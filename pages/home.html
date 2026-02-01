@@ -24,7 +24,7 @@
       --italky-burgundy: rgba(140, 18, 45, .40);
       --italky-burgundy-2: rgba(140, 18, 45, .18);
 
-      --footerH: 86px;
+      --footerH: 92px; /* ✅ alt bar yüksekliği */
       --ease-elastic: cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
@@ -76,7 +76,7 @@
       display:flex; flex-direction:column;
       background: rgba(5,5,10,0.40);
       backdrop-filter: blur(30px);
-      overflow:hidden;
+      overflow:hidden; /* ✅ footer + scroll düzgün */
     }
     @media (min-width:520px){
       .mobile-frame{
@@ -140,7 +140,7 @@
       white-space:nowrap;
     }
 
-    /* ✅ Profil ikon YERİ: Google foto (zeminsiz/çerçevesiz) */
+    /* avatar (google photo) */
     .avatar-btn{
       width: 44px;
       height: 44px;
@@ -153,7 +153,6 @@
       display:flex;
       align-items:center;
       justify-content:center;
-      box-shadow: 0 0 0 rgba(0,0,0,0);
     }
     .avatar-btn:active{ transform: scale(.96); }
     .avatar-btn img{
@@ -177,7 +176,7 @@
       user-select:none;
     }
 
-    /* menu scroll */
+    /* menu scroll (✅ footer kadar padding) */
     .menu-scroll{
       flex:1;
       overflow-y:auto; overflow-x:hidden;
@@ -352,18 +351,20 @@
     }
     .friendChev svg{ width: 18px; height:18px; stroke:#fff; opacity:.85; }
 
-    /* footer */
+    /* ✅ ALT BAR: FRAME İÇİNDE (bozulma yok) */
     .footerbar{
-      position: fixed;
-      left: 50%;
-      transform: translateX(-50%);
+      position:absolute;
+      left: 0;
+      right: 0;
       bottom: 0;
-      width: min(480px, 100vw);
-      max-width: 480px;
+      height: var(--footerH);
       padding: 12px 18px 14px;
       background: rgba(0,0,0,.92);
       border-top: 1px solid rgba(255,255,255,.08);
       z-index: 999;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
     }
     .links{
       display:flex; gap: 16px;
@@ -381,8 +382,9 @@
       text-align:center;
       font-size: 10px;
       color: rgba(255,255,255,0.25);
-      letter-spacing: 1px;
+      letter-spacing: 0.6px;
       font-weight: 800;
+      text-transform:none; /* ✅ büyük harf değil */
     }
 
     @keyframes fadeInUp { from { transform: translateY(26px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
@@ -412,7 +414,6 @@
           <div class="plan" id="userPlan">FREE</div>
         </div>
 
-        <!-- ✅ Google foto burada -->
         <button class="avatar-btn" id="avatarBtn" aria-label="Profil">
           <span class="avatar-fallback" id="avatarFallback">•</span>
         </button>
@@ -568,38 +569,36 @@
       </div>
 
     </div>
-  </div>
 
-  <div class="footerbar">
-    <div class="links">
-      <a href="/pages/about.html">Hakkında</a>
-      <a href="/pages/faq.html">SSS</a>
-      <a href="/pages/privacy.html">Gizlilik</a>
-      <a href="/pages/contact.html">İletişim</a>
+    <!-- ✅ ALT BAR (bozulmaz) -->
+    <div class="footerbar">
+      <div class="links">
+        <a href="/pages/about.html">Hakkında</a>
+        <a href="/pages/faq.html">SSS</a>
+        <a href="/pages/privacy.html">Gizlilik</a>
+        <a href="/pages/contact.html">İletişim</a>
+      </div>
+      <div class="footerBrand">ItalkyAI By Ozyigit’s 2026</div>
     </div>
-    <div class="footerBrand">ItalkyAI By Ozyigit’s 2026</div>
+
   </div>
 
   <script type="module">
     // FILE: italky-web/pages/home.html inline script
     import { STORAGE_KEY } from "/js/config.js";
-
     function safeJson(s, fb={}){ try{ return JSON.parse(s||""); }catch{ return fb; } }
 
-    // login guard
     const u = safeJson(localStorage.getItem(STORAGE_KEY), {});
     if(!u || !u.email || !u.isSessionActive){
       window.location.replace("/index.html");
     }
 
-    // name + plan
     const userName = document.getElementById("userName");
     const userPlan = document.getElementById("userPlan");
     const full = (u.fullname || u.name || u.display_name || u.email || "—").trim();
     if(userName) userName.textContent = full;
     if(userPlan) userPlan.textContent = String(u.plan || "FREE").toUpperCase();
 
-    // avatar (google photo)
     const avatarBtn = document.getElementById("avatarBtn");
     const fallback = document.getElementById("avatarFallback");
     try{
@@ -612,31 +611,14 @@
       }
     }catch{}
 
-    // avatar -> profile
-    avatarBtn?.addEventListener("click", ()=>{
-      window.location.href = "/pages/profile.html";
-    });
+    avatarBtn?.addEventListener("click", ()=>{ window.location.href = "/pages/profile.html"; });
 
-    // routes
     document.querySelectorAll("[data-go]").forEach(el=>{
       el.addEventListener("click", ()=>{
         const go = el.getAttribute("data-go");
         if(go) window.location.href = go;
       });
     });
-
-    // footer padding fix
-    const sc = document.getElementById("menuScroll");
-    if(sc){
-      const fix = ()=> {
-        const fb = document.querySelector(".footerbar");
-        const h = fb ? fb.getBoundingClientRect().height : 86;
-        sc.style.paddingBottom = (h + 14) + "px";
-      };
-      setTimeout(fix, 60);
-      window.addEventListener("resize", ()=> setTimeout(fix, 60), { passive:true });
-    }
   </script>
 </body>
 </html>
-```0
