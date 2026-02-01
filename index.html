@@ -1,496 +1,397 @@
-<!-- FILE: italky-web/index.html -->
 <!DOCTYPE html>
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>ITALKY - Giriş</title>
+  <title>ITALKY - Geleceğin Girişi</title>
 
   <link rel="icon" href="data:," />
-
-  <!-- Google GSI -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+
   <style>
-    :root{
-      --navy-0:#05070d;
-      --navy-1:#081126;
-      --navy-2:#0b1834;
-
-      --maroon-1:#3a0b18;
-      --maroon-2:#5a1226;
-
-      --white: rgba(255,255,255,.92);
-      --muted: rgba(255,255,255,.62);
-      --border: rgba(255,255,255,.10);
-
-      --it-green:#0f7a3a;
-      --it-white:#ffffff;
-      --it-red:#b9142a;
-
-      --frameW: min(480px, calc(100vw - 18px));
+    :root {
+      /* Renk Paleti: Deep Cyberpunk / Elegant Tech */
+      --bg-dark: #030014;
+      --primary: #4f46e5;
+      --secondary: #ec4899;
+      --accent: #06b6d4;
+      
+      --glass-surface: rgba(255, 255, 255, 0.03);
+      --glass-border: rgba(255, 255, 255, 0.08);
+      --glass-highlight: rgba(255, 255, 255, 0.2);
+      
+      --text-main: #ffffff;
+      --text-muted: rgba(255, 255, 255, 0.6);
+      
+      --frameW: min(480px, calc(100vw - 20px));
+      --ease-elastic: cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
-    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-    html,body{ margin:0; padding:0; width:100%; height:100dvh; overflow:hidden; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
-
-    body{
-      background:
-        radial-gradient(900px 480px at 20% 10%, rgba(90,18,38,.32), transparent 60%),
-        radial-gradient(900px 480px at 80% 20%, rgba(11,24,52,.55), transparent 62%),
-        radial-gradient(800px 420px at 50% 92%, rgba(255,255,255,.05), transparent 60%),
-        linear-gradient(180deg, var(--navy-0), var(--navy-1));
-      color: var(--white);
-      display:flex;
-      align-items:center;
-      justify-content:center;
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+    
+    html, body {
+      margin: 0; padding: 0; width: 100%; height: 100dvh;
+      overflow: hidden;
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      display: flex; align-items: center; justify-content: center;
     }
 
-    .mobile-frame{
-      width:100%;
-      max-width:480px;
-      height:100%;
-      background: rgba(0,0,0,.22);
-      position:relative;
-      overflow:hidden;
+    /* --- BACKGROUND FX --- */
+    .ambient-bg {
+      position: absolute; inset: -50%;
+      width: 200%; height: 200%;
+      background: 
+        radial-gradient(circle at 50% 50%, rgba(79, 70, 229, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 10% 20%, rgba(236, 72, 153, 0.15) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(6, 182, 212, 0.15) 0%, transparent 40%);
+      filter: blur(60px);
+      animation: ambientSpin 20s linear infinite;
+      z-index: 0;
+      opacity: 0.8;
+    }
+    @keyframes ambientSpin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
 
-    @media (min-width:520px){
-      .mobile-frame{
-        height: 92vh;
-        margin-top: 4vh;
-        border-radius: 26px;
-        border: 1px solid rgba(255,255,255,.10);
-        box-shadow: 0 40px 120px rgba(0,0,0,.65);
+    /* Noise Texture Overlay for realism */
+    .noise-overlay {
+      position: absolute; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.07'/%3E%3C/svg%3E");
+      opacity: 0.5; pointer-events: none; z-index: 1;
+    }
+
+    /* --- MAIN FRAME --- */
+    .mobile-frame {
+      width: 100%; max-width: 480px; height: 100%;
+      position: relative; z-index: 10;
+      display: flex; flex-direction: column;
+      background: rgba(10, 10, 15, 0.4);
+      backdrop-filter: blur(20px);
+      overflow: hidden;
+      transition: all 0.5s ease;
+    }
+
+    @media (min-width: 520px) {
+      .mobile-frame {
+        height: 90vh;
+        border-radius: 32px;
+        border: 1px solid var(--glass-border);
+        box-shadow: 
+          0 0 0 1px rgba(0,0,0,0.5),
+          0 25px 50px -12px rgba(0, 0, 0, 0.7),
+          0 0 80px rgba(79, 70, 229, 0.15); /* Glow around frame */
       }
     }
 
-    /* TOP BAR */
-    .topbar{
-      position: sticky;
-      top: 0;
-      z-index: 50;
-      height: 68px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding: 10px 12px;
-      background: rgba(0,0,0,.35);
-      border-bottom: 1px solid rgba(255,255,255,.06);
-      backdrop-filter: blur(10px);
+    /* --- TOP BAR --- */
+    .topbar {
+      height: 80px; display: flex; align-items: center; justify-content: center;
+      position: relative; z-index: 20;
+    }
+    
+    .brand {
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      animation: slideDown 0.8s var(--ease-elastic);
+    }
+    
+    .logoText {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700; font-size: 36px; line-height: 1;
+      letter-spacing: -1px;
+      background: linear-gradient(135deg, #fff 20%, #a5b4fc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 30px rgba(255,255,255,0.2);
     }
 
-    .brand{
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      gap: 6px;
-      user-select:none;
+    /* Flagbar Redesign: Glowing Pill */
+    .flagbar {
+      width: 40px; height: 4px; border-radius: 20px;
+      display: flex; overflow: hidden;
+      box-shadow: 0 0 15px rgba(255,255,255,0.3);
     }
+    .flagbar div { flex: 1; height: 100%; }
+    .f-green { background: #009246; }
+    .f-white { background: #ffffff; }
+    .f-red { background: #CE2B37; }
 
-    .logoText{
-      font-weight: 1000;
-      letter-spacing: .6px;
-      font-size: 28px;
-      line-height: 1;
-      color: rgba(255,255,255,.95);
-    }
-
-    /* Bayrak: ITALKY yazısının ALTINDA */
-    .flagbar{
-      width: 170px;
-      height: 10px;
-      border-radius: 999px;
-      overflow:hidden;
-      border: 1px solid rgba(255,255,255,.14);
-      box-shadow: 0 10px 22px rgba(0,0,0,.35);
-    }
-    .flagbar .g{ width:33.33%; height:100%; float:left; background: var(--it-green); }
-    .flagbar .w{ width:33.33%; height:100%; float:left; background: var(--it-white); }
-    .flagbar .r{ width:33.33%; height:100%; float:left; background: var(--it-red); }
-
-    /* MAIN STAGE */
-    .stage{
+    /* --- STAGE --- */
+    .stage {
+      flex: 1; display: flex; flex-direction: column; 
+      align-items: center; justify-content: center;
+      padding: 20px; gap: 30px;
       position: relative;
-      height: calc(100% - 68px);
-      padding: 16px 14px 118px;
-      overflow:hidden;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:flex-start;
-      gap: 14px;
     }
 
-    .heroCard{
-      width: min(460px, 92vw);
-      border-radius: 26px;
-      border: 1px solid rgba(255,255,255,.10);
-      background:
-        radial-gradient(900px 360px at 20% 0%, rgba(90,18,38,.42), transparent 60%),
-        radial-gradient(900px 360px at 85% 10%, rgba(11,24,52,.55), transparent 62%),
-        rgba(0,0,0,.22);
-      box-shadow: 0 34px 120px rgba(0,0,0,.60);
-      backdrop-filter: blur(12px);
-      padding: 16px 16px 14px;
-      margin-top: 10px;
-    }
-
-    .heroTitle{
-      font-weight: 1000;
-      font-size: 15px;
-      letter-spacing:.2px;
-      margin: 0;
-    }
-    .heroDesc{
-      margin: 8px 0 0;
-      font-weight: 800;
-      font-size: 12px;
-      color: rgba(255,255,255,.70);
-      line-height: 1.35;
-    }
-
-    .pillRow{
-      margin-top: 12px;
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-    }
-    .pill{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding: 8px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,.10);
-      background: rgba(255,255,255,.04);
-      color: rgba(255,255,255,.78);
-      font-weight: 900;
-      font-size: 11px;
-      white-space:nowrap;
-    }
-    .dot{
-      width:8px; height:8px; border-radius:99px;
-      background: rgba(255,255,255,.85);
-      box-shadow: 0 0 12px rgba(255,255,255,.14);
-      opacity:.9;
-    }
-
-    /* BUTTONS */
-    .btnWrap{
-      width: min(460px, 92vw);
-      display:flex;
-      flex-direction:column;
-      gap: 12px;
-      margin-top: 12px;
-    }
-
-    .btn3d{
-      width:100%;
-      height: 58px;
-      border-radius: 20px;
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.05);
-      color:#fff;
-      font-weight: 1000;
-      font-size: 15px;
-      letter-spacing:.15px;
-      cursor:pointer;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap: 12px;
-      box-shadow: 0 18px 45px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.12);
-      user-select:none;
-      transition: transform .12s ease, filter .12s ease;
-    }
-    .btn3d:active{ transform: translateY(1px); filter: brightness(.98); }
-
-    .badge{
-      width:34px; height:34px;
-      border-radius: 14px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      box-shadow: 0 12px 26px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.18);
-      background: rgba(255,255,255,.08);
-      border: 1px solid rgba(255,255,255,.10);
-    }
-    .badge.google{ background:#fff; border-color: rgba(255,255,255,.18); }
-    .badge.google svg{ width:18px; height:18px; display:block; }
-    .badge.apple svg{ width:18px; height:18px; display:block; fill:#fff; opacity:.95; }
-
-    /* Google GSI overlay button */
-    .googleOverlay{
+    /* 3D Glass Card */
+    .heroCard {
+      width: 100%;
+      background: linear-gradient(160deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%);
+      border: 1px solid var(--glass-border);
+      border-top-color: var(--glass-highlight);
+      border-radius: 28px;
+      padding: 30px 24px;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
       position: relative;
-      width:100%;
-      height:58px;
-    }
-    #googleBtnWrap{
-      position:absolute;
-      inset:0;
-      width:100%;
-      height:100%;
-      z-index: 50;
-      opacity: 0.01;
-      cursor:pointer;
-    }
-    #googleBtnWrap iframe{
-      width:100% !important;
-      height:100% !important;
-      pointer-events:auto !important;
-      cursor:pointer !important;
+      overflow: hidden;
+      animation: scaleIn 0.8s 0.1s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
     }
 
-    .hint{
-      width: min(460px, 92vw);
-      margin-top: 4px;
-      text-align:center;
-      font-size: 11px;
-      font-weight: 850;
-      color: rgba(255,255,255,.55);
+    /* Card Inner Glow Shine */
+    .heroCard::before {
+      content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,0.07) 0%, transparent 60%);
+      transform: rotate(30deg); pointer-events: none;
     }
 
-    /* FOOTER BAR */
-    .footerbar{
-      position: fixed;
-      left: 50%;
-      transform: translateX(-50%);
-      width: var(--frameW);
-      bottom: 0;
-      z-index: 60;
-      background: rgba(0,0,0,.40);
-      border-top: 1px solid rgba(255,255,255,.06);
-      backdrop-filter: blur(10px);
-      padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
-      display:flex;
-      flex-direction:column;
-      gap: 8px;
+    .heroTitle {
+      margin: 0; font-family: 'Space Grotesk', sans-serif;
+      font-size: 26px; font-weight: 700;
+      color: #fff; letter-spacing: -0.5px;
+      margin-bottom: 12px;
     }
-    .links{
-      display:flex;
-      justify-content:center;
-      gap:16px;
-      flex-wrap:wrap;
-      font-size: 12px;
-      font-weight: 950;
-    }
-    .links a{
-      color: rgba(255,255,255,.70);
-      text-decoration:none;
-      white-space:nowrap;
-    }
-    .footerBrand{
-      text-align:center;
-      font-size: 11px;
-      font-weight: 900;
-      color: rgba(255,255,255,.58);
-      letter-spacing:.2px;
+    .heroTitle span { color: var(--accent); }
+
+    .heroDesc {
+      font-size: 14px; line-height: 1.6; color: var(--text-muted);
+      margin-bottom: 24px; font-weight: 400;
     }
 
-    /* TERMS OVERLAY */
-    .full-overlay{
-      position: fixed;
-      inset: 0;
-      z-index: 9999;
-      background: rgba(0,0,0,.82);
-      display:none;
-      align-items:center;
-      justify-content:center;
-      padding: 18px;
+    .pillRow {
+      display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;
     }
-    .full-overlay.active{ display:flex; }
+    .pill {
+      font-size: 11px; padding: 6px 12px; border-radius: 12px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.05);
+      color: rgba(255,255,255,0.8);
+      display: flex; align-items: center; gap: 6px;
+      font-weight: 600;
+    }
+    .dot { width: 6px; height: 6px; background: #10b981; border-radius: 50%; box-shadow: 0 0 8px #10b981; }
 
-    .terms-card{
-      width: min(520px, 92vw);
-      border-radius: 22px;
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(10,10,12,.96);
-      box-shadow: 0 40px 140px rgba(0,0,0,.70);
-      overflow:hidden;
+    /* --- BUTTONS --- */
+    .btnWrap {
+      width: 100%; display: flex; flex-direction: column; gap: 16px;
+      animation: fadeInUp 0.8s 0.3s var(--ease-elastic) backwards;
     }
-    .terms-head{
-      padding: 14px 14px 10px;
-      border-bottom: 1px solid rgba(255,255,255,.10);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      font-weight: 1000;
-      color:#fff;
-    }
-    .x-btn{
-      width:40px; height:40px;
-      border-radius: 14px;
-      border: 1px solid rgba(255,255,255,.10);
-      background: rgba(255,255,255,.04);
-      color:#fff;
-      font-size: 20px;
-      cursor:pointer;
-    }
-    #termsFrame{
-      width:100%;
-      height: 330px;
-      border:0;
-      background:#fff;
-    }
-    .agreement{
-      padding: 12px 14px 14px;
-      display:flex;
-      flex-direction:column;
-      gap: 10px;
-    }
-    .agree-row{
-      display:flex;
-      gap:10px;
-      align-items:center;
-      font-size: 12px;
-      font-weight: 900;
-      color: rgba(255,255,255,.82);
-    }
-    .agree-row input{ width:18px; height:18px; }
-    #termsAcceptBtn{
-      width:100%;
-      height: 48px;
-      border-radius: 16px;
-      border:none;
-      background: linear-gradient(135deg, rgba(90,18,38,.95), rgba(11,24,52,.95));
-      color:#fff;
-      font-weight: 1000;
-      cursor:pointer;
-      opacity:.65;
-      border: 1px solid rgba(255,255,255,.12);
-      box-shadow: 0 16px 38px rgba(0,0,0,.55);
-    }
-    #termsAcceptBtn.enabled{ opacity:1; }
 
-    /* Toast */
-    .toast{
-      position: fixed;
-      left: 50%;
-      top: 86px;
-      transform: translateX(-50%);
-      z-index: 99999;
-      max-width: min(460px, calc(100vw - 24px));
-      background: rgba(20,20,20,.94);
-      border: 1px solid rgba(255,255,255,.14);
-      border-left: 3px solid rgba(255,255,255,.22);
-      color: rgba(255,255,255,.92);
-      padding: 10px 12px;
-      border-radius: 16px;
-      box-shadow: 0 18px 50px rgba(0,0,0,.55);
-      backdrop-filter: blur(10px);
-      font-weight: 950;
-      font-size: 12px;
-      opacity: 0;
-      transition: opacity .18s ease, transform .18s ease;
-      pointer-events:none;
-      white-space: nowrap;
-      overflow:hidden;
-      text-overflow: ellipsis;
+    .btn3d {
+      position: relative; width: 100%; height: 64px;
+      border-radius: 20px; border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 14px;
+      font-size: 16px; font-weight: 600; color: #fff;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--glass-border);
+      transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+      overflow: hidden;
     }
-    .toast.show{ opacity:1; transform: translateX(-50%) translateY(0); }
+    
+    /* Neon Border Hover Effect */
+    .btn3d::after {
+      content: ''; position: absolute; inset: 0;
+      border-radius: 20px; padding: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      opacity: 0.5;
+    }
+
+    .btn3d:hover {
+      background: rgba(255,255,255,0.07);
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 10px 30px -5px rgba(0,0,0,0.4), 0 0 20px rgba(255,255,255,0.05);
+    }
+    .btn3d:active { transform: scale(0.98); }
+
+    .badge {
+      width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+    }
+    .badge svg { width: 100%; height: 100%; }
+
+    /* Google Special Style */
+    .googleOverlay { position: relative; width: 100%; height: 64px; }
+    #googleBtnWrap { position: absolute; inset: 0; opacity: 0.01; z-index: 50; }
+
+    /* Hint Text */
+    .hint {
+      font-size: 11px; color: var(--text-muted); text-align: center;
+      animation: fadeIn 1s 1s ease backwards; opacity: 0.5;
+    }
+
+    /* --- FOOTER --- */
+    .footerbar {
+      padding: 20px; width: 100%;
+      background: linear-gradient(to top, rgba(3,0,20,0.9), transparent);
+      display: flex; flex-direction: column; align-items: center; gap: 12px;
+      z-index: 20;
+    }
+    .links { display: flex; gap: 20px; }
+    .links a {
+      color: var(--text-muted); text-decoration: none; font-size: 12px; font-weight: 500;
+      transition: color 0.2s;
+    }
+    .links a:hover { color: #fff; }
+    .footerBrand { font-size: 10px; opacity: 0.3; letter-spacing: 1px; text-transform: uppercase; }
+
+    /* --- ANIMATIONS --- */
+    @keyframes slideDown { from { transform: translateY(-30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    @keyframes scaleIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    @keyframes fadeInUp { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 0.5; } }
+
+    /* --- TERMS OVERLAY (Re-styled) --- */
+    .full-overlay {
+      position: fixed; inset: 0; z-index: 9999;
+      background: rgba(3, 0, 20, 0.85); backdrop-filter: blur(15px);
+      display: none; align-items: center; justify-content: center; padding: 20px;
+    }
+    .full-overlay.active { display: flex; animation: fadeIn 0.3s ease; }
+    
+    .terms-card {
+      width: 100%; max-width: 500px;
+      background: #0f0f13; border: 1px solid var(--glass-border);
+      border-radius: 24px; overflow: hidden;
+      box-shadow: 0 40px 100px rgba(0,0,0,0.8);
+      display: flex; flex-direction: column;
+    }
+    .terms-head {
+      padding: 16px 20px; border-bottom: 1px solid var(--glass-border);
+      display: flex; justify-content: space-between; align-items: center;
+      font-weight: 700; font-size: 16px;
+    }
+    .x-btn {
+      background: rgba(255,255,255,0.1); border: none; color: #fff;
+      width: 32px; height: 32px; border-radius: 10px; cursor: pointer;
+    }
+    #termsFrame { width: 100%; height: 350px; border: none; background: #fff; opacity: 0.9; }
+    .agreement { padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+    .agree-row { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-muted); cursor: pointer; }
+    .agree-row input { accent-color: var(--primary); width: 18px; height: 18px; }
+    
+    #termsAcceptBtn {
+      width: 100%; height: 50px; border-radius: 16px; border: none;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: #fff; font-weight: 700; font-size: 15px;
+      cursor: pointer; opacity: 0.5; transition: 0.3s;
+      box-shadow: 0 10px 20px -5px rgba(236, 72, 153, 0.4);
+    }
+    #termsAcceptBtn.enabled { opacity: 1; transform: translateY(0); }
+    #termsAcceptBtn.enabled:active { transform: scale(0.97); }
+
+    /* --- TOAST --- */
+    .toast {
+      position: fixed; left: 50%; top: 40px; transform: translate(-50%, -20px);
+      background: rgba(255,255,255,0.95); color: #000;
+      padding: 12px 24px; border-radius: 99px;
+      font-weight: 600; font-size: 13px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+      opacity: 0; pointer-events: none; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      z-index: 10000;
+    }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
   </style>
 </head>
 
 <body>
+  <div class="ambient-bg"></div>
+  <div class="noise-overlay"></div>
+
   <div class="mobile-frame" id="mobileFrame">
 
-    <!-- TOPBAR -->
     <div class="topbar">
       <div class="brand" aria-label="ITALKY">
         <div class="logoText">ITALKY</div>
         <div class="flagbar" aria-hidden="true">
-          <div class="g"></div><div class="w"></div><div class="r"></div>
+          <div class="f-green"></div><div class="f-white"></div><div class="f-red"></div>
         </div>
       </div>
     </div>
 
-    <!-- STAGE -->
     <div class="stage">
 
       <div class="heroCard">
-        <h2 class="heroTitle">Hızlı çeviri + pratik.</h2>
+        <h2 class="heroTitle">Dil Öğreniminde <span>Yeni Boyut.</span></h2>
         <div class="heroDesc">
-          Canlı konuşma çevirisi, iki yönlü ekran ve fotoğraftan çeviri modülleri burada.
+          Yapay zeka destekli anlık çeviri, ses klonlama ve interaktif pratik modülleriyle sınırları aş.
         </div>
 
         <div class="pillRow">
-          <div class="pill"><span class="dot"></span> Güvenli giriş</div>
-          <div class="pill"><span class="dot"></span> Hızlı çeviri</div>
-          <div class="pill"><span class="dot"></span> Pratik modlar</div>
+          <div class="pill"><div class="dot"></div> Secure</div>
+          <div class="pill"><div class="dot" style="background:#06b6d4; box-shadow:0 0 8px #06b6d4"></div> AI-Powered</div>
+          <div class="pill"><div class="dot" style="background:#ec4899; box-shadow:0 0 8px #ec4899"></div> Fast</div>
         </div>
       </div>
 
       <div class="btnWrap">
 
-        <!-- GOOGLE (overlay) -->
         <div class="googleOverlay">
           <button class="btn3d" id="googleLoginBtn" type="button">
-            <span class="badge google" aria-hidden="true">
+            <span class="badge" aria-hidden="true">
               <svg viewBox="0 0 24 24">
-                <path fill="#EA4335" d="M12 10.2v3.9h5.4c-.2 1.2-1.5 3.4-5.4 3.4-3.3 0-6-2.7-6-6s2.7-6 6-6c1.9 0 3.2.8 3.9 1.5l2.7-2.6C17.9 2.8 15.2 1.5 12 1.5 6.8 1.5 2.5 5.8 2.5 11s4.3 9.5 9.5 9.5c5.5 0 9.1-3.9 9.1-9.3 0-.6-.1-1.1-.1-1.6H12z"/>
-                <path fill="#34A853" d="M3.8 7.3l3.2 2.3C7.9 7.3 9.8 5.8 12 5.8c1.9 0 3.2.8 3.9 1.5l2.7-2.6C17.9 2.8 15.2 1.5 12 1.5 8.3 1.5 5.1 3.7 3.8 7.3z"/>
-                <path fill="#FBBC05" d="M12 20.5c3.1 0 5.7-1 7.6-2.8l-3.5-2.9c-.9.7-2.1 1.2-4.1 1.2-3.2 0-5.9-2.1-6.8-5l-3.3 2.5c1.4 4.1 5.3 7 10.1 7z"/>
-                <path fill="#4285F4" d="M21.1 11.2c0-.6-.1-1.1-.1-1.6H12v3.9h5.4c-.3 1.3-1.1 2.4-2.3 3.1l3.5 2.9c2.1-2 3.3-4.9 3.3-8.3z"/>
+                <path fill="#fff" d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .533 5.347.533 12S5.867 24 12.48 24c3.44 0 6.04-1.133 8.147-3.293 2.187-2.187 2.853-5.28 2.853-7.853 0-.787-.067-1.453-.16-2.12H12.48z"/>
               </svg>
             </span>
-            Google ile Giriş Yap
+            Google ile Başla
           </button>
           <div id="googleBtnWrap"></div>
         </div>
 
-        <!-- APPLE -->
         <button class="btn3d" id="appleLoginBtn" type="button">
-          <span class="badge apple" aria-hidden="true">
-            <svg viewBox="0 0 24 24">
-              <path d="M16.7 13.2c0-2 1.6-3 1.7-3.1-1-1.4-2.6-1.6-3.1-1.6-1.3-.1-2.5.8-3.1.8-.6 0-1.6-.8-2.7-.8-1.4 0-2.7.8-3.4 2.1-1.5 2.6-.4 6.4 1 8.5.7 1 1.5 2.1 2.6 2.1 1 0 1.4-.6 2.7-.6 1.2 0 1.6.6 2.7.6 1.1 0 1.9-1 2.6-2 .8-1.1 1.1-2.2 1.1-2.2-.1 0-2.1-.8-2.1-3.9z"/>
-              <path d="M14.6 6.9c.6-.7 1-1.7.9-2.7-.9.1-2 .6-2.6 1.3-.6.6-1.1 1.6-.9 2.6 1 .1 2-.5 2.6-1.2z"/>
+          <span class="badge" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="#fff">
+              <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24.02-1.44.62-2.2.44-3.26-.7C3.15 15.22 2.76 7.73 8.5 7.42c1.6.09 2.7.85 3.52.88 1.05.03 2.44-1 4.17-.9 1.06.06 2.14.46 2.85 1.44-2.58 1.4-2.12 5.07.38 6.13-.53 1.34-1.25 2.67-2.37 3.8h0zm-1.63-14.7c1.32-1.5 2.18-3.66 1.95-5.58-1.8.07-3.64 1.12-4.66 2.3-1 1.14-1.75 3.32-1.57 5.25 1.94.14 3.42-1.22 4.28-1.97z"/>
             </svg>
           </span>
-          Apple ile Giriş Yap
+          Apple ile Devam Et
         </button>
 
       </div>
 
-      <div class="hint">Devam ederek Kullanıcı Sözleşmesi’ni onaylayacaksın.</div>
+      <div class="hint">Devam ederek Kullanıcı Sözleşmesi'ni kabul etmiş sayılırsın.</div>
     </div>
 
-    <!-- FOOTER -->
     <div class="footerbar">
       <div class="links">
-        <a href="/pages/about.html">Hakkımızda</a>
+        <a href="/pages/about.html">Hakkında</a>
         <a href="/pages/faq.html">SSS</a>
         <a href="/pages/privacy.html">Gizlilik</a>
         <a href="/pages/contact.html">İletişim</a>
       </div>
-      <div class="footerBrand">ITALKYAI By Ozyigit's 2026</div>
+      <div class="footerBrand">ITALKY AI • Ozyigit's 2026</div>
     </div>
 
   </div>
 
-  <!-- TERMS OVERLAY -->
   <div class="full-overlay" id="termsOverlay">
     <div class="terms-card">
       <div class="terms-head">
-        <div>Sözleşme</div>
-        <button id="closeTermsBtn" class="x-btn" aria-label="Kapat">×</button>
+        <div>Kullanım Sözleşmesi</div>
+        <button id="closeTermsBtn" class="x-btn" aria-label="Kapat">✕</button>
       </div>
 
       <iframe id="termsFrame" src="/pages/sozlesme.html" title="Kullanıcı Sözleşmesi"></iframe>
 
       <div class="agreement">
-        <div class="agree-row">
+        <div class="agree-row" onclick="document.getElementById('termsCheck').click()">
           <input type="checkbox" id="termsCheck" />
-          <label for="termsCheck">Onaylıyorum.</label>
+          <label for="termsCheck" style="cursor:pointer">Şartları okudum ve onaylıyorum.</label>
         </div>
-        <button id="termsAcceptBtn" type="button" disabled>Onayla ve Devam Et</button>
-        <div class="footerBrand" style="text-align:center;">ITALKYAI By Ozyigit's 2026</div>
+        <button id="termsAcceptBtn" type="button" disabled>Kabul Et ve Giriş Yap</button>
       </div>
     </div>
   </div>
 
-  <div class="toast" id="toast">—</div>
+  <div class="toast" id="toast">Bildirim</div>
 
   <script type="module">
     // FILE: italky-web/index.html (inline logic)
@@ -508,7 +409,7 @@
       toastEl.textContent = msg;
       toastEl.classList.add("show");
       clearTimeout(window.__t1);
-      window.__t1 = setTimeout(()=> toastEl.classList.remove("show"), 2400);
+      window.__t1 = setTimeout(()=> toastEl.classList.remove("show"), 3000);
     }
 
     function hasUser(){
@@ -523,8 +424,7 @@
       return !!localStorage.getItem(termsKey(email));
     }
 
-    // ✅ ITALKY’de ilk sayfa neresi olacak?
-    // Şimdilik çeviri: /pages/translate.html
+    // HOME PAGE:
     function goHome(){
       window.location.replace("/pages/translate.html");
     }
@@ -532,7 +432,7 @@
     // Apple click
     $("appleLoginBtn")?.addEventListener("click", (e)=>{
       e.preventDefault();
-      showToast("Apple girişi hazırlanıyor… Şimdilik Google ile devam edebilirsin.");
+      showToast("Apple girişi yakında. Lütfen Google kullan.");
     });
 
     // Terms overlay
