@@ -1,10 +1,11 @@
 // FILE: italky-web/js/translate_page.js
-// ✅ POST /api/translate bağlandı
+// ✅ Slogan SABİT: "By Ozyigit's" (JS artık slogan değiştirmez)
+// ✅ Dropdown: arama + scroll (gizli) + çok dil
+// ✅ Mic altta ortada (ID aynı: topMic/botMic)
+// ✅ Auto speak ON; speaker tuşu sadece MUTE toggle
+// ✅ Wave yalnız dinlerken hızlanır
+// ✅ API: POST /api/translate  (BASE_DOMAIN)
 // ✅ Ping: GET /api/translate/ping
-// ✅ TR/EN etiket yok
-// ✅ "Hazır" yok
-// ✅ Auto speak ON (mute toggle)
-// ✅ Dropdown search + scroll gizli zaten HTML/CSS’de
 
 import { BASE_DOMAIN } from "/js/config.js";
 
@@ -30,7 +31,7 @@ async function pingApi(){
     const r = await fetch(`${b}/api/translate/ping`, { method:"GET" });
     const d = await r.json().catch(()=> ({}));
     if(!d?.ok) toast("Çeviri motoru hazır değil.");
-    else if(!d?.has_key) toast("Translate API key eksik.");
+    else if(!d?.has_key) toast("GOOGLE_API_KEY eksik.");
   }catch{
     toast("API erişilemiyor (Render uyuyor olabilir).");
   }
@@ -57,23 +58,6 @@ const LANGS = [
   { code:"ko", name:"Korece", speech:"ko-KR", tts:"ko-KR" },
 ];
 
-const SLOGAN_TR = "Yapay Zekânın Geleneksel Aklı";
-const SLOGAN_MAP = {
-  tr: SLOGAN_TR,
-  en: "The Traditional Mind of AI",
-  de: "Der traditionelle Verstand der KI",
-  fr: "L’esprit traditionnel de l’IA",
-  es: "La mente tradicional de la IA",
-  it: "La mente tradizionale dell’IA",
-  pt: "A mente tradicional da IA",
-  nl: "De traditionele geest van AI",
-  ru: "Традиционный разум ИИ",
-  ar: "عقل الذكاء الاصطناعي التقليدي",
-  zh: "AI 的传统思维",
-  ja: "AIの伝統的な知性",
-  ko: "AI의 전통적 지성",
-};
-function sloganFor(code){ return SLOGAN_MAP[code] || SLOGAN_TR; }
 function speechLocale(code){ return LANGS.find(x=>x.code===code)?.speech || "en-US"; }
 function ttsLocale(code){ return LANGS.find(x=>x.code===code)?.tts || "en-US"; }
 
@@ -85,12 +69,13 @@ async function translateViaApi(text, source, target){
     const r = await fetch(`${b}/api/translate`,{
       method:"POST",
       headers:{ "Content-Type":"application/json" },
+      // ✅ backend’in kabul ettiği isimler: source/target veya from_lang/to_lang
       body: JSON.stringify({ text, source, target })
     });
     const data = await r.json().catch(()=> ({}));
-    // ✅ farklı backend cevaplarını tolere et
-    const out =
-      String(data?.translated || data?.text || data?.translation || data?.result || "").trim();
+    const out = String(
+      data?.translated || data?.translation || data?.text || data?.result || ""
+    ).trim();
     return out || text;
   }catch{
     return text;
@@ -131,7 +116,7 @@ function addBubble(sideName, kind, text){
 }
 
 /* Custom dropdown with search */
-function buildDropdown(ddId, btnId, txtId, menuId, defCode, onChange){
+function buildDropdown(ddId, btnId, txtId, menuId, defCode){
   const dd = $(ddId);
   const btn = $(btnId);
   const txt = $(txtId);
@@ -146,22 +131,19 @@ function buildDropdown(ddId, btnId, txtId, menuId, defCode, onChange){
   function setValue(code){
     current = code;
     txt.textContent = (LANGS.find(l=>l.code===code)?.name || code);
-    onChange?.(code);
   }
 
-  // ✅ menu render (search + list)
   menu.innerHTML = `
     <div class="dd-search-wrap">
       <input class="dd-search" id="${menuId}__q" placeholder="Ara…" />
     </div>
-    <div class="dd-sep">Sık kullanılan</div>
+    <div class="dd-sep">Diller</div>
     ${LANGS.map(l=>`<div class="dd-item" data-code="${l.code}">${l.name}</div>`).join("")}
   `;
 
   const q = menu.querySelector(`#${menuId}__q`);
   const items = Array.from(menu.querySelectorAll(".dd-item"));
 
-  // ✅ filtre
   q?.addEventListener("input", ()=>{
     const v = String(q.value||"").toLowerCase().trim();
     items.forEach(it=>{
@@ -183,15 +165,14 @@ function buildDropdown(ddId, btnId, txtId, menuId, defCode, onChange){
     const open = dd.classList.contains("open");
     closeAll();
     dd.classList.toggle("open", !open);
-    // açılınca search’e fokus
     if(!open){
       setTimeout(()=>{ try{ q?.focus(); }catch{} }, 0);
     }
   });
 
   document.addEventListener("click", ()=> closeAll());
-
   setValue(defCode);
+
   return { get: ()=> current, set: (c)=> setValue(c) };
 }
 
@@ -202,7 +183,7 @@ let botRec = null;
 
 function setMicUI(side, on){
   const mic = $(side === "top" ? "topMic" : "botMic");
-  mic.classList.toggle("listening", !!on);
+  mic?.classList.toggle("listening", !!on);
   setWaveListening(!!on);
 }
 
@@ -222,7 +203,7 @@ const mute = { top:false, bot:false }; // false => speak ON
 function setMute(side, on){
   mute[side] = !!on;
   const btn = $(side === "top" ? "topSpeak" : "botSpeak");
-  btn.classList.toggle("muted", mute[side]);
+  btn?.classList.toggle("muted", mute[side]);
 }
 
 function speakAuto(text, langCode, side){
@@ -307,36 +288,36 @@ function startSide(side, getLang, getOtherLang){
 }
 
 document.addEventListener("DOMContentLoaded", async ()=>{
-  $("backBtn").addEventListener("click", ()=>{
+  // back
+  $("backBtn")?.addEventListener("click", ()=>{
     if(history.length>1) history.back();
     else location.href = "/pages/home.html";
   });
 
-  // ✅ API ping (Render uyuyor mu / key var mı)
+  // ✅ Sloganlar SABİT kalsın: By Ozyigit's (HTML’de yazıyor)
+  // JS burada sloganTop/sloganBot’a dokunmuyor.
+
+  // ping
   await pingApi();
 
+  // scroll follow
   hookScrollFollow("top", $("topBody"));
   hookScrollFollow("bot", $("botBody"));
 
-  const topDD = buildDropdown("ddTop","ddTopBtn","ddTopTxt","ddTopMenu","en", (code)=>{
-    $("sloganTop").textContent = sloganFor(code);
-  });
+  // dropdowns
+  const topDD = buildDropdown("ddTop","ddTopBtn","ddTopTxt","ddTopMenu","en");
+  const botDD = buildDropdown("ddBot","ddBotBtn","ddBotTxt","ddBotMenu","tr");
 
-  const botDD = buildDropdown("ddBot","ddBotBtn","ddBotTxt","ddBotMenu","tr", (code)=>{
-    $("sloganBot").textContent = sloganFor(code);
-  });
-
-  $("sloganTop").textContent = sloganFor(topDD.get());
-  $("sloganBot").textContent = sloganFor(botDD.get());
-
+  // clear
   $("topBody").innerHTML = "";
   $("botBody").innerHTML = "";
 
-  $("topSpeak").addEventListener("click", ()=>{
+  // speaker toggles
+  $("topSpeak")?.addEventListener("click", ()=>{
     setMute("top", !mute.top);
     toast(mute.top ? "Ses kapalı" : "Ses açık");
   });
-  $("botSpeak").addEventListener("click", ()=>{
+  $("botSpeak")?.addEventListener("click", ()=>{
     setMute("bot", !mute.bot);
     toast(mute.bot ? "Ses kapalı" : "Ses açık");
   });
@@ -344,8 +325,9 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   setMute("top", false);
   setMute("bot", false);
 
-  $("topMic").addEventListener("click", ()=> startSide("top", ()=>topDD.get(), ()=>botDD.get()));
-  $("botMic").addEventListener("click", ()=> startSide("bot", ()=>botDD.get(), ()=>topDD.get()));
+  // mic
+  $("topMic")?.addEventListener("click", ()=> startSide("top", ()=>topDD.get(), ()=>botDD.get()));
+  $("botMic")?.addEventListener("click", ()=> startSide("bot", ()=>botDD.get(), ()=>topDD.get()));
 
   setWaveListening(false);
 });
