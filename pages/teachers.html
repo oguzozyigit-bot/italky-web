@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>ITALKY • Öğretmen</title>
+  <title>ITALKY - Öğretmen</title>
   <link rel="icon" href="data:," />
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,17 +18,13 @@
       --neon-purple:#bc13fe;
 
       --glass-border: rgba(255,255,255,0.10);
-      --glass-surface: rgba(255,255,255,0.05);
-
       --text-main:#fff;
       --text-muted: rgba(255,255,255,0.65);
 
-      --italky-burgundy: rgba(140, 18, 45, .40);
+      --italky-burgundy: rgba(140, 18, 45, .42);
       --italky-burgundy-2: rgba(140, 18, 45, .18);
 
-      --footerH: 86px;
-      --headerH: 92px;
-
+      --footerH: 92px;
       --ease-elastic: cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
@@ -44,7 +40,7 @@
       display:flex; align-items:center; justify-content:center;
     }
 
-    /* background (home ile aynı ruh) */
+    /* background */
     .cosmos-bg{
       position:absolute; inset:-50%; width:200%; height:200%;
       background:#030014; z-index:0; pointer-events:none;
@@ -90,33 +86,41 @@
       }
     }
 
-    /* header: home ile aynı logo sistemi + ok */
+    /* header - HOME ile aynı */
     .header{
-      flex:0 0 var(--headerH);
+      flex:0 0 92px;
       padding: 0 18px;
       display:flex; align-items:center; justify-content:space-between;
       gap:12px;
       position:relative; z-index:20;
     }
 
-    .back-btn{
-      width:46px; height:46px;
+    .leftHead{
+      display:flex; align-items:center; gap:10px;
+      min-width:0;
+    }
+
+    .backBtn{
+      width: 44px; height: 44px;
       border-radius: 16px;
       border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(255,255,255,0.06);
+      background: rgba(0,0,0,0.18);
+      color:#fff;
+      font-weight: 1000;
+      font-size: 20px;
       display:flex; align-items:center; justify-content:center;
       cursor:pointer;
-      box-shadow: 0 18px 40px rgba(0,0,0,.35);
-      backdrop-filter: blur(10px);
-      flex: 0 0 46px;
+      box-shadow: 0 14px 30px rgba(0,0,0,0.35);
     }
-    .back-btn:active{ transform: translateY(1px); }
-    .back-btn svg{ width:22px; height:22px; stroke:#fff; stroke-width:2; fill:none; opacity:.92; }
+    .backBtn:active{ transform: scale(.96); }
 
     .mini-brand{
-      display:flex; flex-direction:column; width:fit-content; align-items:center;
+      display:flex;
+      flex-direction:column;
+      width:fit-content;
+      align-items:center;
       user-select:none;
-      cursor:pointer;
+      cursor:pointer; /* logo home */
     }
     .mini-logo{
       font-family:'Space Grotesk', sans-serif;
@@ -126,8 +130,12 @@
       text-shadow:0 0 20px rgba(255,255,255,0.3);
     }
     .mini-flag{
-      width:100%; height:4px; border-radius:4px;
-      display:flex; overflow:hidden; margin-top:4px;
+      width:100%;
+      height:4px;
+      border-radius:4px;
+      display:flex;
+      overflow:hidden;
+      margin-top:4px;
       box-shadow:0 0 10px rgba(255,255,255,0.15);
     }
     .mini-flag div{ flex:1; height:100%; }
@@ -135,176 +143,270 @@
     .f-w{ background:#fff; z-index:2; }
     .f-r{ background:#CE2B37; box-shadow:0 0 8px #CE2B37; z-index:1; }
 
-    /* sağ boşluk: bu sayfada profil yok, ama header dengesi bozulmasın */
-    .right-spacer{
-      width:46px; height:46px;
-      flex: 0 0 46px;
-      opacity:0;
-      pointer-events:none;
+    .userbox{
+      flex:1; min-width:0;
+      display:flex; align-items:center; justify-content:flex-end;
+      gap:12px;
+    }
+    .usertext{
+      min-width:0;
+      display:flex; flex-direction:column;
+      align-items:flex-end;
+      gap:2px;
+      max-width: 240px;
+    }
+    .uname{
+      font-weight: 950;
+      font-size: 13px;
+      color: rgba(255,255,255,0.92);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .plan{
+      font-weight: 900;
+      font-size: 11px;
+      color: rgba(255,255,255,0.60);
+      white-space:nowrap;
     }
 
-    /* content */
-    .content-scroll{
+    .avatar-btn{
+      width: 44px; height: 44px;
+      border: none;
+      background: transparent;
+      padding: 0;
+      border-radius: 999px;
+      overflow: hidden;
+      cursor: pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .avatar-btn:active{ transform: scale(.96); }
+    .avatar-btn img{ width:44px; height:44px; border-radius:999px; object-fit:cover; display:block; }
+    .avatar-fallback{
+      width:44px; height:44px; border-radius:999px;
+      display:flex; align-items:center; justify-content:center;
+      font-weight: 1000;
+      color: rgba(255,255,255,0.92);
+      background: radial-gradient(circle at 30% 20%, rgba(0,243,255,.18), rgba(0,0,0,0));
+      filter: drop-shadow(0 0 10px rgba(0,243,255,.22));
+      user-select:none;
+    }
+
+    /* scroll area */
+    .contentScroll{
       flex:1;
       overflow-y:auto; overflow-x:hidden;
       -webkit-overflow-scrolling: touch;
-      padding: 8px 18px calc(var(--footerH) + 10px);
-      position:relative; z-index:5;
+      padding: 10px 18px calc(var(--footerH) + 14px);
+      position:relative;
+      z-index: 5;
       scrollbar-width:none;
     }
-    .content-scroll::-webkit-scrollbar{ display:none; }
+    .contentScroll::-webkit-scrollbar{ display:none; }
 
-    .title{
-      margin: 2px 2px 12px;
-      font-size: 13px;
-      font-weight: 950;
-      color: rgba(255,255,255,0.78);
+    .pageTitle{
+      margin: 6px 2px 12px;
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+    .h1{
+      font-weight: 1000;
+      font-size: 16px;
       letter-spacing: .2px;
+      color: rgba(255,255,255,.94);
+    }
+    .h2{
+      font-weight: 850;
+      font-size: 12px;
+      color: rgba(255,255,255,.62);
     }
 
     .grid{
       display:grid;
       grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      animation: fadeInUp .6s var(--ease-elastic);
+      gap: 14px;
+      animation: fadeInUp .55s var(--ease-elastic);
     }
 
-    /* teacher card: home kart dili */
-    .card{
+    /* teacher cards */
+    .tcard{
       position:relative;
-      background: linear-gradient(160deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.01) 100%);
-      border: 1px solid var(--glass-border);
-      border-radius: 26px;
-      padding: 18px 16px;
-      display:flex;
-      flex-direction:column;
-      align-items:flex-start;
-      justify-content:space-between;
-      gap: 12px;
+      border-radius: 24px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: linear-gradient(160deg, rgba(255,255,255,0.055) 0%, rgba(255,255,255,0.012) 100%);
+      box-shadow: 0 14px 34px rgba(0,0,0,0.28);
+      overflow:hidden;
       cursor:pointer;
       user-select:none;
-      transition: all .22s ease;
-      box-shadow: 0 10px 30px -5px rgba(0,0,0,0.30);
-      aspect-ratio: 1 / 1.10;
-      overflow:hidden;
+      transition: .22s ease;
+      aspect-ratio: 1 / 1.06;
+      padding: 14px 14px 16px;
     }
-    .card::before{
+    .tcard::before{
       content:"";
       position:absolute; inset:0;
-      background: radial-gradient(900px 260px at 20% 0%, var(--italky-burgundy-2), transparent 60%);
-      opacity: .9;
+      background: radial-gradient(900px 260px at 10% 0%, var(--italky-burgundy-2), transparent 62%);
       pointer-events:none;
+      opacity:.95;
     }
-    .card:hover{ border-color: rgba(140,18,45,.45); }
-    .card:active{ transform: scale(.97); border-color: rgba(140,18,45,.60); }
+    .tcard:hover{
+      border-color: rgba(140,18,45,.40);
+      background: linear-gradient(160deg, rgba(140,18,45,.12) 0%, rgba(255,255,255,0.012) 100%);
+    }
+    .tcard:active{ transform: scale(.97); border-color: rgba(140,18,45,.58); }
 
-    .icon-box{
-      width: 56px; height: 56px;
+    /* big flag */
+    .flagBig{
+      width: 52px; height: 52px;
       border-radius: 18px;
-      background: rgba(0,0,0,0.22);
-      border: 1px solid rgba(255,255,255,0.10);
-      display:flex; align-items:center; justify-content:center;
-      box-shadow: inset 0 0 15px rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.14);
+      overflow:hidden;
+      display:flex;
+      box-shadow: inset 0 0 18px rgba(255,255,255,0.06), 0 10px 18px rgba(0,0,0,0.22);
+      position:relative;
+      z-index:2;
+      background: rgba(0,0,0,0.25);
+    }
+    .flagBig span{ flex:1; }
+    .bg{ background:#012169; } /* UK blue */
+    .br{ background:#CE1126; } /* red */
+    .wh{ background:#fff; }
+
+    /* country presets */
+    .flag-uk{ background: linear-gradient(90deg, #012169 0%, #012169 100%); }
+    .flag-de{ background: linear-gradient(180deg, #000 0 33%, #DD0000 33% 66%, #FFCE00 66% 100%); }
+    .flag-fr{ background: linear-gradient(90deg, #0055A4 0 33%, #fff 33% 66%, #EF4135 66% 100%); }
+    .flag-es{ background: linear-gradient(180deg, #AA151B 0 25%, #F1BF00 25% 75%, #AA151B 75% 100%); }
+    .flag-it{ background: linear-gradient(90deg, #009246 0 33%, #fff 33% 66%, #CE2B37 66% 100%); }
+
+    .flagBox{
+      width: 52px; height: 52px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.14);
+      overflow:hidden;
+      box-shadow: inset 0 0 18px rgba(255,255,255,0.06), 0 10px 18px rgba(0,0,0,0.22);
       position:relative;
       z-index:2;
     }
-    .icon-box svg{
-      width: 30px; height: 30px;
-      stroke: rgba(255,255,255,0.92);
-      fill: none;
-      stroke-width: 1.8;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      opacity: .95;
+
+    .topRow{
+      display:flex; align-items:center; justify-content:space-between;
+      position:relative; z-index:2;
     }
 
-    .lang{
-      position:relative; z-index:2;
+    .teacherIcon{
+      width: 44px; height: 44px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.22);
+      display:flex; align-items:center; justify-content:center;
+      box-shadow: inset 0 0 15px rgba(255,255,255,0.05);
+      position:relative;
+      z-index:2;
+    }
+    .teacherIcon svg{
+      width: 22px; height:22px;
+      stroke:#fff;
+      stroke-width:1.8;
+      fill:none;
+      stroke-linecap:round;
+      stroke-linejoin:round;
+      opacity:.95;
+    }
+
+    .tText{ margin-top: 14px; position:relative; z-index:2; }
+    .tTitle{
       font-weight: 1000;
       font-size: 14px;
-      color: rgba(255,255,255,0.94);
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
+      color: rgba(255,255,255,.94);
+      letter-spacing:.2px;
+      line-height:1.2;
     }
-    .lesson{
-      position:relative; z-index:2;
-      margin-top: 4px;
-      font-weight: 900;
+    .tSub{
+      margin-top: 6px;
+      font-weight: 850;
       font-size: 12px;
-      color: rgba(255,255,255,0.60);
+      color: rgba(255,255,255,.62);
+      line-height:1.2;
     }
-    .lesson b{ color: rgba(255,255,255,0.88); }
-
-    .flagRow{
-      position:absolute;
-      top: 16px; right: 16px;
-      display:flex; gap:8px;
-      z-index: 2;
-      opacity: .95;
+    .lessonChip{
+      margin-top: 10px;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.05);
+      color: rgba(255,255,255,0.84);
+      font-weight: 950;
+      font-size: 11px;
     }
-    .flag{
-      width: 32px; height: 22px;
-      border-radius: 8px;
-      border: 1px solid rgba(255,255,255,0.14);
-      overflow:hidden;
-      background: rgba(0,0,0,0.25);
-      box-shadow: inset 0 0 10px rgba(255,255,255,0.03);
-    }
-    .flag.uk{ background: linear-gradient(#012169 0 0), linear-gradient(#C8102E 0 0), linear-gradient(#fff 0 0);
-      background-size:100% 100%,100% 32%,100% 12%; background-position:0 0,0 50%,0 50%; background-repeat:no-repeat; }
-    .flag.de{ background: linear-gradient(#000 0 33%, #DD0000 33% 66%, #FFCE00 66% 100%); }
-    .flag.fr{ background: linear-gradient(90deg, #0055A4 0 33%, #fff 33% 66%, #EF4135 66% 100%); }
-    .flag.es{ background: linear-gradient(#AA151B 0 25%, #F1BF00 25% 75%, #AA151B 75% 100%); }
-    .flag.it{ background: linear-gradient(90deg, #009246 0 33%, #fff 33% 66%, #CE2B37 66% 100%); }
-
-    /* “Yeni Öğretmen Ekle” kartı */
-    .card.add{
-      opacity: .92;
-      background: linear-gradient(160deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.012) 100%);
-    }
-    .card.add .icon-box{
-      background: rgba(255,255,255,0.06);
-      border-color: rgba(255,255,255,0.16);
+    .lessonChip .dot{
+      width: 8px; height:8px;
+      border-radius: 99px;
+      background: rgba(0,243,255,.55);
+      box-shadow: 0 0 14px rgba(0,243,255,.18);
     }
 
-    /* footer: home gibi, ama transparan değil (karışmasın) */
+    /* add teacher card */
+    .addCard{
+      border: 1px dashed rgba(255,255,255,0.18);
+      background: rgba(255,255,255,0.03);
+    }
+    .addCard:hover{
+      border-color: rgba(0,243,255,0.35);
+      background: rgba(0,243,255,0.05);
+    }
+    .addBig{
+      width: 52px; height: 52px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.18);
+      display:flex; align-items:center; justify-content:center;
+      box-shadow: inset 0 0 15px rgba(255,255,255,0.05);
+    }
+    .addBig svg{ width: 22px; height:22px; stroke:#fff; stroke-width:2; fill:none; }
+
+    /* footer (home ile aynı) */
     .footerbar{
-      position: fixed;
-      left: 50%;
-      transform: translateX(-50%);
-      bottom: 0;
-      width: min(480px, 100vw);
-      max-width: 480px;
+      position:absolute;
+      left:0; right:0; bottom:0;
+      height: var(--footerH);
       padding: 12px 18px 14px;
       background: rgba(0,0,0,.92);
       border-top: 1px solid rgba(255,255,255,.08);
       z-index: 999;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
     }
     .links{
       display:flex;
-      gap: 18px;
+      gap:16px;
       justify-content:center;
       flex-wrap:wrap;
-      margin-bottom: 8px;
+      margin-bottom:8px;
     }
     .links a{
-      color: rgba(255,255,255,0.55);
+      color: rgba(255,255,255,0.60);
       text-decoration:none;
       font-size: 12px;
       font-weight: 800;
     }
-    .links a:active{ opacity: .85; }
-
     .footerBrand{
       text-align:center;
       font-size: 10px;
-      color: rgba(255,255,255,0.30);
-      letter-spacing: .6px;
+      color: rgba(255,255,255,0.25);
+      letter-spacing: 0.6px;
       font-weight: 800;
+      text-transform:none;
     }
 
-    @keyframes fadeInUp{ from{ transform: translateY(26px); opacity:0; } to{ transform: translateY(0); opacity:1; } }
+    @keyframes fadeInUp { from { transform: translateY(26px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
   </style>
 </head>
 
@@ -313,39 +415,180 @@
     <div class="orb orb-1"></div>
     <div class="orb orb-2"></div>
   </div>
-  <div class="noise" aria-hidden="true"></div>
+  <div class="noise"></div>
 
   <div class="mobile-frame">
-    <div class="header">
-      <button class="back-btn" id="backBtn" aria-label="Geri">
-        <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </button>
 
-      <div class="mini-brand" id="homeBrand" title="Ana sayfa">
-        <div class="mini-logo">ITALKY</div>
-        <div class="mini-flag">
-          <div class="f-g"></div><div class="f-w"></div><div class="f-r"></div>
+    <!-- HEADER (home ile aynı + geri ok) -->
+    <div class="header">
+      <div class="leftHead">
+        <button class="backBtn" id="backBtn" aria-label="Geri">←</button>
+
+        <div class="mini-brand" id="logoHome" title="Ana sayfa">
+          <div class="mini-logo">ITALKY</div>
+          <div class="mini-flag">
+            <div class="f-g"></div><div class="f-w"></div><div class="f-r"></div>
+          </div>
         </div>
       </div>
 
-      <div class="right-spacer" aria-hidden="true"></div>
+      <div class="userbox">
+        <div class="usertext">
+          <div class="uname" id="userName">—</div>
+          <div class="plan" id="userPlan">FREE</div>
+        </div>
+
+        <button class="avatar-btn" id="avatarBtn" aria-label="Profil">
+          <span class="avatar-fallback" id="avatarFallback">•</span>
+        </button>
+      </div>
     </div>
 
-    <div class="content-scroll" id="scrollRoot">
-      <div class="title">Bir dil seç — kaldığın dersten devam et.</div>
+    <div class="contentScroll" id="contentScroll">
+      <div class="pageTitle">
+        <div class="h1">Öğretmen</div>
+        <div class="h2">Bir ders seç</div>
+      </div>
 
-      <div class="grid" id="teacherGrid"></div>
-    </div>
-  </div>
+      <div class="grid">
 
-  <div class="footerbar">
-    <div class="links">
-      <a href="/pages/about.html">Hakkında</a>
-      <a href="/pages/faq.html">SSS</a>
-      <a href="/pages/privacy.html">Gizlilik</a>
-      <a href="/pages/contact.html">İletişim</a>
+        <!-- İngilizce -->
+        <div class="tcard" data-go="/pages/teacher_en.html">
+          <div class="topRow">
+            <div class="flagBox flag-uk" aria-hidden="true"></div>
+            <div class="teacherIcon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M4 19V7"/>
+                <path d="M20 19V7"/>
+                <path d="M4 7l8-4 8 4"/>
+                <path d="M7 10h10"/>
+                <path d="M8 13h8"/>
+                <path d="M9 16h6"/>
+              </svg>
+            </div>
+          </div>
+          <div class="tText">
+            <div class="tTitle">İngilizce Öğretmeni</div>
+            <div class="tSub">Telaffuz • kelime • cümle</div>
+            <div class="lessonChip"><span class="dot"></span><span id="enLessonTxt">Ders 1</span></div>
+          </div>
+        </div>
+
+        <!-- Almanca -->
+        <div class="tcard" data-go="/pages/teacher_de.html">
+          <div class="topRow">
+            <div class="flagBox flag-de" aria-hidden="true"></div>
+            <div class="teacherIcon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M12 3v18"/>
+                <path d="M6 7h12"/>
+                <path d="M7 11h10"/>
+                <path d="M8 15h8"/>
+              </svg>
+            </div>
+          </div>
+          <div class="tText">
+            <div class="tTitle">Almanca Öğretmeni</div>
+            <div class="tSub">Telaffuz • kelime • pratik</div>
+            <div class="lessonChip"><span class="dot"></span><span id="deLessonTxt">Ders 1</span></div>
+          </div>
+        </div>
+
+        <!-- Fransızca -->
+        <div class="tcard" data-go="/pages/teacher_fr.html">
+          <div class="topRow">
+            <div class="flagBox flag-fr" aria-hidden="true"></div>
+            <div class="teacherIcon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M4 18c4-8 12-8 16 0"/>
+                <path d="M7 14c2-3 8-3 10 0"/>
+                <path d="M10 10h4"/>
+              </svg>
+            </div>
+          </div>
+          <div class="tText">
+            <div class="tTitle">Fransızca Öğretmeni</div>
+            <div class="tSub">Telaffuz • kelime • cümle</div>
+            <div class="lessonChip"><span class="dot"></span><span id="frLessonTxt">Ders 1</span></div>
+          </div>
+        </div>
+
+        <!-- İspanyolca -->
+        <div class="tcard" data-go="/pages/teacher_es.html">
+          <div class="topRow">
+            <div class="flagBox flag-es" aria-hidden="true"></div>
+            <div class="teacherIcon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M6 18c2-6 10-6 12 0"/>
+                <path d="M8 12h8"/>
+                <path d="M10 9h4"/>
+              </svg>
+            </div>
+          </div>
+          <div class="tText">
+            <div class="tTitle">İspanyolca Öğretmeni</div>
+            <div class="tSub">Telaffuz • kelime • pratik</div>
+            <div class="lessonChip"><span class="dot"></span><span id="esLessonTxt">Ders 1</span></div>
+          </div>
+        </div>
+
+        <!-- İtalyanca -->
+        <div class="tcard" data-go="/pages/teacher_it.html">
+          <div class="topRow">
+            <div class="flagBox flag-it" aria-hidden="true"></div>
+            <div class="teacherIcon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M4 20c2-10 14-10 16 0"/>
+                <path d="M8 13h8"/>
+                <path d="M10 10h4"/>
+              </svg>
+            </div>
+          </div>
+          <div class="tText">
+            <div class="tTitle">İtalyanca Öğretmeni</div>
+            <div class="tSub">Telaffuz • kelime • cümle</div>
+            <div class="lessonChip"><span class="dot"></span><span id="itLessonTxt">Ders 1</span></div>
+          </div>
+        </div>
+
+        <!-- Yeni Öğretmen Ekle -->
+        <div class="tcard addCard" data-go="/pages/teachers_add.html">
+          <div class="topRow">
+            <div class="addBig" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M12 5v14"/>
+                <path d="M5 12h14"/>
+              </svg>
+            </div>
+            <div class="teacherIcon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M3 7h18"/>
+                <path d="M7 7v14"/>
+                <path d="M17 7v14"/>
+              </svg>
+            </div>
+          </div>
+          <div class="tText">
+            <div class="tTitle">Yeni Öğretmen Ekle</div>
+            <div class="tSub">Yakında…</div>
+            <div class="lessonChip"><span class="dot"></span><span>Listeye ekle</span></div>
+          </div>
+        </div>
+
+      </div>
     </div>
-    <div class="footerBrand">ItalkyAI By Ozyigit’s 2026</div>
+
+    <!-- FOOTER -->
+    <div class="footerbar">
+      <div class="links">
+        <a href="/pages/about.html">Hakkında</a>
+        <a href="/pages/faq.html">SSS</a>
+        <a href="/pages/privacy.html">Gizlilik</a>
+        <a href="/pages/contact.html">İletişim</a>
+      </div>
+      <div class="footerBrand">ItalkyAI By Ozyigit’s 2026</div>
+    </div>
+
   </div>
 
   <script type="module">
@@ -353,101 +596,60 @@
     import { STORAGE_KEY } from "/js/config.js";
 
     function safeJson(s, fb={}){ try{ return JSON.parse(s||""); }catch{ return fb; } }
-
-    // login guard
     const u = safeJson(localStorage.getItem(STORAGE_KEY), {});
+
     if(!u || !u.email || !u.isSessionActive){
       window.location.replace("/index.html");
     }
 
-    // header actions
-    document.getElementById("backBtn")?.addEventListener("click", ()=>{
-      if(history.length > 1) history.back();
-      else window.location.href = "/pages/home.html";
-    });
-    document.getElementById("homeBrand")?.addEventListener("click", ()=>{
-      window.location.href = "/pages/home.html";
-    });
+    // header user
+    const userName = document.getElementById("userName");
+    const userPlan = document.getElementById("userPlan");
+    const full = (u.fullname || u.name || u.display_name || u.email || "—").trim();
+    if(userName) userName.textContent = full;
+    if(userPlan) userPlan.textContent = String(u.plan || "FREE").toUpperCase();
 
-    // lesson state (her dil ayrı)
-    function lessonKey(code){ return `italky_teacher_lesson::${code}`; }
-    function getLesson(code){
-      const n = parseInt(localStorage.getItem(lessonKey(code)) || "1", 10);
-      return (Number.isFinite(n) && n > 0) ? n : 1;
-    }
+    // avatar
+    const avatarBtn = document.getElementById("avatarBtn");
+    const fallback = document.getElementById("avatarFallback");
+    try{
+      const pic = String(u.picture || u.avatar || u.avatar_url || "").trim();
+      if(pic){
+        avatarBtn.innerHTML = `<img src="${pic}" alt="avatar">`;
+      }else{
+        const letter = (full && full[0]) ? full[0].toUpperCase() : "•";
+        if(fallback) fallback.textContent = letter;
+      }
+    }catch{}
 
-    // pro line icon (teacher) — aynı, her kartta kullanacağız
-    const ICON_TEACHER = `
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M4 19h16" />
-        <path d="M6 19v-3a3 3 0 0 1 3-3h6a3 3 0 0 1 3 3v3" />
-        <path d="M9.2 9.6a3.4 3.4 0 1 0 5.6 0" />
-        <path d="M8 6.5l4-2.2 4 2.2" />
-        <path d="M18 7v4" />
-      </svg>
-    `;
+    avatarBtn?.addEventListener("click", ()=>{ window.location.href = "/pages/profile.html"; });
 
-    const ICON_ADD = `
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M12 5v14" />
-        <path d="M5 12h14" />
-        <path d="M7 4h10" opacity=".0" />
-      </svg>
-    `;
+    // nav
+    document.getElementById("backBtn")?.addEventListener("click", ()=>{ window.location.href = "/pages/home.html"; });
+    document.getElementById("logoHome")?.addEventListener("click", ()=>{ window.location.href = "/pages/home.html"; });
 
-    const TEACHERS = [
-      { code:"en", title:"İngilizce Öğretmeni", flag:"uk", href:"/pages/teacher.html?lang=en" },
-      { code:"de", title:"Almanca Öğretmeni",  flag:"de", href:"/pages/teacher.html?lang=de" },
-      { code:"fr", title:"Fransızca Öğretmeni",flag:"fr", href:"/pages/teacher.html?lang=fr" },
-      { code:"es", title:"İspanyolca Öğretmeni",flag:"es", href:"/pages/teacher.html?lang=es" },
-      { code:"it", title:"İtalyanca Öğretmeni", flag:"it", href:"/pages/teacher.html?lang=it" },
-    ];
-
-    const grid = document.getElementById("teacherGrid");
-
-    function cardHtml(t){
-      const lesson = getLesson(t.code);
-      return `
-        <div class="card" data-go="${t.href}">
-          <div class="flagRow"><div class="flag ${t.flag}" aria-hidden="true"></div></div>
-          <div class="icon-box">${ICON_TEACHER}</div>
-          <div>
-            <div class="lang">${t.title}</div>
-            <div class="lesson">Ders <b>${lesson}</b></div>
-          </div>
-        </div>
-      `;
-    }
-
-    function addCardHtml(){
-      return `
-        <div class="card add" data-go="/pages/teachers_add.html">
-          <div class="icon-box">${ICON_ADD}</div>
-          <div>
-            <div class="lang">Yeni Öğretmen Ekle</div>
-            <div class="lesson">Yakında</div>
-          </div>
-        </div>
-      `;
-    }
-
-    function render(){
-      if(!grid) return;
-      grid.innerHTML = TEACHERS.map(cardHtml).join("") + addCardHtml();
-      grid.querySelectorAll("[data-go]").forEach(el=>{
-        el.addEventListener("click", ()=>{
-          const go = el.getAttribute("data-go");
-          if(go) window.location.href = go;
-        });
+    document.querySelectorAll("[data-go]").forEach(el=>{
+      el.addEventListener("click", ()=>{
+        const go = el.getAttribute("data-go");
+        if(go) window.location.href = go;
       });
-    }
-
-    render();
-
-    window.addEventListener("storage", (e)=>{
-      if(!e || !e.key) return;
-      if(String(e.key).startsWith("italky_teacher_lesson::")) render();
     });
+
+    // Ders numarası (şimdilik localStorage’dan basit okuma; yoksa Ders 1)
+    // KEY önerisi: italky_teacher_progress::<lang> = { lesson: 1 }
+    function setLesson(id, lang){
+      try{
+        const k = `italky_teacher_progress::${lang}`;
+        const d = safeJson(localStorage.getItem(k), {});
+        const n = parseInt(d.lesson, 10);
+        if(n && n > 0) document.getElementById(id).textContent = `Ders ${n}`;
+      }catch{}
+    }
+    setLesson("enLessonTxt","en");
+    setLesson("deLessonTxt","de");
+    setLesson("frLessonTxt","fr");
+    setLesson("esLessonTxt","es");
+    setLesson("itLessonTxt","it");
   </script>
 </body>
 </html>
