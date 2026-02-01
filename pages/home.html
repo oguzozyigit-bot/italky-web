@@ -1,361 +1,323 @@
-<!-- italky-web/pages/home.html -->
 <!DOCTYPE html>
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Italky - Ana Menü</title>
+  <title>ITALKY - Ana Menü</title>
   <link rel="icon" href="data:," />
 
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+
   <style>
-    :root{
-      --bg1:#07101f;            /* lacivert */
-      --bg2:#02040a;            /* koyu */
-      --wine:#4b0f1d;           /* bordo */
-      --wine2:#7a1830;          /* bordo açık */
-      --text:rgba(255,255,255,.92);
-      --soft:rgba(255,255,255,.62);
-      --border:rgba(255,255,255,.10);
-      --border2:rgba(255,255,255,.06);
-      --shadow:0 22px 70px rgba(0,0,0,.65);
-      --frameW:min(480px, calc(100vw - 18px));
+    :root {
+      /* ITALKY PALET */
+      --bg-void: #030014;
+      --neon-cyan: #00f3ff;
+      --neon-purple: #bc13fe;
+      --neon-pink: #ff00aa;
+      
+      --glass-surface: rgba(255, 255, 255, 0.05);
+      --glass-border: rgba(255, 255, 255, 0.1);
+      
+      --text-main: #ffffff;
+      --text-muted: rgba(255, 255, 255, 0.65);
+      
+      --ease-elastic: cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
-    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-    html,body{ margin:0; padding:0; width:100%; height:100dvh; overflow:hidden;
-      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-      background:
-        radial-gradient(900px 520px at 50% 10%, rgba(20,80,255,.14), transparent 62%),
-        radial-gradient(900px 520px at 50% 92%, rgba(122,24,48,.18), transparent 62%),
-        linear-gradient(180deg, var(--bg1), var(--bg2));
-      color:var(--text);
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+
+    html, body {
+      margin: 0; padding: 0; width: 100%; height: 100dvh;
+      overflow: hidden;
+      font-family: 'Outfit', sans-serif;
+      background-color: var(--bg-void);
+      color: var(--text-main);
+      display: flex; align-items: center; justify-content: center;
     }
 
-    .frame{
-      width:100%;
-      max-width:480px;
-      height:100%;
-      margin:0 auto;
-      position:relative;
-      overflow:hidden;
-      padding: 16px 14px 76px;
+    /* --- BACKGROUND FX --- */
+    .cosmos-bg {
+      position: absolute; inset: -50%; width: 200%; height: 200%;
+      background: #030014; z-index: 0;
+    }
+    .orb {
+      position: absolute; border-radius: 50%;
+      filter: blur(80px); opacity: 0.5;
+      animation: floatOrbit 25s infinite alternate ease-in-out;
+    }
+    .orb-1 {
+      top: 10%; left: 10%; width: 60vw; height: 60vw;
+      background: radial-gradient(circle, var(--neon-purple), transparent 70%);
+    }
+    .orb-2 {
+      bottom: 10%; right: 10%; width: 50vw; height: 50vw;
+      background: radial-gradient(circle, var(--neon-cyan), transparent 70%);
+      animation-delay: -5s;
+    }
+    @keyframes floatOrbit {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(10%, -10%) scale(1.1); }
     }
 
-    /* TOP */
-    .top{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      padding: 10px 2px 12px;
+    .noise {
+      position: absolute; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none; mix-blend-mode: overlay; z-index: 1;
     }
 
-    .brand{
-      display:flex;
-      flex-direction:column;
-      align-items:flex-start;
-      gap:4px;
-      min-width:0;
+    /* --- FRAME --- */
+    .mobile-frame {
+      width: 100%; max-width: 480px; height: 100%;
+      position: relative; z-index: 10;
+      display: flex; flex-direction: column;
+      background: rgba(5, 5, 10, 0.4);
+      backdrop-filter: blur(30px);
     }
-    .brand .name{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      font-weight:1000;
-      letter-spacing:.3px;
-      font-size:18px;
-      line-height:1;
-      white-space:nowrap;
+    @media (min-width: 520px) {
+      .mobile-frame {
+        height: 92vh; border-radius: 40px;
+        border: 1px solid rgba(255,255,255,0.1);
+        box-shadow: 0 40px 100px -20px rgba(0,0,0,0.8);
+      }
     }
 
-    .flag{
-      display:inline-flex;
-      gap:6px;
-      align-items:center;
-      margin-top:2px;
-    }
-    .flag span{
-      width:22px;
-      height:4px;
-      border-radius:99px;
-      display:inline-block;
-      opacity:.95;
-    }
-    .flag .g{ background:#0b8f3c; }
-    .flag .w{ background:#ffffff; opacity:.85; }
-    .flag .r{ background:#c0182f; }
-
-    .brand .sub{
-      font-size:12px;
-      font-weight:900;
-      color:var(--soft);
-      letter-spacing:.2px;
+    /* --- HEADER --- */
+    .header {
+      height: 90px; padding: 0 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: relative; z-index: 20;
     }
 
-    .chip{
-      padding: 8px 10px;
-      border-radius: 999px;
-      border:1px solid var(--border);
-      background: rgba(255,255,255,.04);
-      color: rgba(255,255,255,.85);
-      font-weight: 950;
-      font-size: 12px;
-      white-space:nowrap;
-      box-shadow: 0 12px 30px rgba(0,0,0,.35);
-      cursor:pointer;
-      user-select:none;
+    /* Logo Lock System */
+    .mini-brand { display: flex; flex-direction: column; width: fit-content; align-items: center; }
+    .mini-logo {
+      font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 26px;
+      letter-spacing: -1px; color: #fff; line-height: 1; white-space: nowrap;
+      text-shadow: 0 0 20px rgba(255,255,255,0.3);
     }
-    .chip:active{ transform: translateY(1px); }
-
-    /* GRID */
-    .panel{
-      margin-top: 10px;
-      border-radius: 26px;
-      border: 1px solid var(--border);
-      background: rgba(0,0,0,.18);
-      box-shadow: var(--shadow);
-      padding: 14px;
-      backdrop-filter: blur(12px);
+    .mini-flag {
+      width: 100%; height: 4px; border-radius: 4px; display: flex; overflow: hidden; margin-top: 4px;
+      box-shadow: 0 0 10px rgba(255,255,255,0.15);
     }
+    .mini-flag div { flex: 1; height: 100%; }
+    .f-g { background: #009246; box-shadow: 0 0 8px #009246; z-index:1; } 
+    .f-w { background: #fff; z-index:2; } 
+    .f-r { background: #CE2B37; box-shadow: 0 0 8px #CE2B37; z-index:1; }
 
-    .grid{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
+    /* Profile Button */
+    .profile-btn {
+      width: 44px; height: 44px; border-radius: 14px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: 0.2s; overflow: hidden;
     }
+    .profile-btn:active { transform: scale(0.95); }
+    .profile-btn img { width: 100%; height: 100%; object-fit: cover; }
+    .profile-icon { font-size: 20px; color: #fff; }
 
-    .card{
-      border-radius: 22px;
-      border: 1px solid var(--border2);
-      background:
-        radial-gradient(900px 260px at 20% 0%, rgba(122,24,48,.18), transparent 60%),
-        radial-gradient(900px 260px at 80% 0%, rgba(20,80,255,.16), transparent 60%),
-        rgba(255,255,255,.03);
-      box-shadow: 0 14px 40px rgba(0,0,0,.35);
-      padding: 14px;
-      cursor:pointer;
-      user-select:none;
-      min-height: 120px;
-      display:flex;
-      flex-direction:column;
-      justify-content:space-between;
-      gap:10px;
-      position:relative;
-      overflow:hidden;
+    /* --- GRID MENU --- */
+    .menu-scroll {
+      flex: 1; overflow-y: auto; overflow-x: hidden;
+      padding: 10px 20px 140px; /* Footer payı */
+      scrollbar-width: none; -webkit-overflow-scrolling: touch;
     }
-    .card:active{ transform: translateY(1px); }
+    .menu-scroll::-webkit-scrollbar { display: none; }
 
-    .card::after{
-      content:"";
-      position:absolute;
-      inset:-40%;
-      background: linear-gradient(120deg, transparent 40%, rgba(255,255,255,.06) 50%, transparent 60%);
-      transform: rotate(12deg);
-      opacity:.55;
-      pointer-events:none;
+    .grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+      animation: fadeInUp 0.8s var(--ease-elastic);
     }
 
-    .ico{
-      width:44px; height:44px;
-      border-radius: 16px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.18);
-      flex:0 0 44px;
+    /* MODULE CARD */
+    .card {
+      position: relative;
+      background: linear-gradient(160deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.01) 100%);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      padding: 20px 16px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+      gap: 12px; cursor: pointer; user-select: none;
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      box-shadow: 0 10px 30px -5px rgba(0,0,0,0.3);
+      aspect-ratio: 1 / 1.1; /* Kareye yakın */
+      overflow: hidden;
     }
 
-    .ico svg{
-      width:22px; height:22px;
-      stroke: rgba(255,255,255,.92);
-      fill: none;
-      stroke-width: 2;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      opacity:.95;
+    /* Card Glow Effect */
+    .card::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(circle at 50% 0%, rgba(255,255,255,0.1), transparent 70%);
+      opacity: 0; transition: 0.3s;
+    }
+    .card:hover::before, .card:active::before { opacity: 1; }
+
+    .card:active { transform: scale(0.96); border-color: rgba(255,255,255,0.3); }
+
+    /* Icons */
+    .icon-box {
+      width: 56px; height: 56px; border-radius: 18px;
+      background: rgba(0,0,0,0.2);
+      border: 1px solid rgba(255,255,255,0.1);
+      display: flex; align-items: center; justify-content: center;
+      transition: 0.3s;
+      box-shadow: inset 0 0 15px rgba(255,255,255,0.05);
+    }
+    .card:hover .icon-box { 
+      transform: translateY(-5px); 
+      background: rgba(255,255,255,0.1);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.3), 0 0 15px var(--neon-cyan);
+      border-color: rgba(255,255,255,0.3);
+    }
+    
+    .icon-box svg { width: 28px; height: 28px; stroke-width: 1.8; color: #fff; }
+
+    .label { font-size: 15px; font-weight: 700; color: #fff; line-height: 1.2; letter-spacing: 0.3px; }
+    .sub { font-size: 11px; color: var(--text-muted); font-weight: 500; margin-top: 2px; }
+
+    /* Special Card (Full Width) */
+    .card.full { grid-column: span 2; aspect-ratio: auto; flex-direction: row; justify-content: flex-start; text-align: left; padding: 20px; }
+    .card.full .icon-box { margin-right: 16px; }
+    .card.full:hover .icon-box { box-shadow: 0 10px 20px rgba(0,0,0,0.3), 0 0 15px var(--neon-purple); }
+
+    /* --- FOOTER --- */
+    .footerbar {
+      position: absolute; bottom: 0; width: 100%; padding: 20px;
+      background: linear-gradient(to top, #000 10%, transparent 100%);
+      display: flex; flex-direction: column; align-items: center; gap: 12px;
+      z-index: 30; pointer-events: none;
+    }
+    .links { display: flex; gap: 20px; pointer-events: auto; }
+    .links a {
+      color: rgba(255,255,255,0.5); text-decoration: none; font-size: 12px; font-weight: 600; transition: 0.2s;
+    }
+    .links a:hover { color: var(--neon-cyan); text-shadow: 0 0 8px var(--neon-cyan); }
+    
+    .footerBrand { 
+      font-size: 10px; color: rgba(255,255,255,0.2); letter-spacing: 2px; text-transform: uppercase; font-weight: 700;
     }
 
-    .ttl{
-      font-weight: 1000;
-      font-size: 14px;
-      letter-spacing:.2px;
-      color: rgba(255,255,255,.92);
-      margin-top: 8px;
-    }
-    .desc{
-      font-weight: 850;
-      font-size: 12px;
-      color: rgba(255,255,255,.62);
-      line-height:1.25;
-    }
-
-    /* Footer */
-    .foot{
-      position: fixed;
-      left: 50%;
-      transform: translateX(-50%);
-      bottom: 0;
-      width: var(--frameW);
-      padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
-      border-top: 1px solid rgba(255,255,255,.06);
-      background: rgba(0,0,0,.72);
-      backdrop-filter: blur(12px);
-      text-align:center;
-    }
-    .foot a{
-      color: rgba(255,255,255,.70);
-      text-decoration:none;
-      font-weight: 900;
-      font-size: 12px;
-      margin: 0 8px;
-      white-space:nowrap;
-    }
-    .foot .copy{
-      margin-top:6px;
-      font-size: 11px;
-      font-weight: 900;
-      color: rgba(255,255,255,.55);
-    }
-
-    @media (max-width: 360px){
-      .card{ min-height: 112px; }
-      .grid{ gap:10px; }
-    }
+    @keyframes fadeInUp { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
   </style>
 </head>
 
 <body>
-  <div class="frame">
+  <div class="cosmos-bg">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+  </div>
+  <div class="noise"></div>
 
-    <div class="top">
-      <div class="brand">
-        <div class="name">
-          ITALKY
-          <span class="flag" aria-hidden="true">
-            <span class="g"></span><span class="w"></span><span class="r"></span>
-          </span>
+  <div class="mobile-frame">
+    
+    <div class="header">
+      <div class="mini-brand">
+        <div class="mini-logo">ITALKY</div>
+        <div class="mini-flag">
+          <div class="f-g"></div><div class="f-w"></div><div class="f-r"></div>
         </div>
-        <div class="sub">Hızlı çeviri • pratik öğrenme</div>
       </div>
 
-      <div class="chip" id="profileBtn">Profil</div>
+      <div class="profile-btn" id="profileBtn" aria-label="Profil">
+        <svg class="profile-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+      </div>
     </div>
 
-    <div class="panel">
+    <div class="menu-scroll">
       <div class="grid">
 
-        <!-- Karşılıklı Konuş -->
-        <div class="card" data-go="/pages/translate.html">
-          <div class="ico" aria-hidden="true">
-            <svg viewBox="0 0 24 24">
-              <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/>
-              <path d="M8 9h8"/><path d="M8 13h6"/>
-            </svg>
+        <div class="card" onclick="window.location.href='/pages/translate.html'">
+          <div class="icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
           </div>
           <div>
-            <div class="ttl">Karşılıklı Konuş</div>
-            <div class="desc">İki kişi konuşsun, anında çevirsin.</div>
+            <div class="label">Diyalog</div>
+            <div class="sub">Canlı Konuşma</div>
           </div>
         </div>
 
-        <!-- Anlık Çeviri (tek kişi) -->
-        <div class="card" data-go="/pages/live_translate.html">
-          <div class="ico" aria-hidden="true">
-            <svg viewBox="0 0 24 24">
-              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
-              <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-              <path d="M8 23h8"/>
-            </svg>
+        <div class="card" onclick="window.location.href='/pages/live_translate.html'">
+          <div class="icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
           </div>
           <div>
-            <div class="ttl">Anlık Çeviri</div>
-            <div class="desc">Konuş, yazıya döksün ve çevirsin.</div>
+            <div class="label">Hızlı Çeviri</div>
+            <div class="sub">Tek Yönlü</div>
           </div>
         </div>
 
-        <!-- Fotoğraftan Çeviri -->
-        <div class="card" data-go="/pages/photo_translate.html">
-          <div class="ico" aria-hidden="true">
-            <svg viewBox="0 0 24 24">
-              <path d="M4 7h4l2-2h4l2 2h4v12H4z"/>
-              <circle cx="12" cy="13" r="3"/>
-            </svg>
+        <div class="card" onclick="window.location.href='/pages/photo_translate.html'">
+          <div class="icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
           </div>
           <div>
-            <div class="ttl">Fotoğraftan Çeviri</div>
-            <div class="desc">Menü/etiket çek, Türkçesini gör.</div>
+            <div class="label">Kamera</div>
+            <div class="sub">Görsel Çeviri</div>
           </div>
         </div>
 
-        <!-- Sohbet -->
-        <div class="card" data-go="/pages/chat.html">
-          <div class="ico" aria-hidden="true">
-            <svg viewBox="0 0 24 24">
-              <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/>
-            </svg>
+        <div class="card" onclick="window.location.href='/pages/chat.html'">
+          <div class="icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10H12V2z"></path><path d="M12 2a10 10 0 0 1 10 10h-10z" opacity="0.5"></path></svg>
           </div>
           <div>
-            <div class="ttl">Sohbet</div>
-            <div class="desc">Soru sor, pratik yap.</div>
+            <div class="label">AI Asistan</div>
+            <div class="sub">Sohbet & Soru</div>
           </div>
         </div>
 
-        <!-- Öğretmen -->
-        <div class="card" data-go="/pages/teacher.html">
-          <div class="ico" aria-hidden="true">
-            <svg viewBox="0 0 24 24">
-              <path d="M22 10l-10 5L2 10l10-5z"/>
-              <path d="M6 12v5c3 2 9 2 12 0v-5"/>
-            </svg>
+        <div class="card full" onclick="window.location.href='/pages/teacher.html'">
+          <div class="icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
           </div>
-          <div>
-            <div class="ttl">Öğretmen</div>
-            <div class="desc">Ders + telaffuz + mini sınav.</div>
+          <div style="text-align:left;">
+            <div class="label">Öğretmen Modu</div>
+            <div class="sub">Ders, Telaffuz ve Sınav</div>
           </div>
         </div>
 
-        <!-- Online Sohbet (ileride) -->
-        <div class="card" data-go="/pages/online_chat.html">
-          <div class="ico" aria-hidden="true">
-            <svg viewBox="0 0 24 24">
-              <path d="M16 8a6 6 0 1 0-11 4l-2 3 3-1a6 6 0 0 0 10-6z"/>
-              <path d="M22 12a5 5 0 0 1-5 5h-2l-3 2 1-3"/>
-            </svg>
+        <div class="card full" style="opacity:0.6;">
+          <div class="icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
           </div>
-          <div>
-            <div class="ttl">Online Sohbet</div>
-            <div class="desc">Yazdığını çevirip karşıya yolla.</div>
+          <div style="text-align:left;">
+            <div class="label">Global Sohbet</div>
+            <div class="sub">Yakında...</div>
           </div>
         </div>
 
       </div>
     </div>
 
-    <div class="foot">
-      <div>
-        <a href="/pages/about.html">Hakkımızda</a>
+    <div class="footerbar">
+      <div class="links">
+        <a href="/pages/about.html">Hakkında</a>
         <a href="/pages/faq.html">SSS</a>
         <a href="/pages/privacy.html">Gizlilik</a>
         <a href="/pages/contact.html">İletişim</a>
       </div>
-      <div class="copy">ItalkyAI By Ozyigit's 2026</div>
+      <div class="footerBrand">ItalkyAI By Ozyigit's 2026</div>
     </div>
 
   </div>
 
-  <script>
-    // navigasyon
-    document.querySelectorAll("[data-go]").forEach(el=>{
-      el.addEventListener("click", ()=> {
-        const go = el.getAttribute("data-go");
-        if(go) location.href = go;
-      });
-    });
+  <script type="module">
+    import { STORAGE_KEY } from "/js/config.js";
+    
+    // Basit Profil Resmi Yükleme Mantığı (localStorage'dan)
+    const profileBtn = document.getElementById("profileBtn");
+    try {
+      const u = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+      if(u && u.picture) {
+        profileBtn.innerHTML = `<img src="${u.picture}" alt="Profil">`;
+      }
+    } catch(e) { console.log("Profil resmi yüklenemedi"); }
 
-    // profil butonu (şimdilik translate sayfasına değil, ileride profil.html)
-    document.getElementById("profileBtn")?.addEventListener("click", ()=>{
-      location.href = "/pages/profile.html";
+    profileBtn.addEventListener("click", () => {
+      window.location.href = "/pages/profile.html"; // Profil sayfasına git
     });
   </script>
 </body>
