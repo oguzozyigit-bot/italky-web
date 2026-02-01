@@ -26,9 +26,11 @@
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
 
+    /* 1. Sayfa Çerçevesini Sabitle */
     html, body {
-      margin: 0; padding: 0; width: 100%; height: 100dvh;
-      overflow: hidden;
+      margin: 0; padding: 0; width: 100%; height: 100%;
+      overflow: hidden; /* Dış scroll'u kapat */
+      position: fixed; /* iOS zıplamasını önle */
       font-family: 'Outfit', sans-serif;
       background-color: var(--bg-void);
       color: var(--text-main);
@@ -38,7 +40,7 @@
     /* --- BACKGROUND FX --- */
     .cosmos-bg {
       position: absolute; inset: -50%; width: 200%; height: 200%;
-      background: #030014; z-index: 0;
+      background: #030014; z-index: 0; pointer-events: none;
     }
     .orb {
       position: absolute; border-radius: 50%;
@@ -78,12 +80,14 @@
         height: 92vh; border-radius: 40px;
         border: 1px solid rgba(255,255,255,0.1);
         box-shadow: 0 40px 100px -20px rgba(0,0,0,0.8);
+        overflow: hidden; /* Taşmayı önle */
       }
     }
 
     /* --- TOP BAR --- */
     .topbar {
-      height: 100px; display: flex; align-items: center; justify-content: space-between;
+      flex: 0 0 100px; /* Sabit yükseklik */
+      display: flex; align-items: center; justify-content: space-between;
       padding: 0 24px; position: relative; z-index: 20;
     }
 
@@ -110,10 +114,14 @@
     .mini-flag div { flex: 1; height: 100%; }
     .f-g { background: #009246; } .f-w { background: #fff; } .f-r { background: #CE2B37; }
 
-    /* --- CONTENT AREA --- */
+    /* --- CONTENT AREA (SCROLL FIX) --- */
     .page-content {
-      flex: 1; overflow-y: auto; padding: 10px 20px 120px;
-      display: flex; flex-direction: column; gap: 20px; scrollbar-width: none;
+      flex: 1; /* Kalan alanı doldur */
+      overflow-y: auto; /* Dikey kaydırma */
+      -webkit-overflow-scrolling: touch; /* Mobilde akıcı kaydırma */
+      padding: 10px 20px 160px; /* Footer payı */
+      display: flex; flex-direction: column; gap: 20px;
+      position: relative; z-index: 5;
     }
     .page-content::-webkit-scrollbar { display: none; }
 
@@ -122,6 +130,7 @@
       border: 1px solid var(--glass-border); border-radius: 32px;
       padding: 30px 24px; position: relative; overflow: hidden;
       animation: fadeInUp 0.8s var(--ease-elastic);
+      flex-shrink: 0;
     }
 
     h1 {
@@ -153,7 +162,7 @@
     /* --- FOOTER --- */
     .footerbar {
       position: absolute; bottom: 0; width: 100%; padding: 24px;
-      background: linear-gradient(to top, #000 0%, transparent 100%);
+      background: linear-gradient(to top, #000 20%, transparent 100%);
       display: flex; flex-direction: column; align-items: center; gap: 14px;
       z-index: 30; pointer-events: none;
     }
