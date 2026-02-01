@@ -3,32 +3,33 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>ITALKY - Geleceğin Girişi</title>
+  <title>ITALKY - Neon Giriş</title>
 
   <link rel="icon" href="data:," />
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
 
   <style>
     :root {
-      /* Renk Paleti: Deep Cyberpunk / Elegant Tech */
-      --bg-dark: #030014;
-      --primary: #4f46e5;
-      --secondary: #ec4899;
-      --accent: #06b6d4;
+      /* CANLI RENK PALETİ (VIVID) */
+      --bg-dark: #050208; /* Derin siyah/mor taban */
       
-      --glass-surface: rgba(255, 255, 255, 0.03);
-      --glass-border: rgba(255, 255, 255, 0.08);
-      --glass-highlight: rgba(255, 255, 255, 0.2);
+      --neon-blue: #00f3ff;
+      --neon-pink: #ff00aa;
+      --neon-purple: #bc13fe;
+      --neon-green: #0aff68;
+      
+      --glass-surface: rgba(255, 255, 255, 0.06);
+      --glass-border: rgba(255, 255, 255, 0.15);
+      --glass-glow: rgba(255, 255, 255, 0.25);
       
       --text-main: #ffffff;
-      --text-muted: rgba(255, 255, 255, 0.6);
+      --text-muted: rgba(255, 255, 255, 0.75);
       
-      --frameW: min(480px, calc(100vw - 20px));
-      --ease-elastic: cubic-bezier(0.34, 1.56, 0.64, 1);
+      --ease-out-back: cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
@@ -36,35 +37,35 @@
     html, body {
       margin: 0; padding: 0; width: 100%; height: 100dvh;
       overflow: hidden;
-      font-family: 'Inter', sans-serif;
+      font-family: 'Outfit', sans-serif; /* Daha modern, yuvarlak hatlı font */
       background-color: var(--bg-dark);
       color: var(--text-main);
       display: flex; align-items: center; justify-content: center;
     }
 
-    /* --- BACKGROUND FX --- */
+    /* --- VIVID AMBIENT BACKGROUND --- */
     .ambient-bg {
       position: absolute; inset: -50%;
       width: 200%; height: 200%;
       background: 
-        radial-gradient(circle at 50% 50%, rgba(79, 70, 229, 0.15) 0%, transparent 50%),
-        radial-gradient(circle at 10% 20%, rgba(236, 72, 153, 0.15) 0%, transparent 40%),
-        radial-gradient(circle at 90% 80%, rgba(6, 182, 212, 0.15) 0%, transparent 40%);
-      filter: blur(60px);
-      animation: ambientSpin 20s linear infinite;
+        radial-gradient(circle at 50% 50%, rgba(188, 19, 254, 0.35) 0%, transparent 60%),
+        radial-gradient(circle at 15% 25%, rgba(0, 243, 255, 0.30) 0%, transparent 45%),
+        radial-gradient(circle at 85% 75%, rgba(255, 0, 170, 0.30) 0%, transparent 45%);
+      filter: blur(50px);
+      animation: ambientPulse 12s ease-in-out infinite alternate;
       z-index: 0;
-      opacity: 0.8;
+      opacity: 1; /* Parlaklığı artırdık */
     }
-    @keyframes ambientSpin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+    @keyframes ambientPulse {
+      0% { transform: scale(1) rotate(0deg); filter: blur(50px); }
+      100% { transform: scale(1.1) rotate(5deg); filter: blur(70px); }
     }
 
-    /* Noise Texture Overlay for realism */
+    /* Noise Texture (Film Grain) */
     .noise-overlay {
       position: absolute; inset: 0;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.07'/%3E%3C/svg%3E");
-      opacity: 0.5; pointer-events: none; z-index: 1;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      opacity: 0.6; pointer-events: none; z-index: 1; mix-blend-mode: overlay;
     }
 
     /* --- MAIN FRAME --- */
@@ -72,231 +73,240 @@
       width: 100%; max-width: 480px; height: 100%;
       position: relative; z-index: 10;
       display: flex; flex-direction: column;
-      background: rgba(10, 10, 15, 0.4);
-      backdrop-filter: blur(20px);
+      background: rgba(18, 18, 24, 0.2); /* Daha şeffaf */
+      backdrop-filter: blur(25px);
       overflow: hidden;
       transition: all 0.5s ease;
     }
 
     @media (min-width: 520px) {
       .mobile-frame {
-        height: 90vh;
-        border-radius: 32px;
+        height: 92vh;
+        border-radius: 36px;
         border: 1px solid var(--glass-border);
         box-shadow: 
-          0 0 0 1px rgba(0,0,0,0.5),
-          0 25px 50px -12px rgba(0, 0, 0, 0.7),
-          0 0 80px rgba(79, 70, 229, 0.15); /* Glow around frame */
+          0 0 0 1px rgba(255,255,255,0.05),
+          0 30px 80px -10px rgba(0,0,0,0.8),
+          0 0 120px rgba(188, 19, 254, 0.2); /* Mor dış parıltı */
       }
     }
 
     /* --- TOP BAR --- */
     .topbar {
-      height: 80px; display: flex; align-items: center; justify-content: center;
+      height: 90px; display: flex; align-items: center; justify-content: center;
       position: relative; z-index: 20;
     }
     
     .brand {
-      display: flex; flex-direction: column; align-items: center; gap: 8px;
-      animation: slideDown 0.8s var(--ease-elastic);
+      display: flex; flex-direction: column; align-items: center; gap: 10px;
+      animation: slideDown 1s var(--ease-out-back);
     }
     
     .logoText {
       font-family: 'Space Grotesk', sans-serif;
-      font-weight: 700; font-size: 36px; line-height: 1;
-      letter-spacing: -1px;
-      background: linear-gradient(135deg, #fff 20%, #a5b4fc 100%);
+      font-weight: 800; font-size: 42px; line-height: 1;
+      letter-spacing: -1.5px;
+      /* Canlı Gradient Text */
+      background: linear-gradient(to right, #fff 10%, var(--neon-blue) 50%, var(--neon-purple) 90%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      text-shadow: 0 0 30px rgba(255,255,255,0.2);
+      filter: drop-shadow(0 0 15px rgba(0, 243, 255, 0.3));
     }
 
-    /* Flagbar Redesign: Glowing Pill */
+    /* Flagbar: Neon Colors */
     .flagbar {
-      width: 40px; height: 4px; border-radius: 20px;
+      width: 42px; height: 5px; border-radius: 99px;
       display: flex; overflow: hidden;
-      box-shadow: 0 0 15px rgba(255,255,255,0.3);
+      box-shadow: 0 0 20px rgba(255,255,255,0.4);
     }
     .flagbar div { flex: 1; height: 100%; }
-    .f-green { background: #009246; }
-    .f-white { background: #ffffff; }
-    .f-red { background: #CE2B37; }
+    .f-green { background: #00ff41; box-shadow: 0 0 10px #00ff41; z-index:2; }
+    .f-white { background: #ffffff; z-index:2; }
+    .f-red { background: #ff003c; box-shadow: 0 0 10px #ff003c; z-index:2; }
 
     /* --- STAGE --- */
     .stage {
       flex: 1; display: flex; flex-direction: column; 
       align-items: center; justify-content: center;
-      padding: 20px; gap: 30px;
+      padding: 24px; gap: 32px;
       position: relative;
     }
 
-    /* 3D Glass Card */
+    /* Vivid Glass Card */
     .heroCard {
       width: 100%;
-      background: linear-gradient(160deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%);
+      background: linear-gradient(145deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.01) 100%);
       border: 1px solid var(--glass-border);
-      border-top-color: var(--glass-highlight);
-      border-radius: 28px;
-      padding: 30px 24px;
+      border-left: 1px solid rgba(255,255,255,0.2);
+      border-radius: 32px;
+      padding: 32px 24px;
       text-align: center;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+      box-shadow: 
+        0 20px 50px rgba(0,0,0,0.4),
+        inset 0 0 20px rgba(255,255,255,0.03);
       position: relative;
       overflow: hidden;
-      animation: scaleIn 0.8s 0.1s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+      animation: zoomIn 0.8s 0.2s var(--ease-out-back) backwards;
     }
 
-    /* Card Inner Glow Shine */
-    .heroCard::before {
+    /* Card Rainbow Sheen */
+    .heroCard::after {
       content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-      background: radial-gradient(circle, rgba(255,255,255,0.07) 0%, transparent 60%);
-      transform: rotate(30deg); pointer-events: none;
+      background: conic-gradient(from 0deg at 50% 50%, transparent 0deg, rgba(255,255,255,0.05) 30deg, transparent 60deg);
+      animation: sheen 6s linear infinite;
+      pointer-events: none;
     }
+    @keyframes sheen { 0% {transform: rotate(0deg);} 100% {transform: rotate(360deg);} }
 
     .heroTitle {
-      margin: 0; font-family: 'Space Grotesk', sans-serif;
-      font-size: 26px; font-weight: 700;
+      margin: 0 0 14px; font-family: 'Space Grotesk', sans-serif;
+      font-size: 28px; font-weight: 700;
       color: #fff; letter-spacing: -0.5px;
-      margin-bottom: 12px;
+      line-height: 1.2;
     }
-    .heroTitle span { color: var(--accent); }
+    /* Renkli vurgu kelimeler */
+    .heroTitle b {
+      color: var(--neon-pink);
+      text-shadow: 0 0 20px rgba(255,0,170,0.5);
+      font-weight: 700;
+    }
 
     .heroDesc {
-      font-size: 14px; line-height: 1.6; color: var(--text-muted);
+      font-size: 15px; line-height: 1.5; color: rgba(255,255,255,0.85);
       margin-bottom: 24px; font-weight: 400;
     }
 
-    .pillRow {
-      display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;
-    }
+    .pillRow { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
     .pill {
-      font-size: 11px; padding: 6px 12px; border-radius: 12px;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.05);
-      color: rgba(255,255,255,0.8);
-      display: flex; align-items: center; gap: 6px;
+      font-size: 12px; padding: 8px 14px; border-radius: 14px;
+      background: rgba(0,0,0,0.2);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #fff;
+      display: flex; align-items: center; gap: 8px;
       font-weight: 600;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     }
-    .dot { width: 6px; height: 6px; background: #10b981; border-radius: 50%; box-shadow: 0 0 8px #10b981; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; }
 
     /* --- BUTTONS --- */
     .btnWrap {
       width: 100%; display: flex; flex-direction: column; gap: 16px;
-      animation: fadeInUp 0.8s 0.3s var(--ease-elastic) backwards;
+      animation: fadeInUp 0.8s 0.4s var(--ease-out-back) backwards;
     }
 
     .btn3d {
-      position: relative; width: 100%; height: 64px;
-      border-radius: 20px; border: none; cursor: pointer;
-      display: flex; align-items: center; justify-content: center; gap: 14px;
-      font-size: 16px; font-weight: 600; color: #fff;
-      background: rgba(255,255,255,0.03);
+      position: relative; width: 100%; height: 68px;
+      border-radius: 24px; border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 16px;
+      font-size: 17px; font-weight: 700; color: #fff;
+      background: rgba(255,255,255,0.05);
       border: 1px solid var(--glass-border);
-      transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+      transition: all 0.2s;
       overflow: hidden;
+      font-family: 'Outfit', sans-serif;
     }
     
-    /* Neon Border Hover Effect */
-    .btn3d::after {
-      content: ''; position: absolute; inset: 0;
-      border-radius: 20px; padding: 1px;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-      -webkit-mask-composite: xor;
-      mask-composite: exclude;
-      opacity: 0.5;
-    }
-
+    /* Hover Glow Effect */
     .btn3d:hover {
-      background: rgba(255,255,255,0.07);
-      transform: translateY(-2px) scale(1.02);
-      box-shadow: 0 10px 30px -5px rgba(0,0,0,0.4), 0 0 20px rgba(255,255,255,0.05);
+      background: rgba(255,255,255,0.1);
+      border-color: rgba(255,255,255,0.4);
+      transform: translateY(-3px);
+      box-shadow: 0 10px 40px -10px rgba(255,255,255,0.15);
     }
-    .btn3d:active { transform: scale(0.98); }
+    .btn3d:active { transform: scale(0.96); }
 
     .badge {
-      width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+      width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+      background: #fff; border-radius: 50%;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
     }
-    .badge svg { width: 100%; height: 100%; }
+    .badge.apple { background: #000; } /* Apple ikon siyah background */
+    .badge svg { width: 18px; height: 18px; }
 
-    /* Google Special Style */
-    .googleOverlay { position: relative; width: 100%; height: 64px; }
+    /* Google Special */
+    .googleOverlay { position: relative; width: 100%; height: 68px; }
     #googleBtnWrap { position: absolute; inset: 0; opacity: 0.01; z-index: 50; }
 
     /* Hint Text */
     .hint {
       font-size: 11px; color: var(--text-muted); text-align: center;
-      animation: fadeIn 1s 1s ease backwards; opacity: 0.5;
+      animation: fadeIn 1s 1.2s ease backwards; opacity: 0.6; font-weight: 500;
     }
 
     /* --- FOOTER --- */
     .footerbar {
-      padding: 20px; width: 100%;
-      background: linear-gradient(to top, rgba(3,0,20,0.9), transparent);
-      display: flex; flex-direction: column; align-items: center; gap: 12px;
+      padding: 24px; width: 100%;
+      background: linear-gradient(to top, #000 0%, transparent 100%);
+      display: flex; flex-direction: column; align-items: center; gap: 14px;
       z-index: 20;
     }
-    .links { display: flex; gap: 20px; }
+    .links { display: flex; gap: 24px; }
     .links a {
-      color: var(--text-muted); text-decoration: none; font-size: 12px; font-weight: 500;
-      transition: color 0.2s;
+      color: rgba(255,255,255,0.6); text-decoration: none; font-size: 13px; font-weight: 600;
+      transition: color 0.2s, text-shadow 0.2s;
     }
-    .links a:hover { color: #fff; }
-    .footerBrand { font-size: 10px; opacity: 0.3; letter-spacing: 1px; text-transform: uppercase; }
+    .links a:hover { color: var(--neon-blue); text-shadow: 0 0 10px var(--neon-blue); }
+    
+    .footerBrand { 
+      font-size: 11px; color: rgba(255,255,255,0.3); letter-spacing: 1.5px; text-transform: uppercase; 
+      font-weight: 700;
+    }
 
     /* --- ANIMATIONS --- */
-    @keyframes slideDown { from { transform: translateY(-30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-    @keyframes scaleIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-    @keyframes fadeInUp { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 0.5; } }
+    @keyframes slideDown { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    @keyframes zoomIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    @keyframes fadeInUp { from { transform: translateY(60px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 0.6; } }
 
-    /* --- TERMS OVERLAY (Re-styled) --- */
+    /* --- TERMS OVERLAY --- */
     .full-overlay {
       position: fixed; inset: 0; z-index: 9999;
-      background: rgba(3, 0, 20, 0.85); backdrop-filter: blur(15px);
-      display: none; align-items: center; justify-content: center; padding: 20px;
+      background: rgba(5, 2, 8, 0.9); backdrop-filter: blur(20px);
+      display: none; align-items: center; justify-content: center; padding: 16px;
     }
     .full-overlay.active { display: flex; animation: fadeIn 0.3s ease; }
     
     .terms-card {
       width: 100%; max-width: 500px;
-      background: #0f0f13; border: 1px solid var(--glass-border);
-      border-radius: 24px; overflow: hidden;
-      box-shadow: 0 40px 100px rgba(0,0,0,0.8);
+      background: #121016; border: 1px solid var(--glass-border);
+      border-radius: 30px; overflow: hidden;
+      box-shadow: 0 40px 100px rgba(0,0,0,0.9);
       display: flex; flex-direction: column;
     }
     .terms-head {
-      padding: 16px 20px; border-bottom: 1px solid var(--glass-border);
+      padding: 18px 24px; border-bottom: 1px solid rgba(255,255,255,0.08);
       display: flex; justify-content: space-between; align-items: center;
-      font-weight: 700; font-size: 16px;
+      font-weight: 700; font-size: 18px; color: #fff;
     }
     .x-btn {
-      background: rgba(255,255,255,0.1); border: none; color: #fff;
-      width: 32px; height: 32px; border-radius: 10px; cursor: pointer;
+      background: rgba(255,255,255,0.08); border: none; color: #fff;
+      width: 36px; height: 36px; border-radius: 12px; cursor: pointer; font-size:18px;
     }
-    #termsFrame { width: 100%; height: 350px; border: none; background: #fff; opacity: 0.9; }
-    .agreement { padding: 20px; display: flex; flex-direction: column; gap: 15px; }
-    .agree-row { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-muted); cursor: pointer; }
-    .agree-row input { accent-color: var(--primary); width: 18px; height: 18px; }
+    #termsFrame { width: 100%; height: 400px; border: none; background: #fff; opacity: 0.95; }
+    .agreement { padding: 24px; display: flex; flex-direction: column; gap: 16px; background:#121016; }
+    .agree-row { display: flex; align-items: center; gap: 12px; font-size: 14px; color: #ccc; cursor: pointer; }
+    .agree-row input { accent-color: var(--neon-purple); width: 20px; height: 20px; }
     
     #termsAcceptBtn {
-      width: 100%; height: 50px; border-radius: 16px; border: none;
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
-      color: #fff; font-weight: 700; font-size: 15px;
+      width: 100%; height: 56px; border-radius: 18px; border: none;
+      background: linear-gradient(135deg, var(--neon-purple), var(--neon-pink));
+      color: #fff; font-weight: 800; font-size: 16px;
       cursor: pointer; opacity: 0.5; transition: 0.3s;
-      box-shadow: 0 10px 20px -5px rgba(236, 72, 153, 0.4);
+      box-shadow: 0 10px 30px -5px rgba(188, 19, 254, 0.4);
     }
     #termsAcceptBtn.enabled { opacity: 1; transform: translateY(0); }
     #termsAcceptBtn.enabled:active { transform: scale(0.97); }
 
     /* --- TOAST --- */
     .toast {
-      position: fixed; left: 50%; top: 40px; transform: translate(-50%, -20px);
-      background: rgba(255,255,255,0.95); color: #000;
-      padding: 12px 24px; border-radius: 99px;
-      font-weight: 600; font-size: 13px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-      opacity: 0; pointer-events: none; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      z-index: 10000;
+      position: fixed; left: 50%; top: 50px; transform: translate(-50%, -20px);
+      background: rgba(255,255,255,0.1); backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #fff; padding: 14px 28px; border-radius: 99px;
+      font-weight: 600; font-size: 14px;
+      box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+      opacity: 0; pointer-events: none; transition: 0.4s var(--ease-out-back);
+      z-index: 10000; text-align:center;
     }
     .toast.show { opacity: 1; transform: translate(-50%, 0); }
   </style>
@@ -320,15 +330,15 @@
     <div class="stage">
 
       <div class="heroCard">
-        <h2 class="heroTitle">Dil Öğreniminde <span>Yeni Boyut.</span></h2>
+        <h2 class="heroTitle">Sınırları <b>Kaldır.</b><br>Dili <b>Yaşa.</b></h2>
         <div class="heroDesc">
-          Yapay zeka destekli anlık çeviri, ses klonlama ve interaktif pratik modülleriyle sınırları aş.
+          Yapay zeka ile anında çeviri, sesli pratik ve gerçek zamanlı diyalog simülasyonları.
         </div>
 
         <div class="pillRow">
-          <div class="pill"><div class="dot"></div> Secure</div>
-          <div class="pill"><div class="dot" style="background:#06b6d4; box-shadow:0 0 8px #06b6d4"></div> AI-Powered</div>
-          <div class="pill"><div class="dot" style="background:#ec4899; box-shadow:0 0 8px #ec4899"></div> Fast</div>
+          <div class="pill"><div class="dot" style="background:#0aff68; box-shadow:0 0 8px #0aff68"></div> Güvenli</div>
+          <div class="pill"><div class="dot" style="background:#00f3ff; box-shadow:0 0 8px #00f3ff"></div> AI 2.0</div>
+          <div class="pill"><div class="dot" style="background:#ff00aa; box-shadow:0 0 8px #ff00aa"></div> Hızlı</div>
         </div>
       </div>
 
@@ -338,7 +348,10 @@
           <button class="btn3d" id="googleLoginBtn" type="button">
             <span class="badge" aria-hidden="true">
               <svg viewBox="0 0 24 24">
-                <path fill="#fff" d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .533 5.347.533 12S5.867 24 12.48 24c3.44 0 6.04-1.133 8.147-3.293 2.187-2.187 2.853-5.28 2.853-7.853 0-.787-.067-1.453-.16-2.12H12.48z"/>
+                <path fill="#EA4335" d="M12 10.2v3.9h5.4c-.2 1.2-1.5 3.4-5.4 3.4-3.3 0-6-2.7-6-6s2.7-6 6-6c1.9 0 3.2.8 3.9 1.5l2.7-2.6C17.9 2.8 15.2 1.5 12 1.5 6.8 1.5 2.5 5.8 2.5 11s4.3 9.5 9.5 9.5c5.5 0 9.1-3.9 9.1-9.3 0-.6-.1-1.1-.1-1.6H12z"/>
+                <path fill="#34A853" d="M3.8 7.3l3.2 2.3C7.9 7.3 9.8 5.8 12 5.8c1.9 0 3.2.8 3.9 1.5l2.7-2.6C17.9 2.8 15.2 1.5 12 1.5 8.3 1.5 5.1 3.7 3.8 7.3z"/>
+                <path fill="#FBBC05" d="M12 20.5c3.1 0 5.7-1 7.6-2.8l-3.5-2.9c-.9.7-2.1 1.2-4.1 1.2-3.2 0-5.9-2.1-6.8-5l-3.3 2.5c1.4 4.1 5.3 7 10.1 7z"/>
+                <path fill="#4285F4" d="M21.1 11.2c0-.6-.1-1.1-.1-1.6H12v3.9h5.4c-.3 1.3-1.1 2.4-2.3 3.1l3.5 2.9c2.1-2 3.3-4.9 3.3-8.3z"/>
               </svg>
             </span>
             Google ile Başla
@@ -347,17 +360,17 @@
         </div>
 
         <button class="btn3d" id="appleLoginBtn" type="button">
-          <span class="badge" aria-hidden="true">
+          <span class="badge apple" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="#fff">
               <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24.02-1.44.62-2.2.44-3.26-.7C3.15 15.22 2.76 7.73 8.5 7.42c1.6.09 2.7.85 3.52.88 1.05.03 2.44-1 4.17-.9 1.06.06 2.14.46 2.85 1.44-2.58 1.4-2.12 5.07.38 6.13-.53 1.34-1.25 2.67-2.37 3.8h0zm-1.63-14.7c1.32-1.5 2.18-3.66 1.95-5.58-1.8.07-3.64 1.12-4.66 2.3-1 1.14-1.75 3.32-1.57 5.25 1.94.14 3.42-1.22 4.28-1.97z"/>
             </svg>
           </span>
-          Apple ile Devam Et
+          Apple ile Giriş Yap
         </button>
 
       </div>
 
-      <div class="hint">Devam ederek Kullanıcı Sözleşmesi'ni kabul etmiş sayılırsın.</div>
+      <div class="hint">Hesap oluşturarak Kullanıcı Sözleşmesi'ni kabul etmiş olursun.</div>
     </div>
 
     <div class="footerbar">
@@ -367,7 +380,7 @@
         <a href="/pages/privacy.html">Gizlilik</a>
         <a href="/pages/contact.html">İletişim</a>
       </div>
-      <div class="footerBrand">ITALKY AI • Ozyigit's 2026</div>
+      <div class="footerBrand">ITALKY AI • 2026</div>
     </div>
 
   </div>
@@ -375,26 +388,24 @@
   <div class="full-overlay" id="termsOverlay">
     <div class="terms-card">
       <div class="terms-head">
-        <div>Kullanım Sözleşmesi</div>
+        <div>Sözleşme</div>
         <button id="closeTermsBtn" class="x-btn" aria-label="Kapat">✕</button>
       </div>
-
       <iframe id="termsFrame" src="/pages/sozlesme.html" title="Kullanıcı Sözleşmesi"></iframe>
-
       <div class="agreement">
         <div class="agree-row" onclick="document.getElementById('termsCheck').click()">
           <input type="checkbox" id="termsCheck" />
-          <label for="termsCheck" style="cursor:pointer">Şartları okudum ve onaylıyorum.</label>
+          <label for="termsCheck" style="cursor:pointer">Okudum ve onaylıyorum.</label>
         </div>
-        <button id="termsAcceptBtn" type="button" disabled>Kabul Et ve Giriş Yap</button>
+        <button id="termsAcceptBtn" type="button" disabled>Onayla ve Devam Et</button>
       </div>
     </div>
   </div>
 
-  <div class="toast" id="toast">Bildirim</div>
+  <div class="toast" id="toast"></div>
 
   <script type="module">
-    // FILE: italky-web/index.html (inline logic)
+    // FILE: italky-web/index.html (Logic)
     import { STORAGE_KEY } from "/js/config.js";
     import { initAuth, acceptTerms, logout } from "/js/auth.js";
 
@@ -424,18 +435,16 @@
       return !!localStorage.getItem(termsKey(email));
     }
 
-    // HOME PAGE:
     function goHome(){
       window.location.replace("/pages/translate.html");
     }
 
-    // Apple click
     $("appleLoginBtn")?.addEventListener("click", (e)=>{
       e.preventDefault();
-      showToast("Apple girişi yakında. Lütfen Google kullan.");
+      showToast("Apple girişi çok yakında! Lütfen Google ile devam et.");
     });
 
-    // Terms overlay
+    // Terms logic
     const termsOverlay = $("termsOverlay");
     const termsCheck = $("termsCheck");
     const termsAcceptBtn = $("termsAcceptBtn");
@@ -468,7 +477,6 @@
       if(ok) goHome();
     });
 
-    // Boot
     initAuth();
 
     if(hasUser()){
