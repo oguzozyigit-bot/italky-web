@@ -24,7 +24,7 @@
       --italky-burgundy: rgba(140, 18, 45, .40);
       --italky-burgundy-2: rgba(140, 18, 45, .18);
 
-      --footerH: 86px; /* ✅ footer gerçek yüksekliği */
+      --footerH: 86px;
       --ease-elastic: cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
@@ -140,26 +140,28 @@
       white-space:nowrap;
     }
 
-    /* ✅ Ayar ikonu aydınlatıldı */
-    .settings-btn{
+    /* ✅ Profil ikonu (ayar yerine) */
+    .profile-btn{
       width:46px; height:46px;
       border-radius:16px;
-      background: rgba(255,255,255,0.16);
-      border: 1px solid rgba(255,255,255,0.28);
+      background: rgba(255,255,255,0.14);
+      border: 1px solid rgba(255,255,255,0.26);
       display:flex; align-items:center; justify-content:center;
       cursor:pointer;
       transition: .15s;
-      box-shadow: 0 10px 24px rgba(0,0,0,.35), 0 0 18px rgba(0,243,255,.08);
+      box-shadow: 0 10px 24px rgba(0,0,0,.35);
+      overflow:hidden;
     }
-    .settings-btn:active{ transform: scale(.96); }
-    .settings-btn svg{ width:22px; height:22px; stroke:#fff; opacity: 1; }
+    .profile-btn:active{ transform: scale(.96); }
+    .profile-btn img{ width:100%; height:100%; object-fit:cover; display:block; }
+    .profile-btn svg{ width:22px; height:22px; stroke:#fff; opacity: .95; }
 
     /* menu scroll */
     .menu-scroll{
       flex:1;
       overflow-y:auto; overflow-x:hidden;
       -webkit-overflow-scrolling: touch;
-      padding: 8px 18px calc(var(--footerH) + 14px); /* ✅ artık boşluk footer’a göre */
+      padding: 8px 18px calc(var(--footerH) + 14px);
       position:relative; z-index:5;
       scrollbar-width:none;
     }
@@ -225,50 +227,25 @@
     .label{ font-size: 13px; font-weight: 950; color:#fff; line-height: 1.15; letter-spacing: .2px; }
     .sub{ font-size: 11px; font-weight: 750; color: var(--text-muted); margin-top: 2px; }
 
-    /* ✅ Arkadaşınla Öğren: dikdörtgen (tek satır) */
-    .friendCard{
-      grid-column: span 2;
-      aspect-ratio: auto;
-      padding: 14px 14px;
-      flex-direction: row;
-      justify-content: space-between;
-      text-align: left;
-      gap: 12px;
-    }
-    .friendCard .left{
-      display:flex; align-items:center; gap:12px; min-width:0;
-    }
-    .friendCard .txt{
-      display:flex; flex-direction:column; gap:2px; min-width:0;
-    }
-    .friendCard .label{ font-size: 14px; }
-    .friendCard .chev{
-      width: 40px; height: 40px;
-      border-radius: 16px;
-      border: 1px solid rgba(255,255,255,0.10);
-      background: rgba(255,255,255,0.05);
-      display:flex; align-items:center; justify-content:center;
-      opacity:.9;
-      flex: 0 0 40px;
-    }
-    .friendCard .chev svg{ width: 18px; height:18px; stroke:#fff; opacity:.85; }
-
-    /* long cards */
+    /* long cards wrapper */
     .longWrap{
       margin-top: 14px;
-      display:flex;
-      flex-direction:column;
-      gap: 12px;
+      display:grid;
+      grid-template-columns: 1fr 1fr;   /* ✅ AI Asistan + Öğretmen kare yan yana */
+      gap: 14px;
       animation: fadeInUp .55s var(--ease-elastic);
     }
+
+    /* long card -> kare gibi davran */
     .longCard{
       width:100%;
-      border-radius: 22px;
+      border-radius: 24px;
       border: 1px solid rgba(255,255,255,0.12);
       background: linear-gradient(160deg, rgba(255,255,255,0.055) 0%, rgba(255,255,255,0.012) 100%);
-      padding: 14px 14px;
+      padding: 16px 14px;
       display:flex;
-      align-items:center;
+      flex-direction:column;
+      align-items:flex-start;
       justify-content:space-between;
       gap: 12px;
       cursor:pointer;
@@ -277,6 +254,7 @@
       box-shadow: 0 14px 34px rgba(0,0,0,0.28);
       overflow:hidden;
       position:relative;
+      aspect-ratio: 1 / 1.06;          /* ✅ kare hissi */
     }
     .longCard::before{
       content:"";
@@ -293,25 +271,19 @@
       transform: scale(.98);
       border-color: rgba(140,18,45,.58);
     }
-    .longLeft{
-      display:flex;
-      align-items:center;
-      gap: 12px;
-      min-width:0;
-      position:relative;
-      z-index:2;
-    }
     .longIcon{
-      width: 52px; height: 52px;
+      width: 54px; height: 54px;
       border-radius: 18px;
       background: rgba(0,0,0,0.22);
       border: 1px solid rgba(255,255,255,0.12);
       display:flex; align-items:center; justify-content:center;
       box-shadow: inset 0 0 15px rgba(255,255,255,0.05);
-      flex: 0 0 52px;
+      flex: 0 0 54px;
+      position:relative;
+      z-index:2;
     }
-    .longIcon svg{ width: 28px; height:28px; stroke:#fff; stroke-width:1.8; fill:none; stroke-linecap:round; stroke-linejoin:round; opacity:.95; }
-    .longTxt{ min-width:0; display:flex; flex-direction:column; gap: 2px; }
+    .longIcon svg{ width: 30px; height:30px; stroke:#fff; stroke-width:1.8; fill:none; stroke-linecap:round; stroke-linejoin:round; opacity:.95; }
+    .longTxt{ position:relative; z-index:2; width:100%; }
     .longLbl{
       font-size: 14px;
       font-weight: 1000;
@@ -324,13 +296,49 @@
       font-size: 11px;
       font-weight: 800;
       color: rgba(255,255,255,.60);
+      margin-top: 2px;
       white-space:nowrap;
       overflow:hidden;
       text-overflow:ellipsis;
     }
-    .chev2{
+
+    /* ✅ Arkadaşınla Öğren en altta tek satır dikdörtgen */
+    .friendRow{
+      margin-top: 14px;
+      animation: fadeInUp .55s var(--ease-elastic);
+    }
+    .friendCard{
+      width:100%;
+      border-radius: 24px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: linear-gradient(160deg, rgba(255,255,255,0.055) 0%, rgba(255,255,255,0.012) 100%);
+      padding: 14px 14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+      cursor:pointer;
+      user-select:none;
+      transition: .22s ease;
+      box-shadow: 0 14px 34px rgba(0,0,0,0.28);
+      overflow:hidden;
       position:relative;
-      z-index:2;
+    }
+    .friendCard::before{
+      content:"";
+      position:absolute; inset:0;
+      background: radial-gradient(900px 260px at 10% 0%, var(--italky-burgundy-2), transparent 60%);
+      pointer-events:none;
+      opacity:.95;
+    }
+    .friendCard:hover{
+      border-color: rgba(140,18,45,.40);
+      background: linear-gradient(160deg, rgba(140,18,45,.12) 0%, rgba(255,255,255,0.012) 100%);
+    }
+    .friendCard:active{ transform: scale(.985); }
+    .friendLeft{ display:flex; align-items:center; gap:12px; min-width:0; position:relative; z-index:2; }
+    .friendTxt{ min-width:0; }
+    .friendChev{
       width: 40px; height: 40px;
       border-radius: 16px;
       border: 1px solid rgba(255,255,255,0.10);
@@ -338,10 +346,12 @@
       display:flex; align-items:center; justify-content:center;
       opacity:.9;
       flex: 0 0 40px;
+      position:relative;
+      z-index:2;
     }
-    .chev2 svg{ width: 18px; height:18px; stroke:#fff; opacity:.85; }
+    .friendChev svg{ width: 18px; height:18px; stroke:#fff; opacity:.85; }
 
-    /* ✅ footer fixed + alan tamamen dolsun */
+    /* footer fixed */
     .footerbar{
       position: fixed;
       left: 50%;
@@ -360,9 +370,6 @@
       z-index: 999;
       pointer-events:none;
     }
-    @media (min-width:520px){
-      .footerbar{ width: min(480px, calc(100vw - 0px)); }
-    }
 
     .links{
       display:flex; gap: 16px;
@@ -377,11 +384,12 @@
       font-weight: 800;
     }
     .links a:hover{ color: var(--neon-cyan); text-shadow: 0 0 8px var(--neon-cyan); }
+
+    /* ✅ artık büyük harf yok */
     .footerBrand{
       font-size: 10px;
-      color: rgba(255,255,255,0.22);
-      letter-spacing: 2px;
-      text-transform: uppercase;
+      color: rgba(255,255,255,0.25);
+      letter-spacing: 1px;
       font-weight: 800;
     }
 
@@ -398,7 +406,6 @@
 
   <div class="mobile-frame">
 
-    <!-- HEADER -->
     <div class="header">
       <div class="mini-brand">
         <div class="mini-logo">ITALKY</div>
@@ -413,17 +420,16 @@
           <div class="plan" id="userPlan">FREE</div>
         </div>
 
-        <!-- ✅ ayarlar artık sayfaya gidecek -->
-        <button class="settings-btn" id="settingsBtn" aria-label="Ayarlar">
+        <!-- ✅ Ayarlar kalktı, profil geldi -->
+        <button class="profile-btn" id="profileBtn" aria-label="Profil">
           <svg viewBox="0 0 24 24" fill="none">
-            <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z" stroke-width="2" stroke="currentColor"/>
-            <path d="M19.4 15a8.6 8.6 0 0 0 .1-2l2-1.4-2-3.4-2.3.6a8.9 8.9 0 0 0-1.7-1l-.3-2.4h-4l-.3 2.4a8.9 8.9 0 0 0-1.7 1l-2.3-.6-2 3.4 2 1.4a8.6 8.6 0 0 0 .1 2l-2 1.4 2 3.4 2.3-.6a8.9 8.9 0 0 0 1.7 1l.3 2.4h4l.3-2.4a8.9 8.9 0 0 0 1.7-1l2.3.6 2-3.4-2-1.4z" stroke-width="2" stroke="currentColor" opacity=".85"/>
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke-width="2" stroke="currentColor"/>
+            <circle cx="12" cy="7" r="4" stroke-width="2" stroke="currentColor"/>
           </svg>
         </button>
       </div>
     </div>
 
-    <!-- MENU -->
     <div class="menu-scroll" id="menuScroll">
 
       <div class="grid">
@@ -517,9 +523,41 @@
           </div>
         </div>
 
-        <!-- ✅ Arkadaşınla Öğren artık dikdörtgen -->
-        <div class="card friendCard" data-go="/pages/learn_with_friend.html">
-          <div class="left">
+      </div>
+
+      <!-- ✅ AI Asistan + Öğretmen kare yan yana -->
+      <div class="longWrap">
+        <div class="longCard" data-go="/pages/chat.html">
+          <div class="longIcon">
+            <svg viewBox="0 0 24 24">
+              <path d="M12 2a10 10 0 1 0 10 10H12V2z"/>
+              <path d="M12 2a10 10 0 0 1 10 10h-10z" opacity=".55"/>
+            </svg>
+          </div>
+          <div class="longTxt">
+            <div class="longLbl">AI Asistan</div>
+            <div class="longSub">Soru sor • kısa çözüm al</div>
+          </div>
+        </div>
+
+        <div class="longCard" data-go="/pages/teachers.html">
+          <div class="longIcon">
+            <svg viewBox="0 0 24 24">
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+            </svg>
+          </div>
+          <div class="longTxt">
+            <div class="longLbl">Öğretmen</div>
+            <div class="longSub">Ders • telaffuz • sınav</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ✅ Arkadaşınla Öğren en altta tek satır dikdörtgen -->
+      <div class="friendRow">
+        <div class="friendCard" data-go="/pages/learn_with_friend.html">
+          <div class="friendLeft">
             <div class="icon-box">
               <svg viewBox="0 0 24 24">
                 <path d="M16 11c1.7 0 3-1.3 3-3S17.7 5 16 5s-3 1.3-3 3 1.3 3 3 3z"/>
@@ -529,62 +567,21 @@
                 <path d="M8 15h8"/>
               </svg>
             </div>
-            <div class="txt">
+            <div class="friendTxt">
               <div class="label">Arkadaşınla Öğren</div>
               <div class="sub">Düello • pratik</div>
             </div>
           </div>
-          <div class="chev" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke-width="2" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </div>
-        </div>
-
-      </div>
-
-      <div class="longWrap">
-        <div class="longCard" data-go="/pages/chat.html">
-          <div class="longLeft">
-            <div class="longIcon">
-              <svg viewBox="0 0 24 24">
-                <path d="M12 2a10 10 0 1 0 10 10H12V2z"/>
-                <path d="M12 2a10 10 0 0 1 10 10h-10z" opacity=".55"/>
-              </svg>
-            </div>
-            <div class="longTxt">
-              <div class="longLbl">AI Asistan</div>
-              <div class="longSub">Soru sor • kısa çözüm al</div>
-            </div>
-          </div>
-          <div class="chev2" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke-width="2" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </div>
-        </div>
-
-        <!-- ✅ öğretmen sayfası artık /pages/teachers.html -->
-        <div class="longCard" data-go="/pages/teachers.html">
-          <div class="longLeft">
-            <div class="longIcon">
-              <svg viewBox="0 0 24 24">
-                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-              </svg>
-            </div>
-            <div class="longTxt">
-              <div class="longLbl">Öğretmen</div>
-              <div class="longSub">Ders • telaffuz • sınav</div>
-            </div>
-          </div>
-          <div class="chev2" aria-hidden="true">
+          <div class="friendChev" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke-width="2" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </div>
         </div>
       </div>
 
     </div>
-
   </div>
 
-  <!-- footer fixed -->
+  <!-- footer -->
   <div class="footerbar">
     <div class="links">
       <a href="/pages/about.html">Hakkında</a>
@@ -592,7 +589,7 @@
       <a href="/pages/privacy.html">Gizlilik</a>
       <a href="/pages/contact.html">İletişim</a>
     </div>
-    <div class="footerBrand">ItalkyAI By Ozyigit's 2026</div>
+    <div class="footerBrand">ItalkyAI By Ozyigits's 2026</div>
   </div>
 
   <script type="module">
@@ -622,17 +619,15 @@
       });
     });
 
-    // settings -> new page
-    document.getElementById("settingsBtn")?.addEventListener("click", ()=>{
-      window.location.href = "/pages/settings.html";
+    // profile
+    document.getElementById("profileBtn")?.addEventListener("click", ()=>{
+      window.location.href = "/pages/profile.html";
     });
 
-    // ✅ son kart footer’a “tam dibinde” dursun diye: yüklenince küçük bir hesap
-    // (bazı Android WebView’larda bottom inset yüzünden boşluk oluşabiliyor)
+    // footer padding fix (android/webview)
     const sc = document.getElementById("menuScroll");
     if(sc){
       const fix = ()=> {
-        // footer yüksekliğini gerçek ölç
         const fb = document.querySelector(".footerbar");
         const h = fb ? fb.getBoundingClientRect().height : 86;
         sc.style.paddingBottom = (h + 14) + "px";
