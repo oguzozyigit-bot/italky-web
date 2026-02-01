@@ -10,6 +10,8 @@
   <style>
     :root{
       --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.62);
+
       --gold:#ffb300;
       --pist:#bef264;
 
@@ -17,6 +19,9 @@
       --border2: rgba(255,255,255,.06);
 
       --shadow: 0 28px 90px rgba(0,0,0,.65);
+
+      --sheetBg: rgba(16,16,20,.92);
+      --sheetBorder: rgba(255,255,255,.12);
     }
 
     *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
@@ -38,7 +43,6 @@
       height:100%;
       margin:0 auto;
       position:relative;
-      background: transparent;
       overflow:hidden;
     }
 
@@ -89,7 +93,6 @@
         radial-gradient(260px 46px at 50% 50%, rgba(190,242,100,.16), transparent 72%),
         radial-gradient(260px 46px at 40% 50%, rgba(255,179,0,.12), transparent 72%),
         radial-gradient(260px 46px at 60% 50%, rgba(40,120,255,.14), transparent 72%);
-      pointer-events:none;
       z-index:-1;
       opacity:.75;
     }
@@ -145,101 +148,27 @@
       z-index: 5;
     }
 
-    /* Dropdown */
-    .dd{ position: relative; width: 200px; max-width: 240px; }
-    .dd-btn{
-      width:100%;
-      padding: 10px 12px;
+    /* “Dil” butonu (dropdown yerine) */
+    .langBtn{
+      height: 44px;
       border-radius: 16px;
       border: 1px solid rgba(255,255,255,.12);
       background: rgba(255,255,255,.06);
       color:#fff;
       font-weight: 1000;
       font-size: 13px;
+      padding: 0 12px;
       display:flex;
       align-items:center;
       justify-content:space-between;
-      gap:8px;
+      gap:10px;
       cursor:pointer;
       user-select:none;
+      min-width: 170px;
+      max-width: 240px;
     }
-    .dd-btn .caret{ opacity:.75; font-size: 12px; }
-
-    .dd-menu{
-      position:absolute;
-      top: calc(100% + 8px);
-      left: 0;
-      width: clamp(220px, 78vw, 320px);
-      max-width: calc(100vw - 28px);
-
-      border-radius: 18px;
-      border: 1px solid rgba(255,255,255,.16);
-      background: rgba(20,20,24,.98);
-      box-shadow: 0 34px 90px rgba(0,0,0,.70);
-      backdrop-filter: blur(14px);
-      display:none;
-      z-index: 999;
-
-      max-height: 320px;
-      overflow-y: auto;
-      overflow-x: hidden;
-      -webkit-overflow-scrolling: touch;
-
-      scrollbar-gutter: auto;
-    }
-    .dd.open .dd-menu{ display:block; }
-
-    .dd-menu{ scrollbar-width: none; -ms-overflow-style: none; }
-    .dd-menu::-webkit-scrollbar{ width:0; height:0; }
-    .dd-menu::-webkit-scrollbar-thumb{ background: transparent; }
-    .dd-menu::-webkit-scrollbar-track{ background: transparent; }
-
-    .dd-search-wrap{
-      position: sticky;
-      top: 0;
-      z-index: 5;
-      padding: 10px;
-      background: rgba(20,20,24,.98);
-      border-bottom: 1px solid rgba(255,255,255,.10);
-    }
-    .dd-search{
-      width: 100%;
-      border-radius: 14px;
-      border: 1px solid rgba(255,255,255,.14);
-      background: rgba(255,255,255,.06);
-      color: rgba(255,255,255,.92);
-      font-weight: 900;
-      font-size: 13px;
-      padding: 10px 12px;
-      outline: none;
-    }
-    .dd-search::placeholder{ color: rgba(255,255,255,.55); font-weight: 800; }
-    .dd-search:focus{ border-color: rgba(255,179,0,.55); }
-
-    .dd-item{
-      padding: 13px 14px;
-      cursor:pointer;
-      color: rgba(255,255,255,.96);
-      font-weight: 950;
-      font-size: 14px;
-      border-bottom: 1px solid rgba(255,255,255,.08);
-      letter-spacing: .1px;
-      user-select:none;
-    }
-    .dd-item:last-child{ border-bottom:none; }
-    .dd-item:hover{ background: rgba(255,255,255,.06); }
-    .dd-item:active{ background: rgba(255,179,0,.12); }
-    .dd-item.hidden{ display:none; }
-    .dd-sep{
-      padding: 10px 14px;
-      font-size: 11px;
-      font-weight: 1000;
-      letter-spacing: .8px;
-      text-transform: uppercase;
-      color: rgba(255,255,255,.55);
-      border-bottom: 1px solid rgba(255,255,255,.08);
-      background: rgba(0,0,0,.18);
-    }
+    .langBtn .caret{ opacity:.75; font-size: 12px; }
+    .langBtn:active{ transform: translateY(1px); }
 
     .btnIcon{
       width: 48px;
@@ -297,7 +226,7 @@
     .bubble.me{ align-self:flex-end; border-right: 4px solid var(--pist); text-align:right; }
     .bubble.them{ align-self:flex-start; border-left: 4px solid var(--gold); }
 
-    /* --- ITALKY mini brand (üst/alt) --- */
+    /* ITALKY brand top/bottom */
     .brandBottom, .brandTop{
       position:absolute;
       left: 50%;
@@ -313,7 +242,6 @@
     .brandBottom{ bottom: 10px; }
     .brandTop{ top: 10px; transform: translateX(-50%) rotate(180deg); }
 
-    /* ✅ Bayrak çizgisi yazı genişliği kadar: I’den başlar Y’de biter */
     .brandLock{
       display:inline-flex;
       flex-direction:column;
@@ -341,14 +269,13 @@
     .f-w{ background:#ffffff; }
     .f-r{ background:#CE2B37; }
 
-    /* ✅ Slogan yerine sabit yazı */
     .sl{
       font-weight: 900;
       font-size: 10px;
       color: rgba(255,255,255,.60);
     }
 
-    /* ✅ Mikrofon altta ortada */
+    /* Mic bottom center */
     .micDock{
       position:absolute;
       left:50%;
@@ -357,11 +284,11 @@
       z-index: 20;
       pointer-events:auto;
     }
-    /* top panel rotate olduğu için dock’u düz çevir */
     .side.top .micDock{
       transform: translateX(-50%) rotate(180deg);
     }
 
+    /* Toast */
     .toast{
       position: fixed;
       left: 50%;
@@ -384,6 +311,114 @@
       text-overflow: ellipsis;
     }
     .toast.show{ display:block; }
+
+    /* ===== Language Sheet (tasarıma uyumlu) ===== */
+    .sheetOverlay{
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
+      background: rgba(0,0,0,.60);
+      display:none;
+      align-items:flex-end;
+      justify-content:center;
+      padding: 14px;
+      backdrop-filter: blur(8px);
+    }
+    .sheetOverlay.show{ display:flex; }
+
+    .sheet{
+      width: min(480px, calc(100vw - 18px));
+      border-radius: 22px;
+      border: 1px solid var(--sheetBorder);
+      background: var(--sheetBg);
+      box-shadow: 0 30px 90px rgba(0,0,0,.70);
+      overflow:hidden;
+    }
+
+    .sheetHead{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding: 12px 12px 10px;
+      border-bottom: 1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.22);
+    }
+    .sheetTitle{
+      font-weight: 1000;
+      letter-spacing:.2px;
+      font-size: 13px;
+      color: rgba(255,255,255,.92);
+    }
+    .xBtn{
+      width:40px; height:40px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+      color: #fff;
+      font-size: 18px;
+      font-weight: 1000;
+      cursor:pointer;
+    }
+    .xBtn:active{ transform: translateY(1px); }
+
+    .sheetSearch{
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      background: rgba(0,0,0,.18);
+    }
+    .sheetSearch input{
+      width:100%;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: rgba(255,255,255,.92);
+      font-weight: 900;
+      font-size: 13px;
+      padding: 10px 12px;
+      outline:none;
+    }
+    .sheetSearch input::placeholder{ color: rgba(255,255,255,.55); font-weight: 800; }
+
+    .sheetList{
+      max-height: 52vh;
+      overflow:auto;
+      -webkit-overflow-scrolling: touch;
+
+      /* ✅ scrollbar gizli */
+      scrollbar-width:none;
+      -ms-overflow-style:none;
+    }
+    .sheetList::-webkit-scrollbar{ width:0; height:0; }
+
+    .sheetRow{
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      cursor:pointer;
+      user-select:none;
+    }
+    .sheetRow:active{ background: rgba(255,255,255,.05); }
+    .sheetRow .name{
+      font-weight: 950;
+      font-size: 14px;
+      color: rgba(255,255,255,.92);
+    }
+    .sheetRow .code{
+      font-weight: 900;
+      font-size: 11px;
+      color: rgba(255,255,255,.55);
+      letter-spacing:.5px;
+      text-transform: uppercase;
+    }
+    .sheetRow.selected{
+      background: rgba(190,242,100,.08);
+    }
+    .sheetRow.selected .code{
+      color: rgba(190,242,100,.95);
+    }
   </style>
 </head>
 
@@ -396,7 +431,7 @@
       <div class="brandLock">
         <div class="bn">ITALKY</div>
         <div class="flagbar" aria-hidden="true"><span class="f-g"></span><span class="f-w"></span><span class="f-r"></span></div>
-        <div class="sl" id="sloganTop">By Ozyigit's</div>
+        <div class="sl">By Ozyigit's</div>
       </div>
     </div>
 
@@ -404,10 +439,9 @@
 
       <section class="side top" id="sideTop">
         <div class="bar">
-          <div class="dd" id="ddTop">
-            <div class="dd-btn" id="ddTopBtn"><span id="ddTopTxt">—</span><span class="caret">▾</span></div>
-            <div class="dd-menu" id="ddTopMenu"></div>
-          </div>
+          <button class="langBtn" id="topLangBtn" type="button">
+            <span id="topLangTxt">—</span><span class="caret">▾</span>
+          </button>
 
           <button class="btnIcon" id="topSpeak" aria-label="Ses">
             <svg viewBox="0 0 24 24">
@@ -420,7 +454,6 @@
 
         <div class="content" id="topBody"></div>
 
-        <!-- ✅ Mic bottom center -->
         <div class="micDock">
           <button class="btnIcon" id="topMic" aria-label="Mikrofon">
             <svg viewBox="0 0 24 24">
@@ -445,10 +478,9 @@
 
       <section class="side meTint" id="sideBottom">
         <div class="bar">
-          <div class="dd" id="ddBot">
-            <div class="dd-btn" id="ddBotBtn"><span id="ddBotTxt">—</span><span class="caret">▾</span></div>
-            <div class="dd-menu" id="ddBotMenu"></div>
-          </div>
+          <button class="langBtn" id="botLangBtn" type="button">
+            <span id="botLangTxt">—</span><span class="caret">▾</span>
+          </button>
 
           <button class="btnIcon" id="botSpeak" aria-label="Ses">
             <svg viewBox="0 0 24 24">
@@ -461,7 +493,6 @@
 
         <div class="content" id="botBody"></div>
 
-        <!-- ✅ Mic bottom center -->
         <div class="micDock">
           <button class="btnIcon" id="botMic" aria-label="Mikrofon">
             <svg viewBox="0 0 24 24">
@@ -481,12 +512,27 @@
       <div class="brandLock">
         <div class="bn">ITALKY</div>
         <div class="flagbar" aria-hidden="true"><span class="f-g"></span><span class="f-w"></span><span class="f-r"></span></div>
-        <div class="sl" id="sloganBot">By Ozyigit's</div>
+        <div class="sl">By Ozyigit's</div>
       </div>
     </div>
   </div>
 
   <div class="toast" id="toast">—</div>
-  <script type="module" src="/js/translate_page.js?v=8"></script>
+
+  <!-- Language Sheet -->
+  <div class="sheetOverlay" id="langSheet">
+    <div class="sheet" role="dialog" aria-modal="true">
+      <div class="sheetHead">
+        <div class="sheetTitle" id="sheetTitle">Dil Seç</div>
+        <button class="xBtn" id="sheetClose" type="button">×</button>
+      </div>
+      <div class="sheetSearch">
+        <input id="sheetQuery" placeholder="Ara… (örn: Almanca, Deutsch, de)" />
+      </div>
+      <div class="sheetList" id="sheetList"></div>
+    </div>
+  </div>
+
+  <script type="module" src="/js/translate_page.js?v=9"></script>
 </body>
 </html>
