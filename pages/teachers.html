@@ -18,13 +18,17 @@
       --neon-purple:#bc13fe;
 
       --glass-border: rgba(255,255,255,0.10);
+      --glass-surface: rgba(255,255,255,0.05);
+
       --text-main:#fff;
       --text-muted: rgba(255,255,255,0.65);
 
       --italky-burgundy: rgba(140, 18, 45, .40);
       --italky-burgundy-2: rgba(140, 18, 45, .18);
 
-      --footerH: 78px;
+      --footerH: 86px;
+      --headerH: 92px;
+
       --ease-elastic: cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
@@ -40,7 +44,7 @@
       display:flex; align-items:center; justify-content:center;
     }
 
-    /* background */
+    /* background (home ile aynı ruh) */
     .cosmos-bg{
       position:absolute; inset:-50%; width:200%; height:200%;
       background:#030014; z-index:0; pointer-events:none;
@@ -86,9 +90,9 @@
       }
     }
 
-    /* header */
+    /* header: home ile aynı logo sistemi + ok */
     .header{
-      flex:0 0 92px;
+      flex:0 0 var(--headerH);
       padding: 0 18px;
       display:flex; align-items:center; justify-content:space-between;
       gap:12px;
@@ -109,7 +113,11 @@
     .back-btn:active{ transform: translateY(1px); }
     .back-btn svg{ width:22px; height:22px; stroke:#fff; stroke-width:2; fill:none; opacity:.92; }
 
-    .mini-brand{ display:flex; flex-direction:column; width:fit-content; align-items:center; user-select:none; }
+    .mini-brand{
+      display:flex; flex-direction:column; width:fit-content; align-items:center;
+      user-select:none;
+      cursor:pointer;
+    }
     .mini-logo{
       font-family:'Space Grotesk', sans-serif;
       font-weight:700; font-size:26px;
@@ -127,32 +135,27 @@
     .f-w{ background:#fff; z-index:2; }
     .f-r{ background:#CE2B37; box-shadow:0 0 8px #CE2B37; z-index:1; }
 
-    /* right side tiny info (optional) */
-    .right-info{
-      min-width: 84px;
-      display:flex;
-      justify-content:flex-end;
-      align-items:center;
-      color: rgba(255,255,255,0.55);
-      font-weight: 900;
-      font-size: 11px;
-      letter-spacing:.3px;
-      user-select:none;
+    /* sağ boşluk: bu sayfada profil yok, ama header dengesi bozulmasın */
+    .right-spacer{
+      width:46px; height:46px;
+      flex: 0 0 46px;
+      opacity:0;
+      pointer-events:none;
     }
 
-    /* content scroll */
+    /* content */
     .content-scroll{
       flex:1;
       overflow-y:auto; overflow-x:hidden;
       -webkit-overflow-scrolling: touch;
-      padding: 8px 18px calc(var(--footerH) + 14px);
+      padding: 8px 18px calc(var(--footerH) + 10px);
       position:relative; z-index:5;
       scrollbar-width:none;
     }
     .content-scroll::-webkit-scrollbar{ display:none; }
 
     .title{
-      margin: 2px 2px 10px;
+      margin: 2px 2px 12px;
       font-size: 13px;
       font-weight: 950;
       color: rgba(255,255,255,0.78);
@@ -162,17 +165,17 @@
     .grid{
       display:grid;
       grid-template-columns: 1fr 1fr;
-      gap: 14px;
+      gap: 16px;
       animation: fadeInUp .6s var(--ease-elastic);
     }
 
-    /* teacher card */
+    /* teacher card: home kart dili */
     .card{
       position:relative;
-      background: linear-gradient(160deg, rgba(255,255,255,0.055) 0%, rgba(255,255,255,0.012) 100%);
+      background: linear-gradient(160deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.01) 100%);
       border: 1px solid var(--glass-border);
-      border-radius: 24px;
-      padding: 14px 12px;
+      border-radius: 26px;
+      padding: 18px 16px;
       display:flex;
       flex-direction:column;
       align-items:flex-start;
@@ -182,79 +185,41 @@
       user-select:none;
       transition: all .22s ease;
       box-shadow: 0 10px 30px -5px rgba(0,0,0,0.30);
-      aspect-ratio: 1 / 1.06;
+      aspect-ratio: 1 / 1.10;
       overflow:hidden;
     }
     .card::before{
       content:"";
       position:absolute; inset:0;
-      background: radial-gradient(700px 240px at 10% 0%, var(--italky-burgundy-2), transparent 60%);
-      opacity:.95;
+      background: radial-gradient(900px 260px at 20% 0%, var(--italky-burgundy-2), transparent 60%);
+      opacity: .9;
       pointer-events:none;
     }
-    .card:hover{
-      border-color: rgba(140,18,45,.45);
-      background: linear-gradient(160deg, rgba(140,18,45,.12) 0%, rgba(255,255,255,0.012) 100%);
-    }
+    .card:hover{ border-color: rgba(140,18,45,.45); }
     .card:active{ transform: scale(.97); border-color: rgba(140,18,45,.60); }
 
-    .toprow{
-      width:100%;
-      display:flex; align-items:center; justify-content:space-between;
-      gap:10px;
-      position:relative; z-index:2;
-    }
-
-    .flag{
-      width: 42px; height: 30px;
-      border-radius: 10px;
-      border: 1px solid rgba(255,255,255,0.14);
-      overflow:hidden;
-      background: rgba(0,0,0,0.25);
-      box-shadow: inset 0 0 10px rgba(255,255,255,0.04);
-      flex: 0 0 42px;
-    }
-
-    /* Flags */
-    .flag.uk{
-      background:
-        linear-gradient(#012169 0 0),
-        linear-gradient(#C8102E 0 0),
-        linear-gradient(#fff 0 0);
-      background-size: 100% 100%, 100% 32%, 100% 12%;
-      background-position: 0 0, 0 50%, 0 50%;
-      background-repeat:no-repeat;
-    }
-    .flag.de{
-      background: linear-gradient(#000 0 33%, #DD0000 33% 66%, #FFCE00 66% 100%);
-    }
-    .flag.fr{
-      background: linear-gradient(90deg, #0055A4 0 33%, #fff 33% 66%, #EF4135 66% 100%);
-    }
-    .flag.es{
-      background: linear-gradient(#AA151B 0 25%, #F1BF00 25% 75%, #AA151B 75% 100%);
-    }
-    .flag.it{
-      background: linear-gradient(90deg, #009246 0 33%, #fff 33% 66%, #CE2B37 66% 100%);
-    }
-
-    .go{
-      width: 40px; height: 40px;
-      border-radius: 16px;
+    .icon-box{
+      width: 56px; height: 56px;
+      border-radius: 18px;
+      background: rgba(0,0,0,0.22);
       border: 1px solid rgba(255,255,255,0.10);
-      background: rgba(255,255,255,0.05);
       display:flex; align-items:center; justify-content:center;
-      opacity:.9;
-      flex: 0 0 40px;
-    }
-    .go svg{ width:18px; height:18px; stroke:#fff; opacity:.85; stroke-width:2; fill:none; }
-
-    .txt{
-      width:100%;
+      box-shadow: inset 0 0 15px rgba(255,255,255,0.04);
       position:relative;
       z-index:2;
     }
+    .icon-box svg{
+      width: 30px; height: 30px;
+      stroke: rgba(255,255,255,0.92);
+      fill: none;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      opacity: .95;
+    }
+
     .lang{
+      position:relative; z-index:2;
       font-weight: 1000;
       font-size: 14px;
       color: rgba(255,255,255,0.94);
@@ -263,14 +228,47 @@
       text-overflow:ellipsis;
     }
     .lesson{
+      position:relative; z-index:2;
       margin-top: 4px;
       font-weight: 900;
       font-size: 12px;
       color: rgba(255,255,255,0.60);
     }
-    .lesson b{ color: rgba(255,255,255,0.85); }
+    .lesson b{ color: rgba(255,255,255,0.88); }
 
-    /* footer */
+    .flagRow{
+      position:absolute;
+      top: 16px; right: 16px;
+      display:flex; gap:8px;
+      z-index: 2;
+      opacity: .95;
+    }
+    .flag{
+      width: 32px; height: 22px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.14);
+      overflow:hidden;
+      background: rgba(0,0,0,0.25);
+      box-shadow: inset 0 0 10px rgba(255,255,255,0.03);
+    }
+    .flag.uk{ background: linear-gradient(#012169 0 0), linear-gradient(#C8102E 0 0), linear-gradient(#fff 0 0);
+      background-size:100% 100%,100% 32%,100% 12%; background-position:0 0,0 50%,0 50%; background-repeat:no-repeat; }
+    .flag.de{ background: linear-gradient(#000 0 33%, #DD0000 33% 66%, #FFCE00 66% 100%); }
+    .flag.fr{ background: linear-gradient(90deg, #0055A4 0 33%, #fff 33% 66%, #EF4135 66% 100%); }
+    .flag.es{ background: linear-gradient(#AA151B 0 25%, #F1BF00 25% 75%, #AA151B 75% 100%); }
+    .flag.it{ background: linear-gradient(90deg, #009246 0 33%, #fff 33% 66%, #CE2B37 66% 100%); }
+
+    /* “Yeni Öğretmen Ekle” kartı */
+    .card.add{
+      opacity: .92;
+      background: linear-gradient(160deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.012) 100%);
+    }
+    .card.add .icon-box{
+      background: rgba(255,255,255,0.06);
+      border-color: rgba(255,255,255,0.16);
+    }
+
+    /* footer: home gibi, ama transparan değil (karışmasın) */
     .footerbar{
       position: fixed;
       left: 50%;
@@ -278,19 +276,31 @@
       bottom: 0;
       width: min(480px, 100vw);
       max-width: 480px;
-      padding: 10px 18px 12px;
+      padding: 12px 18px 14px;
       background: rgba(0,0,0,.92);
       border-top: 1px solid rgba(255,255,255,.08);
-      display:flex;
-      align-items:center;
-      justify-content:center;
       z-index: 999;
-      pointer-events:none;
     }
+    .links{
+      display:flex;
+      gap: 18px;
+      justify-content:center;
+      flex-wrap:wrap;
+      margin-bottom: 8px;
+    }
+    .links a{
+      color: rgba(255,255,255,0.55);
+      text-decoration:none;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .links a:active{ opacity: .85; }
+
     .footerBrand{
+      text-align:center;
       font-size: 10px;
-      color: rgba(255,255,255,0.25);
-      letter-spacing: 1px;
+      color: rgba(255,255,255,0.30);
+      letter-spacing: .6px;
       font-weight: 800;
     }
 
@@ -303,7 +313,7 @@
     <div class="orb orb-1"></div>
     <div class="orb orb-2"></div>
   </div>
-  <div class="noise"></div>
+  <div class="noise" aria-hidden="true"></div>
 
   <div class="mobile-frame">
     <div class="header">
@@ -311,26 +321,30 @@
         <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
 
-      <div class="mini-brand">
+      <div class="mini-brand" id="homeBrand" title="Ana sayfa">
         <div class="mini-logo">ITALKY</div>
         <div class="mini-flag">
           <div class="f-g"></div><div class="f-w"></div><div class="f-r"></div>
         </div>
       </div>
 
-      <div class="right-info">Öğretmen</div>
+      <div class="right-spacer" aria-hidden="true"></div>
     </div>
 
     <div class="content-scroll" id="scrollRoot">
       <div class="title">Bir dil seç — kaldığın dersten devam et.</div>
 
-      <div class="grid" id="teacherGrid">
-        <!-- JS ile dolacak -->
-      </div>
+      <div class="grid" id="teacherGrid"></div>
     </div>
   </div>
 
   <div class="footerbar">
+    <div class="links">
+      <a href="/pages/about.html">Hakkında</a>
+      <a href="/pages/faq.html">SSS</a>
+      <a href="/pages/privacy.html">Gizlilik</a>
+      <a href="/pages/contact.html">İletişim</a>
+    </div>
     <div class="footerBrand">ItalkyAI By Ozyigit’s 2026</div>
   </div>
 
@@ -346,25 +360,45 @@
       window.location.replace("/index.html");
     }
 
-    // back
+    // header actions
     document.getElementById("backBtn")?.addEventListener("click", ()=>{
       if(history.length > 1) history.back();
       else window.location.href = "/pages/home.html";
     });
+    document.getElementById("homeBrand")?.addEventListener("click", ()=>{
+      window.location.href = "/pages/home.html";
+    });
 
-    // lesson state
-    // ✅ her dil için ayrı ders sayısı
-    // key örn: italky_teacher_lesson::en -> 1
+    // lesson state (her dil ayrı)
     function lessonKey(code){ return `italky_teacher_lesson::${code}`; }
     function getLesson(code){
       const n = parseInt(localStorage.getItem(lessonKey(code)) || "1", 10);
       return (Number.isFinite(n) && n > 0) ? n : 1;
     }
 
+    // pro line icon (teacher) — aynı, her kartta kullanacağız
+    const ICON_TEACHER = `
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 19h16" />
+        <path d="M6 19v-3a3 3 0 0 1 3-3h6a3 3 0 0 1 3 3v3" />
+        <path d="M9.2 9.6a3.4 3.4 0 1 0 5.6 0" />
+        <path d="M8 6.5l4-2.2 4 2.2" />
+        <path d="M18 7v4" />
+      </svg>
+    `;
+
+    const ICON_ADD = `
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 5v14" />
+        <path d="M5 12h14" />
+        <path d="M7 4h10" opacity=".0" />
+      </svg>
+    `;
+
     const TEACHERS = [
-      { code:"en", title:"İngilizce Öğretmeni", flag:"uk",  href:"/pages/teacher.html?lang=en" },
-      { code:"de", title:"Almanca Öğretmeni",  flag:"de",  href:"/pages/teacher.html?lang=de" },
-      { code:"fr", title:"Fransızca Öğretmeni",flag:"fr",  href:"/pages/teacher.html?lang=fr" },
+      { code:"en", title:"İngilizce Öğretmeni", flag:"uk", href:"/pages/teacher.html?lang=en" },
+      { code:"de", title:"Almanca Öğretmeni",  flag:"de", href:"/pages/teacher.html?lang=de" },
+      { code:"fr", title:"Fransızca Öğretmeni",flag:"fr", href:"/pages/teacher.html?lang=fr" },
       { code:"es", title:"İspanyolca Öğretmeni",flag:"es", href:"/pages/teacher.html?lang=es" },
       { code:"it", title:"İtalyanca Öğretmeni", flag:"it", href:"/pages/teacher.html?lang=it" },
     ];
@@ -375,15 +409,23 @@
       const lesson = getLesson(t.code);
       return `
         <div class="card" data-go="${t.href}">
-          <div class="toprow">
-            <div class="flag ${t.flag}" aria-hidden="true"></div>
-            <div class="go" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </div>
-          </div>
-          <div class="txt">
+          <div class="flagRow"><div class="flag ${t.flag}" aria-hidden="true"></div></div>
+          <div class="icon-box">${ICON_TEACHER}</div>
+          <div>
             <div class="lang">${t.title}</div>
-            <div class="lesson">Ders <b id="l_${t.code}">${lesson}</b></div>
+            <div class="lesson">Ders <b>${lesson}</b></div>
+          </div>
+        </div>
+      `;
+    }
+
+    function addCardHtml(){
+      return `
+        <div class="card add" data-go="/pages/teachers_add.html">
+          <div class="icon-box">${ICON_ADD}</div>
+          <div>
+            <div class="lang">Yeni Öğretmen Ekle</div>
+            <div class="lesson">Yakında</div>
           </div>
         </div>
       `;
@@ -391,7 +433,7 @@
 
     function render(){
       if(!grid) return;
-      grid.innerHTML = TEACHERS.map(cardHtml).join("");
+      grid.innerHTML = TEACHERS.map(cardHtml).join("") + addCardHtml();
       grid.querySelectorAll("[data-go]").forEach(el=>{
         el.addEventListener("click", ()=>{
           const go = el.getAttribute("data-go");
@@ -402,12 +444,9 @@
 
     render();
 
-    // dışarıdan ders ilerleyince (teacher.html) anlık güncellenebilsin
     window.addEventListener("storage", (e)=>{
       if(!e || !e.key) return;
-      if(String(e.key).startsWith("italky_teacher_lesson::")){
-        render();
-      }
+      if(String(e.key).startsWith("italky_teacher_lesson::")) render();
     });
   </script>
 </body>
