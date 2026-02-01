@@ -1,122 +1,102 @@
-// italky-web/js/translate_page.js
-// Tasarım bozulmadan motor: STT (browser) + Translate (italky-api) + TTS (italky-api, fallback speechSynthesis)
-// ✅ Dropdown: arama + scroll gizli + Türkçe dil isimleri + sık kullanılanlar üstte
-// ✅ TR/EN label yok
-// ✅ Hoparlör butonu: mute toggle
-// ✅ Mic: sırayla konuşma, bittiğinde otomatik çeviri + karşı tarafa yaz
-// ✅ API: POST {text,target,source?} -> {translated|text|translation...}
+// FILE: italky-web/js/translate_page.js
+// ✅ POST /api/translate bağlandı
+// ✅ Ping: GET /api/translate/ping
+// ✅ TR/EN etiket yok
+// ✅ "Hazır" yok
+// ✅ Auto speak ON (mute toggle)
+// ✅ Dropdown search + scroll gizli zaten HTML/CSS’de
 
-import { API_BASE } from "/js/config.js";
+import { BASE_DOMAIN } from "/js/config.js";
 
 const $ = (id)=>document.getElementById(id);
 
 function toast(msg){
   const t = $("toast");
   if(!t) return;
-  t.textContent = String(msg||"");
+  t.textContent = msg;
   t.classList.add("show");
   clearTimeout(window.__to);
   window.__to = setTimeout(()=>t.classList.remove("show"), 2000);
+}
+
+function base(){
+  return (BASE_DOMAIN || "").replace(/\/+$/,"");
+}
+
+async function pingApi(){
+  const b = base();
+  if(!b) return;
+  try{
+    const r = await fetch(`${b}/api/translate/ping`, { method:"GET" });
+    const d = await r.json().catch(()=> ({}));
+    if(!d?.ok) toast("Çeviri motoru hazır değil.");
+    else if(!d?.has_key) toast("Translate API key eksik.");
+  }catch{
+    toast("API erişilemiyor (Render uyuyor olabilir).");
+  }
 }
 
 function setWaveListening(on){
   $("frameRoot")?.classList.toggle("listening", !!on);
 }
 
-/* =========================
-   Languages (Türkçe isimler + sık kullanılanlar)
-   ========================= */
 const LANGS = [
-  { code:"tr", name:"Türkçe",   speech:"tr-TR", tts:"tr-TR" },
-  { code:"en", name:"İngilizce",speech:"en-US", tts:"en-US" },
-  { code:"de", name:"Almanca",  speech:"de-DE", tts:"de-DE" },
+  // ✅ Sık kullanılanlar üstte (Türkçe en üst)
+  { code:"tr", name:"Türkçe",  speech:"tr-TR", tts:"tr-TR" },
+  { code:"en", name:"İngilizce", speech:"en-US", tts:"en-US" },
+  { code:"de", name:"Almanca", speech:"de-DE", tts:"de-DE" },
   { code:"fr", name:"Fransızca",speech:"fr-FR", tts:"fr-FR" },
-  { code:"it", name:"İtalyanca",speech:"it-IT", tts:"it-IT" },
-  { code:"es", name:"İspanyolca",speech:"es-ES", tts:"es-ES" },
-  { code:"pt", name:"Portekizce",speech:"pt-PT", tts:"pt-PT" },
-  { code:"nl", name:"Felemenkçe",speech:"nl-NL", tts:"nl-NL" },
-  { code:"pl", name:"Lehçe", speech:"pl-PL", tts:"pl-PL" },
-  { code:"ro", name:"Romence", speech:"ro-RO", tts:"ro-RO" },
+  { code:"es", name:"İspanyolca", speech:"es-ES", tts:"es-ES" },
+  { code:"it", name:"İtalyanca", speech:"it-IT", tts:"it-IT" },
+  { code:"pt", name:"Portekizce", speech:"pt-PT", tts:"pt-PT" },
+  { code:"nl", name:"Felemenkçe", speech:"nl-NL", tts:"nl-NL" },
   { code:"ru", name:"Rusça", speech:"ru-RU", tts:"ru-RU" },
-  { code:"uk", name:"Ukraynaca", speech:"uk-UA", tts:"uk-UA" },
   { code:"ar", name:"Arapça", speech:"ar-SA", tts:"ar-SA" },
-  { code:"fa", name:"Farsça", speech:"fa-IR", tts:"fa-IR" },
-  { code:"el", name:"Yunanca", speech:"el-GR", tts:"el-GR" },
-  { code:"bg", name:"Bulgarca", speech:"bg-BG", tts:"bg-BG" },
-  { code:"sr", name:"Sırpça", speech:"sr-RS", tts:"sr-RS" },
-  { code:"hr", name:"Hırvatça", speech:"hr-HR", tts:"hr-HR" },
-  { code:"hu", name:"Macarca", speech:"hu-HU", tts:"hu-HU" },
-  { code:"sv", name:"İsveççe", speech:"sv-SE", tts:"sv-SE" },
-  { code:"no", name:"Norveççe", speech:"nb-NO", tts:"nb-NO" },
-  { code:"da", name:"Danca", speech:"da-DK", tts:"da-DK" },
+  { code:"zh", name:"Çince", speech:"zh-CN", tts:"zh-CN" },
+  { code:"ja", name:"Japonca", speech:"ja-JP", tts:"ja-JP" },
+  { code:"ko", name:"Korece", speech:"ko-KR", tts:"ko-KR" },
 ];
 
-const TOP_CODES = ["tr","en","de","fr","it","es","ar","ru"];
-
-function langName(code){
-  return (LANGS.find(x=>x.code===code)?.name) || code;
-}
-function speechLocale(code){
-  return LANGS.find(x=>x.code===code)?.speech || "en-US";
-}
-function ttsLocale(code){
-  return LANGS.find(x=>x.code===code)?.tts || "en-US";
-}
-
-/* =========================
-   API helpers
-   ========================= */
-function baseUrl(){
-  const b = String(API_BASE || "").trim().replace(/\/+$/,"");
-  return b;
-}
+const SLOGAN_TR = "Yapay Zekânın Geleneksel Aklı";
+const SLOGAN_MAP = {
+  tr: SLOGAN_TR,
+  en: "The Traditional Mind of AI",
+  de: "Der traditionelle Verstand der KI",
+  fr: "L’esprit traditionnel de l’IA",
+  es: "La mente tradicional de la IA",
+  it: "La mente tradizionale dell’IA",
+  pt: "A mente tradicional da IA",
+  nl: "De traditionele geest van AI",
+  ru: "Традиционный разум ИИ",
+  ar: "عقل الذكاء الاصطناعي التقليدي",
+  zh: "AI 的传统思维",
+  ja: "AIの伝統的な知性",
+  ko: "AI의 전통적 지성",
+};
+function sloganFor(code){ return SLOGAN_MAP[code] || SLOGAN_TR; }
+function speechLocale(code){ return LANGS.find(x=>x.code===code)?.speech || "en-US"; }
+function ttsLocale(code){ return LANGS.find(x=>x.code===code)?.tts || "en-US"; }
 
 async function translateViaApi(text, source, target){
-  const b = baseUrl();
+  const b = base();
   if(!b) return text;
-
-  const payload = { text, target };
-  if(source) payload.source = source;
 
   try{
     const r = await fetch(`${b}/api/translate`,{
       method:"POST",
       headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify(payload)
+      body: JSON.stringify({ text, source, target })
     });
-    if(!r.ok) throw new Error("translate");
     const data = await r.json().catch(()=> ({}));
+    // ✅ farklı backend cevaplarını tolere et
     const out =
-      String(data?.translated || data?.text || data?.translation || data?.translatedText || "").trim();
+      String(data?.translated || data?.text || data?.translation || data?.result || "").trim();
     return out || text;
   }catch{
     return text;
   }
 }
 
-async function ttsViaApi(text, lang){
-  const b = baseUrl();
-  if(!b) return null;
-
-  try{
-    const r = await fetch(`${b}/api/tts`,{
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify({ text, lang })
-    });
-    if(!r.ok) throw new Error("tts");
-    const data = await r.json().catch(()=> ({}));
-    const b64 = String(data?.audio_base64 || "").trim();
-    if(!b64) return null;
-    return `data:audio/mp3;base64,${b64}`;
-  }catch{
-    return null;
-  }
-}
-
-/* =========================
-   SpeechRecognition
-   ========================= */
 function buildRecognizer(langCode){
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if(!SR) return null;
@@ -127,9 +107,7 @@ function buildRecognizer(langCode){
   return rec;
 }
 
-/* =========================
-   Auto-follow per side
-   ========================= */
+/* Auto-follow per side */
 const follow = { top:true, bot:true };
 function isNearBottom(el, slack=140){
   try{ return (el.scrollHeight - el.scrollTop - el.clientHeight) < slack; }
@@ -142,18 +120,17 @@ function scrollIfNeeded(sideName, el){
   if(follow[sideName]) el.scrollTop = el.scrollHeight;
 }
 
+/* Add bubbles (NO labels) */
 function addBubble(sideName, kind, text){
   const wrap = $(sideName === "top" ? "topBody" : "botBody");
   const b = document.createElement("div");
   b.className = `bubble ${kind}`;
-  b.textContent = String(text || "—");
+  b.textContent = text || "—";
   wrap.appendChild(b);
   scrollIfNeeded(sideName, wrap);
 }
 
-/* =========================
-   Dropdown with search + scroll hidden
-   ========================= */
+/* Custom dropdown with search */
 function buildDropdown(ddId, btnId, txtId, menuId, defCode, onChange){
   const dd = $(ddId);
   const btn = $(btnId);
@@ -168,25 +145,32 @@ function buildDropdown(ddId, btnId, txtId, menuId, defCode, onChange){
 
   function setValue(code){
     current = code;
-    txt.textContent = langName(code);
+    txt.textContent = (LANGS.find(l=>l.code===code)?.name || code);
     onChange?.(code);
   }
 
-  // build menu
+  // ✅ menu render (search + list)
   menu.innerHTML = `
     <div class="dd-search-wrap">
-      <input class="dd-search" id="${menuId}_q" placeholder="Dil ara…">
+      <input class="dd-search" id="${menuId}__q" placeholder="Ara…" />
     </div>
-    <div class="dd-sep">Sık kullanılanlar</div>
-    ${TOP_CODES.map(c=>`<div class="dd-item" data-code="${c}">${langName(c)}</div>`).join("")}
-    <div class="dd-sep">Tüm diller</div>
-    ${LANGS
-      .filter(l=>!TOP_CODES.includes(l.code))
-      .map(l=>`<div class="dd-item" data-code="${l.code}">${l.name}</div>`).join("")}
+    <div class="dd-sep">Sık kullanılan</div>
+    ${LANGS.map(l=>`<div class="dd-item" data-code="${l.code}">${l.name}</div>`).join("")}
   `;
 
-  // click items
-  menu.querySelectorAll(".dd-item").forEach(it=>{
+  const q = menu.querySelector(`#${menuId}__q`);
+  const items = Array.from(menu.querySelectorAll(".dd-item"));
+
+  // ✅ filtre
+  q?.addEventListener("input", ()=>{
+    const v = String(q.value||"").toLowerCase().trim();
+    items.forEach(it=>{
+      const name = String(it.textContent||"").toLowerCase();
+      it.classList.toggle("hidden", v && !name.includes(v));
+    });
+  });
+
+  items.forEach(it=>{
     it.addEventListener("click", ()=>{
       const code = it.getAttribute("data-code");
       closeAll();
@@ -194,24 +178,14 @@ function buildDropdown(ddId, btnId, txtId, menuId, defCode, onChange){
     });
   });
 
-  // search filter
-  const q = menu.querySelector(`#${menuId}_q`);
-  function filterList(){
-    const s = String(q.value || "").toLowerCase().trim();
-    menu.querySelectorAll(".dd-item").forEach(it=>{
-      const label = (it.textContent || "").toLowerCase();
-      it.classList.toggle("hidden", s && !label.includes(s));
-    });
-  }
-  q.addEventListener("input", filterList);
-
   btn.addEventListener("click", (e)=>{
     e.stopPropagation();
     const open = dd.classList.contains("open");
     closeAll();
     dd.classList.toggle("open", !open);
+    // açılınca search’e fokus
     if(!open){
-      setTimeout(()=>{ try{ q.focus(); }catch{} }, 50);
+      setTimeout(()=>{ try{ q?.focus(); }catch{} }, 0);
     }
   });
 
@@ -221,57 +195,7 @@ function buildDropdown(ddId, btnId, txtId, menuId, defCode, onChange){
   return { get: ()=> current, set: (c)=> setValue(c) };
 }
 
-/* =========================
-   Speaker (mute) + play audio
-   ========================= */
-const mute = { top:false, bot:false }; // false => speak ON
-function setMute(side, on){
-  mute[side] = !!on;
-  const btn = $(side === "top" ? "topSpeak" : "botSpeak");
-  btn.classList.toggle("muted", mute[side]);
-}
-
-let __audio = null;
-function playAudio(url){
-  try{
-    if(!url) return false;
-    if(!__audio) __audio = new Audio();
-    __audio.pause();
-    __audio.src = url;
-    __audio.currentTime = 0;
-    __audio.play().catch(()=>{});
-    return true;
-  }catch{
-    return false;
-  }
-}
-
-function speakFallback(text, langCode){
-  if(!("speechSynthesis" in window)) return;
-  try{
-    const u = new SpeechSynthesisUtterance(String(text||""));
-    u.lang = ttsLocale(langCode);
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(u);
-  }catch{}
-}
-
-async function speakAuto(text, langCode, side){
-  if(mute[side]) return;
-  const t = String(text||"").trim();
-  if(!t) return;
-
-  // try API TTS first
-  const url = await ttsViaApi(t, ttsLocale(langCode));
-  if(url && playAudio(url)) return;
-
-  // fallback to browser
-  speakFallback(t, langCode);
-}
-
-/* =========================
-   Conversation flow
-   ========================= */
+/* Mic + wave */
 let active = null;
 let topRec = null;
 let botRec = null;
@@ -293,28 +217,48 @@ function stopAll(){
   setWaveListening(false);
 }
 
+/* Auto speak toggle (mute) */
+const mute = { top:false, bot:false }; // false => speak ON
+function setMute(side, on){
+  mute[side] = !!on;
+  const btn = $(side === "top" ? "topSpeak" : "botSpeak");
+  btn.classList.toggle("muted", mute[side]);
+}
+
+function speakAuto(text, langCode, side){
+  if(mute[side]) return;
+  const t = String(text||"").trim();
+  if(!t) return;
+  if(!("speechSynthesis" in window)) return;
+
+  try{
+    const u = new SpeechSynthesisUtterance(t);
+    u.lang = ttsLocale(langCode);
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(u);
+  }catch{}
+}
+
 async function onFinal(side, srcCode, dstCode, finalText){
   const otherSide = (side === "top") ? "bot" : "top";
 
   addBubble(side, "them", finalText);
 
-  const translated = await translateViaApi(finalText, srcCode, dstCode);
-  addBubble(otherSide, "me", translated);
+  const out = await translateViaApi(finalText, srcCode, dstCode);
+  addBubble(otherSide, "me", out);
 
-  await speakAuto(translated, dstCode, otherSide);
+  speakAuto(out, dstCode, otherSide);
 }
 
 function startSide(side, getLang, getOtherLang){
-  if(active && active !== side){
-    stopAll();
-  }
+  if(active && active !== side) stopAll();
 
   const srcCode = getLang();
   const dstCode = getOtherLang();
 
   const rec = buildRecognizer(srcCode);
   if(!rec){
-    toast("Bu cihaz konuşmayı yazıya çevirmiyor.");
+    toast("Bu cihaz konuşmayı yazıya çevirmiyor (SpeechRecognition yok).");
     return;
   }
 
@@ -342,7 +286,6 @@ function startSide(side, getLang, getOtherLang){
   rec.onend = async ()=>{
     const txt = (finalText || live || "").trim();
     setMicUI(side, false);
-    setWaveListening(false);
 
     if(!txt){
       active = null;
@@ -363,23 +306,32 @@ function startSide(side, getLang, getOtherLang){
   }
 }
 
-/* =========================
-   Boot
-   ========================= */
-document.addEventListener("DOMContentLoaded", ()=>{
+document.addEventListener("DOMContentLoaded", async ()=>{
   $("backBtn").addEventListener("click", ()=>{
     if(history.length>1) history.back();
-    else location.href = "/index.html";
+    else location.href = "/pages/home.html";
   });
+
+  // ✅ API ping (Render uyuyor mu / key var mı)
+  await pingApi();
 
   hookScrollFollow("top", $("topBody"));
   hookScrollFollow("bot", $("botBody"));
 
-  // default languages: top=en, bottom=tr (senin alışkanlık)
-  const topDD = buildDropdown("ddTop","ddTopBtn","ddTopTxt","ddTopMenu","en", ()=>{});
-  const botDD = buildDropdown("ddBot","ddBotBtn","ddBotTxt","ddBotMenu","tr", ()=>{});
+  const topDD = buildDropdown("ddTop","ddTopBtn","ddTopTxt","ddTopMenu","en", (code)=>{
+    $("sloganTop").textContent = sloganFor(code);
+  });
 
-  // speaker buttons toggle mute only
+  const botDD = buildDropdown("ddBot","ddBotBtn","ddBotTxt","ddBotMenu","tr", (code)=>{
+    $("sloganBot").textContent = sloganFor(code);
+  });
+
+  $("sloganTop").textContent = sloganFor(topDD.get());
+  $("sloganBot").textContent = sloganFor(botDD.get());
+
+  $("topBody").innerHTML = "";
+  $("botBody").innerHTML = "";
+
   $("topSpeak").addEventListener("click", ()=>{
     setMute("top", !mute.top);
     toast(mute.top ? "Ses kapalı" : "Ses açık");
@@ -389,16 +341,11 @@ document.addEventListener("DOMContentLoaded", ()=>{
     toast(mute.bot ? "Ses kapalı" : "Ses açık");
   });
 
-  // default sound ON
   setMute("top", false);
   setMute("bot", false);
 
-  // mic
   $("topMic").addEventListener("click", ()=> startSide("top", ()=>topDD.get(), ()=>botDD.get()));
   $("botMic").addEventListener("click", ()=> startSide("bot", ()=>botDD.get(), ()=>topDD.get()));
 
-  // clear
-  $("topBody").innerHTML = "";
-  $("botBody").innerHTML = "";
   setWaveListening(false);
 });
