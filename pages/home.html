@@ -1,3 +1,4 @@
+<!-- FILE: italky-web/pages/home.html -->
 <!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -12,214 +13,422 @@
 
   <style>
     :root {
-      /* EFSANE RENKLER */
+      /* ITALKY PALET (mevcut stil korunuyor) */
       --bg-void: #030014;
       --neon-cyan: #00f3ff;
       --neon-purple: #bc13fe;
       --neon-pink: #ff00aa;
-      
-      --glass-border: rgba(255, 255, 255, 0.15);
+
+      --glass-surface: rgba(255, 255, 255, 0.05);
+      --glass-border: rgba(255, 255, 255, 0.1);
+
       --text-main: #ffffff;
       --text-muted: rgba(255, 255, 255, 0.65);
-      
+
       --ease-elastic: cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
 
+    /* Sayfa sabitle (iOS zıplama fix) */
     html, body {
       margin: 0; padding: 0; width: 100%; height: 100%;
-      overflow: hidden; position: fixed;
+      overflow: hidden;
+      position: fixed;
       font-family: 'Outfit', sans-serif;
       background-color: var(--bg-void);
       color: var(--text-main);
       display: flex; align-items: center; justify-content: center;
     }
 
-    /* --- BACKGROUND (Aurora) --- */
-    .cosmos-bg { position: absolute; inset: -50%; width: 200%; height: 200%; background: #030014; z-index: 0; pointer-events: none; }
-    .orb { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.5; animation: floatOrbit 20s infinite alternate; }
-    .orb-1 { top: 20%; left: 20%; width: 60vw; height: 60vw; background: radial-gradient(circle, var(--neon-purple), transparent 70%); }
-    .orb-2 { bottom: 20%; right: 20%; width: 70vw; height: 70vw; background: radial-gradient(circle, var(--neon-cyan), transparent 70%); animation-delay: -5s; }
-    @keyframes floatOrbit { 0% { transform: scale(1) rotate(0deg); } 100% { transform: scale(1.1) rotate(10deg); } }
-    .noise { position: absolute; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E"); pointer-events: none; mix-blend-mode: overlay; z-index: 1; }
+    /* Background FX */
+    .cosmos-bg {
+      position: absolute; inset: -50%; width: 200%; height: 200%;
+      background: #030014; z-index: 0; pointer-events: none;
+    }
+    .orb {
+      position: absolute; border-radius: 50%;
+      filter: blur(80px); opacity: 0.5;
+      animation: floatOrbit 25s infinite alternate ease-in-out;
+    }
+    .orb-1 {
+      top: 10%; left: 10%; width: 60vw; height: 60vw;
+      background: radial-gradient(circle, var(--neon-purple), transparent 70%);
+    }
+    .orb-2 {
+      bottom: 10%; right: 10%; width: 50vw; height: 50vw;
+      background: radial-gradient(circle, var(--neon-cyan), transparent 70%);
+      animation-delay: -5s;
+    }
+    @keyframes floatOrbit {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(10%, -10%) scale(1.1); }
+    }
 
-    /* --- FRAME --- */
+    .noise {
+      position: absolute; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none; mix-blend-mode: overlay; z-index: 1;
+    }
+
+    /* Frame */
     .mobile-frame {
       width: 100%; max-width: 480px; height: 100%;
       position: relative; z-index: 10;
       display: flex; flex-direction: column;
-      background: rgba(5, 5, 10, 0.3);
-      backdrop-filter: blur(40px);
+      background: rgba(5, 5, 10, 0.4);
+      backdrop-filter: blur(30px);
+      overflow: hidden;
     }
     @media (min-width: 520px) {
       .mobile-frame {
         height: 92vh; border-radius: 40px;
         border: 1px solid rgba(255,255,255,0.1);
-        box-shadow: 0 0 80px rgba(188, 19, 254, 0.15), 0 40px 100px rgba(0,0,0,0.8);
+        box-shadow: 0 40px 100px -20px rgba(0,0,0,0.8);
       }
     }
 
-    /* --- TOP BAR (LOGOLU) --- */
-    .topbar {
-      height: 140px; /* Büyük alan */
-      display: flex; align-items: center; justify-content: center;
-      position: relative; z-index: 20; padding-top: 20px;
+    /* Header */
+    .header {
+      flex: 0 0 92px;
+      padding: 0 18px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: relative; z-index: 20;
+      gap: 12px;
     }
-    
-    /* Profil Butonu (Sağ Üstte Asılı) */
-    .profile-float {
-      position: absolute; right: 20px; top: 30px;
-      width: 44px; height: 44px; border-radius: 50%;
-      background: rgba(255,255,255,0.1);
-      border: 1px solid rgba(255,255,255,0.2);
-      backdrop-filter: blur(10px);
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; overflow: hidden;
-      box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-      transition: 0.3s;
-      z-index: 50;
-    }
-    .profile-float:active { transform: scale(0.9); }
-    .profile-float img { width: 100%; height: 100%; object-fit: cover; }
-    
-    .brand {
-      display: flex; flex-direction: column; align-items: center; gap: 12px;
-      animation: slideDown 1s var(--ease-elastic);
-    }
-    
-    /* HOLOGRAM LOGO */
-    .logoText {
-      font-family: 'Space Grotesk', sans-serif;
-      font-weight: 700; font-size: 52px; line-height: 1;
-      letter-spacing: -2px;
-      color: transparent;
-      background: linear-gradient(135deg, #fff 30%, var(--neon-cyan) 50%, #fff 70%);
-      background-size: 200% auto;
-      -webkit-background-clip: text;
-      animation: holoShine 5s linear infinite;
-      filter: drop-shadow(0 0 20px rgba(255,255,255,0.3));
-    }
-    @keyframes holoShine { to { background-position: 200% center; } }
 
-    /* NEON FLAG */
-    .flagbar {
-      width: 160px; height: 4px; border-radius: 99px;
-      display: flex; overflow: hidden;
-      box-shadow: 0 0 20px rgba(255,255,255,0.1);
+    .mini-brand { display: flex; flex-direction: column; width: fit-content; align-items: center; user-select:none; }
+    .mini-logo {
+      font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 26px;
+      letter-spacing: -1px; color: #fff; line-height: 1; white-space: nowrap;
+      text-shadow: 0 0 20px rgba(255,255,255,0.3);
     }
-    .flagbar div { flex: 1; height: 100%; }
-    .f-g { background: #00ff41; box-shadow: 0 0 15px #00ff41; z-index: 2; }
-    .f-w { background: #ffffff; z-index: 1; opacity: 1; box-shadow: 0 0 15px #fff; }
-    .f-red { background: #ff003c; box-shadow: 0 0 15px #ff003c; z-index: 2; }
+    .mini-flag {
+      width: 100%; height: 4px; border-radius: 4px; display: flex; overflow: hidden; margin-top: 4px;
+      box-shadow: 0 0 10px rgba(255,255,255,0.15);
+    }
+    .mini-flag div { flex: 1; height: 100%; }
+    .f-g { background: #009246; box-shadow: 0 0 8px #009246; z-index:1; }
+    .f-w { background: #fff; z-index:2; }
+    .f-r { background: #CE2B37; box-shadow: 0 0 8px #CE2B37; z-index:1; }
 
-    /* --- MENU GRID --- */
+    /* User chip */
+    .userbox{
+      flex: 1;
+      min-width: 0;
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      justify-content:flex-end;
+    }
+
+    .avatar{
+      width: 42px; height: 42px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(255,255,255,0.08);
+      overflow:hidden;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      flex: 0 0 42px;
+    }
+    .avatar img{ width:100%; height:100%; object-fit:cover; display:block; }
+    .avatar .fallback{ font-size:18px; font-weight:900; opacity:.9; }
+
+    .usertext{
+      min-width: 0;
+      display:flex;
+      flex-direction:column;
+      align-items:flex-start;
+      gap: 2px;
+      max-width: 190px;
+    }
+    .uname{
+      font-weight: 900;
+      font-size: 13px;
+      color: rgba(255,255,255,0.92);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .plan{
+      font-weight: 900;
+      font-size: 11px;
+      color: rgba(255,255,255,0.60);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .settings-btn{
+      width: 44px; height: 44px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.10);
+      border: 1px solid rgba(255,255,255,0.18);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      flex: 0 0 44px;
+      transition: .15s;
+    }
+    .settings-btn:active{ transform: scale(.96); }
+    .settings-btn svg{ width: 22px; height:22px; stroke:#fff; opacity:.9; }
+
+    /* Menu scroll */
     .menu-scroll {
-      flex: 1; overflow-y: auto; overflow-x: hidden;
+      flex: 1;
+      overflow-y: auto; overflow-x: hidden;
       -webkit-overflow-scrolling: touch;
-      padding: 10px 20px 140px; /* Footer payı */
+      padding: 10px 18px 170px;
       position: relative; z-index: 5;
+      scrollbar-width: none;
     }
     .menu-scroll::-webkit-scrollbar { display: none; }
 
+    .sectionTitle{
+      font-size: 11px;
+      font-weight: 1000;
+      letter-spacing: .8px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.55);
+      margin: 10px 6px 10px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+    }
+
     .grid {
       display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
-      animation: fadeInUp 0.8s var(--ease-elastic) backwards;
+      animation: fadeInUp 0.8s var(--ease-elastic);
     }
 
-    /* GLASS CARD */
-    .nav-card {
+    .card {
       position: relative;
-      background: linear-gradient(160deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%);
+      background: linear-gradient(160deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.01) 100%);
       border: 1px solid var(--glass-border);
-      border-top: 1px solid rgba(255,255,255,0.15);
-      border-radius: 26px; padding: 20px 16px;
+      border-radius: 24px;
+      padding: 18px 14px;
       display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
-      gap: 12px; cursor: pointer; user-select: none;
-      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-      box-shadow: 0 15px 35px -10px rgba(0,0,0,0.5);
-      aspect-ratio: 1 / 1.1; overflow: hidden;
+      gap: 10px; cursor: pointer; user-select: none;
+      transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+      box-shadow: 0 10px 30px -5px rgba(0,0,0,0.3);
+      aspect-ratio: 1 / 1.1;
+      overflow: hidden;
     }
-    /* Hover Glow */
-    .nav-card::after {
-      content: ''; position: absolute; inset: 0; border-radius: 26px; padding: 1px;
-      background: linear-gradient(135deg, transparent, rgba(255,255,255,0.3), transparent);
-      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-      -webkit-mask-composite: xor; mask-composite: exclude; opacity: 0.5;
-    }
-    .nav-card:active { transform: scale(0.96); background: rgba(255,255,255,0.08); }
 
-    /* Icons */
-    .icon-glow {
-      width: 54px; height: 54px; border-radius: 18px;
-      background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);
+    .card::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(circle at 50% 0%, rgba(255,255,255,0.1), transparent 70%);
+      opacity: 0; transition: 0.25s;
+      pointer-events:none;
+    }
+    .card:active::before { opacity: 1; }
+    .card:active { transform: scale(0.97); border-color: rgba(255,255,255,0.28); }
+
+    .icon-box {
+      width: 56px; height: 56px; border-radius: 18px;
+      background: rgba(0,0,0,0.22);
+      border: 1px solid rgba(255,255,255,0.12);
       display: flex; align-items: center; justify-content: center;
-      transition: 0.3s; box-shadow: inset 0 0 20px rgba(255,255,255,0.05);
-      position: relative;
+      transition: 0.25s;
+      box-shadow: inset 0 0 15px rgba(255,255,255,0.05);
     }
-    .icon-glow svg { width: 26px; height: 26px; stroke-width: 1.8; color: #fff; z-index: 2; }
-    /* Neon Blob */
-    .icon-glow::before {
-      content:''; position: absolute; width: 20px; height: 20px;
-      background: var(--neon-cyan); filter: blur(15px); opacity: 0; transition: 0.3s;
+    .icon-box svg { width: 28px; height: 28px; stroke-width: 1.8; color: #fff; }
+
+    .label { font-size: 14px; font-weight: 900; color: #fff; line-height: 1.15; letter-spacing: 0.2px; }
+    .sub { font-size: 11px; color: var(--text-muted); font-weight: 600; margin-top: 2px; }
+
+    /* Teacher area (collapsible) */
+    .teacherWrap{
+      margin-top: 12px;
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 22px;
+      background: rgba(255,255,255,0.03);
+      overflow:hidden;
+      display:none;
     }
-    .nav-card:nth-child(odd) .icon-glow::before { background: var(--neon-cyan); }
-    .nav-card:nth-child(even) .icon-glow::before { background: var(--neon-purple); }
-    
-    .nav-card:active .icon-glow::before { opacity: 0.6; }
-    .nav-card:active .icon-glow { border-color: rgba(255,255,255,0.4); transform: translateY(-3px); }
-
-    .label { font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 700; color: #fff; line-height: 1.2; letter-spacing: 0.3px; }
-    .sub { font-size: 11px; color: var(--text-muted); font-weight: 500; margin-top: 2px; opacity: 0.7; }
-
-    /* Full Width */
-    .nav-card.full {
-      grid-column: span 2; aspect-ratio: auto; flex-direction: row; justify-content: flex-start;
-      padding: 24px; background: linear-gradient(90deg, rgba(188, 19, 254, 0.1) 0%, rgba(255,255,255,0.02) 100%);
+    .teacherWrap.open{ display:block; animation: fadeInUp .25s ease; }
+    .teacherHead{
+      padding: 12px 14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      background: rgba(0,0,0,.18);
+      font-weight: 950;
+      font-size: 12px;
     }
-    .nav-card.full .icon-glow { margin-right: 16px; }
-    .nav-card.full .text-col { text-align: left; }
+    .teacherGrid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      padding: 12px;
+    }
 
-    /* --- FOOTER --- */
+    .tCard{
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+      padding: 12px 12px 10px;
+      cursor:pointer;
+      user-select:none;
+      display:flex;
+      flex-direction:column;
+      gap: 8px;
+    }
+    .tCard:active{ transform: scale(.98); }
+
+    .tTop{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .tFlag{
+      width: 44px;
+      height: 10px;
+      border-radius: 999px;
+      overflow:hidden;
+      display:flex;
+      border: 1px solid rgba(255,255,255,.10);
+      box-shadow: 0 10px 18px rgba(0,0,0,.25);
+    }
+    .tFlag span{ flex:1; }
+    .tName{
+      font-weight: 950;
+      font-size: 12px;
+      color: rgba(255,255,255,.92);
+      line-height:1.1;
+    }
+    .tSub{
+      font-weight: 800;
+      font-size: 11px;
+      color: rgba(255,255,255,.58);
+    }
+
+    .ghost{
+      opacity:.58;
+      cursor:not-allowed;
+    }
+
+    /* Footer */
     .footerbar {
-      position: absolute; bottom: 0; width: 100%; padding: 24px 20px;
-      background: linear-gradient(to top, #000 30%, transparent 100%);
-      display: flex; flex-direction: column; align-items: center; gap: 14px;
-      z-index: 30; pointer-events: none;
+      position: absolute; bottom: 0; width: 100%; padding: 18px;
+      background: linear-gradient(to top, #000 10%, transparent 100%);
+      display: flex; flex-direction: column; align-items: center; gap: 12px;
+      z-index: 30;
+      pointer-events: none;
     }
-    .links { display: flex; gap: 20px; pointer-events: auto; }
+    .links { display: flex; gap: 18px; pointer-events: auto; flex-wrap:wrap; justify-content:center; }
     .links a {
-      color: rgba(255,255,255,0.5); text-decoration: none; font-size: 12px; font-weight: 600; transition: 0.2s;
+      color: rgba(255,255,255,0.5); text-decoration: none; font-size: 12px; font-weight: 800; transition: 0.2s;
     }
-    .links a:hover { color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.8); }
-    .footerBrand { font-size: 10px; color: rgba(255,255,255,0.25); letter-spacing: 2px; text-transform: uppercase; font-weight: 700; }
+    .links a:hover { color: var(--neon-cyan); text-shadow: 0 0 8px var(--neon-cyan); }
 
-    /* --- ANIMATIONS --- */
-    @keyframes slideDown { from { transform: translateY(-80px) scale(0.8); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
-    @keyframes fadeInUp { from { transform: translateY(60px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .footerBrand {
+      font-size: 10px; color: rgba(255,255,255,0.2);
+      letter-spacing: 2px; text-transform: uppercase; font-weight: 800;
+    }
 
-    /* --- SETTINGS MODAL --- */
-    .modal-overlay {
-      position: absolute; inset: 0; background: rgba(0,0,0,0.6); z-index: 100;
-      backdrop-filter: blur(10px); display: none; align-items: flex-end;
-      animation: fadeIn 0.3s;
+    /* Settings sheet */
+    .sheetOverlay{
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.65);
+      backdrop-filter: blur(10px);
+      z-index: 9999;
+      display:none;
+      align-items:flex-end;
+      justify-content:center;
+      padding: 14px;
     }
-    .modal-overlay.active { display: flex; }
-    .settings-sheet {
-      width: 100%; 
-      background: linear-gradient(180deg, rgba(20,20,30,0.95) 0%, #000 100%);
-      border-top-left-radius: 32px; border-top-right-radius: 32px; border-top: 1px solid var(--glass-border);
-      padding: 28px 24px 40px; display: flex; flex-direction: column; gap: 12px;
-      box-shadow: 0 -20px 50px rgba(0,0,0,0.8);
+    .sheetOverlay.show{ display:flex; }
+    .sheet{
+      width: min(480px, calc(100vw - 18px));
+      border-radius: 22px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(16,16,20,.92);
+      box-shadow: 0 30px 90px rgba(0,0,0,.75);
+      overflow:hidden;
     }
-    .sheet-title { font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 12px; text-align: center; }
-    .setting-item {
-      display: flex; align-items: center; gap: 16px; padding: 16px; border-radius: 18px;
-      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.05);
-      color: #fff; font-size: 15px; font-weight: 600; cursor: pointer;
+    .sheetHead{
+      padding: 12px 12px 10px;
+      border-bottom: 1px solid rgba(255,255,255,.10);
+      display:flex; align-items:center; justify-content:space-between;
+      background: rgba(0,0,0,.22);
     }
-    .setting-item.danger { color: #ff4d4d; background: rgba(255, 77, 77, 0.08); border-color: rgba(255, 77, 77, 0.2); }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .sheetTitle{
+      font-weight: 1000;
+      font-size: 13px;
+      letter-spacing:.2px;
+    }
+    .xBtn{
+      width:40px; height:40px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+      color:#fff;
+      font-size:18px;
+      font-weight:1000;
+      cursor:pointer;
+    }
+    .xBtn:active{ transform: translateY(1px); }
+    .sheetList{
+      padding: 10px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .sItem{
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+      padding: 12px 12px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      cursor:pointer;
+      user-select:none;
+    }
+    .sItem:active{ transform: translateY(1px); }
+    .sLeft{
+      display:flex;
+      flex-direction:column;
+      gap: 4px;
+      min-width:0;
+    }
+    .sLbl{
+      font-weight: 950;
+      font-size: 13px;
+      color: rgba(255,255,255,.92);
+    }
+    .sDesc{
+      font-weight: 800;
+      font-size: 11px;
+      color: rgba(255,255,255,.55);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width: 340px;
+    }
+    .pill{
+      font-weight: 1000;
+      font-size: 11px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.18);
+      color: rgba(255,255,255,.75);
+      white-space:nowrap;
+    }
+    .danger{
+      border-color: rgba(255,0,120,.25);
+      background: rgba(255,0,120,.06);
+    }
+
+    @keyframes fadeInUp { from { transform: translateY(26px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
   </style>
 </head>
 
@@ -227,97 +436,237 @@
   <div class="cosmos-bg">
     <div class="orb orb-1"></div>
     <div class="orb orb-2"></div>
-    <div class="orb orb-3"></div>
   </div>
   <div class="noise"></div>
 
   <div class="mobile-frame">
-    
-    <div class="topbar">
-      <div class="brand">
-        <div class="logoText">ITALKY</div>
-        <div class="flagbar">
+
+    <!-- HEADER -->
+    <div class="header">
+      <div class="mini-brand">
+        <div class="mini-logo">ITALKY</div>
+        <div class="mini-flag">
           <div class="f-g"></div><div class="f-w"></div><div class="f-r"></div>
         </div>
       </div>
 
-      <div class="profile-float" id="openSettings">
-        <img id="userAvatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23fff'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E" alt="Avatar">
+      <div class="userbox">
+        <div class="avatar" id="avatarBox">
+          <div class="fallback">👤</div>
+        </div>
+        <div class="usertext">
+          <div class="uname" id="userName">—</div>
+          <div class="plan" id="userPlan">FREE</div>
+        </div>
+
+        <button class="settings-btn" id="settingsBtn" aria-label="Ayarlar">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z" stroke-width="2" stroke="currentColor"/>
+            <path d="M19.4 15a8.6 8.6 0 0 0 .1-2l2-1.4-2-3.4-2.3.6a8.9 8.9 0 0 0-1.7-1l-.3-2.4h-4l-.3 2.4a8.9 8.9 0 0 0-1.7 1l-2.3-.6-2 3.4 2 1.4a8.6 8.6 0 0 0 .1 2l-2 1.4 2 3.4 2.3-.6a8.9 8.9 0 0 0 1.7 1l.3 2.4h4l.3-2.4a8.9 8.9 0 0 0 1.7-1l2.3.6 2-3.4-2-1.4z" stroke-width="2" stroke="currentColor" opacity=".85"/>
+          </svg>
+        </button>
       </div>
     </div>
 
+    <!-- MENU -->
     <div class="menu-scroll">
+
+      <div class="sectionTitle">Modüller</div>
+
       <div class="grid">
 
-        <div class="nav-card" onclick="window.location.href='/pages/translate.html'">
-          <div class="icon-glow">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        <!-- 1. Yüz Yüze Çeviri -->
+        <div class="card" data-go="/pages/face_translate.html">
+          <div class="icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M8 12h8"/><path d="M12 8v8"/><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg>
           </div>
-          <div><div class="label">Yüz Yüze</div><div class="sub">Karşılıklı Mod</div></div>
+          <div>
+            <div class="label">Yüz Yüze Çeviri</div>
+            <div class="sub">İki kişi, canlı</div>
+          </div>
         </div>
 
-        <div class="nav-card" onclick="window.location.href='/pages/translate.html'">
-          <div class="icon-glow">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+        <!-- 2. Diyalog -->
+        <div class="card" data-go="/pages/translate.html">
+          <div class="icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
           </div>
-          <div><div class="label">Diyalog</div><div class="sub">Sohbet Akışı</div></div>
+          <div>
+            <div class="label">Diyalog</div>
+            <div class="sub">Karşılıklı konuş</div>
+          </div>
         </div>
 
-        <div class="nav-card" onclick="window.location.href='/pages/live_translate.html'">
-          <div class="icon-glow">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+        <!-- 3. Anında tek taraflı -->
+        <div class="card" data-go="/pages/live_translate.html">
+          <div class="icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>
           </div>
-          <div><div class="label">Anında</div><div class="sub">Tek Taraflı</div></div>
+          <div>
+            <div class="label">Toplantı Modu</div>
+            <div class="sub">Tek yön anlık</div>
+          </div>
         </div>
 
-        <div class="nav-card" onclick="window.location.href='/pages/photo_translate.html'">
-          <div class="icon-glow">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+        <!-- 4. Fotoğraftan -->
+        <div class="card" data-go="/pages/photo_translate.html">
+          <div class="icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
           </div>
-          <div><div class="label">Kamera</div><div class="sub">Görsel Çeviri</div></div>
+          <div>
+            <div class="label">Fotoğraftan Çeviri</div>
+            <div class="sub">Menü / etiket</div>
+          </div>
         </div>
 
-        <div class="nav-card" onclick="window.location.href='/pages/doc_translate.html'">
-          <div class="icon-glow">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+        <!-- 5. Belgeden -->
+        <div class="card" data-go="/pages/doc_translate.html">
+          <div class="icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>
           </div>
-          <div><div class="label">Belge</div><div class="sub">Metin Tara</div></div>
+          <div>
+            <div class="label">Belgeden Çeviri</div>
+            <div class="sub">PDF / metin</div>
+          </div>
         </div>
 
-        <div class="nav-card" onclick="window.location.href='/pages/chat.html'">
-          <div class="icon-glow">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10H12V2z"></path><path d="M12 2a10 10 0 0 1 10 10h-10z" opacity="0.5"></path></svg>
+        <!-- 6. AI Asistan -->
+        <div class="card" data-go="/pages/chat.html">
+          <div class="icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2a10 10 0 1 0 10 10H12V2z"/><path d="M12 2a10 10 0 0 1 10 10h-10z" opacity="0.55"/></svg>
           </div>
-          <div><div class="label">AI Asistan</div><div class="sub">Akıllı Soru</div></div>
+          <div>
+            <div class="label">AI Asistan</div>
+            <div class="sub">Sohbet & soru</div>
+          </div>
         </div>
 
-        <div class="nav-card" onclick="window.location.href='/pages/online_chat.html'">
-          <div class="icon-glow">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+        <!-- 7. Online Sohbet -->
+        <div class="card" data-go="/pages/online_chat.html">
+          <div class="icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 8a6 6 0 1 0-11 4l-2 3 3-1a6 6 0 0 0 10-6z"/><path d="M22 12a5 5 0 0 1-5 5h-2l-3 2 1-3"/></svg>
           </div>
-          <div><div class="label">Online</div><div class="sub">Chat Çeviri</div></div>
+          <div>
+            <div class="label">Online Sohbet</div>
+            <div class="sub">Çevirili mesaj</div>
+          </div>
         </div>
 
-        <div class="nav-card" onclick="window.location.href='/pages/teacher.html'">
-          <div class="icon-glow">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+        <!-- 8. Öğretmen -->
+        <div class="card" id="teacherBtn">
+          <div class="icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
           </div>
-          <div><div class="label">Öğretmen</div><div class="sub">Ders & Pratik</div></div>
+          <div>
+            <div class="label">Öğretmen</div>
+            <div class="sub">Ders & sınav</div>
+          </div>
         </div>
 
-        <div class="nav-card full" onclick="window.location.href='/pages/learn_friend.html'">
-          <div class="icon-glow">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        <!-- 9. Arkadaşınla öğren -->
+        <div class="card" data-go="/pages/learn_with_friend.html">
+          <div class="icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 11c1.7 0 3-1.3 3-3S17.7 5 16 5s-3 1.3-3 3 1.3 3 3 3z"/><path d="M8 11c1.7 0 3-1.3 3-3S9.7 5 8 5 5 6.3 5 8s1.3 3 3 3z"/><path d="M2 20c0-3 3-5 6-5"/><path d="M22 20c0-3-3-5-6-5"/><path d="M8 15h8"/></svg>
           </div>
-          <div class="text-col">
+          <div>
             <div class="label">Arkadaşınla Öğren</div>
-            <div class="sub">Birlikte gelişin, yarışın.</div>
+            <div class="sub">Düello / pratik</div>
           </div>
         </div>
 
       </div>
+
+      <!-- Teacher languages (open) -->
+      <div class="teacherWrap" id="teacherWrap">
+        <div class="teacherHead">
+          <div>Öğretmen Seç</div>
+          <div style="opacity:.6;font-weight:900;font-size:11px;">(2’li)</div>
+        </div>
+
+        <div class="teacherGrid">
+          <!-- EN -->
+          <div class="tCard" data-go="/pages/teacher_en.html">
+            <div class="tTop">
+              <div class="tName">İngilizce Öğretmeni</div>
+              <div class="tFlag" aria-hidden="true">
+                <span style="background:#00247d"></span>
+                <span style="background:#ffffff"></span>
+                <span style="background:#cf142b"></span>
+              </div>
+            </div>
+            <div class="tSub">Telaffuz • kelime • sınav</div>
+          </div>
+
+          <!-- DE -->
+          <div class="tCard" data-go="/pages/teacher_de.html">
+            <div class="tTop">
+              <div class="tName">Almanca Öğretmeni</div>
+              <div class="tFlag" aria-hidden="true">
+                <span style="background:#000"></span>
+                <span style="background:#dd0000"></span>
+                <span style="background:#ffce00"></span>
+              </div>
+            </div>
+            <div class="tSub">Telaffuz • kelime • sınav</div>
+          </div>
+
+          <!-- FR -->
+          <div class="tCard" data-go="/pages/teacher_fr.html">
+            <div class="tTop">
+              <div class="tName">Fransızca Öğretmeni</div>
+              <div class="tFlag" aria-hidden="true">
+                <span style="background:#0055a4"></span>
+                <span style="background:#fff"></span>
+                <span style="background:#ef4135"></span>
+              </div>
+            </div>
+            <div class="tSub">Telaffuz • kelime • sınav</div>
+          </div>
+
+          <!-- ES -->
+          <div class="tCard" data-go="/pages/teacher_es.html">
+            <div class="tTop">
+              <div class="tName">İspanyolca Öğretmeni</div>
+              <div class="tFlag" aria-hidden="true">
+                <span style="background:#aa151b"></span>
+                <span style="background:#f1bf00"></span>
+                <span style="background:#aa151b"></span>
+              </div>
+            </div>
+            <div class="tSub">Telaffuz • kelime • sınav</div>
+          </div>
+
+          <!-- IT -->
+          <div class="tCard" data-go="/pages/teacher_it.html">
+            <div class="tTop">
+              <div class="tName">İtalyanca Öğretmeni</div>
+              <div class="tFlag" aria-hidden="true">
+                <span style="background:#009246"></span>
+                <span style="background:#fff"></span>
+                <span style="background:#ce2b37"></span>
+              </div>
+            </div>
+            <div class="tSub">Telaffuz • kelime • sınav</div>
+          </div>
+
+          <!-- Add teacher -->
+          <div class="tCard ghost" id="teacherAdd">
+            <div class="tTop">
+              <div class="tName">Öğretmen Ekle</div>
+              <div class="tFlag" aria-hidden="true">
+                <span style="background:rgba(255,255,255,.10)"></span>
+                <span style="background:rgba(255,255,255,.06)"></span>
+                <span style="background:rgba(255,255,255,.10)"></span>
+              </div>
+            </div>
+            <div class="tSub">Yakında…</div>
+          </div>
+        </div>
+      </div>
+
     </div>
 
+    <!-- FOOTER -->
     <div class="footerbar">
       <div class="links">
         <a href="/pages/about.html">Hakkında</a>
@@ -330,67 +679,171 @@
 
   </div>
 
-  <div class="modal-overlay" id="settingsModal">
-    <div class="settings-sheet">
-      <div class="sheet-title">Ayarlar</div>
-      
-      <div class="setting-item">
-        <svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line></svg>
-        Site Dili
+  <!-- SETTINGS SHEET -->
+  <div class="sheetOverlay" id="settingsSheet">
+    <div class="sheet" role="dialog" aria-modal="true">
+      <div class="sheetHead">
+        <div class="sheetTitle">Ayarlar</div>
+        <button class="xBtn" id="closeSettings" type="button">×</button>
       </div>
-      <div class="setting-item">
-        <svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline></svg>
-        Çevrimdışı Paketler (İndir)
-      </div>
-      <div class="setting-item" style="border-color:rgba(255,215,0,0.3);">
-        <svg viewBox="0 0 24 24" stroke="#ffb300" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-        <span style="color:#ffb300;">Premium'a Yükselt</span>
-      </div>
-      
-      <div class="setting-item" onclick="logoutAction()">
-        <svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-        Güvenli Çıkış
-      </div>
-      <div class="setting-item danger">
-        <svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-        Hesabımı Sil
-      </div>
-      
-      <div class="setting-item" style="justify-content:center; opacity:0.5; font-size:12px; background:transparent; border:none;" id="closeSettings">
-        Kapat
+
+      <div class="sheetList">
+        <div class="sItem" id="setSiteLang">
+          <div class="sLeft">
+            <div class="sLbl">Sitenin Dili</div>
+            <div class="sDesc">Arayüz dili (şimdilik TR/EN)</div>
+          </div>
+          <div class="pill" id="siteLangPill">TR</div>
+        </div>
+
+        <div class="sItem" id="setOfflinePacks">
+          <div class="sLeft">
+            <div class="sLbl">Offline Dil Paketi</div>
+            <div class="sDesc">İndir ve internet yokken kullan</div>
+          </div>
+          <div class="pill">Yakında</div>
+        </div>
+
+        <div class="sItem" id="setUpgrade">
+          <div class="sLeft">
+            <div class="sLbl">Abonelik Yükselt</div>
+            <div class="sDesc">FREE → PLUS/PRO (sonra)</div>
+          </div>
+          <div class="pill">FREE</div>
+        </div>
+
+        <div class="sItem" id="setLogout">
+          <div class="sLeft">
+            <div class="sLbl">Güvenli Çıkış</div>
+            <div class="sDesc">Oturumu kapat</div>
+          </div>
+          <div class="pill">Çık</div>
+        </div>
+
+        <div class="sItem danger" id="setDelete">
+          <div class="sLeft">
+            <div class="sLbl">Hesabımı Sil</div>
+            <div class="sDesc">Kalıcı silme işlemi</div>
+          </div>
+          <div class="pill">Sil</div>
+        </div>
       </div>
     </div>
   </div>
 
   <script type="module">
+    // FILE: italky-web/pages/home.html inline script
     import { STORAGE_KEY } from "/js/config.js";
     import { logout } from "/js/auth.js";
 
-    // Profil Yükleme
-    const userAvatar = document.getElementById("userAvatar");
-    try {
-      const u = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
-      if(u && u.picture) { userAvatar.src = u.picture; }
-    } catch(e) {}
+    function safeJson(s, fb={}){ try{ return JSON.parse(s||""); }catch{ return fb; } }
 
-    // Settings Modal
-    const settingsBtn = document.getElementById("openSettings");
-    const modal = document.getElementById("settingsModal");
-    const closeBtn = document.getElementById("closeSettings");
+    // ✅ login guard
+    const u = safeJson(localStorage.getItem(STORAGE_KEY), {});
+    if(!u || !u.email || !u.isSessionActive){
+      window.location.replace("/index.html");
+    }
 
-    settingsBtn.addEventListener("click", () => modal.classList.add("active"));
-    modal.addEventListener("click", (e) => { if(e.target === modal) modal.classList.remove("active"); });
-    closeBtn.addEventListener("click", () => modal.classList.remove("active"));
+    // paint user
+    const userName = document.getElementById("userName");
+    const userPlan = document.getElementById("userPlan");
+    const avatarBox = document.getElementById("avatarBox");
 
-    // Logout
-    window.logoutAction = function() {
-      if(confirm("Çıkış yapmak istiyor musun?")) {
-        try { logout(); } catch(e) { 
-          localStorage.removeItem(STORAGE_KEY);
-          window.location.replace("/index.html");
-        }
+    const full = (u.fullname || u.name || u.display_name || u.email || "—").trim();
+    if(userName) userName.textContent = full;
+    if(userPlan) userPlan.textContent = (String(u.plan || "FREE").toUpperCase());
+
+    if(avatarBox){
+      const pic = (u.picture || u.avatar || u.avatar_url || "").trim();
+      if(pic){
+        avatarBox.innerHTML = `<img src="${pic}" alt="avatar" />`;
+      }else{
+        const letter = (full && full[0]) ? full[0].toUpperCase() : "👤";
+        avatarBox.innerHTML = `<div class="fallback">${letter}</div>`;
       }
-    };
+    }
+
+    // nav for cards
+    document.querySelectorAll("[data-go]").forEach(el=>{
+      el.addEventListener("click", ()=>{
+        const go = el.getAttribute("data-go");
+        if(go) window.location.href = go;
+      });
+    });
+
+    // teacher toggle
+    const teacherBtn = document.getElementById("teacherBtn");
+    const teacherWrap = document.getElementById("teacherWrap");
+    teacherBtn?.addEventListener("click", ()=>{
+      teacherWrap?.classList.toggle("open");
+      // açınca biraz aşağı kaydır (mobil)
+      if(teacherWrap?.classList.contains("open")){
+        setTimeout(()=> teacherWrap.scrollIntoView({ behavior:"smooth", block:"start" }), 50);
+      }
+    });
+
+    document.getElementById("teacherAdd")?.addEventListener("click", ()=>{
+      alert("Öğretmen ekleme yakında.");
+    });
+
+    // settings sheet
+    const settingsBtn = document.getElementById("settingsBtn");
+    const settingsSheet = document.getElementById("settingsSheet");
+    const closeSettings = document.getElementById("closeSettings");
+
+    function openSettings(){ settingsSheet?.classList.add("show"); }
+    function closeSettingsFn(){ settingsSheet?.classList.remove("show"); }
+
+    settingsBtn?.addEventListener("click", openSettings);
+    closeSettings?.addEventListener("click", closeSettingsFn);
+    settingsSheet?.addEventListener("click", (e)=>{ if(e.target === settingsSheet) closeSettingsFn(); });
+
+    // site language (basit toggle şimdilik)
+    const siteLangPill = document.getElementById("siteLangPill");
+    const SITE_LANG_KEY = "italky_site_lang";
+    function getSiteLang(){ return (localStorage.getItem(SITE_LANG_KEY) || "TR").toUpperCase(); }
+    function setSiteLang(v){ localStorage.setItem(SITE_LANG_KEY, v); }
+
+    function paintLang(){ if(siteLangPill) siteLangPill.textContent = getSiteLang(); }
+    paintLang();
+
+    document.getElementById("setSiteLang")?.addEventListener("click", ()=>{
+      const cur = getSiteLang();
+      const next = (cur === "TR") ? "EN" : "TR";
+      setSiteLang(next);
+      paintLang();
+      alert("Arayüz dili (şimdilik) değişti: " + next);
+    });
+
+    // upgrade
+    document.getElementById("setUpgrade")?.addEventListener("click", ()=>{
+      alert("Abonelik yükseltme sonra bağlanacak.");
+    });
+
+    // offline packs
+    document.getElementById("setOfflinePacks")?.addEventListener("click", ()=>{
+      alert("Offline paket indirme sonra bağlanacak.");
+    });
+
+    // logout
+    document.getElementById("setLogout")?.addEventListener("click", ()=>{
+      try{ logout(); }catch{ window.location.replace("/index.html"); }
+    });
+
+    // delete account (local wipe)
+    document.getElementById("setDelete")?.addEventListener("click", ()=>{
+      const ok = confirm("Hesabın kalıcı olarak silinecek. Emin misin?");
+      if(!ok) return;
+
+      try{
+        localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem("google_id_token");
+        localStorage.removeItem("italky_api_token");
+        localStorage.removeItem("italky_site_lang");
+      }catch{}
+
+      window.location.replace("/index.html");
+    });
   </script>
 </body>
 </html>
