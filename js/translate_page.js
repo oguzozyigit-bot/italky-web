@@ -1,10 +1,9 @@
 // FILE: italky-web/js/translate_page.js
-// ✅ Yeni: Dil seçimi dropdown değil -> Sheet (tasarıma uyumlu)
-// ✅ Yeni: 60+ dil + TR isimleri + arama
-// ✅ Scroll gizli (CSS)
-// ✅ Slogan sabit: By Ozyigit's (JS dokunmaz)
-// ✅ API: POST /api/translate  | Ping: GET /api/translate/ping
-// ✅ Mic: altta ortada (ID aynı)
+// ✅ ÇEVİRİ FIX: backend hangi alanı isterse çalışsın diye 2 format birden gönderir
+// ✅ Dil seçici sheet + arama + çok dil
+// ✅ Scroll gizli
+// ✅ Slogan sabit: By Ozyigit's
+// ✅ Ping: GET /api/translate/_ping (senin backend’de var)
 
 import { BASE_DOMAIN } from "/js/config.js";
 const $ = (id)=>document.getElementById(id);
@@ -24,7 +23,8 @@ async function pingApi(){
   const b = base();
   if(!b) return;
   try{
-    const r = await fetch(`${b}/api/translate/ping`, { method:"GET" });
+    // ✅ senin backend’de: /api/translate/_ping
+    const r = await fetch(`${b}/api/translate/_ping`, { method:"GET" });
     const d = await r.json().catch(()=> ({}));
     if(!d?.ok) toast("Çeviri motoru hazır değil.");
     else if(!d?.has_key) toast("GOOGLE_API_KEY eksik.");
@@ -37,7 +37,7 @@ function setWaveListening(on){
   $("frameRoot")?.classList.toggle("listening", !!on);
 }
 
-/* ✅ Geniş dil listesi (TR adlar + yerel adlar) */
+/* ✅ Geniş dil listesi */
 const LANGS = [
   { code:"tr", tr:"Türkçe", native:"Türkçe", speech:"tr-TR", tts:"tr-TR" },
   { code:"en", tr:"İngilizce", native:"English", speech:"en-US", tts:"en-US" },
@@ -77,26 +77,13 @@ const LANGS = [
   { code:"ms", tr:"Malayca", native:"Bahasa Melayu", speech:"ms-MY", tts:"ms-MY" },
   { code:"th", tr:"Tayca", native:"ไทย", speech:"th-TH", tts:"th-TH" },
   { code:"vi", tr:"Vietnamca", native:"Tiếng Việt", speech:"vi-VN", tts:"vi-VN" },
-  { code:"ta", tr:"Tamilce", native:"தமிழ்", speech:"ta-IN", tts:"ta-IN" },
-  { code:"te", tr:"Teluguca", native:"తెలుగు", speech:"te-IN", tts:"te-IN" },
-  { code:"mr", tr:"Marathi", native:"मराठी", speech:"mr-IN", tts:"mr-IN" },
-  { code:"sw", tr:"Svahili", native:"Kiswahili", speech:"sw-KE", tts:"sw-KE" },
-  { code:"af", tr:"Afrikaanca", native:"Afrikaans", speech:"af-ZA", tts:"af-ZA" },
-  { code:"ca", tr:"Katalanca", native:"Català", speech:"ca-ES", tts:"ca-ES" },
-  { code:"eu", tr:"Baskça", native:"Euskara", speech:"eu-ES", tts:"eu-ES" },
-  { code:"gl", tr:"Galiçyaca", native:"Galego", speech:"gl-ES", tts:"gl-ES" },
-  { code:"is", tr:"İzlandaca", native:"Íslenska", speech:"is-IS", tts:"is-IS" },
-  { code:"et", tr:"Estonca", native:"Eesti", speech:"et-EE", tts:"et-EE" },
-  { code:"lv", tr:"Letonca", native:"Latviešu", speech:"lv-LV", tts:"lv-LV" },
-  { code:"lt", tr:"Litvanca", native:"Lietuvių", speech:"lt-LT", tts:"lt-LT" },
 ];
 
-const HOT = ["tr","en","de","fr","es","it","ru","ar"]; // üstte gözüksün
+const HOT = ["tr","en","de","fr","es","it","ru","ar"];
 
 function labelOf(code){
   const x = LANGS.find(l=>l.code===code);
-  if(!x) return code;
-  return x.tr;
+  return x ? x.tr : code;
 }
 function speechLocale(code){
   const x = LANGS.find(l=>l.code===code);
@@ -107,25 +94,40 @@ function ttsLocale(code){
   return x?.tts || "en-US";
 }
 
-/* translate */
+/* ✅ Çeviri: 2 format birden gönder (backend uyumsuzluğu biter) */
 async function translateViaApi(text, source, target){
   const b = base();
   if(!b) return text;
+
+  const body = {
+    text,
+    // format-1
+    source,
+    target,
+    // format-2 (senin backend)
+    from_lang: source,
+    to_lang: target,
+  };
+
   try{
     const r = await fetch(`${b}/api/translate`,{
       method:"POST",
       headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify({ text, source, target })
+      body: JSON.stringify(body)
     });
+
     const data = await r.json().catch(()=> ({}));
-    const out = String(data?.translated || data?.translation || data?.text || "").trim();
+    const out = String(
+      data?.translated || data?.translation || data?.text || data?.translated_text || ""
+    ).trim();
+
     return out || text;
   }catch{
     return text;
   }
 }
 
-/* speech recognition */
+/* SpeechRecognition */
 function buildRecognizer(langCode){
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if(!SR) return null;
@@ -242,7 +244,6 @@ function startSide(side, getLang, getOtherLang){
   rec.onend = async ()=>{
     const txt = (finalText || live || "").trim();
     setMicUI(side, false);
-
     if(!txt){ active = null; return; }
     await onFinal(side, srcCode, dstCode, txt);
     active = null;
@@ -254,8 +255,8 @@ function startSide(side, getLang, getOtherLang){
   catch{ toast("Mikrofon açılamadı."); stopAll(); }
 }
 
-/* ===== Sheet Language Picker ===== */
-let sheetTarget = "bot"; // "top" | "bot"
+/* ===== Language Sheet ===== */
+let sheetTarget = "bot";
 let langTop = "en";
 let langBot = "tr";
 
@@ -267,10 +268,7 @@ function openSheet(target){
   renderSheetList("");
   setTimeout(()=>{ try{ $("sheetQuery")?.focus(); }catch{} }, 0);
 }
-
-function closeSheet(){
-  $("langSheet")?.classList.remove("show");
-}
+function closeSheet(){ $("langSheet")?.classList.remove("show"); }
 
 function renderSheetList(filter){
   const q = String(filter||"").toLowerCase().trim();
@@ -279,10 +277,8 @@ function renderSheetList(filter){
 
   const current = (sheetTarget === "top") ? langTop : langBot;
 
-  // hot first then rest
   const hot = LANGS.filter(l=>HOT.includes(l.code));
   const rest = LANGS.filter(l=>!HOT.includes(l.code));
-
   const all = [...hot, ...rest].filter(l=>{
     if(!q) return true;
     const hay = `${l.tr} ${l.native} ${l.code}`.toLowerCase();
@@ -313,6 +309,7 @@ function renderSheetList(filter){
         $("botLangTxt").textContent = labelOf(langBot);
       }
       closeSheet();
+      toast("Dil seçildi");
     });
   });
 }
@@ -329,11 +326,9 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   hookScrollFollow("top", $("topBody"));
   hookScrollFollow("bot", $("botBody"));
 
-  // defaults
   $("topLangTxt").textContent = labelOf(langTop);
   $("botLangTxt").textContent = labelOf(langBot);
 
-  // sheet open buttons
   $("topLangBtn")?.addEventListener("click", ()=> openSheet("top"));
   $("botLangBtn")?.addEventListener("click", ()=> openSheet("bot"));
   $("sheetClose")?.addEventListener("click", closeSheet);
@@ -342,7 +337,6 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   });
   $("sheetQuery")?.addEventListener("input", ()=> renderSheetList($("sheetQuery").value));
 
-  // speaker toggles
   $("topSpeak")?.addEventListener("click", ()=>{
     setMute("top", !mute.top);
     toast(mute.top ? "Ses kapalı" : "Ses açık");
@@ -354,9 +348,18 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   setMute("top", false);
   setMute("bot", false);
 
-  // mic
   $("topMic")?.addEventListener("click", ()=> startSide("top", ()=>langTop, ()=>langBot));
   $("botMic")?.addEventListener("click", ()=> startSide("bot", ()=>langBot, ()=>langTop));
 
   setWaveListening(false);
+
+  // ✅ hızlı test: ilk açılışta 1 kere çalışıp API’nin çeviri verdiğini teyit eder
+  // (sessiz, ekrana basmıyor)
+  try{
+    const t = await translateViaApi("hello", "en", "tr");
+    if(t && t.toLowerCase() !== "hello") {
+      // sadece debug için
+      // toast("Çeviri hazır");
+    }
+  }catch{}
 });
