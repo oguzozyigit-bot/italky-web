@@ -1,0 +1,362 @@
+<!-- italky-web/pages/home.html -->
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Italky - Ana Menü</title>
+  <link rel="icon" href="data:," />
+
+  <style>
+    :root{
+      --bg1:#07101f;            /* lacivert */
+      --bg2:#02040a;            /* koyu */
+      --wine:#4b0f1d;           /* bordo */
+      --wine2:#7a1830;          /* bordo açık */
+      --text:rgba(255,255,255,.92);
+      --soft:rgba(255,255,255,.62);
+      --border:rgba(255,255,255,.10);
+      --border2:rgba(255,255,255,.06);
+      --shadow:0 22px 70px rgba(0,0,0,.65);
+      --frameW:min(480px, calc(100vw - 18px));
+    }
+
+    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    html,body{ margin:0; padding:0; width:100%; height:100dvh; overflow:hidden;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+      background:
+        radial-gradient(900px 520px at 50% 10%, rgba(20,80,255,.14), transparent 62%),
+        radial-gradient(900px 520px at 50% 92%, rgba(122,24,48,.18), transparent 62%),
+        linear-gradient(180deg, var(--bg1), var(--bg2));
+      color:var(--text);
+    }
+
+    .frame{
+      width:100%;
+      max-width:480px;
+      height:100%;
+      margin:0 auto;
+      position:relative;
+      overflow:hidden;
+      padding: 16px 14px 76px;
+    }
+
+    /* TOP */
+    .top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding: 10px 2px 12px;
+    }
+
+    .brand{
+      display:flex;
+      flex-direction:column;
+      align-items:flex-start;
+      gap:4px;
+      min-width:0;
+    }
+    .brand .name{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-weight:1000;
+      letter-spacing:.3px;
+      font-size:18px;
+      line-height:1;
+      white-space:nowrap;
+    }
+
+    .flag{
+      display:inline-flex;
+      gap:6px;
+      align-items:center;
+      margin-top:2px;
+    }
+    .flag span{
+      width:22px;
+      height:4px;
+      border-radius:99px;
+      display:inline-block;
+      opacity:.95;
+    }
+    .flag .g{ background:#0b8f3c; }
+    .flag .w{ background:#ffffff; opacity:.85; }
+    .flag .r{ background:#c0182f; }
+
+    .brand .sub{
+      font-size:12px;
+      font-weight:900;
+      color:var(--soft);
+      letter-spacing:.2px;
+    }
+
+    .chip{
+      padding: 8px 10px;
+      border-radius: 999px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.04);
+      color: rgba(255,255,255,.85);
+      font-weight: 950;
+      font-size: 12px;
+      white-space:nowrap;
+      box-shadow: 0 12px 30px rgba(0,0,0,.35);
+      cursor:pointer;
+      user-select:none;
+    }
+    .chip:active{ transform: translateY(1px); }
+
+    /* GRID */
+    .panel{
+      margin-top: 10px;
+      border-radius: 26px;
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,.18);
+      box-shadow: var(--shadow);
+      padding: 14px;
+      backdrop-filter: blur(12px);
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .card{
+      border-radius: 22px;
+      border: 1px solid var(--border2);
+      background:
+        radial-gradient(900px 260px at 20% 0%, rgba(122,24,48,.18), transparent 60%),
+        radial-gradient(900px 260px at 80% 0%, rgba(20,80,255,.16), transparent 60%),
+        rgba(255,255,255,.03);
+      box-shadow: 0 14px 40px rgba(0,0,0,.35);
+      padding: 14px;
+      cursor:pointer;
+      user-select:none;
+      min-height: 120px;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+      gap:10px;
+      position:relative;
+      overflow:hidden;
+    }
+    .card:active{ transform: translateY(1px); }
+
+    .card::after{
+      content:"";
+      position:absolute;
+      inset:-40%;
+      background: linear-gradient(120deg, transparent 40%, rgba(255,255,255,.06) 50%, transparent 60%);
+      transform: rotate(12deg);
+      opacity:.55;
+      pointer-events:none;
+    }
+
+    .ico{
+      width:44px; height:44px;
+      border-radius: 16px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+      flex:0 0 44px;
+    }
+
+    .ico svg{
+      width:22px; height:22px;
+      stroke: rgba(255,255,255,.92);
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      opacity:.95;
+    }
+
+    .ttl{
+      font-weight: 1000;
+      font-size: 14px;
+      letter-spacing:.2px;
+      color: rgba(255,255,255,.92);
+      margin-top: 8px;
+    }
+    .desc{
+      font-weight: 850;
+      font-size: 12px;
+      color: rgba(255,255,255,.62);
+      line-height:1.25;
+    }
+
+    /* Footer */
+    .foot{
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 0;
+      width: var(--frameW);
+      padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+      border-top: 1px solid rgba(255,255,255,.06);
+      background: rgba(0,0,0,.72);
+      backdrop-filter: blur(12px);
+      text-align:center;
+    }
+    .foot a{
+      color: rgba(255,255,255,.70);
+      text-decoration:none;
+      font-weight: 900;
+      font-size: 12px;
+      margin: 0 8px;
+      white-space:nowrap;
+    }
+    .foot .copy{
+      margin-top:6px;
+      font-size: 11px;
+      font-weight: 900;
+      color: rgba(255,255,255,.55);
+    }
+
+    @media (max-width: 360px){
+      .card{ min-height: 112px; }
+      .grid{ gap:10px; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="frame">
+
+    <div class="top">
+      <div class="brand">
+        <div class="name">
+          ITALKY
+          <span class="flag" aria-hidden="true">
+            <span class="g"></span><span class="w"></span><span class="r"></span>
+          </span>
+        </div>
+        <div class="sub">Hızlı çeviri • pratik öğrenme</div>
+      </div>
+
+      <div class="chip" id="profileBtn">Profil</div>
+    </div>
+
+    <div class="panel">
+      <div class="grid">
+
+        <!-- Karşılıklı Konuş -->
+        <div class="card" data-go="/pages/translate.html">
+          <div class="ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/>
+              <path d="M8 9h8"/><path d="M8 13h6"/>
+            </svg>
+          </div>
+          <div>
+            <div class="ttl">Karşılıklı Konuş</div>
+            <div class="desc">İki kişi konuşsun, anında çevirsin.</div>
+          </div>
+        </div>
+
+        <!-- Anlık Çeviri (tek kişi) -->
+        <div class="card" data-go="/pages/live_translate.html">
+          <div class="ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+              <path d="M8 23h8"/>
+            </svg>
+          </div>
+          <div>
+            <div class="ttl">Anlık Çeviri</div>
+            <div class="desc">Konuş, yazıya döksün ve çevirsin.</div>
+          </div>
+        </div>
+
+        <!-- Fotoğraftan Çeviri -->
+        <div class="card" data-go="/pages/photo_translate.html">
+          <div class="ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="M4 7h4l2-2h4l2 2h4v12H4z"/>
+              <circle cx="12" cy="13" r="3"/>
+            </svg>
+          </div>
+          <div>
+            <div class="ttl">Fotoğraftan Çeviri</div>
+            <div class="desc">Menü/etiket çek, Türkçesini gör.</div>
+          </div>
+        </div>
+
+        <!-- Sohbet -->
+        <div class="card" data-go="/pages/chat.html">
+          <div class="ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/>
+            </svg>
+          </div>
+          <div>
+            <div class="ttl">Sohbet</div>
+            <div class="desc">Soru sor, pratik yap.</div>
+          </div>
+        </div>
+
+        <!-- Öğretmen -->
+        <div class="card" data-go="/pages/teacher.html">
+          <div class="ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="M22 10l-10 5L2 10l10-5z"/>
+              <path d="M6 12v5c3 2 9 2 12 0v-5"/>
+            </svg>
+          </div>
+          <div>
+            <div class="ttl">Öğretmen</div>
+            <div class="desc">Ders + telaffuz + mini sınav.</div>
+          </div>
+        </div>
+
+        <!-- Online Sohbet (ileride) -->
+        <div class="card" data-go="/pages/online_chat.html">
+          <div class="ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="M16 8a6 6 0 1 0-11 4l-2 3 3-1a6 6 0 0 0 10-6z"/>
+              <path d="M22 12a5 5 0 0 1-5 5h-2l-3 2 1-3"/>
+            </svg>
+          </div>
+          <div>
+            <div class="ttl">Online Sohbet</div>
+            <div class="desc">Yazdığını çevirip karşıya yolla.</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="foot">
+      <div>
+        <a href="/pages/about.html">Hakkımızda</a>
+        <a href="/pages/faq.html">SSS</a>
+        <a href="/pages/privacy.html">Gizlilik</a>
+        <a href="/pages/contact.html">İletişim</a>
+      </div>
+      <div class="copy">ItalkyAI By Ozyigit's 2026</div>
+    </div>
+
+  </div>
+
+  <script>
+    // navigasyon
+    document.querySelectorAll("[data-go]").forEach(el=>{
+      el.addEventListener("click", ()=> {
+        const go = el.getAttribute("data-go");
+        if(go) location.href = go;
+      });
+    });
+
+    // profil butonu (şimdilik translate sayfasına değil, ileride profil.html)
+    document.getElementById("profileBtn")?.addEventListener("click", ()=>{
+      location.href = "/pages/profile.html";
+    });
+  </script>
+</body>
+</html>
