@@ -1,297 +1,266 @@
-<!-- FILE: /pages/privacy.html -->
-<!-- NOTE: Metinler AYNI. Sadece şablon index/login öncesi standardına uyarlandı:
-     - Üst bar: index.html ile aynı + GERİ OK var
-     - Hamburger yok (login öncesi)
-     - Alt bar: about/faq/privacy/contact + imza
--->
 <!DOCTYPE html>
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Gizlilik Politikası</title>
+  <title>ITALKY - Gizlilik Politikası</title>
 
   <link rel="icon" href="data:," />
-  <link rel="stylesheet" href="/css/style.css?v=2" />
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
   <style>
-    :root{
-      --gold:#ffb300;
-      --pistachio:#bef264;
+    :root {
+      /* ITALKY PALET */
+      --bg-void: #030014;
+      --neon-cyan: #00f3ff;
+      --neon-purple: #bc13fe;
+      --neon-pink: #ff00aa;
+      --glass-border: rgba(255, 255, 255, 0.1);
+      --text-main: #ffffff;
+      --text-muted: rgba(255, 255, 255, 0.7);
+      --ease-elastic: cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
-    /* Üst bar sabit */
-    .topbar{
-      position: sticky;
-      top: 0;
-      z-index: 3000;
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+
+    html, body {
+      margin: 0; padding: 0; width: 100%; height: 100dvh;
+      overflow: hidden;
+      font-family: 'Outfit', sans-serif;
+      background-color: var(--bg-void);
+      color: var(--text-main);
+      display: flex; align-items: center; justify-content: center;
     }
 
-    /* Geri ok */
-    .back-wrap{
-      width:80px;
-      display:flex;
-      align-items:center;
-      justify-content:flex-start;
+    /* --- BACKGROUND FX --- */
+    .cosmos-bg {
+      position: absolute; inset: -50%; width: 200%; height: 200%;
+      background: #030014; z-index: 0;
     }
-    .back-btn{
-      width:42px;
-      height:42px;
-      border-radius:14px;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(255,255,255,.04);
-      color:#fff;
-      cursor:pointer;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:18px;
+    .orb {
+      position: absolute; border-radius: 50%;
+      filter: blur(90px); opacity: 0.5;
+      animation: floatOrbit 25s infinite alternate ease-in-out;
     }
-    .back-btn:active{ transform: translateY(1px); filter: brightness(.95); }
-
-    /* İçerik */
-    .page-wrap{
-      flex: 1 1 auto;
-      min-height: 0;
-      overflow-y:auto;
-      padding: 16px;
-      padding-bottom: 140px; /* alt footerbar */
+    .orb-1 {
+      top: 10%; left: 10%; width: 60vw; height: 60vw;
+      background: radial-gradient(circle, var(--neon-purple), transparent 70%);
     }
-    .page-card{
-      background: rgba(25,25,25,.55);
-      border: 1px solid rgba(255,255,255,.10);
-      border-radius: 22px;
-      padding: 18px;
-      box-shadow: 0 18px 45px rgba(0,0,0,.55);
+    .orb-2 {
+      bottom: 10%; right: 10%; width: 50vw; height: 50vw;
+      background: radial-gradient(circle, var(--neon-cyan), transparent 70%);
+      animation-delay: -5s;
     }
-    .page-title{
-      font-size: 16px;
-      font-weight: 1000;
-      color: #fff;
-      margin: 0 0 12px;
+    @keyframes floatOrbit {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(10%, -10%) scale(1.1); }
     }
 
-    .intro{
-      font-size: 13px;
-      color: rgba(255,255,255,.55);
-      border-bottom: 1px solid rgba(255,255,255,.10);
-      padding-bottom: 14px;
-      margin-bottom: 10px;
-      font-style: italic;
-      font-weight: 700;
+    .noise {
+      position: absolute; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none; mix-blend-mode: overlay; z-index: 1;
+    }
+
+    /* --- FRAME --- */
+    .mobile-frame {
+      width: 100%; max-width: 480px; height: 100%;
+      position: relative; z-index: 10;
+      display: flex; flex-direction: column;
+      background: rgba(5, 5, 10, 0.4);
+      backdrop-filter: blur(30px);
+    }
+    @media (min-width: 520px) {
+      .mobile-frame {
+        height: 92vh; border-radius: 40px;
+        border: 1px solid rgba(255,255,255,0.1);
+        box-shadow: 0 40px 100px -20px rgba(0,0,0,0.8);
+      }
+    }
+
+    /* --- TOP BAR --- */
+    .topbar {
+      height: 100px; display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; position: relative; z-index: 20;
+    }
+
+    .back-btn {
+      width: 44px; height: 44px; border-radius: 14px;
+      border: 1px solid var(--glass-border);
+      background: rgba(255,255,255,0.05);
+      color: #fff; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: 0.2s;
+    }
+    .back-btn:active { transform: scale(0.95); background: rgba(255,255,255,0.1); }
+    .back-btn svg { width: 24px; height: 24px; fill: #fff; }
+
+    /* Logo Lock System */
+    .mini-brand { display: flex; flex-direction: column; width: fit-content; align-items: center; }
+    .mini-logo {
+      font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 24px;
+      letter-spacing: -1px; color: #fff; line-height: 1; white-space: nowrap;
+    }
+    .mini-flag {
+      width: 100%; height: 4px; border-radius: 4px; display: flex; overflow: hidden; margin-top: 4px;
+      box-shadow: 0 0 10px rgba(255,255,255,0.1);
+    }
+    .mini-flag div { flex: 1; height: 100%; }
+    .f-g { background: #009246; } .f-w { background: #fff; } .f-r { background: #CE2B37; }
+
+    /* --- CONTENT AREA --- */
+    .page-content {
+      flex: 1; overflow-y: auto; padding: 10px 20px 120px;
+      display: flex; flex-direction: column; gap: 20px; scrollbar-width: none;
+    }
+    .page-content::-webkit-scrollbar { display: none; }
+
+    .privacy-card {
+      background: linear-gradient(160deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%);
+      border: 1px solid var(--glass-border); border-radius: 32px;
+      padding: 30px 24px; position: relative; overflow: hidden;
+      animation: fadeInUp 0.8s var(--ease-elastic);
+    }
+
+    h1 {
+      font-family: 'Space Grotesk', sans-serif; font-size: 28px; margin: 0 0 12px;
+      background: linear-gradient(to right, #fff, var(--neon-cyan));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      font-weight: 700; letter-spacing: -1px;
+    }
+
+    .intro {
+      font-size: 14px; color: rgba(255,255,255,0.6); font-style: italic;
+      padding-bottom: 20px; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1);
       line-height: 1.6;
     }
 
-    h3{
-      color: var(--gold);
-      font-size: 13px;
-      margin: 16px 0 8px 0;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      font-weight: 900;
+    .section { margin-bottom: 24px; }
+    h3 {
+      font-family: 'Space Grotesk', sans-serif; font-size: 16px; color: var(--neon-purple);
+      margin: 0 0 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
     }
-    p, li{
-      font-size: 13px;
-      line-height: 1.65;
-      color: rgba(255,255,255,.78);
-      margin: 0 0 10px 0;
-      font-weight: 650;
-    }
-    ul{
-      margin: 5px 0 10px 0;
-      padding-left: 18px;
-      list-style-type: disc;
-    }
-    ul ul{
-      list-style-type: circle;
-      margin-top: 6px;
-    }
-    li{ margin-bottom: 6px; }
+    
+    p { font-size: 14px; line-height: 1.6; color: var(--text-muted); margin: 0 0 10px; }
+    
+    ul { padding-left: 18px; margin: 0 0 10px; }
+    li { font-size: 14px; color: rgba(255,255,255,0.8); margin-bottom: 6px; line-height: 1.5; }
+    
+    .highlight { color: #fff; font-weight: 600; text-shadow: 0 0 10px rgba(255,255,255,0.2); }
 
-    .highlight{ color:#fff; font-weight: 900; }
-
-    .footer-sign{
-      margin-top: 18px;
-      text-align: center;
-      padding: 16px 12px;
-      border-top: 1px solid rgba(255,255,255,.10);
-      color: var(--pistachio);
-      font-weight: 900;
-      font-size: 14px;
-      letter-spacing: .4px;
+    /* --- FOOTER --- */
+    .footerbar {
+      position: absolute; bottom: 0; width: 100%; padding: 24px;
+      background: linear-gradient(to top, #000 0%, transparent 100%);
+      display: flex; flex-direction: column; align-items: center; gap: 14px;
+      z-index: 30; pointer-events: none;
     }
-    .footer-sub{
-      font-size: 11px;
-      color: rgba(255,255,255,.55);
-      font-weight: 700;
-      margin-top: 4px;
+    .links { display: flex; gap: 24px; pointer-events: auto; }
+    .links a {
+      color: rgba(255,255,255,0.5); text-decoration: none; font-size: 12px; font-weight: 600; transition: 0.2s;
+    }
+    .links a:hover { color: var(--neon-cyan); }
+    
+    .footerBrand { 
+      font-size: 10px; color: rgba(255,255,255,0.2); letter-spacing: 2px; text-transform: uppercase; font-weight: 700;
     }
 
-    /* Login öncesi alt bar (index ile aynı) */
-    .login-footerbar{
-      position: fixed;
-      left: 50%;
-      transform: translateX(-50%);
-      width: min(480px, calc(100vw - 18px));
-      bottom: 0;
-      z-index: 2800;
-      background: rgba(0,0,0,.92);
-      border-top: 1px solid rgba(255,255,255,.06);
-      padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
-      display:flex;
-      flex-direction:column;
-      gap: 8px;
-    }
-    .login-links{
-      display:flex;
-      justify-content:center;
-      gap: 16px;
-      flex-wrap:wrap;
-      font-size:12px;
-      font-weight: 900;
-    }
-    .login-links a{
-      color: rgba(255,255,255,.70);
-      text-decoration:none;
-      white-space:nowrap;
-    }
-    .login-brand{
-      text-align:center;
-      font-size:11px;
-      font-weight: 900;
-      color: rgba(255,255,255,.55);
-    }
+    @keyframes fadeInUp { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
   </style>
 </head>
 
 <body>
-<div class="mobile-frame" id="mobileFrame">
-
-  <!-- ✅ ÜST BAR (index ile aynı + geri ok) -->
-  <div class="topbar">
-    <div class="back-wrap">
-      <button class="back-btn" type="button" onclick="history.back()" aria-label="Geri">←</button>
-    </div>
-
-    <div class="brand-wrapper" id="brandWrapper">
-      <div class="logo-area">
-        <svg class="seesaw-svg" viewBox="0 0 40 20" aria-hidden="true">
-          <g class="seesaw-bar" id="seesawBar">
-            <line x1="0" y1="8" x2="40" y2="8" stroke="#ccc" stroke-width="2" stroke-linecap="round" />
-            <circle cx="3" cy="5" r="3" fill="#bef264" />
-            <circle cx="37" cy="5" r="3" fill="#ffb300" id="orangeBall" />
-          </g>
-          <polygon points="17,14 23,14 20,8" fill="none" stroke="#666" stroke-width="1.5" />
-        </svg>
-        <div class="brand-name">CaynanaAI</div>
-      </div>
-      <div class="slogan">Yapay Zekanın Geleneksel Aklı</div>
-    </div>
-
-    <div class="right-controls"></div>
+  <div class="cosmos-bg">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
   </div>
+  <div class="noise"></div>
 
-  <!-- ✅ ORTA İÇERİK (metin aynen) -->
-  <div class="page-wrap">
-    <div class="page-card">
-      <h1 class="page-title">Gizlilik Politikası</h1>
+  <div class="mobile-frame">
+    <div class="topbar">
+      <button class="back-btn" onclick="window.location.href='/index.html'">
+        <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+      </button>
 
-      <div class="intro">
-        Caynana AI, kullanıcılarının gizliliğini ve kişisel verilerinin korunmasını ciddiyetle ele alır. Bu politika, verilerin nasıl toplandığını ve kullanıldığını açıklar.
+      <div class="mini-brand">
+        <div class="mini-logo">ITALKY</div>
+        <div class="mini-flag">
+          <div class="f-g"></div><div class="f-w"></div><div class="f-r"></div>
+        </div>
       </div>
+    </div>
 
-      <section>
-        <h3>1) Toplanan Veriler</h3>
-        <p>Caynana AI, yalnızca hizmetin çalışması için gerekli olan verileri toplar:</p>
-        <ul>
-          <li><strong>Kimlik Bilgileri:</strong> Google veya Apple hesabından gelen ad ve profil fotoğrafı.</li>
-          <li><strong>Profil Bilgileri:</strong> Caynana’nın sana verdiği isim, hitap tercihi ve isteğe bağlı bilgiler.</li>
-          <li><strong>Kullanım Verileri:</strong> Son görülme zamanı, online durumu ve teknik etkileşim bilgileri.</li>
-        </ul>
-      </section>
+    <div class="page-content">
+      <div class="privacy-card">
+        <h1>Gizlilik Politikası</h1>
 
-      <section>
-        <h3>2) Kamera ve Mikrofon Kullanımı</h3>
-        <ul>
-          <li>Kamera ve mikrofon yalnızca sen <span class="highlight">açıkça izin verdiğinde</span> çalışır.</li>
-          <li>Görüntü ve ses kaydedilmez, depolanmaz ve paylaşılmaz.</li>
-          <li>Veriler sadece yüz takibi, göz teması ve konuşma algılama gibi anlık analiz amaçlı kullanılır.</li>
-        </ul>
-        <p style="margin-top:5px; color:rgba(255,255,255,.55);">* İstediğin an bu izinleri kapatabilirsin.</p>
-      </section>
+        <div class="intro">
+          ITALKY olarak kişisel verilerinize saygı duyuyor ve en yüksek güvenlik standartlarıyla koruyoruz. Aşağıda verilerinizin nasıl işlendiği açıklanmıştır.
+        </div>
 
-      <section>
-        <h3>3) Mesajlar ve İçerik</h3>
-        <ul>
-          <li>Yazdığın veya söylediğin mesajlar hizmetin çalışması için işlenir.</li>
-          <li>Kalıcı olarak üçüncü taraflarla paylaşılmaz.</li>
-          <li>İçerikler, kullanıcı deneyimini geliştirmek dışında başka bir amaçla kullanılmaz.</li>
-        </ul>
-      </section>
+        <div class="section">
+          <h3>1. Toplanan Veriler</h3>
+          <p>Hizmeti sağlamak amacıyla şu veriler işlenir:</p>
+          <ul>
+            <li><strong>Hesap Bilgileri:</strong> Google/Apple ID ile giriş yaptığınızda alınan temel profil bilgileri.</li>
+            <li><strong>Kullanım Verileri:</strong> Öğrenme ilerlemeniz, pratik süreleri ve uygulama içi tercihleriniz.</li>
+            <li><strong>Ses Verileri:</strong> Yalnızca sesli pratik sırasında işlenir, kalıcı olarak depolanmaz.</li>
+          </ul>
+        </div>
 
-      <section>
-        <h3>4) Veri Paylaşımı</h3>
-        <p>Caynana AI, kullanıcı verilerini izinsiz olarak üçüncü kişilerle paylaşmaz. Yasal zorunluluklar haricinde veri aktarımı yapmaz.</p>
-      </section>
+        <div class="section">
+          <h3>2. Kamera ve Mikrofon</h3>
+          <ul>
+            <li>Kamera ve mikrofon erişimi, <span class="highlight">sadece canlı pratik modlarında</span> ve sizin açık izninizle kullanılır.</li>
+            <li>Görüntülü görüşmeler veya sesli analizler sunucularımızda kaydedilmez.</li>
+            <li>İzinleri dilediğiniz zaman cihaz ayarlarından iptal edebilirsiniz.</li>
+          </ul>
+        </div>
 
-      <section>
-        <h3>5) Veri Güvenliği</h3>
-        <ul>
-          <li>Veriler güvenli sunucularda saklanır.</li>
-          <li>Yetkisiz erişimi önlemek için teknik ve idari önlemler alınır.</li>
-          <li>İhlal durumunda gerekli önlemler derhal uygulanır.</li>
-        </ul>
-      </section>
+        <div class="section">
+          <h3>3. Veri Güvenliği</h3>
+          <p>
+            Tüm veri transferleri SSL/TLS ile şifrelenir. Verileriniz, uluslararası güvenlik standartlarına sahip bulut sunucularda saklanır ve üçüncü taraflarla ticari amaçla <span class="highlight">asla paylaşılmaz</span>.
+          </p>
+        </div>
 
-      <section>
-        <h3>6) Çerezler</h3>
-        <p>Oturum yönetimi için gerekli teknik çerezler kullanılabilir. Takip veya reklam amaçlı çerezler zorunlu değildir ve kullanılmaz.</p>
-      </section>
+        <div class="section">
+          <h3>4. Yapay Zeka ve İşleme</h3>
+          <p>
+            Metin ve ses verileriniz, yalnızca dil modelini size özel hale getirmek ve çeviri kalitesini artırmak amacıyla anonimleştirilerek işlenebilir.
+          </p>
+        </div>
 
-      <section>
-        <h3>7) Kullanıcının Hakları</h3>
-        <p>Kullanıcı olarak şunlara hakkın vardır:</p>
-        <ul>
-          <li>Kendi verilerine erişme.</li>
-          <li>Verilerinin düzeltilmesini isteme.</li>
-          <li>Hesabının silinmesini talep etme.</li>
-        </ul>
-      </section>
+        <div class="section">
+          <h3>5. Kullanıcı Hakları</h3>
+          <ul>
+            <li>Verilerinize erişme ve kopyasını alma.</li>
+            <li>Hatalı verilerin düzeltilmesini isteme.</li>
+            <li>Hesabınızı ve tüm ilişkili verileri silme hakkına sahipsiniz.</li>
+          </ul>
+        </div>
 
-      <section>
-        <h3>8) Çocukların Gizliliği</h3>
-        <p>Caynana AI, 18 yaş altındaki kullanıcılar için tasarlanmamıştır. Bilinçli olarak çocuklara ait veri toplanmaz.</p>
-      </section>
+        <div class="section">
+          <h3>6. İletişim</h3>
+          <p>
+            Gizlilikle ilgili her türlü sorunuz için <span class="highlight">support@italky.ai</span> adresinden Veri Koruma Görevlimize ulaşabilirsiniz.
+          </p>
+        </div>
 
-      <section>
-        <h3>9) Değişiklikler</h3>
-        <p>Bu politika zaman zaman güncellenebilir. Güncellemeler uygulama içinde bildirildiği anda yürürlüğe girer.</p>
-      </section>
-
-      <section>
-        <h3>10) Kabul</h3>
-        <p>Caynana AI’yi kullanarak bu Gizlilik Politikası’nı okuduğunu, anladığını ve kabul ettiğini beyan etmiş olursun.</p>
-      </section>
-
-      <div class="footer-sign">
-        Caynana AI
-        <div class="footer-sub">Yapay Zekânın Geleneksel Aklı</div>
       </div>
+    </div>
 
+    <div class="footerbar">
+      <div class="links">
+        <a href="/pages/about.html">Hakkında</a>
+        <a href="/pages/faq.html">SSS</a>
+        <a href="/pages/privacy.html" style="color:#fff">Gizlilik</a>
+        <a href="/pages/contact.html">İletişim</a>
+      </div>
+      <div class="footerBrand">ItalkyAI By Ozyigit's 2026</div>
     </div>
   </div>
-
-  <!-- ✅ ALT BAR (login öncesi) -->
-  <div class="login-footerbar">
-    <div class="login-links">
-      <a href="/pages/about.html">Hakkımızda</a>
-      <a href="/pages/faq.html">SSS</a>
-      <a href="/pages/privacy.html">Gizlilik</a>
-      <a href="/pages/contact.html">İletişim</a>
-    </div>
-    <div class="login-brand">@CaynanaAI By Ozyigit’s 2026</div>
-  </div>
-
-</div>
 </body>
 </html>
