@@ -38,7 +38,7 @@
       display: flex; align-items: center; justify-content: center;
     }
 
-    /* --- BACKGROUND FX (Living Aurora) --- */
+    /* --- BACKGROUND FX --- */
     .cosmos-bg {
       position: absolute; inset: -50%; width: 200%; height: 200%;
       background: #030014;
@@ -205,38 +205,43 @@
     }
     .btn3d:hover::before { transform: translateX(100%); }
 
-    /* --- GOOGLE BUTTON FIX (Mobil Tıklama Çözümü) --- */
+    /* --- GOOGLE BUTTON MOBILE FIX --- */
     .googleOverlay {
       position: relative;
       width: 100%;
       height: 68px;
-      /* Stacking context oluşturuyoruz */
-      isolation: isolate; 
+      /* Butonu ve iframe'i aynı hizaya zorla */
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    /* 1. Görsel butonu pasif yapıyoruz ki tıklamayı çalmasın */
+    /* 1. Görsel butonu tamamen PASİF yap (Dokunmayı algılamasın) */
     .googleOverlay .btn3d {
       position: absolute;
       inset: 0;
+      width: 100%; height: 100%;
       z-index: 1; /* Alt katman */
-      pointer-events: none; /* Tıklamayı direkt arkadaki elemana (veya üsttekine) geçirir */
+      pointer-events: none; /* KRİTİK: Tıklamayı arkadaki elemanlara değil, üstteki iframe'e bırakır */
     }
 
-    /* 2. Google iframe wrapper'ı en üste ve kesinlikle tıklanabilir yapıyoruz */
+    /* 2. Google Wrapper'ı EN ÜSTE ve TIKLANABİLİR yap */
     #googleBtnWrap {
-      position: absolute;
-      top: 0; left: 0; width: 100%; height: 100%;
-      z-index: 50; /* Üst katman */
-      opacity: 0.01; /* Görünmez ama tıklanabilir */
+      position: absolute !important;
+      inset: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      z-index: 100 !important; /* En üstte */
+      opacity: 0.01; /* Görünmez */
       cursor: pointer;
     }
     
-    /* 3. Hover efekti: Kullanıcı overlay'e gelince görsel buton tepki versin */
-    .googleOverlay:active .btn3d,
-    .googleOverlay:hover .btn3d {
-      background: rgba(255,255,255,0.08);
-      border-color: rgba(255,255,255,0.3);
-      box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 20px rgba(255,255,255,0.05);
+    /* 3. İframe'i BÜYÜT (Iskalamayı önlemek için) */
+    #googleBtnWrap iframe {
+      width: 100% !important;
+      height: 100% !important;
+      transform: scale(1.1); /* %10 daha büyük yap ki kenarlarda boşluk kalmasın */
+      opacity: 0.01 !important;
     }
     /* --- END FIX --- */
 
@@ -350,8 +355,9 @@
     <div class="stage">
       <div class="heroCard">
         <h2 class="heroTitle">Bir Dil, <span>Bir Hayat.</span></h2>
+        
         <div class="heroDesc">
-          Yapay zeka gücü ve <strong>karşılıklı konuşarak</strong> öğrenmeyi eğlenceli lılan, sınırları kaldıran yeni nesil dil platformu.
+          Yapay zeka gücü ve <strong>uzman eğitmenlerle</strong> konuşarak öğrenilen, sınırları kaldıran yeni nesil dil platformu.
         </div>
       </div>
 
@@ -381,7 +387,7 @@
           Apple ile Giriş Yap
         </button>
       </div>
-      <div class="hint">Dünyayı Cebine Sığdır.</div>
+      <div class="hint">Devam ederek Kullanıcı Sözleşmesi'ni kabul etmiş olursun.</div>
     </div>
 
     <div class="footerbar">
