@@ -1,230 +1,468 @@
-# FILE: app/models/translate.py
-from __future__ import annotations
+<!-- FILE: italky-web/pages/translate.html -->
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>ITALKY • Tercüman</title>
+  <link rel="icon" href="data:," />
 
-import os
-import logging
-from typing import Optional, Dict, Any
+  <style>
+    :root{
+      --text: rgba(255,255,255,.92);
 
-import requests
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, ConfigDict, Field
+      /* ITALKY kurumsal his: lacivert + bordo (meTint) */
+      --gold:#ffb300;      /* kenar vurgusu (karşı taraf) */
+      --pist:#bef264;      /* kenar vurgusu (ben tarafı) */
 
-logger = logging.getLogger("uvicorn.error")
-router = APIRouter()
+      --border: rgba(255,255,255,.10);
+      --border2: rgba(255,255,255,.06);
 
-# ✅ KEY FALLBACK SIRASI:
-# 1) GOOGLE_API_KEY (senin mevcut)
-# 2) GOOGLE_TRANSLATE_API_KEY (benim önerdiğim)
-# 3) GEMINI_API_KEY (bazı projelerde sende var)
-GOOGLE_API_KEY = (os.getenv("GOOGLE_API_KEY", "") or "").strip()
-if not GOOGLE_API_KEY:
-    GOOGLE_API_KEY = (os.getenv("GOOGLE_TRANSLATE_API_KEY", "") or "").strip()
-if not GOOGLE_API_KEY:
-    GOOGLE_API_KEY = (os.getenv("GEMINI_API_KEY", "") or "").strip()
-
-
-# -------------------------
-# MODELS
-# -------------------------
-class FlexibleModel(BaseModel):
-    model_config = ConfigDict(extra="ignore", populate_by_name=True)
-
-
-class TranslateRequest(FlexibleModel):
-    text: str
-
-    # ✅ Hem "from_lang" hem "source" kabul et
-    from_lang: Optional[str] = Field(default=None, alias="source")
-
-    # ✅ Hem "to_lang" hem "target" kabul et
-    to_lang: str = Field(default="en", alias="target")
-
-
-class TranslateResponse(FlexibleModel):
-    ok: bool
-    translated: str
-    detected_source: Optional[str] = None
-
-
-class TTSRequest(FlexibleModel):
-    text: str
-    # ✅ Hem "lang" hem "language" kabul et (ileride lazım olur)
-    lang: str = Field(default="en", alias="language")
-    gender: str = "FEMALE"
-    speaking_rate: float = 1.0
-    pitch: float = 0.0
-
-
-class TTSResponse(FlexibleModel):
-    ok: bool
-    audio_base64: str
-
-
-# -------------------------
-# HELPERS
-# -------------------------
-def _ensure_key():
-    if not GOOGLE_API_KEY:
-        raise HTTPException(500, "GOOGLE_API_KEY missing (Render ENV)")
-
-def _norm_lang(code: Optional[str]) -> Optional[str]:
-    if not code:
-        return None
-    c = str(code).strip().lower()
-    # en-US / en_US -> en
-    if "-" in c:
-        c = c.split("-", 1)[0]
-    if "_" in c:
-        c = c.split("_", 1)[0]
-    return c or None
-
-
-# -------------------------
-# ✅ PING (en hızlı teşhis)
-# GET /api/translate/_ping  (senin var)
-# GET /api/translate/ping   (kolay ezber)
-# -------------------------
-@router.get("/translate/_ping")
-def translate_ping():
-    has = bool(GOOGLE_API_KEY)
-    masked = (GOOGLE_API_KEY[:6] + "..." + GOOGLE_API_KEY[-4:]) if has else ""
-    return {"ok": True, "has_key": has, "key": masked}
-
-@router.get("/translate/ping")
-def translate_ping2():
-    return translate_ping()
-
-
-# -------------------------
-# ✅ GOOGLE TRANSLATE v2
-# POST /api/translate
-# Body: {text, to_lang|target, from_lang|source?}
-# -------------------------
-@router.post("/translate", response_model=TranslateResponse)
-def api_translate(req: TranslateRequest):
-    _ensure_key()
-
-    text = (req.text or "").strip()
-    if not text:
-        raise HTTPException(400, "empty text")
-
-    src = _norm_lang(req.from_lang)  # alias: "source" da buraya düşer
-    dst = _norm_lang(req.to_lang) or "en"  # alias: "target" da buraya düşer
-
-    url = "https://translation.googleapis.com/language/translate/v2"
-
-    # ✅ EN STABİL: key query param, body JSON
-    params = {"key": GOOGLE_API_KEY}
-    payload: Dict[str, Any] = {
-        "q": text,
-        "target": dst,
-        "format": "text",
-    }
-    if src:
-        payload["source"] = src
-
-    try:
-        r = requests.post(url, params=params, json=payload, timeout=18)
-
-        if r.status_code >= 400:
-            body = (r.text or "")[:1200]
-            logger.error("GOOGLE_TRANSLATE_FAIL status=%s body=%s", r.status_code, body)
-            raise HTTPException(
-                status_code=502,
-                detail=f"google_translate_error status={r.status_code} body={body}"
-            )
-
-        data = r.json() or {}
-        tr = (((data.get("data") or {}).get("translations")) or [])
-        if not tr:
-            return TranslateResponse(ok=True, translated=text, detected_source=src)
-
-        first = tr[0] or {}
-        translated = str(first.get("translatedText") or "").strip() or text
-        detected = str(first.get("detectedSourceLanguage") or "").strip() or None
-
-        # Basit HTML entity temizliği
-        translated = (
-            translated
-            .replace("&amp;", "&")
-            .replace("&quot;", '"')
-            .replace("&#39;", "'")
-            .replace("&lt;", "<")
-            .replace("&gt;", ">")
-        )
-
-        return TranslateResponse(ok=True, translated=translated, detected_source=detected)
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error("TRANSLATE_EXCEPTION %s", str(e))
-        raise HTTPException(500, "translate error")
-
-
-# -------------------------
-# ✅ GOOGLE TEXT-TO-SPEECH
-# POST /api/tts
-# -------------------------
-@router.post("/tts", response_model=TTSResponse)
-def api_tts(req: TTSRequest):
-    _ensure_key()
-
-    text = (req.text or "").strip()
-    if not text:
-        raise HTTPException(400, "empty text")
-
-    lang = _norm_lang(req.lang) or "en"
-
-    voice_map = {
-        "tr": {"languageCode": "tr-TR", "name": "tr-TR-Standard-A"},
-        "en": {"languageCode": "en-US", "name": "en-US-Standard-C"},
-        "de": {"languageCode": "de-DE", "name": "de-DE-Standard-A"},
-        "fr": {"languageCode": "fr-FR", "name": "fr-FR-Standard-A"},
-        "es": {"languageCode": "es-ES", "name": "es-ES-Standard-A"},
-        "ar": {"languageCode": "ar-XA", "name": "ar-XA-Standard-A"},
-        "ru": {"languageCode": "ru-RU", "name": "ru-RU-Standard-A"},
-        "it": {"languageCode": "it-IT", "name": "it-IT-Standard-A"},
-    }
-    voice = voice_map.get(lang, {"languageCode": "en-US", "name": "en-US-Standard-C"})
-
-    url = "https://texttospeech.googleapis.com/v1/text:synthesize"
-    params = {"key": GOOGLE_API_KEY}
-
-    body = {
-        "input": {"text": text[:4500]},
-        "voice": {
-            "languageCode": voice["languageCode"],
-            "name": voice["name"],
-            "ssmlGender": str(req.gender or "FEMALE").upper(),
-        },
-        "audioConfig": {
-            "audioEncoding": "MP3",
-            "speakingRate": float(req.speaking_rate or 1.0),
-            "pitch": float(req.pitch or 0.0),
-        },
+      --shadow: 0 28px 90px rgba(0,0,0,.65);
     }
 
-    try:
-        r = requests.post(url, params=params, json=body, timeout=20)
+    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    html,body{ margin:0; padding:0; width:100%; height:100dvh; overflow:hidden; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
 
-        if r.status_code >= 400:
-            body_txt = (r.text or "")[:1200]
-            logger.error("GOOGLE_TTS_FAIL status=%s body=%s", r.status_code, body_txt)
-            raise HTTPException(
-                status_code=502,
-                detail=f"google_tts_error status={r.status_code} body={body_txt}"
-            )
+    body{
+      /* ITALKY background (lacivert ağırlık) */
+      background:
+        radial-gradient(900px 520px at 50% 16%, rgba(40,120,255,.16), transparent 62%),
+        radial-gradient(900px 520px at 50% 86%, rgba(140,20,50,.12), transparent 62%),
+        radial-gradient(700px 360px at 12% 10%, rgba(255,255,255,.06), transparent 60%),
+        radial-gradient(700px 360px at 88% 90%, rgba(255,255,255,.05), transparent 60%),
+        linear-gradient(180deg, #0b1222, #05070d);
+      color: var(--text);
+    }
 
-        data = r.json() or {}
-        audio = str(data.get("audioContent") or "").strip()
-        if not audio:
-            raise HTTPException(502, "tts no audioContent")
+    .frame{
+      width:100%;
+      max-width:480px;
+      height:100%;
+      margin:0 auto;
+      position:relative;
+      background: transparent;
+      overflow:hidden;
+    }
 
-        return TTSResponse(ok=True, audio_base64=audio)
+    .back{
+      position:absolute;
+      top: 12px;
+      left: 12px;
+      z-index: 80;
+      width: 46px;
+      height: 46px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: rgba(15,15,18,.50);
+      color: #fff;
+      font-size: 22px;
+      font-weight: 1000;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      box-shadow: 0 18px 40px rgba(0,0,0,.45);
+      backdrop-filter: blur(10px);
+    }
+    .back:active{ transform: translateY(1px); }
 
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error("TTS_EXCEPTION %s", str(e))
-        raise HTTPException(500, "tts error")
+    .split{
+      position:absolute;
+      inset: 0;
+      display:grid;
+      grid-template-rows: 1fr auto 1fr;
+      padding: 70px 12px 54px;
+    }
+
+    /* Wave */
+    .wave{
+      height: 30px;
+      position: relative;
+      margin: 10px 0;
+      opacity: .96;
+      pointer-events:none;
+      filter: drop-shadow(0 10px 22px rgba(0,0,0,.45));
+    }
+    .wave svg{ width:100%; height:100%; display:block; }
+    .wave .glow{
+      position:absolute;
+      inset:-12px -12px -12px -12px;
+      background:
+        radial-gradient(260px 46px at 50% 50%, rgba(190,242,100,.16), transparent 72%),
+        radial-gradient(260px 46px at 40% 50%, rgba(255,179,0,.12), transparent 72%),
+        radial-gradient(260px 46px at 60% 50%, rgba(40,120,255,.14), transparent 72%);
+      pointer-events:none;
+      z-index:-1;
+      opacity:.75;
+    }
+    .wave svg path{
+      stroke-dasharray: 12 14;
+      animation: waveFlow 2.2s linear infinite;
+      opacity: .95;
+    }
+    @keyframes waveFlow{
+      0%{ stroke-dashoffset: 0; }
+      100%{ stroke-dashoffset: -120; }
+    }
+    .frame.listening .wave svg path{
+      animation-duration: .85s;
+      opacity: 1;
+    }
+    .frame.listening .wave .glow{ opacity: 1; }
+
+    .side{
+      border-radius: 28px;
+      border: 1px solid var(--border);
+      background:
+        radial-gradient(800px 240px at 0% 0%, rgba(40,120,255,.12), transparent 62%),
+        radial-gradient(800px 240px at 100% 0%, rgba(255,255,255,.05), transparent 62%),
+        rgba(0,0,0,.12);
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+      min-height:0;
+      backdrop-filter: blur(10px);
+      box-shadow: var(--shadow);
+      position:relative;
+    }
+
+    /* Ben tarafı: ITALKY bordo dokunuş */
+    .side.meTint{
+      background:
+        radial-gradient(900px 420px at 30% 12%, rgba(120, 20, 35, .85), transparent 68%),
+        radial-gradient(700px 360px at 80% 18%, rgba(90, 15, 30, .65), transparent 70%),
+        radial-gradient(600px 320px at 40% 75%, rgba(70, 10, 25, .45), transparent 72%),
+        linear-gradient(180deg, rgba(60, 10, 20, .55), rgba(0,0,0,.15));
+    }
+
+    .side.top{ transform: rotate(180deg); }
+
+    .bar{
+      display:flex;
+      align-items:center;
+      justify-content:flex-end;
+      gap: 8px;
+      padding: 12px 12px;
+      border-bottom: 1px solid var(--border2);
+      background: rgba(0,0,0,.22);
+    }
+
+    /* Dropdown */
+    .dd{ position: relative; width: 200px; max-width: 240px; }
+    .dd-btn{
+      width:100%;
+      padding: 10px 12px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+      color:#fff;
+      font-weight: 1000;
+      font-size: 13px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+      cursor:pointer;
+      user-select:none;
+    }
+    .dd-btn .caret{ opacity:.75; font-size: 12px; }
+
+    /* ✅ Dropdown scroll + scrollbar tamamen gizli + sağ boşluk yok */
+    .dd-menu{
+      position:absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      width: clamp(220px, 78vw, 320px);
+      max-width: calc(100vw - 28px);
+
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.16);
+      background: rgba(20,20,24,.98);
+      box-shadow: 0 34px 90px rgba(0,0,0,.70);
+      backdrop-filter: blur(14px);
+      display:none;
+      z-index: 999;
+
+      max-height: 320px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+
+      scrollbar-gutter: auto;
+    }
+    .dd.open .dd-menu{ display:block; }
+
+    /* ✅ scrollbar tamamen gizli (webkit + firefox + ms) */
+    .dd-menu{ scrollbar-width: none; -ms-overflow-style: none; }
+    .dd-menu::-webkit-scrollbar{ width:0; height:0; }
+    .dd-menu::-webkit-scrollbar-thumb{ background: transparent; }
+    .dd-menu::-webkit-scrollbar-track{ background: transparent; }
+
+    /* ✅ search sticky */
+    .dd-search-wrap{
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      padding: 10px;
+      background: rgba(20,20,24,.98);
+      border-bottom: 1px solid rgba(255,255,255,.10);
+    }
+    .dd-search{
+      width: 100%;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: rgba(255,255,255,.92);
+      font-weight: 900;
+      font-size: 13px;
+      padding: 10px 12px;
+      outline: none;
+    }
+    .dd-search::placeholder{ color: rgba(255,255,255,.55); font-weight: 800; }
+    .dd-search:focus{ border-color: rgba(255,179,0,.55); }
+
+    .dd-item{
+      padding: 13px 14px;
+      cursor:pointer;
+      color: rgba(255,255,255,.96);
+      font-weight: 950;
+      font-size: 14px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      letter-spacing: .1px;
+      user-select:none;
+    }
+    .dd-item:last-child{ border-bottom:none; }
+    .dd-item:hover{ background: rgba(255,255,255,.06); }
+    .dd-item:active{ background: rgba(255,179,0,.12); }
+    .dd-item.hidden{ display:none; }
+    .dd-sep{
+      padding: 10px 14px;
+      font-size: 11px;
+      font-weight: 1000;
+      letter-spacing: .8px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.55);
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      background: rgba(0,0,0,.18);
+    }
+
+    .btnIcon{
+      width: 48px;
+      height: 48px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      flex: 0 0 48px;
+    }
+    .btnIcon svg{
+      width: 22px; height:22px;
+      stroke:#fff; fill:none;
+      stroke-width:2; stroke-linecap:round; stroke-linejoin:round;
+      opacity:.92;
+    }
+    .btnIcon:active{ transform: translateY(1px); }
+    .btnIcon.listening{
+      border-color: rgba(190,242,100,.35);
+      background: rgba(190,242,100,.12);
+      box-shadow: 0 0 22px rgba(190,242,100,.18);
+    }
+    .btnIcon.muted{ opacity: .45; }
+
+    .content{
+      flex: 1 1 auto;
+      min-height:0;
+      padding: 12px;
+      overflow:auto;
+      -webkit-overflow-scrolling: touch;
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+
+      scrollbar-width:none;
+      -ms-overflow-style:none;
+    }
+    .content::-webkit-scrollbar{ width:0; height:0; }
+
+    .bubble{
+      max-width: 92%;
+      padding: 11px 13px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.22);
+      font-weight: 950;
+      font-size: 13px;
+      line-height: 1.35;
+      word-break: break-word;
+      box-shadow: 0 12px 28px rgba(0,0,0,.28);
+    }
+    .bubble.me{ align-self:flex-end; border-right: 4px solid var(--pist); text-align:right; }
+    .bubble.them{ align-self:flex-start; border-left: 4px solid var(--gold); }
+
+    /* --- ITALKY mini brand (üst/alt) --- */
+    .brandBottom, .brandTop{
+      position:absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap: 4px;
+      pointer-events:none;
+      opacity:.90;
+      z-index: 40;
+    }
+    .brandBottom{ bottom: 10px; }
+    .brandTop{ top: 10px; transform: translateX(-50%) rotate(180deg); }
+
+    .bn{
+      font-weight: 1000;
+      letter-spacing:.35px;
+      font-size: 12px;
+      color: rgba(255,255,255,.92);
+    }
+
+    /* italy flag under ITALKY */
+    .flagbar{
+      width: 120px;
+      height: 4px;
+      border-radius: 999px;
+      overflow:hidden;
+      display:flex;
+      box-shadow: 0 10px 22px rgba(0,0,0,.25);
+    }
+    .flagbar span{ flex:1; }
+    .f-g{ background:#009246; }
+    .f-w{ background:#ffffff; }
+    .f-r{ background:#CE2B37; }
+
+    .sl{
+      font-weight: 900;
+      font-size: 10px;
+      color: rgba(255,255,255,.60);
+    }
+
+    .toast{
+      position: fixed;
+      left: 50%;
+      top: 14px;
+      transform: translateX(-50%);
+      z-index: 99999;
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-weight: 1000;
+      font-size: 12px;
+      background: rgba(20,20,20,.92);
+      border: 1px solid rgba(255,255,255,.12);
+      box-shadow: 0 18px 40px rgba(0,0,0,.45);
+      backdrop-filter: blur(10px);
+      display:none;
+      color: rgba(255,255,255,.92);
+      max-width: min(480px, calc(100vw - 24px));
+      white-space: nowrap;
+      overflow:hidden;
+      text-overflow: ellipsis;
+    }
+    .toast.show{ display:block; }
+  </style>
+</head>
+
+<body>
+  <div class="frame" id="frameRoot">
+    <button class="back" id="backBtn" aria-label="Geri">←</button>
+
+    <!-- TOP brand -->
+    <div class="brandTop">
+      <div class="bn">ITALKY</div>
+      <div class="flagbar" aria-hidden="true"><span class="f-g"></span><span class="f-w"></span><span class="f-r"></span></div>
+      <div class="sl" id="sloganTop">—</div>
+    </div>
+
+    <div class="split">
+
+      <section class="side top" id="sideTop">
+        <div class="bar">
+          <div class="dd" id="ddTop">
+            <div class="dd-btn" id="ddTopBtn"><span id="ddTopTxt">—</span><span class="caret">▾</span></div>
+            <div class="dd-menu" id="ddTopMenu"></div>
+          </div>
+
+          <button class="btnIcon" id="topSpeak" aria-label="Ses">
+            <svg viewBox="0 0 24 24">
+              <path d="M11 5L6 9H3v6h3l5 4z"></path>
+              <path d="M15 9a4 4 0 0 1 0 6"></path>
+              <path d="M17.5 6.5a7 7 0 0 1 0 11"></path>
+            </svg>
+          </button>
+
+          <button class="btnIcon" id="topMic" aria-label="Mikrofon">
+            <svg viewBox="0 0 24 24">
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+              <line x1="12" y1="19" x2="12" y2="23"></line>
+              <line x1="8" y1="23" x2="16" y2="23"></line>
+            </svg>
+          </button>
+        </div>
+
+        <div class="content" id="topBody"></div>
+      </section>
+
+      <div class="wave" aria-hidden="true">
+        <div class="glow"></div>
+        <svg viewBox="0 0 1000 80" preserveAspectRatio="none">
+          <path d="M0,45 C80,15 160,75 240,45 C320,15 400,75 480,45 C560,15 640,75 720,45 C800,15 880,75 960,45 C980,40 990,36 1000,35"
+                fill="none" stroke="rgba(255,255,255,.16)" stroke-width="8" stroke-linecap="round"/>
+          <path d="M0,45 C80,15 160,75 240,45 C320,15 400,75 480,45 C560,15 640,75 720,45 C800,15 880,75 960,45 C980,40 990,36 1000,35"
+                fill="none" stroke="rgba(190,242,100,.18)" stroke-width="3" stroke-linecap="round"/>
+        </svg>
+      </div>
+
+      <section class="side meTint" id="sideBottom">
+        <div class="bar">
+          <div class="dd" id="ddBot">
+            <div class="dd-btn" id="ddBotBtn"><span id="ddBotTxt">—</span><span class="caret">▾</span></div>
+            <div class="dd-menu" id="ddBotMenu"></div>
+          </div>
+
+          <button class="btnIcon" id="botSpeak" aria-label="Ses">
+            <svg viewBox="0 0 24 24">
+              <path d="M11 5L6 9H3v6h3l5 4z"></path>
+              <path d="M15 9a4 4 0 0 1 0 6"></path>
+              <path d="M17.5 6.5a7 7 0 0 1 0 11"></path>
+            </svg>
+          </button>
+
+          <button class="btnIcon" id="botMic" aria-label="Mikrofon">
+            <svg viewBox="0 0 24 24">
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+              <line x1="12" y1="19" x2="12" y2="23"></line>
+              <line x1="8" y1="23" x2="16" y2="23"></line>
+            </svg>
+          </button>
+        </div>
+
+        <div class="content" id="botBody"></div>
+      </section>
+
+    </div>
+
+    <!-- BOTTOM brand -->
+    <div class="brandBottom">
+      <div class="bn">ITALKY</div>
+      <div class="flagbar" aria-hidden="true"><span class="f-g"></span><span class="f-w"></span><span class="f-r"></span></div>
+      <div class="sl" id="sloganBot">—</div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">—</div>
+  <!-- ✅ ITALKY JS -->
+  <script type="module" src="/js/translate_page.js?v=8"></script>
+</body>
+</html>
+```0
