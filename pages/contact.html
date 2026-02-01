@@ -1,314 +1,276 @@
-<!-- FILE: /pages/contact.html -->
-<!-- LOGIN ÖNCESİ ŞABLON: index.html ile aynı üst bar + geri ok, altta about/faq/privacy/contact + imza
-     İÇERİK: daha kurumsal, sade, premium
-     SCROLL: gizli (scrollbar görünmez)
--->
 <!DOCTYPE html>
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>İletişim</title>
+  <title>ITALKY - İletişim</title>
 
   <link rel="icon" href="data:," />
-  <link rel="stylesheet" href="/css/style.css?v=2" />
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
   <style>
-    :root{
-      --gold:#ffb300;
-      --pistachio:#bef264;
-      --card: rgba(25,25,25,.55);
-      --border: rgba(255,255,255,.10);
+    :root {
+      /* ITALKY PALET */
+      --bg-void: #030014;
+      --neon-cyan: #00f3ff;
+      --neon-purple: #bc13fe;
+      --neon-pink: #ff00aa;
+      
+      --glass-border: rgba(255, 255, 255, 0.1);
+      --text-main: #ffffff;
+      --text-muted: rgba(255, 255, 255, 0.7);
+      
+      --ease-elastic: cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
-    /* Üst bar sabit */
-    .topbar{
-      position: sticky;
-      top: 0;
-      z-index: 3000;
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+
+    html, body {
+      margin: 0; padding: 0; width: 100%; height: 100dvh;
+      overflow: hidden;
+      font-family: 'Outfit', sans-serif;
+      background-color: var(--bg-void);
+      color: var(--text-main);
+      display: flex; align-items: center; justify-content: center;
     }
 
-    /* Geri ok */
-    .back-wrap{
-      width:80px;
-      display:flex;
-      align-items:center;
-      justify-content:flex-start;
+    /* --- BACKGROUND FX --- */
+    .cosmos-bg {
+      position: absolute; inset: -50%; width: 200%; height: 200%;
+      background: #030014; z-index: 0;
     }
-    .back-btn{
-      width:42px;
-      height:42px;
-      border-radius:14px;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(255,255,255,.04);
-      color:#fff;
-      cursor:pointer;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:18px;
+    .orb {
+      position: absolute; border-radius: 50%;
+      filter: blur(90px); opacity: 0.5;
+      animation: floatOrbit 25s infinite alternate ease-in-out;
     }
-    .back-btn:active{ transform: translateY(1px); filter: brightness(.95); }
-
-    /* İçerik */
-    .page-wrap{
-      flex: 1 1 auto;
-      min-height: 0;
-      overflow-y:auto;
-      padding: 16px;
-      padding-bottom: 140px; /* alt footerbar */
-      scrollbar-width: none;          /* Firefox */
+    .orb-1 {
+      top: 10%; left: 10%; width: 60vw; height: 60vw;
+      background: radial-gradient(circle, var(--neon-purple), transparent 70%);
     }
-    .page-wrap::-webkit-scrollbar{ display:none; } /* Webkit */
-
-    .page-card{
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 22px;
-      padding: 18px;
-      box-shadow: 0 18px 45px rgba(0,0,0,.55);
+    .orb-2 {
+      bottom: 10%; right: 10%; width: 50vw; height: 50vw;
+      background: radial-gradient(circle, var(--neon-cyan), transparent 70%);
+      animation-delay: -5s;
     }
-    .page-title{
-      font-size: 16px;
-      font-weight: 1000;
-      color: #fff;
-      margin: 0 0 10px;
-      letter-spacing:.2px;
-    }
-    .sub{
-      font-size: 13px;
-      line-height: 1.6;
-      color: rgba(255,255,255,.72);
-      font-weight: 650;
-      margin: 0 0 14px;
+    @keyframes floatOrbit {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(10%, -10%) scale(1.1); }
     }
 
-    /* Kurumsal kutular */
-    .info-grid{
-      display:flex;
-      flex-direction:column;
-      gap: 12px;
-      margin-top: 10px;
-    }
-    .info-box{
-      background: rgba(0,0,0,.25);
-      border: 1px solid rgba(255,255,255,.10);
-      border-radius: 18px;
-      padding: 14px;
-      display:flex;
-      flex-direction:column;
-      gap: 8px;
-    }
-    .label{
-      font-size: 11px;
-      font-weight: 950;
-      color: rgba(255,255,255,.55);
-      letter-spacing: .8px;
-      text-transform: uppercase;
+    .noise {
+      position: absolute; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none; mix-blend-mode: overlay; z-index: 1;
     }
 
-    .value-row{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap: 10px;
-      flex-wrap:wrap;
+    /* --- FRAME --- */
+    .mobile-frame {
+      width: 100%; max-width: 480px; height: 100%;
+      position: relative; z-index: 10;
+      display: flex; flex-direction: column;
+      background: rgba(5, 5, 10, 0.4);
+      backdrop-filter: blur(30px);
     }
-    .value{
-      font-size: 14px;
-      font-weight: 900;
-      color: var(--gold);
-      word-break: break-word;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-    }
-    .mini{
-      font-size: 12px;
-      color: rgba(255,255,255,.60);
-      font-weight: 650;
-      margin: 0;
-      line-height: 1.5;
+    @media (min-width: 520px) {
+      .mobile-frame {
+        height: 92vh; border-radius: 40px;
+        border: 1px solid rgba(255,255,255,0.1);
+        box-shadow: 0 40px 100px -20px rgba(0,0,0,0.8);
+      }
     }
 
-    /* Butonlar */
-    .btn-row{
-      display:flex;
-      gap:10px;
-      margin-top: 6px;
-      flex-wrap:wrap;
-    }
-    .btn{
-      flex: 1 1 180px;
-      height: 46px;
-      border-radius: 16px;
-      border: 1px solid rgba(255,255,255,.10);
-      background: rgba(255,255,255,.04);
-      color: rgba(255,255,255,.85);
-      font-weight: 950;
-      cursor:pointer;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap: 10px;
-      text-decoration:none;
-      box-shadow: 0 12px 24px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.10);
-    }
-    .btn:active{ transform: translateY(1px); filter: brightness(.97); }
-
-    .btn-primary{
-      background: var(--pistachio);
-      color:#111;
-      border: none;
+    /* --- TOP BAR --- */
+    .topbar {
+      height: 100px; display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; position: relative; z-index: 20;
     }
 
-    .ico{
-      width: 18px; height: 18px;
-      stroke: currentColor;
-      fill: none;
-      stroke-width: 2;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      opacity: .95;
+    .back-btn {
+      width: 44px; height: 44px; border-radius: 14px;
+      border: 1px solid var(--glass-border);
+      background: rgba(255,255,255,0.05);
+      color: #fff; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: 0.2s;
+    }
+    .back-btn:active { transform: scale(0.95); background: rgba(255,255,255,0.1); }
+    .back-btn svg { width: 24px; height: 24px; fill: #fff; }
+
+    /* Logo Lock System */
+    .mini-brand { display: flex; flex-direction: column; width: fit-content; align-items: center; }
+    .mini-logo {
+      font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 24px;
+      letter-spacing: -1px; color: #fff; line-height: 1; white-space: nowrap;
+    }
+    .mini-flag {
+      width: 100%; height: 4px; border-radius: 4px; display: flex; overflow: hidden; margin-top: 4px;
+      box-shadow: 0 0 10px rgba(255,255,255,0.1);
+    }
+    .mini-flag div { flex: 1; height: 100%; }
+    .f-g { background: #009246; } .f-w { background: #fff; } .f-r { background: #CE2B37; }
+
+    /* --- CONTENT AREA --- */
+    .page-content {
+      flex: 1; overflow-y: auto; padding: 10px 20px 120px;
+      display: flex; flex-direction: column; gap: 20px; scrollbar-width: none;
+    }
+    .page-content::-webkit-scrollbar { display: none; }
+
+    .contact-card {
+      background: linear-gradient(160deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%);
+      border: 1px solid var(--glass-border); border-radius: 32px;
+      padding: 30px 24px; position: relative; overflow: hidden;
+      animation: fadeInUp 0.8s var(--ease-elastic);
     }
 
-    /* Login öncesi alt bar (index ile aynı) */
-    .login-footerbar{
-      position: fixed;
-      left: 50%;
-      transform: translateX(-50%);
-      width: min(480px, calc(100vw - 18px));
-      bottom: 0;
-      z-index: 2800;
-      background: rgba(0,0,0,.92);
-      border-top: 1px solid rgba(255,255,255,.06);
-      padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
-      display:flex;
-      flex-direction:column;
-      gap: 8px;
+    h1 {
+      font-family: 'Space Grotesk', sans-serif; font-size: 28px; margin: 0 0 10px;
+      background: linear-gradient(to right, #fff, var(--neon-purple));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      font-weight: 700; letter-spacing: -1px;
     }
-    .login-links{
-      display:flex;
-      justify-content:center;
-      gap: 16px;
-      flex-wrap:wrap;
-      font-size:12px;
-      font-weight: 900;
+    
+    .sub { font-size: 14px; color: var(--text-muted); line-height: 1.6; margin-bottom: 24px; }
+
+    .info-box {
+      background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border);
+      border-radius: 20px; padding: 20px; margin-bottom: 16px;
+      display: flex; flex-direction: column; gap: 12px;
     }
-    .login-links a{
-      color: rgba(255,255,255,.70);
-      text-decoration:none;
-      white-space:nowrap;
+    .label { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 1px; }
+    
+    .value { 
+      font-family: 'Space Grotesk', monospace; font-size: 16px; font-weight: 700; color: var(--neon-cyan);
+      word-break: break-all;
     }
-    .login-brand{
-      text-align:center;
-      font-size:11px;
-      font-weight: 900;
-      color: rgba(255,255,255,.55);
+
+    .btn-row { display: flex; gap: 10px; margin-top: 6px; }
+    .btn {
+      flex: 1; height: 48px; border-radius: 14px; border: none; font-size: 14px; font-weight: 600;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: 0.2s; text-decoration: none;
     }
+    .btn-primary { background: var(--neon-cyan); color: #000; box-shadow: 0 5px 15px rgba(0, 243, 255, 0.3); }
+    .btn-primary:active { transform: scale(0.96); }
+    
+    .btn-sec { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid var(--glass-border); }
+    .btn-sec:active { background: rgba(255,255,255,0.15); transform: scale(0.96); }
+
+    .mini-note { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 10px; line-height: 1.5; font-style: italic; }
+
+    /* --- FOOTER --- */
+    .footerbar {
+      position: absolute; bottom: 0; width: 100%; padding: 24px;
+      background: linear-gradient(to top, #000 0%, transparent 100%);
+      display: flex; flex-direction: column; align-items: center; gap: 14px;
+      z-index: 30; pointer-events: none;
+    }
+    .links { display: flex; gap: 24px; pointer-events: auto; }
+    .links a {
+      color: rgba(255,255,255,0.5); text-decoration: none; font-size: 12px; font-weight: 600; transition: 0.2s;
+    }
+    .links a:hover { color: var(--neon-cyan); }
+    
+    .footerBrand { 
+      font-size: 10px; color: rgba(255,255,255,0.2); letter-spacing: 2px; text-transform: uppercase; font-weight: 700;
+    }
+
+    @keyframes fadeInUp { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
   </style>
 </head>
 
 <body>
-<div class="mobile-frame" id="mobileFrame">
-
-  <!-- ✅ ÜST BAR (index ile aynı + geri ok) -->
-  <div class="topbar">
-    <div class="back-wrap">
-      <button class="back-btn" type="button" onclick="history.back()" aria-label="Geri">←</button>
-    </div>
-
-    <div class="brand-wrapper" id="brandWrapper">
-      <div class="logo-area">
-        <svg class="seesaw-svg" viewBox="0 0 40 20" aria-hidden="true">
-          <g class="seesaw-bar" id="seesawBar">
-            <line x1="0" y1="8" x2="40" y2="8" stroke="#ccc" stroke-width="2" stroke-linecap="round" />
-            <circle cx="3" cy="5" r="3" fill="#bef264" />
-            <circle cx="37" cy="5" r="3" fill="#ffb300" id="orangeBall" />
-          </g>
-          <polygon points="17,14 23,14 20,8" fill="none" stroke="#666" stroke-width="1.5" />
-        </svg>
-        <div class="brand-name">CaynanaAI</div>
-      </div>
-      <div class="slogan">Yapay Zekanın Geleneksel Aklı</div>
-    </div>
-
-    <div class="right-controls"></div>
+  <div class="cosmos-bg">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
   </div>
+  <div class="noise"></div>
 
-  <!-- ✅ ORTA İÇERİK (Kurumsal) -->
-  <div class="page-wrap">
-    <div class="page-card">
-      <h1 class="page-title">İletişim</h1>
-      <p class="sub">
-        Teknik bir sorun, öneri veya iş birliği talebin varsa resmi kanallarımız üzerinden bizimle iletişime geçebilirsin.
-      </p>
+  <div class="mobile-frame">
+    <div class="topbar">
+      <button class="back-btn" onclick="window.location.href='/index.html'">
+        <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+      </button>
 
-      <div class="info-grid">
+      <div class="mini-brand">
+        <div class="mini-logo">ITALKY</div>
+        <div class="mini-flag">
+          <div class="f-g"></div><div class="f-w"></div><div class="f-r"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-content">
+      <div class="contact-card">
+        <h1>İletişim</h1>
+        <p class="sub">
+          Teknik destek, iş birliği veya önerileriniz için bizimle doğrudan iletişime geçebilirsiniz.
+        </p>
 
         <div class="info-box">
-          <div class="label">Resmi Destek E-Postası</div>
-          <div class="value-row">
-            <a class="value" href="mailto:support@caynana.ai">support@caynana.ai</a>
-          </div>
-          <p class="mini">Bu adres üzerinden gelen talepler kayıt altına alınır ve sırasıyla yanıtlanır.</p>
-
+          <div class="label">Resmi Destek</div>
+          <div class="value">support@italky.ai</div>
+          <div class="mini-note">Talepleriniz genellikle 24 saat içinde yanıtlanır.</div>
+          
           <div class="btn-row">
-            <a class="btn btn-primary" href="mailto:support@caynana.ai">
-              <svg class="ico" viewBox="0 0 24 24"><path d="M4 4h16v16H4z"></path><path d="M4 7l8 6 8-6"></path></svg>
+            <a class="btn btn-primary" href="mailto:support@italky.ai">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
               E-Posta Gönder
             </a>
-            <button class="btn" type="button" id="copyMailBtn">
-              <svg class="ico" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"></rect><rect x="2" y="2" width="13" height="13" rx="2"></rect></svg>
+            <button class="btn btn-sec" type="button" id="copyMailBtn">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
               Kopyala
             </button>
           </div>
         </div>
 
         <div class="info-box">
-          <div class="label">Şirket</div>
-          <div class="value-row">
-            <div style="font-weight:950; color:rgba(255,255,255,.85);">ITALKY TEKNOLOJİ A.Ş.</div>
-          </div>
-          <p class="mini">Kurumsal iletişim ve yasal talepler bu başlık altında değerlendirilir.</p>
+          <div class="label">Şirket Bilgileri</div>
+          <div class="value" style="color:#fff; font-family:'Outfit', sans-serif;">ITALKY TEKNOLOJİ A.Ş.</div>
+          <div class="mini-note">Düzce Teknopark, Teknoloji Geliştirme Bölgesi</div>
         </div>
-
+        
+        <p class="mini-note" style="text-align: center; margin-top: 20px;">
+          Resmi yazışmalar ve yasal bildirimler için lütfen şirket adresini kullanınız.
+        </p>
       </div>
+    </div>
 
-      <p class="mini" style="margin-top:14px;">
-        Not: Caynana AI tıbbi/finansal/hukuki resmi danışmanlık hizmeti vermez. Yanıtlar öneri niteliğindedir.
-      </p>
+    <div class="footerbar">
+      <div class="links">
+        <a href="/pages/about.html">Hakkında</a>
+        <a href="/pages/faq.html">SSS</a>
+        <a href="/pages/privacy.html">Gizlilik</a>
+        <a href="/pages/contact.html" style="color:#fff">İletişim</a>
+      </div>
+      <div class="footerBrand">ItalkyAI By Ozyigit's 2026</div>
     </div>
   </div>
 
-  <!-- ✅ ALT BAR (login öncesi) -->
-  <div class="login-footerbar">
-    <div class="login-links">
-      <a href="/pages/about.html">Hakkımızda</a>
-      <a href="/pages/faq.html">SSS</a>
-      <a href="/pages/privacy.html">Gizlilik</a>
-      <a href="/pages/contact.html">İletişim</a>
-    </div>
-    <div class="login-brand">@CaynanaAI By Ozyigit’s 2026</div>
-  </div>
-
-</div>
-
-<script>
-  // mail kopyala (kurumsal küçük kolaylık)
-  document.addEventListener("DOMContentLoaded", () => {
-    const btn = document.getElementById("copyMailBtn");
-    if(!btn) return;
-    btn.addEventListener("click", async () => {
-      const mail = "support@caynana.ai";
-      try{
-        await navigator.clipboard.writeText(mail);
-        btn.textContent = "Kopyalandı";
-        setTimeout(()=> btn.textContent = "Kopyala", 1200);
-      }catch{
-        alert("Kopyalanamadı: " + mail);
-      }
+  <script>
+    // Mail Kopyalama Fonksiyonu
+    document.addEventListener("DOMContentLoaded", () => {
+      const btn = document.getElementById("copyMailBtn");
+      if(!btn) return;
+      btn.addEventListener("click", async () => {
+        const mail = "support@italky.ai";
+        try{
+          await navigator.clipboard.writeText(mail);
+          const originalText = btn.innerHTML;
+          btn.innerHTML = "Kopyalandı!";
+          btn.style.borderColor = "#00f3ff";
+          setTimeout(()=> {
+            btn.innerHTML = originalText;
+            btn.style.borderColor = "rgba(255,255,255,0.1)";
+          }, 1500);
+        } catch(e) {
+          alert("Kopyalanamadı: " + mail);
+        }
+      });
     });
-  });
-</script>
-
+  </script>
 </body>
 </html>
