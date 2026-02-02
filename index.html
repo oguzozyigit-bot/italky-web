@@ -3,31 +3,31 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>italkyAI - Giriş Yap</title>
+  <title>italkyAI • Giriş</title>
 
   <link rel="icon" href="data:," />
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
   <style>
     :root {
-      /* --- LOGO PALETİ (KİLİTLİ) --- */
-      --bg-void: #050508; /* Tam siyah değil, logodaki gibi çok koyu lacivert-siyah */
+      /* --- KİLİTLİ LOGO RENKLERİ --- */
+      --bg-deep: #020205; /* Sonsuz Siyah */
+      --text-white: #ffffff;
+      --text-grey: #9ca3af;
       
-      /* "AI" kısmındaki gradyanın aynısı */
-      --ai-grad: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #4f46e5 100%);
-      --ai-glow: rgba(99, 102, 241, 0.4);
+      /* O meşhur İndigo Gradyan */
+      --ai-gradient: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #4338ca 100%);
       
-      /* "BE FREE" rengi */
-      --slogan-grey: #6b7280;
+      /* Cam Efektleri */
+      --glass-bg: rgba(255, 255, 255, 0.03);
+      --glass-border: rgba(255, 255, 255, 0.08);
+      --glass-shine: rgba(255, 255, 255, 0.15);
       
-      --glass-border: rgba(255, 255, 255, 0.1);
-      --text-main: #ffffff;
-      
-      --ease-elastic: cubic-bezier(0.34, 1.56, 0.64, 1);
+      --ease-out: cubic-bezier(0.215, 0.61, 0.355, 1);
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
@@ -36,340 +36,321 @@
       margin: 0; padding: 0; width: 100%; height: 100dvh;
       overflow: hidden;
       font-family: 'Outfit', sans-serif;
-      background-color: var(--bg-void);
-      color: var(--text-main);
+      background-color: var(--bg-deep);
+      color: var(--text-white);
       display: flex; align-items: center; justify-content: center;
     }
 
-    /* --- BACKGROUND (Logodaki renklere uyumlu) --- */
-    .cosmos-bg {
+    /* --- UZAY ATMOSFERİ --- */
+    .cosmos-layer {
       position: absolute; inset: -50%; width: 200%; height: 200%;
-      background: var(--bg-void); overflow: hidden; z-index: 0;
+      background: var(--bg-deep); z-index: 0; overflow: hidden;
     }
     
-    /* Neon renkler gitti, sadece Logo Mavisi/Moru var */
-    .orb {
+    .nebula {
       position: absolute; border-radius: 50%;
-      filter: blur(100px); opacity: 0.25; /* Daha soft */
-      animation: floatOrbit 25s infinite alternate ease-in-out;
+      filter: blur(120px); opacity: 0.3;
+      animation: breathe 10s infinite alternate ease-in-out;
     }
-    .orb-1 {
-      top: 10%; left: 20%; width: 60vw; height: 60vw;
-      background: radial-gradient(circle, #6366f1, transparent 70%); /* İndigo */
+    .nebula-1 {
+      top: 10%; left: 10%; width: 70vw; height: 70vw;
+      background: radial-gradient(circle, #6366f1, transparent 60%);
     }
-    .orb-2 {
-      bottom: 10%; right: 10%; width: 50vw; height: 50vw;
-      background: radial-gradient(circle, #a5b4fc, transparent 70%); /* Açık Mavi */
+    .nebula-2 {
+      bottom: 10%; right: 10%; width: 60vw; height: 60vw;
+      background: radial-gradient(circle, #818cf8, transparent 60%);
       animation-delay: -5s;
     }
 
-    @keyframes floatOrbit {
-      0% { transform: translate(0, 0) scale(1); }
-      100% { transform: translate(10%, -10%) scale(1.1); }
-    }
-
-    .noise {
+    .stars {
       position: absolute; inset: 0;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
-      pointer-events: none; mix-blend-mode: overlay; z-index: 1;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.5' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.07'/%3E%3C/svg%3E");
+      mix-blend-mode: screen; opacity: 0.5;
     }
 
-    /* --- MAIN FRAME --- */
-    .mobile-frame {
+    @keyframes breathe {
+      0% { transform: scale(1); opacity: 0.2; }
+      100% { transform: scale(1.1); opacity: 0.35; }
+    }
+
+    /* --- ANA SAHNE (FRAME) --- */
+    .app-frame {
       width: 100%; max-width: 480px; height: 100%;
       position: relative; z-index: 10;
       display: flex; flex-direction: column;
-      /* Logodaki koyu arka planı hissettiren mat cam */
-      background: rgba(10, 10, 15, 0.6); 
-      backdrop-filter: blur(30px);
-      transition: all 0.5s ease;
+      justify-content: space-between;
+      padding: 0 24px 30px;
+      background: rgba(5, 5, 10, 0.4); 
+      backdrop-filter: blur(20px);
     }
-
+    
     @media (min-width: 520px) {
-      .mobile-frame {
+      .app-frame {
         height: 92vh; border-radius: 40px;
-        border: 1px solid rgba(255,255,255,0.05);
-        box-shadow: 0 40px 100px -20px rgba(0,0,0,0.9);
+        border: 1px solid rgba(255,255,255,0.06);
+        box-shadow: 0 50px 100px -20px rgba(0,0,0,0.9);
       }
     }
 
-    /* --- BRANDING (LOGO) --- */
-    .topbar {
-      height: 180px; /* Logo için geniş alan */
-      display: flex; align-items: center; justify-content: center;
-      position: relative; z-index: 20; padding-top: 40px;
+    /* --- 1. BÖLÜM: LOGO (Vitrinin Kralı) --- */
+    .header-section {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding-top: 40px;
     }
-    
-    .brand {
+
+    .brand-wrapper {
       display: flex; flex-direction: column; align-items: center;
-      animation: slideDown 1.2s var(--ease-elastic);
+      animation: logoEntrance 1.2s var(--ease-out) backwards;
     }
-    
-    /* LOGO TİPOGRAFİSİ - RESİMLE BİREBİR */
-    .brand-container {
-      font-family: 'Outfit', sans-serif; /* Resimdeki fonta en yakını */
-      font-size: 58px; 
-      line-height: 0.9;
-      letter-spacing: -1.5px;
-      display: flex;
-      align-items: center;
+
+    .logo-text {
+      font-family: 'Outfit', sans-serif; /* Resimdeki font */
+      font-size: 64px; 
+      line-height: 0.85;
+      letter-spacing: -2px;
+      display: flex; align-items: center;
     }
-    
-    /* "italky" - BEYAZ VE KALIN */
-    .brand-main {
-      font-weight: 700; 
-      color: #ffffff;
-      /* Resimdeki küçük 'i' yapısı */
+
+    .txt-white {
+      color: #fff; font-weight: 700;
+      text-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }
-    
-    /* "AI" - İNDİGO GRADYAN */
-    .brand-ai {
+
+    .txt-ai {
       font-weight: 700;
-      background: var(--ai-grad);
+      background: var(--ai-gradient);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       margin-left: 2px;
-      padding-bottom: 2px; /* Kesilmeyi önlemek için */
+      position: relative;
     }
-    
-    /* "BE FREE" - GRİ VE GENİŞ */
-    .brand-slogan {
+    /* AI'nin arkasındaki hafif parlama */
+    .txt-ai::after {
+      content:''; position: absolute; inset: 0;
+      background: inherit; filter: blur(20px); opacity: 0.4; z-index: -1;
+    }
+
+    .slogan {
       font-family: 'Outfit', sans-serif;
-      font-size: 14px; 
-      font-weight: 800;
-      color: var(--slogan-grey);
-      letter-spacing: 5px; /* Harfleri iyice açtık */
-      text-transform: uppercase;
-      margin-top: 12px; 
-      text-align: center;
+      font-size: 13px; font-weight: 800;
+      color: #6b7280; /* Mat Gri */
+      letter-spacing: 6px; text-transform: uppercase;
+      margin-top: 14px;
+      opacity: 0.9;
     }
 
-    /* --- STAGE --- */
-    .stage {
-      flex: 1; display: flex; flex-direction: column; 
-      align-items: center; justify-content: center;
-      padding: 24px; gap: 30px;
+    /* --- 2. BÖLÜM: HERO MESAJI --- */
+    .hero-section {
+      text-align: center; margin-bottom: 40px;
+      animation: fadeUp 1s 0.3s var(--ease-out) backwards;
     }
 
-    .heroCard {
-      width: 100%;
-      background: linear-gradient(165deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.005) 100%);
-      border: 1px solid var(--glass-border);
-      border-radius: 32px; padding: 40px 24px;
-      text-align: center;
-      box-shadow: 0 20px 40px -10px rgba(0,0,0,0.5);
-      position: relative; overflow: hidden;
-      animation: cardEnter 1s 0.2s var(--ease-elastic) backwards;
+    .hero-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 28px; font-weight: 700; color: #fff;
+      line-height: 1.2; margin-bottom: 12px;
+    }
+    .hero-title span {
+      background: var(--ai-gradient);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     }
 
-    .heroTitle {
-      margin: 0 0 16px; font-family: 'Space Grotesk', sans-serif;
-      font-size: 32px; font-weight: 700;
-      color: #fff; letter-spacing: -1px; line-height: 1.2;
-    }
-    .heroTitle span {
-      background: var(--ai-grad);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+    .hero-desc {
+      font-size: 15px; color: var(--text-grey); line-height: 1.5;
+      max-width: 90%; margin: 0 auto;
     }
 
-    .heroDesc {
-      font-size: 15px; line-height: 1.6; color: var(--slogan-grey);
-      font-weight: 500; max-width: 90%; margin: 0 auto;
-    }
-    .heroDesc strong { color: #fff; font-weight: 600; }
-
-    /* --- BUTTONS --- */
-    .btnWrap {
+    /* --- 3. BÖLÜM: BUTONLAR --- */
+    .action-section {
       width: 100%; display: flex; flex-direction: column; gap: 16px;
-      animation: fadeInUp 1s 0.4s var(--ease-elastic) backwards;
-      position: relative; z-index: 50;
+      animation: fadeUp 1s 0.5s var(--ease-out) backwards;
     }
 
-    .btn3d {
+    .glass-btn {
       position: relative; width: 100%; height: 64px;
-      border-radius: 20px; border: none; cursor: pointer;
-      display: flex; align-items: center; justify-content: center; gap: 16px;
-      font-size: 16px; font-weight: 700; color: #fff;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid var(--glass-border);
-      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-      overflow: hidden;
-      font-family: 'Outfit', sans-serif;
+      border-radius: 20px; border: 1px solid var(--glass-border);
+      background: var(--glass-bg);
+      color: #fff; font-size: 16px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; gap: 14px;
+      cursor: pointer; overflow: hidden;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
     }
 
-    /* Hover'da Logodaki Mavi Parlasın */
-    .btn3d::before {
-      content: ''; position: absolute; inset: 0;
-      background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.1), transparent);
-      transform: translateX(-100%); transition: 0.5s;
+    /* Hover'da Işık Efekti */
+    .glass-btn::before {
+      content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+      transform: skewX(-25deg); transition: 0.5s;
     }
-    .btn3d:hover { border-color: rgba(99, 102, 241, 0.3); transform: translateY(-2px); }
-    .btn3d:hover::before { transform: translateX(100%); }
-    .btn3d:active { transform: scale(0.98); }
+    .glass-btn:hover::before { left: 150%; transition: 0.7s; }
+    .glass-btn:active { transform: scale(0.97); background: rgba(255,255,255,0.05); }
 
-    /* GOOGLE OVERLAY FIX */
-    .googleOverlay { position: relative; width: 100%; height: 64px; display: flex; }
-    .googleOverlay .btn3d { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
-    #googleBtnWrap { position: absolute !important; inset: 0 !important; width: 100% !important; height: 100% !important; z-index: 100 !important; opacity: 0.001; overflow: hidden; border-radius: 20px; }
-    #googleBtnWrap iframe { width: 120% !important; height: 120% !important; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0 !important; cursor: pointer; }
-
-    .badge {
-      width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
-      background: #fff; border-radius: 50%;
+    /* GOOGLE BUTTON FIX (Görünmez Katman) */
+    .google-wrapper { position: relative; width: 100%; height: 64px; }
+    .google-wrapper .glass-btn { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+    #g_id_onload_wrapper { 
+      position: absolute !important; inset: 0 !important; z-index: 100 !important; 
+      opacity: 0.01; overflow: hidden; border-radius: 20px; 
     }
-    .badge.apple { background: #000; color: #fff; border: 1px solid rgba(255,255,255,0.2); }
-    .badge svg { width: 18px; height: 18px; }
-
-    .hint {
-      font-size: 11px; color: var(--slogan-grey); text-align: center; opacity: 0.7;
-      animation: fadeIn 1.5s 1.2s ease backwards; font-weight: 500; letter-spacing: 0.5px;
+    #g_id_onload_wrapper iframe { 
+      width: 120% !important; height: 120% !important; 
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
     }
+
+    .icon-badge {
+      width: 28px; height: 28px; background: #fff; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .icon-badge.black { background: #000; border: 1px solid rgba(255,255,255,0.2); color: #fff; }
+    .icon-badge svg { width: 18px; height: 18px; }
 
     /* --- FOOTER --- */
-    .footerbar {
-      padding: 24px; width: 100%;
-      background: linear-gradient(to top, #000 0%, transparent 100%);
-      display: flex; flex-direction: column; align-items: center; gap: 14px;
-      z-index: 20;
+    .footer-section {
+      margin-top: 30px; text-align: center;
+      animation: fadeIn 1s 0.8s var(--ease-out) backwards;
     }
-    .links { display: flex; gap: 20px; }
-    .links a {
-      color: var(--slogan-grey); text-decoration: none; font-size: 12px; font-weight: 600;
-      transition: all 0.2s;
+    .legal-text {
+      font-size: 11px; color: rgba(255,255,255,0.3); 
+      margin-bottom: 12px;
     }
-    .links a:hover { color: #fff; }
-    
-    .footerBrand { 
-      font-size: 10px; color: rgba(255,255,255,0.2); letter-spacing: 1px;
-      font-weight: 700; margin-top: 4px;
+    .footer-brand {
+      font-size: 10px; color: rgba(255,255,255,0.15); 
+      font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
     }
 
-    @keyframes slideDown { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-    @keyframes cardEnter { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-    @keyframes fadeInUp { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 0.8; } }
+    /* --- ANIMASYONLAR --- */
+    @keyframes logoEntrance {
+      from { transform: scale(0.8) translateY(-30px); opacity: 0; filter: blur(10px); }
+      to { transform: scale(1) translateY(0); opacity: 1; filter: blur(0); }
+    }
+    @keyframes fadeUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-    /* TERMS & TOAST */
-    .full-overlay {
+    /* --- MODAL (TERMS) --- */
+    .overlay-backdrop {
       position: fixed; inset: 0; z-index: 9999;
-      background: rgba(3, 0, 20, 0.95); backdrop-filter: blur(20px);
-      display: none; align-items: center; justify-content: center; padding: 16px;
+      background: rgba(2, 2, 5, 0.85); backdrop-filter: blur(15px);
+      display: none; align-items: center; justify-content: center; padding: 20px;
+      opacity: 0; transition: opacity 0.3s ease;
     }
-    .full-overlay.active { display: flex; animation: fadeIn 0.3s ease; }
-    .terms-card {
-      width: 100%; max-width: 500px; background: #0c0c12; border: 1px solid var(--glass-border);
-      border-radius: 28px; overflow: hidden; display: flex; flex-direction: column;
-      box-shadow: 0 50px 100px rgba(0,0,0,0.8);
+    .overlay-backdrop.active { display: flex; opacity: 1; }
+    
+    .modal-card {
+      width: 100%; max-width: 440px; 
+      background: #0a0a0f; 
+      border: 1px solid var(--glass-border);
+      border-radius: 30px; overflow: hidden;
+      box-shadow: 0 40px 80px -10px rgba(0,0,0,0.8);
+      transform: scale(0.95); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
-    .terms-head {
-      padding: 18px 24px; border-bottom: 1px solid rgba(255,255,255,0.08);
-      display: flex; justify-content: space-between; align-items: center; color: #fff; font-weight: 700;
+    .overlay-backdrop.active .modal-card { transform: scale(1); }
+
+    .modal-header {
+      padding: 18px 24px; border-bottom: 1px solid var(--glass-border);
+      display: flex; justify-content: space-between; align-items: center;
+      background: rgba(255,255,255,0.02);
     }
-    .x-btn { background: rgba(255,255,255,0.08); border: none; color: #fff; width: 36px; height: 36px; border-radius: 12px; cursor: pointer; font-size: 18px; }
-    #termsFrame { width: 100%; height: 400px; border: none; background: #fff; opacity: 0.92; }
-    .agreement { padding: 24px; display: flex; flex-direction: column; gap: 16px; }
-    .agree-row { display: flex; align-items: center; gap: 12px; color: #ccc; font-size: 13px; cursor:pointer; }
-    .agree-row input { width: 18px; height: 18px; accent-color: #6366f1; }
-    #termsAcceptBtn {
-      width: 100%; height: 56px; border-radius: 18px; border: none;
-      background: var(--ai-grad);
-      color: #fff; font-weight: 700; font-size: 16px; opacity: 0.5; cursor:pointer;
-      box-shadow: 0 10px 30px -5px rgba(99, 102, 241, 0.4); transition: 0.3s;
+    .modal-title { font-weight: 700; font-size: 16px; color: #fff; }
+    .close-btn { 
+      background: rgba(255,255,255,0.1); border: none; color: #fff; 
+      width: 32px; height: 32px; border-radius: 10px; cursor: pointer; 
     }
-    #termsAcceptBtn.enabled { opacity: 1; transform: scale(1); }
-    #termsAcceptBtn.enabled:active { transform: scale(0.97); }
+
+    #termsFrame { width: 100%; height: 350px; border: none; background: #fff; opacity: 0.9; }
+
+    .modal-footer { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+    .checkbox-row { display: flex; align-items: center; gap: 12px; color: #ccc; font-size: 13px; cursor: pointer; }
+    .checkbox-row input { width: 18px; height: 18px; accent-color: #6366f1; }
+    
+    #acceptBtn {
+      width: 100%; height: 50px; border-radius: 16px; border: none;
+      background: var(--ai-gradient); color: #fff; font-weight: 700; font-size: 15px;
+      opacity: 0.5; cursor: not-allowed; transition: 0.3s;
+    }
+    #acceptBtn.active { opacity: 1; cursor: pointer; box-shadow: 0 5px 20px rgba(99, 102, 241, 0.4); }
 
     .toast {
-      position: fixed; left: 50%; top: 40px; transform: translate(-50%, -20px);
-      background: rgba(255,255,255,0.1); backdrop-filter: blur(16px);
-      border: 1px solid rgba(255,255,255,0.2);
-      color: #fff; padding: 12px 28px; border-radius: 50px; font-size: 13px; font-weight: 600;
-      opacity: 0; transition: 0.4s var(--ease-elastic); z-index: 10000; pointer-events: none;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.4); white-space: nowrap;
+      position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px);
+      background: rgba(255,255,255,0.1); backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.2); padding: 12px 24px; border-radius: 50px;
+      color: #fff; font-weight: 600; font-size: 13px; z-index: 10000;
+      transition: transform 0.5s var(--ease-out);
     }
-    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+    .toast.show { transform: translateX(-50%) translateY(0); }
   </style>
 </head>
 
 <body>
-  <div class="cosmos-bg">
-    <div class="orb orb-1"></div>
-    <div class="orb orb-2"></div>
+  <div class="cosmos-layer">
+    <div class="nebula nebula-1"></div>
+    <div class="nebula nebula-2"></div>
+    <div class="stars"></div>
   </div>
-  <div class="noise" aria-hidden="true"></div>
 
-  <div class="mobile-frame">
-    <div class="topbar">
-      <div class="brand">
-        <div class="brand-container">
-          <span class="brand-main">italky</span><span class="brand-ai">AI</span>
+  <div class="app-frame">
+    <div class="header-section">
+      <div class="brand-wrapper">
+        <div class="logo-text">
+          <span class="txt-white">italky</span>
+          <span class="txt-ai">AI</span>
         </div>
-        <div class="brand-slogan">BE FREE</div>
+        <div class="slogan">BE FREE</div>
       </div>
     </div>
 
-    <div class="stage">
-      <div class="heroCard">
-        <h2 class="heroTitle">Bir Dil, <span>Bir Hayat.</span></h2>
-        
-        <div class="heroDesc">
-          Yapay zeka gücü ve <strong>uzman eğitmenlerle</strong> konuşarak öğrenilen, sınırları kaldıran yeni nesil dil platformu.
-        </div>
-      </div>
+    <div class="hero-section">
+      <h1 class="hero-title">Sınırları <span>Kaldır.</span></h1>
+      <p class="hero-desc">
+        Yapay zeka gücüyle anında çeviri yap, dünyayla özgürce konuş.
+      </p>
+    </div>
 
-      <div class="btnWrap">
-        <div class="googleOverlay">
-          <button class="btn3d" id="googleLoginBtnVisual" type="button" tabindex="-1">
-            <span class="badge" style="background:#fff">
-              <svg viewBox="0 0 24 24">
-                <path fill="#EA4335" d="M12 10.2v3.9h5.4c-.2 1.2-1.5 3.4-5.4 3.4-3.3 0-6-2.7-6-6s2.7-6 6-6c1.9 0 3.2.8 3.9 1.5l2.7-2.6C17.9 2.8 15.2 1.5 12 1.5 6.8 1.5 2.5 5.8 2.5 11s4.3 9.5 9.5 9.5c5.5 0 9.1-3.9 9.1-9.3 0-.6-.1-1.1-.1-1.6H12z"/>
-                <path fill="#34A853" d="M3.8 7.3l3.2 2.3C7.9 7.3 9.8 5.8 12 5.8c1.9 0 3.2.8 3.9 1.5l2.7-2.6C17.9 2.8 15.2 1.5 12 1.5 8.3 1.5 5.1 3.7 3.8 7.3z"/>
-                <path fill="#FBBC05" d="M12 20.5c3.1 0 5.7-1 7.6-2.8l-3.5-2.9c-.9.7-2.1 1.2-4.1 1.2-3.2 0-5.9-2.1-6.8-5l-3.3 2.5c1.4 4.1 5.3 7 10.1 7z"/>
-                <path fill="#4285F4" d="M21.1 11.2c0-.6-.1-1.1-.1-1.6H12v3.9h5.4c-.3 1.3-1.1 2.4-2.3 3.1l3.5 2.9c2.1-2 3.3-4.9 3.3-8.3z"/>
-              </svg>
-            </span>
-            Google ile Giriş Yap
-          </button>
-          <div id="googleBtnWrap"></div>
-        </div>
-
-        <button class="btn3d" id="appleLoginBtn" type="button">
-          <span class="badge apple">
-            <svg viewBox="0 0 24 24" fill="#fff">
-              <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24.02-1.44.62-2.2.44-3.26-.7C3.15 15.22 2.76 7.73 8.5 7.42c1.6.09 2.7.85 3.52.88 1.05.03 2.44-1 4.17-.9 1.06.06 2.14.46 2.85 1.44-2.58 1.4-2.12 5.07.38 6.13-.53 1.34-1.25 2.67-2.37 3.8h0zm-1.63-14.7c1.32-1.5 2.18-3.66 1.95-5.58-1.8.07-3.64 1.12-4.66 2.3-1 1.14-1.75 3.32-1.57 5.25 1.94.14 3.42-1.22 4.28-1.97z"/>
-            </svg>
+    <div class="action-section">
+      
+      <div class="google-wrapper">
+        <div class="glass-btn">
+          <span class="icon-badge">
+            <svg viewBox="0 0 24 24"><path fill="#EA4335" d="M12 10.2v3.9h5.4c-.2 1.2-1.5 3.4-5.4 3.4-3.3 0-6-2.7-6-6s2.7-6 6-6c1.9 0 3.2.8 3.9 1.5l2.7-2.6C17.9 2.8 15.2 1.5 12 1.5 6.8 1.5 2.5 5.8 2.5 11s4.3 9.5 9.5 9.5c5.5 0 9.1-3.9 9.1-9.3 0-.6-.1-1.1-.1-1.6H12z"/><path fill="#34A853" d="M3.8 7.3l3.2 2.3C7.9 7.3 9.8 5.8 12 5.8c1.9 0 3.2.8 3.9 1.5l2.7-2.6C17.9 2.8 15.2 1.5 12 1.5 8.3 1.5 5.1 3.7 3.8 7.3z"/><path fill="#FBBC05" d="M12 20.5c3.1 0 5.7-1 7.6-2.8l-3.5-2.9c-.9.7-2.1 1.2-4.1 1.2-3.2 0-5.9-2.1-6.8-5l-3.3 2.5c1.4 4.1 5.3 7 10.1 7z"/><path fill="#4285F4" d="M21.1 11.2c0-.6-.1-1.1-.1-1.6H12v3.9h5.4c-.3 1.3-1.1 2.4-2.3 3.1l3.5 2.9c2.1-2 3.3-4.9 3.3-8.3z"/></svg>
           </span>
-          Apple ile Giriş Yap
-        </button>
+          Google ile Devam Et
+        </div>
+        <div id="g_id_onload_wrapper"></div> </div>
+
+      <div class="glass-btn" id="appleBtn">
+        <span class="icon-badge black">
+          <svg viewBox="0 0 24 24" fill="#fff"><path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24.02-1.44.62-2.2.44-3.26-.7C3.15 15.22 2.76 7.73 8.5 7.42c1.6.09 2.7.85 3.52.88 1.05.03 2.44-1 4.17-.9 1.06.06 2.14.46 2.85 1.44-2.58 1.4-2.12 5.07.38 6.13-.53 1.34-1.25 2.67-2.37 3.8h0zm-1.63-14.7c1.32-1.5 2.18-3.66 1.95-5.58-1.8.07-3.64 1.12-4.66 2.3-1 1.14-1.75 3.32-1.57 5.25 1.94.14 3.42-1.22 4.28-1.97z"/></svg>
+        </span>
+        Apple ile Devam Et
       </div>
-      <div class="hint">Devam ederek Kullanıcı Sözleşmesi'ni kabul etmiş olursun.</div>
+
     </div>
 
-    <div class="footerbar">
-      <div class="links">
-        <a href="/pages/about.html">Hakkında</a>
-        <a href="/pages/faq.html">SSS</a>
-        <a href="/pages/privacy.html">Gizlilik</a>
-        <a href="/pages/contact.html">İletişim</a>
+    <div class="footer-section">
+      <div class="legal-text">
+        Devam ederek <u onclick="openModal()">Kullanıcı Sözleşmesi</u>'ni kabul edersiniz.
       </div>
-      <div class="footerBrand">italkyAI By Ozyigit's 2026</div>
+      <div class="footer-brand">italkyAI By Ozyigit's 2026</div>
     </div>
   </div>
 
-  <div class="full-overlay" id="termsOverlay">
-    <div class="terms-card">
-      <div class="terms-head">
-        <div>Sözleşme</div>
-        <button id="closeTermsBtn" class="x-btn">✕</button>
+  <div class="overlay-backdrop" id="termsModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <span class="modal-title">Kullanıcı Sözleşmesi</span>
+        <button class="close-btn" onclick="closeModal()">✕</button>
       </div>
-      <iframe id="termsFrame" src="/pages/sozlesme.html" title="Kullanıcı Sözleşmesi"></iframe>
-      <div class="agreement">
-        <div class="agree-row" onclick="document.getElementById('termsCheck').click()">
-          <input type="checkbox" id="termsCheck" />
-          <label>Okudum ve onaylıyorum.</label>
+      <iframe id="termsFrame" src="/pages/sozlesme.html"></iframe>
+      <div class="modal-footer">
+        <div class="checkbox-row" onclick="document.getElementById('checkTerm').click()">
+          <input type="checkbox" id="checkTerm">
+          <span>Okudum ve onaylıyorum.</span>
         </div>
-        <button id="termsAcceptBtn" type="button" disabled>Onayla ve Devam Et</button>
+        <button id="acceptBtn" disabled>Onayla ve Başla</button>
       </div>
     </div>
   </div>
@@ -380,70 +361,69 @@
     import { STORAGE_KEY } from "/js/config.js";
     import { initAuth, acceptTerms, logout } from "/js/auth.js";
 
-    const $ = (id)=>document.getElementById(id);
+    const $ = (id) => document.getElementById(id);
     const toastEl = $("toast");
-    function safeJson(s, fb={}){ try{ return JSON.parse(s||""); }catch{ return fb; } }
-    function termsKey(email=""){ return `italky_terms_accepted_at::${String(email||"").toLowerCase().trim()}`; }
 
-    function showToast(msg){
-      if(!toastEl) return;
+    // Toast Mesajı
+    window.showToast = (msg) => {
       toastEl.textContent = msg;
       toastEl.classList.add("show");
-      clearTimeout(window.__t1);
-      window.__t1 = setTimeout(()=> toastEl.classList.remove("show"), 3000);
+      setTimeout(() => toastEl.classList.remove("show"), 3000);
     }
 
-    function hasUser(){
-      const u = safeJson(localStorage.getItem(STORAGE_KEY), {});
-      return !!(u && u.email && u.isSessionActive);
-    }
-    function hasAcceptedTerms(){
-      const u = safeJson(localStorage.getItem(STORAGE_KEY), {});
-      const email = String(u?.email||"").toLowerCase().trim();
-      if(!email) return false;
-      return !!localStorage.getItem(termsKey(email));
-    }
-    function goHome(){ window.location.replace("/pages/home.html"); }
+    // Modal Kontrolleri
+    window.openModal = () => $("termsModal").classList.add("active");
+    window.closeModal = () => $("termsModal").classList.remove("active");
 
-    $("appleLoginBtn")?.addEventListener("click", (e)=>{
-      e.preventDefault();
-      showToast("Apple girişi yakında aktif olacak.");
+    // Apple Click
+    $("appleBtn").onclick = () => showToast("Apple girişi yakında geliyor.");
+
+    // Sözleşme Checkbox Mantığı
+    const chk = $("checkTerm");
+    const btn = $("acceptBtn");
+    
+    chk.addEventListener("change", () => {
+      btn.disabled = !chk.checked;
+      btn.classList.toggle("active", chk.checked);
     });
 
-    const termsOverlay = $("termsOverlay");
-    const termsCheck = $("termsCheck");
-    const termsAcceptBtn = $("termsAcceptBtn");
-
-    function openTerms(){
-      if(!termsOverlay) return;
-      termsOverlay.classList.add("active");
-      if(termsCheck) termsCheck.checked = false;
-      if(termsAcceptBtn){
-        termsAcceptBtn.disabled = true;
-        termsAcceptBtn.classList.remove("enabled");
-      }
-    }
-    $("closeTermsBtn")?.addEventListener("click", ()=>{
-      try{ logout(); }catch{ window.location.replace("/index.html"); }
-    });
-    if(termsCheck && termsAcceptBtn){
-      termsCheck.addEventListener("change", ()=>{
-        const ok = !!termsCheck.checked;
-        termsAcceptBtn.disabled = !ok;
-        termsAcceptBtn.classList.toggle("enabled", ok);
-      });
-    }
-    termsAcceptBtn?.addEventListener("click", async ()=>{
-      if(!termsCheck?.checked) return;
-      const ok = await acceptTerms();
-      if(ok) goHome();
+    btn.addEventListener("click", async () => {
+      if(!chk.checked) return;
+      await acceptTerms();
+      window.location.replace("/pages/home.html");
     });
 
+    // Kullanıcı Kontrolü
+    function checkUser() {
+      try {
+        const u = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+        const accepted = localStorage.getItem(`italky_terms_accepted_at::${u.email}`);
+        
+        if (u.email && u.isSessionActive) {
+          if (accepted) window.location.replace("/pages/home.html");
+          else openModal(); // Giriş var ama sözleşme yoksa aç
+        }
+      } catch (e) {}
+    }
+
+    // Başlat
     initAuth();
-    if(hasUser()){
-      if(hasAcceptedTerms()) goHome();
-      else openTerms();
-    }
+    checkUser();
+
+    // Google Butonunu Render Et (Görünmez Wrapper İçine)
+    window.onload = function() {
+      google.accounts.id.initialize({
+        client_id: "SENIN_GOOGLE_CLIENT_ID_BURAYA", // Config'den de alabilirsin
+        callback: (resp) => {
+            // JS/auth.js içindeki handleCredentialResponse fonksiyonunu çağırır normalde
+            // Burayı auth.js yapına göre otomatik çalışacaktır.
+        }
+      });
+      google.accounts.id.renderButton(
+        document.getElementById("g_id_onload_wrapper"),
+        { theme: "outline", size: "large", width: "400" } // Genişlik ver ki iframe dolsun
+      );
+    };
   </script>
 </body>
 </html>
