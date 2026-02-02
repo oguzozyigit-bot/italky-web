@@ -1,10 +1,10 @@
-<!-- FILE: italky-web/pages/translate.html -->
+<!-- FILE: italky-web/pages/facetoface.html -->
 <!DOCTYPE html>
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>italkyAI • Tercüman</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no" />
+  <title>italkyAI • Yüz Yüze</title>
   <link rel="icon" href="data:," />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
@@ -18,12 +18,13 @@
 
       --border: rgba(255,255,255,.10);
       --border2: rgba(255,255,255,.06);
+
       --shadow: 0 28px 90px rgba(0,0,0,.65);
 
       --sheetBg: rgba(16,16,20,.92);
       --sheetBorder: rgba(255,255,255,.12);
 
-      /* ✅ LOGO KİLİT RENKLERİ */
+      /* ✅ LOGO KİLİT */
       --italkyWhite:#FFFFFF;
       --ai1:#A5B4FC;
       --ai2:#4F46E5;
@@ -31,7 +32,10 @@
     }
 
     *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-    html,body{ margin:0; padding:0; width:100%; height:100dvh; overflow:hidden; font-family:'Outfit', -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
+    html,body{
+      margin:0; padding:0; width:100%; height:100dvh; overflow:hidden;
+      font-family:'Outfit', -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    }
 
     body{
       background:
@@ -53,31 +57,20 @@
     }
 
     .back{
-      position:absolute;
-      top: 12px;
-      left: 12px;
-      z-index: 80;
-      width: 46px;
-      height: 46px;
-      border-radius: 16px;
-      border: 1px solid var(--border);
+      position:absolute; top:12px; left:12px; z-index:80;
+      width:46px; height:46px; border-radius:16px;
+      border:1px solid var(--border);
       background: rgba(15,15,18,.50);
-      color: #fff;
-      font-size: 22px;
-      font-weight: 1000;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      cursor:pointer;
-      box-shadow: 0 18px 40px rgba(0,0,0,.45);
+      color:#fff; font-size:22px; font-weight:1000;
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer; user-select:none;
+      box-shadow:0 18px 40px rgba(0,0,0,.45);
       backdrop-filter: blur(10px);
-      user-select:none;
     }
     .back:active{ transform: translateY(1px); }
 
     .split{
-      position:absolute;
-      inset: 0;
+      position:absolute; inset:0;
       display:grid;
       grid-template-rows: 1fr auto 1fr;
       padding: 70px 12px 54px;
@@ -94,46 +87,32 @@
     }
     .wave svg{ width:100%; height:100%; display:block; }
     .wave .glow{
-      position:absolute;
-      inset:-12px -12px -12px -12px;
+      position:absolute; inset:-12px;
       background:
         radial-gradient(260px 46px at 50% 50%, rgba(190,242,100,.16), transparent 72%),
         radial-gradient(260px 46px at 40% 50%, rgba(255,179,0,.12), transparent 72%),
         radial-gradient(260px 46px at 60% 50%, rgba(40,120,255,.14), transparent 72%);
-      z-index:-1;
-      opacity:.75;
+      z-index:-1; opacity:.75;
     }
-    .wave svg path{
-      stroke-dasharray: 12 14;
-      animation: waveFlow 2.2s linear infinite;
-      opacity: .95;
-    }
-    @keyframes waveFlow{
-      0%{ stroke-dashoffset: 0; }
-      100%{ stroke-dashoffset: -120; }
-    }
-    .frame.listening .wave svg path{
-      animation-duration: .85s;
-      opacity: 1;
-    }
-    .frame.listening .wave .glow{ opacity: 1; }
+    .wave svg path{ stroke-dasharray: 12 14; animation: waveFlow 2.2s linear infinite; opacity: .95; }
+    @keyframes waveFlow{ 0%{stroke-dashoffset:0} 100%{stroke-dashoffset:-120} }
+    .frame.listening .wave svg path{ animation-duration: .85s; opacity:1; }
+    .frame.listening .wave .glow{ opacity:1; }
 
     .side{
-      border-radius: 28px;
-      border: 1px solid var(--border);
-      background:
-        radial-gradient(800px 240px at 0% 0%, rgba(40,120,255,.12), transparent 62%),
-        radial-gradient(800px 240px at 100% 0%, rgba(255,255,255,.05), transparent 62%),
-        rgba(0,0,0,.12);
+      border-radius:28px;
+      border:1px solid var(--border);
       overflow:hidden;
-      display:flex;
-      flex-direction:column;
+      display:flex; flex-direction:column;
       min-height:0;
       backdrop-filter: blur(10px);
       box-shadow: var(--shadow);
       position:relative;
+      background:
+        radial-gradient(800px 240px at 0% 0%, rgba(40,120,255,.12), transparent 62%),
+        radial-gradient(800px 240px at 100% 0%, rgba(255,255,255,.05), transparent 62%),
+        rgba(0,0,0,.12);
     }
-
     .side.meTint{
       background:
         radial-gradient(900px 420px at 30% 12%, rgba(120, 20, 35, .85), transparent 68%),
@@ -141,155 +120,101 @@
         radial-gradient(600px 320px at 40% 75%, rgba(70, 10, 25, .45), transparent 72%),
         linear-gradient(180deg, rgba(60, 10, 20, .55), rgba(0,0,0,.15));
     }
-
     .side.top{ transform: rotate(180deg); }
 
     .bar{
-      display:flex;
-      align-items:center;
-      justify-content:flex-end;
-      gap: 8px;
-      padding: 12px 12px;
-      border-bottom: 1px solid var(--border2);
+      display:flex; align-items:center; justify-content:flex-end;
+      gap:8px; padding:12px;
+      border-bottom:1px solid var(--border2);
       background: rgba(0,0,0,.22);
-      z-index: 5;
+      z-index:5;
     }
 
     .langBtn{
-      height: 44px;
-      border-radius: 16px;
-      border: 1px solid rgba(255,255,255,.12);
+      height:44px; min-width:170px; max-width:240px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.12);
       background: rgba(255,255,255,.06);
       color:#fff;
-      font-weight: 1000;
-      font-size: 13px;
-      padding: 0 12px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      cursor:pointer;
-      user-select:none;
-      min-width: 170px;
-      max-width: 240px;
+      font-weight:1000; font-size:13px;
+      padding:0 12px;
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      cursor:pointer; user-select:none;
     }
-    .langBtn .caret{ opacity:.75; font-size: 12px; }
+    .langBtn .caret{ opacity:.75; font-size:12px; }
     .langBtn:active{ transform: translateY(1px); }
 
     .btnIcon{
-      width: 48px;
-      height: 48px;
-      border-radius: 18px;
-      border: 1px solid rgba(255,255,255,.12);
+      width:48px; height:48px; border-radius:18px;
+      border:1px solid rgba(255,255,255,.12);
       background: rgba(255,255,255,.04);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      cursor:pointer;
-      flex: 0 0 48px;
-      user-select:none;
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer; user-select:none;
+      flex:0 0 48px;
     }
-    .btnIcon svg{
-      width: 22px; height:22px;
-      stroke:#fff; fill:none;
-      stroke-width:2; stroke-linecap:round; stroke-linejoin:round;
-      opacity:.92;
-    }
+    .btnIcon svg{ width:22px; height:22px; stroke:#fff; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; opacity:.92; }
     .btnIcon:active{ transform: translateY(1px); }
-    .btnIcon.muted{ opacity: .45; }
+    .btnIcon.muted{ opacity:.45; }
 
     .content{
-      flex: 1 1 auto;
+      flex:1 1 auto;
       min-height:0;
-      padding: 12px;
+      padding:12px;
       overflow:auto;
       -webkit-overflow-scrolling: touch;
-      display:flex;
-      flex-direction:column;
-      gap: 10px;
-      scrollbar-width:none;
-      -ms-overflow-style:none;
+      display:flex; flex-direction:column; gap:10px;
+      scrollbar-width:none; -ms-overflow-style:none;
     }
     .content::-webkit-scrollbar{ width:0; height:0; }
 
     .bubble{
-      max-width: 92%;
-      padding: 11px 13px;
-      border-radius: 18px;
-      border: 1px solid rgba(255,255,255,.10);
+      max-width:92%;
+      padding:11px 13px;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.10);
       background: rgba(0,0,0,.22);
-      font-weight: 950;
-      font-size: 13px;
-      line-height: 1.35;
+      font-weight:950; font-size:13px; line-height:1.35;
       word-break: break-word;
-      box-shadow: 0 12px 28px rgba(0,0,0,.28);
+      box-shadow:0 12px 28px rgba(0,0,0,.28);
     }
-    .bubble.me{ align-self:flex-end; border-right: 4px solid var(--pist); text-align:right; }
-    .bubble.them{ align-self:flex-start; border-left: 4px solid var(--gold); }
+    .bubble.me{ align-self:flex-end; border-right:4px solid var(--pist); text-align:right; }
+    .bubble.them{ align-self:flex-start; border-left:4px solid var(--gold); }
 
-    /* ✅ Logo: italkyAI + BE FREE (yer/boşluk aynı) */
+    /* ✅ Logo blok (top/bottom) */
     .brandBottom, .brandTop{
-      position:absolute;
-      left: 50%;
+      position:absolute; left:50%;
       transform: translateX(-50%);
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      gap: 6px;
+      display:flex; flex-direction:column; align-items:center; gap:6px;
       pointer-events:none;
-      opacity:.92;
-      z-index: 40;
+      opacity:.92; z-index:40;
     }
-    .brandBottom{ bottom: 10px; }
-    .brandTop{ top: 10px; transform: translateX(-50%) rotate(180deg); }
+    .brandTop{ top:10px; transform: translateX(-50%) rotate(180deg); }
+    .brandBottom{ bottom:10px; }
 
-    .brandLock{
-      display:inline-flex;
-      flex-direction:column;
-      align-items:center;
-      gap:6px;
-      user-select:none;
-    }
-    .logoLine{
-      font-family:'Space Grotesk', sans-serif;
-      font-size: 22px;
-      line-height: .9;
-      letter-spacing: -0.3px;
-    }
+    .brandLock{ display:inline-flex; flex-direction:column; align-items:center; gap:6px; user-select:none; }
+    .logoLine{ font-family:'Space Grotesk', sans-serif; font-size:22px; line-height:.9; letter-spacing:-0.3px; }
     .logoMain{ font-weight:700; color: var(--italkyWhite); }
     .logoAI{
       font-weight:700;
       background: linear-gradient(135deg, var(--ai1) 0%, var(--ai2) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      margin-left: 1px;
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      margin-left:1px;
     }
-    .sl{
-      font-weight: 800;
-      font-size: 10px;
-      letter-spacing: 4px;
-      text-transform: uppercase;
-      color: var(--beFree);
-    }
+    .sl{ font-weight:800; font-size:10px; letter-spacing:4px; text-transform:uppercase; color: var(--beFree); }
 
     /* Mic bottom center */
     .micDock{
-      position:absolute;
-      left:50%;
-      bottom: 12px;
+      position:absolute; left:50%; bottom:12px;
       transform: translateX(-50%);
-      z-index: 20;
+      z-index:20;
       pointer-events:auto;
     }
-    .side.top .micDock{
-      transform: translateX(-50%) rotate(180deg);
-    }
+    .side.top .micDock{ transform: translateX(-50%) rotate(180deg); }
 
+    /* Toast */
     .toast{
-      position: fixed;
-      left: 50%;
-      top: 14px;
-      transform: translateX(-50%);
+      position: fixed; left: 50%; top: 14px; transform: translateX(-50%);
       z-index: 99999;
       padding: 10px 14px;
       border-radius: 999px;
@@ -305,31 +230,28 @@
       white-space: nowrap;
       overflow:hidden;
       text-overflow: ellipsis;
+      user-select:none;
     }
     .toast.show{ display:block; }
 
     /* ===== Language Sheet ===== */
     .sheetOverlay{
-      position: fixed;
-      inset: 0;
-      z-index: 99999;
+      position: fixed; inset: 0; z-index: 99999;
       background: rgba(0,0,0,.60);
       display:none;
-      align-items:flex-end;   /* default: bottom user */
+      align-items:flex-end; /* default: bottom */
       justify-content:center;
       padding: 14px;
       backdrop-filter: blur(8px);
     }
     .sheetOverlay.show{ display:flex; }
 
-    /* ✅ TOP USER: üstten aç + sheet’i 180 çevir (yazı üst kullanıcıya düz) */
-    .sheetOverlay.fromTop{
-      align-items:flex-start;
-    }
+    /* ✅ TOP USER: üstten aç + tek rotasyon */
+    .sheetOverlay.fromTop{ align-items:flex-start; }
     .sheetOverlay.fromTop .sheet{
-      transform: rotate(180deg);   /* ✅ TEK rotasyon: yazı problemi çözülür */
+      transform: rotate(180deg);
       border-radius: 0 0 22px 22px;
-      margin-top: 58px;            /* üstteki butonların üzerine binmesin */
+      margin-top: 58px;
     }
 
     .sheet{
@@ -342,9 +264,7 @@
     }
 
     .sheetHead{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
+      display:flex; align-items:center; justify-content:space-between;
       padding: 12px 12px 10px;
       border-bottom: 1px solid rgba(255,255,255,.10);
       background: rgba(0,0,0,.22);
@@ -398,26 +318,12 @@
     .sheetRow{
       padding: 12px 14px;
       border-bottom: 1px solid rgba(255,255,255,.06);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      cursor:pointer;
-      user-select:none;
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      cursor:pointer; user-select:none;
     }
     .sheetRow:active{ background: rgba(255,255,255,.05); }
-    .sheetRow .name{
-      font-weight: 950;
-      font-size: 14px;
-      color: rgba(255,255,255,.92);
-    }
-    .sheetRow .code{
-      font-weight: 900;
-      font-size: 11px;
-      color: rgba(255,255,255,.55);
-      letter-spacing:.5px;
-      text-transform: uppercase;
-    }
+    .sheetRow .name{ font-weight: 950; font-size: 14px; color: rgba(255,255,255,.92); }
+    .sheetRow .code{ font-weight: 900; font-size: 11px; color: rgba(255,255,255,.55); letter-spacing:.5px; text-transform: uppercase; }
     .sheetRow.selected{ background: rgba(190,242,100,.08); }
     .sheetRow.selected .code{ color: rgba(190,242,100,.95); }
   </style>
@@ -436,12 +342,12 @@
     </div>
 
     <div class="split">
+      <!-- TOP USER -->
       <section class="side top" id="sideTop">
         <div class="bar">
           <button class="langBtn" id="topLangBtn" type="button">
             <span id="topLangTxt">—</span><span class="caret">▾</span>
           </button>
-
           <button class="btnIcon" id="topSpeak" aria-label="Ses">
             <svg viewBox="0 0 24 24">
               <path d="M11 5L6 9H3v6h3l5 4z"></path>
@@ -475,12 +381,12 @@
         </svg>
       </div>
 
+      <!-- BOTTOM USER -->
       <section class="side meTint" id="sideBottom">
         <div class="bar">
           <button class="langBtn" id="botLangBtn" type="button">
             <span id="botLangTxt">—</span><span class="caret">▾</span>
           </button>
-
           <button class="btnIcon" id="botSpeak" aria-label="Ses">
             <svg viewBox="0 0 24 24">
               <path d="M11 5L6 9H3v6h3l5 4z"></path>
@@ -505,7 +411,7 @@
       </section>
     </div>
 
-    <!-- BOTTOM brand -->
+    <!-- Bottom brand -->
     <div class="brandBottom">
       <div class="brandLock">
         <div class="logoLine"><span class="logoMain">italky</span><span class="logoAI">AI</span></div>
@@ -530,6 +436,6 @@
     </div>
   </div>
 
-  <script type="module" src="/js/translate_page.js?v=11"></script>
+  <script type="module" src="/js/facetoface_page.js?v=1"></script>
 </body>
 </html>
