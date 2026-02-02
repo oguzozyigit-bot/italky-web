@@ -1,12 +1,9 @@
 // FILE: italky-web/js/fast_page.js
-// Italky - Anında Çeviri (Toplantı Modu)
-// ✅ STT (SpeechRecognition) -> interim transcript
-// ✅ Throttled translate -> /api/translate
-// ✅ Auto append lines + auto-scroll
-// ✅ Speaker toggle (TTS on/off) for translated text
-// ✅ Two language selects: source -> target
-// ✅ Microphone button start/stop
-// ⚠️ Requires HTTPS + mic permission
+// Italky - Anında Çeviri (Toplantı Modu) v2
+// ✅ Spam yok: interim çeviri YOK
+// ✅ Final + sessizlik (900ms) ile tek sefer çeviri
+// ✅ Dedupe: aynı cümle tekrar basılmaz
+// ✅ Opsiyonel: "Duyulan" satırını göster/gizle (SRC toggle)
 
 import { BASE_DOMAIN } from "/js/config.js";
 
@@ -22,7 +19,6 @@ function toast(msg){
 }
 
 const LANGS = [
-  // en sık kullanılanlar üstte (Türkçe en başta)
   { code:"tr", name:"Türkçe",   sr:"tr-TR", tts:"tr-TR" },
   { code:"en", name:"English",  sr:"en-US", tts:"en-US" },
   { code:"de", name:"Deutsch",  sr:"de-DE", tts:"de-DE" },
@@ -57,7 +53,6 @@ async function translateViaApi(text, source, target){
   const base = baseUrl();
   if(!base) return text;
 
-  // backend'in translate endpoint'i: {text, source, target}
   const payload = { text, target };
   if(source) payload.source = source;
 
@@ -73,20 +68,10 @@ async function translateViaApi(text, source, target){
   }
 
   const data = await r.json().catch(()=> ({}));
-  const out = String(data.text || data.translated || data.translation || data.translatedText || "").trim();
+  const out = String(
+    data.text || data.translated || data.translation || data.translatedText || ""
+  ).trim();
   return out || text;
-}
-
-function addLine(kind, text){
-  const wrap = $("lines");
-  const b = document.createElement("div");
-  b.className = `bubble ${kind}`;
-  b.innerHTML = kind === "src"
-    ? `<div class="small">Duyulan</div>${escapeHtml(text)}`
-    : `<div class="small">Çeviri</div>${escapeHtml(text)}`;
-
-  wrap.appendChild(b);
-  wrap.scrollTop = wrap.scrollHeight;
 }
 
 function escapeHtml(s=""){
@@ -98,7 +83,23 @@ function escapeHtml(s=""){
     .replace(/'/g,"&#39;");
 }
 
-// Speaker (TTS)
+function addLine(kind, text){
+  const wrap = $("lines");
+  const b = document.createElement("div");
+  b.className = `bubble ${kind}`;
+
+  // SRC görünürlük toggle
+  if(kind === "src" && !SHOW_SRC) return;
+
+  b.innerHTML = kind === "src"
+    ? `<div class="small">Duyulan</div>${escapeHtml(text)}`
+    : `<div class="small">Çeviri</div>${escapeHtml(text)}`;
+
+  wrap.appendChild(b);
+  wrap.scrollTop = wrap.scrollHeight;
+}
+
+/* Speaker (TTS) */
 let muted = false;
 function setMuted(on){
   muted = !!on;
@@ -118,7 +119,7 @@ function speak(text, langCode){
   }catch{}
 }
 
-// SpeechRecognition (continuous)
+/* SpeechRecognition */
 let rec = null;
 let running = false;
 
@@ -137,51 +138,80 @@ function buildRecognizer(srLocale){
   return r;
 }
 
-// throttling
-let lastInterim = "";
-let lastTranslatedSource = "";
-let lastTranslateAt = 0;
-let translateInFlight = false;
+/* ✅ spam kontrol: final/sessizlik ile flush */
+let bufferText = "";
+let silenceTimer = null;
+let inFlight = false;
+let lastPushed = "";  // dedupe
+let SHOW_SRC = true;
 
-function shouldTranslateNow(text){
-  const t = String(text||"").trim();
-  if(t.length < 3) return false;
-  if(t === lastTranslatedSource) return false;
-  const now = Date.now();
-  if(now - lastTranslateAt < 650) return false; // throttle
-  return true;
+function norm(s){
+  return String(s||"")
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g," ")
+    .replace(/[’']/g,"'")
+    .replace(/[.,!?;:]+$/g,"");
 }
 
-async function doTranslateChunk(sourceText){
-  if(translateInFlight) return;
-  translateInFlight = true;
+function clearSilence(){
+  if(silenceTimer){
+    clearTimeout(silenceTimer);
+    silenceTimer = null;
+  }
+}
+
+function scheduleFlush(){
+  clearSilence();
+  silenceTimer = setTimeout(()=> flushBuffer(), 900); // 900ms sessizlik
+}
+
+async function flushBuffer(){
+  clearSilence();
+  if(inFlight) return;
+
+  const text = String(bufferText||"").trim();
+  bufferText = "";
+
+  if(!text) return;
+
+  const n = norm(text);
+  if(!n) return;
+
+  // aynı şeyi tekrar basma
+  if(n === lastPushed) return;
+
+  inFlight = true;
 
   const src = $("srcLang").value;
   const dst = $("dstLang").value;
 
   try{
     $("panelStatus").textContent = "Çeviriyorum…";
-    const out = await translateViaApi(sourceText, src, dst);
+    const out = await translateViaApi(text, src, dst);
 
-    addLine("src", sourceText);
+    addLine("src", text);
     addLine("trg", out);
+
     speak(out, dst);
 
-    lastTranslatedSource = sourceText;
-    lastTranslateAt = Date.now();
+    lastPushed = n;
     $("panelStatus").textContent = "Dinliyor";
-  }catch(e){
+  }catch{
     $("panelStatus").textContent = "Hata";
     toast("Çeviri hatası (API/Key/CORS).");
   }finally{
-    translateInFlight = false;
+    inFlight = false;
   }
 }
 
+/* Start/Stop */
 function stop(){
   running = false;
   $("micBtn").classList.remove("listening");
   $("panelStatus").textContent = "Durdu";
+  clearSilence();
+  bufferText = "";
 
   try{ rec && rec.stop && rec.stop(); }catch{}
   rec = null;
@@ -206,14 +236,12 @@ function start(){
   $("micBtn").classList.add("listening");
   $("panelStatus").textContent = "Dinliyor";
 
-  // reset for new run
-  lastInterim = "";
-  lastTranslatedSource = "";
-  lastTranslateAt = 0;
-  translateInFlight = false;
+  bufferText = "";
+  lastPushed = "";
+  inFlight = false;
+  clearSilence();
 
-  rec.onresult = async (e)=>{
-    // build interim + finals
+  rec.onresult = (e)=>{
     let interim = "";
     let finals = "";
 
@@ -223,24 +251,17 @@ function start(){
       else interim += t + " ";
     }
 
-    const live = String((finals + interim) || "").trim();
-    if(!live) return;
-
-    // if final sentence ended -> translate that final chunk
+    // Final geldiyse direkt buffer’a ekle ve flush planla
     if(finals.trim()){
-      const chunk = finals.trim();
-      await doTranslateChunk(chunk);
+      bufferText = (bufferText ? bufferText + " " : "") + finals.trim();
+      scheduleFlush();
       return;
     }
 
-    // else throttle interim translation (optional)
-    if(live !== lastInterim){
-      lastInterim = live;
-      if(shouldTranslateNow(live)){
-        // “konuşma akarken ekrana düşsün” için interim de çeviriyoruz,
-        // ama spam olmasın diye throttle var.
-        await doTranslateChunk(live);
-      }
+    // Interim geldikçe sadece “sessizlik sayaç” yenile
+    if(interim.trim()){
+      // buffer’ı interim ile şişirmiyoruz, sadece bekliyoruz
+      scheduleFlush();
     }
   };
 
@@ -251,12 +272,9 @@ function start(){
 
   rec.onend = ()=>{
     if(running){
-      // bazı cihazlarda continuous kendiliğinden biter; tekrar başlat
-      try{
-        rec && rec.start && rec.start();
-      }catch{
-        stop();
-      }
+      // bazı cihazlarda continuous biter → yeniden başlat
+      try{ rec && rec.start && rec.start(); }
+      catch{ stop(); }
     }
   };
 
@@ -267,52 +285,61 @@ function start(){
   }
 }
 
+/* UX helpers */
 function swapIfSame(){
   const a = $("srcLang").value;
   const b = $("dstLang").value;
   if(a === b){
-    // hedef dili otomatik değiştir (en pratik)
     $("dstLang").value = (a === "tr") ? "en" : "tr";
   }
 }
 
+function toggleSrc(){
+  SHOW_SRC = !SHOW_SRC;
+  toast(SHOW_SRC ? "Duyulan açık" : "Duyulan kapalı");
+}
+
+/* Wire */
 document.addEventListener("DOMContentLoaded", ()=>{
-  // back
   $("backBtn").addEventListener("click", ()=>{
     if(history.length > 1) history.back();
     else location.href = "/pages/home.html";
   });
 
-  // fill selects
   fillSelect($("srcLang"), "en");
   fillSelect($("dstLang"), "tr");
   swapIfSame();
 
   $("srcLang").addEventListener("change", ()=>{
-    // running iken dil değişirse stop/start
     swapIfSame();
-    if(running){
-      stop();
-      start();
-    }
+    if(running){ stop(); start(); }
   });
-  $("dstLang").addEventListener("change", ()=>{
-    swapIfSame();
-  });
+  $("dstLang").addEventListener("change", swapIfSame);
 
-  // speaker
   setMuted(false);
   $("spkBtn").addEventListener("click", ()=>{
     setMuted(!muted);
     toast(muted ? "Ses kapalı" : "Ses açık");
   });
 
-  // mic toggle
+  // Duyulan göster/gizle: hoparlöre uzun basınca toggle (UI bozulmasın)
+  $("spkBtn").addEventListener("contextmenu", (e)=>{ e.preventDefault(); toggleSrc(); });
+  $("spkBtn").addEventListener("pointerdown", (e)=>{
+    // 650ms basılı tutarsa toggle
+    const t0 = Date.now();
+    const up = ()=>{
+      window.removeEventListener("pointerup", up);
+      window.removeEventListener("pointercancel", up);
+      if(Date.now() - t0 >= 650) toggleSrc();
+    };
+    window.addEventListener("pointerup", up, { once:true });
+    window.addEventListener("pointercancel", up, { once:true });
+  });
+
   $("micBtn").addEventListener("click", ()=>{
     if(running) stop();
     else start();
   });
 
-  // initial status
   $("panelStatus").textContent = "Hazır";
 });
