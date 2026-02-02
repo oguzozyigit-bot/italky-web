@@ -1,9 +1,11 @@
 // FILE: italky-web/js/fast_page.js
-// Italky - Anında Çeviri (Toplantı Modu) v2.2
-// ✅ Play/Pause
-// ✅ Final + 900ms sessizlik => tek blok çeviri (spam yok)
-// ✅ 422 fix: backend'e hem (source/target) hem (from_lang/to_lang) gönder
-// ✅ ITALKY logo click => home
+// Italky - Anında Çeviri (Toplantı Modu) v3
+// ✅ Bordo panel tam ekran (HTML)
+// ✅ Play/Pause altta ortada
+// ✅ "Duyulan" yok, sadece Çeviri düşer
+// ✅ Custom dropdown (dark, arama+scroll) => beyaz popup yok
+// ✅ Ses SESSİZ: ekstra beep yok (TTS default kapalı)
+// ⚠️ SpeechRecognition sistem bip'i bazı cihazlarda engellenemez.
 
 import { BASE_DOMAIN } from "/js/config.js";
 
@@ -40,16 +42,10 @@ function by(code){
   return LANGS.find(x=>x.code===code) || LANGS[0];
 }
 
-function fillSelect(sel, def){
-  sel.innerHTML = LANGS.map(l=>`<option value="${l.code}">${l.name}</option>`).join("");
-  sel.value = def;
-}
-
 function baseUrl(){
   return String(BASE_DOMAIN||"").replace(/\/+$/,"");
 }
 
-/* HTML safe */
 function escapeHtml(s=""){
   return String(s)
     .replace(/&/g,"&amp;")
@@ -59,40 +55,82 @@ function escapeHtml(s=""){
     .replace(/'/g,"&#39;");
 }
 
-function addLine(kind, text){
-  const wrap = $("lines");
+function addTranslated(text){
+  const wrap = $("stream");
   const b = document.createElement("div");
-  b.className = `bubble ${kind}`;
-  b.innerHTML =
-    kind === "src"
-      ? `<div class="small">Duyulan</div>${escapeHtml(text)}`
-      : `<div class="small">Çeviri</div>${escapeHtml(text)}`;
-
+  b.className = "bubble trg";
+  b.innerHTML = `<div class="small">Çeviri</div>${escapeHtml(text)}`;
   wrap.appendChild(b);
   wrap.scrollTop = wrap.scrollHeight;
 }
 
-/* TTS toggle */
-let muted = false;
-function setMuted(on){
-  muted = !!on;
-  $("spkBtn").classList.toggle("muted", muted);
-}
-function speak(text, langCode){
-  if(muted) return;
-  if(!("speechSynthesis" in window)) return;
+/* ========= Custom Dropdown ========= */
+function buildDropdown(rootId, btnId, txtId, menuId, defCode, onChange){
+  const root = $(rootId);
+  const btn = $(btnId);
+  const txt = $(txtId);
+  const menu = $(menuId);
 
-  try{
-    window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(String(text||""));
-    u.lang = by(langCode).tts || "en-US";
-    u.rate = 1.0;
-    u.pitch = 1.0;
-    window.speechSynthesis.speak(u);
-  }catch{}
+  let current = defCode;
+
+  function closeAll(){
+    document.querySelectorAll(".dd.open").forEach(x=>x.classList.remove("open"));
+  }
+
+  function setValue(code){
+    current = code;
+    txt.textContent = by(code).name;
+    onChange?.(code);
+  }
+
+  menu.innerHTML = `
+    <div class="ddSearchWrap">
+      <input class="ddSearch" type="text" placeholder="Ara..." />
+    </div>
+    ${LANGS.map(l=>`<div class="ddItem" data-code="${l.code}">${l.name}</div>`).join("")}
+  `;
+
+  const search = menu.querySelector(".ddSearch");
+  const items = Array.from(menu.querySelectorAll(".ddItem"));
+
+  function filter(q){
+    const s = String(q||"").toLowerCase().trim();
+    items.forEach(it=>{
+      const name = (it.textContent||"").toLowerCase();
+      it.classList.toggle("hidden", s && !name.includes(s));
+    });
+  }
+
+  search.addEventListener("input", ()=> filter(search.value));
+
+  items.forEach(it=>{
+    it.addEventListener("click", ()=>{
+      const code = it.getAttribute("data-code");
+      closeAll();
+      setValue(code);
+    });
+  });
+
+  btn.addEventListener("click", (e)=>{
+    e.stopPropagation();
+    const open = root.classList.contains("open");
+    closeAll();
+    root.classList.toggle("open", !open);
+    if(!open){
+      search.value = "";
+      filter("");
+      setTimeout(()=> search.focus(), 0);
+    }
+  });
+
+  document.addEventListener("click", ()=> closeAll());
+
+  setValue(defCode);
+
+  return { get: ()=> current, set: (c)=> setValue(c) };
 }
 
-/* SpeechRecognition */
+/* ========= SR + Flush ========= */
 function srSupported(){
   return !!(window.SpeechRecognition || window.webkitSpeechRecognition);
 }
@@ -106,12 +144,43 @@ function buildRecognizer(srLocale){
   return r;
 }
 
-/* ✅ 422 FIX: gönderim şekli */
+function norm(s){
+  return String(s||"")
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g," ")
+    .replace(/[’']/g,"'")
+    .replace(/[.,!?;:]+$/g,"");
+}
+
+/* ✅ TTS: default kapalı */
+let ttsOn = false;
+function setTts(on){
+  ttsOn = !!on;
+  $("spkBtn").classList.toggle("on", ttsOn);
+  if(!ttsOn){
+    try{ window.speechSynthesis?.cancel?.(); }catch{}
+  }
+}
+function speak(text, langCode){
+  if(!ttsOn) return;
+  if(!("speechSynthesis" in window)) return;
+
+  try{
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(String(text||""));
+    u.lang = by(langCode).tts || "en-US";
+    u.rate = 1.0;
+    u.pitch = 1.0;
+    window.speechSynthesis.speak(u);
+  }catch{}
+}
+
+/* backend translate */
 async function translateViaApi(text, src, dst){
   const base = baseUrl();
   if(!base) return text;
 
-  // bazı routerlar source/target ister, bazıları from_lang/to_lang
   const body = {
     text,
     source: src,
@@ -135,10 +204,11 @@ async function translateViaApi(text, src, dst){
   const out = String(
     data.text || data.translated || data.translation || data.translatedText || ""
   ).trim();
+
   return out || text;
 }
 
-/* spam-control: final + sessizlik */
+/* play/pause */
 let rec = null;
 let running = false;
 let bufferText = "";
@@ -146,13 +216,10 @@ let silenceTimer = null;
 let inFlight = false;
 let lastPushed = "";
 
-function norm(s){
-  return String(s||"")
-    .toLowerCase()
-    .trim()
-    .replace(/\s+/g," ")
-    .replace(/[’']/g,"'")
-    .replace(/[.,!?;:]+$/g,"");
+function setPlayUI(on){
+  $("playBtn").classList.toggle("running", !!on);
+  $("icoPlay").style.display = on ? "none" : "block";
+  $("icoPause").style.display = on ? "block" : "none";
 }
 
 function clearSilence(){
@@ -181,45 +248,31 @@ async function flushBuffer(){
 
   inFlight = true;
 
-  const src = $("srcLang").value;
-  const dst = $("dstLang").value;
+  const src = srcDD.get();
+  const dst = dstDD.get();
 
   try{
     $("panelStatus").textContent = "Çeviriyorum…";
     const out = await translateViaApi(text, src, dst);
-
-    addLine("src", text);
-    addLine("trg", out);
-
+    addTranslated(out);
     speak(out, dst);
-
     lastPushed = n;
     $("panelStatus").textContent = "Dinliyor";
   }catch(e){
     $("panelStatus").textContent = "Hata";
     toast("Çeviri hatası (422/CORS/KEY).");
-    // debug için console'a bas
     console.warn("TRANSLATE_ERR:", e?.message || e);
   }finally{
     inFlight = false;
   }
 }
 
-/* Play / Pause UI */
-function setPlayUI(on){
-  $("playBtn").classList.toggle("running", !!on);
-  $("icoPlay").style.display = on ? "none" : "block";
-  $("icoPause").style.display = on ? "block" : "none";
-}
-
 function stop(){
   running = false;
   setPlayUI(false);
   $("panelStatus").textContent = "Hazır";
-
   clearSilence();
   bufferText = "";
-
   try{ rec?.stop?.(); }catch{}
   rec = null;
 }
@@ -230,7 +283,7 @@ function start(){
     return;
   }
 
-  const src = $("srcLang").value;
+  const src = srcDD.get();
   const srLocale = by(src).sr || "en-US";
 
   rec = buildRecognizer(srLocale);
@@ -241,7 +294,6 @@ function start(){
 
   running = true;
   setPlayUI(true);
-
   bufferText = "";
   lastPushed = "";
   inFlight = false;
@@ -277,9 +329,7 @@ function start(){
 
   rec.onend = ()=>{
     if(running){
-      // bazı cihazlar continuous'ı kapatır: yeniden dene
-      try{ rec?.start?.(); }
-      catch{ stop(); }
+      try{ rec?.start?.(); } catch { stop(); }
     }
   };
 
@@ -290,13 +340,8 @@ function start(){
   }
 }
 
-function swapIfSame(){
-  const a = $("srcLang").value;
-  const b = $("dstLang").value;
-  if(a === b){
-    $("dstLang").value = (a === "tr") ? "en" : "tr";
-  }
-}
+/* ========= init ========= */
+let srcDD, dstDD;
 
 document.addEventListener("DOMContentLoaded", ()=>{
   $("backBtn").addEventListener("click", ()=>{
@@ -308,25 +353,28 @@ document.addEventListener("DOMContentLoaded", ()=>{
     location.href = "/pages/home.html";
   });
 
-  fillSelect($("srcLang"), "en");
-  fillSelect($("dstLang"), "tr");
-  swapIfSame();
+  // dropdowns
+  srcDD = buildDropdown("ddSrc","ddSrcBtn","ddSrcTxt","ddSrcMenu","en", ()=>{
+    if(srcDD.get() === dstDD.get()){
+      dstDD.set(srcDD.get()==="tr" ? "en" : "tr");
+    }
+    if(running){ stop(); start(); }
+  });
 
-  $("srcLang").addEventListener("change", ()=>{
-    swapIfSame();
-    if(running){
-      stop();
-      start();
+  dstDD = buildDropdown("ddDst","ddDstBtn","ddDstTxt","ddDstMenu","tr", ()=>{
+    if(srcDD.get() === dstDD.get()){
+      dstDD.set(srcDD.get()==="tr" ? "en" : "tr");
     }
   });
-  $("dstLang").addEventListener("change", swapIfSame);
 
-  setMuted(false);
+  // TTS toggle (default OFF)
+  setTts(false);
   $("spkBtn").addEventListener("click", ()=>{
-    setMuted(!muted);
-    toast(muted ? "Ses kapalı" : "Ses açık");
+    setTts(!ttsOn);
+    toast(ttsOn ? "Ses açık" : "Sessiz");
   });
 
+  // play/pause
   $("playBtn").addEventListener("click", ()=>{
     if(running) stop();
     else start();
