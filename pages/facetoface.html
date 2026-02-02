@@ -6,7 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>italkyAI • Tercüman</title>
   <link rel="icon" href="data:," />
-
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
   <style>
@@ -19,15 +18,16 @@
 
       --border: rgba(255,255,255,.10);
       --border2: rgba(255,255,255,.06);
-
       --shadow: 0 28px 90px rgba(0,0,0,.65);
 
       --sheetBg: rgba(16,16,20,.92);
       --sheetBorder: rgba(255,255,255,.12);
 
-      /* Logo kilit renkleri (home ile aynı) */
-      --aiGrad1:#a5b4fc;
-      --aiGrad2:#6366f1;
+      /* ✅ LOGO KİLİT RENKLERİ */
+      --italkyWhite:#FFFFFF;
+      --ai1:#A5B4FC;
+      --ai2:#4F46E5;
+      --beFree:#6B7280;
     }
 
     *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
@@ -71,6 +71,7 @@
       cursor:pointer;
       box-shadow: 0 18px 40px rgba(0,0,0,.45);
       backdrop-filter: blur(10px);
+      user-select:none;
     }
     .back:active{ transform: translateY(1px); }
 
@@ -154,7 +155,6 @@
       z-index: 5;
     }
 
-    /* Dil butonu (sheet açar) */
     .langBtn{
       height: 44px;
       border-radius: 16px;
@@ -187,6 +187,7 @@
       justify-content:center;
       cursor:pointer;
       flex: 0 0 48px;
+      user-select:none;
     }
     .btnIcon svg{
       width: 22px; height:22px;
@@ -226,7 +227,7 @@
     .bubble.me{ align-self:flex-end; border-right: 4px solid var(--pist); text-align:right; }
     .bubble.them{ align-self:flex-start; border-left: 4px solid var(--gold); }
 
-    /* ✅ LOGO (home ile aynı) — TOP/BOTTOM */
+    /* ✅ Logo: italkyAI + BE FREE (yer/boşluk aynı) */
     .brandBottom, .brandTop{
       position:absolute;
       left: 50%;
@@ -247,6 +248,7 @@
       flex-direction:column;
       align-items:center;
       gap:6px;
+      user-select:none;
     }
     .logoLine{
       font-family:'Space Grotesk', sans-serif;
@@ -254,20 +256,20 @@
       line-height: .9;
       letter-spacing: -0.3px;
     }
-    .logoMain{ font-weight:700; color: rgba(255,255,255,.95); }
+    .logoMain{ font-weight:700; color: var(--italkyWhite); }
     .logoAI{
       font-weight:700;
-      background: linear-gradient(135deg, var(--aiGrad1) 0%, var(--aiGrad2) 100%);
+      background: linear-gradient(135deg, var(--ai1) 0%, var(--ai2) 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       margin-left: 1px;
     }
     .sl{
-      font-weight: 700;
+      font-weight: 800;
       font-size: 10px;
       letter-spacing: 4px;
       text-transform: uppercase;
-      color: rgba(255,255,255,.45);
+      color: var(--beFree);
     }
 
     /* Mic bottom center */
@@ -283,7 +285,6 @@
       transform: translateX(-50%) rotate(180deg);
     }
 
-    /* Toast */
     .toast{
       position: fixed;
       left: 50%;
@@ -307,27 +308,28 @@
     }
     .toast.show{ display:block; }
 
-    /* ===== Language Sheet (tasarıma uyumlu) ===== */
+    /* ===== Language Sheet ===== */
     .sheetOverlay{
       position: fixed;
       inset: 0;
       z-index: 99999;
       background: rgba(0,0,0,.60);
       display:none;
-      align-items:flex-end; /* default: bottom */
+      align-items:flex-end;   /* default: bottom user */
       justify-content:center;
       padding: 14px;
       backdrop-filter: blur(8px);
     }
     .sheetOverlay.show{ display:flex; }
 
-    /* ✅ TOP USER: sheet yukarıdan açılsın ve 180° döndür (yazı ÜST kullanıcıya düz gelir) */
+    /* ✅ TOP USER: üstten aç + sheet’i 180 çevir (yazı üst kullanıcıya düz) */
     .sheetOverlay.fromTop{
-      align-items:flex-start; /* top */
+      align-items:flex-start;
     }
     .sheetOverlay.fromTop .sheet{
-      transform: rotate(180deg); /* ✅ kritik fix: yazı yönü artık ters değil */
+      transform: rotate(180deg);   /* ✅ TEK rotasyon: yazı problemi çözülür */
       border-radius: 0 0 22px 22px;
+      margin-top: 58px;            /* üstteki butonların üzerine binmesin */
     }
 
     .sheet{
@@ -362,6 +364,7 @@
       font-size: 18px;
       font-weight: 1000;
       cursor:pointer;
+      user-select:none;
     }
     .xBtn:active{ transform: translateY(1px); }
 
@@ -415,12 +418,8 @@
       letter-spacing:.5px;
       text-transform: uppercase;
     }
-    .sheetRow.selected{
-      background: rgba(190,242,100,.08);
-    }
-    .sheetRow.selected .code{
-      color: rgba(190,242,100,.95);
-    }
+    .sheetRow.selected{ background: rgba(190,242,100,.08); }
+    .sheetRow.selected .code{ color: rgba(190,242,100,.95); }
   </style>
 </head>
 
@@ -428,7 +427,7 @@
   <div class="frame" id="frameRoot">
     <button class="back" id="backBtn" aria-label="Geri">←</button>
 
-    <!-- TOP brand (kilit) -->
+    <!-- TOP brand -->
     <div class="brandTop">
       <div class="brandLock">
         <div class="logoLine"><span class="logoMain">italky</span><span class="logoAI">AI</span></div>
@@ -437,8 +436,6 @@
     </div>
 
     <div class="split">
-
-      <!-- TOP SIDE (180°) -->
       <section class="side top" id="sideTop">
         <div class="bar">
           <button class="langBtn" id="topLangBtn" type="button">
@@ -478,7 +475,6 @@
         </svg>
       </div>
 
-      <!-- BOTTOM SIDE -->
       <section class="side meTint" id="sideBottom">
         <div class="bar">
           <button class="langBtn" id="botLangBtn" type="button">
@@ -507,10 +503,9 @@
           </button>
         </div>
       </section>
-
     </div>
 
-    <!-- BOTTOM brand (kilit) -->
+    <!-- BOTTOM brand -->
     <div class="brandBottom">
       <div class="brandLock">
         <div class="logoLine"><span class="logoMain">italky</span><span class="logoAI">AI</span></div>
@@ -535,7 +530,6 @@
     </div>
   </div>
 
-  <!-- NOTE: JS aynı kalır. Sadece open sheet yön sınıfı eklenecek (aşağıdaki dosyada). -->
-  <script type="module" src="/js/translate_page.js?v=10"></script>
+  <script type="module" src="/js/translate_page.js?v=11"></script>
 </body>
 </html>
