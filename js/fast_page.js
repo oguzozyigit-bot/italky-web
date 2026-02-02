@@ -1,10 +1,9 @@
 // FILE: italky-web/js/fast_page.js
-// Anında Çeviri v9
-// ✅ Fix: "no-speech" hatasında uyarı vermez (sessizce devam eder)
+// Anında Çeviri v10
+// ✅ Play Tuşu Fix: Tek dokunuşla (Click) anında çalışır, basılı tutmaya gerek yok.
+// ✅ Tam Sessizlik: Kod kaynaklı 0 ses. (OS mikrofon uyarısı minimize edildi)
 // ✅ Default: TR -> EN
-// ✅ Play/Pause: pointerdown + click fallback
-// ✅ liveWave.running class (shimmer)
-// ✅ Anti-loop: dedupe + min-change + cooldown + hard cap
+// ✅ Hız: 350ms Turbo
 
 import { BASE_DOMAIN } from "/js/config.js";
 const $ = (id)=>document.getElementById(id);
@@ -125,39 +124,18 @@ function buildDropdown(rootId, btnId, txtId, menuId, defCode){
   search.addEventListener("input", ()=> filter(search.value));
 
   items.forEach(it=>{
+    // Dropdown içinde pointerdown güvenli, çünkü kaydırma vs. yok
     it.addEventListener("pointerdown", (e)=>{
-      e.preventDefault();
-      e.stopPropagation();
-      const code = it.getAttribute("data-code");
-      closeAll();
-      setValue(code, false);
-    });
-    // click fallback
-    it.addEventListener("click", (e)=>{
-      e.preventDefault();
-      e.stopPropagation();
+      e.preventDefault(); e.stopPropagation();
       const code = it.getAttribute("data-code");
       closeAll();
       setValue(code, false);
     });
   });
 
-  btn.addEventListener("pointerdown", (e)=>{
-    e.preventDefault();
-    e.stopPropagation();
-    const open = root.classList.contains("open");
-    closeAll();
-    root.classList.toggle("open", !open);
-    if(!open){
-      search.value = "";
-      filter("");
-      setTimeout(()=> search.focus(), 0);
-    }
-  });
-  // click fallback
+  // Dropdown açma butonu için CLICK kullanıyoruz (çakışmayı önlemek için)
   btn.addEventListener("click", (e)=>{
-    e.preventDefault();
-    e.stopPropagation();
+    e.preventDefault(); e.stopPropagation();
     const open = root.classList.contains("open");
     closeAll();
     root.classList.toggle("open", !open);
@@ -184,7 +162,7 @@ function buildRecognizer(srLocale){
   const r = new SR();
   r.lang = srLocale;
   r.interimResults = true;
-  r.continuous = true;
+  r.continuous = true; // ✅ Bip sesini azaltmak için sürekli açık tutuyoruz
   return r;
 }
 
@@ -287,7 +265,7 @@ async function translateTick(){
     $("stream").scrollTop = $("stream").scrollHeight;
 
   }catch(e){
-    // Hataları sessizce yut
+    // Sessiz hata
   }finally{
     inFlight = false;
   }
@@ -318,7 +296,7 @@ function stop(){
 
 function start(){
   if(!srSupported()){
-    toast("Bu cihaz konuşmayı yazıya çevirmiyor.");
+    toast("Cihaz desteklemiyor.");
     return;
   }
 
@@ -327,7 +305,7 @@ function start(){
   const srLocale = by(srcDD.get()).sr || "en-US";
   rec = buildRecognizer(srLocale);
   if(!rec){
-    toast("Mikrofon başlatılamadı.");
+    toast("Mikrofon hatası.");
     return;
   }
 
@@ -379,25 +357,26 @@ function start(){
     }
   };
 
-  /* ✅ DÜZELTME: Sessizlik (no-speech) hatasını yut */
+  // ✅ SESSİZLİK YÖNETİMİ
   rec.onerror = (e) => {
-    // 1. Sessizlik veya elle durdurma ise HATA DEĞİLDİR. Sadece dön.
+    // "no-speech": Kullanıcı sustu. Hata değil, uyarı verme, devam et.
     if (e.error === 'no-speech' || e.error === 'aborted') {
         return; 
     }
     
-    // 2. İzin yoksa veya cihazda sorun varsa UYARI VER ve DUR.
+    // Sadece ciddi izin hatalarında uyarı ver ve durdur.
     console.warn("SR Error:", e.error);
     if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
-        toast("Mikrofon izni yok veya engellendi.");
+        toast("Mikrofon izni yok.");
         stop();
     } else {
-        // 3. Diğer teknik hatalarda sessizce durdur (kullanıcıyı darlama)
         stop();
     }
   };
 
   rec.onend = ()=>{
+    // Süreklilik: Eğer kullanıcı 'Dur'a basmadıysa mikrofonu hemen geri aç
+    // Not: İşletim sistemi burada "Bip" sesi çıkarabilir, bunu engellemenin yolu yok.
     if(running){
       try{ rec?.start?.(); }catch{ stop(); }
     }
@@ -405,7 +384,7 @@ function start(){
 
   try{ rec.start(); }
   catch{
-    toast("Mikrofon başlatılamadı.");
+    toast("Başlatılamadı.");
     stop();
   }
 }
@@ -423,7 +402,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
     location.href = "/pages/home.html";
   });
 
-  // ✅ Default TR -> EN
+  // ✅ Default: TR -> EN
   srcDD = buildDropdown("ddSrc","ddSrcBtn","ddSrcTxt","ddSrcMenu","tr");
   dstDD = buildDropdown("ddDst","ddDstBtn","ddDstTxt","ddDstMenu","en");
 
@@ -436,30 +415,22 @@ document.addEventListener("DOMContentLoaded", ()=>{
   });
   dstDD.root.addEventListener("italky:change", ()=> enforceDifferent());
 
-  // Speaker: UI only
-  let ttsOn = false;
-  const setTts = (on)=>{
-    ttsOn = !!on;
-    $("spkBtn")?.classList.toggle("on", ttsOn);
-    toast(ttsOn ? "Ses açık" : "Sessiz");
-  };
-  setTts(false);
-  $("spkBtn").addEventListener("pointerdown", (e)=>{
+  // ✅ Play Tuşu Düzeltmesi: Sadece 'click' dinliyoruz.
+  // pointerdown'ı kaldırdık ki "basılı tutma" hissi oluşmasın.
+  $("playBtn").addEventListener("click", (e)=>{
     e.preventDefault(); e.stopPropagation();
-    setTts(!ttsOn);
+    if(running) stop();
+    else start();
+  });
+
+  // Hoparlör butonu (Göstermelik, ses çıkarmaz)
+  $("spkBtn").addEventListener("click", (e)=>{
+    e.preventDefault();
+    $("spkBtn").classList.toggle("on");
+    // Ses çalma kodu yok.
   });
 
   setPlayUI(false);
   setStatusTop("Hazır");
   setStatusWave("Hazır");
-
-  const toggle = (e)=>{
-    e?.preventDefault?.();
-    e?.stopPropagation?.();
-    if(running) stop();
-    else start();
-  };
-
-  $("playBtn").addEventListener("pointerdown", toggle);
-  $("playBtn").addEventListener("click", toggle);
 });
