@@ -1,10 +1,9 @@
 // FILE: italky-web/js/fast_page.js
-// Italky - Anında Çeviri (Toplantı Modu) v4
-// ✅ Play/Pause çalışır (JS init patlamaz)
-// ✅ İki dropdown da açılır (custom dark + arama + scroll)
-// ✅ "Duyulan" yok, sadece Çeviri
-// ✅ TTS default OFF (sessiz)
-// ⚠️ SpeechRecognition sistem bip: webde kesin kapatılamaz.
+// Italky - Anında Çeviri (Toplantı Modu) v5
+// ✅ Dropdown seçim fix (mobile pointerdown + stopPropagation)
+// ✅ Çeviri debug (hata body toast)
+// ✅ TTS default OFF (sessiz). Hoparlör sadece çeviri seslendirme aç/kapat.
+// ⚠️ SpeechRecognition sistem bip'i webde kapatılamaz (OS/Chrome).
 
 import { BASE_DOMAIN } from "/js/config.js";
 
@@ -16,35 +15,33 @@ function toast(msg){
   t.textContent = msg;
   t.classList.add("show");
   clearTimeout(window.__to);
-  window.__to = setTimeout(()=>t.classList.remove("show"), 1800);
+  window.__to = setTimeout(()=>t.classList.remove("show"), 2200);
 }
 
 const LANGS = [
-  { code:"tr", name:"Türkçe",    sr:"tr-TR", tts:"tr-TR" },
-  { code:"en", name:"English",   sr:"en-US", tts:"en-US" },
-  { code:"de", name:"Deutsch",   sr:"de-DE", tts:"de-DE" },
-  { code:"fr", name:"Français",  sr:"fr-FR", tts:"fr-FR" },
-  { code:"it", name:"Italiano",  sr:"it-IT", tts:"it-IT" },
-  { code:"es", name:"Español",   sr:"es-ES", tts:"es-ES" },
-  { code:"pt", name:"Português", sr:"pt-PT", tts:"pt-PT" },
-  { code:"ru", name:"Русский",   sr:"ru-RU", tts:"ru-RU" },
-  { code:"ar", name:"العربية",   sr:"ar-SA", tts:"ar-SA" },
-  { code:"nl", name:"Nederlands",sr:"nl-NL", tts:"nl-NL" },
-  { code:"sv", name:"Svenska",   sr:"sv-SE", tts:"sv-SE" },
-  { code:"no", name:"Norsk",     sr:"nb-NO", tts:"nb-NO" },
-  { code:"da", name:"Dansk",     sr:"da-DK", tts:"da-DK" },
-  { code:"pl", name:"Polski",    sr:"pl-PL", tts:"pl-PL" },
-  { code:"el", name:"Ελληνικά",  sr:"el-GR", tts:"el-GR" },
+  { code:"tr", name:"Türkçe",     sr:"tr-TR", tts:"tr-TR" },
+  { code:"en", name:"English",    sr:"en-US", tts:"en-US" },
+  { code:"de", name:"Deutsch",    sr:"de-DE", tts:"de-DE" },
+  { code:"fr", name:"Français",   sr:"fr-FR", tts:"fr-FR" },
+  { code:"it", name:"Italiano",   sr:"it-IT", tts:"it-IT" },
+  { code:"es", name:"Español",    sr:"es-ES", tts:"es-ES" },
+  { code:"pt", name:"Português",  sr:"pt-PT", tts:"pt-PT" },
+  { code:"ru", name:"Русский",    sr:"ru-RU", tts:"ru-RU" },
+  { code:"ar", name:"العربية",    sr:"ar-SA", tts:"ar-SA" },
+  { code:"nl", name:"Nederlands", sr:"nl-NL", tts:"nl-NL" },
+  { code:"sv", name:"Svenska",    sr:"sv-SE", tts:"sv-SE" },
+  { code:"no", name:"Norsk",      sr:"nb-NO", tts:"nb-NO" },
+  { code:"da", name:"Dansk",      sr:"da-DK", tts:"da-DK" },
+  { code:"pl", name:"Polski",     sr:"pl-PL", tts:"pl-PL" },
+  { code:"el", name:"Ελληνικά",   sr:"el-GR", tts:"el-GR" },
 ];
 
 function by(code){
   return LANGS.find(x=>x.code===code) || LANGS[0];
 }
-
 function baseUrl(){
   return String(BASE_DOMAIN||"").replace(/\/+$/,"");
 }
-
 function escapeHtml(s=""){
   return String(s)
     .replace(/&/g,"&amp;")
@@ -100,18 +97,24 @@ function buildDropdown(rootId, btnId, txtId, menuId, defCode){
     });
   }
 
+  // ✅ input event normal
   search.addEventListener("input", ()=> filter(search.value));
 
+  // ✅ KRİTİK: item seçimleri pointerdown + stopPropagation
   items.forEach(it=>{
-    it.addEventListener("click", ()=>{
+    it.addEventListener("pointerdown", (e)=>{
+      e.preventDefault();
+      e.stopPropagation();
       const code = it.getAttribute("data-code");
       closeAll();
       setValue(code, false);
     });
   });
 
+  // ✅ buton aç/kapat
   btn.addEventListener("pointerdown", (e)=>{
-    e.preventDefault(); e.stopPropagation();
+    e.preventDefault();
+    e.stopPropagation();
     const open = root.classList.contains("open");
     closeAll();
     root.classList.toggle("open", !open);
@@ -122,9 +125,10 @@ function buildDropdown(rootId, btnId, txtId, menuId, defCode){
     }
   });
 
+  // ✅ dışarı tıklayınca kapan
   document.addEventListener("pointerdown", ()=> closeAll(), { passive:true });
 
-  // ✅ İlk değer: sessiz set (onChange tetiklemesin)
+  // ✅ ilk değer sessiz
   setValue(defCode, true);
 
   return { get: ()=> current, set: (c)=> setValue(c,false), root };
@@ -157,7 +161,7 @@ function norm(s){
 let ttsOn = false;
 function setTts(on){
   ttsOn = !!on;
-  $("spkBtn").classList.toggle("on", ttsOn);
+  $("spkBtn")?.classList.toggle("on", ttsOn);
   if(!ttsOn){
     try{ window.speechSynthesis?.cancel?.(); }catch{}
   }
@@ -165,7 +169,6 @@ function setTts(on){
 function speak(text, langCode){
   if(!ttsOn) return;
   if(!("speechSynthesis" in window)) return;
-
   try{
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(String(text||""));
@@ -195,12 +198,14 @@ async function translateViaApi(text, src, dst){
     body: JSON.stringify(body)
   });
 
+  const raw = await r.text().catch(()=> "");
   if(!r.ok){
-    const tx = await r.text().catch(()=> "");
-    throw new Error(tx || `HTTP ${r.status}`);
+    throw new Error(raw || `HTTP ${r.status}`);
   }
 
-  const data = await r.json().catch(()=> ({}));
+  let data = {};
+  try{ data = JSON.parse(raw || "{}"); }catch{ data = {}; }
+
   const out = String(
     data.text || data.translated || data.translation || data.translatedText || ""
   ).trim();
@@ -218,7 +223,7 @@ let inFlight = false;
 let lastPushed = "";
 
 function setPlayUI(on){
-  $("playBtn").classList.toggle("running", !!on);
+  $("playBtn")?.classList.toggle("running", !!on);
   $("icoPlay").style.display = on ? "none" : "block";
   $("icoPause").style.display = on ? "block" : "none";
 }
@@ -260,8 +265,10 @@ async function flushBuffer(){
     $("panelStatus").textContent = "Dinliyor";
   }catch(e){
     $("panelStatus").textContent = "Hata";
-    toast("Çeviri hatası (422/CORS/KEY).");
-    console.warn("TRANSLATE_ERR:", e?.message || e);
+    // ✅ hata gövdesini göster (kısalt)
+    const m = String(e?.message || e || "").slice(0, 220);
+    toast(`Çeviri hatası: ${m || "bilinmiyor"}`);
+    console.warn("TRANSLATE_ERR:", e);
   }finally{
     inFlight = false;
   }
@@ -339,13 +346,13 @@ function start(){
   }
 }
 
-/* ========= init ========= */
 function enforceDifferent(){
   if(srcDD.get() === dstDD.get()){
     dstDD.set(srcDD.get()==="tr" ? "en" : "tr");
   }
 }
 
+/* ========= init ========= */
 document.addEventListener("DOMContentLoaded", ()=>{
   $("backBtn").addEventListener("pointerdown", (e)=>{
     e.preventDefault();
@@ -358,14 +365,13 @@ document.addEventListener("DOMContentLoaded", ()=>{
     location.href = "/pages/home.html";
   });
 
-  // dropdowns (✅ artık init sırasında onChange patlamaz)
+  // dropdowns
   srcDD = buildDropdown("ddSrc","ddSrcBtn","ddSrcTxt","ddSrcMenu","en");
   dstDD = buildDropdown("ddDst","ddDstBtn","ddDstTxt","ddDstMenu","tr");
 
-  // change events
   srcDD.root.addEventListener("italky:change", ()=>{
     enforceDifferent();
-    if(running){ stop(); start(); } // source SR locale değişsin
+    if(running){ stop(); start(); }
   });
   dstDD.root.addEventListener("italky:change", ()=>{
     enforceDifferent();
@@ -380,6 +386,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
   });
 
   // play/pause
+  setPlayUI(false);
   $("playBtn").addEventListener("pointerdown", (e)=>{
     e.preventDefault(); e.stopPropagation();
     if(running) stop();
