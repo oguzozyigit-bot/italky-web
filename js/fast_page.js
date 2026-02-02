@@ -1,10 +1,9 @@
 // FILE: italky-web/js/fast_page.js
-// Anında Çeviri v6
-// ✅ Play altta ortada (HTML ile)
-// ✅ Interim dedupe (aynı metni tekrar yazmaz)
-// ✅ Sürekli çalışır: Play -> stop'a kadar
-// ✅ “Ses” yok: biz hiçbir ses üretmeyiz (sadece UI rengi + animasyon)
-// ✅ Dropdown iki tarafta da çalışır (pointerdown fix)
+// Anında Çeviri v7
+// ✅ 350ms tick (daha anlık)
+// ✅ liveWave.running class (shimmer)
+// ✅ Anti-loop: dedupe + min-change + cooldown + hard cap
+// ✅ Sessiz: hiçbir bip/ses üretmeyiz (OS bip'i web ile kapatılamaz)
 
 import { BASE_DOMAIN } from "/js/config.js";
 const $ = (id)=>document.getElementById(id);
@@ -15,7 +14,7 @@ function toast(msg){
   t.textContent = msg;
   t.classList.add("show");
   clearTimeout(window.__to);
-  window.__to = setTimeout(()=>t.classList.remove("show"), 2400);
+  window.__to = setTimeout(()=>t.classList.remove("show"), 2200);
 }
 
 const LANGS = [
@@ -46,7 +45,6 @@ function escapeHtml(s=""){
     .replace(/"/g,"&quot;")
     .replace(/'/g,"&#39;");
 }
-
 function norm(s){
   return String(s||"")
     .toLowerCase()
@@ -62,6 +60,7 @@ function setStatusWave(s){ $("waveStatus").textContent = s; }
 
 function setPlayUI(on){
   $("playBtn")?.classList.toggle("running", !!on);
+  $("liveWave")?.classList.toggle("running", !!on);   // ✅ shimmer tetik
   $("icoPlay").style.display = on ? "none" : "block";
   $("icoPause").style.display = on ? "block" : "none";
 }
@@ -77,8 +76,8 @@ function ensureLiveBubble(){
   b.dataset.live = "1";
   b.innerHTML = "—";
   wrap.appendChild(b);
-  // keep last 10
-  while(wrap.children.length > 10) wrap.removeChild(wrap.firstElementChild);
+
+  while(wrap.children.length > 8) wrap.removeChild(wrap.firstElementChild);
   wrap.scrollTop = wrap.scrollHeight;
   return b;
 }
@@ -197,12 +196,15 @@ let running = false;
 let interimText = "";
 let finalText = "";
 
-/* dedupe + spam control */
-let lastCombined = "";
-let lastTranslateKey = "";
 let inFlight = false;
 let tickTimer = null;
 let sentenceTimer = null;
+
+/* anti-loop controls */
+let lastCombined = "";
+let lastOut = "";
+let sameOutCount = 0;
+let lastReqAt = 0;
 
 function clearTimers(){
   if(tickTimer){ clearInterval(tickTimer); tickTimer=null; }
@@ -215,48 +217,55 @@ function enforceDifferent(){
   }
 }
 
-/* ✅ IMPORTANT: do not keep adding repeated same content */
-function isMeaningfulChange(newText, prevText){
+function changedEnough(newText, prevText){
   const a = norm(newText);
   const b = norm(prevText);
   if(!a) return false;
   if(a === b) return false;
 
-  // very small jitter change → ignore
-  if(b && Math.abs(a.length - b.length) < 3 && a.startsWith(b.slice(0, Math.min(10,b.length)))) return false;
+  // only tiny jitter → ignore
+  if(b && Math.abs(a.length - b.length) <= 2) return false;
+  if(b && a.startsWith(b) && (a.length - b.length) < 6) return false;
 
   return true;
 }
 
-/* throttle translate: every 900ms (less spam) */
 async function translateTick(){
   if(!running) return;
   if(inFlight) return;
 
   const combined = (finalText + " " + interimText).trim();
-  if(!combined) return;
+  const combinedN = norm(combined);
 
-  // if combined repeats → do nothing
-  if(!isMeaningfulChange(combined, lastCombined)) return;
+  if(combinedN.length < 6) return;
+  if(!changedEnough(combined, lastCombined)) return;
 
-  // spam filter: if last 20 chars same loop pattern -> ignore
-  const key = norm(combined).slice(-32);
-  if(key && key === lastTranslateKey) return;
+  // rate limit: at least 280ms between requests (even if tick 350)
+  const now = Date.now();
+  if(now - lastReqAt < 280) return;
+  lastReqAt = now;
 
   lastCombined = combined;
-  lastTranslateKey = key;
-
-  // If too short, skip
-  if(norm(combined).length < 6) return;
 
   inFlight = true;
-
   try{
     const src = srcDD.get();
     const dst = dstDD.get();
     const out = await translateViaApi(combined, src, dst);
 
-    // update ONLY live bubble
+    // anti-repeat output spam
+    const outN = norm(out);
+    if(outN && outN === norm(lastOut)){
+      sameOutCount++;
+      if(sameOutCount >= 3){
+        // stop updating if output stuck
+        return;
+      }
+    }else{
+      sameOutCount = 0;
+      lastOut = out;
+    }
+
     const live = ensureLiveBubble();
     live.innerHTML = escapeHtml(out || "—");
     $("stream").scrollTop = $("stream").scrollHeight;
@@ -279,9 +288,12 @@ function stop(){
 
   interimText = "";
   finalText = "";
-  lastCombined = "";
-  lastTranslateKey = "";
   inFlight = false;
+
+  lastCombined = "";
+  lastOut = "";
+  sameOutCount = 0;
+  lastReqAt = 0;
 
   try{ rec?.stop?.(); }catch{}
   rec = null;
@@ -311,12 +323,15 @@ function start(){
 
   interimText = "";
   finalText = "";
-  lastCombined = "";
-  lastTranslateKey = "";
   inFlight = false;
 
+  lastCombined = "";
+  lastOut = "";
+  sameOutCount = 0;
+  lastReqAt = 0;
+
   clearTimers();
-  tickTimer = setInterval(translateTick, 900);
+  tickTimer = setInterval(translateTick, 350); // ✅ hız
 
   rec.onresult = (e)=>{
     let finals = "";
@@ -328,25 +343,25 @@ function start(){
       else interim += t + " ";
     }
 
+    // Final geldiğinde biriktir (ama kısa kes)
     if(finals.trim()){
-      // append to final
       finalText = (finalText ? (finalText + " ") : "") + finals.trim();
       interimText = "";
 
-      // sentence break: after 1200ms without new finals -> finalize live bubble
+      // cümle kırıcı: 900ms sonra yeni final gelmezse reset
       if(sentenceTimer) clearTimeout(sentenceTimer);
       sentenceTimer = setTimeout(()=>{
         finalizeLiveBubble();
-        // reset buffers to avoid “snowball repeating”
         finalText = "";
         interimText = "";
         lastCombined = "";
-        lastTranslateKey = "";
-      }, 1200);
-
+        lastOut = "";
+        sameOutCount = 0;
+      }, 900);
       return;
     }
 
+    // interim
     if(interim.trim()){
       interimText = interim.trim();
     }
@@ -358,7 +373,7 @@ function start(){
   };
 
   rec.onend = ()=>{
-    // some devices stop recognition randomly; keep running if user didn't press pause
+    // bazı cihazlar durdurur → running ise tekrar dene
     if(running){
       try{ rec?.start?.(); }catch{ stop(); }
     }
@@ -391,15 +406,12 @@ document.addEventListener("DOMContentLoaded", ()=>{
     enforceDifferent();
     if(running){
       stop();
-      start(); // restart with new locale
+      start();
     }
   });
+  dstDD.root.addEventListener("italky:change", ()=> enforceDifferent());
 
-  dstDD.root.addEventListener("italky:change", ()=>{
-    enforceDifferent();
-  });
-
-  // speaker button: sadece UI (opsiyonel). default OFF. (TTS eklemedik)
+  // Speaker: sadece “etiket”. Ses üretmeyiz. (İlerde TTS bağlarız)
   let ttsOn = false;
   const setTts = (on)=>{
     ttsOn = !!on;
