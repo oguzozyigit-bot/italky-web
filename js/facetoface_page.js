@@ -30,12 +30,39 @@ const LANGS = [
 function speechLocale(code){ return LANGS.find(x=>x.code===code)?.speech || "en-US"; }
 function ttsLocale(code){ return LANGS.find(x=>x.code===code)?.tts || "en-US"; }
 
+/* ✅ BE FREE çizgisini dinamik hesapla: i altından → y ortası */
+function layoutBeFreeLine(){
+  try{
+    const it = $("logoItalky");
+    const y  = $("logoY");
+    const line = $("beFreeLine");
+    if(!it || !y || !line) return;
+
+    const itR = it.getBoundingClientRect();
+    const yR  = y.getBoundingClientRect();
+
+    // çizgi konteyneri: beFreeWrap
+    const wrap = line.parentElement;
+    const wR = wrap.getBoundingClientRect();
+
+    // başlangıç: italky'nin SOL’u (i'nin altı)
+    const left = Math.max(0, itR.left - wR.left);
+
+    // bitiş: y harfinin ORTASI
+    const yMid = (yR.left + (yR.width/2)) - wR.left;
+
+    // CSS var’a yaz
+    wrap.style.setProperty("--beLeft", `${Math.round(left)}px`);
+    wrap.style.setProperty("--beRight", `${Math.round(yMid)}px`);
+  }catch{}
+}
+
 async function translateViaApi(text, source, target){
   const base = (BASE_DOMAIN || "").replace(/\/+$/,"");
   if(!base) return text;
 
   try{
-    const payload = { text, source, target, from_lang: source, to_lang: target }; // iki formatı da destekle
+    const payload = { text, source, target, from_lang: source, to_lang: target };
     const r = await fetch(`${base}/api/translate`,{
       method:"POST",
       headers:{ "Content-Type":"application/json" },
@@ -43,34 +70,31 @@ async function translateViaApi(text, source, target){
     });
     if(!r.ok) throw new Error("api");
     const data = await r.json();
-
-    const out = String(
-      data?.translated || data?.text || data?.translation || data?.translatedText || ""
-    ).trim();
-
+    const out = String(data?.translated || data?.text || data?.translation || data?.translatedText || "").trim();
     return out || text;
   }catch{
     return text;
   }
 }
 
-/* ========= ✅ SES DÜZELTME (HOPARLÖR) =========
-   - topSpeak/botSpeak artık o paneldeki SON üretilen metni okur
-   - (Autoplay yok; kullanıcı dokunuşu ile güvenli)
+/* ====== AUTO SPEAK + MUTE (SENİN ESKİ KURALIN) ======
+   - varsayılan: SES AÇIK
+   - hoparlör: MUTE toggle (sürekli kapat/aç)
+   - çeviri düşünce otomatik okur (mute değilse)
 */
-let lastSpeakTop = "";
-let lastSpeakBot = "";
-function rememberLast(side, txt){
-  const t = String(txt||"").trim();
-  if(!t) return;
-  if(side === "top") lastSpeakTop = t;
-  else lastSpeakBot = t;
+const mute = { top:false, bot:false }; // false => speak ON
+function setMute(side, on){
+  mute[side] = !!on;
+  const btn = $(side==="top" ? "topSpeak" : "botSpeak");
+  btn?.classList.toggle("muted", mute[side]);
+  toast(mute[side] ? "Ses kapalı" : "Ses açık");
 }
 
-function speakText(text, langCode){
+function speakAuto(text, langCode, side){
+  if(mute[side]) return;
   const t = String(text||"").trim();
-  if(!t) { toast("Okunacak metin yok."); return; }
-  if(!("speechSynthesis" in window)) { toast("TTS desteklenmiyor."); return; }
+  if(!t) return;
+  if(!("speechSynthesis" in window)) return;
 
   try{
     window.speechSynthesis.cancel();
@@ -80,10 +104,7 @@ function speakText(text, langCode){
     u.pitch = 1.0;
     u.volume = 1.0;
     window.speechSynthesis.speak(u);
-  }catch(e){
-    console.warn("TTS error", e);
-    toast("Ses çalınamadı.");
-  }
+  }catch{}
 }
 
 /* ========= Speech Recognition ========= */
@@ -118,14 +139,10 @@ function addBubble(sideName, kind, text){
   b.textContent = text || "—";
   wrap.appendChild(b);
   scrollIfNeeded(sideName, wrap);
-
-  // son metni hatırla (✅ hoparlör için)
-  if(kind === "me") rememberLast(sideName, b.textContent);
-  if(kind === "them") rememberLast(sideName, b.textContent);
 }
 
 /* ========= Language sheet ========= */
-let activeSheetSide = "bot"; // hangi buton açtıysa
+let activeSheetSide = "bot";
 let topLang = "en";
 let botLang = "tr";
 
@@ -198,7 +215,8 @@ async function onFinal(side, srcCode, dstCode, finalText){
   const out = await translateViaApi(finalText, srcCode, dstCode);
   addBubble(otherSide, "me", out);
 
-  // Not: otomatik ses yok (önceden böyleyse) — hoparlör butonuyla okutuluyor
+  // ✅ otomatik oku (mute değilse)
+  speakAuto(out, dstCode, otherSide);
 }
 
 function startSide(side){
@@ -259,6 +277,10 @@ function startSide(side){
 
 /* ========= Boot ========= */
 document.addEventListener("DOMContentLoaded", ()=>{
+  // logo çizgisi ölçümü
+  layoutBeFreeLine();
+  window.addEventListener("resize", ()=> setTimeout(layoutBeFreeLine, 50), { passive:true });
+
   $("backBtn").addEventListener("click", ()=>{
     if(history.length>1) history.back();
     else location.href = "/pages/home.html";
@@ -267,11 +289,9 @@ document.addEventListener("DOMContentLoaded", ()=>{
   hookScrollFollow("top", $("topBody"));
   hookScrollFollow("bot", $("botBody"));
 
-  // init labels
   $("topLangTxt").textContent = LANGS.find(x=>x.code===topLang)?.name || "English";
   $("botLangTxt").textContent = LANGS.find(x=>x.code===botLang)?.name || "Türkçe";
 
-  // sheet open
   $("topLangBtn").addEventListener("click", (e)=>{ e.preventDefault(); e.stopPropagation(); openSheet("top"); });
   $("botLangBtn").addEventListener("click", (e)=>{ e.preventDefault(); e.stopPropagation(); openSheet("bot"); });
 
@@ -279,21 +299,16 @@ document.addEventListener("DOMContentLoaded", ()=>{
   $("langSheet").addEventListener("click", (e)=>{ if(e.target === $("langSheet")) closeSheet(); });
   $("sheetQuery").addEventListener("input", ()=> renderSheet(activeSheetSide==="top" ? topLang : botLang));
 
-  // mic
   $("topMic").addEventListener("click", ()=> startSide("top"));
   $("botMic").addEventListener("click", ()=> startSide("bot"));
 
-  // ✅ hoparlör: son metni oku
-  $("topSpeak").addEventListener("click", ()=>{
-    speakText(lastSpeakTop, topLang);
-  });
-  $("botSpeak").addEventListener("click", ()=>{
-    speakText(lastSpeakBot, botLang);
-  });
+  // ✅ Hoparlör: MUTE toggle (senin eski kural)
+  $("topSpeak").addEventListener("click", ()=> setMute("top", !mute.top));
+  $("botSpeak").addEventListener("click", ()=> setMute("bot", !mute.bot));
 
-  // İlk metin boşsa uyarı olmasın diye küçük demo
-  // (İstersen kaldırırsın)
-  // addBubble("bot", "me", "Hazırım. Konuş, ben çevireyim.");
+  // başlangıç: ses AÇIK
+  setMute("top", false);
+  setMute("bot", false);
 
   setWaveListening(false);
 });
