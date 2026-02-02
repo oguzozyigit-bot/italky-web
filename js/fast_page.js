@@ -1,6 +1,7 @@
 // FILE: italky-web/js/fast_page.js
-// Anında Çeviri v7
-// ✅ 350ms tick (daha anlık)
+// Anında Çeviri v8
+// ✅ Default: TR -> EN
+// ✅ Play/Pause: pointerdown + click fallback
 // ✅ liveWave.running class (shimmer)
 // ✅ Anti-loop: dedupe + min-change + cooldown + hard cap
 // ✅ Sessiz: hiçbir bip/ses üretmeyiz (OS bip'i web ile kapatılamaz)
@@ -60,7 +61,7 @@ function setStatusWave(s){ $("waveStatus").textContent = s; }
 
 function setPlayUI(on){
   $("playBtn")?.classList.toggle("running", !!on);
-  $("liveWave")?.classList.toggle("running", !!on);   // ✅ shimmer tetik
+  $("liveWave")?.classList.toggle("running", !!on);
   $("icoPlay").style.display = on ? "none" : "block";
   $("icoPause").style.display = on ? "block" : "none";
 }
@@ -131,9 +132,30 @@ function buildDropdown(rootId, btnId, txtId, menuId, defCode){
       closeAll();
       setValue(code, false);
     });
+    // click fallback
+    it.addEventListener("click", (e)=>{
+      e.preventDefault();
+      e.stopPropagation();
+      const code = it.getAttribute("data-code");
+      closeAll();
+      setValue(code, false);
+    });
   });
 
   btn.addEventListener("pointerdown", (e)=>{
+    e.preventDefault();
+    e.stopPropagation();
+    const open = root.classList.contains("open");
+    closeAll();
+    root.classList.toggle("open", !open);
+    if(!open){
+      search.value = "";
+      filter("");
+      setTimeout(()=> search.focus(), 0);
+    }
+  });
+  // click fallback
+  btn.addEventListener("click", (e)=>{
     e.preventDefault();
     e.stopPropagation();
     const open = root.classList.contains("open");
@@ -171,6 +193,7 @@ async function translateViaApi(text, src, dst){
   const base = baseUrl();
   if(!base) return text;
 
+  // backend farklı alan isimleri bekleyebiliyor → ikisini de gönderiyoruz
   const body = { text, source: src, target: dst, from_lang: src, to_lang: dst };
 
   const r = await fetch(`${base}/api/translate`, {
@@ -223,7 +246,6 @@ function changedEnough(newText, prevText){
   if(!a) return false;
   if(a === b) return false;
 
-  // only tiny jitter → ignore
   if(b && Math.abs(a.length - b.length) <= 2) return false;
   if(b && a.startsWith(b) && (a.length - b.length) < 6) return false;
 
@@ -240,7 +262,6 @@ async function translateTick(){
   if(combinedN.length < 6) return;
   if(!changedEnough(combined, lastCombined)) return;
 
-  // rate limit: at least 280ms between requests (even if tick 350)
   const now = Date.now();
   if(now - lastReqAt < 280) return;
   lastReqAt = now;
@@ -253,14 +274,10 @@ async function translateTick(){
     const dst = dstDD.get();
     const out = await translateViaApi(combined, src, dst);
 
-    // anti-repeat output spam
     const outN = norm(out);
     if(outN && outN === norm(lastOut)){
       sameOutCount++;
-      if(sameOutCount >= 3){
-        // stop updating if output stuck
-        return;
-      }
+      if(sameOutCount >= 3) return;
     }else{
       sameOutCount = 0;
       lastOut = out;
@@ -331,7 +348,7 @@ function start(){
   lastReqAt = 0;
 
   clearTimers();
-  tickTimer = setInterval(translateTick, 350); // ✅ hız
+  tickTimer = setInterval(translateTick, 350);
 
   rec.onresult = (e)=>{
     let finals = "";
@@ -343,12 +360,10 @@ function start(){
       else interim += t + " ";
     }
 
-    // Final geldiğinde biriktir (ama kısa kes)
     if(finals.trim()){
       finalText = (finalText ? (finalText + " ") : "") + finals.trim();
       interimText = "";
 
-      // cümle kırıcı: 900ms sonra yeni final gelmezse reset
       if(sentenceTimer) clearTimeout(sentenceTimer);
       sentenceTimer = setTimeout(()=>{
         finalizeLiveBubble();
@@ -361,7 +376,6 @@ function start(){
       return;
     }
 
-    // interim
     if(interim.trim()){
       interimText = interim.trim();
     }
@@ -373,7 +387,6 @@ function start(){
   };
 
   rec.onend = ()=>{
-    // bazı cihazlar durdurur → running ise tekrar dene
     if(running){
       try{ rec?.start?.(); }catch{ stop(); }
     }
@@ -399,8 +412,9 @@ document.addEventListener("DOMContentLoaded", ()=>{
     location.href = "/pages/home.html";
   });
 
-  srcDD = buildDropdown("ddSrc","ddSrcBtn","ddSrcTxt","ddSrcMenu","en");
-  dstDD = buildDropdown("ddDst","ddDstBtn","ddDstTxt","ddDstMenu","tr");
+  // ✅ Default TR -> EN
+  srcDD = buildDropdown("ddSrc","ddSrcBtn","ddSrcTxt","ddSrcMenu","tr");
+  dstDD = buildDropdown("ddDst","ddDstBtn","ddDstTxt","ddDstMenu","en");
 
   srcDD.root.addEventListener("italky:change", ()=>{
     enforceDifferent();
@@ -411,7 +425,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
   });
   dstDD.root.addEventListener("italky:change", ()=> enforceDifferent());
 
-  // Speaker: sadece “etiket”. Ses üretmeyiz. (İlerde TTS bağlarız)
+  // Speaker: sadece UI. Ses üretmeyiz.
   let ttsOn = false;
   const setTts = (on)=>{
     ttsOn = !!on;
@@ -428,9 +442,13 @@ document.addEventListener("DOMContentLoaded", ()=>{
   setStatusTop("Hazır");
   setStatusWave("Hazır");
 
-  $("playBtn").addEventListener("pointerdown", (e)=>{
-    e.preventDefault(); e.stopPropagation();
+  const toggle = (e)=>{
+    e?.preventDefault?.();
+    e?.stopPropagation?.();
     if(running) stop();
     else start();
-  });
+  };
+
+  $("playBtn").addEventListener("pointerdown", toggle);
+  $("playBtn").addEventListener("click", toggle); // ✅ fallback
 });
