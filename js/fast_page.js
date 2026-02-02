@@ -1,384 +1,407 @@
-// FILE: italky-web/js/fast_page.js
-// Italky - Anında Çeviri (Toplantı Modu) v3
-// ✅ Bordo panel tam ekran (HTML)
-// ✅ Play/Pause altta ortada
-// ✅ "Duyulan" yok, sadece Çeviri düşer
-// ✅ Custom dropdown (dark, arama+scroll) => beyaz popup yok
-// ✅ Ses SESSİZ: ekstra beep yok (TTS default kapalı)
-// ⚠️ SpeechRecognition sistem bip'i bazı cihazlarda engellenemez.
+<!-- FILE: italky-web/pages/fast.html -->
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>ITALKY • Anında Çeviri</title>
+  <link rel="icon" href="data:," />
 
-import { BASE_DOMAIN } from "/js/config.js";
+  <style>
+    :root{
+      --text: rgba(255,255,255,.94);
+      --muted: rgba(255,255,255,.62);
+      --border: rgba(255,255,255,.10);
+      --border2: rgba(255,255,255,.06);
+      --shadow: 0 28px 90px rgba(0,0,0,.65);
 
-const $ = (id)=>document.getElementById(id);
+      --bgA: #0b1222;
+      --bgB: #05070d;
 
-function toast(msg){
-  const t = $("toast");
-  if(!t) return;
-  t.textContent = msg;
-  t.classList.add("show");
-  clearTimeout(window.__to);
-  window.__to = setTimeout(()=>t.classList.remove("show"), 1800);
-}
+      --burgA: rgba(120, 20, 35, .92);
+      --burgB: rgba(60, 10, 20, .60);
 
-const LANGS = [
-  { code:"tr", name:"Türkçe",    sr:"tr-TR", tts:"tr-TR" },
-  { code:"en", name:"English",   sr:"en-US", tts:"en-US" },
-  { code:"de", name:"Deutsch",   sr:"de-DE", tts:"de-DE" },
-  { code:"fr", name:"Français",  sr:"fr-FR", tts:"fr-FR" },
-  { code:"it", name:"Italiano",  sr:"it-IT", tts:"it-IT" },
-  { code:"es", name:"Español",   sr:"es-ES", tts:"es-ES" },
-  { code:"pt", name:"Português", sr:"pt-PT", tts:"pt-PT" },
-  { code:"ru", name:"Русский",   sr:"ru-RU", tts:"ru-RU" },
-  { code:"ar", name:"العربية",   sr:"ar-SA", tts:"ar-SA" },
-  { code:"nl", name:"Nederlands",sr:"nl-NL", tts:"nl-NL" },
-  { code:"sv", name:"Svenska",   sr:"sv-SE", tts:"sv-SE" },
-  { code:"no", name:"Norsk",     sr:"nb-NO", tts:"nb-NO" },
-  { code:"da", name:"Dansk",     sr:"da-DK", tts:"da-DK" },
-  { code:"pl", name:"Polski",    sr:"pl-PL", tts:"pl-PL" },
-  { code:"el", name:"Ελληνικά",  sr:"el-GR", tts:"el-GR" },
-];
+      --g:#009246; --w:#ffffff; --r:#CE2B37;
+    }
 
-function by(code){
-  return LANGS.find(x=>x.code===code) || LANGS[0];
-}
+    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    html,body{ margin:0; padding:0; width:100%; height:100dvh; overflow:hidden; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
 
-function baseUrl(){
-  return String(BASE_DOMAIN||"").replace(/\/+$/,"");
-}
+    body{
+      background:
+        radial-gradient(900px 520px at 50% 14%, rgba(40,120,255,.18), transparent 62%),
+        radial-gradient(900px 520px at 50% 86%, rgba(120,20,35,.16), transparent 62%),
+        radial-gradient(700px 360px at 12% 10%, rgba(255,255,255,.06), transparent 60%),
+        radial-gradient(700px 360px at 88% 90%, rgba(255,255,255,.05), transparent 60%),
+        linear-gradient(180deg, var(--bgA), var(--bgB));
+      color: var(--text);
+    }
 
-function escapeHtml(s=""){
-  return String(s)
-    .replace(/&/g,"&amp;")
-    .replace(/</g,"&lt;")
-    .replace(/>/g,"&gt;")
-    .replace(/"/g,"&quot;")
-    .replace(/'/g,"&#39;");
-}
+    .frame{
+      width:100%;
+      max-width:480px;
+      height:100%;
+      margin:0 auto;
+      position:relative;
+      overflow:hidden;
+    }
 
-function addTranslated(text){
-  const wrap = $("stream");
-  const b = document.createElement("div");
-  b.className = "bubble trg";
-  b.innerHTML = `<div class="small">Çeviri</div>${escapeHtml(text)}`;
-  wrap.appendChild(b);
-  wrap.scrollTop = wrap.scrollHeight;
-}
+    /* Top bar */
+    .topbar{
+      position:absolute;
+      top: 12px;
+      left: 12px;
+      right: 12px;
+      z-index: 50;
+      display:flex;
+      align-items:center;
+      gap: 10px;
+    }
 
-/* ========= Custom Dropdown ========= */
-function buildDropdown(rootId, btnId, txtId, menuId, defCode, onChange){
-  const root = $(rootId);
-  const btn = $(btnId);
-  const txt = $(txtId);
-  const menu = $(menuId);
+    .back{
+      width: 46px; height: 46px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: rgba(15,15,18,.50);
+      color:#fff;
+      font-size:22px;
+      font-weight:1000;
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer; user-select:none;
+      box-shadow: 0 18px 40px rgba(0,0,0,.45);
+      backdrop-filter: blur(10px);
+      flex:0 0 46px;
+    }
+    .back:active{ transform: translateY(1px); }
 
-  let current = defCode;
+    .titlePill{
+      flex:1;
+      height:46px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: rgba(15,15,18,.35);
+      box-shadow: 0 18px 40px rgba(0,0,0,.35);
+      backdrop-filter: blur(10px);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding: 0 12px;
+      gap: 10px;
+      min-width:0;
+    }
+    .titleLeft{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+    .ttl{ font-weight:1000; font-size:13px; letter-spacing:.2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .st{ font-weight:900; font-size:11px; color: var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
-  function closeAll(){
-    document.querySelectorAll(".dd.open").forEach(x=>x.classList.remove("open"));
-  }
+    .spkBtn{
+      width: 44px; height: 44px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.05);
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer; user-select:none;
+      flex:0 0 44px;
+      opacity:.55;
+    }
+    .spkBtn.on{ opacity:.95; }
+    .spkBtn svg{ width:22px; height:22px; stroke:#fff; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
 
-  function setValue(code){
-    current = code;
-    txt.textContent = by(code).name;
-    onChange?.(code);
-  }
+    /* Fullscreen burgundy panel */
+    .panel{
+      position:absolute;
+      left: 12px;
+      right: 12px;
+      top: 70px;
+      bottom: 62px;
+      border-radius: 28px;
+      border:1px solid var(--border);
+      background:
+        radial-gradient(900px 420px at 30% 10%, var(--burgA), transparent 68%),
+        radial-gradient(700px 360px at 80% 18%, rgba(90, 15, 30, .70), transparent 70%),
+        radial-gradient(600px 320px at 40% 75%, var(--burgB), transparent 72%),
+        linear-gradient(180deg, rgba(10,10,12,.18), rgba(0,0,0,.15));
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+      min-height:0;
+    }
 
-  menu.innerHTML = `
-    <div class="ddSearchWrap">
-      <input class="ddSearch" type="text" placeholder="Ara..." />
+    .panelHead{
+      padding: 12px;
+      border-bottom: 1px solid var(--border2);
+      background: rgba(0,0,0,.18);
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+      z-index: 10;
+    }
+
+    .ddRow{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      align-items:center;
+    }
+
+    .dd{ position: relative; width: 100%; }
+    .ddBtn{
+      width:100%;
+      padding: 12px 12px;
+      border-radius: 18px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+      color:#fff;
+      font-weight: 950;
+      font-size: 13px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      cursor:pointer;
+      user-select:none;
+    }
+    .ddBtn .caret{ opacity:.75; font-size: 12px; }
+
+    .ddMenu{
+      position:absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      width: min(92vw, 360px);
+      max-width: calc(100vw - 28px);
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.16);
+      background: rgba(20,20,24,.98);
+      box-shadow: 0 34px 90px rgba(0,0,0,.70);
+      backdrop-filter: blur(14px);
+      display:none;
+      z-index: 9999;
+      max-height: 320px;
+      overflow:auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width:none;
+      -ms-overflow-style:none;
+    }
+    .ddMenu::-webkit-scrollbar{ width:0; height:0; }
+    .dd.open .ddMenu{ display:block; }
+
+    /* ✅ hedef dil menüsü sağdan açılsın (taşma yok) */
+    #ddDst .ddMenu{ left:auto; right:0; }
+
+    .ddSearchWrap{
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      padding: 10px;
+      background: rgba(20,20,24,.98);
+      border-bottom: 1px solid rgba(255,255,255,.10);
+    }
+    .ddSearch{
+      width:100%;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: rgba(255,255,255,.92);
+      font-weight: 900;
+      font-size: 13px;
+      padding: 10px 12px;
+      outline:none;
+    }
+    .ddSearch::placeholder{ color: rgba(255,255,255,.55); font-weight: 800; }
+
+    .ddItem{
+      padding: 13px 14px;
+      cursor:pointer;
+      color: rgba(255,255,255,.96);
+      font-weight: 950;
+      font-size: 14px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      user-select:none;
+    }
+    .ddItem:last-child{ border-bottom:none; }
+    .ddItem:hover{ background: rgba(255,255,255,.06); }
+    .ddItem.hidden{ display:none; }
+
+    .stream{
+      flex: 1 1 auto;
+      min-height:0;
+      padding: 12px 12px 92px;
+      overflow:auto;
+      -webkit-overflow-scrolling: touch;
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+      scrollbar-width:none;
+      -ms-overflow-style:none;
+    }
+    .stream::-webkit-scrollbar{ width:0; height:0; }
+
+    .bubble{
+      border-radius: 22px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+      box-shadow: 0 14px 30px rgba(0,0,0,.25);
+      padding: 12px 13px;
+      font-weight: 950;
+      font-size: 13px;
+      line-height: 1.35;
+      word-break: break-word;
+    }
+    .bubble .small{
+      font-size: 11px;
+      font-weight: 950;
+      color: rgba(255,255,255,.62);
+      margin-bottom: 6px;
+    }
+    .bubble.trg{ border-left: 4px solid rgba(190,242,100,.85); }
+
+    .playDock{
+      position:absolute;
+      left: 50%;
+      bottom: 14px;
+      transform: translateX(-50%);
+      z-index: 30;
+      pointer-events:auto;
+    }
+    .playBtn{
+      width: 78px; height: 78px;
+      border-radius: 30px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      user-select:none;
+      box-shadow: 0 20px 55px rgba(0,0,0,.45);
+    }
+    .playBtn:active{ transform: translateY(1px); }
+    .playBtn.running{
+      border-color: rgba(190,242,100,.35);
+      background: rgba(190,242,100,.12);
+      box-shadow: 0 0 26px rgba(190,242,100,.16), 0 20px 55px rgba(0,0,0,.45);
+    }
+    .playBtn svg{ width:30px; height:30px; stroke:#fff; fill:none; stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round; opacity:.95; }
+
+    .brandBottom{
+      position:absolute;
+      left: 50%;
+      bottom: 10px;
+      transform: translateX(-50%);
+      z-index: 20;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap: 6px;
+      cursor:pointer;
+      user-select:none;
+      opacity:.92;
+    }
+    .bn{
+      font-weight: 1000;
+      letter-spacing:.35px;
+      font-size: 12px;
+      color: rgba(255,255,255,.92);
+      line-height:1;
+    }
+    .flagbar{
+      width: 64px;
+      height: 4px;
+      border-radius: 999px;
+      overflow:hidden;
+      display:flex;
+      box-shadow: 0 10px 22px rgba(0,0,0,.25);
+    }
+    .flagbar span{ flex:1; }
+    .f-g{ background: var(--g); }
+    .f-w{ background: var(--w); }
+    .f-r{ background: var(--r); }
+
+    .toast{
+      position: fixed;
+      left: 50%;
+      top: 14px;
+      transform: translateX(-50%);
+      z-index: 99999;
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-weight: 1000;
+      font-size: 12px;
+      background: rgba(20,20,20,.92);
+      border: 1px solid rgba(255,255,255,.12);
+      box-shadow: 0 18px 40px rgba(0,0,0,.45);
+      backdrop-filter: blur(10px);
+      display:none;
+      color: rgba(255,255,255,.92);
+      max-width: min(480px, calc(100vw - 24px));
+      white-space: nowrap;
+      overflow:hidden;
+      text-overflow: ellipsis;
+    }
+    .toast.show{ display:block; }
+  </style>
+</head>
+
+<body>
+  <div class="frame" id="frameRoot">
+
+    <div class="topbar">
+      <button class="back" id="backBtn" aria-label="Geri">←</button>
+
+      <div class="titlePill">
+        <div class="titleLeft">
+          <div class="ttl">Anında Çeviri</div>
+          <div class="st" id="panelStatus">Hazır</div>
+        </div>
+
+        <button class="spkBtn" id="spkBtn" aria-label="Ses">
+          <svg viewBox="0 0 24 24">
+            <path d="M11 5L6 9H3v6h3l5 4z"></path>
+            <path d="M15 9a4 4 0 0 1 0 6"></path>
+            <path d="M17.5 6.5a7 7 0 0 1 0 11"></path>
+          </svg>
+        </button>
+      </div>
     </div>
-    ${LANGS.map(l=>`<div class="ddItem" data-code="${l.code}">${l.name}</div>`).join("")}
-  `;
 
-  const search = menu.querySelector(".ddSearch");
-  const items = Array.from(menu.querySelectorAll(".ddItem"));
+    <section class="panel" id="panel">
+      <div class="panelHead">
+        <div class="ddRow">
+          <div class="dd" id="ddSrc">
+            <div class="ddBtn" id="ddSrcBtn"><span id="ddSrcTxt">English</span><span class="caret">▾</span></div>
+            <div class="ddMenu" id="ddSrcMenu"></div>
+          </div>
 
-  function filter(q){
-    const s = String(q||"").toLowerCase().trim();
-    items.forEach(it=>{
-      const name = (it.textContent||"").toLowerCase();
-      it.classList.toggle("hidden", s && !name.includes(s));
-    });
-  }
+          <div class="dd" id="ddDst">
+            <div class="ddBtn" id="ddDstBtn"><span id="ddDstTxt">Türkçe</span><span class="caret">▾</span></div>
+            <div class="ddMenu" id="ddDstMenu"></div>
+          </div>
+        </div>
+      </div>
 
-  search.addEventListener("input", ()=> filter(search.value));
+      <div class="stream" id="stream"></div>
 
-  items.forEach(it=>{
-    it.addEventListener("click", ()=>{
-      const code = it.getAttribute("data-code");
-      closeAll();
-      setValue(code);
-    });
-  });
+      <div class="playDock">
+        <button class="playBtn" id="playBtn" aria-label="Başlat/Duraklat">
+          <svg id="icoPlay" viewBox="0 0 24 24">
+            <polygon points="8,5 19,12 8,19"></polygon>
+          </svg>
+          <svg id="icoPause" viewBox="0 0 24 24" style="display:none">
+            <line x1="9" y1="6" x2="9" y2="18"></line>
+            <line x1="15" y1="6" x2="15" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+    </section>
 
-  btn.addEventListener("click", (e)=>{
-    e.stopPropagation();
-    const open = root.classList.contains("open");
-    closeAll();
-    root.classList.toggle("open", !open);
-    if(!open){
-      search.value = "";
-      filter("");
-      setTimeout(()=> search.focus(), 0);
-    }
-  });
+    <div class="brandBottom" id="brandHome" title="Anasayfa">
+      <div class="bn">ITALKY</div>
+      <div class="flagbar" aria-hidden="true"><span class="f-g"></span><span class="f-w"></span><span class="f-r"></span></div>
+    </div>
+  </div>
 
-  document.addEventListener("click", ()=> closeAll());
+  <div class="toast" id="toast">—</div>
 
-  setValue(defCode);
-
-  return { get: ()=> current, set: (c)=> setValue(c) };
-}
-
-/* ========= SR + Flush ========= */
-function srSupported(){
-  return !!(window.SpeechRecognition || window.webkitSpeechRecognition);
-}
-function buildRecognizer(srLocale){
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if(!SR) return null;
-  const r = new SR();
-  r.lang = srLocale;
-  r.interimResults = true;
-  r.continuous = true;
-  return r;
-}
-
-function norm(s){
-  return String(s||"")
-    .toLowerCase()
-    .trim()
-    .replace(/\s+/g," ")
-    .replace(/[’']/g,"'")
-    .replace(/[.,!?;:]+$/g,"");
-}
-
-/* ✅ TTS: default kapalı */
-let ttsOn = false;
-function setTts(on){
-  ttsOn = !!on;
-  $("spkBtn").classList.toggle("on", ttsOn);
-  if(!ttsOn){
-    try{ window.speechSynthesis?.cancel?.(); }catch{}
-  }
-}
-function speak(text, langCode){
-  if(!ttsOn) return;
-  if(!("speechSynthesis" in window)) return;
-
-  try{
-    window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(String(text||""));
-    u.lang = by(langCode).tts || "en-US";
-    u.rate = 1.0;
-    u.pitch = 1.0;
-    window.speechSynthesis.speak(u);
-  }catch{}
-}
-
-/* backend translate */
-async function translateViaApi(text, src, dst){
-  const base = baseUrl();
-  if(!base) return text;
-
-  const body = {
-    text,
-    source: src,
-    target: dst,
-    from_lang: src,
-    to_lang: dst
-  };
-
-  const r = await fetch(`${base}/api/translate`, {
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify(body)
-  });
-
-  if(!r.ok){
-    const tx = await r.text().catch(()=> "");
-    throw new Error(tx || `HTTP ${r.status}`);
-  }
-
-  const data = await r.json().catch(()=> ({}));
-  const out = String(
-    data.text || data.translated || data.translation || data.translatedText || ""
-  ).trim();
-
-  return out || text;
-}
-
-/* play/pause */
-let rec = null;
-let running = false;
-let bufferText = "";
-let silenceTimer = null;
-let inFlight = false;
-let lastPushed = "";
-
-function setPlayUI(on){
-  $("playBtn").classList.toggle("running", !!on);
-  $("icoPlay").style.display = on ? "none" : "block";
-  $("icoPause").style.display = on ? "block" : "none";
-}
-
-function clearSilence(){
-  if(silenceTimer){
-    clearTimeout(silenceTimer);
-    silenceTimer = null;
-  }
-}
-function scheduleFlush(){
-  clearSilence();
-  silenceTimer = setTimeout(()=> flushBuffer(), 900);
-}
-
-async function flushBuffer(){
-  clearSilence();
-  if(inFlight) return;
-
-  const text = String(bufferText||"").trim();
-  bufferText = "";
-
-  if(!text) return;
-
-  const n = norm(text);
-  if(!n) return;
-  if(n === lastPushed) return;
-
-  inFlight = true;
-
-  const src = srcDD.get();
-  const dst = dstDD.get();
-
-  try{
-    $("panelStatus").textContent = "Çeviriyorum…";
-    const out = await translateViaApi(text, src, dst);
-    addTranslated(out);
-    speak(out, dst);
-    lastPushed = n;
-    $("panelStatus").textContent = "Dinliyor";
-  }catch(e){
-    $("panelStatus").textContent = "Hata";
-    toast("Çeviri hatası (422/CORS/KEY).");
-    console.warn("TRANSLATE_ERR:", e?.message || e);
-  }finally{
-    inFlight = false;
-  }
-}
-
-function stop(){
-  running = false;
-  setPlayUI(false);
-  $("panelStatus").textContent = "Hazır";
-  clearSilence();
-  bufferText = "";
-  try{ rec?.stop?.(); }catch{}
-  rec = null;
-}
-
-function start(){
-  if(!srSupported()){
-    toast("Bu cihaz konuşmayı yazıya çevirmiyor.");
-    return;
-  }
-
-  const src = srcDD.get();
-  const srLocale = by(src).sr || "en-US";
-
-  rec = buildRecognizer(srLocale);
-  if(!rec){
-    toast("Mikrofon başlatılamadı.");
-    return;
-  }
-
-  running = true;
-  setPlayUI(true);
-  bufferText = "";
-  lastPushed = "";
-  inFlight = false;
-  clearSilence();
-
-  $("panelStatus").textContent = "Dinliyor";
-
-  rec.onresult = (e)=>{
-    let finals = "";
-    let interim = "";
-
-    for(let i=e.resultIndex; i<e.results.length; i++){
-      const t = e.results[i]?.[0]?.transcript || "";
-      if(e.results[i].isFinal) finals += t + " ";
-      else interim += t + " ";
-    }
-
-    if(finals.trim()){
-      bufferText = (bufferText ? bufferText + " " : "") + finals.trim();
-      scheduleFlush();
-      return;
-    }
-
-    if(interim.trim()){
-      scheduleFlush();
-    }
-  };
-
-  rec.onerror = ()=>{
-    toast("Mikrofon izin/HTTPS/cihaz sorunu olabilir.");
-    stop();
-  };
-
-  rec.onend = ()=>{
-    if(running){
-      try{ rec?.start?.(); } catch { stop(); }
-    }
-  };
-
-  try{ rec.start(); }
-  catch{
-    toast("Mikrofon başlatılamadı.");
-    stop();
-  }
-}
-
-/* ========= init ========= */
-let srcDD, dstDD;
-
-document.addEventListener("DOMContentLoaded", ()=>{
-  $("backBtn").addEventListener("click", ()=>{
-    if(history.length > 1) history.back();
-    else location.href = "/pages/home.html";
-  });
-
-  $("brandHome").addEventListener("click", ()=>{
-    location.href = "/pages/home.html";
-  });
-
-  // dropdowns
-  srcDD = buildDropdown("ddSrc","ddSrcBtn","ddSrcTxt","ddSrcMenu","en", ()=>{
-    if(srcDD.get() === dstDD.get()){
-      dstDD.set(srcDD.get()==="tr" ? "en" : "tr");
-    }
-    if(running){ stop(); start(); }
-  });
-
-  dstDD = buildDropdown("ddDst","ddDstBtn","ddDstTxt","ddDstMenu","tr", ()=>{
-    if(srcDD.get() === dstDD.get()){
-      dstDD.set(srcDD.get()==="tr" ? "en" : "tr");
-    }
-  });
-
-  // TTS toggle (default OFF)
-  setTts(false);
-  $("spkBtn").addEventListener("click", ()=>{
-    setTts(!ttsOn);
-    toast(ttsOn ? "Ses açık" : "Sessiz");
-  });
-
-  // play/pause
-  $("playBtn").addEventListener("click", ()=>{
-    if(running) stop();
-    else start();
-  });
-
-  $("panelStatus").textContent = "Hazır";
-});
+  <script type="module" src="/js/fast_page.js?v=4"></script>
+</body>
+</html>
