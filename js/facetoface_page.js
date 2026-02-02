@@ -3,312 +3,154 @@ import { BASE_DOMAIN } from "/js/config.js";
 
 const $ = (id)=>document.getElementById(id);
 
-function toast(msg){
-  const t = $("toast");
-  if(!t) return;
-  t.textContent = msg;
-  t.classList.add("show");
-  clearTimeout(window.__to);
-  window.__to = setTimeout(()=>t.classList.remove("show"), 1800);
-}
-
-function setWaveListening(on){
-  $("frameRoot")?.classList.toggle("listening", !!on);
-}
-
 const LANGS = [
-  { code:"tr", name:"Türkçe",  speech:"tr-TR", tts:"tr-TR" },
-  { code:"en", name:"English", speech:"en-US", tts:"en-US" },
-  { code:"de", name:"Deutsch", speech:"de-DE", tts:"de-DE" },
-  { code:"fr", name:"Français",speech:"fr-FR", tts:"fr-FR" },
-  { code:"es", name:"Español", speech:"es-ES", tts:"es-ES" },
-  { code:"it", name:"Italiano", speech:"it-IT", tts:"it-IT" },
-  { code:"ar", name:"العربية", speech:"ar-SA", tts:"ar-SA" },
-  { code:"ru", name:"Русский", speech:"ru-RU", tts:"ru-RU" },
+  { code:"tr", name:"Türkçe" },
+  { code:"en", name:"English" },
+  { code:"de", name:"Deutsch" },
+  { code:"fr", name:"Français" },
+  { code:"it", name:"Italiano" },
+  { code:"es", name:"Español" },
+  { code:"ru", name:"Русский" },
+  { code:"ar", name:"العربية" },
 ];
 
-function speechLocale(code){ return LANGS.find(x=>x.code===code)?.speech || "en-US"; }
-function ttsLocale(code){ return LANGS.find(x=>x.code===code)?.tts || "en-US"; }
-
-/* ✅ BE FREE çizgisini dinamik hesapla: i altından → y ortası */
-function layoutBeFreeLine(){
-  try{
-    const it = $("logoItalky");
-    const y  = $("logoY");
-    const line = $("beFreeLine");
-    if(!it || !y || !line) return;
-
-    const itR = it.getBoundingClientRect();
-    const yR  = y.getBoundingClientRect();
-
-    // çizgi konteyneri: beFreeWrap
-    const wrap = line.parentElement;
-    const wR = wrap.getBoundingClientRect();
-
-    // başlangıç: italky'nin SOL’u (i'nin altı)
-    const left = Math.max(0, itR.left - wR.left);
-
-    // bitiş: y harfinin ORTASI
-    const yMid = (yR.left + (yR.width/2)) - wR.left;
-
-    // CSS var’a yaz
-    wrap.style.setProperty("--beLeft", `${Math.round(left)}px`);
-    wrap.style.setProperty("--beRight", `${Math.round(yMid)}px`);
-  }catch{}
-}
-
-async function translateViaApi(text, source, target){
-  const base = (BASE_DOMAIN || "").replace(/\/+$/,"");
-  if(!base) return text;
-
-  try{
-    const payload = { text, source, target, from_lang: source, to_lang: target };
-    const r = await fetch(`${base}/api/translate`,{
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify(payload)
-    });
-    if(!r.ok) throw new Error("api");
-    const data = await r.json();
-    const out = String(data?.translated || data?.text || data?.translation || data?.translatedText || "").trim();
-    return out || text;
-  }catch{
-    return text;
-  }
-}
-
-/* ====== AUTO SPEAK + MUTE (SENİN ESKİ KURALIN) ======
-   - varsayılan: SES AÇIK
-   - hoparlör: MUTE toggle (sürekli kapat/aç)
-   - çeviri düşünce otomatik okur (mute değilse)
-*/
-const mute = { top:false, bot:false }; // false => speak ON
-function setMute(side, on){
-  mute[side] = !!on;
-  const btn = $(side==="top" ? "topSpeak" : "botSpeak");
-  btn?.classList.toggle("muted", mute[side]);
-  toast(mute[side] ? "Ses kapalı" : "Ses açık");
-}
-
-function speakAuto(text, langCode, side){
-  if(mute[side]) return;
-  const t = String(text||"").trim();
-  if(!t) return;
-  if(!("speechSynthesis" in window)) return;
-
-  try{
-    window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(t);
-    u.lang = ttsLocale(langCode);
-    u.rate = 0.95;
-    u.pitch = 1.0;
-    u.volume = 1.0;
-    window.speechSynthesis.speak(u);
-  }catch{}
-}
-
-/* ========= Speech Recognition ========= */
-function buildRecognizer(langCode){
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if(!SR) return null;
-  const rec = new SR();
-  rec.lang = speechLocale(langCode);
-  rec.interimResults = true;
-  rec.continuous = false;
-  return rec;
-}
-
-/* Auto-follow */
-const follow = { top:true, bot:true };
-function isNearBottom(el, slack=140){
-  try{ return (el.scrollHeight - el.scrollTop - el.clientHeight) < slack; }
-  catch{ return true; }
-}
-function hookScrollFollow(sideName, el){
-  el.addEventListener("scroll", ()=>{ follow[sideName] = isNearBottom(el); }, { passive:true });
-}
-function scrollIfNeeded(sideName, el){
-  if(follow[sideName]) el.scrollTop = el.scrollHeight;
-}
-
-/* Bubbles */
-function addBubble(sideName, kind, text){
-  const wrap = $(sideName === "top" ? "topBody" : "botBody");
-  const b = document.createElement("div");
-  b.className = `bubble ${kind === "me" ? "me" : "them"}`;
-  b.textContent = text || "—";
-  wrap.appendChild(b);
-  scrollIfNeeded(sideName, wrap);
-}
-
-/* ========= Language sheet ========= */
-let activeSheetSide = "bot";
 let topLang = "en";
 let botLang = "tr";
 
-function renderSheet(selectedCode){
+/* ========= BE FREE line: i altı -> y ortası ========= */
+function layoutBeFreeLineFor(lineEl, italkyEl, yEl){
+  try{
+    if(!lineEl || !italkyEl || !yEl) return;
+    const wrap = lineEl.parentElement;
+    if(!wrap) return;
+
+    // Not: yEl invisible span, italkyEl visible span
+    const itR = italkyEl.getBoundingClientRect();
+    const yR  = yEl.getBoundingClientRect();
+    const wR  = wrap.getBoundingClientRect();
+
+    let left  = itR.left - wR.left;                 // i altı (sol)
+    let right = (yR.left + (yR.width/2)) - wR.left; // y ortası
+
+    left  = Math.max(0, Math.min(left, wR.width));
+    right = Math.max(0, Math.min(right, wR.width));
+    if(right < left){ const t = left; left = right; right = t; }
+
+    wrap.style.setProperty("--beLeft", `${Math.round(left)}px`);
+    wrap.style.setProperty("--beRight", `${Math.round(right)}px`);
+  }catch{}
+}
+
+function layoutAllBeFree(){
+  // bottom
+  layoutBeFreeLineFor($("beFreeLine"), $("logoItalky"), $("logoY"));
+  // top (brandTop rotate var ama ölçüm aynı)
+  layoutBeFreeLineFor($("beFreeLineTop"), $("logoItalkyTop"), $("logoYTop"));
+}
+
+/* ========= Language sheet logic ========= */
+let sheetFor = "bot"; // "top" | "bot"
+
+function renderSheetList(){
   const list = $("sheetList");
-  const q = ($("sheetQuery")?.value || "").trim().toLowerCase();
+  if(!list) return;
+  list.innerHTML = LANGS.map(l => `
+    <div class="sheetRow" data-code="${l.code}">
+      <div class="name">${l.name}</div>
+      <div class="code">${l.code}</div>
+    </div>
+  `).join("");
 
-  list.innerHTML = "";
-  LANGS.forEach(l=>{
-    const key = (l.name + " " + l.code).toLowerCase();
-    if(q && !key.includes(q)) return;
-
-    const row = document.createElement("div");
-    row.className = "sheetRow" + (l.code === selectedCode ? " selected" : "");
-    row.innerHTML = `<span class="name">${l.name}</span><span class="code">${l.code}</span>`;
+  list.querySelectorAll(".sheetRow").forEach(row=>{
     row.addEventListener("click", ()=>{
-      if(activeSheetSide === "top"){
-        topLang = l.code;
-        $("topLangTxt").textContent = l.name;
+      const code = row.getAttribute("data-code") || "en";
+      if(sheetFor === "top"){
+        topLang = code;
+        $("topLangTxt").textContent = LANGS.find(x=>x.code===topLang)?.name || topLang;
       }else{
-        botLang = l.code;
-        $("botLangTxt").textContent = l.name;
+        botLang = code;
+        $("botLangTxt").textContent = LANGS.find(x=>x.code===botLang)?.name || botLang;
       }
+
+      // seçili işaret
+      list.querySelectorAll(".sheetRow").forEach(r=> r.classList.remove("selected"));
+      row.classList.add("selected");
+
       closeSheet();
     });
-    list.appendChild(row);
+  });
+
+  // initial selected
+  const sel = (sheetFor === "top") ? topLang : botLang;
+  list.querySelectorAll(".sheetRow").forEach(r=>{
+    if((r.getAttribute("data-code")||"") === sel) r.classList.add("selected");
   });
 }
 
-function openSheet(side){
-  activeSheetSide = side;
-  $("sheetTitle").textContent = (side==="top") ? "Üst Dil" : "Alt Dil";
+function openSheet(which){
+  sheetFor = which;
+
+  const overlay = $("langSheet");
+  if(!overlay) return;
+
+  // ✅ Kritik: ÜSTTEN açılıyorsa overlay'e fromTop classı veriyoruz
+  overlay.classList.toggle("fromTop", which === "top");
+  overlay.classList.add("show");
+
+  $("sheetTitle").textContent = (which === "top") ? "Üst Dil" : "Alt Dil";
+
   $("sheetQuery").value = "";
-  renderSheet(side==="top" ? topLang : botLang);
-  $("langSheet").classList.add("show");
+  renderSheetList();
+  $("sheetQuery")?.focus?.();
+
+  // filtre
+  $("sheetQuery").oninput = ()=>{
+    const q = ($("sheetQuery").value || "").toLowerCase().trim();
+    overlay.querySelectorAll(".sheetRow").forEach(r=>{
+      const code = (r.getAttribute("data-code")||"").toLowerCase();
+      const nm = (r.querySelector(".name")?.textContent||"").toLowerCase();
+      const show = !q || nm.includes(q) || code.includes(q);
+      r.style.display = show ? "flex" : "none";
+    });
+  };
 }
+
 function closeSheet(){
-  $("langSheet").classList.remove("show");
+  const overlay = $("langSheet");
+  if(!overlay) return;
+  overlay.classList.remove("show");
+  overlay.classList.remove("fromTop");
 }
 
-/* ========= Mic flow ========= */
-let active = null;
-let topRec = null;
-let botRec = null;
-
-function setMicUI(side, on){
-  const mic = $(side === "top" ? "topMic" : "botMic");
-  mic?.classList.toggle("listening", !!on);
-  setWaveListening(!!on);
-}
-
-function stopAll(){
-  try{ topRec?.stop?.(); }catch{}
-  try{ botRec?.stop?.(); }catch{}
-  topRec = null;
-  botRec = null;
-  active = null;
-  setMicUI("top", false);
-  setMicUI("bot", false);
-  setWaveListening(false);
-}
-
-async function onFinal(side, srcCode, dstCode, finalText){
-  const otherSide = (side === "top") ? "bot" : "top";
-
-  // konuşan
-  addBubble(side, "them", finalText);
-
-  // çeviri
-  const out = await translateViaApi(finalText, srcCode, dstCode);
-  addBubble(otherSide, "me", out);
-
-  // ✅ otomatik oku (mute değilse)
-  speakAuto(out, dstCode, otherSide);
-}
-
-function startSide(side){
-  if(active && active !== side) stopAll();
-
-  const srcCode = (side==="top") ? topLang : botLang;
-  const dstCode = (side==="top") ? botLang : topLang;
-
-  const rec = buildRecognizer(srcCode);
-  if(!rec){
-    toast("Bu cihaz konuşmayı yazıya çevirmiyor.");
-    return;
-  }
-
-  active = side;
-  setMicUI(side, true);
-
-  let live = "";
-  let finalText = "";
-
-  rec.onresult = (e)=>{
-    let chunk = "";
-    for(let i=e.resultIndex;i<e.results.length;i++){
-      const t = e.results[i]?.[0]?.transcript || "";
-      if(e.results[i].isFinal) finalText += t + " ";
-      else chunk += t + " ";
-    }
-    live = (finalText + chunk).trim();
-  };
-
-  rec.onerror = ()=>{
-    toast("Mikrofon izin/HTTPS/cihaz sıkıntısı olabilir.");
-    stopAll();
-  };
-
-  rec.onend = async ()=>{
-    const txt = (finalText || live || "").trim();
-    setMicUI(side, false);
-
-    if(!txt){
-      active = null;
-      return;
-    }
-
-    await onFinal(side, srcCode, dstCode, txt);
-    active = null;
-  };
-
-  if(side === "top") topRec = rec;
-  else botRec = rec;
-
-  try{ rec.start(); }
-  catch{
-    toast("Mikrofon açılamadı.");
-    stopAll();
-  }
-}
-
-/* ========= Boot ========= */
-document.addEventListener("DOMContentLoaded", ()=>{
-  // logo çizgisi ölçümü
-  layoutBeFreeLine();
-  window.addEventListener("resize", ()=> setTimeout(layoutBeFreeLine, 50), { passive:true });
-
-  $("backBtn").addEventListener("click", ()=>{
-    if(history.length>1) history.back();
-    else location.href = "/pages/home.html";
+/* ========= Back ========= */
+function bindNav(){
+  $("backBtn")?.addEventListener("click", ()=>{
+    if(history.length > 1) history.back();
+    else location.href="/pages/home.html";
   });
+}
 
-  hookScrollFollow("top", $("topBody"));
-  hookScrollFollow("bot", $("botBody"));
+/* ========= Minimal mic/speak hooks (şimdilik boş bırakıyoruz, mevcut sisteminle entegre edeceksin) ========= */
+function bindLangButtons(){
+  $("topLangBtn")?.addEventListener("click", (e)=>{ e.preventDefault(); e.stopPropagation(); openSheet("top"); });
+  $("botLangBtn")?.addEventListener("click", (e)=>{ e.preventDefault(); e.stopPropagation(); openSheet("bot"); });
 
-  $("topLangTxt").textContent = LANGS.find(x=>x.code===topLang)?.name || "English";
-  $("botLangTxt").textContent = LANGS.find(x=>x.code===botLang)?.name || "Türkçe";
+  $("sheetClose")?.addEventListener("click", closeSheet);
+  $("langSheet")?.addEventListener("click", (e)=>{
+    if(e.target === $("langSheet")) closeSheet();
+  });
+}
 
-  $("topLangBtn").addEventListener("click", (e)=>{ e.preventDefault(); e.stopPropagation(); openSheet("top"); });
-  $("botLangBtn").addEventListener("click", (e)=>{ e.preventDefault(); e.stopPropagation(); openSheet("bot"); });
+document.addEventListener("DOMContentLoaded", ()=>{
+  // default labels
+  $("topLangTxt").textContent = LANGS.find(x=>x.code===topLang)?.name || topLang;
+  $("botLangTxt").textContent = LANGS.find(x=>x.code===botLang)?.name || botLang;
 
-  $("sheetClose").addEventListener("click", closeSheet);
-  $("langSheet").addEventListener("click", (e)=>{ if(e.target === $("langSheet")) closeSheet(); });
-  $("sheetQuery").addEventListener("input", ()=> renderSheet(activeSheetSide==="top" ? topLang : botLang));
+  bindNav();
+  bindLangButtons();
 
-  $("topMic").addEventListener("click", ()=> startSide("top"));
-  $("botMic").addEventListener("click", ()=> startSide("bot"));
-
-  // ✅ Hoparlör: MUTE toggle (senin eski kural)
-  $("topSpeak").addEventListener("click", ()=> setMute("top", !mute.top));
-  $("botSpeak").addEventListener("click", ()=> setMute("bot", !mute.bot));
-
-  // başlangıç: ses AÇIK
-  setMute("top", false);
-  setMute("bot", false);
-
-  setWaveListening(false);
+  // BE FREE çizgisini yerleştir
+  layoutAllBeFree();
+  window.addEventListener("resize", ()=> setTimeout(layoutAllBeFree, 50), { passive:true });
+  document.fonts?.ready?.then(()=> setTimeout(layoutAllBeFree, 50)).catch(()=>{});
 });
