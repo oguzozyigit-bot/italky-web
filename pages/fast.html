@@ -14,11 +14,8 @@
       --border: rgba(255,255,255,.10);
       --border2: rgba(255,255,255,.06);
 
-      /* ITALKY palette */
       --navy1:#0b1222;
       --navy2:#05070d;
-      --bordo1: rgba(120,20,35,.78);
-      --bordo2: rgba(70,10,25,.40);
 
       --shadow: 0 28px 90px rgba(0,0,0,.65);
 
@@ -72,11 +69,8 @@
     .back:active{ transform: translateY(1px); }
 
     .title{
-      flex:1;
-      min-width:0;
-      display:flex;
-      flex-direction:column;
-      gap:2px;
+      flex:1; min-width:0;
+      display:flex; flex-direction:column; gap:2px;
       padding-left: 2px;
     }
     .title b{
@@ -114,7 +108,7 @@
       overflow:hidden;
     }
 
-    /* Bordo panel FULL height (sen istedin) */
+    /* Panel full height */
     .panel{
       flex:1;
       border-radius: 28px;
@@ -132,7 +126,6 @@
       backdrop-filter: blur(10px);
     }
 
-    /* Language row */
     .langRow{
       padding: 12px 12px 10px;
       display:flex; align-items:center; gap:10px;
@@ -141,6 +134,7 @@
       z-index: 3;
     }
 
+    /* Custom dropdown */
     .dd{ position:relative; flex:1; min-width:0; }
     .ddBtn{
       width:100%;
@@ -156,13 +150,13 @@
       min-height: 48px;
       box-shadow: inset 0 1px 0 rgba(255,255,255,.10);
     }
-    .ddBtn .caret{ opacity:.8; font-size: 12px; }
+    .caret{ opacity:.75; font-size: 12px; }
 
     .ddMenu{
       position:absolute;
       top: calc(100% + 8px);
       left: 0;
-      width: min(320px, calc(100vw - 24px));
+      width: min(340px, calc(100vw - 24px));
       border-radius: 18px;
       border: 1px solid rgba(255,255,255,.16);
       background: rgba(18,18,22,.98);
@@ -212,35 +206,12 @@
     .ddItem.hidden{ display:none; }
     .ddItem:active{ background: rgba(255,179,0,.12); }
 
-    /* Play */
-    .playBtn{
-      width: 58px;
-      height: 58px;
-      border-radius: 22px;
-      border: 1px solid rgba(255,255,255,.14);
-      background: rgba(0,0,0,.18);
-      display:flex; align-items:center; justify-content:center;
-      cursor:pointer; user-select:none;
-      box-shadow: 0 18px 50px rgba(0,0,0,.35);
-      flex: 0 0 58px;
-      position:relative;
-    }
-    .playBtn:active{ transform: translateY(1px); }
-    .playBtn.running{
-      border-color: rgba(34,197,94,.35);
-      background: rgba(34,197,94,.12);
-      box-shadow: 0 0 24px rgba(34,197,94,.18), 0 18px 50px rgba(0,0,0,.35);
-    }
-
-    .playBtn svg{ width:26px;height:26px; fill:none; stroke:#fff; stroke-width:2; opacity:.95; stroke-linecap:round; stroke-linejoin:round; }
-    .icoPause{ display:none; }
-
-    /* Output area */
+    /* Stream */
     .stream{
       flex:1;
       min-height:0;
       overflow:auto;
-      padding: 12px;
+      padding: 12px 12px 130px; /* bottom space for play+wave */
       display:flex;
       flex-direction:column;
       gap: 10px;
@@ -248,7 +219,7 @@
     }
     .stream::-webkit-scrollbar{ width:0; height:0; }
 
-    /* We keep it clean: only translated lines */
+    /* Clean bubble */
     .bubble{
       border-radius: 18px;
       border: 1px solid rgba(255,255,255,.10);
@@ -259,64 +230,83 @@
       line-height: 1.35;
       box-shadow: 0 12px 28px rgba(0,0,0,.28);
     }
-    .small{ display:none; } /* ✅ label yok */
 
-    /* Gemini-like white living animation */
-    .liveGlow{
+    /* Bottom wave + play dock (FIX) */
+    .bottomDock{
       position:absolute;
-      left: 14px;
-      right: 14px;
-      bottom: 10px;
-      height: 88px;
-      border-radius: 26px;
-      pointer-events:none;
-      overflow:hidden;
-      opacity: .92;
-      filter: blur(.2px);
+      left: 0; right: 0;
+      bottom: 0;
+      padding: 10px 12px 12px;
+      background: linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,.34));
+      z-index: 5;
     }
-    .liveGlow::before{
+
+    /* Gemini-like white wave area */
+    .liveWave{
+      width: 100%;
+      height: 92px;
+      border-radius: 28px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+      overflow:hidden;
+      position:relative;
+      box-shadow: 0 24px 80px rgba(0,0,0,.45);
+      backdrop-filter: blur(10px);
+    }
+    .liveWave::before{
       content:"";
-      position:absolute; inset:-40%;
+      position:absolute; inset:-35%;
       background:
-        radial-gradient(400px 120px at 18% 60%, rgba(255,255,255,.30), transparent 70%),
-        radial-gradient(420px 140px at 52% 70%, rgba(255,255,255,.24), transparent 70%),
-        radial-gradient(360px 120px at 86% 64%, rgba(255,255,255,.22), transparent 70%);
+        radial-gradient(520px 160px at 20% 70%, rgba(255,255,255,.28), transparent 70%),
+        radial-gradient(560px 170px at 55% 80%, rgba(255,255,255,.22), transparent 70%),
+        radial-gradient(520px 160px at 85% 70%, rgba(255,255,255,.20), transparent 70%);
       filter: blur(18px);
       transform: translate3d(-6%,0,0);
-      animation: glowMove 2.8s ease-in-out infinite alternate;
-      opacity: .80;
+      opacity: .85;
+      animation: waveMove 2.7s ease-in-out infinite alternate;
     }
-    .liveGlow::after{
-      content:"";
-      position:absolute; inset:0;
-      background: linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,.35));
-      opacity: .8;
-    }
-    @keyframes glowMove{
-      0%{ transform: translate3d(-6%, 0, 0) scale(1); opacity:.65; }
-      100%{ transform: translate3d(6%, -6%, 0) scale(1.05); opacity:.92; }
+    @keyframes waveMove{
+      0%{ transform: translate3d(-6%, 2%, 0) scale(1); opacity:.60; }
+      100%{ transform: translate3d(6%, -5%, 0) scale(1.05); opacity:.92; }
     }
 
-    /* Status strip */
-    .statusStrip{
+    /* Play centered OVER wave */
+    .playBtn{
       position:absolute;
-      left: 12px;
-      right: 12px;
-      bottom: 12px;
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      z-index: 4;
-      pointer-events:none;
+      left:50%;
+      top:50%;
+      transform: translate(-50%,-50%);
+      width: 70px;
+      height: 70px;
+      border-radius: 26px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.22);
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer; user-select:none;
+      box-shadow: 0 18px 60px rgba(0,0,0,.45);
     }
-    .statusTxt{
+    .playBtn:active{ transform: translate(-50%,-50%) translateY(1px); }
+    .playBtn.running{
+      border-color: rgba(34,197,94,.35);
+      background: rgba(34,197,94,.14);
+      box-shadow: 0 0 26px rgba(34,197,94,.18), 0 18px 60px rgba(0,0,0,.45);
+    }
+    .playBtn svg{ width:28px;height:28px; fill:none; stroke:#fff; stroke-width:2; opacity:.95; stroke-linecap:round; stroke-linejoin:round; }
+    #icoPause{ display:none; }
+
+    /* Status text inside wave (top-left) */
+    .waveStatus{
+      position:absolute;
+      left: 14px;
+      top: 12px;
       font-size: 12px;
       font-weight: 1000;
-      color: rgba(255,255,255,.78);
+      color: rgba(255,255,255,.80);
       text-shadow: 0 10px 22px rgba(0,0,0,.45);
+      pointer-events:none;
     }
 
-    /* Bottom brand */
+    /* Bottom brand (clickable) */
     .brand{
       position:absolute;
       left:50%;
@@ -404,31 +394,30 @@
             <div class="ddBtn" id="ddDstBtn"><span id="ddDstTxt">—</span><span class="caret">▾</span></div>
             <div class="ddMenu" id="ddDstMenu"></div>
           </div>
-
-          <button class="playBtn" id="playBtn" aria-label="Play/Pause">
-            <svg id="icoPlay" viewBox="0 0 24 24">
-              <path d="M8 5l12 7-12 7z"></path>
-            </svg>
-            <svg id="icoPause" class="icoPause" viewBox="0 0 24 24">
-              <path d="M7 6v12"></path>
-              <path d="M17 6v12"></path>
-            </svg>
-          </button>
         </div>
 
         <div class="stream" id="stream"></div>
 
-        <!-- Gemini-like living white animation -->
-        <div class="liveGlow" id="liveGlow"></div>
+        <!-- ✅ Bottom wave area + centered play -->
+        <div class="bottomDock">
+          <div class="liveWave" id="liveWave">
+            <div class="waveStatus" id="waveStatus">Hazır</div>
 
-        <div class="statusStrip">
-          <div class="statusTxt" id="statusLeft"></div>
-          <div class="statusTxt" id="statusRight"></div>
+            <button class="playBtn" id="playBtn" aria-label="Play/Pause">
+              <svg id="icoPlay" viewBox="0 0 24 24">
+                <path d="M8 5l12 7-12 7z"></path>
+              </svg>
+              <svg id="icoPause" viewBox="0 0 24 24">
+                <path d="M7 6v12"></path>
+                <path d="M17 6v12"></path>
+              </svg>
+            </button>
+          </div>
         </div>
+
       </div>
     </div>
 
-    <!-- clickable brand -->
     <div class="brand" id="brandHome">
       <div class="t">ITALKY</div>
       <div class="flag"><i class="g"></i><i class="w"></i><i class="r"></i></div>
@@ -436,7 +425,7 @@
 
     <div class="toast" id="toast">—</div>
 
-    <script type="module" src="/js/fast_page.js?v=5"></script>
+    <script type="module" src="/js/fast_page.js?v=6"></script>
   </div>
 </body>
 </html>
