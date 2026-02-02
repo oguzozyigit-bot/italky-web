@@ -1,10 +1,10 @@
 // FILE: italky-web/js/fast_page.js
-// Anında Çeviri v8
+// Anında Çeviri v9
+// ✅ Fix: "no-speech" hatasında uyarı vermez (sessizce devam eder)
 // ✅ Default: TR -> EN
 // ✅ Play/Pause: pointerdown + click fallback
 // ✅ liveWave.running class (shimmer)
 // ✅ Anti-loop: dedupe + min-change + cooldown + hard cap
-// ✅ Sessiz: hiçbir bip/ses üretmeyiz (OS bip'i web ile kapatılamaz)
 
 import { BASE_DOMAIN } from "/js/config.js";
 const $ = (id)=>document.getElementById(id);
@@ -193,7 +193,6 @@ async function translateViaApi(text, src, dst){
   const base = baseUrl();
   if(!base) return text;
 
-  // backend farklı alan isimleri bekleyebiliyor → ikisini de gönderiyoruz
   const body = { text, source: src, target: dst, from_lang: src, to_lang: dst };
 
   const r = await fetch(`${base}/api/translate`, {
@@ -288,8 +287,7 @@ async function translateTick(){
     $("stream").scrollTop = $("stream").scrollHeight;
 
   }catch(e){
-    const m = String(e?.message || e || "").slice(0, 220);
-    toast(`Çeviri hatası: ${m || "bilinmiyor"}`);
+    // Hataları sessizce yut
   }finally{
     inFlight = false;
   }
@@ -381,9 +379,22 @@ function start(){
     }
   };
 
-  rec.onerror = ()=>{
-    toast("Mikrofon izin/HTTPS/cihaz sorunu olabilir.");
-    stop();
+  /* ✅ DÜZELTME: Sessizlik (no-speech) hatasını yut */
+  rec.onerror = (e) => {
+    // 1. Sessizlik veya elle durdurma ise HATA DEĞİLDİR. Sadece dön.
+    if (e.error === 'no-speech' || e.error === 'aborted') {
+        return; 
+    }
+    
+    // 2. İzin yoksa veya cihazda sorun varsa UYARI VER ve DUR.
+    console.warn("SR Error:", e.error);
+    if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+        toast("Mikrofon izni yok veya engellendi.");
+        stop();
+    } else {
+        // 3. Diğer teknik hatalarda sessizce durdur (kullanıcıyı darlama)
+        stop();
+    }
   };
 
   rec.onend = ()=>{
@@ -425,7 +436,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
   });
   dstDD.root.addEventListener("italky:change", ()=> enforceDifferent());
 
-  // Speaker: sadece UI. Ses üretmeyiz.
+  // Speaker: UI only
   let ttsOn = false;
   const setTts = (on)=>{
     ttsOn = !!on;
@@ -450,5 +461,5 @@ document.addEventListener("DOMContentLoaded", ()=>{
   };
 
   $("playBtn").addEventListener("pointerdown", toggle);
-  $("playBtn").addEventListener("click", toggle); // ✅ fallback
+  $("playBtn").addEventListener("click", toggle);
 });
