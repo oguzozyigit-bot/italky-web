@@ -1,9 +1,9 @@
 // FILE: italky-web/js/fast_page.js
-// Italky - Anında Çeviri (Toplantı Modu) v2
-// ✅ Spam yok: interim çeviri YOK
-// ✅ Final + sessizlik (900ms) ile tek sefer çeviri
-// ✅ Dedupe: aynı cümle tekrar basılmaz
-// ✅ Opsiyonel: "Duyulan" satırını göster/gizle (SRC toggle)
+// Italky - Anında Çeviri (Toplantı Modu) v2.2
+// ✅ Play/Pause
+// ✅ Final + 900ms sessizlik => tek blok çeviri (spam yok)
+// ✅ 422 fix: backend'e hem (source/target) hem (from_lang/to_lang) gönder
+// ✅ ITALKY logo click => home
 
 import { BASE_DOMAIN } from "/js/config.js";
 
@@ -19,24 +19,24 @@ function toast(msg){
 }
 
 const LANGS = [
-  { code:"tr", name:"Türkçe",   sr:"tr-TR", tts:"tr-TR" },
-  { code:"en", name:"English",  sr:"en-US", tts:"en-US" },
-  { code:"de", name:"Deutsch",  sr:"de-DE", tts:"de-DE" },
-  { code:"fr", name:"Français", sr:"fr-FR", tts:"fr-FR" },
-  { code:"it", name:"Italiano", sr:"it-IT", tts:"it-IT" },
-  { code:"es", name:"Español",  sr:"es-ES", tts:"es-ES" },
-  { code:"pt", name:"Português",sr:"pt-PT", tts:"pt-PT" },
-  { code:"ru", name:"Русский",  sr:"ru-RU", tts:"ru-RU" },
-  { code:"ar", name:"العربية",  sr:"ar-SA", tts:"ar-SA" },
+  { code:"tr", name:"Türkçe",    sr:"tr-TR", tts:"tr-TR" },
+  { code:"en", name:"English",   sr:"en-US", tts:"en-US" },
+  { code:"de", name:"Deutsch",   sr:"de-DE", tts:"de-DE" },
+  { code:"fr", name:"Français",  sr:"fr-FR", tts:"fr-FR" },
+  { code:"it", name:"Italiano",  sr:"it-IT", tts:"it-IT" },
+  { code:"es", name:"Español",   sr:"es-ES", tts:"es-ES" },
+  { code:"pt", name:"Português", sr:"pt-PT", tts:"pt-PT" },
+  { code:"ru", name:"Русский",   sr:"ru-RU", tts:"ru-RU" },
+  { code:"ar", name:"العربية",   sr:"ar-SA", tts:"ar-SA" },
   { code:"nl", name:"Nederlands",sr:"nl-NL", tts:"nl-NL" },
-  { code:"sv", name:"Svenska",  sr:"sv-SE", tts:"sv-SE" },
-  { code:"no", name:"Norsk",    sr:"nb-NO", tts:"nb-NO" },
-  { code:"da", name:"Dansk",    sr:"da-DK", tts:"da-DK" },
-  { code:"pl", name:"Polski",   sr:"pl-PL", tts:"pl-PL" },
-  { code:"el", name:"Ελληνικά", sr:"el-GR", tts:"el-GR" },
+  { code:"sv", name:"Svenska",   sr:"sv-SE", tts:"sv-SE" },
+  { code:"no", name:"Norsk",     sr:"nb-NO", tts:"nb-NO" },
+  { code:"da", name:"Dansk",     sr:"da-DK", tts:"da-DK" },
+  { code:"pl", name:"Polski",    sr:"pl-PL", tts:"pl-PL" },
+  { code:"el", name:"Ελληνικά",  sr:"el-GR", tts:"el-GR" },
 ];
 
-function langBy(code){
+function by(code){
   return LANGS.find(x=>x.code===code) || LANGS[0];
 }
 
@@ -49,17 +49,81 @@ function baseUrl(){
   return String(BASE_DOMAIN||"").replace(/\/+$/,"");
 }
 
-async function translateViaApi(text, source, target){
+/* HTML safe */
+function escapeHtml(s=""){
+  return String(s)
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#39;");
+}
+
+function addLine(kind, text){
+  const wrap = $("lines");
+  const b = document.createElement("div");
+  b.className = `bubble ${kind}`;
+  b.innerHTML =
+    kind === "src"
+      ? `<div class="small">Duyulan</div>${escapeHtml(text)}`
+      : `<div class="small">Çeviri</div>${escapeHtml(text)}`;
+
+  wrap.appendChild(b);
+  wrap.scrollTop = wrap.scrollHeight;
+}
+
+/* TTS toggle */
+let muted = false;
+function setMuted(on){
+  muted = !!on;
+  $("spkBtn").classList.toggle("muted", muted);
+}
+function speak(text, langCode){
+  if(muted) return;
+  if(!("speechSynthesis" in window)) return;
+
+  try{
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(String(text||""));
+    u.lang = by(langCode).tts || "en-US";
+    u.rate = 1.0;
+    u.pitch = 1.0;
+    window.speechSynthesis.speak(u);
+  }catch{}
+}
+
+/* SpeechRecognition */
+function srSupported(){
+  return !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+}
+function buildRecognizer(srLocale){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR) return null;
+  const r = new SR();
+  r.lang = srLocale;
+  r.interimResults = true;
+  r.continuous = true;
+  return r;
+}
+
+/* ✅ 422 FIX: gönderim şekli */
+async function translateViaApi(text, src, dst){
   const base = baseUrl();
   if(!base) return text;
 
-  const payload = { text, target };
-  if(source) payload.source = source;
+  // bazı routerlar source/target ister, bazıları from_lang/to_lang
+  const body = {
+    text,
+    source: src,
+    target: dst,
+    from_lang: src,
+    to_lang: dst
+  };
 
-  const r = await fetch(`${base}/api/translate`,{
+  const r = await fetch(`${base}/api/translate`, {
     method:"POST",
     headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify(payload)
+    body: JSON.stringify(body)
   });
 
   if(!r.ok){
@@ -74,76 +138,13 @@ async function translateViaApi(text, source, target){
   return out || text;
 }
 
-function escapeHtml(s=""){
-  return String(s)
-    .replace(/&/g,"&amp;")
-    .replace(/</g,"&lt;")
-    .replace(/>/g,"&gt;")
-    .replace(/"/g,"&quot;")
-    .replace(/'/g,"&#39;");
-}
-
-function addLine(kind, text){
-  const wrap = $("lines");
-  const b = document.createElement("div");
-  b.className = `bubble ${kind}`;
-
-  // SRC görünürlük toggle
-  if(kind === "src" && !SHOW_SRC) return;
-
-  b.innerHTML = kind === "src"
-    ? `<div class="small">Duyulan</div>${escapeHtml(text)}`
-    : `<div class="small">Çeviri</div>${escapeHtml(text)}`;
-
-  wrap.appendChild(b);
-  wrap.scrollTop = wrap.scrollHeight;
-}
-
-/* Speaker (TTS) */
-let muted = false;
-function setMuted(on){
-  muted = !!on;
-  $("spkBtn").classList.toggle("muted", muted);
-}
-function speak(text, langCode){
-  if(muted) return;
-  if(!("speechSynthesis" in window)) return;
-
-  try{
-    window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(String(text||""));
-    u.lang = langBy(langCode).tts || "en-US";
-    u.rate = 1.0;
-    u.pitch = 1.0;
-    window.speechSynthesis.speak(u);
-  }catch{}
-}
-
-/* SpeechRecognition */
+/* spam-control: final + sessizlik */
 let rec = null;
 let running = false;
-
-function srSupported(){
-  return !!(window.SpeechRecognition || window.webkitSpeechRecognition);
-}
-
-function buildRecognizer(srLocale){
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if(!SR) return null;
-
-  const r = new SR();
-  r.lang = srLocale;
-  r.interimResults = true;
-  r.continuous = true;
-  return r;
-}
-
-/* ✅ spam kontrol: final/sessizlik ile flush */
 let bufferText = "";
 let silenceTimer = null;
 let inFlight = false;
-let lastPushed = "";  // dedupe
-let SHOW_SRC = true;
+let lastPushed = "";
 
 function norm(s){
   return String(s||"")
@@ -160,10 +161,9 @@ function clearSilence(){
     silenceTimer = null;
   }
 }
-
 function scheduleFlush(){
   clearSilence();
-  silenceTimer = setTimeout(()=> flushBuffer(), 900); // 900ms sessizlik
+  silenceTimer = setTimeout(()=> flushBuffer(), 900);
 }
 
 async function flushBuffer(){
@@ -177,8 +177,6 @@ async function flushBuffer(){
 
   const n = norm(text);
   if(!n) return;
-
-  // aynı şeyi tekrar basma
   if(n === lastPushed) return;
 
   inFlight = true;
@@ -197,23 +195,32 @@ async function flushBuffer(){
 
     lastPushed = n;
     $("panelStatus").textContent = "Dinliyor";
-  }catch{
+  }catch(e){
     $("panelStatus").textContent = "Hata";
-    toast("Çeviri hatası (API/Key/CORS).");
+    toast("Çeviri hatası (422/CORS/KEY).");
+    // debug için console'a bas
+    console.warn("TRANSLATE_ERR:", e?.message || e);
   }finally{
     inFlight = false;
   }
 }
 
-/* Start/Stop */
+/* Play / Pause UI */
+function setPlayUI(on){
+  $("playBtn").classList.toggle("running", !!on);
+  $("icoPlay").style.display = on ? "none" : "block";
+  $("icoPause").style.display = on ? "block" : "none";
+}
+
 function stop(){
   running = false;
-  $("micBtn").classList.remove("listening");
-  $("panelStatus").textContent = "Durdu";
+  setPlayUI(false);
+  $("panelStatus").textContent = "Hazır";
+
   clearSilence();
   bufferText = "";
 
-  try{ rec && rec.stop && rec.stop(); }catch{}
+  try{ rec?.stop?.(); }catch{}
   rec = null;
 }
 
@@ -224,26 +231,27 @@ function start(){
   }
 
   const src = $("srcLang").value;
-  const srLocale = langBy(src).sr || "en-US";
-  rec = buildRecognizer(srLocale);
+  const srLocale = by(src).sr || "en-US";
 
+  rec = buildRecognizer(srLocale);
   if(!rec){
     toast("Mikrofon başlatılamadı.");
     return;
   }
 
   running = true;
-  $("micBtn").classList.add("listening");
-  $("panelStatus").textContent = "Dinliyor";
+  setPlayUI(true);
 
   bufferText = "";
   lastPushed = "";
   inFlight = false;
   clearSilence();
 
+  $("panelStatus").textContent = "Dinliyor";
+
   rec.onresult = (e)=>{
-    let interim = "";
     let finals = "";
+    let interim = "";
 
     for(let i=e.resultIndex; i<e.results.length; i++){
       const t = e.results[i]?.[0]?.transcript || "";
@@ -251,16 +259,13 @@ function start(){
       else interim += t + " ";
     }
 
-    // Final geldiyse direkt buffer’a ekle ve flush planla
     if(finals.trim()){
       bufferText = (bufferText ? bufferText + " " : "") + finals.trim();
       scheduleFlush();
       return;
     }
 
-    // Interim geldikçe sadece “sessizlik sayaç” yenile
     if(interim.trim()){
-      // buffer’ı interim ile şişirmiyoruz, sadece bekliyoruz
       scheduleFlush();
     }
   };
@@ -272,8 +277,8 @@ function start(){
 
   rec.onend = ()=>{
     if(running){
-      // bazı cihazlarda continuous biter → yeniden başlat
-      try{ rec && rec.start && rec.start(); }
+      // bazı cihazlar continuous'ı kapatır: yeniden dene
+      try{ rec?.start?.(); }
       catch{ stop(); }
     }
   };
@@ -285,7 +290,6 @@ function start(){
   }
 }
 
-/* UX helpers */
 function swapIfSame(){
   const a = $("srcLang").value;
   const b = $("dstLang").value;
@@ -294,16 +298,14 @@ function swapIfSame(){
   }
 }
 
-function toggleSrc(){
-  SHOW_SRC = !SHOW_SRC;
-  toast(SHOW_SRC ? "Duyulan açık" : "Duyulan kapalı");
-}
-
-/* Wire */
 document.addEventListener("DOMContentLoaded", ()=>{
   $("backBtn").addEventListener("click", ()=>{
     if(history.length > 1) history.back();
     else location.href = "/pages/home.html";
+  });
+
+  $("brandHome").addEventListener("click", ()=>{
+    location.href = "/pages/home.html";
   });
 
   fillSelect($("srcLang"), "en");
@@ -312,7 +314,10 @@ document.addEventListener("DOMContentLoaded", ()=>{
 
   $("srcLang").addEventListener("change", ()=>{
     swapIfSame();
-    if(running){ stop(); start(); }
+    if(running){
+      stop();
+      start();
+    }
   });
   $("dstLang").addEventListener("change", swapIfSame);
 
@@ -322,21 +327,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
     toast(muted ? "Ses kapalı" : "Ses açık");
   });
 
-  // Duyulan göster/gizle: hoparlöre uzun basınca toggle (UI bozulmasın)
-  $("spkBtn").addEventListener("contextmenu", (e)=>{ e.preventDefault(); toggleSrc(); });
-  $("spkBtn").addEventListener("pointerdown", (e)=>{
-    // 650ms basılı tutarsa toggle
-    const t0 = Date.now();
-    const up = ()=>{
-      window.removeEventListener("pointerup", up);
-      window.removeEventListener("pointercancel", up);
-      if(Date.now() - t0 >= 650) toggleSrc();
-    };
-    window.addEventListener("pointerup", up, { once:true });
-    window.addEventListener("pointercancel", up, { once:true });
-  });
-
-  $("micBtn").addEventListener("click", ()=>{
+  $("playBtn").addEventListener("click", ()=>{
     if(running) stop();
     else start();
   });
