@@ -28,24 +28,24 @@
 
     .wrap { width:100%; max-width:480px; height:100%; margin:0 auto; position:relative; z-index:10; display:flex; flex-direction:column; }
 
-    /* --- YENİ LOGO ALANI --- */
+    /* LOGO HEADER */
     .game-logo-header {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      padding-top: 25px; margin-bottom: -10px; position: relative; z-index: 20;
+      padding-top: 20px; margin-bottom: -10px; position: relative; z-index: 20;
     }
     .gl-icon {
-      font-size: 42px; margin-bottom: 5px;
+      font-size: 36px; margin-bottom: 2px;
       filter: drop-shadow(0 0 5px var(--c-neon));
       animation: pulseNeon 2s infinite alternate;
     }
     .gl-title {
-      font-family: 'Space Grotesk', sans-serif; font-weight: 900; font-size: 28px; letter-spacing: 1px;
+      font-family: 'Space Grotesk', sans-serif; font-weight: 900; font-size: 24px; letter-spacing: 1px;
       background: linear-gradient(to right, var(--c-neon), var(--c-safe));
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
       text-transform: uppercase; line-height: 1;
     }
     .gl-sub {
-      font-size: 10px; letter-spacing: 4px; color: var(--c-safe); opacity: 0.8; margin-top: 5px; font-weight: 700;
+      font-size: 9px; letter-spacing: 4px; color: var(--c-safe); opacity: 0.8; margin-top: 4px; font-weight: 700;
     }
     @keyframes pulseNeon {
       from { filter: drop-shadow(0 0 5px var(--c-neon)); transform: scale(1); }
@@ -53,7 +53,7 @@
     }
 
     /* NAV & SCORE */
-    .nav-layer { height:70px; padding:12px; display:flex; justify-content:space-between; align-items:center; }
+    .nav-layer { height:70px; padding:10px 12px; display:flex; justify-content:space-between; align-items:center; }
     .nav-btn { width:40px; height:40px; border-radius:12px; background:rgba(255,255,255,0.1); border:1px solid var(--border); color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; font-weight:700; transition:0.2s; }
     .nav-btn:active { transform:scale(0.95); }
     
@@ -113,6 +113,14 @@
     .modal-title { font-size:28px; font-weight:800; margin-bottom:12px; color: var(--c-safe); font-family:'Space Grotesk', sans-serif; text-transform: uppercase; }
     .modal-p { font-size:15px; opacity:0.7; margin-bottom:24px; line-height:1.6; }
     
+    /* DİL SEÇİMİ BUTONLARI */
+    .lang-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 20px; }
+    .lang-btn {
+      background: rgba(255,255,255,0.1); border: 1px solid var(--border); border-radius: 12px;
+      padding: 10px 0; cursor: pointer; font-size: 24px; transition: 0.2s; display: flex; justify-content: center; align-items: center;
+    }
+    .lang-btn:active, .lang-btn.active { background: var(--c-safe); border-color: var(--c-safe); transform: scale(1.05); box-shadow: 0 0 15px rgba(0,243,255,0.3); }
+
     .diff-btn { width:100%; padding:16px; border-radius:16px; border:none; margin-bottom:10px; font-weight:800; font-size:16px; cursor:pointer; position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center; gap:10px; transition: 0.2s; }
     .diff-btn:active { transform: scale(0.98); }
     .diff-easy { background: linear-gradient(135deg, #00e676, #00b0ff); color: #000; }
@@ -170,8 +178,18 @@
   <div class="modal-wrap" id="startModal">
     <div class="modal-card">
       <div class="modal-title">NEON HANGMAN</div>
+      
+      <div class="modal-p" style="margin-bottom:10px; font-weight:700">Hedef Dili Seç:</div>
+      <div class="lang-grid">
+        <div class="lang-btn active" onclick="setLang('en')">🇬🇧</div>
+        <div class="lang-btn" onclick="setLang('de')">🇩🇪</div>
+        <div class="lang-btn" onclick="setLang('fr')">🇫🇷</div>
+        <div class="lang-btn" onclick="setLang('es')">🇪🇸</div>
+        <div class="lang-btn" onclick="setLang('it')">🇮🇹</div>
+      </div>
+
       <div class="modal-p">
-        Zorluk seviyeni seç, kelimeleri bil.<br>
+        Zorluk seviyeni seç.<br>
         Her 3 Seri = +1 İpucu 💡
       </div>
       
@@ -199,7 +217,24 @@ import { BASE_DOMAIN } from "/js/config.js";
 const $ = (id) => document.getElementById(id);
 const apiBase = () => String(BASE_DOMAIN || "").replace(/\/+$/, "");
 
-// SES (Lazy Load + Safe)
+// DİL AYARLARI
+let currentLang = 'en';
+const LANG_CONFIG = {
+  en: { code: 'en-US', name: 'İngilizce', prompt: 'İngilizce' },
+  de: { code: 'de-DE', name: 'Almanca', prompt: 'Almanca' },
+  fr: { code: 'fr-FR', name: 'Fransızca', prompt: 'Fransızca' },
+  es: { code: 'es-ES', name: 'İspanyolca', prompt: 'İspanyolca' },
+  it: { code: 'it-IT', name: 'İtalyanca', prompt: 'İtalyanca' }
+};
+
+window.setLang = (lang) => {
+  currentLang = lang;
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  ensureAudio();
+};
+
+// SES (Lazy Load)
 let audioCtx = null;
 function ensureAudio(){
   if(!audioCtx){ const AC = window.AudioContext || window.webkitAudioContext; audioCtx = AC ? new AC() : null; }
@@ -236,16 +271,13 @@ let streak = 0;
 let powerups = 1; 
 let currentMaxErrors = 9;
 let scoreMultiplier = 1;
-let isBossRound = false; // Boss kontrolü
+let isBossRound = false; 
 
-// AYARLAR
 const SETTINGS = {
   A2: { lives: 9, multi: 1,  range: "4-6" },
   B1: { lives: 7, multi: 1.5, range: "6-8" },
   B2: { lives: 6, multi: 2,   range: "8-10" }
 };
-
-window.selectMode = (diff) => { difficulty = diff; }; 
 
 window.selectLevel = async (diff) => {
   difficulty = diff;
@@ -254,7 +286,9 @@ window.selectLevel = async (diff) => {
   ensureAudio(); 
   
   const modal = $("startModal").querySelector(".modal-card");
-  Array.from(modal.children).forEach(c => { if(c.tagName==="BUTTON" || c.className==="modal-p") c.style.display="none"; });
+  Array.from(modal.children).forEach(c => { 
+    if(c.tagName==="BUTTON" || c.className==="modal-p" || c.className==="lang-grid") c.style.display="none"; 
+  });
   $("loading").style.display = "block";
 
   await fetchWords();
@@ -270,16 +304,23 @@ function safeJsonArray(text){
   return parsed;
 }
 
+// KARAKTER DÖNÜŞÜMÜ (Multilang için)
+function normalizeChar(char) {
+  // Aksanlı karakterleri normale çevir (Örn: é -> E, Ü -> U)
+  return char.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+}
+
 async function fetchWords() {
   try {
+    const langName = LANG_CONFIG[currentLang].prompt;
     const prompt = `
-      Bana İngilizce ${difficulty} seviyesinde 15 kelime ver.
+      Bana ${langName} dilinde, ${difficulty} seviyesinde 15 kelime ver.
       Kurallar:
       - Sadece isim/fiil
-      - Sadece a-z harfleri
       - Uzunluk: ${SETTINGS[difficulty].range} harf
-      - Yanına Türkçe karşılığı ve o kelimeyle basit bir İngilizce cümle yaz.
-      SADECE JSON dön: [["apple","Elma","I eat an apple."], ...]
+      - Yanına Türkçe karşılığı ve o kelimeyle basit bir cümle (${langName} dilinde) yaz.
+      SADECE JSON dön:
+      [["apple","Elma","I eat an apple."], ...]
       Kod bloğu kullanma.
     `;
     const res = await fetch(`${apiBase()}/api/chat`, {
@@ -289,6 +330,7 @@ async function fetchWords() {
     const data = await res.json();
     wordList = safeJsonArray(data.text);
     
+    // Normalize & Filter
     wordList = wordList
       .filter(x => Array.isArray(x) && x.length >= 2)
       .map(x => [String(x[0]||"").trim(), String(x[1]||"").trim(), String(x[2]||"").trim()])
@@ -299,7 +341,10 @@ async function fetchWords() {
     startLevel();
 
   } catch (err) {
-    wordList = [["Galaxy", "Galaksi", "The galaxy is huge."], ["Planet", "Gezegen", "Earth is a planet."]];
+    // Yedek Veri (Dile göre)
+    if(currentLang === 'en') wordList = [["Galaxy", "Galaksi", "Space is big."], ["Planet", "Gezegen", "Earth is blue."]];
+    else wordList = [["Hallo", "Merhaba", "Hallo welt."], ["Auto", "Araba", "Das auto ist schnell."]];
+    
     $("startModal").style.display = "none";
     startLevel();
   }
@@ -325,7 +370,9 @@ function startLevel() {
     $("hintBox").textContent = trMean;
   }
 
-  currentWord = wordList[currentIndex][0].toUpperCase();
+  // Kelimeyi Normalize Et (Özel karakterleri temizle)
+  currentWord = normalizeChar(wordList[currentIndex][0]); 
+  
   mistakes = 0;
   discovered = new Array(currentWord.length).fill(false);
   
@@ -340,7 +387,8 @@ function renderWord() {
   container.innerHTML = "";
   for(let i=0; i<currentWord.length; i++) {
     const span = document.createElement("div");
-    if(currentWord[i] === " " || currentWord[i] === "-") {
+    // Alfanümerik olmayanları (boşluk, tire) otomatik aç
+    if(!/[A-Z]/.test(currentWord[i])) {
       span.className = "letter-slot filled";
       span.textContent = currentWord[i];
       span.style.border = "none";
@@ -368,6 +416,8 @@ function generateKeyboard() {
   
   const onlyLetters = currentWord.replace(/[^A-Z]/g, "");
   const poolSet = new Set(onlyLetters.split(""));
+  
+  // Distractor harfler (Dile özgü olabilir ama şimdilik standart)
   const common = "ETAOINSHRDLUCMPFGYWBVKXJQZ"; 
   let totalKeys = (difficulty === 'B2') ? 18 : 14;
 
@@ -401,14 +451,27 @@ function handleGuess(char, btn) {
       if(currentWord[i] === char) discovered[i] = true;
     }
     renderWord();
-    checkWin();
+    
+    const allFound = discovered.every(Boolean);
+    if(allFound) {
+      SFX.win();
+      const basePoints = (currentMaxErrors - mistakes) * 10;
+      const streakBonus = (streak + 1) * 5; 
+      const roundScore = Math.floor((basePoints + streakBonus) * scoreMultiplier);
+      score += roundScore;
+      streak++;
+      if(streak % 3 === 0) powerups++;
+      
+      updateScoreUI();
+      if(streak > 1) startConfetti();
+
+      setTimeout(() => { currentIndex++; startLevel(); }, 1500);
+    }
   } else {
-    // Yanlış
     btn.classList.add("wrong");
     mistakes++;
     renderHangman();
     
-    // Streak Kırıldı
     if(streak > 0) {
       streak = 0;
       updateScoreUI();
@@ -428,12 +491,10 @@ function handleGuess(char, btn) {
   }
 }
 
-// JOKER KULLANIMI
 window.usePowerUp = () => {
-  if(isBossRound) return; // Boss'ta yasak
+  if(isBossRound) return;
   if(powerups <= 0) return;
   
-  // Açılmamış harfleri bul
   let hiddenIndices = [];
   for(let i=0; i<currentWord.length; i++) {
     if(!discovered[i]) hiddenIndices.push(i);
@@ -451,46 +512,23 @@ window.usePowerUp = () => {
     if(currentWord[i] === charToReveal) discovered[i] = true;
   }
   
-  // Klavyede temizle ve işaretle
   const btn = $(`key-${charToReveal}`);
   if(btn) {
-    btn.classList.remove("wrong"); // Yanlış basılmışsa düzelt
+    btn.classList.remove("wrong");
     btn.classList.add("used", "correct");
   }
   
   renderWord();
   updateScoreUI();
-  checkWin();
-}
-
-function checkWin() {
+  
   const allFound = discovered.every(Boolean);
   if(allFound) {
-    SFX.win();
-    
-    const basePoints = (currentMaxErrors - mistakes) * 10;
-    const streakBonus = (streak + 1) * 5; // Mevcut streak ödülü
-    const roundScore = Math.floor((basePoints + streakBonus) * scoreMultiplier);
-    
-    score += roundScore;
-    streak++;
-    
-    // Her 3 Streak'te +1 Joker
-    if(streak % 3 === 0) powerups++;
-    
-    updateScoreUI();
-    if(streak > 1) startConfetti();
-
-    setTimeout(() => {
-      currentIndex++;
-      startLevel();
-    }, 1500);
+    setTimeout(() => { SFX.win(); score += 10; currentIndex++; startLevel(); }, 1000);
   }
 }
 
 function updateScoreUI() {
   $("scoreDisplay").textContent = score;
-  
   const sb = $("streakDisplay");
   if(streak > 1) {
     sb.textContent = `🔥 STREAK: ${streak}`;
@@ -500,11 +538,8 @@ function updateScoreUI() {
     sb.style.display = "none";
     sb.classList.remove("active");
   }
-  
   const pb = $("btnPowerUp");
   $("powerCount").textContent = powerups;
-  
-  // Boss round veya joker yoksa disable
   if(powerups > 0 && !isBossRound) pb.classList.remove("disabled");
   else pb.classList.add("disabled");
 }
@@ -522,10 +557,11 @@ function teacherSolve() {
   
   const w = wordList[currentIndex]; 
   const spelled = currentWord.split("").join("-");
-  const lessonText = `Correct is ${currentWord}. Spelling: ${spelled}. ${w[2]}`;
+  const lessonText = `${w[0]}. ${w[2]}`; // Sadece kelime ve cümle oku
   
   const u = new SpeechSynthesisUtterance(lessonText);
-  u.lang = "en-US"; u.rate = 0.85; 
+  u.lang = LANG_CONFIG[currentLang].code; // Seçilen dilin aksanı
+  u.rate = 0.85; 
   
   const goNext = () => { setTimeout(() => { currentIndex++; startLevel(); }, 1000); };
   u.onend = goNext;
@@ -534,13 +570,12 @@ function teacherSolve() {
   window.speechSynthesis.speak(u);
 }
 
-// LISTENER
 $("btnPowerUp").addEventListener("click", () => window.usePowerUp());
 
 // KONFETİ
 let fwInterval=null; const cvs=$("effectCanvas"), ctx=cvs.getContext("2d"); let particles=[];
 function startConfetti(){
-  particles = []; // Temizle
+  particles = [];
   cvs.style.display="block"; cvs.width=window.innerWidth; cvs.height=window.innerHeight;
   for(let i=0;i<30;i++){
     particles.push({x:cvs.width/2, y:cvs.height/2, vx:(Math.random()-.5)*15, vy:(Math.random()-.5)*15, color:`hsl(${Math.random()*360},100%,50%)`, life:50});
