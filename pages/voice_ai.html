@@ -11,12 +11,17 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
   <style>
-    /* --- TEMEL AYARLAR --- */
+    /* --- RENK PALETİ --- */
     :root {
-      --bg-deep: #020205; --text-main: #fff;
-      --c-indigo: #6366f1; --c-cyan: #06b6d4; --c-pink: #ec4899; 
-      --c-fire-1: #ff0f7b; --c-fire-2: #f89b29; /* Alev Renkleri */
+      --bg-deep: #020205; 
+      --text-main: #fff;
+      
+      /* DURUM RENKLERİ */
+      --c-listen: #00f2ff; /* Turkuaz (Dinliyor) */
+      --c-think: #bc13fe;  /* Mor (Düşünüyor) */
+      --c-speak: #ff2a00;  /* Alev Kırmızısı (Konuşuyor) */
     }
+
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
 
     html, body {
@@ -25,132 +30,133 @@
       display: flex; align-items: center; justify-content: center;
     }
 
-    /* ATMOSFER */
+    /* --- ARKA PLAN (KOZMOS) --- */
     .cosmos-bg { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; overflow: hidden; pointer-events: none; }
-    .glow-spot { position: absolute; border-radius: 50%; filter: blur(120px); opacity: 0.15; animation: floatSpot 20s infinite alternate ease-in-out; }
-    .gs-1 { top: -10%; left: -10%; width: 80vw; height: 80vw; background: var(--c-indigo); }
-    .gs-2 { bottom: -10%; right: -10%; width: 80vw; height: 80vw; background: var(--c-cyan); animation-delay: -5s; }
-    @keyframes floatSpot { from { transform: translate(0,0); } to { transform: translate(10%, 10%); } }
+    /* Arka plandaki ışıklar da duruma göre renk değiştirsin diye CSS class'ları JS ile eklenecek, şimdilik sabit */
+    .glow-spot { position: absolute; border-radius: 50%; filter: blur(100px); opacity: 0.2; animation: floatSpot 20s infinite alternate; }
+    .gs-1 { top: -20%; left: -20%; width: 90vw; height: 90vw; background: blue; animation-duration: 25s; }
+    .gs-2 { bottom: -20%; right: -20%; width: 90vw; height: 90vw; background: purple; animation-delay: -5s; }
+    @keyframes floatSpot { from { transform: translate(0,0) scale(1); } to { transform: translate(15%, 15%) scale(1.1); } }
 
-    .frame { width: 100%; max-width: 480px; height: 100%; position: relative; z-index: 10; display: flex; flex-direction: column; background: transparent; }
+    .frame { width: 100%; max-width: 480px; height: 100%; position: relative; z-index: 10; display: flex; flex-direction: column; }
 
-    /* TOPBAR */
+    /* --- TOPBAR --- */
     .topbar { height: 90px; padding: 10px 20px 0; display: flex; align-items: center; justify-content: space-between; position: relative; z-index: 100; }
     .back-btn { width: 44px; height: 44px; border-radius: 14px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; color: #fff; cursor: pointer; transition: 0.2s; backdrop-filter: blur(5px); }
     .back-btn:active { transform: scale(0.95); }
+    
     .brand { display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: transform 0.2s; }
     .brand:active { transform: scale(0.95); }
     .logo-main { font-family:'Space Grotesk', sans-serif; font-size: 24px; font-weight: 700; color: #fff; }
     .logo-ai { font-family:'Space Grotesk', sans-serif; font-size: 24px; font-weight: 700; background: linear-gradient(135deg, #a5b4fc 0%, #6366f1 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     .mini-slogan { font-size: 10px; font-weight: 800; color: rgba(255,255,255,0.5); letter-spacing: 5px; margin-top: 6px; }
+
     .voice-btn { padding: 0 18px; height: 40px; border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); color: #fff; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; backdrop-filter: blur(5px); }
     .voice-btn:active { transform: scale(0.95); }
 
-    /* --- GÖRSEL ŞOV (THE STAGE) --- */
+    /* --- SAHNE (THE STAGE) --- */
     .stage { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; pointer-events: none; }
-    
-    .ai-container {
-      position: relative; width: 280px; height: 280px; display: flex; align-items: center; justify-content: center;
-    }
 
-    /* ÇEKİRDEK BLOB */
+    /* ANA BLOB (Canlı Organizma) */
     .ai-blob {
       width: 180px; height: 180px; border-radius: 50%;
-      filter: blur(15px); opacity: 0.9; z-index: 2;
-      transition: all 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
-      box-shadow: inset 0 0 60px rgba(0,0,0,0.5);
+      position: relative; z-index: 10;
+      transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); /* Yumuşak geçiş */
+      box-shadow: inset 0 0 50px rgba(0,0,0,0.5);
       
-      /* VARSAYILAN: IDLE (Sakin Mavi) */
-      background: conic-gradient(from 0deg, var(--c-indigo), var(--c-cyan), var(--c-indigo));
-      animation: spinIdle 10s linear infinite, morphIdle 8s ease-in-out infinite;
+      /* Varsayılan: IDLE (Uyku Modu - Gri/Mavi) */
+      background: radial-gradient(circle at 30% 30%, #4c5775, #1e2436);
+      box-shadow: 0 0 30px rgba(76, 87, 117, 0.3);
+      animation: idleFloat 6s ease-in-out infinite;
     }
 
-    /* DURUM 1: DİNLİYOR (NEFES ALMA EFEKTİ) */
+    /* DIŞ HALKA (Atmosfer) */
+    .ai-ring {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      width: 250px; height: 250px; border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.05);
+      z-index: 1; opacity: 0; transition: 0.5s;
+    }
+
+    /* --- DURUM 1: DİNLİYOR (MAVİ/TURKUAZ) --- */
     .stage.listening .ai-blob {
-      width: 200px; height: 200px; 
-      filter: blur(20px);
-      /* Beyaz/Mavi Parlak */
-      background: radial-gradient(circle, #ffffff, var(--c-cyan));
-      box-shadow: 0 0 80px rgba(6, 182, 212, 0.6);
-      /* NEFES ANİMASYONU */
-      animation: breatheListen 3s infinite ease-in-out; 
+      width: 200px; height: 200px;
+      /* Parlak Beyaz'dan Turkuaz'a geçiş */
+      background: radial-gradient(circle at 30% 30%, #ffffff, var(--c-listen));
+      box-shadow: 0 0 60px var(--c-listen), 0 0 100px rgba(0, 242, 255, 0.4);
+      animation: listenBreath 2s ease-in-out infinite alternate; /* Nefes Alıp Verme */
     }
+    .stage.listening .ai-ring { opacity: 1; border-color: rgba(0, 242, 255, 0.2); transform: translate(-50%, -50%) scale(1.2); }
 
-    /* DURUM 2: DÜŞÜNÜYOR (GİRDAP) */
+    /* --- DURUM 2: DÜŞÜNÜYOR (MOR GİRDAP) --- */
     .stage.thinking .ai-blob {
-      width: 140px; height: 140px;
-      filter: blur(10px);
-      background: conic-gradient(from 0deg, var(--c-pink), var(--c-indigo), var(--c-pink));
-      animation: spinFast 0.8s linear infinite;
-      box-shadow: 0 0 40px var(--c-pink);
+      width: 160px; height: 160px;
+      /* Mor Spiral */
+      background: conic-gradient(from 0deg, var(--c-think), #5500ff, var(--c-think));
+      box-shadow: 0 0 50px var(--c-think);
+      border-radius: 45%; /* Hafif kareleşme */
+      animation: thinkSpin 0.6s linear infinite; /* Hızlı Dönüş */
     }
+    .stage.thinking .ai-ring { opacity: 1; border-color: rgba(188, 19, 254, 0.3); animation: thinkRing 1s linear infinite; }
 
-    /* DURUM 3: KONUŞUYOR (ALEV VE ÖFKE 🔥) */
+    /* --- DURUM 3: KONUŞUYOR (ALEV/TURUNCU) --- */
     .stage.speaking .ai-blob {
-      width: 260px; height: 260px; 
-      filter: blur(30px);
-      /* ALEV RENKLERİ */
-      background: conic-gradient(from 0deg, #ff0000, #ff8c00, #ffd700, #ff0000);
-      box-shadow: 0 0 100px rgba(255, 69, 0, 0.8);
-      /* PATLAMA ANİMASYONU */
-      animation: fireSpeak 2s linear infinite, wobbleSpeak 4s ease-in-out infinite;
+      width: 240px; height: 240px;
+      /* Ateş Gradyanı */
+      background: radial-gradient(circle at 40% 40%, #ffeb3b, var(--c-speak));
+      box-shadow: 0 0 80px var(--c-speak), 0 0 150px rgba(255, 42, 0, 0.5);
+      /* Şekil Bozulması */
+      animation: speakWobble 0.6s ease-in-out infinite alternate;
     }
+    .stage.speaking .ai-ring { opacity: 0.5; border-color: var(--c-speak); transform: translate(-50%, -50%) scale(1.5); }
 
-    /* Status Text */
-    .status-text {
-      margin-top: 60px; font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 700; 
-      color: rgba(255,255,255,0.5); letter-spacing: 2px; text-transform: uppercase; 
-      opacity: 0; transform: translateY(10px); transition: 0.5s; text-shadow: 0 0 20px rgba(0,0,0,0.5);
-    }
-    .status-text.show { opacity: 1; transform: translateY(0); }
 
     /* --- ANİMASYON KEYFRAMES --- */
-    
-    /* Sakin Dönüş */
-    @keyframes spinIdle { 100% { transform: rotate(360deg); } }
-    @keyframes morphIdle {
-      0%, 100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
-      50% { border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%; }
+    @keyframes idleFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+    /* Dinlerken: Nefes Al */
+    @keyframes listenBreath {
+      0% { transform: scale(1); filter: brightness(1); }
+      100% { transform: scale(1.1); filter: brightness(1.2); }
     }
 
-    /* Nefes Alma (Dinlerken) */
-    @keyframes breatheListen {
-      0% { transform: scale(1); opacity: 0.8; box-shadow: 0 0 50px rgba(6,182,212,0.4); }
-      50% { transform: scale(1.15); opacity: 1; box-shadow: 0 0 90px rgba(6,182,212,0.8); } /* Nefes Al */
-      100% { transform: scale(1); opacity: 0.8; box-shadow: 0 0 50px rgba(6,182,212,0.4); } /* Nefes Ver */
+    /* Düşünürken: Hızlı Dönüş */
+    @keyframes thinkSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    @keyframes thinkRing { 0% { transform: translate(-50%, -50%) rotate(0deg) scale(1); } 100% { transform: translate(-50%, -50%) rotate(-360deg) scale(0.9); } }
+
+    /* Konuşurken: Jöle Gibi Titreme */
+    @keyframes speakWobble {
+      0% { border-radius: 50%; transform: scale(1); }
+      25% { border-radius: 50% 40% 60% 40%; }
+      50% { border-radius: 40% 60% 40% 60%; transform: scale(1.05); }
+      75% { border-radius: 60% 40% 50% 50%; }
+      100% { border-radius: 50%; transform: scale(1); }
     }
 
-    /* Hızlı Dönüş (Düşünürken) */
-    @keyframes spinFast { 100% { transform: rotate(-360deg); } }
 
-    /* Alev Efekti (Konuşurken) */
-    @keyframes fireSpeak {
-      0% { background: conic-gradient(from 0deg, #ff0000, #ff8c00, #ffd700, #ff0000); }
-      50% { background: conic-gradient(from 180deg, #ff0000, #ff8c00, #ffd700, #ff0000); }
-      100% { background: conic-gradient(from 360deg, #ff0000, #ff8c00, #ffd700, #ff0000); }
+    /* STATUS TEXT */
+    .status-text {
+      margin-top: 60px; font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700; 
+      color: rgba(255,255,255,0.8); letter-spacing: 3px; text-transform: uppercase; 
+      opacity: 0; transform: translateY(10px); transition: 0.5s; 
+      text-shadow: 0 0 20px rgba(0,0,0,0.8);
     }
-    @keyframes wobbleSpeak {
-      0%, 100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; transform: scale(1); }
-      25% { border-radius: 40% 60% 70% 30% / 50% 30% 70% 50%; transform: scale(1.05); }
-      50% { border-radius: 70% 30% 30% 70% / 60% 40% 60% 40%; transform: scale(0.95); }
-      75% { border-radius: 30% 70% 70% 30% / 30% 70% 70% 30%; transform: scale(1.05); }
-    }
+    .status-text.show { opacity: 1; transform: translateY(0); }
 
     /* KONTROLLER */
     .controls { padding: 40px; display: flex; flex-direction: column; align-items: center; gap: 24px; z-index: 100; pointer-events: none; }
     
     .mode-switch { pointer-events: auto; display: flex; gap: 4px; background: rgba(255,255,255,0.08); padding: 4px; border-radius: 24px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
     .mode-btn { padding: 8px 16px; border-radius: 20px; border: none; background: transparent; color: rgba(255,255,255,0.5); font-size: 11px; font-weight: 700; cursor: pointer; transition: 0.3s; font-family: 'Space Grotesk', sans-serif; text-transform: uppercase; letter-spacing: 1px; }
-    .mode-btn.active { background: #fff; color: #000; box-shadow: 0 2px 10px rgba(255,255,255,0.2); }
+    .mode-btn.active { background: #fff; color: #000; box-shadow: 0 2px 15px rgba(255,255,255,0.3); }
 
     .mic-btn { width: 90px; height: 90px; border-radius: 50%; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); pointer-events: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.4); backdrop-filter: blur(5px); }
     .mic-btn svg { width: 36px; height: 36px; stroke: #fff; fill: none; stroke-width: 2; transition: 0.3s; }
     .mic-btn:active { transform: scale(0.9); }
     
-    /* Aktif Mikrofon (Nabız) */
-    .mic-btn.active { background: #fff; border-color: #fff; box-shadow: 0 0 50px rgba(255, 255, 255, 0.3); animation: pulseMic 2s infinite; }
+    .mic-btn.active { background: #fff; border-color: #fff; box-shadow: 0 0 60px rgba(255, 255, 255, 0.4); animation: pulseMic 2s infinite; }
     .mic-btn.active svg { stroke: #000; }
-    @keyframes pulseMic { 0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4); } 70% { box-shadow: 0 0 0 25px rgba(255, 255, 255, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); } }
+    @keyframes pulseMic { 0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4); } 70% { box-shadow: 0 0 0 30px rgba(255, 255, 255, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); } }
 
     /* MODAL */
     .modal-overlay { position: fixed; inset: 0; z-index: 9999; background: rgba(0,0,0,0.85); backdrop-filter: blur(20px); display: none; align-items: flex-end; justify-content: center; opacity: 0; transition: opacity 0.3s; }
@@ -162,7 +168,7 @@
     .vs-close { background: rgba(255,255,255,0.1); border:none; color:#fff; width:36px; height:36px; border-radius:50%; cursor:pointer; font-size:20px; display:flex; align-items:center; justify-content:center; }
     .voice-list { overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
     .voice-item { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px; border-radius: 20px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); cursor: pointer; transition: 0.2s; }
-    .voice-item.selected { background: rgba(99, 102, 241, 0.15); border-color: var(--c-indigo); box-shadow: 0 0 20px rgba(99, 102, 241, 0.1); }
+    .voice-item.selected { background: rgba(99, 102, 241, 0.15); border-color: var(--c-listen); box-shadow: 0 0 20px rgba(0, 242, 255, 0.1); }
     .v-left { display: flex; align-items: center; gap: 16px; flex: 1; }
     .play-btn { width: 40px; height: 40px; border-radius: 14px; background: rgba(255,255,255,0.1); border: none; display: flex; align-items: center; justify-content: center; color: #fff; cursor: pointer; transition: 0.2s; }
     .play-btn:active { background: #fff; color: #000; }
@@ -170,7 +176,7 @@
     .v-details { display: flex; flex-direction: column; gap: 2px; }
     .v-name { font-weight: 700; font-size: 16px; color: #fff; }
     .v-lang { font-size: 11px; color: rgba(255,255,255,0.5); text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; }
-    .save-btn { margin-top: 24px; width: 100%; height: 60px; border-radius: 22px; background: linear-gradient(135deg, var(--c-indigo), var(--c-pink)); border: none; color: #fff; font-weight: 800; font-size: 16px; cursor: pointer; box-shadow: 0 10px 40px rgba(99, 102, 241, 0.4); letter-spacing: 0.5px; transition: transform 0.2s; }
+    .save-btn { margin-top: 24px; width: 100%; height: 60px; border-radius: 22px; background: linear-gradient(135deg, var(--c-listen), var(--c-think)); border: none; color: #fff; font-weight: 800; font-size: 16px; cursor: pointer; box-shadow: 0 10px 40px rgba(99, 102, 241, 0.4); letter-spacing: 0.5px; transition: transform 0.2s; }
     .save-btn:active { transform: scale(0.98); }
   </style>
 </head>
@@ -193,9 +199,9 @@
     </div>
 
     <div class="stage" id="aiStage">
-      <div class="ai-container">
-        <div class="ai-blob"></div>
-      </div>
+      <div class="ai-ring"></div>
+      <div class="ai-blob"></div>
+      
       <div class="status-text" id="statusText">Başlat</div>
     </div>
 
