@@ -3,60 +3,77 @@ import { BASE_DOMAIN } from "/js/config.js";
 
 const $ = (id)=>document.getElementById(id);
 
+/* ✅ Dil listesi: çok daha geniş + bayrak */
 const LANGS = [
-  { code:"tr", name:"Türkçe" },
-  { code:"en", name:"English" },
-  { code:"de", name:"Deutsch" },
-  { code:"fr", name:"Français" },
-  { code:"it", name:"Italiano" },
-  { code:"es", name:"Español" },
-  { code:"ru", name:"Русский" },
-  { code:"ar", name:"العربية" },
+  { code:"tr", name:"Türkçe", flag:"🇹🇷" },
+  { code:"en", name:"English", flag:"🇬🇧" },
+  { code:"de", name:"Deutsch", flag:"🇩🇪" },
+  { code:"fr", name:"Français", flag:"🇫🇷" },
+  { code:"it", name:"Italiano", flag:"🇮🇹" },
+  { code:"es", name:"Español", flag:"🇪🇸" },
+  { code:"pt", name:"Português", flag:"🇵🇹" },
+  { code:"pt-br", name:"Português (Brasil)", flag:"🇧🇷" },
+  { code:"nl", name:"Nederlands", flag:"🇳🇱" },
+  { code:"sv", name:"Svenska", flag:"🇸🇪" },
+  { code:"no", name:"Norsk", flag:"🇳🇴" },
+  { code:"da", name:"Dansk", flag:"🇩🇰" },
+  { code:"fi", name:"Suomi", flag:"🇫🇮" },
+  { code:"pl", name:"Polski", flag:"🇵🇱" },
+  { code:"cs", name:"Čeština", flag:"🇨🇿" },
+  { code:"sk", name:"Slovenčina", flag:"🇸🇰" },
+  { code:"hu", name:"Magyar", flag:"🇭🇺" },
+  { code:"ro", name:"Română", flag:"🇷🇴" },
+  { code:"bg", name:"Български", flag:"🇧🇬" },
+  { code:"el", name:"Ελληνικά", flag:"🇬🇷" },
+  { code:"ru", name:"Русский", flag:"🇷🇺" },
+  { code:"uk", name:"Українська", flag:"🇺🇦" },
+  { code:"sr", name:"Српски", flag:"🇷🇸" },
+  { code:"hr", name:"Hrvatski", flag:"🇭🇷" },
+  { code:"bs", name:"Bosanski", flag:"🇧🇦" },
+  { code:"sq", name:"Shqip", flag:"🇦🇱" },
+  { code:"ar", name:"العربية", flag:"🇸🇦" },
+  { code:"fa", name:"فارسی", flag:"🇮🇷" },
+  { code:"ur", name:"اردو", flag:"🇵🇰" },
+  { code:"hi", name:"हिन्दी", flag:"🇮🇳" },
+  { code:"bn", name:"বাংলা", flag:"🇧🇩" },
+  { code:"ta", name:"தமிழ்", flag:"🇮🇳" },
+  { code:"te", name:"తెలుగు", flag:"🇮🇳" },
+  { code:"th", name:"ไทย", flag:"🇹🇭" },
+  { code:"vi", name:"Tiếng Việt", flag:"🇻🇳" },
+  { code:"id", name:"Bahasa Indonesia", flag:"🇮🇩" },
+  { code:"ms", name:"Bahasa Melayu", flag:"🇲🇾" },
+  { code:"zh", name:"中文", flag:"🇨🇳" },
+  { code:"zh-tw", name:"中文 (繁體)", flag:"🇹🇼" },
+  { code:"ja", name:"日本語", flag:"🇯🇵" },
+  { code:"ko", name:"한국어", flag:"🇰🇷" },
+  { code:"he", name:"עברית", flag:"🇮🇱" },
 ];
 
 let topLang = "en";
 let botLang = "tr";
 
-/* ========= BE FREE line: i altı -> y ortası ========= */
-function layoutBeFreeLineFor(lineEl, italkyEl, yEl){
-  try{
-    if(!lineEl || !italkyEl || !yEl) return;
-    const wrap = lineEl.parentElement;
-    if(!wrap) return;
-
-    // Not: yEl invisible span, italkyEl visible span
-    const itR = italkyEl.getBoundingClientRect();
-    const yR  = yEl.getBoundingClientRect();
-    const wR  = wrap.getBoundingClientRect();
-
-    let left  = itR.left - wR.left;                 // i altı (sol)
-    let right = (yR.left + (yR.width/2)) - wR.left; // y ortası
-
-    left  = Math.max(0, Math.min(left, wR.width));
-    right = Math.max(0, Math.min(right, wR.width));
-    if(right < left){ const t = left; left = right; right = t; }
-
-    wrap.style.setProperty("--beLeft", `${Math.round(left)}px`);
-    wrap.style.setProperty("--beRight", `${Math.round(right)}px`);
-  }catch{}
+function langName(code){
+  return LANGS.find(x=>x.code===code)?.name || code;
+}
+function langFlag(code){
+  return LANGS.find(x=>x.code===code)?.flag || "🌐";
 }
 
-function layoutAllBeFree(){
-  // bottom
-  layoutBeFreeLineFor($("beFreeLine"), $("logoItalky"), $("logoY"));
-  // top (brandTop rotate var ama ölçüm aynı)
-  layoutBeFreeLineFor($("beFreeLineTop"), $("logoItalkyTop"), $("logoYTop"));
-}
-
-/* ========= Language sheet logic ========= */
+/* ========= Language sheet ========= */
 let sheetFor = "bot"; // "top" | "bot"
 
 function renderSheetList(){
   const list = $("sheetList");
   if(!list) return;
+
+  const sel = (sheetFor === "top") ? topLang : botLang;
+
   list.innerHTML = LANGS.map(l => `
-    <div class="sheetRow" data-code="${l.code}">
-      <div class="name">${l.name}</div>
+    <div class="sheetRow ${l.code===sel ? "selected":""}" data-code="${l.code}">
+      <div class="left">
+        <div class="flag">${l.flag}</div>
+        <div class="name">${l.name}</div>
+      </div>
       <div class="code">${l.code}</div>
     </div>
   `).join("");
@@ -64,26 +81,17 @@ function renderSheetList(){
   list.querySelectorAll(".sheetRow").forEach(row=>{
     row.addEventListener("click", ()=>{
       const code = row.getAttribute("data-code") || "en";
+
       if(sheetFor === "top"){
         topLang = code;
-        $("topLangTxt").textContent = LANGS.find(x=>x.code===topLang)?.name || topLang;
+        $("topLangTxt").textContent = `${langFlag(topLang)} ${langName(topLang)}`;
       }else{
         botLang = code;
-        $("botLangTxt").textContent = LANGS.find(x=>x.code===botLang)?.name || botLang;
+        $("botLangTxt").textContent = `${langFlag(botLang)} ${langName(botLang)}`;
       }
-
-      // seçili işaret
-      list.querySelectorAll(".sheetRow").forEach(r=> r.classList.remove("selected"));
-      row.classList.add("selected");
 
       closeSheet();
     });
-  });
-
-  // initial selected
-  const sel = (sheetFor === "top") ? topLang : botLang;
-  list.querySelectorAll(".sheetRow").forEach(r=>{
-    if((r.getAttribute("data-code")||"") === sel) r.classList.add("selected");
   });
 }
 
@@ -93,17 +101,15 @@ function openSheet(which){
   const overlay = $("langSheet");
   if(!overlay) return;
 
-  // ✅ Kritik: ÜSTTEN açılıyorsa overlay'e fromTop classı veriyoruz
   overlay.classList.toggle("fromTop", which === "top");
   overlay.classList.add("show");
 
   $("sheetTitle").textContent = (which === "top") ? "Üst Dil" : "Alt Dil";
-
   $("sheetQuery").value = "";
   renderSheetList();
+
   $("sheetQuery")?.focus?.();
 
-  // filtre
   $("sheetQuery").oninput = ()=>{
     const q = ($("sheetQuery").value || "").toLowerCase().trim();
     overlay.querySelectorAll(".sheetRow").forEach(r=>{
@@ -130,7 +136,6 @@ function bindNav(){
   });
 }
 
-/* ========= Minimal mic/speak hooks (şimdilik boş bırakıyoruz, mevcut sisteminle entegre edeceksin) ========= */
 function bindLangButtons(){
   $("topLangBtn")?.addEventListener("click", (e)=>{ e.preventDefault(); e.stopPropagation(); openSheet("top"); });
   $("botLangBtn")?.addEventListener("click", (e)=>{ e.preventDefault(); e.stopPropagation(); openSheet("bot"); });
@@ -142,15 +147,9 @@ function bindLangButtons(){
 }
 
 document.addEventListener("DOMContentLoaded", ()=>{
-  // default labels
-  $("topLangTxt").textContent = LANGS.find(x=>x.code===topLang)?.name || topLang;
-  $("botLangTxt").textContent = LANGS.find(x=>x.code===botLang)?.name || botLang;
+  $("topLangTxt").textContent = `${langFlag(topLang)} ${langName(topLang)}`;
+  $("botLangTxt").textContent = `${langFlag(botLang)} ${langName(botLang)}`;
 
   bindNav();
   bindLangButtons();
-
-  // BE FREE çizgisini yerleştir
-  layoutAllBeFree();
-  window.addEventListener("resize", ()=> setTimeout(layoutAllBeFree, 50), { passive:true });
-  document.fonts?.ready?.then(()=> setTimeout(layoutAllBeFree, 50)).catch(()=>{});
 });
