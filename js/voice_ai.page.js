@@ -2,7 +2,7 @@ import { BASE_DOMAIN } from "/js/config.js";
 
 const $ = (id) => document.getElementById(id);
 
-// --- KARAKTER LİSTESİ ---
+// --- KARAKTER LİSTESİ (YENİ VE FARKLI SESLER) ---
 const VOICES = [
   // KADINLAR
   { id: "dora",   label: "Dora",   gender: "Kadın", openaiVoice: "nova",    desc: "Enerjik ve Neşeli ⚡" },
@@ -27,9 +27,7 @@ function getSelectedVoice() {
   return VOICES.find(v => v.id === selectedId) || VOICES[0];
 }
 
-/* =========================================
-   YARDIMCI: SES ÇALMA (GERÇEK API)
-   ========================================= */
+/* --- YARDIMCI: GERÇEK SES ÇALMA (API) --- */
 async function playRealVoice(text, openaiVoice) {
   try {
     const res = await fetch(`${apiBase()}/api/tts_openai`, {
@@ -48,7 +46,7 @@ async function playRealVoice(text, openaiVoice) {
     if (data.audio_base64) {
       const audio = new Audio("data:audio/mp3;base64," + data.audio_base64);
       await audio.play();
-      return audio; // Audio nesnesini döndür (kontrol için)
+      return audio;
     }
   } catch (err) {
     console.error("Ses Çalma Hatası:", err);
@@ -57,9 +55,7 @@ async function playRealVoice(text, openaiVoice) {
   return null;
 }
 
-/* =========================================
-   GÖRSEL DURUMLAR
-   ========================================= */
+/* --- GÖRSEL DURUMLAR --- */
 const stage   = $("aiStage");
 const status  = $("statusText");
 const micBtn  = $("micToggle");
@@ -85,9 +81,7 @@ function setVisual(state) {
   }
 }
 
-/* =========================================
-   SÜREKLİ SOHBET (LOOP)
-   ========================================= */
+/* --- SÜREKLİ SOHBET (LOOP) --- */
 let isConversationActive = false;
 let recognition = null;
 let currentAudio = null;
@@ -108,6 +102,7 @@ function stopConversation() {
   isConversationActive = false;
   if (recognition) { try { recognition.stop(); } catch(e){} recognition = null; }
   if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+  window.speechSynthesis.cancel();
   setVisual("idle");
 }
 
@@ -145,7 +140,6 @@ async function processUserSpeech(userText) {
     const chatData = await chatRes.json();
     const aiReply = chatData.text || "Anlaşılamadı.";
 
-    // Konuşma fonksiyonunu çağır
     await speakResponse(aiReply);
 
   } catch (err) {
@@ -160,7 +154,6 @@ async function speakResponse(text) {
   const v = getSelectedVoice();
   setVisual("speaking");
 
-  // Mevcut playRealVoice fonksiyonunu kullanıyoruz ama loop mantığı ekliyoruz
   try {
     const res = await fetch(`${apiBase()}/api/tts_openai`, {
       method: "POST",
@@ -175,7 +168,7 @@ async function speakResponse(text) {
       
       audio.onended = () => {
         currentAudio = null;
-        if (isConversationActive) startListening(); // LOOP DEVAM
+        if (isConversationActive) startListening();
         else setVisual("idle");
       };
       await audio.play();
@@ -187,9 +180,7 @@ async function speakResponse(text) {
   }
 }
 
-/* =========================================
-   MODAL & DEMO (DÜZELTİLEN KISIM)
-   ========================================= */
+/* --- MODAL & DEMO --- */
 const modal = $("voiceModal");
 const listContainer = $("voiceListContainer");
 
@@ -217,24 +208,20 @@ function renderVoiceList() {
       ${isSelected ? '<div style="color:#6366f1">✓</div>' : ''}
     `;
 
+    // Seçim
     row.addEventListener("click", (e) => {
       if (e.target.closest(".play-btn")) return;
       stagedId = v.id;
       renderVoiceList();
     });
 
-    // --- DEMO DİNLE (ARTIK GERÇEK SES!) ---
+    // Demo (Gerçek Ses)
     const btn = row.querySelector(".play-btn");
     btn.addEventListener("click", async (e) => {
       e.stopPropagation();
-      
-      // Butonu geçici olarak pasif yap (spam engelleme)
       btn.style.opacity = "0.5";
-      
-      // OpenAI'den gerçek sesi çek
       const demoText = `Merhaba, ben ${v.label}. italkyAI ile konuşmaya hazırım!`;
       await playRealVoice(demoText, v.openaiVoice);
-      
       btn.style.opacity = "1";
     });
 
@@ -242,9 +229,7 @@ function renderVoiceList() {
   });
 }
 
-/* =========================================
-   INIT
-   ========================================= */
+/* --- INIT --- */
 document.addEventListener("DOMContentLoaded", () => {
   $("btnBack")?.addEventListener("click", () => location.href="/pages/home.html");
   $("btnSettings")?.addEventListener("click", openModal);
