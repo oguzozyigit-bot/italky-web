@@ -1,16 +1,18 @@
+// FILE: italky-web/js/voice_ai.page.js
 import { BASE_DOMAIN } from "/js/config.js";
 
 const $ = (id) => document.getElementById(id);
 
 /* =========================
-   SES LİSTESİ (OpenAI Modelleri)
+   SES LİSTESİ (OpenAI Voice Map)
+   (Yavuz, Yılmaz, Eles YOK)
    ========================= */
 const VOICES = [
   { id: "jale",   label: "Jale",   gender: "Kadın", openaiVoice: "shimmer", desc: "Net ve İddialı" },
   { id: "huma",   label: "Hüma",   gender: "Kadın", openaiVoice: "nova",    desc: "Enerjik ve Sıcak" },
   { id: "selden", label: "Selden", gender: "Kadın", openaiVoice: "alloy",   desc: "Çok Yönlü ve Nötr" },
   { id: "aysem",  label: "Ayşem",  gender: "Kadın", openaiVoice: "ash",     desc: "Sakin ve Profesyonel" },
-  
+
   { id: "ozan",   label: "Ozan",   gender: "Erkek", openaiVoice: "alloy",   desc: "Dengeli ve Net" },
   { id: "oguz",   label: "Oğuz",   gender: "Erkek", openaiVoice: "echo",    desc: "Tok ve Yankılı" },
   { id: "baris",  label: "Barış",  gender: "Erkek", openaiVoice: "fable",   desc: "Anlatıcı Tonu" },
@@ -19,45 +21,46 @@ const VOICES = [
 
 const KEY = "italky_voice_pref";
 let selectedId = (localStorage.getItem(KEY) || "").trim();
+let stagedId = selectedId || VOICES[0].id;
 
-// Seçili sesi bul, yoksa ilkini döndür
-function getSelectedVoice() {
-  return VOICES.find(v => v.id === selectedId) || VOICES[0];
+function baseUrl() {
+  return String(BASE_DOMAIN || "").replace(/\/+$/, "");
+}
+function getVoiceById(id) {
+  return VOICES.find(v => v.id === id) || VOICES[0];
+}
+
+function welcomeText(name){
+  return `italkyAI’ye hoş geldiniz. Benimle hem eğlenip, hem öğrenip hem de dünyayı özgürce gezebilirsiniz. Hadi beni seç, ben ${name}.`;
 }
 
 /* =========================
-   TTS (METİNDEN SESE)
+   OPENAI TTS (server -> base64)
    ========================= */
 async function tts(text, openaiVoice) {
-  // Config yoksa boş string al, hata vermesin
-  const base = String(BASE_DOMAIN || "").replace(/\/+$/, "");
-  
-  // API Çağrısı (Senin sunucuna)
-  const r = await fetch(`${base}/api/tts_openai`, {
+  const url = `${baseUrl()}/api/tts_openai`;
+  const r = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       text,
       voice: openaiVoice,
       format: "mp3",
-      speed: 1.0
-    })
+      speed: 1.0,
+    }),
   });
 
   const raw = await r.text().catch(() => "");
   if (!r.ok) throw new Error(raw || `TTS Hatası: ${r.status}`);
-  
+
   let data = {};
   try { data = JSON.parse(raw || "{}"); } catch {}
-  
   const b64 = String(data.audio_base64 || "").trim();
   if (!b64) throw new Error("Ses verisi boş döndü.");
-  
   return b64;
 }
 
-// Base64 sesi çal
-async function playB64(b64) {
+function playB64(b64) {
   return new Promise((resolve, reject) => {
     const a = new Audio(`data:audio/mp3;base64,${b64}`);
     a.onended = resolve;
@@ -67,218 +70,195 @@ async function playB64(b64) {
 }
 
 /* =========================
-   SES SEÇİM PENCERESİ (MODAL)
+   UI: Modal
    ========================= */
-function openModal() {
-  const modal = $("voiceModal");
-  if (modal) {
-    modal.classList.add("show");
-    renderVoiceList();
-  }
+const modal = $("voiceModal");
+const list  = $("voiceList");
+
+function openModal(){
+  modal?.classList.add("show");
+  renderList();
+}
+function closeModal(){
+  modal?.classList.remove("show");
 }
 
-function closeModal() {
-  $("voiceModal")?.classList.remove("show");
-}
+function renderList(){
+  if(!list) return;
+  list.innerHTML = "";
 
-function renderVoiceList() {
-  const container = $("voiceListContainer");
-  if (!container) return;
-  
-  container.innerHTML = "";
-
-  VOICES.forEach(v => {
-    const isSelected = (v.id === selectedId);
-    
-    const div = document.createElement("div");
-    div.className = `voice-item ${isSelected ? "selected" : ""}`;
-    div.innerHTML = `
-      <div class="v-left">
-        <button class="play-btn" title="Önizle">
-          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-        </button>
-        <div class="v-details">
-          <div class="v-name">${v.label}</div>
-          <div class="v-lang">${v.gender} • ${v.desc}</div>
+  VOICES.forEach(v=>{
+    const row = document.createElement("div");
+    row.className = "voice-row" + (v.id===stagedId ? " sel" : "");
+    row.innerHTML = `
+      <div class="vLeft">
+        <div class="vText">
+          <div class="vName">${v.label}</div>
+          <div class="vMeta">${v.gender} • ${v.desc}</div>
         </div>
       </div>
-      ${isSelected ? `<div style="color:#6366f1">✓</div>` : ""}
+      <button class="vPlay" type="button" data-play="${v.id}">▶</button>
     `;
 
-    // Satıra tıklayınca seç
-    div.addEventListener("click", (e) => {
-      // Play butonuna basıldıysa seçimi tetikleme
-      if (e.target.closest(".play-btn")) return;
-      
-      // Seçimi güncelle
-      document.querySelectorAll(".voice-item").forEach(el => el.classList.remove("selected"));
-      div.classList.add("selected");
-      selectedId = v.id; // Geçici seçim (Kaydet diyene kadar)
+    // satıra tıkla => seç
+    row.addEventListener("click",(e)=>{
+      const btn = e.target.closest("[data-play]");
+      if(btn) return;
+      stagedId = v.id;
+      renderList();
     });
 
-    // Play butonu (Demo)
-    const btn = div.querySelector(".play-btn");
-    btn.addEventListener("click", async () => {
-      const demoText = `Merhaba, ben ${v.label}. italkyAI ile konuşmaya hazır mısın?`;
-      try {
-        const b64 = await tts(demoText, v.openaiVoice);
+    // demo
+    row.querySelector("[data-play]")?.addEventListener("click", async (e)=>{
+      e.preventDefault();
+      e.stopPropagation();
+      try{
+        const b64 = await tts(welcomeText(v.label), v.openaiVoice);
         await playB64(b64);
-      } catch (err) {
-        alert("Demo çalınamadı: " + err.message);
+      }catch(err){
+        alert("Demo çalınamadı.");
+        console.error(err);
       }
     });
 
-    container.appendChild(div);
+    list.appendChild(row);
   });
 }
 
 /* =========================
-   ANİMASYON DURUMLARI
+   UI: Visual state
    ========================= */
-function setVisualState(state) {
-  const stage = $("aiStage");
-  const status = $("statusText");
-  const mic = $("micToggle"); // Pro HTML'deki ID
+const stage  = $("stage");
+const status = $("status");
 
-  // Temizle
-  stage?.classList.remove("listening", "speaking");
-  mic?.classList.remove("active");
-  status?.classList.remove("show");
+function setState(s){
+  stage?.classList.remove("listening","speaking");
+  $("micBtn")?.classList.remove("active","listening");
 
-  if (state === "listening") {
-    // KULLANICI KONUŞUYOR
+  if(s === "listening"){
     stage?.classList.add("listening");
-    mic?.classList.add("active");
-    if (status) { status.textContent = "Dinliyorum..."; status.classList.add("show"); }
-  
-  } else if (state === "thinking") {
-    // AI DÜŞÜNÜYOR
-    if (status) { status.textContent = "Düşünüyor..."; status.classList.add("show"); }
-  
-  } else if (state === "speaking") {
-    // AI KONUŞUYOR
+    $("micBtn")?.classList.add("active","listening");
+    if(status) status.textContent = "Dinliyorum…";
+  }else if(s === "speaking"){
     stage?.classList.add("speaking");
-    if (status) { status.textContent = "Cevap Veriyor..."; status.classList.add("show"); }
-  
-  } else {
-    // BOŞTA (IDLE)
-    if (status) { status.textContent = "Dokun ve Konuş"; status.classList.add("show"); }
+    $("micBtn")?.classList.add("active");
+    if(status) status.textContent = "Cevap veriyorum…";
+  }else if(s === "thinking"){
+    if(status) status.textContent = "Düşünüyorum…";
+  }else{
+    if(status) status.textContent = "Dokun ve Konuş";
   }
 }
 
 /* =========================
-   STT & MANTIK
+   STT
    ========================= */
-let recognition = null;
-let isListening = false;
+let rec = null;
+let sttBusy = false;
 
-function initSTT() {
+function initSTT(){
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) return null;
+  if(!SR) return null;
   const r = new SR();
   r.lang = "tr-TR";
-  r.interimResults = false; 
-  r.continuous = false; 
+  r.interimResults = false;
+  r.continuous = false;
   return r;
 }
 
-// Ana Mikrofon Butonu
-function bindMic() {
-  const btn = $("micToggle");
-  if (!btn) return;
-
-  btn.addEventListener("click", () => {
-    // 1. Tarayıcı desteği kontrolü
-    if (!recognition) {
-      recognition = initSTT();
-      if (!recognition) {
-        alert("Tarayıcınız sesli komutu desteklemiyor. (Chrome/Android kullanın)");
-        return;
-      }
-
-      // --- EVENTLER ---
-      recognition.onstart = () => {
-        isListening = true;
-        setVisualState("listening");
-      };
-
-      recognition.onend = () => {
-        isListening = false;
-        // Eğer cevap verme moduna geçmediysek (hata olduysa veya sessizse) idle yap
-        const stage = $("aiStage");
-        if (stage && !stage.classList.contains("speaking")) {
-          setVisualState("idle");
-        }
-      };
-
-      recognition.onresult = async (e) => {
-        const text = e.results[0][0].transcript;
-        if (!text) return;
-
-        // Düşünüyor moduna geç
-        setVisualState("thinking");
-
-        try {
-          // A) Cevabı oluştur (Şimdilik basit echo, buraya AI Chat API gelecek)
-          // const aiResponseText = await askAI(text); // İleride burası açılacak
-          const aiResponseText = `Bunu söyledin: ${text}. Harika bir cümle!`;
-
-          // B) Konuşuyor moduna geç
-          setVisualState("speaking");
-
-          // C) Sesi üret ve çal
-          const currentVoice = getSelectedVoice();
-          const b64 = await tts(aiResponseText, currentVoice.openaiVoice);
-          await playB64(b64);
-
-        } catch (err) {
-          console.error(err);
-          alert("Bir hata oluştu.");
-        } finally {
-          setVisualState("idle");
-        }
-      };
-      
-      recognition.onerror = (e) => {
-        console.warn("STT Hatası:", e.error);
-        setVisualState("idle");
-      };
-    }
-
-    // Toggle Mantığı
-    if (isListening) {
-      recognition.stop();
-    } else {
-      try { recognition.start(); } catch (e) { console.error(e); }
-    }
-  });
+/* =========================
+   “Cevap” (şimdilik echo) -> OpenAI TTS
+   (Chat API sonra bağlanır)
+   ========================= */
+async function answerAndSpeak(userText){
+  const v = getVoiceById(selectedId || stagedId);
+  const reply = `italkyAI burada. Bunu söyledin: ${userText}.`;
+  const b64 = await tts(reply, v.openaiVoice);
+  await playB64(b64);
 }
 
 /* =========================
-   BAŞLAT
+   Bind
    ========================= */
-document.addEventListener("DOMContentLoaded", () => {
-  // Navigasyon
-  $("settingsBtn")?.addEventListener("click", openModal);
-  $("closeVoiceModal")?.addEventListener("click", closeModal);
-  
-  // Kaydet Butonu
-  $("saveVoiceBtn")?.addEventListener("click", () => {
-    if (selectedId) {
-      localStorage.setItem(KEY, selectedId);
-      closeModal();
-      // Onay sesi (Opsiyonel)
+function bind(){
+  // nav
+  $("backBtn")?.addEventListener("click", ()=> location.href="/pages/home.html");
+  $("homeBtn")?.addEventListener("click", ()=> location.href="/pages/home.html");
+
+  // modal open/close
+  $("openVoice")?.addEventListener("click", openModal);
+  $("closeVoice")?.addEventListener("click", closeModal);
+  modal?.addEventListener("click",(e)=>{ if(e.target === modal) closeModal(); });
+
+  // save voice
+  $("saveVoice")?.addEventListener("click", async ()=>{
+    selectedId = stagedId;
+    localStorage.setItem(KEY, selectedId);
+    closeModal();
+    // kaydedince kısa demo (isteğe bağlı)
+    try{
+      const v = getVoiceById(selectedId);
+      const b64 = await tts(welcomeText(v.label), v.openaiVoice);
+      await playB64(b64);
+    }catch{}
+  });
+
+  // mic
+  $("micBtn")?.addEventListener("click", async ()=>{
+    if(sttBusy) {
+      try{ rec?.stop?.(); }catch{}
+      return;
+    }
+
+    rec = rec || initSTT();
+    if(!rec){
+      alert("Bu cihaz sesli komutu desteklemiyor. (Chrome/Android deneyin)");
+      return;
+    }
+
+    sttBusy = true;
+    setState("listening");
+
+    rec.onresult = async (e)=>{
+      const txt = (e.results?.[0]?.[0]?.transcript || "").trim();
+      if(!txt) return;
+
+      setState("thinking");
+      try{
+        setState("speaking");
+        await answerAndSpeak(txt);
+      }catch(err){
+        console.error(err);
+      }finally{
+        setState("idle");
+      }
+    };
+
+    rec.onerror = (e)=>{
+      console.warn("STT error:", e?.error);
+      setState("idle");
+    };
+
+    rec.onend = ()=>{
+      sttBusy = false;
+      if(!stage?.classList.contains("speaking")) setState("idle");
+    };
+
+    try{
+      rec.start();
+    }catch(err){
+      console.error(err);
+      sttBusy = false;
+      setState("idle");
     }
   });
 
-  // Mikrofonu Bağla
-  bindMic();
+  setState("idle");
 
-  // İlk açılışta ses seçili değilse modalı aç
-  if (!localStorage.getItem(KEY)) {
-    setTimeout(openModal, 500); // Animasyon otursun diye az bekle
-  } else {
-    // Ses varsa IDLE modunda başlat
-    setVisualState("idle");
+  // ilk girişte ses seçtirmeyi zorla
+  if(!localStorage.getItem(KEY)){
+    setTimeout(openModal, 350);
   }
-});
+}
+
+document.addEventListener("DOMContentLoaded", bind);
