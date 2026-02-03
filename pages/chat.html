@@ -15,7 +15,12 @@
     :root{
       --frameW: min(480px, calc(100vw - 18px));
       --topH: 74px;
-      --dockH: 74px;
+
+      /* ✅ footer ve dock ölçüleri */
+      --footerH: 86px;     /* linkler + copyright */
+      --dockMinH: 64px;    /* dock min (textarea 1 satır) */
+      --dockMaxH: 150px;   /* textarea büyüme sınırı */
+      --gap: 10px;         /* footer ile dock arası */
 
       --text: rgba(255,255,255,.92);
       --muted: rgba(255,255,255,.62);
@@ -150,6 +155,7 @@
       font-size: 11px;
       color: rgba(255,255,255,0.60);
       white-space:nowrap;
+      text-transform: uppercase;
     }
     .avatar-btn{
       width: 42px; height: 42px;
@@ -171,12 +177,14 @@
       user-select:none;
     }
 
-    /* chat area */
+    /* ✅ chat area: bottom dinamik ayarlanacak (JS) */
     #chat.chat-area{
-      position: absolute;
-      left: 0; right: 0;
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      width: var(--frameW);
       top: var(--topH);
-      bottom: var(--dockH);
+      bottom: calc(var(--footerH) + var(--dockMinH) + (var(--gap) * 2));
       padding: 14px 12px;
 
       overflow-y:auto;
@@ -217,19 +225,21 @@
       text-align:right;
     }
 
-    /* dock */
+    /* ✅ dock footer'ın ÜSTÜNDE */
     .input-dock{
       position: fixed;
       left: 50%;
       transform: translateX(-50%);
       width: var(--frameW);
-      bottom: 0;
+      bottom: calc(var(--footerH) + var(--gap));
       z-index: 2600;
       padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
-      background: rgba(0,0,0,.45);
-      border-top: 1px solid rgba(255,255,255,.08);
+      background: rgba(0,0,0,.35);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 22px;
       backdrop-filter: blur(12px);
       pointer-events: none;
+      box-shadow: 0 18px 55px rgba(0,0,0,.35);
     }
     .dock-inner{
       pointer-events:auto;
@@ -273,10 +283,13 @@
       line-height:18px;
       font-family:inherit;
       resize:none;
-      white-space:normal;
-      overflow:hidden;
-      max-height:120px;
+
+      overflow-y:auto;
+      max-height: var(--dockMaxH);
+      scrollbar-width:none;
     }
+    #msgInput::-webkit-scrollbar{ width:0; height:0; }
+
     .send-btn{
       width:40px;height:40px;
       border-radius:16px;
@@ -295,7 +308,7 @@
       left: 50%;
       transform: translateX(-50%);
       width: var(--frameW);
-      bottom: calc(var(--dockH) + 14px);
+      bottom: calc(var(--footerH) + var(--dockMinH) + 22px);
       z-index: 9999;
       display:none;
       gap:10px;
@@ -341,6 +354,45 @@
       box-shadow: 0 0 18px rgba(190,242,100,.18);
       position: relative;
     }
+
+    /* ✅ footer */
+    .footerbar{
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      width: var(--frameW);
+      bottom: 0;
+      z-index: 2400;
+      height: var(--footerH);
+      background: rgba(3, 0, 20, 0.95);
+      border-top: 1px solid rgba(255,255,255,.06);
+      backdrop-filter: blur(10px);
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      padding: 10px 16px 12px;
+      gap: 8px;
+    }
+    .links{
+      display:flex;
+      justify-content:center;
+      gap: 16px;
+      flex-wrap:wrap;
+    }
+    .links a{
+      color: rgba(255,255,255,0.62);
+      text-decoration:none;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .links a:active{ opacity:.85; }
+    .footerBrand{
+      text-align:center;
+      font-size: 11px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.35);
+      letter-spacing: .2px;
+    }
   </style>
 </head>
 
@@ -379,8 +431,8 @@
 
     <div class="chat-area" id="chat"></div>
 
-    <div class="input-dock">
-      <div class="dock-inner">
+    <div class="input-dock" id="dockWrap">
+      <div class="dock-inner" id="dockInner">
         <button class="icon-btn" id="camBtn" aria-label="Dosya / Fotoğraf">
           <svg viewBox="0 0 24 24"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
         </button>
@@ -416,8 +468,18 @@
       </div>
     </div>
 
+    <div class="footerbar">
+      <div class="links">
+        <a href="/pages/about.html">Hakkında</a>
+        <a href="/pages/faq.html">SSS</a>
+        <a href="/pages/privacy.html">Gizlilik</a>
+        <a href="/pages/contact.html">İletişim</a>
+      </div>
+      <div class="footerBrand">italkyAI By Ozyigit’s 2026</div>
+    </div>
+
   </div>
 
-  <script type="module" src="/js/italky_chat_page.js?v=1"></script>
+  <script type="module" src="/js/italky_chat_page.js?v=2"></script>
 </body>
 </html>
