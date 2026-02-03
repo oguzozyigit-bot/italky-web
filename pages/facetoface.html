@@ -28,8 +28,8 @@
       --sheetBg: rgba(16,16,20,.92);
       --sheetBorder: rgba(255,255,255,.12);
 
-      /* Logo lock */
-      --logoWhite: #ffffff;
+      /* ✅ Logo lock (KİLİTLİ) */
+      --logoWhite: #FFFFFF;
       --ai1: #A5B4FC;
       --ai2: #4F46E5;
       --be: #6B7280;
@@ -180,8 +180,8 @@
       gap:10px;
       cursor:pointer;
       user-select:none;
-      min-width: 180px;
-      max-width: 240px;
+      min-width: 190px;
+      max-width: 260px;
     }
     .langBtn .caret{ opacity:.75; font-size: 12px; }
 
@@ -215,7 +215,6 @@
       display:flex;
       flex-direction:column;
       gap: 10px;
-
       scrollbar-width:none;
       -ms-overflow-style:none;
     }
@@ -245,7 +244,7 @@
       z-index: 20;
       pointer-events:auto;
     }
-    /* ✅ Top panelde mic düğmesi, TOP kullanıcısına doğru bakacak */
+    /* ✅ Top panel mic düğmesi TOP kullanıcısına doğru bakacak */
     .side.top .micDock{
       transform: translateX(-50%) rotate(180deg);
     }
@@ -291,7 +290,6 @@
       margin-left: 2px;
     }
     .beRow{
-      position: relative;
       width: 100%;
       text-align:center;
       margin-top: 2px;
@@ -304,18 +302,7 @@
       color: var(--be);
       text-transform: uppercase;
       display:inline-block;
-      padding-top: 8px;
       opacity: .92;
-    }
-    /* i altından y ortasına çizgi */
-    .beFreeLine{
-      position:absolute;
-      top: 6px;
-      height: 1px;
-      background: rgba(107,114,128,0.55);
-      border-radius: 999px;
-      left: var(--beLeft, 12px);
-      width: calc(var(--beRight, 120px) - var(--beLeft, 12px));
     }
 
     /* ===== Language Sheet ===== */
@@ -345,7 +332,7 @@
     /* ✅ ÜST KULLANICI: sheet yukarı gelsin ve 180° dönsün (yazı ters çevrilmesin!) */
     .sheetOverlay.fromTop{
       align-items:flex-start;
-      padding-top: 84px;     /* üst logo/back çakışmasın */
+      padding-top: 84px;
       padding-bottom: 14px;
     }
     .sheetOverlay.fromTop .sheet{
@@ -396,9 +383,11 @@
     }
     .sheetSearch input::placeholder{ color: rgba(255,255,255,.55); font-weight: 800; }
 
+    /* ✅ Scroll kesin + gizli scrollbar */
     .sheetList{
-      max-height: 52vh;
-      overflow:auto;
+      max-height: 62vh;
+      overflow-y:auto;
+      overflow-x:hidden;
       -webkit-overflow-scrolling: touch;
       scrollbar-width:none;
       -ms-overflow-style:none;
@@ -416,17 +405,34 @@
       user-select:none;
     }
     .sheetRow:active{ background: rgba(255,255,255,.05); }
-    .sheetRow .name{
+
+    .left{
+      display:flex; align-items:center; gap:10px;
+      min-width:0;
+    }
+    .flag{
+      width: 26px; height: 18px;
+      display:flex; align-items:center; justify-content:center;
+      font-size: 16px;
+      opacity: .95;
+      flex: 0 0 26px;
+    }
+    .name{
       font-weight: 950;
       font-size: 14px;
       color: rgba(255,255,255,.92);
+      white-space: nowrap;
+      overflow:hidden;
+      text-overflow: ellipsis;
+      max-width: 220px;
     }
-    .sheetRow .code{
+    .code{
       font-weight: 900;
       font-size: 11px;
       color: rgba(255,255,255,.55);
       letter-spacing:.5px;
       text-transform: uppercase;
+      flex: 0 0 auto;
     }
     .sheetRow.selected{
       background: rgba(190,242,100,.08);
@@ -445,11 +451,9 @@
     <div class="brandTop">
       <div class="brandLock">
         <div class="logoLine">
-          <span class="logoItalky" id="logoItalkyTop">italky</span><span class="logoAI">AI</span>
-          <span id="logoYTop" style="position:absolute;opacity:0;pointer-events:none;">y</span>
+          <span class="logoItalky">italky</span><span class="logoAI">AI</span>
         </div>
         <div class="beRow">
-          <div class="beFreeLine" id="beFreeLineTop"></div>
           <div class="beFree">BE FREE</div>
         </div>
       </div>
@@ -528,14 +532,11 @@
 
     <!-- BOTTOM brand -->
     <div class="brandBottom">
-      <div class="brandLock" id="brandBottomLock">
+      <div class="brandLock">
         <div class="logoLine">
-          <span class="logoItalky" id="logoItalky">italky</span><span class="logoAI">AI</span>
-          <!-- y için ölçüm hedefi -->
-          <span id="logoY" style="position:absolute;opacity:0;pointer-events:none;">y</span>
+          <span class="logoItalky">italky</span><span class="logoAI">AI</span>
         </div>
         <div class="beRow">
-          <div class="beFreeLine" id="beFreeLine"></div>
           <div class="beFree">BE FREE</div>
         </div>
       </div>
@@ -556,6 +557,6 @@
     </div>
   </div>
 
-  <script type="module" src="/js/facetoface_page.js?v=1"></script>
+  <script type="module" src="/js/facetoface_page.js?v=2"></script>
 </body>
 </html>
