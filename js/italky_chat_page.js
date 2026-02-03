@@ -1,8 +1,7 @@
 // FILE: italky-web/js/italky_chat_page.js
-// ✅ Auto-grow textarea + chat bottom follows (dock + footer) so never overlaps
-// ✅ STT mic toggle
-// ✅ TTS: AI replies read aloud when enabled (toggle button)
-// ✅ Brand guard: "Seni kim yazdı?" -> Google DEMEZ
+// ✅ Chat: mic ile sorarsan cevap SESLİ + yazı
+// ✅ Yazıyla sorarsan sadece yazı
+// ✅ Footer çakışması yok (chat.html ayarlı)
 
 import { BASE_DOMAIN, STORAGE_KEY } from "/js/config.js";
 
@@ -12,10 +11,7 @@ function safeJson(s, fb={}){ try{ return JSON.parse(s||""); }catch{ return fb; }
 function getUser(){ return safeJson(localStorage.getItem(STORAGE_KEY), {}); }
 function ensureLogged(){
   const u = getUser();
-  if(!u || !u.email || !u.isSessionActive){
-    location.replace("/index.html");
-    return null;
-  }
+  if(!u || !u.email || !u.isSessionActive){ location.replace("/index.html"); return null; }
   return u;
 }
 
@@ -34,24 +30,9 @@ function paintHeader(u){
   }
 
   avatarBtn.addEventListener("click", ()=> location.href="/pages/profile.html");
-  $("logoHome").addEventListener("click", ()=> location.href="/pages/home.html");
   $("backBtn").addEventListener("click", ()=> location.href="/pages/home.html");
 }
 
-/* ===== Footer + dock -> chat bottom fix ===== */
-function refreshChatBottom(){
-  const chat = $("chat");
-  const dock = $("inputDock");
-  const footer = $("footerBar");
-  if(!chat || !dock || !footer) return;
-
-  const dh = Math.ceil(dock.getBoundingClientRect().height || 70);
-  const fh = Math.ceil(footer.getBoundingClientRect().height || 64);
-
-  chat.style.bottom = (dh + fh) + "px";
-}
-
-/* ===== History ===== */
 function chatKey(u){
   const uid = String(u.user_id || u.id || u.email || "guest").toLowerCase().trim();
   return `italky_chat_hist::${uid}`;
@@ -59,21 +40,16 @@ function chatKey(u){
 function loadHist(u){ return safeJson(localStorage.getItem(chatKey(u)), []); }
 function saveHist(u, h){ try{ localStorage.setItem(chatKey(u), JSON.stringify(h.slice(-30))); }catch{} }
 
-/* ===== Scroll follow ===== */
 function isNearBottom(el, slack=140){
-  try{ return (el.scrollHeight - el.scrollTop - el.clientHeight) < slack; }
-  catch{ return true; }
+  try{ return (el.scrollHeight - el.scrollTop - el.clientHeight) < slack; }catch{ return true; }
 }
 let follow = true;
 function scrollBottom(force=false){
   const el = $("chat");
   if(!el) return;
-  requestAnimationFrame(()=>{
-    if(force || follow) el.scrollTop = el.scrollHeight;
-  });
+  requestAnimationFrame(()=>{ if(force || follow) el.scrollTop = el.scrollHeight; });
 }
 
-/* ===== UI bubbles ===== */
 function bubble(role, text){
   const chat = $("chat");
   const d = document.createElement("div");
@@ -82,6 +58,7 @@ function bubble(role, text){
   chat.appendChild(d);
   scrollBottom(false);
 }
+
 function typing(){
   const chat = $("chat");
   const d = document.createElement("div");
@@ -92,24 +69,6 @@ function typing(){
   return d;
 }
 
-/* ===== Brand guard (Google demesin) ===== */
-function isBrandQuestion(t){
-  const s = String(t||"").toLowerCase();
-  return (
-    s.includes("seni kim yazdı") ||
-    s.includes("seni kim yaptı") ||
-    s.includes("seni kim yarattı") ||
-    s.includes("kimin ürünüsün") ||
-    s.includes("kime aitsin") ||
-    s.includes("kimin yapay zekasısın") ||
-    s.includes("kimin yazılımısın")
-  );
-}
-function brandAnswer(){
-  return "Ben italkyAI’nin geliştirdiği dil yazılımıyım. Amacım konuşmayı, öğrenmeyi ve çeviriyi pratik hale getirmek.";
-}
-
-/* ===== API ===== */
 async function apiChat(u, text, history){
   const base = String(BASE_DOMAIN||"").replace(/\/+$/,"");
   const url = `${base}/api/chat`;
@@ -117,7 +76,6 @@ async function apiChat(u, text, history){
     user_id: (u.user_id || u.id || u.email),
     text,
     history: (history || []).slice(-20),
-    user_meta: { brand:"italkyAI", app:"italkyAI" }
   };
 
   const r = await fetch(url,{
@@ -134,47 +92,59 @@ async function apiChat(u, text, history){
   return out || "…";
 }
 
-/* ===== Auto-grow textarea ===== */
+/* ===== OpenAI TTS (backend proxy) ===== */
+async function ttsSpeak(text){
+  const base = String(BASE_DOMAIN||"").replace(/\/+$/,"");
+  const url = `${base}/api/tts_openai`;
+  const r = await fetch(url,{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({ text, format:"mp3", voice:"alloy", speed:1.0 })
+  });
+  const raw = await r.text().catch(()=> "");
+  if(!r.ok) throw new Error(raw || `HTTP ${r.status}`);
+
+  let data={};
+  try{ data = JSON.parse(raw || "{}"); }catch{}
+  const b64 = String(data.audio_base64 || "").trim();
+  const fmt = String(data.format || "mp3").trim().toLowerCase();
+  if(!b64) throw new Error("no audio_base64");
+
+  // mp3 data url
+  const mime = (fmt==="wav") ? "audio/wav"
+            : (fmt==="aac") ? "audio/aac"
+            : (fmt==="flac") ? "audio/flac"
+            : (fmt==="opus") ? "audio/opus"
+            : "audio/mpeg";
+
+  const audio = new Audio(`data:${mime};base64,${b64}`);
+  audio.volume = 1.0;
+  try{ await audio.play(); }catch{}
+}
+
 function autoGrow(){
   const ta = $("msgInput");
-  if(!ta) return;
-
   ta.style.height = "auto";
   ta.style.height = Math.min(ta.scrollHeight, 120) + "px";
-
-  refreshChatBottom();
 }
 
-/* ===== STT toggle ===== */
-let _rec = null;
-let _sttOn = false;
+/* ===== STT ===== */
+let lastInputWasMic = false;
 
-function stopSTT(){
-  const micBtn = $("micBtn");
-  try{ _rec && _rec.stop && _rec.stop(); }catch{}
-  try{ _rec && _rec.abort && _rec.abort(); }catch{}
-  _rec = null;
-  _sttOn = false;
-  micBtn?.classList.remove("listening");
-}
 function startSTT(){
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if(!SR){ alert("Bu cihaz konuşmayı yazıya çevirmiyor."); return; }
 
-  // toggle
-  if(_sttOn){ stopSTT(); return; }
-
   const micBtn = $("micBtn");
   const ta = $("msgInput");
-  const rec = new SR();
-  _rec = rec;
-  _sttOn = true;
 
+  const rec = new SR();
   rec.lang = "tr-TR";
   rec.interimResults = false;
   rec.continuous = false;
 
-  micBtn?.classList.add("listening");
+  micBtn.classList.add("listening");
+  lastInputWasMic = true;
 
   rec.onresult = (e)=>{
     const t = e.results?.[0]?.[0]?.transcript || "";
@@ -184,52 +154,9 @@ function startSTT(){
     }
   };
   rec.onerror = ()=>{};
-  rec.onend = ()=> stopSTT();
+  rec.onend = ()=> micBtn.classList.remove("listening");
 
-  try{ rec.start(); }catch{ stopSTT(); }
-}
-
-/* ===== TTS (sesli cevap) ===== */
-let ttsOn = true;
-
-function guessTTSLang(text){
-  const s = String(text||"");
-  const trChars = /[çğıöşüÇĞİÖŞÜ]/.test(s);
-  const trWords = /\b(ve|ama|çünkü|lütfen|teşekkür|merhaba|evet|hayır)\b/i.test(s);
-  return (trChars || trWords) ? "tr-TR" : "en-US";
-}
-
-function speak(text){
-  if(!ttsOn) return;
-  if(!("speechSynthesis" in window)) return;
-
-  const t = String(text||"").trim();
-  if(!t) return;
-
-  try{
-    window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(t);
-    u.lang = guessTTSLang(t);
-    u.rate = 1.0;
-    u.pitch = 1.0;
-    window.speechSynthesis.speak(u);
-  }catch{}
-}
-
-function bindTTS(){
-  const btn = $("ttsBtn");
-  const sync = ()=>{
-    btn.classList.toggle("off", !ttsOn);
-  };
-  sync();
-  btn.addEventListener("click", ()=>{
-    ttsOn = !ttsOn;
-    sync();
-    // kapatınca sesi de kes
-    if(!ttsOn){
-      try{ window.speechSynthesis && window.speechSynthesis.cancel(); }catch{}
-    }
-  });
+  try{ rec.start(); }catch{ micBtn.classList.remove("listening"); }
 }
 
 /* ===== Plus sheet ===== */
@@ -246,10 +173,7 @@ function bindPlusSheet(){
 
   function toggle(open){ plusSheet.classList.toggle("show", !!open); }
 
-  camBtn.addEventListener("click",(e)=>{
-    e.preventDefault();
-    toggle(!plusSheet.classList.contains("show"));
-  });
+  camBtn.addEventListener("click",(e)=>{ e.preventDefault(); toggle(!plusSheet.classList.contains("show")); });
 
   document.addEventListener("click",(e)=>{
     if(!plusSheet.classList.contains("show")) return;
@@ -269,19 +193,17 @@ async function main(){
 
   paintHeader(u);
   bindPlusSheet();
-  bindTTS();
 
   const chat = $("chat");
   chat.addEventListener("scroll", ()=>{ follow = isNearBottom(chat); }, { passive:true });
 
-  // history
+  // load history
   const hist = loadHist(u);
   chat.innerHTML = "";
   hist.forEach(m=> bubble(m.role, m.text));
   follow = true;
   scrollBottom(true);
 
-  // mic
   $("micBtn").addEventListener("click", startSTT);
 
   async function send(){
@@ -289,7 +211,8 @@ async function main(){
     const text = String(ta.value||"").trim();
     if(!text) return;
 
-    stopSTT();
+    const shouldSpeak = lastInputWasMic;   // ✅ sadece mic ile geldiyse ses
+    lastInputWasMic = false;
 
     ta.value = "";
     autoGrow();
@@ -298,31 +221,23 @@ async function main(){
     bubble("user", text);
     h.push({ role:"user", text });
 
-    // brand guard
-    if(isBrandQuestion(text)){
-      const out = brandAnswer();
-      bubble("assistant", out);
-      speak(out);
-      h.push({ role:"assistant", text: out });
-      saveHist(u, h);
-      scrollBottom(false);
-      return;
-    }
-
     const loader = typing();
 
     try{
       const out = await apiChat(u, text, h.map(x=>({role:x.role, content:x.text})));
       try{ loader.remove(); }catch{}
       bubble("assistant", out);
-      speak(out);
       h.push({ role:"assistant", text: out });
       saveHist(u, h);
+
+      // ✅ mic ile sorulduysa: OpenAI TTS ile seslendir
+      if(shouldSpeak){
+        try{ await ttsSpeak(out); }catch{}
+      }
     }catch(e){
       try{ loader.remove(); }catch{}
       const fb = "Şu an cevap veremedim. Bir daha dener misin?";
       bubble("assistant", fb);
-      speak(fb);
       h.push({ role:"assistant", text: fb });
       saveHist(u, h);
     }
@@ -331,8 +246,7 @@ async function main(){
   }
 
   $("sendBtn").addEventListener("click", send);
-
-  $("msgInput").addEventListener("input", autoGrow);
+  $("msgInput").addEventListener("input", ()=>{ lastInputWasMic = false; autoGrow(); });
   $("msgInput").addEventListener("keydown",(e)=>{
     if(e.key==="Enter" && !e.shiftKey){
       e.preventDefault();
@@ -340,14 +254,7 @@ async function main(){
     }
   });
 
-  // ilk ölçümler
   autoGrow();
-  refreshChatBottom();
-
-  window.addEventListener("resize", ()=>{
-    autoGrow();
-    refreshChatBottom();
-  }, { passive:true });
 }
 
 document.addEventListener("DOMContentLoaded", main);
