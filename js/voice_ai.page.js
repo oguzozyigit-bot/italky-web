@@ -16,10 +16,11 @@ const KEY = "italky_voice_pref";
 let selectedId = (localStorage.getItem(KEY) || "dora").trim();
 let stagedId = selectedId; 
 let isAutoMode = true;
-
-// ✅ HAFIZA (HISTORY) LİSTESİ
-// Sohbet boyunca konuşmaları burada tutacağız.
 let chatHistory = []; 
+
+// SESSİZLİK SAYACI (Israr limiti)
+let silenceRetryCount = 0;
+const MAX_SILENCE_RETRIES = 2; // 2 kere sorar, sonra kapatır.
 
 function apiBase() { return String(BASE_DOMAIN || "").replace(/\/+$/, ""); }
 function getSelectedVoice() { return VOICES.find(v => v.id === selectedId) || VOICES[0]; }
@@ -42,7 +43,7 @@ async function playRealVoice(text, openaiVoice, onEndCallback) {
     const data = await res.json();
     
     if (data.audio_base64) {
-      setVisual("speaking"); // Görsel Tetikleyici
+      setVisual("speaking"); 
       const audio = new Audio("data:audio/mp3;base64," + data.audio_base64);
       currentAudio = audio;
       audio.onended = () => { 
@@ -75,7 +76,9 @@ function setVisual(state) {
     stage?.classList.add("listening"); 
     micBtn?.classList.add("active");
     if(status) { 
-      status.textContent = isAutoMode ? "Dinliyorum..." : "Konuşun..."; 
+      // Duruma göre mesaj
+      if (silenceRetryCount > 0) status.textContent = "Cevap Bekliyor...";
+      else status.textContent = isAutoMode ? "Dinliyorum..." : "Konuşun..."; 
       status.classList.add("show"); 
     }
   } else if (state === "thinking") {
@@ -104,7 +107,9 @@ function toggleConversation() {
 function startConversation() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) { alert("Tarayıcı desteklemiyor."); return; }
+  
   isConversationActive = true;
+  silenceRetryCount = 0; // Sayacı sıfırla
   startListening();
 }
 
@@ -128,64 +133,87 @@ function startListening() {
   recognition.onstart = () => {
     if (isConversationActive) {
       setVisual("listening");
+      
+      // ✅ YENİ SESSİZLİK MANTIĞI (10 Saniye)
       if (isAutoMode) {
         if (silenceTimer) clearTimeout(silenceTimer);
         silenceTimer = setTimeout(() => {
           if (isConversationActive && stage.classList.contains("listening")) {
-            console.log("Sessizlik timeout.");
-            stopConversation();
-            if(status) status.textContent = "Ses gelmedi.";
+            handleSilence(); // Kapatma, DÜRT!
           }
-        }, 6000);
+        }, 10000); // 10 Saniye
       }
     }
   };
 
   recognition.onresult = (event) => {
     if(silenceTimer) clearTimeout(silenceTimer);
+    silenceRetryCount = 0; // Kullanıcı konuştu, ısrar sayacını sıfırla
     const text = event.results[0][0].transcript;
     if (text && isConversationActive) processUserSpeech(text);
   };
 
   recognition.onerror = (e) => {
+    // Hata durumunda hemen pes etme, biraz bekle tekrar dene
     if (isConversationActive && e.error !== 'aborted' && isAutoMode) {
-      setTimeout(startListening, 300);
+      setTimeout(startListening, 500);
     }
   };
 
   try{ recognition.start(); }catch(e){}
 }
 
-async function processUserSpeech(userText) {
+// 🔥 SESSİZLİK OLUNCA DEVREYE GİREN FONKSİYON
+async function handleSilence() {
+  // Eğer limit dolduysa kapat
+  if (silenceRetryCount >= MAX_SILENCE_RETRIES) {
+    stopConversation();
+    if(status) status.textContent = "Görüşürüz...";
+    return;
+  }
+
+  silenceRetryCount++;
+  
+  // Yapay Zekaya "Dürtme" komutu gönderiyoruz (Kullanıcı görmez)
+  // Bu metni kullanıcı söylemiş gibi değil, sistem uyarısı gibi işliyoruz.
+  const nudgePrompt = `(SİSTEM UYARISI: Kullanıcı 10 saniyedir sessiz. Eğer kullanıcının ismini biliyorsan ismini kullanarak, bilmiyorsan samimi bir şekilde: "Ne oldu sustun? Sohbet hoşuna gitmedi mi? Konuşmanı bekliyorum" minvalinde, biraz trip atan, samimi ve canlı tek bir cümle kur.)`;
+
+  processUserSpeech(nudgePrompt, true); // true = bu bir sistem tetiklemesidir
+}
+
+async function processUserSpeech(text, isSystemTrigger = false) {
   setVisual("thinking");
   
   try {
     const v = getSelectedVoice();
     
-    // 1. Kullanıcı mesajını hafızaya ekle
-    chatHistory.push({ role: "user", content: userText });
+    // Sadece kullanıcı sözlerini geçmişe ekle, sistem uyarılarını ekleme ki kafası karışmasın
+    if (!isSystemTrigger) {
+      chatHistory.push({ role: "user", content: text });
+    } else {
+      // Sistem tetiklemesi olsa bile AI bilsin diye geçici context (History'ye kalıcı eklemeyelim, sadece bu request için)
+      // Veya ekleyelim ki neden trip attığını bilsin. Eklemek daha güvenli.
+      chatHistory.push({ role: "user", content: text }); 
+    }
 
-    // 2. Backend'e gönder (Tarihçe ile birlikte)
     const chatRes = await fetch(`${apiBase()}/api/chat`, {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ 
-        text: userText, 
+        text: text, 
         persona_name: v.label,
-        history: chatHistory, // ✅ İŞTE KRİTİK NOKTA: Hafızayı gönderiyoruz
+        history: chatHistory, 
         max_tokens: 150
       })
     });
     
     const chatData = await chatRes.json();
-    const aiReply = chatData.text || "Anlaşılamadı.";
+    const aiReply = chatData.text || "Orada mısın?";
 
-    // 3. Yapay zeka cevabını da hafızaya ekle
+    // AI cevabını kaydet
     chatHistory.push({ role: "assistant", content: aiReply });
-    
-    // Hafıza çok şişerse son 20 mesajı tut (Optimizasyon)
     if (chatHistory.length > 20) chatHistory = chatHistory.slice(-20);
 
-    // 4. Konuş
+    // Konuş
     await playRealVoice(aiReply, v.openaiVoice, () => {
       if (isConversationActive && isAutoMode) startListening();
       else if (isConversationActive && !isAutoMode) stopConversation();
@@ -246,8 +274,6 @@ document.addEventListener("DOMContentLoaded", () => {
   $("saveVoiceBtn")?.addEventListener("click", () => {
     selectedId = stagedId;
     localStorage.setItem(KEY, selectedId);
-    // Karakter değişince hafızayı sıfırlayalım mı? 
-    // Bence sıfırlamayalım, Oğuz olduğunu bilsin ama karakter değişsin.
     closeModal();
   });
 
