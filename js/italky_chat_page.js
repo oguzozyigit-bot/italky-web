@@ -1,303 +1,206 @@
-<!DOCTYPE html>
-<html lang="tr">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>italkyAI • Sohbet AI</title>
-  <link rel="icon" href="data:,">
+// Italky Chat Page Controller (Gemini - text only)
+// ✅ Clear chat works
+// ✅ Mic works (STT)
+// ✅ Wave animation while recording
+// ✅ Auto-send after speech
+// ✅ No sound output
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+import { BASE_DOMAIN, STORAGE_KEY } from "/js/config.js";
 
-  <style>
-    :root{
-      --frameW: min(480px, calc(100vw - 18px));
-      --topH: 74px;
-      --footerH: 72px;
-      --dockH: 76px;
+const $ = (id)=>document.getElementById(id);
+function safeJson(s, fb={}){ try{ return JSON.parse(s||""); }catch{ return fb; } }
 
-      --text: rgba(255,255,255,.92);
-      --muted: rgba(255,255,255,.60);
-      --border: rgba(255,255,255,.10);
+/* ================= USER ================= */
+function getUser(){
+  return safeJson(localStorage.getItem(STORAGE_KEY), {});
+}
+function ensureLogged(){
+  const u = getUser();
+  if(!u || !u.email || !u.isSessionActive){
+    location.replace("/index.html");
+    return null;
+  }
+  return u;
+}
 
-      /* 🔒 KİLİTLİ PALET */
-      --ai-color:#4F46E5;
-      --be-free:#6B7280;
-    }
+/* ================= HEADER ================= */
+function paintHeader(u){
+  const full = (u.fullname || u.name || u.display_name || u.email || "—").trim();
+  $("userName").textContent = full;
+  $("userPlan").textContent = String(u.plan || "FREE").toUpperCase();
 
-    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-    html,body{
-      margin:0; padding:0;
-      width:100%; height:100dvh;
-      overflow:hidden;
-      font-family:'Outfit', sans-serif;
-      background:#030014;
-      color:var(--text);
-      display:flex; align-items:center; justify-content:center;
-      position:fixed;
-    }
+  const avatarBtn = $("avatarBtn");
+  const fallback = $("avatarFallback");
+  const pic = String(u.picture || "").trim();
+  if(pic){
+    avatarBtn.innerHTML = `<img src="${pic}" alt="avatar">`;
+  }else{
+    fallback.textContent = full[0] || "•";
+  }
 
-    .mobile-frame{
-      width:100%; max-width:480px; height:100%;
-      position:relative;
-      background: rgba(8,8,20,.65);
-      backdrop-filter: blur(25px);
-      display:flex; flex-direction:column;
-    }
+  $("logoHome").onclick = ()=> location.href="/pages/home.html";
+  $("backBtn").onclick  = ()=> location.href="/pages/home.html";
+  avatarBtn.onclick     = ()=> location.href="/pages/profile.html";
+}
 
-    /* ================= TOP BAR ================= */
-    .topbar{
-      height:var(--topH);
-      display:flex; align-items:center; justify-content:space-between;
-      padding:0 12px;
-      border-bottom:1px solid rgba(255,255,255,.08);
-      background: rgba(0,0,0,.35);
-      backdrop-filter: blur(12px);
-    }
+/* ================= HISTORY ================= */
+function chatKey(u){
+  const uid = String(u.user_id || u.email).toLowerCase();
+  return `italky_chat_hist::${uid}`;
+}
+function loadHist(u){
+  return safeJson(localStorage.getItem(chatKey(u)), []);
+}
+function saveHist(u, h){
+  localStorage.setItem(chatKey(u), JSON.stringify(h.slice(-30)));
+}
 
-    .leftControls{ display:flex; align-items:center; gap:10px; }
-    .backBtn{
-      width:42px;height:42px;border-radius:14px;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(0,0,0,.18);
-      color:#fff;font-size:20px;font-weight:900;
-      display:flex;align-items:center;justify-content:center;
-      cursor:pointer;
-    }
+/* ================= UI ================= */
+let follow = true;
+function scrollBottom(force=false){
+  const el = $("chat");
+  requestAnimationFrame(()=>{
+    if(force || follow) el.scrollTop = el.scrollHeight;
+  });
+}
 
-    .mini-brand{
-      display:flex; flex-direction:column;
-      line-height:1; cursor:pointer;
-    }
-    .logo-line{
-      font-family:'Space Grotesk',sans-serif;
-      font-size:20px;
-      letter-spacing:-.4px;
-    }
-    .logo-main{ color:#fff; font-weight:700; }
-    .logo-ai{
-      font-weight:700;
-      background: linear-gradient(135deg,#A5B4FC,#4F46E5);
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;
-    }
-    .logo-slogan{
-      font-size:10px;
-      font-weight:700;
-      letter-spacing:4px;
-      color:#6B7280;
-      margin-top:5px;
-    }
+function addBubble(role, text){
+  const d = document.createElement("div");
+  d.className = `bubble ${role}`;
+  d.textContent = text;
+  $("chat").appendChild(d);
+  scrollBottom(false);
+}
 
-    .rightControls{
-      display:flex; align-items:center; gap:10px;
-    }
-    .usertext{
-      display:flex; flex-direction:column; align-items:flex-end;
-    }
-    .uname{ font-size:12px; font-weight:900; }
-    .plan{ font-size:11px; color:var(--muted); font-weight:800; }
+function typingBubble(){
+  const d = document.createElement("div");
+  d.className = "bubble bot";
+  d.textContent = "…";
+  $("chat").appendChild(d);
+  scrollBottom(false);
+  return d;
+}
 
-    .avatar-btn{
-      width:40px;height:40px;border-radius:999px;
-      border:none;background:transparent;cursor:pointer;
-      overflow:hidden;
-    }
-    .avatar-btn img{ width:100%;height:100%;object-fit:cover; }
-    .avatar-fallback{
-      width:40px;height:40px;border-radius:999px;
-      display:flex;align-items:center;justify-content:center;
-      background: rgba(255,255,255,.08);
-      border:1px solid rgba(255,255,255,.12);
-      font-weight:900;
-    }
+/* ================= API ================= */
+async function apiChat(u, text, history){
+  const r = await fetch(`${BASE_DOMAIN}/api/chat`,{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({
+      user_id: u.user_id || u.email,
+      text,
+      history: history.slice(-20).map(x=>({role:x.role, content:x.text}))
+    })
+  });
+  const j = await r.json();
+  return String(j.text||"").trim() || "…";
+}
 
-    /* ================= CLEAR CHAT ================= */
-    .clear-wrap{
-      text-align:center;
-      padding:8px 0;
-      border-bottom:1px solid rgba(255,255,255,.05);
-    }
-    .clear-btn{
-      background:none;
-      border:none;
-      color:var(--be-free);
-      font-size:12px;
-      font-weight:800;
-      cursor:pointer;
-      letter-spacing:.3px;
-    }
+/* ================= TEXTAREA ================= */
+function autoGrow(){
+  const ta = $("msgInput");
+  ta.style.height="auto";
+  ta.style.height=Math.min(ta.scrollHeight,120)+"px";
+}
 
-    /* ================= CHAT ================= */
-    #chat{
-      position:absolute;
-      top:calc(var(--topH) + 36px);
-      bottom:calc(var(--dockH) + var(--footerH));
-      left:0; right:0;
-      padding:14px 12px;
-      overflow-y:auto;
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-    }
+/* ================= CLEAR CHAT ================= */
+function bindClearChat(u){
+  $("clearChatBtn").onclick = ()=>{
+    $("chat").innerHTML = "";
+    localStorage.removeItem(chatKey(u)); // ✅ HAFIZA SİLİNMİYOR, SADECE SOHBET
+    addBubble("meta","Sohbet temizlendi. Seni hatırlıyorum 🙂");
+  };
+}
 
-    .bubble{
-      max-width:85%;
-      padding:10px 14px;
-      border-radius:16px;
-      font-size:14px;
-      line-height:1.45;
-      background: rgba(0,0,0,.18);
-      border:1px solid rgba(255,255,255,.10);
-      backdrop-filter: blur(8px);
-      white-space:pre-wrap;
-    }
-    .bubble.bot{
-      align-self:flex-start;
-      border-left:4px solid var(--ai-color);
-    }
-    .bubble.user{
-      align-self:flex-end;
-      text-align:right;
-      border-right:4px solid var(--be-free);
-    }
-    .bubble.meta{
-      align-self:center;
-      font-size:12px;
-      color:var(--muted);
-      background: rgba(255,255,255,.04);
-    }
+/* ================= STT (MIC) ================= */
+let sttBusy = false;
+function startSTT(onFinal){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR){ alert("Bu cihaz konuşmayı yazıya çevirmiyor."); return; }
+  if(sttBusy) return;
 
-    /* ================= INPUT ================= */
-    .input-dock{
-      position:fixed;
-      bottom:var(--footerH);
-      left:50%;
-      transform:translateX(-50%);
-      width:var(--frameW);
-      padding:10px 12px;
-      background: rgba(0,0,0,.32);
-      border-top:1px solid rgba(255,255,255,.08);
+  const micBtn = $("micBtn");
+  const ta = $("msgInput");
+
+  const rec = new SR();
+  rec.lang="tr-TR";
+  rec.interimResults=false;
+  rec.continuous=false;
+
+  sttBusy=true;
+  micBtn.classList.add("listening"); // ✅ dalga animasyonu tetik
+
+  rec.onresult = (e)=>{
+    const t = e.results[0][0].transcript.trim();
+    if(t){
+      ta.value=t;
+      autoGrow();
+      onFinal(t);
     }
-    .dock-inner{
-      display:flex; gap:8px; align-items:flex-end;
-      background: rgba(255,255,255,.04);
-      border:1px solid rgba(255,255,255,.10);
-      border-radius:26px;
-      padding:8px;
+  };
+  rec.onend = ()=>{
+    micBtn.classList.remove("listening");
+    sttBusy=false;
+  };
+  try{ rec.start(); }catch{ sttBusy=false; }
+}
+
+/* ================= MAIN ================= */
+async function main(){
+  const u = ensureLogged();
+  if(!u) return;
+
+  paintHeader(u);
+  bindClearChat(u);
+
+  const chat = $("chat");
+  chat.onscroll = ()=> follow = (chat.scrollHeight - chat.scrollTop - chat.clientHeight) < 120;
+
+  const hist = loadHist(u);
+  chat.innerHTML="";
+  if(hist.length){
+    hist.forEach(m=> addBubble(m.role,m.text));
+  }else{
+    addBubble("meta","italkyAI: Yazılı bilgi alma alanı.");
+  }
+  scrollBottom(true);
+
+  async function send(){
+    const ta=$("msgInput");
+    const text=ta.value.trim();
+    if(!text) return;
+    ta.value=""; autoGrow();
+
+    const h=loadHist(u);
+    addBubble("user",text);
+    h.push({role:"user",text});
+
+    const loader=typingBubble();
+    try{
+      const out=await apiChat(u,text,h);
+      loader.remove();
+      addBubble("bot",out);
+      h.push({role:"assistant",text:out});
+      saveHist(u,h);
+    }catch{
+      loader.remove();
+      addBubble("bot","Şu an cevap veremedim.");
     }
+  }
 
-    #msgInput{
-      flex:1;
-      background:none;
-      border:none;
-      color:#fff;
-      font-size:14px;
-      resize:none;
-      max-height:120px;
-      outline:none;
+  $("sendBtn").onclick=send;
+  $("msgInput").oninput=autoGrow;
+  $("msgInput").onkeydown=(e)=>{
+    if(e.key==="Enter" && !e.shiftKey){
+      e.preventDefault(); send();
     }
+  };
 
-    .icon-btn, .send-btn{
-      width:40px;height:40px;
-      border-radius:16px;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(0,0,0,.22);
-      display:flex;align-items:center;justify-content:center;
-      cursor:pointer;
-    }
+  $("micBtn").onclick=()=>{
+    startSTT(async ()=>{ await send(); });
+  };
 
-    .send-btn{
-      border-color: rgba(107,114,128,.45);
-      background: rgba(107,114,128,.22);
-    }
-    .send-btn svg{ stroke:#6B7280; }
+  autoGrow();
+}
 
-    /* ================= FOOTER ================= */
-    .footerbar{
-      position:fixed;
-      bottom:0; left:50%;
-      transform:translateX(-50%);
-      width:var(--frameW);
-      height:var(--footerH);
-      background: rgba(3,0,20,.95);
-      border-top:1px solid rgba(255,255,255,.05);
-      display:flex;
-      flex-direction:column;
-      justify-content:center;
-      gap:6px;
-    }
-    .links{
-      display:flex;
-      justify-content:center;
-      gap:16px;
-    }
-    .links a{
-      color:var(--muted);
-      font-size:12px;
-      font-weight:800;
-      text-decoration:none;
-    }
-    .footerBrand{
-      text-align:center;
-      font-size:10px;
-      color: rgba(255,255,255,.22);
-      font-weight:700;
-    }
-  </style>
-</head>
-
-<body>
-<div class="mobile-frame">
-
-  <div class="topbar">
-    <div class="leftControls">
-      <button class="backBtn" id="backBtn">←</button>
-      <div class="mini-brand" id="logoHome">
-        <div class="logo-line">
-          <span class="logo-main">italky</span><span class="logo-ai">AI</span>
-        </div>
-        <div class="logo-slogan">BE FREE</div>
-      </div>
-    </div>
-    <div class="rightControls">
-      <div class="usertext">
-        <div class="uname" id="userName">—</div>
-        <div class="plan" id="userPlan">FREE</div>
-      </div>
-      <button class="avatar-btn" id="avatarBtn">
-        <span class="avatar-fallback" id="avatarFallback">•</span>
-      </button>
-    </div>
-  </div>
-
-  <div class="clear-wrap">
-    <button class="clear-btn" id="clearChatBtn">Sohbeti Temizle</button>
-  </div>
-
-  <div id="chat"></div>
-
-  <div class="input-dock">
-    <div class="dock-inner">
-      <textarea id="msgInput" rows="1" placeholder="Sohbet AI… yaz bakalım."></textarea>
-      <button class="icon-btn" id="micBtn">🎙️</button>
-      <button class="send-btn" id="sendBtn">✈️</button>
-    </div>
-  </div>
-
-  <div class="footerbar">
-    <div class="links">
-      <a href="/pages/about.html">Hakkında</a>
-      <a href="/pages/faq.html">SSS</a>
-      <a href="/pages/privacy.html">Gizlilik</a>
-      <a href="/pages/contact.html">İletişim</a>
-    </div>
-    <div class="footerBrand">italkyAI By Ozyigit’s 2026</div>
-  </div>
-
-</div>
-
-<script type="module" src="/js/italky_chat_page.js?v=4"></script>
-</body>
-</html>
+document.addEventListener("DOMContentLoaded",main);
