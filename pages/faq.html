@@ -4,298 +4,111 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>italkyAI - SSS</title>
-
   <link rel="icon" href="data:," />
-  
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
   <style>
     :root {
-      /* --- YENİ MARKA PALETİ --- */
-      --bg-deep: #020205;
-      --text-main: #ffffff;
-      --text-muted: rgba(255, 255, 255, 0.65);
-      
-      /* Logo Renkleri */
-      --c-indigo: #6366f1;
-      --c-purple: #a855f7;
+      --bg-deep: #020205; --text-main: #ffffff; --text-muted: rgba(255, 255, 255, 0.65);
+      --c-indigo: #6366f1; --c-purple: #a855f7;
       --ai-grad: linear-gradient(135deg, #a5b4fc 0%, #6366f1 100%);
-      
       --glass-border: rgba(255, 255, 255, 0.1);
       --ease-elastic: cubic-bezier(0.34, 1.56, 0.64, 1);
     }
-
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
 
     html, body {
       margin: 0; padding: 0; width: 100%; height: 100%;
-      overflow: hidden; /* Dış scroll kapalı */
-      position: fixed;
+      overflow: hidden; position: fixed;
       font-family: 'Outfit', sans-serif;
-      background-color: var(--bg-deep);
-      color: var(--text-main);
+      background-color: var(--bg-deep); color: var(--text-main);
       display: flex; align-items: center; justify-content: center;
     }
 
-    /* --- ATMOSFER --- */
-    .cosmos-bg {
-      position: absolute; inset: -50%; width: 200%; height: 200%;
-      background: var(--bg-deep); z-index: 0; pointer-events: none;
-    }
-    .orb {
-      position: absolute; border-radius: 50%;
-      filter: blur(100px); opacity: 0.3;
-      animation: floatOrbit 30s infinite alternate ease-in-out;
-    }
-    .orb-1 {
-      top: 10%; left: 10%; width: 60vw; height: 60vw;
-      background: radial-gradient(circle, var(--c-indigo), transparent 70%);
-    }
-    .orb-2 {
-      bottom: 10%; right: 10%; width: 50vw; height: 50vw;
-      background: radial-gradient(circle, var(--c-purple), transparent 70%);
-      animation-delay: -5s;
-    }
-    @keyframes floatOrbit {
-      0% { transform: translate(0, 0) scale(1); }
-      100% { transform: translate(10%, -10%) scale(1.1); }
-    }
+    .cosmos-bg { position: absolute; inset: -50%; width: 200%; height: 200%; background: var(--bg-deep); z-index: 0; pointer-events: none; }
+    .orb { position: absolute; border-radius: 50%; filter: blur(100px); opacity: 0.3; animation: floatOrbit 30s infinite alternate ease-in-out; }
+    .orb-1 { top: 10%; left: 10%; width: 60vw; height: 60vw; background: radial-gradient(circle, var(--c-indigo), transparent 70%); }
+    .orb-2 { bottom: 10%; right: 10%; width: 50vw; height: 50vw; background: radial-gradient(circle, var(--c-purple), transparent 70%); animation-delay: -5s; }
+    @keyframes floatOrbit { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(10%, -10%) scale(1.1); } }
+    .noise { position: absolute; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E"); pointer-events: none; mix-blend-mode: overlay; z-index: 1; }
 
-    .noise {
-      position: absolute; inset: 0;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-      pointer-events: none; mix-blend-mode: overlay; z-index: 1;
-    }
-
-    /* --- FRAME --- */
     .mobile-frame {
-      width: 100%; max-width: 480px; height: 100%;
-      position: relative; z-index: 10;
+      width: 100%; max-width: 480px; height: 100%; position: relative; z-index: 10;
       display: flex; flex-direction: column;
-      background: rgba(8, 8, 12, 0.5);
-      backdrop-filter: blur(30px);
+      background: rgba(8, 8, 12, 0.5); backdrop-filter: blur(30px);
     }
     @media (min-width: 520px) {
-      .mobile-frame {
-        height: 92vh; border-radius: 40px;
-        border: 1px solid rgba(255,255,255,0.08);
-        box-shadow: 0 40px 100px -20px rgba(0,0,0,0.9);
-        overflow: hidden;
-      }
+      .mobile-frame { height: 92vh; border-radius: 40px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 40px 100px -20px rgba(0,0,0,0.9); overflow: hidden; }
     }
 
-    /* --- TOP BAR --- */
-    .topbar {
-      flex: 0 0 100px;
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 0 24px; position: relative; z-index: 20;
-    }
-
-    .back-btn {
-      width: 44px; height: 44px; border-radius: 14px;
-      border: 1px solid var(--glass-border);
-      background: rgba(255,255,255,0.05);
-      color: #fff; display: flex; align-items: center; justify-content: center;
-      cursor: pointer; transition: 0.2s;
-    }
+    .topbar { flex: 0 0 90px; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; position: relative; z-index: 20; }
+    .back-btn { width: 44px; height: 44px; border-radius: 14px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.05); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
     .back-btn:active { transform: scale(0.95); background: rgba(255,255,255,0.1); }
     .back-btn svg { width: 22px; height: 22px; stroke-width: 2.5; }
 
-    /* YENİ LOGO */
-    .mini-brand {
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      line-height: 1; margin-top: 4px;
-    }
-    .logo-container {
-      font-family: 'Space Grotesk', sans-serif; font-size: 26px; letter-spacing: -1px;
-    }
+    .mini-brand { display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1; margin-top: 4px; }
+    .logo-container { font-family: 'Space Grotesk', sans-serif; font-size: 26px; letter-spacing: -1px; }
     .logo-main { font-weight: 700; color: #fff; }
-    .logo-ai { 
-      font-weight: 700; 
-      background: var(--ai-grad);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    }
-    .mini-slogan {
-      font-family: 'Outfit', sans-serif;
-      font-size: 10px; font-weight: 700;
-      color: rgba(255,255,255,0.5);
-      letter-spacing: 4px; text-transform: uppercase;
-      margin-top: 4px; margin-left: 2px;
-    }
+    .logo-ai { font-weight: 700; background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .mini-slogan { font-family: 'Outfit', sans-serif; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.5); letter-spacing: 4px; text-transform: uppercase; margin-top: 4px; margin-left: 2px; }
 
-    /* --- CONTENT --- */
+    /* --- SCROLL FIX --- */
     .page-content {
-      flex: 1;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-      padding: 10px 20px 140px;
-      display: flex; flex-direction: column; gap: 20px;
-      position: relative; z-index: 5;
+      flex: 1; height: 100%; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch;
+      padding: 10px 20px 160px; display: flex; flex-direction: column; gap: 20px; position: relative; z-index: 5;
     }
     .page-content::-webkit-scrollbar { display: none; }
 
     .faq-card {
       background: linear-gradient(160deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.005) 100%);
-      border: 1px solid var(--glass-border);
-      border-radius: 32px;
-      padding: 32px 24px;
-      position: relative; overflow: hidden;
-      animation: fadeInUp 0.8s var(--ease-elastic);
+      border: 1px solid var(--glass-border); border-radius: 32px; padding: 32px 24px;
+      position: relative; overflow: hidden; animation: fadeInUp 0.8s var(--ease-elastic); flex-shrink: 0;
     }
 
-    h1 {
-      font-family: 'Space Grotesk', sans-serif; font-size: 32px; margin: 0 0 24px;
-      color: #fff; font-weight: 700; letter-spacing: -1.5px;
-    }
-    h1 span {
-      background: var(--ai-grad);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    }
+    h1 { font-family: 'Space Grotesk', sans-serif; font-size: 32px; margin: 0 0 24px; color: #fff; font-weight: 700; letter-spacing: -1.5px; }
+    h1 span { background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
-    /* SSS Item */
-    .faq-item {
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-      padding-bottom: 20px; margin-bottom: 20px;
-    }
+    .faq-item { border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 20px; margin-bottom: 20px; }
     .faq-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+    .faq-q { font-family: 'Outfit', sans-serif; font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 8px; line-height: 1.4; display: flex; justify-content: space-between; align-items: center; }
+    .faq-a { font-size: 14px; color: var(--text-muted); line-height: 1.6; }
     
-    .faq-q {
-      font-family: 'Outfit', sans-serif; font-size: 16px; font-weight: 700; color: #fff;
-      margin-bottom: 8px; line-height: 1.4;
-      display: flex; justify-content: space-between; align-items: center;
-    }
-    
-    .faq-a {
-      font-size: 14px; color: var(--text-muted); line-height: 1.6;
-    }
+    .tag { display: inline-block; padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: 800; margin-bottom: 8px; letter-spacing: 0.5px; text-transform: uppercase; }
+    .tag.ai { background: rgba(99, 102, 241, 0.15); color: #a5b4fc; border: 1px solid rgba(99, 102, 241, 0.3); }
+    .tag.free { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); }
+    .tag.pro { background: rgba(236, 72, 153, 0.15); color: #f472b6; border: 1px solid rgba(236, 72, 153, 0.3); }
 
-    /* Tag Tasarımı */
-    .tag {
-      display: inline-block; padding: 4px 10px; border-radius: 8px; 
-      font-size: 10px; font-weight: 800; margin-bottom: 8px; 
-      letter-spacing: 0.5px; text-transform: uppercase;
-    }
-    .tag.ai { 
-      background: rgba(99, 102, 241, 0.15); color: #a5b4fc; 
-      border: 1px solid rgba(99, 102, 241, 0.3); 
-    }
-    .tag.free { 
-      background: rgba(34, 197, 94, 0.15); color: #4ade80; 
-      border: 1px solid rgba(34, 197, 94, 0.3); 
-    }
-    .tag.pro { 
-      background: rgba(236, 72, 153, 0.15); color: #f472b6; 
-      border: 1px solid rgba(236, 72, 153, 0.3); 
-    }
-
-    /* --- FOOTER --- */
-    .footerbar {
-      position: absolute; bottom: 0; width: 100%; padding: 24px;
-      background: linear-gradient(to top, #000 20%, transparent 100%);
-      display: flex; flex-direction: column; align-items: center; gap: 16px;
-      z-index: 30; pointer-events: none;
-    }
+    .footerbar { position: absolute; bottom: 0; width: 100%; padding: 24px; background: linear-gradient(to top, #000 20%, transparent 100%); display: flex; flex-direction: column; align-items: center; gap: 16px; z-index: 30; pointer-events: none; }
     .links { display: flex; gap: 20px; pointer-events: auto; }
-    .links a {
-      color: rgba(255,255,255,0.5); text-decoration: none; font-size: 11px; 
-      font-weight: 700; text-transform: uppercase; transition: 0.2s;
-    }
+    .links a { color: rgba(255,255,255,0.5); text-decoration: none; font-size: 11px; font-weight: 700; text-transform: uppercase; transition: 0.2s; }
     .links a:hover { color: #fff; }
-    
-    .footerBrand { 
-      font-size: 10px; color: rgba(255,255,255,0.2); letter-spacing: 1.5px; 
-      text-transform: uppercase; font-weight: 700;
-    }
-
+    .footerBrand { font-size: 10px; color: rgba(255,255,255,0.2); letter-spacing: 1.5px; text-transform: uppercase; font-weight: 700; }
     @keyframes fadeInUp { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
   </style>
 </head>
-
 <body>
-  <div class="cosmos-bg">
-    <div class="orb orb-1"></div>
-    <div class="orb orb-2"></div>
-  </div>
+  <div class="cosmos-bg"><div class="orb orb-1"></div><div class="orb orb-2"></div></div>
   <div class="noise"></div>
-
   <div class="mobile-frame">
     <div class="topbar">
-      <button class="back-btn" onclick="window.history.length > 1 ? window.history.back() : window.location.href='/pages/home.html'">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-      </button>
-
-      <div class="mini-brand">
-        <div class="logo-container">
-          <span class="logo-main">italky</span><span class="logo-ai">AI</span>
-        </div>
-        <div class="mini-slogan">BE FREE</div>
-      </div>
+      <button class="back-btn" onclick="window.history.length > 1 ? window.history.back() : window.location.href='/pages/home.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
+      <div class="mini-brand"><div class="logo-container"><span class="logo-main">italky</span><span class="logo-ai">AI</span></div><div class="mini-slogan">BE FREE</div></div>
     </div>
-
     <div class="page-content">
       <div class="faq-card">
         <h1>Sıkça Sorulan <span>Sorular</span></h1>
-
-        <div class="faq-item">
-          <span class="tag ai">GENEL</span>
-          <div class="faq-q">italkyAI nedir, nasıl çalışır?</div>
-          <div class="faq-a">
-            italkyAI, gelişmiş yapay zeka modellerini kullanarak anlık sesli, yazılı ve görsel çeviri yapan, aynı zamanda sizinle sohbet ederek dil öğreten yeni nesil bir asistandır.
-          </div>
-        </div>
-
-        <div class="faq-item">
-          <span class="tag free">ÜYELİK</span>
-          <div class="faq-q">Uygulama ücretli mi?</div>
-          <div class="faq-a">
-            Giriş yapmak ve temel yapay zeka özelliklerini kullanmak tamamen <strong>ücretsizdir.</strong> Sınırsız konuşma süresi ve gelişmiş ses modelleri (Voice AI) için Premium planlar sunulmaktadır.
-          </div>
-        </div>
-
-        <div class="faq-item">
-          <span class="tag ai">TEKNOLOJİ</span>
-          <div class="faq-q">Konuşkan AI (Voice AI) nedir?</div>
-          <div class="faq-a">
-            Tıpkı gerçek bir insanla telefonda konuşur gibi, gecikmesiz ve kesintisiz sohbet edebileceğiniz modumuzdur. Sizi dinler, düşünür ve anında doğal bir sesle cevap verir.
-          </div>
-        </div>
-
-        <div class="faq-item">
-          <span class="tag pro">DİL DESTEĞİ</span>
-          <div class="faq-q">Hangi dilleri destekliyorsunuz?</div>
-          <div class="faq-a">
-            Şu an Türkçe, İngilizce, Almanca, Fransızca, İtalyanca, İspanyolca, Rusça ve Arapça dillerinde tam destek veriyoruz. Listemiz her gün büyüyor.
-          </div>
-        </div>
-
-        <div class="faq-item">
-          <span class="tag ai">GÜVENLİK</span>
-          <div class="faq-q">Konuşmalarım kaydediliyor mu?</div>
-          <div class="faq-a">
-            Hayır. Ses verileriniz anlık olarak işlenir ve sunucularımızda depolanmaz. Gizliliğiniz bizim için en büyük önceliktir.
-          </div>
-        </div>
-
-        <div class="faq-item">
-          <span class="tag pro">ÖZELLİK</span>
-          <div class="faq-q">İnternet bağlantısı şart mı?</div>
-          <div class="faq-a">
-            Evet. En güçlü yapay zeka modellerini (LLM) kullanabilmek için cihazınızın internete bağlı olması gerekmektedir.
-          </div>
-        </div>
-
+        <div class="faq-item"><span class="tag ai">GENEL</span><div class="faq-q">italkyAI nedir, nasıl çalışır?</div><div class="faq-a">italkyAI, gelişmiş yapay zeka modellerini kullanarak anlık sesli, yazılı ve görsel çeviri yapan, aynı zamanda sizinle sohbet ederek dil öğreten yeni nesil bir asistandır.</div></div>
+        <div class="faq-item"><span class="tag free">ÜYELİK</span><div class="faq-q">Uygulama ücretli mi?</div><div class="faq-a">Giriş yapmak ve temel yapay zeka özelliklerini kullanmak tamamen <strong>ücretsizdir.</strong> Sınırsız konuşma süresi ve gelişmiş ses modelleri (Voice AI) için Premium planlar sunulmaktadır.</div></div>
+        <div class="faq-item"><span class="tag ai">TEKNOLOJİ</span><div class="faq-q">Konuşkan AI (Voice AI) nedir?</div><div class="faq-a">Tıpkı gerçek bir insanla telefonda konuşur gibi, gecikmesiz ve kesintisiz sohbet edebileceğiniz modumuzdur. Sizi dinler, düşünür ve anında doğal bir sesle cevap verir.</div></div>
+        <div class="faq-item"><span class="tag pro">DİL DESTEĞİ</span><div class="faq-q">Hangi dilleri destekliyorsunuz?</div><div class="faq-a">Şu an Türkçe, İngilizce, Almanca, Fransızca, İtalyanca, İspanyolca, Rusça ve Arapça dillerinde tam destek veriyoruz. Listemiz her gün büyüyor.</div></div>
+        <div class="faq-item"><span class="tag ai">GÜVENLİK</span><div class="faq-q">Konuşmalarım kaydediliyor mu?</div><div class="faq-a">Hayır. Ses verileriniz anlık olarak işlenir ve sunucularımızda depolanmaz. Gizliliğiniz bizim için en büyük önceliktir.</div></div>
+        <div class="faq-item"><span class="tag pro">ÖZELLİK</span><div class="faq-q">İnternet bağlantısı şart mı?</div><div class="faq-a">Evet. En güçlü yapay zeka modellerini (LLM) kullanabilmek için cihazınızın internete bağlı olması gerekmektedir.</div></div>
       </div>
     </div>
-
     <div class="footerbar">
-      <div class="links">
-        <a href="/pages/about.html">Hakkında</a>
-        <a href="/pages/faq.html" style="color:#fff">SSS</a>
-        <a href="/pages/privacy.html">Gizlilik</a>
-        <a href="/pages/contact.html">İletişim</a>
-      </div>
+      <div class="links"><a href="/pages/about.html">Hakkında</a><a href="/pages/faq.html" style="color:#fff">SSS</a><a href="/pages/privacy.html">Gizlilik</a><a href="/pages/contact.html">İletişim</a></div>
       <div class="footerBrand">italkyAI By Ozyigit's 2026</div>
     </div>
   </div>
