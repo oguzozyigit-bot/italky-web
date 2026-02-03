@@ -3,10 +3,6 @@ import { BASE_DOMAIN } from "/js/config.js";
 
 const $ = (id) => document.getElementById(id);
 
-/* =========================
-   SES LİSTESİ (OpenAI Voice Map)
-   (Yavuz, Yılmaz, Eles YOK)
-   ========================= */
 const VOICES = [
   { id: "jale",   label: "Jale",   gender: "Kadın", openaiVoice: "shimmer", desc: "Net ve İddialı" },
   { id: "huma",   label: "Hüma",   gender: "Kadın", openaiVoice: "nova",    desc: "Enerjik ve Sıcak" },
@@ -34,9 +30,32 @@ function welcomeText(name){
   return `italkyAI’ye hoş geldiniz. Benimle hem eğlenip, hem öğrenip hem de dünyayı özgürce gezebilirsiniz. Hadi beni seç, ben ${name}.`;
 }
 
-/* =========================
-   OPENAI TTS (server -> base64)
-   ========================= */
+/* ======= VISUAL ======= */
+const stage  = $("stage");
+const status = $("status");
+const micBtn = $("micBtn");
+
+function setState(s){
+  stage?.classList.remove("listening","speaking");
+  micBtn?.classList.remove("active","listening");
+
+  if (s === "listening"){
+    stage?.classList.add("listening");
+    micBtn?.classList.add("active","listening");
+    if(status) status.textContent = "Dinliyorum…";
+  } else if (s === "thinking"){
+    micBtn?.classList.add("active");
+    if(status) status.textContent = "Düşünüyorum…";
+  } else if (s === "speaking"){
+    stage?.classList.add("speaking");
+    micBtn?.classList.add("active");
+    if(status) status.textContent = "Cevap veriyorum…";
+  } else {
+    if(status) status.textContent = "Dokun ve Konuş";
+  }
+}
+
+/* ======= OPENAI TTS ======= */
 async function tts(text, openaiVoice) {
   const url = `${baseUrl()}/api/tts_openai`;
   const r = await fetch(url, {
@@ -69,9 +88,7 @@ function playB64(b64) {
   });
 }
 
-/* =========================
-   UI: Modal
-   ========================= */
+/* ======= MODAL ======= */
 const modal = $("voiceModal");
 const list  = $("voiceList");
 
@@ -100,7 +117,6 @@ function renderList(){
       <button class="vPlay" type="button" data-play="${v.id}">▶</button>
     `;
 
-    // satıra tıkla => seç
     row.addEventListener("click",(e)=>{
       const btn = e.target.closest("[data-play]");
       if(btn) return;
@@ -108,16 +124,14 @@ function renderList(){
       renderList();
     });
 
-    // demo
     row.querySelector("[data-play]")?.addEventListener("click", async (e)=>{
-      e.preventDefault();
-      e.stopPropagation();
+      e.preventDefault(); e.stopPropagation();
       try{
         const b64 = await tts(welcomeText(v.label), v.openaiVoice);
         await playB64(b64);
       }catch(err){
-        alert("Demo çalınamadı.");
         console.error(err);
+        alert("Demo çalınamadı. (API / Key / Route kontrol)");
       }
     });
 
@@ -125,34 +139,7 @@ function renderList(){
   });
 }
 
-/* =========================
-   UI: Visual state
-   ========================= */
-const stage  = $("stage");
-const status = $("status");
-
-function setState(s){
-  stage?.classList.remove("listening","speaking");
-  $("micBtn")?.classList.remove("active","listening");
-
-  if(s === "listening"){
-    stage?.classList.add("listening");
-    $("micBtn")?.classList.add("active","listening");
-    if(status) status.textContent = "Dinliyorum…";
-  }else if(s === "speaking"){
-    stage?.classList.add("speaking");
-    $("micBtn")?.classList.add("active");
-    if(status) status.textContent = "Cevap veriyorum…";
-  }else if(s === "thinking"){
-    if(status) status.textContent = "Düşünüyorum…";
-  }else{
-    if(status) status.textContent = "Dokun ve Konuş";
-  }
-}
-
-/* =========================
-   STT
-   ========================= */
+/* ======= STT ======= */
 let rec = null;
 let sttBusy = false;
 
@@ -166,10 +153,6 @@ function initSTT(){
   return r;
 }
 
-/* =========================
-   “Cevap” (şimdilik echo) -> OpenAI TTS
-   (Chat API sonra bağlanır)
-   ========================= */
 async function answerAndSpeak(userText){
   const v = getVoiceById(selectedId || stagedId);
   const reply = `italkyAI burada. Bunu söyledin: ${userText}.`;
@@ -177,25 +160,19 @@ async function answerAndSpeak(userText){
   await playB64(b64);
 }
 
-/* =========================
-   Bind
-   ========================= */
+/* ======= BIND ======= */
 function bind(){
-  // nav
   $("backBtn")?.addEventListener("click", ()=> location.href="/pages/home.html");
   $("homeBtn")?.addEventListener("click", ()=> location.href="/pages/home.html");
 
-  // modal open/close
   $("openVoice")?.addEventListener("click", openModal);
   $("closeVoice")?.addEventListener("click", closeModal);
   modal?.addEventListener("click",(e)=>{ if(e.target === modal) closeModal(); });
 
-  // save voice
   $("saveVoice")?.addEventListener("click", async ()=>{
     selectedId = stagedId;
     localStorage.setItem(KEY, selectedId);
     closeModal();
-    // kaydedince kısa demo (isteğe bağlı)
     try{
       const v = getVoiceById(selectedId);
       const b64 = await tts(welcomeText(v.label), v.openaiVoice);
@@ -203,9 +180,9 @@ function bind(){
     }catch{}
   });
 
-  // mic
-  $("micBtn")?.addEventListener("click", async ()=>{
-    if(sttBusy) {
+  // ✅ MOBILE CLICK FIX: pointerup + click
+  const fireMic = async ()=>{
+    if(sttBusy){
       try{ rec?.stop?.(); }catch{}
       return;
     }
@@ -229,6 +206,7 @@ function bind(){
         await answerAndSpeak(txt);
       }catch(err){
         console.error(err);
+        alert("Ses üretilemedi. (/api/tts_openai çalışmıyor)");
       }finally{
         setState("idle");
       }
@@ -244,18 +222,19 @@ function bind(){
       if(!stage?.classList.contains("speaking")) setState("idle");
     };
 
-    try{
-      rec.start();
-    }catch(err){
+    try{ rec.start(); }
+    catch(err){
       console.error(err);
       sttBusy = false;
       setState("idle");
     }
-  });
+  };
+
+  micBtn?.addEventListener("pointerup", (e)=>{ e.preventDefault(); fireMic(); });
+  micBtn?.addEventListener("click", (e)=>{ e.preventDefault(); fireMic(); });
 
   setState("idle");
 
-  // ilk girişte ses seçtirmeyi zorla
   if(!localStorage.getItem(KEY)){
     setTimeout(openModal, 350);
   }
