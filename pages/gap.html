@@ -8,49 +8,61 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
   
   <style>
-    /* --- TASARIM (Cosmos Tema) --- */
     :root { 
       --bg-deep:#020205; 
       --text-main:#fff; 
       --c-accent:#ffb800; /* Altın */
       --c-success:#00e676; 
       --c-error:#ff1744; 
+      --c-cyan: #00f3ff;
       --border:rgba(255,255,255,0.1); 
     }
     
-    * { box-sizing:border-box; outline:none; user-select:none; }
+    * { box-sizing:border-box; outline:none; user-select:none; -webkit-tap-highlight-color:transparent; }
     html,body { margin:0; height:100dvh; overflow:hidden; font-family:'Outfit', sans-serif; background:var(--bg-deep); color:var(--text-main); }
     
     .cosmos-bg { position:absolute; inset:0; background:radial-gradient(circle at center, #1a1a2e 0%, #000 100%); z-index:0; }
     .star-dust { position: absolute; inset: 0; opacity: 0.3; background-image: radial-gradient(#fff 1px, transparent 1px); background-size: 50px 50px; animation: dustMove 100s linear infinite; } 
+    #effectCanvas { position: absolute; inset: 0; pointer-events: none; z-index: 9999; display: none; }
     @keyframes dustMove { from { transform: translateY(0); } to { transform: translateY(-500px); } }
     
     .wrap { width:100%; max-width:480px; height:100%; margin:0 auto; position:relative; z-index:10; display:flex; flex-direction:column; }
     
-    /* NAV */
-    .nav-layer { position:absolute; top:0; left:0; width:100%; height:70px; z-index:50; display:flex; justify-content:space-between; padding:12px; pointer-events:none; }
+    /* LOGO HEADER */
+    .game-logo-header {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding-top: 20px; margin-bottom: -10px; position: relative; z-index: 20;
+    }
+    .gl-brand { font-family: 'Space Grotesk', sans-serif; font-size: 14px; font-weight: 700; color: rgba(255, 255, 255, 0.6); letter-spacing: 2px; margin-bottom: 5px; }
+    .gl-icon { font-size: 32px; margin-bottom: 2px; filter: drop-shadow(0 0 5px var(--c-accent)); animation: pulseNeon 2s infinite alternate; }
+    .gl-title { font-family: 'Space Grotesk', sans-serif; font-weight: 900; font-size: 26px; letter-spacing: 1px; background: linear-gradient(to right, var(--c-accent), #ff5500); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-transform: uppercase; line-height: 1; }
+    .gl-sub { font-size: 9px; letter-spacing: 4px; color: var(--c-accent); opacity: 0.8; margin-top: 4px; font-weight: 700; }
+    @keyframes pulseNeon { from { transform: scale(1); } to { transform: scale(1.05); } }
+
+    /* NAV & SCORE */
+    .nav-layer { position:absolute; top:0; left:0; width:100%; height:70px; z-index:50; display:flex; justify-content:space-between; padding:10px 12px; pointer-events:none; }
     .nav-btn { pointer-events:auto; height:44px; padding:0 16px; border-radius:14px; background:rgba(0,0,0,0.4); border:1px solid var(--border); color:#fff; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(10px); cursor:pointer; font-weight:700; transition:0.2s; }
     .nav-btn:active { transform:scale(0.95); }
-    .brand-mini { pointer-events:auto; display:flex; flex-direction:column; align-items:center; cursor:pointer; } 
-    .brand-mini span { font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:20px; line-height:1; } 
-    .brand-mini small { font-size:9px; letter-spacing:3px; opacity:0.6; color:var(--c-accent); }
     
+    .score-badge { font-family:'Space Grotesk', sans-serif; font-weight:800; font-size:16px; color:var(--c-accent); display:flex; flex-direction:column; align-items:flex-end; pointer-events:auto; text-shadow: 0 0 10px rgba(0,0,0,0.5); }
+    .lives-display { font-size:12px; margin-top:2px; letter-spacing:2px; }
+
     /* OYUN ALANI */
-    .game-stage { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px; padding-top:60px; position:relative; }
+    .game-stage { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px; padding-top:40px; position:relative; }
     
     .puzzle-card { 
       width:100%; background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:24px; padding:30px 20px; text-align:center; backdrop-filter:blur(10px); box-shadow:0 20px 60px rgba(0,0,0,0.5); transition:0.3s; 
     }
     
     .sentence-container { 
-      font-size:26px; font-weight:600; line-height:1.6; color:rgba(255,255,255,0.9); min-height:100px; display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:8px; 
+      font-size:24px; font-weight:600; line-height:1.6; color:rgba(255,255,255,0.95); min-height:100px; display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:8px; 
     }
     
     .gap-slot { 
-      display:inline-block; min-width:80px; height:40px; border-bottom:3px solid var(--c-accent); color:var(--c-accent); font-weight:800; text-align:center; transition:0.3s; 
+      display:inline-block; min-width:80px; height:36px; border-bottom:3px solid var(--c-accent); color:var(--c-accent); font-weight:800; text-align:center; transition:0.3s; padding:0 5px;
     }
-    .gap-slot.filled { border-bottom-color:var(--c-success); color:var(--c-success); transform:scale(1.1); }
-    .gap-slot.error { border-bottom-color:var(--c-error); animation:shake 0.4s; }
+    .gap-slot.filled { border-bottom-color:var(--c-success); color:var(--c-success); transform:scale(1.1); text-shadow: 0 0 10px var(--c-success); }
+    .gap-slot.error { border-bottom-color:var(--c-error); color:var(--c-error); animation:shake 0.4s; }
     
     .translation { 
       margin-top:24px; font-size:16px; opacity:0; transform:translateY(10px); transition:all 0.5s ease; font-weight:500; color:var(--c-success); 
@@ -67,38 +79,54 @@
     .mic-btn:active { transform:scale(0.95); }
     .mic-btn.listening { background:#fff; box-shadow:0 0 30px rgba(255,184,0,0.4); animation:pulseMic 1.5s infinite; } 
     .mic-btn.listening svg { stroke:#000; }
+    .mic-btn:disabled { opacity:0.5; filter:grayscale(1); cursor:not-allowed; }
     
-    .status-text { font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:14px; opacity:0.7; letter-spacing:1px; text-transform:uppercase; height:20px; }
+    .status-text { font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:14px; opacity:0.7; letter-spacing:1px; text-transform:uppercase; height:20px; transition: color 0.3s; }
+    .status-text.combo { color: var(--c-accent); animation: pulse 0.5s infinite; }
     
     /* MODAL */
     .modal-wrap { position:absolute; inset:0; background:rgba(0,0,0,0.9); z-index:999; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(20px); } 
     .modal-card { width:85%; background:#101014; border:1px solid var(--border); border-radius:32px; padding:32px; text-align:center; box-shadow:0 30px 80px rgba(0,0,0,1); animation:popIn 0.5s; }
     .modal-title { font-size:24px; font-weight:800; margin-bottom:12px; color:var(--c-accent); font-family:'Space Grotesk', sans-serif; }
-    .modal-p { font-size:15px; opacity:0.7; margin-bottom:32px; line-height:1.6; }
+    .modal-p { font-size:15px; opacity:0.7; margin-bottom:24px; line-height:1.6; }
     
     .btn-primary { width:100%; padding:16px; border-radius:16px; border:none; background:linear-gradient(135deg, var(--c-accent), #ff8800); color:#000; font-weight:800; font-size:16px; cursor:pointer; box-shadow:0 10px 30px rgba(255,184,0,0.3); transition:0.2s; }
     .btn-primary:active { transform:scale(0.98); }
+    .btn-sec { background:rgba(255,255,255,0.1); margin-top:10px; color:#fff; }
+
+    /* DİL SEÇİMİ */
+    .lang-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 20px; }
+    .lang-btn { background: rgba(255,255,255,0.1); border: 1px solid var(--border); border-radius: 8px; padding: 10px 0; cursor: pointer; font-size: 24px; transition: 0.2s; display: flex; justify-content: center; }
+    .lang-btn:active, .lang-btn.active { background: var(--c-accent); border-color: var(--c-accent); color:#000; transform: scale(1.05); }
     
-    .loader { border:4px solid rgba(255,255,255,0.1); border-top:4px solid var(--c-accent); border-radius:50%; width:40px; height:40px; animation:spin 1s linear infinite; margin:0 auto 20px; }
+    .loader { border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid var(--c-accent); border-radius: 50%; width: 40px; height: 40px; animation:spin 1s linear infinite; margin:0 auto 20px; }
     
     @keyframes spin { 0% { transform:rotate(0deg); } 100% { transform:rotate(360deg); } } 
     @keyframes pulseMic { 0% { box-shadow:0 0 0 0 rgba(255,255,255,0.4); } 70% { box-shadow:0 0 0 20px rgba(255,255,255,0); } 100% { box-shadow:0 0 0 0 rgba(255,255,255,0); } } 
     @keyframes shake { 0% { transform:translateX(0); } 25% { transform:translateX(-5px); } 50% { transform:translateX(5px); } 75% { transform:translateX(-5px); } 100% { transform:translateX(0); } } 
     @keyframes popIn { from{transform:scale(0)} to{transform:scale(1)} }
+    @keyframes pulse { 0%{transform:scale(1)} 50%{transform:scale(1.1)} 100%{transform:scale(1)} }
   </style>
 </head>
 <body>
 
   <div class="cosmos-bg"><div class="star-dust"></div></div>
+  <canvas id="effectCanvas"></canvas>
 
   <div class="wrap">
+    <div class="game-logo-header">
+      <div class="gl-brand">ITALKY<span style="color:var(--c-accent)">AI</span></div>
+      <div class="gl-icon">🧩</div>
+      <div class="gl-title">GAP MASTER</div>
+      <div class="gl-sub">MIND ARENA</div>
+    </div>
+
     <div class="nav-layer">
       <button class="nav-btn" onclick="window.location.href='/pages/game.html'">←</button>
-      <div class="brand-mini" onclick="window.location.href='/pages/home.html'">
-        <span>italky<span style="color:var(--c-accent)">AI</span></span>
-        <small>GAP MASTER</small>
+      <div class="score-badge">
+        <span id="scoreVal">0 PUAN</span>
+        <div class="lives-display" id="livesVal">❤️❤️❤️</div>
       </div>
-      <div class="nav-btn" id="scoreBadge">🏆 0</div>
     </div>
 
     <div class="game-stage">
@@ -118,14 +146,31 @@
 
   <div class="modal-wrap" id="startModal">
     <div class="modal-card">
-      <div class="modal-title">CÜMLE TAMAMLAMA 🧩</div>
+      <div class="modal-title">GAP MASTER 🧩</div>
+      <div class="modal-p" style="margin-bottom:10px;font-weight:700">Dil Seçimi:</div>
+      <div class="lang-grid">
+        <div class="lang-btn active" onclick="setLang('en', this)">🇬🇧</div>
+        <div class="lang-btn" onclick="setLang('de', this)">🇩🇪</div>
+        <div class="lang-btn" onclick="setLang('fr', this)">🇫🇷</div>
+        <div class="lang-btn" onclick="setLang('es', this)">🇪🇸</div>
+        <div class="lang-btn" onclick="setLang('it', this)">🇮🇹</div>
+      </div>
       <div class="modal-p">
         1. Cümleyi Dinle (Boşlukta susacak)<br>
         2. Eksik Kelimeyi Söyle<br>
-        3. Doğruysa AI tamamını okur!
+        3. Hızlı Ol, Canını Koru!
       </div>
       <div id="loading" style="display:none;margin-bottom:20px"><div class="loader"></div><div>Hazırlanıyor...</div></div>
       <button class="btn-primary" id="startBtn">BAŞLA</button>
+    </div>
+  </div>
+
+  <div class="modal-wrap" id="endModal" style="display:none">
+    <div class="modal-card">
+      <div class="modal-title">OYUN BİTTİ! 🏁</div>
+      <div class="modal-p" id="endResult"></div>
+      <button class="btn-primary" onclick="location.reload()">TEKRAR</button>
+      <button class="btn-primary btn-sec" onclick="location.href='/pages/game.html'">ÇIKIŞ</button>
     </div>
   </div>
 
@@ -133,6 +178,23 @@
 import { BASE_DOMAIN } from "/js/config.js";
 const $ = (id) => document.getElementById(id);
 const apiBase = () => String(BASE_DOMAIN || "").replace(/\/+$/, "");
+
+// DİL AYARLARI
+let currentLang = 'en';
+const LANG_CONFIG = {
+  en: { code: 'en-US', name: 'İngilizce', prompt: 'İngilizce' },
+  de: { code: 'de-DE', name: 'Almanca', prompt: 'Almanca' },
+  fr: { code: 'fr-FR', name: 'Fransızca', prompt: 'Fransızca' },
+  es: { code: 'es-ES', name: 'İspanyolca', prompt: 'İspanyolca' },
+  it: { code: 'it-IT', name: 'İtalyanca', prompt: 'İtalyanca' }
+};
+
+window.setLang = (l, el) => {
+  currentLang = l;
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+  if(el) el.classList.add('active');
+  ensureAudio();
+};
 
 // SES SİSTEMİ (Lazy Load & Fix)
 let audioCtx = null;
@@ -171,55 +233,83 @@ const SFX = {
 let puzzleList = [];
 let currentIndex = 0;
 let score = 0;
+let lives = 3;
+let combo = 0;
 let isBusy = false;
+let turnStartTime = 0;
 
 function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
 
-// JSON Parse Helper
+// ROBUST PARSE
 function safeParse(raw){
-  if(Array.isArray(raw)) return raw;
-  let txt = (typeof raw === "string") ? raw : (raw.text || "");
-  txt = txt.replace(/```json/gi,"").replace(/```/g,"").trim();
-  return JSON.parse(txt);
+  let txt = "";
+  if(typeof raw === "string") txt = raw;
+  else if(raw && typeof raw === "object") txt = raw.text || raw.message || raw.output || ""; // .output eklendi
+  
+  txt = String(txt||"").trim().replace(/```json/gi,"").replace(/```/g,"").trim();
+  
+  // Köşeli parantez temizliği
+  const a = txt.indexOf("[");
+  const b = txt.lastIndexOf("]");
+  if(a !== -1 && b !== -1) txt = txt.slice(a, b+1);
+
+  try {
+    return JSON.parse(txt);
+  } catch {
+    return [];
+  }
+}
+
+// NORMALIZE (Akıllı)
+function normalize(s){
+  return String(s||"").toLowerCase().trim()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "") 
+    .replace(/ß/g, "ss") // Almanca
+    .replace(/[.,!?]/g,"");
 }
 
 // --- API ---
 async function fetchPuzzles() {
-  ensureAudio(); // User Gesture
-  $("loading").style.display = "block";
-  $("startBtn").style.display = "none";
+  ensureAudio(); 
+  $("loading").style.display = "block"; $("startBtn").style.display = "none";
 
   try {
+    const lg = LANG_CONFIG[currentLang];
     const res = await fetch(`${apiBase()}/api/chat`, {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ 
-        text: "Bana İngilizce B1 seviyesinde 10 cümle ver. Bir kelimeyi (fiil/isim) gizle. SADECE JSON formatında: [{'sentence_parts':['I drink','every day.'],'hidden_word':'coffee','translation':'Her gün kahve içerim.'},...]",
+        text: `Bana ${lg.name} dilinde B1 seviyesinde 10 cümle ver. Bir kelimeyi (fiil/isim) gizle. SADECE JSON formatında: [{'sentence_parts':['I drink','every day.'],'hidden_word':'coffee','translation':'Her gün kahve içerim.'},...]`,
         max_tokens: 1500 
       })
     });
     const data = await res.json();
-    puzzleList = safeParse(data);
+    puzzleList = safeParse(data).filter(p => Array.isArray(p.sentence_parts) && p.sentence_parts.length === 2 && typeof p.hidden_word === "string");
     
-    if (!Array.isArray(puzzleList) || puzzleList.length < 3) throw new Error("Yetersiz veri");
+    if (puzzleList.length < 3) throw new Error("Yetersiz veri");
 
   } catch (err) {
-    puzzleList = [
-      {sentence_parts:["The sky is","today."], hidden_word:"blue", translation:"Bugün gökyüzü mavi."},
-      {sentence_parts:["I drink","water."], hidden_word:"cold", translation:"Soğuk su içerim."},
-      {sentence_parts:["She likes","music."], hidden_word:"good", translation:"O iyi müzik sever."}
-    ];
+    if(currentLang === 'en') {
+      puzzleList = [
+        {sentence_parts:["The sky is","today."], hidden_word:"blue", translation:"Bugün gökyüzü mavi."},
+        {sentence_parts:["I drink","water."], hidden_word:"cold", translation:"Soğuk su içerim."},
+        {sentence_parts:["She likes","music."], hidden_word:"good", translation:"O iyi müzik sever."}
+      ];
+    } else {
+      puzzleList = [
+        {sentence_parts:["Das ist","gut."], hidden_word:"sehr", translation:"Bu çok iyi."},
+        {sentence_parts:["Ich bin","Mann."], hidden_word:"ein", translation:"Ben bir adamım."}
+      ];
+    }
   }
   
   $("startModal").style.display = "none";
+  lives = 3; score = 0; combo = 0; currentIndex = 0;
+  updateScoreUI();
   loadPuzzle();
 }
 
 function loadPuzzle() {
-  if (currentIndex >= puzzleList.length) {
-    alert(`Oyun Bitti! Toplam Puan: ${score}`);
-    location.reload();
-    return;
-  }
+  if (currentIndex >= puzzleList.length) { endSet(false); return; }
 
   const p = puzzleList[currentIndex];
   $("translationBox").className = "translation";
@@ -231,40 +321,48 @@ function loadPuzzle() {
     <span>${p.sentence_parts[1]}</span>
   `;
   
-  $("statusText").textContent = "DİNLE VE CEVAPLA";
-  setTimeout(() => speakPuzzle(p), 1000);
+  setStatus("DİNLE VE CEVAPLA");
+  turnStartTime = Date.now();
+  setTimeout(() => speakPuzzle(p), 800);
 }
 
-// --- TTS ---
-function speakPuzzle(p) {
+function setStatus(txt, type="normal") {
+  const el = $("statusText");
+  el.textContent = txt;
+  el.className = "status-text";
+  if(type==="combo") el.classList.add("combo");
+}
+
+function speak(text, rate=0.85) {
+  return new Promise(resolve => {
+    try{ window.speechSynthesis.cancel(); }catch{}
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = LANG_CONFIG[currentLang].code;
+    u.rate = rate;
+    u.onend = resolve; u.onerror = resolve;
+    try{ window.speechSynthesis.speak(u); }catch{ resolve(); }
+  });
+}
+
+async function speakPuzzle(p) {
   if (isBusy) return;
   isBusy = true;
   $("micBtn").disabled = true;
   
-  // Boşluk efekti
-  const text = `${p.sentence_parts[0]} ... ${p.sentence_parts[1]}`;
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = "en-US"; u.rate = 0.85;
+  await speak(`${p.sentence_parts[0]} ... ${p.sentence_parts[1]}`);
   
-  u.onend = () => {
-    isBusy = false;
-    $("micBtn").disabled = false;
-    $("statusText").textContent = "MİKROFONA BASIP SÖYLE";
-  };
-  
-  window.speechSynthesis.cancel();
-  window.speechSynthesis.speak(u);
+  isBusy = false;
+  $("micBtn").disabled = false;
+  $("micBtn").classList.remove("listening");
+  setStatus("MİKROFONA BASIP SÖYLE");
 }
 
-function speakFullSentence(p) {
-  return new Promise(resolve => {
-    isBusy = true;
-    $("statusText").textContent = "DİNLE VE ÖĞREN...";
-    const u = new SpeechSynthesisUtterance(`${p.sentence_parts[0]} ${p.hidden_word} ${p.sentence_parts[1]}`);
-    u.lang = "en-US"; u.rate = 0.9;
-    u.onend = () => { isBusy = false; resolve(); };
-    window.speechSynthesis.speak(u);
-  });
+async function speakFullSentence(p) {
+  isBusy = true;
+  $("statusText").textContent = "DİNLE VE ÖĞREN...";
+  try{ window.speechSynthesis.cancel(); }catch{} // Önlem
+  await speak(`${p.sentence_parts[0]} ${p.hidden_word} ${p.sentence_parts[1]}`, 0.9);
+  isBusy = false;
 }
 
 // --- STT ---
@@ -280,54 +378,116 @@ function listen() {
   $("statusText").textContent = "DİNLİYOR...";
   
   const rec = new SR();
-  rec.lang = "en-US";
+  rec.lang = LANG_CONFIG[currentLang].code;
   rec.interimResults = false;
-  let gotResult = false;
+  let handled = false; // Çift tetikleme koruması
   
   rec.onresult = (e) => {
-    gotResult = true;
-    checkAnswer(e.results[0][0].transcript.toLowerCase().trim());
+    if(handled) return;
+    handled = true;
+    checkAnswer(e.results[0][0].transcript);
   };
   
-  rec.onend = () => {
-    $("micBtn").classList.remove("listening");
-    if (!gotResult) { isBusy = false; $("statusText").textContent = "SES GELMEDİ"; }
-  };
+  rec.onerror = () => { if(!handled) cleanup("SES GELMEDİ"); };
+  rec.onend = () => { if (!handled) cleanup("SES GELMEDİ"); };
   
-  try{ rec.start(); }catch{ isBusy = false; }
+  try{ rec.start(); }catch{ cleanup("HATA"); }
 }
 
-async function checkAnswer(input) {
-  isBusy = false; 
+function cleanup(msg) {
+  isBusy = false;
+  $("micBtn").classList.remove("listening");
+  $("micBtn").disabled = false;
+  setStatus(msg);
+}
+
+async function checkAnswer(inputRaw) {
   const p = puzzleList[currentIndex];
-  const target = p.hidden_word.toLowerCase().trim();
+  const target = normalize(p.hidden_word);
+  const input = normalize(inputRaw);
   const slot = $("gapSlot");
 
-  // Toleranslı Kontrol
-  if (input.includes(target) || target.includes(input)) {
+  const ok = input.includes(target) || target.includes(input);
+  
+  // Hız Bonusu
+  const sec = (Date.now() - turnStartTime) / 1000;
+  const speedBonus = sec <= 4 ? 5 : 0;
+
+  if (ok) {
     // DOĞRU
     SFX.correct();
-    slot.textContent = target.toUpperCase();
+    slot.textContent = p.hidden_word.toUpperCase();
     slot.classList.remove("error");
     slot.classList.add("filled");
-    score += 10;
-    $("scoreBadge").textContent = `🏆 ${score}`;
-    $("statusText").textContent = "DOĞRU!";
     
-    // Çeviri + Tam Cümle
+    combo++;
+    let bonus = combo >= 3 ? 10 : (combo >= 2 ? 5 : 0);
+    score += (10 + bonus + speedBonus);
+    
+    let msg = "DOĞRU!";
+    if(bonus>0) msg += ` SERİ +${bonus}`;
+    if(speedBonus>0) msg += ` HIZ +${speedBonus}`;
+    setStatus(msg, "combo");
+    
+    updateScoreUI();
     $("translationBox").classList.add("show");
-    await sleep(500);
+    if(combo >= 3) startConfetti();
+
+    await sleep(600);
     await speakFullSentence(p);
-    
-    setTimeout(() => { currentIndex++; loadPuzzle(); }, 1500);
+    await sleep(500);
 
   } else {
-    // YANLIŞ
+    // YANLIŞ -> ARENA KURALI
     SFX.wrong();
+    lives--;
+    score = Math.max(0, score - 5); // Ceza
+    combo = 0;
+    
     slot.classList.add("error");
-    $("statusText").textContent = `YANLIŞ: "${input}"`;
-    setTimeout(() => slot.classList.remove("error"), 1000);
+    slot.textContent = p.hidden_word.toUpperCase(); // Göster
+    setStatus(`YANLIŞ! DOĞRUSU: ${p.hidden_word.toUpperCase()}`);
+    updateScoreUI();
+    
+    await sleep(1500);
+    if(lives <= 0) { endSet(true); return; }
   }
+  
+  currentIndex++;
+  isBusy = false;
+  loadPuzzle();
+}
+
+function updateScoreUI(){
+  $("scoreVal").textContent = `${score} PUAN`;
+  const hearts = "❤️".repeat(lives) + "🤍".repeat(3-lives);
+  $("livesVal").textContent = lives > 0 ? hearts : "💀💀💀";
+}
+
+function endSet(isDead){
+  $("endModal").style.display = "flex";
+  if(isDead) {
+    $("endResult").innerHTML = `<span style="color:var(--c-error);font-size:32px">OYUN BİTTİ</span><br>Skor: ${score}`;
+  } else {
+    $("endResult").innerHTML = `<span style="color:var(--c-success);font-size:32px">TEBRİKLER!</span><br>Skor: ${score}`;
+    startConfetti();
+  }
+}
+
+// CONFETTI
+let fwInterval=null; const cvs=$("effectCanvas"), ctx=cvs.getContext("2d"); let particles=[];
+function startConfetti(){
+  if(fwInterval) clearInterval(fwInterval);
+  particles=[]; cvs.style.display="block"; cvs.width=window.innerWidth; cvs.height=window.innerHeight;
+  fwInterval=setInterval(()=>{ for(let i=0;i<5;i++) particles.push({x:Math.random()*cvs.width,y:cvs.height,vx:(Math.random()-.5)*5,vy:-(Math.random()*5+5),c:`hsl(${Math.random()*360},100%,50%)`,l:100}); },100);
+  setTimeout(()=>{ if(fwInterval)clearInterval(fwInterval); cvs.style.display="none"; particles=[]; }, 4000);
+  requestAnimationFrame(loopConfetti);
+}
+function loopConfetti(){
+  if(particles.length <= 0) { cvs.style.display="none"; return; }
+  ctx.clearRect(0,0,cvs.width,cvs.height);
+  for(let i=0;i<particles.length;i++){ let p=particles[i]; p.x+=p.vx; p.y+=p.vy; p.l--; ctx.beginPath(); ctx.arc(p.x,p.y,5,0,Math.PI*2); ctx.fillStyle=p.c; ctx.fill(); if(p.l<=0){particles.splice(i,1);i--} }
+  requestAnimationFrame(loopConfetti);
 }
 
 $("startBtn").onclick = fetchPuzzles;
