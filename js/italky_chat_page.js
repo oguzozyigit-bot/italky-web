@@ -1,9 +1,10 @@
 // FILE: italky-web/js/italky_chat_page.js
-// Italky Chat Page Controller (Text-only chat)
-// ✅ Mic: STT -> auto-send on speech end (no Enter/OK needed)
-// ✅ NO sound output on this page (no TTS, no beep)
-// ✅ Plus sheet UI stays (no upload yet)
+// Italky Chat Page Controller (Gemini backend - text only)
+// ✅ STT -> auto-send (no enter needed)
+// ✅ No TTS here (no sound)
+// ✅ Footer links fixed; dock sits above footer
 // ✅ Local history per user (last 30)
+// ✅ Plus sheet: camera/photos/files (OCR hook is optional)
 
 import { BASE_DOMAIN, STORAGE_KEY } from "/js/config.js";
 
@@ -41,7 +42,6 @@ function paintHeader(u){
   $("backBtn").addEventListener("click", ()=> location.href="/pages/home.html");
 }
 
-/* ---------- history ---------- */
 function chatKey(u){
   const uid = String(u.user_id || u.id || u.email || "guest").toLowerCase().trim();
   return `italky_chat_hist::${uid}`;
@@ -50,31 +50,33 @@ function loadHist(u){
   return safeJson(localStorage.getItem(chatKey(u)), []);
 }
 function saveHist(u, h){
-  try{ localStorage.setItem(chatKey(u), JSON.stringify(h.slice(-30))); }catch{}
+  try{ localStorage.setItem(chatKey(u), JSON.stringify((h||[]).slice(-30))); }catch{}
 }
 
-/* ---------- scroll ---------- */
 function isNearBottom(el, slack=140){
   try{ return (el.scrollHeight - el.scrollTop - el.clientHeight) < slack; }
   catch{ return true; }
 }
+
 let follow = true;
 function scrollBottom(force=false){
   const el = $("chat");
   if(!el) return;
-  requestAnimationFrame(()=>{ if(force || follow) el.scrollTop = el.scrollHeight; });
+  requestAnimationFrame(()=>{
+    if(force || follow) el.scrollTop = el.scrollHeight;
+  });
 }
 
-/* ---------- bubbles ---------- */
-function bubble(role, text){
+function addBubble(role, text){
   const chat = $("chat");
   const d = document.createElement("div");
-  d.className = `bubble ${role==="user" ? "user" : "bot"}`;
+  d.className = `bubble ${role==="user" ? "user" : (role==="meta" ? "meta" : "bot")}`;
   d.textContent = String(text||"");
   chat.appendChild(d);
   scrollBottom(false);
 }
-function typing(){
+
+function typingBubble(){
   const chat = $("chat");
   const d = document.createElement("div");
   d.className = "bubble bot";
@@ -84,14 +86,21 @@ function typing(){
   return d;
 }
 
-/* ---------- API ---------- */
 async function apiChat(u, text, history){
   const base = String(BASE_DOMAIN||"").replace(/\/+$/,"");
   const url = `${base}/api/chat`;
+
+  // ✅ sadece yazı: Italky AI ürünü
   const body = {
     user_id: (u.user_id || u.id || u.email),
     text,
-    history: (history || []).slice(-20)
+    history: (history || []).slice(-20),
+    user_meta: {
+      // bu alanlar backend prompt'a yardımcı olur
+      fullname: u.fullname || u.name || u.display_name || "",
+      plan: u.plan || "FREE",
+      product: "italkyAI"
+    }
   };
 
   const r = await fetch(url,{
@@ -102,13 +111,36 @@ async function apiChat(u, text, history){
 
   const raw = await r.text().catch(()=> "");
   if(!r.ok) throw new Error(raw || `HTTP ${r.status}`);
+
   let data = {};
   try{ data = JSON.parse(raw || "{}"); }catch{}
   const out = String(data.text || data.reply || data.answer || "").trim();
   return out || "…";
 }
 
-/* ---------- textarea ---------- */
+/* OPTIONAL OCR hook (eğer backend’de /api/ocr varsa) */
+async function tryOCRImage(base64DataUrl){
+  const base = String(BASE_DOMAIN||"").replace(/\/+$/,"");
+  if(!base) return "";
+
+  // beklenen örnek payload: { image_base64: "data:image/jpeg;base64,..." } veya { image: "..." }
+  const url = `${base}/api/ocr`;
+  try{
+    const r = await fetch(url,{
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ image_base64: base64DataUrl })
+    });
+    const raw = await r.text().catch(()=> "");
+    if(!r.ok) return "";
+    let d={}; try{ d=JSON.parse(raw||"{}"); }catch{}
+    const text = String(d.text || d.ocr_text || d.result || "").trim();
+    return text;
+  }catch{
+    return "";
+  }
+}
+
 function autoGrow(){
   const ta = $("msgInput");
   if(!ta) return;
@@ -116,8 +148,46 @@ function autoGrow(){
   ta.style.height = Math.min(ta.scrollHeight, 120) + "px";
 }
 
-/* ---------- plus sheet ---------- */
-function bindPlusSheet(){
+let sttBusy = false;
+
+function startSTT(onFinal){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR){ alert("Bu cihaz konuşmayı yazıya çevirmiyor."); return; }
+  if(sttBusy) return;
+
+  const micBtn = $("micBtn");
+  const ta = $("msgInput");
+
+  const rec = new SR();
+  rec.lang = "tr-TR";
+  rec.interimResults = false;
+  rec.continuous = false;
+
+  sttBusy = true;
+  micBtn.classList.add("listening");
+
+  rec.onresult = (e)=>{
+    const t = e.results?.[0]?.[0]?.transcript || "";
+    if(t){
+      ta.value = t.trim();
+      autoGrow();
+      onFinal?.(t.trim());
+    }
+  };
+  rec.onerror = ()=>{};
+  rec.onend = ()=>{
+    micBtn.classList.remove("listening");
+    sttBusy = false;
+  };
+
+  try{ rec.start(); }
+  catch{
+    micBtn.classList.remove("listening");
+    sttBusy = false;
+  }
+}
+
+function bindPlusSheet(u, sendFn){
   const camBtn = $("camBtn");
   const plusSheet = $("plusSheet");
   const fileCamera = $("fileCamera");
@@ -128,7 +198,9 @@ function bindPlusSheet(){
   const pickPhotos = $("pickPhotos");
   const pickFiles  = $("pickFiles");
 
-  function toggle(open){ plusSheet.classList.toggle("show", !!open); }
+  function toggle(open){
+    plusSheet.classList.toggle("show", !!open);
+  }
 
   camBtn.addEventListener("click",(e)=>{
     e.preventDefault();
@@ -145,116 +217,55 @@ function bindPlusSheet(){
   pickCamera.onclick = ()=>{ toggle(false); fileCamera.click(); };
   pickPhotos.onclick = ()=>{ toggle(false); filePhotos.click(); };
   pickFiles.onclick  = ()=>{ toggle(false); fileFiles.click(); };
-}
 
-/* ---------- SEND (manual + STT) ---------- */
-let sending = false;
+  async function handleImage(file){
+    if(!file) return;
+    addBubble("meta", `📷 Fotoğraf alındı: ${file.name || "image"}`);
 
-async function sendText(u, text){
-  const t = String(text||"").trim();
-  if(!t || sending) return;
-  sending = true;
+    // base64
+    const dataUrl = await new Promise((res)=>{
+      const fr = new FileReader();
+      fr.onload = ()=> res(String(fr.result||""));
+      fr.readAsDataURL(file);
+    });
 
-  const h = loadHist(u);
-
-  bubble("user", t);
-  h.push({ role:"user", text: t });
-
-  const loader = typing();
-
-  try{
-    const out = await apiChat(u, t, h.map(x=>({role:x.role, content:x.text})));
-    try{ loader.remove(); }catch{}
-    bubble("assistant", out);
-    h.push({ role:"assistant", text: out });
-    saveHist(u, h);
-  }catch{
-    try{ loader.remove(); }catch{}
-    const msg = "Şu an cevap veremedim. Bir daha dener misin?";
-    bubble("assistant", msg);
-    h.push({ role:"assistant", text: msg });
-    saveHist(u, h);
+    const ocrText = await tryOCRImage(dataUrl);
+    if(ocrText){
+      addBubble("meta", `📝 Metin (OCR): ${ocrText.slice(0, 900)}${ocrText.length>900 ? "…" : ""}`);
+      // istersen otomatik sohbete soralım:
+      // $("msgInput").value = ocrText; autoGrow(); sendFn();
+    }else{
+      addBubble("meta", "📝 OCR şu an bağlı değil (backend /api/ocr yok ya da hata).");
+    }
   }
 
-  scrollBottom(false);
-  sending = false;
+  fileCamera.addEventListener("change", async ()=>{
+    const f = fileCamera.files?.[0];
+    fileCamera.value = "";
+    await handleImage(f);
+  });
+
+  filePhotos.addEventListener("change", async ()=>{
+    const f = filePhotos.files?.[0];
+    filePhotos.value = "";
+    await handleImage(f);
+  });
+
+  fileFiles.addEventListener("change", async ()=>{
+    const f = fileFiles.files?.[0];
+    fileFiles.value = "";
+    if(!f) return;
+
+    addBubble("meta", `📎 Dosya alındı: ${f.name} (${Math.round((f.size||0)/1024)} KB)`);
+    // burada ileride: PDF/text çıkarma + web arama bağlarız
+  });
 }
 
-/* ---------- STT (NO SOUND, AUTO-SEND) ---------- */
-let sttBusy = false;
-
-function startSTTAndAutoSend(u){
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if(!SR){ alert("Bu cihaz konuşmayı yazıya çevirmiyor."); return; }
-  if(sttBusy || sending) return;
-
-  const micBtn = $("micBtn");
-  const ta = $("msgInput");
-
-  const rec = new SR();
-  rec.lang = "tr-TR";
-  rec.interimResults = true;   // konuşurken yazsın
-  rec.continuous = false;
-
-  sttBusy = true;
-  micBtn.classList.add("listening");
-
-  let finalText = "";
-  let interimText = "";
-
-  const render = ()=>{
-    const merged = (finalText + " " + interimText).trim();
-    ta.value = merged;
-    autoGrow();
-  };
-
-  rec.onresult = (e)=>{
-    interimText = "";
-    for(let i=e.resultIndex; i<e.results.length; i++){
-      const piece = (e.results[i]?.[0]?.transcript || "");
-      if(e.results[i].isFinal) finalText += piece + " ";
-      else interimText += piece + " ";
-    }
-    render();
-  };
-
-  rec.onerror = ()=>{
-    // sessiz: sadece state kapat
-  };
-
-  rec.onend = async ()=>{
-    micBtn.classList.remove("listening");
-    sttBusy = false;
-
-    const text = String((finalText + " " + interimText) || "").trim();
-    finalText = ""; interimText = "";
-
-    if(!text){
-      ta.value = "";
-      autoGrow();
-      return;
-    }
-
-    // ✅ konuşma bitti -> otomatik gönder
-    ta.value = "";
-    autoGrow();
-    await sendText(u, text);
-  };
-
-  try{ rec.start(); }
-  catch{
-    micBtn.classList.remove("listening");
-    sttBusy = false;
-  }
-}
-
-/* ---------- main ---------- */
 async function main(){
   const u = ensureLogged();
   if(!u) return;
 
   paintHeader(u);
-  bindPlusSheet();
 
   const chat = $("chat");
   chat.addEventListener("scroll", ()=>{ follow = isNearBottom(chat); }, { passive:true });
@@ -262,37 +273,67 @@ async function main(){
   // load history
   const hist = loadHist(u);
   chat.innerHTML = "";
-  hist.forEach(m=> bubble(m.role, m.text));
+
+  if(!hist.length){
+    addBubble("meta", "italkyAI: Yazılı sohbet modundasın. Mikrofon konuşmanı yazıya çevirir ve otomatik gönderir.");
+  }else{
+    hist.forEach(m=> addBubble(m.role, m.text));
+  }
+
   follow = true;
   scrollBottom(true);
 
-  // mic -> STT -> auto send
-  $("micBtn").addEventListener("click", ()=> startSTTAndAutoSend(u));
-
-  // manual send (text typed)
-  $("sendBtn").addEventListener("click", ()=>{
+  async function send(){
     const ta = $("msgInput");
-    const t = String(ta.value||"").trim();
-    if(!t) return;
+    const text = String(ta.value||"").trim();
+    if(!text) return;
+
     ta.value = "";
     autoGrow();
-    sendText(u, t);
-  });
 
-  // enter send
+    const h = loadHist(u);
+    addBubble("user", text);
+    h.push({ role:"user", text });
+
+    const loader = typingBubble();
+
+    try{
+      const out = await apiChat(u, text, h.map(x=>({role:x.role, content:x.text})));
+      try{ loader.remove(); }catch{}
+      addBubble("assistant", out);
+      h.push({ role:"assistant", text: out });
+      saveHist(u, h);
+    }catch{
+      try{ loader.remove(); }catch{}
+      const msg = "Şu an cevap veremedim. Bir daha dener misin?";
+      addBubble("assistant", msg);
+      h.push({ role:"assistant", text: msg });
+      saveHist(u, h);
+    }
+
+    scrollBottom(false);
+  }
+
+  bindPlusSheet(u, send);
+
+  $("sendBtn").addEventListener("click", send);
+
+  $("msgInput").addEventListener("input", autoGrow);
   $("msgInput").addEventListener("keydown",(e)=>{
     if(e.key==="Enter" && !e.shiftKey){
       e.preventDefault();
-      const ta = $("msgInput");
-      const t = String(ta.value||"").trim();
-      if(!t) return;
-      ta.value = "";
-      autoGrow();
-      sendText(u, t);
+      send();
     }
   });
 
-  $("msgInput").addEventListener("input", autoGrow);
+  // ✅ Mikrofon: konuşma biter bitmez otomatik gönder
+  $("micBtn").addEventListener("click", ()=>{
+    startSTT(async ()=>{
+      // STT yazdıktan sonra otomatik gönder
+      await send();
+    });
+  });
+
   autoGrow();
 }
 
