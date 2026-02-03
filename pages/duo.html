@@ -14,6 +14,7 @@
       --c-cyan: #00f3ff; 
       --c-green: #00e676;
       --c-red: #ff1744;
+      --c-gold: #ffb800;
       --border: rgba(255, 255, 255, 0.1); 
     }
     * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; user-select:none; }
@@ -21,20 +22,27 @@
     
     .cosmos-bg { position:absolute; inset:0; background: radial-gradient(circle at center, #1a1a2e 0%, #000 100%); z-index:0; }
     .star-dust { position: absolute; inset: 0; opacity: 0.4; background-image: radial-gradient(#fff 1px, transparent 1px); background-size: 50px 50px; animation: dustMove 100s linear infinite; }
-    /* EFEKT KANVASI */
     #effectCanvas { position: absolute; inset: 0; pointer-events: none; z-index: 9999; display: none; }
 
     @keyframes dustMove { from { transform: translateY(0); } to { transform: translateY(-500px); } }
     
     .wrap { width:100%; max-width:480px; height:100%; margin:0 auto; position:relative; z-index:10; display:flex; flex-direction:column; }
     
+    /* LOGO HEADER */
+    .game-logo-header {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding-top: 20px; margin-bottom: -15px; position: relative; z-index: 20;
+    }
+    .gl-brand { font-family: 'Space Grotesk', sans-serif; font-size: 14px; font-weight: 700; color: rgba(255, 255, 255, 0.6); letter-spacing: 2px; margin-bottom: 5px; }
+    .gl-icon { font-size: 32px; margin-bottom: 2px; filter: drop-shadow(0 0 5px var(--c-cyan)); animation: pulseNeon 2s infinite alternate; }
+    .gl-title { font-family: 'Space Grotesk', sans-serif; font-weight: 900; font-size: 26px; letter-spacing: 1px; background: linear-gradient(to right, var(--c-cyan), #0066ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-transform: uppercase; line-height: 1; }
+    .gl-sub { font-size: 9px; letter-spacing: 4px; color: var(--c-cyan); opacity: 0.8; margin-top: 4px; font-weight: 700; }
+    @keyframes pulseNeon { from { filter: drop-shadow(0 0 5px var(--c-cyan)); transform: scale(1); } to { filter: drop-shadow(0 0 15px var(--c-cyan)); transform: scale(1.05); } }
+
     /* NAV */
-    .nav-layer { position:absolute; top:0; left:0; width:100%; height:70px; z-index:50; display:flex; justify-content:space-between; padding:12px; pointer-events:none; }
+    .nav-layer { position:absolute; top:0; left:0; width:100%; height:70px; z-index:50; display:flex; justify-content:space-between; padding:10px 12px; pointer-events:none; }
     .nav-btn { pointer-events:auto; height:44px; padding:0 16px; border-radius:14px; background:rgba(0,0,0,0.4); border:1px solid var(--border); color:#fff; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(10px); cursor:pointer; font-weight:700; font-size:14px; gap:6px; transition:0.2s; }
     .nav-btn:active { transform:scale(0.95); }
-    .brand-mini { pointer-events: auto; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; }
-    .brand-mini span { font-family:'Space Grotesk', sans-serif; font-weight: 700; font-size: 20px; line-height: 1; }
-    .brand-mini small { font-size: 9px; letter-spacing: 3px; opacity: 0.6; margin-top: 2px; }
     
     .grid { flex:1; display:grid; grid-template-rows: 1fr 80px 1fr; gap:12px; padding:70px 12px 20px; }
     
@@ -42,12 +50,10 @@
     .pane.active { border-color:var(--c-cyan); box-shadow: 0 0 30px rgba(0,243,255,0.15); }
     .pane.top { transform: rotate(180deg); }
     
-    /* --- SKOR TABLOSU (Doğru - Puan - Yanlış) --- */
     .bar { padding:10px 16px; background:rgba(0,0,0,0.3); border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; font-family:'Space Grotesk', sans-serif; }
-    
     .score-stats { display: flex; gap: 15px; align-items: center; font-weight: 800; font-size: 14px; }
-    .stat-g { color: var(--c-green); display: flex; align-items: center; gap: 4px; }
-    .stat-r { color: var(--c-red); display: flex; align-items: center; gap: 4px; }
+    .stat-g { color: var(--c-green); }
+    .stat-r { color: var(--c-red); }
     .stat-main { color: #fff; background: rgba(255,255,255,0.1); padding: 4px 10px; border-radius: 8px; font-size: 14px; }
 
     .prog-wrap { padding:12px 16px 0; }
@@ -90,6 +96,15 @@
     .btn-primary { width:100%; padding:16px; border-radius:16px; border:none; background:linear-gradient(135deg, var(--c-cyan), #0066ff); color:#fff; font-weight:800; font-size:16px; cursor:pointer; box-shadow:0 10px 30px rgba(0,100,255,0.3); transition:0.2s; }
     .btn-primary:active { transform:scale(0.98); }
     .btn-sec { background:rgba(255,255,255,0.1); margin-top:10px; color:#fff; }
+    
+    /* DİL SEÇİMİ */
+    .lang-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 10px; }
+    .lang-btn { background: rgba(255,255,255,0.1); border: 1px solid var(--border); border-radius: 8px; padding: 10px 0; cursor: pointer; font-size: 24px; transition: 0.2s; display: flex; justify-content: center; }
+    .lang-btn:active, .lang-btn.active { background: var(--c-cyan); border-color: var(--c-cyan); transform: scale(1.05); }
+    
+    .rules-box { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 12px; margin-bottom: 20px; font-size: 11px; text-align: left; line-height: 1.5; color: rgba(255,255,255,0.7); }
+    .rules-box strong { color: var(--c-green); }
+
     .loader { border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid var(--c-cyan); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 20px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
   </style>
@@ -100,12 +115,15 @@
   <canvas id="effectCanvas"></canvas>
 
   <div class="wrap">
+    <div class="game-logo-header">
+      <div class="gl-brand">ITALKY<span style="color:var(--c-cyan)">AI</span></div>
+      <div class="gl-icon">🥊</div>
+      <div class="gl-title">DUO BATTLE</div>
+      <div class="gl-sub">ARENA</div>
+    </div>
+
     <div class="nav-layer">
       <button class="nav-btn" onclick="window.location.href='/pages/game.html'">←</button>
-      <div class="brand-mini" onclick="window.location.href='/pages/home.html'">
-        <span>italky<span style="color:#6366f1">AI</span></span>
-        <small>DUO AI</small>
-      </div>
       <button class="nav-btn" style="opacity:0">.</button>
     </div>
 
@@ -139,7 +157,7 @@
           <div class="p-name">SEN</div>
           <div class="score-stats">
             <span class="stat-g" title="Doğru">✅ <span id="valCorrect">0</span></span>
-            <span class="stat-main" title="Toplam Puan" id="valScore">0 PUAN</span>
+            <span class="stat-main" id="valScore">0 P • ❤️❤️❤️</span>
             <span class="stat-r" title="Yanlış">❌ <span id="valWrong">0</span></span>
           </div>
         </div>
@@ -161,20 +179,33 @@
   <div class="modal-wrap" id="startModal">
     <div class="modal-card">
       <div class="modal-title">DUO BATTLE AI 🥊</div>
-      <div class="modal-p">
-        20 Kelime • 100 Puan<br>
-        Her doğru 5 puan. 100 alan şampiyon olur!
+      <div class="modal-p">Hedef Dili Seç ve Başla:</div>
+      <div class="lang-grid">
+        <div class="lang-btn active" onclick="setLang('en', this)">🇬🇧</div>
+        <div class="lang-btn" onclick="setLang('de', this)">🇩🇪</div>
+        <div class="lang-btn" onclick="setLang('fr', this)">🇫🇷</div>
+        <div class="lang-btn" onclick="setLang('es', this)">🇪🇸</div>
+        <div class="lang-btn" onclick="setLang('it', this)">🇮🇹</div>
       </div>
-      <div id="loading" style="display:none"><div class="loader"></div><div style="font-size:12px;opacity:0.6">Kelimeler Üretiliyor...</div></div>
+      
+      <div class="rules-box">
+        <strong>Kurallar:</strong><br>
+        • Doğru: +5 Puan | Seri: +1/+2/+3 Bonus<br>
+        • Hız: 2sn içinde +2 Puan<br>
+        • Can: 3 Yanlış = NAKAVT (KO) 🥊<br>
+        • <strong>Son Şans:</strong> 1 Kereye mahsus can yenilenir!
+      </div>
+
+      <div id="loading" style="display:none"><div class="loader"></div><div style="font-size:12px;opacity:0.6">Hazırlanıyor...</div></div>
       <button class="btn-primary" id="startBtn">BAŞLA</button>
     </div>
   </div>
 
   <div class="modal-wrap" id="endModal" style="display:none">
     <div class="modal-card">
-      <div class="modal-title">SINAV BİTTİ! 📝</div>
+      <div class="modal-title">MAÇ BİTTİ! 📝</div>
       <div class="modal-p" id="endResult"></div>
-      <button class="btn-primary" onclick="location.reload()">YENİ KELİMELERLE OYNA</button>
+      <button class="btn-primary" onclick="location.reload()">TEKRAR</button>
       <button class="btn-primary btn-sec" onclick="location.href='/pages/game.html'">ÇIKIŞ</button>
     </div>
   </div>
@@ -184,194 +215,276 @@ import { BASE_DOMAIN } from "/js/config.js";
 const $ = (id) => document.getElementById(id);
 const apiBase = () => String(BASE_DOMAIN || "").replace(/\/+$/, "");
 
-// SESLER
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+// DİL AYARLARI
+let currentLang = 'en';
+const LANGS = {
+  en: { code: 'en-US', name: 'İngilizce' },
+  de: { code: 'de-DE', name: 'Almanca' },
+  fr: { code: 'fr-FR', name: 'Fransızca' },
+  es: { code: 'es-ES', name: 'İspanyolca' },
+  it: { code: 'it-IT', name: 'İtalyanca' }
+};
+
+window.setLang = (l, el) => {
+  currentLang = l;
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+  if(el) el.classList.add('active');
+  ensureAudio();
+};
+
+// BEST SCORE & DAILY LOGIC
+const BEST_ALL = "duobattle_best_all";
+const BEST_DAY = "duobattle_best_day";
+const BEST_DAY_KEY = "duobattle_best_day_key";
+
+function todayKey(){
+  const d=new Date(); return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+}
+function updateBests(finalScore){
+  const all = Number(localStorage.getItem(BEST_ALL)||0);
+  if(finalScore>all) localStorage.setItem(BEST_ALL, String(finalScore));
+
+  const k = todayKey();
+  const savedK = localStorage.getItem(BEST_DAY_KEY);
+  if(savedK !== k){
+    localStorage.setItem(BEST_DAY_KEY, k);
+    localStorage.setItem(BEST_DAY, "0");
+  }
+  const day = Number(localStorage.getItem(BEST_DAY)||0);
+  if(finalScore>day) localStorage.setItem(BEST_DAY, String(finalScore));
+}
+
+// SES (Lazy Load)
+let audioCtx = null;
+function ensureAudio(){
+  if(!audioCtx){ const AC = window.AudioContext || window.webkitAudioContext; audioCtx = AC ? new AC() : null; }
+  if(audioCtx && audioCtx.state==="suspended") audioCtx.resume().catch(()=>{});
+  return audioCtx;
+}
+
 const SFX = {
   win: () => {
-    if(audioCtx.state==='suspended')audioCtx.resume();
-    const t=audioCtx.currentTime;
-    [523,659,783,1046].forEach((f,i)=>{
-      const o=audioCtx.createOscillator(),g=audioCtx.createGain();
-      o.frequency.value=f;o.connect(g);g.connect(audioCtx.destination);
-      g.gain.setValueAtTime(.05,t+i*.1);g.gain.exponentialRampToValueAtTime(.001,t+i*.1+.4);
-      o.start(t+i*.1);o.stop(t+i*.1+.4);
-    });
+    const c=ensureAudio(); if(!c)return; const t=c.currentTime;
+    [523,659,783,1046].forEach((f,i)=>{ const o=c.createOscillator(),g=c.createGain(); o.frequency.value=f; o.connect(g); g.connect(c.destination); g.gain.setValueAtTime(.05,t+i*.1); g.gain.exponentialRampToValueAtTime(.001,t+i*.1+.4); o.start(t+i*.1); o.stop(t+i*.1+.4); });
   },
   fail: () => {
-    if(audioCtx.state==='suspended')audioCtx.resume();
-    const t=audioCtx.currentTime,o=audioCtx.createOscillator(),g=audioCtx.createGain();
-    o.type='sawtooth';o.frequency.setValueAtTime(150,t);o.frequency.linearRampToValueAtTime(100,t+.3);
-    o.connect(g);g.connect(audioCtx.destination);
-    g.gain.setValueAtTime(.1,t);g.gain.exponentialRampToValueAtTime(.001,t+.4);
-    o.start(t);o.stop(t+.4);
+    const c=ensureAudio(); if(!c)return; const t=c.currentTime,o=c.createOscillator(),g=c.createGain();
+    o.type='sawtooth'; o.frequency.setValueAtTime(150,t); o.frequency.linearRampToValueAtTime(100,t+.3); o.connect(g); g.connect(c.destination); g.gain.setValueAtTime(.1,t); g.gain.exponentialRampToValueAtTime(.001,t+.4); o.start(t); o.stop(t+.4);
   }
 };
 
-let wordList = [];
-let currentIndex = 0;
-let isBusy = false;
-let stats = { correct: 0, wrong: 0 };
+// OYUN STATE
+let wordList=[], currentIndex=0, isBusy=false;
+let stats={ correct:0, wrong:0 };
+let score=0, combo=0, lives=3, turnStartedAt=0;
+let reviveUsed = false;
+let confettiOn = false;
 
-function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
-async function warmUpVoices(){ try{ window.speechSynthesis.getVoices(); await sleep(150); window.speechSynthesis.getVoices(); }catch{} }
-function setWave(s, t) { $("waveBox").className = "wave-box " + (s || ""); $("waveStatus").textContent = t || "HAZIR"; }
+function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+function setWave(s,t){ $("waveBox").className="wave-box "+(s||""); $("waveStatus").textContent=t||"HAZIR"; }
 
 function safeParseWordList(raw){
-  if(Array.isArray(raw)) return raw;
   let txt = "";
   if(typeof raw === "string") txt = raw;
-  else if(raw && typeof raw === "object"){ txt = raw.text || raw.message || ""; }
-  txt = String(txt || "").trim().replace(/```json/gi,"").replace(/```/g,"").trim();
-  return JSON.parse(txt);
+  else if(raw && typeof raw === "object") txt = raw.text || raw.message || "";
+  txt = String(txt||"").trim().replace(/```json/gi,"").replace(/```/g,"").trim();
+  const a = txt.indexOf("["); const b = txt.lastIndexOf("]");
+  if(a !== -1 && b !== -1) txt = txt.slice(a, b+1);
+  const parsed = JSON.parse(txt);
+  if(!Array.isArray(parsed)) throw new Error("not array");
+  return parsed;
 }
 
 async function fetchWordsFromAI() {
-  $("loading").style.display = "block"; $("startBtn").style.display = "none";
-  setWave("idle","Hazırlanıyor...");
+  $("loading").style.display="block"; $("startBtn").style.display="none"; setWave("idle","Hazırlanıyor...");
   try {
+    const lg = LANGS[currentLang];
     const res = await fetch(`${apiBase()}/api/chat`, {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text: "Bana İngilizce A2-B1 seviyesinde 20 kelime ve Türkçe karşılığını SADECE JSON array formatında ver: [[\"apple\",\"elma\"], ...]", max_tokens: 1000 })
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({ text:`Bana ${lg.name} dilinde A2-B1 seviyesinde 20 kelime ve Türkçe karşılığını SADECE JSON array formatında ver: [["apple","elma"], ...]`, max_tokens:1000 })
     });
     const data = await res.json();
-    wordList = safeParseWordList(data);
-    wordList = wordList.filter(x => Array.isArray(x) && x.length >= 2);
-    if (wordList.length < 5) throw new Error("too few");
-  } catch (err) {
-    wordList = [["Hello", "Merhaba"], ["Friend", "Arkadaş"], ["Love", "Aşk"], ["Money", "Para"], ["Time", "Zaman"], ["Car","Araba"]];
-  }
-  $("startModal").style.display = "none";
-  await warmUpVoices();
-  startGameLoop(true);
+    wordList = safeParseWordList(data).filter(x=>Array.isArray(x)&&x.length>=2);
+    if(wordList.length<5) throw 1;
+  } catch(e) { wordList=[["Hello","Merhaba"],["Friend","Arkadaş"],["Love","Aşk"],["Money", "Para"], ["Time", "Zaman"], ["Car","Araba"]]; }
+  
+  $("startModal").style.display="none"; await sleep(100); startGameLoop(true);
 }
 
-function startGameLoop(startWithTeacherNow = false) {
-  currentIndex = 0; stats = { correct: 0, wrong: 0 };
+function startGameLoop(now=false){
+  currentIndex=0; stats={correct:0, wrong:0}; score=0; combo=0; lives=3; reviveUsed=false;
   updateUI();
-  if(startWithTeacherNow){ teacherPhase(); } else{ setTimeout(teacherPhase, 600); }
+  if(now) teacherPhase(); else setTimeout(teacherPhase,600);
 }
 
-function updateUI() {
-  if (currentIndex >= wordList.length) { endSet(); return; }
-  const w = wordList[currentIndex];
-
-  $("wordA").textContent = w[0]; $("meanA").textContent = w[1];
-  $("wordB").textContent = w[0]; $("meanB").textContent = w[1];
-
-  // SKOR HESABI (20 soru, her biri 5 puan -> 100 puan)
-  const totalScore = stats.correct * 5;
-  $("valCorrect").textContent = stats.correct;
-  $("valWrong").textContent = stats.wrong;
-  $("valScore").textContent = totalScore + " PUAN";
-
-  $("fillA").style.width = (currentIndex / wordList.length * 100) + "%";
-  $("corrA").textContent = (currentIndex + 1) + "/" + wordList.length;
+function updateUI(){
+  if(currentIndex>=wordList.length){ endSet(); return; }
+  
+  const w=wordList[currentIndex];
+  $("wordA").textContent=w[0]; $("meanA").textContent=w[1];
+  $("wordB").textContent=w[0]; $("meanB").textContent=w[1];
+  
+  $("valCorrect").textContent=stats.correct;
+  $("valWrong").textContent=stats.wrong;
+  
+  const hearts = lives > 0 ? "❤️".repeat(lives) + "🤍".repeat(3-lives) : "💀💀💀";
+  $("valScore").textContent = `${score} P • ${hearts}`;
+  
+  // Progress Fix: (current + 1)
+  $("fillA").style.width=((currentIndex + 1)/wordList.length*100)+"%";
+  $("corrA").textContent=(currentIndex+1)+"/"+wordList.length;
   
   $("paneA").classList.remove("active"); $("paneB").classList.remove("active");
-  $("micA").disabled = true;
-  setWave("idle","Hazır");
+  $("micA").disabled=true; setWave("idle","Hazır");
 }
 
-function speakBrowser(text, lang) {
-  return new Promise((resolve) => {
-    try{ window.speechSynthesis.cancel(); }catch{}
-    const u = new SpeechSynthesisUtterance(String(text||""));
-    u.lang = lang || "en-US"; u.rate = 0.9;
-    u.onend = resolve; u.onerror = resolve;
-    try { window.speechSynthesis.speak(u); } catch { resolve(); }
+function speakBrowser(t, rate=0.9){
+  return new Promise(r=>{
+    try{window.speechSynthesis.cancel();}catch{}
+    const u=new SpeechSynthesisUtterance(String(t||""));
+    u.lang=LANGS[currentLang].code; u.rate=rate;
+    u.onend=r; u.onerror=r;
+    try{window.speechSynthesis.speak(u);}catch{r();}
   });
 }
 
-async function teacherPhase() {
-  if(isBusy) return;
-  isBusy = true;
-  $("paneB").classList.add("active");
-  setWave("speaking", "Öğretmen Okuyor...");
-  await speakBrowser(wordList[currentIndex][0], "en-US");
-  $("paneB").classList.remove("active");
-  $("paneA").classList.add("active");
-  setWave("idle", "Sıra Sende");
-  isBusy = false;
-  $("micA").disabled = false;
+async function teacherPhase(){
+  if(isBusy)return; isBusy=true;
+  turnStartedAt = Date.now();
+  
+  $("paneB").classList.add("active"); setWave("speaking","Öğretmen...");
+  await speakBrowser(wordList[currentIndex][0]);
+  
+  $("paneB").classList.remove("active"); $("paneA").classList.add("active");
+  setWave("idle","Sıra Sende"); isBusy=false; $("micA").disabled=false;
 }
 
 function normalize(s){ return String(s||"").toLowerCase().trim().replace(/[.,!?]/g,""); }
 
-function listen() {
-  if (isBusy) return;
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) return alert("Desteklenmiyor");
-  try { window.speechSynthesis.cancel(); } catch {}
-  isBusy = true; $("micA").disabled = true; setWave("listening", "Dinleniyor...");
-  const rec = new SR(); rec.lang = "en-US"; rec.interimResults = false;
-  let gotResult = false;
-  rec.onresult = (e) => { gotResult = true; checkResult(e.results?.[0]?.[0]?.transcript || ""); };
-  rec.onerror = () => { cleanupAfterListen(); };
-  rec.onend = () => { if(!gotResult) cleanupAfterListen(); };
-  try { rec.start(); } catch { cleanupAfterListen(); }
+function similarity(a,b){
+  a = normalize(a); b = normalize(b);
+  if(!a || !b) return 0;
+  if(a === b) return 1;
+  const min = Math.min(a.length,b.length);
+  let same=0;
+  for(let i=0;i<min;i++){ if(a[i]===b[i]) same++; else break; }
+  return same / Math.max(a.length,b.length);
 }
 
-function cleanupAfterListen(){ isBusy = false; $("micA").disabled = false; setWave("idle", "Sıra Sende"); }
-
-async function checkResult(spokenText) {
-  const target = wordList[currentIndex][0];
-  const s = normalize(spokenText); const t = normalize(target);
-  const ok = (s.includes(t) || t.includes(s)); // Basit kontrol
-
-  if (ok) { SFX.win(); stats.correct++; showResultOverlay(true); }
-  else { SFX.fail(); stats.wrong++; showResultOverlay(false); }
+function listen(){
+  if(isBusy)return;
+  const S=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!S)return alert("Desteklenmiyor");
   
-  await sleep(1500);
-  currentIndex++;
-  updateUI();
-  await sleep(500);
-  isBusy = false;
-  teacherPhase();
-}
-
-function showResultOverlay(isOk) {
-  const ov = $("ovA");
-  ov.innerHTML = `<div class="res-icon">${isOk ? "✅" : "❌"}</div><div class="res-text">${isOk ? "HARİKA" : "YANLIŞ"}</div>`;
-  ov.className = "result-overlay show " + (isOk ? "ok" : "bad");
-  setTimeout(() => ov.classList.remove("show"), 1200);
-}
-
-function endSet() {
-  const finalScore = stats.correct * 5;
-  $("endModal").style.display = "flex";
+  try{window.speechSynthesis.cancel();}catch{}
+  isBusy=true; $("micA").disabled=true; setWave("listening","Dinleniyor...");
   
-  if(finalScore >= 100) {
-    $("endResult").innerHTML = `<span style="color:var(--c-green);font-size:32px">TEBRİKLER! TAM PUAN!</span><br>Skor: 100/100`;
-    startConfetti(); // 100 PUANSA BALONLAR
-  } else {
-    $("endResult").innerHTML = `Skorun: ${finalScore}/100<br>Doğru: ${stats.correct} | Yanlış: ${stats.wrong}`;
-  }
-  setWave("idle","Sınav Bitti");
+  const r=new S(); r.lang=LANGS[currentLang].code; r.interimResults=false;
+  let got=false;
+  r.onresult=e=>{ got=true; checkResult(e.results?.[0]?.[0]?.transcript||""); };
+  r.onerror=cleanup; r.onend=()=>{ if(!got)cleanup(); };
+  try{r.start();}catch{cleanup();}
 }
 
-// BALON/KONFETİ EFEKTİ
-let fwInterval=null; const cvs=$("effectCanvas"), ctx=cvs.getContext("2d"); let particles=[];
-function startConfetti(){
-  cvs.style.display="block"; cvs.width=window.innerWidth; cvs.height=window.innerHeight;
-  fwInterval=setInterval(()=>{
-    for(let i=0;i<5;i++){
-      particles.push({x:Math.random()*cvs.width, y:cvs.height+10, vx:(Math.random()-.5)*5, vy:-(Math.random()*5+5), color:`hsl(${Math.random()*360},100%,50%)`, life:150});
+function cleanup(){ isBusy=false; $("micA").disabled=false; setWave("idle","Sıra Sende"); }
+
+async function checkResult(txt){
+  const t=normalize(wordList[currentIndex][0]), s=normalize(txt);
+  
+  // Hard Mode (Last 5 words)
+  const isLate = currentIndex >= (wordList.length - 5);
+  const simThreshold = isLate ? 0.72 : 0.6;
+  const ok = (s.includes(t)||t.includes(s)||similarity(s,t)>=simThreshold);
+  
+  const sec = (Date.now() - turnStartedAt) / 1000;
+  const timeBonus = sec <= 2 ? 2 : sec <= 4 ? 1 : 0;
+
+  if(ok){
+    SFX.win(); stats.correct++; combo++;
+    const comboBonus = combo >= 4 ? 3 : Math.max(0, combo-1);
+    const gained = 5 + comboBonus + timeBonus; 
+    score += gained;
+    showResultOverlay(true, gained);
+    
+    // Perfect Streak Bonus
+    if(combo === 3){
+      score += 5;
+      setWave("idle","🔥 3'LÜ SERİ +5!");
     }
-  },100);
-  requestAnimationFrame(loopConfetti);
-}
-function loopConfetti(){
-  if(cvs.style.display==="none")return;
-  ctx.clearRect(0,0,cvs.width,cvs.height);
-  for(let i=0;i<particles.length;i++){
-    let p=particles[i]; p.x+=p.vx; p.y+=p.vy; p.life--; 
-    ctx.beginPath(); ctx.arc(p.x,p.y,5,0,Math.PI*2); ctx.fillStyle=p.color; ctx.fill();
-    if(p.life<=0){ particles.splice(i,1); i--; }
+
+  } else {
+    SFX.fail(); stats.wrong++; combo=0; lives--;
+    showResultOverlay(false, 0);
+    
+    // Replay Teacher (Slow)
+    await speakBrowser(wordList[currentIndex][0], 0.78);
+
+    if(lives <= 0) { 
+      if(!reviveUsed) {
+        reviveUsed = true;
+        lives = 1;
+        setWave("idle","SON ŞANS! 🔥");
+        updateUI();
+        // Bir sonraki soruya geçme mantığı aşağıda devam eder
+      } else {
+        endSet(true); 
+        return; 
+      }
+    } 
   }
-  requestAnimationFrame(loopConfetti);
+  
+  await sleep(1500); currentIndex++; updateUI();
+  await sleep(500); isBusy=false; teacherPhase();
 }
 
-$("startBtn").onclick = fetchWordsFromAI; $("micA").onclick = listen; setWave("idle","HAZIR");
+function showResultOverlay(ok, gained){
+  const o=$("ovA");
+  const extra = ok ? `<div style="margin-top:6px;font-weight:800;opacity:.9">+${gained}</div>` : "";
+  o.innerHTML=`<div class="res-icon">${ok?'✅':'❌'}</div><div class="res-text">${ok?'HARİKA':'YANLIŞ'}</div>${extra}`;
+  o.className="result-overlay show "+(ok?"ok":"bad");
+  setTimeout(()=>o.classList.remove("show"),1100);
+}
+
+function endSet(isKO=false){
+  try{ window.speechSynthesis.cancel(); }catch{}
+  updateBests(score);
+  
+  $("endModal").style.display="flex";
+  
+  if(isKO){
+    $("endResult").innerHTML = `<span style="color:var(--c-red);font-size:32px">NAKAVT! 🥊</span><br>Skor: ${score}<br>Doğru: ${stats.correct}`;
+  } else if(score >= 100){
+    $("endResult").innerHTML = `<span style="color:var(--c-green);font-size:32px">EFSANE! 🏆</span><br>Skor: ${score}`;
+    startConfetti();
+  } else {
+    $("endResult").innerHTML = `Skor: ${score}<br>Doğru: ${stats.correct}`;
+  }
+  setWave("idle","Bitti");
+}
+
+// KONFETİ (Optimized)
+let fwInterval=null; const cvs=$("effectCanvas"),ctx=cvs.getContext("2d"); let parts=[];
+function startConfetti(){
+  if(fwInterval) clearInterval(fwInterval);
+  parts=[]; cvs.style.display="block"; cvs.width=window.innerWidth; cvs.height=window.innerHeight; 
+  confettiOn = true;
+  
+  fwInterval=setInterval(()=>{ for(let i=0;i<5;i++) parts.push({x:Math.random()*cvs.width,y:cvs.height,vx:(Math.random()-.5)*5,vy:-(Math.random()*5+5),c:`hsl(${Math.random()*360},100%,50%)`,l:100}); },100); 
+  requestAnimationFrame(loopConfetti);
+  
+  setTimeout(()=>{ 
+    if(fwInterval) clearInterval(fwInterval); fwInterval=null; 
+    confettiOn = false; cvs.style.display="none"; parts=[]; 
+  }, 5000);
+}
+function loopConfetti(){ 
+  if(!confettiOn) return;
+  ctx.clearRect(0,0,cvs.width,cvs.height); 
+  for(let i=0;i<parts.length;i++){ let p=parts[i]; p.x+=p.vx; p.y+=p.vy; p.l--; ctx.beginPath(); ctx.arc(p.x,p.y,5,0,Math.PI*2); ctx.fillStyle=p.c; ctx.fill(); if(p.l<=0){parts.splice(i,1);i--} } 
+  requestAnimationFrame(loopConfetti); 
+}
+
+$("startBtn").onclick=fetchWordsFromAI; $("micA").onclick=()=>{ ensureAudio(); listen(); };
 </script>
 </body>
 </html>
