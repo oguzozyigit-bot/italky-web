@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>ITALKY - İletişim</title>
+  <title>italkyAI - Hakkımızda</title>
 
   <link rel="icon" href="data:," />
   
@@ -13,47 +13,49 @@
 
   <style>
     :root {
-      /* ITALKY PALET */
-      --bg-void: #030014;
-      --neon-cyan: #00f3ff;
-      --neon-purple: #bc13fe;
-      --neon-pink: #ff00aa;
+      /* --- YENİ MARKA PALETİ --- */
+      --bg-deep: #020205;
+      --text-main: #ffffff;
+      --text-muted: rgba(255, 255, 255, 0.65);
+      
+      /* Logo Renkleri */
+      --c-indigo: #6366f1;
+      --c-purple: #a855f7;
+      --ai-grad: linear-gradient(135deg, #a5b4fc 0%, #6366f1 100%);
       
       --glass-border: rgba(255, 255, 255, 0.1);
-      --text-main: #ffffff;
-      --text-muted: rgba(255, 255, 255, 0.7);
-      
       --ease-elastic: cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
 
     html, body {
-      margin: 0; padding: 0; width: 100%; height: 100dvh;
-      overflow: hidden;
+      margin: 0; padding: 0; width: 100%; height: 100%;
+      overflow: hidden; /* Dış scroll kapalı */
+      position: fixed;
       font-family: 'Outfit', sans-serif;
-      background-color: var(--bg-void);
+      background-color: var(--bg-deep);
       color: var(--text-main);
       display: flex; align-items: center; justify-content: center;
     }
 
-    /* --- BACKGROUND FX --- */
+    /* --- ATMOSFER --- */
     .cosmos-bg {
       position: absolute; inset: -50%; width: 200%; height: 200%;
-      background: #030014; z-index: 0;
+      background: var(--bg-deep); z-index: 0; pointer-events: none;
     }
     .orb {
       position: absolute; border-radius: 50%;
-      filter: blur(90px); opacity: 0.5;
-      animation: floatOrbit 25s infinite alternate ease-in-out;
+      filter: blur(100px); opacity: 0.3;
+      animation: floatOrbit 30s infinite alternate ease-in-out;
     }
     .orb-1 {
       top: 10%; left: 10%; width: 60vw; height: 60vw;
-      background: radial-gradient(circle, var(--neon-purple), transparent 70%);
+      background: radial-gradient(circle, var(--c-indigo), transparent 70%);
     }
     .orb-2 {
       bottom: 10%; right: 10%; width: 50vw; height: 50vw;
-      background: radial-gradient(circle, var(--neon-cyan), transparent 70%);
+      background: radial-gradient(circle, var(--c-purple), transparent 70%);
       animation-delay: -5s;
     }
     @keyframes floatOrbit {
@@ -72,20 +74,22 @@
       width: 100%; max-width: 480px; height: 100%;
       position: relative; z-index: 10;
       display: flex; flex-direction: column;
-      background: rgba(5, 5, 10, 0.4);
+      background: rgba(8, 8, 12, 0.5); /* Daha koyu, daha şık */
       backdrop-filter: blur(30px);
     }
     @media (min-width: 520px) {
       .mobile-frame {
         height: 92vh; border-radius: 40px;
-        border: 1px solid rgba(255,255,255,0.1);
-        box-shadow: 0 40px 100px -20px rgba(0,0,0,0.8);
+        border: 1px solid rgba(255,255,255,0.08);
+        box-shadow: 0 40px 100px -20px rgba(0,0,0,0.9);
+        overflow: hidden;
       }
     }
 
     /* --- TOP BAR --- */
     .topbar {
-      height: 100px; display: flex; align-items: center; justify-content: space-between;
+      flex: 0 0 100px;
+      display: flex; align-items: center; justify-content: space-between;
       padding: 0 24px; position: relative; z-index: 20;
     }
 
@@ -97,85 +101,120 @@
       cursor: pointer; transition: 0.2s;
     }
     .back-btn:active { transform: scale(0.95); background: rgba(255,255,255,0.1); }
-    .back-btn svg { width: 24px; height: 24px; fill: #fff; }
+    .back-btn svg { width: 22px; height: 22px; stroke-width: 2.5; }
 
-    /* Logo Lock System */
-    .mini-brand { display: flex; flex-direction: column; width: fit-content; align-items: center; }
-    .mini-logo {
-      font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 24px;
-      letter-spacing: -1px; color: #fff; line-height: 1; white-space: nowrap;
+    /* YENİ LOGO YAPISI */
+    .mini-brand {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      line-height: 1; margin-top: 4px;
     }
-    .mini-flag {
-      width: 100%; height: 4px; border-radius: 4px; display: flex; overflow: hidden; margin-top: 4px;
-      box-shadow: 0 0 10px rgba(255,255,255,0.1);
+    .logo-container {
+      font-family: 'Space Grotesk', sans-serif; font-size: 26px; letter-spacing: -1px;
     }
-    .mini-flag div { flex: 1; height: 100%; }
-    .f-g { background: #009246; } .f-w { background: #fff; } .f-r { background: #CE2B37; }
+    .logo-main { font-weight: 700; color: #fff; }
+    .logo-ai { 
+      font-weight: 700; 
+      background: var(--ai-grad);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .mini-slogan {
+      font-family: 'Outfit', sans-serif;
+      font-size: 10px; font-weight: 700;
+      color: rgba(255,255,255,0.5);
+      letter-spacing: 4px; text-transform: uppercase;
+      margin-top: 4px; margin-left: 2px;
+    }
 
-    /* --- CONTENT AREA --- */
+    /* --- SCROLL CONTENT --- */
     .page-content {
-      flex: 1; overflow-y: auto; padding: 10px 20px 120px;
-      display: flex; flex-direction: column; gap: 20px; scrollbar-width: none;
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 10px 20px 140px; /* Footer payı */
+      display: flex; flex-direction: column; gap: 20px;
+      position: relative; z-index: 5;
     }
     .page-content::-webkit-scrollbar { display: none; }
 
-    .contact-card {
-      background: linear-gradient(160deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%);
-      border: 1px solid var(--glass-border); border-radius: 32px;
-      padding: 30px 24px; position: relative; overflow: hidden;
+    .about-card {
+      background: linear-gradient(160deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.005) 100%);
+      border: 1px solid var(--glass-border);
+      border-radius: 32px;
+      padding: 32px 24px;
+      position: relative; overflow: hidden;
       animation: fadeInUp 0.8s var(--ease-elastic);
     }
 
+    /* Başlık */
     h1 {
-      font-family: 'Space Grotesk', sans-serif; font-size: 28px; margin: 0 0 10px;
-      background: linear-gradient(to right, #fff, var(--neon-purple));
+      font-family: 'Space Grotesk', sans-serif; font-size: 32px; margin: 0 0 24px;
+      color: #fff; font-weight: 700; letter-spacing: -1.5px; line-height: 1.1;
+    }
+    /* Vurgulu kelime (AI Gradient) */
+    h1 span {
+      background: var(--ai-grad);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      font-weight: 700; letter-spacing: -1px;
-    }
-    
-    .sub { font-size: 14px; color: var(--text-muted); line-height: 1.6; margin-bottom: 24px; }
-
-    .info-box {
-      background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border);
-      border-radius: 20px; padding: 20px; margin-bottom: 16px;
-      display: flex; flex-direction: column; gap: 12px;
-    }
-    .label { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 1px; }
-    
-    .value { 
-      font-family: 'Space Grotesk', monospace; font-size: 16px; font-weight: 700; color: var(--neon-cyan);
-      word-break: break-all;
     }
 
-    .btn-row { display: flex; gap: 10px; margin-top: 6px; }
-    .btn {
-      flex: 1; height: 48px; border-radius: 14px; border: none; font-size: 14px; font-weight: 600;
-      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
-      transition: 0.2s; text-decoration: none;
-    }
-    .btn-primary { background: var(--neon-cyan); color: #000; box-shadow: 0 5px 15px rgba(0, 243, 255, 0.3); }
-    .btn-primary:active { transform: scale(0.96); }
+    .section { margin-bottom: 36px; position: relative; z-index: 2; }
     
-    .btn-sec { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid var(--glass-border); }
-    .btn-sec:active { background: rgba(255,255,255,0.15); transform: scale(0.96); }
+    h3 {
+      font-family: 'Space Grotesk', sans-serif; 
+      color: #fff; opacity: 0.9;
+      font-size: 17px; margin: 0 0 14px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    /* İndigo Nokta */
+    h3::before { 
+      content: ''; width: 6px; height: 6px; 
+      background: var(--c-indigo); border-radius: 50%; 
+      box-shadow: 0 0 10px var(--c-indigo); 
+    }
 
-    .mini-note { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 10px; line-height: 1.5; font-style: italic; }
+    p { font-size: 15px; line-height: 1.7; color: var(--text-muted); margin: 0 0 16px; font-weight: 400; }
+    
+    .highlight { 
+      color: #fff; font-weight: 600; 
+      text-shadow: 0 0 15px rgba(99, 102, 241, 0.4); 
+    }
+
+    ul { padding: 0; list-style: none; margin: 0; }
+    li {
+      position: relative; padding-left: 20px; margin-bottom: 14px;
+      font-size: 14px; color: rgba(255,255,255,0.75); line-height: 1.5;
+    }
+    /* Ok yerine ince çizgi */
+    li::after {
+      content: ''; position: absolute; left: 0; top: 8px; width: 10px; height: 2px;
+      background: var(--c-indigo); border-radius: 2px;
+    }
+
+    .quote-box {
+      border-left: 3px solid var(--c-purple); /* Mor vurgu */
+      padding-left: 18px; margin: 28px 0;
+      font-size: 16px; font-style: italic; color: #fff;
+      background: linear-gradient(90deg, rgba(168, 85, 247, 0.1), transparent);
+      padding-top: 10px; padding-bottom: 10px; border-radius: 0 12px 12px 0;
+    }
 
     /* --- FOOTER --- */
     .footerbar {
       position: absolute; bottom: 0; width: 100%; padding: 24px;
-      background: linear-gradient(to top, #000 0%, transparent 100%);
-      display: flex; flex-direction: column; align-items: center; gap: 14px;
+      background: linear-gradient(to top, #000 20%, transparent 100%);
+      display: flex; flex-direction: column; align-items: center; gap: 16px;
       z-index: 30; pointer-events: none;
     }
-    .links { display: flex; gap: 24px; pointer-events: auto; }
+    .links { display: flex; gap: 20px; pointer-events: auto; }
     .links a {
-      color: rgba(255,255,255,0.5); text-decoration: none; font-size: 12px; font-weight: 600; transition: 0.2s;
+      color: rgba(255,255,255,0.5); text-decoration: none; font-size: 11px; 
+      font-weight: 700; text-transform: uppercase; transition: 0.2s;
     }
-    .links a:hover { color: var(--neon-cyan); }
+    .links a:hover { color: #fff; }
     
     .footerBrand { 
-      font-size: 10px; color: rgba(255,255,255,0.2); letter-spacing: 2px; text-transform: uppercase; font-weight: 700;
+      font-size: 10px; color: rgba(255,255,255,0.2); letter-spacing: 1.5px; 
+      text-transform: uppercase; font-weight: 700;
     }
 
     @keyframes fadeInUp { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
@@ -191,86 +230,68 @@
 
   <div class="mobile-frame">
     <div class="topbar">
-      <button class="back-btn" onclick="window.location.href='/index.html'">
-        <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+      <button class="back-btn" onclick="window.history.length > 1 ? window.history.back() : window.location.href='/pages/home.html'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
       </button>
 
       <div class="mini-brand">
-        <div class="mini-logo">ITALKY</div>
-        <div class="mini-flag">
-          <div class="f-g"></div><div class="f-w"></div><div class="f-r"></div>
+        <div class="logo-container">
+          <span class="logo-main">italky</span><span class="logo-ai">AI</span>
         </div>
+        <div class="mini-slogan">BE FREE</div>
       </div>
     </div>
 
     <div class="page-content">
-      <div class="contact-card">
-        <h1>İletişim</h1>
-        <p class="sub">
-          Teknik destek, iş birliği veya önerileriniz için bizimle doğrudan iletişime geçebilirsiniz.
-        </p>
+      <div class="about-card">
+        <h1>Geleceğin <span>Dili.</span></h1>
 
-        <div class="info-box">
-          <div class="label">Resmi Destek</div>
-          <div class="value">support@italky.ai</div>
-          <div class="mini-note">Talepleriniz genellikle 24 saat içinde yanıtlanır.</div>
-          
-          <div class="btn-row">
-            <a class="btn btn-primary" href="mailto:support@italky.ai">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-              E-Posta Gönder
-            </a>
-            <button class="btn btn-sec" type="button" id="copyMailBtn">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-              Kopyala
-            </button>
+        <div class="section">
+          <p>
+            italkyAI, sıradan bir çeviri aracı değildir. Dil öğrenimini, <span class="highlight">yapay zeka (AI 2.0)</span> ve insan doğallığıyla birleştiren, sınırları kaldıran yeni nesil bir iletişim platformudur.
+          </p>
+          <div class="quote-box">
+            "Bir dil, sadece kelimelerden ibaret değildir; bir kültür, bir yaşam ve yeni bir dünyadır."
           </div>
         </div>
 
-        <div class="info-box">
-          <div class="label">Şirket Bilgileri</div>
-          <div class="value" style="color:#fff; font-family:'Outfit', sans-serif;">ITALKY TEKNOLOJİ A.Ş.</div>
-          <div class="mini-note">BY Ozyigit's</div>
+        <div class="section">
+          <h3>VİZYONUMUZ</h3>
+          <p>
+            Amacımız, dil bariyerlerini teknolojiyle yıkmak ama bunu yaparken "insan" faktörünü kaybetmemek. italkyAI, sana sadece kelimeleri öğretmez; o dili <span class="highlight">yaşamanı</span> sağlar.
+          </p>
+        </div>
+
+        <div class="section">
+          <h3>NEDEN italkyAI?</h3>
+          <ul>
+            <li><strong>Canlı Simülasyon:</strong> Yapay zeka ile gerçek zamanlı, sesli ve akıcı pratik yaparsın.</li>
+            <li><strong>Hibrit Model:</strong> Yapay zekanın hızı ile gerçek eğitmenlerin deneyimini birleştiriyoruz.</li>
+            <li><strong>Sınırsız Özgürlük:</strong> Kendi sesinle, başka bir dilde konuşmanın özgüvenini yaşarsın.</li>
+            <li><strong>7/24 Erişim:</strong> Öğrenme süreci senin hızına ve zamanına göre şekillenir.</li>
+          </ul>
+        </div>
+
+        <div class="section">
+          <h3>TEKNOLOJİ + İNSAN</h3>
+          <p>
+            Soğuk algoritmalar yerine, seni anlayan, hatalarını düzelten ve motive eden bir sistem kurduk. <span class="highlight">CaynanaAI</span> altyapısı üzerine inşa edilen italkyAI, ilişkisel yapay zeka teknolojisini kullanır.
+          </p>
         </div>
         
-        <p class="mini-note" style="text-align: center; margin-top: 20px;">
-        
-        </p>
+        <br>
       </div>
     </div>
 
     <div class="footerbar">
       <div class="links">
-        <a href="/pages/about.html">Hakkında</a>
+        <a href="/pages/about.html" style="color:#fff">Hakkında</a>
         <a href="/pages/faq.html">SSS</a>
         <a href="/pages/privacy.html">Gizlilik</a>
-        <a href="/pages/contact.html" style="color:#fff">İletişim</a>
+        <a href="/pages/contact.html">İletişim</a>
       </div>
-      <div class="footerBrand">ItalkyAI By Ozyigit's 2026</div>
+      <div class="footerBrand">italkyAI By Ozyigit's 2026</div>
     </div>
   </div>
-
-  <script>
-    // Mail Kopyalama Fonksiyonu
-    document.addEventListener("DOMContentLoaded", () => {
-      const btn = document.getElementById("copyMailBtn");
-      if(!btn) return;
-      btn.addEventListener("click", async () => {
-        const mail = "support@italky.ai";
-        try{
-          await navigator.clipboard.writeText(mail);
-          const originalText = btn.innerHTML;
-          btn.innerHTML = "Kopyalandı!";
-          btn.style.borderColor = "#00f3ff";
-          setTimeout(()=> {
-            btn.innerHTML = originalText;
-            btn.style.borderColor = "rgba(255,255,255,0.1)";
-          }, 1500);
-        } catch(e) {
-          alert("Kopyalanamadı: " + mail);
-        }
-      });
-    });
-  </script>
 </body>
 </html>
