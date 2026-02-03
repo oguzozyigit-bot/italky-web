@@ -1,89 +1,170 @@
 // FILE: italky-web/js/voice_ai_page.js
 import { BASE_DOMAIN } from "/js/config.js";
 
-const $ = id => document.getElementById(id);
+const $ = (id)=>document.getElementById(id);
 
+/* =========================
+   OPENAI VOICE MAP (SABİT)
+   ========================= */
 const VOICES = [
-  "Jale","Hüma","Selden","Ayşem",
-  "Ozan","Oğuz","Barış","Emrah"
+  { id:"jale",   label:"Jale",   gender:"Kadın" },
+  { id:"huma",   label:"Hüma",   gender:"Kadın" },
+  { id:"selden", label:"Selden", gender:"Kadın" },
+  { id:"aysem",  label:"Ayşem",  gender:"Kadın" },
+
+  { id:"ozan",   label:"Ozan",   gender:"Erkek" },
+  { id:"oguz",   label:"Oğuz",   gender:"Erkek" },
+  { id:"baris",  label:"Barış",  gender:"Erkek" },
+  { id:"emrah",  label:"Emrah",  gender:"Erkek" },
 ];
 
-let selected = localStorage.getItem("italky_voice") || "Ozan";
+let selectedVoice = localStorage.getItem("italky_voice") || "oguz";
 
-function demoText(name){
-  return `Italky AI'ye hoş geldiniz. Ben ${name}. 
-Benimle hem eğlenip, hem öğrenip, hem de dünyayı özgürce gezebilirsiniz.
-Hadi beni seç. Ben ${name}.`;
+/* =========================
+   VOICE MODAL
+   ========================= */
+const modal = $("voiceModal");
+const list  = $("voiceList");
+
+function renderVoices(){
+  list.innerHTML = "";
+
+  VOICES.forEach(v=>{
+    const row = document.createElement("div");
+    row.className = "voice-row" + (v.id===selectedVoice ? " sel" : "");
+    row.innerHTML = `
+      <div>
+        <strong>${v.label}</strong>
+        <div style="font-size:11px;opacity:.6">${v.gender}</div>
+      </div>
+      <button data-id="${v.id}">▶</button>
+    `;
+
+    // SEÇ
+    row.onclick = ()=>{
+      selectedVoice = v.id;
+      localStorage.setItem("italky_voice", v.id);
+      renderVoices();
+    };
+
+    // DEMO
+    row.querySelector("button").onclick = async (e)=>{
+      e.stopPropagation();
+      await playDemo(v.id, v.label);
+    };
+
+    list.appendChild(row);
+  });
 }
 
-/* ===== VOICE MODAL ===== */
-window.openModal = ()=>{
-  $("modal").classList.add("show");
+$("openVoice").onclick = ()=>{
+  modal.classList.add("show");
   renderVoices();
 };
 
-function renderVoices(){
-  const box = $("voiceList");
-  box.innerHTML = "";
-  VOICES.forEach(name=>{
-    const row = document.createElement("div");
-    row.className = "voice" + (name===selected?" sel":"");
-    row.innerHTML = `
-      <div>${name}</div>
-      <button>▶</button>
-    `;
+modal.onclick = (e)=>{
+  if(e.target === modal) modal.classList.remove("show");
+};
 
-    row.onclick = ()=>{
-      document.querySelectorAll(".voice").forEach(x=>x.classList.remove("sel"));
-      row.classList.add("sel");
-      selected = name;
-      localStorage.setItem("italky_voice", name);
-    };
+/* =========================
+   OPENAI TTS DEMO
+   ========================= */
+async function playDemo(voiceId, name){
+  const text = `Merhaba, ben ${name}. italkyAI’ye hoş geldin.`;
 
-    row.querySelector("button").onclick = e=>{
-      e.stopPropagation();
-      speak(demoText(name));
-    };
-
-    box.appendChild(row);
-  });
-}
-
-/* ===== SPEAK ===== */
-async function speak(text){
-  const r = await fetch(`${BASE_DOMAIN}/api/tts_openai`,{
+  const res = await fetch(`${BASE_DOMAIN}/api/tts_openai`,{
     method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({
       text,
-      name:selected
+      voice: voiceId,
+      format: "mp3"
     })
   });
-  const j = await r.json();
-  const audio = new Audio(`data:audio/mp3;base64,${j.audio_base64}`);
+
+  const data = await res.json();
+  const audio = new Audio(`data:audio/mp3;base64,${data.audio_base64}`);
   audio.play();
 }
 
-/* ===== MIC ===== */
-let listening=false;
-$("mic").addEventListener("pointerdown", async ()=>{
-  listening = !listening;
-  const stage = $("stage");
-  const mic = $("mic");
-  const status = $("status");
+/* =========================
+   MICROPHONE (GERÇEK STT)
+   ========================= */
+const micBtn = $("micBtn");
+const stage  = $("stage");
+const status = $("status");
+
+let rec = null;
+let listening = false;
+
+function initSTT(){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR){
+    alert("Bu cihaz mikrofonu desteklemiyor.");
+    return null;
+  }
+  const r = new SR();
+  r.lang = "tr-TR";
+  r.interimResults = false;
+  r.continuous = false;
+  return r;
+}
+
+micBtn.onclick = ()=>{
+  if(!rec){
+    rec = initSTT();
+    if(!rec) return;
+  }
 
   if(listening){
-    mic.classList.add("listening");
-    stage.className="stage listening";
-    status.textContent="Dinliyorum…";
-  }else{
-    mic.classList.remove("listening");
-    stage.className="stage speaking";
-    status.textContent="Konuşuyorum…";
-    speak(`Merhaba. Ben ${selected}.`);
-    setTimeout(()=>{
-      stage.className="stage";
-      status.textContent="Hazır";
-    },4000);
+    rec.stop();
+    return;
   }
-});
+
+  listening = true;
+  micBtn.classList.add("listening");
+  stage.classList.add("listening");
+  status.textContent = "Dinliyorum…";
+
+  rec.start();
+
+  rec.onresult = async (e)=>{
+    const text = e.results[0][0].transcript;
+
+    listening = false;
+    micBtn.classList.remove("listening");
+    stage.classList.remove("listening");
+    stage.classList.add("speaking");
+    status.textContent = "Konuşuyorum…";
+
+    await speakWithOpenAI(text);
+
+    stage.classList.remove("speaking");
+    status.textContent = "Hazır";
+  };
+
+  rec.onend = ()=>{
+    listening = false;
+    micBtn.classList.remove("listening");
+    stage.classList.remove("listening");
+  };
+};
+
+/* =========================
+   OPENAI TTS RESPONSE
+   ========================= */
+async function speakWithOpenAI(text){
+  const res = await fetch(`${BASE_DOMAIN}/api/tts_openai`,{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({
+      text,
+      voice: selectedVoice,
+      format: "mp3"
+    })
+  });
+
+  const data = await res.json();
+  const audio = new Audio(`data:audio/mp3;base64,${data.audio_base64}`);
+  await audio.play();
+}
