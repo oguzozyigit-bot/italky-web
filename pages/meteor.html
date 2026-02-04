@@ -4,154 +4,334 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>ITALKY • Meteor Defense</title>
+  <link rel="icon" href="data:," />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
   <style>
     /* --- TEMA: DEEP SPACE DEFENSE --- */
-    :root {
-      --bg: #020005;
-      --ui-panel: rgba(20, 20, 30, 0.85);
-      --neon-blue: #00f3ff;
-      --neon-red: #ff0055;
-      --neon-green: #00ff66;
-      --meteor-color: #ffaa00;
-      --text: #fff;
+    :root{
+      --bg:#020005;
+      --ui-panel:rgba(20,20,30,.85);
+      --neon-blue:#00f3ff;
+      --neon-red:#ff0055;
+      --neon-green:#00ff66;
+      --meteor-color:#ffaa00;
+      --text:#fff;
+      --border:rgba(255,255,255,.12);
     }
-
-    * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; outline: none; }
-    body { margin: 0; width: 100%; height: 100%; overflow: hidden; position: fixed; font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--text); }
+    *{ box-sizing:border-box; user-select:none; -webkit-tap-highlight-color:transparent; outline:none; }
+    body{ margin:0; width:100%; height:100%; overflow:hidden; position:fixed; font-family:'Outfit',sans-serif; background:var(--bg); color:var(--text); }
 
     /* ARKA PLAN */
-    .space-bg { position: absolute; inset: 0; background: radial-gradient(circle at bottom, #1a0033 0%, #000 100%); z-index: -2; }
-    .stars { position: absolute; inset: 0; background-image: radial-gradient(#fff 1px, transparent 1px); background-size: 50px 50px; opacity: 0.3; z-index: -1; }
+    .space-bg{ position:absolute; inset:0; background:radial-gradient(circle at bottom,#1a0033 0%,#000 100%); z-index:-2; }
+    .stars{ position:absolute; inset:0; background-image:radial-gradient(#fff 1px, transparent 1px); background-size:50px 50px; opacity:.3; z-index:-1; }
 
     /* OYUN ALANI */
-    .game-container {
-      position: relative; width: 100%; height: 100%; max-width: 480px; margin: 0 auto;
-      display: flex; flex-direction: column; overflow: hidden;
-      border-left: 1px solid rgba(255,255,255,0.1); border-right: 1px solid rgba(255,255,255,0.1);
+    .game-container{
+      position:relative; width:100%; height:100%; max-width:480px; margin:0 auto;
+      display:flex; flex-direction:column; overflow:hidden;
+      border-left:1px solid rgba(255,255,255,0.1);
+      border-right:1px solid rgba(255,255,255,0.1);
     }
 
     /* HEADER */
-    .header {
-      flex: 0 0 60px; padding: 0 15px; display: flex; align-items: center; justify-content: space-between;
-      background: linear-gradient(180deg, rgba(0,0,0,0.8), transparent); z-index: 20;
+    .header{
+      flex:0 0 60px; padding:0 15px;
+      display:flex; align-items:center; justify-content:space-between;
+      background:linear-gradient(180deg, rgba(0,0,0,.8), transparent);
+      z-index:20;
     }
-    .back-btn { font-size: 24px; cursor: pointer; opacity: 0.8; }
-    .score-board { font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700; color: var(--neon-blue); text-shadow: 0 0 10px var(--neon-blue); }
-    .lives { letter-spacing: 2px; font-size: 14px; }
+    .back-btn{ font-size:24px; cursor:pointer; opacity:.85; transition:.15s; }
+    .back-btn:active{ transform:scale(.95); }
 
-    /* SAHNE (Meteorların düştüğü yer) */
-    .stage { flex: 1; position: relative; overflow: hidden; }
+    .mid{
+      display:flex; align-items:center; gap:10px;
+      font-family:'Space Grotesk',sans-serif;
+    }
+    .score-board{
+      font-size:18px; font-weight:800;
+      color:var(--neon-blue);
+      text-shadow:0 0 10px var(--neon-blue);
+      letter-spacing:.5px;
+      white-space:nowrap;
+    }
+    .combo{
+      font-size:12px; font-weight:900;
+      padding:6px 10px; border-radius:999px;
+      border:1px solid rgba(0,243,255,.25);
+      background:rgba(0,243,255,.08);
+      color:#c9fdff;
+      letter-spacing:.6px;
+      opacity:.95;
+      min-width:78px;
+      text-align:center;
+    }
+
+    .right{
+      display:flex; align-items:center; gap:10px;
+    }
+    .lives{ letter-spacing:2px; font-size:14px; }
+
+    .icon-btn{
+      width:38px; height:38px; border-radius:12px;
+      display:flex; align-items:center; justify-content:center;
+      background:rgba(255,255,255,0.06);
+      border:1px solid rgba(255,255,255,0.12);
+      cursor:pointer;
+      transition:.15s;
+      font-size:16px;
+      opacity:.95;
+    }
+    .icon-btn:active{ transform:scale(.96); }
+
+    /* SAHNE */
+    .stage{ flex:1; position:relative; overflow:hidden; }
 
     /* METEOR */
-    .meteor {
-      position: absolute; left: 50%; top: -60px; transform: translateX(-50%);
-      width: 100px; height: 100px;
-      display: flex; align-items: center; justify-content: center;
-      flex-direction: column;
-      z-index: 10;
-      transition: top 0.1s linear; /* JS ile sürülecek */
+    .meteor{
+      position:absolute; top:-120px;
+      width:100px; height:100px;
+      display:flex; align-items:center; justify-content:center;
+      flex-direction:column;
+      z-index:10;
+      transition: top 0.1s linear;
     }
-    .meteor-body {
-      width: 70px; height: 70px;
-      background: radial-gradient(circle at 30% 30%, #ffcc00, #ff4400);
-      border-radius: 50%;
-      box-shadow: 0 0 20px #ff4400;
-      display: flex; align-items: center; justify-content: center;
-      border: 2px solid #fff;
-      position: relative;
+    .meteor-body{
+      width:70px; height:70px;
+      background:radial-gradient(circle at 30% 30%, #ffcc00, #ff4400);
+      border-radius:50%;
+      box-shadow:0 0 20px #ff4400;
+      display:flex; align-items:center; justify-content:center;
+      border:2px solid #fff;
+      position:relative;
     }
-    .meteor-body::after {
-      content: ''; position: absolute; top: -10px; left: 0; right: 0; bottom: 0;
-      background: transparent; box-shadow: 0 -10px 20px #ffaa00; border-radius: 50%; opacity: 0.5;
+    .meteor-body::after{
+      content:''; position:absolute; top:-10px; left:0; right:0; bottom:0;
+      background:transparent;
+      box-shadow:0 -10px 20px #ffaa00;
+      border-radius:50%;
+      opacity:.5;
     }
-    .meteor-text {
-      color: #000; font-weight: 900; font-size: 13px; text-transform: uppercase;
-      text-align: center; line-height: 1; z-index: 2; font-family: 'Space Grotesk', sans-serif;
+    .meteor-text{
+      color:#000;
+      font-weight:900;
+      font-size:13px;
+      text-transform:uppercase;
+      text-align:center;
+      line-height:1;
+      z-index:2;
+      font-family:'Space Grotesk',sans-serif;
+      padding:0 6px;
     }
-    .meteor-tail {
-      position: absolute; top: -40px; width: 40px; height: 60px;
-      background: linear-gradient(to top, #ff4400, transparent);
-      opacity: 0.6; filter: blur(5px); z-index: 1;
-    }
-
-    /* KONTROL PANELİ (Silahlar) */
-    .control-panel {
-      flex: 0 0 240px; background: var(--ui-panel);
-      border-top: 2px solid var(--neon-blue);
-      border-radius: 20px 20px 0 0;
-      padding: 15px;
-      display: flex; flex-direction: column; gap: 10px;
-      z-index: 30;
-      box-shadow: 0 -5px 30px rgba(0, 243, 255, 0.2);
-    }
-    
-    .turret-base {
-      position: absolute; bottom: 230px; left: 50%; transform: translateX(-50%);
-      width: 40px; height: 40px; background: var(--neon-blue);
-      border-radius: 50% 50% 0 0; z-index: 25;
-      box-shadow: 0 0 15px var(--neon-blue);
-    }
-    .laser-beam {
-      position: absolute; width: 4px; background: var(--neon-green);
-      transform-origin: bottom center; pointer-events: none; opacity: 0; z-index: 5;
-      box-shadow: 0 0 10px var(--neon-green);
+    .meteor-tail{
+      position:absolute; top:-40px; width:40px; height:60px;
+      background:linear-gradient(to top, #ff4400, transparent);
+      opacity:.6; filter:blur(5px); z-index:1;
     }
 
-    .options-grid {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 10px; height: 100%;
+    /* KONTROL PANELİ */
+    .control-panel{
+      flex:0 0 240px;
+      background:var(--ui-panel);
+      border-top:2px solid var(--neon-blue);
+      border-radius:20px 20px 0 0;
+      padding:15px;
+      display:flex; flex-direction:column; gap:10px;
+      z-index:30;
+      box-shadow:0 -5px 30px rgba(0,243,255,.2);
     }
-    .opt-btn {
-      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2);
-      border-radius: 12px; color: #fff; font-size: 16px; font-weight: 700;
-      cursor: pointer; position: relative; overflow: hidden; transition: 0.1s;
+
+    .turret-base{
+      position:absolute; bottom:230px; left:50%; transform:translateX(-50%);
+      width:40px; height:40px;
+      background:var(--neon-blue);
+      border-radius:50% 50% 0 0;
+      z-index:25;
+      box-shadow:0 0 15px var(--neon-blue);
     }
-    .opt-btn:active { background: rgba(255,255,255,0.2); transform: scale(0.95); }
-    .opt-btn.correct { background: var(--neon-green); color: #000; border-color: var(--neon-green); }
-    .opt-btn.wrong { background: var(--neon-red); border-color: var(--neon-red); animation: shake 0.3s; }
+
+    .laser-beam{
+      position:absolute;
+      height:4px;
+      background:var(--neon-green);
+      pointer-events:none;
+      z-index:6;
+      box-shadow:0 0 10px var(--neon-green);
+      opacity:1;
+      border-radius:999px;
+    }
+
+    .options-grid{
+      display:grid; grid-template-columns:1fr 1fr;
+      gap:10px; height:100%;
+    }
+    .opt-btn{
+      background:rgba(255,255,255,0.05);
+      border:1px solid rgba(255,255,255,0.2);
+      border-radius:12px;
+      color:#fff;
+      font-size:16px;
+      font-weight:800;
+      cursor:pointer;
+      position:relative;
+      overflow:hidden;
+      transition:0.1s;
+    }
+    .opt-btn:active{ background:rgba(255,255,255,0.2); transform:scale(0.95); }
+    .opt-btn:disabled{ opacity:.7; cursor:not-allowed; }
+    .opt-btn.correct{ background:var(--neon-green); color:#000; border-color:var(--neon-green); }
+    .opt-btn.wrong{ background:var(--neon-red); border-color:var(--neon-red); animation:shake 0.3s; }
 
     /* EFEKTLER */
-    .explosion {
-      position: absolute; width: 100px; height: 100px; 
-      background: radial-gradient(circle, #fff, #ffaa00, transparent);
-      border-radius: 50%; transform: scale(0); opacity: 1; pointer-events: none; z-index: 20;
+    .explosion{
+      position:absolute; width:100px; height:100px;
+      background:radial-gradient(circle, #fff, #ffaa00, transparent);
+      border-radius:50%;
+      transform:scale(0);
+      opacity:1;
+      pointer-events:none;
+      z-index:20;
     }
-    .screen-shake { animation: shake 0.5s; }
+    .screen-shake{ animation:shake 0.5s; }
 
-    @keyframes shake { 0%, 100% {transform:translateX(0)} 25% {transform:translateX(-10px)} 75% {transform:translateX(10px)} }
-    @keyframes laserShot { 0% {height:0; opacity:1;} 50% {height:100vh; opacity:1;} 100% {height:100vh; opacity:0;} }
-    @keyframes explode { 0% {transform:scale(0); opacity:1;} 50% {transform:scale(1.5); opacity:0.8;} 100% {transform:scale(2); opacity:0;} }
+    @keyframes shake{
+      0%,100%{transform:translateX(0)}
+      25%{transform:translateX(-10px)}
+      75%{transform:translateX(10px)}
+    }
+    @keyframes explode{
+      0%{transform:scale(0); opacity:1;}
+      50%{transform:scale(1.5); opacity:.8;}
+      100%{transform:scale(2); opacity:0;}
+    }
 
     /* MODAL */
-    .modal-wrap { position: absolute; inset: 0; background: rgba(0,0,0,0.9); z-index: 99; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
-    .modal-card { width: 85%; max-width: 320px; background: #101015; border: 1px solid var(--neon-blue); border-radius: 20px; padding: 25px; text-align: center; }
-    .btn-main { width: 100%; padding: 15px; margin-top: 15px; background: var(--neon-blue); border: none; border-radius: 12px; font-weight: 800; font-size: 16px; cursor: pointer; color:#000; text-transform: uppercase; }
-    
-    .lang-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-top: 15px; }
-    .lang-btn { padding: 10px 0; background: rgba(255,255,255,0.1); border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; border: 1px solid rgba(255,255,255,0.2); }
-    .lang-btn.active { background: var(--neon-blue); color: #000; }
+    .modal-wrap{
+      position:absolute; inset:0;
+      background:rgba(0,0,0,0.9);
+      z-index:99;
+      display:flex; align-items:center; justify-content:center;
+      backdrop-filter:blur(10px);
+    }
+    .modal-card{
+      width:85%; max-width:320px;
+      background:#101015;
+      border:1px solid var(--neon-blue);
+      border-radius:20px;
+      padding:25px;
+      text-align:center;
+    }
+    .btn-main{
+      width:100%;
+      padding:15px;
+      margin-top:15px;
+      background:var(--neon-blue);
+      border:none;
+      border-radius:12px;
+      font-weight:900;
+      font-size:16px;
+      cursor:pointer;
+      color:#000;
+      text-transform:uppercase;
+      letter-spacing:.8px;
+    }
+    .btn-secondary{
+      width:100%;
+      padding:14px;
+      margin-top:10px;
+      background:transparent;
+      border:1px solid rgba(255,255,255,.6);
+      border-radius:12px;
+      font-weight:900;
+      font-size:14px;
+      cursor:pointer;
+      color:#fff;
+      text-transform:uppercase;
+      letter-spacing:.8px;
+    }
 
-    .hidden { display: none !important; }
+    .lang-grid{
+      display:grid; grid-template-columns:repeat(5, 1fr);
+      gap:5px; margin-top:15px;
+    }
+    .lang-btn{
+      padding:10px 0;
+      background:rgba(255,255,255,0.1);
+      border-radius:8px;
+      cursor:pointer;
+      font-size:14px;
+      font-weight:900;
+      border:1px solid rgba(255,255,255,0.2);
+      transition:.15s;
+    }
+    .lang-btn:active{ transform:scale(.97); }
+    .lang-btn.active{ background:var(--neon-blue); color:#000; }
+
+    .toast{
+      position:absolute;
+      left:12px; right:12px;
+      bottom:252px;
+      z-index:80;
+      background:rgba(10,10,18,.82);
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:16px;
+      padding:10px 12px;
+      display:none;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      backdrop-filter:blur(12px);
+    }
+    .toast.show{ display:flex; }
+    .toast b{ font-family:'Space Grotesk'; letter-spacing:.4px; }
+    .toast small{ opacity:.75; }
+    .toast .mini{
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.06);
+      color:#fff;
+      font-weight:900;
+      cursor:pointer;
+    }
+    .hidden{ display:none !important; }
   </style>
 </head>
 <body>
-
   <div class="space-bg"></div>
   <div class="stars"></div>
 
   <div class="game-container" id="gameContainer">
     <div class="header">
-      <div class="back-btn" onclick="location.href='/pages/game.html'">←</div>
-      <div class="score-board"><span id="scoreVal">0</span> P</div>
-      <div class="lives" id="livesVal">❤️❤️❤️</div>
+      <div class="back-btn" onclick="location.href='/pages/arcade.html'">←</div>
+
+      <div class="mid">
+        <div class="score-board"><span id="scoreVal">0</span> P</div>
+        <div class="combo" id="comboVal">COMBO x0</div>
+      </div>
+
+      <div class="right">
+        <div class="lives" id="livesVal">❤️❤️❤️</div>
+        <div class="icon-btn" id="pauseBtn" title="Duraklat">⏸</div>
+        <div class="icon-btn" id="muteBtn" title="Ses">🔊</div>
+      </div>
     </div>
 
     <div class="stage" id="stage">
       <div class="turret-base"></div>
+    </div>
+
+    <div class="toast" id="toast">
+      <div>
+        <b id="toastTitle">—</b><br/>
+        <small id="toastMsg">—</small>
       </div>
+      <button class="mini" id="toastSpeak">Oku</button>
+    </div>
 
     <div class="control-panel">
-      <div style="text-align:center; font-size:12px; opacity:0.5; margin-bottom:5px;">HEDEFİ SEÇ & ATEŞLE</div>
+      <div style="text-align:center; font-size:12px; opacity:0.55; margin-bottom:5px; font-weight:800; letter-spacing:.7px;">
+        HEDEFİ SEÇ & ATEŞLE
+      </div>
       <div class="options-grid" id="optionsGrid">
         <button class="opt-btn">-</button>
         <button class="opt-btn">-</button>
@@ -163,34 +343,36 @@
 
   <div class="modal-wrap" id="startModal">
     <div class="modal-card">
-      <h2 style="color:var(--neon-blue); font-family:'Space Grotesk'">METEOR YAĞMURU</h2>
-      <p style="font-size:13px; opacity:0.7">Kelimeler düşmeden önce anlamını bul ve vur! ☄️🔫</p>
-      
-      <div style="margin-top:15px; font-size:12px; font-weight:700">DİL SEÇ:</div>
-      <div class="lang-grid">
-        <div class="lang-btn active" onclick="selectLang('en', this)">EN</div>
-        <div class="lang-btn" onclick="selectLang('de', this)">DE</div>
-        <div class="lang-btn" onclick="selectLang('fr', this)">FR</div>
-        <div class="lang-btn" onclick="selectLang('es', this)">ES</div>
-        <div class="lang-btn" onclick="selectLang('it', this)">IT</div>
+      <h2 style="color:var(--neon-blue); font-family:'Space Grotesk'; margin:0 0 6px;">METEOR YAĞMURU</h2>
+      <p style="font-size:13px; opacity:0.7; margin:0;">Kelimeler düşmeden önce anlamını bul ve vur! ☄️🔫</p>
+
+      <div style="margin-top:15px; font-size:12px; font-weight:900; letter-spacing:.7px;">DİL SEÇ:</div>
+      <div class="lang-grid" id="langGrid">
+        <div class="lang-btn" data-lang="en">EN</div>
+        <div class="lang-btn" data-lang="de">DE</div>
+        <div class="lang-btn" data-lang="fr">FR</div>
+        <div class="lang-btn" data-lang="es">ES</div>
+        <div class="lang-btn" data-lang="it">IT</div>
       </div>
 
-      <button class="btn-main" onclick="startGame()">SAVUNMAYA BAŞLA</button>
+      <button class="btn-main" id="startBtn">SAVUNMAYA BAŞLA</button>
     </div>
   </div>
 
   <div class="modal-wrap hidden" id="endModal">
     <div class="modal-card">
-      <h2 style="color:var(--neon-red)">OYUN BİTTİ</h2>
-      <div style="font-size:32px; font-weight:800; color:#fff; margin:10px 0" id="finalScore">0</div>
-      <p style="opacity:0.7; font-size:13px">Dünya seninle gurur duyuyor.</p>
-      <button class="btn-main" onclick="retryGame()">YENİDEN OYNA</button>
-      <button class="btn-main" style="background:transparent; border:1px solid #fff; color:#fff" onclick="location.href='/pages/game.html'">ÇIKIŞ</button>
+      <h2 style="color:var(--neon-red); margin:0;">OYUN BİTTİ</h2>
+      <div style="font-size:32px; font-weight:900; color:#fff; margin:10px 0" id="finalScore">0</div>
+      <p style="opacity:0.7; font-size:13px; margin:0;">Dünya seninle gurur duyuyor.</p>
+      <button class="btn-main" id="retryBtn">YENİDEN OYNA</button>
+      <button class="btn-secondary" onclick="location.href='/pages/arcade.html'">ÇIKIŞ</button>
     </div>
   </div>
 
 <script>
-// --- VERİTABANI (OFFLINE DB) ---
+/* =========================
+   OFFLINE DB
+========================= */
 const DB = {
   en: [["Apple","Elma"],["Run","Koşmak"],["Blue","Mavi"],["Car","Araba"],["Sun","Güneş"],["Moon","Ay"],["Star","Yıldız"],["Water","Su"],["Fire","Ateş"],["Tree","Ağaç"],["Book","Kitap"],["Computer","Bilgisayar"],["Love","Aşk"],["Money","Para"],["Time","Zaman"],["Friend","Arkadaş"],["House","Ev"],["Door","Kapı"],["Window","Pencere"],["School","Okul"]],
   de: [["Apfel","Elma"],["Laufen","Koşmak"],["Blau","Mavi"],["Auto","Araba"],["Sonne","Güneş"],["Mond","Ay"],["Stern","Yıldız"],["Wasser","Su"],["Feuer","Ateş"],["Baum","Ağaç"],["Buch","Kitap"],["Computer","Bilgisayar"],["Liebe","Aşk"],["Geld","Para"],["Zeit","Zaman"],["Freund","Arkadaş"],["Haus","Ev"],["Tür","Kapı"],["Fenster","Pencere"],["Schule","Okul"]],
@@ -199,245 +381,52 @@ const DB = {
   it: [["Mela","Elma"],["Correre","Koşmak"],["Blu","Mavi"],["Macchina","Araba"],["Sole","Güneş"],["Luna","Ay"],["Stella","Yıldız"],["Acqua","Su"],["Fuoco","Ateş"],["Albero","Ağaç"],["Libro","Kitap"],["Computer","Bilgisayar"],["Amore","Aşk"],["Soldi","Para"],["Tempo","Zaman"],["Amico","Arkadaş"],["Casa","Ev"],["Porta","Kapı"],["Finestra","Pencere"],["Scuola","Okul"]]
 };
 
-// --- STATE ---
-let currentLang = 'en';
-let score = 0;
-let lives = 3;
-let gameActive = false;
-let meteorSpeed = 1.0; // Düşüş hızı
-let spawnInterval = 3000;
-let lastSpawnTime = 0;
-let activeMeteor = null; // { el, data: [word, meaning], y: 0 }
-let frameId;
+/* =========================
+   STORAGE KEYS
+========================= */
+const LANG_KEY = "italky_meteor_lang";
+const MUTE_KEY = "italky_meteor_muted";
 
-// --- INIT ---
-function selectLang(l, btn) {
-  currentLang = l;
-  document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-}
+/* =========================
+   ELEMENTS
+========================= */
+const $ = (id) => document.getElementById(id);
+const stage = $("stage");
+const optionsGrid = $("optionsGrid");
+const scoreVal = $("scoreVal");
+const livesVal = $("livesVal");
+const comboVal = $("comboVal");
+const pauseBtn = $("pauseBtn");
+const muteBtn = $("muteBtn");
+const gameContainer = $("gameContainer");
 
-function startGame() {
-  document.getElementById('startModal').classList.add('hidden');
-  document.getElementById('endModal').classList.add('hidden');
-  
-  score = 0;
-  lives = 3;
-  meteorSpeed = 0.8; 
-  spawnInterval = 2500;
-  activeMeteor = null;
-  gameActive = true;
-  
-  updateUI();
-  document.getElementById('stage').innerHTML = '<div class="turret-base"></div>'; // Temizle
-  
-  requestAnimationFrame(gameLoop);
-  spawnMeteor(); // İlk meteor hemen gelsin
-}
+const toast = $("toast");
+const toastTitle = $("toastTitle");
+const toastMsg = $("toastMsg");
+const toastSpeak = $("toastSpeak");
 
-function retryGame() {
-  // Dil seçimine dönmeden direkt başlat
-  startGame();
-}
+const startModal = $("startModal");
+const endModal = $("endModal");
+const finalScore = $("finalScore");
 
-// --- GAME LOOP ---
-function gameLoop(timestamp) {
-  if (!gameActive) return;
+const langGrid = $("langGrid");
+const startBtn = $("startBtn");
+const retryBtn = $("retryBtn");
 
-  // Meteor Hareketi
-  if (activeMeteor) {
-    activeMeteor.y += meteorSpeed;
-    activeMeteor.el.style.top = activeMeteor.y + 'px';
-
-    // Çarpışma Kontrolü (Yere değdi mi?)
-    const stageH = document.getElementById('stage').offsetHeight;
-    if (activeMeteor.y > stageH - 80) { // Taret hizası
-      handleCrash();
-    }
-  } else {
-    // Yeni Meteor Spawn (Eğer yoksa)
-    // Basitlik için: Bir meteor yok olunca diğeri gelsin (Wave mantığı)
-    // (Daha karmaşık oyunlarda çoklu meteor olur ama mobilde tekil daha temiz)
-    if (timestamp - lastSpawnTime > 500) { 
-       // Biraz bekle öyle gelsin
-    }
+/* =========================
+   AUDIO (SFX)
+========================= */
+let audioCtx = null;
+function ensureAudio(){
+  if(!audioCtx){
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   }
-
-  frameId = requestAnimationFrame(gameLoop);
+  if(audioCtx.state === "suspended") audioCtx.resume();
 }
+function playSFX(type){
+  if(state.muted) return;
+  ensureAudio();
 
-// --- METEOR MANTIĞI ---
-function spawnMeteor() {
-  if (activeMeteor) return;
-
-  // Kelime Seç
-  const pool = DB[currentLang];
-  const wordPair = pool[Math.floor(Math.random() * pool.length)]; // ["Apple", "Elma"]
-  
-  // DOM Oluştur
-  const el = document.createElement('div');
-  el.className = 'meteor';
-  el.innerHTML = `
-    <div class="meteor-tail"></div>
-    <div class="meteor-body">
-      <div class="meteor-text">${wordPair[0]}</div>
-    </div>
-  `;
-  
-  // Rastgele X pozisyonu (Ekran dışına taşmasın)
-  const stageW = document.getElementById('stage').offsetWidth;
-  const randX = Math.random() * (stageW - 120) + 10;
-  el.style.left = randX + 'px';
-  
-  document.getElementById('stage').appendChild(el);
-
-  activeMeteor = {
-    el: el,
-    data: wordPair,
-    y: -100,
-    x: randX
-  };
-
-  setupOptions(wordPair);
-  lastSpawnTime = performance.now();
-  
-  // Hız Artışı
-  meteorSpeed += 0.05;
-}
-
-// --- SEÇENEKLER ---
-function setupOptions(correctPair) {
-  const opts = [correctPair[1]]; // Doğru cevap
-  const pool = DB[currentLang];
-  
-  // 3 Yanlış Cevap Ekle
-  while (opts.length < 4) {
-    const r = pool[Math.floor(Math.random() * pool.length)][1];
-    if (!opts.includes(r)) opts.push(r);
-  }
-  
-  // Karıştır
-  opts.sort(() => Math.random() - 0.5);
-  
-  const grid = document.getElementById('optionsGrid');
-  grid.innerHTML = '';
-  
-  opts.forEach(opt => {
-    const btn = document.createElement('button');
-    btn.className = 'opt-btn';
-    btn.innerText = opt;
-    btn.onclick = () => checkAnswer(btn, opt, correctPair[1]);
-    grid.appendChild(btn);
-  });
-}
-
-function checkAnswer(btn, selected, correct) {
-  if (!gameActive || !activeMeteor) return;
-
-  if (selected === correct) {
-    // DOĞRU: ATEŞ ET!
-    btn.classList.add('correct');
-    fireLaser(activeMeteor.x + 50, activeMeteor.y + 50); // Meteor merkezine ateş
-    destroyMeteor();
-    score += 10;
-    speak(activeMeteor.data[0]); // Kelimeyi oku
-  } else {
-    // YANLIŞ
-    btn.classList.add('wrong');
-    playSFX('error');
-    // Hız cezası verilebilir
-  }
-  updateUI();
-}
-
-// --- EFEKTLER ---
-function fireLaser(targetX, targetY) {
-  const stage = document.getElementById('stage');
-  const stageH = stage.offsetHeight;
-  const stageW = stage.offsetWidth;
-  
-  // Lazer Çizgisi (Basit DOM transform ile)
-  // Taretin konumu: Bottom center
-  const startX = stageW / 2;
-  const startY = stageH; 
-  
-  const dx = targetX - startX;
-  const dy = targetY - startY;
-  const dist = Math.sqrt(dx*dx + dy*dy);
-  const angle = Math.atan2(dy, dx) * 180 / Math.PI;
-
-  const laser = document.createElement('div');
-  laser.className = 'laser-beam';
-  laser.style.height = '4px';
-  laser.style.width = dist + 'px';
-  laser.style.left = startX + 'px';
-  laser.style.top = startY + 'px';
-  laser.style.transform = `rotate(${angle}deg)`;
-  laser.style.transformOrigin = '0 50%'; // Soldan dön
-  
-  stage.appendChild(laser);
-  playSFX('laser');
-
-  // Lazer animasyonu
-  setTimeout(() => laser.remove(), 200);
-}
-
-function destroyMeteor() {
-  if (!activeMeteor) return;
-  
-  // Patlama Efekti
-  const exp = document.createElement('div');
-  exp.className = 'explosion';
-  exp.style.left = (activeMeteor.x) + 'px';
-  exp.style.top = (activeMeteor.y) + 'px';
-  exp.style.animation = 'explode 0.4s forwards';
-  document.getElementById('stage').appendChild(exp);
-  playSFX('explode');
-
-  activeMeteor.el.remove();
-  activeMeteor = null;
-  
-  // Yeni meteor gönder
-  setTimeout(spawnMeteor, 500);
-}
-
-function handleCrash() {
-  playSFX('crash');
-  document.getElementById('gameContainer').classList.add('screen-shake');
-  setTimeout(() => document.getElementById('gameContainer').classList.remove('screen-shake'), 500);
-  
-  activeMeteor.el.remove();
-  activeMeteor = null;
-  lives--;
-  updateUI();
-
-  if (lives <= 0) {
-    gameOver();
-  } else {
-    setTimeout(spawnMeteor, 1000);
-  }
-}
-
-function gameOver() {
-  gameActive = false;
-  cancelAnimationFrame(frameId);
-  document.getElementById('endModal').classList.remove('hidden');
-  document.getElementById('finalScore').innerText = score;
-}
-
-function updateUI() {
-  document.getElementById('scoreVal').innerText = score;
-  let h = "";
-  for(let i=0; i<3; i++) h += (i < lives ? "❤️" : "💀");
-  document.getElementById('livesVal').innerText = h;
-}
-
-// --- SES MOTORU ---
-const synth = window.speechSynthesis;
-let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-function playSFX(type) {
-  if (audioCtx.state === 'suspended') audioCtx.resume();
   const osc = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
   osc.connect(gain);
@@ -445,42 +434,451 @@ function playSFX(type) {
 
   const t = audioCtx.currentTime;
 
-  if (type === 'laser') {
+  if(type === "laser"){
     osc.frequency.setValueAtTime(800, t);
     osc.frequency.exponentialRampToValueAtTime(100, t + 0.15);
-    osc.type = 'sawtooth';
-    gain.gain.setValueAtTime(0.1, t);
+    osc.type = "sawtooth";
+    gain.gain.setValueAtTime(0.12, t);
     gain.gain.linearRampToValueAtTime(0, t + 0.15);
     osc.start(t); osc.stop(t + 0.15);
-  } else if (type === 'explode') {
-    osc.frequency.setValueAtTime(100, t);
+  }else if(type === "explode"){
+    osc.frequency.setValueAtTime(110, t);
     osc.frequency.exponentialRampToValueAtTime(0.01, t + 0.3);
-    osc.type = 'square';
-    gain.gain.setValueAtTime(0.2, t);
+    osc.type = "square";
+    gain.gain.setValueAtTime(0.22, t);
     gain.gain.linearRampToValueAtTime(0, t + 0.3);
     osc.start(t); osc.stop(t + 0.3);
-  } else if (type === 'error') {
-    osc.type = 'sawtooth';
+  }else if(type === "error"){
+    osc.type = "sawtooth";
     osc.frequency.value = 150;
-    gain.gain.value = 0.2;
-    osc.start(t); osc.stop(t + 0.2);
-  } else if (type === 'crash') {
-    // Gürültü simülasyonu için düşük frekans
-    osc.frequency.value = 50;
-    osc.type = 'sawtooth';
-    gain.gain.setValueAtTime(0.5, t);
-    gain.gain.linearRampToValueAtTime(0, t + 0.5);
-    osc.start(t); osc.stop(t + 0.5);
+    gain.gain.value = 0.18;
+    osc.start(t); osc.stop(t + 0.18);
+  }else if(type === "crash"){
+    osc.frequency.value = 55;
+    osc.type = "sawtooth";
+    gain.gain.setValueAtTime(0.4, t);
+    gain.gain.linearRampToValueAtTime(0, t + 0.45);
+    osc.start(t); osc.stop(t + 0.45);
   }
 }
 
-function speak(text) {
+/* =========================
+   TTS
+========================= */
+const synth = window.speechSynthesis;
+function speak(text){
+  if(state.muted) return;
+  try { synth.cancel(); } catch(e) {}
   const u = new SpeechSynthesisUtterance(text);
-  const langMap = { 'en': 'en-US', 'de': 'de-DE', 'fr': 'fr-FR', 'es': 'es-ES', 'it': 'it-IT' };
-  u.lang = langMap[currentLang] || 'en-US';
+  const langMap = { en:"en-US", de:"de-DE", fr:"fr-FR", es:"es-ES", it:"it-IT" };
+  u.lang = langMap[state.lang] || "en-US";
+  u.rate = 0.95;
   synth.speak(u);
 }
 
+/* =========================
+   STATE
+========================= */
+const state = {
+  lang: "en",
+  score: 0,
+  lives: 3,
+  combo: 0,
+  gameActive: false,
+  paused: false,
+  muted: false,
+
+  meteorSpeed: 0.8,
+  activeMeteor: null, // { el, data:[word,meaning], x, y }
+  wrongTries: 0,      // current meteor wrong tries
+
+  lastSpeakText: ""
+};
+
+let frameId = 0;
+
+/* =========================
+   TOAST
+========================= */
+function showToast(title, msg, speakText){
+  toastTitle.textContent = title || "—";
+  toastMsg.textContent = msg || "";
+  toast.classList.add("show");
+  state.lastSpeakText = speakText || "";
+  toastSpeak.disabled = !state.lastSpeakText;
+  toastSpeak.style.opacity = toastSpeak.disabled ? 0.5 : 1;
+}
+function hideToast(){
+  toast.classList.remove("show");
+}
+
+/* =========================
+   LANG INIT (persistent)
+========================= */
+function setActiveLangUI(lang){
+  document.querySelectorAll(".lang-btn").forEach(b=>{
+    b.classList.toggle("active", b.getAttribute("data-lang") === lang);
+  });
+}
+function initSavedSettings(){
+  const savedLang = (localStorage.getItem(LANG_KEY) || "").trim();
+  if(savedLang && DB[savedLang]){
+    state.lang = savedLang;
+  }
+  const savedMuted = (localStorage.getItem(MUTE_KEY) || "").trim();
+  state.muted = savedMuted === "1";
+  muteBtn.textContent = state.muted ? "🔇" : "🔊";
+  setActiveLangUI(state.lang);
+}
+
+/* =========================
+   UI
+========================= */
+function updateUI(){
+  scoreVal.textContent = String(state.score);
+  comboVal.textContent = "COMBO x" + String(state.combo);
+  let h = "";
+  for(let i=0;i<3;i++) h += (i < state.lives ? "❤️" : "💀");
+  livesVal.textContent = h;
+}
+function clearStage(){
+  stage.innerHTML = '<div class="turret-base"></div>';
+}
+
+/* =========================
+   GAME CONTROL
+========================= */
+function selectLang(l){
+  state.lang = l;
+  localStorage.setItem(LANG_KEY, l);
+  setActiveLangUI(l);
+}
+function startGame(){
+  startModal.classList.add("hidden");
+  endModal.classList.add("hidden");
+  hideToast();
+
+  state.score = 0;
+  state.lives = 3;
+  state.combo = 0;
+  state.meteorSpeed = 0.8;
+  state.activeMeteor = null;
+  state.wrongTries = 0;
+
+  state.paused = false;
+  pauseBtn.textContent = "⏸";
+
+  state.gameActive = true;
+  updateUI();
+  clearStage();
+
+  spawnMeteor(true);
+  cancelAnimationFrame(frameId);
+  frameId = requestAnimationFrame(gameLoop);
+}
+function retryGame(){
+  // Dil seçimine dönmez, aynı dilden devam
+  startGame();
+}
+function gameOver(){
+  state.gameActive = false;
+  cancelAnimationFrame(frameId);
+  endModal.classList.remove("hidden");
+  finalScore.textContent = String(state.score);
+}
+
+/* =========================
+   METEOR
+========================= */
+function spawnMeteor(immediate=false){
+  if(!state.gameActive || state.paused) return;
+  if(state.activeMeteor) return;
+
+  const pool = DB[state.lang] || DB.en;
+  const pair = pool[Math.floor(Math.random() * pool.length)]; // [word, meaning]
+
+  const el = document.createElement("div");
+  el.className = "meteor";
+  el.innerHTML = `
+    <div class="meteor-tail"></div>
+    <div class="meteor-body">
+      <div class="meteor-text">${pair[0]}</div>
+    </div>
+  `;
+
+  const stageW = stage.offsetWidth || 360;
+  const randX = Math.random() * (stageW - 120) + 10; // keep in bounds
+  el.style.left = randX + "px";
+  el.style.top = (-120) + "px";
+  stage.appendChild(el);
+
+  state.activeMeteor = { el, data: pair, x: randX, y: -120 };
+  state.wrongTries = 0;
+
+  setupOptions(pair);
+  // Soft cap speed ramp
+  state.meteorSpeed = Math.min(state.meteorSpeed + (immediate ? 0 : 0.04), 2.2);
+}
+
+function destroyMeteor(){
+  if(!state.activeMeteor) return;
+
+  const m = state.activeMeteor;
+
+  const centerX = m.x + 50;
+  const centerY = m.y + 50;
+
+  const exp = document.createElement("div");
+  exp.className = "explosion";
+  exp.style.left = (centerX - 50) + "px";
+  exp.style.top = (centerY - 50) + "px";
+  exp.style.animation = "explode 0.4s forwards";
+  stage.appendChild(exp);
+  playSFX("explode");
+  setTimeout(()=>{ exp.remove(); }, 500);
+
+  m.el.remove();
+  state.activeMeteor = null;
+
+  // next wave
+  setTimeout(()=>spawnMeteor(false), 450);
+}
+
+function handleCrash(){
+  playSFX("crash");
+  gameContainer.classList.add("screen-shake");
+  setTimeout(()=>gameContainer.classList.remove("screen-shake"), 500);
+
+  if(state.activeMeteor){
+    state.activeMeteor.el.remove();
+    state.activeMeteor = null;
+  }
+
+  state.combo = 0;
+  state.lives -= 1;
+  updateUI();
+
+  if(state.lives <= 0){
+    gameOver();
+  }else{
+    setTimeout(()=>spawnMeteor(false), 700);
+  }
+}
+
+/* =========================
+   OPTIONS
+========================= */
+function setupOptions(correctPair){
+  const correct = correctPair[1]; // Turkish meaning
+  const pool = DB[state.lang] || DB.en;
+
+  const opts = [correct];
+  while(opts.length < 4){
+    const r = pool[Math.floor(Math.random() * pool.length)][1];
+    if(!opts.includes(r)) opts.push(r);
+  }
+  opts.sort(()=>Math.random() - 0.5);
+
+  optionsGrid.innerHTML = "";
+  opts.forEach(opt=>{
+    const btn = document.createElement("button");
+    btn.className = "opt-btn";
+    btn.innerText = opt;
+    btn.onclick = ()=>checkAnswer(btn, opt, correct);
+    optionsGrid.appendChild(btn);
+  });
+
+  // enable all
+  enableOptionButtons(true);
+}
+
+function enableOptionButtons(enabled){
+  document.querySelectorAll(".opt-btn").forEach(b=>{
+    b.disabled = !enabled;
+  });
+}
+
+function markCorrectButton(correct){
+  document.querySelectorAll(".opt-btn").forEach(b=>{
+    if(b.innerText === correct) b.classList.add("correct");
+  });
+}
+
+function checkAnswer(btn, selected, correct){
+  if(!state.gameActive || state.paused || !state.activeMeteor) return;
+
+  // if already resolved (buttons disabled), ignore
+  if(btn.disabled) return;
+
+  if(selected === correct){
+    // Correct
+    btn.classList.add("correct");
+
+    state.combo += 1;
+    const gain = 10 + Math.min(state.combo - 1, 5) * 5; // 10,15,20,... cap
+    state.score += gain;
+
+    const m = state.activeMeteor;
+    const centerX = m.x + 50;
+    const centerY = m.y + 50;
+
+    fireLaser(centerX, centerY);
+    playSFX("laser");
+
+    // Speak the foreign word (not Turkish meaning)
+    speak(m.data[0]);
+    showToast("DOĞRU ✅", `+${gain} puan • ${m.data[0]} → ${correct}`, m.data[0]);
+
+    enableOptionButtons(false);
+    updateUI();
+
+    // destroy after short delay
+    setTimeout(()=>{ hideToast(); destroyMeteor(); }, 350);
+  }else{
+    // Wrong
+    btn.classList.add("wrong");
+    playSFX("error");
+    state.combo = 0;
+    state.wrongTries += 1;
+    updateUI();
+
+    const left = 3 - state.wrongTries;
+    if(left > 0){
+      showToast("YANLIŞ ❌", `${left} deneme kaldı.`, "");
+      // auto-hide small
+      setTimeout(hideToast, 600);
+      return;
+    }
+
+    // 3rd wrong -> solution + speak + penalty
+    enableOptionButtons(false);
+    markCorrectButton(correct);
+
+    const m = state.activeMeteor;
+    const solutionText = m ? m.data[0] : "";
+    showToast("ÇÖZÜM", `${solutionText} → ${correct}`, solutionText);
+    speak(solutionText);
+
+    // penalty (soft): -5 and crash OR just crash; here: crash without extra score minus
+    setTimeout(()=>{ hideToast(); handleCrash(); }, 750);
+  }
+}
+
+/* =========================
+   LASER
+========================= */
+function fireLaser(targetX, targetY){
+  const stageH = stage.offsetHeight || 600;
+  const stageW = stage.offsetWidth || 360;
+
+  const startX = stageW / 2;
+  const startY = stageH; // bottom
+
+  const dx = targetX - startX;
+  const dy = targetY - startY;
+  const dist = Math.sqrt(dx*dx + dy*dy);
+  const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+
+  const laser = document.createElement("div");
+  laser.className = "laser-beam";
+  laser.style.width = dist + "px";
+  laser.style.left = startX + "px";
+  laser.style.top = startY + "px";
+  laser.style.transform = `rotate(${angle}deg)`;
+  laser.style.transformOrigin = "0 50%";
+
+  stage.appendChild(laser);
+  setTimeout(()=>laser.remove(), 170);
+}
+
+/* =========================
+   LOOP
+========================= */
+function gameLoop(){
+  if(!state.gameActive) return;
+
+  if(state.paused){
+    frameId = requestAnimationFrame(gameLoop);
+    return;
+  }
+
+  if(state.activeMeteor){
+    const m = state.activeMeteor;
+    m.y += state.meteorSpeed;
+    m.el.style.top = m.y + "px";
+
+    const stageH = stage.offsetHeight || 600;
+    if(m.y > stageH - 120){ // turret band
+      handleCrash();
+    }
+  }else{
+    // if meteor missing, spawn quickly
+    spawnMeteor(false);
+  }
+
+  frameId = requestAnimationFrame(gameLoop);
+}
+
+/* =========================
+   PAUSE / MUTE
+========================= */
+function togglePause(){
+  if(!state.gameActive) return;
+  state.paused = !state.paused;
+  pauseBtn.textContent = state.paused ? "▶️" : "⏸";
+  if(state.paused){
+    showToast("DURAKLATILDI", "Devam etmek için ▶️", "");
+  }else{
+    hideToast();
+  }
+}
+
+function toggleMute(){
+  state.muted = !state.muted;
+  localStorage.setItem(MUTE_KEY, state.muted ? "1" : "0");
+  muteBtn.textContent = state.muted ? "🔇" : "🔊";
+  if(state.muted){
+    try { synth.cancel(); } catch(e) {}
+    showToast("SES", "Sessiz mod açık.", "");
+  }else{
+    showToast("SES", "Ses açık.", "");
+  }
+  setTimeout(hideToast, 700);
+}
+
+/* =========================
+   EVENTS
+========================= */
+langGrid.addEventListener("click", (e)=>{
+  const btn = e.target.closest(".lang-btn");
+  if(!btn) return;
+  const l = btn.getAttribute("data-lang");
+  if(l) selectLang(l);
+});
+
+startBtn.addEventListener("click", ()=>{
+  // ensure audio on first user gesture (mobile)
+  ensureAudio();
+  startGame();
+});
+
+retryBtn.addEventListener("click", ()=>{
+  ensureAudio();
+  retryGame();
+});
+
+pauseBtn.addEventListener("click", togglePause);
+muteBtn.addEventListener("click", toggleMute);
+
+toastSpeak.addEventListener("click", ()=>{
+  if(state.lastSpeakText) speak(state.lastSpeakText);
+});
+
+/* =========================
+   INIT
+========================= */
+initSavedSettings();
+updateUI();
 </script>
 </body>
 </html>
