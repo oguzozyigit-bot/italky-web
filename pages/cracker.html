@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>ITALKY • Word Cracker</title>
+  <link rel="icon" href="data:," />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800&family=Space+Grotesk:wght@700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    /* --- TEMA: CYBER HACKER --- */
+    :root {
+      --bg-deep: #000500;
+      --matrix: #00ff41; /* Matrix Yeşili */
+      --matrix-dim: rgba(0, 255, 65, 0.2);
+      --error: #ff1744;
+      --text: #ffffff;
+      --border: rgba(0, 255, 65, 0.3);
+    }
+
+    * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; outline: none; }
+    html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; position: fixed; font-family: 'Outfit', sans-serif; background: var(--bg-deep); color: var(--text); display: flex; align-items: center; justify-content: center; }
+
+    /* Matrix Arka Plan */
+    .cosmos-bg { position: absolute; inset: 0; background: radial-gradient(circle at center, #001a00 0%, #000 100%); z-index: 0; }
+    .grid-lines { 
+      position: absolute; inset: 0; 
+      background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 40px 40px; opacity: 0.15;
+    }
+
+    .mobile-frame {
+      width: 100%; max-width: 480px; height: 100%; position: relative; z-index: 10;
+      display: flex; flex-direction: column; background: rgba(0, 20, 0, 0.85);
+      backdrop-filter: blur(10px); border: 1px solid var(--border); overflow: hidden;
+      box-shadow: 0 0 20px var(--matrix-dim);
+    }
+    @media(min-width: 520px) { .mobile-frame { height: 92vh; border-radius: 20px; } }
+
+    /* HEADER */
+    .header { flex: 0 0 70px; padding: 0 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
+    .nav-btn { width: 40px; height: 40px; border-radius: 8px; background: var(--matrix-dim); border: 1px solid var(--border); color: var(--matrix); display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; }
+    .page-title { font-family: 'Share Tech Mono', monospace; font-size: 20px; letter-spacing: 2px; color: var(--matrix); text-shadow: 0 0 10px var(--matrix); }
+
+    /* OYUN ALANI */
+    .game-area { flex: 1; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; }
+
+    /* SORU KARTI */
+    .hint-box {
+      width: 100%; padding: 20px;
+      background: rgba(0, 255, 65, 0.05);
+      border: 1px dashed var(--matrix);
+      border-radius: 12px;
+      text-align: center;
+    }
+    .hint-label { font-size: 12px; color: var(--matrix); opacity: 0.7; letter-spacing: 1px; margin-bottom: 5px; }
+    .hint-text { font-size: 22px; font-weight: 700; color: #fff; text-transform: uppercase; }
+
+    /* SLOTLAR (HEDEF) */
+    .slots-row {
+      display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin: 20px 0; min-height: 60px;
+    }
+    .slot {
+      width: 45px; height: 55px;
+      border-bottom: 3px solid var(--matrix);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 32px; font-weight: bold; color: var(--matrix);
+      text-shadow: 0 0 10px var(--matrix);
+      cursor: pointer; transition: 0.2s;
+    }
+    .slot.empty { border-bottom-color: rgba(255,255,255,0.2); color: transparent; text-shadow: none; }
+    .slot.wrong { border-bottom-color: var(--error); color: var(--error); text-shadow: 0 0 10px var(--error); animation: shake 0.4s; }
+
+    /* KLAVYE (KARIŞIK HARFLER) */
+    .keyboard {
+      display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; width: 100%;
+    }
+    .key-btn {
+      width: 50px; height: 50px;
+      background: rgba(0, 255, 65, 0.1);
+      border: 1px solid var(--matrix);
+      border-radius: 8px;
+      color: #fff; font-size: 24px; font-weight: bold; font-family: 'Space Grotesk', sans-serif;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 0 rgba(0, 50, 0, 0.5);
+      transition: 0.1s;
+    }
+    .key-btn:active { transform: translateY(4px); box-shadow: none; }
+    .key-btn.used { opacity: 0; pointer-events: none; transform: scale(0.8); }
+
+    /* İSTATİSTİK */
+    .stats {
+      width: 100%; display: flex; justify-content: space-between;
+      font-family: 'Share Tech Mono', monospace; color: var(--matrix); font-size: 14px;
+      margin-top: auto; padding-top: 20px; border-top: 1px solid var(--border);
+    }
+
+    /* MODAL */
+    .modal-wrap { position: absolute; inset: 0; background: rgba(0,0,0,0.95); z-index: 99; display: flex; align-items: center; justify-content: center; }
+    .modal-card { width: 80%; background: #0a0a0a; border: 2px solid var(--matrix); padding: 30px; text-align: center; border-radius: 12px; box-shadow: 0 0 30px var(--matrix-dim); }
+    .btn-main {
+      width: 100%; padding: 15px; margin-top: 20px;
+      background: var(--matrix); color: #000; font-weight: 900; font-size: 18px;
+      border: none; cursor: pointer; text-transform: uppercase; font-family: 'Share Tech Mono', monospace;
+    }
+
+    @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
+  </style>
+</head>
+<body>
+
+  <div class="cosmos-bg"><div class="grid-lines"></div></div>
+
+  <div class="mobile-frame">
+    <div class="header">
+      <div class="nav-btn" onclick="location.href='/pages/game.html'">←</div>
+      <div class="page-title">WORD_CRACKER_v1.0</div>
+      <div class="nav-btn" onclick="toggleSound()">🔊</div>
+    </div>
+
+    <div class="game-area">
+      <div class="hint-box">
+        <div class="hint-label">HEDEF ŞİFRE (TÜRKÇE)</div>
+        <div class="hint-text" id="hintText">...</div>
+      </div>
+
+      <div class="slots-row" id="slotsArea"></div>
+
+      <div class="keyboard" id="keyboardArea"></div>
+
+      <div class="stats">
+        <span>SCORE: <span id="scoreVal">0</span></span>
+        <span>LEVEL: <span id="levelVal">1</span></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-wrap" id="startModal">
+    <div class="modal-card">
+      <h2 style="color:var(--matrix); font-family:'Share Tech Mono'">SYSTEM READY</h2>
+      <p style="color:#fff; opacity:0.8">Şifreli kelimeleri çöz.<br>Sırayı bozma.</p>
+      
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-top:20px;">
+        <button class="nav-btn" style="width:100%" onclick="selectLang('en')">EN</button>
+        <button class="nav-btn" style="width:100%" onclick="selectLang('de')">DE</button>
+        <button class="nav-btn" style="width:100%" onclick="selectLang('fr')">FR</button>
+      </div>
+
+      <button class="btn-main" id="startBtn" style="display:none" onclick="startGame()">HACK START</button>
+    </div>
+  </div>
+
+<script>
+// --- OFFLINE DATABASE (Yazım Odaklı Kelimeler) ---
+const WORD_DB = {
+  en: [
+    ["FRIEND", "ARKADAŞ"], ["SCHOOL", "OKUL"], ["FAMILY", "AİLE"], ["GARDEN", "BAHÇE"],
+    ["MARKET", "PAZAR"], ["DOCTOR", "DOKTOR"], ["WINDOW", "PENCERE"], ["YELLOW", "SARI"],
+    ["ORANGE", "TURUNCU"], ["PURPLE", "MOR"], ["SUMMER", "YAZ"], ["WINTER", "KIŞ"],
+    ["SYSTEM", "SİSTEM"], ["FUTURE", "GELECEK"], ["PLANET", "GEZEGEN"], ["GALAXY", "GALAKSİ"],
+    ["ENERGY", "ENERJİ"], ["MEMORY", "HAFIZA"], ["NUMBER", "NUMARA"], ["PEOPLE", "İNSANLAR"]
+  ],
+  de: [
+    ["FREUND", "ARKADAŞ"], ["SCHULE", "OKUL"], ["FAMILIE", "AİLE"], ["GARTEN", "BAHÇE"],
+    ["WASSER", "SU"], ["HIMMEL", "GÖKYÜZÜ"], ["MORGEN", "SABAH"], ["ABEND", "AKŞAM"],
+    ["MUTTER", "ANNE"], ["VATER", "BABA"], ["BRUDER", "ERKEK KARDEŞ"], ["KATZE", "KEDİ"]
+  ],
+  fr: [
+    ["AMOUR", "AŞK"], ["MONDE", "DÜNYA"], ["SOLEIL", "GÜNEŞ"], ["FLEUR", "ÇİÇEK"],
+    ["MAISON", "EV"], ["CHIEN", "KÖPEK"], ["LIVRE", "KİTAP"], ["TEMPS", "ZAMAN"],
+    ["ROUGE", "KIRMIZI"], ["BLANC", "BEYAZ"], ["NOIRE", "SİYAH"], ["MERCI", "TEŞEKKÜR"]
+  ]
+};
+
+// --- STATE ---
+let currentLang = 'en';
+let currentWordObj = null; // ["FRIEND", "ARKADAŞ"]
+let targetChars = [];      // ['F','R','I','E','N','D']
+let userChars = [];        // Kullanıcının doldurduğu
+let shuffledChars = [];    // Klavye için karışık
+let score = 0;
+let level = 0;
+let isMuted = false;
+
+// --- INIT ---
+function selectLang(l) {
+  currentLang = l;
+  document.getElementById('startBtn').style.display = 'block';
+  document.getElementById('startBtn').innerText = `START (${l.toUpperCase()})`;
+}
+
+function startGame() {
+  document.getElementById('startModal').style.display = 'none';
+  score = 0;
+  level = 0;
+  updateStats();
+  // Karıştır
+  if(WORD_DB[currentLang]) WORD_DB[currentLang].sort(() => Math.random() - 0.5);
+  loadLevel();
+}
+
+function loadLevel() {
+  if (level >= WORD_DB[currentLang].length) {
+    alert("TÜM ŞİFRELER KIRILDI! TEBRİKLER.");
+    location.reload();
+    return;
+  }
+
+  currentWordObj = WORD_DB[currentLang][level];
+  const word = currentWordObj[0]; // "FRIEND"
+  const hint = currentWordObj[1]; // "ARKADAŞ"
+
+  document.getElementById('hintText').innerText = hint;
+
+  targetChars = word.split('');
+  userChars = new Array(targetChars.length).fill(null);
+  
+  // Klavye için harfleri karıştır
+  shuffledChars = targetChars.map((char, idx) => ({ id: idx, char: char }));
+  shuffledChars.sort(() => Math.random() - 0.5);
+
+  renderUI();
+}
+
+function renderUI() {
+  const slotsArea = document.getElementById('slotsArea');
+  const keyboardArea = document.getElementById('keyboardArea');
+
+  // 1. SLOTLAR (YUKARI)
+  slotsArea.innerHTML = '';
+  userChars.forEach((char, idx) => {
+    let slot = document.createElement('div');
+    slot.className = char ? 'slot' : 'slot empty';
+    slot.innerText = char ? char.char : '_';
+    
+    // Dolu slota tıklayınca geri al
+    if(char) {
+      slot.onclick = () => removeChar(idx);
+    }
+    slotsArea.appendChild(slot);
+  });
+
+  // 2. KLAVYE (AŞAĞI)
+  keyboardArea.innerHTML = '';
+  shuffledChars.forEach((item) => {
+    let btn = document.createElement('div');
+    
+    // Eğer bu harf yukarıda kullanıldıysa gizle (used)
+    const isUsed = userChars.some(u => u && u.id === item.id);
+    btn.className = isUsed ? 'key-btn used' : 'key-btn';
+    
+    btn.innerText = item.char;
+    btn.onclick = () => typeChar(item);
+    keyboardArea.appendChild(btn);
+  });
+}
+
+function typeChar(item) {
+  // İlk boş slotu bul
+  const emptyIndex = userChars.findIndex(c => c === null);
+  if (emptyIndex !== -1) {
+    userChars[emptyIndex] = item;
+    playSFX('type');
+    renderUI();
+    
+    // Hepsi doldu mu?
+    if (!userChars.includes(null)) {
+      checkWord();
+    }
+  }
+}
+
+function removeChar(index) {
+  userChars[index] = null;
+  playSFX('type');
+  renderUI();
+}
+
+function checkWord() {
+  const currentString = userChars.map(u => u.char).join('');
+  const targetString = targetChars.join('');
+
+  if (currentString === targetString) {
+    // DOĞRU
+    playSFX('win');
+    score += 100;
+    
+    // Sesli Oku
+    speak(targetString);
+
+    setTimeout(() => {
+      level++;
+      updateStats();
+      loadLevel();
+    }, 1000);
+  } else {
+    // YANLIŞ
+    playSFX('error');
+    const slots = document.querySelectorAll('.slot');
+    slots.forEach(s => s.classList.add('wrong'));
+    
+    setTimeout(() => {
+      // Hepsini silme, sadece kırmızıyı kaldır, kullanıcı düzeltsin
+      slots.forEach(s => s.classList.remove('wrong'));
+      
+      // İstersen yanlışta hepsini aşağı dökebilirsin:
+      // userChars.fill(null);
+      // renderUI();
+    }, 500);
+  }
+}
+
+function updateStats() {
+  document.getElementById('scoreVal').innerText = score;
+  document.getElementById('levelVal').innerText = level + 1;
+}
+
+// --- SES ---
+const synth = window.speechSynthesis;
+let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+function toggleSound() { isMuted = !isMuted; }
+
+function playSFX(type) {
+  if (isMuted) return;
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  
+  if (type === 'type') {
+    osc.frequency.value = 800;
+    osc.type = 'square';
+    gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+    osc.start(); osc.stop(audioCtx.currentTime + 0.05);
+  } else if (type === 'win') {
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+    osc.frequency.linearRampToValueAtTime(880, audioCtx.currentTime + 0.2);
+    gain.gain.value = 0.1;
+    osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+  } else if (type === 'error') {
+    osc.type = 'sawtooth';
+    osc.frequency.value = 100;
+    gain.gain.value = 0.2;
+    osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+  }
+}
+
+function speak(text) {
+  if (isMuted) return;
+  const u = new SpeechSynthesisUtterance(text);
+  const langMap = { 'en': 'en-US', 'de': 'de-DE', 'fr': 'fr-FR' };
+  u.lang = langMap[currentLang] || 'en-US';
+  synth.speak(u);
+}
+
+</script>
+</body>
+</html>
