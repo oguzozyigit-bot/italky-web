@@ -49,8 +49,7 @@
 
     /* STATS */
     .stats-bar { display: flex; justify-content: space-between; font-family: 'Share Tech Mono', monospace; color: var(--matrix); font-size: 14px; padding-bottom: 10px; border-bottom: 1px dashed var(--border); }
-    .heart { color: var(--error); }
-
+    
     /* SORU KARTI (TÜRKÇE) */
     .hint-box {
       width: 100%; padding: 15px;
@@ -61,7 +60,7 @@
       position: relative;
       overflow: hidden;
     }
-    .hint-box::before { content:'TARGET_MEANING'; position:absolute; top:2px; left:5px; font-size:8px; color:var(--matrix); opacity:0.5; }
+    .hint-box::before { content:'HEDEF ANLAM'; position:absolute; top:2px; left:5px; font-size:8px; color:var(--matrix); opacity:0.5; }
     .hint-text { font-size: 20px; font-weight: 700; color: #fff; text-transform: uppercase; letter-spacing: 1px; }
 
     /* SLOTLAR (HEDEF) */
@@ -97,7 +96,7 @@
       transition: 0.1s;
     }
     .key-btn:active { transform: translateY(4px); box-shadow: none; }
-    .key-btn.used { opacity: 0; pointer-events: none; transform: scale(0.5); }
+    .key-btn.used { opacity: 0; pointer-events: none; transform: scale(0.5); background: transparent; border-color: rgba(0,255,65,0.1); box-shadow: none; }
 
     /* MODAL */
     .modal-wrap { position: absolute; inset: 0; background: rgba(0,0,0,0.95); z-index: 99; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
@@ -117,7 +116,7 @@
       border: none; border-radius: 8px; cursor: pointer; text-transform: uppercase; font-family: 'Share Tech Mono', monospace;
       box-shadow: 0 0 20px rgba(0,255,65,0.4);
     }
-    .btn-sec { background: transparent; border: 1px solid var(--border); color: #fff; margin-top: 10px; }
+    .btn-sec { background: transparent; border: 1px solid var(--border); color: #fff; margin-top: 10px; box-shadow: none; }
 
     @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
   </style>
@@ -280,6 +279,7 @@ function renderUI() {
     slot.className = char ? 'slot' : 'slot empty';
     slot.innerText = char ? char.char : '_';
     
+    // Dolu slota tıklayınca geri al
     if(char) slot.onclick = () => removeChar(idx);
     slotsArea.appendChild(slot);
   });
@@ -304,7 +304,6 @@ function typeChar(item) {
     playSFX('type');
     renderUI();
     
-    // Doldu mu? Kontrol et
     if (!userChars.includes(null)) {
       checkWord();
     }
@@ -341,8 +340,12 @@ function checkWord() {
     const slots = document.querySelectorAll('.slot');
     slots.forEach(s => s.classList.add('wrong'));
     
+    // ✅ DÜZELTME: Yanlış olunca harfleri geri dök
     setTimeout(() => {
       slots.forEach(s => s.classList.remove('wrong'));
+      userChars.fill(null); // Slotları boşalt
+      renderUI();           // Klavye geri gelsin
+      
       if(lives <= 0) endGame();
     }, 500);
   }
@@ -355,16 +358,17 @@ function updateStats() {
   document.getElementById('livesVal').innerText = hearts;
 }
 
-// --- OYUN SONU (DOĞRUSUNU GÖSTER VE OKU) ---
+// --- OYUN SONU ---
 function endGame() {
   document.getElementById('endModal').style.display = 'flex';
   document.getElementById('endTitle').innerText = "SYSTEM FAILURE";
   
   const correctWord = currentWordObj[0];
   
+  // ✅ DÜZELTME: "DOĞRU KELİME" yazısı ve sesli okuma
   document.getElementById('endDesc').innerHTML = `
     Toplam Puan: <strong style="color:#00ff41">${score}</strong><br><br>
-    DOĞRU ŞİFRE:<br>
+    DOĞRU KELİME:<br>
     <strong style="color:#fff; font-size:24px; letter-spacing:2px">${correctWord}</strong>
   `;
   
@@ -409,14 +413,13 @@ function playSFX(type) {
 
 function speak(text) {
   if (isMuted) return;
-  // Takılmayı önlemek için timeout sigortası
   const tm = setTimeout(() => {}, 2000);
   try {
     synth.cancel();
     const u = new SpeechSynthesisUtterance(text);
     const langMap = { 'en': 'en-US', 'de': 'de-DE', 'fr': 'fr-FR', 'es': 'es-ES', 'it': 'it-IT' };
     u.lang = langMap[currentLang] || 'en-US';
-    u.rate = 0.8; // Yazım olduğu için biraz yavaş okusun
+    u.rate = 0.8; 
     u.onend = () => clearTimeout(tm);
     synth.speak(u);
   } catch(e) { clearTimeout(tm); }
