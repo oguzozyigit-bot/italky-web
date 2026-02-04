@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>ITALKY • Sentence Builder</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;900&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg: #050505;
+      --panel: #101014;
+      --primary: #00f3ff; /* Neon Mavi */
+      --secondary: #ff00ff; /* Neon Pembe */
+      --success: #00e676;
+      --error: #ff1744;
+      --text: #ffffff;
+    }
+
+    * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
+    body { margin: 0; height: 100vh; background: var(--bg); color: var(--text); font-family: 'Outfit', sans-serif; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* ARKA PLAN */
+    .bg-grid {
+      position: absolute; inset: 0; z-index: -1;
+      background-image: radial-gradient(var(--panel) 1px, transparent 1px);
+      background-size: 20px 20px; opacity: 0.2;
+    }
+
+    /* HEADER */
+    .header {
+      padding: 15px; text-align: center;
+      background: linear-gradient(180deg, rgba(0,243,255,0.1), transparent);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .title { font-weight: 900; font-size: 20px; letter-spacing: 1px; text-transform: uppercase; color: var(--primary); }
+    .score-board { display: flex; justify-content: space-between; padding: 10px 20px; font-weight: 700; font-size: 14px; color: rgba(255,255,255,0.7); }
+    .score-val { color: var(--success); }
+    .lives-val { color: var(--error); letter-spacing: 2px; }
+
+    /* OYUN ALANI */
+    .game-area { flex: 1; display: flex; flex-direction: column; padding: 20px; gap: 20px; max-width: 600px; margin: 0 auto; width: 100%; }
+
+    /* 1. HEDEF ALANI (Cümle Çubuğu) */
+    .sentence-slot-wrap {
+      min-height: 80px;
+      background: rgba(255,255,255,0.05);
+      border: 2px dashed rgba(255,255,255,0.2);
+      border-radius: 16px;
+      padding: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      justify-content: center;
+      transition: 0.3s;
+    }
+    .sentence-slot-wrap.active { border-color: var(--primary); background: rgba(0, 243, 255, 0.05); }
+    .sentence-slot-wrap.wrong { border-color: var(--error); animation: shake 0.4s; }
+    .sentence-slot-wrap.correct { border-color: var(--success); background: rgba(0, 230, 118, 0.1); }
+
+    /* TÜRKÇE İPUCU */
+    .hint-box {
+      text-align: center; font-size: 16px; font-weight: 500; color: rgba(255,255,255,0.6); font-style: italic; min-height: 24px;
+    }
+
+    /* 2. KELİME HAVUZU (Kaynak) */
+    .word-pool {
+      flex: 1;
+      display: flex;
+      flex-wrap: wrap;
+      align-content: flex-start;
+      justify-content: center;
+      gap: 10px;
+      padding-top: 20px;
+    }
+
+    /* KELİME KUTUSU (Button) */
+    .word-btn {
+      background: var(--panel);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #fff;
+      padding: 12px 18px;
+      border-radius: 12px;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 0 rgba(255,255,255,0.1);
+      transition: all 0.1s;
+      animation: popIn 0.3s backwards;
+    }
+    .word-btn:active { transform: translateY(4px); box-shadow: none; }
+    
+    /* Seçilmiş kelime stili (Yukarıdaki) */
+    .word-btn.placed {
+      background: linear-gradient(135deg, var(--primary), #0066ff);
+      border: none;
+      box-shadow: 0 4px 0 rgba(0, 100, 255, 0.5);
+      text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    }
+
+    /* Gizli (Seçilmiş) kelime havuzda soluklaşsın */
+    .word-btn.ghost { opacity: 0; pointer-events: none; width: 0; padding: 0; margin: 0; overflow: hidden; border: none; }
+
+    /* BUTONLAR */
+    .nav-btn {
+      position: absolute; top: 15px; left: 15px;
+      width: 36px; height: 36px;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      background: rgba(0,0,0,0.5);
+      color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+    }
+
+    /* MODAL */
+    .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 99; display: none; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
+    .modal-content { background: var(--panel); padding: 30px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); text-align: center; width: 80%; max-width: 320px; }
+    .big-btn { width: 100%; padding: 15px; background: var(--primary); border: none; border-radius: 12px; font-size: 18px; font-weight: 800; color: #000; margin-top: 20px; cursor: pointer; }
+
+    @keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-5px);} 75% {transform: translateX(5px);} }
+    @keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+  </style>
+</head>
+<body>
+
+  <div class="bg-grid"></div>
+
+  <div class="header">
+    <button class="nav-btn" onclick="location.href='/pages/game.html'">←</button>
+    <div class="title">CÜMLE KURUCU</div>
+  </div>
+
+  <div class="score-board">
+    <span>PUAN: <span class="score-val" id="score">0</span></span>
+    <span>CAN: <span class="lives-display" id="lives">❤️❤️❤️</span></span>
+  </div>
+
+  <div class="game-area">
+    <div class="hint-box" id="hintBox">...</div>
+
+    <div class="sentence-slot-wrap" id="targetArea">
+      <div style="opacity:0.3; font-size:14px;">Kelimeleri buraya diz...</div>
+    </div>
+
+    <div class="word-pool" id="poolArea"></div>
+  </div>
+
+  <div class="modal" id="gameModal" style="display:flex;">
+    <div class="modal-content">
+      <h2 id="modalTitle" style="color:var(--primary)">SENTENCE MASTER</h2>
+      <p id="modalDesc" style="opacity:0.8; font-size:14px;">
+        Kelimeleri doğru sıraya dizerek anlamlı cümleler oluştur.<br><br>
+        50+ Cümle Hazır!
+      </p>
+      <button class="big-btn" onclick="startGame()">BAŞLA</button>
+    </div>
+  </div>
+
+<script>
+// --- SES SİSTEMİ ---
+const synth = window.speechSynthesis;
+const AudioContext = window.AudioContext || window.webkitAudioContext;
+let audioCtx = new AudioContext();
+
+function playSound(type) {
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+
+  if (type === 'click') {
+    osc.frequency.value = 800;
+    osc.type = 'sine';
+    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+    osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+  } else if (type === 'win') {
+    osc.frequency.setValueAtTime(500, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(1000, audioCtx.currentTime + 0.3);
+    gain.gain.value = 0.2;
+    osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+  } else if (type === 'error') {
+    osc.type = 'sawtooth';
+    osc.frequency.value = 150;
+    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+    osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+  }
+}
+
+function speak(text) {
+  if (synth.speaking) synth.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'en-US';
+  u.rate = 0.9;
+  synth.speak(u);
+}
+
+// --- VERİTABANI (OFFLINE CÜMLELER) ---
+const SENTENCES = [
+  // KOLAY (A1-A2)
+  { en: "I go to school every day", tr: "Her gün okula giderim" },
+  { en: "She is my best friend", tr: "O benim en iyi arkadaşım" },
+  { en: "The cat is under the table", tr: "Kedi masanın altında" },
+  { en: "I like to drink coffee", tr: "Kahve içmeyi severim" },
+  { en: "We play football on Sundays", tr: "Pazar günleri futbol oynarız" },
+  { en: "Please open the door", tr: "Lütfen kapıyı aç" },
+  { en: "My father is a doctor", tr: "Babam bir doktordur" },
+  { en: "It is very cold today", tr: "Bugün hava çok soğuk" },
+  { en: "Can you help me please", tr: "Bana yardım edebilir misin lütfen" },
+  { en: "I have a red car", tr: "Kırmızı bir arabam var" },
+  
+  // ORTA (B1)
+  { en: "I have been waiting for you", tr: "Seni bekliyordum" },
+  { en: "She decided to buy a new house", tr: "Yeni bir ev almaya karar verdi" },
+  { en: "Do you know where the station is", tr: "İstasyonun nerede olduğunu biliyor musun" },
+  { en: "He speaks English very well", tr: "O çok iyi İngilizce konuşur" },
+  { en: "They are going to travel next week", tr: "Gelecek hafta seyahate çıkacaklar" },
+  { en: "I usually wake up early in the morning", tr: "Genellikle sabahları erken uyanırım" },
+  { en: "This book is more interesting than that one", tr: "Bu kitap diğerinden daha ilginç" },
+  { en: "You should brush your teeth twice a day", tr: "Dişlerini günde iki kez fırçalamalısın" },
+  { en: "If it rains we will stay at home", tr: "Eğer yağmur yağarsa evde kalacağız" },
+  { en: "I forgot to bring my umbrella", tr: "Şemsiyemi getirmeyi unuttum" },
+
+  // ZOR (B2+)
+  { en: "The economy of the country is growing fast", tr: "Ülkenin ekonomisi hızlı büyüyor" },
+  { en: "Technology has changed our lives completely", tr: "Teknoloji hayatımızı tamamen değiştirdi" },
+  { en: "Freedom of speech is a fundamental right", tr: "İfade özgürlüğü temel bir haktır" },
+  { en: "Success depends on your hard work", tr: "Başarı senin sıkı çalışmana bağlıdır" },
+  { en: "We must protect the environment for future generations", tr: "Gelecek nesiller için çevreyi korumalıyız" }
+];
+
+// --- OYUN DEĞİŞKENLERİ ---
+let currentLevel = 0;
+let score = 0;
+let lives = 3;
+let currentSentenceObj = null;
+let currentWords = []; // Cümlenin doğru sırası
+let placedWords = [];  // Kullanıcının dizdiği sıra
+let shuffledPool = []; // Karışık havuz
+
+// --- OYUN MOTORU ---
+function shuffle(array) {
+  return array.sort(() => Math.random() - 0.5);
+}
+
+function startGame() {
+  document.getElementById('gameModal').style.display = 'none';
+  score = 0;
+  lives = 3;
+  currentLevel = 0;
+  updateStats();
+  
+  // Soruları karıştır ki her oyun farklı olsun
+  SENTENCES.sort(() => Math.random() - 0.5);
+  loadLevel();
+}
+
+function loadLevel() {
+  // Oyun bitti mi?
+  if (currentLevel >= SENTENCES.length || lives <= 0) {
+    endGame();
+    return;
+  }
+
+  currentSentenceObj = SENTENCES[currentLevel];
+  document.getElementById('hintBox').innerText = currentSentenceObj.tr; // Türkçe ipucu
+  
+  // Cümleyi kelimelere ayır (Noktalama işaretlerini temizle)
+  let cleanEn = currentSentenceObj.en.replace(/[.,?!]/g, "");
+  currentWords = cleanEn.split(" ");
+  
+  // Havuzu karıştır
+  shuffledPool = [...currentWords];
+  shuffle(shuffledPool);
+  
+  placedWords = [];
+  renderUI();
+}
+
+function renderUI() {
+  const targetArea = document.getElementById('targetArea');
+  const poolArea = document.getElementById('poolArea');
+  
+  targetArea.innerHTML = "";
+  poolArea.innerHTML = "";
+
+  // 1. ÜST KISIM (Dizilenler)
+  if (placedWords.length === 0) {
+    targetArea.innerHTML = `<div style="opacity:0.3; width:100%; text-align:center;">Kelimelere tıkla...</div>`;
+  } else {
+    placedWords.forEach((word, index) => {
+      let btn = document.createElement('button');
+      btn.className = 'word-btn placed';
+      btn.innerText = word;
+      btn.onclick = () => removeFromSlot(index); // Geri çıkar
+      targetArea.appendChild(btn);
+    });
+  }
+
+  // 2. ALT KISIM (Havuz)
+  shuffledPool.forEach((word, index) => {
+    // Eğer bu kelime zaten yukarıdaysa gösterme (ama array yapısını bozma)
+    // Basitlik için: Pool'dan silmiyoruz, sadece görünmez yapıyoruz veya listeden siliyoruz.
+    // Daha iyi yöntem: placedWords içinde bu kelime kaç kere geçiyor saymak lazım (duplicate words için).
+    
+    // Basit yöntem: Bir kelimeye tıklayınca placedWords'e ekle, poolUI'dan kaldır.
+    // Biz burada UI'ı placedWords ve poolWords diye iki ayrı arrayden render etmiyoruz.
+    // Tekrar render mantığı:
+    // Pool'da kalanları bulmak için: shuffledPool'un bir kopyasını al, placedWords'teki her elemanı bu kopyadan bir kez sil.
+    
+    let btn = document.createElement('button');
+    btn.className = 'word-btn';
+    btn.innerText = word;
+    btn.onclick = () => addToSlot(word);
+    poolArea.appendChild(btn);
+  });
+  
+  // (Düzeltme: Yukarıdaki render mantığında duplicate kelimeler (örn: "to", "to") karışabilir.
+  // En temiz yöntem: State tabanlı render.)
+  renderStateBased(); 
+}
+
+// State Tabanlı Render (Daha Sağlam)
+// shuffledPool: Orijinal karışık havuz (Referans)
+// placedWords: Yukarıdakiler
+// activePoolIndices: Havuzda hala tıklanabilir olanların indeksleri
+let activePoolIndices = []; 
+
+function loadLevel() {
+  if (currentLevel >= SENTENCES.length || lives <= 0) { endGame(); return; }
+
+  currentSentenceObj = SENTENCES[currentLevel];
+  document.getElementById('hintBox').innerText = currentSentenceObj.tr;
+  
+  let cleanEn = currentSentenceObj.en.replace(/[.,?!]/g, "");
+  currentWords = cleanEn.split(" ");
+  
+  // Havuz oluştur
+  shuffledPool = currentWords.map((w, i) => ({ id: i, text: w })); // ID ekledik ki aynı kelimeler karışmasın
+  shuffle(shuffledPool);
+  
+  placedWords = []; // {id, text} objeleri tutacak
+  renderStateBased();
+}
+
+function renderStateBased() {
+  const targetArea = document.getElementById('targetArea');
+  const poolArea = document.getElementById('poolArea');
+  
+  targetArea.innerHTML = "";
+  poolArea.innerHTML = "";
+  
+  // Hedef Alanı
+  if (placedWords.length === 0) {
+    targetArea.innerHTML = `<div style="opacity:0.3; width:100%; text-align:center;">Kelimelere tıkla...</div>`;
+  } else {
+    placedWords.forEach((item, idx) => {
+      let btn = document.createElement('button');
+      btn.className = 'word-btn placed';
+      btn.innerText = item.text;
+      btn.onclick = () => {
+        playSound('click');
+        placedWords.splice(idx, 1); // Çıkar
+        renderStateBased();
+      };
+      targetArea.appendChild(btn);
+    });
+  }
+  
+  // Havuz Alanı
+  shuffledPool.forEach((item) => {
+    // Bu item (ID'si ile) placedWords içinde var mı?
+    const isPlaced = placedWords.some(p => p.id === item.id);
+    
+    if (!isPlaced) {
+      let btn = document.createElement('button');
+      btn.className = 'word-btn';
+      btn.innerText = item.text;
+      btn.onclick = () => {
+        playSound('click');
+        addToSlot(item);
+      };
+      poolArea.appendChild(btn);
+    }
+  });
+  
+  // Otomatik Kontrol
+  if (placedWords.length === currentWords.length) {
+    checkSentence();
+  }
+}
+
+function addToSlot(item) {
+  placedWords.push(item);
+  renderStateBased();
+}
+
+function checkSentence() {
+  // Kullanıcının oluşturduğu cümle
+  const userSentence = placedWords.map(w => w.text).join(" ");
+  const correctSentence = currentWords.join(" "); // currentWords zaten doğru sıra
+  
+  const targetWrap = document.getElementById('targetArea');
+  
+  if (userSentence.toLowerCase() === correctSentence.toLowerCase()) {
+    // DOĞRU
+    playSound('win');
+    targetWrap.className = 'sentence-slot-wrap correct';
+    score += 10;
+    speak(currentSentenceObj.en);
+    
+    setTimeout(() => {
+      targetWrap.className = 'sentence-slot-wrap';
+      currentLevel++;
+      updateStats();
+      loadLevel();
+    }, 1200);
+    
+  } else {
+    // YANLIŞ
+    playSound('error');
+    targetWrap.className = 'sentence-slot-wrap wrong';
+    lives--;
+    updateStats();
+    
+    // Titreme bitince sıfırla ama kelimeleri aşağı dökme, kullanıcı düzeltsin
+    setTimeout(() => {
+      targetWrap.className = 'sentence-slot-wrap';
+      if (lives <= 0) endGame();
+      else {
+        // İstersen yanlışta hepsini aşağı dökebilirsin:
+        placedWords = [];
+        renderStateBased();
+      }
+    }, 500);
+  }
+}
+
+function updateStats() {
+  document.getElementById('score').innerText = score;
+  let hearts = "";
+  for(let i=0; i<3; i++) hearts += (i < lives ? "❤️" : "💀");
+  document.getElementById('lives').innerText = hearts;
+}
+
+function endGame() {
+  document.getElementById('gameModal').style.display = 'flex';
+  document.getElementById('modalTitle').innerText = (lives > 0) ? "TEBRİKLER! 🏆" : "OYUN BİTTİ 💀";
+  document.getElementById('modalDesc').innerHTML = `
+    Toplam Puan: <strong style="color:#fff; font-size:20px">${score}</strong><br><br>
+    ${lives > 0 ? "Tüm cümleleri başarıyla kurdun!" : "Biraz daha pratik yapmalısın."}
+  `;
+}
+
+// İlk açılış
+document.addEventListener('DOMContentLoaded', () => {
+  // Modal açık başlar
+});
+
+</script>
+</body>
+</html>
