@@ -70,7 +70,10 @@
     #paneA .mic-btn.active-mic { background: linear-gradient(135deg, var(--c-p1), #0066ff); border:none; box-shadow: 0 5px 20px rgba(0,243,255,0.3); }
     #paneA .pass-btn:not(:disabled) { border-color:var(--c-p1); color:var(--c-p1); }
 
+    /* PANE B DÖNÜŞ FIX */
     #paneB { transform: rotate(180deg); }
+    #paneB > * { transform: rotate(180deg); } 
+    
     #paneB.active { border-color:var(--c-p2); box-shadow: 0 0 30px rgba(255, 0, 102, 0.2); }
     #paneB .p-score { color:var(--c-p2); }
     #paneB .mic-btn.active-mic { background: linear-gradient(135deg, var(--c-p2), #800020); border:none; box-shadow: 0 5px 20px rgba(255,0,102,0.3); }
@@ -218,12 +221,12 @@
       <div class="modal-p">
         10 Kelime x 10 Puan = 100 Puan<br>
         Yanlış veya Pas = Sıra Geçer!<br>
-        <strong>Bilmediğini Öğretir!</strong>
+        <strong>Havuz Sistemi: Tekrar Yok!</strong>
       </div>
       <button class="mode-btn mode-pronounce" id="btnPron">🗣️ TELAFFUZ LİGİ</button>
       <button class="mode-btn mode-vocab" id="btnVocab">🧠 KELİME LİGİ</button>
       <div id="loading" style="display:none; margin-top:20px;">
-        <div class="loader"></div><div style="font-size:12px;opacity:0.6">Arena Hazırlanıyor...</div>
+        <div class="loader"></div><div style="font-size:12px;opacity:0.6">Havuz Dolduruluyor...</div>
       </div>
     </div>
   </div>
@@ -250,39 +253,72 @@ import { BASE_DOMAIN } from "/js/config.js";
 const $ = (id) => document.getElementById(id);
 const apiBase = () => String(BASE_DOMAIN || "").replace(/\/+$/, "");
 
-// DEVASA OFFLINE HAVUZ (Yedek)
+// --- DEVASA HAVUZ (50-60 Kelime/Dil) ---
 const OFFLINE_DB = {
   en: [
     ["Galaxy","Galaksi"],["Planet","Gezegen"],["Energy","Enerji"],["Future","Gelecek"],
     ["Dream","Rüya"],["Music","Müzik"],["Travel","Seyahat"],["Friend","Arkadaş"],
     ["Summer","Yaz"],["School","Okul"],["Market","Pazar"],["Garden","Bahçe"],
     ["Doctor","Doktor"],["Window","Pencere"],["Coffee","Kahve"],["Bridge","Köprü"],
-    ["Island","Ada"],["Forest","Orman"],["Yellow","Sarı"],["Purple","Mor"]
+    ["Island","Ada"],["Forest","Orman"],["Yellow","Sarı"],["Purple","Mor"],
+    ["History","Tarih"],["Science","Bilim"],["Nature","Doğa"],["Ocean","Okyanus"],
+    ["River","Nehir"],["Mountain","Dağ"],["Cloud","Bulut"],["Rain","Yağmur"],
+    ["Snow","Kar"],["Wind","Rüzgar"],["Fire","Ateş"],["Water","Su"],
+    ["Earth","Dünya"],["Moon","Ay"],["Sun","Güneş"],["Star","Yıldız"],
+    ["Space","Uzay"],["Time","Zaman"],["Light","Işık"],["Sound","Ses"],
+    ["Color","Renk"],["Shape","Şekil"],["Art","Sanat"],["Love","Aşk"],
+    ["Peace","Barış"],["War","Savaş"],["Life","Hayat"],["Death","Ölüm"]
   ],
   de: [
     ["Sonne","Güneş"],["Mond","Ay"],["Wasser","Su"],["Freund","Arkadaş"],
     ["Schule","Okul"],["Arbeit","İş"],["Himmel","Gökyüzü"],["Garten","Bahçe"],
-    ["Familie","Aile"],["Reise","Seyahat"],["Buch","Kitap"],["Stadt","Şehir"]
+    ["Familie","Aile"],["Reise","Seyahat"],["Buch","Kitap"],["Stadt","Şehir"],
+    ["Lehrer","Öğretmen"],["Schüler","Öğrenci"],["Haus","Ev"],["Auto","Araba"],
+    ["Zug","Tren"],["Flugzeug","Uçak"],["Schiff","Gemi"],["Fahrrad","Bisiklet"],
+    ["Straße","Cadde"],["Weg","Yol"],["Brücke","Köprü"],["Berg","Dağ"],
+    ["Fluss","Nehir"],["See","Göl"],["Meer","Deniz"],["Wald","Orman"],
+    ["Baum","Ağaç"],["Blume","Çiçek"],["Tier","Hayvan"],["Hund","Köpek"],
+    ["Katze","Kedi"],["Vogel","Kuş"],["Fisch","Balık"],["Brot","Ekmek"],
+    ["Milch","Süt"],["Kaffee","Kahve"],["Tee","Çay"],["Bier","Bira"]
   ],
+  // ... (Diğer diller de benzer şekilde doldurulur) ...
   fr: [
     ["Soleil","Güneş"],["Lune","Ay"],["Amour","Aşk"],["Monde","Dünya"],
     ["Fleur","Çiçek"],["Temps","Zaman"],["Plage","Plaj"],["Livre","Kitap"],
-    ["Chien","Köpek"],["Maison","Ev"]
+    ["Chien","Köpek"],["Maison","Ev"],["Chat","Kedi"],["Oiseau","Kuş"],
+    ["Poisson","Balık"],["Pain","Ekmek"],["Eau","Su"],["Lait","Süt"],
+    ["Café","Kahve"],["Thé","Çay"],["Vin","Şarap"],["Bière","Bira"],
+    ["Homme","Adam"],["Femme","Kadın"],["Enfant","Çocuk"],["Ami","Arkadaş"],
+    ["Professeur","Öğretmen"],["Étudiant","Öğrenci"],["École","Okul"],["Travail","İş"],
+    ["Ville","Şehir"],["Pays","Ülke"],["Rue","Cadde"],["Route","Yol"],
+    ["Voiture","Araba"],["Train","Tren"],["Avion","Uçak"],["Bateau","Gemi"]
   ],
   es: [
     ["Sol","Güneş"],["Luna","Ay"],["Amigo","Arkadaş"],["Ciudad","Şehir"],
     ["Playa","Plaj"],["Libro","Kitap"],["Tiempo","Zaman"],["Gato","Kedi"],
-    ["Casa","Ev"],["Fiesta","Parti"]
+    ["Casa","Ev"],["Fiesta","Parti"],["Perro","Köpek"],["Pájaro","Kuş"],
+    ["Pez","Balık"],["Pan","Ekmek"],["Agua","Su"],["Leche","Süt"],
+    ["Café","Kahve"],["Té","Çay"],["Vino","Şarap"],["Cerveza","Bira"],
+    ["Hombre","Adam"],["Mujer","Kadın"],["Niño","Çocuk"],["Familia","Aile"],
+    ["Profesor","Öğretmen"],["Estudiante","Öğrenci"],["Escuela","Okul"],["Trabajo","İş"],
+    ["Calle","Cadde"],["Camino","Yol"],["Coche","Araba"],["Tren","Tren"],
+    ["Avión","Uçak"],["Barco","Gemi"],["Bicicleta","Bisiklet"],["Montaña","Dağ"]
   ],
   it: [
     ["Sole","Güneş"],["Luna","Ay"],["Amore","Aşk"],["Mare","Deniz"],
     ["Pizza","Pizza"],["Tempo","Zaman"],["Citta","Şehir"],["Casa","Ev"],
-    ["Libro","Kitap"],["Gatto","Kedi"]
+    ["Libro","Kitap"],["Gatto","Kedi"],["Cane","Köpek"],["Uccello","Kuş"],
+    ["Pesce","Balık"],["Pane","Ekmek"],["Acqua","Su"],["Latte","Süt"],
+    ["Caffè","Kahve"],["Tè","Çay"],["Vino","Şarap"],["Birra","Bira"],
+    ["Uomo","Adam"],["Donna","Kadın"],["Bambino","Çocuk"],["Amico","Arkadaş"],
+    ["Insegnante","Öğretmen"],["Studente","Öğrenci"],["Scuola","Okul"],["Lavoro","İş"],
+    ["Strada","Cadde"],["Via","Yol"],["Macchina","Araba"],["Treno","Tren"],
+    ["Aereo","Uçak"],["Nave","Gemi"],["Bicicletta","Bisiklet"],["Montagna","Dağ"]
   ]
 };
 
 /* =========================
-   DİL
+   DEĞİŞKENLER
    ========================= */
 let currentLang = 'en';
 const LANG_CONFIG = {
@@ -292,6 +328,29 @@ const LANG_CONFIG = {
   es: { code: 'es-ES', name: 'İspanyolca' },
   it: { code: 'it-IT', name: 'İtalyanca' }
 };
+
+const TARGET_SETS = 3;
+const WORDS_PER_SET = 10;
+const POOL_TARGET = 60; // Havuz hedefi
+
+let gameMode = "";
+let wordPool = [];      // Ana Havuz
+let usedWords = new Set(); // Kullanılanlar
+let wordList = [];      // Aktif Set
+let idx = 0;              
+let turn = "A";           
+let isBusy = false;
+
+let setStats = { A:{correct:0, wrong:0}, B:{correct:0, wrong:0} };
+let setsWon  = { A:0, B:0 };
+let passLeft = { A:3, B:3 };
+let streaks  = { A:0, B:0 };
+
+const paneA = $("paneA"), paneB = $("paneB");
+const micA = $("micA"), micB = $("micB");
+const passA = $("passA"), passB = $("passB");
+
+// Dil Seçimi
 document.querySelectorAll(".lang-btn").forEach(btn=>{
   btn.addEventListener("click", ()=>{
     document.querySelectorAll(".lang-btn").forEach(b=>b.classList.remove("active"));
@@ -302,7 +361,7 @@ document.querySelectorAll(".lang-btn").forEach(btn=>{
 });
 
 /* =========================
-   SES (SFX)
+   SES
    ========================= */
 let audioCtx = null;
 function ensureAudio(){
@@ -336,27 +395,6 @@ const SFX = {
 };
 
 /* =========================
-   OYUN AYARLARI
-   ========================= */
-const TARGET_SETS = 3;
-const WORDS_PER_SET = 10;
-
-let gameMode = "";
-let wordList = [];
-let idx = 0;              
-let turn = "A";           
-let isBusy = false;
-
-let setStats = { A:{correct:0, wrong:0}, B:{correct:0, wrong:0} };
-let setsWon  = { A:0, B:0 };
-let passLeft = { A:3, B:3 };
-let streaks  = { A:0, B:0 };
-
-const paneA = $("paneA"), paneB = $("paneB");
-const micA = $("micA"), micB = $("micB");
-const passA = $("passA"), passB = $("passB");
-
-/* =========================
    BAŞLAT
    ========================= */
 $("btnPron").addEventListener("click", ()=> startMode("pronunciation"));
@@ -365,6 +403,10 @@ $("btnVocab").addEventListener("click", ()=> startMode("vocabulary"));
 async function startMode(mode){
   ensureAudio();
   gameMode = mode;
+  
+  // Reset Pool
+  wordPool = [];
+  usedWords = new Set();
 
   $("startModal").querySelector(".modal-p").style.display = "none";
   $("btnPron").style.display = "none";
@@ -375,7 +417,7 @@ async function startMode(mode){
 }
 
 /* =========================
-   GEMINI'DEN KELİME
+   HAVUZ SİSTEMİ
    ========================= */
 function safeParseWordList(raw){
   let txt = String(raw?.text||raw||"").trim().replace(/```json/gi,"").replace(/```/g,"").trim();
@@ -383,7 +425,6 @@ function safeParseWordList(raw){
   if(a !== -1 && b !== -1) txt = txt.slice(a, b+1);
   return JSON.parse(txt);
 }
-// Fisher-Yates Shuffle
 function shuffle(arr){
   const a = arr.slice();
   for(let i=a.length-1;i>0;i--){
@@ -393,45 +434,76 @@ function shuffle(arr){
   return a;
 }
 
+// 1. ADIM: HAVUZU DOLDUR (AI + OFFLINE)
 async function fetchWordsFromAI(){
   try{
     const lg = LANG_CONFIG[currentLang];
-    let prompt = "";
-    if(gameMode === "pronunciation"){
-      prompt = `Bana ${lg.name} dilinde B1 seviyesinde ${WORDS_PER_SET} adet kelime/cümle ve Türkçe karşılıklarını JSON listesi olarak ver: [["apple","elma"], ...]`;
-    }else{
-      prompt = `Bana ${lg.name} dilinde B1 seviyesinde ${WORDS_PER_SET} adet kelime ve Türkçe karşılıklarını JSON listesi olarak ver: [["apple","elma"], ...]`;
-    }
-
+    // Büyük bir batch iste (50 kelime)
+    let prompt = `Bana ${lg.name} dilinde A1-A2 seviyesinde ${POOL_TARGET} ADET FARKLI kelime ve Türkçe karşılıklarını JSON listesi olarak ver: [["apple","elma"], ...]`;
+    
     const res = await fetch(`${apiBase()}/api/chat`,{
       method:"POST",
       headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify({ text: prompt, max_tokens: 1500 })
+      body: JSON.stringify({ text: prompt, max_tokens: 2500 })
     });
 
     const data = await res.json();
     const rawList = safeParseWordList(data);
     let list = rawList.map(w=>[String(w[0]).trim(), String(w[1]).trim()]);
     
-    // Eğer az gelirse yedekten tamamla
-    if(list.length < WORDS_PER_SET) {
-        const pool = OFFLINE_DB[currentLang] || OFFLINE_DB['en'];
-        list = list.concat(pool);
-    }
-    
-    list = shuffle(list).slice(0, WORDS_PER_SET);
-    wordList = list;
+    wordPool = list;
 
   }catch{
-    const pool = OFFLINE_DB[currentLang] || OFFLINE_DB['en'];
-    let filled = [...pool];
-    while(filled.length < WORDS_PER_SET) filled = filled.concat(pool);
-    wordList = shuffle(filled).slice(0, WORDS_PER_SET);
+    // Fallback: Offline DB kullan
+    wordPool = [...(OFFLINE_DB[currentLang] || OFFLINE_DB['en'])];
   }
+  
+  // Havuz Yetersizse Yedekle Destekle
+  if(wordPool.length < 20) {
+      const backup = OFFLINE_DB[currentLang] || OFFLINE_DB['en'];
+      wordPool = [...wordPool, ...backup];
+  }
+
+  // Havuzu Karıştır
+  wordPool = shuffle(wordPool);
 
   $("startModal").style.display = "none";
   $("setModal").style.display = "none";
+  
   startSet();
+}
+
+// 2. ADIM: HAVUZDAN SET ÇEK (Unique)
+function getNextSet() {
+    let set = [];
+    let attempts = 0;
+    
+    // Kullanılmamışları bul
+    for(let w of wordPool) {
+        if(!usedWords.has(w[0])) {
+            set.push(w);
+            usedWords.add(w[0]);
+            if(set.length >= WORDS_PER_SET) break;
+        }
+    }
+    
+    // Eğer havuz bittiyse (set dolmadıysa), resetle ve tekrar al
+    if(set.length < WORDS_PER_SET) {
+        usedWords.clear();
+        let remaining = WORDS_PER_SET - set.length;
+        let freshPool = shuffle(wordPool);
+        
+        for(let w of freshPool) {
+            if(!usedWords.has(w[0])) { // (Set'tekini tekrar alma)
+               // Basitçe ekle, strict unique zorunlu değil bu noktada
+               set.push(w);
+               usedWords.add(w[0]);
+               if(set.length >= WORDS_PER_SET) break;
+            }
+        }
+    }
+    
+    return shuffle(set);
 }
 
 /* =========================
@@ -448,13 +520,14 @@ function startSet(){
   const totalSets = setsWon.A + setsWon.B;
   turn = (totalSets % 2 === 0) ? "A" : "B";
 
+  // Havuzdan Yeni Set Al
+  wordList = getNextSet();
+
   renderWord();
   updateUI();
 
-  // OTO SESLİ İPUCU + GECİKME
-  setTimeout(() => {
-      autoSpeakHint();
-  }, 1000);
+  // OTO SESLİ İPUCU
+  setTimeout(() => { autoSpeakHint(); }, 1000);
 }
 
 function currentWord(){
@@ -479,7 +552,7 @@ function renderWord(){
   hints.forEach(h => h.textContent = hintText);
 }
 
-// OTO SESLİ İPUCU (SORU)
+// OTO SESLİ İPUCU
 async function autoSpeakHint() {
     if(idx >= wordList.length) return;
     const w = currentWord();
@@ -493,10 +566,7 @@ async function autoSpeakHint() {
 }
 
 function updateUI(){
-  if(idx >= wordList.length){
-    handleSetEnd();
-    return;
-  }
+  if(idx >= wordList.length){ handleSetEnd(); return; }
 
   $("scoreA").textContent = `SET: ${setsWon.A}`;
   $("corrA").textContent = setStats.A.correct;
@@ -542,7 +612,7 @@ function enableTurnButtons(){
 }
 
 /* =========================
-   SESLENDİRME (BROWSER)
+   SESLENDİRME
    ========================= */
 function speakBrowser(text, lang){
   return new Promise(resolve=>{
@@ -555,21 +625,17 @@ function speakBrowser(text, lang){
   });
 }
 
+// Pronunciation modunda öğretici ses iptal (HIZ İÇİN)
 async function teacherPhase(){
-  if(idx >= wordList.length) return;
-  isBusy = true;
-  micA.disabled = true; micB.disabled = true;
-  setWave("speaking", "DİNLE...");
-  const w = currentWord()[0];
-  await speakBrowser(w, LANG_CONFIG[currentLang].code);
-  setWave("idle", `SIRA: OYUNCU ${turn}`);
-  isBusy = false;
-  enableTurnButtons();
+  // Boş, kullanılmıyor artık
 }
 
 /* =========================
-   PAS (ÖĞRETİCİ)
+   PAS
    ========================= */
+passA.addEventListener("click", ()=> passTurn("A"));
+passB.addEventListener("click", ()=> passTurn("B"));
+
 async function passTurn(player){
   if(isBusy) return;
   if(player !== turn) return;
@@ -585,18 +651,17 @@ async function passTurn(player){
   SFX.wrong();
   
   const w = currentWord();
-  showResultOverlay(player, "pass", "PAS", "DOĞRUSU OKUNUYOR...");
+  showResultOverlay(player, "pass", "PAS", "SIRA GEÇTİ"); // Hızlı Mesaj
 
-  // ÖĞRETME MODU (SESLİ)
-  const correctText = (gameMode === "vocabulary") ? w[1] : w[0];
-  const correctLang = (gameMode === "vocabulary") ? "tr-TR" : LANG_CONFIG[currentLang].code;
-  
-  await speakBrowser(correctText, correctLang);
+  // Sadece Vocab ise öğret
+  if (gameMode === "vocabulary") {
+      const correctText = w[1]; 
+      await speakBrowser(correctText, "tr-TR");
+  } else {
+      await new Promise(r => setTimeout(r, 800)); // Kısa bekle
+  }
 
-  setTimeout(()=>{
-    isBusy = false;
-    switchTurnNewWord(); // PAS -> YENİ KELİME
-  }, 500);
+  switchTurnNewWord(); 
 }
 
 /* =========================
@@ -629,16 +694,19 @@ function listen(player){
   rec.interimResults = false;
   rec.continuous = false;
 
+  const tm = setTimeout(()=>{ try{ rec.stop(); }catch{} }, 5000);
+
   let got = false;
 
   rec.onresult = (e)=>{
+    clearTimeout(tm);
     got = true;
     const text = e.results?.[0]?.[0]?.transcript || "";
     try{ rec.stop(); }catch{}
     checkResult(player, text);
   };
-  rec.onerror = ()=>{ if(!got){ got = true; cleanupNoResult(); } };
-  rec.onend = ()=>{ if(!got){ got = true; cleanupNoResult(); } };
+  rec.onerror = ()=>{ clearTimeout(tm); if(!got){ got = true; cleanupNoResult(); } };
+  rec.onend = ()=>{ clearTimeout(tm); if(!got){ got = true; cleanupNoResult(); } };
 
   try{ rec.start(); }catch{ cleanupNoResult(); }
 
@@ -652,15 +720,17 @@ function listen(player){
 async function checkResult(player, spoken){
   const w = currentWord();
   const target = (gameMode === "pronunciation") ? w[0] : w[1];
-
   const tClean = normalize(target);
   const sClean = normalize(spoken);
 
-  const ok = !!sClean && (sClean.includes(tClean) || tClean.includes(sClean));
+  const ok = !!sClean && sClean.length >= Math.max(2, Math.floor(tClean.length * 0.45)) && (
+    (" " + sClean + " ").includes(" " + tClean + " ") ||
+    (" " + tClean + " ").includes(" " + sClean + " ")
+  );
+
   const isFinal = (idx === wordList.length - 1);
 
   if(ok){
-    // DOĞRU
     SFX.correct();
     const pts = isFinal ? "+20" : "+10";
     showResultOverlay(player, "success", "HARİKA!", pts);
@@ -671,7 +741,7 @@ async function checkResult(player, spoken){
 
     setTimeout(()=>{
       isBusy = false;
-      advanceWord(); // DOĞRU -> YENİ KELİME
+      advanceWord(); 
     }, 900);
     return;
   }
@@ -684,22 +754,22 @@ async function checkResult(player, spoken){
   const hint = `Doğrusu: ${w[0]} = ${w[1]}`;
   showResultOverlay(player, "error", "YANLIŞ!", hint);
 
-  // ÖĞRETME MODU (SESLİ)
-  const correctText = (gameMode === "vocabulary") ? w[1] : w[0];
-  const correctLang = (gameMode === "vocabulary") ? "tr-TR" : LANG_CONFIG[currentLang].code;
-  
-  await speakBrowser(correctText, correctLang);
+  // Sadece Vocab ise öğret
+  if (gameMode === "vocabulary") {
+      const correctText = w[1];
+      await speakBrowser(correctText, "tr-TR");
+  } else {
+      await new Promise(r => setTimeout(r, 1000));
+  }
 
-  setTimeout(()=>{
-    isBusy = false;
-    switchTurnNewWord(); // YANLIŞ -> YENİ KELİME
-  }, 500);
+  switchTurnNewWord(); // Yanlışsa da GEÇ
 }
 
 /* =========================
    GEÇİŞ & YENİ KELİME
    ========================= */
 function switchTurnNewWord(){
+  isBusy = false;
   turn = (turn === "A") ? "B" : "A";
   advanceWord();
 }
@@ -710,7 +780,6 @@ function advanceWord(){
   updateUI();
   if(idx < wordList.length){
     if(gameMode === "vocabulary") setTimeout(autoSpeakHint, 500);
-    else if(gameMode === "pronunciation") setTimeout(teacherPhase, 450);
     else { isBusy = false; enableTurnButtons(); }
   }
 }
@@ -748,7 +817,9 @@ function handleSetEnd(){
 
   $("nextSetBtn").onclick = async ()=>{
     $("setModal").querySelector(".modal-title").textContent = "YENİ KELİMELER...";
-    await fetchWordsFromAI();
+    // YENİ SET, YENİ KELİMELER (Havuzdan Çek)
+    startSet();
+    $("setModal").style.display = "none";
   };
 }
 
@@ -757,6 +828,13 @@ function handleMatchOver(){
   $("matchModal").style.display = "flex";
   $("matchResult").textContent = `${champ} KAZANDI!`;
   startFireworks();
+  
+  setTimeout(()=>{
+    if(fwInterval) clearInterval(fwInterval);
+    fwInterval = null;
+    cvs.style.display = "none";
+    particles = [];
+  }, 6000);
 }
 
 let fwInterval=null;
