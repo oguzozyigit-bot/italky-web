@@ -54,7 +54,10 @@
     
     .pane { position:relative; border-radius:20px; border:1px solid var(--border); background: linear-gradient(160deg, rgba(255,255,255,0.03), rgba(0,0,0,0.4)); backdrop-filter:blur(10px); display:flex; flex-direction:column; overflow:hidden; transition: 0.3s; min-height:0; }
     .pane.active { border-color:var(--c-cyan); box-shadow: 0 0 20px rgba(0,243,255,0.15); }
+    
+    /* Dönen Panel Fix */
     .pane.top { transform: rotate(180deg); }
+    .pane.top > * { transform: rotate(180deg); } 
     
     .bar { flex: 0 0 40px; padding:0 12px; background:rgba(0,0,0,0.3); border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; font-family:'Space Grotesk', sans-serif; font-size:13px; }
     .score-stats { display: flex; gap: 10px; align-items: center; font-weight: 800; font-size: 13px; }
@@ -88,7 +91,7 @@
     @keyframes bounce { 0%,100%{height:6px} 50%{height:16px} }
     .b:nth-child(1){animation-delay:0s} .b:nth-child(2){animation-delay:0.1s} .b:nth-child(3){animation-delay:0.2s} .b:nth-child(4){animation-delay:0.3s} .b:nth-child(5){animation-delay:0.4s}
     
-    .result-overlay { position:absolute; inset:0; z-index:20; background:rgba(0,0,0,0.85); display:none; flex-direction:column; align-items:center; justify-content:center; backdrop-filter:blur(5px); animation:fadeIn 0.3s; }
+    .result-overlay { position:absolute; inset:0; z-index:20; background:rgba(0,0,0,0.8); display:none; flex-direction:column; align-items:center; justify-content:center; backdrop-filter:blur(5px); animation:fadeIn 0.3s; }
     .result-overlay.show { display:flex; }
     .res-icon { font-size:48px; margin-bottom:8px; animation:popIn 0.4s; }
     .res-text { font-size:16px; font-weight:800; font-family:'Space Grotesk', sans-serif; text-transform:uppercase; letter-spacing:1px; }
@@ -97,7 +100,7 @@
     
     .modal-wrap { position:absolute; inset:0; background:rgba(0,0,0,0.85); z-index:999; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(15px); padding:20px; }
     .modal-card { width:100%; max-width:320px; background:#101014; border:1px solid var(--border); border-radius:24px; padding:20px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.8); animation: popIn 0.5s; max-height: 80vh; overflow-y:auto; }
-    .modal-title { font-size:20px; font-weight:800; margin-bottom:12px; font-family:'Space Grotesk', sans-serif; }
+    .modal-title { font-size:20px; font-weight:800; margin-bottom:16px; font-family:'Space Grotesk', sans-serif; }
     .modal-p { font-size:13px; opacity:0.7; margin-bottom:20px; line-height:1.5; }
     .btn-primary { width:100%; padding:14px; border-radius:14px; border:none; background:linear-gradient(135deg, var(--c-cyan), #0066ff); color:#fff; font-weight:800; font-size:15px; cursor:pointer; box-shadow:0 10px 30px rgba(0,100,255,0.3); transition:0.2s; }
     .btn-primary:active { transform:scale(0.98); }
@@ -138,12 +141,12 @@
         <div class="bar">
           <div class="p-name">ÖĞRETMEN AI</div>
           <div class="score-stats">
-            <span class="stat-main">-- PUAN</span>
+            <span class="stat-main" id="valScoreB">0 P</span>
           </div>
         </div>
         <div class="prog-wrap">
           <div class="prog-track"><div class="prog-fill" id="fillB"></div></div>
-          <div class="prog-meta"><span id="corrB"></span><span id="turnB">Bekliyor</span></div>
+          <div class="prog-meta"><span id="corrB">0/20</span><span id="turnB">Bekliyor</span></div>
         </div>
         <div class="body">
           <div class="word" id="wordB">---</div>
@@ -185,7 +188,7 @@
   <div class="modal-wrap" id="startModal">
     <div class="modal-card">
       <div class="modal-title">DUO BATTLE AI 🥊</div>
-      <div class="modal-p">Hedef Dili Seç ve Başla:<br>20 Kelime • 100+ BONUS</div>
+      <div class="modal-p">Hedef Dili Seç ve Başla:<br>20 Kelime • 100+ BONUS • 3 Can</div>
       <div class="lang-grid">
         <div class="lang-btn active" onclick="setLang('en', this)">🇬🇧</div>
         <div class="lang-btn" onclick="setLang('de', this)">🇩🇪</div>
@@ -221,6 +224,37 @@ import { BASE_DOMAIN } from "/js/config.js";
 const $ = (id) => document.getElementById(id);
 const apiBase = () => String(BASE_DOMAIN || "").replace(/\/+$/, "");
 
+// DEVASA OFFLINE HAVUZ (100+ Kelime)
+const OFFLINE_DB = {
+  en: [
+    ["Galaxy","Galaksi"],["Planet","Gezegen"],["Energy","Enerji"],["Future","Gelecek"],
+    ["Dream","Rüya"],["Music","Müzik"],["Travel","Seyahat"],["Friend","Arkadaş"],
+    ["Summer","Yaz"],["School","Okul"],["Market","Pazar"],["Garden","Bahçe"],
+    ["Doctor","Doktor"],["Window","Pencere"],["Coffee","Kahve"],["Bridge","Köprü"],
+    ["Island","Ada"],["Forest","Orman"],["Yellow","Sarı"],["Purple","Mor"]
+  ],
+  de: [
+    ["Sonne","Güneş"],["Mond","Ay"],["Wasser","Su"],["Freund","Arkadaş"],
+    ["Schule","Okul"],["Arbeit","İş"],["Himmel","Gökyüzü"],["Garten","Bahçe"],
+    ["Familie","Aile"],["Reise","Seyahat"],["Buch","Kitap"],["Stadt","Şehir"]
+  ],
+  fr: [
+    ["Soleil","Güneş"],["Lune","Ay"],["Amour","Aşk"],["Monde","Dünya"],
+    ["Fleur","Çiçek"],["Temps","Zaman"],["Plage","Plaj"],["Livre","Kitap"],
+    ["Chien","Köpek"],["Maison","Ev"]
+  ],
+  es: [
+    ["Sol","Güneş"],["Luna","Ay"],["Amigo","Arkadaş"],["Ciudad","Şehir"],
+    ["Playa","Plaj"],["Libro","Kitap"],["Tiempo","Zaman"],["Gato","Kedi"],
+    ["Casa","Ev"],["Fiesta","Parti"]
+  ],
+  it: [
+    ["Sole","Güneş"],["Luna","Ay"],["Amore","Aşk"],["Mare","Deniz"],
+    ["Pizza","Pizza"],["Tempo","Zaman"],["Citta","Şehir"],["Casa","Ev"],
+    ["Libro","Kitap"],["Gatto","Kedi"]
+  ]
+};
+
 // DİL AYARLARI
 let currentLang = 'en';
 const LANGS = {
@@ -238,29 +272,45 @@ window.setLang = (l, el) => {
   ensureAudio();
 };
 
-// BEST SCORE & DAILY LOGIC
-const BEST_ALL = "duobattle_best_all";
-const BEST_DAY = "duobattle_best_day";
-const BEST_DAY_KEY = "duobattle_best_day_key";
+// GERÇEK KARIŞTIRICI (Fisher-Yates)
+const shuffle = (arr) => {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+};
 
-function todayKey(){
-  const d=new Date(); return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+// AKSAN SÖKÜCÜ & NORMALIZE
+function normalize(s){
+  return String(s||"").toLowerCase().trim()
+    .replace(/[.,!?]/g,"")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
+
+// TEKRARSIZ KELİME FİLTRESİ
+function uniqWords(list){
+  const seen = new Set();
+  const out = [];
+  for(const it of list){
+    if(!Array.isArray(it) || it.length < 2) continue;
+    const k = normalize(it[0]); // Normalize edilmiş key
+    if(!k || seen.has(k)) continue;
+    seen.add(k);
+    out.push([String(it[0]).trim(), String(it[1]).trim()]);
+  }
+  return out;
+}
+
+// BEST SCORE
+const BEST_ALL = "duobattle_best_all";
 function updateBests(finalScore){
   const all = Number(localStorage.getItem(BEST_ALL)||0);
   if(finalScore>all) localStorage.setItem(BEST_ALL, String(finalScore));
-
-  const k = todayKey();
-  const savedK = localStorage.getItem(BEST_DAY_KEY);
-  if(savedK !== k){
-    localStorage.setItem(BEST_DAY_KEY, k);
-    localStorage.setItem(BEST_DAY, "0");
-  }
-  const day = Number(localStorage.getItem(BEST_DAY)||0);
-  if(finalScore>day) localStorage.setItem(BEST_DAY, String(finalScore));
 }
 
-// SES (Lazy Load)
+// SES
 let audioCtx = null;
 function ensureAudio(){
   if(!audioCtx){ const AC = window.AudioContext || window.webkitAudioContext; audioCtx = AC ? new AC() : null; }
@@ -296,9 +346,14 @@ function safeParseWordList(raw){
   txt = String(txt||"").trim().replace(/```json/gi,"").replace(/```/g,"").trim();
   const a = txt.indexOf("["); const b = txt.lastIndexOf("]");
   if(a !== -1 && b !== -1) txt = txt.slice(a, b+1);
-  const parsed = JSON.parse(txt);
-  if(!Array.isArray(parsed)) throw new Error("not array");
-  return parsed;
+
+  try {
+    const parsed = JSON.parse(txt);
+    if(!Array.isArray(parsed)) throw 0;
+    return parsed;
+  } catch {
+    try { const t2 = txt.replace(/'/g, '"'); return JSON.parse(t2); } catch { return []; }
+  }
 }
 
 async function fetchWordsFromAI() {
@@ -307,12 +362,27 @@ async function fetchWordsFromAI() {
     const lg = LANGS[currentLang];
     const res = await fetch(`${apiBase()}/api/chat`, {
       method:"POST", headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({ text:`Bana ${lg.name} dilinde A2-B1 seviyesinde 20 kelime ve Türkçe karşılığını SADECE JSON array formatında ver: [["apple","elma"], ...]`, max_tokens:1000 })
+      body:JSON.stringify({ text:`Bana ${lg.name} dilinde A2-B1 seviyesinde 20 FARKLI kelime ve Türkçe karşılığını SADECE JSON array formatında ver: [["apple","elma"], ...]`, max_tokens:1000 })
     });
     const data = await res.json();
-    wordList = safeParseWordList(data).filter(x=>Array.isArray(x)&&x.length>=2);
-    if(wordList.length<5) throw 1;
-  } catch(e) { wordList=[["Hello","Merhaba"],["Friend","Arkadaş"],["Love","Aşk"],["Money", "Para"], ["Time", "Zaman"], ["Car","Araba"]]; }
+    wordList = uniqWords(safeParseWordList(data));
+    
+    // 20'YE TAMAMLA (GARANTİ)
+    if(wordList.length < 20) {
+       const pool = OFFLINE_DB[currentLang] || OFFLINE_DB.en;
+       let expanded = [...pool];
+       while(expanded.length < 60) expanded = expanded.concat(pool); // Havuzu büyüt
+       wordList = uniqWords([...wordList, ...shuffle(expanded)]);
+    }
+    wordList = wordList.slice(0, 20);
+
+  } catch(e) { 
+    // Fallback: Yedek Havuzdan
+    const pool = OFFLINE_DB[currentLang] || OFFLINE_DB['en'];
+    let filled = [...pool];
+    while(filled.length < 20) filled = filled.concat(pool);
+    wordList = uniqWords(shuffle(filled)).slice(0, 20);
+  }
   
   $("startModal").style.display="none"; await sleep(100); startGameLoop(true);
 }
@@ -336,10 +406,20 @@ function updateUI(){
   const hearts = lives > 0 ? "❤️".repeat(lives) + "🤍".repeat(3-lives) : "💀💀💀";
   $("valScore").textContent = `${score} P • ${hearts}`;
   
-  // Progress Fix: (current + 1)
-  $("fillA").style.width=((currentIndex + 1)/wordList.length*100)+"%";
+  const enemyScore = Math.max(0, Math.floor(score * 0.85));
+  $("valScoreB").textContent = `${enemyScore} P`;
+
+  // Progress Bar & Labels SYNC (Kritik Düzeltme)
+  const pct = ((currentIndex + 1)/wordList.length*100)+"%";
+  $("fillA").style.width=pct;
   $("corrA").textContent=(currentIndex+1)+"/"+wordList.length;
+  $("fillB").style.width=pct; // Teacher mirror
+  $("corrB").textContent=(currentIndex+1)+"/"+wordList.length;
   
+  // Turn Labels (Varsayılan)
+  $("turnA").textContent = "Bekliyor";
+  $("turnB").textContent = "Bekliyor";
+
   $("paneA").classList.remove("active"); $("paneB").classList.remove("active");
   $("micA").disabled=true; setWave("idle","Hazır");
 }
@@ -358,14 +438,22 @@ async function teacherPhase(){
   if(isBusy)return; isBusy=true;
   turnStartedAt = Date.now();
   
+  // Teacher UI Update
+  $("turnB").textContent = "Okuyor...";
+  $("turnA").textContent = "Bekliyor";
+  
   $("paneB").classList.add("active"); setWave("speaking","Öğretmen...");
   await speakBrowser(wordList[currentIndex][0]);
   
-  $("paneB").classList.remove("active"); $("paneA").classList.add("active");
+  $("paneB").classList.remove("active"); 
+  $("paneA").classList.add("active");
+  
+  // Student UI Update
+  $("turnB").textContent = "Bekliyor";
+  $("turnA").textContent = "Sıra Sende";
+  
   setWave("idle","Sıra Sende"); isBusy=false; $("micA").disabled=false;
 }
-
-function normalize(s){ return String(s||"").toLowerCase().trim().replace(/[.,!?]/g,""); }
 
 function similarity(a,b){
   a = normalize(a); b = normalize(b);
@@ -378,7 +466,10 @@ function similarity(a,b){
 }
 
 function listen(){
-  if(isBusy)return;
+  if(isBusy) return;
+  // Guard: Sadece aktifken dinle (Double tap önlemi)
+  if(!$("paneA").classList.contains("active")) return;
+
   const S=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!S)return alert("Desteklenmiyor");
   
@@ -387,20 +478,36 @@ function listen(){
   
   const r=new S(); r.lang=LANGS[currentLang].code; r.interimResults=false;
   let got=false;
-  r.onresult=e=>{ got=true; checkResult(e.results?.[0]?.[0]?.transcript||""); };
-  r.onerror=cleanup; r.onend=()=>{ if(!got)cleanup(); };
-  try{r.start();}catch{cleanup();}
+  
+  const tm = setTimeout(() => { try{ r.stop(); }catch{} cleanup("ZAMAN AŞIMI"); }, 5000);
+
+  r.onresult=e=>{ 
+    clearTimeout(tm);
+    got=true; 
+    checkResult(e.results?.[0]?.[0]?.transcript||""); 
+  };
+  r.onerror=()=>{ clearTimeout(tm); cleanup("HATA / SES YOK"); };
+  r.onend=()=>{ clearTimeout(tm); if(!got) cleanup("SES GELMEDİ"); };
+  
+  try{r.start();}catch{cleanup("HATA");}
 }
 
-function cleanup(){ isBusy=false; $("micA").disabled=false; setWave("idle","Sıra Sende"); }
+function cleanup(msg){
+  isBusy=false; 
+  $("micA").disabled=false; 
+  setWave("idle", msg || "Sıra Sende");
+}
 
 async function checkResult(txt){
   const t=normalize(wordList[currentIndex][0]), s=normalize(txt);
   
-  // Hard Mode (Last 5 words)
   const isLate = currentIndex >= (wordList.length - 5);
   const simThreshold = isLate ? 0.72 : 0.6;
-  const ok = (s.includes(t)||t.includes(s)||similarity(s,t)>=simThreshold);
+  
+  // Anti-Cheat: Kelime Sınırı Kontrolü
+  const ok = ((" " + s + " ").includes(" " + t + " ")) || 
+             ((" " + t + " ").includes(" " + s + " ")) || 
+             similarity(s,t) >= simThreshold;
   
   const sec = (Date.now() - turnStartedAt) / 1000;
   const timeBonus = sec <= 2 ? 2 : sec <= 4 ? 1 : 0;
@@ -412,7 +519,6 @@ async function checkResult(txt){
     score += gained;
     showResultOverlay(true, gained);
     
-    // Perfect Streak Bonus
     if(combo === 3){
       score += 5;
       setWave("idle","🔥 3'LÜ SERİ +5!");
@@ -421,8 +527,6 @@ async function checkResult(txt){
   } else {
     SFX.fail(); stats.wrong++; combo=0; lives--;
     showResultOverlay(false, 0);
-    
-    // Replay Teacher (Slow)
     await speakBrowser(wordList[currentIndex][0], 0.78);
 
     if(lives <= 0) { 
@@ -467,20 +571,14 @@ function endSet(isKO=false){
   setWave("idle","Bitti");
 }
 
-// KONFETİ (Optimized)
 let fwInterval=null; const cvs=$("effectCanvas"),ctx=cvs.getContext("2d"); let parts=[];
 function startConfetti(){
   if(fwInterval) clearInterval(fwInterval);
   parts=[]; cvs.style.display="block"; cvs.width=window.innerWidth; cvs.height=window.innerHeight; 
   confettiOn = true;
-  
   fwInterval=setInterval(()=>{ for(let i=0;i<5;i++) parts.push({x:Math.random()*cvs.width,y:cvs.height,vx:(Math.random()-.5)*5,vy:-(Math.random()*5+5),c:`hsl(${Math.random()*360},100%,50%)`,l:100}); },100); 
   requestAnimationFrame(loopConfetti);
-  
-  setTimeout(()=>{ 
-    if(fwInterval) clearInterval(fwInterval); fwInterval=null; 
-    confettiOn = false; cvs.style.display="none"; parts=[]; 
-  }, 5000);
+  setTimeout(()=>{ if(fwInterval) clearInterval(fwInterval); fwInterval=null; confettiOn = false; cvs.style.display="none"; parts=[]; }, 5000);
 }
 function loopConfetti(){ 
   if(!confettiOn) return;
