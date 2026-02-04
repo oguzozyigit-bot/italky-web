@@ -28,7 +28,7 @@
     
     .wrap { width:100%; max-width:480px; height:100%; margin:0 auto; position:relative; z-index:10; display:flex; flex-direction:column; }
     
-    /* HEADER */
+    /* LOGO HEADER */
     .game-logo-header {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       padding-top: 15px; margin-bottom: -5px; position: relative; z-index: 20;
@@ -46,17 +46,19 @@
     
     .score-badge { font-family:'Space Grotesk', sans-serif; font-weight:800; font-size:16px; color:var(--c-accent); display:flex; flex-direction:column; align-items:flex-end; pointer-events:auto; text-shadow: 0 0 10px rgba(0,0,0,0.5); }
     .lives-display { font-size:12px; margin-top:2px; letter-spacing:2px; }
+    .progress-txt { font-size: 10px; opacity: 0.7; margin-top: 2px; color: #fff; }
 
     /* OYUN ALANI */
     .game-stage { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; padding:10px 20px; overflow-y:auto; }
     
     .puzzle-card { 
       width:100%; background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:24px; padding:20px; text-align:center; backdrop-filter:blur(10px); box-shadow:0 10px 40px rgba(0,0,0,0.5); margin-bottom: 20px; transition:0.3s;
+      animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
     
     .sentence-box { font-size:22px; font-weight:600; line-height:1.5; color:#fff; margin-bottom:15px; }
     .gap-slot { 
-      display:inline-block; min-width:60px; border-bottom:2px solid var(--c-accent); color:var(--c-accent); font-weight:800; padding:0 5px; transition:0.3s;
+      display:inline-block; min-width:60px; border-bottom:2px solid var(--c-accent); color:var(--c-accent); font-weight:800; padding:0 5px; transition:0.3s; text-transform: uppercase;
     }
     .gap-slot.filled { border-bottom-color:var(--c-success); color:var(--c-success); }
     .gap-slot.error { border-bottom-color:var(--c-error); color:var(--c-error); }
@@ -72,6 +74,7 @@
       background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 16px;
       padding: 16px; font-size: 18px; font-weight: 700; color: #fff; cursor: pointer;
       transition: all 0.2s; text-align: left; display: flex; align-items: center; justify-content: space-between;
+      text-transform: uppercase;
     }
     .opt-btn:active { transform: scale(0.98); background: rgba(255,255,255,0.1); }
     .opt-btn.correct { background: rgba(0, 230, 118, 0.2); border-color: var(--c-success); color: var(--c-success); }
@@ -96,7 +99,7 @@
     .loader { border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid var(--c-accent); border-radius: 50%; width: 40px; height: 40px; animation:spin 1s linear infinite; margin:0 auto 20px; }
     
     @keyframes spin { 0% { transform:rotate(0deg); } 100% { transform:rotate(360deg); } } 
-    @keyframes popIn { from{transform:scale(0.8)} to{transform:scale(1)} }
+    @keyframes popIn { from{transform:scale(0.8); opacity:0;} to{transform:scale(1); opacity:1;} }
     @keyframes shake { 0% { transform:translateX(0); } 25% { transform:translateX(-5px); } 75% { transform:translateX(5px); } 100% { transform:translateX(0); } }
   </style>
 </head>
@@ -118,6 +121,7 @@
       <div class="score-badge">
         <span id="scoreVal">0 PUAN</span>
         <div class="lives-display" id="livesVal">❤️❤️❤️</div>
+        <div class="progress-txt" id="progressVal">- / -</div>
       </div>
     </div>
 
@@ -165,7 +169,7 @@ import { BASE_DOMAIN } from "/js/config.js";
 const $ = (id) => document.getElementById(id);
 const apiBase = () => String(BASE_DOMAIN || "").replace(/\/+$/, "");
 
-// OFFLINE DB (Dillere Özel)
+// OFFLINE DB
 const OFFLINE_DB = {
   en: [
     {s:["I drink","every morning."], h:"coffee", t:["Her sabah","içerim."], ht:"kahve", opts:["coffee","tea","milk","water","juice"]},
@@ -182,18 +186,20 @@ const OFFLINE_DB = {
   de: [
     {s:["Das Auto ist","schnell."], h:"sehr", t:["Araba","hızlı."], ht:"çok", opts:["sehr","nicht","auch","nur","immer"]},
     {s:["Ich habe","Bruder."], h:"einen", t:["Benim","erkek kardeşim var."], ht:"bir", opts:["einen","eine","ein","der","die"]},
-    {s:["Wir gehen","Hause."], h:"nach", t:["Biz eve","gidiyoruz."], ht:"doğru", opts:["nach","zu","in","auf","bei"]},
-    {s:["Sie ist","schön."], h:"sehr", t:["O","güzel."], ht:"çok", opts:["sehr","viel","wenig","ganz","voll"]},
-    {s:["Der Himmel ist","blau."], h:"heute", t:["Gökyüzü","mavi."], ht:"bugün", opts:["heute","morgen","gestern","jetzt","bald"]}
+    {s:["Wir gehen","Hause."], h:"nach", t:["Biz eve","gidiyoruz."], ht:"doğru", opts:["nach","zu","in","auf","bei"]}
   ],
   fr: [
     {s:["La voiture est","rouge."], h:"très", t:["Araba","kırmızı."], ht:"çok", opts:["très","pas","aussi","seulement","toujours"]},
-    {s:["J'ai","frère."], h:"un", t:["Benim","erkek kardeşim var."], ht:"bir", opts:["un","une","le","la","les"]},
-    {s:["Nous allons","maison."], h:"à la", t:["Biz eve","gidiyoruz."], ht:"doğru", opts:["à la","au","en","sur","chez"]},
-    {s:["Elle est","belle."], h:"très", t:["O","güzel."], ht:"çok", opts:["très","beaucoup","peu","tout","plein"]},
-    {s:["Le ciel est","bleu."], h:"aujourd'hui", t:["Gökyüzü","mavi."], ht:"bugün", opts:["aujourd'hui","demain","hier","maintenant","bientôt"]}
+    {s:["J'ai","frère."], h:"un", t:["Benim","erkek kardeşim var."], ht:"bir", opts:["un","une","le","la","les"]}
   ],
-  // Diğer diller için de benzer mantıkla eklenebilir...
+  es: [
+    {s:["El sol es","caliente."], h:"muy", t:["Güneş","sıcak."], ht:"çok", opts:["muy","no","si","tan","mas"]},
+    {s:["Tengo un","gato."], h:"pequeño", t:["Benim","bir kedim var."], ht:"küçük", opts:["pequeño","grande","rojo","azul","mal"]}
+  ],
+  it: [
+    {s:["La pizza è","buona."], h:"molto", t:["Pizza","güzel."], ht:"çok", opts:["molto","poco","tutto","niente","sempre"]},
+    {s:["Vado a","casa."], h:"mia", t:["Ben","evime gidiyorum."], ht:"benim", opts:["mia","tua","sua","nostra","vostra"]}
+  ]
 };
 
 let currentLang = 'en';
@@ -241,7 +247,7 @@ const shuffle = (arr) => {
 function normalizeStr(s){ return String(s ?? "").trim(); }
 function safeLower(s){ return normalizeStr(s).toLowerCase(); }
 
-// JSON TEMİZLEME & DOĞRULAMA
+// JSON TEMİZLEME
 function sanitizePuzzles(list){
   if(!Array.isArray(list)) return [];
   const out = [];
@@ -255,13 +261,12 @@ function sanitizePuzzles(list){
 
     if(!s0 || !s1 || !h || !t0 || !t1 || !ht || !Array.isArray(opts)) continue;
 
-    // opts içinde doğru cevap yoksa ekle
     const cleanedOpts = [...new Set(opts.map(o => normalizeStr(o)).filter(Boolean))];
     if(!cleanedOpts.some(o => safeLower(o) === safeLower(h))) cleanedOpts.unshift(h);
     
-    // Toplam 5 şık olsun
+    // 5 Şık Şartı
     const finalOpts = cleanedOpts.slice(0,5);
-    while(finalOpts.length < 5) finalOpts.push("..."); 
+    if(finalOpts.length < 5) continue; 
 
     out.push({
       s:[normalizeStr(s0), normalizeStr(s1)],
@@ -301,12 +306,31 @@ async function fetchPuzzles() {
     const parsed = JSON.parse(raw);
     puzzleList = sanitizePuzzles(parsed);
 
-    if(puzzleList.length < 5) throw new Error("Yetersiz Veri");
+    // KARIŞTIR & 15'E TAMAMLA
+    puzzleList = shuffle(puzzleList);
+    if (puzzleList.length < 15) {
+        const base = [...puzzleList];
+        // Sonsuz döngüden kaçınmak için base doluluğunu kontrol et
+        if(base.length > 0) {
+            while (puzzleList.length < 15) puzzleList.push(...base);
+        }
+    }
+    
     puzzleList = puzzleList.slice(0, 15);
+    if(puzzleList.length < 5) throw new Error("Yetersiz Veri");
 
   } catch (err) {
-    const fallback = OFFLINE_DB[currentLang] || OFFLINE_DB.en;
-    puzzleList = shuffle(fallback).slice(0, 15);
+    // Fallback: Eksikse tamamla ve karıştır
+    let fallback = OFFLINE_DB[currentLang] || OFFLINE_DB.en;
+    fallback = shuffle(fallback);
+    
+    const base = [...fallback];
+    if(base.length === 0) base.push(...OFFLINE_DB.en); // Son kale
+
+    const filled = [];
+    while (filled.length < 15) filled.push(...base);
+    
+    puzzleList = shuffle(filled).slice(0, 15); // Tekrar karıştır
   }
 
   $("startModal").style.display = "none";
@@ -316,10 +340,19 @@ async function fetchPuzzles() {
 }
 
 function loadPuzzle() {
-  if(currentIndex >= puzzleList.length) { endSet(false); return; }
+  if (currentIndex >= puzzleList.length) { endSet(false); return; }
   
+  // Kart Animasyonu
+  const card = document.querySelector(".puzzle-card");
+  card.style.animation = "none";
+  void card.offsetHeight; // Reflow
+  card.style.animation = "popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)";
+
   const p = puzzleList[currentIndex];
   
+  // Progress
+  $("progressVal").textContent = `${currentIndex + 1} / ${puzzleList.length}`;
+
   $("sentenceBox").innerHTML = `
     <span>${p.s[0]}</span>
     <span class="gap-slot" id="gapSlot">_____</span>
@@ -336,7 +369,7 @@ function loadPuzzle() {
     const btn = document.createElement("button");
     btn.className = "opt-btn";
     btn.dataset.opt = opt;
-    btn.textContent = opt.toUpperCase();
+    btn.textContent = opt; 
     btn.onclick = () => handleChoice(btn, opt, p);
     grid.appendChild(btn);
   });
@@ -354,12 +387,16 @@ async function handleChoice(btn, choice, p) {
   const isCorrect = safeLower(choice) === safeLower(p.h);
 
   if(isCorrect) {
+    if(navigator.vibrate) navigator.vibrate(20);
     SFX.correct();
     btn.classList.add("correct");
-    btn.innerHTML += " ✅";
+    
+    const s = document.createElement("span"); 
+    s.textContent = " ✅";
+    btn.appendChild(s);
     
     const slot = $("gapSlot");
-    slot.textContent = p.h.toUpperCase();
+    slot.textContent = p.h; // CSS uppercase yapacak
     slot.classList.add("filled");
     
     $("translationBox").innerHTML = `${p.t[0]} <strong>${p.ht.toUpperCase()}</strong> ${p.t[1]}`;
@@ -371,17 +408,23 @@ async function handleChoice(btn, choice, p) {
     await new Promise(r => setTimeout(r, 500));
 
   } else {
+    if(navigator.vibrate) navigator.vibrate([50, 30, 50]);
     SFX.wrong();
     btn.classList.add("wrong");
-    btn.innerHTML += " ❌";
+    
+    const s = document.createElement("span"); 
+    s.textContent = " ❌";
+    btn.appendChild(s);
     
     // Doğruyu Göster
     allBtns.forEach(b => {
-      if(safeLower(b.dataset.opt) === safeLower(p.h)) b.classList.add("correct");
+      if(safeLower(b.dataset.opt) === safeLower(p.h)) {
+        b.classList.add("correct");
+      }
     });
     
     const slot = $("gapSlot");
-    slot.textContent = p.h.toUpperCase();
+    slot.textContent = p.h; // Doğrusunu göster
     slot.classList.add("error");
     
     lives--;
