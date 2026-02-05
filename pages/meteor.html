@@ -1,884 +1,267 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>ITALKY • Meteor Defense</title>
-  <link rel="icon" href="data:," />
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
-  <style>
-    /* --- TEMA: DEEP SPACE DEFENSE --- */
-    :root{
-      --bg:#020005;
-      --ui-panel:rgba(20,20,30,.85);
-      --neon-blue:#00f3ff;
-      --neon-red:#ff0055;
-      --neon-green:#00ff66;
-      --meteor-color:#ffaa00;
-      --text:#fff;
-      --border:rgba(255,255,255,.12);
-    }
-    *{ box-sizing:border-box; user-select:none; -webkit-tap-highlight-color:transparent; outline:none; }
-    body{ margin:0; width:100%; height:100%; overflow:hidden; position:fixed; font-family:'Outfit',sans-serif; background:var(--bg); color:var(--text); }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ITALKY • Meteor Defense — Final</title>
+<link rel="icon" href="data:,">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#020005;--panel:rgba(18,18,26,.92);
+  --blue:#00f3ff;--red:#ff0055;--green:#00ff66;--gold:#ffb800;
+  --border:rgba(255,255,255,.14);--text:#fff
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+html,body{margin:0;width:100%;height:100%;background:var(--bg);font-family:Outfit,sans-serif;overflow:hidden;color:var(--text)}
+.space{position:absolute;inset:0;background:radial-gradient(circle at bottom,#1a0033,#000)}
+.stars{position:absolute;inset:0;background-image:radial-gradient(#fff 1px,transparent 1px);background-size:50px 50px;opacity:.3}
 
-    /* ARKA PLAN */
-    .space-bg{ position:absolute; inset:0; background:radial-gradient(circle at bottom,#1a0033 0%,#000 100%); z-index:-2; }
-    .stars{ position:absolute; inset:0; background-image:radial-gradient(#fff 1px, transparent 1px); background-size:50px 50px; opacity:.3; z-index:-1; }
+.game{position:relative;max-width:480px;height:100%;margin:0 auto;border-left:1px solid var(--border);border-right:1px solid var(--border);display:flex;flex-direction:column}
+.header{height:60px;display:flex;align-items:center;justify-content:space-between;padding:0 14px}
+.score{font-family:Space Grotesk;font-weight:900;color:var(--blue);text-shadow:0 0 10px var(--blue)}
+.combo{font-size:12px;padding:4px 10px;border-radius:999px;border:1px solid rgba(0,243,255,.3)}
+.lives{letter-spacing:2px}
+.powerbar{display:flex;gap:6px}
+.pbtn{width:34px;height:34px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,.06);color:#fff;font-weight:900;cursor:pointer}
+.pbtn:disabled{opacity:.4}
 
-    /* OYUN ALANI */
-    .game-container{
-      position:relative; width:100%; height:100%; max-width:480px; margin:0 auto;
-      display:flex; flex-direction:column; overflow:hidden;
-      border-left:1px solid rgba(255,255,255,0.1);
-      border-right:1px solid rgba(255,255,255,0.1);
-    }
+.stage{flex:1;position:relative;overflow:hidden}
+.turret{position:absolute;bottom:230px;left:50%;transform:translateX(-50%);width:40px;height:40px;background:var(--blue);border-radius:50% 50% 0 0;box-shadow:0 0 15px var(--blue)}
 
-    /* HEADER */
-    .header{
-      flex:0 0 60px; padding:0 15px;
-      display:flex; align-items:center; justify-content:space-between;
-      background:linear-gradient(180deg, rgba(0,0,0,.8), transparent);
-      z-index:20;
-    }
-    .back-btn{ font-size:24px; cursor:pointer; opacity:.85; transition:.15s; }
-    .back-btn:active{ transform:scale(.95); }
+.meteor{position:absolute;top:-140px;width:110px;height:120px;display:flex;align-items:center;justify-content:center}
+.meteor.boss .meteor-body{box-shadow:0 0 28px var(--gold);border-color:var(--gold)}
+.meteor-body{width:72px;height:72px;border-radius:50%;background:radial-gradient(circle,#ffcc00,#ff4400);box-shadow:0 0 20px #ff4400;border:2px solid #fff;display:flex;align-items:center;justify-content:center}
+.meteor-text{font-family:Space Grotesk;font-weight:900;font-size:13px;color:#000;text-align:center;padding:0 6px}
 
-    .mid{
-      display:flex; align-items:center; gap:10px;
-      font-family:'Space Grotesk',sans-serif;
-    }
-    .score-board{
-      font-size:18px; font-weight:800;
-      color:var(--neon-blue);
-      text-shadow:0 0 10px var(--neon-blue);
-      letter-spacing:.5px;
-      white-space:nowrap;
-    }
-    .combo{
-      font-size:12px; font-weight:900;
-      padding:6px 10px; border-radius:999px;
-      border:1px solid rgba(0,243,255,.25);
-      background:rgba(0,243,255,.08);
-      color:#c9fdff;
-      letter-spacing:.6px;
-      opacity:.95;
-      min-width:78px;
-      text-align:center;
-    }
+.laser{position:absolute;height:4px;background:var(--green);box-shadow:0 0 10px var(--green);transform-origin:0 50%}
+.explosion{position:absolute;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,#fff,#ffaa00,transparent);animation:boom .45s forwards;pointer-events:none}
+@keyframes boom{0%{transform:scale(.2);opacity:1}100%{transform:scale(2);opacity:0}}
 
-    .right{
-      display:flex; align-items:center; gap:10px;
-    }
-    .lives{ letter-spacing:2px; font-size:14px; }
+.panel{height:240px;background:var(--panel);border-top:2px solid var(--blue);padding:15px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.opt{border:1px solid var(--border);border-radius:12px;background:rgba(255,255,255,.06);color:#fff;font-weight:900;font-size:16px;cursor:pointer}
+.opt.correct{background:var(--green);color:#000}
+.opt.wrong{background:var(--red)}
 
-    .icon-btn{
-      width:38px; height:38px; border-radius:12px;
-      display:flex; align-items:center; justify-content:center;
-      background:rgba(255,255,255,0.06);
-      border:1px solid rgba(255,255,255,0.12);
-      cursor:pointer;
-      transition:.15s;
-      font-size:16px;
-      opacity:.95;
-    }
-    .icon-btn:active{ transform:scale(.96); }
+.toast{position:absolute;left:12px;right:12px;bottom:252px;background:rgba(10,10,18,.85);border:1px solid var(--border);border-radius:14px;padding:10px;display:none;align-items:center;justify-content:space-between;gap:10px}
+.toast.show{display:flex}
+.toast b{font-family:Space Grotesk}
 
-    /* SAHNE */
-    .stage{ flex:1; position:relative; overflow:hidden; }
-
-    /* METEOR */
-    .meteor{
-      position:absolute; top:-120px;
-      width:100px; height:100px;
-      display:flex; align-items:center; justify-content:center;
-      flex-direction:column;
-      z-index:10;
-      transition: top 0.1s linear;
-    }
-    .meteor-body{
-      width:70px; height:70px;
-      background:radial-gradient(circle at 30% 30%, #ffcc00, #ff4400);
-      border-radius:50%;
-      box-shadow:0 0 20px #ff4400;
-      display:flex; align-items:center; justify-content:center;
-      border:2px solid #fff;
-      position:relative;
-    }
-    .meteor-body::after{
-      content:''; position:absolute; top:-10px; left:0; right:0; bottom:0;
-      background:transparent;
-      box-shadow:0 -10px 20px #ffaa00;
-      border-radius:50%;
-      opacity:.5;
-    }
-    .meteor-text{
-      color:#000;
-      font-weight:900;
-      font-size:13px;
-      text-transform:uppercase;
-      text-align:center;
-      line-height:1;
-      z-index:2;
-      font-family:'Space Grotesk',sans-serif;
-      padding:0 6px;
-    }
-    .meteor-tail{
-      position:absolute; top:-40px; width:40px; height:60px;
-      background:linear-gradient(to top, #ff4400, transparent);
-      opacity:.6; filter:blur(5px); z-index:1;
-    }
-
-    /* KONTROL PANELİ */
-    .control-panel{
-      flex:0 0 240px;
-      background:var(--ui-panel);
-      border-top:2px solid var(--neon-blue);
-      border-radius:20px 20px 0 0;
-      padding:15px;
-      display:flex; flex-direction:column; gap:10px;
-      z-index:30;
-      box-shadow:0 -5px 30px rgba(0,243,255,.2);
-    }
-
-    .turret-base{
-      position:absolute; bottom:230px; left:50%; transform:translateX(-50%);
-      width:40px; height:40px;
-      background:var(--neon-blue);
-      border-radius:50% 50% 0 0;
-      z-index:25;
-      box-shadow:0 0 15px var(--neon-blue);
-    }
-
-    .laser-beam{
-      position:absolute;
-      height:4px;
-      background:var(--neon-green);
-      pointer-events:none;
-      z-index:6;
-      box-shadow:0 0 10px var(--neon-green);
-      opacity:1;
-      border-radius:999px;
-    }
-
-    .options-grid{
-      display:grid; grid-template-columns:1fr 1fr;
-      gap:10px; height:100%;
-    }
-    .opt-btn{
-      background:rgba(255,255,255,0.05);
-      border:1px solid rgba(255,255,255,0.2);
-      border-radius:12px;
-      color:#fff;
-      font-size:16px;
-      font-weight:800;
-      cursor:pointer;
-      position:relative;
-      overflow:hidden;
-      transition:0.1s;
-    }
-    .opt-btn:active{ background:rgba(255,255,255,0.2); transform:scale(0.95); }
-    .opt-btn:disabled{ opacity:.7; cursor:not-allowed; }
-    .opt-btn.correct{ background:var(--neon-green); color:#000; border-color:var(--neon-green); }
-    .opt-btn.wrong{ background:var(--neon-red); border-color:var(--neon-red); animation:shake 0.3s; }
-
-    /* EFEKTLER */
-    .explosion{
-      position:absolute; width:100px; height:100px;
-      background:radial-gradient(circle, #fff, #ffaa00, transparent);
-      border-radius:50%;
-      transform:scale(0);
-      opacity:1;
-      pointer-events:none;
-      z-index:20;
-    }
-    .screen-shake{ animation:shake 0.5s; }
-
-    @keyframes shake{
-      0%,100%{transform:translateX(0)}
-      25%{transform:translateX(-10px)}
-      75%{transform:translateX(10px)}
-    }
-    @keyframes explode{
-      0%{transform:scale(0); opacity:1;}
-      50%{transform:scale(1.5); opacity:.8;}
-      100%{transform:scale(2); opacity:0;}
-    }
-
-    /* MODAL */
-    .modal-wrap{
-      position:absolute; inset:0;
-      background:rgba(0,0,0,0.9);
-      z-index:99;
-      display:flex; align-items:center; justify-content:center;
-      backdrop-filter:blur(10px);
-    }
-    .modal-card{
-      width:85%; max-width:320px;
-      background:#101015;
-      border:1px solid var(--neon-blue);
-      border-radius:20px;
-      padding:25px;
-      text-align:center;
-    }
-    .btn-main{
-      width:100%;
-      padding:15px;
-      margin-top:15px;
-      background:var(--neon-blue);
-      border:none;
-      border-radius:12px;
-      font-weight:900;
-      font-size:16px;
-      cursor:pointer;
-      color:#000;
-      text-transform:uppercase;
-      letter-spacing:.8px;
-    }
-    .btn-secondary{
-      width:100%;
-      padding:14px;
-      margin-top:10px;
-      background:transparent;
-      border:1px solid rgba(255,255,255,.6);
-      border-radius:12px;
-      font-weight:900;
-      font-size:14px;
-      cursor:pointer;
-      color:#fff;
-      text-transform:uppercase;
-      letter-spacing:.8px;
-    }
-
-    .lang-grid{
-      display:grid; grid-template-columns:repeat(5, 1fr);
-      gap:5px; margin-top:15px;
-    }
-    .lang-btn{
-      padding:10px 0;
-      background:rgba(255,255,255,0.1);
-      border-radius:8px;
-      cursor:pointer;
-      font-size:14px;
-      font-weight:900;
-      border:1px solid rgba(255,255,255,0.2);
-      transition:.15s;
-    }
-    .lang-btn:active{ transform:scale(.97); }
-    .lang-btn.active{ background:var(--neon-blue); color:#000; }
-
-    .toast{
-      position:absolute;
-      left:12px; right:12px;
-      bottom:252px;
-      z-index:80;
-      background:rgba(10,10,18,.82);
-      border:1px solid rgba(255,255,255,.12);
-      border-radius:16px;
-      padding:10px 12px;
-      display:none;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      backdrop-filter:blur(12px);
-    }
-    .toast.show{ display:flex; }
-    .toast b{ font-family:'Space Grotesk'; letter-spacing:.4px; }
-    .toast small{ opacity:.75; }
-    .toast .mini{
-      padding:10px 12px;
-      border-radius:12px;
-      border:1px solid rgba(255,255,255,.14);
-      background:rgba(255,255,255,.06);
-      color:#fff;
-      font-weight:900;
-      cursor:pointer;
-    }
-    .hidden{ display:none !important; }
-  </style>
+.modal{position:absolute;inset:0;background:rgba(0,0,0,.9);display:flex;align-items:center;justify-content:center;z-index:99}
+.card{background:#101015;border:1px solid var(--blue);border-radius:20px;padding:24px;text-align:center;width:85%}
+.langs{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:10px 0}
+.lang{padding:10px;border:1px solid var(--border);border-radius:8px;font-weight:900;cursor:pointer}
+.lang.active{background:var(--blue);color:#000}
+.btn{width:100%;padding:14px;margin-top:10px;border:none;border-radius:12px;font-weight:900;background:var(--blue);color:#000}
+</style>
 </head>
+
 <body>
-  <div class="space-bg"></div>
-  <div class="stars"></div>
+<div class="space"></div>
+<div class="stars"></div>
 
-  <div class="game-container" id="gameContainer">
-    <div class="header">
-      <div class="back-btn" onclick="location.href='/pages/arcade.html'">←</div>
-
-      <div class="mid">
-        <div class="score-board"><span id="scoreVal">0</span> P</div>
-        <div class="combo" id="comboVal">COMBO x0</div>
-      </div>
-
-      <div class="right">
-        <div class="lives" id="livesVal">❤️❤️❤️</div>
-        <div class="icon-btn" id="pauseBtn" title="Duraklat">⏸</div>
-        <div class="icon-btn" id="muteBtn" title="Ses">🔊</div>
-      </div>
+<div class="game">
+  <div class="header">
+    <div class="score"><span id="score">0</span> P</div>
+    <div class="combo" id="combo">COMBO x0</div>
+    <div class="powerbar">
+      <button class="pbtn" id="slowBtn" title="Yavaşlat">⏳</button>
+      <button class="pbtn" id="nukeBtn" title="Nuke">💣</button>
     </div>
-
-    <div class="stage" id="stage">
-      <div class="turret-base"></div>
-    </div>
-
-    <div class="toast" id="toast">
-      <div>
-        <b id="toastTitle">—</b><br/>
-        <small id="toastMsg">—</small>
-      </div>
-      <button class="mini" id="toastSpeak">Oku</button>
-    </div>
-
-    <div class="control-panel">
-      <div style="text-align:center; font-size:12px; opacity:0.55; margin-bottom:5px; font-weight:800; letter-spacing:.7px;">
-        HEDEFİ SEÇ & ATEŞLE
-      </div>
-      <div class="options-grid" id="optionsGrid">
-        <button class="opt-btn">-</button>
-        <button class="opt-btn">-</button>
-        <button class="opt-btn">-</button>
-        <button class="opt-btn">-</button>
-      </div>
-    </div>
+    <div class="lives" id="lives">❤️❤️❤️</div>
   </div>
 
-  <div class="modal-wrap" id="startModal">
-    <div class="modal-card">
-      <h2 style="color:var(--neon-blue); font-family:'Space Grotesk'; margin:0 0 6px;">METEOR YAĞMURU</h2>
-      <p style="font-size:13px; opacity:0.7; margin:0;">Kelimeler düşmeden önce anlamını bul ve vur! ☄️🔫</p>
-
-      <div style="margin-top:15px; font-size:12px; font-weight:900; letter-spacing:.7px;">DİL SEÇ:</div>
-      <div class="lang-grid" id="langGrid">
-        <div class="lang-btn" data-lang="en">EN</div>
-        <div class="lang-btn" data-lang="de">DE</div>
-        <div class="lang-btn" data-lang="fr">FR</div>
-        <div class="lang-btn" data-lang="es">ES</div>
-        <div class="lang-btn" data-lang="it">IT</div>
-      </div>
-
-      <button class="btn-main" id="startBtn">SAVUNMAYA BAŞLA</button>
-    </div>
+  <div class="stage" id="stage">
+    <div class="turret"></div>
   </div>
 
-  <div class="modal-wrap hidden" id="endModal">
-    <div class="modal-card">
-      <h2 style="color:var(--neon-red); margin:0;">OYUN BİTTİ</h2>
-      <div style="font-size:32px; font-weight:900; color:#fff; margin:10px 0" id="finalScore">0</div>
-      <p style="opacity:0.7; font-size:13px; margin:0;">Dünya seninle gurur duyuyor.</p>
-      <button class="btn-main" id="retryBtn">YENİDEN OYNA</button>
-      <button class="btn-secondary" onclick="location.href='/pages/arcade.html'">ÇIKIŞ</button>
-    </div>
+  <div class="toast" id="toast">
+    <div><b id="tTitle">—</b><br><small id="tMsg">—</small></div>
+    <button class="pbtn" id="tSpeak">Oku</button>
   </div>
 
-<script>
-/* =========================
-   OFFLINE DB
-========================= */
-const DB = {
-  en: [["Apple","Elma"],["Run","Koşmak"],["Blue","Mavi"],["Car","Araba"],["Sun","Güneş"],["Moon","Ay"],["Star","Yıldız"],["Water","Su"],["Fire","Ateş"],["Tree","Ağaç"],["Book","Kitap"],["Computer","Bilgisayar"],["Love","Aşk"],["Money","Para"],["Time","Zaman"],["Friend","Arkadaş"],["House","Ev"],["Door","Kapı"],["Window","Pencere"],["School","Okul"]],
-  de: [["Apfel","Elma"],["Laufen","Koşmak"],["Blau","Mavi"],["Auto","Araba"],["Sonne","Güneş"],["Mond","Ay"],["Stern","Yıldız"],["Wasser","Su"],["Feuer","Ateş"],["Baum","Ağaç"],["Buch","Kitap"],["Computer","Bilgisayar"],["Liebe","Aşk"],["Geld","Para"],["Zeit","Zaman"],["Freund","Arkadaş"],["Haus","Ev"],["Tür","Kapı"],["Fenster","Pencere"],["Schule","Okul"]],
-  fr: [["Pomme","Elma"],["Courir","Koşmak"],["Bleu","Mavi"],["Voiture","Araba"],["Soleil","Güneş"],["Lune","Ay"],["Étoile","Yıldız"],["Eau","Su"],["Feu","Ateş"],["Arbre","Ağaç"],["Livre","Kitap"],["Ordinateur","Bilgisayar"],["Amour","Aşk"],["Argent","Para"],["Temps","Zaman"],["Ami","Arkadaş"],["Maison","Ev"],["Porte","Kapı"],["Fenêtre","Pencere"],["École","Okul"]],
-  es: [["Manzana","Elma"],["Correr","Koşmak"],["Azul","Mavi"],["Coche","Araba"],["Sol","Güneş"],["Luna","Ay"],["Estrella","Yıldız"],["Agua","Su"],["Fuego","Ateş"],["Árbol","Ağaç"],["Libro","Kitap"],["Ordenador","Bilgisayar"],["Amor","Aşk"],["Dinero","Para"],["Tiempo","Zaman"],["Amigo","Arkadaş"],["Casa","Ev"],["Puerta","Kapı"],["Ventana","Pencere"],["Escuela","Okul"]],
-  it: [["Mela","Elma"],["Correre","Koşmak"],["Blu","Mavi"],["Macchina","Araba"],["Sole","Güneş"],["Luna","Ay"],["Stella","Yıldız"],["Acqua","Su"],["Fuoco","Ateş"],["Albero","Ağaç"],["Libro","Kitap"],["Computer","Bilgisayar"],["Amore","Aşk"],["Soldi","Para"],["Tempo","Zaman"],["Amico","Arkadaş"],["Casa","Ev"],["Porta","Kapı"],["Finestra","Pencere"],["Scuola","Okul"]]
+  <div class="panel" id="panel"></div>
+</div>
+
+<div class="modal" id="start">
+  <div class="card">
+    <h2 style="color:var(--blue)">METEOR DEFENSE</h2>
+    <div class="langs" id="langs">
+      <div class="lang active" data-lang="en">EN</div>
+      <div class="lang" data-lang="de">DE</div>
+      <div class="lang" data-lang="fr">FR</div>
+      <div class="lang" data-lang="es">ES</div>
+      <div class="lang" data-lang="it">IT</div>
+    </div>
+    <button class="btn" id="startBtn">BAŞLA</button>
+  </div>
+</div>
+
+<div class="modal" id="end" style="display:none">
+  <div class="card">
+    <h2 style="color:var(--red)">OYUN BİTTİ</h2>
+    <div style="font-size:28px;font-weight:900" id="final">0</div>
+    <button class="btn" onclick="location.reload()">TEKRAR</button>
+  </div>
+</div>
+
+<script type="module">
+import { loadLangPool, createUsedSet, pick } from "/js/langpool.js";
+const $=id=>document.getElementById(id);
+
+let lang="en";
+let pool=[],queue=[];
+let meteor=null;
+let y=0,baseSpeed=.9,speed=.9;
+let score=0,lives=3,combo=0;
+let running=false,slowTicks=0,nukes=1;
+let bossEvery=7,killCount=0;
+let lastSpeak="";
+
+const LANGMAP={en:"en-US",de:"de-DE",fr:"fr-FR",es:"es-ES",it:"it-IT"};
+
+document.querySelectorAll(".lang").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll(".lang").forEach(x=>x.classList.remove("active"));
+  b.classList.add("active"); lang=b.dataset.lang;
+});
+
+$("#startBtn").onclick=async()=>{
+  $("#start").style.display="none";
+  const data=await loadLangPool(lang);
+  const {used,save}=createUsedSet("meteor_final_"+lang);
+  pool=pick(data,80,used,save);
+  queue=[...pool];
+  score=0;lives=3;combo=0;killCount=0;baseSpeed=.9;speed=.9;slowTicks=0;nukes=1;
+  updateUI();
+  spawn(true);
+  running=true;
+  requestAnimationFrame(loop);
 };
 
-/* =========================
-   STORAGE KEYS
-========================= */
-const LANG_KEY = "italky_meteor_lang";
-const MUTE_KEY = "italky_meteor_muted";
-
-/* =========================
-   ELEMENTS
-========================= */
-const $ = (id) => document.getElementById(id);
-const stage = $("stage");
-const optionsGrid = $("optionsGrid");
-const scoreVal = $("scoreVal");
-const livesVal = $("livesVal");
-const comboVal = $("comboVal");
-const pauseBtn = $("pauseBtn");
-const muteBtn = $("muteBtn");
-const gameContainer = $("gameContainer");
-
-const toast = $("toast");
-const toastTitle = $("toastTitle");
-const toastMsg = $("toastMsg");
-const toastSpeak = $("toastSpeak");
-
-const startModal = $("startModal");
-const endModal = $("endModal");
-const finalScore = $("finalScore");
-
-const langGrid = $("langGrid");
-const startBtn = $("startBtn");
-const retryBtn = $("retryBtn");
-
-/* =========================
-   AUDIO (SFX)
-========================= */
-let audioCtx = null;
-function ensureAudio(){
-  if(!audioCtx){
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  }
-  if(audioCtx.state === "suspended") audioCtx.resume();
-}
-function playSFX(type){
-  if(state.muted) return;
-  ensureAudio();
-
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-  osc.connect(gain);
-  gain.connect(audioCtx.destination);
-
-  const t = audioCtx.currentTime;
-
-  if(type === "laser"){
-    osc.frequency.setValueAtTime(800, t);
-    osc.frequency.exponentialRampToValueAtTime(100, t + 0.15);
-    osc.type = "sawtooth";
-    gain.gain.setValueAtTime(0.12, t);
-    gain.gain.linearRampToValueAtTime(0, t + 0.15);
-    osc.start(t); osc.stop(t + 0.15);
-  }else if(type === "explode"){
-    osc.frequency.setValueAtTime(110, t);
-    osc.frequency.exponentialRampToValueAtTime(0.01, t + 0.3);
-    osc.type = "square";
-    gain.gain.setValueAtTime(0.22, t);
-    gain.gain.linearRampToValueAtTime(0, t + 0.3);
-    osc.start(t); osc.stop(t + 0.3);
-  }else if(type === "error"){
-    osc.type = "sawtooth";
-    osc.frequency.value = 150;
-    gain.gain.value = 0.18;
-    osc.start(t); osc.stop(t + 0.18);
-  }else if(type === "crash"){
-    osc.frequency.value = 55;
-    osc.type = "sawtooth";
-    gain.gain.setValueAtTime(0.4, t);
-    gain.gain.linearRampToValueAtTime(0, t + 0.45);
-    osc.start(t); osc.stop(t + 0.45);
-  }
+function spawn(immediate=false){
+  if(!queue.length) queue=[...pool];
+  const w=queue.shift();
+  const el=document.createElement("div");
+  el.className="meteor";
+  const isBoss = (++killCount % bossEvery === 0);
+  if(isBoss) el.classList.add("boss");
+  el.innerHTML=`<div class="meteor-body"><div class="meteor-text">${w.w}</div></div>`;
+  el.style.left=Math.random()*(360-110)+20+"px";
+  $("#stage").appendChild(el);
+  meteor={el,data:w,boss:isBoss};
+  y=-140;
+  baseSpeed=Math.min(baseSpeed+(immediate?0:.05),2.2);
+  speed=baseSpeed*(slowTicks>0?.4:1);
+  buildOptions(w);
 }
 
-/* =========================
-   TTS
-========================= */
-const synth = window.speechSynthesis;
-function speak(text){
-  if(state.muted) return;
-  try { synth.cancel(); } catch(e) {}
-  const u = new SpeechSynthesisUtterance(text);
-  const langMap = { en:"en-US", de:"de-DE", fr:"fr-FR", es:"es-ES", it:"it-IT" };
-  u.lang = langMap[state.lang] || "en-US";
-  u.rate = 0.95;
-  synth.speak(u);
-}
-
-/* =========================
-   STATE
-========================= */
-const state = {
-  lang: "en",
-  score: 0,
-  lives: 3,
-  combo: 0,
-  gameActive: false,
-  paused: false,
-  muted: false,
-
-  meteorSpeed: 0.8,
-  activeMeteor: null, // { el, data:[word,meaning], x, y }
-  wrongTries: 0,      // current meteor wrong tries
-
-  lastSpeakText: ""
-};
-
-let frameId = 0;
-
-/* =========================
-   TOAST
-========================= */
-function showToast(title, msg, speakText){
-  toastTitle.textContent = title || "—";
-  toastMsg.textContent = msg || "";
-  toast.classList.add("show");
-  state.lastSpeakText = speakText || "";
-  toastSpeak.disabled = !state.lastSpeakText;
-  toastSpeak.style.opacity = toastSpeak.disabled ? 0.5 : 1;
-}
-function hideToast(){
-  toast.classList.remove("show");
-}
-
-/* =========================
-   LANG INIT (persistent)
-========================= */
-function setActiveLangUI(lang){
-  document.querySelectorAll(".lang-btn").forEach(b=>{
-    b.classList.toggle("active", b.getAttribute("data-lang") === lang);
-  });
-}
-function initSavedSettings(){
-  const savedLang = (localStorage.getItem(LANG_KEY) || "").trim();
-  if(savedLang && DB[savedLang]){
-    state.lang = savedLang;
-  }
-  const savedMuted = (localStorage.getItem(MUTE_KEY) || "").trim();
-  state.muted = savedMuted === "1";
-  muteBtn.textContent = state.muted ? "🔇" : "🔊";
-  setActiveLangUI(state.lang);
-}
-
-/* =========================
-   UI
-========================= */
-function updateUI(){
-  scoreVal.textContent = String(state.score);
-  comboVal.textContent = "COMBO x" + String(state.combo);
-  let h = "";
-  for(let i=0;i<3;i++) h += (i < state.lives ? "❤️" : "💀");
-  livesVal.textContent = h;
-}
-function clearStage(){
-  stage.innerHTML = '<div class="turret-base"></div>';
-}
-
-/* =========================
-   GAME CONTROL
-========================= */
-function selectLang(l){
-  state.lang = l;
-  localStorage.setItem(LANG_KEY, l);
-  setActiveLangUI(l);
-}
-function startGame(){
-  startModal.classList.add("hidden");
-  endModal.classList.add("hidden");
-  hideToast();
-
-  state.score = 0;
-  state.lives = 3;
-  state.combo = 0;
-  state.meteorSpeed = 0.8;
-  state.activeMeteor = null;
-  state.wrongTries = 0;
-
-  state.paused = false;
-  pauseBtn.textContent = "⏸";
-
-  state.gameActive = true;
-  updateUI();
-  clearStage();
-
-  spawnMeteor(true);
-  cancelAnimationFrame(frameId);
-  frameId = requestAnimationFrame(gameLoop);
-}
-function retryGame(){
-  // Dil seçimine dönmez, aynı dilden devam
-  startGame();
-}
-function gameOver(){
-  state.gameActive = false;
-  cancelAnimationFrame(frameId);
-  endModal.classList.remove("hidden");
-  finalScore.textContent = String(state.score);
-}
-
-/* =========================
-   METEOR
-========================= */
-function spawnMeteor(immediate=false){
-  if(!state.gameActive || state.paused) return;
-  if(state.activeMeteor) return;
-
-  const pool = DB[state.lang] || DB.en;
-  const pair = pool[Math.floor(Math.random() * pool.length)]; // [word, meaning]
-
-  const el = document.createElement("div");
-  el.className = "meteor";
-  el.innerHTML = `
-    <div class="meteor-tail"></div>
-    <div class="meteor-body">
-      <div class="meteor-text">${pair[0]}</div>
-    </div>
-  `;
-
-  const stageW = stage.offsetWidth || 360;
-  const randX = Math.random() * (stageW - 120) + 10; // keep in bounds
-  el.style.left = randX + "px";
-  el.style.top = (-120) + "px";
-  stage.appendChild(el);
-
-  state.activeMeteor = { el, data: pair, x: randX, y: -120 };
-  state.wrongTries = 0;
-
-  setupOptions(pair);
-  // Soft cap speed ramp
-  state.meteorSpeed = Math.min(state.meteorSpeed + (immediate ? 0 : 0.04), 2.2);
-}
-
-function destroyMeteor(){
-  if(!state.activeMeteor) return;
-
-  const m = state.activeMeteor;
-
-  const centerX = m.x + 50;
-  const centerY = m.y + 50;
-
-  const exp = document.createElement("div");
-  exp.className = "explosion";
-  exp.style.left = (centerX - 50) + "px";
-  exp.style.top = (centerY - 50) + "px";
-  exp.style.animation = "explode 0.4s forwards";
-  stage.appendChild(exp);
-  playSFX("explode");
-  setTimeout(()=>{ exp.remove(); }, 500);
-
-  m.el.remove();
-  state.activeMeteor = null;
-
-  // next wave
-  setTimeout(()=>spawnMeteor(false), 450);
-}
-
-function handleCrash(){
-  playSFX("crash");
-  gameContainer.classList.add("screen-shake");
-  setTimeout(()=>gameContainer.classList.remove("screen-shake"), 500);
-
-  if(state.activeMeteor){
-    state.activeMeteor.el.remove();
-    state.activeMeteor = null;
-  }
-
-  state.combo = 0;
-  state.lives -= 1;
-  updateUI();
-
-  if(state.lives <= 0){
-    gameOver();
-  }else{
-    setTimeout(()=>spawnMeteor(false), 700);
-  }
-}
-
-/* =========================
-   OPTIONS
-========================= */
-function setupOptions(correctPair){
-  const correct = correctPair[1]; // Turkish meaning
-  const pool = DB[state.lang] || DB.en;
-
-  const opts = [correct];
-  while(opts.length < 4){
-    const r = pool[Math.floor(Math.random() * pool.length)][1];
+function buildOptions(w){
+  const panel=$("#panel"); panel.innerHTML="";
+  const opts=[w.tr];
+  while(opts.length<4){
+    const r=pool[Math.floor(Math.random()*pool.length)].tr;
     if(!opts.includes(r)) opts.push(r);
   }
-  opts.sort(()=>Math.random() - 0.5);
-
-  optionsGrid.innerHTML = "";
-  opts.forEach(opt=>{
-    const btn = document.createElement("button");
-    btn.className = "opt-btn";
-    btn.innerText = opt;
-    btn.onclick = ()=>checkAnswer(btn, opt, correct);
-    optionsGrid.appendChild(btn);
-  });
-
-  // enable all
-  enableOptionButtons(true);
-}
-
-function enableOptionButtons(enabled){
-  document.querySelectorAll(".opt-btn").forEach(b=>{
-    b.disabled = !enabled;
+  opts.sort(()=>Math.random()-.5);
+  opts.forEach(o=>{
+    const b=document.createElement("button");
+    b.className="opt"; b.textContent=o;
+    b.onclick=()=>answer(b,o,w.tr);
+    panel.appendChild(b);
   });
 }
 
-function markCorrectButton(correct){
-  document.querySelectorAll(".opt-btn").forEach(b=>{
-    if(b.innerText === correct) b.classList.add("correct");
-  });
-}
-
-function checkAnswer(btn, selected, correct){
-  if(!state.gameActive || state.paused || !state.activeMeteor) return;
-
-  // if already resolved (buttons disabled), ignore
-  if(btn.disabled) return;
-
-  if(selected === correct){
-    // Correct
+function answer(btn,sel,correct){
+  if(!meteor) return;
+  if(sel===correct){
     btn.classList.add("correct");
-
-    state.combo += 1;
-    const gain = 10 + Math.min(state.combo - 1, 5) * 5; // 10,15,20,... cap
-    state.score += gain;
-
-    const m = state.activeMeteor;
-    const centerX = m.x + 50;
-    const centerY = m.y + 50;
-
-    fireLaser(centerX, centerY);
-    playSFX("laser");
-
-    // Speak the foreign word (not Turkish meaning)
-    speak(m.data[0]);
-    showToast("DOĞRU ✅", `+${gain} puan • ${m.data[0]} → ${correct}`, m.data[0]);
-
-    enableOptionButtons(false);
-    updateUI();
-
-    // destroy after short delay
-    setTimeout(()=>{ hideToast(); destroyMeteor(); }, 350);
+    fire();
+    const gain=10+Math.min(combo,5)*5+(meteor.boss?20:0);
+    score+=gain; combo++;
+    speak(meteor.data.w);
+    toast("DOĞRU",`+${gain} • ${meteor.data.w} → ${correct}`,meteor.data.w);
+    destroy();
   }else{
-    // Wrong
     btn.classList.add("wrong");
-    playSFX("error");
-    state.combo = 0;
-    state.wrongTries += 1;
-    updateUI();
+    combo=0; lives--; updateUI();
+    toast("YANLIŞ",`Kalan can: ${lives}`,"");
+    if(lives<=0) gameOver();
+  }
+}
 
-    const left = 3 - state.wrongTries;
-    if(left > 0){
-      showToast("YANLIŞ ❌", `${left} deneme kaldı.`, "");
-      // auto-hide small
-      setTimeout(hideToast, 600);
-      return;
+function destroy(){
+  const m=meteor; if(!m) return;
+  const exp=document.createElement("div");
+  exp.className="explosion";
+  exp.style.left=(m.el.offsetLeft-10)+"px";
+  exp.style.top=(y-10)+"px";
+  $("#stage").appendChild(exp);
+  setTimeout(()=>exp.remove(),500);
+  m.el.remove(); meteor=null;
+  updateUI();
+  setTimeout(()=>spawn(false),400);
+}
+
+function fire(){
+  const s=$("#stage");
+  const laser=document.createElement("div");
+  laser.className="laser";
+  laser.style.left="50%"; laser.style.top="100%";
+  laser.style.width="300px"; laser.style.transform="rotate(-90deg)";
+  s.appendChild(laser);
+  setTimeout(()=>laser.remove(),150);
+}
+
+function loop(){
+  if(!running) return;
+  if(meteor){
+    if(slowTicks>0){ slowTicks--; speed=baseSpeed*.4; }
+    else speed=baseSpeed;
+    y+=speed; meteor.el.style.top=y+"px";
+    if(y>($("#stage").offsetHeight-140)){
+      lives--; combo=0; updateUI();
+      meteor.el.remove(); meteor=null;
+      if(lives<=0){gameOver();return;}
+      spawn(false);
     }
-
-    // 3rd wrong -> solution + speak + penalty
-    enableOptionButtons(false);
-    markCorrectButton(correct);
-
-    const m = state.activeMeteor;
-    const solutionText = m ? m.data[0] : "";
-    showToast("ÇÖZÜM", `${solutionText} → ${correct}`, solutionText);
-    speak(solutionText);
-
-    // penalty (soft): -5 and crash OR just crash; here: crash without extra score minus
-    setTimeout(()=>{ hideToast(); handleCrash(); }, 750);
   }
+  requestAnimationFrame(loop);
 }
 
-/* =========================
-   LASER
-========================= */
-function fireLaser(targetX, targetY){
-  const stageH = stage.offsetHeight || 600;
-  const stageW = stage.offsetWidth || 360;
-
-  const startX = stageW / 2;
-  const startY = stageH; // bottom
-
-  const dx = targetX - startX;
-  const dy = targetY - startY;
-  const dist = Math.sqrt(dx*dx + dy*dy);
-  const angle = Math.atan2(dy, dx) * 180 / Math.PI;
-
-  const laser = document.createElement("div");
-  laser.className = "laser-beam";
-  laser.style.width = dist + "px";
-  laser.style.left = startX + "px";
-  laser.style.top = startY + "px";
-  laser.style.transform = `rotate(${angle}deg)`;
-  laser.style.transformOrigin = "0 50%";
-
-  stage.appendChild(laser);
-  setTimeout(()=>laser.remove(), 170);
+function updateUI(){
+  $("#score").textContent=score;
+  $("#combo").textContent="COMBO x"+combo;
+  $("#lives").textContent="❤️".repeat(lives)+"💀".repeat(3-lives);
+  $("#slowBtn").disabled=slowTicks>0;
+  $("#nukeBtn").disabled=nukes<=0;
 }
 
-/* =========================
-   LOOP
-========================= */
-function gameLoop(){
-  if(!state.gameActive) return;
-
-  if(state.paused){
-    frameId = requestAnimationFrame(gameLoop);
-    return;
-  }
-
-  if(state.activeMeteor){
-    const m = state.activeMeteor;
-    m.y += state.meteorSpeed;
-    m.el.style.top = m.y + "px";
-
-    const stageH = stage.offsetHeight || 600;
-    if(m.y > stageH - 120){ // turret band
-      handleCrash();
-    }
-  }else{
-    // if meteor missing, spawn quickly
-    spawnMeteor(false);
-  }
-
-  frameId = requestAnimationFrame(gameLoop);
+function toast(t,m,s){
+  lastSpeak=s||""; $("#tTitle").textContent=t; $("#tMsg").textContent=m;
+  $("#toast").classList.add("show");
+  setTimeout(()=>$("#toast").classList.remove("show"),700);
 }
 
-/* =========================
-   PAUSE / MUTE
-========================= */
-function togglePause(){
-  if(!state.gameActive) return;
-  state.paused = !state.paused;
-  pauseBtn.textContent = state.paused ? "▶️" : "⏸";
-  if(state.paused){
-    showToast("DURAKLATILDI", "Devam etmek için ▶️", "");
-  }else{
-    hideToast();
-  }
+function speak(t){
+  if(!t) return;
+  const u=new SpeechSynthesisUtterance(t);
+  u.lang=LANGMAP[lang]||"en-US";
+  speechSynthesis.cancel(); speechSynthesis.speak(u);
 }
 
-function toggleMute(){
-  state.muted = !state.muted;
-  localStorage.setItem(MUTE_KEY, state.muted ? "1" : "0");
-  muteBtn.textContent = state.muted ? "🔇" : "🔊";
-  if(state.muted){
-    try { synth.cancel(); } catch(e) {}
-    showToast("SES", "Sessiz mod açık.", "");
-  }else{
-    showToast("SES", "Ses açık.", "");
-  }
-  setTimeout(hideToast, 700);
+$("#tSpeak").onclick=()=>{ if(lastSpeak) speak(lastSpeak); };
+
+$("#slowBtn").onclick=()=>{ slowTicks=240; };
+$("#nukeBtn").onclick=()=>{
+  if(nukes<=0) return;
+  nukes--; if(meteor){ destroy(); }
+};
+
+function gameOver(){
+  running=false;
+  $("#end").style.display="flex";
+  $("#final").textContent=score;
 }
-
-/* =========================
-   EVENTS
-========================= */
-langGrid.addEventListener("click", (e)=>{
-  const btn = e.target.closest(".lang-btn");
-  if(!btn) return;
-  const l = btn.getAttribute("data-lang");
-  if(l) selectLang(l);
-});
-
-startBtn.addEventListener("click", ()=>{
-  // ensure audio on first user gesture (mobile)
-  ensureAudio();
-  startGame();
-});
-
-retryBtn.addEventListener("click", ()=>{
-  ensureAudio();
-  retryGame();
-});
-
-pauseBtn.addEventListener("click", togglePause);
-muteBtn.addEventListener("click", toggleMute);
-
-toastSpeak.addEventListener("click", ()=>{
-  if(state.lastSpeakText) speak(state.lastSpeakText);
-});
-
-/* =========================
-   INIT
-========================= */
-initSavedSettings();
-updateUI();
 </script>
 </body>
 </html>
