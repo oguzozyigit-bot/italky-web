@@ -3,359 +3,252 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-  <title>ITALKY • Gap Master</title>
-  <link rel="icon" href="data:,"/>
+  <title>italkyAI • Boxing Alpha</title>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
-
   <style>
-    :root {
-      --bg-deep: #020205; --text-main: #fff; --c-accent: #ffb800;
-      --c-ok: #00e676; --c-bad: #ff1744; --border: rgba(255,255,255,.12);
-      --safe-top: env(safe-area-inset-top, 20px); --safe-bottom: env(safe-area-inset-bottom, 20px);
+    :root { 
+      --bg-deep: #020205; --text-white: #ffffff; 
+      --c-neon-pink: #ff00ff; --c-neon-blue: #00f3ff; --c-neon-green: #00e676; --c-error: #ff1744;
+      --ai-gradient: linear-gradient(135deg, #a5b4fc 0%, #6366f1 100%);
+      --glass: rgba(255, 255, 255, 0.06);
+      --border: rgba(255, 255, 255, 0.12);
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
     }
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
-    html, body { margin: 0; width: 100%; height: 100%; background: var(--bg-deep); color: var(--text-main); font-family: 'Outfit', sans-serif; overflow: hidden; position: fixed; }
+    * { box-sizing:border-box; outline:none; user-select:none; -webkit-tap-highlight-color:transparent; }
+    html, body { margin:0; width:100%; height:100%; overflow:hidden; font-family:'Outfit', sans-serif; background:var(--bg-deep); color:#fff; position:fixed; }
     
-    .wrap { max-width: 480px; height: 100%; margin: 0 auto; display: flex; flex-direction: column; padding-top: var(--safe-top); padding-bottom: var(--safe-bottom); position: relative; }
-    
+    /* 🌌 COSMOS BACKGROUND */
+    .cosmos-bg { position:absolute; inset:0; background: radial-gradient(circle at 50% 35%, #0b0b2a 0%, #020205 60%, #010104 100%); z-index:0; }
+    .stars { position: absolute; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.15'/%3E%3C/svg%3E"); opacity: 0.6; mix-blend-mode: screen; animation: starsFloat 110s linear infinite; }
+    @keyframes starsFloat { from { background-position: 0 0; } to { background-position: 0 1200px; } }
+
+    .wrap { width:100%; max-width:480px; height:100%; margin:0 auto; position:relative; z-index:10; display:flex; flex-direction:column; padding-top: var(--safe-top); padding-bottom: var(--safe-bottom); }
+
     /* HEADER */
-    .header { text-align: center; padding: 15px 0; font-family: 'Space Grotesk', sans-serif; font-weight: 900; letter-spacing: 2px; font-size: 20px; color: var(--c-accent); text-shadow: 0 0 15px rgba(255, 184, 0, 0.3); display: flex; justify-content: center; align-items: center; position: relative; }
-    
-    .nav-btn { position: absolute; right: 15px; width: 36px; height: 36px; background: rgba(255,255,255,0.1); border: 1px solid var(--border); border-radius: 8px; color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; }
+    .nav-top { flex: 0 0 auto; display:flex; align-items:center; justify-content:space-between; padding: 10px 18px; }
+    .back-btn { background: var(--glass); border: 1px solid var(--border); padding: 10px 14px; border-radius: 16px; color:#fff; font-size: 11px; font-weight: 800; cursor:pointer; text-decoration:none; backdrop-filter: blur(12px); }
+    .logo-small { font-size:24px; font-weight:900; letter-spacing:-1px; }
+    .logo-small span { background: var(--ai-gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
 
-    /* GAME AREA */
-    .stage { flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 20px; overflow-y: auto; }
-    
-    .scorebar { display: flex; justify-content: space-between; font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 16px; background: rgba(255,255,255,0.05); padding: 10px 15px; border-radius: 12px; border: 1px solid var(--border); }
-    
-    .card { background: rgba(255,255,255,.04); border: 1px solid var(--border); border-radius: 24px; padding: 30px 20px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 180px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-    
-    .sentence { font-size: 24px; font-weight: 700; line-height: 1.5; }
-    .gap { display: inline-block; min-width: 60px; border-bottom: 3px solid var(--c-accent); padding: 0 5px; color: var(--c-accent); font-weight: 800; }
-    .gap.filled { border-color: var(--c-ok); color: var(--c-ok); animation: popIn 0.3s; }
-    .gap.error { border-color: var(--c-bad); color: var(--c-bad); }
-    .translation { margin-top: 15px; font-size: 14px; opacity: 0.6; font-style: italic; }
+    /* HP BARS */
+    .fight-stats { padding: 10px 20px; display: flex; flex-direction: column; gap: 15px; }
+    .hp-container { display: flex; align-items: center; gap: 10px; }
+    .hp-label { width: 50px; font-size: 10px; font-weight: 800; opacity: 0.7; }
+    .hp-bar-bg { flex: 1; height: 10px; background: rgba(255,255,255,0.1); border-radius: 5px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); }
+    .hp-fill { height: 100%; transition: width 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    #userHp { background: var(--c-neon-blue); box-shadow: 0 0 10px var(--c-neon-blue); }
+    #enemyHp { background: var(--c-neon-pink); box-shadow: 0 0 10px var(--c-neon-pink); }
 
-    .opts { display: grid; gap: 12px; margin-top: auto; }
-    .opt { padding: 16px; border-radius: 16px; border: 1px solid var(--border); background: rgba(255,255,255,.06); font-weight: 700; font-size: 18px; color: #fff; cursor: pointer; transition: 0.1s; text-transform: uppercase; }
-    .opt:active { transform: scale(0.98); background: rgba(255,255,255,0.1); }
-    .opt.correct { border-color: var(--c-ok); color: var(--c-ok); background: rgba(0, 230, 118, 0.15); }
-    .opt.wrong { border-color: var(--c-bad); color: var(--c-bad); background: rgba(255, 23, 68, 0.15); opacity: 0.6; }
+    /* RING AREA */
+    .ring { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; padding: 20px; }
+    .fighter-box { display: flex; justify-content: space-around; width: 100%; margin-bottom: 30px; }
+    .fighter { font-size: 60px; transition: 0.2s; position: relative; }
+    .fighter.hit { animation: hitShake 0.4s; }
+    @keyframes hitShake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-15px) rotate(-10deg); filter: sepia(1) saturate(5) hue-rotate(-50deg); } 75% { transform: translateX(15px) rotate(10deg); } }
+
+    /* WORD CARD */
+    .word-card { 
+      width: 100%; background: var(--glass); border: 1px solid var(--border); 
+      border-radius: 24px; padding: 25px; text-align: center; backdrop-filter: blur(15px);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+    }
+    .current-word { font-size: 32px; font-weight: 800; color: #fff; margin-bottom: 5px; letter-spacing: 1px; }
+    .word-info { font-size: 12px; color: var(--c-neon-blue); opacity: 0.8; font-weight: 600; }
+
+    /* OPTIONS */
+    .options-grid { display: grid; grid-template-columns: 1fr; gap: 12px; width: 100%; padding: 20px; }
+    .opt-btn { 
+      background: var(--glass); border: 1px solid var(--border); 
+      padding: 18px; border-radius: 18px; color: #fff; font-size: 16px; 
+      font-weight: 700; cursor: pointer; transition: 0.2s; text-align: center;
+      backdrop-filter: blur(10px);
+    }
+    .opt-btn:active { transform: scale(0.97); }
+    .opt-btn.correct { background: var(--c-neon-green); color: #000; border-color: transparent; }
+    .opt-btn.wrong { background: var(--c-error); color: #fff; border-color: transparent; }
 
     /* MODAL */
-    .modal { position: absolute; inset: 0; background: rgba(0,0,0,.95); display: flex; align-items: center; justify-content: center; z-index: 50; padding: 20px; backdrop-filter: blur(10px); }
-    .box { background: #101014; border: 1px solid var(--border); border-radius: 30px; padding: 30px; width: 100%; max-width: 360px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
-    
-    .modal-title { font-family: 'Space Grotesk'; font-size: 24px; font-weight: 800; margin-bottom: 20px; color: var(--c-accent); }
-    
-    .langs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 25px; }
-    .lang { border: 1px solid var(--border); border-radius: 10px; padding: 10px 0; font-size: 24px; cursor: pointer; background: rgba(255,255,255,0.05); transition: 0.2s; }
-    .lang.active { background: var(--c-accent); border-color: var(--c-accent); transform: scale(1.1); box-shadow: 0 0 15px rgba(255, 184, 0, 0.4); }
-    
-    .btn { width: 100%; padding: 16px; border-radius: 16px; border: none; font-weight: 800; font-size: 16px; background: linear-gradient(135deg, var(--c-accent), #ff8800); color: #000; cursor: pointer; box-shadow: 0 5px 20px rgba(255, 136, 0, 0.3); transition: 0.2s; }
-    .btn:active { transform: scale(0.98); }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .btn-sec { background: rgba(255,255,255,0.1); color: #fff; margin-top: 10px; box-shadow: none; }
-
-    .loader { border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid var(--c-accent); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 0 auto 15px; }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    @keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .modal-wrap { position: absolute; inset: 0; background: rgba(2,2,5,0.95); z-index: 100; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(25px); padding: 20px; }
+    .modal-card { width: 100%; max-width: 360px; background: var(--glass); border: 1px solid var(--border); border-radius: 32px; padding: 30px; text-align: center; }
+    .lang-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 20px 0; }
+    .lang-btn { font-size: 24px; padding: 10px; border-radius: 15px; background: rgba(255,255,255,0.05); border: 1px solid transparent; cursor: pointer; }
+    .lang-btn.active { border-color: var(--c-neon-blue); background: rgba(0,243,255,0.1); }
+    .btn-primary { width: 100%; padding: 16px; background: var(--c-neon-green); color: #000; border: none; border-radius: 16px; font-weight: 800; font-size: 15px; cursor: pointer; margin-top: 10px; }
   </style>
 </head>
-
 <body>
-<div class="wrap">
-  <div class="header">
-    GAP MASTER
-    <button class="nav-btn" onclick="window.location.href='/pages/game.html'">✕</button>
-  </div>
 
-  <div class="stage" id="gameStage">
-    <div class="scorebar">
-      <div id="scoreTxt">0 PUAN</div>
-      <div id="lifeTxt">❤️❤️❤️</div>
+  <div class="cosmos-bg"><div class="stars"></div></div>
+
+  <div class="wrap">
+    <div class="nav-top">
+      <a href="/pages/game.html" class="back-btn">← GERİ DÖN</a>
+      <div class="logo-small">italky<span>AI</span></div>
+      <div style="width:70px"></div>
     </div>
 
-    <div class="card">
-      <div class="sentence" id="sentence">...</div>
-      <div class="translation" id="translation">...</div>
+    <div class="fight-stats">
+      <div class="hp-container">
+        <div class="hp-label">YOU</div>
+        <div class="hp-bar-bg"><div id="userHp" class="hp-fill" style="width: 100%"></div></div>
+      </div>
+      <div class="hp-container">
+        <div class="hp-label">ENEMY</div>
+        <div class="hp-bar-bg"><div id="enemyHp" class="hp-fill" style="width: 100%"></div></div>
+      </div>
     </div>
 
-    <div class="opts" id="opts"></div>
-  </div>
-</div>
-
-<div class="modal" id="startModal">
-  <div class="box">
-    <div class="modal-title">GAP MASTER 🧩</div>
-    <div style="margin-bottom:10px; opacity:0.7">Hedef Dili Seç:</div>
-    <div class="langs">
-      <div class="lang active" data-lang="en">🇬🇧</div>
-      <div class="lang" data-lang="de">🇩🇪</div>
-      <div class="lang" data-lang="fr">🇫🇷</div>
-      <div class="lang" data-lang="es">🇪🇸</div>
-      <div class="lang" data-lang="it">🇮🇹</div>
+    <div class="ring">
+      <div class="fighter-box">
+        <div id="player" class="fighter">🥊</div>
+        <div id="enemy" class="fighter">👽</div>
+      </div>
+      
+      <div class="word-card">
+        <div id="targetWord" class="current-word">---</div>
+        <div id="wordLvl" class="word-info">Seviye Bekleniyor</div>
+      </div>
     </div>
-    <div id="loading" style="display:none"><div class="loader"></div><div>Hazırlanıyor...</div></div>
-    <button class="btn" id="startBtn">BAŞLA</button>
-  </div>
-</div>
 
-<div class="modal" id="endModal" style="display:none">
-  <div class="box">
-    <div class="modal-title" id="endTitle">OYUN BİTTİ</div>
-    <div id="endTxt" style="font-size:18px; margin-bottom:20px; opacity:0.8"></div>
-    <button class="btn" id="retryBtn">TEKRAR OYNA</button>
-    <button class="btn btn-sec" onclick="location.href='/pages/game.html'">ÇIKIŞ</button>
+    <div class="options-grid" id="options">
+      </div>
   </div>
-</div>
+
+  <div class="modal-wrap" id="startModal">
+    <div class="modal-card">
+      <h2 style="margin-top:0">WORD BOXING</h2>
+      <div class="lang-grid">
+        <button onclick="setLang('en',this)" class="lang-btn active">🇬🇧</button>
+        <button onclick="setLang('de',this)" class="lang-btn">🇩🇪</button>
+        <button onclick="setLang('fr',this)" class="lang-btn">🇫🇷</button>
+        <button onclick="setLang('es',this)" class="lang-btn">🇪🇸</button>
+        <button onclick="setLang('it',this)" class="lang-btn">🇮🇹</button>
+      </div>
+      <button class="btn-primary" onclick="initGame('A2')">KOLAY (A2)</button>
+      <button class="btn-primary" onclick="initGame('B1')">ORTA (B1)</button>
+      <button class="btn-primary" onclick="initGame('B2')">ZOR (B2)</button>
+      <div id="loader" style="margin-top:15px; font-size:12px; color:var(--c-neon-blue)"></div>
+    </div>
+  </div>
+
+  <div class="modal-wrap" id="endModal" style="display:none">
+    <div class="modal-card">
+      <h2 id="endTitle">OYUN BİTTİ</h2>
+      <p id="endMsg"></p>
+      <button class="btn-primary" onclick="location.reload()">TEKRAR DENE</button>
+      <button class="btn-primary" style="background:rgba(255,255,255,0.1); color:#fff;" onclick="location.href='/pages/game.html'">ÇIKIŞ</button>
+    </div>
+  </div>
 
 <script type="module">
 import { loadLangPool, createUsedSet, pick } from "/js/langpool.js";
 
-const $ = id => document.getElementById(id);
+let currentLang = 'en', pool = [], currentIndex = 0;
+let userHp = 100, enemyHp = 100, isActing = false;
 
-let currentLang = "en";
-let pool = null;
-let puzzles = [];
-let idx = 0;
-let score = 0;
-let lives = 3;
-
-const LANG_CONFIG = {
-  en: { code: "en-US", defSent: "This is [w]." },
-  de: { code: "de-DE", defSent: "Das ist [w]." },
-  fr: { code: "fr-FR", defSent: "C'est [w]." },
-  es: { code: "es-ES", defSent: "Es [w]." },
-  it: { code: "it-IT", defSent: "È [w]." }
+window.setLang = (lang, btn) => {
+  currentLang = lang;
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
 };
 
-// DİL SEÇİMİ UI
-document.querySelectorAll(".lang").forEach(b => {
-  b.onclick = () => {
-    document.querySelectorAll(".lang").forEach(x => x.classList.remove("active"));
-    b.classList.add("active");
-    currentLang = b.dataset.lang;
-  };
-});
-
-// OYUNU BAŞLAT
-$("#startBtn").onclick = () => {
-  initGame();
-};
-
-// YENİDEN OYNA (RETRY) - PATCH 4
-$("#retryBtn").onclick = () => {
-  $("#endModal").style.display = "none";
-  $("#startModal").style.display = "flex"; // Loader'ı görmek için ana modalı aç
-  initGame();
-};
-
-// REGEX ESCAPE - PATCH 3
-function escapeRegExp(s){
-  return String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
-async function initGame() {
-  $("#endModal").style.display = "none";
-  $("#startBtn").disabled = true;
-  $("#loading").style.display = "block"; // PATCH 1: Loader görünür
-
+window.initGame = async (diff) => {
+  document.getElementById('loader').textContent = "Kelimeler Kozmos'tan çekiliyor...";
   try {
-    // 1. Havuzu Yükle
-    pool = await loadLangPool(currentLang);
+    const rawPool = await loadLangPool(currentLang);
+    const { used, save } = createUsedSet(`boxing_used_${currentLang}_${diff}`);
     
-    if (!pool || pool.length === 0) {
-      throw new Error("Dil verisi yüklenemedi!");
+    // Kurallar: Seviye filtresi ve karıştırma
+    const checkLevel = (lvl) => (diff === "A2" ? ["A1", "A2"].includes(lvl) : lvl === diff);
+    
+    pool = pick(rawPool, 20, used, save, (it) => checkLevel(it.lvl));
+    
+    if (pool.length < 5) {
+        document.getElementById('loader').textContent = "Yeterli kelime bulunamadı.";
+        return;
     }
 
-    // 2. Kullanılanları Yönet (Tekrarı önle)
-    const { used, save } = createUsedSet("gapmaster_" + currentLang);
+    document.getElementById('startModal').style.display = 'none';
+    nextRound();
+  } catch (e) {
+    document.getElementById('loader').textContent = "Hata oluştu!";
+  }
+};
 
-    // 3. Kelime Seç (En az 3 harfli)
-    const words = pick(pool, 15, used, save, it => {
-      const w = String(it.w || "").trim();
-      return w.length >= 3;
-    });
-
-    // 4. Puzzle Oluştur
-    const allWords = pool.map(x => x.w); 
+function nextRound() {
+  if (currentIndex >= pool.length) currentIndex = 0; // Başa dön
+  
+  const currentItem = pool[currentIndex];
+  document.getElementById('targetWord').textContent = currentItem.w;
+  document.getElementById('wordLvl').textContent = currentItem.lvl + " Seviye Kelime";
+  
+  // Seçenekleri oluştur (1 doğru, 2 yanlış)
+  let wrongOptions = pool
+    .filter(i => i.tr !== currentItem.tr)
+    .sort(() => 0.5 - Math.random())
+    .slice(0, 2)
+    .map(i => i.tr);
     
-    puzzles = words.map(it => {
-      const w = it.w;
-      const ew = escapeRegExp(w);
-      
-      let rawSent = it.sentence || it.ex || LANG_CONFIG[currentLang].defSent.replace("[w]", w);
-      
-      // PATCH 3: Güvenli Regex + Fallback
-      // Önce case-insensitive kelime sınırı ile dene
-      let regex = new RegExp(`\\b${ew}\\b`, 'i');
-      let finalSent = rawSent.replace(regex, "_____");
-      
-      // Eğer kelime sınırı (\b) unicode yüzünden çalışmazsa direkt replace dene
-      if (!finalSent.includes("_____")) {
-         regex = new RegExp(ew, 'i');
-         finalSent = rawSent.replace(regex, "_____");
-      }
-      
-      // Hâlâ boşluk yoksa (kelime cümlede hiç yoksa), default cümleyi kullan
-      if (!finalSent.includes("_____")) {
-         finalSent = LANG_CONFIG[currentLang].defSent.replace("[w]", "_____");
-      }
-
-      // PATCH 5: Benzersiz Şıklar
-      const opts = shuffle([w, ...randomOpts(allWords, w, 3)]);
-      
-      return {
-        sentence: finalSent,
-        answer: w,
-        translation: it.tr,
-        opts: opts
-      };
-    });
-
-    // 5. UI Sıfırla ve Başlat
-    idx = 0;
-    score = 0;
-    lives = 3;
-    
-    $("#loading").style.display = "none";
-    $("#startBtn").disabled = false;
-    $("#startModal").style.display = "none"; // Her şey hazırsa kapat
-    
-    updateUI();
-    loadPuzzle();
-
-  } catch (err) {
-    console.error(err);
-    alert("Oyun başlatılamadı: " + err.message);
-    $("#startBtn").disabled = false;
-    $("#loading").style.display = "none";
-  }
-}
-
-// PATCH 5: BENZERSİZ YANLIŞ ŞIK ÜRETİCİ
-function randomOpts(allList, correct, count) {
-  // Doğru cevabı hariç tut
-  const filtered = allList.filter(x => x && x.toLowerCase() !== correct.toLowerCase());
-  const shuffled = shuffle(filtered);
-  const uniq = [];
+  let options = [currentItem.tr, ...wrongOptions].sort(() => 0.5 - Math.random());
   
-  for(const x of shuffled){
-    // Şıklar arasında tekrar olmasın
-    if(!uniq.some(u => u.toLowerCase() === String(x).toLowerCase())) {
-        uniq.push(x);
-    }
-    if(uniq.length === count) break;
-  }
-  return uniq;
-}
-
-function loadPuzzle() {
-  // PATCH 2: Win Condition
-  if (lives <= 0) { 
-      endGame(false); // Kaybetti
-      return; 
-  }
-  if (idx >= puzzles.length) { 
-      endGame(true); // Kazandı
-      return; 
-  }
-
-  const p = puzzles[idx];
+  const container = document.getElementById('options');
+  container.innerHTML = '';
   
-  // Cümleyi Yerleştir
-  $("#sentence").innerHTML = p.sentence.replace("_____", "<span class='gap'>_____</span>");
-  $("#translation").textContent = p.translation || "";
-  
-  // Şıkları Yerleştir
-  const grid = $("#opts");
-  grid.innerHTML = "";
-  
-  p.opts.forEach(o => {
-    const b = document.createElement("button");
-    b.className = "opt";
-    b.textContent = o;
-    b.onclick = () => handleChoice(b, o, p);
-    grid.appendChild(b);
+  options.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'opt-btn';
+    btn.textContent = opt;
+    btn.onclick = () => handleAnswer(opt === currentItem.tr, btn);
+    container.appendChild(btn);
   });
+  
+  speak(currentItem.w);
 }
 
-async function handleChoice(btn, choice, p) {
-  // Tüm butonları kilitle
-  document.querySelectorAll(".opt").forEach(x => x.disabled = true);
-
-  if (choice.toLowerCase() === p.answer.toLowerCase()) {
-    // DOĞRU
-    btn.classList.add("correct");
-    score += 10;
-    
-    // Boşluğu doldur
-    const gap = document.querySelector(".gap");
-    if(gap) {
-        gap.textContent = p.answer;
-        gap.classList.add("filled");
-    }
-    
-    await speak(p.answer);
+function handleAnswer(isCorrect, btn) {
+  if (isActing) return;
+  isActing = true;
+  
+  if (isCorrect) {
+    btn.classList.add('correct');
+    enemyHp -= 20;
+    document.getElementById('enemy').classList.add('hit');
+    document.getElementById('enemyHp').style.width = enemyHp + "%";
   } else {
-    // YANLIŞ
-    btn.classList.add("wrong");
-    lives--;
-    
-    // Doğruyu göster
-    document.querySelectorAll(".opt").forEach(x => {
-      if (x.textContent.toLowerCase() === p.answer.toLowerCase()) x.classList.add("correct");
-    });
-    
-    const gap = document.querySelector(".gap");
-    if(gap) {
-        gap.textContent = p.answer;
-        gap.classList.add("error");
-    }
+    btn.classList.add('wrong');
+    userHp -= 25;
+    document.getElementById('player').classList.add('hit');
+    document.getElementById('userHp').style.width = userHp + "%";
   }
-
-  updateUI();
   
-  // Sonraki soruya geç
   setTimeout(() => {
-    idx++;
-    loadPuzzle();
-  }, 1200);
+    document.getElementById('player').classList.remove('hit');
+    document.getElementById('enemy').classList.remove('hit');
+    isActing = false;
+    
+    if (userHp <= 0 || enemyHp <= 0) {
+      endGame(enemyHp <= 0);
+    } else {
+      currentIndex++;
+      nextRound();
+    }
+  }, 600);
 }
 
-function updateUI() {
-  $("#scoreTxt").textContent = `${score} PUAN`;
-  $("#lifeTxt").textContent = lives > 0 ? "❤️".repeat(lives) + "🤍".repeat(3 - lives) : "💀💀💀";
-}
-
-// PATCH 2: Parametreli EndGame
 function endGame(win) {
-  $("#endModal").style.display = "flex";
-  $("#endTitle").textContent = win ? "TEBRİKLER! 🏆" : "OYUN BİTTİ";
-  $("#endTitle").style.color = win ? "var(--c-ok)" : "var(--c-bad)";
-  $("#endTxt").innerHTML = `Skor: <b style="color:#fff">${score}</b><br>${win ? 'Harika iş çıkardın!' : 'Bir dahaki sefere!'}`;
+  document.getElementById('endModal').style.display = 'flex';
+  document.getElementById('endTitle').textContent = win ? "K.O. - KAZANDIN! 🏆" : "NAKAVT OLDUN! 🥊";
+  document.getElementById('endMsg').textContent = win ? "Harika bir maçtı şampiyon!" : "Pes etme, tekrar dene.";
 }
 
-function speak(t) {
-  return new Promise(res => {
-    try { speechSynthesis.cancel(); } catch {}
-    const u = new SpeechSynthesisUtterance(t);
-    u.lang = LANG_CONFIG[currentLang].code || "en-US";
-    u.rate = 0.9;
-    u.onend = res;
-    u.onerror = res;
-    try { speechSynthesis.speak(u); } catch { res(); }
-  });
-}
-
-function shuffle(arr) {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
+function speak(text) {
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  const map = { en: 'en-US', de: 'de-DE', fr: 'fr-FR', es: 'es-ES', it: 'it-IT' };
+  u.lang = map[currentLang] || 'en-US';
+  u.rate = 0.9;
+  window.speechSynthesis.speak(u);
 }
 </script>
 </body>
