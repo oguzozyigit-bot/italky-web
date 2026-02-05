@@ -3,83 +3,86 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-  <title>italkyAI • Boxing Alpha</title>
+  <title>italkyAI • Gap Master Premium</title>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
   <style>
     :root { 
       --bg-deep: #020205; --text-white: #ffffff; 
-      --c-neon-pink: #ff00ff; --c-neon-blue: #00f3ff; --c-neon-green: #00e676; --c-error: #ff1744;
+      --c-neon-blue: #00f3ff; --c-neon-pink: #ff00ff; --c-neon-green: #00e676; --c-error: #ff1744;
       --ai-gradient: linear-gradient(135deg, #a5b4fc 0%, #6366f1 100%);
-      --glass: rgba(255, 255, 255, 0.06);
-      --border: rgba(255, 255, 255, 0.12);
-      --safe-top: env(safe-area-inset-top, 0px);
-      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --glass: rgba(255, 255, 255, 0.06); --border: rgba(255, 255, 255, 0.12);
+      --safe-top: env(safe-area-inset-top, 0px); --safe-bottom: env(safe-area-inset-bottom, 0px);
     }
     * { box-sizing:border-box; outline:none; user-select:none; -webkit-tap-highlight-color:transparent; }
     html, body { margin:0; width:100%; height:100%; overflow:hidden; font-family:'Outfit', sans-serif; background:var(--bg-deep); color:#fff; position:fixed; }
     
-    /* 🌌 COSMOS BACKGROUND */
+    /* 🌌 DEEP SPACE BACKGROUND */
     .cosmos-bg { position:absolute; inset:0; background: radial-gradient(circle at 50% 35%, #0b0b2a 0%, #020205 60%, #010104 100%); z-index:0; }
     .stars { position: absolute; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.15'/%3E%3C/svg%3E"); opacity: 0.6; mix-blend-mode: screen; animation: starsFloat 110s linear infinite; }
+    .nebula { position:absolute; width:110vw; height:110vw; border-radius:50%; filter: blur(120px); opacity:.14; z-index:1; pointer-events:none; animation: nebulaBreathe 16s infinite alternate ease-in-out; }
+    .neb-1 { top:-30%; left:-30%; background:#4338ca; }
+    .neb-2 { bottom:-35%; right:-35%; background:#701a75; }
+    @keyframes nebulaBreathe { from { transform: scale(1); opacity: 0.1; } to { transform: scale(1.18); opacity: 0.18; } }
     @keyframes starsFloat { from { background-position: 0 0; } to { background-position: 0 1200px; } }
 
     .wrap { width:100%; max-width:480px; height:100%; margin:0 auto; position:relative; z-index:10; display:flex; flex-direction:column; padding-top: var(--safe-top); padding-bottom: var(--safe-bottom); }
 
     /* HEADER */
     .nav-top { flex: 0 0 auto; display:flex; align-items:center; justify-content:space-between; padding: 10px 18px; }
-    .back-btn { background: var(--glass); border: 1px solid var(--border); padding: 10px 14px; border-radius: 16px; color:#fff; font-size: 11px; font-weight: 800; cursor:pointer; text-decoration:none; backdrop-filter: blur(12px); }
+    .back-btn { background: var(--glass); border: 1px solid var(--border); padding: 10px 14px; border-radius: 16px; color:#fff; font-size: 11px; font-weight: 800; cursor:pointer; text-decoration:none; backdrop-filter: blur(12px); box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
     .logo-small { font-size:24px; font-weight:900; letter-spacing:-1px; }
     .logo-small span { background: var(--ai-gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
 
-    /* HP BARS */
-    .fight-stats { padding: 10px 20px; display: flex; flex-direction: column; gap: 15px; }
-    .hp-container { display: flex; align-items: center; gap: 10px; }
-    .hp-label { width: 50px; font-size: 10px; font-weight: 800; opacity: 0.7; }
-    .hp-bar-bg { flex: 1; height: 10px; background: rgba(255,255,255,0.1); border-radius: 5px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); }
-    .hp-fill { height: 100%; transition: width 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-    #userHp { background: var(--c-neon-blue); box-shadow: 0 0 10px var(--c-neon-blue); }
-    #enemyHp { background: var(--c-neon-pink); box-shadow: 0 0 10px var(--c-neon-pink); }
+    /* STATS */
+    .stats-row { padding: 0 18px 10px; display: flex; justify-content: space-between; align-items: center; }
+    .score-pill { background: var(--glass); border: 1px solid var(--border); padding: 8px 16px; border-radius: 20px; font-family: 'Space Grotesk', sans-serif; font-weight: 800; color: var(--c-neon-green); font-size: 14px; }
+    .hearts { font-size: 18px; letter-spacing: 2px; }
 
-    /* RING AREA */
-    .ring { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; padding: 20px; }
-    .fighter-box { display: flex; justify-content: space-around; width: 100%; margin-bottom: 30px; }
-    .fighter { font-size: 60px; transition: 0.2s; position: relative; }
-    .fighter.hit { animation: hitShake 0.4s; }
-    @keyframes hitShake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-15px) rotate(-10deg); filter: sepia(1) saturate(5) hue-rotate(-50deg); } 75% { transform: translateX(15px) rotate(10deg); } }
-
-    /* WORD CARD */
-    .word-card { 
-      width: 100%; background: var(--glass); border: 1px solid var(--border); 
-      border-radius: 24px; padding: 25px; text-align: center; backdrop-filter: blur(15px);
-      box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+    /* GAME AREA */
+    .stage { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 10px 20px; gap: 20px; }
+    
+    .sentence-card { 
+      width:100%; background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03)); 
+      border: 1px solid var(--border); border-radius: 32px; padding: 40px 25px; text-align: center; 
+      backdrop-filter: blur(20px); box-shadow: 0 30px 60px rgba(0,0,0,0.5); position:relative;
     }
-    .current-word { font-size: 32px; font-weight: 800; color: #fff; margin-bottom: 5px; letter-spacing: 1px; }
-    .word-info { font-size: 12px; color: var(--c-neon-blue); opacity: 0.8; font-weight: 600; }
+    .sentence-text { font-size: 22px; font-weight: 600; line-height: 1.6; color: #eee; }
+    .gap-box { 
+      display: inline-block; min-width: 90px; border-bottom: 3px solid var(--c-neon-blue); 
+      color: var(--c-neon-blue); font-weight: 800; margin: 0 5px; transition: 0.3s;
+    }
+    .gap-box.correct { border-color: var(--c-neon-green); color: var(--c-neon-green); text-shadow: 0 0 15px var(--c-neon-green); }
+    .gap-box.wrong { border-color: var(--c-error); color: var(--c-error); }
+    .translation-sub { font-size: 14px; color: rgba(255,255,255,0.4); margin-top: 25px; font-style: italic; }
 
     /* OPTIONS */
-    .options-grid { display: grid; grid-template-columns: 1fr; gap: 12px; width: 100%; padding: 20px; }
+    .options-grid { width:100%; display:grid; grid-template-columns: 1fr; gap: 12px; }
     .opt-btn { 
       background: var(--glass); border: 1px solid var(--border); 
-      padding: 18px; border-radius: 18px; color: #fff; font-size: 16px; 
-      font-weight: 700; cursor: pointer; transition: 0.2s; text-align: center;
+      padding: 18px; border-radius: 20px; color: #fff; font-size: 16px; 
+      font-weight: 700; cursor: pointer; transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       backdrop-filter: blur(10px);
     }
-    .opt-btn:active { transform: scale(0.97); }
-    .opt-btn.correct { background: var(--c-neon-green); color: #000; border-color: transparent; }
-    .opt-btn.wrong { background: var(--c-error); color: #fff; border-color: transparent; }
+    .opt-btn:active { transform: scale(0.96); }
+    .opt-btn.correct { background: var(--c-neon-green); color: #000; border-color: transparent; box-shadow: 0 0 25px rgba(0,230,118,0.4); }
+    .opt-btn.wrong { background: var(--c-error); color: #fff; border-color: transparent; opacity: 0.5; }
 
     /* MODAL */
-    .modal-wrap { position: absolute; inset: 0; background: rgba(2,2,5,0.95); z-index: 100; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(25px); padding: 20px; }
-    .modal-card { width: 100%; max-width: 360px; background: var(--glass); border: 1px solid var(--border); border-radius: 32px; padding: 30px; text-align: center; }
-    .lang-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 20px 0; }
-    .lang-btn { font-size: 24px; padding: 10px; border-radius: 15px; background: rgba(255,255,255,0.05); border: 1px solid transparent; cursor: pointer; }
-    .lang-btn.active { border-color: var(--c-neon-blue); background: rgba(0,243,255,0.1); }
-    .btn-primary { width: 100%; padding: 16px; background: var(--c-neon-green); color: #000; border: none; border-radius: 16px; font-weight: 800; font-size: 15px; cursor: pointer; margin-top: 10px; }
+    .modal-wrap { position: absolute; inset: 0; background: rgba(2,2,5,0.96); z-index: 100; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(30px); }
+    .modal-card { width: 100%; max-width: 360px; background: var(--glass); border: 1px solid var(--border); border-radius: 36px; padding: 40px 30px; text-align: center; }
+    .lang-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 25px 0; }
+    .lang-btn { font-size: 24px; padding: 10px; border-radius: 16px; background: rgba(255,255,255,0.05); border: 1px solid transparent; cursor: pointer; transition: 0.3s; }
+    .lang-btn.active { border-color: var(--c-neon-blue); background: rgba(0,243,255,0.1); box-shadow: 0 0 20px rgba(0,243,255,0.2); }
+    .btn-main { width: 100%; padding: 18px; background: var(--c-neon-green); color: #000; border: none; border-radius: 20px; font-weight: 800; font-size: 16px; cursor: pointer; margin-top: 10px; box-shadow: 0 10px 30px rgba(0,230,118,0.2); }
   </style>
 </head>
 <body>
 
-  <div class="cosmos-bg"><div class="stars"></div></div>
+  <div class="cosmos-bg">
+    <div class="stars"></div>
+    <div class="nebula neb-1"></div>
+    <div class="nebula neb-2"></div>
+  </div>
 
   <div class="wrap">
     <div class="nav-top">
@@ -88,167 +91,177 @@
       <div style="width:70px"></div>
     </div>
 
-    <div class="fight-stats">
-      <div class="hp-container">
-        <div class="hp-label">YOU</div>
-        <div class="hp-bar-bg"><div id="userHp" class="hp-fill" style="width: 100%"></div></div>
-      </div>
-      <div class="hp-container">
-        <div class="hp-label">ENEMY</div>
-        <div class="hp-bar-bg"><div id="enemyHp" class="hp-fill" style="width: 100%"></div></div>
-      </div>
+    <div class="stats-row">
+      <div class="score-pill" id="scoreTxt">0 PUAN</div>
+      <div class="hearts" id="heartsTxt">❤️❤️❤️</div>
     </div>
 
-    <div class="ring">
-      <div class="fighter-box">
-        <div id="player" class="fighter">🥊</div>
-        <div id="enemy" class="fighter">👽</div>
+    <div class="stage" id="gameArea">
+      <div class="sentence-card">
+        <div id="sentenceDisplay" class="sentence-text">---</div>
+        <div id="translationDisplay" class="translation-sub">---</div>
       </div>
-      
-      <div class="word-card">
-        <div id="targetWord" class="current-word">---</div>
-        <div id="wordLvl" class="word-info">Seviye Bekleniyor</div>
-      </div>
+      <div class="options-grid" id="options"></div>
     </div>
-
-    <div class="options-grid" id="options">
-      </div>
   </div>
 
   <div class="modal-wrap" id="startModal">
     <div class="modal-card">
-      <h2 style="margin-top:0">WORD BOXING</h2>
-      <div class="lang-grid">
-        <button onclick="setLang('en',this)" class="lang-btn active">🇬🇧</button>
-        <button onclick="setLang('de',this)" class="lang-btn">🇩🇪</button>
-        <button onclick="setLang('fr',this)" class="lang-btn">🇫🇷</button>
-        <button onclick="setLang('es',this)" class="lang-btn">🇪🇸</button>
-        <button onclick="setLang('it',this)" class="lang-btn">🇮🇹</button>
+      <h2 style="font-weight:900; letter-spacing:2px; margin-top:0;">GAP MASTER</h2>
+      <div class="lang-grid" id="langGrid">
+        <button class="lang-btn active" data-l="en">🇬🇧</button>
+        <button class="lang-btn" data-l="de">🇩🇪</button>
+        <button class="lang-btn" data-l="fr">🇫🇷</button>
+        <button class="lang-btn" data-l="es">🇪🇸</button>
+        <button class="lang-btn" data-l="it">🇮🇹</button>
       </div>
-      <button class="btn-primary" onclick="initGame('A2')">KOLAY (A2)</button>
-      <button class="btn-primary" onclick="initGame('B1')">ORTA (B1)</button>
-      <button class="btn-primary" onclick="initGame('B2')">ZOR (B2)</button>
-      <div id="loader" style="margin-top:15px; font-size:12px; color:var(--c-neon-blue)"></div>
+      <button class="btn-main" id="btnA2">KOLAY (A2)</button>
+      <button class="btn-main" id="btnB1">ORTA (B1)</button>
+      <button class="btn-main" id="btnB2">ZOR (B2)</button>
+      <div id="loaderMsg" style="margin-top:20px; font-size:12px; color:var(--c-neon-blue)"></div>
     </div>
   </div>
 
   <div class="modal-wrap" id="endModal" style="display:none">
     <div class="modal-card">
-      <h2 id="endTitle">OYUN BİTTİ</h2>
-      <p id="endMsg"></p>
-      <button class="btn-primary" onclick="location.reload()">TEKRAR DENE</button>
-      <button class="btn-primary" style="background:rgba(255,255,255,0.1); color:#fff;" onclick="location.href='/pages/game.html'">ÇIKIŞ</button>
+      <h2 id="endTitle" style="font-size:32px; font-weight:900;">OYUN BİTTİ</h2>
+      <p id="endScore" style="font-size:18px; opacity:0.8; margin-bottom:30px;"></p>
+      <button class="btn-main" onclick="location.reload()">TEKRAR DENE</button>
+      <button class="btn-main" style="background:rgba(255,255,255,0.1); color:#fff;" onclick="location.href='/pages/game.html'">ÇIKIŞ</button>
     </div>
   </div>
 
 <script type="module">
 import { loadLangPool, createUsedSet, pick } from "/js/langpool.js";
 
-let currentLang = 'en', pool = [], currentIndex = 0;
-let userHp = 100, enemyHp = 100, isActing = false;
+const $ = id => document.getElementById(id);
+let currentLang = 'en', pool = [], puzzles = [], currentIdx = 0;
+let score = 0, lives = 3, isBusy = false;
 
-window.setLang = (lang, btn) => {
-  currentLang = lang;
-  document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-};
+const TTS_MAP = { en:'en-US', de:'de-DE', fr:'fr-FR', es:'es-ES', it:'it-IT' };
 
-window.initGame = async (diff) => {
-  document.getElementById('loader').textContent = "Kelimeler Kozmos'tan çekiliyor...";
-  try {
-    const rawPool = await loadLangPool(currentLang);
-    const { used, save } = createUsedSet(`boxing_used_${currentLang}_${diff}`);
-    
-    // Kurallar: Seviye filtresi ve karıştırma
-    const checkLevel = (lvl) => (diff === "A2" ? ["A1", "A2"].includes(lvl) : lvl === diff);
-    
-    pool = pick(rawPool, 20, used, save, (it) => checkLevel(it.lvl));
-    
-    if (pool.length < 5) {
-        document.getElementById('loader').textContent = "Yeterli kelime bulunamadı.";
-        return;
+// DİL SEÇİMİ
+document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.onclick = () => {
+        document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentLang = btn.dataset.l;
+    };
+});
+
+// OYUN BAŞLATMA
+$('btnA2').onclick = () => initGame('A2');
+$('btnB1').onclick = () => initGame('B1');
+$('btnB2').onclick = () => initGame('B2');
+
+async function initGame(diff) {
+    $('loaderMsg').textContent = "Yıldız haritaları yükleniyor...";
+    try {
+        const rawPool = await loadLangPool(currentLang);
+        const { used, save } = createUsedSet(`gap_master_v1_${currentLang}_${diff}`);
+        
+        // Seviye ve Cümle Kontrolü
+        const checkLevel = (lvl) => (diff === "A2" ? ["A1", "A2"].includes(lvl) : lvl === diff);
+        
+        const selected = pick(rawPool, 15, used, save, it => {
+            return it.sentence && it.sentence.toLowerCase().includes(it.w.toLowerCase()) && checkLevel(it.lvl);
+        });
+
+        if (selected.length === 0) {
+            $('loaderMsg').textContent = "Bu seviyede uygun cümle kalmadı!";
+            return;
+        }
+
+        puzzles = selected.map(item => {
+            const regex = new RegExp(`\\b${item.w}\\b`, 'gi');
+            return {
+                word: item.w,
+                sentence: item.sentence,
+                display: item.sentence.replace(regex, '_____'),
+                tr: item.tr
+            };
+        });
+
+        $('startModal').style.display = 'none';
+        renderPuzzle();
+    } catch (e) {
+        $('loaderMsg').textContent = "Bağlantı Hatası!";
     }
-
-    document.getElementById('startModal').style.display = 'none';
-    nextRound();
-  } catch (e) {
-    document.getElementById('loader').textContent = "Hata oluştu!";
-  }
-};
-
-function nextRound() {
-  if (currentIndex >= pool.length) currentIndex = 0; // Başa dön
-  
-  const currentItem = pool[currentIndex];
-  document.getElementById('targetWord').textContent = currentItem.w;
-  document.getElementById('wordLvl').textContent = currentItem.lvl + " Seviye Kelime";
-  
-  // Seçenekleri oluştur (1 doğru, 2 yanlış)
-  let wrongOptions = pool
-    .filter(i => i.tr !== currentItem.tr)
-    .sort(() => 0.5 - Math.random())
-    .slice(0, 2)
-    .map(i => i.tr);
-    
-  let options = [currentItem.tr, ...wrongOptions].sort(() => 0.5 - Math.random());
-  
-  const container = document.getElementById('options');
-  container.innerHTML = '';
-  
-  options.forEach(opt => {
-    const btn = document.createElement('button');
-    btn.className = 'opt-btn';
-    btn.textContent = opt;
-    btn.onclick = () => handleAnswer(opt === currentItem.tr, btn);
-    container.appendChild(btn);
-  });
-  
-  speak(currentItem.w);
 }
 
-function handleAnswer(isCorrect, btn) {
-  if (isActing) return;
-  isActing = true;
-  
-  if (isCorrect) {
-    btn.classList.add('correct');
-    enemyHp -= 20;
-    document.getElementById('enemy').classList.add('hit');
-    document.getElementById('enemyHp').style.width = enemyHp + "%";
-  } else {
-    btn.classList.add('wrong');
-    userHp -= 25;
-    document.getElementById('player').classList.add('hit');
-    document.getElementById('userHp').style.width = userHp + "%";
-  }
-  
-  setTimeout(() => {
-    document.getElementById('player').classList.remove('hit');
-    document.getElementById('enemy').classList.remove('hit');
-    isActing = false;
-    
-    if (userHp <= 0 || enemyHp <= 0) {
-      endGame(enemyHp <= 0);
+function renderPuzzle() {
+    if (lives <= 0 || currentIdx >= puzzles.length) {
+        return showEnd(lives > 0);
+    }
+
+    const p = puzzles[currentIdx];
+    $('sentenceDisplay').innerHTML = p.display.replace('_____', '<span class="gap-box">...</span>');
+    $('translationDisplay').textContent = p.tr;
+
+    // Şıklar (1 doğru, 3 yanlış)
+    let wrongs = puzzles.filter(x => x.word !== p.word).map(x => x.word);
+    if (wrongs.length < 3) wrongs = ["apple", "house", "water", "friend", "time"]; // Fallback
+    let options = [p.word, ...shuffle(wrongs).slice(0, 3)].sort(() => Math.random() - 0.5);
+
+    const grid = $('options');
+    grid.innerHTML = '';
+    options.forEach(opt => {
+        const b = document.createElement('button');
+        b.className = 'opt-btn';
+        b.textContent = opt;
+        b.onclick = () => handleChoice(opt === p.word, b);
+        grid.appendChild(b);
+    });
+}
+
+function handleChoice(correct, btn) {
+    if (isBusy) return;
+    isBusy = true;
+    const p = puzzles[currentIdx];
+
+    if (correct) {
+        btn.classList.add('correct');
+        score += 10;
+        const gap = document.querySelector('.gap-box');
+        gap.textContent = p.word;
+        gap.classList.add('correct');
+        speak(p.sentence);
     } else {
-      currentIndex++;
-      nextRound();
+        btn.classList.add('wrong');
+        lives--;
+        // Doğruyu göster
+        document.querySelectorAll('.opt-btn').forEach(b => {
+            if (b.textContent === p.word) b.classList.add('correct');
+        });
     }
-  }, 600);
+
+    $('scoreTxt').textContent = `${score} PUAN`;
+    $('heartsTxt').textContent = lives > 0 ? "❤️".repeat(lives) + "🖤".repeat(3 - lives) : "💀💀💀";
+
+    setTimeout(() => {
+        currentIdx++;
+        isBusy = false;
+        renderPuzzle();
+    }, correct ? 2200 : 1500);
 }
 
-function endGame(win) {
-  document.getElementById('endModal').style.display = 'flex';
-  document.getElementById('endTitle').textContent = win ? "K.O. - KAZANDIN! 🏆" : "NAKAVT OLDUN! 🥊";
-  document.getElementById('endMsg').textContent = win ? "Harika bir maçtı şampiyon!" : "Pes etme, tekrar dene.";
+function showEnd(win) {
+    $('endModal').style.display = 'flex';
+    $('endTitle').textContent = win ? "GÖREV TAMAMLANDI! 🏆" : "SİSTEM ÇÖKTÜ! 🥊";
+    $('endTitle').style.color = win ? "var(--c-neon-green)" : "var(--c-error)";
+    $('endScore').textContent = `Toplam Skor: ${score}`;
 }
 
-function speak(text) {
-  window.speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  const map = { en: 'en-US', de: 'de-DE', fr: 'fr-FR', es: 'es-ES', it: 'it-IT' };
-  u.lang = map[currentLang] || 'en-US';
-  u.rate = 0.9;
-  window.speechSynthesis.speak(u);
+function speak(t) {
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(t);
+    u.lang = TTS_MAP[currentLang];
+    u.rate = 0.85;
+    window.speechSynthesis.speak(u);
+}
+
+function shuffle(a) {
+    return a.sort(() => Math.random() - 0.5);
 }
 </script>
 </body>
