@@ -104,12 +104,12 @@
     .pill:active { transform: scale(0.98); }
     .pillLeft { display: flex; align-items: center; gap: 10px; }
     
-    /* DÜZELTME: Bayrak Boyutu ve Görünürlük */
+    /* BAYRAK AYARLARI */
     .flag { 
         font-size: 24px; 
         line-height: 1; 
         display: inline-block; 
-        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4)); /* Bayrak gölgesi */
+        filter: none; /* Bazı tarayıcılarda emoji siyah beyaz olmasın */
     }
     .label { font-size: 14px; font-weight: 600; color: #ffffff; }
     .caret { font-size: 10px; opacity: 0.6; color: #ffffff; }
@@ -153,7 +153,7 @@
     .headTitle { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); }
     .small { font-size: 11px; font-weight: 600; color: var(--accent-primary); }
 
-    /* --- Preview Area with Big + --- */
+    /* --- Preview Area --- */
     .previewWrap {
       flex: 1; position: relative; overflow: hidden;
       background: rgba(0,0,0,0.2);
@@ -164,7 +164,10 @@
     .empty-state {
       display: flex; flex-direction: column; align-items: center; gap: 12px;
       z-index: 2; pointer-events: none; padding: 20px;
+      transition: opacity 0.3s;
     }
+    /* JS ile gizlemek için */
+    .empty-state.hidden { opacity: 0; pointer-events: none; }
     
     .big-plus-btn {
       width: 72px; height: 72px; border-radius: 50%;
@@ -192,10 +195,7 @@
       margin-top: -6px; opacity: 0.7; letter-spacing: 0.3px;
     }
 
-    /* DÜZELTME: Preview (Resim/PDF) artık en üstte
-       z-index: 99 verildi ve background mat siyah yapıldı.
-       Böylece alttaki + butonu ve yazılar kesinlikle görünmeyecek.
-    */
+    /* PREVIEW (Görsel yüklendiğinde öne çıkacak) */
     .preview { 
         position: absolute; inset: 0; width: 100%; height: 100%; 
         object-fit: contain; 
@@ -203,8 +203,8 @@
     }
     .preview.show { 
         opacity: 1; 
-        background: #0b0b0f; /* Mat Siyah Arka Plan */
-        z-index: 99; /* Empty state'in (z-index:2) çok üstünde */
+        background: #0b0b0f; 
+        z-index: 50; /* Empty state'in çok üstünde */
     }
 
     /* Output */
@@ -329,7 +329,7 @@
             <div class="small" id="statusTop">Hazır</div>
           </div>
           <div class="previewWrap">
-            <div class="empty-state">
+            <div class="empty-state" id="emptyState">
               <button class="big-plus-btn" id="bigAddBtn" type="button">+</button>
               <span class="empty-text">Belge veya Fotoğraf</span>
               <span class="empty-hint">Lütfen .PDF / .JPEG uzantılı dosyalar yükleyin</span>
@@ -399,6 +399,7 @@
   
   <script>
     document.addEventListener('DOMContentLoaded', () => {
+      // 1. Sheet Logic
       const sourceSheet = document.getElementById('sourceSheet');
       const openSheet = () => sourceSheet.classList.add('show');
       const closeSheet = () => sourceSheet.classList.remove('show');
@@ -406,15 +407,52 @@
       document.getElementById('bigAddBtn').addEventListener('click', openSheet);
       document.getElementById('toolbarAddBtn').addEventListener('click', openSheet);
 
+      // 2. Button -> Input Triggers
+      const camInput = document.getElementById('camPick');
+      const fileInput = document.getElementById('filePick');
+
       document.getElementById('sourceCam').addEventListener('click', () => {
         closeSheet();
-        document.getElementById('camPick').click();
+        camInput.click();
       });
 
       document.getElementById('sourceFile').addEventListener('click', () => {
         closeSheet();
-        document.getElementById('filePick').click();
+        fileInput.click();
       });
+
+      // 3. AUTO PREVIEW & AUTO SUBMIT LOGIC
+      function handleFileSelect(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        // A. Show Preview Immediately
+        const imgPreview = document.getElementById('imgPreview');
+        const emptyState = document.getElementById('emptyState');
+        const runBtn = document.getElementById('runBtn');
+
+        // Hide empty state
+        emptyState.classList.add('hidden');
+
+        // Render Image
+        const reader = new FileReader();
+        reader.onload = (e) => {
+           imgPreview.src = e.target.result;
+           imgPreview.classList.add('show');
+           
+           // B. AUTO SUBMIT (0.8s delay for effect)
+           // Simulate clicking the "ÇEVİR" button automatically
+           setTimeout(() => {
+             console.log("Auto-submitting translation...");
+             runBtn.click();
+           }, 800);
+        };
+        reader.readAsDataURL(file);
+      }
+
+      // Attach handlers
+      camInput.addEventListener('change', handleFileSelect);
+      fileInput.addEventListener('change', handleFileSelect);
     });
   </script>
 
