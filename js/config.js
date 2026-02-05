@@ -8,3 +8,8 @@ export const STORAGE_KEY = "italky_user_v1";
 
 // ✅ BACKEND (Render)
 export const BASE_DOMAIN = "https://italky-api.onrender.com";
+
+// ✅ ORTAK DİL HAVUZU (Supabase Storage - Public Bucket: lang)
+// Dosyalar: en.json, de.json, fr.json, es.json, it.json
+export const LANGPOOL_BASE =
+  "https://dzeemgfwzwkalrvjthps.supabase.co/storage/v1/object/public/lang";
