@@ -3,10 +3,9 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-  <title>ITALKY • Neon Hangman Pro</title>
+  <title>ITALKY • Neon Hangman Kilit</title>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
   <style>
-    /* Stil kısmında Boss Tag ve UI iyileştirmeleri yapıldı başkanım */
     :root { 
       --bg-deep: #05020a; --text-main: #fff; 
       --c-neon-pink: #ff00ff; --c-neon-blue: #00f3ff; --c-neon-green: #00e676; --c-error: #ff1744;
@@ -26,13 +25,12 @@
     
     .stage { flex:1; display:flex; flex-direction:column; align-items:center; padding:10px; position:relative; overflow-y:auto; }
     
-    /* Madde 4: Boss Tag Selector Fix */
+    /* Madde 6: Boss Tag Selector */
     .boss-tag { display:none; background:var(--c-error); color:#fff; padding:4px 12px; border-radius:4px; font-size:12px; font-weight:800; margin-bottom:10px; animation: pulse 1s infinite; z-index: 20; }
-    .boss-mode .boss-tag { display:block !important; }
+    .stage.boss-mode .boss-tag { display:block !important; }
 
     .gallows-box { position:relative; width:140px; height:160px; margin-bottom:10px; }
     .man-part { position:absolute; background:var(--c-neon-pink); border-radius:2px; opacity:0; transition:0.3s; box-shadow: 0 0 8px var(--c-neon-pink); }
-    /* Parçalar aynı kalıyor, matematik JS'de düzeldi başkanım */
     .p1 { top:30px; right:15px; width:30px; height:30px; border:3px solid var(--c-neon-pink); border-radius:50%; background:transparent; } 
     .p2 { top:60px; right:29px; width:2px; height:40px; } 
     .p3 { top:65px; right:31px; width:25px; height:2px; transform:rotate(-20deg); transform-origin:left; } 
@@ -40,23 +38,21 @@
     .p5 { top:98px; right:29px; width:2px; height:30px; transform:rotate(25deg); transform-origin:top; } 
     .p6 { top:98px; right:29px; width:2px; height:30px; transform:rotate(-25deg); transform-origin:top; } 
 
-    .word-box { display:flex; flex-wrap:wrap; justify-content:center; gap:6px; margin-bottom:10px; min-height:45px; }
-    .letter-slot { width:30px; height:40px; border-bottom:3px solid var(--c-neon-blue); display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:800; color:#fff; }
-    
-    /* Madde 7: Zengin Hint Box */
-    .hint-container { display:flex; flex-direction:column; align-items:center; gap:4px; margin-bottom:15px; width:90%; }
+    .hint-container { display:flex; flex-direction:column; align-items:center; gap:4px; margin-bottom:15px; width:90%; min-height:40px; }
     .hint-main { font-size:16px; font-weight:600; color:var(--c-neon-green); text-align:center; }
     .hint-sentence { font-size:12px; font-style:italic; color:rgba(255,255,255,0.6); text-align:center; line-height:1.2; }
 
+    .word-box { display:flex; flex-wrap:wrap; justify-content:center; gap:6px; margin-bottom:10px; min-height:45px; }
+    .letter-slot { width:30px; height:40px; border-bottom:3px solid var(--c-neon-blue); display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:800; color:#fff; }
+    
     .keyboard { display:grid; grid-template-columns:repeat(7, 1fr); gap:5px; width:100%; max-width:400px; }
     .key-btn { aspect-ratio:1; background:rgba(255,255,255,0.1); border:1px solid var(--border); border-radius:8px; color:#fff; font-size:16px; display:flex; align-items:center; justify-content:center; cursor:pointer; }
     .key-btn.correct { background:var(--c-neon-green); color:#000; box-shadow:0 0 15px var(--c-neon-green); }
     .key-btn.wrong { background:var(--c-error); opacity:0.4; }
     
-    /* Modal Tasarımı */
     .modal-wrap { position:absolute; inset:0; background:rgba(0,0,0,0.95); z-index:999; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(15px); padding:20px; }
     .modal-card { width:100%; max-width:340px; background:#101014; border:1px solid var(--border); border-radius:24px; padding:30px; text-align:center; }
-    #modalMsg { margin-top:10px; color:var(--c-neon-blue); font-size:14px; min-height:20px; }
+    #modalMsg { margin-top:20px; color:var(--c-neon-blue); font-size:14px; font-weight: 500; }
 
     .btn-primary { width:100%; padding:15px; background:var(--c-neon-green); color:#000; border:none; border-radius:12px; font-weight:800; cursor:pointer; margin-top:10px; }
     @keyframes pulse { 0%{opacity:1} 50%{opacity:0.6} 100%{opacity:1} }
@@ -86,7 +82,7 @@
       </div>
 
       <div class="hint-container">
-        <div class="hint-main" id="hintMain">...</div>
+        <div class="hint-main" id="hintMain"></div>
         <div class="hint-sentence" id="hintSentence"></div>
       </div>
 
@@ -105,14 +101,14 @@
     <div class="modal-card">
       <div style="font-size:24px; font-weight:800; color:var(--c-neon-pink); margin-bottom:20px;">NEON HANGMAN</div>
       <div id="setupView">
-        <div style="font-size:12px; opacity:0.6; margin-bottom:10px;">DİL SEÇİN</div>
-        <div style="display:flex; justify-content:center; gap:10px; margin-bottom:20px;">
-            <button onclick="setLang('en',this)" class="btn-primary active" style="width:50px">EN</button>
-            <button onclick="setLang('de',this)" class="btn-primary" style="width:50px; background:rgba(255,255,255,0.1); color:#fff;">DE</button>
-            <button onclick="setLang('fr',this)" class="btn-primary" style="width:50px; background:rgba(255,255,255,0.1); color:#fff;">FR</button>
+        <div style="display:flex; justify-content:center; gap:8px; margin-bottom:20px;">
+            <button onclick="setLang('en',this)" class="btn-primary active" style="width:55px; margin-top:0;">EN</button>
+            <button onclick="setLang('de',this)" class="btn-primary" style="width:55px; margin-top:0; background:rgba(255,255,255,0.1); color:#fff;">DE</button>
+            <button onclick="setLang('fr',this)" class="btn-primary" style="width:55px; margin-top:0; background:rgba(255,255,255,0.1); color:#fff;">FR</button>
         </div>
-        <button class="btn-primary" onclick="selectLevel('A2')">A2 - KOLAY</button>
-        <button class="btn-primary" onclick="selectLevel('B1')">B1 - ORTA</button>
+        <button class="btn-primary" onclick="selectLevel('A2')">A2 (KOLAY)</button>
+        <button class="btn-primary" onclick="selectLevel('B1')">B1 (ORTA)</button>
+        <button class="btn-primary" onclick="selectLevel('B2')">B2 (ZOR)</button>
       </div>
       <div id="modalMsg"></div>
     </div>
@@ -122,7 +118,7 @@
     <div class="modal-card">
       <div id="endTitle" style="font-size:28px; font-weight:800; margin-bottom:10px;"></div>
       <p id="endMsg" style="opacity:0.8; margin-bottom:20px;"></p>
-      <button class="btn-primary" onclick="retryGame()">YENİDEN DENE</button>
+      <button class="btn-primary" onclick="retryGame()">YENİDEN DENE BAŞKANIM</button>
       <button class="btn-primary" style="background:rgba(255,255,255,0.1); color:#fff;" onclick="location.href='/pages/game.html'">ÇIKIŞ</button>
     </div>
   </div>
@@ -134,10 +130,10 @@ const $ = (id) => document.getElementById(id);
 let currentLang = "en", currentDiff = "A2", wordList = [], currentIndex = 0;
 let score = 0, powerups = 1, mistakes = 0, currentWord = "", currentRaw = "", discovered = [], maxErrors = 6, isBoss = false;
 
-// Madde 6: Karakter Normalize Stratejisi
+// Madde 7: Karakter Normalize & Alfabe
 function hangmanNormalize(str) {
     return str.trim().toUpperCase()
-        .replace(/ẞ/g, "SS") // Almanca ß özel durumu
+        .replace(/ẞ/g, "SS") 
         .replace(/[.,/#!$%^&*;:{}=\-_`~()]/g,"");
 }
 
@@ -152,7 +148,7 @@ function getAlphabet(lang) {
 window.setLang = (l, btn) => {
     currentLang = l;
     document.querySelectorAll('#setupView .btn-primary').forEach(b => {
-        b.style.background = "rgba(255,255,255,0.1)"; b.style.color="#fff";
+        if(b.textContent.length < 3) { b.style.background = "rgba(255,255,255,0.1)"; b.style.color="#fff"; }
     });
     btn.style.background = "var(--c-neon-green)"; btn.style.color="#000";
 };
@@ -162,47 +158,62 @@ window.selectLevel = (diff) => {
     initGame();
 };
 
-// Madde 1 & 3: Akıllı Filtre ve Boş Havuz Yönetimi
+// Madde 4 & 5: Kademeli Filtreleme ve Retry Mantığı
 async function initGame(retryCount = 0) {
     $("setupView").style.display = "none";
-    $("modalMsg").textContent = "Havuz Hazırlanıyor başkanım...";
+    $("modalMsg").innerHTML = "Havuz Hazırlanıyor...<br><span style='font-size:10px'>Lütfen bekleyin başkanım</span>";
     
     try {
+        // Madde 1: Sadece LangPool
         const pool = await loadLangPool(currentLang);
-        // Madde 2: usedKey Prefiksi
+        // Madde 3: usedKey Standardı
         const { used, save } = createUsedSet(`italky_used_hangman_${currentLang}_${currentDiff}`);
         
-        let cfg = { min: 4, max: 7 };
-        if(currentDiff === "B1") cfg = { min: 7, max: 12 };
+        let cfg = { min: 4, max: 7, count: 15 };
+        if(currentDiff === "B1") cfg = { min: 6, max: 10, count: 15 };
+        if(currentDiff === "B2") cfg = { min: 8, max: 14, count: 15 };
 
-        // Kademe 1: Tam filtre
-        let selected = pick(pool, 15, used, save, (it) => {
+        // Madde 2: A2 = A1 + A2 Kuralı
+        const checkLevel = (lvl) => {
+            if(currentDiff === "A2") return ["A1", "A2"].includes(lvl);
+            return lvl === currentDiff;
+        };
+
+        // KADEME 1: İdeal Filtre
+        let selected = pick(pool, cfg.count, used, save, (it) => {
             const w = hangmanNormalize(it.w);
-            return it.lvl === currentDiff && w.length >= cfg.min && w.length <= cfg.max;
+            return checkLevel(it.lvl) && w.length >= cfg.min && w.length <= cfg.max;
         });
 
-        // Kademe 2: Filtre Gevşetme (Madde 1)
+        // KADEME 2: Uzunluk Esnetme
         if(selected.length < 5) {
-            $("modalMsg").textContent = "Havuz genişletiliyor...";
-            selected = pick(pool, 15, used, save, (it) => it.w.length >= 3);
+            selected = pick(pool, cfg.count, used, save, (it) => {
+                const w = hangmanNormalize(it.w);
+                return checkLevel(it.lvl) && w.length >= (cfg.min - 1) && w.length <= (cfg.max + 2);
+            });
         }
 
-        // Madde 3: Boşsa tekrar dene
+        // KADEME 3: Adet Düşürme
+        if(selected.length === 0) {
+            selected = pick(pool, 5, used, save, (it) => checkLevel(it.lvl));
+        }
+
+        // Madde 5: Retry Akışı
         if(selected.length === 0 && retryCount < 3) {
             setTimeout(() => initGame(retryCount + 1), 1000);
             return;
         }
 
         if(selected.length === 0) {
-            $("modalMsg").textContent = "Şu an kelime bulunamadı, lütfen sonra deneyin.";
-            setTimeout(() => location.reload(), 3000);
+            $("modalMsg").textContent = "Şu an uygun kelime bulunamadı başkanım.";
+            setTimeout(() => location.reload(), 2500);
             return;
         }
 
         wordList = selected;
         startGame();
     } catch (e) {
-        $("modalMsg").textContent = "Bağlantı Hatası!";
+        $("modalMsg").textContent = "Bağlantı Hatası! Lütfen internetinizi kontrol edin.";
     }
 }
 
@@ -225,7 +236,7 @@ function startRound() {
     mistakes = 0;
     discovered = new Array(currentWord.length).fill(false);
     
-    // Madde 4 & 7: Boss Tag ve Hint
+    // Madde 6: Boss Modu ve Hint Yapısı
     isBoss ? $("gameStage").classList.add("boss-mode") : $("gameStage").classList.remove("boss-mode");
     $("hintMain").textContent = data.tr;
     $("hintSentence").textContent = data.sentence || ""; 
@@ -251,12 +262,11 @@ function renderWord() {
     }
 }
 
-// Madde 5: Darağacı Matematiği (Kademeli ve Doğru)
 function renderHangman() {
     for(let i=1; i<=6; i++) {
         const el = document.querySelector(`.p${i}`);
         if(el) {
-            // mistakes=1, max=3 ise threshold=2 (2 parça açılır)
+            // Madde 5: Boss için (3 can) her hatada 2 parça açılır
             const threshold = Math.floor((mistakes / maxErrors) * 6);
             el.style.opacity = (i <= threshold) ? 1 : 0;
         }
@@ -278,13 +288,13 @@ function handleGuess(char, btn) {
     if(btn.classList.contains("used") || mistakes >= maxErrors) return;
     btn.classList.add("used");
     
-    // Madde 6: Normalizasyon uyumlu kontrol
     if(currentWord.includes(char)) {
         btn.classList.add("correct");
         for(let i=0; i<currentWord.length; i++) if(currentWord[i] === char) discovered[i] = true;
         renderWord();
         if(discovered.every(v => v)) {
             score += (maxErrors - mistakes) * 10;
+            if(isBoss) score += 50;
             updateUI();
             setTimeout(() => { currentIndex++; startRound(); }, 1200);
         }
@@ -305,12 +315,12 @@ function teacherSolve() {
 
 function gameOver(win) {
     $("endModal").style.display = "flex";
-    $("endTitle").textContent = win ? "TEBRİKLER! 🏆" : "BİTTİ";
+    $("endTitle").textContent = win ? "ZAFER! 🏆" : "BİTTİ BAŞKANIM";
     $("endTitle").style.color = win ? "var(--c-neon-green)" : "var(--c-error)";
-    $("endMsg").textContent = `Toplam Skor: ${score}`;
+    $("endMsg").textContent = `Toplam Skorunuz: ${score}`;
 }
 
-// Madde 8: Retry State Temizliği
+// Madde 8: Retry Temizliği
 window.retryGame = () => {
     window.speechSynthesis.cancel();
     $("endModal").style.display = "none";
@@ -329,10 +339,24 @@ function speak(txt) {
     window.speechSynthesis.speak(u);
 }
 
-function ensureAudio() {
-    const AC = window.AudioContext || window.webkitAudioContext;
-    if(AC) { const ctx = new AC(); ctx.resume(); }
-}
+window.usePowerUp = () => {
+    if(powerups <= 0 || isBoss) return;
+    let targets = [];
+    for(let i=0; i<currentWord.length; i++) {
+        if(!discovered[i] && /\p{L}/u.test(currentWord[i])) targets.push(currentWord[i]);
+    }
+    if(targets.length === 0) return;
+    const char = targets[Math.floor(Math.random() * targets.length)];
+    const keys = document.querySelectorAll(".key-btn");
+    for(let btn of keys) {
+        if(btn.textContent === char) {
+            powerups--;
+            updateUI();
+            handleGuess(char, btn);
+            break;
+        }
+    }
+};
 </script>
 </body>
 </html>
