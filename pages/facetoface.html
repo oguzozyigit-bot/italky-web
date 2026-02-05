@@ -88,7 +88,7 @@
       inset: 0;
       display:grid;
       grid-template-rows: 1fr auto 1fr;
-      padding: 70px 12px 54px;
+      padding: 70px 12px 70px; /* ✅ alt logo/mic için daha fazla boşluk */
       gap: 10px;
     }
 
@@ -206,10 +206,10 @@
     .btnIcon:active{ transform: translateY(1px); }
     .btnIcon.muted{ opacity: .45; }
 
-    /* ✅ listening state (motor class ekliyor) */
+    /* ✅ dinleme animasyonu */
     .btnIcon.listening{
       border-color: rgba(79,70,229,.45);
-      background: rgba(79,70,229,.14);
+      background: rgba(79,70,229,.16);
       box-shadow: 0 0 18px rgba(79,70,229,.20);
       position: relative;
     }
@@ -272,10 +272,9 @@
       transform: translateX(-50%) rotate(180deg);
     }
 
-    /* ✅ HATA-1 FIX: 180° taraftaki mikrofon ikonunu 180° döndür */
-    .side.top #botMic svg{
-      transform: rotate(180deg);
-    }
+    /* ✅ İSTEDİĞİN: mikrofondaki ikonları TAM TERS YÖNE çevir */
+    #topMic svg{ transform: rotate(180deg); }
+    #botMic svg{ transform: rotate(180deg); }
 
     /* ===== LOGO (KİLİTLİ) ===== */
     .brandBottom, .brandTop{
@@ -290,11 +289,13 @@
       opacity:.92;
       z-index: 40;
     }
-    .brandBottom{ bottom: 10px; }
-
-    /* ✅ HATA-2 FIX: italkyAI / BE FREE biraz aşağı insin */
+    /* ✅ Alt logo aşağı alındı */
+    .brandBottom{
+      bottom: -6px; /* 10px -> -6px */
+      transform: translateX(-50%) translateY(8px);
+    }
     .brandTop{
-      top: 18px; /* 10px -> 18px */
+      top: 18px;
       transform: translateX(-50%) rotate(180deg);
     }
 
@@ -590,6 +591,6 @@
     </div>
   </div>
 
-  <script type="module" src="/js/facetoface_page.js?v=3"></script>
+  <script type="module" src="/js/facetoface_page.js?v=4"></script>
 </body>
 </html>
