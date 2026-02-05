@@ -17,25 +17,19 @@
       --topH: 70px;
       --footerH: 80px;
 
-      /* --- Colors (Premium Palette) --- */
+      /* --- Colors --- */
       --bg-deep: #050507;
-      --bg-surface: #0f0f13;
-      
       --text-main: #ffffff;
       --text-muted: rgba(255, 255, 255, 0.5);
       --text-dim: rgba(255, 255, 255, 0.3);
 
-      --accent-primary: #6366f1; /* Indigo */
-      --accent-glow: rgba(99, 102, 241, 0.4);
+      --accent-primary: #6366f1;
+      --accent-glow: rgba(99, 102, 241, 0.5);
       --accent-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
 
-      /* --- Glassmorphism --- */
       --glass-bg: rgba(20, 20, 25, 0.65);
       --glass-border: rgba(255, 255, 255, 0.08);
-      --glass-highlight: rgba(255, 255, 255, 0.03);
-      --blur-amt: 20px;
 
-      /* --- Logo Colors --- */
       --logo-w: #fff;
       --ai-grad: linear-gradient(to right, #818cf8, #c084fc);
     }
@@ -51,59 +45,35 @@
       display: flex; align-items: center; justify-content: center;
     }
 
-    /* --- Background Atmosphere --- */
-    .premium-bg {
-      position: absolute; inset: 0; z-index: 0; pointer-events: none;
-      background: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #000000 60%);
-    }
-    .premium-glow {
-      position: absolute; width: 600px; height: 600px;
-      background: radial-gradient(circle, rgba(99, 102, 241, 0.15), transparent 70%);
-      top: -200px; left: 50%; transform: translateX(-50%);
-      filter: blur(80px); opacity: 0.6;
-    }
+    /* --- Background --- */
+    .premium-bg { position: absolute; inset: 0; z-index: 0; pointer-events: none; background: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #000000 60%); }
+    .premium-glow { position: absolute; width: 600px; height: 600px; background: radial-gradient(circle, rgba(99, 102, 241, 0.15), transparent 70%); top: -200px; left: 50%; transform: translateX(-50%); filter: blur(80px); opacity: 0.6; }
 
-    /* --- Mobile Frame --- */
+    /* --- Frame --- */
     .mobile-frame {
       width: 100%; max-width: var(--frameW); height: 100%;
       position: relative; z-index: 10;
-      background: rgba(10, 10, 12, 0.4);
+      background: rgba(10, 10, 12, 0.5);
       display: flex; flex-direction: column;
       overflow: hidden;
     }
-    
     @media(min-width: 520px) {
-      .mobile-frame {
-        height: 92vh; border-radius: 32px;
-        border: 1px solid var(--glass-border);
-        box-shadow: 0 40px 120px -20px rgba(0,0,0,0.8);
-        background: rgba(10, 10, 12, 0.85); /* Slightly darker on desktop */
-      }
+      .mobile-frame { height: 92vh; border-radius: 32px; border: 1px solid var(--glass-border); box-shadow: 0 40px 120px -20px rgba(0,0,0,0.8); background: rgba(10, 10, 12, 0.85); }
     }
 
     /* --- Top Bar --- */
     .topbar {
-      height: var(--topH);
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 0 20px;
-      background: rgba(5, 5, 7, 0.7);
-      backdrop-filter: blur(var(--blur-amt));
-      border-bottom: 1px solid var(--glass-border);
-      z-index: 50;
+      height: var(--topH); display: flex; align-items: center; justify-content: space-between;
+      padding: 0 20px; background: rgba(5, 5, 7, 0.7); backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--glass-border); z-index: 50;
     }
-
     .backBtn {
-      width: 40px; height: 40px; border-radius: 12px;
-      border: 1px solid var(--glass-border);
-      background: var(--glass-highlight);
-      color: var(--text-main); font-size: 18px;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; transition: 0.2s;
+      width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--glass-border);
+      background: rgba(255,255,255,0.03); color: var(--text-main); font-size: 18px;
+      display: flex; align-items: center; justify-content: center; cursor: pointer;
     }
-    .backBtn:active { transform: scale(0.95); background: rgba(255,255,255,0.1); }
-
     .mini-brand { display: flex; flex-direction: column; cursor: pointer; margin-left: 6px; }
-    .logo-line { font-family: 'Space Grotesk', sans-serif; font-size: 20px; letter-spacing: -0.5px; line-height: 1; }
+    .logo-line { font-family: 'Space Grotesk', sans-serif; font-size: 20px; line-height: 1; letter-spacing: -0.5px; }
     .logo-main { font-weight: 700; color: var(--logo-w); }
     .logo-ai { font-weight: 700; background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     .logo-slogan { font-size: 9px; font-weight: 700; letter-spacing: 3px; color: var(--text-muted); margin-top: 4px; opacity: 0.7; }
@@ -111,221 +81,189 @@
     .rightControls { display: flex; align-items: center; gap: 12px; }
     .usertext { text-align: right; line-height: 1.2; }
     .uname { font-size: 13px; font-weight: 600; color: var(--text-main); }
-    .plan { font-size: 10px; font-weight: 600; color: #a855f7; letter-spacing: 0.5px; text-transform: uppercase; }
-    
-    .avatar-btn {
-      width: 38px; height: 38px; border-radius: 50%; padding: 0;
-      border: 1px solid rgba(255,255,255,0.15);
-      background: transparent; overflow: hidden; cursor: pointer;
-    }
+    .plan { font-size: 10px; font-weight: 600; color: #a855f7; text-transform: uppercase; }
+    .avatar-btn { width: 38px; height: 38px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.15); background: transparent; overflow: hidden; cursor: pointer; padding: 0; }
     .avatar-btn img { width: 100%; height: 100%; object-fit: cover; }
     .avatar-fallback { width: 100%; height: 100%; background: #1f1f25; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; }
 
-    /* --- Main Content --- */
-    .main {
-      flex: 1; padding: 20px;
-      display: flex; flex-direction: column; gap: 16px;
-      overflow-y: auto; overflow-x: hidden;
-      padding-bottom: calc(var(--footerH) + 20px);
-    }
-    /* Hide Scrollbar */
+    /* --- Main --- */
+    .main { flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 16px; overflow-y: auto; padding-bottom: calc(var(--footerH) + 20px); }
     .main::-webkit-scrollbar { display: none; }
 
-    /* --- Toolbar (Controls) --- */
-    .toolbar {
-      display: grid; grid-template-columns: 1fr auto auto; gap: 10px;
-      margin-bottom: 4px;
-    }
-
-    /* Language Pill - Premium Style */
+    /* --- Toolbar --- */
+    .toolbar { display: flex; gap: 10px; margin-bottom: 4px; }
+    
     .pill {
-      height: 50px; border-radius: 14px;
+      flex: 1; height: 54px; border-radius: 16px;
       background: linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%);
       border: 1px solid var(--glass-border);
       display: flex; align-items: center; justify-content: space-between;
       padding: 0 16px; cursor: pointer; transition: 0.2s;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
-    .pill:active { transform: scale(0.98); border-color: rgba(255,255,255,0.2); }
+    .pill:active { transform: scale(0.98); }
     .pillLeft { display: flex; align-items: center; gap: 10px; }
-    .flag { font-size: 20px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
-    .label { font-size: 14px; font-weight: 600; letter-spacing: 0.3px; }
+    .flag { font-size: 20px; }
+    .label { font-size: 14px; font-weight: 600; }
     .caret { font-size: 10px; opacity: 0.6; }
 
-    /* Action Buttons Group */
-    .actions-group {
-      display: flex; gap: 8px;
-    }
+    /* Action Buttons */
+    .actions-group { display: flex; gap: 8px; flex: 1.2; } /* Genişletildi */
 
-    .btnSmall {
-      height: 50px; padding: 0 16px; border-radius: 14px;
-      font-size: 12px; font-weight: 700; letter-spacing: 0.5px;
-      cursor: pointer; transition: 0.2s;
-      display: flex; align-items: center; justify-content: center; gap: 6px;
+    /* Small + Button in Toolbar */
+    .btn-circle {
+      width: 54px; height: 54px; border-radius: 16px;
+      background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);
+      color: #fff; font-size: 24px; font-weight: 300;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: 0.2s; flex-shrink: 0;
     }
-    
-    /* Secondary Buttons (File/Cam) */
-    .btn-secondary {
-      background: transparent;
-      border: 1px solid var(--glass-border);
-      color: var(--text-muted);
-    }
-    .btn-secondary:active { background: rgba(255,255,255,0.05); color: var(--text-main); }
-    .btn-secondary svg { width: 16px; height: 16px; fill: currentColor; }
+    .btn-circle:active { background: rgba(255,255,255,0.1); transform: scale(0.95); }
 
-    /* Hero Button (Translate) */
+    /* Translate Button (Expanded) */
     #runBtn {
+      flex: 1; /* Genişletildi */
+      height: 54px; border-radius: 16px;
       background: var(--accent-gradient);
       border: none; color: #fff;
+      font-size: 13px; font-weight: 800; letter-spacing: 0.5px;
       box-shadow: 0 4px 20px var(--accent-glow);
-      min-width: 80px;
+      cursor: pointer; transition: 0.2s;
     }
-    #runBtn:active { transform: scale(0.96); box-shadow: 0 2px 10px var(--accent-glow); }
+    #runBtn:active { transform: scale(0.97); box-shadow: 0 2px 10px var(--accent-glow); }
 
-    /* --- The Split Pane (Cards) --- */
-    .pane {
-      flex: 1; display: grid; grid-template-rows: 1fr 1fr; gap: 16px; min-height: 0;
-    }
-
+    /* --- Pane & Boxes --- */
+    .pane { flex: 1; display: grid; grid-template-rows: 1fr 1fr; gap: 16px; min-height: 0; }
     .box {
-      border-radius: 20px;
-      border: 1px solid var(--glass-border);
-      background: var(--glass-bg);
-      backdrop-filter: blur(var(--blur-amt));
+      border-radius: 24px; border: 1px solid var(--glass-border);
+      background: var(--glass-bg); backdrop-filter: blur(20px);
       display: flex; flex-direction: column; overflow: hidden;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-      transition: border-color 0.3s;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+      position: relative;
     }
-    .box:focus-within { border-color: rgba(255,255,255,0.2); }
-
-    /* Box Header */
     .boxHead {
-      height: 40px; padding: 0 16px; display: flex; align-items: center; justify-content: space-between;
-      border-bottom: 1px solid rgba(255,255,255,0.04);
-      background: rgba(0,0,0,0.1);
+      height: 42px; padding: 0 16px; display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(0,0,0,0.15);
     }
     .headTitle { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); }
-    .small { font-size: 11px; font-weight: 500; color: var(--accent-primary); }
-    #statusBot { color: var(--text-dim); }
+    .small { font-size: 11px; font-weight: 600; color: var(--accent-primary); }
 
-    /* Input Preview Area */
+    /* --- Preview Area with Big + --- */
     .previewWrap {
       flex: 1; position: relative; overflow: hidden;
       background: rgba(0,0,0,0.2);
       display: flex; align-items: center; justify-content: center;
     }
-    /* Empty State Icon */
-    .previewWrap::after {
-      content: 'Dosya veya Kamera Seçin';
-      position: absolute; font-size: 12px; color: var(--text-dim);
-      font-weight: 500; pointer-events: none; z-index: 0;
+    
+    /* Empty State (Centered Big Plus) */
+    .empty-state {
+      display: flex; flex-direction: column; align-items: center; gap: 12px;
+      z-index: 2; pointer-events: none; /* Let clicks pass through if needed, but button needs pointer-events auto */
     }
     
-    .preview {
-      position: absolute; inset: 0; width: 100%; height: 100%;
-      object-fit: contain; z-index: 1; opacity: 0; transition: opacity 0.3s;
+    .big-plus-btn {
+      width: 72px; height: 72px; border-radius: 50%;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: var(--accent-primary);
+      font-size: 32px; font-weight: 300;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; pointer-events: auto;
+      box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4);
+      animation: pulse-glow 2s infinite;
+      transition: 0.3s;
     }
-    .preview.show { opacity: 1; background: #000; } /* Show when file selected */
+    .big-plus-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.12); }
+    
+    @keyframes pulse-glow {
+      0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); }
+      70% { box-shadow: 0 0 0 15px rgba(99, 102, 241, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+    }
 
-    /* Output Text Area */
+    .empty-text { font-size: 12px; font-weight: 600; color: var(--text-muted); letter-spacing: 0.5px; }
+
+    /* Image/PDF Canvas */
+    .preview { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; z-index: 1; opacity: 0; transition: opacity 0.3s; }
+    .preview.show { opacity: 1; background: #000; z-index: 5; } /* Covers the button when loaded */
+
+    /* Output */
     textarea {
-      flex: 1; width: 100%; border: none; background: transparent; resize: none;
+      flex: 1; border: none; background: transparent; resize: none;
       padding: 16px; color: var(--text-main); font-family: 'Outfit', sans-serif;
-      font-size: 15px; line-height: 1.6; font-weight: 400;
+      font-size: 15px; line-height: 1.6;
     }
-    textarea::placeholder { color: var(--text-dim); font-weight: 300; }
-    textarea::-webkit-scrollbar { width: 4px; }
-    textarea::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+    textarea::placeholder { color: var(--text-dim); }
 
     /* --- Footer --- */
     .footerbar {
-      position: absolute; bottom: 0; left: 0; right: 0;
-      height: var(--footerH);
-      background: rgba(5, 5, 7, 0.8);
-      backdrop-filter: blur(var(--blur-amt));
+      position: absolute; bottom: 0; left: 0; right: 0; height: var(--footerH);
+      background: rgba(5, 5, 7, 0.85); backdrop-filter: blur(20px);
       border-top: 1px solid var(--glass-border);
-      display: flex; flex-direction: column; justify-content: center; align-items: center;
-      gap: 10px; z-index: 50;
+      display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 8px; z-index: 50;
     }
-    
     .links { display: flex; gap: 20px; }
-    .links a {
-      color: var(--text-muted); font-size: 11px; font-weight: 600; text-decoration: none;
-      text-transform: uppercase; letter-spacing: 0.5px; transition: 0.2s;
-    }
-    .links a:hover { color: var(--text-main); }
-    
-    .footerBrand {
-      font-size: 10px; color: var(--text-dim); letter-spacing: 0.5px;
-    }
+    .links a { color: var(--text-muted); font-size: 11px; font-weight: 600; text-decoration: none; text-transform: uppercase; }
+    .footerBrand { font-size: 10px; color: var(--text-dim); letter-spacing: 0.5px; }
 
-    /* --- Language Sheet (Modern Modal) --- */
+    /* --- Sheets (Modals) --- */
     .sheetBackdrop {
       position: fixed; inset: 0; z-index: 9999;
-      background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
+      background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
       display: none; align-items: flex-end; justify-content: center;
       opacity: 0; transition: opacity 0.3s;
     }
     .sheetBackdrop.show { display: flex; opacity: 1; }
 
     .sheet {
-      width: 100%; max-width: 480px;
-      background: #121216;
-      border: 1px solid var(--glass-border);
-      border-radius: 28px 28px 0 0;
-      box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
-      overflow: hidden; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-      margin-bottom: 0; /* Bottom sheet */
-    }
-    @media(min-width: 520px) {
-      .sheet { border-radius: 24px; margin-bottom: 20px; width: 90%; }
+      width: 100%; max-width: 480px; background: #121216;
+      border: 1px solid var(--glass-border); border-radius: 28px 28px 0 0;
+      box-shadow: 0 -10px 50px rgba(0,0,0,0.6);
+      transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+      padding-bottom: 20px;
     }
     .sheetBackdrop.show .sheet { transform: translateY(0); }
 
-    .sheetTop {
-      padding: 16px 20px; display: flex; align-items: center; justify-content: space-between;
-      border-bottom: 1px solid var(--glass-border);
-    }
+    .sheetTop { padding: 18px 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--glass-border); }
     .sheetTitle { font-size: 16px; font-weight: 700; color: #fff; }
-    .sheetClose {
-      background: rgba(255,255,255,0.08); border: none; color: #fff;
-      width: 32px; height: 32px; border-radius: 50%; cursor: pointer;
-      display: flex; align-items: center; justify-content: center; font-size: 14px;
-    }
+    .sheetClose { background: rgba(255,255,255,0.08); border: none; color: #fff; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
+    /* Source Select specific buttons */
+    .source-options { padding: 24px; display: grid; gap: 12px; }
+    .btn-source {
+      height: 60px; border-radius: 18px; border: 1px solid var(--glass-border);
+      background: rgba(255,255,255,0.03); color: #fff;
+      display: flex; align-items: center; padding: 0 20px; gap: 16px;
+      font-size: 15px; font-weight: 600; cursor: pointer; transition: 0.2s;
+    }
+    .btn-source:active { background: rgba(255,255,255,0.08); transform: scale(0.98); }
+    .btn-source svg { width: 24px; height: 24px; fill: var(--accent-primary); }
+
+    /* Language Sheet Styles (FIXED COLORS) */
     .sheetSearch { padding: 12px 20px; border-bottom: 1px solid var(--glass-border); }
     .sheetSearch input {
-      width: 100%; height: 44px; border-radius: 12px;
-      background: rgba(255,255,255,0.05); border: 1px solid transparent;
-      color: #fff; padding: 0 14px; font-size: 14px;
+      width: 100%; height: 46px; border-radius: 14px;
+      background: rgba(255,255,255,0.08); border: 1px solid transparent;
+      color: #ffffff; /* FIX: White text */
+      padding: 0 16px; font-size: 14px;
     }
-    .sheetSearch input:focus { border-color: var(--accent-primary); background: rgba(0,0,0,0.2); }
-
-    .sheetList { max-height: 50vh; overflow-y: auto; padding-bottom: 20px; }
+    .sheetList { max-height: 50vh; overflow-y: auto; }
     .sheetRow {
-      padding: 14px 20px; display: flex; align-items: center; justify-content: space-between;
-      border-bottom: 1px solid rgba(255,255,255,0.03); cursor: pointer; transition: background 0.2s;
+      padding: 16px 24px; display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid rgba(255,255,255,0.03); cursor: pointer;
     }
-    .sheetRow:active { background: rgba(255,255,255,0.05); }
-    .sheetRow.selected { background: rgba(99, 102, 241, 0.1); }
-    .sheetRow.selected .name { color: var(--accent-primary); }
-    
-    .sheetRow .name { font-size: 14px; font-weight: 600; color: var(--text-main); }
-    .sheetRow .code { font-size: 12px; font-weight: 500; color: var(--text-dim); text-transform: uppercase; background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px; }
-
-    /* Toast */
-    .toast {
-      position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px);
-      background: rgba(255, 255, 255, 0.95); color: #000;
-      padding: 12px 24px; border-radius: 30px;
-      font-size: 13px; font-weight: 700;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-      z-index: 10000; transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-    .toast.show { transform: translateX(-50%) translateY(0); }
+    .sheetRow .name { font-size: 14px; font-weight: 600; color: #ffffff; /* FIX: White text */ }
+    .sheetRow .code { font-size: 12px; font-weight: 500; color: var(--text-muted); background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 6px; }
 
     /* Hidden Inputs */
     #filePick, #camPick { display: none; }
+    
+    /* Toast */
+    .toast {
+      position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px);
+      background: #fff; color: #000; padding: 12px 24px; border-radius: 30px;
+      font-size: 13px; font-weight: 700; z-index: 10000; transition: transform 0.3s;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
   </style>
 </head>
 
@@ -342,20 +280,16 @@
           <div class="logo-slogan">BE FREE</div>
         </div>
       </div>
-
       <div class="rightControls">
         <div class="usertext">
           <div class="uname" id="userName">—</div>
           <div class="plan" id="userPlan">FREE</div>
         </div>
-        <button class="avatar-btn" id="avatarBtn" aria-label="Profil">
-          <div class="avatar-fallback" id="avatarFallback">U</div>
-        </button>
+        <button class="avatar-btn" id="avatarBtn"><div class="avatar-fallback" id="avatarFallback">U</div></button>
       </div>
     </div>
 
     <div class="main">
-      
       <div class="toolbar">
         <button class="pill" id="toLangBtn" type="button">
           <span class="pillLeft">
@@ -366,13 +300,8 @@
         </button>
 
         <div class="actions-group">
-          <button class="btnSmall btn-secondary" id="pickFileBtn" type="button" aria-label="Dosya Seç">
-            <svg viewBox="0 0 24 24"><path d="M20 6h-8l-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/></svg>
-          </button>
-          <button class="btnSmall btn-secondary" id="pickCamBtn" type="button" aria-label="Kamera Aç">
-            <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-          </button>
-          <button class="btnSmall" id="runBtn" type="button">ÇEVİR</button>
+          <button class="btn-circle" id="toolbarAddBtn" type="button" aria-label="Ekle">+</button>
+          <button id="runBtn" type="button">ÇEVİR</button>
         </div>
       </div>
 
@@ -383,6 +312,10 @@
             <div class="small" id="statusTop">Hazır</div>
           </div>
           <div class="previewWrap">
+            <div class="empty-state">
+              <button class="big-plus-btn" id="bigAddBtn" type="button">+</button>
+              <span class="empty-text">Belge veya Fotoğraf</span>
+            </div>
             <img id="imgPreview" class="preview" alt="preview" />
             <canvas id="pdfCanvas" class="preview"></canvas>
           </div>
@@ -415,12 +348,29 @@
     <div class="sheet">
       <div class="sheetTop">
         <div class="sheetTitle" id="sheetTitle">Hedef Dil Seçimi</div>
-        <button class="sheetClose" id="sheetClose" aria-label="Kapat">✕</button>
+        <button class="sheetClose" id="sheetClose">✕</button>
       </div>
-      <div class="sheetSearch">
-        <input id="sheetQuery" placeholder="Dil ara... (Örn: İngilizce, EN)" />
-      </div>
+      <div class="sheetSearch"><input id="sheetQuery" placeholder="Dil ara..." /></div>
       <div class="sheetList" id="sheetList"></div>
+    </div>
+  </div>
+
+  <div class="sheetBackdrop" id="sourceSheet">
+    <div class="sheet">
+      <div class="sheetTop">
+        <div class="sheetTitle">Ekleme Yöntemi</div>
+        <button class="sheetClose" onclick="document.getElementById('sourceSheet').classList.remove('show')">✕</button>
+      </div>
+      <div class="source-options">
+        <button class="btn-source" id="sourceCam">
+          <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+          Fotoğraf Çek (Kamera)
+        </button>
+        <button class="btn-source" id="sourceFile">
+          <svg viewBox="0 0 24 24"><path d="M20 6h-8l-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/></svg>
+          Dosya veya Galeri
+        </button>
+      </div>
     </div>
   </div>
 
@@ -428,6 +378,32 @@
 
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.min.js"></script>
+  
+  <script>
+    // Simple logic to bridge the new UI buttons to the hidden file inputs
+    // This runs alongside the main module script
+    document.addEventListener('DOMContentLoaded', () => {
+      const sourceSheet = document.getElementById('sourceSheet');
+      const openSheet = () => sourceSheet.classList.add('show');
+      const closeSheet = () => sourceSheet.classList.remove('show');
+
+      // Open sheet from Big Plus or Toolbar Plus
+      document.getElementById('bigAddBtn').addEventListener('click', openSheet);
+      document.getElementById('toolbarAddBtn').addEventListener('click', openSheet);
+
+      // Handle Camera Select
+      document.getElementById('sourceCam').addEventListener('click', () => {
+        closeSheet();
+        document.getElementById('camPick').click(); // Triggers hidden input
+      });
+
+      // Handle File Select
+      document.getElementById('sourceFile').addEventListener('click', () => {
+        closeSheet();
+        document.getElementById('filePick').click(); // Triggers hidden input
+      });
+    });
+  </script>
 
   <script type="module" src="/js/document_page.js?v=1"></script>
 </body>
