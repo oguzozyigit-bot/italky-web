@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>italkyAI • Pro Öğretmen</title>
+  <title>italkyAI • Pro Cloud</title>
   <link rel="icon" href="data:," />
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,9 +17,10 @@
       --text-main: #ffffff;
       --text-muted: rgba(255, 255, 255, 0.5);
       
-      /* Karakter Renkleri (JS ile değişecek) */
       --theme-color: #8b5cf6; 
       --theme-gradient: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+      --cloud-speaking: linear-gradient(45deg, #ff00cc, #3333ff, #00ccff, #ffcc00);
+      --cloud-listening: linear-gradient(135deg, #06b6d4, #3b82f6);
       
       --glass-border: rgba(255, 255, 255, 0.08);
     }
@@ -36,8 +37,7 @@
     }
 
     .bg-gradient { position: absolute; inset: 0; z-index: 0; background: radial-gradient(circle at 50% 0%, #1a103c 0%, #000000 80%); }
-    .bg-glow { position: absolute; top: -20%; left: 50%; transform: translateX(-50%); width: 120%; height: 60%; background: radial-gradient(ellipse, rgba(139, 92, 246, 0.15), transparent 70%); pointer-events: none; }
-
+    
     .mobile-frame {
       width: 100%; max-width: var(--frameW); height: 100%;
       position: relative; z-index: 10;
@@ -51,101 +51,111 @@
     .close-btn { background: none; border: none; color: var(--text-muted); font-size: 24px; cursor: pointer; }
     
     .progress-track {
-        flex: 1; height: 4px; background: rgba(255,255,255,0.1); border-radius: 10px; margin: 0 20px;
+        flex: 1; height: 6px; background: rgba(255,255,255,0.1); border-radius: 10px; margin: 0 20px;
         position: relative; overflow: hidden;
     }
     .progress-fill {
         height: 100%; width: 0%; background: var(--theme-gradient); border-radius: 10px;
         transition: width 0.5s ease;
     }
+    .timer-badge {
+        font-size: 12px; font-weight: 700; color: #fbbf24; background: rgba(255,255,255,0.05);
+        padding: 4px 10px; border-radius: 8px; border: 1px solid var(--glass-border);
+    }
 
     /* STAGE */
     .lesson-stage {
         flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-        padding: 0 24px; position: relative;
+        padding: 0 24px; position: relative; gap: 30px;
     }
 
-    /* Öğretmen Künyesi */
-    .teacher-pill {
-        display: flex; align-items: center; gap: 10px;
-        background: rgba(0,0,0,0.4); padding: 8px 16px 8px 8px; border-radius: 30px;
-        border: 1px solid var(--glass-border); margin-bottom: 20px;
-        transition: transform 0.3s; cursor: pointer;
+    /* --- CLOUD AVATAR (Canlı Efekt) --- */
+    .cloud-container {
+        position: relative; width: 120px; height: 120px;
+        display: flex; align-items: center; justify-content: center;
     }
-    .t-avatar-small {
-        width: 40px; height: 40px; border-radius: 50%;
-        background: var(--theme-gradient); display: flex; align-items: center; justify-content: center;
-        box-shadow: 0 0 15px rgba(139, 92, 246, 0.4); position: relative;
+    
+    /* Temel Bulut Şekli */
+    .cloud-core {
+        width: 80px; height: 80px; border-radius: 50%;
+        background: rgba(255,255,255,0.1);
+        backdrop-filter: blur(10px);
+        position: relative; z-index: 2;
+        box-shadow: 0 0 20px rgba(255,255,255,0.1);
+        transition: all 0.5s ease;
+        display: flex; align-items: center; justify-content: center; font-size: 32px;
     }
-    /* Konuşma Efekti */
-    .t-avatar-small.speaking::after {
-        content: ''; position: absolute; inset: -4px; border-radius: 50%;
-        border: 2px solid var(--theme-color); opacity: 0;
-        animation: ping 1.5s infinite;
+
+    /* Efekt Katmanı */
+    .cloud-aura {
+        position: absolute; inset: 0; border-radius: 50%;
+        filter: blur(15px); z-index: 1;
+        transition: all 0.5s ease;
     }
-    .t-label { font-size: 13px; font-weight: 600; color: var(--text-main); }
-    .t-status { font-size: 11px; color: var(--theme-color); font-weight: 500; }
+
+    /* DURUM: IDLE (Bekliyor) */
+    .cloud-container.idle .cloud-core { transform: scale(1); border: 1px solid rgba(255,255,255,0.2); }
+    .cloud-container.idle .cloud-aura { background: var(--theme-color); opacity: 0.3; animation: breathe 4s infinite ease-in-out; }
+
+    /* DURUM: LISTENING (Nefes Alıp Verme - Mavi) */
+    .cloud-container.listening .cloud-core { transform: scale(1.1); border-color: #3b82f6; }
+    .cloud-container.listening .cloud-aura { 
+        background: var(--cloud-listening); 
+        opacity: 0.6; 
+        animation: deepBreath 3s infinite ease-in-out; 
+    }
+
+    /* DURUM: SPEAKING (Rengarenk - Hızlı) */
+    .cloud-container.speaking .cloud-core { transform: scale(1.05); border-color: transparent; }
+    .cloud-container.speaking .cloud-aura {
+        background: var(--cloud-speaking);
+        background-size: 200% 200%;
+        opacity: 0.8;
+        animation: rainbowRotate 2s infinite linear;
+    }
 
     /* CARD DESIGN */
     .focus-card {
-        width: 100%; min-height: 320px;
+        width: 100%; min-height: 260px;
         background: rgba(20, 20, 25, 0.6); backdrop-filter: blur(20px);
         border: 1px solid var(--glass-border); border-radius: 32px;
         display: flex; flex-direction: column; align-items: center; justify-content: center;
-        padding: 30px 20px; text-align: center;
+        padding: 20px; text-align: center;
         box-shadow: 0 20px 50px rgba(0,0,0,0.4);
-        transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-        transform: scale(0.95); opacity: 0; position: relative;
+        transition: all 0.4s;
     }
-    .focus-card.active { transform: scale(1); opacity: 1; }
-    
     .card-image {
-        width: 160px; height: 160px; object-fit: contain;
-        margin-bottom: 20px; display: none;
-        filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
+        width: 140px; height: 140px; object-fit: contain;
+        margin-bottom: 16px; display: none; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
     }
-    
     .word-target {
         font-family: 'Space Grotesk', sans-serif;
-        font-size: 38px; font-weight: 700; color: #fff;
-        line-height: 1.1; margin-bottom: 8px;
-        text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        font-size: 36px; font-weight: 700; color: #fff;
+        line-height: 1.1; margin-bottom: 6px;
     }
     .word-meaning {
         font-size: 16px; color: var(--text-muted); font-weight: 500;
-        margin-top: 10px; padding-top: 10px;
-        border-top: 1px solid rgba(255,255,255,0.1); width: 60%;
+        border-top: 1px solid rgba(255,255,255,0.1); width: 60%; padding-top: 8px;
     }
 
-    /* Ses Dalgası */
-    .audio-wave {
-        height: 24px; display: flex; align-items: center; gap: 4px; margin-top: 20px;
-        opacity: 0; transition: 0.3s;
-    }
-    .audio-wave.playing { opacity: 1; }
-    .bar { width: 4px; background: var(--theme-color); border-radius: 4px; animation: wave 1s infinite ease-in-out; }
-    .bar:nth-child(2) { animation-delay: 0.1s; height: 16px; }
-    .bar:nth-child(3) { animation-delay: 0.2s; height: 24px; }
-    .bar:nth-child(4) { animation-delay: 0.3s; height: 12px; }
-
-    /* CONTROLS */
+    /* CONTROLS (Düzenlendi) */
     .controls-area {
-        padding: 30px 24px; display: flex; flex-direction: column; align-items: center; gap: 20px;
+        padding: 30px 24px; display: flex; flex-direction: column; align-items: center; gap: 24px;
         position: relative; z-index: 30;
     }
-    .instruction-text {
-        font-size: 14px; color: var(--text-muted); text-align: center;
-        min-height: 20px; font-weight: 500; letter-spacing: 0.5px;
+    
+    .action-row {
+        display: flex; align-items: center; justify-content: center; gap: 40px; width: 100%;
     }
 
-    .mic-wrapper { position: relative; }
+    /* Big Mic Button (Center) */
     .main-mic {
         width: 88px; height: 88px; border-radius: 50%;
         background: linear-gradient(145deg, #1a1a20, #0f0f12);
         border: 1px solid rgba(255,255,255,0.1);
         color: #fff; display: flex; align-items: center; justify-content: center;
-        font-size: 32px; cursor: pointer;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,255,0.1);
+        font-size: 32px; cursor: pointer; position: relative;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         transition: all 0.3s ease;
     }
     .main-mic:active { transform: scale(0.95); }
@@ -154,380 +164,326 @@
         box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.2), 0 0 40px var(--theme-color);
         background: var(--theme-color);
     }
-    
-    .mic-ripple {
-        position: absolute; inset: -20px; border-radius: 50%;
-        border: 2px solid var(--theme-color); opacity: 0; pointer-events: none;
-    }
-    .main-mic.listening ~ .mic-ripple { animation: ripple 1.5s infinite; }
 
-    .replay-btn {
-        position: absolute; right: 40px; top: 50%; transform: translateY(-50%);
-        width: 44px; height: 44px; border-radius: 14px;
+    /* Replay Button (Left Side) */
+    .side-btn {
+        width: 50px; height: 50px; border-radius: 16px;
         background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);
-        color: var(--text-muted); display: flex; align-items: center; justify-content: center; cursor: pointer;
+        color: var(--text-muted); display: flex; align-items: center; justify-content: center;
+        cursor: pointer; transition: 0.2s;
     }
-    .replay-btn:active { background: rgba(255,255,255,0.1); }
+    .side-btn:active { background: rgba(255,255,255,0.1); transform: scale(0.95); }
+    .side-btn.disabled { opacity: 0.3; pointer-events: none; }
 
-    /* TEACHER SELECTION OVERLAY */
-    .overlay-screen {
-        position: absolute; inset: 0; z-index: 100;
-        background: rgba(5, 5, 7, 0.98);
-        display: flex; flex-direction: column; padding: 60px 20px 40px;
-        gap: 20px; overflow-y: auto;
-        transition: transform 0.5s cubic-bezier(0.7, 0, 0.3, 1);
+    .instruction-text {
+        font-size: 14px; color: var(--text-muted); text-align: center;
+        min-height: 20px; font-weight: 500;
     }
-    .overlay-screen.hidden { transform: translateY(100%); pointer-events: none; }
-    .sel-title { font-size: 24px; font-weight: 700; color: #fff; text-align: center; }
-    .teacher-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding-bottom: 40px; }
-    .t-card {
-        background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border);
-        border-radius: 24px; padding: 20px; cursor: pointer;
-        display: flex; flex-direction: column; align-items: center; gap: 14px;
-        transition: 0.2s; position: relative; overflow: hidden;
-    }
-    .t-card:active { transform: scale(0.96); background: rgba(255,255,255,0.06); }
-    .t-avatar-img {
-        width: 70px; height: 70px; border-radius: 50%;
-        display: flex; align-items: center; justify-content: center;
-        border: 2px solid rgba(255,255,255,0.1); font-size: 30px;
-    }
-    .t-card[data-gender="female"] .t-avatar-img { background: linear-gradient(135deg, #FF9A9E 0%, #FECFEF 100%); }
-    .t-card[data-gender="male"] .t-avatar-img { background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%); }
-    .t-name { font-size: 16px; font-weight: 700; color: #fff; }
 
-    @keyframes ping { 75%, 100% { transform: scale(1.6); opacity: 0; } }
-    @keyframes wave { 0%, 100% { height: 4px; } 50% { height: 24px; } }
-    @keyframes ripple { 0% { transform: scale(0.8); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
+    /* MODAL */
+    .modal-backdrop {
+        position: fixed; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(8px);
+        z-index: 200; display: none; align-items: center; justify-content: center; padding: 20px;
+    }
+    .modal-backdrop.show { display: flex; }
+    .modal-box {
+        background: #121216; border: 1px solid var(--glass-border);
+        border-radius: 24px; padding: 30px 24px; width: 100%; max-width: 340px;
+        text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+    }
+    .btn-primary { 
+        background: var(--theme-gradient); color: #fff; border: none; width: 100%;
+        padding: 16px; border-radius: 16px; font-weight: 700; font-size: 15px; cursor: pointer; margin-top: 10px;
+    }
+    .btn-secondary {
+        background: transparent; color: var(--text-muted); border: 1px solid var(--glass-border); width: 100%;
+        padding: 14px; border-radius: 16px; font-weight: 600; font-size: 14px; cursor: pointer; margin-top: 10px;
+    }
+
+    /* TOAST */
+    .toast {
+        position: absolute; bottom: 150px; left: 50%; transform: translateX(-50%) translateY(20px);
+        padding: 12px 24px; border-radius: 20px; font-weight: 700; font-size: 14px;
+        opacity: 0; transition: 0.3s; pointer-events: none; z-index: 50; display: flex; gap: 8px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast.success { background: #064e3b; color: #34d399; border: 1px solid #059669; }
+    .toast.retry { background: #451a03; color: #fbbf24; border: 1px solid #d97706; }
+
+    /* Animations */
+    @keyframes breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+    @keyframes deepBreath { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.15); } }
+    @keyframes rainbowRotate { 0% { background-position: 0% 50%; transform: rotate(0deg); } 100% { background-position: 100% 50%; transform: rotate(360deg); } }
+
   </style>
 </head>
 
 <body>
   <div class="bg-gradient"></div>
-  <div class="bg-glow"></div>
 
   <div class="mobile-frame">
     
     <div class="top-header">
-      <button class="close-btn" onclick="history.back()">✕</button>
+      <button class="close-btn" onclick="tryExit()">✕</button>
       <div class="progress-track">
         <div class="progress-fill" style="width: 0%"></div>
       </div>
-    </div>
-
-    <div class="overlay-screen" id="teacherScreen">
-      <h2 class="sel-title">Öğretmenini Seç</h2>
-      <div class="teacher-grid">
-        <div class="t-card" data-gender="female" onclick="selectTeacher('dora')">
-          <div class="t-avatar-img">👩‍🏫</div>
-          <div class="t-name">Dora</div>
-        </div>
-        <div class="t-card" data-gender="female" onclick="selectTeacher('ayda')">
-          <div class="t-avatar-img">⚡</div>
-          <div class="t-name">Ayda</div>
-        </div>
-        <div class="t-card" data-gender="female" onclick="selectTeacher('umay')">
-          <div class="t-avatar-img">⚖️</div>
-          <div class="t-name">Umay</div>
-        </div>
-        <div class="t-card" data-gender="male" onclick="selectTeacher('sencer')">
-          <div class="t-avatar-img">🎙️</div>
-          <div class="t-name">Sencer</div>
-        </div>
-        <div class="t-card" data-gender="male" onclick="selectTeacher('toygar')">
-          <div class="t-avatar-img">🎮</div>
-          <div class="t-name">Toygar</div>
-        </div>
-        <div class="t-card" data-gender="male" onclick="selectTeacher('sungur')">
-          <div class="t-avatar-img">🗿</div>
-          <div class="t-name">Sungur</div>
-        </div>
-      </div>
+      <div class="timer-badge" id="timerBadge">00:00</div>
     </div>
 
     <div class="lesson-stage">
       
-      <div class="teacher-pill" onclick="changeTeacher()">
-        <div class="t-avatar-small" id="tAvatar">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="#fff"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
-        </div>
-        <div style="display:flex; flex-direction:column;">
-            <span class="t-label" id="tName">...</span>
-            <span class="t-status" id="tStatus">Hazır</span>
-        </div>
-      </div>
+      <div class="cloud-container idle" id="cloudAvatar">
+        <div class="cloud-aura"></div>
+        <div class="cloud-core">👩‍🏫</div> </div>
+      <div id="teacherStatusText" style="font-size:12px; color:rgba(255,255,255,0.5); margin-top:-20px;">Dora Hazır</div>
 
       <div class="focus-card active" id="wordCard">
         <img src="" class="card-image" id="cardImage" alt="lesson image">
-        
         <div class="word-target" id="targetWord">...</div>
         <div class="word-meaning" id="targetMeaning">...</div>
-        
-        <div class="audio-wave" id="audioWave">
-            <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
-        </div>
+      </div>
+
+      <div class="toast" id="feedbackToast">
+        <span id="feedIcon">🎉</span> <span id="feedText">Mükemmel!</span>
       </div>
     </div>
 
     <div class="controls-area">
-      <div class="instruction-text" id="instruction">Önce dinle...</div>
+      <div class="instruction-text" id="instruction">Dersi başlatmak için bekle...</div>
       
-      <div class="mic-wrapper">
+      <div class="action-row">
+        <div class="side-btn" id="replayBtn" title="Tekrar Dinle">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        </div>
+
         <div class="main-mic" id="micBtn">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
         </div>
-        <div class="mic-ripple"></div>
-        
-        <div class="replay-btn" id="replayBtn">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-        </div>
+
+        <div class="side-btn disabled" style="opacity:0;"></div>
       </div>
     </div>
 
   </div>
 
+  <div class="modal-backdrop" id="endModal">
+    <div class="modal-box">
+      <div style="font-size:40px; margin-bottom:10px;">🎉</div>
+      <h2 style="color:#fff; margin-bottom:10px;">Harika İş Çıkardın!</h2>
+      <p style="color:rgba(255,255,255,0.6); font-size:14px; margin-bottom:20px;">
+        Bugünkü dersini tamamladın. Şimdi öğrendiklerini pekiştirmek ister misin?
+      </p>
+      <button class="btn-primary" onclick="goToGames()">🎮 Eğlenerek Öğren'e Git</button>
+      <button class="btn-secondary" onclick="window.location.href='/pages/home.html'">Ana Menüye Dön</button>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="lockModal">
+    <div class="modal-box">
+      <div style="font-size:40px; margin-bottom:10px;">⏳</div>
+      <h2 style="color:#fff; margin-bottom:10px;">Dinlenme Zamanı</h2>
+      <p style="color:rgba(255,255,255,0.6); font-size:14px; margin-bottom:20px;">
+        Yeni ders 24 saat sonra açılacak. Ancak pratik yapmak için bu dersi tekrar edebilirsin.
+      </p>
+      <button class="btn-primary" onclick="startAnyway()">Bu Dersi Tekrar Et</button>
+      <button class="btn-secondary" onclick="goToGames()">Oyun Oyna</button>
+    </div>
+  </div>
+
   <script>
-    // =========================================================
-    // ⚠️ RENDER BACKEND URL BURAYA
-    // =========================================================
-    const BACKEND_URL = "https://your-render-app.onrender.com"; 
-    // =========================================================
-
-    // --- SENİN İSTEDİĞİN KARAKTER DATA (VOICES) ---
-    const VOICES = [
-      { id: "dora",   label: "Dora",   gender: "female", openaiVoice: "nova" },
-      { id: "ayda",   label: "Ayda",   gender: "female", openaiVoice: "shimmer" },
-      { id: "umay",   label: "Umay",   gender: "female", openaiVoice: "alloy" },
-      { id: "sencer", label: "Sencer", gender: "male",   openaiVoice: "echo" },
-      { id: "toygar", label: "Toygar", gender: "male",   openaiVoice: "fable" },
-      { id: "sungur", label: "Sungur", gender: "male",   openaiVoice: "onyx" }
-    ];
-
-    let currentTeacher = null;
-    let silenceTimer = null;
-    let silenceCount = 0;
-
-    // --- MÜFREDAT (Resimli + Kelimeli) ---
-    const lessonData = [
+    // --- CONF ---
+    const MIN_LESSON_TIME = 15 * 60; // 15 dakika (saniye cinsinden)
+    // const MIN_LESSON_TIME = 10; // TEST İÇİN 10 SANİYE (Bunu açıp üsttekini kapatabilirsin test ederken)
+    
+    // --- STATE ---
+    let lessonData = [
         { type: 'visual', en: "Duck", tr: "Ördek", img: "https://cdn-icons-png.flaticon.com/512/826/826963.png" }, 
         { type: 'repeat', en: "Good Morning", tr: "Günaydın", img: null },
         { type: 'visual', en: "Apple", tr: "Elma", img: "https://cdn-icons-png.flaticon.com/512/415/415733.png" },
-        { type: 'repeat', en: "How are you?", tr: "Nasılsın?", img: null }
+        { type: 'repeat', en: "How are you?", tr: "Nasılsın?", img: null },
+        { type: 'repeat', en: "I am fine", tr: "İyiyim", img: null }
     ];
-
     let currentIndex = 0;
     let isTeacherSpeaking = false;
     let isUserListening = false;
+    let lessonStartTime = null;
+    let timerInterval = null;
 
-    // DOM Elements
+    // --- DOM ---
     const el = {
-        targetWord: document.getElementById('targetWord'),
-        targetMeaning: document.getElementById('targetMeaning'),
-        cardImage: document.getElementById('cardImage'),
-        micBtn: document.getElementById('micBtn'),
-        replayBtn: document.getElementById('replayBtn'),
-        audioWave: document.getElementById('audioWave'),
-        tAvatar: document.getElementById('tAvatar'),
-        tStatus: document.getElementById('tStatus'),
-        tName: document.getElementById('tName'),
-        instruction: document.getElementById('instruction'),
+        cloud: document.getElementById('cloudAvatar'),
+        status: document.getElementById('teacherStatusText'),
+        word: document.getElementById('targetWord'),
+        meaning: document.getElementById('targetMeaning'),
+        img: document.getElementById('cardImage'),
+        mic: document.getElementById('micBtn'),
         progress: document.querySelector('.progress-fill'),
-        teacherScreen: document.getElementById('teacherScreen')
+        toast: document.getElementById('feedbackToast'),
+        timer: document.getElementById('timerBadge'),
+        endModal: document.getElementById('endModal'),
+        lockModal: document.getElementById('lockModal')
     };
 
     // --- INIT ---
-    // Başlangıçta öğretmen seçtirme ekranı açık
-    
-    function selectTeacher(id) {
-        const selected = VOICES.find(v => v.id === id);
-        currentTeacher = selected;
-        
-        // UI Güncelle
-        el.tName.innerText = selected.label;
-        const root = document.documentElement;
-        if(selected.gender === 'female') {
-            root.style.setProperty('--theme-gradient', 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)');
-            root.style.setProperty('--theme-color', '#8b5cf6');
-        } else {
-            root.style.setProperty('--theme-gradient', 'linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%)');
-            root.style.setProperty('--theme-color', '#3b82f6');
-        }
+    window.onload = () => {
+        checkCooldown();
+    };
 
-        // Ekranı kapat, derse başla
-        el.teacherScreen.classList.add('hidden');
-        loadCard(0);
-        setTimeout(teacherTurn, 1000);
+    function checkCooldown() {
+        const lastLesson = localStorage.getItem('italky_last_lesson_ts');
+        const now = Date.now();
+        
+        // Eğer 24 saat geçmediyse (86400000 ms)
+        if (lastLesson && (now - parseInt(lastLesson) < 86400000)) {
+            el.lockModal.classList.add('show');
+        } else {
+            startLesson();
+        }
     }
 
-    function changeTeacher() {
-        el.teacherScreen.classList.remove('hidden');
+    function startAnyway() {
+        el.lockModal.classList.remove('show');
+        startLesson();
+    }
+
+    function startLesson() {
+        lessonStartTime = Date.now();
+        loadCard(0);
+        
+        // Timer Başlat
+        timerInterval = setInterval(() => {
+            const elapsed = Math.floor((Date.now() - lessonStartTime) / 1000);
+            const m = Math.floor(elapsed / 60).toString().padStart(2, '0');
+            const s = (elapsed % 60).toString().padStart(2, '0');
+            el.timer.innerText = `${m}:${s}`;
+        }, 1000);
+
+        setTimeout(teacherTurn, 1000);
     }
 
     function loadCard(index) {
         if(index >= lessonData.length) {
-            alert("Ders Bitti! Harikasın.");
+            finishLesson();
             return;
         }
         currentIndex = index;
-        const currentData = lessonData[index];
+        const item = lessonData[index];
         
-        el.progress.style.width = `${((index) / lessonData.length) * 100}%`;
-
-        if (currentData.type === 'visual' && currentData.img) {
-            el.cardImage.src = currentData.img;
-            el.cardImage.style.display = 'block';
-            el.targetWord.innerText = "?";
-            el.targetMeaning.innerText = "";
+        el.progress.style.width = `${((index)/lessonData.length)*100}%`;
+        
+        if(item.type === 'visual' && item.img) {
+            el.img.src = item.img;
+            el.img.style.display = 'block';
+            el.word.innerText = "?";
+            el.meaning.innerText = "";
         } else {
-            el.cardImage.style.display = 'none';
-            el.targetWord.innerText = currentData.en;
-            el.targetMeaning.innerText = currentData.tr;
+            el.img.style.display = 'none';
+            el.word.innerText = item.en;
+            el.meaning.innerText = item.tr;
         }
-        
-        el.micBtn.classList.remove('listening');
-        el.instruction.innerText = "Önce dinle...";
     }
 
-    // --- 1. TEACHER SPEAKING (BACKEND) ---
-    async function teacherTurn() {
+    // --- TEACHER (HECELEME MODU) ---
+    function teacherTurn() {
         if(isTeacherSpeaking) return;
         isTeacherSpeaking = true;
         
-        el.tAvatar.classList.add('speaking');
-        el.audioWave.classList.add('playing');
-        el.tStatus.innerText = "Konuşuyor...";
-
-        const currentData = lessonData[currentIndex];
-        let textToSpeak = currentData.en;
+        // Görsel Efekt (Rengarenk Bulut)
+        el.cloud.className = "cloud-container speaking";
+        el.status.innerText = "Heceleyerek Konuşuyor...";
         
-        if (currentData.type === 'visual') textToSpeak = "What is this?";
+        const item = lessonData[currentIndex];
+        let text = item.en;
+        if(item.type === 'visual') text = "What is this?";
 
-        try {
-            // OPENAI API CALL
-            const response = await fetch(`${BACKEND_URL}/api/tts_openai`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    text: textToSpeak, 
-                    voice: currentTeacher.openaiVoice // Seçilen öğretmenin sesi (nova, echo vs.)
-                })
-            });
+        // TTS (Tarayıcı)
+        const synth = window.speechSynthesis;
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = 'en-US';
+        u.rate = 0.7; // YAVAŞ (Heceleme etkisi)
+        u.pitch = 1.1; // Biraz daha canlı
 
-            if (!response.ok) throw new Error("API Hatası");
-            const data = await response.json();
-            
-            if (data.audio_base64) {
-                const audio = new Audio("data:audio/mp3;base64," + data.audio_base64);
-                audio.onended = finishTeacherTurn;
-                await audio.play();
-            } else {
-                throw new Error("No audio data");
-            }
+        u.onend = () => {
+            isTeacherSpeaking = false;
+            el.cloud.className = "cloud-container idle";
+            el.status.innerText = "Sıra Sende";
+            document.getElementById('instruction').innerText = "Şimdi mikrofona bas ve söyle.";
+        };
 
-        } catch (error) {
-            // Fallback: Tarayıcı Sesi
-            console.warn("Backend hatası, tarayıcı motoru kullanılıyor.");
-            const synth = window.speechSynthesis;
-            const utterThis = new SpeechSynthesisUtterance(textToSpeak);
-            utterThis.lang = 'en-US';
-            utterThis.onend = finishTeacherTurn;
-            synth.speak(utterThis);
-        }
+        synth.speak(u);
     }
 
-    function finishTeacherTurn() {
-        isTeacherSpeaking = false;
-        el.tAvatar.classList.remove('speaking');
-        el.audioWave.classList.remove('playing');
-        el.tStatus.innerText = "Sıra Sende";
-        el.instruction.innerText = "Mikrofona bas ve söyle.";
-        startSilenceDetection(); // Konuşma bitti, sessizlik sayacı başlar
-    }
-
-    // --- 2. SESSİZLİK YÖNETİMİ (KAYNANA MODU) ---
-    function startSilenceDetection() {
-        clearTimeout(silenceTimer);
-        silenceCount = 0;
-        
-        // 10 saniye bekle, konuşmazsa dürter
-        silenceTimer = setTimeout(() => {
-            if (!isUserListening && !isTeacherSpeaking) {
-                handleSilence();
-            }
-        }, 10000);
-    }
-
-    async function handleSilence() {
-        silenceCount++;
-        let nudgeText = "";
-        
-        if (silenceCount === 1) {
-            nudgeText = "Orada mısın? Hadi çekinme, seni dinliyorum.";
-        } else {
-            nudgeText = "Sanırım zorlandın. Sorun değil, tekrar deneyelim mi?";
-        }
-
-        // Öğretmen araya girer konuşur
-        isTeacherSpeaking = true;
-        el.tStatus.innerText = "Seni Motive Ediyor...";
-        
-        // Bu metni de seslendir
-        try {
-             // Basitçe tarayıcı motoruyla hızlıca motive etsin (Hız için)
-             const synth = window.speechSynthesis;
-             const utterThis = new SpeechSynthesisUtterance(nudgeText);
-             utterThis.lang = 'tr-TR'; // Türkçe motive etsin
-             utterThis.onend = () => {
-                 isTeacherSpeaking = false;
-                 el.tStatus.innerText = "Sıra Sende";
-             };
-             synth.speak(utterThis);
-        } catch(e) {}
-    }
-
-    // --- 3. USER SPEAKING ---
-    el.micBtn.addEventListener('click', () => {
-        clearTimeout(silenceTimer); // Kullanıcı butona bastı, sayacı durdur
+    // --- USER (NEFES ALAN BULUT) ---
+    el.mic.addEventListener('click', () => {
         if(isTeacherSpeaking) return;
 
         if(!isUserListening) {
-            startListening();
-        } else {
-            stopListening();
+            isUserListening = true;
+            el.mic.classList.add('listening');
+            
+            // Görsel Efekt (Nefes Alan Mavi Bulut)
+            el.cloud.className = "cloud-container listening";
+            el.status.innerText = "Seni Dinliyor...";
+            
+            // Simülasyon
+            setTimeout(evaluate, 2000);
         }
     });
 
-    function startListening() {
-        // Gerçek STT (Speech to Text) entegrasyonu buraya gelecek
-        // Şimdilik simülasyon:
-        isUserListening = true;
-        el.micBtn.classList.add('listening');
-        el.instruction.innerText = "Dinliyorum...";
-        el.tStatus.innerText = "Seni Dinliyor...";
-        
-        // 3 saniye sonra durdur
-        setTimeout(stopListening, 3000);
-    }
-
-    function stopListening() {
+    function evaluate() {
         isUserListening = false;
-        el.micBtn.classList.remove('listening');
-        el.instruction.innerText = "Analiz ediliyor...";
+        el.mic.classList.remove('listening');
+        el.cloud.className = "cloud-container idle";
+        el.status.innerText = "Analiz ediliyor...";
         
-        const currentData = lessonData[currentIndex];
-        if (currentData.type === 'visual') {
-            el.targetWord.innerText = currentData.en;
-            el.targetMeaning.innerText = currentData.tr;
+        const item = lessonData[currentIndex];
+        if(item.type === 'visual') {
+            el.word.innerText = item.en;
+            el.meaning.innerText = item.tr;
         }
 
         setTimeout(() => {
-            // Başarılı say ve geç
-            loadCard(currentIndex + 1);
-            setTimeout(teacherTurn, 800);
-        }, 1000);
+            showToast(true);
+        }, 800);
     }
 
-    el.replayBtn.addEventListener('click', teacherTurn);
+    function showToast(success) {
+        el.toast.className = `toast show ${success ? 'success' : 'retry'}`;
+        setTimeout(() => {
+            el.toast.classList.remove('show');
+            loadCard(currentIndex + 1);
+            setTimeout(teacherTurn, 800);
+        }, 2000);
+    }
+
+    // --- EXIT LOGIC (15 DK KURALI) ---
+    function tryExit() {
+        const elapsed = (Date.now() - lessonStartTime) / 1000;
+        if (elapsed < MIN_LESSON_TIME) {
+            const remain = Math.ceil((MIN_LESSON_TIME - elapsed) / 60);
+            alert(`Dersin bitmesine daha ${remain} dakika var! Pes etmek yok! 💪`);
+        } else {
+            if(confirm("Dersi erken bitirmek istiyor musun?")) {
+                window.location.href = '/pages/home.html';
+            }
+        }
+    }
+
+    function finishLesson() {
+        clearInterval(timerInterval);
+        localStorage.setItem('italky_last_lesson_ts', Date.now());
+        el.endModal.classList.add('show');
+    }
+
+    function goToGames() {
+        // Oyun sayfasına yönlendir (URL'yi projene göre ayarla)
+        window.location.href = '/pages/games.html';
+    }
+
+    // Tekrar Butonu
+    document.getElementById('replayBtn').addEventListener('click', teacherTurn);
 
   </script>
 </body>
