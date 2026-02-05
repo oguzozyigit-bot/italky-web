@@ -152,6 +152,28 @@
       cursor:pointer;
       user-select:none;
       min-width:0;
+      gap: 10px;
+    }
+    .langLeft{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      min-width:0;
+    }
+    .flag{
+      width: 24px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size: 16px;
+      flex: 0 0 24px;
+      opacity: .95;
+    }
+    .langLabel{
+      min-width:0;
+      white-space: nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
     }
     .caret{ opacity:.8; }
 
@@ -192,15 +214,45 @@
       justify-content:space-between;
       gap:10px;
     }
+    .headLeft{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:0;
+    }
     .headTitle{
       font-weight: 1000;
       font-size: 12px;
       color: rgba(255,255,255,.88);
+      white-space: nowrap;
     }
     .counter{
       font-weight: 900;
       font-size: 11px;
       color: rgba(255,255,255,.55);
+      white-space:nowrap;
+    }
+    .speakBtn{
+      width: 42px; height: 42px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      flex: 0 0 42px;
+      user-select:none;
+    }
+    .speakBtn:active{ transform: scale(.98); }
+    .speakBtn svg{
+      width: 18px; height: 18px;
+      stroke: rgba(255,255,255,.90);
+      fill:none;
+      stroke-width:2;
+      stroke-linecap:round;
+      stroke-linejoin:round;
+      opacity:.95;
     }
 
     textarea{
@@ -285,7 +337,7 @@
     .footerBrand{
       text-align:center;
       font-size: 10px;
-      color: rgba(255,255,255,0.22);
+      color: rgba(255,255,255,.22);
       letter-spacing: 0.2px;
       font-weight: 700;
     }
@@ -365,15 +417,25 @@
       border-bottom: 1px solid rgba(255,255,255,.06);
     }
     .sheetRow.selected{ background: rgba(79,70,229,.14); }
+    .sheetRow .left{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      min-width:0;
+    }
     .sheetRow .name{
       font-weight: 1000;
       font-size: 13px;
       color: rgba(255,255,255,.92);
+      white-space: nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
     }
     .sheetRow .code{
       font-weight: 800;
       font-size: 12px;
       color: rgba(255,255,255,.55);
+      white-space:nowrap;
     }
 
     /* toast */
@@ -417,24 +479,56 @@
 
     <div class="main">
       <div class="toolbar">
-        <button class="langBtn" id="fromLangBtn" type="button"><span id="fromLangTxt">Dili Algıla</span><span class="caret">▾</span></button>
+        <button class="langBtn" id="fromLangBtn" type="button">
+          <span class="langLeft">
+            <span class="flag" id="fromFlag">🌐</span>
+            <span class="langLabel" id="fromLangTxt">Dili Algıla</span>
+          </span>
+          <span class="caret">▾</span>
+        </button>
+
         <button class="swapBtn" id="swapBtn" type="button" title="Dilleri değiştir">⇄</button>
-        <button class="langBtn" id="toLangBtn" type="button"><span id="toLangTxt">Türkçe</span><span class="caret">▾</span></button>
+
+        <button class="langBtn" id="toLangBtn" type="button">
+          <span class="langLeft">
+            <span class="flag" id="toFlag">🇹🇷</span>
+            <span class="langLabel" id="toLangTxt">Türkçe</span>
+          </span>
+          <span class="caret">▾</span>
+        </button>
       </div>
 
       <div class="pane">
         <div class="box">
           <div class="boxHead">
-            <div class="headTitle">Çevrilecek metin</div>
-            <div class="counter" id="countIn">0</div>
+            <div class="headLeft">
+              <div class="headTitle">Çevrilecek metin</div>
+              <div class="counter" id="countIn">0</div>
+            </div>
+            <button class="speakBtn" id="speakIn" type="button" aria-label="Metni oku">
+              <svg viewBox="0 0 24 24">
+                <path d="M11 5 6 9H3v6h3l5 4z"></path>
+                <path d="M15 9a4 4 0 0 1 0 6"></path>
+                <path d="M17.5 6.5a7 7 0 0 1 0 11"></path>
+              </svg>
+            </button>
           </div>
           <textarea id="inText" placeholder="Yaz…" spellcheck="false"></textarea>
         </div>
 
         <div class="box">
           <div class="boxHead">
-            <div class="headTitle">Çeviri</div>
-            <div class="counter" id="countOut">0</div>
+            <div class="headLeft">
+              <div class="headTitle">Çeviri</div>
+              <div class="counter" id="countOut">0</div>
+            </div>
+            <button class="speakBtn" id="speakOut" type="button" aria-label="Çeviriyi oku">
+              <svg viewBox="0 0 24 24">
+                <path d="M11 5 6 9H3v6h3l5 4z"></path>
+                <path d="M15 9a4 4 0 0 1 0 6"></path>
+                <path d="M17.5 6.5a7 7 0 0 1 0 11"></path>
+              </svg>
+            </button>
           </div>
           <div class="out" id="outText">—</div>
         </div>
@@ -473,6 +567,6 @@
 
   <div id="toast" class="toast"></div>
 
-  <script type="module" src="/js/text_translate_page.js?v=1"></script>
+  <script type="module" src="/js/text_translate_page.js?v=2"></script>
 </body>
 </html>
