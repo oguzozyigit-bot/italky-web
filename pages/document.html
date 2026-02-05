@@ -99,18 +99,24 @@
       border: 1px solid var(--glass-border);
       display: flex; align-items: center; justify-content: space-between;
       padding: 0 16px; cursor: pointer; transition: 0.2s;
-      color: #ffffff; /* Beyaz yazı */
+      color: #ffffff;
     }
     .pill:active { transform: scale(0.98); }
     .pillLeft { display: flex; align-items: center; gap: 10px; }
-    .flag { font-size: 20px; }
+    
+    /* DÜZELTME: Bayrak Boyutu ve Görünürlük */
+    .flag { 
+        font-size: 24px; 
+        line-height: 1; 
+        display: inline-block; 
+        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4)); /* Bayrak gölgesi */
+    }
     .label { font-size: 14px; font-weight: 600; color: #ffffff; }
     .caret { font-size: 10px; opacity: 0.6; color: #ffffff; }
 
     /* Action Buttons */
     .actions-group { display: flex; gap: 8px; flex: 1.2; }
 
-    /* Small + Button in Toolbar */
     .btn-circle {
       width: 54px; height: 54px; border-radius: 16px;
       background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);
@@ -120,7 +126,6 @@
     }
     .btn-circle:active { background: rgba(255,255,255,0.1); transform: scale(0.95); }
 
-    /* Translate Button */
     #runBtn {
       flex: 1;
       height: 54px; border-radius: 16px;
@@ -156,7 +161,6 @@
       text-align: center;
     }
     
-    /* Empty State */
     .empty-state {
       display: flex; flex-direction: column; align-items: center; gap: 12px;
       z-index: 2; pointer-events: none; padding: 20px;
@@ -183,16 +187,25 @@
     }
 
     .empty-text { font-size: 12px; font-weight: 600; color: var(--text-muted); letter-spacing: 0.5px; }
-    
-    /* YENİ: Dosya uzantısı bilgilendirmesi */
     .empty-hint {
       font-size: 10px; font-weight: 500; color: var(--text-dim);
       margin-top: -6px; opacity: 0.7; letter-spacing: 0.3px;
     }
 
-    /* Preview Elements (Cover the empty state when visible) */
-    .preview { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; z-index: 1; opacity: 0; transition: opacity 0.3s; }
-    .preview.show { opacity: 1; background: #000; z-index: 10; } /* Z-index 10 guarantees overlap */
+    /* DÜZELTME: Preview (Resim/PDF) artık en üstte
+       z-index: 99 verildi ve background mat siyah yapıldı.
+       Böylece alttaki + butonu ve yazılar kesinlikle görünmeyecek.
+    */
+    .preview { 
+        position: absolute; inset: 0; width: 100%; height: 100%; 
+        object-fit: contain; 
+        z-index: 1; opacity: 0; transition: opacity 0.3s; 
+    }
+    .preview.show { 
+        opacity: 1; 
+        background: #0b0b0f; /* Mat Siyah Arka Plan */
+        z-index: 99; /* Empty state'in (z-index:2) çok üstünde */
+    }
 
     /* Output */
     textarea {
@@ -235,7 +248,6 @@
     .sheetTitle { font-size: 16px; font-weight: 700; color: #fff; }
     .sheetClose { background: rgba(255,255,255,0.08); border: none; color: #fff; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
-    /* Source Select specific buttons */
     .source-options { padding: 24px; display: grid; gap: 12px; }
     .btn-source {
       height: 60px; border-radius: 18px; border: 1px solid var(--glass-border);
@@ -246,7 +258,6 @@
     .btn-source:active { background: rgba(255,255,255,0.08); transform: scale(0.98); }
     .btn-source svg { width: 24px; height: 24px; fill: var(--accent-primary); }
 
-    /* Language Sheet Styles */
     .sheetSearch { padding: 12px 20px; border-bottom: 1px solid var(--glass-border); }
     .sheetSearch input {
       width: 100%; height: 46px; border-radius: 14px;
@@ -262,10 +273,8 @@
     .sheetRow .name { font-size: 14px; font-weight: 600; color: #ffffff; }
     .sheetRow .code { font-size: 12px; font-weight: 500; color: var(--text-muted); background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 6px; }
 
-    /* Hidden Inputs */
     #filePick, #camPick { display: none; }
     
-    /* Toast */
     .toast {
       position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px);
       background: #fff; color: #000; padding: 12px 24px; border-radius: 30px;
@@ -394,17 +403,14 @@
       const openSheet = () => sourceSheet.classList.add('show');
       const closeSheet = () => sourceSheet.classList.remove('show');
 
-      // Open sheet from Big Plus or Toolbar Plus
       document.getElementById('bigAddBtn').addEventListener('click', openSheet);
       document.getElementById('toolbarAddBtn').addEventListener('click', openSheet);
 
-      // Handle Camera Select
       document.getElementById('sourceCam').addEventListener('click', () => {
         closeSheet();
         document.getElementById('camPick').click();
       });
 
-      // Handle File Select
       document.getElementById('sourceFile').addEventListener('click', () => {
         closeSheet();
         document.getElementById('filePick').click();
