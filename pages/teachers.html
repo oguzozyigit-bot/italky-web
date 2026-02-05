@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>italkyAI • Öğretmen Seçimi</title>
+  <title>italkyAI • Özel Ders</title>
   <link rel="icon" href="data:," />
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -13,19 +13,17 @@
   <style>
     :root {
       --frameW: min(480px, 100vw);
-      --topH: 70px;
+      --topH: 80px; /* Biraz arttırdık, ders bilgisi sığsın */
       --footerH: 90px;
 
       --bg-deep: #050507;
       --text-main: #ffffff;
       --text-muted: rgba(255, 255, 255, 0.6);
 
-      /* Varsayılan Accent (Dora) */
-      --accent-primary: #8b5cf6; 
-      --accent-glow: rgba(139, 92, 246, 0.5);
       --accent-gradient: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
-
-      --glass-bg: rgba(20, 20, 25, 0.75);
+      --accent-glow: rgba(139, 92, 246, 0.5);
+      
+      --glass-bg: rgba(20, 20, 25, 0.85);
       --glass-border: rgba(255, 255, 255, 0.08);
 
       --user-bubble: #2e1065;
@@ -43,94 +41,93 @@
       display: flex; align-items: center; justify-content: center;
     }
 
-    /* Background Atmosphere */
     .premium-bg { position: absolute; inset: 0; z-index: 0; pointer-events: none; background: radial-gradient(circle at 50% 0%, #1a103c 0%, #000000 70%); }
     .premium-glow { position: absolute; width: 100%; height: 60%; background: radial-gradient(ellipse at top, var(--accent-glow), transparent 70%); top: 0; left: 0; pointer-events: none; transition: 0.5s; }
 
-    /* Frame */
     .mobile-frame {
       width: 100%; max-width: var(--frameW); height: 100%;
       position: relative; z-index: 10;
       background: rgba(10, 10, 12, 0.5);
-      display: flex; flex-direction: column;
-      overflow: hidden;
+      display: flex; flex-direction: column; overflow: hidden;
     }
     @media(min-width: 520px) {
       .mobile-frame { height: 92vh; border-radius: 32px; border: 1px solid var(--glass-border); box-shadow: 0 40px 120px -20px rgba(0,0,0,0.8); background: rgba(10, 10, 12, 0.9); }
     }
 
-    /* Top Bar */
+    /* --- TOP BAR --- */
     .topbar {
       height: var(--topH); display: flex; align-items: center; justify-content: space-between;
       padding: 0 20px; background: rgba(5, 5, 7, 0.8); backdrop-filter: blur(20px);
       border-bottom: 1px solid var(--glass-border); z-index: 50;
     }
-    .backBtn {
-      width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--glass-border);
-      background: rgba(255,255,255,0.03); color: var(--text-main); font-size: 18px;
-      display: flex; align-items: center; justify-content: center; cursor: pointer;
+    .top-left { display: flex; flex-direction: column; }
+    .backBtn { font-size: 20px; background: none; border: none; color: #fff; cursor: pointer; margin-right: 10px; }
+    
+    .lesson-badge {
+        font-size: 11px; font-weight: 700; color: #fbbf24; 
+        background: rgba(251, 191, 36, 0.1); padding: 4px 10px; border-radius: 12px;
+        border: 1px solid rgba(251, 191, 36, 0.2); margin-top: 4px; display: inline-block;
     }
-    .mini-brand { display: flex; flex-direction: column; cursor: pointer; margin-left: 6px; }
-    .logo-line { font-family: 'Space Grotesk', sans-serif; font-size: 20px; line-height: 1; letter-spacing: -0.5px; }
+
+    .mini-brand { display: flex; flex-direction: column; }
+    .logo-line { font-family: 'Space Grotesk', sans-serif; font-size: 18px; line-height: 1; }
     .logo-main { font-weight: 700; color: #fff; }
     .logo-ai { font-weight: 700; background: linear-gradient(to right, #a78bfa, #f472b6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .logo-slogan { font-size: 9px; font-weight: 700; letter-spacing: 3px; color: var(--text-muted); margin-top: 4px; opacity: 0.7; }
     
     .lang-indicator {
-        display: flex; align-items: center; gap: 8px;
+        display: flex; align-items: center; gap: 8px; position: relative;
         background: rgba(255,255,255,0.08); padding: 6px 12px; border-radius: 20px;
-        border: 1px solid var(--glass-border); cursor: pointer;
+        border: 1px solid var(--glass-border); cursor: pointer; transition: 0.2s;
     }
     .lang-flag { font-size: 18px; line-height: 1; }
     .lang-code { font-size: 12px; font-weight: 700; color: #fff; text-transform: uppercase; }
 
-    /* --- TEACHER SELECTION OVERLAY (NEW) --- */
-    .selection-overlay {
+    /* --- OVERLAYS (Teacher & Level Selection) --- */
+    .overlay-screen {
         position: absolute; inset: 0; z-index: 100;
         background: rgba(5, 5, 7, 0.98);
-        display: flex; flex-direction: column; padding: 80px 20px 40px;
+        display: flex; flex-direction: column; padding: 60px 20px 40px;
         gap: 20px; overflow-y: auto;
         transition: transform 0.5s cubic-bezier(0.7, 0, 0.3, 1);
     }
-    .selection-overlay.hidden { transform: translateY(100%); pointer-events: none; }
+    .overlay-screen.hidden { transform: translateY(100%); pointer-events: none; }
 
-    .sel-title { font-size: 26px; font-weight: 700; color: #fff; text-align: center; margin-bottom: 4px; }
+    .sel-title { font-size: 24px; font-weight: 700; color: #fff; text-align: center; margin-bottom: 4px; }
     .sel-subtitle { font-size: 14px; color: var(--text-muted); text-align: center; margin-bottom: 24px; }
 
-    .teacher-grid {
-        display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
-        padding-bottom: 40px;
-    }
-
+    /* Teacher Grid */
+    .teacher-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding-bottom: 40px; }
     .t-card {
         background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border);
-        border-radius: 24px; padding: 16px; cursor: pointer;
-        display: flex; flex-direction: column; align-items: center; gap: 12px;
+        border-radius: 24px; padding: 20px; cursor: pointer;
+        display: flex; flex-direction: column; align-items: center; gap: 14px;
         transition: 0.2s; position: relative; overflow: hidden;
     }
     .t-card:active { transform: scale(0.96); background: rgba(255,255,255,0.06); }
-    
-    /* Seçili efekti */
-    .t-card.selected { border-color: var(--accent-primary); background: rgba(139, 92, 246, 0.1); }
-
-    .t-avatar {
-        width: 64px; height: 64px; border-radius: 50%;
-        background: linear-gradient(135deg, #333, #111);
-        display: flex; align-items: center; justify-content: center;
-        font-size: 28px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    .t-avatar-img {
+        width: 70px; height: 70px; border-radius: 50%;
+        position: relative; overflow: hidden;
         border: 2px solid rgba(255,255,255,0.1);
+        display: flex; align-items: center; justify-content: center;
     }
-    .t-info { text-align: center; }
-    .t-name { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 2px; }
-    .t-style { font-size: 11px; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+    .t-card[data-gender="female"] .t-avatar-img { background: linear-gradient(135deg, #FF9A9E 0%, #FECFEF 100%); }
+    .t-card[data-gender="male"] .t-avatar-img { background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%); }
+    .t-avatar-img svg { width: 40px; height: 40px; fill: rgba(0,0,0,0.5); }
+    .t-name { font-size: 16px; font-weight: 700; color: #fff; }
 
-    /* Female Colors */
-    .t-card[data-gender="female"] .t-avatar { background: linear-gradient(135deg, #ec4899, #8b5cf6); }
-    /* Male Colors */
-    .t-card[data-gender="male"] .t-avatar { background: linear-gradient(135deg, #3b82f6, #06b6d4); }
+    /* Level Grid */
+    .level-card {
+        background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border);
+        border-radius: 20px; padding: 24px; cursor: pointer;
+        display: flex; align-items: center; justify-content: space-between;
+        margin-bottom: 12px; transition: 0.2s;
+    }
+    .level-card:active { background: rgba(139, 92, 246, 0.1); transform: scale(0.98); }
+    .lvl-info h3 { font-size: 18px; font-weight: 700; color: #fff; margin: 0 0 4px; }
+    .lvl-info p { font-size: 12px; color: var(--text-muted); margin: 0; }
+    .lvl-icon { font-size: 24px; }
 
-
-    /* --- Chat Area --- */
+    /* --- CHAT AREA --- */
     .chat-area {
       flex: 1; padding: 20px; overflow-y: auto;
       display: flex; flex-direction: column; gap: 16px;
@@ -138,39 +135,32 @@
     }
     .chat-area::-webkit-scrollbar { display: none; }
 
-    /* Messages */
+    .teacher-status { display: flex; flex-direction: column; align-items: center; gap: 8px; margin: 10px 0 20px; }
+    .avatar-orb {
+        width: 70px; height: 70px; border-radius: 50%;
+        background: var(--accent-gradient);
+        box-shadow: 0 0 30px var(--accent-glow);
+        position: relative; display: flex; align-items: center; justify-content: center;
+        border: 2px solid rgba(255,255,255,0.2);
+    }
+    .avatar-orb svg { width: 36px; height: 36px; fill: #fff; }
+    .avatar-orb.speaking { animation: pulse-speak 1.5s infinite; }
+    .teacher-name-display { font-size: 16px; font-weight: 700; color: #fff; }
+    .lang-hint { font-size: 11px; color: var(--text-muted); opacity: 0.8; }
+
     .msg { max-width: 85%; width: fit-content; display: flex; flex-direction: column; gap: 4px; }
     .msg.ai { align-self: flex-start; }
     .msg.user { align-self: flex-end; align-items: flex-end; }
 
     .bubble {
-      padding: 12px 16px; border-radius: 18px;
+      padding: 14px 18px; border-radius: 20px;
       font-size: 15px; line-height: 1.5; color: #fff;
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
     .msg.ai .bubble { background: var(--ai-bubble); border-bottom-left-radius: 4px; border: 1px solid var(--glass-border); }
     .msg.user .bubble { background: var(--user-bubble); border-bottom-right-radius: 4px; border: 1px solid rgba(255,255,255,0.15); }
 
-    /* Main Avatar in Chat */
-    .teacher-status { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 20px; margin-top: 10px; transition: 0.3s; }
-    .avatar-orb {
-        width: 80px; height: 80px; border-radius: 50%;
-        background: var(--accent-gradient);
-        box-shadow: 0 0 30px var(--accent-glow);
-        position: relative; display: flex; align-items: center; justify-content: center;
-        font-size: 32px; color: #fff;
-    }
-    .avatar-orb.speaking { animation: pulse-speak 1.5s infinite; }
-    .teacher-name-display { font-size: 18px; font-weight: 700; color: #fff; }
-    .teacher-mode-display { font-size: 12px; color: rgba(255,255,255,0.6); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
-
-    @keyframes pulse-speak {
-        0% { transform: scale(1); box-shadow: 0 0 20px var(--accent-glow); }
-        50% { transform: scale(1.05); box-shadow: 0 0 40px var(--accent-glow); }
-        100% { transform: scale(1); box-shadow: 0 0 20px var(--accent-glow); }
-    }
-
-    /* Bottom Controls */
+    /* --- BOTTOM CONTROLS --- */
     .bottom-controls {
       position: absolute; bottom: 0; left: 0; right: 0; height: var(--footerH);
       background: rgba(5, 5, 7, 0.9); backdrop-filter: blur(25px);
@@ -188,14 +178,33 @@
     .mic-btn:active { transform: scale(0.95); }
     .mic-btn svg { width: 32px; height: 32px; fill: currentColor; }
 
-    /* Sheets */
-    .sheetBackdrop { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.8); display: none; align-items: flex-end; justify-content: center; }
-    .sheetBackdrop.show { display: flex; }
-    .sheet { width: 100%; max-width: 480px; background: #121216; border-radius: 28px 28px 0 0; border: 1px solid var(--glass-border); padding-bottom: 30px; }
-    .sheetTop { padding: 20px 24px; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; }
-    .sheetTitle { font-size: 16px; font-weight: 700; color: #fff; }
-    .lang-grid { padding: 24px; display: grid; gap: 12px; }
-    .lang-option { display: flex; align-items: center; gap: 16px; padding: 16px; background: rgba(255,255,255,0.03); border-radius: 16px; border: 1px solid var(--glass-border); color: #fff; font-weight: 600; cursor: pointer; }
+    /* --- MODALS (Lesson Finished) --- */
+    .modal-backdrop {
+        position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px);
+        z-index: 200; display: none; align-items: center; justify-content: center; padding: 20px;
+    }
+    .modal-backdrop.show { display: flex; }
+    .modal-box {
+        background: #121216; border: 1px solid var(--glass-border);
+        border-radius: 24px; padding: 30px 24px; width: 100%; max-width: 340px;
+        text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+    }
+    .modal-icon { font-size: 40px; margin-bottom: 16px; }
+    .modal-title { font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+    .modal-desc { font-size: 14px; color: var(--text-muted); margin-bottom: 24px; line-height: 1.5; }
+    .modal-btns { display: flex; flex-direction: column; gap: 10px; }
+    
+    .btn-primary { 
+        background: var(--accent-gradient); color: #fff; border: none; 
+        padding: 14px; border-radius: 14px; font-weight: 700; font-size: 14px; cursor: pointer;
+    }
+    .btn-secondary {
+        background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--glass-border);
+        padding: 14px; border-radius: 14px; font-weight: 600; font-size: 14px; cursor: pointer;
+    }
+
+    /* Animasyonlar */
+    @keyframes pulse-speak { 0% { transform: scale(1); box-shadow: 0 0 20px var(--accent-glow); } 50% { transform: scale(1.05); box-shadow: 0 0 40px var(--accent-glow); } 100% { transform: scale(1); box-shadow: 0 0 20px var(--accent-glow); } }
 
   </style>
 </head>
@@ -207,64 +216,93 @@
   <div class="mobile-frame">
     
     <div class="topbar">
-      <button class="backBtn" onclick="history.back()">←</button>
-      <div class="mini-brand">
-        <div class="logo-line"><span class="logo-main">italky</span><span class="logo-ai">AI</span></div>
-        <div class="logo-slogan">BE FREE</div>
+      <div class="top-left">
+        <div style="display:flex; align-items:center;">
+            <button class="backBtn" onclick="history.back()">←</button>
+            <div class="mini-brand">
+              <div class="logo-line"><span class="logo-main">italky</span><span class="logo-ai">AI</span></div>
+            </div>
+        </div>
+        <div class="lesson-badge" id="lessonCounter">Ders: 1/7</div>
       </div>
-      <div class="lang-indicator" onclick="document.getElementById('langSheet').classList.add('show')">
+      
+      <div class="lang-indicator">
         <span class="lang-flag" id="currentFlag">🇬🇧</span>
         <span class="lang-code" id="currentCode">EN</span>
       </div>
     </div>
 
-    <div class="selection-overlay" id="teacherSelectScreen">
+    <div class="overlay-screen" id="teacherScreen">
       <h2 class="sel-title">Öğretmenini Seç</h2>
-      <p class="sel-subtitle">Seninle kim konuşsun istersin?</p>
-      
+      <p class="sel-subtitle">Öğrenme yolculuğunda sana kim eşlik etsin?</p>
       <div class="teacher-grid">
-        <div class="t-card" data-gender="female" onclick="chooseTeacher('Dora', 'female', 'Sabırlı & Sakin')">
-          <div class="t-avatar">👩‍🏫</div>
-          <div class="t-info"><div class="t-name">Dora</div><div class="t-style">Sabırlı</div></div>
+        <div class="t-card" data-gender="female" onclick="selectTeacher('Dora', 'female')">
+          <div class="t-avatar-img"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg></div>
+          <div class="t-name">Dora</div>
         </div>
-        <div class="t-card" data-gender="female" onclick="chooseTeacher('Ayda', 'female', 'Enerjik & Hızlı')">
-          <div class="t-avatar">⚡</div>
-          <div class="t-info"><div class="t-name">Ayda</div><div class="t-style">Enerjik</div></div>
+        <div class="t-card" data-gender="female" onclick="selectTeacher('Ayda', 'female')">
+          <div class="t-avatar-img"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg></div>
+          <div class="t-name">Ayda</div>
         </div>
-        <div class="t-card" data-gender="female" onclick="chooseTeacher('Umay', 'female', 'Disiplinli')">
-          <div class="t-avatar">⚖️</div>
-          <div class="t-info"><div class="t-name">Umay</div><div class="t-style">Disiplinli</div></div>
+        <div class="t-card" data-gender="female" onclick="selectTeacher('Umay', 'female')">
+          <div class="t-avatar-img"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg></div>
+          <div class="t-name">Umay</div>
         </div>
+        <div class="t-card" data-gender="male" onclick="selectTeacher('Sencer', 'male')">
+          <div class="t-avatar-img"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg></div>
+          <div class="t-name">Sencer</div>
+        </div>
+        <div class="t-card" data-gender="male" onclick="selectTeacher('Toygar', 'male')">
+          <div class="t-avatar-img"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg></div>
+          <div class="t-name">Toygar</div>
+        </div>
+        <div class="t-card" data-gender="male" onclick="selectTeacher('Sungur', 'male')">
+          <div class="t-avatar-img"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg></div>
+          <div class="t-name">Sungur</div>
+        </div>
+      </div>
+    </div>
 
-        <div class="t-card" data-gender="male" onclick="chooseTeacher('Sencer', 'male', 'Resmi & Tok Ses')">
-          <div class="t-avatar">🎙️</div>
-          <div class="t-info"><div class="t-name">Sencer</div><div class="t-style">Resmi</div></div>
+    <div class="overlay-screen hidden" id="levelScreen">
+      <h2 class="sel-title">Seviyen Nedir?</h2>
+      <p class="sel-subtitle">Sana uygun müfredatı belirleyelim.</p>
+      
+      <div class="level-card" onclick="selectLevel('Başlangıç')">
+        <div class="lvl-info">
+          <h3>Başlangıç (A1-A2)</h3>
+          <p>Temel kelimeler, basit cümleler.</p>
         </div>
-        <div class="t-card" data-gender="male" onclick="chooseTeacher('Toygar', 'male', 'Samimi & Kanka')">
-          <div class="t-avatar">🎮</div>
-          <div class="t-info"><div class="t-name">Toygar</div><div class="t-style">Samimi</div></div>
+        <div class="lvl-icon">🌱</div>
+      </div>
+
+      <div class="level-card" onclick="selectLevel('Orta')">
+        <div class="lvl-info">
+          <h3>Orta (B1-B2)</h3>
+          <p>Akıcı diyalog, günlük konuşmalar.</p>
         </div>
-        <div class="t-card" data-gender="male" onclick="chooseTeacher('Sungur', 'male', 'Akademik')">
-          <div class="t-avatar">📚</div>
-          <div class="t-info"><div class="t-name">Sungur</div><div class="t-style">Akademik</div></div>
+        <div class="lvl-icon">🚀</div>
+      </div>
+
+      <div class="level-card" onclick="selectLevel('İleri')">
+        <div class="lvl-info">
+          <h3>İleri (C1-C2)</h3>
+          <p>Deyimler, iş hayatı, derin konular.</p>
         </div>
+        <div class="lvl-icon">🎓</div>
       </div>
     </div>
 
     <div class="chat-area" id="chatArea">
       <div class="teacher-status">
-        <div class="avatar-orb" id="mainAvatar">👩‍🏫</div>
-        <div class="teacher-text" style="text-align:center;">
-          <div class="teacher-name-display" id="mainName">Dora</div>
-          <div class="teacher-mode-display" id="mainStyle">Öğretmenin</div>
+        <div class="avatar-orb" id="chatAvatar">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
         </div>
+        <div class="teacher-name-display" id="chatName">Dora</div>
+        <div class="lang-hint">Kelime tekrarı ve cümle kurma dersi</div>
       </div>
 
-      <div class="msg ai">
-        <div class="bubble" id="welcomeText">
-          Merhaba! Ben Dora. Bugün İngilizce pratiği yapmaya ne dersin? Hata yapmaktan çekinme!
+      <div id="messagesContainer">
         </div>
-      </div>
     </div>
 
     <div class="bottom-controls">
@@ -275,84 +313,172 @@
 
   </div>
 
-  <div class="sheetBackdrop" id="langSheet">
-    <div class="sheet">
-      <div class="sheetTop">
-        <span class="sheetTitle">Dil Seçimi</span>
-        <span onclick="document.getElementById('langSheet').classList.remove('show')" style="color:#fff; cursor:pointer;">✕</span>
-      </div>
-      <div class="lang-grid">
-        <div class="lang-option" onclick="setLang('🇬🇧','EN')"><span class="flag">🇬🇧</span> İngilizce</div>
-        <div class="lang-option" onclick="setLang('🇩🇪','DE')"><span class="flag">🇩🇪</span> Almanca</div>
-        <div class="lang-option" onclick="setLang('🇫🇷','FR')"><span class="flag">🇫🇷</span> Fransızca</div>
-        <div class="lang-option" onclick="setLang('🇪🇸','ES')"><span class="flag">🇪🇸</span> İspanyolca</div>
-        <div class="lang-option" onclick="setLang('🇮🇹','IT')"><span class="flag">🇮🇹</span> İtalyanca</div>
+  <div class="modal-backdrop" id="endLessonModal">
+    <div class="modal-box">
+      <div class="modal-icon">⏰</div>
+      <div class="modal-title">Ders Bitti!</div>
+      <div class="modal-desc">30 dakikalık süremiz doldu. Harika bir iş çıkardın! Devam etmek ister misin?</div>
+      <div class="modal-btns">
+        <button class="btn-primary" onclick="continueLesson()">Devam Et (+15 dk)</button>
+        <button class="btn-secondary" onclick="finishSession()">Hayır, Bitir</button>
       </div>
     </div>
   </div>
 
   <script>
-    // Logic for Selection
-    function chooseTeacher(name, gender, style) {
-        // 1. Hide Selection Screen
-        document.getElementById('teacherSelectScreen').classList.add('hidden');
+    // --- STATE ---
+    let state = {
+        teacher: localStorage.getItem('italky_teacher_name') || null,
+        gender: localStorage.getItem('italky_teacher_gender') || 'female',
+        level: localStorage.getItem('italky_level') || null,
+        currentLesson: parseInt(localStorage.getItem('italky_lesson_num')) || 1,
+        messageCount: 0 // Simülasyon için
+    };
 
-        // 2. Update UI Colors & Content
-        const root = document.documentElement;
-        const glow = document.getElementById('ambientGlow');
-        const avatar = document.getElementById('mainAvatar');
+    // --- DOM ---
+    const screens = {
+        teacher: document.getElementById('teacherScreen'),
+        level: document.getElementById('levelScreen'),
+        chat: document.getElementById('chatArea'),
+        modal: document.getElementById('endLessonModal')
+    };
+    const ui = {
+        name: document.getElementById('chatName'),
+        avatar: document.getElementById('chatAvatar'),
+        lessonBadge: document.getElementById('lessonCounter'),
+        msgContainer: document.getElementById('messagesContainer')
+    };
+
+    // --- INIT ---
+    function checkFlow() {
+        // UI Güncelle
+        ui.lessonBadge.innerText = `Ders: ${state.currentLesson}/7`;
         
-        // Update Texts
-        document.getElementById('mainName').innerText = name;
-        document.getElementById('mainStyle').innerText = style;
-        document.getElementById('welcomeText').innerText = `Selam! Ben ${name}. ${style} tarzımla seni dinliyorum. Hadi başlayalım!`;
+        if (!state.teacher) {
+            screens.teacher.classList.remove('hidden');
+            screens.level.classList.add('hidden');
+        } else if (!state.level) {
+            screens.teacher.classList.add('hidden');
+            screens.level.classList.remove('hidden');
+            applyTeacherTheme(state.teacher, state.gender);
+        } else {
+            screens.teacher.classList.add('hidden');
+            screens.level.classList.add('hidden');
+            applyTeacherTheme(state.teacher, state.gender);
+            startLesson();
+        }
+    }
 
-        // Update Icons & Colors
+    // 1. Öğretmen Seç
+    function selectTeacher(name, gender) {
+        state.teacher = name;
+        state.gender = gender;
+        localStorage.setItem('italky_teacher_name', name);
+        localStorage.setItem('italky_teacher_gender', gender);
+        checkFlow();
+    }
+
+    // 2. Seviye Seç
+    function selectLevel(lvl) {
+        state.level = lvl;
+        localStorage.setItem('italky_level', lvl);
+        checkFlow();
+    }
+
+    // 3. Ders Başlat (Karşılama)
+    function startLesson() {
+        // Eğer o ders için hiç mesaj yoksa, hocanın giriş konuşmasını bas
+        if (ui.msgContainer.children.length === 0) {
+            const welcomeMsg = `Selam ben dil öğretmenin ${state.teacher}. ${state.level} seviyesinde ${state.currentLesson}. dersteyiz. Seninle kısa sürede bu dil problemini aşacağımızı umuyorum. Lütfen her gün derslere katıl olur mu? Hadi kelime tekrarıyla başlayalım.`;
+            addMsg('ai', welcomeMsg);
+        }
+    }
+
+    function applyTeacherTheme(name, gender) {
+        ui.name.innerText = name;
+        const root = document.documentElement;
         if (gender === 'female') {
-            // Pembe/Mor Tema
             root.style.setProperty('--accent-gradient', 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)');
             root.style.setProperty('--accent-glow', 'rgba(139, 92, 246, 0.5)');
-            
-            if(name === 'Dora') avatar.innerText = '👩‍🏫';
-            if(name === 'Ayda') avatar.innerText = '⚡';
-            if(name === 'Umay') avatar.innerText = '⚖️';
-
         } else {
-            // Mavi/Turkuaz Tema
             root.style.setProperty('--accent-gradient', 'linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%)');
             root.style.setProperty('--accent-glow', 'rgba(59, 130, 246, 0.5)');
-            
-            if(name === 'Sencer') avatar.innerText = '🎙️';
-            if(name === 'Toygar') avatar.innerText = '🎮';
-            if(name === 'Sungur') avatar.innerText = '📚';
         }
     }
 
-    // Lang Set
-    function setLang(flag, code) {
-        document.getElementById('currentFlag').innerText = flag;
-        document.getElementById('currentCode').innerText = code;
-        document.getElementById('langSheet').classList.remove('show');
+    // Mesaj Ekleme
+    function addMsg(role, text) {
+        const div = document.createElement('div');
+        div.className = `msg ${role}`;
+        div.innerHTML = `<div class="bubble">${text}</div>`;
+        ui.msgContainer.appendChild(div);
+        ui.msgContainer.parentElement.scrollTop = ui.msgContainer.parentElement.scrollHeight;
     }
 
-    // Mic Animation Simulation
+    // --- SİMÜLASYON: Konuşma ve Ders Sonu ---
     const micBtn = document.getElementById('micBtn');
-    const avatar = document.getElementById('mainAvatar');
-    let isTalking = false;
+    let isListening = false;
 
     micBtn.addEventListener('click', () => {
-        isTalking = !isTalking;
-        if(isTalking) {
+        isListening = !isListening;
+        
+        if (isListening) {
+            // Kullanıcı konuşuyor (Simüle)
             micBtn.style.transform = 'scale(1.1)';
-            avatar.classList.remove('speaking'); // User speaks
+            micBtn.style.boxShadow = '0 0 40px var(--accent-glow)';
         } else {
+            // AI Cevap Veriyor
             micBtn.style.transform = 'scale(1)';
+            micBtn.style.boxShadow = '0 8px 30px var(--accent-glow)';
+            
+            // Kullanıcı mesajı (Simüle)
+            addMsg('user', 'Örnek cevap cümlesi...');
+            
+            // Sayaç Arttır
+            state.messageCount++;
+
+            // AI Cevabı
             setTimeout(() => {
-                avatar.classList.add('speaking'); // AI replies
-                setTimeout(() => avatar.classList.remove('speaking'), 3000);
-            }, 500);
+                addMsg('ai', 'Harika telaffuz! Şimdi şu kelimeyi tekrar et: "Experience".');
+                
+                // --- DERS BİTİŞ KONTROLÜ (Örn: 3. mesajda bitiriyoruz test için) ---
+                if (state.messageCount >= 3) {
+                    setTimeout(() => {
+                        screens.modal.classList.add('show');
+                    }, 1500);
+                }
+            }, 1000);
         }
     });
+
+    // Ders Sonu Butonları
+    function continueLesson() {
+        screens.modal.classList.remove('show');
+        state.messageCount = 0; // Sayacı sıfırla, devam et
+        addMsg('ai', 'Süper! Enerjine hayranım. Kaldığımız yerden devam edelim.');
+    }
+
+    function finishSession() {
+        screens.modal.classList.remove('show');
+        const byeMsg = "Tamam, bugünlük bu kadar yeter. Yarın mutlaka gel, unutma 7. dersten sonra seviye sınavımız var!";
+        addMsg('ai', byeMsg);
+        
+        // Dersi bir sonraki aşamaya geçir
+        if (state.currentLesson < 7) {
+            state.currentLesson++;
+            localStorage.setItem('italky_lesson_num', state.currentLesson);
+            // Badge'i güncelle
+            ui.lessonBadge.innerText = `Ders: ${state.currentLesson}/7`;
+        }
+        
+        // Butonu pasife al (Ders bitti hissi)
+        micBtn.style.opacity = '0.5';
+        micBtn.style.pointerEvents = 'none';
+    }
+
+    // Başlat
+    checkFlow();
+
   </script>
 </body>
 </html>
