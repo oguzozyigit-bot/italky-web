@@ -26,7 +26,17 @@
       --befree:#6B7280;
 
       --glass: rgba(255,255,255,.04);
-      --card: rgba(0,0,0,.18);
+
+      /* ✅ Face-to-face hissi */
+      --navyA: rgba(40,120,255,.12);
+      --navyB: rgba(255,255,255,.05);
+
+      --burgA: rgba(120, 20, 35, .85);
+      --burgB: rgba(90, 15, 30, .65);
+      --burgC: rgba(70, 10, 25, .45);
+
+      --btnBg: rgba(255,255,255,.06);
+      --btnBd: rgba(255,255,255,.12);
     }
 
     *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; }
@@ -67,6 +77,7 @@
       }
     }
 
+    /* TOP BAR (profil) */
     .topbar{
       position: sticky;
       top: 0;
@@ -121,6 +132,35 @@
       text-transform: uppercase;
     }
 
+    .rightControls{ display:flex; align-items:center; gap:10px; min-width:0; }
+    .usertext{
+      min-width:0;
+      display:flex; flex-direction:column; align-items:flex-end; gap:2px;
+      max-width: 200px;
+    }
+    .uname{ font-weight: 900; font-size: 12px; color: rgba(255,255,255,0.92); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .plan{ font-weight: 800; font-size: 11px; color: rgba(255,255,255,0.55); white-space:nowrap; }
+
+    .avatar-btn{
+      width: 42px; height: 42px;
+      border:none; background:transparent;
+      border-radius:999px;
+      overflow:hidden;
+      cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .avatar-btn:active{ transform: scale(.96); }
+    .avatar-btn img{ width:42px; height:42px; border-radius:999px; object-fit:cover; display:block; }
+    .avatar-fallback{
+      width:42px; height:42px; border-radius:999px;
+      display:flex; align-items:center; justify-content:center;
+      font-weight: 1000;
+      color: rgba(255,255,255,0.92);
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.10);
+      user-select:none;
+    }
+
     .main{
       flex:1;
       padding: 12px;
@@ -140,8 +180,8 @@
       flex:1;
       height: 46px;
       border-radius: 16px;
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.06);
+      border: 1px solid var(--btnBd);
+      background: var(--btnBg);
       color:#fff;
       font-weight: 1000;
       font-size: 12px;
@@ -180,8 +220,8 @@
     .swapBtn{
       width: 54px; height: 46px;
       border-radius: 16px;
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.06);
+      border: 1px solid var(--btnBd);
+      background: var(--btnBg);
       color: rgba(255,255,255,.92);
       font-weight: 1000;
       cursor:pointer;
@@ -199,12 +239,29 @@
     .box{
       border-radius: 22px;
       border: 1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.18);
       overflow:hidden;
       display:flex;
       flex-direction:column;
       min-height:0;
+      backdrop-filter: blur(10px);
     }
+
+    /* ✅ üst lacivert */
+    .box.top{
+      background:
+        radial-gradient(800px 240px at 0% 0%, var(--navyA), transparent 62%),
+        radial-gradient(800px 240px at 100% 0%, var(--navyB), transparent 62%),
+        rgba(0,0,0,.12);
+    }
+    /* ✅ alt bordo */
+    .box.bottom{
+      background:
+        radial-gradient(900px 420px at 30% 12%, var(--burgA), transparent 68%),
+        radial-gradient(700px 360px at 80% 18%, var(--burgB), transparent 70%),
+        radial-gradient(600px 320px at 40% 75%, var(--burgC), transparent 72%),
+        linear-gradient(180deg, rgba(60, 10, 20, .55), rgba(0,0,0,.15));
+    }
+
     .boxHead{
       padding: 10px 12px;
       border-bottom: 1px solid rgba(255,255,255,.08);
@@ -232,7 +289,14 @@
       color: rgba(255,255,255,.55);
       white-space:nowrap;
     }
-    .speakBtn{
+    .btnsRight{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      flex: 0 0 auto;
+    }
+
+    .iconBtn{
       width: 42px; height: 42px;
       border-radius: 16px;
       border: 1px solid rgba(255,255,255,.12);
@@ -241,11 +305,10 @@
       display:flex;
       align-items:center;
       justify-content:center;
-      flex: 0 0 42px;
       user-select:none;
     }
-    .speakBtn:active{ transform: scale(.98); }
-    .speakBtn svg{
+    .iconBtn:active{ transform: scale(.98); }
+    .iconBtn svg{
       width: 18px; height: 18px;
       stroke: rgba(255,255,255,.90);
       fill:none;
@@ -253,6 +316,28 @@
       stroke-linecap:round;
       stroke-linejoin:round;
       opacity:.95;
+    }
+
+    /* mic listening */
+    .iconBtn.listening{
+      border-color: rgba(79,70,229,.45);
+      background: rgba(79,70,229,.14);
+      box-shadow: 0 0 18px rgba(79,70,229,.20);
+      position: relative;
+    }
+    .iconBtn.listening::after{
+      content:"";
+      position:absolute;
+      inset:-7px;
+      border-radius: 18px;
+      border: 2px solid rgba(165,180,252,.55);
+      animation: micPulse 1.15s ease-in-out infinite;
+      pointer-events:none;
+    }
+    @keyframes micPulse{
+      0%{ transform: scale(0.92); opacity:.75; }
+      50%{ transform: scale(1.08); opacity:.28; }
+      100%{ transform: scale(0.92); opacity:.75; }
     }
 
     textarea{
@@ -290,8 +375,8 @@
       flex:1;
       height: 46px;
       border-radius: 16px;
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.06);
+      border: 1px solid var(--btnBd);
+      background: var(--btnBg);
       color:#fff;
       font-weight: 1000;
       cursor:pointer;
@@ -337,7 +422,7 @@
     .footerBrand{
       text-align:center;
       font-size: 10px;
-      color: rgba(255,255,255,.22);
+      color: rgba(255,255,255,0.22);
       letter-spacing: 0.2px;
       font-weight: 700;
     }
@@ -475,6 +560,16 @@
           <div class="logo-slogan">BE FREE</div>
         </div>
       </div>
+
+      <div class="rightControls">
+        <div class="usertext">
+          <div class="uname" id="userName">—</div>
+          <div class="plan" id="userPlan">FREE</div>
+        </div>
+        <button class="avatar-btn" id="avatarBtn" aria-label="Profil">
+          <span class="avatar-fallback" id="avatarFallback">•</span>
+        </button>
+      </div>
     </div>
 
     <div class="main">
@@ -499,36 +594,50 @@
       </div>
 
       <div class="pane">
-        <div class="box">
+        <!-- ✅ ÜST: lacivert -->
+        <div class="box top">
           <div class="boxHead">
             <div class="headLeft">
               <div class="headTitle">Çevrilecek metin</div>
               <div class="counter" id="countIn">0</div>
             </div>
-            <button class="speakBtn" id="speakIn" type="button" aria-label="Metni oku">
-              <svg viewBox="0 0 24 24">
-                <path d="M11 5 6 9H3v6h3l5 4z"></path>
-                <path d="M15 9a4 4 0 0 1 0 6"></path>
-                <path d="M17.5 6.5a7 7 0 0 1 0 11"></path>
-              </svg>
-            </button>
+            <div class="btnsRight">
+              <button class="iconBtn" id="micIn" type="button" aria-label="Mikrofon">
+                <svg viewBox="0 0 24 24">
+                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                  <line x1="12" y1="19" x2="12" y2="23"></line>
+                  <line x1="8" y1="23" x2="16" y2="23"></line>
+                </svg>
+              </button>
+              <button class="iconBtn" id="speakIn" type="button" aria-label="Metni oku">
+                <svg viewBox="0 0 24 24">
+                  <path d="M11 5 6 9H3v6h3l5 4z"></path>
+                  <path d="M15 9a4 4 0 0 1 0 6"></path>
+                  <path d="M17.5 6.5a7 7 0 0 1 0 11"></path>
+                </svg>
+              </button>
+            </div>
           </div>
-          <textarea id="inText" placeholder="Yaz…" spellcheck="false"></textarea>
+          <textarea id="inText" placeholder="Yaz ya da mikrofonla konuş…" spellcheck="false"></textarea>
         </div>
 
-        <div class="box">
+        <!-- ✅ ALT: bordo -->
+        <div class="box bottom">
           <div class="boxHead">
             <div class="headLeft">
               <div class="headTitle">Çeviri</div>
               <div class="counter" id="countOut">0</div>
             </div>
-            <button class="speakBtn" id="speakOut" type="button" aria-label="Çeviriyi oku">
-              <svg viewBox="0 0 24 24">
-                <path d="M11 5 6 9H3v6h3l5 4z"></path>
-                <path d="M15 9a4 4 0 0 1 0 6"></path>
-                <path d="M17.5 6.5a7 7 0 0 1 0 11"></path>
-              </svg>
-            </button>
+            <div class="btnsRight">
+              <button class="iconBtn" id="speakOut" type="button" aria-label="Çeviriyi oku">
+                <svg viewBox="0 0 24 24">
+                  <path d="M11 5 6 9H3v6h3l5 4z"></path>
+                  <path d="M15 9a4 4 0 0 1 0 6"></path>
+                  <path d="M17.5 6.5a7 7 0 0 1 0 11"></path>
+                </svg>
+              </button>
+            </div>
           </div>
           <div class="out" id="outText">—</div>
         </div>
@@ -567,6 +676,6 @@
 
   <div id="toast" class="toast"></div>
 
-  <script type="module" src="/js/text_translate_page.js?v=2"></script>
+  <script type="module" src="/js/text_translate_page.js?v=3"></script>
 </body>
 </html>
