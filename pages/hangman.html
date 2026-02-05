@@ -10,66 +10,68 @@
       --bg-deep: #020205; --text-white: #ffffff; 
       --c-neon-pink: #ff00ff; --c-neon-blue: #00f3ff; --c-neon-green: #00e676; --c-error: #ff1744;
       --ai-gradient: linear-gradient(135deg, #a5b4fc 0%, #6366f1 100%);
-      --glass: rgba(255, 255, 255, 0.05);
     }
     * { box-sizing:border-box; outline:none; user-select:none; -webkit-tap-highlight-color:transparent; }
     html, body { margin:0; width:100%; height:100%; overflow:hidden; font-family:'Outfit', sans-serif; background:var(--bg-deep); color:#fff; position:fixed; }
     
-    /* PREMİUM COSMOS BACKGROUND */
-    .cosmos-bg { position:absolute; inset:0; background: radial-gradient(circle at center, #0a0a20 0%, #020205 100%); z-index:0; }
-    .stars { position: absolute; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.1'/%3E%3C/svg%3E"); opacity: 0.6; mix-blend-mode: screen; }
-    .nebula { position: absolute; width: 80vw; height: 80vw; border-radius: 50%; filter: blur(100px); opacity: 0.15; z-index: 1; pointer-events: none; }
-    .neb-1 { top: -10%; left: -10%; background: #6366f1; }
-    .neb-2 { bottom: -10%; right: -10%; background: #ff00ff; }
+    /* 🌌 DERİN UZAY ARKA PLAN EFECTLERİ */
+    .cosmos-bg { position:absolute; inset:0; background: radial-gradient(circle at 50% 50%, #0a0a25 0%, #020205 100%); z-index:0; }
+    .stars { position: absolute; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.15'/%3E%3C/svg%3E"); opacity: 0.6; mix-blend-mode: screen; animation: starsFloat 100s linear infinite; }
+    .nebula { position: absolute; width: 100vw; height: 100vw; border-radius: 50%; filter: blur(120px); opacity: 0.12; z-index: 1; pointer-events: none; animation: nebulaBreathe 15s infinite alternate ease-in-out; }
+    .neb-1 { top: -20%; left: -20%; background: #4338ca; }
+    .neb-2 { bottom: -20%; right: -20%; background: #701a75; }
+    @keyframes nebulaBreathe { from { transform: scale(1); opacity: 0.1; } to { transform: scale(1.2); opacity: 0.18; } }
+    @keyframes starsFloat { from { background-position: 0 0; } to { background-position: 0 1000px; } }
 
-    .wrap { width:100%; max-width:480px; height:100%; margin:0 auto; position:relative; z-index:10; display:flex; flex-direction:column; padding-bottom: 20px; }
+    .wrap { width:100%; max-width:480px; height:100%; margin:0 auto; position:relative; z-index:10; display:flex; flex-direction:column; }
     
-    /* PREMİUM HEADER */
-    .header { flex: 0 0 160px; display:flex; flex-direction:column; align-items:center; justify-content:center; }
-    .logo-main { font-size: 56px; font-weight: 800; letter-spacing: -2px; }
-    .logo-ai { background: var(--ai-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .game-title { font-size: 14px; font-weight: 800; color: var(--c-neon-pink); letter-spacing: 6px; text-transform: uppercase; margin-top: -8px; text-shadow: 0 0 15px var(--c-neon-pink); }
+    /* HEADER & NAVBAR */
+    .nav-top { flex: 0 0 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; position: relative; }
+    .back-btn { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); padding: 8px 16px; border-radius: 12px; color: #fff; font-size: 11px; font-weight: 800; cursor: pointer; text-decoration: none; backdrop-filter: blur(10px); display: flex; align-items: center; gap: 5px; }
+    .back-btn:active { transform: scale(0.95); }
+    .logo-small { font-size: 24px; font-weight: 800; letter-spacing: -1px; }
+
+    .header-main { flex: 0 0 80px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .game-title { font-size: 14px; font-weight: 800; color: var(--c-neon-pink); letter-spacing: 6px; text-transform: uppercase; text-shadow: 0 0 15px var(--c-neon-pink); }
     
-    .stats-bar { width: 90%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 0 10px; }
+    .stats-bar { width: 90%; display: flex; justify-content: flex-end; padding: 0 25px; margin-bottom: 5px; }
     .score-label { font-family: 'Space Grotesk', sans-serif; color: var(--c-neon-green); font-weight: 700; font-size: 18px; }
 
-    .stage { flex:1; display:flex; flex-direction:column; align-items:center; padding:10px; }
+    .stage { flex:1; display:flex; flex-direction:column; align-items:center; justify-content: center; padding:10px; }
     
     /* GALLOWS */
-    .gallows-box { position:relative; width:100px; height:120px; margin-bottom:15px; }
+    .gallows-box { position:relative; width:100px; height:110px; margin-bottom:15px; }
     .man-part { position:absolute; background:var(--c-neon-pink); border-radius:2px; opacity:0; transition:0.3s; box-shadow: 0 0 10px var(--c-neon-pink); }
     .p1 { top:25px; right:12px; width:26px; height:26px; border:3px solid var(--c-neon-pink); border-radius:50%; background:transparent; } 
-    .p2 { top:51px; right:24px; width:2px; height:35px; } 
+    .p2 { top:51px; right:24px; width:2px; height:30px; } 
     .p3 { top:55px; right:26px; width:18px; height:2px; transform:rotate(-25deg); transform-origin:left; } 
     .p4 { top:55px; right:8px; width:18px; height:2px; transform:rotate(25deg); transform-origin:right; } 
-    .p5 { top:84px; right:24px; width:2px; height:22px; transform:rotate(25deg); transform-origin:top; } 
-    .p6 { top:84px; right:24px; width:2px; height:22px; transform:rotate(-25deg); transform-origin:top; } 
+    .p5 { top:80px; right:24px; width:2px; height:20px; transform:rotate(25deg); transform-origin:top; } 
+    .p6 { top:80px; right:24px; width:2px; height:20px; transform:rotate(-25deg); transform-origin:top; } 
 
     .hint-container { margin-bottom:15px; text-align:center; min-height:50px; width: 90%; }
     .hint-main { font-size: 19px; font-weight:700; color:var(--c-neon-green); text-shadow: 0 0 8px rgba(0,230,118,0.3); }
-    .hint-sentence { font-size: 12px; font-style:italic; color:rgba(255,255,255,0.4); margin-top: 5px; line-height: 1.3; }
+    .hint-sentence { font-size: 12px; font-style:italic; color:rgba(255,255,255,0.4); margin-top: 5px; }
 
-    .word-box { display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin-bottom:20px; }
-    .letter-slot { width:30px; height:40px; border-bottom:3px solid var(--c-neon-blue); display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:800; text-shadow: 0 0 10px var(--c-neon-blue); }
+    .word-box { display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin-bottom:15px; }
+    .letter-slot { width:30px; height:40px; border-bottom:3px solid var(--c-neon-blue); display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:800; }
     .letter-slot.filled { border-bottom: none; animation: pop 0.3s ease; }
 
-    /* JOKER / POWERUP BUTTON */
-    .joker-box { margin-bottom: 15px; }
-    .joker-btn { background: var(--ai-gradient); border: none; padding: 8px 20px; border-radius: 20px; color: #fff; font-weight: 800; font-size: 12px; cursor: pointer; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4); transition: 0.3s; }
-    .joker-btn:disabled { opacity: 0.3; filter: grayscale(1); }
+    .joker-box { margin-bottom: 20px; }
+    .joker-btn { background: var(--ai-gradient); border: none; padding: 8px 20px; border-radius: 20px; color: #fff; font-weight: 800; font-size: 11px; cursor: pointer; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4); }
+    .joker-btn:disabled { opacity: 0.2; }
 
-    .keyboard { display:grid; grid-template-columns:repeat(7, 1fr); gap:6px; width:100%; max-width:420px; padding: 0 15px; }
-    .key-btn { aspect-ratio:1; background:var(--glass); border:1px solid rgba(255,255,255,0.1); border-radius:12px; color:#fff; font-size:18px; font-weight: 700; cursor:pointer; backdrop-filter: blur(5px); transition: 0.2s; }
-    .key-btn.correct { background:var(--c-neon-green); color:#000; border-color:transparent; box-shadow:0 0 15px var(--c-neon-green); }
-    .key-btn.wrong { background:var(--c-error); opacity:0.2; border-color:transparent; }
+    .keyboard { display:grid; grid-template-columns:repeat(7, 1fr); gap:6px; width:100%; max-width:420px; padding: 0 15px; margin-bottom: 20px; }
+    .key-btn { aspect-ratio:1; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:12px; color:#fff; font-size:18px; font-weight: 700; cursor:pointer; backdrop-filter: blur(5px); }
+    .key-btn.correct { background:var(--c-neon-green); color:#000; box-shadow:0 0 15px var(--c-neon-green); }
+    .key-btn.wrong { background:var(--c-error); opacity:0.2; }
     
-    /* MODALS */
-    .modal-wrap { position:absolute; inset:0; background:rgba(2,2,5,0.96); z-index:999; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(25px); }
-    .modal-card { width:100%; max-width:340px; background:rgba(20,20,30,0.8); border:1px solid rgba(255,255,255,0.1); border-radius:35px; padding:40px 30px; text-align:center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+    .modal-wrap { position:absolute; inset:0; background:rgba(2,2,5,0.98); z-index:999; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(30px); }
+    .modal-card { width:100%; max-width:340px; background:rgba(20,20,30,0.6); border:1px solid rgba(255,255,255,0.1); border-radius:35px; padding:40px 30px; text-align:center; }
     .lang-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 25px 0; }
-    .lang-btn { font-size: 24px; padding: 8px; border-radius: 15px; background: var(--glass); border: 1px solid transparent; cursor: pointer; transition: 0.3s; }
-    .lang-btn.active { border-color: var(--c-neon-blue); background: rgba(0, 243, 255, 0.1); box-shadow: 0 0 15px rgba(0,243,255,0.2); }
-    .btn-primary { width:100%; padding:16px; background:var(--c-neon-green); color:#000; border:none; border-radius:18px; font-weight:800; font-size: 16px; cursor:pointer; margin-top:10px; box-shadow: 0 5px 20px rgba(0,230,118,0.3); }
+    .lang-btn { font-size: 24px; padding: 8px; border-radius: 15px; background: rgba(255,255,255,0.05); border: 1px solid transparent; cursor: pointer; }
+    .lang-btn.active { border-color: var(--c-neon-blue); background: rgba(0, 243, 255, 0.1); }
+    .btn-primary { width:100%; padding:16px; background:var(--c-neon-green); color:#000; border:none; border-radius:18px; font-weight:800; font-size: 16px; cursor:pointer; margin-top:10px; }
 
     @keyframes pop { from{transform:scale(1.3)} to{transform:scale(1)} }
   </style>
@@ -83,21 +85,25 @@
   </div>
 
   <div class="wrap">
-    <div class="header">
-      <div class="stats-bar">
-        <div style="font-size: 10px; font-weight: 800; color: var(--c-neon-blue); letter-spacing: 2px;">ITALKY AI</div>
-        <div class="score-label" id="scoreDisplay">0</div>
-      </div>
-      <div class="logo-main">italky<span class="logo-ai">AI</span></div>
+    <div class="nav-top">
+      <a href="/pages/game.html" class="back-btn">← GERİ DÖN</a>
+      <div class="logo-small">italky<span style="background:var(--ai-gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">AI</span></div>
+      <div style="width:70px"></div> </div>
+
+    <div class="header-main">
       <div class="game-title">NEON HANGMAN</div>
+    </div>
+
+    <div class="stats-bar">
+      <div class="score-label" id="scoreDisplay">0</div>
     </div>
 
     <div class="stage" id="gameStage">
       <div class="gallows-box">
-        <div style="position:absolute; bottom:0; left:10px; width:80px; height:3px; background:#fff;"></div>
-        <div style="position:absolute; bottom:0; left:25px; width:3px; height:110px; background:#fff;"></div>
-        <div style="position:absolute; top:10px; left:25px; width:60px; height:3px; background:#fff;"></div>
-        <div style="position:absolute; top:10px; right:15px; width:1px; height:15px; background:var(--c-neon-pink);"></div>
+        <div style="position:absolute; bottom:0; left:15px; width:70px; height:2px; background:#fff;"></div>
+        <div style="position:absolute; bottom:0; left:25px; width:2px; height:100px; background:#fff;"></div>
+        <div style="position:absolute; top:10px; left:25px; width:50px; height:2px; background:#fff;"></div>
+        <div style="position:absolute; top:10px; right:25px; width:1px; height:15px; background:var(--c-neon-pink);"></div>
         <div class="man-part p1"></div><div class="man-part p2"></div><div class="man-part p3"></div>
         <div class="man-part p4"></div><div class="man-part p5"></div><div class="man-part p6"></div>
       </div>
@@ -119,8 +125,7 @@
 
   <div class="modal-wrap" id="startModal">
     <div class="modal-card">
-      <div style="font-size:22px; font-weight:800; color:#fff; letter-spacing:1px; margin-bottom: 5px;">HOŞ GELDİN</div>
-      <div style="font-size:11px; color:rgba(255,255,255,0.4); letter-spacing: 2px;">BİR DİL SEÇ VE BAŞLA</div>
+      <div style="font-size:22px; font-weight:800; color:#fff; margin-bottom: 5px;">HOŞ GELDİN</div>
       <div class="lang-grid">
           <button onclick="setLang('en',this)" class="lang-btn active">🇬🇧</button>
           <button onclick="setLang('de',this)" class="lang-btn">🇩🇪</button>
@@ -149,7 +154,7 @@ import { loadLangPool, createUsedSet, pick } from "/js/langpool.js";
 
 const $ = (id) => document.getElementById(id);
 let currentLang = "en", currentDiff = "A2", wordList = [], currentIndex = 0;
-let score = 0, mistakes = 0, currentWord = "", currentRaw = "", discovered = [], maxErrors = 6, jokers = 1;
+let score = 0, mistakes = 0, currentWord = "", currentRaw = "", discovered = [], jokers = 1;
 
 function hangmanNormalize(str) {
     if(!str) return "";
@@ -170,20 +175,14 @@ window.setLang = (l, btn) => {
     btn.classList.add('active');
 };
 
-window.selectLevel = (diff) => {
-    currentDiff = diff;
-    initGame();
-};
+window.selectLevel = (diff) => { currentDiff = diff; initGame(); };
 
 async function initGame() {
     $("modalMsg").textContent = "Kozmos taranıyor...";
     try {
         const rawPool = await loadLangPool(currentLang);
         const { used, save } = createUsedSet(`italky_used_hangman_${currentLang}_${currentDiff}`);
-        
-        // SEVİYE BAZLI UZUNLUK KURALLARI
-        const SETTINGS = { A2: { min:3, max:6 }, B1: { min:6, max:9 }, B2: { min:9, max:15 } };
-        const cfg = SETTINGS[currentDiff];
+        const cfg = { A2: { min:3, max:6 }, B1: { min:6, max:9 }, B2: { min:9, max:15 } }[currentDiff];
         const checkLevel = (lvl) => (currentDiff === "A2" ? ["A1", "A2"].includes(lvl) : lvl === currentDiff);
 
         let selected = pick(rawPool, 15, used, save, (it) => {
@@ -192,50 +191,37 @@ async function initGame() {
         });
 
         if (selected.length === 0) {
-            $("modalMsg").textContent = "Bu seviyede kelime kalmadı.";
+            $("modalMsg").textContent = "Kelime bulunamadı.";
             return;
         }
         wordList = selected;
         startGame();
     } catch (e) {
-        $("modalMsg").textContent = "Bağlantı hatası.";
+        $("modalMsg").textContent = "Hata oluştu.";
     }
 }
 
 function startGame() {
     $("startModal").style.display = "none";
     currentIndex = 0; score = 0; jokers = 1;
-    updateUI();
-    startRound();
+    updateUI(); startRound();
 }
 
 function startRound() {
     if(currentIndex >= wordList.length) return gameOver(true);
     const data = wordList[currentIndex];
     currentRaw = data.w; currentWord = hangmanNormalize(data.w);
-    mistakes = 0;
-    discovered = new Array(currentWord.length).fill(false);
-    
-    $("hintMain").textContent = data.tr;
-    $("hintSentence").textContent = data.sentence || ""; 
-    renderHangman();
-    renderWord();
-    renderKeyboard();
-    updateUI();
+    mistakes = 0; discovered = new Array(currentWord.length).fill(false);
+    $("hintMain").textContent = data.tr; $("hintSentence").textContent = data.sentence || ""; 
+    renderHangman(); renderWord(); renderKeyboard(); updateUI();
 }
 
 function renderWord() {
     const box = $("wordBox"); box.innerHTML = "";
     for(let i=0; i<currentWord.length; i++) {
-        const d = document.createElement("div");
-        const ch = currentWord[i];
-        if(!/\p{L}/u.test(ch)) {
-            d.className = "letter-slot filled"; d.textContent = ch; d.style.border = "none";
-            discovered[i] = true;
-        } else {
-            d.className = `letter-slot ${discovered[i]?'filled':''}`;
-            d.textContent = discovered[i] ? ch : "";
-        }
+        const d = document.createElement("div"); const ch = currentWord[i];
+        if(!/\p{L}/u.test(ch)) { d.className = "letter-slot filled"; d.textContent = ch; d.style.border = "none"; discovered[i] = true; }
+        else { d.className = `letter-slot ${discovered[i]?'filled':''}`; d.textContent = discovered[i] ? ch : ""; }
         box.appendChild(d);
     }
 }
@@ -260,59 +246,45 @@ function renderKeyboard() {
 }
 
 function handleGuess(char, btn) {
-    if(!btn || btn.classList.contains("used") || mistakes >= maxErrors) return;
+    if(!btn || btn.classList.contains("used") || mistakes >= 6) return;
     btn.classList.add("used");
     if(currentWord.includes(char)) {
         btn.classList.add("correct");
         for(let i=0; i<currentWord.length; i++) if(currentWord[i] === char) discovered[i] = true;
         renderWord();
         if(discovered.every(v => v)) {
-            score += (maxErrors - mistakes) * 10;
-            updateUI();
-            speak(currentRaw);
+            score += (6 - mistakes) * 10;
+            updateUI(); speak(currentRaw);
             setTimeout(() => { currentIndex++; startRound(); }, 1200);
         }
     } else {
         btn.classList.add("wrong");
-        mistakes++;
-        renderHangman();
-        if(mistakes >= maxErrors) teacherSolve();
+        mistakes++; renderHangman();
+        if(mistakes >= 6) teacherSolve();
     }
 }
 
 window.useJoker = () => {
     if(jokers <= 0) return;
     let targets = [];
-    for(let i=0; i<currentWord.length; i++) {
-        if(!discovered[i] && /\p{L}/u.test(currentWord[i])) targets.push(currentWord[i]);
-    }
+    for(let i=0; i<currentWord.length; i++) if(!discovered[i] && /\p{L}/u.test(currentWord[i])) targets.push(currentWord[i]);
     if(targets.length === 0) return;
     let randomChar = targets[Math.floor(Math.random() * targets.length)];
-    let btn = $("key-" + randomChar);
-    jokers--;
-    handleGuess(randomChar, btn);
-    updateUI();
+    jokers--; handleGuess(randomChar, $("key-" + randomChar)); updateUI();
 };
 
 function teacherSolve() {
     for(let i=0; i<currentWord.length; i++) discovered[i] = true;
-    renderWord();
-    speak(currentRaw);
-    setTimeout(() => gameOver(false), 2000);
+    renderWord(); speak(currentRaw); setTimeout(() => gameOver(false), 2000);
 }
 
 function gameOver(win) {
     $("endModal").style.display = "flex";
     $("endTitle").textContent = win ? "ZAFER! 🏆" : "BİTTİ";
-    $("endTitle").style.color = win ? "var(--c-neon-green)" : "var(--c-error)";
     $("endMsg").textContent = `Skorun: ${score}`;
 }
 
-window.retryGame = () => {
-    window.speechSynthesis.cancel();
-    $("endModal").style.display = "none";
-    initGame();
-};
+window.retryGame = () => { window.speechSynthesis.cancel(); $("endModal").style.display = "none"; initGame(); };
 
 function updateUI() {
     $("scoreDisplay").textContent = score;
@@ -325,8 +297,7 @@ function speak(text) {
     const u = new SpeechSynthesisUtterance(text);
     const map = { en: 'en-US', de: 'de-DE', fr: 'fr-FR', es: 'es-ES', it: 'it-IT' };
     u.lang = map[currentLang] || 'en-US';
-    u.rate = 0.8;
-    window.speechSynthesis.speak(u);
+    u.rate = 0.8; window.speechSynthesis.speak(u);
 }
 </script>
 </body>
