@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>italkyAI • Özel Ders</title>
+  <title>italkyAI • Telaffuz Dersi</title>
   <link rel="icon" href="data:," />
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -13,21 +13,18 @@
   <style>
     :root {
       --frameW: min(480px, 100vw);
-      --topH: 80px; /* Biraz arttırdık, ders bilgisi sığsın */
-      --footerH: 90px;
-
       --bg-deep: #050507;
       --text-main: #ffffff;
-      --text-muted: rgba(255, 255, 255, 0.6);
+      --text-muted: rgba(255, 255, 255, 0.5);
 
-      --accent-gradient: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
-      --accent-glow: rgba(139, 92, 246, 0.5);
+      /* Tema Renkleri (Değişken) */
+      --theme-color: #8b5cf6; 
+      --theme-gradient: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
       
-      --glass-bg: rgba(20, 20, 25, 0.85);
+      --glass-panel: rgba(255, 255, 255, 0.03);
       --glass-border: rgba(255, 255, 255, 0.08);
-
-      --user-bubble: #2e1065;
-      --ai-bubble: #1f2937;
+      --success: #10b981;
+      --error: #f59e0b;
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
@@ -41,443 +38,363 @@
       display: flex; align-items: center; justify-content: center;
     }
 
-    .premium-bg { position: absolute; inset: 0; z-index: 0; pointer-events: none; background: radial-gradient(circle at 50% 0%, #1a103c 0%, #000000 70%); }
-    .premium-glow { position: absolute; width: 100%; height: 60%; background: radial-gradient(ellipse at top, var(--accent-glow), transparent 70%); top: 0; left: 0; pointer-events: none; transition: 0.5s; }
+    /* Arka Plan */
+    .bg-gradient { position: absolute; inset: 0; z-index: 0; background: radial-gradient(circle at 50% 0%, #1a103c 0%, #000000 80%); }
+    .bg-glow { position: absolute; top: -20%; left: 50%; transform: translateX(-50%); width: 120%; height: 60%; background: radial-gradient(ellipse, rgba(139, 92, 246, 0.15), transparent 70%); pointer-events: none; }
 
     .mobile-frame {
       width: 100%; max-width: var(--frameW); height: 100%;
       position: relative; z-index: 10;
-      background: rgba(10, 10, 12, 0.5);
-      display: flex; flex-direction: column; overflow: hidden;
-    }
-    @media(min-width: 520px) {
-      .mobile-frame { height: 92vh; border-radius: 32px; border: 1px solid var(--glass-border); box-shadow: 0 40px 120px -20px rgba(0,0,0,0.8); background: rgba(10, 10, 12, 0.9); }
+      display: flex; flex-direction: column;
     }
 
-    /* --- TOP BAR --- */
-    .topbar {
-      height: var(--topH); display: flex; align-items: center; justify-content: space-between;
-      padding: 0 20px; background: rgba(5, 5, 7, 0.8); backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--glass-border); z-index: 50;
+    /* --- TOP BAR (Progress) --- */
+    .top-header {
+        padding: 20px 24px; display: flex; align-items: center; justify-content: space-between;
+        z-index: 20;
     }
-    .top-left { display: flex; flex-direction: column; }
-    .backBtn { font-size: 20px; background: none; border: none; color: #fff; cursor: pointer; margin-right: 10px; }
+    .close-btn { background: none; border: none; color: var(--text-muted); font-size: 24px; cursor: pointer; }
     
-    .lesson-badge {
-        font-size: 11px; font-weight: 700; color: #fbbf24; 
-        background: rgba(251, 191, 36, 0.1); padding: 4px 10px; border-radius: 12px;
-        border: 1px solid rgba(251, 191, 36, 0.2); margin-top: 4px; display: inline-block;
-    }
-
-    .mini-brand { display: flex; flex-direction: column; }
-    .logo-line { font-family: 'Space Grotesk', sans-serif; font-size: 18px; line-height: 1; }
-    .logo-main { font-weight: 700; color: #fff; }
-    .logo-ai { font-weight: 700; background: linear-gradient(to right, #a78bfa, #f472b6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    
-    .lang-indicator {
-        display: flex; align-items: center; gap: 8px; position: relative;
-        background: rgba(255,255,255,0.08); padding: 6px 12px; border-radius: 20px;
-        border: 1px solid var(--glass-border); cursor: pointer; transition: 0.2s;
-    }
-    .lang-flag { font-size: 18px; line-height: 1; }
-    .lang-code { font-size: 12px; font-weight: 700; color: #fff; text-transform: uppercase; }
-
-    /* --- OVERLAYS (Teacher & Level Selection) --- */
-    .overlay-screen {
-        position: absolute; inset: 0; z-index: 100;
-        background: rgba(5, 5, 7, 0.98);
-        display: flex; flex-direction: column; padding: 60px 20px 40px;
-        gap: 20px; overflow-y: auto;
-        transition: transform 0.5s cubic-bezier(0.7, 0, 0.3, 1);
-    }
-    .overlay-screen.hidden { transform: translateY(100%); pointer-events: none; }
-
-    .sel-title { font-size: 24px; font-weight: 700; color: #fff; text-align: center; margin-bottom: 4px; }
-    .sel-subtitle { font-size: 14px; color: var(--text-muted); text-align: center; margin-bottom: 24px; }
-
-    /* Teacher Grid */
-    .teacher-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding-bottom: 40px; }
-    .t-card {
-        background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border);
-        border-radius: 24px; padding: 20px; cursor: pointer;
-        display: flex; flex-direction: column; align-items: center; gap: 14px;
-        transition: 0.2s; position: relative; overflow: hidden;
-    }
-    .t-card:active { transform: scale(0.96); background: rgba(255,255,255,0.06); }
-    .t-avatar-img {
-        width: 70px; height: 70px; border-radius: 50%;
+    .progress-track {
+        flex: 1; height: 6px; background: rgba(255,255,255,0.1); border-radius: 10px; margin: 0 20px;
         position: relative; overflow: hidden;
-        border: 2px solid rgba(255,255,255,0.1);
-        display: flex; align-items: center; justify-content: center;
     }
-    .t-card[data-gender="female"] .t-avatar-img { background: linear-gradient(135deg, #FF9A9E 0%, #FECFEF 100%); }
-    .t-card[data-gender="male"] .t-avatar-img { background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%); }
-    .t-avatar-img svg { width: 40px; height: 40px; fill: rgba(0,0,0,0.5); }
-    .t-name { font-size: 16px; font-weight: 700; color: #fff; }
-
-    /* Level Grid */
-    .level-card {
-        background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border);
-        border-radius: 20px; padding: 24px; cursor: pointer;
-        display: flex; align-items: center; justify-content: space-between;
-        margin-bottom: 12px; transition: 0.2s;
+    .progress-fill {
+        height: 100%; width: 10%; background: var(--theme-gradient); border-radius: 10px;
+        transition: width 0.5s ease;
     }
-    .level-card:active { background: rgba(139, 92, 246, 0.1); transform: scale(0.98); }
-    .lvl-info h3 { font-size: 18px; font-weight: 700; color: #fff; margin: 0 0 4px; }
-    .lvl-info p { font-size: 12px; color: var(--text-muted); margin: 0; }
-    .lvl-icon { font-size: 24px; }
-
-    /* --- CHAT AREA --- */
-    .chat-area {
-      flex: 1; padding: 20px; overflow-y: auto;
-      display: flex; flex-direction: column; gap: 16px;
-      padding-bottom: 120px;
-    }
-    .chat-area::-webkit-scrollbar { display: none; }
-
-    .teacher-status { display: flex; flex-direction: column; align-items: center; gap: 8px; margin: 10px 0 20px; }
-    .avatar-orb {
-        width: 70px; height: 70px; border-radius: 50%;
-        background: var(--accent-gradient);
-        box-shadow: 0 0 30px var(--accent-glow);
-        position: relative; display: flex; align-items: center; justify-content: center;
-        border: 2px solid rgba(255,255,255,0.2);
-    }
-    .avatar-orb svg { width: 36px; height: 36px; fill: #fff; }
-    .avatar-orb.speaking { animation: pulse-speak 1.5s infinite; }
-    .teacher-name-display { font-size: 16px; font-weight: 700; color: #fff; }
-    .lang-hint { font-size: 11px; color: var(--text-muted); opacity: 0.8; }
-
-    .msg { max-width: 85%; width: fit-content; display: flex; flex-direction: column; gap: 4px; }
-    .msg.ai { align-self: flex-start; }
-    .msg.user { align-self: flex-end; align-items: flex-end; }
-
-    .bubble {
-      padding: 14px 18px; border-radius: 20px;
-      font-size: 15px; line-height: 1.5; color: #fff;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-    .msg.ai .bubble { background: var(--ai-bubble); border-bottom-left-radius: 4px; border: 1px solid var(--glass-border); }
-    .msg.user .bubble { background: var(--user-bubble); border-bottom-right-radius: 4px; border: 1px solid rgba(255,255,255,0.15); }
-
-    /* --- BOTTOM CONTROLS --- */
-    .bottom-controls {
-      position: absolute; bottom: 0; left: 0; right: 0; height: var(--footerH);
-      background: rgba(5, 5, 7, 0.9); backdrop-filter: blur(25px);
-      border-top: 1px solid var(--glass-border);
-      display: flex; align-items: center; justify-content: center; gap: 20px; z-index: 60;
-    }
-    .mic-btn {
-        width: 72px; height: 72px; border-radius: 50%;
-        background: var(--accent-gradient);
-        border: 4px solid rgba(5, 5, 7, 0.5);
-        box-shadow: 0 8px 30px var(--accent-glow);
-        display: flex; align-items: center; justify-content: center;
-        color: #fff; cursor: pointer; margin-top: -30px; transition: 0.2s;
-    }
-    .mic-btn:active { transform: scale(0.95); }
-    .mic-btn svg { width: 32px; height: 32px; fill: currentColor; }
-
-    /* --- MODALS (Lesson Finished) --- */
-    .modal-backdrop {
-        position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px);
-        z-index: 200; display: none; align-items: center; justify-content: center; padding: 20px;
-    }
-    .modal-backdrop.show { display: flex; }
-    .modal-box {
-        background: #121216; border: 1px solid var(--glass-border);
-        border-radius: 24px; padding: 30px 24px; width: 100%; max-width: 340px;
-        text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.6);
-    }
-    .modal-icon { font-size: 40px; margin-bottom: 16px; }
-    .modal-title { font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 8px; }
-    .modal-desc { font-size: 14px; color: var(--text-muted); margin-bottom: 24px; line-height: 1.5; }
-    .modal-btns { display: flex; flex-direction: column; gap: 10px; }
     
-    .btn-primary { 
-        background: var(--accent-gradient); color: #fff; border: none; 
-        padding: 14px; border-radius: 14px; font-weight: 700; font-size: 14px; cursor: pointer;
-    }
-    .btn-secondary {
-        background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--glass-border);
-        padding: 14px; border-radius: 14px; font-weight: 600; font-size: 14px; cursor: pointer;
+    .score-badge {
+        font-size: 14px; font-weight: 700; color: #fff; background: rgba(255,255,255,0.1);
+        padding: 6px 12px; border-radius: 12px; border: 1px solid var(--glass-border);
     }
 
-    /* Animasyonlar */
-    @keyframes pulse-speak { 0% { transform: scale(1); box-shadow: 0 0 20px var(--accent-glow); } 50% { transform: scale(1.05); box-shadow: 0 0 40px var(--accent-glow); } 100% { transform: scale(1); box-shadow: 0 0 20px var(--accent-glow); } }
+    /* --- LESSON STAGE (Merkez) --- */
+    .lesson-stage {
+        flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+        padding: 0 24px; position: relative;
+    }
+
+    /* Teacher Avatar (Compact) */
+    .teacher-pill {
+        display: flex; align-items: center; gap: 10px;
+        background: rgba(0,0,0,0.4); padding: 8px 16px 8px 8px; border-radius: 30px;
+        border: 1px solid var(--glass-border); margin-bottom: 30px;
+        transition: transform 0.3s;
+    }
+    .t-avatar-small {
+        width: 40px; height: 40px; border-radius: 50%;
+        background: var(--theme-gradient); display: flex; align-items: center; justify-content: center;
+        box-shadow: 0 0 15px rgba(139, 92, 246, 0.4); position: relative;
+    }
+    /* Konuşma animasyonu */
+    .t-avatar-small.speaking::after {
+        content: ''; position: absolute; inset: -4px; border-radius: 50%;
+        border: 2px solid var(--theme-color); opacity: 0;
+        animation: ping 1.5s infinite;
+    }
+    .t-label { font-size: 13px; font-weight: 600; color: var(--text-main); }
+    .t-status { font-size: 11px; color: var(--theme-color); font-weight: 500; }
+
+    /* THE CARD (Kelime Kartı) */
+    .focus-card {
+        width: 100%; min-height: 280px;
+        background: rgba(20, 20, 25, 0.6); backdrop-filter: blur(20px);
+        border: 1px solid var(--glass-border); border-radius: 32px;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        padding: 40px 20px; text-align: center;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+        transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        transform: scale(0.95); opacity: 0; /* Giriş animasyonu için */
+    }
+    .focus-card.active { transform: scale(1); opacity: 1; }
+    
+    .word-target {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 42px; font-weight: 700; color: #fff;
+        line-height: 1.1; margin-bottom: 8px;
+        text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    }
+    
+    .word-meaning {
+        font-size: 18px; color: var(--text-muted); font-weight: 500;
+        margin-top: 10px; padding-top: 10px;
+        border-top: 1px solid rgba(255,255,255,0.1); width: 60%;
+    }
+
+    .audio-wave {
+        height: 24px; display: flex; align-items: center; gap: 4px; margin-top: 20px;
+        opacity: 0; transition: 0.3s;
+    }
+    .audio-wave.playing { opacity: 1; }
+    .bar { width: 4px; background: var(--theme-color); border-radius: 4px; animation: wave 1s infinite ease-in-out; }
+    .bar:nth-child(2) { animation-delay: 0.1s; height: 16px; }
+    .bar:nth-child(3) { animation-delay: 0.2s; height: 24px; }
+    .bar:nth-child(4) { animation-delay: 0.3s; height: 12px; }
+
+    /* --- FOOTER CONTROLS --- */
+    .controls-area {
+        padding: 40px 24px; display: flex; flex-direction: column; align-items: center; gap: 20px;
+        position: relative; z-index: 30;
+    }
+
+    .instruction-text {
+        font-size: 14px; color: var(--text-muted); text-align: center;
+        min-height: 20px; font-weight: 500; letter-spacing: 0.5px;
+    }
+
+    /* Big Mic Button */
+    .mic-wrapper { position: relative; }
+    .main-mic {
+        width: 88px; height: 88px; border-radius: 50%;
+        background: linear-gradient(145deg, #1a1a20, #0f0f12);
+        border: 1px solid rgba(255,255,255,0.1);
+        color: #fff; display: flex; align-items: center; justify-content: center;
+        font-size: 32px; cursor: pointer;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,255,0.1);
+        transition: all 0.3s ease;
+    }
+    .main-mic:active { transform: scale(0.95); }
+    
+    .main-mic.listening {
+        border-color: var(--theme-color);
+        box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.2), 0 0 40px var(--theme-color);
+        background: var(--theme-color);
+    }
+    
+    .mic-ripple {
+        position: absolute; inset: -20px; border-radius: 50%;
+        border: 2px solid var(--theme-color); opacity: 0;
+        pointer-events: none;
+    }
+    .main-mic.listening ~ .mic-ripple { animation: ripple 1.5s infinite; }
+
+    /* Replay Button (Small) */
+    .replay-btn {
+        position: absolute; right: 40px; top: 50%; transform: translateY(-50%);
+        width: 44px; height: 44px; border-radius: 14px;
+        background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);
+        color: var(--text-muted); display: flex; align-items: center; justify-content: center;
+        cursor: pointer;
+    }
+    .replay-btn:active { background: rgba(255,255,255,0.1); }
+
+    /* --- FEEDBACK OVERLAY (Success/Fail) --- */
+    .feedback-toast {
+        position: absolute; bottom: 140px; left: 50%; transform: translateX(-50%) translateY(20px);
+        padding: 12px 24px; border-radius: 20px;
+        font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 8px;
+        opacity: 0; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        pointer-events: none; z-index: 50; box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    }
+    .feedback-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    
+    .feedback-toast.success { background: #064e3b; color: #34d399; border: 1px solid #059669; }
+    .feedback-toast.retry { background: #451a03; color: #fbbf24; border: 1px solid #d97706; }
+
+    /* Animations */
+    @keyframes ping { 75%, 100% { transform: scale(1.6); opacity: 0; } }
+    @keyframes wave { 0%, 100% { height: 4px; } 50% { height: 24px; } }
+    @keyframes ripple { 0% { transform: scale(0.8); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
 
   </style>
 </head>
 
 <body>
-  <div class="premium-bg"></div>
-  <div class="premium-glow" id="ambientGlow"></div>
+  <div class="bg-gradient"></div>
+  <div class="bg-glow"></div>
 
   <div class="mobile-frame">
     
-    <div class="topbar">
-      <div class="top-left">
-        <div style="display:flex; align-items:center;">
-            <button class="backBtn" onclick="history.back()">←</button>
-            <div class="mini-brand">
-              <div class="logo-line"><span class="logo-main">italky</span><span class="logo-ai">AI</span></div>
-            </div>
-        </div>
-        <div class="lesson-badge" id="lessonCounter">Ders: 1/7</div>
+    <div class="top-header">
+      <button class="close-btn" onclick="history.back()">✕</button>
+      <div class="progress-track">
+        <div class="progress-fill" style="width: 15%"></div>
       </div>
+      <div class="score-badge">150 Puan</div>
+    </div>
+
+    <div class="lesson-stage">
       
-      <div class="lang-indicator">
-        <span class="lang-flag" id="currentFlag">🇬🇧</span>
-        <span class="lang-code" id="currentCode">EN</span>
-      </div>
-    </div>
-
-    <div class="overlay-screen" id="teacherScreen">
-      <h2 class="sel-title">Öğretmenini Seç</h2>
-      <p class="sel-subtitle">Öğrenme yolculuğunda sana kim eşlik etsin?</p>
-      <div class="teacher-grid">
-        <div class="t-card" data-gender="female" onclick="selectTeacher('Dora', 'female')">
-          <div class="t-avatar-img"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg></div>
-          <div class="t-name">Dora</div>
+      <div class="teacher-pill">
+        <div class="t-avatar-small" id="tAvatar">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="#fff"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
         </div>
-        <div class="t-card" data-gender="female" onclick="selectTeacher('Ayda', 'female')">
-          <div class="t-avatar-img"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg></div>
-          <div class="t-name">Ayda</div>
-        </div>
-        <div class="t-card" data-gender="female" onclick="selectTeacher('Umay', 'female')">
-          <div class="t-avatar-img"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg></div>
-          <div class="t-name">Umay</div>
-        </div>
-        <div class="t-card" data-gender="male" onclick="selectTeacher('Sencer', 'male')">
-          <div class="t-avatar-img"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg></div>
-          <div class="t-name">Sencer</div>
-        </div>
-        <div class="t-card" data-gender="male" onclick="selectTeacher('Toygar', 'male')">
-          <div class="t-avatar-img"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg></div>
-          <div class="t-name">Toygar</div>
-        </div>
-        <div class="t-card" data-gender="male" onclick="selectTeacher('Sungur', 'male')">
-          <div class="t-avatar-img"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg></div>
-          <div class="t-name">Sungur</div>
+        <div style="display:flex; flex-direction:column;">
+            <span class="t-label" id="tName">Dora</span>
+            <span class="t-status" id="tStatus">Dinliyor...</span>
         </div>
       </div>
+
+      <div class="focus-card active" id="wordCard">
+        <div class="word-target" id="targetWord">Good Morning</div>
+        <div class="word-meaning" id="targetMeaning">Günaydın</div>
+        
+        <div class="audio-wave" id="audioWave">
+            <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+        </div>
+      </div>
+
+      <div class="feedback-toast" id="feedbackToast">
+        <span id="feedIcon">🎉</span> <span id="feedText">Mükemmel Telaffuz!</span>
+      </div>
+
     </div>
 
-    <div class="overlay-screen hidden" id="levelScreen">
-      <h2 class="sel-title">Seviyen Nedir?</h2>
-      <p class="sel-subtitle">Sana uygun müfredatı belirleyelim.</p>
+    <div class="controls-area">
+      <div class="instruction-text" id="instruction">Önce dinle, sonra butona basıp tekrar et.</div>
       
-      <div class="level-card" onclick="selectLevel('Başlangıç')">
-        <div class="lvl-info">
-          <h3>Başlangıç (A1-A2)</h3>
-          <p>Temel kelimeler, basit cümleler.</p>
+      <div class="mic-wrapper">
+        <div class="main-mic" id="micBtn">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
         </div>
-        <div class="lvl-icon">🌱</div>
-      </div>
-
-      <div class="level-card" onclick="selectLevel('Orta')">
-        <div class="lvl-info">
-          <h3>Orta (B1-B2)</h3>
-          <p>Akıcı diyalog, günlük konuşmalar.</p>
+        <div class="mic-ripple"></div>
+        
+        <div class="replay-btn" id="replayBtn">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
         </div>
-        <div class="lvl-icon">🚀</div>
-      </div>
-
-      <div class="level-card" onclick="selectLevel('İleri')">
-        <div class="lvl-info">
-          <h3>İleri (C1-C2)</h3>
-          <p>Deyimler, iş hayatı, derin konular.</p>
-        </div>
-        <div class="lvl-icon">🎓</div>
       </div>
     </div>
 
-    <div class="chat-area" id="chatArea">
-      <div class="teacher-status">
-        <div class="avatar-orb" id="chatAvatar">
-          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
-        </div>
-        <div class="teacher-name-display" id="chatName">Dora</div>
-        <div class="lang-hint">Kelime tekrarı ve cümle kurma dersi</div>
-      </div>
-
-      <div id="messagesContainer">
-        </div>
-    </div>
-
-    <div class="bottom-controls">
-      <div class="mic-btn" id="micBtn">
-        <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
-      </div>
-    </div>
-
-  </div>
-
-  <div class="modal-backdrop" id="endLessonModal">
-    <div class="modal-box">
-      <div class="modal-icon">⏰</div>
-      <div class="modal-title">Ders Bitti!</div>
-      <div class="modal-desc">30 dakikalık süremiz doldu. Harika bir iş çıkardın! Devam etmek ister misin?</div>
-      <div class="modal-btns">
-        <button class="btn-primary" onclick="continueLesson()">Devam Et (+15 dk)</button>
-        <button class="btn-secondary" onclick="finishSession()">Hayır, Bitir</button>
-      </div>
-    </div>
   </div>
 
   <script>
-    // --- STATE ---
-    let state = {
-        teacher: localStorage.getItem('italky_teacher_name') || null,
-        gender: localStorage.getItem('italky_teacher_gender') || 'female',
-        level: localStorage.getItem('italky_level') || null,
-        currentLesson: parseInt(localStorage.getItem('italky_lesson_num')) || 1,
-        messageCount: 0 // Simülasyon için
-    };
+    // --- MOCK CURRICULUM (Örnek Ders İçeriği) ---
+    const lessonData = [
+        { en: "Good Morning", tr: "Günaydın" },
+        { en: "How are you?", tr: "Nasılsın?" },
+        { en: "I would like a coffee", tr: "Bir kahve istiyorum" },
+        { en: "Where is the station?", tr: "İstasyon nerede?" }
+    ];
 
-    // --- DOM ---
-    const screens = {
-        teacher: document.getElementById('teacherScreen'),
-        level: document.getElementById('levelScreen'),
-        chat: document.getElementById('chatArea'),
-        modal: document.getElementById('endLessonModal')
-    };
-    const ui = {
-        name: document.getElementById('chatName'),
-        avatar: document.getElementById('chatAvatar'),
-        lessonBadge: document.getElementById('lessonCounter'),
-        msgContainer: document.getElementById('messagesContainer')
+    let currentIndex = 0;
+    let isTeacherSpeaking = false;
+    let isUserListening = false;
+
+    // --- DOM Elements ---
+    const el = {
+        targetWord: document.getElementById('targetWord'),
+        targetMeaning: document.getElementById('targetMeaning'),
+        micBtn: document.getElementById('micBtn'),
+        replayBtn: document.getElementById('replayBtn'),
+        audioWave: document.getElementById('audioWave'),
+        tAvatar: document.getElementById('tAvatar'),
+        tStatus: document.getElementById('tStatus'),
+        instruction: document.getElementById('instruction'),
+        toast: document.getElementById('feedbackToast'),
+        feedText: document.getElementById('feedText'),
+        feedIcon: document.getElementById('feedIcon'),
+        progress: document.querySelector('.progress-fill')
     };
 
     // --- INIT ---
-    function checkFlow() {
-        // UI Güncelle
-        ui.lessonBadge.innerText = `Ders: ${state.currentLesson}/7`;
+    // Sayfa açılınca ilk kelimeyi yükle ve 1 saniye sonra öğretmeni konuştur
+    window.onload = () => {
+        loadCard(0);
+        setTimeout(playTeacherAudio, 1000);
+    };
+
+    function loadCard(index) {
+        if(index >= lessonData.length) index = 0; // Loop for demo
+        currentIndex = index;
         
-        if (!state.teacher) {
-            screens.teacher.classList.remove('hidden');
-            screens.level.classList.add('hidden');
-        } else if (!state.level) {
-            screens.teacher.classList.add('hidden');
-            screens.level.classList.remove('hidden');
-            applyTeacherTheme(state.teacher, state.gender);
-        } else {
-            screens.teacher.classList.add('hidden');
-            screens.level.classList.add('hidden');
-            applyTeacherTheme(state.teacher, state.gender);
-            startLesson();
-        }
-    }
-
-    // 1. Öğretmen Seç
-    function selectTeacher(name, gender) {
-        state.teacher = name;
-        state.gender = gender;
-        localStorage.setItem('italky_teacher_name', name);
-        localStorage.setItem('italky_teacher_gender', gender);
-        checkFlow();
-    }
-
-    // 2. Seviye Seç
-    function selectLevel(lvl) {
-        state.level = lvl;
-        localStorage.setItem('italky_level', lvl);
-        checkFlow();
-    }
-
-    // 3. Ders Başlat (Karşılama)
-    function startLesson() {
-        // Eğer o ders için hiç mesaj yoksa, hocanın giriş konuşmasını bas
-        if (ui.msgContainer.children.length === 0) {
-            const welcomeMsg = `Selam ben dil öğretmenin ${state.teacher}. ${state.level} seviyesinde ${state.currentLesson}. dersteyiz. Seninle kısa sürede bu dil problemini aşacağımızı umuyorum. Lütfen her gün derslere katıl olur mu? Hadi kelime tekrarıyla başlayalım.`;
-            addMsg('ai', welcomeMsg);
-        }
-    }
-
-    function applyTeacherTheme(name, gender) {
-        ui.name.innerText = name;
-        const root = document.documentElement;
-        if (gender === 'female') {
-            root.style.setProperty('--accent-gradient', 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)');
-            root.style.setProperty('--accent-glow', 'rgba(139, 92, 246, 0.5)');
-        } else {
-            root.style.setProperty('--accent-gradient', 'linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%)');
-            root.style.setProperty('--accent-glow', 'rgba(59, 130, 246, 0.5)');
-        }
-    }
-
-    // Mesaj Ekleme
-    function addMsg(role, text) {
-        const div = document.createElement('div');
-        div.className = `msg ${role}`;
-        div.innerHTML = `<div class="bubble">${text}</div>`;
-        ui.msgContainer.appendChild(div);
-        ui.msgContainer.parentElement.scrollTop = ui.msgContainer.parentElement.scrollHeight;
-    }
-
-    // --- SİMÜLASYON: Konuşma ve Ders Sonu ---
-    const micBtn = document.getElementById('micBtn');
-    let isListening = false;
-
-    micBtn.addEventListener('click', () => {
-        isListening = !isListening;
+        // Update Text
+        el.targetWord.innerText = lessonData[index].en;
+        el.targetMeaning.innerText = lessonData[index].tr;
         
-        if (isListening) {
-            // Kullanıcı konuşuyor (Simüle)
-            micBtn.style.transform = 'scale(1.1)';
-            micBtn.style.boxShadow = '0 0 40px var(--accent-glow)';
-        } else {
-            // AI Cevap Veriyor
-            micBtn.style.transform = 'scale(1)';
-            micBtn.style.boxShadow = '0 8px 30px var(--accent-glow)';
-            
-            // Kullanıcı mesajı (Simüle)
-            addMsg('user', 'Örnek cevap cümlesi...');
-            
-            // Sayaç Arttır
-            state.messageCount++;
+        // Update Progress
+        el.progress.style.width = `${((index + 1) / lessonData.length) * 100}%`;
+        
+        // Reset States
+        el.micBtn.classList.remove('listening');
+        el.instruction.innerText = "Önce dinle...";
+    }
 
-            // AI Cevabı
+    // 1. TEACHER SPEAKS (Simulation)
+    function playTeacherAudio() {
+        if(isTeacherSpeaking) return;
+        isTeacherSpeaking = true;
+        
+        // Visuals
+        el.tAvatar.classList.add('speaking');
+        el.audioWave.classList.add('playing');
+        el.tStatus.innerText = "Konuşuyor...";
+        el.tStatus.style.color = "#ec4899"; // Pink for talking
+        
+        // Simulate Audio Duration (1.5s)
+        setTimeout(() => {
+            isTeacherSpeaking = false;
+            el.tAvatar.classList.remove('speaking');
+            el.audioWave.classList.remove('playing');
+            el.tStatus.innerText = "Sıra Sende";
+            el.tStatus.style.color = "#8b5cf6";
+            el.instruction.innerText = "Şimdi mikrofona bas ve tekrar et.";
+        }, 1500);
+    }
+
+    // 2. USER SPEAKS
+    el.micBtn.addEventListener('click', () => {
+        if(isTeacherSpeaking) return;
+
+        if(!isUserListening) {
+            // Start Listening
+            isUserListening = true;
+            el.micBtn.classList.add('listening');
+            el.instruction.innerText = "Dinliyorum...";
+            el.tStatus.innerText = "Seni Dinliyor...";
+            
+            // Simulate User finishing speech after 2 seconds
             setTimeout(() => {
-                addMsg('ai', 'Harika telaffuz! Şimdi şu kelimeyi tekrar et: "Experience".');
-                
-                // --- DERS BİTİŞ KONTROLÜ (Örn: 3. mesajda bitiriyoruz test için) ---
-                if (state.messageCount >= 3) {
-                    setTimeout(() => {
-                        screens.modal.classList.add('show');
-                    }, 1500);
-                }
-            }, 1000);
+                stopListeningAndEvaluate();
+            }, 2000);
+
+        } else {
+            // Manual Stop (if clicked again)
+            stopListeningAndEvaluate();
         }
     });
 
-    // Ders Sonu Butonları
-    function continueLesson() {
-        screens.modal.classList.remove('show');
-        state.messageCount = 0; // Sayacı sıfırla, devam et
-        addMsg('ai', 'Süper! Enerjine hayranım. Kaldığımız yerden devam edelim.');
+    function stopListeningAndEvaluate() {
+        isUserListening = false;
+        el.micBtn.classList.remove('listening');
+        el.instruction.innerText = "Analiz ediliyor...";
+        
+        // Simulate Evaluation (Random Success/Fail for demo)
+        setTimeout(() => {
+            const isSuccess = Math.random() > 0.3; // 70% success chance
+            showFeedback(isSuccess);
+        }, 800);
     }
 
-    function finishSession() {
-        screens.modal.classList.remove('show');
-        const byeMsg = "Tamam, bugünlük bu kadar yeter. Yarın mutlaka gel, unutma 7. dersten sonra seviye sınavımız var!";
-        addMsg('ai', byeMsg);
+    // 3. FEEDBACK & NEXT
+    function showFeedback(success) {
+        el.toast.className = `feedback-toast show ${success ? 'success' : 'retry'}`;
         
-        // Dersi bir sonraki aşamaya geçir
-        if (state.currentLesson < 7) {
-            state.currentLesson++;
-            localStorage.setItem('italky_lesson_num', state.currentLesson);
-            // Badge'i güncelle
-            ui.lessonBadge.innerText = `Ders: ${state.currentLesson}/7`;
+        if(success) {
+            el.feedIcon.innerText = "🎉";
+            el.feedText.innerText = "Harika Telaffuz!";
+            el.tStatus.innerText = "Mükemmel!";
+            
+            // Next card after delay
+            setTimeout(() => {
+                el.toast.classList.remove('show');
+                loadCard(currentIndex + 1);
+                setTimeout(playTeacherAudio, 500);
+            }, 2000);
+        } else {
+            el.feedIcon.innerText = "🎤";
+            el.feedText.innerText = "Tekrar Dene";
+            el.tStatus.innerText = "Bir daha deneyelim";
+            
+            setTimeout(() => {
+                el.toast.classList.remove('show');
+                el.instruction.innerText = "Tekrar denemek için butona bas.";
+            }, 2000);
         }
-        
-        // Butonu pasife al (Ders bitti hissi)
-        micBtn.style.opacity = '0.5';
-        micBtn.style.pointerEvents = 'none';
     }
 
-    // Başlat
-    checkFlow();
+    // Replay Button
+    el.replayBtn.addEventListener('click', playTeacherAudio);
 
   </script>
 </body>
