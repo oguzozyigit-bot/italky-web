@@ -3,85 +3,86 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-  <title>ITALKY • Neon Hangman Ultra</title>
+  <title>italkyAI • Neon Hangman</title>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
   <style>
     :root { 
-      --bg-deep: #05020a; --text-main: #fff; 
+      --bg-deep: #030014; --text-main: #fff; 
       --c-neon-pink: #ff00ff; --c-neon-blue: #00f3ff; --c-neon-green: #00e676; --c-error: #ff1744;
       --border: rgba(255, 255, 255, 0.15); 
-      --safe-top: env(safe-area-inset-top, 20px); --safe-bottom: env(safe-area-inset-bottom, 20px);
     }
     * { box-sizing:border-box; outline:none; user-select:none; -webkit-tap-highlight-color:transparent; }
     html, body { margin:0; width:100%; height:100%; overflow:hidden; font-family:'Outfit', sans-serif; background:var(--bg-deep); color:var(--text-main); position:fixed; }
     
-    /* Uzay Boşluğu Tasarımı */
-    .cosmos-bg { position:absolute; inset:0; background: radial-gradient(circle at center, #1a0a2e 0%, #000 100%); z-index:0; }
-    .grid-lines { position: absolute; inset: 0; background-image: linear-gradient(rgba(255, 0, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 243, 255, 0.05) 1px, transparent 1px); background-size: 40px 40px; opacity: 0.5; }
-    
-    .wrap { width:100%; max-width:480px; height:100%; margin:0 auto; position:relative; z-index:10; display:flex; flex-direction:column; padding-top: var(--safe-top); padding-bottom: var(--safe-bottom); }
-    
-    .game-header { flex: 0 0 80px; display:flex; justify-content:space-between; align-items:center; padding:0 20px; background: rgba(0,0,0,0.4); border-bottom: 1px solid var(--border); backdrop-filter: blur(10px); }
-    .gh-logo { text-align: center; flex: 1; }
-    .gh-title { font-size: 20px; font-weight: 800; color: #fff; text-shadow: 0 0 10px var(--c-neon-pink); letter-spacing: 2px; }
-    .gh-score { font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 700; color: var(--c-neon-green); width: 60px; text-align: right; }
+    /* UZAY BOŞLUĞU TASARIMI */
+    .cosmos-bg { position:absolute; inset:0; background: radial-gradient(circle at center, #1a0a2e 0%, #030014 100%); z-index:0; }
+    .stars { position: absolute; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E"); opacity: 0.4; }
 
-    .stage { flex:1; display:flex; flex-direction:column; align-items:center; padding:10px; position:relative; overflow-y:auto; }
+    .wrap { width:100%; max-width:480px; height:100%; margin:0 auto; position:relative; z-index:10; display:flex; flex-direction:column; }
+    
+    /* LOGO VE BAŞLIK */
+    .header { flex: 0 0 140px; display:flex; flex-direction:column; align-items:center; justify-content:center; padding-top: 20px; }
+    .logo-main { font-size: 52px; font-weight: 800; letter-spacing: -2px; }
+    .logo-ai { background: linear-gradient(135deg, #a5b4fc 0%, #6366f1 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .game-title { font-size: 16px; font-weight: 800; color: var(--c-neon-pink); letter-spacing: 5px; text-transform: uppercase; margin-top: -5px; text-shadow: 0 0 10px var(--c-neon-pink); }
+    .score-box { position: absolute; top: 20px; right: 20px; font-family: 'Space Grotesk', sans-serif; color: var(--c-neon-green); font-size: 18px; font-weight: 700; }
+
+    .stage { flex:1; display:flex; flex-direction:column; align-items:center; padding:10px; position:relative; }
     .boss-tag { display:none; background:var(--c-error); color:#fff; padding:4px 12px; border-radius:4px; font-size:12px; font-weight:800; margin-bottom:10px; animation: pulse 1s infinite; }
     .stage.boss-mode .boss-tag { display:block !important; }
 
-    .gallows-box { position:relative; width:140px; height:160px; margin-bottom:15px; opacity: 0.8; }
+    .gallows-box { position:relative; width:120px; height:140px; margin-bottom:10px; }
     .man-part { position:absolute; background:var(--c-neon-pink); border-radius:2px; opacity:0; transition:0.3s; box-shadow: 0 0 8px var(--c-neon-pink); }
     .p1 { top:30px; right:15px; width:30px; height:30px; border:3px solid var(--c-neon-pink); border-radius:50%; background:transparent; } 
     .p2 { top:60px; right:29px; width:2px; height:40px; } 
-    .p3 { top:65px; right:31px; width:25px; height:2px; transform:rotate(-20deg); transform-origin:left; } 
-    .p4 { top:65px; right:4px; width:25px; height:2px; transform:rotate(20deg); transform-origin:right; } 
-    .p5 { top:98px; right:29px; width:2px; height:30px; transform:rotate(25deg); transform-origin:top; } 
-    .p6 { top:98px; right:29px; width:2px; height:30px; transform:rotate(-25deg); transform-origin:top; } 
+    .p3 { top:65px; right:31px; width:20px; height:2px; transform:rotate(-20deg); transform-origin:left; } 
+    .p4 { top:65px; right:9px; width:20px; height:2px; transform:rotate(20deg); transform-origin:right; } 
+    .p5 { top:98px; right:29px; width:2px; height:25px; transform:rotate(25deg); transform-origin:top; } 
+    .p6 { top:98px; right:29px; width:2px; height:25px; transform:rotate(-25deg); transform-origin:top; } 
 
-    .hint-container { display:flex; flex-direction:column; align-items:center; gap:4px; margin-bottom:20px; width:90%; min-height:50px; }
-    .hint-main { font-size: 18px; font-weight:700; color:var(--c-neon-green); text-align:center; }
-    .hint-sentence { font-size: 13px; font-style:italic; color:rgba(255,255,255,0.6); text-align:center; line-height:1.2; }
+    .hint-container { margin-bottom:15px; text-align:center; min-height:45px; width: 90%; }
+    .hint-main { font-size: 18px; font-weight:700; color:var(--c-neon-green); }
+    .hint-sentence { font-size: 12px; font-style:italic; color:rgba(255,255,255,0.5); margin-top: 4px; }
 
-    .word-box { display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin-bottom:20px; min-height:45px; }
-    .letter-slot { width:32px; height:42px; border-bottom:3px solid var(--c-neon-blue); display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:800; color:#fff; text-transform: uppercase; }
-    .letter-slot.filled { border-bottom: none; animation: pop 0.3s ease; }
+    .word-box { display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin-bottom:15px; }
+    .letter-slot { width:32px; height:42px; border-bottom:3px solid var(--c-neon-blue); display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:800; }
+    .letter-slot.filled { border-bottom: none; animation: pop 0.3s ease; color: #fff; }
 
-    .keyboard { display:grid; grid-template-columns:repeat(7, 1fr); gap:6px; width:100%; max-width:400px; padding: 10px; }
-    .key-btn { aspect-ratio:1; background:rgba(255,255,255,0.08); border:1px solid var(--border); border-radius:10px; color:#fff; font-size:18px; font-weight: 700; display:flex; align-items:center; justify-content:center; cursor:pointer; transition: 0.2s; }
-    .key-btn.correct { background:var(--c-neon-green); color:#000; border-color: var(--c-neon-green); box-shadow:0 0 15px var(--c-neon-green); }
-    .key-btn.wrong { background:var(--c-error); opacity:0.3; border-color: var(--c-error); }
+    .keyboard { display:grid; grid-template-columns:repeat(7, 1fr); gap:6px; width:100%; max-width:420px; padding: 0 10px; }
+    .key-btn { aspect-ratio:1; background:rgba(255,255,255,0.06); border:1px solid var(--border); border-radius:10px; color:#fff; font-size:18px; font-weight: 700; cursor:pointer; }
+    .key-btn.correct { background:var(--c-neon-green); color:#000; box-shadow:0 0 15px var(--c-neon-green); }
+    .key-btn.wrong { background:var(--c-error); opacity:0.3; }
     
-    .modal-wrap { position:absolute; inset:0; background:rgba(0,0,0,0.92); z-index:999; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(15px); padding:20px; }
-    .modal-card { width:100%; max-width:340px; background:#121218; border:1px solid var(--border); border-radius:28px; padding:30px; text-align:center; box-shadow: 0 0 30px rgba(255,0,255,0.2); }
-    
-    .lang-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 20px 0; }
-    .lang-btn { font-size: 24px; padding: 10px; border-radius: 12px; background: rgba(255,255,255,0.05); border: 2px solid transparent; cursor: pointer; transition: 0.3s; }
-    .lang-btn.active { background: rgba(0, 243, 255, 0.15); border-color: var(--c-neon-blue); }
+    /* MODALS */
+    .modal-wrap { position:absolute; inset:0; background:rgba(0,0,0,0.95); z-index:999; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(20px); }
+    .modal-card { width:100%; max-width:340px; background:#0a0a0f; border:1px solid var(--border); border-radius:32px; padding:40px 30px; text-align:center; }
+    .lang-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 25px 0; }
+    .lang-btn { font-size: 24px; padding: 10px; border-radius: 12px; background: rgba(255,255,255,0.05); border: 2px solid transparent; cursor: pointer; }
+    .lang-btn.active { border-color: var(--c-neon-blue); background: rgba(0, 243, 255, 0.1); }
+    .btn-primary { width:100%; padding:16px; background:var(--c-neon-green); color:#000; border:none; border-radius:16px; font-weight:800; font-size: 16px; cursor:pointer; margin-top:10px; }
 
-    .btn-primary { width:100%; padding:15px; background:var(--c-neon-green); color:#000; border:none; border-radius:14px; font-weight:800; font-size: 16px; cursor:pointer; margin-top:10px; }
     @keyframes pop { from{transform:scale(1.2)} to{transform:scale(1)} }
     @keyframes pulse { 0%{opacity:1} 50%{opacity:0.6} 100%{opacity:1} }
   </style>
 </head>
 <body>
 
-  <div class="cosmos-bg"><div class="grid-lines"></div></div>
+  <div class="cosmos-bg"><div class="stars"></div></div>
 
   <div class="wrap">
-    <div class="game-header">
-      <div style="width: 60px; font-size: 10px; color: var(--c-neon-blue); font-weight: 800;">ITALKY</div>
-      <div class="gh-logo"><div class="gh-title">HANGMAN</div></div>
-      <div class="gh-score" id="scoreDisplay">0</div>
+    <div class="header">
+      <div class="score-box" id="scoreDisplay">0</div>
+      <div class="logo-main">italky<span class="logo-ai">AI</span></div>
+      <div class="game-title">NEON HANGMAN</div>
     </div>
 
     <div class="stage" id="gameStage">
       <div class="boss-tag">⚠️ BOSS ROUND</div>
       <div class="gallows-box">
-        <div style="position:absolute; bottom:0; left:10px; width:120px; height:4px; background:#fff; border-radius: 2px;"></div>
-        <div style="position:absolute; bottom:0; left:30px; width:4px; height:150px; background:#fff; border-radius: 2px;"></div>
-        <div style="position:absolute; top:10px; left:30px; width:80px; height:4px; background:#fff; border-radius: 2px;"></div>
-        <div style="position:absolute; top:10px; right:30px; width:2px; height:20px; background:var(--c-neon-pink);"></div>
+        <div style="position:absolute; bottom:0; left:10px; width:100px; height:4px; background:#fff;"></div>
+        <div style="position:absolute; bottom:0; left:30px; width:4px; height:130px; background:#fff;"></div>
+        <div style="position:absolute; top:10px; left:30px; width:70px; height:4px; background:#fff;"></div>
+        <div style="position:absolute; top:10px; right:20px; width:2px; height:20px; background:var(--c-neon-pink);"></div>
         <div class="man-part p1"></div><div class="man-part p2"></div><div class="man-part p3"></div>
         <div class="man-part p4"></div><div class="man-part p5"></div><div class="man-part p6"></div>
       </div>
@@ -98,29 +99,26 @@
 
   <div class="modal-wrap" id="startModal">
     <div class="modal-card">
-      <div style="font-size:26px; font-weight:800; color:var(--c-neon-pink); margin-bottom:10px;">NEON HANGMAN</div>
-      <div id="setupView">
-        <div style="font-size:12px; opacity:0.6;">DİL SEÇİN</div>
-        <div class="lang-grid">
-            <button onclick="setLang('en',this)" class="lang-btn active">🇬🇧</button>
-            <button onclick="setLang('de',this)" class="lang-btn">🇩🇪</button>
-            <button onclick="setLang('fr',this)" class="lang-btn">🇫🇷</button>
-            <button onclick="setLang('es',this)" class="lang-btn">🇪🇸</button>
-            <button onclick="setLang('it',this)" class="lang-btn">🇮🇹</button>
-        </div>
-        <button class="btn-primary" onclick="selectLevel('A2')">A2 SEVİYESİ</button>
-        <button class="btn-primary" onclick="selectLevel('B1')">B1 SEVİYESİ</button>
-        <button class="btn-primary" onclick="selectLevel('B2')">B2 SEVİYESİ</button>
+      <div style="font-size:20px; font-weight:800; color:#fff; letter-spacing:1px;">HOŞ GELDİN</div>
+      <div class="lang-grid">
+          <button onclick="setLang('en',this)" class="lang-btn active">🇬🇧</button>
+          <button onclick="setLang('de',this)" class="lang-btn">🇩🇪</button>
+          <button onclick="setLang('fr',this)" class="lang-btn">🇫🇷</button>
+          <button onclick="setLang('es',this)" class="lang-btn">🇪🇸</button>
+          <button onclick="setLang('it',this)" class="lang-btn">🇮🇹</button>
       </div>
-      <div id="modalMsg" style="margin-top: 15px; color: var(--c-neon-blue); font-size: 13px;"></div>
+      <button class="btn-primary" onclick="selectLevel('A2')">A2 SEVİYESİ</button>
+      <button class="btn-primary" onclick="selectLevel('B1')">B1 SEVİYESİ</button>
+      <button class="btn-primary" onclick="selectLevel('B2')">B2 SEVİYESİ</button>
+      <div id="modalMsg" style="margin-top:15px; font-size:12px; color:var(--c-neon-blue)"></div>
     </div>
   </div>
 
   <div class="modal-wrap" id="endModal" style="display:none">
     <div class="modal-card">
-      <div id="endTitle" style="font-size:30px; font-weight:800; margin-bottom:10px;"></div>
-      <p id="endMsg" style="opacity:0.8; margin-bottom:20px; font-size: 16px;"></p>
-      <button class="btn-primary" onclick="retryGame()">YENİDEN DENE</button>
+      <div id="endTitle" style="font-size:32px; font-weight:800; margin-bottom:10px;"></div>
+      <p id="endMsg" style="opacity:0.8; margin-bottom:25px;"></p>
+      <button class="btn-primary" onclick="retryGame()">DEVAM ET</button>
       <button class="btn-primary" style="background:rgba(255,255,255,0.1); color:#fff;" onclick="location.href='/pages/game.html'">ÇIKIŞ</button>
     </div>
   </div>
@@ -130,12 +128,10 @@ import { loadLangPool, createUsedSet, pick } from "/js/langpool.js";
 
 const $ = (id) => document.getElementById(id);
 let currentLang = "en", currentDiff = "A2", wordList = [], currentIndex = 0;
-let score = 0, mistakes = 0, currentWord = "", discovered = [], maxErrors = 6, isBoss = false;
+let score = 0, mistakes = 0, currentWord = "", currentRaw = "", discovered = [], maxErrors = 6, isBoss = false;
 
-// ✅ Madde 6 & 7: Karakter Normalizasyonu (Rüya -> RÜYA, Sıkkın -> SIKKIN)
 function hangmanNormalize(str) {
     if(!str) return "";
-    // Türkçe özel karakter dönüşümü
     return str.trim()
         .replace(/i/g, "İ").replace(/ı/g, "I")
         .replace(/ğ/g, "Ğ").replace(/ü/g, "Ü")
@@ -150,8 +146,7 @@ function getAlphabet(lang) {
     const base = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     if(lang === "de") return base + "ÄÖÜẞ";
     if(lang === "es") return base + "ÑÁÉÍÓÚÜ";
-    if(lang === "fr") return base + "ÀÂÆÇÉÈÊËÎÏÔŒÙÛÜŸ";
-    if(lang === "it") return base + "ÀÈÉÌÒÙ";
+    if(lang === "fr") return base + "ÀÂÇÉÈÊËÎÏÔŒÙÛÜŸ";
     return base;
 }
 
@@ -166,14 +161,13 @@ window.selectLevel = (diff) => {
     initGame();
 };
 
-async function initGame(retryCount = 0) {
-    $("setupView").style.display = "none";
-    $("modalMsg").innerHTML = "Havuzdan kelimeler yükleniyor...";
+async function initGame() {
+    $("setupView") && ($("setupView").style.display = "none");
+    $("modalMsg").textContent = "Kelimeler hazırlanıyor...";
     
     try {
         const rawPool = await loadLangPool(currentLang);
         const { used, save } = createUsedSet(`italky_used_hangman_${currentLang}_${currentDiff}`);
-        
         const checkLevel = (lvl) => (currentDiff === "A2" ? ["A1", "A2"].includes(lvl) : lvl === currentDiff);
 
         let selected = pick(rawPool, 15, used, save, (it) => {
@@ -183,15 +177,13 @@ async function initGame(retryCount = 0) {
 
         if (selected.length === 0) {
             $("modalMsg").textContent = "Uygun kelime bulunamadı.";
-            $("setupView").style.display = "block";
             return;
         }
 
         wordList = selected;
         startGame();
     } catch (e) {
-        $("modalMsg").textContent = "Hata oluştu: " + e.message;
-        $("setupView").style.display = "block";
+        $("modalMsg").textContent = "Bağlantı hatası.";
     }
 }
 
@@ -204,10 +196,9 @@ function startGame() {
 
 function startRound() {
     if(currentIndex >= wordList.length) return gameOver(true);
-    
     const data = wordList[currentIndex];
+    currentRaw = data.w;
     currentWord = hangmanNormalize(data.w);
-    
     isBoss = (currentIndex + 1) % 5 === 0;
     maxErrors = isBoss ? 3 : 6;
     mistakes = 0;
@@ -216,7 +207,6 @@ function startRound() {
     isBoss ? $("gameStage").classList.add("boss-mode") : $("gameStage").classList.remove("boss-mode");
     $("hintMain").textContent = data.tr;
     $("hintSentence").textContent = data.sentence || ""; 
-
     renderHangman();
     renderWord();
     renderKeyboard();
@@ -248,19 +238,12 @@ function renderHangman() {
     }
 }
 
-// ✅ Akıllı Klavye: Kelimedeki harfler + Rastgele 10 harf
 function renderKeyboard() {
     const kb = $("keyboard"); kb.innerHTML = "";
-    const fullAlphabet = getAlphabet(currentLang);
+    const fullAlpha = getAlphabet(currentLang);
     const wordChars = new Set(currentWord.split("").filter(c => /\p{L}/u.test(c)));
-    
-    // Rastgele harf seçimi
-    let others = fullAlphabet.split("").filter(c => !wordChars.has(c));
-    others.sort(() => Math.random() - 0.5);
-    let chosenOthers = others.slice(0, 10);
-    
-    // Klavyeyi oluştur ve alfabetik sırala
-    let finalKeys = Array.from(new Set([...wordChars, ...chosenOthers])).sort((a,b) => fullAlphabet.indexOf(a) - fullAlphabet.indexOf(b));
+    let others = fullAlpha.split("").filter(c => !wordChars.has(c)).sort(() => Math.random() - 0.5).slice(0, 10);
+    let finalKeys = Array.from(new Set([...wordChars, ...others])).sort((a,b) => fullAlpha.indexOf(a) - fullAlpha.indexOf(b));
 
     finalKeys.forEach(char => {
         const b = document.createElement("div");
@@ -281,6 +264,7 @@ function handleGuess(char, btn) {
             score += (maxErrors - mistakes) * 10;
             if(isBoss) score += 50;
             updateUI();
+            speak(currentRaw); // ✅ BİLİNCE OKU
             setTimeout(() => { currentIndex++; startRound(); }, 1200);
         }
     } else {
@@ -294,9 +278,7 @@ function handleGuess(char, btn) {
 function teacherSolve() {
     for(let i=0; i<currentWord.length; i++) discovered[i] = true;
     renderWord();
-    const u = new SpeechSynthesisUtterance(wordList[currentIndex].w);
-    u.lang = currentLang;
-    window.speechSynthesis.speak(u);
+    speak(currentRaw); // ✅ BİLEMEYİNCE OKU
     setTimeout(() => gameOver(false), 2000);
 }
 
@@ -315,6 +297,14 @@ window.retryGame = () => {
 
 function updateUI() {
     $("scoreDisplay").textContent = score;
+}
+
+function speak(text) {
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = currentLang === 'en' ? 'en-US' : currentLang === 'de' ? 'de-DE' : currentLang === 'fr' ? 'fr-FR' : 'it-IT';
+    u.rate = 0.8;
+    window.speechSynthesis.speak(u);
 }
 </script>
 </body>
