@@ -47,7 +47,7 @@ function paintHeader(u){
   avatarBtn.addEventListener("click", logout);
 }
 
-/* ===== Diller (Türkçe + bayrak) ===== */
+/* ===== Diller ===== */
 const LANGS = [
   { code:"tr", name:"Türkçe", flag:"🇹🇷" },
   { code:"en", name:"İngilizce", flag:"🇬🇧" },
@@ -96,7 +96,7 @@ function langBy(code){
 }
 
 /* ===== Hedef dil (sessionStorage) ===== */
-const SS_TO = "italky_photo_to_lang_v1";
+const SS_TO = "italky_photo_to_lang_v2";
 let toLang = sessionStorage.getItem(SS_TO) || "tr";
 
 function setToUI(){
@@ -159,23 +159,14 @@ async function startCamera(){
     });
     v.srcObject = stream;
     await v.play();
-    $("statusChip").textContent = "✅ Kamera hazır • SCAN ile tara";
+    $("statusChip").textContent = "✅ Kamera hazır • Yazıya dokun";
   }catch{
     $("statusChip").textContent = "❌ Kamera açılamadı (izin/cihaz)";
     toast("Kamera izni gerekli");
   }
 }
 
-/* ===== OCR state ===== */
-const ocrState = {
-  ready: false,
-  busy: false,
-  words: [],
-  imgW: 0,
-  imgH: 0,
-};
-const cache = new Map();
-
+/* ===== Canvas ===== */
 function fitCanvasToVideo(){
   const v = $("cam");
   const c = $("overlay");
@@ -189,6 +180,7 @@ function drawClear(){
   ctx.clearRect(0,0,c.width,c.height);
 }
 
+/* ===== Snapshot frame ===== */
 function captureFrame(){
   const v = $("cam");
   if(!v || v.videoWidth === 0) return null;
@@ -199,85 +191,49 @@ function captureFrame(){
   return tmp;
 }
 
-async function doScan(){
-  if(!window.Tesseract){ toast("OCR yüklenemedi"); return; }
-  if(ocrState.busy) return;
+/* ===== OCR ROI (dokunduğun bölge) ===== */
+let busy = false;
+const cache = new Map();
 
-  const snap = captureFrame();
-  if(!snap){ toast("Kamera hazır değil"); return; }
-
-  ocrState.busy = true;
-  $("statusChip").textContent = "🧠 OCR taranıyor…";
-  drawClear();
-
-  try{
-    const r = await window.Tesseract.recognize(snap, "eng", {
-      logger: (m)=>{
-        if(m?.status === "recognizing text"){
-          const p = Math.round((m.progress || 0) * 100);
-          $("statusChip").textContent = `🧠 OCR taranıyor… %${p}`;
-        }
-      }
-    });
-
-    const words = (r?.data?.words || [])
-      .filter(w => String(w.text||"").trim().length >= 2)
-      .map(w => ({
-        text: String(w.text||"").trim(),
-        bbox: { x0:w.bbox.x0, y0:w.bbox.y0, x1:w.bbox.x1, y1:w.bbox.y1 }
-      }));
-
-    ocrState.words = words;
-    ocrState.imgW = snap.width;
-    ocrState.imgH = snap.height;
-    ocrState.ready = true;
-
-    $("statusChip").textContent = words.length
-      ? `✅ Bulundu: ${words.length} • Yazıya tıkla`
-      : "⚠️ Yazı bulunamadı • Yaklaştır";
-  }catch{
-    $("statusChip").textContent = "❌ OCR hata";
-    toast("OCR başarısız");
-  }finally{
-    ocrState.busy = false;
-  }
-}
-
-function pointToImageXY(clientX, clientY){
+function stageToFrameXY(clientX, clientY, frameW, frameH){
   const v = $("cam");
   const rect = v.getBoundingClientRect();
   const x = clientX - rect.left;
   const y = clientY - rect.top;
 
-  const sx = ocrState.imgW / rect.width;
-  const sy = ocrState.imgH / rect.height;
+  const sx = frameW / rect.width;
+  const sy = frameH / rect.height;
 
-  // ekranda video mirror -> x'i tersle
-  const imgX = (rect.width - x) * sx;
-  const imgY = y * sy;
-
-  return { imgX, imgY };
+  return { fx: x * sx, fy: y * sy };
 }
 
-function nearestWord(imgX, imgY){
-  let best = null;
-  let bestD = Infinity;
+function cropROI(frameCanvas, fx, fy){
+  // ROI boyutu (piksel) – hızlı OCR
+  const roiW = Math.floor(Math.min(420, frameCanvas.width * 0.55));
+  const roiH = Math.floor(Math.min(220, frameCanvas.height * 0.22));
 
-  for(const w of ocrState.words){
-    const b = w.bbox;
-    const cx = (b.x0 + b.x1) / 2;
-    const cy = (b.y0 + b.y1) / 2;
-    const dx = cx - imgX;
-    const dy = cy - imgY;
-    const d = dx*dx + dy*dy;
-    if(d < bestD){
-      bestD = d;
-      best = w;
-    }
-  }
-  return best;
+  let x0 = Math.floor(fx - roiW/2);
+  let y0 = Math.floor(fy - roiH/2);
+
+  x0 = Math.max(0, Math.min(frameCanvas.width - roiW, x0));
+  y0 = Math.max(0, Math.min(frameCanvas.height - roiH, y0));
+
+  const roi = document.createElement("canvas");
+  roi.width = roiW;
+  roi.height = roiH;
+  roi.getContext("2d").drawImage(frameCanvas, x0, y0, roiW, roiH, 0, 0, roiW, roiH);
+
+  return { roi, x0, y0, roiW, roiH };
 }
 
+async function ocrROI(roiCanvas){
+  if(!window.Tesseract) throw new Error("OCR yok");
+  const r = await window.Tesseract.recognize(roiCanvas, "eng");
+  const txt = String(r?.data?.text || "").trim();
+  return txt;
+}
+
+/* ===== Translate ===== */
 async function translateViaApi(text, target){
   const key = `${text}__${target}`;
   if(cache.has(key)) return cache.get(key);
@@ -308,40 +264,37 @@ async function translateViaApi(text, target){
   return out;
 }
 
-function drawOverlayBox(b, text){
+/* ===== Draw overlay ROI result ===== */
+function drawOverlayTextBox(x0, y0, w, h, text){
   const c = $("overlay");
   const ctx = c.getContext("2d");
 
   const v = $("cam");
   const rect = v.getBoundingClientRect();
 
-  const sx = rect.width / ocrState.imgW;
-  const sy = rect.height / ocrState.imgH;
+  // frame px -> stage px
+  const frameW = v.videoWidth;
+  const frameH = v.videoHeight;
+  const sx = rect.width / frameW;
+  const sy = rect.height / frameH;
 
-  // mirror x in screen coords
-  const x0 = (rect.width - b.x1) * sx;
-  const x1 = (rect.width - b.x0) * sx;
-  const y0 = b.y0 * sy;
-  const y1 = b.y1 * sy;
-
-  const px0 = Math.round(x0 * devicePixelRatio);
-  const py0 = Math.round(y0 * devicePixelRatio);
-  const pw = Math.max(10, Math.round((x1 - x0) * devicePixelRatio));
-  const ph = Math.max(10, Math.round((y1 - y0) * devicePixelRatio));
+  const px0 = Math.round((x0 * sx) * devicePixelRatio);
+  const py0 = Math.round((y0 * sy) * devicePixelRatio);
+  const pw  = Math.round((w  * sx) * devicePixelRatio);
+  const ph  = Math.round((h  * sy) * devicePixelRatio);
 
   ctx.fillStyle = "rgba(0,0,0,0.55)";
   ctx.strokeStyle = "rgba(165,180,252,0.70)";
   ctx.lineWidth = Math.max(2, Math.round(2 * devicePixelRatio));
-
   ctx.fillRect(px0, py0, pw, ph);
   ctx.strokeRect(px0, py0, pw, ph);
 
-  const fontSize = Math.max(12, Math.min(22, Math.floor(ph / 2.2 / devicePixelRatio)));
+  const fontSize = Math.max(12, Math.min(22, Math.floor((ph / 2.3) / devicePixelRatio)));
   ctx.font = `900 ${Math.round(fontSize * devicePixelRatio)}px Outfit, sans-serif`;
   ctx.fillStyle = "rgba(255,255,255,0.95)";
   ctx.textBaseline = "middle";
 
-  const tx = px0 + Math.round(8 * devicePixelRatio);
+  const tx = px0 + Math.round(10 * devicePixelRatio);
   const ty = py0 + Math.round(ph / 2);
 
   ctx.save();
@@ -352,23 +305,92 @@ function drawOverlayBox(b, text){
   ctx.restore();
 }
 
-async function onStageTap(e){
-  if(!ocrState.ready){
-    toast("Önce SCAN");
-    return;
-  }
-  const pt = pointToImageXY(e.clientX, e.clientY);
-  const w = nearestWord(pt.imgX, pt.imgY);
-  if(!w){ toast("Kelime yok"); return; }
+/* ===== Instant translate on hold ===== */
+let holding = false;
+let lastRun = 0;
 
-  $("statusChip").textContent = "⚡ Çeviriliyor…";
+async function translateAt(clientX, clientY){
+  if(busy) return;
+  const v = $("cam");
+  if(!v || v.videoWidth === 0) return;
+
+  busy = true;
+  $("statusChip").textContent = "🧠 Okunuyor…";
+
   try{
-    const tr = await translateViaApi(w.text, toLang);
-    drawOverlayBox(w.bbox, tr);
-    $("statusChip").textContent = "✅ Basıldı • Başka yazıya tıkla";
+    const frame = captureFrame();
+    if(!frame) throw new Error("frame yok");
+
+    const { fx, fy } = stageToFrameXY(clientX, clientY, frame.width, frame.height);
+    const { roi, x0, y0, roiW, roiH } = cropROI(frame, fx, fy);
+
+    const raw = await ocrROI(roi);
+    const clean = raw.replace(/\s+/g, " ").trim();
+
+    if(!clean){
+      $("statusChip").textContent = "⚠️ Yazı yok • Yaklaştır";
+      return;
+    }
+
+    const out = await translateViaApi(clean, toLang);
+    drawOverlayTextBox(x0, y0, roiW, roiH, out);
+    $("statusChip").textContent = "✅ Basıldı • Tutmaya devam et";
   }catch{
-    $("statusChip").textContent = "⚠️ Çeviri alınamadı";
-    toast("Çeviri hata");
+    $("statusChip").textContent = "⚠️ Çeviri/OCR hata";
+    toast("OCR/Çeviri hata");
+  }finally{
+    busy = false;
+  }
+}
+
+function onPointerDown(e){
+  holding = true;
+  lastRun = 0;
+  translateAt(e.clientX, e.clientY);
+}
+function onPointerMove(e){
+  if(!holding) return;
+  const now = Date.now();
+  if(now - lastRun < 650) return; // throttle
+  lastRun = now;
+  translateAt(e.clientX, e.clientY);
+}
+function onPointerUp(){
+  holding = false;
+}
+
+/* ===== Optional Full Scan ===== */
+async function doFullScan(){
+  if(!window.Tesseract){ toast("OCR yok"); return; }
+  if(busy) return;
+
+  const v = $("cam");
+  if(!v || v.videoWidth === 0) return toast("Kamera hazır değil");
+
+  busy = true;
+  $("statusChip").textContent = "🧠 SCAN…";
+
+  try{
+    const frame = captureFrame();
+    const r = await window.Tesseract.recognize(frame, "eng");
+    const txt = String(r?.data?.text || "").trim().replace(/\s+/g," ");
+    if(!txt){ $("statusChip").textContent = "⚠️ Yazı bulunamadı"; return; }
+
+    const out = await translateViaApi(txt, toLang);
+    drawClear();
+    // full scan sonucu: ekranın üstüne bir kutu gibi bas
+    drawOverlayTextBox(
+      Math.floor(frame.width*0.05),
+      Math.floor(frame.height*0.05),
+      Math.floor(frame.width*0.90),
+      Math.floor(frame.height*0.18),
+      out
+    );
+    $("statusChip").textContent = "✅ SCAN basıldı";
+  }catch{
+    $("statusChip").textContent = "❌ SCAN hata";
+  }finally{
+    busy = false;
   }
 }
 
@@ -392,16 +414,18 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   $("langSheet")?.addEventListener("click", (ev)=>{ if(ev.target === $("langSheet")) closeSheet(); });
   $("sheetQuery")?.addEventListener("input", ()=> renderSheet($("sheetQuery").value));
 
-  $("scanBtn")?.addEventListener("click", doScan);
+  $("scanBtn")?.addEventListener("click", doFullScan);
   $("clearBtn")?.addEventListener("click", ()=>{
-    ocrState.ready = false;
-    ocrState.words = [];
     cache.clear();
     drawClear();
-    $("statusChip").textContent = "🧽 Temizlendi • SCAN ile tara";
+    $("statusChip").textContent = "🧽 Temizlendi • Yazıya dokun";
   });
 
-  $("stage").addEventListener("click", onStageTap);
+  const stage = $("stage");
+  stage.addEventListener("pointerdown", onPointerDown);
+  stage.addEventListener("pointermove", onPointerMove);
+  stage.addEventListener("pointerup", onPointerUp);
+  stage.addEventListener("pointercancel", onPointerUp);
 
   await startCamera();
 
