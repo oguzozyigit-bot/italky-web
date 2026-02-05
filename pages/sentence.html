@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>ITALKY • Sentence Builder — Final</title>
+<title>ITALKY • Sentence Builder</title>
 <link rel="icon" href="data:,">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
@@ -13,44 +13,50 @@
   --primary:#9900ff; --accent:#00f3ff;
   --ok:#00e676; --bad:#ff1744;
   --text:#fff; --border:rgba(255,255,255,.15);
+  --safe-top: env(safe-area-inset-top, 20px);
+  --safe-bottom: env(safe-area-inset-bottom, 20px);
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
-html,body{margin:0;width:100%;height:100%;background:var(--bg);font-family:Outfit,sans-serif;overflow:hidden;color:var(--text)}
+html,body{margin:0;width:100%;height:100%;background:var(--bg);font-family:Outfit,sans-serif;overflow:hidden;color:var(--text);position:fixed}
 .bg{position:absolute;inset:0;background:radial-gradient(circle,#1a001a 0%,#000 100%)}
 
-.app{position:relative;max-width:480px;height:100%;margin:0 auto;border:1px solid var(--border);background:var(--panel);display:flex;flex-direction:column}
-@media(min-width:520px){.app{height:92vh;border-radius:32px}}
+.app{position:relative;max-width:480px;height:100%;margin:0 auto;border:1px solid var(--border);background:var(--panel);display:flex;flex-direction:column; padding-top:var(--safe-top); padding-bottom:var(--safe-bottom);}
+@media(min-width:520px){.app{height:92vh;border-radius:32px;margin-top:2vh}}
 
-.header{height:70px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;border-bottom:1px solid var(--border)}
+.header{height:60px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;border-bottom:1px solid var(--border)}
 .title{font-family:Space Grotesk;font-weight:900;color:var(--accent);letter-spacing:1px}
-.badge{font-size:10px;padding:4px 8px;border-radius:6px;background:var(--primary);margin-left:8px}
+.badge{font-size:10px;padding:4px 8px;border-radius:6px;background:var(--primary);margin-left:8px;vertical-align:middle}
+
+.nav-btn { width: 32px; height: 32px; background: rgba(255,255,255,0.1); border: 1px solid var(--border); border-radius: 8px; color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; margin-left: 10px; }
 
 .stats{display:flex;justify-content:space-between;padding:10px 16px;border-bottom:1px dashed var(--border)}
-.stats div{font-size:12px;text-transform:uppercase;opacity:.7}
-.stats b{font-size:16px;opacity:1}
+.stats div{font-size:11px;text-transform:uppercase;opacity:.7;text-align:center}
+.stats b{font-size:15px;opacity:1;display:block;color:var(--text)}
 
-.game{flex:1;padding:16px;display:none;flex-direction:column;gap:12px}
-.hint{background:linear-gradient(135deg,rgba(153,0,255,.15),rgba(0,243,255,.08));border:1px solid rgba(153,0,255,.4);border-radius:16px;padding:14px;text-align:center;font-style:italic}
+.game{flex:1;padding:16px;display:none;flex-direction:column;gap:12px;overflow-y:auto}
+.hint{background:linear-gradient(135deg,rgba(153,0,255,.15),rgba(0,243,255,.08));border:1px solid rgba(153,0,255,.4);border-radius:16px;padding:14px;text-align:center;font-style:italic;font-size:15px;color:rgba(255,255,255,0.9)}
 
-.target{min-height:90px;border:2px dashed var(--border);border-radius:20px;padding:10px;display:flex;flex-wrap:wrap;gap:8px}
+.target{min-height:100px;border:2px dashed var(--border);border-radius:20px;padding:12px;display:flex;flex-wrap:wrap;gap:8px;align-content:flex-start;transition:0.3s}
 .target.correct{border-color:var(--ok);background:rgba(0,230,118,.12)}
-.target.wrong{border-color:var(--bad)}
+.target.wrong{border-color:var(--bad);background:rgba(255,23,68,.1)}
 
-.pool{flex:1;display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.pool{flex:1;display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-content:flex-start;padding-top:10px}
 
-.token{padding:10px 14px;border-radius:12px;border:1px solid var(--border);background:rgba(255,255,255,.08);font-weight:700;cursor:pointer}
-.token.placed{background:linear-gradient(135deg,var(--primary),var(--accent));border:none}
+.token{padding:10px 14px;border-radius:12px;border:1px solid var(--border);background:rgba(255,255,255,.08);font-weight:700;font-size:16px;cursor:pointer;transition:0.2s}
+.token:active{transform:scale(0.95)}
+.token.placed{background:linear-gradient(135deg,var(--primary),var(--accent));border:none;color:#000}
 
-.actions{display:flex;gap:10px}
-.btn{flex:1;padding:14px;border-radius:16px;border:none;font-weight:900;cursor:pointer}
+.actions{display:flex;gap:10px;margin-top:auto}
+.btn{flex:1;padding:16px;border-radius:16px;border:none;font-weight:900;cursor:pointer;font-size:16px;transition:0.2s}
+.btn:active{transform:scale(0.98)}
 .btn.check{background:var(--ok);color:#000}
 .btn.sec{background:rgba(255,255,255,.1);color:#fff;border:1px solid var(--border)}
 
-.modal{position:absolute;inset:0;background:rgba(0,0,0,.9);display:flex;align-items:center;justify-content:center;z-index:50}
-.card{background:#151520;border:1px solid var(--border);border-radius:24px;padding:26px;width:85%;text-align:center}
+.modal{position:absolute;inset:0;background:rgba(0,0,0,.95);display:flex;align-items:center;justify-content:center;z-index:50;backdrop-filter:blur(10px)}
+.card{background:#151520;border:1px solid var(--border);border-radius:24px;padding:26px;width:85%;max-width:340px;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,0.8)}
 .langs{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:16px}
-.lang{padding:10px;border:1px solid var(--border);border-radius:10px;font-weight:900;cursor:pointer}
-.lang.active{background:var(--primary)}
+.lang{padding:12px 0;border:1px solid var(--border);border-radius:10px;font-weight:900;cursor:pointer;background:rgba(255,255,255,0.05)}
+.lang.active{background:var(--primary);border-color:var(--primary);transform:scale(1.1)}
 
 .hidden{display:none!important}
 </style>
@@ -61,14 +67,20 @@ html,body{margin:0;width:100%;height:100%;background:var(--bg);font-family:Outfi
 
 <div class="app">
   <div class="header">
-    <div class="title">SENTENCE BUILDER <span id="langBadge" class="badge">EN</span></div>
-    <div id="soundBtn" style="cursor:pointer">🔊</div>
+    <div style="display:flex;align-items:center">
+      <div class="title">SENTENCE</div>
+      <span id="langBadge" class="badge">EN</span>
+    </div>
+    <div style="display:flex;align-items:center">
+      <div id="soundBtn" style="cursor:pointer;font-size:20px;margin-right:5px">🔊</div>
+      <button class="nav-btn" onclick="window.location.href='/pages/game.html'">✕</button>
+    </div>
   </div>
 
   <div class="stats">
     <div>PUAN<br><b id="scoreVal">0</b></div>
     <div>CAN<br><b id="livesVal">❤️❤️❤️</b></div>
-    <div>SEVİYE<br><b id="levelVal">1</b></div>
+    <div>SEVİYE<br><b id="levelVal">1/10</b></div>
   </div>
 
   <div class="game" id="game">
@@ -84,7 +96,7 @@ html,body{margin:0;width:100%;height:100%;background:var(--bg);font-family:Outfi
 
 <div class="modal" id="langModal">
   <div class="card">
-    <h3>DİL SEÇ</h3>
+    <h3 style="font-family:'Space Grotesk';color:var(--accent);margin-bottom:10px">DİL SEÇ</h3>
     <div class="langs">
       <div class="lang active" data-lang="en">EN</div>
       <div class="lang" data-lang="de">DE</div>
@@ -92,147 +104,280 @@ html,body{margin:0;width:100%;height:100%;background:var(--bg);font-family:Outfi
       <div class="lang" data-lang="es">ES</div>
       <div class="lang" data-lang="it">IT</div>
     </div>
+    <div id="loading" class="hidden" style="margin-top:20px;color:var(--ok)">Hazırlanıyor...</div>
+    <button class="btn check" id="startBtn" style="margin-top:20px">BAŞLA</button>
   </div>
 </div>
 
 <div class="modal hidden" id="endModal">
   <div class="card">
-    <h3 id="endTitle">BİTTİ</h3>
-    <p id="endDesc"></p>
-    <button class="btn check" onclick="restart()">TEKRAR</button>
+    <h3 id="endTitle" style="font-size:24px;margin-bottom:10px">BİTTİ</h3>
+    <p id="endDesc" style="font-size:14px;opacity:0.8;margin-bottom:20px;line-height:1.5"></p>
+    <button class="btn check" id="retryBtn">YENİDEN OYNA</button>
+    <button class="btn sec" style="margin-top:10px" onclick="location.href='/pages/game.html'">ÇIKIŞ</button>
   </div>
 </div>
 
 <script type="module">
-import { loadLangPool, createUsedSet, pick } from "/js/langpool.js";
+// --------------------------------------------------------
+// 1. OFFLINE POOL (Veritabanı)
+// --------------------------------------------------------
+const MASTER_DB = {
+  en: [
+    {s:"I don't like coffee.", t:"Kahveyi sevmem."},
+    {s:"She is my best friend.", t:"O benim en iyi arkadaşım."},
+    {s:"Where are you going?", t:"Nereye gidiyorsun?"},
+    {s:"This is a well-known fact.", t:"Bu bilinen bir gerçektir."},
+    {s:"I have (two) brothers.", t:"İki kardeşim var."},
+    {s:"It's raining heavily.", t:"Sağanak yağıyor."},
+    {s:"Can you help me?", t:"Bana yardım edebilir misin?"},
+    {s:"He doesn't live here.", t:"O burada yaşamıyor."},
+    {s:"What time is it?", t:"Saat kaç?"},
+    {s:"I love learning languages.", t:"Dil öğrenmeyi seviyorum."},
+    {s:"Do you want some tea?", t:"Biraz çay ister misin?"},
+    {s:"They are playing football.", t:"Onlar futbol oynuyorlar."},
+    {s:"Open the door, please.", t:"Kapıyı aç, lütfen."},
+    {s:"I was born in 1990.", t:"1990'da doğdum."},
+    {s:"She looks like her mother.", t:"Annesine benziyor."},
+    {s:"We need to buy bread.", t:"Ekmek almamız lazım."},
+    {s:"Turn off the lights.", t:"Işıkları kapat."},
+    {s:"Don't give up!", t:"Asla pes etme!"},
+    {s:"Life is beautiful.", t:"Hayat güzeldir."},
+    {s:"Are you ready to go?", t:"Gitmeye hazır mısın?"}
+  ],
+  de: [{s:"Ich habe kein Geld.", t:"Param yok."}, {s:"Das ist mein Haus.", t:"Bu benim evim."}],
+  fr: [{s:"C'est la vie.", t:"Hayat bu."}, {s:"Je ne sais pas.", t:"Bilmiyorum."}],
+  es: [{s:"No tengo tiempo.", t:"Zamanım yok."}, {s:"La vida es bella.", t:"Hayat güzeldir."}],
+  it: [{s:"Non ho tempo.", t:"Zamanım yok."}, {s:"La vita è bella.", t:"Hayat güzeldir."}]
+};
 
-const $=id=>document.getElementById(id);
-
+const $ = id => document.getElementById(id);
 let lang="en";
 let score=0,lives=3,level=0;
-let sentence="",tokens=[],pool=[],placed=[];
+let sentence="",tokens=[],poolArr=[],placed=[];
 let muted=false;
+let usedIndices = new Set();
 
 const LANGMAP={en:"en-US",de:"de-DE",fr:"fr-FR",es:"es-ES",it:"it-IT"};
 
+// --------------------------------------------------------
+// 2. HELPER FUNCTIONS
+// --------------------------------------------------------
+const shuffle = (arr) => arr.sort(() => Math.random() - 0.5);
+
+function getUniqueRound() {
+  const pool = MASTER_DB[lang] || MASTER_DB.en;
+  let attempt = 0;
+  let idx;
+  
+  // Havuz dolduysa sıfırla
+  if (usedIndices.size >= pool.length) usedIndices = new Set();
+
+  do {
+    idx = Math.floor(Math.random() * pool.length);
+    attempt++;
+  } while (usedIndices.has(idx) && attempt < 50);
+
+  usedIndices.add(idx);
+  return pool[idx];
+}
+
+// --------------------------------------------------------
+// 3. GAME FLOW
+// --------------------------------------------------------
 document.querySelectorAll(".lang").forEach(b=>{
   b.onclick=()=>{
     document.querySelectorAll(".lang").forEach(x=>x.classList.remove("active"));
     b.classList.add("active");
     lang=b.dataset.lang;
     $("langBadge").textContent=lang.toUpperCase();
-    start();
   };
 });
 
-$("soundBtn").onclick=()=>{
+$("#startBtn").onclick = startGameFlow;
+
+$("#retryBtn").onclick = () => {
+  $("endModal").classList.add("hidden");
+  startGameFlow();
+};
+
+$("soundBtn").onclick = () => {
   muted=!muted;
   $("soundBtn").textContent=muted?"🔇":"🔊";
 };
 
-async function start(){
-  $("langModal").classList.add("hidden");
-  $("game").style.display="flex";
-  score=0;lives=3;level=0;
+// PATCH 1: LOADING & INIT FIX
+async function startGameFlow() {
+  $("#startBtn").disabled = true;
+  $("loading").classList.remove("hidden"); // Loader'ı göster
+
+  // Simüle edilmiş bekleme (kullanıcı görsün diye)
+  await new Promise(r => setTimeout(r, 300)); 
+
+  // UI Hazırla
+  $("loading").classList.add("hidden");
+  $("#startBtn").disabled = false;
+  $("langModal").classList.add("hidden"); // Şimdi kapat
+  $("game").style.display = "flex";
+
+  // Reset
+  score=0; lives=3; level=0; usedIndices = new Set();
   updateStats();
-  await loadLevel();
+  
+  loadLevel();
 }
 
-async function loadLevel(){
-  if(lives<=0){finish(false);return;}
-  const data=await loadLangPool(lang);
-  const {used,save}=createUsedSet("sentence_builder_"+lang);
-  const picked=pick(data,1,used,save);
-  const w=picked[0];
-  sentence=(w.sentence || `I like ${w.w}.`).trim();
-  $("hintText").textContent=w.tr;
+function loadLevel() {
+  // PATCH 5: WIN CONDITION
+  if (lives <= 0) { finish(false); return; }
+  if (level >= 10) { finish(true); return; }
 
-  tokens=sentence.match(/[\wÀ-ž]+|[.,!?;]/g) || [];
-  pool=[...tokens].sort(()=>Math.random()-.5).map((t,i)=>({id:i,text:t}));
-  placed=[];
+  const q = getUniqueRound();
+  
+  // PATCH 3: CRASH KORUMASI (Veri yoksa)
+  if (!q) {
+    alert("Veri hatası!");
+    location.reload();
+    return;
+  }
+
+  sentence = q.s;
+  $("hintText").textContent = q.t;
+
+  // PATCH 4: AKILLI TOKENIZER (Unicode + Apostrof + Noktalama)
+  // Kelimeler (hyphen, apostrof dahil) VEYA Noktalama işaretleri
+  tokens = sentence.match(/[\p{L}\p{N}]+(?:[’'\-][\p{L}\p{N}]+)*|[.,!?;:()"]/gu) || [];
+  
+  poolArr = shuffle([...tokens]).map((t,i)=>({id:i,text:t}));
+  placed = [];
+  
+  $("target").className = "target";
   render();
 }
 
-function render(){
+function render() {
   const t=$("target"), p=$("pool");
   t.innerHTML=""; p.innerHTML="";
+  
   placed.forEach((o,i)=>{
     const b=document.createElement("div");
     b.className="token placed";
     b.textContent=o.text;
-    b.onclick=()=>{placed.splice(i,1);pool.push(o);render();};
+    b.onclick=()=>{ 
+        play("click"); 
+        placed.splice(i,1); 
+        poolArr.push(o); 
+        render(); 
+    };
     t.appendChild(b);
   });
-  pool.forEach((o,i)=>{
+  
+  poolArr.forEach((o,i)=>{
     const b=document.createElement("div");
     b.className="token";
     b.textContent=o.text;
-    b.onclick=()=>{pool.splice(i,1);placed.push(o);speak(o.text);render();};
+    b.onclick=()=>{ 
+        play("click"); 
+        poolArr.splice(i,1); 
+        placed.push(o); 
+        speak(o.text); 
+        render(); 
+    };
     p.appendChild(b);
   });
 }
 
+// PATCH 4: NORMALIZE JOIN (Akıllı Boşluk)
 function normalizeJoin(arr){
   let out="";
   arr.forEach((w,i)=>{
-    if(i>0 && !/[.,!?;]/.test(w)) out+=" ";
+    // Noktalama ise boşluk koyma, ama ( ve " hariç
+    if(i>0 && !/^[.,!?;:)]/.test(w)) out+=" ";
+    // Eğer şu anki kelime ( veya " ise, öncesine boşluk koy
+    if(i>0 && /^[("]/.test(w)) out+=" ";
     out+=w;
   });
   return out;
 }
 
-function checkSentence(){
+function checkSentence() {
   if(!placed.length) return;
-  const user=normalizeJoin(placed.map(o=>o.text));
-  if(user===sentence){
-    score+=10; level++; play("win"); speak(sentence);
+  
+  const user = normalizeJoin(placed.map(o=>o.text));
+  const cleanUser = user.replace(/[.!?]$/,"").toLowerCase();
+  const cleanTarget = sentence.replace(/[.!?]$/,"").toLowerCase();
+
+  if(cleanUser === cleanTarget){
+    score+=10; level++; play("win"); 
+    $("target").className = "target correct";
+    speak(sentence);
     updateStats();
-    setTimeout(loadLevel,800);
-  }else{
-    lives--; play("error"); updateStats();
+    setTimeout(() => { 
+        $("target").className = "target"; 
+        loadLevel(); 
+    }, 1000);
+  } else {
+    lives--; play("error"); 
+    $("target").className = "target wrong";
+    updateStats();
+    setTimeout(() => $("target").className = "target", 500);
+    
     if(lives<=0) finish(false);
   }
 }
 
-function resetLevel(){
-  pool=[...pool,...placed]; placed=[]; render();
+window.resetLevel = function(){
+  poolArr = [...poolArr, ...placed];
+  placed = [];
+  render();
 }
+window.checkSentence = checkSentence;
 
 function updateStats(){
   $("scoreVal").textContent=score;
-  $("levelVal").textContent=level+1;
+  $("levelVal").textContent=(level+1) + "/10";
   $("livesVal").textContent="❤️".repeat(lives)+"💀".repeat(3-lives);
 }
 
 function finish(win){
   $("endModal").classList.remove("hidden");
-  $("endTitle").textContent=win?"TAMAMLANDI":"OYUN BİTTİ";
-  $("endDesc").innerHTML=`Skor: <b>${score}</b><br>Doğru cümle:<br><i>${sentence}</i>`;
+  $("endTitle").textContent = win ? "TEBRİKLER! 🏆" : "OYUN BİTTİ";
+  $("endTitle").style.color = win ? "var(--ok)" : "var(--bad)";
+  $("endDesc").innerHTML = `Skor: <b>${score}</b><br><br>Doğru cümle:<br><span style="color:var(--accent)">${sentence}</span>`;
   speak(sentence);
 }
 
-function restart(){
-  $("endModal").classList.add("hidden");
-  start();
+// PATCH 2: AUDIO LAZY LOAD
+let audioCtx = null;
+function ensureAudio() {
+  if (!audioCtx) {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    audioCtx = AC ? new AC() : null;
+  }
+  if (audioCtx && audioCtx.state === "suspended") audioCtx.resume().catch(()=>{});
 }
 
-let audioCtx=new (window.AudioContext||window.webkitAudioContext)();
 function play(t){
   if(muted) return;
-  if(audioCtx.state==="suspended") audioCtx.resume();
+  ensureAudio(); // Her seste garanti et
+  if(!audioCtx) return;
+
   const o=audioCtx.createOscillator(),g=audioCtx.createGain();
   o.connect(g); g.connect(audioCtx.destination);
   const n=audioCtx.currentTime;
+  
+  if(t==="click"){o.frequency.value=400;g.gain.value=.05;o.start(n);o.stop(n+.05);}
   if(t==="win"){o.frequency.value=600;g.gain.value=.1;o.start(n);o.stop(n+.25);}
-  if(t==="error"){o.frequency.value=140;g.gain.value=.1;o.start(n);o.stop(n+.2);}
+  if(t==="error"){o.frequency.value=140;g.gain.value=.1;o.type="sawtooth";o.start(n);o.stop(n+.2);}
 }
 
 function speak(txt){
   if(muted) return;
+  try { speechSynthesis.cancel(); } catch{}
   const u=new SpeechSynthesisUtterance(txt);
   u.lang=LANGMAP[lang]||"en-US";
-  speechSynthesis.cancel();
-  speechSynthesis.speak(u);
+  u.rate=0.9;
+  try { speechSynthesis.speak(u); } catch{}
 }
 </script>
 </body>
