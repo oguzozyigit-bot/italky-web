@@ -13,24 +13,17 @@
     }
     * { box-sizing:border-box; outline:none; user-select:none; -webkit-tap-highlight-color:transparent; }
     html, body { margin:0; width:100%; height:100%; overflow:hidden; font-family:'Outfit', sans-serif; background:var(--bg-deep); color:var(--text-main); position:fixed; }
-    
-    /* UZAY BOŞLUĞU TASARIMI */
     .cosmos-bg { position:absolute; inset:0; background: radial-gradient(circle at center, #1a0a2e 0%, #030014 100%); z-index:0; }
     .stars { position: absolute; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E"); opacity: 0.4; }
-
     .wrap { width:100%; max-width:480px; height:100%; margin:0 auto; position:relative; z-index:10; display:flex; flex-direction:column; }
-    
-    /* LOGO VE BAŞLIK */
     .header { flex: 0 0 140px; display:flex; flex-direction:column; align-items:center; justify-content:center; padding-top: 20px; }
     .logo-main { font-size: 52px; font-weight: 800; letter-spacing: -2px; }
     .logo-ai { background: linear-gradient(135deg, #a5b4fc 0%, #6366f1 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     .game-title { font-size: 16px; font-weight: 800; color: var(--c-neon-pink); letter-spacing: 5px; text-transform: uppercase; margin-top: -5px; text-shadow: 0 0 10px var(--c-neon-pink); }
     .score-box { position: absolute; top: 20px; right: 20px; font-family: 'Space Grotesk', sans-serif; color: var(--c-neon-green); font-size: 18px; font-weight: 700; }
-
     .stage { flex:1; display:flex; flex-direction:column; align-items:center; padding:10px; position:relative; }
     .boss-tag { display:none; background:var(--c-error); color:#fff; padding:4px 12px; border-radius:4px; font-size:12px; font-weight:800; margin-bottom:10px; animation: pulse 1s infinite; }
     .stage.boss-mode .boss-tag { display:block !important; }
-
     .gallows-box { position:relative; width:120px; height:140px; margin-bottom:10px; }
     .man-part { position:absolute; background:var(--c-neon-pink); border-radius:2px; opacity:0; transition:0.3s; box-shadow: 0 0 8px var(--c-neon-pink); }
     .p1 { top:30px; right:15px; width:30px; height:30px; border:3px solid var(--c-neon-pink); border-radius:50%; background:transparent; } 
@@ -39,43 +32,34 @@
     .p4 { top:65px; right:9px; width:20px; height:2px; transform:rotate(20deg); transform-origin:right; } 
     .p5 { top:98px; right:29px; width:2px; height:25px; transform:rotate(25deg); transform-origin:top; } 
     .p6 { top:98px; right:29px; width:2px; height:25px; transform:rotate(-25deg); transform-origin:top; } 
-
     .hint-container { margin-bottom:15px; text-align:center; min-height:45px; width: 90%; }
     .hint-main { font-size: 18px; font-weight:700; color:var(--c-neon-green); }
     .hint-sentence { font-size: 12px; font-style:italic; color:rgba(255,255,255,0.5); margin-top: 4px; }
-
     .word-box { display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin-bottom:15px; }
     .letter-slot { width:32px; height:42px; border-bottom:3px solid var(--c-neon-blue); display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:800; }
     .letter-slot.filled { border-bottom: none; animation: pop 0.3s ease; color: #fff; }
-
     .keyboard { display:grid; grid-template-columns:repeat(7, 1fr); gap:6px; width:100%; max-width:420px; padding: 0 10px; }
     .key-btn { aspect-ratio:1; background:rgba(255,255,255,0.06); border:1px solid var(--border); border-radius:10px; color:#fff; font-size:18px; font-weight: 700; cursor:pointer; }
     .key-btn.correct { background:var(--c-neon-green); color:#000; box-shadow:0 0 15px var(--c-neon-green); }
     .key-btn.wrong { background:var(--c-error); opacity:0.3; }
-    
-    /* MODALS */
     .modal-wrap { position:absolute; inset:0; background:rgba(0,0,0,0.95); z-index:999; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(20px); }
     .modal-card { width:100%; max-width:340px; background:#0a0a0f; border:1px solid var(--border); border-radius:32px; padding:40px 30px; text-align:center; }
     .lang-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 25px 0; }
     .lang-btn { font-size: 24px; padding: 10px; border-radius: 12px; background: rgba(255,255,255,0.05); border: 2px solid transparent; cursor: pointer; }
     .lang-btn.active { border-color: var(--c-neon-blue); background: rgba(0, 243, 255, 0.1); }
     .btn-primary { width:100%; padding:16px; background:var(--c-neon-green); color:#000; border:none; border-radius:16px; font-weight:800; font-size: 16px; cursor:pointer; margin-top:10px; }
-
     @keyframes pop { from{transform:scale(1.2)} to{transform:scale(1)} }
     @keyframes pulse { 0%{opacity:1} 50%{opacity:0.6} 100%{opacity:1} }
   </style>
 </head>
 <body>
-
   <div class="cosmos-bg"><div class="stars"></div></div>
-
   <div class="wrap">
     <div class="header">
       <div class="score-box" id="scoreDisplay">0</div>
       <div class="logo-main">italky<span class="logo-ai">AI</span></div>
       <div class="game-title">NEON HANGMAN</div>
     </div>
-
     <div class="stage" id="gameStage">
       <div class="boss-tag">⚠️ BOSS ROUND</div>
       <div class="gallows-box">
@@ -86,20 +70,14 @@
         <div class="man-part p1"></div><div class="man-part p2"></div><div class="man-part p3"></div>
         <div class="man-part p4"></div><div class="man-part p5"></div><div class="man-part p6"></div>
       </div>
-
-      <div class="hint-container">
-        <div class="hint-main" id="hintMain"></div>
-        <div class="hint-sentence" id="hintSentence"></div>
-      </div>
-
+      <div class="hint-container"><div class="hint-main" id="hintMain"></div><div class="hint-sentence" id="hintSentence"></div></div>
       <div class="word-box" id="wordBox"></div>
       <div class="keyboard" id="keyboard"></div>
     </div>
   </div>
-
   <div class="modal-wrap" id="startModal">
     <div class="modal-card">
-      <div style="font-size:20px; font-weight:800; color:#fff; letter-spacing:1px;">HOŞ GELDİN</div>
+      <div style="font-size:20px; font-weight:800; color:#fff; letter-spacing:1px;">HOŞ GELDİN BAŞKANIM</div>
       <div class="lang-grid">
           <button onclick="setLang('en',this)" class="lang-btn active">🇬🇧</button>
           <button onclick="setLang('de',this)" class="lang-btn">🇩🇪</button>
@@ -113,38 +91,29 @@
       <div id="modalMsg" style="margin-top:15px; font-size:12px; color:var(--c-neon-blue)"></div>
     </div>
   </div>
-
   <div class="modal-wrap" id="endModal" style="display:none">
     <div class="modal-card">
       <div id="endTitle" style="font-size:32px; font-weight:800; margin-bottom:10px;"></div>
       <p id="endMsg" style="opacity:0.8; margin-bottom:25px;"></p>
-      <button class="btn-primary" onclick="retryGame()">DEVAM ET</button>
+      <button class="btn-primary" onclick="retryGame()">DEVAM ET BAŞKANIM</button>
       <button class="btn-primary" style="background:rgba(255,255,255,0.1); color:#fff;" onclick="location.href='/pages/game.html'">ÇIKIŞ</button>
     </div>
   </div>
-
 <script type="module">
 import { loadLangPool, createUsedSet, pick } from "/js/langpool.js";
-
 const $ = (id) => document.getElementById(id);
 let currentLang = "en", currentDiff = "A2", wordList = [], currentIndex = 0;
 let score = 0, mistakes = 0, currentWord = "", currentRaw = "", discovered = [], maxErrors = 6, isBoss = false;
 
+// ✅ Madde 3: TR Normalize Kaldırıldı, Sadece Saf Büyük Harf + ẞ Desteği
 function hangmanNormalize(str) {
     if(!str) return "";
-    return str.trim()
-        .replace(/i/g, "İ").replace(/ı/g, "I")
-        .replace(/ğ/g, "Ğ").replace(/ü/g, "Ü")
-        .replace(/ş/g, "Ş").replace(/ö/g, "Ö")
-        .replace(/ç/g, "Ç")
-        .toUpperCase()
-        .replace(/ẞ/g, "SS")
-        .replace(/[.,/#!$%^&*;:{}=\-_`~()]/g,"");
+    return str.trim().toUpperCase().replace(/ẞ/g, "SS").replace(/[.,/#!$%^&*;:{}=\-_`~()]/g,"");
 }
 
 function getAlphabet(lang) {
     const base = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    if(lang === "de") return base + "ÄÖÜẞ";
+    if(lang === "de") return base + "ÄÖÜ"; // ẞ alfabeden kaldırıldı
     if(lang === "es") return base + "ÑÁÉÍÓÚÜ";
     if(lang === "fr") return base + "ÀÂÇÉÈÊËÎÏÔŒÙÛÜŸ";
     return base;
@@ -156,74 +125,52 @@ window.setLang = (l, btn) => {
     btn.classList.add('active');
 };
 
-window.selectLevel = (diff) => {
-    currentDiff = diff;
-    initGame();
-};
+window.selectLevel = (diff) => { currentDiff = diff; initGame(); };
 
 async function initGame() {
-    $("setupView") && ($("setupView").style.display = "none");
-    $("modalMsg").textContent = "Kelimeler hazırlanıyor...";
-    
+    const msg = $("modalMsg");
+    msg.textContent = "Kelimeler hazırlanıyor...";
     try {
         const rawPool = await loadLangPool(currentLang);
         const { used, save } = createUsedSet(`italky_used_hangman_${currentLang}_${currentDiff}`);
+        
+        // ✅ Madde 4: Seviye Bazlı Uzunluk Filtreleri
+        const SETTINGS = { A2: { min:3, max:6 }, B1: { min:6, max:9 }, B2: { min:9, max:15 } };
+        const cfg = SETTINGS[currentDiff];
         const checkLevel = (lvl) => (currentDiff === "A2" ? ["A1", "A2"].includes(lvl) : lvl === currentDiff);
 
         let selected = pick(rawPool, 15, used, save, (it) => {
             const w = hangmanNormalize(it.w);
-            return checkLevel(it.lvl) && w.length >= 3;
+            return checkLevel(it.lvl) && w.length >= cfg.min && w.length <= cfg.max;
         });
 
         if (selected.length === 0) {
-            $("modalMsg").textContent = "Uygun kelime bulunamadı.";
+            msg.textContent = "Uygun kelime bulunamadı başkanım.";
             return;
         }
-
-        wordList = selected;
-        startGame();
-    } catch (e) {
-        $("modalMsg").textContent = "Bağlantı hatası.";
-    }
+        wordList = selected; startGame();
+    } catch (e) { msg.textContent = "Bağlantı hatası başkanım."; }
 }
 
-function startGame() {
-    $("startModal").style.display = "none";
-    currentIndex = 0; score = 0;
-    updateUI();
-    startRound();
-}
+function startGame() { $("startModal").style.display = "none"; currentIndex = 0; score = 0; updateUI(); startRound(); }
 
 function startRound() {
     if(currentIndex >= wordList.length) return gameOver(true);
     const data = wordList[currentIndex];
-    currentRaw = data.w;
-    currentWord = hangmanNormalize(data.w);
-    isBoss = (currentIndex + 1) % 5 === 0;
-    maxErrors = isBoss ? 3 : 6;
-    mistakes = 0;
+    currentRaw = data.w; currentWord = hangmanNormalize(data.w);
+    isBoss = (currentIndex + 1) % 5 === 0; maxErrors = isBoss ? 3 : 6; mistakes = 0;
     discovered = new Array(currentWord.length).fill(false);
-    
     isBoss ? $("gameStage").classList.add("boss-mode") : $("gameStage").classList.remove("boss-mode");
-    $("hintMain").textContent = data.tr;
-    $("hintSentence").textContent = data.sentence || ""; 
-    renderHangman();
-    renderWord();
-    renderKeyboard();
+    $("hintMain").textContent = data.tr; $("hintSentence").textContent = data.sentence || ""; 
+    renderHangman(); renderWord(); renderKeyboard();
 }
 
 function renderWord() {
     const box = $("wordBox"); box.innerHTML = "";
     for(let i=0; i<currentWord.length; i++) {
-        const d = document.createElement("div");
-        const ch = currentWord[i];
-        if(!/\p{L}/u.test(ch)) {
-            d.className = "letter-slot filled"; d.textContent = ch; d.style.border = "none";
-            discovered[i] = true;
-        } else {
-            d.className = `letter-slot ${discovered[i]?'filled':''}`;
-            d.textContent = discovered[i] ? ch : "";
-        }
+        const d = document.createElement("div"); const ch = currentWord[i];
+        if(!/\p{L}/u.test(ch)) { d.className = "letter-slot filled"; d.textContent = ch; d.style.border = "none"; discovered[i] = true; }
+        else { d.className = `letter-slot ${discovered[i]?'filled':''}`; d.textContent = discovered[i] ? ch : ""; }
         box.appendChild(d);
     }
 }
@@ -231,25 +178,20 @@ function renderWord() {
 function renderHangman() {
     for(let i=1; i<=6; i++) {
         const el = document.querySelector(`.p${i}`);
-        if(el) {
-            const threshold = Math.floor((mistakes / maxErrors) * 6);
-            el.style.opacity = (i <= threshold) ? 1 : 0;
-        }
+        if(el) { const threshold = Math.floor((mistakes / maxErrors) * 6); el.style.opacity = (i <= threshold) ? 1 : 0; }
     }
 }
 
+// ✅ Madde 6: Akıllı Klavye - Min 14 Tuş Garantisi
 function renderKeyboard() {
     const kb = $("keyboard"); kb.innerHTML = "";
     const fullAlpha = getAlphabet(currentLang);
     const wordChars = new Set(currentWord.split("").filter(c => /\p{L}/u.test(c)));
-    let others = fullAlpha.split("").filter(c => !wordChars.has(c)).sort(() => Math.random() - 0.5).slice(0, 10);
-    let finalKeys = Array.from(new Set([...wordChars, ...others])).sort((a,b) => fullAlpha.indexOf(a) - fullAlpha.indexOf(b));
-
+    let others = fullAlpha.split("").filter(c => !wordChars.has(c)).sort(() => Math.random() - 0.5);
+    let finalKeys = Array.from(new Set([...wordChars, ...others.slice(0, Math.max(10, 14 - wordChars.size))])).sort((a,b) => fullAlpha.indexOf(a) - fullAlpha.indexOf(b));
     finalKeys.forEach(char => {
-        const b = document.createElement("div");
-        b.className = "key-btn"; b.textContent = char;
-        b.onclick = () => handleGuess(char, b);
-        kb.appendChild(b);
+        const b = document.createElement("div"); b.className = "key-btn"; b.textContent = char;
+        b.onclick = () => handleGuess(char, b); kb.appendChild(b);
     });
 }
 
@@ -257,54 +199,35 @@ function handleGuess(char, btn) {
     if(btn.classList.contains("used") || mistakes >= maxErrors) return;
     btn.classList.add("used");
     if(currentWord.includes(char)) {
-        btn.classList.add("correct");
-        for(let i=0; i<currentWord.length; i++) if(currentWord[i] === char) discovered[i] = true;
+        btn.classList.add("correct"); for(let i=0; i<currentWord.length; i++) if(currentWord[i] === char) discovered[i] = true;
         renderWord();
         if(discovered.every(v => v)) {
-            score += (maxErrors - mistakes) * 10;
-            if(isBoss) score += 50;
-            updateUI();
-            speak(currentRaw); // ✅ BİLİNCE OKU
-            setTimeout(() => { currentIndex++; startRound(); }, 1200);
+            score += (maxErrors - mistakes) * 10; if(isBoss) score += 50;
+            updateUI(); speak(currentRaw); setTimeout(() => { currentIndex++; startRound(); }, 1200);
         }
-    } else {
-        btn.classList.add("wrong");
-        mistakes++;
-        renderHangman();
-        if(mistakes >= maxErrors) teacherSolve();
-    }
+    } else { btn.classList.add("wrong"); mistakes++; renderHangman(); if(mistakes >= maxErrors) teacherSolve(); }
 }
 
-function teacherSolve() {
-    for(let i=0; i<currentWord.length; i++) discovered[i] = true;
-    renderWord();
-    speak(currentRaw); // ✅ BİLEMEYİNCE OKU
-    setTimeout(() => gameOver(false), 2000);
-}
+function teacherSolve() { for(let i=0; i<currentWord.length; i++) discovered[i] = true; renderWord(); speak(currentRaw); setTimeout(() => gameOver(false), 2000); }
 
 function gameOver(win) {
     $("endModal").style.display = "flex";
-    $("endTitle").textContent = win ? "ZAFER! 🏆" : "BİTTİ";
+    $("endTitle").textContent = win ? "ZAFER! 🏆" : "BİTTİ BAŞKANIM";
     $("endTitle").style.color = win ? "var(--c-neon-green)" : "var(--c-error)";
     $("endMsg").textContent = `Toplam Skor: ${score}`;
 }
 
-window.retryGame = () => {
-    window.speechSynthesis.cancel();
-    $("endModal").style.display = "none";
-    initGame();
-};
+window.retryGame = () => { window.speechSynthesis.cancel(); $("endModal").style.display = "none"; initGame(); };
 
-function updateUI() {
-    $("scoreDisplay").textContent = score;
-}
+function updateUI() { $("scoreDisplay").textContent = score; }
 
+// ✅ Madde 2: TTS es-ES ve Default en-US Desteği
 function speak(text) {
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
-    u.lang = currentLang === 'en' ? 'en-US' : currentLang === 'de' ? 'de-DE' : currentLang === 'fr' ? 'fr-FR' : 'it-IT';
-    u.rate = 0.8;
-    window.speechSynthesis.speak(u);
+    const map = { en: 'en-US', de: 'de-DE', fr: 'fr-FR', es: 'es-ES', it: 'it-IT' };
+    u.lang = map[currentLang] || 'en-US';
+    u.rate = 0.8; window.speechSynthesis.speak(u);
 }
 </script>
 </body>
