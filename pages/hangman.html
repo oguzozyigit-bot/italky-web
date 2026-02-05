@@ -1,330 +1,44 @@
-<!doctype html>
-<html lang="tr">
-<head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-  <title>ITALKY • Neon Hangman Kilit</title>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
-  <style>
-    :root { 
-      --bg-deep: #05020a; --text-main: #fff; 
-      --c-neon-pink: #ff00ff; --c-neon-blue: #00f3ff; --c-neon-green: #00e676; --c-error: #ff1744;
-      --border: rgba(255, 255, 255, 0.15); 
-      --safe-top: env(safe-area-inset-top, 20px); --safe-bottom: env(safe-area-inset-bottom, 20px);
-    }
-    * { box-sizing:border-box; outline:none; user-select:none; -webkit-tap-highlight-color:transparent; }
-    html, body { margin:0; width:100%; height:100%; overflow:hidden; font-family:'Outfit', sans-serif; background:var(--bg-deep); color:var(--text-main); position:fixed; }
-    .cosmos-bg { position:absolute; inset:0; background: radial-gradient(circle at center, #1a0a2e 0%, #000 100%); z-index:0; }
-    .grid-lines { position: absolute; inset: 0; background-image: linear-gradient(rgba(255, 0, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 243, 255, 0.05) 1px, transparent 1px); background-size: 40px 40px; opacity: 0.5; }
-    .wrap { width:100%; max-width:480px; height:100%; margin:0 auto; position:relative; z-index:10; display:flex; flex-direction:column; padding-top: var(--safe-top); padding-bottom: var(--safe-bottom); }
-    
-    .game-header { flex: 0 0 60px; display:flex; justify-content:space-between; align-items:center; padding:0 20px; background: rgba(0,0,0,0.4); border-bottom: 1px solid var(--border); backdrop-filter: blur(10px); }
-    .gh-title { font-size: 18px; font-weight: 800; color: #fff; text-shadow: 0 0 10px var(--c-neon-pink); }
-    .gh-score { font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 700; color: var(--c-neon-green); }
-    
-    .stage { flex:1; display:flex; flex-direction:column; align-items:center; padding:10px; position:relative; overflow-y:auto; }
-    
-    /* Boss Tag Selector (Kilit Madde 6) */
-    .boss-tag { display:none; background:var(--c-error); color:#fff; padding:4px 12px; border-radius:4px; font-size:12px; font-weight:800; margin-bottom:10px; animation: pulse 1s infinite; }
-    .stage.boss-mode .boss-tag { display:block !important; }
-
-    .gallows-box { position:relative; width:140px; height:160px; margin-bottom:10px; }
-    .man-part { position:absolute; background:var(--c-neon-pink); border-radius:2px; opacity:0; transition:0.3s; box-shadow: 0 0 8px var(--c-neon-pink); }
-    .p1 { top:30px; right:15px; width:30px; height:30px; border:3px solid var(--c-neon-pink); border-radius:50%; background:transparent; } 
-    .p2 { top:60px; right:29px; width:2px; height:40px; } 
-    .p3 { top:65px; right:31px; width:25px; height:2px; transform:rotate(-20deg); transform-origin:left; } 
-    .p4 { top:65px; right:4px; width:25px; height:2px; transform:rotate(20deg); transform-origin:right; } 
-    .p5 { top:98px; right:29px; width:2px; height:30px; transform:rotate(25deg); transform-origin:top; } 
-    .p6 { top:98px; right:29px; width:2px; height:30px; transform:rotate(-25deg); transform-origin:top; } 
-
-    .hint-container { display:flex; flex-direction:column; align-items:center; gap:4px; margin-bottom:15px; width:90%; min-height:40px; }
-    .hint-main { font-size:16px; font-weight:600; color:var(--c-neon-green); text-align:center; }
-    .hint-sentence { font-size:12px; font-style:italic; color:rgba(255,255,255,0.6); text-align:center; line-height:1.2; }
-
-    .word-box { display:flex; flex-wrap:wrap; justify-content:center; gap:6px; margin-bottom:10px; min-height:45px; }
-    .letter-slot { width:30px; height:40px; border-bottom:3px solid var(--c-neon-blue); display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:800; color:#fff; }
-    
-    .keyboard { display:grid; grid-template-columns:repeat(7, 1fr); gap:5px; width:100%; max-width:400px; }
-    .key-btn { aspect-ratio:1; background:rgba(255,255,255,0.1); border:1px solid var(--border); border-radius:8px; color:#fff; font-size:16px; display:flex; align-items:center; justify-content:center; cursor:pointer; transition: 0.1s; }
-    .key-btn.correct { background:var(--c-neon-green); color:#000; box-shadow:0 0 15px var(--c-neon-green); }
-    .key-btn.wrong { background:var(--c-error); opacity:0.4; }
-    
-    .modal-wrap { position:absolute; inset:0; background:rgba(0,0,0,0.95); z-index:999; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(15px); padding:20px; }
-    .modal-card { width:100%; max-width:340px; background:#101014; border:1px solid var(--border); border-radius:24px; padding:30px; text-align:center; }
-    #modalMsg { margin-top:20px; color:var(--c-neon-blue); font-size:14px; font-weight: 500; }
-
-    .btn-primary { width:100%; padding:15px; background:var(--c-neon-green); color:#000; border:none; border-radius:12px; font-weight:800; cursor:pointer; margin-top:10px; }
-    @keyframes pulse { 0%{opacity:1} 50%{opacity:0.6} 100%{opacity:1} }
-  </style>
-</head>
-<body>
-
-  <div class="cosmos-bg"><div class="grid-lines"></div></div>
-  <canvas id="effectCanvas" style="display:none; position:absolute; inset:0; pointer-events:none; z-index:9999;"></canvas>
-
-  <div class="wrap">
-    <div class="game-header">
-      <div><div style="font-size:10px; color:var(--c-neon-blue)">ITALKY</div><div class="gh-title">HANGMAN</div></div>
-      <div class="gh-score" id="scoreDisplay">0</div>
-    </div>
-
-    <div class="stage" id="gameStage">
-      <div class="boss-tag">⚠️ BOSS ROUND</div>
-      <div class="gallows-box">
-        <div style="position:absolute; bottom:0; left:10px; width:120px; height:4px; background:#fff;"></div>
-        <div style="position:absolute; bottom:0; left:30px; width:4px; height:150px; background:#fff;"></div>
-        <div style="position:absolute; top:10px; left:30px; width:80px; height:4px; background:#fff;"></div>
-        <div style="position:absolute; top:10px; right:30px; width:2px; height:20px; background:var(--c-neon-pink);"></div>
-        <div class="man-part p1"></div><div class="man-part p2"></div><div class="man-part p3"></div>
-        <div class="man-part p4"></div><div class="man-part p5"></div><div class="man-part p6"></div>
-      </div>
-      <div class="hint-container">
-        <div class="hint-main" id="hintMain"></div>
-        <div class="hint-sentence" id="hintSentence"></div>
-      </div>
-      <div class="word-box" id="wordBox"></div>
-      <div class="keyboard" id="keyboard"></div>
-      <div class="power-bar" style="margin-top:20px">
-        <button class="pwr-btn" id="btnPowerUp" onclick="window.usePowerUp()" style="background:linear-gradient(45deg, #ff00ff, #00f3ff); border:none; padding:10px 25px; border-radius:20px; color:#fff; font-weight:800; cursor:pointer;">⚡ İPUCU (<span id="powerCount">1</span>)</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="modal-wrap" id="startModal">
-    <div class="modal-card">
-      <div style="font-size:24px; font-weight:800; color:var(--c-neon-pink); margin-bottom:20px;">NEON HANGMAN</div>
-      <div id="setupView">
-        <div style="display:flex; justify-content:center; gap:8px; margin-bottom:20px;">
-            <button onclick="setLang('en',this)" class="btn-primary" style="width:55px; margin-top:0; background:var(--c-neon-green); color:#000;">EN</button>
-            <button onclick="setLang('de',this)" class="btn-primary" style="width:55px; margin-top:0; background:rgba(255,255,255,0.1); color:#fff;">DE</button>
-            <button onclick="setLang('fr',this)" class="btn-primary" style="width:55px; margin-top:0; background:rgba(255,255,255,0.1); color:#fff;">FR</button>
-        </div>
-        <button class="btn-primary" onclick="selectLevel('A2')">A2 (KOLAY)</button>
-        <button class="btn-primary" onclick="selectLevel('B1')">B1 (ORTA)</button>
-        <button class="btn-primary" onclick="selectLevel('B2')">B2 (ZOR)</button>
-      </div>
-      <div id="modalMsg"></div>
-    </div>
-  </div>
-
-  <div class="modal-wrap" id="endModal" style="display:none">
-    <div class="modal-card">
-      <div id="endTitle" style="font-size:28px; font-weight:800; margin-bottom:10px;"></div>
-      <p id="endMsg" style="opacity:0.8; margin-bottom:20px;"></p>
-      <button class="btn-primary" onclick="retryGame()">YENİDEN DENE BAŞKANIM</button>
-      <button class="btn-primary" style="background:rgba(255,255,255,0.1); color:#fff;" onclick="location.href='/pages/game.html'">ÇIKIŞ</button>
-    </div>
-  </div>
-
 <script type="module">
 import { loadLangPool, createUsedSet, pick } from "/js/langpool.js";
 
-const $ = (id) => document.getElementById(id);
-let currentLang = "en", currentDiff = "A2", wordList = [], currentIndex = 0;
-let score = 0, powerups = 1, mistakes = 0, currentWord = "", currentRaw = "", discovered = [], maxErrors = 6, isBoss = false;
-
-// Kilit Madde 7: Normalizasyon
-function hangmanNormalize(str) {
-    return str.trim().toUpperCase().replace(/ẞ/g, "SS").replace(/[.,/#!$%^&*;:{}=\-_`~()]/g,"");
-}
-
-function getAlphabet(lang) {
-    const base = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    if(lang === "de") return base + "ÄÖÜ";
-    if(lang === "es") return base + "ÑÁÉÍÓÚ";
-    if(lang === "fr") return base + "ÀÂÇÉÈÊËÎÏÔÛ";
-    return base;
-}
-
-window.setLang = (l, btn) => {
-    currentLang = l;
-    document.querySelectorAll('#setupView .btn-primary').forEach(b => {
-        if(b.textContent.length < 3) { b.style.background = "rgba(255,255,255,0.1)"; b.style.color="#fff"; }
-    });
-    btn.style.background = "var(--c-neon-green)"; btn.style.color="#000";
-};
-
-window.selectLevel = (diff) => {
-    currentDiff = diff;
-    initGame();
-};
-
-// Kilit Madde 1, 4 & 5: JSON Düzeltmesi ve Filtreleme
 async function initGame(retryCount = 0) {
-    $("setupView").style.display = "none";
-    $("modalMsg").innerHTML = "Havuz Hazırlanıyor...<br><span style='font-size:10px'>Lütfen bekleyin başkanım</span>";
+    document.getElementById("setupView").style.display = "none";
+    document.getElementById("modalMsg").innerHTML = "Havuz Hazırlanıyor...<br><span style='font-size:10px'>Lütfen bekleyin</span>";
     
     try {
         const rawPool = await loadLangPool(currentLang);
-        // JSON Düzeltmesi: Items kapısını açıyoruz
-        const pool = rawPool.items || rawPool; 
         
-        const { used, save } = createUsedSet(`italky_used_hangman_${currentLang}_${currentDiff}`);
+        // KRİTİK DÜZELTME: Görseldeki gibi {"items": [...]} yapısını veya doğrudan diziyi destekler
+        const pool = Array.isArray(rawPool) ? rawPool : (rawPool.items || []); 
         
-        let cfg = { min: 4, max: 7, count: 15 };
-        if(currentDiff === "B1") cfg = { min: 6, max: 10, count: 15 };
-        if(currentDiff === "B2") cfg = { min: 8, max: 14, count: 15 };
-
-        // Kilit Madde 2: A2 = A1 + A2
-        const checkLevel = (lvl) => (currentDiff === "A2" ? ["A1", "A2"].includes(lvl) : lvl === currentDiff);
-
-        let selected = pick(pool, cfg.count, used, save, (it) => {
-            const w = hangmanNormalize(it.w);
-            return checkLevel(it.lvl) && w.length >= cfg.min && w.length <= cfg.max;
-        });
-
-        // Kademe 2: Esnetme
-        if(selected.length < 5) {
-            selected = pick(pool, cfg.count, used, save, (it) => {
-                const w = hangmanNormalize(it.w);
-                return checkLevel(it.lvl) && w.length >= (cfg.min - 1) && w.length <= (cfg.max + 2);
-            });
-        }
-
-        if(selected.length === 0 && retryCount < 3) {
+        if (pool.length === 0 && retryCount < 2) {
+            console.warn("Havuz boş veya henüz yüklenmedi, tekrar deneniyor...");
             setTimeout(() => initGame(retryCount + 1), 1000);
             return;
         }
 
-        if(selected.length === 0) {
-            $("modalMsg").textContent = "Şu an uygun kelime bulunamadı başkanım.";
-            $("setupView").style.display = "block";
+        const { used, save } = createUsedSet(`italky_used_hangman_${currentLang}_${currentDiff}`);
+        
+        // Filtreleme Stratejisi (A2 = A1 + A2 Kuralı Uygulandı)
+        const checkLevel = (lvl) => (currentDiff === "A2" ? ["A1", "A2"].includes(lvl) : lvl === currentDiff);
+
+        let selected = pick(pool, 15, used, save, (it) => {
+            const w = it.w.trim();
+            return checkLevel(it.lvl) && w.length >= 3;
+        });
+
+        if (selected.length === 0) {
+            document.getElementById("modalMsg").textContent = "Uygun kelime bulunamadı. Lütfen başka bir seviye seçin.";
+            document.getElementById("setupView").style.display = "block";
             return;
         }
 
         wordList = selected;
         startGame();
     } catch (e) {
-        $("modalMsg").textContent = "Bağlantı Hatası!";
-        $("setupView").style.display = "block";
+        console.error("Havuz yükleme hatası:", e);
+        document.getElementById("modalMsg").textContent = "Bağlantı hatası!";
+        document.getElementById("setupView").style.display = "block";
     }
 }
-
-function startGame() {
-    $("startModal").style.display = "none";
-    currentIndex = 0; score = 0; powerups = 1;
-    updateUI();
-    startRound();
-}
-
-function startRound() {
-    if(currentIndex >= wordList.length) return gameOver(true);
-    const data = wordList[currentIndex];
-    currentRaw = data.w;
-    currentWord = hangmanNormalize(data.w);
-    isBoss = (currentIndex + 1) % 5 === 0;
-    maxErrors = isBoss ? 3 : 6;
-    mistakes = 0;
-    discovered = new Array(currentWord.length).fill(false);
-    isBoss ? $("gameStage").classList.add("boss-mode") : $("gameStage").classList.remove("boss-mode");
-    $("hintMain").textContent = data.tr;
-    $("hintSentence").textContent = data.sentence || ""; 
-    renderHangman();
-    renderWord();
-    renderKeyboard();
-}
-
-function renderWord() {
-    const box = $("wordBox"); box.innerHTML = "";
-    for(let i=0; i<currentWord.length; i++) {
-        const d = document.createElement("div");
-        const ch = currentWord[i];
-        if(!/\p{L}/u.test(ch)) {
-            d.className = "letter-slot filled"; d.textContent = ch; d.style.border = "none";
-            discovered[i] = true;
-        } else {
-            d.className = `letter-slot ${discovered[i]?'filled':''}`;
-            d.textContent = discovered[i] ? ch : "";
-        }
-        box.appendChild(d);
-    }
-}
-
-function renderHangman() {
-    for(let i=1; i<=6; i++) {
-        const el = document.querySelector(`.p${i}`);
-        if(el) {
-            const threshold = Math.floor((mistakes / maxErrors) * 6);
-            el.style.opacity = (i <= threshold) ? 1 : 0;
-        }
-    }
-}
-
-function renderKeyboard() {
-    const kb = $("keyboard"); kb.innerHTML = "";
-    getAlphabet(currentLang).split("").forEach(char => {
-        const b = document.createElement("div");
-        b.className = "key-btn"; b.textContent = char;
-        b.onclick = () => handleGuess(char, b);
-        kb.appendChild(b);
-    });
-}
-
-function handleGuess(char, btn) {
-    if(btn.classList.contains("used") || mistakes >= maxErrors) return;
-    btn.classList.add("used");
-    if(currentWord.includes(char)) {
-        btn.classList.add("correct");
-        for(let i=0; i<currentWord.length; i++) if(currentWord[i] === char) discovered[i] = true;
-        renderWord();
-        if(discovered.every(v => v)) {
-            score += (maxErrors - mistakes) * 10;
-            if(isBoss) score += 50;
-            updateUI();
-            setTimeout(() => { currentIndex++; startRound(); }, 1200);
-        }
-    } else {
-        btn.classList.add("wrong");
-        mistakes++;
-        renderHangman();
-        if(mistakes >= maxErrors) teacherSolve();
-    }
-}
-
-function teacherSolve() {
-    for(let i=0; i<currentWord.length; i++) discovered[i] = true;
-    renderWord();
-    speak(currentRaw);
-    setTimeout(() => gameOver(false), 2000);
-}
-
-function gameOver(win) {
-    $("endModal").style.display = "flex";
-    $("endTitle").textContent = win ? "ZAFER! 🏆" : "BİTTİ BAŞKANIM";
-    $("endTitle").style.color = win ? "var(--c-neon-green)" : "var(--c-error)";
-    $("endMsg").textContent = `Toplam Skorunuz: ${score}`;
-}
-
-window.retryGame = () => {
-    window.speechSynthesis.cancel();
-    $("endModal").style.display = "none";
-    initGame();
-};
-
-function updateUI() {
-    $("scoreDisplay").textContent = score;
-    $("powerCount").textContent = powerups;
-    $("btnPowerUp").style.opacity = (powerups > 0 && !isBoss) ? 1 : 0.5;
-}
-
-function speak(txt) {
-    const u = new SpeechSynthesisUtterance(txt);
-    u.lang = currentLang;
-    window.speechSynthesis.speak(u);
-}
-
-window.usePowerUp = () => {
-    if(powerups <= 0 || isBoss) return;
-    let targets = [];
-    for(let i=0; i<currentWord.length; i++) {
-        if(!discovered[i] && /\p{L}/u.test(currentWord[i])) targets.push(currentWord[i]);
-    }
-    if(targets.length === 0) return;
-    const char = targets[Math.floor(Math.random() * targets.length)];
-    document.querySelectorAll(".key-btn").forEach(btn => {
-        if(btn.textContent === char) { powerups--; updateUI(); handleGuess(char, btn); }
-    });
-};
 </script>
-</body>
-</html>
