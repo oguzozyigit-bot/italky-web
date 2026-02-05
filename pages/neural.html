@@ -1,481 +1,255 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>ITALKY • Neural Match</title>
-  <link rel="icon" href="data:," />
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
-  <style>
-    /* --- TEMA: NEURAL CYBERPUNK --- */
-    :root {
-      --bg-deep: #05000a;
-      --panel-bg: rgba(20, 0, 30, 0.9);
-      --neon-pink: #ff00ff;
-      --neon-cyan: #00f3ff;
-      --neon-purple: #bd00ff;
-      --text: #ffffff;
-      --border: rgba(189, 0, 255, 0.3);
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ITALKY • Neural Match — Final</title>
+<link rel="icon" href="data:,">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
-    * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; outline: none; }
-    html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; position: fixed; font-family: 'Outfit', sans-serif; background: var(--bg-deep); color: var(--text); display: flex; align-items: center; justify-content: center; }
+<style>
+:root{
+  --bg:#05000a;
+  --panel:rgba(20,0,30,.92);
+  --pink:#ff00ff;
+  --cyan:#00f3ff;
+  --purple:#bd00ff;
+  --green:#00e676;
+  --red:#ff1744;
+  --border:rgba(189,0,255,.3);
+  --text:#fff;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+html,body{margin:0;width:100%;height:100%;background:var(--bg);font-family:Outfit,sans-serif;overflow:hidden;color:var(--text)}
 
-    /* ARKA PLAN */
-    .cosmos-bg { position: absolute; inset: 0; background: radial-gradient(circle at center, #1a002b 0%, #000 100%); z-index: 0; }
-    .grid-lines { 
-      position: absolute; inset: 0; 
-      background-image: linear-gradient(rgba(189,0,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(189,0,255,0.1) 1px, transparent 1px);
-      background-size: 40px 40px; opacity: 0.4;
-    }
+.bg{position:absolute;inset:0;background:radial-gradient(circle at center,#1a002b 0%,#000 100%)}
+.grid{position:absolute;inset:0;background-image:linear-gradient(rgba(189,0,255,.1) 1px,transparent 1px),linear-gradient(90deg,rgba(189,0,255,.1) 1px,transparent 1px);background-size:40px 40px;opacity:.4}
 
-    /* ÇERÇEVE */
-    .mobile-frame {
-      width: 100%; max-width: 480px; height: 100%; position: relative; z-index: 10;
-      display: flex; flex-direction: column; background: var(--panel-bg);
-      backdrop-filter: blur(20px); border: 1px solid var(--border); overflow: hidden;
-      box-shadow: 0 0 40px rgba(189,0,255,0.2);
-    }
-    @media(min-width: 520px) { .mobile-frame { height: 92vh; border-radius: 32px; } }
+.app{position:relative;max-width:480px;height:100%;margin:0 auto;border:1px solid var(--border);background:var(--panel);display:flex;flex-direction:column;z-index:5}
+@media(min-width:520px){.app{height:92vh;border-radius:32px}}
 
-    /* HEADER */
-    .header { flex: 0 0 70px; padding: 0 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); background: linear-gradient(180deg, rgba(0,0,0,0.5), transparent); }
-    .nav-btn { width: 40px; height: 40px; border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
-    .nav-btn:active { transform: scale(0.95); background: var(--neon-purple); }
-    
-    .page-title { font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 700; letter-spacing: 1px; color: var(--neon-pink); text-shadow: 0 0 10px var(--neon-pink); text-transform: uppercase; }
-    .lang-badge { font-size: 10px; padding: 4px 8px; background: var(--neon-purple); border-radius: 6px; color: #fff; margin-left: 8px; vertical-align: middle; }
+.header{height:70px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;border-bottom:1px solid var(--border)}
+.title{font-family:Space Grotesk;font-weight:900;color:var(--pink);letter-spacing:1px;text-shadow:0 0 12px var(--pink)}
+.badge{font-size:10px;padding:4px 8px;border-radius:6px;background:var(--purple);margin-left:8px}
 
-    /* OYUN ALANI */
-    .game-area { flex: 1; padding: 15px; display: flex; flex-direction: column; }
+.stats{display:flex;justify-content:space-between;padding:10px 16px;font-family:Space Grotesk;color:var(--cyan);border-bottom:1px dashed var(--border)}
+.stats span b{color:#fff}
 
-    /* STATS */
-    .stats-row { display: flex; justify-content: space-between; padding: 10px 5px; margin-bottom: 10px; font-family: 'Space Grotesk', sans-serif; font-size: 14px; color: var(--neon-cyan); text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px dashed var(--border); }
-    
-    /* GRID (KARTLAR) */
-    .card-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      grid-template-rows: repeat(4, 1fr);
-      gap: 10px;
-      width: 100%;
-      height: 100%; /* Kare olması için JS ile ayarlanabilir veya aspect-ratio */
-      max-height: 450px; /* Mobilde taşmasın */
-      margin: auto 0;
-    }
+.game{flex:1;padding:12px;display:none;flex-direction:column}
+.grid-cards{display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(4,1fr);gap:10px;flex:1;max-height:460px}
 
-    /* KART YAPISI (3D FLIP) */
-    .card {
-      background: transparent;
-      perspective: 1000px;
-      cursor: pointer;
-      position: relative;
-    }
-    .card-inner {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      text-align: center;
-      transition: transform 0.4s;
-      transform-style: preserve-3d;
-      border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-    }
-    .card.flipped .card-inner {
-      transform: rotateY(180deg);
-    }
-    .card.matched .card-inner {
-      transform: rotateY(180deg);
-      box-shadow: 0 0 15px var(--neon-green, #00e676);
-    }
-    .card.matched .card-back {
-      border-color: #00e676;
-      background: rgba(0, 230, 118, 0.15);
-    }
+.card{perspective:1000px;cursor:pointer}
+.inner{width:100%;height:100%;transition:transform .4s;transform-style:preserve-3d;border-radius:14px}
+.card.flipped .inner{transform:rotateY(180deg)}
+.card.matched .inner{transform:rotateY(180deg);box-shadow:0 0 18px var(--green)}
 
-    /* ÖN VE ARKA YÜZ */
-    .card-front, .card-back {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      -webkit-backface-visibility: hidden; /* Safari */
-      backface-visibility: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-    }
+.face{position:absolute;inset:0;border-radius:14px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);backface-visibility:hidden}
+.front{background:linear-gradient(135deg,rgba(255,255,255,.06),rgba(255,255,255,.01));color:var(--purple);font-size:22px}
+.front::after{content:"🧠";opacity:.5}
+.back{background:rgba(30,0,50,.95);color:#fff;transform:rotateY(180deg);font-weight:800;font-size:14px;text-align:center;padding:6px}
 
-    /* ÖN YÜZ (KAPALI) */
-    .card-front {
-      background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01));
-      color: var(--neon-purple);
-      font-size: 24px;
-    }
-    .card-front::after { content: '🧠'; opacity: 0.5; font-size: 20px; filter: grayscale(100%); }
+.modal{position:absolute;inset:0;background:rgba(0,0,0,.95);display:flex;align-items:center;justify-content:center;z-index:20}
+.card-modal{background:#10051a;border:1px solid var(--pink);border-radius:24px;padding:26px;text-align:center;width:85%;box-shadow:0 0 50px rgba(255,0,255,.25)}
+.langs{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:16px}
+.lang{padding:10px;border-radius:10px;border:1px solid var(--border);cursor:pointer;font-weight:900}
+.lang.active{background:var(--pink);color:#000}
 
-    /* ARKA YÜZ (AÇIK) */
-    .card-back {
-      background: rgba(20, 0, 40, 0.9);
-      color: #fff;
-      transform: rotateY(180deg);
-      padding: 5px;
-      font-size: 13px; /* Uzun kelimeler sığsın */
-      font-weight: 700;
-      word-break: break-word;
-      border: 1px solid var(--neon-cyan);
-    }
+.btn{width:100%;padding:14px;border:none;border-radius:14px;font-weight:900;margin-top:16px;background:var(--pink);color:#000}
+.btn.sec{background:transparent;border:1px solid #fff;color:#fff}
 
-    /* MODAL */
-    .modal-wrap { position: absolute; inset: 0; background: rgba(0,0,0,0.95); z-index: 99; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
-    .modal-card { width: 85%; max-width: 320px; background: #10051a; border: 1px solid var(--neon-pink); padding: 25px; text-align: center; border-radius: 20px; box-shadow: 0 0 50px rgba(255,0,255,0.2); }
-    
-    .lang-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 20px; }
-    .lang-btn {
-      background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: #fff;
-      padding: 10px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s;
-    }
-    .lang-btn:active { background: var(--neon-pink); color: #000; border-color: var(--neon-pink); }
-
-    .btn-main {
-      width: 100%; padding: 15px; margin-top: 20px;
-      background: var(--neon-pink); color: #fff; font-weight: 800; font-size: 16px;
-      border: none; border-radius: 12px; cursor: pointer; text-transform: uppercase;
-      box-shadow: 0 5px 20px rgba(255,0,255,0.3);
-    }
-    .btn-sec { background: transparent; border: 1px solid #fff; margin-top: 10px; box-shadow: none; }
-
-    /* EFEKTLER */
-    @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
-    .shake { animation: shake 0.4s; border-color: var(--error, #ff1744) !important; }
-
-    .hidden { display: none !important; }
-  </style>
+.hidden{display:none!important}
+</style>
 </head>
+
 <body>
+<div class="bg"></div>
+<div class="grid"></div>
 
-  <div class="cosmos-bg"><div class="grid-lines"></div></div>
-
-  <div class="mobile-frame">
-    <div class="header">
-      <div class="nav-btn" onclick="location.href='/pages/game.html'">←</div>
-      <div class="page-title">NEURAL MATCH <span id="langBadge" class="lang-badge">EN</span></div>
-      <div class="nav-btn" onclick="toggleSound()" id="soundIcon">🔊</div>
-    </div>
-
-    <div class="game-area" id="gameScreen" style="display:none">
-      <div class="stats-row">
-        <span>HAMLE: <span id="moveVal" style="color:#fff">0</span></span>
-        <span>EŞLEŞME: <span id="matchVal" style="color:#fff">0</span> / 8</span>
-      </div>
-
-      <div class="card-grid" id="gridArea">
-        </div>
-    </div>
+<div class="app">
+  <div class="header">
+    <div class="title">NEURAL MATCH <span id="langBadge" class="badge">EN</span></div>
+    <div id="soundBtn" style="cursor:pointer">🔊</div>
   </div>
 
-  <div class="modal-wrap" id="startModal">
-    <div class="modal-card">
-      <h2 style="color:var(--neon-cyan); margin:0; font-family:'Space Grotesk'">NEURAL LINK</h2>
-      <p style="color:#fff; opacity:0.7; font-size:13px; margin-top:10px">Beyin nöronlarını eşleştir.<br>Hafızanı test et.</p>
-      
-      <div class="lang-grid">
-        <div class="lang-btn" onclick="selectLang('en')">🇬🇧 EN</div>
-        <div class="lang-btn" onclick="selectLang('de')">🇩🇪 DE</div>
-        <div class="lang-btn" onclick="selectLang('fr')">🇫🇷 FR</div>
-        <div class="lang-btn" onclick="selectLang('es')">🇪🇸 ES</div>
-        <div class="lang-btn" onclick="selectLang('it')">🇮🇹 IT</div>
-      </div>
-    </div>
+  <div class="stats">
+    <span>HAMLE: <b id="moveVal">0</b></span>
+    <span>EŞLEŞME: <b id="matchVal">0</b> / 8</span>
   </div>
 
-  <div class="modal-wrap hidden" id="endModal">
-    <div class="modal-card">
-      <h2 style="color:var(--neon-green, #00e676); margin:0;">BAĞLANTI KURULDU</h2>
-      <div style="font-size:14px; opacity:0.8; margin:15px 0;">
-        Toplam Hamle: <strong id="finalMoves" style="color:#fff">0</strong><br>
-        Hafıza Skorun: <strong id="finalScore" style="color:var(--neon-pink)">%100</strong>
-      </div>
-      <button class="btn-main" onclick="restartGame()">YENİDEN BAŞLA</button>
-      <button class="btn-main btn-sec" onclick="location.href='/pages/game.html'">ÇIKIŞ</button>
-    </div>
+  <div class="game" id="game">
+    <div class="grid-cards" id="grid"></div>
   </div>
+</div>
 
-<script>
-// --- OFFLINE DATABASE (Her dil için 80+ Kelime) ---
-// Not: Her oyun için rastgele 8 çift (16 kart) seçilir.
-const MEMORY_DB = {
-  en: [
-    ["Apple","Elma"],["Sun","Güneş"],["Moon","Ay"],["Star","Yıldız"],["Water","Su"],["Fire","Ateş"],
-    ["Book","Kitap"],["Love","Aşk"],["Time","Zaman"],["Money","Para"],["Car","Araba"],["Door","Kapı"],
-    ["Cat","Kedi"],["Dog","Köpek"],["Bird","Kuş"],["Tree","Ağaç"],["Red","Kırmızı"],["Blue","Mavi"],
-    ["Fish","Balık"],["Milk","Süt"],["Rain","Yağmur"],["Snow","Kar"],["Wind","Rüzgar"],["Road","Yol"]
-  ],
-  de: [
-    ["Apfel","Elma"],["Sonne","Güneş"],["Mond","Ay"],["Stern","Yıldız"],["Wasser","Su"],["Feuer","Ateş"],
-    ["Buch","Kitap"],["Liebe","Aşk"],["Zeit","Zaman"],["Geld","Para"],["Auto","Araba"],["Tür","Kapı"],
-    ["Katze","Kedi"],["Hund","Köpek"],["Vogel","Kuş"],["Baum","Ağaç"],["Rot","Kırmızı"],["Blau","Mavi"],
-    ["Fisch","Balık"],["Milch","Süt"],["Regen","Yağmur"],["Schnee","Kar"],["Wind","Rüzgar"],["Weg","Yol"]
-  ],
-  fr: [
-    ["Pomme","Elma"],["Soleil","Güneş"],["Lune","Ay"],["Étoile","Yıldız"],["Eau","Su"],["Feu","Ateş"],
-    ["Livre","Kitap"],["Amour","Aşk"],["Temps","Zaman"],["Argent","Para"],["Voiture","Araba"],["Porte","Kapı"],
-    ["Chat","Kedi"],["Chien","Köpek"],["Oiseau","Kuş"],["Arbre","Ağaç"],["Rouge","Kırmızı"],["Bleu","Mavi"],
-    ["Poisson","Balık"],["Lait","Süt"],["Pluie","Yağmur"],["Neige","Kar"],["Vent","Rüzgar"],["Route","Yol"]
-  ],
-  es: [
-    ["Manzana","Elma"],["Sol","Güneş"],["Luna","Ay"],["Estrella","Yıldız"],["Agua","Su"],["Fuego","Ateş"],
-    ["Libro","Kitap"],["Amor","Aşk"],["Tiempo","Zaman"],["Dinero","Para"],["Coche","Araba"],["Puerta","Kapı"],
-    ["Gato","Kedi"],["Perro","Köpek"],["Pájaro","Kuş"],["Árbol","Ağaç"],["Rojo","Kırmızı"],["Azul","Mavi"],
-    ["Pez","Balık"],["Leche","Süt"],["Lluvia","Yağmur"],["Nieve","Kar"],["Viento","Rüzgar"],["Camino","Yol"]
-  ],
-  it: [
-    ["Mela","Elma"],["Sole","Güneş"],["Luna","Ay"],["Stella","Yıldız"],["Acqua","Su"],["Fuoco","Ateş"],
-    ["Libro","Kitap"],["Amore","Aşk"],["Tempo","Zaman"],["Soldi","Para"],["Macchina","Araba"],["Porta","Kapı"],
-    ["Gatto","Kedi"],["Cane","Köpek"],["Uccello","Kuş"],["Albero","Ağaç"],["Rosso","Kırmızı"],["Blu","Mavi"],
-    ["Pesce","Balık"],["Latte","Süt"],["Pioggia","Yağmur"],["Neve","Kar"],["Vento","Rüzgar"],["Strada","Yol"]
-  ]
+<div class="modal" id="start">
+  <div class="card-modal">
+    <h2 style="color:var(--cyan);margin:0;font-family:Space Grotesk">NEURAL LINK</h2>
+    <p style="opacity:.7;font-size:13px">Kelime ile anlamı eşleştir.</p>
+    <div class="langs">
+      <div class="lang active" data-lang="en">EN</div>
+      <div class="lang" data-lang="de">DE</div>
+      <div class="lang" data-lang="fr">FR</div>
+      <div class="lang" data-lang="es">ES</div>
+      <div class="lang" data-lang="it">IT</div>
+    </div>
+    <button class="btn" id="startBtn">BAŞLA</button>
+  </div>
+</div>
+
+<div class="modal hidden" id="end">
+  <div class="card-modal">
+    <h2 style="color:var(--green);margin:0">BAĞLANTI KURULDU</h2>
+    <p style="margin:12px 0">
+      Hamle: <b id="finalMoves"></b><br>
+      Skor: <b id="finalScore"></b>
+    </p>
+    <button class="btn" onclick="restart()">YENİDEN</button>
+    <button class="btn sec" onclick="location.href='/pages/game.html'">ÇIKIŞ</button>
+  </div>
+</div>
+
+<script type="module">
+import { loadLangPool, createUsedSet, pick } from "/js/langpool.js";
+
+const $=id=>document.getElementById(id);
+
+let lang="en";
+let cards=[],flipped=[],matched=0,moves=0,locked=false;
+let muted=false;
+
+const LANGMAP={en:"en-US",de:"de-DE",fr:"fr-FR",es:"es-ES",it:"it-IT"};
+
+document.querySelectorAll(".lang").forEach(b=>{
+  b.onclick=()=>{
+    document.querySelectorAll(".lang").forEach(x=>x.classList.remove("active"));
+    b.classList.add("active");
+    lang=b.dataset.lang;
+    $("langBadge").textContent=lang.toUpperCase();
+  };
+});
+
+$("soundBtn").onclick=()=>{
+  muted=!muted;
+  $("soundBtn").textContent=muted?"🔇":"🔊";
 };
 
-// --- STATE ---
-let currentLang = 'en';
-let gameCards = []; // { id, text, type, pairId }
-let flippedCards = [];
-let matchedCount = 0;
-let moves = 0;
-let isLocked = false; // Animasyon sırasında tıklamayı engelle
-let isMuted = false;
+$("startBtn").onclick=async()=>{
+  $("start").classList.add("hidden");
+  $("game").style.display="flex";
+  await initGame();
+};
 
-// --- INIT ---
-function selectLang(l) {
-  currentLang = l;
-  document.getElementById('langBadge').innerText = l.toUpperCase();
-  document.getElementById('startModal').style.display = 'none';
-  document.getElementById('gameScreen').style.display = 'flex';
-  startGame();
-}
-
-function restartGame() {
-  document.getElementById('endModal').classList.add('hidden');
-  startGame();
-}
-
-function startGame() {
-  moves = 0;
-  matchedCount = 0;
-  flippedCards = [];
-  isLocked = false;
+async function initGame(){
+  moves=0;matched=0;flipped=[];locked=false;
   updateStats();
-  
-  // 1. Havuzdan Rastgele 8 Çift Seç
-  const pool = MEMORY_DB[currentLang];
-  // Havuzu karıştır
-  const shuffledPool = [...pool].sort(() => Math.random() - 0.5);
-  const selectedPairs = shuffledPool.slice(0, 8); // İlk 8 çifti al
 
-  // 2. Kartları Oluştur (16 Kart: 8 Yabancı, 8 Türkçe)
-  gameCards = [];
-  selectedPairs.forEach((pair, index) => {
-    // Yabancı Kelime Kartı
-    gameCards.push({
-      id: `card-${index}-A`,
-      pairId: index,
-      text: pair[0],
-      langCode: currentLang, // Okunacak dil
-      isForeign: true
-    });
-    // Türkçe Anlam Kartı
-    gameCards.push({
-      id: `card-${index}-B`,
-      pairId: index,
-      text: pair[1],
-      langCode: 'tr-TR',
-      isForeign: false
-    });
+  const pool=await loadLangPool(lang);
+  const {used,save}=createUsedSet("neural_match_"+lang);
+  const picked=pick(pool,8,used,save);
+
+  cards=[];
+  picked.forEach((it,i)=>{
+    cards.push({pair:i,text:it.w,lang:lang});
+    cards.push({pair:i,text:it.tr,lang:"tr"});
   });
-
-  // 3. Kartları Karıştır
-  gameCards.sort(() => Math.random() - 0.5);
-
-  renderGrid();
+  cards.sort(()=>Math.random()-.5);
+  render();
 }
 
-function renderGrid() {
-  const grid = document.getElementById('gridArea');
-  grid.innerHTML = '';
-
-  gameCards.forEach((card, index) => {
-    // Kart HTML Yapısı
-    const el = document.createElement('div');
-    el.className = 'card';
-    el.dataset.index = index;
-    el.onclick = () => handleCardClick(index);
-
-    el.innerHTML = `
-      <div class="card-inner">
-        <div class="card-front"></div>
-        <div class="card-back">${card.text}</div>
-      </div>
-    `;
-    grid.appendChild(el);
+function render(){
+  const g=$("grid"); g.innerHTML="";
+  cards.forEach((c,i)=>{
+    const el=document.createElement("div");
+    el.className="card";
+    el.dataset.i=i;
+    el.innerHTML=`
+      <div class="inner">
+        <div class="face front"></div>
+        <div class="face back">${c.text}</div>
+      </div>`;
+    el.onclick=()=>clickCard(i);
+    g.appendChild(el);
   });
 }
 
-// --- OYUN MANTIĞI ---
-function handleCardClick(index) {
-  if (isLocked) return;
-  
-  const cardEl = document.querySelectorAll('.card')[index];
-  
-  // Zaten açık veya eşleşmişse işlem yapma
-  if (cardEl.classList.contains('flipped') || cardEl.classList.contains('matched')) return;
+function clickCard(i){
+  if(locked) return;
+  const el=document.querySelectorAll(".card")[i];
+  if(el.classList.contains("flipped")||el.classList.contains("matched")) return;
 
-  // Kartı Aç
-  flipCard(cardEl);
-  flippedCards.push({ index: index, data: gameCards[index], el: cardEl });
+  el.classList.add("flipped");
+  flipped.push({i,data:cards[i],el});
 
-  // İkinci kart açıldıysa kontrol et
-  if (flippedCards.length === 2) {
-    moves++;
-    updateStats();
-    checkForMatch();
-  } else {
-    // İlk kart açıldığında (Opsiyonel: Ses çalabiliriz ama kafa karıştırır, sadece eşleşince çalalım)
-    playSFX('flip');
+  if(flipped.length===2){
+    moves++; updateStats();
+    check();
   }
 }
 
-function flipCard(el) {
-  el.classList.add('flipped');
-}
-
-function unflipCard(el) {
-  el.classList.remove('flipped');
-}
-
-function checkForMatch() {
-  isLocked = true; // Diğer tıklamaları engelle
-
-  const card1 = flippedCards[0];
-  const card2 = flippedCards[1];
-
-  if (card1.data.pairId === card2.data.pairId) {
-    // --- EŞLEŞME OLDU ---
-    playSFX('match');
-    
-    // Yabancı kelimeyi bul ve seslendir
-    const foreignCard = card1.data.isForeign ? card1 : card2;
-    speak(foreignCard.data.text);
-
-    setTimeout(() => {
-      card1.el.classList.add('matched');
-      card2.el.classList.add('matched');
-      flippedCards = [];
-      matchedCount++;
+function check(){
+  locked=true;
+  const [a,b]=flipped;
+  if(a.data.pair===b.data.pair){
+    play("match");
+    const speakCard=a.data.lang!=="tr"?a.data:b.data;
+    speak(speakCard.text,speakCard.lang);
+    setTimeout(()=>{
+      a.el.classList.add("matched");
+      b.el.classList.add("matched");
+      matched++;
+      flipped=[];
+      locked=false;
       updateStats();
-      isLocked = false;
-
-      if (matchedCount === 8) {
-        setTimeout(endGame, 500);
-      }
-    }, 600);
-
-  } else {
-    // --- EŞLEŞME OLMADI ---
-    playSFX('error');
-    
-    setTimeout(() => {
-      unflipCard(card1.el);
-      unflipCard(card2.el);
-      flippedCards = [];
-      isLocked = false;
-    }, 1000); // 1 saniye bekle kapat
+      if(matched===8) finish();
+    },500);
+  }else{
+    play("error");
+    setTimeout(()=>{
+      a.el.classList.remove("flipped");
+      b.el.classList.remove("flipped");
+      flipped=[];
+      locked=false;
+    },900);
   }
 }
 
-function updateStats() {
-  document.getElementById('moveVal').innerText = moves;
-  document.getElementById('matchVal').innerText = matchedCount;
+function updateStats(){
+  $("moveVal").textContent=moves;
+  $("matchVal").textContent=matched;
 }
 
-function endGame() {
-  playSFX('win');
-  document.getElementById('endModal').classList.remove('hidden');
-  document.getElementById('finalMoves').innerText = moves;
-  
-  // Hafıza Skoru Hesabı: En iyi (8 hamle) -> %100. Her hata puan düşürür.
-  // 8 Çift var. Minimum 8 hamle. 
-  // Skor = Max(0, 100 - (moves - 8) * 5) gibi basit bir mantık
-  let successRate = Math.max(0, 100 - (moves - 8) * 10);
-  document.getElementById('finalScore').innerText = `%${successRate}`;
+function finish(){
+  play("win");
+  $("finalMoves").textContent=moves;
+  const score=Math.max(0,100-(moves-8)*10);
+  $("finalScore").textContent="%"+score;
+  $("end").classList.remove("hidden");
 }
 
-// --- SES SİSTEMİ ---
-const synth = window.speechSynthesis;
-let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-function toggleSound() {
-  isMuted = !isMuted;
-  document.getElementById('soundIcon').innerText = isMuted ? "🔇" : "🔊";
+function restart(){
+  $("end").classList.add("hidden");
+  initGame();
 }
 
-function playSFX(type) {
-  if (isMuted) return;
-  if (audioCtx.state === 'suspended') audioCtx.resume();
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-  osc.connect(gain);
-  gain.connect(audioCtx.destination);
-  
-  const t = audioCtx.currentTime;
-
-  if (type === 'flip') {
-    osc.frequency.setValueAtTime(400, t);
-    osc.frequency.exponentialRampToValueAtTime(100, t + 0.1);
-    gain.gain.setValueAtTime(0.05, t);
-    gain.gain.linearRampToValueAtTime(0, t + 0.1);
-    osc.start(t); osc.stop(t + 0.1);
-  } else if (type === 'match') {
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(440, t); // A4
-    osc.frequency.setValueAtTime(554, t + 0.1); // C#5
-    osc.frequency.setValueAtTime(659, t + 0.2); // E5
-    gain.gain.setValueAtTime(0.1, t);
-    gain.gain.linearRampToValueAtTime(0, t + 0.4);
-    osc.start(t); osc.stop(t + 0.4);
-  } else if (type === 'error') {
-    osc.type = 'sawtooth';
-    osc.frequency.value = 150;
-    gain.gain.value = 0.1;
-    osc.start(t); osc.stop(t + 0.2);
-  } else if (type === 'win') {
-    // Victory sound
-    osc.type = 'square';
-    osc.frequency.setValueAtTime(523, t);
-    osc.frequency.setValueAtTime(659, t + 0.2);
-    osc.frequency.setValueAtTime(784, t + 0.4);
-    osc.frequency.setValueAtTime(1046, t + 0.6);
-    gain.gain.setValueAtTime(0.1, t);
-    gain.gain.linearRampToValueAtTime(0, t + 1.0);
-    osc.start(t); osc.stop(t + 1.0);
-  }
+let audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+function play(t){
+  if(muted) return;
+  if(audioCtx.state==="suspended") audioCtx.resume();
+  const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+  o.connect(g); g.connect(audioCtx.destination);
+  const now=audioCtx.currentTime;
+  if(t==="match"){o.frequency.value=600;g.gain.value=.08;o.start(now);o.stop(now+.25);}
+  if(t==="error"){o.frequency.value=140;g.gain.value=.1;o.start(now);o.stop(now+.2);}
+  if(t==="win"){o.frequency.value=800;g.gain.value=.1;o.start(now);o.stop(now+.6);}
 }
 
-function speak(text) {
-  if (isMuted) return;
-  const tm = setTimeout(() => {}, 2000);
-  try {
-    synth.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    const langMap = { 'en': 'en-US', 'de': 'de-DE', 'fr': 'fr-FR', 'es': 'es-ES', 'it': 'it-IT' };
-    u.lang = langMap[currentLang] || 'en-US';
-    u.rate = 0.9;
-    u.onend = () => clearTimeout(tm);
-    synth.speak(u);
-  } catch(e) { clearTimeout(tm); }
+function speak(txt,l){
+  if(muted) return;
+  const u=new SpeechSynthesisUtterance(txt);
+  u.lang=l==="tr"?"tr-TR":LANGMAP[l]||"en-US";
+  speechSynthesis.cancel();
+  speechSynthesis.speak(u);
 }
-
 </script>
 </body>
 </html>
