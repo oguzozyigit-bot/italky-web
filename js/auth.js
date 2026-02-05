@@ -5,7 +5,6 @@ import { GOOGLE_CLIENT_ID, STORAGE_KEY, BASE_DOMAIN } from "./config.js";
 
 const API_TOKEN_KEY = "italky_api_token";
 const STABLE_ID_KEY = "italky_stable_id_v1";
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 function getAuthState(){
   if(!window.__ITALKY_AUTH__) window.__ITALKY_AUTH__ = { inited:false, btnRendered:false };
@@ -144,8 +143,6 @@ async function handleGoogleResponse(res){
       isSessionActive: true,
       lastLoginAt: new Date().toISOString(),
       terms_accepted_at: savedTermsAt,
-
-      // tek puan alanı (istersen sonra)
       sp_score: 10,
       plan: "FREE"
     };
@@ -159,8 +156,16 @@ async function handleGoogleResponse(res){
       clearApiToken();
     }
 
-    // index sayfası sözleşme kontrol eder, kabul varsa /pages/home.html'e geçer
-    window.location.href = "/index.html";
+    // ✅ sözleşme varsa direkt home, yoksa modal aç
+    if(savedTermsAt){
+      window.location.replace("/pages/home.html");
+      return;
+    }
+    if(typeof window.__ITALKY_SHOW_TERMS__ === "function"){
+      window.__ITALKY_SHOW_TERMS__();
+      return;
+    }
+    window.location.replace("/index.html");
   }catch(e){
     console.error("handleGoogleResponse error:", e);
     alert("Google girişinde hata oldu. Console'u kontrol et.");
@@ -171,7 +176,8 @@ function renderGoogleOverlayButton(){
   const st = getAuthState();
   if(st.btnRendered) return;
 
-  const wrap = document.getElementById("googleBtnWrap");
+  // ✅ index.html wrapper id
+  const wrap = document.getElementById("googleBtnWrapper");
   if(!wrap) return;
 
   try{
@@ -180,8 +186,8 @@ function renderGoogleOverlayButton(){
       theme: "outline",
       size: "large",
       text: "continue_with",
-      shape: "pill",
-      width: wrap.clientWidth || 320
+      shape: "rectangular",
+      width: wrap.clientWidth || 380
     });
     st.btnRendered = true;
   }catch(e){
