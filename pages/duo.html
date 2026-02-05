@@ -1,203 +1,188 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="tr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-<title>ITALKY • Word Cracker</title>
-<link rel="icon" href="data:,">
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800&family=Space+Grotesk:wght@700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+<title>ITALKY • Duo Friend</title>
+<link rel="icon" href="data:,"/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
 <style>
 :root{
---bg:#000500;--matrix:#00ff41;--dim:rgba(0,255,65,.15);
---err:#ff1744;--border:rgba(0,255,65,.4)
+--bg:#020205;--text:#fff;
+--p1:#00f3ff;--p2:#ff0066;
+--green:#00e676;--red:#ff1744;--gold:#ffb800;
+--border:rgba(255,255,255,.12)
 }
-*{box-sizing:border-box;user-select:none;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;width:100%;height:100%;background:var(--bg);font-family:Outfit,sans-serif;overflow:hidden}
-.cosmos{position:fixed;inset:0;background:radial-gradient(circle,#001a00 0%,#000 100%)}
-.grid{position:absolute;inset:0;background-image:linear-gradient(var(--dim) 1px,transparent 1px),linear-gradient(90deg,var(--dim) 1px,transparent 1px);background-size:30px 30px;opacity:.3}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+html,body{margin:0;width:100%;height:100%;background:var(--bg);color:var(--text);font-family:Outfit,sans-serif;overflow:hidden}
+.wrap{max-width:480px;height:100%;margin:0 auto;display:flex;flex-direction:column;position:relative}
 
-.frame{position:relative;z-index:5;width:100%;max-width:480px;height:100%;margin:auto;display:flex;flex-direction:column;background:rgba(0,10,0,.9);border:1px solid var(--border);box-shadow:0 0 30px var(--dim);transition:.2s}
-@media(min-width:520px){.frame{height:92vh;border-radius:22px}}
+.header{height:70px;display:flex;align-items:center;justify-content:center;font-family:Space Grotesk;font-weight:900;letter-spacing:2px}
+.grid{flex:1;display:grid;grid-template-rows:1fr 60px 1fr;gap:8px;padding:10px}
 
-.header{height:70px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;border-bottom:1px solid var(--border)}
-.btn{width:40px;height:40px;border:1px solid var(--border);background:rgba(0,255,65,.1);color:var(--matrix);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;cursor:pointer}
-.title{font-family:'Share Tech Mono';color:var(--matrix);letter-spacing:2px}
-.badge{background:var(--matrix);color:#000;font-size:10px;padding:2px 6px;border-radius:4px;margin-left:6px}
+.pane{border:1px solid var(--border);border-radius:20px;display:flex;flex-direction:column;overflow:hidden;background:linear-gradient(160deg,rgba(255,255,255,.04),rgba(0,0,0,.5))}
+#paneB{transform:rotate(180deg)}
+#paneB>*{transform:rotate(180deg)}
 
-.game{flex:1;padding:20px;display:none;flex-direction:column;gap:15px}
-.stats{display:flex;justify-content:space-between;font-family:'Share Tech Mono';color:var(--matrix);border-bottom:1px dashed var(--border);padding-bottom:8px}
+.bar{height:40px;padding:0 12px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);font-family:Space Grotesk;font-size:13px}
+.score{font-weight:800}
+.body{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:6px}
+.word{font-size:28px;font-weight:900}
+.mean{font-size:16px;opacity:.6}
 
-.hint{border:1px solid var(--matrix);padding:14px;border-radius:12px;text-align:center}
-.hint-text{font-size:20px;font-weight:800;letter-spacing:1px}
+.actions{height:60px;display:flex;gap:8px;padding:8px}
+.mic{flex:2;border-radius:12px;border:1px solid var(--border);background:rgba(255,255,255,.08);color:#fff;font-weight:800}
+.pass{flex:1;border-radius:12px;border:1px solid var(--border);background:transparent;color:#aaa}
 
-.slots{display:flex;justify-content:center;flex-wrap:wrap;gap:6px;min-height:60px}
-.slot{width:40px;height:50px;border:1px solid var(--matrix);border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'Share Tech Mono';font-size:28px;color:var(--matrix)}
-.slot.empty{color:transparent;border-color:rgba(0,255,65,.2)}
-.slot.wrong{border-color:var(--err);color:var(--err)}
+.wave{height:60px;border:1px solid var(--border);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
 
-.keys{flex:1;display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
-.key{width:48px;height:48px;border:1px solid var(--matrix);background:rgba(0,255,65,.15);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#fff;cursor:pointer}
-.key.used{opacity:0;pointer-events:none}
-
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.95);display:flex;align-items:center;justify-content:center;z-index:99}
-.card{background:#050505;border:1px solid var(--matrix);padding:24px;border-radius:16px;text-align:center;box-shadow:0 0 40px var(--dim)}
-.langs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:20px}
-.lang{border:1px solid var(--matrix);padding:10px;border-radius:8px;color:#fff;cursor:pointer}
-.lang:hover{background:var(--matrix);color:#000}
-
-.flash{animation:flash .6s}
-@keyframes flash{0%{box-shadow:0 0 0 rgba(0,255,65,0)}50%{box-shadow:0 0 80px rgba(0,255,65,.6)}100%{box-shadow:0 0 30px rgba(0,255,65,.15)}}
+.modal{position:absolute;inset:0;background:rgba(0,0,0,.9);display:flex;align-items:center;justify-content:center;z-index:10}
+.card{background:#101014;border:1px solid var(--border);border-radius:20px;padding:24px;text-align:center;width:90%}
+.langs{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:16px}
+.lang{border:1px solid var(--border);border-radius:8px;padding:10px;font-size:20px;cursor:pointer}
+.lang.active{background:var(--p1);color:#000}
+.btn{width:100%;padding:14px;border-radius:14px;border:none;font-weight:900;margin-top:10px}
 </style>
 </head>
 
 <body>
-<div class="cosmos"><div class="grid"></div></div>
+<div class="wrap">
+  <div class="header">DUO FRIEND</div>
 
-<div class="frame" id="frame">
-  <div class="header">
-    <div class="btn" onclick="location.href='/pages/game.html'">←</div>
-    <div class="title">WORD_CRACKER <span id="langBadge" class="badge">EN</span></div>
-    <div class="btn" onclick="toggleSound()" id="soundBtn">🔊</div>
-  </div>
+  <div class="grid">
+    <section class="pane" id="paneB">
+      <div class="bar">
+        <div>OYUNCU B</div>
+        <div class="score" id="scoreB">0</div>
+      </div>
+      <div class="body">
+        <div class="word" id="wordB">---</div>
+        <div class="mean" id="meanB">---</div>
+      </div>
+      <div class="actions">
+        <button class="pass" id="passB">PAS</button>
+        <button class="mic" id="micB">🎙️</button>
+      </div>
+    </section>
 
-  <div class="game" id="game">
-    <div class="stats">
-      <span>SCORE: <span id="score">0</span></span>
-      <span>LIVES: <span id="lives">❤️❤️❤️</span></span>
-    </div>
-    <div class="hint"><div class="hint-text" id="hintText">...</div></div>
-    <div class="slots" id="slots"></div>
-    <div class="keys" id="keys"></div>
+    <div class="wave" id="wave">HAZIR</div>
+
+    <section class="pane" id="paneA">
+      <div class="bar">
+        <div>OYUNCU A</div>
+        <div class="score" id="scoreA">0</div>
+      </div>
+      <div class="body">
+        <div class="word" id="wordA">---</div>
+        <div class="mean" id="meanA">---</div>
+      </div>
+      <div class="actions">
+        <button class="pass" id="passA">PAS</button>
+        <button class="mic" id="micA">🎙️</button>
+      </div>
+    </section>
   </div>
 </div>
 
 <div class="modal" id="startModal">
   <div class="card">
-    <h2 style="color:var(--matrix);font-family:'Share Tech Mono'">SYSTEM READY</h2>
+    <h3>DİL SEÇ</h3>
     <div class="langs">
-      <div class="lang" onclick="selectLang('en')">EN</div>
-      <div class="lang" onclick="selectLang('de')">DE</div>
-      <div class="lang" onclick="selectLang('fr')">FR</div>
-      <div class="lang" onclick="selectLang('es')">ES</div>
-      <div class="lang" onclick="selectLang('it')">IT</div>
+      <div class="lang active" data-lang="en">🇬🇧</div>
+      <div class="lang" data-lang="de">🇩🇪</div>
+      <div class="lang" data-lang="fr">🇫🇷</div>
+      <div class="lang" data-lang="es">🇪🇸</div>
+      <div class="lang" data-lang="it">🇮🇹</div>
     </div>
-  </div>
-</div>
-
-<div class="modal" id="endModal" style="display:none">
-  <div class="card">
-    <h2 style="color:var(--matrix);font-family:'Share Tech Mono'">SYSTEM FAILURE</h2>
-    <div id="endText" style="margin:15px 0"></div>
-    <button class="lang" onclick="restart()">RETRY</button>
+    <button class="btn" id="startBtn">BAŞLA</button>
   </div>
 </div>
 
 <script type="module">
 import { loadLangPool, createUsedSet, pick } from "/js/langpool.js";
-const $=i=>document.getElementById(i);
 
-let lang="en",pool=[],list=[],idx=0;
-let word="",target=[],user=[],keys=[];
-let score=0,lives=3,streak=0,boss=false,first=true;
-let muted=false;
+const $=id=>document.getElementById(id);
 
-const bossEvery=5,baseDecoys=2,bossExtra=2;
+let lang="en";
+let pool=null;
+let list=[];
+let idx=0;
+let turn="A";
+let score={A:0,B:0};
+
+const LANG_MAP={en:"en-US",de:"de-DE",fr:"fr-FR",es:"es-ES",it:"it-IT"};
+
+document.querySelectorAll(".lang").forEach(b=>{
+  b.onclick=()=>{
+    document.querySelectorAll(".lang").forEach(x=>x.classList.remove("active"));
+    b.classList.add("active");
+    lang=b.dataset.lang;
+  };
+});
+
+$("#startBtn").onclick=async()=>{
+  $("#startModal").style.display="none";
+  pool=await loadLangPool(lang);
+  const {used,save}=createUsedSet("used_duofriend_"+lang);
+  list=pick(pool,30,used,save,it=>{
+    const w=String(it.w||"").replace(/[^a-zA-Z]/g,"");
+    return w.length>=3 && w.length<=10;
+  });
+  idx=0;turn="A";score={A:0,B:0};
+  nextWord();
+};
+
+function nextWord(){
+  if(idx>=list.length){ idx=0; }
+  const w=list[idx];
+  $("#wordA").textContent=w.w;
+  $("#wordB").textContent=w.w;
+  $("#meanA").textContent="???";
+  $("#meanB").textContent="???";
+  $("#wave").textContent="SIRA: "+turn;
+}
 
 function normalize(s){
- return String(s||"").replace(/ß/g,"ss").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase()
+  return String(s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim();
 }
 
-window.selectLang=async l=>{
- lang=l;$("langBadge").innerText=l.toUpperCase();
- $("startModal").style.display="none";
- $("game").style.display="flex";
- await prepare();
- restart();
+function listen(player){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR) return;
+  const rec=new SR();
+  rec.lang="tr-TR";
+  rec.onresult=e=>{
+    const said=e.results[0][0].transcript;
+    check(player,said);
+  };
+  rec.start();
 }
 
-async function prepare(){
- const data=await loadLangPool(lang);
- const {used,save}=createUsedSet("used_wordcracker_"+lang);
- pool=pick(data,30,used,save,it=>{
-  const w=normalize(it.w).replace(/[^A-Z]/g,"");
-  return w.length>=4&&w.length<=8;
- });
+function check(player,spoken){
+  const w=list[idx];
+  const ok=normalize(spoken).includes(normalize(w.tr));
+  if(ok){
+    score[player]+=10;
+    $("#score"+player).textContent=score[player];
+    speak(w.tr,"tr-TR");
+  }
+  turn=turn==="A"?"B":"A";
+  idx++;
+  nextWord();
 }
 
-function restart(){
- score=0;lives=3;streak=0;idx=0;
- update();next();
+function speak(t,lang){
+  const u=new SpeechSynthesisUtterance(t);
+  u.lang=lang;
+  speechSynthesis.cancel();
+  speechSynthesis.speak(u);
 }
 
-function next(){
- boss=((idx+1)%bossEvery===0);first=true;
- const it=pool[idx%pool.length];
- word=normalize(it.w).replace(/[^A-Z]/g,"");
- target=word.split(""); user=new Array(target.length).fill(null);
- $("hintText").innerText=(boss?"⚠️ BOSS: ":"")+it.tr.toUpperCase();
- $("frame").style.boxShadow=boss?"0 0 55px rgba(0,255,65,.25)":"0 0 30px rgba(0,255,65,.15)";
- const base=target.map((c,i)=>({id:"t"+i,char:c}));
- keys=base.concat(decoys(target,boss?baseDecoys+bossExtra:baseDecoys)).sort(()=>Math.random()-.5);
- render();
-}
-
-function decoys(arr,n){
- const s=new Set(arr),a="ETAOINSHRDLUCMPFGYWBVKXJQZ",o=[];
- while(o.length<n){const c=a[Math.floor(Math.random()*a.length)];if(!s.has(c)){s.add(c);o.push({id:"d"+o.length,char:c})}}
- return o;
-}
-
-function render(){
- $("slots").innerHTML="";
- user.forEach((c,i)=>{
-  const d=document.createElement("div");
-  d.className="slot"+(c?"":" empty");
-  d.innerText=c?c.char:"_";
-  if(c)d.onclick=()=>{user[i]=null;render()}
-  $("slots").appendChild(d);
- });
- $("keys").innerHTML="";
- keys.forEach(k=>{
-  const b=document.createElement("div");
-  b.className="key"+(user.some(u=>u&&u.id===k.id)?" used":"");
-  b.innerText=k.char;
-  b.onclick=()=>press(k);
-  $("keys").appendChild(b);
- });
-}
-
-function press(k){
- const i=user.findIndex(x=>x===null);
- if(i<0)return;
- user[i]=k;render();
- if(!user.includes(null))check();
-}
-
-function check(){
- if(user.map(u=>u.char).join("")===target.join("")){
-  let add=100*(boss?2:1)+Math.min(50,streak*10);
-  if(boss&&first){add+=200;$("frame").classList.add("flash");setTimeout(()=>$("frame").classList.remove("flash"),600)}
-  score+=add;streak++; if(boss)lives=Math.min(3,lives+1);
-  update(); idx++; next();
- }else{
-  first=false;streak=0;lives--;update();
-  document.querySelectorAll(".slot").forEach(s=>s.classList.add("wrong"));
-  setTimeout(()=>{user.fill(null);render(); if(lives<=0)end()},500);
- }
-}
-
-function update(){
- $("score").innerText=score;
- $("lives").innerText=[0,1,2].map(i=>i<lives?"❤️":"💀").join("");
-}
-
-function end(){
- $("endModal").style.display="flex";
- $("endText").innerHTML=`PUAN: <b>${score}</b><br>STREAK: <b>${streak}</b><br><br>KELİME:<br><b style="font-size:22px">${word}</b>`;
-}
-
-window.toggleSound=()=>{muted=!muted;$("soundBtn").innerText=muted?"🔇":"🔊";}
+$("#micA").onclick=()=>listen("A");
+$("#micB").onclick=()=>listen("B");
+$("#passA").onclick=()=>{turn="B";idx++;nextWord();};
+$("#passB").onclick=()=>{turn="A";idx++;nextWord();};
 </script>
 </body>
 </html>
