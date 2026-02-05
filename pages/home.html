@@ -131,24 +131,43 @@
   </div>
 
   <script type="module">
-    import { STORAGE_KEY } from "/js/config.js";
-    function safeJson(s, fb={}){ try{ return JSON.parse(s||""); }catch{ return fb; } }
-    const u = safeJson(localStorage.getItem(STORAGE_KEY), {});
-    if(!u || !u.email || !u.isSessionActive) window.location.replace("/index.html");
-    const userName = document.getElementById("userName");
-    const userPlan = document.getElementById("userPlan");
-    const full = (u.fullname || u.name || u.display_name || u.email || "—").trim();
-    if(userName) userName.textContent = full;
-    if(userPlan) userPlan.textContent = String(u.plan || "FREE").toUpperCase();
-    const avatarBtn = document.getElementById("avatarBtn");
-    const fallback = document.getElementById("avatarFallback");
-    try{
-      const pic = String(u.picture || u.avatar || u.avatar_url || "").trim();
-      if(pic) avatarBtn.innerHTML = `<img src="${pic}" alt="avatar">`;
-      else if(fallback) fallback.textContent = (full && full[0]) ? full[0].toUpperCase() : "•";
-    }catch{}
-    avatarBtn?.addEventListener("click", ()=>{ window.location.href = "/pages/profile.html"; });
-    document.querySelectorAll("[data-go]").forEach(el=>{ el.addEventListener("click", ()=>{ const go = el.getAttribute("data-go"); if(go) window.location.href = go; }); });
-  </script>
+  import { STORAGE_KEY } from "/js/config.js";
+  
+  function checkSession() {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return window.location.replace("/index.html");
+    
+    try {
+      const u = JSON.parse(raw);
+      const termsKey = `italky_terms_accepted_at::${u.email}`;
+      
+      // Kilit Kontrol: Email yoksa veya sözleşme onaylanmamışsa index'e kov
+      if (!u.email || !localStorage.getItem(termsKey)) {
+        window.location.replace("/index.html");
+        return;
+      }
+
+      // UI Güncelleme
+      document.getElementById("userName").textContent = (u.fullname || u.name || u.email || "—").trim();
+      document.getElementById("userPlan").textContent = String(u.plan || "FREE").toUpperCase();
+      const pic = String(u.picture || u.avatar || "").trim();
+      if (pic) document.getElementById("avatarBtn").innerHTML = `<img src="${pic}" alt="avatar">`;
+      
+    } catch(e) {
+      localStorage.removeItem(STORAGE_KEY);
+      window.location.replace("/index.html");
+    }
+  }
+
+  checkSession();
+
+  // Menü tıklamaları ve diğer logicler...
+  document.querySelectorAll("[data-go]").forEach(el => {
+    el.addEventListener("click", () => {
+      const go = el.getAttribute("data-go");
+      if (go) window.location.href = go;
+    });
+  });
+</script>
 </body>
 </html>
