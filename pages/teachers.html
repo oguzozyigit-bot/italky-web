@@ -8,571 +8,474 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
   <style>
-    :root{
-      --frameW: min(480px, calc(100vw - 18px));
-      --topH: 74px;
-      --footerH: 74px;
-      --dockH: 88px;
+    :root {
+      /* --- Layout --- */
+      --frameW: min(480px, 100vw);
+      --topH: 70px;
+      --footerH: 90px; /* Mikrofon için biraz daha yüksek */
 
-      --bg:#030014;
-      --text: rgba(255,255,255,.92);
-      --muted: rgba(255,255,255,.60);
-      --border: rgba(255,255,255,.10);
+      /* --- Colors --- */
+      --bg-deep: #050507;
+      --text-main: #ffffff;
+      --text-muted: rgba(255, 255, 255, 0.6);
+      --text-dim: rgba(255, 255, 255, 0.3);
 
-      --ai1:#A5B4FC;
-      --ai2:#4F46E5;
-      --befree:#6B7280;
+      /* Öğretmen Modu için daha sıcak/arkadaş canlısı bir accent */
+      --accent-primary: #8b5cf6; /* Violet */
+      --accent-secondary: #ec4899; /* Pink */
+      --accent-glow: rgba(139, 92, 246, 0.5);
+      --accent-gradient: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
 
-      --glass: rgba(255,255,255,.06);
-      --card: rgba(0,0,0,.18);
-    }
+      --glass-bg: rgba(20, 20, 25, 0.75);
+      --glass-border: rgba(255, 255, 255, 0.08);
 
-    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; }
-    html,body{
-      margin:0; padding:0; width:100%; height:100dvh;
-      overflow:hidden; position:fixed;
-      font-family:'Outfit', sans-serif;
-      background:var(--bg);
-      color:var(--text);
-      display:flex; align-items:center; justify-content:center;
+      --user-bubble: #2e1065; /* Dark Violet */
+      --ai-bubble: #1f2937; /* Dark Gray */
+      --correction: #ef4444; /* Red hint */
     }
 
-    /* background */
-    .cosmos-bg{ position:absolute; inset:-50%; width:200%; height:200%; background:var(--bg); z-index:0; pointer-events:none; }
-    .orb{ position:absolute; border-radius:50%; filter: blur(90px); opacity:.28; animation: floatOrbit 30s infinite alternate ease-in-out; }
-    .orb-1{ top:10%; left:10%; width:60vw; height:60vw; background: radial-gradient(circle, rgba(79,70,229,.55), transparent 70%); }
-    .orb-2{ bottom:10%; right:10%; width:50vw; height:50vw; background: radial-gradient(circle, rgba(165,180,252,.45), transparent 70%); animation-delay:-5s; }
-    @keyframes floatOrbit{ 0%{ transform: translate(0,0) scale(1);} 100%{ transform: translate(10%,-10%) scale(1.1);} }
-    .noise{
-      position:absolute; inset:0;
-      background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
-      pointer-events:none; mix-blend-mode:overlay; z-index:1;
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+    
+    body {
+      margin: 0; padding: 0; width: 100%; height: 100dvh;
+      overflow: hidden; position: fixed;
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg-deep);
+      color: var(--text-main);
+      display: flex; align-items: center; justify-content: center;
     }
 
-    .mobile-frame{
-      width:100%; max-width:480px; height:100%;
-      position:relative; z-index:10;
-      background: rgba(8, 8, 20, 0.65);
-      backdrop-filter: blur(25px);
-      overflow:hidden;
-      display:flex; flex-direction:column;
+    /* --- Background --- */
+    .premium-bg { position: absolute; inset: 0; z-index: 0; pointer-events: none; background: radial-gradient(circle at 50% 0%, #1a103c 0%, #000000 70%); }
+    .premium-glow { position: absolute; width: 100%; height: 60%; background: radial-gradient(ellipse at top, rgba(139, 92, 246, 0.15), transparent 70%); top: 0; left: 0; pointer-events: none; }
+
+    /* --- Frame --- */
+    .mobile-frame {
+      width: 100%; max-width: var(--frameW); height: 100%;
+      position: relative; z-index: 10;
+      background: rgba(10, 10, 12, 0.5);
+      display: flex; flex-direction: column;
+      overflow: hidden;
     }
-    @media(min-width:520px){
-      .mobile-frame{
-        height:92vh;
-        border-radius:40px;
-        border:1px solid rgba(255,255,255,0.08);
-        box-shadow:0 40px 100px -20px rgba(0,0,0,0.9);
-      }
+    @media(min-width: 520px) {
+      .mobile-frame { height: 92vh; border-radius: 32px; border: 1px solid var(--glass-border); box-shadow: 0 40px 120px -20px rgba(0,0,0,0.8); background: rgba(10, 10, 12, 0.9); }
     }
 
-    /* topbar */
-    .topbar{
-      position: sticky;
-      top: 0;
-      z-index: 3000;
-      height: var(--topH);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      padding: 0 12px;
-      border-bottom:1px solid rgba(255,255,255,.08);
-      background: rgba(0,0,0,.35);
-      backdrop-filter: blur(12px);
+    /* --- Top Bar --- */
+    .topbar {
+      height: var(--topH); display: flex; align-items: center; justify-content: space-between;
+      padding: 0 20px; background: rgba(5, 5, 7, 0.8); backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--glass-border); z-index: 50;
     }
-    .leftControls{ display:flex; align-items:center; gap:10px; min-width:0; }
-    .backBtn{
-      width:44px;height:44px;border-radius:16px;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(0,0,0,.18);
-      color:#fff;
-      font-size:20px;font-weight:1000;
-      display:flex;align-items:center;justify-content:center;
-      cursor:pointer; user-select:none;
+    .backBtn {
+      width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--glass-border);
+      background: rgba(255,255,255,0.03); color: var(--text-main); font-size: 18px;
+      display: flex; align-items: center; justify-content: center; cursor: pointer;
     }
-    .backBtn:active{ transform: scale(.96); }
+    .mini-brand { display: flex; flex-direction: column; cursor: pointer; margin-left: 6px; }
+    .logo-line { font-family: 'Space Grotesk', sans-serif; font-size: 20px; line-height: 1; letter-spacing: -0.5px; }
+    .logo-main { font-weight: 700; color: #fff; }
+    .logo-ai { font-weight: 700; background: linear-gradient(to right, #a78bfa, #f472b6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .logo-slogan { font-size: 9px; font-weight: 700; letter-spacing: 3px; color: var(--text-muted); margin-top: 4px; opacity: 0.7; }
+    
+    .lang-indicator {
+        display: flex; align-items: center; gap: 8px;
+        background: rgba(255,255,255,0.08); padding: 6px 12px; border-radius: 20px;
+        border: 1px solid var(--glass-border); cursor: pointer;
+    }
+    .lang-flag { font-size: 18px; line-height: 1; }
+    .lang-code { font-size: 12px; font-weight: 700; color: #fff; text-transform: uppercase; }
 
-    .mini-brand{
-      display:flex; flex-direction:column;
-      user-select:none; cursor:pointer; line-height:1;
-      margin-top: 2px;
+    /* --- Main Chat Area --- */
+    .chat-area {
+      flex: 1; padding: 20px; overflow-y: auto;
+      display: flex; flex-direction: column; gap: 16px;
+      padding-bottom: 120px; /* Space for bottom controls */
     }
-    .logo-line{
-      font-family:'Space Grotesk', sans-serif;
-      font-size: 20px;
-      letter-spacing: -0.4px;
-      display:flex; align-items:flex-end; gap:2px;
-    }
-    .logo-main{ font-weight:700; color:#FFFFFF; }
-    .logo-ai{
-      font-weight:700;
-      background: linear-gradient(135deg, var(--ai1) 0%, var(--ai2) 100%);
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;
-    }
-    .logo-slogan{
-      font-family:'Outfit', sans-serif;
-      font-size:10px;
-      font-weight:700;
-      letter-spacing: 4px;
-      color: var(--befree);
-      margin-top: 5px;
-      padding-left: 2px;
-      text-transform: uppercase;
-    }
+    .chat-area::-webkit-scrollbar { display: none; }
 
-    .rightControls{ display:flex; align-items:center; gap:10px; min-width:0; }
-    .usertext{
-      min-width:0;
-      display:flex; flex-direction:column; align-items:flex-end; gap:2px;
-      max-width: 200px;
-    }
-    .uname{ font-weight: 900; font-size: 12px; color: rgba(255,255,255,0.92); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .plan{ font-weight: 800; font-size: 11px; color: rgba(255,255,255,0.55); white-space:nowrap; }
-    .avatar-btn{
-      width: 42px; height: 42px;
-      border:none; background:transparent;
-      border-radius:999px;
-      overflow:hidden;
-      cursor:pointer;
-      display:flex; align-items:center; justify-content:center;
-    }
-    .avatar-btn:active{ transform: scale(.96); }
-    .avatar-btn img{ width:42px; height:42px; border-radius:999px; object-fit:cover; display:block; }
-    .avatar-fallback{
-      width:42px; height:42px; border-radius:999px;
-      display:flex; align-items:center; justify-content:center;
-      font-weight: 1000;
-      color: rgba(255,255,255,0.92);
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.10);
-      user-select:none;
-    }
+    /* Messages */
+    .msg { max-width: 85%; width: fit-content; display: flex; flex-direction: column; gap: 4px; position: relative; }
+    
+    .msg.ai { align-self: flex-start; }
+    .msg.user { align-self: flex-end; align-items: flex-end; }
 
-    /* main */
-    .main{
-      flex:1;
-      padding: 12px;
-      overflow:hidden;
-      display:flex;
-      flex-direction:column;
-      gap: 10px;
-      padding-bottom: calc(var(--footerH) + var(--dockH) + 12px);
-    }
-
-    .row{
-      display:flex;
-      gap:10px;
-      align-items:center;
-    }
-
-    .pill{
-      flex:1;
-      height: 46px;
-      border-radius: 16px;
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.06);
-      color:#fff;
-      font-weight: 1000;
-      font-size: 12px;
-      padding: 0 12px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      cursor:pointer;
-      user-select:none;
-      min-width:0;
-      gap: 10px;
-    }
-    .pillLeft{ display:flex; align-items:center; gap:10px; min-width:0; }
-    .flag{ width:24px; display:flex; align-items:center; justify-content:center; font-size:16px; flex:0 0 24px; opacity:.95; }
-    .label{ min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .caret{ opacity:.8; }
-
-    .tinyBtn{
-      width: 54px; height: 46px;
-      border-radius: 16px;
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.06);
-      color: rgba(255,255,255,.92);
-      font-weight: 1000;
-      cursor:pointer;
-      user-select:none;
-    }
-    .tinyBtn.muted{ opacity:.55; filter: grayscale(1); }
-
-    /* quick actions */
-    .chips{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-top: 2px;
-    }
-    .chip{
-      padding: 10px 12px;
-      border-radius: 16px;
-      border: 1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.22);
-      color: rgba(255,255,255,.92);
-      font-weight: 900;
-      font-size: 12px;
-      cursor:pointer;
-      user-select:none;
-    }
-    .chip:active{ transform: scale(.98); }
-
-    /* chat */
-    #chat{
-      flex:1;
-      overflow:auto;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width:none;
-      display:flex;
-      flex-direction:column;
-      gap: 10px;
-      padding: 6px 2px 2px;
-      min-height:0;
-    }
-    #chat::-webkit-scrollbar{ display:none; }
-
-    .bubble{
-      max-width: 88%;
-      padding: 10px 14px;
-      border-radius: 16px;
-      font-size: 14px;
-      line-height: 1.45;
-      border: 1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.18);
-      box-shadow: 0 12px 28px rgba(0,0,0,.22);
-      backdrop-filter: blur(8px);
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
-    .bubble.bot{
-      align-self:flex-start;
-      border-left:4px solid var(--ai2);
-      background: rgba(79,70,229,.12);
-    }
-    .bubble.user{
-      align-self:flex-end;
-      border-right:4px solid var(--befree);
-      background: rgba(107,114,128,.14);
-      text-align:right;
-    }
-    .bubble.meta{
-      align-self:center;
-      max-width: 92%;
-      opacity:.92;
-      background: rgba(255,255,255,.04);
-      border-color: rgba(255,255,255,.08);
-      font-size: 12px;
-      font-weight: 800;
-      color: rgba(255,255,255,.70);
-      text-align:center;
-    }
-
-    /* input dock */
-    .dock{
-      position: fixed;
-      left: 50%;
-      transform: translateX(-50%);
-      width: var(--frameW);
-      bottom: var(--footerH);
-      z-index: 2600;
-      padding: 10px 12px;
-      background: rgba(0,0,0,.32);
-      border-top: 1px solid rgba(255,255,255,.08);
-      backdrop-filter: blur(12px);
-    }
-    .dock-inner{
-      width:100%;
-      min-height:54px;
-      display:flex;
-      align-items:flex-end;
-      gap:8px;
-      background: rgba(255,255,255,.04);
-      border: 1px solid rgba(255,255,255,.10);
-      border-radius: 26px;
-      padding: 8px;
-    }
-
-    #msgInput{
-      flex: 1 1 auto;
-      min-width:0;
-      background: transparent;
-      border:none;
-      outline:none;
-      color:#fff;
-      font-size:14px;
-      padding:10px 6px;
-      line-height:18px;
-      font-family:inherit;
-      resize:none;
-      overflow:hidden;
-      max-height: 120px;
-    }
-
-    .iconBtn{
-      width:42px; height:42px;
-      border-radius:16px;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.22);
-      display:flex; align-items:center; justify-content:center;
-      cursor:pointer; user-select:none;
-      flex-shrink:0;
-    }
-    .iconBtn svg{
-      width:21px; height:21px;
-      stroke: rgba(255,255,255,.88);
-      fill:none;
-      stroke-width:2;
-      stroke-linecap:round;
-      stroke-linejoin:round;
-      opacity:.95;
-    }
-    .iconBtn.listening{
-      border-color: rgba(79,70,229,.45);
-      background: rgba(79,70,229,.16);
-      box-shadow: 0 0 18px rgba(79,70,229,.20);
+    .bubble {
+      padding: 12px 16px; border-radius: 18px;
+      font-size: 15px; line-height: 1.5; color: #fff;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
       position: relative;
     }
-    .iconBtn.listening::after{
-      content:"";
-      position:absolute;
-      inset:-7px;
-      border-radius: 18px;
-      border: 2px solid rgba(165,180,252,.55);
-      animation: micPulse 1.15s ease-in-out infinite;
+    .msg.ai .bubble {
+      background: var(--ai-bubble);
+      border-bottom-left-radius: 4px;
+      border: 1px solid var(--glass-border);
     }
-    @keyframes micPulse{
-      0%{ transform: scale(0.92); opacity:.75; }
-      50%{ transform: scale(1.08); opacity:.28; }
-      100%{ transform: scale(0.92); opacity:.75; }
+    .msg.user .bubble {
+      background: var(--user-bubble);
+      border-bottom-right-radius: 4px;
+      border: 1px solid rgba(139, 92, 246, 0.3);
+      background: linear-gradient(135deg, rgba(46, 16, 101, 0.8), rgba(76, 29, 149, 0.8));
     }
 
-    .sendBtn{
-      border-color: rgba(107,114,128,.28);
-      background: rgba(107,114,128,.16);
+    /* Correction / Hint Style inside bubble */
+    .correction {
+        display: block; margin-top: 6px; padding-top: 6px;
+        border-top: 1px solid rgba(255,255,255,0.1);
+        font-size: 12px; color: #f87171; font-weight: 500; font-style: italic;
     }
-    .sendBtn svg{ stroke: rgba(107,114,128,.95); }
+    .correction span { color: #fff; opacity: 0.7; font-style: normal; margin-right: 4px; }
 
-    /* footer */
-    .footerbar{
-      position: fixed;
-      left: 50%;
-      transform: translateX(-50%);
-      width: var(--frameW);
-      bottom: 0;
-      z-index: 2400;
+    /* AI Avatar (Teacher) */
+    .teacher-status {
+        display: flex; flex-direction: column; align-items: center; gap: 10px;
+        margin-bottom: 20px; margin-top: 10px;
+        transition: all 0.5s ease;
+    }
+    .teacher-status.minimized {
+        flex-direction: row; margin: 0; padding: 10px 20px;
+        background: rgba(0,0,0,0.3); position: absolute; top: var(--topH); left: 0; right: 0;
+        z-index: 40; backdrop-filter: blur(10px); border-bottom: 1px solid var(--glass-border);
+        justify-content: center; height: 50px; opacity: 0; pointer-events: none;
+    }
+    
+    .avatar-orb {
+        width: 80px; height: 80px; border-radius: 50%;
+        background: var(--accent-gradient);
+        box-shadow: 0 0 30px var(--accent-glow);
+        position: relative;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .avatar-orb::after {
+        content: ''; position: absolute; inset: -5px; border-radius: 50%;
+        border: 2px solid rgba(255,255,255,0.1);
+        animation: spin 10s linear infinite;
+    }
+    .avatar-orb.speaking { animation: pulse-speak 1.5s infinite; }
+
+    .teacher-text { text-align: center; }
+    .teacher-name { font-size: 18px; font-weight: 700; color: #fff; }
+    .teacher-mode { font-size: 12px; color: var(--accent-secondary); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+
+    @keyframes pulse-speak {
+        0% { transform: scale(1); box-shadow: 0 0 20px var(--accent-glow); }
+        50% { transform: scale(1.05); box-shadow: 0 0 40px var(--accent-glow); }
+        100% { transform: scale(1); box-shadow: 0 0 20px var(--accent-glow); }
+    }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+
+
+    /* --- Bottom Controls --- */
+    .bottom-controls {
+      position: absolute; bottom: 0; left: 0; right: 0;
       height: var(--footerH);
-      padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
-      background: rgba(3, 0, 20, 0.95);
-      border-top: 1px solid rgba(255,255,255,.05);
-      backdrop-filter: blur(10px);
-      display:flex;
-      flex-direction:column;
-      justify-content:center;
-      gap: 6px;
-    }
-    .footerBrand{
-      text-align:center;
-      font-size: 10px;
-      color: rgba(255,255,255,0.22);
-      letter-spacing: 0.2px;
-      font-weight: 700;
+      background: rgba(5, 5, 7, 0.9); backdrop-filter: blur(25px);
+      border-top: 1px solid var(--glass-border);
+      display: flex; align-items: center; justify-content: center;
+      gap: 20px; z-index: 60; padding: 0 20px;
     }
 
-    /* sheet */
-    .sheetBackdrop{
-      position: fixed;
-      inset: 0;
-      z-index: 9999;
-      background: rgba(0,0,0,.72);
-      display:none;
-      align-items:flex-end;
-      justify-content:center;
-      padding: 16px;
+    /* Side Buttons */
+    .ctrl-btn {
+        width: 44px; height: 44px; border-radius: 14px;
+        background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);
+        color: var(--text-muted); display: flex; align-items: center; justify-content: center;
+        cursor: pointer; transition: 0.2s;
     }
-    .sheetBackdrop.show{ display:flex; }
-    .sheet{
-      width: 100%;
-      max-width: 480px;
-      background: rgba(10,10,18,.96);
-      border: 1px solid rgba(255,255,255,.10);
-      border-radius: 26px;
-      overflow:hidden;
-      box-shadow: 0 30px 80px rgba(0,0,0,.55);
-    }
-    .sheetTop{
-      padding: 12px 14px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap: 10px;
-      border-bottom: 1px solid rgba(255,255,255,.08);
-    }
-    .sheetTitle{
-      font-weight: 1000;
-      font-size: 13px;
-      color: rgba(255,255,255,.92);
-    }
-    .sheetClose{
-      width: 42px; height: 42px;
-      border-radius: 16px;
-      border: 1px solid rgba(255,255,255,.10);
-      background: rgba(255,255,255,.06);
-      color: rgba(255,255,255,.88);
-      font-weight: 1000;
-      cursor:pointer;
-    }
-    .sheetSearch{
-      padding: 10px 14px;
-      border-bottom: 1px solid rgba(255,255,255,.08);
-    }
-    .sheetSearch input{
-      width:100%;
-      height: 46px;
-      border-radius: 16px;
-      border: 1px solid rgba(255,255,255,.10);
-      background: rgba(255,255,255,.06);
-      color: #fff;
-      padding: 0 12px;
-      font-weight: 800;
-      font-size: 13px;
-    }
-    .sheetList{
-      max-height: 55vh;
-      overflow:auto;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width:none;
-    }
-    .sheetList::-webkit-scrollbar{ display:none; }
-    .sheetRow{
-      padding: 12px 14px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap: 10px;
-      cursor:pointer;
-      border-bottom: 1px solid rgba(255,255,255,.06);
-    }
-    .sheetRow.selected{ background: rgba(79,70,229,.14); }
-    .sheetRow .left{ display:flex; align-items:center; gap:10px; min-width:0; }
-    .sheetRow .name{ font-weight: 1000; font-size: 13px; color: rgba(255,255,255,.92); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .sheetRow .code{ font-weight: 800; font-size: 12px; color: rgba(255,255,255,.55); white-space:nowrap; }
+    .ctrl-btn:active { background: rgba(255,255,255,0.1); color: #fff; transform: scale(0.95); }
+    .ctrl-btn svg { width: 22px; height: 22px; fill: currentColor; }
 
-    /* toast */
-    .toast{
-      position: fixed; left:50%; top:18px;
-      transform: translateX(-50%) translateY(-120px);
-      background: rgba(10,10,18,.92);
-      border:1px solid rgba(165,180,252,.35);
-      padding: 10px 14px;
-      border-radius: 999px;
-      color:#fff;
-      z-index:10000;
-      font-weight:900;
-      font-size:12px;
-      transition:.28s;
-      backdrop-filter: blur(12px);
+    /* The Main Mic Button */
+    .mic-btn {
+        width: 72px; height: 72px; border-radius: 50%;
+        background: var(--accent-gradient);
+        border: 4px solid rgba(5, 5, 7, 0.5);
+        box-shadow: 0 8px 30px var(--accent-glow);
+        display: flex; align-items: center; justify-content: center;
+        color: #fff; cursor: pointer; margin-top: -30px; /* Pop out effect */
+        transition: 0.2s; position: relative;
     }
-    .toast.show{ transform: translateX(-50%) translateY(0); }
+    .mic-btn svg { width: 32px; height: 32px; fill: currentColor; }
+    .mic-btn:active { transform: scale(0.95); }
+    
+    .mic-btn::before {
+        content: ''; position: absolute; inset: -10px; border-radius: 50%;
+        border: 1px solid rgba(255,255,255,0.1); opacity: 0.5;
+        animation: ripple 2s infinite; pointer-events: none;
+    }
+    @keyframes ripple {
+        0% { transform: scale(0.8); opacity: 0; }
+        50% { opacity: 0.5; }
+        100% { transform: scale(1.5); opacity: 0; }
+    }
+
+
+    /* --- Mode Selection Cards (Initial State) --- */
+    .mode-overlay {
+        position: absolute; inset: 0; z-index: 80;
+        background: rgba(5, 5, 7, 0.95); backdrop-filter: blur(10px);
+        display: flex; flex-direction: column; padding: 100px 20px 40px;
+        gap: 20px; overflow-y: auto;
+        transition: opacity 0.4s, transform 0.4s;
+    }
+    .mode-overlay.hidden { opacity: 0; pointer-events: none; transform: scale(1.05); }
+
+    .mode-title { font-size: 24px; font-weight: 700; color: #fff; margin-bottom: 10px; text-align: center; }
+    .mode-subtitle { font-size: 14px; color: var(--text-muted); text-align: center; margin-bottom: 20px; line-height: 1.5; }
+
+    .mode-card {
+        background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border);
+        border-radius: 20px; padding: 20px; cursor: pointer;
+        display: flex; align-items: center; gap: 16px;
+        transition: 0.2s;
+    }
+    .mode-card:active { transform: scale(0.98); background: rgba(255,255,255,0.06); }
+    
+    .mode-icon {
+        width: 50px; height: 50px; border-radius: 14px;
+        background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.02));
+        display: flex; align-items: center; justify-content: center;
+        font-size: 24px; color: var(--accent-secondary);
+        border: 1px solid rgba(255,255,255,0.05);
+    }
+    .mode-info { flex: 1; }
+    .mode-name { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+    .mode-desc { font-size: 12px; color: var(--text-muted); font-weight: 400; }
+
+    /* --- Sheets --- */
+    .sheetBackdrop {
+      position: fixed; inset: 0; z-index: 9999;
+      background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
+      display: none; align-items: flex-end; justify-content: center;
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .sheetBackdrop.show { display: flex; opacity: 1; }
+    .sheet {
+      width: 100%; max-width: 480px; background: #121216;
+      border: 1px solid var(--glass-border); border-radius: 28px 28px 0 0;
+      transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+      padding-bottom: 30px;
+    }
+    .sheetBackdrop.show .sheet { transform: translateY(0); }
+    .sheetTop { padding: 20px 24px; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; }
+    .sheetTitle { font-size: 16px; font-weight: 700; color: #fff; }
+    .sheetClose { background: rgba(255,255,255,0.08); border: none; color: #fff; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; }
+    
+    .lang-grid { padding: 24px; display: grid; gap: 12px; }
+    .lang-option {
+        display: flex; align-items: center; gap: 16px; padding: 16px 20px;
+        background: rgba(255,255,255,0.03); border-radius: 16px;
+        border: 1px solid var(--glass-border); cursor: pointer; transition: 0.2s;
+    }
+    .lang-option:active { background: rgba(255,255,255,0.08); }
+    .lang-option .flag { font-size: 24px; }
+    .lang-option .name { font-size: 15px; font-weight: 600; color: #fff; }
+    .lang-option.active { border-color: var(--accent-primary); background: rgba(139, 92, 246, 0.1); }
+
   </style>
 </head>
 
 <body>
-  <div class="cosmos-bg"><div class="orb orb-1"></div><div class="orb orb-2"></div></div>
-  <div class="noise"></div>
+  <div class="premium-bg"></div>
+  <div class="premium-glow"></div>
 
   <div class="mobile-frame">
+    
     <div class="topbar">
-      <div class="leftControls">
-        <button class="backBtn" id="backBtn" aria-label="Geri">←</button>
-        <div class="mini-brand" id="logoHome" title="Ana sayfa">
-          <div class="logo-line"><span class="logo-main">italky</span><span class="logo-ai">AI</span></div>
-          <div class="logo-slogan">BE FREE</div>
+      <button class="backBtn" onclick="history.back()">←</button>
+      <div class="mini-brand">
+        <div class="logo-line"><span class="logo-main">italky</span><span class="logo-ai">AI</span></div>
+        <div class="logo-slogan">BE FREE</div>
+      </div>
+      <div class="lang-indicator" id="langTrigger">
+        <span class="lang-flag" id="currentFlag">🇬🇧</span>
+        <span class="lang-code" id="currentCode">EN</span>
+      </div>
+    </div>
+
+    <div class="mode-overlay" id="modeOverlay">
+      <h2 class="mode-title">Nasıl Konuşalım?</h2>
+      <p class="mode-subtitle">Bugün hangi konuda kendini geliştirmek istersin?</p>
+      
+      <div class="mode-card" onclick="selectMode('Serbest Muhabbet')">
+        <div class="mode-icon">☕</div>
+        <div class="mode-info">
+          <div class="mode-name">Serbest Muhabbet</div>
+          <div class="mode-desc">Konu sınırlaması yok, havadan sudan konuşalım.</div>
         </div>
       </div>
 
-      <div class="rightControls">
-        <div class="usertext">
-          <div class="uname" id="userName">—</div>
-          <div class="plan" id="userPlan">FREE</div>
+      <div class="mode-card" onclick="selectMode('Hayatta Kalma')">
+        <div class="mode-icon">🆘</div>
+        <div class="mode-info">
+          <div class="mode-name">Hayatta Kalma</div>
+          <div class="mode-desc">Havalimanı, otel, hastane senaryoları.</div>
         </div>
-        <button class="avatar-btn" id="avatarBtn" aria-label="Çıkış">
-          <span class="avatar-fallback" id="avatarFallback">•</span>
-        </button>
+      </div>
+
+      <div class="mode-card" onclick="selectMode('Gramer Polisi')">
+        <div class="mode-icon">👮</div>
+        <div class="mode-info">
+          <div class="mode-name">Gramer Polisi</div>
+          <div class="mode-desc">Her hatanı düzeltirim, acımak yok!</div>
+        </div>
       </div>
     </div>
 
-    <div class="main">
-      <div class="row">
-        <button class="pill" id="langBtn" type="button">
-          <span class="pillLeft">
-            <span class="flag" id="langFlag">🇬🇧</span>
-            <span class="label" id="langTxt">İngilizce</span>
-          </span>
-          <span class="caret">▾</span>
-        </button>
-        <button class="tinyBtn" id="muteBtn" type="button" title="Ses (aç/kapat)">🔊</button>
+    <div class="chat-area" id="chatArea">
+      
+      <div class="teacher-status" id="teacherStatus">
+        <div class="avatar-orb" id="avatarOrb">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+        </div>
+        <div class="teacher-text">
+          <div class="teacher-name">italky Teacher</div>
+          <div class="teacher-mode" id="activeModeDisplay">Mod Seçimi Bekleniyor...</div>
+        </div>
       </div>
 
-      <div class="chips">
-        <div class="chip" data-q="Kısa bir seviye testi yap (5 soru).">Seviye Testi</div>
-        <div class="chip" data-q="Bugün için 10 kelimelik bir mini kelime listesi ve örnek cümleler ver.">10 Kelime</div>
-        <div class="chip" data-q="Benimle günlük konuşma pratiği yap. Çok kısa cümlelerle başla.">Konuşma Pratiği</div>
-        <div class="chip" data-q="Bir roleplay başlat: kafede sipariş verme.">Roleplay</div>
-      </div>
-
-      <div id="chat"></div>
-    </div>
-
-    <div class="dock">
-      <div class="dock-inner">
-        <textarea id="msgInput" rows="1" placeholder="Yaz ya da konuş…" spellcheck="false"></textarea>
-
-        <button class="iconBtn" id="micBtn" aria-label="Mikrofon">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
-            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-            <line x1="12" y1="19" x2="12" y2="23"></line>
-            <line x1="8" y1="23" x2="16" y2="23"></line>
-          </svg>
-        </button>
-
-        <button class="iconBtn sendBtn" id="sendBtn" aria-label="Gönder">
-          <svg viewBox="0 0 24 24">
-            <path d="M22 2L11 13"></path>
-            <path d="M22 2L15 22L11 13L2 9L22 2Z"></path>
-          </svg>
-        </button>
+      <div class="msg ai" style="display:none;" id="welcomeMsg">
+        <div class="bubble">
+          Merhaba! Ben İngilizce öğretmenin. Bugün nasılsın, neler yaptın?
+        </div>
       </div>
     </div>
 
-    <div class="footerbar">
-      <div class="footerBrand">italkyAI By Ozyigit’s 2026</div>
+    <div class="bottom-controls">
+      <button class="ctrl-btn" aria-label="Klavye">
+        <svg viewBox="0 0 24 24"><path d="M20 5H4c-1.1 0-1.99.9-1.99 2L2 17c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm-9 3h2v2h-2V8zm0 3h2v2h-2v-2zM8 8h2v2H8V8zm0 3h2v2H8v-2zm-1 2H5v-2h2v2zm0-3H5V8h2v2zm9 7H8v-2h8v2zm0-4h-2v-2h2v2zm0-3h-2V8h2v2zm3 3h-2v-2h2v2zm0-3h-2V8h2v2z"/></svg>
+      </button>
+
+      <div class="mic-btn" id="micBtn">
+        <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
+      </div>
+
+      <button class="ctrl-btn" aria-label="İpucu" style="color: #fbbf24;">
+        <svg viewBox="0 0 24 24"><path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1l-.85.6V16h-4v-2.3l-.85-.6C7.8 12.16 7 10.63 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.16-2.15 4.1z"/></svg>
+      </button>
     </div>
+
   </div>
 
-  <!-- Language Sheet -->
   <div class="sheetBackdrop" id="langSheet">
     <div class="sheet">
       <div class="sheetTop">
-        <div class="sheetTitle" id="sheetTitle">Öğrenilecek Dil</div>
-        <button class="sheetClose" id="sheetClose" aria-label="Kapat">✕</button>
+        <div class="sheetTitle">Hangi Dili Öğreniyoruz?</div>
+        <button class="sheetClose" id="closeLangBtn">✕</button>
       </div>
-      <div class="sheetSearch">
-        <input id="sheetQuery" placeholder="Dil ara (İngilizce, Almanca, Fransızca…)" />
+      <div class="lang-grid">
+        <div class="lang-option active" onclick="setLang('🇬🇧', 'EN')">
+          <span class="flag">🇬🇧</span>
+          <span class="name">İngilizce</span>
+        </div>
+        <div class="lang-option" onclick="setLang('🇩🇪', 'DE')">
+          <span class="flag">🇩🇪</span>
+          <span class="name">Almanca</span>
+        </div>
+        <div class="lang-option" onclick="setLang('🇫🇷', 'FR')">
+          <span class="flag">🇫🇷</span>
+          <span class="name">Fransızca</span>
+        </div>
+        <div class="lang-option" onclick="setLang('🇪🇸', 'ES')">
+          <span class="flag">🇪🇸</span>
+          <span class="name">İspanyolca</span>
+        </div>
+        <div class="lang-option" onclick="setLang('🇮🇹', 'IT')">
+          <span class="flag">🇮🇹</span>
+          <span class="name">İtalyanca</span>
+        </div>
       </div>
-      <div class="sheetList" id="sheetList"></div>
     </div>
   </div>
 
-  <div id="toast" class="toast"></div>
+  <script>
+    // --- Logic for UI interactions ---
 
-  <script type="module" src="/js/teacher_page.js?v=1"></script>
+    // 1. Language Sheet
+    const langTrigger = document.getElementById('langTrigger');
+    const langSheet = document.getElementById('langSheet');
+    const closeLangBtn = document.getElementById('closeLangBtn');
+    const currentFlag = document.getElementById('currentFlag');
+    const currentCode = document.getElementById('currentCode');
+
+    langTrigger.addEventListener('click', () => langSheet.classList.add('show'));
+    closeLangBtn.addEventListener('click', () => langSheet.classList.remove('show'));
+
+    function setLang(flag, code) {
+        currentFlag.textContent = flag;
+        currentCode.textContent = code;
+        langSheet.classList.remove('show');
+        // Reset active class
+        document.querySelectorAll('.lang-option').forEach(el => el.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+    }
+
+    // 2. Mode Selection
+    const modeOverlay = document.getElementById('modeOverlay');
+    const activeModeDisplay = document.getElementById('activeModeDisplay');
+    const welcomeMsg = document.getElementById('welcomeMsg');
+    const avatarOrb = document.getElementById('avatarOrb');
+
+    function selectMode(modeName) {
+        modeOverlay.classList.add('hidden');
+        activeModeDisplay.textContent = modeName;
+        
+        // Show welcome message after small delay
+        setTimeout(() => {
+            welcomeMsg.style.display = 'flex';
+            avatarOrb.classList.add('speaking'); // Start speaking animation
+            
+            // Stop speaking after a few seconds (simulate TTS)
+            setTimeout(() => avatarOrb.classList.remove('speaking'), 3000);
+        }, 500);
+    }
+
+    // 3. Microphone Interaction
+    const micBtn = document.getElementById('micBtn');
+    let isListening = false;
+
+    micBtn.addEventListener('click', () => {
+        isListening = !isListening;
+        if(isListening) {
+            micBtn.style.transform = 'scale(1.1)';
+            micBtn.style.boxShadow = '0 0 40px var(--accent-glow)';
+            // Simulating user speaking
+            avatarOrb.classList.remove('speaking');
+        } else {
+            micBtn.style.transform = 'scale(1)';
+            micBtn.style.boxShadow = '0 8px 30px var(--accent-glow)';
+            // Simulate AI processing & reply
+            setTimeout(() => {
+                 addMsg("User", "I go to cinema yesterday.");
+                 setTimeout(() => {
+                     addMsg("AI", "Oh, you **went to the cinema**? That's great! What did you watch?", true);
+                 }, 1000);
+            }, 500);
+        }
+    });
+
+    function addMsg(role, text, correction = false) {
+        const chatArea = document.getElementById('chatArea');
+        const div = document.createElement('div');
+        div.className = `msg ${role.toLowerCase()}`;
+        
+        let htmlContent = text;
+        if(correction) {
+            // Demo for correction formatting
+            htmlContent = `Oh, you <b>went to the cinema</b>? That's great! What did you watch?
+            <span class="correction"><span>Düzeltme:</span> I went to the cinema</span>`;
+            avatarOrb.classList.add('speaking');
+            setTimeout(() => avatarOrb.classList.remove('speaking'), 3000);
+        }
+
+        div.innerHTML = `<div class="bubble">${htmlContent}</div>`;
+        chatArea.appendChild(div);
+        chatArea.scrollTop = chatArea.scrollHeight;
+    }
+
+  </script>
 </body>
 </html>
