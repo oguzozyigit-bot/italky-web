@@ -12,68 +12,217 @@
       --c-neon-pink:#ff00ff; --c-neon-blue:#00f3ff;
       --c-neon-green:#00e676; --c-error:#ff1744;
       --ai-gradient: linear-gradient(135deg,#a5b4fc 0%,#6366f1 100%);
-      --border: rgba(255,255,255,.12);
-      --radius-xl: 28px;
+      --glass: rgba(255,255,255,.06); --border: rgba(255,255,255,.12);
+      --shadow: 0 18px 50px rgba(0,0,0,.55);
+      --radius-xl: 28px; --radius-lg: 18px;
     }
 
     *{ box-sizing:border-box; outline:none; user-select:none; -webkit-tap-highlight-color:transparent; }
     html,body{ margin:0; width:100%; height:100%; overflow:hidden; font-family:'Outfit', sans-serif; background:var(--bg-deep); color:#fff; position:fixed; }
 
-    /* 🌌 COSMOS BG */
+    /* 🌌 PREMIUM COSMOS BACKGROUND */
     .cosmos-bg{ position:absolute; inset:0; z-index:0; background: radial-gradient(circle at 50% 35%, #0b0b2a 0%, #020205 60%, #010104 100%); }
-    .stars{ position:absolute; inset:0; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.15'/%3E%3C/svg%3E"); opacity:.5; }
+    .stars{ position:absolute; inset:0; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.15'/%3E%3C/svg%3E"); opacity:.6; animation: starsFloat 110s linear infinite; }
+    @keyframes starsFloat{ from{ background-position:0 0; } to{ background-position:0 1200px; } }
 
-    /* 🎯 ANIMATIONS */
-    @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-3px); } 50% { transform: translateX(3px); } 75% { transform: translateX(-2px); } }
+    /* SHAKE */
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-3px); }
+      50% { transform: translateX(3px); }
+      75% { transform: translateX(-2px); }
+    }
     .gallows-box.shake { animation: shake .25s linear 2; }
 
-    /* 🏗️ UI ELEMENTS */
-    .wrap{ width:100%; max-width:480px; height:100%; margin:0 auto; position:relative; z-index:10; display:flex; flex-direction:column; padding: calc(10px + env(safe-area-inset-top)) 0 calc(10px + env(safe-area-inset-bottom)); }
+    /* WRAP & UI */
+    .wrap{
+      width:100%; max-width:480px; height:100%;
+      margin:0 auto; position:relative; z-index:10;
+      display:flex; flex-direction:column;
+      padding: calc(6px + env(safe-area-inset-top)) 0 calc(10px + env(safe-area-inset-bottom));
+    }
     .nav-top{ display:flex; align-items:center; justify-content:space-between; padding: 10px 18px; }
-    .mini-badge{ display:flex; align-items:center; height: 38px; padding: 0 12px; border-radius: 16px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.10); font-weight: 800; font-size: 11px; }
+    .logo-small{ font-size:24px; font-weight:900; letter-spacing:-.5px; }
+    .logo-small .ai{ background: var(--ai-gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
 
-    .game-card{ 
-      background: rgba(255,255,255,.05); border: 1px solid var(--border); border-radius: var(--radius-xl); 
-      backdrop-filter: blur(14px); padding: 20px; margin: 0 14px; position:relative; overflow:hidden;
-      box-shadow: 0 30px 90px rgba(0,0,0,.65);
+    /* STATS */
+    .stats-bar{ display:flex; align-items:center; justify-content:space-between; padding: 0 18px 10px; gap:10px; }
+    .score-pill{
+      display:flex; align-items:center; gap:10px; padding: 10px 14px;
+      border-radius: 18px; background: rgba(255,255,255,.08);
+      border: 1px solid var(--border); backdrop-filter: blur(12px);
+      box-shadow: 0 12px 28px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.12);
+    }
+    .score-label{ color: var(--c-neon-green); font-weight: 900; font-size: 18px; text-shadow: 0 0 12px rgba(0,230,118,.18); }
+    .mini-badge{
+      display:flex; align-items:center; height: 38px; padding: 0 12px;
+      border-radius: 16px; background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.10);
+      font-weight: 900; font-size: 11px;
+      box-shadow: 0 12px 26px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.10);
+    }
+    .mini-badge span{ color: var(--c-neon-blue); margin-left: 6px; font-family:'Space Grotesk'; font-weight:900; text-shadow: 0 0 12px rgba(0,243,255,.22); }
+
+    /* GAME CARD */
+    .game-card{
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      backdrop-filter: blur(14px);
+      padding: 18px 18px 16px;
+      margin: 0 14px;
+      position:relative;
+      overflow:hidden;
+      box-shadow:
+        0 30px 90px rgba(0,0,0,.65),
+        0 0 40px rgba(99,102,241,.10);
+    }
+    .game-card::before{
+      content:"";
+      position:absolute; inset:-2px;
+      background:
+        radial-gradient(circle at 20% 10%, rgba(0,243,255,.14) 0%, rgba(0,243,255,0) 45%),
+        radial-gradient(circle at 80% 30%, rgba(255,0,255,.12) 0%, rgba(255,0,255,0) 50%),
+        radial-gradient(circle at 50% 120%, rgba(0,230,118,.10) 0%, rgba(0,230,118,0) 55%);
+      pointer-events:none;
+      opacity:.95;
     }
 
-    /* 🏗️ GALLOWS & MAN */
-    .gallows-box{ position:relative; width:120px; height:140px; margin: 0 auto 15px; }
-    .g-stand{ position:absolute; bottom:0; left:20px; width:80px; height:2px; background: #fff; }
-    .g-post{ position:absolute; bottom:0; left:30px; width:2px; height:130px; background: #fff; }
-    .g-top{ position:absolute; top:10px; left:30px; width:60px; height:2px; background: #fff; }
-    .g-rope{ position:absolute; top:10px; right:30px; width:1px; height:20px; background: var(--c-neon-pink); box-shadow: 0 0 10px var(--c-neon-pink); transition: all 0.3s; }
-    .g-rope.danger { background: var(--c-error) !important; width: 2px; box-shadow: 0 0 15px var(--c-error); }
+    /* GALLOWS */
+    .gallows-box{ position:relative; width:120px; height:132px; margin: 0 auto 14px; }
+    .g-stand{ position:absolute; bottom:0; left:20px; width:80px; height:2px; background: rgba(255,255,255,.92); }
+    .g-post{ position:absolute; bottom:0; left:30px; width:2px; height:120px; background: rgba(255,255,255,.92); }
+    .g-top{ position:absolute; top:10px; left:30px; width:60px; height:2px; background: rgba(255,255,255,.92); }
+    .g-rope{
+      position:absolute; top:10px; right:30px;
+      width:1px; height:20px;
+      background: var(--c-neon-pink);
+      box-shadow: 0 0 10px rgba(255,0,255,.75);
+      transition: background .22s ease, box-shadow .22s ease, width .22s ease;
+    }
+    .g-rope.danger {
+      background: var(--c-error) !important;
+      width: 2px;
+      box-shadow: 0 0 15px rgba(255, 23, 68, 0.8);
+    }
 
-    .man-part{ position:absolute; background: var(--c-neon-pink); box-shadow: 0 0 12px var(--c-neon-pink); opacity:0; transition: opacity .3s; }
-    .p1{ top:28px; right:17px; width:26px; height:26px; border: 3px solid var(--c-neon-pink); border-radius:50%; background:transparent; }
+    /* MAN PARTS */
+    .man-part{
+      position:absolute;
+      background: var(--c-neon-pink);
+      box-shadow: 0 0 12px rgba(255,0,255,.75);
+      opacity:0;
+      transition: opacity .22s ease;
+      border-radius: 2px;
+    }
+    .p1{ top:28px; right:17px; width:26px; height:26px; border: 3px solid var(--c-neon-pink); border-radius:50%; background:transparent; box-shadow: 0 0 16px rgba(255,0,255,.6); }
     .p2{ top:56px; right:30px; width:2px; height:32px; }
     .p3{ top:60px; right:32px; width:18px; height:2px; transform: rotate(-25deg); transform-origin:left; }
     .p4{ top:60px; right:12px; width:18px; height:2px; transform: rotate(25deg); transform-origin:right; }
-    /* ✅ BACAKLAR - KALÇA PİVOTU */
-    .p5{ top: 92px; right: 30px; width: 18px; height: 2px; transform: rotate(35deg); transform-origin: 0% 50%; }
-    .p6{ top: 92px; right: 30px; width: 18px; height: 2px; transform: rotate(-35deg); transform-origin: 0% 50%; }
 
-    /* ⌨️ KEYBOARD 3D */
-    .keyboard{ display:grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 15px; }
-    .key-btn{ 
-      aspect-ratio:1; display:flex; align-items:center; justify-content:center;
-      color: #fff; background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.05));
-      border: 1px solid rgba(255,255,255,.15); border-radius: 12px; font-weight: 800; cursor:pointer;
-      box-shadow: 0 4px 8px rgba(0,0,0,.3); transition: all .1s;
+    /* BACAKLAR ✅ Daha doğal aşağı V, aynı pivot */
+    .p5{
+      top:92px; right:30px;
+      width:18px; height:2px;
+      transform: rotate(35deg);
+      transform-origin: 0% 50%;
     }
-    .key-btn:active{ transform: scale(.95); }
-    .key-btn.correct{ background: var(--c-neon-green) !important; color:#000; border-color: var(--c-neon-green); }
-    .key-btn.wrong{ opacity: .4; filter: grayscale(1); pointer-events: none; }
+    .p6{
+      top:92px; right:30px;
+      width:18px; height:2px;
+      transform: rotate(-35deg);
+      transform-origin: 0% 50%;
+    }
 
-    .word-box{ display:flex; flex-wrap:wrap; justify-content:center; gap: 8px; margin: 20px 0; }
-    .letter-slot{ width: 30px; height: 40px; border-bottom: 2px solid var(--c-neon-blue); display:flex; align-items:center; justify-content:center; font-size: 22px; font-weight: 900; }
-    .letter-slot.filled{ border-bottom: none; }
+    /* WORD & KEYBOARD */
+    #hintMain{ text-align:center; color:var(--c-neon-green); font-weight:900; font-size:18px; text-shadow: 0 0 14px rgba(0,230,118,.18); position:relative; z-index:1; }
+    .word-box{ display:flex; flex-wrap:wrap; justify-content:center; gap: 8px; margin: 18px 0 16px; position:relative; z-index:1; }
+    .letter-slot{
+      width: 30px; height: 40px;
+      border-bottom: 2px solid rgba(0,243,255,.95);
+      display:flex; align-items:center; justify-content:center;
+      font-size: 22px; font-weight: 900;
+      text-shadow: 0 0 16px rgba(0,243,255,.16);
+    }
+    .letter-slot.filled{ border-bottom: none; animation: pop .2s ease; }
 
-    .btn-primary{ width:100%; padding: 16px; background: var(--c-neon-green); color:#000; border:none; border-radius: 18px; font-weight: 900; cursor:pointer; margin-top: 10px; }
-    .modal-wrap{ position:absolute; inset:0; background: rgba(0,0,0,.9); z-index:999; display:flex; align-items:center; justify-content:center; padding: 20px; }
-    .modal-card{ width:100%; max-width:340px; background: #111; border: 1px solid var(--border); border-radius: 30px; padding: 30px; text-align:center; }
+    .keyboard{ display:grid; grid-template-columns: repeat(7, 1fr); gap: 8px; position:relative; z-index:1; }
+    .key-btn{
+      position:relative;
+      aspect-ratio:1;
+      display:flex; align-items:center; justify-content:center;
+      color: rgba(255,255,255,.92);
+      text-shadow: 0 1px 0 rgba(0,0,0,.55), 0 0 12px rgba(0,243,255,.10);
+      background: linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.06));
+      border: 1px solid rgba(255,255,255,.16);
+      border-radius: 14px;
+      font-weight: 900;
+      cursor:pointer;
+      box-shadow: 0 10px 22px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.18);
+      transition: transform .10s ease, filter .12s ease, opacity .12s ease, border-color .12s ease;
+      overflow:hidden;
+    }
+    .key-btn::after{
+      content:"";
+      position:absolute; inset:-40%;
+      background:
+        radial-gradient(circle at 30% 30%, rgba(0,243,255,.18) 0%, rgba(0,243,255,0) 40%),
+        radial-gradient(circle at 70% 70%, rgba(255,0,255,.14) 0%, rgba(255,0,255,0) 45%);
+      opacity:0;
+      transition: opacity .12s ease;
+      pointer-events:none;
+    }
+    .key-btn:hover::after{ opacity:.85; }
+    .key-btn:active{ transform: translateY(1px) scale(.98); }
+
+    .key-btn.correct{
+      background: linear-gradient(180deg, rgba(0,230,118,.95), rgba(0,230,118,.65));
+      color:#000;
+      border-color: rgba(0,230,118,.55);
+      text-shadow:none;
+      box-shadow: 0 0 18px rgba(0,230,118,.25), 0 10px 22px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.20);
+    }
+    .key-btn.wrong{
+      opacity: .45;
+      filter: grayscale(.2);
+      border-color: rgba(255,255,255,.10);
+    }
+    .key-btn:disabled{ cursor:default; }
+
+    /* BUTTONS */
+    .btn-primary{
+      width:100%;
+      padding: 15px;
+      background: var(--ai-gradient);
+      color:#fff;
+      border:none;
+      border-radius: 16px;
+      font-weight: 900;
+      margin-top: 12px;
+      cursor:pointer;
+      position:relative;
+      z-index:1;
+      box-shadow: 0 20px 55px rgba(99,102,241,.25), inset 0 1px 0 rgba(255,255,255,.22);
+      transition: transform .12s ease, filter .12s ease, opacity .12s ease;
+    }
+    .btn-primary:active{ transform: translateY(1px) scale(.99); }
+    .btn-primary:disabled{ opacity:.55; cursor:not-allowed; }
+
+    /* MODALS */
+    .modal-wrap{ position:absolute; inset:0; background: rgba(2,2,5,.95); z-index:999; display:flex; align-items:center; justify-content:center; backdrop-filter: blur(20px); padding: 20px; }
+    .modal-card{ width:100%; max-width:340px; background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03)); border: 1px solid var(--border); border-radius: 30px; padding: 30px; text-align:center; box-shadow: 0 30px 90px rgba(0,0,0,.6); position:relative; overflow:hidden; }
+    .modal-card::before{
+      content:"";
+      position:absolute; inset:-2px;
+      background:
+        radial-gradient(circle at 20% 10%, rgba(0,243,255,.12) 0%, rgba(0,243,255,0) 45%),
+        radial-gradient(circle at 80% 30%, rgba(255,0,255,.10) 0%, rgba(255,0,255,0) 50%);
+      pointer-events:none;
+      opacity:.9;
+    }
+    .modal-card > *{ position:relative; z-index:1; }
+
+    @keyframes pop { from{ transform:scale(1.2); } to{ transform:scale(1); } }
   </style>
 </head>
 
@@ -82,29 +231,51 @@
 
   <div class="wrap">
     <div class="nav-top">
-      <div style="font-size:24px; font-weight:900;">italky<span style="color:var(--c-neon-blue)">AI</span></div>
-      <div class="mini-badge">HATA <span id="mistakeDisplay" style="margin-left:5px; color:var(--c-neon-blue)">0/0</span></div>
+      <div class="logo-small">italky<span class="ai">AI</span></div>
+      <div class="mini-badge">HATA <span id="mistakeDisplay">0/0</span></div>
+    </div>
+
+    <div class="stats-bar">
+      <div class="score-pill">
+        <div style="font-size:10px; font-weight:900; opacity:.7; letter-spacing:.6px;">SKOR</div>
+        <div class="score-label" id="scoreDisplay">0</div>
+      </div>
+      <div class="mini-badge">İPUCU <span id="jokerCountTop">1</span></div>
     </div>
 
     <div class="game-card">
-      <div class="gallows-box" id="gallowsBox">
-        <div class="g-stand"></div><div class="g-post"></div><div class="g-top"></div><div class="g-rope" id="mainRope"></div>
-        <div class="man-part p1"></div><div class="man-part p2"></div><div class="man-part p3"></div>
-        <div class="man-part p4"></div><div class="man-part p5"></div><div class="man-part p6"></div>
+      <div class="gallows-box" id="gallowsBox" aria-hidden="true">
+        <div class="g-stand"></div><div class="g-post"></div><div class="g-top"></div>
+        <div class="g-rope" id="mainRope"></div>
+        <div class="man-part p1"></div><div class="man-part p2"></div>
+        <div class="man-part p3"></div><div class="man-part p4"></div>
+        <div class="man-part p5"></div><div class="man-part p6"></div>
       </div>
-      <div id="hintMain" style="text-align:center; color:var(--c-neon-green); font-weight:800;"></div>
+
+      <div id="hintMain"></div>
       <div id="wordBox" class="word-box"></div>
       <div class="keyboard" id="keyboard"></div>
-      <button class="btn-primary" style="background:var(--ai-gradient); color:#fff" onclick="useJoker()">⚡ İPUCU (<span id="jokerCount">1</span>)</button>
+
+      <button class="btn-primary" id="jokerBtn" onclick="useJoker()">⚡ İPUCU (<span id="jokerCount">1</span>)</button>
     </div>
   </div>
 
   <div class="modal-wrap" id="startModal">
     <div class="modal-card">
-      <h2 style="margin-bottom:20px">BAŞKANIM HOŞ GELDİNİZ</h2>
-      <button class="btn-primary" onclick="selectLevel('A2')">KOLAY (A1/A2)</button>
-      <button class="btn-primary" onclick="selectLevel('B1')">ORTA (B1)</button>
-      <button class="btn-primary" onclick="selectLevel('B2')">ZOR (B2)</button>
+      <h2 style="margin:0 0 10px">HOŞ GELDİN BAŞKANIM</h2>
+      <p style="opacity:0.75; font-size:13px; margin:0 0 18px">Seviye seçin ve neon terbiye başlasın!</p>
+
+      <button class="btn-primary" onclick="selectLevel('A2')">KOLAY (A2 • 8 Hak)</button>
+      <button class="btn-primary" onclick="selectLevel('B1')">ORTA (B1 • 7 Hak)</button>
+      <button class="btn-primary" onclick="selectLevel('B2')">ZOR (B2 • 6 Hak)</button>
+    </div>
+  </div>
+
+  <div class="modal-wrap" id="endModal" style="display:none">
+    <div class="modal-card">
+      <h1 id="endTitle" style="margin:0"></h1>
+      <p id="endMsg" style="margin:15px 0 20px; opacity:.85"></p>
+      <button class="btn-primary" onclick="location.reload()">TEKRAR DENE</button>
     </div>
   </div>
 
@@ -112,57 +283,93 @@
 import { loadLangPool, createUsedSet, pick } from "/js/langpool.js";
 
 const $ = (id) => document.getElementById(id);
-let currentDiff = "A2", wordList = [], currentIndex = 0;
-let mistakes = 0, currentWord = "", currentRaw = "", discovered = [], jokers = 1;
+let currentLang = "en", currentDiff = "A2", wordList = [], currentIndex = 0;
+let score = 0, mistakes = 0, currentWord = "", currentRaw = "", discovered = [], jokers = 1;
 
 window.selectLevel = (diff) => { currentDiff = diff; initGame(); };
 
 async function initGame() {
   try {
-    const rawPool = await loadLangPool("en");
-    const { used, save } = createUsedSet(`used_hangman_${currentDiff}`);
+    const rawPool = await loadLangPool(currentLang);
+    const { used, save } = createUsedSet(`italky_used_hangman_${currentLang}_${currentDiff}`);
+
     const cfg = { A2: { min:3, max:6 }, B1: { min:6, max:9 }, B2: { min:9, max:15 } }[currentDiff];
 
     wordList = pick(rawPool, 10, used, save, (it) => {
-      const w = it.w.trim().toUpperCase();
-      const match = (currentDiff === "A2") ? ["A1","A2"].includes(it.lvl) : it.lvl === currentDiff;
-      return match && w.length >= cfg.min && w.length <= cfg.max;
+      const w = String(it.w || "").trim().toUpperCase();
+      const lvl = String(it.lvl || "").toUpperCase();
+      const okLvl = (currentDiff === "A2") ? ["A1","A2"].includes(lvl) : (lvl === currentDiff);
+      return okLvl && w.length >= cfg.min && w.length <= cfg.max;
     });
 
-    $("startModal").style.display = "none";
-    startRound();
-  } catch (e) { alert("Yükleme hatası başkanım!"); }
+    startGame();
+  } catch (e) {
+    alert("Yükleme hatası başkanım!");
+  }
+}
+
+function startGame() {
+  $("startModal").style.display = "none";
+  score = 0; jokers = 1; currentIndex = 0;
+  startRound();
+}
+
+function maxMistakes() {
+  if (currentDiff === "A2") return 8;
+  if (currentDiff === "B1") return 7;
+  return 6;
+}
+
+function normalizeWord(raw) {
+  return String(raw || "")
+    .trim()
+    .toUpperCase()
+    // Türkçe harfler + - izin
+    .replace(/[^A-ZÇĞİÖŞÜ-]/g, "");
 }
 
 function startRound() {
-  if(currentIndex >= wordList.length) { alert("Tebrikler başkanım!"); return; }
+  if(currentIndex >= wordList.length) return gameOver(true);
+
   const data = wordList[currentIndex];
   currentRaw = data.w;
-  currentWord = data.w.trim().toUpperCase().replace(/[^A-Z]/g, "");
+  currentWord = normalizeWord(data.w);
+
   mistakes = 0;
   discovered = new Array(currentWord.length).fill(false);
-  
+
+  // Reset visuals
   if($("mainRope")) $("mainRope").classList.remove("danger");
   if($("gallowsBox")) $("gallowsBox").classList.remove("shake");
-  
-  $("hintMain").textContent = data.tr;
-  renderWord(); renderKeyboard(); renderHangman(); updateUI();
-}
 
-function maxMistakes() { return currentDiff === "A2" ? 8 : (currentDiff === "B1" ? 7 : 6); }
+  $("hintMain").textContent = data.tr || "";
+
+  renderWord();
+  renderKeyboard();
+  renderHangman();
+  updateUI();
+}
 
 function renderHangman() {
   const MAX = maxMistakes();
-  const visible = Math.min(mistakes, 6);
-  
-  if($("mainRope")) $("mainRope").classList.toggle("danger", mistakes >= 6 && mistakes < MAX);
-  
-  const g = $("gallowsBox");
-  if(g) {
-    if(mistakes === MAX - 1) { g.classList.remove("shake"); void g.offsetWidth; g.classList.add("shake"); }
-    else g.classList.remove("shake");
+  const rope = $("mainRope");
+  const gallows = $("gallowsBox");
+
+  // Rope danger only for 6..MAX-1
+  if(rope) rope.classList.toggle("danger", mistakes >= 6 && mistakes < MAX);
+
+  // Shake on last chance (retrigger reliably)
+  if(gallows) {
+    if(mistakes === MAX - 1) {
+      gallows.classList.remove("shake");
+      void gallows.offsetWidth;
+      gallows.classList.add("shake");
+    } else {
+      gallows.classList.remove("shake");
+    }
   }
 
+  const visible = Math.min(mistakes, 6);
   for (let i = 1; i <= 6; i++) {
     const el = document.querySelector(`.p${i}`);
     if (el) el.style.opacity = (i <= visible) ? "1" : "0";
@@ -172,18 +379,26 @@ function renderHangman() {
 function handleGuess(char, btn) {
   const MAX = maxMistakes();
   if(!btn || btn.disabled || mistakes >= MAX) return;
+
   btn.disabled = true;
 
   if(currentWord.includes(char)) {
     btn.classList.add("correct");
     currentWord.split("").forEach((c, i) => { if(c === char) discovered[i] = true; });
+
     renderWord();
-    if(discovered.every(v => v)) setTimeout(() => { currentIndex++; startRound(); }, 1000);
+
+    if(discovered.every(v => v)) {
+      score += (MAX - mistakes) * 10;
+      updateUI();
+      setTimeout(() => { currentIndex++; startRound(); }, 950);
+    }
   } else {
     btn.classList.add("wrong");
     mistakes++;
-    renderHangman(); updateUI();
-    if(mistakes >= MAX) setTimeout(() => { alert("Bitti başkanım! Kelime: " + currentRaw); location.reload(); }, 500);
+    renderHangman();
+    updateUI();
+    if(mistakes >= MAX) setTimeout(() => gameOver(false), 500);
   }
 }
 
@@ -191,36 +406,76 @@ function renderWord() {
   const box = $("wordBox"); box.innerHTML = "";
   currentWord.split("").forEach((ch, i) => {
     const d = document.createElement("div");
-    d.className = `letter-slot ${discovered[i] ? 'filled' : ''}`;
-    d.textContent = discovered[i] ? ch : "";
+
+    if (ch === "-") {
+      d.className = "letter-slot filled";
+      d.textContent = "-";
+    } else {
+      d.className = `letter-slot ${discovered[i] ? 'filled' : ''}`;
+      d.textContent = discovered[i] ? ch : "";
+    }
     box.appendChild(d);
   });
 }
 
 function renderKeyboard() {
   const kb = $("keyboard"); kb.innerHTML = "";
-  "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").forEach(char => {
+
+  // Türkçe klavye seti (daha doğru ve okunur)
+  const alpha = "ABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZ".split("");
+
+  alpha.forEach(char => {
     const b = document.createElement("button");
-    b.className = "key-btn"; b.textContent = char;
+    b.className = "key-btn";
+    b.type = "button";
+    b.textContent = char;
     b.onclick = () => handleGuess(char, b);
     kb.appendChild(b);
   });
 }
 
 function updateUI() {
-  $("mistakeDisplay").textContent = `${mistakes}/${maxMistakes()}`;
+  const MAX = maxMistakes();
+  $("scoreDisplay").textContent = score;
   $("jokerCount").textContent = jokers;
+  $("jokerCountTop").textContent = jokers;
+  $("mistakeDisplay").textContent = `${mistakes}/${MAX}`;
+  $("jokerBtn").disabled = jokers <= 0;
+}
+
+function gameOver(win) {
+  if($("mainRope")) $("mainRope").classList.remove("danger");
+  if($("gallowsBox")) $("gallowsBox").classList.remove("shake");
+
+  $("endModal").style.display = "flex";
+  $("endTitle").textContent = win ? "ZAFER! 🏆" : "ELENDİNİZ";
+  $("endMsg").textContent = `Skorun: ${score} | Kelime: ${currentRaw}`;
 }
 
 window.useJoker = () => {
   if(jokers <= 0) return;
-  const h = discovered.map((v, i) => v ? -1 : i).filter(i => i !== -1);
-  if(h.length > 0) {
-    const char = currentWord[h[Math.floor(Math.random() * h.length)]];
-    jokers--; updateUI();
-    const btns = document.querySelectorAll(".key-btn");
-    btns.forEach(b => { if(b.textContent === char) handleGuess(char, b); });
+
+  const hiddenIdx = discovered
+    .map((v, i) => v ? -1 : i)
+    .filter(i => i !== -1);
+
+  if(hiddenIdx.length === 0) return;
+
+  // '-' joker hedefi olmasın
+  let tries = 0;
+  let idx = hiddenIdx[Math.floor(Math.random() * hiddenIdx.length)];
+  while (currentWord[idx] === "-" && tries < 12) {
+    idx = hiddenIdx[Math.floor(Math.random() * hiddenIdx.length)];
+    tries++;
   }
+  if (currentWord[idx] === "-") return;
+
+  const randomChar = currentWord[idx];
+  jokers--;
+  updateUI();
+
+  const keys = document.querySelectorAll(".key-btn");
+  keys.forEach(k => { if(k.textContent === randomChar) handleGuess(randomChar, k); });
 };
 </script>
 </body>
