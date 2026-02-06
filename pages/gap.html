@@ -16,47 +16,39 @@
     .cosmos-bg { position:absolute; inset:0; background: radial-gradient(circle at 50% 35%, #0b0b2a 0%, #020205 60%, #010104 100%); z-index:0; }
     .wrap { width:100%; max-width:480px; height:100%; margin:0 auto; position:relative; z-index:10; display:flex; flex-direction:column; padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); }
 
-    /* TOP UI */
+    /* UI ELEMENTS */
     .nav-top { display:flex; align-items:center; justify-content:space-between; padding: 15px 20px; }
     .status-chip { background: var(--glass); padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; border: 1px solid var(--border); letter-spacing: 1px; }
     
-    .progress-wrap { width: 100%; padding: 0 20px 10px; }
-    .progress-bar { width: 100%; height: 5px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; }
-    .progress-fill { height: 100%; background: var(--c-neon-blue); width: 0%; transition: width 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 0 12px var(--c-neon-blue); }
+    .progress-bar { width: calc(100% - 40px); height: 5px; background: rgba(255,255,255,0.1); border-radius: 3px; margin: 0 20px 10px; overflow: hidden; }
+    .progress-fill { height: 100%; background: var(--c-neon-blue); width: 0%; transition: width 0.5s ease; box-shadow: 0 0 12px var(--c-neon-blue); }
 
-    /* STATS */
     .stats-row { padding: 5px 20px; display: flex; justify-content: space-between; align-items: center; }
-    @keyframes pulseCombo { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); box-shadow: 0 0 15px var(--c-neon-pink); } }
-    .combo-badge { background: var(--c-neon-pink); color: #fff; padding: 4px 10px; border-radius: 8px; font-size: 13px; font-weight: 900; display: none; }
-    .combo-active { animation: pulseCombo 1s infinite; }
+    .score-pill { color: var(--c-neon-green); font-weight: 900; font-size: 20px; }
+    @keyframes scorePop{ from{ transform:scale(1.25); } to{ transform:scale(1); } }.score-pop{ animation: scorePop .18s ease; }
 
     /* STAGE */
     .stage { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 10px 20px; gap: 15px; }
-    
-    .sentence-card { 
-      width:100%; background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02)); 
-      border: 1px solid var(--border); border-radius: 32px; padding: 35px 25px; text-align: center; backdrop-filter: blur(25px);
-      box-shadow: 0 25px 60px rgba(0,0,0,0.6);
-    }
+    .sentence-card { width:100%; background: var(--glass); border: 1px solid var(--border); border-radius: 32px; padding: 35px 20px; text-align: center; backdrop-filter: blur(25px); }
     .gap-box { color: var(--c-neon-blue); border-bottom: 3px solid var(--c-neon-blue); padding: 0 8px; font-weight: 800; }
     .translation-text { font-size: 16px; color: var(--c-neon-green); font-style: italic; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; margin-top: 15px; }
 
-    /* OPTIONS */
+    /* KEYBOARD & OPTIONS */
     .options-grid { width: 100%; display: grid; grid-template-columns: 1fr; gap: 12px; }
     .opt-btn { 
-      width: 100%; padding: 18px; background: var(--glass); 
-      border: 1px solid var(--border); border-radius: 20px; color: #fff; 
-      font-size: 17px; font-weight: 700; cursor: pointer; transition: all 0.2s ease;
-      box-shadow: 0 8px 16px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
+      position:relative; overflow:hidden; width: 100%; padding: 18px; background: var(--glass); 
+      border: 1px solid var(--border); border-radius: 20px; color: #fff; font-size: 17px; font-weight: 700; cursor: pointer; transition: all 0.2s;
     }
-    .opt-btn:active { transform: translateY(3px); box-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+    .opt-btn:active { transform: translateY(3px); }
+    .opt-btn:disabled { opacity:.85; cursor:default; }
     .opt-btn.correct { background: linear-gradient(180deg, #00e676, #00c853) !important; color: #000; box-shadow: 0 0 25px rgba(0, 230, 118, 0.4); }
+    .opt-btn.correct::after { content:""; position:absolute; inset:-30%; background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.55) 0%, rgba(255,255,255,0) 35%); opacity:.55; transform: rotate(12deg); pointer-events:none; }
     .opt-btn.wrong { background: linear-gradient(180deg, #ff1744, #d50000) !important; animation: shake 0.4s; }
-
     @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
 
-    /* RESULT MODAL */
-    .result-info { font-size: 13px; color: var(--c-neon-blue); margin-top: 10px; font-weight: 600; opacity: 0; transition: opacity 0.3s; }
+    /* MODAL DİLLER ✅ */
+    .lang-btn{ font-size:24px; padding:10px; border-radius:16px; background: var(--glass); border: 1px solid transparent; cursor:pointer; margin:4px; transition:.2s; }
+    .lang-btn.active{ border-color: var(--c-neon-blue); background: rgba(0,243,255,0.15); transform: scale(1.08); }
 
     .modal-wrap { position: absolute; inset: 0; background: rgba(0,0,0,0.98); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px; }
     .modal-card { width: 100%; max-width: 360px; background: #08080c; border: 1px solid var(--border); border-radius: 36px; padding: 40px 30px; text-align: center; }
@@ -64,32 +56,22 @@
   </style>
 </head>
 <body>
-
   <div class="cosmos-bg"></div>
-
   <div class="wrap">
     <div class="nav-top">
       <a href="/pages/game.html" style="text-decoration:none; color:#fff; font-size:22px;">←</a>
       <div id="statusChip" class="status-chip">EN • LEVEL</div>
       <div style="font-size:20px; font-weight:900;">italky<span style="color:var(--c-neon-blue)">AI</span></div>
     </div>
-
-    <div class="progress-wrap">
-      <div class="progress-bar"><div id="progFill" class="progress-fill"></div></div>
-    </div>
-
+    <div class="progress-bar"><div id="progFill" class="progress-fill"></div></div>
     <div class="stats-row">
       <div id="lifeBar" style="color:var(--c-neon-pink); font-size:18px;">❤️❤️❤️</div>
-      <div style="display:flex; align-items:center; gap:10px;">
-        <div id="comboBadge" class="combo-badge">COMBO X1</div>
-        <div id="scoreTxt" style="color:var(--c-neon-green); font-weight:900; font-size:20px;">0</div>
-      </div>
+      <div id="scoreTxt" class="score-pill">0</div>
     </div>
-
     <div class="stage">
       <div class="sentence-card">
         <div id="sentenceDisplay" class="sentence-text"></div>
-        <div id="resInfo" class="result-info"></div>
+        <div id="resInfo" style="font-size:13px; color:var(--c-neon-blue); margin-top:10px; font-weight:600; opacity:0;"></div>
         <div id="translationDisplay" class="translation-text"></div>
       </div>
       <div class="options-grid" id="optionsGrid"></div>
@@ -99,16 +81,16 @@
   <div class="modal-wrap" id="startModal">
     <div class="modal-card">
       <h2 style="margin:0 0 20px;">GAP MASTER V2</h2>
-      <div id="langSelector" style="margin-bottom:25px;">
+      <div style="margin-bottom:25px;">
         <button onclick="setLang('en',this)" class="lang-btn active">🇬🇧</button>
         <button onclick="setLang('de',this)" class="lang-btn">🇩🇪</button>
         <button onclick="setLang('fr',this)" class="lang-btn">🇫🇷</button>
         <button onclick="setLang('es',this)" class="lang-btn">🇪🇸</button>
         <button onclick="setLang('it',this)" class="lang-btn">🇮🇹</button>
       </div>
-      <button class="btn-main" onclick="initGame('A2')">KOLAY (A1/A2)</button>
-      <button class="btn-main" style="background:#4338ca; color:#fff;" onclick="initGame('B1')">ORTA (B1)</button>
-      <button class="btn-main" style="background:#701a75; color:#fff;" onclick="initGame('B2')">ZOR (B2)</button>
+      <button class="btn-main" onclick="initGame('A2')">KOLAY SEVİYE</button>
+      <button class="btn-main" style="background:#4338ca; color:#fff;" onclick="initGame('B1')">ORTA SEVİYE</button>
+      <button class="btn-main" style="background:#701a75; color:#fff;" onclick="initGame('B2')">ZOR SEVİYE</button>
     </div>
   </div>
 
@@ -117,7 +99,6 @@
       <h2 id="endTitle">SET TAMAMLANDI</h2>
       <div id="endStats" style="text-align:left; margin:20px 0; font-size:15px; line-height:2;"></div>
       <button class="btn-main" onclick="location.reload()">TEKRAR DENE</button>
-      <button class="btn-main" style="background:var(--glass); color:#fff;" onclick="location.href='/pages/game.html'">ÇIKIŞ</button>
     </div>
   </div>
 
@@ -126,10 +107,19 @@ import { loadLangPool, createUsedSet, pick } from "/js/langpool.js";
 
 const $ = id => document.getElementById(id);
 let currentLang = 'en', puzzles = [], currentIdx = 0;
-let score = 0, lives = 3, streak = 0, maxStreak = 0, totalCorrect = 0, isBusy = false;
-let startTime = 0, totalTime = 0;
+let score = 0, lives = 3, maxLives = 3, streak = 0, isBusy = false, startTime = 0;
 
-function escapeRegExp(string) { return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function playSfx(freq, type, duration) {
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+  gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+  osc.connect(gain); gain.connect(audioCtx.destination);
+  osc.start(); osc.stop(audioCtx.currentTime + duration);
+}
+
+function escapeRegExp(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
 
 window.setLang = (l, btn) => {
   currentLang = l;
@@ -141,37 +131,36 @@ window.initGame = async (diff) => {
   try {
     const rawPool = await loadLangPool(currentLang);
     const { used, save } = createUsedSet(`gap_v2_${currentLang}_${diff}`);
-    
-    // Can Ayarı ✅
-    lives = (diff === "A2") ? 4 : 3;
-    
+    maxLives = (diff === "A2") ? 4 : 3;
+    lives = maxLives;
     puzzles = pick(rawPool, 15, used, save, it => {
       const itLvl = String(it.lvl || "").toUpperCase();
       const targetLvl = diff.toUpperCase();
       return it.sentence && (targetLvl === "A2" ? ["A1","A2"].includes(itLvl) : itLvl === targetLvl);
     });
-    
     $('statusChip').textContent = `${currentLang.toUpperCase()} • ${diff}`;
     $('startModal').style.display = 'none';
     loadPuzzle();
-  } catch (e) { alert("Sistem hatası başkanım!"); }
+  } catch (e) { alert("Hata!"); }
 };
 
 function loadPuzzle() {
-  if (lives <= 0 || currentIdx >= puzzles.length) return showFinalResults();
-
+  if (lives <= 0 || currentIdx >= puzzles.length) return showFinal();
   const p = puzzles[currentIdx];
-  const escapedWord = escapeRegExp(p.w.toUpperCase());
-  
-  // Progress Bar Psikolojisi ✅ (currentIdx + 1)
+  const escapedWord = escapeRegExp(p.w);
   $('progFill').style.width = `${((currentIdx + 1) / puzzles.length) * 100}%`;
-  $('sentenceDisplay').innerHTML = p.sentence.toUpperCase().replace(new RegExp(`\\b${escapedWord}\\b`, 'g'), '<span class="gap-box">____</span>');
+  
+  // Unicode Regex ✅
+  const upperSentence = String(p.sentence || "").toUpperCase();
+  const regex = new RegExp(`(^|[^\\p{L}])(${escapedWord})(?=[^\\p{L}]|$)`, 'giu');
+  $('sentenceDisplay').innerHTML = upperSentence.replace(regex, `$1<span class="gap-box">____</span>`);
+  
   $('translationDisplay').textContent = p.tr;
-  $('lifeBar').textContent = "❤️".repeat(lives) + "🖤".repeat((currentIdx < 5 ? (lives === 4 ? 4 : 3) : 3) - lives);
+  $('lifeBar').textContent = "❤️".repeat(lives) + "🖤".repeat(maxLives - lives);
   $('resInfo').style.opacity = "0";
-
-  // Şık Üretimi (Daha Kaliteli) ✅
-  let options = shuffle([p.w, ...shuffle(puzzles.filter(x => x.w !== p.w).map(x => x.w)).slice(0, 4)]);
+  
+  const norm = s => String(s||"").trim().toUpperCase();
+  let options = shuffle([p.w, ...shuffle(puzzles.filter(x => norm(x.w) !== norm(p.w)).map(x => x.w)).slice(0, 4)]);
   renderOptions(options);
   startTime = Date.now();
 }
@@ -192,71 +181,38 @@ function handleChoice(val, btn) {
   const correctVal = p.w.toUpperCase();
   const timeTaken = (Date.now() - startTime) / 1000;
   isBusy = true;
-  totalTime += timeTaken;
+  document.querySelectorAll('.opt-btn').forEach(b => b.disabled = true);
 
   if (val === correctVal) {
-    streak++; totalCorrect++;
-    maxStreak = Math.max(maxStreak, streak);
-    
-    // Kademeli Hız Bonusu ✅
-    let speedBonus = 0;
-    if(timeTaken < 4) speedBonus = 8;
-    else if(timeTaken < 7) speedBonus = 5;
-    else if(timeTaken < 10) speedBonus = 2;
-
-    // Adil Combo Mantığı ✅
+    streak++;
+    let speedBonus = timeTaken < 4 ? 8 : (timeTaken < 7 ? 5 : (timeTaken < 10 ? 2 : 0));
     let comboMult = streak <= 3 ? streak : (3 + (streak - 3) * 0.25);
     score += Math.round(10 * comboMult + speedBonus);
     
+    playSfx(600, 'sine', 0.2);
     btn.classList.add('correct');
-    updateComboUI();
-    speak(p.sentence);
+    $('scoreTxt').classList.remove('score-pop'); void $('scoreTxt').offsetWidth;
+    $('scoreTxt').classList.add('score-pop');
   } else {
     streak = 0; lives--;
+    playSfx(200, 'square', 0.2);
     btn.classList.add('wrong');
-    updateComboUI();
-    
-    // Öğretmen Modu ✅
-    const posInfo = p.pos ? ` [${p.pos.toLowerCase()}]` : "";
-    $('resInfo').textContent = `Doğru: ${correctVal}${posInfo}`;
+    $('resInfo').textContent = `Doğru: ${correctVal}`;
     $('resInfo').style.opacity = "1";
-    
-    document.querySelectorAll('.opt-btn').forEach(b => {
-      if(b.textContent === correctVal) b.classList.add('correct');
-    });
+    document.querySelectorAll('.opt-btn').forEach(b => { if(b.textContent === correctVal) b.classList.add('correct'); });
   }
 
   $('scoreTxt').textContent = score;
+  speak(p.sentence); // Her durumda oku ✅
 
   setTimeout(() => {
     currentIdx++; isBusy = false; loadPuzzle();
-  }, 2000);
+  }, 2200);
 }
 
-function showFinalResults() {
+function showFinal() {
   $('endModal').style.display = 'flex';
-  $('endTitle').textContent = lives > 0 ? "TEBRİKLER! 🏆" : "SET BİTTİ 🥊";
-  const accuracy = Math.round((totalCorrect / puzzles.length) * 100);
-  const avgSpeed = (totalTime / puzzles.length).toFixed(1);
-  
-  $('endStats').innerHTML = `
-    • Toplam Skor: <b>${score}</b><br>
-    • Doğruluk: <b>%${accuracy}</b><br>
-    • En İyi Seri: <b>${maxStreak}</b><br>
-    • Ort. Hız: <b>${avgSpeed} sn</b>
-  `;
-}
-
-function updateComboUI() {
-  const badge = $('comboBadge');
-  if(streak >= 2) {
-    badge.textContent = `COMBO X${streak > 3 ? (3 + (streak - 3) * 0.25).toFixed(1) : streak}`;
-    badge.style.display = 'block';
-    badge.classList.add('combo-active');
-  } else {
-    badge.style.display = 'none';
-    badge.classList.remove('combo-active');
-  }
+  $('endStats').innerHTML = `• Skor: <b>${score}</b><br>• Doğruluk: <b>%${Math.round((score/200)*100)}</b>`;
 }
 
 function speak(t) {
