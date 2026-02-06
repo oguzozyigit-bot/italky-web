@@ -19,31 +19,23 @@
     .nav-top { display:flex; align-items:center; justify-content:space-between; padding: 10px 18px; }
     .back-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--border); padding: 10px 14px; border-radius: 12px; color:#fff; text-decoration:none; font-size: 13px; }
 
-    .stats-row { padding: 0 20px 10px; display: flex; justify-content: space-between; align-items: center; }
-    .score-pill { color: var(--c-neon-green); font-weight: 800; }
-
     .stage { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 10px 20px; gap: 15px; }
     
-    /* SENTENCE CARD */
     .sentence-card { 
       width:100%; background: rgba(255,255,255,0.04); 
       border: 1px solid var(--border); border-radius: 28px; padding: 30px 20px; text-align: center; backdrop-filter: blur(20px);
     }
     .sentence-text { font-size: 22px; font-weight: 700; line-height: 1.5; margin-bottom: 20px; }
-    .translation-text { font-size: 16px; color: rgba(255,255,255,0.5); font-style: italic; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; }
+    .translation-text { font-size: 16px; color: var(--c-neon-green); font-style: italic; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; }
     
-    /* GAP SLOTS */
     .gap-word-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin: 15px 0; }
-    .letter-slot { width: 28px; height: 36px; border-bottom: 2px solid var(--c-neon-blue); display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 900; color: var(--c-neon-blue); }
+    .letter-slot { width: 28px; height: 36px; border-bottom: 2px solid var(--c-neon-blue); display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 900; }
     .letter-slot.filled { border-bottom: none; color: #fff; text-shadow: 0 0 10px var(--c-neon-blue); }
 
-    /* KEYBOARD */
     .keyboard { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; width: 100%; margin-top: 10px; }
-    .key-btn { aspect-ratio: 1; background: rgba(255,255,255,0.08); border: 1px solid var(--border); border-radius: 12px; color: #fff; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.1s; }
+    .key-btn { aspect-ratio: 1; background: rgba(255,255,255,0.08); border: 1px solid var(--border); border-radius: 12px; color: #fff; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; }
     .key-btn.wrong { opacity: 0.2; pointer-events: none; }
-    .key-btn:active { transform: scale(0.9); }
 
-    /* MODALS */
     .modal-wrap { position: absolute; inset: 0; background: rgba(0,0,0,0.95); z-index: 100; display: flex; align-items: center; justify-content: center; }
     .modal-card { width: 90%; max-width: 340px; background: #0a0a10; border: 1px solid var(--border); border-radius: 30px; padding: 30px; text-align: center; }
     .btn-main { width: 100%; padding: 16px; background: var(--c-neon-green); color: #000; border: none; border-radius: 16px; font-weight: 800; cursor: pointer; margin-top: 10px; }
@@ -54,24 +46,18 @@
 <body>
 
   <div class="cosmos-bg"></div>
-
   <div class="wrap">
     <div class="nav-top">
       <a href="/pages/game.html" class="back-btn">← Geri</a>
       <div style="font-size:20px; font-weight:900;">italky<span style="color:var(--c-neon-blue)">AI</span></div>
-      <div id="scoreTxt" class="score-pill">0 PUAN</div>
-    </div>
-
-    <div class="stats-row">
-      <div id="livesTxt" style="font-size:18px">❤️❤️❤️</div>
-      <div style="font-size:12px; opacity:0.5">GAP MASTER • PREMIUM</div>
+      <div id="scoreTxt" style="color:var(--c-neon-green); font-weight:800;">0 PUAN</div>
     </div>
 
     <div class="stage">
       <div class="sentence-card">
-        <div id="sentenceDisplay" class="sentence-text">Cümle yükleniyor...</div>
+        <div id="sentenceDisplay" class="sentence-text">...</div>
         <div id="gapContainer" class="gap-word-container"></div>
-        <div id="translationDisplay" class="translation-text">Çeviri yükleniyor...</div>
+        <div id="translationDisplay" class="translation-text">...</div>
       </div>
       <div class="keyboard" id="keyboard"></div>
     </div>
@@ -79,8 +65,7 @@
 
   <div class="modal-wrap" id="startModal">
     <div class="modal-card">
-      <h2 style="margin-top:0">HOŞ GELDİN BAŞKANIM</h2>
-      <p style="font-size:13px; opacity:0.6">Dil seç ve cümledeki boşluğu tamamla.</p>
+      <h2 style="margin-top:0">GAP MASTER</h2>
       <div id="langSelector">
         <button onclick="setLang('en',this)" class="lang-btn active">🇬🇧</button>
         <button onclick="setLang('de',this)" class="lang-btn">🇩🇪</button>
@@ -88,8 +73,9 @@
         <button onclick="setLang('es',this)" class="lang-btn">🇪🇸</button>
         <button onclick="setLang('it',this)" class="lang-btn">🇮🇹</button>
       </div>
-      <button class="btn-main" onclick="initGame('A2')">BAŞLA (KOLAY)</button>
-      <button class="btn-main" style="background:#444; color:#fff" onclick="initGame('B1')">ORTA SEVİYE</button>
+      <button class="btn-main" onclick="initGame('A2')">KOLAY SEVİYE</button>
+      <button class="btn-main" onclick="initGame('B1')">ORTA SEVİYE</button>
+      <button class="btn-main" onclick="initGame('B2')">ZOR SEVİYE</button>
     </div>
   </div>
 
@@ -98,7 +84,7 @@ import { loadLangPool, createUsedSet, pick } from "/js/langpool.js";
 
 const $ = id => document.getElementById(id);
 let currentLang = 'en', puzzles = [], currentIdx = 0;
-let score = 0, lives = 3, mistakes = 0, discoveredLetters = [];
+let score = 0, mistakes = 0, discoveredLetters = [];
 
 window.setLang = (l, btn) => {
     currentLang = l;
@@ -109,71 +95,56 @@ window.setLang = (l, btn) => {
 window.initGame = async (diff) => {
     try {
         const rawPool = await loadLangPool(currentLang);
-        const { used, save } = createUsedSet(`gapmaster_v4_${currentLang}_${diff}`);
-        const selected = pick(rawPool, 15, used, save, it => it.lvl === diff && it.sentence);
-
-        puzzles = selected.map(it => {
-            const word = it.w.toUpperCase();
-            const sentence = it.sentence.toUpperCase();
-            // Cümledeki kelimeyi gizle
-            const displaySent = sentence.replace(new RegExp(`\\b${word}\\b`, 'g'), '_____');
-            // Türkçe anlamdaki kelimeyi gizle (Eğitim odaklı)
-            const displayTr = it.tr.replace(new RegExp(it.w, 'gi'), '[....]');
-            
-            return { word, fullSent: it.sentence, displaySent, tr: displayTr };
+        const { used, save } = createUsedSet(`gapmaster_v5_${currentLang}_${diff}`);
+        
+        const selected = pick(rawPool, 15, used, save, it => {
+          const match = (diff === "A2") ? ["A1","A2"].includes(it.lvl) : (it.lvl === diff);
+          return match && it.sentence;
         });
+
+        puzzles = selected.map(it => ({
+            word: it.w.toUpperCase(),
+            fullSent: it.sentence.toUpperCase(),
+            displaySent: it.sentence.toUpperCase().replace(new RegExp(`\\b${it.w}\\b`, 'gi'), '_____'),
+            tr: it.tr // ✅ Anlamı açık yazıyoruz başkanım
+        }));
 
         $('startModal').style.display = 'none';
         loadPuzzle();
-    } catch (e) { alert("Havuz yüklenemedi başkanım!"); }
+    } catch (e) { alert("Hata oluştu!"); }
 };
 
 function loadPuzzle() {
-    if (lives <= 0 || currentIdx >= puzzles.length) {
-        alert("Oyun Bitti! Skor: " + score);
-        location.reload();
-        return;
-    }
-
+    if (currentIdx >= puzzles.length) { alert("Başarıyla tamamladınız! Skor: " + score); location.reload(); return; }
     const p = puzzles[currentIdx];
     mistakes = 0;
     discoveredLetters = new Array(p.word.length).fill(false);
-
     $('sentenceDisplay').textContent = p.displaySent;
     $('translationDisplay').textContent = p.tr;
-    
     renderGapSlots();
     renderKeyboard();
 }
 
 function renderGapSlots() {
-    const container = $('gapContainer');
-    container.innerHTML = '';
+    const container = $('gapContainer'); container.innerHTML = '';
     const word = puzzles[currentIdx].word;
-    
     for (let i = 0; i < word.length; i++) {
         const slot = document.createElement('div');
-        slot.className = 'letter-slot';
+        slot.className = 'letter-slot' + (discoveredLetters[i] ? ' filled' : '');
         slot.textContent = discoveredLetters[i] ? word[i] : '';
-        if(discoveredLetters[i]) slot.classList.add('filled');
         container.appendChild(slot);
     }
 }
 
 function renderKeyboard() {
-    const kb = $('keyboard');
-    kb.innerHTML = '';
+    const kb = $('keyboard'); kb.innerHTML = '';
     const alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    
-    // Kelime harfleri + 10 rastgele harf
     const wordSet = new Set(puzzles[currentIdx].word.split(''));
     const shuffleAlpha = alpha.split('').filter(c => !wordSet.has(c)).sort(() => 0.5 - Math.random()).slice(0, 10);
     const finalKeys = [...wordSet, ...shuffleAlpha].sort();
-
     finalKeys.forEach(char => {
         const btn = document.createElement('button');
-        btn.className = 'key-btn';
-        btn.textContent = char;
+        btn.className = 'key-btn'; btn.textContent = char;
         btn.onclick = () => handleGuess(char, btn);
         kb.appendChild(btn);
     });
@@ -182,26 +153,16 @@ function renderKeyboard() {
 function handleGuess(char, btn) {
     const p = puzzles[currentIdx];
     if (p.word.includes(char)) {
-        p.word.split('').forEach((l, idx) => {
-            if (l === char) discoveredLetters[idx] = true;
-        });
+        p.word.split('').forEach((l, idx) => { if (l === char) discoveredLetters[idx] = true; });
         renderGapSlots();
-        
         if (discoveredLetters.every(l => l)) {
-            score += (3 - mistakes) * 10;
+            score += (3 - Math.min(mistakes, 2)) * 10;
             $('scoreTxt').textContent = `${score} PUAN`;
             speak(p.fullSent);
-            setTimeout(() => { currentIdx++; loadPuzzle(); }, 2000);
+            setTimeout(() => { currentIdx++; loadPuzzle(); }, 1500);
         }
     } else {
-        btn.classList.add('wrong');
-        mistakes++;
-        if (mistakes >= 3) {
-            lives--;
-            $('livesTxt').textContent = "❤️".repeat(lives);
-            currentIdx++;
-            loadPuzzle();
-        }
+        btn.classList.add('wrong'); mistakes++;
     }
 }
 
@@ -209,8 +170,7 @@ function speak(t) {
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(t);
     const m = { en:'en-US', de:'de-DE', fr:'fr-FR', es:'es-ES', it:'it-IT' };
-    u.lang = m[currentLang];
-    u.rate = 0.8;
+    u.lang = m[currentLang]; u.rate = 0.8;
     window.speechSynthesis.speak(u);
 }
 </script>
