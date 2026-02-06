@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>ITALKY • Glitch Hunter Flow</title>
+<title>ITALKY • Glitch Hunter Neural Sync</title>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
 
 <style>
 :root{
-  --bg:#050505; --cyan:#00ffff; --pink:#ff0055; --green:#00ff66;
+  --bg:#050505; --cyan:#00ffff; --pink:#ff0055; --green:#00ff66; --purple:#bd00ff;
   --panel:rgba(10,20,20,.95); --border:rgba(0,255,255,.3); --text:#fff;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
@@ -18,42 +18,38 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);f
 @media(min-width:520px){.app{height:92vh;border-radius:24px;margin-top:4vh}}
 
 .header{height:60px;display:flex;align-items:center;justify-content:space-between;padding:0 16px; border-bottom:1px solid var(--border)}
-.title{font-size:18px; color:var(--cyan); font-weight:900; letter-spacing:1px;}
-.pb-badge{font-size:10px;padding:4px 8px;background:var(--cyan);color:#000;font-weight:800;border-radius:4px}
+.title{font-size:16px; letter-spacing:1px; color:var(--cyan); font-weight:900;}
 
 .game{flex:1;padding:16px;display:none;flex-direction:column;justify-content:space-between; position: relative;}
-.stats{display:flex;justify-content:space-between;font-size:12px;color:var(--cyan);font-weight:bold;margin-bottom:5px}
+.stats{display:flex;justify-content:space-between;font-size:11px;color:var(--cyan);font-weight:bold;margin-bottom:5px; text-transform: uppercase;}
 
-/* ✅ Momentum Bar Görselleştirme */
-.mom-bar-container { width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-bottom: 10px; overflow: hidden; }
-#momBarFill { width: 0%; height: 100%; background: var(--cyan); transition: 0.3s; box-shadow: 0 0 10px var(--cyan); }
+.mom-bar-container { width: 100%; height: 4px; background: rgba(255,255,255,0.05); border-radius: 2px; margin-bottom: 10px; overflow: hidden; }
+#momBarFill { width: 0%; height: 100%; background: var(--cyan); transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 
-.terminal{flex:1;border:2px solid var(--border);background:rgba(0,0,0,0.85);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;padding:25px;text-align:center;border-radius:20px;transition: 0.3s; cursor: pointer;}
+.terminal{flex:1;border:2px solid var(--border);background:rgba(0,0,0,0.9);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;padding:25px;text-align:center;border-radius:20px;transition: 0.3s; cursor: pointer;}
 .terminal.boss-mode { border-color: var(--pink); box-shadow: inset 0 0 30px rgba(255,0,85,0.2); }
-.tap-hint { position: absolute; bottom: 10px; font-size: 9px; color: var(--cyan); opacity: 0.5; display: none; }
+.boss-label { position: absolute; top: 10px; font-size: 10px; color: var(--pink); font-weight: 900; display: none; letter-spacing: 2px; }
 
 .sentence{font-size:28px; color:#fff; line-height:1.3; font-weight:700;}
 
-#correctionBox{font-size:14px; color:var(--green); margin-top:15px; font-weight:bold; opacity:0; transition:0.2s; background: rgba(0,255,102,0.1); padding: 12px; border-radius: 10px; width: 100%; text-align: left; border-left: 3px solid var(--green);}
+#correctionBox{font-size:14px; color:var(--green); margin-top:15px; font-weight:bold; opacity:0; transition:0.2s; background: rgba(0,255,102,0.1); padding: 12px; border-radius: 10px; width: 100%; border-left: 3px solid var(--green);}
 .tr-text { color: var(--cyan); font-style: italic; font-weight: 500; margin-top: 5px; display: block; }
-.cat-label { font-size: 10px; color: var(--pink); text-transform: uppercase; margin-bottom: 5px; display: block; opacity: 0.8; }
+.tap-hint { font-size: 10px; color: var(--cyan); margin-top: 10px; opacity: 0.6; display: none; font-weight: 900;}
 
 .controls{display:flex;gap:12px;height:100px;margin-top:20px}
 .action{flex:1;border:3px solid var(--border);cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:.1s; font-weight:900;border-radius:16px;color:#fff; background: transparent;}
 .bug { border-color: var(--pink); color: var(--pink); }
 .ok { border-color: var(--green); color: var(--green); }
 .action:active{transform:scale(.95)}
-.action:disabled{opacity:0.2; pointer-events:none;}
 
 .modal{position:absolute;inset:0;background:rgba(0,0,0,.98);display:flex;align-items:center;justify-content:center;z-index:200}
 .card{background:#0a0a0a;border:1px solid var(--cyan);padding:25px;width:90%;text-align:center;border-radius:28px; max-height: 90vh; overflow-y: auto;}
-.mainbtn{width:100%;padding:18px;margin-top:10px;border:none;background:var(--cyan);color:#000;font-weight:900;cursor:pointer;font-size:18px;border-radius:14px}
+.mainbtn{width:100%;padding:18px;margin-top:10px;border:none;background:var(--cyan);color:#000;font-weight:900;cursor:pointer;font-size:16px;border-radius:14px}
+.btn-sub { font-size: 9px; display: block; margin-top: 4px; opacity: 0.7; font-weight: 400; }
 
-.lang-grid{display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin:15px 0}
-.lang-btn{font-size:26px; padding:10px 15px; background:rgba(255,255,255,0.05); border:2px solid #333; border-radius:12px; cursor:pointer;}
+.lang-grid{display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin:15px 0}
+.lang-btn{font-size:24px; padding:10px; background:rgba(255,255,255,0.05); border:2px solid #333; border-radius:12px; cursor:pointer;}
 .lang-btn.active{border-color:var(--cyan); background:rgba(0,243,255,0.1)}
-
-.daily-card { background: linear-gradient(135deg, rgba(255,0,255,0.1), rgba(0,243,255,0.1)); border: 1px solid var(--pink); padding: 12px; border-radius: 15px; margin-bottom: 15px; }
 
 .hidden{display:none!important}
 .glitch-anim{animation:shake 0.3s}
@@ -64,8 +60,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);f
 <body>
 <div class="app" id="frame">
   <div class="header">
-    <div style="cursor:pointer; color:var(--cyan); font-size:24px" onclick="location.href='/pages/game.html'">←</div>
-    <div class="title">GLITCH HUNTER</div>
+    <div style="cursor:pointer; color:var(--cyan); font-size:20px" onclick="location.href='/pages/game.html'">←</div>
+    <div class="title">GLITCH_HUNTER</div>
     <div id="pbBadge" class="pb-badge">PB: 0</div>
   </div>
 
@@ -78,13 +74,13 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);f
     <div class="mom-bar-container"><div id="momBarFill"></div></div>
 
     <div class="terminal" id="terminal">
+      <div class="boss-label" id="bossLabel">/// BOSS CHECK ///</div>
       <div class="sentence" id="sentence">Initializing...</div>
       <div id="correctionBox">
-        <span class="cat-label" id="catLabel">DETECTION</span>
-        CORRECT: <span id="correctTxt"></span>
+        <span id="correctTxt"></span>
         <span id="trTxt" class="tr-text"></span>
+        <div class="tap-hint" id="tapHint">DEVAM ET / DÜZELTTİM</div>
       </div>
-      <div class="tap-hint" id="tapHint">DEVAM ETMEK İÇİN DOKUN</div>
     </div>
 
     <div class="controls">
@@ -96,13 +92,9 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);f
 
 <div class="modal" id="start">
   <div class="card">
-    <h2 style="color:var(--cyan); font-size:24px; margin-bottom: 5px;">Neural Flow</h2>
+    <h2 style="color:var(--cyan); font-size:24px; margin-bottom: 5px;">Cyber Flow</h2>
+    <p style="opacity:.6; font-size:11px; margin-bottom: 15px;">Dili ayırt etme kasını çalıştır.</p>
     
-    <div class="daily-card">
-        <div style="font-size:10px; color:var(--pink); font-weight:900; margin-bottom:3px;">👑 BUGÜNÜN LİDERİ</div>
-        <div id="dailyInfo" style="font-size:14px; font-weight:800;">Lider Yok</div>
-    </div>
-
     <div class="lang-grid">
         <button data-lang="en" class="lang-btn active">🇬🇧</button>
         <button data-lang="de" class="lang-btn">🇩🇪</button>
@@ -112,16 +104,18 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);f
     </div>
 
     <button class="mainbtn" id="startBtn">BOOT SYSTEM</button>
-    <div id="leaderboardBox" style="margin-top:20px; font-size:11px; text-align:left; color:rgba(255,255,255,0.5)"></div>
+    <div id="leaderboardBox" style="margin-top:20px; font-size:10px; text-align:left; color:rgba(255,255,255,0.4)"></div>
   </div>
 </div>
 
 <div class="modal hidden" id="end">
   <div class="card">
-    <h2 id="endTitle" style="color:var(--green)">SECTOR CLEARED</h2>
-    <p id="endStats" style="font-size:18px; margin:20px 0"></p>
-    <button class="mainbtn" id="btnContinue">CONTINUE (KEEP xMOM 🚀)</button>
-    <button class="mainbtn" id="btnBank" style="background:var(--pink); color:#fff">BANK & REPAIR (x1.00 🛡️)</button>
+    <h2 id="endTitle" style="color:var(--green)">SYNC COMPLETE</h2>
+    <p id="learningReport" style="color:var(--cyan); font-size:12px; margin-bottom:15px; font-weight:bold;"></p>
+    <p id="endStats" style="font-size:18px; margin-bottom: 20px"></p>
+    
+    <button class="mainbtn" id="btnContinue">CONTINUE <span class="btn-sub">HIZLI / KIRILGAN</span></button>
+    <button class="mainbtn" id="btnBank" style="background:var(--pink); color:#fff">BACKUP <span class="btn-sub">GÜVENLİ / YAVAŞ</span></button>
     <button class="mainbtn" style="background:#222;color:#fff" id="btnExit">SAVE & EXIT</button>
   </div>
 </div>
@@ -131,30 +125,20 @@ import { loadLangPool, createUsedSet, pick } from "/js/langpool.js";
 
 const $ = id => document.getElementById(id);
 let lang="en", totalScore=0, setScore=0, integrity=100, momentum=1.0, wordList=[], currentIndex=0, busy=false, currentItem=null, runActive=false, autoProceedTimer=null;
+let missedCats = {};
 
 const SET_SIZE = 12;
 
 function speak(text, targetLang) {
   window.speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
-  const m = { en: "en-US", de: "de-DE", fr: "fr-FR", es: "es-ES", it: "it-IT" };
-  u.lang = m[targetLang] || "en-US";
+  u.lang = { en:"en-US", de:"de-DE", fr:"fr-FR", es:"es-ES", it:"it-IT" }[targetLang] || "en-US";
   u.rate = 0.95;
   window.speechSynthesis.speak(u);
 }
 
 function updateLeaderboardUI() {
-    const records = JSON.parse(localStorage.getItem('glitch_eternal_v6') || '[]');
-    const today = new Date().toLocaleDateString('tr-TR');
-    const daily = JSON.parse(localStorage.getItem('glitch_daily_v6') || '{}');
-
-    if (daily.date !== today) {
-        localStorage.removeItem('glitch_daily_v6');
-        $('dailyInfo').textContent = "Lider Yok";
-    } else if (daily.score) {
-        $('dailyInfo').textContent = `${daily.score} Puan (${daily.lang})`;
-    }
-
+    const records = JSON.parse(localStorage.getItem('glitch_eternal_v61') || '[]');
     const pb = records.filter(r => r.lang === lang.toUpperCase()).reduce((max, r) => Math.max(max, r.score), 0);
     $("pbBadge").textContent = `PB: ${pb}`;
     $('leaderboardBox').innerHTML = records.slice(0,3).map((r,i)=> `<div>${i+1}. ${r.score} - ${r.lang}</div>`).join('');
@@ -172,91 +156,75 @@ document.querySelectorAll(".lang-btn").forEach(b=>{
 $("startBtn").onclick=async()=>{
   $("start").classList.add("hidden"); 
   $("game").style.display="flex";
-  if(!runActive) { totalScore=0; integrity=100; momentum=1.0; runActive=true; }
+  if(!runActive) { totalScore=0; integrity=100; momentum=1.0; runActive=true; missedCats={}; }
   await initGame();
 };
 
 async function initGame(isBank = false) {
   currentIndex=0; setScore=0;
   if(isBank) { integrity = 100; momentum = 1.0; }
-
   const pool = await loadLangPool(lang);
   const randomizedItems = [...pool.items].sort(() => Math.random() - 0.5);
-  const {used, save} = createUsedSet("glitch_v6_"+lang);
+  const {used, save} = createUsedSet("glitch_v61_"+lang);
   wordList = pick({items: randomizedItems}, SET_SIZE, used, save, (it) => it.sentence && it.sentence.length > 5);
-  
-  if(wordList.length < SET_SIZE) {
-    localStorage.removeItem("glitch_v6_"+lang);
-    return initGame();
-  }
+  if(wordList.length < SET_SIZE) { localStorage.removeItem("glitch_v61_"+lang); return initGame(); }
   nextRound();
 }
 
 function produceGlitch(original) {
   const rules = [
-    { cat: "Subject-Verb", f: " am ", t: " is " },
-    { cat: "Subject-Verb", f: " are ", t: " is " },
-    { cat: "Article", f: " a ", t: " an " },
-    { cat: "Tense", f: " did ", t: " do " },
-    { cat: "Plural", f: "s ", t: " " }
+    { cat: "Subject-Verb", f: " am ", t: " is ", subtle: false },
+    { cat: "Subject-Verb", f: " are ", t: " is ", subtle: false },
+    { cat: "Article", f: " a ", t: " an ", subtle: true },
+    { cat: "Article", f: " an ", t: " a ", subtle: true },
+    { cat: "Tense", f: " did ", t: " do ", subtle: true },
+    { cat: "Plural", f: "s ", t: " ", subtle: true }
   ];
   let text = original;
   const applicableRules = rules.filter(r => text.toLowerCase().includes(r.f));
   if (applicableRules.length > 0) {
     const rule = applicableRules[Math.floor(Math.random() * applicableRules.length)];
-    return { text: text.replace(new RegExp(rule.f, "i"), rule.t), category: rule.cat };
+    return { text: text.replace(new RegExp(rule.f, "i"), rule.t), category: rule.cat, subtle: rule.subtle };
   }
-  return { text: text + "s", category: "Syntax" };
+  return { text: text + "s", category: "Syntax", subtle: true };
 }
 
 function nextRound() {
   if(currentIndex >= wordList.length || integrity <= 0) { finish(integrity <= 0); return; }
-  
   const item = wordList[currentIndex];
   const isBoss = currentIndex >= 10;
-  if(isBoss) $("terminal").classList.add("boss-mode");
-  else $("terminal").classList.remove("boss-mode");
+  
+  if(isBoss) { $("terminal").classList.add("boss-mode"); $("bossLabel").style.display = "block"; }
+  else { $("terminal").classList.remove("boss-mode"); $("bossLabel").style.display = "none"; }
 
   const isOk = Math.random() > 0.5;
-  const glitch = isOk ? { text: item.sentence, category: "Verified" } : produceGlitch(item.sentence);
+  const glitch = isOk ? { text: item.sentence, category: "Verified", subtle: false } : produceGlitch(item.sentence);
 
-  currentItem = { 
-    text: glitch.text, 
-    original: item.sentence, 
-    isOk, 
-    category: glitch.category,
-    tr: item.tr || "Anlam yüklendi."
-  };
-
+  currentItem = { text: glitch.text, original: item.sentence, isOk, category: glitch.category, subtle: glitch.subtle, tr: item.tr || "" };
   $("sentence").textContent = currentItem.text;
   $("correctionBox").style.opacity = "0";
   $("tapHint").style.display = "none";
   $("setCounter").textContent = `${currentIndex + 1}/12`;
   
-  // ✅ Momentum Bar Update
+  // ✅ Momentum Renk Hikayesi başkanım
   const momPercent = ((momentum - 1.0) / 0.6) * 100;
   $("momBarFill").style.width = momPercent + "%";
-  $("momBarFill").style.background = momentum > 1.4 ? "var(--pink)" : "var(--cyan)";
-  $("momVal").textContent = `x${momentum.toFixed(2)}`;
+  if(momentum < 1.2) $("momBarFill").style.background = "var(--cyan)";
+  else if(momentum < 1.4) $("momBarFill").style.background = "var(--purple)";
+  else $("momBarFill").style.background = "var(--pink)";
   
+  $("momVal").textContent = `x${momentum.toFixed(2)}`;
   $("life").textContent = integrity + "%";
   $("life").style.color = integrity <= 25 ? "var(--pink)" : "var(--cyan)";
   $("terminal").style.borderColor = "var(--border)";
   busy=false;
 }
 
-// ✅ Tap to Continue Mantığı
-$("terminal").onclick = () => {
-    if(busy && autoProceedTimer) {
-        clearTimeout(autoProceedTimer);
-        proceedNext();
-    }
-};
+$("terminal").onclick = () => { if(busy && autoProceedTimer) { clearTimeout(autoProceedTimer); proceedNext(); } };
 
 function handleAnswer(userPick) {
   if(busy) return;
   busy = true;
-  
   const correct = (userPick === currentItem.isOk);
   const isBoss = currentIndex >= 10;
 
@@ -266,36 +234,34 @@ function handleAnswer(userPick) {
     setScore += points;
     momentum = Math.min(1.6, momentum + 0.05);
     $("terminal").style.borderColor = "var(--green)";
+    if(isBoss) $("sentence").innerHTML = `<span style="color:var(--green)">NEURAL SYNC +</span>`;
     
-    // ✅ Doğruda bekleme yok, hızlı geçiş (0.8s)
-    autoProceedTimer = setTimeout(proceedNext, 800);
+    // ✅ Doğruda bekletmiyoruz başkanım
+    autoProceedTimer = setTimeout(proceedNext, 700);
   } else {
-    // ✅ NEAR MISS ADALETİ
-    const isHardGlitch = (currentItem.category === "Syntax" || isBoss);
-    const damage = isHardGlitch ? 15 : 25;
+    // ✅ Near-Miss Adaleti başkanım
+    const isNearMiss = currentItem.subtle || isBoss;
+    const damage = isNearMiss ? 15 : 25;
     integrity -= damage;
     momentum = Math.max(1.0, momentum - 0.15);
     
+    // Kategori Raporu için
+    missedCats[currentItem.category] = (missedCats[currentItem.category] || 0) + 1;
+    
     $("frame").classList.add("glitch-anim");
     $("terminal").style.borderColor = "var(--pink)";
-    
-    // ✅ Hata etiketi
-    $("catLabel").textContent = isHardGlitch ? "⚠ NEAR MISS / " + currentItem.category : "✖ SYSTEM CORRUPTED";
-    $("correctTxt").textContent = currentItem.original;
+    $("correctTxt").textContent = (isNearMiss ? "⚠ NEAR MISS / " : "✖ CORRUPTED / ") + currentItem.original;
     $("trTxt").textContent = "Anlamı: " + currentItem.tr;
     $("correctionBox").style.opacity = "1";
     $("tapHint").style.display = "block";
     speak(currentItem.original, lang);
 
-    // ✅ Yanlışta 4s bekleme ama Tap to Continue aktif
     autoProceedTimer = setTimeout(proceedNext, 4000);
   }
-  $("scoreDisp").textContent = totalScore;
 }
 
 function proceedNext() {
-    autoProceedTimer = null;
-    currentIndex++;
+    autoProceedTimer = null; currentIndex++;
     $("frame").classList.remove("glitch-anim");
     nextRound();
 }
@@ -303,33 +269,24 @@ function proceedNext() {
 $("btnGlitch").onclick = () => handleAnswer(false);
 $("btnStable").onclick = () => handleAnswer(true);
 
-function saveRecord() {
-    const records = JSON.parse(localStorage.getItem('glitch_eternal_v6') || '[]');
-    const today = new Date().toLocaleDateString('tr-TR');
-    records.push({score: totalScore, lang: lang.toUpperCase(), date: today, id: Date.now()});
-    records.sort((a,b)=>b.score - a.score);
-    localStorage.setItem('glitch_eternal_v6', JSON.stringify(records.slice(0,10)));
-
-    const daily = JSON.parse(localStorage.getItem('glitch_daily_v6') || '{}');
-    if (daily.date !== today || totalScore > (daily.score || 0)) {
-        localStorage.setItem('glitch_daily_v6', JSON.stringify({score: totalScore, lang: lang.toUpperCase(), date: today}));
-    }
-}
-
 function finish(died) {
-  saveRecord();
+  const records = JSON.parse(localStorage.getItem('glitch_eternal_v61') || '[]');
+  records.push({score: totalScore, lang: lang.toUpperCase(), id: Date.now()});
+  records.sort((a,b)=>b.score - a.score);
+  localStorage.setItem('glitch_eternal_v61', JSON.stringify(records.slice(0,10)));
   updateLeaderboardUI();
-  $("end").classList.remove("hidden");
-  $("endTitle").textContent = died ? "SYSTEM CRASHED" : "SECTOR CLEARED";
-  $("endTitle").style.color = died ? "var(--pink)" : "var(--green)";
-  $("endStats").innerHTML = `TOTAL SCORE: <b>${totalScore}</b>`;
   
-  if(died) {
-      $("btnContinue").classList.add("hidden"); $("btnBank").classList.add("hidden");
-      runActive = false;
-  } else {
-      $("btnContinue").classList.remove("hidden"); $("btnBank").classList.remove("hidden");
-  }
+  // ✅ Öğrenme Kası Raporu başkanım
+  const worstCat = Object.entries(missedCats).sort((a,b)=>b[1]-a[1])[0];
+  $("learningReport").textContent = worstCat ? `BUGÜN EN ÇOK ${worstCat[0].toUpperCase()} KAÇIRDIN.` : "RADARIN BUGÜN KESKİNDİ!";
+
+  $("end").classList.remove("hidden");
+  $("endTitle").textContent = died ? "SYSTEM CRASHED" : "SYNC COMPLETE";
+  $("endTitle").style.color = died ? "var(--pink)" : "var(--green)";
+  $("endStats").innerHTML = `SCORE: <b>${totalScore}</b> | MOM: <b>x${momentum.toFixed(2)}</b>`;
+  
+  if(died) { $("btnContinue").classList.add("hidden"); $("btnBank").classList.add("hidden"); runActive = false; } 
+  else { $("btnContinue").classList.remove("hidden"); $("btnBank").classList.remove("hidden"); }
 }
 
 $("btnContinue").onclick = () => { $("end").classList.add("hidden"); initGame(false); };
