@@ -3,137 +3,107 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>ITALKY • Glitch Hunter — Cyber Master</title>
-<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+<title>ITALKY • Glitch Hunter</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
 <style>
 :root{
-  --bg:#050505; --cyan:#00ffff; --pink:#ff0055; --green:#00ff66; --purple:#bd00ff;
-  --panel:rgba(10,20,20,.95); --border:rgba(0,255,255,.3); --text:#e0fbfc;
+  --bg:#050505; --cyan:#00ffff; --pink:#ff0055; --green:#00ff66;
+  --panel:rgba(20,20,20,.95); --border:rgba(0,255,255,.3); --text:#fff;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
-html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);
-  font-family:'Share Tech Mono',monospace;color:var(--text)}
-.matrix{position:absolute;inset:0;z-index:0;background:linear-gradient(180deg,rgba(0,255,255,.05),transparent,rgba(255,0,85,.05));
-  background-size:100% 200%;animation:scan 5s linear infinite}
-@keyframes scan{to{background-position:0 200%}}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:sans-serif;color:var(--text)}
 
-.app{position:relative;max-width:480px;height:100%;margin:0 auto;
-  background:var(--panel);border:1px solid var(--border);display:flex;flex-direction:column;z-index:5}
+.app{position:relative;max-width:480px;height:100%;margin:0 auto;background:var(--panel);border:1px solid var(--border);display:flex;flex-direction:column;z-index:5}
 @media(min-width:520px){.app{height:92vh;border-radius:20px;margin-top:4vh}}
 
-.header{height:70px;display:flex;align-items:center;justify-content:space-between;padding:0 16px; border-bottom:1px solid var(--border)}
-.title{font-size:16px;letter-spacing:1px;color:var(--cyan);text-shadow:2px 0 var(--pink)}
-.pb-badge{font-size:10px;padding:4px 8px;background:var(--cyan);color:#000;font-weight:800;border-radius:4px}
+.header{height:60px;display:flex;align-items:center;justify-content:space-between;padding:0 16px; border-bottom:1px solid var(--border)}
+.title{font-size:18px; color:var(--cyan); font-weight:bold;}
 
 .game{flex:1;padding:16px;display:none;flex-direction:column;justify-content:space-between}
-.stats{display:flex;justify-content:space-between;font-size:14px;color:var(--cyan);font-weight:900;margin-bottom:10px}
+.stats{display:flex;justify-content:space-between;font-size:16px;color:var(--cyan);font-weight:bold;margin-bottom:10px}
 
-.terminal{flex:1;border:3px solid var(--border);background:rgba(0,0,0,.8);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;
-  box-shadow:inset 0 0 50px rgba(0,255,255,.1);padding:30px; transition: 0.3s;}
+.terminal{flex:1;border:2px solid var(--border);background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;position:relative;padding:20px;text-align:center}
 
-/* ✅ CÜMLE BURADA KOCAMAN OLDU BAŞKANIM */
+/* ✅ KOCAMAN VE OKUNAKLI CÜMLE */
 .sentence{
-  font-family:'Space Grotesk',sans-serif;
-  font-size:32px; /* Yazı boyutu büyütüldü */
-  text-align:center;
+  font-family:'Space Grotesk', sans-serif;
+  font-size:32px; 
   color:#fff;
-  text-transform:uppercase;
   line-height:1.2;
   font-weight:900;
-  text-shadow: 0 0 15px rgba(255,255,255,0.3);
 }
 
-.term-head{position:absolute;top:0;left:0;right:0;height:30px;
-  background:rgba(0,255,255,.15);border-bottom:1px solid var(--border);
-  font-size:12px;padding:0 12px;display:flex;align-items:center;justify-content:space-between;font-weight:900}
-
-.category-tag{font-size:12px;color:var(--cyan);border:1px solid var(--cyan);padding:4px 10px;margin-bottom:20px;background: rgba(0,243,255,0.1);font-weight:900}
-
 .controls{display:flex;gap:16px;height:120px;margin-top:20px}
-.action{flex:1;border:3px solid var(--border);cursor:pointer;font-size:20px;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;transition:.15s; font-weight: 900;}
-.bug{border-color:var(--pink);color:var(--pink);background:rgba(255,0,85,.15)}
-.ok{border-color:var(--green);color:var(--green);background:rgba(0,255,102,.15)}
+.action{flex:1;border:3px solid var(--border);cursor:pointer;font-size:20px;display:flex;align-items:center;justify-content:center;transition:.15s; font-weight:bold;border-radius:12px;color:#fff}
+.bug{background:rgba(255,0,85,0.2);border-color:var(--pink)}
+.ok{background:rgba(0,255,102,0.2);border-color:var(--green)}
 .action:active{transform:scale(.95)}
 
-.res-toast{position:absolute;top:110px;left:50%;transform:translateX(-50%);
-  background:#000;border:2px solid var(--cyan);padding:12px 24px;font-weight:900;
-  opacity:0;transition:0.3s;z-index:100;white-space:nowrap;font-size:18px}
+.modal{position:absolute;inset:0;background:rgba(0,0,0,.95);display:flex;align-items:center;justify-content:center;z-index:200}
+.card{background:#111;border:1px solid var(--cyan);padding:30px;width:85%;text-align:center;border-radius:20px}
+.mainbtn{width:100%;padding:18px;margin-top:20px;border:none;background:var(--cyan);color:#000;font-weight:900;cursor:pointer;font-size:18px;border-radius:10px}
 
-.modal{position:absolute;inset:0;background:rgba(0,0,0,.95);
-  display:flex;align-items:center;justify-content:center;z-index:200}
-.card{background:#080808;border:2px solid var(--cyan);padding:26px;width:85%;text-align:center;max-height:85vh;overflow-y:auto}
-.mainbtn{width:100%;padding:18px;margin-top:16px;border:none;background:var(--cyan);color:#000;font-weight:900;cursor:pointer;font-size:18px}
+.lang-btn{font-size:28px; padding:12px; background:rgba(255,255,255,0.1); border:2px solid #444; border-radius:12px; cursor:pointer; transition:0.2s}
 
 .hidden{display:none!important}
-.glitch-anim{animation:glitch .3s}
-@keyframes glitch{
-  20%{filter:hue-rotate(90deg);transform:translate(-5px,5px)}
-  60%{filter:invert(1);transform:translate(5px,-5px)}
+.glitch-anim{animation:shake 0.3s}
+@keyframes shake{
+  0%, 100% {transform: translateX(0)}
+  25% {transform: translateX(-10px) rotate(-1deg)}
+  75% {transform: translateX(10px) rotate(1deg)}
 }
 </style>
 </head>
 
 <body>
-<div class="matrix"></div>
-
 <div class="app" id="frame">
   <div class="header">
     <div style="cursor:pointer; color:var(--cyan); font-size:24px" onclick="location.href='/pages/game.html'">←</div>
-    <div class="title">GLITCH_HUNTER</div>
-    <div id="pbBadge" class="pb-badge">PB: 0</div>
-    <div id="soundBtn" style="cursor:pointer; font-size:20px">🔊</div>
+    <div class="title">GLITCH HUNTER</div>
+    <div id="scoreDisp" style="font-weight:bold; color:var(--green)">0</div>
   </div>
 
   <div class="game" id="game">
     <div class="stats">
-      <span>SCORE: <b id="score">0</b></span>
-      <span>INTEGRITY: <b id="life">100%</b></span>
+      <span>CAN: <b id="life">100%</b></span>
+      <span id="setCounter">1/12</span>
     </div>
 
-    <div class="terminal" id="terminal">
-      <div class="term-head">
-        <span id="termStatus">/// SCANNING_SYNTAX ///</span>
-        <span id="setCounter">1/12</span>
-      </div>
-      <div class="category-tag" id="catTag">SYSTEM_READY</div>
-      <div class="sentence" id="sentence">LOADING_CORE...</div>
+    <div class="terminal">
+      <div class="sentence" id="sentence">YÜKLENİYOR...</div>
     </div>
-
-    <div class="res-toast" id="resToast">OK</div>
 
     <div class="controls">
-      <button class="action bug" id="btnGlitch">🐞 GLITCH</button>
-      <button class="action ok" id="btnStable">🛡️ STABLE</button>
+      <button class="action bug" id="btnGlitch">🐞 HATALI</button>
+      <button class="action ok" id="btnStable">🛡️ DOĞRU</button>
     </div>
   </div>
 </div>
 
 <div class="modal" id="start">
   <div class="card">
-    <h2 style="color:var(--cyan); font-size:28px">SİSTEMİ BAŞLAT</h2>
-    <p style="opacity:.8; margin:15px 0">Cümlede gramer hatası varsa <b>GLITCH</b>, doğruysa <b>STABLE</b> seç başkanım.</p>
+    <h2 style="color:var(--cyan); font-size:24px">Oyun Başlıyor</h2>
+    <p style="opacity:.8;">Cümle doğru mu yanlış mı seçin.</p>
     
-    <div style="display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin:20px 0">
-        <button data-lang="en" class="lang-btn" style="font-size:24px; padding:10px; background:rgba(255,255,255,0.1); border:1px solid #444; border-radius:10px; cursor:pointer">🇬🇧</button>
-        <button data-lang="de" class="lang-btn" style="font-size:24px; padding:10px; background:rgba(255,255,255,0.1); border:1px solid #444; border-radius:10px; cursor:pointer">🇩🇪</button>
-        <button data-lang="fr" class="lang-btn" style="font-size:24px; padding:10px; background:rgba(255,255,255,0.1); border:1px solid #444; border-radius:10px; cursor:pointer">🇫🇷</button>
-        <button data-lang="es" class="lang-btn" style="font-size:24px; padding:10px; background:rgba(255,255,255,0.1); border:1px solid #444; border-radius:10px; cursor:pointer">🇪🇸</button>
-        <button data-lang="it" class="lang-btn" style="font-size:24px; padding:10px; background:rgba(255,255,255,0.1); border:1px solid #444; border-radius:10px; cursor:pointer">🇮🇹</button>
+    <div style="display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin:25px 0">
+        <button data-lang="en" class="lang-btn" style="border-color:var(--cyan)">🇬🇧</button>
+        <button data-lang="de" class="lang-btn">🇩🇪</button>
+        <button data-lang="fr" class="lang-btn">🇫🇷</button>
+        <button data-lang="es" class="lang-btn">🇪🇸</button>
+        <button data-lang="it" class="lang-btn">🇮🇹</button>
     </div>
 
-    <button class="mainbtn" id="startBtn">INITIALIZE</button>
+    <button class="mainbtn" id="startBtn">BAŞLA</button>
   </div>
 </div>
 
 <div class="modal hidden" id="end">
   <div class="card">
-    <h2 id="endTitle" style="color:var(--green)">REPORT_FINISHED</h2>
-    <p id="endStats" style="font-size:20px; margin:20px 0"></p>
+    <h2 id="endTitle" style="color:var(--green)">SET BİTTİ</h2>
+    <p id="endStats" style="font-size:22px; margin:20px 0"></p>
     <button class="mainbtn" id="btnContinue">DEVAM ET</button>
-    <button class="mainbtn" style="background:#333;color:#fff" id="btnExit">KAYDET VE ÇIK</button>
+    <button class="mainbtn" style="background:#333;color:#fff" id="btnExit">ÇIKIS</button>
   </div>
 </div>
 
@@ -141,8 +111,9 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);
 import { loadLangPool, createUsedSet, pick } from "/js/langpool.js";
 
 const $ = id => document.getElementById(id);
-let lang="en", muted=false, score=0, integrity=100, wordList=[], currentIndex=0, busy=false, currentItem=null;
+let lang="en", score=0, integrity=100, wordList=[], currentIndex=0, busy=false, currentItem=null;
 
+// Dil Seçimi
 document.querySelectorAll(".lang-btn").forEach(b=>{
   b.onclick=()=>{
     document.querySelectorAll(".lang-btn").forEach(x=>x.style.borderColor="#444");
@@ -151,6 +122,7 @@ document.querySelectorAll(".lang-btn").forEach(b=>{
   };
 });
 
+// Başlat
 $("startBtn").onclick=async()=>{
   $("start").classList.add("hidden"); 
   $("game").style.display="flex";
@@ -162,83 +134,79 @@ async function initGame() {
   currentIndex=0;
   const pool = await loadLangPool(lang);
   const randomizedItems = [...pool.items].sort(() => Math.random() - 0.5);
-  const {used, save} = createUsedSet("glitch_v4_"+lang);
+  const {used, save} = createUsedSet("glitch_v5_"+lang);
   wordList = pick({items: randomizedItems}, 12, used, save);
   
   if(wordList.length < 12) {
-    localStorage.removeItem("glitch_v4_"+lang);
+    localStorage.removeItem("glitch_v5_"+lang);
     return initGame();
   }
   nextRound();
 }
 
+// Hata Üretici (Sadece basit ve mantıklı hatalar)
 function produceGlitch(original) {
   let text = original;
   const rules = [
-    { from: " am ", to: " is " },
-    { from: " are ", to: " is " },
-    { from: " have ", to: " has " },
-    { from: " don't ", to: " doesn't " },
-    { from: " a ", to: " an " }
+    { f: " am ", t: " is " }, { f: " are ", t: " is " },
+    { f: " have ", t: " has " }, { f: " don't ", t: " doesn't " },
+    { f: " doesn't ", t: " don't " }, { f: " a ", t: " an " }
   ];
-  const rule = rules.find(r => text.includes(r.from));
-  if(rule) text = text.replace(rule.from, rule.to);
-  else text = text + "s"; 
+  const rule = rules.find(r => text.toLowerCase().includes(r.f));
+  if(rule) {
+      const reg = new RegExp(rule.f, "i");
+      text = text.replace(reg, rule.t);
+  } else {
+      text = text.replace(/s /g, " "); // Çoğul hatası
+  }
   return text;
 }
 
 function nextRound() {
   if(currentIndex >= wordList.length) { finish(false); return; }
   const item = wordList[currentIndex];
-  const isOk = Math.random() > 0.5;
-  const displayText = isOk ? item.sentence : produceGlitch(item.sentence);
+  const isCorrectCümle = Math.random() > 0.5;
+  const displayText = isCorrectCümle ? item.sentence : produceGlitch(item.sentence);
 
-  currentItem = { text: displayText, original: item.sentence, isOk: isOk };
+  currentItem = { text: displayText, original: item.sentence, isOk: isCorrectCümle };
   $("sentence").textContent = currentItem.text;
   $("setCounter").textContent = `${currentIndex + 1}/12`;
-  $("score").textContent = score;
+  $("scoreDisp").textContent = score;
   $("life").textContent = integrity + "%";
   busy=false;
 }
 
-function handleAnswer(userSaysStable) {
+function handleAnswer(userPickStable) {
   if(busy) return;
   busy=true;
-  const isCorrect = (userSaysStable === currentItem.isOk);
+  const correct = (userPickStable === currentItem.isOk);
   
-  if(isCorrect) {
+  if(correct) {
     score += 100;
-    toast("✔ SİSTEM OK", "var(--green)");
-    speak(currentItem.original);
+    $("terminal").style.borderColor = "var(--green)";
+    setTimeout(()=> $("terminal").style.borderColor = "var(--border)", 500);
   } else {
     integrity -= 25;
-    glitchEff();
-    toast("✖ HATA!", "var(--pink)");
-    speak(currentItem.original);
+    $("frame").classList.add("glitch-anim");
+    $("terminal").style.borderColor = "var(--pink)";
+    setTimeout(()=> {
+        $("frame").classList.remove("glitch-anim");
+        $("terminal").style.borderColor = "var(--border)";
+    }, 500);
   }
 
-  if(integrity <= 0) setTimeout(() => finish(true), 800);
-  else setTimeout(() => { currentIndex++; nextRound(); }, 1200);
+  if(integrity <= 0) setTimeout(() => finish(true), 600);
+  else setTimeout(() => { currentIndex++; nextRound(); }, 800);
 }
 
 $("btnGlitch").onclick = () => handleAnswer(false);
 $("btnStable").onclick = () => handleAnswer(true);
 
-function toast(msg, color) {
-  const t = $("resToast");
-  t.textContent = msg; t.style.color = color; t.style.borderColor = color;
-  t.style.opacity = "1"; setTimeout(() => t.style.opacity = "0", 1000);
-}
-
-function glitchEff() {
-  $("frame").classList.add("glitch-anim");
-  setTimeout(() => $("frame").classList.remove("glitch-anim"), 300);
-}
-
 function finish(died) {
   $("end").classList.remove("hidden");
-  $("endTitle").textContent = died ? "SİSTEM ÇÖKTÜ!" : "SET TAMAM!";
-  $("endStats").innerHTML = `SKORUN: ${score}`;
+  $("endTitle").textContent = died ? "SİSTEM ÇÖKTÜ" : "TEBRİKLER";
+  $("endTitle").style.color = died ? "var(--pink)" : "var(--green)";
+  $("endStats").innerHTML = `SKOR: ${score}`;
   if(died) $("btnContinue").classList.add("hidden");
   else $("btnContinue").classList.remove("hidden");
 }
@@ -249,14 +217,6 @@ $("btnContinue").onclick = () => {
 };
 
 $("btnExit").onclick = () => location.reload();
-
-function speak(t){
-  if(muted || !t) return;
-  const u=new SpeechSynthesisUtterance(t);
-  const m={en:"en-US",de:"de-DE",fr:"fr-FR",es:"es-ES",it:"it-IT"};
-  u.lang=m[lang]||"en-US";
-  speechSynthesis.cancel(); speechSynthesis.speak(u);
-}
 </script>
 </body>
 </html>
