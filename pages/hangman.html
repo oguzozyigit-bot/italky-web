@@ -3,14 +3,12 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-  <title>italkyAI • Neon Hangman Premium</title>
+  <title>italkyAI • Neon Hangman Eternal</title>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
-
   <style>
     :root{
       --bg-deep:#020205; --c-neon-pink:#ff00ff; --c-neon-blue:#00f3ff;
-      --c-neon-green:#00e676; --c-error:#ff1744;
-      --border: rgba(255,255,255,.12);
+      --c-neon-green:#00e676; --c-error:#ff1744; --border: rgba(255,255,255,.12);
     }
     *{ box-sizing:border-box; outline:none; user-select:none; -webkit-tap-highlight-color:transparent; }
     html,body{ margin:0; width:100%; height:100%; overflow:hidden; font-family:'Outfit', sans-serif; background:var(--bg-deep); color:#fff; position:fixed; }
@@ -19,18 +17,16 @@
     .gallows-box.shake { animation: shake .25s linear 2; }
     .wrap{ width:100%; max-width:480px; height:100%; margin:0 auto; position:relative; z-index:10; display:flex; flex-direction:column; padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); }
     .nav-top{ display:flex; align-items:center; justify-content:space-between; padding: 15px 18px; }
-    .back-btn{ display:flex; align-items:center; justify-content:center; width:40px; height:40px; border-radius:12px; background: rgba(255,255,255,.05); border: 1px solid var(--border); color:#fff; text-decoration:none; font-size:20px; }
+    .status-chip { background: rgba(255,255,255,0.05); padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; border: 1px solid var(--border); letter-spacing: 1px; }
+    .pb-chip { font-size: 10px; color: var(--c-neon-pink); font-weight: 800; text-align: right; margin-top: 4px; }
     .mini-badge{ display:flex; align-items:center; height: 38px; padding: 0 12px; border-radius: 16px; background: rgba(255,255,255,.05); border: 1px solid var(--border); font-weight: 800; font-size: 11px; }
     .game-card{ background: rgba(255,255,255,.03); border: 1px solid var(--border); border-radius: 28px; backdrop-filter: blur(15px); padding: 20px; margin: 0 14px; position:relative; box-shadow: 0 30px 60px rgba(0,0,0,.5); }
-    
-    /* GALLOWS */
     .gallows-box{ position:relative; width:120px; height:140px; margin: 0 auto 15px; }
     .g-line{ position:absolute; background: #fff; }
     .g-stand{ bottom:0; left:20px; width:80px; height:2px; }
     .g-post{ bottom:0; left:30px; width:2px; height:130px; }
     .g-top{ top:10px; left:30px; width:60px; height:2px; }
     .g-rope{ position:absolute; top:10px; right:30px; width:1px; height:20px; background: var(--c-neon-pink); box-shadow: 0 0 10px var(--c-neon-pink); }
-    
     .man-part{ position:absolute; background: var(--c-neon-pink); box-shadow: 0 0 12px var(--c-neon-pink); opacity:0; transition: opacity .3s; }
     .p1{ top:28px; right:17px; width:26px; height:26px; border: 3px solid var(--c-neon-pink); border-radius:50%; background:transparent; }
     .p2{ top:56px; right:30px; width:2px; height:32px; }
@@ -38,21 +34,22 @@
     .p4{ top:62px; right:14px; width:16px; height:2px; transform: rotate(30deg); transform-origin:right; }
     .p5{ top:86px; right:30px; width:18px; height:2px; transform: rotate(45deg); transform-origin:left; }
     .p6{ top:86px; right:12px; width:18px; height:2px; transform: rotate(-45deg); transform-origin:right; }
-
     .word-box{ display:flex; flex-wrap:wrap; justify-content:center; gap: 8px; margin: 25px 0; }
     .letter-slot{ width: 32px; height: 42px; border-bottom: 2px solid var(--c-neon-blue); display:flex; align-items:center; justify-content:center; font-size: 24px; font-weight: 900; }
-    
     .keyboard{ display:grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
     .key-btn{ aspect-ratio:1; display:flex; align-items:center; justify-content:center; background: rgba(255,255,255,.1); border: 1px solid var(--border); border-radius: 12px; color: #fff; font-weight: 800; cursor:pointer; }
     .key-btn.correct{ background: var(--c-neon-green) !important; color:#000; border:none; }
     .key-btn.wrong{ opacity: 0.2; pointer-events:none; }
-
     .modal-wrap{ position:absolute; inset:0; background: rgba(0,0,0,.96); z-index:999; display:flex; align-items:center; justify-content:center; padding: 20px; }
-    .modal-card{ width:100%; max-width:340px; background: #08080c; border: 1px solid var(--border); border-radius: 30px; padding: 30px; text-align:center; }
-    .btn-primary{ width:100%; padding: 16px; background: var(--c-neon-green); color:#000; border:none; border-radius: 18px; font-weight: 900; cursor:pointer; margin-top: 10px; }
-    .lang-grid{ display:grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 20px; }
-    .lang-btn{ font-size: 22px; padding: 8px; border-radius: 12px; background: rgba(255,255,255,.05); border: 1px solid transparent; cursor:pointer; }
-    .lang-btn.active{ border-color: var(--c-neon-blue); background: rgba(0,243,255,0.1); }
+    .modal-card{ width:100%; max-width:360px; background: #08080c; border: 1px solid var(--border); border-radius: 36px; padding: 30px; text-align:center; overflow-y:auto; max-height:90vh; }
+    .daily-card { background: linear-gradient(135deg, rgba(255,0,255,0.1), rgba(0,243,255,0.1)); border: 1px solid var(--c-neon-pink); padding: 15px; border-radius: 20px; margin-bottom: 15px; }
+    .record-item { display: flex; justify-content: space-between; align-items:center; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 12px; margin-bottom: 8px; font-size: 11px; border-left: 3px solid #444; }
+    .record-item.rank-0 { border-left-color: var(--c-neon-pink); background: rgba(255,0,255,0.05); }
+    .btn-main{ width:100%; padding: 18px; background: var(--c-neon-green); color:#000; border:none; border-radius: 20px; font-weight: 900; cursor:pointer; margin-top: 10px; }
+    .lvl-btn { width:100%; display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-radius: 18px; border: 1px solid var(--border); background: rgba(255,255,255,0.05); color: #fff; font-weight: 700; cursor: pointer; margin-top: 8px; }
+    .lang-btn{ font-size: 24px; padding: 10px; border-radius: 16px; background: rgba(255,255,255,0.05); border: 1px solid transparent; cursor:pointer; margin: 4px; }
+    .lang-btn.active{ border-color: var(--c-neon-blue); background: rgba(0,243,255,0.15); }
+    #resInfo { font-size: 12px; color: var(--c-neon-blue); text-align: center; min-height: 18px; margin-bottom: 5px; font-weight: 700; opacity: 0; transition: 0.3s; }
   </style>
 </head>
 
@@ -61,9 +58,13 @@
   <div class="wrap">
     <div class="nav-top">
       <a href="/pages/game.html" class="back-btn">←</a>
-      <div style="font-size:24px; font-weight:900;">italky<span style="color:var(--c-neon-blue)">AI</span></div>
+      <div style="text-align: center;">
+        <div id="statusChip" class="status-chip">EN • LEVEL</div>
+        <div id="pbDisplay" class="pb-chip">PB: 0</div>
+      </div>
       <div style="display:flex; gap:8px;">
         <div class="mini-badge" id="lifeDisplay" style="color:var(--c-neon-pink);">❤️❤️❤️</div>
+        <div class="mini-badge" id="shieldBadge" style="color:var(--c-neon-blue); display:none;">🛡️</div>
         <div class="mini-badge">SKOR <span id="scoreDisplay" style="color:var(--c-neon-green); margin-left:5px;">0</span></div>
       </div>
     </div>
@@ -74,26 +75,48 @@
         <div class="man-part p1"></div><div class="man-part p2"></div><div class="man-part p3"></div>
         <div class="man-part p4"></div><div class="man-part p5"></div><div class="man-part p6"></div>
       </div>
-      <div id="hintMain" style="text-align:center; color:var(--c-neon-green); font-weight:900; font-size:18px;"></div>
+      <div id="resInfo"></div>
+      <div id="hintMain" style="text-align:center; color:var(--c-neon-green); font-weight:900; font-size:18px; margin-bottom: 10px;"></div>
       <div id="wordBox" class="word-box"></div>
       <div class="keyboard" id="keyboard"></div>
-      <button class="btn-primary" style="background:linear-gradient(135deg,#6366f1,#a5b4fc); color:#fff" id="jokerBtn">⚡ İPUCU (<span id="jokerCount">1</span>)</button>
+      <button class="btn-main" style="background:linear-gradient(135deg,#6366f1,#a5b4fc); color:#fff" id="jokerBtn">⚡ İPUCU (<span id="jokerCount">1</span>)</button>
     </div>
   </div>
 
   <div class="modal-wrap" id="startModal">
     <div class="modal-card">
-      <h2 style="margin-bottom:20px">Dilinizi Seçin</h2>
-      <div class="lang-grid">
+      <h2 style="margin:0 0 15px;">NEON HANGMAN ELITE</h2>
+      
+      <div class="daily-card" id="dailyChampionCard">
+        <div style="font-size:11px; color:var(--c-neon-pink); font-weight:900; margin-bottom:5px;">👑 BUGÜNÜN LİDERİ</div>
+        <div id="dailyChampionInfo" style="font-size:14px; font-weight:800;">Lider Yok</div>
+        <div id="countdownTimer" style="font-size:10px; opacity:0.7; margin-top:5px;">Sıfırlanmaya: --:--</div>
+      </div>
+
+      <div style="margin-bottom:20px;">
         <button data-lang="en" class="lang-btn active">🇬🇧</button>
         <button data-lang="de" class="lang-btn">🇩🇪</button>
         <button data-lang="fr" class="lang-btn">🇫🇷</button>
         <button data-lang="es" class="lang-btn">🇪🇸</button>
         <button data-lang="it" class="lang-btn">🇮🇹</button>
       </div>
-      <button class="btn-primary" data-lvl="A2">KOLAY SEVİYE</button>
-      <button class="btn-primary" data-lvl="B1">ORTA SEVİYE</button>
-      <button class="btn-primary" data-lvl="B2">ZOR SEVİYE</button>
+      
+      <button class="lvl-btn" data-lvl="A2"><span>KOLAY</span> <span id="pb-A2">PB: 0</span></button>
+      <button class="lvl-btn" data-lvl="B1" style="border-color: #4338ca"><span>ORTA</span> <span id="pb-B1">PB: 0</span></button>
+      <button class="lvl-btn" data-lvl="B2" style="border-color: #701a75"><span>ZOR</span> <span id="pb-B2">PB: 0</span></button>
+
+      <h3 style="margin:25px 0 10px; font-size:14px; color:var(--c-neon-pink);">🏆 KAYIT DEFTERİ</h3>
+      <div id="leaderboardBox"></div>
+    </div>
+  </div>
+
+  <div class="modal-wrap" id="endModal" style="display:none">
+    <div class="modal-card">
+      <h2 id="endTitle">SET TAMAMLANDI</h2>
+      <div id="endStats" style="text-align:left; margin:20px 0; font-size:15px; line-height:2;"></div>
+      <button class="btn-main" id="btnContinue">DEVAM ET (1 HATA KALKANI 🛡️)</button>
+      <button class="btn-main" id="btnBank" style="background:var(--c-neon-blue)">BANKALA (%5 BONUS & +1 JOKER)</button>
+      <button class="btn-main" id="btnFinish" style="background:rgba(255,255,255,0.05); color:#fff; border:1px solid var(--border)">BİTİR VE KAYDET</button>
     </div>
   </div>
 
@@ -102,29 +125,82 @@ import { loadLangPool, createUsedSet, pick } from "/js/langpool.js";
 
 const $ = (id) => document.getElementById(id);
 let currentLang = "en", currentDiff = "A2", wordList = [], currentIndex = 0;
-let mistakes = 0, lives = 3, currentWord = "", currentRaw = "", discovered = [], jokers = 1, totalScore = 0;
+let mistakes = 0, lives = 3, maxLives = 3, currentWord = "", currentRaw = "", discovered = [], jokers = 1, totalScore = 0, setScore = 0;
+let maxStreak = 0, currentStreak = 0, isBusy = false, lastSpoken = 0, runActive = false, shield = false;
 
-function speak(text) {
-  try {
-    window.speechSynthesis.cancel();
-    const msg = new SpeechSynthesisUtterance(text);
-    const langMap = { en: 'en-US', de: 'de-DE', fr: 'fr-FR', es: 'es-ES', it: 'it-IT' };
-    msg.lang = langMap[currentLang] || 'en-US';
-    msg.rate = 0.8;
-    window.speechSynthesis.speak(msg);
-  } catch(e) {}
+function shuffle(a) {
+  const arr = [...a];
+  for(let i=arr.length-1; i>0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
 }
 
-async function initGame() {
+function updateCountdown() {
+  const now = new Date();
+  const night = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0);
+  const diff = night - now;
+  const h = Math.floor(diff / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  $('countdownTimer').textContent = `Sıfırlanmaya: ${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
+}
+setInterval(updateCountdown, 60000);
+updateCountdown();
+
+function updateLeaderboardUI() {
+  const records = JSON.parse(localStorage.getItem('italky_hangman_v64') || '[]');
+  const todayKey = new Date().toLocaleDateString('tr-TR');
+  const dailyRecord = JSON.parse(localStorage.getItem('italky_daily_hangman_v64') || '{}');
+  
+  if (dailyRecord.date !== todayKey) {
+    localStorage.removeItem('italky_daily_hangman_v64');
+    $('dailyChampionInfo').innerHTML = "Lider Yok";
+  } else if (dailyRecord.score) {
+    $('dailyChampionInfo').innerHTML = `${dailyRecord.score} Puan (${dailyRecord.lang}-${dailyRecord.lvl}) • 🔥${dailyRecord.streak}`;
+  }
+
+  $('leaderboardBox').innerHTML = records.map((r, i) => `
+    <div class="record-item rank-${i < 3 ? i : 'rest'}">
+      <span>${i < 3 ? ['👑','🥈','🥉'][i] : i+1+'.'} <b>${r.score}</b> <small>${r.lang}-${r.lvl}</small></span>
+      <span style="color:var(--c-neon-pink)">🔥${r.streak} <small>${r.time}</small></span>
+    </div>
+  `).join('') || '<div style="font-size:12px; opacity:0.5">Henüz rekor yok.</div>';
+  
+  ['A2', 'B1', 'B2'].forEach(lvl => {
+    const local = records.filter(r => r.lang === currentLang.toUpperCase() && r.lvl === lvl);
+    const top = local.length > 0 ? Math.max(...local.map(r => r.score)) : 0;
+    $(`pb-${lvl}`).textContent = `PB: ${top}`;
+    if (lvl === currentDiff) $('pbDisplay').textContent = `PB (${currentLang.toUpperCase()}-${lvl}): ${top}`;
+  });
+}
+
+function speak(text) {
+  const now = Date.now();
+  if (now - lastSpoken < 250) return;
+  lastSpoken = now;
+  window.speechSynthesis.cancel();
+  const msg = new SpeechSynthesisUtterance(text);
+  const langMap = { en: 'en-US', de: 'de-DE', fr: 'fr-FR', es: 'es-ES', it: 'it-IT' };
+  msg.lang = langMap[currentLang] || 'en-US';
+  msg.rate = 0.8;
+  window.speechSynthesis.speak(msg);
+}
+
+async function initGame(diff, isBank = false) {
   try {
+    currentDiff = diff;
     const pool = await loadLangPool(currentLang);
     if (!pool || !Array.isArray(pool.items)) throw new Error("Pool load failed");
 
-    // Benzersiz kullanılanlar listesi
-    const { used, save } = createUsedSet(`used_hangman_v53_${currentLang}_${currentDiff}`);
+    const randomizedItems = shuffle([...pool.items]);
+    const { used, save } = createUsedSet(`used_hangman_v64_${currentLang}_${currentDiff}`);
     
-    // Havuzu karıştır
-    const randomizedItems = [...pool.items].sort(() => Math.random() - 0.5);
+    if (!runActive || isBank) {
+      maxLives = (currentDiff === "A2") ? 4 : 3;
+      lives = maxLives;
+      runActive = true;
+    }
 
     const cfg = { A2: { min:3, max:6 }, B1: { min:6, max:9 }, B2: { min:9, max:15 } }[currentDiff];
 
@@ -135,49 +211,50 @@ async function initGame() {
       return match && it.w && it.w.length >= cfg.min && it.w.length <= cfg.max;
     });
 
+    try { save(wordList.map(x => x.w)); } catch {}
+
     if (wordList.length === 0) {
-        alert("Yeni kelime kalmadı! İlerleme sıfırlanıyor...");
-        localStorage.removeItem(`used_hangman_v53_${currentLang}_${currentDiff}`);
-        location.reload();
-        return;
+        alert("Havuz tükendi! Liste temizleniyor.");
+        localStorage.removeItem(`used_hangman_v64_${currentLang}_${currentDiff}`);
+        location.reload(); return;
     }
 
+    $("statusChip").textContent = `${currentLang.toUpperCase()} • ${currentDiff}`;
     $("startModal").style.display = "none";
+    $("endModal").style.display = "none";
+    $("btnContinue").disabled = false;
+    $("btnBank").disabled = false;
+
     currentIndex = 0;
+    setScore = 0;
     startRound();
-  } catch (e) { 
-    console.error("Yükleme Hatası:", e);
-    alert("Havuz yüklenemedi! /js/langpool.js dosyasını kontrol edin."); 
-  }
+  } catch (e) { alert("Sistem hatası!"); }
 }
 
 function startRound() {
-  if(currentIndex >= wordList.length || lives <= 0) return;
+  if(currentIndex >= wordList.length || lives <= 0) { showFinal(lives <= 0); return; }
   const data = wordList[currentIndex];
   currentRaw = String(data.w || "").trim();
-
-  // Normalizasyon: Aksanlı harfleri klavye uyumu için temizle
   currentWord = currentRaw.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().replace(/[^A-Z]/g, "");
-    
   mistakes = 0;
   discovered = new Array(currentWord.length).fill(false);
   
   $("gallowsBox").classList.remove("shake");
   $("hintMain").textContent = data.tr || "";
+  $("resInfo").style.opacity = "0";
+
+  if (shield) {
+    $("resInfo").textContent = `🛡️ KALKAN AKTİF!`;
+    $("resInfo").style.opacity = "1";
+  }
+
   renderWord(); 
   renderDynamicKeyboard();
   renderHangman(); 
   updateUI();
 }
 
-function maxMistakes() { return currentDiff === "A2" ? 8 : (currentDiff === "B1" ? 7 : 6); }
-
-function renderHangman() {
-  const visible = Math.min(mistakes, 6);
-  if(mistakes >= maxMistakes() - 1) $("gallowsBox").classList.add("shake");
-  document.querySelectorAll(".man-part").forEach((p, i) => p.style.opacity = (i < visible) ? "1" : "0");
-}
-
+// ✅ FIX 1: Dinamik Klavye Geri Getirildi
 function renderDynamicKeyboard() {
   const kb = $("keyboard"); kb.innerHTML = "";
   const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -194,7 +271,7 @@ function renderDynamicKeyboard() {
 }
 
 function handleGuess(char, btn) {
-  if(!btn || btn.disabled) return;
+  if(!btn || btn.disabled || isBusy) return;
   btn.disabled = true;
 
   if(currentWord.includes(char)) {
@@ -202,24 +279,42 @@ function handleGuess(char, btn) {
     currentWord.split("").forEach((c, i) => { if(c === char) discovered[i] = true; });
     renderWord();
     if(discovered.every(v => v)) {
-      totalScore += (maxMistakes() - mistakes) * 10;
+      isBusy = true;
+      currentStreak++;
+      maxStreak = Math.max(maxStreak, currentStreak);
+      const roundPoints = (6 - mistakes) * 10;
+      totalScore += roundPoints;
+      setScore += roundPoints;
       speak(currentRaw); 
-      setTimeout(() => { currentIndex++; startRound(); }, 1200);
+      setTimeout(() => { currentIndex++; isBusy = false; startRound(); }, 1200);
     }
   } else {
+    // ✅ FIX 2: Kalkan Görseli Correct Boyamıyor
+    if (shield) {
+      shield = false;
+      btn.style.opacity = "0.35";
+      btn.style.borderColor = "var(--c-neon-blue)";
+      $("resInfo").textContent = `🛡️ KALKAN KULLANILDI!`;
+      $("resInfo").style.opacity = "1";
+      setTimeout(() => { $("resInfo").style.opacity = "0"; }, 1500);
+      updateUI();
+      return; 
+    }
+
     btn.classList.add("wrong");
     mistakes++;
+    $("resInfo").textContent = `HATA: ${mistakes}/6`;
+    $("resInfo").style.opacity = "1";
     renderHangman(); 
-    updateUI();
-    if(mistakes >= maxMistakes()) {
+    if(mistakes >= 6) {
+      isBusy = true;
       lives--;
+      currentStreak = 0;
+      const penalty = currentDiff === "B2" ? 15 : 10;
+      totalScore = Math.max(0, totalScore - penalty);
       speak(currentRaw); 
-      if(lives <= 0) { 
-        alert("Eğitim Bitti! Toplam Puan: " + totalScore); 
-        location.reload(); 
-      } else { 
-        setTimeout(() => { currentIndex++; startRound(); }, 1500); 
-      }
+      if(lives <= 0) showFinal(true);
+      else setTimeout(() => { currentIndex++; isBusy = false; startRound(); }, 1500);
     }
   }
 }
@@ -234,37 +329,135 @@ function renderWord() {
   });
 }
 
+function renderHangman() {
+  const visible = Math.min(mistakes, 6);
+  if(mistakes >= 5) $("gallowsBox").classList.add("shake");
+  document.querySelectorAll(".man-part").forEach((p, i) => p.style.opacity = (i < visible) ? "1" : "0");
+}
+
 function updateUI() {
-  $("lifeDisplay").textContent = "❤️".repeat(Math.max(0, lives));
+  $("lifeDisplay").textContent = "❤️".repeat(Math.max(0, lives)) + "🖤".repeat(maxLives - Math.max(0, lives));
   $("scoreDisplay").textContent = totalScore;
   $("jokerCount").textContent = jokers;
+  $("shieldBadge").style.display = shield ? "flex" : "none";
+}
+
+function saveRecord() {
+  if (totalScore <= 0) return false;
+  const records = JSON.parse(localStorage.getItem('italky_hangman_v64') || '[]');
+  const todayKey = new Date().toLocaleDateString('tr-TR');
+  const now = new Date();
+  
+  const newRecord = {
+    id: now.getTime() + "-" + Math.random().toString(16).slice(2),
+    score: totalScore,
+    lang: currentLang.toUpperCase(),
+    lvl: currentDiff,
+    streak: maxStreak,
+    time: now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) + ' ' + todayKey
+  };
+
+  const currentDaily = JSON.parse(localStorage.getItem('italky_daily_hangman_v64') || '{}');
+  const isBetter = (totalScore > (currentDaily.score || 0)) || 
+                   (totalScore === (currentDaily.score || 0) && maxStreak > (currentDaily.streak || 0));
+
+  if (currentDaily.date !== todayKey || isBetter) {
+    localStorage.setItem('italky_daily_hangman_v64', JSON.stringify({
+      score: totalScore,
+      lang: currentLang.toUpperCase(),
+      lvl: currentDiff,
+      streak: maxStreak,
+      date: todayKey
+    }));
+  }
+
+  records.push(newRecord);
+  records.sort((a,b) => b.score - a.score);
+  const top10 = records.slice(0, 10);
+  localStorage.setItem('italky_hangman_v64', JSON.stringify(top10));
+  updateLeaderboardUI();
+  return top10.some(r => r.id === newRecord.id);
+}
+
+function showFinal(gameEnded) {
+  $("endModal").style.display = "flex";
+  if (gameEnded) {
+    const isNew = saveRecord();
+    $("endTitle").textContent = isNew ? "YENİ REKOR! 👑" : "OYUN BİTTİ 💀";
+    $("btnContinue").style.display = "none";
+    $("btnBank").style.display = "none";
+    runActive = false; shield = false;
+  } else {
+    $("endTitle").textContent = "SET TAMAMLANDI 🏆";
+    $("btnContinue").style.display = "block";
+    $("btnBank").style.display = "block";
+  }
+  $("endStats").innerHTML = `Skor: <b>${totalScore}</b><br>Max Streak: <b>🔥 ${maxStreak}</b>`;
+}
+
+function returnToMenu() {
+  saveRecord();
+  runActive = false; shield = false;
+  totalScore = 0; setScore = 0; lives = 3; maxLives = 3;
+  currentStreak = 0; maxStreak = 0; jokers = 1;
+  currentIndex = 0; wordList = [];
+  $("scoreDisplay").textContent = "0";
+  $("lifeDisplay").textContent = "❤️❤️❤️";
+  $("endModal").style.display = "none";
+  $("startModal").style.display = "flex";
+  updateLeaderboardUI();
 }
 
 // Event Bindings
 document.querySelectorAll(".lang-btn").forEach(btn => {
-    btn.addEventListener('click', () => {
-        currentLang = btn.dataset.lang;
-        document.querySelectorAll(".lang-btn").forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-    });
+  btn.onclick = () => {
+    currentLang = btn.dataset.lang;
+    document.querySelectorAll(".lang-btn").forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    updateLeaderboardUI();
+  };
 });
 
-document.querySelectorAll("[data-lvl]").forEach(btn => {
-    btn.addEventListener('click', () => {
-        currentDiff = btn.dataset.lvl;
-        initGame();
-    });
+document.querySelectorAll(".lvl-btn").forEach(btn => {
+  btn.onclick = () => initGame(btn.dataset.lvl);
 });
+
+$("btnContinue").onclick = () => {
+  $("btnContinue").disabled = true;
+  $("btnBank").disabled = true;
+  shield = true;
+  setScore = 0; 
+  initGame(currentDiff);
+};
+
+$("btnBank").onclick = () => {
+  $("btnContinue").disabled = true;
+  $("btnBank").disabled = true;
+  const bonus = Math.round(setScore * 0.05);
+  totalScore += bonus;
+  setScore = 0; // ✅ FIX 3: Bankada setScore anlık sıfırlama
+  jokers++;
+  currentStreak = 0;
+  shield = false; 
+  $("resInfo").textContent = `BANKA BONUSU +${bonus} PUAN & +1 JOKER ⚡`;
+  $("resInfo").style.opacity = "1";
+  initGame(currentDiff, true);
+};
+
+$("btnFinish").onclick = returnToMenu;
 
 $("jokerBtn").onclick = () => {
-  if(jokers <= 0) return;
+  if(jokers <= 0 || isBusy) return;
   const hidden = discovered.map((v, i) => v ? -1 : i).filter(i => i !== -1);
   if(hidden.length > 0) {
     const char = currentWord[hidden[Math.floor(Math.random() * hidden.length)]];
-    jokers--; updateUI();
+    jokers--; 
+    updateUI();
     document.querySelectorAll(".key-btn").forEach(b => { if(b.textContent === char) handleGuess(char, b); });
   }
 };
+
+window.addEventListener('load', updateLeaderboardUI);
 </script>
 </body>
 </html>
