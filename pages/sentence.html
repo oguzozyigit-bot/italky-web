@@ -114,21 +114,28 @@ function speakSentence(text) {
 
 async function initGame() {
   try {
-    const rawPool = await loadLangPool(currentLang);
-    if (!rawPool || rawPool.length === 0) throw new Error("Pool load failed");
+    // Havuzu yükle
+    const pool = await loadLangPool(currentLang);
+    if (!pool || !Array.isArray(pool.items)) {
+        throw new Error("Havuz verisi geçersiz.");
+    }
 
+    // Bu oyun moduna özel used listesi
     const { used, save } = createUsedSet(`used_sentence_v53_${currentLang}_${currentDiff}`);
-    const randomizedPool = [...rawPool].sort(() => Math.random() - 0.5);
 
-    wordList = pick(randomizedPool, SET_SIZE, used, save, (it) => {
+    // Havuzu rastgeleleştir
+    const randomizedItems = [...pool.items].sort(() => Math.random() - 0.5);
+
+    wordList = pick({ items: randomizedItems }, SET_SIZE, used, save, (it) => {
       const itLvl = String(it.lvl || "").toUpperCase();
       const target = String(currentDiff || "").toUpperCase();
+      // A2 için A1+A2 desteği
       const lvlMatch = (target === "A2") ? ["A1","A2"].includes(itLvl) : (itLvl === target);
       return lvlMatch && it.sentence && it.w;
     });
 
     if(!wordList || wordList.length === 0) {
-        alert("Havuzda yeni kelime kalmadı! İlerleme sıfırlanıyor...");
+        alert("Yeni kelime kalmadı! İlerleme temizleniyor...");
         localStorage.removeItem(`used_sentence_v53_${currentLang}_${currentDiff}`);
         location.reload();
         return;
@@ -138,8 +145,8 @@ async function initGame() {
     currentIndex = 0;
     startRound();
   } catch (e) { 
-    console.error("Game Init Error:", e);
-    alert("Havuz yüklenemedi! /js/langpool.js yolunun doğru olduğundan ve verilerin yüklendiğinden emin olun."); 
+    console.error("Yükleme Hatası:", e);
+    alert("Havuz yüklenemedi! /js/langpool.js dosyasını ve bağlantıyı kontrol edin."); 
   }
 }
 
@@ -148,7 +155,10 @@ function startRound() {
   const data = wordList[currentIndex];
   currentRaw = String(data.w || "").trim();
   currentSentence = String(data.sentence || "");
+  
+  // Harf normalizasyonu
   currentWord = currentRaw.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().replace(/[^A-ZÇĞİÖŞÜ-]/g, "");
+  
   mistakes = 0;
   discovered = new Array(currentWord.length).fill(false);
   roundStartTime = Date.now();
@@ -200,6 +210,7 @@ function handleGuess(char, btn) {
     renderWord();
     if (discovered.every(v => v)) {
       calculatePuan();
+      // Sadece kelime bittiğinde oku
       setTimeout(() => speakSentence(currentSentence), 200);
       setTimeout(() => { currentIndex++; startRound(); }, 1500);
     }
@@ -210,6 +221,7 @@ function handleGuess(char, btn) {
     updateUI();
     if (mistakes >= 8) {
       lives--;
+      // Yanlışta eğitim için cümleyi oku
       setTimeout(() => speakSentence(currentSentence), 200);
       if (lives <= 0) finishSet();
       else { currentIndex++; setTimeout(() => startRound(), 1500); }
@@ -251,20 +263,20 @@ function finishSet() {
   $("endStats").innerHTML = `Skor: <b>${totalScore}</b><br>Seri: <b>🔥 ${maxStreak}</b><br>Kusursuz: <b>🏆 ${perfectCount}</b>`;
 }
 
-// Event Bindings
+// Event Listeners - Modül dışına açık hale getirildi
 document.querySelectorAll(".lang-btn").forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.onclick = () => {
         currentLang = btn.dataset.lang;
         document.querySelectorAll(".lang-btn").forEach(b => b.classList.remove("active"));
         btn.classList.add("active");
-    });
+    };
 });
 
 document.querySelectorAll("[data-lvl]").forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.onclick = () => {
         currentDiff = btn.dataset.lvl;
         initGame();
-    });
+    };
 });
 
 $("nextSetBtn").onclick = () => {
