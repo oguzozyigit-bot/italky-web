@@ -3,20 +3,21 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-  <title>italkyAI • Sentence Master v5.3</title>
+  <title>italkyAI • Sentence Master Eternal</title>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
   <style>
     :root{
       --bg-deep:#020205; --c-neon-pink:#ff00ff; --c-neon-blue:#00f3ff;
       --c-neon-green:#00e676; --c-error:#ff1744; --border: rgba(255,255,255,.12);
-      --safe-top: env(safe-area-inset-top, 0px);
     }
     *{ box-sizing:border-box; outline:none; user-select:none; -webkit-tap-highlight-color:transparent; }
     html,body{ margin:0; width:100%; height:100%; overflow:hidden; font-family:'Outfit', sans-serif; background:var(--bg-deep); color:#fff; position:fixed; }
     .cosmos-bg{ position:absolute; inset:0; z-index:0; background: radial-gradient(circle at 50% 35%, #0b0b2a 0%, #020205 60%, #010104 100%); }
-    .wrap{ width:100%; max-width:480px; height:100%; margin:0 auto; position:relative; z-index:10; display:flex; flex-direction:column; padding: var(--safe-top) 0 env(safe-area-inset-bottom); }
+    .wrap{ width:100%; max-width:480px; height:100%; margin:0 auto; position:relative; z-index:10; display:flex; flex-direction:column; padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); }
+    
     .nav-top{ display:flex; align-items:center; justify-content:space-between; padding: 15px 18px; }
-    .back-btn{ display:flex; align-items:center; justify-content:center; width:40px; height:40px; border-radius:12px; background: rgba(255,255,255,.05); border: 1px solid var(--border); color:#fff; text-decoration:none; font-size:20px; }
+    .status-chip { background: rgba(255,255,255,0.05); padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; border: 1px solid var(--border); letter-spacing: 1px; }
+    .pb-chip { font-size: 10px; color: var(--c-neon-pink); font-weight: 800; text-align: right; margin-top: 4px; }
     .mini-badge{ display:flex; align-items:center; height: 38px; padding: 0 12px; border-radius: 16px; background: rgba(255,255,255,.05); border: 1px solid var(--border); font-weight: 800; font-size: 11px; }
 
     @keyframes streakPop { 0% { transform:scale(1); } 50% { transform:scale(1.1); color:var(--c-neon-pink); } 100% { transform:scale(1); } }
@@ -33,16 +34,20 @@
     .letter-slot.filled{ border-bottom: none; color: #fff; text-shadow: 0 0 10px var(--c-neon-blue); }
 
     .keyboard{ display:grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
-    .key-btn{ aspect-ratio:1; display:flex; align-items:center; justify-content:center; background: rgba(255,255,255,.1); border: 1px solid var(--border); border-radius: 10px; color: #fff; font-weight: 800; cursor:pointer; font-size: 14px; }
+    .key-btn{ aspect-ratio:1; display:flex; align-items:center; justify-content:center; background: rgba(255,255,255,.1); border: 1px solid var(--border); border-radius: 10px; color: #fff; font-weight: 800; cursor:pointer; font-size: 14px; transition: 0.2s; }
     .key-btn.correct{ background: var(--c-neon-green) !important; color:#000; border:none; }
-    .key-btn.wrong{ opacity: 0.2; pointer-events:none; }
+    .key-btn.wrong{ background: var(--c-error) !important; color:#fff; border:none; opacity: 0.35; text-decoration: line-through; pointer-events: none; }
 
     .modal-wrap{ position:absolute; inset:0; background: rgba(0,0,0,.97); z-index:1000; display:flex; align-items:center; justify-content:center; padding: 20px; }
-    .modal-card{ width:100%; max-width:340px; background: #08080c; border: 1px solid var(--border); border-radius: 30px; padding: 30px; text-align:center; }
-    .btn-primary{ width:100%; padding: 16px; background: var(--c-neon-green); color:#000; border:none; border-radius: 18px; font-weight: 900; cursor:pointer; margin-top: 10px; }
-    .lang-grid{ display:grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 20px; }
-    .lang-btn{ font-size: 22px; padding: 8px; border-radius: 12px; background: rgba(255,255,255,.05); border: 1px solid transparent; cursor:pointer; }
-    .lang-btn.active{ border-color: var(--c-neon-blue); background: rgba(0,243,255,0.1); }
+    .modal-card{ width:100%; max-width:360px; background: #08080c; border: 1px solid var(--border); border-radius: 36px; padding: 30px; text-align:center; overflow-y:auto; max-height:90vh; }
+    .record-item { display: flex; justify-content: space-between; align-items:center; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 12px; margin-bottom: 8px; font-size: 11px; border-left: 3px solid #444; }
+    .record-item.rank-0 { border-left-color: var(--c-neon-pink); background: rgba(255,0,255,0.05); }
+
+    .btn-main{ width:100%; padding: 18px; background: var(--c-neon-green); color:#000; border:none; border-radius: 20px; font-weight: 900; cursor:pointer; margin-top: 10px; }
+    .lvl-btn { width:100%; display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-radius: 18px; border: 1px solid var(--border); background: rgba(255,255,255,0.05); color: #fff; font-weight: 700; cursor: pointer; margin-top: 8px; }
+    .lang-btn{ font-size: 24px; padding: 10px; border-radius: 16px; background: rgba(255,255,255,0.05); border: 1px solid transparent; cursor:pointer; margin: 4px; }
+    .lang-btn.active{ border-color: var(--c-neon-blue); background: rgba(0,243,255,0.15); }
+    #resInfo { font-size: 12px; color: var(--c-neon-blue); text-align: center; min-height: 18px; margin-bottom: 5px; font-weight: 700; opacity: 0; transition: 0.3s; }
   </style>
 </head>
 <body>
@@ -50,43 +55,54 @@
   <div class="wrap">
     <div class="nav-top">
       <a href="/pages/game.html" class="back-btn">←</a>
-      <div style="font-size:24px; font-weight:900;">italky<span style="color:var(--c-neon-blue)">AI</span></div>
+      <div style="text-align: center;">
+        <div id="statusChip" class="status-chip">EN • LEVEL</div>
+        <div id="pbDisplay" class="pb-chip">PB: 0</div>
+      </div>
       <div style="display:flex; gap:8px;">
         <div class="mini-badge" id="lifeDisplay" style="color:var(--c-neon-pink);">❤️❤️❤️</div>
+        <div class="mini-badge" id="shieldBadge" style="color:var(--c-neon-blue); display:none;">🛡️</div>
         <div class="mini-badge" id="scoreBadge">🏆 <span id="scoreDisplay">0</span></div>
       </div>
     </div>
     <div id="streakWrap" class="streak-wrap">🔥 STREAK: <span id="streakCount">0</span></div>
     <div class="game-card">
+      <div id="resInfo"></div>
       <div id="sentenceDisplay" class="sentence-text"></div>
       <div id="translationDisplay" class="translation-text"></div>
       <div id="wordBox" class="word-box"></div>
       <div class="keyboard" id="keyboard"></div>
-      <button class="btn-primary" style="background:linear-gradient(135deg,#6366f1,#a5b4fc); color:#fff; margin-top:15px" id="jokerBtn">⚡ REVEAL JOKER (<span id="jokerCount">2</span>)</button>
+      <button class="btn-main" style="background:linear-gradient(135deg,#6366f1,#a5b4fc); color:#fff; margin-top:15px; padding: 14px;" id="jokerBtn">⚡ REVEAL JOKER (<span id="jokerCount">2</span>)</button>
     </div>
   </div>
 
   <div class="modal-wrap" id="startModal">
     <div class="modal-card">
-      <h2>Sentence Master</h2>
-      <div class="lang-grid" id="langGrid">
+      <h2 style="margin:0 0 20px;">SENTENCE MASTER ELITE</h2>
+      <div style="margin-bottom:20px;">
         <button data-lang="en" class="lang-btn active">🇬🇧</button>
         <button data-lang="de" class="lang-btn">🇩🇪</button>
         <button data-lang="fr" class="lang-btn">🇫🇷</button>
         <button data-lang="es" class="lang-btn">🇪🇸</button>
         <button data-lang="it" class="lang-btn">🇮🇹</button>
       </div>
-      <button class="btn-primary" data-lvl="A2">A1 / A2 SEVİYESİ</button>
-      <button class="btn-primary" data-lvl="B1">B1 SEVİYESİ</button>
-      <button class="btn-primary" data-lvl="B2">B2 SEVİYESİ</button>
+      
+      <button class="lvl-btn" data-lvl="A2"><span>KOLAY (A2)</span> <span id="pb-A2">PB: 0</span></button>
+      <button class="lvl-btn" data-lvl="B1" style="border-color: #4338ca"><span>ORTA (B1)</span> <span id="pb-B1">PB: 0</span></button>
+      <button class="lvl-btn" data-lvl="B2" style="border-color: #701a75"><span>ZOR (B2)</span> <span id="pb-B2">PB: 0</span></button>
+
+      <h3 style="margin:25px 0 10px; font-size:14px; color:var(--c-neon-pink);">🏆 KAYIT DEFTERİ</h3>
+      <div id="leaderboardBox"></div>
     </div>
   </div>
 
   <div class="modal-wrap" id="endModal" style="display:none">
     <div class="modal-card">
       <h2 id="endTitle">SET TAMAMLANDI</h2>
-      <p id="endStats" style="margin: 15px 0; line-height: 1.6;"></p>
-      <button class="btn-primary" id="nextSetBtn">BİR SET DAHA!</button>
+      <div id="endStats" style="text-align:left; margin:20px 0; font-size:15px; line-height:2;"></div>
+      <button class="btn-main" id="btnContinue">DEVAM ET (1 ROUND KALKAN 🛡️)</button>
+      <button class="btn-main" id="btnBank" style="background:var(--c-neon-blue)">BANKALA (%5 BONUS & +1 JOKER)</button>
+      <button class="btn-main" id="btnFinish" style="background:rgba(255,255,255,0.05); color:#fff; border:1px solid var(--border)">BİTİR VE KAYDET</button>
     </div>
   </div>
 
@@ -95,79 +111,125 @@ import { loadLangPool, createUsedSet, pick } from "/js/langpool.js";
 
 const $ = (id) => document.getElementById(id);
 let currentLang = "en", currentDiff = "A2", wordList = [], currentIndex = 0;
-let mistakes = 0, lives = 3, currentWord = "", currentRaw = "", currentSentence = "", discovered = [], jokers = 2, totalScore = 0;
-let streak = 0, maxStreak = 0, roundStartTime = 0, perfectCount = 0;
-const SET_SIZE = 12;
+let mistakes = 0, maxMistakes = 8, lives = 3, maxLives = 3, currentWord = "", currentRaw = "", currentSentence = "", discovered = [], jokers = 2, totalScore = 0, setScore = 0;
+let streak = 0, maxStreak = 0, roundStartTime = 0, perfectCount = 0, lastSpoken = 0, runActive = false, shield = false, usedJokerInRound = false;
+
+const LOCALE_MAP = { en:'en-US', de:'de-DE', fr:'fr-FR', es:'es-ES', it:'it-IT' };
 
 function escapeRegExp(s){ return String(s ?? "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
-
-function speakSentence(text) {
-  try {
-    window.speechSynthesis.cancel();
-    const msg = new SpeechSynthesisUtterance(text);
-    const langMap = { en: "en-US", de: "de-DE", fr: "fr-FR", es: "es-ES", it: "it-IT" };
-    msg.lang = langMap[currentLang] || "en-US";
-    msg.rate = 0.85;
-    window.speechSynthesis.speak(msg);
-  } catch(e) {}
+function shuffle(a) {
+  const arr = [...a];
+  for(let i=arr.length-1; i>0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
 }
 
-async function initGame() {
+function updateLeaderboardUI() {
+  const records = JSON.parse(localStorage.getItem('italky_sentence_hof_v62') || '[]');
+  const badges = ["👑", "🥈", "🥉"];
+  
+  $('leaderboardBox').innerHTML = records.map((r, i) => `
+    <div class="record-item rank-${i < 3 ? i : 'rest'}">
+      <span>${i < 3 ? badges[i] : i+1 + '.'} <b>${r.score}</b> <small>${r.lang}-${r.lvl}</small></span>
+      <span style="color:var(--c-neon-pink)">🔥${r.streak}</span>
+    </div>
+  `).join('') || '<div style="font-size:12px; opacity:0.5">Henüz rekor yok.</div>';
+  
+  ['A2', 'B1', 'B2'].forEach(lvl => {
+    const local = records.filter(r => r.lang === currentLang.toUpperCase() && r.lvl === lvl);
+    const top = local.length > 0 ? Math.max(...local.map(r => r.score)) : 0;
+    $(`pb-${lvl}`).textContent = `PB: ${top}`;
+    if (lvl === currentDiff) $('pbDisplay').textContent = `PB (${currentLang.toUpperCase()}-${lvl}): ${top}`;
+  });
+}
+
+function speak(text) {
+  const now = Date.now();
+  if (now - lastSpoken < 250) return;
+  lastSpoken = now;
+  window.speechSynthesis.cancel();
+  const msg = new SpeechSynthesisUtterance(text);
+  msg.lang = LOCALE_MAP[currentLang] || 'en-US';
+  msg.rate = 0.85;
+  window.speechSynthesis.speak(msg);
+}
+
+async function initGame(diff, isBank = false) {
   try {
-    // Havuzu yükle
+    currentDiff = diff;
+    updateLeaderboardUI(); // ✅ PB display'i anında güncelle başkanım
     const pool = await loadLangPool(currentLang);
-    if (!pool || !Array.isArray(pool.items)) {
-        throw new Error("Havuz verisi geçersiz.");
+    if (!pool || !Array.isArray(pool.items)) throw new Error("Pool error");
+
+    const randomizedItems = shuffle([...pool.items]);
+    const { used, save } = createUsedSet(`used_sentence_v62_${currentLang}_${currentDiff}`);
+
+    if (!runActive || isBank) {
+      const cfg = { A2: { l:4, j:2, m:8 }, B1: { l:3, j:2, m:7 }, B2: { l:3, j:1, m:6 } }[currentDiff];
+      maxLives = cfg.l; lives = maxLives;
+      jokers = isBank ? jokers : cfg.j;
+      maxMistakes = cfg.m;
+      runActive = true;
     }
 
-    // Bu oyun moduna özel used listesi
-    const { used, save } = createUsedSet(`used_sentence_v53_${currentLang}_${currentDiff}`);
+    const setSize = currentDiff === "A2" ? 10 : 12;
 
-    // Havuzu rastgeleleştir
-    const randomizedItems = [...pool.items].sort(() => Math.random() - 0.5);
-
-    wordList = pick({ items: randomizedItems }, SET_SIZE, used, save, (it) => {
+    wordList = pick({ items: randomizedItems }, setSize, used, save, (it) => {
       const itLvl = String(it.lvl || "").toUpperCase();
-      const target = String(currentDiff || "").toUpperCase();
-      // A2 için A1+A2 desteği
+      const target = currentDiff.toUpperCase();
       const lvlMatch = (target === "A2") ? ["A1","A2"].includes(itLvl) : (itLvl === target);
-      return lvlMatch && it.sentence && it.w;
+      // ✅ SADECE TEK KELİME VE GEÇERLİ METİN
+      return lvlMatch && it.sentence && it.w && !it.w.trim().includes(" "); 
     });
 
-    if(!wordList || wordList.length === 0) {
-        alert("Yeni kelime kalmadı! İlerleme temizleniyor...");
-        localStorage.removeItem(`used_sentence_v53_${currentLang}_${currentDiff}`);
-        location.reload();
-        return;
+    try { save(wordList.map(x => x.w)); } catch(e) {}
+
+    if(!wordList.length) {
+        alert("Havuz tükendi! Liste sıfırlanıyor.");
+        localStorage.removeItem(`used_sentence_v62_${currentLang}_${currentDiff}`);
+        location.reload(); return;
     }
 
     $("startModal").style.display = "none";
-    currentIndex = 0;
+    $("endModal").style.display = "none";
+    $("btnContinue").disabled = false; $("btnBank").disabled = false;
+    currentIndex = 0; setScore = 0;
     startRound();
-  } catch (e) { 
-    console.error("Yükleme Hatası:", e);
-    alert("Havuz yüklenemedi! /js/langpool.js dosyasını ve bağlantıyı kontrol edin."); 
-  }
+  } catch (e) { alert("Sistem hatası!"); }
 }
 
 function startRound() {
   if (currentIndex >= wordList.length || lives <= 0) { finishSet(); return; }
+  
   const data = wordList[currentIndex];
   currentRaw = String(data.w || "").trim();
   currentSentence = String(data.sentence || "");
   
-  // Harf normalizasyonu
-  currentWord = currentRaw.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().replace(/[^A-ZÇĞİÖŞÜ-]/g, "");
+  // ✅ Locale duyarlı büyük harf ve güvenli normalizasyon
+  const loc = LOCALE_MAP[currentLang] || 'en-US';
+  currentWord = currentRaw.toLocaleUpperCase(loc).normalize("NFC").replace(/[^A-ZÇĞİÖŞÜÀ-ÿ-]/gu, "");
   
   mistakes = 0;
+  usedJokerInRound = false;
   discovered = new Array(currentWord.length).fill(false);
   roundStartTime = Date.now();
 
   const escaped = escapeRegExp(currentRaw);
-  const masked = currentSentence.toUpperCase().replace(new RegExp(`\\b${escaped}\\b`, "gi"), "____");
+  const regex = new RegExp(`(^|[^\\p{L}'-])(${escaped})(?=[^\\p{L}'-]|$)`, "giu");
+  const masked = currentSentence.replace(regex, `$1____`);
 
-  $("sentenceDisplay").textContent = masked;
+  $("sentenceDisplay").textContent = masked.toUpperCase();
   $("translationDisplay").textContent = data.tr || "";
+  $("resInfo").style.opacity = "0";
+
+  // ✅ Kalkan Bildirimi (Sadece aktif olduğu round'da)
+  if (shield) {
+    $("resInfo").textContent = `🛡️ KALKAN AKTİF!`;
+    $("resInfo").style.opacity = "1";
+  }
+
   renderWord();
   renderDynamicKeyboard();
   updateUI();
@@ -185,11 +247,10 @@ function renderWord() {
 
 function renderDynamicKeyboard() {
   const kb = $("keyboard"); kb.innerHTML = "";
-  const alphabet = currentLang === "en" ? "ABCDEFGHIJKLMNOPQRSTUVWXYZ" : "ABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZ";
+  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZÀÈÉÌÍÒÓÙÚ";
   const wordChars = [...new Set(currentWord.split("").filter(Boolean))];
   const wrongChars = alphabet.split("").filter(c => !wordChars.includes(c)).sort(() => Math.random() - 0.5).slice(0, 12);
-  const locale = currentLang === "en" ? "en" : "tr";
-  const finalKeys = [...wordChars, ...wrongChars].sort((a,b)=>a.localeCompare(b, locale));
+  const finalKeys = [...wordChars, ...wrongChars].sort((a,b)=>a.localeCompare(b, currentLang));
 
   finalKeys.forEach(char => {
     const b = document.createElement("button");
@@ -210,36 +271,60 @@ function handleGuess(char, btn) {
     renderWord();
     if (discovered.every(v => v)) {
       calculatePuan();
-      // Sadece kelime bittiğinde oku
-      setTimeout(() => speakSentence(currentSentence), 200);
+      shield = false; // Başarıyla bitince kalkan resetlenir başkanım
+      $("resInfo").textContent = `✅ DOĞRU: ${currentRaw.toUpperCase()}`;
+      $("resInfo").style.opacity = "1";
+      speak(currentSentence);
       setTimeout(() => { currentIndex++; startRound(); }, 1500);
     }
   } else {
+    // ✅ Kalkan Sadece 1 Yanlış Affeder ve Round bitmeden yanar başkanım
+    if (shield) {
+      shield = false;
+      btn.style.opacity = "0.4";
+      btn.style.borderColor = "var(--c-neon-blue)";
+      $("resInfo").textContent = `🛡️ KALKAN KULLANILDI!`;
+      $("resInfo").style.opacity = "1";
+      updateUI();
+      return;
+    }
+
     btn.classList.add("wrong");
     mistakes++;
-    streak = Math.max(0, streak - 2);
+    streak = 0; 
     updateUI();
-    if (mistakes >= 8) {
+    
+    if (mistakes >= maxMistakes) {
       lives--;
-      // Yanlışta eğitim için cümleyi oku
-      setTimeout(() => speakSentence(currentSentence), 200);
+      const penalty = { A2: 5, B1: 8, B2: 12 }[currentDiff];
+      totalScore = Math.max(0, totalScore - penalty);
+      speak(currentSentence);
       if (lives <= 0) finishSet();
       else { currentIndex++; setTimeout(() => startRound(), 1500); }
+    } else {
+      $("resInfo").textContent = `HATA: ${mistakes}/${maxMistakes}`;
+      $("resInfo").style.opacity = "1";
     }
   }
 }
 
 function calculatePuan() {
   streak++;
-  if (streak > maxStreak) maxStreak = streak;
-  const multiplier = (streak >= 5) ? 2 : (streak >= 3 ? 1.5 : 1);
-  const base = (8 - mistakes) * 10;
+  maxStreak = Math.max(maxStreak, streak);
+  const multiplier = Math.min(streak <= 3 ? streak : (3 + (streak - 3) * 0.25), 6);
+  const base = (maxMistakes - mistakes) * 10;
   const timeUsed = (Date.now() - roundStartTime) / 1000;
-  const speedBonus = timeUsed < 6 ? 10 : (timeUsed < 10 ? 5 : 0);
-  const perfectBonus = mistakes === 0 ? 25 : 0;
-  if (mistakes === 0) perfectCount++;
-  totalScore += Math.round((base * multiplier) + speedBonus + perfectBonus);
   
+  // ✅ Joker Cezası: Hız ve Perfect bonuslarını yakar başkanım
+  let speedBonus = !usedJokerInRound ? (timeUsed < 6 ? 10 : (timeUsed < 10 ? 5 : 0)) : 0;
+  let perfectBonus = (!usedJokerInRound && mistakes === 0) ? { A2:15, B1:20, B2:25 }[currentDiff] : 0;
+  
+  if (mistakes === 0 && !usedJokerInRound) perfectCount++;
+  
+  const roundTotal = Math.round((base * multiplier) + speedBonus + perfectBonus);
+  totalScore += roundTotal;
+  setScore += roundTotal;
+
   const sw = $("streakWrap");
   sw.classList.add("streak-pop");
   setTimeout(() => sw.classList.remove("streak-pop"), 380);
@@ -247,54 +332,106 @@ function calculatePuan() {
 }
 
 function updateUI() {
-  $("lifeDisplay").textContent = "❤️".repeat(Math.max(0, lives));
+  $("lifeDisplay").textContent = "❤️".repeat(Math.max(0, lives)) + "🖤".repeat(maxLives - Math.max(0, lives));
   $("scoreDisplay").textContent = totalScore;
   $("jokerCount").textContent = jokers;
   $("streakCount").textContent = streak;
-  const sw = $("streakWrap");
-  if (streak >= 2) sw.classList.add("streak-active");
-  else sw.classList.remove("streak-active");
+  $("shieldBadge").style.display = shield ? "flex" : "none";
+  if (streak >= 2) $("streakWrap").classList.add("streak-active");
+  else $("streakWrap").classList.remove("streak-active");
+}
+
+function saveRecord() {
+  if (totalScore <= 0) return false;
+  const records = JSON.parse(localStorage.getItem('italky_sentence_hof_v62') || '[]');
+  const now = new Date();
+  const newRecord = {
+    id: now.getTime() + "-" + Math.random().toString(16).slice(2),
+    score: totalScore,
+    lang: currentLang.toUpperCase(),
+    lvl: currentDiff,
+    streak: maxStreak,
+    time: now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) + ' ' + now.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit' })
+  };
+  records.push(newRecord);
+  records.sort((a,b) => b.score - a.score);
+  const top10 = records.slice(0, 10);
+  localStorage.setItem('italky_sentence_hof_v62', JSON.stringify(top10));
+  updateLeaderboardUI();
+  return top10.some(r => r.id === newRecord.id);
 }
 
 function finishSet() {
   $("endModal").style.display = "flex";
-  const badge = (lives > 0 && totalScore >= 1000) ? "👑 KING OF THE SET" : (lives <= 0 ? "💀 EĞİTİM BİTTİ" : "SET TAMAMLANDI");
-  $("endTitle").textContent = badge;
-  $("endStats").innerHTML = `Skor: <b>${totalScore}</b><br>Seri: <b>🔥 ${maxStreak}</b><br>Kusursuz: <b>🏆 ${perfectCount}</b>`;
+  if (lives <= 0) {
+    const isNew = saveRecord();
+    $("endTitle").textContent = isNew ? "YENİ REKOR! 👑" : "EĞİTİM BİTTİ 💀";
+    $("btnContinue").style.display = "none"; $("btnBank").style.display = "none";
+    runActive = false; shield = false;
+  } else {
+    $("endTitle").textContent = "SET TAMAMLANDI 🏆";
+    $("btnContinue").style.display = "block"; $("btnBank").style.display = "block";
+  }
+  $("endStats").innerHTML = `Toplam Skor: <b>${totalScore}</b><br>Max Seri: <b>🔥 ${maxStreak}</b>`;
 }
 
-// Event Listeners - Modül dışına açık hale getirildi
+function returnToMenu() {
+  saveRecord();
+  runActive = false; shield = false;
+  totalScore = 0; setScore = 0; streak = 0; maxStreak = 0;
+  $("scoreDisplay").textContent = "0";
+  $("endModal").style.display = "none";
+  $("startModal").style.display = "flex";
+  updateLeaderboardUI();
+}
+
+// Event Bindings
 document.querySelectorAll(".lang-btn").forEach(btn => {
     btn.onclick = () => {
         currentLang = btn.dataset.lang;
-        document.querySelectorAll(".lang-btn").forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
+        document.querySelectorAll(".lang-btn").forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        updateLeaderboardUI();
     };
 });
 
 document.querySelectorAll("[data-lvl]").forEach(btn => {
-    btn.onclick = () => {
-        currentDiff = btn.dataset.lvl;
-        initGame();
-    };
+    btn.onclick = () => initGame(btn.dataset.lvl);
 });
 
-$("nextSetBtn").onclick = () => {
-    $("endModal").style.display = "none";
-    currentIndex = 0; perfectCount = 0; streak = 0; maxStreak = 0;
-    jokers = Math.min(5, jokers + 1);
-    initGame();
+$("btnContinue").onclick = () => {
+    $("btnContinue").disabled = true; $("btnBank").disabled = true;
+    shield = true; // ✅ Momentum Kalkanı (Sadece 1 round için)
+    setScore = 0; 
+    initGame(currentDiff);
 };
 
+$("btnBank").onclick = () => {
+    $("btnContinue").disabled = true; $("btnBank").disabled = true;
+    const bonus = Math.round(setScore * 0.05);
+    totalScore += bonus;
+    setScore = 0; // ✅ Anlık sıfırlama
+    jokers = Math.min(5, jokers + 1);
+    streak = 0; shield = false;
+    $("resInfo").textContent = `BANKA BONUSU +${bonus} PUAN & +1 JOKER ⚡`;
+    $("resInfo").style.opacity = "1";
+    initGame(currentDiff, true);
+};
+
+$("btnFinish").onclick = returnToMenu;
+
 $("jokerBtn").onclick = () => {
-  if (jokers <= 0) return;
+  if (jokers <= 0 || usedJokerInRound) return;
   const hiddenIdx = discovered.map((v, i) => v ? -1 : i).filter(i => i !== -1);
   if (!hiddenIdx.length) return;
   const char = currentWord[hiddenIdx[Math.floor(Math.random() * hiddenIdx.length)]];
   jokers--;
+  usedJokerInRound = true;
   document.querySelectorAll(".key-btn").forEach(b => { if (b.textContent === char) handleGuess(char, b); });
   updateUI();
 };
+
+window.addEventListener('load', updateLeaderboardUI);
 </script>
 </body>
 </html>
