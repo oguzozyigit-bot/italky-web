@@ -1,4 +1,8 @@
-// /js/profile_page.js
+// /js/profile_page.js  (RELAXED GUARD - same as home)
+// - google_id_token şartı KALKTI (home gibi)
+// - terms + email + STORAGE_KEY yeterli
+// - dil değişimi anında applyI18n
+
 import { STORAGE_KEY } from "/js/config.js";
 import { logout } from "/js/auth.js";
 import { apiPOST } from "/js/api.js";
@@ -19,21 +23,28 @@ function toast(msg){
 function termsKey(email=""){
   return `italky_terms_accepted_at::${String(email||"").toLowerCase().trim()}`;
 }
+
 function getUser(){
   return safeJson(localStorage.getItem(STORAGE_KEY), {});
 }
+
+/* ✅ Home ile aynı: token şartı yok */
 function ensureLogged(){
   const u = getUser();
-  if(!u || !u.email){ location.replace("/index.html"); return null; }
-  if(!localStorage.getItem(termsKey(u.email))){ location.replace("/index.html"); return null; }
-  const gid = (localStorage.getItem("google_id_token") || "").trim();
-  if(!gid){ location.replace("/index.html"); return null; }
-  if(!u.isSessionActive){ location.replace("/index.html"); return null; }
+  if(!u || !u.email){
+    location.replace("/index.html");
+    return null;
+  }
+  // sözleşme onayı zorunlu
+  if(!localStorage.getItem(termsKey(u.email))){
+    location.replace("/index.html");
+    return null;
+  }
+  // bazı kayıtlarda isSessionActive olmayabilir; bozmayalım
   return u;
 }
 
 function buildLangOptions(selectEl){
-  // labels in native — UI language will be handled by i18n, but language names stay native
   const labels = {
     tr: "TR • Türkçe",
     en: "EN • English",
@@ -57,8 +68,8 @@ async function deleteAccountFlow(u){
 
   try{
     localStorage.removeItem(STORAGE_KEY);
-    localStorage.removeItem("google_id_token");
     localStorage.removeItem("italky_api_token");
+    localStorage.removeItem("google_id_token"); // varsa
     localStorage.removeItem(termsKey(u.email));
   }catch{}
 
@@ -67,18 +78,20 @@ async function deleteAccountFlow(u){
 }
 
 document.addEventListener("DOMContentLoaded", ()=>{
-  // ✅ Apply language immediately (no Turkish when EN selected)
+  // i18n uygula
   applyI18n(document);
 
   const u = ensureLogged();
   if(!u) return;
 
+  // Back/Home
   $("backBtn")?.addEventListener("click", ()=>{
     if(history.length>1) history.back();
     else location.href="/pages/home.html";
   });
   $("logoHome")?.addEventListener("click", ()=> location.href="/pages/home.html");
 
+  // Profile fields
   const full = (u.fullname || u.name || u.display_name || u.email || "—").trim();
   $("fullName").textContent = full;
   $("email").textContent = (u.email || "—").trim();
@@ -88,6 +101,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
   if(pic) $("avatarBox").innerHTML = `<img src="${pic}" alt="avatar">`;
   else $("avatarBox").textContent = (full && full[0]) ? full[0].toUpperCase() : "•";
 
+  // Site language
   const sel = $("siteLangSelect");
   buildLangOptions(sel);
   sel.value = getSiteLang();
@@ -96,28 +110,27 @@ document.addEventListener("DOMContentLoaded", ()=>{
     const newLang = setSiteLang(sel.value);
     sel.value = newLang;
 
-    // apply right now
     applyI18n(document);
     toast(t("profile_lang_saved"));
 
-    // notify other pages/tabs
+    // diğer sayfalar anında güncellensin
     try{ localStorage.setItem("italky_lang_ping", String(Date.now())); }catch{}
   });
 
-  // keep synced if language changed elsewhere
-  window.addEventListener("storage", (e)=>{
-    if(e.key === "italky_site_lang_v1" || e.key === "italky_lang_ping"){
+  // dışarıdan dil değişince
+  window.addEventListener("storage",(e)=>{
+    if(e.key==="italky_site_lang_v1" || e.key==="italky_lang_ping"){
       applyI18n(document);
       sel.value = getSiteLang();
     }
   });
 
-  const doUpgrade = ()=>{
-    toast(t("profile_upgrade_toast"));
-  };
+  // Upgrade
+  const doUpgrade = ()=> toast(t("profile_upgrade_toast"));
   $("upgradeBtn")?.addEventListener("click", doUpgrade);
   $("upgradeBtn2")?.addEventListener("click", doUpgrade);
 
+  // Logout / Delete
   $("logoutBtn")?.addEventListener("click", ()=> logout());
   $("deleteBtn")?.addEventListener("click", ()=> deleteAccountFlow(u));
 });
