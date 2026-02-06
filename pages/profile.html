@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>italkyAI • Profil</title>
+  <title>italkyAI • Profile</title>
   <link rel="icon" href="data:," />
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,14 +14,14 @@
     :root{
       --frameW: min(480px, calc(100vw - 18px));
       --topH: 74px;
-
       --bg:#030014;
       --text: rgba(255,255,255,.92);
-
+      --muted: rgba(255,255,255,.60);
       --ai1:#A5B4FC;
       --ai2:#4F46E5;
       --befree:#6B7280;
-
+      --glass: rgba(255,255,255,.06);
+      --border: rgba(255,255,255,.12);
       --navyA: rgba(40,120,255,.12);
       --navyB: rgba(255,255,255,.05);
     }
@@ -37,12 +37,7 @@
       display:flex; flex-direction:column;
     }
     @media(min-width:520px){
-      .mobile-frame{
-        height:92vh;
-        border-radius:40px;
-        border:1px solid rgba(255,255,255,0.08);
-        box-shadow:0 40px 100px -20px rgba(0,0,0,0.9);
-      }
+      .mobile-frame{ height:92vh; border-radius:40px; border:1px solid rgba(255,255,255,0.08); box-shadow:0 40px 100px -20px rgba(0,0,0,0.9); }
     }
 
     .topbar{
@@ -67,14 +62,7 @@
     .logo-ai{ font-weight:700; background: linear-gradient(135deg, var(--ai1), var(--ai2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
     .logo-slogan{ font-size:10px; font-weight:700; letter-spacing:4px; color: var(--befree); margin-top:5px; padding-left:2px; text-transform: uppercase; }
 
-    .iconBtn{
-      width:44px; height:44px; border-radius:16px;
-      border:1px solid rgba(255,255,255,.12); background: rgba(0,0,0,.18);
-      color:#fff; font-size:18px; font-weight:1000; cursor:pointer;
-      display:flex; align-items:center; justify-content:center; user-select:none;
-    }
-
-    .main{ flex:1; padding: 14px 12px 12px; overflow:auto; -webkit-overflow-scrolling: touch; scrollbar-width:none; }
+    .main{ flex:1; padding: 14px 12px 18px; overflow:auto; -webkit-overflow-scrolling: touch; scrollbar-width:none; }
     .main::-webkit-scrollbar{ display:none; }
 
     .hero{
@@ -87,6 +75,7 @@
       box-shadow: 0 28px 90px rgba(0,0,0,.55);
       padding: 16px;
       display:flex; align-items:center; gap: 14px;
+      margin-bottom: 12px;
     }
 
     .avatar{
@@ -103,35 +92,25 @@
     .who{ min-width:0; flex:1; display:flex; flex-direction:column; gap: 6px; }
     .name{ font-weight: 1000; font-size: 16px; white-space: nowrap; overflow:hidden; text-overflow: ellipsis; }
     .email{ font-weight: 800; font-size: 12px; color: rgba(255,255,255,.60); white-space: nowrap; overflow:hidden; text-overflow: ellipsis; }
-
     .planRow{ display:flex; gap: 10px; align-items:center; flex-wrap:wrap; margin-top: 4px; }
     .badge{ padding: 8px 10px; border-radius: 999px; border: 1px solid rgba(255,255,255,.12); background: rgba(0,0,0,.20); font-weight: 1000; font-size: 11px; }
     .upgradeBtn{ padding: 8px 12px; border-radius: 999px; border: none; background: linear-gradient(135deg, var(--ai1), var(--ai2)); font-weight: 1000; font-size: 11px; color: #fff; cursor:pointer; }
 
-    /* Drawer */
-    .drawerBack{ position: fixed; inset: 0; background: rgba(0,0,0,.65); display:none; align-items:flex-end; justify-content:center; padding: 14px; z-index: 9999; }
-    .drawerBack.show{ display:flex; }
-
-    .drawer{
-      width: 100%; max-width: 480px;
-      border-radius: 26px; border: 1px solid rgba(255,255,255,.10);
-      background: rgba(10,10,18,.96);
-      box-shadow: 0 30px 80px rgba(0,0,0,.65);
-      overflow:hidden;
-    }
-    .drawerTop{ padding: 12px 14px; display:flex; align-items:center; justify-content:space-between; border-bottom: 1px solid rgba(255,255,255,.08); }
-    .drawerTitle{ font-weight: 1000; font-size: 13px; }
-    .closeBtn{ width: 42px; height: 42px; border-radius: 16px; border: 1px solid rgba(255,255,255,.10); background: rgba(255,255,255,.06); color: rgba(255,255,255,.92); font-weight: 1000; cursor:pointer; }
-
-    .drawerBody{ padding: 12px 14px; display:flex; flex-direction:column; gap:10px; }
-    .rowItem{
-      border-radius: 18px; border: 1px solid rgba(255,255,255,.10);
+    .card{
+      border-radius: 22px;
+      border: 1px solid rgba(255,255,255,.10);
       background: rgba(255,255,255,.05);
       padding: 12px;
-      display:flex; align-items:center; justify-content:space-between; gap: 10px;
+      margin-bottom: 10px;
+    }
+    .rowItem{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
     }
     .rowLeft{ display:flex; flex-direction:column; gap:4px; min-width:0; }
-    .rowName{ font-weight: 1000; font-size: 13px; }
+    .rowName{ font-weight: 1000; font-size: 13px; color: rgba(255,255,255,.92); }
     .rowDesc{ font-weight: 800; font-size: 11px; color: rgba(255,255,255,.55); }
 
     .select{
@@ -139,11 +118,18 @@
       background: rgba(0,0,0,.18); color:#fff; font-weight: 900; padding: 0 10px; cursor:pointer;
     }
 
-    .dangerBtn{ height: 40px; padding: 0 12px; border-radius: 14px; border: 1px solid rgba(255,82,82,.35); background: rgba(255,82,82,.12); color: rgba(255,255,255,.92); font-weight: 1000; cursor:pointer; }
-    .safeBtn{ height: 40px; padding: 0 12px; border-radius: 14px; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.06); color: rgba(255,255,255,.92); font-weight: 1000; cursor:pointer; }
-    .primaryBtn{ height: 40px; padding: 0 12px; border-radius: 14px; border: none; background: linear-gradient(135deg, var(--ai1), var(--ai2)); color: #fff; font-weight: 1000; cursor:pointer; }
+    .btnRow{ display:flex; gap:10px; margin-top: 10px; }
+    .primaryBtn{ flex:1; height: 42px; border-radius: 14px; border: none; background: linear-gradient(135deg, var(--ai1), var(--ai2)); color:#fff; font-weight:1000; cursor:pointer; }
+    .safeBtn{ flex:1; height: 42px; border-radius: 14px; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.06); color:#fff; font-weight:1000; cursor:pointer; }
+    .dangerBtn{ flex:1; height: 42px; border-radius: 14px; border: 1px solid rgba(255,82,82,.35); background: rgba(255,82,82,.12); color:#fff; font-weight:1000; cursor:pointer; }
 
-    .drawerFooter{ padding: 12px 14px; border-top: 1px solid rgba(255,255,255,.08); color: rgba(255,255,255,.22); font-weight: 800; font-size: 10px; text-align:center; }
+    .footerNote{
+      margin-top: 12px;
+      text-align:center;
+      color: rgba(255,255,255,.22);
+      font-weight: 800;
+      font-size: 10px;
+    }
 
     .toast{
       position: fixed; left:50%; top:18px;
@@ -167,15 +153,11 @@
   <div class="mobile-frame">
     <div class="topbar">
       <div class="leftControls">
-        <button class="backBtn" id="backBtn" aria-label="Geri">←</button>
-        <div class="mini-brand" id="logoHome" title="Ana sayfa">
+        <button class="backBtn" id="backBtn" aria-label="Back">←</button>
+        <div class="mini-brand" id="logoHome" title="Home">
           <div class="logo-line"><span class="logo-main">italky</span><span class="logo-ai">AI</span></div>
           <div class="logo-slogan">BE FREE</div>
         </div>
-      </div>
-
-      <div class="rightControls">
-        <button class="iconBtn" id="menuBtn" aria-label="Menü">≡</button>
       </div>
     </div>
 
@@ -187,61 +169,63 @@
           <div class="email" id="email">—</div>
           <div class="planRow">
             <div class="badge" id="planBadge">FREE</div>
-            <button class="upgradeBtn" id="upgradeBtn" type="button" data-i18n="profile_upgrade">Üyelik Yükselt</button>
+            <button class="upgradeBtn" id="upgradeBtn" type="button" data-i18n="profile_upgrade">Upgrade</button>
           </div>
         </div>
       </div>
-    </div>
-  </div>
 
-  <!-- Drawer -->
-  <div class="drawerBack" id="drawerBack">
-    <div class="drawer">
-      <div class="drawerTop">
-        <div class="drawerTitle" data-i18n="profile_menu_title">Profil Menüsü</div>
-        <button class="closeBtn" id="closeDrawer" type="button">✕</button>
-      </div>
-
-      <div class="drawerBody">
+      <div class="card">
         <div class="rowItem">
           <div class="rowLeft">
-            <div class="rowName" data-i18n="profile_site_lang">Site Dili</div>
-            <div class="rowDesc" data-i18n="profile_site_lang_desc">Şimdilik 5 dil</div>
+            <div class="rowName" data-i18n="profile_site_lang">Site Language</div>
+            <div class="rowDesc" data-i18n="profile_site_lang_desc">5 languages for now</div>
           </div>
           <select class="select" id="siteLangSelect"></select>
         </div>
+      </div>
 
+      <div class="card">
         <div class="rowItem">
           <div class="rowLeft">
-            <div class="rowName" data-i18n="profile_upgrade">Üyelik Yükselt</div>
-            <div class="rowDesc" data-i18n="profile_upgrade_desc">Premium özellikler</div>
+            <div class="rowName" data-i18n="profile_upgrade">Upgrade</div>
+            <div class="rowDesc" data-i18n="profile_upgrade_desc">Premium features</div>
           </div>
-          <button class="primaryBtn" id="upgradeBtn2" type="button" data-i18n="profile_upgrade_btn">Yükselt</button>
         </div>
-
-        <div class="rowItem">
-          <div class="rowLeft">
-            <div class="rowName" data-i18n="profile_secure_logout">Güvenli Çıkış</div>
-            <div class="rowDesc" data-i18n="profile_secure_logout_desc">Oturumu kapat</div>
-          </div>
-          <button class="safeBtn" id="logoutBtn" type="button" data-i18n="profile_logout_btn">Çıkış</button>
-        </div>
-
-        <div class="rowItem">
-          <div class="rowLeft">
-            <div class="rowName" data-i18n="profile_delete">Hesabımı Sil</div>
-            <div class="rowDesc" data-i18n="profile_delete_desc">Geri alınamaz</div>
-          </div>
-          <button class="dangerBtn" id="deleteBtn" type="button" data-i18n="profile_delete_btn">Sil</button>
+        <div class="btnRow">
+          <button class="primaryBtn" id="upgradeBtn2" type="button" data-i18n="profile_upgrade_btn">Upgrade</button>
         </div>
       </div>
 
-      <div class="drawerFooter">italkyAI By Ozyigit's 2026</div>
+      <div class="card">
+        <div class="rowItem">
+          <div class="rowLeft">
+            <div class="rowName" data-i18n="profile_secure_logout">Secure Logout</div>
+            <div class="rowDesc" data-i18n="profile_secure_logout_desc">Sign out</div>
+          </div>
+        </div>
+        <div class="btnRow">
+          <button class="safeBtn" id="logoutBtn" type="button" data-i18n="profile_logout_btn">Logout</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="rowItem">
+          <div class="rowLeft">
+            <div class="rowName" data-i18n="profile_delete">Delete Account</div>
+            <div class="rowDesc" data-i18n="profile_delete_desc">Cannot be undone</div>
+          </div>
+        </div>
+        <div class="btnRow">
+          <button class="dangerBtn" id="deleteBtn" type="button" data-i18n="profile_delete_btn">Delete</button>
+        </div>
+      </div>
+
+      <div class="footerNote">italkyAI By Ozyigit's 2026</div>
     </div>
   </div>
 
   <div id="toast" class="toast"></div>
 
-  <script type="module" src="/js/profile_page.js?v=2"></script>
+  <script type="module" src="/js/profile_page.js?v=3"></script>
 </body>
 </html>
