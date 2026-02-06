@@ -25,7 +25,6 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);f
 .stats{display:flex;justify-content:space-between;font-size:13px;color:var(--cyan);font-weight:bold;margin-bottom:10px}
 
 .terminal{flex:1;border:2px solid var(--border);background:rgba(0,0,0,0.85);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;padding:25px;text-align:center;border-radius:20px;transition: 0.3s;}
-
 .sentence{font-size:28px; color:#fff; line-height:1.3; font-weight:700;}
 
 #correctionBox{font-size:15px; color:var(--green); margin-top:15px; font-weight:bold; opacity:0; transition:0.3s; background: rgba(0,255,102,0.1); padding: 12px; border-radius: 10px; width: 100%; text-align: left;}
@@ -87,7 +86,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);f
 <div class="modal" id="start">
   <div class="card">
     <h2 style="color:var(--cyan); font-size:24px; margin-bottom: 5px;">Cyber Boot Eternal</h2>
-    
+
     <div class="daily-card" id="dailyCard">
         <div style="font-size:10px; color:var(--pink); font-weight:900; margin-bottom:3px;">👑 BUGÜNÜN LİDERİ</div>
         <div id="dailyInfo" style="font-size:14px; font-weight:800;">Yükleniyor...</div>
@@ -120,9 +119,22 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);f
 import { loadLangPool, createUsedSet, pick } from "/js/langpool.js";
 
 const $ = id => document.getElementById(id);
+
 let lang="en", totalScore=0, setScore=0, integrity=100, wordList=[], currentIndex=0, busy=false, currentItem=null, runActive=false;
 
+const SET_SIZE = 12;
+const DMG = 25;
+const USED_KEY = (l)=>`glitch_eternal_v4_${l}`;
+const HOF_KEY = "glitch_eternal_v4";
+const DAILY_KEY = "glitch_daily_v4";
+
+function setBtns(disabled){
+  $("btnGlitch").disabled = disabled;
+  $("btnStable").disabled = disabled;
+}
+
 function speak(text, targetLang) {
+  if(!text) return;
   window.speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
   const m = { en: "en-US", de: "de-DE", fr: "fr-FR", es: "es-ES", it: "it-IT" };
@@ -132,23 +144,34 @@ function speak(text, targetLang) {
 }
 
 function updateLeaderboardUI() {
-    const records = JSON.parse(localStorage.getItem('glitch_eternal_v4') || '[]');
-    const today = new Date().toLocaleDateString('tr-TR');
-    const daily = JSON.parse(localStorage.getItem('glitch_daily_v4') || '{}');
+  const records = JSON.parse(localStorage.getItem(HOF_KEY) || "[]");
+  const today = new Date().toLocaleDateString('tr-TR');
+  const daily = JSON.parse(localStorage.getItem(DAILY_KEY) || "{}");
 
-    if (daily.date !== today) {
-        localStorage.removeItem('glitch_daily_v4');
-        $('dailyInfo').textContent = "Lider Yok";
-    } else if (daily.score) {
-        $('dailyInfo').textContent = `${daily.score} Puan (${daily.lang})`;
-    }
+  // Daily
+  if (daily.date !== today) {
+    localStorage.removeItem(DAILY_KEY);
+    $("dailyInfo").textContent = "Lider Yok";
+  } else if (daily.score) {
+    $("dailyInfo").textContent = `${daily.score} Puan (${daily.lang})`;
+  } else {
+    $("dailyInfo").textContent = "Lider Yok";
+  }
 
-    const pb = records.filter(r => r.lang === lang.toUpperCase())[0]?.score || 0;
-    $("pbBadge").textContent = `PB: ${pb}`;
-    
-    $('leaderboardBox').innerHTML = records.slice(0,5).map((r,i)=> `<div>${i+1}. ${r.score} - ${r.lang}</div>`).join('');
+  // PB: seçili dil için max
+  const pb = records
+    .filter(r => r.lang === lang.toUpperCase())
+    .reduce((mx, r) => Math.max(mx, Number(r.score || 0)), 0);
+
+  $("pbBadge").textContent = `PB: ${pb}`;
+
+  // Top 5
+  $("leaderboardBox").innerHTML =
+    records.slice(0,5).map((r,i)=> `<div>${i+1}. ${r.score} - ${r.lang}</div>`).join('')
+    || '<div style="opacity:.5">Henüz kayıt yok.</div>';
 }
 
+// Dil seçimi
 document.querySelectorAll(".lang-btn").forEach(b=>{
   b.onclick=()=>{
     document.querySelectorAll(".lang-btn").forEach(x=>x.classList.remove("active"));
@@ -159,34 +182,50 @@ document.querySelectorAll(".lang-btn").forEach(b=>{
 });
 
 $("startBtn").onclick=async()=>{
-  $("start").classList.add("hidden"); 
+  $("start").classList.add("hidden");
   $("game").style.display="flex";
-  if(!runActive) {
-      totalScore=0; integrity=100; runActive=true;
+
+  if(!runActive){
+    totalScore=0;
+    integrity=100;
+    runActive=true;
   }
-  await initGame();
+  await initGame(false);
 };
 
 async function initGame(isBank = false) {
   currentIndex=0;
   setScore=0;
+  busy=false;
+  setBtns(false);
+
   if(isBank) integrity = 100;
 
   const pool = await loadLangPool(lang);
-  const items = pool?.items || [];
+  const items = Array.isArray(pool?.items) ? pool.items : [];
   const randomizedItems = [...items].sort(() => Math.random() - 0.5);
-  const {used, save} = createUsedSet("glitch_eternal_v4_"+lang);
-  wordList = pick({items: randomizedItems}, 12, used, save, (it) => it.sentence && it.sentence.length > 5);
-  
-  if(wordList.length < 12) {
-    localStorage.removeItem("glitch_eternal_v4_"+lang);
-    return initGame();
+
+  const { used, save } = createUsedSet(USED_KEY(lang));
+
+  wordList = pick({items: randomizedItems}, SET_SIZE, used, save, (it) => {
+    const s = String(it?.sentence || "").trim();
+    return s.length > 5;
+  });
+
+  // soft reset
+  if(wordList.length < SET_SIZE) {
+    localStorage.removeItem(USED_KEY(lang));
+    return initGame(isBank);
   }
+
+  // ✅ used mühürle
+  try { save(wordList.map(x => x.w)); } catch(e){}
+
   nextRound();
 }
 
 function produceGlitch(original) {
-  let text = original;
+  let text = String(original || "");
   const rules = [
     { f: " am ", t: " is " }, { f: " are ", t: " is " }, { f: " have ", t: " has " },
     { f: " don't ", t: " doesn't " }, { f: " doesn't ", t: " don't " }, { f: " a ", t: " an " }
@@ -199,50 +238,58 @@ function produceGlitch(original) {
 
 function nextRound() {
   if(currentIndex >= wordList.length || integrity <= 0) { finish(integrity <= 0); return; }
-  const item = wordList[currentIndex];
-  const isOk = Math.random() > 0.5;
-  const displayText = isOk ? item.sentence : produceGlitch(item.sentence);
 
-  currentItem = { text: displayText, original: item.sentence, isOk: isOk, tr: item.tr || "" };
+  const item = wordList[currentIndex];
+  const sentence = String(item?.sentence || "").trim() || `I am studying ${String(item?.w || "it")}.`;
+
+  const isOk = Math.random() > 0.5;
+  const displayText = isOk ? sentence : produceGlitch(sentence);
+
+  currentItem = { text: displayText, original: sentence, isOk, tr: item?.tr || "" };
+
   $("sentence").textContent = currentItem.text;
   $("correctionBox").style.opacity = "0";
-  $("setCounter").textContent = `${currentIndex + 1}/12`;
+
+  $("setCounter").textContent = `${currentIndex + 1}/${SET_SIZE}`;
   $("scoreDisp").textContent = totalScore;
   $("life").textContent = integrity + "%";
+  $("life").style.color = integrity <= 25 ? "var(--pink)" : "var(--cyan)";
   $("terminal").style.borderColor = "var(--border)";
+
   busy=false;
-  $("btnGlitch").disabled = false;
-  $("btnStable").disabled = false;
+  setBtns(false);
 }
 
-function handleAnswer(userPick) {
+function handleAnswer(userPickStable) {
   if(busy) return;
   busy=true;
-  $("btnGlitch").disabled = true;
-  $("btnStable").disabled = true;
-  
-  const correct = (userPick === currentItem.isOk);
-  
+  setBtns(true);
+
+  const correct = (userPickStable === currentItem.isOk);
+
   if(correct) {
-    totalScore += 100; setScore += 100;
+    totalScore += 100;
+    setScore += 100;
     $("terminal").style.borderColor = "var(--green)";
     speak(currentItem.original, lang);
-    setTimeout(() => { currentIndex++; nextRound(); }, 1200);
+
+    setTimeout(() => { currentIndex++; nextRound(); }, 1100);
   } else {
-    integrity -= 25;
+    integrity -= DMG;
     $("frame").classList.add("glitch-anim");
     $("terminal").style.borderColor = "var(--pink)";
-    
+
     $("correctTxt").textContent = currentItem.original;
-    $("trTxt").textContent = "Anlamı: " + currentItem.tr;
+    $("trTxt").textContent = currentItem.tr ? ("Anlamı: " + currentItem.tr) : "";
     $("correctionBox").style.opacity = "1";
+
     speak(currentItem.original, lang);
 
     setTimeout(()=> {
-        $("frame").classList.remove("glitch-anim");
-        if(integrity <= 0) finish(true);
-        else { currentIndex++; nextRound(); }
-    }, 4000); // 4 saniye bekleme başkanım
+      $("frame").classList.remove("glitch-anim");
+      if(integrity <= 0) finish(true);
+      else { currentIndex++; nextRound(); }
+    }, 2600); // ✅ 4sn yerine daha akıcı
   }
 }
 
@@ -250,34 +297,36 @@ $("btnGlitch").onclick = () => handleAnswer(false);
 $("btnStable").onclick = () => handleAnswer(true);
 
 function saveRecord() {
-    const records = JSON.parse(localStorage.getItem('glitch_eternal_v4') || '[]');
-    const today = new Date().toLocaleDateString('tr-TR');
-    
-    records.push({score: totalScore, lang: lang.toUpperCase(), date: today, id: Date.now()});
-    records.sort((a,b)=>b.score - a.score);
-    localStorage.setItem('glitch_eternal_v4', JSON.stringify(records.slice(0,10)));
+  const today = new Date().toLocaleDateString('tr-TR');
+  const langUp = lang.toUpperCase();
 
-    const daily = JSON.parse(localStorage.getItem('glitch_daily_v4') || '{}');
-    if (daily.date !== today || totalScore > (daily.score || 0)) {
-        localStorage.setItem('glitch_daily_v4', JSON.stringify({score: totalScore, lang: lang.toUpperCase(), date: today}));
-    }
+  const records = JSON.parse(localStorage.getItem(HOF_KEY) || "[]");
+  records.push({score: totalScore, lang: langUp, date: today, id: Date.now()});
+  records.sort((a,b)=> Number(b.score||0) - Number(a.score||0));
+  localStorage.setItem(HOF_KEY, JSON.stringify(records.slice(0,10)));
+
+  const daily = JSON.parse(localStorage.getItem(DAILY_KEY) || "{}");
+  if (daily.date !== today || totalScore > (daily.score || 0)) {
+    localStorage.setItem(DAILY_KEY, JSON.stringify({score: totalScore, lang: langUp, date: today}));
+  }
 }
 
 function finish(died) {
   saveRecord();
   updateLeaderboardUI();
+
   $("end").classList.remove("hidden");
   $("endTitle").textContent = died ? "SYSTEM CRASHED" : "SECTOR CLEARED";
   $("endTitle").style.color = died ? "var(--pink)" : "var(--green)";
   $("endStats").innerHTML = `SCORE: <b>${totalScore}</b>`;
-  
+
   if(died) {
-      $("btnContinue").classList.add("hidden");
-      $("btnBank").classList.add("hidden");
-      runActive = false;
+    $("btnContinue").classList.add("hidden");
+    $("btnBank").classList.add("hidden");
+    runActive = false;
   } else {
-      $("btnContinue").classList.remove("hidden");
-      $("btnBank").classList.remove("hidden");
+    $("btnContinue").classList.remove("hidden");
+    $("btnBank").classList.remove("hidden");
   }
 }
 
@@ -287,14 +336,17 @@ $("btnContinue").onclick = () => {
 };
 
 $("btnBank").onclick = () => {
-  totalScore += Math.round(setScore * 0.05);
+  const bonus = Math.round(setScore * 0.05);
+  totalScore += bonus;
+  setScore = 0;          // ✅ banka sonrası setScore sıfır
+  integrity = 100;       // ✅ tamir net
   $("end").classList.add("hidden");
   initGame(true);
 };
 
 $("btnExit").onclick = () => location.reload();
 
-window.onload = updateLeaderboardUI;
+window.addEventListener("load", updateLeaderboardUI);
 </script>
 </body>
 </html>
