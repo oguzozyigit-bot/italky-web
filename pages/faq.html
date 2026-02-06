@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>italkyAI - SSS</title>
+  <title>italkyAI</title>
   <link rel="icon" href="data:," />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -54,7 +54,6 @@
     .logo-ai { font-weight: 700; background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     .mini-slogan { font-family: 'Outfit', sans-serif; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.5); letter-spacing: 4px; text-transform: uppercase; margin-top: 4px; margin-left: 2px; }
 
-    /* --- SCROLL FIX --- */
     .page-content {
       flex: 1; height: 100%; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch;
       padding: 10px 20px 160px; display: flex; flex-direction: column; gap: 20px; position: relative; z-index: 5;
@@ -74,7 +73,7 @@
     .faq-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
     .faq-q { font-family: 'Outfit', sans-serif; font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 8px; line-height: 1.4; display: flex; justify-content: space-between; align-items: center; }
     .faq-a { font-size: 14px; color: var(--text-muted); line-height: 1.6; }
-    
+
     .tag { display: inline-block; padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: 800; margin-bottom: 8px; letter-spacing: 0.5px; text-transform: uppercase; }
     .tag.ai { background: rgba(99, 102, 241, 0.15); color: #a5b4fc; border: 1px solid rgba(99, 102, 241, 0.3); }
     .tag.free { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); }
@@ -93,24 +92,185 @@
   <div class="noise"></div>
   <div class="mobile-frame">
     <div class="topbar">
-      <button class="back-btn" onclick="window.history.length > 1 ? window.history.back() : window.location.href='/pages/home.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
-      <div class="mini-brand"><div class="logo-container"><span class="logo-main">italky</span><span class="logo-ai">AI</span></div><div class="mini-slogan">BE FREE</div></div>
-    </div>
-    <div class="page-content">
-      <div class="faq-card">
-        <h1>Sıkça Sorulan <span>Sorular</span></h1>
-        <div class="faq-item"><span class="tag ai">GENEL</span><div class="faq-q">italkyAI nedir, nasıl çalışır?</div><div class="faq-a">italkyAI, gelişmiş yapay zeka modellerini kullanarak anlık sesli, yazılı ve görsel çeviri yapan, aynı zamanda sizinle sohbet ederek dil öğreten yeni nesil bir asistandır.</div></div>
-        <div class="faq-item"><span class="tag free">ÜYELİK</span><div class="faq-q">Uygulama ücretli mi?</div><div class="faq-a">Giriş yapmak ve temel yapay zeka özelliklerini kullanmak tamamen <strong>ücretsizdir.</strong> Sınırsız konuşma süresi ve gelişmiş ses modelleri (Voice AI) için Premium planlar sunulmaktadır.</div></div>
-        <div class="faq-item"><span class="tag ai">TEKNOLOJİ</span><div class="faq-q">Konuşkan AI (Voice AI) nedir?</div><div class="faq-a">Tıpkı gerçek bir insanla telefonda konuşur gibi, gecikmesiz ve kesintisiz sohbet edebileceğiniz modumuzdur. Sizi dinler, düşünür ve anında doğal bir sesle cevap verir.</div></div>
-        <div class="faq-item"><span class="tag pro">DİL DESTEĞİ</span><div class="faq-q">Hangi dilleri destekliyorsunuz?</div><div class="faq-a">Şu an Türkçe, İngilizce, Almanca, Fransızca, İtalyanca, İspanyolca, Rusça ve Arapça dillerinde tam destek veriyoruz. Listemiz her gün büyüyor.</div></div>
-        <div class="faq-item"><span class="tag ai">GÜVENLİK</span><div class="faq-q">Konuşmalarım kaydediliyor mu?</div><div class="faq-a">Hayır. Ses verileriniz anlık olarak işlenir ve sunucularımızda depolanmaz. Gizliliğiniz bizim için en büyük önceliktir.</div></div>
-        <div class="faq-item"><span class="tag pro">ÖZELLİK</span><div class="faq-q">İnternet bağlantısı şart mı?</div><div class="faq-a">Evet. En güçlü yapay zeka modellerini (LLM) kullanabilmek için cihazınızın internete bağlı olması gerekmektedir.</div></div>
+      <button class="back-btn" onclick="window.history.length > 1 ? window.history.back() : window.location.href='/pages/home.html'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+      </button>
+      <div class="mini-brand">
+        <div class="logo-container"><span class="logo-main">italky</span><span class="logo-ai">AI</span></div>
+        <div class="mini-slogan">BE FREE</div>
       </div>
     </div>
+
+    <!-- ✅ Bu alanı JS diline göre dolduracak -->
+    <div class="page-content" id="contentHost"></div>
+
     <div class="footerbar">
-      <div class="links"><a href="/pages/about.html">Hakkında</a><a href="/pages/faq.html" style="color:#fff">SSS</a><a href="/pages/privacy.html">Gizlilik</a><a href="/pages/contact.html">İletişim</a></div>
+      <div class="links">
+        <a href="/pages/about.html" id="lnkAbout">About</a>
+        <a href="/pages/faq.html" id="lnkFaq" style="color:#fff">FAQ</a>
+        <a href="/pages/privacy.html" id="lnkPrivacy">Privacy</a>
+        <a href="/pages/contact.html" id="lnkContact">Contact</a>
+      </div>
       <div class="footerBrand">italkyAI By Ozyigit's 2026</div>
     </div>
   </div>
+
+  <!-- ✅ İçerikler: TR/EN/DE/IT/FR (silinmez) -->
+  <template id="faq_tr">
+    <div class="faq-card">
+      <h1>Sıkça Sorulan <span>Sorular</span></h1>
+
+      <div class="faq-item">
+        <span class="tag ai">GENEL</span>
+        <div class="faq-q">italkyAI nedir, nasıl çalışır?</div>
+        <div class="faq-a">italkyAI, gelişmiş yapay zeka modellerini kullanarak anlık sesli, yazılı ve görsel çeviri yapan, aynı zamanda sizinle sohbet ederek dil öğreten yeni nesil bir asistandır.</div>
+      </div>
+
+      <div class="faq-item">
+        <span class="tag free">ÜYELİK</span>
+        <div class="faq-q">Uygulama ücretli mi?</div>
+        <div class="faq-a">Giriş yapmak ve temel yapay zeka özelliklerini kullanmak tamamen <strong>ücretsizdir.</strong> Sınırsız konuşma süresi ve gelişmiş ses modelleri (Voice AI) için Premium planlar sunulmaktadır.</div>
+      </div>
+
+      <div class="faq-item">
+        <span class="tag ai">TEKNOLOJİ</span>
+        <div class="faq-q">Konuşkan AI (Voice AI) nedir?</div>
+        <div class="faq-a">Tıpkı gerçek bir insanla telefonda konuşur gibi, gecikmesiz ve kesintisiz sohbet edebileceğiniz modumuzdur. Sizi dinler, düşünür ve anında doğal bir sesle cevap verir.</div>
+      </div>
+
+      <div class="faq-item">
+        <span class="tag pro">DİL DESTEĞİ</span>
+        <div class="faq-q">Hangi dilleri destekliyorsunuz?</div>
+        <div class="faq-a">Şu an Türkçe, İngilizce, Almanca, Fransızca, İtalyanca, İspanyolca, Rusça ve Arapça dillerinde tam destek veriyoruz. Listemiz her gün büyüyor.</div>
+      </div>
+
+      <div class="faq-item">
+        <span class="tag ai">GÜVENLİK</span>
+        <div class="faq-q">Konuşmalarım kaydediliyor mu?</div>
+        <div class="faq-a">Hayır. Ses verileriniz anlık olarak işlenir ve sunucularımızda depolanmaz. Gizliliğiniz bizim için en büyük önceliktir.</div>
+      </div>
+
+      <div class="faq-item">
+        <span class="tag pro">ÖZELLİK</span>
+        <div class="faq-q">İnternet bağlantısı şart mı?</div>
+        <div class="faq-a">Evet. En güçlü yapay zeka modellerini (LLM) kullanabilmek için cihazınızın internete bağlı olması gerekmektedir.</div>
+      </div>
+    </div>
+  </template>
+
+  <template id="faq_en">
+    <div class="faq-card">
+      <h1>Frequently Asked <span>Questions</span></h1>
+
+      <div class="faq-item">
+        <span class="tag ai">GENERAL</span>
+        <div class="faq-q">What is italkyAI and how does it work?</div>
+        <div class="faq-a">italkyAI is a next-gen assistant that provides instant voice, text, and image translation, and helps you learn languages through conversation.</div>
+      </div>
+
+      <div class="faq-item">
+        <span class="tag free">MEMBERSHIP</span>
+        <div class="faq-q">Is the app paid?</div>
+        <div class="faq-a">Signing in and using core AI features is <strong>free</strong>. Premium plans unlock extended voice time and advanced voice models.</div>
+      </div>
+
+      <div class="faq-item">
+        <span class="tag ai">TECH</span>
+        <div class="faq-q">What is Talk AI (Voice AI)?</div>
+        <div class="faq-a">A low-latency mode where you can talk like a phone call: it listens, thinks, and responds with natural voice.</div>
+      </div>
+
+      <div class="faq-item">
+        <span class="tag pro">LANGUAGES</span>
+        <div class="faq-q">Which languages are supported?</div>
+        <div class="faq-a">We support many languages and keep expanding regularly.</div>
+      </div>
+
+      <div class="faq-item">
+        <span class="tag ai">SECURITY</span>
+        <div class="faq-q">Are my conversations stored?</div>
+        <div class="faq-a">No. Audio is processed in real-time and is not stored on our servers.</div>
+      </div>
+
+      <div class="faq-item">
+        <span class="tag pro">REQUIREMENTS</span>
+        <div class="faq-q">Do I need internet?</div>
+        <div class="faq-a">Yes. Internet access is required to use the AI models.</div>
+      </div>
+    </div>
+  </template>
+
+  <template id="faq_de">
+    <div class="faq-card">
+      <h1>Häufige <span>Fragen</span></h1>
+      <div class="faq-item"><span class="tag ai">ALLGEMEIN</span><div class="faq-q">Was ist italkyAI?</div><div class="faq-a">italkyAI bietet Übersetzung und Sprachlernen in einem.</div></div>
+      <div class="faq-item"><span class="tag free">ABO</span><div class="faq-q">Ist es kostenlos?</div><div class="faq-a">Basisfunktionen sind kostenlos, Premium erweitert die Limits.</div></div>
+    </div>
+  </template>
+
+  <template id="faq_it">
+    <div class="faq-card">
+      <h1>Domande <span>frequenti</span></h1>
+      <div class="faq-item"><span class="tag ai">GENERALE</span><div class="faq-q">Cos’è italkyAI?</div><div class="faq-a">Traduzione e apprendimento linguistico in un’unica app.</div></div>
+      <div class="faq-item"><span class="tag free">ABBONAMENTO</span><div class="faq-q">È gratuito?</div><div class="faq-a">Base gratuita, Premium sblocca funzioni avanzate.</div></div>
+    </div>
+  </template>
+
+  <template id="faq_fr">
+    <div class="faq-card">
+      <h1>Questions <span>fréquentes</span></h1>
+      <div class="faq-item"><span class="tag ai">GÉNÉRAL</span><div class="faq-q">Qu’est-ce que italkyAI ?</div><div class="faq-a">Traduction et apprentissage des langues au même endroit.</div></div>
+      <div class="faq-item"><span class="tag free">ABONNEMENT</span><div class="faq-q">Est-ce gratuit ?</div><div class="faq-a">Fonctions de base gratuites, Premium débloque plus.</div></div>
+    </div>
+  </template>
+
+  <script type="module">
+    import { getSiteLang, t } from "/js/i18n.js";
+
+    function pickId(){
+      const lang = getSiteLang();
+      const map = { tr:"faq_tr", en:"faq_en", de:"faq_de", it:"faq_it", fr:"faq_fr" };
+      return map[lang] || "faq_en";
+    }
+
+    function setFooterLang(){
+      const lang = getSiteLang();
+      // footer link text: use i18n dictionary keys
+      // Keep it simple: read from t(...)
+      const a = document.getElementById("lnkAbout");
+      const f = document.getElementById("lnkFaq");
+      const p = document.getElementById("lnkPrivacy");
+      const c = document.getElementById("lnkContact");
+      if(a) a.textContent = t("nav_about");
+      if(f) f.textContent = t("nav_faq");
+      if(p) p.textContent = t("nav_privacy");
+      if(c) c.textContent = t("nav_contact");
+      document.documentElement.lang = lang;
+    }
+
+    function render(){
+      const host = document.getElementById("contentHost");
+      host.innerHTML = "";
+      const tpl = document.getElementById(pickId());
+      if(tpl) host.appendChild(tpl.content.cloneNode(true));
+
+      // title
+      const lang = getSiteLang();
+      const titles = { tr:"italkyAI • SSS", en:"italkyAI • FAQ", de:"italkyAI • FAQ", it:"italkyAI • FAQ", fr:"italkyAI • FAQ" };
+      document.title = titles[lang] || "italkyAI • FAQ";
+
+      setFooterLang();
+    }
+
+    render();
+
+    window.addEventListener("storage",(e)=>{
+      if(e.key==="italky_site_lang_v1" || e.key==="italky_lang_ping"){
+        render();
+      }
+    });
+  </script>
 </body>
 </html>
