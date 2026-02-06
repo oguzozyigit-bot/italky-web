@@ -12,39 +12,38 @@
       --c-neon-pink:#ff00ff; --c-neon-blue:#00f3ff;
       --c-neon-green:#00e676; --c-error:#ff1744;
       --ai-gradient: linear-gradient(135deg,#a5b4fc 0%,#6366f1 100%);
-      --glass: rgba(255,255,255,.06); --border: rgba(255,255,255,.12);
-      --shadow: 0 18px 50px rgba(0,0,0,.55);
-      --radius-xl: 28px; --radius-lg: 18px;
+      --border: rgba(255,255,255,.12);
+      --radius-xl: 28px;
     }
 
     *{ box-sizing:border-box; outline:none; user-select:none; -webkit-tap-highlight-color:transparent; }
     html,body{ margin:0; width:100%; height:100%; overflow:hidden; font-family:'Outfit', sans-serif; background:var(--bg-deep); color:#fff; position:fixed; }
 
-    /* 🌌 PREMIUM COSMOS BG */
+    /* 🌌 COSMOS BG */
     .cosmos-bg{ position:absolute; inset:0; z-index:0; background: radial-gradient(circle at 50% 35%, #0b0b2a 0%, #020205 60%, #010104 100%); }
-    .stars{ position:absolute; inset:0; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.15'/%3E%3C/svg%3E"); opacity:.6; }
+    .stars{ position:absolute; inset:0; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.15'/%3E%3C/svg%3E"); opacity:.5; }
 
-    /* 🎯 3D SHAKE & SHINE PACK */
+    /* 🎯 ANIMATIONS */
     @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-3px); } 50% { transform: translateX(3px); } 75% { transform: translateX(-2px); } }
     .gallows-box.shake { animation: shake .25s linear 2; }
+
+    /* 🏗️ UI ELEMENTS */
+    .wrap{ width:100%; max-width:480px; height:100%; margin:0 auto; position:relative; z-index:10; display:flex; flex-direction:column; padding: calc(10px + env(safe-area-inset-top)) 0 calc(10px + env(safe-area-inset-bottom)); }
+    .nav-top{ display:flex; align-items:center; justify-content:space-between; padding: 10px 18px; }
+    .mini-badge{ display:flex; align-items:center; height: 38px; padding: 0 12px; border-radius: 16px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.10); font-weight: 800; font-size: 11px; }
 
     .game-card{ 
       background: rgba(255,255,255,.05); border: 1px solid var(--border); border-radius: var(--radius-xl); 
       backdrop-filter: blur(14px); padding: 20px; margin: 0 14px; position:relative; overflow:hidden;
-      box-shadow: 0 30px 90px rgba(0,0,0,.65), 0 0 40px rgba(99,102,241,.10);
-    }
-    .game-card::before{
-      content:""; position:absolute; inset:-2px; pointer-events:none; opacity:.9;
-      background: radial-gradient(circle at 20% 10%, rgba(0,243,255,.14) 0%, rgba(0,243,255,0) 45%),
-                  radial-gradient(circle at 80% 30%, rgba(255,0,255,.12) 0%, rgba(255,0,255,0) 50%);
+      box-shadow: 0 30px 90px rgba(0,0,0,.65);
     }
 
     /* 🏗️ GALLOWS & MAN */
-    .gallows-box{ position:relative; width:120px; height:130px; margin: 0 auto 15px; }
+    .gallows-box{ position:relative; width:120px; height:140px; margin: 0 auto 15px; }
     .g-stand{ position:absolute; bottom:0; left:20px; width:80px; height:2px; background: #fff; }
-    .g-post{ position:absolute; bottom:0; left:30px; width:2px; height:120px; background: #fff; }
+    .g-post{ position:absolute; bottom:0; left:30px; width:2px; height:130px; background: #fff; }
     .g-top{ position:absolute; top:10px; left:30px; width:60px; height:2px; background: #fff; }
-    .g-rope{ position:absolute; top:10px; right:30px; width:1px; height:20px; background: var(--c-neon-pink); box-shadow: 0 0 10px var(--c-neon-pink); }
+    .g-rope{ position:absolute; top:10px; right:30px; width:1px; height:20px; background: var(--c-neon-pink); box-shadow: 0 0 10px var(--c-neon-pink); transition: all 0.3s; }
     .g-rope.danger { background: var(--c-error) !important; width: 2px; box-shadow: 0 0 15px var(--c-error); }
 
     .man-part{ position:absolute; background: var(--c-neon-pink); box-shadow: 0 0 12px var(--c-neon-pink); opacity:0; transition: opacity .3s; }
@@ -52,37 +51,29 @@
     .p2{ top:56px; right:30px; width:2px; height:32px; }
     .p3{ top:60px; right:32px; width:18px; height:2px; transform: rotate(-25deg); transform-origin:left; }
     .p4{ top:60px; right:12px; width:18px; height:2px; transform: rotate(25deg); transform-origin:right; }
-    
-    /* BACAKLAR ✅ Pivot Sabitlendi (Kalça Noktası) */
+    /* ✅ BACAKLAR - KALÇA PİVOTU */
     .p5{ top: 92px; right: 30px; width: 18px; height: 2px; transform: rotate(35deg); transform-origin: 0% 50%; }
     .p6{ top: 92px; right: 30px; width: 18px; height: 2px; transform: rotate(-35deg); transform-origin: 0% 50%; }
 
-    /* ⌨️ PREMIUM 3D KEYBOARD */
-    .keyboard{ display:grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+    /* ⌨️ KEYBOARD 3D */
+    .keyboard{ display:grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 15px; }
     .key-btn{ 
       aspect-ratio:1; display:flex; align-items:center; justify-content:center;
-      color: rgba(255,255,255,.92); text-shadow: 0 1px 0 rgba(0,0,0,.55), 0 0 12px rgba(0,243,255,.10);
-      background: linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.06));
-      border: 1px solid rgba(255,255,255,.16); border-radius: 12px; font-weight: 800; cursor:pointer;
-      box-shadow: 0 8px 16px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.18);
-      position:relative; overflow:hidden; transition: transform .1s;
+      color: #fff; background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.05));
+      border: 1px solid rgba(255,255,255,.15); border-radius: 12px; font-weight: 800; cursor:pointer;
+      box-shadow: 0 4px 8px rgba(0,0,0,.3); transition: all .1s;
     }
-    .key-btn:active{ transform: translateY(1px) scale(.98); }
-    .key-btn.correct{ background: var(--c-neon-green) !important; color:#000; text-shadow:none; }
-    .key-btn.wrong{ opacity: .45; filter: grayscale(.2); }
-
-    /* UI ELEMENTS */
-    .wrap{ width:100%; max-width:480px; height:100%; margin:0 auto; position:relative; z-index:10; display:flex; flex-direction:column; padding: calc(6px + env(safe-area-inset-top)) 0 calc(10px + env(safe-area-inset-bottom)); }
-    .nav-top{ display:flex; align-items:center; justify-content:space-between; padding: 10px 18px; }
-    .score-pill{ display:flex; align-items:center; gap:10px; padding: 10px 14px; border-radius: 18px; background: rgba(255,255,255,.08); border: 1px solid var(--border); backdrop-filter: blur(12px); }
-    .mini-badge{ display:flex; align-items:center; height: 38px; padding: 0 12px; border-radius: 16px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.10); font-weight: 800; font-size: 11px; }
-    .btn-primary{ width:100%; padding: 16px; background: var(--c-neon-green); color:#000; border:none; border-radius: 18px; font-weight: 900; cursor:pointer; box-shadow: 0 15px 35px rgba(0,230,118,.2); transition: transform .1s; }
-    .btn-primary:active{ transform: translateY(1px) scale(.99); }
+    .key-btn:active{ transform: scale(.95); }
+    .key-btn.correct{ background: var(--c-neon-green) !important; color:#000; border-color: var(--c-neon-green); }
+    .key-btn.wrong{ opacity: .4; filter: grayscale(1); pointer-events: none; }
 
     .word-box{ display:flex; flex-wrap:wrap; justify-content:center; gap: 8px; margin: 20px 0; }
     .letter-slot{ width: 30px; height: 40px; border-bottom: 2px solid var(--c-neon-blue); display:flex; align-items:center; justify-content:center; font-size: 22px; font-weight: 900; }
-    .letter-slot.filled{ border-bottom: none; animation: pop .2s ease; }
-    @keyframes pop { from{ transform:scale(1.2); } to{ transform:scale(1); } }
+    .letter-slot.filled{ border-bottom: none; }
+
+    .btn-primary{ width:100%; padding: 16px; background: var(--c-neon-green); color:#000; border:none; border-radius: 18px; font-weight: 900; cursor:pointer; margin-top: 10px; }
+    .modal-wrap{ position:absolute; inset:0; background: rgba(0,0,0,.9); z-index:999; display:flex; align-items:center; justify-content:center; padding: 20px; }
+    .modal-card{ width:100%; max-width:340px; background: #111; border: 1px solid var(--border); border-radius: 30px; padding: 30px; text-align:center; }
   </style>
 </head>
 
@@ -91,8 +82,8 @@
 
   <div class="wrap">
     <div class="nav-top">
-      <div style="font-size:24px; font-weight:900;">italky<span style="background:var(--ai-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">AI</span></div>
-      <div class="mini-badge">HATA <span id="mistakeDisplay" style="color:var(--c-neon-blue); margin-left:5px; font-family:'Space Grotesk'">0/0</span></div>
+      <div style="font-size:24px; font-weight:900;">italky<span style="color:var(--c-neon-blue)">AI</span></div>
+      <div class="mini-badge">HATA <span id="mistakeDisplay" style="margin-left:5px; color:var(--c-neon-blue)">0/0</span></div>
     </div>
 
     <div class="game-card">
@@ -101,19 +92,19 @@
         <div class="man-part p1"></div><div class="man-part p2"></div><div class="man-part p3"></div>
         <div class="man-part p4"></div><div class="man-part p5"></div><div class="man-part p6"></div>
       </div>
-      <div id="hintMain" style="text-align:center; color:var(--c-neon-green); font-weight:800; font-size:18px;"></div>
+      <div id="hintMain" style="text-align:center; color:var(--c-neon-green); font-weight:800;"></div>
       <div id="wordBox" class="word-box"></div>
       <div class="keyboard" id="keyboard"></div>
-      <button class="btn-primary" style="background:var(--ai-gradient); color:#fff; margin-top:15px;" id="jokerBtn" onclick="useJoker()">⚡ İPUCU (<span id="jokerCount">1</span>)</button>
+      <button class="btn-primary" style="background:var(--ai-gradient); color:#fff" onclick="useJoker()">⚡ İPUCU (<span id="jokerCount">1</span>)</button>
     </div>
   </div>
 
   <div class="modal-wrap" id="startModal">
-    <div class="modal-card" style="max-width:340px; background:rgba(255,255,255,.05); border:1px solid var(--border); border-radius:30px; padding:30px; text-align:center;">
-      <h2 style="margin:0 0 10px">HOŞ GELDİN BAŞKANIM</h2>
+    <div class="modal-card">
+      <h2 style="margin-bottom:20px">BAŞKANIM HOŞ GELDİNİZ</h2>
       <button class="btn-primary" onclick="selectLevel('A2')">KOLAY (A1/A2)</button>
-      <button class="btn-primary" style="margin-top:10px" onclick="selectLevel('B1')">ORTA (B1)</button>
-      <button class="btn-primary" style="margin-top:10px" onclick="selectLevel('B2')">ZOR (B2)</button>
+      <button class="btn-primary" onclick="selectLevel('B1')">ORTA (B1)</button>
+      <button class="btn-primary" onclick="selectLevel('B2')">ZOR (B2)</button>
     </div>
   </div>
 
@@ -121,34 +112,35 @@
 import { loadLangPool, createUsedSet, pick } from "/js/langpool.js";
 
 const $ = (id) => document.getElementById(id);
-let currentLang = "en", currentDiff = "A2", wordList = [], currentIndex = 0;
-let score = 0, mistakes = 0, currentWord = "", currentRaw = "", discovered = [], jokers = 1;
+let currentDiff = "A2", wordList = [], currentIndex = 0;
+let mistakes = 0, currentWord = "", currentRaw = "", discovered = [], jokers = 1;
 
 window.selectLevel = (diff) => { currentDiff = diff; initGame(); };
 
 async function initGame() {
   try {
-    const rawPool = await loadLangPool(currentLang);
-    const { used, save } = createUsedSet(`italky_used_hangman_${currentLang}_${currentDiff}`);
+    const rawPool = await loadLangPool("en");
+    const { used, save } = createUsedSet(`used_hangman_${currentDiff}`);
     const cfg = { A2: { min:3, max:6 }, B1: { min:6, max:9 }, B2: { min:9, max:15 } }[currentDiff];
 
     wordList = pick(rawPool, 10, used, save, (it) => {
       const w = it.w.trim().toUpperCase();
-      // ✅ Filtreleme Düzeltildi: A1/A2 beraber, max sınırı aktif
-      const isLvlMatch = (currentDiff === "A2") ? ["A1","A2"].includes(it.lvl) : (it.lvl === currentDiff);
-      return isLvlMatch && w.length >= cfg.min && w.length <= cfg.max;
+      const match = (currentDiff === "A2") ? ["A1","A2"].includes(it.lvl) : it.lvl === currentDiff;
+      return match && w.length >= cfg.min && w.length <= cfg.max;
     });
 
     $("startModal").style.display = "none";
     startRound();
-  } catch (e) { alert("Hata oluştu başkanım!"); }
+  } catch (e) { alert("Yükleme hatası başkanım!"); }
 }
 
 function startRound() {
+  if(currentIndex >= wordList.length) { alert("Tebrikler başkanım!"); return; }
   const data = wordList[currentIndex];
   currentRaw = data.w;
-  currentWord = data.w.trim().toUpperCase().replace(/[^-A-ZÇĞİÖŞÜ]/g, "");
-  mistakes = 0; discovered = new Array(currentWord.length).fill(false);
+  currentWord = data.w.trim().toUpperCase().replace(/[^A-Z]/g, "");
+  mistakes = 0;
+  discovered = new Array(currentWord.length).fill(false);
   
   if($("mainRope")) $("mainRope").classList.remove("danger");
   if($("gallowsBox")) $("gallowsBox").classList.remove("shake");
@@ -159,16 +151,16 @@ function startRound() {
 
 function maxMistakes() { return currentDiff === "A2" ? 8 : (currentDiff === "B1" ? 7 : 6); }
 
-// ✅ p1..p6 Loop Düzeltildi
 function renderHangman() {
   const MAX = maxMistakes();
   const visible = Math.min(mistakes, 6);
+  
   if($("mainRope")) $("mainRope").classList.toggle("danger", mistakes >= 6 && mistakes < MAX);
   
   const g = $("gallowsBox");
   if(g) {
     if(mistakes === MAX - 1) { g.classList.remove("shake"); void g.offsetWidth; g.classList.add("shake"); }
-    else { g.classList.remove("shake"); }
+    else g.classList.remove("shake");
   }
 
   for (let i = 1; i <= 6; i++) {
@@ -180,22 +172,18 @@ function renderHangman() {
 function handleGuess(char, btn) {
   const MAX = maxMistakes();
   if(!btn || btn.disabled || mistakes >= MAX) return;
-  btn.disabled = true; // ✅ Inline opacity kaldırıldı, CSS yönetiyor
+  btn.disabled = true;
 
   if(currentWord.includes(char)) {
     btn.classList.add("correct");
     currentWord.split("").forEach((c, i) => { if(c === char) discovered[i] = true; });
     renderWord();
-    if(discovered.every(v => v)) {
-      score += (MAX - mistakes) * 10;
-      updateUI();
-      setTimeout(() => { currentIndex++; startRound(); }, 1000);
-    }
+    if(discovered.every(v => v)) setTimeout(() => { currentIndex++; startRound(); }, 1000);
   } else {
     btn.classList.add("wrong");
     mistakes++;
     renderHangman(); updateUI();
-    if(mistakes >= MAX) alert("Bitti başkanım! Kelime: " + currentRaw);
+    if(mistakes >= MAX) setTimeout(() => { alert("Bitti başkanım! Kelime: " + currentRaw); location.reload(); }, 500);
   }
 }
 
@@ -211,7 +199,7 @@ function renderWord() {
 
 function renderKeyboard() {
   const kb = $("keyboard"); kb.innerHTML = "";
-  "ABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZ".split("").forEach(char => {
+  "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").forEach(char => {
     const b = document.createElement("button");
     b.className = "key-btn"; b.textContent = char;
     b.onclick = () => handleGuess(char, b);
@@ -220,12 +208,20 @@ function renderKeyboard() {
 }
 
 function updateUI() {
-  const MAX = maxMistakes();
-  $("mistakeDisplay").textContent = `${mistakes}/${MAX}`;
+  $("mistakeDisplay").textContent = `${mistakes}/${maxMistakes()}`;
   $("jokerCount").textContent = jokers;
 }
 
-window.useJoker = () => { /* Mevcut Joker Mantığı */ };
+window.useJoker = () => {
+  if(jokers <= 0) return;
+  const h = discovered.map((v, i) => v ? -1 : i).filter(i => i !== -1);
+  if(h.length > 0) {
+    const char = currentWord[h[Math.floor(Math.random() * h.length)]];
+    jokers--; updateUI();
+    const btns = document.querySelectorAll(".key-btn");
+    btns.forEach(b => { if(b.textContent === char) handleGuess(char, b); });
+  }
+};
 </script>
 </body>
 </html>
