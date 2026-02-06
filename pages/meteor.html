@@ -1,3 +1,166 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>ITALKY • Meteor Defense — Elite Eternal</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg:#020005;--panel:rgba(18,18,26,.92);
+  --blue:#00f3ff;--red:#ff0055;--green:#00ff66;--gold:#ffb800;
+  --border:rgba(255,255,255,.14);--text:#fff;
+  --glass: rgba(255,255,255,0.05);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+html,body{margin:0;width:100%;height:100%;background:var(--bg);font-family:Outfit,sans-serif;overflow:hidden;color:var(--text)}
+.space{position:absolute;inset:0;background:radial-gradient(circle at bottom,#1a0033,#000)}
+.stars{position:absolute;inset:0;background-image:radial-gradient(#fff 1px,transparent 1px);background-size:50px 50px;opacity:.25}
+
+.game{position:relative;max-width:480px;height:100%;margin:0 auto;border-left:1px solid var(--border);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:5}
+.header{height:72px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;border-bottom:1px solid var(--border);background:rgba(0,0,0,.35);backdrop-filter: blur(10px)}
+.score-box{text-align:left}
+.score{font-family:"Space Grotesk";font-weight:900;color:var(--blue);font-size:20px;letter-spacing:.5px}
+.pb-chip{font-size:10px;color:var(--gold);font-weight:900;opacity:.95}
+
+.stats-mid{text-align:center;min-width:120px}
+.combo-tag{font-size:10px;background:var(--blue);color:#000;padding:2px 8px;border-radius:6px;font-weight:900;display:inline-block}
+.momentum{font-size:12px;color:var(--green);font-weight:900;margin-top:4px}
+.lives{font-size:16px;letter-spacing:2px}
+
+.stage{flex:1;position:relative;overflow:hidden;background:rgba(255,255,255,0.02)}
+.turret{
+  position:absolute;bottom:18px;left:50%;transform:translateX(-50%);
+  width:54px;height:28px;border-radius:14px 14px 8px 8px;
+  background:linear-gradient(180deg, rgba(0,243,255,.95), rgba(0,243,255,.35));
+  box-shadow:0 0 22px rgba(0,243,255,.55);
+}
+.laser{
+  position:absolute;left:50%;bottom:32px;transform:translateX(-50%);
+  width:3px;height:0;background:var(--blue);
+  box-shadow:0 0 18px var(--blue);
+  opacity:0; transition: height .12s ease, opacity .12s ease;
+}
+
+/* ✅ METEOR TAŞ GÖRÜNTÜSÜ */
+.meteor{position:absolute;top:-160px;width:118px;height:132px;display:flex;align-items:center;justify-content:center;will-change: transform, top}
+.meteor .meteor-body{
+  width:82px;height:82px;border-radius:38% 62% 63% 37% / 41% 44% 56% 59%; 
+  background: radial-gradient(circle at 30% 30%, #888, #444 40%, #222);
+  border: 1px solid rgba(255,255,255,0.1);
+  display:flex;align-items:center;justify-content:center;
+  position:relative;
+  box-shadow: inset -10px -10px 20px rgba(0,0,0,0.8), 0 0 15px rgba(0,0,0,0.5);
+  overflow: hidden;
+}
+.meteor-body::before {
+  content: ''; position: absolute; width: 15px; height: 10px; background: rgba(0,0,0,0.4); border-radius: 50%; top: 20%; left: 20%; box-shadow: 30px 40px 0 rgba(0,0,0,0.3), 10px 50px 0 rgba(0,0,0,0.4);
+}
+.meteor::after{
+  content:''; position:absolute; top:-40px; width:50px; height:100px;
+  background:linear-gradient(to top, rgba(255,100,0,0.5), rgba(255,50,0,0.2), transparent);
+  z-index:-1; filter: blur(8px); border-radius: 50% 50% 0 0;
+}
+
+.meteor .meteor-text{
+  font-family:"Space Grotesk"; font-weight:900;font-size:12px;color:#fff;text-align:center;padding:0 8px;
+  text-transform:uppercase; z-index: 2; text-shadow: 0 2px 4px #000;
+}
+.meteor.boss .meteor-body{ width: 100px; height: 100px; border: 2px solid var(--gold); box-shadow: 0 0 40px rgba(255,184,0,0.4); }
+.meteor.boss::after { background:linear-gradient(to top, rgba(255,200,0,0.6), transparent); }
+
+.explosion{
+  position:absolute;width:160px;height:160px;border-radius:50%;
+  background:radial-gradient(circle,#fff,rgba(255,170,0,.9),transparent 70%);
+  animation:boom .45s forwards; pointer-events:none;
+}
+@keyframes boom{0%{transform:scale(0.2);opacity:1}100%{transform:scale(2.5);opacity:0}}
+
+.panel{
+  height:228px; background:var(--panel); border-top:2px solid var(--blue); padding:12px;
+  display:grid; grid-template-columns:1fr 1fr; gap:10px;
+}
+.opt{
+  border:1px solid var(--border); border-radius:16px; background:var(--glass);
+  color:#fff;font-weight:900;font-size:15px; cursor:pointer; 
+  transition: transform .1s, background .1s; display:flex;align-items:center;justify-content:center;
+  padding:10px;text-align:center;
+}
+.opt:active{transform:scale(0.96)}
+.opt.correct{background:rgba(0,255,102,.9);color:#000;border:none}
+.opt.wrong{background:rgba(255,0,85,.9);border:none}
+.opt:disabled{opacity: 0.4; cursor: default;}
+
+.toast{
+  position:absolute;top:82px;left:50%;transform:translateX(-50%);
+  background:rgba(10,10,16,.95); border:1px solid var(--blue);
+  padding:8px 20px;border-radius:20px;font-weight:900;font-size:12px;
+  opacity:0;transition:0.25s;z-index:100; pointer-events:none;
+}
+
+.modal{position:absolute;inset:0;background:rgba(0,0,0,0.95);display:flex;align-items:center;justify-content:center;z-index:1000}
+.card{background:#0a0a0f;border:1px solid var(--blue);border-radius:28px;padding:30px;text-align:center;width:86%;max-width:380px}
+.langs{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:18px 0}
+.lang{padding:10px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:12px;font-weight:900;cursor:pointer;font-size:12px;color:#fff}
+.lang.active{border-color:var(--blue);background:rgba(0,243,255,0.12)}
+.mainbtn{width:100%;padding:16px;margin-top:12px;border:none;border-radius:16px;font-weight:900;background:var(--blue);color:#000;cursor:pointer}
+
+.hidden{display:none!important}
+</style>
+</head>
+
+<body>
+<div class="space"></div>
+<div class="stars"></div>
+
+<div class="game">
+  <div class="header">
+    <div class="score-box">
+      <div class="score" id="score">0</div>
+      <div class="pb-chip" id="pb">PB: 0</div>
+    </div>
+    <div class="stats-mid">
+      <div class="combo-tag" id="combo">COMBO x0</div>
+      <div class="momentum" id="momVal">x1.00</div>
+    </div>
+    <div class="lives" id="lives">❤️❤️❤️</div>
+  </div>
+
+  <div class="stage" id="stage">
+    <div class="turret"></div>
+    <div class="laser" id="laser"></div>
+  </div>
+
+  <div id="resToast" class="toast">TOAST</div>
+  <div class="panel" id="panel"></div>
+</div>
+
+<div class="modal" id="startModal">
+  <div class="card">
+    <h2 style="color:var(--blue);margin:0">METEOR DEFENSE</h2>
+    <p style="font-size:12px;opacity:.7;margin:10px 0">Gezegeni koru başkanım. Yanlış cevap momentumu kırar!</p>
+    <div class="langs">
+      <button class="lang active" data-lang="en">EN</button>
+      <button class="lang" data-lang="de">DE</button>
+      <button class="lang" data-lang="fr">FR</button>
+      <button class="lang" data-lang="es">ES</button>
+      <button class="lang" data-lang="it">IT</button>
+    </div>
+    <button class="mainbtn" id="startBtn">SAVUNMAYI BAŞLAT</button>
+  </div>
+</div>
+
+<div class="modal hidden" id="endModal">
+  <div class="card">
+    <h2 id="endTitle" style="color:var(--green)">SEKTÖR TEMİZ</h2>
+    <p id="endStats" style="font-size:14px;margin:18px 0;line-height:1.6"></p>
+    <button class="mainbtn" id="btnContinue">DEVAM ET (MOMENTUM KORU 🚀)</button>
+    <button class="mainbtn" id="btnBank" style="background:var(--gold)">BANKALA (%5 BONUS + TAMİR 🛡️)</button>
+    <button class="mainbtn" style="background:#222;color:#fff" id="btnExit">KAYDET VE ÇIK</button>
+  </div>
+</div>
+
 <script type="module">
 import { loadLangPool, createUsedSet, pick } from "/js/langpool.js";
 
@@ -32,9 +195,7 @@ function updatePB(){
 document.querySelectorAll(".lang").forEach(b=>{
   b.onclick = ()=>{
     document.querySelectorAll(".lang").forEach(x=>x.classList.remove("active"));
-    b.classList.add("active"); 
-    lang = b.dataset.lang; 
-    updatePB();
+    b.classList.add("active"); lang = b.dataset.lang; updatePB();
   };
 });
 
@@ -84,16 +245,17 @@ async function initGame(isBank=false){
   const USED_KEY = `used_meteor_v4_${lang}`;
   const { used, save } = createUsedSet(USED_KEY);
 
-  // ✅ Used mantığı: save fonksiyonunu pick'e bırakıyoruz başkanım.
   pool = pick(data, 50, used, save);
 
-  // ✅ Eternal Döngü: Recursion yerine temiz sıfırlama
+  // ✅ Eternal Döngü
   if (!pool || pool.length < 15){
     localStorage.removeItem(USED_KEY);
-    // Tek seferlik manuel tetikleme
     const cleanUsed = new Set();
     pool = pick(data, 50, cleanUsed, save);
   }
+
+  // ✅ Used set mühürleme (sentence bazlı)
+  try { save(pool.map(x => x.sentence)); } catch(e){}
 
   deck = shuffle(pool).slice(0, SET_SIZE);
   spawnNext();
@@ -151,18 +313,17 @@ function checkAnswer(btn, sel, correct){
   if (!running || !currentMeteor) return;
 
   if (sel === correct){
-    setButtonsState(true); // ✅ Double-click koruması
+    setButtonsState(true); 
     btn.classList.add("correct");
     laserPulse();
     safeSpeak(currentMeteor.data.w);
 
-    // Boss Zırh Mekaniği
     if (currentMeteor.boss && currentMeteor.armor > 1){
       currentMeteor.armor--;
       toast("ZIRH HASAR ALDI! 🛡️", "var(--gold)");
       setTimeout(()=> {
         btn.classList.remove("correct");
-        buildOptions(currentMeteor.data); // ✅ Seçenekleri karıştır ki farm yapılmasın
+        buildOptions(currentMeteor.data);
         setButtonsState(false);
       }, 400);
       return;
@@ -173,7 +334,6 @@ function checkAnswer(btn, sel, correct){
     combo++; momentum = Math.min(momentum + 0.05, 1.6);
     killCount++; setCounter++;
 
-    // ✅ Dinamik merkez hesaplama başkanım
     const rect = currentMeteor.el.getBoundingClientRect();
     const stageRect = $("stage").getBoundingClientRect();
     const centerX = rect.left - stageRect.left + (rect.width / 2);
@@ -268,3 +428,5 @@ $("btnExit").onclick = ()=> location.reload();
 
 window.onload = ()=>{ updatePB(); updateUI(); };
 </script>
+</body>
+</html>
