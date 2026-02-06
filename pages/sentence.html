@@ -2,66 +2,143 @@
 import { loadLangPool, createUsedSet, pick } from "/js/langpool.js";
 
 const $ = (id) => document.getElementById(id);
-let currentLang = "en", currentDiff = "A2", wordList = [], currentIndex = 0;
-let mistakes = 0, lives = 3, currentWord = "", currentRaw = "", currentSentence = "", discovered = [], jokers = 2, totalScore = 0;
-let streak = 0, maxStreak = 0, roundStartTime = 0, perfectCount = 0;
+
+let currentLang = "en",
+  currentDiff = "A2",
+  wordList = [],
+  currentIndex = 0;
+
+let mistakes = 0,
+  lives = 3,
+  currentWord = "",
+  currentRaw = "",
+  currentSentence = "",
+  discovered = [],
+  jokers = 2,
+  totalScore = 0;
+
+let streak = 0,
+  maxStreak = 0,
+  roundStartTime = 0,
+  perfectCount = 0;
+
 const SET_SIZE = 12;
 
 function escapeRegExp(s){ return String(s ?? "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
 
-/* ✅ KRİTİK: SADECE KELİME BİTİNCE OKU (CHECKLIST #4 FIX) */
+/* ✅ SADECE KELİME BİTİNCE / TUR YANINCA OKU */
 function speakSentence(text) {
-  window.speechSynthesis.cancel();
-  const msg = new SpeechSynthesisUtterance(text);
-  const langMap = { en: "en-US", de: "de-DE", fr: "fr-FR", es: "es-ES", it: "it-IT" };
-  msg.lang = langMap[currentLang] || "en-US";
-  msg.rate = 0.85;
-  window.speechSynthesis.speak(msg);
+  try {
+    window.speechSynthesis.cancel();
+    const msg = new SpeechSynthesisUtterance(text);
+    const langMap = { en: "en-US", de: "de-DE", fr: "fr-FR", es: "es-ES", it: "it-IT" };
+    msg.lang = langMap[currentLang] || "en-US";
+    msg.rate = 0.85;
+    window.speechSynthesis.speak(msg);
+  } catch {}
 }
+
+window.setLang = (lang, btn) => {
+  currentLang = lang;
+  document.querySelectorAll(".lang-btn").forEach(b => b.classList.remove("active"));
+  if (btn) btn.classList.add("active");
+};
 
 window.selectLevel = (diff) => { currentDiff = diff; initGame(); };
 
 async function initGame() {
   try {
     const rawPool = await loadLangPool(currentLang);
-    
-    // ✅ HAVUZU ÇEŞİTLENDİR: Her oyun modu için benzersiz 'used' listesi
+
+    // ✅ Her mod/dil/seviye için ayrı used list
     const { used, save } = createUsedSet(`used_sentence_v53_${currentLang}_${currentDiff}`);
 
-    // ✅ SHUFFLE VE SEED: Havuzu karıştır ki hep aynıları gelmesin
-    const randomizedPool = rawPool.sort(() => Math.random() - 0.5);
+    // ✅ Karıştır
+    const randomizedPool = [...rawPool].sort(() => Math.random() - 0.5);
 
     wordList = pick(randomizedPool, SET_SIZE, used, save, (it) => {
       const itLvl = String(it.lvl || "").toUpperCase();
       const target = String(currentDiff || "").toUpperCase();
       const lvlMatch = (target === "A2") ? ["A1","A2"].includes(itLvl) : (itLvl === target);
-      // Diğer oyunlarda çıkan kelimeleri buradan da süzebiliriz (opsiyonel)
       return lvlMatch && it.sentence && it.w;
     });
 
     $("startModal").style.display = "none";
+    currentIndex = 0;
     startRound();
-  } catch (e) { alert("Havuz yüklenemedi!"); }
+  } catch (e) {
+    alert("Havuz yüklenemedi!");
+  }
 }
 
 function startRound() {
   if (currentIndex >= wordList.length || lives <= 0) { finishSet(); return; }
+
   const data = wordList[currentIndex];
-  currentRaw = data.w.trim();
-  currentSentence = data.sentence;
-  currentWord = currentRaw.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().replace(/[^A-ZÇĞİÖŞÜ-]/g, "");
+
+  currentRaw = String(data.w || "").trim();
+  currentSentence = String(data.sentence || "");
+  currentWord = String(currentRaw)
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase()
+    .replace(/[^A-ZÇĞİÖŞÜ-]/g, "");
+
   mistakes = 0;
   discovered = new Array(currentWord.length).fill(false);
   roundStartTime = Date.now();
 
   const escaped = escapeRegExp(currentRaw);
-  const masked = currentSentence.toUpperCase().replace(new RegExp(`\\b${escaped}\\b`, "gi"), "____");
-  
-  $("sentenceDisplay").textContent = masked;
+  const masked = currentSentence
+    .toUpperCase()
+    .replace(new RegExp(`\\b${escaped}\\b`, "gi"), "____");
+
+  $("sentenceDisplay").textContent = masked || "";
   $("translationDisplay").textContent = data.tr || "";
+
   renderWord();
   renderDynamicKeyboard();
   updateUI();
+}
+
+function renderWord() {
+  const box = $("wordBox"); box.innerHTML = "";
+  currentWord.split("").forEach((ch, i) => {
+    const d = document.createElement("div");
+    d.className = `letter-slot ${discovered[i] ? "filled" : ""}`;
+    d.textContent = discovered[i] ? ch : "";
+    box.appendChild(d);
+  });
+}
+
+function getAlphabet(){
+  return currentLang === "en"
+    ? "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    : "ABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZ";
+}
+
+function renderDynamicKeyboard() {
+  const kb = $("keyboard"); kb.innerHTML = "";
+
+  const alphabet = getAlphabet();
+  const wordChars = [...new Set(currentWord.split("").filter(Boolean))];
+
+  // yanlışı setle
+  const wrongChars = alphabet
+    .split("")
+    .filter(c => !wordChars.includes(c))
+    .sort(() => Math.random() - 0.5)
+    .slice(0, 12);
+
+  const locale = currentLang === "en" ? "en" : "tr";
+  const finalKeys = [...wordChars, ...wrongChars].sort((a,b)=>a.localeCompare(b, locale));
+
+  finalKeys.forEach(char => {
+    const b = document.createElement("button");
+    b.className = "key-btn";
+    b.textContent = char;
+    b.onclick = () => handleGuess(char, b);
+    kb.appendChild(b);
+  });
 }
 
 function handleGuess(char, btn) {
@@ -70,29 +147,123 @@ function handleGuess(char, btn) {
 
   if (currentWord.includes(char)) {
     btn.classList.add("correct");
-    // ✅ BUG FİX: Burada sesli okuma kaldırıldı (Kopya verilmez)
+
     currentWord.split("").forEach((c, i) => { if (c === char) discovered[i] = true; });
     renderWord();
 
     if (discovered.every(v => v)) {
       calculatePuan();
-      // ✅ DOĞRU AN: Kelime tamamen bitince telaffuz et
+
+      // ✅ Doğru an: kelime bitince oku
       setTimeout(() => speakSentence(currentSentence), 200);
+
       setTimeout(() => { currentIndex++; startRound(); }, 1500);
     }
   } else {
     btn.classList.add("wrong");
     mistakes++;
+
+    // streak yumuşak düşüş
     streak = Math.max(0, streak - 2);
     updateUI();
+
     if (mistakes >= 8) {
       lives--;
-      // Yanlışta da kelimeyi göster ve cümleyi okut (Eğitim amaçlı)
+
+      // ✅ Tur yandı: eğitim için cümleyi okut
       setTimeout(() => speakSentence(currentSentence), 200);
+
       if (lives <= 0) finishSet();
       else { currentIndex++; setTimeout(() => startRound(), 1500); }
     }
   }
 }
-// ... (Kalan fonksiyonlar calculatePuan, finishSet, updateUI v5.2 ile aynı) ...
+
+function calculatePuan() {
+  streak++;
+  if (streak > maxStreak) maxStreak = streak;
+
+  const multiplier = (streak >= 5) ? 2 : (streak >= 3 ? 1.5 : 1);
+  const base = (8 - mistakes) * 10;
+
+  const timeUsed = (Date.now() - roundStartTime) / 1000;
+  const speedBonus = timeUsed < 6 ? 10 : (timeUsed < 10 ? 5 : 0);
+
+  const perfectBonus = mistakes === 0 ? 25 : 0;
+  if (mistakes === 0) perfectCount++;
+
+  totalScore += Math.round((base * multiplier) + speedBonus + perfectBonus);
+
+  // streak pop (varsa)
+  const sw = $("streakWrap");
+  if (sw) {
+    sw.classList.add("streak-pop");
+    setTimeout(() => sw.classList.remove("streak-pop"), 380);
+  }
+
+  updateUI();
+}
+
+function updateUI() {
+  $("lifeDisplay").textContent = "❤️".repeat(Math.max(0, lives));
+  $("scoreDisplay").textContent = totalScore;
+  $("jokerCount").textContent = jokers;
+  $("streakCount").textContent = streak;
+
+  const sw = $("streakWrap");
+  if (sw) {
+    if (streak >= 2) sw.classList.add("streak-active");
+    else sw.classList.remove("streak-active");
+  }
+}
+
+function finishSet() {
+  $("endModal").style.display = "flex";
+
+  const bossBadge =
+    (lives > 0 && totalScore >= 1000) ? "👑 KING OF THE SET" :
+    (lives <= 0) ? "💀 EĞİTİM BİTTİ" :
+    "SET TAMAMLANDI";
+
+  $("endTitle").textContent = bossBadge;
+  $("endStats").innerHTML = `
+    Toplam Skor: <b>${totalScore}</b><br>
+    En İyi Seri: <b>🔥 ${maxStreak}</b><br>
+    Kusursuz Tur: <b>🏆 ${perfectCount}</b><br>
+    Tamamlanan: <b>${Math.min(currentIndex, SET_SIZE)}/${SET_SIZE}</b>
+  `;
+
+  // ✅ Oyun bitince: yeni tur + çıkış
+  // Senin HTML’inde butonlar: nextSet() ve /pages/game.html’e dönüş.
+  // Eğer endModal içindeki butonları değiştirdiysen şu fonksiyonlar çalışır.
+}
+
+window.nextSet = () => {
+  $("endModal").style.display = "none";
+
+  // set geçişi
+  currentIndex = 0;
+  perfectCount = 0;
+  streak = 0;
+  maxStreak = 0;
+
+  // set ödülü
+  jokers = Math.min(5, jokers + 1);
+
+  initGame();
+};
+
+window.useJoker = () => {
+  if (jokers <= 0) return;
+
+  const hiddenIdx = discovered.map((v, i) => v ? -1 : i).filter(i => i !== -1);
+  if (!hiddenIdx.length) return;
+
+  const pickIdx = hiddenIdx[Math.floor(Math.random() * hiddenIdx.length)];
+  const char = currentWord[pickIdx];
+
+  jokers--;
+  document.querySelectorAll(".key-btn").forEach(b => { if (b.textContent === char) handleGuess(char, b); });
+  updateUI();
+};
 </script>
