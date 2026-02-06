@@ -23,12 +23,11 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);f
 .game{flex:1;padding:16px;display:none;flex-direction:column;justify-content:space-between}
 .stats{display:flex;justify-content:space-between;font-size:16px;color:var(--cyan);font-weight:bold;margin-bottom:10px}
 
-.terminal{flex:1;border:2px solid var(--border);background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;position:relative;padding:20px;text-align:center}
-
 /* ✅ KOCAMAN VE OKUNAKLI CÜMLE */
+.terminal{flex:1;border:2px solid var(--border);background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;position:relative;padding:20px;text-align:center;border-radius:14px}
 .sentence{
   font-family:'Space Grotesk', sans-serif;
-  font-size:32px; 
+  font-size:32px;
   color:#fff;
   line-height:1.2;
   font-weight:900;
@@ -39,6 +38,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);f
 .bug{background:rgba(255,0,85,0.2);border-color:var(--pink)}
 .ok{background:rgba(0,255,102,0.2);border-color:var(--green)}
 .action:active{transform:scale(.95)}
+.action:disabled{opacity:.35;pointer-events:none}
 
 .modal{position:absolute;inset:0;background:rgba(0,0,0,.95);display:flex;align-items:center;justify-content:center;z-index:200}
 .card{background:#111;border:1px solid var(--cyan);padding:30px;width:85%;text-align:center;border-radius:20px}
@@ -70,7 +70,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);f
       <span id="setCounter">1/12</span>
     </div>
 
-    <div class="terminal">
+    <!-- ✅ id eklendi: handleAnswer içinde $("terminal") kullanıyorsun -->
+    <div class="terminal" id="terminal">
       <div class="sentence" id="sentence">YÜKLENİYOR...</div>
     </div>
 
@@ -85,7 +86,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);f
   <div class="card">
     <h2 style="color:var(--cyan); font-size:24px">Oyun Başlıyor</h2>
     <p style="opacity:.8;">Cümle doğru mu yanlış mı seçin.</p>
-    
+
     <div style="display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin:25px 0">
         <button data-lang="en" class="lang-btn" style="border-color:var(--cyan)">🇬🇧</button>
         <button data-lang="de" class="lang-btn">🇩🇪</button>
@@ -103,7 +104,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);f
     <h2 id="endTitle" style="color:var(--green)">SET BİTTİ</h2>
     <p id="endStats" style="font-size:22px; margin:20px 0"></p>
     <button class="mainbtn" id="btnContinue">DEVAM ET</button>
-    <button class="mainbtn" style="background:#333;color:#fff" id="btnExit">ÇIKIS</button>
+    <button class="mainbtn" style="background:#333;color:#fff" id="btnExit">ÇIKIŞ</button>
   </div>
 </div>
 
@@ -111,7 +112,16 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);f
 import { loadLangPool, createUsedSet, pick } from "/js/langpool.js";
 
 const $ = id => document.getElementById(id);
+
 let lang="en", score=0, integrity=100, wordList=[], currentIndex=0, busy=false, currentItem=null;
+
+const SET_SIZE = 12;
+const DMG = 25;
+
+function setButtonsDisabled(v){
+  $("btnGlitch").disabled = v;
+  $("btnStable").disabled = v;
+}
 
 // Dil Seçimi
 document.querySelectorAll(".lang-btn").forEach(b=>{
@@ -124,7 +134,7 @@ document.querySelectorAll(".lang-btn").forEach(b=>{
 
 // Başlat
 $("startBtn").onclick=async()=>{
-  $("start").classList.add("hidden"); 
+  $("start").classList.add("hidden");
   $("game").style.display="flex";
   score=0; integrity=100;
   await initGame();
@@ -132,71 +142,119 @@ $("startBtn").onclick=async()=>{
 
 async function initGame() {
   currentIndex=0;
+  busy=false;
+  setButtonsDisabled(false);
+
   const pool = await loadLangPool(lang);
-  const randomizedItems = [...pool.items].sort(() => Math.random() - 0.5);
-  const {used, save} = createUsedSet("glitch_v5_"+lang);
-  wordList = pick({items: randomizedItems}, 12, used, save);
-  
-  if(wordList.length < 12) {
-    localStorage.removeItem("glitch_v5_"+lang);
+  const items = Array.isArray(pool?.items) ? pool.items : [];
+
+  // Güvenli karıştırma
+  const randomizedItems = [...items].sort(() => Math.random() - 0.5);
+
+  const USED_KEY = "glitch_v5_" + lang;
+  const { used, save } = createUsedSet(USED_KEY);
+
+  // pick -> 12 item al
+  wordList = pick({items: randomizedItems}, SET_SIZE, used, save, (it)=> {
+    // ✅ sentence zorunlu, yoksa üretilir (oyun takılmasın)
+    const s = String(it?.sentence || "").trim();
+    return !!s && s.length >= 6;
+  });
+
+  if(wordList.length < SET_SIZE) {
+    // soft reset: anahtarı temizle, tekrar dene
+    localStorage.removeItem(USED_KEY);
     return initGame();
   }
+
+  // ✅ used set gerçekten kaydedilsin
+  try { save(wordList.map(x => x.w)); } catch(e){}
+
   nextRound();
 }
 
-// Hata Üretici (Sadece basit ve mantıklı hatalar)
+// Hata Üretici (basit ve mantıklı)
 function produceGlitch(original) {
-  let text = original;
+  let text = String(original || "");
   const rules = [
-    { f: " am ", t: " is " }, { f: " are ", t: " is " },
-    { f: " have ", t: " has " }, { f: " don't ", t: " doesn't " },
-    { f: " doesn't ", t: " don't " }, { f: " a ", t: " an " }
+    { f: " am ", t: " is " },
+    { f: " are ", t: " is " },
+    { f: " have ", t: " has " },
+    { f: " don't ", t: " doesn't " },
+    { f: " doesn't ", t: " don't " },
+    { f: " a ", t: " an " },
   ];
-  const rule = rules.find(r => text.toLowerCase().includes(r.f));
+  const lower = text.toLowerCase();
+  const rule = rules.find(r => lower.includes(r.f));
   if(rule) {
-      const reg = new RegExp(rule.f, "i");
-      text = text.replace(reg, rule.t);
+    const reg = new RegExp(rule.f, "i");
+    text = text.replace(reg, rule.t);
   } else {
-      text = text.replace(/s /g, " "); // Çoğul hatası
+    // Çok agresif olmasın diye ilk eşleşmeyi boz
+    text = text.replace(/\bis\b/i, "are")
+               .replace(/\bwas\b/i, "were")
+               .replace(/\bs\b(?=\s)/, "");
   }
   return text;
 }
 
+function safeSentence(it){
+  const w = String(it?.w || "something").trim();
+  const s = String(it?.sentence || "").trim();
+  return s || `I am studying ${w}.`;
+}
+
 function nextRound() {
   if(currentIndex >= wordList.length) { finish(false); return; }
-  const item = wordList[currentIndex];
-  const isCorrectCümle = Math.random() > 0.5;
-  const displayText = isCorrectCümle ? item.sentence : produceGlitch(item.sentence);
 
-  currentItem = { text: displayText, original: item.sentence, isOk: isCorrectCümle };
-  $("sentence").textContent = currentItem.text;
-  $("setCounter").textContent = `${currentIndex + 1}/12`;
+  const item = wordList[currentIndex];
+  const original = safeSentence(item);
+
+  const isCorrectSentence = Math.random() > 0.5;
+  const displayText = isCorrectSentence ? original : produceGlitch(original);
+
+  currentItem = { text: displayText, original, isOk: isCorrectSentence };
+
+  $("sentence").textContent = currentItem.text.toUpperCase();
+  $("setCounter").textContent = `${currentIndex + 1}/${SET_SIZE}`;
   $("scoreDisp").textContent = score;
   $("life").textContent = integrity + "%";
+  $("life").style.color = integrity <= 25 ? "var(--pink)" : "var(--cyan)";
+
+  // terminal border reset
+  $("terminal").style.borderColor = "var(--border)";
+
   busy=false;
+  setButtonsDisabled(false);
+}
+
+function flashBorder(colorVar){
+  $("terminal").style.borderColor = colorVar;
+  setTimeout(()=> $("terminal").style.borderColor = "var(--border)", 450);
 }
 
 function handleAnswer(userPickStable) {
   if(busy) return;
   busy=true;
+  setButtonsDisabled(true);
+
   const correct = (userPickStable === currentItem.isOk);
-  
+
   if(correct) {
     score += 100;
-    $("terminal").style.borderColor = "var(--green)";
-    setTimeout(()=> $("terminal").style.borderColor = "var(--border)", 500);
+    flashBorder("var(--green)");
   } else {
-    integrity -= 25;
+    integrity -= DMG;
     $("frame").classList.add("glitch-anim");
-    $("terminal").style.borderColor = "var(--pink)";
-    setTimeout(()=> {
-        $("frame").classList.remove("glitch-anim");
-        $("terminal").style.borderColor = "var(--border)";
-    }, 500);
+    flashBorder("var(--pink)");
+    setTimeout(()=> $("frame").classList.remove("glitch-anim"), 320);
   }
 
-  if(integrity <= 0) setTimeout(() => finish(true), 600);
-  else setTimeout(() => { currentIndex++; nextRound(); }, 800);
+  $("scoreDisp").textContent = score;
+  $("life").textContent = Math.max(0, integrity) + "%";
+
+  if(integrity <= 0) setTimeout(() => finish(true), 500);
+  else setTimeout(() => { currentIndex++; nextRound(); }, 650);
 }
 
 $("btnGlitch").onclick = () => handleAnswer(false);
@@ -206,9 +264,10 @@ function finish(died) {
   $("end").classList.remove("hidden");
   $("endTitle").textContent = died ? "SİSTEM ÇÖKTÜ" : "TEBRİKLER";
   $("endTitle").style.color = died ? "var(--pink)" : "var(--green)";
-  $("endStats").innerHTML = `SKOR: ${score}`;
-  if(died) $("btnContinue").classList.add("hidden");
-  else $("btnContinue").classList.remove("hidden");
+  $("endStats").innerHTML = `SKOR: <b>${score}</b>`;
+  $("btnContinue").classList.toggle("hidden", died);
+  busy=false;
+  setButtonsDisabled(true);
 }
 
 $("btnContinue").onclick = () => {
