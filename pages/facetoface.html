@@ -134,7 +134,7 @@
       filter: saturate(1.25);
     }
 
-    /* ✅ ORTA LOGO: sadece italkyAI, slogan yok; dalga alttan geçer */
+    /* ✅ ORTA LOGO: sadece italkyAI (slogan yok) */
     .centerBrand{
       position:absolute;
       left:50%;
@@ -199,7 +199,6 @@
       z-index: 5;
     }
 
-    /* Dil butonu */
     .langBtn{
       height: 44px;
       border-radius: 16px;
@@ -220,14 +219,6 @@
     }
     .langBtn .caret{ opacity:.75; font-size: 12px; }
 
-    /* ✅ Sağ aksiyonlar: hoparlör + mikrofon (artık yazı alanının DIŞINDA) */
-    .barRight{
-      display:flex;
-      gap: 8px;
-      align-items:center;
-      flex: 0 0 auto;
-    }
-
     .btnIcon{
       width: 48px;
       height: 48px;
@@ -247,7 +238,13 @@
       opacity:.92;
     }
     .btnIcon:active{ transform: translateY(1px); }
-    .btnIcon.muted{ opacity: .50; filter: grayscale(1); border-color: rgba(255,255,255,.08); background: rgba(255,255,255,.03); }
+
+    .btnIcon.muted{
+      opacity: .50;
+      filter: grayscale(1);
+      border-color: rgba(255,255,255,.08);
+      background: rgba(255,255,255,.03);
+    }
 
     .btnIcon.listening{
       border-color: rgba(79,70,229,.45);
@@ -270,6 +267,7 @@
       100%{ transform: scale(0.92); opacity:.75; }
     }
 
+    /* ✅ içerik artık dock’a çarpmasın */
     .content{
       flex: 1 1 auto;
       min-height:0;
@@ -281,6 +279,11 @@
       gap: 10px;
       scrollbar-width:none;
       -ms-overflow-style:none;
+      padding-bottom: 84px; /* ✅ alt dock için yer */
+    }
+    .side.top .content{
+      padding-bottom: 12px;
+      padding-top: 84px;    /* ✅ üst dock için yer (çünkü panel ters) */
     }
     .content::-webkit-scrollbar{ width:0; height:0; }
 
@@ -300,7 +303,27 @@
     .bubble.me{ align-self:flex-end; border-right: 4px solid var(--pist); text-align:right; }
     .bubble.them{ align-self:flex-start; border-left: 4px solid var(--gold); }
 
-    /* ✅ Mikrofon yönleri değişmeyecek (mevcut kalsın) */
+    /* ✅ ACTION DOCK: yazı alanının DIŞINDA */
+    .actionDock{
+      position:absolute;
+      left: 12px;
+      right: 12px;
+      bottom: 12px;
+      z-index: 30;
+      display:flex;
+      justify-content:flex-end;
+      gap: 10px;
+      pointer-events:auto;
+    }
+
+    /* ✅ Üst panel ters olduğu için dock’u üste alıp tekrar düz çevir */
+    .side.top .actionDock{
+      bottom: auto;
+      top: 12px;
+      transform: rotate(180deg); /* içerik düz görünsün */
+    }
+
+    /* Mikrofon yönleri değişmesin */
     #botMic svg{ transform: rotate(180deg); }
     #topMic svg{ transform: rotate(180deg); }
 
@@ -401,10 +424,7 @@
     }
     .sheetRow:active{ background: rgba(255,255,255,.05); }
 
-    .left{
-      display:flex; align-items:center; gap:10px;
-      min-width:0;
-    }
+    .left{ display:flex; align-items:center; gap:10px; min-width:0; }
     .flag{
       width: 26px; height: 18px;
       display:flex; align-items:center; justify-content:center;
@@ -445,26 +465,26 @@
           <button class="langBtn" id="topLangBtn" type="button">
             <span id="topLangTxt">English</span><span class="caret">▾</span>
           </button>
+        </div>
 
-          <div class="barRight">
-            <button class="btnIcon" id="topSpeak" aria-label="Ses (mute)">
-              <svg viewBox="0 0 24 24">
-                <path d="M11 5L6 9H3v6h3l5 4z"></path>
-                <path d="M15 9a4 4 0 0 1 0 6"></path>
-                <path d="M17.5 6.5a7 7 0 0 1 0 11"></path>
-              </svg>
-            </button>
+        <!-- ✅ Dock (üst panelde üstte görünür, kullanıcıya altta gibi gelir) -->
+        <div class="actionDock">
+          <button class="btnIcon" id="topSpeak" aria-label="Ses (mute)">
+            <svg viewBox="0 0 24 24">
+              <path d="M11 5L6 9H3v6h3l5 4z"></path>
+              <path d="M15 9a4 4 0 0 1 0 6"></path>
+              <path d="M17.5 6.5a7 7 0 0 1 0 11"></path>
+            </svg>
+          </button>
 
-            <!-- ✅ Mikrofon BAR’a taşındı -->
-            <button class="btnIcon" id="topMic" aria-label="Mikrofon">
-              <svg viewBox="0 0 24 24">
-                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
-                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-                <line x1="12" y1="19" x2="12" y2="23"></line>
-                <line x1="8" y1="23" x2="16" y2="23"></line>
-              </svg>
-            </button>
-          </div>
+          <button class="btnIcon" id="topMic" aria-label="Mikrofon">
+            <svg viewBox="0 0 24 24">
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+              <line x1="12" y1="19" x2="12" y2="23"></line>
+              <line x1="8" y1="23" x2="16" y2="23"></line>
+            </svg>
+          </button>
         </div>
 
         <div class="content" id="topBody"></div>
@@ -474,7 +494,6 @@
       <div class="wave" aria-hidden="true">
         <div class="glow"></div>
 
-        <!-- ✅ Logo dalganın üstünde, slogan yok -->
         <div class="centerBrand">
           <div class="logoLine">
             <span class="logoItalky">italky</span><span class="logoAI">AI</span>
@@ -511,26 +530,26 @@
           <button class="langBtn" id="botLangBtn" type="button">
             <span id="botLangTxt">Türkçe</span><span class="caret">▾</span>
           </button>
+        </div>
 
-          <div class="barRight">
-            <button class="btnIcon" id="botSpeak" aria-label="Ses (mute)">
-              <svg viewBox="0 0 24 24">
-                <path d="M11 5L6 9H3v6h3l5 4z"></path>
-                <path d="M15 9a4 4 0 0 1 0 6"></path>
-                <path d="M17.5 6.5a7 7 0 0 1 0 11"></path>
-              </svg>
-            </button>
+        <!-- ✅ Dock (alt panelde altta) -->
+        <div class="actionDock">
+          <button class="btnIcon" id="botSpeak" aria-label="Ses (mute)">
+            <svg viewBox="0 0 24 24">
+              <path d="M11 5L6 9H3v6h3l5 4z"></path>
+              <path d="M15 9a4 4 0 0 1 0 6"></path>
+              <path d="M17.5 6.5a7 7 0 0 1 0 11"></path>
+            </svg>
+          </button>
 
-            <!-- ✅ Mikrofon BAR’a taşındı -->
-            <button class="btnIcon" id="botMic" aria-label="Mikrofon">
-              <svg viewBox="0 0 24 24">
-                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
-                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-                <line x1="12" y1="19" x2="12" y2="23"></line>
-                <line x1="8" y1="23" x2="16" y2="23"></line>
-              </svg>
-            </button>
-          </div>
+          <button class="btnIcon" id="botMic" aria-label="Mikrofon">
+            <svg viewBox="0 0 24 24">
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+              <line x1="12" y1="19" x2="12" y2="23"></line>
+              <line x1="8" y1="23" x2="16" y2="23"></line>
+            </svg>
+          </button>
         </div>
 
         <div class="content" id="botBody"></div>
