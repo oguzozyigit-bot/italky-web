@@ -10,6 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
   <style>
+    /* TASARIM AYARLARI */
     :root{
       --frameW: min(480px, calc(100vw - 18px));
       --topH: 64px;
@@ -20,15 +21,13 @@
       --border: rgba(255,255,255,.10);
       --ai1:#A5B4FC;
       --ai2:#4F46E5;
-      --befree:#6B7280;
-      --glass: rgba(255,255,255,.04);
+      --btnBg: rgba(255,255,255,.06);
+      --btnBd: rgba(255,255,255,.12);
       --navyA: rgba(40,120,255,.12);
       --navyB: rgba(255,255,255,.05);
       --burgA: rgba(120, 20, 35, .85);
       --burgB: rgba(90, 15, 30, .65);
       --burgC: rgba(70, 10, 25, .45);
-      --btnBg: rgba(255,255,255,.06);
-      --btnBd: rgba(255,255,255,.12);
     }
 
     *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; }
@@ -46,11 +45,7 @@
     .orb-1{ top:10%; left:10%; width:60vw; height:60vw; background: radial-gradient(circle, rgba(79,70,229,.55), transparent 70%); }
     .orb-2{ bottom:10%; right:10%; width:50vw; height:50vw; background: radial-gradient(circle, rgba(165,180,252,.45), transparent 70%); animation-delay:-5s; }
     @keyframes floatOrbit{ 0%{ transform: translate(0,0) scale(1);} 100%{ transform: translate(10%,-10%) scale(1.1);} }
-    .noise{
-      position:absolute; inset:0;
-      background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
-      pointer-events:none; mix-blend-mode:overlay; z-index:1;
-    }
+    .noise{ position:absolute; inset:0; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E"); pointer-events:none; mix-blend-mode:overlay; z-index:1; }
 
     .mobile-frame{
       width:100%; max-width:480px; height:100%;
@@ -61,165 +56,89 @@
       display:flex; flex-direction:column;
     }
     @media(min-width:520px){
-      .mobile-frame{
-        height:92vh;
-        border-radius:40px;
-        border:1px solid rgba(255,255,255,0.08);
-        box-shadow:0 40px 100px -20px rgba(0,0,0,0.9);
-      }
+      .mobile-frame{ height:92vh; border-radius:40px; border:1px solid rgba(255,255,255,0.08); box-shadow:0 40px 100px -20px rgba(0,0,0,0.9); }
     }
 
-    /* TOP BAR */
     .topbar{
-      position: sticky; top: 0; z-index: 3000;
-      height: var(--topH);
+      position: sticky; top: 0; z-index: 3000; height: var(--topH);
       display:flex; align-items:center; justify-content:space-between;
-      padding: 0 16px;
-      border-bottom:1px solid rgba(255,255,255,.08);
-      background: rgba(0,0,0,.35);
-      backdrop-filter: blur(12px);
+      padding: 0 16px; border-bottom:1px solid rgba(255,255,255,.08);
+      background: rgba(0,0,0,.35); backdrop-filter: blur(12px);
     }
-    .leftControls{ display:flex; align-items:center; gap:12px; min-width:0; }
+    .leftControls{ display:flex; align-items:center; gap:12px; }
     .backBtn{
-      width:40px;height:40px;border-radius:14px;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(0,0,0,.18);
-      color:#fff;
-      font-size:18px;font-weight:1000;
-      display:flex;align-items:center;justify-content:center;
-      cursor:pointer; user-select:none;
+      width:40px;height:40px;border-radius:14px; border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.18); color:#fff; font-size:18px;font-weight:1000;
+      display:flex;align-items:center;justify-content:center; cursor:pointer;
     }
-    .backBtn:active{ transform: scale(.96); }
-
-    .mini-brand{
-      display:flex; flex-direction:column;
-      user-select:none; cursor:pointer; line-height:1;
-      justify-content:center;
-    }
-    .logo-line{
-      font-family:'Space Grotesk', sans-serif;
-      font-size: 22px;
-      letter-spacing: -0.5px;
-      display:flex; align-items:center; gap:2px;
-    }
+    .mini-brand{ display:flex; flex-direction:column; justify-content:center; }
+    .logo-line{ font-family:'Space Grotesk', sans-serif; font-size: 22px; letter-spacing: -0.5px; display:flex; align-items:center; gap:2px; }
     .logo-main{ font-weight:700; color:#FFFFFF; }
-    .logo-ai{
-      font-weight:700;
-      background: linear-gradient(135deg, var(--ai1) 0%, var(--ai2) 100%);
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;
-    }
-    
-    .main{
-      flex:1; padding: 12px; overflow:hidden;
-      display:flex; flex-direction:column; gap: 10px;
-      padding-bottom: calc(var(--footerH) + 12px);
-    }
+    .logo-ai{ font-weight:700; background: linear-gradient(135deg, var(--ai1) 0%, var(--ai2) 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
 
+    .main{ flex:1; padding: 12px; overflow:hidden; display:flex; flex-direction:column; gap: 10px; padding-bottom: calc(var(--footerH) + 12px); }
+    
     .toolbar{ display:flex; gap:10px; align-items:center; flex: 0 0 auto; }
     .langBtn{
-      flex:1; height: 46px; border-radius: 16px;
-      border: 1px solid var(--btnBd); background: var(--btnBg);
-      color:#fff; font-weight: 1000; font-size: 12px;
+      flex:1; height: 46px; border-radius: 16px; border: 1px solid var(--btnBd);
+      background: var(--btnBg); color:#fff; font-weight: 1000; font-size: 12px;
       padding: 0 12px; display:flex; align-items:center; justify-content:space-between;
-      cursor:pointer; user-select:none; min-width:0; gap: 10px;
+      cursor:pointer; gap: 10px;
     }
-    .langLeft{ display:flex; align-items:center; gap: 10px; min-width:0; }
-    .flag{ width: 24px; display:flex; align-items:center; justify-content:center; font-size: 16px; flex: 0 0 24px; opacity: .95; }
-    .langLabel{ min-width:0; white-space: nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .caret{ opacity:.8; }
+    .langLeft{ display:flex; align-items:center; gap: 10px; overflow:hidden; }
+    .flag{ font-size: 16px; flex: 0 0 24px; text-align:center; }
+    .langLabel{ white-space: nowrap; overflow:hidden; text-overflow:ellipsis; }
     .swapBtn{
-      width: 54px; height: 46px; border-radius: 16px;
-      border: 1px solid var(--btnBd); background: var(--btnBg);
-      color: rgba(255,255,255,.92); font-weight: 1000; cursor:pointer;
+      width: 54px; height: 46px; border-radius: 16px; border: 1px solid var(--btnBd);
+      background: var(--btnBg); color: rgba(255,255,255,.92); font-weight: 1000; cursor:pointer;
     }
     .swapBtn:active{ transform: scale(.98); }
 
     .pane{ flex:1; display:flex; flex-direction: column; gap: 8px; min-height:0; }
     .box{
       border-radius: 22px; border: 1px solid rgba(255,255,255,.10);
-      overflow:hidden; display:flex; flex-direction:column;
-      min-height:0; backdrop-filter: blur(10px); flex: 1;
+      overflow:hidden; display:flex; flex-direction:column; flex: 1;
+      backdrop-filter: blur(10px);
     }
-    .box.top{
-      background: radial-gradient(800px 240px at 0% 0%, var(--navyA), transparent 62%),
-                  radial-gradient(800px 240px at 100% 0%, var(--navyB), transparent 62%),
-                  rgba(0,0,0,.12);
-    }
-    .box.bottom{
-      background: radial-gradient(900px 420px at 30% 12%, var(--burgA), transparent 68%),
-                  radial-gradient(700px 360px at 80% 18%, var(--burgB), transparent 70%),
-                  radial-gradient(600px 320px at 40% 75%, var(--burgC), transparent 72%),
-                  linear-gradient(180deg, rgba(60, 10, 20, .55), rgba(0,0,0,.15));
-    }
+    .box.top{ background: radial-gradient(at 0% 0%, var(--navyA), transparent 70%), rgba(0,0,0,.12); }
+    .box.bottom{ background: radial-gradient(at 100% 100%, var(--burgA), transparent 70%), rgba(0,0,0,.15); }
+
     .boxHead{
       padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,.08);
-      background: rgba(0,0,0,.22); display:flex; align-items:center;
-      justify-content:space-between; gap:10px; flex: 0 0 auto;
+      background: rgba(0,0,0,.22); display:flex; align-items:center; justify-content:space-between;
     }
-    .headLeft{ display:flex; align-items:center; gap:10px; min-width:0; }
-    .headTitle{ font-weight: 1000; font-size: 12px; color: rgba(255,255,255,.88); white-space: nowrap; }
-    .counter{ font-weight: 900; font-size: 11px; color: rgba(255,255,255,.55); white-space:nowrap; }
-    .btnsRight{ display:flex; gap:8px; align-items:center; flex: 0 0 auto; }
-    
+    .headTitle{ font-weight: 1000; font-size: 12px; color: rgba(255,255,255,.88); }
+    .btnsRight{ display:flex; gap:8px; }
     .iconBtn{
-      width: 38px; height: 38px; border-radius: 14px;
-      border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.06);
-      cursor:pointer; display:flex; align-items:center; justify-content:center;
-      user-select:none;
+      width: 38px; height: 38px; border-radius: 14px; border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06); cursor:pointer; display:flex; align-items:center; justify-content:center;
     }
-    .iconBtn:active{ transform: scale(.98); }
-    .iconBtn svg{
-      width: 16px; height: 16px; stroke: rgba(255,255,255,.90);
-      fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; opacity:.95;
-    }
+    .iconBtn svg{ width: 16px; height: 16px; stroke: rgba(255,255,255,.90); fill:none; stroke-width:2; }
     .iconBtn.listening{
       border-color: rgba(79,70,229,.45); background: rgba(79,70,229,.14);
-      box-shadow: 0 0 18px rgba(79,70,229,.20); position: relative;
-    }
-    .iconBtn.listening::after{
-      content:""; position:absolute; inset:-7px; border-radius: 18px;
-      border: 2px solid rgba(165,180,252,.55); animation: micPulse 1.15s ease-in-out infinite;
-      pointer-events:none;
-    }
-    @keyframes micPulse{
-      0%{ transform: scale(0.92); opacity:.75; } 50%{ transform: scale(1.08); opacity:.28; } 100%{ transform: scale(0.92); opacity:.75; }
+      box-shadow: 0 0 18px rgba(79,70,229,.20);
     }
 
-    textarea{
-      flex:1; border:none; outline:none; background: transparent;
-      color:#fff; font-size: 15px; line-height: 1.5; padding: 12px; resize:none;
-    }
-    .out{
-      flex:1; padding: 12px; overflow:auto; -webkit-overflow-scrolling: touch;
-      scrollbar-width:none; white-space: pre-wrap; word-break: break-word;
-      font-size: 15px; line-height: 1.5; color: rgba(255,255,255,.92);
-    }
-    .out::-webkit-scrollbar{ display:none; }
-
-    /* ORTA AKSİYON BUTONLARI */
-    .actions-mid{ display:flex; gap: 10px; padding: 2px 0; flex: 0 0 auto; }
+    textarea{ flex:1; border:none; outline:none; background: transparent; color:#fff; font-size: 15px; padding: 12px; resize:none; }
+    .out{ flex:1; padding: 12px; overflow:auto; font-size: 15px; color: rgba(255,255,255,.92); }
+    
+    .actions-mid{ display:flex; gap: 10px; padding: 2px 0; }
     .btn{
       flex:1; height: 44px; border-radius: 16px; border: 1px solid var(--btnBd);
       background: var(--btnBg); color:#fff; font-weight: 1000; cursor:pointer; font-size: 13px;
     }
-    .btn.primary{
-      background: linear-gradient(135deg, var(--ai1), var(--ai2));
-      border: none; box-shadow: 0 4px 12px rgba(79,70,229,0.3);
-    }
+    .btn.primary{ background: linear-gradient(135deg, var(--ai1), var(--ai2)); border: none; }
     .btn:active{ transform: scale(.98); }
 
     .footerbar{
       position: fixed; left: 50%; transform: translateX(-50%); width: var(--frameW);
       bottom: 0; z-index: 2400; height: var(--footerH);
-      padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+      display:flex; justify-content:center; align-items: center;
       background: rgba(3, 0, 20, 0.95); border-top: 1px solid rgba(255,255,255,.05);
-      backdrop-filter: blur(10px); display:flex; flex-direction:column;
-      justify-content:center; align-items: center;
     }
-    .footerBrand{ text-align:center; font-size: 11px; color: rgba(255,255,255,0.35); letter-spacing: 0.5px; font-weight: 700; }
+    .footerBrand{ font-size: 11px; color: rgba(255,255,255,0.35); letter-spacing: 0.5px; font-weight: 700; }
 
-    /* language sheet */
+    /* Dil Seçim Paneli */
     .sheetBackdrop{
       position: fixed; inset: 0; z-index: 9999; background: rgba(0,0,0,.72);
       display:none; align-items:flex-end; justify-content:center; padding: 16px;
@@ -228,136 +147,64 @@
     .sheet{
       width: 100%; max-width: 480px; background: rgba(10,10,18,.96);
       border: 1px solid rgba(255,255,255,.10); border-radius: 26px;
-      overflow:hidden; box-shadow: 0 30px 80px rgba(0,0,0,.55);
+      overflow:hidden; max-height: 60vh; display:flex; flex-direction:column;
     }
-    .sheetTop{
-      padding: 12px 14px; display:flex; align-items:center;
-      justify-content:space-between; gap: 10px; border-bottom: 1px solid rgba(255,255,255,.08);
-    }
-    .sheetTitle{ font-weight: 1000; font-size: 13px; color: rgba(255,255,255,.92); }
-    .sheetClose{
-      width: 42px; height: 42px; border-radius: 16px;
-      border: 1px solid rgba(255,255,255,.10); background: rgba(255,255,255,.06);
-      color: rgba(255,255,255,.88); font-weight: 1000; cursor:pointer;
-    }
-    .sheetSearch{ padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,.08); }
-    .sheetSearch input{
-      width:100%; height: 46px; border-radius: 16px;
-      border: 1px solid rgba(255,255,255,.10); background: rgba(255,255,255,.06);
-      color: #fff; padding: 0 12px; font-weight: 800; font-size: 13px;
-    }
-    .sheetList{ max-height: 55vh; overflow:auto; -webkit-overflow-scrolling: touch; scrollbar-width:none; }
-    .sheetList::-webkit-scrollbar{ display:none; }
+    .sheetTop{ padding: 12px 14px; display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid rgba(255,255,255,.08); }
+    .sheetTitle{ font-weight: 1000; font-size: 13px; color:#fff; }
+    .sheetClose{ width:36px; height:36px; border-radius:12px; background:rgba(255,255,255,.1); border:none; color:#fff; cursor:pointer; }
+    .sheetList{ overflow-y:auto; padding: 0; margin:0; }
     .sheetRow{
-      padding: 12px 14px; display:flex; align-items:center;
-      justify-content:space-between; gap: 10px; cursor:pointer;
-      border-bottom: 1px solid rgba(255,255,255,.06);
+      padding: 12px 14px; display:flex; justify-content:space-between; align-items:center;
+      border-bottom: 1px solid rgba(255,255,255,.06); cursor:pointer;
     }
-    .sheetRow.selected{ background: rgba(79,70,229,.14); }
-    .sheetRow .left{ display:flex; align-items:center; gap: 10px; min-width:0; }
-    .sheetRow .name{
-      font-weight: 1000; font-size: 13px; color: rgba(255,255,255,.92);
-      white-space: nowrap; overflow:hidden; text-overflow:ellipsis;
-    }
-    .sheetRow .code{ font-weight: 800; font-size: 12px; color: rgba(255,255,255,.55); white-space:nowrap; }
-
-    .toast{
-      position: fixed; left:50%; top:18px; transform: translateX(-50%) translateY(-120px);
-      background: rgba(10,10,18,.92); border:1px solid rgba(165,180,252,.35);
-      padding: 10px 14px; border-radius: 999px; color:#fff; z-index:10000;
-      font-weight:900; font-size:12px; transition:.28s; backdrop-filter: blur(12px);
-    }
-    .toast.show{ transform: translateX(-50%) translateY(0); }
+    .sheetRow:active{ background: rgba(255,255,255,.05); }
+    .sheetRow .left{ display:flex; align-items:center; gap:10px; }
+    .sheetRow .name{ font-weight: 700; font-size: 14px; color:#fff; }
   </style>
 </head>
 
 <body>
-  <div class="cosmos-bg">
-    <div class="orb orb-1"></div>
-    <div class="orb orb-2"></div>
-  </div>
-  <div class="noise"></div>
-
+  <div class="cosmos-bg"><div class="orb orb-1"></div><div class="orb orb-2"></div></div>
+  
   <div class="mobile-frame">
     <div class="topbar">
       <div class="leftControls">
-        <button class="backBtn" id="backBtn" aria-label="Geri">←</button>
-        <div class="mini-brand" id="logoHome" title="Ana sayfa">
-          <div class="logo-line">
-            <span class="logo-main">italky</span><span class="logo-ai">AI</span>
-          </div>
-          </div>
+        <button class="backBtn" onclick="history.back()">←</button>
+        <div class="mini-brand"><div class="logo-line"><span class="logo-main">italky</span><span class="logo-ai">AI</span></div></div>
       </div>
     </div>
 
     <div class="main">
       <div class="toolbar">
-        <button class="langBtn" id="fromLangBtn" type="button">
-          <span class="langLeft">
-            <span class="flag" id="fromFlag">🌐</span>
-            <span class="langLabel" id="fromLangTxt">Otomatik</span>
-          </span>
-          <span class="caret">▾</span>
-        </button>
-
-        <button class="swapBtn" id="swapBtn" type="button" title="Dilleri değiştir">⇄</button>
-
-        <button class="langBtn" id="toLangBtn" type="button">
-          <span class="langLeft">
-            <span class="flag" id="toFlag">🇹🇷</span>
-            <span class="langLabel" id="toLangTxt">Türkçe</span>
-          </span>
-          <span class="caret">▾</span>
-        </button>
+        <button class="langBtn" id="fromLangBtn"><span class="langLeft"><span class="flag" id="fromFlag">🌐</span><span class="langLabel" id="fromLangTxt">Otomatik</span></span><span>▼</span></button>
+        <button class="swapBtn" id="swapBtn">⇄</button>
+        <button class="langBtn" id="toLangBtn"><span class="langLeft"><span class="flag" id="toFlag">🇹🇷</span><span class="langLabel" id="toLangTxt">Türkçe</span></span><span>▼</span></button>
       </div>
 
       <div class="pane">
         <div class="box top">
           <div class="boxHead">
-            <div class="headLeft">
-              <div class="headTitle">Çevrilecek metin</div>
-              <div class="counter" id="countIn">0</div>
-            </div>
-            <div class="btnsRight">
-              <button class="iconBtn" id="micIn" type="button" aria-label="Mikrofon">
-                <svg viewBox="0 0 24 24">
-                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
-                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-                  <line x1="12" y1="19" x2="12" y2="23"></line>
-                  <line x1="8" y1="23" x2="16" y2="23"></line>
-                </svg>
-              </button>
-            </div>
+            <span class="headTitle">Çevrilecek metin</span>
+            <div class="btnsRight"><button class="iconBtn" id="micIn">🎤</button></div>
           </div>
-          <textarea id="inText" placeholder="Yaz ya da mikrofonla konuş…" spellcheck="false"></textarea>
+          <textarea id="inText" placeholder="Yazmaya başla..." spellcheck="false"></textarea>
         </div>
 
         <div class="actions-mid">
-          <button class="btn" id="clearBtn" type="button">Temizle</button>
-          <button class="btn primary" id="translateBtn" type="button">Çevir</button>
+          <button class="btn" id="clearBtn">Temizle</button>
+          <button class="btn primary" id="translateBtn">Çevir</button>
         </div>
 
         <div class="box bottom">
           <div class="boxHead">
-            <div class="headLeft">
-              <div class="headTitle">Çeviri</div>
-              <div class="counter" id="countOut">0</div>
-            </div>
-            <div class="btnsRight">
-              <button class="iconBtn" id="speakOut" type="button" aria-label="Çeviriyi oku">
-                <svg viewBox="0 0 24 24">
-                  <path d="M11 5 6 9H3v6h3l5 4z"></path>
-                  <path d="M15 9a4 4 0 0 1 0 6"></path>
-                  <path d="M17.5 6.5a7 7 0 0 1 0 11"></path>
-                </svg>
-              </button>
-            </div>
+            <span class="headTitle">Çeviri</span>
+            <div class="btnsRight"><button class="iconBtn" id="copyOut">📋</button></div>
           </div>
           <div class="out" id="outText">—</div>
         </div>
       </div>
     </div>
-
+    
     <div class="footerbar">
       <div class="footerBrand">italkyAI By Ozyigit’s 2026</div>
     </div>
@@ -366,86 +213,83 @@
   <div class="sheetBackdrop" id="langSheet">
     <div class="sheet">
       <div class="sheetTop">
-        <div class="sheetTitle">Dil Seçiniz</div>
+        <span class="sheetTitle">Dil Seç</span>
         <button class="sheetClose" id="sheetClose">✕</button>
       </div>
-      <div class="sheetList" id="sheetList">
-        </div>
+      <div class="sheetList" id="sheetList"></div>
     </div>
   </div>
 
 <script>
-    // --- ÇALIŞAN JAVASCRIPT MOTORU ---
-
-    // Gerekli elementleri seçiyoruz
+    // ELEMENTLER
     const inText = document.getElementById('inText');
     const outText = document.getElementById('outText');
-    const countIn = document.getElementById('countIn');
-    const countOut = document.getElementById('countOut');
     const translateBtn = document.getElementById('translateBtn');
     const clearBtn = document.getElementById('clearBtn');
     const swapBtn = document.getElementById('swapBtn');
     const micIn = document.getElementById('micIn');
+    const copyOut = document.getElementById('copyOut');
     
-    // Dil Seçimi Elementleri
+    // DİL SEÇİMİ
     const fromLangBtn = document.getElementById('fromLangBtn');
     const toLangBtn = document.getElementById('toLangBtn');
     const langSheet = document.getElementById('langSheet');
     const sheetClose = document.getElementById('sheetClose');
     const sheetList = document.getElementById('sheetList');
     
-    // Değişkenler
-    let fromLang = "autodetect"; // Başlangıç otomatik
+    let fromLang = "autodetect"; 
     let toLang = "tr";
-    let activeSide = "from"; // Hangi tarafı değiştiriyoruz? (from/to)
+    let activeSide = "from";
 
-    // Dil Listesi (Basit versiyon)
     const languages = [
-      { code: "autodetect", name: "Dili Algıla", flag: "🌐" },
+      { code: "autodetect", name: "Otomatik", flag: "🌐" },
       { code: "tr", name: "Türkçe", flag: "🇹🇷" },
       { code: "en", name: "İngilizce", flag: "🇬🇧" },
       { code: "de", name: "Almanca", flag: "🇩🇪" },
       { code: "fr", name: "Fransızca", flag: "🇫🇷" },
-      { code: "es", name: "İspanyolca", flag: "🇪🇸" },
       { code: "ru", name: "Rusça", flag: "🇷🇺" },
-      { code: "it", name: "İtalyanca", flag: "🇮🇹" },
       { code: "ar", name: "Arapça", flag: "🇸🇦" },
+      { code: "es", name: "İspanyolca", flag: "🇪🇸" },
+      { code: "it", name: "İtalyanca", flag: "🇮🇹" },
+      { code: "ja", name: "Japonca", flag: "🇯🇵" },
+      { code: "ko", name: "Korece", flag: "🇰🇷" },
+      { code: "zh", name: "Çince", flag: "🇨🇳" },
     ];
 
-    // 1. Yazarken sayaç güncelle
-    inText.addEventListener('input', () => {
-        countIn.innerText = inText.value.length;
-    });
-
-    // 2. Temizle Butonu
+    // Temizle
     clearBtn.addEventListener('click', () => {
-        inText.value = "";
-        outText.innerText = "—";
-        countIn.innerText = "0";
-        countOut.innerText = "0";
-        inText.focus();
+        inText.value = ""; outText.innerText = "—"; inText.focus();
     });
 
-    // 3. Dil Değiştir (Swap)
+    // Swap (Değiştir)
     swapBtn.addEventListener('click', () => {
-        // Otomatik seçiliyse swap yapma, mantıksız olur
         if(fromLang === "autodetect") {
-            alert("Otomatik algılama etkinken dilleri değiştiremezsiniz. Lütfen soldan bir dil seçin.");
+            alert("Otomatik moddayken dilleri değiştiremezsiniz. Lütfen soldan bir dil seçin.");
             return;
         }
-
-        // Değerleri takas et
-        let tempCode = fromLang; fromLang = toLang; toLang = tempCode;
-        
-        updateLangUI();
+        let temp = fromLang; fromLang = toLang; toLang = temp;
+        updateUI();
     });
 
-    // 4. ÇEVİRİ BUTONU (Gerçek MyMemory API)
+    // Kopyala
+    copyOut.addEventListener('click', () => {
+        if(outText.innerText !== "—") {
+            navigator.clipboard.writeText(outText.innerText);
+            alert("Kopyalandı!");
+        }
+    });
+
+    // ÇEVİRİ BUTONU (KORUMALI)
     translateBtn.addEventListener('click', async () => {
         const text = inText.value.trim();
         if(!text) return;
 
-        // Buton efektleri
+        // AYNI DİL KONTROLÜ (SENİN HATAYI ENGELLEYEN YER)
+        if (fromLang !== "autodetect" && fromLang === toLang) {
+            outText.innerText = "⚠️ Başkanım, kaynak ve hedef dil aynı olamaz. Lütfen farklı diller seçin.";
+            return;
+        }
+
         const originalText = translateBtn.innerText;
         translateBtn.innerText = "Çevriliyor...";
         translateBtn.style.opacity = "0.7";
@@ -456,14 +300,18 @@
             const res = await fetch(url);
             const data = await res.json();
 
+            // Eğer API hala hata verirse (MyMemory bazen kota hatası verir)
             if(data.responseData && data.responseData.translatedText) {
-                outText.innerText = data.responseData.translatedText;
-                countOut.innerText = data.responseData.translatedText.length;
+                // Hata mesajı kontrolü (API bazen hatayı çeviri gibi döner)
+                if (data.responseData.translatedText.includes("PLEASE SELECT TWO DISTINCT LANGUAGES")) {
+                    outText.innerText = "⚠️ Lütfen iki farklı dil seçiniz.";
+                } else {
+                    outText.innerText = data.responseData.translatedText;
+                }
             } else {
-                outText.innerText = "Çeviri yapılamadı.";
+                outText.innerText = "Hata oluştu.";
             }
         } catch (err) {
-            console.error(err);
             outText.innerText = "Bağlantı hatası!";
         } finally {
             translateBtn.innerText = originalText;
@@ -472,85 +320,46 @@
         }
     });
 
-    // 5. Dil Seçim Menüsü Fonksiyonları
-    function openLangSheet(side) {
+    // Dil Menüsü İşlemleri
+    function openSheet(side) {
         activeSide = side;
-        renderLangList();
+        sheetList.innerHTML = "";
+        languages.forEach(lang => {
+            // Sağ tarafta 'Otomatik' olmasın
+            if(activeSide === 'to' && lang.code === 'autodetect') return;
+            
+            const div = document.createElement('div');
+            div.className = 'sheetRow';
+            div.innerHTML = `<div class="left"><span style="font-size:20px">${lang.flag}</span><span class="name">${lang.name}</span></div>`;
+            div.onclick = () => {
+                if(activeSide === 'from') fromLang = lang.code;
+                else toLang = lang.code;
+                updateUI();
+                langSheet.classList.remove('show');
+            };
+            sheetList.appendChild(div);
+        });
         langSheet.classList.add('show');
     }
 
-    function closeLangSheet() {
-        langSheet.classList.remove('show');
+    function updateUI() {
+        const f = languages.find(l => l.code === fromLang);
+        const t = languages.find(l => l.code === toLang);
+        document.getElementById('fromFlag').innerText = f.flag;
+        document.getElementById('fromLangTxt').innerText = f.name;
+        document.getElementById('toFlag').innerText = t.flag;
+        document.getElementById('toLangTxt').innerText = t.name;
     }
 
-    function renderLangList() {
-        sheetList.innerHTML = "";
-        languages.forEach(lang => {
-            // Eğer "Çevrilen Dil" (Sağ) seçiliyorsa "Otomatik" seçeneğini gösterme
-            if(activeSide === 'to' && lang.code === 'autodetect') return;
-
-            const row = document.createElement('div');
-            row.className = "sheetRow";
-            row.innerHTML = `
-                <div class="left">
-                    <span style="font-size:20px">${lang.flag}</span>
-                    <span class="name">${lang.name}</span>
-                </div>
-                <span class="code">${lang.code.toUpperCase()}</span>
-            `;
-            
-            // Tıklayınca seç
-            row.addEventListener('click', () => {
-                if(activeSide === 'from') fromLang = lang.code;
-                else toLang = lang.code;
-                
-                updateLangUI();
-                closeLangSheet();
-            });
-
-            sheetList.appendChild(row);
-        });
-    }
-
-    function updateLangUI() {
-        // Sol tarafı güncelle
-        const fLang = languages.find(l => l.code === fromLang);
-        if(fLang) {
-            document.getElementById('fromFlag').innerText = fLang.flag;
-            document.getElementById('fromLangTxt').innerText = fLang.name;
-        }
-
-        // Sağ tarafı güncelle
-        const tLang = languages.find(l => l.code === toLang);
-        if(tLang) {
-            document.getElementById('toFlag').innerText = tLang.flag;
-            document.getElementById('toLangTxt').innerText = tLang.name;
-        }
-    }
-
-    // Butonlara event ekle
-    fromLangBtn.addEventListener('click', () => openLangSheet('from'));
-    toLangBtn.addEventListener('click', () => openLangSheet('to'));
-    sheetClose.addEventListener('click', closeLangSheet);
-    
-    // Dışarı tıklayınca kapat
-    langSheet.addEventListener('click', (e) => {
-        if(e.target === langSheet) closeLangSheet();
-    });
-
-    // Mikrofon (Görsel)
-    micIn.addEventListener('click', () => {
+    fromLangBtn.onclick = () => openSheet('from');
+    toLangBtn.onclick = () => openSheet('to');
+    sheetClose.onclick = () => langSheet.classList.remove('show');
+    micIn.onclick = () => {
         micIn.classList.toggle('listening');
-        if(micIn.classList.contains('listening')) {
-            inText.placeholder = "Dinliyorum...";
-        } else {
-            inText.placeholder = "Yaz ya da mikrofonla konuş…";
-        }
-    });
+        inText.placeholder = micIn.classList.contains('listening') ? "Dinliyorum..." : "Yazmaya başla...";
+    };
 
-    // Başlangıç ayarları
-    updateLangUI();
-
+    updateUI();
 </script>
 </body>
 </html>
