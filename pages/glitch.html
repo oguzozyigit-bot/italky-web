@@ -3,70 +3,67 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>ITALKY • Glitch Hunter — Final</title>
-<link rel="icon" href="data:,">
+<title>ITALKY • Glitch Hunter — Neural Architect</title>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
 <style>
 :root{
-  --bg:#050505; --cyan:#00ffff; --pink:#ff0055; --green:#00ff66;
+  --bg:#050505; --cyan:#00ffff; --pink:#ff0055; --green:#00ff66; --purple:#bd00ff;
   --panel:rgba(10,20,20,.95); --border:rgba(0,255,255,.3); --text:#e0fbfc;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);
   font-family:'Share Tech Mono',monospace;color:var(--text)}
-.matrix{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,255,255,.05),transparent,rgba(255,0,85,.05));
+.matrix{position:absolute;inset:0;z-index:0;background:linear-gradient(180deg,rgba(0,255,255,.05),transparent,rgba(255,0,85,.05));
   background-size:100% 200%;animation:scan 5s linear infinite}
 @keyframes scan{to{background-position:0 200%}}
 
 .app{position:relative;max-width:480px;height:100%;margin:0 auto;
-  background:var(--panel);border:1px solid var(--border);display:flex;flex-direction:column}
-@media(min-width:520px){.app{height:92vh;border-radius:20px}}
+  background:var(--panel);border:1px solid var(--border);display:flex;flex-direction:column;z-index:5}
+@media(min-width:520px){.app{height:92vh;border-radius:20px;margin-top:4vh}}
 
-.header{height:70px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;
-  border-bottom:1px solid var(--border)}
-.btn{width:40px;height:40px;border:1px solid var(--cyan);background:rgba(0,255,255,.1);
-  color:var(--cyan);display:flex;align-items:center;justify-content:center;cursor:pointer}
-.title{font-size:20px;letter-spacing:2px;color:var(--cyan);text-shadow:2px 0 var(--pink)}
-.badge{font-size:10px;padding:2px 6px;background:var(--cyan);color:#000;margin-left:6px}
+.header{height:70px;display:flex;align-items:center;justify-content:space-between;padding:0 16px; border-bottom:1px solid var(--border)}
+.title{font-size:16px;letter-spacing:1px;color:var(--cyan);text-shadow:2px 0 var(--pink)}
+.pb-badge{font-size:10px;padding:4px 8px;background:var(--cyan);color:#000;font-weight:800;border-radius:4px}
 
 .game{flex:1;padding:16px;display:none;flex-direction:column;justify-content:space-between}
-.stats{display:flex;justify-content:space-between;font-size:14px;color:var(--cyan);opacity:.85}
+.stats{display:flex;justify-content:space-between;font-size:12px;color:var(--cyan);opacity:.85;margin-bottom:10px}
+
+.narrative{font-size:10px;color:var(--pink);text-align:center;margin-bottom:10px;letter-spacing:2px;text-transform:uppercase; font-weight: 800;}
 
 .terminal{flex:1;border:2px solid var(--border);background:rgba(0,0,0,.6);
-  display:flex;align-items:center;justify-content:center;position:relative;
-  box-shadow:inset 0 0 30px rgba(0,255,255,.05)}
+  display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;
+  box-shadow:inset 0 0 30px rgba(0,255,255,.05);padding:20px; transition: 0.3s;}
+.terminal.boss-active { border-color: var(--pink); box-shadow: inset 0 0 50px rgba(255,0,85,0.2); }
+
 .term-head{position:absolute;top:0;left:0;right:0;height:24px;
   background:rgba(0,255,255,.1);border-bottom:1px solid var(--border);
-  font-size:10px;padding:0 10px;display:flex;align-items:center}
-.sentence{font-family:'Space Grotesk',sans-serif;font-size:24px;text-align:center;color:#fff}
+  font-size:10px;padding:0 10px;display:flex;align-items:center;justify-content:space-between}
 
-.controls{display:flex;gap:16px;height:120px}
-.action{flex:1;border:2px solid var(--border);cursor:pointer;font-size:18px;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  transition:.15s}
-.bug{border-color:var(--pink);color:var(--pink);background:rgba(255,0,85,.15)}
-.ok{border-color:var(--green);color:var(--green);background:rgba(0,255,102,.15)}
+.category-tag{font-size:10px;color:var(--cyan);border:1px solid var(--cyan);padding:2px 6px;margin-bottom:15px;background: rgba(0,255,255,0.1)}
+.sentence{font-family:'Space Grotesk',sans-serif;font-size:22px;text-align:center;color:#fff;text-transform:uppercase;line-height:1.4}
+
+.controls{display:flex;gap:16px;height:100px;margin-top:20px}
+.action{flex:1;border:2px solid var(--border);cursor:pointer;font-size:16px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;transition:.15s; font-weight: 800;}
+.bug{border-color:var(--pink);color:var(--pink);background:rgba(255,0,85,.1)}
+.ok{border-color:var(--green);color:var(--green);background:rgba(0,255,102,.1)}
 .action:active{transform:scale(.95)}
-.icon{font-size:38px}
 
-.toast{position:absolute;bottom:150px;left:20px;right:20px;
-  background:#000;border:1px solid #fff;padding:14px;display:none;gap:10px}
-.toast.show{display:flex}
-.toast.success{border-color:var(--green);color:var(--green)}
-.toast.fail{border-color:var(--pink);color:var(--pink)}
+.res-toast{position:absolute;top:100px;left:50%;transform:translateX(-50%);
+  background:#000;border:1px solid var(--cyan);padding:10px 20px;font-weight:900;
+  opacity:0;transition:0.3s;z-index:100;white-space:nowrap}
 
 .modal{position:absolute;inset:0;background:rgba(0,0,0,.95);
-  display:flex;align-items:center;justify-content:center;z-index:50}
-.card{background:#080808;border:1px solid var(--cyan);padding:26px;width:85%;text-align:center}
-.langs{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:16px}
-.lang{border:1px solid var(--cyan);color:var(--cyan);padding:10px;cursor:pointer}
-.lang.active{background:var(--cyan);color:#000}
-.mainbtn{width:100%;padding:14px;margin-top:16px;border:none;
-  background:var(--cyan);color:#000;font-weight:900}
+  display:flex;align-items:center;justify-content:center;z-index:200}
+.card{background:#080808;border:1px solid var(--cyan);padding:26px;width:85%;text-align:center;max-height:85vh;overflow-y:auto}
+.lvl-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
+.lvl-btn{border:1px solid var(--pink);color:var(--pink);padding:8px;font-size:10px;cursor:pointer; font-weight: 800;}
+.lvl-btn.active{background:var(--pink);color:#fff}
+.mainbtn{width:100%;padding:14px;margin-top:16px;border:none;background:var(--cyan);color:#000;font-weight:900;cursor:pointer}
 
 .hidden{display:none!important}
-.glitch{animation:glitch .3s}
+.glitch-anim{animation:glitch .3s}
 @keyframes glitch{
   20%{filter:hue-rotate(90deg);transform:translate(-5px,5px)}
   60%{filter:invert(1);transform:translate(5px,-5px)}
@@ -79,165 +76,275 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);
 
 <div class="app" id="frame">
   <div class="header">
-    <div class="btn" onclick="location.href='/pages/game.html'">←</div>
-    <div class="title">GLITCH_HUNTER <span id="langBadge" class="badge">EN</span></div>
-    <div class="btn" id="soundBtn">🔊</div>
+    <div style="cursor:pointer; color:var(--cyan)" onclick="location.href='/pages/game.html'">←</div>
+    <div class="title">GLITCH_HUNTER</div>
+    <div id="pbBadge" class="pb-badge">PB: 0</div>
+    <div id="soundBtn" style="cursor:pointer">🔊</div>
   </div>
 
   <div class="game" id="game">
+    <div class="narrative" id="opName">/// FIREWALL TRAINING ///</div>
     <div class="stats">
       <span>SCORE: <b id="score">0</b></span>
+      <span>MOMENTUM: <b id="momVal">x1.00</b></span>
       <span>INTEGRITY: <b id="life">100%</b></span>
     </div>
 
-    <div class="terminal">
-      <div class="term-head">/// SYSTEM_CHECK_V3.0 ///</div>
-      <div class="sentence" id="sentence">...</div>
+    <div class="terminal" id="terminal">
+      <div class="term-head">
+        <span id="termStatus">/// SCANNING_SYNTAX ///</span>
+        <span id="setCounter">1/12</span>
+      </div>
+      <div class="category-tag" id="catTag">ANALYZING...</div>
+      <div class="sentence" id="sentence">INITIALIZING_CORE...</div>
     </div>
+
+    <div class="res-toast" id="resToast">SYSTEM OK</div>
 
     <div class="controls">
-      <div class="action bug" onclick="answer(false)">
-        <div class="icon">🐞</div>GLITCH
-      </div>
-      <div class="action ok" onclick="answer(true)">
-        <div class="icon">🛡️</div>STABLE
-      </div>
-    </div>
-
-    <div class="toast" id="toast">
-      <div id="toastText"></div>
+      <button class="action bug" onclick="answer(false)" id="btnBug">🐞 GLITCH</button>
+      <button class="action ok" onclick="answer(true)" id="btnOk">🛡️ STABLE</button>
     </div>
   </div>
 </div>
 
 <div class="modal" id="start">
   <div class="card">
-    <h2 style="color:var(--cyan)">SYSTEM BOOT</h2>
-    <p style="opacity:.7">Cümlede hata var mı tespit et.</p>
-    <div class="langs">
+    <h2 style="color:var(--cyan);margin-top:0">CYBER MASTER v3.0</h2>
+    <p style="opacity:.7;font-size:12px">Algılama kasını çalıştır: Hataları ayıkla.</p>
+    <div class="lvl-grid">
+      <div class="lvl-btn active" data-diff="EASY">EASY</div>
+      <div class="lvl-btn" data-diff="HARD">HARD</div>
+      <div class="lvl-btn" data-diff="INSANE">INSANE</div>
+    </div>
+    <div class="langs" style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:16px 0">
       <div class="lang active" data-lang="en">EN</div>
       <div class="lang" data-lang="de">DE</div>
       <div class="lang" data-lang="fr">FR</div>
       <div class="lang" data-lang="es">ES</div>
       <div class="lang" data-lang="it">IT</div>
     </div>
-    <button class="mainbtn" id="startBtn">BOOT</button>
+    <button class="mainbtn" id="startBtn">INITIALIZE</button>
+    <h3 style="color:var(--pink);font-size:12px;margin:20px 0 10px">/// SYSTEM_LOGS ///</h3>
+    <div id="leaderboard"></div>
   </div>
 </div>
 
 <div class="modal hidden" id="end">
   <div class="card">
-    <h2 style="color:var(--pink)">SYSTEM CRASH</h2>
-    <p>FINAL SCORE: <b id="final"></b></p>
-    <button class="mainbtn" onclick="restart()">REBOOT</button>
+    <h2 id="endTitle" style="color:var(--green)">REPORT_FINISHED</h2>
+    <p id="endStats" style="font-size:14px; margin:15px 0"></p>
+    <button class="mainbtn" id="btnContinue">CONTINUE (RISK)</button>
+    <button class="mainbtn" id="btnBackup" style="background:var(--pink);color:#fff">BACKUP (SAFE ZONE)</button>
+    <button class="mainbtn" style="background:#333;color:#fff" onclick="location.reload()">EXIT_SYSTEM</button>
   </div>
 </div>
 
 <script type="module">
 import { loadLangPool, createUsedSet, pick } from "/js/langpool.js";
 
-const $=id=>document.getElementById(id);
+const $ = id => document.getElementById(id);
 
-let lang="en", muted=false;
-let score=0, lives=3;
-let current=null, busy=false;
+let lang="en", muted=false, currentDiff="EASY";
+let totalScore=0, setScore=0, momentum=1.0, integrity=100;
+let wordList=[], currentIndex=0, busy=false, runActive=false, setIndex=1;
+let currentItem=null, isBossRound = false;
 
 const LANGMAP={en:"en-US",de:"de-DE",fr:"fr-FR",es:"es-ES",it:"it-IT"};
+
+function shuffle(a) {
+  const arr = [...a];
+  for(let i=arr.length-1; i>0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function updateLeaderboardUI() {
+  const records = JSON.parse(localStorage.getItem('glitch_v3_hof') || '[]');
+  $('leaderboard').innerHTML = records.map((r, i) => `
+    <div style="display:flex;justify-content:space-between;padding:8px;background:rgba(0,255,255,0.05);margin-bottom:4px;font-size:11px;">
+      <span>${i+1}. <b>${r.score}</b> <small>${r.lang}</small></span>
+      <span>🔥${r.mom}</span>
+    </div>
+  `).join('') || '<div style="font-size:10px; opacity:0.5">LOGLAR BOŞ.</div>';
+  const pb = records.filter(r => r.lang === lang.toUpperCase())[0]?.score || 0;
+  $("pbBadge").textContent = `PB: ${pb}`;
+}
 
 document.querySelectorAll(".lang").forEach(b=>{
   b.onclick=()=>{
     document.querySelectorAll(".lang").forEach(x=>x.classList.remove("active"));
     b.classList.add("active");
-    lang=b.dataset.lang;
-    $("langBadge").textContent=lang.toUpperCase();
+    lang=b.dataset.lang; updateLeaderboardUI();
+  };
+});
+
+document.querySelectorAll(".lvl-btn").forEach(b=>{
+  b.onclick=()=>{
+    document.querySelectorAll(".lvl-btn").forEach(x=>x.classList.remove("active"));
+    b.classList.add("active"); currentDiff=b.dataset.diff;
   };
 });
 
 $("soundBtn").onclick=()=>{muted=!muted;$("soundBtn").textContent=muted?"🔇":"🔊";};
 
 $("startBtn").onclick=async()=>{
-  $("start").classList.add("hidden");
-  $("game").style.display="flex";
-  score=0;lives=3;
-  updateUI();
-  await next();
+  $("start").classList.add("hidden"); $("game").style.display="flex";
+  runActive=false; setIndex=1; totalScore=0; momentum=1.0; integrity=100;
+  await initGame();
 };
 
-async function next(){
-  if(lives<=0){finish();return;}
-  const pool=await loadLangPool(lang);
-  const {used,save}=createUsedSet("glitch_hunter_"+lang);
-  const picked=pick(pool,1,used,save);
-  const w=picked[0];
-  current={
-    text: w.sentence || `I like ${w.w}.`,
-    ok: Math.random()>0.5,
-    fix: `I like ${w.w}.`
-  };
-  if(!current.ok){
-    current.text = current.text.replace(" like "," likes ");
+async function initGame(isBackup = false) {
+  busy=false; currentIndex=0; setScore=0;
+  if(!runActive || isBackup) { integrity = 100; runActive = true; }
+  
+  const pool = await loadLangPool(lang);
+  const randomizedItems = shuffle([...pool.items]);
+  const USED_KEY = `used_glitch_v3_${lang}_${currentDiff}`;
+  const {used, save} = createUsedSet(USED_KEY);
+
+  wordList = pick({items: randomizedItems}, 12, used, save);
+  if(wordList.length < 12) { localStorage.removeItem(USED_KEY); return initGame(isBackup); }
+
+  try { save(wordList.map(x => x.w)); await Promise.resolve(); } catch(e){}
+
+  const ops = ["FIREWALL TRAINING", "GRAMMAR CORE", "SYNTAX BREACH", "SYSTEM OVERRIDE", "NEURAL ACCESS"];
+  $("opName").textContent = `/// ${ops[Math.min(setIndex-1, 4)]} ///`;
+  updateUI(); nextRound();
+}
+
+function produceGlitch(original) {
+  const categories = ["SUBJECT-VERB", "ARTICLE", "TENSE", "PLURAL"];
+  const cat = categories[Math.floor(Math.random()*categories.length)];
+  let text = original;
+  
+  // Whitelist/Level based glitch production başkanım
+  if(currentDiff === "EASY") {
+    if(cat === "SUBJECT-VERB") text = text.replace(" am ", " is ").replace(" are ", " is ");
+    else if(cat === "ARTICLE") text = text.replace(" a ", " an ").replace(" an ", " a ");
+    else text = text.replace("s ", " ");
+  } else {
+    if(cat === "TENSE") text = text.replace(" did ", " do ").replace(" will ", " was ");
+    else if(cat === "PLURAL") text = text.replace(" people ", " peoples ").replace(" are ", " is ");
+    else text = text.replace(" don't ", " doesn't ").replace(" have ", " has ");
   }
-  $("sentence").textContent=current.text;
+  return { text, cat };
+}
+
+function nextRound() {
+  if(currentIndex >= wordList.length) { finish(false); return; }
+  const item = wordList[currentIndex];
+  isBossRound = (currentIndex >= 10); // Son 2 soru Boss
+  
+  const isOk = Math.random() > 0.5;
+  const glitchData = isOk ? {text: item.sentence, cat: "VERIFIED"} : produceGlitch(item.sentence);
+
+  currentItem = { text: glitchData.text, original: item.sentence, isOk: isOk, category: glitchData.cat };
+
+  $("sentence").textContent = currentItem.text;
+  $("catTag").textContent = isOk ? "SCANNING_CORE..." : `ANOMALY: ${currentItem.category}`;
+  $("setCounter").textContent = `${currentIndex + 1}/12`;
+  
+  if(isBossRound) {
+    $("terminal").classList.add("boss-active");
+    $("termStatus").textContent = "/// BOSS_ROUND: SYNTAX_CORE ///";
+  } else {
+    $("terminal").classList.remove("boss-active");
+    $("termStatus").textContent = "/// SCANNING_SYNTAX ///";
+  }
   busy=false;
 }
 
-function answer(stable){
+function answer(userSaysStable) {
   if(busy) return;
   busy=true;
-  const right = (stable===current.ok);
-  if(right){
-    score+=100;
-    showToast("✔ SYSTEM OK");
-    speak(current.fix);
-    setTimeout(()=>{updateUI();next();},1200);
-  }else{
-    lives--;
-    glitch();
-    showToast("✖ ERROR");
-    if(lives<=0) setTimeout(finish,1000);
-    else setTimeout(next,1000);
-    updateUI();
+  const isCorrect = (userSaysStable === currentItem.isOk);
+  
+  if(isCorrect) {
+    let roundPoints = Math.round(100 * momentum);
+    if(isBossRound) roundPoints = Math.round(roundPoints * 1.5);
+    totalScore += roundPoints; setScore += roundPoints;
+    momentum = Math.min(1.6, momentum + 0.05);
+    toast("✔ SYSTEM_OK", "var(--green)");
+    speak(currentItem.original);
+  } else {
+    // ✅ NEAR MISS vs FULL MISS
+    let damage = isBossRound ? 30 : (currentDiff === "EASY" ? 25 : 20);
+    let momLoss = isBossRound ? 0.30 : 0.20;
+    
+    integrity -= damage;
+    momentum = Math.max(1.0, momentum - momLoss);
+    glitchEff();
+    toast(`✖ CORRUPTED: ${currentItem.category}`, "var(--pink)");
+    speak(currentItem.original);
+  }
+
+  updateUI();
+  if(integrity <= 0) setTimeout(() => finish(true), 800);
+  else setTimeout(() => { currentIndex++; nextRound(); }, 1200);
+}
+
+function updateUI() {
+  $("score").textContent = totalScore;
+  $("life").textContent = Math.max(0, integrity) + "%";
+  $("momVal").textContent = `x${momentum.toFixed(2)}`;
+}
+
+function toast(msg, color) {
+  const t = $("resToast");
+  t.textContent = msg; t.style.color = color; t.style.borderColor = color;
+  t.style.opacity = "1"; setTimeout(() => t.style.opacity = "0", 1000);
+}
+
+function glitchEff() {
+  $("frame").classList.add("glitch-anim");
+  setTimeout(() => $("frame").classList.remove("glitch-anim"), 300);
+}
+
+function saveRecord() {
+  if(totalScore <= 0) return;
+  const records = JSON.parse(localStorage.getItem('glitch_v3_hof') || '[]');
+  const newRecord = { id: Date.now(), score: totalScore, lang: lang.toUpperCase(), mom: momentum.toFixed(2) };
+  records.push(newRecord);
+  records.sort((a,b) => b.score - a.score);
+  localStorage.setItem('glitch_v3_hof', JSON.stringify(records.slice(0, 10)));
+  updateLeaderboardUI();
+}
+
+function finish(died) {
+  saveRecord();
+  $("end").classList.remove("hidden");
+  $("endTitle").textContent = died ? "SYSTEM_CRASHED" : "SYNTAX_SYNCED";
+  $("endTitle").style.color = died ? "var(--pink)" : "var(--green)";
+  $("endStats").innerHTML = `SCORE: ${totalScore}<br>MOMENTUM: x${momentum.toFixed(2)}`;
+  
+  if(died) {
+    $("btnContinue").classList.add("hidden"); $("btnBackup").classList.add("hidden");
+  } else {
+    $("btnContinue").classList.remove("hidden"); $("btnBackup").classList.remove("hidden");
   }
 }
 
-function updateUI(){
-  $("score").textContent=score;
-  $("life").textContent=Math.round(lives/3*100)+"%";
-}
+$("btnContinue").onclick = () => {
+  setIndex++; $("end").classList.add("hidden"); initGame(false);
+};
 
-function showToast(t){
-  const box=$("toast");
-  $("toastText").textContent=t;
-  box.className="toast show";
-  setTimeout(()=>box.classList.remove("show"),700);
-}
-
-function glitch(){
-  $("frame").classList.add("glitch");
-  setTimeout(()=>$("frame").classList.remove("glitch"),300);
-}
-
-function finish(){
-  $("end").classList.remove("hidden");
-  $("final").textContent=score;
-  speak(current?.fix||"");
-}
-
-function restart(){
-  $("end").classList.add("hidden");
-  $("game").style.display="flex";
-  score=0;lives=3;
-  updateUI();
-  next();
-}
+$("btnBackup").onclick = () => {
+  const bonus = Math.round(setScore * 0.05);
+  totalScore += bonus; momentum = 1.0; setIndex++;
+  $("end").classList.add("hidden"); initGame(true);
+};
 
 function speak(t){
-  if(muted||!t) return;
+  if(muted || !t) return;
   const u=new SpeechSynthesisUtterance(t);
   u.lang=LANGMAP[lang]||"en-US";
-  speechSynthesis.cancel();
-  speechSynthesis.speak(u);
+  u.rate = 0.9; speechSynthesis.cancel(); speechSynthesis.speak(u);
 }
+
+window.addEventListener('load', updateLeaderboardUI);
 </script>
 </body>
 </html>
