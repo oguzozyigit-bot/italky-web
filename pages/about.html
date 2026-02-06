@@ -35,48 +35,127 @@
   <!-- ✅ İçerikler burada durur (silinmez) -->
   <template id="about_tr">
     <h1>Hakkımızda</h1>
-    <p>italkyAI; çeviri, konuşma ve dil öğrenimini tek yerde birleştiren bir dil platformudur.</p>
+    <p>
+      italkyAI, çeviri ve dil öğrenimini “tek ekranda” birleştiren yapay zekâ destekli bir dil platformudur.
+      Amacımız, dili ezberletmek değil; kullanıcıya dili gerçek hayatta kullanabileceği şekilde kazandırmaktır.
+    </p>
+    <p>
+      Platform; oyunlar, yüz yüze çeviri, metinden çeviri ve konuşma desteğiyle öğrenmeyi pratik hâle getirir.
+      Öğrenme süreci; hızınıza, seviyenize ve ihtiyaçlarınıza göre şekillenir.
+    </p>
+    <p>
+      italkyAI’de hedef net: Daha hızlı anla, daha rahat konuş, daha az “takıl”.
+      Dil öğrenmek sıkıcı olmak zorunda değil.
+    </p>
   </template>
 
   <template id="about_en">
     <h1>About</h1>
-    <p>italkyAI is a language platform that brings translation, speaking, and learning together in one place.</p>
+    <p>
+      italkyAI is an AI-powered language platform that brings translation and language learning into a single experience.
+      Our goal is not memorization — it’s helping people use a language naturally in real life.
+    </p>
+    <p>
+      With games, face-to-face translation, text translation, and speaking support, italkyAI turns practice into progress.
+      Learning adapts to your pace, level, and needs.
+    </p>
+    <p>
+      The mission is simple: understand faster, speak with confidence, and get stuck less.
+      Learning a language doesn’t have to be boring.
+    </p>
   </template>
 
   <template id="about_de">
     <h1>Über</h1>
-    <p>italkyAI ist eine Sprachplattform, die Übersetzung, Sprechen und Lernen an einem Ort vereint.</p>
+    <p>
+      italkyAI ist eine KI-gestützte Sprachplattform, die Übersetzung und Sprachenlernen in einer einzigen Erfahrung vereint.
+      Unser Ziel ist nicht Auswendiglernen, sondern die Sprache im Alltag natürlich nutzen zu können.
+    </p>
+    <p>
+      Mit Spielen, Face-to-Face-Übersetzung, Textübersetzung und Sprechunterstützung wird Übung zu Fortschritt.
+      Das Lernen passt sich deinem Tempo, Niveau und Bedarf an.
+    </p>
+    <p>
+      Das Ziel ist klar: schneller verstehen, selbstbewusster sprechen und weniger hängen bleiben.
+      Sprachenlernen muss nicht langweilig sein.
+    </p>
   </template>
 
   <template id="about_it">
     <h1>Info</h1>
-    <p>italkyAI è una piattaforma linguistica che unisce traduzione, conversazione e apprendimento in un unico posto.</p>
+    <p>
+      italkyAI è una piattaforma linguistica basata sull’IA che unisce traduzione e apprendimento in un’unica esperienza.
+      Il nostro obiettivo non è la memorizzazione, ma l’uso naturale della lingua nella vita reale.
+    </p>
+    <p>
+      Con giochi, traduzione faccia a faccia, traduzione di testi e supporto al parlato, italkyAI trasforma la pratica in progresso.
+      L’apprendimento si adatta al tuo ritmo, livello e alle tue esigenze.
+    </p>
+    <p>
+      Obiettivo semplice: capire più velocemente, parlare con più sicurezza e bloccarsi di meno.
+      Imparare una lingua non deve essere noioso.
+    </p>
   </template>
 
   <template id="about_fr">
     <h1>À propos</h1>
-    <p>italkyAI est une plateforme linguistique qui réunit traduction, conversation et apprentissage au même endroit.</p>
+    <p>
+      italkyAI est une plateforme linguistique propulsée par l’IA qui réunit traduction et apprentissage en une seule expérience.
+      Notre objectif n’est pas la mémorisation, mais l’usage naturel de la langue dans la vie réelle.
+    </p>
+    <p>
+      Grâce aux jeux, à la traduction en face à face, à la traduction de texte et au support de la parole,
+      italkyAI transforme la pratique en progression. L’apprentissage s’adapte à votre rythme, votre niveau et vos besoins.
+    </p>
+    <p>
+      Le but est simple : comprendre plus vite, parler avec confiance et se bloquer moins.
+      Apprendre une langue n’a pas à être ennuyeux.
+    </p>
   </template>
 
   <script type="module">
     import { getSiteLang } from "/js/i18n.js";
 
+    // Sayfadaki tüm about template'lerini otomatik bulur
+    function getAvailableAboutTemplates(){
+      const tpls = Array.from(document.querySelectorAll('template[id^="about_"]'));
+      const map = {};
+      for(const t of tpls){
+        const m = String(t.id || "").match(/^about_([a-z0-9-]+)$/i);
+        if(m) map[m[1].toLowerCase()] = t.id;
+      }
+      return map;
+    }
+
     function pickTemplateId(){
-      const lang = getSiteLang(); // tr/en/de/it/fr
-      const map = { tr:"about_tr", en:"about_en", de:"about_de", it:"about_it", fr:"about_fr" };
-      return map[lang] || "about_en";
+      const avail = getAvailableAboutTemplates();
+      const langRaw = (getSiteLang && getSiteLang()) ? String(getSiteLang()) : "en";
+      const lang = langRaw.toLowerCase();
+
+      if(avail[lang]) return avail[lang];
+      if(avail["tr"]) return avail["tr"];
+      if(avail["en"]) return avail["en"];
+      const firstKey = Object.keys(avail)[0];
+      return firstKey ? avail[firstKey] : null;
     }
 
     function render(){
       const id = pickTemplateId();
-      const tpl = document.getElementById(id);
       const host = document.getElementById("content");
       host.innerHTML = "";
-      if(tpl) host.appendChild(tpl.content.cloneNode(true));
+
+      if(id){
+        const tpl = document.getElementById(id);
+        if(tpl) host.appendChild(tpl.content.cloneNode(true));
+      } else {
+        host.innerHTML = "<h1>About</h1><p>italkyAI</p>";
+      }
 
       const h1 = host.querySelector("h1");
       document.title = h1 ? `italkyAI • ${h1.textContent}` : "italkyAI";
-      document.documentElement.lang = getSiteLang();
+
+      const langDoc = (getSiteLang && getSiteLang()) ? String(getSiteLang()).toLowerCase() : "en";
+      document.documentElement.lang = langDoc;
     }
 
     render();
