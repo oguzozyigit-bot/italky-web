@@ -1,3 +1,4 @@
+<!-- FILE: italky-web/pages/facetoface.html -->
 <!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -85,8 +86,7 @@
       inset: 0;
       display:grid;
       grid-template-rows: 1fr auto 1fr;
-      /* üst brand için biraz boşluk + alt brand için biraz boşluk */
-      padding: 78px 12px 84px;
+      padding: 70px 12px 54px;
       gap: 10px;
     }
 
@@ -134,6 +134,34 @@
       filter: saturate(1.25);
     }
 
+    /* ✅ ORTA LOGO: sadece italkyAI, slogan yok; dalga alttan geçer */
+    .centerBrand{
+      position:absolute;
+      left:50%;
+      top:50%;
+      transform: translate(-50%, -50%);
+      z-index: 25;
+      pointer-events:none;
+      opacity: .95;
+      filter: drop-shadow(0 12px 26px rgba(0,0,0,.55));
+    }
+    .centerBrand .logoLine{
+      font-family:'Space Grotesk', sans-serif;
+      font-size: 28px;
+      line-height: 1;
+      letter-spacing: -0.6px;
+      white-space: nowrap;
+      user-select:none;
+    }
+    .centerBrand .logoItalky{ color: var(--logoWhite); font-weight: 700; }
+    .centerBrand .logoAI{
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--ai1), var(--ai2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-left: 2px;
+    }
+
     .side{
       border-radius: 28px;
       border: 1px solid var(--border);
@@ -171,6 +199,7 @@
       z-index: 5;
     }
 
+    /* Dil butonu */
     .langBtn{
       height: 44px;
       border-radius: 16px;
@@ -191,6 +220,14 @@
     }
     .langBtn .caret{ opacity:.75; font-size: 12px; }
 
+    /* ✅ Sağ aksiyonlar: hoparlör + mikrofon (artık yazı alanının DIŞINDA) */
+    .barRight{
+      display:flex;
+      gap: 8px;
+      align-items:center;
+      flex: 0 0 auto;
+    }
+
     .btnIcon{
       width: 48px;
       height: 48px;
@@ -210,13 +247,7 @@
       opacity:.92;
     }
     .btnIcon:active{ transform: translateY(1px); }
-
-    .btnIcon.muted{
-      opacity: .50;
-      filter: grayscale(1);
-      border-color: rgba(255,255,255,.08);
-      background: rgba(255,255,255,.03);
-    }
+    .btnIcon.muted{ opacity: .50; filter: grayscale(1); border-color: rgba(255,255,255,.08); background: rgba(255,255,255,.03); }
 
     .btnIcon.listening{
       border-color: rgba(79,70,229,.45);
@@ -269,91 +300,9 @@
     .bubble.me{ align-self:flex-end; border-right: 4px solid var(--pist); text-align:right; }
     .bubble.them{ align-self:flex-start; border-left: 4px solid var(--gold); }
 
-    /* Mic dock */
-    .micDock{
-      position:absolute;
-      left:50%;
-      bottom: 12px;
-      transform: translateX(-50%);
-      z-index: 20;
-      pointer-events:auto;
-    }
-    .side.top .micDock{
-      transform: translateX(-50%) rotate(180deg);
-    }
-
-    /* ✅ DÜZELTME 1: Alt (bordo) mikrofon 180 derece */
+    /* ✅ Mikrofon yönleri değişmeyecek (mevcut kalsın) */
     #botMic svg{ transform: rotate(180deg); }
-
-    /* ✅ DÜZELTME 2: Üst mikrofonu da 180 derece çevirdik (kullanıcı isteği) */
     #topMic svg{ transform: rotate(180deg); }
-
-    /* ===== LOGO (KİLİTLİ) ===== */
-    .brandBottom, .brandTop{
-      position:absolute;
-      left: 50%;
-      transform: translateX(-50%);
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      gap: 6px;
-      pointer-events:none;
-      opacity:.92;
-      z-index: 40;
-    }
-
-    /* üst yazı lacivert zemine binmesin: bir tık yukarı/ayır */
-    .brandTop{
-      top: 18px; /* daha yukarıda */
-      transform: translateX(-50%) rotate(180deg);
-      padding-top: 6px; /* minik ayırma */
-    }
-
-    /* alt logo aşağı + slogan garanti */
-    .brandBottom{
-      bottom: 2px;
-      transform: translateX(-50%) translateY(16px);
-    }
-
-    .brandLock{
-      display:inline-flex;
-      flex-direction:column;
-      align-items:center;
-      gap:6px;
-      position: relative;
-    }
-
-    .logoLine{
-      font-family:'Space Grotesk', sans-serif;
-      font-size: 26px;
-      line-height: 0.95;
-      letter-spacing: -0.4px;
-      user-select:none;
-      white-space: nowrap;
-    }
-    .logoItalky{ color: var(--logoWhite); font-weight: 700; }
-    .logoAI{
-      font-weight: 700;
-      background: linear-gradient(135deg, var(--ai1), var(--ai2));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      margin-left: 2px;
-    }
-    .beRow{
-      width: 100%;
-      text-align:center;
-      margin-top: 2px;
-    }
-    .beFree{
-      font-family:'Outfit', sans-serif;
-      font-weight: 800;
-      font-size: 10px;
-      letter-spacing: 6px;
-      color: var(--be);
-      text-transform: uppercase;
-      display:inline-block;
-      opacity: .92;
-    }
 
     /* ===== Language Sheet ===== */
     .sheetOverlay{
@@ -452,7 +401,10 @@
     }
     .sheetRow:active{ background: rgba(255,255,255,.05); }
 
-    .left{ display:flex; align-items:center; gap:10px; min-width:0; }
+    .left{
+      display:flex; align-items:center; gap:10px;
+      min-width:0;
+    }
     .flag{
       width: 26px; height: 18px;
       display:flex; align-items:center; justify-content:center;
@@ -486,48 +438,49 @@
   <div class="frame" id="frameRoot">
     <button class="back" id="backBtn" aria-label="Geri">←</button>
 
-    <div class="brandTop">
-      <div class="brandLock">
-        <div class="logoLine">
-          <span class="logoItalky">italky</span><span class="logoAI">AI</span>
-        </div>
-        <div class="beRow">
-          <div class="beFree">BE FREE</div>
-        </div>
-      </div>
-    </div>
-
     <div class="split">
+      <!-- TOP PANEL -->
       <section class="side top" id="sideTop">
         <div class="bar">
           <button class="langBtn" id="topLangBtn" type="button">
             <span id="topLangTxt">English</span><span class="caret">▾</span>
           </button>
-          <button class="btnIcon" id="topSpeak" aria-label="Ses (mute)">
-            <svg viewBox="0 0 24 24">
-              <path d="M11 5L6 9H3v6h3l5 4z"></path>
-              <path d="M15 9a4 4 0 0 1 0 6"></path>
-              <path d="M17.5 6.5a7 7 0 0 1 0 11"></path>
-            </svg>
-          </button>
+
+          <div class="barRight">
+            <button class="btnIcon" id="topSpeak" aria-label="Ses (mute)">
+              <svg viewBox="0 0 24 24">
+                <path d="M11 5L6 9H3v6h3l5 4z"></path>
+                <path d="M15 9a4 4 0 0 1 0 6"></path>
+                <path d="M17.5 6.5a7 7 0 0 1 0 11"></path>
+              </svg>
+            </button>
+
+            <!-- ✅ Mikrofon BAR’a taşındı -->
+            <button class="btnIcon" id="topMic" aria-label="Mikrofon">
+              <svg viewBox="0 0 24 24">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                <line x1="12" y1="19" x2="12" y2="23"></line>
+                <line x1="8" y1="23" x2="16" y2="23"></line>
+              </svg>
+            </button>
+          </div>
         </div>
 
         <div class="content" id="topBody"></div>
-
-        <div class="micDock">
-          <button class="btnIcon" id="topMic" aria-label="Mikrofon">
-            <svg viewBox="0 0 24 24">
-              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
-              <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-              <line x1="12" y1="19" x2="12" y2="23"></line>
-              <line x1="8" y1="23" x2="16" y2="23"></line>
-            </svg>
-          </button>
-        </div>
       </section>
 
+      <!-- WAVE -->
       <div class="wave" aria-hidden="true">
         <div class="glow"></div>
+
+        <!-- ✅ Logo dalganın üstünde, slogan yok -->
+        <div class="centerBrand">
+          <div class="logoLine">
+            <span class="logoItalky">italky</span><span class="logoAI">AI</span>
+          </div>
+        </div>
+
         <svg viewBox="0 0 1000 90" preserveAspectRatio="none">
           <defs>
             <linearGradient id="g1" x1="0" y1="0" x2="1" y2="0">
@@ -552,47 +505,40 @@
         </svg>
       </div>
 
+      <!-- BOTTOM PANEL -->
       <section class="side meTint" id="sideBottom">
         <div class="bar">
           <button class="langBtn" id="botLangBtn" type="button">
             <span id="botLangTxt">Türkçe</span><span class="caret">▾</span>
           </button>
-          <button class="btnIcon" id="botSpeak" aria-label="Ses (mute)">
-            <svg viewBox="0 0 24 24">
-              <path d="M11 5L6 9H3v6h3l5 4z"></path>
-              <path d="M15 9a4 4 0 0 1 0 6"></path>
-              <path d="M17.5 6.5a7 7 0 0 1 0 11"></path>
-            </svg>
-          </button>
+
+          <div class="barRight">
+            <button class="btnIcon" id="botSpeak" aria-label="Ses (mute)">
+              <svg viewBox="0 0 24 24">
+                <path d="M11 5L6 9H3v6h3l5 4z"></path>
+                <path d="M15 9a4 4 0 0 1 0 6"></path>
+                <path d="M17.5 6.5a7 7 0 0 1 0 11"></path>
+              </svg>
+            </button>
+
+            <!-- ✅ Mikrofon BAR’a taşındı -->
+            <button class="btnIcon" id="botMic" aria-label="Mikrofon">
+              <svg viewBox="0 0 24 24">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                <line x1="12" y1="19" x2="12" y2="23"></line>
+                <line x1="8" y1="23" x2="16" y2="23"></line>
+              </svg>
+            </button>
+          </div>
         </div>
 
         <div class="content" id="botBody"></div>
-
-        <div class="micDock">
-          <button class="btnIcon" id="botMic" aria-label="Mikrofon">
-            <svg viewBox="0 0 24 24">
-              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
-              <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-              <line x1="12" y1="19" x2="12" y2="23"></line>
-              <line x1="8" y1="23" x2="16" y2="23"></line>
-            </svg>
-          </button>
-        </div>
       </section>
-    </div>
-
-    <div class="brandBottom">
-      <div class="brandLock">
-        <div class="logoLine">
-          <span class="logoItalky">italky</span><span class="logoAI">AI</span>
-        </div>
-        <div class="beRow">
-          <div class="beFree">BE FREE</div>
-        </div>
-      </div>
     </div>
   </div>
 
+  <!-- Language Sheet -->
   <div class="sheetOverlay" id="langSheet">
     <div class="sheet" role="dialog" aria-modal="true">
       <div class="sheetHead">
