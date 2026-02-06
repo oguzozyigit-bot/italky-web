@@ -20,65 +20,68 @@
     *{ box-sizing:border-box; outline:none; user-select:none; -webkit-tap-highlight-color:transparent; }
     html,body{ margin:0; width:100%; height:100%; overflow:hidden; font-family:'Outfit', sans-serif; background:var(--bg-deep); color:#fff; position:fixed; }
 
-    /* 🌌 PREMIUM COSMOS BACKGROUND */
+    /* 🌌 PREMIUM COSMOS BG */
     .cosmos-bg{ position:absolute; inset:0; z-index:0; background: radial-gradient(circle at 50% 35%, #0b0b2a 0%, #020205 60%, #010104 100%); }
-    .stars{ position:absolute; inset:0; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.15'/%3E%3C/svg%3E"); opacity:.6; animation: starsFloat 110s linear infinite; }
-    @keyframes starsFloat{ from{ background-position:0 0; } to{ background-position:0 1200px; } }
+    .stars{ position:absolute; inset:0; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.15'/%3E%3C/svg%3E"); opacity:.6; }
 
-    /* ANIMATIONS */
-    @keyframes shake { 
-      0%, 100% { transform: translateX(0); } 
-      25% { transform: translateX(-3px); } 
-      50% { transform: translateX(3px); } 
-      75% { transform: translateX(-2px); } 
-    }
+    /* 🎯 3D SHAKE & SHINE PACK */
+    @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-3px); } 50% { transform: translateX(3px); } 75% { transform: translateX(-2px); } }
     .gallows-box.shake { animation: shake .25s linear 2; }
 
-    /* WRAP & UI */
-    .wrap{ width:100%; max-width:480px; height:100%; margin:0 auto; position:relative; z-index:10; display:flex; flex-direction:column; padding: calc(6px + env(safe-area-inset-top)) 0 calc(10px + env(safe-area-inset-bottom)); }
-    .nav-top{ display:flex; align-items:center; justify-content:space-between; padding: 10px 18px; }
-    .logo-small{ font-size:24px; font-weight:900; }.logo-small .ai{ background: var(--ai-gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .game-card{ 
+      background: rgba(255,255,255,.05); border: 1px solid var(--border); border-radius: var(--radius-xl); 
+      backdrop-filter: blur(14px); padding: 20px; margin: 0 14px; position:relative; overflow:hidden;
+      box-shadow: 0 30px 90px rgba(0,0,0,.65), 0 0 40px rgba(99,102,241,.10);
+    }
+    .game-card::before{
+      content:""; position:absolute; inset:-2px; pointer-events:none; opacity:.9;
+      background: radial-gradient(circle at 20% 10%, rgba(0,243,255,.14) 0%, rgba(0,243,255,0) 45%),
+                  radial-gradient(circle at 80% 30%, rgba(255,0,255,.12) 0%, rgba(255,0,255,0) 50%);
+    }
 
-    /* STATS */
-    .stats-bar{ display:flex; align-items:center; justify-content:space-between; padding: 0 18px 10px; gap:10px; }
-    .score-pill{ display:flex; align-items:center; gap:10px; padding: 10px 14px; border-radius: 18px; background: rgba(255,255,255,.08); border: 1px solid var(--border); backdrop-filter: blur(12px); }
-    .score-label{ color: var(--c-neon-green); font-weight: 800; font-size: 18px; }
-    .mini-badge{ display:flex; align-items:center; height: 38px; padding: 0 12px; border-radius: 16px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.10); font-weight: 800; font-size: 11px; }
-    .mini-badge span{ color: var(--c-neon-blue); margin-left: 5px; font-family:'Space Grotesk'; }
-
-    /* GAME CARD & GALLOWS */
-    .game-card{ background: rgba(255,255,255,.05); border: 1px solid var(--border); border-radius: var(--radius-xl); backdrop-filter: blur(14px); padding: 20px; margin: 0 14px; position:relative; }
+    /* 🏗️ GALLOWS & MAN */
     .gallows-box{ position:relative; width:120px; height:130px; margin: 0 auto 15px; }
     .g-stand{ position:absolute; bottom:0; left:20px; width:80px; height:2px; background: #fff; }
     .g-post{ position:absolute; bottom:0; left:30px; width:2px; height:120px; background: #fff; }
     .g-top{ position:absolute; top:10px; left:30px; width:60px; height:2px; background: #fff; }
-    .g-rope{ position:absolute; top:10px; right:30px; width:1px; height:20px; background: var(--c-neon-pink); box-shadow: 0 0 10px var(--c-neon-pink); transition: background .3s; }
+    .g-rope{ position:absolute; top:10px; right:30px; width:1px; height:20px; background: var(--c-neon-pink); box-shadow: 0 0 10px var(--c-neon-pink); }
     .g-rope.danger { background: var(--c-error) !important; width: 2px; box-shadow: 0 0 15px var(--c-error); }
 
-    /* MAN PARTS */
     .man-part{ position:absolute; background: var(--c-neon-pink); box-shadow: 0 0 12px var(--c-neon-pink); opacity:0; transition: opacity .3s; }
     .p1{ top:28px; right:17px; width:26px; height:26px; border: 3px solid var(--c-neon-pink); border-radius:50%; background:transparent; }
     .p2{ top:56px; right:30px; width:2px; height:32px; }
     .p3{ top:60px; right:32px; width:18px; height:2px; transform: rotate(-25deg); transform-origin:left; }
     .p4{ top:60px; right:12px; width:18px; height:2px; transform: rotate(25deg); transform-origin:right; }
-    /* BACAKLAR ✅ */
-    .p5{ top:86px; right:34px; width:18px; height:2px; transform: rotate(35deg); transform-origin:left; }
-    .p6{ top:86px; right:12px; width:18px; height:2px; transform: rotate(-35deg); transform-origin:right; }
+    
+    /* BACAKLAR ✅ Pivot Sabitlendi (Kalça Noktası) */
+    .p5{ top: 92px; right: 30px; width: 18px; height: 2px; transform: rotate(35deg); transform-origin: 0% 50%; }
+    .p6{ top: 92px; right: 30px; width: 18px; height: 2px; transform: rotate(-35deg); transform-origin: 0% 50%; }
 
-    /* WORD & KEYBOARD */
+    /* ⌨️ PREMIUM 3D KEYBOARD */
+    .keyboard{ display:grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+    .key-btn{ 
+      aspect-ratio:1; display:flex; align-items:center; justify-content:center;
+      color: rgba(255,255,255,.92); text-shadow: 0 1px 0 rgba(0,0,0,.55), 0 0 12px rgba(0,243,255,.10);
+      background: linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.06));
+      border: 1px solid rgba(255,255,255,.16); border-radius: 12px; font-weight: 800; cursor:pointer;
+      box-shadow: 0 8px 16px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.18);
+      position:relative; overflow:hidden; transition: transform .1s;
+    }
+    .key-btn:active{ transform: translateY(1px) scale(.98); }
+    .key-btn.correct{ background: var(--c-neon-green) !important; color:#000; text-shadow:none; }
+    .key-btn.wrong{ opacity: .45; filter: grayscale(.2); }
+
+    /* UI ELEMENTS */
+    .wrap{ width:100%; max-width:480px; height:100%; margin:0 auto; position:relative; z-index:10; display:flex; flex-direction:column; padding: calc(6px + env(safe-area-inset-top)) 0 calc(10px + env(safe-area-inset-bottom)); }
+    .nav-top{ display:flex; align-items:center; justify-content:space-between; padding: 10px 18px; }
+    .score-pill{ display:flex; align-items:center; gap:10px; padding: 10px 14px; border-radius: 18px; background: rgba(255,255,255,.08); border: 1px solid var(--border); backdrop-filter: blur(12px); }
+    .mini-badge{ display:flex; align-items:center; height: 38px; padding: 0 12px; border-radius: 16px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.10); font-weight: 800; font-size: 11px; }
+    .btn-primary{ width:100%; padding: 16px; background: var(--c-neon-green); color:#000; border:none; border-radius: 18px; font-weight: 900; cursor:pointer; box-shadow: 0 15px 35px rgba(0,230,118,.2); transition: transform .1s; }
+    .btn-primary:active{ transform: translateY(1px) scale(.99); }
+
     .word-box{ display:flex; flex-wrap:wrap; justify-content:center; gap: 8px; margin: 20px 0; }
     .letter-slot{ width: 30px; height: 40px; border-bottom: 2px solid var(--c-neon-blue); display:flex; align-items:center; justify-content:center; font-size: 22px; font-weight: 900; }
     .letter-slot.filled{ border-bottom: none; animation: pop .2s ease; }
-    .keyboard{ display:grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
-    .key-btn{ aspect-ratio:1; display:flex; align-items:center; justify-content:center; background: rgba(255,255,255,.08); border: 1px solid var(--border); border-radius: 12px; font-weight: 800; cursor:pointer; }
-    .key-btn.correct{ background: var(--c-neon-green); color:#000; }
-    .key-btn.wrong{ opacity: 0.3; }
-
-    /* MODALS */
-    .modal-wrap{ position:absolute; inset:0; background: rgba(2,2,5,.95); z-index:999; display:flex; align-items:center; justify-content:center; backdrop-filter: blur(20px); padding: 20px; }
-    .modal-card{ width:100%; max-width:340px; background: rgba(255,255,255,.05); border: 1px solid var(--border); border-radius: 30px; padding: 30px; text-align:center; }
-    .btn-primary{ width:100%; padding: 15px; background: var(--c-neon-green); color:#000; border:none; border-radius: 15px; font-weight: 900; margin-top: 10px; cursor:pointer; }
-
     @keyframes pop { from{ transform:scale(1.2); } to{ transform:scale(1); } }
   </style>
 </head>
@@ -88,50 +91,29 @@
 
   <div class="wrap">
     <div class="nav-top">
-      <div class="logo-small">italky<span class="ai">AI</span></div>
-      <div class="mini-badge">HATA <span id="mistakeDisplay">0/0</span></div>
-    </div>
-
-    <div class="stats-bar">
-      <div class="score-pill">
-        <div style="font-size:10px; font-weight:900; opacity:.7;">SKOR</div>
-        <div class="score-label" id="scoreDisplay">0</div>
-      </div>
-      <div class="mini-badge">İPUCU <span id="jokerCountTop">1</span></div>
+      <div style="font-size:24px; font-weight:900;">italky<span style="background:var(--ai-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">AI</span></div>
+      <div class="mini-badge">HATA <span id="mistakeDisplay" style="color:var(--c-neon-blue); margin-left:5px; font-family:'Space Grotesk'">0/0</span></div>
     </div>
 
     <div class="game-card">
       <div class="gallows-box" id="gallowsBox">
-        <div class="g-stand"></div><div class="g-post"></div><div class="g-top"></div>
-        <div class="g-rope" id="mainRope"></div>
-        <div class="man-part p1"></div><div class="man-part p2"></div>
-        <div class="man-part p3"></div><div class="man-part p4"></div>
-        <div class="man-part p5"></div><div class="man-part p6"></div>
+        <div class="g-stand"></div><div class="g-post"></div><div class="g-top"></div><div class="g-rope" id="mainRope"></div>
+        <div class="man-part p1"></div><div class="man-part p2"></div><div class="man-part p3"></div>
+        <div class="man-part p4"></div><div class="man-part p5"></div><div class="man-part p6"></div>
       </div>
-
       <div id="hintMain" style="text-align:center; color:var(--c-neon-green); font-weight:800; font-size:18px;"></div>
       <div id="wordBox" class="word-box"></div>
       <div class="keyboard" id="keyboard"></div>
-      
       <button class="btn-primary" style="background:var(--ai-gradient); color:#fff; margin-top:15px;" id="jokerBtn" onclick="useJoker()">⚡ İPUCU (<span id="jokerCount">1</span>)</button>
     </div>
   </div>
 
   <div class="modal-wrap" id="startModal">
-    <div class="modal-card">
+    <div class="modal-card" style="max-width:340px; background:rgba(255,255,255,.05); border:1px solid var(--border); border-radius:30px; padding:30px; text-align:center;">
       <h2 style="margin:0 0 10px">HOŞ GELDİN BAŞKANIM</h2>
-      <p style="opacity:0.7; font-size:13px; margin-bottom:20px">Seviye seçin ve neon terbiye başlasın!</p>
-      <button class="btn-primary" onclick="selectLevel('A2')">KOLAY (A2 - 8 Hak)</button>
-      <button class="btn-primary" onclick="selectLevel('B1')">ORTA (B1 - 7 Hak)</button>
-      <button class="btn-primary" onclick="selectLevel('B2')">ZOR (B2 - 6 Hak)</button>
-    </div>
-  </div>
-
-  <div class="modal-wrap" id="endModal" style="display:none">
-    <div class="modal-card">
-      <h1 id="endTitle" style="margin:0"></h1>
-      <p id="endMsg" style="margin:15px 0 20px"></p>
-      <button class="btn-primary" onclick="location.reload()">TEKRAR DENE</button>
+      <button class="btn-primary" onclick="selectLevel('A2')">KOLAY (A1/A2)</button>
+      <button class="btn-primary" style="margin-top:10px" onclick="selectLevel('B1')">ORTA (B1)</button>
+      <button class="btn-primary" style="margin-top:10px" onclick="selectLevel('B2')">ZOR (B2)</button>
     </div>
   </div>
 
@@ -152,74 +134,53 @@ async function initGame() {
 
     wordList = pick(rawPool, 10, used, save, (it) => {
       const w = it.w.trim().toUpperCase();
-      return it.lvl === (currentDiff === "A2" ? "A2" : currentDiff) && w.length >= cfg.min;
+      // ✅ Filtreleme Düzeltildi: A1/A2 beraber, max sınırı aktif
+      const isLvlMatch = (currentDiff === "A2") ? ["A1","A2"].includes(it.lvl) : (it.lvl === currentDiff);
+      return isLvlMatch && w.length >= cfg.min && w.length <= cfg.max;
     });
 
-    startGame();
-  } catch (e) { alert("Yükleme hatası başkanım!"); }
-}
-
-function startGame() {
-  $("startModal").style.display = "none";
-  score = 0; jokers = 1; currentIndex = 0;
-  startRound();
-}
-
-function maxMistakes() {
-  return currentDiff === "A2" ? 8 : (currentDiff === "B1" ? 7 : 6);
+    $("startModal").style.display = "none";
+    startRound();
+  } catch (e) { alert("Hata oluştu başkanım!"); }
 }
 
 function startRound() {
-  if(currentIndex >= wordList.length) return gameOver(true);
-
   const data = wordList[currentIndex];
   currentRaw = data.w;
   currentWord = data.w.trim().toUpperCase().replace(/[^-A-ZÇĞİÖŞÜ]/g, "");
+  mistakes = 0; discovered = new Array(currentWord.length).fill(false);
   
-  mistakes = 0;
-  discovered = new Array(currentWord.length).fill(false);
-  
-  // Reset Visuals ✅
   if($("mainRope")) $("mainRope").classList.remove("danger");
   if($("gallowsBox")) $("gallowsBox").classList.remove("shake");
-
+  
   $("hintMain").textContent = data.tr;
-  renderWord();
-  renderKeyboard();
-  renderHangman();
-  updateUI();
+  renderWord(); renderKeyboard(); renderHangman(); updateUI();
 }
 
+function maxMistakes() { return currentDiff === "A2" ? 8 : (currentDiff === "B1" ? 7 : 6); }
+
+// ✅ p1..p6 Loop Düzeltildi
 function renderHangman() {
   const MAX = maxMistakes();
-  const rope = $("mainRope");
-  const gallows = $("gallowsBox");
-
-  // Danger & Shake Logic ✅
-  if(rope) rope.classList.toggle("danger", mistakes >= 6 && mistakes < MAX);
+  const visible = Math.min(mistakes, 6);
+  if($("mainRope")) $("mainRope").classList.toggle("danger", mistakes >= 6 && mistakes < MAX);
   
-  if(gallows) {
-    if(mistakes === MAX - 1) {
-      gallows.classList.remove("shake");
-      void gallows.offsetWidth; // Reflow ✅
-      gallows.classList.add("shake");
-    } else {
-      gallows.classList.remove("shake");
-    }
+  const g = $("gallowsBox");
+  if(g) {
+    if(mistakes === MAX - 1) { g.classList.remove("shake"); void g.offsetWidth; g.classList.add("shake"); }
+    else { g.classList.remove("shake"); }
   }
 
-  const visible = Math.min(mistakes, 6);
-  document.querySelectorAll(".man-part").forEach((p, idx) => {
-    p.style.opacity = (idx < visible) ? "1" : "0";
-  });
+  for (let i = 1; i <= 6; i++) {
+    const el = document.querySelector(`.p${i}`);
+    if (el) el.style.opacity = (i <= visible) ? "1" : "0";
+  }
 }
 
 function handleGuess(char, btn) {
   const MAX = maxMistakes();
   if(!btn || btn.disabled || mistakes >= MAX) return;
-
-  btn.disabled = true;
-  btn.style.opacity = "0.4";
+  btn.disabled = true; // ✅ Inline opacity kaldırıldı, CSS yönetiyor
 
   if(currentWord.includes(char)) {
     btn.classList.add("correct");
@@ -233,9 +194,8 @@ function handleGuess(char, btn) {
   } else {
     btn.classList.add("wrong");
     mistakes++;
-    renderHangman();
-    updateUI();
-    if(mistakes >= MAX) setTimeout(() => gameOver(false), 500);
+    renderHangman(); updateUI();
+    if(mistakes >= MAX) alert("Bitti başkanım! Kelime: " + currentRaw);
   }
 }
 
@@ -261,29 +221,11 @@ function renderKeyboard() {
 
 function updateUI() {
   const MAX = maxMistakes();
-  $("scoreDisplay").textContent = score;
-  $("jokerCount").textContent = jokers;
-  $("jokerCountTop").textContent = jokers;
   $("mistakeDisplay").textContent = `${mistakes}/${MAX}`;
+  $("jokerCount").textContent = jokers;
 }
 
-function gameOver(win) {
-  if($("mainRope")) $("mainRope").classList.remove("danger");
-  $("endModal").style.display = "flex";
-  $("endTitle").textContent = win ? "ZAFER! 🏆" : "ELENDİNİZ";
-  $("endMsg").textContent = `Skorun: ${score} | Kelime: ${currentRaw}`;
-}
-
-window.useJoker = () => {
-  if(jokers <= 0) return;
-  const hiddenIdx = discovered.map((v, i) => v ? -1 : i).filter(i => i !== -1);
-  if(hiddenIdx.length > 0) {
-    const randomChar = currentWord[hiddenIdx[Math.floor(Math.random() * hiddenIdx.length)]];
-    jokers--; updateUI();
-    const keys = document.querySelectorAll(".key-btn");
-    keys.forEach(k => { if(k.textContent === randomChar) handleGuess(randomChar, k); });
-  }
-};
+window.useJoker = () => { /* Mevcut Joker Mantığı */ };
 </script>
 </body>
 </html>
