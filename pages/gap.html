@@ -16,7 +16,6 @@
     .cosmos-bg { position:absolute; inset:0; background: radial-gradient(circle at 50% 35%, #0b0b2a 0%, #020205 60%, #010104 100%); z-index:0; }
     .wrap { width:100%; max-width:480px; height:100%; margin:0 auto; position:relative; z-index:10; display:flex; flex-direction:column; padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); }
 
-    /* UI */
     .nav-top { display:flex; align-items:center; justify-content:space-between; padding: 15px 20px; }
     .status-chip { background: var(--glass); padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; border: 1px solid var(--border); letter-spacing: 1px; }
     .progress-bar { width: calc(100% - 40px); height: 5px; background: rgba(255,255,255,0.1); border-radius: 3px; margin: 0 20px 10px; overflow: hidden; }
@@ -25,7 +24,6 @@
     .score-pill { color: var(--c-neon-green); font-weight: 900; font-size: 20px; }
     @keyframes scorePop{ from{ transform:scale(1.25); } to{ transform:scale(1); } }.score-pop{ animation: scorePop .18s ease; }
 
-    /* STAGE */
     .stage { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 10px 20px; gap: 15px; }
     .sentence-card { width:100%; background: var(--glass); border: 1px solid var(--border); border-radius: 32px; padding: 35px 20px; text-align: center; backdrop-filter: blur(25px); position: relative; }
     .sentence-text { text-transform: uppercase; letter-spacing: .3px; font-size: 22px; font-weight: 700; line-height: 1.5; }
@@ -33,7 +31,6 @@
     .translation-text { font-size: 16px; color: var(--c-neon-green); font-style: italic; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; margin-top: 15px; }
     #resInfo { font-size: 13px; color: var(--c-neon-blue); margin-top: 10px; font-weight: 600; opacity: 0; transition: opacity 0.3s; }
 
-    /* OPTIONS */
     .options-grid { width: 100%; display: grid; grid-template-columns: 1fr; gap: 12px; }
     .opt-btn { 
       position:relative; overflow:hidden; width: 100%; padding: 18px; background: var(--glass); 
@@ -47,12 +44,12 @@
     .opt-btn.wrong { background: linear-gradient(180deg, #ff1744, #d50000) !important; animation: shake 0.4s; box-shadow: 0 0 18px rgba(255,23,68,.25), 0 10px 26px rgba(0,0,0,.42) !important; }
     @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
 
-    /* MODAL */
     .lang-btn{ font-size:24px; padding:10px; border-radius:16px; background: var(--glass); border: 1px solid transparent; cursor:pointer; margin:4px; transition:.2s; }
     .lang-btn.active{ border-color: var(--c-neon-blue); background: rgba(0,243,255,0.15); transform: scale(1.08); }
     .modal-wrap { position: absolute; inset: 0; background: rgba(0,0,0,0.98); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px; }
     .modal-card { width: 100%; max-width: 360px; background: #08080c; border: 1px solid var(--border); border-radius: 36px; padding: 40px 30px; text-align: center; }
     .btn-main { width: 100%; padding: 18px; background: var(--c-neon-green); color: #000; border: none; border-radius: 20px; font-weight: 900; cursor: pointer; margin-top: 12px; }
+    .btn-secondary { width: 100%; padding: 18px; background: var(--glass); color: #fff; border: 1px solid var(--border); border-radius: 20px; font-weight: 700; cursor: pointer; margin-top: 12px; }
   </style>
 </head>
 <body>
@@ -98,7 +95,8 @@
     <div class="modal-card">
       <h2 id="endTitle">SET TAMAMLANDI</h2>
       <div id="endStats" style="text-align:left; margin:20px 0; font-size:15px; line-height:2;"></div>
-      <button class="btn-main" onclick="location.reload()">TEKRAR DENE</button>
+      <button class="btn-main" id="btnContinue">DEVAM ET (PUANIN KALSIN)</button>
+      <button class="btn-secondary" onclick="location.reload()">Sıfırla ve Başla</button>
     </div>
   </div>
 
@@ -106,7 +104,7 @@
 import { loadLangPool, createUsedSet, pick } from "/js/langpool.js";
 
 const $ = id => document.getElementById(id);
-let currentLang = 'en', puzzles = [], currentIdx = 0;
+let currentLang = 'en', currentDiff = 'A2', puzzles = [], currentIdx = 0;
 let score = 0, lives = 3, maxLives = 3, streak = 0, totalCorrect = 0, totalAnswered = 0, isBusy = false, startTime = 0;
 
 const FALLBACKS = {
@@ -120,7 +118,6 @@ const FALLBACKS = {
 function escapeRegExp(s){ return String(s ?? "").replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
 const norm = (s) => String(s || "").normalize("NFC");
 
-// ✅ Fisher–Yates Shuffle Algorithm
 function shuffle(a) {
   const arr = [...a];
   for(let i=arr.length-1; i>0; i--) {
@@ -138,17 +135,18 @@ window.setLang = (l, btn) => {
 
 window.initGame = async (diff) => {
   try {
+    currentDiff = diff;
     const rawPool = await loadLangPool(currentLang);
     if (!rawPool || !rawPool.items) throw new Error("Havuz boş");
 
-    // ✅ KURAL GÜNCELLEMESİ: Havuzu pick öncesi agresif karıştır
     const randomizedItems = shuffle(rawPool.items);
-
-    // ✅ KURAL GÜNCELLEMESİ: Benzersiz oturum kaydı
-    const { used, save } = createUsedSet(`gap_master_v53_${currentLang}_${diff}`);
+    const { used, save } = createUsedSet(`gap_master_v54_${currentLang}_${diff}`);
     
-    maxLives = (diff === "A2") ? 4 : 3;
-    lives = maxLives;
+    // Sadece ilk başlangıçta canları belirle
+    if (totalAnswered === 0) {
+      maxLives = (diff === "A2") ? 4 : 3;
+      lives = maxLives;
+    }
 
     puzzles = pick({ items: randomizedItems }, 15, used, save, it => {
       const itLvl = String(it.lvl || "").toUpperCase();
@@ -157,24 +155,26 @@ window.initGame = async (diff) => {
     });
 
     if (puzzles.length === 0) {
-        alert("Bu seviyede tüm kelimeleri bitirdiniz! İlerleme sıfırlanıyor.");
-        localStorage.removeItem(`gap_master_v53_${currentLang}_${diff}`);
+        alert("Harika! Bu seviyede taranacak kelime kalmadı. Liste sıfırlanıyor.");
+        localStorage.removeItem(`gap_master_v54_${currentLang}_${diff}`);
         location.reload();
         return;
     }
 
     $('statusChip').textContent = `${currentLang.toUpperCase()} • ${diff}`;
     $('startModal').style.display = 'none';
+    $('endModal').style.display = 'none';
     currentIdx = 0;
     loadPuzzle();
   } catch (e) { 
-    console.error(e);
     alert("Havuz yüklenemedi!"); 
   }
 };
 
 function loadPuzzle() {
-  if (lives <= 0 || currentIdx >= puzzles.length) return showFinal();
+  if (lives <= 0) return showFinal(true); // Can bittiyse kesin final
+  if (currentIdx >= puzzles.length) return showFinal(false); // Set bittiyse seçim ekranı
+
   const p = puzzles[currentIdx];
   const word = norm(p.w).trim();
   const escapedWord = escapeRegExp(word).replace(/\s+/g, "\\s+");
@@ -220,6 +220,14 @@ function handleChoice(val, btn) {
 
   if (val === correctVal) {
     streak++; totalCorrect++;
+    
+    // ✅ COMBO BONUS: Her 10 comboda bir can ver başkanım
+    let comboMsg = "";
+    if (streak > 0 && streak % 10 === 0) {
+      lives = Math.min(lives + 1, maxLives);
+      comboMsg = " • ❤️ CAN KAZANDIN!";
+    }
+
     let speedBonus = timeTaken < 4 ? 8 : (timeTaken < 7 ? 5 : (timeTaken < 10 ? 2 : 0));
     let comboMult = streak <= 3 ? streak : (3 + (streak - 3) * 0.25);
     const roundScore = Math.round(10 * comboMult + speedBonus);
@@ -229,7 +237,7 @@ function handleChoice(val, btn) {
     $('scoreTxt').classList.remove('score-pop'); void $('scoreTxt').offsetWidth;
     $('scoreTxt').classList.add('score-pop');
     
-    $('resInfo').textContent = `+${roundScore} PUAN ${speedBonus > 0 ? '• HIZ BONUSU' : ''}`;
+    $('resInfo').textContent = `+${roundScore} PUAN ${streak > 1 ? '(STREAK X' + streak + ')' : ''}${comboMsg}`;
     $('resInfo').style.opacity = "1";
     speak(p.sentence);
   } else {
@@ -238,21 +246,36 @@ function handleChoice(val, btn) {
     $('resInfo').textContent = `DOĞRU CEVAP: ${correctVal}`;
     $('resInfo').style.opacity = "1";
     document.querySelectorAll('.opt-btn').forEach(b => { if(norm(b.textContent) === correctVal) b.classList.add('correct'); });
-    const prefix = currentLang === 'en' ? `Correct word: ${correctVal}. ` : `${correctVal}. `;
-    speak(prefix + p.sentence);
+    speak(correctVal + ". " + p.sentence);
   }
 
   $('scoreTxt').textContent = score;
-  setTimeout(() => { currentIdx++; isBusy = false; loadPuzzle(); }, 2200);
+  $('lifeBar').textContent = "❤️".repeat(Math.max(0, lives)) + "🖤".repeat(maxLives - Math.max(0, lives));
+
+  setTimeout(() => { 
+    currentIdx++; 
+    isBusy = false; 
+    loadPuzzle(); 
+  }, 2200);
 }
 
-function showFinal() {
+function showFinal(gameEnded) {
   $('endModal').style.display = 'flex';
   const acc = totalAnswered ? Math.round((totalCorrect/totalAnswered)*100) : 0;
-  const totalQ = puzzles.length;
+  
+  if (gameEnded) {
+    $('endTitle').textContent = "OYUN BİTTİ 💀";
+    $('btnContinue').style.display = 'none';
+  } else {
+    $('endTitle').textContent = "SET TAMAMLANDI 🏆";
+    $('btnContinue').style.display = 'block';
+    $('btnContinue').onclick = () => initGame(currentDiff);
+  }
+
   $('endStats').innerHTML = `
     • Toplam Skor: <b>${score}</b><br>
-    • Doğruluk: <b>%${acc}</b> (<b>${totalCorrect}/${totalQ}</b>)
+    • Doğruluk: <b>%${acc}</b><br>
+    • Kalan Can: <b>${lives} ❤️</b>
   `;
 }
 
