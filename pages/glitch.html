@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>ITALKY • Glitch Hunter Neural Sync</title>
+<title>ITALKY • Glitch Hunter Final Integrity</title>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
 
 <style>
@@ -33,8 +33,6 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);f
 @keyframes alarm { 0%, 100% { border-color: var(--border); } 50% { border-color: var(--pink); box-shadow: 0 0 20px var(--pink); } }
 .terminal.alarm-active { animation: alarm 0.6s infinite; }
 
-.boss-label { position: absolute; top: 10px; font-size: 10px; color: var(--pink); font-weight: 900; display: none; letter-spacing: 2px; }
-
 .sentence{font-size:28px; color:#fff; line-height:1.3; font-weight:700;}
 
 #correctionBox{font-size:14px; color:var(--green); margin-top:15px; font-weight:bold; opacity:0; transition:0.2s; background: rgba(0,255,102,0.1); padding: 12px; border-radius: 10px; width: 100%; border-left: 3px solid var(--green);}
@@ -50,7 +48,6 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);f
 .modal{position:absolute;inset:0;background:rgba(0,0,0,.98);display:flex;align-items:center;justify-content:center;z-index:200}
 .card{background:#0a0a0a;border:1px solid var(--cyan);padding:25px;width:90%;text-align:center;border-radius:28px; max-height: 90vh; overflow-y: auto;}
 .mainbtn{width:100%;padding:18px;margin-top:10px;border:none;background:var(--cyan);color:#000;font-weight:900;cursor:pointer;font-size:16px;border-radius:14px}
-.btn-sub { font-size: 9px; display: block; margin-top: 4px; opacity: 0.7; font-weight: 400; }
 
 .lang-grid{display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin:15px 0}
 .lang-btn{font-size:24px; padding:10px; background:rgba(255,255,255,0.05); border:2px solid #333; border-radius:12px; cursor:pointer;}
@@ -72,14 +69,14 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);f
 
   <div class="game" id="game">
     <div class="stats">
-      <span>INTEGRITY: <b id="life">100%</b></span>
-      <span>MOMENTUM: <b id="momVal">x1.00</b></span>
+      <span>INT: <b id="life">100%</b></span>
+      <span>SCORE: <b id="scoreDisp" style="color:var(--green)">0</b></span>
+      <span>MOM: <b id="momVal">x1.00</b></span>
       <span id="setCounter">1/12</span>
     </div>
     <div class="mom-bar-container"><div id="momBarFill"></div></div>
 
     <div class="terminal" id="terminal">
-      <div class="boss-label" id="bossLabel">/// BOSS CHECK ///</div>
       <div class="sentence" id="sentence">Initializing...</div>
       <div id="correctionBox">
         <span id="correctTxt"></span>
@@ -89,8 +86,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);f
     </div>
 
     <div class="controls">
-      <button class="action bug" id="btnGlitch">🐞 GLITCH</button>
-      <button class="action ok" id="btnStable">🛡️ STABLE</button>
+      <button class="action bug" id="btnGlitch">🐞 HATALI</button>
+      <button class="action ok" id="btnStable">🛡️ DOĞRU</button>
     </div>
   </div>
 </div>
@@ -120,8 +117,8 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);f
     <div id="bankFeedback" style="color:var(--pink); font-size:11px; margin-bottom:10px; font-weight:900; display:none;"></div>
     <p id="endStats" style="font-size:18px; margin-bottom: 20px"></p>
     
-    <button class="mainbtn" id="btnContinue">CONTINUE <span class="btn-sub">HIZLI / KIRILGAN</span></button>
-    <button class="mainbtn" id="btnBank" style="background:var(--pink); color:#fff">BACKUP <span class="btn-sub">GÜVENLİ / YAVAŞ</span></button>
+    <button class="mainbtn" id="btnContinue">CONTINUE (KEEP MOMENTUM)</button>
+    <button class="mainbtn" id="btnBank" style="background:var(--pink); color:#fff">BACKUP (%5 + REPAIR)</button>
     <button class="mainbtn" style="background:#222;color:#fff" id="btnExit">SAVE & EXIT</button>
   </div>
 </div>
@@ -145,10 +142,10 @@ function speak(text, targetLang) {
 }
 
 function updateLeaderboardUI() {
-    const records = JSON.parse(localStorage.getItem('glitch_eternal_v63') || '[]');
+    const records = JSON.parse(localStorage.getItem('glitch_eternal_v64') || '[]');
     const pb = records.filter(r => r.lang === lang.toUpperCase()).reduce((max, r) => Math.max(max, r.score), 0);
     $("pbBadge").textContent = `PB: ${pb}`;
-    $('leaderboardBox').innerHTML = records.slice(0,3).map((r,i)=> `<div>${i+1}. ${r.score} - ${r.lang}</div>`).join('');
+    $('leaderboardBox').innerHTML = records.slice(0,3).map((r,i)=> `<div>${i+1}. ${r.score} - ${r.lang}</div>`).join('') || 'Log bulunamadı.';
 }
 
 document.querySelectorAll(".lang-btn").forEach(b=>{
@@ -171,19 +168,19 @@ async function initGame(isBank = false) {
   currentIndex=0; setScore=0;
   if(isBank) { integrity = 100; momentum = 1.0; }
   const pool = await loadLangPool(lang);
-  const randomizedItems = [...pool.items].sort(() => Math.random() - 0.5);
-  const USED_KEY = `used_glitch_v63_${lang}`; // ✅ FIX 1: Versiyon anahtarı senkronize edildi
+  const randomizedItems = [...(pool?.items || [])].sort(() => Math.random() - 0.5);
+  const USED_KEY = `used_glitch_v64_${lang}`;
   const {used, save} = createUsedSet(USED_KEY);
 
   wordList = pick({items: randomizedItems}, SET_SIZE, used, save, (it) => it.sentence && it.sentence.length > 5);
   
   if(wordList.length < SET_SIZE) { 
-    localStorage.removeItem(USED_KEY); // ✅ FIX 1: Doğru anahtar siliniyor
+    localStorage.removeItem(USED_KEY);
     return initGame(); 
   }
 
-  // ✅ FIX 2: Used mühürü eklendi
-  try { save(wordList.map(x => x.w)); await Promise.resolve(); } catch(e){}
+  // ✅ sentence bazlı güvenli mühür başkanım
+  try { save(wordList.map(x => x.sentence)); await Promise.resolve(); } catch(e){}
 
   nextRound();
 }
@@ -192,9 +189,16 @@ function produceGlitch(original) {
   const rules = [
     { cat: "Subject-Verb", f: " am ", t: " is ", s: false },
     { cat: "Subject-Verb", f: " are ", t: " is ", s: false },
+    { cat: "Subject-Verb", f: " do ", t: " does ", s: true },
     { cat: "Article", f: " a ", t: " an ", s: true },
+    { cat: "Article", f: " an ", t: " a ", s: true },
+    { cat: "Preposition", f: " in ", t: " on ", s: true },
+    { cat: "Preposition", f: " at ", t: " in ", s: true },
+    { cat: "Pronoun", f: " me ", t: " I ", s: true },
     { cat: "Tense", f: " did ", t: " do ", s: true },
-    { cat: "Pronoun", f: " me ", t: " I ", s: true }
+    { cat: "Logic", f: " good ", t: " well ", s: true },
+    { cat: "Logic", f: " well ", t: " good ", s: true },
+    { cat: "Plural", f: "s ", t: " ", s: true }
   ];
   let text = original;
   const applicable = rules.filter(r => text.toLowerCase().includes(r.f));
@@ -210,20 +214,21 @@ function nextRound() {
   const item = wordList[currentIndex];
   const isBoss = currentIndex >= 10;
   
-  if(isBoss) { $("terminal").classList.add("boss-mode"); $("bossLabel").style.display = "block"; }
-  else { $("terminal").classList.remove("boss-mode"); $("bossLabel").style.display = "none"; }
-
-  // ✅ Alarm pulse sadece boşta beklerken aktif, feedback sırasında border-color ezilecek başkanım
+  // Terminal Reset
+  $("terminal").classList.remove("boss-mode", "alarm-active");
+  $("correctionBox").style.opacity = "0";
+  $("correctTxt").textContent = ""; // ✅ FIX 2: Metin temizliği
+  $("trTxt").textContent = "";
+  $("tapHint").style.display = "none";
+  
+  if(isBoss) $("terminal").classList.add("boss-mode");
   if(integrity <= 25) $("terminal").classList.add("alarm-active");
-  else $("terminal").classList.remove("alarm-active");
 
   const isOk = Math.random() > 0.5;
   const glitch = isOk ? { text: item.sentence, category: "Verified", subtle: false } : produceGlitch(item.sentence);
 
-  currentItem = { text: glitch.text, original: item.sentence, isOk, category: glitch.category, subtle: glitch.subtle, tr: item.tr || "Anlam yüklenemedi." };
+  currentItem = { text: glitch.text, original: item.sentence, isOk, category: glitch.category, subtle: glitch.subtle, tr: item.tr || "Anlam bulunamadı." };
   $("sentence").textContent = currentItem.text;
-  $("correctionBox").style.opacity = "0";
-  $("tapHint").style.display = "none";
   $("setCounter").textContent = `${currentIndex + 1}/12`;
   
   const p = ((momentum - 1.0) / 0.6) * 100;
@@ -234,6 +239,7 @@ function nextRound() {
   
   $("momVal").textContent = `x${momentum.toFixed(2)}`;
   $("life").textContent = integrity + "%";
+  $("scoreDisp").textContent = totalScore; // ✅ FIX 1: scoreDisp mevcudiyeti garanti
   $("life").style.color = integrity <= 25 ? "var(--pink)" : "var(--cyan)";
   $("terminal").style.borderColor = "var(--border)";
   busy=false;
@@ -247,8 +253,8 @@ function handleAnswer(userPick) {
   const correct = (userPick === currentItem.isOk);
   const isBoss = currentIndex >= 10;
 
-  // ✅ FIX 3 & 4: Doğru olsa da oku ve anlamı göster başkanım
   speak(currentItem.original, lang);
+  $("terminal").classList.remove("alarm-active"); // Feedback sırasında alarmı sustur
   
   if(correct) {
     flowStreak++;
@@ -258,19 +264,11 @@ function handleAnswer(userPick) {
     setScore += points;
     momentum = Math.min(1.6, momentum + 0.05);
     
-    // Doğruda alarmı geçici durdur başkanım
-    $("terminal").classList.remove("alarm-active");
     $("terminal").style.borderColor = "var(--green)";
-    
-    // ✅ Mini Meaning Display (Flow'u bozmadan anlamı fısılda başkanım)
-    if(isBoss) $("sentence").innerHTML = `<span style="color:var(--green)">BOSS CLEARED</span>`;
-    else if(flowStreak % 3 === 0) $("sentence").innerHTML = `<span style="color:var(--cyan)">FLOW +</span>`;
-    
     $("trTxt").textContent = "Anlamı: " + currentItem.tr;
-    $("correctTxt").textContent = ""; // Temizle
     $("correctionBox").style.opacity = "1";
 
-    autoProceedTimer = setTimeout(proceedNext, 850); // Hızlı geçiş
+    autoProceedTimer = setTimeout(proceedNext, 850);
   } else {
     flowStreak = 0;
     statsCats.missed[currentItem.category] = (statsCats.missed[currentItem.category] || 0) + 1;
@@ -278,7 +276,6 @@ function handleAnswer(userPick) {
     integrity -= damage;
     momentum = Math.max(1.0, momentum - 0.15);
     
-    $("terminal").classList.remove("alarm-active");
     $("frame").classList.add("glitch-anim");
     $("terminal").style.borderColor = "var(--pink)";
     
@@ -302,16 +299,16 @@ $("btnGlitch").onclick = () => handleAnswer(false);
 $("btnStable").onclick = () => handleAnswer(true);
 
 function finish(died) {
-  const records = JSON.parse(localStorage.getItem('glitch_eternal_v63') || '[]');
+  const records = JSON.parse(localStorage.getItem('glitch_eternal_v64') || '[]');
   records.push({score: totalScore, lang: lang.toUpperCase(), id: Date.now()});
   records.sort((a,b)=>b.score - a.score);
-  localStorage.setItem('glitch_eternal_v63', JSON.stringify(records.slice(0,10)));
+  localStorage.setItem('glitch_eternal_v64', JSON.stringify(records.slice(0,10)));
   updateLeaderboardUI();
   
   const worst = Object.entries(statsCats.missed).sort((a,b)=>b[1]-a[1])[0];
   const best = Object.entries(statsCats.hit).filter(x=>x[0]!=="Verified").sort((a,b)=>b[1]-a[1])[0];
   
-  let report = worst ? `BUGÜN EN ÇOK ${worst[0].toUpperCase()} KAÇIRDIN.` : "RADARIN KUSURSUZDU!";
+  let report = worst ? `EN ÇOK ${worst[0].toUpperCase()} KAÇIRDIN.` : "RADARIN KUSURSUZDU!";
   if(best) report += `<br><span style="color:var(--green)">EN GÜÇLÜ ALANIN: ${best[0].toUpperCase()}</span>`;
   $("learningReport").innerHTML = report;
   $("bankFeedback").style.display = "none";
@@ -329,10 +326,8 @@ $("btnContinue").onclick = () => { $("end").classList.add("hidden"); initGame(fa
 $("btnBank").onclick = () => { 
     const bonus = Math.round(setScore * 0.05);
     totalScore += bonus;
-    // ✅ FIX 8: Bank geri bildirimi artık modal üzerinde başkanım
     $("bankFeedback").style.display = "block";
     $("bankFeedback").innerHTML = `CASHED IN: +${bonus} | MOMENTUM RESET`;
-    
     momentum = 1.0; setScore = 0; flowStreak = 0;
     setTimeout(() => { $("end").classList.add("hidden"); initGame(true); }, 1600);
 };
