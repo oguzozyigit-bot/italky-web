@@ -3,17 +3,15 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-  <title>ITALKY • Duo Friend</title>
-  <link rel="icon" href="data:,"/>
+  <title>ITALKY • Friend Arena Eternal</title>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
   <style>
-    /* --- RENK PALETİ --- */
     :root {
       --bg-deep: #020205; 
       --text-main: #ffffff;
-      --c-p1: #00f3ff; /* A */
-      --c-p2: #ff0066; /* B */
+      --c-p1: #00f3ff; 
+      --c-p2: #ff0066; 
       --c-green: #00e676;
       --c-red: #ff1744;
       --c-gold: #ffb800;
@@ -25,155 +23,87 @@
     * { box-sizing:border-box; outline:none; user-select:none; -webkit-tap-highlight-color:transparent; }
     html, body { margin:0; width:100%; height:100%; overflow:hidden; font-family:'Outfit', sans-serif; background:var(--bg-deep); color:var(--text-main); position:fixed; }
 
-    /* ATMOSFER */
     .cosmos-bg { position:absolute; inset:0; background: radial-gradient(circle at center, #1a1a2e 0%, #000 100%); z-index:0; }
-    .star-dust { position: absolute; inset: 0; opacity: 0.3; background-image: radial-gradient(#fff 1px, transparent 1px); background-size: 50px 50px; animation: dustMove 100s linear infinite; }
-    #fireworksCanvas { position: absolute; inset: 0; pointer-events: none; z-index: 9999; display: none; }
-    @keyframes dustMove { from { transform: translateY(0); } to { transform: translateY(-500px); } }
-
+    .star-dust { position: absolute; inset: 0; opacity: 0.3; background-image: radial-gradient(#fff 1px, transparent 1px); background-size: 50px 50px; }
+    
     .wrap { 
       width:100%; max-width:480px; height:100%; margin:0 auto; position:relative; z-index:10; display:flex; flex-direction:column; 
       padding-top: var(--safe-top); padding-bottom: var(--safe-bottom);
     }
 
-    /* LOGO HEADER */
-    .game-logo-header {
-      flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; justify-content: center;
-      padding-top: 10px; margin-bottom: -5px; position: relative; z-index: 20;
-    }
-    .gl-brand { font-family: 'Space Grotesk', sans-serif; font-size: 12px; font-weight: 700; color: rgba(255, 255, 255, 0.6); letter-spacing: 2px; margin-bottom: 2px; }
-    .gl-icon { font-size: 28px; margin-bottom: 0px; filter: drop-shadow(0 0 5px var(--c-gold)); animation: pulseNeon 2s infinite alternate; }
-    .gl-title { font-family: 'Space Grotesk', sans-serif; font-weight: 900; font-size: 22px; letter-spacing: 1px; background: linear-gradient(to right, var(--c-p1), var(--c-p2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-transform: uppercase; line-height: 1; }
-    .gl-sub { font-size: 8px; letter-spacing: 3px; color: var(--text-main); opacity: 0.6; margin-top: 2px; font-weight: 700; }
-    @keyframes pulseNeon { from { transform: scale(1); } to { transform: scale(1.05); } }
+    .game-logo-header { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; padding-top: 10px; margin-bottom: 5px; }
+    .gl-title { font-family: 'Space Grotesk', sans-serif; font-weight: 900; font-size: 22px; background: linear-gradient(to right, var(--c-p1), var(--c-p2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-transform: uppercase; }
 
-    /* NAV */
-    .nav-layer { flex: 0 0 50px; display:flex; justify-content:space-between; padding:0 12px; align-items:center; position:relative; z-index:30; }
-    .nav-btn { width:40px; height:40px; border-radius:12px; background:rgba(0,0,0,0.4); border:1px solid var(--border); color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; font-weight:700; font-size:14px; transition:0.2s; }
-    .nav-btn:active { transform:scale(0.95); }
-
-    /* GRID */
     .grid { flex:1; display:grid; grid-template-rows: 1fr 60px 1fr; gap:8px; padding:0 10px 10px; overflow:hidden; }
 
-    /* OYUNCU KARTLARI */
     .pane {
       position:relative; border-radius:20px; border:1px solid var(--border);
-      background: linear-gradient(160deg, rgba(255,255,255,0.03), rgba(0,0,0,0.4));
-      backdrop-filter:blur(10px);
-      display:flex; flex-direction:column; overflow:hidden;
-      transition: all 0.3s ease;
-      min-height: 0;
+      background: rgba(255,255,255,0.03); backdrop-filter:blur(10px);
+      display:flex; flex-direction:column; overflow:hidden; transition: 0.3s;
     }
-
     #paneA.active { border-color:var(--c-p1); box-shadow: 0 0 30px rgba(0, 243, 255, 0.2); }
-    #paneA .p-score { color:var(--c-p1); }
-    #paneA .mic-btn.active-mic { background: linear-gradient(135deg, var(--c-p1), #0066ff); border:none; box-shadow: 0 5px 20px rgba(0,243,255,0.3); }
-    #paneA .pass-btn:not(:disabled) { border-color:var(--c-p1); color:var(--c-p1); }
+    #paneB.active { border-color:var(--c-p2); box-shadow: 0 0 30px rgba(255, 0, 102, 0.2); }
 
-    /* PANE B DÖNÜŞ FIX */
     #paneB { transform: rotate(180deg); }
     #paneB > * { transform: rotate(180deg); } 
-    
-    #paneB.active { border-color:var(--c-p2); box-shadow: 0 0 30px rgba(255, 0, 102, 0.2); }
-    #paneB .p-score { color:var(--c-p2); }
-    #paneB .mic-btn.active-mic { background: linear-gradient(135deg, var(--c-p2), #800020); border:none; box-shadow: 0 5px 20px rgba(255,0,102,0.3); }
-    #paneB .pass-btn:not(:disabled) { border-color:var(--c-p2); color:var(--c-p2); }
 
-    .bar { flex:0 0 40px; padding:0 12px; background:rgba(0,0,0,0.3); border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; font-family:'Space Grotesk', sans-serif; font-size:13px; }
-    .score-stats { display: flex; gap: 8px; align-items: center; font-weight: 800; font-size: 13px; }
-    .stat-g { color: var(--c-green); }
-    .stat-r { color: var(--c-red); }
-    .p-name { font-weight:700; opacity:0.9; }
-    .p-score { font-weight:700; }
+    .bar { flex:0 0 40px; padding:0 12px; background:rgba(0,0,0,0.3); display:flex; justify-content:space-between; align-items:center; font-size:13px; }
+    .p-score { font-weight:800; color: var(--c-p1); }
+    #paneB .p-score { color: var(--c-p2); }
 
-    .body { flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:2px; padding:4px 10px; min-height:0; overflow:hidden; }
-    .word { font-size:clamp(22px, 6vw, 32px); font-weight:800; color:#fff; font-family:'Space Grotesk', sans-serif; text-align:center; line-height:1.1; }
-    .meaning { font-size:clamp(14px, 4vw, 16px); color:rgba(255,255,255,0.6); font-weight:500; text-align:center; }
-    .hint { font-size:10px; font-weight:700; margin-top:6px; opacity:0; transition:0.3s; text-transform:uppercase; letter-spacing:1px; color:#fff; }
-    .pane.active .hint { opacity:0.9; color: var(--c-gold); text-shadow: 0 0 5px rgba(0,0,0,0.5); }
+    .body { flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:2px; padding:10px; text-align:center; }
+    .word { font-size: 32px; font-weight:800; font-family:'Space Grotesk'; }
+    .meaning { font-size: 16px; opacity: 0.6; }
 
-    .actions { flex:0 0 60px; padding:8px; display:flex; justify-content:center; align-items:center; gap:8px; }
-    .mic-btn { flex:2; height:44px; border-radius:12px; border:1px solid var(--border); background:rgba(255,255,255,0.05); color:#fff; font-weight:700; font-size:14px; cursor:pointer; transition:0.2s; display:flex; align-items:center; justify-content:center; gap:6px; }
-    .mic-btn:disabled { opacity:0.3; cursor:not-allowed; }
-    .mic-btn:active { transform:scale(0.96); }
+    .actions { flex:0 0 60px; padding:8px; display:flex; gap:8px; }
+    .mic-btn { flex:2; border-radius:12px; border:1px solid var(--border); background:rgba(255,255,255,0.05); color:#fff; font-weight:700; cursor:pointer; }
+    .mic-btn.active-mic { background: var(--c-p1); color: #000; }
+    #paneB .mic-btn.active-mic { background: var(--c-p2); color: #fff; }
+    .pass-btn { flex:1; border-radius:12px; border:1px solid var(--border); background:transparent; color:rgba(255,255,255,0.5); font-weight:700; cursor:pointer; }
 
-    .pass-btn { flex:1; height:44px; border-radius:12px; border:1px solid var(--border); background:transparent; color:rgba(255,255,255,0.5); font-weight:700; font-size:14px; cursor:pointer; transition:0.2s; }
-    .pass-btn:active { transform:scale(0.96); background:rgba(255,255,255,0.1); }
-    .pass-btn:disabled { opacity:0.3; cursor:not-allowed; border-color:var(--border) !important; color:rgba(255,255,255,0.3) !important; }
+    .wave-box { border-radius:16px; background:rgba(0,0,0,0.6); border:1px solid var(--border); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; }
+    .wave-status { font-size:10px; font-weight:700; letter-spacing:1px; color:var(--c-p1); }
 
-    .wave-box { border-radius:16px; background:rgba(0,0,0,0.6); border:1px solid var(--border); backdrop-filter:blur(10px); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; position:relative; overflow:hidden; }
-    .wave-status { font-size:10px; font-weight:700; opacity:0.8; letter-spacing:1px; text-transform:uppercase; color:var(--text-main); }
-    .bars { display:flex; gap:3px; height:16px; align-items:center; }
-    .b { width:3px; height:6px; background:rgba(255,255,255,0.3); border-radius:4px; transition:0.2s; }
-    .wave-box.speaking .b { background:var(--c-green); animation: bounce 0.6s infinite ease-in-out; }
-    .wave-box.listening .b { background:#fff; animation: bounce 0.5s infinite ease-in-out; }
-    @keyframes bounce { 0%,100%{height:6px} 50%{height:16px} }
-    .b:nth-child(1){animation-delay:0s} .b:nth-child(2){animation-delay:0.1s} .b:nth-child(3){animation-delay:0.2s} .b:nth-child(4){animation-delay:0.3s} .b:nth-child(5){animation-delay:0.4s}
-
-    .result-overlay { position:absolute; inset:0; z-index:20; background:rgba(0,0,0,0.85); display:none; flex-direction:column; align-items:center; justify-content:center; backdrop-filter:blur(8px); animation:fadeIn 0.3s; text-align:center; padding:20px; }
+    .result-overlay { position:absolute; inset:0; z-index:20; background:rgba(0,0,0,0.9); display:none; flex-direction:column; align-items:center; justify-content:center; backdrop-filter:blur(8px); text-align:center; }
     .result-overlay.show { display:flex; }
-    .res-icon { font-size:48px; margin-bottom:8px; animation:popIn 0.4s; }
-    .res-text { font-size:20px; font-weight:900; font-family:'Space Grotesk', sans-serif; text-transform:uppercase; letter-spacing:1px; line-height:1.2; text-shadow: 0 5px 20px rgba(0,0,0,0.5); }
-    .res-sub { font-size:14px; opacity:0.8; margin-top:8px; color:#fff; }
-    .result-overlay.success .res-text { color:var(--c-green); }
-    .result-overlay.error .res-text { color:var(--c-red); }
-    .result-overlay.pass .res-text { color:var(--c-gold); }
-    @keyframes popIn { from{transform:scale(0)} to{transform:scale(1)} }
-    @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+    .res-text { font-size:24px; font-weight:900; text-transform:uppercase; }
+    .success .res-text { color: var(--c-green); }
+    .error .res-text { color: var(--c-red); }
 
-    .modal-wrap { position:absolute; inset:0; background:rgba(0,0,0,0.9); z-index:999; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(20px); padding:20px; }
-    .modal-card { width:100%; max-width:340px; background:#101014; border:1px solid var(--border); border-radius:24px; padding:24px; text-align:center; box-shadow:0 30px 80px rgba(0,0,0,1); animation: popIn 0.5s; }
-    .modal-title { font-size:24px; font-weight:800; margin-bottom:12px; font-family:'Space Grotesk', sans-serif; }
-    .modal-p { font-size:14px; opacity:0.7; margin-bottom:24px; line-height:1.5; }
-    
-    .mode-btn { width:100%; padding:16px; border-radius:16px; border:none; margin-bottom:10px; font-weight:800; font-size:15px; cursor:pointer; position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center; gap:8px; transition:0.2s; }
-    .mode-btn:active { transform:scale(0.98); }
-    .mode-pronounce { background:linear-gradient(135deg, #00f3ff, #0066ff); color:#000; }
-    .mode-vocab { background:linear-gradient(135deg, #ff00aa, #800020); color:#fff; }
+    .modal-wrap { position:absolute; inset:0; background:rgba(0,0,0,0.95); z-index:999; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(20px); }
+    .modal-card { width:90%; max-width:340px; background:#101014; border:1px solid var(--border); border-radius:24px; padding:24px; text-align:center; }
+    .mode-btn { width:100%; padding:16px; border-radius:16px; border:none; margin-bottom:10px; font-weight:800; font-size:15px; cursor:pointer; }
+    .mode-pronounce { background: var(--c-p1); color:#000; }
+    .mode-vocab { background: var(--c-p2); color:#fff; }
 
     .lang-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 20px; }
-    .lang-btn { background: rgba(255,255,255,0.1); border: 1px solid var(--border); border-radius: 8px; padding: 10px 0; cursor: pointer; font-size: 22px; transition: 0.2s; display: flex; justify-content: center; }
-    .lang-btn:active, .lang-btn.active { background: var(--c-p1); border-color: var(--c-p1); transform: scale(1.05); }
+    .lang-btn { background: rgba(255,255,255,0.1); border: 1px solid var(--border); border-radius: 8px; padding: 10px 0; cursor: pointer; font-size: 20px; }
+    .lang-btn.active { background: var(--c-p1); color: #000; border-color: var(--c-p1); }
 
-    .loader { border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid var(--c-p1); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 20px; }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .hidden { display: none !important; }
   </style>
 </head>
 <body>
 
   <div class="cosmos-bg"><div class="star-dust"></div></div>
-  <canvas id="fireworksCanvas"></canvas>
 
   <div class="wrap">
     <div class="game-logo-header">
-      <div class="gl-brand">ITALKY<span style="color:var(--c-p1)">AI</span></div>
-      <div class="gl-icon">🏆</div>
       <div class="gl-title">FRIEND ARENA</div>
-      <div class="gl-sub">CHAMPIONS LEAGUE</div>
-    </div>
-
-    <div class="nav-layer">
-      <button class="nav-btn" onclick="window.location.href='/pages/game.html'">←</button>
-      <button class="nav-btn" style="opacity:0">.</button>
     </div>
 
     <div class="grid">
       <section class="pane top" id="paneB">
         <div class="bar">
           <div class="p-name">OYUNCU B</div>
-          <div class="score-stats">
-            <span class="stat-g">✅ <span id="corrB">0</span></span>
-            <span class="stat-r">❌ <span id="wrongB">0</span></span>
-            <span class="p-score" id="scoreB">SET: 0</span>
-          </div>
+          <div class="p-score" id="scoreB">SET: 0</div>
         </div>
         <div class="body">
           <div class="word" id="wordB">---</div>
           <div class="meaning" id="meanB">---</div>
-          <div class="hint">BEKLİYOR...</div>
         </div>
         <div class="actions">
-          <button class="pass-btn" id="passB" disabled>PAS (3)</button>
+          <button class="pass-btn" id="passB" disabled>PAS</button>
           <button class="mic-btn" id="micB" disabled>🎙️ CEVAPLA</button>
         </div>
         <div class="result-overlay" id="ovB"></div>
@@ -181,25 +111,19 @@
 
       <div class="wave-box" id="waveBox">
         <div class="wave-status" id="waveStatus">HAZIR</div>
-        <div class="bars"><div class="b"></div><div class="b"></div><div class="b"></div><div class="b"></div><div class="b"></div></div>
       </div>
 
       <section class="pane" id="paneA">
         <div class="bar">
           <div class="p-name">OYUNCU A</div>
-          <div class="score-stats">
-            <span class="stat-g">✅ <span id="corrA">0</span></span>
-            <span class="stat-r">❌ <span id="wrongA">0</span></span>
-            <span class="p-score" id="scoreA">SET: 0</span>
-          </div>
+          <div class="p-score" id="scoreA">SET: 0</div>
         </div>
         <div class="body">
           <div class="word" id="wordA">---</div>
           <div class="meaning" id="meanA">---</div>
-          <div class="hint">BEKLİYOR...</div>
         </div>
         <div class="actions">
-          <button class="pass-btn" id="passA" disabled>PAS (3)</button>
+          <button class="pass-btn" id="passA" disabled>PAS</button>
           <button class="mic-btn" id="micA" disabled>🎙️ CEVAPLA</button>
         </div>
         <div class="result-overlay" id="ovA"></div>
@@ -209,8 +133,7 @@
 
   <div class="modal-wrap" id="startModal">
     <div class="modal-card">
-      <div class="modal-title">ŞAMPİYONLAR LİGİ 🏆</div>
-      <div class="modal-p" style="margin-bottom:10px; font-weight:700">Dil Seçimi:</div>
+      <h2 style="color:var(--c-p1)">ARENA BOOT</h2>
       <div class="lang-grid">
         <div class="lang-btn active" data-lang="en">🇬🇧</div>
         <div class="lang-btn" data-lang="de">🇩🇪</div>
@@ -218,665 +141,197 @@
         <div class="lang-btn" data-lang="es">🇪🇸</div>
         <div class="lang-btn" data-lang="it">🇮🇹</div>
       </div>
-      <div class="modal-p">
-        10 Kelime x 10 Puan = 100 Puan<br>
-        Yanlış veya Pas = Sıra Geçer!<br>
-        <strong>Havuz Sistemi: Tekrar Yok!</strong>
-      </div>
-      <button class="mode-btn mode-pronounce" id="btnPron">🗣️ TELAFFUZ LİGİ</button>
-      <button class="mode-btn mode-vocab" id="btnVocab">🧠 KELİME LİGİ</button>
-      <div id="loading" style="display:none; margin-top:20px;">
-        <div class="loader"></div><div style="font-size:12px;opacity:0.6">Havuz Dolduruluyor...</div>
-      </div>
+      <button class="mode-btn mode-pronounce" id="btnPron">TELAFFUZ LİGİ</button>
+      <button class="mode-btn mode-vocab" id="btnVocab">KELİME LİGİ</button>
     </div>
   </div>
 
-  <div class="modal-wrap" id="setModal" style="display:none">
+  <div class="modal-wrap hidden" id="setModal">
     <div class="modal-card">
-      <div class="modal-title" id="setTitle">SET BİTTİ!</div>
-      <div class="modal-p" id="setResult"></div>
-      <button class="mode-btn mode-pronounce" id="nextSetBtn">SONRAKİ SET</button>
-    </div>
-  </div>
-
-  <div class="modal-wrap" id="matchModal" style="display:none; background:transparent">
-    <div class="modal-card" style="margin-top:200px">
-      <div class="modal-title" style="font-size:32px">ŞAMPİYON! 👑</div>
-      <div class="modal-p" id="matchResult" style="font-size:18px; font-weight:bold; color:var(--c-green)"></div>
-      <button class="mode-btn" style="background:rgba(255,255,255,0.2)" onclick="location.reload()">TEKRAR OYNA</button>
-      <button class="mode-btn" style="background:rgba(0,0,0,0.5)" onclick="location.href='/pages/game.html'">ÇIKIŞ</button>
+      <h2 id="setTitle">SET BİTTİ</h2>
+      <p id="setResult"></p>
+      <button class="mode-btn mode-pronounce" id="nextSetBtn">DEVAM ET</button>
     </div>
   </div>
 
 <script type="module">
-import { BASE_DOMAIN } from "/js/config.js";
+import { loadLangPool, createUsedSet, pick } from "/js/langpool.js";
+
 const $ = (id) => document.getElementById(id);
-const apiBase = () => String(BASE_DOMAIN || "").replace(/\/+$/, "");
 
-// --- DEVASA HAVUZ (50-60 Kelime/Dil) ---
-const OFFLINE_DB = {
-  en: [
-    ["Galaxy","Galaksi"],["Planet","Gezegen"],["Energy","Enerji"],["Future","Gelecek"],
-    ["Dream","Rüya"],["Music","Müzik"],["Travel","Seyahat"],["Friend","Arkadaş"],
-    ["Summer","Yaz"],["School","Okul"],["Market","Pazar"],["Garden","Bahçe"],
-    ["Doctor","Doktor"],["Window","Pencere"],["Coffee","Kahve"],["Bridge","Köprü"],
-    ["Island","Ada"],["Forest","Orman"],["Yellow","Sarı"],["Purple","Mor"],
-    ["History","Tarih"],["Science","Bilim"],["Nature","Doğa"],["Ocean","Okyanus"],
-    ["River","Nehir"],["Mountain","Dağ"],["Cloud","Bulut"],["Rain","Yağmur"],
-    ["Snow","Kar"],["Wind","Rüzgar"],["Fire","Ateş"],["Water","Su"],
-    ["Earth","Dünya"],["Moon","Ay"],["Sun","Güneş"],["Star","Yıldız"],
-    ["Space","Uzay"],["Time","Zaman"],["Light","Işık"],["Sound","Ses"],
-    ["Color","Renk"],["Shape","Şekil"],["Art","Sanat"],["Love","Aşk"],
-    ["Peace","Barış"],["War","Savaş"],["Life","Hayat"],["Death","Ölüm"]
-  ],
-  de: [
-    ["Sonne","Güneş"],["Mond","Ay"],["Wasser","Su"],["Freund","Arkadaş"],
-    ["Schule","Okul"],["Arbeit","İş"],["Himmel","Gökyüzü"],["Garten","Bahçe"],
-    ["Familie","Aile"],["Reise","Seyahat"],["Buch","Kitap"],["Stadt","Şehir"],
-    ["Lehrer","Öğretmen"],["Schüler","Öğrenci"],["Haus","Ev"],["Auto","Araba"],
-    ["Zug","Tren"],["Flugzeug","Uçak"],["Schiff","Gemi"],["Fahrrad","Bisiklet"],
-    ["Straße","Cadde"],["Weg","Yol"],["Brücke","Köprü"],["Berg","Dağ"],
-    ["Fluss","Nehir"],["See","Göl"],["Meer","Deniz"],["Wald","Orman"],
-    ["Baum","Ağaç"],["Blume","Çiçek"],["Tier","Hayvan"],["Hund","Köpek"],
-    ["Katze","Kedi"],["Vogel","Kuş"],["Fisch","Balık"],["Brot","Ekmek"],
-    ["Milch","Süt"],["Kaffee","Kahve"],["Tee","Çay"],["Bier","Bira"]
-  ],
-  // ... (Diğer diller de benzer şekilde doldurulur) ...
-  fr: [
-    ["Soleil","Güneş"],["Lune","Ay"],["Amour","Aşk"],["Monde","Dünya"],
-    ["Fleur","Çiçek"],["Temps","Zaman"],["Plage","Plaj"],["Livre","Kitap"],
-    ["Chien","Köpek"],["Maison","Ev"],["Chat","Kedi"],["Oiseau","Kuş"],
-    ["Poisson","Balık"],["Pain","Ekmek"],["Eau","Su"],["Lait","Süt"],
-    ["Café","Kahve"],["Thé","Çay"],["Vin","Şarap"],["Bière","Bira"],
-    ["Homme","Adam"],["Femme","Kadın"],["Enfant","Çocuk"],["Ami","Arkadaş"],
-    ["Professeur","Öğretmen"],["Étudiant","Öğrenci"],["École","Okul"],["Travail","İş"],
-    ["Ville","Şehir"],["Pays","Ülke"],["Rue","Cadde"],["Route","Yol"],
-    ["Voiture","Araba"],["Train","Tren"],["Avion","Uçak"],["Bateau","Gemi"]
-  ],
-  es: [
-    ["Sol","Güneş"],["Luna","Ay"],["Amigo","Arkadaş"],["Ciudad","Şehir"],
-    ["Playa","Plaj"],["Libro","Kitap"],["Tiempo","Zaman"],["Gato","Kedi"],
-    ["Casa","Ev"],["Fiesta","Parti"],["Perro","Köpek"],["Pájaro","Kuş"],
-    ["Pez","Balık"],["Pan","Ekmek"],["Agua","Su"],["Leche","Süt"],
-    ["Café","Kahve"],["Té","Çay"],["Vino","Şarap"],["Cerveza","Bira"],
-    ["Hombre","Adam"],["Mujer","Kadın"],["Niño","Çocuk"],["Familia","Aile"],
-    ["Profesor","Öğretmen"],["Estudiante","Öğrenci"],["Escuela","Okul"],["Trabajo","İş"],
-    ["Calle","Cadde"],["Camino","Yol"],["Coche","Araba"],["Tren","Tren"],
-    ["Avión","Uçak"],["Barco","Gemi"],["Bicicleta","Bisiklet"],["Montaña","Dağ"]
-  ],
-  it: [
-    ["Sole","Güneş"],["Luna","Ay"],["Amore","Aşk"],["Mare","Deniz"],
-    ["Pizza","Pizza"],["Tempo","Zaman"],["Citta","Şehir"],["Casa","Ev"],
-    ["Libro","Kitap"],["Gatto","Kedi"],["Cane","Köpek"],["Uccello","Kuş"],
-    ["Pesce","Balık"],["Pane","Ekmek"],["Acqua","Su"],["Latte","Süt"],
-    ["Caffè","Kahve"],["Tè","Çay"],["Vino","Şarap"],["Birra","Bira"],
-    ["Uomo","Adam"],["Donna","Kadın"],["Bambino","Çocuk"],["Amico","Arkadaş"],
-    ["Insegnante","Öğretmen"],["Studente","Öğrenci"],["Scuola","Okul"],["Lavoro","İş"],
-    ["Strada","Cadde"],["Via","Yol"],["Macchina","Araba"],["Treno","Tren"],
-    ["Aereo","Uçak"],["Nave","Gemi"],["Bicicletta","Bisiklet"],["Montagna","Dağ"]
-  ]
-};
-
-/* =========================
-   DEĞİŞKENLER
-   ========================= */
 let currentLang = 'en';
+let gameMode = "pronunciation";
+let wordPool = [];
+let usedWords = null;
+let wordList = [];
+let idx = 0;
+let turn = "A";
+let isBusy = false;
+let setsWon = { A:0, B:0 };
+let setStats = { A:0, B:0 };
+
 const LANG_CONFIG = {
-  en: { code: 'en-US', name: 'İngilizce' },
-  de: { code: 'de-DE', name: 'Almanca' },
-  fr: { code: 'fr-FR', name: 'Fransızca' },
-  es: { code: 'es-ES', name: 'İspanyolca' },
-  it: { code: 'it-IT', name: 'İtalyanca' }
+  en: { code: 'en-US' }, de: { code: 'de-DE' },
+  fr: { code: 'fr-FR' }, es: { code: 'es-ES' }, it: { code: 'it-IT' }
 };
 
-const TARGET_SETS = 3;
-const WORDS_PER_SET = 10;
-const POOL_TARGET = 60; // Havuz hedefi
-
-let gameMode = "";
-let wordPool = [];      // Ana Havuz
-let usedWords = new Set(); // Kullanılanlar
-let wordList = [];      // Aktif Set
-let idx = 0;              
-let turn = "A";           
-let isBusy = false;
-
-let setStats = { A:{correct:0, wrong:0}, B:{correct:0, wrong:0} };
-let setsWon  = { A:0, B:0 };
-let passLeft = { A:3, B:3 };
-let streaks  = { A:0, B:0 };
-
-const paneA = $("paneA"), paneB = $("paneB");
-const micA = $("micA"), micB = $("micB");
-const passA = $("passA"), passB = $("passB");
-
-// Dil Seçimi
-document.querySelectorAll(".lang-btn").forEach(btn=>{
-  btn.addEventListener("click", ()=>{
-    document.querySelectorAll(".lang-btn").forEach(b=>b.classList.remove("active"));
+document.querySelectorAll(".lang-btn").forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll(".lang-btn").forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
-    currentLang = btn.getAttribute("data-lang") || "en";
-    ensureAudio();
-  });
+    currentLang = btn.dataset.lang;
+  };
 });
 
-/* =========================
-   SES
-   ========================= */
-let audioCtx = null;
-function ensureAudio(){
-  if(!audioCtx){
-    const AC = window.AudioContext || window.webkitAudioContext;
-    audioCtx = AC ? new AC() : null;
-  }
-  if(audioCtx && audioCtx.state === "suspended") audioCtx.resume().catch(()=>{});
-  return audioCtx;
-}
-const SFX = {
-  correct: () => {
-    const c = ensureAudio(); if(!c) return;
-    const now = c.currentTime;
-    [523, 659, 783, 1046].forEach((f, i) => {
-      const o = c.createOscillator(), g = c.createGain();
-      o.frequency.value = f; o.connect(g); g.connect(c.destination);
-      g.gain.setValueAtTime(.05, now + i*0.1);
-      g.gain.exponentialRampToValueAtTime(.001, now + i*0.1 + 0.35);
-      o.start(now + i*0.1); o.stop(now + i*0.1 + 0.35);
-    });
-  },
-  wrong: () => {
-    const c = ensureAudio(); if(!c) return;
-    const now = c.currentTime, o = c.createOscillator(), g = c.createGain();
-    o.type = 'sawtooth'; o.frequency.setValueAtTime(150, now); o.frequency.linearRampToValueAtTime(100, now + 0.25);
-    o.connect(g); g.connect(c.destination);
-    g.gain.setValueAtTime(.08, now); g.gain.exponentialRampToValueAtTime(.001, now + 0.35);
-    o.start(now); o.stop(now + 0.35);
-  }
-};
+$("btnPron").onclick = () => startArena("pronunciation");
+$("btnVocab").onclick = () => startArena("vocabulary");
 
-/* =========================
-   BAŞLAT
-   ========================= */
-$("btnPron").addEventListener("click", ()=> startMode("pronunciation"));
-$("btnVocab").addEventListener("click", ()=> startMode("vocabulary"));
-
-async function startMode(mode){
-  ensureAudio();
+async function startArena(mode) {
   gameMode = mode;
+  $("startModal").classList.add("hidden");
   
-  // Reset Pool
-  wordPool = [];
-  usedWords = new Set();
+  const data = await loadLangPool(currentLang);
+  const USED_KEY = `used_duo_${currentLang}`;
+  const usedHelper = createUsedSet(USED_KEY);
+  usedWords = usedHelper;
 
-  $("startModal").querySelector(".modal-p").style.display = "none";
-  $("btnPron").style.display = "none";
-  $("btnVocab").style.display = "none";
-  $("loading").style.display = "block";
+  // Havuz çekimi
+  wordPool = pick(data, 50, usedHelper.used, usedHelper.save);
 
-  await fetchWordsFromAI();
-}
-
-/* =========================
-   HAVUZ SİSTEMİ
-   ========================= */
-function safeParseWordList(raw){
-  let txt = String(raw?.text||raw||"").trim().replace(/```json/gi,"").replace(/```/g,"").trim();
-  const a = txt.indexOf("["); const b = txt.lastIndexOf("]");
-  if(a !== -1 && b !== -1) txt = txt.slice(a, b+1);
-  return JSON.parse(txt);
-}
-function shuffle(arr){
-  const a = arr.slice();
-  for(let i=a.length-1;i>0;i--){
-    const j = Math.floor(Math.random()*(i+1));
-    [a[i],a[j]] = [a[j],a[i]];
-  }
-  return a;
-}
-
-// 1. ADIM: HAVUZU DOLDUR (AI + OFFLINE)
-async function fetchWordsFromAI(){
-  try{
-    const lg = LANG_CONFIG[currentLang];
-    // Büyük bir batch iste (50 kelime)
-    let prompt = `Bana ${lg.name} dilinde A1-A2 seviyesinde ${POOL_TARGET} ADET FARKLI kelime ve Türkçe karşılıklarını JSON listesi olarak ver: [["apple","elma"], ...]`;
-    
-    const res = await fetch(`${apiBase()}/api/chat`,{
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify({ text: prompt, max_tokens: 2500 })
-    });
-
-    const data = await res.json();
-    const rawList = safeParseWordList(data);
-    let list = rawList.map(w=>[String(w[0]).trim(), String(w[1]).trim()]);
-    
-    wordPool = list;
-
-  }catch{
-    // Fallback: Offline DB kullan
-    wordPool = [...(OFFLINE_DB[currentLang] || OFFLINE_DB['en'])];
-  }
-  
-  // Havuz Yetersizse Yedekle Destekle
-  if(wordPool.length < 20) {
-      const backup = OFFLINE_DB[currentLang] || OFFLINE_DB['en'];
-      wordPool = [...wordPool, ...backup];
+  // Eternal Güvenliği
+  if(!wordPool || wordPool.length < 20) {
+    localStorage.removeItem(USED_KEY);
+    location.reload();
   }
 
-  // Havuzu Karıştır
-  wordPool = shuffle(wordPool);
-
-  $("startModal").style.display = "none";
-  $("setModal").style.display = "none";
-  
   startSet();
 }
 
-// 2. ADIM: HAVUZDAN SET ÇEK (Unique)
-function getNextSet() {
-    let set = [];
-    let attempts = 0;
-    
-    // Kullanılmamışları bul
-    for(let w of wordPool) {
-        if(!usedWords.has(w[0])) {
-            set.push(w);
-            usedWords.add(w[0]);
-            if(set.length >= WORDS_PER_SET) break;
-        }
-    }
-    
-    // Eğer havuz bittiyse (set dolmadıysa), resetle ve tekrar al
-    if(set.length < WORDS_PER_SET) {
-        usedWords.clear();
-        let remaining = WORDS_PER_SET - set.length;
-        let freshPool = shuffle(wordPool);
-        
-        for(let w of freshPool) {
-            if(!usedWords.has(w[0])) { // (Set'tekini tekrar alma)
-               // Basitçe ekle, strict unique zorunlu değil bu noktada
-               set.push(w);
-               usedWords.add(w[0]);
-               if(set.length >= WORDS_PER_SET) break;
-            }
-        }
-    }
-    
-    return shuffle(set);
-}
-
-/* =========================
-   SET / TUR
-   ========================= */
-function startSet(){
+function startSet() {
   idx = 0;
-  isBusy = false;
-
-  setStats = { A:{correct:0, wrong:0}, B:{correct:0, wrong:0} };
-  passLeft = { A:3, B:3 };
-  streaks  = { A:0, B:0 };
-
-  const totalSets = setsWon.A + setsWon.B;
-  turn = (totalSets % 2 === 0) ? "A" : "B";
-
-  // Havuzdan Yeni Set Al
-  wordList = getNextSet();
+  setStats = { A:0, B:0 };
+  // Her set başı havuzdan 10 benzersiz kelime çek
+  wordList = wordPool.splice(0, 10);
+  
+  // Eğer havuzda kelime azaldıysa (Eternal Döngü)
+  if(wordPool.length < 10) {
+    localStorage.removeItem(`used_duo_${currentLang}`);
+  }
 
   renderWord();
   updateUI();
-
-  // OTO SESLİ İPUCU
-  setTimeout(() => { autoSpeakHint(); }, 1000);
 }
 
-function currentWord(){
-  return wordList[idx] || ["---","---"];
+function renderWord() {
+  const w = wordList[idx];
+  if(!w) return;
+
+  const showMeaning = gameMode === "pronunciation";
+  $("wordA").textContent = w.w; $("meanA").textContent = showMeaning ? w.tr : "???";
+  $("wordB").textContent = w.w; $("meanB").textContent = showMeaning ? w.tr : "???";
 }
 
-function renderWord(){
-  const w = currentWord();
-  const hintText = (gameMode === "pronunciation") 
-    ? "OKU BUNU!" 
-    : "TÜRKÇESİNİ SÖYLE!"; 
+function updateUI() {
+  $("scoreA").textContent = `SET: ${setsWon.A} | DOĞRU: ${setStats.A}`;
+  $("scoreB").textContent = `SET: ${setsWon.B} | DOĞRU: ${setStats.B}`;
 
-  if(gameMode === "pronunciation"){
-    $("wordA").textContent = w[0]; $("meanA").textContent = w[1];
-    $("wordB").textContent = w[0]; $("meanB").textContent = w[1];
-  }else{
-    $("wordA").textContent = w[0]; $("meanA").textContent = "???";
-    $("wordB").textContent = w[0]; $("meanB").textContent = "???";
-  }
+  $("paneA").classList.toggle("active", turn === "A");
+  $("paneB").classList.toggle("active", turn === "B");
+  $("micA").classList.toggle("active-mic", turn === "A");
+  $("micB").classList.toggle("active-mic", turn === "B");
   
-  const hints = document.querySelectorAll(".hint");
-  hints.forEach(h => h.textContent = hintText);
+  $("micA").disabled = turn !== "A"; $("passA").disabled = turn !== "A";
+  $("micB").disabled = turn !== "B"; $("passB").disabled = turn !== "B";
+  
+  $("waveStatus").textContent = `SIRA: OYUNCU ${turn}`;
 }
 
-// OTO SESLİ İPUCU
-async function autoSpeakHint() {
-    if(idx >= wordList.length) return;
-    const w = currentWord();
-    
-    if(gameMode === "vocabulary") {
-        await speakBrowser(w[0], LANG_CONFIG[currentLang].code);
-    }
-    
-    setWave("idle", `SIRA: OYUNCU ${turn}`);
-    enableTurnButtons();
-}
-
-function updateUI(){
-  if(idx >= wordList.length){ handleSetEnd(); return; }
-
-  $("scoreA").textContent = `SET: ${setsWon.A}`;
-  $("corrA").textContent = setStats.A.correct;
-  $("wrongA").textContent = setStats.A.wrong;
-
-  $("scoreB").textContent = `SET: ${setsWon.B}`;
-  $("corrB").textContent = setStats.B.correct;
-  $("wrongB").textContent = setStats.B.wrong;
-
-  const isFinal = (idx === wordList.length - 1);
-
-  if(isFinal){
-    passA.textContent = "FİNAL!"; passB.textContent = "FİNAL!";
-    passA.disabled = true; passB.disabled = true;
-  }else{
-    passA.textContent = `PAS (${passLeft.A})`;
-    passB.textContent = `PAS (${passLeft.B})`;
-  }
-
-  paneA.classList.remove("active"); paneB.classList.remove("active");
-  micA.classList.remove("active-mic"); micB.classList.remove("active-mic");
-
-  micA.disabled = true; micB.disabled = true;
-  if(!isFinal){ passA.disabled = true; passB.disabled = true; }
-
-  if(turn === "A"){ paneA.classList.add("active"); micA.classList.add("active-mic"); }
-  else{ paneB.classList.add("active"); micB.classList.add("active-mic"); }
-
-  setWave("idle", `SIRA: OYUNCU ${turn}`);
-}
-
-function enableTurnButtons(){
+async function handleAnswer(player, spoken) {
   if(isBusy) return;
-  const isFinal = (idx === wordList.length - 1);
+  isBusy = true;
+  
+  const w = wordList[idx];
+  const target = gameMode === "pronunciation" ? w.w : w.tr;
+  
+  const isCorrect = spoken.toLowerCase().includes(target.toLowerCase()) || 
+                    target.toLowerCase().includes(spoken.toLowerCase());
 
-  if(turn === "A"){
-    micA.disabled = false;
-    if(!isFinal && passLeft.A > 0) passA.disabled = false;
-  }else{
-    micB.disabled = false;
-    if(!isFinal && passLeft.B > 0) passB.disabled = false;
+  if(isCorrect) {
+    setStats[player]++;
+    showResult(player, "success", "HARİKA!", "+10 PUAN");
+    await speak(w.w);
+    setTimeout(nextTurn, 1200);
+  } else {
+    showResult(player, "error", "YANLIŞ!", `Doğrusu: ${target}`);
+    await speak(w.w);
+    setTimeout(nextTurn, 2500);
   }
 }
 
-/* =========================
-   SESLENDİRME
-   ========================= */
-function speakBrowser(text, lang){
-  return new Promise(resolve=>{
-    try{ window.speechSynthesis.cancel(); }catch{}
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = lang || LANG_CONFIG[currentLang].code;
-    u.rate = 0.9;
-    u.onend = resolve; u.onerror = resolve;
-    try{ window.speechSynthesis.speak(u); }catch{ resolve(); }
+function nextTurn() {
+  idx++;
+  turn = turn === "A" ? "B" : "A";
+  isBusy = false;
+  
+  if(idx >= wordList.length) {
+    finishSet();
+  } else {
+    renderWord();
+    updateUI();
+  }
+}
+
+function finishSet() {
+  const win = setStats.A > setStats.B ? "A" : (setStats.B > setStats.A ? "B" : "BERABERE");
+  if(win !== "BERABERE") setsWon[win]++;
+
+  $("setModal").classList.remove("hidden");
+  $("setTitle").textContent = win === "BERABERE" ? "BERABERE!" : `OYUNCU ${win} KAZANDI`;
+  $("setResult").textContent = `A: ${setStats.A} - B: ${setStats.B}`;
+}
+
+$("nextSetBtn").onclick = () => {
+  $("setModal").classList.add("hidden");
+  startSet();
+};
+
+$("passA").onclick = () => nextTurn();
+$("passB").onclick = () => nextTurn();
+
+// STT Entegrasyonu
+function listen(player) {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR) return;
+  const rec = new SR();
+  rec.lang = gameMode === "vocabulary" ? "tr-TR" : LANG_CONFIG[currentLang].code;
+  
+  $("waveStatus").textContent = "DİNLİYOR...";
+  rec.start();
+  
+  rec.onresult = (e) => {
+    const text = e.results[0][0].transcript;
+    handleAnswer(player, text);
+  };
+}
+
+$("micA").onclick = () => listen("A");
+$("micB").onclick = () => listen("B");
+
+function showResult(player, type, title, sub) {
+  const ov = $(player === "A" ? "ovA" : "ovB");
+  ov.className = `result-overlay show ${type}`;
+  ov.innerHTML = `<div class="res-text">${title}</div><div style="font-size:14px">${sub}</div>`;
+  setTimeout(() => ov.classList.remove("show"), 2000);
+}
+
+function speak(txt) {
+  return new Promise(res => {
+    const u = new SpeechSynthesisUtterance(txt);
+    u.lang = LANG_CONFIG[currentLang].code;
+    u.onend = res;
+    window.speechSynthesis.speak(u);
   });
 }
-
-// Pronunciation modunda öğretici ses iptal (HIZ İÇİN)
-async function teacherPhase(){
-  // Boş, kullanılmıyor artık
-}
-
-/* =========================
-   PAS
-   ========================= */
-passA.addEventListener("click", ()=> passTurn("A"));
-passB.addEventListener("click", ()=> passTurn("B"));
-
-async function passTurn(player){
-  if(isBusy) return;
-  if(player !== turn) return;
-  const isFinal = (idx === wordList.length - 1);
-  if(isFinal) return;
-  if(passLeft[player] <= 0) return;
-
-  isBusy = true;
-  passLeft[player]--;
-  streaks[player] = 0;
-
-  setStats[player].wrong++;
-  SFX.wrong();
-  
-  const w = currentWord();
-  showResultOverlay(player, "pass", "PAS", "SIRA GEÇTİ"); // Hızlı Mesaj
-
-  // Sadece Vocab ise öğret
-  if (gameMode === "vocabulary") {
-      const correctText = w[1]; 
-      await speakBrowser(correctText, "tr-TR");
-  } else {
-      await new Promise(r => setTimeout(r, 800)); // Kısa bekle
-  }
-
-  switchTurnNewWord(); 
-}
-
-/* =========================
-   STT
-   ========================= */
-function normalize(s){
-  return String(s||"").toLowerCase()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
-    .replace(/[.,!?]/g,"").trim();
-}
-
-micA.addEventListener("click", ()=> listen("A"));
-micB.addEventListener("click", ()=> listen("B"));
-
-function listen(player){
-  if(isBusy) return;
-  if(player !== turn) return;
-
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if(!SR){ alert("Tarayıcı desteklemiyor."); return; }
-
-  try{ window.speechSynthesis.cancel(); }catch{}
-
-  isBusy = true;
-  micA.disabled = true; micB.disabled = true;
-  setWave("listening", `DİNLİYOR: ${player}`);
-
-  const rec = new SR();
-  rec.lang = (gameMode === "vocabulary") ? "tr-TR" : LANG_CONFIG[currentLang].code;
-  rec.interimResults = false;
-  rec.continuous = false;
-
-  const tm = setTimeout(()=>{ try{ rec.stop(); }catch{} }, 5000);
-
-  let got = false;
-
-  rec.onresult = (e)=>{
-    clearTimeout(tm);
-    got = true;
-    const text = e.results?.[0]?.[0]?.transcript || "";
-    try{ rec.stop(); }catch{}
-    checkResult(player, text);
-  };
-  rec.onerror = ()=>{ clearTimeout(tm); if(!got){ got = true; cleanupNoResult(); } };
-  rec.onend = ()=>{ clearTimeout(tm); if(!got){ got = true; cleanupNoResult(); } };
-
-  try{ rec.start(); }catch{ cleanupNoResult(); }
-
-  function cleanupNoResult(){
-    isBusy = false;
-    setWave("idle", `SIRA: OYUNCU ${turn}`);
-    enableTurnButtons();
-  }
-}
-
-async function checkResult(player, spoken){
-  const w = currentWord();
-  const target = (gameMode === "pronunciation") ? w[0] : w[1];
-  const tClean = normalize(target);
-  const sClean = normalize(spoken);
-
-  const ok = !!sClean && sClean.length >= Math.max(2, Math.floor(tClean.length * 0.45)) && (
-    (" " + sClean + " ").includes(" " + tClean + " ") ||
-    (" " + tClean + " ").includes(" " + sClean + " ")
-  );
-
-  const isFinal = (idx === wordList.length - 1);
-
-  if(ok){
-    SFX.correct();
-    const pts = isFinal ? "+20" : "+10";
-    showResultOverlay(player, "success", "HARİKA!", pts);
-
-    setStats[player].correct += (isFinal ? 2 : 1);
-    streaks[player]++;
-    if(streaks[player] % 2 === 0 && passLeft[player] < 5) passLeft[player]++;
-
-    setTimeout(()=>{
-      isBusy = false;
-      advanceWord(); 
-    }, 900);
-    return;
-  }
-
-  // YANLIŞ
-  SFX.wrong();
-  setStats[player].wrong++;
-  streaks[player] = 0;
-
-  const hint = `Doğrusu: ${w[0]} = ${w[1]}`;
-  showResultOverlay(player, "error", "YANLIŞ!", hint);
-
-  // Sadece Vocab ise öğret
-  if (gameMode === "vocabulary") {
-      const correctText = w[1];
-      await speakBrowser(correctText, "tr-TR");
-  } else {
-      await new Promise(r => setTimeout(r, 1000));
-  }
-
-  switchTurnNewWord(); // Yanlışsa da GEÇ
-}
-
-/* =========================
-   GEÇİŞ & YENİ KELİME
-   ========================= */
-function switchTurnNewWord(){
-  isBusy = false;
-  turn = (turn === "A") ? "B" : "A";
-  advanceWord();
-}
-
-function advanceWord(){
-  idx++;
-  renderWord();
-  updateUI();
-  if(idx < wordList.length){
-    if(gameMode === "vocabulary") setTimeout(autoSpeakHint, 500);
-    else { isBusy = false; enableTurnButtons(); }
-  }
-}
-
-function showResultOverlay(player, type, title, sub){
-  const ov = $(player === "A" ? "ovA" : "ovB");
-  const icon = type==='success'?'✅':(type==='pass'?'🟡':'❌');
-  ov.innerHTML = `<div class="res-icon">${icon}</div><div class="res-text">${title}</div><div class="res-sub">${sub}</div>`;
-  ov.className = `result-overlay show ${type}`;
-  setTimeout(()=>{ ov.classList.remove("show"); }, 1100);
-}
-
-function setWave(state, text){
-  $("waveBox").className = "wave-box " + (state || "idle");
-  $("waveStatus").textContent = text || "HAZIR";
-}
-
-function handleSetEnd(){
-  const scoreA = setStats.A.correct * 10;
-  const scoreB = setStats.B.correct * 10;
-
-  let winner = "";
-  if(scoreA > scoreB){ winner="A"; setsWon.A++; }
-  else if(scoreB > scoreA){ winner="B"; setsWon.B++; }
-  else winner = "BERABERE";
-
-  if(setsWon.A >= TARGET_SETS || setsWon.B >= TARGET_SETS){
-    handleMatchOver();
-    return;
-  }
-
-  $("setModal").style.display = "flex";
-  $("setTitle").textContent = (winner==="BERABERE") ? "SET BERABERE!" : `SETİ OYUNCU ${winner} KAZANDI!`;
-  $("setResult").innerHTML = `OYUNCU A: ${scoreA} Puan<br>OYUNCU B: ${scoreB} Puan<br><small>Durum: ${setsWon.A} - ${setsWon.B}</small>`;
-
-  $("nextSetBtn").onclick = async ()=>{
-    $("setModal").querySelector(".modal-title").textContent = "YENİ KELİMELER...";
-    // YENİ SET, YENİ KELİMELER (Havuzdan Çek)
-    startSet();
-    $("setModal").style.display = "none";
-  };
-}
-
-function handleMatchOver(){
-  const champ = (setsWon.A > setsWon.B) ? "OYUNCU A" : "OYUNCU B";
-  $("matchModal").style.display = "flex";
-  $("matchResult").textContent = `${champ} KAZANDI!`;
-  startFireworks();
-  
-  setTimeout(()=>{
-    if(fwInterval) clearInterval(fwInterval);
-    fwInterval = null;
-    cvs.style.display = "none";
-    particles = [];
-  }, 6000);
-}
-
-let fwInterval=null;
-const cvs=$("fireworksCanvas"), ctx=cvs.getContext("2d");
-let particles=[];
-function startFireworks(){
-  if(fwInterval) clearInterval(fwInterval);
-  particles=[]; cvs.style.display="block";
-  cvs.width=window.innerWidth; cvs.height=window.innerHeight;
-
-  fwInterval = setInterval(()=>{
-    const x = Math.random()*cvs.width;
-    for(let i=0;i<30;i++){
-      particles.push({
-        x:x, y:cvs.height*0.35+Math.random()*cvs.height*0.35,
-        vx:(Math.random()-.5)*10, vy:(Math.random()-.5)*10,
-        life:100, color:`hsl(${Math.random()*360}, 100%, 50%)`, alpha:1
-      });
-    }
-  }, 800);
-
-  requestAnimationFrame(loopFireworks);
-}
-function loopFireworks(){
-  if(cvs.style.display==="none") return;
-  ctx.globalCompositeOperation='destination-out';
-  ctx.fillStyle='rgba(0,0,0,0.1)';
-  ctx.fillRect(0,0,cvs.width,cvs.height);
-  ctx.globalCompositeOperation='lighter';
-
-  for(let i=0;i<particles.length;i++){
-    const p=particles[i];
-    p.x+=p.vx; p.y+=p.vy; p.vy+=0.1; p.life--; p.alpha=p.life/100;
-    ctx.beginPath(); ctx.arc(p.x,p.y,3,0,Math.PI*2);
-    ctx.fillStyle=p.color; ctx.globalAlpha=p.alpha; ctx.fill();
-    if(p.life<=0){ particles.splice(i,1); i--; }
-  }
-  requestAnimationFrame(loopFireworks);
-}
-window.addEventListener("resize", ()=>{
-  if(cvs.style.display==="block"){ cvs.width=window.innerWidth; cvs.height=window.innerHeight; }
-});
 </script>
 </body>
 </html>
