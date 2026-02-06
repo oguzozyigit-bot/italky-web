@@ -43,6 +43,7 @@ html,body{margin:0;width:100%;height:100%;background:var(--bg);font-family:Outfi
   opacity:0; transition: height .12s ease, opacity .12s ease;
 }
 
+/* ✅ METEOR TAŞ GÖRÜNTÜSÜ */
 .meteor{position:absolute;top:-160px;width:118px;height:132px;display:flex;align-items:center;justify-content:center;will-change: transform, top}
 .meteor .meteor-body{
   width:82px;height:82px;border-radius:38% 62% 63% 37% / 41% 44% 56% 59%; 
@@ -104,6 +105,8 @@ html,body{margin:0;width:100%;height:100%;background:var(--bg);font-family:Outfi
 .lang{padding:10px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:12px;font-weight:900;cursor:pointer;font-size:12px;color:#fff}
 .lang.active{border-color:var(--blue);background:rgba(0,243,255,0.12)}
 .mainbtn{width:100%;padding:16px;margin-top:12px;border:none;border-radius:16px;font-weight:900;background:var(--blue);color:#000;cursor:pointer}
+.mainbtn.sec { background: #222; color: #fff; border: 1px solid var(--border); }
+
 .hidden{display:none!important}
 </style>
 </head>
@@ -153,9 +156,9 @@ html,body{margin:0;width:100%;height:100%;background:var(--bg);font-family:Outfi
   <div class="card">
     <h2 id="endTitle" style="color:var(--green)">SEKTÖR TEMİZ</h2>
     <p id="endStats" style="font-size:14px;margin:18px 0;line-height:1.6"></p>
-    <button class="mainbtn" id="btnContinue">DEVAM ET (MOMENTUM KORU 🚀)</button>
+    <button class="mainbtn" id="btnContinue">DEVAM ET (MOMENTUM 🚀)</button>
     <button class="mainbtn" id="btnBank" style="background:var(--gold)">BANKALA (%5 BONUS + TAMİR 🛡️)</button>
-    <button class="mainbtn" style="background:#222;color:#fff" id="btnExit">KAYDET VE ÇIK</button>
+    <button class="mainbtn sec" id="btnExit">KAYDET VE ÇIK</button>
   </div>
 </div>
 
@@ -356,6 +359,12 @@ function checkAnswer(btn, sel, correct){
     updateUI();
     toast(`DOĞRUSU: ${correct}`, "var(--red)");
     if (lives <= 0) finishSet(true);
+    
+    // Yanlışta butonları tekrar aç (öğrenmeye devam)
+    setTimeout(()=> {
+        btn.classList.remove("wrong");
+        setButtonsState(false);
+    }, 600);
   }
 }
 
@@ -432,7 +441,12 @@ $("btnBank").onclick = ()=>{
   initGame(true);
 };
 
-$("btnExit").onclick = ()=> location.reload();
+// ✅ ÇIKIŞ BUTONU: Sayfayı yeniler veya yönlendirir başkanım
+$("btnExit").onclick = ()=> {
+    if(confirm("Kayıtlarınızı güvenli bir şekilde kapatmak istiyor musunuz başkanım?")) {
+        location.href = '/pages/game.html'; // Ana oyun sayfasına yönlendirir
+    }
+};
 
 window.onload = ()=>{ updatePB(); updateUI(); };
 </script>
