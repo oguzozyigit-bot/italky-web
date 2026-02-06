@@ -85,7 +85,7 @@
   <div class="modal-wrap" id="endModal" style="display:none">
     <div class="modal-card">
       <h2 id="endTitle">SET TAMAMLANDI</h2>
-      <p id="endStats"></p>
+      <p id="endStats" style="margin: 15px 0; line-height: 1.6;"></p>
       <button class="btn-primary" id="nextSetBtn">BİR SET DAHA!</button>
     </div>
   </div>
@@ -114,8 +114,14 @@ function speakSentence(text) {
 
 async function initGame() {
   try {
+    // 1. Havuzu tazeleyerek çek
     const rawPool = await loadLangPool(currentLang);
+    if (!rawPool) throw new Error("Dil havuzu boş");
+
+    // 2. Her oyun modu için benzersiz bir 'used' listesi oluşturarak tekrarları önle
     const { used, save } = createUsedSet(`used_sentence_v53_${currentLang}_${currentDiff}`);
+
+    // 3. Havuzu her seferinde baştan karıştırarak çeşitliliği artır
     const randomizedPool = [...rawPool].sort(() => Math.random() - 0.5);
 
     wordList = pick(randomizedPool, SET_SIZE, used, save, (it) => {
@@ -126,14 +132,19 @@ async function initGame() {
     });
 
     if(wordList.length === 0) {
-        alert("Havuzda yeni kelime kalmadı başkanım!");
+        alert("Havuzda yeni kelime kalmadı başkanım! Kullanım verileri temizleniyor...");
+        localStorage.removeItem(`used_sentence_v53_${currentLang}_${currentDiff}`);
+        location.reload();
         return;
     }
 
     $("startModal").style.display = "none";
     currentIndex = 0;
     startRound();
-  } catch (e) { alert("Havuz yüklenemedi!"); }
+  } catch (e) { 
+    console.error("Yükleme Hatası:", e);
+    alert("Havuz yüklenemedi başkanım! Lütfen /js/langpool.js dosyasını kontrol edin."); 
+  }
 }
 
 function startRound() {
@@ -141,7 +152,10 @@ function startRound() {
   const data = wordList[currentIndex];
   currentRaw = String(data.w || "").trim();
   currentSentence = String(data.sentence || "");
+  
+  // Normalizasyon: Aksanlı harfleri klavye uyumu için temizle
   currentWord = currentRaw.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().replace(/[^A-ZÇĞİÖŞÜ-]/g, "");
+  
   mistakes = 0;
   discovered = new Array(currentWord.length).fill(false);
   roundStartTime = Date.now();
@@ -193,6 +207,7 @@ function handleGuess(char, btn) {
     renderWord();
     if (discovered.every(v => v)) {
       calculatePuan();
+      // Kelime bitince cümleyi oku
       setTimeout(() => speakSentence(currentSentence), 200);
       setTimeout(() => { currentIndex++; startRound(); }, 1500);
     }
@@ -203,6 +218,7 @@ function handleGuess(char, btn) {
     updateUI();
     if (mistakes >= 8) {
       lives--;
+      // Can kaybında cümleyi oku ki kullanıcı öğrensin
       setTimeout(() => speakSentence(currentSentence), 200);
       if (lives <= 0) finishSet();
       else { currentIndex++; setTimeout(() => startRound(), 1500); }
@@ -244,7 +260,7 @@ function finishSet() {
   $("endStats").innerHTML = `Skor: <b>${totalScore}</b><br>Seri: <b>🔥 ${maxStreak}</b><br>Kusursuz: <b>🏆 ${perfectCount}</b>`;
 }
 
-// ✅ EVENT LISTENERS (WINDOW'A BAĞLAMAK YERİNE DIRECT ATTACH)
+// ✅ MODERN EVENT BINDING
 document.querySelectorAll(".lang-btn").forEach(btn => {
     btn.onclick = () => {
         currentLang = btn.dataset.lang;
