@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-  <title>italkyAI • Gap Master Survival</title>
+  <title>italkyAI • Gap Master Elite Survival</title>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&display=swap" rel="stylesheet">
   <style>
     :root { 
@@ -19,6 +19,7 @@
     .progress-bar { width: calc(100% - 40px); height: 5px; background: rgba(255,255,255,0.1); border-radius: 3px; margin: 0 20px 10px; overflow: hidden; }
     .progress-fill { height: 100%; background: var(--c-neon-blue); width: 0%; transition: width 0.5s ease; box-shadow: 0 0 12px var(--c-neon-blue); }
     .stats-row { padding: 5px 20px; display: flex; justify-content: space-between; align-items: center; }
+    #lifeBar { transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
     .score-pill { color: var(--c-neon-green); font-weight: 900; font-size: 20px; }
     @keyframes scorePop{ from{ transform:scale(1.25); } to{ transform:scale(1); } }.score-pop{ animation: scorePop .18s ease; }
     .stage { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 10px 20px; gap: 15px; }
@@ -26,7 +27,7 @@
     .sentence-text { text-transform: uppercase; letter-spacing: .3px; font-size: 22px; font-weight: 700; line-height: 1.5; }
     .gap-box { color: var(--c-neon-blue); border-bottom: 3px solid var(--c-neon-blue); padding: 0 8px; font-weight: 800; }
     .translation-text { font-size: 16px; color: var(--c-neon-green); font-style: italic; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; margin-top: 15px; }
-    #resInfo { font-size: 13px; color: var(--c-neon-blue); margin-top: 10px; font-weight: 600; opacity: 0; transition: opacity 0.3s; }
+    #resInfo { font-size: 12px; color: var(--c-neon-blue); margin-top: 10px; font-weight: 700; opacity: 0; transition: opacity 0.3s; }
     .options-grid { width: 100%; display: grid; grid-template-columns: 1fr; gap: 12px; }
     .opt-btn { position:relative; overflow:hidden; width: 100%; padding: 18px; background: var(--glass); border: 1px solid var(--border); border-radius: 20px; color: #fff; font-size: 17px; font-weight: 700; cursor: pointer; transition: all 0.2s; box-shadow: 0 10px 26px rgba(0,0,0,.42); }
     .opt-btn:active { transform: translateY(3px); }
@@ -38,6 +39,8 @@
     .modal-card { width: 100%; max-width: 360px; background: #08080c; border: 1px solid var(--border); border-radius: 36px; padding: 40px 30px; text-align: center; }
     .btn-main { width: 100%; padding: 18px; background: var(--c-neon-green); color: #000; border: none; border-radius: 20px; font-weight: 900; cursor: pointer; margin-top: 12px; }
     .btn-secondary { width: 100%; padding: 18px; background: var(--glass); color: #fff; border: 1px solid var(--border); border-radius: 20px; font-weight: 700; cursor: pointer; margin-top: 12px; }
+    .lang-btn{ font-size:24px; padding:10px; border-radius:16px; background: var(--glass); border: 1px solid transparent; cursor:pointer; margin:4px; transition:.2s; }
+    .lang-btn.active{ border-color: var(--c-neon-blue); background: rgba(0,243,255,0.15); transform: scale(1.08); }
   </style>
 </head>
 <body>
@@ -67,8 +70,12 @@
     <div class="modal-card">
       <h2 style="margin:0 0 20px;">GAP MASTER MASTER</h2>
       <div style="margin-bottom:25px;">
-        <button onclick="setLang('en',this)" class="lang-btn active" style="font-size:24px; padding:10px; border-radius:16px; background: var(--glass); border: 1px solid transparent; cursor:pointer; margin:4px;">🇬🇧</button>
-        </div>
+        <button onclick="setLang('en',this)" class="lang-btn active">🇬🇧</button>
+        <button onclick="setLang('de',this)" class="lang-btn">🇩🇪</button>
+        <button onclick="setLang('fr',this)" class="lang-btn">🇫🇷</button>
+        <button onclick="setLang('es',this)" class="lang-btn">🇪🇸</button>
+        <button onclick="setLang('it',this)" class="lang-btn">🇮🇹</button>
+      </div>
       <button class="btn-main" onclick="initGame('A2')">KOLAY SEVİYE</button>
       <button class="btn-main" style="background:#4338ca; color:#fff;" onclick="initGame('B1')">ORTA SEVİYE</button>
       <button class="btn-main" style="background:#701a75; color:#fff;" onclick="initGame('B2')">ZOR SEVİYE</button>
@@ -79,7 +86,8 @@
     <div class="modal-card">
       <h2 id="endTitle">SET TAMAMLANDI</h2>
       <div id="endStats" style="text-align:left; margin:20px 0; font-size:15px; line-height:2;"></div>
-      <button class="btn-main" id="btnContinue">DEVAM ET (PUANIN KALSIN)</button>
+      <button class="btn-main" id="btnContinue">DEVAM ET (RİSK)</button>
+      <button class="btn-main" id="btnBank" style="background:var(--c-neon-blue)">BANKALA (%5 BONUS)</button>
       <button class="btn-secondary" onclick="location.reload()">SIFIRLA VE BAŞLA</button>
     </div>
   </div>
@@ -89,12 +97,14 @@ import { loadLangPool, createUsedSet, pick } from "/js/langpool.js";
 
 const $ = id => document.getElementById(id);
 let currentLang = 'en', currentDiff = 'A2', puzzles = [], currentIdx = 0;
-let score = 0, lives = 3, maxLives = 3, streak = 0, totalCorrect = 0, totalAnswered = 0, isBusy = false, startTime = 0;
+let score = 0, lives = 3, maxLives = 3, streak = 0, totalCorrect = 0, totalAnswered = 0, isBusy = false, startTime = 0, lastSpoken = 0;
 
 const FALLBACKS = {
   en:["TIME","WORLD","HOUSE","WATER","FRIEND","GO","LIFE","DAY"],
-  de:["ZEIT","WELT","HAUS","WASSER","FREUND","GEHEN","LEBEN","TAG"]
-  // ... diğerleri eklenebilir başkanım
+  de:["ZEIT","WELT","HAUS","WASSER","FREUND","GEHEN","LEBEN","TAG"],
+  fr:["TEMPS","MONDE","MAISON","EAU","AMI","ALLER","VIE","JOUR"],
+  es:["TIEMPO","MUNDO","CASA","AGUA","AMIGO","IR","VIDA","DÍA"],
+  it:["TEMPO","MONDO","CASA","ACQUA","AMICO","ANDARE","VITA","GIORNO"]
 };
 
 function escapeRegExp(s){ return String(s ?? "").replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
@@ -119,10 +129,8 @@ window.initGame = async (diff) => {
   try {
     currentDiff = diff;
     const rawPool = await loadLangPool(currentLang);
-    if (!rawPool || !rawPool.items) throw new Error("Havuz boş");
-
     const randomizedItems = shuffle(rawPool.items);
-    const { used, save } = createUsedSet(`gap_master_v55_${currentLang}_${diff}`);
+    const { used, save } = createUsedSet(`gap_master_v56_${currentLang}_${diff}`);
     
     if (totalAnswered === 0) {
       maxLives = (diff === "A2") ? 4 : 3;
@@ -136,8 +144,8 @@ window.initGame = async (diff) => {
     });
 
     if (puzzles.length === 0) {
-        alert("Havuz bitti başkanım! Başa sarılıyor.");
-        localStorage.removeItem(`gap_master_v55_${currentLang}_${diff}`);
+        alert("Havuz tazelemek için liste temizleniyor başkanım!");
+        localStorage.removeItem(`gap_master_v56_${currentLang}_${diff}`);
         location.reload(); return;
     }
 
@@ -145,7 +153,7 @@ window.initGame = async (diff) => {
     $('startModal').style.display = 'none';
     $('endModal').style.display = 'none';
     currentIdx = 0; loadPuzzle();
-  } catch (e) { alert("Sistem hatası!"); }
+  } catch (e) { alert("Havuz yüklenemedi!"); }
 };
 
 function loadPuzzle() {
@@ -167,8 +175,6 @@ function loadPuzzle() {
   
   const n = s => norm(s).trim().toUpperCase();
   const correctN = n(p.w);
-  
-  // ✅ Şık Filtresi: Doğru şıkla çakışmayı ve tekrarları engelle başkanım
   let wrongs = shuffle(puzzles.filter(x => n(x.w) !== correctN).map(x => x.w));
   const fallbackList = FALLBACKS[currentLang] || FALLBACKS.en;
   
@@ -180,9 +186,7 @@ function loadPuzzle() {
   };
 
   wrongs.forEach(w => { if(uniqueWrongs.length < 4) addWrong(w); });
-  while (uniqueWrongs.length < 4) {
-    addWrong(fallbackList[uniqueWrongs.length % fallbackList.length]);
-  }
+  while (uniqueWrongs.length < 4) addWrong(fallbackList[uniqueWrongs.length % fallbackList.length]);
   
   renderOptions(shuffle([p.w, ...uniqueWrongs]));
   startTime = Date.now();
@@ -211,18 +215,19 @@ function handleChoice(val, btn) {
   if (val === correctVal) {
     streak++; totalCorrect++;
     
-    // ✅ Can Kazanımı: Sadece hızlıysa (7sn altı) ve 10 comboda bir başkanım
     let comboMsg = "";
-    if (streak > 0 && streak % 10 === 0 && timeTaken < 7) {
+    if (streak > 0 && streak % 10 === 0 && timeTaken < 7 && lives < maxLives) {
       lives = Math.min(lives + 1, maxLives);
       comboMsg = " • ❤️ CAN KAZANDIN!";
+      // Pop efekti başkanım
+      $('lifeBar').style.transform = "scale(1.2)";
+      setTimeout(()=> $('lifeBar').style.transform="scale(1)", 200);
     }
 
-    // ✅ Skor Tavanı: Çarpanı 6'da kilitledik başkanım
-    let comboMult = streak <= 3 ? streak : (3 + (streak - 3) * 0.25);
-    comboMult = Math.min(comboMult, 6); 
-    
+    let comboMult = Math.min(streak <= 3 ? streak : (3 + (streak - 3) * 0.25), 6); 
     let speedBonus = timeTaken < 4 ? 8 : (timeTaken < 7 ? 5 : (timeTaken < 10 ? 2 : 0));
+    if (currentDiff === "B2") speedBonus = Math.floor(speedBonus * 0.7);
+
     const roundScore = Math.round(10 * comboMult + speedBonus);
     score += roundScore;
     
@@ -230,7 +235,7 @@ function handleChoice(val, btn) {
     $('scoreTxt').classList.remove('score-pop'); void $('scoreTxt').offsetWidth;
     $('scoreTxt').classList.add('score-pop');
     
-    $('resInfo').textContent = `+${roundScore} PUAN (X${comboMult.toFixed(1)})${comboMsg}`;
+    $('resInfo').textContent = `+${roundScore} PUAN • STREAK ${streak} • MULT x${comboMult.toFixed(1)}${comboMsg}`;
     $('resInfo').style.opacity = "1";
     speak(p.sentence);
   } else {
@@ -239,7 +244,7 @@ function handleChoice(val, btn) {
     $('resInfo').textContent = `DOĞRU: ${correctVal}`;
     $('resInfo').style.opacity = "1";
     document.querySelectorAll('.opt-btn').forEach(b => { if(norm(b.textContent) === correctVal) b.classList.add('correct'); });
-    speak(correctVal); // Yanlışta sadece doğru kelimeyi oku başkanım
+    speak(correctVal); 
   }
 
   $('scoreTxt').textContent = score;
@@ -251,22 +256,36 @@ function handleChoice(val, btn) {
 function showFinal(gameEnded) {
   $('endModal').style.display = 'flex';
   const acc = totalAnswered ? Math.round((totalCorrect/totalAnswered)*100) : 0;
+  
   if (gameEnded) {
     $('endTitle').textContent = "OYUN BİTTİ 💀";
     $('btnContinue').style.display = 'none';
+    $('btnBank').style.display = 'none';
   } else {
     $('endTitle').textContent = "SET TAMAMLANDI 🏆";
     $('btnContinue').style.display = 'block';
     $('btnContinue').onclick = () => initGame(currentDiff);
+    
+    $('btnBank').style.display = 'block';
+    $('btnBank').onclick = () => {
+      score += Math.round(score * 0.05); // %5 banka bonusu başkanım
+      lives = maxLives;
+      streak = 0; // Bankalayınca streak sıfırlanır başkanım
+      initGame(currentDiff);
+    };
   }
   $('endStats').innerHTML = `Skor: <b>${score}</b><br>Doğruluk: <b>%${acc}</b><br>Can: <b>${lives} ❤️</b>`;
 }
 
 function speak(t) {
+  const now = Date.now();
+  if (now - lastSpoken < 250) return;
+  lastSpoken = now;
   window.speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(t);
   const m = { en:'en-US', de:'de-DE', fr:'fr-FR', es:'es-ES', it:'it-IT' };
-  u.lang = m[currentLang]; u.rate = 0.85;
+  u.lang = m[currentLang] || 'en-US';
+  u.rate = 0.85;
   window.speechSynthesis.speak(u);
 }
 </script>
