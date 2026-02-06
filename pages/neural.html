@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>ITALKY • Neural Match — Elite Survival</title>
+<title>ITALKY • Neural Match — Grand Master</title>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
 <style>
@@ -23,6 +23,9 @@ html,body{margin:0;width:100%;height:100%;background:var(--bg);font-family:Outfi
 .title{font-family:Space Grotesk;font-weight:900;color:var(--pink);letter-spacing:1px;text-shadow:0 0 12px var(--pink)}
 .pb-badge{font-size:10px;padding:4px 8px;border-radius:6px;background:var(--purple);color:#fff;font-weight:800}
 
+/* ✅ Momentum Chip UI */
+.momentum-chip { font-size: 11px; background: var(--pink); color: #000; padding: 4px 10px; border-radius: 12px; font-weight: 900; box-shadow: 0 0 10px var(--pink); transition: 0.3s; }
+
 .stats{display:flex;justify-content:space-between;padding:10px 16px;font-family:Space Grotesk;color:var(--cyan);border-bottom:1px dashed var(--border)}
 .stats span b{color:#fff}
 
@@ -32,14 +35,13 @@ html,body{margin:0;width:100%;height:100%;background:var(--bg);font-family:Outfi
 .card{perspective:1000px;cursor:pointer}
 .inner{width:100%;height:100%;transition:transform .4s;transform-style:preserve-3d;border-radius:14px}
 .card.flipped .inner{transform:rotateY(180deg)}
-.card.matched .inner{transform:rotateY(180deg);box-shadow:0 0 18px var(--green)}
+.card.matched .inner{transform:rotateY(180deg);box-shadow:0 0 18px var(--green); animation: pulse 0.4s ease-out;}
+@keyframes pulse { 0% { transform: rotateY(180deg) scale(1); } 50% { transform: rotateY(180deg) scale(1.05); } 100% { transform: rotateY(180deg) scale(1); } }
 
 .face{position:absolute;inset:0;border-radius:14px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);backface-visibility:hidden}
 .front{background:linear-gradient(135deg,rgba(255,255,255,.06),rgba(255,255,255,.01));color:var(--purple);font-size:22px}
 .front::after{content:"🧠";opacity:.5}
 .back{background:rgba(30,0,50,.95);transform:rotateY(180deg);font-weight:800;font-size:11px;text-align:center;padding:6px;word-break:break-word}
-
-/* ✅ Renkli Kart Arkaları */
 .back.tr { color: var(--green); }
 .back.fx { color: #fff; }
 
@@ -54,7 +56,7 @@ html,body{margin:0;width:100%;height:100%;background:var(--bg);font-family:Outfi
 .btn.sec{background:transparent;border:1px solid #fff;color:#fff}
 .hidden{display:none!important}
 
-#resInfo { position: absolute; top: 80px; left: 50%; transform: translateX(-50%); z-index: 10; padding: 8px 16px; background: var(--purple); color: #fff; border-radius: 20px; font-size: 12px; font-weight: 700; opacity: 0; transition: 0.3s; pointer-events: none; white-space: nowrap; box-shadow: 0 0 15px var(--purple); }
+#resInfo { position: absolute; top: 120px; left: 50%; transform: translateX(-50%); z-index: 10; padding: 10px 20px; background: var(--purple); color: #fff; border-radius: 24px; font-size: 13px; font-weight: 800; opacity: 0; transition: 0.3s; pointer-events: none; white-space: nowrap; box-shadow: 0 0 20px var(--purple); }
 </style>
 </head>
 
@@ -66,6 +68,7 @@ html,body{margin:0;width:100%;height:100%;background:var(--bg);font-family:Outfi
   <div class="header">
     <div class="title">NEURAL MATCH</div>
     <div id="pbBadge" class="pb-badge">PB: 0</div>
+    <div id="momChip" class="momentum-chip">x1.00</div>
     <div id="soundBtn" style="cursor:pointer">🔊</div>
   </div>
 
@@ -75,7 +78,7 @@ html,body{margin:0;width:100%;height:100%;background:var(--bg);font-family:Outfi
     <span>EŞLEŞME: <b id="matchVal">0</b>/8</span>
   </div>
 
-  <div id="resInfo">TOAST</div>
+  <div id="resInfo">BAŞARI!</div>
 
   <div class="game" id="game">
     <div class="grid-cards" id="grid"></div>
@@ -85,7 +88,7 @@ html,body{margin:0;width:100%;height:100%;background:var(--bg);font-family:Outfi
 <div class="modal" id="start">
   <div class="card-modal">
     <h2 style="color:var(--cyan);margin:0;font-family:Space Grotesk">NEURAL LINK</h2>
-    <p style="opacity:.7;font-size:13px;margin:10px 0">Kelime ile anlamı eşleştirerek ilerle.</p>
+    <p style="opacity:.7;font-size:13px;margin:10px 0">Hatasız eşleşme ile momentum kazan.</p>
     <div class="langs">
       <div class="lang active" data-lang="en">EN</div>
       <div class="lang" data-lang="de">DE</div>
@@ -102,10 +105,10 @@ html,body{margin:0;width:100%;height:100%;background:var(--bg);font-family:Outfi
     <h2 id="endTitle" style="color:var(--green);margin:0">SET TAMAMLANDI</h2>
     <p style="margin:12px 0">
       Toplam Skor: <b id="finalScore"></b><br>
-      Yanlış Hamle: <b id="finalWrong"></b>
+      Set Hatası: <b id="finalWrong"></b>
     </p>
-    <button class="btn" id="btnContinue">DEVAM ET (x1.10 MOMENTUM 🚀)</button>
-    <button class="btn" id="btnBank" style="background:var(--cyan)">BANKALA (%5 BONUS 💰)</button>
+    <button class="btn" id="btnContinue">DEVAM ET (MOMENTUM KORU)</button>
+    <button class="btn" id="btnBank" style="background:var(--cyan)">BANKALA (<span id="bankBonusText">0</span> PUAN)</button>
     <button class="btn sec" id="btnFinish">BİTİR VE KAYDET</button>
   </div>
 </div>
@@ -131,9 +134,9 @@ function shuffle(a) {
   return arr;
 }
 
-// ✅ Toast Mesaj Sistemi başkanım
-function toastRes(msg){
+function toastRes(msg, color = 'var(--purple)'){
   $("resInfo").textContent = msg;
+  $("resInfo").style.background = color;
   $("resInfo").style.opacity = "1";
   clearTimeout(window.__resTo);
   window.__resTo = setTimeout(() => $("resInfo").style.opacity = "0", 1800);
@@ -158,7 +161,6 @@ $("soundBtn").onclick = () => {
   $("soundBtn").textContent = muted ? "🔇" : "🔊";
 };
 
-// ✅ Start Mantığı Düzenlendi başkanım
 $("startBtn").onclick = async () => {
   $("start").classList.add("hidden");
   $("game").style.display = "flex";
@@ -167,11 +169,9 @@ $("startBtn").onclick = async () => {
   await initGame(true);
 };
 
-// ✅ initGame İmzası ve Mantığı Yenilendi başkanım
 async function initGame(isNewRun = false) {
   $("btnContinue").disabled = false;
   $("btnBank").disabled = false;
-
   matched = 0; moves = 0; wrongMoves = 0; flipped = []; locked = false; setScore = 0;
   
   if (isNewRun) {
@@ -183,23 +183,21 @@ async function initGame(isNewRun = false) {
   
   const pool = await loadLangPool(lang);
   const randomizedItems = shuffle([...pool.items]);
-  
-  const USED_KEY = `used_neural_v2_${lang}`;
+  const USED_KEY = `used_neural_v3_${lang}`;
   const {used, save} = createUsedSet(USED_KEY);
   
-  const picked = pick({items: randomizedItems}, 8, used, save);
+  let picked = pick({items: randomizedItems}, 8, used, save);
 
-  // ✅ Hafıza Mührü
+  // ✅ SOFT RESET: Havuz bittiyse reload yapma, used set'i temizle başkanım
+  if (picked.length < 8) {
+      localStorage.removeItem(USED_KEY);
+      return initGame(isNewRun); 
+  }
+
   try { 
     save(picked.map(x => x.w)); 
-    await Promise.resolve(); // Microtask flush
+    await Promise.resolve();
   } catch(e){}
-
-  if (picked.length < 8) {
-      alert("Havuz tükendi başkanım! Liste temizleniyor.");
-      localStorage.removeItem(USED_KEY);
-      location.reload(); return;
-  }
 
   cards = [];
   picked.forEach((it, i) => {
@@ -227,15 +225,9 @@ function render() {
 
 function clickCard(i, el) {
   if (locked || el.classList.contains("flipped") || el.classList.contains("matched")) return;
-
   el.classList.add("flipped");
   flipped.push({i, data: cards[i], el});
-
-  if (flipped.length === 2) {
-    moves++;
-    updateStats();
-    check();
-  }
+  if (flipped.length === 2) { moves++; updateStats(); check(); }
 }
 
 function check() {
@@ -243,32 +235,31 @@ function check() {
   const [a, b] = flipped;
   if (a.data.pair === b.data.pair) {
     play("match");
+    // ✅ FIX: speakCard dili hatasız gönderiliyor başkanım
     const speakCard = a.data.lang !== "tr" ? a.data : b.data;
-    speak(speakCard.text, speakCard.FX_LANG || lang);
+    speak(speakCard.text, speakCard.lang);
     
     setTimeout(() => {
       a.el.classList.add("matched");
       b.el.classList.add("matched");
       matched++;
-      
-      // ✅ Adil Skor Formülü başkanım
+      // ✅ Puan Formülü
       const roundPoints = Math.round(Math.max(10, 60 - (wrongMoves * 6)) * momentum);
       setScore += roundPoints;
       totalScore += roundPoints;
-      
-      flipped = [];
-      locked = false;
-      updateStats();
+      flipped = []; locked = false; updateStats();
       if (matched === 8) finish();
     }, 500);
   } else {
     play("error");
-    wrongMoves++; // Yanlış hamle sayacı başkanım
+    wrongMoves++;
+    // ✅ MOMENTUM BREAK: Yanlışta momentum kırılır başkanım
+    momentum = Math.max(1.0, momentum - 0.10);
+    updateStats();
     setTimeout(() => {
       a.el.classList.remove("flipped");
       b.el.classList.remove("flipped");
-      flipped = [];
-      locked = false;
+      flipped = []; locked = false;
     }, 800);
   }
 }
@@ -277,6 +268,7 @@ function updateStats() {
   $("moveVal").textContent = moves;
   $("matchVal").textContent = matched;
   $("scoreVal").textContent = totalScore;
+  $("momChip").textContent = `x${momentum.toFixed(2)}`;
 }
 
 function saveRecord() {
@@ -292,29 +284,31 @@ function finish() {
   play("win");
   const isPB = saveRecord();
   $("endTitle").textContent = isPB ? "YENİ REKOR! 👑" : "SET TAMAMLANDI";
-  $("finalMoves").textContent = wrongMoves;
+  $("finalWrong").textContent = wrongMoves;
   $("finalScore").textContent = totalScore;
+  
+  // ✅ Banka Bonus Önizleme
+  $("bankBonusText").textContent = `+${Math.round(setScore * 0.05)}`;
+  
   $("end").classList.remove("hidden");
   updatePBDisplay();
 }
 
-// ✅ Continue/Bank Butonları Patch edildi başkanım
 $("btnContinue").onclick = () => {
-  $("btnContinue").disabled = true;
-  $("btnBank").disabled = true;
-  momentum += 0.10; // Momentum artışı
-  toastRes(`MOMENTUM YÜKSELDİ: x${momentum.toFixed(2)} 🚀`);
+  $("btnContinue").disabled = true; $("btnBank").disabled = true;
+  // ✅ Momentum Cap: x1.60 sınırı başkanım
+  momentum = Math.min(1.6, momentum + 0.10);
+  toastRes(`MOMENTUM YÜKSELDİ: x${momentum.toFixed(2)} 🚀`, 'var(--purple)');
   $("end").classList.add("hidden");
   initGame(false);
 };
 
 $("btnBank").onclick = () => {
-  $("btnContinue").disabled = true;
-  $("btnBank").disabled = true;
+  $("btnContinue").disabled = true; $("btnBank").disabled = true;
   const bonus = Math.round(setScore * 0.05);
   totalScore += bonus;
-  momentum = 1.0; // Momentum sıfırlanır
-  toastRes(`BANKA BONUSU +${bonus} PUAN! 💰`);
+  momentum = 1.0; 
+  toastRes(`BANKA BONUSU +${bonus} PUAN! 💰`, 'var(--green)');
   $("end").classList.add("hidden");
   initGame(false);
 };
