@@ -27,25 +27,23 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);f
 .header{
   height:70px; padding-top: var(--safe-top);
   display:flex;align-items:center;justify-content:space-between;padding-left:16px;padding-right:16px;
-  border-bottom:1px solid var(--border);
+  border-bottom:1px solid var(--border); background: rgba(0,0,0,0.3);
 }
 .score-box{text-align:left}
 .score{font-family:'Share Tech Mono';font-size:20px;color:var(--radar);text-shadow:0 0 10px var(--radar)}
 .pb-chip{font-size:10px;color:var(--gold);font-weight:800}
-.title{font-family:'Share Tech Mono';letter-spacing:1px;color:var(--radar);opacity:.9}
 .btn{
   width:38px;height:38px;border-radius:12px;
   border:1px solid var(--border);
   background:rgba(0,40,30,.45);
   display:flex;align-items:center;justify-content:center;
   cursor:pointer; transition:.2s;
-  box-shadow:0 0 18px rgba(0,255,204,.08);
 }
 .btn:active{transform:scale(.96); background:rgba(0,255,204,.12)}
 
 .main{flex:1;padding:16px;display:none;flex-direction:column;justify-content:space-between;padding-bottom:calc(16px + var(--safe-bottom))}
 
-.visual{width:180px;height:180px;border:2px solid var(--border);border-radius:50%;margin:10px auto;
+.visual{width:160px;height:160px;border:2px solid var(--border);border-radius:50%;margin:5px auto;
   position:relative;background:radial-gradient(circle,rgba(0,255,204,0.1) 0%,transparent 70%);
   box-shadow:0 0 30px var(--radar-dim)}
 .scan{position:absolute;inset:0;border-radius:50%;
@@ -55,22 +53,22 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);f
 
 .wave{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:4px}
 .wave.playing .bar{animation:eq .5s infinite ease-in-out alternate;background:var(--radar)}
-.bar{width:6px;height:12px;border-radius:3px;background:var(--radar);opacity:.3}
+.bar{width:5px;height:12px;border-radius:3px;background:var(--radar);opacity:.3}
 @keyframes eq{to{height:50px;opacity:1;box-shadow:0 0 10px var(--radar)}}
 
-.listen-btn{margin:10px auto;padding:12px 30px;border-radius:30px;border:2px solid var(--radar);
-  background:transparent;color:var(--radar);font-family:'Share Tech Mono';font-size:15px;cursor:pointer;transition:0.2s}
-.listen-btn:active{transform:scale(0.95);background:var(--radar-dim)}
-.listen-btn[disabled]{opacity:.45;cursor:not-allowed}
+.listen-btn{margin:5px auto 15px;padding:12px 30px;border-radius:30px;border:2px solid var(--radar);
+  background:transparent;color:var(--radar);font-family:'Share Tech Mono';font-size:14px;cursor:pointer;transition:0.2s; font-weight: 800;}
+.listen-btn:active:not(:disabled){transform:scale(0.95);background:var(--radar-dim)}
+.listen-btn:disabled{opacity:.4; border-color: #555; color: #555;}
 
 .opts{display:flex;flex-direction:column;gap:10px}
-.opt{padding:16px;border-radius:14px;border:1px solid var(--border);
-  background:rgba(0,40,30,.6);cursor:pointer;font-weight:700;transition:0.2s;text-align:center}
+.opt{padding:15px;border-radius:14px;border:1px solid var(--border);
+  background:rgba(0,40,30,.6);cursor:pointer;font-weight:700;transition:0.2s;text-align:center; font-size: 15px;}
 .opt:active{transform:scale(.99)}
 .opt.correct{border-color:var(--ok);background:rgba(0,230,118,.2);color:var(--ok)}
 .opt.wrong{border-color:var(--alert);background:rgba(255,51,0,.2);color:var(--alert)}
 
-.stats-bar{display:flex;justify-content:space-between;align-items:center;padding:10px 0;font-family:'Share Tech Mono';font-size:12px;color:var(--radar)}
+.stats-bar{display:flex;justify-content:space-between;align-items:center;padding:10px 0;font-family:'Share Tech Mono';font-size:11px;color:var(--radar)}
 
 .modal{position:absolute;inset:0;background:rgba(0,0,0,0.96);display:flex;align-items:center;justify-content:center;z-index:100}
 .card{background:#001510;border:1px solid var(--radar);border-radius:24px;padding:30px;width:88%;text-align:center}
@@ -96,14 +94,14 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);f
       <div class="score" id="scoreDisp">0</div>
       <div class="pb-chip" id="pbDisp">PB: 0</div>
     </div>
-    <div class="title">AUDIO_SPY</div>
-    <div class="btn" id="soundBtn" title="Ses">🔊</div>
+    <div class="title" style="font-family: 'Share Tech Mono';">AUDIO_SPY</div>
+    <div class="btn" id="soundBtn">🔊</div>
   </div>
 
   <div class="main" id="gameArea">
     <div class="visual">
       <div class="scan"></div>
-      <div class="wave" id="wave" aria-hidden="true">
+      <div class="wave" id="wave">
         <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
       </div>
     </div>
@@ -151,24 +149,20 @@ const $ = id => document.getElementById(id);
 
 let lang = "en";
 let muted = false, totalScore = 0, setScore = 0, momentum = 1.0, lives = 3;
-let currentItem = null;
-let cooldown = false;
+let currentItem = null, playing = false, cooldown = false;
 let setCounter = 0, runActive = false;
 let poolItems = [];
-
-// speech state
 let speaking = false;
 let lastUtter = null;
 
 const LANGMAP = {en:"en-US", de:"de-DE", fr:"fr-FR", es:"es-ES", it:"it-IT"};
 
 function updatePB() {
-  const pb = parseInt(localStorage.getItem(`audio_spy_pb_${lang}`) || "0", 10);
-  $("pbDisp").textContent = `PB: ${pb}`;
+    const pb = parseInt(localStorage.getItem(`audio_spy_pb_${lang}`) || "0", 10);
+    $("pbDisp").textContent = `PB: ${pb}`;
 }
 
 function setListenLabel(state){
-  // state: idle | playing | wait
   const btn = $("listenBtn");
   if(state === "playing"){
     btn.textContent = "⏳ SİNYAL ÇALIYOR";
@@ -183,97 +177,88 @@ function setListenLabel(state){
 }
 
 document.querySelectorAll(".lang-btn").forEach(b => {
-  b.onclick = () => {
-    document.querySelectorAll(".lang-btn").forEach(x => x.classList.remove("active"));
-    b.classList.add("active");
-    lang = b.dataset.lang;
-    updatePB();
-  };
+    b.onclick = () => {
+        document.querySelectorAll(".lang-btn").forEach(x => x.classList.remove("active"));
+        b.classList.add("active");
+        lang = b.dataset.lang;
+        updatePB();
+    };
 });
 
 $("soundBtn").onclick = () => {
-  muted = !muted;
-  $("soundBtn").textContent = muted ? "🔇" : "🔊";
-  // stop ongoing
-  if(muted) stopSpeak();
+    muted = !muted;
+    $("soundBtn").textContent = muted ? "🔇" : "🔊";
+    if(muted) stopSpeak();
 };
 
 $("startBtn").onclick = async () => {
-  $("startModal").classList.add("hidden");
-  $("gameArea").style.display = "flex";
-  if(!runActive) {
-    totalScore = 0; lives = 3; momentum = 1.0; runActive = true;
-  }
-  await initSet();
+    $("startModal").classList.add("hidden");
+    $("gameArea").style.display = "flex";
+    if(!runActive) {
+        totalScore = 0; lives = 3; momentum = 1.0; runActive = true;
+    }
+    await initSet();
 };
 
 async function initSet(isBank = false) {
-  if(isBank) { lives = 3; momentum = 1.0; }
-  setCounter = 0; setScore = 0;
-  cooldown = false;
-  stopSpeak();
-  setListenLabel("idle");
+    if(isBank) { lives = 3; momentum = 1.0; }
+    setCounter = 0; setScore = 0;
+    cooldown = false;
+    stopSpeak();
+    setListenLabel("idle");
+    
+    const data = await loadLangPool(lang);
+    const USED_KEY = `used_audio_spy_v2_${lang}`;
+    const { used, save } = createUsedSet(USED_KEY);
 
-  const data = await loadLangPool(lang);
-  const USED_KEY = `used_audio_spy_v2_${lang}`;
-  const { used, save } = createUsedSet(USED_KEY);
+    let picked = pick(data, 12, used, save);
+    if (!picked || picked.length < 8) {
+        localStorage.removeItem(USED_KEY);
+        const cleanUsed = new Set();
+        picked = pick(data, 12, cleanUsed, save);
+    }
+    
+    poolItems = picked || [];
+    try { save(poolItems.map(x => x.sentence || x.w)); } catch(e){}
 
-  // ✅ ETERNAL: az kaldıysa reset
-  let picked = pick(data, 10, used, save);
-  if (!picked || picked.length < 8) {
-    localStorage.removeItem(USED_KEY);
-    const cleanUsed = new Set();
-    picked = pick(data, 10, cleanUsed, save);
-  }
-
-  poolItems = picked || [];
-  try { save(poolItems.map(x => x.sentence || x.w)); } catch(e){}
-
-  updateUI();
-  nextSignal();
+    updateUI();
+    nextSignal();
 }
 
 function nextSignal() {
-  if(setCounter >= 8 || lives <= 0) {
-    finishSet(lives <= 0);
-    return;
-  }
-
-  const w = poolItems[setCounter];
-  currentItem = {
-    say: (w?.sentence || `Listen: ${w?.w || "signal"}.`),
-    ans: w?.tr || "",
-    w: w?.w || ""
-  };
-
-  buildOptions(currentItem.ans);
-  // küçük gecikme: UI otursun
-  setTimeout(() => playSignal(), 450);
+    if(setCounter >= 8 || lives <= 0) {
+        finishSet(lives <= 0);
+        return;
+    }
+    
+    const w = poolItems[setCounter];
+    currentItem = { 
+        say: (w?.sentence || `Listen: ${w?.w || "signal"}.`), 
+        ans: w?.tr || "", 
+        w: w?.w || "" 
+    };
+    
+    buildOptions(currentItem.ans);
+    setTimeout(() => playSignal(), 500);
 }
 
 function buildOptions(correct) {
-  const opts = [];
-  if(correct) opts.push(correct);
-
-  // havuzdan şık distractor
-  while(opts.length < 4) {
-    const r = poolItems[Math.floor(Math.random() * poolItems.length)]?.tr;
-    if(r && !opts.includes(r)) opts.push(r);
-  }
-  // fallback: çok kısa havuzda
-  while(opts.length < 4) opts.push("—");
-
-  opts.sort(() => Math.random() - 0.5);
-
-  const area = $("optionsArea");
-  area.innerHTML = "";
-  opts.forEach(v => {
-    const d = document.createElement("div");
-    d.className = "opt";
-    d.textContent = v;
-    d.onclick = () => handleChoice(d, v);
-    area.appendChild(d);
-  });
+    const opts = [correct];
+    while(opts.length < 4) {
+        const r = poolItems[Math.floor(Math.random() * poolItems.length)]?.tr;
+        if(r && !opts.includes(r)) opts.push(r);
+    }
+    opts.sort(() => Math.random() - 0.5);
+    
+    const area = $("optionsArea");
+    area.innerHTML = "";
+    opts.forEach(v => {
+        const d = document.createElement("div");
+        d.className = "opt";
+        d.textContent = v;
+        d.onclick = () => handleChoice(d, v);
+        area.appendChild(d);
+    });
 }
 
 function lockOptions(lock=true){
@@ -281,101 +266,100 @@ function lockOptions(lock=true){
 }
 
 function playSignal() {
-  if(speaking || cooldown || !currentItem) return;
-  setListenLabel("playing");
-  $("wave").classList.add("playing");
-  speak(currentItem.say, () => {
-    $("wave").classList.remove("playing");
-    setListenLabel("idle");
-  });
+    if(speaking || cooldown || !currentItem) return;
+    setListenLabel("playing");
+    $("wave").classList.add("playing");
+    speak(currentItem.say, () => {
+        $("wave").classList.remove("playing");
+        setListenLabel("idle");
+    });
 }
 
 $("listenBtn").onclick = playSignal;
 
 function handleChoice(el, val) {
-  if(cooldown || !currentItem) return;
-  cooldown = true;
-  lockOptions(true);
-  setListenLabel("wait");
-
-  if(val === currentItem.ans) {
-    el.classList.add("correct");
-    const gain = Math.round(100 * momentum);
-    totalScore += gain; setScore += gain;
-    momentum = Math.min(1.6, momentum + 0.05);
-
-    // doğru sesi bir daha duyur
-    $("wave").classList.add("playing");
-    speak(currentItem.say, () => {
-      $("wave").classList.remove("playing");
-      resetSignal();
-      nextSignal();
-    });
-  } else {
-    el.classList.add("wrong");
-    lives--;
-    momentum = Math.max(1.0, momentum - 0.2);
-    document.querySelectorAll(".opt").forEach(x => {
-      if(x.textContent === currentItem.ans) x.classList.add("correct");
-    });
-
-    $("wave").classList.add("playing");
-    speak(currentItem.say, () => {
-      $("wave").classList.remove("playing");
-      resetSignal();
-      (lives > 0) ? nextSignal() : finishSet(true);
-    });
-  }
-
-  updateUI();
+    if(cooldown || !currentItem) return;
+    cooldown = true;
+    lockOptions(true);
+    setListenLabel("wait");
+    
+    if(val === currentItem.ans) {
+        el.classList.add("correct");
+        const gain = Math.round(100 * momentum);
+        totalScore += gain; setScore += gain;
+        momentum = Math.min(1.6, momentum + 0.05);
+        
+        // Doğru sinyali bir daha duyur (Reinforcement)
+        $("wave").classList.add("playing");
+        speak(currentItem.say, () => {
+            $("wave").classList.remove("playing");
+            resetSignal();
+            nextSignal();
+        });
+    } else {
+        el.classList.add("wrong");
+        lives--;
+        momentum = Math.max(1.0, momentum - 0.2);
+        document.querySelectorAll(".opt").forEach(x => {
+            if(x.textContent === currentItem.ans) x.classList.add("correct");
+        });
+        
+        // Doğrusunu deşifre et (Learning)
+        $("wave").classList.add("playing");
+        speak(currentItem.say, () => {
+            $("wave").classList.remove("playing");
+            resetSignal();
+            (lives > 0) ? nextSignal() : finishSet(true);
+        });
+    }
+    updateUI();
 }
 
 function resetSignal() {
-  cooldown = false;
-  setCounter++;
-  lockOptions(false);
-  setListenLabel("idle");
+    cooldown = false;
+    setCounter++;
+    lockOptions(false);
+    setListenLabel("idle");
 }
 
 function updateUI() {
-  $("scoreDisp").textContent = totalScore;
-  $("momDisp").textContent = `x${momentum.toFixed(2)} MOMENTUM`;
-  $("livesDisp").textContent = "❤️".repeat(Math.max(0, lives)) + "💀".repeat(3 - Math.max(0, lives));
+    $("scoreDisp").textContent = totalScore;
+    $("momDisp").textContent = `x${momentum.toFixed(2)} MOMENTUM`;
+    $("livesDisp").textContent = "❤️".repeat(Math.max(0, lives)) + "💀".repeat(3 - Math.max(0, lives));
 }
 
 function finishSet(died) {
-  stopSpeak();
-  setListenLabel("idle");
-
-  const pb = parseInt(localStorage.getItem(`audio_spy_pb_${lang}`) || "0", 10);
-  if(totalScore > pb) localStorage.setItem(`audio_spy_pb_${lang}`, String(totalScore));
-
-  $("endModal").classList.remove("hidden");
-  $("endTitle").textContent = died ? "SIGNAL LOST" : "SECTOR DECODED";
-  $("endTitle").style.color = died ? "var(--alert)" : "var(--radar)";
-  $("endStats").innerHTML = `TOPLAM SKOR: <b>${totalScore}</b><br>MOMENTUM: <b>x${momentum.toFixed(2)}</b>`;
-
-  if(died) {
-    $("continueBtn").classList.add("hidden");
-    $("bankBtn").classList.add("hidden");
-    runActive = false;
-  } else {
-    $("continueBtn").classList.remove("hidden");
-    $("bankBtn").classList.remove("hidden");
-  }
-  updatePB();
+    stopSpeak();
+    setListenLabel("idle");
+    const pb = parseInt(localStorage.getItem(`audio_spy_pb_${lang}`) || "0", 10);
+    if(totalScore > pb) localStorage.setItem(`audio_spy_pb_${lang}`, totalScore);
+    
+    $("endModal").classList.remove("hidden");
+    $("endTitle").textContent = died ? "SIGNAL LOST" : "SECTOR DECODED";
+    $("endTitle").style.color = died ? "var(--alert)" : "var(--radar)";
+    $("endStats").innerHTML = `TOPLAM SKOR: <b>${totalScore}</b><br>MOMENTUM: <b>x${momentum.toFixed(2)}</b>`;
+    
+    if(died) {
+        $("continueBtn").classList.add("hidden");
+        $("bankBtn").classList.add("hidden");
+        runActive = false;
+    } else {
+        $("continueBtn").classList.remove("hidden");
+        $("bankBtn").classList.remove("hidden");
+    }
+    updatePB();
 }
 
 $("continueBtn").onclick = () => {
-  $("endModal").classList.add("hidden");
-  initSet(false);
+    $("endModal").classList.add("hidden");
+    initSet(false);
 };
 
 $("bankBtn").onclick = () => {
-  const bonus = Math.round(setScore * 0.05);
-  totalScore += bonus;
-  $("endModal").classList.add("hidden");
-  initSet(true);
+    const bonus = Math.round(setScore * 0.05);
+    totalScore += bonus;
+    $("endModal").classList.add("hidden");
+    initSet(true);
 };
 
 $("exitBtn").onclick = () => location.reload();
@@ -388,19 +372,16 @@ function stopSpeak(){
 
 function speak(txt, onDone) {
   if(muted || !txt) { onDone && onDone(); return; }
-
-  // bazı tarayıcılarda ses motoru hazır değilse “fail” olabilir; yine de kilitlemeyelim
   stopSpeak();
 
   const u = new SpeechSynthesisUtterance(txt);
   lastUtter = u;
   u.lang = LANGMAP[lang] || "en-US";
   u.rate = 0.85;
-
   speaking = true;
 
   const finish = () => {
-    if(lastUtter !== u) return; // yeni konuşma başladıysa
+    if(lastUtter !== u) return; 
     speaking = false;
     onDone && onDone();
   };
@@ -416,8 +397,8 @@ function speak(txt, onDone) {
 }
 
 window.addEventListener('load', () => {
-  updatePB();
-  setListenLabel("idle");
+    updatePB();
+    setListenLabel("idle");
 });
 </script>
 </body>
