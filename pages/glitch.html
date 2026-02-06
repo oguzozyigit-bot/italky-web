@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>ITALKY • Glitch Hunter — Neural Architect</title>
+<title>ITALKY • Glitch Hunter — Cyber Master</title>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
 <style>
@@ -40,7 +40,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);
   background:rgba(0,255,255,.1);border-bottom:1px solid var(--border);
   font-size:10px;padding:0 10px;display:flex;align-items:center;justify-content:space-between}
 
-.category-tag{font-size:10px;color:var(--cyan);border:1px solid var(--cyan);padding:2px 6px;margin-bottom:15px;background: rgba(0,255,255,0.1)}
+.category-tag{font-size:10px;color:var(--cyan);border:1px solid var(--cyan);padding:2px 6px;margin-bottom:15px;background: rgba(0,243,255,0.1)}
 .sentence{font-family:'Space Grotesk',sans-serif;font-size:22px;text-align:center;color:#fff;text-transform:uppercase;line-height:1.4}
 
 .controls{display:flex;gap:16px;height:100px;margin-top:20px}
@@ -58,9 +58,15 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);
   display:flex;align-items:center;justify-content:center;z-index:200}
 .card{background:#080808;border:1px solid var(--cyan);padding:26px;width:85%;text-align:center;max-height:85vh;overflow-y:auto}
 .lvl-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
-.lvl-btn{border:1px solid var(--pink);color:var(--pink);padding:8px;font-size:10px;cursor:pointer; font-weight: 800;}
+.lvl-btn{border:1px solid var(--pink);color:var(--pink);padding:12px;font-size:12px;cursor:pointer; font-weight: 800; background: transparent;}
 .lvl-btn.active{background:var(--pink);color:#fff}
 .mainbtn{width:100%;padding:14px;margin-top:16px;border:none;background:var(--cyan);color:#000;font-weight:900;cursor:pointer}
+
+.record-item { display: flex; justify-content: space-between; padding: 8px; background: rgba(0,255,255,0.05); border-left: 3px solid var(--cyan); margin-bottom: 4px; font-size: 11px; color: var(--cyan); }
+
+.lang-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:20px 0}
+.lang-btn{padding:10px;background:rgba(255,255,255,0.05);border:1px solid var(--border);color:#fff;cursor:pointer;font-size:20px;border-radius:8px}
+.lang-btn.active{border-color:var(--cyan);background:rgba(0,255,255,0.1)}
 
 .hidden{display:none!important}
 .glitch-anim{animation:glitch .3s}
@@ -102,27 +108,26 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);
     <div class="res-toast" id="resToast">SYSTEM OK</div>
 
     <div class="controls">
-      <button class="action bug" onclick="answer(false)" id="btnBug">🐞 GLITCH</button>
-      <button class="action ok" onclick="answer(true)" id="btnOk">🛡️ STABLE</button>
+      <button class="action bug" id="btnGlitch">🐞 GLITCH</button>
+      <button class="action ok" id="btnStable">🛡️ STABLE</button>
     </div>
   </div>
 </div>
 
 <div class="modal" id="start">
   <div class="card">
-    <h2 style="color:var(--cyan);margin-top:0">CYBER MASTER v3.0</h2>
-    <p style="opacity:.7;font-size:12px">Algılama kasını çalıştır: Hataları ayıkla.</p>
-    <div class="lvl-grid">
-      <div class="lvl-btn active" data-diff="EASY">EASY</div>
-      <div class="lvl-btn" data-diff="HARD">HARD</div>
-      <div class="lvl-btn" data-diff="INSANE">INSANE</div>
+    <h2 style="color:var(--cyan);margin-top:0">CYBER MASTER v3.1</h2>
+    <div class="lang-grid">
+        <button data-lang="en" class="lang-btn active">🇬🇧</button>
+        <button data-lang="de" class="lang-btn">🇩🇪</button>
+        <button data-lang="fr" class="lang-btn">🇫🇷</button>
+        <button data-lang="es" class="lang-btn">🇪🇸</button>
+        <button data-lang="it" class="lang-btn">🇮🇹</button>
     </div>
-    <div class="langs" style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:16px 0">
-      <div class="lang active" data-lang="en">EN</div>
-      <div class="lang" data-lang="de">DE</div>
-      <div class="lang" data-lang="fr">FR</div>
-      <div class="lang" data-lang="es">ES</div>
-      <div class="lang" data-lang="it">IT</div>
+    <div class="lvl-grid">
+      <button class="lvl-btn active" data-diff="EASY">EASY</button>
+      <button class="lvl-btn" data-diff="HARD">HARD</button>
+      <button class="lvl-btn" data-diff="INSANE">INSANE</button>
     </div>
     <button class="mainbtn" id="startBtn">INITIALIZE</button>
     <h3 style="color:var(--pink);font-size:12px;margin:20px 0 10px">/// SYSTEM_LOGS ///</h3>
@@ -136,7 +141,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);
     <p id="endStats" style="font-size:14px; margin:15px 0"></p>
     <button class="mainbtn" id="btnContinue">CONTINUE (RISK)</button>
     <button class="mainbtn" id="btnBackup" style="background:var(--pink);color:#fff">BACKUP (SAFE ZONE)</button>
-    <button class="mainbtn" style="background:#333;color:#fff" onclick="location.reload()">EXIT_SYSTEM</button>
+    <button class="mainbtn" style="background:#333;color:#fff" id="btnExit">EXIT_SYSTEM</button>
   </div>
 </div>
 
@@ -164,7 +169,7 @@ function shuffle(a) {
 function updateLeaderboardUI() {
   const records = JSON.parse(localStorage.getItem('glitch_v3_hof') || '[]');
   $('leaderboard').innerHTML = records.map((r, i) => `
-    <div style="display:flex;justify-content:space-between;padding:8px;background:rgba(0,255,255,0.05);margin-bottom:4px;font-size:11px;">
+    <div class="record-item">
       <span>${i+1}. <b>${r.score}</b> <small>${r.lang}</small></span>
       <span>🔥${r.mom}</span>
     </div>
@@ -173,25 +178,30 @@ function updateLeaderboardUI() {
   $("pbBadge").textContent = `PB: ${pb}`;
 }
 
-document.querySelectorAll(".lang").forEach(b=>{
+// ✅ Dil Butonlarını Aktifleştir başkanım
+document.querySelectorAll(".lang-btn").forEach(b=>{
   b.onclick=()=>{
-    document.querySelectorAll(".lang").forEach(x=>x.classList.remove("active"));
+    document.querySelectorAll(".lang-btn").forEach(x=>x.classList.remove("active"));
     b.classList.add("active");
-    lang=b.dataset.lang; updateLeaderboardUI();
+    lang=b.dataset.lang; 
+    updateLeaderboardUI();
   };
 });
 
+// ✅ Zorluk Butonlarını Aktifleştir başkanım
 document.querySelectorAll(".lvl-btn").forEach(b=>{
   b.onclick=()=>{
     document.querySelectorAll(".lvl-btn").forEach(x=>x.classList.remove("active"));
-    b.classList.add("active"); currentDiff=b.dataset.diff;
+    b.classList.add("active"); 
+    currentDiff=b.dataset.diff;
   };
 });
 
 $("soundBtn").onclick=()=>{muted=!muted;$("soundBtn").textContent=muted?"🔇":"🔊";};
 
 $("startBtn").onclick=async()=>{
-  $("start").classList.add("hidden"); $("game").style.display="flex";
+  $("start").classList.add("hidden"); 
+  $("game").style.display="flex";
   runActive=false; setIndex=1; totalScore=0; momentum=1.0; integrity=100;
   await initGame();
 };
@@ -206,7 +216,10 @@ async function initGame(isBackup = false) {
   const {used, save} = createUsedSet(USED_KEY);
 
   wordList = pick({items: randomizedItems}, 12, used, save);
-  if(wordList.length < 12) { localStorage.removeItem(USED_KEY); return initGame(isBackup); }
+  if(wordList.length < 12) { 
+    localStorage.removeItem(USED_KEY); 
+    return initGame(isBackup); 
+  }
 
   try { save(wordList.map(x => x.w)); await Promise.resolve(); } catch(e){}
 
@@ -220,7 +233,6 @@ function produceGlitch(original) {
   const cat = categories[Math.floor(Math.random()*categories.length)];
   let text = original;
   
-  // Whitelist/Level based glitch production başkanım
   if(currentDiff === "EASY") {
     if(cat === "SUBJECT-VERB") text = text.replace(" am ", " is ").replace(" are ", " is ");
     else if(cat === "ARTICLE") text = text.replace(" a ", " an ").replace(" an ", " a ");
@@ -236,7 +248,7 @@ function produceGlitch(original) {
 function nextRound() {
   if(currentIndex >= wordList.length) { finish(false); return; }
   const item = wordList[currentIndex];
-  isBossRound = (currentIndex >= 10); // Son 2 soru Boss
+  isBossRound = (currentIndex >= 10);
   
   const isOk = Math.random() > 0.5;
   const glitchData = isOk ? {text: item.sentence, cat: "VERIFIED"} : produceGlitch(item.sentence);
@@ -257,7 +269,7 @@ function nextRound() {
   busy=false;
 }
 
-function answer(userSaysStable) {
+function handleAnswer(userSaysStable) {
   if(busy) return;
   busy=true;
   const isCorrect = (userSaysStable === currentItem.isOk);
@@ -270,10 +282,8 @@ function answer(userSaysStable) {
     toast("✔ SYSTEM_OK", "var(--green)");
     speak(currentItem.original);
   } else {
-    // ✅ NEAR MISS vs FULL MISS
     let damage = isBossRound ? 30 : (currentDiff === "EASY" ? 25 : 20);
     let momLoss = isBossRound ? 0.30 : 0.20;
-    
     integrity -= damage;
     momentum = Math.max(1.0, momentum - momLoss);
     glitchEff();
@@ -285,6 +295,9 @@ function answer(userSaysStable) {
   if(integrity <= 0) setTimeout(() => finish(true), 800);
   else setTimeout(() => { currentIndex++; nextRound(); }, 1200);
 }
+
+$("btnGlitch").onclick = () => handleAnswer(false);
+$("btnStable").onclick = () => handleAnswer(true);
 
 function updateUI() {
   $("score").textContent = totalScore;
@@ -318,7 +331,7 @@ function finish(died) {
   $("end").classList.remove("hidden");
   $("endTitle").textContent = died ? "SYSTEM_CRASHED" : "SYNTAX_SYNCED";
   $("endTitle").style.color = died ? "var(--pink)" : "var(--green)";
-  $("endStats").innerHTML = `SCORE: ${totalScore}<br>MOMENTUM: x${momentum.toFixed(2)}`;
+  $("endStats").innerHTML = `TOTAL_SCORE: ${totalScore}<br>MOMENTUM: x${momentum.toFixed(2)}`;
   
   if(died) {
     $("btnContinue").classList.add("hidden"); $("btnBackup").classList.add("hidden");
@@ -335,6 +348,11 @@ $("btnBackup").onclick = () => {
   const bonus = Math.round(setScore * 0.05);
   totalScore += bonus; momentum = 1.0; setIndex++;
   $("end").classList.add("hidden"); initGame(true);
+};
+
+$("btnExit").onclick = () => {
+    saveRecord();
+    location.reload();
 };
 
 function speak(t){
