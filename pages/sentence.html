@@ -3,51 +3,47 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-  <title>italkyAI • Sentence Master Premium</title>
+  <title>italkyAI • Sentence Master v5</title>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
-
   <style>
     :root{
       --bg-deep:#020205; --c-neon-pink:#ff00ff; --c-neon-blue:#00f3ff;
       --c-neon-green:#00e676; --c-error:#ff1744; --border: rgba(255,255,255,.12);
       --safe-top: env(safe-area-inset-top, 0px);
     }
-
     *{ box-sizing:border-box; outline:none; user-select:none; -webkit-tap-highlight-color:transparent; }
     html,body{ margin:0; width:100%; height:100%; overflow:hidden; font-family:'Outfit', sans-serif; background:var(--bg-deep); color:#fff; position:fixed; }
-
     .cosmos-bg{ position:absolute; inset:0; z-index:0; background: radial-gradient(circle at 50% 35%, #0b0b2a 0%, #020205 60%, #010104 100%); }
     .wrap{ width:100%; max-width:480px; height:100%; margin:0 auto; position:relative; z-index:10; display:flex; flex-direction:column; padding: var(--safe-top) 0 env(safe-area-inset-bottom); }
-    
-    /* HEADER & STATS */
     .nav-top{ display:flex; align-items:center; justify-content:space-between; padding: 15px 18px; }
     .back-btn{ display:flex; align-items:center; justify-content:center; width:40px; height:40px; border-radius:12px; background: rgba(255,255,255,.05); border: 1px solid var(--border); color:#fff; text-decoration:none; font-size:20px; }
     .mini-badge{ display:flex; align-items:center; height: 38px; padding: 0 12px; border-radius: 16px; background: rgba(255,255,255,.05); border: 1px solid var(--border); font-weight: 800; font-size: 11px; }
 
-    /* ADDICTION UI */
-    .streak-wrap{ text-align:center; margin-bottom:10px; opacity:0; transition:0.3s; }
-    .streak-active{ opacity:1; animation: bounce 0.5s infinite alternate; }
-    .streak-fire{ font-size:18px; font-weight:900; color:var(--c-neon-pink); text-shadow: 0 0 10px var(--c-neon-pink); }
-    
-    @keyframes bounce { from{ transform:translateY(0); } to{ transform:translateY(-5px); } }
+    /* Streak Pop Animation */
+    @keyframes streakPop { 0% { transform:scale(1); } 50% { transform:scale(1.2); color:var(--c-neon-pink); } 100% { transform:scale(1); } }
+    .streak-pop{ animation: streakPop 0.4s ease; }
+    .streak-wrap{ text-align:center; margin-bottom:10px; opacity:0; transition:0.3s; font-weight:900; }
+    .streak-active{ opacity:1; }
 
     .game-card{ background: rgba(255,255,255,.03); border: 1px solid var(--border); border-radius: 28px; backdrop-filter: blur(15px); padding: 25px 20px; margin: 0 14px; position:relative; box-shadow: 0 30px 60px rgba(0,0,0,.5); }
-    .sentence-text{ font-size: 20px; font-weight: 700; line-height: 1.4; text-align: center; margin-bottom: 15px; text-transform: uppercase; min-height: 60px; }
-    .translation-text{ font-size: 15px; color: var(--c-neon-green); font-style: italic; text-align: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; }
+    .sentence-text{ font-size: 18px; font-weight: 700; line-height: 1.4; text-align: center; margin-bottom: 15px; text-transform: uppercase; min-height: 60px; }
+    .translation-text{ font-size: 14px; color: var(--c-neon-green); font-style: italic; text-align: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; margin-bottom: 10px; }
 
-    .word-box{ display:flex; flex-wrap:wrap; justify-content:center; gap: 6px; margin: 20px 0; }
-    .letter-slot{ width: 28px; height: 38px; border-bottom: 2px solid var(--c-neon-blue); display:flex; align-items:center; justify-content:center; font-size: 22px; font-weight: 900; color: var(--c-neon-blue); }
+    .word-box{ display:flex; flex-wrap:wrap; justify-content:center; gap: 6px; margin: 15px 0; }
+    .letter-slot{ width: 26px; height: 36px; border-bottom: 2px solid var(--c-neon-blue); display:flex; align-items:center; justify-content:center; font-size: 20px; font-weight: 900; color: var(--c-neon-blue); }
     .letter-slot.filled{ border-bottom: none; color: #fff; text-shadow: 0 0 10px var(--c-neon-blue); }
 
-    .keyboard{ display:grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
-    .key-btn{ aspect-ratio:1; display:flex; align-items:center; justify-content:center; background: rgba(255,255,255,.1); border: 1px solid var(--border); border-radius: 12px; color: #fff; font-weight: 800; cursor:pointer; font-size: 16px; }
-    .key-btn.correct{ background: var(--c-neon-green); color:#000; border:none; }
+    .keyboard{ display:grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+    .key-btn{ aspect-ratio:1; display:flex; align-items:center; justify-content:center; background: rgba(255,255,255,.1); border: 1px solid var(--border); border-radius: 10px; color: #fff; font-weight: 800; cursor:pointer; font-size: 14px; }
+    .key-btn.correct{ background: var(--c-neon-green); color:#000; }
     .key-btn.wrong{ opacity: 0.2; pointer-events:none; }
 
-    /* MODALS */
-    .btn-primary{ width:100%; padding: 16px; background: var(--c-neon-green); color:#000; border:none; border-radius: 18px; font-weight: 900; cursor:pointer; margin-top: 15px; }
-    .modal-wrap{ position:absolute; inset:0; background: rgba(0,0,0,.97); z-index:999; display:flex; align-items:center; justify-content:center; padding: 20px; }
+    .modal-wrap{ position:absolute; inset:0; background: rgba(0,0,0,.97); z-index:1000; display:flex; align-items:center; justify-content:center; padding: 20px; }
     .modal-card{ width:100%; max-width:340px; background: #08080c; border: 1px solid var(--border); border-radius: 30px; padding: 30px; text-align:center; }
+    .btn-primary{ width:100%; padding: 16px; background: var(--c-neon-green); color:#000; border:none; border-radius: 18px; font-weight: 900; cursor:pointer; margin-top: 10px; }
+    .lang-grid{ display:grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 20px; }
+    .lang-btn{ font-size: 22px; padding: 8px; border-radius: 12px; background: rgba(255,255,255,.05); border: 1px solid transparent; cursor:pointer; }
+    .lang-btn.active{ border-color: var(--c-neon-blue); background: rgba(0,243,255,0.1); }
   </style>
 </head>
 
@@ -59,12 +55,12 @@
       <div style="font-size:24px; font-weight:900;">italky<span style="color:var(--c-neon-blue)">AI</span></div>
       <div style="display:flex; gap:8px;">
         <div class="mini-badge" id="lifeDisplay" style="color:var(--c-neon-pink);">❤️❤️❤️</div>
-        <div class="mini-badge">PUAN <span id="scoreDisplay" style="color:var(--c-neon-green); margin-left:5px;">0</span></div>
+        <div class="mini-badge" id="scoreBadge">🏆 <span id="scoreDisplay">0</span></div>
       </div>
     </div>
 
     <div id="streakWrap" class="streak-wrap">
-      <span class="streak-fire">🔥 STREAK: <span id="streakCount">0</span></span>
+      🔥 STREAK: <span id="streakCount">0</span>
     </div>
 
     <div class="game-card">
@@ -72,24 +68,31 @@
       <div id="translationDisplay" class="translation-text"></div>
       <div id="wordBox" class="word-box"></div>
       <div class="keyboard" id="keyboard"></div>
-      <button class="btn-primary" style="background:linear-gradient(135deg,#6366f1,#a5b4fc); color:#fff; margin-top:15px" onclick="useJoker()">⚡ İPUCU (<span id="jokerCount">1</span>)</button>
-    </div>
-  </div>
-
-  <div class="modal-wrap" id="endModal" style="display:none">
-    <div class="modal-card">
-      <h2 id="endTitle">SET TAMAMLANDI!</h2>
-      <p id="endStats" style="font-size:16px; line-height:1.6; margin:20px 0; opacity:0.8;"></p>
-      <button class="btn-primary" onclick="location.reload()">BİR SET DAHA!</button>
+      <button class="btn-primary" style="background:linear-gradient(135deg,#6366f1,#a5b4fc); color:#fff; margin-top:15px" onclick="useJoker()">⚡ REVEAL JOKER (<span id="jokerCount">1</span>)</button>
     </div>
   </div>
 
   <div class="modal-wrap" id="startModal">
     <div class="modal-card">
       <h2 style="margin-bottom:20px">Sentence Master</h2>
+      <div class="lang-grid">
+        <button onclick="setLang('en', this)" class="lang-btn active">🇬🇧</button>
+        <button onclick="setLang('de', this)" class="lang-btn">🇩🇪</button>
+        <button onclick="setLang('fr', this)" class="lang-btn">🇫🇷</button>
+        <button onclick="setLang('es', this)" class="lang-btn">🇪🇸</button>
+        <button onclick="setLang('it', this)" class="lang-btn">🇮🇹</button>
+      </div>
       <button class="btn-primary" onclick="selectLevel('A2')">A1 / A2 SEVİYESİ</button>
       <button class="btn-primary" onclick="selectLevel('B1')">B1 SEVİYESİ</button>
       <button class="btn-primary" onclick="selectLevel('B2')">B2 SEVİYESİ</button>
+    </div>
+  </div>
+
+  <div class="modal-wrap" id="endModal" style="display:none">
+    <div class="modal-card">
+      <h2 id="endTitle">SET TAMAMLANDI</h2>
+      <p id="endStats" style="font-size:16px; margin:20px 0; opacity:0.8; line-height:1.6;"></p>
+      <button class="btn-primary" onclick="nextSet()">BİR SET DAHA!</button>
     </div>
   </div>
 
@@ -98,45 +101,63 @@ import { loadLangPool, createUsedSet, pick } from "/js/langpool.js";
 
 const $ = (id) => document.getElementById(id);
 let currentLang = "en", currentDiff = "A2", wordList = [], currentIndex = 0;
-let mistakes = 0, lives = 3, currentWord = "", currentSentence = "", discovered = [], jokers = 1, totalScore = 0;
+let mistakes = 0, lives = 3, currentWord = "", currentRaw = "", currentSentence = "", discovered = [], jokers = 2, totalScore = 0;
 
-// BAĞIMLILIK DEĞİŞKENLERİ ✅
+// BAĞIMLILIK & STABİLİTE ✅
 let streak = 0, maxStreak = 0, roundStartTime = 0, perfectCount = 0;
-const SET_SIZE = 12; // Bir set 12 kelime başkanım
+const SET_SIZE = 12;
+
+function escapeRegExp(string) { return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
 
 function speak(text) {
   window.speechSynthesis.cancel();
   const msg = new SpeechSynthesisUtterance(text);
-  msg.lang = 'en-US'; msg.rate = 0.85;
+  const langMap = { en: 'en-US', de: 'de-DE', fr: 'fr-FR', es: 'es-ES', it: 'it-IT' };
+  msg.lang = langMap[currentLang] || 'en-US'; // ✅ Checklist #3: Dinamik Speak Dili
+  msg.rate = 0.85;
   window.speechSynthesis.speak(msg);
 }
+
+window.setLang = (lang, btn) => {
+  currentLang = lang;
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+};
 
 window.selectLevel = (diff) => { currentDiff = diff; initGame(); };
 
 async function initGame() {
   try {
     const rawPool = await loadLangPool(currentLang);
-    const { used, save } = createUsedSet(`sentence_addict_${currentDiff}`);
+    const { used, save } = createUsedSet(`sentence_master_v5_${currentLang}_${currentDiff}`);
     
-    // Set büyüklüğünde kelime çekiyoruz başkanım
-    wordList = pick(rawPool, SET_SIZE, used, save, (it) => it.lvl === currentDiff && it.sentence);
+    // ✅ Checklist #1: A2 seçilirse A1+A2 yükle
+    wordList = pick(rawPool, SET_SIZE, used, save, (it) => {
+      const itLvl = String(it.lvl).toUpperCase();
+      const targetLvl = currentDiff.toUpperCase();
+      const lvlMatch = targetLvl === "A2" ? ["A1", "A2"].includes(itLvl) : itLvl === targetLvl;
+      return lvlMatch && it.sentence;
+    });
 
     $("startModal").style.display = "none";
     startRound();
-  } catch (e) { alert("Sistem yüklenemedi başkanım!"); }
+  } catch (e) { alert("Havuz yüklenemedi başkanım!"); }
 }
 
 function startRound() {
   if(currentIndex >= wordList.length || lives <= 0) { finishSet(); return; }
   
   const data = wordList[currentIndex];
+  currentRaw = data.w;
   currentWord = data.w.trim().toUpperCase().replace(/[^A-ZÇĞİÖŞÜ-]/g, "");
   currentSentence = data.sentence;
   mistakes = 0;
   discovered = new Array(currentWord.length).fill(false);
-  roundStartTime = Date.now(); // Hız bonusu için başkanım
+  roundStartTime = Date.now();
 
-  $("sentenceDisplay").textContent = currentSentence.toUpperCase().replace(new RegExp(`\\b${data.w}\\b`, 'gi'), "____");
+  // ✅ Checklist #4: Regex Güvenliği (Escape)
+  const escapedWord = escapeRegExp(currentRaw);
+  $("sentenceDisplay").textContent = currentSentence.toUpperCase().replace(new RegExp(`\\b${escapedWord}\\b`, 'gi'), "____");
   $("translationDisplay").textContent = data.tr;
 
   renderWord(); 
@@ -156,10 +177,11 @@ function renderWord() {
 
 function renderDynamicKeyboard() {
   const kb = $("keyboard"); kb.innerHTML = "";
-  const alphabet = "ABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZ";
+  // ✅ Checklist #2: Dile Göre Klavye Alfabesi
+  const alphabet = currentLang === "en" ? "ABCDEFGHIJKLMNOPQRSTUVWXYZ" : "ABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZ";
   const wordChars = [...new Set(currentWord.split(""))];
   const wrongChars = alphabet.split("").filter(c => !wordChars.includes(c)).sort(() => Math.random() - 0.5).slice(0, 12);
-  const finalKeys = [...wordChars, ...wrongChars].sort((a, b) => a.localeCompare(b, 'tr'));
+  const finalKeys = [...wordChars, ...wrongChars].sort((a, b) => a.localeCompare(b, currentLang === 'en' ? 'en' : 'tr'));
 
   finalKeys.forEach(char => {
     const b = document.createElement("button");
@@ -177,16 +199,16 @@ function handleGuess(char, btn) {
     btn.classList.add("correct");
     currentWord.split("").forEach((c, i) => { if(c === char) discovered[i] = true; });
     renderWord();
-    
     if(discovered.every(v => v)) {
-      calculatePuan(); // BAĞIMLILIK MANTIĞI BURADA ✅
+      calculatePuan();
       speak(currentSentence);
       setTimeout(() => { currentIndex++; startRound(); }, 1200);
     }
   } else {
     btn.classList.add("wrong");
     mistakes++;
-    streak = 0; // Hata yapınca seri bozulur başkanım
+    // ✅ Checklist #5: Streak -2 Düşür (0 Altına İnme)
+    streak = Math.max(0, streak - 2);
     updateUI();
     if(mistakes >= 8) {
       lives--;
@@ -204,15 +226,18 @@ function calculatePuan() {
   let multiplier = streak >= 5 ? 2 : (streak >= 3 ? 1.5 : 1);
   let basePuan = (8 - mistakes) * 10;
   
-  // Hız Bonusu
+  // Hız & Perfect Bonusu
   let timeUsed = (Date.now() - roundStartTime) / 1000;
   let speedBonus = timeUsed < 6 ? 10 : (timeUsed < 10 ? 5 : 0);
-  
-  // Kusursuz Tur
   let perfectBonus = mistakes === 0 ? 25 : 0;
   if(mistakes === 0) perfectCount++;
 
   totalScore += Math.round((basePuan * multiplier) + speedBonus + perfectBonus);
+  
+  // ✅ Checklist #9: Streak Pop Animasyon
+  $("streakWrap").classList.add("streak-pop");
+  setTimeout(() => $("streakWrap").classList.remove("streak-pop"), 400);
+  
   updateUI();
 }
 
@@ -228,15 +253,36 @@ function updateUI() {
 
 function finishSet() {
   $("endModal").style.display = "flex";
+  // ✅ Checklist #10: Boss Turu Rozeti (Temsili)
+  const isBossWin = totalScore > 1000 ? "👑 KING OF THE SET" : "Set Tamamlandı";
+  $("endTitle").textContent = isBossWin;
   $("endStats").innerHTML = `
     Toplam Skor: <b>${totalScore}</b><br>
     En İyi Seri: <b>🔥 ${maxStreak}</b><br>
-    Kusursuz Tur: <b>🏆 ${perfectCount}</b><br>
-    Tamamlanan: <b>${currentIndex}/${SET_SIZE}</b>
+    Kusursuz Tur: <b>🏆 ${perfectCount}</b>
   `;
 }
 
-window.useJoker = () => { /* Mevcut Joker Mantığı */ };
+// ✅ Checklist #6: Reset Yerine Yeni Set Başlat
+window.nextSet = () => {
+  $("endModal").style.display = "none";
+  currentIndex = 0;
+  perfectCount = 0;
+  // Skor ve can korunuyor, yeni kelimeler pick ediliyor
+  initGame(); 
+};
+
+window.useJoker = () => {
+  if(jokers <= 0) return;
+  const h = discovered.map((v, i) => v ? -1 : i).filter(i => i !== -1);
+  if(h.length > 0) {
+    const char = currentWord[h[Math.floor(Math.random() * h.length)]];
+    jokers--; 
+    const btns = document.querySelectorAll(".key-btn");
+    btns.forEach(b => { if(b.textContent === char) handleGuess(char, b); });
+    updateUI();
+  }
+};
 </script>
 </body>
 </html>
