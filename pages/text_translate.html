@@ -12,17 +12,13 @@
 
   <style>
     :root{
-      --topH: 64px;
-      --footerH: 46px;
-
+      --topH: 66px;
       --bg:#030014;
       --text: rgba(255,255,255,.92);
+      --border: rgba(255,255,255,.10);
 
       --ai1:#A5B4FC;
       --ai2:#4F46E5;
-
-      --btnBg: rgba(255,255,255,.06);
-      --btnBd: rgba(255,255,255,.12);
 
       --navyA: rgba(40,120,255,.12);
       --navyB: rgba(255,255,255,.05);
@@ -31,49 +27,48 @@
       --burgB: rgba(90, 15, 30, .65);
       --burgC: rgba(70, 10, 25, .45);
 
+      --btnBg: rgba(255,255,255,.06);
+      --btnBd: rgba(255,255,255,.12);
+
       --safeTop: env(safe-area-inset-top, 0px);
       --safeBottom: env(safe-area-inset-bottom, 0px);
     }
 
     *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; }
     html,body{
-      margin:0; padding:0;
-      width:100%;
-      min-height:100%;
-      height:auto;
-      overflow:auto;              /* ✅ kesin scroll */
+      margin:0; padding:0; width:100%; height:100%;
+      overflow:auto;                 /* ✅ scroll serbest */
+      font-family:'Outfit', sans-serif;
       background:var(--bg);
       color:var(--text);
-      font-family:'Outfit', sans-serif;
     }
 
-    /* Arkaplanlar tıklamayı ASLA engellemesin */
-    .cosmos-bg, .noise{ pointer-events:none !important; }
-
-    .cosmos-bg{ position:fixed; inset:-50%; width:200%; height:200%; z-index:0; background:var(--bg); }
+    .cosmos-bg{ position:fixed; inset:-50%; width:200%; height:200%; background:var(--bg); z-index:0; pointer-events:none; }
     .orb{ position:absolute; border-radius:50%; filter: blur(90px); opacity:.28; animation: floatOrbit 30s infinite alternate ease-in-out; }
     .orb-1{ top:10%; left:10%; width:60vw; height:60vw; background: radial-gradient(circle, rgba(79,70,229,.55), transparent 70%); }
     .orb-2{ bottom:10%; right:10%; width:50vw; height:50vw; background: radial-gradient(circle, rgba(165,180,252,.45), transparent 70%); animation-delay:-5s; }
     @keyframes floatOrbit{ 0%{ transform: translate(0,0) scale(1);} 100%{ transform: translate(10%,-10%) scale(1.1);} }
+
     .noise{
-      position:fixed; inset:0; z-index:1;
+      position:fixed; inset:0;
       background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
-      mix-blend-mode:overlay;
+      pointer-events:none; mix-blend-mode:overlay; z-index:1;
     }
 
-    /* ✅ Uygulama çerçevesi: fixed yok, sticky yok */
     .mobile-frame{
       position:relative;
       z-index:10;
       width:100%;
       max-width:480px;
-      margin:0 auto;
       min-height:100dvh;
+      margin:0 auto;
       padding-top: var(--safeTop);
       padding-bottom: var(--safeBottom);
       background: rgba(8, 8, 20, 0.65);
-      /* backdrop-filter bazı cihazlarda click bug yapabiliyor → kapattım */
+      /* ❗backdrop-filter bazı cihazda click bug yapabiliyor, burada kapalı */
       /* backdrop-filter: blur(25px); */
+      display:flex;
+      flex-direction:column;
       border-left:1px solid rgba(255,255,255,0.06);
       border-right:1px solid rgba(255,255,255,0.06);
     }
@@ -81,51 +76,85 @@
       .mobile-frame{
         margin: 4vh auto;
         min-height: 92vh;
-        border-radius: 40px;
+        border-radius:40px;
         border:1px solid rgba(255,255,255,0.08);
         box-shadow:0 40px 100px -20px rgba(0,0,0,0.9);
         overflow:hidden;
       }
     }
 
+    /* TOP BAR */
     .topbar{
       height: var(--topH);
       display:flex;
       align-items:center;
       justify-content:space-between;
-      padding: 0 16px;
+      padding: 0 12px;
       border-bottom:1px solid rgba(255,255,255,.08);
       background: rgba(0,0,0,.35);
     }
-    .leftControls{ display:flex; align-items:center; gap:12px; min-width:0; }
+
+    .leftControls{ display:flex; align-items:center; gap:10px; min-width:0; }
     .backBtn{
-      width:40px;height:40px;border-radius:14px;
+      width:44px;height:44px;border-radius:16px;
       border:1px solid rgba(255,255,255,.12);
       background: rgba(0,0,0,.18);
       color:#fff;
-      font-size:18px;font-weight:1000;
+      font-size:20px;font-weight:1000;
       display:flex;align-items:center;justify-content:center;
       cursor:pointer; user-select:none;
       touch-action: manipulation;
     }
-    .mini-brand{ user-select:none; cursor:pointer; line-height:1; touch-action: manipulation; }
-    .logo-line{ font-family:'Space Grotesk', sans-serif; font-size:22px; letter-spacing:-0.5px; display:flex; gap:2px; }
-    .logo-main{ font-weight:700; color:#fff; }
+    .backBtn:active{ transform: scale(.96); }
+
+    .mini-brand{
+      display:flex; flex-direction:column;
+      user-select:none; cursor:pointer; line-height:1;
+      margin-top:2px;
+      touch-action: manipulation;
+    }
+    .logo-line{
+      font-family:'Space Grotesk', sans-serif;
+      font-size: 20px;
+      letter-spacing: -0.4px;
+      display:flex; align-items:flex-end; gap:2px;
+    }
+    .logo-main{ font-weight:700; color:#FFFFFF; }
     .logo-ai{
       font-weight:700;
       background: linear-gradient(135deg, var(--ai1) 0%, var(--ai2) 100%);
       -webkit-background-clip:text;
       -webkit-text-fill-color:transparent;
     }
+    /* “ok” mini satır */
+    .logo-ok{
+      margin-top:6px;
+      font-size:11px;
+      font-weight:900;
+      letter-spacing: 2px;
+      color: rgba(255,255,255,0.35);
+      text-transform: lowercase;
+    }
 
+    /* MAIN */
     .main{
+      flex:1;
       padding: 12px;
       display:flex;
       flex-direction:column;
       gap: 10px;
+      overflow:auto;
+      -webkit-overflow-scrolling: touch;
     }
+    .main::-webkit-scrollbar{ display:none; }
+    .main{ scrollbar-width:none; }
 
-    .toolbar{ display:flex; gap:10px; align-items:center; }
+    .toolbar{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex: 0 0 auto;
+    }
     .langBtn{
       flex:1;
       height: 46px;
@@ -146,8 +175,10 @@
       touch-action: manipulation;
     }
     .langLeft{ display:flex; align-items:center; gap: 10px; min-width:0; }
-    .flag{ width:24px; display:flex; justify-content:center; font-size:16px; }
+    .flag{ width:24px; display:flex; align-items:center; justify-content:center; font-size:16px; flex: 0 0 24px; opacity:.95; }
     .langLabel{ min-width:0; white-space: nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .caret{ opacity:.8; }
+
     .swapBtn{
       width: 54px; height: 46px;
       border-radius: 16px;
@@ -158,8 +189,15 @@
       cursor:pointer;
       touch-action: manipulation;
     }
+    .swapBtn:active{ transform: scale(.98); }
 
-    .pane{ display:flex; flex-direction:column; gap:8px; }
+    .pane{
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+      min-height:0;
+    }
 
     .box{
       border-radius: 22px;
@@ -167,8 +205,10 @@
       overflow:hidden;
       display:flex;
       flex-direction:column;
-      min-height: 220px;
+      min-height:0;
+      flex: 1;
     }
+
     .box.top{
       background:
         radial-gradient(800px 240px at 0% 0%, var(--navyA), transparent 62%),
@@ -184,31 +224,35 @@
     }
 
     .boxHead{
-      padding: 8px 12px;
+      padding: 10px 12px;
       border-bottom: 1px solid rgba(255,255,255,.08);
       background: rgba(0,0,0,.22);
       display:flex;
       align-items:center;
       justify-content:space-between;
       gap:10px;
+      flex: 0 0 auto;
     }
     .headLeft{ display:flex; align-items:center; gap:10px; min-width:0; }
-    .headTitle{ font-weight:1000; font-size:12px; color: rgba(255,255,255,.88); white-space:nowrap; }
-    .counter{ font-weight:900; font-size:11px; color: rgba(255,255,255,.55); white-space:nowrap; }
+    .headTitle{ font-weight: 1000; font-size: 12px; color: rgba(255,255,255,.88); white-space: nowrap; }
+    .counter{ font-weight: 900; font-size: 11px; color: rgba(255,255,255,.55); white-space:nowrap; }
     .btnsRight{ display:flex; gap:8px; align-items:center; }
 
     .iconBtn{
-      width: 38px; height: 38px;
-      border-radius: 14px;
+      width: 42px; height: 42px;
+      border-radius: 16px;
       border: 1px solid rgba(255,255,255,.12);
       background: rgba(255,255,255,.06);
       cursor:pointer;
-      display:flex; align-items:center; justify-content:center;
+      display:flex;
+      align-items:center;
+      justify-content:center;
       user-select:none;
       touch-action: manipulation;
     }
+    .iconBtn:active{ transform: scale(.98); }
     .iconBtn svg{
-      width: 16px; height: 16px;
+      width: 18px; height: 18px;
       stroke: rgba(255,255,255,.90);
       fill:none;
       stroke-width:2;
@@ -218,65 +262,51 @@
     }
 
     textarea{
-      width:100%;
-      min-height: 220px;
+      flex:1;
       border:none;
       background: transparent;
       color:#fff;
-      font-size: 15px;
+      font-size: 14px;
       line-height: 1.5;
       padding: 12px;
-      resize: vertical; /* ✅ kullanıcı büyütebilsin */
+      resize:none;
     }
 
     .out{
-      min-height: 220px;
+      flex:1;
       padding: 12px;
+      overflow:auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width:none;
       white-space: pre-wrap;
       word-break: break-word;
-      font-size: 15px;
+      font-size: 14px;
       line-height: 1.5;
       color: rgba(255,255,255,.92);
     }
+    .out::-webkit-scrollbar{ display:none; }
 
+    /* ✅ Butonlar araya */
     .actions{
       display:flex;
       gap: 10px;
-      padding: 4px 0;
+      padding: 2px 0;
+      flex: 0 0 auto;
     }
     .btn{
       flex:1;
-      height: 44px;
+      height: 46px;
       border-radius: 16px;
       border: 1px solid var(--btnBd);
       background: var(--btnBg);
       color:#fff;
       font-weight: 1000;
       cursor:pointer;
-      font-size: 13px;
       touch-action: manipulation;
     }
     .btn.primary{
       background: linear-gradient(135deg, var(--ai1), var(--ai2));
       border: none;
-    }
-
-    .footerbar{
-      height: var(--footerH);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      border-top: 1px solid rgba(255,255,255,.05);
-      background: rgba(3, 0, 20, 0.75);
-      padding: 0 16px;
-      margin-top: 12px;
-    }
-    .footerBrand{
-      text-align:center;
-      font-size: 11px;
-      color: rgba(255,255,255,0.35);
-      letter-spacing: 0.5px;
-      font-weight: 700;
     }
 
     /* language sheet */
@@ -308,7 +338,11 @@
       gap: 10px;
       border-bottom: 1px solid rgba(255,255,255,.08);
     }
-    .sheetTitle{ font-weight: 1000; font-size: 13px; color: rgba(255,255,255,.92); }
+    .sheetTitle{
+      font-weight: 1000;
+      font-size: 13px;
+      color: rgba(255,255,255,.92);
+    }
     .sheetClose{
       width: 42px; height: 42px;
       border-radius: 16px;
@@ -319,7 +353,10 @@
       cursor:pointer;
       touch-action: manipulation;
     }
-    .sheetSearch{ padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,.08); }
+    .sheetSearch{
+      padding: 10px 14px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
     .sheetSearch input{
       width:100%;
       height: 46px;
@@ -331,7 +368,13 @@
       font-weight: 800;
       font-size: 13px;
     }
-    .sheetList{ max-height: 55vh; overflow:auto; -webkit-overflow-scrolling: touch; }
+    .sheetList{
+      max-height: 55vh;
+      overflow:auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width:none;
+    }
+    .sheetList::-webkit-scrollbar{ display:none; }
     .sheetRow{
       padding: 12px 14px;
       display:flex;
@@ -340,6 +383,27 @@
       gap: 10px;
       cursor:pointer;
       border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .sheetRow.selected{ background: rgba(79,70,229,.14); }
+    .sheetRow .left{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      min-width:0;
+    }
+    .sheetRow .name{
+      font-weight: 1000;
+      font-size: 13px;
+      color: rgba(255,255,255,.92);
+      white-space: nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .sheetRow .code{
+      font-weight: 800;
+      font-size: 12px;
+      color: rgba(255,255,255,.55);
+      white-space:nowrap;
     }
 
     .toast{
@@ -371,12 +435,15 @@
     <div class="topbar">
       <div class="leftControls">
         <button class="backBtn" id="backBtn" aria-label="Geri" type="button">←</button>
+
         <div class="mini-brand" id="logoHome" title="Ana sayfa" role="button" tabindex="0">
           <div class="logo-line">
             <span class="logo-main">italky</span><span class="logo-ai">AI</span>
           </div>
+          <div class="logo-ok">ok</div>
         </div>
       </div>
+      <div></div>
     </div>
 
     <div class="main">
@@ -386,7 +453,7 @@
             <span class="flag" id="fromFlag">🌐</span>
             <span class="langLabel" id="fromLangTxt">Dili Algıla</span>
           </span>
-          <span>▾</span>
+          <span class="caret">▾</span>
         </button>
 
         <button class="swapBtn" id="swapBtn" type="button" title="Dilleri değiştir">⇄</button>
@@ -396,7 +463,7 @@
             <span class="flag" id="toFlag">🇹🇷</span>
             <span class="langLabel" id="toLangTxt">Türkçe</span>
           </span>
-          <span>▾</span>
+          <span class="caret">▾</span>
         </button>
       </div>
 
@@ -428,6 +495,7 @@
           <textarea id="inText" placeholder="Yaz ya da mikrofonla konuş…" spellcheck="false"></textarea>
         </div>
 
+        <!-- ✅ BUTONLAR ARADA -->
         <div class="actions">
           <button class="btn" id="clearBtn" type="button">Temizle</button>
           <button class="btn primary" id="translateBtn" type="button">Çevir</button>
@@ -452,14 +520,10 @@
           <div class="out" id="outText">—</div>
         </div>
       </div>
-
-      <div class="footerbar">
-        <div class="footerBrand">italkyAI By Ozyigit’s 2026</div>
-      </div>
     </div>
   </div>
 
-  <div class="sheetBackdrop" id="langSheet" role="dialog" aria-modal="true" aria-label="Dil Seçimi">
+  <div class="sheetBackdrop" id="langSheet">
     <div class="sheet">
       <div class="sheetTop">
         <div class="sheetTitle" id="sheetTitle">Dil seç</div>
