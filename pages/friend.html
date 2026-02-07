@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-  <title>ITALKY • Arena V15 Ultimate</title>
+  <title>ITALKY • Arena V16 Gold</title>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
 
   <style>
@@ -11,7 +11,6 @@
       --bg: #030305;
       --border: rgba(255,255,255,0.08);
       --glass: rgba(255, 255, 255, 0.03);
-      --glass-active: rgba(255, 255, 255, 0.08);
       --pA: #00f0ff; /* Cyber Cyan */
       --pB: #ff0055; /* Neon Pink */
       --green: #00e676; --red: #ff1744; --gold: #ffd700;
@@ -27,208 +26,119 @@
       color: #fff; overflow: hidden; position: fixed;
     }
 
-    /* PREMIUM ARKA PLAN */
-    .bg-fx {
-      position: absolute; inset: 0; z-index: 0;
-      background: radial-gradient(circle at 50% 50%, #0a0a12 0%, #000 100%);
-    }
-    /* Hareketli Nebula Efekti */
-    .nebula {
-      position: absolute; width: 600px; height: 600px; border-radius: 50%;
-      filter: blur(80px); opacity: 0.15; animation: breathe 10s infinite alternate;
-    }
+    /* ARKA PLAN */
+    .bg-fx { position: absolute; inset: 0; z-index: 0; background: radial-gradient(circle at 50% 50%, #0a0a12 0%, #000 100%); }
+    .nebula { position: absolute; width: 600px; height: 600px; border-radius: 50%; filter: blur(90px); opacity: 0.15; animation: breathe 10s infinite alternate; }
     .nebula-a { background: var(--pA); top: -200px; left: -100px; }
     .nebula-b { background: var(--pB); bottom: -200px; right: -100px; animation-delay: -5s; }
-
     @keyframes breathe { 0% { transform: scale(1); opacity: 0.1; } 100% { transform: scale(1.2); opacity: 0.2; } }
 
-    /* ANA YAPI */
-    .arena-wrap {
-      position: relative; z-index: 10; width: 100%; height: 100dvh;
-      display: flex; flex-direction: column;
-    }
-
-    /* HEADER BAR (YENİ) */
+    /* HEADER */
     .app-header {
-      position: absolute; top: 0; left: 0; right: 0; height: 50px;
+      position: absolute; top: 0; left: 0; right: 0; height: 60px;
       display: flex; align-items: center; justify-content: space-between;
-      padding: 0 20px; z-index: 100; pointer-events: none; /* Arkası tıklanabilsin diye */
+      padding: 0 20px; z-index: 100; pointer-events: none;
     }
-    .header-logo {
-      font-family: var(--font-display); font-weight: 700; font-size: 18px;
-      letter-spacing: -0.5px; opacity: 0.8; pointer-events: auto;
-    }
+    .header-logo { font-family: var(--font-display); font-weight: 700; font-size: 18px; letter-spacing: -0.5px; opacity: 0.8; pointer-events: auto; }
     .header-back {
-      width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+      width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
       border-radius: 12px; background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);
-      text-decoration: none; color: #fff; font-size: 18px; pointer-events: auto;
+      text-decoration: none; color: #fff; font-size: 20px; pointer-events: auto;
       border: 1px solid rgba(255,255,255,0.1); transition: 0.2s;
     }
     .header-back:active { transform: scale(0.9); background: rgba(255,255,255,0.2); }
 
-    /* OYUNCU ALANLARI (SPOTLIGHT + BLUR) */
+    /* OYUN ALANI */
+    .arena-wrap { position: relative; z-index: 10; width: 100%; height: 100dvh; display: flex; flex-direction: column; }
+    
     .player-zone {
-      flex: 1; position: relative;
-      display: flex; justify-content: center; align-items: center;
-      transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
-      overflow: hidden;
-      
-      /* Pasif Durum */
+      flex: 1; position: relative; display: flex; justify-content: center; align-items: center;
+      transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1); overflow: hidden;
       opacity: 0.4; filter: blur(4px) grayscale(0.8); pointer-events: none;
     }
-
     .player-zone.active {
       opacity: 1; filter: blur(0) grayscale(0); pointer-events: auto;
-      /* Hafif Spotlight */
       background: radial-gradient(circle at center, rgba(255,255,255,0.03) 0%, transparent 70%);
     }
-
-    /* YERLEŞİM */
+    
     #zoneB { border-bottom: 1px solid var(--border); align-items: flex-end; padding-bottom: 20px; }
     #zoneB .card-content { transform: rotate(180deg); }
-    
     #zoneA { border-top: 1px solid var(--border); align-items: flex-end; padding-bottom: 40px; }
 
-    /* KART TASARIMI */
-    .card-content {
-      width: 88%; max-width: 360px;
-      display: flex; flex-direction: column; align-items: center; text-align: center;
-      position: relative;
+    .card-content { width: 88%; max-width: 360px; display: flex; flex-direction: column; align-items: center; text-align: center; position: relative; }
+    
+    /* OYUNCU BİLGİLERİ */
+    .player-header { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
+    .player-label { font-size: 12px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; }
+    .var-indicator { 
+      font-size: 10px; background: rgba(255,215,0,0.2); color: var(--gold); 
+      padding: 3px 8px; border-radius: 6px; font-weight: 800; border: 1px solid rgba(255,215,0,0.3);
+      opacity: 0.5; transition: 0.3s;
     }
+    .var-indicator.has-rights { opacity: 1; box-shadow: 0 0 10px rgba(255,215,0,0.2); }
 
-    .player-label {
-      font-size: 11px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase;
-      margin-bottom: 15px; opacity: 0.8;
-    }
     #zoneA .player-label { color: var(--pA); text-shadow: 0 0 15px rgba(0, 240, 255, 0.4); }
     #zoneB .player-label { color: var(--pB); text-shadow: 0 0 15px rgba(255, 0, 85, 0.4); }
 
-    .main-word {
-      font-family: var(--font-display); font-size: 42px; font-weight: 700;
-      line-height: 1.1; margin: 5px 0; letter-spacing: -1px;
-    }
-    .sub-word {
-      font-size: 17px; color: rgba(255,255,255,0.6); margin-bottom: 30px;
-      font-weight: 500; min-height: 24px;
-    }
+    .main-word { font-family: var(--font-display); font-size: 40px; font-weight: 700; line-height: 1.1; margin: 5px 0; letter-spacing: -1px; }
+    .sub-word { font-size: 18px; color: rgba(255,255,255,0.6); margin-bottom: 30px; font-weight: 500; min-height: 24px; }
 
-    /* BUTONLAR (HAPTIC + PREMIUM) */
+    /* BUTONLAR */
     .controls { display: flex; gap: 12px; width: 100%; margin-top: auto; }
-    
     .btn {
-      border: 1px solid rgba(255,255,255,0.1);
-      background: rgba(255,255,255,0.06); backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.06); backdrop-filter: blur(10px);
       color: #fff; padding: 16px 0; border-radius: 18px;
       font-family: var(--font-display); font-weight: 700; font-size: 13px; letter-spacing: 0.5px;
-      cursor: pointer; flex: 1; transition: all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
-      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      cursor: pointer; flex: 1; transition: all 0.15s;
     }
-    
-    /* Basınca ezilme ve parlama efekti */
     .btn:active { transform: scale(0.94); background: rgba(255,255,255,0.12); }
     .btn[disabled] { opacity: 0.4; pointer-events: none; filter: grayscale(1); }
 
-    /* Mic Butonu (Primary) */
-    .btn-mic {
-      flex: 1.8; background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.25);
-      font-size: 14px;
-    }
-    
-    /* VAR Butonu (Sakin Altın) */
-    .btn-var {
-      flex: 0.7; color: var(--gold); border-color: rgba(255, 215, 0, 0.3);
-      background: rgba(255, 215, 0, 0.05);
-    }
-    
-    /* Round Göstergesi */
-    .round-badge {
-      position: absolute; font-size: 10px; font-weight: 800; letter-spacing: 1.5px;
-      color: rgba(255,255,255,0.25); border: 1px solid rgba(255,255,255,0.1);
-      padding: 4px 10px; border-radius: 20px;
-    }
+    .btn-mic { flex: 1.8; background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.25); }
+    .btn-var { flex: 0.7; color: var(--gold); border-color: rgba(255, 215, 0, 0.3); background: rgba(255, 215, 0, 0.05); }
+
+    /* DİNLEME MODU STİLİ */
+    .btn.listening { background: #fff !important; color: #000 !important; box-shadow: 0 0 20px rgba(255,255,255,0.5); border-color: #fff; animation: pulse 1s infinite; }
+    @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
+
+    .round-badge { position: absolute; font-size: 10px; font-weight: 800; letter-spacing: 1.5px; color: rgba(255,255,255,0.25); border: 1px solid rgba(255,255,255,0.1); padding: 4px 10px; border-radius: 20px; }
     #zoneA .round-badge { bottom: 0; }
     #zoneB .round-badge { top: 0; }
 
-    /* ORTA SKOR (MINIMAL) */
+    /* ORTA SKOR */
     .arena-center {
       position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      width: 140px; height: 56px;
-      background: #000; border: 1px solid var(--border); border-radius: 28px;
-      display: flex; align-items: center; justify-content: space-evenly;
-      z-index: 20; box-shadow: 0 0 40px rgba(0,0,0,0.8);
+      width: 140px; height: 56px; background: #000; border: 1px solid var(--border); border-radius: 28px;
+      display: flex; align-items: center; justify-content: space-evenly; z-index: 20; box-shadow: 0 0 40px rgba(0,0,0,0.8);
     }
     .score-txt { font-family: var(--font-display); font-size: 24px; font-weight: 700; }
     .vs-line { width: 1px; height: 20px; background: rgba(255,255,255,0.15); }
 
-    /* MODAL (PREMIUM) */
-    .modal {
-      position: fixed; inset: 0; z-index: 200;
-      background: rgba(0,0,0,0.85); backdrop-filter: blur(20px);
-      display: flex; align-items: center; justify-content: center;
-      opacity: 0; pointer-events: none; transition: 0.3s;
-    }
+    /* MODAL */
+    .modal { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.85); backdrop-filter: blur(20px); display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: 0.3s; }
     .modal:not(.hidden) { opacity: 1; pointer-events: auto; }
-    
-    .modal-box {
-      width: 90%; max-width: 360px;
-      background: #121216; border: 1px solid var(--border);
-      border-radius: 32px; padding: 32px 24px; text-align: center;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.6);
-      transform: scale(0.95); transition: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
+    .modal-box { width: 90%; max-width: 360px; background: #121216; border: 1px solid var(--border); border-radius: 32px; padding: 32px 24px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.6); transform: scale(0.95); transition: 0.3s; }
     .modal:not(.hidden) .modal-box { transform: scale(1); }
 
-    .input-group { display: flex; gap: 10px; margin-bottom: 25px; }
-    .name-input {
-      width: 100%; background: #1a1a20; border: 1px solid var(--border);
-      color: #fff; padding: 14px; border-radius: 14px;
-      font-family: var(--font-main); font-weight: 600; text-align: center;
-      font-size: 15px; transition: 0.2s;
-    }
-    .name-input:focus { background: #222; border-color: var(--pA); }
+    .input-group { display: flex; gap: 12px; margin-bottom: 25px; }
+    .name-input { width: 100%; background: #1a1a20; border: 1px solid var(--border); color: #fff; padding: 14px; border-radius: 14px; font-family: var(--font-main); font-weight: 600; text-align: center; font-size: 15px; }
+    .name-input:focus { background: #222; border-color: var(--pA); outline:none; }
     .name-input.p2:focus { border-color: var(--pB); }
 
-    /* DİL SEÇİMİ (GRID) */
     .lang-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 25px; }
-    .lang-btn {
-      background: rgba(255,255,255,0.04); border: 1px solid var(--border);
-      color: rgba(255,255,255,0.6); border-radius: 12px; padding: 10px 0;
-      font-size: 20px; cursor: pointer; transition: 0.2s;
-    }
-    .lang-btn.active {
-      background: #fff; color: #000; border-color: #fff; transform: scale(1.05);
-      box-shadow: 0 4px 15px rgba(255,255,255,0.15);
-    }
+    .lang-btn { background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: rgba(255,255,255,0.6); border-radius: 12px; padding: 10px 0; font-size: 20px; cursor: pointer; transition: 0.2s; }
+    .lang-btn.active { background: #fff; color: #000; border-color: #fff; transform: scale(1.05); }
 
-    .btn-block {
-      width: 100%; padding: 18px; margin-top: 10px;
-      border-radius: 16px; border: none; font-weight: 700;
-      font-family: var(--font-display); font-size: 16px;
-      cursor: pointer; letter-spacing: 0.5px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-    }
+    .btn-block { width: 100%; padding: 18px; margin-top: 10px; border-radius: 16px; border: none; font-weight: 700; font-family: var(--font-display); font-size: 16px; cursor: pointer; letter-spacing: 0.5px; }
+    .set-stat-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 15px; }
 
-    /* OVERLAY (SINEMATIK) */
-    .result-overlay {
-      position: absolute; inset: -20px; z-index: 50;
-      background: rgba(8, 8, 10, 0.94); backdrop-filter: blur(12px);
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      border-radius: 24px; opacity: 0; pointer-events: none;
-      transform: scale(0.9); transition: 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
+    /* OVERLAY */
+    .result-overlay { position: absolute; inset: -20px; z-index: 50; background: rgba(8, 8, 10, 0.96); backdrop-filter: blur(12px); display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 24px; opacity: 0; pointer-events: none; transform: scale(0.9); transition: 0.25s; }
     .result-overlay.show { opacity: 1; transform: scale(1); }
-
     .res-val { font-size: 14px; font-weight: 600; opacity: 0.7; letter-spacing: 1px; margin-bottom: 5px; text-transform: uppercase; }
     .res-title { font-size: 42px; font-weight: 800; margin: 0; line-height: 1; font-family: var(--font-display); }
     .res-sub { margin-top: 10px; font-size: 16px; opacity: 0.8; }
-    
-    .badge {
-      margin-top: 15px; padding: 6px 14px; border-radius: 20px;
-      font-size: 13px; font-weight: 700; letter-spacing: 0.5px;
-      background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1);
-    }
-
-    .set-stat-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 15px; }
+    .badge { margin-top: 15px; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 700; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1); }
   </style>
 </head>
 <body>
@@ -240,33 +150,29 @@
   <div class="app-header">
     <a href="game.html" class="header-back">✕</a>
     <div class="header-logo">italkyAI</div>
-    <div style="width:36px"></div> </div>
+    <div style="width:40px"></div>
+  </div>
 
   <div class="arena-wrap">
-    
     <div class="player-zone" id="zoneB">
       <div class="card-content">
-        <div class="result-overlay" id="ovB">
-          <div class="res-val">SONUÇ</div>
-          <div class="res-title"></div>
-          <div class="res-sub"></div>
-          <div class="badge"></div>
-        </div>
-
+        <div class="result-overlay" id="ovB"><div class="res-val">SONUÇ</div><div class="res-title"></div><div class="res-sub"></div><div class="badge"></div></div>
+        
         <div class="controls">
           <button class="btn btn-var" id="varB" onclick="game.useVar('B')">VAR</button>
           <button class="btn btn-pass" id="passB" onclick="game.pass()">PAS</button>
           <button class="btn btn-mic" id="micB" onclick="game.listen('B')">🎙️ CEVAPLA</button>
         </div>
-
+        
         <div style="margin: auto 0;">
           <div class="main-word" id="wB">...</div>
           <div class="sub-word" id="mB">...</div>
         </div>
-
+        
         <div class="player-header" style="justify-content:center; margin-top:20px;">
           <div class="player-label" id="lblB">OYUNCU B</div>
-          <div class="var-indicator" id="indB" style="display:none">VAR</div> </div>
+          <div class="var-indicator" id="indB">VAR: 1</div>
+        </div>
         <div class="round-badge" id="rndB">ROUND 1</div>
       </div>
     </div>
@@ -279,15 +185,11 @@
 
     <div class="player-zone" id="zoneA">
       <div class="card-content">
-        <div class="result-overlay" id="ovA">
-          <div class="res-val">SONUÇ</div>
-          <div class="res-title"></div>
-          <div class="res-sub"></div>
-          <div class="badge"></div>
-        </div>
-
+        <div class="result-overlay" id="ovA"><div class="res-val">SONUÇ</div><div class="res-title"></div><div class="res-sub"></div><div class="badge"></div></div>
+        
         <div class="player-header" style="justify-content:center; margin-bottom:20px;">
           <div class="player-label" id="lblA">OYUNCU A</div>
+          <div class="var-indicator" id="indA">VAR: 1</div>
         </div>
 
         <div style="margin: auto 0;">
@@ -307,13 +209,11 @@
 
   <div class="modal" id="setupModal">
     <div class="modal-box">
-      <div class="header-logo" style="font-size:24px; margin-bottom:20px;">italkyAI ARENA</div>
-      
+      <div class="header-logo" style="font-size:26px; margin-bottom:20px;">italkyAI ARENA</div>
       <div class="input-group">
         <input type="text" class="name-input" id="inpA" placeholder="Oyuncu A">
         <input type="text" class="name-input p2" id="inpB" placeholder="Oyuncu B">
       </div>
-
       <div class="lang-grid">
         <button class="lang-btn active" data-lang="en">🇬🇧</button>
         <button class="lang-btn" data-lang="de">🇩🇪</button>
@@ -321,7 +221,6 @@
         <button class="lang-btn" data-lang="es">🇪🇸</button>
         <button class="lang-btn" data-lang="it">🇮🇹</button>
       </div>
-
       <button class="btn-block" style="background:var(--pA); color:#000" onclick="game.init()">BAŞLA</button>
     </div>
   </div>
@@ -329,21 +228,18 @@
   <div class="modal hidden" id="pauseModal">
     <div class="modal-box">
       <div style="font-family:var(--font-display); font-weight:700; font-size:20px; margin-bottom:15px; color:#fff;">SET ÖZETİ</div>
-      
       <div style="background:rgba(255,255,255,0.05); padding:20px; border-radius:16px; margin-bottom:20px;">
         <div class="set-stat-row"><span style="color:var(--pA); font-weight:700" id="statNameA">A</span><span id="statScoreA">0</span></div>
         <div class="set-stat-row" style="border:none; padding-bottom:0;"><span style="color:var(--pB); font-weight:700" id="statNameB">B</span><span id="statScoreB">0</span></div>
       </div>
-
       <div style="font-size:22px; font-weight:800; color:var(--gold); margin-bottom:25px; font-family:var(--font-display);" id="setWinnerMsg">...</div>
-      
       <button class="btn-block" style="background:var(--green); color:#000" onclick="game.continueGame()">DEVAM ET</button>
       <button class="btn-block" style="background:rgba(255,255,255,0.1); color:#fff" onclick="location.href='game.html'">ÇIKIŞ</button>
     </div>
   </div>
 
 <script>
-// --- VERİTABANI ---
+// --- VERİTABANI (Object Yapısı - Genişletilmiş) ---
 const RAW_DB = {
   en: [
     {w:"Excellent", tr:"Mükemmel"}, {w:"Decision", tr:"Karar"}, {w:"Challenge", tr:"Meydan Okuma"}, 
@@ -354,8 +250,7 @@ const RAW_DB = {
     {w:"Question", tr:"Soru"}, {w:"Solution", tr:"Çözüm"}, {w:"Language", tr:"Dil"}, 
     {w:"Computer", tr:"Bilgisayar"}, {w:"History", tr:"Tarih"}, {w:"Together", tr:"Birlikte"}, 
     {w:"Family", tr:"Aile"}, {w:"Friend", tr:"Arkadaş"}, {w:"Success", tr:"Başarı"},
-    {w:"Future", tr:"Gelecek"}, {w:"Freedom", tr:"Özgürlük"}, {w:"Mountain", tr:"Dağ"},
-    {w:"Creative", tr:"Yaratıcı"}, {w:"Project", tr:"Proje"}, {w:"System", tr:"Sistem"}
+    {w:"Future", tr:"Gelecek"}, {w:"Freedom", tr:"Özgürlük"}, {w:"Mountain", tr:"Dağ"}
   ],
   de: [
     {w:"Entscheidung", tr:"Karar"}, {w:"Möglichkeit", tr:"İmkan"}, {w:"Erfahrung", tr:"Deneyim"},
@@ -376,7 +271,7 @@ const RAW_DB = {
   ]
 };
 
-// DİL SEÇİMİ
+// --- DİL SEÇİMİ ---
 let selLang = 'en';
 document.querySelectorAll('.lang-btn').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -386,8 +281,13 @@ document.querySelectorAll('.lang-btn').forEach(btn => {
   });
 });
 
-// UTILS
-function normalize(str) { return str.toLowerCase().replace(/ß/g, "ss").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9 ]/g, "").trim(); }
+// --- HELPER FONKSİYONLAR ---
+function normalize(str) { 
+  return str.toLowerCase()
+    .replace(/ß/g, "ss")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9 ]/g, "").trim(); 
+}
 
 function getBestMatchScore(target, spoken) {
   const normTarget = normalize(target);
@@ -454,7 +354,7 @@ const game = {
   init: function() {
     const nA = document.getElementById('inpA').value.trim();
     const nB = document.getElementById('inpB').value.trim();
-    if (!nA || !nB) { alert("Lütfen isimleri giriniz."); return; }
+    if (!nA || !nB) { alert("Lütfen oyuncu isimlerini giriniz!"); return; }
 
     this.names.A = nA; this.names.B = nB;
     document.getElementById('lblA').innerText = this.names.A;
@@ -464,17 +364,16 @@ const game = {
     this.score = {A:0, B:0}; this.setScore = {A:0, B:0}; this.varRights = {A:1, B:1};
     this.turn = Math.random()>0.5 ? 'A' : 'B';
     document.getElementById('setupModal').classList.add('hidden');
-    SFX.init(); this.startTurn();
+    SFX.init(); this.updateVarUI(); this.startTurn();
   },
 
   fillPool: function() {
     let raw = RAW_DB[selLang] || RAW_DB.en;
-    // Kelimeleri 3 kez çoğaltıp karıştır (Uzun oyun için)
+    // Havuzu 3 katına çıkar ve karıştır
     this.words = [...raw, ...raw, ...raw].sort(() => Math.random() - 0.5);
   },
 
   startTurn: function() {
-    // 20 Hamlede Mola
     if (this.moveCount > 0 && this.moveCount % 20 === 0 && this.lastPauseCheck !== this.moveCount) {
       this.lastPauseCheck = this.moveCount; this.pauseGame(); return;
     }
@@ -498,9 +397,21 @@ const game = {
     document.getElementById('wB').innerText = item.w; document.getElementById('mB').innerText = item.tr;
     
     document.getElementById('sA').innerText = this.score.A; document.getElementById('sB').innerText = this.score.B;
+    this.updateVarUI();
+  },
+
+  updateVarUI: function() {
+    const indA = document.getElementById('indA');
+    const indB = document.getElementById('indB');
+    const btnVarA = document.getElementById('varA'); 
+    const btnVarB = document.getElementById('varB');
+
+    indA.innerText = `VAR: ${this.varRights.A}`;
+    indB.innerText = `VAR: ${this.varRights.B}`;
     
-    // VAR Buton Durumu
-    const btnVarA = document.getElementById('varA'); const btnVarB = document.getElementById('varB');
+    indA.classList.toggle('has-rights', this.varRights.A > 0);
+    indB.classList.toggle('has-rights', this.varRights.B > 0);
+
     btnVarA.disabled = (this.varRights.A <= 0 || this.turn !== 'A');
     btnVarB.disabled = (this.varRights.B <= 0 || this.turn !== 'B');
     btnVarA.style.opacity = (this.varRights.A <= 0) ? 0.3 : 1;
@@ -516,7 +427,8 @@ const game = {
     
     this.activeMicId = `mic${p}`;
     const btn = document.getElementById(this.activeMicId);
-    btn.innerText = "👂..."; btn.style.background="#fff"; btn.style.color="#000";
+    btn.innerText = "👂..."; 
+    btn.classList.add('listening'); // CSS class kullanımı (Inline yok)
 
     this.currentSnapshot = { targetWord: this.words[this.idx].w, moveId: this.moveCount, player: p };
 
@@ -538,8 +450,8 @@ const game = {
     if (this.activeMicId) {
       const btn = document.getElementById(this.activeMicId);
       if(btn) { 
-        btn.innerText = "🎙️ TEKRAR ET"; 
-        btn.style.background = ""; btn.style.color = "";
+        btn.innerText = "🎙️ CEVAPLA"; // Metin düzeltildi
+        btn.classList.remove('listening');
       }
       this.activeMicId = null;
     }
@@ -551,7 +463,7 @@ const game = {
 
   toggleControls: function(disable) {
     document.querySelectorAll('.btn').forEach(b => b.disabled = disable);
-    if(!disable) this.renderUI(); // Kilit açılınca buton durumlarını güncelle
+    if(!disable) this.updateVarUI(); 
   },
 
   check: function(spoken) {
@@ -559,14 +471,15 @@ const game = {
 
     const { targetWord, player } = this.currentSnapshot;
     const score = getBestMatchScore(targetWord, spoken);
-    // Eşik %95
-    const isCorrect = score >= 95; 
+    // Eşik %90 (Adil Zorluk)
+    const isCorrect = score >= 90; 
     this.showResult(player, isCorrect, score, targetWord);
   },
 
   useVar: function(p) {
     if(this.busy || this.inputLocked || this.varRights[p] <= 0) return;
     this.varRights[p]--;
+    this.updateVarUI(); // Anında güncelle
     const targetWord = this.words[this.idx].w;
     this.showResult(p, true, 100, targetWord, true);
   },
