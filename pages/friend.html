@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-  <title>ITALKY • Arena V13 Supreme</title>
+  <title>ITALKY • Arena V14</title>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
   <style>
@@ -12,21 +12,22 @@
       --border: rgba(255,255,255,0.15);
       --pA: #00f3ff; --pB: #ff0055;
       --green: #00e676; --red: #ff1744; --gold: #ffb700;
+      --glass: rgba(255, 255, 255, 0.05);
     }
     * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; outline: none; }
     html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--bg); font-family: 'Outfit', sans-serif; color: #fff; overflow: hidden; position: fixed; }
-    .bg-fx { position: absolute; inset: 0; z-index: 0; background: radial-gradient(circle at 50% 50%, #1a1a2e 0%, #000 100%); opacity: 0.8; }
     
-    .arena-wrap { position: relative; z-index: 10; width: 100%; height: 100dvh; display: flex; flex-direction: column; }
-    
-    /* LOGO & MARKALAMA */
+    /* ARKA PLAN */
+    .bg-fx { position: absolute; inset: 0; z-index: 0; background: radial-gradient(circle at 50% 50%, #121225 0%, #000 100%); opacity: 0.8; }
     .brand-logo {
       position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      z-index: 5; opacity: 0.1; font-family: 'Space Grotesk'; font-size: 60px; font-weight: 900;
-      white-space: nowrap; pointer-events: none; letter-spacing: -2px;
+      z-index: 5; opacity: 0.08; font-family: 'Space Grotesk'; font-size: 70px; font-weight: 900;
+      white-space: nowrap; pointer-events: none; letter-spacing: -3px;
     }
 
-    /* OYUNCU ALANLARI */
+    /* OYUN ALANI */
+    .arena-wrap { position: relative; z-index: 10; width: 100%; height: 100dvh; display: flex; flex-direction: column; }
+    
     .player-zone { flex: 1; position: relative; display: flex; justify-content: center; align-items: center; transition: 0.3s ease; overflow: hidden; opacity: 0.3; pointer-events: none; filter: grayscale(1); }
     .player-zone.active { opacity: 1; pointer-events: auto; filter: grayscale(0); }
     
@@ -34,7 +35,7 @@
     #zoneB .card-content { transform: rotate(180deg); }
     #zoneA { border-top: 1px solid var(--border); align-items: flex-end; padding-bottom: 40px; }
 
-    .card-content { width: 85%; max-width: 320px; display: flex; flex-direction: column; align-items: center; text-align: center; transition: 0.3s; position: relative; }
+    .card-content { width: 90%; max-width: 340px; display: flex; flex-direction: column; align-items: center; text-align: center; transition: 0.3s; position: relative; }
     
     .player-header { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
     .player-label { font-size: 14px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; text-shadow: 0 0 10px rgba(255,255,255,0.3); }
@@ -44,52 +45,58 @@
     #zoneA .player-label { color: var(--pA); }
     #zoneB .player-label { color: var(--pB); }
 
-    .main-word { font-family: 'Space Grotesk', sans-serif; font-size: 34px; font-weight: 700; line-height: 1.1; margin: 5px 0; }
-    .sub-word { font-size: 18px; color: #fff; opacity: 0.8; margin-bottom: 25px; min-height: 24px; font-weight: 500; letter-spacing: 0.5px; }
+    .main-word { font-family: 'Space Grotesk', sans-serif; font-size: 34px; font-weight: 700; line-height: 1.1; margin: 8px 0; }
+    .sub-word { font-size: 18px; color: rgba(255,255,255,0.7); margin-bottom: 25px; min-height: 24px; font-weight: 500; }
     
     .controls { display: flex; gap: 10px; width: 100%; margin-top: auto; }
-    .btn { border: 1px solid var(--border); background: rgba(255,255,255,0.1); color: #fff; padding: 18px 0; border-radius: 16px; font-weight: 800; cursor: pointer; flex: 1; transition: 0.2s; font-size: 14px; }
+    .btn { border: 1px solid var(--border); background: var(--glass); color: #fff; padding: 18px 0; border-radius: 16px; font-weight: 800; cursor: pointer; flex: 1; transition: 0.2s; font-size: 14px; }
     .btn:active { transform: scale(0.95); }
     .btn[disabled] { opacity: 0.3; cursor: not-allowed; transform: none; }
-    .btn-mic { flex: 2; background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.3); }
-    .btn-var { flex: 0.6; background: rgba(255, 183, 0, 0.2); color: var(--gold); border-color: var(--gold); }
+    .btn-mic { flex: 2; background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.3); }
+    .btn-var { flex: 0.6; background: rgba(255, 183, 0, 0.15); color: var(--gold); border-color: var(--gold); }
 
     .round-indicator { position: absolute; font-size: 10px; font-weight: 900; letter-spacing: 2px; color: rgba(255,255,255,0.3); bottom: 10px; }
     #zoneB .round-indicator { top: 10px; bottom: auto; }
 
     /* ORTA SKOR VE GERİ DÖNÜŞ */
-    .arena-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 160px; height: 60px; background: #000; border: 1px solid var(--border); border-radius: 30px; display: flex; align-items: center; justify-content: center; z-index: 20; box-shadow: 0 0 30px #000; }
-    .score-board { font-family: 'Space Grotesk'; font-size: 24px; font-weight: 700; display: flex; gap: 15px; align-items: center; width: 100%; justify-content: space-evenly; }
-    
-    /* GERİ DÖNÜŞ OKU */
-    .back-arrow {
-      text-decoration: none; color: rgba(255,255,255,0.5); font-size: 20px; font-weight: 900;
-      display: flex; align-items: center; justify-content: center;
-      width: 30px; height: 30px; border-radius: 50%; background: rgba(255,255,255,0.1);
-      transition: 0.2s;
-    }
+    .arena-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 160px; height: 64px; background: #080808; border: 1px solid var(--border); border-radius: 32px; display: flex; align-items: center; justify-content: center; z-index: 20; box-shadow: 0 0 40px #000; }
+    .score-board { font-family: 'Space Grotesk'; font-size: 26px; font-weight: 700; display: flex; gap: 15px; align-items: center; width: 100%; justify-content: space-evenly; }
+    .back-arrow { text-decoration: none; color: rgba(255,255,255,0.6); font-size: 18px; font-weight: 900; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.1); border: 1px solid var(--border); transition: 0.2s; }
     .back-arrow:active { background: #fff; color: #000; }
 
-    .modal { position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,0.95); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(15px); transition: 0.3s; }
+    /* MODAL TASARIMI (GÜNCELLENDİ) */
+    .modal { position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,0.96); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(20px); transition: 0.3s; }
     .modal.hidden { opacity: 0; pointer-events: none; visibility: hidden; }
-    .modal-box { width: 90%; max-width: 360px; background: #111; border: 1px solid var(--border); border-radius: 24px; padding: 25px; max-height: 90vh; overflow-y: auto; text-align: center; }
-    .input-group { display: flex; gap: 10px; margin-bottom: 20px; }
-    .name-input { width: 100%; background: #222; border: 1px solid var(--border); color: #fff; padding: 12px; border-radius: 10px; font-family: 'Outfit'; font-weight: 700; text-align: center; }
-    .name-input:focus { border-color: var(--pA); } .name-input.p2:focus { border-color: var(--pB); }
+    .modal-box { width: 90%; max-width: 380px; background: #121216; border: 1px solid var(--border); border-radius: 28px; padding: 30px; max-height: 90vh; overflow-y: auto; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
+    
+    .modal-logo { font-family:'Space Grotesk'; font-weight:900; font-size:28px; margin-bottom:20px; background:linear-gradient(90deg, var(--pA), var(--pB)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing: -1px; }
 
-    .result-overlay { position: absolute; inset: -20px; background: rgba(0,0,0,0.95); z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 20px; opacity: 0; pointer-events: none; transition: 0.2s; transform: scale(0.9); }
+    .input-group { display: flex; gap: 12px; margin-bottom: 25px; }
+    .name-input { width: 100%; background: #1e1e24; border: 1px solid var(--border); color: #fff; padding: 14px; border-radius: 12px; font-family: 'Outfit'; font-weight: 700; text-align: center; font-size: 16px; transition: 0.2s; }
+    .name-input:focus { border-color: var(--pA); outline:none; background: #2a2a35; } 
+    .name-input.p2:focus { border-color: var(--pB); }
+
+    /* DİL SEÇİM BUTONLARI (DÜZELTİLDİ) */
+    .lang-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 25px; }
+    .lang-btn { 
+      background: rgba(255,255,255,0.05); border: 1px solid var(--border); 
+      color: #fff; border-radius: 12px; padding: 12px 0; font-size: 22px; 
+      cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center;
+    }
+    .lang-btn:active { transform: scale(0.9); }
+    .lang-btn.active { background: #fff; color: #000; border-color: #fff; box-shadow: 0 0 15px rgba(255,255,255,0.2); }
+
+    .btn-block { width:100%; padding:18px; margin-top:10px; border-radius:14px; border:none; font-weight:800; cursor:pointer; font-size: 16px; letter-spacing: 1px; transition: 0.2s; }
+    .btn-block:active { transform: scale(0.98); }
+
+    .set-stat-row { display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 15px; }
+
+    /* OVERLAY */
+    .result-overlay { position: absolute; inset: -20px; background: rgba(0,0,0,0.96); z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 20px; opacity: 0; pointer-events: none; transition: 0.2s; transform: scale(0.9); }
     .result-overlay.show { opacity: 1; transform: scale(1); }
-    .res-title { font-size: 32px; font-weight: 900; margin-bottom: 5px; }
-    .res-sub { font-size: 14px; color: #ccc; font-weight: 500; }
-    .accuracy-badge { margin-top: 10px; padding: 5px 10px; border-radius: 8px; font-size: 12px; font-weight: 700; background: rgba(255,255,255,0.1); }
-    
-    .lang-opt { display:inline-block; font-size:24px; padding:8px; border:1px solid var(--border); border-radius:8px; margin:2px; cursor:pointer;}
-    .lang-opt.selected { background:#fff; color:#000; }
-    .btn-block { width:100%; padding:15px; margin-top:10px; border-radius:12px; border:none; font-weight:800; cursor:pointer; font-size:16px;}
-    .set-stat-row { display: flex; justify-content: space-between; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 14px; }
-    
-    /* MODAL LOGO */
-    .modal-logo { font-family:'Space Grotesk'; font-weight:900; font-size:24px; margin-bottom:15px; background:linear-gradient(90deg, var(--pA), var(--pB)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .res-title { font-size: 36px; font-weight: 900; margin-bottom: 5px; }
+    .res-sub { font-size: 15px; color: #ccc; font-weight: 500; }
+    .accuracy-badge { margin-top: 12px; padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: 700; background: rgba(255,255,255,0.1); }
   </style>
 </head>
 <body>
@@ -124,7 +131,7 @@
     <div class="arena-center">
       <div class="score-board">
         <span style="color:var(--pB)" id="sB">0</span>
-        <a href="game.html" class="back-arrow" title="Çıkış">✕</a>
+        <a href="game.html" class="back-arrow">✕</a>
         <span style="color:var(--pA)" id="sA">0</span>
       </div>
     </div>
@@ -156,32 +163,83 @@
   <div class="modal" id="setupModal">
     <div class="modal-box">
       <div class="modal-logo">italkyAI ARENA</div>
+      <p style="margin-bottom:20px; font-size:14px; opacity:0.6;">Karşılıklı Rekabet Modu</p>
+      
       <div class="input-group">
         <input type="text" class="name-input" id="inpA" placeholder="Oyuncu A Adı">
         <input type="text" class="name-input p2" id="inpB" placeholder="Oyuncu B Adı">
       </div>
-      <div style="text-align:center; margin-bottom:15px;">
-        <div class="lang-opt selected" onclick="selectLang('en', this)">🇬🇧</div><div class="lang-opt" onclick="selectLang('de', this)">🇩🇪</div><div class="lang-opt" onclick="selectLang('fr', this)">🇫🇷</div><div class="lang-opt" onclick="selectLang('es', this)">🇪🇸</div><div class="lang-opt" onclick="selectLang('it', this)">🇮🇹</div>
+      
+      <div class="lang-grid">
+        <button class="lang-btn active" data-lang="en">🇬🇧</button>
+        <button class="lang-btn" data-lang="de">🇩🇪</button>
+        <button class="lang-btn" data-lang="fr">🇫🇷</button>
+        <button class="lang-btn" data-lang="es">🇪🇸</button>
+        <button class="lang-btn" data-lang="it">🇮🇹</button>
       </div>
-      <button class="btn-block" style="background:var(--pA); color:#000" onclick="game.init()">OYUNA BAŞLA</button>
+      
+      <button class="btn-block" style="background:var(--pA); color:#000" onclick="game.init()">BAŞLA</button>
     </div>
   </div>
 
   <div class="modal hidden" id="pauseModal">
     <div class="modal-box" style="text-align:center">
       <h2 style="font-family:'Space Grotesk'" id="setResultTitle">SET ÖZETİ</h2>
-      <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:12px; margin:15px 0;">
+      <div style="background:rgba(255,255,255,0.05); padding:20px; border-radius:16px; margin:20px 0;">
         <div class="set-stat-row"><span style="color:var(--pA)" id="statNameA">A</span><span id="statScoreA">0 Puan</span></div>
         <div class="set-stat-row" style="border:none; margin:0; padding:0"><span style="color:var(--pB)" id="statNameB">B</span><span id="statScoreB">0 Puan</span></div>
       </div>
-      <div style="font-size:18px; font-weight:700; color:var(--gold); margin-bottom:20px;" id="setWinnerMsg">...</div>
-      <button class="btn-block" style="background:var(--green); color:#000" onclick="game.continueGame()">DEVAM ET</button>
+      <div style="font-size:22px; font-weight:900; color:var(--gold); margin-bottom:25px;" id="setWinnerMsg">...</div>
+      <button class="btn-block" style="background:var(--green); color:#000" onclick="game.continueGame()">SONRAKİ SET</button>
       <button class="btn-block" style="background:#333" onclick="location.href='game.html'">ÇIKIŞ</button>
     </div>
   </div>
 
 <script>
-// --- UTILS ---
+// --- VERİTABANI (Object Yapısı) ---
+// Not: Gerçekte burası çok daha uzun olabilir. Demo için 20+ kelime ekledim.
+const RAW_DB = {
+  en: [
+    {w:"Excellent", tr:"Mükemmel"}, {w:"Decision", tr:"Karar"}, {w:"Challenge", tr:"Meydan Okuma"}, 
+    {w:"Opportunity", tr:"Fırsat"}, {w:"Journey", tr:"Yolculuk"}, {w:"Environment", tr:"Çevre"}, 
+    {w:"Development", tr:"Gelişim"}, {w:"Necessary", tr:"Gerekli"}, {w:"Beautiful", tr:"Güzel"}, 
+    {w:"Dangerous", tr:"Tehlikeli"}, {w:"Knowledge", tr:"Bilgi"}, {w:"Experience", tr:"Deneyim"}, 
+    {w:"Incredible", tr:"İnanılmaz"}, {w:"Understand", tr:"Anlamak"}, {w:"Remember", tr:"Hatırlamak"}, 
+    {w:"Question", tr:"Soru"}, {w:"Solution", tr:"Çözüm"}, {w:"Language", tr:"Dil"}, 
+    {w:"Computer", tr:"Bilgisayar"}, {w:"History", tr:"Tarih"}, {w:"Together", tr:"Birlikte"}, 
+    {w:"Family", tr:"Aile"}, {w:"Friend", tr:"Arkadaş"}, {w:"Success", tr:"Başarı"},
+    {w:"Future", tr:"Gelecek"}, {w:"Freedom", tr:"Özgürlük"}, {w:"Mountain", tr:"Dağ"}
+  ],
+  de: [
+    {w:"Entscheidung", tr:"Karar"}, {w:"Möglichkeit", tr:"İmkan"}, {w:"Erfahrung", tr:"Deneyim"},
+    {w:"Natürlich", tr:"Doğal"}, {w:"Wichtig", tr:"Önemli"}, {w:"Zusammen", tr:"Birlikte"},
+    {w:"Schmetterling", tr:"Kelebek"}, {w:"Gefährlich", tr:"Tehlikeli"}, {w:"Entschuldigung", tr:"Özür Dilerim"}
+  ],
+  fr: [
+    {w:"Bonjour", tr:"Merhaba"}, {w:"Amour", tr:"Aşk"}, {w:"Voiture", tr:"Araba"},
+    {w:"Maison", tr:"Ev"}, {w:"Magnifique", tr:"Muhteşem"}, {w:"Toujours", tr:"Her zaman"}
+  ],
+  es: [
+    {w:"Corazón", tr:"Kalp"}, {w:"Amigo", tr:"Arkadaş"}, {w:"Tiempo", tr:"Zaman"},
+    {w:"Vida", tr:"Hayat"}, {w:"Felicidad", tr:"Mutluluk"}, {w:"Peligroso", tr:"Tehlikeli"}
+  ],
+  it: [
+    {w:"Ciao", tr:"Merhaba"}, {w:"Grazie", tr:"Teşekkürler"}, {w:"Famiglia", tr:"Aile"},
+    {w:"Piccolo", tr:"Küçük"}, {w:"Mangiare", tr:"Yemek"}, {w:"Dormire", tr:"Uyumak"}
+  ]
+};
+
+// --- DİL SEÇİM MANTIĞI (DÜZELTİLDİ) ---
+let selLang = 'en';
+document.querySelectorAll('.lang-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selLang = btn.getAttribute('data-lang');
+  });
+});
+
+// --- HELPER FONKSİYONLAR ---
 function normalize(str) { return str.toLowerCase().replace(/ß/g, "ss").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9 ]/g, "").trim(); }
 
 function getBestMatchScore(target, spoken) {
@@ -240,42 +298,6 @@ const SFX = {
   }
 };
 
-// --- DATA: OBJECT FORMAT (Kelime + Anlam) ---
-const RAW_DB = {
-  en: [
-    { w: "Excellent", tr: "Mükemmel" }, { w: "Decision", tr: "Karar" }, { w: "Challenge", tr: "Meydan Okuma" },
-    { w: "Opportunity", tr: "Fırsat" }, { w: "Journey", tr: "Yolculuk" }, { w: "Environment", tr: "Çevre" },
-    { w: "Development", tr: "Gelişim" }, { w: "Necessary", tr: "Gerekli" }, { w: "Beautiful", tr: "Güzel" },
-    { w: "Dangerous", tr: "Tehlikeli" }, { w: "Knowledge", tr: "Bilgi" }, { w: "Experience", tr: "Deneyim" },
-    { w: "Incredible", tr: "İnanılmaz" }, { w: "Understand", tr: "Anlamak" }, { w: "Remember", tr: "Hatırlamak" },
-    { w: "Question", tr: "Soru" }, { w: "Solution", tr: "Çözüm" }, { w: "Language", tr: "Dil" },
-    { w: "Computer", tr: "Bilgisayar" }, { w: "History", tr: "Tarih" }, { w: "Together", tr: "Birlikte" },
-    { w: "Family", tr: "Aile" }, { w: "Friend", tr: "Arkadaş" }, { w: "Success", tr: "Başarı" }
-  ],
-  de: [
-    { w: "Entscheidung", tr: "Karar" }, { w: "Möglichkeit", tr: "İmkan" }, { w: "Erfahrung", tr: "Deneyim" },
-    { w: "Natürlich", tr: "Doğal" }, { w: "Wichtig", tr: "Önemli" }, { w: "Zusammen", tr: "Birlikte" },
-    { w: "Schmetterling", tr: "Kelebek" }, { w: "Gefährlich", tr: "Tehlikeli" }, { w: "Entschuldigung", tr: "Özür Dilerim" }
-  ],
-  fr: [
-    { w: "Bonjour", tr: "Merhaba" }, { w: "Amour", tr: "Aşk" }, { w: "Voiture", tr: "Araba" },
-    { w: "Maison", tr: "Ev" }, { w: "Magnifique", tr: "Muhteşem" }, { w: "Toujours", tr: "Her zaman" }
-  ],
-  es: [
-    { w: "Corazón", tr: "Kalp" }, { w: "Amigo", tr: "Arkadaş" }, { w: "Tiempo", tr: "Zaman" },
-    { w: "Vida", tr: "Hayat" }, { w: "Felicidad", tr: "Mutluluk" }, { w: "Peligroso", tr: "Tehlikeli" }
-  ],
-  it: [
-    { w: "Ciao", tr: "Merhaba" }, { w: "Grazie", tr: "Teşekkürler" }, { w: "Famiglia", tr: "Aile" },
-    { w: "Piccolo", tr: "Küçük" }, { w: "Mangiare", tr: "Yemek" }, { w: "Dormire", tr: "Uyumak" }
-  ]
-};
-
-let selLang = 'en';
-function selectLang(c, el) { 
-  selLang = c; document.querySelectorAll('.lang-opt').forEach(x=>x.classList.remove('selected')); el.classList.add('selected'); 
-}
-
 const game = {
   words: [], idx: 0, moveCount: 0, lastPauseCheck: 0, setNumber: 1, 
   turn: 'A', score: { A:0, B:0 }, setScore: { A:0, B:0 }, names: { A:'A', B:'B' }, 
@@ -285,12 +307,9 @@ const game = {
   init: function() {
     const nA = document.getElementById('inpA').value.trim();
     const nB = document.getElementById('inpB').value.trim();
-    
-    // ZORUNLU İSİM GİRİŞİ
     if (!nA || !nB) { alert("Lütfen oyuncu isimlerini giriniz!"); return; }
 
-    this.names.A = nA;
-    this.names.B = nB;
+    this.names.A = nA; this.names.B = nB;
     document.getElementById('lblA').innerText = this.names.A;
     document.getElementById('lblB').innerText = this.names.B;
     this.fillPool();
@@ -393,7 +412,7 @@ const game = {
     const { targetWord, player } = this.currentSnapshot;
     const score = getBestMatchScore(targetWord, spoken);
     
-    // BENZERLİK ORANI %95 (Supreme Difficulty)
+    // BENZERLİK ORANI %95
     const threshold = 95; 
     const isCorrect = score >= threshold;
     this.showResult(player, isCorrect, score, targetWord);
@@ -420,7 +439,7 @@ const game = {
     if(isCorrect) {
       SFX.play('correct');
       title.innerText = "HARİKA!"; title.style.color = "var(--green)";
-      let pts = 1; if (!isVar && percent >= 98) pts = 2; // %98 üstü bonus
+      let pts = 1; if (!isVar && percent >= 98) pts = 2; 
       sub.innerText = `+${pts} PUAN`; badge.style.color = "var(--green)";
       this.score[p] += pts; this.setScore[p] += pts;
       setTimeout(() => { this.finishResult(el); }, 1200);
@@ -428,7 +447,7 @@ const game = {
       SFX.play('wrong');
       title.innerText = "OLMADI"; title.style.color = "var(--red)";
       sub.innerText = `Doğrusu: ${targetWord}`; badge.style.color = "var(--red)";
-      // YANLIŞTA TEKRAR OKUMA YOK (İstek Üzerine İptal Edildi)
+      // YANLIŞTA TEKRAR OKUMA YOK (İPTAL EDİLDİ)
       setTimeout(() => { this.finishResult(el); }, 2000);
     }
   },
