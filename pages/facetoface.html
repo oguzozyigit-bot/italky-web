@@ -174,6 +174,15 @@ body{ background-image: radial-gradient(at 0% 0%, rgba(59,130,246,.16) 0px, tran
     padding: 10px 12px;
     border-bottom: 1px solid var(--border2);
     background: rgba(0,0,0,.22);
+    /* Dropdown üstte görünsün diye z-index ve position:relative ekliyoruz */
+    position: relative;
+    z-index: 20;
+}
+
+/* --- YENİ EKLENEN DROPDOWN STİLLERİ --- */
+.langWrapper {
+    position: relative;
+    display: inline-block;
 }
 .langBtn{
     height: 38px; border-radius: 12px;
@@ -182,6 +191,53 @@ body{ background-image: radial-gradient(at 0% 0%, rgba(59,130,246,.16) 0px, tran
     font-weight: 800; font-size: 13px;
     padding: 0 12px; display:flex; align-items:center; justify-content:space-between; gap:10px; cursor:pointer; min-width: 140px;
 }
+.dropdownMenu {
+    position: absolute;
+    top: 115%; /* Butonun hemen altı */
+    left: 0;
+    width: 160px;
+    max-height: 220px;
+    overflow-y: auto;
+    background: rgba(18, 18, 24, 0.95);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 12px;
+    padding: 6px;
+    display: none; /* Varsayılan gizli */
+    flex-direction: column;
+    gap: 2px;
+    backdrop-filter: blur(16px);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+    z-index: 999;
+}
+.dropdownMenu.show {
+    display: flex;
+    animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+@keyframes popIn {
+    from { opacity: 0; transform: translateY(-10px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.dropItem {
+    padding: 10px 12px;
+    border-radius: 8px;
+    color: rgba(255,255,255,0.9);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.2s;
+}
+.dropItem:active { background: rgba(255,255,255,0.1); }
+.dropItem:hover { background: rgba(255,255,255,0.08); }
+.dropItem span { pointer-events: none; }
+
+/* Scrollbar ayarı */
+.dropdownMenu::-webkit-scrollbar { width: 4px; }
+.dropdownMenu::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+/* -------------------------------------- */
+
 .btnIcon{
     width: 38px; height: 38px; border-radius: 12px;
     border: 1px solid rgba(255,255,255,.12);
@@ -243,7 +299,11 @@ body{ background-image: radial-gradient(at 0% 0%, rgba(59,130,246,.16) 0px, tran
 
     <section class="side top" id="sideTop">
       <div class="bar">
-        <button class="langBtn" id="topLangBtn" type="button"><span id="topLangTxt">English</span><span>▾</span></button>
+        <div class="langWrapper">
+            <button class="langBtn" id="topLangBtn" type="button"><span id="topLangTxt">English</span><span>▾</span></button>
+            <div class="dropdownMenu" id="topDropdown"></div>
+        </div>
+
         <button class="btnIcon" id="topSpeak" type="button" title="Geri oku / Mute">
           <svg viewBox="0 0 24 24"><path d="M11 5L6 9H3v6h3l5 4z"></path><path d="M15 9a4 4 0 0 1 0 6"></path></svg>
         </button>
@@ -276,7 +336,11 @@ body{ background-image: radial-gradient(at 0% 0%, rgba(59,130,246,.16) 0px, tran
 
     <section class="side meTint" id="sideBottom">
       <div class="bar">
-        <button class="langBtn" id="botLangBtn" type="button"><span id="botLangTxt">Türkçe</span><span>▾</span></button>
+        <div class="langWrapper">
+            <button class="langBtn" id="botLangBtn" type="button"><span id="botLangTxt">Türkçe</span><span>▾</span></button>
+            <div class="dropdownMenu" id="botDropdown"></div>
+        </div>
+
         <button class="btnIcon" id="botSpeak" type="button" title="Geri oku / Mute">
           <svg viewBox="0 0 24 24"><path d="M11 5L6 9H3v6h3l5 4z"></path><path d="M15 9a4 4 0 0 1 0 6"></path></svg>
         </button>
@@ -335,21 +399,65 @@ body{ background-image: radial-gradient(at 0% 0%, rgba(59,130,246,.16) 0px, tran
   $("topLangTxt").textContent = label(topLang);
   $("botLangTxt").textContent = label(botLang);
 
-  function cycleLang(current){
-    const idx = LANGS.findIndex(x=>x.code===current);
-    return LANGS[(idx+1) % LANGS.length].code;
+  // --- DROPDOWN FONKSİYONLARI ---
+  
+  function createDropdownItems(containerId, side) {
+    const container = $(containerId);
+    container.innerHTML = "";
+    
+    LANGS.forEach(l => {
+        const item = document.createElement("div");
+        item.className = "dropItem";
+        item.innerHTML = `<span>${l.flag}</span> <span>${l.name}</span>`;
+        item.onclick = (e) => {
+            e.stopPropagation(); // Butona tıklamayı engelle
+            if(side === "top") {
+                topLang = l.code;
+                $("topLangTxt").textContent = label(topLang);
+                // toast("Üst dil: " + l.name);
+            } else {
+                botLang = l.code;
+                $("botLangTxt").textContent = label(botLang);
+                // toast("Alt dil: " + l.name);
+            }
+            closeAllDropdowns();
+        };
+        container.appendChild(item);
+    });
   }
 
-  $("topLangBtn").addEventListener("click", ()=>{
-    topLang = cycleLang(topLang);
-    $("topLangTxt").textContent = label(topLang);
-    toast("Üst dil: " + L(topLang).name);
+  // İlk yüklemede listeleri oluştur
+  createDropdownItems("topDropdown", "top");
+  createDropdownItems("botDropdown", "bot");
+
+  function toggleDropdown(id) {
+    const el = $(id);
+    const isOpen = el.classList.contains("show");
+    closeAllDropdowns(); // Diğerlerini kapat
+    if(!isOpen) el.classList.add("show");
+  }
+
+  function closeAllDropdowns() {
+    document.querySelectorAll(".dropdownMenu").forEach(el => el.classList.remove("show"));
+  }
+
+  // Buton Tıklamaları (Eskiden cycleLang vardı, şimdi toggle var)
+  $("topLangBtn").addEventListener("click", (e)=>{
+    e.stopPropagation();
+    toggleDropdown("topDropdown");
   });
-  $("botLangBtn").addEventListener("click", ()=>{
-    botLang = cycleLang(botLang);
-    $("botLangTxt").textContent = label(botLang);
-    toast("Alt dil: " + L(botLang).name);
+
+  $("botLangBtn").addEventListener("click", (e)=>{
+    e.stopPropagation();
+    toggleDropdown("botDropdown");
   });
+
+  // Ekranda boş yere tıklayınca kapat
+  window.addEventListener("click", () => {
+    closeAllDropdowns();
+  });
+
+  // --- DİĞER KODLAR AYNI KALIYOR ---
 
   function addBubble(where, role, text){
     const wrap = $(where);
@@ -396,7 +504,6 @@ body{ background-image: radial-gradient(at 0% 0%, rgba(59,130,246,.16) 0px, tran
 
     const raw = await r.text().catch(()=> "");
     if(!r.ok){
-      // status + kısa hata
       throw new Error(`HTTP ${r.status} ${raw.slice(0,120)}`);
     }
 
@@ -508,9 +615,7 @@ body{ background-image: radial-gradient(at 0% 0%, rgba(59,130,246,.16) 0px, tran
       try{
         await runFlow(side, finalText);
       }catch(err){
-        // burada çeviri hatasını gösteriyoruz
         toast("Çeviri hata: " + String(err?.message || err).slice(0,120));
-        // yine de metni diğer tarafa “aynı” bas
         if(side === "top") addBubble("botBody", "me", finalText);
         else addBubble("topBody", "me", finalText);
       }
@@ -536,7 +641,7 @@ body{ background-image: radial-gradient(at 0% 0%, rgba(59,130,246,.16) 0px, tran
   $("topMic").addEventListener("click", ()=> startMic("top"));
   $("botMic").addEventListener("click", ()=> startMic("bot"));
 
-  addBubble("botBody","meta","Mikrofona bas → konuş → otomatik çeviri. (Çeviri hatasında üstte toast görürsün)");
+  addBubble("botBody","meta","Mikrofona bas → konuş → otomatik çeviri.");
 </script>
 
 </body>
