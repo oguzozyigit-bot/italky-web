@@ -3,18 +3,21 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>italkyAI • Karşılıklı Çeviri</title>
+  <title>italkyAI • Pro Karşılıklı</title>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
   <style>
     :root {
       --bg-void: #02000a;
-      --brand-burgundy: #4a0817; /* Karşı taraf */
-      --brand-lacivert: #0f172a; /* Senin tarafın */
+      --brand-burgundy: #580c1f;
+      --brand-lacivert: #0f172a;
+      --text-main: #fff;
+      --icon-bordo: #8b2635; /* Aristokrat Bordo */
       --ai-grad: linear-gradient(135deg, #a5b4fc 0%, #6366f1 100%);
+      --popover-bg: radial-gradient(circle at top left, #2a020f 0%, #14000a 100%);
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
@@ -27,110 +30,120 @@
 
     .container { display: flex; flex-direction: column; height: 100%; width: 100%; position: relative; }
 
-    /* ÜST BÖLME (BORDO) */
-    .half-screen.top {
-      background: linear-gradient(to bottom, #2d060e, var(--brand-burgundy));
-      transform: rotate(180deg); /* Karşıdaki kişi için ters */
+    /* PANEL YAPISI */
+    .half-screen {
+      flex: 1; position: relative; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; padding: 20px;
+      transition: background 0.5s ease;
     }
-
-    /* ALT BÖLME (LACİVERT) */
+    .half-screen.top {
+      background: linear-gradient(to bottom, #1a0208, var(--brand-burgundy));
+      transform: rotate(180deg);
+    }
     .half-screen.bottom {
       background: linear-gradient(to bottom, var(--brand-lacivert), #02000a);
     }
 
-    .half-screen {
-      flex: 1; position: relative; display: flex; flex-direction: column;
-      align-items: center; justify-content: space-between; padding: 30px 20px;
+    /* 1) DİL SEÇİMİ (MINIMALIST) */
+    .lang-trigger {
+      position: absolute; right: 20px;
+      background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.8); padding: 6px 12px; border-radius: 12px;
+      font-size: 11px; font-weight: 800; cursor: pointer;
+      display: flex; align-items: center; gap: 6px; z-index: 100;
+      letter-spacing: 1px;
     }
+    .half-screen.top .lang-trigger { top: 20px; }
+    .half-screen.bottom .lang-trigger { bottom: 20px; }
+    .lang-trigger svg { width: 12px; opacity: 0.5; stroke: #fff; }
 
-    /* DİL SEÇİM BUTONLARI */
-    .lang-pill {
-      background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1);
-      color: #fff; padding: 10px 20px; border-radius: 25px;
-      font-size: 13px; font-weight: 700; cursor: pointer; backdrop-filter: blur(10px);
-      display: flex; align-items: center; gap: 8px; z-index: 50;
+    /* 2) COMPACT POPOVER */
+    .popover {
+      position: absolute; right: 20px; width: 240px; height: 300px;
+      background: var(--popover-bg); border: 1px solid rgba(139, 38, 53, 0.3);
+      border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.8);
+      display: none; flex-direction: column; z-index: 1000; overflow: hidden;
+      animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
+    .popover.show { display: flex; }
+    @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
-    /* MESAJ BALONLARI VE METİN ALANI */
-    .chat-body {
-      flex: 1; width: 100%; max-width: 90%; 
-      display: flex; flex-direction: column; justify-content: center;
-      overflow-y: auto; scrollbar-width: none;
+    .pop-header { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .pop-search { 
+      width: 100%; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px; padding: 6px 10px; color: #fff; font-size: 12px;
     }
-    .chat-body::-webkit-scrollbar { display: none; }
-
-    .bubble {
-      font-size: 24px; font-weight: 800; line-height: 1.2;
-      margin: 10px 0; text-align: center; width: 100%;
+    .pop-list { flex: 1; overflow-y: auto; padding: 8px; }
+    .pop-item { 
+      padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 600;
+      display: flex; justify-content: space-between; cursor: pointer;
     }
-    .bubble.me { color: #fff; } /* Çevrilen (Karşı tarafa giden) */
-    .bubble.them { color: rgba(255,255,255,0.4); font-size: 18px; font-weight: 500; } /* Konuşulan */
+    .pop-item:hover { background: rgba(255,255,255,0.05); }
+    .pop-item.active { color: var(--icon-bordo); background: rgba(139, 38, 53, 0.1); }
 
-    /* HOPARLÖR BUTONU */
-    .speaker-row { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 5px; }
-    .btn-speak {
-      width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.15);
-      background: rgba(255,255,255,0.05); color: #fff; display: flex; align-items: center; justify-content: center;
-      cursor: pointer; transition: 0.2s;
+    /* 3 & 4) BUBBLE & HIYERARŞİ */
+    .chat-display {
+      width: 90%; display: flex; flex-direction: column; align-items: center; gap: 8px;
     }
-    .btn-speak.muted { opacity: 0.3; border-color: transparent; }
+    .input-text { 
+      font-size: 14px; color: rgba(255,255,255,0.4); font-weight: 400; 
+      max-width: 80%; line-height: 1.2;
+    }
+    .output-bubble {
+      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);
+      padding: 15px 20px; border-radius: 20px; position: relative;
+      max-width: 100%; display: flex; align-items: flex-start; gap: 15px;
+    }
+    .output-text { font-size: 26px; font-weight: 800; line-height: 1.1; flex: 1; }
 
-    /* MİKROFONLAR (EN ALTTA VE EN ÜSTTE) */
+    /* HOPARLÖR (INLINE) */
+    .btn-speaker {
+      background: none; border: none; padding: 0; cursor: pointer; color: var(--icon-bordo);
+      display: flex; align-items: center; justify-content: center; transition: 0.2s;
+    }
+    .btn-speaker svg { width: 22px; height: 22px; stroke-width: 2; }
+    .btn-speaker:active { transform: scale(0.9); }
+    .speaker-status { 
+      position: absolute; bottom: -18px; left: 50%; transform: translateX(-50%);
+      font-size: 9px; font-weight: 700; color: var(--icon-bordo); text-transform: uppercase;
+      opacity: 0; transition: 0.3s;
+    }
+    .btn-speaker.playing + .speaker-status { opacity: 1; }
+
+    /* 6) PREMIUM IKON STILI */
     .btn-mic {
-      width: 72px; height: 72px; border-radius: 50%;
-      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2);
-      color: #fff; display: flex; align-items: center; justify-content: center;
-      cursor: pointer; transition: 0.3s; margin-top: 10px;
+      width: 70px; height: 70px; border-radius: 20px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      background: radial-gradient(circle at top left, #3b0716 0%, #2a020f 45%, #14000a 100%);
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: 0 10px 24px rgba(0,0,0,0.6);
+      transition: transform 0.2s; z-index: 50;
     }
-    .btn-mic.listening { 
-        background: #fff; color: #000; transform: scale(1.1); 
-        box-shadow: 0 0 25px rgba(255,255,255,0.4);
-    }
+    .btn-mic svg { width: 30px; stroke: var(--icon-bordo); fill: none; stroke-width: 2; }
+    .btn-mic.listening { transform: scale(1.05); border-color: var(--icon-bordo); }
 
-    /* ORTA HUB (LOGO + DALGA) */
+    /* 5) ORTA HUB (LOGO + DALGA) */
     .center-hub {
-      position: absolute; top: 50%; left: 0; width: 100%; height: 80px;
-      transform: translateY(-50%); display: flex; align-items: center;
-      justify-content: center; z-index: 100; pointer-events: none;
+      position: absolute; top: 50%; left: 0; width: 100%; height: 60px;
+      transform: translateY(-50%); display: flex; align-items: center; justify-content: center;
+      z-index: 200; pointer-events: none;
     }
-
-    /* Logo Kapasülü */
     .logo-capsule {
-      background: #02000a; padding: 10px 24px; border-radius: 30px;
-      border: 2px solid rgba(255,255,255,0.1); display: flex; align-items: center;
-      pointer-events: auto; box-shadow: 0 0 40px rgba(0,0,0,0.9);
-      cursor: pointer;
+      background: #02000a; padding: 8px 18px; border-radius: 25px;
+      border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center;
+      gap: 10px; pointer-events: auto; cursor: pointer; text-decoration: none;
     }
-    .logo-text { font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700; }
+    .logo-text { font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 700; color: #fff; }
     .logo-ai { background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
-    /* Dinamik Ses Dalgaları */
-    .wave-visual {
-      position: absolute; display: flex; align-items: center; gap: 4px; opacity: 0; transition: 0.3s;
+    /* DALGA (SOFTER) */
+    .wave-wrap { 
+      position: absolute; width: 100%; display: flex; justify-content: center; gap: 4px; 
+      opacity: 0; transition: 0.4s;
     }
-    .listening .wave-visual { opacity: 1; }
-    .bar { width: 3px; height: 12px; background: var(--ai-grad); border-radius: 4px; animation: bounce 0.8s infinite ease-in-out; }
-    @keyframes bounce { 0%, 100% { height: 10px; } 50% { height: 50px; } }
-
-    /* DİL SEÇİM PANELİ (BOTTOM SHEET) */
-    .sheet-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px);
-      z-index: 1000; display: none; align-items: flex-end; justify-content: center;
-    }
-    .sheet-overlay.show { display: flex; }
-    .sheet-card {
-      width: 100%; max-width: 480px; background: #0a0a15; border-radius: 30px 30px 0 0;
-      max-height: 80vh; display: flex; flex-direction: column; padding: 20px;
-      border-top: 1px solid rgba(255,255,255,0.1);
-    }
-    .sheet-overlay.fromTop .sheet-card { border-radius: 0 0 30px 30px; align-self: flex-start; }
-
-    .sheet-list { flex: 1; overflow-y: auto; margin-top: 15px; }
-    .sheet-row { 
-      padding: 14px; display: flex; justify-content: space-between; align-items: center; 
-      border-bottom: 1px solid rgba(255,255,255,0.03); cursor: pointer;
-    }
-    .sheet-row.selected { background: rgba(99, 102, 241, 0.1); border-radius: 12px; }
+    .listening .wave-wrap { opacity: 1; }
+    .bar { width: 3px; height: 10px; background: rgba(165, 180, 252, 0.4); border-radius: 4px; animation: wave 1s infinite ease-in-out; }
+    @keyframes wave { 0%, 100% { height: 10px; } 50% { height: 40px; } }
   </style>
 </head>
 
@@ -138,69 +151,119 @@
 
   <div class="container">
     
-    <div class="half-screen top">
-      <div class="lang-pill" id="topLangBtn">
-        <span id="topLangTxt">🌐 İngilizce</span>
+    <div class="half-screen top" id="topSection">
+      <div class="lang-trigger" onclick="togglePopover('top')">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20"/></svg>
+        <span id="topLangTxt">EN</span>
       </div>
 
-      <div class="chat-body" id="topBody">
+      <div class="popover" id="popover-top" style="top: 50px;">
+        <div class="pop-header"><input type="text" class="pop-search" placeholder="Dil ara..."></div>
+        <div class="pop-list" id="list-top"></div>
+      </div>
+
+      <div class="chat-display">
+        <div class="input-text">Waiting for speech...</div>
+        <div class="output-bubble">
+          <div class="output-text" id="topOutput">Welcome</div>
+          <button class="btn-speaker" onclick="handleSpeak('top')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M11 5L6 9H2v6h4l5 4V5zM19 5a10 10 0 0 1 0 14M15 8a5 5 0 0 1 0 7"/></svg>
+            <span class="speaker-status">Seslendiriliyor...</span>
+          </button>
         </div>
-
-      <div class="speaker-row">
-        <button class="btn-speak" id="topSpeak">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 5L6 9H2v6h4l5 4V5zM19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
-        </button>
-        <button class="btn-mic" id="topMic">
-          <svg viewBox="0 0 24 24" width="30"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
-        </button>
       </div>
+
+      <button class="btn-mic" id="topMic" onclick="toggleMic('top')">
+        <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>
+      </button>
     </div>
 
     <div class="center-hub">
-      <div class="wave-visual">
+      <div class="wave-wrap">
         <div class="bar" style="animation-delay:0.1s"></div>
         <div class="bar" style="animation-delay:0.3s"></div>
         <div class="bar" style="animation-delay:0.5s"></div>
         <div class="bar" style="animation-delay:0.3s"></div>
         <div class="bar" style="animation-delay:0.1s"></div>
       </div>
-      <div class="logo-capsule" id="backBtn">
-        <span class="logo-text">italky<span class="logo-ai">AI</span></span>
-      </div>
+      <a href="home.html" class="logo-capsule">
+        <span class="logo-text">← italky<span class="logo-ai">AI</span></span>
+      </a>
     </div>
 
-    <div class="half-screen bottom">
-      <div class="speaker-row">
-        <button class="btn-mic" id="botMic">
-          <svg viewBox="0 0 24 24" width="30"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
-        </button>
-        <button class="btn-speak" id="botSpeak">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 5L6 9H2v6h4l5 4V5zM19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
-        </button>
-      </div>
+    <div class="half-screen bottom" id="botSection">
+      <button class="btn-mic" id="botMic" onclick="toggleMic('bot')">
+        <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>
+      </button>
 
-      <div class="chat-body" id="botBody">
+      <div class="chat-display">
+        <div class="input-text">Konuşmak için basın...</div>
+        <div class="output-bubble">
+          <div class="output-text" id="botOutput">Merhaba</div>
+          <button class="btn-speaker" onclick="handleSpeak('bot')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M11 5L6 9H2v6h4l5 4V5zM19 5a10 10 0 0 1 0 14M15 8a5 5 0 0 1 0 7"/></svg>
+            <span class="speaker-status">Seslendiriliyor...</span>
+          </button>
         </div>
+      </div>
 
-      <div class="lang-pill" id="botLangBtn">
-        <span id="botLangTxt">🌐 Türkçe</span>
+      <div class="lang-trigger" onclick="togglePopover('bot')">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20"/></svg>
+        <span id="botLangTxt">TR</span>
+      </div>
+
+      <div class="popover" id="popover-bot" style="bottom: 50px;">
+        <div class="pop-header"><input type="text" class="pop-search" placeholder="Dil ara..."></div>
+        <div class="pop-list" id="list-bot"></div>
       </div>
     </div>
 
   </div>
 
-  <div class="sheet-overlay" id="langSheet">
-    <div class="sheet-card">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <h3 id="sheetTitle" style="margin:0;">Dil Seçin</h3>
-        <button id="sheetClose" style="background:none; border:none; color:#fff; font-size:20px;">✕</button>
-      </div>
-      <input type="text" id="sheetQuery" placeholder="Dil ara..." style="width:100%; padding:12px; margin-top:15px; border-radius:12px; border:1px solid #333; background:#111; color:#fff;">
-      <div class="sheet-list" id="sheetList"></div>
-    </div>
-  </div>
+  <script>
+    const LANGS = [
+      {code: 'tr', label: 'TR', name: 'Türkçe'},
+      {code: 'en', label: 'EN', name: 'English'},
+      {code: 'de', label: 'DE', name: 'Deutsch'},
+      {code: 'fr', label: 'FR', name: 'Français'}
+    ];
 
-  <script type="module" src="/js/facetoface_page.js"></script>
+    function togglePopover(side) {
+      const pop = document.getElementById(`popover-${side}`);
+      const isShow = pop.style.display === 'flex';
+      document.querySelectorAll('.popover').forEach(p => p.style.display = 'none');
+      pop.style.display = isShow ? 'none' : 'flex';
+      if (!isShow) renderList(side);
+    }
 
+    function renderList(side) {
+      const list = document.getElementById(`list-${side}`);
+      list.innerHTML = LANGS.map(l => `
+        <div class="pop-item" onclick="selectLang('${side}', '${l.code}', '${l.label}')">
+          <span>${l.name}</span>
+          <span>${l.label}</span>
+        </div>
+      `).join('');
+    }
+
+    function selectLang(side, code, label) {
+      document.getElementById(`${side}LangTxt`).innerText = label;
+      document.querySelectorAll('.popover').forEach(p => p.style.display = 'none');
+    }
+
+    function toggleMic(side) {
+      const root = document.getElementById('frameRoot');
+      const isListening = root.classList.contains('listening');
+      root.classList.toggle('listening', !isListening);
+      document.querySelectorAll('.btn-mic').forEach(m => m.classList.remove('listening'));
+      if(!isListening) document.getElementById(`${side}Mic`).classList.add('listening');
+    }
+
+    function handleSpeak(side) {
+      const btn = event.currentTarget;
+      btn.classList.add('playing');
+      setTimeout(() => btn.classList.remove('playing'), 2000);
+    }
+  </script>
 </body>
 </html>
