@@ -45,17 +45,13 @@
     .features-list li { margin-bottom: 15px; font-size: 15px; color: #d1d5db; display: flex; align-items: center; gap: 12px; }
     .features-list li::before { content: "✦"; color: #6366f1; font-weight: bold; }
 
-    .action-section { width: 100%; padding: 0 32px; display: flex; flex-direction: column; gap: 12px; align-items: center; }
-    
-    /* Google Buton Konteynırı */
-    #googleBtnContainer { width: 320px; min-height: 44px; display: flex; justify-content: center; }
+    .action-section { width: 100%; padding: 0 32px; display: flex; flex-direction: column; gap: 14px; align-items: center; }
+    #googleBtnContainer { width: 320px; min-height: 44px; display: flex; justify-content: center; overflow: hidden; border-radius: 6px; }
 
-    /* Kurumsal Apple Butonu */
     .apple-btn {
       width: 320px; height: 44px; border-radius: 6px; border: none;
       background: #000; color: #fff; font-size: 15px; font-weight: 600;
-      display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer;
     }
 
     .footer-section { margin-top: 20px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
@@ -63,7 +59,6 @@
     .footer-nav a { color: rgba(255,255,255,0.3); text-decoration: none; font-size: 10px; font-weight: 700; text-transform: uppercase; }
     .copyright { font-size: 10px; color: rgba(255,255,255,0.15); font-weight: 700; letter-spacing: 1px; }
 
-    /* Yükleniyor Overlay */
     .loading-overlay {
       position: absolute; inset: 0; background: rgba(2, 2, 5, 0.9); z-index: 100;
       display: none; flex-direction: column; align-items: center; justify-content: center; border-radius: 40px;
@@ -90,7 +85,6 @@
     <div class="header-section">
       <div class="logo-text">italky<span class="txt-ai">AI</span></div>
       <div class="be-free">BE FREE</div>
-      
       <div style="margin-top: 40px; padding: 0 40px;">
         <h2 style="font-size: 24px; margin-bottom: 10px; font-weight: 700;">Yapay Zeka İle Dil Engellini Kaldır.</h2>
         <p style="font-size: 14px; color: var(--text-grey); line-height: 1.4;">Anlaşmak ve anlaşılır olmak hiç bu kadar kolay olmamıştı.</p>
@@ -106,11 +100,8 @@
 
     <div class="action-section">
       <div id="googleBtnContainer"></div>
-
       <button class="apple-btn" onclick="showToast('Apple girişi hazırlanıyor, lütfen Google ile devam edin.')">
-        <svg width="16" height="16" viewBox="0 0 17 20" fill="white" xmlns="http://www.w3.org/2000/svg" style="margin-bottom: 2px;">
-            <path d="M14.072 10.142c.013-2.458 2.016-3.64 2.106-3.693-1.15-1.683-2.936-1.913-3.568-1.94-1.507-.153-2.943.889-3.708.889-.764 0-1.956-.867-3.235-.841-1.68.026-3.227.979-4.092 2.483-1.745 3.033-.446 7.513 1.246 9.963.828 1.198 1.812 2.544 3.107 2.496 1.248-.047 1.72-.806 3.23-.806 1.51 0 1.933.806 3.254.78 1.345-.024 2.193-1.218 3.018-2.422.955-1.396 1.35-2.747 1.371-2.822-.03-.013-2.645-1.015-2.529-4.087zM11.91 3.297c.677-.82 1.134-1.961.942-3.097-1.168.047-2.578.777-3.416 1.752-.75.864-1.407 2.029-1.23 3.14 1.298.101 2.628-.68 3.704-1.795z"/>
-        </svg>
+        <svg width="18" height="18" viewBox="0 0 17 20" fill="white"><path d="M14.072 10.142c.013-2.458 2.016-3.64 2.106-3.693-1.15-1.683-2.936-1.913-3.568-1.94-1.507-.153-2.943.889-3.708.889-.764 0-1.956-.867-3.235-.841-1.68.026-3.227.979-4.092 2.483-1.745 3.033-.446 7.513 1.246 9.963.828 1.198 1.812 2.544 3.107 2.496 1.248-.047 1.72-.806 3.23-.806 1.51 0 1.933.806 3.254.78 1.345-.024 2.193-1.218 3.018-2.422.955-1.396 1.35-2.747 1.371-2.822-.03-.013-2.645-1.015-2.529-4.087zM11.91 3.297c.677-.82 1.134-1.961.942-3.097-1.168.047-2.578.777-3.416 1.752-.75.864-1.407 2.029-1.23 3.14 1.298.101 2.628-.68 3.704-1.795z"/></svg>
         Apple ile Giriş Yap
       </button>
     </div>
@@ -137,46 +128,28 @@
     setTimeout(() => t.classList.remove("show"), 3500);
   };
 
-  // Google Login Başladığında Tetiklenir
-  function handleCredentialResponse(response) {
-    document.getElementById("loadingOverlay").classList.add("active");
-    // auth.js'e datayı gönderip işlemleri tamamla
-    console.log("Giriş yapılıyor...");
-  }
-
   function startApp() {
     if (window.google?.accounts?.id) {
       initAuth(); 
-      
       google.accounts.id.renderButton(
         document.getElementById("googleBtnContainer"),
         { 
-          type: "standard",
           theme: "outline", 
           size: "large", 
+          width: "320", 
           text: "continue_with",
-          shape: "rectangular",
-          logo_alignment: "left",
-          width: "320" 
+          shape: "rectangular"
         }
       );
-
-      // Otomatik giriş veya tıklama anında overlay'i göster
-      // Not: Bu fonksiyonu auth.js içindeki callback ile bağlayabilirsiniz
     }
   }
 
-  let checkGoogle = setInterval(() => {
-    if (window.google?.accounts?.id) {
-      clearInterval(checkGoogle);
-      startApp();
-    }
-  }, 100);
+  setInterval(() => {
+    if (window.google?.accounts?.id) startApp();
+  }, 500);
 
-  // Overlay'i dışarıdan tetiklemek gerekirse:
-  window.italkyStartLoading = () => {
-    document.getElementById("loadingOverlay").classList.add("active");
-  };
+  // Overlay'i manuel test etmek istersen konsoldan: window.italkyStartLoading()
+  window.italkyStartLoading = () => document.getElementById("loadingOverlay").classList.add("active");
 </script>
 </body>
 </html>
