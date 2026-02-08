@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ITALKY • NEURAL BOX</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#050508; --panel:#0a0a0f; --cyan:#00f3ff; --gold:#ffb800; --red:#ff0055; --blue:#4f46e5;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none}
+html,body{margin:0;width:100%;height:100dvh;background:var(--bg);font-family:'Outfit',sans-serif;color:#fff;overflow:hidden}
+
+.app { max-width:480px; height:100%; margin:0 auto; display:flex; flex-direction:column; position:relative; background:rgba(8,8,20,.6); backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,0.05); }
+
+/* --- SCORE BOARD --- */
+.scoreboard { display:grid; grid-template-columns: 1fr 1fr; gap:8px; padding:15px; background:rgba(0,0,0,0.4); border-bottom:1px solid rgba(255,255,255,0.1); }
+.val-tag { padding:8px; border-radius:10px; font-size:12px; font-weight:900; text-align:center; border:1.5px solid rgba(255,255,255,0.1); transition:0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); color:rgba(255,255,255,0.3); }
+.val-tag.active { opacity:1; border-color:var(--gold); color:var(--gold); text-shadow:0 0 10px rgba(255,184,0,0.3); background:rgba(255,184,0,0.05); }
+.val-tag.removed { text-decoration:line-through; opacity:0.05; background:#111; transform:scale(0.9); }
+
+/* --- GAME AREA --- */
+.main { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px; }
+
+.box-grid { display:grid; grid-template-columns: repeat(3, 1fr); gap:12px; width:100%; }
+.box { height:90px; background:linear-gradient(145deg, #1a1a25, #08080a); border:2px solid var(--blue); border-radius:18px; display:flex; align-items:center; justify-content:center; font-size:28px; font-family:'Space Grotesk'; font-weight:900; color:var(--cyan); cursor:pointer; transition:0.3s; box-shadow:0 10px 20px rgba(0,0,0,0.3); }
+.box:active { transform:scale(0.92); }
+.box.selected { border-color:var(--gold); color:var(--gold); box-shadow:0 0 25px rgba(255,184,0,0.4); animation: pulseBox 2s infinite; }
+@keyframes pulseBox { 0%,100% { transform:scale(1); } 50% { transform:scale(1.05); } }
+.box.opened { opacity:0; pointer-events:none; transform:scale(0.5) rotate(20deg); }
+
+.my-box-area { margin-top:25px; text-align:center; padding:20px; border:2px dashed rgba(255,255,255,0.1); border-radius:24px; width:90%; background:rgba(255,255,255,0.02); }
+
+/* --- MODALS --- */
+.modal { position:absolute; inset:0; background:rgba(0,0,0,0.97); z-index:100; display:flex; align-items:center; justify-content:center; padding:25px; text-align:center; }
+.card { background:var(--panel); border:2px solid var(--blue); border-radius:32px; padding:30px; width:100%; box-shadow:0 0 50px rgba(79,70,229,0.3); }
+.q-word { font-size:38px; font-weight:900; color:var(--gold); margin:20px 0; font-family:'Space Grotesk'; letter-spacing:1px; }
+.opt-btn { width:100%; padding:18px; margin-bottom:12px; border-radius:16px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.05); color:#fff; font-weight:800; font-size:16px; cursor:pointer; transition:0.2s; }
+.opt-btn:active { background:var(--blue); transform:scale(0.98); }
+
+.banker-card { border-color:var(--gold); }
+.offer-amt { font-size:48px; font-weight:900; color:#fff; margin:20px 0; text-shadow:0 0 20px rgba(255,255,255,0.2); font-family:'Space Grotesk'; }
+
+.btn-main { width:100%; padding:20px; border-radius:20px; border:none; background:var(--cyan); color:#000; font-weight:1000; font-size:18px; cursor:pointer; margin-top:10px; transition:0.2s; }
+.btn-main:active { transform:scale(0.96); }
+.btn-no { background:rgba(255,255,255,0.1); color:#fff; border:1.5px solid rgba(255,255,255,0.2); }
+
+.hidden { display:none !important; }
+</style>
+</head>
+<body>
+
+<div class="app">
+    <div class="scoreboard" id="scoreBoard"></div>
+
+    <div class="main">
+        <h2 id="statusTxt" style="color:var(--cyan); margin-bottom:20px; font-weight:900; text-transform:uppercase; letter-spacing:1px;">KUTUNU SEÇ BAŞKANIM!</h2>
+        <div class="box-grid" id="boxGrid"></div>
+
+        <div class="my-box-area" id="myBoxArea">
+            <div id="myBoxSlot"></div>
+            <p style="font-size:11px; font-weight:900; opacity:0.4; margin-top:10px; letter-spacing:2px;">SENİN KUTUN</p>
+        </div>
+    </div>
+
+    <div class="modal hidden" id="qModal">
+        <div class="card">
+            <p style="font-size:12px; font-weight:900; color:var(--cyan); letter-spacing:1px;">KUTUYU AÇMAK İÇİN BİL!</p>
+            <div class="q-word" id="qWord">WORD</div>
+            <div id="qOpts"></div>
+        </div>
+    </div>
+
+    <div class="modal hidden" id="bankerModal">
+        <div class="card banker-card">
+          <h2 style="color:var(--gold); margin:0; letter-spacing:2px;">BANKER TEKLİFİ</h2>
+          <p style="font-size:14px; opacity:0.7; margin:15px 0;">italkyAI performasını analiz etti ve masaya şunu koydu:</p>
+          <div class="offer-amt" id="offerAmt">500 P</div>
+          <button class="btn-main" id="btnDeal">VARIM (BANKALA)</button>
+          <button class="btn-main btn-no" id="btnNoDeal">YOKUM (DEVAM)</button>
+        </div>
+    </div>
+
+    <div class="modal" id="startModal">
+        <div class="card">
+            <h1 style="font-family:'Space Grotesk'; font-size:42px; margin:0; background:linear-gradient(to right, var(--cyan), var(--gold)); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">NEURAL BOX</h1>
+            <p style="font-size:14px; opacity:0.8; margin:20px 0; line-height:1.6;">10 Kutu, 10 Büyük Ödül. Yanlış cevap Banker'ı sevindirir, büyük ödülü siler! Hazır mısın başkanım?</p>
+            <button class="btn-main" id="startBtn">SİSTEMİ BOOT ET</button>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+import { loadLangPool, createUsedSet, pick } from "/js/langpool.js";
+
+const $ = id => document.getElementById(id);
+const VALUES = [1, 10, 50, 100, 500, 1000, 2500, 5000, 7500, 10000];
+let boardValues = [...VALUES];
+let myBox = null;
+let currentPool = [];
+let boxes = [];
+let stage = 'PICK_MY_BOX'; 
+let boxesToOpenThisRound = 2;
+let boxesOpenedInRound = 0;
+let totalOpened = 0;
+
+function renderBoard() {
+    $("scoreBoard").innerHTML = VALUES.map(v => 
+        `<div class="val-tag active" id="val-${v}">${v.toLocaleString()} P</div>`
+    ).join('');
+}
+
+$("startBtn").onclick = async () => {
+    $("startModal").classList.add("hidden");
+    renderBoard();
+    const data = await loadLangPool("en"); // Havuzu yükle
+    currentPool = data.items;
+    createBoxes();
+};
+
+function createBoxes() {
+    const shuffledValues = [...VALUES].sort(() => Math.random() - 0.5);
+    const grid = $("boxGrid");
+    grid.innerHTML = "";
+    boxes = [];
+
+    for(let i=0; i<10; i++) {
+        const b = { id: i+1, val: shuffledValues[i], opened: false };
+        boxes.push(b);
+        const el = document.createElement("div");
+        el.className = "box";
+        el.textContent = b.id;
+        el.onclick = () => handleBoxClick(b, el);
+        grid.appendChild(el);
+    }
+}
+
+function handleBoxClick(box, el) {
+    if(stage === 'PICK_MY_BOX') {
+        myBox = box;
+        el.classList.add("selected");
+        $("myBoxSlot").appendChild(el);
+        stage = 'OPEN_BOXES';
+        $("statusTxt").textContent = "BİR KUTU SEÇ VE ELE!";
+    } else if(stage === 'OPEN_BOXES' && !box.opened && box !== myBox) {
+        askQuestion(box, el);
+    }
+}
+
+function askQuestion(box, el) {
+    // Havuzdan rastgele kelime çek
+    const item = currentPool[Math.floor(Math.random() * currentPool.length)];
+    $("qWord").textContent = item.w.toUpperCase();
+    $("qModal").classList.remove("hidden");
+
+    let opts = [item.tr];
+    while(opts.length < 3) {
+        const r = currentPool[Math.floor(Math.random() * currentPool.length)].tr;
+        if(!opts.includes(r)) opts.push(r);
+    }
+    opts = opts.sort(() => Math.random() - 0.5);
+
+    $("qOpts").innerHTML = opts.map(o => 
+        `<button class="opt-btn">${o}</button>`
+    ).join('');
+
+    document.querySelectorAll(".opt-btn").forEach(btn => {
+        btn.onclick = () => {
+            if(btn.textContent === item.tr) {
+                // DOĞRU
+                box.opened = true;
+                el.classList.add("opened");
+                removeValue(box.val);
+                totalOpened++;
+                checkRound();
+            } else {
+                // YANLIŞ: En büyük değerlerden birini sil
+                box.opened = true;
+                el.classList.add("opened");
+                const sortedActive = [...boardValues].sort((a,b)=>b-a);
+                const highVal = sortedActive[0]; 
+                removeValue(highVal);
+                alert("YANLIŞ CEVAP! Banker tablodaki en büyük ödülü sildi: " + highVal + " P!");
+                totalOpened++;
+                checkRound();
+            }
+            $("qModal").classList.add("hidden");
+        };
+    });
+}
+
+function removeValue(val) {
+    boardValues = boardValues.filter(v => v !== val);
+    const el = $(`val-${val}`);
+    if(el) el.className = "val-tag removed";
+}
+
+function checkRound() {
+    boxesOpenedInRound++;
+    
+    // Toplamda 8 kutu açıldıysa (Geriye 2 kutu kaldıysa: Benimki ve 1 tane daha)
+    if(totalOpened === 8) {
+        stage = 'FINAL_CHOICE';
+        showFinalSwap();
+        return;
+    }
+
+    if(boxesOpenedInRound >= boxesToOpenThisRound) {
+        showBankerOffer();
+    }
+}
+
+function showBankerOffer() {
+    // Banker Teklifi Formülü: Ortalama * Risk Çarpanı
+    const avg = boardValues.reduce((a,b)=>a+b, 0) / boardValues.length;
+    const offer = Math.floor(avg * 0.75);
+    $("offerAmt").textContent = offer.toLocaleString() + " P";
+    $("bankerModal").classList.remove("hidden");
+}
+
+$("btnNoDeal").onclick = () => {
+    $("bankerModal").classList.add("hidden");
+    boxesOpenedInRound = 0;
+    // Her turda açılacak kutu sayısını ayarla
+    boxesToOpenThisRound = totalOpened >= 6 ? 1 : 2;
+    $("statusTxt").textContent = "DEVAM! BİR KUTU DAHA ELE!";
+};
+
+$("btnDeal").onclick = () => {
+    alert("BANKER İLE ANLAŞTIN! Cüzdanına eklenen: " + $("offerAmt").textContent);
+    location.href = 'game.html';
+};
+
+function showFinalSwap() {
+    const otherBox = boxes.find(b => !b.opened && b !== myBox);
+    const confirmSwap = confirm("SONA GELDİK BAŞKANIM! Elindeki kutuyla yerdeki kutuyu değiştirmek ister misin?");
+    
+    if(confirmSwap) {
+        const temp = myBox;
+        myBox = otherBox;
+        alert("KUTULAR DEĞİŞTİRİLDİ!");
+    }
+    
+    alert("VE FİNAL! KUTUN AÇILIYOR... İÇİNDEN ÇIKAN: " + myBox.val + " P!");
+    location.href = 'game.html';
+}
+
+</script>
+</body>
+</html>
