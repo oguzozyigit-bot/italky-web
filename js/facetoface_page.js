@@ -1,343 +1,206 @@
-// FILE: italky-web/js/facetoface_page.js
-import { BASE_DOMAIN } from "/js/config.js";
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>italkyAI • Karşılıklı Çeviri</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
-const $ = (id)=>document.getElementById(id);
-function base(){ return String(BASE_DOMAIN||"").replace(/\/+$/,""); }
-
-/* ✅ Dil listesi + bayrak + TTS locale */
-const LANGS = [
-  { code:"tr", name:"Türkçe", flag:"🇹🇷", bcp:"tr-TR" },
-  { code:"en", name:"İngilizce", flag:"🇬🇧", bcp:"en-US" },
-  { code:"de", name:"Almanca", flag:"🇩🇪", bcp:"de-DE" },
-  { code:"fr", name:"Fransızca", flag:"🇫🇷", bcp:"fr-FR" },
-  { code:"it", name:"İtalyanca", flag:"🇮🇹", bcp:"it-IT" },
-  { code:"es", name:"İspanyolca", flag:"🇪🇸", bcp:"es-ES" },
-  { code:"pt", name:"Portekizce", flag:"🇵🇹", bcp:"pt-PT" },
-  { code:"pt-br", name:"Portekizce (Brezilya)", flag:"🇧🇷", bcp:"pt-BR" },
-
-  { code:"nl", name:"Felemenkçe", flag:"🇳🇱", bcp:"nl-NL" },
-  { code:"sv", name:"İsveççe", flag:"🇸🇪", bcp:"sv-SE" },
-  { code:"no", name:"Norveççe", flag:"🇳🇴", bcp:"nb-NO" },
-  { code:"da", name:"Danca", flag:"🇩🇰", bcp:"da-DK" },
-  { code:"fi", name:"Fince", flag:"🇫🇮", bcp:"fi-FI" },
-
-  { code:"pl", name:"Lehçe", flag:"🇵🇱", bcp:"pl-PL" },
-  { code:"cs", name:"Çekçe", flag:"🇨🇿", bcp:"cs-CZ" },
-  { code:"sk", name:"Slovakça", flag:"🇸🇰", bcp:"sk-SK" },
-  { code:"hu", name:"Macarca", flag:"🇭🇺", bcp:"hu-HU" },
-  { code:"ro", name:"Romence", flag:"🇷🇴", bcp:"ro-RO" },
-  { code:"bg", name:"Bulgarca", flag:"🇧🇬", bcp:"bg-BG" },
-  { code:"el", name:"Yunanca", flag:"🇬🇷", bcp:"el-GR" },
-
-  { code:"ru", name:"Rusça", flag:"🇷🇺", bcp:"ru-RU" },
-  { code:"uk", name:"Ukraynaca", flag:"🇺🇦", bcp:"uk-UA" },
-  { code:"sr", name:"Sırpça", flag:"🇷🇸", bcp:"sr-RS" },
-  { code:"hr", name:"Hırvatça", flag:"🇭🇷", bcp:"hr-HR" },
-  { code:"bs", name:"Boşnakça", flag:"🇧🇦", bcp:"bs-BA" },
-  { code:"sq", name:"Arnavutça", flag:"🇦🇱", bcp:"sq-AL" },
-
-  { code:"ar", name:"Arapça", flag:"🇸🇦", bcp:"ar-SA" },
-  { code:"fa", name:"Farsça", flag:"🇮🇷", bcp:"fa-IR" },
-  { code:"ur", name:"Urduca", flag:"🇵🇰", bcp:"ur-PK" },
-  { code:"hi", name:"Hintçe", flag:"🇮🇳", bcp:"hi-IN" },
-  { code:"bn", name:"Bengalce", flag:"🇧🇩", bcp:"bn-BD" },
-  { code:"ta", name:"Tamilce", flag:"🇮🇳", bcp:"ta-IN" },
-  { code:"te", name:"Teluguca", flag:"🇮🇳", bcp:"te-IN" },
-
-  { code:"th", name:"Tayca", flag:"🇹🇭", bcp:"th-TH" },
-  { code:"vi", name:"Vietnamca", flag:"🇻🇳", bcp:"vi-VN" },
-  { code:"id", name:"Endonezce", flag:"🇮🇩", bcp:"id-ID" },
-  { code:"ms", name:"Malayca", flag:"🇲🇾", bcp:"ms-MY" },
-
-  { code:"zh", name:"Çince", flag:"🇨🇳", bcp:"zh-CN" },
-  { code:"zh-tw", name:"Çince (Geleneksel)", flag:"🇹🇼", bcp:"zh-TW" },
-  { code:"ja", name:"Japonca", flag:"🇯🇵", bcp:"ja-JP" },
-  { code:"ko", name:"Korece", flag:"🇰🇷", bcp:"ko-KR" },
-  { code:"he", name:"İbranice", flag:"🇮🇱", bcp:"he-IL" },
-];
-
-let topLang = "en";
-let botLang = "tr";
-
-function langName(code){ return LANGS.find(x=>x.code===code)?.name || code; }
-function langFlag(code){ return LANGS.find(x=>x.code===code)?.flag || "🌐"; }
-function bcp(code){ return LANGS.find(x=>x.code===code)?.bcp || "en-US"; }
-
-/* ===== Speech (TTS) ===== */
-const mute = { top:false, bot:false };
-
-function setMute(side, on){
-  mute[side] = !!on;
-  const btn = (side === "top") ? $("topSpeak") : $("botSpeak");
-  btn?.classList.toggle("muted", mute[side]);
-}
-
-function speak(text, langCode, side){
-  if(mute[side]) return;
-  const t = String(text||"").trim();
-  if(!t) return;
-  if(!("speechSynthesis" in window)) return;
-
-  try{
-    const u = new SpeechSynthesisUtterance(t);
-    u.lang = bcp(langCode);
-    // aynı anda iki taraf okumaya kalkmasın
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(u);
-  }catch{}
-}
-
-/* ===== bubbles ===== */
-function addBubble(side, kind, text){
-  const wrap = (side === "top") ? $("topBody") : $("botBody");
-  if(!wrap) return;
-  const b = document.createElement("div");
-  b.className = `bubble ${kind}`; // kind: me/them
-  b.textContent = String(text||"").trim() || "—";
-  wrap.appendChild(b);
-  wrap.scrollTop = wrap.scrollHeight;
-}
-
-function setMicUI(which, on){
-  const btn = (which === "top") ? $("topMic") : $("botMic");
-  btn?.classList.toggle("listening", !!on);
-  $("frameRoot")?.classList.toggle("listening", !!on);
-}
-
-/* ===== Language sheet ===== */
-let sheetFor = "bot"; // "top" | "bot"
-
-function renderSheetList(){
-  const list = $("sheetList");
-  if(!list) return;
-
-  const sel = (sheetFor === "top") ? topLang : botLang;
-
-  list.innerHTML = LANGS.map(l => `
-    <div class="sheetRow ${l.code===sel ? "selected":""}" data-code="${l.code}">
-      <div class="left">
-        <div class="flag">${l.flag}</div>
-        <div class="name">${l.name}</div>
-      </div>
-      <div class="code">${l.code}</div>
-    </div>
-  `).join("");
-
-  list.querySelectorAll(".sheetRow").forEach(row=>{
-    row.addEventListener("click", ()=>{
-      const code = row.getAttribute("data-code") || "en";
-
-      if(sheetFor === "top"){
-        topLang = code;
-        $("topLangTxt").textContent = `${langFlag(topLang)} ${langName(topLang)}`;
-      }else{
-        botLang = code;
-        $("botLangTxt").textContent = `${langFlag(botLang)} ${langName(botLang)}`;
-      }
-
-      stopAll();
-      closeSheet();
-    });
-  });
-}
-
-function openSheet(which){
-  sheetFor = which;
-
-  const overlay = $("langSheet");
-  if(!overlay) return;
-
-  overlay.classList.toggle("fromTop", which === "top");
-  overlay.classList.add("show");
-
-  $("sheetTitle").textContent = (which === "top") ? "Üst Dil" : "Alt Dil";
-  $("sheetQuery").value = "";
-  renderSheetList();
-
-  $("sheetQuery")?.focus?.();
-
-  $("sheetQuery").oninput = ()=>{
-    const q = ($("sheetQuery").value || "").toLowerCase().trim();
-    overlay.querySelectorAll(".sheetRow").forEach(r=>{
-      const code = (r.getAttribute("data-code")||"").toLowerCase();
-      const nm = (r.querySelector(".name")?.textContent||"").toLowerCase();
-      const show = !q || nm.includes(q) || code.includes(q);
-      r.style.display = show ? "flex" : "none";
-    });
-  };
-}
-
-function closeSheet(){
-  const overlay = $("langSheet");
-  if(!overlay) return;
-  overlay.classList.remove("show");
-  overlay.classList.remove("fromTop");
-}
-
-/* ===== Back ===== */
-function bindNav(){
-  $("backBtn")?.addEventListener("click", ()=>{
-    if(history.length > 1) history.back();
-    else location.href="/pages/home.html";
-  });
-}
-
-/* ===== Translate ===== */
-async function translateViaApi(text, source, target){
-  const b = base();
-  if(!b) return text;
-
-  const body = {
-    text,
-    source,
-    target,
-    from_lang: source,
-    to_lang: target,
-  };
-
-  const r = await fetch(`${b}/api/translate`,{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify(body)
-  });
-
-  const data = await r.json().catch(()=> ({}));
-  const out = String(
-    data?.translated || data?.translation || data?.text || data?.translated_text || ""
-  ).trim();
-
-  return out || text;
-}
-
-/* ===== STT ===== */
-let active = null;
-let recTop = null;
-let recBot = null;
-
-function stopAll(){
-  try{ recTop?.stop?.(); }catch{}
-  try{ recBot?.stop?.(); }catch{}
-  recTop = null; recBot = null;
-  active = null;
-  setMicUI("top", false);
-  setMicUI("bot", false);
-}
-
-function buildRecognizer(langCode){
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if(!SR) return null;
-  const rec = new SR();
-  rec.lang = bcp(langCode);
-  rec.interimResults = false;
-  rec.continuous = false;
-  return rec;
-}
-
-async function start(which){
-  // Mikrofon HTTPS ister (localhost hariç)
-  if(location.protocol !== "https:" && location.hostname !== "localhost"){
-    alert("Mikrofon için HTTPS gerekli. (Vercel/HTTPS kullan)");
-    return;
-  }
-
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if(!SR){
-    alert("Bu tarayıcı SpeechRecognition desteklemiyor (Chrome/Edge dene).");
-    return;
-  }
-
-  if(active && active !== which) stopAll();
-
-  const src = (which === "top") ? topLang : botLang;
-  const dst = (which === "top") ? botLang : topLang;
-
-  const rec = buildRecognizer(src);
-  if(!rec){
-    alert("Mikrofon başlatılamadı.");
-    return;
-  }
-
-  active = which;
-  setMicUI(which, true);
-
-  rec.onresult = async (e)=>{
-    const t = e.results?.[0]?.[0]?.transcript || "";
-    const finalText = String(t||"").trim();
-    if(!finalText) return;
-
-    // konuşanı kendi tarafına yaz (them)
-    addBubble(which, "them", finalText);
-
-    // çeviriyi karşı tarafa yaz (me)
-    const other = (which === "top") ? "bot" : "top";
-    try{
-      const translated = await translateViaApi(finalText, src, dst);
-      addBubble(other, "me", translated);
-
-      // ✅ otomatik ses: çeviri hangi tarafa yazıldıysa o tarafın hoparlörü kontrol eder
-      speak(translated, dst, other);
-    }catch{
-      // sessiz
+  <style>
+    :root {
+      --bg-void: #02000a;
+      --brand-burgundy: #4a0817; /* Karşı taraf */
+      --brand-lacivert: #0f172a; /* Senin tarafın */
+      --ai-grad: linear-gradient(135deg, #a5b4fc 0%, #6366f1 100%);
     }
-  };
 
-  rec.onerror = ()=>{
-    stopAll();
-    alert("Mikrofon çalışmadı. Site ayarlarından mikrofonu Allow yap (Chrome: kilit simgesi).");
-  };
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+    body {
+      margin: 0; padding: 0; width: 100%; height: 100dvh;
+      font-family: 'Outfit', sans-serif;
+      background-color: var(--bg-void); color: #fff;
+      display: flex; flex-direction: column; overflow: hidden;
+    }
 
-  rec.onend = ()=>{
-    setMicUI(which, false);
-    active = null;
-  };
+    .container { display: flex; flex-direction: column; height: 100%; width: 100%; position: relative; }
 
-  if(which === "top") recTop = rec; else recBot = rec;
+    /* ÜST BÖLME (BORDO) */
+    .half-screen.top {
+      background: linear-gradient(to bottom, #2d060e, var(--brand-burgundy));
+      transform: rotate(180deg); /* Karşıdaki kişi için ters */
+    }
 
-  try{ rec.start(); }
-  catch{
-    stopAll();
-    alert("Mikrofon başlatılamadı.");
-  }
-}
+    /* ALT BÖLME (LACİVERT) */
+    .half-screen.bottom {
+      background: linear-gradient(to bottom, var(--brand-lacivert), #02000a);
+    }
 
-/* ===== Buttons ===== */
-function bindLangButtons(){
-  $("topLangBtn")?.addEventListener("click", (e)=>{ e.preventDefault(); e.stopPropagation(); openSheet("top"); });
-  $("botLangBtn")?.addEventListener("click", (e)=>{ e.preventDefault(); e.stopPropagation(); openSheet("bot"); });
+    .half-screen {
+      flex: 1; position: relative; display: flex; flex-direction: column;
+      align-items: center; justify-content: space-between; padding: 30px 20px;
+    }
 
-  $("sheetClose")?.addEventListener("click", closeSheet);
-  $("langSheet")?.addEventListener("click", (e)=>{
-    if(e.target === $("langSheet")) closeSheet();
-  });
-}
+    /* DİL SEÇİM BUTONLARI */
+    .lang-pill {
+      background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1);
+      color: #fff; padding: 10px 20px; border-radius: 25px;
+      font-size: 13px; font-weight: 700; cursor: pointer; backdrop-filter: blur(10px);
+      display: flex; align-items: center; gap: 8px; z-index: 50;
+    }
 
-function bindMicButtons(){
-  $("topMic")?.addEventListener("click", (e)=>{
-    e.preventDefault();
-    if(active === "top") stopAll();
-    else start("top");
-  });
+    /* MESAJ BALONLARI VE METİN ALANI */
+    .chat-body {
+      flex: 1; width: 100%; max-width: 90%; 
+      display: flex; flex-direction: column; justify-content: center;
+      overflow-y: auto; scrollbar-width: none;
+    }
+    .chat-body::-webkit-scrollbar { display: none; }
 
-  $("botMic")?.addEventListener("click", (e)=>{
-    e.preventDefault();
-    if(active === "bot") stopAll();
-    else start("bot");
-  });
+    .bubble {
+      font-size: 24px; font-weight: 800; line-height: 1.2;
+      margin: 10px 0; text-align: center; width: 100%;
+    }
+    .bubble.me { color: #fff; } /* Çevrilen (Karşı tarafa giden) */
+    .bubble.them { color: rgba(255,255,255,0.4); font-size: 18px; font-weight: 500; } /* Konuşulan */
 
-  // ✅ hoparlör = mute toggle
-  $("topSpeak")?.addEventListener("click", ()=> setMute("top", !mute.top));
-  $("botSpeak")?.addEventListener("click", ()=> setMute("bot", !mute.bot));
+    /* HOPARLÖR BUTONU */
+    .speaker-row { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 5px; }
+    .btn-speak {
+      width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.05); color: #fff; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: 0.2s;
+    }
+    .btn-speak.muted { opacity: 0.3; border-color: transparent; }
 
-  // default: açık
-  setMute("top", false);
-  setMute("bot", false);
-}
+    /* MİKROFONLAR (EN ALTTA VE EN ÜSTTE) */
+    .btn-mic {
+      width: 72px; height: 72px; border-radius: 50%;
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2);
+      color: #fff; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: 0.3s; margin-top: 10px;
+    }
+    .btn-mic.listening { 
+        background: #fff; color: #000; transform: scale(1.1); 
+        box-shadow: 0 0 25px rgba(255,255,255,0.4);
+    }
 
-document.addEventListener("DOMContentLoaded", ()=>{
-  $("topLangTxt").textContent = `${langFlag(topLang)} ${langName(topLang)}`;
-  $("botLangTxt").textContent = `${langFlag(botLang)} ${langName(botLang)}`;
+    /* ORTA HUB (LOGO + DALGA) */
+    .center-hub {
+      position: absolute; top: 50%; left: 0; width: 100%; height: 80px;
+      transform: translateY(-50%); display: flex; align-items: center;
+      justify-content: center; z-index: 100; pointer-events: none;
+    }
 
-  bindNav();
-  bindLangButtons();
-  bindMicButtons();
-});
+    /* Logo Kapasülü */
+    .logo-capsule {
+      background: #02000a; padding: 10px 24px; border-radius: 30px;
+      border: 2px solid rgba(255,255,255,0.1); display: flex; align-items: center;
+      pointer-events: auto; box-shadow: 0 0 40px rgba(0,0,0,0.9);
+      cursor: pointer;
+    }
+    .logo-text { font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700; }
+    .logo-ai { background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+    /* Dinamik Ses Dalgaları */
+    .wave-visual {
+      position: absolute; display: flex; align-items: center; gap: 4px; opacity: 0; transition: 0.3s;
+    }
+    .listening .wave-visual { opacity: 1; }
+    .bar { width: 3px; height: 12px; background: var(--ai-grad); border-radius: 4px; animation: bounce 0.8s infinite ease-in-out; }
+    @keyframes bounce { 0%, 100% { height: 10px; } 50% { height: 50px; } }
+
+    /* DİL SEÇİM PANELİ (BOTTOM SHEET) */
+    .sheet-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px);
+      z-index: 1000; display: none; align-items: flex-end; justify-content: center;
+    }
+    .sheet-overlay.show { display: flex; }
+    .sheet-card {
+      width: 100%; max-width: 480px; background: #0a0a15; border-radius: 30px 30px 0 0;
+      max-height: 80vh; display: flex; flex-direction: column; padding: 20px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    .sheet-overlay.fromTop .sheet-card { border-radius: 0 0 30px 30px; align-self: flex-start; }
+
+    .sheet-list { flex: 1; overflow-y: auto; margin-top: 15px; }
+    .sheet-row { 
+      padding: 14px; display: flex; justify-content: space-between; align-items: center; 
+      border-bottom: 1px solid rgba(255,255,255,0.03); cursor: pointer;
+    }
+    .sheet-row.selected { background: rgba(99, 102, 241, 0.1); border-radius: 12px; }
+  </style>
+</head>
+
+<body id="frameRoot">
+
+  <div class="container">
+    
+    <div class="half-screen top">
+      <div class="lang-pill" id="topLangBtn">
+        <span id="topLangTxt">🌐 İngilizce</span>
+      </div>
+
+      <div class="chat-body" id="topBody">
+        </div>
+
+      <div class="speaker-row">
+        <button class="btn-speak" id="topSpeak">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 5L6 9H2v6h4l5 4V5zM19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+        </button>
+        <button class="btn-mic" id="topMic">
+          <svg viewBox="0 0 24 24" width="30"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="center-hub">
+      <div class="wave-visual">
+        <div class="bar" style="animation-delay:0.1s"></div>
+        <div class="bar" style="animation-delay:0.3s"></div>
+        <div class="bar" style="animation-delay:0.5s"></div>
+        <div class="bar" style="animation-delay:0.3s"></div>
+        <div class="bar" style="animation-delay:0.1s"></div>
+      </div>
+      <div class="logo-capsule" id="backBtn">
+        <span class="logo-text">italky<span class="logo-ai">AI</span></span>
+      </div>
+    </div>
+
+    <div class="half-screen bottom">
+      <div class="speaker-row">
+        <button class="btn-mic" id="botMic">
+          <svg viewBox="0 0 24 24" width="30"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
+        </button>
+        <button class="btn-speak" id="botSpeak">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 5L6 9H2v6h4l5 4V5zM19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+        </button>
+      </div>
+
+      <div class="chat-body" id="botBody">
+        </div>
+
+      <div class="lang-pill" id="botLangBtn">
+        <span id="botLangTxt">🌐 Türkçe</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="sheet-overlay" id="langSheet">
+    <div class="sheet-card">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h3 id="sheetTitle" style="margin:0;">Dil Seçin</h3>
+        <button id="sheetClose" style="background:none; border:none; color:#fff; font-size:20px;">✕</button>
+      </div>
+      <input type="text" id="sheetQuery" placeholder="Dil ara..." style="width:100%; padding:12px; margin-top:15px; border-radius:12px; border:1px solid #333; background:#111; color:#fff;">
+      <div class="sheet-list" id="sheetList"></div>
+    </div>
+  </div>
+
+  <script type="module" src="/js/facetoface_page.js"></script>
+
+</body>
+</html>
