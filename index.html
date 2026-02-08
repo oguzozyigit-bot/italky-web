@@ -46,11 +46,9 @@
     .features-list li::before { content: "✦"; color: #6366f1; font-weight: bold; }
 
     .action-section { width: 100%; padding: 0 32px; display: flex; flex-direction: column; gap: 12px; align-items: center; }
-    
-    /* Google Buton Konteynırı */
+
     #googleBtnContainer { width: 320px; min-height: 44px; display: flex; justify-content: center; }
 
-    /* Apple Butonu */
     .apple-btn {
       width: 320px; height: 44px; border-radius: 6px; border: none;
       background: #000; color: #fff; font-size: 15px; font-weight: 600;
@@ -62,7 +60,6 @@
     .footer-nav a { color: rgba(255,255,255,0.3); text-decoration: none; font-size: 10px; font-weight: 700; text-transform: uppercase; }
     .copyright { font-size: 10px; color: rgba(255,255,255,0.15); font-weight: 700; letter-spacing: 1px; }
 
-    /* Yükleniyor Ekranı */
     .loading-overlay {
       position: absolute; inset: 0; background: rgba(2, 2, 5, 0.95); z-index: 100;
       display: none; flex-direction: column; align-items: center; justify-content: center; border-radius: 40px;
@@ -88,7 +85,7 @@
     <div class="header-section">
       <div class="logo-text">italky<span class="txt-ai">AI</span></div>
       <div class="be-free">BE FREE</div>
-      
+
       <div style="margin-top: 40px; padding: 0 40px;">
         <h2 style="font-size: 24px; margin-bottom: 10px; font-weight: 700;">Yapay Zeka İle Dil Engellini Kaldır.</h2>
         <p style="font-size: 14px; color: var(--text-grey); line-height: 1.4;">Anlaşmak ve anlaşılır olmak hiç bu kadar kolay olmamıştı.</p>
@@ -115,10 +112,10 @@
 
     <div class="footer-section">
       <nav class="footer-nav">
-        <a href="#">Hakkımızda</a>
-        <a href="#">SSS</a>
-        <a href="#">Gizlilik</a>
-        <a href="#">İletişim</a>
+        <a href="/pages/about.html">Hakkımızda</a>
+        <a href="/pages/faq.html">SSS</a>
+        <a href="/pages/privacy.html">Gizlilik</a>
+        <a href="/pages/contact.html">İletişim</a>
       </nav>
       <div class="copyright">italkyAI By Ozyigit's 2026</div>
     </div>
@@ -127,7 +124,7 @@
   <div id="toast" class="toast"></div>
 
 <script type="module">
-  import { initAuth } from "/js/auth.js";
+  import { initAuth, redirectIfLoggedIn } from "/js/auth.js";
 
   window.showToast = (msg) => {
     const t = document.getElementById("toast");
@@ -135,39 +132,36 @@
     setTimeout(() => t.classList.remove("show"), 3500);
   };
 
-  // Yükleniyor ekranını açan fonksiyon
   window.italkyStartLoading = () => {
     document.getElementById("loadingOverlay").classList.add("active");
   };
+  window.italkyStopLoading = () => {
+    document.getElementById("loadingOverlay").classList.remove("active");
+  };
 
-  let isAuthInitialized = false;
-
-  function startApp() {
-    if (window.google?.accounts?.id && !isAuthInitialized) {
-      isAuthInitialized = true; // Sadece bir kez çalışmasını sağla
-      initAuth(); 
-      
-      google.accounts.id.renderButton(
-        document.getElementById("googleBtnContainer"),
-        { 
-          theme: "outline", 
-          size: "large", 
-          width: "320", 
-          text: "continue_with",
-          shape: "rectangular",
-          logo_alignment: "left"
-        }
-      );
-    }
+  // ✅ Eğer kullanıcı zaten login ise: direkt home
+  if (redirectIfLoggedIn()) {
+    // redirectIfLoggedIn true dönerse zaten yönlendirdi
+  } else {
+    // ✅ Google script hazır olana kadar güvenli bekleme
+    const t0 = Date.now();
+    const tick = () => {
+      if (window.google?.accounts?.id) {
+        initAuth({
+          buttonEl: document.getElementById("googleBtnContainer"),
+          onError: (msg) => window.showToast(msg || "Giriş başarısız"),
+        });
+        return;
+      }
+      // 10sn sonra uyar
+      if (Date.now() - t0 > 10000) {
+        window.showToast("Google giriş yüklenemedi. İnternet / reklam engelleyici kontrol et.");
+        return;
+      }
+      requestAnimationFrame(tick);
+    };
+    tick();
   }
-
-  // Yenilenme sorununu çözen güvenli kontrol
-  const authInterval = setInterval(() => {
-    if (window.google?.accounts?.id) {
-      startApp();
-      clearInterval(authInterval); // Kütüphane bulundu, döngüyü bitir!
-    }
-  }, 100);
 </script>
 </body>
 </html>
