@@ -1,3 +1,4 @@
+<!-- FILE: /pages/document.html -->
 <!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -8,286 +9,316 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
   <style>
-    :root {
-      /* --- Layout --- */
-      --frameW: min(480px, 100vw);
-      --topH: 70px;
-      --footerH: 80px;
+    :root{
+      --frameW: min(480px, calc(100vw - 18px));
+      --topH: 74px;
+      --footerH: 74px;
 
-      /* --- Colors --- */
-      --bg-deep: #050507;
-      --text-main: #ffffff;
-      --text-muted: rgba(255, 255, 255, 0.5);
-      --text-dim: rgba(255, 255, 255, 0.3);
+      --bg:#030014;
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.60);
 
-      --accent-primary: #6366f1;
-      --accent-glow: rgba(99, 102, 241, 0.5);
-      --accent-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+      --ai1:#A5B4FC;
+      --ai2:#4F46E5;
+      --befree:#6B7280;
 
-      --glass-bg: rgba(20, 20, 25, 0.65);
-      --glass-border: rgba(255, 255, 255, 0.08);
+      --glass: rgba(255,255,255,.06);
+      --border: rgba(255,255,255,.12);
 
-      --logo-w: #fff;
-      --ai-grad: linear-gradient(to right, #818cf8, #c084fc);
+      --navyA: rgba(40,120,255,.12);
+      --navyB: rgba(255,255,255,.05);
+    }
+    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; }
+    html,body{
+      margin:0; padding:0; width:100%; height:100dvh;
+      overflow:hidden; position:fixed;
+      font-family:'Outfit', sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      display:flex; align-items:center; justify-content:center;
     }
 
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
-    
-    body {
-      margin: 0; padding: 0; width: 100%; height: 100dvh;
-      overflow: hidden; position: fixed;
-      font-family: 'Outfit', sans-serif;
-      background: var(--bg-deep);
-      color: var(--text-main);
-      display: flex; align-items: center; justify-content: center;
+    .mobile-frame{
+      width:100%; max-width:480px; height:100%;
+      position:relative; z-index:10;
+      background: rgba(8, 8, 20, 0.65);
+      backdrop-filter: blur(25px);
+      overflow:hidden;
+      display:flex; flex-direction:column;
+    }
+    @media(min-width:520px){
+      .mobile-frame{
+        height:92vh;
+        border-radius:40px;
+        border:1px solid rgba(255,255,255,0.08);
+        box-shadow:0 40px 100px -20px rgba(0,0,0,0.9);
+      }
     }
 
-    /* --- Background --- */
-    .premium-bg { position: absolute; inset: 0; z-index: 0; pointer-events: none; background: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #000000 60%); }
-    .premium-glow { position: absolute; width: 600px; height: 600px; background: radial-gradient(circle, rgba(99, 102, 241, 0.15), transparent 70%); top: -200px; left: 50%; transform: translateX(-50%); filter: blur(80px); opacity: 0.6; }
-
-    /* --- Frame --- */
-    .mobile-frame {
-      width: 100%; max-width: var(--frameW); height: 100%;
-      position: relative; z-index: 10;
-      background: rgba(10, 10, 12, 0.5);
-      display: flex; flex-direction: column;
-      overflow: hidden;
+    .topbar{
+      position: sticky; top: 0; z-index: 3000;
+      height: var(--topH);
+      display:flex; align-items:center; justify-content:space-between;
+      padding: 0 12px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+      background: rgba(0,0,0,.35);
+      backdrop-filter: blur(12px);
     }
-    @media(min-width: 520px) {
-      .mobile-frame { height: 92vh; border-radius: 32px; border: 1px solid var(--glass-border); box-shadow: 0 40px 120px -20px rgba(0,0,0,0.8); background: rgba(10, 10, 12, 0.85); }
+    .leftControls{ display:flex; align-items:center; gap:10px; min-width:0; }
+    .backBtn{
+      width:44px;height:44px;border-radius:16px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.18);
+      color:#fff;
+      font-size:20px;font-weight:1000;
+      display:flex;align-items:center;justify-content:center;
+      cursor:pointer; user-select:none;
+    }
+    .mini-brand{ display:flex; flex-direction:column; user-select:none; cursor:pointer; line-height:1; margin-top:2px; }
+    .logo-line{ font-family:'Space Grotesk', sans-serif; font-size: 20px; letter-spacing:-0.4px; display:flex; align-items:flex-end; gap:2px; }
+    .logo-main{ font-weight:700; color:#FFFFFF; }
+    .logo-ai{ font-weight:700; background: linear-gradient(135deg, var(--ai1) 0%, var(--ai2) 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .logo-slogan{ font-size:10px; font-weight:700; letter-spacing:4px; color: var(--befree); margin-top:5px; padding-left:2px; text-transform: uppercase; }
+
+    .rightControls{ display:flex; align-items:center; gap:10px; min-width:0; }
+    .usertext{ min-width:0; display:flex; flex-direction:column; align-items:flex-end; gap:2px; max-width: 200px; }
+    .uname{ font-weight: 900; font-size: 12px; color: rgba(255,255,255,0.92); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .plan{ font-weight: 800; font-size: 11px; color: rgba(255,255,255,0.55); white-space:nowrap; }
+    .avatar-btn{ width:42px; height:42px; border:none; background:transparent; border-radius:999px; overflow:hidden; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+    .avatar-btn img{ width:42px; height:42px; border-radius:999px; object-fit:cover; display:block; }
+    .avatar-fallback{ width:42px; height:42px; border-radius:999px; display:flex; align-items:center; justify-content:center; font-weight:1000; color: rgba(255,255,255,0.92); background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.10); user-select:none; }
+
+    .main{
+      flex:1;
+      padding: 12px;
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+      overflow:hidden;
+      padding-bottom: calc(var(--footerH) + 12px);
     }
 
-    /* --- Top Bar --- */
-    .topbar {
-      height: var(--topH); display: flex; align-items: center; justify-content: space-between;
-      padding: 0 20px; background: rgba(5, 5, 7, 0.7); backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--glass-border); z-index: 50;
+    .toolbar{ display:flex; gap:10px; align-items:center; }
+    .pill{
+      flex:1;
+      height: 46px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: var(--glass);
+      color:#fff;
+      font-weight: 1000;
+      font-size: 12px;
+      padding: 0 12px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      cursor:pointer;
+      user-select:none;
+      min-width:0;
+      gap: 10px;
     }
-    .backBtn {
-      width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--glass-border);
-      background: rgba(255,255,255,0.03); color: var(--text-main); font-size: 18px;
-      display: flex; align-items: center; justify-content: center; cursor: pointer;
+    .pillLeft{ display:flex; align-items:center; gap:10px; min-width:0; }
+    .flag{ width:24px; display:flex; align-items:center; justify-content:center; font-size:16px; flex:0 0 24px; opacity:.95; }
+    .label{ min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .caret{ opacity:.8; }
+
+    .btnSmall{
+      width: 72px; height: 46px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: var(--glass);
+      color: rgba(255,255,255,.92);
+      font-weight: 1000;
+      cursor:pointer;
     }
-    .mini-brand { display: flex; flex-direction: column; cursor: pointer; margin-left: 6px; }
-    .logo-line { font-family: 'Space Grotesk', sans-serif; font-size: 20px; line-height: 1; letter-spacing: -0.5px; }
-    .logo-main { font-weight: 700; color: var(--logo-w); }
-    .logo-ai { font-weight: 700; background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .logo-slogan { font-size: 9px; font-weight: 700; letter-spacing: 3px; color: var(--text-muted); margin-top: 4px; opacity: 0.7; }
-
-    .rightControls { display: flex; align-items: center; gap: 12px; }
-    .usertext { text-align: right; line-height: 1.2; }
-    .uname { font-size: 13px; font-weight: 600; color: var(--text-main); }
-    .plan { font-size: 10px; font-weight: 600; color: #a855f7; text-transform: uppercase; }
-    .avatar-btn { width: 38px; height: 38px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.15); background: transparent; overflow: hidden; cursor: pointer; padding: 0; }
-    .avatar-btn img { width: 100%; height: 100%; object-fit: cover; }
-    .avatar-fallback { width: 100%; height: 100%; background: #1f1f25; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; }
-
-    /* --- Main --- */
-    .main { flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 16px; overflow-y: auto; padding-bottom: calc(var(--footerH) + 20px); }
-    .main::-webkit-scrollbar { display: none; }
-
-    /* --- Toolbar --- */
-    .toolbar { display: flex; gap: 10px; margin-bottom: 4px; }
-    
-    .pill {
-      flex: 1; height: 54px; border-radius: 16px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%);
-      border: 1px solid var(--glass-border);
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 0 16px; cursor: pointer; transition: 0.2s;
-      color: #ffffff;
+    .btnSmall.primary{
+      border:none;
+      background: linear-gradient(135deg, var(--ai1), var(--ai2));
+      box-shadow: 0 18px 40px rgba(79,70,229,.18);
     }
-    .pill:active { transform: scale(0.98); }
-    .pillLeft { display: flex; align-items: center; gap: 10px; }
-    
-    /* BAYRAK AYARLARI */
-    .flag { 
-        font-size: 24px; 
-        line-height: 1; 
-        display: inline-block; 
-        filter: none; /* Bazı tarayıcılarda emoji siyah beyaz olmasın */
+
+    .stage{
+      flex:1;
+      border-radius: 22px;
+      border: 1px solid rgba(255,255,255,.10);
+      overflow:hidden;
+      position:relative;
+      background:
+        radial-gradient(800px 240px at 0% 0%, var(--navyA), transparent 62%),
+        radial-gradient(800px 240px at 100% 0%, var(--navyB), transparent 62%),
+        rgba(0,0,0,.12);
+      box-shadow: 0 28px 90px rgba(0,0,0,.55);
+      min-height:0;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      padding: 12px;
     }
-    .label { font-size: 14px; font-weight: 600; color: #ffffff; }
-    .caret { font-size: 10px; opacity: 0.6; color: #ffffff; }
 
-    /* Action Buttons */
-    .actions-group { display: flex; gap: 8px; flex: 1.2; }
-
-    .btn-circle {
-      width: 54px; height: 54px; border-radius: 16px;
-      background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);
-      color: #fff; font-size: 24px; font-weight: 300;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; transition: 0.2s; flex-shrink: 0;
+    .preview{
+      flex:1;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.22);
+      overflow:hidden;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      position:relative;
+      min-height:0;
     }
-    .btn-circle:active { background: rgba(255,255,255,0.1); transform: scale(0.95); }
 
-    #runBtn {
+    #imgPreview{ display:none; width:100%; height:100%; object-fit:contain; }
+    #pdfCanvas{ display:none; width:100%; height:100%; }
+
+    .statusRow{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .statusPill{
+      padding: 10px 12px;
+      border-radius: 16px;
+      background: rgba(0,0,0,.35);
+      border: 1px solid rgba(255,255,255,.10);
+      color: rgba(255,255,255,.92);
+      font-weight: 900;
+      font-size: 12px;
       flex: 1;
-      height: 54px; border-radius: 16px;
-      background: var(--accent-gradient);
-      border: none; color: #fff;
-      font-size: 13px; font-weight: 800; letter-spacing: 0.5px;
-      box-shadow: 0 4px 20px var(--accent-glow);
-      cursor: pointer; transition: 0.2s;
-    }
-    #runBtn:active { transform: scale(0.97); box-shadow: 0 2px 10px var(--accent-glow); }
-
-    /* --- Pane & Boxes --- */
-    .pane { flex: 1; display: grid; grid-template-rows: 1fr 1fr; gap: 16px; min-height: 0; }
-    .box {
-      border-radius: 24px; border: 1px solid var(--glass-border);
-      background: var(--glass-bg); backdrop-filter: blur(20px);
-      display: flex; flex-direction: column; overflow: hidden;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-      position: relative;
-    }
-    .boxHead {
-      height: 42px; padding: 0 16px; display: flex; align-items: center; justify-content: space-between;
-      border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(0,0,0,0.15);
-    }
-    .headTitle { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); }
-    .small { font-size: 11px; font-weight: 600; color: var(--accent-primary); }
-
-    /* --- Preview Area --- */
-    .previewWrap {
-      flex: 1; position: relative; overflow: hidden;
-      background: rgba(0,0,0,0.2);
-      display: flex; align-items: center; justify-content: center;
-      text-align: center;
-    }
-    
-    .empty-state {
-      display: flex; flex-direction: column; align-items: center; gap: 12px;
-      z-index: 2; pointer-events: none; padding: 20px;
-      transition: opacity 0.3s;
-    }
-    /* JS ile gizlemek için */
-    .empty-state.hidden { opacity: 0; pointer-events: none; }
-    
-    .big-plus-btn {
-      width: 72px; height: 72px; border-radius: 50%;
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.1);
-      color: var(--accent-primary);
-      font-size: 32px; font-weight: 300;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; pointer-events: auto;
-      box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4);
-      animation: pulse-glow 2s infinite;
-      transition: 0.3s;
-    }
-    .big-plus-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.12); }
-    
-    @keyframes pulse-glow {
-      0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); }
-      70% { box-shadow: 0 0 0 15px rgba(99, 102, 241, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+      min-width: 0;
+      backdrop-filter: blur(10px);
     }
 
-    .empty-text { font-size: 12px; font-weight: 600; color: var(--text-muted); letter-spacing: 0.5px; }
-    .empty-hint {
-      font-size: 10px; font-weight: 500; color: var(--text-dim);
-      margin-top: -6px; opacity: 0.7; letter-spacing: 0.3px;
+    .outBox{
+      height: 34%;
+      min-height: 160px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.22);
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+    }
+    .outHead{
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      font-weight: 1000;
+      font-size: 12px;
+      color: rgba(255,255,255,.80);
+    }
+    .outText{
+      flex:1;
+      padding: 12px;
+      background: transparent;
+      border:none;
+      outline:none;
+      color:#fff;
+      font-size: 14px;
+      line-height: 1.4;
+      resize:none;
     }
 
-    /* PREVIEW (Görsel yüklendiğinde öne çıkacak) */
-    .preview { 
-        position: absolute; inset: 0; width: 100%; height: 100%; 
-        object-fit: contain; 
-        z-index: 1; opacity: 0; transition: opacity 0.3s; 
+    .footerbar{
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      width: var(--frameW);
+      bottom: 0;
+      z-index: 2400;
+      height: 74px;
+      padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+      background: rgba(3, 0, 20, 0.95);
+      border-top: 1px solid rgba(255,255,255,.05);
+      backdrop-filter: blur(10px);
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      gap: 6px;
     }
-    .preview.show { 
-        opacity: 1; 
-        background: #0b0b0f; 
-        z-index: 50; /* Empty state'in çok üstünde */
-    }
+    .footerBrand{ text-align:center; font-size: 10px; color: rgba(255,255,255,0.22); letter-spacing: 0.2px; font-weight: 700; }
 
-    /* Output */
-    textarea {
-      flex: 1; border: none; background: transparent; resize: none;
-      padding: 16px; color: var(--text-main); font-family: 'Outfit', sans-serif;
-      font-size: 15px; line-height: 1.6;
-    }
-    textarea::placeholder { color: var(--text-dim); }
-
-    /* --- Footer --- */
-    .footerbar {
-      position: absolute; bottom: 0; left: 0; right: 0; height: var(--footerH);
-      background: rgba(5, 5, 7, 0.85); backdrop-filter: blur(20px);
-      border-top: 1px solid var(--glass-border);
-      display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 8px; z-index: 50;
-    }
-    .links { display: flex; gap: 20px; }
-    .links a { color: var(--text-muted); font-size: 11px; font-weight: 600; text-decoration: none; text-transform: uppercase; }
-    .footerBrand { font-size: 10px; color: var(--text-dim); letter-spacing: 0.5px; }
-
-    /* --- Sheets (Modals) --- */
-    .sheetBackdrop {
+    /* language sheet */
+    .sheetBackdrop{
       position: fixed; inset: 0; z-index: 9999;
-      background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
-      display: none; align-items: flex-end; justify-content: center;
-      opacity: 0; transition: opacity 0.3s;
+      background: rgba(0,0,0,.72);
+      display:none; align-items:flex-end; justify-content:center; padding: 16px;
     }
-    .sheetBackdrop.show { display: flex; opacity: 1; }
+    .sheetBackdrop.show{ display:flex; }
+    .sheet{
+      width: 100%; max-width: 480px;
+      background: rgba(10,10,18,.96);
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 26px;
+      overflow:hidden;
+      box-shadow: 0 30px 80px rgba(0,0,0,.55);
+    }
+    .sheetTop{
+      padding: 12px 14px;
+      display:flex; align-items:center; justify-content:space-between; gap: 10px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+    .sheetTitle{ font-weight: 1000; font-size: 13px; color: rgba(255,255,255,.92); }
+    .sheetClose{
+      width: 42px; height: 42px; border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.06);
+      color: rgba(255,255,255,.88);
+      font-weight: 1000;
+      cursor:pointer;
+    }
+    .sheetSearch{ padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,.08); }
+    .sheetSearch input{
+      width:100%; height: 46px; border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.06);
+      color: #fff;
+      padding: 0 12px;
+      font-weight: 800;
+      font-size: 13px;
+    }
+    .sheetList{
+      max-height: 55vh;
+      overflow:auto; -webkit-overflow-scrolling: touch;
+      scrollbar-width:none;
+    }
+    .sheetList::-webkit-scrollbar{ display:none; }
+    .sheetRow{
+      padding: 12px 14px;
+      display:flex; align-items:center; justify-content:space-between; gap: 10px;
+      cursor:pointer; border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .sheetRow.selected{ background: rgba(79,70,229,.14); }
+    .sheetRow .left{ display:flex; align-items:center; gap:10px; min-width:0; }
+    .sheetRow .name{ font-weight: 1000; font-size: 13px; color: rgba(255,255,255,.92); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .sheetRow .code{ font-weight: 800; font-size: 12px; color: rgba(255,255,255,.55); white-space:nowrap; }
 
-    .sheet {
-      width: 100%; max-width: 480px; background: #121216;
-      border: 1px solid var(--glass-border); border-radius: 28px 28px 0 0;
-      box-shadow: 0 -10px 50px rgba(0,0,0,0.6);
-      transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-      padding-bottom: 20px;
+    .toast{
+      position: fixed; left:50%; top:18px;
+      transform: translateX(-50%) translateY(-120px);
+      background: rgba(10,10,18,.92);
+      border:1px solid rgba(165,180,252,.35);
+      padding: 10px 14px;
+      border-radius: 999px;
+      color:#fff;
+      z-index:10000;
+      font-weight:900;
+      font-size:12px;
+      transition:.28s;
+      backdrop-filter: blur(12px);
     }
-    .sheetBackdrop.show .sheet { transform: translateY(0); }
-
-    .sheetTop { padding: 18px 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--glass-border); }
-    .sheetTitle { font-size: 16px; font-weight: 700; color: #fff; }
-    .sheetClose { background: rgba(255,255,255,0.08); border: none; color: #fff; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-
-    .source-options { padding: 24px; display: grid; gap: 12px; }
-    .btn-source {
-      height: 60px; border-radius: 18px; border: 1px solid var(--glass-border);
-      background: rgba(255,255,255,0.03); color: #fff;
-      display: flex; align-items: center; padding: 0 20px; gap: 16px;
-      font-size: 15px; font-weight: 600; cursor: pointer; transition: 0.2s;
-    }
-    .btn-source:active { background: rgba(255,255,255,0.08); transform: scale(0.98); }
-    .btn-source svg { width: 24px; height: 24px; fill: var(--accent-primary); }
-
-    .sheetSearch { padding: 12px 20px; border-bottom: 1px solid var(--glass-border); }
-    .sheetSearch input {
-      width: 100%; height: 46px; border-radius: 14px;
-      background: rgba(255,255,255,0.08); border: 1px solid transparent;
-      color: #ffffff;
-      padding: 0 16px; font-size: 14px;
-    }
-    .sheetList { max-height: 50vh; overflow-y: auto; }
-    .sheetRow {
-      padding: 16px 24px; display: flex; align-items: center; justify-content: space-between;
-      border-bottom: 1px solid rgba(255,255,255,0.03); cursor: pointer;
-    }
-    .sheetRow .name { font-size: 14px; font-weight: 600; color: #ffffff; }
-    .sheetRow .code { font-size: 12px; font-weight: 500; color: var(--text-muted); background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 6px; }
-
-    #filePick, #camPick { display: none; }
-    
-    .toast {
-      position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px);
-      background: #fff; color: #000; padding: 12px 24px; border-radius: 30px;
-      font-size: 13px; font-weight: 700; z-index: 10000; transition: transform 0.3s;
-    }
-    .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast.show{ transform: translateX(-50%) translateY(0); }
   </style>
 </head>
 
 <body>
-  <div class="premium-bg"></div>
-  <div class="premium-glow"></div>
-
   <div class="mobile-frame">
     <div class="topbar">
       <div class="leftControls">
@@ -297,12 +328,15 @@
           <div class="logo-slogan">BE FREE</div>
         </div>
       </div>
+
       <div class="rightControls">
         <div class="usertext">
           <div class="uname" id="userName">—</div>
           <div class="plan" id="userPlan">FREE</div>
         </div>
-        <button class="avatar-btn" id="avatarBtn"><div class="avatar-fallback" id="avatarFallback">U</div></button>
+        <button class="avatar-btn" id="avatarBtn" aria-label="Profil">
+          <span class="avatar-fallback" id="avatarFallback">•</span>
+        </button>
       </div>
     </div>
 
@@ -316,146 +350,56 @@
           <span class="caret">▾</span>
         </button>
 
-        <div class="actions-group">
-          <button class="btn-circle" id="toolbarAddBtn" type="button" aria-label="Ekle">+</button>
-          <button id="runBtn" type="button">ÇEVİR</button>
-        </div>
+        <button class="btnSmall" id="pickFileBtn" type="button">DOSYA</button>
+        <button class="btnSmall" id="pickCamBtn" type="button">KAMERA</button>
+        <button class="btnSmall primary" id="runBtn" type="button">ÇEVİR</button>
       </div>
 
-      <div class="pane">
-        <div class="box">
-          <div class="boxHead">
-            <div class="headTitle">Belge Kaynağı</div>
-            <div class="small" id="statusTop">Hazır</div>
-          </div>
-          <div class="previewWrap">
-            <div class="empty-state" id="emptyState">
-              <button class="big-plus-btn" id="bigAddBtn" type="button">+</button>
-              <span class="empty-text">Belge veya Fotoğraf</span>
-              <span class="empty-hint">Lütfen .PDF / .JPEG uzantılı dosyalar yükleyin</span>
-            </div>
-            <img id="imgPreview" class="preview" alt="preview" />
-            <canvas id="pdfCanvas" class="preview"></canvas>
-          </div>
+      <div class="stage">
+        <div class="preview">
+          <img id="imgPreview" alt="preview" />
+          <canvas id="pdfCanvas"></canvas>
         </div>
 
-        <div class="box">
-          <div class="boxHead">
-            <div class="headTitle">AI Çevirisi</div>
-            <div class="small" id="statusBot">—</div>
-          </div>
-          <textarea id="outText" placeholder="Çeviri sonucu buraya gelecek..." spellcheck="false"></textarea>
+        <div class="statusRow">
+          <div class="statusPill" id="statusTop">Dosya veya Kamera seç</div>
+          <div class="statusPill" id="statusBot">—</div>
+        </div>
+
+        <div class="outBox">
+          <div class="outHead">Çeviri</div>
+          <textarea class="outText" id="outText" placeholder="Çeviri burada görünecek…" readonly></textarea>
         </div>
       </div>
-
-      <input id="filePick" type="file" accept="image/*,application/pdf" />
-      <input id="camPick" type="file" accept="image/*" capture="environment" />
     </div>
 
     <div class="footerbar">
-      <div class="links">
-        <a href="/pages/about.html">Hakkında</a>
-        <a href="/pages/faq.html">Destek</a>
-        <a href="/pages/privacy.html">Gizlilik</a>
-      </div>
-      <div class="footerBrand">italkyAI © 2026</div>
+      <div class="footerBrand">italkyAI By Ozyigit’s 2026</div>
     </div>
   </div>
 
   <div class="sheetBackdrop" id="langSheet">
     <div class="sheet">
       <div class="sheetTop">
-        <div class="sheetTitle" id="sheetTitle">Hedef Dil Seçimi</div>
-        <button class="sheetClose" id="sheetClose">✕</button>
+        <div class="sheetTitle" id="sheetTitle">Hedef Dil</div>
+        <button class="sheetClose" id="sheetClose" aria-label="Kapat">✕</button>
       </div>
-      <div class="sheetSearch"><input id="sheetQuery" placeholder="Dil ara..." /></div>
+      <div class="sheetSearch">
+        <input id="sheetQuery" placeholder="Dil ara (Türkçe, İngilizce, Almanca…)" />
+      </div>
       <div class="sheetList" id="sheetList"></div>
-    </div>
-  </div>
-
-  <div class="sheetBackdrop" id="sourceSheet">
-    <div class="sheet">
-      <div class="sheetTop">
-        <div class="sheetTitle">Ekleme Yöntemi</div>
-        <button class="sheetClose" onclick="document.getElementById('sourceSheet').classList.remove('show')">✕</button>
-      </div>
-      <div class="source-options">
-        <button class="btn-source" id="sourceCam">
-          <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-          Fotoğraf Çek (Kamera)
-        </button>
-        <button class="btn-source" id="sourceFile">
-          <svg viewBox="0 0 24 24"><path d="M20 6h-8l-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/></svg>
-          Dosya veya Galeri
-        </button>
-      </div>
     </div>
   </div>
 
   <div id="toast" class="toast"></div>
 
+  <!-- OCR + PDF -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.min.js"></script>
-  
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      // 1. Sheet Logic
-      const sourceSheet = document.getElementById('sourceSheet');
-      const openSheet = () => sourceSheet.classList.add('show');
-      const closeSheet = () => sourceSheet.classList.remove('show');
 
-      document.getElementById('bigAddBtn').addEventListener('click', openSheet);
-      document.getElementById('toolbarAddBtn').addEventListener('click', openSheet);
+  <input id="filePick" type="file" accept="application/pdf,image/*" style="display:none" />
+  <input id="camPick" type="file" accept="image/*" capture="environment" style="display:none" />
 
-      // 2. Button -> Input Triggers
-      const camInput = document.getElementById('camPick');
-      const fileInput = document.getElementById('filePick');
-
-      document.getElementById('sourceCam').addEventListener('click', () => {
-        closeSheet();
-        camInput.click();
-      });
-
-      document.getElementById('sourceFile').addEventListener('click', () => {
-        closeSheet();
-        fileInput.click();
-      });
-
-      // 3. AUTO PREVIEW & AUTO SUBMIT LOGIC
-      function handleFileSelect(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-
-        // A. Show Preview Immediately
-        const imgPreview = document.getElementById('imgPreview');
-        const emptyState = document.getElementById('emptyState');
-        const runBtn = document.getElementById('runBtn');
-
-        // Hide empty state
-        emptyState.classList.add('hidden');
-
-        // Render Image
-        const reader = new FileReader();
-        reader.onload = (e) => {
-           imgPreview.src = e.target.result;
-           imgPreview.classList.add('show');
-           
-           // B. AUTO SUBMIT (0.8s delay for effect)
-           // Simulate clicking the "ÇEVİR" button automatically
-           setTimeout(() => {
-             console.log("Auto-submitting translation...");
-             runBtn.click();
-           }, 800);
-        };
-        reader.readAsDataURL(file);
-      }
-
-      // Attach handlers
-      camInput.addEventListener('change', handleFileSelect);
-      fileInput.addEventListener('change', handleFileSelect);
-    });
-  </script>
-
-  <script type="module" src="/js/document_page.js?v=1"></script>
+  <script type="module" src="/js/document_page.js?v=999"></script>
 </body>
 </html>
