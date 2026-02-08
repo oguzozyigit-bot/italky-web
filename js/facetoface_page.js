@@ -6,116 +6,147 @@ const $ = (id)=>document.getElementById(id);
 function base(){ return String(BASE_DOMAIN||"").replace(/\/+$/,""); }
 
 /* ===============================
-   SYSTEM LANGUAGE (profile/i18n)
+   SYSTEM UI LANGUAGE (profile/i18n)
    =============================== */
 function getSystemUILang(){
-  // i18n varsa onu kullan
   try{
     const l = String(getSiteLang?.() || "").toLowerCase().trim();
     if(l) return l;
   }catch{}
-
-  // fallback (i18n key)
   try{
     const l2 = String(localStorage.getItem("italky_site_lang_v1") || "").toLowerCase().trim();
     if(l2) return l2;
   }catch{}
-
   return "tr";
 }
-let UI_LANG = getSystemUILang(); // tr|en|de|it|fr expected
-const UI_FALLBACKS = (lang)=>{
-  // boş kalmasın diye sırayla fallback
-  const x = String(lang||"tr").toLowerCase();
-  // hedef: önce seçili, sonra en, sonra tr
-  const set = [x, "en", "tr"];
-  return Array.from(new Set(set));
-};
+
+let UI_LANG = getSystemUILang(); // expected tr|en|de|it|fr (but accepts others)
 
 /* ===============================
-   LANG LIST (wide)
-   label: {tr,en,de,it,fr}  (some entries might have only tr/en; fallback handles)
+   LANGUAGE REGISTRY (code + flag + bcp)
+   - Names are NOT hardcoded anymore.
+   - Add as many languages as you want; display name auto-localizes.
    =============================== */
 const LANGS = [
   // Core
-  { code:"tr", flag:"🇹🇷", bcp:"tr-TR", label:{ tr:"Türkçe", en:"Turkish", de:"Türkisch", it:"Turco", fr:"Turc" } },
-  { code:"en", flag:"🇬🇧", bcp:"en-US", label:{ tr:"İngilizce", en:"English", de:"Englisch", it:"Inglese", fr:"Anglais" } },
-  { code:"en-gb", flag:"🇬🇧", bcp:"en-GB", label:{ tr:"İngilizce (UK)", en:"English (UK)", de:"Englisch (UK)", it:"Inglese (UK)", fr:"Anglais (UK)" } },
+  { code:"tr", flag:"🇹🇷", bcp:"tr-TR" },
+  { code:"en", flag:"🇬🇧", bcp:"en-US" },
+  { code:"en-gb", flag:"🇬🇧", bcp:"en-GB" },
+  { code:"de", flag:"🇩🇪", bcp:"de-DE" },
+  { code:"fr", flag:"🇫🇷", bcp:"fr-FR" },
+  { code:"it", flag:"🇮🇹", bcp:"it-IT" },
+  { code:"es", flag:"🇪🇸", bcp:"es-ES" },
+  { code:"pt", flag:"🇵🇹", bcp:"pt-PT" },
+  { code:"pt-br", flag:"🇧🇷", bcp:"pt-BR" },
 
-  { code:"de", flag:"🇩🇪", bcp:"de-DE", label:{ tr:"Almanca", en:"German", de:"Deutsch", it:"Tedesco", fr:"Allemand" } },
-  { code:"fr", flag:"🇫🇷", bcp:"fr-FR", label:{ tr:"Fransızca", en:"French", de:"Französisch", it:"Francese", fr:"Français" } },
-  { code:"it", flag:"🇮🇹", bcp:"it-IT", label:{ tr:"İtalyanca", en:"Italian", de:"Italienisch", it:"Italiano", fr:"Italien" } },
-  { code:"es", flag:"🇪🇸", bcp:"es-ES", label:{ tr:"İspanyolca", en:"Spanish", de:"Spanisch", it:"Spagnolo", fr:"Espagnol" } },
-  { code:"pt", flag:"🇵🇹", bcp:"pt-PT", label:{ tr:"Portekizce", en:"Portuguese", de:"Portugiesisch", it:"Portoghese", fr:"Portugais" } },
-  { code:"pt-br", flag:"🇧🇷", bcp:"pt-BR", label:{ tr:"Portekizce (Brezilya)", en:"Portuguese (Brazil)", de:"Portugiesisch (Brasilien)", it:"Portoghese (Brasile)", fr:"Portugais (Brésil)" } },
+  // Travel / neighbors / very common
+  { code:"ru", flag:"🇷🇺", bcp:"ru-RU" },
+  { code:"uk", flag:"🇺🇦", bcp:"uk-UA" },
+  { code:"bg", flag:"🇧🇬", bcp:"bg-BG" },
+  { code:"el", flag:"🇬🇷", bcp:"el-GR" },
+  { code:"ro", flag:"🇷🇴", bcp:"ro-RO" },
+  { code:"sr", flag:"🇷🇸", bcp:"sr-RS" },
+  { code:"hr", flag:"🇭🇷", bcp:"hr-HR" },
+  { code:"bs", flag:"🇧🇦", bcp:"bs-BA" },
+  { code:"sq", flag:"🇦🇱", bcp:"sq-AL" },
+  { code:"mk", flag:"🇲🇰", bcp:"mk-MK" },
 
-  // Western / Nordic
-  { code:"nl", flag:"🇳🇱", bcp:"nl-NL", label:{ tr:"Felemenkçe", en:"Dutch", de:"Niederländisch", it:"Olandese", fr:"Néerlandais" } },
-  { code:"sv", flag:"🇸🇪", bcp:"sv-SE", label:{ tr:"İsveççe", en:"Swedish", de:"Schwedisch", it:"Svedese", fr:"Suédois" } },
-  { code:"no", flag:"🇳🇴", bcp:"nb-NO", label:{ tr:"Norveççe", en:"Norwegian (Bokmål)", de:"Norwegisch (Bokmål)", it:"Norvegese (Bokmål)", fr:"Norvégien (Bokmål)" } },
-  { code:"da", flag:"🇩🇰", bcp:"da-DK", label:{ tr:"Danca", en:"Danish", de:"Dänisch", it:"Danese", fr:"Danois" } },
-  { code:"fi", flag:"🇫🇮", bcp:"fi-FI", label:{ tr:"Fince", en:"Finnish", de:"Finnisch", it:"Finlandese", fr:"Finnois" } },
-  { code:"is", flag:"🇮🇸", bcp:"is-IS", label:{ tr:"İzlandaca", en:"Icelandic", de:"Isländisch", it:"Islandese", fr:"Islandais" } },
+  // Caucasus / Central Asia (Turkish travel/work)
+  { code:"az", flag:"🇦🇿", bcp:"az-AZ" },
+  { code:"ka", flag:"🇬🇪", bcp:"ka-GE" },
+  { code:"hy", flag:"🇦🇲", bcp:"hy-AM" },
+  { code:"kk", flag:"🇰🇿", bcp:"kk-KZ" },
+  { code:"uz", flag:"🇺🇿", bcp:"uz-UZ" },
+  { code:"ky", flag:"🇰🇬", bcp:"ky-KG" },
+  { code:"mn", flag:"🇲🇳", bcp:"mn-MN" },
 
-  // Central/Eastern Europe
-  { code:"pl", flag:"🇵🇱", bcp:"pl-PL", label:{ tr:"Lehçe", en:"Polish", de:"Polnisch", it:"Polacco", fr:"Polonais" } },
-  { code:"cs", flag:"🇨🇿", bcp:"cs-CZ", label:{ tr:"Çekçe", en:"Czech", de:"Tschechisch", it:"Ceco", fr:"Tchèque" } },
-  { code:"sk", flag:"🇸🇰", bcp:"sk-SK", label:{ tr:"Slovakça", en:"Slovak", de:"Slowakisch", it:"Slovacco", fr:"Slovaque" } },
-  { code:"hu", flag:"🇭🇺", bcp:"hu-HU", label:{ tr:"Macarca", en:"Hungarian", de:"Ungarisch", it:"Ungherese", fr:"Hongrois" } },
-  { code:"ro", flag:"🇷🇴", bcp:"ro-RO", label:{ tr:"Romence", en:"Romanian", de:"Rumänisch", it:"Rumeno", fr:"Roumain" } },
-  { code:"bg", flag:"🇧🇬", bcp:"bg-BG", label:{ tr:"Bulgarca", en:"Bulgarian", de:"Bulgarisch", it:"Bulgaro", fr:"Bulgare" } },
-  { code:"el", flag:"🇬🇷", bcp:"el-GR", label:{ tr:"Yunanca", en:"Greek", de:"Griechisch", it:"Greco", fr:"Grec" } },
-  { code:"uk", flag:"🇺🇦", bcp:"uk-UA", label:{ tr:"Ukraynaca", en:"Ukrainian", de:"Ukrainisch", it:"Ucraino", fr:"Ukrainien" } },
-  { code:"ru", flag:"🇷🇺", bcp:"ru-RU", label:{ tr:"Rusça", en:"Russian", de:"Russisch", it:"Russo", fr:"Russe" } },
-  { code:"sr", flag:"🇷🇸", bcp:"sr-RS", label:{ tr:"Sırpça", en:"Serbian", de:"Serbisch", it:"Serbo", fr:"Serbe" } },
-  { code:"hr", flag:"🇭🇷", bcp:"hr-HR", label:{ tr:"Hırvatça", en:"Croatian", de:"Kroatisch", it:"Croato", fr:"Croate" } },
-  { code:"bs", flag:"🇧🇦", bcp:"bs-BA", label:{ tr:"Boşnakça", en:"Bosnian", de:"Bosnisch", it:"Bosniaco", fr:"Bosniaque" } },
-  { code:"sq", flag:"🇦🇱", bcp:"sq-AL", label:{ tr:"Arnavutça", en:"Albanian", de:"Albanisch", it:"Albanese", fr:"Albanais" } },
+  // EU / Nordics / misc
+  { code:"nl", flag:"🇳🇱", bcp:"nl-NL" },
+  { code:"sv", flag:"🇸🇪", bcp:"sv-SE" },
+  { code:"no", flag:"🇳🇴", bcp:"nb-NO" },
+  { code:"da", flag:"🇩🇰", bcp:"da-DK" },
+  { code:"fi", flag:"🇫🇮", bcp:"fi-FI" },
+  { code:"pl", flag:"🇵🇱", bcp:"pl-PL" },
+  { code:"cs", flag:"🇨🇿", bcp:"cs-CZ" },
+  { code:"sk", flag:"🇸🇰", bcp:"sk-SK" },
+  { code:"hu", flag:"🇭🇺", bcp:"hu-HU" }, // ✅ Macarca
+  { code:"sl", flag:"🇸🇮", bcp:"sl-SI" },
 
-  // Middle East
-  { code:"ar", flag:"🇸🇦", bcp:"ar-SA", label:{ tr:"Arapça", en:"Arabic", de:"Arabisch", it:"Arabo", fr:"Arabe" } },
-  { code:"he", flag:"🇮🇱", bcp:"he-IL", label:{ tr:"İbranice", en:"Hebrew", de:"Hebräisch", it:"Ebraico", fr:"Hébreu" } },
-  { code:"fa", flag:"🇮🇷", bcp:"fa-IR", label:{ tr:"Farsça", en:"Persian", de:"Persisch", it:"Persiano", fr:"Persan" } },
-  { code:"ur", flag:"🇵🇰", bcp:"ur-PK", label:{ tr:"Urduca", en:"Urdu", de:"Urdu", it:"Urdu", fr:"Ourdou" } },
+  // Middle East / MENA
+  { code:"ar", flag:"🇸🇦", bcp:"ar-SA" },
+  { code:"ar-eg", flag:"🇪🇬", bcp:"ar-EG" },
+  { code:"he", flag:"🇮🇱", bcp:"he-IL" },
+  { code:"fa", flag:"🇮🇷", bcp:"fa-IR" },
+  { code:"ur", flag:"🇵🇰", bcp:"ur-PK" },
 
-  // South Asia
-  { code:"hi", flag:"🇮🇳", bcp:"hi-IN", label:{ tr:"Hintçe", en:"Hindi", de:"Hindi", it:"Hindi", fr:"Hindi" } },
-  { code:"bn", flag:"🇧🇩", bcp:"bn-BD", label:{ tr:"Bengalce", en:"Bengali", de:"Bengalisch", it:"Bengalese", fr:"Bengali" } },
-  { code:"ta", flag:"🇮🇳", bcp:"ta-IN", label:{ tr:"Tamilce", en:"Tamil", de:"Tamil", it:"Tamil", fr:"Tamoul" } },
-  { code:"te", flag:"🇮🇳", bcp:"te-IN", label:{ tr:"Teluguca", en:"Telugu", de:"Telugu", it:"Telugu", fr:"Télougou" } },
+  // South / SE Asia travel
+  { code:"hi", flag:"🇮🇳", bcp:"hi-IN" },
+  { code:"bn", flag:"🇧🇩", bcp:"bn-BD" },
+  { code:"ta", flag:"🇮🇳", bcp:"ta-IN" },
+  { code:"te", flag:"🇮🇳", bcp:"te-IN" },
+  { code:"th", flag:"🇹🇭", bcp:"th-TH" }, // ✅ Tayca
+  { code:"vi", flag:"🇻🇳", bcp:"vi-VN" },
+  { code:"id", flag:"🇮🇩", bcp:"id-ID" },
+  { code:"ms", flag:"🇲🇾", bcp:"ms-MY" },
+  { code:"fil", flag:"🇵🇭", bcp:"fil-PH" },
 
-  // East / SE Asia
-  { code:"zh", flag:"🇨🇳", bcp:"zh-CN", label:{ tr:"Çince (Basitleştirilmiş)", en:"Chinese (Simplified)", de:"Chinesisch (Vereinfacht)", it:"Cinese (Semplificato)", fr:"Chinois (Simplifié)" } },
-  { code:"zh-tw", flag:"🇹🇼", bcp:"zh-TW", label:{ tr:"Çince (Geleneksel)", en:"Chinese (Traditional)", de:"Chinesisch (Traditionell)", it:"Cinese (Tradizionale)", fr:"Chinois (Traditionnel)" } },
-  { code:"ja", flag:"🇯🇵", bcp:"ja-JP", label:{ tr:"Japonca", en:"Japanese", de:"Japanisch", it:"Giapponese", fr:"Japonais" } },
-  { code:"ko", flag:"🇰🇷", bcp:"ko-KR", label:{ tr:"Korece", en:"Korean", de:"Koreanisch", it:"Coreano", fr:"Coréen" } },
-  { code:"th", flag:"🇹🇭", bcp:"th-TH", label:{ tr:"Tayca", en:"Thai", de:"Thailändisch", it:"Tailandese", fr:"Thaï" } },
-  { code:"vi", flag:"🇻🇳", bcp:"vi-VN", label:{ tr:"Vietnamca", en:"Vietnamese", de:"Vietnamesisch", it:"Vietnamita", fr:"Vietnamien" } },
-  { code:"id", flag:"🇮🇩", bcp:"id-ID", label:{ tr:"Endonezce", en:"Indonesian", de:"Indonesisch", it:"Indonesiano", fr:"Indonésien" } },
-  { code:"ms", flag:"🇲🇾", bcp:"ms-MY", label:{ tr:"Malayca", en:"Malay", de:"Malaiisch", it:"Malese", fr:"Malais" } },
+  // East Asia
+  { code:"zh", flag:"🇨🇳", bcp:"zh-CN" },
+  { code:"zh-tw", flag:"🇹🇼", bcp:"zh-TW" },
+  { code:"ja", flag:"🇯🇵", bcp:"ja-JP" },
+  { code:"ko", flag:"🇰🇷", bcp:"ko-KR" },
 
-  // Africa (some common)
-  { code:"sw", flag:"🇰🇪", bcp:"sw-KE", label:{ tr:"Svahili", en:"Swahili", de:"Swahili", it:"Swahili", fr:"Swahili" } },
-  { code:"am", flag:"🇪🇹", bcp:"am-ET", label:{ tr:"Amharca", en:"Amharic", de:"Amharisch", it:"Amarico", fr:"Amharique" } },
+  // Africa common
+  { code:"sw", flag:"🇰🇪", bcp:"sw-KE" },
+  { code:"am", flag:"🇪🇹", bcp:"am-ET" },
+
+  // Extra commonly-requested
+  { code:"la", flag:"🏛️", bcp:"la" },
+  { code:"eo", flag:"🌐", bcp:"eo" },
 ];
 
 /* ===============================
-   Language name utilities
+   Display name via Intl.DisplayNames
    =============================== */
+let _dn = null;
+function getDisplayNames(){
+  // Rebuild if UI_LANG changed
+  if(_dn && _dn.__lang === UI_LANG) return _dn;
+
+  _dn = null;
+  try{
+    // Intl.DisplayNames expects BCP47 language tags like "tr", "en", "de", etc.
+    const dn = new Intl.DisplayNames([UI_LANG], { type:"language" });
+    dn.__lang = UI_LANG;
+    _dn = dn;
+  }catch{
+    _dn = null;
+  }
+  return _dn;
+}
+
+function canonicalLangCode(code){
+  // Intl.DisplayNames works best with base language subtag for “language” type.
+  // For things like zh-tw, it will typically return "Çince" in TR.
+  // We'll feed the language subtag primarily, but keep full for UI code display.
+  const c = String(code||"").toLowerCase();
+  // if code is like "pt-br" -> use "pt" for language-name
+  return c.split("-")[0];
+}
+
 function langObj(code){ return LANGS.find(x=>x.code===code); }
 function langFlag(code){ return langObj(code)?.flag || "🌐"; }
 function bcp(code){ return langObj(code)?.bcp || "en-US"; }
+
 function langLabel(code){
-  const o = langObj(code);
-  if(!o) return String(code||"").toUpperCase();
-  const wants = UI_FALLBACKS(UI_LANG);
-  for(const k of wants){
-    const v = o.label?.[k];
-    if(v) return v;
+  const dn = getDisplayNames();
+  const base = canonicalLangCode(code);
+  if(dn){
+    const name = dn.of(base);
+    if(name) return name;
   }
-  // fallback to any label
-  const any = o.label?.en || o.label?.tr;
-  return any || String(code||"").toUpperCase();
+  // fallback: show code if Intl missing
+  return String(code||"").toUpperCase();
 }
 
 /* ===============================
@@ -195,6 +226,12 @@ function closeAllPop(){
   $("pop-bot")?.classList.remove("show");
 }
 
+function labelChip(code){
+  // ✅ show flag + localized language name
+  // Example in TR: "🇬🇪 Gürcüce"
+  return `${langFlag(code)} ${langLabel(code)}`;
+}
+
 function renderPop(side){
   const list = $(side === "top" ? "list-top" : "list-bot");
   if(!list) return;
@@ -218,11 +255,11 @@ function renderPop(side){
       if(side === "top"){
         topLang = code;
         const t = $("topLangTxt");
-        if(t) t.textContent = `${langFlag(topLang)} ${langLabel(topLang)}`;
+        if(t) t.textContent = labelChip(topLang);
       }else{
         botLang = code;
         const t = $("botLangTxt");
-        if(t) t.textContent = `${langFlag(botLang)} ${langLabel(botLang)}`;
+        if(t) t.textContent = labelChip(botLang);
       }
 
       stopAll();
@@ -326,10 +363,10 @@ async function start(which){
     const finalText = String(t||"").trim();
     if(!finalText) return;
 
-    // konuşulan (them) — hoparlör yok
+    // spoken (them) — no speaker icon
     addBubble(which, "them", finalText, src);
 
-    // çeviri karşı tarafa (me) — hoparlör var
+    // translated (me) on the other side — has speaker icon
     const other = (which === "top") ? "bot" : "top";
     try{
       const translated = await translateViaApi(finalText, src, dst);
@@ -411,36 +448,34 @@ function bindOutsideClose(){
   }, { capture:true });
 }
 
-function updateUILangIfChanged(){
+function refreshUILang(){
   const now = getSystemUILang();
   if(now === UI_LANG) return;
   UI_LANG = now;
 
-  // seçili dil etiketlerini yeni UI diline göre refresh
-  const t1 = $("topLangTxt");
-  const t2 = $("botLangTxt");
-  if(t1) t1.textContent = `${langFlag(topLang)} ${langLabel(topLang)}`;
-  if(t2) t2.textContent = `${langFlag(botLang)} ${langLabel(botLang)}`;
+  // update chips
+  $("topLangTxt") && ($("topLangTxt").textContent = labelChip(topLang));
+  $("botLangTxt") && ($("botLangTxt").textContent = labelChip(botLang));
 
-  // popover açıksa da refreshle
+  // update lists if open
   if($("pop-top")?.classList.contains("show")) renderPop("top");
   if($("pop-bot")?.classList.contains("show")) renderPop("bot");
 }
 
 document.addEventListener("DOMContentLoaded", ()=>{
-  // initial labels
-  if($("topLangTxt")) $("topLangTxt").textContent = `${langFlag(topLang)} ${langLabel(topLang)}`;
-  if($("botLangTxt")) $("botLangTxt").textContent = `${langFlag(botLang)} ${langLabel(botLang)}`;
+  // initial chip labels (flag + localized name)
+  if($("topLangTxt")) $("topLangTxt").textContent = labelChip(topLang);
+  if($("botLangTxt")) $("botLangTxt").textContent = labelChip(botLang);
 
   bindNav();
   bindLangButtons();
   bindMicButtons();
   bindOutsideClose();
 
-  // ✅ Profile sayfasında dil değişince bu sayfa açıkken de güncellensin
+  // if profile language changes in another tab/page
   window.addEventListener("storage", (e)=>{
     if(e.key === "italky_site_lang_v1" || e.key === "italky_lang_ping"){
-      updateUILangIfChanged();
+      refreshUILang();
     }
   });
 });
