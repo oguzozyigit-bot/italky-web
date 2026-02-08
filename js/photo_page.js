@@ -1,11 +1,10 @@
-// FILE: /js/photo_page.js
+// FILE: /js/photo_page.js  (FINAL — OCR quality + OpenAI TTS read)
 import { STORAGE_KEY } from "/js/config.js";
 import { apiPOST } from "/js/api.js";
 
 const $ = (id)=>document.getElementById(id);
 function safeJson(s, fb={}){ try{ return JSON.parse(s||""); }catch{ return fb; } }
 
-/* ===== Toast ===== */
 function toast(msg){
   const t = $("toast");
   if(!t) return;
@@ -15,16 +14,16 @@ function toast(msg){
   window.__to = setTimeout(()=> t.classList.remove("show"), 1800);
 }
 
-/* ===== Guard (home/profile standard) ===== */
+function setStatus(msg){ const el=$("statusChip"); if(el) el.textContent = msg; }
+
+/* ===== Guard ===== */
 function termsKey(email=""){
   return `italky_terms_accepted_at::${String(email||"").toLowerCase().trim()}`;
 }
-function getUser(){
-  return safeJson(localStorage.getItem(STORAGE_KEY), {});
-}
+function getUser(){ return safeJson(localStorage.getItem(STORAGE_KEY), {}); }
 function ensureLogged(){
   const u = getUser();
-  if(!u || !u.email){ location.replace("/index.html"); return null; }
+  if(!u?.email){ location.replace("/index.html"); return null; }
   if(!localStorage.getItem(termsKey(u.email))){ location.replace("/index.html"); return null; }
   return u;
 }
@@ -42,8 +41,22 @@ function paintHeader(u){
   }else{
     fallback.textContent = (full && full[0]) ? full[0].toUpperCase() : "•";
   }
-
   avatarBtn.addEventListener("click", ()=> location.href="/pages/profile.html");
+}
+
+/* ===== Voice selection (same as voice module) ===== */
+const VOICE_PREF_KEY = "italky_voice_pref";
+const VOICE_MAP = {
+  dora: "nova",
+  ayda: "shimmer",
+  umay: "alloy",
+  sencer: "echo",
+  toygar: "fable",
+  sungur: "onyx",
+};
+function getSelectedOpenAIVoice(){
+  const id = String(localStorage.getItem(VOICE_PREF_KEY) || "dora").trim();
+  return VOICE_MAP[id] || "nova";
 }
 
 /* ===== Languages ===== */
@@ -62,48 +75,17 @@ const LANGS = [
   { code:"zh-tw", name:"Çince (Geleneksel)", flag:"🇹🇼" },
   { code:"ja", name:"Japonca", flag:"🇯🇵" },
   { code:"ko", name:"Korece", flag:"🇰🇷" },
-  { code:"nl", name:"Felemenkçe", flag:"🇳🇱" },
-  { code:"sv", name:"İsveççe", flag:"🇸🇪" },
-  { code:"no", name:"Norveççe", flag:"🇳🇴" },
-  { code:"da", name:"Danca", flag:"🇩🇰" },
-  { code:"fi", name:"Fince", flag:"🇫🇮" },
-  { code:"pl", name:"Lehçe", flag:"🇵🇱" },
-  { code:"cs", name:"Çekçe", flag:"🇨🇿" },
-  { code:"sk", name:"Slovakça", flag:"🇸🇰" },
-  { code:"hu", name:"Macarca", flag:"🇭🇺" },
-  { code:"ro", name:"Romence", flag:"🇷🇴" },
-  { code:"bg", name:"Bulgarca", flag:"🇧🇬" },
-  { code:"el", name:"Yunanca", flag:"🇬🇷" },
-  { code:"uk", name:"Ukraynaca", flag:"🇺🇦" },
-  { code:"sr", name:"Sırpça", flag:"🇷🇸" },
-  { code:"hr", name:"Hırvatça", flag:"🇭🇷" },
-  { code:"bs", name:"Boşnakça", flag:"🇧🇦" },
-  { code:"sq", name:"Arnavutça", flag:"🇦🇱" },
-  { code:"fa", name:"Farsça", flag:"🇮🇷" },
-  { code:"ur", name:"Urduca", flag:"🇵🇰" },
-  { code:"hi", name:"Hintçe", flag:"🇮🇳" },
-  { code:"bn", name:"Bengalce", flag:"🇧🇩" },
-  { code:"th", name:"Tayca", flag:"🇹🇭" },
-  { code:"vi", name:"Vietnamca", flag:"🇻🇳" },
-  { code:"id", name:"Endonezce", flag:"🇮🇩" },
-  { code:"ms", name:"Malayca", flag:"🇲🇾" },
-  { code:"he", name:"İbranice", flag:"🇮🇱" },
 ];
-function langBy(code){
-  return LANGS.find(x=>x.code===code) || { code, name: code, flag:"🌐" };
-}
+function langBy(code){ return LANGS.find(x=>x.code===code) || { code, name: code, flag:"🌐" }; }
 
-/* ===== Target lang session ===== */
 const SS_TO = "italky_photo_to_lang_v3";
 let toLang = sessionStorage.getItem(SS_TO) || "tr";
-
 function setToUI(){
   $("toFlag").textContent = langBy(toLang).flag;
   $("toLangTxt").textContent = langBy(toLang).name;
   sessionStorage.setItem(SS_TO, toLang);
 }
 
-/* ===== Language sheet ===== */
 function openSheet(){
   $("langSheet").classList.add("show");
   $("sheetQuery").value = "";
@@ -111,7 +93,6 @@ function openSheet(){
   setTimeout(()=>{ try{ $("sheetQuery").focus(); }catch{} }, 0);
 }
 function closeSheet(){ $("langSheet").classList.remove("show"); }
-
 function renderSheet(filter){
   const q = String(filter||"").toLowerCase().trim();
   const list = $("sheetList");
@@ -146,26 +127,55 @@ function renderSheet(filter){
   });
 }
 
+/* ===== Secure context ===== */
+function isSecureContextOk(){
+  return (location.protocol === "https:" || location.hostname === "localhost");
+}
+
 /* ===== Camera ===== */
 let stream = null;
 async function startCamera(){
   const v = $("cam");
-  try{
-    stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { ideal: "environment" } },
-      audio: false
-    });
-    v.srcObject = stream;
-    await v.play();
-    $("statusChip").textContent = "✅ Kamera hazır • Yazıya dokun";
-  }catch(e){
-    console.error(e);
-    $("statusChip").textContent = "❌ Kamera açılamadı (izin/cihaz)";
-    toast("Kamera izni gerekli");
+
+  if(!isSecureContextOk()){
+    setStatus("❌ HTTPS gerekli (kamera açılmaz)");
+    toast("HTTPS olmadan kamera açılmaz");
+    enableUploadFallback();
+    return;
   }
+
+  if(!navigator.mediaDevices?.getUserMedia){
+    setStatus("❌ Kamera API yok");
+    enableUploadFallback();
+    return;
+  }
+
+  const tries = [
+    { video: { facingMode: { ideal: "environment" } }, audio:false },
+    { video: { facingMode: "environment" }, audio:false },
+    { video: true, audio:false },
+  ];
+
+  for(const constraints of tries){
+    try{
+      stream = await navigator.mediaDevices.getUserMedia(constraints);
+      v.srcObject = stream;
+      v.muted = true;
+      v.setAttribute("playsinline","true");
+      await v.play();
+      setStatus("✅ Kamera hazır • Yazıya dokun");
+      return;
+    }catch(e){
+      console.error("getUserMedia fail:", constraints, e);
+    }
+  }
+
+  setStatus("❌ Kamera açılamadı (izin/cihaz)");
+  toast("Kamera izni verildi mi?");
+  enableUploadFallback();
 }
 
-/* ===== Canvas mapping ===== */
+/* ===== Canvas ===== */
 function fitCanvasToVideo(){
   const v = $("cam");
   const c = $("overlay");
@@ -179,7 +189,8 @@ function drawClear(){
   ctx.clearRect(0,0,c.width,c.height);
 }
 
-function captureFrame(){
+/* ===== Capture ===== */
+function captureFromVideo(){
   const v = $("cam");
   if(!v || v.videoWidth === 0) return null;
   const tmp = document.createElement("canvas");
@@ -188,7 +199,6 @@ function captureFrame(){
   tmp.getContext("2d").drawImage(v, 0, 0, tmp.width, tmp.height);
   return tmp;
 }
-
 function stageToFrameXY(clientX, clientY, frameW, frameH){
   const v = $("cam");
   const rect = v.getBoundingClientRect();
@@ -198,95 +208,101 @@ function stageToFrameXY(clientX, clientY, frameW, frameH){
   const sy = frameH / rect.height;
   return { fx: x * sx, fy: y * sy };
 }
-
 function cropROI(frameCanvas, fx, fy){
   const roiW = Math.floor(Math.min(520, frameCanvas.width * 0.60));
   const roiH = Math.floor(Math.min(260, frameCanvas.height * 0.25));
 
   let x0 = Math.floor(fx - roiW/2);
   let y0 = Math.floor(fy - roiH/2);
-
   x0 = Math.max(0, Math.min(frameCanvas.width - roiW, x0));
   y0 = Math.max(0, Math.min(frameCanvas.height - roiH, y0));
 
   const roi = document.createElement("canvas");
   roi.width = roiW;
   roi.height = roiH;
-
-  const ctx = roi.getContext("2d");
-  ctx.drawImage(frameCanvas, x0, y0, roiW, roiH, 0, 0, roiW, roiH);
+  roi.getContext("2d").drawImage(frameCanvas, x0, y0, roiW, roiH, 0, 0, roiW, roiH);
 
   return { roi, x0, y0, roiW, roiH };
 }
 
-/* ===== OCR (single worker, fast) ===== */
+/* ===== OCR (worker once) + preprocess ===== */
 let OCR_READY = false;
 let OCR_WORKER = null;
 
+function preprocessCanvas(srcCanvas){
+  // grayscale + contrast boost
+  const c = document.createElement("canvas");
+  c.width = srcCanvas.width;
+  c.height = srcCanvas.height;
+  const ctx = c.getContext("2d");
+  ctx.drawImage(srcCanvas, 0, 0);
+
+  const img = ctx.getImageData(0,0,c.width,c.height);
+  const d = img.data;
+
+  const contrast = 1.35; // 1.0 normal
+  const intercept = 128 * (1 - contrast);
+
+  for(let i=0;i<d.length;i+=4){
+    const r=d[i], g=d[i+1], b=d[i+2];
+    // luminance
+    let y = 0.299*r + 0.587*g + 0.114*b;
+    // contrast
+    y = y * contrast + intercept;
+    y = Math.max(0, Math.min(255, y));
+    d[i]=d[i+1]=d[i+2]=y;
+    d[i+3]=255;
+  }
+
+  ctx.putImageData(img,0,0);
+  return c;
+}
+
 async function initOCR(){
   if(OCR_READY) return;
-  if(!window.Tesseract) throw new Error("Tesseract yüklenmedi");
-
-  $("statusChip").textContent = "🧠 OCR hazırlanıyor…";
-
-  OCR_WORKER = await window.Tesseract.createWorker("eng+tur", 1, {
-    logger: (m)=>{} // sessiz
-  });
-
-  // speed tweaks
+  if(!window.Tesseract) throw new Error("Tesseract yok");
+  setStatus("🧠 OCR hazırlanıyor…");
+  OCR_WORKER = await window.Tesseract.createWorker("eng+tur", 1, { logger: ()=>{} });
   try{
-    await OCR_WORKER.setParameters({
-      tessedit_pageseg_mode: "6",
-      preserve_interword_spaces: "1"
-    });
+    await OCR_WORKER.setParameters({ tessedit_pageseg_mode: "6", preserve_interword_spaces: "1" });
   }catch{}
-
   OCR_READY = true;
-  $("statusChip").textContent = "✅ Kamera hazır • Yazıya dokun";
+  setStatus("✅ Kamera hazır • Yazıya dokun");
 }
 
 async function ocrCanvas(canvas){
   await initOCR();
-  const { data } = await OCR_WORKER.recognize(canvas);
-  const txt = String(data?.text || "").trim();
-  return txt;
+  const prep = preprocessCanvas(canvas);
+  const { data } = await OCR_WORKER.recognize(prep);
+  return String(data?.text || "").trim();
 }
 
-/* ===== Translate (backend) ===== */
+/* ===== Translate ===== */
 const cache = new Map();
 async function translateViaApi(text, target){
   const clean = String(text||"").replace(/\s+/g," ").trim();
   if(!clean) return "";
-
   const key = `${clean}__${target}`;
   if(cache.has(key)) return cache.get(key);
 
   const data = await apiPOST("/api/translate", {
-    text: clean,
-    source: "",
-    target,
-    from_lang: "",
-    to_lang: target
+    text: clean, source:"", target, from_lang:"", to_lang: target
   }, { timeoutMs: 25000 });
 
-  const out = String(
-    data?.translated || data?.translation || data?.text || data?.translated_text || ""
-  ).trim() || clean;
-
+  const out = String(data?.translated || data?.translation || data?.text || data?.translated_text || "").trim() || clean;
   cache.set(key, out);
   return out;
 }
 
-/* ===== Draw overlay ===== */
+/* ===== Draw overlay text ===== */
 function drawOverlayTextBox(x0, y0, w, h, text){
   const c = $("overlay");
   const ctx = c.getContext("2d");
-
   const v = $("cam");
   const rect = v.getBoundingClientRect();
 
-  const frameW = v.videoWidth;
-  const frameH = v.videoHeight;
+  const frameW = v.videoWidth || 1;
+  const frameH = v.videoHeight || 1;
 
   const sx = rect.width / frameW;
   const sy = rect.height / frameH;
@@ -318,6 +334,38 @@ function drawOverlayTextBox(x0, y0, w, h, text){
   ctx.restore();
 }
 
+/* ===== OpenAI TTS Read ===== */
+let currentAudio = null;
+function stopAudio(){
+  if(currentAudio){ try{ currentAudio.pause(); }catch{} currentAudio=null; }
+}
+async function speakText(text){
+  const t = String(text||"").trim();
+  if(!t) return toast("Okunacak metin yok");
+
+  stopAudio();
+  setStatus("🔊 Okutuluyor…");
+
+  try{
+    const voice = getSelectedOpenAIVoice();
+    const data = await apiPOST("/api/tts_openai", { text: t, voice, speed: 1.1 }, { timeoutMs: 45000 });
+    const b64 = String(data?.audio_base64 || "");
+    if(!b64){ setStatus("⚠️ Ses yok"); return; }
+
+    const audio = new Audio("data:audio/mp3;base64," + b64);
+    currentAudio = audio;
+    audio.onended = ()=>{ currentAudio=null; setStatus("✅ Kamera hazır • Yazıya dokun"); };
+    await audio.play();
+  }catch(e){
+    console.error(e);
+    setStatus("⚠️ Ses hata");
+    toast("Ses hatası");
+  }
+}
+
+/* ===== State: last translation ===== */
+let lastTranslatedText = "";
+
 /* ===== Interaction ===== */
 let busy = false;
 let holding = false;
@@ -326,13 +374,16 @@ let lastRun = 0;
 async function translateAt(clientX, clientY){
   if(busy) return;
   const v = $("cam");
-  if(!v || v.videoWidth === 0) return;
+  if(!v || v.videoWidth === 0){
+    toast("Kamera hazır değil");
+    return;
+  }
 
   busy = true;
-  $("statusChip").textContent = "🧠 Okunuyor…";
+  setStatus("🧠 Okunuyor…");
 
   try{
-    const frame = captureFrame();
+    const frame = captureFromVideo();
     if(!frame) throw new Error("frame yok");
 
     const { fx, fy } = stageToFrameXY(clientX, clientY, frame.width, frame.height);
@@ -340,29 +391,26 @@ async function translateAt(clientX, clientY){
 
     const raw = await ocrCanvas(roi);
     const clean = raw.replace(/\s+/g, " ").trim();
-
     if(!clean){
-      $("statusChip").textContent = "⚠️ Yazı yok • Yaklaştır";
+      setStatus("⚠️ Yazı yok • Yaklaştır");
       return;
     }
 
     const out = await translateViaApi(clean, toLang);
+    lastTranslatedText = out;
+
     drawOverlayTextBox(x0, y0, roiW, roiH, out);
-    $("statusChip").textContent = "✅ Basıldı • Tutmaya devam et";
+    setStatus("✅ Basıldı • SAY ile okut");
   }catch(e){
     console.error(e);
-    $("statusChip").textContent = "⚠️ OCR/Çeviri hata";
+    setStatus("⚠️ OCR/Çeviri hata");
     toast("OCR/Çeviri hata");
   }finally{
     busy = false;
   }
 }
 
-function onPointerDown(e){
-  holding = true;
-  lastRun = 0;
-  translateAt(e.clientX, e.clientY);
-}
+function onPointerDown(e){ holding = true; lastRun = 0; translateAt(e.clientX, e.clientY); }
 function onPointerMove(e){
   if(!holding) return;
   const now = Date.now();
@@ -379,17 +427,19 @@ async function doFullScan(){
   if(!v || v.videoWidth === 0) return toast("Kamera hazır değil");
 
   busy = true;
-  $("statusChip").textContent = "🧠 SCAN…";
+  setStatus("🧠 SCAN…");
 
   try{
-    const frame = captureFrame();
+    const frame = captureFromVideo();
     if(!frame) throw new Error("frame yok");
 
     const raw = await ocrCanvas(frame);
     const txt = raw.replace(/\s+/g," ").trim();
-    if(!txt){ $("statusChip").textContent = "⚠️ Yazı bulunamadı"; return; }
+    if(!txt){ setStatus("⚠️ Yazı bulunamadı"); return; }
 
     const out = await translateViaApi(txt, toLang);
+    lastTranslatedText = out;
+
     drawClear();
     drawOverlayTextBox(
       Math.floor(frame.width*0.05),
@@ -398,14 +448,84 @@ async function doFullScan(){
       Math.floor(frame.height*0.20),
       out
     );
-    $("statusChip").textContent = "✅ SCAN basıldı";
+    setStatus("✅ SCAN basıldı • SAY ile okut");
   }catch(e){
     console.error(e);
-    $("statusChip").textContent = "❌ SCAN hata";
+    setStatus("❌ SCAN hata");
     toast("SCAN hata");
   }finally{
     busy = false;
   }
+}
+
+/* ===== Upload fallback ===== */
+function enableUploadFallback(){
+  const stage = $("stage");
+  if(!stage) return;
+  if(document.getElementById("photoFile")) return;
+
+  const input = document.createElement("input");
+  input.type = "file";
+  input.id = "photoFile";
+  input.accept = "image/*";
+  input.capture = "environment";
+  input.style.display = "none";
+  document.body.appendChild(input);
+
+  const hint = document.querySelector(".hint");
+  if(hint){
+    hint.innerHTML = `Kamera açılmadı. <b>Dokun</b> → fotoğraf seç → SCAN. (SAY: okut)`;
+  }
+
+  stage.addEventListener("click", ()=> input.click(), { passive:true });
+
+  input.addEventListener("change", async ()=>{
+    const file = input.files?.[0];
+    if(!file) return;
+
+    setStatus("🧠 Fotoğraf yükleniyor…");
+
+    const img = new Image();
+    img.onload = async ()=>{
+      try{
+        await initOCR();
+        setStatus("🧠 SCAN…");
+
+        const tmp = document.createElement("canvas");
+        tmp.width = img.width;
+        tmp.height = img.height;
+        tmp.getContext("2d").drawImage(img,0,0);
+
+        const raw = await ocrCanvas(tmp);
+        const txt = raw.replace(/\s+/g," ").trim();
+        if(!txt){ setStatus("⚠️ Yazı bulunamadı"); return; }
+
+        const out = await translateViaApi(txt, toLang);
+        lastTranslatedText = out;
+
+        drawClear();
+        // show as top box using overlay canvas space
+        const c = $("overlay");
+        const ctx = c.getContext("2d");
+        ctx.fillStyle = "rgba(0,0,0,0.55)";
+        ctx.strokeStyle = "rgba(165,180,252,0.70)";
+        ctx.lineWidth = Math.max(2, Math.round(2 * devicePixelRatio));
+        ctx.fillRect(Math.round(12*devicePixelRatio), Math.round(12*devicePixelRatio), Math.round((c.width-24*devicePixelRatio)), Math.round(140*devicePixelRatio));
+        ctx.strokeRect(Math.round(12*devicePixelRatio), Math.round(12*devicePixelRatio), Math.round((c.width-24*devicePixelRatio)), Math.round(140*devicePixelRatio));
+        ctx.font = `900 ${Math.round(16*devicePixelRatio)}px Outfit, sans-serif`;
+        ctx.fillStyle = "rgba(255,255,255,0.95)";
+        ctx.textBaseline = "top";
+        ctx.fillText(out.slice(0,180), Math.round(22*devicePixelRatio), Math.round(22*devicePixelRatio));
+
+        setStatus("✅ SCAN basıldı • SAY ile okut");
+      }catch(e){
+        console.error(e);
+        setStatus("❌ OCR hata");
+      }
+    };
+    img.onerror = ()=> setStatus("❌ Görsel açılamadı");
+    img.src = URL.createObjectURL(file);
+  });
 }
 
 /* ===== Boot ===== */
@@ -431,9 +551,13 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   $("scanBtn")?.addEventListener("click", doFullScan);
   $("clearBtn")?.addEventListener("click", ()=>{
     cache.clear();
+    lastTranslatedText = "";
+    stopAudio();
     drawClear();
-    $("statusChip").textContent = "🧽 Temizlendi • Yazıya dokun";
+    setStatus("🧽 Temizlendi • Yazıya dokun");
   });
+
+  $("speakBtn")?.addEventListener("click", ()=> speakText(lastTranslatedText));
 
   const stage = $("stage");
   stage.addEventListener("pointerdown", onPointerDown);
