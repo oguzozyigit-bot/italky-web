@@ -1,4 +1,3 @@
-// FILE: /js/game_page.js  (FINAL - all games linked + tokens spend on enter)
 import { STORAGE_KEY } from "/js/config.js";
 
 const $ = (id)=>document.getElementById(id);
@@ -52,14 +51,37 @@ function paintHeader(u){
   });
 }
 
-/* ===== Daily entry token system ===== */
+/* ===== Daily token system =====
+   FREE: daily 5 tokens auto-init
+   PRO: unlimited
+*/
+const DAILY_FREE_TOKENS = 5;
+
 function isoDateLocal(){
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
 }
-function tokenKey(u){
-  return `italky_game_tokens::${String(u.user_id||u.id||u.email).toLowerCase().trim()}::${isoDateLocal()}`;
+function uidKey(u){
+  return String(u.user_id||u.id||u.email).toLowerCase().trim();
 }
+function tokenKey(u){
+  return `italky_game_tokens::${uidKey(u)}::${isoDateLocal()}`;
+}
+function tokenInitKey(u){
+  return `italky_game_tokens_inited::${uidKey(u)}::${isoDateLocal()}`;
+}
+
+function ensureDailyTokens(u){
+  if(isPro(u)) return;
+
+  const inited = localStorage.getItem(tokenInitKey(u));
+  if(inited) return;
+
+  // ✅ first time today: give daily tokens
+  localStorage.setItem(tokenKey(u), String(DAILY_FREE_TOKENS));
+  localStorage.setItem(tokenInitKey(u), "1");
+}
+
 function getTokens(u){
   if(isPro(u)) return 9999;
   const v = Number(localStorage.getItem(tokenKey(u)) || "0");
@@ -76,7 +98,7 @@ function addTokens(u, add){
   return next;
 }
 function spendToken(u){
-  // ✅ SPEND ON ENTER (your choice)
+  // ✅ spend on enter (locked)
   if(isPro(u)) return true;
   const t = getTokens(u);
   if(t <= 0) return false;
@@ -88,14 +110,14 @@ function paintTokens(u){
   $("planChip").classList.toggle("pro", isPro(u));
 }
 
-/* ===== All games linked ===== */
+/* ===== Games (all active) ===== */
 const GAMES = [
-  { id:"hangman",  name:"Neon Hangman",     icon:"🛰️", desc:"Kelime tahmin — hız + öğrenme", url:"/pages/hangman.html",         ready:true },
-  { id:"sentence", name:"Sentence Master",  icon:"🧩", desc:"Cümle kur — hızlı pratik",      url:"/pages/sentence_master.html", ready:true },
-  { id:"meteor",   name:"Meteor Defense",   icon:"☄️", desc:"Refleks + kelime",             url:"/pages/meteor.html",          ready:true },
-  { id:"glitch",   name:"Glitch Hunter",    icon:"⚡", desc:"Doğru kelimeyi yakala",        url:"/pages/glitch.html",          ready:true },
-  { id:"gap",      name:"Gap Master",       icon:"🧠", desc:"Boşluk doldurma",              url:"/pages/gap_master.html",      ready:true },
-  { id:"life",     name:"Life Alchemist",   icon:"🧪", desc:"Seçimler + dil",               url:"/pages/life_alchemist.html",  ready:true },
+  { id:"hangman",  name:"Neon Hangman",     icon:"🛰️", desc:"Kelime tahmin — hız + öğrenme", url:"/pages/hangman.html" },
+  { id:"sentence", name:"Sentence Master",  icon:"🧩", desc:"Cümle kur — hızlı pratik",      url:"/pages/sentence_master.html" },
+  { id:"meteor",   name:"Meteor Defense",   icon:"☄️", desc:"Refleks + kelime",             url:"/pages/meteor.html" },
+  { id:"glitch",   name:"Glitch Hunter",    icon:"⚡", desc:"Doğru kelimeyi yakala",        url:"/pages/glitch.html" },
+  { id:"gap",      name:"Gap Master",       icon:"🧠", desc:"Boşluk doldurma",              url:"/pages/gap_master.html" },
+  { id:"life",     name:"Life Alchemist",   icon:"🧪", desc:"Seçimler + dil",               url:"/pages/life_alchemist.html" },
 ];
 
 function renderGrid(u){
@@ -143,7 +165,7 @@ function renderGrid(u){
         return;
       }
       if(!spendToken(u)){
-        toast("Hakkın bitti. Hak kazan butonuna bas.");
+        toast("Hakkın bitti. Hak Kazan’a bas.");
         paintTokens(u);
         return;
       }
@@ -160,6 +182,10 @@ document.addEventListener("DOMContentLoaded", ()=>{
   if(!u) return;
 
   paintHeader(u);
+
+  // ✅ give daily tokens automatically (FREE)
+  ensureDailyTokens(u);
+
   paintTokens(u);
   renderGrid(u);
 
@@ -181,7 +207,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
       return;
     }
     if(!spendToken(u)){
-      toast("Hakkın yok. Hak kazan.");
+      toast("Hakkın yok. Hak Kazan’a bas.");
       paintTokens(u);
       return;
     }
