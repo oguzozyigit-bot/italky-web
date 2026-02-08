@@ -1,4 +1,4 @@
-// FILE: /js/game_page.js
+// FILE: /js/game_page.js  (FINAL - all games linked + tokens spend on enter)
 import { STORAGE_KEY } from "/js/config.js";
 
 const $ = (id)=>document.getElementById(id);
@@ -52,10 +52,7 @@ function paintHeader(u){
   });
 }
 
-/* ===== Daily “entry token” system (web placeholder for ads) =====
-   - FREE: needs tokens to enter a game
-   - PRO: unlimited
-*/
+/* ===== Daily entry token system ===== */
 function isoDateLocal(){
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
@@ -79,6 +76,7 @@ function addTokens(u, add){
   return next;
 }
 function spendToken(u){
+  // ✅ SPEND ON ENTER (your choice)
   if(isPro(u)) return true;
   const t = getTokens(u);
   if(t <= 0) return false;
@@ -87,16 +85,17 @@ function spendToken(u){
 }
 function paintTokens(u){
   $("dailyChip").textContent = isPro(u) ? "♾️ Limitsiz" : `🎟️ Hak: ${getTokens(u)}`;
+  $("planChip").classList.toggle("pro", isPro(u));
 }
 
-/* ===== Games list (edit paths as you wish) ===== */
+/* ===== All games linked ===== */
 const GAMES = [
-  { id:"hangman", name:"Neon Hangman", icon:"🛰️", desc:"Kelime tahmin — hız + öğrenme", url:"/pages/hangman.html", ready:false },
-  { id:"sentence", name:"Sentence Master", icon:"🧩", desc:"Cümle kur — hızlı pratik", url:"/pages/sentence_master.html", ready:false },
-  { id:"meteor", name:"Meteor Defense", icon:"☄️", desc:"Refleks + kelime", url:"/pages/meteor.html", ready:false },
-  { id:"glitch", name:"Glitch Hunter", icon:"⚡", desc:"Doğru kelimeyi yakala", url:"/pages/glitch.html", ready:false },
-  { id:"gap", name:"Gap Master", icon:"🧠", desc:"Boşluk doldurma", url:"/pages/gap_master.html", ready:false },
-  { id:"life", name:"Life Alchemist", icon:"🧪", desc:"Seçimler + dil", url:"/pages/life_alchemist.html", ready:false },
+  { id:"hangman",  name:"Neon Hangman",     icon:"🛰️", desc:"Kelime tahmin — hız + öğrenme", url:"/pages/hangman.html",         ready:true },
+  { id:"sentence", name:"Sentence Master",  icon:"🧩", desc:"Cümle kur — hızlı pratik",      url:"/pages/sentence_master.html", ready:true },
+  { id:"meteor",   name:"Meteor Defense",   icon:"☄️", desc:"Refleks + kelime",             url:"/pages/meteor.html",          ready:true },
+  { id:"glitch",   name:"Glitch Hunter",    icon:"⚡", desc:"Doğru kelimeyi yakala",        url:"/pages/glitch.html",          ready:true },
+  { id:"gap",      name:"Gap Master",       icon:"🧠", desc:"Boşluk doldurma",              url:"/pages/gap_master.html",      ready:true },
+  { id:"life",     name:"Life Alchemist",   icon:"🧪", desc:"Seçimler + dil",               url:"/pages/life_alchemist.html",  ready:true },
 ];
 
 function renderGrid(u){
@@ -123,11 +122,11 @@ function renderGrid(u){
     meta.className = "metaRow";
 
     const tag1 = document.createElement("div");
-    tag1.className = "tag " + (g.ready ? "ready" : "lock");
-    tag1.textContent = g.ready ? "HAZIR" : "YAKINDA";
+    tag1.className = "tag ready";
+    tag1.textContent = "AKTİF";
 
     const tag2 = document.createElement("div");
-    tag2.className = "tag";
+    tag2.className = "tag " + (isPro(u) ? "pro" : "free");
     tag2.textContent = isPro(u) ? "PRO" : "FREE";
 
     meta.appendChild(tag1);
@@ -139,10 +138,6 @@ function renderGrid(u){
     card.appendChild(meta);
 
     card.addEventListener("click", ()=>{
-      if(!g.ready){
-        toast("Bu oyun sayfasını bağlayınca HAZIR olacak.");
-        return;
-      }
       if(isPro(u)){
         location.href = g.url;
         return;
@@ -173,21 +168,24 @@ document.addEventListener("DOMContentLoaded", ()=>{
       toast("PRO: hak derdi yok 😄");
       return;
     }
-    // Web’de reklam yok; placeholder: 1 hak ver
+    // Web’de reklam yok; placeholder: +1 hak
     addTokens(u, 1);
     paintTokens(u);
     toast("✅ +1 hak eklendi (reklam yerine test).");
   });
 
   $("startBtn").addEventListener("click", ()=>{
-    const firstReady = GAMES.find(x=>x.ready);
-    if(!firstReady){
-      toast("Önce bir oyun sayfasını bağlayalım (hazır URL ver).");
+    const first = GAMES[0];
+    if(isPro(u)){
+      location.href = first.url;
       return;
     }
-    if(isPro(u)) { location.href = firstReady.url; return; }
-    if(!spendToken(u)){ toast("Hakkın yok. Hak kazan."); return; }
+    if(!spendToken(u)){
+      toast("Hakkın yok. Hak kazan.");
+      paintTokens(u);
+      return;
+    }
     paintTokens(u);
-    location.href = firstReady.url;
+    location.href = first.url;
   });
 });
