@@ -1,8 +1,6 @@
 // FILE: /js/voice_ai.page.js
-// FINAL — Voice AI (your original) + 60s/day FREE gate + PRO unlimited
-// + NEW: subtitleStream (talk text floats & dissolves into clouds)
-//
-// Requires voice_ai.html contains: <div id="subtitleStream" class="subtitles"></div>
+// FINAL — your original logic + 60s/day FREE gate + PRO unlimited
+// + NEW: subtitleStream sync with audio (AI text shows when audio starts, fades after audio ends)
 
 import { STORAGE_KEY } from "/js/config.js";
 import { apiPOST } from "/js/api.js";
@@ -164,9 +162,7 @@ function showPaywall(u) {
   btnSub.style.fontWeight = "1000";
   btnSub.style.color = "#fff";
   btnSub.style.background = "linear-gradient(135deg, #A5B4FC, #4F46E5)";
-  btnSub.addEventListener("click", () => {
-    alert("Abonelik uygulama içinden yapılır.");
-  });
+  btnSub.addEventListener("click", () => alert("Abonelik uygulama içinden yapılır."));
 
   const btnClose = document.createElement("button");
   btnClose.type = "button";
@@ -209,18 +205,19 @@ function ensureHttpsForMic() {
 }
 
 /* ===============================
-   SUBTITLES STREAM (NEW)
-   - pushSubtitle(text, "user"|"ai")
+   SUBTITLES STREAM (SYNCED)
+   - user text shows immediately
+   - ai text shows when audio starts, fades after audio ends
    =============================== */
-function pushSubtitle(text, who = "ai") {
+function createSubtitle(text, who = "ai", { autoFade = true } = {}) {
   const stream = $("subtitleStream");
-  if (!stream) return;
+  if (!stream) return null;
 
   const t = String(text || "").trim();
-  if (!t) return;
+  if (!t) return null;
 
-  // Keep stream tidy
-  while (stream.children.length > 3) {
+  // keep at most 3 lines
+  while (stream.children.length > 2) {
     try { stream.removeChild(stream.firstChild); } catch { break; }
   }
 
@@ -230,17 +227,21 @@ function pushSubtitle(text, who = "ai") {
 
   stream.appendChild(line);
 
-  // Trigger fade-out after a moment, to "dissolve into clouds"
-  const holdMs = 900;
-  const lifeMs = 2800;
+  // auto fade (for user lines)
+  if (autoFade) {
+    setTimeout(() => line.classList.add("fadeout"), 900);
+    setTimeout(() => { try { line.remove(); } catch {} }, 900 + 2800);
+  }
 
-  setTimeout(() => {
+  return line;
+}
+
+function fadeSubtitle(line) {
+  if (!line) return;
+  try {
     line.classList.add("fadeout");
-  }, holdMs);
-
-  setTimeout(() => {
-    try { line.remove(); } catch {}
-  }, holdMs + lifeMs);
+    setTimeout(() => { try { line.remove(); } catch {} }, 2800);
+  } catch {}
 }
 
 /* ===============================
@@ -268,6 +269,7 @@ function getSelectedVoice() { return VOICES.find(v => v.id === selectedId) || VO
 
 /* ===============================
    AUDIO (OpenAI TTS via backend)
+   - NEW: accepts subtitleLine to show at audio start & fade at end
    =============================== */
 let currentAudio = null;
 
@@ -275,29 +277,44 @@ function stopAudio() {
   if (currentAudio) { try { currentAudio.pause(); } catch {} currentAudio = null; }
 }
 
-async function playRealVoice(text, openaiVoice, onEndCallback) {
+async function playRealVoice(text, openaiVoice, onEndCallback, subtitleLine = null) {
   stopAudio();
 
   try {
     const data = await apiPOST("/api/tts_openai", { text, voice: openaiVoice, speed: 1.1 }, { timeoutMs: 45000 });
 
     if (data?.audio_base64) {
+      // speaking visuals
       setVisual("speaking");
 
       const audio = new Audio("data:audio/mp3;base64," + data.audio_base64);
       currentAudio = audio;
 
+      // ✅ subtitle sync: show line when audio starts
+      audio.onplay = () => {
+        // If line exists and was created "no auto fade", keep visible during playback
+        // (no-op, line is already in DOM)
+      };
+
       audio.onended = () => {
         currentAudio = null;
+
+        // ✅ subtitle sync: fade after speech ends
+        fadeSubtitle(subtitleLine);
+
         if (onEndCallback) onEndCallback();
       };
 
+      // Start playing
       await audio.play();
     } else {
+      // if no audio, just fade subtitle quickly
+      fadeSubtitle(subtitleLine);
       if (onEndCallback) onEndCallback();
     }
   } catch (err) {
     console.error("TTS Hatası:", err);
+    fadeSubtitle(subtitleLine);
     if (onEndCallback) onEndCallback();
   }
 }
@@ -405,6 +422,7 @@ function startListening() {
   recognition.onresult = (event) => {
     if (silenceTimer) clearTimeout(silenceTimer);
     silenceRetryCount = 0;
+
     const text = event.results[0][0].transcript;
     const finalText = String(text || "").trim();
     if (finalText && isConversationActive) processUserSpeech(finalText, false);
@@ -425,7 +443,6 @@ function startListening() {
     }
 
     if (isConversationActive && isAutoMode) {
-      // if not currently thinking/speaking, keep loop alive
       if (!stage?.classList.contains("thinking") && !stage?.classList.contains("speaking")) {
         setTimeout(() => startListening(), 250);
       }
@@ -451,8 +468,6 @@ async function handleSilence() {
   const nudgePrompt =
     `(SİSTEM UYARISI: Kullanıcı 10 saniyedir sessiz. Eğer kullanıcının ismini biliyorsan ismini kullanarak, bilmiyorsan samimi bir şekilde: "Ne oldu sustun? Sohbet hoşuna gitmedi mi? Konuşmanı bekliyorum" minvalinde, biraz trip atan, samimi ve canlı tek bir cümle kur.)`;
 
-  // show a subtle subtitle (optional)
-  pushSubtitle("…", "ai");
   processUserSpeech(nudgePrompt, true);
 }
 
@@ -465,8 +480,8 @@ async function processUserSpeech(text, isSystemTrigger = false) {
   try {
     const v = getSelectedVoice();
 
-    // Subtitle: user text (but hide system trigger content)
-    if (!isSystemTrigger) pushSubtitle(text, "user");
+    // ✅ Subtitle: user text appears immediately (but NOT for system triggers)
+    if (!isSystemTrigger) createSubtitle(text, "user", { autoFade: true });
 
     // history
     chatHistory.push({ role: "user", content: text });
@@ -490,18 +505,19 @@ async function processUserSpeech(text, isSystemTrigger = false) {
 
     const aiReply = String(chatData?.text || "").trim() || "Orada mısın?";
 
-    // Subtitle: AI reply (always)
-    pushSubtitle(aiReply, "ai");
-
     // save history
     chatHistory.push({ role: "assistant", content: aiReply });
     if (chatHistory.length > 20) chatHistory = chatHistory.slice(-20);
+
+    // ✅ Subtitle SYNC: create AI subtitle but DO NOT auto-fade.
+    // It will fade when audio ends.
+    const aiLine = createSubtitle(aiReply, "ai", { autoFade: false });
 
     await playRealVoice(aiReply, v.openaiVoice, () => {
       if (isConversationActive && isAutoMode) startListening();
       else if (isConversationActive && !isAutoMode) stopConversation();
       else setVisual("idle");
-    });
+    }, aiLine);
 
   } catch (err) {
     console.error(err);
@@ -551,10 +567,14 @@ function renderVoiceList() {
       const btn = e.currentTarget;
       btn.style.opacity = "0.5";
       setVisual("speaking");
+
+      // preview subtitle sync too
+      const line = createSubtitle(`Benim adım ${v.label}.`, "ai", { autoFade: false });
+
       await playRealVoice(`Benim adım ${v.label}.`, v.openaiVoice, () => {
         btn.style.opacity = "1";
         setVisual("idle");
-      });
+      }, line);
     });
 
     listContainer.appendChild(row);
