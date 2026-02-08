@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-  <title>ITALKY • Arena V26 Infinity</title>
+  <title>ITALKY • Arena V27 Immortal</title>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
 
   <style>
@@ -50,7 +50,7 @@
     .turn-badge { font-size: 12px; font-weight: 800; background: rgba(255,255,255,0.1); padding: 4px 10px; border-radius: 8px; letter-spacing: 1px; }
 
     .word-display { width: 100%; flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
-    .main-word { font-family: var(--font-display); font-size: 40px; font-weight: 700; line-height: 1.1; margin: 0 0 6px; }
+    .main-word { font-family: var(--font-display); font-size: 38px; font-weight: 700; line-height: 1.1; margin: 0 0 6px; }
     .sub-word { font-size: 18px; color: rgba(255,255,255,0.65); font-weight: 500; min-height: 24px; }
     .letter-slots { display: none; font-family: monospace; font-size: 32px; letter-spacing: 4px; color: var(--gold); margin-top: 14px; text-shadow: 0 0 10px rgba(255, 215, 0, 0.25); }
     .hint-info { display: none; font-size: 10px; opacity: 0.55; margin-top: 6px; letter-spacing: 1px; }
@@ -168,8 +168,8 @@
     </div>
 
     <div id="nameInputs">
-      <input type="text" class="name-input" id="inp0" value="Oyuncu 1" style="border-color:var(--p0)">
-      <input type="text" class="name-input" id="inp1" value="Oyuncu 2" style="border-color:var(--p1)">
+      <input type="text" class="name-input" id="inp0" placeholder="Oyuncu 1" style="border-color:var(--p0)">
+      <input type="text" class="name-input" id="inp1" placeholder="Oyuncu 2" style="border-color:var(--p1)">
     </div>
 
     <div style="font-size:12px; opacity:.6; margin:15px 0 6px">DİL</div>
@@ -187,7 +187,7 @@
       <div class="toggle-btn" data-mode="vocab">🧠 Kelime</div>
     </div>
 
-    <button class="btn-block" id="btnStart">BAŞLA</button>
+    <button class="btn-block" id="btnStart">BAŞLA (3 SET)</button>
   </div>
 </div>
 
@@ -202,21 +202,22 @@
 </div>
 
 <script>
-/* ========= V26 INFINITY ENGINE ========= */
+/* ========= V27 IMMORTAL ENGINE ========= */
 
-// BURAYA 1000 KELİMENİZİ YAPIŞTIRIN (Örnek olarak çoğaltılmıştır)
+// Geliştirilmiş Kelime Havuzu (Örnek)
 const DB = {
   en: [
     {w:"Excellent",tr:"Mükemmel"},{w:"Challenge",tr:"Meydan Okuma"},{w:"Opportunity",tr:"Fırsat"},{w:"Journey",tr:"Yolculuk"},
     {w:"Environment",tr:"Çevre"},{w:"Necessary",tr:"Gerekli"},{w:"Dangerous",tr:"Tehlikeli"},{w:"Knowledge",tr:"Bilgi"},
     {w:"Experience",tr:"Deneyim"},{w:"Incredible",tr:"İnanılmaz"},{w:"Understand",tr:"Anlamak"},{w:"Remember",tr:"Hatırlamak"},
     {w:"Solution",tr:"Çözüm"},{w:"Together",tr:"Birlikte"},{w:"Success",tr:"Başarı"},{w:"Future",tr:"Gelecek"},
-    {w:"Freedom",tr:"Özgürlük"},{w:"Victory",tr:"Zafer"},{w:"Quality",tr:"Kalite"},{w:"Ambition",tr:"Hırs"}
+    {w:"Freedom",tr:"Özgürlük"},{w:"Victory",tr:"Zafer"},{w:"Quality",tr:"Kalite"},{w:"Ambition",tr:"Hırs"},
+    {w:"Adventure",tr:"Macera"}, {w:"Celebration",tr:"Kutlama"}, {w:"Determination",tr:"Kararlılık"}, {w:"Happiness",tr:"Mutluluk"}
   ],
-  de: [{w:"Entscheidung",tr:"Karar"},{w:"Möglichkeit",tr:"İmkan"},{w:"Erfahrung",tr:"Deneyim"},{w:"Natürlich",tr:"Doğal"}],
-  fr: [{w:"Bonjour",tr:"Merhaba"},{w:"Amour",tr:"Aşk"},{w:"Voiture",tr:"Araba"},{w:"Maison",tr:"Ev"}],
-  es: [{w:"Corazón",tr:"Kalp"},{w:"Amigo",tr:"Arkadaş"},{w:"Tiempo",tr:"Zaman"},{w:"Vida",tr:"Hayat"}],
-  it: [{w:"Ciao",tr:"Merhaba"},{w:"Grazie",tr:"Teşekkürler"},{w:"Famiglia",tr:"Aile"},{w:"Piccolo",tr:"Küçük"}]
+  de: [{w:"Entscheidung",tr:"Karar"},{w:"Möglichkeit",tr:"İmkan"},{w:"Erfahrung",tr:"Deneyim"},{w:"Natürlich",tr:"Doğal"},{w:"Wichtig",tr:"Önemli"}],
+  fr: [{w:"Bonjour",tr:"Merhaba"},{w:"Amour",tr:"Aşk"},{w:"Voiture",tr:"Araba"},{w:"Maison",tr:"Ev"},{w:"Magnifique",tr:"Muhteşem"}],
+  es: [{w:"Corazón",tr:"Kalp"},{w:"Amigo",tr:"Arkadaş"},{w:"Tiempo",tr:"Zaman"},{w:"Vida",tr:"Hayat"},{w:"Felicidad",tr:"Mutluluk"}],
+  it: [{w:"Ciao",tr:"Merhaba"},{w:"Grazie",tr:"Teşekkürler"},{w:"Famiglia",tr:"Aile"},{w:"Piccolo",tr:"Küçük"},{w:"Mangiare",tr:"Yemek"}]
 };
 
 const LANG_CODES = { en:'en-US', de:'de-DE', fr:'fr-FR', es:'es-ES', it:'it-IT' };
@@ -225,7 +226,6 @@ function normalize(s){
   return String(s||"").toLowerCase().replace(/ß/g, "ss").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9 ]/g, "").trim();
 }
 
-// 85% BENZERLİK EŞİĞİ
 function similarityScore(a,b){
   const s1 = normalize(a), s2 = normalize(b);
   if(!s1 && !s2) return 100;
@@ -254,7 +254,7 @@ function editDistance(s1, s2){
   return costs[s2.length];
 }
 
-// FISHER-YATES SHUFFLE
+// Fisher-Yates Shuffle
 function shuffle(array) {
   let currentIndex = array.length, randomIndex;
   while (currentIndex != 0) {
@@ -264,6 +264,18 @@ function shuffle(array) {
   }
   return array;
 }
+
+// AKILLI HAFIZA YÖNETİCİSİ
+const MEMORY = {
+  key: 'italky_used_words',
+  get: function() { return JSON.parse(localStorage.getItem(this.key) || '[]'); },
+  add: function(word) { 
+    let list = this.get();
+    if(!list.includes(word)) list.push(word);
+    localStorage.setItem(this.key, JSON.stringify(list));
+  },
+  reset: function() { localStorage.removeItem(this.key); }
+};
 
 const STATE = { IDLE:0, SPEAKING:1, LISTENING:2, RESOLVING:3, PAUSED:4, END:5 };
 
@@ -282,28 +294,25 @@ const game = {
   current: null,
   pool: [],
   poolPos: 0,
-  usedWords: new Set(), // MAÇ BOYUNCA TUTAR (Infinity Pool)
   pendingWrong: null,
 
   init(){
+    // OYUNCU ADI KONTROLÜ (MECBURİ)
+    let valid = true;
     this.players = [];
     for(let i=0;i<setup.playerCount;i++){
-      const name = ($(`inp${i}`)?.value || `Oyuncu ${i+1}`).trim() || `Oyuncu ${i+1}`;
+      const val = $(`inp${i}`).value.trim();
+      if(!val) { valid = false; break; }
       this.players.push({
-        id:i, name, score:0, setWins:0, wordsPlayed:0,
+        id:i, name:val, score:0, setWins:0, wordsPlayed:0,
         passRight:1, varRight:1, hintRight:5, slots:null, hintUsedThisWord:false,
       });
     }
     
-    // MAÇ BAŞI: HAVUZU OLUŞTUR VE KARIŞTIR
-    const raw = DB[setup.lang] || DB.en;
-    // 1000 kelime simülasyonu için 100 kere çoğaltıyoruz (Siz kendi 1000 kelimenizi DB'ye ekleyin)
-    let expanded = [];
-    for(let i=0; i<50; i++) expanded = expanded.concat(raw); 
-    
-    this.pool = shuffle(expanded);
-    this.poolPos = 0;
-    this.usedWords.clear(); // SADECE MAÇ BAŞINDA SIFIRLANIR
+    if(!valid) { alert("Lütfen tüm oyuncu isimlerini giriniz!"); return; }
+
+    // MAÇ BAŞI: HAFIZAYI SIFIRLA
+    MEMORY.reset();
 
     this.turnIndex = Math.floor(Math.random()*this.players.length);
     this.startNewSet(true);
@@ -316,6 +325,15 @@ const game = {
       p.slots = null; p.hintUsedThisWord = false;
     });
     this.pendingWrong = null;
+
+    // HAVUZU OLUŞTUR VE KARIŞTIR
+    const raw = DB[setup.lang] || DB.en;
+    // Havuzu 20 katına çıkar (Çok uzun süre tekrar etmesin)
+    let expanded = [];
+    for(let i=0; i<20; i++) expanded = expanded.concat(raw);
+    this.pool = shuffle(expanded);
+    this.poolPos = 0;
+
     this.pickNextWordStrict();
     this.state = STATE.IDLE;
     this.updateUI();
@@ -324,26 +342,30 @@ const game = {
 
   pickNextWordStrict(){
     let tries = 0;
+    const usedList = MEMORY.get(); // Hafızadan çek
+
     while(tries < this.pool.length){
       if(this.poolPos >= this.pool.length){
-        // Havuz biterse tekrar karıştır ama usedWords'u silme (sonsuz döngüden kaçınmak için)
-        // Eğer tüm kelimeler bittiyse mecbur tekrara düşecek.
         this.pool = shuffle(this.pool);
         this.poolPos = 0;
       }
       const item = this.pool[this.poolPos++];
       const key = normalize(item.w);
-      if(!this.usedWords.has(key)){
-        this.usedWords.add(key); // Kelimeyi "kullanıldı" olarak işaretle
+      
+      // Eğer kelime hafızada yoksa kullan
+      if(!usedList.includes(key)){
+        MEMORY.add(key); // Hafızaya ekle
         this.current = item;
         return;
       }
       tries++;
     }
-    // Eğer buraya gelirse tüm kelimeler bitmiş demektir.
-    this.usedWords.clear(); // Mecburen temizle
+    
+    // Eğer tüm kelimeler bittiyse (Hafıza dolduysa)
+    // Mecburen hafızayı sıfırla ve devam et
+    MEMORY.reset();
     this.current = this.pool[this.poolPos++] || (DB[setup.lang]||DB.en)[0];
-    this.usedWords.add(normalize(this.current.w));
+    MEMORY.add(normalize(this.current.w));
   },
 
   startTurnFlow(){
@@ -465,7 +487,7 @@ const game = {
 
   startListening(){
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if(!SR){ alert("Bu cihazda Ses Tanıma yok."); return; }
+    if(!SR){ alert("Ses Tanıma desteklenmiyor."); return; }
     this.state = STATE.LISTENING;
     this.updateUI();
 
@@ -491,8 +513,9 @@ const game = {
     const p = this.players[this.turnIndex];
     const target = this.current.w;
     const score = similarityScore(target, spoken);
-    // EŞİK: %85
-    const isCorrect = score >= 85;
+    
+    // EŞİK: %95 (HARDCORE)
+    const isCorrect = score >= 95;
 
     const overlay = $("overlay");
     const actions = $("varActions");
@@ -530,7 +553,7 @@ const game = {
       } else {
         actions.style.display = "none";
         badge.style.display = "block";
-        badge.textContent = `%${score} BENZERLİK`;
+        badge.textContent = `%${score} BENZERLİK`; // Yanlışta da oranı göster
         badge.style.color = "var(--red)";
         setTimeout(()=>{ this.commitWrongAndAdvance(); }, 1400);
       }
@@ -591,6 +614,7 @@ const game = {
   endSet(){
     this.state = STATE.PAUSED;
     $("pauseModal").classList.remove("hidden");
+
     const sorted = [...this.players].sort((a,b)=> b.score - a.score);
     let winner = null;
     if(sorted.length === 1){ winner = sorted[0]; }
@@ -630,7 +654,14 @@ const game = {
 
   continueGame(){
     $("pauseModal").classList.add("hidden");
-    this.startNewSet();
+    this.players.forEach(p=>{
+      p.score = 0; p.wordsPlayed = 0; p.passRight = 1; p.varRight = 1; p.slots = null; p.hintUsedThisWord = false;
+    });
+    this.pendingWrong = null;
+    this.pickNextWordStrict();
+    this.state = STATE.IDLE;
+    this.updateUI();
+    this.startTurnFlow();
   },
 
   speak(txt, cb){
