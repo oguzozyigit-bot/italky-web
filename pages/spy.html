@@ -56,14 +56,14 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);f
 .bar{width:5px;height:12px;border-radius:3px;background:var(--radar);opacity:.3}
 @keyframes eq{to{height:50px;opacity:1;box-shadow:0 0 10px var(--radar)}}
 
-.listen-btn{margin:5px auto 15px;padding:12px 30px;border-radius:30px;border:2px solid var(--radar);
-  background:transparent;color:var(--radar);font-family:'Share Tech Mono';font-size:14px;cursor:pointer;transition:0.2s; font-weight: 800;}
+.listen-btn{margin:5px auto 12px;padding:12px 30px;border-radius:30px;border:2px solid var(--radar);
+  background:transparent;color:var(--radar);font-family:'Share Tech Mono';font-size:14px;cursor:pointer;transition:0.2s; font-weight: 900;}
 .listen-btn:active:not(:disabled){transform:scale(0.95);background:var(--radar-dim)}
 .listen-btn:disabled{opacity:.4; border-color: #555; color: #555;}
 
 .opts{display:flex;flex-direction:column;gap:10px}
 .opt{padding:15px;border-radius:14px;border:1px solid var(--border);
-  background:rgba(0,40,30,.6);cursor:pointer;font-weight:800;transition:0.2s;text-align:center; font-size: 15px;}
+  background:rgba(0,40,30,.6);cursor:pointer;font-weight:900;transition:0.2s;text-align:center; font-size: 15px;}
 .opt:active{transform:scale(.99)}
 .opt.correct{border-color:var(--ok);background:rgba(0,230,118,.2);color:var(--ok)}
 .opt.wrong{border-color:var(--alert);background:rgba(255,51,0,.2);color:var(--alert)}
@@ -108,7 +108,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);f
     <div class="opts" id="optionsArea"></div>
 
     <div class="stats-bar">
-      <div id="momDisp" style="color:var(--ok); font-weight:800">x1.00 MOMENTUM</div>
+      <div id="momDisp" style="color:var(--ok); font-weight:900">x1.00 MOMENTUM</div>
       <div id="livesDisp">❤️❤️❤️</div>
     </div>
   </div>
@@ -145,13 +145,10 @@ let lastUtter = null;
 
 const LANGMAP = {en:"en-US", de:"de-DE", fr:"fr-FR", es:"es-ES", it:"it-IT"};
 
-/* ✅ normalize to fix “correct not detected” */
+// normalize (fix correct/incorrect compare)
 const norm = (s)=>
-  String(s||"")
-    .trim()
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g,"")
+  String(s||"").trim().toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
     .replace(/\s+/g," ");
 
 function updatePB() {
@@ -161,16 +158,13 @@ function updatePB() {
 
 function setListenLabel(state){
   const btn = $("listenBtn");
-  if(state === "playing"){
-    btn.textContent = "⏳ SİNYAL ÇALIYOR";
-    btn.disabled = true;
-  } else if(state === "wait"){
-    btn.textContent = "… BEKLE";
-    btn.disabled = true;
-  } else {
-    btn.textContent = "▶ SİNYALİ DİNLE";
-    btn.disabled = false;
-  }
+  if(state === "playing"){ btn.textContent = "⏳ SİNYAL ÇALIYOR"; btn.disabled = true; }
+  else if(state === "wait"){ btn.textContent = "… BEKLE"; btn.disabled = true; }
+  else { btn.textContent = "▶ SİNYALİ DİNLE"; btn.disabled = false; }
+}
+
+function lockOptions(lock=true){
+  document.querySelectorAll(".opt").forEach(x => x.style.pointerEvents = lock ? "none" : "auto");
 }
 
 document.querySelectorAll(".lang-btn").forEach(b => {
@@ -188,10 +182,25 @@ $("soundBtn").onclick = () => {
   if(muted) stopSpeak();
 };
 
-/* ✅ Gate: oyuna girince hak düşsün */
+function warmUpTTS(){
+  try{
+    if(!("speechSynthesis" in window)) return;
+    speechSynthesis.cancel();
+    // warm voices
+    speechSynthesis.getVoices();
+    const u = new SpeechSynthesisUtterance(" ");
+    u.volume = 0;
+    u.rate = 1;
+    u.lang = LANGMAP[lang] || "en-US";
+    speechSynthesis.speak(u);
+    setTimeout(()=>{ try{ speechSynthesis.cancel(); }catch{} }, 120);
+  }catch{}
+}
+
 $("startBtn").onclick = async () => {
   GameKit.gateEnterOrRedirect({
     onAllowed: async ()=>{
+      warmUpTTS();
       $("startModal").classList.add("hidden");
       $("gameArea").style.display = "flex";
       if(!runActive) { totalScore = 0; lives = 3; momentum = 1.0; runActive = true; }
@@ -206,14 +215,30 @@ async function initSet(isBank = false) {
   cooldown = false;
   stopSpeak();
   setListenLabel("idle");
+  lockOptions(false);
 
-  const dataRaw = await loadLangPool(lang);
-  // ✅ filter invalid items (prevents blank correct answer)
-  const data = (dataRaw || []).filter(x => {
+  let dataRaw = [];
+  try{
+    dataRaw = await loadLangPool(lang);
+  }catch(e){
+    dataRaw = [];
+  }
+
+  const data = (dataRaw || []).filter(x=>{
     const tr = String(x?.tr||"").trim();
     const say = String(x?.sentence || x?.w || "").trim();
     return tr.length >= 1 && say.length >= 1;
   });
+
+  if(data.length < 10){
+    GameKit.showEndModal({
+      title:"Havuz yüklenemedi",
+      subtitle:"Dil havuzu boş veya ulaşılamıyor. Çıkıp tekrar dene.",
+      canContinue:false,
+      onExit: ()=> location.href="/pages/game.html"
+    });
+    return;
+  }
 
   const USED_KEY = `used_audio_spy_v2_${lang}`;
   const { used, save } = createUsedSet(USED_KEY);
@@ -226,53 +251,36 @@ async function initSet(isBank = false) {
   }
 
   poolItems = picked || [];
-  try { save(poolItems.map(x => (x.sentence || x.w || x.tr || ""))); } catch {}
+  if(poolItems.length < 8){
+    GameKit.showEndModal({
+      title:"Yeterli soru yok",
+      subtitle:"Havuzdan yeterli içerik gelmedi. Çıkıp tekrar dene.",
+      canContinue:false,
+      onExit: ()=> location.href="/pages/game.html"
+    });
+    return;
+  }
+
+  try{ save(poolItems.map(x => (x.sentence || x.w || x.tr || ""))); }catch{}
 
   updateUI();
   nextSignal();
 }
 
-function nextSignal() {
-  if(setCounter >= 8 || lives <= 0) {
-    finishSet(lives <= 0);
-    return;
-  }
-
-  const w = poolItems[setCounter];
-  const ans = String(w?.tr || "").trim();
-  const say = String(w?.sentence || w?.w || "").trim();
-
-  if(!ans || !say){
-    setCounter++;
-    nextSignal();
-    return;
-  }
-
-  currentItem = { say, ans };
-
-  buildOptions(currentItem.ans);
-  setTimeout(() => playSignal(), 350);
-}
-
 function buildOptions(correct) {
   const correctClean = String(correct||"").trim();
-  if(!correctClean){
-    // safety
-    $("optionsArea").innerHTML = "";
-    return;
-  }
+  if(!correctClean){ $("optionsArea").innerHTML=""; return false; }
 
   const opts = [correctClean];
-
   let tries = 0;
-  while(opts.length < 4 && tries < 80) {
+
+  while(opts.length < 4 && tries < 120) {
     tries++;
-    const r = String(poolItems[Math.floor(Math.random() * poolItems.length)]?.tr || "").trim();
+    const r = String(poolItems[Math.floor(Math.random()*poolItems.length)]?.tr || "").trim();
     if(r && !opts.some(x=>norm(x)===norm(r))) opts.push(r);
   }
 
-  // if still not enough, duplicate-safe filler
-  while(opts.length < 4) opts.push(correctClean);
+  if(opts.length < 4) return false;
 
   opts.sort(() => Math.random() - 0.5);
 
@@ -285,10 +293,49 @@ function buildOptions(correct) {
     d.onclick = () => handleChoice(d, v);
     area.appendChild(d);
   });
+
+  return true;
 }
 
-function lockOptions(lock=true){
-  document.querySelectorAll(".opt").forEach(x => x.style.pointerEvents = lock ? "none" : "auto");
+function nextSignal() {
+  // clear old options if any
+  $("optionsArea").innerHTML = "";
+
+  if(setCounter >= 8 || lives <= 0) {
+    finishSet(lives <= 0);
+    return;
+  }
+
+  // find next valid item
+  let tries = 0;
+  while(tries < 30){
+    const w = poolItems[setCounter];
+    const ans = String(w?.tr || "").trim();
+    const say = String(w?.sentence || w?.w || "").trim();
+
+    if(ans && say){
+      currentItem = { say, ans };
+      break;
+    }
+    setCounter++;
+    tries++;
+    if(setCounter >= 8) break;
+  }
+
+  if(!currentItem || !currentItem.ans || !currentItem.say){
+    finishSet(true);
+    return;
+  }
+
+  // ensure 4 options
+  const ok = buildOptions(currentItem.ans);
+  if(!ok){
+    setCounter++;
+    nextSignal();
+    return;
+  }
+
+  setTimeout(() => playSignal(), 250);
 }
 
 function playSignal() {
@@ -339,7 +386,6 @@ function handleChoice(el, val) {
       (lives > 0) ? nextSignal() : finishSet(true);
     });
   }
-
   updateUI();
 }
 
@@ -348,6 +394,7 @@ function resetSignal() {
   setCounter++;
   lockOptions(false);
   setListenLabel("idle");
+  currentItem = null;
 }
 
 function updateUI() {
@@ -356,7 +403,6 @@ function updateUI() {
   $("livesDisp").textContent = "❤️".repeat(Math.max(0, lives)) + "💀".repeat(3 - Math.max(0, lives));
 }
 
-/* ✅ GameKit end screen (every game end) */
 function finishSet(died) {
   stopSpeak();
   setListenLabel("idle");
@@ -374,16 +420,15 @@ function finishSet(died) {
     scoreText,
     canContinue: true,
     onContinue: ()=>{
-      // continue: new set (no bank logic now; simple continue)
       initSet(false);
     },
     onExit: ()=>{
-      location.href = "/pages/game.html";
+      location.href="/pages/game.html";
     }
   });
 }
 
-/* ===== Speech ===== */
+/* speech */
 function stopSpeak(){
   speaking = false;
   try { speechSynthesis.cancel(); } catch {}
@@ -393,6 +438,11 @@ function stopSpeak(){
 function speak(txt, onDone) {
   if(muted || !txt) { onDone && onDone(); return; }
   stopSpeak();
+
+  if(!("speechSynthesis" in window)){
+    onDone && onDone();
+    return;
+  }
 
   const u = new SpeechSynthesisUtterance(txt);
   lastUtter = u;
@@ -413,7 +463,6 @@ function speak(txt, onDone) {
   catch { finish(); }
 }
 
-/* init */
 window.addEventListener('load', () => {
   updatePB();
   setListenLabel("idle");
