@@ -1,9 +1,30 @@
 // FILE: italky-web/js/facetoface_page.js
-import { BASE_DOMAIN } from "/js/config.js";
+import { BASE_DOMAIN, STORAGE_KEY } from "/js/config.js";
 import { getSiteLang } from "/js/i18n.js";
 
 const $ = (id)=>document.getElementById(id);
 function base(){ return String(BASE_DOMAIN||"").replace(/\/+$/,""); }
+
+/* ===============================
+   AUTH GUARD (simple)
+   =============================== */
+function requireLogin(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) { location.replace("/index.html"); return false; }
+    const u = JSON.parse(raw);
+    if(!u || !u.email){
+      localStorage.removeItem(STORAGE_KEY);
+      location.replace("/index.html");
+      return false;
+    }
+    return true;
+  }catch{
+    try{ localStorage.removeItem(STORAGE_KEY); }catch{}
+    location.replace("/index.html");
+    return false;
+  }
+}
 
 /* ===============================
    SYSTEM UI LANGUAGE (profile/i18n)
@@ -23,8 +44,7 @@ function getSystemUILang(){
 let UI_LANG = getSystemUILang();
 
 /* ===============================
-   LANGUAGE REGISTRY (code + flag + bcp)
-   - names auto-localized using Intl.DisplayNames
+   LANGUAGE REGISTRY
    =============================== */
 const LANGS = [
   { code:"tr", flag:"🇹🇷", bcp:"tr-TR" },
@@ -37,7 +57,6 @@ const LANGS = [
   { code:"pt", flag:"🇵🇹", bcp:"pt-PT" },
   { code:"pt-br", flag:"🇧🇷", bcp:"pt-BR" },
 
-  // Travel / neighbors / very common
   { code:"ru", flag:"🇷🇺", bcp:"ru-RU" },
   { code:"uk", flag:"🇺🇦", bcp:"uk-UA" },
   { code:"bg", flag:"🇧🇬", bcp:"bg-BG" },
@@ -49,7 +68,6 @@ const LANGS = [
   { code:"sq", flag:"🇦🇱", bcp:"sq-AL" },
   { code:"mk", flag:"🇲🇰", bcp:"mk-MK" },
 
-  // Caucasus / Central Asia
   { code:"az", flag:"🇦🇿", bcp:"az-AZ" },
   { code:"ka", flag:"🇬🇪", bcp:"ka-GE" },
   { code:"hy", flag:"🇦🇲", bcp:"hy-AM" },
@@ -58,7 +76,6 @@ const LANGS = [
   { code:"ky", flag:"🇰🇬", bcp:"ky-KG" },
   { code:"mn", flag:"🇲🇳", bcp:"mn-MN" },
 
-  // EU / Nordics / misc
   { code:"nl", flag:"🇳🇱", bcp:"nl-NL" },
   { code:"sv", flag:"🇸🇪", bcp:"sv-SE" },
   { code:"no", flag:"🇳🇴", bcp:"nb-NO" },
@@ -70,14 +87,12 @@ const LANGS = [
   { code:"hu", flag:"🇭🇺", bcp:"hu-HU" },
   { code:"sl", flag:"🇸🇮", bcp:"sl-SI" },
 
-  // Middle East
   { code:"ar", flag:"🇸🇦", bcp:"ar-SA" },
   { code:"ar-eg", flag:"🇪🇬", bcp:"ar-EG" },
   { code:"he", flag:"🇮🇱", bcp:"he-IL" },
   { code:"fa", flag:"🇮🇷", bcp:"fa-IR" },
   { code:"ur", flag:"🇵🇰", bcp:"ur-PK" },
 
-  // South / SE Asia
   { code:"hi", flag:"🇮🇳", bcp:"hi-IN" },
   { code:"bn", flag:"🇧🇩", bcp:"bn-BD" },
   { code:"ta", flag:"🇮🇳", bcp:"ta-IN" },
@@ -88,13 +103,11 @@ const LANGS = [
   { code:"ms", flag:"🇲🇾", bcp:"ms-MY" },
   { code:"fil", flag:"🇵🇭", bcp:"fil-PH" },
 
-  // East Asia
   { code:"zh", flag:"🇨🇳", bcp:"zh-CN" },
   { code:"zh-tw", flag:"🇹🇼", bcp:"zh-TW" },
   { code:"ja", flag:"🇯🇵", bcp:"ja-JP" },
   { code:"ko", flag:"🇰🇷", bcp:"ko-KR" },
 
-  // Africa common
   { code:"sw", flag:"🇰🇪", bcp:"sw-KE" },
   { code:"am", flag:"🇪🇹", bcp:"am-ET" },
 ];
@@ -115,16 +128,13 @@ function getDisplayNames(){
   }
   return _dn;
 }
-
 function canonicalLangCode(code){
   const c = String(code||"").toLowerCase();
   return c.split("-")[0];
 }
-
 function langObj(code){ return LANGS.find(x=>x.code===code); }
 function langFlag(code){ return langObj(code)?.flag || "🌐"; }
 function bcp(code){ return langObj(code)?.bcp || "en-US"; }
-
 function langLabel(code){
   const dn = getDisplayNames();
   const base = canonicalLangCode(code);
@@ -157,15 +167,13 @@ function speak(text, langCode){
 }
 
 /* ===============================
-   ✅ NEW: latest translation marker
+   Latest translation marker
    =============================== */
 function markLatestTranslation(side){
   const wrap = (side === "top") ? $("topBody") : $("botBody");
   if(!wrap) return;
 
-  wrap.querySelectorAll(".bubble.me.is-latest").forEach(el=>{
-    el.classList.remove("is-latest");
-  });
+  wrap.querySelectorAll(".bubble.me.is-latest").forEach(el=>el.classList.remove("is-latest"));
 
   const allMe = wrap.querySelectorAll(".bubble.me");
   const last = allMe[allMe.length - 1];
@@ -173,7 +181,7 @@ function markLatestTranslation(side){
 }
 
 /* ===============================
-   ✅ NEW: clear chat
+   Clear chat
    =============================== */
 function clearChat(){
   closeAllPop();
@@ -188,7 +196,6 @@ function clearChat(){
 
 /* ===============================
    Bubbles
-   - speaker ONLY on translated bubble (me)
    =============================== */
 function addBubble(side, kind, text, langForSpeak){
   const wrap = (side === "top") ? $("topBody") : $("botBody");
@@ -223,10 +230,7 @@ function addBubble(side, kind, text, langForSpeak){
 
   wrap.appendChild(row);
 
-  // “son çeviri patlasın”
-  if(kind === "me"){
-    markLatestTranslation(side);
-  }
+  if(kind === "me") markLatestTranslation(side);
 
   try{ wrap.scrollTop = wrap.scrollHeight; }catch{}
 }
@@ -237,7 +241,10 @@ function addBubble(side, kind, text, langForSpeak){
 function setMicUI(which, on){
   const btn = (which === "top") ? $("topMic") : $("botMic");
   btn?.classList.toggle("listening", !!on);
-  $("frameRoot")?.classList.toggle("listening", !!on);
+
+  // frameRoot: sadece herhangi bir mic açıksa listening kalsın
+  const anyOn = !!on || !!recTop || !!recBot;
+  $("frameRoot")?.classList.toggle("listening", anyOn);
 }
 
 /* ===============================
@@ -247,11 +254,9 @@ function closeAllPop(){
   $("pop-top")?.classList.remove("show");
   $("pop-bot")?.classList.remove("show");
 }
-
 function labelChip(code){
   return `${langFlag(code)} ${langLabel(code)}`;
 }
-
 function renderPop(side){
   const list = $(side === "top" ? "list-top" : "list-bot");
   if(!list) return;
@@ -287,7 +292,6 @@ function renderPop(side){
     });
   });
 }
-
 function togglePop(side){
   const pop = $(side === "top" ? "pop-top" : "pop-bot");
   if(!pop) return;
@@ -301,26 +305,44 @@ function togglePop(side){
 }
 
 /* ===============================
-   Translate API
+   Translate API (robust)
    =============================== */
 async function translateViaApi(text, source, target){
   const b = base();
   if(!b) return text;
 
-  const body = { text, source, target, from_lang: source, to_lang: target };
+  const ctrl = new AbortController();
+  const to = setTimeout(()=>ctrl.abort(), 15000);
 
-  const r = await fetch(`${b}/api/translate`,{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify(body)
-  });
+  try{
+    const body = { text, source, target, from_lang: source, to_lang: target };
 
-  const data = await r.json().catch(()=> ({}));
-  const out = String(
-    data?.translated || data?.translation || data?.text || data?.translated_text || ""
-  ).trim();
+    const r = await fetch(`${b}/api/translate`,{
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify(body),
+      signal: ctrl.signal
+    });
 
-  return out || text;
+    if(!r.ok){
+      // 401/403 gibi durumlarda da sessiz kalmasın
+      const msg = `Translate API error (${r.status})`;
+      console.warn(msg);
+      return text;
+    }
+
+    const data = await r.json().catch(()=> ({}));
+    const out = String(
+      data?.translated || data?.translation || data?.text || data?.translated_text || ""
+    ).trim();
+
+    return out || text;
+  }catch(err){
+    console.warn("translateViaApi failed:", err);
+    return text;
+  }finally{
+    clearTimeout(to);
+  }
 }
 
 /* ===============================
@@ -336,8 +358,12 @@ function stopAll(){
   recTop = null;
   recBot = null;
   active = null;
+
   setMicUI("top", false);
   setMicUI("bot", false);
+
+  // garanti: frameRoot listening kapansın
+  $("frameRoot")?.classList.remove("listening");
 }
 
 function buildRecognizer(langCode){
@@ -383,16 +409,13 @@ async function start(which){
     const finalText = String(t||"").trim();
     if(!finalText) return;
 
-    // spoken (them) — no speaker icon
     addBubble(which, "them", finalText, src);
 
-    // translated (me) on other side — speaker icon + latest highlight
     const other = (which === "top") ? "bot" : "top";
-    try{
-      const translated = await translateViaApi(finalText, src, dst);
-      addBubble(other, "me", translated, dst);
-      speak(translated, dst);
-    }catch{}
+    const translated = await translateViaApi(finalText, src, dst);
+
+    addBubble(other, "me", translated, dst);
+    speak(translated, dst);
   };
 
   rec.onerror = ()=>{
@@ -401,8 +424,14 @@ async function start(which){
   };
 
   rec.onend = ()=>{
+    // end geldiğinde sadece ilgili butonu kapat
+    if(active === which) active = null;
     setMicUI(which, false);
-    active = null;
+
+    // iki tarafta da aktif kayıt yoksa frameRoot kapat
+    if(!active){
+      $("frameRoot")?.classList.remove("listening");
+    }
   };
 
   if(which === "top") recTop = rec;
@@ -418,16 +447,18 @@ async function start(which){
 /* ===============================
    Nav + Bindings
    =============================== */
+const HOME_PATH = "/pages/home.html"; // gerekirse burayı menü dosyana göre değiştir
+
 function bindNav(){
   $("homeBtn")?.addEventListener("click", ()=>{
-    location.href = "/pages/home.html";
+    location.href = HOME_PATH;
   });
 
   $("topBack")?.addEventListener("click", ()=>{
     stopAll();
     closeAllPop();
     if(history.length > 1) history.back();
-    else location.href="/pages/home.html";
+    else location.href = HOME_PATH;
   });
 
   $("clearChat")?.addEventListener("click", ()=>{
@@ -487,7 +518,8 @@ function refreshUILang(){
 }
 
 document.addEventListener("DOMContentLoaded", ()=>{
-  // initial chip labels
+  if(!requireLogin()) return;
+
   if($("topLangTxt")) $("topLangTxt").textContent = labelChip(topLang);
   if($("botLangTxt")) $("botLangTxt").textContent = labelChip(botLang);
 
@@ -496,7 +528,6 @@ document.addEventListener("DOMContentLoaded", ()=>{
   bindMicButtons();
   bindOutsideClose();
 
-  // if profile language changes in another tab/page
   window.addEventListener("storage", (e)=>{
     if(e.key === "italky_site_lang_v1" || e.key === "italky_lang_ping"){
       refreshUILang();
