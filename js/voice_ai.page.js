@@ -33,7 +33,7 @@ function isPro(u) {
 }
 
 /* ===============================
-   DAILY FREE 60s (voice)
+   DAILY FREE 600s (voice)
    - counts: mic listening seconds + AI wait seconds
    =============================== */
 const FREE_SECONDS_PER_DAY = 60;
