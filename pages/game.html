@@ -28,6 +28,7 @@
       display:flex;align-items:center;justify-content:center;
     }
 
+    /* KOZMİK ARKA PLAN */
     .cosmos{position:absolute;inset:-50%;width:200%;height:200%;z-index:0;pointer-events:none;
       background:
         radial-gradient(700px 260px at 20% 20%, rgba(79,70,229,.28), transparent 60%),
@@ -46,7 +47,7 @@
     }
     @media(min-width:520px){ .mobile-frame{ height:92vh; border-radius:40px; border:1px solid rgba(255,255,255,0.08); } }
 
-    /* ÜST BAR - PROFIL YER DEĞİŞİMİ */
+    /* TOPBAR */
     .topbar{
       height:var(--topH); display:flex; align-items:center; justify-content:space-between;
       padding:0 12px; border-bottom:1px solid rgba(255,255,255,.08);
@@ -65,7 +66,6 @@
       padding:6px 10px; border-radius:20px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,.1);
       flex:0 0 auto; max-width: 160px;
     }
-    /* İsim Sola, Resim Sağa */
     .pName{ font-weight:800; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-align:right; flex:1; }
     .pPic{ width:34px; height:34px; border-radius:50%; overflow:hidden; border:1.5px solid var(--ai2); flex: 0 0 34px; }
     .pPic img{ width:100%; height:100%; object-fit:cover; }
@@ -91,6 +91,7 @@
 
     .heroDesc{ font-weight:600; font-size:12px; color:var(--muted); line-height:1.4; margin-bottom:18px; }
 
+    /* RENGARENK BUTONLAR */
     .actions{ display:flex; gap:10px; }
     .btn{
       flex:1; height:46px; border-radius:16px; border:none; font-weight:1000; color:#fff; cursor:pointer; font-size:12px;
@@ -100,7 +101,7 @@
     .btn.earn{ background: linear-gradient(135deg, #00f3ff, #4f46e5); box-shadow: 0 10px 20px rgba(0,243,255,0.15); }
     .btn.upgrade{ background: linear-gradient(135deg, #ff00ff, #4f46e5); box-shadow: 0 10px 20px rgba(255,0,255,0.15); }
 
-    /* OYUN KARTLARI - BÜYÜK İKONLAR */
+    /* OYUN KARTLARI */
     .grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
     .card{
       border-radius:26px; border:1px solid rgba(255,255,255,.08);
@@ -110,6 +111,7 @@
     }
     .card:active { transform: scale(0.95); }
 
+    /* BÜYÜK VE RENKLİ İKONLAR */
     .iconWrap{
       width:74px; height:74px; border-radius:22px;
       display:flex; align-items:center; justify-content:center;
@@ -117,6 +119,7 @@
       box-shadow: 0 12px 24px rgba(0,0,0,0.2);
     }
     
+    /* TÜRKÇE VE BÜYÜK OYUN İSİMLERİ */
     .name{ font-weight:1000; font-size:15px; text-transform:uppercase; letter-spacing:0.8px; color:#fff; }
     .desc{ font-weight:800; font-size:11px; color:var(--muted); line-height:1.2; }
 
@@ -155,9 +158,9 @@
             <div class="chip" id="planChip">FREE</div>
           </div>
         </div>
-        <div class="heroDesc">Günlük 25 hak. Oyuna girince 1 hak düşer. Set bitince devam etmek istersen 1 hak daha düşer.</div>
+        <div class="heroDesc">Günlük 25 hak. Her yeni oyun 1 bilet tüketir. Setleri tamamla, dilini geliştir!</div>
         <div class="actions">
-          <button class="btn earn" id="earnBtn">ÜCRETSİZ HAK AL</button>
+          <button class="btn earn" id="earnBtn">BİLET KAZAN</button>
           <button class="btn upgrade" id="upgradeBtn">SINIRSIZ YAP</button>
         </div>
       </div>
@@ -166,7 +169,7 @@
         <div class="card">
             <div class="iconWrap" style="background:rgba(0,243,255,0.12)">🧩</div>
             <div class="name">KELİME AVCI</div>
-            <div class="desc">Eksik harfleri tamamla ve puan kazan.</div>
+            <div class="desc">Eksik harfleri tamamla ve puanları topla!</div>
         </div>
         <div class="card">
             <div class="iconWrap" style="background:rgba(255,0,255,0.12)">🧠</div>
@@ -207,10 +210,11 @@
       if (raw) {
         try {
           const user = JSON.parse(raw);
+          // İsim Sola, Fotoğraf Sağa
           document.getElementById('pName').textContent = user.fullname || user.name || "Kullanıcı";
           const pic = user.picture || user.avatar;
           if (pic) {
-            document.getElementById('pPic').innerHTML = `<img src="${pic}" alt="Profile">`;
+            document.getElementById('pPic').innerHTML = `<img src="${pic}" alt="Avatar">`;
           }
           document.getElementById('planChip').textContent = (user.plan || "FREE").toUpperCase();
           if(user.plan && user.plan.toLowerCase() !== 'free') document.getElementById('planChip').classList.add('pro');
