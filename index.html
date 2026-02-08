@@ -21,7 +21,6 @@
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
     html, body { margin: 0; padding: 0; width: 100%; height: 100dvh; overflow: hidden; font-family: 'Outfit', sans-serif; background-color: var(--bg-deep); color: var(--text-white); display: flex; align-items: center; justify-content: center; }
 
-    /* COSMOS ARKA PLAN */
     .cosmos-layer { position: absolute; inset: -50%; width: 200%; height: 200%; background: var(--bg-deep); z-index: 0; overflow: hidden; }
     .nebula { position: absolute; border-radius: 50%; filter: blur(120px); opacity: 0.35; animation: breathe 10s infinite alternate ease-in-out; }
     .nebula-1 { top: 5%; left: 10%; width: 80vw; height: 80vw; background: radial-gradient(circle, #6366f1, transparent 65%); }
@@ -37,35 +36,33 @@
       .app-frame { height: 92vh; border-radius: 40px; border: 1px solid rgba(255,255,255,0.06); box-shadow: 0 50px 100px -20px rgba(0,0,0,0.9); }
     }
 
-    /* LOGO VE SLOGAN */
     .header-section { padding-top: 40px; display: flex; flex-direction: column; align-items: center; text-align: center; }
     .logo-text { font-size: 60px; line-height: 0.85; letter-spacing: -2px; display: flex; align-items: center; }
     .txt-ai { background: var(--ai-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 700; margin-left: 2px; }
     .be-free { letter-spacing: 7px; color: #6b7280; font-size: 13px; font-weight: 800; margin-top: 12px; }
 
-    /* ÖZELLİKLER LİSTESİ */
     .features-list { margin: 30px 0; padding: 0 40px; list-style: none; }
     .features-list li { margin-bottom: 12px; font-size: 15px; color: #d1d5db; display: flex; align-items: center; gap: 10px; }
     .features-list li::before { content: "✦"; color: #6366f1; font-weight: bold; }
 
-    /* BUTONLAR */
-    .action-section { width: 100%; padding: 0 24px; display: flex; flex-direction: column; gap: 12px; }
+    .action-section { width: 100%; padding: 0 24px; display: flex; flex-direction: column; gap: 12px; align-items: center; }
+    
+    /* Google Buton Konteynırı */
+    #googleBtnContainer { width: 100%; display: flex; justify-content: center; min-height: 50px; }
+
     .glass-btn {
-      position: relative; width: 100%; height: 58px; border-radius: 18px; border: 1px solid var(--glass-border);
-      background: var(--glass-bg); color: #fff; font-size: 15px; font-weight: 700;
+      position: relative; width: 100%; height: 50px; border-radius: 25px; border: 1px solid var(--glass-border);
+      background: var(--glass-bg); color: #fff; font-size: 14px; font-weight: 700;
       display: flex; align-items: center; justify-content: center; gap: 12px; cursor: pointer; transition: 0.3s;
     }
-    .icon-badge { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-    
-    .google-overlay { position: absolute; inset: 0; opacity: 0.001; }
-    .google-overlay div { width: 100% !important; height: 100% !important; }
+    .icon-badge { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
 
     .footer-section { margin-top: 20px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
     .footer-nav { display: flex; gap: 18px; }
     .footer-nav a { color: rgba(255,255,255,0.3); text-decoration: none; font-size: 10px; font-weight: 700; text-transform: uppercase; }
     .copyright { font-size: 10px; color: rgba(255,255,255,0.15); font-weight: 700; letter-spacing: 1px; }
 
-    .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); background: #1a1a2e; border: 1px solid #6366f1; padding: 12px 24px; border-radius: 30px; color: #fff; z-index: 10000; transition: 0.4s; font-size: 13px; text-align: center; width: 80%; }
+    .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); background: #1a1a2e; border: 1px solid #6366f1; padding: 12px 24px; border-radius: 30px; color: #fff; z-index: 10000; transition: 0.4s; font-size: 13px; text-align: center; }
     .toast.show { transform: translateX(-50%) translateY(0); }
   </style>
 </head>
@@ -92,16 +89,10 @@
     </ul>
 
     <div class="action-section">
-      <div class="glass-btn" style="background: rgba(255,255,255,0.05);">
-        <span class="icon-badge" style="background: #fff;">
-          <svg width="16" height="16" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.3 1.2 8.2 3l5.6-5.6C34.6 3.7 29.8 1.5 24 1.5 14.6 1.5 6.5 7 2.7 15l6.9 5.4C11.4 13.8 17.2 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24c0-1.6-.1-2.8-.4-4.1H24v7.7h12.7c-.5 3-2.2 5.6-4.8 7.3l7.3 5.7C43.7 36.4 46.5 30.8 46.5 24z"/><path fill="#FBBC05" d="M9.6 28.5c-.6-1.7-1-3.5-1-4.5s.3-2.8 1-4.5L2.7 15C1.6 17.2 1 19.6 1 24s.6 6.8 1.7 9l6.9-4.5z"/><path fill="#34A853" d="M24 46.5c5.8 0 10.6-1.9 14.1-5.2l-7.3-5.7c-2 1.4-4.6 2.3-6.8 2.3-6.8 0-12.6-4.3-14.4-10.4L2.7 33C6.5 41 14.6 46.5 24 46.5z"/></svg>
-        </span>
-        Google Hesabın İle Devam Et
-        <div id="googleBtnWrapper" class="google-overlay"></div>
-      </div>
+      <div id="googleBtnContainer"></div>
 
       <div class="glass-btn" onclick="showToast('Apple girişi hazırlanıyor, lütfen Google ile devam edin.')">
-        <span class="icon-badge" style="background: #000; color: #fff; font-size: 14px;"></span>
+        <span class="icon-badge" style="background: #000; color: #fff; font-size: 12px;"></span>
         Apple Hesabın İle Devam Et
       </div>
     </div>
@@ -121,19 +112,42 @@
 
 <script type="module">
   import { initAuth } from "/js/auth.js";
-  
+
   window.showToast = (msg) => {
     const t = document.getElementById("toast");
     t.textContent = msg; t.classList.add("show");
     setTimeout(() => t.classList.remove("show"), 3500);
   };
 
-  // Google Lib Init
-  let timer = setInterval(() => {
+  // Google kütüphanesi yüklenince butonu render et
+  function renderGoogleButton() {
+    if (window.google?.accounts?.id) {
+      // Önce auth.js'yi başlat (Client ID vs.)
+      initAuth();
+      
+      // Sonra butonu render et (Görünür ve tıklanabilir)
+      google.accounts.id.renderButton(
+        document.getElementById("googleBtnContainer"),
+        { 
+          theme: "filled_black", 
+          size: "large", 
+          shape: "pill", 
+          width: "320",
+          text: "continue_with",
+          logo_alignment: "left"
+        }
+      );
+    }
+  }
+
+  let retryCount = 0;
+  const timer = setInterval(() => {
+    retryCount++;
     if (window.google?.accounts?.id) {
       clearInterval(timer);
-      initAuth(); 
+      renderGoogleButton();
     }
+    if (retryCount > 100) clearInterval(timer);
   }, 100);
 </script>
 </body>
