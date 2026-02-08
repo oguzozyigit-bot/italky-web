@@ -36,17 +36,25 @@ html,body{margin:0;width:100%;height:100%;background:var(--bg);font-family:Outfi
   background:linear-gradient(180deg, rgba(0,243,255,.95), rgba(0,243,255,.35));
   box-shadow:0 0 22px rgba(0,243,255,.55);
 }
+
+/* ✅ LASER artık hedefe açılı gidecek */
 .laser{
-  position:absolute;left:50%;bottom:32px;transform:translateX(-50%);
-  width:3px;height:0;background:var(--blue);
+  position:absolute;
+  width:4px;
+  height:0;
+  background:var(--blue);
   box-shadow:0 0 18px var(--blue);
-  opacity:0; transition: height .12s ease, opacity .12s ease;
+  opacity:0;
+  transform-origin: 50% 100%; /* bottom */
+  border-radius: 8px;
+  pointer-events:none;
+  transition: opacity .08s ease;
 }
 
-/* ✅ METEOR TAŞ GÖRÜNTÜSÜ */
+/* ✅ METEOR */
 .meteor{position:absolute;top:-160px;width:118px;height:132px;display:flex;align-items:center;justify-content:center;will-change: transform, top}
 .meteor .meteor-body{
-  width:82px;height:82px;border-radius:38% 62% 63% 37% / 41% 44% 56% 59%; 
+  width:82px;height:82px;border-radius:38% 62% 63% 37% / 41% 44% 56% 59%;
   background: radial-gradient(circle at 30% 30%, #888, #444 40%, #222);
   border: 1px solid rgba(255,255,255,0.1);
   display:flex;align-items:center;justify-content:center;
@@ -55,7 +63,8 @@ html,body{margin:0;width:100%;height:100%;background:var(--bg);font-family:Outfi
   overflow: hidden;
 }
 .meteor-body::before {
-  content: ''; position: absolute; width: 15px; height: 10px; background: rgba(0,0,0,0.4); border-radius: 50%; top: 20%; left: 20%; box-shadow: 30px 40px 0 rgba(0,0,0,0.3), 10px 50px 0 rgba(0,0,0,0.4);
+  content: ''; position: absolute; width: 15px; height: 10px; background: rgba(0,0,0,0.4); border-radius: 50%; top: 20%; left: 20%;
+  box-shadow: 30px 40px 0 rgba(0,0,0,0.3), 10px 50px 0 rgba(0,0,0,0.4);
 }
 .meteor::after{
   content:''; position:absolute; top:-40px; width:50px; height:100px;
@@ -70,6 +79,18 @@ html,body{margin:0;width:100%;height:100%;background:var(--bg);font-family:Outfi
 .meteor.boss .meteor-body{ width: 100px; height: 100px; border: 2px solid var(--gold); box-shadow: 0 0 40px rgba(255,184,0,0.4); }
 .meteor.boss::after { background:linear-gradient(to top, rgba(255,200,0,0.6), transparent); }
 
+/* ✅ Parçalanma parçaları */
+.shard{
+  position:absolute;
+  width:14px;height:12px;
+  border-radius: 6px 10px 6px 10px;
+  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.35), rgba(120,120,120,.55), rgba(20,20,20,.95));
+  border: 1px solid rgba(255,255,255,.08);
+  box-shadow: 0 0 10px rgba(0,0,0,.45);
+  pointer-events:none;
+  will-change: transform, opacity;
+}
+
 .explosion{
   position:absolute;width:160px;height:160px;border-radius:50%;
   background:radial-gradient(circle,#fff,rgba(255,170,0,.9),transparent 70%);
@@ -83,7 +104,7 @@ html,body{margin:0;width:100%;height:100%;background:var(--bg);font-family:Outfi
 }
 .opt{
   border:1px solid var(--border); border-radius:16px; background:var(--glass);
-  color:#fff;font-weight:900;font-size:15px; cursor:pointer; 
+  color:#fff;font-weight:900;font-size:15px; cursor:pointer;
   transition: transform .1s, background .1s; display:flex;align-items:center;justify-content:center;
   padding:10px;text-align:center;
 }
@@ -129,7 +150,7 @@ html,body{margin:0;width:100%;height:100%;background:var(--bg);font-family:Outfi
   </div>
 
   <div class="stage" id="stage">
-    <div class="turret"></div>
+    <div class="turret" id="turret"></div>
     <div class="laser" id="laser"></div>
   </div>
 
@@ -140,7 +161,7 @@ html,body{margin:0;width:100%;height:100%;background:var(--bg);font-family:Outfi
 <div class="modal" id="startModal">
   <div class="card">
     <h2 style="color:var(--blue);margin:0">METEOR DEFENSE</h2>
-    <p style="font-size:12px;opacity:.7;margin:10px 0">2 Doğru = +1 Can 🛠️ (Max 3 Can)<br>Gezegeni koru başkanım!</p>
+    <p style="font-size:12px;opacity:.7;margin:10px 0">2 Doğru = +1 Can 🛠️ (Max 3 Can)<br>Gezegeni koru.</p>
     <div class="langs">
       <button class="lang active" data-lang="en">EN</button>
       <button class="lang" data-lang="de">DE</button>
@@ -167,13 +188,50 @@ import { loadLangPool, createUsedSet, pick } from "/js/langpool.js";
 
 const $ = (id) => document.getElementById(id);
 
+/* ===== GAMEKIT MIN (only gating; same logic as other games) ===== */
+const DAILY_FREE_TOKENS = 25;
+function isoDateLocal(){
+  const d=new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+}
+function getUser(){ try{ return JSON.parse(localStorage.getItem("italky_user_v1")||"{}"); }catch{ return {}; } }
+function isPro(u){
+  const p = String(u?.plan||"").toUpperCase().trim();
+  return p==="PRO" || p==="PREMIUM" || p==="PLUS";
+}
+function uid(u){ return String(u.user_id||u.id||u.email||"guest").toLowerCase().trim(); }
+function tokenKey(u){ return `italky_game_tokens::${uid(u)}::${isoDateLocal()}`; }
+function tokenInitKey(u){ return `italky_game_tokens_init::${uid(u)}::${isoDateLocal()}`; }
+function ensureDailyTokens(){
+  const u=getUser();
+  if(isPro(u)) return;
+  if(localStorage.getItem(tokenInitKey(u))) return;
+  localStorage.setItem(tokenKey(u), String(DAILY_FREE_TOKENS));
+  localStorage.setItem(tokenInitKey(u), "1");
+}
+function getTokens(){
+  const u=getUser();
+  if(isPro(u)) return 9999;
+  const v = Number(localStorage.getItem(tokenKey(u))||"0");
+  return Number.isFinite(v)?Math.max(0,v):0;
+}
+function spendToken(){
+  const u=getUser();
+  if(isPro(u)) return true;
+  const t=getTokens();
+  if(t<=0) return false;
+  localStorage.setItem(tokenKey(u), String(t-1));
+  return true;
+}
+/* ===== END GAMEKIT ===== */
+
 let lang = "en";
 let pool = [];
 let deck = [];
 let currentMeteor = null;
 let totalScore = 0, setScore = 0, combo = 0, momentum = 1.0, lives = 3;
 let y = -160, running = false, rafId = 0, killCount = 0, setCounter = 0;
-const SET_SIZE = 10; 
+const SET_SIZE = 10;
 let baseSpeed = 1.1;
 const speedCap = 3.5;
 
@@ -206,9 +264,37 @@ function toast(msg, color="var(--blue)"){
   clearTimeout(window.__tto); window.__tto = setTimeout(()=> t.style.opacity="0", 1500);
 }
 
-function laserPulse(){
-  const l = $("laser"); l.style.opacity = "1"; l.style.height = "300px";
-  setTimeout(()=>{ l.style.opacity = "0"; l.style.height = "0px"; }, 150);
+/* ✅ Laser: aim to meteor center */
+function fireLaserTo(targetX, targetY){
+  const stage = $("stage");
+  const turret = $("turret");
+  const beam = $("laser");
+  if(!stage || !turret || !beam) return;
+
+  const sRect = stage.getBoundingClientRect();
+  const tRect = turret.getBoundingClientRect();
+
+  const ax = (tRect.left - sRect.left) + (tRect.width/2);
+  const ay = (tRect.top  - sRect.top)  + 6; // near turret top
+
+  const dx = targetX - ax;
+  const dy = targetY - ay;
+
+  // length from turret to target
+  const len = Math.max(40, Math.hypot(dx, dy));
+
+  // angle for a vertical beam pointing UP (origin bottom)
+  // dy is usually negative (target above), formula below keeps it correct
+  const ang = Math.atan2(dx, -dy);
+
+  // position beam so its bottom is at turret anchor
+  beam.style.left = ax + "px";
+  beam.style.top  = (ay - len) + "px";
+  beam.style.height = len + "px";
+  beam.style.opacity = "1";
+  beam.style.transform = `translateX(-50%) rotate(${ang}rad)`;
+
+  setTimeout(()=>{ beam.style.opacity = "0"; beam.style.height = "0px"; }, 120);
 }
 
 function updateUI(){
@@ -235,7 +321,7 @@ async function initGame(isBank=false){
   stopGameLoop();
   if(isBank){ lives = 3; momentum = 1.0; baseSpeed = 1.1; combo = 0; }
   setScore = 0; setCounter = 0;
-  
+
   const data = await loadLangPool(lang);
   if (!data?.items?.length) {
     toast("Veri paketi yüklenemedi! ⚠️", "var(--red)");
@@ -271,13 +357,19 @@ function spawnNext(){
   const el = document.createElement("div");
   el.className = `meteor ${isBoss ? "boss" : ""}`;
   el.innerHTML = `<div class="meteor-body"><div class="meteor-text">${String(w.w || "").toUpperCase()}</div></div>`;
-  
+
   const stage = $("stage");
   const left = Math.random() * (stage.offsetWidth - 118);
   el.style.left = Math.max(10, left) + "px";
+
+  // ✅ different sizes (small/medium/big)
+  let scale = 0.85 + Math.random() * 0.55; // 0.85..1.40
+  if(isBoss) scale = 1.35;
+  el.style.transform = `scale(${scale})`;
+
   stage.appendChild(el);
 
-  currentMeteor = { el, data: w, boss: isBoss, armor: isBoss ? 2 : 1 };
+  currentMeteor = { el, data: w, boss: isBoss, armor: isBoss ? 2 : 1, scale };
   y = -160;
   currentMeteor.speed = Math.min(baseSpeed + (setCounter * 0.1) + (momentum * 0.1), speedCap) * (isBoss ? 0.7 : 1);
 
@@ -311,10 +403,19 @@ function setButtonsState(disabled) {
 function checkAnswer(btn, sel, correct){
   if (!running || !currentMeteor) return;
 
+  // compute target center for laser now (before meteor removed)
+  const mRect = currentMeteor.el.getBoundingClientRect();
+  const sRect = $("stage").getBoundingClientRect();
+  const tx = (mRect.left - sRect.left) + (mRect.width/2);
+  const ty = (mRect.top  - sRect.top)  + (mRect.height/2);
+
   if (sel === correct){
-    setButtonsState(true); 
+    setButtonsState(true);
     btn.classList.add("correct");
-    laserPulse();
+
+    // ✅ aim laser to meteor
+    fireLaserTo(tx, ty);
+
     safeSpeak(currentMeteor.data.w);
 
     if (currentMeteor.boss && currentMeteor.armor > 1){
@@ -324,34 +425,29 @@ function checkAnswer(btn, sel, correct){
         btn.classList.remove("correct");
         buildOptions(currentMeteor.data);
         setButtonsState(false);
-      }, 400);
+      }, 350);
       return;
     }
 
     const gain = Math.round((currentMeteor.boss ? 150 : 100) * momentum);
     totalScore += gain; setScore += gain;
-    combo++; 
+    combo++;
     momentum = Math.min(momentum + 0.05, 1.6);
 
-    // ✅ YENİ: İKİ DOĞRUDA BİR CAN (MAX 3)
     if (combo > 0 && combo % 2 === 0) {
-        if (lives < 3) {
-            lives++;
-            toast("SİSTEM TAMİR EDİLDİ! ❤️+1", "var(--green)");
-        } else {
-            toast("MÜKEMMEL FLOW! ⚡", "var(--blue)");
-        }
+      if (lives < 3) {
+        lives++;
+        toast("SİSTEM TAMİR EDİLDİ! ❤️+1", "var(--green)");
+      } else {
+        toast("MÜKEMMEL FLOW! ⚡", "var(--blue)");
+      }
     }
 
     killCount++; setCounter++;
 
-    const rect = currentMeteor.el.getBoundingClientRect();
-    const stageRect = $("stage").getBoundingClientRect();
-    const centerX = rect.left - stageRect.left + (rect.width / 2);
-    const centerY = y + (rect.height / 2);
-    destroyMeteor(centerX, centerY);
+    destroyMeteor(tx, ty);
 
-    setTimeout(spawnNext, 400);
+    setTimeout(spawnNext, 360);
   } else {
     btn.classList.add("wrong");
     combo = 0; momentum = Math.max(1.0, momentum - 0.2);
@@ -359,12 +455,42 @@ function checkAnswer(btn, sel, correct){
     updateUI();
     toast(`DOĞRUSU: ${correct}`, "var(--red)");
     if (lives <= 0) finishSet(true);
-    
-    // Yanlışta butonları tekrar aç (öğrenmeye devam)
+
     setTimeout(()=> {
-        btn.classList.remove("wrong");
-        setButtonsState(false);
-    }, 600);
+      btn.classList.remove("wrong");
+      setButtonsState(false);
+    }, 520);
+  }
+}
+
+/* ✅ meteor breaks into pieces */
+function spawnShards(cx, cy, isBoss=false){
+  const stage = $("stage");
+  const n = isBoss ? 14 : 10;
+
+  for(let i=0;i<n;i++){
+    const s = document.createElement("div");
+    s.className = "shard";
+    const size = 10 + Math.random()*14;
+    s.style.width = Math.round(size) + "px";
+    s.style.height = Math.round(size * (0.6 + Math.random()*0.6)) + "px";
+    s.style.left = (cx - size/2) + "px";
+    s.style.top  = (cy - size/2) + "px";
+
+    stage.appendChild(s);
+
+    const ang = Math.random() * Math.PI * 2;
+    const spd = (isBoss ? 220 : 160) + Math.random()*220;
+    const vx = Math.cos(ang) * spd;
+    const vy = Math.sin(ang) * spd - (120 + Math.random()*120);
+    const rot = (Math.random()*720 - 360);
+
+    s.animate([
+      { transform:`translate(0,0) rotate(0deg)`, opacity: 1 },
+      { transform:`translate(${vx}px, ${vy}px) rotate(${rot}deg)`, opacity: 0 }
+    ], { duration: 650 + Math.random()*250, easing: "cubic-bezier(.2,.8,.2,1)", fill:"forwards" });
+
+    setTimeout(()=>{ try{s.remove();}catch{} }, 1200);
   }
 }
 
@@ -374,6 +500,10 @@ function destroyMeteor(cx, cy){
   exp.style.left = (cx - 80) + "px"; exp.style.top = (cy - 80) + "px";
   $("stage").appendChild(exp);
   setTimeout(()=> exp.remove(), 450);
+
+  // ✅ shards
+  spawnShards(cx, cy, !!currentMeteor?.boss);
+
   if (currentMeteor?.el) currentMeteor.el.remove();
   currentMeteor = null;
 }
@@ -418,22 +548,49 @@ function finishSet(died){
   updatePB();
 }
 
+/* ✅ spend on ENTER */
 $("startBtn").onclick = async ()=>{
+  ensureDailyTokens();
+  const u=getUser();
+  if(!isPro(u) && !spendToken()){
+    alert("Hakkın bitti. Hak kazan veya PRO’ya geç.");
+    location.href="/pages/game.html";
+    return;
+  }
+
   $("startBtn").disabled = true;
   $("startModal").classList.add("hidden");
   totalScore = 0; lives = 3; momentum = 1.0; baseSpeed = 1.1; combo = 0; killCount = 0;
-  updateUI(); 
+  updateUI();
   await initGame(false);
   $("startBtn").disabled = false;
 };
 
+/* ✅ spend on CONTINUE */
 $("btnContinue").onclick = ()=>{
+  ensureDailyTokens();
+  const u=getUser();
+  if(!isPro(u) && !spendToken()){
+    alert("Hakkın bitti. Hak kazan veya PRO’ya geç.");
+    location.href="/pages/game.html";
+    return;
+  }
+
   $("endModal").classList.add("hidden");
   baseSpeed = Math.min(baseSpeed + 0.1, 2.0);
   initGame(false);
 };
 
+/* ✅ spend on BANK */
 $("btnBank").onclick = ()=>{
+  ensureDailyTokens();
+  const u=getUser();
+  if(!isPro(u) && !spendToken()){
+    alert("Hakkın bitti. Hak kazan veya PRO’ya geç.");
+    location.href="/pages/game.html";
+    return;
+  }
+
   const bonus = Math.round(setScore * 0.05);
   totalScore += bonus;
   toast(`BANKA: +${bonus} BONUS 💰`, "var(--gold)");
@@ -441,11 +598,10 @@ $("btnBank").onclick = ()=>{
   initGame(true);
 };
 
-// ✅ ÇIKIŞ BUTONU: Sayfayı yeniler veya yönlendirir başkanım
 $("btnExit").onclick = ()=> {
-    if(confirm("Kayıtlarınızı güvenli bir şekilde kapatmak istiyor musunuz başkanım?")) {
-        location.href = '/pages/game.html'; // Ana oyun sayfasına yönlendirir
-    }
+  if(confirm("Kaydet ve çıkmak istiyor musunuz?")) {
+    location.href = '/pages/game.html';
+  }
 };
 
 window.onload = ()=>{ updatePB(); updateUI(); };
