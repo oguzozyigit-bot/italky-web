@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>italkyAI • Neon Hangman Turnuva</title>
+  <title>italkyAI • Neon Hangman</title>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,266 +12,220 @@
   <style>
     :root {
       --bg: #02000a;
+      --neon-pink: #ff00ff;
+      --neon-blue: #00f3ff;
       --burgundy: #8b2635;
-      --lacivert: #6366f1;
       --ai-grad: linear-gradient(135deg, #a5b4fc 0%, #6366f1 100%);
-      --neon-glow: 0 0 15px rgba(99, 102, 241, 0.4);
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
-    html, body { margin: 0; width: 100%; height: 100dvh; overflow: hidden; position: fixed; font-family: 'Outfit', sans-serif; background: var(--bg); color: #fff; }
+    body { margin: 0; background: var(--bg); color: #fff; font-family: 'Outfit', sans-serif; height: 100dvh; overflow: hidden; }
 
-    .cosmos { position: absolute; inset: -50%; width: 200%; height: 200%; background: radial-gradient(circle at 50% 50%, #1a0208 0%, #02000a 80%); z-index: 0; }
-    .mobile-frame { width: 100%; max-width: 480px; height: 100%; margin: 0 auto; position: relative; z-index: 10; display: flex; flex-direction: column; background: rgba(2, 0, 10, 0.85); backdrop-filter: blur(35px); }
+    /* NEON TEXT EFFECT */
+    .neon-title {
+      font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 900;
+      text-align: center; color: #fff; margin: 10px 0;
+      text-shadow: 0 0 5px #fff, 0 0 10px var(--neon-blue), 0 0 20px var(--neon-blue);
+      text-transform: uppercase; letter-spacing: 2px;
+    }
 
-    .overlay { position: absolute; inset: 0; background: var(--bg); z-index: 100; display: flex; flex-direction: column; align-items: center; padding: 30px; text-align: center; overflow-y: auto; scrollbar-width: none; }
-    .overlay::-webkit-scrollbar { display: none; }
-    .hidden { display: none !important; }
-    
-    .player-row { display: flex; gap: 10px; width: 100%; margin-bottom: 10px; align-items: center; }
-    .neon-input { flex: 1; padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: #fff; font-weight: 600; }
-    .del-btn { width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--burgundy); background: rgba(139, 38, 53, 0.1); color: var(--burgundy); display: flex; align-items: center; justify-content: center; cursor: pointer; }
-    .add-player-btn { width: 100%; padding: 12px; border-radius: 12px; border: 2px dashed rgba(99, 102, 241, 0.4); color: var(--lacivert); font-weight: 800; cursor: pointer; margin-bottom: 20px; background: none; }
+    .mobile-frame { width: 100%; max-width: 480px; height: 100%; margin: 0 auto; display: flex; flex-direction: column; background: rgba(5, 0, 20, 0.9); position: relative; border: 1px solid rgba(255,255,255,0.05); }
 
-    .l-btn { padding: 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: #fff; font-weight: 800; cursor: pointer; font-size: 11px; transition: 0.3s; }
-    .active-opt { border-color: var(--lacivert); background: rgba(99, 102, 241, 0.2); box-shadow: var(--neon-glow); }
-    .big-btn { margin-top: 15px; width: 100%; padding: 14px; border-radius: 15px; border: none; background: var(--ai-grad); color: #fff; font-weight: 900; cursor: pointer; }
+    /* HANGMAN AREA - DAHA BÜYÜK */
+    .hangman-area { flex: 0 0 200px; display: flex; align-items: center; justify-content: center; position: relative; padding: 20px; }
+    .stage { width: 140px; height: 160px; position: relative; border-bottom: 4px solid #fff; box-shadow: 0 4px 10px var(--neon-blue); }
+    .p { position: absolute; background: #fff; display: none; box-shadow: 0 0 8px #fff; }
+    .p.show { display: block; }
+    .p1 { width: 4px; height: 100%; left: 30px; }
+    .p2 { width: 80px; height: 4px; left: 30px; top: 0; }
+    .p3 { width: 2px; height: 20px; left: 110px; top: 0; }
+    .p4 { width: 34px; height: 34px; border-radius: 50%; border: 4px solid #fff; left: 93px; top: 20px; background: none; }
+    .p5 { width: 4px; height: 55px; left: 108px; top: 54px; }
+    .p6 { width: 25px; height: 4px; left: 85px; top: 70px; transform: rotate(-30deg); }
+    .p7 { width: 25px; height: 4px; left: 108px; top: 70px; transform: rotate(30deg); }
+    .p8 { width: 25px; height: 4px; left: 85px; top: 105px; transform: rotate(-45deg); }
+    .p9 { width: 25px; height: 4px; left: 108px; top: 105px; transform: rotate(45deg); }
 
-    .section-label { font-size: 11px; font-weight: 800; opacity: 0.6; display: block; text-align: left; margin-bottom: 8px; text-transform: uppercase; }
+    /* LIVES (KALPLER) */
+    .lives-row { display: flex; justify-content: center; gap: 8px; margin: 10px 0; }
+    .heart { font-size: 20px; color: var(--neon-pink); filter: drop-shadow(0 0 5px var(--neon-pink)); transition: 0.3s; }
+    .heart.lost { opacity: 0.1; filter: grayscale(1); transform: scale(0.8); }
 
-    .topbar { height: 70px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-    
-    .word-area { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 20px; }
-    .word-grid { display: flex; gap: 5px; flex-wrap: wrap; justify-content: center; }
-    .char-slot { width: 30px; height: 40px; border-bottom: 3px solid var(--burgundy); display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 900; }
-    .tr-meaning { font-size: 16px; color: var(--muted); font-weight: 600; font-style: italic; opacity: 0.7; }
+    .word-display { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; padding: 10px 20px; }
+    .slot { width: 32px; height: 42px; border-bottom: 3px solid var(--neon-blue); display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 900; }
+    .tr-box { text-align: center; font-size: 15px; color: rgba(255,255,255,0.5); font-style: italic; margin-top: 5px; }
 
-    .keyboard { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; width: 100%; padding: 20px; margin-top: auto; }
-    .key { height: 40px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: #fff; font-weight: 800; cursor: pointer; }
-    .key.wrong { background: var(--burgundy); opacity: 0.3; pointer-events: none; }
-    .key.correct { background: var(--lacivert); box-shadow: var(--neon-glow); pointer-events: none; }
+    .keyboard { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; padding: 15px; margin-top: auto; }
+    .key { height: 42px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: #fff; font-weight: 800; cursor: pointer; font-size: 14px; }
+    .key.wrong { background: var(--burgundy); opacity: 0.3; }
+    .key.correct { background: #0080ff; box-shadow: 0 0 10px #0080ff; }
 
-    .modal { position: absolute; inset: 0; background: rgba(2,0,10,0.98); z-index: 200; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 30px; text-align: center; }
+    .setup-overlay { position: absolute; inset: 0; background: var(--bg); z-index: 500; padding: 30px; display: flex; flex-direction: column; overflow-y: auto; }
+    .player-line { display: flex; gap: 10px; margin-bottom: 10px; }
+    .neon-input { flex: 1; padding: 12px; border-radius: 12px; background: #111; border: 1px solid #333; color: #fff; }
+
+    .footer-bar { height: 40px; display: flex; align-items: center; justify-content: center; border-top: 1px solid rgba(255,255,255,0.05); font-size: 11px; font-weight: 800; color: rgba(255,255,255,0.2); letter-spacing: 1px; }
+
+    .modal { position: absolute; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 40px; text-align: center; }
     .modal.active { display: flex; }
+    .big-btn { width: 100%; padding: 16px; border-radius: 15px; background: var(--ai-grad); border: none; color: #fff; font-weight: 900; cursor: pointer; font-size: 16px; margin-top: 20px; }
   </style>
 </head>
 <body>
 
-  <div class="cosmos"></div>
   <div class="mobile-frame">
     
-    <div class="overlay" id="setupOverlay">
-      <h1 style="font-family:'Space Grotesk'; font-size:24px; margin-bottom:20px;">TURNUVA AYARLARI</h1>
+    <div class="setup-overlay" id="setup">
+      <div class="neon-title">Neon Hangman</div>
+      <p style="text-align:center; font-size:12px; opacity:0.5;">OYUNCULARI EKLE</p>
+      <div id="pContainer">
+        <div class="player-line"><input type="text" class="neon-input p-in" placeholder="1. Oyuncu"></div>
+      </div>
+      <button onclick="addP()" style="background:none; border:1px dashed #444; color:#888; padding:10px; border-radius:10px; margin-bottom:20px;">+ OYUNCU EKLE</button>
       
-      <label class="section-label">OYUNCULAR</label>
-      <div id="playerContainer" style="width:100%;">
-          <div class="player-row">
-            <input type="text" class="neon-input p-input" placeholder="1. Oyuncu Adı">
-            <div style="width:44px;"></div>
-          </div>
-      </div>
-      <button class="add-player-btn" onclick="addPlayerField()">+ YENİ OYUNCU EKLE</button>
-
-      <div style="width:100%; margin-bottom:20px;">
-        <label class="section-label">HEDEF DİL</label>
-        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:8px;">
-            <button class="l-btn lang-btn active-opt" onclick="setLang('en', this)">EN 🇬🇧</button>
-            <button class="l-btn lang-btn" onclick="setLang('de', this)">DE 🇩🇪</button>
-            <button class="l-btn lang-btn" onclick="setLang('fr', this)">FR 🇫🇷</button>
-            <button class="l-btn lang-btn" onclick="setLang('it', this)">IT 🇮🇹</button>
-            <button class="l-btn lang-btn" onclick="setLang('es', this)">ES 🇪🇸</button>
-            <button class="l-btn lang-btn" onclick="setLang('ru', this)">RU 🇷🇺</button>
+      <div style="margin-bottom:20px;">
+        <p style="font-size:11px; font-weight:800; opacity:0.6;">DİL VE ZORLUK</p>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <select id="langSel" class="neon-input"><option value="en">English</option><option value="de">Deutsch</option></select>
+          <select id="diffSel" class="neon-input"><option value="8">Kolay (8)</option><option value="6">Orta (6)</option><option value="4">Zor (4)</option></select>
         </div>
       </div>
+      <button class="big-btn" onclick="start()">BAŞLAT</button>
+    </div>
 
-      <div style="width:100%; margin-bottom:20px;">
-        <label class="section-label">ZORLUK</label>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-            <button class="l-btn difficulty active-opt" onclick="setDiff('KOLAY', 8, this)">KOLAY (8)</button>
-            <button class="l-btn difficulty" onclick="setDiff('ORTA', 6, this)">ORTA (6)</button>
-            <button class="l-btn difficulty" onclick="setDiff('ZOR', 4, this)">ZOR (4)</button>
-            <button class="l-btn difficulty" onclick="setDiff('EN ZOR', 2, this)">EN ZOR (2)</button>
-        </div>
+    <div class="neon-title" style="font-size: 20px;">Neon Hangman</div>
+
+    <div class="hangman-area">
+      <div class="stage">
+        <div class="p p1"></div><div class="p p2"></div><div class="p p3"></div>
+        <div class="p p4"></div><div class="p p5"></div><div class="p p6"></div>
+        <div class="p p7"></div><div class="p p8"></div><div class="p p9"></div>
       </div>
-
-      <button class="big-btn" onclick="startTournament()">TURNUVAYI BAŞLAT</button>
     </div>
 
-    <div class="modal" id="gameModal">
-        <h2 id="modalTitle">BİLDİN! 🎉</h2>
-        <div style="margin: 15px 0;">
-            <p id="targetWord" style="font-size:24px; font-weight:900; color:var(--lacivert); margin:0;"></p>
-            <p id="trWord" style="font-size:18px; opacity:0.7; font-style:italic;"></p>
-        </div>
-        <button class="big-btn" id="modalBtn">DEVAM ET</button>
-    </div>
+    <div class="lives-row" id="hearts"></div>
 
-    <div class="topbar">
-      <button class="backBtn" onclick="history.back()">←</button>
-      <div id="turnDisplay" style="font-weight:900; font-size:14px; color:var(--lacivert);">SIRA: --</div>
-      <div id="jokerDisplay" style="font-size:12px; font-weight:800; color:var(--pink);">🃏 Joker: 3</div>
-    </div>
+    <div class="tr-box" id="trMean">...</div>
+    <div class="word-display" id="wordGrid"></div>
 
-    <div class="word-area">
-        <div class="word-grid" id="wordGrid"></div>
-        <div class="tr-meaning" id="trMeaning"></div>
-    </div>
-
-    <div style="padding:0 20px;">
-        <button class="l-btn" id="jokerBtn" style="width:100%; border-color:var(--pink); background:rgba(255, 0, 255, 0.05);" onclick="useJoker()">JOKER KULLAN (HARF AÇ)</button>
+    <div style="padding: 0 20px; display: flex; gap: 10px;">
+        <div id="turnInfo" style="font-size: 12px; font-weight: 800; color: var(--neon-blue);">SIRA: --</div>
+        <button onclick="useHint()" id="jokerBtn" style="flex:1; background:none; border:1px solid var(--neon-pink); color:var(--neon-pink); font-size:10px; border-radius:5px; cursor:pointer;">JOKER (3)</button>
     </div>
 
     <div class="keyboard" id="kb"></div>
+
+    <div class="footer-bar">italkyAI By Ozyigit’s 2026</div>
+
+    <div class="modal" id="modal">
+      <h1 id="mTitle">BİLDİN!</h1>
+      <h2 id="mWord" style="color:var(--neon-blue);">APPLE</h2>
+      <p id="mTr">(Elma)</p>
+      <button class="big-btn" onclick="next()">DEVAM ET</button>
+    </div>
+
   </div>
 
   <script type="module">
     import { loadLangPool, createUsedSet, pick } from "/js/langpool.js";
 
-    let pool, usedManager;
-    let players = [];
-    let currentPlayerIdx = 0;
-    let currentConfig = { diff: 'KOLAY', maxMistakes: 8, lang: 'en' };
-    let currentWordObj = null;
-    let guessed = [];
-    let mistakes = 0;
-    let wordsCount = 0;
-    let totalJokers = 3;
+    let pool, used, players = [], curPIdx = 0, wordsDone = 0;
+    let target, guessed = [], mistakes = 0, maxM = 8, jokers = 3;
 
-    window.addPlayerField = () => {
-        const div = document.createElement('div');
-        div.className = 'player-row';
-        div.innerHTML = `
-            <input type="text" class="neon-input p-input" placeholder="Yeni Oyuncu">
-            <button class="del-btn" onclick="this.parentElement.remove()">🗑️</button>
-        `;
-        document.getElementById('playerContainer').appendChild(div);
-    };
-
-    window.setLang = (lang, btn) => {
-        currentConfig.lang = lang;
-        document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active-opt'));
-        btn.classList.add('active-opt');
-    };
-
-    window.setDiff = (label, val, btn) => {
-        currentConfig.diff = label; currentConfig.maxMistakes = val;
-        document.querySelectorAll('.difficulty').forEach(b => b.classList.remove('active-opt'));
-        btn.classList.add('active-opt');
-    };
-
-    window.startTournament = async () => {
-        const inputs = document.querySelectorAll('.p-input');
-        const pNames = [];
-        inputs.forEach(i => { if(i.value.trim()) pNames.push({ name: i.value.trim(), score: 0 }); });
-        
-        if(!pNames.length) return alert("Lütfen en az bir oyuncu ismi yazın!");
-        
-        // Havuzu seçilen dile göre yükle
-        pool = await loadLangPool(currentConfig.lang);
-        usedManager = createUsedSet(`tournament_used_${currentConfig.lang}`);
-        
-        players = pNames;
-        document.getElementById('setupOverlay').classList.add('hidden');
-        startPlayerTurn(0);
-    };
-
-    function startPlayerTurn(idx) {
-        currentPlayerIdx = idx;
-        wordsCount = 0;
-        totalJokers = 3;
-        document.getElementById('turnDisplay').innerText = `SIRA: ${players[idx].name.toUpperCase()}`;
-        document.getElementById('jokerDisplay').innerText = `🃏 Joker: ${totalJokers}`;
-        loadNewWord();
+    window.addP = () => {
+      const line = document.createElement('div'); line.className = 'player-line';
+      line.innerHTML = `<input type="text" class="neon-input p-in" placeholder="Oyuncu"> <button onclick="this.parentElement.remove()" style="background:none; border:none; color:red;">🗑️</button>`;
+      document.getElementById('pContainer').appendChild(line);
     }
 
-    function loadNewWord() {
-        const items = pick(pool, 1, usedManager.used, usedManager.save, (item) => item.w.length >= 5);
-        if(!items.length) {
-            alert("Havuzda uygun kelime kalmadı!");
-            location.reload();
-            return;
-        }
-        currentWordObj = items[0];
-        guessed = []; mistakes = 0;
-        updateUI();
-        renderKeyboard();
+    window.start = async () => {
+      const ins = document.querySelectorAll('.p-in');
+      ins.forEach(i => { if(i.value.trim()) players.push({n: i.value.trim(), s: 0}); });
+      if(!players.length) return alert("İsim yaz!");
+      
+      const lang = document.getElementById('langSel').value;
+      maxM = parseInt(document.getElementById('diffSel').value);
+      pool = await loadLangPool(lang);
+      used = createUsedSet(`used_${lang}`).used;
+      
+      document.getElementById('setup').style.display = 'none';
+      startTurn(0);
+    }
+
+    function startTurn(idx) {
+      curPIdx = idx; wordsDone = 0; jokers = 3;
+      document.getElementById('turnInfo').innerText = `SIRA: ${players[idx].n.toUpperCase()}`;
+      loadWord();
+    }
+
+    function loadWord() {
+      const items = pick(pool, 1, used, null, (x) => x.w.length >= 5);
+      target = items[0];
+      guessed = []; mistakes = 0;
+      updateUI();
+      renderKB();
     }
 
     function updateUI() {
-        document.getElementById('wordGrid').innerHTML = currentWordObj.w.split('').map(l => `
-            <div class="char-slot">${guessed.includes(l.toUpperCase()) ? l.toUpperCase() : ''}</div>
-        `).join('');
-        document.getElementById('trMeaning').innerText = currentWordObj.tr;
+      document.getElementById('wordGrid').innerHTML = target.w.split('').map(l => `<div class="slot">${guessed.includes(l.toUpperCase())?l.toUpperCase():''}</div>`).join('');
+      document.getElementById('trMean').innerText = target.tr;
+      document.getElementById('jokerBtn').innerText = `JOKER (${jokers})`;
+      
+      // Çizim
+      document.querySelectorAll('.p').forEach((p, i) => p.classList.toggle('show', i < mistakes));
+      
+      // Kalpler
+      let hHtml = "";
+      for(let i=0; i<maxM; i++) hHtml += `<span class="heart ${i >= (maxM - mistakes) ? 'lost' : ''}">❤️</span>`;
+      document.getElementById('hearts').innerHTML = hHtml;
     }
 
-    function renderKeyboard() {
-        const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZÜĞŞİÖÇ".split('');
-        const wordChars = [...new Set(currentWordObj.w.toUpperCase().split(''))];
-        let keys = [...wordChars];
-        const others = alphabet.filter(l => !keys.includes(l));
-        for(let i=0; i<10; i++) keys.push(others.splice(Math.floor(Math.random()*others.length), 1)[0]);
-        
-        document.getElementById('kb').innerHTML = keys.sort((a,b) => a.localeCompare(b)).map(l => `
-            <button class="key" id="k-${l}" onclick="makeGuess('${l}')">${l}</button>
-        `).join('');
+    function renderKB() {
+      const abc = "ABCDEFGHIJKLMNOPQRSTUVWXYZÜĞŞİÖÇ".split('');
+      const wordChars = [...new Set(target.w.toUpperCase().split(''))];
+      let keys = [...wordChars];
+      const others = abc.filter(l => !keys.includes(l));
+      for(let i=0; i<10; i++) keys.push(others.splice(Math.floor(Math.random()*others.length), 1)[0]);
+      document.getElementById('kb').innerHTML = keys.sort((a,b)=>a.localeCompare(b)).map(l => `<button class="key" onclick="guess('${l}', this)">${l}</button>`).join('');
     }
 
-    window.makeGuess = (l) => {
-        if(guessed.includes(l)) return;
-        const btn = document.getElementById(`k-${l}`);
-        
-        if(currentWordObj.w.toUpperCase().includes(l)) {
-            guessed.push(l);
-            btn.classList.add('correct');
-            if(currentWordObj.w.split('').every(c => guessed.includes(c.toUpperCase()))) finishWord(true);
-        } else {
-            mistakes++;
-            btn.classList.add('wrong');
-            if(mistakes >= currentConfig.maxMistakes) finishWord(false);
-        }
-        updateUI();
-    };
-
-    window.useJoker = () => {
-        if(totalJokers <= 0) return;
-        const unrevealed = currentWordObj.w.toUpperCase().split('').filter(l => !guessed.includes(l));
-        if(unrevealed.length) {
-            totalJokers--;
-            document.getElementById('jokerDisplay').innerText = `🃏 Joker: ${totalJokers}`;
-            makeGuess(unrevealed[0]);
-        }
-    };
-
-    function finishWord(isWin) {
-        speak(currentWordObj.w);
-        const modal = document.getElementById('gameModal');
-        document.getElementById('modalTitle').innerText = isWin ? "BİLDİN! 🎉" : "BİLEMEDİN! 💀";
-        document.getElementById('targetWord').innerText = currentWordObj.w;
-        document.getElementById('trWord').innerText = `(${currentWordObj.tr})`;
-        
-        const btn = document.getElementById('modalBtn');
-        
-        wordsCount++;
-        if(wordsCount >= 5) {
-            btn.innerText = (currentPlayerIdx < players.length - 1) ? "SIRADAKİ OYUNCU" : "TURNUVAYI BİTİR";
-            btn.onclick = () => {
-                modal.classList.remove('active');
-                if(currentPlayerIdx < players.length - 1) startPlayerTurn(currentPlayerIdx + 1);
-                else location.reload();
-            };
-        } else {
-            btn.innerText = "SIRADAKİ KELİME";
-            btn.onclick = () => { modal.classList.remove('active'); loadNewWord(); };
-        }
-        modal.classList.add('active');
+    window.guess = (l, btn) => {
+      if(guessed.includes(l) || mistakes >= maxM) return;
+      if(target.w.toUpperCase().includes(l)) {
+        guessed.push(l); btn.classList.add('correct');
+        if(target.w.split('').every(c => guessed.includes(c.toUpperCase()))) finish(true);
+      } else {
+        mistakes++; btn.classList.add('wrong');
+        if(mistakes >= maxM) finish(false);
+      }
+      updateUI();
     }
 
-    function speak(text) {
-        if (!('speechSynthesis' in window)) return;
-        const msg = new SpeechSynthesisUtterance(text);
-        const langMap = { en: 'en-US', de: 'de-DE', fr: 'fr-FR', it: 'it-IT', es: 'es-ES', ru: 'ru-RU' };
-        msg.lang = langMap[currentConfig.lang] || 'en-US';
-        window.speechSynthesis.speak(msg);
+    window.useHint = () => {
+      if(jokers <= 0) return;
+      const rem = target.w.toUpperCase().split('').filter(l => !guessed.includes(l));
+      if(rem.length) { jokers--; guess(rem[0], null); }
+    }
+
+    function finish(win) {
+      const m = document.getElementById('modal');
+      document.getElementById('mTitle').innerText = win ? "BİLDİN! 🎉" : "BİLEMEDİN! 💀";
+      document.getElementById('mWord').innerText = target.w.toUpperCase();
+      document.getElementById('mTr').innerText = `(${target.tr})`;
+      m.classList.add('active');
+      
+      const utterance = new SpeechSynthesisUtterance(target.w);
+      utterance.lang = document.getElementById('langSel').value === 'en' ? 'en-US' : 'de-DE';
+      speechSynthesis.speak(utterance);
+    }
+
+    window.next = () => {
+      document.getElementById('modal').classList.remove('active');
+      wordsDone++;
+      if(wordsDone >= 5) {
+        if(curPIdx < players.length - 1) startTurn(curPIdx + 1);
+        else location.reload();
+      } else loadWord();
     }
   </script>
 </body>
