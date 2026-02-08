@@ -56,7 +56,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);f
 .bar{width:5px;height:12px;border-radius:3px;background:var(--radar);opacity:.3}
 @keyframes eq{to{height:50px;opacity:1;box-shadow:0 0 10px var(--radar)}}
 
-.listen-btn{margin:5px auto 12px;padding:12px 30px;border-radius:30px;border:2px solid var(--radar);
+.listen-btn{margin:5px auto 15px;padding:12px 30px;border-radius:30px;border:2px solid var(--radar);
   background:transparent;color:var(--radar);font-family:'Share Tech Mono';font-size:14px;cursor:pointer;transition:0.2s; font-weight: 900;}
 .listen-btn:active:not(:disabled){transform:scale(0.95);background:var(--radar-dim)}
 .listen-btn:disabled{opacity:.4; border-color: #555; color: #555;}
@@ -78,6 +78,9 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);f
 .lang-btn.active{background:var(--radar);color:#000}
 .main-btn{width:100%;padding:16px;border:none;border-radius:14px;background:var(--radar);
   color:#000;font-weight:900;margin-top:15px;cursor:pointer}
+.secondary-btn{width:100%;padding:14px;border:1px solid var(--radar);border-radius:14px;background:transparent;
+  color:var(--radar);font-weight:900;margin-top:10px;cursor:pointer}
+.exit-btn { background: #1a1a1a !important; color: #ff3300 !important; border: 1px solid #ff3300 !important; }
 .hidden{display:none!important}
 </style>
 </head>
@@ -129,12 +132,111 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);f
   </div>
 </div>
 
+<div class="modal hidden" id="endModal">
+  <div class="card">
+    <h2 id="endTitle" style="color:var(--radar);font-family:'Share Tech Mono';margin:0">SIGNAL COMPLETE</h2>
+    <p id="endStats" style="margin:16px 0; font-size:15px; line-height:1.6"></p>
+    <button class="main-btn" id="continueBtn">DEVAM ET</button>
+    <button class="main-btn" id="bankBtn" style="background:var(--gold)">YEDEKLE (+%5)</button>
+    <button class="main-btn exit-btn" id="exitBtn">ÇIKIŞ</button>
+  </div>
+</div>
+
 <script type="module">
-import { GameKit } from "/js/gamekit.js";
 import { loadLangPool, createUsedSet, pick } from "/js/langpool.js";
 
 const $ = id => document.getElementById(id);
 
+/* =========================
+   INLINE GAMEKIT (no /js/gamekit.js dependency)
+   ========================= */
+const DAILY_FREE_TOKENS = 25;
+
+function termsKey(email=""){ return `italky_terms_accepted_at::${String(email||"").toLowerCase().trim()}`; }
+function getUser(){ try{ return JSON.parse(localStorage.getItem("italky_user_v1")||"{}"); }catch{ return {}; } }
+function isPro(u){
+  const p = String(u?.plan||"").toUpperCase().trim();
+  return p==="PRO" || p==="PREMIUM" || p==="PLUS";
+}
+function isoDateLocal(){
+  const d=new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+}
+function uid(u){ return String(u.user_id||u.id||u.email||"guest").toLowerCase().trim(); }
+function tokenKey(u){ return `italky_game_tokens::${uid(u)}::${isoDateLocal()}`; }
+function tokenInitKey(u){ return `italky_game_tokens_init::${uid(u)}::${isoDateLocal()}`; }
+
+function ensureDailyTokens(){
+  const u=getUser();
+  if(!u?.email) return;
+  if(!localStorage.getItem(termsKey(u.email))) return;
+  if(isPro(u)) return;
+  if(localStorage.getItem(tokenInitKey(u))) return;
+  localStorage.setItem(tokenKey(u), String(DAILY_FREE_TOKENS));
+  localStorage.setItem(tokenInitKey(u), "1");
+}
+
+function getTokens(){
+  const u=getUser();
+  if(isPro(u)) return 9999;
+  const v = Number(localStorage.getItem(tokenKey(u))||"0");
+  return Number.isFinite(v) ? Math.max(0,v) : 0;
+}
+
+function spendToken(){
+  const u=getUser();
+  if(isPro(u)) return true;
+  const t=getTokens();
+  if(t<=0) return false;
+  localStorage.setItem(tokenKey(u), String(t-1));
+  return true;
+}
+
+function addToken(){
+  const u=getUser();
+  if(isPro(u)) return;
+  localStorage.setItem(tokenKey(u), String(getTokens()+1));
+}
+
+function showEndGate({ title="Oyun bitti", stats="", onContinue } = {}){
+  // Use existing endModal UI
+  $("endModal").classList.remove("hidden");
+  $("endTitle").textContent = title;
+  $("endStats").innerHTML = stats;
+
+  // continue button behavior: needs token (FREE) or unlimited (PRO)
+  $("continueBtn").onclick = ()=>{
+    const u = getUser();
+    ensureDailyTokens();
+    if(isPro(u)){
+      $("endModal").classList.add("hidden");
+      onContinue?.();
+      return;
+    }
+    if(spendToken()){
+      $("endModal").classList.add("hidden");
+      onContinue?.();
+      return;
+    }
+    // no token -> offer earn/pro
+    alert("Hakkın bitti. Oyunlar sayfasında Hak Kazan veya PRO’ya geç.");
+    location.href="/pages/game.html";
+  };
+
+  $("bankBtn").onclick = ()=>{
+    // bank: still consumes a token for next continue if free
+    addToken(); // small reward placeholder (optional)
+    alert("Yedeklendi. Devam etmek için 'Devam Et'.");
+  };
+
+  $("exitBtn").onclick = ()=>{
+    location.href="/pages/game.html";
+  };
+}
+
+/* =========================
+   GAME LOGIC (yours + fixes)
+   ========================= */
 let lang = "en";
 let muted = false, totalScore = 0, setScore = 0, momentum = 1.0, lives = 3;
 let currentItem = null, cooldown = false;
@@ -145,7 +247,7 @@ let lastUtter = null;
 
 const LANGMAP = {en:"en-US", de:"de-DE", fr:"fr-FR", es:"es-ES", it:"it-IT"};
 
-// normalize (fix correct/incorrect compare)
+// normalize for correct detection
 const norm = (s)=>
   String(s||"").trim().toLowerCase()
     .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
@@ -158,13 +260,9 @@ function updatePB() {
 
 function setListenLabel(state){
   const btn = $("listenBtn");
-  if(state === "playing"){ btn.textContent = "⏳ SİNYAL ÇALIYOR"; btn.disabled = true; }
-  else if(state === "wait"){ btn.textContent = "… BEKLE"; btn.disabled = true; }
-  else { btn.textContent = "▶ SİNYALİ DİNLE"; btn.disabled = false; }
-}
-
-function lockOptions(lock=true){
-  document.querySelectorAll(".opt").forEach(x => x.style.pointerEvents = lock ? "none" : "auto");
+  if(state === "playing"){ btn.textContent="⏳ SİNYAL ÇALIYOR"; btn.disabled=true; }
+  else if(state === "wait"){ btn.textContent="… BEKLE"; btn.disabled=true; }
+  else { btn.textContent="▶ SİNYALİ DİNLE"; btn.disabled=false; }
 }
 
 document.querySelectorAll(".lang-btn").forEach(b => {
@@ -186,11 +284,9 @@ function warmUpTTS(){
   try{
     if(!("speechSynthesis" in window)) return;
     speechSynthesis.cancel();
-    // warm voices
     speechSynthesis.getVoices();
     const u = new SpeechSynthesisUtterance(" ");
     u.volume = 0;
-    u.rate = 1;
     u.lang = LANGMAP[lang] || "en-US";
     speechSynthesis.speak(u);
     setTimeout(()=>{ try{ speechSynthesis.cancel(); }catch{} }, 120);
@@ -198,15 +294,25 @@ function warmUpTTS(){
 }
 
 $("startBtn").onclick = async () => {
-  GameKit.gateEnterOrRedirect({
-    onAllowed: async ()=>{
-      warmUpTTS();
-      $("startModal").classList.add("hidden");
-      $("gameArea").style.display = "flex";
-      if(!runActive) { totalScore = 0; lives = 3; momentum = 1.0; runActive = true; }
-      await initSet();
-    }
-  });
+  // ✅ ensure daily tokens and spend on enter
+  ensureDailyTokens();
+  const u=getUser();
+  if(!u?.email || !localStorage.getItem(termsKey(u.email))){
+    location.href="/index.html";
+    return;
+  }
+  if(!isPro(u) && !spendToken()){
+    alert("Hakkın bitti. Oyunlar sayfasında Hak Kazan veya PRO’ya geç.");
+    location.href="/pages/game.html";
+    return;
+  }
+
+  warmUpTTS();
+  $("startModal").classList.add("hidden");
+  $("gameArea").style.display = "flex";
+
+  if(!runActive) { totalScore = 0; lives = 3; momentum = 1.0; runActive = true; }
+  await initSet();
 };
 
 async function initSet(isBank = false) {
@@ -215,27 +321,26 @@ async function initSet(isBank = false) {
   cooldown = false;
   stopSpeak();
   setListenLabel("idle");
-  lockOptions(false);
 
-  let dataRaw = [];
+  let data = [];
   try{
-    dataRaw = await loadLangPool(lang);
+    data = await loadLangPool(lang);
   }catch(e){
-    dataRaw = [];
+    data = [];
   }
 
-  const data = (dataRaw || []).filter(x=>{
+  // filter invalid items
+  data = (data || []).filter(x=>{
     const tr = String(x?.tr||"").trim();
     const say = String(x?.sentence || x?.w || "").trim();
     return tr.length >= 1 && say.length >= 1;
   });
 
   if(data.length < 10){
-    GameKit.showEndModal({
-      title:"Havuz yüklenemedi",
-      subtitle:"Dil havuzu boş veya ulaşılamıyor. Çıkıp tekrar dene.",
-      canContinue:false,
-      onExit: ()=> location.href="/pages/game.html"
+    showEndGate({
+      title:"Havuz yok",
+      stats:`Dil havuzu yüklenemedi.<br><br>Çıkıp tekrar dene.`,
+      onContinue:null
     });
     return;
   }
@@ -243,25 +348,21 @@ async function initSet(isBank = false) {
   const USED_KEY = `used_audio_spy_v2_${lang}`;
   const { used, save } = createUsedSet(USED_KEY);
 
-  let picked = pick(data, 14, used, save);
+  let picked = pick(data, 12, used, save);
   if (!picked || picked.length < 8) {
     localStorage.removeItem(USED_KEY);
     const cleanUsed = new Set();
-    picked = pick(data, 14, cleanUsed, save);
+    picked = pick(data, 12, cleanUsed, save);
   }
 
   poolItems = picked || [];
+
   if(poolItems.length < 8){
-    GameKit.showEndModal({
-      title:"Yeterli soru yok",
-      subtitle:"Havuzdan yeterli içerik gelmedi. Çıkıp tekrar dene.",
-      canContinue:false,
-      onExit: ()=> location.href="/pages/game.html"
-    });
+    showEndGate({ title:"Yetersiz soru", stats:"Havuzdan yeterli içerik gelmedi.", onContinue:null });
     return;
   }
 
-  try{ save(poolItems.map(x => (x.sentence || x.w || x.tr || ""))); }catch{}
+  try { save(poolItems.map(x => x.sentence || x.w || x.tr || "")); } catch(e){}
 
   updateUI();
   nextSignal();
@@ -269,14 +370,14 @@ async function initSet(isBank = false) {
 
 function buildOptions(correct) {
   const correctClean = String(correct||"").trim();
-  if(!correctClean){ $("optionsArea").innerHTML=""; return false; }
+  if(!correctClean) return false;
 
   const opts = [correctClean];
-  let tries = 0;
 
+  let tries=0;
   while(opts.length < 4 && tries < 120) {
     tries++;
-    const r = String(poolItems[Math.floor(Math.random()*poolItems.length)]?.tr || "").trim();
+    const r = String(poolItems[Math.floor(Math.random() * poolItems.length)]?.tr || "").trim();
     if(r && !opts.some(x=>norm(x)===norm(r))) opts.push(r);
   }
 
@@ -293,12 +394,10 @@ function buildOptions(correct) {
     d.onclick = () => handleChoice(d, v);
     area.appendChild(d);
   });
-
   return true;
 }
 
 function nextSignal() {
-  // clear old options if any
   $("optionsArea").innerHTML = "";
 
   if(setCounter >= 8 || lives <= 0) {
@@ -306,28 +405,18 @@ function nextSignal() {
     return;
   }
 
-  // find next valid item
-  let tries = 0;
-  while(tries < 30){
-    const w = poolItems[setCounter];
-    const ans = String(w?.tr || "").trim();
-    const say = String(w?.sentence || w?.w || "").trim();
+  const w = poolItems[setCounter];
+  currentItem = {
+    say: String(w?.sentence || w?.w || "").trim(),
+    ans: String(w?.tr || "").trim()
+  };
 
-    if(ans && say){
-      currentItem = { say, ans };
-      break;
-    }
+  if(!currentItem.say || !currentItem.ans){
     setCounter++;
-    tries++;
-    if(setCounter >= 8) break;
-  }
-
-  if(!currentItem || !currentItem.ans || !currentItem.say){
-    finishSet(true);
+    nextSignal();
     return;
   }
 
-  // ensure 4 options
   const ok = buildOptions(currentItem.ans);
   if(!ok){
     setCounter++;
@@ -335,7 +424,11 @@ function nextSignal() {
     return;
   }
 
-  setTimeout(() => playSignal(), 250);
+  setTimeout(() => playSignal(), 350);
+}
+
+function lockOptions(lock=true){
+  document.querySelectorAll(".opt").forEach(x => x.style.pointerEvents = lock ? "none" : "auto");
 }
 
 function playSignal() {
@@ -412,23 +505,15 @@ function finishSet(died) {
   updatePB();
 
   const title = died ? "Oyun Bitti" : "Seviye Tamam";
-  const scoreText = `Skor: ${totalScore} • Momentum: x${momentum.toFixed(2)}`;
+  const stats = `TOPLAM SKOR: <b>${totalScore}</b><br>MOMENTUM: <b>x${momentum.toFixed(2)}</b>`;
 
-  GameKit.showEndModal({
+  showEndGate({
     title,
-    subtitle: died ? "Canlar bitti." : "Devam etmek ister misin?",
-    scoreText,
-    canContinue: true,
-    onContinue: ()=>{
-      initSet(false);
-    },
-    onExit: ()=>{
-      location.href="/pages/game.html";
-    }
+    stats,
+    onContinue: ()=> initSet(false)
   });
 }
 
-/* speech */
 function stopSpeak(){
   speaking = false;
   try { speechSynthesis.cancel(); } catch {}
@@ -438,11 +523,6 @@ function stopSpeak(){
 function speak(txt, onDone) {
   if(muted || !txt) { onDone && onDone(); return; }
   stopSpeak();
-
-  if(!("speechSynthesis" in window)){
-    onDone && onDone();
-    return;
-  }
 
   const u = new SpeechSynthesisUtterance(txt);
   lastUtter = u;
