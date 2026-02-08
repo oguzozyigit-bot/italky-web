@@ -12,18 +12,14 @@
 
   <style>
     :root {
-      --bg-void: #030014;
+      --bg-void: #02000a;
       --text-main: #fff;
       --text-muted: rgba(255,255,255,0.50);
       --footerH: 92px;
       
-      /* Aristokrat Bordo Paleti */
-      --icon-inner: #8b2635; 
-      --grad-1: #3b0716;
-      --grad-2: #2a020f;
-      --grad-3: #14000a;
-      
-      /* Orijinal AI Logosu Gradient */
+      /* Renk Reçetesi */
+      --brand-burgundy: #4a0817; /* Butonların Bordo Rengi */
+      --icon-lacivert: #6366f1;   /* İkonların Lacivert/Indigo Tonu */
       --ai-grad: linear-gradient(135deg, #a5b4fc 0%, #6366f1 100%);
     }
 
@@ -31,12 +27,12 @@
     html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; position: fixed; font-family: 'Outfit', sans-serif; background-color: var(--bg-void); color: var(--text-main); display: flex; align-items: center; justify-content: center; }
 
     /* COSMOS ARKA PLAN */
-    .cosmos-bg { position: absolute; inset: -50%; width: 200%; height: 200%; background: #030014; z-index: 0; pointer-events: none; }
-    .orb { position: absolute; border-radius: 50%; filter: blur(100px); opacity: .15; animation: floatOrbit 25s infinite alternate ease-in-out; }
-    .orb-1 { top: 5%; left: -10%; width: 70vw; height: 70vw; background: radial-gradient(circle, var(--grad-1), transparent 70%); }
+    .cosmos-bg { position: absolute; inset: -50%; width: 200%; height: 200%; background: var(--bg-void); z-index: 0; pointer-events: none; }
+    .orb { position: absolute; border-radius: 50%; filter: blur(100px); opacity: .12; animation: floatOrbit 25s infinite alternate ease-in-out; }
+    .orb-1 { top: 10%; left: 0%; width: 60vw; height: 60vw; background: radial-gradient(circle, var(--brand-burgundy), transparent 70%); }
     
-    .mobile-frame { width: 100%; max-width: 480px; height: 100%; position: relative; z-index: 10; display: flex; flex-direction: column; background: rgba(5, 2, 12, 0.8); backdrop-filter: blur(35px); overflow: hidden; }
-    @media (min-width: 520px) { .mobile-frame { height: 94vh; border-radius: 40px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 40px 100px -20px rgba(0,0,0,0.8); } }
+    .mobile-frame { width: 100%; max-width: 480px; height: 100%; position: relative; z-index: 10; display: flex; flex-direction: column; background: rgba(2, 0, 10, 0.85); backdrop-filter: blur(40px); overflow: hidden; }
+    @media (min-width: 520px) { .mobile-frame { height: 94vh; border-radius: 40px; border: 1px solid rgba(255,255,255,0.06); box-shadow: 0 40px 100px -20px rgba(0,0,0,0.9); } }
 
     /* HEADER */
     .header { flex: 0 0 85px; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; position: relative; z-index: 100; border-bottom: 1px solid rgba(255,255,255,0.03); }
@@ -45,10 +41,10 @@
     .be-free { font-size: 9px; font-weight: 900; color: #ffffff; letter-spacing: 3px; margin-top: 2px; text-transform: uppercase; }
 
     .userbox { display: flex; align-items: center; gap: 12px; }
-    .uname { font-weight: 800; font-size: 13px; color: #fff; text-align: right; }
-    .plan { font-weight: 700; font-size: 10px; color: var(--icon-inner); letter-spacing: 1px; }
+    .uname { font-weight: 800; font-size: 13px; color: #fff; }
+    .plan { font-weight: 700; font-size: 10px; color: var(--icon-lacivert); letter-spacing: 1px; }
 
-    .avatar-link { width: 40px; height: 40px; border-radius: 14px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); background: #000; }
+    .avatar-link { width: 40px; height: 40px; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); background: #000; }
     .avatar-link img { width: 100%; height: 100%; object-fit: cover; }
 
     /* SCROLL AREA */
@@ -57,39 +53,42 @@
 
     /* GRID & CARDS */
     .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    
+    /* BUTON (KART) TASARIMI - BORDO */
     .card { 
-      padding: 24px 12px; border-radius: 28px; 
-      background: rgba(255,255,255,0.02); 
+      padding: 24px 12px; border-radius: 26px; 
+      background: linear-gradient(145deg, var(--brand-burgundy) 0%, #1a0208 100%); 
       border: 1px solid rgba(255,255,255,0.05); 
       display: flex; flex-direction: column; align-items: center; text-align: center; 
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer;
+      transition: all 0.3s ease; cursor: pointer;
+      box-shadow: 0 8px 25px -10px rgba(0,0,0,0.5);
     }
     
-    /* REÇETE: İKON WRAP (DEEP GRADIENT) */
+    /* İKON KUTUSU - ŞEFFAF / HAFİF LACİVERT DOKUNUŞ */
     .icon-wrap { 
-      width: 52px; height: 52px; border-radius: 16px; 
+      width: 50px; height: 50px; border-radius: 14px; 
       display: flex; align-items: center; justify-content: center; margin-bottom: 12px; 
-      background: radial-gradient(circle at top left, var(--grad-1) 0%, var(--grad-2) 45%, var(--grad-3) 100%); 
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,.05), 0 10px 20px rgba(0,0,0,.4);
+      background: rgba(99, 102, 241, 0.1); /* Hafif lacivert cam efekti */
+      border: 1px solid rgba(99, 102, 241, 0.2);
     }
     
-    /* REÇETE: İKON (SOLID BURGUNDY) */
+    /* İKON - LACİVERT */
     .icon-wrap svg { 
         width: 24px; height: 24px; 
-        stroke: var(--icon-inner); /* Düz, sade, asil bordo */
+        stroke: var(--icon-lacivert); /* İlk halindeki lacivert ton */
         fill: none; stroke-width: 2; 
     }
 
     .label { font-size: 14px; font-weight: 800; color: #fff; letter-spacing: -0.1px; }
-    .sub { font-size: 11px; color: var(--text-muted); margin-top: 4px; font-weight: 500; }
+    .sub { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 4px; font-weight: 500; }
 
-    /* HOVER/PRESS */
-    .card:active { transform: scale(0.97); background: rgba(139, 38, 53, 0.05); border-color: rgba(139, 38, 53, 0.2); }
+    /* TIKLAMA EFEKTİ */
+    .card:active { transform: scale(0.96); filter: brightness(1.2); }
 
     /* FOOTER */
-    .footerbar { position: absolute; bottom: 0; width: 100%; height: var(--footerH); background: rgba(3, 0, 10, 0.98); backdrop-filter: blur(20px); border-top: 1px solid rgba(255,255,255,0.03); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 200; }
+    .footerbar { position: absolute; bottom: 0; width: 100%; height: var(--footerH); background: rgba(2, 0, 10, 0.98); backdrop-filter: blur(20px); border-top: 1px solid rgba(255,255,255,0.03); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 200; }
     .links { display: flex; gap: 24px; margin-bottom: 8px; }
-    .links a { font-size: 11px; font-weight: 800; color: rgba(255,255,255,0.2); text-decoration: none; text-transform: uppercase; letter-spacing: 1px; }
+    .links a { font-size: 11px; font-weight: 800; color: rgba(255,255,255,0.25); text-decoration: none; text-transform: uppercase; }
     .footerBrand { font-size: 10px; color: rgba(255,255,255,0.05); font-weight: 800; letter-spacing: 2px; }
 
   </style>
