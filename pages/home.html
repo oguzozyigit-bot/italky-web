@@ -13,12 +13,18 @@
   <style>
     :root {
       --bg-void: #030014;
-      --brand-burgundy: #580c1f; /* Şık Bordo Tonu */
-      --brand-glow: rgba(88, 12, 31, 0.4);
       --text-main: #fff;
       --text-muted: rgba(255,255,255,0.50);
       --footerH: 92px;
-      --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+      
+      /* Aristokrat Bordo Paleti */
+      --icon-inner: #8b2635; 
+      --grad-1: #3b0716;
+      --grad-2: #2a020f;
+      --grad-3: #14000a;
+      
+      /* Orijinal AI Logosu Gradient */
+      --ai-grad: linear-gradient(135deg, #a5b4fc 0%, #6366f1 100%);
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
@@ -26,24 +32,23 @@
 
     /* COSMOS ARKA PLAN */
     .cosmos-bg { position: absolute; inset: -50%; width: 200%; height: 200%; background: #030014; z-index: 0; pointer-events: none; }
-    .orb { position: absolute; border-radius: 50%; filter: blur(100px); opacity: .25; animation: floatOrbit 25s infinite alternate ease-in-out; }
-    .orb-1 { top: 5%; left: -10%; width: 70vw; height: 70vw; background: radial-gradient(circle, var(--brand-burgundy), transparent 70%); }
-    .orb-2 { bottom: 5%; right: -10%; width: 60vw; height: 60vw; background: radial-gradient(circle, #2d060e, transparent 70%); animation-delay: -5s; }
-    @keyframes floatOrbit { 0% { transform: translate(0,0); } 100% { transform: translate(5%, -5%); } }
-
-    .mobile-frame { width: 100%; max-width: 480px; height: 100%; position: relative; z-index: 10; display: flex; flex-direction: column; background: rgba(5, 2, 15, 0.7); backdrop-filter: blur(30px); overflow: hidden; }
+    .orb { position: absolute; border-radius: 50%; filter: blur(100px); opacity: .15; animation: floatOrbit 25s infinite alternate ease-in-out; }
+    .orb-1 { top: 5%; left: -10%; width: 70vw; height: 70vw; background: radial-gradient(circle, var(--grad-1), transparent 70%); }
+    
+    .mobile-frame { width: 100%; max-width: 480px; height: 100%; position: relative; z-index: 10; display: flex; flex-direction: column; background: rgba(5, 2, 12, 0.8); backdrop-filter: blur(35px); overflow: hidden; }
     @media (min-width: 520px) { .mobile-frame { height: 94vh; border-radius: 40px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 40px 100px -20px rgba(0,0,0,0.8); } }
 
     /* HEADER */
     .header { flex: 0 0 85px; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; position: relative; z-index: 100; border-bottom: 1px solid rgba(255,255,255,0.03); }
     .logo-container { font-family: 'Space Grotesk', sans-serif; font-size: 26px; font-weight: 700; letter-spacing: -1px; }
-    .logo-ai { background: linear-gradient(135deg, #fff 0%, #a5b4fc 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    
+    .logo-ai { background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .be-free { font-size: 9px; font-weight: 900; color: #ffffff; letter-spacing: 3px; margin-top: 2px; text-transform: uppercase; }
+
     .userbox { display: flex; align-items: center; gap: 12px; }
     .uname { font-weight: 800; font-size: 13px; color: #fff; text-align: right; }
-    .plan { font-weight: 700; font-size: 10px; color: #ff3b60; letter-spacing: 1px; text-align: right; } /* Bordo/Kırmızı tonlu plan */
+    .plan { font-weight: 700; font-size: 10px; color: var(--icon-inner); letter-spacing: 1px; }
 
-    .avatar-link { width: 40px; height: 40px; border-radius: 14px; overflow: hidden; border: 1.5px solid var(--brand-burgundy); background: #111; box-shadow: 0 0 15px var(--brand-glow); }
+    .avatar-link { width: 40px; height: 40px; border-radius: 14px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); background: #000; }
     .avatar-link img { width: 100%; height: 100%; object-fit: cover; }
 
     /* SCROLL AREA */
@@ -53,60 +58,56 @@
     /* GRID & CARDS */
     .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     .card { 
-      padding: 24px 16px; border-radius: 28px; 
-      background: linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%); 
-      border: 1px solid rgba(255,255,255,0.07); 
+      padding: 24px 12px; border-radius: 28px; 
+      background: rgba(255,255,255,0.02); 
+      border: 1px solid rgba(255,255,255,0.05); 
       display: flex; flex-direction: column; align-items: center; text-align: center; 
-      transition: all 0.4s var(--ease-out); cursor: pointer; position: relative;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer;
     }
     
-    /* İKON ALTI BORDO DOKUNUŞU */
-    .icon-box { 
-      width: 54px; height: 54px; border-radius: 18px; 
-      display: flex; align-items: center; justify-content: center; margin-bottom: 14px; 
-      background: linear-gradient(135deg, var(--brand-burgundy) 0%, #2d060e 100%); 
-      box-shadow: 0 8px 20px -4px var(--brand-glow);
-      transition: transform 0.3s ease;
+    /* REÇETE: İKON WRAP (DEEP GRADIENT) */
+    .icon-wrap { 
+      width: 52px; height: 52px; border-radius: 16px; 
+      display: flex; align-items: center; justify-content: center; margin-bottom: 12px; 
+      background: radial-gradient(circle at top left, var(--grad-1) 0%, var(--grad-2) 45%, var(--grad-3) 100%); 
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.05), 0 10px 20px rgba(0,0,0,.4);
     }
-    .icon-box svg { width: 26px; height: 26px; stroke: #fff; fill: none; stroke-width: 1.8; }
-
-    .label { font-size: 15px; font-weight: 800; color: #fff; letter-spacing: -0.2px; }
-    .sub { font-size: 11px; color: var(--text-muted); margin-top: 5px; font-weight: 500; }
-
-    /* HOVER EFFECT */
-    .card:active { transform: scale(0.96); border-color: var(--brand-burgundy); background: rgba(88, 12, 31, 0.1); }
-    .card::after { 
-        content: ''; position: absolute; inset: 0; border-radius: 28px; 
-        background: radial-gradient(circle at center, var(--brand-glow) 0%, transparent 70%); 
-        opacity: 0; transition: opacity 0.4s; z-index: -1;
+    
+    /* REÇETE: İKON (SOLID BURGUNDY) */
+    .icon-wrap svg { 
+        width: 24px; height: 24px; 
+        stroke: var(--icon-inner); /* Düz, sade, asil bordo */
+        fill: none; stroke-width: 2; 
     }
-    .card:hover::after { opacity: 1; }
 
-    .longWrap { margin-top: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .label { font-size: 14px; font-weight: 800; color: #fff; letter-spacing: -0.1px; }
+    .sub { font-size: 11px; color: var(--text-muted); margin-top: 4px; font-weight: 500; }
+
+    /* HOVER/PRESS */
+    .card:active { transform: scale(0.97); background: rgba(139, 38, 53, 0.05); border-color: rgba(139, 38, 53, 0.2); }
 
     /* FOOTER */
-    .footerbar { position: absolute; bottom: 0; width: 100%; height: var(--footerH); background: rgba(3, 0, 15, 0.95); backdrop-filter: blur(20px); border-top: 1px solid rgba(255,255,255,0.04); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 200; }
-    .links { display: flex; gap: 24px; margin-bottom: 10px; }
-    .links a { font-size: 11px; font-weight: 800; color: rgba(255,255,255,0.3); text-decoration: none; text-transform: uppercase; letter-spacing: 1px; transition: color 0.3s; }
-    .links a:hover { color: var(--brand-burgundy); }
-    .footerBrand { font-size: 10px; color: rgba(255,255,255,0.1); font-weight: 800; letter-spacing: 2px; }
+    .footerbar { position: absolute; bottom: 0; width: 100%; height: var(--footerH); background: rgba(3, 0, 10, 0.98); backdrop-filter: blur(20px); border-top: 1px solid rgba(255,255,255,0.03); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 200; }
+    .links { display: flex; gap: 24px; margin-bottom: 8px; }
+    .links a { font-size: 11px; font-weight: 800; color: rgba(255,255,255,0.2); text-decoration: none; text-transform: uppercase; letter-spacing: 1px; }
+    .footerBrand { font-size: 10px; color: rgba(255,255,255,0.05); font-weight: 800; letter-spacing: 2px; }
 
   </style>
 </head>
 
 <body>
-  <div class="cosmos-bg"><div class="orb orb-1"></div><div class="orb orb-2"></div></div>
+  <div class="cosmos-bg"><div class="orb orb-1"></div></div>
 
   <div class="mobile-frame">
     <div class="header">
       <div class="mini-brand">
         <div class="logo-container">italky<span class="logo-ai">AI</span></div>
-        <div style="font-size: 9px; font-weight: 900; color: var(--brand-burgundy); letter-spacing: 3px; margin-top: 2px;">BE FREE</div>
+        <div class="be-free">BE FREE</div>
       </div>
 
       <div class="userbox">
         <div class="usertext">
-          <div class="uname" id="userName">Yükleniyor...</div>
+          <div class="uname" id="userName">—</div>
           <div class="plan" id="userPlan">PREMIUM</div>
         </div>
         <a href="/pages/profile.html" class="avatar-link">
@@ -118,51 +119,51 @@
     <div class="menu-scroll">
       <div class="grid">
         <div class="card" onclick="location.href='/pages/facetoface.html'">
-          <div class="icon-box"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+          <div class="icon-wrap"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
           <div class="label">Yüz Yüze</div>
           <div class="sub">Canlı çeviri</div>
         </div>
 
         <div class="card" onclick="location.href='/pages/text_translate.html'">
-          <div class="icon-box"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></svg></div>
+          <div class="icon-wrap"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></svg></div>
           <div class="label">Metinden</div>
           <div class="sub">Yazıdan çeviri</div>
         </div>
 
         <div class="card" onclick="location.href='/pages/photo.html'">
-          <div class="icon-box"><svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
+          <div class="icon-wrap"><svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
           <div class="label">Fotoğraf</div>
           <div class="sub">Üstüne çevir</div>
         </div>
 
         <div class="card" onclick="location.href='/pages/document.html'">
-          <div class="icon-box"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+          <div class="icon-wrap"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
           <div class="label">Belge</div>
           <div class="sub">PDF / Kamera</div>
         </div>
 
         <div class="card" onclick="location.href='/pages/chat.html'">
-          <div class="icon-box"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 1 1-7.6-13.5 8.38 8.38 0 0 1 3.8.9L21 3z"/></svg></div>
+          <div class="icon-wrap"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 1 1-7.6-13.5 8.38 8.38 0 0 1 3.8.9L21 3z"/></svg></div>
           <div class="label">Sohbet AI</div>
           <div class="sub">Asistanın</div>
         </div>
 
         <div class="card" onclick="location.href='/pages/voice_ai.html'">
-          <div class="icon-box"><svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></div>
+          <div class="icon-wrap"><svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></div>
           <div class="label">Konuşkan</div>
           <div class="sub">Sesli AI</div>
         </div>
       </div>
 
-      <div class="longWrap">
+      <div style="margin-top: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
         <div class="card" onclick="location.href='/pages/teachers.html'">
-          <div class="icon-box"><svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div>
+          <div class="icon-wrap"><svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div>
           <div class="label">Dil Öğretmeni</div>
           <div class="sub">Telaffuz ve ders</div>
         </div>
 
         <div class="card" onclick="location.href='/pages/game.html'">
-          <div class="icon-box"><svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 12h4M8 10v4"/><circle cx="15" cy="11" r="1"/><circle cx="18" cy="13" r="1"/></svg></div>
+          <div class="icon-wrap"><svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 12h4M8 10v4"/><circle cx="15" cy="11" r="1"/><circle cx="18" cy="13" r="1"/></svg></div>
           <div class="label">Eğlenerek Öğren</div>
           <div class="sub">Oyun ve yarışma</div>
         </div>
@@ -171,10 +172,10 @@
 
     <div class="footerbar">
       <div class="links">
-        <a href="/pages/about.html">Hakkımızda</a>
-        <a href="/pages/faq.html">SSS</a>
-        <a href="/pages/privacy.html">Gizlilik</a>
-        <a href="/pages/contact.html">İletişim</a>
+        <a href="/pages/about.html">About</a>
+        <a href="/pages/faq.html">FAQ</a>
+        <a href="/pages/privacy.html">Privacy</a>
+        <a href="/pages/contact.html">Contact</a>
       </div>
       <div class="footerBrand">italkyAI By Ozyigit’s 2026</div>
     </div>
@@ -182,13 +183,12 @@
 
   <script type="module">
     import { STORAGE_KEY } from "/js/config.js";
-
     function init() {
       const userData = localStorage.getItem(STORAGE_KEY);
       if (!userData) { window.location.replace("/index.html"); return; }
       try {
         const user = JSON.parse(userData);
-        document.getElementById("userName").textContent = user.name || user.fullname || "Kullanıcı";
+        document.getElementById("userName").textContent = user.name || user.fullname || "User";
         document.getElementById("userPlan").textContent = (user.plan || "FREE").toUpperCase();
         if (user.picture || user.avatar) document.getElementById("userPic").src = user.picture || user.avatar;
       } catch (err) { window.location.replace("/index.html"); }
