@@ -1,10 +1,9 @@
-// /js/document_page.js
-import { BASE_DOMAIN, STORAGE_KEY } from "/js/config.js";
-import { logout } from "/js/auth.js";
+// FILE: /js/document_page.js  (FINAL)
+import { STORAGE_KEY } from "/js/config.js";
+import { apiPOST } from "/js/api.js";
 
 const $ = (id)=>document.getElementById(id);
 function safeJson(s, fb={}){ try{ return JSON.parse(s||""); }catch{ return fb; } }
-function base(){ return String(BASE_DOMAIN||"").replace(/\/+$/,""); }
 
 function toast(msg){
   const t = $("toast");
@@ -18,16 +17,11 @@ function toast(msg){
 function termsKey(email=""){
   return `italky_terms_accepted_at::${String(email||"").toLowerCase().trim()}`;
 }
-function getUser(){
-  return safeJson(localStorage.getItem(STORAGE_KEY), {});
-}
+function getUser(){ return safeJson(localStorage.getItem(STORAGE_KEY), {}); }
 function ensureLogged(){
   const u = getUser();
-  if(!u || !u.email){ location.replace("/index.html"); return null; }
+  if(!u?.email){ location.replace("/index.html"); return null; }
   if(!localStorage.getItem(termsKey(u.email))){ location.replace("/index.html"); return null; }
-  const gid = (localStorage.getItem("google_id_token") || "").trim();
-  if(!gid){ location.replace("/index.html"); return null; }
-  if(!u.isSessionActive){ location.replace("/index.html"); return null; }
   return u;
 }
 
@@ -40,14 +34,14 @@ function paintHeader(u){
   const fallback = $("avatarFallback");
   const pic = String(u.picture || u.avatar || u.avatar_url || "").trim();
   if(pic){
-    avatarBtn.innerHTML = `<img src="${pic}" alt="avatar">`;
+    avatarBtn.innerHTML = `<img src="${pic}" alt="avatar" referrerpolicy="no-referrer">`;
   }else{
     fallback.textContent = (full && full[0]) ? full[0].toUpperCase() : "•";
   }
-  avatarBtn.addEventListener("click", logout);
+  avatarBtn.addEventListener("click", ()=> location.href="/pages/profile.html");
 }
 
-/* ===== Diller (Türkçe) ===== */
+/* ===== Languages ===== */
 const LANGS = [
   { code:"tr", name:"Türkçe", flag:"🇹🇷" },
   { code:"en", name:"İngilizce", flag:"🇬🇧" },
@@ -63,49 +57,17 @@ const LANGS = [
   { code:"zh-tw", name:"Çince (Geleneksel)", flag:"🇹🇼" },
   { code:"ja", name:"Japonca", flag:"🇯🇵" },
   { code:"ko", name:"Korece", flag:"🇰🇷" },
-  { code:"nl", name:"Felemenkçe", flag:"🇳🇱" },
-  { code:"sv", name:"İsveççe", flag:"🇸🇪" },
-  { code:"no", name:"Norveççe", flag:"🇳🇴" },
-  { code:"da", name:"Danca", flag:"🇩🇰" },
-  { code:"fi", name:"Fince", flag:"🇫🇮" },
-  { code:"pl", name:"Lehçe", flag:"🇵🇱" },
-  { code:"cs", name:"Çekçe", flag:"🇨🇿" },
-  { code:"sk", name:"Slovakça", flag:"🇸🇰" },
-  { code:"hu", name:"Macarca", flag:"🇭🇺" },
-  { code:"ro", name:"Romence", flag:"🇷🇴" },
-  { code:"bg", name:"Bulgarca", flag:"🇧🇬" },
-  { code:"el", name:"Yunanca", flag:"🇬🇷" },
-  { code:"uk", name:"Ukraynaca", flag:"🇺🇦" },
-  { code:"sr", name:"Sırpça", flag:"🇷🇸" },
-  { code:"hr", name:"Hırvatça", flag:"🇭🇷" },
-  { code:"bs", name:"Boşnakça", flag:"🇧🇦" },
-  { code:"sq", name:"Arnavutça", flag:"🇦🇱" },
-  { code:"fa", name:"Farsça", flag:"🇮🇷" },
-  { code:"ur", name:"Urduca", flag:"🇵🇰" },
-  { code:"hi", name:"Hintçe", flag:"🇮🇳" },
-  { code:"bn", name:"Bengalce", flag:"🇧🇩" },
-  { code:"th", name:"Tayca", flag:"🇹🇭" },
-  { code:"vi", name:"Vietnamca", flag:"🇻🇳" },
-  { code:"id", name:"Endonezce", flag:"🇮🇩" },
-  { code:"ms", name:"Malayca", flag:"🇲🇾" },
-  { code:"he", name:"İbranice", flag:"🇮🇱" },
 ];
+function langBy(code){ return LANGS.find(x=>x.code===code) || { code, name: code, flag:"🌐" }; }
 
-function langBy(code){
-  return LANGS.find(x=>x.code===code) || { code, name: code, flag:"🌐" };
-}
-
-/* ===== Hedef dil: sayfa boyunca kalsın ===== */
-const SS_TO = "italky_doc_to_lang_v1";
+const SS_TO = "italky_doc_to_lang_v2";
 let toLang = sessionStorage.getItem(SS_TO) || "tr";
-
 function setToUI(){
   $("toFlag").textContent = langBy(toLang).flag;
   $("toLangTxt").textContent = langBy(toLang).name;
   sessionStorage.setItem(SS_TO, toLang);
 }
 
-/* ===== Language sheet ===== */
 function openSheet(){
   $("langSheet").classList.add("show");
   $("sheetQuery").value = "";
@@ -113,7 +75,6 @@ function openSheet(){
   setTimeout(()=>{ try{ $("sheetQuery").focus(); }catch{} }, 0);
 }
 function closeSheet(){ $("langSheet").classList.remove("show"); }
-
 function renderSheet(filter){
   const q = String(filter||"").toLowerCase().trim();
   const list = $("sheetList");
@@ -148,16 +109,16 @@ function renderSheet(filter){
   });
 }
 
+/* ===== UI status ===== */
+function setTopStatus(msg){ $("statusTop").textContent = msg; }
+function setBotStatus(msg){ $("statusBot").textContent = msg; }
+
 /* ===== State ===== */
 const state = {
   file: null,
-  kind: "", // image|pdf
-  imageCanvas: null, // canvas for OCR
+  kind: "",        // image|pdf
+  imageCanvas: null
 };
-
-/* ===== Helpers ===== */
-function setTopStatus(msg){ $("statusTop").textContent = msg; }
-function setBotStatus(msg){ $("statusBot").textContent = msg; }
 
 function clearPreview(){
   $("imgPreview").style.display = "none";
@@ -166,25 +127,18 @@ function clearPreview(){
   const c = $("pdfCanvas");
   const ctx = c.getContext("2d");
   ctx.clearRect(0,0,c.width,c.height);
+  state.imageCanvas = null;
+  state.kind = "";
+  state.file = null;
 }
 
-async function readFileAsDataURL(file){
-  return new Promise((res, rej)=>{
-    const fr = new FileReader();
-    fr.onload = ()=> res(fr.result);
-    fr.onerror = ()=> rej(new Error("file read failed"));
-    fr.readAsDataURL(file);
-  });
-}
+/* ===== File readers ===== */
+async function readFileAsDataURL(file){ return await new Promise((res, rej)=>{ const fr=new FileReader(); fr.onload=()=>res(fr.result); fr.onerror=rej; fr.readAsDataURL(file); }); }
+async function readFileAsArrayBuffer(file){ return await file.arrayBuffer(); }
 
-async function readFileAsArrayBuffer(file){
-  return await file.arrayBuffer();
-}
-
-/* ===== PDF render to canvas (first page) ===== */
+/* ===== Render PDF first page ===== */
 async function renderPdfFirstPageToCanvas(pdfBytes){
   if(!window.pdfjsLib) throw new Error("pdfjs missing");
-  // worker
   try{
     window.pdfjsLib.GlobalWorkerOptions.workerSrc =
       "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.worker.min.js";
@@ -206,95 +160,75 @@ async function renderPdfFirstPageToCanvas(pdfBytes){
   canvas.style.display = "block";
   $("imgPreview").style.display = "none";
 
-  // OCR image canvas is the same pdfCanvas
   state.imageCanvas = canvas;
 }
 
-/* ===== Image render to canvas ===== */
+/* ===== Render image to offscreen canvas ===== */
 async function renderImageToCanvas(dataUrl){
   const img = new Image();
   img.crossOrigin = "anonymous";
   img.src = dataUrl;
-
-  await new Promise((r, rej)=>{
-    img.onload = r;
-    img.onerror = rej;
-  });
+  await new Promise((r, rej)=>{ img.onload=r; img.onerror=rej; });
 
   $("imgPreview").src = dataUrl;
   $("imgPreview").style.display = "block";
   $("pdfCanvas").style.display = "none";
 
-  // create OCR canvas offscreen
   const c = document.createElement("canvas");
   c.width = img.naturalWidth;
   c.height = img.naturalHeight;
-  const ctx = c.getContext("2d");
-  ctx.drawImage(img, 0, 0);
+  c.getContext("2d").drawImage(img, 0, 0);
   state.imageCanvas = c;
 }
 
-/* ===== OCR ===== */
-async function doOCR(){
-  if(!window.Tesseract) throw new Error("tesseract missing");
-  if(!state.imageCanvas) throw new Error("no image canvas");
+/* ===== OCR worker ===== */
+let OCR_READY = false;
+let OCR_WORKER = null;
 
+async function initOCR(){
+  if(OCR_READY) return;
+  if(!window.Tesseract) throw new Error("tesseract missing");
+
+  setTopStatus("OCR hazırlanıyor…");
+  OCR_WORKER = await window.Tesseract.createWorker("eng+tur", 1, { logger: ()=>{} });
+  try{
+    await OCR_WORKER.setParameters({ tessedit_pageseg_mode: "6", preserve_interword_spaces: "1" });
+  }catch{}
+  OCR_READY = true;
+  setTopStatus("Hazır");
+}
+
+async function doOCR(){
+  if(!state.imageCanvas) throw new Error("no image canvas");
+  await initOCR();
   setTopStatus("OCR taranıyor…");
   setBotStatus("OCR…");
   $("outText").value = "";
 
-  const r = await window.Tesseract.recognize(state.imageCanvas, "eng", {
-    logger: (m)=>{
-      if(m?.status === "recognizing text"){
-        const p = Math.round((m.progress || 0) * 100);
-        setTopStatus(`OCR taranıyor… %${p}`);
-      }
-    }
-  });
-
-  const txt = String(r?.data?.text || "").trim();
+  const { data } = await OCR_WORKER.recognize(state.imageCanvas);
+  const txt = String(data?.text || "").trim();
   setTopStatus(txt ? "OCR tamam" : "Yazı bulunamadı");
   return txt;
 }
 
 /* ===== Translate ===== */
 async function translateViaApi(text, target){
-  const b = base();
-  if(!b) return text;
+  const clean = String(text||"").replace(/\s+/g," ").trim();
+  if(!clean) return "";
 
-  const body = {
-    text,
-    source: "",       // auto
-    target,
-    from_lang: "",
-    to_lang: target,
-  };
+  const data = await apiPOST("/api/translate", {
+    text: clean, source:"", target, from_lang:"", to_lang: target
+  }, { timeoutMs: 25000 });
 
-  const r = await fetch(`${b}/api/translate`,{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify(body)
-  });
-
-  const data = await r.json().catch(()=> ({}));
-  const out = String(
-    data?.translated || data?.translation || data?.text || data?.translated_text || ""
-  ).trim() || text;
-
+  const out = String(data?.translated || data?.translation || data?.text || data?.translated_text || "").trim() || clean;
   return out;
 }
 
-/* ===== Main flow ===== */
+/* ===== File handling ===== */
 async function handlePickedFile(file){
-  state.file = file;
-  state.kind = "";
-  state.imageCanvas = null;
-
   clearPreview();
-  setTopStatus("Dosya seçildi");
-  setBotStatus("—");
-  $("outText").value = "";
 
+  state.file = file;
   const type = String(file.type || "").toLowerCase();
 
   try{
@@ -304,28 +238,36 @@ async function handlePickedFile(file){
       const bytes = await readFileAsArrayBuffer(file);
       await renderPdfFirstPageToCanvas(bytes);
       setTopStatus("PDF hazır (1. sayfa)");
+      setBotStatus("ÇEVİR'e bas");
     }else if(type.startsWith("image/")){
       state.kind = "image";
       setTopStatus("Görsel yükleniyor…");
       const url = await readFileAsDataURL(file);
       await renderImageToCanvas(url);
       setTopStatus("Görsel hazır");
+      setBotStatus("ÇEVİR'e bas");
     }else{
       toast("Desteklenmeyen format");
       setTopStatus("Format desteklenmiyor");
     }
-  }catch{
+  }catch(e){
+    console.error(e);
     toast("Dosya açılamadı");
     setTopStatus("Hata");
   }
 }
 
+/* ===== Run flow ===== */
+let busy = false;
+
 async function run(){
+  if(busy) return;
   if(!state.file || !state.imageCanvas){
     toast("Önce dosya/kamera seç");
     return;
   }
 
+  busy = true;
   try{
     const ocrText = await doOCR();
     if(!ocrText){
@@ -338,9 +280,12 @@ async function run(){
 
     $("outText").value = translated || "";
     setBotStatus("Tamam");
-  }catch{
+  }catch(e){
+    console.error(e);
     toast("İşlem başarısız");
     setBotStatus("Hata");
+  }finally{
+    busy = false;
   }
 }
 
@@ -353,7 +298,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
 
   $("backBtn")?.addEventListener("click", ()=>{
     if(history.length>1) history.back();
-    else location.href = "/pages/home.html";
+    else location.href="/pages/home.html";
   });
   $("logoHome")?.addEventListener("click", ()=> location.href="/pages/home.html");
 
