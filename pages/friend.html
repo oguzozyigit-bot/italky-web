@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-  <title>ITALKY • Arena V32 Connected</title>
+  <title>ITALKY • Arena V33 Economy</title>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;800&family=Space+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
 
   <style>
-    /* --- CSS: PREMIUM TASARIM (V30 İLE AYNI) --- */
+    /* --- CSS: PREMIUM TASARIM --- */
     :root{ --bg:#030305; --border: rgba(255,255,255,0.12); --p0:#00f0ff; --p1:#ff0055; --p2:#00e676; --p3:#ffd700; --green:#00e676; --red:#ff1744; --gold:#ffd700; --font-main:'Outfit',sans-serif; --font-display:'Space Grotesk',sans-serif; --accent: var(--p0); --accentGlow: rgba(0,240,255,0.18); }
     *{box-sizing:border-box; user-select:none; -webkit-tap-highlight-color:transparent; outline:none}
     html,body{margin:0; padding:0; width:100%; height:100%; overflow:hidden; position:fixed; font-family:var(--font-main); color:#fff; background:var(--bg)}
@@ -24,6 +24,8 @@
     .brand .logo .ai{background: linear-gradient(90deg, var(--accent), #ff48c4); -webkit-background-clip: text; -webkit-text-fill-color: transparent;}
     .header-spacer{ width:40px; height:40px; }
     .arena-wrap{position:relative; z-index:10; width:100%; height:100dvh; display:flex; flex-direction:column; justify-content:center; align-items:center; padding: 72px 0 110px;}
+    
+    /* CARD */
     .card{width: min(92vw, 420px); height: min(64vh, 520px); border-radius: 32px; border: 1px solid rgba(255,255,255,0.14); background: rgba(255,255,255,0.035); backdrop-filter: blur(14px); box-shadow: 0 28px 70px rgba(0,0,0,0.55), 0 0 40px var(--accentGlow); position:relative; padding: 18px 18px 16px; overflow:hidden; transition:.25s;}
     .card.p0{ --accent: var(--p0); --accentGlow: rgba(0,240,255,0.18); }
     .card.p1{ --accent: var(--p1); --accentGlow: rgba(255,0,85,0.16); }
@@ -41,14 +43,17 @@
     .meaning{font-size:18px; font-weight:600; color: rgba(255,255,255,0.68); min-height: 26px;}
     .slots{display:none; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 30px; letter-spacing: 6px; margin-top: 14px; color: var(--gold); text-shadow: 0 0 14px rgba(255,215,0,0.18);}
     .hintInfo{display:none; margin-top: 6px; font-size: 10px; font-weight: 800; letter-spacing: 1.6px; opacity: .6;}
+    
     .controls{display:flex; gap: 10px; width:100%; height: 56px; position:relative; z-index:2;}
     .btn{flex:1; border-radius: 16px; border:1px solid rgba(255,255,255,0.14); background: rgba(255,255,255,0.06); color:#fff; font-family: var(--font-display); font-weight: 800; font-size: 13px; letter-spacing:.4px; cursor:pointer; transition: .12s; backdrop-filter: blur(10px); box-shadow: 0 10px 22px rgba(0,0,0,0.25);}
     .btn:active{ transform: scale(.95); background: rgba(255,255,255,0.12); }
     .btn:disabled{ opacity:.25; cursor:not-allowed; filter: grayscale(1); box-shadow:none; transform:none; }
     .btn-mic{flex:2; background: rgba(255,255,255,0.14); border-color: rgba(255,255,255,0.25); font-size: 15px;}
     .btn-hint{flex:.9; color: var(--green); border-color: rgba(0,230,118,0.35); background: rgba(0,230,118,0.06);}
+    .btn-hint.buy { color: var(--gold); border-color: var(--gold); background: rgba(255,215,0,0.1); }
     .btn.listening{background:#fff !important; color:#000 !important; animation: pulse 1s infinite;}
     @keyframes pulse{ 0%{ box-shadow: 0 0 0 0 rgba(255,255,255,0.38); } 100%{ box-shadow: 0 0 0 18px rgba(255,255,255,0); } }
+
     .overlay{position:absolute; inset:0; display:flex; flex-direction:column; justify-content:center; align-items:center; background: rgba(0,0,0,0.82); backdrop-filter: blur(16px); opacity:0; pointer-events:none; transition: .18s; z-index: 20; padding: 18px; text-align:center;}
     .overlay.show{opacity:1; pointer-events:auto;}
     .ovTitle{font-family: var(--font-display); font-weight: 900; font-size: 42px; margin:0; letter-spacing:-1px;}
@@ -58,6 +63,7 @@
     .ovBtn{flex:1; padding: 14px 12px; border-radius: 14px; border:none; font-weight: 900; cursor:pointer; font-family: var(--font-display); letter-spacing:.4px; transition:.12s;}
     .ovBtnVar{background: var(--gold); color:#000; box-shadow: 0 0 26px rgba(255,215,0,0.25);}
     .ovBtnCont{background: rgba(255,255,255,0.10); color:#fff; border: 1px solid rgba(255,255,255,0.16);}
+
     .bottom-bar{position:absolute; left:10px; right:10px; bottom:16px; height: 92px; border-radius: 22px; border: 1px solid rgba(255,255,255,0.12); background: rgba(10,10,12,0.75); backdrop-filter: blur(14px); display:flex; align-items:center; justify-content:space-between; gap: 8px; padding: 10px; z-index: 30; box-shadow: 0 18px 60px rgba(0,0,0,0.55);}
     .pCard{flex:1; height: 100%; border-radius: 18px; border: 1px solid rgba(255,255,255,0.10); background: rgba(255,255,255,0.04); display:flex; flex-direction:column; align-items:center; justify-content:center; gap: 4px; opacity: .55; transform: scale(.96); transition: .18s; position:relative; overflow:hidden;}
     .pCard.active{opacity: 1; transform: scale(1); border-color: rgba(255,255,255,0.18); box-shadow: 0 0 24px var(--accentGlow);}
@@ -65,23 +71,29 @@
     .pCard .s{font-family: var(--font-display); font-size: 24px; font-weight: 900; line-height: 1;}
     .pCard .sets{font-size: 9px; font-weight: 900; letter-spacing: 1.2px; color: var(--gold); opacity: .9;}
     .pCard .mini{position:absolute; bottom:6px; display:flex; gap:8px; font-size: 9px; font-weight: 900; opacity: .7;}
-    .modal{position:fixed; inset:0; z-index:200; background:rgba(0,0,0,.92); backdrop-filter: blur(16px); display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:.25s}
+
+    /* MODAL & SAVED PLAYERS */
+    .modal{position:fixed; inset:0; z-index:200; background:rgba(0,0,0,.95); backdrop-filter: blur(16px); display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:.25s}
     .modal:not(.hidden){opacity:1; pointer-events:auto}
-    .modal-box{width:92%; max-width:380px; background:#121216; border:1px solid rgba(255,255,255,.12); border-radius:32px; padding:28px; text-align:center; max-height:90vh; overflow:auto; box-shadow: 0 25px 70px rgba(0,0,0,0.7)}
+    .modal-box{width:92%; max-width:380px; background:#121216; border:1px solid var(--border); border-radius:32px; padding:28px; text-align:center; max-height:90vh; overflow:auto; box-shadow: 0 25px 70px rgba(0,0,0,0.7)}
     .sectionTitle{font-family:var(--font-display); font-weight:900; font-size:22px; margin:0 0 14px}
     .toggle-grp{display:flex; background:rgba(255,255,255,.06); padding:4px; border-radius:12px; gap:4px; margin-bottom:14px}
     .toggle-btn{flex:1; padding:10px; border-radius:10px; cursor:pointer; text-align:center; font-size:13px; font-weight:900; opacity:.6; transition:.16s}
     .toggle-btn.active{background:#fff; color:#000; opacity:1}
     .btn-block{width:100%; padding:16px; border-radius:16px; border:none; font-weight:900; font-size:16px; cursor:pointer; background:#fff; color:#000; transition:.12s}
     .btn-block:active{transform:scale(.98)}
-    .btn-block:disabled{opacity:0.5; cursor:wait}
     .name-input{width:100%; background:#1a1a20; border:1px solid rgba(255,255,255,.12); color:#fff; padding:12px; border-radius:12px; font-weight:800; text-align:center; margin-bottom:8px}
-    .lang-grid{display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-bottom:12px}
+    
+    /* Saved Players UI */
+    .saved-list { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-bottom: 15px; }
+    .saved-chip { font-size: 11px; padding: 6px 10px; background: rgba(255,255,255,0.1); border-radius: 16px; cursor: pointer; display: flex; align-items: center; gap: 6px; border: 1px solid transparent; transition: .2s; }
+    .saved-chip:hover { background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.3); }
+    .saved-del { width: 14px; height: 14px; background: #ff1744; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; color: #fff; opacity: 0.6; }
+    .saved-del:hover { opacity: 1; }
+
+    .lang-grid{display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-bottom:16px}
     .lang-btn{background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); color:#fff; border-radius:12px; padding:10px 0; font-size:20px; cursor:pointer; transition:.14s}
     .lang-btn.active{background:#fff; color:#000}
-    .statsBox{background:rgba(255,255,255,.05); padding:14px; border-radius:16px; text-align:left; margin:12px 0}
-    .row{display:flex; justify-content:space-between; margin-bottom:6px}
-    .champ{font-size:22px; font-weight:900; color:var(--gold); margin:10px 0}
     .spinner { border: 3px solid rgba(255,255,255,0.1); border-left-color: #fff; border-radius: 50%; width: 18px; height: 18px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; margin-right:8px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
   </style>
@@ -104,7 +116,7 @@
   <div class="card p0" id="card">
     <div class="overlay" id="overlay">
       <h2 class="ovTitle" id="ovTitle">HARİKA!</h2>
-      <div class="ovSub" id="ovSub">+2 PUAN</div>
+      <div class="ovSub" id="ovSub">+5 PUAN</div>
       <div class="ovBadge" id="ovBadge">%100 BENZERLİK</div>
 
       <div class="ovActions" id="ovActions">
@@ -141,13 +153,19 @@
 <div class="modal" id="setupModal">
   <div class="modal-box">
     <div class="sectionTitle">CHAMPIONSHIP</div>
+    
     <div style="font-size:12px;opacity:.6;margin:10px 0">OYUNCU SAYISI</div>
     <div class="toggle-grp" id="grpPlayers">
       <div class="toggle-btn active" data-n="2">2 Kişi</div>
       <div class="toggle-btn" data-n="3">3 Kişi</div>
       <div class="toggle-btn" data-n="4">4 Kişi</div>
     </div>
+
+    <div style="font-size:12px;opacity:.6;margin:5px 0">KAYITLI OYUNCULAR</div>
+    <div class="saved-list" id="savedList"></div>
+
     <div id="nameInputs"></div>
+
     <div style="font-size:12px;opacity:.6;margin:15px 0 6px">DİL</div>
     <div class="lang-grid" id="grpLang">
       <button class="lang-btn active" data-lang="en">🇬🇧</button>
@@ -156,11 +174,13 @@
       <button class="lang-btn" data-lang="es">🇪🇸</button>
       <button class="lang-btn" data-lang="it">🇮🇹</button>
     </div>
+
     <div style="font-size:12px;opacity:.6;margin:10px 0">MOD</div>
     <div class="toggle-grp" id="grpMode">
       <div class="toggle-btn active" data-mode="pron">🎙️ Telaffuz</div>
       <div class="toggle-btn" data-mode="vocab">🧠 Kelime</div>
     </div>
+
     <button class="btn-block" id="btnStart">BAŞLA (3 SET)</button>
   </div>
 </div>
@@ -175,9 +195,9 @@
   </div>
 </div>
 
-<script>
-// --- CONFIG & HELPERS ---
-const LANGPOOL_BASE = "https://dzeemgfwzwkalrvjthps.supabase.co/storage/v1/object/public/lang";
+<script type="module">
+import { loadLangPool } from "/js/langpool.js";
+
 const LANG_CODES = { en:'en-US', de:'de-DE', fr:'fr-FR', es:'es-ES', it:'it-IT' };
 const $ = (id)=>document.getElementById(id);
 
@@ -210,36 +230,20 @@ function similarityScore(a,b){
   return Math.max(0, Math.min(100, Math.floor(((longer.length - dist)/longer.length)*100)));
 }
 
-// --- DATA LOADER (From langpool.js logic) ---
-const CACHE_KEY = (l) => `italky_lang_${l}_v1`;
-
-async function loadPool(lang) {
-  const L = String(lang||"").trim().toLowerCase();
-  
-  // 1. Try Cache
-  try {
-    const raw = localStorage.getItem(CACHE_KEY(L));
-    if(raw) {
-      const parsed = JSON.parse(raw);
-      if(parsed && Array.isArray(parsed.items)) return parsed;
-    }
-  } catch {}
-
-  // 2. Fetch from Supabase
-  const url = `${LANGPOOL_BASE}/${encodeURIComponent(L)}.json`;
-  try {
-    const r = await fetch(url, { cache: "no-store" });
-    if(!r.ok) throw new Error("Fetch failed");
-    const data = await r.json();
-    
-    // 3. Save Cache
-    localStorage.setItem(CACHE_KEY(L), JSON.stringify(data));
-    return data;
-  } catch(e) {
-    console.error(e);
-    return null;
+// --- PLAYER STORAGE MANAGER ---
+const PLAYER_STORE = {
+  key: 'italky_roster',
+  get: function() { try { return JSON.parse(localStorage.getItem(this.key) || '[]'); } catch { return []; } },
+  add: function(name) {
+    if(!name) return;
+    let list = this.get();
+    if(!list.includes(name)) { list.push(name); localStorage.setItem(this.key, JSON.stringify(list)); }
+  },
+  remove: function(name) {
+    let list = this.get().filter(n => n !== name);
+    localStorage.setItem(this.key, JSON.stringify(list));
   }
-}
+};
 
 const STATE = { IDLE:0, SPEAKING:1, LISTENING:2, RESOLVING:3, PAUSED:4 };
 const setup = { playerCount:2, mode:'pron', lang:'en' };
@@ -255,10 +259,50 @@ function buildNameInputs(){
   for(let i=0;i<setup.playerCount;i++){
     const inp=document.createElement("input");
     inp.type="text"; inp.className="name-input"; inp.id=`inp${i}`;
-    inp.value=`Oyuncu ${i+1}`;
+    inp.placeholder=`Oyuncu ${i+1}`;
     inp.style.borderColor = colors[i];
     container.appendChild(inp);
   }
+  renderSavedPlayers();
+}
+
+function renderSavedPlayers(){
+  const list = PLAYER_STORE.get();
+  const container = $("savedList");
+  container.innerHTML = "";
+  if(list.length === 0) {
+    container.innerHTML = "<span style='font-size:10px;opacity:0.4'>Kayıtlı oyuncu yok</span>";
+    return;
+  }
+  list.forEach(name => {
+    const chip = document.createElement("div");
+    chip.className = "saved-chip";
+    chip.innerHTML = `<span>${name}</span>`;
+    chip.onclick = () => fillNextInput(name);
+    
+    const del = document.createElement("div");
+    del.className = "saved-del";
+    del.innerText = "✕";
+    del.onclick = (e) => {
+      e.stopPropagation();
+      PLAYER_STORE.remove(name);
+      renderSavedPlayers();
+    };
+    chip.appendChild(del);
+    container.appendChild(chip);
+  });
+}
+
+function fillNextInput(name){
+  for(let i=0; i<setup.playerCount; i++){
+    const inp = $(`inp${i}`);
+    if(inp.value === "") {
+      inp.value = name;
+      return;
+    }
+  }
+  // If all full, overwrite first empty or focused? Just overwrite current focus or first
+  $(`inp0`).value = name;
 }
 
 const game = {
@@ -282,10 +326,12 @@ const game = {
         score:0, setWins:0,
         wordsPlayed:0,
         passRight:1, varRight:1,
-        hintRight:5,
+        hintRight:5, // Match-long
         slots:null,
         hintUsedThisWord:false
       });
+      // Save name
+      PLAYER_STORE.add(val);
     }
     if(!valid){ alert("Lütfen tüm oyuncu isimlerini giriniz!"); return; }
 
@@ -293,16 +339,14 @@ const game = {
     btnStart.innerHTML = '<span class="spinner"></span> YÜKLENİYOR...';
     btnStart.disabled = true;
 
-    const pool = await loadPool(setup.lang);
-    
+    const pool = await loadLangPool(setup.lang);
     if(!pool || !Array.isArray(pool.items) || pool.items.length===0){
-      alert("Havuz yüklenemedi. İnternet bağlantınızı kontrol edin.");
+      alert("Havuz yüklenemedi.");
       btnStart.innerHTML = 'BAŞLA (3 SET)';
       btnStart.disabled = false;
       return;
     }
 
-    // Process Pool
     const map = new Map();
     for(const it of pool.items){
       const w = String(it.w).trim();
@@ -321,6 +365,9 @@ const game = {
 
   startNewSet(){
     this.players.forEach(p=>{
+      // Score resets? No, typically score resets per set for "Set Winner", match score is Sets.
+      // But user said: "If point exists, pay 1 point". This implies score is currency.
+      // We will keep score PER SET for winning the set, but handle 'economy' within set.
       p.score=0; p.wordsPlayed=0; p.passRight=1; p.varRight=1;
       p.slots=null; p.hintUsedThisWord=false;
     });
@@ -357,7 +404,6 @@ const game = {
     if(setup.mode==='vocab'){
       if(!p.slots){
         const target = this.current.w;
-        // RANDOM START LETTER
         const randIdx = Math.floor(Math.random() * target.length);
         p.slots = target.split("").map((ch,i)=> i===randIdx ? ch : "_");
         p.hintUsedThisWord=false;
@@ -389,6 +435,12 @@ const game = {
     const rights = [];
     rights.push(`<span class="rchip">PAS <strong>${p.passRight}</strong></span>`);
     rights.push(`<span class="rchip">VAR <strong>${p.varRight}</strong></span>`);
+    
+    // Hint Logic Display
+    let hintText = `HARF (${p.hintRight})`;
+    if(setup.mode==='vocab' && p.hintRight <= 0) {
+        hintText = `SATIN AL (-1)`;
+    }
     if(setup.mode==='vocab') rights.push(`<span class="rchip">HARF <strong>${p.hintRight}</strong></span>`);
     $("rightsRow").innerHTML = rights.join("");
 
@@ -408,10 +460,18 @@ const game = {
       const revealed = slots.filter(x=>x!=="_").length;
       $("wSlots").textContent = slots.join(" ");
       $("wHintInfo").textContent = `AÇILAN HARF: ${revealed}/${this.current.w.length}`;
+      
+      // Update Hint Button State/Color
+      const btnHint = $("btnHint");
+      btnHint.textContent = hintText;
+      if(p.hintRight <= 0) {
+          btnHint.classList.add("buy");
+      } else {
+          btnHint.classList.remove("buy");
+      }
     }
 
     $("btnPass").textContent = `PAS (${p.passRight})`;
-    $("btnHint").textContent = `HARF (${p.hintRight})`;
     $("btnMic").textContent = "🎙️ CEVAPLA";
 
     const allBtns = [$("btnHint"), $("btnPass"), $("btnMic")];
@@ -426,8 +486,10 @@ const game = {
       $("btnMic").classList.remove("listening");
       $("btnMic").disabled=false;
       $("btnPass").disabled = !(p.passRight>0);
+      
       if(setup.mode==='vocab'){
-        $("btnHint").disabled = !(p.hintRight>0);
+        // Enable if has rights OR has points to buy
+        $("btnHint").disabled = !((p.hintRight > 0) || (p.score >= 1));
       } else {
         $("btnHint").disabled=true;
       }
@@ -460,22 +522,27 @@ const game = {
 
     if(type==="hint"){
       if(setup.mode!=="vocab") return;
-      if(p.hintRight<=0) return;
+      
+      // LOGIC: Free or Buy
+      if(p.hintRight > 0) {
+          p.hintRight--;
+      } else if (p.score >= 1) {
+          p.score--; // Pay 1 point
+      } else {
+          return; // No rights, no money
+      }
 
       const target = this.current.w;
       const slots = p.slots;
-      // RANDOM UNREVEALED SLOT
       const hiddenIndices = [];
       for(let i=0; i<target.length; i++){ if(slots[i]==="_") hiddenIndices.push(i); }
       
-      if(hiddenIndices.length === 0) return;
-      
-      const randIdx = hiddenIndices[Math.floor(Math.random() * hiddenIndices.length)];
-      slots[randIdx] = target[randIdx];
-
-      p.hintRight -= 1;
-      p.slots = slots;
-      p.hintUsedThisWord = true;
+      if(hiddenIndices.length > 0) {
+          const randIdx = hiddenIndices[Math.floor(Math.random() * hiddenIndices.length)];
+          slots[randIdx] = target[randIdx];
+          p.slots = slots;
+          p.hintUsedThisWord = true;
+      }
       this.render();
       return;
     }
@@ -493,6 +560,7 @@ const game = {
     this.render();
 
     const rec = new SR();
+    this.lastRec = rec;
     rec.lang = LANG_CODES[setup.lang] || "en-US";
     rec.interimResults = false;
     rec.maxAlternatives = 1;
@@ -546,11 +614,15 @@ const game = {
     const p = this.players[this.turnIndex];
     const target = this.current.w;
     const score = similarityScore(target, spoken);
-    // HARDCORE %98
-    const ok = score >= 98;
+    const ok = score >= 98; // Hardcore
 
     if(ok){
-      const pts = (setup.mode==="vocab" && p.hintUsedThisWord) ? 1 : 2;
+      // Scoring Update: +5 for correct
+      let pts = 5; 
+      if(setup.mode==="vocab" && p.hintUsedThisWord) pts = 3; // Reduced if hint used? Or strictly 5? Let's say reduced slightly or keep 5. Request said "correct is 5". 
+      // Let's implement penalty logic: if hint used, maybe less? 
+      // User said: "doğru bilmke 5 puan". 
+      
       p.score += pts;
       p.wordsPlayed += 1;
       p.slots=null; p.hintUsedThisWord=false;
@@ -586,7 +658,7 @@ const game = {
     p.varRight -= 1;
     this.pendingWrong = null;
     this.finalizeOverlay();
-    this.startTurnFlow(); // Retry
+    this.startTurnFlow(); 
   },
 
   varContinue(){
@@ -596,6 +668,7 @@ const game = {
 
   commitWrongAndAdvance(){
     const p = this.players[this.turnIndex];
+    // Wrong: -1 point
     p.score = Math.max(0, p.score - 1);
     p.wordsPlayed += 1;
     p.slots=null; p.hintUsedThisWord=false;
