@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>italkyAI • Manuel Çeviri</title>
-  
+  <title>italkyAI • Metinden Çeviri</title>
+
+  <link rel="icon" href="data:," />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
@@ -41,7 +42,7 @@
     .orb-1{ top:10%; left:10%; width:60vw; height:60vw; background: radial-gradient(circle, rgba(79,70,229,.55), transparent 70%); }
     .orb-2{ bottom:10%; right:10%; width:50vw; height:50vw; background: radial-gradient(circle, rgba(165,180,252,.45), transparent 70%); animation-delay:-5s; }
     @keyframes floatOrbit{ 0%{ transform: translate(0,0) scale(1);} 100%{ transform: translate(10%,-10%) scale(1.1);} }
-    
+
     .noise{
       position:absolute; inset:0;
       background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
@@ -66,30 +67,48 @@
     /* TOP BAR */
     .topbar{
       height: var(--topH); display:flex; align-items:center; justify-content:space-between;
-      padding: 0 16px; border-bottom:1px solid rgba(255,255,255,.08);
+      padding: 0 14px; border-bottom:1px solid rgba(255,255,255,.08);
       background: rgba(0,0,0,.35); backdrop-filter: blur(12px); flex: 0 0 auto;
+      gap:10px;
     }
+    .leftControls{ display:flex; align-items:center; gap:10px; min-width:0; }
     .backBtn{
       width:40px;height:40px;border-radius:14px; background: rgba(0,0,0,.18);
-      border:1px solid rgba(255,255,255,.12); color:#fff; font-size:18px; 
+      border:1px solid rgba(255,255,255,.12); color:#fff; font-size:18px;
       display:flex;align-items:center;justify-content:center; cursor:pointer;
+      text-decoration:none;
     }
-    .mini-brand{ display:flex; flex-direction:column; justify-content:center; line-height:1; }
-    .logo-line{ font-family:'Space Grotesk', sans-serif; font-size: 22px; letter-spacing: -0.5px; }
+    .mini-brand{ display:flex; flex-direction:column; justify-content:center; line-height:1; cursor:pointer; user-select:none; }
+    .logo-line{ font-family:'Space Grotesk', sans-serif; font-size: 20px; letter-spacing: -0.5px; display:flex; gap:2px; }
     .logo-ai{ background: linear-gradient(135deg, var(--ai1), var(--ai2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+
+    .userbox{ display:flex; align-items:center; gap:10px; }
+    .usertext{ display:flex; flex-direction:column; align-items:flex-end; line-height:1.1; }
+    .uname{ font-weight:900; font-size:12px; max-width:140px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .plan{ font-weight:900; font-size:10px; opacity:.7; }
+    .avatarBtn{
+      width:38px; height:38px; border-radius:999px; overflow:hidden;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+      display:flex; align-items:center; justify-content:center;
+      color:#fff; font-weight:1000;
+      cursor:pointer;
+      flex: 0 0 auto;
+    }
+    .avatarBtn img{ width:100%; height:100%; object-fit:cover; display:block; }
 
     .main{ flex:1; padding: 12px; overflow:hidden; display:flex; flex-direction:column; gap: 10px; }
 
     /* TOOLBAR (DİLLER) */
     .toolbar{ display:flex; gap:10px; align-items:center; flex: 0 0 auto; }
     .langBtn{
-      flex:1; height: 46px; border-radius: 16px; border: 1px solid var(--btnBd); 
-      background: var(--btnBg); color:#fff; font-weight: 700; font-size: 13px;
+      flex:1; height: 46px; border-radius: 16px; border: 1px solid var(--btnBd);
+      background: var(--btnBg); color:#fff; font-weight: 800; font-size: 13px;
       padding: 0 12px; display:flex; align-items:center; justify-content:space-between;
       cursor:pointer;
     }
     .swapBtn{
-      width: 54px; height: 46px; border-radius: 16px; border: 1px solid var(--btnBd); 
+      width: 54px; height: 46px; border-radius: 16px; border: 1px solid var(--btnBd);
       background: var(--btnBg); color:#fff; font-weight: 1000; cursor:pointer;
     }
 
@@ -99,6 +118,7 @@
       border-radius: 22px; border: 1px solid rgba(255,255,255,.10);
       overflow:hidden; display:flex; flex-direction:column; flex: 1;
       backdrop-filter: blur(10px);
+      min-height:0;
     }
     .box.top{
       background: radial-gradient(at 0% 0%, var(--navyA), transparent 70%), rgba(0,0,0,.2);
@@ -106,20 +126,19 @@
     .box.bottom{
       background: radial-gradient(at 80% 80%, var(--burgA), transparent 70%), rgba(0,0,0,.2);
     }
-    
+
     .boxHead{
       padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,.08);
       background: rgba(0,0,0,.22); display:flex; align-items:center; justify-content:space-between;
     }
-    .headTitle{ font-size: 12px; color: rgba(255,255,255,.7); font-weight:700; }
-    
+    .headTitle{ font-size: 12px; color: rgba(255,255,255,.7); font-weight:800; }
+
     .iconBtn{
       width: 38px; height: 38px; border-radius: 14px;
       border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.06);
       cursor:pointer; display:flex; align-items:center; justify-content:center;
     }
     .iconBtn svg{ width: 18px; stroke: #fff; fill:none; stroke-width:2; }
-    
     .iconBtn.listening{
       border-color: #4F46E5; background: rgba(79,70,229,.2);
       animation: pulse 1.5s infinite;
@@ -137,7 +156,7 @@
     .actions-mid{ display:flex; gap: 10px; padding: 2px 0; flex: 0 0 auto; }
     .btn{
       flex:1; height: 44px; border-radius: 16px; border: 1px solid var(--btnBd);
-      background: var(--btnBg); color:#fff; font-weight: 700; cursor:pointer;
+      background: var(--btnBg); color:#fff; font-weight: 800; cursor:pointer;
     }
     .btn.primary{
       background: linear-gradient(135deg, var(--ai1), var(--ai2)); border:none;
@@ -149,7 +168,7 @@
       font-size: 11px; color: rgba(255,255,255,0.4); flex: 0 0 auto;
     }
 
-    /* SHEET (DİL LİSTESİ) */
+    /* SHEET */
     .sheetBackdrop{
       position: fixed; inset: 0; z-index: 9999; background: rgba(0,0,0,.7);
       display:none; align-items:flex-end; justify-content:center; padding: 16px;
@@ -158,14 +177,41 @@
     .sheet{
       width: 100%; max-width: 480px; background: #0c0c14;
       border: 1px solid rgba(255,255,255,.15); border-radius: 26px;
-      overflow:hidden; max-height: 60vh; display:flex; flex-direction:column;
+      overflow:hidden; max-height: 70vh; display:flex; flex-direction:column;
     }
-    .sheetTop{ padding:14px; display:flex; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,.1); }
+    .sheetTop{
+      padding:12px; display:flex; justify-content:space-between; align-items:center;
+      border-bottom:1px solid rgba(255,255,255,.1); gap:10px;
+    }
+    .sheetTitle{ font-weight:900; color:#fff; }
+    .sheetQuery{
+      flex:1; height: 38px; border-radius: 14px; border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06); color:#fff; padding:0 10px; font-weight:800;
+    }
     .sheetList{ overflow-y:auto; padding:10px; }
     .sheetRow{
       padding: 12px; display:flex; align-items:center; justify-content:space-between;
       border-bottom: 1px solid rgba(255,255,255,.05); cursor:pointer;
     }
+    .sheetRow.selected{ background: rgba(79,70,229,.12); border-radius: 14px; border-bottom-color: transparent; margin-bottom: 8px; }
+
+    /* TOAST */
+    .toast{
+      position: fixed; left:50%; top:18px;
+      transform: translateX(-50%) translateY(-120px);
+      background: rgba(10,10,18,.92);
+      border:1px solid rgba(165,180,252,.35);
+      padding: 10px 14px;
+      border-radius: 999px;
+      color:#fff;
+      z-index:10000;
+      font-weight:900;
+      font-size:12px;
+      transition:.28s;
+      backdrop-filter: blur(12px);
+      pointer-events:none;
+    }
+    .toast.show{ transform: translateX(-50%) translateY(0); }
   </style>
 </head>
 
@@ -179,24 +225,34 @@
   <div class="mobile-frame">
     <div class="topbar">
       <div class="leftControls">
-        <button class="backBtn">←</button>
-        <div class="mini-brand" style="margin-left:12px">
+        <a class="backBtn" id="backBtn" href="/pages/home.html" aria-label="Back">←</a>
+        <div class="mini-brand" id="logoHome" title="Home">
           <div class="logo-line"><span class="logo-main">italky</span><span class="logo-ai">AI</span></div>
         </div>
+      </div>
+
+      <div class="userbox">
+        <div class="usertext">
+          <div class="uname" id="userName">—</div>
+          <div class="plan" id="userPlan">FREE</div>
+        </div>
+        <a class="avatarBtn" id="avatarBtn" href="/pages/profile.html" aria-label="Profile">
+          <span id="avatarFallback">•</span>
+        </a>
       </div>
     </div>
 
     <div class="main">
       <div class="toolbar">
-        <button class="langBtn" id="fromLangBtn">
-          <span class="langLeft"><span id="fromFlag">🇹🇷</span> <span id="fromLangTxt">Türkçe</span></span>
+        <button class="langBtn" id="fromLangBtn" type="button">
+          <span class="langLeft"><span id="fromFlag">🌐</span> <span id="fromLangTxt">Dili Algıla</span></span>
           <span>▾</span>
         </button>
 
-        <button class="swapBtn" id="swapBtn">⇄</button>
+        <button class="swapBtn" id="swapBtn" type="button">⇄</button>
 
-        <button class="langBtn" id="toLangBtn">
-          <span class="langLeft"><span id="toFlag">🇬🇧</span> <span id="toLangTxt">İngilizce</span></span>
+        <button class="langBtn" id="toLangBtn" type="button">
+          <span class="langLeft"><span id="toFlag">🇹🇷</span> <span id="toLangTxt">Türkçe</span></span>
           <span>▾</span>
         </button>
       </div>
@@ -205,22 +261,37 @@
         <div class="box top">
           <div class="boxHead">
             <div class="headTitle">Giriş</div>
-            <button class="iconBtn" id="micIn"><svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line></svg></button>
+            <div style="display:flex; gap:8px;">
+              <button class="iconBtn" id="micIn" type="button" aria-label="Mic">
+                <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line></svg>
+              </button>
+              <button class="iconBtn" id="speakIn" type="button" aria-label="Speak input">
+                <svg viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+              </button>
+            </div>
           </div>
           <textarea id="inText" placeholder="Metni girin..."></textarea>
+          <div style="padding: 0 12px 10px; font-size: 11px; color: rgba(255,255,255,.55); font-weight: 800; display:flex; justify-content:space-between;">
+            <span>Karakter</span><span id="countIn">0</span>
+          </div>
         </div>
 
         <div class="actions-mid">
-          <button class="btn" id="clearBtn">Temizle</button>
-          <button class="btn primary" id="translateBtn">Çevir</button>
+          <button class="btn" id="clearBtn" type="button">Temizle</button>
+          <button class="btn primary" id="translateBtn" type="button">Çevir</button>
         </div>
 
         <div class="box bottom">
           <div class="boxHead">
             <div class="headTitle">Çeviri</div>
-            <button class="iconBtn" id="speakOut"><svg viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg></button>
+            <button class="iconBtn" id="speakOut" type="button" aria-label="Speak output">
+              <svg viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+            </button>
           </div>
-          <div class="out" id="outText">...</div>
+          <div class="out" id="outText">—</div>
+          <div style="padding: 0 12px 10px; font-size: 11px; color: rgba(255,255,255,.55); font-weight: 800; display:flex; justify-content:space-between;">
+            <span>Karakter</span><span id="countOut">0</span>
+          </div>
         </div>
       </div>
     </div>
@@ -228,219 +299,22 @@
     <div class="footerbar">italkyAI By Ozyigit’s 2026</div>
   </div>
 
+  <!-- Sheet -->
   <div class="sheetBackdrop" id="langSheet">
     <div class="sheet">
       <div class="sheetTop">
-        <span style="font-weight:700; color:#fff">Dil Seç</span>
-        <button id="sheetClose" style="background:none;border:none;color:#fff;font-size:18px;">✕</button>
+        <span class="sheetTitle" id="sheetTitle">Dil Seç</span>
+        <input class="sheetQuery" id="sheetQuery" placeholder="Ara…" />
+        <button id="sheetClose" style="background:none;border:none;color:#fff;font-size:18px; width:40px; height:40px; border-radius:14px; border:1px solid rgba(255,255,255,.12);">✕</button>
       </div>
       <div class="sheetList" id="sheetList"></div>
     </div>
   </div>
 
-<script>
-    // --- GEREKLİ ELEMENTLER ---
-    const inText = document.getElementById('inText');
-    const outText = document.getElementById('outText');
-    const translateBtn = document.getElementById('translateBtn');
-    const clearBtn = document.getElementById('clearBtn');
-    const micIn = document.getElementById('micIn');
-    const speakOut = document.getElementById('speakOut');
-    const swapBtn = document.getElementById('swapBtn');
-    
-    const fromLangBtn = document.getElementById('fromLangBtn');
-    const toLangBtn = document.getElementById('toLangBtn');
-    const langSheet = document.getElementById('langSheet');
-    const sheetList = document.getElementById('sheetList');
-    const sheetClose = document.getElementById('sheetClose');
+  <!-- Toast -->
+  <div id="toast" class="toast"></div>
 
-    // --- BAŞLANGIÇ AYARLARI (Manuel) ---
-    // Varsayılan: Türkçe -> İngilizce
-    let fromLangCode = "tr"; 
-    let toLangCode = "en";
-    
-    // Dil Listesi ('Auto' kaldırıldı)
-    const langs = [
-      { code: "tr", name: "Türkçe", flag: "🇹🇷" },
-      { code: "en", name: "İngilizce", flag: "🇬🇧" },
-      { code: "de", name: "Almanca", flag: "🇩🇪" },
-      { code: "fr", name: "Fransızca", flag: "🇫🇷" },
-      { code: "es", name: "İspanyolca", flag: "🇪🇸" },
-      { code: "ru", name: "Rusça", flag: "🇷🇺" },
-      { code: "it", name: "İtalyanca", flag: "🇮🇹" },
-      { code: "ar", name: "Arapça", flag: "🇸🇦" },
-    ];
-
-    // --- ÇEVİRİ FONKSİYONU ---
-    async function doTranslate() {
-        const text = inText.value.trim();
-        if(!text) return;
-
-        translateBtn.innerText = "⏳";
-        outText.style.opacity = "0.5";
-
-        // API URL (Artık direkt seçili dilleri gönderiyoruz)
-        const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${fromLangCode}|${toLangCode}`;
-
-        try {
-            const res = await fetch(url);
-            const data = await res.json();
-            
-            if(data.responseData && data.responseData.translatedText) {
-                outText.innerText = data.responseData.translatedText;
-            } else {
-                outText.innerText = "Hata: Çeviri alınamadı.";
-            }
-        } catch(e) {
-            console.error(e);
-            outText.innerText = "İnternet bağlantısını kontrol edin.";
-        } finally {
-            translateBtn.innerText = "Çevir";
-            outText.style.opacity = "1";
-        }
-    }
-
-    // Buton Tıklama
-    translateBtn.addEventListener('click', doTranslate);
-    
-    // Temizle
-    clearBtn.addEventListener('click', () => {
-        inText.value = "";
-        outText.innerText = "...";
-        inText.focus();
-    });
-
-    // --- MİKROFON (SES TANIMA) ---
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    let recognition;
-
-    if(SpeechRecognition) {
-        recognition = new SpeechRecognition();
-        recognition.continuous = false;
-        
-        micIn.addEventListener('click', () => {
-            if(micIn.classList.contains('listening')) {
-                recognition.stop();
-            } else {
-                // Seçili dile göre mikrofonu ayarla
-                if(fromLangCode === 'en') recognition.lang = 'en-US';
-                else if(fromLangCode === 'de') recognition.lang = 'de-DE';
-                else if(fromLangCode === 'fr') recognition.lang = 'fr-FR';
-                else if(fromLangCode === 'es') recognition.lang = 'es-ES';
-                else if(fromLangCode === 'ru') recognition.lang = 'ru-RU';
-                else if(fromLangCode === 'ar') recognition.lang = 'ar-SA';
-                else recognition.lang = 'tr-TR'; // Varsayılan Türkçe
-
-                recognition.start();
-            }
-        });
-
-        recognition.onstart = () => {
-            micIn.classList.add('listening');
-            inText.placeholder = "Dinliyorum...";
-        };
-        
-        recognition.onend = () => {
-            micIn.classList.remove('listening');
-            inText.placeholder = "Metni girin...";
-            // Konuşma bitince otomatik çevir
-            if(inText.value.length > 0) doTranslate();
-        };
-
-        recognition.onresult = (event) => {
-            const t = event.results[0][0].transcript;
-            inText.value = t;
-        };
-    } else {
-        micIn.style.display = "none";
-    }
-
-    // --- HOPARLÖR (OKUMA) ---
-    speakOut.addEventListener('click', () => {
-        const txt = outText.innerText;
-        if(!txt || txt === "...") return;
-        
-        window.speechSynthesis.cancel();
-        const u = new SpeechSynthesisUtterance(txt);
-        // Hedef dil neyse o aksanla oku
-        u.lang = toLangCode; 
-        window.speechSynthesis.speak(u);
-    });
-
-    // --- DİL SEÇİM MENÜSÜ ---
-    let activeSide = 'from'; // 'from' veya 'to'
-    
-    function openSheet(side) {
-        activeSide = side;
-        renderSheet();
-        langSheet.classList.add('show');
-    }
-
-    function renderSheet() {
-        sheetList.innerHTML = "";
-        langs.forEach(l => {
-            const row = document.createElement('div');
-            row.className = 'sheetRow';
-            row.innerHTML = `
-                <div style="display:flex;align-items:center;gap:10px">
-                    <span style="font-size:20px">${l.flag}</span>
-                    <span style="font-weight:700;font-size:14px;color:#fff">${l.name}</span>
-                </div>
-                <span style="opacity:0.5;font-size:12px;color:#fff">${l.code.toUpperCase()}</span>
-            `;
-            
-            row.onclick = () => {
-                const flagEl = document.getElementById(activeSide === 'from' ? 'fromFlag' : 'toFlag');
-                const txtEl = document.getElementById(activeSide === 'from' ? 'fromLangTxt' : 'toLangTxt');
-                
-                // UI Güncelle
-                flagEl.innerText = l.flag;
-                txtEl.innerText = l.name;
-                
-                // Değişkeni Güncelle
-                if(activeSide === 'from') fromLangCode = l.code;
-                else toLangCode = l.code;
-                
-                langSheet.classList.remove('show');
-            };
-            sheetList.appendChild(row);
-        });
-    }
-
-    // Eventler
-    fromLangBtn.onclick = () => openSheet('from');
-    toLangBtn.onclick = () => openSheet('to');
-    sheetClose.onclick = () => langSheet.classList.remove('show');
-    langSheet.onclick = (e) => {
-        if(e.target === langSheet) langSheet.classList.remove('show');
-    }
-
-    // --- SWAP (DEĞİŞTİR) BUTONU ---
-    swapBtn.onclick = () => {
-        // Kodları takas et
-        let tempCode = fromLangCode;
-        fromLangCode = toLangCode;
-        toLangCode = tempCode;
-
-        // UI Görsellerini takas et
-        const fromFlag = document.getElementById('fromFlag');
-        const toFlag = document.getElementById('toFlag');
-        const fromTxt = document.getElementById('fromLangTxt');
-        const toTxt = document.getElementById('toLangTxt');
-
-        let tFlag = fromFlag.innerText;
-        fromFlag.innerText = toFlag.innerText;
-        toFlag.innerText = tFlag;
-
-        let tTxt = fromTxt.innerText;
-        fromTxt.innerText = toTxt.innerText;
-        toTxt.innerText = tTxt;
-
-        // Metinleri de takas edelim mi? (Opsiyonel ama kullanışlı)
-        // Giriş kutusunu temizleyip sonucu girişe atmak bazen kafa karıştırır,
-        // o yüzden sadece dilleri değiştiriyoruz.
-    };
-
-</script>
+  <!-- ✅ Tek JS: bizim standard -->
+  <script type="module" src="/js/text_translate_page.js?v=999"></script>
 </body>
 </html>
