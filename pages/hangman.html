@@ -1,1143 +1,510 @@
+<!-- FILE: /pages/hangman.html  (FINAL - Supabase langpool + no repeats + token gate) -->
 <!doctype html>
 <html lang="tr">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-  <title>ITALKY • Arena V25 Supreme</title>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;800&family=Space+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
+  <title>italkyAI • Neon Hangman Elite</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
   <style>
     :root{
-      --bg:#030305;
-      --border: rgba(255,255,255,0.12);
+      --bg-deep:#020205; --c-neon-pink:#ff00ff; --c-neon-blue:#00f3ff;
+      --c-neon-green:#00e676; --c-error:#ff1744; --border: rgba(255,255,255,.12);
+    }
+    *{ box-sizing:border-box; outline:none; user-select:none; -webkit-tap-highlight-color:transparent; }
+    html,body{ margin:0; width:100%; height:100%; overflow:hidden; font-family:'Outfit', sans-serif; background:var(--bg-deep); color:#fff; position:fixed; }
+    .cosmos-bg{ position:absolute; inset:0; z-index:0; background: radial-gradient(circle at 50% 35%, #0b0b2a 0%, #020205 60%, #010104 100%); }
+    .wrap{ width:100%; max-width:480px; height:100%; margin:0 auto; position:relative; z-index:10; display:flex; flex-direction:column; padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); }
 
-      /* base player colors */
-      --p0:#00f0ff;
-      --p1:#ff0055;
-      --p2:#00e676;
-      --p3:#ffd700;
+    .nav-top{ display:flex; align-items:center; justify-content:space-between; padding: 15px 18px; }
+    .back-btn{ color:#fff; text-decoration:none; font-weight:1000; font-size:18px; opacity:.9; }
+    .status-chip { background: rgba(255,255,255,0.05); padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; border: 1px solid var(--border); letter-spacing: 1px; }
+    .pb-chip { font-size: 10px; color: var(--c-neon-pink); font-weight: 800; text-align: right; margin-top: 4px; }
+    .mini-badge{ display:flex; align-items:center; height: 38px; padding: 0 12px; border-radius: 16px; background: rgba(255,255,255,.05); border: 1px solid var(--border); font-weight: 800; font-size: 11px; gap:6px; }
 
-      --green:#00e676;
-      --red:#ff1744;
-      --gold:#ffd700;
+    .game-card{ background: rgba(255,255,255,.03); border: 1px solid var(--border); border-radius: 28px; backdrop-filter: blur(15px); padding: 20px 18px; margin: 0 14px; position:relative; box-shadow: 0 30px 60px rgba(0,0,0,.5); }
 
-      --font-main:'Outfit',sans-serif;
-      --font-display:'Space Grotesk',sans-serif;
+    .gallows-box{ width:220px; height:220px; margin: 0 auto 10px; position:relative; }
+    .g-line{ position:absolute; background: rgba(255,255,255,.20); border-radius: 2px; }
+    .g-stand{ width:140px; height:6px; bottom:12px; left:30px; }
+    .g-post{ width:6px; height:170px; bottom:12px; left:50px; }
+    .g-top{ width:110px; height:6px; top:22px; left:50px; }
+    .g-rope{ width:2px; height:26px; top:28px; left:152px; background: rgba(255,255,255,.28); }
 
-      /* dynamic theme (changes per active player) */
-      --accent: var(--p0);
-      --accent2: rgba(255,255,255,0.06);
-      --accentGlow: rgba(0,240,255,0.18);
-    }
+    .man-part{ position:absolute; opacity:0; transition:.2s; }
+    .p1{ width:34px; height:34px; border:3px solid rgba(255,255,255,.55); border-radius:50%; top:52px; left:135px; }
+    .p2{ width:4px; height:46px; background: rgba(255,255,255,.55); top:86px; left:151px; }
+    .p3{ width:34px; height:4px; background: rgba(255,255,255,.55); top:100px; left:134px; transform:rotate(-20deg); transform-origin:left; }
+    .p4{ width:34px; height:4px; background: rgba(255,255,255,.55); top:100px; left:151px; transform:rotate(20deg); transform-origin:left; }
+    .p5{ width:34px; height:4px; background: rgba(255,255,255,.55); top:134px; left:134px; transform:rotate(25deg); transform-origin:left; }
+    .p6{ width:34px; height:4px; background: rgba(255,255,255,.55); top:134px; left:151px; transform:rotate(-25deg); transform-origin:left; }
 
-    *{box-sizing:border-box; user-select:none; -webkit-tap-highlight-color:transparent; outline:none}
-    html,body{margin:0; padding:0; width:100%; height:100%; overflow:hidden; position:fixed; font-family:var(--font-main); color:#fff; background:var(--bg)}
-    button{font-family:inherit}
+    #resInfo{ font-size:12px; color: var(--c-neon-blue); text-align:center; min-height: 18px; margin: 6px 0 8px; font-weight: 900; opacity: 0; transition: 0.25s; }
+    #hintMain{ text-align:center; color:var(--c-neon-green); font-weight:900; font-size:18px; margin-bottom: 10px; min-height: 22px; }
 
-    /* ====== BACKGROUND ====== */
-    .bg-fx{
-      position:absolute; inset:0; z-index:0;
-      background:
-        radial-gradient(circle at 50% 50%, rgba(15,15,35,0.85) 0%, rgba(0,0,0,1) 70%),
-        radial-gradient(circle at 10% 20%, rgba(255,255,255,0.04) 0%, rgba(0,0,0,0) 55%);
-    }
-    .nebula{
-      position:absolute; width:120vmax; height:120vmax; border-radius:50%;
-      filter: blur(90px); opacity:0.16;
-      animation: breathe 10s infinite alternate ease-in-out;
-      pointer-events:none;
-      mix-blend-mode: screen;
-    }
-    .nebula.a{ left:-35vmax; top:-35vmax; background: var(--accent); }
-    .nebula.b{ right:-35vmax; bottom:-35vmax; background: rgba(255,255,255,0.14); animation-delay:-4s; }
-    @keyframes breathe{ 0%{ transform:scale(1); opacity:.11 } 100%{ transform:scale(1.18); opacity:.22 } }
+    .word-box{ display:flex; flex-wrap:wrap; justify-content:center; gap: 6px; margin: 12px 0; }
+    .letter-slot{ width: 28px; height: 38px; border-bottom: 2px solid var(--c-neon-blue); display:flex; align-items:center; justify-content:center; font-size: 22px; font-weight: 900; color: var(--c-neon-blue); }
+    .letter-slot.filled{ border-bottom: none; color: #fff; text-shadow: 0 0 10px var(--c-neon-blue); }
 
-    /* ====== HEADER ====== */
-    .app-header{
-      position:absolute; top:0; left:0; right:0; height:64px;
-      display:flex; align-items:center; justify-content:space-between;
-      padding: 0 18px;
-      z-index: 50;
-      pointer-events:none;
-    }
-    .header-back{
-      pointer-events:auto;
-      width:40px; height:40px;
-      display:flex; align-items:center; justify-content:center;
-      border-radius:14px;
-      background: rgba(255,255,255,0.08);
-      border:1px solid rgba(255,255,255,0.12);
-      color:#fff; text-decoration:none; font-size:20px;
-      backdrop-filter: blur(12px);
-      transition:.15s;
-    }
-    .header-back:active{ transform: scale(.92); background: rgba(255,255,255,0.14); }
-    .brand{
-      pointer-events:none;
-      display:flex; flex-direction:column; align-items:center; gap:2px;
-      line-height:1;
-    }
-    .brand .logo{
-      font-family: var(--font-display);
-      font-weight:800;
-      font-size:18px;
-      letter-spacing:-0.3px;
-      opacity:.95;
-    }
-    .brand .logo .ai{
-      background: linear-gradient(90deg, var(--accent), #ff48c4);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    .brand .tag{
-      font-family: var(--font-display);
-      font-weight:700;
-      font-size:10px;
-      letter-spacing:2.2px;
-      opacity:.65;
-      transform: translateY(-1px);
-    }
-    .header-spacer{ width:40px; height:40px; }
+    .keyboard{ display:grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+    .key-btn{ aspect-ratio:1; display:flex; align-items:center; justify-content:center; background: rgba(255,255,255,.1); border: 1px solid var(--border); border-radius: 10px; color: #fff; font-weight: 900; cursor:pointer; font-size: 14px; transition: 0.2s; }
+    .key-btn.correct{ background: var(--c-neon-green) !important; color:#000; border:none; }
+    .key-btn.wrong{ background: var(--c-error) !important; color:#fff; border:none; opacity: 0.35; text-decoration: line-through; pointer-events: none; }
 
-    /* ====== LAYOUT ====== */
-    .arena-wrap{
-      position:relative; z-index:10;
-      width:100%; height:100dvh;
-      display:flex; flex-direction:column;
-      justify-content:center; align-items:center;
-      padding: 72px 0 110px; /* header + bottom bar space */
-    }
+    .btn-main{ width:100%; padding: 14px; border:none; border-radius: 20px; font-weight: 1000; cursor:pointer; margin-top: 12px; background:linear-gradient(135deg,#6366f1,#a5b4fc); color:#fff; }
 
-    /* ====== MAIN CARD ====== */
-    .card{
-      width: min(92vw, 420px);
-      height: min(64vh, 520px);
-      border-radius: 32px;
-      border: 1px solid rgba(255,255,255,0.14);
-      background: rgba(255,255,255,0.035);
-      backdrop-filter: blur(14px);
-      box-shadow:
-        0 28px 70px rgba(0,0,0,0.55),
-        0 0 40px var(--accentGlow);
-      position:relative;
-      padding: 18px 18px 16px;
-      overflow:hidden;
-      transition:.25s;
-    }
-    .card::before{
-      content:"";
-      position:absolute; inset:-2px;
-      background: radial-gradient(circle at 20% 10%, rgba(255,255,255,0.06), transparent 55%);
-      pointer-events:none;
-    }
+    .modal-wrap{ position:absolute; inset:0; background: rgba(0,0,0,.97); z-index:1000; display:flex; align-items:center; justify-content:center; padding: 20px; }
+    .modal-card{ width:100%; max-width:360px; background: #08080c; border: 1px solid var(--border); border-radius: 36px; padding: 26px; text-align:center; overflow-y:auto; max-height:90vh; }
+    .lang-btn{ font-size: 24px; padding: 10px; border-radius: 16px; background: rgba(255,255,255,0.05); border: 1px solid transparent; cursor:pointer; margin: 4px; }
+    .lang-btn.active{ border-color: var(--c-neon-blue); background: rgba(0,243,255,0.15); }
+    .lvl-btn { width:100%; display: flex; justify-content: space-between; align-items: center; padding: 16px 18px; border-radius: 18px; border: 1px solid var(--border); background: rgba(255,255,255,0.05); color: #fff; font-weight: 900; cursor: pointer; margin-top: 8px; }
+    .btn-green{ background: var(--c-neon-green); color:#000; }
+    .btn-blue{ background: var(--c-neon-blue); color:#000; }
+    .btn-ghost{ background: rgba(255,255,255,0.06); border:1px solid var(--border); color:#fff; }
 
-    .card.p0{ --accent: var(--p0); --accentGlow: rgba(0,240,255,0.18); }
-    .card.p1{ --accent: var(--p1); --accentGlow: rgba(255,0,85,0.16); }
-    .card.p2{ --accent: var(--p2); --accentGlow: rgba(0,230,118,0.16); }
-    .card.p3{ --accent: var(--p3); --accentGlow: rgba(255,215,0,0.16); }
-
-    .toprow{
-      display:flex; align-items:flex-start; justify-content:space-between;
-      gap:12px;
-      margin-bottom: 12px;
-      position:relative;
-      z-index:2;
-    }
-    .pname{
-      font-family: var(--font-display);
-      font-weight:800;
-      font-size:18px;
-      letter-spacing: .4px;
-      text-transform: uppercase;
-      color: var(--accent);
-      text-shadow: 0 0 18px rgba(255,255,255,0.06);
-    }
-    .meta{
-      display:flex; flex-direction:column; align-items:flex-end; gap:6px;
-    }
-    .chip{
-      font-size:11px;
-      font-weight:800;
-      letter-spacing:1px;
-      padding: 6px 10px;
-      border-radius: 12px;
-      border:1px solid rgba(255,255,255,0.14);
-      background: rgba(0,0,0,0.35);
-      backdrop-filter: blur(10px);
-      opacity:.92;
-    }
-    .rights{
-      display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end;
-    }
-    .rchip{
-      font-size:10px;
-      font-weight:900;
-      letter-spacing:1px;
-      padding: 5px 8px;
-      border-radius: 10px;
-      border:1px solid rgba(255,255,255,0.12);
-      background: rgba(255,255,255,0.06);
-      opacity:.9;
-    }
-    .rchip strong{ color: var(--accent); }
-
-    .mid{
-      height: calc(100% - 150px);
-      display:flex;
-      flex-direction:column;
-      justify-content:center;
-      align-items:center;
-      text-align:center;
-      padding: 4px 4px;
-      position:relative;
-      z-index:2;
-    }
-    .word{
-      font-family: var(--font-display);
-      font-weight:800;
-      font-size:42px;
-      letter-spacing:-1px;
-      line-height:1.05;
-      margin: 0 0 10px;
-      text-shadow: 0 18px 60px rgba(0,0,0,0.55);
-    }
-    .meaning{
-      font-size:18px;
-      font-weight:600;
-      color: rgba(255,255,255,0.68);
-      min-height: 26px;
-    }
-    .slots{
-      display:none;
-      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-      font-size: 30px;
-      letter-spacing: 4px;
-      margin-top: 14px;
-      color: var(--gold);
-      text-shadow: 0 0 14px rgba(255,215,0,0.18);
-    }
-    .hintInfo{
-      display:none;
-      margin-top: 6px;
-      font-size: 10px;
-      font-weight: 800;
-      letter-spacing: 1.6px;
-      opacity: .6;
-    }
-
-    .controls{
-      display:flex;
-      gap: 10px;
-      width:100%;
-      height: 56px;
-      position:relative;
-      z-index:2;
-    }
-    .btn{
-      flex:1;
-      border-radius: 16px;
-      border:1px solid rgba(255,255,255,0.14);
-      background: rgba(255,255,255,0.06);
-      color:#fff;
-      font-family: var(--font-display);
-      font-weight: 800;
-      font-size: 13px;
-      letter-spacing:.4px;
-      cursor:pointer;
-      transition: .12s;
-      backdrop-filter: blur(10px);
-      box-shadow: 0 10px 22px rgba(0,0,0,0.25);
-    }
-    .btn:active{ transform: scale(.95); background: rgba(255,255,255,0.12); }
-    .btn:disabled{ opacity:.25; cursor:not-allowed; filter: grayscale(1); box-shadow:none; transform:none; }
-    .btn-mic{
-      flex:2;
-      background: rgba(255,255,255,0.14);
-      border-color: rgba(255,255,255,0.25);
-      font-size: 15px;
-    }
-    .btn-hint{
-      flex:.9;
-      color: var(--green);
-      border-color: rgba(0,230,118,0.35);
-      background: rgba(0,230,118,0.06);
-    }
-    .btn.listening{
-      background:#fff !important;
-      color:#000 !important;
-      animation: pulse 1s infinite;
-    }
-    @keyframes pulse{
-      0%{ box-shadow: 0 0 0 0 rgba(255,255,255,0.38); }
-      100%{ box-shadow: 0 0 0 18px rgba(255,255,255,0); }
-    }
-
-    /* ====== OVERLAY ====== */
-    .overlay{
-      position:absolute; inset:0;
-      display:flex; flex-direction:column; justify-content:center; align-items:center;
-      background: rgba(0,0,0,0.82);
-      backdrop-filter: blur(16px);
-      opacity:0;
-      pointer-events:none;
-      transition: .18s;
-      z-index: 20;
-      padding: 18px;
-      text-align:center;
-    }
-    .overlay.show{
-      opacity:1;
-      pointer-events:auto;
-    }
-    .ovTitle{
-      font-family: var(--font-display);
-      font-weight: 900;
-      font-size: 42px;
-      margin:0;
-      letter-spacing:-1px;
-    }
-    .ovSub{
-      margin-top: 10px;
-      font-size: 16px;
-      color: rgba(255,255,255,0.8);
-      min-height: 20px;
-    }
-    .ovBadge{
-      margin-top: 14px;
-      padding: 7px 14px;
-      border-radius: 999px;
-      font-weight: 900;
-      font-size: 13px;
-      border: 1px solid rgba(255,255,255,0.16);
-      background: rgba(255,255,255,0.08);
-      display:none;
-    }
-    .ovTap{
-      margin-top: 14px;
-      font-size: 11px;
-      font-weight: 800;
-      letter-spacing: 1.6px;
-      opacity: .55;
-    }
-    .ovActions{
-      display:none;
-      gap: 10px;
-      width: 100%;
-      max-width: 320px;
-      margin-top: 16px;
-    }
-    .ovBtn{
-      flex:1;
-      padding: 14px 12px;
-      border-radius: 14px;
-      border:none;
-      font-weight: 900;
-      cursor:pointer;
-      font-family: var(--font-display);
-      letter-spacing:.4px;
-      transition:.12s;
-    }
-    .ovBtn:active{ transform: scale(.96); }
-    .ovBtnVar{
-      background: var(--gold);
-      color:#000;
-      box-shadow: 0 0 26px rgba(255,215,0,0.25);
-    }
-    .ovBtnCont{
-      background: rgba(255,255,255,0.10);
-      color:#fff;
-      border: 1px solid rgba(255,255,255,0.16);
-    }
-
-    /* ====== BOTTOM SCORE ====== */
-    .bottom-bar{
-      position:absolute; left:10px; right:10px; bottom:16px;
-      height: 92px;
-      border-radius: 22px;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(10,10,12,0.75);
-      backdrop-filter: blur(14px);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap: 8px;
-      padding: 10px;
-      z-index: 30;
-      box-shadow: 0 18px 60px rgba(0,0,0,0.55);
-    }
-    .pCard{
-      flex:1;
-      height: 100%;
-      border-radius: 18px;
-      border: 1px solid rgba(255,255,255,0.10);
-      background: rgba(255,255,255,0.04);
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      gap: 4px;
-      opacity: .55;
-      transform: scale(.96);
-      transition: .18s;
-      position:relative;
-      overflow:hidden;
-    }
-    .pCard.active{
-      opacity: 1;
-      transform: scale(1);
-      border-color: rgba(255,255,255,0.18);
-      box-shadow: 0 0 24px var(--accentGlow);
-    }
-    .pCard .n{
-      font-size: 10px;
-      font-weight: 900;
-      letter-spacing: 1.4px;
-      text-transform: uppercase;
-      opacity: .9;
-    }
-    .pCard .s{
-      font-family: var(--font-display);
-      font-size: 24px;
-      font-weight: 900;
-      line-height: 1;
-    }
-    .pCard .sets{
-      font-size: 9px;
-      font-weight: 900;
-      letter-spacing: 1.2px;
-      color: var(--gold);
-      opacity: .9;
-    }
-    .pCard .mini{
-      position:absolute;
-      bottom:6px;
-      display:flex;
-      gap:8px;
-      font-size: 9px;
-      font-weight: 900;
-      opacity: .7;
-    }
-
-    /* ====== MODALS ====== */
-    .modal{position:fixed; inset:0; z-index:200; background:rgba(0,0,0,.92); backdrop-filter: blur(16px); display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:.25s}
-    .modal:not(.hidden){opacity:1; pointer-events:auto}
-    .modal-box{width:92%; max-width:380px; background:#121216; border:1px solid rgba(255,255,255,.12); border-radius:32px; padding:28px; text-align:center; max-height:90vh; overflow:auto; box-shadow: 0 25px 70px rgba(0,0,0,0.7)}
-    .sectionTitle{font-family:var(--font-display); font-weight:900; font-size:22px; margin:0 0 14px}
-    .hintText{font-size:12px; opacity:.6; margin:10px 0 6px}
-    .toggle-grp{display:flex; background:rgba(255,255,255,.06); padding:4px; border-radius:12px; gap:4px; margin-bottom:14px}
-    .toggle-btn{flex:1; padding:10px; border-radius:10px; cursor:pointer; text-align:center; font-size:13px; font-weight:900; opacity:.6; transition:.16s}
-    .toggle-btn.active{background:#fff; color:#000; opacity:1}
-    .name-input{width:100%; background:#1a1a20; border:1px solid rgba(255,255,255,.12); color:#fff; padding:12px; border-radius:12px; font-weight:800; text-align:center; margin-bottom:8px}
-    .lang-grid{display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-bottom:12px}
-    .lang-btn{background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); color:#fff; border-radius:12px; padding:10px 0; font-size:20px; cursor:pointer; transition:.14s}
-    .lang-btn.active{background:#fff; color:#000}
-    .btn-block{width:100%; padding:16px; border-radius:16px; border:none; font-weight:900; font-size:16px; cursor:pointer; background:#fff; color:#000; transition:.12s}
-    .btn-block:active{transform:scale(.98)}
-    .statsBox{background:rgba(255,255,255,.05); padding:14px; border-radius:16px; text-align:left; margin:12px 0}
-    .row{display:flex; justify-content:space-between; margin-bottom:6px}
-    .champ{font-size:22px; font-weight:900; color:var(--gold); margin:10px 0}
+    .hidden{ display:none !important; }
   </style>
 </head>
 <body>
+  <div class="cosmos-bg"></div>
 
-<div class="bg-fx"></div>
-<div class="nebula a"></div>
-<div class="nebula b"></div>
-
-<div class="app-header">
-  <a href="/pages/game.html" class="header-back">←</a>
-  <div class="brand">
-    <div class="logo">italky<span class="ai">AI</span></div>
-    <div class="tag">BE FREE</div>
-  </div>
-  <div class="header-spacer"></div>
-</div>
-
-<div class="arena-wrap">
-  <div class="card p0" id="card">
-    <div class="overlay" id="overlay">
-      <h2 class="ovTitle" id="ovTitle">HARİKA!</h2>
-      <div class="ovSub" id="ovSub">+2 PUAN</div>
-      <div class="ovBadge" id="ovBadge">%100 BENZERLİK</div>
-
-      <div class="ovActions" id="ovActions">
-        <button class="ovBtn ovBtnVar" id="btnVar">İTİRAZ (VAR)</button>
-        <button class="ovBtn ovBtnCont" id="btnCont">DEVAM ET</button>
+  <div class="wrap">
+    <div class="nav-top">
+      <a href="/pages/game.html" class="back-btn">←</a>
+      <div style="text-align:center">
+        <div id="statusChip" class="status-chip">EN • A2</div>
+        <div id="pbDisplay" class="pb-chip">PB: 0</div>
       </div>
-
-      <div class="ovTap" id="ovTap">DOKUN → DEVAM</div>
-    </div>
-
-    <div class="toprow">
-      <div>
-        <div class="pname" id="pName">OYUNCU</div>
-      </div>
-      <div class="meta">
-        <div class="chip" id="chipCount">0/20</div>
-        <div class="rights" id="rightsRow"></div>
+      <div style="display:flex; gap:8px;">
+        <div class="mini-badge" id="lifeDisplay" style="color:var(--c-neon-pink);">❤️❤️❤️</div>
+        <div class="mini-badge" id="shieldBadge" style="color:var(--c-neon-blue); display:none;">🛡️</div>
+        <div class="mini-badge" id="scoreBadge">SKOR <span id="scoreDisplay">0</span></div>
       </div>
     </div>
 
-    <div class="mid">
-      <div class="word" id="wMain">...</div>
-      <div class="meaning" id="wSub">...</div>
-      <div class="slots" id="wSlots">_ _ _</div>
-      <div class="hintInfo" id="wHintInfo"></div>
-    </div>
+    <div class="game-card">
+      <div class="gallows-box" id="gallowsBox">
+        <div class="g-line g-stand"></div><div class="g-line g-post"></div><div class="g-line g-top"></div><div class="g-rope"></div>
+        <div class="man-part p1"></div><div class="man-part p2"></div><div class="man-part p3"></div>
+        <div class="man-part p4"></div><div class="man-part p5"></div><div class="man-part p6"></div>
+      </div>
 
-    <div class="controls">
-      <button class="btn btn-hint" id="btnHint" style="display:none">HARF (5)</button>
-      <button class="btn" id="btnPass">PAS (1)</button>
-      <button class="btn btn-mic" id="btnMic">🎙️ CEVAPLA</button>
+      <div id="resInfo"></div>
+      <div id="hintMain"></div>
+
+      <div id="wordBox" class="word-box"></div>
+      <div class="keyboard" id="keyboard"></div>
+
+      <button class="btn-main" id="jokerBtn">⚡ İPUCU (<span id="jokerCount">1</span>)</button>
     </div>
   </div>
-</div>
 
-<div class="bottom-bar" id="scoreBar"></div>
+  <!-- START -->
+  <div class="modal-wrap" id="startModal">
+    <div class="modal-card">
+      <h2 style="margin:0 0 14px;">NEON HANGMAN ELITE</h2>
 
-<div class="modal" id="setupModal">
-  <div class="modal-box">
-    <div class="sectionTitle">CHAMPIONSHIP</div>
+      <div style="margin-bottom:14px;">
+        <button data-lang="en" class="lang-btn active">🇬🇧</button>
+        <button data-lang="de" class="lang-btn">🇩🇪</button>
+        <button data-lang="fr" class="lang-btn">🇫🇷</button>
+        <button data-lang="es" class="lang-btn">🇪🇸</button>
+        <button data-lang="it" class="lang-btn">🇮🇹</button>
+      </div>
 
-    <div class="hintText">OYUNCU SAYISI</div>
-    <div class="toggle-grp" id="grpPlayers">
-      <div class="toggle-btn active" data-n="2">2 Kişi</div>
-      <div class="toggle-btn" data-n="3">3 Kişi</div>
-      <div class="toggle-btn" data-n="4">4 Kişi</div>
+      <button class="lvl-btn" data-lvl="A2"><span>KOLAY (A2)</span> <span id="pb-A2">PB: 0</span></button>
+      <button class="lvl-btn" data-lvl="B1"><span>ORTA (B1)</span> <span id="pb-B1">PB: 0</span></button>
+      <button class="lvl-btn" data-lvl="B2"><span>ZOR (B2)</span> <span id="pb-B2">PB: 0</span></button>
+
+      <div style="margin-top:14px; font-size:12px; opacity:.7; line-height:1.4">
+        Günlük 25 hak. Oyuna girişte 1 hak düşer. Set bitince devam/banka 1 hak daha düşer.
+      </div>
     </div>
-
-    <div id="nameInputs">
-      <input type="text" class="name-input" id="inp0" value="Oyuncu 1" style="border-color:var(--p0)">
-      <input type="text" class="name-input" id="inp1" value="Oyuncu 2" style="border-color:var(--p1)">
-    </div>
-
-    <div class="hintText">DİL</div>
-    <div class="lang-grid" id="grpLang">
-      <button class="lang-btn active" data-lang="en">🇬🇧</button>
-      <button class="lang-btn" data-lang="de">🇩🇪</button>
-      <button class="lang-btn" data-lang="fr">🇫🇷</button>
-      <button class="lang-btn" data-lang="es">🇪🇸</button>
-      <button class="lang-btn" data-lang="it">🇮🇹</button>
-    </div>
-
-    <div class="hintText">MOD</div>
-    <div class="toggle-grp" id="grpMode">
-      <div class="toggle-btn active" data-mode="pron">🎙️ Telaffuz</div>
-      <div class="toggle-btn" data-mode="vocab">🧠 Kelime</div>
-    </div>
-
-    <button class="btn-block" id="btnStart">BAŞLA (3 SET)</button>
-    <div style="margin-top:10px;font-size:11px;opacity:.6">Supabase havuzu + cache kullanılır</div>
   </div>
-</div>
 
-<div class="modal hidden" id="pauseModal">
-  <div class="modal-box">
-    <div class="sectionTitle" id="pauseTitle">SET SONUCU</div>
-    <div class="statsBox" id="setStats"></div>
-    <div class="champ" id="setWinnerMsg">...</div>
-    <button class="btn-block" id="btnNextSet" style="background:var(--green);color:#000">DEVAM ET</button>
-    <button class="btn-block" style="background:rgba(255,255,255,0.1);color:#fff" onclick="location.href='/pages/game.html'">ÇIKIŞ</button>
+  <!-- END -->
+  <div class="modal-wrap hidden" id="endModal">
+    <div class="modal-card">
+      <h2 id="endTitle">SET TAMAMLANDI</h2>
+      <div id="endStats" style="text-align:left; margin:16px 0; font-size:14px; line-height:1.8;"></div>
+      <button class="btn-main btn-green" id="btnContinue">DEVAM ET</button>
+      <button class="btn-main btn-blue" id="btnBank">BANKALA (+%5 & +1 İPUCU)</button>
+      <button class="btn-main btn-ghost" id="btnFinish">BİTİR</button>
+    </div>
   </div>
-</div>
 
 <script type="module">
-import { loadLangPool } from "/js/langpool.js";
+import { loadLangPool, createUsedSet, pick } from "/js/langpool.js";
 
-const LANG_CODES = { en:'en-US', de:'de-DE', fr:'fr-FR', es:'es-ES', it:'it-IT' };
 const $ = (id)=>document.getElementById(id);
 
-function normalize(s){
-  return String(s||"")
-    .toLowerCase()
-    .replace(/ß/g,"ss")
-    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
-    .replace(/[^a-z0-9 ]/g,"")
-    .trim();
+/* ===== token gate (same minimal as other games) ===== */
+const DAILY_FREE_TOKENS = 25;
+function isoDateLocal(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; }
+function getUser(){ try{ return JSON.parse(localStorage.getItem("italky_user_v1")||"{}"); }catch{ return {}; } }
+function isPro(u){ const p=String(u?.plan||"").toUpperCase().trim(); return p==="PRO"||p==="PREMIUM"||p==="PLUS"; }
+function uid(u){ return String(u.user_id||u.id||u.email||"guest").toLowerCase().trim(); }
+function tokenKey(u){ return `italky_game_tokens::${uid(u)}::${isoDateLocal()}`; }
+function tokenInitKey(u){ return `italky_game_tokens_init::${uid(u)}::${isoDateLocal()}`; }
+function ensureDailyTokens(){ const u=getUser(); if(isPro(u)) return; if(localStorage.getItem(tokenInitKey(u))) return; localStorage.setItem(tokenKey(u), String(DAILY_FREE_TOKENS)); localStorage.setItem(tokenInitKey(u), "1"); }
+function getTokens(){ const u=getUser(); if(isPro(u)) return 9999; const v=Number(localStorage.getItem(tokenKey(u))||"0"); return Number.isFinite(v)?Math.max(0,v):0; }
+function spendToken(){ const u=getUser(); if(isPro(u)) return true; const t=getTokens(); if(t<=0) return false; localStorage.setItem(tokenKey(u), String(t-1)); return true; }
+
+/* ===== state ===== */
+let lang="en", lvl="A2";
+let lives=3, maxLives=3;
+let score=0, setScore=0;
+let shield=false;
+let jokers=1;
+let usedJoker=false;
+
+let current=null; // { w,tr,sentence }
+let usedSetKey="";
+let wordMasked=[];
+let wrongLetters=new Set();
+let correctLetters=new Set();
+
+const LOCALE_MAP = { en:'en-US', de:'de-DE', fr:'fr-FR', es:'es-ES', it:'it-IT' };
+
+function toastInfo(msg, ok=true){
+  const el=$("resInfo");
+  el.textContent = msg;
+  el.style.color = ok ? "var(--c-neon-green)" : "var(--c-error)";
+  el.style.opacity="1";
+  clearTimeout(window.__ri);
+  window.__ri=setTimeout(()=> el.style.opacity="0", 1200);
 }
-function editDistance(a,b){
-  const s1=String(a), s2=String(b);
-  const costs = new Array(s2.length+1);
-  for(let j=0;j<=s2.length;j++) costs[j]=j;
-  for(let i=1;i<=s1.length;i++){
-    let prev=i-1;
-    costs[0]=i;
-    for(let j=1;j<=s2.length;j++){
-      const tmp=costs[j];
-      const val=Math.min(costs[j]+1, costs[j-1]+1, prev+(s1[i-1]===s2[j-1]?0:1));
-      costs[j]=val; prev=tmp;
+
+function updateTop(){
+  $("lifeDisplay").textContent = "❤️".repeat(Math.max(0,lives)) + "🖤".repeat(maxLives - Math.max(0,lives));
+  $("scoreDisplay").textContent = String(score);
+  $("jokerCount").textContent = String(jokers);
+  $("shieldBadge").style.display = shield ? "flex" : "none";
+  $("statusChip").textContent = `${lang.toUpperCase()} • ${lvl}`;
+}
+
+function showManParts(){
+  const parts=[...document.querySelectorAll(".man-part")];
+  const shown = Math.min(6, wrongLetters.size);
+  parts.forEach((p,i)=> p.style.opacity = (i < shown) ? "1" : "0");
+}
+
+function renderWord(){
+  const box=$("wordBox");
+  box.innerHTML="";
+  wordMasked.forEach(ch=>{
+    const d=document.createElement("div");
+    d.className="letter-slot" + (ch!=="_" ? " filled" : "");
+    d.textContent = (ch === "_") ? "" : ch;
+    box.appendChild(d);
+  });
+}
+
+function buildKeyboard(){
+  const kb=$("keyboard");
+  kb.innerHTML="";
+  const alphabet="ABCDEFGHIJKLMNOPQRSTUVWXYZÇĞİÖŞÜ";
+  const letters = new Set();
+  // include word letters + random extras
+  const wLetters = new Set(current.w.split(""));
+  wLetters.forEach(x=>letters.add(x));
+  while(letters.size < 24){
+    letters.add(alphabet[Math.floor(Math.random()*alphabet.length)]);
+  }
+  const final=[...letters].sort((a,b)=>a.localeCompare(b, lang));
+  final.forEach(ch=>{
+    const b=document.createElement("button");
+    b.className="key-btn";
+    b.textContent=ch;
+    if(correctLetters.has(ch)) b.classList.add("correct");
+    if(wrongLetters.has(ch)) b.classList.add("wrong");
+    b.onclick=()=> press(ch,b);
+    kb.appendChild(b);
+  });
+}
+
+function maskSentence(sentence, rawWord){
+  try{
+    const escaped = String(rawWord).replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
+    const regex = new RegExp(`(^|[^\\p{L}'-])(${escaped})(?=[^\\p{L}'-]|$)`, "giu");
+    return String(sentence||"").replace(regex, `$1____`);
+  }catch{
+    return String(sentence||"");
+  }
+}
+
+function speak(text){
+  try{
+    const u=new SpeechSynthesisUtterance(text);
+    u.lang = LOCALE_MAP[lang] || "en-US";
+    u.rate = 0.9;
+    speechSynthesis.cancel();
+    speechSynthesis.speak(u);
+  }catch{}
+}
+
+function letterInWord(ch){ return current.w.includes(ch); }
+
+function revealAll(){
+  for(let i=0;i<current.w.length;i++){
+    wordMasked[i] = current.w[i];
+  }
+  renderWord();
+}
+
+function isSolved(){ return wordMasked.every(x=>x!=="_"); }
+
+function takeDamage(){
+  if(shield){
+    shield=false;
+    toastInfo("🛡️ Kalkan kullanıldı", true);
+    updateTop();
+    return false;
+  }
+  lives--;
+  updateTop();
+  if(lives<=0) return true;
+  return false;
+}
+
+function press(ch, btn){
+  if(btn.disabled) return;
+  btn.disabled=true;
+
+  if(letterInWord(ch)){
+    correctLetters.add(ch);
+    btn.classList.add("correct");
+    current.w.split("").forEach((c,i)=>{ if(c===ch) wordMasked[i]=c; });
+    renderWord();
+    if(isSolved()){
+      speak(current.sentence || current.raw || current.w);
+      const base = 120;
+      const gain = base;
+      score += gain;
+      setScore += gain;
+      toastInfo(`✅ DOĞRU: ${current.raw.toUpperCase()}`, true);
+      nextRound(900);
+    }
+  }else{
+    wrongLetters.add(ch);
+    btn.classList.add("wrong");
+    const died = takeDamage();
+    showManParts();
+    if(died){
+      endSet(true);
+    }else{
+      toastInfo("HATA", false);
     }
   }
-  return costs[s2.length];
-}
-function similarityScore(a,b){
-  const s1=normalize(a), s2=normalize(b);
-  if(!s1 && !s2) return 100;
-  if(!s1 || !s2) return 0;
-  if(s2.includes(s1)) return 100;
-  const longer = s1.length >= s2.length ? s1 : s2;
-  const shorter = s1.length >= s2.length ? s2 : s1;
-  const dist = editDistance(longer, shorter);
-  return Math.max(0, Math.min(100, Math.floor(((longer.length - dist)/longer.length)*100)));
 }
 
-const STATE = { IDLE:0, SPEAKING:1, LISTENING:2, RESOLVING:3, PAUSED:4 };
-
-const setup = { playerCount:2, mode:'pron', lang:'en' };
-
-function setThemeForPlayer(pid){
-  document.documentElement.style.setProperty("--accent", `var(--p${pid})`);
+function nextRound(delay=400){
+  setTimeout(()=> startRound(), delay);
 }
 
-function buildNameInputs(){
-  const container = $("nameInputs");
-  container.innerHTML = "";
-  const colors = ["var(--p0)","var(--p1)","var(--p2)","var(--p3)"];
-  for(let i=0;i<setup.playerCount;i++){
-    const inp=document.createElement("input");
-    inp.type="text"; inp.className="name-input"; inp.id=`inp${i}`;
-    inp.value=`Oyuncu ${i+1}`;
-    inp.style.borderColor = colors[i];
-    container.appendChild(inp);
+async function startRound(){
+  // load from pool each round set in a deck
+  if(deckIndex >= deck.length){
+    endSet(false);
+    return;
+  }
+  const it = deck[deckIndex++];
+  const raw = String(it.w||"").trim();
+  const loc = LOCALE_MAP[lang] || "en-US";
+  const w = raw.toLocaleUpperCase(loc).normalize("NFC").replace(/[^A-ZÇĞİÖŞÜÀ-ÿ-]/gu,"");
+  current = { raw, w, tr: String(it.tr||""), sentence: String(it.sentence||"") };
+
+  wrongLetters = new Set();
+  correctLetters = new Set();
+  usedJoker=false;
+  $("hintMain").textContent = current.tr ? current.tr : "";
+  $("sentenceDisplay") && ($("sentenceDisplay").textContent = ""); // safety if user merges UIs later
+
+  wordMasked = new Array(current.w.length).fill("_");
+  showManParts();
+  renderWord();
+  buildKeyboard();
+  updateTop();
+}
+
+let deck=[];
+let deckIndex=0;
+
+async function buildDeck(){
+  const pool = await loadLangPool(lang);
+  const data = (pool?.items || pool || []).items ? (pool.items) : (pool?.items || []);
+  // fallback if loadLangPool returns array directly
+  const arr = Array.isArray(pool?.items) ? pool.items : (Array.isArray(pool) ? pool : (Array.isArray(data) ? data : []));
+  if(!arr.length) throw new Error("pool empty");
+
+  usedSetKey = `used_hangman_v1_${lang}_${lvl}`;
+  const { used, save } = createUsedSet(usedSetKey);
+
+  const size = (lvl==="A2") ? 10 : 12;
+
+  const picked = pick({ items: arr }, size, used, save, (it)=>{
+    const itLvl = String(it.lvl||"").toUpperCase();
+    const target = lvl.toUpperCase();
+    const lvlMatch = (target==="A2") ? ["A1","A2"].includes(itLvl) : (itLvl===target);
+    return lvlMatch && it.w && it.tr && !String(it.w).trim().includes(" ");
+  });
+
+  if(!picked || picked.length < 6){
+    localStorage.removeItem(usedSetKey);
+  } else {
+    try{ save(picked.map(x=>x.w)); }catch{}
+  }
+
+  deck = picked;
+  deckIndex = 0;
+}
+
+function updatePB(){
+  const key = `hangman_pb_${lang}_${lvl}`;
+  const pb = Number(localStorage.getItem(key)||0);
+  $("pbDisplay").textContent = `PB: ${pb}`;
+  ["A2","B1","B2"].forEach(x=>{
+    const k = `hangman_pb_${lang}_${x}`;
+    const v = Number(localStorage.getItem(k)||0);
+    const el = document.getElementById(`pb-${x}`);
+    if(el) el.textContent = `PB: ${v}`;
+  });
+}
+
+function savePB(){
+  const key = `hangman_pb_${lang}_${lvl}`;
+  const pb = Number(localStorage.getItem(key)||0);
+  if(score > pb) localStorage.setItem(key, String(score));
+}
+
+function endSet(died){
+  savePB();
+  $("endModal").classList.remove("hidden");
+  $("endTitle").textContent = died ? "BİTTİ 💀" : "SET TAMAMLANDI 🏆";
+  $("endStats").innerHTML = `Skor: <b>${score}</b><br>Set Skoru: <b>${setScore}</b>`;
+  if(died){
+    $("btnContinue").classList.add("hidden");
+    $("btnBank").classList.add("hidden");
+  }else{
+    $("btnContinue").classList.remove("hidden");
+    $("btnBank").classList.remove("hidden");
   }
 }
 
-const game = {
-  state: STATE.IDLE,
-  players: [],
-  turnIndex: 0,
+async function startRun(){
+  $("startModal").classList.add("hidden");
+  $("endModal").classList.add("hidden");
 
-  poolItems: [],
-  usedWords: new Set(), // per set, word keys
-  current: null,
+  // reset run state
+  score=0; setScore=0;
+  shield=false;
+  jokers = (lvl==="B2") ? 1 : 1;
+  lives = (lvl==="A2") ? 4 : 3;
+  maxLives = lives;
+  updatePB();
+  updateTop();
 
-  pendingWrong: null, // { playerId, score, spokenScore }
-  overlayTimer: null,
-  lastRec: null,
-
-  async init(){
-    // players
-    this.players = [];
-    for(let i=0;i<setup.playerCount;i++){
-      const name = ($(`inp${i}`)?.value || `Oyuncu ${i+1}`).trim() || `Oyuncu ${i+1}`;
-      this.players.push({
-        id:i, name,
-        score:0, setWins:0,
-        wordsPlayed:0,
-        passRight:1, varRight:1,
-        hintRight:5, // match-long
-        slots:null,
-        hintUsedThisWord:false
-      });
-    }
-
-    // load from supabase via your langpool.js (same as hangman)
-    const pool = await loadLangPool(setup.lang);
-    if(!pool || !Array.isArray(pool.items) || pool.items.length===0){
-      alert("Supabase havuzu yüklenemedi.");
-      return;
-    }
-
-    // make UNIQUE by normalized word so set repeats are truly prevented
-    const map = new Map();
-    for(const it of pool.items){
-      if(!it || !it.w) continue;
-      const w = String(it.w).trim();
-      if(w.length < 2) continue;
-      const key = normalize(w);
-      if(!key) continue;
-      if(!map.has(key)){
-        map.set(key, { w, tr: String(it.tr||"").trim() });
-      }
-    }
-    this.poolItems = Array.from(map.values());
-
-    if(this.poolItems.length < 25){
-      // not fatal, but warn: small pools will force repeats after exhaustion
-      console.warn("Pool küçük:", this.poolItems.length);
-    }
-
-    $("setupModal").classList.add("hidden");
-
-    this.turnIndex = Math.floor(Math.random()*this.players.length);
-    this.startNewSet();
-  },
-
-  startNewSet(){
-    this.players.forEach(p=>{
-      p.score=0; p.wordsPlayed=0; p.passRight=1; p.varRight=1;
-      p.slots=null; p.hintUsedThisWord=false;
-      // hintRight stays match-long
-    });
-    this.usedWords.clear();
-    this.pendingWrong = null;
-    this.pickNextWordStrict();
-    this.state = STATE.IDLE;
-    this.render();
-    this.startTurnFlow();
-  },
-
-  pickNextWordStrict(){
-    // try find unused word for this set
-    let tries = 0;
-    while(tries < this.poolItems.length){
-      const item = this.poolItems[Math.floor(Math.random()*this.poolItems.length)];
-      const key = normalize(item.w);
-      if(!this.usedWords.has(key)){
-        this.usedWords.add(key);
-        this.current = item;
-        return;
-      }
-      tries++;
-    }
-    // exhausted: cannot satisfy "no repeats" with current pool size
-    // best behavior: reset usedWords with visible warning (otherwise game stalls)
-    this.usedWords.clear();
-    this.current = this.poolItems[Math.floor(Math.random()*this.poolItems.length)];
-    this.usedWords.add(normalize(this.current.w));
-    // soft warning
-    $("ovBadge").style.display = "block";
-    $("ovBadge").textContent = "Havuz küçük • Tekrar olabilir";
-    setTimeout(()=>{ if(!$("overlay").classList.contains("show")) $("ovBadge").style.display="none"; }, 1200);
-  },
-
-  startTurnFlow(){
-    // set end?
-    if(this.players.every(p=>p.wordsPlayed>=20)){
-      this.endSet();
-      return;
-    }
-    // skip finished players
-    if(this.players[this.turnIndex].wordsPlayed>=20){
-      this.nextPlayer(true);
-      return;
-    }
-
-    const p = this.players[this.turnIndex];
-
-    // per-word state
-    if(setup.mode==='vocab'){
-      if(!p.slots){
-        p.slots = this.current.w.split("").map((ch,i)=> i===0 ? ch : "_");
-        p.hintUsedThisWord=false;
-      }
-    } else {
-      p.slots=null; p.hintUsedThisWord=false;
-    }
-
-    if(setup.mode==='pron'){
-      this.state = STATE.SPEAKING;
-      this.render();
-      this.speak(this.current.w, ()=>{
-        this.state = STATE.IDLE;
-        this.render();
-      });
-    } else {
-      this.state = STATE.IDLE;
-      this.render();
-    }
-  },
-
-  render(){
-    const p = this.players[this.turnIndex];
-    setThemeForPlayer(p.id);
-    $("card").className = `card p${p.id}`;
-    $("pName").textContent = p.name;
-    $("chipCount").textContent = `${p.wordsPlayed}/20`;
-
-    // rights row
-    const rights = [];
-    rights.push(`<span class="rchip">PAS <strong>${p.passRight}</strong></span>`);
-    rights.push(`<span class="rchip">VAR <strong>${p.varRight}</strong></span>`);
-    if(setup.mode==='vocab') rights.push(`<span class="rchip">HARF <strong>${p.hintRight}</strong></span>`);
-    $("rightsRow").innerHTML = rights.join("");
-
-    if(setup.mode==='pron'){
-      $("wMain").textContent = this.current.w;
-      $("wSub").textContent = this.current.tr || "";
-      $("wSlots").style.display="none";
-      $("wHintInfo").style.display="none";
-      $("btnHint").style.display="none";
-    } else {
-      $("wMain").textContent = this.current.tr || "";
-      $("wSub").textContent = "???";
-      $("wSlots").style.display="block";
-      $("wHintInfo").style.display="block";
-      $("btnHint").style.display="block";
-      const slots = p.slots || this.current.w.split("").map((ch,i)=> i===0 ? ch : "_");
-      const revealed = slots.filter(x=>x!=="_").length;
-      $("wSlots").textContent = slots.join(" ");
-      $("wHintInfo").textContent = `AÇILAN HARF: ${revealed}/${this.current.w.length}`;
-    }
-
-    // button texts
-    $("btnPass").textContent = `PAS (${p.passRight})`;
-    $("btnHint").textContent = `HARF (${p.hintRight})`;
-    $("btnMic").textContent = "🎙️ CEVAPLA";
-
-    // control enable
-    const allBtns = [$("btnHint"), $("btnPass"), $("btnMic")];
-    if(this.state===STATE.SPEAKING || this.state===STATE.RESOLVING || this.state===STATE.PAUSED){
-      allBtns.forEach(b=>b.disabled=true);
-      $("btnMic").classList.remove("listening");
-    } else if(this.state===STATE.LISTENING){
-      allBtns.forEach(b=>b.disabled=true);
-      $("btnMic").classList.add("listening");
-      $("btnMic").textContent = "👂...";
-    } else {
-      // IDLE
-      $("btnMic").classList.remove("listening");
-      $("btnMic").disabled=false;
-      $("btnPass").disabled = !(p.passRight>0);
-      if(setup.mode==='vocab'){
-        $("btnHint").disabled = !(p.hintRight>0);
-      } else {
-        $("btnHint").disabled=true;
-      }
-    }
-
-    // bottom bar
-    const bar = $("scoreBar");
-    bar.innerHTML="";
-    this.players.forEach((pl,i)=>{
-      const div=document.createElement("div");
-      div.className = `pCard ${i===this.turnIndex?"active":""}`;
-      div.style.setProperty("--accentGlow", `rgba(255,255,255,0.0)`);
-      div.innerHTML = `
-        <div class="n" style="color:var(--p${pl.id})">${pl.name}</div>
-        <div class="s">${pl.score}</div>
-        <div class="sets">SET: ${pl.setWins}</div>
-        <div class="mini">K ${pl.wordsPlayed}/20</div>
-      `;
-      bar.appendChild(div);
-    });
-  },
-
-  action(type){
-    if(this.state!==STATE.IDLE) return;
-    const p = this.players[this.turnIndex];
-
-    if(type==="pass"){
-      if(p.passRight<=0) return;
-      p.passRight -= 1;
-      // new word, same player
-      p.slots=null; p.hintUsedThisWord=false;
-      this.pickNextWordStrict();
-      this.render();
-      this.startTurnFlow();
-      return;
-    }
-
-    if(type==="hint"){
-      if(setup.mode!=="vocab") return;
-      if(p.hintRight<=0) return;
-
-      const target = this.current.w;
-      const slots = p.slots || target.split("").map((ch,i)=> i===0 ? ch : "_");
-      let changed=false;
-      for(let i=0;i<target.length;i++){
-        if(slots[i]==="_"){ slots[i]=target[i]; changed=true; break; }
-      }
-      if(!changed) return;
-
-      p.hintRight -= 1;
-      p.slots = slots;
-      p.hintUsedThisWord = true;
-      this.render();
-      return;
-    }
-
-    if(type==="mic"){
-      this.startListening();
-    }
-  },
-
-  startListening(){
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if(!SR){ alert("Bu cihazda SpeechRecognition yok."); return; }
-
-    this.state = STATE.LISTENING;
-    this.render();
-
-    const rec = new SR();
-    this.lastRec = rec;
-    rec.lang = LANG_CODES[setup.lang] || "en-US";
-    rec.interimResults = false;
-    rec.maxAlternatives = 1;
-
-    const watchdog = setTimeout(()=>{ try{rec.stop()}catch{} }, 8000);
-
-    rec.onresult = (e)=>{
-      clearTimeout(watchdog);
-      const spoken = e.results?.[0]?.[0]?.transcript || "";
-      this.onSpoken(spoken);
-    };
-    rec.onerror = ()=>{
-      clearTimeout(watchdog);
-      if(this.state===STATE.LISTENING){
-        this.state=STATE.IDLE;
-        this.render();
-      }
-    };
-    rec.onend = ()=>{
-      clearTimeout(watchdog);
-      if(this.state===STATE.LISTENING){
-        this.state=STATE.IDLE;
-        this.render();
-      }
-    };
-
-    rec.start();
-  },
-
-  showOverlay({title, titleColor, sub, badgeText, badgeColor, showActions}){
-    // safe reset visuals
-    $("ovTitle").textContent = title;
-    $("ovTitle").style.color = titleColor || "#fff";
-    $("ovSub").textContent = sub || "";
-    $("ovBadge").style.display = badgeText ? "block" : "none";
-    $("ovBadge").textContent = badgeText || "";
-    $("ovBadge").style.color = badgeColor || "#fff";
-    $("ovActions").style.display = showActions ? "flex" : "none";
-    $("overlay").classList.add("show");
-  },
-
-  hideOverlay(){
-    $("overlay").classList.remove("show");
-    $("ovActions").style.display = "none";
-    $("ovBadge").style.display = "none";
-  },
-
-  finalizeOverlay(){
-    // hard fail-safe: never freeze on overlay
-    clearTimeout(this.overlayTimer);
-    this.hideOverlay();
-    this.state = STATE.IDLE;
-    this.render();
-  },
-
-  onSpoken(spoken){
-    this.state = STATE.RESOLVING;
-    this.render();
-
-    const p = this.players[this.turnIndex];
-    const target = this.current.w;
-    const score = similarityScore(target, spoken);
-    const ok = score >= 90;
-
-    if(ok){
-      const pts = (setup.mode==="vocab" && p.hintUsedThisWord) ? 1 : 2;
-      p.score += pts;
-      p.wordsPlayed += 1;
-      p.slots=null; p.hintUsedThisWord=false;
-
-      this.pendingWrong = null;
-
-      this.showOverlay({
-        title: "HARİKA!",
-        titleColor: "var(--green)",
-        sub: `+${pts} PUAN`,
-        badgeText: `%${score} BENZERLİK`,
-        badgeColor: "var(--green)",
-        showActions: false
-      });
-
-      // fallback: even if timer fails, tap closes
-      this.overlayTimer = setTimeout(()=>{ this.finishCommittedTurn(); }, 1100);
-      return;
-    }
-
-    // wrong: deferred commit
-    this.pendingWrong = { playerId: p.id, score };
-    this.showOverlay({
-      title: "OLMADI",
-      titleColor: "var(--red)",
-      sub: `Doğrusu: ${target}`,
-      badgeText: `%${score} BENZERLİK`,
-      badgeColor: "var(--red)",
-      showActions: (p.varRight > 0)
-    });
-
-    // If no VAR right, auto-commit after short delay
-    if(p.varRight <= 0){
-      this.overlayTimer = setTimeout(()=>{ this.commitWrongAndAdvance(); }, 1200);
-    }
-  },
-
-  varObjection(){
-    if(this.state!==STATE.RESOLVING) return;
-    const p = this.players[this.turnIndex];
-    if(p.varRight<=0) return;
-    if(!this.pendingWrong || this.pendingWrong.playerId !== p.id) return;
-
-    p.varRight -= 1;
-    // cancel commit, retry same word, same player, keep slots in vocab
-    this.pendingWrong = null;
-
-    this.finalizeOverlay(); // returns to IDLE
-    this.startTurnFlow();   // will TTS again in pron mode (rule)
-  },
-
-  varContinue(){
-    if(this.state!==STATE.RESOLVING) return;
-    this.commitWrongAndAdvance();
-  },
-
-  commitWrongAndAdvance(){
-    const p = this.players[this.turnIndex];
-    // commit wrong: -1 score, +1 wordsPlayed
-    p.score = Math.max(0, p.score - 1);
-    p.wordsPlayed += 1;
-    p.slots=null; p.hintUsedThisWord=false;
-    this.pendingWrong = null;
-    this.finishCommittedTurn();
-  },
-
-  finishCommittedTurn(){
-    // close overlay safely
-    this.finalizeOverlay();
-
-    // pick next word, next player
-    this.pickNextWordStrict();
-    this.turnIndex = (this.turnIndex + 1) % this.players.length;
-
-    // skip finished players
-    let guard=0;
-    while(this.players[this.turnIndex].wordsPlayed >= 20 && guard < this.players.length){
-      this.turnIndex = (this.turnIndex + 1) % this.players.length;
-      guard++;
-    }
-
-    this.startTurnFlow();
-  },
-
-  endSet(){
-    this.state = STATE.PAUSED;
-    this.render();
-
-    $("pauseModal").classList.remove("hidden");
-
-    const sorted = [...this.players].sort((a,b)=> b.score - a.score);
-    let winner = null;
-    if(sorted.length===1) winner = sorted[0];
-    else if(sorted[0].score > sorted[1].score) winner = sorted[0];
-
-    if(winner){
-      const real = this.players.find(x=>x.id===winner.id);
-      real.setWins += 1;
-    }
-
-    let html="";
-    sorted.forEach(pl=>{
-      html += `<div class="row"><span style="color:var(--p${pl.id});font-weight:900">${pl.name}</span><b>${pl.score}</b></div>`;
-    });
-    $("setStats").innerHTML = html;
-
-    const matchWinner = this.players.find(x=>x.setWins>=3) || null;
-    if(matchWinner){
-      $("pauseTitle").textContent = "ŞAMPİYON!";
-      $("setWinnerMsg").textContent = `${matchWinner.name} MAÇI KAZANDI!`;
-      $("btnNextSet").textContent = "YENİ MAÇ";
-      $("btnNextSet").onclick = ()=> location.reload();
-    } else if(winner){
-      $("pauseTitle").textContent = "SET SONUCU";
-      $("setWinnerMsg").textContent = `${winner.name} SETİ KAZANDI!`;
-      $("btnNextSet").textContent = "SONRAKİ SET";
-      $("btnNextSet").onclick = ()=> this.continueGame();
-    } else {
-      $("pauseTitle").textContent = "SET SONUCU";
-      $("setWinnerMsg").textContent = "SET BERABERE!";
-      $("btnNextSet").textContent = "SONRAKİ SET";
-      $("btnNextSet").onclick = ()=> this.continueGame();
-    }
-  },
-
-  continueGame(){
-    $("pauseModal").classList.add("hidden");
-    this.players.forEach(p=>{
-      p.score=0; p.wordsPlayed=0; p.passRight=1; p.varRight=1;
-      p.slots=null; p.hintUsedThisWord=false;
-      // hintRight stays match-long
-    });
-    this.usedWords.clear();
-    this.pendingWrong = null;
-    this.turnIndex = (this.turnIndex + 1) % this.players.length; // slight fairness
-    this.pickNextWordStrict();
-    this.state = STATE.IDLE;
-    this.render();
-    this.startTurnFlow();
-  },
-
-  speak(txt, cb){
-    window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(txt);
-    u.lang = LANG_CODES[setup.lang] || "en-US";
-    u.rate = 0.85;
-    u.onend = ()=> cb && cb();
-    window.speechSynthesis.speak(u);
+  await buildDeck();
+  if(!deck.length){
+    alert("Havuz boş görünüyor.");
+    location.href="/pages/game.html";
+    return;
   }
+  startRound();
+}
+
+document.querySelectorAll(".lang-btn").forEach(btn=>{
+  btn.onclick=()=>{
+    document.querySelectorAll(".lang-btn").forEach(x=>x.classList.remove("active"));
+    btn.classList.add("active");
+    lang = btn.dataset.lang;
+    updatePB();
+    $("statusChip").textContent = `${lang.toUpperCase()} • ${lvl}`;
+  };
+});
+document.querySelectorAll("[data-lvl]").forEach(btn=>{
+  btn.onclick=async ()=>{
+    lvl = btn.dataset.lvl;
+    // spend token on ENTER
+    ensureDailyTokens();
+    const u=getUser();
+    if(!isPro(u) && !spendToken()){
+      alert("Hakkın bitti. Hak kazan veya PRO’ya geç.");
+      location.href="/pages/game.html";
+      return;
+    }
+    await startRun();
+  };
+});
+
+$("jokerBtn").onclick=()=>{
+  if(jokers<=0 || usedJoker) return;
+  jokers--;
+  usedJoker=true;
+  // reveal one random hidden letter
+  const hiddenIdx = wordMasked.map((v,i)=> v==="_"?i:-1).filter(i=>i!==-1);
+  if(!hiddenIdx.length) return;
+  const idx = hiddenIdx[Math.floor(Math.random()*hiddenIdx.length)];
+  const ch = current.w[idx];
+  correctLetters.add(ch);
+  current.w.split("").forEach((c,i)=>{ if(c===ch) wordMasked[i]=c; });
+  renderWord();
+  buildKeyboard();
+  toastInfo("⚡ İPUCU kullanıldı", true);
+  if(isSolved()){
+    speak(current.sentence || current.raw || current.w);
+    score += 120; setScore += 120;
+    nextRound(700);
+  }
+  updateTop();
 };
 
-// ===== UI wiring =====
-(function(){
-  // players
-  $("grpPlayers").querySelectorAll(".toggle-btn").forEach(btn=>{
-    btn.addEventListener("click", ()=>{
-      $("grpPlayers").querySelectorAll(".toggle-btn").forEach(x=>x.classList.remove("active"));
-      btn.classList.add("active");
-      setup.playerCount = Number(btn.dataset.n);
-      buildNameInputs();
-    });
-  });
+$("btnContinue").onclick=async ()=>{
+  // spend token on CONTINUE
+  ensureDailyTokens();
+  const u=getUser();
+  if(!isPro(u) && !spendToken()){
+    alert("Hakkın bitti. Hak kazan veya PRO’ya geç.");
+    location.href="/pages/game.html";
+    return;
+  }
+  shield=true;
+  setScore=0;
+  $("endModal").classList.add("hidden");
+  await buildDeck();
+  startRound();
+};
 
-  // lang
-  $("grpLang").querySelectorAll(".lang-btn").forEach(btn=>{
-    btn.addEventListener("click", ()=>{
-      $("grpLang").querySelectorAll(".lang-btn").forEach(x=>x.classList.remove("active"));
-      btn.classList.add("active");
-      setup.lang = btn.dataset.lang;
-    });
-  });
+$("btnBank").onclick=async ()=>{
+  // spend token on BANK
+  ensureDailyTokens();
+  const u=getUser();
+  if(!isPro(u) && !spendToken()){
+    alert("Hakkın bitti. Hak kazan veya PRO’ya geç.");
+    location.href="/pages/game.html";
+    return;
+  }
+  const bonus = Math.round(setScore*0.05);
+  score += bonus;
+  jokers = Math.min(3, jokers+1);
+  setScore=0;
+  shield=false;
+  toastInfo(`BANKA +${bonus} & +1 İPUCU`, true);
+  $("endModal").classList.add("hidden");
+  await buildDeck();
+  startRound();
+};
 
-  // mode
-  $("grpMode").querySelectorAll(".toggle-btn").forEach(btn=>{
-    btn.addEventListener("click", ()=>{
-      $("grpMode").querySelectorAll(".toggle-btn").forEach(x=>x.classList.remove("active"));
-      btn.classList.add("active");
-      setup.mode = btn.dataset.mode;
-    });
-  });
+$("btnFinish").onclick=()=>{
+  savePB();
+  location.href="/pages/game.html";
+};
 
-  // start
-  $("btnStart").addEventListener("click", ()=> game.init());
-
-  // main controls
-  $("btnPass").addEventListener("click", ()=> game.action("pass"));
-  $("btnHint").addEventListener("click", ()=> game.action("hint"));
-  $("btnMic").addEventListener("click", ()=> game.action("mic"));
-
-  // overlay actions
-  $("btnVar").addEventListener("click", ()=> game.varObjection());
-  $("btnCont").addEventListener("click", ()=> game.varContinue());
-
-  // tap overlay to continue (anti-freeze)
-  $("overlay").addEventListener("click", (e)=>{
-    // if actions visible, ignore tap (force choice) unless user taps outside buttons
-    const actionsVisible = $("ovActions").style.display === "flex";
-    if(actionsVisible){
-      // allow tap on background to act like "DEVAM ET" (premium UX)
-      if(e.target === $("overlay") || e.target === $("ovTap") || e.target === $("ovTitle") || e.target === $("ovSub") || e.target === $("ovBadge")){
-        game.varContinue();
-      }
-      return;
-    }
-    // correct overlay: tap = proceed
-    if(game.state === STATE.RESOLVING){
-      game.finishCommittedTurn();
-    }
-  });
-})();
+window.addEventListener("load", ()=>{
+  updatePB();
+  updateTop();
+});
 </script>
-
 </body>
 </html>
