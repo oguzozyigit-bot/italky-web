@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>italkyAI • Oyunlar</title>
+  <title>italkyAI • Oyun Merkezi</title>
   <link rel="icon" href="data:," />
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -12,42 +12,150 @@
 
   <style>
     :root{
-      --bg:#030014; --text:rgba(255,255,255,.92);
-      --ai1:#A5B4FC; --ai2:#4F46E5;
+      --bg:#020205; 
+      --text:#fff;
+      --accent-blue:#00f3ff; 
+      --accent-pink:#ff00ff;
+      --glass: rgba(255, 255, 255, 0.05);
+      --border: rgba(255, 255, 255, 0.15);
     }
-    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-    html,body{margin:0;width:100%;height:100dvh;overflow:hidden;position:fixed;
-      font-family:Outfit,sans-serif;background:var(--bg);color:var(--text)}
-    .mobile-frame{max-width:480px;height:100%;margin:0 auto;
-      display:flex;flex-direction:column;background:rgba(8,8,20,.65);backdrop-filter:blur(25px)}
-    .topbar{height:74px;display:flex;align-items:center;justify-content:space-between;
-      padding:0 12px;border-bottom:1px solid rgba(255,255,255,.08)}
-    .backBtn{width:44px;height:44px;border-radius:16px;border:1px solid rgba(255,255,255,.12);
-      background:rgba(0,0,0,.18);color:#fff;font-size:20px;font-weight:900}
-    .logo-line{font-family:Space Grotesk;font-size:20px;font-weight:700}
-    .logo-ai{background:linear-gradient(135deg,var(--ai1),var(--ai2));
-      -webkit-background-clip:text;-webkit-text-fill-color:transparent}
-    .main{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:12px}
-    .hero{border-radius:22px;padding:12px;border:1px solid rgba(255,255,255,.1);
-      background:radial-gradient(400px 140px at 0 0,rgba(79,70,229,.25),transparent 60%)}
-    .chips{display:flex;gap:8px}
-    .chip{padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.12);
-      font-size:11px;font-weight:800}
-    .btns{display:flex;gap:10px;margin-top:8px}
-    .btn{flex:1;height:46px;border-radius:16px;font-weight:900;border:none;color:#fff}
-    .btn.earn{background:linear-gradient(135deg,#00f3ff,#bc13fe)}
-    .btn.play{background:linear-gradient(135deg,var(--ai1),var(--ai2))}
-    .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    .card{border-radius:22px;padding:12px;border:1px solid rgba(255,255,255,.1);
-      background:rgba(255,255,255,.05);display:flex;flex-direction:column;gap:6px;
-      min-height:160px}
-    .icon{width:44px;height:44px;border-radius:16px;
-      display:flex;align-items:center;justify-content:center;font-size:20px}
-    .name{font-weight:900;font-size:13px}
-    .desc{font-size:11px;font-weight:700;opacity:.75}
+    
+    * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; user-select: none; }
+    
+    html, body {
+      margin:0; width:100%; height:100dvh; overflow:hidden; position:fixed;
+      font-family:'Outfit', sans-serif; background:var(--bg); color:var(--text);
+    }
+
+    /* --- ARKA PLAN EFEKTLERİ --- */
+    .cosmos-bg { position:absolute; inset:0; z-index:0; background: radial-gradient(circle at 50% 0%, #1a1a2e 0%, #020205 70%); }
+    .orb { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.4; animation: float 10s infinite alternate ease-in-out; }
+    .orb-1 { width: 300px; height: 300px; background: var(--accent-blue); top: -100px; left: -100px; }
+    .orb-2 { width: 250px; height: 250px; background: var(--accent-pink); bottom: -50px; right: -50px; animation-delay: -5s; }
+    
+    @keyframes float { 0% { transform: translate(0, 0); } 100% { transform: translate(20px, 40px); } }
+
+    /* --- LAYOUT --- */
+    .mobile-frame {
+      max-width:480px; height:100%; margin:0 auto; position: relative; z-index: 10;
+      display:flex; flex-direction:column; 
+      background: rgba(255,255,255,0.01); backdrop-filter:blur(20px);
+    }
+
+    /* --- TOP BAR --- */
+    .topbar {
+      height:70px; display:flex; align-items:center; justify-content:space-between;
+      padding:0 20px; border-bottom:1px solid var(--border);
+    }
+    .backBtn {
+      width:40px; height:40px; border-radius:12px; border:1px solid var(--border);
+      background: rgba(255,255,255,0.05); color:#fff; font-size:22px; font-weight:700;
+      cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center;
+    }
+    .backBtn:active { transform: scale(0.9); background: rgba(255,255,255,0.1); }
+    
+    .logo-line { font-family:'Space Grotesk'; font-size:22px; font-weight:700; letter-spacing: -0.5px; }
+    .logo-ai { background: linear-gradient(90deg, var(--accent-blue), var(--accent-pink)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+
+    /* --- MAIN CONTENT --- */
+    .main { flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:25px; }
+    /* Scrollbar gizle */
+    .main::-webkit-scrollbar { display: none; }
+
+    /* --- HERO DASHBOARD (3D PANEL) --- */
+    .dashboard {
+      background: linear-gradient(160deg, rgba(30,30,40,0.6), rgba(10,10,15,0.8));
+      border: 1px solid var(--border); border-top: 1px solid rgba(255,255,255,0.3);
+      border-radius: 28px; padding: 20px;
+      box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+      transform-style: preserve-3d;
+    }
+    
+    .stats-row { display: flex; justify-content: space-between; margin-bottom: 20px; }
+    .stat-box {
+      background: rgba(0,0,0,0.3); padding: 8px 14px; border-radius: 12px;
+      display: flex; align-items: center; gap: 8px; border: 1px solid rgba(255,255,255,0.05);
+    }
+    .stat-icon { font-size: 18px; }
+    .stat-text { font-size: 13px; font-weight: 800; color: rgba(255,255,255,0.9); }
+    .plan-badge { 
+      background: linear-gradient(45deg, #FFD700, #FFA500); color: #000; 
+      padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: 900; 
+    }
+
+    .action-row { display: flex; gap: 12px; }
+    .btn-3d {
+      flex: 1; height: 50px; border: none; border-radius: 16px;
+      font-family: 'Space Grotesk'; font-weight: 700; font-size: 14px; color: #fff;
+      cursor: pointer; position: relative; top: 0; transition: 0.1s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      box-shadow: 0 6px 0 rgba(0,0,0,0.3), 0 10px 20px rgba(0,0,0,0.2);
+    }
+    .btn-3d:active { top: 4px; box-shadow: 0 2px 0 rgba(0,0,0,0.3), 0 4px 10px rgba(0,0,0,0.2); }
+    
+    .btn-earn { background: linear-gradient(to bottom, #8b5cf6, #6d28d9); box-shadow: 0 6px 0 #4c1d95; }
+    .btn-play { background: linear-gradient(to bottom, #00e676, #00b359); box-shadow: 0 6px 0 #008040; color: #002b15; }
+
+    /* --- GAME GRID --- */
+    .section-title { font-size: 14px; font-weight: 700; opacity: 0.6; margin-left: 5px; letter-spacing: 1px; }
+    .grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+
+    .game-card {
+      position: relative;
+      height: 100px;
+      border-radius: 24px;
+      padding: 0 20px;
+      display: flex; align-items: center; justify-content: space-between;
+      overflow: hidden; cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.1);
+      transition: 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .game-card::before {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(90deg, rgba(255,255,255,0.03), transparent);
+      z-index: 0;
+    }
+    .game-card:active { transform: scale(0.96); }
+
+    /* Sol Taraf (İkon + Metin) */
+    .gc-left { display: flex; align-items: center; gap: 15px; z-index: 1; }
+    .gc-icon-box {
+      width: 54px; height: 54px; border-radius: 18px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px;
+      background: rgba(255,255,255,0.1);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+      position: relative;
+    }
+    .gc-icon-anim { animation: floatIcon 3s ease-in-out infinite; }
+    @keyframes floatIcon { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+
+    .gc-info { display: flex; flex-direction: column; gap: 4px; }
+    .gc-name { font-size: 18px; font-weight: 800; letter-spacing: 0.5px; }
+    .gc-desc { font-size: 11px; opacity: 0.6; font-weight: 500; }
+
+    /* Sağ Taraf (Ok) */
+    .gc-arrow {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: rgba(255,255,255,0.1);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; opacity: 0.5;
+    }
+
+    /* Özel Renkler */
+    .gc-arena { background: linear-gradient(135deg, rgba(255, 0, 85, 0.15), rgba(0,0,0,0)); border-left: 4px solid #ff0055; }
+    .gc-spy { background: linear-gradient(135deg, rgba(0, 240, 255, 0.15), rgba(0,0,0,0)); border-left: 4px solid #00f0ff; }
+    .gc-sentence { background: linear-gradient(135deg, rgba(0, 230, 118, 0.15), rgba(0,0,0,0)); border-left: 4px solid #00e676; }
+
   </style>
 </head>
 <body>
+
+<div class="cosmos-bg">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+</div>
+
 <div class="mobile-frame">
   <div class="topbar">
     <button class="backBtn" id="backBtn">←</button>
@@ -55,23 +163,38 @@
   </div>
 
   <div class="main">
-    <div class="hero">
-      <div class="chips">
-        <div class="chip" id="dailyChip">🎟️ Hak: 0</div>
-        <div class="chip" id="planChip">FREE</div>
+    
+    <div class="dashboard">
+      <div class="stats-row">
+        <div class="stat-box">
+          <span class="stat-icon">🎟️</span>
+          <span class="stat-text" id="dailyChip">Hak: 0</span>
+        </div>
+        <div class="plan-badge" id="planChip">FREE</div>
       </div>
-      <div class="btns">
-        <button class="btn earn" id="earnBtn">Hak Kazan</button>
-        <button class="btn play" id="startBtn">Hemen Oyna</button>
+      
+      <div class="action-row">
+        <button class="btn-3d btn-earn" id="earnBtn">
+          <span>📺</span> HAK KAZAN
+        </button>
+        <button class="btn-3d btn-play" id="startBtn">
+          <span>⚡</span> HEMEN OYNA
+        </button>
       </div>
     </div>
 
-    <div class="grid" id="gameGrid"></div>
+    <div class="section-title">OYUN LİSTESİ</div>
+    <div class="grid" id="gameGrid">
+      </div>
+
   </div>
 </div>
 
-<div id="toast" style="position:fixed;top:20px;left:50%;transform:translateX(-50%);
-background:#111;padding:10px 14px;border-radius:999px;display:none"></div>
+<div id="toast" style="position:fixed;top:90px;left:50%;transform:translateX(-50%);
+background:rgba(20,20,30,0.9); border:1px solid rgba(255,255,255,0.2); backdrop-filter:blur(10px);
+padding:12px 20px; border-radius:30px; font-weight:700; font-size:13px;
+box-shadow:0 10px 30px rgba(0,0,0,0.5); display:none; z-index:100; text-align:center;">
+</div>
 
 <script type="module" src="/js/game_page.js"></script>
 </body>
