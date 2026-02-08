@@ -1,6 +1,10 @@
 // FILE: /js/voice_ai.page.js
-// FINAL — synced subtitles + 600s/day (test) + PRO unlimited
-// Change back to 60 for prod later.
+// FINAL — Voice AI (OpenAI text + OpenAI TTS) + subtitles dissolve + 60s/day FREE gate + PRO unlimited
+// - Text generation: POST /api/chat_openai   ✅ (NEW)
+// - TTS:            POST /api/tts_openai     ✅ (your existing base64 endpoint)
+// - STT:            Web SpeechRecognition (browser)
+//
+// Requires voice_ai.html contains: <div id="subtitleStream" class="subtitles"></div>
 
 import { STORAGE_KEY } from "/js/config.js";
 import { apiPOST } from "/js/api.js";
@@ -8,33 +12,51 @@ import { apiPOST } from "/js/api.js";
 const $ = (id) => document.getElementById(id);
 function safeJson(s, fb = {}) { try { return JSON.parse(s || ""); } catch { return fb; } }
 
-/* AUTH */
-function termsKey(email = "") { return `italky_terms_accepted_at::${String(email || "").toLowerCase().trim()}`; }
-function getUser() { return safeJson(localStorage.getItem(STORAGE_KEY), {}); }
+/* ===============================
+   AUTH GUARD (home/profile standard)
+   =============================== */
+function termsKey(email = "") {
+  return `italky_terms_accepted_at::${String(email || "").toLowerCase().trim()}`;
+}
+function getUser() {
+  return safeJson(localStorage.getItem(STORAGE_KEY), {});
+}
 function ensureLogged() {
   const u = getUser();
-  if (!u?.email) { location.replace("/index.html"); return null; }
+  if (!u || !u.email) { location.replace("/index.html"); return null; }
   if (!localStorage.getItem(termsKey(u.email))) { location.replace("/index.html"); return null; }
   return u;
 }
 
-/* PLAN */
+/* ===============================
+   PLAN
+   =============================== */
 function isPro(u) {
   const p = String(u?.plan || "").toUpperCase().trim();
   return p === "PRO" || p === "PREMIUM" || p === "PLUS";
 }
 
-/* ===== DAILY FREE (TEST) ===== */
-const FREE_SECONDS_PER_DAY = 600; // ✅ TEST: 600s/day
+/* ===============================
+   DAILY FREE 60s (voice)
+   - counts: mic listening seconds + AI wait seconds
+   =============================== */
+const FREE_SECONDS_PER_DAY = 60; // PROD: 60 (testte 600 yapabilirsin)
 const MIN_AI_WAIT_CHARGE = 1;
 const MAX_AI_WAIT_CHARGE = 15;
 
-function uidKey(u) { return String(u.user_id || u.id || u.email || "guest").toLowerCase().trim(); }
+function uidKey(u) {
+  return String(u.user_id || u.id || u.email || "guest").toLowerCase().trim();
+}
 function isoDateLocal() {
   const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
 }
-function usageKey(u) { return `italky_voice_free_used_sec::${uidKey(u)}::${isoDateLocal()}`; }
+function usageKey(u) {
+  return `italky_voice_free_used_sec::${uidKey(u)}::${isoDateLocal()}`;
+}
 function getUsed(u) {
   if (isPro(u)) return 0;
   const v = Number(localStorage.getItem(usageKey(u)) || "0");
@@ -46,27 +68,44 @@ function setUsed(u, sec) {
 }
 function addUsed(u, add) {
   if (isPro(u)) return 0;
-  const next = getUsed(u) + Math.max(0, Math.floor(add));
+  const cur = getUsed(u);
+  const next = cur + Math.max(0, Math.floor(add));
   setUsed(u, next);
   return next;
 }
-function remaining(u) { return isPro(u) ? 9999 : Math.max(0, FREE_SECONDS_PER_DAY - getUsed(u)); }
-function canUse(u) { return isPro(u) ? true : remaining(u) > 0; }
-
-/* PAYWALL (same) */
-let paywallEl = null;
-function disableControls(disabled) {
-  $("micToggle") && ($("micToggle").disabled = disabled);
-  $("modeAuto") && ($("modeAuto").disabled = disabled);
-  $("modeManual") && ($("modeManual").disabled = disabled);
-  const s = $("btnSettings");
-  if (s) s.style.pointerEvents = disabled ? "none" : "auto";
+function remaining(u) {
+  if (isPro(u)) return 9999;
+  return Math.max(0, FREE_SECONDS_PER_DAY - getUsed(u));
 }
+function canUse(u) {
+  if (isPro(u)) return true;
+  return remaining(u) > 0;
+}
+
+/* ===============================
+   PAYWALL
+   =============================== */
+let paywallEl = null;
+
+function disableControls(disabled) {
+  const mic = $("micToggle");
+  const modeA = $("modeAuto");
+  const modeM = $("modeManual");
+  const settings = $("btnSettings");
+
+  if (mic) mic.disabled = disabled;
+  if (modeA) modeA.disabled = disabled;
+  if (modeM) modeM.disabled = disabled;
+  if (settings) settings.style.pointerEvents = disabled ? "none" : "auto";
+}
+
 function showPaywall(u) {
   if (isPro(u)) return;
   if (paywallEl) return;
+
   stopConversation();
   setVisual("idle");
+  if (status) { status.textContent = "Süre Bitti"; status.classList.add("show"); }
   disableControls(true);
 
   paywallEl = document.createElement("div");
@@ -78,37 +117,108 @@ function showPaywall(u) {
   paywallEl.style.alignItems = "center";
   paywallEl.style.justifyContent = "center";
   paywallEl.style.padding = "18px";
-  paywallEl.innerHTML = `
-    <div style="width:min(420px, calc(100vw - 36px));border-radius:26px;border:1px solid rgba(255,255,255,.14);background:rgba(8,8,20,.90);backdrop-filter:blur(18px);box-shadow:0 40px 120px rgba(0,0,0,.75);padding:16px;">
-      <div style="font-weight:1000;font-size:16px;margin-bottom:8px;">Günlük ücretsiz süre bitti</div>
-      <div style="font-weight:800;font-size:12px;color:rgba(255,255,255,.78);line-height:1.45;">
-        Bugünlük ücretsiz kullanım hakkın doldu. Abonelik sadece uygulama içinden.
-      </div>
-      <div style="margin-top:12px;padding:10px 12px;border-radius:16px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.05);font-weight:900;font-size:12px;">
-        Bugünkü kalan: ${remaining(u)}s
-      </div>
-      <div style="display:flex;gap:10px;margin-top:14px;">
-        <button id="pwSub" style="flex:1;height:46px;border-radius:16px;border:none;cursor:pointer;font-weight:1000;color:#fff;background:linear-gradient(135deg,#A5B4FC,#4F46E5);">Uygulamadan Abone Ol</button>
-        <button id="pwClose" style="flex:1;height:46px;border-radius:16px;border:1px solid rgba(255,255,255,.14);cursor:pointer;font-weight:1000;color:#fff;background:rgba(255,255,255,.06);">Kapat</button>
-      </div>
-    </div>
-  `;
+
+  const card = document.createElement("div");
+  card.style.width = "min(420px, calc(100vw - 36px))";
+  card.style.borderRadius = "26px";
+  card.style.border = "1px solid rgba(255,255,255,.14)";
+  card.style.background = "rgba(8,8,20,.90)";
+  card.style.backdropFilter = "blur(18px)";
+  card.style.boxShadow = "0 40px 120px rgba(0,0,0,.75)";
+  card.style.padding = "16px";
+
+  const title = document.createElement("div");
+  title.style.fontWeight = "1000";
+  title.style.fontSize = "16px";
+  title.style.marginBottom = "8px";
+  title.textContent = "Günlük ücretsiz süre bitti";
+
+  const body = document.createElement("div");
+  body.style.fontWeight = "800";
+  body.style.fontSize = "12px";
+  body.style.color = "rgba(255,255,255,.78)";
+  body.style.lineHeight = "1.45";
+  body.textContent = "Bugünlük 60 saniyelik ücretsiz kullanım hakkın doldu. Abonelik sadece uygulama içinden (Play Store / yakında App Store).";
+
+  const meter = document.createElement("div");
+  meter.style.marginTop = "12px";
+  meter.style.padding = "10px 12px";
+  meter.style.borderRadius = "16px";
+  meter.style.border = "1px solid rgba(255,255,255,.10)";
+  meter.style.background = "rgba(255,255,255,.05)";
+  meter.style.fontWeight = "900";
+  meter.style.fontSize = "12px";
+  meter.textContent = `Bugünkü kalan: ${remaining(u)}s`;
+
+  const row = document.createElement("div");
+  row.style.display = "flex";
+  row.style.gap = "10px";
+  row.style.marginTop = "14px";
+
+  const btnSub = document.createElement("button");
+  btnSub.type = "button";
+  btnSub.textContent = "Uygulamadan Abone Ol";
+  btnSub.style.flex = "1";
+  btnSub.style.height = "46px";
+  btnSub.style.borderRadius = "16px";
+  btnSub.style.border = "none";
+  btnSub.style.cursor = "pointer";
+  btnSub.style.fontWeight = "1000";
+  btnSub.style.color = "#fff";
+  btnSub.style.background = "linear-gradient(135deg, #A5B4FC, #4F46E5)";
+  btnSub.addEventListener("click", () => {
+    alert("Abonelik uygulama içinden yapılır.");
+  });
+
+  const btnClose = document.createElement("button");
+  btnClose.type = "button";
+  btnClose.textContent = "Kapat";
+  btnClose.style.flex = "1";
+  btnClose.style.height = "46px";
+  btnClose.style.borderRadius = "16px";
+  btnClose.style.border = "1px solid rgba(255,255,255,.14)";
+  btnClose.style.cursor = "pointer";
+  btnClose.style.fontWeight = "1000";
+  btnClose.style.color = "#fff";
+  btnClose.style.background = "rgba(255,255,255,.06)";
+  btnClose.addEventListener("click", () => {
+    paywallEl?.remove?.();
+    paywallEl = null;
+    alert("Ücretsiz süre bitti.");
+  });
+
+  row.appendChild(btnSub);
+  row.appendChild(btnClose);
+
+  card.appendChild(title);
+  card.appendChild(body);
+  card.appendChild(meter);
+  card.appendChild(row);
+
+  paywallEl.appendChild(card);
+  paywallEl.addEventListener("click", (e) => { if (e.target === paywallEl) btnClose.click(); });
+
   document.body.appendChild(paywallEl);
-  paywallEl.querySelector("#pwSub").onclick = () => alert("Abonelik uygulama içinden yapılır.");
-  paywallEl.querySelector("#pwClose").onclick = () => { paywallEl.remove(); paywallEl = null; };
 }
 
-/* HTTPS mic */
+/* ===============================
+   HTTPS check for mic
+   =============================== */
 function ensureHttpsForMic() {
   if (location.protocol === "https:" || location.hostname === "localhost") return true;
-  alert("Mikrofon için HTTPS gerekli.");
+  alert("Mikrofon için HTTPS gerekli. (Vercel/HTTPS kullan)");
   return false;
 }
 
-/* Subtitles sync */
+/* ===============================
+   SUBTITLES STREAM (SYNCED)
+   - user text shows immediately and fades
+   - ai text shows immediately but fades only after audio ends
+   =============================== */
 function createSubtitle(text, who = "ai", { autoFade = true } = {}) {
   const stream = $("subtitleStream");
   if (!stream) return null;
+
   const t = String(text || "").trim();
   if (!t) return null;
 
@@ -125,8 +235,10 @@ function createSubtitle(text, who = "ai", { autoFade = true } = {}) {
     setTimeout(() => line.classList.add("fadeout"), 900);
     setTimeout(() => { try { line.remove(); } catch {} }, 900 + 2800);
   }
+
   return line;
 }
+
 function fadeSubtitle(line) {
   if (!line) return;
   try {
@@ -135,7 +247,9 @@ function fadeSubtitle(line) {
   } catch {}
 }
 
-/* Characters */
+/* ===============================
+   YOUR CHARACTER LIST
+   =============================== */
 const VOICES = [
   { id: "dora",   label: "Dora",   gender: "Kadın", openaiVoice: "nova",    desc: "Enerjik ve Neşeli ⚡" },
   { id: "ayda",   label: "Ayda",   gender: "Kadın", openaiVoice: "shimmer", desc: "Parlak ve Net ✨" },
@@ -149,6 +263,8 @@ const KEY = "italky_voice_pref";
 let selectedId = (localStorage.getItem(KEY) || "dora").trim();
 let stagedId = selectedId;
 let isAutoMode = true;
+
+// ✅ voice chat memory (OpenAI text)
 let chatHistory = [];
 
 let silenceRetryCount = 0;
@@ -156,31 +272,48 @@ const MAX_SILENCE_RETRIES = 2;
 
 function getSelectedVoice() { return VOICES.find(v => v.id === selectedId) || VOICES[0]; }
 
-/* Audio */
+/* ===============================
+   AUDIO (OpenAI TTS via backend)
+   =============================== */
 let currentAudio = null;
-function stopAudio() { if (currentAudio) { try { currentAudio.pause(); } catch {} currentAudio = null; } }
+
+function stopAudio() {
+  if (currentAudio) { try { currentAudio.pause(); } catch {} currentAudio = null; }
+}
 
 async function playRealVoice(text, openaiVoice, onEndCallback, subtitleLine = null) {
   stopAudio();
+
   try {
     const data = await apiPOST("/api/tts_openai", { text, voice: openaiVoice, speed: 1.1 }, { timeoutMs: 45000 });
+
     if (data?.audio_base64) {
       setVisual("speaking");
+
       const audio = new Audio("data:audio/mp3;base64," + data.audio_base64);
       currentAudio = audio;
-      audio.onended = () => { currentAudio = null; fadeSubtitle(subtitleLine); onEndCallback?.(); };
+
+      audio.onended = () => {
+        currentAudio = null;
+        fadeSubtitle(subtitleLine);
+        if (onEndCallback) onEndCallback();
+      };
+
       await audio.play();
     } else {
       fadeSubtitle(subtitleLine);
-      onEndCallback?.();
+      if (onEndCallback) onEndCallback();
     }
-  } catch {
+  } catch (err) {
+    console.error("TTS Hatası:", err);
     fadeSubtitle(subtitleLine);
-    onEndCallback?.();
+    if (onEndCallback) onEndCallback();
   }
 }
 
-/* Visuals */
+/* ===============================
+   VISUAL
+   =============================== */
 const stage = $("aiStage");
 const status = $("statusText");
 const micBtn = $("micToggle");
@@ -196,7 +329,8 @@ function setVisual(state) {
     stage?.classList.add("listening");
     micBtn?.classList.add("active");
     if (status) {
-      status.textContent = (silenceRetryCount > 0) ? "Cevap Bekliyor..." : (isAutoMode ? "Dinliyorum..." : "Konuşun...");
+      if (silenceRetryCount > 0) status.textContent = "Cevap Bekliyor...";
+      else status.textContent = isAutoMode ? "Dinliyorum..." : "Konuşun...";
       status.classList.add("show");
     }
   } else if (state === "thinking") {
@@ -212,14 +346,37 @@ function setVisual(state) {
   }
 }
 
-/* Conversation */
+/* ===============================
+   OpenAI CHAT (NEW endpoint)
+   POST /api/chat_openai
+   =============================== */
+async function apiVoiceTextOpenAI(text, personaName, history) {
+  const data = await apiPOST("/api/chat_openai", {
+    text,
+    persona_name: personaName,
+    history: (history || []).slice(-6),
+    max_tokens: 140
+  }, { timeoutMs: 25000 });
+
+  return String(data?.text || "").trim() || "...";
+}
+
+/* ===============================
+   Conversation loop
+   =============================== */
 let uGlobal = null;
+
 let isConversationActive = false;
 let recognition = null;
 let silenceTimer = null;
+
+// quota timing (mic)
 let listenStartTs = 0;
 
-function toggleConversation() { if (isConversationActive) stopConversation(); else startConversation(); }
+function toggleConversation() {
+  if (isConversationActive) stopConversation();
+  else startConversation();
+}
 
 function startConversation() {
   if (!uGlobal) return;
@@ -244,6 +401,7 @@ function stopConversation() {
 
 function startListening() {
   if (!uGlobal || !isConversationActive) return;
+
   if (!canUse(uGlobal)) { showPaywall(uGlobal); return; }
 
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -260,7 +418,9 @@ function startListening() {
     if (isAutoMode) {
       if (silenceTimer) clearTimeout(silenceTimer);
       silenceTimer = setTimeout(() => {
-        if (isConversationActive && stage?.classList.contains("listening")) handleSilence();
+        if (isConversationActive && stage?.classList.contains("listening")) {
+          handleSilence();
+        }
       }, 10000);
     }
   };
@@ -268,28 +428,36 @@ function startListening() {
   recognition.onresult = (event) => {
     if (silenceTimer) clearTimeout(silenceTimer);
     silenceRetryCount = 0;
+
     const text = String(event.results?.[0]?.[0]?.transcript || "").trim();
     if (text && isConversationActive) processUserSpeech(text, false);
   };
 
   recognition.onerror = (e) => {
-    if (isConversationActive && e.error !== "aborted" && isAutoMode) setTimeout(startListening, 500);
+    if (isConversationActive && e.error !== "aborted" && isAutoMode) {
+      setTimeout(startListening, 500);
+    }
   };
 
   recognition.onend = () => {
+    // ✅ charge mic listening seconds (FREE only)
     if (uGlobal && !isPro(uGlobal)) {
       const sec = (Date.now() - listenStartTs) / 1000;
       addUsed(uGlobal, sec);
       if (!canUse(uGlobal)) { showPaywall(uGlobal); return; }
     }
+
     if (isConversationActive && isAutoMode) {
-      if (!stage?.classList.contains("thinking") && !stage?.classList.contains("speaking")) setTimeout(startListening, 250);
+      if (!stage?.classList.contains("thinking") && !stage?.classList.contains("speaking")) {
+        setTimeout(() => startListening(), 250);
+      }
     }
   };
 
   try { recognition.start(); } catch {}
 }
 
+// silence nudge
 async function handleSilence() {
   if (!uGlobal) return;
   if (!canUse(uGlobal)) { showPaywall(uGlobal); return; }
@@ -301,7 +469,10 @@ async function handleSilence() {
   }
 
   silenceRetryCount++;
-  const nudgePrompt = `(SİSTEM UYARISI: Kullanıcı 10 saniyedir sessiz. Samimi tek cümleyle dürt.)`;
+
+  const nudgePrompt =
+    `(SİSTEM UYARISI: Kullanıcı 10 saniyedir sessiz. Eğer kullanıcının ismini biliyorsan ismini kullanarak, bilmiyorsan samimi bir şekilde: "Ne oldu sustun? Sohbet hoşuna gitmedi mi? Konuşmanı bekliyorum" minvalinde, biraz trip atan, samimi ve canlı tek bir cümle kur.)`;
+
   processUserSpeech(nudgePrompt, true);
 }
 
@@ -314,20 +485,19 @@ async function processUserSpeech(text, isSystemTrigger = false) {
   try {
     const v = getSelectedVoice();
 
+    // ✅ user subtitle now
     if (!isSystemTrigger) createSubtitle(text, "user", { autoFade: true });
 
+    // ✅ voice chat memory (OpenAI)
     chatHistory.push({ role: "user", content: text });
-    if (chatHistory.length > 8) chatHistory = chatHistory.slice(-8);
+    if (chatHistory.length > 10) chatHistory = chatHistory.slice(-10);
 
     const started = Date.now();
 
-    const chatData = await apiPOST("/api/chat", {
-      text,
-      persona_name: v.label,
-      history: chatHistory,
-      max_tokens: 120
-    }, { timeoutMs: 25000 });
+    // ✅ TEXT from OpenAI endpoint
+    const aiReply = await apiVoiceTextOpenAI(text, v.label, chatHistory);
 
+    // ✅ charge AI wait seconds (FREE only)
     if (!isPro(uGlobal)) {
       const elapsed = (Date.now() - started) / 1000;
       const charge = Math.max(MIN_AI_WAIT_CHARGE, Math.min(MAX_AI_WAIT_CHARGE, Math.floor(elapsed)));
@@ -335,27 +505,33 @@ async function processUserSpeech(text, isSystemTrigger = false) {
       if (!canUse(uGlobal)) { showPaywall(uGlobal); return; }
     }
 
-    const aiReply = String(chatData?.text || "").trim() || "Orada mısın?";
+    const replyText = aiReply || "Orada mısın?";
 
-    chatHistory.push({ role: "assistant", content: aiReply });
-    if (chatHistory.length > 8) chatHistory = chatHistory.slice(-8);
+    // ✅ save assistant in memory
+    chatHistory.push({ role: "assistant", content: replyText });
+    if (chatHistory.length > 10) chatHistory = chatHistory.slice(-10);
 
-    const aiLine = createSubtitle(aiReply, "ai", { autoFade: false });
+    // ✅ subtitle shown now, fades when audio ends
+    const aiLine = createSubtitle(replyText, "ai", { autoFade: false });
 
-    await playRealVoice(aiReply, v.openaiVoice, () => {
+    await playRealVoice(replyText, v.openaiVoice, () => {
       if (isConversationActive && isAutoMode) startListening();
       else if (isConversationActive && !isAutoMode) stopConversation();
       else setVisual("idle");
     }, aiLine);
 
-  } catch {
+  } catch (err) {
+    console.error(err);
     stopConversation();
   }
 }
 
-/* Modal */
+/* ===============================
+   MODAL
+   =============================== */
 const modal = $("voiceModal");
 const listContainer = $("voiceListContainer");
+
 function openModal() { modal?.classList.add("show"); renderVoiceList(); }
 function closeModal() { modal?.classList.remove("show"); }
 
@@ -399,12 +575,14 @@ function renderVoiceList() {
   });
 }
 
-/* Boot */
+/* ===============================
+   BOOT
+   =============================== */
 document.addEventListener("DOMContentLoaded", () => {
   uGlobal = ensureLogged();
   if (!uGlobal) return;
 
-  $("btnBack")?.addEventListener("click", () => location.href = "/pages/home.html");
+  $("btnBack")?.addEventListener("click", () => location.href="/pages/home.html");
   $("btnSettings")?.addEventListener("click", openModal);
   $("closeVoiceModal")?.addEventListener("click", closeModal);
   $("saveVoiceBtn")?.addEventListener("click", () => {
@@ -415,14 +593,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const btnAuto = $("modeAuto");
   const btnManual = $("modeManual");
-
   btnAuto?.addEventListener("click", () => {
     isAutoMode = true;
     btnAuto.classList.add("active");
     btnManual?.classList.remove("active");
     stopConversation();
   });
-
   btnManual?.addEventListener("click", () => {
     isAutoMode = false;
     btnManual.classList.add("active");
