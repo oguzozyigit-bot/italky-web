@@ -17,17 +17,15 @@
       --bg-deep: #020205; --text-white: #ffffff; --text-grey: #9ca3af;
       --ai-gradient: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #4338ca 100%);
       --glass-bg: rgba(255, 255, 255, 0.03); --glass-border: rgba(255, 255, 255, 0.08);
-      --ease-out: cubic-bezier(0.215, 0.61, 0.355, 1);
     }
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
     html, body { margin: 0; padding: 0; width: 100%; height: 100dvh; overflow: hidden; font-family: 'Outfit', sans-serif; background-color: var(--bg-deep); color: var(--text-white); display: flex; align-items: center; justify-content: center; }
 
-    /* COSMOS TASARIM (Nebula Efektleri) */
+    /* COSMOS ARKA PLAN */
     .cosmos-layer { position: absolute; inset: -50%; width: 200%; height: 200%; background: var(--bg-deep); z-index: 0; overflow: hidden; }
     .nebula { position: absolute; border-radius: 50%; filter: blur(120px); opacity: 0.35; animation: breathe 10s infinite alternate ease-in-out; }
     .nebula-1 { top: 5%; left: 10%; width: 80vw; height: 80vw; background: radial-gradient(circle, #6366f1, transparent 65%); }
     .nebula-2 { bottom: 5%; right: 10%; width: 70vw; height: 70vw; background: radial-gradient(circle, #818cf8, transparent 65%); animation-delay: -5s; }
-    .stars { position: absolute; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.5' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E"); mix-blend-mode: screen; opacity: 0.6; }
     @keyframes breathe { 0% { transform: scale(1); opacity: 0.3; } 100% { transform: scale(1.1); opacity: 0.45; } }
 
     .app-frame {
@@ -39,174 +37,104 @@
       .app-frame { height: 92vh; border-radius: 40px; border: 1px solid rgba(255,255,255,0.06); box-shadow: 0 50px 100px -20px rgba(0,0,0,0.9); }
     }
 
-    .header-section { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-    .logo-text { font-size: 68px; line-height: 0.85; letter-spacing: -2.5px; display: flex; align-items: center; }
+    /* LOGO VE SLOGAN */
+    .header-section { padding-top: 40px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+    .logo-text { font-size: 60px; line-height: 0.85; letter-spacing: -2px; display: flex; align-items: center; }
     .txt-ai { background: var(--ai-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 700; margin-left: 2px; }
+    .be-free { letter-spacing: 7px; color: #6b7280; font-size: 13px; font-weight: 800; margin-top: 12px; }
 
-    .action-section { width: 100%; padding: 0 24px; display: flex; flex-direction: column; gap: 14px; }
+    /* ÖZELLİKLER LİSTESİ */
+    .features-list { margin: 30px 0; padding: 0 40px; list-style: none; }
+    .features-list li { margin-bottom: 12px; font-size: 15px; color: #d1d5db; display: flex; align-items: center; gap: 10px; }
+    .features-list li::before { content: "✦"; color: #6366f1; font-weight: bold; }
+
+    /* BUTONLAR */
+    .action-section { width: 100%; padding: 0 24px; display: flex; flex-direction: column; gap: 12px; }
     .glass-btn {
-      position: relative; width: 100%; height: 60px; border-radius: 18px; border: 1px solid var(--glass-border);
+      position: relative; width: 100%; height: 58px; border-radius: 18px; border: 1px solid var(--glass-border);
       background: var(--glass-bg); color: #fff; font-size: 15px; font-weight: 700;
       display: flex; align-items: center; justify-content: center; gap: 12px; cursor: pointer; transition: 0.3s;
     }
-    .icon-badge { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    .icon-badge { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    
+    .google-overlay { position: absolute; inset: 0; opacity: 0.001; }
+    .google-overlay div { width: 100% !important; height: 100% !important; }
 
-    /* Google Wrapper Fix */
-    .google-wrapper { position: relative; width: 100%; height: 60px; display: flex; justify-content: center; }
-    #googleBtnWrapper { width: 100% !important; min-height: 50px; display: flex; justify-content: center; }
-
-    /* ✅ GOOGLE TASARIM FIX: Glass buton + gerçek Google butonu şeffaf overlay */
-    .google-glass{ position:relative; overflow:hidden; }
-    .google-overlay{
-      position:absolute; inset:0;
-      opacity:0.001; /* 0 yapma: bazı tarayıcılarda tıklama ölür */
-      display:flex; align-items:center; justify-content:center;
-    }
-    .google-overlay > div{ width:100% !important; }
-
-    .footer-section { margin-top: 25px; display: flex; flex-direction: column; align-items: center; gap: 15px; }
-    .footer-nav { display: flex; gap: 20px; align-items: center; padding: 10px 0; }
-    .footer-nav a { color: rgba(255,255,255,0.4); text-decoration: none; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+    .footer-section { margin-top: 20px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+    .footer-nav { display: flex; gap: 18px; }
+    .footer-nav a { color: rgba(255,255,255,0.3); text-decoration: none; font-size: 10px; font-weight: 700; text-transform: uppercase; }
     .copyright { font-size: 10px; color: rgba(255,255,255,0.15); font-weight: 700; letter-spacing: 1px; }
 
-    /* Modal */
-    .overlay-backdrop { position: fixed; inset: 0; z-index: 9999; background: rgba(2, 2, 5, 0.95); backdrop-filter: blur(15px); display: none; align-items: center; justify-content: center; padding: 20px; }
-    .overlay-backdrop.active { display: flex; }
-    .modal-card { width: 100%; max-width: 440px; background: #0a0a0f; border: 1px solid var(--glass-border); border-radius: 24px; padding: 20px; text-align: center; }
-    iframe { width: 100%; height: 350px; border: none; background: #fff; border-radius: 12px; margin-bottom: 15px; }
-
-    .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); background: #1a1a2e; border: 1px solid #6366f1; padding: 12px 24px; border-radius: 30px; color: #fff; z-index: 10000; transition: 0.4s; text-align: center; }
+    .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); background: #1a1a2e; border: 1px solid #6366f1; padding: 12px 24px; border-radius: 30px; color: #fff; z-index: 10000; transition: 0.4s; font-size: 13px; text-align: center; width: 80%; }
     .toast.show { transform: translateX(-50%) translateY(0); }
   </style>
 </head>
 <body>
 
-  <div class="cosmos-layer"><div class="nebula nebula-1"></div><div class="nebula nebula-2"></div><div class="stars"></div></div>
+  <div class="cosmos-layer"><div class="nebula nebula-1"></div><div class="nebula nebula-2"></div></div>
 
   <div class="app-frame">
     <div class="header-section">
-      <div class="logo-text"><span style="font-weight:700">italky</span><span class="txt-ai">AI</span></div>
-      <div style="letter-spacing:7px; color:#6b7280; font-size:13px; font-weight:800; margin-top:16px;">BE FREE</div>
+      <div class="logo-text"><span>italky</span><span class="txt-ai">AI</span></div>
+      <div class="be-free">BE FREE</div>
+      
+      <div style="margin-top: 35px; padding: 0 30px;">
+        <h2 style="font-size: 22px; margin-bottom: 8px;">Yapay Zeka İle Dil Engellini Kaldır.</h2>
+        <p style="font-size: 13px; color: var(--text-grey); font-weight: 500;">Anlaşmak ve anlaşılır olmak hiç bu kadar kolay olmamıştı.</p>
+      </div>
     </div>
 
-    <div style="text-align: center; margin-bottom: 40px; padding: 0 24px;">
-      <h2 style="font-size: 26px; font-weight: 700; margin-bottom: 10px;">Sınırları <span class="txt-ai">Kaldır.</span></h2>
-      <p style="font-size: 14px; color: var(--text-grey); line-height: 1.5;">Yapay zeka gücüyle anında çeviri yap.</p>
-    </div>
+    <ul class="features-list">
+      <li>Karşılıklı Çeviri</li>
+      <li>Yapay Zeka İle Sohbet</li>
+      <li>Dil Öğretmenleri</li>
+      <li>Eğitici Dil Oyunları</li>
+    </ul>
 
     <div class="action-section">
-      <!-- ✅ Google: tasarım butonu + overlay -->
-      <div class="google-wrapper">
-        <div class="glass-btn google-glass" id="googleGlassBtn">
-          <span class="icon-badge" style="background:#fff; border:1px solid rgba(0,0,0,0.08);">
-            <!-- Google G SVG -->
-            <svg width="16" height="16" viewBox="0 0 48 48" aria-hidden="true">
-              <path fill="#EA4335" d="M24 9.5c3.5 0 6.3 1.2 8.2 3l5.6-5.6C34.6 3.7 29.8 1.5 24 1.5 14.6 1.5 6.5 7 2.7 15l6.9 5.4C11.4 13.8 17.2 9.5 24 9.5z"/>
-              <path fill="#4285F4" d="M46.5 24c0-1.6-.1-2.8-.4-4.1H24v7.7h12.7c-.5 3-2.2 5.6-4.8 7.3l7.3 5.7C43.7 36.4 46.5 30.8 46.5 24z"/>
-              <path fill="#FBBC05" d="M9.6 28.5c-.6-1.7-1-3.5-1-4.5s.3-2.8 1-4.5L2.7 15C1.6 17.2 1 19.6 1 24s.6 6.8 1.7 9l6.9-4.5z"/>
-              <path fill="#34A853" d="M24 46.5c5.8 0 10.6-1.9 14.1-5.2l-7.3-5.7c-2 1.4-4.6 2.3-6.8 2.3-6.8 0-12.6-4.3-14.4-10.4L2.7 33C6.5 41 14.6 46.5 24 46.5z"/>
-            </svg>
-          </span>
-          Google ile Devam Et
-
-          <!-- gerçek Google butonu buraya render edilecek (şeffaf) -->
-          <div id="googleBtnWrapper" class="google-overlay"></div>
-        </div>
+      <div class="glass-btn" style="background: rgba(255,255,255,0.05);">
+        <span class="icon-badge" style="background: #fff;">
+          <svg width="16" height="16" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.3 1.2 8.2 3l5.6-5.6C34.6 3.7 29.8 1.5 24 1.5 14.6 1.5 6.5 7 2.7 15l6.9 5.4C11.4 13.8 17.2 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24c0-1.6-.1-2.8-.4-4.1H24v7.7h12.7c-.5 3-2.2 5.6-4.8 7.3l7.3 5.7C43.7 36.4 46.5 30.8 46.5 24z"/><path fill="#FBBC05" d="M9.6 28.5c-.6-1.7-1-3.5-1-4.5s.3-2.8 1-4.5L2.7 15C1.6 17.2 1 19.6 1 24s.6 6.8 1.7 9l6.9-4.5z"/><path fill="#34A853" d="M24 46.5c5.8 0 10.6-1.9 14.1-5.2l-7.3-5.7c-2 1.4-4.6 2.3-6.8 2.3-6.8 0-12.6-4.3-14.4-10.4L2.7 33C6.5 41 14.6 46.5 24 46.5z"/></svg>
+        </span>
+        Google Hesabın İle Devam Et
+        <div id="googleBtnWrapper" class="google-overlay"></div>
       </div>
 
-      <div class="glass-btn" onclick="showToast('Apple girişi henüz hazır değil. Lütfen Google kullanın.')">
-        <span class="icon-badge" style="background: #000; border: 1px solid rgba(255,255,255,0.2); color: #fff;">
-          
-        </span>
-        Apple ile Devam Et
+      <div class="glass-btn" onclick="showToast('Apple girişi hazırlanıyor, lütfen Google ile devam edin.')">
+        <span class="icon-badge" style="background: #000; color: #fff; font-size: 14px;"></span>
+        Apple Hesabın İle Devam Et
       </div>
     </div>
 
     <div class="footer-section">
       <nav class="footer-nav">
-        <a href="/pages/about.html">HAKKIMIZDA</a>
+        <a href="/pages/about.html">Hakkımızda</a>
         <a href="/pages/faq.html">SSS</a>
-        <a href="/pages/privacy.html">GİZLİLİK</a>
-        <a href="/pages/contact.html">İLETİŞİM</a>
+        <a href="/pages/privacy.html">Gizlilik</a>
+        <a href="/pages/contact.html">İletişim</a>
       </nav>
       <div class="copyright">italkyAI By Ozyigit's 2026</div>
     </div>
   </div>
 
-  <div class="overlay-backdrop" id="termsModal">
-    <div class="modal-card">
-      <h3 style="margin-top:0;">Kullanıcı Sözleşmesi</h3>
-      <iframe src="/pages/sozlesme.html"></iframe>
-      <div style="padding: 10px;">
-        <label style="display:flex; gap:10px; color:#ccc; font-size:13px; align-items:center; cursor:pointer;">
-          <input type="checkbox" id="checkTerm"> Okudum ve onaylıyorum.
-        </label>
-        <button id="acceptBtn" class="glass-btn" style="margin-top:15px; width:100%; border:none; background:var(--ai-gradient); opacity:0.5;" disabled>Onayla ve Başla</button>
-      </div>
-    </div>
-  </div>
-
   <div id="toast" class="toast"></div>
 
-<script>
-  function showToast(msg) {
+<script type="module">
+  import { initAuth } from "/js/auth.js";
+  
+  window.showToast = (msg) => {
     const t = document.getElementById("toast");
     t.textContent = msg; t.classList.add("show");
     setTimeout(() => t.classList.remove("show"), 3500);
-  }
-</script>
-
-<script type="module">
-  import { STORAGE_KEY } from "/js/config.js";
-  import { initAuth, acceptTerms } from "/js/auth.js";
-
-  // auth.js butonu buraya basacak
-  window.__ITALKY_SHOW_TERMS__ = () => {
-    document.getElementById("termsModal")?.classList.add("active");
   };
 
-  function hasAcceptedTerms(u){
-    try{
-      const email = String(u?.email || "").toLowerCase().trim();
-      if(!email) return false;
-      return !!localStorage.getItem(`italky_terms_accepted_at::${email}`);
-    }catch{ return false; }
-  }
-
-  // giriş yapılmış + sözleşme onaylıysa direkt home
-  try{
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if(raw){
-      const u = JSON.parse(raw);
-      if(hasAcceptedTerms(u)){
-        window.location.replace("/pages/home.html");
-      }
-    }
-  }catch{}
-
-  // Google lib hazır olunca initAuth
-  let tries = 0;
-  const timer = setInterval(() => {
-    tries++;
+  // Google Lib Init
+  let timer = setInterval(() => {
     if (window.google?.accounts?.id) {
       clearInterval(timer);
-      initAuth();
+      initAuth(); 
     }
-    if(tries > 80) clearInterval(timer);
   }, 100);
-
-  const checkTerm = document.getElementById("checkTerm");
-  const acceptBtn = document.getElementById("acceptBtn");
-  checkTerm.onchange = () => {
-    acceptBtn.disabled = !checkTerm.checked;
-    acceptBtn.style.opacity = checkTerm.checked ? "1" : "0.5";
-  };
-  acceptBtn.onclick = async () => {
-    if(!checkTerm.checked) return;
-    const ok = await acceptTerms();
-    if(ok) window.location.replace("/pages/home.html");
-    else showToast("Sözleşme kaydedilemedi.");
-  };
 </script>
 </body>
 </html>
