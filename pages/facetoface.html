@@ -42,40 +42,47 @@
 
         .half-screen {
             flex: 1; position: relative; display: flex; flex-direction: column;
-            align-items: center; justify-content: center; padding: 20px;
+            align-items: center; justify-content: space-between; padding: 40px 20px;
         }
 
-        /* Dil Seçimi (Açılır Pencere) */
+        /* Dil Seçimi */
         .lang-picker {
-            position: absolute; top: 20px; right: 20px;
             background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1);
-            color: #fff; padding: 6px 12px; border-radius: 12px;
-            font-size: 12px; font-weight: 700; cursor: pointer; backdrop-filter: blur(10px);
+            color: #fff; padding: 8px 16px; border-radius: 20px;
+            font-size: 13px; font-weight: 700; cursor: pointer; backdrop-filter: blur(10px);
         }
 
         /* Metin Alanı */
-        .display-box { text-align: center; max-width: 85%; z-index: 5; }
-        .transcript { font-size: 22px; font-weight: 700; min-height: 32px; margin-bottom: 5px; }
-        .translation { font-size: 15px; opacity: 0.5; font-style: italic; font-weight: 500; }
-
-        /* Mikrofonlar */
-        .mic-btn {
-            width: 70px; height: 70px; border-radius: 50%;
-            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2);
-            color: #fff; display: flex; align-items: center; justify-content: center;
-            cursor: pointer; transition: 0.3s; margin-top: 20px;
+        .display-box { text-align: center; max-width: 90%; flex: 1; display: flex; flex-direction: column; justify-content: center; }
+        .transcript { font-size: 24px; font-weight: 700; line-height: 1.2; margin-bottom: 12px; color: #fff; }
+        
+        /* Çeviri ve Hoparlör Grubu */
+        .translation-row { display: flex; align-items: center; justify-content: center; gap: 10px; opacity: 0.7; }
+        .translation { font-size: 17px; font-style: italic; font-weight: 500; }
+        .speaker-btn { 
+            background: rgba(255,255,255,0.1); border: none; border-radius: 50%; 
+            width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; 
+            cursor: pointer; color: #fff; transition: 0.2s;
         }
-        .mic-btn.active { background: #fff; color: #000; transform: scale(1.1); }
-        .mic-btn svg { width: 28px; height: 28px; fill: currentColor; }
+        .speaker-btn:active { transform: scale(0.9); background: #fff; color: #000; }
 
-        /* ORTA PANEL (Ses Dalgaları + Logo + Temizle) */
+        /* Mikrofonlar (Daha Aşağıda/Yukarıda Konumlandırıldı) */
+        .mic-btn {
+            width: 72px; height: 72px; border-radius: 50%;
+            background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2);
+            color: #fff; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: 0.3s;
+        }
+        .mic-btn.active { background: #fff; color: #000; transform: scale(1.1); box-shadow: 0 0 20px rgba(255,255,255,0.3); }
+        .mic-btn svg { width: 30px; height: 30px; fill: currentColor; }
+
+        /* ORTA PANEL (Ses Dalgaları + Logo) */
         .center-hub {
-            position: absolute; top: 50%; left: 0; width: 100%; height: 100px;
+            position: absolute; top: 50%; left: 0; width: 100%; height: 80px;
             transform: translateY(-50%); display: flex; align-items: center;
             justify-content: center; z-index: 100; pointer-events: none;
         }
 
-        /* Dinamik Ses Dalgaları */
         .wave-container {
             position: absolute; width: 100%; height: 100%;
             display: flex; align-items: center; justify-content: center; gap: 4px;
@@ -83,30 +90,19 @@
         }
         .wave-container.active { opacity: 1; }
         .wave-bar {
-            width: 3px; height: 20px; background: var(--ai-grad);
-            border-radius: 10px; animation: bounce 1s infinite ease-in-out;
+            width: 3px; height: 15px; background: var(--ai-grad);
+            border-radius: 10px; animation: bounce 0.8s infinite ease-in-out;
         }
-        @keyframes bounce {
-            0%, 100% { height: 10px; opacity: 0.3; }
-            50% { height: 60px; opacity: 1; }
-        }
+        @keyframes bounce { 0%, 100% { height: 10px; opacity: 0.3; } 50% { height: 50px; opacity: 1; } }
 
-        /* Orta Logo */
         .logo-capsule {
-            background: #02000a; padding: 8px 20px; border-radius: 30px;
-            border: 2px solid rgba(255,255,255,0.08); display: flex; align-items: center;
-            gap: 10px; pointer-events: auto; box-shadow: 0 0 30px rgba(0,0,0,0.8);
+            background: #02000a; padding: 10px 24px; border-radius: 30px;
+            border: 2px solid rgba(255,255,255,0.1); display: flex; align-items: center;
+            pointer-events: auto; box-shadow: 0 0 40px rgba(0,0,0,0.9);
         }
-        .logo-text { font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700; color: #fff; }
+        .logo-text { font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 700; color: #fff; }
         .logo-ai { background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
-        /* Temizle Butonu */
-        .btn-clear {
-            position: absolute; left: 20px; pointer-events: auto;
-            width: 38px; height: 38px; border-radius: 50%; background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1); color: #fff;
-            display: flex; align-items: center; justify-content: center; cursor: pointer;
-        }
     </style>
 </head>
 <body>
@@ -116,15 +112,19 @@
             <select class="lang-picker">
                 <option>ENGLISH 🇺🇸</option>
                 <option>DEUTSCH 🇩🇪</option>
-                <option>FRANÇAIS 🇫🇷</option>
             </select>
             
             <div class="display-box">
-                <div class="transcript" id="topT">...</div>
-                <div class="translation" id="topS">Waiting for speech</div>
+                <div class="transcript" id="topT">Welcome to italkyAI</div>
+                <div class="translation-row">
+                    <div class="translation" id="topS">italkyAI'ya hoş geldiniz</div>
+                    <button class="speaker-btn" onclick="speak('top')">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 5L6 9H2v6h4l5 4V5zM19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                    </button>
+                </div>
             </div>
 
-            <button class="mic-btn" id="micTop" onclick="startRecognition('top')">
+            <button class="mic-btn" id="micTop" onclick="toggleRecognition('top')">
                 <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
             </button>
         </div>
@@ -132,19 +132,15 @@
         <div class="center-hub">
             <div class="wave-container" id="waveVisual">
                 <div class="wave-bar" style="animation-delay: 0.1s"></div>
+                <div class="wave-bar" style="animation-delay: 0.2s"></div>
                 <div class="wave-bar" style="animation-delay: 0.3s"></div>
-                <div class="wave-bar" style="animation-delay: 0.5s"></div>
-                <div class="wave-bar" style="animation-delay: 0.7s"></div>
-                <div class="wave-bar" style="animation-delay: 0.5s"></div>
+                <div class="wave-bar" style="animation-delay: 0.4s"></div>
                 <div class="wave-bar" style="animation-delay: 0.3s"></div>
+                <div class="wave-bar" style="animation-delay: 0.2s"></div>
                 <div class="wave-bar" style="animation-delay: 0.1s"></div>
             </div>
 
-            <button class="btn-clear" onclick="clearChat()">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 7l-.867 12.142A2 2 0 0 1 16.138 21H7.862a2 2 0 0 1-1.995-1.858L5 7m5 4v6m4-10V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v3M3 7h18"/></svg>
-            </button>
-
-            <div class="logo-capsule">
+            <div class="logo-capsule" onclick="location.href='home.html'">
                 <span class="logo-text">italky<span class="logo-ai">AI</span></span>
             </div>
         </div>
@@ -156,47 +152,58 @@
             </select>
 
             <div class="display-box">
-                <div class="transcript" id="bottomT">...</div>
-                <div class="translation" id="bottomS">Konuşmak için dokunun</div>
+                <div class="transcript" id="bottomT">Bugün size nasıl yardımcı olabilirim?</div>
+                <div class="translation-row">
+                    <div class="translation" id="bottomS">How can I help you today?</div>
+                    <button class="speaker-btn" onclick="speak('bottom')">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 5L6 9H2v6h4l5 4V5zM19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                    </button>
+                </div>
             </div>
 
-            <button class="mic-btn" id="micBottom" onclick="startRecognition('bottom')">
+            <button class="mic-btn" id="micBottom" onclick="toggleRecognition('bottom')">
                 <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
             </button>
         </div>
     </div>
 
     <script>
-        let recognition;
         let activeSide = null;
 
-        function startRecognition(side) {
-            if (activeSide) {
-                stopRecognition();
-                if (activeSide === side) return;
+        function toggleRecognition(side) {
+            const wave = document.getElementById('waveVisual');
+            const micT = document.getElementById('micTop');
+            const micB = document.getElementById('micBottom');
+
+            if (activeSide === side) {
+                stopAll();
+                return;
             }
 
+            stopAll();
             activeSide = side;
+            wave.classList.add('active');
             document.getElementById(side === 'top' ? 'micTop' : 'micBottom').classList.add('active');
-            document.getElementById('waveVisual').classList.add('active');
             
-            // Burada Google SDK'nı bağlayacaksın
-            console.log(side + " tarafı dinleniyor...");
+            console.log(side + " dinleniyor...");
         }
 
-        function stopRecognition() {
-            document.querySelectorAll('.mic-btn').forEach(b => b.classList.remove('active'));
+        function stopAll() {
             document.getElementById('waveVisual').classList.remove('active');
+            document.getElementById('micTop').classList.remove('active');
+            document.getElementById('micBottom').classList.remove('active');
             activeSide = null;
         }
 
-        function clearChat() {
-            document.getElementById('topT').innerText = "...";
-            document.getElementById('bottomT').innerText = "...";
-            stopRecognition();
+        function speak(side) {
+            const text = document.getElementById(side === 'top' ? 'topS' : 'bottomS').innerText;
+            // Google TTS API buraya bağlanacak
+            console.log("Seslendiriliyor: " + text);
+            
+            // Basit tarayıcı TTS testi (geçici)
+            const msg = new SpeechSynthesisUtterance(text);
+            window.speechSynthesis.speak(msg);
         }
-
-        // Sayfa tıklandığında geri dönmek için header veya bir buton eklenebilir.
     </script>
 </body>
 </html>
