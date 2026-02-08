@@ -1,10 +1,16 @@
 // italky-web/js/auth.js
-// VERSION: italky-v1 (SP single source + FREE default + italky terms key)
+// VERSION: italky-v1.1 (container fix + safer redirect + /js config import)
 
-import { GOOGLE_CLIENT_ID, STORAGE_KEY, BASE_DOMAIN } from "./config.js";
+import { GOOGLE_CLIENT_ID, STORAGE_KEY, BASE_DOMAIN } from "/js/config.js";
 
 const API_TOKEN_KEY = "italky_api_token";
 const STABLE_ID_KEY = "italky_stable_id_v1";
+
+// ✅ index.html'de senin kullandığın id
+const GOOGLE_BTN_ID = "googleBtnContainer";
+
+// home
+const HOME_PATH = "/pages/home.html";
 
 function getAuthState(){
   if(!window.__ITALKY_AUTH__) window.__ITALKY_AUTH__ = { inited:false, btnRendered:false };
@@ -81,7 +87,9 @@ function getOrCreateStableId(){
 }
 
 async function fetchBackendToken(googleIdToken){
-  const r = await fetch(`${BASE_DOMAIN}/api/auth/google`, {
+  const url = `${String(BASE_DOMAIN||"").replace(/\/+$/,"")}/api/auth/google`;
+
+  const r = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -111,6 +119,18 @@ async function fetchBackendToken(googleIdToken){
   if(!token) throw new Error("auth/google token not found in response");
   setApiToken(token);
   return token;
+}
+
+/* ✅ index sayfasında zaten login ise direkt home */
+export function redirectIfLoggedIn(){
+  try{
+    const u = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+    if(u?.email){
+      window.location.replace(HOME_PATH);
+      return true;
+    }
+  }catch{}
+  return false;
 }
 
 async function handleGoogleResponse(res){
@@ -149,6 +169,7 @@ async function handleGoogleResponse(res){
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
 
+    // backend token opsiyonel (başarısız olsa da giriş devam)
     try{
       await fetchBackendToken(idToken);
     }catch(e){
@@ -158,13 +179,16 @@ async function handleGoogleResponse(res){
 
     // ✅ sözleşme varsa direkt home, yoksa modal aç
     if(savedTermsAt){
-      window.location.replace("/pages/home.html");
+      window.location.replace(HOME_PATH);
       return;
     }
     if(typeof window.__ITALKY_SHOW_TERMS__ === "function"){
       window.__ITALKY_SHOW_TERMS__();
       return;
     }
+
+    // terms UI yoksa tekrar index'e dönmek yerine güvenli fallback:
+    alert("Sözleşme ekranı bulunamadı. Lütfen terms modalını bağla.");
     window.location.replace("/index.html");
   }catch(e){
     console.error("handleGoogleResponse error:", e);
@@ -172,22 +196,25 @@ async function handleGoogleResponse(res){
   }
 }
 
-function renderGoogleOverlayButton(){
+function renderGoogleButton(){
   const st = getAuthState();
   if(st.btnRendered) return;
 
-  // ✅ index.html wrapper id
-  const wrap = document.getElementById("googleBtnWrapper");
+  const wrap = document.getElementById(GOOGLE_BTN_ID);
   if(!wrap) return;
 
   try{
+    // container boş değilse tekrar render etme
+    if(wrap.childElementCount > 0){ st.btnRendered = true; return; }
+
     window.google.accounts.id.renderButton(wrap, {
       type: "standard",
       theme: "outline",
       size: "large",
       text: "continue_with",
       shape: "rectangular",
-      width: wrap.clientWidth || 380
+      width: 320,
+      logo_alignment: "left"
     });
     st.btnRendered = true;
   }catch(e){
@@ -215,7 +242,7 @@ export function initAuth(){
     cancel_on_tap_outside: false
   });
 
-  renderGoogleOverlayButton();
+  renderGoogleButton();
 }
 
 export async function acceptTerms(){
