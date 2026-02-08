@@ -1,4 +1,4 @@
-<!-- FILE: /pages/game.html -->
+<!-- FILE: /pages/game.html (FINAL - scroll fixed + colorful buttons) -->
 <!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -48,6 +48,7 @@
       backdrop-filter: blur(25px);
       overflow:hidden;
       display:flex; flex-direction:column;
+      min-height:0; /* ✅ scroll fix */
     }
     @media(min-width:520px){
       .mobile-frame{
@@ -70,6 +71,7 @@
       border-bottom:1px solid rgba(255,255,255,.08);
       background: rgba(0,0,0,.35);
       backdrop-filter: blur(12px);
+      flex: 0 0 auto;
     }
     .leftControls{ display:flex; align-items:center; gap:10px; min-width:0; }
     .backBtn{
@@ -97,14 +99,15 @@
 
     .main{
       flex:1;
+      min-height:0;           /* ✅ scroll fix */
+      overflow:auto;          /* ✅ scroll fix */
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width:none;
       padding: 12px;
+      padding-bottom: calc(var(--footerH) + 16px);
       display:flex;
       flex-direction:column;
       gap: 10px;
-      overflow:auto;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width:none;
-      padding-bottom: calc(var(--footerH) + 16px);
     }
     .main::-webkit-scrollbar{ display:none; }
 
@@ -113,8 +116,8 @@
       border: 1px solid rgba(255,255,255,.10);
       overflow:hidden;
       background:
-        radial-gradient(800px 240px at 0% 0%, var(--navyA), transparent 62%),
-        radial-gradient(800px 240px at 100% 0%, var(--navyB), transparent 62%),
+        radial-gradient(800px 240px at 0% 0%, rgba(79,70,229,.22), transparent 62%),
+        radial-gradient(800px 240px at 100% 0%, rgba(236,72,153,.18), transparent 62%),
         rgba(0,0,0,.12);
       box-shadow: 0 28px 90px rgba(0,0,0,.55);
       padding: 14px;
@@ -134,9 +137,10 @@
       font-size: 11px;
       color: rgba(255,255,255,.92);
     }
-    .chip.pro{ background: linear-gradient(135deg, var(--ai1), var(--ai2)); border: none; }
+    .chip.pro{ background: linear-gradient(135deg, var(--ai1), var(--ai2)); border:none; }
     .heroDesc{ color: rgba(255,255,255,.70); font-weight: 800; font-size: 12px; line-height: 1.35; }
     .heroActions{ display:flex; gap:10px; }
+
     .btn{
       flex:1;
       height: 46px;
@@ -147,9 +151,17 @@
       font-weight: 1000;
       cursor:pointer;
     }
-    .btn.primary{
+    .btn:active{ transform: scale(.98); }
+
+    /* ✅ colorful buttons */
+    .btn.earn{
       border:none;
-      background: linear-gradient(135deg, var(--ai1), var(--ai2));
+      background: linear-gradient(135deg, #00f3ff, #bc13fe);
+      box-shadow: 0 18px 40px rgba(0,243,255,.12);
+    }
+    .btn.play{
+      border:none;
+      background: linear-gradient(135deg, #A5B4FC, #4F46E5);
       box-shadow: 0 18px 40px rgba(79,70,229,.18);
     }
 
@@ -158,6 +170,7 @@
       grid-template-columns: 1fr 1fr;
       gap: 10px;
     }
+
     .card{
       border-radius: 22px;
       border: 1px solid rgba(255,255,255,.10);
@@ -167,22 +180,41 @@
       display:flex;
       flex-direction:column;
       gap: 8px;
-      min-height: 160px;
+      min-height: 170px;
       transition: transform .15s;
       user-select:none;
+      overflow:hidden;
+      position:relative;
     }
     .card:active{ transform: scale(.98); }
+
+    /* gradient glow per card */
+    .card::before{
+      content:"";
+      position:absolute;
+      inset:-1px;
+      border-radius: 22px;
+      background: radial-gradient(420px 140px at 20% 0%, rgba(79,70,229,.28), transparent 60%),
+                  radial-gradient(420px 140px at 100% 100%, rgba(236,72,153,.18), transparent 55%);
+      pointer-events:none;
+      z-index:0;
+    }
+    .card > *{ position:relative; z-index:1; }
+
     .icon{
       width: 44px; height: 44px;
       border-radius: 16px;
       display:flex; align-items:center; justify-content:center;
-      background: rgba(79,70,229,.16);
-      border: 1px solid rgba(79,70,229,.22);
       font-weight: 1000;
       font-size: 18px;
+      color:#fff;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.06);
     }
+
     .name{ font-weight: 1000; font-size: 13px; }
-    .desc{ font-weight: 800; font-size: 11px; color: rgba(255,255,255,.65); line-height: 1.35; }
+    .desc{ font-weight: 800; font-size: 11px; color: rgba(255,255,255,.70); line-height: 1.35; }
+
     .metaRow{ margin-top:auto; display:flex; gap:8px; flex-wrap:wrap; }
     .tag{
       padding: 6px 8px;
@@ -193,8 +225,9 @@
       font-size: 10px;
       color: rgba(255,255,255,.85);
     }
-    .tag.lock{ border-color: rgba(255,200,0,.25); background: rgba(255,200,0,.10); }
     .tag.ready{ border-color: rgba(0,230,118,.25); background: rgba(0,230,118,.10); }
+    .tag.free{ border-color: rgba(255,255,255,.14); background: rgba(255,255,255,.06); }
+    .tag.pro{ border:none; background: linear-gradient(135deg, var(--ai1), var(--ai2)); }
 
     .footerbar{
       position: fixed;
@@ -265,11 +298,11 @@
           </div>
         </div>
         <div class="heroDesc">
-          Oyun oynadıkça hak kazan. Haklar “oyun girişleri” içindir. PRO’da limitsiz.
+          FREE: Oyuna girince 1 hak düşer. Hak kazan → (şimdilik test +1). PRO: limitsiz.
         </div>
         <div class="heroActions">
-          <button class="btn" id="earnBtn" type="button">Hak Kazan</button>
-          <button class="btn primary" id="startBtn" type="button">Hemen Oyna</button>
+          <button class="btn earn" id="earnBtn" type="button">Hak Kazan</button>
+          <button class="btn play" id="startBtn" type="button">Hemen Oyna</button>
         </div>
       </div>
 
