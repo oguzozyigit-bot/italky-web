@@ -1,189 +1,54 @@
-<!DOCTYPE html>
-<html lang="tr">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-<title>italkyAI • Face to Face Translator</title>
+/* === PREMIUM ICON SYSTEM (BORDO OBJ + OUTER DARK RADIAL BG) === */
 
-<link rel="icon" href="data:," />
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
-
-<style>
 :root{
-  --bg:#030014;
-  --glass:rgba(255,255,255,.08);
-  --border:rgba(255,255,255,.15);
-  --text:#fff;
-  --muted:#9ca3af;
-  --neon-blue:#00f3ff;
-  --neon-pink:#ff00ff;
-  --neon-green:#00e676;
-  --danger:#ff1744;
-  --radius:18px;
-  --safe-top: env(safe-area-inset-top, 0px);
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --bordo:#7a1f2b;
+  --bordo2:#8b2635;
+
+  /* dıştan koyu -> merkeze doğru açılan */
+  --icoOuter:#060006;     /* dış kenar çok koyu */
+  --icoMid:#12000a;       /* orta */
+  --icoInner:#2a020f;     /* merkez daha açık */
+
+  --icoRing: rgba(255,255,255,.10);
+  --icoShadow: rgba(0,0,0,.65);
 }
 
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
-html,body{
-  margin:0;
-  width:100%;
-  height:100%;
-  background:var(--bg);
-  font-family:Outfit,sans-serif;
-  color:var(--text);
-  overflow:hidden;
-}
-
-.app{
-  max-width:480px;
-  height:100%;
-  margin:0 auto;
-  display:flex;
-  flex-direction:column;
-}
-
-/* TOP */
-.top{
-  padding:calc(14px + var(--safe-top)) 16px 12px;
+.icoBtn{
+  width:46px;
+  height:46px;
+  border-radius:15px;
   display:flex;
   align-items:center;
-  justify-content:space-between;
-}
-.logo{
-  font-weight:900;
-  font-size:18px;
-  letter-spacing:.3px;
-}
-.logo span{color:var(--neon-blue)}
-.mode{
-  font-size:12px;
-  color:var(--muted);
+  justify-content:center;
+  border:1px solid var(--icoRing);
+
+  /* ✅ dıştan koyu başlar, merkeze doğru açılır */
+  background: radial-gradient(circle at 50% 50%,
+    var(--icoInner) 0%,
+    var(--icoMid) 55%,
+    var(--icoOuter) 100%
+  );
+
+  box-shadow:
+    0 16px 34px var(--icoShadow),
+    inset 0 0 0 1px rgba(0,0,0,.35);
 }
 
-/* VIDEO */
-.video-wrap{
-  position:relative;
-  margin:0 16px;
-  border-radius:var(--radius);
-  overflow:hidden;
-  background:#000;
-  border:1px solid var(--border);
-}
-video{
-  width:100%;
-  height:260px;
-  object-fit:cover;
-}
-.video-overlay{
-  position:absolute;
-  inset:0;
-  display:flex;
-  align-items:flex-end;
-  justify-content:space-between;
-  padding:10px;
-  background:linear-gradient(to top, rgba(0,0,0,.6), transparent);
-}
-.lang-chip{
-  background:rgba(0,0,0,.55);
-  border:1px solid var(--border);
-  padding:6px 10px;
-  border-radius:999px;
-  font-size:13px;
+.icoBtn svg{
+  width:22px;
+  height:22px;
+  stroke: var(--bordo2);
+  fill: none;
+  stroke-width:2.2;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  opacity:.98;
 }
 
-/* CONTROLS */
-.controls{
-  margin:14px 16px 0;
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
+/* basılı hissi */
+.icoBtn:active{
+  transform: translateY(1px) scale(.99);
+  box-shadow:
+    0 10px 22px rgba(0,0,0,.75),
+    inset 0 0 0 1px rgba(0,0,0,.4);
 }
-.select{
-  background:var(--glass);
-  border:1px solid var(--border);
-  border-radius:14px;
-  padding:12px;
-  font-size:14px;
-  color:#fff;
-}
-button{
-  grid-column:span 2;
-  margin-top:10px;
-  height:52px;
-  border-radius:16px;
-  border:none;
-  font-size:16px;
-  font-weight:800;
-  cursor:pointer;
-  background:linear-gradient(135deg,var(--neon-blue),var(--neon-pink));
-  color:#000;
-}
-
-/* RESULT */
-.result{
-  margin:14px 16px;
-  background:var(--glass);
-  border:1px solid var(--border);
-  border-radius:16px;
-  padding:14px;
-  font-size:15px;
-  line-height:1.5;
-  min-height:72px;
-}
-.result span{
-  color:var(--neon-green);
-  font-weight:700;
-}
-
-/* FOOT */
-.footer{
-  margin-top:auto;
-  padding:10px 16px calc(12px + var(--safe-bottom));
-  text-align:center;
-  font-size:12px;
-  color:var(--muted);
-}
-</style>
-</head>
-
-<body>
-<div class="app">
-
-  <!-- TOP -->
-  <div class="top">
-    <div class="logo">italky<span>AI</span></div>
-    <div class="mode">Face to Face</div>
-  </div>
-
-  <!-- VIDEO -->
-  <div class="video-wrap">
-    <video id="camera" autoplay muted playsinline></video>
-    <div class="video-overlay">
-      <div class="lang-chip" id="fromLang">🎙️ Konuşulan Dil</div>
-      <div class="lang-chip" id="toLang">🧠 Çeviri Dili</div>
-    </div>
-  </div>
-
-  <!-- CONTROLS -->
-  <div class="controls">
-    <select id="fromSelect" class="select"></select>
-    <select id="toSelect" class="select"></select>
-    <button id="startBtn">🎧 Dinlemeyi Başlat</button>
-  </div>
-
-  <!-- RESULT -->
-  <div class="result" id="resultBox">
-    <span>Hazır.</span> Konuşmaya başlayabilirsin.
-  </div>
-
-  <!-- FOOT -->
-  <div class="footer">
-    Gerçek zamanlı yüz yüze çeviri • italkyAI
-  </div>
-
-</div>
-
-<script type="module" src="/js/facetoface_page.js"></script>
-</body>
-</html>
