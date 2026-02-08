@@ -1,9 +1,13 @@
 // /js/api.js
-// ITALKY API helper (single source of truth)
+// ITALKY API helper (single source of truth) — FINAL
 
-import { BASE_DOMAIN } from "./config.js";
+import { BASE_DOMAIN } from "/js/config.js";
 
 const API_TOKEN_KEY = "italky_api_token";
+
+function base() {
+  return String(BASE_DOMAIN || "").replace(/\/+$/, "");
+}
 
 function getApiToken() {
   return (localStorage.getItem(API_TOKEN_KEY) || "").trim();
@@ -14,20 +18,20 @@ function getGoogleIdToken() {
 }
 
 function buildHeaders(extra = {}) {
-  const h = {
-    "Content-Type": "application/json",
-    ...extra
-  };
+  const h = { "Content-Type": "application/json", ...extra };
 
   const apiToken = getApiToken();
   const googleIdToken = getGoogleIdToken();
 
-  // Backend hangi header'ı bekliyorsa yakalasın diye 2'sini de veriyoruz
-  if (apiToken) h["Authorization"] = `Bearer ${apiToken}`;
-  if (apiToken) h["X-Api-Token"] = apiToken;
+  if (apiToken) {
+    h["Authorization"] = `Bearer ${apiToken}`;
+    h["X-Api-Token"] = apiToken;
+  }
 
-  if (googleIdToken) h["X-Google-Id-Token"] = googleIdToken;
-  if (googleIdToken) h["X-Id-Token"] = googleIdToken;
+  if (googleIdToken) {
+    h["X-Google-Id-Token"] = googleIdToken;
+    h["X-Id-Token"] = googleIdToken;
+  }
 
   return h;
 }
@@ -36,12 +40,22 @@ async function readTextSafe(res) {
   try { return await res.text(); } catch { return ""; }
 }
 
-export async function apiGET(path, { headers = {}, raw = false } = {}) {
-  const url = `${BASE_DOMAIN}${path}`;
-  const res = await fetch(url, {
+async function fetchWithTimeout(url, options = {}, timeoutMs = 20000) {
+  const ctrl = new AbortController();
+  const to = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...options, signal: ctrl.signal });
+  } finally {
+    clearTimeout(to);
+  }
+}
+
+export async function apiGET(path, { headers = {}, raw = false, timeoutMs = 20000 } = {}) {
+  const url = `${base()}${path}`;
+  const res = await fetchWithTimeout(url, {
     method: "GET",
     headers: buildHeaders(headers),
-  });
+  }, timeoutMs);
 
   if (raw) return res;
 
@@ -57,13 +71,13 @@ export async function apiGET(path, { headers = {}, raw = false } = {}) {
   return data;
 }
 
-export async function apiPOST(path, body = {}, { headers = {}, raw = false } = {}) {
-  const url = `${BASE_DOMAIN}${path}`;
-  const res = await fetch(url, {
+export async function apiPOST(path, body = {}, { headers = {}, raw = false, timeoutMs = 20000 } = {}) {
+  const url = `${base()}${path}`;
+  const res = await fetchWithTimeout(url, {
     method: "POST",
     headers: buildHeaders(headers),
     body: JSON.stringify(body ?? {}),
-  });
+  }, timeoutMs);
 
   if (raw) return res;
 
@@ -79,7 +93,7 @@ export async function apiPOST(path, body = {}, { headers = {}, raw = false } = {
   return data;
 }
 
-// Bazı sayfalar PUT/DELETE isterse diye hazır dursun
+// PUT/DELETE gerekirse (override)
 export async function apiPUT(path, body = {}, opts = {}) {
   return apiPOST(path, body, { ...opts, headers: { ...(opts.headers || {}), "X-HTTP-Method-Override": "PUT" } });
 }
