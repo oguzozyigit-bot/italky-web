@@ -1,54 +1,164 @@
-/* === PREMIUM ICON SYSTEM (BORDO OBJ + OUTER DARK RADIAL BG) === */
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>italkyAI • Yüz Yüze</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
-:root{
-  --bordo:#7a1f2b;
-  --bordo2:#8b2635;
+    <style>
+        :root {
+            --bg-void: #02000a;
+            --brand-burgundy: #580c1f;
+            --brand-lacivert: #1e1b4b;
+            --text-main: #fff;
+        }
 
-  /* dıştan koyu -> merkeze doğru açılan */
-  --icoOuter:#060006;     /* dış kenar çok koyu */
-  --icoMid:#12000a;       /* orta */
-  --icoInner:#2a020f;     /* merkez daha açık */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+        body {
+            margin: 0; padding: 0; width: 100%; height: 100dvh;
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-void);
+            color: var(--text-main);
+            display: flex; flex-direction: column; overflow: hidden;
+        }
 
-  --icoRing: rgba(255,255,255,.10);
-  --icoShadow: rgba(0,0,0,.65);
-}
+        /* Ekran Bölünmesi */
+        .container {
+            display: flex; flex-direction: column; height: 100%; width: 100%;
+        }
 
-.icoBtn{
-  width:46px;
-  height:46px;
-  border-radius:15px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  border:1px solid var(--icoRing);
+        /* Üst Bölme (Bordo - Karşı Taraf) */
+        .half-screen.top {
+            background: linear-gradient(to bottom, #2d060e, var(--brand-burgundy));
+            transform: rotate(180deg); /* Karşıdaki kişi için ters */
+        }
 
-  /* ✅ dıştan koyu başlar, merkeze doğru açılır */
-  background: radial-gradient(circle at 50% 50%,
-    var(--icoInner) 0%,
-    var(--icoMid) 55%,
-    var(--icoOuter) 100%
-  );
+        /* Alt Bölme (Lacivert - Sen) */
+        .half-screen.bottom {
+            background: linear-gradient(to bottom, var(--brand-lacivert), #0f172a);
+        }
 
-  box-shadow:
-    0 16px 34px var(--icoShadow),
-    inset 0 0 0 1px rgba(0,0,0,.35);
-}
+        .half-screen {
+            flex: 1; position: relative; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; padding: 30px;
+            transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
 
-.icoBtn svg{
-  width:22px;
-  height:22px;
-  stroke: var(--bordo2);
-  fill: none;
-  stroke-width:2.2;
-  stroke-linecap:round;
-  stroke-linejoin:round;
-  opacity:.98;
-}
+        /* Metin Alanları */
+        .text-display {
+            text-align: center; max-width: 85%;
+        }
+        .transcript { font-size: 24px; font-weight: 700; margin-bottom: 8px; min-height: 30px; }
+        .translation { font-size: 16px; opacity: 0.6; font-weight: 500; font-style: italic; }
 
-/* basılı hissi */
-.icoBtn:active{
-  transform: translateY(1px) scale(.99);
-  box-shadow:
-    0 10px 22px rgba(0,0,0,.75),
-    inset 0 0 0 1px rgba(0,0,0,.4);
-}
+        /* Mikrofonlar */
+        .mic-btn {
+            width: 75px; height: 75px; border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.2);
+            background: rgba(0,0,0,0.3); color: #fff;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; margin-top: 30px; transition: 0.3s;
+            backdrop-filter: blur(10px);
+        }
+        .mic-btn.active { 
+            transform: scale(1.15); border-color: #fff; 
+            box-shadow: 0 0 30px rgba(255,255,255,0.2); 
+        }
+        .mic-btn svg { width: 32px; height: 32px; fill: currentColor; }
+
+        /* Orta Bar (Logo ve Temizle) */
+        .center-bar {
+            position: absolute; top: 50%; left: 0; width: 100%;
+            height: 60px; transform: translateY(-50%);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 20px; z-index: 100;
+        }
+
+        .center-logo {
+            font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 700;
+            background: #02000a; padding: 5px 15px; border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .logo-ai { background: linear-gradient(135deg, #a5b4fc 0%, #6366f1 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        .clear-btn {
+            width: 40px; height: 40px; border-radius: 50%; background: #02000a;
+            border: 1px solid rgba(255,255,255,0.1); color: #fff;
+            display: flex; align-items: center; justify-content: center; cursor: pointer;
+        }
+
+        /* Geri Butonu */
+        .back-nav {
+            position: absolute; top: 20px; left: 20px; z-index: 200;
+            transform: rotate(180deg); /* Üst taraf ters olduğu için düzeltmek gerek */
+        }
+        .back-circle {
+            width: 35px; height: 35px; border-radius: 50%; background: rgba(0,0,0,0.5);
+            display: flex; align-items: center; justify-content: center; color: #fff;
+            text-decoration: none; border: 1px solid rgba(255,255,255,0.1);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="half-screen top" id="topSection">
+            <div class="back-nav">
+                <a href="home.html" class="back-circle">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M15 18l-6-6 6-6"/></svg>
+                </a>
+            </div>
+            <div class="text-display">
+                <div class="transcript" id="topText">Listening...</div>
+                <div class="translation" id="topSub">Karşı taraf konuşuyor</div>
+            </div>
+            <button class="mic-btn" onclick="toggleMic('top')">
+                <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
+            </button>
+        </div>
+
+        <div class="center-bar">
+            <div class="center-logo">italky<span class="logo-ai">AI</span></div>
+            <button class="clear-btn" onclick="clearAll()" title="Sohbeti Temizle">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 6h18m-2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            </button>
+        </div>
+
+        <div class="half-screen bottom" id="bottomSection">
+            <div class="text-display">
+                <div class="transcript" id="bottomText">Konuşmak için basın</div>
+                <div class="translation" id="bottomSub">Sizin tarafınız</div>
+            </div>
+            <button class="mic-btn" onclick="toggleMic('bottom')">
+                <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function toggleMic(side) {
+            // Diğer tüm aktif mikrofonları kapat
+            document.querySelectorAll('.mic-btn').forEach(btn => btn.classList.remove('active'));
+            
+            // Tıklananı aktif et
+            const section = side === 'top' ? 'topSection' : 'bottomSection';
+            const btn = document.querySelector(`#${section} .mic-btn`);
+            btn.classList.add('active');
+            
+            // Simülasyon: Metin değiştirme
+            const textId = side === 'top' ? 'topText' : 'bottomText';
+            document.getElementById(textId).innerText = "...";
+        }
+
+        function clearAll() {
+            document.getElementById('topText').innerText = "Waiting...";
+            document.getElementById('bottomText').innerText = "Basın ve Konuşun";
+            document.querySelectorAll('.mic-btn').forEach(btn => btn.classList.remove('active'));
+        }
+    </script>
+</body>
+</html>
