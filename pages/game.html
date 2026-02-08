@@ -16,13 +16,11 @@
       --text:rgba(255,255,255,.92);
       --muted:rgba(255,255,255,.60);
       --border:rgba(255,255,255,.10);
-
       --ai1:#A5B4FC;
       --ai2:#4F46E5;
       --pink:#ff00ff;
       --cyan:#00f3ff;
       --green:#00e676;
-
       --topH:74px;
       --footerH:74px;
     }
@@ -106,7 +104,6 @@
       padding-bottom: calc(var(--footerH) + 16px);
       display:flex;flex-direction:column;gap:12px;
       scrollbar-width:none;
-      -ms-overflow-style:none;
     }
     .main::-webkit-scrollbar{display:none;}
 
@@ -146,33 +143,20 @@
     .btn.earn{background:linear-gradient(135deg,var(--cyan),var(--pink));box-shadow:0 18px 40px rgba(0,243,255,.10)}
     .btn.upgrade{background:linear-gradient(135deg,var(--ai1),var(--ai2));box-shadow:0 18px 40px rgba(79,70,229,.18)}
 
-    .grid{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:10px;
-    }
+    .grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
 
     .card{
-      border-radius:22px;
-      border:1px solid rgba(255,255,255,.10);
-      background:rgba(255,255,255,.05);
-      padding:12px;
-      min-height:172px;
-      display:flex;flex-direction:column;gap:8px;
-      cursor:pointer;
-      position:relative;
-      overflow:hidden;
-      /* ✅ no movement */
-      transform:none !important;
+      border-radius:22px; border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.05); padding:12px; min-height:172px;
+      display:flex; flex-direction:column; gap:8px; cursor:pointer;
+      position:relative; overflow:hidden;
     }
     .card::before{
-      content:"";
-      position:absolute;inset:-1px;border-radius:22px;
+      content:""; position:absolute;inset:-1px;border-radius:22px;
       background:
         radial-gradient(420px 140px at 20% 0%, rgba(79,70,229,.26), transparent 60%),
         radial-gradient(420px 140px at 100% 100%, rgba(0,243,255,.14), transparent 55%);
-      pointer-events:none;
-      z-index:0;
+      pointer-events:none; z-index:0;
     }
     .card > *{position:relative;z-index:1}
 
@@ -185,8 +169,6 @@
       border:1px solid rgba(255,255,255,.12);
       box-shadow: 0 0 18px rgba(0,243,255,.12);
       font-size:20px;
-      /* ✅ icon fixed */
-      transform:none !important;
     }
     .name{font-weight:1000;font-size:13px}
     .desc{font-weight:800;font-size:11px;line-height:1.25;color:rgba(255,255,255,.70)}
@@ -198,29 +180,19 @@
       font-weight:1000;font-size:10px;white-space:nowrap;
     }
     .tag.ready{border-color:rgba(0,230,118,.25);background:rgba(0,230,118,.10)}
-    .tag.free{border-color:rgba(255,255,255,.14);background:rgba(255,255,255,.06)}
-    .tag.pro{border:none;background:linear-gradient(135deg,var(--ai1),var(--ai2))}
 
-    /* footer opaque */
     .footerbar{
-      position:absolute;left:0;right:0;bottom:0;
-      height:var(--footerH);
+      position:absolute;left:0;right:0;bottom:0; height:var(--footerH);
       display:flex;align-items:center;justify-content:center;
       border-top:1px solid rgba(255,255,255,.06);
-      background:#060018; /* ✅ opaque */
-      font-size:10px;font-weight:800;color:rgba(255,255,255,.22);
-      letter-spacing:.2px;
+      background:#060018; font-size:10px;font-weight:800;color:rgba(255,255,255,.22);
     }
 
     .toast{
       position:fixed;left:50%;top:18px;transform:translateX(-50%) translateY(-120px);
-      background:rgba(10,10,18,.92);
-      border:1px solid rgba(165,180,252,.35);
-      padding:10px 14px;border-radius:999px;
-      color:#fff;z-index:10000;
-      font-weight:900;font-size:12px;
-      transition:.28s;
-      backdrop-filter:blur(12px);
+      background:rgba(10,10,18,.92); border:1px solid rgba(165,180,252,.35);
+      padding:10px 14px;border-radius:999px; color:#fff;z-index:10000;
+      font-weight:900;font-size:12px; transition:.28s; backdrop-filter:blur(12px);
     }
     .toast.show{transform:translateX(-50%) translateY(0)}
   </style>
@@ -230,16 +202,18 @@
 
   <div class="mobile-frame">
     <div class="topbar">
-      <button class="backBtn" id="backBtn">←</button>
+      <button class="backBtn" onclick="history.back()">←</button>
 
-      <div class="brand" id="logoHome">
+      <div class="brand" onclick="location.href='/pages/home.html'">
         <div class="logo-line">italky<span class="logo-ai">AI</span></div>
         <div class="slogan">BE FREE</div>
       </div>
 
-      <div class="profileMini" id="profileMini">
-        <div class="pPic" id="pPic"><span id="pFallback">•</span></div>
-        <div class="pName" id="pName">—</div>
+      <div class="profileMini" onclick="location.href='/pages/profile.html'">
+        <div class="pPic" id="pPic">
+            <span id="pFallback">A</span>
+        </div>
+        <div class="pName" id="pName">Yükleniyor...</div>
       </div>
     </div>
 
@@ -248,19 +222,16 @@
         <div class="heroTop">
           <div class="heroTitle">Oyun Merkezi</div>
           <div class="chips">
-            <div class="chip" id="dailyChip">🎟️ Hak: 0</div>
+            <div class="chip" id="dailyChip">🎟️ Hak: --</div>
             <div class="chip" id="planChip">FREE</div>
           </div>
         </div>
-
         <div class="heroDesc">Günlük 25 hak. Oyuna girince 1 hak düşer. Set bitince devam etmek istersen 1 hak daha düşer.</div>
-
         <div class="actions">
           <button class="btn earn" id="earnBtn">Hak Kazan</button>
           <button class="btn upgrade" id="upgradeBtn">Abonelik Yükselt</button>
         </div>
       </div>
-
       <div class="grid" id="gameGrid"></div>
     </div>
 
@@ -268,6 +239,39 @@
   </div>
 
   <div id="toast" class="toast"></div>
+
+  <script type="module">
+    import { STORAGE_KEY } from "/js/config.js";
+
+    // Profil Bilgilerini Yükle
+    function loadProfile() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        try {
+          const user = JSON.parse(raw);
+          // Ad Soyad Entegresi
+          document.getElementById('pName').textContent = user.fullname || user.name || "Kullanıcı";
+          
+          // Profil Resmi Entegresi
+          const pic = user.picture || user.avatar;
+          if (pic) {
+            document.getElementById('pPic').innerHTML = `<img src="${pic}" alt="Avatar">`;
+          } else {
+            // Baş harf fallback
+            const initial = (user.fullname || user.name || "A").charAt(0).toUpperCase();
+            document.getElementById('pFallback').textContent = initial;
+          }
+          
+          // Plan bilgisini de güncelle
+          document.getElementById('planChip').textContent = (user.plan || "FREE").toUpperCase();
+        } catch (e) {
+          console.error("Profil yükleme hatası", e);
+        }
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", loadProfile);
+  </script>
 
   <script type="module" src="/js/game_page.js?v=1000"></script>
 </body>
