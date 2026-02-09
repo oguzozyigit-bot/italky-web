@@ -1,121 +1,321 @@
+<!-- FILE: /pages/game.html (FINAL - scroll fixed + colorful buttons) -->
 <!DOCTYPE html>
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>italkyAI - Oyunlar</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>italkyAI • Oyunlar</title>
+  <link rel="icon" href="data:," />
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+
   <style>
-    :root {
-      --bg-void: #02000f;
-      --text-main: #fff;
-      --text-muted: rgba(255, 255, 255, 0.65);
-      --glass: rgba(255, 255, 255, 0.05);
-      --glass-border: rgba(255, 255, 255, 0.12);
-      --ease-premium: cubic-bezier(0.22, 1, 0.36, 1);
+    :root{
+      --frameW: min(480px, calc(100vw - 18px));
+      --topH: 74px;
+      --footerH: 74px;
+
+      --bg:#030014;
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.60);
+      --border: rgba(255,255,255,.10);
+      --glass: rgba(255,255,255,.06);
+
+      --ai1:#A5B4FC;
+      --ai2:#4F46E5;
+      --befree:#6B7280;
+
+      --navyA: rgba(40,120,255,.12);
+      --navyB: rgba(255,255,255,.05);
     }
 
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
-    html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; position: fixed; font-family: 'Outfit', sans-serif; background-color: var(--bg-void); color: var(--text-main); }
+    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; }
+    html,body{
+      margin:0; padding:0; width:100%; height:100dvh;
+      overflow:hidden; position:fixed;
+      font-family:'Outfit', sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      display:flex; align-items:center; justify-content:center;
+    }
 
-    /* COSMIC BACKDROP */
-    .nebula-bg { position: absolute; inset: -10%; width: 120%; height: 120%; background: radial-gradient(circle at 20% 20%, rgba(79, 70, 229, 0.4) 0%, transparent 40%), radial-gradient(circle at 80% 80%, rgba(168, 85, 247, 0.3) 0%, transparent 40%), radial-gradient(circle at 50% 50%, rgba(30, 0, 60, 1) 0%, #02000f 100%); filter: blur(60px); z-index: 0; animation: nebulaPulse 15s infinite alternate ease-in-out; }
-    @keyframes nebulaPulse { from { transform: scale(1) rotate(0deg); } to { transform: scale(1.1) rotate(2deg); } }
-    .stars-field { position: absolute; inset: 0; background: url("https://www.transparenttextures.com/patterns/stardust.png"); opacity: 0.4; z-index: 1; pointer-events: none; }
+    .mobile-frame{
+      width:100%; max-width:480px; height:100%;
+      position:relative; z-index:10;
+      background: rgba(8, 8, 20, 0.65);
+      backdrop-filter: blur(25px);
+      overflow:hidden;
+      display:flex; flex-direction:column;
+      min-height:0; /* ✅ scroll fix */
+    }
+    @media(min-width:520px){
+      .mobile-frame{
+        height:92vh;
+        border-radius:40px;
+        border:1px solid rgba(255,255,255,0.08);
+        box-shadow:0 40px 100px -20px rgba(0,0,0,0.9);
+      }
+    }
 
-    .app-shell { position: relative; z-index: 10; width: 100%; max-width: 480px; height: 100%; margin: 0 auto; display: flex; flex-direction: column; background: rgba(10, 10, 30, 0.4); backdrop-filter: blur(30px); }
+    .topbar{
+      position: sticky;
+      top: 0;
+      z-index: 3000;
+      height: var(--topH);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding: 0 12px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+      background: rgba(0,0,0,.35);
+      backdrop-filter: blur(12px);
+      flex: 0 0 auto;
+    }
+    .leftControls{ display:flex; align-items:center; gap:10px; min-width:0; }
+    .backBtn{
+      width:44px;height:44px;border-radius:16px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.18);
+      color:#fff;
+      font-size:20px;font-weight:1000;
+      display:flex;align-items:center;justify-content:center;
+      cursor:pointer; user-select:none;
+    }
+    .mini-brand{ display:flex; flex-direction:column; user-select:none; cursor:pointer; line-height:1; margin-top:2px; }
+    .logo-line{ font-family:'Space Grotesk', sans-serif; font-size: 20px; letter-spacing:-0.4px; display:flex; align-items:flex-end; gap:2px; }
+    .logo-main{ font-weight:700; color:#FFFFFF; }
+    .logo-ai{ font-weight:700; background: linear-gradient(135deg, var(--ai1) 0%, var(--ai2) 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .logo-slogan{ font-size:10px; font-weight:700; letter-spacing:4px; color: var(--befree); margin-top:5px; padding-left:2px; text-transform: uppercase; }
 
-    /* HEADER & NAVIGATION */
-    .premium-header { padding: calc(20px + env(safe-area-inset-top)) 20px 20px; display: flex; align-items: center; justify-content: space-between; }
-    .back-btn { width: 42px; height: 42px; border-radius: 14px; border: 1px solid var(--glass-border); background: var(--glass); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-    
-    .brand-group { text-align: center; cursor: pointer; }
-    .brand-group h1 { font-family: 'Space Grotesk', sans-serif; font-size: 24px; margin: 0; font-weight: 700; letter-spacing: -1px; }
-    .brand-group h1 span { background: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .rightControls{ display:flex; align-items:center; gap:10px; min-width:0; }
+    .usertext{ min-width:0; display:flex; flex-direction:column; align-items:flex-end; gap:2px; max-width: 200px; }
+    .uname{ font-weight: 900; font-size: 12px; color: rgba(255,255,255,0.92); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .plan{ font-weight: 800; font-size: 11px; color: rgba(255,255,255,0.55); white-space:nowrap; }
+    .avatar-btn{ width:42px; height:42px; border:none; background:transparent; border-radius:999px; overflow:hidden; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+    .avatar-btn img{ width:42px; height:42px; border-radius:999px; object-fit:cover; display:block; }
+    .avatar-fallback{ width:42px; height:42px; border-radius:999px; display:flex; align-items:center; justify-content:center; font-weight:1000; color: rgba(255,255,255,0.92); background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.10); user-select:none; }
 
-    /* GRID LAYOUT */
-    .main-content { flex: 1; overflow-y: auto; padding: 10px 20px 100px; scrollbar-width: none; }
-    .main-content::-webkit-scrollbar { display: none; }
-    .grid-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .main{
+      flex:1;
+      min-height:0;           /* ✅ scroll fix */
+      overflow:auto;          /* ✅ scroll fix */
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width:none;
+      padding: 12px;
+      padding-bottom: calc(var(--footerH) + 16px);
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+    }
+    .main::-webkit-scrollbar{ display:none; }
 
-    /* NEON GAME CARDS */
-    .premium-card { position: relative; background: linear-gradient(145deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%); border: 1px solid var(--glass-border); border-radius: 32px; padding: 24px 16px; display: flex; flex-direction: column; align-items: center; transition: all 0.4s var(--ease-premium); cursor: pointer; overflow: hidden; }
-    .premium-card:active { transform: scale(0.94); }
-    
-    .neon-icon-wrap { width: 62px; height: 56px; border-radius: 20px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; position: relative; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); }
-    .neon-icon-wrap::after { content: ""; position: absolute; inset: 0; border-radius: inherit; opacity: 0.8; z-index: 1; }
-    .premium-card svg { width: 30px; height: 30px; stroke: #fff; fill: none; stroke-width: 2.2; z-index: 2; }
+    .hero{
+      border-radius: 22px;
+      border: 1px solid rgba(255,255,255,.10);
+      overflow:hidden;
+      background:
+        radial-gradient(800px 240px at 0% 0%, rgba(79,70,229,.22), transparent 62%),
+        radial-gradient(800px 240px at 100% 0%, rgba(236,72,153,.18), transparent 62%),
+        rgba(0,0,0,.12);
+      box-shadow: 0 28px 90px rgba(0,0,0,.55);
+      padding: 14px;
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+    }
+    .heroTop{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+    .heroTitle{ font-weight: 1000; font-size: 14px; }
+    .chips{ display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+    .chip{
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.20);
+      font-weight: 1000;
+      font-size: 11px;
+      color: rgba(255,255,255,.92);
+    }
+    .chip.pro{ background: linear-gradient(135deg, var(--ai1), var(--ai2)); border:none; }
+    .heroDesc{ color: rgba(255,255,255,.70); font-weight: 800; font-size: 12px; line-height: 1.35; }
+    .heroActions{ display:flex; gap:10px; }
 
-    /* Oyun Özel Renkleri */
-    .game-hangman .neon-icon-wrap::after { background: linear-gradient(135deg, #ff9a9e, #fecfef); box-shadow: 0 0 20px rgba(255, 154, 158, 0.6); }
-    .game-word .neon-icon-wrap::after { background: linear-gradient(135deg, #a18cd1, #fbc2eb); box-shadow: 0 0 20px rgba(161, 140, 209, 0.6); }
-    .game-quiz .neon-icon-wrap::after { background: linear-gradient(135deg, #84fab0, #8fd3f4); box-shadow: 0 0 20px rgba(132, 250, 176, 0.6); }
-    .game-match .neon-icon-wrap::after { background: linear-gradient(135deg, #fa709a, #fee140); box-shadow: 0 0 20px rgba(250, 112, 154, 0.6); }
+    .btn{
+      flex:1;
+      height: 46px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+      color:#fff;
+      font-weight: 1000;
+      cursor:pointer;
+    }
+    .btn:active{ transform: scale(.98); }
 
-    .card-title { font-size: 17px; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
-    .card-desc { font-size: 11px; color: var(--text-muted); font-weight: 600; margin-top: 4px; text-align: center; }
+    /* ✅ colorful buttons */
+    .btn.earn{
+      border:none;
+      background: linear-gradient(135deg, #00f3ff, #bc13fe);
+      box-shadow: 0 18px 40px rgba(0,243,255,.12);
+    }
+    .btn.play{
+      border:none;
+      background: linear-gradient(135deg, #A5B4FC, #4F46E5);
+      box-shadow: 0 18px 40px rgba(79,70,229,.18);
+    }
 
-    .footer-brand { padding: 20px; text-align: center; border-top: 1px solid var(--glass-border); }
-    .prestige-signature { font-size: 12px; font-weight: 900; letter-spacing: 1.5px; background: linear-gradient(to right, #fff, #6366f1, #fff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.5)); }
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .card{
+      border-radius: 22px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.05);
+      padding: 12px;
+      cursor:pointer;
+      display:flex;
+      flex-direction:column;
+      gap: 8px;
+      min-height: 170px;
+      transition: transform .15s;
+      user-select:none;
+      overflow:hidden;
+      position:relative;
+    }
+    .card:active{ transform: scale(.98); }
+
+    /* gradient glow per card */
+    .card::before{
+      content:"";
+      position:absolute;
+      inset:-1px;
+      border-radius: 22px;
+      background: radial-gradient(420px 140px at 20% 0%, rgba(79,70,229,.28), transparent 60%),
+                  radial-gradient(420px 140px at 100% 100%, rgba(236,72,153,.18), transparent 55%);
+      pointer-events:none;
+      z-index:0;
+    }
+    .card > *{ position:relative; z-index:1; }
+
+    .icon{
+      width: 44px; height: 44px;
+      border-radius: 16px;
+      display:flex; align-items:center; justify-content:center;
+      font-weight: 1000;
+      font-size: 18px;
+      color:#fff;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.06);
+    }
+
+    .name{ font-weight: 1000; font-size: 13px; }
+    .desc{ font-weight: 800; font-size: 11px; color: rgba(255,255,255,.70); line-height: 1.35; }
+
+    .metaRow{ margin-top:auto; display:flex; gap:8px; flex-wrap:wrap; }
+    .tag{
+      padding: 6px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.18);
+      font-weight: 1000;
+      font-size: 10px;
+      color: rgba(255,255,255,.85);
+    }
+    .tag.ready{ border-color: rgba(0,230,118,.25); background: rgba(0,230,118,.10); }
+    .tag.free{ border-color: rgba(255,255,255,.14); background: rgba(255,255,255,.06); }
+    .tag.pro{ border:none; background: linear-gradient(135deg, var(--ai1), var(--ai2)); }
+
+    .footerbar{
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      width: var(--frameW);
+      bottom: 0;
+      z-index: 2400;
+      height: 74px;
+      padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+      background: rgba(3, 0, 20, 0.95);
+      border-top: 1px solid rgba(255,255,255,.05);
+      backdrop-filter: blur(10px);
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      gap: 6px;
+    }
+    .footerBrand{ text-align:center; font-size: 10px; color: rgba(255,255,255,0.22); letter-spacing: 0.2px; font-weight: 700; }
+
+    .toast{
+      position: fixed; left:50%; top:18px;
+      transform: translateX(-50%) translateY(-120px);
+      background: rgba(10,10,18,.92);
+      border:1px solid rgba(165,180,252,.35);
+      padding: 10px 14px;
+      border-radius: 999px;
+      color:#fff;
+      z-index:10000;
+      font-weight:900;
+      font-size:12px;
+      transition:.28s;
+      backdrop-filter: blur(12px);
+    }
+    .toast.show{ transform: translateX(-50%) translateY(0); }
   </style>
 </head>
+
 <body>
-  <div class="nebula-bg"></div>
-  <div class="stars-field"></div>
-
-  <div class="app-shell">
-    <header class="premium-header">
-      <button class="back-btn" onclick="history.back()">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-      </button>
-      <div class="brand-group" onclick="location.href='/pages/home.html'">
-        <h1>italky<span>AI</span></h1>
+  <div class="mobile-frame">
+    <div class="topbar">
+      <div class="leftControls">
+        <button class="backBtn" id="backBtn" aria-label="Geri">←</button>
+        <div class="mini-brand" id="logoHome" title="Ana sayfa">
+          <div class="logo-line"><span class="logo-main">italky</span><span class="logo-ai">AI</span></div>
+          <div class="logo-slogan">BE FREE</div>
+        </div>
       </div>
-      <div style="width: 42px;"></div> </header>
 
-    <main class="main-content">
-      <div class="grid-layout">
-        
-        <div class="premium-card game-hangman" onclick="location.href='/pages/games/hangman.html'">
-          <div class="neon-icon-wrap">
-            <svg viewBox="0 0 24 24"><path d="M6.5 2h11M12 2v15M8 22h8M12 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/></svg>
-          </div>
-          <span class="card-title">Adam Asmaca</span>
-          <span class="card-desc">Kelimeleri Tahmin Et</span>
+      <div class="rightControls">
+        <div class="usertext">
+          <div class="uname" id="userName">—</div>
+          <div class="plan" id="userPlan">FREE</div>
         </div>
-
-        <div class="premium-card game-word" onclick="location.href='/pages/games/word_combine.html'">
-          <div class="neon-icon-wrap">
-            <svg viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/></svg>
-          </div>
-          <span class="card-title">Kelime Avı</span>
-          <span class="card-desc">Harfleri Birleştir</span>
-        </div>
-
-        <div class="premium-card game-quiz" onclick="location.href='/pages/games/quiz.html'">
-          <div class="neon-icon-wrap">
-            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/></svg>
-          </div>
-          <span class="card-title">Bilgi Yarışı</span>
-          <span class="card-desc">Kendini Test Et</span>
-        </div>
-
-        <div class="premium-card game-match" onclick="location.href='/pages/games/matching.html'">
-          <div class="neon-icon-wrap">
-            <svg viewBox="0 0 24 24"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
-          </div>
-          <span class="card-title">Eşleştirme</span>
-          <span class="card-desc">Doğru Kelimeyi Bul</span>
-        </div>
-
+        <button class="avatar-btn" id="avatarBtn" aria-label="Profil">
+          <span class="avatar-fallback" id="avatarFallback">•</span>
+        </button>
       </div>
-    </main>
+    </div>
 
-    <footer class="footer-brand">
-      <div class="prestige-signature">italkyAI By Ozyigit’s 2026</div>
-    </footer>
+    <div class="main">
+      <div class="hero">
+        <div class="heroTop">
+          <div class="heroTitle">Oyun Merkezi</div>
+          <div class="chips">
+            <div class="chip" id="dailyChip">🎟️ Hak: 0</div>
+            <div class="chip" id="planChip">FREE</div>
+          </div>
+        </div>
+        <div class="heroDesc">
+          FREE: Oyuna girince 1 hak düşer. Hak kazan → (şimdilik test +1). PRO: limitsiz.
+        </div>
+        <div class="heroActions">
+          <button class="btn earn" id="earnBtn" type="button">Hak Kazan</button>
+          <button class="btn play" id="startBtn" type="button">Hemen Oyna</button>
+        </div>
+      </div>
+
+      <div class="grid" id="gameGrid"></div>
+    </div>
+
+    <div class="footerbar">
+      <div class="footerBrand">italkyAI By Ozyigit’s 2026</div>
+    </div>
   </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script type="module" src="/js/game_page.js?v=999"></script>
 </body>
 </html>
