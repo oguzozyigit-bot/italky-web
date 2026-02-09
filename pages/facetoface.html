@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
   <title>italkyAI • Karşılıklı Çeviri</title>
   <link rel="icon" href="data:," />
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
@@ -12,28 +13,22 @@
   <style>
     :root{
       --bg-void:#02000a;
+      --brand-burgundy:#580c1f;
+      --brand-lacivert:#0f172a;
       --text:#fff;
       --muted:rgba(255,255,255,.45);
+      --icon-bordo:#8b2635;
+      --mic-navy:#5b76ff;
       --ai-grad: linear-gradient(135deg, #a5b4fc 0%, #6366f1 100%);
-      --glass: rgba(255, 255, 255, 0.05);
-      --glass-border: rgba(255, 255, 255, 0.12);
       --safe-top: env(safe-area-inset-top, 0px);
       --safe-bottom: env(safe-area-inset-bottom, 0px);
     }
 
     *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none;}
     html,body{margin:0; width:100%; height:100%; background:var(--bg-void); color:var(--text); font-family:Outfit,sans-serif; overflow:hidden;}
-    
-    /* COSMIC DEPTH ELEMENTS */
-    .cosmos-bg { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
-    .orb { position: absolute; border-radius: 50%; filter: blur(80px); opacity: .20; animation: float 20s infinite alternate ease-in-out; }
-    .orb-top { top: -10%; left: 10%; width: 70vw; height: 70vw; background: radial-gradient(circle, #580c1f, transparent 70%); }
-    .orb-bot { bottom: -10%; right: 10%; width: 60vw; height: 60vw; background: radial-gradient(circle, #0f172a, transparent 70%); }
-    @keyframes float { from { transform: translate(0,0); } to { transform: translate(10%, 10%); } }
+    .container{position:relative; width:100%; height:100%; display:flex; flex-direction:column;}
 
-    .container{position:relative; width:100%; height:100%; display:flex; flex-direction:column; z-index: 10;}
-
-    /* PANELS (PREMIUM GLASS) */
+    /* PANELS - İstediğin klasik yarım ekranlar */
     .half-screen{
       flex:1;
       position:relative;
@@ -41,103 +36,98 @@
       flex-direction:column;
       align-items:center;
       justify-content:space-between;
-      padding: calc(20px + var(--safe-top)) 20px calc(20px + var(--safe-bottom));
+      padding: calc(16px + var(--safe-top)) 18px calc(16px + var(--safe-bottom));
       gap:14px;
       overflow:hidden;
-      background: rgba(255,255,255,0.02);
-      backdrop-filter: blur(20px);
     }
-    .half-screen.top{ transform: rotate(180deg); border-bottom: 1px solid var(--glass-border); }
-    .half-screen.bottom{ border-top: 1px solid var(--glass-border); }
+    .half-screen.top{
+      background: linear-gradient(to bottom, #1a0208, var(--brand-burgundy));
+      transform: rotate(180deg);
+      --mic-accent: var(--mic-navy);
+    }
+    .half-screen.bottom{
+      background: linear-gradient(to bottom, var(--brand-lacivert), #02000a);
+      --mic-accent: var(--icon-bordo);
+    }
 
-    /* NAVIGATION CONTROLS */
+    /* NAVIGATION */
     .top-back{
-      position:absolute; left:16px; top: calc(16px + var(--safe-top)); z-index: 150;
-      width:42px; height:42px; border-radius:14px;
-      border:1px solid var(--glass-border); background: var(--glass);
+      position:absolute; left:14px; top: calc(14px + var(--safe-top)); z-index: 120;
+      width:38px; height:38px; border-radius:14px;
+      border:1px solid rgba(255,255,255,.12); background: rgba(0,0,0,.18);
       color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer;
     }
     .top-clear{
-      position:absolute; left:64px; top: calc(16px + var(--safe-top)); z-index: 150;
-      width:42px; height:42px; border-radius:14px;
-      border:1px solid var(--glass-border); background: var(--glass);
+      position:absolute; left:58px; top: calc(14px + var(--safe-top)); z-index: 120;
+      width:38px; height:38px; border-radius:14px;
+      border:1px solid rgba(255,255,255,.12); background: rgba(0,0,0,.18);
       color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer;
     }
 
     /* LANG TRIGGERS */
     .lang-trigger{
-      background: var(--glass); border:1px solid var(--glass-border);
-      color: #fff; padding:12px 18px; border-radius: 999px;
-      font-size: 13px; font-weight: 800; display:flex; align-items:center; gap:8px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      background: rgba(0,0,0,.28); border:1px solid rgba(255,255,255,.10);
+      color: rgba(255,255,255,.92); padding:10px 14px; border-radius: 999px;
+      font-size: 12px; font-weight: 900; cursor:pointer; display:flex; align-items:center; gap:8px;
+      backdrop-filter: blur(10px);
     }
 
-    /* CHAT BUBBLES */
-    .chat-body{ flex:1; width:100%; max-width:90%; display:flex; flex-direction:column; justify-content:center; gap:12px; overflow-y:auto; scrollbar-width:none; z-index: 50; }
-    .bubble.them .txt{ color: var(--text-muted); font-size: 16px; font-weight: 500; }
-    .bubble.me.is-latest .txt{ 
-      color:#fff; font-size:28px; font-weight:900; 
-      filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));
-    }
+    /* CHAT BODY */
+    .chat-body{ flex:1; width:100%; max-width:92%; display:flex; flex-direction:column; justify-content:center; gap:10px; overflow-y:auto; scrollbar-width:none; z-index: 50; }
+    .chat-body::-webkit-scrollbar{display:none}
 
-    /* PREMIUM MIC BUTTONS */
+    /* BUBBLES */
+    .bubble.them .txt{ color: rgba(255,255,255,.42); font-size: 16px; font-weight: 450; }
+    .bubble.me.is-latest .txt{ color:#fff; font-size:26px; font-weight:950; line-height:1.1; }
+
+    /* MIC BUTTONS */
     .btn-mic{
-      width:84px; height:84px; border-radius:28px;
-      background: linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.02));
-      border: 1px solid var(--glass-border);
-      box-shadow: 0 15px 35px rgba(0,0,0,0.5);
-      display:flex; align-items:center; justify-content:center;
+      width:78px; height:78px; border-radius:26px;
+      background: radial-gradient(circle at 50% 50%, #2a020f 0%, #12000a 58%, #060006 100%);
+      border: 1px solid rgba(255,255,255,.10); box-shadow: 0 14px 30px rgba(0,0,0,.65);
+      display:flex; align-items:center; justify-content:center; position:relative;
     }
-    .top .btn-mic svg { stroke: #ff4d4d; filter: drop-shadow(0 0 8px #ff4d4d); }
-    .bottom .btn-mic svg { stroke: #4d94ff; filter: drop-shadow(0 0 8px #4d94ff); }
+    .btn-mic svg{ width:34px; height:34px; stroke: var(--mic-accent); fill:none; stroke-width:2; }
 
-    /* CENTER HUB (PREMIUM CAPSULE) */
-    .center-hub{ position:absolute; top:50%; left:0; width:100%; height:80px; transform: translateY(-50%); display:flex; align-items:center; justify-content:center; z-index:120; pointer-events:none; }
+    /* CENTER HUB */
+    .center-hub{ position:absolute; top:50%; left:0; width:100%; height:74px; transform: translateY(-50%); display:flex; align-items:center; justify-content:center; z-index:120; pointer-events:none; }
     .logo-capsule{
-      background: rgba(3,0,20,0.9); border:1px solid var(--glass-border);
-      padding:14px 28px; border-radius:999px; display:flex; align-items:center; gap:12px;
-      box-shadow: 0 0 30px rgba(99,102,241,0.3); pointer-events:auto; cursor:pointer;
+      background:#02000a; border:1px solid rgba(255,255,255,.10);
+      padding:12px 22px; border-radius:999px; display:flex; align-items:center; gap:12px;
+      box-shadow: 0 24px 50px rgba(0,0,0,.78); pointer-events:auto; cursor:pointer;
     }
-    .logo-text{ font-family:"Space Grotesk",sans-serif; font-size:20px; font-weight:800; color:#fff; }
+    .logo-text{ font-family:"Space Grotesk",sans-serif; font-size:18px; font-weight:800; color:#fff; }
     .logo-ai{background:var(--ai-grad); -webkit-background-clip:text; -webkit-text-fill-color:transparent;}
 
-    /* POPOVERS */
+    /* POPOVER */
     .popover{
       position:absolute; left:50%; transform: translateX(-50%);
-      width:min(300px, calc(100vw - 40px)); height:350px;
-      background: rgba(10,10,30,0.95); backdrop-filter: blur(40px);
-      border: 1px solid var(--glass-border); border-radius: 28px;
-      display:none; flex-direction:column; z-index: 1000;
+      width:min(280px, calc(100vw - 60px)); height:320px;
+      background: radial-gradient(circle at 50% 50%, #2a020f 0%, #12000a 58%, #060006 100%);
+      border: 1px solid rgba(139,38,53,.28); border-radius: 22px;
+      display:none; flex-direction:column; z-index: 999; overflow:hidden;
     }
     .popover.show{display:flex;}
   </style>
 </head>
 
 <body id="frameRoot">
-  <div class="cosmos-bg">
-    <div class="orb orb-top"></div>
-    <div class="orb orb-bot"></div>
-  </div>
-
   <div class="container">
     <div class="half-screen top" id="topSection">
       <button class="top-back" id="topBack">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
       </button>
       <button class="top-clear" id="clearChat">🧹</button>
 
       <div class="top-top">
         <button class="lang-trigger" id="topLangBtn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 0 20"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 0 20"/></svg>
           <span id="topLangTxt">İngilizce</span>
         </button>
       </div>
 
       <div class="popover" id="pop-top">
-        <div class="pop-head">
-          <div class="pop-title">ÜST DİL SEÇİMİ</div>
-          <button class="pop-close" id="close-top">✕</button>
-        </div>
+        <div class="pop-head"><div class="pop-title">ÜST DİL</div><button class="pop-close" id="close-top">✕</button></div>
         <div class="pop-list" id="list-top"></div>
       </div>
 
@@ -159,16 +149,13 @@
     <div class="half-screen bottom" id="botSection">
       <div class="bottom-top">
         <button class="lang-trigger" id="botLangBtn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 0 20"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 0 20"/></svg>
           <span id="botLangTxt">Türkçe</span>
         </button>
       </div>
 
       <div class="popover" id="pop-bot">
-        <div class="pop-head">
-          <div class="pop-title">ALT DİL SEÇİMİ</div>
-          <button class="pop-close" id="close-bot">✕</button>
-        </div>
+        <div class="pop-head"><div class="pop-title">ALT DİL</div><button class="pop-close" id="close-bot">✕</button></div>
         <div class="pop-list" id="list-bot"></div>
       </div>
 
@@ -184,7 +171,8 @@
 
   <script type="module" src="/js/facetoface_page.js"></script>
   <script>
-    // Logo ile ana sayfaya dönüş
+    // Klasik geri dönüş ve home işlevleri
+    document.getElementById('topBack').onclick = () => history.back();
     document.getElementById('homeBtn').onclick = () => window.location.href = '/pages/home.html';
   </script>
 </body>
