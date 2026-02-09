@@ -65,7 +65,6 @@ function buildLangOptions(selectEl){
     const txt = labels[code] || code.toUpperCase();
     return `<option value="${code}">${txt}</option>`;
   }).join("");
-}
 
 async function deleteAccountFlow(u){
   const ok = confirm(t("profile_delete_confirm"));
