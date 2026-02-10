@@ -83,12 +83,8 @@
     .card-doc .neon-icon-wrap::after { background: linear-gradient(135deg, #fccb90 0%, #d57eeb 100%); box-shadow: 0 0 20px rgba(213, 126, 235, 0.6); }
     .card-game .neon-icon-wrap::after { background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); box-shadow: 0 0 20px rgba(255, 154, 158, 0.6); }
 
-    /* ✅ Offline kartları için ayrı renk (aurora) */
-    .card-offline-text .neon-icon-wrap::after { background: linear-gradient(135deg, #a8ff78 0%, #78ffd6 100%); box-shadow: 0 0 22px rgba(120, 255, 214, 0.55); }
-    .card-offline-f2f .neon-icon-wrap::after  { background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%); box-shadow: 0 0 22px rgba(143, 211, 244, 0.55); }
-
     .card-title { font-size: 18px; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
-    .card-desc { font-size: 11px; color: var(--text-muted); font-weight: 600; margin-top: 4px; }
+    .card-desc { font-size: 11px; color: var(--text-muted); font-weight: 600; margin-top: 4px; text-align:center; }
 
     /* ====== DURUM ROZETİ (Yüklü/İndiriliyor/Eksik) ====== */
     .pkgBadge{
@@ -103,6 +99,7 @@
       letter-spacing:.2px;
       white-space:nowrap;
       backdrop-filter: blur(8px);
+      z-index:3;
     }
     .pkgInstalled{
       border-color: rgba(0,230,118,.45);
@@ -121,10 +118,69 @@
       animation: shimmer 1.2s linear infinite;
     }
     @keyframes shimmer { to { transform: translateX(100%); } }
-
     .pkgMissing{
       border-color: rgba(255,23,68,.45);
       background: rgba(255,23,68,.12);
+    }
+
+    /* ===== OFFLINE SECTION ===== */
+    .offline-section{
+      grid-column: 1 / -1;
+      margin-top: 10px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(255,255,255,0.10);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .offline-title{
+      font-size:12px;
+      font-weight:900;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.78);
+    }
+    .offline-sub{
+      font-size:11px;
+      font-weight:800;
+      color: rgba(255,255,255,.45);
+    }
+
+    /* Offline kartları daha farklı dursun */
+    .premium-card.offline-pack{
+      border-color: rgba(0,243,255,0.16);
+      background: linear-gradient(145deg, rgba(0,243,255,0.10) 0%, rgba(255,255,255,0.02) 60%);
+    }
+    .premium-card.offline-pack:active{
+      background: linear-gradient(145deg, rgba(0,243,255,0.14) 0%, rgba(255,255,255,0.03) 60%);
+    }
+
+    /* Offline ikon glow’ları (ice neon) */
+    .offline-pack.card-offline-text .neon-icon-wrap::after{
+      background: linear-gradient(135deg, #00f2fe 0%, #4facfe 45%, #a8ff78 100%);
+      box-shadow: 0 0 24px rgba(0,243,255,0.35);
+    }
+    .offline-pack.card-offline-f2f .neon-icon-wrap::after{
+      background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 55%, #00f2fe 100%);
+      box-shadow: 0 0 24px rgba(143,211,244,0.35);
+    }
+
+    /* küçük OFFLINE etiketi */
+    .offline-tag{
+      position:absolute;
+      left:12px; top:12px;
+      font-size:10px;
+      font-weight:950;
+      letter-spacing: 1px;
+      padding:6px 9px;
+      border-radius:999px;
+      border:1px solid rgba(0,243,255,.22);
+      background: rgba(0,0,0,.22);
+      color: rgba(0,243,255,.95);
+      backdrop-filter: blur(8px);
+      user-select:none;
+      z-index:3;
     }
 
     /* ====== PRESTIGE FOOTER ====== */
@@ -178,74 +234,98 @@
     <main class="main-content">
       <div class="grid-layout">
 
-        <!-- ✅ OFFLINE TEXT -->
-        <div class="premium-card card-offline-text" id="offlineTextBtn" onclick="location.href='/pages/text_translate.html'">
-          <span class="pkgBadge pkgMissing" id="badgeOfflineText">Eksik</span>
-          <div class="neon-icon-wrap">
-            <svg viewBox="0 0 24 24">
-              <path d="M4 7h16M4 12h16M4 17h10"/>
-              <path d="M14 17l3 3 3-3"/>
-            </svg>
-          </div>
-          <span class="card-title">Offline Text</span>
-          <span class="card-desc">CT2 Paket (Metin Çeviri)</span>
-        </div>
-
-        <!-- ✅ OFFLINE FACETOFACE -->
-        <div class="premium-card card-offline-f2f" id="offlineF2FBtn" onclick="location.href='/pages/facetoface.html'">
-          <span class="pkgBadge pkgMissing" id="badgeOfflineF2F">Eksik</span>
-          <div class="neon-icon-wrap">
-            <svg viewBox="0 0 24 24">
-              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
-              <circle cx="8" cy="7" r="4"/>
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-            </svg>
-          </div>
-          <span class="card-title">Offline FaceToFace</span>
-          <span class="card-desc">CT2 Paket (Yüz Yüze)</span>
-        </div>
-
         <!-- Mevcut kartların -->
         <div class="premium-card card-face" onclick="location.href='/pages/facetoface.html'">
           <div class="neon-icon-wrap"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
           <span class="card-title">Yüzyüze</span>
           <span class="card-desc">Anlık Karşılıklı Çeviri</span>
         </div>
+
         <div class="premium-card card-voice" onclick="location.href='/pages/voice_ai.html'">
           <div class="neon-icon-wrap"><svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg></div>
           <span class="card-title">Konuşkan AI</span>
           <span class="card-desc">Yapay Zeka ile Konuş</span>
         </div>
+
         <div class="premium-card card-text" onclick="location.href='/pages/text_translate.html'">
           <div class="neon-icon-wrap"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></svg></div>
           <span class="card-title">Metin Çeviri</span>
           <span class="card-desc">Hızlı ve Doğru Çeviri</span>
         </div>
+
         <div class="premium-card card-chat" onclick="location.href='/pages/chat.html'">
           <div class="neon-icon-wrap"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 1 1-7.6-13.5 8.38 8.38 0 0 1 3.8.9L21 3z"/></svg></div>
           <span class="card-title">Sohbet AI</span>
           <span class="card-desc">Akıllı Asistan Sohbeti</span>
         </div>
+
         <div class="premium-card card-photo" onclick="location.href='/pages/photo.html'">
           <div class="neon-icon-wrap"><svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
           <span class="card-title">Foto Çeviri</span>
           <span class="card-desc">Görselden Anında Çevir</span>
         </div>
+
         <div class="premium-card card-teacher" onclick="location.href='/pages/teachers.html'">
           <div class="neon-icon-wrap"><svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div>
           <span class="card-title">Öğretmen AI</span>
           <span class="card-desc">Dil Eğitmenlerin</span>
         </div>
+
         <div class="premium-card card-doc" onclick="location.href='/pages/document.html'">
           <div class="neon-icon-wrap"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
           <span class="card-title">Belge Çeviri</span>
           <span class="card-desc">PDF ve Dosya Tarama</span>
         </div>
+
         <div class="premium-card card-game" onclick="location.href='/pages/game.html'">
           <div class="neon-icon-wrap"><svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 12h4M8 10v4"/><circle cx="15" cy="11" r="1"/></svg></div>
           <span class="card-title">Oyunlar</span>
           <span class="card-desc">Eğlenerek Öğren</span>
+        </div>
+
+        <!-- ===== OFFLINE PAKETLER (EN ALT) ===== -->
+        <div class="offline-section">
+          <div style="display:flex;flex-direction:column;gap:2px;">
+            <div class="offline-title">Offline Paketler</div>
+            <div class="offline-sub">CT2 • cihaz içi çeviri</div>
+          </div>
+        </div>
+
+        <!-- ✅ OFFLINE TEXT -->
+        <div class="premium-card offline-pack card-offline-text" id="offlineTextBtn" onclick="location.href='/pages/text_translate_offline.html'">
+          <span class="offline-tag">OFFLINE</span>
+          <span class="pkgBadge pkgMissing" id="badgeOfflineText">Eksik</span>
+          <div class="neon-icon-wrap">
+            <!-- yeni ikon: paket + yazı -->
+            <svg viewBox="0 0 24 24">
+              <path d="M21 8.5V20a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8.5"/>
+              <path d="M3 8.5 12 3l9 5.5"/>
+              <path d="M12 3v6"/>
+              <path d="M7 13h10"/>
+              <path d="M7 17h7"/>
+            </svg>
+          </div>
+          <span class="card-title">Offline Text</span>
+          <span class="card-desc">Metin çeviri • EN ⇄ TR</span>
+        </div>
+
+        <!-- ✅ OFFLINE FACETOFACE -->
+        <div class="premium-card offline-pack card-offline-f2f" id="offlineF2FBtn" onclick="location.href='/pages/facetoface_offline.html'">
+          <span class="offline-tag">OFFLINE</span>
+          <span class="pkgBadge pkgMissing" id="badgeOfflineF2F">Eksik</span>
+          <div class="neon-icon-wrap">
+            <!-- yeni ikon: iki kişi + telefon -->
+            <svg viewBox="0 0 24 24">
+              <path d="M7 21v-2a4 4 0 0 1 4-4h0"/>
+              <circle cx="9" cy="7" r="3"/>
+              <path d="M17 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.5a3 3 0 0 1 0 7"/>
+              <rect x="14.5" y="10" width="7" height="12" rx="2"/>
+              <path d="M18 20h0.01"/>
+            </svg>
+          </div>
+          <span class="card-title">Offline FaceToFace</span>
+          <span class="card-desc">Karşılıklı • EN ⇄ TR</span>
         </div>
 
       </div>
