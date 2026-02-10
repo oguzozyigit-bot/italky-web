@@ -1,5 +1,5 @@
 // FILE: italky-web/js/text_translate_offline.js
-// Offline mode: CT2 bridge + only en <-> tr
+// Offline mode: CT2 bridge + SINGLE language pair (EN <-> TR) fixed
 import { STORAGE_KEY } from "/js/config.js";
 import { getSiteLang } from "/js/i18n.js";
 
@@ -43,6 +43,7 @@ function getSystemUILang(){
 
 let UI_LANG = getSystemUILang();
 
+/* ONLY EN/TR registry (fixed pair) */
 const LANGS = [
   { code:"en", flag:"🇬🇧", bcp:"en-US" },
   { code:"tr", flag:"🇹🇷", bcp:"tr-TR" }
@@ -73,6 +74,9 @@ function langLabel(code){
   return String(code||"").toUpperCase();
 }
 
+/* ===============================
+   TOAST
+   =============================== */
 function toast(msg){
   const t = $("toast");
   if(!t) return;
@@ -115,7 +119,6 @@ function bridgeReady(){
 function dir(src, dst){ return `${String(src||"").toLowerCase()}-${String(dst||"").toLowerCase()}`; }
 
 function checkCt2(){
-  // Web test simülasyon
   const sim = String(localStorage.getItem("ct2_sim_state")||"").trim(); // installed / missing
   if(sim === "installed"){ CT2_OK = true; return true; }
   if(sim === "missing"){ CT2_OK = false; return false; }
@@ -197,7 +200,7 @@ async function startMic(){
     return;
   }
 
-  const src = state.from;
+  const src = state.from; // fixed
   const r = buildRecognizer(src);
   if(!r){ toast("Mikrofon açılamadı."); return; }
 
@@ -221,74 +224,15 @@ async function startMic(){
 }
 
 /* ===============================
-   LANG SHEET (EN/TR only)
+   FIXED LANG STATE (NO SHEET)
    =============================== */
-const state = { from:"en", to:"tr", picking:"from" };
+const state = { from:"en", to:"tr" };
 
 function setLangUI(){
   $("fromFlag").textContent = langFlag(state.from);
   $("toFlag").textContent = langFlag(state.to);
   $("fromLangTxt").textContent = langLabel(state.from);
   $("toLangTxt").textContent = langLabel(state.to);
-
-  const title = $("sheetTitle");
-  if(title) title.textContent = (state.picking === "from") ? "Kaynak Dil" : "Hedef Dil";
-}
-
-function showSheet(which){
-  state.picking = which;
-  const back = $("langSheet");
-  if(!back) return;
-  back.classList.add("show");
-  const q = $("sheetQuery");
-  if(q){ q.value = ""; q.focus(); }
-  renderSheet("");
-}
-
-function hideSheet(){
-  $("langSheet")?.classList.remove("show");
-}
-
-function renderSheet(filter){
-  const list = $("sheetList");
-  if(!list) return;
-
-  const f = String(filter||"").toLowerCase().trim();
-  const rows = LANGS
-    .filter(l=>{
-      if(!f) return true;
-      const name = langLabel(l.code).toLowerCase();
-      return name.includes(f) || l.code.includes(f);
-    })
-    .map(l=>{
-      const selected = (state.picking === "from") ? (l.code === state.from) : (l.code === state.to);
-      return `
-        <div class="sheetRow ${selected ? "selected":""}" data-code="${l.code}">
-          <div style="display:flex;align-items:center;gap:10px;">
-            <span style="font-size:18px">${l.flag}</span>
-            <span style="font-weight:900">${langLabel(l.code)}</span>
-          </div>
-          <div style="opacity:.7;font-weight:900">${String(l.code).toUpperCase()}</div>
-        </div>
-      `;
-    }).join("");
-
-  list.innerHTML = rows || `<div style="padding:16px;opacity:.7;font-weight:900;">Sonuç yok</div>`;
-
-  list.querySelectorAll(".sheetRow").forEach(r=>{
-    r.addEventListener("click", ()=>{
-      const code = r.getAttribute("data-code") || "en";
-      if(state.picking === "from"){
-        state.from = code;
-        if(state.from === state.to) state.to = (state.from === "en" ? "tr" : "en");
-      }else{
-        state.to = code;
-        if(state.to === state.from) state.from = (state.to === "en" ? "tr" : "en");
-      }
-      setLangUI();
-      hideSheet();
-    });
-  });
 }
 
 /* ===============================
@@ -307,12 +251,6 @@ async function doTranslate(){
 
   if(!CT2_OK){
     toast("Offline paket eksik.");
-    return;
-  }
-
-  const d = dir(state.from, state.to);
-  if(d !== "en-tr" && d !== "tr-en"){
-    toast("Offline sadece EN ⇄ TR.");
     return;
   }
 
@@ -336,7 +274,7 @@ function clearAll(){
 document.addEventListener("DOMContentLoaded", ()=>{
   if(!requireLogin()) return;
 
-  // kullanıcı alanı doldur (mevcut UI ile uyumlu)
+  // user info
   try{
     const raw = localStorage.getItem(STORAGE_KEY);
     const u = raw ? JSON.parse(raw) : null;
@@ -352,41 +290,37 @@ document.addEventListener("DOMContentLoaded", ()=>{
     }
   }catch{}
 
-  // TTS voices preload
+  // preload voices
   try{ window.speechSynthesis?.getVoices?.(); }catch{}
 
-  // Offline varsayılan diller
+  // FIXED LANGS: EN -> TR
   state.from = "en";
   state.to = "tr";
   setLangUI();
 
-  // Paket kontrol
+  // CT2 check
   checkCt2();
   if(!CT2_OK){
     toast("Offline paket yok: en-tr / tr-en");
   }
 
-  // bind
+  // bind home
   $("logoHome")?.addEventListener("click", ()=> location.href="/pages/home.html");
 
-  $("fromLangBtn")?.addEventListener("click", ()=> showSheet("from"));
-  $("toLangBtn")?.addEventListener("click", ()=> showSheet("to"));
+  // ✅ LANG BUTTONS DISABLED (tek çift)
+  $("fromLangBtn")?.addEventListener("click", (e)=>{ e.preventDefault(); toast("Offline: Dil sabit (EN→TR)"); });
+  $("toLangBtn")?.addEventListener("click", (e)=>{ e.preventDefault(); toast("Offline: Dil sabit (EN→TR)"); });
 
-  $("swapBtn")?.addEventListener("click", ()=>{
-    const tmp = state.from;
-    state.from = state.to;
-    state.to = tmp;
-    // Offline sadece en/tr olduğundan güvenli
-    setLangUI();
+  // ✅ Swap: istersen kapatalım. Şimdilik KAPALI (tek yön sabit).
+  $("swapBtn")?.addEventListener("click", (e)=>{
+    e.preventDefault();
+    toast("Offline: Dil sabit (EN→TR)");
   });
 
-  $("sheetClose")?.addEventListener("click", hideSheet);
-  $("langSheet")?.addEventListener("click", (e)=>{
-    if(e.target?.id === "langSheet") hideSheet();
-  });
+  // sheet tamamen devre dışı (varsa kapalı kalsın)
+  $("langSheet")?.classList.remove("show");
 
-  $("sheetQuery")?.addEventListener("input", (e)=> renderSheet(e.target.value));
-
+  // input handlers
   $("inText")?.addEventListener("input", updateCounts);
 
   $("translateBtn")?.addEventListener("click", doTranslate);
