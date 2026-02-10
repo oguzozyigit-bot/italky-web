@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+  <title>italkyAI • Karşılıklı Çeviri (Offline)</title>
+  <link rel="icon" href="data:," />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg-void:#02000a;
+      --brand-burgundy:#580c1f;
+      --brand-lacivert:#0f172a;
+
+      --text:#fff;
+      --muted:rgba(255,255,255,.45);
+
+      --icon-bordo:#8b2635;
+      --mic-navy:#5b76ff;
+
+      --ai-grad: linear-gradient(135deg, #a5b4fc 0%, #6366f1 100%);
+
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none;}
+    html,body{margin:0; width:100%; height:100%; background:var(--bg-void); color:var(--text); font-family:Outfit,sans-serif; overflow:hidden;}
+    .container{position:relative; width:100%; height:100%; display:flex; flex-direction:column;}
+
+    /* PANELS */
+    .half-screen{
+      flex:1;
+      position:relative;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:space-between;
+      padding: calc(16px + var(--safe-top)) 18px calc(16px + var(--safe-bottom));
+      gap:14px;
+      overflow:hidden;
+    }
+    .half-screen.top{
+      background: linear-gradient(to bottom, #1a0208, var(--brand-burgundy));
+      transform: rotate(180deg);
+      --mic-accent: var(--mic-navy);
+    }
+    .half-screen.bottom{
+      background: linear-gradient(to bottom, var(--brand-lacivert), #02000a);
+      --mic-accent: var(--icon-bordo);
+    }
+
+    /* TOP BACK ARROW */
+    .top-back{
+      position:absolute;
+      left:14px;
+      top: calc(14px + var(--safe-top));
+      z-index: 120;
+      width:38px;
+      height:38px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.18);
+      color:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      user-select:none;
+    }
+    .top-back:active{transform:scale(.96);}
+
+    /* CHAT CLEAR */
+    .top-clear{
+      position:absolute;
+      left:58px;
+      top: calc(14px + var(--safe-top));
+      z-index: 120;
+      width:38px;
+      height:38px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.18);
+      color:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      user-select:none;
+      font-size:16px;
+    }
+    .top-clear:active{transform:scale(.96);}
+
+    .top-top, .bottom-top{
+      width:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      z-index:110;
+      padding-top: 6px;
+    }
+
+    .lang-trigger{
+      background: rgba(0,0,0,.28);
+      border:1px solid rgba(255,255,255,.10);
+      color: rgba(255,255,255,.92);
+      padding:10px 14px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing:.3px;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      backdrop-filter: blur(10px);
+      user-select:none;
+    }
+    .lang-trigger svg{width:14px; height:14px; opacity:.7}
+
+    /* POPOVER */
+    .popover{
+      position:absolute;
+      left:50%;
+      transform: translateX(-50%);
+      width:min(280px, calc(100vw - 60px));
+      height:320px;
+      background: radial-gradient(circle at 50% 50%, #2a020f 0%, #12000a 58%, #060006 100%);
+      border: 1px solid rgba(139,38,53,.28);
+      border-radius: 22px;
+      box-shadow: 0 22px 46px rgba(0,0,0,.80);
+      display:none;
+      flex-direction:column;
+      z-index: 999;
+      overflow:hidden;
+    }
+    .popover.show{display:flex;}
+    .pop-head{padding:12px; border-bottom:1px solid rgba(255,255,255,.06); display:flex; align-items:center; justify-content:space-between;}
+    .pop-title{font-weight:900; font-size:12px; opacity:.9; letter-spacing:.3px;}
+    .pop-close{
+      width:34px; height:34px; border-radius:14px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+      color:#fff; cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .pop-close:active{transform:scale(.96);}
+
+    .pop-list{
+      flex:1;
+      overflow:auto;
+      padding:10px;
+      scrollbar-width:none;
+    }
+    .pop-list::-webkit-scrollbar{ width:0; height:0; display:none; }
+
+    .pop-item{
+      padding:12px;
+      border-radius:14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      cursor:pointer;
+      border:1px solid transparent;
+      user-select:none;
+    }
+    .pop-item:hover{background: rgba(255,255,255,.04);}
+    .pop-item.active{
+      background: rgba(139,38,53,.10);
+      border-color: rgba(139,38,53,.24);
+      color: #fff;
+    }
+    .pop-left{display:flex; align-items:center; gap:10px; min-width:0;}
+    .pop-flag{font-size:18px}
+    .pop-name{font-weight:900; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:190px;}
+    .pop-code{font-size:12px; font-weight:900; opacity:.7; text-transform:uppercase;}
+
+    .top .popover{ top: calc(62px + var(--safe-top)); }
+    .bottom .popover{ bottom: 120px; }
+
+    /* CHAT */
+    .chat-body{
+      flex:1;
+      width:100%;
+      max-width:92%;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      gap:10px;
+      overflow-y:auto;
+      scrollbar-width:none;
+      padding: 6px 0;
+      z-index: 50;
+    }
+    .chat-body::-webkit-scrollbar{display:none}
+
+    .bubble{
+      width:100%;
+      display:flex;
+      align-items:flex-start;
+      justify-content:center;
+      gap:10px;
+      text-align:center;
+      word-break: break-word;
+    }
+    .bubble .txt{display:inline-block; max-width: 92%;}
+    .bubble.them .txt{
+      color: rgba(255,255,255,.42);
+      font-size: 16px;
+      font-weight: 450;
+      line-height:1.25;
+    }
+
+    .bubble.me .txt{
+      color: rgba(255,255,255,.78);
+      font-size: 16px;
+      font-weight: 650;
+      line-height:1.2;
+      letter-spacing:.1px;
+    }
+    .bubble.me.is-latest .txt{
+      color:#fff;
+      font-size:26px;
+      font-weight:950;
+      line-height:1.1;
+      letter-spacing:.2px;
+    }
+
+    .bubble .spk{
+      width:34px;
+      height:34px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+      color:#fff;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      flex: 0 0 auto;
+      margin-top: 4px;
+    }
+    .bubble.me .spk{display:flex;}
+    .bubble .spk svg{width:16px; height:16px;}
+    .bubble .spk:active{transform:scale(.95);}
+
+    /* MIC */
+    .mic-wrap{
+      width:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding-bottom: 4px;
+      z-index: 60;
+    }
+
+    .btn-mic{
+      width:78px;
+      height:78px;
+      border-radius:26px;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background: radial-gradient(circle at 50% 50%, #2a020f 0%, #12000a 58%, #060006 100%);
+      border: 1px solid rgba(255,255,255,.10);
+      box-shadow: 0 14px 30px rgba(0,0,0,.65);
+      transition: transform .18s, border-color .18s, box-shadow .18s;
+      position:relative;
+    }
+    .btn-mic svg{
+      width:34px; height:34px;
+      stroke: var(--mic-accent);
+      fill:none;
+      stroke-width:2;
+      stroke-linecap:round; stroke-linejoin:round;
+    }
+
+    @keyframes recPulse{
+      0%,100%{ transform: scale(1); box-shadow: 0 14px 30px rgba(0,0,0,.65); }
+      50%{ transform: scale(1.06); box-shadow: 0 18px 40px rgba(0,0,0,.75); }
+    }
+    .btn-mic.listening{
+      border-color: rgba(255,255,255,.18);
+      animation: recPulse 0.9s ease-in-out infinite;
+    }
+    .btn-mic.listening::after{
+      content:"REC";
+      position:absolute;
+      top:-10px;
+      right:-8px;
+      font-size:10px;
+      font-weight:900;
+      letter-spacing:.6px;
+      padding:6px 8px;
+      border-radius:999px;
+      background: rgba(0,0,0,.55);
+      border:1px solid rgba(255,255,255,.14);
+      color: #fff;
+    }
+    .btn-mic:active{transform:scale(1.02);}
+
+    /* CENTER HUB */
+    .center-hub{
+      position:absolute;
+      top:50%;
+      left:0;
+      width:100%;
+      height:74px;
+      transform: translateY(-50%);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      z-index:120;
+      pointer-events:none;
+    }
+    .logo-capsule{
+      background:#02000a;
+      border:1px solid rgba(255,255,255,.10);
+      padding:12px 22px;
+      border-radius:999px;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      box-shadow: 0 24px 50px rgba(0,0,0,.78);
+      pointer-events:auto;
+      cursor:pointer;
+      position:relative;
+      overflow:hidden;
+    }
+    .logo-text{
+      font-family:"Space Grotesk",sans-serif;
+      font-size:18px;
+      font-weight:800;
+      color:#fff;
+      position:relative;
+      z-index:2;
+    }
+    .logo-ai{background:var(--ai-grad); -webkit-background-clip:text; -webkit-text-fill-color:transparent;}
+
+    .logo-wave{
+      position:absolute;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:4px;
+      opacity:0;
+      transition:.2s;
+      z-index:1;
+      pointer-events:none;
+    }
+    #frameRoot.listening .logo-wave{opacity:1;}
+    .logo-wave .bar{
+      width:3px; height:10px;
+      border-radius:3px;
+      background: rgba(165,180,252,.42);
+      animation: bounce 0.9s infinite ease-in-out;
+    }
+    .logo-wave .bar:nth-child(2){animation-delay:.15s}
+    .logo-wave .bar:nth-child(3){animation-delay:.28s}
+    .logo-wave .bar:nth-child(4){animation-delay:.15s}
+    .logo-wave .bar:nth-child(5){animation-delay:.0s}
+    @keyframes bounce{0%,100%{height:10px} 50%{height:40px}}
+  </style>
+</head>
+
+<body id="frameRoot">
+  <div class="container">
+
+    <div class="half-screen top" id="topSection">
+      <button class="top-back" id="topBack" title="Başa dön">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M15 18l-6-6 6-6"/>
+        </svg>
+      </button>
+
+      <button class="top-clear" id="clearChat" title="Sohbeti temizle">🧹</button>
+
+      <div class="top-top">
+        <button class="lang-trigger" id="topLangBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 0 20"/>
+          </svg>
+          <span id="topLangTxt">🇬🇧 İngilizce</span>
+        </button>
+      </div>
+
+      <div class="popover" id="pop-top" role="dialog" aria-label="Üst dil seçimi">
+        <div class="pop-head">
+          <div class="pop-title">ÜST DİL</div>
+          <button class="pop-close" id="close-top" aria-label="Kapat">✕</button>
+        </div>
+        <div class="pop-list" id="list-top"></div>
+      </div>
+
+      <div class="chat-body" id="topBody"></div>
+
+      <div class="mic-wrap">
+        <button class="btn-mic" id="topMic" title="Mikrofon">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
+            <path d="M19 11v1a7 7 0 0 1-14 0v-1"/>
+            <path d="M12 19v3"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="center-hub">
+      <div class="logo-capsule" id="homeBtn" title="Ana sayfa">
+        <div class="logo-wave" aria-hidden="true">
+          <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+        </div>
+        <span class="logo-text">italky<span class="logo-ai">AI</span></span>
+      </div>
+    </div>
+
+    <div class="half-screen bottom" id="botSection">
+      <div class="bottom-top">
+        <button class="lang-trigger" id="botLangBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 0 20"/>
+          </svg>
+          <span id="botLangTxt">🇹🇷 Türkçe</span>
+        </button>
+      </div>
+
+      <div class="popover" id="pop-bot" role="dialog" aria-label="Alt dil seçimi">
+        <div class="pop-head">
+          <div class="pop-title">ALT DİL</div>
+          <button class="pop-close" id="close-bot" aria-label="Kapat">✕</button>
+        </div>
+        <div class="pop-list" id="list-bot"></div>
+      </div>
+
+      <div class="chat-body" id="botBody"></div>
+
+      <div class="mic-wrap">
+        <button class="btn-mic" id="botMic" title="Mikrofon">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
+            <path d="M19 11v1a7 7 0 0 1-14 0v-1"/>
+            <path d="M12 19v3"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/js/facetoface_page.js"></script>
+  <script>
+    // ✅ Geri dönüş ve Home işlevlerini basitçe bağladık
+    document.getElementById('topBack').addEventListener('click', () => { history.back(); });
+    document.getElementById('homeBtn').addEventListener('click', () => { window.location.href = '/pages/home.html'; });
+  </script>
+</body>
+</html>
