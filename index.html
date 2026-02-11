@@ -1,85 +1,124 @@
-<!-- FILE: italky-web/index.html -->
 <!DOCTYPE html>
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>italkyAI • Giriş</title>
-  <link rel="icon" href="data:," />
+
   <script src="https://accounts.google.com/gsi/client" async defer></script>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
   <style>
-    :root { --bg:#020205; --text:#fff; --muted:#9ca3af; --ai:linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#4338ca 100%); }
-    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none}
-    html,body{margin:0;width:100%;height:100dvh;overflow:hidden;font-family:Outfit,sans-serif;background:var(--bg);color:var(--text);display:flex;align-items:center;justify-content:center}
-    .frame{width:100%;max-width:440px;height:100%;display:flex;flex-direction:column;justify-content:space-between;background:rgba(8,8,12,.85);backdrop-filter:blur(30px);padding:40px 20px}
-    .logo{font-size:50px;font-weight:700;text-align:center}
-    .ai{background:var(--ai);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-    #googleBtnContainer{width:100%;max-width:320px;min-height:44px;display:flex;justify-content:center}
-    .toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-100px);background:#1a1a2e;border:1px solid #6366f1;padding:12px 16px;border-radius:999px;transition:.3s;z-index:9999;color:#fff;font-weight:800;font-size:12px;max-width:min(92vw,520px);text-align:center}
-    .toast.show{transform:translateX(-50%) translateY(0)}
+    :root {
+      --bg-deep: #020205; 
+      --text-white: #ffffff;
+      --ai-gradient: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #4338ca 100%);
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+    
+    html, body { 
+      margin: 0; padding: 0; width: 100%; height: 100dvh; 
+      overflow: hidden; font-family: 'Outfit', sans-serif; 
+      background-color: var(--bg-deep); color: var(--text-white); 
+      display: flex; align-items: center; justify-content: center; 
+    }
+
+    /* Arka plan efektleri */
+    .cosmos { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
+    .nebula { 
+      position: absolute; width: 80vw; height: 80vw; 
+      border-radius: 50%; filter: blur(100px); opacity: 0.2; 
+      background: radial-gradient(circle, #6366f1, transparent 70%); 
+    }
+    .n-1 { top: -10%; left: -10%; }
+    .n-2 { bottom: -10%; right: -10%; animation: move 15s infinite alternate; }
+    @keyframes move { from { transform: translate(0,0); } to { transform: translate(-20px, 30px); } }
+
+    .container {
+      width: 100%; max-width: 400px; position: relative; z-index: 10;
+      display: flex; flex-direction: column; align-items: center; padding: 20px;
+    }
+
+    .logo-area { margin-bottom: 50px; text-align: center; }
+    .logo { font-size: 64px; font-weight: 800; letter-spacing: -3px; line-height: 1; }
+    .txt-ai { background: var(--ai-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .be-free { letter-spacing: 10px; color: #4b5563; font-size: 14px; font-weight: 800; margin-top: 10px; }
+
+    .action-section { 
+      width: 100%; display: flex; flex-direction: column; 
+      gap: 16px; align-items: center; margin-top: 20px;
+    }
+
+    /* Google Buton Konteynırı */
+    #googleBtnContainer { width: 300px; min-height: 44px; display: flex; justify-content: center; }
+
+    /* Apple Butonu */
+    .apple-btn {
+      width: 300px; height: 44px; border-radius: 6px; border: none;
+      background: #000; color: #fff; font-size: 15px; font-weight: 600;
+      display: flex; align-items: center; justify-content: center; gap: 10px; 
+      cursor: pointer; transition: transform 0.2s;
+    }
+    .apple-btn:active { transform: scale(0.98); }
+
+    .footer { position: absolute; bottom: 30px; font-size: 10px; color: #374151; letter-spacing: 2px; font-weight: 600; }
   </style>
 </head>
 <body>
-  <div class="frame">
-    <div style="text-align:center">
-      <div class="logo">italky<span class="ai">AI</span></div>
-      <h2 style="font-size:22px;margin-top:20px;">Hoş Geldiniz</h2>
-      <p style="color:var(--muted);font-size:14px;">Devam etmek için giriş yapın.</p>
-    </div>
 
-    <div style="display:flex;flex-direction:column;gap:12px;align-items:center;width:100%;">
-      <div id="googleBtnContainer"></div>
-    </div>
-
-    <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.2);">italkyAI © 2026</div>
+  <div class="cosmos">
+    <div class="nebula n-1"></div>
+    <div class="nebula n-2"></div>
   </div>
 
-  <div id="toast" class="toast"></div>
+  <div class="container">
+    <div class="logo-area">
+      <div class="logo">italky<span class="txt-ai">AI</span></div>
+      <div class="be-free">BE FREE</div>
+    </div>
+
+    <div class="action-section">
+      <div id="googleBtnContainer"></div>
+
+      <button class="apple-btn" onclick="alert('Yakında!')">
+        <svg width="18" height="18" viewBox="0 0 17 20" fill="white">
+          <path d="M14.072 10.142c.013-2.458 2.016-3.64 2.106-3.693-1.15-1.683-2.936-1.913-3.568-1.94-1.507-.153-2.943.889-3.708.889-.764 0-1.956-.867-3.235-.841-1.68.026-3.227.979-4.092 2.483-1.745 3.033-.446 7.513 1.246 9.963.828 1.198 1.812 2.544 3.107 2.496 1.248-.047 1.72-.806 3.23-.806 1.51 0 1.933.806 3.254.78 1.345-.024 2.193-1.218 3.018-2.422.955-1.396 1.35-2.747 1.371-2.822-.03-.013-2.645-1.015-2.529-4.087zM11.91 3.297c.677-.82 1.134-1.961.942-3.097-1.168.047-2.578.777-3.416 1.752-.75.864-1.407 2.029-1.23 3.14 1.298.101 2.628-.68 3.704-1.795z"/>
+        </svg>
+        <span>Apple ile Giriş Yap</span>
+      </button>
+    </div>
+
+    <div class="footer">italkyAI © 2026</div>
+  </div>
 
   <script type="module">
-    const HOME_PATH = "/pages/home.html";
-    window.showToast = (msg)=>{
-      const t=document.getElementById("toast");
-      t.textContent=String(msg||"");
-      t.classList.add("show");
-      clearTimeout(window.__to);
-      window.__to=setTimeout(()=>t.classList.remove("show"),2200);
-    };
+    import { initAuth, redirectIfLoggedIn } from "/js/auth.js";
 
-    function waitGoogle(maxMs=9000){
-      const t0=Date.now();
-      return new Promise((resolve)=>{
-        const tick=()=>{
-          if(window.google?.accounts?.id) return resolve(true);
-          if(Date.now()-t0>maxMs) return resolve(false);
-          setTimeout(tick,150);
-        };
-        tick();
-      });
+    // ✅ Uygulama açıldığında çalışacak mantık
+    async function startFlow() {
+      try {
+        // 1. Zaten giriş yapmış mı kontrol et (pages/home.html'e gider)
+        const isLogged = redirectIfLoggedIn();
+        if (isLogged) return;
+
+        // 2. Google kütüphanesinin yüklenmesini bekle
+        const checkGoogle = setInterval(() => {
+          if (window.google?.accounts?.id) {
+            clearInterval(checkGoogle);
+            initAuth(); // Butonu render eder
+          }
+        }, 200);
+
+      } catch (e) {
+        console.error("Başlatma hatası:", e);
+      }
     }
 
-    async function init(){
-      let auth=null;
-      try{ auth = await import("/js/auth.js?v="+Date.now()); }
-      catch(e){ console.error(e); showToast("auth.js yüklenemedi"); return; }
-
-      // login varsa → home
-      try{
-        const already = auth.redirectIfLoggedIn?.();
-        if(already){ location.replace(HOME_PATH); return; }
-      }catch{}
-
-      const ok = await waitGoogle();
-      if(!ok){ showToast("Google bileşeni yüklenemedi"); return; }
-
-      try{ auth.initAuth?.(); }
-      catch(e){ console.error(e); showToast("Giriş başlatılamadı"); }
-    }
-
-    window.addEventListener("load", init);
+    window.addEventListener("load", startFlow);
   </script>
 </body>
 </html>
