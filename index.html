@@ -126,39 +126,47 @@
   <div id="toast" class="toast"></div>
 
   <script type="module">
-    import { initAuth, redirectIfLoggedIn } from "/js/auth.js";
+  import { initAuth, redirectIfLoggedIn } from "/js/auth.js";
 
-    window.showToast = (msg) => {
-      const t = document.getElementById("toast");
-      t.textContent = msg; t.classList.add("show");
-      setTimeout(() => t.classList.remove("show"), 3500);
-    };
+  window.showToast = (msg) => {
+    const t = document.getElementById("toast");
+    t.textContent = msg; t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), 3500);
+  };
 
-    // auth.js isterse kullanır (senin mevcut overlay’in)
-    window.italkyStartLoading = () => {
-      document.getElementById("loadingOverlay").classList.add("active");
-    };
-    window.italkyStopLoading = () => {
-      document.getElementById("loadingOverlay").classList.remove("active");
-    };
+  // ✅ Yönlendirme Kontrolü
+  async function runAuthFlow() {
+    try {
+      // 1. Önce oturum kontrolü yap
+      const isLogged = await redirectIfLoggedIn();
+      if (isLogged) {
+        // Eğer giriş yapılmışsa, hiçbir şeye bakmadan home.html'e uçur
+        window.location.replace("/home.html");
+        return;
+      }
 
-    // ✅ zaten login ise direkt home
-    if (!redirectIfLoggedIn()) {
-      // ✅ Google GIS yüklenene kadar güvenli bekle
+      // 2. Google kütüphanesini bekle
       const t0 = Date.now();
-      const tick = () => {
+      const checkGoogle = setInterval(() => {
         if (window.google?.accounts?.id) {
-          initAuth(); // ✅ render + callback auth.js içinde
-          return;
+          clearInterval(checkGoogle);
+          initAuth(); // auth.js içindeki login butonunu render eder
         }
+        // 10 saniye zaman aşımı
         if (Date.now() - t0 > 10000) {
-          showToast("Google giriş yüklenemedi. İnternet / reklam engelleyici kontrol et.");
-          return;
+          clearInterval(checkGoogle);
+          showToast("Google bağlantısı kurulamadı.");
         }
-        requestAnimationFrame(tick);
-      };
-      tick();
+      }, 200);
+
+    } catch (err) {
+      console.error("Auth Flow Error:", err);
+      // Hata olsa bile kullanıcı login ekranını görebilmeli
+      if(window.italkyStopLoading) window.italkyStopLoading();
     }
-  </script>
+  }
+
+  runAuthFlow();
+</script>
 </body>
 </html>
