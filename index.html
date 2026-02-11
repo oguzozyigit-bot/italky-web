@@ -1,3 +1,4 @@
+<!-- FILE: italky-web/index.html -->
 <!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -5,130 +6,80 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>italkyAI • Giriş</title>
   <link rel="icon" href="data:," />
-
   <script src="https://accounts.google.com/gsi/client" async defer></script>
-
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
-
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    :root{ --bg:#020205; --text:#fff; --muted:#9ca3af; }
-    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; }
-    html,body{ margin:0; width:100%; height:100dvh; overflow:hidden; font-family:Outfit,sans-serif; background:var(--bg); color:var(--text); }
-    .wrap{ height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px; gap:16px; text-align:center; }
-    .brand{ font-size:52px; font-weight:800; letter-spacing:-1px; }
-    .sub{ color:var(--muted); font-weight:700; }
-    #googleBtnContainer{ width:320px; min-height:46px; display:flex; align-items:center; justify-content:center; }
-    .hint{ width:min(520px, 92vw); color:rgba(255,255,255,.75); font-size:12px; line-height:1.35; }
-    .err{ width:min(520px, 92vw); background:rgba(255,0,80,.10); border:1px solid rgba(255,0,80,.35); padding:10px 12px; border-radius:14px; font-size:12px; display:none; }
-    .err.show{ display:block; }
-    .btn{ width:320px; height:46px; border-radius:12px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.06); color:#fff; font-weight:800; }
-    .btn:active{ transform:scale(.99); }
+    :root { --bg:#020205; --text:#fff; --muted:#9ca3af; --ai:linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#4338ca 100%); }
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none}
+    html,body{margin:0;width:100%;height:100dvh;overflow:hidden;font-family:Outfit,sans-serif;background:var(--bg);color:var(--text);display:flex;align-items:center;justify-content:center}
+    .frame{width:100%;max-width:440px;height:100%;display:flex;flex-direction:column;justify-content:space-between;background:rgba(8,8,12,.85);backdrop-filter:blur(30px);padding:40px 20px}
+    .logo{font-size:50px;font-weight:700;text-align:center}
+    .ai{background:var(--ai);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    #googleBtnContainer{width:100%;max-width:320px;min-height:44px;display:flex;justify-content:center}
+    .toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-100px);background:#1a1a2e;border:1px solid #6366f1;padding:12px 16px;border-radius:999px;transition:.3s;z-index:9999;color:#fff;font-weight:800;font-size:12px;max-width:min(92vw,520px);text-align:center}
+    .toast.show{transform:translateX(-50%) translateY(0)}
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="brand">italkyAI</div>
-    <div class="sub">Devam etmek için giriş yapın.</div>
+  <div class="frame">
+    <div style="text-align:center">
+      <div class="logo">italky<span class="ai">AI</span></div>
+      <h2 style="font-size:22px;margin-top:20px;">Hoş Geldiniz</h2>
+      <p style="color:var(--muted);font-size:14px;">Devam etmek için giriş yapın.</p>
+    </div>
 
-    <div id="googleBtnContainer"></div>
+    <div style="display:flex;flex-direction:column;gap:12px;align-items:center;width:100%;">
+      <div id="googleBtnContainer"></div>
+    </div>
 
-    <button class="btn" id="appleBtn" type="button">Apple ile giriş (yakında)</button>
-
-    <div class="err" id="errBox"></div>
-    <div class="hint" id="hintBox">Eğer Google butonu gelmiyorsa, WebView Google scriptini yükleyememiş olabilir.</div>
+    <div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.2);">italkyAI © 2026</div>
   </div>
 
+  <div id="toast" class="toast"></div>
+
   <script type="module">
-    const HOME = "/pages/home.html";
-    const err = (msg) => {
-      const box = document.getElementById("errBox");
-      box.textContent = String(msg || "");
-      box.classList.add("show");
-      console.error(msg);
+    const HOME_PATH = "/pages/home.html";
+    window.showToast = (msg)=>{
+      const t=document.getElementById("toast");
+      t.textContent=String(msg||"");
+      t.classList.add("show");
+      clearTimeout(window.__to);
+      window.__to=setTimeout(()=>t.classList.remove("show"),2200);
     };
 
-    document.getElementById("appleBtn").addEventListener("click", ()=>err("Apple girişi henüz aktif değil."));
-
     function waitGoogle(maxMs=9000){
-      const t0 = Date.now();
+      const t0=Date.now();
       return new Promise((resolve)=>{
         const tick=()=>{
           if(window.google?.accounts?.id) return resolve(true);
           if(Date.now()-t0>maxMs) return resolve(false);
-          setTimeout(tick, 120);
+          setTimeout(tick,150);
         };
         tick();
       });
     }
 
-    async function tryAuthJs(){
-      try{
-        const m = await import("/js/auth.js?v=" + Date.now());
-        // zaten login ise auth.js yönlendirir
-        try{ if(m.redirectIfLoggedIn?.()) return true; }catch{}
-        m.initAuth?.();
-        return true;
-      }catch(e){
-        console.warn("auth.js import failed:", e);
-        return false;
-      }
-    }
+    async function init(){
+      let auth=null;
+      try{ auth = await import("/js/auth.js?v="+Date.now()); }
+      catch(e){ console.error(e); showToast("auth.js yüklenemedi"); return; }
 
-    async function fallbackGSI(){
-      // auth.js yoksa bile en azından buton çıksın
-      // NOT: burada client_id lazım; config.js'den okumak için fetch yapıyoruz (en garanti değil)
-      // Eğer config.js modül import edilebiliyorsa:
-      let CLIENT_ID = "";
+      // login varsa → home
       try{
-        const cfg = await import("/js/config.js?v=" + Date.now());
-        CLIENT_ID = String(cfg.GOOGLE_CLIENT_ID || "").trim();
-      }catch(e){
-        err("config.js yüklenemedi. /js/config.js yolu kontrol et.");
-        return;
-      }
-      if(!CLIENT_ID){
-        err("GOOGLE_CLIENT_ID boş. /js/config.js içinde tanımlı olmalı.");
-        return;
-      }
+        const already = auth.redirectIfLoggedIn?.();
+        if(already){ location.replace(HOME_PATH); return; }
+      }catch{}
 
       const ok = await waitGoogle();
-      if(!ok){
-        err("Google GSI script yüklenemedi (accounts.google.com). WebView/internet kontrol et.");
-        return;
-      }
+      if(!ok){ showToast("Google bileşeni yüklenemedi"); return; }
 
-      window.google.accounts.id.initialize({
-        client_id: CLIENT_ID,
-        callback: (res)=>{
-          // auth.js yoksa bile en azından tokenı saklayıp home'a geçelim
-          try{ localStorage.setItem("google_id_token", res?.credential || ""); }catch{}
-          location.replace(HOME);
-        },
-        auto_select: false,
-        cancel_on_tap_outside: false
-      });
-
-      const wrap = document.getElementById("googleBtnContainer");
-      window.google.accounts.id.renderButton(wrap, { theme:"outline", size:"large", text:"continue_with", width: 320 });
+      try{ auth.initAuth?.(); }
+      catch(e){ console.error(e); showToast("Giriş başlatılamadı"); }
     }
 
-    (async ()=>{
-      const okAuth = await tryAuthJs();
-
-      // Buton hala boşsa fallback çalıştır
-      setTimeout(async ()=>{
-        const wrap = document.getElementById("googleBtnContainer");
-        if(!wrap || wrap.childElementCount === 0){
-          if(!okAuth){
-            await fallbackGSI();
-          }else{
-            err("Google butonu render olmadı. auth.js initAuth çalışmamış olabilir.");
-          }
-        }
-      }, 1200);
-    })();
+    window.addEventListener("load", init);
   </script>
 </body>
 </html>
