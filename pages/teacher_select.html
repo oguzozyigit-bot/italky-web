@@ -12,19 +12,26 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
   <style>
-    /* ✅ HOME shell ile sarılacak. Buradaki CSS sadece içerik için. */
+    /* ✅ Bu sayfa HOME shell ile sarılacak. Buradaki CSS sadece içerik için. */
 
+    /* Shell main-content içine taşınan alan */
+    #pageContent{
+      height: 100%;
+    }
+
+    /* ✅ Üst/alt boşluk EŞİT + scroll yok */
     .wrap{
-      width:100%;
+      height: 100%;
       display:flex;
       flex-direction:column;
-      gap:10px;
-      padding: 4px 2px 10px;
-      overflow:hidden; /* scroll yok */
+      justify-content:center;   /* dikey ortala */
+      padding: 14px 2px;        /* üst/alt eşit */
+      overflow:hidden;
     }
 
     .section{
-      padding:12px 14px;
+      width:100%;
+      padding: 12px 14px;
       border-radius:24px;
       border:1px solid rgba(255,255,255,.10);
       background: rgba(0,0,0,.18);
@@ -32,28 +39,34 @@
       overflow:hidden;
     }
 
-    /* teacher grid */
+    /* ✅ Büyük ikonlar için grid */
     .grid{
       display:grid;
       grid-template-columns: 1fr 1fr;
-      gap:10px;
+      gap: 12px;
     }
+
+    /* ✅ Kartlar büyüdü, daha dengeli */
     .card{
-      border-radius:22px;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(255,255,255,.04);
-      padding:11px 12px;
+      border-radius:24px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.05);
+      padding: 16px 14px;
       cursor:pointer;
-      transition:.2s;
       user-select:none;
       position:relative;
       overflow:hidden;
-      min-height:86px;
+      min-height: 118px;
+      transition:.18s;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
     }
     .card:active{ transform: scale(.98); }
+
     .badge{
       position:absolute;
-      top:10px; right:10px;
+      top:12px; right:12px;
       padding:6px 10px;
       border-radius:999px;
       font-size:10px;
@@ -63,13 +76,23 @@
       color: rgba(255,255,255,.86);
       backdrop-filter: blur(8px);
     }
-    .flag{ font-size:20px; margin-bottom:8px; }
-    .name{ font-size:14px; font-weight:1000; line-height:1.1; }
+
+    .flag{
+      font-size:26px;
+      margin-bottom:10px;
+      line-height:1;
+    }
+    .name{
+      font-size:16px;
+      font-weight:1000;
+      letter-spacing:-0.2px;
+      line-height:1.1;
+    }
     .sub{
-      margin-top:6px;
-      font-size:11px;
+      margin-top:8px;
+      font-size:12px;
       font-weight:900;
-      color: rgba(255,255,255,.62);
+      color: rgba(255,255,255,.68);
       line-height:1.25;
     }
 
@@ -101,12 +124,9 @@
   <!-- ✅ CONTENT ONLY (shell bunu saracak) -->
   <main id="pageContent">
     <div class="wrap">
-
-      <!-- ✅ SADE: sadece dil ikonları -->
       <section class="section" aria-label="Dil seçimi">
         <div class="grid" id="teacherGrid"></div>
       </section>
-
     </div>
   </main>
 
@@ -114,26 +134,26 @@
 
   <script type="module">
     import { mountShell } from "/js/ui_shell.js";
-    // ✅ scrollsuz tek ekran
+
+    // ✅ Scroll yok; barlar HOME ile aynı (milim oynamaz)
     mountShell({ scroll:"none" });
 
     // ===== prefs keys =====
-    const KEY_TEACHER = "italky_teacher_pref";   // seçilen dil/öğretmen
-    const KEY_LEVEL_DONE = "italky_level_done";  // "1" ise seviye sınavı tamam
-    const KEY_PLAN = "italky_plan_pref";         // plan seçimi (p10/p20/p30/p120)
-    const KEY_MINS = "italky_lesson_mins";       // 10/20/30
-    const KEY_ACCEL = "italky_accelerated";      // 1/0
+    const KEY_TEACHER   = "italky_teacher_pref";
+    const KEY_LEVEL_DONE= "italky_level_done";  // "1" ise seviye tamam
+    const KEY_PLAN      = "italky_plan_pref";   // p10/p20/p30/p120
+    const KEY_MINS      = "italky_lesson_mins"; // 10/20/30
 
     // ✅ Öğretmen listesi (Çince: Umay)
     const TEACHERS = [
-      { id:"dora",   flag:"🇬🇧", title:"İngilizce Öğretmeni", name:"Dora" },
-      { id:"sencer", flag:"🇮🇹", title:"İtalyanca Öğretmeni", name:"Sencer" },
-      { id:"jale",   flag:"🇫🇷", title:"Fransızca Öğretmeni", name:"Jale" },
-      { id:"ozan",   flag:"🇪🇸", title:"İspanyolca Öğretmeni", name:"Ozan" },
-      { id:"ayda",   flag:"🇩🇪", title:"Almanca Öğretmeni", name:"Ayda" },
-      { id:"sungur", flag:"🇷🇺", title:"Rusça Öğretmeni", name:"Sungur" },
-      { id:"huma",   flag:"🇯🇵", title:"Japonca Öğretmeni", name:"Hüma" },
-      { id:"umay",   flag:"🇨🇳", title:"Çince Öğretmeni", name:"Umay" }
+      { id:"dora",   flag:"🇬🇧", title:"İngilizce Öğretmeni",   name:"Dora" },
+      { id:"ayda",   flag:"🇩🇪", title:"Almanca Öğretmeni",     name:"Ayda" },
+      { id:"jale",   flag:"🇫🇷", title:"Fransızca Öğretmeni",   name:"Jale" },
+      { id:"ozan",   flag:"🇪🇸", title:"İspanyolca Öğretmeni",  name:"Ozan" },
+      { id:"sencer", flag:"🇮🇹", title:"İtalyanca Öğretmeni",   name:"Sencer" },
+      { id:"sungur", flag:"🇷🇺", title:"Rusça Öğretmeni",       name:"Sungur" },
+      { id:"huma",   flag:"🇯🇵", title:"Japonca Öğretmeni",     name:"Hüma" },
+      { id:"umay",   flag:"🇨🇳", title:"Çince Öğretmeni",       name:"Umay" }
     ];
 
     const $ = (id)=>document.getElementById(id);
@@ -143,7 +163,30 @@
       t.textContent = String(msg||"");
       t.classList.add("show");
       clearTimeout(window.__to);
-      window.__to = setTimeout(()=>t.classList.remove("show"), 1800);
+      window.__to = setTimeout(()=>t.classList.remove("show"), 1500);
+    }
+
+    function goNextAfterSelect(){
+      const levelDone = (localStorage.getItem(KEY_LEVEL_DONE) || "") === "1";
+
+      // ✅ Seviye tespit yapılmadıysa: ilk kez sınav
+      if(!levelDone){
+        toast("Seviye tespit sınavı...");
+        setTimeout(()=> location.href = "/pages/level_test.html", 200);
+        return;
+      }
+
+      // ✅ Seviye yapıldıysa: plan+mins varsa direkt derse
+      const plan = (localStorage.getItem(KEY_PLAN) || "").trim();
+      const mins = (localStorage.getItem(KEY_MINS) || "").trim();
+
+      if(plan && mins){
+        location.href = "/pages/teacher_course.html";
+        return;
+      }
+
+      // plan yoksa plan seçimine
+      location.href = "/pages/plan_select.html";
     }
 
     function renderTeachers(){
@@ -165,26 +208,12 @@
           // seçimi kaydet
           localStorage.setItem(KEY_TEACHER, id);
 
-          // ✅ İlk defa: seviye tespit yoksa sınava
-          const levelDone = (localStorage.getItem(KEY_LEVEL_DONE) || "") === "1";
+          // ✅ dil değiştiyse: seviye tespiti tekrar zorunlu (senin önceki kuralın)
+          // İstersen bunu kaldırırız; şimdilik güvenli kalsın:
+          // localStorage.removeItem("italky_level");
+          // localStorage.removeItem("italky_level_done");
 
-          // Eğer seviye tespit daha önce yapıldıysa:
-          // - plan seçimi varsa direkt derse
-          // - plan yoksa plan seçime
-          if(levelDone){
-            const plan = (localStorage.getItem(KEY_PLAN) || "").trim();
-            const mins = (localStorage.getItem(KEY_MINS) || "").trim();
-            if(plan && mins){
-              location.href = "/pages/teacher_course.html";
-              return;
-            }
-            location.href = "/pages/plan_select.html";
-            return;
-          }
-
-          // ilk kez: sınava git
-          toast("Seviye tespit sınavına yönlendiriliyorsun...");
-          setTimeout(()=> location.href = "/pages/level_test.html", 220);
+          goNextAfterSelect();
         });
       });
     }
