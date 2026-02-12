@@ -14,104 +14,85 @@
   <style>
     #pageContent{ height:100%; }
 
+    /* Üst-alt eşit boşluk */
     .wrap{
       height:100%;
-      display:flex;
-      flex-direction:column;
-      padding: 14px 2px; /* üst/alt eşit */
+      padding: 14px 18px;
       overflow:hidden;
+      display:flex;
     }
 
-    .panel{
-      flex:1;
-      width:100%;
-      padding: 14px;
-      border-radius: 28px;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.18);
-      backdrop-filter: blur(10px);
-      overflow:hidden;
-
-      /* ✅ grid tam dolsun diye */
-      display:flex;
-      flex-direction:column;
-
-      /* ✅ kart yüksekliği JS ile set edilecek */
-      --cardH: 140px;
-      --gap: 14px;
-    }
-
+    /* Grid ekranı doldursun */
     .grid{
       flex:1;
       width:100%;
       display:grid;
       grid-template-columns: 1fr 1fr;
-      gap: var(--gap);
-      align-content: stretch;
-      grid-auto-rows: var(--cardH); /* ✅ kart yüksekliği buradan */
-      min-height: 0;
+      gap: 16px;
+      grid-auto-rows: var(--cardH);
     }
 
+    /* Kart */
     .card{
       position:relative;
       height: var(--cardH);
       border-radius: 28px;
-      border:1px solid rgba(255,255,255,0.10);
-      background: linear-gradient(145deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%);
-      padding: 18px 14px;
+      border:1px solid rgba(255,255,255,0.12);
+      background: linear-gradient(
+        145deg,
+        rgba(255,255,255,0.08) 0%,
+        rgba(255,255,255,0.03) 100%
+      );
+      padding: 20px;
       cursor:pointer;
-      user-select:none;
       overflow:hidden;
-      transition: all .25s cubic-bezier(0.22, 1, 0.36, 1);
-
+      transition: .25s;
       display:flex;
       flex-direction:column;
       justify-content:flex-end;
     }
-    .card:active{ transform: scale(0.94); background: rgba(255,255,255,0.10); }
+    .card:active{ transform: scale(.94); }
 
-    /* küçük rozet (sağ üst) */
+    /* Küçük sağ üst rozet */
     .badge{
       position:absolute;
-      top:12px; right:12px;
-      width:34px; height:34px;
+      top:16px;
+      right:16px;
+      width:40px;
+      height:40px;
       border-radius:999px;
       display:flex;
       align-items:center;
       justify-content:center;
-      font-size:14px;
-      border:1px solid rgba(255,255,255,.14);
+      font-size:18px;
+      border:1px solid rgba(255,255,255,.15);
       background: rgba(0,0,0,.18);
       backdrop-filter: blur(8px);
-      color: rgba(255,255,255,.92);
     }
 
-    /* ✅ büyük bayrak (sol üst) */
+    /* Büyük bayrak */
     .flag{
       position:absolute;
-      left:14px;
-      top:18px;
-      font-size: 46px; /* JS ile büyüyebilir */
+      top:22px;
+      left:22px;
+      font-size: var(--flagSize);
       line-height:1;
-      opacity: .98;
-      filter: drop-shadow(0 0 10px rgba(255,255,255,.10));
-      transform-origin: left top;
+      filter: drop-shadow(0 0 12px rgba(255,255,255,.15));
     }
 
     .name{
-      font-size: 22px;
+      font-size: var(--nameSize);
       font-weight:1000;
       letter-spacing:-0.5px;
       line-height:1.05;
-      margin-top: 62px; /* bayrağın üst alanı */
+      margin-top: calc(var(--flagSize) * 0.9);
     }
 
     .sub{
-      margin-top: 8px;
-      font-size: 12px;
+      margin-top:10px;
+      font-size:14px;
       font-weight:900;
       color: rgba(255,255,255,.62);
-      line-height:1.25;
     }
 
     .toast{
@@ -130,8 +111,6 @@
       transition:.28s;
       backdrop-filter: blur(12px);
       pointer-events:none;
-      max-width:min(92vw, 520px);
-      text-align:center;
     }
     .toast.show{ transform: translateX(-50%) translateY(0); }
   </style>
@@ -140,9 +119,7 @@
 <body>
   <main id="pageContent">
     <div class="wrap">
-      <section class="panel" id="panel" aria-label="Dil seçimi">
-        <div class="grid" id="teacherGrid"></div>
-      </section>
+      <div class="grid" id="teacherGrid"></div>
     </div>
   </main>
 
@@ -168,34 +145,21 @@
       { id:"umay",   flag:"🇨🇳", title:"Çince Öğretmeni",       name:"Umay" }
     ];
 
-    const $ = (id)=>document.getElementById(id);
-
-    function toast(msg){
-      const t = $("toast");
-      t.textContent = String(msg||"");
-      t.classList.add("show");
-      clearTimeout(window.__to);
-      window.__to = setTimeout(()=>t.classList.remove("show"), 1500);
-    }
+    const $ = id => document.getElementById(id);
 
     function goNextAfterSelect(){
       const levelDone = (localStorage.getItem(KEY_LEVEL_DONE) || "") === "1";
-
       if(!levelDone){
-        toast("Seviye tespit sınavı...");
-        setTimeout(()=> location.href = "/pages/level_test.html", 200);
+        location.href = "/pages/level_test.html";
         return;
       }
-
       const plan = (localStorage.getItem(KEY_PLAN) || "").trim();
       const mins = (localStorage.getItem(KEY_MINS) || "").trim();
-
       if(plan && mins){
         location.href = "/pages/teacher_course.html";
-        return;
+      } else {
+        location.href = "/pages/plan_select.html";
       }
-
-      location.href = "/pages/plan_select.html";
     }
 
     function renderTeachers(){
@@ -211,53 +175,32 @@
 
       grid.querySelectorAll(".card").forEach(card=>{
         card.addEventListener("click", ()=>{
-          const id = (card.getAttribute("data-id") || "").trim();
-          if(!id) return;
+          const id = card.getAttribute("data-id");
           localStorage.setItem(KEY_TEACHER, id);
           goNextAfterSelect();
         });
       });
     }
 
-    function fitCards(){
-      const panel = $("panel");
-      if(!panel) return;
+    function fitLayout(){
+      const headerH = document.querySelector(".premium-header").offsetHeight;
+      const footerH = document.querySelector(".premium-footer").offsetHeight;
+      const available = window.innerHeight - headerH - footerH - 28;
 
-      // 8 kart = 4 satır * 2 sütun
-      const rows = 4;
+      const rows = 4; // 8 kart = 4 satır
+      const gap = 16;
 
-      // panel iç yüksekliği (padding hariç)
-      const cs = getComputedStyle(panel);
-      const padTop = parseFloat(cs.paddingTop) || 0;
-      const padBot = parseFloat(cs.paddingBottom) || 0;
-      const gap = parseFloat(cs.getPropertyValue("--gap")) || 14;
+      let cardH = (available - (gap * (rows - 1))) / rows;
+      cardH = Math.max(150, Math.min(220, cardH));
 
-      const innerH = panel.clientHeight - padTop - padBot;
-
-      // 4 satır, arada 3 gap
-      let cardH = (innerH - (gap * (rows - 1))) / rows;
-
-      // güvenli sınırlar (çok küçük/çok büyük olmasın)
-      cardH = Math.max(120, Math.min(175, cardH));
-
-      panel.style.setProperty("--cardH", `${cardH}px`);
-
-      // bayrak, yazı ölçekleri biraz cardH'ye göre
-      const flagSize = Math.max(40, Math.min(54, cardH * 0.33));
-      document.querySelectorAll(".flag").forEach(el=>{
-        el.style.fontSize = `${flagSize}px`;
-      });
-      // isim fontu
-      const nameSize = Math.max(18, Math.min(24, cardH * 0.16));
-      document.querySelectorAll(".name").forEach(el=>{
-        el.style.fontSize = `${nameSize}px`;
-      });
+      document.documentElement.style.setProperty("--cardH", cardH + "px");
+      document.documentElement.style.setProperty("--flagSize", (cardH * 0.35) + "px");
+      document.documentElement.style.setProperty("--nameSize", (cardH * 0.17) + "px");
     }
 
     renderTeachers();
-    // ilk ölçüm + resize
-    requestAnimationFrame(()=>{ fitCards(); });
-    window.addEventListener("resize", ()=>fitCards());
+    requestAnimationFrame(()=>fitLayout());
+    window.addEventListener("resize", fitLayout);
   </script>
 </body>
 </html>
