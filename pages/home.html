@@ -16,8 +16,11 @@
       --neon-glow: 0 0 20px rgba(99, 102, 241, 0.5);
       --ease-premium: cubic-bezier(0.22, 1, 0.36, 1);
 
-      /* ✅ alt bar biraz küçültüldü */
+      /* alt bar yüksekliği aynı kalsın */
       --footerH: 104px;
+
+      /* ✅ sadece zemin uzatma: footer'ın siyahını yukarı taşıyacağız */
+      --footerFillExtra: 28px; /* çizgiye kadar doldurmak için */
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
@@ -54,7 +57,6 @@
       display: flex; align-items: center; justify-content: space-between;
     }
 
-    /* ✅ Logo tıklanabilir */
     .brand-group{
       cursor: pointer;
       user-select: none;
@@ -65,18 +67,15 @@
     .brand-group h1 span { background: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 0 10px rgba(99, 102, 241, 0.4)); }
     .brand-slogan { font-size: 11px; font-weight: 900; letter-spacing: 5px; color: var(--text-muted); text-transform: uppercase; margin-top: 4px; }
 
-    /* ✅ User pill: çerçeve yok, unlimited yok, ortalı */
     .user-pill {
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 12px;
-
       padding: 0;
       background: transparent;
       border: none;
       box-shadow: none;
-
       cursor: pointer;
       user-select: none;
     }
@@ -105,7 +104,8 @@
     .main-content {
       flex: 1;
       overflow-y: auto;
-      padding: 10px 20px calc(var(--footerH) + 26px);
+      /* ✅ footer + extra fill payı: alttaki siyah zemin "çizgiye kadar" dolsun */
+      padding: 10px 20px calc(var(--footerH) + var(--footerFillExtra) + 16px);
       scrollbar-width: none;
     }
     .main-content::-webkit-scrollbar { display: none; }
@@ -146,15 +146,31 @@
     .card-title { font-size: 18px; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
     .card-desc { font-size: 11px; color: var(--text-muted); font-weight: 600; margin-top: 4px; text-align:center; }
 
-    /* ✅ Footer biraz aşağı ve kompakt */
+    /* ✅ FOOTER: yazıların yeri değişmeden, sadece arka planı yukarı uzatıyoruz */
     .premium-footer {
       position: absolute; bottom: 0; width: 100%; height: var(--footerH);
-      background: linear-gradient(to top, rgba(2, 0, 15, 1) 86%, transparent);
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
       border-top: 1px solid rgba(255,255,255,0.08);
       z-index: 20;
+
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+
+      /* ✅ içerik padding değişmedi (yazılar aynı yerde) */
       padding-bottom: calc(8px + env(safe-area-inset-bottom));
+
+      /* ✅ arka planın “başladığı yer” yukarı taşındı */
+      background: linear-gradient(
+        to top,
+        rgba(2, 0, 15, 1) 92%,
+        rgba(2, 0, 15, 1) calc(92% + var(--footerFillExtra)),
+        transparent
+      );
+      /* bazı cihazlarda gradient kısa kalır; garanti için */
+      box-shadow: 0 -22px 0 rgba(2,0,15,1);
     }
+
     .footer-nav {
       display: flex;
       gap: 20px;
@@ -179,7 +195,7 @@
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
       filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.5));
       opacity: 0.9;
-      transform: translateY(2px); /* ✅ bir tık aşağı */
+      transform: translateY(2px);
     }
   </style>
 </head>
@@ -225,7 +241,7 @@
         </div>
 
         <div class="premium-card card-chat" data-href="/pages/chat.html">
-          <div class="neon-icon-wrap"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 1 1-7.6-13.5 8.38 8.38 0 0 1 3.8.9L21 3z"/></svg></div>
+          <div class="neon-icon-wrap"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 1 1-7.6-13.5 a8.38 8.38 0 0 1 3.8.9L21 3z"/></svg></div>
           <span class="card-title">Sohbet AI</span>
           <span class="card-desc">Akıllı Asistan Sohbeti</span>
         </div>
@@ -284,7 +300,6 @@
     function boot() {
       applyI18n(document);
 
-      // ✅ logo -> home
       document.getElementById("homeLogo")?.addEventListener("click", ()=>{
         location.href = "/pages/home.html";
       });
