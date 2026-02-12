@@ -1,10 +1,40 @@
 // FILE: /js/ui_shell.js
 // ✅ HOME header+footer'ını HER SAYFAYA birebir basar (milim şaşmaz)
+// ✅ Anti-Flash Boot: beyaz sayfa flash'ını tek seferde azaltır
 // Kural: Sayfada <main id="pageContent"> ... </main> olmalı.
 // mountShell({ scroll:"none" }) => içerik scroll yok, barlar sabit.
 
 import { STORAGE_KEY } from "/js/config.js";
 import { applyI18n } from "/js/i18n.js";
+
+/* ✅ ANTI-FLASH BOOT (tek seferde tüm sayfalarda) */
+(function antiFlashBoot(){
+  try{
+    // 1) İlk paint için html/body arka planını hemen koyulaştır
+    document.documentElement.style.backgroundColor = "#02000f";
+    document.documentElement.style.colorScheme = "dark";
+    if(document.body) document.body.style.backgroundColor = "#02000f";
+
+    // 2) Head'e hızlı global style bas
+    if(!document.getElementById("italkyAntiFlash")){
+      const st = document.createElement("style");
+      st.id = "italkyAntiFlash";
+      st.textContent = `html,body{ background:#02000f !important; }`;
+      document.head.appendChild(st);
+    }
+
+    // 3) Theme color (Android/WebView)
+    const existing = document.querySelector('meta[name="theme-color"]');
+    if(existing){
+      existing.setAttribute("content", "#02000f");
+    }else{
+      const meta = document.createElement("meta");
+      meta.setAttribute("name","theme-color");
+      meta.setAttribute("content","#02000f");
+      document.head.appendChild(meta);
+    }
+  }catch{}
+})();
 
 /* ✅ HOME HEADER (BİREBİR) */
 const HOME_HEADER_HTML = `
@@ -339,3 +369,4 @@ export function mountShell(options = {}){
   try{ applyI18n?.(document); }catch{}
   fillUser();
 }
+```0
