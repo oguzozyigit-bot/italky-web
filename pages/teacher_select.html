@@ -13,25 +13,26 @@
 <style>
   #pageContent{ height:100%; }
 
-  /* ✅ EŞİT BOŞLUK (üst-alt / sağ-sol) ve min boşluk */
+  /* ✅ EŞİT boşluk + altta biraz daha güvenlik */
   .wrap{
     height:100%;
-    padding: 12px 12px; /* eşit */
+    padding: 12px 12px 18px; /* üst, sağ-sol, alt */
     overflow:hidden;
     display:flex;
   }
 
-  /* ✅ Grid alanı TAM dolacak */
   .grid{
     flex:1;
     width:100%;
     display:grid;
     grid-template-columns: 1fr 1fr;
-    gap: 12px;                 /* az boşluk */
-    grid-auto-rows: var(--cardH); /* JS set eder */
+    gap: 12px;
+    grid-auto-rows: var(--cardH);
+
+    /* ✅ hepsini bir tık yukarı */
+    transform: translateY(-6px);
   }
 
-  /* ✅ Kartlar kareye yakın */
   .card{
     height: var(--cardH);
     border-radius: 26px;
@@ -50,7 +51,6 @@
   }
   .card:active{ transform: scale(.95); }
 
-  /* ikon kutusu (home gibi) */
   .iconWrap{
     width: var(--iconBox);
     height: var(--iconBox);
@@ -61,12 +61,8 @@
     background: rgba(255,255,255,0.05);
     border: 1px solid rgba(255,255,255,0.12);
   }
-  .flag{
-    font-size: var(--flagSize);
-    line-height:1;
-  }
+  .flag{ font-size: var(--flagSize); line-height:1; }
 
-  /* önce rol küçük */
   .role{
     font-size: var(--roleSize);
     font-weight: 900;
@@ -74,7 +70,6 @@
     line-height:1.1;
   }
 
-  /* sonra isim büyük */
   .name{
     font-size: var(--nameSize);
     font-weight: 1000;
@@ -142,29 +137,23 @@
     });
   }
 
-  /* ✅ TAM SIĞDIRMA: header+footer arası yüksekliği 4 satıra böl */
   function fit(){
     const header = document.querySelector(".premium-header");
     const footer = document.querySelector(".premium-footer");
     const headerH = header ? header.offsetHeight : 0;
     const footerH = footer ? footer.offsetHeight : 0;
 
-    // wrap padding: 12 + 12 (üst-alt) + küçük emniyet
-    const usable = window.innerHeight - headerH - footerH - 28;
+    // ✅ ekstra güvenli pay: 46px (alttaki taşmayı bitirir)
+    const usable = window.innerHeight - headerH - footerH - 46;
 
-    const rows = 4;     // 8 kart => 4 satır
-    const gap  = 12;    // CSS gap
+    const rows = 4;
+    const gap  = 12;
 
-    // kart yüksekliği (tam sığar)
     let cardH = (usable - (gap * (rows - 1))) / rows;
+    cardH = Math.max(130, Math.min(180, cardH));
 
-    // kareye yakın görünüm için min/max (çok taşarsa değil)
-    cardH = Math.max(135, Math.min(185, cardH));
-
-    // ikon kutusu kartın içinde orantılı
-    const iconBox = Math.max(52, Math.min(78, cardH * 0.44));
-    const flagSize = Math.max(22, Math.min(34, iconBox * 0.42));
-
+    const iconBox  = Math.max(52, Math.min(74, cardH * 0.44));
+    const flagSize = Math.max(22, Math.min(32, iconBox * 0.42));
     const roleSize = Math.max(11, Math.min(13, cardH * 0.10));
     const nameSize = Math.max(16, Math.min(20, cardH * 0.14));
 
