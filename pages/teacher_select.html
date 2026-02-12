@@ -12,10 +12,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
   <style>
-    /* ✅ Bu sayfa HOME shell ile sarılacak. Buradaki CSS sadece içerik için. */
     #pageContent{ height:100%; }
 
-    /* ✅ Home gibi: eşit üst/alt boşluk, ortalamaya ZORLAMA yok */
     .wrap{
       height:100%;
       display:flex;
@@ -24,32 +22,40 @@
       overflow:hidden;
     }
 
-    /* ✅ Tek panel (home kart hissi) */
     .panel{
       flex:1;
       width:100%;
       padding: 14px;
-      border-radius:28px;
+      border-radius: 28px;
       border:1px solid rgba(255,255,255,.10);
       background: rgba(0,0,0,.18);
       backdrop-filter: blur(10px);
       overflow:hidden;
+
+      /* ✅ grid tam dolsun diye */
       display:flex;
+      flex-direction:column;
+
+      /* ✅ kart yüksekliği JS ile set edilecek */
+      --cardH: 140px;
+      --gap: 14px;
     }
 
-    /* ✅ Grid: ekranı doldursun, dengeli otursun */
     .grid{
+      flex:1;
       width:100%;
       display:grid;
       grid-template-columns: 1fr 1fr;
-      gap:14px;
-      align-content:stretch;
+      gap: var(--gap);
+      align-content: stretch;
+      grid-auto-rows: var(--cardH); /* ✅ kart yüksekliği buradan */
+      min-height: 0;
     }
 
-    /* ✅ HOME kart hissi: gradient cam + border + büyük radius */
     .card{
       position:relative;
-      border-radius:28px;
+      height: var(--cardH);
+      border-radius: 28px;
       border:1px solid rgba(255,255,255,0.10);
       background: linear-gradient(145deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%);
       padding: 18px 14px;
@@ -58,15 +64,13 @@
       overflow:hidden;
       transition: all .25s cubic-bezier(0.22, 1, 0.36, 1);
 
-      /* ✅ kartlar ekrana göre boylansın */
-      min-height: 0;
       display:flex;
       flex-direction:column;
-      justify-content:flex-end; /* home’da yazılar altta */
+      justify-content:flex-end;
     }
     .card:active{ transform: scale(0.94); background: rgba(255,255,255,0.10); }
 
-    /* ✅ Home benzeri küçük rozet */
+    /* küçük rozet (sağ üst) */
     .badge{
       position:absolute;
       top:12px; right:12px;
@@ -82,34 +86,34 @@
       color: rgba(255,255,255,.92);
     }
 
-    /* ✅ büyük bayrak ikon (home’daki ikon yerine) */
+    /* ✅ büyük bayrak (sol üst) */
     .flag{
       position:absolute;
       left:14px;
       top:18px;
-      font-size:40px;
+      font-size: 46px; /* JS ile büyüyebilir */
       line-height:1;
       opacity: .98;
       filter: drop-shadow(0 0 10px rgba(255,255,255,.10));
+      transform-origin: left top;
     }
 
     .name{
-      font-size:20px;
+      font-size: 22px;
       font-weight:1000;
-      letter-spacing:-0.4px;
-      line-height:1.1;
-      margin-top: 54px; /* bayrak için boşluk */
+      letter-spacing:-0.5px;
+      line-height:1.05;
+      margin-top: 62px; /* bayrağın üst alanı */
     }
 
     .sub{
-      margin-top:8px;
-      font-size:12px;
+      margin-top: 8px;
+      font-size: 12px;
       font-weight:900;
       color: rgba(255,255,255,.62);
       line-height:1.25;
     }
 
-    /* tiny toast */
     .toast{
       position: fixed;
       left:50%;
@@ -136,7 +140,7 @@
 <body>
   <main id="pageContent">
     <div class="wrap">
-      <section class="panel" aria-label="Dil seçimi">
+      <section class="panel" id="panel" aria-label="Dil seçimi">
         <div class="grid" id="teacherGrid"></div>
       </section>
     </div>
@@ -146,7 +150,7 @@
 
   <script type="module">
     import { mountShell } from "/js/ui_shell.js";
-    mountShell({ scroll:"none" }); // ✅ tek ekran
+    mountShell({ scroll:"none" });
 
     const KEY_TEACHER    = "italky_teacher_pref";
     const KEY_LEVEL_DONE = "italky_level_done";
@@ -215,7 +219,45 @@
       });
     }
 
+    function fitCards(){
+      const panel = $("panel");
+      if(!panel) return;
+
+      // 8 kart = 4 satır * 2 sütun
+      const rows = 4;
+
+      // panel iç yüksekliği (padding hariç)
+      const cs = getComputedStyle(panel);
+      const padTop = parseFloat(cs.paddingTop) || 0;
+      const padBot = parseFloat(cs.paddingBottom) || 0;
+      const gap = parseFloat(cs.getPropertyValue("--gap")) || 14;
+
+      const innerH = panel.clientHeight - padTop - padBot;
+
+      // 4 satır, arada 3 gap
+      let cardH = (innerH - (gap * (rows - 1))) / rows;
+
+      // güvenli sınırlar (çok küçük/çok büyük olmasın)
+      cardH = Math.max(120, Math.min(175, cardH));
+
+      panel.style.setProperty("--cardH", `${cardH}px`);
+
+      // bayrak, yazı ölçekleri biraz cardH'ye göre
+      const flagSize = Math.max(40, Math.min(54, cardH * 0.33));
+      document.querySelectorAll(".flag").forEach(el=>{
+        el.style.fontSize = `${flagSize}px`;
+      });
+      // isim fontu
+      const nameSize = Math.max(18, Math.min(24, cardH * 0.16));
+      document.querySelectorAll(".name").forEach(el=>{
+        el.style.fontSize = `${nameSize}px`;
+      });
+    }
+
     renderTeachers();
+    // ilk ölçüm + resize
+    requestAnimationFrame(()=>{ fitCards(); });
+    window.addEventListener("resize", ()=>fitCards());
   </script>
 </body>
 </html>
