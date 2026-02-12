@@ -15,7 +15,7 @@
 
     .wrap{
       min-height: 100%;
-      padding: 12px 12px 160px; /* footer üstünde garanti */
+      padding: 12px 12px 180px; /* ✅ footer üstünde kesin */
       display:flex;
       flex-direction:column;
       gap:12px;
@@ -28,7 +28,7 @@
       padding: 16px 14px;
     }
     .name{
-      font-size:16px;
+      font-size:18px;
       font-weight:1000;
       color:#fff;
       white-space:nowrap;
@@ -45,12 +45,12 @@
       text-overflow:ellipsis;
     }
 
-    .keyLine{
+    .pillRow{
       margin-top:10px;
       display:flex;
       gap:10px;
-      align-items:center;
       flex-wrap:wrap;
+      align-items:center;
     }
     .pill{
       padding:8px 10px;
@@ -65,7 +65,7 @@
       border-color: rgba(99,102,241,0.35);
       background: rgba(99,102,241,0.12);
       color:#fff;
-      letter-spacing: .6px;
+      letter-spacing:.8px;
     }
 
     .card{
@@ -75,6 +75,7 @@
       padding: 14px 12px;
       overflow:hidden;
     }
+
     .row{
       display:flex;
       align-items:center;
@@ -101,7 +102,7 @@
 
     .select{
       height:40px;
-      min-width:140px;
+      min-width:150px;
       border-radius:14px;
       border:1px solid rgba(255,255,255,0.12);
       background: rgba(255,255,255,0.06);
@@ -135,7 +136,6 @@
       font-weight:1000;
       letter-spacing:-0.2px;
       color:#fff;
-      word-break: break-word;
     }
 
     .list{
@@ -202,32 +202,12 @@
       background: rgba(10,10,18,0.92);
       padding: 16px 14px;
     }
-    .modal h3{
-      margin:0;
-      font-size:16px;
-      font-weight:1000;
-      letter-spacing:-0.2px;
-    }
-    .modal p{
-      margin:10px 0 0;
-      font-size:12px;
-      font-weight:900;
-      color: rgba(255,255,255,0.70);
-      line-height:1.45;
-    }
-    .modalBtns{
-      margin-top:14px;
-      display:flex;
-      gap:10px;
-    }
+    .modal h3{ margin:0; font-size:16px; font-weight:1000; }
+    .modal p{ margin:10px 0 0; font-size:12px; font-weight:900; color: rgba(255,255,255,0.70); line-height:1.45; }
+    .modalBtns{ margin-top:14px; display:flex; gap:10px; }
     .mBtn{
-      flex:1;
-      height:46px;
-      border-radius:16px;
-      cursor:pointer;
-      font-weight:1000;
-      font-size:13px;
-      color:#fff;
+      flex:1; height:46px; border-radius:16px; cursor:pointer;
+      font-weight:1000; font-size:13px; color:#fff;
       background: rgba(255,255,255,0.08);
       border: 1px solid rgba(255,255,255,0.12);
     }
@@ -235,7 +215,6 @@
       background: rgba(255,60,60,0.18);
       border: 1px solid rgba(255,60,60,0.35);
     }
-    .mBtn:active{ transform: scale(.99); }
 
     .toast{
       position: fixed;
@@ -265,9 +244,9 @@
     <div class="wrap">
 
       <section class="hero">
-        <div class="name" id="fullName">Kullanıcı</div>
+        <div class="name" id="fullName">—</div>
         <div class="email" id="email">—</div>
-        <div class="keyLine">
+        <div class="pillRow">
           <div class="pill key" id="userKeyPill">KEY: —</div>
         </div>
       </section>
@@ -289,7 +268,6 @@
             <div class="desc" id="lvlDesc">Seçili dil için sonuç</div>
           </div>
         </div>
-
         <div class="grid2">
           <div class="mini">
             <div class="k">Seviye</div>
@@ -309,9 +287,7 @@
             <div class="desc">Cihazında indirili paketler</div>
           </div>
         </div>
-
         <div class="list" id="offlineList"></div>
-
         <div class="btnRow">
           <button class="btn" id="downloadLangBtn" type="button">Dil İndir</button>
         </div>
@@ -346,7 +322,6 @@
   </main>
 
   <div id="toast" class="toast"></div>
-
   <div class="modalBack" id="confirmBack">
     <div class="modal">
       <h3>Emin misiniz?</h3>
@@ -372,46 +347,15 @@
       window.__to = setTimeout(()=>t.classList.remove("show"), 1700);
     }
 
-    // ✅ localStorage içinden kullanıcı objesini bul (key adı ne olursa olsun)
-    function findUserFromAnyKey(){
-      for(let i=0;i<localStorage.length;i++){
-        const k = localStorage.key(i);
-        if(!k) continue;
-        const v = localStorage.getItem(k);
-        if(!v || v.length < 10) continue;
-        if(v[0] !== "{") continue;
-        try{
-          const o = JSON.parse(v);
-          if(o && (o.name || o.fullname) && (o.picture || o.avatar || o.email)){
-            return o;
-          }
-        }catch{}
-      }
-      return null;
-    }
-
-    // ✅ Header’dan fallback al
-    function headerFallback(){
-      const hn = document.getElementById("userName");
-      const hp = document.getElementById("userPic");
-      return {
-        name: hn ? hn.textContent : "Kullanıcı",
-        picture: hp && hp.getAttribute("src") ? hp.getAttribute("src") : ""
-      };
-    }
-
-    // ✅ KEY üretimi
+    // --- KEY üretimi ---
     const USER_KEY_STORAGE = "italky_user_key";
-
     function randLetters3(){
       const A="ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-      let s="";
-      for(let i=0;i<3;i++) s += A[Math.floor(Math.random()*A.length)];
+      let s=""; for(let i=0;i<3;i++) s += A[Math.floor(Math.random()*A.length)];
       return s;
     }
     function randDigits6(){
-      let s="";
-      for(let i=0;i<6;i++) s += String(Math.floor(Math.random()*10));
+      let s=""; for(let i=0;i<6;i++) s += String(Math.floor(Math.random()*10));
       return s;
     }
     function digitsOk(d){
@@ -439,13 +383,46 @@
       return k;
     }
 
-    function fillUser(){
-      const u = findUserFromAnyKey() || headerFallback();
-      const nm = (u.name || u.fullname || "Kullanıcı").trim();
-      const em = (u.email || "—").trim();
-      $("fullName").textContent = nm || "Kullanıcı";
-      $("email").textContent = em || "—";
-      $("userKeyPill").textContent = `KEY: ${getOrCreateUserKey()}`;
+    // ✅ Shell header’dan adı al (GARANTİ)
+    function readNameFromShell(){
+      const hn = document.getElementById("userName");
+      return hn ? (hn.textContent || "").trim() : "";
+    }
+
+    // ✅ Email’i nereden bulursak (bulunamazsa —)
+    function readEmailFromStorageScan(){
+      for(let i=0;i<localStorage.length;i++){
+        const k = localStorage.key(i);
+        const v = localStorage.getItem(k);
+        if(!v || v.length < 10 || v[0] !== "{") continue;
+        try{
+          const o = JSON.parse(v);
+          if(o && o.email) return String(o.email);
+        }catch{}
+      }
+      return "—";
+    }
+
+    // init user (retry: shell bazen 1 frame sonra doluyor)
+    function initUser(){
+      let tries = 0;
+      const timer = setInterval(()=>{
+        tries++;
+        const nm = readNameFromShell();
+        if(nm){
+          clearInterval(timer);
+          $("fullName").textContent = nm;
+          $("email").textContent = readEmailFromStorageScan();
+          $("userKeyPill").textContent = `KEY: ${getOrCreateUserKey()}`;
+          return;
+        }
+        if(tries >= 15){
+          clearInterval(timer);
+          $("fullName").textContent = "Kullanıcı";
+          $("email").textContent = readEmailFromStorageScan();
+          $("userKeyPill").textContent = `KEY: ${getOrCreateUserKey()}`;
+        }
+      }, 60);
     }
 
     function fillLangSelect(){
@@ -468,38 +445,31 @@
 
     function fillLevel(){
       const sel = (localStorage.getItem("italky_teacher_pref") || "").trim();
-
-      // 1) yeni profil varsa
-      const prof = JSON.parse(localStorage.getItem("italky_profile") || "{}");
-      const st = (prof.languages && sel && prof.languages[sel]) ? prof.languages[sel] : null;
-
-      // 2) yoksa legacy keylerden al
-      const legacyLevel = (localStorage.getItem("italky_level") || "").trim();
-      const legacyWeighted = (localStorage.getItem("italky_level_weighted_score") || "").trim();
-      const legacyRaw = (localStorage.getItem("italky_level_raw_correct") || "").trim();
-
       const labelMap = {
         dora:"İngilizce", ayda:"Almanca", jale:"Fransızca", ozan:"İspanyolca",
         sencer:"İtalyanca", sungur:"Rusça", huma:"Japonca", umay:"Çince"
       };
       $("lvlDesc").textContent = `Dil: ${labelMap[sel] || "Seçili Dil Yok"}`;
 
-      const level = (st && st.level) ? st.level : (legacyLevel || "—");
-      const attempts = (st && typeof st.attempt_count === "number") ? st.attempt_count : (legacyLevel ? 1 : 0);
+      // profile varsa
+      let level = "—";
+      let attempts = 0;
+
+      try{
+        const prof = JSON.parse(localStorage.getItem("italky_profile") || "{}");
+        const st = (prof.languages && sel && prof.languages[sel]) ? prof.languages[sel] : null;
+        if(st && st.level) level = st.level;
+        if(st && typeof st.attempt_count === "number") attempts = st.attempt_count;
+      }catch{}
+
+      // legacy fallback
+      const legacyLevel = (localStorage.getItem("italky_level") || "").trim();
+      const legacyDone  = (localStorage.getItem("italky_level_done") || "").trim();
+      if(level === "—" && legacyLevel) level = legacyLevel;
+      if(attempts === 0 && legacyDone === "1") attempts = 1;
 
       $("levelVal").textContent = level;
       $("attemptVal").textContent = String(attempts);
-
-      // İstersen legacy varsa profile'a yaz (tek sefer)
-      if(legacyLevel && (!prof.languages || !prof.languages[sel] || !prof.languages[sel].level)){
-        prof.languages = prof.languages || {};
-        prof.languages[sel] = prof.languages[sel] || {};
-        prof.languages[sel].level = legacyLevel;
-        prof.languages[sel].attempt_count = attempts;
-        if(legacyWeighted) prof.languages[sel].weighted_score = Number(legacyWeighted);
-        if(legacyRaw) prof.languages[sel].raw_score = Number(legacyRaw);
-        localStorage.setItem("italky_profile", JSON.stringify(prof));
-      }
     }
 
     function fillOffline(){
@@ -527,7 +497,6 @@
     });
 
     $("logoutBtn").addEventListener("click", ()=>{
-      // Sadece oturum datası temizliği (hangi key olduğunu bilmediğimiz için “scan” yapmayacağız)
       toast("Çıkış yapıldı");
       setTimeout(()=>location.href="/pages/home.html", 400);
     });
@@ -535,16 +504,13 @@
     $("deleteBtn").addEventListener("click", ()=>{ $("confirmBack").style.display="flex"; });
     $("confirmNo").addEventListener("click", ()=>{ $("confirmBack").style.display="none"; });
     $("confirmYes").addEventListener("click", ()=>{
-      try{
-        localStorage.clear();
-      }catch{}
+      try{ localStorage.clear(); }catch{}
       $("confirmBack").style.display="none";
       toast("Hesap silindi");
       setTimeout(()=>location.href="/pages/home.html", 650);
     });
 
-    // init
-    fillUser();
+    initUser();
     fillLangSelect();
     fillLevel();
     fillOffline();
