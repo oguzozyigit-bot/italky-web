@@ -46,6 +46,10 @@
       background: linear-gradient(145deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%);
       padding: 16px 14px;
       overflow:hidden;
+      flex: 1;
+      display:flex;
+      flex-direction:column;
+      justify-content:flex-start;
     }
 
     .qnum{
@@ -54,7 +58,12 @@
       color: rgba(255,255,255,0.70);
       letter-spacing: .4px;
       text-transform: uppercase;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
     }
+
     .qtext{
       margin-top:10px;
       font-size:16px;
@@ -69,6 +78,7 @@
       display:flex;
       flex-direction:column;
       gap:10px;
+      flex: 1;
     }
     .opt{
       width:100%;
@@ -139,7 +149,7 @@
     <div class="wrap">
       <div class="topbar">
         <div class="chip" id="langChip">Dil: —</div>
-        <div class="chip" id="timerChip">15:00</div>
+        <div class="chip" id="timerChip">40:00</div>
       </div>
 
       <div class="card" id="qCard"></div>
@@ -157,13 +167,15 @@
     import { mountShell } from "/js/ui_shell.js";
     mountShell({ scroll:"none" });
 
-    // keys
-    const KEY_TEACHER    = "italky_teacher_pref";
-    const KEY_LEVEL      = "italky_level";
-    const KEY_LEVEL_DONE = "italky_level_done";
-    const KEY_SCORE      = "italky_level_score";
-    const KEY_REC_MINS   = "italky_recommended_mins";
+    // ===== storage keys =====
+    const KEY_TEACHER     = "italky_teacher_pref";
+    const KEY_LEVEL       = "italky_level";
+    const KEY_LEVEL_DONE  = "italky_level_done";
+    const KEY_RAW_SCORE   = "italky_level_raw_correct";   // 0-50
+    const KEY_WEIGHTED    = "italky_level_weighted_score"; // 0-150
+    const KEY_REC_MINS    = "italky_recommended_mins";
 
+    // ===== teacher registry (UI chip) =====
     const TEACHERS = {
       dora:{flag:"🇬🇧", role:"İngilizce"},
       ayda:{flag:"🇩🇪", role:"Almanca"},
@@ -176,7 +188,6 @@
     };
 
     const $ = (id)=>document.getElementById(id);
-
     function toast(msg){
       const t = $("toast");
       t.textContent = String(msg||"");
@@ -194,51 +205,78 @@
       $("langChip").textContent = `${info.flag} Dil: ${info.role}`;
     }
 
-    // 30 soru — sade, stabil
+    // ===== Professional Question Bank (50) =====
+    // Format:
+    // { id, level, weight, category, question, options[4], correct (0-3) }
     const QUESTIONS = [
-      { q:"Doğru cümle hangisi?", a:["I am a student.","I student am.","I is student.","Me a student."], c:0 },
-      { q:"Boşluğu doldur: “She ___ happy.”", a:["am","is","are","be"], c:1 },
-      { q:"Boşluğu doldur: “They ___ here.”", a:["is","are","am","be"], c:1 },
-      { q:"Doğru soru hangisi?", a:["Where you are?","Where are you?","Where is you?","Where you is?"], c:1 },
-      { q:"Doğru seçenek: “I ___ coffee every day.”", a:["drink","drinks","drinking","drank"], c:0 },
-      { q:"Boşluğu doldur: “He ___ to school.”", a:["go","goes","going","gone"], c:1 },
-      { q:"“Dün” anlamına en yakın ifade?", a:["tomorrow","yesterday","today","now"], c:1 },
-      { q:"Boşluğu doldur: “I ___ yesterday.”", a:["go","went","gone","going"], c:1 },
-      { q:"Doğru cümle hangisi?", a:["She don’t like it.","She doesn’t like it.","She doesn’t likes it.","She not like it."], c:1 },
-      { q:"Boşluğu doldur: “There ___ a book on the table.”", a:["are","is","am","be"], c:1 },
+      // ---- A1 (10) weight=1 ----
+      { id:1,  level:"A1", weight:1, category:"be", question:"Choose the correct sentence:", options:["I am a student.","I student am.","I is student.","Me am student."], correct:0 },
+      { id:2,  level:"A1", weight:1, category:"be", question:"She ___ happy.", options:["am","is","are","be"], correct:1 },
+      { id:3,  level:"A1", weight:1, category:"be_plural", question:"They ___ my friends.", options:["is","are","am","be"], correct:1 },
+      { id:4,  level:"A1", weight:1, category:"articles", question:"I have ___ apple.", options:["a","an","the","no article"], correct:1 },
+      { id:5,  level:"A1", weight:1, category:"present_simple", question:"He ___ to school every day.", options:["go","goes","going","gone"], correct:1 },
+      { id:6,  level:"A1", weight:1, category:"questions", question:"Correct question form:", options:["Where you live?","Where do you live?","Where you do live?","Where are you live?"], correct:1 },
+      { id:7,  level:"A1", weight:1, category:"vocab", question:"Opposite of 'big' is:", options:["tall","small","short","long"], correct:1 },
+      { id:8,  level:"A1", weight:1, category:"prepositions", question:"The book is ___ the table.", options:["in","on","at","under"], correct:1 },
+      { id:9,  level:"A1", weight:1, category:"past_simple_basic", question:"Yesterday I ___ to the park.", options:["go","went","gone","going"], correct:1 },
+      { id:10, level:"A1", weight:1, category:"pronouns", question:"This is my sister. ___ name is Anna.", options:["She","Her","His","Its"], correct:1 },
 
-      { q:"“Çok” anlamına en uygun seçenek?", a:["many","very","few","little"], c:1 },
-      { q:"Boşluğu doldur: “I have ___ a car.”", a:["go","buy","bought","buys"], c:2 },
-      { q:"Doğru zaman: “I ___ in 2022.”", a:["have gone","went","am going","go"], c:1 },
-      { q:"Boşluğu doldur: “I have ___ to London.”", a:["go","went","been","was"], c:2 },
-      { q:"Doğru seçenek: “Can you ___ me?”", a:["to help","help","helping","helped"], c:1 },
+      // ---- A2 (10) weight=2 ----
+      { id:11, level:"A2", weight:2, category:"countable", question:"How ___ apples do you want?", options:["much","many","a lot","little"], correct:1 },
+      { id:12, level:"A2", weight:2, category:"uncountable", question:"How ___ water is there?", options:["many","much","few","a lot"], correct:1 },
+      { id:13, level:"A2", weight:2, category:"present_perfect", question:"I have ___ my homework.", options:["do","did","done","doing"], correct:2 },
+      { id:14, level:"A2", weight:2, category:"present_perfect", question:"She has ___ to Paris.", options:["go","went","been","was"], correct:2 },
+      { id:15, level:"A2", weight:2, category:"since_for", question:"I have lived here ___ 2019.", options:["for","since","ago","from"], correct:1 },
+      { id:16, level:"A2", weight:2, category:"since_for", question:"I have lived here ___ five years.", options:["since","for","ago","in"], correct:1 },
+      { id:17, level:"A2", weight:2, category:"comparatives", question:"This book is ___ than that one.", options:["good","better","best","more good"], correct:1 },
+      { id:18, level:"A2", weight:2, category:"future", question:"I think it ___ rain tomorrow.", options:["will","is","was","did"], correct:0 },
+      { id:19, level:"A2", weight:2, category:"modals", question:"___ you help me, please?", options:["Must","Can","Should","Need"], correct:1 },
+      { id:20, level:"A2", weight:2, category:"past_continuous", question:"At 8 pm, I ___ TV.", options:["watch","watched","was watching","am watching"], correct:2 },
 
-      { q:"Doğru seçenek: “If it rains, I ___ home.”", a:["stay","stayed","will stay","staying"], c:2 },
-      { q:"Karşılaştırma: “better” hangi kelimeyle ilgilidir?", a:["good","bad","big","small"], c:0 },
-      { q:"Boşluğu doldur: “I’ve lived here ___ 5 years.”", a:["since","for","ago","from"], c:1 },
-      { q:"Doğru seçenek: “She is ___ than me.”", a:["tall","taller","tallest","more tall"], c:1 },
-      { q:"Boşluğu doldur: “I must ___ now.”", a:["to go","go","going","gone"], c:1 },
+      // ---- B1 (10) weight=3 ----
+      { id:21, level:"B1", weight:3, category:"conditionals_1", question:"If I have time, I ___ you.", options:["call","called","will call","calling"], correct:2 },
+      { id:22, level:"B1", weight:3, category:"relative_clauses", question:"That’s the man ___ helped me.", options:["who","where","when","what"], correct:0 },
+      { id:23, level:"B1", weight:3, category:"gerunds", question:"I enjoy ___ music.", options:["listen","to listen","listening","listened"], correct:2 },
+      { id:24, level:"B1", weight:3, category:"reported_speech", question:"He said he ___ tired.", options:["is","was","are","be"], correct:1 },
+      { id:25, level:"B1", weight:3, category:"passive_basic", question:"The car ___ in Germany.", options:["made","is made","make","is making"], correct:1 },
+      { id:26, level:"B1", weight:3, category:"present_perfect_vs_past", question:"I ___ to London in 2022.", options:["have been","went","go","have gone"], correct:1 },
+      { id:27, level:"B1", weight:3, category:"advice", question:"You ___ see a doctor.", options:["must","should","can","might"], correct:1 },
+      { id:28, level:"B1", weight:3, category:"phrasal", question:"Please ___ your shoes.", options:["take off","take up","take in","take on"], correct:0 },
+      { id:29, level:"B1", weight:3, category:"quantifiers", question:"There are ___ people here.", options:["too much","too many","too little","too few (kalabalık için)"], correct:1 },
+      { id:30, level:"B1", weight:3, category:"time_clauses", question:"I’ll call you when I ___ home.", options:["get","got","will get","getting"], correct:0 },
 
-      { q:"Doğru: “I’m looking forward to ___ you.”", a:["see","seeing","saw","seen"], c:1 },
-      { q:"Doğru: “This book is ___.”", a:["interest","interesting","interested","interests"], c:1 },
-      { q:"Doğru cümle hangisi?", a:["I suggest to go.","I suggest going.","I suggest go.","I suggest went."], c:1 },
-      { q:"Boşluğu doldur: “This is the person ___ helped me.”", a:["who","where","when","what"], c:0 },
-      { q:"Doğru: “I wish I ___ more time.”", a:["have","had","will have","am having"], c:1 },
+      // ---- B2 (10) weight=4 ----
+      { id:31, level:"B2", weight:4, category:"conditionals_2", question:"If I ___ more money, I would travel more.", options:["have","had","will have","am having"], correct:1 },
+      { id:32, level:"B2", weight:4, category:"wish", question:"I wish I ___ more time.", options:["have","had","will have","am having"], correct:1 },
+      { id:33, level:"B2", weight:4, category:"passive_adv", question:"The project ___ by next week.", options:["will finish","will be finished","finishes","is finishing"], correct:1 },
+      { id:34, level:"B2", weight:4, category:"modals_deduction", question:"He ___ be at home; the lights are on.", options:["can’t","must","shouldn’t","would"], correct:1 },
+      { id:35, level:"B2", weight:4, category:"relative_reduced", question:"The woman ___ by the door is my boss.", options:["stand","standing","stood","stands"], correct:1 },
+      { id:36, level:"B2", weight:4, category:"inversion", question:"Hardly ___ arrived when it started raining.", options:["I had","had I","I have","have I"], correct:1 },
+      { id:37, level:"B2", weight:4, category:"not_only", question:"Not only ___ he late, but he was also unprepared.", options:["was","were","is","be"], correct:0 },
+      { id:38, level:"B2", weight:4, category:"reported_adv", question:"She told me she ___ come if she could.", options:["will","would","is","can"], correct:1 },
+      { id:39, level:"B2", weight:4, category:"gerund_inf", question:"I’m used to ___ early.", options:["wake up","waking up","woke up","to wake up"], correct:1 },
+      { id:40, level:"B2", weight:4, category:"linkers", question:"I studied hard; ___, I passed easily.", options:["however","therefore","although","because"], correct:1 },
 
-      { q:"Boşluğu doldur: “He said he ___ come.”", a:["will","would","is","can"], c:1 },
-      { q:"Doğru: “Not only ___ he late, but also unprepared.”", a:["was","were","is","be"], c:0 },
-      { q:"Doğru: “I have never ___ sushi.”", a:["eat","ate","eaten","eating"], c:2 },
-      { q:"Doğru: “She ___ here since 2020.”", a:["lives","has lived","lived","is live"], c:1 },
-      { q:"Doğru: “Could you ___ the door?”", a:["open","opened","opening","opens"], c:0 },
+      // ---- C1 (10) weight=5 ----
+      { id:41, level:"C1", weight:5, category:"subjunctive", question:"It’s essential that he ___ on time.", options:["is","be","was","being"], correct:1 },
+      { id:42, level:"C1", weight:5, category:"advanced_collocation", question:"Choose the best option: “take ___ responsibility”", options:["heavy","full","strong","big"], correct:1 },
+      { id:43, level:"C1", weight:5, category:"inversion_negative", question:"Under no circumstances ___ you reveal this information.", options:["you should","should you","you would","would you"], correct:1 },
+      { id:44, level:"C1", weight:5, category:"participle_clause", question:"___ the weather, we decided to stay indoors.", options:["Considering","Consider","Considered","To consider"], correct:0 },
+      { id:45, level:"C1", weight:5, category:"advanced_tense", question:"By the time we arrived, the film ___.", options:["started","had started","has started","would start"], correct:1 },
+      { id:46, level:"C1", weight:5, category:"lexis", question:"Closest meaning to “inevitable” is:", options:["avoidable","unavoidable","uncertain","temporary"], correct:1 },
+      { id:47, level:"C1", weight:5, category:"cleft_sentence", question:"___ I need is a little more time.", options:["That","What","Which","Who"], correct:1 },
+      { id:48, level:"C1", weight:5, category:"discourse", question:"Choose the best linker: “___ the fact that it was late, we continued.”", options:["Despite","Because","Although","Since"], correct:0 },
+      { id:49, level:"C1", weight:5, category:"advanced_modal", question:"You ___ have told me earlier; now it’s too late.", options:["should","shouldn’t","must","can"], correct:0 },
+      { id:50, level:"C1", weight:5, category:"formal_register", question:"Best formal synonym for “help” is:", options:["assist","fix","push","handle"], correct:0 },
     ];
 
-    // state
+    // ===== Timer: 40 min =====
+    let remaining = 40 * 60;
+    let tick = null;
+
+    // ===== state =====
     let idx = 0;
     const answers = Array(QUESTIONS.length).fill(null);
-
-    // timer 15dk
-    let remaining = 15 * 60;
-    let tick = null;
 
     function fmt(t){
       const m = String(Math.floor(t/60)).padStart(2,"0");
@@ -251,10 +289,13 @@
       const picked = answers[idx];
 
       $("qCard").innerHTML = `
-        <div class="qnum">Soru ${idx+1} / ${QUESTIONS.length}</div>
-        <div class="qtext">${q.q}</div>
+        <div class="qnum">
+          <span>Soru ${idx+1} / ${QUESTIONS.length}</span>
+          <span>${q.level} • +${q.weight}</span>
+        </div>
+        <div class="qtext">${q.question}</div>
         <div class="opts">
-          ${q.a.map((txt,i)=>`
+          ${q.options.map((txt,i)=>`
             <button class="opt ${picked===i ? "sel":""}" data-i="${i}" type="button">${txt}</button>
           `).join("")}
         </div>
@@ -287,12 +328,15 @@
       }, 1000);
     }
 
-    function scoreToLevel(score){
-      if(score <= 6)  return "A0";
-      if(score <= 12) return "A1";
-      if(score <= 18) return "A2";
-      if(score <= 23) return "B1";
-      if(score <= 27) return "B2";
+    // ===== Pro scoring (weighted) =====
+    // max weighted = (A1 10*1) + (A2 10*2) + (B1 10*3) + (B2 10*4) + (C1 10*5) = 150
+    function weightedToLevel(weighted){
+      // Pro thresholds (stable, non-amateur)
+      if(weighted <= 20)  return "A0";
+      if(weighted <= 40)  return "A1";
+      if(weighted <= 65)  return "A2";
+      if(weighted <= 95)  return "B1";
+      if(weighted <= 120) return "B2";
       return "C1";
     }
 
@@ -309,20 +353,27 @@
     }
 
     function finish(auto=false){
-      // skor
-      let score = 0;
+      // raw + weighted
+      let raw = 0;
+      let weighted = 0;
+
       for(let i=0;i<QUESTIONS.length;i++){
-        if(answers[i] === QUESTIONS[i].c) score++;
+        const ok = (answers[i] === QUESTIONS[i].correct);
+        if(ok){
+          raw++;
+          weighted += QUESTIONS[i].weight;
+        }
       }
-      const level = scoreToLevel(score);
+
+      const level = weightedToLevel(weighted);
       const rec = recommendedMins(level);
 
-      localStorage.setItem(KEY_SCORE, String(score));
+      localStorage.setItem(KEY_RAW_SCORE, String(raw));
+      localStorage.setItem(KEY_WEIGHTED, String(weighted));
       localStorage.setItem(KEY_LEVEL, level);
       localStorage.setItem(KEY_REC_MINS, String(rec));
       localStorage.setItem(KEY_LEVEL_DONE, "1");
 
-      // plan seçimine
       location.href = "/pages/plan_select.html";
     }
 
@@ -342,6 +393,11 @@
     // init
     render();
     startTimer();
+
+    // safety: leaving page resets attempt (pro rule)
+    window.addEventListener("beforeunload", ()=>{
+      // attempt not persisted; next entry starts fresh by design
+    });
   </script>
 </body>
 </html>
