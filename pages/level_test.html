@@ -1,0 +1,347 @@
+<!-- FILE: /pages/level_test.html -->
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>italkyAI • Seviye Tespit</title>
+  <link rel="icon" href="data:," />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+
+  <style>
+    #pageContent{ height:100%; }
+
+    .wrap{
+      height:100%;
+      padding: 12px 12px 18px;
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+    }
+    .chip{
+      padding:10px 12px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,0.10);
+      background: rgba(0,0,0,0.18);
+      font-weight:1000;
+      font-size:12px;
+      color: rgba(255,255,255,0.86);
+      white-space:nowrap;
+    }
+
+    .card{
+      border-radius: 28px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: linear-gradient(145deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%);
+      padding: 16px 14px;
+      overflow:hidden;
+    }
+
+    .qnum{
+      font-size:12px;
+      font-weight:1000;
+      color: rgba(255,255,255,0.70);
+      letter-spacing: .4px;
+      text-transform: uppercase;
+    }
+    .qtext{
+      margin-top:10px;
+      font-size:16px;
+      font-weight:1000;
+      letter-spacing:-0.2px;
+      line-height:1.25;
+      color:#fff;
+    }
+
+    .opts{
+      margin-top:12px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .opt{
+      width:100%;
+      border-radius:20px;
+      border:1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.18);
+      padding:12px 12px;
+      color:#fff;
+      font-weight:900;
+      font-size:13px;
+      text-align:left;
+      cursor:pointer;
+    }
+    .opt:active{ transform: scale(.99); }
+    .opt.sel{
+      border-color: rgba(99,102,241,.55);
+      background: rgba(99,102,241,.14);
+    }
+
+    .nav{
+      display:flex;
+      gap:12px;
+    }
+    .btn{
+      flex:1;
+      height:54px;
+      border-radius:22px;
+      border:1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06);
+      color:#fff;
+      font-weight:1000;
+      font-size:14px;
+      cursor:pointer;
+    }
+    .btn:active{ transform: scale(.99); }
+    .btn.primary{
+      border:none;
+      background: linear-gradient(135deg, #A5B4FC, #4F46E5);
+      box-shadow: 0 16px 44px rgba(79,70,229,.22);
+    }
+    .btn:disabled{ opacity:.45; cursor:not-allowed; }
+
+    .toast{
+      position: fixed;
+      left:50%;
+      top:18px;
+      transform:translateX(-50%) translateY(-120px);
+      background:rgba(10,10,18,.92);
+      border:1px solid rgba(165,180,252,.35);
+      padding:10px 14px;
+      border-radius:999px;
+      color:#fff;
+      z-index:99999;
+      font-weight:900;
+      font-size:12px;
+      transition:.28s;
+      backdrop-filter: blur(12px);
+      pointer-events:none;
+      max-width:min(92vw,520px);
+      text-align:center;
+    }
+    .toast.show{ transform:translateX(-50%) translateY(0); }
+  </style>
+</head>
+
+<body>
+  <main id="pageContent">
+    <div class="wrap">
+      <div class="topbar">
+        <div class="chip" id="langChip">Dil: —</div>
+        <div class="chip" id="timerChip">15:00</div>
+      </div>
+
+      <div class="card" id="qCard"></div>
+
+      <div class="nav">
+        <button class="btn" id="btnPrev" type="button">Geri</button>
+        <button class="btn primary" id="btnNext" type="button">İleri</button>
+      </div>
+    </div>
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <script type="module">
+    import { mountShell } from "/js/ui_shell.js";
+    mountShell({ scroll:"none" });
+
+    // keys
+    const KEY_TEACHER    = "italky_teacher_pref";
+    const KEY_LEVEL      = "italky_level";
+    const KEY_LEVEL_DONE = "italky_level_done";
+    const KEY_SCORE      = "italky_level_score";
+    const KEY_REC_MINS   = "italky_recommended_mins";
+
+    const TEACHERS = {
+      dora:{flag:"🇬🇧", role:"İngilizce"},
+      ayda:{flag:"🇩🇪", role:"Almanca"},
+      jale:{flag:"🇫🇷", role:"Fransızca"},
+      ozan:{flag:"🇪🇸", role:"İspanyolca"},
+      sencer:{flag:"🇮🇹", role:"İtalyanca"},
+      sungur:{flag:"🇷🇺", role:"Rusça"},
+      huma:{flag:"🇯🇵", role:"Japonca"},
+      umay:{flag:"🇨🇳", role:"Çince"},
+    };
+
+    const $ = (id)=>document.getElementById(id);
+
+    function toast(msg){
+      const t = $("toast");
+      t.textContent = String(msg||"");
+      t.classList.add("show");
+      clearTimeout(window.__to);
+      window.__to = setTimeout(()=>t.classList.remove("show"), 1600);
+    }
+
+    // Dil seçili mi?
+    const sel = (localStorage.getItem(KEY_TEACHER) || "").trim();
+    const info = TEACHERS[sel];
+    if(!info){
+      location.href = "/pages/teacher_select.html";
+    } else {
+      $("langChip").textContent = `${info.flag} Dil: ${info.role}`;
+    }
+
+    // 30 soru — sade, stabil
+    const QUESTIONS = [
+      { q:"Doğru cümle hangisi?", a:["I am a student.","I student am.","I is student.","Me a student."], c:0 },
+      { q:"Boşluğu doldur: “She ___ happy.”", a:["am","is","are","be"], c:1 },
+      { q:"Boşluğu doldur: “They ___ here.”", a:["is","are","am","be"], c:1 },
+      { q:"Doğru soru hangisi?", a:["Where you are?","Where are you?","Where is you?","Where you is?"], c:1 },
+      { q:"Doğru seçenek: “I ___ coffee every day.”", a:["drink","drinks","drinking","drank"], c:0 },
+      { q:"Boşluğu doldur: “He ___ to school.”", a:["go","goes","going","gone"], c:1 },
+      { q:"“Dün” anlamına en yakın ifade?", a:["tomorrow","yesterday","today","now"], c:1 },
+      { q:"Boşluğu doldur: “I ___ yesterday.”", a:["go","went","gone","going"], c:1 },
+      { q:"Doğru cümle hangisi?", a:["She don’t like it.","She doesn’t like it.","She doesn’t likes it.","She not like it."], c:1 },
+      { q:"Boşluğu doldur: “There ___ a book on the table.”", a:["are","is","am","be"], c:1 },
+
+      { q:"“Çok” anlamına en uygun seçenek?", a:["many","very","few","little"], c:1 },
+      { q:"Boşluğu doldur: “I have ___ a car.”", a:["go","buy","bought","buys"], c:2 },
+      { q:"Doğru zaman: “I ___ in 2022.”", a:["have gone","went","am going","go"], c:1 },
+      { q:"Boşluğu doldur: “I have ___ to London.”", a:["go","went","been","was"], c:2 },
+      { q:"Doğru seçenek: “Can you ___ me?”", a:["to help","help","helping","helped"], c:1 },
+
+      { q:"Doğru seçenek: “If it rains, I ___ home.”", a:["stay","stayed","will stay","staying"], c:2 },
+      { q:"Karşılaştırma: “better” hangi kelimeyle ilgilidir?", a:["good","bad","big","small"], c:0 },
+      { q:"Boşluğu doldur: “I’ve lived here ___ 5 years.”", a:["since","for","ago","from"], c:1 },
+      { q:"Doğru seçenek: “She is ___ than me.”", a:["tall","taller","tallest","more tall"], c:1 },
+      { q:"Boşluğu doldur: “I must ___ now.”", a:["to go","go","going","gone"], c:1 },
+
+      { q:"Doğru: “I’m looking forward to ___ you.”", a:["see","seeing","saw","seen"], c:1 },
+      { q:"Doğru: “This book is ___.”", a:["interest","interesting","interested","interests"], c:1 },
+      { q:"Doğru cümle hangisi?", a:["I suggest to go.","I suggest going.","I suggest go.","I suggest went."], c:1 },
+      { q:"Boşluğu doldur: “This is the person ___ helped me.”", a:["who","where","when","what"], c:0 },
+      { q:"Doğru: “I wish I ___ more time.”", a:["have","had","will have","am having"], c:1 },
+
+      { q:"Boşluğu doldur: “He said he ___ come.”", a:["will","would","is","can"], c:1 },
+      { q:"Doğru: “Not only ___ he late, but also unprepared.”", a:["was","were","is","be"], c:0 },
+      { q:"Doğru: “I have never ___ sushi.”", a:["eat","ate","eaten","eating"], c:2 },
+      { q:"Doğru: “She ___ here since 2020.”", a:["lives","has lived","lived","is live"], c:1 },
+      { q:"Doğru: “Could you ___ the door?”", a:["open","opened","opening","opens"], c:0 },
+    ];
+
+    // state
+    let idx = 0;
+    const answers = Array(QUESTIONS.length).fill(null);
+
+    // timer 15dk
+    let remaining = 15 * 60;
+    let tick = null;
+
+    function fmt(t){
+      const m = String(Math.floor(t/60)).padStart(2,"0");
+      const s = String(t%60).padStart(2,"0");
+      return `${m}:${s}`;
+    }
+
+    function render(){
+      const q = QUESTIONS[idx];
+      const picked = answers[idx];
+
+      $("qCard").innerHTML = `
+        <div class="qnum">Soru ${idx+1} / ${QUESTIONS.length}</div>
+        <div class="qtext">${q.q}</div>
+        <div class="opts">
+          ${q.a.map((txt,i)=>`
+            <button class="opt ${picked===i ? "sel":""}" data-i="${i}" type="button">${txt}</button>
+          `).join("")}
+        </div>
+      `;
+
+      $("btnPrev").disabled = (idx===0);
+      $("btnNext").textContent = (idx===QUESTIONS.length-1) ? "Sınavı Bitir" : "İleri";
+
+      $("qCard").querySelectorAll(".opt").forEach(b=>{
+        b.addEventListener("click", ()=>{
+          const i = Number(b.getAttribute("data-i"));
+          answers[idx] = i;
+          render();
+        });
+      });
+    }
+
+    function startTimer(){
+      $("timerChip").textContent = fmt(remaining);
+      tick = setInterval(()=>{
+        remaining--;
+        if(remaining <= 0){
+          remaining = 0;
+          $("timerChip").textContent = fmt(remaining);
+          clearInterval(tick);
+          finish(true);
+          return;
+        }
+        $("timerChip").textContent = fmt(remaining);
+      }, 1000);
+    }
+
+    function scoreToLevel(score){
+      if(score <= 6)  return "A0";
+      if(score <= 12) return "A1";
+      if(score <= 18) return "A2";
+      if(score <= 23) return "B1";
+      if(score <= 27) return "B2";
+      return "C1";
+    }
+
+    function recommendedMins(level){
+      switch(level){
+        case "A0": return 10;
+        case "A1": return 10;
+        case "A2": return 20;
+        case "B1": return 20;
+        case "B2": return 30;
+        case "C1": return 30;
+        default: return 10;
+      }
+    }
+
+    function finish(auto=false){
+      // skor
+      let score = 0;
+      for(let i=0;i<QUESTIONS.length;i++){
+        if(answers[i] === QUESTIONS[i].c) score++;
+      }
+      const level = scoreToLevel(score);
+      const rec = recommendedMins(level);
+
+      localStorage.setItem(KEY_SCORE, String(score));
+      localStorage.setItem(KEY_LEVEL, level);
+      localStorage.setItem(KEY_REC_MINS, String(rec));
+      localStorage.setItem(KEY_LEVEL_DONE, "1");
+
+      // plan seçimine
+      location.href = "/pages/plan_select.html";
+    }
+
+    $("btnPrev").addEventListener("click", ()=>{
+      if(idx>0){ idx--; render(); }
+    });
+
+    $("btnNext").addEventListener("click", ()=>{
+      if(idx < QUESTIONS.length-1){
+        idx++; render();
+      } else {
+        clearInterval(tick);
+        finish(false);
+      }
+    });
+
+    // init
+    render();
+    startTimer();
+  </script>
+</body>
+</html>
