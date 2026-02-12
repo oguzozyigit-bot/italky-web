@@ -1,3 +1,4 @@
+<!-- FILE: /pages/teacher_course.html -->
 <!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -118,6 +119,7 @@
       overscroll-behavior: contain;
       scrollbar-width:none;
       display:flex;flex-direction:column;gap:10px;
+      z-index: 2000;
     }
     #chat::-webkit-scrollbar{display:none}
     #chat::before{content:"";flex:1 0 auto;}
@@ -139,16 +141,18 @@
     .bubble.student{align-self:flex-end;border-right:4px solid var(--befree);background: rgba(107,114,128,.14);text-align:right;}
     .bubble.tr{align-self:flex-start;opacity:.85;font-size:13px;background: rgba(255,255,255,.04);border-color: rgba(255,255,255,.08);color: rgba(255,255,255,.78);}
 
-    /* bottom controls */
+    /* ✅ FIX: dock fixed + transform yerine mobile-frame içine ABSOLUTE */
     .dock{
-      position:fixed; left:50%; transform:translateX(-50%);
-      width: var(--frameW);
+      position:absolute;
+      left:0; right:0;
+      width: 100%;
       bottom: var(--footerH);
       z-index:2600;
       padding: 10px 12px;
       background: rgba(0,0,0,.32);
       border-top: 1px solid rgba(255,255,255,.08);
       backdrop-filter: blur(12px);
+      pointer-events: auto;
     }
     .dockInner{
       width:100%;
@@ -169,6 +173,9 @@
       color:#fff;
       background: linear-gradient(135deg, #A5B4FC, #4F46E5);
       box-shadow: 0 14px 40px rgba(79,70,229,.18);
+      pointer-events: auto;
+      position: relative;
+      z-index: 5;
     }
     .btnMain:active{transform:scale(.99)}
     .pill{
@@ -182,11 +189,12 @@
       font-size:12px;
       display:flex;align-items:center;justify-content:center;
       white-space:nowrap;
+      pointer-events:none;
     }
 
     .footerbar{
-      position:fixed; left:50%; transform:translateX(-50%);
-      width: var(--frameW);
+      position:absolute;
+      left:0; right:0;
       bottom:0;
       height: var(--footerH);
       z-index:2400;
@@ -197,6 +205,7 @@
       display:flex;align-items:center;justify-content:center;
       color: rgba(255,255,255,.22);
       font-weight:800;font-size:10px;
+      pointer-events: auto;
     }
   </style>
 </head>
@@ -229,7 +238,7 @@
 
     <div class="dock">
       <div class="dockInner">
-        <button class="btnMain" id="btnLesson">Dersi Başlat</button>
+        <button class="btnMain" id="btnLesson" type="button">Dersi Başlat</button>
         <div class="pill" id="pillTry">●●●</div>
         <div class="pill" id="pillScore">95%</div>
       </div>
