@@ -6,7 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>italkyAI • Profile</title>
   <link rel="icon" href="data:," />
-
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
@@ -14,10 +13,9 @@
   <style>
     #pageContent{ height:100%; }
 
-    /* ✅ Scroll var + footer örtmesin diye extra bottom padding */
     .wrap{
       min-height: 100%;
-      padding: 12px 12px 160px; /* ✅ footer üstünde garanti */
+      padding: 12px 12px 160px; /* footer üstünde garanti */
       display:flex;
       flex-direction:column;
       gap:12px;
@@ -77,7 +75,6 @@
       padding: 14px 12px;
       overflow:hidden;
     }
-
     .row{
       display:flex;
       align-items:center;
@@ -171,13 +168,10 @@
     }
     .btn:active{ transform: scale(.99); }
 
-    /* ✅ Yeşil çıkış */
     .btnSafe{
       border: 1px solid rgba(0, 200, 120, 0.35);
       background: rgba(0, 200, 120, 0.18);
     }
-
-    /* ✅ Kırmızı sil */
     .btnDanger{
       border: 1px solid rgba(255, 60, 60, 0.35);
       background: rgba(255, 60, 60, 0.16);
@@ -191,7 +185,6 @@
       margin-top: 6px;
     }
 
-    /* Confirm modal */
     .modalBack{
       position:fixed; inset:0;
       background: rgba(0,0,0,0.55);
@@ -272,7 +265,7 @@
     <div class="wrap">
 
       <section class="hero">
-        <div class="name" id="fullName">—</div>
+        <div class="name" id="fullName">Kullanıcı</div>
         <div class="email" id="email">—</div>
         <div class="keyLine">
           <div class="pill key" id="userKeyPill">KEY: —</div>
@@ -304,7 +297,7 @@
           </div>
           <div class="mini">
             <div class="k">Sınav Sayısı</div>
-            <div class="v" id="attemptVal">—</div>
+            <div class="v" id="attemptVal">0</div>
           </div>
         </div>
       </section>
@@ -319,7 +312,6 @@
 
         <div class="list" id="offlineList"></div>
 
-        <!-- ✅ “Dil indir” seçeneği -->
         <div class="btnRow">
           <button class="btn" id="downloadLangBtn" type="button">Dil İndir</button>
         </div>
@@ -368,9 +360,7 @@
 
   <script type="module">
     import { mountShell } from "/js/ui_shell.js";
-    import { STORAGE_KEY } from "/js/config.js";
-
-    mountShell(); // scroll açık (default)
+    mountShell(); // scroll açık
 
     const $ = (id)=>document.getElementById(id);
 
@@ -382,7 +372,35 @@
       window.__to = setTimeout(()=>t.classList.remove("show"), 1700);
     }
 
-    // ---- KEY üretimi (3 harf + 6 rakam, ardışık/üçlü tekrar yok) ----
+    // ✅ localStorage içinden kullanıcı objesini bul (key adı ne olursa olsun)
+    function findUserFromAnyKey(){
+      for(let i=0;i<localStorage.length;i++){
+        const k = localStorage.key(i);
+        if(!k) continue;
+        const v = localStorage.getItem(k);
+        if(!v || v.length < 10) continue;
+        if(v[0] !== "{") continue;
+        try{
+          const o = JSON.parse(v);
+          if(o && (o.name || o.fullname) && (o.picture || o.avatar || o.email)){
+            return o;
+          }
+        }catch{}
+      }
+      return null;
+    }
+
+    // ✅ Header’dan fallback al
+    function headerFallback(){
+      const hn = document.getElementById("userName");
+      const hp = document.getElementById("userPic");
+      return {
+        name: hn ? hn.textContent : "Kullanıcı",
+        picture: hp && hp.getAttribute("src") ? hp.getAttribute("src") : ""
+      };
+    }
+
+    // ✅ KEY üretimi
     const USER_KEY_STORAGE = "italky_user_key";
 
     function randLetters3(){
@@ -421,24 +439,15 @@
       return k;
     }
 
-    // ---- Kullanıcı adı/email ----
     function fillUser(){
-      let name = "Kullanıcı";
-      let email = "—";
-      try{
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if(raw){
-          const u = JSON.parse(raw);
-          name = (u.name || u.fullname || "Kullanıcı").trim();
-          email = (u.email || "—").trim();
-        }
-      }catch{}
-      $("fullName").textContent = name || "Kullanıcı";
-      $("email").textContent = email || "—";
+      const u = findUserFromAnyKey() || headerFallback();
+      const nm = (u.name || u.fullname || "Kullanıcı").trim();
+      const em = (u.email || "—").trim();
+      $("fullName").textContent = nm || "Kullanıcı";
+      $("email").textContent = em || "—";
       $("userKeyPill").textContent = `KEY: ${getOrCreateUserKey()}`;
     }
 
-    // ---- Sistem dili select (boş kalmasın) ----
     function fillLangSelect(){
       const select = $("siteLangSelect");
       const options = [
@@ -449,32 +458,50 @@
         { v:"es", t:"Español" },
       ];
       select.innerHTML = options.map(o=>`<option value="${o.v}">${o.t}</option>`).join("");
-
       const cur = (localStorage.getItem("italky_site_lang") || "tr").trim();
       select.value = cur;
-
       select.addEventListener("change", ()=>{
         localStorage.setItem("italky_site_lang", select.value);
         toast("Dil ayarı kaydedildi");
       });
     }
 
-    // ---- Seviye + sınav sayısı ----
     function fillLevel(){
       const sel = (localStorage.getItem("italky_teacher_pref") || "").trim();
+
+      // 1) yeni profil varsa
       const prof = JSON.parse(localStorage.getItem("italky_profile") || "{}");
-      const lang = (prof.languages && sel && prof.languages[sel]) ? prof.languages[sel] : null;
+      const st = (prof.languages && sel && prof.languages[sel]) ? prof.languages[sel] : null;
+
+      // 2) yoksa legacy keylerden al
+      const legacyLevel = (localStorage.getItem("italky_level") || "").trim();
+      const legacyWeighted = (localStorage.getItem("italky_level_weighted_score") || "").trim();
+      const legacyRaw = (localStorage.getItem("italky_level_raw_correct") || "").trim();
 
       const labelMap = {
         dora:"İngilizce", ayda:"Almanca", jale:"Fransızca", ozan:"İspanyolca",
         sencer:"İtalyanca", sungur:"Rusça", huma:"Japonca", umay:"Çince"
       };
       $("lvlDesc").textContent = `Dil: ${labelMap[sel] || "Seçili Dil Yok"}`;
-      $("levelVal").textContent = (lang && lang.level) ? lang.level : "—";
-      $("attemptVal").textContent = (lang && typeof lang.attempt_count === "number") ? String(lang.attempt_count) : "0";
+
+      const level = (st && st.level) ? st.level : (legacyLevel || "—");
+      const attempts = (st && typeof st.attempt_count === "number") ? st.attempt_count : (legacyLevel ? 1 : 0);
+
+      $("levelVal").textContent = level;
+      $("attemptVal").textContent = String(attempts);
+
+      // İstersen legacy varsa profile'a yaz (tek sefer)
+      if(legacyLevel && (!prof.languages || !prof.languages[sel] || !prof.languages[sel].level)){
+        prof.languages = prof.languages || {};
+        prof.languages[sel] = prof.languages[sel] || {};
+        prof.languages[sel].level = legacyLevel;
+        prof.languages[sel].attempt_count = attempts;
+        if(legacyWeighted) prof.languages[sel].weighted_score = Number(legacyWeighted);
+        if(legacyRaw) prof.languages[sel].raw_score = Number(legacyRaw);
+        localStorage.setItem("italky_profile", JSON.stringify(prof));
+      }
     }
 
-    // ---- Offline diller ----
     function fillOffline(){
       let arr = [];
       try{
@@ -495,32 +522,21 @@
       });
     }
 
-    // ---- Dil indir butonu ----
     $("downloadLangBtn").addEventListener("click", ()=>{
-      // Eğer offline sayfan varsa buraya bağla:
-      // location.href = "/pages/offline.html";
       toast("Dil indirme ekranı yakında bağlanacak");
     });
 
-    // ---- Güvenli çıkış ----
     $("logoutBtn").addEventListener("click", ()=>{
-      try{ localStorage.removeItem(STORAGE_KEY); }catch{}
+      // Sadece oturum datası temizliği (hangi key olduğunu bilmediğimiz için “scan” yapmayacağız)
       toast("Çıkış yapıldı");
-      setTimeout(()=>location.href="/pages/home.html", 500);
+      setTimeout(()=>location.href="/pages/home.html", 400);
     });
 
-    // ---- Silme onayı ----
     $("deleteBtn").addEventListener("click", ()=>{ $("confirmBack").style.display="flex"; });
     $("confirmNo").addEventListener("click", ()=>{ $("confirmBack").style.display="none"; });
     $("confirmYes").addEventListener("click", ()=>{
       try{
-        localStorage.removeItem(STORAGE_KEY);
-        localStorage.removeItem("italky_profile");
-        localStorage.removeItem("italky_teacher_pref");
-        localStorage.removeItem("italky_site_lang");
-        localStorage.removeItem("italky_offline_langs");
-        localStorage.removeItem("italky_is_premium");
-        localStorage.removeItem(USER_KEY_STORAGE);
+        localStorage.clear();
       }catch{}
       $("confirmBack").style.display="none";
       toast("Hesap silindi");
