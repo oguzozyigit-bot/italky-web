@@ -14,7 +14,6 @@
   <style>
     #pageContent{ height:100%; }
 
-    /* ✅ header-footer arası tek ekran */
     .wrap{
       height:100%;
       padding: 12px 12px 18px;
@@ -24,74 +23,127 @@
       gap:12px;
     }
 
-    .card{
+    .hero{
       border-radius: 28px;
       border: 1px solid rgba(255,255,255,0.10);
       background: linear-gradient(145deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%);
       padding: 18px 16px;
+      overflow:hidden;
+    }
+
+    .topRow{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+
+    .teacherBadge{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-width: 0;
+    }
+
+    .flagBox{
+      width:64px;
+      height:64px;
+      border-radius:22px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+    .flagBox span{
+      font-size:30px;
+      line-height:1;
+      filter: drop-shadow(0 0 10px rgba(255,255,255,.12));
+    }
+
+    .who{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+      min-width: 0;
+    }
+    .role{
+      font-size:12px;
+      font-weight:900;
+      color: rgba(255,255,255,0.65);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .name{
+      font-size:20px;
+      font-weight:1000;
+      letter-spacing:-0.4px;
+      line-height:1.05;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
     }
 
     .title{
-      font-size: 22px;
-      font-weight: 1000;
-      letter-spacing: -0.6px;
-      line-height: 1.05;
-      margin: 0;
+      margin: 14px 0 0;
+      font-size:18px;
+      font-weight:1000;
+      letter-spacing:-0.2px;
+      line-height:1.2;
     }
-    .sub{
-      margin: 8px 0 0;
-      font-size: 13px;
-      font-weight: 900;
-      color: rgba(255,255,255,0.68);
-      line-height: 1.35;
+    .desc{
+      margin: 10px 0 0;
+      font-size:13px;
+      font-weight:900;
+      color: rgba(255,255,255,0.70);
+      line-height:1.45;
     }
 
-    .infoGrid{
+    .rules{
+      margin-top: 14px;
       display:grid;
       grid-template-columns: 1fr 1fr;
       gap: 12px;
-      margin-top: 14px;
     }
-    .pill{
-      border-radius: 22px;
+    .rule{
+      border-radius: 24px;
       border: 1px solid rgba(255,255,255,0.10);
       background: rgba(0,0,0,0.18);
       padding: 14px 12px;
-      display:flex;
-      flex-direction:column;
-      gap:6px;
     }
-    .pill .k{
-      font-size: 11px;
-      font-weight: 1000;
+    .k{
+      font-size:11px;
+      font-weight:1000;
       color: rgba(255,255,255,0.60);
-      text-transform: uppercase;
-      letter-spacing: 1px;
+      text-transform:uppercase;
+      letter-spacing:1px;
     }
-    .pill .v{
-      font-size: 18px;
-      font-weight: 1000;
-      letter-spacing: -0.3px;
+    .v{
+      margin-top:6px;
+      font-size:18px;
+      font-weight:1000;
+      letter-spacing:-0.3px;
     }
 
     .note{
-      font-size: 12px;
-      font-weight: 900;
-      color: rgba(255,255,255,0.66);
-      line-height: 1.45;
       margin-top: 12px;
+      font-size:12px;
+      font-weight:900;
+      color: rgba(255,255,255,0.66);
+      line-height:1.45;
     }
 
     .spacer{ flex:1; }
 
     .btn{
-      height: 56px;
+      height: 58px;
       border-radius: 22px;
       border: none;
-      cursor: pointer;
-      font-weight: 1000;
-      font-size: 15px;
-      color: #fff;
+      cursor:pointer;
+      font-weight:1000;
+      font-size:15px;
+      color:#fff;
       background: linear-gradient(135deg, #A5B4FC, #4F46E5);
       box-shadow: 0 16px 44px rgba(79,70,229,.22);
     }
@@ -103,65 +155,58 @@
       border: 1px solid rgba(255,255,255,0.12);
       background: rgba(255,255,255,0.06);
       color:#fff;
-      font-weight: 1000;
-      font-size: 13px;
+      font-weight:1000;
+      font-size:13px;
       cursor:pointer;
     }
     .ghost:active{ transform: scale(.99); }
-
-    .langLine{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      margin-top: 10px;
-    }
-    .chip{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      padding:10px 12px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,0.10);
-      background: rgba(0,0,0,0.18);
-      font-weight: 1000;
-      font-size: 12px;
-      color: rgba(255,255,255,0.86);
-      white-space:nowrap;
-    }
   </style>
 </head>
 
 <body>
   <main id="pageContent">
     <div class="wrap">
-      <div class="card">
-        <h2 class="title">Seviye Tespit Sınavı</h2>
-        <div class="sub">Bu sınav dil seviyenizi belirlemek için hazırlanmıştır. Süre bitince otomatik tamamlanır.</div>
 
-        <div class="langLine" id="langLine"></div>
+      <section class="hero">
+        <div class="topRow">
+          <div class="teacherBadge">
+            <div class="flagBox"><span id="flag">🏳️</span></div>
+            <div class="who">
+              <div class="role" id="role">Dil Dersi</div>
+              <div class="name" id="teacherName">Öğretmen</div>
+            </div>
+          </div>
+        </div>
 
-        <div class="infoGrid">
-          <div class="pill">
+        <div class="title" id="headline">
+          Bu derse başlayabilmek için öncelikle seviye tespit sınavına katılmanız gereklidir.
+        </div>
+
+        <div class="desc">
+          Seviye tespit sınavı tamamlandıktan sonra size özel ders planı oluşturulacaktır.
+        </div>
+
+        <div class="rules">
+          <div class="rule">
             <div class="k">Soru</div>
             <div class="v">30</div>
           </div>
-          <div class="pill">
+          <div class="rule">
             <div class="k">Süre</div>
             <div class="v">15 dk</div>
           </div>
         </div>
 
         <div class="note">
+          • Süre dolunca sınav otomatik tamamlanır.<br/>
           • Sınav sırasında uygulamadan çıkmayınız.<br/>
-          • Sınavı yarıda bırakırsanız baştan başlar.<br/>
-          • Sonuca göre seviyeniz otomatik belirlenir.
+          • Sınavı yarıda bırakırsanız baştan başlar.
         </div>
-      </div>
+      </section>
 
       <div class="spacer"></div>
 
-      <button class="btn" id="btnStart" type="button">Sınava Başla</button>
+      <button class="btn" id="btnStart" type="button">Seviye Tespit Sınavına Başla</button>
       <button class="ghost" id="btnBack" type="button">Dil Seçimine Dön</button>
     </div>
   </main>
@@ -172,33 +217,31 @@
 
     const KEY_TEACHER = "italky_teacher_pref";
 
+    // teacher registry (teacher_select ile birebir aynı)
     const TEACHERS = {
-      dora:{flag:"🇬🇧", role:"İngilizce"},
-      ayda:{flag:"🇩🇪", role:"Almanca"},
-      jale:{flag:"🇫🇷", role:"Fransızca"},
-      ozan:{flag:"🇪🇸", role:"İspanyolca"},
-      sencer:{flag:"🇮🇹", role:"İtalyanca"},
-      sungur:{flag:"🇷🇺", role:"Rusça"},
-      huma:{flag:"🇯🇵", role:"Japonca"},
-      umay:{flag:"🇨🇳", role:"Çince"},
+      dora:{flag:"🇬🇧", role:"İngilizce Öğretmeni", name:"Dora"},
+      ayda:{flag:"🇩🇪", role:"Almanca Öğretmeni", name:"Ayda"},
+      jale:{flag:"🇫🇷", role:"Fransızca Öğretmeni", name:"Jale"},
+      ozan:{flag:"🇪🇸", role:"İspanyolca Öğretmeni", name:"Ozan"},
+      sencer:{flag:"🇮🇹", role:"İtalyanca Öğretmeni", name:"Sencer"},
+      sungur:{flag:"🇷🇺", role:"Rusça Öğretmeni", name:"Sungur"},
+      huma:{flag:"🇯🇵", role:"Japonca Öğretmeni", name:"Hüma"},
+      umay:{flag:"🇨🇳", role:"Çince Öğretmeni", name:"Umay"},
     };
 
     const sel = (localStorage.getItem(KEY_TEACHER) || "").trim();
-    const info = TEACHERS[sel];
+    const t = TEACHERS[sel];
 
-    // seçili dil yoksa geri
-    if(!info){
+    if(!t){
       location.href = "/pages/teacher_select.html";
-    } else {
-      const line = document.getElementById("langLine");
-      line.innerHTML = `
-        <div class="chip">${info.flag} Seçili Dil: ${info.role}</div>
-        <div class="chip">Hazır mısın?</div>
-      `;
+    }else{
+      document.getElementById("flag").textContent = t.flag;
+      document.getElementById("role").textContent = t.role;
+      document.getElementById("teacherName").textContent = t.name;
     }
 
     document.getElementById("btnStart").addEventListener("click", ()=>{
-      location.href = "/pages/level_test.html";  // ✅ 30 soru sayfası
+      location.href = "/pages/level_test.html";
     });
 
     document.getElementById("btnBack").addEventListener("click", ()=>{
