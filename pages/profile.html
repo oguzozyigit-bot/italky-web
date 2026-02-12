@@ -12,13 +12,12 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
   <style>
-    /* Bu sayfa HOME shell ile sarılacak. Buradaki CSS sadece içerik. */
     #pageContent{ height:100%; }
 
+    /* ✅ Scroll açık: bu wrapper main-content içinde kayar */
     .wrap{
-      height:100%;
+      min-height: 100%;
       padding: 12px 12px 18px;
-      overflow:hidden;
       display:flex;
       flex-direction:column;
       gap:12px;
@@ -45,6 +44,8 @@
       align-items:center;
       justify-content:center;
       font-weight:1000;
+      font-size:18px;
+      color:#fff;
     }
     .avatar img{ width:100%; height:100%; object-fit:cover; display:block; }
 
@@ -154,24 +155,25 @@
       flex:1;
       height:48px;
       border-radius:16px;
-      border:none;
       cursor:pointer;
       font-weight:1000;
       font-size:13px;
       color:#fff;
+      border:1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06);
     }
     .btn:active{ transform: scale(.99); }
 
-    /* ✅ Güvenli çıkış yeşil */
+    /* ✅ Yeşil çıkış */
     .btnSafe{
-      background: rgba(0, 200, 120, 0.18);
       border: 1px solid rgba(0, 200, 120, 0.35);
+      background: rgba(0, 200, 120, 0.18);
     }
 
-    /* ✅ Sil kırmızı */
+    /* ✅ Kırmızı sil */
     .btnDanger{
-      background: rgba(255, 60, 60, 0.16);
       border: 1px solid rgba(255, 60, 60, 0.35);
+      background: rgba(255, 60, 60, 0.16);
     }
 
     .footerNote{
@@ -180,6 +182,7 @@
       font-weight: 900;
       font-size: 10px;
       margin-top: 6px;
+      margin-bottom: 10px;
     }
 
     /* Confirm modal */
@@ -222,7 +225,6 @@
       flex:1;
       height:46px;
       border-radius:16px;
-      border:none;
       cursor:pointer;
       font-weight:1000;
       font-size:13px;
@@ -345,7 +347,6 @@
 
   <div id="toast" class="toast"></div>
 
-  <!-- Confirm Modal -->
   <div class="modalBack" id="confirmBack">
     <div class="modal">
       <h3>Emin misiniz?</h3>
@@ -362,7 +363,7 @@
     import { STORAGE_KEY } from "/js/config.js";
     import { applyI18n } from "/js/i18n.js";
 
-    mountShell(); // ✅ alt/üst bar var (Home ile aynı)
+    mountShell(); // ✅ scroll açık (default)
     try{ applyI18n(document); }catch{}
 
     const $ = (id)=>document.getElementById(id);
@@ -384,31 +385,25 @@
       for(let i=0;i<3;i++) s += A[Math.floor(Math.random()*A.length)];
       return s;
     }
-
     function randDigits6(){
       let s="";
       for(let i=0;i<6;i++) s += String(Math.floor(Math.random()*10));
       return s;
     }
-
-    // "birbirini takip etmeyen": ardışık 3+ rakam olmasın (123,234...) veya aynı 3+ tekrar (000,111)
     function digitsOk(d){
-      // 3'lü pencere kontrol
       for(let i=0;i<=d.length-3;i++){
         const a = Number(d[i]), b = Number(d[i+1]), c = Number(d[i+2]);
-        if(a+1===b && b+1===c) return false;        // artan ardışık
-        if(a-1===b && b-1===c) return false;        // azalan ardışık
-        if(a===b && b===c) return false;            // üçlü tekrar
+        if(a+1===b && b+1===c) return false; // 123
+        if(a-1===b && b-1===c) return false; // 321
+        if(a===b && b===c) return false;     // 000
       }
       return true;
     }
-
     function getOrCreateUserKey(){
       let k = (localStorage.getItem(USER_KEY_STORAGE) || "").trim();
       if(k && /^[A-Z]{3}\d{6}$/.test(k)) return k;
 
-      // üret
-      for(let tries=0; tries<50; tries++){
+      for(let tries=0; tries<80; tries++){
         const letters = randLetters3();
         const digits = randDigits6();
         if(!digitsOk(digits)) continue;
@@ -416,13 +411,11 @@
         localStorage.setItem(USER_KEY_STORAGE, k);
         return k;
       }
-      // fallback
       k = `${randLetters3()}${randDigits6()}`;
       localStorage.setItem(USER_KEY_STORAGE, k);
       return k;
     }
 
-    // ---- Profile fill (Google login STORAGE_KEY) ----
     function fillHeader(){
       const raw = localStorage.getItem(STORAGE_KEY);
       let name = "Kullanıcı";
@@ -440,65 +433,18 @@
 
       $("fullName").textContent = name || "Kullanıcı";
       $("email").textContent = email || "—";
+      $("userKeyPill").textContent = `KEY: ${getOrCreateUserKey()}`;
+
+      const isPremium = (localStorage.getItem("italky_is_premium") || "0")==="1";
+      $("planBadge").textContent = isPremium ? "PRO" : "FREE";
 
       if(pic){
         $("avatarBox").innerHTML = `<img src="${pic}" alt="">`;
       }else{
         $("avatarBox").textContent = (name && name[0]) ? name[0].toUpperCase() : "•";
       }
-
-      $("userKeyPill").textContent = `KEY: ${getOrCreateUserKey()}`;
-
-      // plan badge (şimdilik local)
-      const isPremium = (localStorage.getItem("italky_is_premium") || "0")==="1";
-      $("planBadge").textContent = isPremium ? "PRO" : "FREE";
     }
 
-    // ---- Language level + attempts (selected teacher) ----
-    function fillLevelBox(){
-      const sel = (localStorage.getItem("italky_teacher_pref") || "").trim();
-      const prof = JSON.parse(localStorage.getItem("italky_profile") || "{}");
-      const lang = (prof.languages && sel && prof.languages[sel]) ? prof.languages[sel] : null;
-
-      const labelMap = {
-        dora:"İngilizce", ayda:"Almanca", jale:"Fransızca", ozan:"İspanyolca",
-        sencer:"İtalyanca", sungur:"Rusça", huma:"Japonca", umay:"Çince"
-      };
-
-      const langName = labelMap[sel] || "Seçili Dil Yok";
-      $("lvlDesc").textContent = `Dil: ${langName}`;
-
-      $("levelVal").textContent = (lang && lang.level) ? lang.level : "—";
-      $("attemptVal").textContent = (lang && typeof lang.attempt_count === "number") ? String(lang.attempt_count) : "0";
-    }
-
-    // ---- Offline downloaded languages ----
-    function fillOffline(){
-      // beklenen: localStorage.italky_offline_langs = JSON ["en-tr","tr-en","de-tr"...] veya ["English","German"...]
-      let arr = [];
-      try{
-        const raw = localStorage.getItem("italky_offline_langs");
-        if(raw) arr = JSON.parse(raw);
-      }catch{}
-
-      const box = $("offlineList");
-      box.innerHTML = "";
-
-      if(!arr || !arr.length){
-        box.innerHTML = `<div class="tag">Henüz indirilmedi</div>`;
-        return;
-      }
-
-      arr.slice(0, 20).forEach(x=>{
-        const t = String(x);
-        const el = document.createElement("div");
-        el.className = "tag";
-        el.textContent = t;
-        box.appendChild(el);
-      });
-    }
-
-    // ---- System language select ----
     function fillLangSelect(){
       const select = $("siteLangSelect");
       const options = [
@@ -520,24 +466,56 @@
       });
     }
 
-    // ---- Logout / Delete ----
+    function fillLevelBox(){
+      const sel = (localStorage.getItem("italky_teacher_pref") || "").trim();
+      const prof = JSON.parse(localStorage.getItem("italky_profile") || "{}");
+      const lang = (prof.languages && sel && prof.languages[sel]) ? prof.languages[sel] : null;
+
+      const labelMap = {
+        dora:"İngilizce", ayda:"Almanca", jale:"Fransızca", ozan:"İspanyolca",
+        sencer:"İtalyanca", sungur:"Rusça", huma:"Japonca", umay:"Çince"
+      };
+      const langName = labelMap[sel] || "Seçili Dil Yok";
+      $("lvlDesc").textContent = `Dil: ${langName}`;
+
+      $("levelVal").textContent = (lang && lang.level) ? lang.level : "—";
+      $("attemptVal").textContent = (lang && typeof lang.attempt_count === "number") ? String(lang.attempt_count) : "0";
+    }
+
+    function fillOffline(){
+      let arr = [];
+      try{
+        const raw = localStorage.getItem("italky_offline_langs");
+        if(raw) arr = JSON.parse(raw);
+      }catch{}
+
+      const box = $("offlineList");
+      box.innerHTML = "";
+
+      if(!arr || !arr.length){
+        box.innerHTML = `<div class="tag">Henüz indirilmedi</div>`;
+        return;
+      }
+
+      arr.slice(0, 20).forEach(x=>{
+        const el = document.createElement("div");
+        el.className = "tag";
+        el.textContent = String(x);
+        box.appendChild(el);
+      });
+    }
+
+    // Logout
     $("logoutBtn").addEventListener("click", ()=>{
-      // güvenli çıkış: auth bilgisini temizle (ilerleme profili kalabilir)
       try{ localStorage.removeItem(STORAGE_KEY); }catch{}
       toast("Çıkış yapıldı");
       setTimeout(()=>location.href="/pages/home.html", 500);
     });
 
-    $("deleteBtn").addEventListener("click", ()=>{
-      $("confirmBack").style.display = "flex";
-    });
-
-    $("confirmNo").addEventListener("click", ()=>{
-      $("confirmBack").style.display = "none";
-    });
-
+    // Delete confirm
+    $("deleteBtn").addEventListener("click", ()=>{ $("confirmBack").style.display = "flex"; });
+    $("confirmNo").addEventListener("click", ()=>{ $("confirmBack").style.display = "none"; });
     $("confirmYes").addEventListener("click", ()=>{
-      // kalıcı sil: localStorage temizle
       try{
         localStorage.removeItem(STORAGE_KEY);
         localStorage.removeItem("italky_profile");
