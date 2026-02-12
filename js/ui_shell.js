@@ -1,11 +1,14 @@
 // FILE: /js/ui_shell.js
-// Home.html üst/alt barı HER SAYFAYA standart olarak basar.
+// Home.html üst/alt barı (isteğe bağlı) sayfalara standart olarak basar.
 // Kural: Sayfada <main id="pageContent"> ... </main> olmalı.
-// mountShell() çağırınca:
-// - Nebula + stars + app-shell kurar
-// - HOME premium-header + premium-footer'ı enjekte eder
-// - Sadece orta alan (main-content) scroll olur
-// - Footer imzası her sayfada aynı kalır
+//
+// mountShell(options) ile kontrol:
+//  - enabled: false -> hiç dokunma
+//  - header: false  -> header basma
+//  - footer: false  -> footer basma
+//  - background: false -> nebula/stars basma
+//  - scroll: "main" | "none"  -> main-content scroll kalsın mı? (default: "main")
+//  - maxWidth: "480px" gibi -> app-shell max-width override (default: 480px)
 
 import { STORAGE_KEY } from "/js/config.js";
 import { applyI18n } from "/js/i18n.js";
@@ -41,7 +44,6 @@ const HOME_FOOTER_HTML = `
 `;
 
 // HOME'dan taşınan CSS (sadece shell + header/footer + arkaplan)
-// Not: Diğer sayfaların kendi CSS'ini bozmaz; sadece üst/alt barı sabitler.
 const SHELL_CSS = `
 :root{
   --bg-void:#02000f;
@@ -137,7 +139,7 @@ html,body{
 }
 .avatar-circle img{ width:100%; height:100%; object-fit:cover; }
 
-/* MAIN CONTENT: sadece burası scroll */
+/* MAIN CONTENT */
 .main-content{
   flex:1;
   overflow-y:auto;
@@ -171,6 +173,16 @@ html,body{
   filter: drop-shadow(0 0 8px rgba(99,102,241,0.5));
   opacity:0.9;
 }
+
+/* header yokken yukarı boşluk olmasın */
+.app-shell.no-header .premium-header{ display:none; }
+
+/* footer yokken padding ve footerH etkisini kaldır */
+.app-shell.no-footer{ --footerH: 0px; }
+.app-shell.no-footer .premium-footer{ display:none; }
+
+/* scroll kapalı mod */
+.app-shell.no-scroll .main-content{ overflow:hidden; padding-bottom: 20px; }
 `;
 
 function ensureStyleOnce(){
@@ -195,39 +207,63 @@ function fillUser(){
   }catch{}
 }
 
-export function mountShell(){
+export function mountShell(options = {}){
+  const {
+    enabled = true,
+    header = true,
+    footer = true,
+    background = true,
+    scroll = "main",     // "main" | "none"
+    maxWidth = "480px"
+  } = options;
+
+  if(!enabled) return;
+
   ensureStyleOnce();
 
-  // pageContent bul
   const content = document.getElementById("pageContent");
   if(!content){
     console.error("mountShell: #pageContent yok.");
     return;
   }
 
-  // arkaplanları bas
-  if(!document.querySelector(".nebula-bg")){
-    const n = document.createElement("div");
-    n.className = "nebula-bg";
-    document.body.appendChild(n);
-  }
-  if(!document.querySelector(".stars-field")){
-    const s = document.createElement("div");
-    s.className = "stars-field";
-    document.body.appendChild(s);
+  // background
+  if(background){
+    if(!document.querySelector(".nebula-bg")){
+      const n = document.createElement("div");
+      n.className = "nebula-bg";
+      document.body.appendChild(n);
+    }
+    if(!document.querySelector(".stars-field")){
+      const s = document.createElement("div");
+      s.className = "stars-field";
+      document.body.appendChild(s);
+    }
   }
 
-  // app-shell oluştur
+  // app-shell
   const shell = document.createElement("div");
   shell.className = "app-shell";
-  shell.innerHTML = HOME_HEADER_HTML + `<main class="main-content"></main>` + HOME_FOOTER_HTML;
+
+  // maxWidth override (home ile aynı kalsın istiyorsan 480px bırak)
+  shell.style.maxWidth = maxWidth;
+
+  // header/footer HTML seçimi
+  const headerHTML = header ? HOME_HEADER_HTML : "";
+  const footerHTML = footer ? HOME_FOOTER_HTML : "";
+
+  shell.innerHTML = headerHTML + `<main class="main-content"></main>` + footerHTML;
+
+  // mode classları
+  if(!header) shell.classList.add("no-header");
+  if(!footer) shell.classList.add("no-footer");
+  if(scroll === "none") shell.classList.add("no-scroll");
 
   // content'i main-content içine taşı
   const main = shell.querySelector(".main-content");
   main.appendChild(content);
 
-  // body'yi temizle, shell'i bas
-  // (background divleri body'de kalır; shell en üstte)
+  // body'yi temizle (arka plan divleri kalabilir)
   const keep = Array.from(document.body.children).filter(el =>
     el.classList.contains("nebula-bg") || el.classList.contains("stars-field")
   );
@@ -235,7 +271,7 @@ export function mountShell(){
   keep.forEach(el=>document.body.appendChild(el));
   document.body.appendChild(shell);
 
-  // profile tık
+  // profile click (header yoksa zaten olmayacak)
   const pill = document.getElementById("shellUserPill");
   if(pill) pill.addEventListener("click", ()=> location.href="/pages/profile.html");
 
