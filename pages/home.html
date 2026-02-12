@@ -16,8 +16,8 @@
       --neon-glow: 0 0 20px rgba(99, 102, 241, 0.5);
       --ease-premium: cubic-bezier(0.22, 1, 0.36, 1);
 
-      /* ✅ ALT BAR GÜVENLİ: safe-area + ekstra boşluk */
-      --footerH: calc(120px + env(safe-area-inset-bottom, 0px) + 16px);
+      /* ✅ alt bar biraz küçültüldü */
+      --footerH: 104px;
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
@@ -49,31 +49,88 @@
       backdrop-filter: blur(30px);
     }
 
-    .premium-header { padding: calc(20px + env(safe-area-inset-top)) 24px 20px; display: flex; align-items: center; justify-content: space-between; }
+    .premium-header {
+      padding: calc(20px + env(safe-area-inset-top)) 24px 18px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
 
-    /* ✅ LOGO TIKLANABİLİR */
-    .brand-group{ cursor:pointer; user-select:none; }
-    .brand-group:active{ transform: scale(.99); opacity:.9; }
+    /* ✅ Logo tıklanabilir */
+    .brand-group{
+      cursor: pointer;
+      user-select: none;
+    }
+    .brand-group:active{ transform: scale(.99); opacity:.92; }
 
     .brand-group h1 { font-family: 'Space Grotesk', sans-serif; font-size: 32px; margin: 0; font-weight: 700; letter-spacing: -1px; }
     .brand-group h1 span { background: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 0 10px rgba(99, 102, 241, 0.4)); }
-    .brand-slogan { font-size: 11px; font-weight: 900; letter-spacing: 5px; color: var(--text-muted); text-transform: uppercase; }
+    .brand-slogan { font-size: 11px; font-weight: 900; letter-spacing: 5px; color: var(--text-muted); text-transform: uppercase; margin-top: 4px; }
 
-    .user-pill { display: flex; align-items: center; gap: 12px; padding: 6px 6px 6px 14px; border-radius: 40px; background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.15); box-shadow: var(--neon-glow); cursor: pointer; }
-    .user-pill .name { font-weight: 800; font-size: 13px; }
-    .user-pill .status { font-size: 10px; color: #a5b4fc; font-weight: 900; }
-    .avatar-circle { width: 36px; height: 36px; border-radius: 50%; border: 2px solid #6366f1; background: #222; overflow: hidden; }
+    /* ✅ User pill: çerçeve yok, unlimited yok, ortalı */
+    .user-pill {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+
+      padding: 0;
+      background: transparent;
+      border: none;
+      box-shadow: none;
+
+      cursor: pointer;
+      user-select: none;
+    }
+    .user-pill:active{ transform: scale(.99); opacity:.92; }
+
+    .user-pill .name {
+      font-weight: 900;
+      font-size: 14px;
+      text-align: center;
+      max-width: 170px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .user-pill .status { display: none; }
+
+    .avatar-circle {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      border: none;
+      background: #222;
+      overflow: hidden;
+    }
     .avatar-circle img { width: 100%; height: 100%; object-fit: cover; }
 
-    /* ✅ içerik footer'ın altına GİRMEZ */
-    .main-content { flex: 1; overflow-y: auto; padding: 10px 20px calc(var(--footerH) + 20px); scrollbar-width: none; }
+    .main-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px 20px calc(var(--footerH) + 26px);
+      scrollbar-width: none;
+    }
     .main-content::-webkit-scrollbar { display: none; }
     .grid-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
 
-    .premium-card { position: relative; background: linear-gradient(145deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 32px; padding: 24px 16px; display: flex; flex-direction: column; align-items: center; transition: all 0.4s var(--ease-premium); cursor: pointer; overflow: hidden; }
+    .premium-card {
+      position: relative;
+      background: linear-gradient(145deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 32px;
+      padding: 24px 16px;
+      display: flex; flex-direction: column; align-items: center;
+      transition: all 0.4s var(--ease-premium);
+      cursor: pointer;
+      overflow: hidden;
+    }
     .premium-card:active { transform: scale(0.94); background: rgba(255,255,255,0.1); }
 
-    .neon-icon-wrap { width: 62px; height: 56px; border-radius: 20px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; position: relative; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); }
+    .neon-icon-wrap {
+      width: 62px; height: 56px; border-radius: 20px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 16px; position: relative;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.12);
+    }
     .neon-icon-wrap::after { content: ""; position: absolute; inset: 0; border-radius: inherit; opacity: 0.8; z-index: 1; }
     .premium-card svg { width: 30px; height: 30px; stroke: #fff; fill: none; stroke-width: 2.2; z-index: 2; }
 
@@ -89,30 +146,40 @@
     .card-title { font-size: 18px; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
     .card-desc { font-size: 11px; color: var(--text-muted); font-weight: 600; margin-top: 4px; text-align:center; }
 
+    /* ✅ Footer biraz aşağı ve kompakt */
     .premium-footer {
       position: absolute; bottom: 0; width: 100%; height: var(--footerH);
-      background: linear-gradient(to top, rgba(2, 0, 15, 1) 80%, transparent);
+      background: linear-gradient(to top, rgba(2, 0, 15, 1) 86%, transparent);
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      border-top: 1px solid rgba(255,255,255,0.08); z-index: 20;
-
-      /* ✅ safe-area padding */
-      padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px) + 10px);
+      border-top: 1px solid rgba(255,255,255,0.08);
+      z-index: 20;
+      padding-bottom: calc(8px + env(safe-area-inset-bottom));
     }
-    .footer-nav { display: flex; gap: 24px; margin-bottom: 16px; }
+    .footer-nav {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 10px;
+    }
     .footer-nav a {
-      font-size: 12px; font-weight: 800; color: rgba(255,255,255,0.5);
-      text-decoration: none; text-transform: uppercase; letter-spacing: 1px;
+      font-size: 11px;
+      font-weight: 900;
+      color: rgba(255,255,255,0.5);
+      text-decoration: none;
+      text-transform: uppercase;
+      letter-spacing: 1px;
       transition: color 0.2s;
     }
     .footer-nav a:active { color: #6366f1; }
 
     .prestige-signature {
-      font-size: 12px; font-weight: 900;
+      font-size: 11px;
+      font-weight: 900;
       letter-spacing: 1.5px;
       background: linear-gradient(to right, #ffffff 0%, #6366f1 50%, #ffffff 100%);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
       filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.5));
       opacity: 0.9;
+      transform: translateY(2px); /* ✅ bir tık aşağı */
     }
   </style>
 </head>
@@ -123,16 +190,13 @@
 
   <div class="app-shell">
     <header class="premium-header">
-      <!-- ✅ ID eklendi -->
-      <div class="brand-group" id="goHome">
+      <div class="brand-group" id="homeLogo">
         <h1>italky<span>AI</span></h1>
         <div class="brand-slogan">Be Free</div>
       </div>
+
       <div class="user-pill" onclick="location.href='/pages/profile.html'">
-        <div style="display:flex; flex-direction:column; align-items:flex-end">
-          <span class="name" id="userName">Kullanıcı</span>
-          <span class="status">UNLIMITED</span>
-        </div>
+        <span class="name" id="userName">Kullanıcı</span>
         <div class="avatar-circle">
           <img src="" id="userPic" alt="">
         </div>
@@ -161,7 +225,7 @@
         </div>
 
         <div class="premium-card card-chat" data-href="/pages/chat.html">
-          <div class="neon-icon-wrap"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 1 1-7.6-13.5 a8.38 8.38 0 0 1 3.8.9L21 3z"/></svg></div>
+          <div class="neon-icon-wrap"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 1 1-7.6-13.5 8.38 8.38 0 0 1 3.8.9L21 3z"/></svg></div>
           <span class="card-title">Sohbet AI</span>
           <span class="card-desc">Akıllı Asistan Sohbeti</span>
         </div>
@@ -220,17 +284,17 @@
     function boot() {
       applyI18n(document);
 
+      // ✅ logo -> home
+      document.getElementById("homeLogo")?.addEventListener("click", ()=>{
+        location.href = "/pages/home.html";
+      });
+
       const raw = localStorage.getItem(STORAGE_KEY);
       if(raw) {
         const u = JSON.parse(raw);
-        document.getElementById("userName").textContent = u.name || "Kullanıcı";
+        document.getElementById("userName").textContent = u.name || u.fullname || "Kullanıcı";
         if(u.picture) document.getElementById("userPic").src = u.picture;
       }
-
-      // ✅ logo tıkla -> home
-      document.getElementById("goHome")?.addEventListener("click", ()=>{
-        location.href = "/pages/home.html";
-      });
 
       bindCardNav();
     }
