@@ -19,7 +19,13 @@
 
       --footerH: 92px;
       --bar-bg: rgba(0,0,0,0.18);
-      --edgePad: 14px;
+
+      /* ✅ scroll yok => padding biraz sıkı */
+      --edgePad: 12px;
+
+      /* ✅ grid fit vars */
+      --gap: 14px;
+      --rowH: 120px; /* JS hesaplayacak */
     }
 
     *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; }
@@ -34,12 +40,13 @@
     .nebula-bg{
       position:absolute; inset:-10%; width:120%; height:120%;
       background:
-        radial-gradient(circle at 20% 20%, rgba(79, 70, 229, 0.38) 0%, transparent 40%),
-        radial-gradient(circle at 80% 80%, rgba(168, 85, 247, 0.28) 0%, transparent 40%),
+        radial-gradient(circle at 20% 20%, rgba(79, 70, 229, 0.42) 0%, transparent 40%),
+        radial-gradient(circle at 80% 80%, rgba(168, 85, 247, 0.34) 0%, transparent 40%),
         radial-gradient(circle at 50% 50%, rgba(30, 0, 60, 1) 0%, #02000f 100%);
       filter: blur(60px);
       z-index:0;
       animation: nebulaPulse 15s infinite alternate ease-in-out;
+      pointer-events:none;
     }
     @keyframes nebulaPulse{
       from{ transform: scale(1) rotate(0deg); }
@@ -75,6 +82,7 @@
       border-bottom: 1px solid rgba(255,255,255,0.08);
       backdrop-filter: blur(30px);
       -webkit-backdrop-filter: blur(30px);
+      flex: 0 0 auto;
     }
 
     .brand-group{ cursor:pointer; user-select:none; }
@@ -136,31 +144,27 @@
       background: rgba(255,255,255,0.10);
       flex: 0 0 auto;
     }
-    .avatar img{
-      width:100%;
-      height:100%;
-      object-fit:cover;
-      display:block;
-    }
+    .avatar img{ width:100%; height:100%; object-fit:cover; display:block; }
 
+    /* ✅ scroll yok */
     .main-content{
       flex:1;
-      overflow-y:auto;
-      padding: var(--edgePad) 20px calc(var(--footerH) + var(--edgePad) + env(safe-area-inset-bottom));
-      scrollbar-width:none;
+      overflow:hidden;
+      padding: var(--edgePad) 18px calc(var(--footerH) + var(--edgePad) + env(safe-area-inset-bottom));
     }
-    .main-content::-webkit-scrollbar{ display:none; }
 
-    /* ✅ TILE LAYOUT (renkli + farklı boylar) */
+    /* ✅ tile layout */
     .tiles{
+      height: 100%;
       display:grid;
-      gap:14px;
+      gap: var(--gap);
       grid-template-columns: 1fr 1fr;
       grid-template-areas:
         "a b"
         "c c"
         "d e"
         "f g";
+      grid-auto-rows: var(--rowH); /* JS ile fit */
     }
 
     .tile{
@@ -169,27 +173,35 @@
       border: 1px solid rgba(255,255,255,0.10);
       overflow:hidden;
       cursor:pointer;
-      padding: 18px 14px;
-      transition: all .35s var(--ease-premium);
+      padding: 16px 14px;
+      transition: all .30s var(--ease-premium);
       background: rgba(255,255,255,0.06);
+      user-select:none;
     }
     .tile:active{ transform: scale(0.95); }
 
-    .tile.big{ padding: 20px 16px; }
+    .tile::before{
+      content:"";
+      position:absolute; inset:0;
+      opacity:.95;
+      pointer-events:none;
+      background: radial-gradient(circle at 30% 20%, rgba(255,255,255,0.18), transparent 55%);
+    }
 
     .tile .icon{
-      width:60px; height:54px;
+      width:62px; height:56px;
       border-radius:20px;
       display:flex; align-items:center; justify-content:center;
-      margin-bottom: 12px;
-      border:1px solid rgba(255,255,255,0.14);
-      background: rgba(255,255,255,0.06);
+      margin-bottom: 10px;
+      border:1px solid rgba(255,255,255,0.16);
+      background: rgba(0,0,0,0.16);
+      backdrop-filter: blur(10px);
     }
     .tile svg{
       width:28px; height:28px;
       fill:none;
-      stroke-width:2.5;
-      opacity:.95;
+      stroke-width:2.6;
+      opacity:.98;
     }
 
     .tTitle{
@@ -197,44 +209,36 @@
       font-weight:1000;
       letter-spacing:-0.4px;
       color:#fff;
-      line-height:1.1;
+      line-height:1.05;
     }
     .tDesc{
       margin-top:6px;
       font-size:12px;
       font-weight:900;
-      color: rgba(255,255,255,0.70);
-      line-height:1.35;
+      color: rgba(255,255,255,0.72);
+      line-height:1.3;
     }
 
-    /* Grid areas */
-    .tile.a{ grid-area:a; }
-    .tile.b{ grid-area:b; }
-    .tile.c{ grid-area:c; }
-    .tile.d{ grid-area:d; }
-    .tile.e{ grid-area:e; }
-    .tile.f{ grid-area:f; }
-    .tile.g{ grid-area:g; }
+    .a{ grid-area:a; } .b{ grid-area:b; } .c{ grid-area:c; }
+    .d{ grid-area:d; } .e{ grid-area:e; } .f{ grid-area:f; } .g{ grid-area:g; }
 
-    /* ✅ Renk temaları (pastel neon) */
-    .pink { background: linear-gradient(145deg, rgba(250,112,154,0.24), rgba(255,255,255,0.04)); }
-    .purple{ background: linear-gradient(145deg, rgba(165,180,252,0.22), rgba(255,255,255,0.04)); }
-    .green { background: linear-gradient(145deg, rgba(56,249,215,0.18), rgba(255,255,255,0.04)); }
-    .blue  { background: linear-gradient(145deg, rgba(79,172,254,0.22), rgba(255,255,255,0.04)); }
-    .orange{ background: linear-gradient(145deg, rgba(255,154,158,0.22), rgba(255,255,255,0.04)); }
-    .indigo{ background: linear-gradient(145deg, rgba(102,126,234,0.22), rgba(255,255,255,0.04)); }
-    .violet{ background: linear-gradient(145deg, rgba(213,126,235,0.20), rgba(255,255,255,0.04)); }
+    /* ✅ Daha renkli */
+    .pink { background: linear-gradient(145deg, rgba(250,112,154,0.36), rgba(255,255,255,0.04)); box-shadow: 0 0 30px rgba(250,112,154,0.12); }
+    .purple{ background: linear-gradient(145deg, rgba(165,180,252,0.34), rgba(255,255,255,0.04)); box-shadow: 0 0 30px rgba(165,180,252,0.12); }
+    .green { background: linear-gradient(145deg, rgba(56,249,215,0.30), rgba(255,255,255,0.04)); box-shadow: 0 0 30px rgba(56,249,215,0.10); }
+    .blue  { background: linear-gradient(145deg, rgba(79,172,254,0.34), rgba(255,255,255,0.04)); box-shadow: 0 0 30px rgba(79,172,254,0.12); }
+    .orange{ background: linear-gradient(145deg, rgba(255,154,158,0.34), rgba(255,255,255,0.04)); box-shadow: 0 0 30px rgba(255,154,158,0.10); }
+    .indigo{ background: linear-gradient(145deg, rgba(102,126,234,0.34), rgba(255,255,255,0.04)); box-shadow: 0 0 30px rgba(102,126,234,0.12); }
+    .violet{ background: linear-gradient(145deg, rgba(213,126,235,0.32), rgba(255,255,255,0.04)); box-shadow: 0 0 30px rgba(213,126,235,0.12); }
 
-    /* Icon strokes */
-    .pink svg{ stroke: rgba(250,112,154,0.95); }
-    .purple svg{ stroke: rgba(165,180,252,0.95); }
-    .green svg{ stroke: rgba(56,249,215,0.95); }
-    .blue svg{ stroke: rgba(79,172,254,0.95); }
-    .orange svg{ stroke: rgba(255,154,158,0.95); }
-    .indigo svg{ stroke: rgba(102,126,234,0.95); }
-    .violet svg{ stroke: rgba(213,126,235,0.95); }
+    .pink svg{ stroke: rgba(250,112,154,0.98); }
+    .purple svg{ stroke: rgba(165,180,252,0.98); }
+    .green svg{ stroke: rgba(56,249,215,0.98); }
+    .blue svg{ stroke: rgba(79,172,254,0.98); }
+    .orange svg{ stroke: rgba(255,154,158,0.98); }
+    .indigo svg{ stroke: rgba(102,126,234,0.98); }
+    .violet svg{ stroke: rgba(213,126,235,0.98); }
 
-    /* Footer */
     .premium-footer{
       position: fixed;
       left: 50%;
@@ -259,7 +263,6 @@
       backdrop-filter: blur(30px);
       -webkit-backdrop-filter: blur(30px);
     }
-
     .footer-nav{
       display:flex;
       gap: 22px;
@@ -278,7 +281,6 @@
       letter-spacing: 1px;
     }
     .footer-nav a:active{ opacity:.85; }
-
     .prestige-signature{
       font-size: 12px;
       font-weight: 900;
@@ -310,10 +312,9 @@
       </div>
     </header>
 
-    <main class="main-content">
-      <div class="tiles">
+    <main class="main-content" id="mainContent">
+      <div class="tiles" id="tiles">
 
-        <!-- a: Yüzyüze -->
         <div class="tile a blue" data-href="/pages/facetoface.html">
           <div class="icon">
             <svg viewBox="0 0 24 24">
@@ -327,7 +328,6 @@
           <div class="tDesc">Anlık Karşılıklı Çeviri</div>
         </div>
 
-        <!-- b: Dil Kursu -->
         <div class="tile b pink" data-href="/pages/teacher_select.html">
           <div class="icon">
             <svg viewBox="0 0 24 24">
@@ -340,8 +340,7 @@
           <div class="tDesc">Öğretmenle Günlük Ders</div>
         </div>
 
-        <!-- c: Offline Translate (big wide) -->
-        <div class="tile c big green" data-href="/pages/offline.html">
+        <div class="tile c green" data-href="/pages/offline.html">
           <div class="icon">
             <svg viewBox="0 0 24 24">
               <path d="M4 7h16M4 12h16M4 17h10"/>
@@ -350,21 +349,19 @@
             </svg>
           </div>
           <div class="tTitle">Offline Çeviri</div>
-          <div class="tDesc">İndir • Süreli Paket • Hızlı Kullanım</div>
+          <div class="tDesc">İndir • Süreli Paket</div>
         </div>
 
-        <!-- d: Metin Çeviri -->
         <div class="tile d violet" data-href="/pages/text_translate.html">
           <div class="icon">
             <svg viewBox="0 0 24 24">
               <path d="M4 7h16M4 12h16M4 17h10"/>
             </svg>
           </div>
-          <div class="tTitle">Metin Çeviri</div>
-          <div class="tDesc">Hızlı ve Doğru</div>
+          <div class="tTitle">Metin</div>
+          <div class="tDesc">Hızlı Çeviri</div>
         </div>
 
-        <!-- e: Foto Çeviri -->
         <div class="tile e indigo" data-href="/pages/photo.html">
           <div class="icon">
             <svg viewBox="0 0 24 24">
@@ -372,11 +369,10 @@
               <circle cx="12" cy="13" r="4"/>
             </svg>
           </div>
-          <div class="tTitle">Foto Çeviri</div>
+          <div class="tTitle">Foto</div>
           <div class="tDesc">Görselden Çevir</div>
         </div>
 
-        <!-- f: Belge Çeviri -->
         <div class="tile f purple" data-href="/pages/document.html">
           <div class="icon">
             <svg viewBox="0 0 24 24">
@@ -384,11 +380,10 @@
               <polyline points="14 2 14 8 20 8"/>
             </svg>
           </div>
-          <div class="tTitle">Belge Çeviri</div>
+          <div class="tTitle">Belge</div>
           <div class="tDesc">PDF • Dosya</div>
         </div>
 
-        <!-- g: Oyunlar -->
         <div class="tile g orange" data-href="/pages/game.html">
           <div class="icon">
             <svg viewBox="0 0 24 24">
@@ -428,6 +423,29 @@
       });
     }
 
+    function fitTiles(){
+      const main = document.getElementById("mainContent");
+      const tiles = document.getElementById("tiles");
+      if(!main || !tiles) return;
+
+      const gap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--gap")) || 14;
+
+      // 4 row: a/b, c, d/e, f/g  => total rows 4
+      const rows = 4;
+
+      const h = main.clientHeight; // padding dahil değil (main padding var ama content area)
+      // tiles container height is 100% of main content box
+      const innerH = tiles.clientHeight; // already equals main content height
+      let rowH = (innerH - gap * (rows - 1)) / rows;
+
+      // safety clamp
+      rowH = Math.max(92, Math.min(150, rowH));
+      document.documentElement.style.setProperty("--rowH", rowH + "px");
+
+      // icon box scale a bit with row height
+      // (keep it simple; CSS already ok)
+    }
+
     function boot(){
       applyI18n(document);
       document.getElementById("brandHome")?.addEventListener("click", ()=>location.href="/pages/home.html");
@@ -439,10 +457,13 @@
         document.getElementById("userName").textContent = u.name || "Kullanıcı";
         if(u.picture) document.getElementById("userPic").src = u.picture;
       }
+
       bindNav();
+      requestAnimationFrame(()=>fitTiles());
+      window.addEventListener("resize", ()=>fitTiles());
     }
+
     boot();
   </script>
 </body>
 </html>
-```0
