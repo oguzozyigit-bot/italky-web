@@ -12,111 +12,107 @@
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
 <style>
-#pageContent{ height:100%; }
+  #pageContent{ height:100%; }
 
-/* ✅ Üst-alt eşit boşluk */
-.wrap{
-  height:100%;
-  padding:16px 16px; /* sağ-sol eşit */
-  overflow:hidden;
-  display:flex;
-}
+  /* ✅ Home gibi dengeli boşluk */
+  .wrap{
+    height:100%;
+    padding: 16px 18px; /* üst-alt / sağ-sol dengeli */
+    overflow:hidden;
+    display:flex;
+  }
 
-/* ✅ Grid alanı tüm orta alanı doldurur */
-.grid{
-  flex:1;
-  width:100%;
-  display:grid;
-  grid-template-columns: 1fr 1fr;
-  gap:18px;                 /* yan ve alt boşluk eşit */
-  grid-auto-rows: var(--cardH);
-}
+  /* ✅ Grid tüm alanı doldurur, kartlar aynı boy */
+  .grid{
+    flex:1;
+    width:100%;
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    grid-auto-rows: var(--cardH);
+  }
 
-/* ✅ Kart büyüdü */
-.card{
-  height: var(--cardH);
-  border-radius:30px;
-  border:1px solid rgba(255,255,255,0.12);
-  background: linear-gradient(
-    145deg,
-    rgba(255,255,255,0.08),
-    rgba(255,255,255,0.03)
-  );
-  padding:22px;
-  cursor:pointer;
-  transition:.25s;
-  display:flex;
-  flex-direction:column;
-  justify-content:flex-end;
-  position:relative;
-}
-.card:active{ transform:scale(.95); }
+  /* ✅ Home kart hissi */
+  .card{
+    height: var(--cardH);
+    border-radius: 30px;
+    border: 1px solid rgba(255,255,255,0.10);
+    background: linear-gradient(145deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%);
+    padding: 18px 16px;
+    cursor:pointer;
+    transition: all .25s cubic-bezier(0.22, 1, 0.36, 1);
+    user-select:none;
+    overflow:hidden;
 
-/* sağ üst küçük rozet */
-.badge{
-  position:absolute;
-  top:18px;
-  right:18px;
-  width:42px;
-  height:42px;
-  border-radius:999px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:20px;
-  border:1px solid rgba(255,255,255,.15);
-  background:rgba(0,0,0,.18);
-  backdrop-filter:blur(8px);
-}
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    gap: 10px;
+  }
+  .card:active{ transform: scale(.94); background: rgba(255,255,255,0.10); }
 
-/* büyük bayrak */
-.flag{
-  position:absolute;
-  top:28px;
-  left:28px;
-  font-size: var(--flagSize);
-  line-height:1;
-  filter: drop-shadow(0 0 12px rgba(255,255,255,.18));
-}
+  /* ✅ Home’daki ikon kutusu gibi */
+  .iconWrap{
+    width: 78px;
+    height: 78px;
+    border-radius: 26px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.12);
+    box-shadow: 0 10px 26px rgba(0,0,0,0.25) inset;
+  }
 
-/* isim */
-.name{
-  font-size: var(--nameSize);
-  font-weight:1000;
-  letter-spacing:-0.5px;
-  line-height:1.05;
-  margin-top: calc(var(--flagSize) * 0.9);
-}
+  /* ✅ Bayrak küçük */
+  .flag{
+    font-size: var(--flagSize);
+    line-height:1;
+    filter: drop-shadow(0 0 10px rgba(255,255,255,0.10));
+  }
 
-/* alt açıklama */
-.sub{
-  margin-top:10px;
-  font-size:14px;
-  font-weight:900;
-  color:rgba(255,255,255,.6);
-}
+  /* ✅ önce rol (küçük) */
+  .role{
+    font-size: var(--roleSize);
+    font-weight: 900;
+    color: rgba(255,255,255,0.68);
+    line-height:1.15;
+  }
 
-/* toast */
-.toast{
-  position: fixed;
-  left:50%;
-  top:18px;
-  transform:translateX(-50%) translateY(-120px);
-  background:rgba(10,10,18,.92);
-  border:1px solid rgba(165,180,252,.35);
-  padding:10px 14px;
-  border-radius:999px;
-  color:#fff;
-  font-weight:900;
-  font-size:12px;
-  transition:.28s;
-}
-.toast.show{ transform:translateX(-50%) translateY(0); }
+  /* ✅ sonra isim (büyük ve belirgin) */
+  .name{
+    font-size: var(--nameSize);
+    font-weight: 1000;
+    letter-spacing: -0.4px;
+    line-height:1.05;
+    color:#fff;
+  }
+
+  /* toast (opsiyonel) */
+  .toast{
+    position: fixed;
+    left:50%;
+    top:18px;
+    transform:translateX(-50%) translateY(-120px);
+    background:rgba(10,10,18,.92);
+    border:1px solid rgba(165,180,252,.35);
+    padding:10px 14px;
+    border-radius:999px;
+    color:#fff;
+    z-index:99999;
+    font-weight:900;
+    font-size:12px;
+    transition:.28s;
+    backdrop-filter: blur(12px);
+    pointer-events:none;
+  }
+  .toast.show{ transform:translateX(-50%) translateY(0); }
 </style>
 </head>
 
 <body>
-
 <main id="pageContent">
   <div class="wrap">
     <div class="grid" id="teacherGrid"></div>
@@ -126,75 +122,78 @@
 <div class="toast" id="toast"></div>
 
 <script type="module">
-import { mountShell } from "/js/ui_shell.js";
-mountShell({ scroll:"none" });
+  import { mountShell } from "/js/ui_shell.js";
+  mountShell({ scroll:"none" });
 
-const KEY_TEACHER="italky_teacher_pref";
-const KEY_LEVEL_DONE="italky_level_done";
-const KEY_PLAN="italky_plan_pref";
-const KEY_MINS="italky_lesson_mins";
+  const KEY_TEACHER="italky_teacher_pref";
+  const KEY_LEVEL_DONE="italky_level_done";
+  const KEY_PLAN="italky_plan_pref";
+  const KEY_MINS="italky_lesson_mins";
 
-const TEACHERS=[
-{ id:"dora",flag:"🇬🇧",title:"İngilizce Öğretmeni",name:"Dora"},
-{ id:"ayda",flag:"🇩🇪",title:"Almanca Öğretmeni",name:"Ayda"},
-{ id:"jale",flag:"🇫🇷",title:"Fransızca Öğretmeni",name:"Jale"},
-{ id:"ozan",flag:"🇪🇸",title:"İspanyolca Öğretmeni",name:"Ozan"},
-{ id:"sencer",flag:"🇮🇹",title:"İtalyanca Öğretmeni",name:"Sencer"},
-{ id:"sungur",flag:"🇷🇺",title:"Rusça Öğretmeni",name:"Sungur"},
-{ id:"huma",flag:"🇯🇵",title:"Japonca Öğretmeni",name:"Hüma"},
-{ id:"umay",flag:"🇨🇳",title:"Çince Öğretmeni",name:"Umay"}
-];
+  const TEACHERS = [
+    { id:"dora",   flag:"🇬🇧", role:"İngilizce Öğretmeni",   name:"Dora" },
+    { id:"ayda",   flag:"🇩🇪", role:"Almanca Öğretmeni",     name:"Ayda" },
+    { id:"jale",   flag:"🇫🇷", role:"Fransızca Öğretmeni",   name:"Jale" },
+    { id:"ozan",   flag:"🇪🇸", role:"İspanyolca Öğretmeni",  name:"Ozan" },
+    { id:"sencer", flag:"🇮🇹", role:"İtalyanca Öğretmeni",   name:"Sencer" },
+    { id:"sungur", flag:"🇷🇺", role:"Rusça Öğretmeni",       name:"Sungur" },
+    { id:"huma",   flag:"🇯🇵", role:"Japonca Öğretmeni",     name:"Hüma" },
+    { id:"umay",   flag:"🇨🇳", role:"Çince Öğretmeni",       name:"Umay" },
+  ];
 
-const $=id=>document.getElementById(id);
+  const $ = (id)=>document.getElementById(id);
 
-function goNext(){
-const levelDone=(localStorage.getItem(KEY_LEVEL_DONE)||"")==="1";
-if(!levelDone){location.href="/pages/level_test.html";return;}
-const plan=(localStorage.getItem(KEY_PLAN)||"").trim();
-const mins=(localStorage.getItem(KEY_MINS)||"").trim();
-if(plan&&mins){location.href="/pages/teacher_course.html";}
-else{location.href="/pages/plan_select.html";}
-}
+  function goNext(){
+    const levelDone = (localStorage.getItem(KEY_LEVEL_DONE)||"")==="1";
+    if(!levelDone){ location.href="/pages/level_test.html"; return; }
 
-function render(){
-const grid=$("teacherGrid");
-grid.innerHTML=TEACHERS.map(t=>`
-<div class="card" data-id="${t.id}">
-<div class="badge">${t.flag}</div>
-<div class="flag">${t.flag}</div>
-<div class="name">${t.name}</div>
-<div class="sub">${t.title}</div>
-</div>`).join("");
+    const plan = (localStorage.getItem(KEY_PLAN)||"").trim();
+    const mins = (localStorage.getItem(KEY_MINS)||"").trim();
+    if(plan && mins) location.href="/pages/teacher_course.html";
+    else location.href="/pages/plan_select.html";
+  }
 
-grid.querySelectorAll(".card").forEach(c=>{
-c.addEventListener("click",()=>{
-localStorage.setItem(KEY_TEACHER,c.getAttribute("data-id"));
-goNext();
-});
-});
-}
+  function render(){
+    const grid = $("teacherGrid");
+    grid.innerHTML = TEACHERS.map(t=>`
+      <div class="card" data-id="${t.id}">
+        <div class="iconWrap"><div class="flag">${t.flag}</div></div>
+        <div class="role">${t.role}</div>
+        <div class="name">${t.name}</div>
+      </div>
+    `).join("");
 
-/* ✅ Kart boyutunu ekranın orta alanına göre ayarla */
-function fit(){
-const headerH=document.querySelector(".premium-header").offsetHeight;
-const footerH=document.querySelector(".premium-footer").offsetHeight;
-const usable=window.innerHeight-headerH-footerH-32;
+    grid.querySelectorAll(".card").forEach(c=>{
+      c.addEventListener("click", ()=>{
+        localStorage.setItem(KEY_TEACHER, c.getAttribute("data-id"));
+        goNext();
+      });
+    });
+  }
 
-const rows=4;
-const gap=18;
+  /* ✅ Kartlar sayfaya dağılsın (aşağı kayma yok) */
+  function fit(){
+    const headerH = document.querySelector(".premium-header")?.offsetHeight || 0;
+    const footerH = document.querySelector(".premium-footer")?.offsetHeight || 0;
 
-let cardH=(usable-(gap*(rows-1)))/rows;
-cardH=Math.max(170,Math.min(240,cardH));
+    // wrap padding (16 + 16) ve küçük güvenlik payı
+    const usable = window.innerHeight - headerH - footerH - 40;
 
-document.documentElement.style.setProperty("--cardH",cardH+"px");
-document.documentElement.style.setProperty("--flagSize",(cardH*0.40)+"px");
-document.documentElement.style.setProperty("--nameSize",(cardH*0.18)+"px");
-}
+    const rows = 4;   // 8 kart => 4 satır
+    const gap = 18;
 
-render();
-requestAnimationFrame(()=>fit());
-window.addEventListener("resize",fit);
+    let cardH = (usable - (gap*(rows-1))) / rows;
+    cardH = Math.max(150, Math.min(210, cardH)); // dengeli sınır
+
+    document.documentElement.style.setProperty("--cardH", cardH + "px");
+    document.documentElement.style.setProperty("--flagSize", Math.max(26, Math.min(34, cardH*0.18)) + "px");
+    document.documentElement.style.setProperty("--roleSize", Math.max(12, Math.min(14, cardH*0.09)) + "px");
+    document.documentElement.style.setProperty("--nameSize", Math.max(18, Math.min(22, cardH*0.13)) + "px");
+  }
+
+  render();
+  requestAnimationFrame(()=>fit());
+  window.addEventListener("resize", fit);
 </script>
-
 </body>
 </html>
