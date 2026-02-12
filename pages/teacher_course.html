@@ -1,169 +1,172 @@
-<!-- FILE: /pages/teacher_course.html -->
+<!-- FILE: /pages/teacher_select.html -->
 <!DOCTYPE html>
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>italkyAI • Teacher Course</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>italkyAI • Dil Kursu</title>
   <link rel="icon" href="data:," />
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
   <style>
-    :root{
-      --frameW: min(480px, calc(100vw - 18px));
-      --topH: 74px;
-      --footerH: 66px;
-      --dockH: 70px;
+    /* ✅ Bu sayfa HOME shell ile sarılacak. Buradaki CSS sadece içerik için. */
 
-      --bg:#030014;
-      --text: rgba(255,255,255,.92);
-      --muted: rgba(255,255,255,.60);
-      --border: rgba(255,255,255,.10);
-
-      --ai1:#A5B4FC;
-      --ai2:#4F46E5;
-      --befree:#6B7280;
-
-      --card: rgba(0,0,0,.18);
-      --glass: rgba(255,255,255,.04);
-    }
-
-    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; }
-    html,body{
-      margin:0; padding:0; width:100%; height:100dvh;
-      overflow:hidden; position:fixed;
-      font-family:'Outfit', sans-serif;
-      background:var(--bg);
-      color:var(--text);
-      display:flex; align-items:center; justify-content:center;
-    }
-
-    .cosmos-bg{ position:absolute; inset:-50%; width:200%; height:200%; background:var(--bg); z-index:0; pointer-events:none; }
-    .orb{ position:absolute; border-radius:50%; filter: blur(90px); opacity:.28; animation: floatOrbit 30s infinite alternate ease-in-out; }
-    .orb-1{ top:10%; left:10%; width:60vw; height:60vw; background: radial-gradient(circle, rgba(79,70,229,.55), transparent 70%); }
-    .orb-2{ bottom:10%; right:10%; width:50vw; height:50vw; background: radial-gradient(circle, rgba(165,180,252,.45), transparent 70%); animation-delay:-5s; }
-    @keyframes floatOrbit{ 0%{ transform: translate(0,0) scale(1);} 100%{ transform: translate(10%,-10%) scale(1.1);} }
-    .noise{ position:absolute; inset:0; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E"); pointer-events:none; mix-blend-mode:overlay; z-index:1; }
-
-    .mobile-frame{
-      width:100%; max-width:480px; height:100%;
-      position:relative; z-index:10;
-      background: rgba(8, 8, 20, 0.65);
-      backdrop-filter: blur(25px);
-      overflow:hidden;
-      display:flex; flex-direction:column;
-    }
-
-    .topbar{
-      position: sticky; top:0; z-index: 3000;
-      height: var(--topH);
-      display:flex; align-items:center; justify-content:space-between;
-      padding: 0 12px;
-      border-bottom:1px solid rgba(255,255,255,.08);
-      background: rgba(0,0,0,.35);
-      backdrop-filter: blur(12px);
-    }
-    .backBtn{
-      width:44px;height:44px;border-radius:16px;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(0,0,0,.18);
-      color:#fff;
-      font-size:20px;font-weight:1000;
-      display:flex;align-items:center;justify-content:center;
-      cursor:pointer; user-select:none;
-    }
-
-    .mini-brand{display:flex;flex-direction:column;align-items:center;line-height:1;cursor:pointer}
-    .logo-line{font-family:'Space Grotesk', sans-serif;font-size:20px;display:flex;gap:2px}
-    .logo-ai{background:linear-gradient(135deg,var(--ai1),var(--ai2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-    .logo-slogan{font-size:10px;font-weight:800;letter-spacing:4px;color:var(--befree);margin-top:6px;text-transform:uppercase}
-
-    .rightMeta{display:flex;flex-direction:column;align-items:flex-end;gap:2px;max-width:180px}
-    .tName{font-weight:1000;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .tInfo{font-weight:900;font-size:11px;color:rgba(255,255,255,.55);white-space:nowrap}
-
-    /* mini cloud status */
-    .statusMini{
-      position:absolute; left:50%; transform:translateX(-50%);
-      top: 76px;
-      z-index:2500;
-      padding: 8px 12px;
-      border-radius: 999px;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.22);
-      backdrop-filter: blur(12px);
-      font-weight:1000;
-      font-size:11px;
-      letter-spacing:1px;
-      color:rgba(255,255,255,.8);
-      display:flex; align-items:center; gap:8px;
-      pointer-events:none;
-    }
-    .dots{display:flex;gap:4px}
-    .dot{width:6px;height:6px;border-radius:99px;background:rgba(165,180,252,.75);animation:b 1s infinite ease-in-out;}
-    .dot:nth-child(2){animation-delay:.12s}
-    .dot:nth-child(3){animation-delay:.24s}
-    @keyframes b{0%,100%{transform:translateY(0);opacity:.8}50%{transform:translateY(-4px);opacity:1}}
-
-    /* chat area */
-    #chat{
-      position:absolute; left:0; right:0;
-      top: calc(var(--topH) + 52px);
-      bottom: calc(var(--dockH) + var(--footerH) + 8px);
-      padding: 14px 12px;
-      overflow-y:auto;
-      -webkit-overflow-scrolling: touch;
-      overscroll-behavior: contain;
-      scrollbar-width:none;
-      display:flex;flex-direction:column;gap:10px;
-      z-index: 2000;
-    }
-    #chat::-webkit-scrollbar{display:none}
-    #chat::before{content:"";flex:1 0 auto;}
-
-    .bubble{
-      max-width:92%;
-      padding:12px 14px;
-      border-radius:18px;
-      font-size:16px;
-      line-height:1.5;
-      border:1px solid rgba(255,255,255,.10);
-      background: var(--card);
-      box-shadow: 0 12px 28px rgba(0,0,0,.22);
-      backdrop-filter: blur(8px);
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
-    .bubble.teacher{align-self:flex-start;border-left:4px solid var(--ai2);background: rgba(79,70,229,.12);}
-    .bubble.student{align-self:flex-end;border-right:4px solid var(--befree);background: rgba(107,114,128,.14);text-align:right;}
-    .bubble.tr{align-self:flex-start;opacity:.85;font-size:13px;background: rgba(255,255,255,.04);border-color: rgba(255,255,255,.08);color: rgba(255,255,255,.78);}
-
-    /* ✅ FIX: dock fixed + transform yerine mobile-frame içine ABSOLUTE */
-    .dock{
-      position:absolute;
-      left:0; right:0;
-      width: 100%;
-      bottom: var(--footerH);
-      z-index:2600;
-      padding: 10px 12px;
-      background: rgba(0,0,0,.32);
-      border-top: 1px solid rgba(255,255,255,.08);
-      backdrop-filter: blur(12px);
-      pointer-events: auto;
-    }
-    .dockInner{
+    .wrap{
       width:100%;
-      display:flex;align-items:center;justify-content:space-between;gap:10px;
-      background: rgba(255,255,255,.04);
-      border: 1px solid rgba(255,255,255,.10);
-      border-radius: 22px;
-      padding: 8px;
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+      padding: 4px 2px 10px;
     }
-    .btnMain{
-      flex:1;
+
+    .hero{
+      padding:14px 14px;
+      border-radius:24px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.05);
+      backdrop-filter: blur(10px);
+    }
+    .hero h2{
+      margin:0;
+      font-size:18px;
+      font-weight:1000;
+      letter-spacing:-0.2px;
+    }
+    .hero p{
+      margin:8px 0 0;
+      font-size:12px;
+      font-weight:800;
+      color: rgba(255,255,255,.65);
+      line-height:1.45;
+    }
+
+    .section{
+      padding:14px;
+      border-radius:24px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+      backdrop-filter: blur(10px);
+    }
+    .sec-title{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:12px;
+    }
+    .sec-title .t{
+      font-size:13px;
+      font-weight:1000;
+      letter-spacing:.6px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.88);
+    }
+    .sec-title .s{
+      font-size:11px;
+      font-weight:900;
+      color: rgba(255,255,255,.55);
+      white-space:nowrap;
+    }
+
+    /* teacher grid */
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+    }
+    .card{
+      border-radius:22px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+      padding:12px;
+      cursor:pointer;
+      transition:.2s;
+      user-select:none;
+      position:relative;
+      overflow:hidden;
+      min-height:88px;
+    }
+    .card:active{ transform: scale(.98); }
+    .card.selected{
+      border-color: rgba(99,102,241,.55);
+      background: rgba(99,102,241,.12);
+      box-shadow: 0 0 24px rgba(99,102,241,.12);
+    }
+    .flag{
+      font-size:20px;
+      margin-bottom:8px;
+    }
+    .name{
+      font-size:14px;
+      font-weight:1000;
+      line-height:1.1;
+    }
+    .sub{
+      margin-top:6px;
+      font-size:11px;
+      font-weight:900;
+      color: rgba(255,255,255,.62);
+      line-height:1.25;
+    }
+    .badge{
+      position:absolute;
+      top:10px; right:10px;
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:10px;
+      font-weight:1000;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.18);
+      color: rgba(255,255,255,.86);
+      backdrop-filter: blur(8px);
+    }
+
+    /* mins pills */
+    .pills{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .pill{
+      flex:1 1 30%;
+      min-width:92px;
+      height:44px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04);
+      color:#fff;
+      font-weight:1000;
+      font-size:12px;
+      cursor:pointer;
+      user-select:none;
+    }
+    .pill:active{ transform: scale(.99); }
+    .pill.selected{
+      border-color: rgba(99,102,241,.55);
+      background: rgba(99,102,241,.14);
+    }
+
+    /* CTA */
+    .cta{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      padding:14px;
+      border-radius:24px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+      backdrop-filter: blur(10px);
+    }
+    .sum{
+      font-size:12px;
+      font-weight:900;
+      color: rgba(255,255,255,.78);
+      line-height:1.35;
+    }
+    .btn{
       height:52px;
       border-radius:18px;
       border:none;
@@ -173,80 +176,179 @@
       color:#fff;
       background: linear-gradient(135deg, #A5B4FC, #4F46E5);
       box-shadow: 0 14px 40px rgba(79,70,229,.18);
-      pointer-events: auto;
-      position: relative;
-      z-index: 5;
     }
-    .btnMain:active{transform:scale(.99)}
-    .pill{
-      height:52px;
-      padding:0 12px;
-      border-radius:18px;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(0,0,0,.18);
-      color:rgba(255,255,255,.9);
-      font-weight:1000;
-      font-size:12px;
-      display:flex;align-items:center;justify-content:center;
-      white-space:nowrap;
-      pointer-events:none;
-    }
+    .btn:active{ transform: scale(.99); }
 
-    .footerbar{
-      position:absolute;
-      left:0; right:0;
-      bottom:0;
-      height: var(--footerH);
-      z-index:2400;
-      padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
-      background: rgba(3, 0, 20, 0.95);
-      border-top: 1px solid rgba(255,255,255,.05);
-      backdrop-filter: blur(10px);
-      display:flex;align-items:center;justify-content:center;
-      color: rgba(255,255,255,.22);
-      font-weight:800;font-size:10px;
-      pointer-events: auto;
+    /* tiny toast */
+    .toast{
+      position: fixed;
+      left:50%;
+      top: 18px;
+      transform: translateX(-50%) translateY(-120px);
+      background: rgba(10,10,18,.92);
+      border: 1px solid rgba(165,180,252,.35);
+      padding: 10px 14px;
+      border-radius: 999px;
+      color:#fff;
+      z-index:99999;
+      font-weight:900;
+      font-size:12px;
+      transition:.28s;
+      backdrop-filter: blur(12px);
+      pointer-events:none;
+      max-width:min(92vw, 520px);
+      text-align:center;
     }
+    .toast.show{ transform: translateX(-50%) translateY(0); }
   </style>
 </head>
 
 <body>
-  <div class="cosmos-bg"><div class="orb orb-1"></div><div class="orb orb-2"></div></div>
-  <div class="noise"></div>
 
-  <div class="mobile-frame">
-    <div class="topbar">
-      <button class="backBtn" id="backBtn" aria-label="Geri">←</button>
+  <!-- ✅ CONTENT ONLY (shell bunu saracak) -->
+  <main id="pageContent">
+    <div class="wrap">
 
-      <div class="mini-brand" id="logoHome">
-        <div class="logo-line"><span>italky</span><span class="logo-ai">AI</span></div>
-        <div class="logo-slogan">TEACHER</div>
+      <div class="hero">
+        <h2>🎓 Dil Kursu</h2>
+        <p>Öğretmenini seç, ders süresini belirle ve derse gir. Öğretmen seçtiğin dilde konuşur.</p>
       </div>
 
-      <div class="rightMeta">
-        <div class="tName" id="teacherName">Teacher</div>
-        <div class="tInfo" id="lessonInfo">—</div>
-      </div>
+      <section class="section" aria-label="Öğretmen seçimi">
+        <div class="sec-title">
+          <div class="t">Öğretmen Seç</div>
+          <div class="s" id="selTeacherMini">Seçilmedi</div>
+        </div>
+
+        <div class="grid" id="teacherGrid"></div>
+      </section>
+
+      <section class="section" aria-label="Ders süresi">
+        <div class="sec-title">
+          <div class="t">Ders Süresi</div>
+          <div class="s" id="selMinsMini">10 dk</div>
+        </div>
+
+        <div class="pills" id="minsPills">
+          <button class="pill selected" data-min="10" type="button">10 dk</button>
+          <button class="pill" data-min="20" type="button">20 dk</button>
+          <button class="pill" data-min="30" type="button">30 dk</button>
+        </div>
+      </section>
+
+      <section class="cta" aria-label="Derse gir">
+        <div class="sum" id="summaryText">Önce öğretmen seç.</div>
+        <button class="btn" id="btnGo" type="button">Derse Gir</button>
+      </section>
+
     </div>
+  </main>
 
-    <div class="statusMini" id="statusMini">
-      <span id="statusText">READY</span>
-      <span class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>
-    </div>
+  <div class="toast" id="toast"></div>
 
-    <div id="chat"></div>
+  <script type="module">
+    // ✅ HOME shell’i bu sayfaya uygula
+    import { mountShell } from "/js/ui_shell.js";
+    mountShell();
 
-    <div class="dock">
-      <div class="dockInner">
-        <button class="btnMain" id="btnLesson" type="button">Dersi Başlat</button>
-        <div class="pill" id="pillTry">●●●</div>
-        <div class="pill" id="pillScore">95%</div>
-      </div>
-    </div>
+    // ===== prefs keys (mevcut teacher_course.page.js ile uyumlu) =====
+    const KEY_TEACHER = "italky_teacher_pref";
+    const KEY_MINS = "italky_lesson_mins";
 
-    <div class="footerbar">italkyAI Teacher • 2026</div>
-  </div>
+    // teacher registry (senin liste)
+    const TEACHERS = [
+      { id:"dora",   flag:"🇬🇧", title:"İngilizce Öğretmeni", name:"Dora" },
+      { id:"sencer", flag:"🇮🇹", title:"İtalyanca Öğretmeni", name:"Sencer" },
+      { id:"jale",   flag:"🇫🇷", title:"Fransızca Öğretmeni", name:"Jale" },
+      { id:"ozan",   flag:"🇪🇸", title:"İspanyolca Öğretmeni", name:"Ozan" },
+      { id:"ayda",   flag:"🇩🇪", title:"Almanca Öğretmeni", name:"Ayda" },
+      { id:"sungur", flag:"🇷🇺", title:"Rusça Öğretmeni", name:"Sungur" },
+      { id:"huma",   flag:"🇯🇵", title:"Japonca Öğretmeni", name:"Hüma" }
+    ];
 
-  <script type="module" src="/js/teacher_course.page.js"></script>
+    const $ = (id)=>document.getElementById(id);
+
+    function toast(msg){
+      const t = $("toast");
+      t.textContent = String(msg||"");
+      t.classList.add("show");
+      clearTimeout(window.__to);
+      window.__to = setTimeout(()=>t.classList.remove("show"), 2200);
+    }
+
+    let selTeacher = (localStorage.getItem(KEY_TEACHER) || "").trim();
+    let selMins = (localStorage.getItem(KEY_MINS) || "10").trim();
+    if(!["10","20","30"].includes(selMins)) selMins = "10";
+
+    function setMinsUI(){
+      $("selMinsMini").textContent = `${selMins} dk`;
+      document.querySelectorAll("#minsPills .pill").forEach(p=>{
+        p.classList.toggle("selected", p.getAttribute("data-min") === selMins);
+      });
+      localStorage.setItem(KEY_MINS, selMins);
+      setSummary();
+    }
+
+    function setTeacherUI(){
+      const t = TEACHERS.find(x=>x.id===selTeacher);
+      $("selTeacherMini").textContent = t ? `${t.flag} ${t.name}` : "Seçilmedi";
+      document.querySelectorAll("#teacherGrid .card").forEach(c=>{
+        c.classList.toggle("selected", c.getAttribute("data-id") === selTeacher);
+      });
+      if(selTeacher) localStorage.setItem(KEY_TEACHER, selTeacher);
+      setSummary();
+    }
+
+    function setSummary(){
+      const t = TEACHERS.find(x=>x.id===selTeacher);
+      if(!t){
+        $("summaryText").textContent = "Önce öğretmen seç.";
+        return;
+      }
+      $("summaryText").textContent = `${t.flag} ${t.title} • ${t.name}  |  Süre: ${selMins} dk`;
+    }
+
+    function renderTeachers(){
+      const grid = $("teacherGrid");
+      grid.innerHTML = TEACHERS.map(t=>`
+        <div class="card ${t.id===selTeacher ? "selected":""}" data-id="${t.id}">
+          <div class="badge">${t.flag}</div>
+          <div class="flag">${t.flag}</div>
+          <div class="name">${t.name}</div>
+          <div class="sub">${t.title}</div>
+        </div>
+      `).join("");
+
+      grid.querySelectorAll(".card").forEach(card=>{
+        card.addEventListener("click", ()=>{
+          selTeacher = card.getAttribute("data-id") || "";
+          setTeacherUI();
+        });
+      });
+    }
+
+    // mins click
+    document.querySelectorAll("#minsPills .pill").forEach(p=>{
+      p.addEventListener("click", ()=>{
+        selMins = p.getAttribute("data-min") || "10";
+        setMinsUI();
+      });
+    });
+
+    // go
+    $("btnGo").addEventListener("click", ()=>{
+      if(!selTeacher){
+        toast("Önce öğretmen seç.");
+        return;
+      }
+      // derse gir
+      location.href = "/pages/teacher_course.html";
+    });
+
+    // init
+    renderTeachers();
+    setMinsUI();
+    setTeacherUI();
+  </script>
 </body>
 </html>
