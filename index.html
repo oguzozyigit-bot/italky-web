@@ -58,23 +58,15 @@
   <div id="toast"></div>
 
   <script type="module">
-    const HOME = "/pages/home.html";
+    // MACERA ARAMIYORUZ: Doğrudan senin auth.js dosyanı çağırıyoruz.
     async function boot() {
-        let auth = null;
-        try {
-            // Root ayarını boşalttığımız için './js/' doğrudan ana dizine bakar
-            auth = await import("./js/auth_state.js?v=" + Date.now());
-        } catch (e) {
-            console.error("Yükleme hatası:", e);
-            document.getElementById("googleBtnContainer").innerHTML = '<p style="color:red; font-size:12px;">Sistem yüklenemedi. Lütfen yenileyin.</p>';
-            return;
-        }
-        const already = await auth.redirectIfLoggedIn();
-        if (already) { window.location.replace(HOME); return; }
-        auth.initAuth();
-        auth.startAuthState(({ user }) => {
-            if (user && window.location.pathname.includes("index.html")) { window.location.replace(HOME); }
-        });
+      try {
+        // Cache kırıcı ekleyerek en taze auth.js'yi yüklüyoruz.
+        await import("./js/auth.js?v=" + Date.now());
+      } catch (e) {
+        console.error("Kritik Hata:", e);
+        document.getElementById("googleBtnContainer").innerHTML = '<p style="color:red; font-size:12px;">Sistem yüklenemedi.</p>';
+      }
     }
     window.addEventListener("load", boot);
   </script>
