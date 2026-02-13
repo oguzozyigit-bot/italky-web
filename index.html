@@ -5,10 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>italkyAI • Giriş</title>
 
-  <!-- ✅ NOT:
-       APP/WebView’de GSI script’i yüklemek (accounts.google.com/gsi/client) beyaz ekran tetikleyebiliyor.
-       Bu yüzden APP’de ASLA yüklemiyoruz. WEB’de dinamik yüklüyoruz. -->
-
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -67,29 +63,8 @@
 
     .action-area { width: 100%; display: flex; flex-direction: column; gap: 15px; align-items: center; }
 
-    /* WEB: auth.js buraya GSI render eder */
+    /* WEB: auth_state.js buraya butonu render eder */
     #googleBtnContainer { width: 100%; max-width: 320px; min-height: 44px; display: flex; justify-content: center; }
-
-    /* APP/WebView: Native Google */
-    .google-native-btn{
-      width: 100%;
-      max-width: 320px;
-      height: 44px;
-      border-radius: 10px;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(0,0,0,0.35);
-      color: #fff;
-      font-size: 15px;
-      font-weight: 800;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:10px;
-      cursor:pointer;
-      user-select:none;
-    }
-    .google-native-btn:active{ transform: scale(.99); }
-    .g-icon{ width:18px; height:18px; display:inline-flex; align-items:center; justify-content:center; }
 
     .apple-btn {
       width: 100%; max-width: 320px; height: 44px; border-radius: 10px; border: none;
@@ -108,7 +83,7 @@
       color: rgba(255,255,255,0.15); font-weight: 700; letter-spacing: 1px; 
     }
 
-    #toast{
+    #toast {
       position:fixed; top:18px; left:50%;
       transform: translateX(-50%) translateY(-120px);
       background: rgba(10,10,18,.92);
@@ -125,7 +100,7 @@
       max-width:min(92vw, 520px);
       text-align:center;
     }
-    #toast.show{ transform: translateX(-50%) translateY(0); }
+    #toast.show { transform: translateX(-50%) translateY(0); }
   </style>
 </head>
 <body>
@@ -155,22 +130,7 @@
 
     <div class="bottom-area">
       <div class="action-area">
-
-        <!-- WEB: auth.js buraya GSI render eder -->
         <div id="googleBtnContainer"></div>
-
-        <!-- APP/WebView: Native Google -->
-        <button class="google-native-btn" id="nativeGoogleBtn" type="button" style="display:none;">
-          <span class="g-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="18" height="18">
-              <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.2 1.2-1.5 3.6-5.5 3.6-3.3 0-6-2.7-6-6s2.7-6 6-6c1.9 0 3.2.8 3.9 1.5l2.7-2.6C17.9 2.5 15.3 1.2 12 1.2 5.9 1.2 1 6.1 1 12s4.9 10.8 11 10.8c6.3 0 10.4-4.4 10.4-10.6 0-.7-.1-1.2-.2-1.7H12z"/>
-              <path fill="#34A853" d="M3.6 7.7l3.2 2.3C7.7 8 9.7 6.5 12 6.5c1.9 0 3.2.8 3.9 1.5l2.7-2.6C17.9 2.5 15.3 1.2 12 1.2c-4.2 0-7.8 2.4-9.6 6.5z"/>
-              <path fill="#FBBC05" d="M12 22.8c3.2 0 5.9-1.1 7.9-2.9l-3.6-2.8c-1 .7-2.3 1.2-4.3 1.2-3.2 0-5.8-2.1-6.7-5l-3.4 2.6c1.8 3.5 5.4 5.9 10.1 5.9z"/>
-              <path fill="#4285F4" d="M22.2 12.2c0-.7-.1-1.2-.2-1.7H12v3.9h5.5c-.3 1.3-1.5 3.6-5.5 3.6-3.3 0-6-2.7-6-6 0-.6.1-1.1.2-1.6L2.8 10c-.6 1.2-.9 2.6-.9 4 0 5.9 4.9 10.8 11 10.8 6.3 0 10.4-4.4 10.4-10.6z"/>
-            </svg>
-          </span>
-          <span>Google ile Devam Et</span>
-        </button>
 
         <button class="apple-btn" id="appleBtn" type="button">
           <svg width="18" height="18" viewBox="0 0 17 20" fill="white">
@@ -192,9 +152,7 @@
 
   <div id="toast"></div>
 
-  // index.html içindeki script bölümü
-<script type="module">
-    // HOME sayfasının yolu
+  <script type="module">
     const HOME = "/pages/home.html";
 
     const toast = (msg) => {
@@ -211,38 +169,34 @@
         const container = document.getElementById("googleBtnContainer");
 
         try {
-            // Relative path (./) Vercel'deki 404/MIME hatalarını önlemek için en güvenli yoldur.
-            // Cache breaker (?v=...) dosyanın her zaman taze gelmesini sağlar.
+            // Vercel'deki 404/MIME hatalarını önlemek için bağıl yol (./) ve cache-breaker kullanıyoruz.
             auth = await import("./js/auth_state.js?v=" + Date.now());
-            console.log("Auth modülü başarıyla yüklendi.");
+            console.log("Auth sistemi hazır.");
         } catch (e) {
-            console.error("Kritik Yükleme Hatası:", e);
+            console.error("Modül yükleme hatası:", e);
             if(container) {
-                container.innerHTML = '<p style="color:#ff4b5c; font-size:13px; font-weight:600; text-align:center;">Giriş sistemi şu an başlatılamıyor.<br>Lütfen sayfayı yenileyiniz.</p>';
+                container.innerHTML = '<p style="color:#ff4b5c; font-size:12px; font-weight:600;">Sistem şu an yüklenemedi. Lütfen sayfayı yenileyin.</p>';
             }
             return;
         }
 
-        // 1. Oturum zaten varsa beklemeden yönlendir
+        // 1. Mevcut oturumu kontrol et
         try {
             const already = await auth.redirectIfLoggedIn();
             if (already) {
                 window.location.replace(HOME);
                 return;
             }
-        } catch(err) { console.error("Session check error:", err); }
+        } catch(err) { console.error("Session hatası:", err); }
 
-        // 2. Google butonunu oluştur (auth_state.js içindeki initAuth çalışır)
+        // 2. Butonu render et (auth_state.js içindeki fonksiyonu çağırır)
         if (typeof auth.initAuth === "function") {
             auth.initAuth();
-        } else {
-            console.error("Hata: auth_state.js içinde initAuth fonksiyonu bulunamadı!");
         }
 
-        // 3. Gerçek zamanlı oturum dinleyicisini başlat
+        // 3. Oturum durumunu dinle (Giriş yapıldığı an yönlendir)
         if (typeof auth.startAuthState === "function") {
             auth.startAuthState(({ user }) => {
-                // Kullanıcı login olduğu an (örneğin Google popup kapandığında) home'a uçur
                 if (user && (window.location.pathname.endsWith("index.html") || window.location.pathname === "/")) {
                     window.location.replace(HOME);
                 }
@@ -250,13 +204,11 @@
         }
     }
 
-    // DOM ve tüm kaynaklar hazır olduğunda sistemi ateşle
     window.addEventListener("load", boot);
 
-    // Apple Butonu için geçici uyarı
     document.getElementById("appleBtn")?.addEventListener("click", () => {
       toast("Apple girişi yakında aktif olacak. Şimdilik Google ile devam edebilirsiniz.");
     });
-</script>
+  </script>
 </body>
 </html>
