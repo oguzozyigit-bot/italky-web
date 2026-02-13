@@ -1,14 +1,12 @@
 import { supabase } from "./supabase_client.js";
 
-let _user = null;
-
-// index.html'in beklediği fonksiyon: Oturum varsa true döner
+// index.html'in beklediği fonksiyon: Oturum kontrolü
 export async function redirectIfLoggedIn() {
     const { data: { session } } = await supabase.auth.getSession();
     return !!session;
 }
 
-// index.html'in beklediği fonksiyon: Google butonunu render eder
+// index.html'in beklediği fonksiyon: Google butonunu oluşturur
 export function initAuth() {
     const container = document.getElementById("googleBtnContainer");
     if (!container) return;
@@ -32,29 +30,29 @@ export function initAuth() {
     });
 }
 
-// Merkezi durum yönetimi
+// Merkezi auth dinleyicisi
 export function startAuthState(onChange) {
     const emit = async (session, event) => {
         if (!session?.user) {
-            _user = null;
             onChange?.({ user: null, wallet: null, event });
             return;
         }
 
-        _user = session.user;
+        const user = session.user;
 
-        // İlk girişte profil ve 10 token hoşgeldin bonusu
+        // Hoşgeldin bonusu (10 token) ve profil kaydı
         if (event === "SIGNED_IN" || event === "INITIAL_SESSION") {
-            await supabase.rpc("ensure_profile_and_welcome", {
-                p_full_name: _user.user_metadata?.full_name || "",
-                p_email: _user.email || "",
-                p_avatar_url: _user.user_metadata?.avatar_url || ""
-            });
+            try {
+                await supabase.rpc("ensure_profile_and_welcome", {
+                    p_full_name: user.user_metadata?.full_name || user.user_metadata?.name || "",
+                    p_email: user.email || "",
+                    p_avatar_url: user.user_metadata?.avatar_url || ""
+                });
+            } catch (e) { console.error(e); }
         }
 
-        // Güncel cüzdan bakiyesini çek
         const { data } = await supabase.from("wallets").select("balance").maybeSingle();
-        onChange?.({ user: _user, wallet: data?.balance || 0, event });
+        onChange?.({ user, wallet: data?.balance || 0, event });
     };
 
     supabase.auth.getSession().then(({ data }) => emit(data?.session, "INITIAL_SESSION"));
