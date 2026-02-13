@@ -179,69 +179,24 @@
   <div id="toast"></div>
 
   <script type="module">
-    const HOME = `${window.location.origin}/pages/home.html`;
+import { supabase } from "/js/supabase_client.js";
+import { ensureAuthAndCacheUser, loginWithGoogle } from "/js/auth.js";
 
-    const toast = (msg)=>{
-      const t = document.getElementById("toast");
-      t.textContent = String(msg||"");
-      t.classList.add("show");
-      clearTimeout(window.__to);
-      window.__to = setTimeout(()=>t.classList.remove("show"), 2200);
-    };
+const HOME = "/pages/home.html";
 
-    document.getElementById("appleBtn")?.addEventListener("click", ()=>{
-      toast("Apple girişi yakında. Şimdilik Google ile devam edin.");
-    });
+async function checkSession(){
+  const { data: { session } } = await supabase.auth.getSession();
 
-    function hasNativeBridge(){
-      try{
-        return !!(window.Native && typeof window.Native.startGoogleLogin === "function");
-      }catch(e){
-        return false;
-      }
-    }
+  if(session){
+    await ensureAuthAndCacheUser();
+    location.replace(HOME);
+  }
+}
 
-    // Daha önce giriş yaptıysa direkt home
-    async function redirectIfLoggedIn(){
-      try{
-        const auth = await import("/js/auth.js?v=" + Date.now());
-        const u = await auth.ensureAuthAndCacheUser?.();
-        if(u){
-          location.replace(HOME);
-          return true;
-        }
-      }catch(e){
-        console.error("[login] redirectIfLoggedIn error:", e);
-      }
-      return false;
-    }
+document.getElementById("googleBtn")
+  ?.addEventListener("click", loginWithGoogle);
 
-    async function boot(){
-      const already = await redirectIfLoggedIn();
-      if(already) return;
-
-      const btn = document.getElementById("googleBtn");
-      btn.addEventListener("click", async ()=>{
-        // APP ise native
-        if(hasNativeBridge()){
-          try{ window.Native.startGoogleLogin(); return; }
-          catch(e){ console.error(e); toast("Native Google Login açılamadı."); return; }
-        }
-
-        // WEB ise Supabase OAuth
-        try{
-          const auth = await import("/js/auth.js?v=" + Date.now());
-          console.log("[login] origin:", window.location.origin);
-          console.log("[login] redirectTo:", HOME);
-          await auth.loginWithGoogle();
-        }catch(e){
-          console.error("[login] auth.js/loginWithGoogle hata:", e);
-          toast("Giriş sistemi yüklenemedi (auth.js).");
-        }
-      });
-    }
-
-    window.addEventListener("load", boot);
-  </script>
+document.addEventListener("DOMContentLoaded", checkSession);
+</script>
 </body>
 </html>
