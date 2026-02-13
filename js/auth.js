@@ -2,7 +2,7 @@
 import { supabase } from "/js/supabase_client.js";
 import { STORAGE_KEY } from "/js/config.js";
 
-// Supabase user -> bizim standart user objemiz
+// Supabase user -> standart user objesi
 function toStdUser(u){
   if(!u) return null;
   const md = u.user_metadata || {};
@@ -12,42 +12,62 @@ function toStdUser(u){
   return { name, email, picture };
 }
 
-// ✅ En kritik fonksiyon: session varsa STORAGE_KEY’e yaz + profile/wallet kur
+// ✅ session varsa STORAGE_KEY’e yaz + profile/wallet kur + wallet cache
 export async function ensureAuthAndCacheUser(){
   try{
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data, error } = await supabase.auth.getSession();
+    if(error){
+      console.error("[auth] getSession error:", error);
+      return null;
+    }
+
+    const session = data?.session;
     if(!session?.user) return null;
 
     const std = toStdUser(session.user);
     if(std){
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(std));
+      try{
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(std));
+      }catch(e){
+        console.error("[auth] localStorage set STORAGE_KEY failed:", e);
+      }
     }
 
-    // ✅ İlk girişte profile + 10 token hediye (RPC)
-    // (Fonksiyonu daha önce SQL ile oluşturduk)
-    await supabase.rpc("ensure_profile_and_welcome", {
-      p_full_name: std?.name || "",
-      p_email: std?.email || "",
-      p_avatar_url: std?.picture || ""
-    });
+    // ✅ İlk giriş: profile + 10 token hediye (RPC)
+    try{
+      const { error: rpcErr } = await supabase.rpc("ensure_profile_and_welcome", {
+        p_full_name: std?.name || "",
+        p_email: std?.email || "",
+        p_avatar_url: std?.picture || ""
+      });
+      if(rpcErr) console.error("[auth] ensure_profile_and_welcome error:", rpcErr);
+    }catch(e){
+      console.error("[auth] ensure_profile_and_welcome exception:", e);
+    }
 
-    // Wallet balance'i çek (UI için local cache)
-    // wallets tablosu: user_id = auth.uid()
-    const { data: w } = await supabase
-      .from("wallets")
-      .select("balance, earned_total, spent_total")
-      .single();
+    // ✅ Wallet çek (row yoksa sorun çıkarma)
+    try{
+      const { data: w, error: wErr } = await supabase
+        .from("wallets")
+        .select("balance, earned_total, spent_total")
+        .maybeSingle();
 
-    if(w && typeof w.balance === "number"){
-      localStorage.setItem("italky_wallet", JSON.stringify({
-        balance: w.balance,
-        earned: w.earned_total || 0,
-        spent: w.spent_total || 0
-      }));
+      if(wErr){
+        console.error("[auth] wallets select error:", wErr);
+      }else if(w && typeof w.balance === "number"){
+        localStorage.setItem("italky_wallet", JSON.stringify({
+          balance: w.balance,
+          earned: w.earned_total || 0,
+          spent: w.spent_total || 0
+        }));
+      }
+    }catch(e){
+      console.error("[auth] wallets fetch exception:", e);
     }
 
     return std;
-  }catch{
+  }catch(e){
+    console.error("[auth] ensureAuthAndCacheUser fatal:", e);
     return null;
   }
 }
@@ -59,12 +79,27 @@ export async function loginWithGoogle(){
     provider: "google",
     options: { redirectTo }
   });
-  if(error) alert("Google Login Hata: " + error.message);
+  if(error){
+    console.error("[auth] signInWithOAuth error:", error);
+    alert("Google Login Hata: " + error.message);
+  }
 }
 
 // Logout (Supabase + local)
 export async function logoutEverywhere(){
-  try{ await supabase.auth.signOut(); }catch{}
+  try{ await supabase.auth.signOut(); }catch(e){ console.error("[auth] signOut error:", e); }
   try{ localStorage.removeItem(STORAGE_KEY); }catch{}
-  // (İstersen wallet’ı da sil: localStorage.removeItem("italky_wallet"))
+  try{ localStorage.removeItem("italky_wallet"); }catch{}
+}
+
+// ✅ Eski login sayfalarının uyumu (istersen kullan, zarar yok)
+export async function redirectIfLoggedIn(){
+  const u = await ensureAuthAndCacheUser();
+  return !!u;
+}
+
+// ✅ Eski login sayfalarının uyumu (GSI yerine Supabase butonu kullanıyoruz)
+export function initAuth(){
+  // Bu fonksiyon eskiden GSI render ediyordu; artık gerek yok.
+  // Boş bırakıyoruz ki eski sayfalar patlamasın.
 }
