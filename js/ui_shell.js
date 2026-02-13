@@ -1,7 +1,13 @@
 // FILE: /js/ui_shell.js
+// ✅ HOME header+footer'ını HER SAYFAYA birebir basar (milim şaşmaz)
+// ✅ Kullanıcı sorununu kökten çözer:
+//    - STORAGE_KEY -> local/session storage taraması -> URL query/hash -> JWT decode
+//    - Bulunca STORAGE_KEY'e standart user yazar + URL'yi temizler
+
 import { STORAGE_KEY } from "/js/config.js";
 import { applyI18n } from "/js/i18n.js";
 
+/* ✅ HOME HEADER (BİREBİR) */
 const HOME_HEADER_HTML = `
 <header class="premium-header">
   <div class="brand-group" id="brandHome" title="Ana sayfa">
@@ -16,6 +22,7 @@ const HOME_HEADER_HTML = `
 </header>
 `;
 
+/* ✅ HOME FOOTER (BİREBİR) */
 const HOME_FOOTER_HTML = `
 <footer class="premium-footer">
   <nav class="footer-nav">
@@ -28,6 +35,7 @@ const HOME_FOOTER_HTML = `
 </footer>
 `;
 
+/* ✅ HOME CSS (BİREBİR) + shell taşıma kuralları */
 const SHELL_CSS = `
 :root{
   --bg-void:#02000f;
@@ -47,6 +55,7 @@ html,body{
   color: var(--text-main);
 }
 
+/* background */
 .nebula-bg{
   position:absolute; inset:-10%; width:120%; height:120%;
   background:
@@ -70,6 +79,7 @@ html,body{
   pointer-events:none;
 }
 
+/* shell container */
 .app-shell{
   position:relative; z-index:10;
   width:100%; max-width:480px; height:100%;
@@ -79,13 +89,10 @@ html,body{
   backdrop-filter: blur(30px);
 }
 
+/* HEADER */
 .premium-header{
   padding: calc(10px + env(safe-area-inset-top)) 18px 10px;
-  display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
-  gap: 10px;
-
+  display:flex; align-items:flex-start; justify-content:space-between; gap: 10px;
   background: var(--bar-bg);
   border-bottom-left-radius: 22px;
   border-bottom-right-radius: 22px;
@@ -127,12 +134,8 @@ html,body{
 }
 
 .user-plain{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  cursor:pointer;
-  user-select:none;
-  margin-top: 2px;
+  display:flex; align-items:center; gap:10px;
+  cursor:pointer; user-select:none; margin-top: 2px;
 }
 .uName{
   font-weight: 1000;
@@ -145,21 +148,16 @@ html,body{
   text-align:right;
 }
 .avatar{
-  width: 40px;
-  height: 40px;
+  width: 40px; height: 40px;
   border-radius: 999px;
   overflow:hidden;
   border: 2px solid rgba(99,102,241,0.65);
   background: rgba(255,255,255,0.10);
   flex: 0 0 auto;
 }
-.avatar img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  display:block;
-}
+.avatar img{ width:100%; height:100%; object-fit:cover; display:block; }
 
+/* main content */
 .main-content{
   flex:1;
   overflow-y:auto;
@@ -168,6 +166,7 @@ html,body{
 }
 .main-content::-webkit-scrollbar{ display:none; }
 
+/* FOOTER */
 .premium-footer{
   position: fixed;
   left: 50%;
@@ -192,16 +191,7 @@ html,body{
   backdrop-filter: blur(30px);
   -webkit-backdrop-filter: blur(30px);
 }
-
-.footer-nav{
-  display:flex;
-  gap: 22px;
-  justify-content:center;
-  flex-wrap:wrap;
-  line-height:1;
-  margin: 0;
-  padding: 0;
-}
+.footer-nav{ display:flex; gap: 22px; justify-content:center; flex-wrap:wrap; line-height:1; margin: 0; padding: 0; }
 .footer-nav a{
   font-size: 11px;
   font-weight: 900;
@@ -211,7 +201,6 @@ html,body{
   letter-spacing: 1px;
 }
 .footer-nav a:active{ opacity:.85; }
-
 .prestige-signature{
   font-size: 12px;
   font-weight: 900;
@@ -237,17 +226,127 @@ function ensureStyleOnce(){
   document.head.appendChild(st);
 }
 
-/* ✅ Bulduğun kullanıcıyı STORAGE_KEY’e yaz (standartlaşsın) */
+/* ---------------- USER RECOVERY ---------------- */
+
 function normalizeUserObject(o){
   if(!o) return null;
-  const name = (o.name || o.fullname || o.displayName || "").trim();
-  const email = (o.email || "").trim();
-  const picture = (o.picture || o.avatar || o.photoURL || "").trim();
+  const name = String(o.name || o.fullname || o.displayName || o.given_name || "").trim();
+  const email = String(o.email || "").trim();
+  const picture = String(o.picture || o.avatar || o.photoURL || o.image || "").trim();
   if(!name && !email && !picture) return null;
   return { name: name || "Kullanıcı", email, picture };
 }
 
+function decodeJwtPayload(token){
+  try{
+    const parts = token.split(".");
+    if(parts.length < 2) return null;
+    const b64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const pad = "=".repeat((4 - (b64.length % 4)) % 4);
+    const json = atob(b64 + pad);
+    return JSON.parse(json);
+  }catch{
+    return null;
+  }
+}
+
+function findUserFromUrl(){
+  try{
+    // Query: ?name=&email=&picture=
+    const q = new URLSearchParams(location.search || "");
+    const qName = (q.get("name") || q.get("fullName") || q.get("fullname") || "").trim();
+    const qEmail = (q.get("email") || "").trim();
+    const qPic = (q.get("picture") || q.get("avatar") || q.get("photo") || "").trim();
+    if(qName || qEmail || qPic){
+      const u = normalizeUserObject({ name: qName, email: qEmail, picture: qPic });
+      if(u) return u;
+    }
+
+    // Hash: #id_token=... OR #name=...
+    const hash = (location.hash || "").replace(/^#/, "");
+    if(hash){
+      const h = new URLSearchParams(hash);
+
+      const idTok = h.get("id_token") || h.get("idToken");
+      if(idTok && idTok.includes(".")){
+        const payload = decodeJwtPayload(idTok);
+        if(payload){
+          const u = normalizeUserObject({
+            name: payload.name || payload.given_name || payload.family_name,
+            email: payload.email,
+            picture: payload.picture
+          });
+          if(u) return u;
+        }
+      }
+
+      const hName = (h.get("name") || "").trim();
+      const hEmail = (h.get("email") || "").trim();
+      const hPic = (h.get("picture") || "").trim();
+      if(hName || hEmail || hPic){
+        const u = normalizeUserObject({ name: hName, email: hEmail, picture: hPic });
+        if(u) return u;
+      }
+    }
+  }catch{}
+  return null;
+}
+
+function findUserByScanningStorage(storage){
+  try{
+    for(let i=0;i<storage.length;i++){
+      const k = storage.key(i);
+      if(!k) continue;
+      const v = storage.getItem(k);
+      if(!v) continue;
+
+      // JSON object?
+      if(v.length > 8 && v[0] === "{"){
+        try{
+          const obj = JSON.parse(v);
+
+          // direct user fields
+          const u1 = normalizeUserObject(obj);
+          if(u1) return u1;
+
+          // token inside object
+          const tok = obj.id_token || obj.idToken || obj.access_token || obj.accessToken || obj.token;
+          if(typeof tok === "string" && tok.includes(".")){
+            const payload = decodeJwtPayload(tok);
+            if(payload){
+              const u2 = normalizeUserObject({
+                name: payload.name || payload.given_name || payload.family_name,
+                email: payload.email,
+                picture: payload.picture
+              });
+              if(u2) return u2;
+            }
+          }
+        }catch{}
+      }
+
+      // raw JWT?
+      if(v.includes(".") && v.length > 40){
+        const payload = decodeJwtPayload(v.trim());
+        if(payload){
+          const u3 = normalizeUserObject({
+            name: payload.name || payload.given_name || payload.family_name,
+            email: payload.email,
+            picture: payload.picture
+          });
+          if(u3) return u3;
+        }
+      }
+    }
+  }catch{}
+  return null;
+}
+
 function findUserAnywhere(){
+  // 0) URL first (if OAuth returns tokens here)
+  const fromUrl = findUserFromUrl();
+  if(fromUrl) return fromUrl;
+
   // 1) STORAGE_KEY
   try{
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -257,33 +356,35 @@ function findUserAnywhere(){
     }
   }catch{}
 
-  // 2) localStorage tarama
-  for(let i=0;i<localStorage.length;i++){
-    const k = localStorage.key(i);
-    if(!k) continue;
-    const v = localStorage.getItem(k);
-    if(!v || v.length < 8) continue;
-    if(v[0] !== "{") continue;
-    try{
-      const u = normalizeUserObject(JSON.parse(v));
-      if(u) return u;
-    }catch{}
-  }
+  // 2) scan localStorage
+  let u = findUserByScanningStorage(localStorage);
+  if(u) return u;
 
-  // 3) sessionStorage tarama (bazı loginler burada tutar)
+  // 3) scan sessionStorage
   try{
-    for(let i=0;i<sessionStorage.length;i++){
-      const k = sessionStorage.key(i);
-      if(!k) continue;
-      const v = sessionStorage.getItem(k);
-      if(!v || v.length < 8) continue;
-      if(v[0] !== "{") continue;
-      const u = normalizeUserObject(JSON.parse(v));
-      if(u) return u;
-    }
+    u = findUserByScanningStorage(sessionStorage);
+    if(u) return u;
   }catch{}
 
   return null;
+}
+
+function writeStandardUser(u){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      name: u.name || "Kullanıcı",
+      email: u.email || "",
+      picture: u.picture || ""
+    }));
+  }catch{}
+}
+
+function cleanUrlIfNeeded(){
+  try{
+    if(location.search || location.hash){
+      history.replaceState({}, document.title, location.pathname);
+    }
+  }catch{}
 }
 
 function fillUser(){
@@ -291,14 +392,8 @@ function fillUser(){
     const u = findUserAnywhere();
     if(!u) return;
 
-    // ✅ STANDARDIZE: artık her yerde STORAGE_KEY’den okunabilsin
-    try{
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        name: u.name,
-        email: u.email,
-        picture: u.picture
-      }));
-    }catch{}
+    writeStandardUser(u);
+    cleanUrlIfNeeded();
 
     const elName = document.getElementById("userName");
     const elPic  = document.getElementById("userPic");
@@ -306,6 +401,8 @@ function fillUser(){
     if(elPic && u.picture) elPic.src = u.picture;
   }catch{}
 }
+
+/* ---------------- SHELL MOUNT ---------------- */
 
 export function mountShell(options = {}){
   const {
