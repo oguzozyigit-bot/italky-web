@@ -4,71 +4,151 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>italkyAI • Giriş</title>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
   <style>
-    :root { --bg-deep: #020205; --text-white: #ffffff; --text-grey: #9ca3af; --ai-gradient: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #4338ca 100%); }
+    :root {
+      --bg-deep: #020205; 
+      --text-white: #ffffff;
+      --text-grey: #9ca3af;
+      --ai-gradient: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #4338ca 100%);
+    }
+
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
-    html, body { margin: 0; padding: 0; width: 100%; height: 100dvh; overflow: hidden; font-family: 'Outfit', sans-serif; background-color: var(--bg-deep); color: var(--text-white); display: flex; align-items: center; justify-content: center; }
+    html, body { 
+      margin: 0; padding: 0; width: 100%; height: 100dvh; 
+      overflow: hidden; font-family: 'Outfit', sans-serif; 
+      background-color: var(--bg-deep); color: var(--text-white); 
+      display: flex; align-items: center; justify-content: center; 
+    }
+
     .cosmos { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
-    .nebula { position: absolute; width: 90vw; height: 90vw; border-radius: 50%; filter: blur(120px); opacity: 0.25; background: radial-gradient(circle, #6366f1, transparent 70%); }
+    .nebula { 
+      position: absolute; width: 90vw; height: 90vw; 
+      border-radius: 50%; filter: blur(120px); opacity: 0.25; 
+      background: radial-gradient(circle, #6366f1, transparent 70%); 
+    }
     .n-1 { top: -20%; left: -10%; }
     .n-2 { bottom: -10%; right: -10%; animation: breathe 12s infinite alternate ease-in-out; }
-    @keyframes breathe { 0% { transform: scale(1); opacity: 0.2; } 100% { transform: scale(1.1); opacity: 0.35; } }
-    .app-frame { width: 100%; max-width: 440px; height: 100%; position: relative; z-index: 10; display: flex; flex-direction: column; justify-content: space-between; background: rgba(8, 8, 12, 0.7); backdrop-filter: blur(20px); padding: 60px 30px 30px 30px; }
+    @keyframes breathe { 
+      0% { transform: scale(1); opacity: 0.2; } 
+      100% { transform: scale(1.1); opacity: 0.35; } 
+    }
+
+    .app-frame {
+      width: 100%; max-width: 440px; height: 100%; position: relative; z-index: 10;
+      display: flex; flex-direction: column; justify-content: space-between;
+      background: rgba(8, 8, 12, 0.7); backdrop-filter: blur(20px);
+      padding: 60px 30px 30px 30px;
+    }
+
     .header-section { text-align: center; }
     .logo { font-size: 58px; font-weight: 800; letter-spacing: -2px; line-height: 1; }
     .txt-ai { background: var(--ai-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     .be-free { letter-spacing: 8px; color: #4b5563; font-size: 13px; font-weight: 800; margin-top: 12px; }
+
     .hero-text { margin-top: 50px; }
     .hero-text h1 { font-size: 26px; font-weight: 700; margin-bottom: 12px; }
     .hero-text p { font-size: 15px; color: var(--text-grey); line-height: 1.5; }
+
     .features-list { margin-top: 30px; padding: 0; list-style: none; }
-    .features-list li { margin-bottom: 14px; font-size: 16px; font-weight: 500; display: flex; align-items: center; gap: 12px; }
+    .features-list li { 
+      margin-bottom: 14px; font-size: 16px; font-weight: 500; 
+      display: flex; align-items: center; gap: 12px; 
+    }
     .features-list li::before { content: "✦"; color: #6366f1; font-weight: 900; }
+
     .action-area { width: 100%; display: flex; flex-direction: column; gap: 15px; align-items: center; }
+
+    /* WEB: auth.js buraya butonu render eder */
     #googleBtnContainer { width: 100%; max-width: 320px; min-height: 44px; display: flex; justify-content: center; }
-    .apple-btn { width: 100%; max-width: 320px; height: 44px; border-radius: 10px; border: none; background: #000; color: #fff; font-size: 15px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; }
+
+    .apple-btn {
+      width: 100%; max-width: 320px; height: 44px; border-radius: 10px; border: none;
+      background: #000; color: #fff; font-size: 15px; font-weight: 800;
+      display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer;
+    }
+
     .footer-links { display: flex; justify-content: center; gap: 15px; margin-top: 30px; }
-    .footer-links a { color: rgba(255,255,255,0.4); text-decoration: none; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-    .copyright { text-align: center; margin-top: 15px; font-size: 10px; color: rgba(255,255,255,0.15); font-weight: 700; letter-spacing: 1px; }
-    #toast { position:fixed; top:18px; left:50%; transform: translateX(-50%) translateY(-120px); background: rgba(10,10,18,.92); border:1px solid rgba(165,180,252,.35); padding: 10px 14px; border-radius: 999px; color:#fff; z-index:9999; font-weight:900; font-size:12px; transition:.25s; backdrop-filter: blur(12px); pointer-events:none; max-width:min(92vw, 520px); text-align:center; }
-    #toast.show { transform: translateX(-50%) translateY(0); }
+    .footer-links a { 
+      color: rgba(255,255,255,0.4); text-decoration: none; 
+      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+
+    .copyright { 
+      text-align: center; margin-top: 15px; font-size: 10px; 
+      color: rgba(255,255,255,0.15); font-weight: 700; letter-spacing: 1px; 
+    }
+
+    #toast{
+      position:fixed; top:18px; left:50%;
+      transform: translateX(-50%) translateY(-120px);
+      background: rgba(10,10,18,.92);
+      border:1px solid rgba(165,180,252,.35);
+      padding: 10px 14px;
+      border-radius: 999px;
+      color:#fff;
+      z-index:9999;
+      font-weight:900;
+      font-size:12px;
+      transition:.25s;
+      backdrop-filter: blur(12px);
+      pointer-events:none;
+      max-width:min(92vw, 520px);
+      text-align:center;
+    }
+    #toast.show{ transform: translateX(-50%) translateY(0); }
   </style>
 </head>
 <body>
-  <div class="cosmos"><div class="nebula n-1"></div><div class="nebula n-2"></div></div>
+
+  <div class="cosmos">
+    <div class="nebula n-1"></div>
+    <div class="nebula n-2"></div>
+  </div>
+
   <div class="app-frame">
     <div class="header-section">
       <div class="logo">italky<span class="txt-ai">AI</span></div>
       <div class="be-free">BE FREE</div>
-      <div class="hero-text"><h1>Yapay Zeka İle Dil Engellini Kaldır.</h1><p>Anlaşmak ve anlaşılır olmak hiç bu kadar kolay olmamıştı.</p></div>
-      <ul class="features-list"><li>Karşılıklı Çeviri</li><li>Yapay Zeka İle Sohbet</li><li>Dil Öğretmenleri</li><li>Eğitici Dil Oyunları</li></ul>
+
+      <div class="hero-text">
+        <h1>Yapay Zeka İle Dil Engellini Kaldır.</h1>
+        <p>Anlaşmak ve anlaşılır olmak hiç bu kadar kolay olmamıştı.</p>
+      </div>
+
+      <ul class="features-list">
+        <li>Karşılıklı Çeviri</li>
+        <li>Yapay Zeka İle Sohbet</li>
+        <li>Dil Öğretmenleri</li>
+        <li>Eğitici Dil Oyunları</li>
+      </ul>
     </div>
+
     <div class="bottom-area">
       <div class="action-area">
         <div id="googleBtnContainer"></div>
-        <button class="apple-btn" id="appleBtn" type="button"><span>Apple ile Giriş Yap</span></button>
+
+        <button class="apple-btn" id="appleBtn" type="button">
+          <span>Apple ile Giriş Yap</span>
+        </button>
       </div>
-      <div class="footer-links"><a href="/pages/about.html">Hakkımızda</a><a href="/pages/faq.html">SSS</a><a href="/pages/privacy.html">Gizlilik</a><a href="/pages/contact.html">İletişim</a></div>
+
+      <div class="footer-links">
+        <a href="/pages/about.html">Hakkımızda</a>
+        <a href="/pages/faq.html">SSS</a>
+        <a href="/pages/privacy.html">Gizlilik</a>
+        <a href="/pages/contact.html">İletişim</a>
+      </div>
       <div class="copyright">italkyAI By Ozyigit's 2026</div>
     </div>
   </div>
+
   <div id="toast"></div>
 
-  <script type="module">
-    // MACERA ARAMIYORUZ: Doğrudan senin auth.js dosyanı çağırıyoruz.
-    async function boot() {
-      try {
-        // Cache kırıcı ekleyerek en taze auth.js'yi yüklüyoruz.
-        await import("./js/auth.js?v=" + Date.now());
-      } catch (e) {
-        console.error("Kritik Hata:", e);
-        document.getElementById("googleBtnContainer").innerHTML = '<p style="color:red; font-size:12px;">Sistem yüklenemedi.</p>';
-      }
-    }
-    window.addEventListener("load", boot);
-  </script>
+  <script type="module" src="./js/auth.js?v=2026"></script>
 </body>
 </html>
