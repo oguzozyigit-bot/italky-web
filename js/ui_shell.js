@@ -463,5 +463,8 @@ export function mountShell(options = {}){
   document.getElementById("profileBtn")?.addEventListener("click", ()=>location.href="/pages/profile.html");
 
   try{ applyI18n?.(document); }catch{}
-  fillUser();
+
+// ✅ Supabase session varsa user’ı STORAGE_KEY’e yazdır ve sonra header’ı doldur
+import("/js/auth.js").then(m => m.ensureAuthAndCacheUser?.())
+  .finally(() => fillUser());
 }
