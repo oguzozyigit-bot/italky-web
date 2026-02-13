@@ -42,7 +42,7 @@ const SHELL_CSS = `
   --text-main:#fff;
   --text-muted: rgba(255,255,255,0.65);
   --footerH: 92px;
-  --bar-bg: rgba(0,0,0,0.18);
+  --bar-bg: rgba(0,0,0,0.40);
   --edgePad: 14px;
 }
 
