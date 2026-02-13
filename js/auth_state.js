@@ -22,11 +22,13 @@ export function startAuthState(onChange) {
         if (!session?.user) { onChange?.({ user: null }); return; }
         const user = session.user;
         if (event === "SIGNED_IN" || event === "INITIAL_SESSION") {
-            await supabase.rpc("ensure_profile_and_welcome", {
-                p_full_name: user.user_metadata?.full_name || "",
-                p_email: user.email || "",
-                p_avatar_url: user.user_metadata?.avatar_url || ""
-            });
+            try {
+                await supabase.rpc("ensure_profile_and_welcome", {
+                    p_full_name: user.user_metadata?.full_name || "",
+                    p_email: user.email || "",
+                    p_avatar_url: user.user_metadata?.avatar_url || ""
+                });
+            } catch(e) { console.error(e); }
         }
         onChange?.({ user });
     };
