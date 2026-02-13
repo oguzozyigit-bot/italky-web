@@ -42,48 +42,19 @@
 </div>
 
 <script type="module">
+import { bootPage } from "/js/ui_guard.js";
 import { supabase } from "/js/supabase_client.js";
-import { ensureAuthAndCacheUser, logoutEverywhere } from "/js/auth.js";
-import { applyI18n } from "/js/i18n.js";
 
-applyI18n(document);
+bootPage({
+  protectedPage: true,
+  header: { nameId:"userName", picId:"userPic" }, // shell basıyorsan bu id’ler var
+  wallet: { elId:"tokenVal" }
+});
 
-async function initProfile(){
-
-  const { data: { session } } = await supabase.auth.getSession();
-
-  if(!session){
-    location.replace("/pages/login.html");
-    return;
-  }
-
-  await ensureAuthAndCacheUser();
-
-  const user = session.user;
-
-  document.getElementById("fullName").textContent =
-    user.user_metadata?.full_name || user.email;
-
-  document.getElementById("email").textContent =
-    user.email;
-
-  const { data: wallet } = await supabase
-    .from("wallets")
-    .select("balance")
-    .maybeSingle();
-
-  document.getElementById("tokenVal").textContent =
-    wallet?.balance ?? 0;
-
-}
-
-document.getElementById("logoutBtn")
-  ?.addEventListener("click", async ()=>{
-    await logoutEverywhere();
-    location.replace("/pages/login.html");
-  });
-
-document.addEventListener("DOMContentLoaded", initProfile);
+document.getElementById("logoutBtn")?.addEventListener("click", async ()=>{
+  await supabase.auth.signOut();
+  location.replace("/pages/login.html");
+});
 </script>
 
 </body>
