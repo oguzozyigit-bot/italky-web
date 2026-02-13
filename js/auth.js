@@ -33,7 +33,7 @@ export async function ensureAuthAndCacheUser(){
       }
     }
 
-    // ✅ İlk giriş: profile + 10 token hediye (RPC)
+    // ✅ İlk giriş: profile + 10 token hediye (DB RPC)
     try{
       const { error: rpcErr } = await supabase.rpc("ensure_profile_and_welcome", {
         p_full_name: std?.name || "",
@@ -65,6 +65,11 @@ export async function ensureAuthAndCacheUser(){
       console.error("[auth] wallets fetch exception:", e);
     }
 
+    // ✅ OAuth hash temizle (isteğe bağlı)
+    try{
+      if(location.hash) history.replaceState({}, document.title, location.pathname);
+    }catch{}
+
     return std;
   }catch(e){
     console.error("[auth] ensureAuthAndCacheUser fatal:", e);
@@ -72,17 +77,34 @@ export async function ensureAuthAndCacheUser(){
   }
 }
 
-// Google login başlat
+// ✅ Google login (telefon/webview için stabil)
+// - Supabase URL üretir
+// - biz direkt o URL’ye gideriz
 export async function loginWithGoogle(){
   const redirectTo = `${window.location.origin}/pages/home.html`;
-  const { error } = await supabase.auth.signInWithOAuth({
+
+  const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
-    options: { redirectTo }
+    options: {
+      redirectTo,
+      skipBrowserRedirect: true
+    }
   });
+
+  console.log("[auth] OAuth data:", data);
+  console.log("[auth] OAuth error:", error);
+
   if(error){
-    console.error("[auth] signInWithOAuth error:", error);
-    alert("Google Login Hata: " + error.message);
+    alert("Google Login Hata: " + (error.message || "Bilinmeyen hata"));
+    return;
   }
+
+  if(!data?.url){
+    alert("Google Login URL alınamadı (data.url yok).");
+    return;
+  }
+
+  window.location.href = data.url;
 }
 
 // Logout (Supabase + local)
@@ -92,14 +114,13 @@ export async function logoutEverywhere(){
   try{ localStorage.removeItem("italky_wallet"); }catch{}
 }
 
-// ✅ Eski login sayfalarının uyumu (istersen kullan, zarar yok)
+// ✅ Eski login sayfalarının uyumu
 export async function redirectIfLoggedIn(){
   const u = await ensureAuthAndCacheUser();
   return !!u;
 }
 
-// ✅ Eski login sayfalarının uyumu (GSI yerine Supabase butonu kullanıyoruz)
+// ✅ Eski login sayfalarının uyumu (boş)
 export function initAuth(){
-  // Bu fonksiyon eskiden GSI render ediyordu; artık gerek yok.
-  // Boş bırakıyoruz ki eski sayfalar patlamasın.
+  // Eskiden GSI render ediyordu; artık yok.
 }
