@@ -192,32 +192,31 @@
 
   <div id="toast"></div>
 
-  <script type="module">
+  // index.html içindeki script bölümü
+<script type="module">
     const HOME = "/pages/home.html";
 
     async function boot() {
         let auth = null;
         try {
-            // MIME ve 404 hatasını çözmek için bağıl yol (./) kullanıyoruz
+            // ÖNEMLİ: Başına mutlaka ./ koyarak 'relative path' kullanıyoruz.
+            // Bu, Vercel'in dosyayı kök dizinde bulmasını sağlar.
             auth = await import("./js/auth_state.js?v=" + Date.now());
         } catch (e) {
             console.error("Yükleme hatası:", e);
             const msg = document.getElementById("googleBtnContainer");
-            if(msg) msg.innerHTML = '<p style="color:#ff4b5c; font-size:12px;">Sistem yüklenemedi, lütfen sayfayı yenileyin.</p>';
+            if(msg) msg.innerHTML = '<p style="color:#ff4b5c; font-size:12px;">Sistem yüklenemedi. Lütfen internetinizi kontrol edip yenileyin.</p>';
             return;
         }
 
-        // 1. Giriş yapılmışsa yönlendir
         const already = await auth.redirectIfLoggedIn();
         if (already) {
             location.replace(HOME);
             return;
         }
 
-        // 2. Butonu oluştur
         auth.initAuth();
 
-        // 3. Durumu izle
         auth.startAuthState(({ user }) => {
             if (user && window.location.pathname.includes("index.html")) {
                 location.replace(HOME);
