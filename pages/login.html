@@ -120,46 +120,24 @@
 
   <!-- ✅ Script en altta: buton kesin DOM’da -->
   <script type="module">
-    import { supabase } from "/js/supabase_client.js";
+import { supabase } from "/js/supabase_client.js";
+import { ensureAuthAndCacheUser, loginWithGoogle } from "/js/auth.js";
 
-    const toast = (msg)=>{
-      const t = document.getElementById("toast");
-      t.textContent = String(msg||"");
-      t.classList.add("show");
-      clearTimeout(window.__to);
-      window.__to = setTimeout(()=>t.classList.remove("show"), 2200);
-    };
+const HOME = "/pages/home.html";
 
-    document.addEventListener("DOMContentLoaded", async ()=>{
-      const btn = document.getElementById("googleBtn");
-      if(!btn){
-        toast("Google butonu bulunamadı (id=googleBtn).");
-        return;
-      }
+async function checkSession(){
+  const { data: { session } } = await supabase.auth.getSession();
 
-      // zaten oturum varsa home
-      const { data, error } = await supabase.auth.getSession();
-      if(error) console.error(error);
-      if(data?.session){
-        location.replace("/pages/home.html");
-        return;
-      }
+  if(session){
+    await ensureAuthAndCacheUser();
+    location.replace(HOME);
+  }
+}
 
-      btn.addEventListener("click", async ()=>{
-        btn.disabled = true;
+document.getElementById("googleBtn")
+  ?.addEventListener("click", loginWithGoogle);
 
-        const { error } = await supabase.auth.signInWithOAuth({
-          provider: "google",
-          options: { redirectTo: window.location.origin + "/pages/home.html" }
-        });
-
-        if(error){
-          console.error(error);
-          toast("Google Login Hatası: " + error.message);
-          btn.disabled = false;
-        }
-      });
-    });
-  </script>
+document.addEventListener("DOMContentLoaded", checkSession);
+</script>
 </body>
 </html>
