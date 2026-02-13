@@ -322,15 +322,16 @@
   </div>
 
   <script type="module">
-    import { mountShell } from "/js/ui_shell.js";
-    import { applyI18n, setSiteLang, getSiteLang, t } from "/js/i18n.js";
-    import { logoutEverywhere, ensureAuthAndCacheUser } from "/js/auth.js";
-    import { supabase } from "/js/supabase_client.js";
-    import { STORAGE_KEY } from "/js/config.js";
+    // ✅ cache-bust: iç sayfalarda eski ui_shell/auth cache kalmasın
+    const V = "20260213";
 
-    // Dil kilidi
+    const { mountShell } = await import(`/js/ui_shell.js?v=${V}`);
+    const { applyI18n, setSiteLang, getSiteLang, t } = await import(`/js/i18n.js?v=${V}`);
+    const { logoutEverywhere, ensureAuthAndCacheUser } = await import(`/js/auth.js?v=${V}`);
+    const { supabase } = await import(`/js/supabase_client.js?v=${V}`);
+    const { STORAGE_KEY } = await import(`/js/config.js?v=${V}`);
+
     setSiteLang(getSiteLang());
-
     mountShell();
     applyI18n(document);
 
@@ -344,57 +345,78 @@
       window.__to = setTimeout(()=>el.classList.remove("show"), 1600);
     }
 
-    // ✅ Session -> STORAGE_KEY + wallet cache (supabase)
-    await ensureAuthAndCacheUser();
-
-    // KEY (local üretim) — sonra DB key'e bağlarız
-    const USER_KEY_STORAGE = "italky_user_key";
-    function randLetters3(){ const A="ABCDEFGHIJKLMNOPQRSTUVWXYZ"; let s=""; for(let i=0;i<3;i++) s+=A[Math.floor(Math.random()*A.length)]; return s; }
-    function randDigits6(){ let s=""; for(let i=0;i<6;i++) s+=String(Math.floor(Math.random()*10)); return s; }
-    function getOrCreateUserKey(){
-      let k = (localStorage.getItem(USER_KEY_STORAGE) || "").trim();
-      if(k && /^[A-Z]{3}\d{6}$/.test(k)) return k;
-      k = `${randLetters3()}${randDigits6()}`;
-      localStorage.setItem(USER_KEY_STORAGE, k);
-      return k;
-    }
-
-    // Token (wallet cache)
-    function loadWallet(){
+    function safeName(s){
       try{
-        const w = JSON.parse(localStorage.getItem("italky_wallet") || "null");
-        if(w && typeof w.balance === "number") return w;
-      }catch{}
-      return { balance: 0 };
+        if(!s) return s;
+        if (/[ÃÂ]/.test(s)) return decodeURIComponent(escape(s));
+        return s;
+      }catch{
+        return s;
+      }
     }
-    $("tokenVal").textContent = String(loadWallet().balance || 0);
 
-    // user (STORAGE_KEY)
+    // ✅ session → storage + wallet cache (auth.js)
+    const sessionUser = await ensureAuthAndCacheUser();
+
+    // ✅ user panel (storage’dan)
     (function(){
       let name="Kullanıcı", email="—";
       try{
         const raw = localStorage.getItem(STORAGE_KEY);
         if(raw){
           const u = JSON.parse(raw);
-          name = (u.name || "Kullanıcı").trim();
-          email = (u.email || "—").trim();
+          name = safeName((u.name || "Kullanıcı").trim());
+          email = safeName((u.email || "—").trim());
         }
       }catch{}
       $("fullName").textContent = name;
       $("email").textContent = email;
-
-      const key = getOrCreateUserKey();
-      $("userKeyText").textContent = `KEY: ${key}`;
-
-      $("keyCopy").addEventListener("click", async ()=>{
-        try{
-          await navigator.clipboard.writeText(key);
-          toast(t("key_copied"));
-        }catch{
-          toast(t("key_copied"));
-        }
-      });
     })();
+
+    // ✅ KEY: önce DB’den profiles.user_key dene, yoksa local fallback
+    const USER_KEY_STORAGE = "italky_user_key";
+    function localKey(){
+      let k = (localStorage.getItem(USER_KEY_STORAGE) || "").trim();
+      if(k && /^[A-Z]{3}\d{6}$/.test(k)) return k;
+      const A="ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+      const letters = A[Math.floor(Math.random()*26)] + A[Math.floor(Math.random()*26)] + A[Math.floor(Math.random()*26)];
+      const digits = String(Math.floor(Math.random()*1000000)).padStart(6,"0");
+      k = letters + digits;
+      localStorage.setItem(USER_KEY_STORAGE, k);
+      return k;
+    }
+
+    let keyText = localKey();
+    try{
+      const { data: prof } = await supabase.from("profiles").select("user_key").maybeSingle();
+      if(prof?.user_key) keyText = prof.user_key;
+    }catch{}
+
+    $("userKeyText").textContent = `KEY: ${keyText}`;
+    $("keyCopy").addEventListener("click", async ()=>{
+      try{ await navigator.clipboard.writeText(keyText); toast(t("key_copied")); }
+      catch{ toast(t("key_copied")); }
+    });
+
+    // ✅ TOKEN: önce DB’den wallets.balance, yoksa local cache
+    async function refreshWallet(){
+      try{
+        const { data: w } = await supabase.from("wallets").select("balance").maybeSingle();
+        if(w && typeof w.balance === "number"){
+          $("tokenVal").textContent = String(w.balance);
+          localStorage.setItem("italky_wallet", JSON.stringify({ balance: w.balance }));
+          return;
+        }
+      }catch{}
+
+      try{
+        const w = JSON.parse(localStorage.getItem("italky_wallet") || "null");
+        $("tokenVal").textContent = String((w && typeof w.balance === "number") ? w.balance : 0);
+      }catch{
+        $("tokenVal").textContent = "0";
+      }
+    }
+    await refreshWallet();
 
     // offline list (local cache)
     (function(){
@@ -453,41 +475,21 @@
       }
     });
 
-    // ✅ Güvenli çıkış: Supabase + local + login
+    // ✅ Güvenli çıkış
     $("logoutBtn").addEventListener("click", async ()=>{
       await logoutEverywhere();
       location.replace("/pages/login.html");
     });
 
-    // ✅ Kalıcı sil: Edge Function delete_account (yoksa uyarı)
+    // ✅ Kalıcı sil (istersen sonra Edge Function bağlarız)
     $("deleteBtn").addEventListener("click", ()=>{ $("confirmBack").style.display="flex"; });
     $("confirmNo").addEventListener("click", ()=>{ $("confirmBack").style.display="none"; });
 
     $("confirmYes").addEventListener("click", async ()=>{
-      try{
-        const { data: { session } } = await supabase.auth.getSession();
-        if(!session?.access_token){
-          alert("Oturum bulunamadı. Tekrar giriş yapın.");
-          return;
-        }
-
-        const { error } = await supabase.functions.invoke("delete_account", {
-          headers: { Authorization: `Bearer ${session.access_token}` }
-        });
-
-        if(error){
-          console.error(error);
-          alert("Kalıcı silme için delete_account function gerekli.");
-          return;
-        }
-
-        await logoutEverywhere();
-        try{ localStorage.clear(); }catch{}
-        location.replace("/pages/login.html");
-      }catch(e){
-        console.error(e);
-        alert("Silme başarısız.");
-      }
+      // Şimdilik lokal temizle + çıkış (Edge Function kurunca gerçek silme bağlarız)
+      await logoutEverywhere();
+      try{ localStorage.clear(); }catch{}
+      location.replace("/pages/login.html");
     });
   </script>
 </body>
