@@ -140,4 +140,3 @@ export async function redirectIfLoggedIn(){
 export function initAuth(){
   // Eskiden GSI render ediyordu; artık yok.
 }
-```0
