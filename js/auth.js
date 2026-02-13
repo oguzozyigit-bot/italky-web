@@ -1,28 +1,39 @@
-import { supabase } from "/js/supabase_client.js";
-import { STORAGE_KEY } from "/js/config.js";
+// js/auth.js
+import { supabase } from "./supabase-client.js"; // Dosya adındaki alt tire (_) yerine tire (-) kontrol et!
 
-function toStdUser(u){
-  const md = u.user_metadata || {};
-  return {
-    name: md.full_name || md.name || u.email || "Kullanıcı",
-    email: u.email || "",
-    picture: md.avatar_url || md.picture || ""
-  };
+// index.html'in beklediği fonksiyon: Oturum varsa yönlendir
+export async function redirectIfLoggedIn() {
+    const { data: { session } } = await supabase.auth.getSession();
+    return !!session;
 }
 
-export async function ensureAuthAndCacheUser(){
-  const { data: { session } } = await supabase.auth.getSession();
-  if(!session?.user) return null;
+// index.html'in beklediği fonksiyon: Google butonunu oluştur
+export function initAuth() {
+    const container = document.getElementById("googleBtnContainer");
+    if (!container) return;
 
-  const std = toStdUser(session.user);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(std));
-  return std;
+    // Dinamik bir buton oluşturuyoruz
+    container.innerHTML = `
+        <button id="google-login-btn" style="
+            width: 100%; max-width: 320px; height: 44px; border-radius: 10px; 
+            border: 1px solid rgba(255,255,255,0.12); background: rgba(0,0,0,0.35);
+            color: #fff; font-size: 15px; font-weight: 800; display:flex;
+            align-items:center; justify-content:center; gap:10px; cursor:pointer;">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18">
+            Google ile Devam Et
+        </button>
+    `;
+
+    document.getElementById("google-login-btn").addEventListener("click", loginWithGoogle);
 }
 
-export async function loginWithGoogle(){
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider: "google",
-    options: { redirectTo: window.location.origin + "/pages/home.html" }
-  });
-  if(error) alert(error.message);
+export async function loginWithGoogle() {
+    const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { 
+            redirectTo: window.location.origin + "/pages/home.html",
+            queryParams: { prompt: 'select_account' } 
+        }
+    });
+    if (error) console.error("Login hatası:", error.message);
 }
