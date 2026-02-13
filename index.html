@@ -194,37 +194,69 @@
 
   // index.html içindeki script bölümü
 <script type="module">
+    // HOME sayfasının yolu
     const HOME = "/pages/home.html";
+
+    const toast = (msg) => {
+      const t = document.getElementById("toast");
+      if(!t) return;
+      t.textContent = String(msg || "");
+      t.classList.add("show");
+      clearTimeout(window.__to);
+      window.__to = setTimeout(() => t.classList.remove("show"), 2200);
+    };
 
     async function boot() {
         let auth = null;
+        const container = document.getElementById("googleBtnContainer");
+
         try {
-            // ÖNEMLİ: Başına mutlaka ./ koyarak 'relative path' kullanıyoruz.
-            // Bu, Vercel'in dosyayı kök dizinde bulmasını sağlar.
+            // Relative path (./) Vercel'deki 404/MIME hatalarını önlemek için en güvenli yoldur.
+            // Cache breaker (?v=...) dosyanın her zaman taze gelmesini sağlar.
             auth = await import("./js/auth_state.js?v=" + Date.now());
+            console.log("Auth modülü başarıyla yüklendi.");
         } catch (e) {
-            console.error("Yükleme hatası:", e);
-            const msg = document.getElementById("googleBtnContainer");
-            if(msg) msg.innerHTML = '<p style="color:#ff4b5c; font-size:12px;">Sistem yüklenemedi. Lütfen internetinizi kontrol edip yenileyin.</p>';
-            return;
-        }
-
-        const already = await auth.redirectIfLoggedIn();
-        if (already) {
-            location.replace(HOME);
-            return;
-        }
-
-        auth.initAuth();
-
-        auth.startAuthState(({ user }) => {
-            if (user && window.location.pathname.includes("index.html")) {
-                location.replace(HOME);
+            console.error("Kritik Yükleme Hatası:", e);
+            if(container) {
+                container.innerHTML = '<p style="color:#ff4b5c; font-size:13px; font-weight:600; text-align:center;">Giriş sistemi şu an başlatılamıyor.<br>Lütfen sayfayı yenileyiniz.</p>';
             }
-        });
+            return;
+        }
+
+        // 1. Oturum zaten varsa beklemeden yönlendir
+        try {
+            const already = await auth.redirectIfLoggedIn();
+            if (already) {
+                window.location.replace(HOME);
+                return;
+            }
+        } catch(err) { console.error("Session check error:", err); }
+
+        // 2. Google butonunu oluştur (auth_state.js içindeki initAuth çalışır)
+        if (typeof auth.initAuth === "function") {
+            auth.initAuth();
+        } else {
+            console.error("Hata: auth_state.js içinde initAuth fonksiyonu bulunamadı!");
+        }
+
+        // 3. Gerçek zamanlı oturum dinleyicisini başlat
+        if (typeof auth.startAuthState === "function") {
+            auth.startAuthState(({ user }) => {
+                // Kullanıcı login olduğu an (örneğin Google popup kapandığında) home'a uçur
+                if (user && (window.location.pathname.endsWith("index.html") || window.location.pathname === "/")) {
+                    window.location.replace(HOME);
+                }
+            });
+        }
     }
 
+    // DOM ve tüm kaynaklar hazır olduğunda sistemi ateşle
     window.addEventListener("load", boot);
+
+    // Apple Butonu için geçici uyarı
+    document.getElementById("appleBtn")?.addEventListener("click", () => {
+      toast("Apple girişi yakında aktif olacak. Şimdilik Google ile devam edebilirsiniz.");
+    });
 </script>
 </body>
 </html>
