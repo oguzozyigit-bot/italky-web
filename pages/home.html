@@ -14,7 +14,7 @@
     :root{
       --bg-void:#02000f;
       --text-main:#fff;
-      --text-muted: rgba(255,255,255,0.72);
+      --text-muted: rgba(255,255,255,0.80);
       --ease-premium: cubic-bezier(0.22, 1, 0.36, 1);
 
       --footerH: 92px;
@@ -153,21 +153,20 @@
       padding: var(--edgePad) 18px calc(var(--footerH) + var(--edgePad) + env(safe-area-inset-bottom));
     }
 
-    /* ✅ tile layout */
+    /* ✅ tile layout: istek sırası */
     .tiles{
       height: 100%;
       display:grid;
       gap: var(--gap);
       grid-template-columns: 1fr 1fr;
       grid-template-areas:
-        "w1 w2"
-        "c  c"
-        "a  b"
-        "d  e";
+        "face offline"
+        "course course"
+        "game text"
+        "photo doc";
       grid-auto-rows: var(--rowH);
     }
 
-    /* base tile */
     .tile{
       position:relative;
       border-radius: 26px;
@@ -181,9 +180,27 @@
       box-shadow: 0 14px 30px rgba(0,0,0,0.25);
     }
     .tile:active{ transform: scale(0.95); }
-    .tile::before{ display:none; } /* pastel parlamayı kapat */
 
-    /* icon box like device */
+    /* ✅ kumlama / grain */
+    .tile::after{
+      content:"";
+      position:absolute; inset:0;
+      background:
+        url("https://www.transparenttextures.com/patterns/asfalt-light.png");
+      opacity:0.18;
+      mix-blend-mode: overlay;
+      pointer-events:none;
+    }
+    /* küçük highlight */
+    .tile::before{
+      content:"";
+      position:absolute; inset:0;
+      background: radial-gradient(circle at 18% 18%, rgba(255,255,255,0.22), transparent 60%);
+      opacity:0.55;
+      pointer-events:none;
+    }
+
+    /* icon box */
     .tile .icon{
       width:62px; height:56px;
       border-radius:20px;
@@ -211,54 +228,27 @@
       margin-top:6px;
       font-size:12px;
       font-weight:900;
-      color: rgba(255,255,255,0.80);
+      color: rgba(255,255,255,0.82);
       line-height:1.3;
     }
 
-    /* widget tiles */
-    .widget{
-      padding: 14px;
-      display:flex;
-      flex-direction:column;
-      justify-content:space-between;
-    }
-    .widget .label{
-      font-size:11px;
-      font-weight:1000;
-      letter-spacing:1px;
-      text-transform:uppercase;
-      opacity:.85;
-    }
-    .widget .bigVal{
-      font-size:28px;
-      font-weight:1000;
-      letter-spacing:-0.8px;
-      line-height:1;
-    }
-    .widget .smallVal{
-      margin-top:6px;
-      font-size:12px;
-      font-weight:900;
-      opacity:.85;
-    }
-
     /* areas */
-    .w1{ grid-area:w1; }
-    .w2{ grid-area:w2; }
-    .c{ grid-area:c; }
-    .a{ grid-area:a; }
-    .b{ grid-area:b; }
-    .d{ grid-area:d; }
-    .e{ grid-area:e; }
+    .face{ grid-area:face; }
+    .offline{ grid-area:offline; }
+    .course{ grid-area:course; }
+    .game{ grid-area:game; }
+    .text{ grid-area:text; }
+    .photo{ grid-area:photo; }
+    .doc{ grid-area:doc; }
 
-    /* ✅ Cihaz gibi canlı blok renkler (hafif punch gradient) */
-    .red    { background: linear-gradient(180deg, #ff453a, #ff3b30); }
-    .purple { background: linear-gradient(180deg, #bf5af2, #af52de); }
-    .green  { background: linear-gradient(180deg, #30d158, #34c759); }
-    .blue   { background: linear-gradient(180deg, #409cff, #0a84ff); }
-    .orange { background: linear-gradient(180deg, #ffd60a, #ff9f0a); }
-    .indigo { background: linear-gradient(180deg, #7d7aff, #5e5ce6); }
-    .yellow { background: linear-gradient(180deg, #ffe36e, #ffd60a); }
+    /* ✅ canlı “cihaz gibi” renkler */
+    .bg-red    { background: linear-gradient(180deg, #ff453a, #ff3b30); }
+    .bg-green  { background: linear-gradient(180deg, #30d158, #34c759); }
+    .bg-blue   { background: linear-gradient(180deg, #409cff, #0a84ff); }
+    .bg-purple { background: linear-gradient(180deg, #bf5af2, #af52de); }
+    .bg-indigo { background: linear-gradient(180deg, #7d7aff, #5e5ce6); }
+    .bg-orange { background: linear-gradient(180deg, #ffd60a, #ff9f0a); }
+    .bg-yellow { background: linear-gradient(180deg, #ffe36e, #ffd60a); }
 
     /* footer */
     .premium-footer{
@@ -337,37 +327,8 @@
     <main class="main-content" id="mainContent">
       <div class="tiles" id="tiles">
 
-        <!-- widgets -->
-        <div class="tile widget w1 purple" data-href="/pages/teacher_select.html">
-          <div class="label">Son Ders</div>
-          <div>
-            <div class="bigVal" id="wLast">--:--</div>
-            <div class="smallVal" id="wLastSub">Kursa gir</div>
-          </div>
-        </div>
-
-        <div class="tile widget w2 indigo" data-href="/pages/game.html">
-          <div class="label">Streak</div>
-          <div>
-            <div class="bigVal" id="wStreak">0</div>
-            <div class="smallVal">gün</div>
-          </div>
-        </div>
-
-        <!-- big -->
-        <div class="tile c green" data-href="/pages/offline.html">
-          <div class="icon">
-            <svg viewBox="0 0 24 24">
-              <path d="M4 7h16M4 12h16M4 17h10"/>
-              <path d="M17 8l3 3-3 3"/>
-              <path d="M20 11H14"/>
-            </svg>
-          </div>
-          <div class="tTitle">Offline Çeviri</div>
-          <div class="tDesc">İndir • Süreli Paket</div>
-        </div>
-
-        <div class="tile a blue" data-href="/pages/facetoface.html">
+        <!-- 1) Yüzyüze -->
+        <div class="tile face bg-blue" data-href="/pages/facetoface.html">
           <div class="icon">
             <svg viewBox="0 0 24 24">
               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
@@ -380,7 +341,21 @@
           <div class="tDesc">Karşılıklı Çeviri</div>
         </div>
 
-        <div class="tile b red" data-href="/pages/teacher_select.html">
+        <!-- 2) Offline Çeviri -->
+        <div class="tile offline bg-green" data-href="/pages/offline.html">
+          <div class="icon">
+            <svg viewBox="0 0 24 24">
+              <path d="M4 7h16M4 12h16M4 17h10"/>
+              <path d="M17 8l3 3-3 3"/>
+              <path d="M20 11H14"/>
+            </svg>
+          </div>
+          <div class="tTitle">Offline</div>
+          <div class="tDesc">İndir • Süreli</div>
+        </div>
+
+        <!-- Geniş: Dil Kursu -->
+        <div class="tile course bg-red" data-href="/pages/teacher_select.html">
           <div class="icon">
             <svg viewBox="0 0 24 24">
               <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
@@ -389,28 +364,55 @@
             </svg>
           </div>
           <div class="tTitle">Dil Kursu</div>
-          <div class="tDesc">Günlük Ders</div>
+          <div class="tDesc">Günlük Ders • Seviye • Plan</div>
         </div>
 
-        <div class="tile d yellow" data-href="/pages/text_translate.html">
+        <!-- Alt: Eğlenerek Öğren -->
+        <div class="tile game bg-purple" data-href="/pages/game.html">
+          <div class="icon">
+            <svg viewBox="0 0 24 24">
+              <rect x="2" y="6" width="20" height="12" rx="2"/>
+              <path d="M6 12h4M8 10v4"/>
+              <circle cx="15" cy="11" r="1"/>
+            </svg>
+          </div>
+          <div class="tTitle">Eğlenerek</div>
+          <div class="tDesc">Öğren</div>
+        </div>
+
+        <!-- Yanına: Metinden Çeviri -->
+        <div class="tile text bg-yellow" data-href="/pages/text_translate.html">
           <div class="icon">
             <svg viewBox="0 0 24 24">
               <path d="M4 7h16M4 12h16M4 17h10"/>
             </svg>
           </div>
-          <div class="tTitle">Metin Çeviri</div>
-          <div class="tDesc">Hızlı</div>
+          <div class="tTitle">Metinden</div>
+          <div class="tDesc">Çeviri</div>
         </div>
 
-        <div class="tile e orange" data-href="/pages/photo.html">
+        <!-- Fotoğraftan çeviri -->
+        <div class="tile photo bg-orange" data-href="/pages/photo.html">
           <div class="icon">
             <svg viewBox="0 0 24 24">
               <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
               <circle cx="12" cy="13" r="4"/>
             </svg>
           </div>
-          <div class="tTitle">Foto Çeviri</div>
-          <div class="tDesc">Görsel</div>
+          <div class="tTitle">Fotoğraftan</div>
+          <div class="tDesc">Çeviri</div>
+        </div>
+
+        <!-- Yanına: Belgeden çeviri -->
+        <div class="tile doc bg-indigo" data-href="/pages/document.html">
+          <div class="icon">
+            <svg viewBox="0 0 24 24">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+            </svg>
+          </div>
+          <div class="tTitle">Belgeden</div>
+          <div class="tDesc">Çeviri</div>
         </div>
 
       </div>
@@ -441,17 +443,15 @@
     }
 
     function fitTiles(){
-      const main = document.getElementById("mainContent");
       const tiles = document.getElementById("tiles");
-      if(!main || !tiles) return;
+      if(!tiles) return;
 
       const gap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--gap")) || 14;
 
-      // areas: w1/w2, c, a/b, d/e => 4 rows
+      // 4 satır: (face/offline), (course), (game/text), (photo/doc)
       const rows = 4;
       const innerH = tiles.clientHeight;
       let rowH = (innerH - gap * (rows - 1)) / rows;
-
       rowH = Math.max(92, Math.min(150, rowH));
       document.documentElement.style.setProperty("--rowH", rowH + "px");
     }
@@ -468,13 +468,6 @@
         document.getElementById("userName").textContent = u.name || "Kullanıcı";
         if(u.picture) document.getElementById("userPic").src = u.picture;
       }
-
-      // simple widgets
-      const now = new Date();
-      const hh = String(now.getHours()).padStart(2,"0");
-      const mm = String(now.getMinutes()).padStart(2,"0");
-      document.getElementById("wLast").textContent = `${hh}:${mm}`;
-      document.getElementById("wStreak").textContent = String(Number(localStorage.getItem("italky_streak")||"0"));
 
       bindNav();
       requestAnimationFrame(()=>fitTiles());
