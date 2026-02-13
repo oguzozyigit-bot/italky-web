@@ -253,16 +253,47 @@ function ensureStyleOnce(){
   document.head.appendChild(st);
 }
 
+/* ✅ NEW: STORAGE_KEY yoksa localStorage içinde user objesi ara */
+function findUserObjectFromLocalStorage(){
+  for(let i=0;i<localStorage.length;i++){
+    const k = localStorage.key(i);
+    if(!k) continue;
+    const v = localStorage.getItem(k);
+    if(!v || v.length < 10) continue;
+    if(v[0] !== "{") continue;
+    try{
+      const o = JSON.parse(v);
+      const hasName = !!(o && (o.name || o.fullname || o.displayName));
+      const hasAny = !!(o && (o.picture || o.avatar || o.photoURL || o.email));
+      if(hasName && hasAny) return o;
+    }catch{}
+  }
+  return null;
+}
+
 function fillUser(){
   try{
+    let u = null;
+
+    // 1) Önce STORAGE_KEY
     const raw = localStorage.getItem(STORAGE_KEY);
-    if(!raw) return;
-    const u = JSON.parse(raw);
-    const nm = (u.name || u.fullname || "Kullanıcı").trim();
-    const pic = (u.picture || u.avatar || "").trim();
+    if(raw){
+      try{ u = JSON.parse(raw); }catch{ u = null; }
+    }
+
+    // 2) Yoksa tarama
+    if(!u){
+      u = findUserObjectFromLocalStorage();
+    }
+
+    if(!u) return;
+
+    const nm = String(u.name || u.fullname || u.displayName || "Kullanıcı").trim();
+    const pic = String(u.picture || u.avatar || u.photoURL || "").trim();
+
     const elName = document.getElementById("userName");
     const elPic  = document.getElementById("userPic");
-    if(elName) elName.textContent = nm;
+    if(elName) elName.textContent = nm || "Kullanıcı";
     if(elPic && pic) elPic.src = pic;
   }catch{}
 }
