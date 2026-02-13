@@ -17,6 +17,7 @@
       --text-muted: rgba(255,255,255,0.65);
       --neon-glow: 0 0 20px rgba(99,102,241,0.45);
       --ease-premium: cubic-bezier(0.22, 1, 0.36, 1);
+
       --footerH: 92px;
       --bar-bg: rgba(0,0,0,0.18);
       --edgePad: 14px;
@@ -69,6 +70,7 @@
       align-items:flex-start;
       justify-content:space-between;
       gap: 10px;
+
       background: var(--bar-bg);
       border-bottom-left-radius: 22px;
       border-bottom-right-radius: 22px;
@@ -166,11 +168,12 @@
       display:flex;
       flex-direction:column;
       align-items:center;
-      transition: all .4s var(--ease-premium);
+      transition: all .35s var(--ease-premium);
       cursor:pointer;
       overflow:hidden;
+      user-select:none;
     }
-    .premium-card:active{ transform: scale(0.94); background: rgba(255,255,255,0.10); }
+    .premium-card:active{ transform: scale(0.96); background: rgba(255,255,255,0.10); }
 
     .neon-icon-wrap{
       width:56px; height:50px;
@@ -277,8 +280,55 @@
 
     <main class="main-content">
       <div class="grid-layout">
-        <!-- (kartlar aynı; kısaltmadım) -->
-        <!-- ... -->
+
+        <div class="premium-card card-face" data-href="/pages/facetoface.html">
+          <div class="neon-icon-wrap"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+          <span class="card-title">Yüzyüze</span>
+          <span class="card-desc">Anlık Karşılıklı Çeviri</span>
+        </div>
+
+        <div class="premium-card card-voice" data-href="/pages/teacher_select.html">
+          <div class="neon-icon-wrap"><svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg></div>
+          <span class="card-title">Dil Kursu</span>
+          <span class="card-desc">Öğretmenle Günlük Ders</span>
+        </div>
+
+        <div class="premium-card card-text" data-href="/pages/text_translate.html">
+          <div class="neon-icon-wrap"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></svg></div>
+          <span class="card-title">Metin Çeviri</span>
+          <span class="card-desc">Hızlı ve Doğru Çeviri</span>
+        </div>
+
+        <div class="premium-card card-chat" data-href="/pages/teacher_select.html">
+          <div class="neon-icon-wrap"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 1 1-7.6-13.5 8.38 8.38 0 0 1 3.8.9L21 3z"/></svg></div>
+          <span class="card-title">AI Öğretmen</span>
+          <span class="card-desc">Seviye + Ders Planı</span>
+        </div>
+
+        <div class="premium-card card-photo" data-href="/pages/photo.html">
+          <div class="neon-icon-wrap"><svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
+          <span class="card-title">Foto Çeviri</span>
+          <span class="card-desc">Görselden Anında Çevir</span>
+        </div>
+
+        <div class="premium-card card-teacher" data-href="/pages/teacher_select.html">
+          <div class="neon-icon-wrap"><svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div>
+          <span class="card-title">Kurslar</span>
+          <span class="card-desc">Diller & Öğretmenler</span>
+        </div>
+
+        <div class="premium-card card-doc" data-href="/pages/document.html">
+          <div class="neon-icon-wrap"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+          <span class="card-title">Belge Çeviri</span>
+          <span class="card-desc">PDF ve Dosya Tarama</span>
+        </div>
+
+        <div class="premium-card card-game" data-href="/pages/game.html">
+          <div class="neon-icon-wrap"><svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 12h4M8 10v4"/><circle cx="15" cy="11" r="1"/></svg></div>
+          <span class="card-title">Oyunlar</span>
+          <span class="card-desc">Eğlenerek Öğren</span>
+        </div>
+
       </div>
     </main>
 
@@ -338,10 +388,10 @@
     async function boot(){
       try{ applyI18n(document); }catch{}
 
-      // ✅ 0) İlk frame: local varsa bas (flicker biter)
+      // ✅ 0) ilk frame: local varsa bas (Kullanıcı flicker biter)
       paintHeaderFromStorage();
 
-      // ✅ 1) Session’dan çek (login sonrası güncelle)
+      // ✅ 1) session’dan çek (login sonrası güncelle)
       const u = await ensureAuthAndCacheUser();
       if(u) paintHeader(u);
 
