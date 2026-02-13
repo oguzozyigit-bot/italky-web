@@ -344,53 +344,18 @@
   </div>
 
   <script type="module">
-import { supabase } from "/js/supabase_client.js";
-import { ensureAuthAndCacheUser } from "/js/auth.js";
-import { applyI18n } from "/js/i18n.js";
+import { bootPage } from "/js/ui_guard.js";
 
-function updateHeader(user){
-  const nameEl = document.getElementById("userName");
-  const imgEl  = document.getElementById("userPic");
+bootPage({
+  protectedPage: true,
+  header: { nameId:"userName", picId:"userPic" }
+});
 
-  const name =
-    user.user_metadata?.full_name ||
-    user.user_metadata?.name ||
-    user.email;
-
-  nameEl.textContent = name;
-
-  if(user.user_metadata?.avatar_url){
-    imgEl.src = user.user_metadata.avatar_url;
-  }
-}
-
-async function initHome(){
-
-  applyI18n(document);
-
-  const { data: { session } } = await supabase.auth.getSession();
-
-  if(!session){
-    location.replace("/pages/login.html");
-    return;
-  }
-
-  await ensureAuthAndCacheUser();
-
-  updateHeader(session.user);
-
-  document.querySelectorAll(".premium-card[data-href]").forEach(card=>{
-    card.addEventListener("click", ()=>{
-      location.href = card.getAttribute("data-href");
-    });
-  });
-
-  document.getElementById("profileBtn")
-    ?.addEventListener("click", ()=>location.href="/pages/profile.html");
-
-}
-
-document.addEventListener("DOMContentLoaded", initHome);
+// kart nav (senin mevcut)
+document.querySelectorAll(".premium-card[data-href]").forEach(card=>{
+  card.addEventListener("click", ()=>location.href = card.getAttribute("data-href"));
+});
+document.getElementById("profileBtn")?.addEventListener("click", ()=>location.href="/pages/profile.html");
 </script>
 </body>
 </html>
