@@ -12,7 +12,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
   <style>
-    #pageContent{ height:100%; }
+    /* ✅ yatay kayma KİLİT */
+    html, body { overflow-x: hidden !important; }
+    #pageContent { width:100%; overflow-x:hidden; }
 
     .wrap{
       min-height:100%;
@@ -20,6 +22,7 @@
       display:flex;
       flex-direction:column;
       gap:12px;
+      overflow-x:hidden;
     }
 
     .panel{
@@ -47,12 +50,7 @@
       text-overflow:ellipsis;
     }
 
-    .keyRow{
-      margin-top:12px;
-      display:flex;
-      gap:10px;
-      align-items:center;
-    }
+    .keyRow{ margin-top:12px; display:flex; gap:10px; align-items:center; }
     .keyPill{
       flex:1;
       padding:10px 12px;
@@ -68,13 +66,16 @@
       justify-content:space-between;
       align-items:center;
       gap:10px;
+      min-width:0;
     }
+    .keyPill span{ min-width:0; }
     .keyPill:active{ transform: scale(.99); }
     .copyHint{
       font-size:11px;
       font-weight:1000;
       color: rgba(255,255,255,0.75);
       letter-spacing:.4px;
+      white-space:nowrap;
     }
 
     .card{
@@ -82,6 +83,7 @@
       border:1px solid rgba(255,255,255,0.10);
       background: rgba(0,0,0,0.18);
       padding: 14px 12px;
+      overflow:hidden;
     }
 
     .row{
@@ -90,26 +92,11 @@
       align-items:flex-start;
       gap:12px;
     }
-    .left{
-      display:flex;
-      flex-direction:column;
-      gap:6px;
-      min-width:0;
-    }
-    .title{
-      font-size:13px;
-      font-weight:1000;
-      color: rgba(255,255,255,0.92);
-    }
-    .desc{
-      font-size:11px;
-      font-weight:900;
-      color: rgba(255,255,255,0.62);
-      line-height:1.35;
-    }
+    .left{ display:flex; flex-direction:column; gap:6px; min-width:0; }
+    .title{ font-size:13px; font-weight:1000; color: rgba(255,255,255,0.92); }
+    .desc{ font-size:11px; font-weight:900; color: rgba(255,255,255,0.62); line-height:1.35; }
 
-    /* Custom flag dropdown */
-    .langBox{ position:relative; min-width: 160px; }
+    .langBox{ position:relative; width: 180px; flex:0 0 auto; }
     .langBtn{
       width:100%;
       height:44px;
@@ -125,16 +112,9 @@
       padding: 0 12px;
       user-select:none;
     }
-    .langBtn:active{ transform: scale(.99); }
     .langLeft{ display:flex; align-items:center; gap:10px; min-width:0; }
     .flag{ font-size:18px; line-height:1; }
-    .langText{
-      font-size:13px;
-      font-weight:1000;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
+    .langText{ font-size:13px; font-weight:1000; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:120px; }
     .chev{ opacity:.7; font-size:14px; }
 
     .langMenu{
@@ -161,31 +141,15 @@
     }
     .langItem:active{ transform: scale(.99); background: rgba(255,255,255,0.06); }
 
-    .grid2{
-      margin-top:12px;
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:10px;
-    }
+    .grid2{ margin-top:12px; display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
     .mini{
       border-radius: 22px;
       border:1px solid rgba(255,255,255,0.10);
       background: rgba(255,255,255,0.05);
       padding: 12px;
     }
-    .k{
-      font-size:11px;
-      font-weight:1000;
-      color: rgba(255,255,255,0.60);
-      text-transform:uppercase;
-      letter-spacing:1px;
-    }
-    .v{
-      margin-top:6px;
-      font-size:16px;
-      font-weight:1000;
-      color:#fff;
-    }
+    .k{ font-size:11px; font-weight:1000; color: rgba(255,255,255,0.60); text-transform:uppercase; letter-spacing:1px; }
+    .v{ margin-top:6px; font-size:16px; font-weight:1000; color:#fff; }
 
     .list{ margin-top:10px; display:flex; flex-wrap:wrap; gap:8px; }
     .tag{
@@ -211,20 +175,9 @@
       border:1px solid rgba(255,255,255,0.12);
     }
     .btnFull:active{ transform: scale(.99); }
-
-    .btnPrimary{
-      background: linear-gradient(135deg, #A5B4FC, #4F46E5);
-      border:none;
-      box-shadow: 0 16px 44px rgba(79,70,229,.18);
-    }
-    .btnSafe{
-      background: rgba(0,200,120,0.20);
-      border:1px solid rgba(0,200,120,0.40);
-    }
-    .btnDanger{
-      background: rgba(255,60,60,0.18);
-      border:1px solid rgba(255,60,60,0.40);
-    }
+    .btnPrimary{ background: linear-gradient(135deg, #A5B4FC, #4F46E5); border:none; box-shadow: 0 16px 44px rgba(79,70,229,.18); }
+    .btnSafe{ background: rgba(0,200,120,0.20); border:1px solid rgba(0,200,120,0.40); }
+    .btnDanger{ background: rgba(255,60,60,0.18); border:1px solid rgba(255,60,60,0.40); }
 
     .toast{
       position: fixed;
@@ -247,7 +200,6 @@
     }
     .toast.show{ transform: translateX(-50%) translateY(0); }
 
-    /* Modal */
     .modalBack{
       position:fixed; inset:0;
       background: rgba(0,0,0,0.55);
@@ -274,10 +226,7 @@
       background: rgba(255,255,255,0.08);
       border: 1px solid rgba(255,255,255,0.12);
     }
-    .mBtnDanger{
-      background: rgba(255,60,60,0.18);
-      border: 1px solid rgba(255,60,60,0.40);
-    }
+    .mBtnDanger{ background: rgba(255,60,60,0.18); border: 1px solid rgba(255,60,60,0.40); }
   </style>
 </head>
 
@@ -306,7 +255,7 @@
         </div>
         <div class="grid2">
           <div class="mini">
-            <div class="k" data-i18n="profile_remaining_tokens">Kalan Token</div>
+            <div class="k" data-i18n="remaining_tokens">Kalan Token</div>
             <div class="v" id="tokenVal">0</div>
           </div>
           <div class="mini">
@@ -378,6 +327,9 @@
     import { applyI18n, setSiteLang, getSiteLang, t } from "/js/i18n.js";
     import { STORAGE_KEY } from "/js/config.js";
 
+    // ✅ Dil kilidi
+    setSiteLang(getSiteLang());
+
     mountShell();
     applyI18n(document);
 
@@ -391,7 +343,6 @@
       window.__to = setTimeout(()=>el.classList.remove("show"), 1600);
     }
 
-    // KEY
     const USER_KEY_STORAGE = "italky_user_key";
     function randLetters3(){ const A="ABCDEFGHIJKLMNOPQRSTUVWXYZ"; let s=""; for(let i=0;i<3;i++) s+=A[Math.floor(Math.random()*A.length)]; return s; }
     function randDigits6(){ let s=""; for(let i=0;i<6;i++) s+=String(Math.floor(Math.random()*10)); return s; }
@@ -403,7 +354,6 @@
       return k;
     }
 
-    // Wallet
     function loadWallet(){
       try{
         const w = JSON.parse(localStorage.getItem("italky_wallet") || "null");
@@ -413,8 +363,8 @@
     }
     $("tokenVal").textContent = String(loadWallet().balance || 0);
 
-    // User
-    function fillUser(){
+    // user
+    (function(){
       let name="Kullanıcı", email="—";
       try{
         const raw = localStorage.getItem(STORAGE_KEY);
@@ -433,15 +383,14 @@
       $("keyCopy").addEventListener("click", async ()=>{
         try{
           await navigator.clipboard.writeText(key);
-          toast(t("key_copied") || "KEY kopyalandı");
+          toast(t("key_copied"));
         }catch{
-          toast(t("key_copied") || "KEY kopyalandı");
+          toast(t("key_copied"));
         }
       });
-    }
-    fillUser();
+    })();
 
-    // Offline list
+    // offline list
     (function(){
       let arr=[];
       try{ arr = JSON.parse(localStorage.getItem("italky_offline_langs") || "[]"); }catch{}
@@ -459,27 +408,23 @@
       }
     })();
 
-    // Buy tokens / Download lang
     $("buyTokenBtn").addEventListener("click", ()=>location.href="/pages/course_signup.html");
     $("downloadLangBtn").addEventListener("click", ()=>toast("OK"));
 
-    // Language menu (KİLİT: set + reload)
-    const LANG_UI = {
+    // language menu
+    const UI = {
       tr:{flag:"🇹🇷", label:"Türkçe"},
       en:{flag:"🇬🇧", label:"English"},
       de:{flag:"🇩🇪", label:"Deutsch"},
       it:{flag:"🇮🇹", label:"Italiano"},
       fr:{flag:"🇫🇷", label:"Français"},
     };
-
     function setLangUI(v){
-      const info = LANG_UI[v] || LANG_UI.tr;
+      const info = UI[v] || UI.tr;
       $("langFlag").textContent = info.flag;
       $("langLabel").textContent = info.label;
     }
-
-    const cur = getSiteLang();
-    setLangUI(cur);
+    setLangUI(getSiteLang());
 
     const menu = $("langMenu");
     const btn = $("langBtn");
@@ -492,8 +437,7 @@
       item.addEventListener("click", ()=>{
         const v = item.getAttribute("data-v");
         setSiteLang(v);
-        // ✅ kilit: tüm sayfa yeni dile dönsün
-        location.reload();
+        location.reload(); // ✅ kilit
       });
     });
 
@@ -503,7 +447,6 @@
       }
     });
 
-    // Logout / delete
     $("logoutBtn").addEventListener("click", ()=>{
       try{ localStorage.removeItem(STORAGE_KEY); }catch{}
       location.href="/pages/home.html";
