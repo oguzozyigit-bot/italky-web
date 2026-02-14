@@ -80,8 +80,12 @@
   <div id="toast"></div>
 
   <script type="module">
+    // DEBUG KODU: E00 (Deploy doğrulaması için)
+    console.log("Debug Code: E00 - italkyAI Booting...");
+
     const SUPABASE_URL  = "https://rkbwcmeqdwuewqeokfas.supabase.co";
-    const SUPABASE_KEY  = "sb_publishable_Xh1B9xUhmHCV6A3ffgeIrg_yO6uTX0t";
+    // ÖNEMLİ: Buradaki key 'anon' key olmalı, 'publishable' değilse hata verebilir.
+    const SUPABASE_KEY  = "sb_publishable_Xh1B9xUhmHCV6A3ffgeIrg_yO6uTX0t"; 
     const HOME_PATH     = "/pages/home.html";
 
     const box = document.getElementById("googleBtnContainer");
@@ -98,32 +102,19 @@
     function showError(code, msg){
       if(!box) return;
       box.innerHTML = `<p style="color:#ff6b6b;font-size:12px;font-weight:900;margin:0;text-align:center;">
-        Sistem yüklenemedi (${code}). ${msg || ""}
+        Sistem yüklenemedi (${code}). <br> <span style="font-weight:400">${msg || ""}</span>
       </p>`;
-    }
-
-    function renderButton(){
-      if(!box) return;
-      box.innerHTML = `
-        <button id="googleBtn"
-          style="width:100%;max-width:320px;height:44px;border-radius:10px;
-          border:1px solid rgba(255,255,255,0.12);
-          background:rgba(255,255,255,0.06);
-          color:#fff;font-size:15px;font-weight:900;cursor:pointer;"
-          type="button">
-          Google ile Giriş Yap
-        </button>`;
     }
 
     async function boot(){
       try{
-        // ✅ Dinamik import: hata olursa ekrana basar
+        // 1. Supabase Yükleme
         let createClient;
         try{
-          ({ createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm"));
+          const sb = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm");
+          createClient = sb.createClient;
         }catch(e){
-          console.error(e);
-          showError("E_IMPORT", e?.message || "Supabase ESM import failed");
+          showError("E_IMPORT", "CDN bağlantısı kurulamadı.");
           return;
         }
 
@@ -131,49 +122,36 @@
           auth: { persistSession:true, autoRefreshToken:true, detectSessionInUrl:true }
         });
 
-        renderButton();
+        // 2. Butonu Render Et
+        box.innerHTML = `
+          <button id="googleBtn" 
+            style="width:100%;max-width:320px;height:44px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.06);color:#fff;font-size:15px;font-weight:900;cursor:pointer;">
+            Google ile Giriş Yap (E00)
+          </button>`;
 
-        // session varsa home
-        const { data: sessData, error: sessErr } = await client.auth.getSession();
-        if(sessErr) console.error(sessErr);
-        if(sessData?.session){
-          window.location.replace(HOME_PATH);
-          return;
+        // 3. Mevcut Session Kontrolü
+        const { data: { session } } = await client.auth.getSession();
+        if(session) {
+            window.location.replace(HOME_PATH);
+            return;
         }
 
-        // click -> oauth
-        const btn = document.getElementById("googleBtn");
-        btn.onclick = async () => {
-          try{
-            toast("Google yönlendiriliyor...");
-            const redirectTo = window.location.origin + HOME_PATH;
-
-            const { error } = await client.auth.signInWithOAuth({
-              provider: "google",
-              options: { redirectTo }
-            });
-
-            if(error){
-              console.error(error);
-              showError("E_OAUTH", error.message || String(error));
-            }
-          }catch(e){
-            console.error(e);
-            showError("E_OAUTH2", e?.message || String(e));
-          }
+        // 4. Click Event
+        document.getElementById("googleBtn").onclick = async () => {
+          toast("Google yönlendiriliyor...");
+          const { error } = await client.auth.signInWithOAuth({
+            provider: "google",
+            options: { redirectTo: window.location.origin + HOME_PATH }
+          });
+          if(error) showError("E_OAUTH", error.message);
         };
 
-        client.auth.onAuthStateChange((_event, session)=>{
-          if(session) window.location.replace(HOME_PATH);
-        });
-
       }catch(e){
-        console.error(e);
-        showError("E_BOOT", e?.message || String(e));
+        showError("E_BOOT", e.message);
       }
     }
 
     boot();
-  </script>
+</script>
 </body>
 </html>
