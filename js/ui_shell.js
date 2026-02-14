@@ -1,26 +1,26 @@
-// ✅ italkyAI Merkezi Arayüz Sistemi (Shell)
 import { STORAGE_KEY } from "/js/config.js";
 import { applyI18n } from "/js/i18n.js";
 
-/* ✅ HOME HEADER (GÜNCEL JETON ALANI EKLENDİ) */
+/* ✅ HOME HEADER - İSİM ÜSTTE, JETON ALTTA, AVATAR YANDA */
 const HOME_HEADER_HTML = `
 <header class="premium-header">
-  <div class="brand-group" id="brandHome" title="Ana sayfa">
+  <div class="brand-group" id="brandHome">
     <h1><span>italky</span><span class="ai">AI</span></h1>
     <div class="brand-slogan">BE FREE</div>
   </div>
 
-  <div class="user-plain" id="profileBtn" title="Profil">
-    <div class="user-meta-group">
+  <div class="user-shell-box" id="profileBtn">
+    <div class="user-info-stack">
       <div class="uName" id="userName">Kullanıcı</div>
       <div class="uJeton">Jeton: <span id="headerJeton">0</span> Adet</div>
     </div>
-    <div class="avatar"><img src="" id="userPic" alt=""></div>
+    <div class="avatar">
+      <img src="" id="userPic" alt="">
+    </div>
   </div>
 </header>
 `;
 
-/* ✅ HOME FOOTER (SABİT) */
 const HOME_FOOTER_HTML = `
 <footer class="premium-footer">
   <nav class="footer-nav">
@@ -33,7 +33,6 @@ const HOME_FOOTER_HTML = `
 </footer>
 `;
 
-/* ✅ SHELL CSS (JETON TASARIMI DAHİL) */
 const SHELL_CSS = `
 :root{
   --bg-void:#02000f;
@@ -48,7 +47,6 @@ html,body{
   overflow:hidden; position:fixed;
   font-family:'Outfit', sans-serif;
   background-color: var(--bg-void);
-  color: var(--text-main);
 }
 
 .app-shell{
@@ -60,48 +58,52 @@ html,body{
   backdrop-filter: blur(30px);
 }
 
-/* HEADER TASARIMI */
+/* HEADER - TASARIM DÜZELTME */
 .premium-header{
-  padding: calc(10px + env(safe-area-inset-top)) 18px 10px;
+  padding: calc(14px + env(safe-area-inset-top)) 18px 14px;
   display:flex; align-items:center; justify-content:space-between;
   background: var(--bar-bg);
   border-bottom: 1px solid rgba(255,255,255,0.08);
-  backdrop-filter: blur(30px);
 }
 
-.user-meta-group {
+.user-shell-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.user-info-stack {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
-  margin-right: 10px;
+  align-items: flex-end; /* Metinleri avatarın soluna yaslar */
 }
 
 .uName {
-  font-weight: 900;
+  font-weight: 800;
   font-size: 14px;
   color: #fff;
-  white-space: nowrap;
+  line-height: 1.2;
 }
 
-/* ✅ JETON TEXT STİLİ */
 .uJeton {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 800;
-  color: #a5b4fc; /* Jeton rengi indigo */
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  color: #a5b4fc; /* Indigo tonu */
   margin-top: 2px;
 }
 
-.avatar{
-  width: 40px; height: 40px;
-  border-radius: 999px;
-  overflow:hidden;
-  border: 2px solid rgba(99,102,241,0.65);
+.avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px; /* Hafif karemsi premium görünüm */
+  overflow: hidden;
+  border: 1.5px solid rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.05);
 }
-.avatar img{ width:100%; height:100%; object-fit:cover; display:block; }
+.avatar img { width: 100%; height: 100%; object-fit: cover; }
 
-.main-content{ flex:1; overflow-y:auto; padding-bottom: var(--footerH); scrollbar-width:none; }
+.main-content{ flex:1; overflow-y:auto; padding-bottom: 100px; scrollbar-width:none; }
 .main-content::-webkit-scrollbar{ display:none; }
 
 .premium-footer{
@@ -110,8 +112,15 @@ html,body{
   background: var(--bar-bg);
   border-top: 1px solid rgba(255,255,255,0.08);
   backdrop-filter: blur(30px);
-  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;
 }
+.footer-nav a { font-size:11px; font-weight:900; color:rgba(255,255,255,0.5); text-decoration:none; text-transform:uppercase; letter-spacing:1px; }
+.prestige-signature { font-size:12px; font-weight:900; background:linear-gradient(90deg, #fff, #6366f1); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+
+/* Marka Logosu */
+.brand-group h1 { font-size: 26px; margin:0; font-weight:900; display:flex; gap:2px; }
+.brand-group h1 .ai { background: linear-gradient(135deg, #a5b4fc 0%, #6366f1 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.brand-slogan { font-size: 8px; font-weight:900; color:rgba(255,255,255,0.4); letter-spacing:3px; margin-top:2px; }
 `;
 
 function ensureStyleOnce(){
@@ -122,55 +131,34 @@ function ensureStyleOnce(){
   document.head.appendChild(st);
 }
 
-/* ---------------- VERİ DOLDURMA ---------------- */
-
 async function fillUser(){
   try{
     const raw = localStorage.getItem(STORAGE_KEY);
     if(!raw) return;
     const u = JSON.parse(raw);
-
     const elName = document.getElementById("userName");
     const elPic  = document.getElementById("userPic");
+    const elJeton = document.getElementById("headerJeton");
     if(elName) elName.textContent = u.name || "Kullanıcı";
     if(elPic && u.picture) elPic.src = u.picture;
-
-    // ✅ Jeton miktarını header'a bas (BootPage bunu Supabase'den güncelleyecek)
-    const elJeton = document.getElementById("headerJeton");
-    if(elJeton && u.jeton) elJeton.textContent = u.jeton;
+    if(elJeton) elJeton.textContent = u.tokens || 0; // Profiles tablosundaki tokens sütunu
   }catch{}
 }
-
-/* ---------------- SHELL MONTAJI ---------------- */
 
 export function mountShell(options = {}){
   const { enabled = true, header = true, footer = true } = options;
   if(!enabled) return;
-
   ensureStyleOnce();
-
   const content = document.getElementById("pageContent");
   if(!content) return;
-
   const shell = document.createElement("div");
   shell.className = "app-shell";
-
-  const headerHTML = header ? HOME_HEADER_HTML : "";
-  const footerHTML = footer ? HOME_FOOTER_HTML : "";
-  shell.innerHTML = headerHTML + `<main class="main-content"></main>` + footerHTML;
-
+  shell.innerHTML = (header ? HOME_HEADER_HTML : "") + `<main class="main-content"></main>` + (footer ? HOME_FOOTER_HTML : "");
   const main = shell.querySelector(".main-content");
   main.appendChild(content);
-
   document.body.innerHTML = "";
   document.body.appendChild(shell);
-
   document.getElementById("brandHome")?.addEventListener("click", ()=>location.href="/pages/home.html");
   document.getElementById("profileBtn")?.addEventListener("click", ()=>location.href="/pages/profile.html");
-
-  try{ applyI18n?.(document); }catch{}
-
-  // ✅ Verileri yükle ve Supabase senkronizasyonunu başlat
-  import("/js/auth.js").then(m => m.ensureAuthAndCacheUser?.())
-    .finally(() => fillUser());
+  import("/js/auth.js").then(m => m.ensureAuthAndCacheUser?.()).finally(() => fillUser());
 }
