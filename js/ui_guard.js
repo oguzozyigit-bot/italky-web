@@ -1,5 +1,5 @@
 // FILE: /js/ui_guard.js
-import { startAuthState } from "/js/auth_state.js";
+import { startAuthState } from "/js/auth.js";
 
 /**
  * Sayfa türleri:
