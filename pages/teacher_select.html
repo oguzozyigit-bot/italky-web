@@ -4,19 +4,18 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 <title>italkyAI • Dil Dersi Seçimi</title>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
 <style>
   #pageContent { height: 100%; overflow: hidden; }
-  .wrap { height: 100%; padding: 10px 16px 20px; display: flex; flex-direction: column; justify-content: flex-start; }
-  .title-area { margin-bottom: 16px; text-align: center; padding-top: 5px; }
-  .title-area h2 { font-size: 22px; font-weight: 900; margin: 0; background: linear-gradient(135deg, #ffffff 0%, #a5b4fc 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-  .grid { flex: 1; width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; grid-auto-rows: var(--cardH); align-content: start; }
-  .card { border-radius: 28px; border: 1px solid rgba(255,255,255,0.08); background: linear-gradient(165deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.01) 100%); backdrop-filter: blur(20px); cursor: pointer; transition: all 0.3s ease; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; position: relative; }
-  .iconWrap { width: var(--iconBox); height: var(--iconBox); border-radius: 20px; display: flex; align-items: center; justify-content: center; background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.2); margin-bottom: 8px; }
-  .flag { font-size: var(--flagSize); filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
-  .role { font-size: var(--roleSize); font-weight: 800; color: #a5b4fc; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 2px; }
+  .wrap { height: 100%; padding: 10px 16px 20px; display: flex; flex-direction: column; }
+  .title-area { margin-bottom: 16px; text-align: center; }
+  .title-area h2 { font-size: 22px; font-weight: 900; background: linear-gradient(135deg, #fff 0%, #a5b4fc 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .grid { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; grid-auto-rows: var(--cardH); align-content: start; }
+  .card { border-radius: 28px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); backdrop-filter: blur(20px); cursor: pointer; transition: 0.3s; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .iconWrap { width: var(--iconBox); height: var(--iconBox); border-radius: 20px; display: flex; align-items: center; justify-content: center; background: rgba(99, 102, 241, 0.1); margin-bottom: 8px; }
+  .flag { font-size: var(--flagSize); }
+  .role { font-size: var(--roleSize); font-weight: 800; color: #a5b4fc; text-transform: uppercase; }
   .name { font-size: var(--nameSize); font-weight: 900; color: #fff; }
-  .card:active { transform: scale(0.95); background: rgba(99, 102, 241, 0.15); }
 </style>
 </head>
 <body>
@@ -59,9 +58,9 @@
         localStorage.setItem("italky_teacher_pref", tid);
         localStorage.setItem("italky_voice_pref", c.getAttribute("data-voice"));
         
-        // Dil bazlı seviye kontrolü
         const hasLevel = localStorage.getItem(`italky_level_${tid}`);
-        location.href = hasLevel ? "/pages/plan_select.html" : "/pages/level_test.html";
+        // 🚩 DOĞRU AKIŞ: Seviye yoksa Intro'ya (3. sayfa), varsa Plan'a (5. sayfa)
+        location.href = hasLevel ? "/pages/plan_select.html" : "/pages/level_test_intro.html";
       });
     });
   }
