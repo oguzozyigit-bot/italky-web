@@ -5,6 +5,9 @@ const HOME = "/pages/home.html";
 const box = document.getElementById("googleBtnContainer");
 const toastEl = document.getElementById("toast");
 
+/**
+ * Bildirim (Toast) Gösterimi
+ */
 function toast(msg){
   if(!toastEl) return;
   toastEl.textContent = msg;
@@ -13,11 +16,17 @@ function toast(msg){
   window.__to = setTimeout(()=>toastEl.classList.remove("show"), 2200);
 }
 
+/**
+ * Hata Mesajı Gösterimi
+ */
 function showError(msg){
   if(!box) return;
   box.innerHTML = `<p style="color:#ff6b6b;font-size:12px;font-weight:900;margin:0;text-align:center;">${msg}</p>`;
 }
 
+/**
+ * Login Butonunu Render Et
+ */
 function renderBtn(){
   if(!box) return;
   box.innerHTML = `
@@ -31,40 +40,45 @@ function renderBtn(){
   `;
 }
 
+/**
+ * Sayfa Yüklendiğinde Çalışan Başlatıcı (Login Sayfası İçin)
+ */
 async function boot(){
   try{
     renderBtn();
 
-    // session varsa home
     const { data, error } = await supabase.auth.getSession();
     if(error) console.error("getSession:", error);
+    
+    // Zaten oturum varsa ana sayfaya at
     if(data?.session){
       window.location.replace(HOME);
       return;
     }
 
-    // click
-    document.getElementById("googleBtn").onclick = async () => {
-      try{
-        toast("Google yönlendiriliyor...");
-        const redirectTo = window.location.origin + HOME;
+    const btn = document.getElementById("googleBtn");
+    if(btn) {
+      btn.onclick = async () => {
+        try{
+          toast("Google yönlendiriliyor...");
+          const redirectTo = window.location.origin + HOME;
 
-        const { error } = await supabase.auth.signInWithOAuth({
-          provider: "google",
-          options: { redirectTo }
-        });
+          const { error } = await supabase.auth.signInWithOAuth({
+            provider: "google",
+            options: { redirectTo }
+          });
 
-        if(error){
-          console.error("OAuth:", error);
-          showError("Google giriş hatası: " + (error.message || error));
+          if(error){
+            console.error("OAuth:", error);
+            showError("Google giriş hatası: " + (error.message || error));
+          }
+        }catch(e){
+          console.error("OAuth crash:", e);
+          showError("Google giriş başlatılamadı: " + (e?.message || e));
         }
-      }catch(e){
-        console.error("OAuth crash:", e);
-        showError("Google giriş başlatılamadı: " + (e?.message || e));
-      }
-    };
+      };
+    }
 
-    // auth state
     supabase.auth.onAuthStateChange((_event, session)=>{
       if(session) window.location.replace(HOME);
     });
@@ -75,4 +89,38 @@ async function boot(){
   }
 }
 
-boot();
+// Login sayfası elementleri varsa boot'u çalıştır
+if(box) boot();
+
+/**
+ * 🚩 ui_guard.js'in beklediği KRİTİK köprü fonksiyonu
+ * Bu "export" olmadığı için konsolda hata alıyordun.
+ */
+export async function startAuthState(callback) {
+  const handleAuth = async (session) => {
+    const user = session?.user || null;
+    let wallet = 0;
+
+    if (user) {
+      // Cüzdan bakiyesini çek
+      const { data } = await supabase
+        .from("profiles")
+        .select("tokens")
+        .eq("id", user.id)
+        .single();
+      wallet = data?.tokens || 0;
+    }
+
+    // ui_guard.js'e verileri gönder
+    callback({ user, wallet });
+  };
+
+  // Mevcut durumu hemen kontrol et
+  const { data: { session } } = await supabase.auth.getSession();
+  await handleAuth(session);
+
+  // Değişimleri dinle
+  supabase.auth.onAuthStateChange(async (_event, session) => {
+    await handleAuth(session);
+  });
+}
