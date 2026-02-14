@@ -1,85 +1,113 @@
-<!-- FILE: /pages/teacher_select.html -->
 <!DOCTYPE html>
 <html lang="tr">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-<title>italkyAI • Dil Seç</title>
+<title>italkyAI • Dil Seçimi</title>
 <link rel="icon" href="data:," />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
 <style>
-  #pageContent{ height:100%; }
+  #pageContent { height: 100%; }
 
-  .wrap{
-    height:100%;
-    padding: 12px 12px 18px;
-    overflow:hidden;
-    display:flex;
+  .wrap {
+    height: 100%;
+    padding: 10px 14px 20px;
+    display: flex;
+    flex-direction: column;
   }
 
-  .grid{
-    flex:1;
-    width:100%;
-    display:grid;
+  .title-area {
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  .title-area h2 {
+    font-size: 22px;
+    font-weight: 900;
+    margin: 0;
+    background: linear-gradient(135deg, #fff 0%, #a5b4fc 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .title-area p {
+    font-size: 13px;
+    color: rgba(255,255,255,0.5);
+    margin-top: 5px;
+    font-weight: 600;
+  }
+
+  .grid {
+    flex: 1;
+    width: 100%;
+    display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 12px;
     grid-auto-rows: var(--cardH);
   }
 
-  .card{
+  .card {
     height: var(--cardH);
-    border-radius: 26px;
-    border: 1px solid rgba(255,255,255,0.10);
-    background: linear-gradient(
-      145deg,
-      rgba(255,255,255,0.08) 0%,
-      rgba(255,255,255,0.02) 100%
-    );
-    padding: 12px;
-    cursor:pointer;
-    user-select:none;
-    transition:.2s;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    text-align:center;
-    gap: 8px;
+    border-radius: 28px;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.03);
+    backdrop-filter: blur(10px);
+    padding: 14px;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
   }
-  .card:active{ transform: scale(.95); }
 
-  .iconWrap{
+  /* Premium Parlama Efekti */
+  .card::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(145deg, rgba(99,102,241,0.1) 0%, transparent 100%);
+    opacity: 0;
+    transition: 0.3s;
+  }
+
+  .card:active { transform: scale(0.94); background: rgba(99,102,241,0.15); }
+  .card:active::after { opacity: 1; }
+
+  .iconWrap {
     width: var(--iconBox);
     height: var(--iconBox);
     border-radius: 22px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.1);
+    margin-bottom: 10px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
   }
 
-  .flag{
-    font-size: var(--flagSize);
-    line-height:1;
-  }
+  .flag { font-size: var(--flagSize); line-height: 1; }
 
-  .role{
+  .role {
     font-size: var(--roleSize);
-    font-weight: 900;
-    color: rgba(255,255,255,0.65);
-    line-height:1.1;
+    font-weight: 800;
+    color: #6366f1;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
   }
 
-  .name{
+  .name {
     font-size: var(--nameSize);
-    font-weight: 1000;
-    letter-spacing: -0.4px;
-    line-height:1.05;
-    color:#fff;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: -0.5px;
   }
 </style>
 </head>
@@ -87,55 +115,64 @@
 <body>
 <main id="pageContent">
   <div class="wrap">
+    <div class="title-area">
+      <h2>Eğitmenini Seç</h2>
+      <p>Öğrenmek istediğin dili ve yapay zeka eğitmenini belirle.</p>
+    </div>
     <div class="grid" id="teacherGrid"></div>
   </div>
 </main>
 
 <script type="module">
   import { mountShell } from "/js/ui_shell.js";
-  mountShell({ scroll:"none" });
+  import { bootPage } from "/js/ui_guard.js"; // 🚩 KRİTİK: Profil için gerekli
 
-  const KEY_TEACHER="italky_teacher_pref";
-  const KEY_LEVEL_DONE="italky_level_done";
-  const KEY_PLAN="italky_plan_pref";
-  const KEY_MINS="italky_lesson_mins";
+  // Shell'i kur
+  mountShell({ scroll: "none" });
+
+  // Profil verilerini doldur
+  bootPage({
+    protectedPage: true,
+    header: { nameId: "userName", picId: "userPic" }
+  });
+
+  const KEY_TEACHER = "italky_teacher_pref";
+  const KEY_LEVEL_DONE = "italky_level_done";
+  const KEY_PLAN = "italky_plan_pref";
+  const KEY_MINS = "italky_lesson_mins";
 
   const TEACHERS = [
-    { id:"dora",   flag:"🇬🇧", role:"İngilizce Öğretmeni",   name:"Dora" },
-    { id:"ayda",   flag:"🇩🇪", role:"Almanca Öğretmeni",     name:"Ayda" },
-    { id:"jale",   flag:"🇫🇷", role:"Fransızca Öğretmeni",   name:"Jale" },
-    { id:"ozan",   flag:"🇪🇸", role:"İspanyolca Öğretmeni",  name:"Ozan" },
-    { id:"sencer", flag:"🇮🇹", role:"İtalyanca Öğretmeni",   name:"Sencer" },
-    { id:"sungur", flag:"🇷🇺", role:"Rusça Öğretmeni",       name:"Sungur" },
-    { id:"huma",   flag:"🇯🇵", role:"Japonca Öğretmeni",     name:"Hüma" },
-    { id:"umay",   flag:"🇨🇳", role:"Çince Öğretmeni",       name:"Umay" },
+    { id: "dora",   flag: "🇬🇧", role: "English",   name: "Dora" },
+    { id: "ayda",   flag: "🇩🇪", role: "Deutsch",   name: "Ayda" },
+    { id: "jale",   flag: "🇫🇷", role: "Français",  name: "Jale" },
+    { id: "ozan",   flag: "🇪🇸", role: "Español",   name: "Ozan" },
+    { id: "sencer", flag: "🇮🇹", role: "Italiano",  name: "Sencer" },
+    { id: "sungur", flag: "🇷🇺", role: "Pусский",   name: "Sungur" },
+    { id: "huma",   flag: "🇯🇵", role: "日本語",     name: "Hüma" },
+    { id: "umay",   flag: "🇨🇳", role: "中文",       name: "Umay" },
   ];
 
   const $ = id => document.getElementById(id);
 
-  function goNext(){
-    const levelDone = (localStorage.getItem(KEY_LEVEL_DONE)||"")==="1";
-
-    // ✅ İlk kez → intro sayfası
-    if(!levelDone){
-      location.href="/pages/level_test_intro.html";
+  function goNext() {
+    const levelDone = (localStorage.getItem(KEY_LEVEL_DONE) || "") === "1";
+    if (!levelDone) {
+      location.href = "/pages/level_test_intro.html";
       return;
     }
+    const plan = (localStorage.getItem(KEY_PLAN) || "").trim();
+    const mins = (localStorage.getItem(KEY_MINS) || "").trim();
 
-    // ✅ Seviye yapıldıysa
-    const plan = (localStorage.getItem(KEY_PLAN)||"").trim();
-    const mins = (localStorage.getItem(KEY_MINS)||"").trim();
-
-    if(plan && mins){
-      location.href="/pages/teacher_course.html";
+    if (plan && mins) {
+      location.href = "/pages/teacher_course.html";
     } else {
-      location.href="/pages/plan_select.html";
+      location.href = "/pages/plan_select.html";
     }
   }
 
-  function render(){
+  function render() {
     const grid = $("teacherGrid");
-    grid.innerHTML = TEACHERS.map(t=>`
+    grid.innerHTML = TEACHERS.map(t => `
       <div class="card" data-id="${t.id}">
         <div class="iconWrap"><div class="flag">${t.flag}</div></div>
         <div class="role">${t.role}</div>
@@ -143,32 +180,31 @@
       </div>
     `).join("");
 
-    grid.querySelectorAll(".card").forEach(c=>{
-      c.addEventListener("click", ()=>{
+    grid.querySelectorAll(".card").forEach(c => {
+      c.addEventListener("click", () => {
         localStorage.setItem(KEY_TEACHER, c.getAttribute("data-id"));
         goNext();
       });
     });
   }
 
-  function fit(){
+  function fit() {
     const header = document.querySelector(".premium-header");
     const footer = document.querySelector(".premium-footer");
     const headerH = header ? header.offsetHeight : 0;
     const footerH = footer ? footer.offsetHeight : 0;
 
-    const usable = window.innerHeight - headerH - footerH - 46;
-
+    const usable = window.innerHeight - headerH - footerH - 100;
     const rows = 4;
-    const gap  = 12;
+    const gap = 12;
 
     let cardH = (usable - (gap * (rows - 1))) / rows;
-    cardH = Math.max(130, Math.min(180, cardH));
+    cardH = Math.max(120, Math.min(170, cardH));
 
-    const iconBox  = Math.max(52, Math.min(74, cardH * 0.44));
-    const flagSize = Math.max(22, Math.min(32, iconBox * 0.42));
-    const roleSize = Math.max(11, Math.min(13, cardH * 0.10));
-    const nameSize = Math.max(16, Math.min(20, cardH * 0.14));
+    const iconBox = Math.max(50, Math.min(70, cardH * 0.42));
+    const flagSize = Math.max(22, Math.min(30, iconBox * 0.45));
+    const roleSize = Math.max(10, Math.min(12, cardH * 0.09));
+    const nameSize = Math.max(16, Math.min(19, cardH * 0.14));
 
     document.documentElement.style.setProperty("--cardH", cardH + "px");
     document.documentElement.style.setProperty("--iconBox", iconBox + "px");
@@ -178,7 +214,7 @@
   }
 
   render();
-  requestAnimationFrame(()=>fit());
+  requestAnimationFrame(() => fit());
   window.addEventListener("resize", fit);
 </script>
 </body>
