@@ -5,55 +5,71 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>italkyAI • Profil</title>
   <link rel="icon" href="data:," />
-
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
 
   <style>
-    html,body{margin:0;padding:0;font-family:'Outfit',sans-serif;}
-    .wrap{padding:20px;}
-    .panel{padding:20px;border-radius:20px;background:#111;color:#fff;}
-    .name{font-size:20px;font-weight:800;}
-    .email{opacity:.7;margin-top:6px;}
-    .card{margin-top:20px;padding:20px;border-radius:20px;background:#181818;color:#fff;}
-    .token{font-size:24px;font-weight:900;margin-top:10px;}
-    button{margin-top:20px;padding:12px 16px;border:none;border-radius:10px;font-weight:700;cursor:pointer;}
-    .logout{background:#16a34a;color:#fff;}
-    .delete{background:#dc2626;color:#fff;margin-left:10px;}
+    html, body { margin: 0; padding: 0; font-family: 'Outfit', sans-serif; background: #000; color: #fff; }
+    .wrap { padding: 20px; max-width: 500px; margin: 0 auto; }
+    .panel { padding: 25px; border-radius: 20px; background: #111; border: 1px solid rgba(255,255,255,0.05); }
+    .name { font-size: 22px; font-weight: 800; background: linear-gradient(90deg, #fff, #888); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .email { opacity: .6; margin-top: 6px; font-size: 14px; }
+    .card { margin-top: 20px; padding: 25px; border-radius: 20px; background: #181818; border: 1px solid rgba(255,255,255,0.05); }
+    .token-label { font-size: 14px; opacity: .7; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+    .token { font-size: 32px; font-weight: 900; margin-top: 10px; color: #fff; }
+    .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
+    button { padding: 14px; border: none; border-radius: 12px; font-weight: 800; cursor: pointer; transition: transform 0.2s; font-family: 'Outfit', sans-serif; }
+    button:active { transform: scale(0.96); }
+    .logout { background: #16a34a; color: #fff; }
+    .delete { background: #dc2626; color: #fff; }
   </style>
 </head>
 
 <body>
 
 <div class="wrap">
-
   <div class="panel">
-    <div class="name" id="fullName">...</div>
-    <div class="email" id="email">...</div>
+    <div class="name" id="fullName">Yükleniyor...</div>
+    <div class="email" id="userEmail">...</div>
   </div>
 
   <div class="card">
-    <div>Token Cüzdan</div>
+    <div class="token-label">Token Cüzdan</div>
     <div class="token" id="tokenVal">0</div>
   </div>
 
-  <button class="logout" id="logoutBtn">Güvenli Çıkış</button>
-  <button class="delete" id="deleteBtn">Hesabımı Sil</button>
-
+  <div class="actions">
+    <button class="logout" id="logoutBtn">Güvenli Çıkış</button>
+    <button class="delete" id="deleteBtn">Hesabı Sil</button>
+  </div>
 </div>
 
 <script type="module">
 import { bootPage } from "/js/ui_guard.js";
 import { supabase } from "/js/supabase_client.js";
 
+// ui_guard.js ile sayfayı canlandırıyoruz
 bootPage({
-  protectedPage: true,
-  header: { nameId:"userName", picId:"userPic" }, // shell basıyorsan bu id’ler var
-  wallet: { elId:"tokenVal" }
+  protectedPage: true, // Giriş yapmamışsa login'e atar
+  header: { 
+    nameId: "fullName",   // HTML'deki id="fullName" ile eşleşti
+    emailId: "userEmail"  // HTML'deki id="userEmail" ile eşleşti
+  },
+  wallet: { 
+    elId: "tokenVal"      // HTML'deki id="tokenVal" ile eşleşti
+  }
 });
 
-document.getElementById("logoutBtn")?.addEventListener("click", async ()=>{
-  await supabase.auth.signOut();
-  location.replace("/pages/login.html");
+// Çıkış İşlemi
+document.getElementById("logoutBtn")?.addEventListener("click", async () => {
+  if(confirm("Güvenli çıkış yapmak istiyor musunuz?")) {
+    await supabase.auth.signOut();
+    location.replace("/pages/login.html");
+  }
+});
+
+// Hesap Silme (Şimdilik sadece uyarı verir)
+document.getElementById("deleteBtn")?.addEventListener("click", () => {
+  alert("Hesap silme işlemi için lütfen destek ile iletişime geçin.");
 });
 </script>
 
