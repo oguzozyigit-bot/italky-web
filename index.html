@@ -80,9 +80,6 @@
   <div id="toast"></div>
 
   <script type="module">
-    // ✅ Mobilde en stabil ESM kaynağı
-    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
-
     const SUPABASE_URL  = "https://rkbwcmeqdwuewqeokfas.supabase.co";
     const SUPABASE_KEY  = "sb_publishable_Xh1B9xUhmHCV6A3ffgeIrg_yO6uTX0t";
     const HOME_PATH     = "/pages/home.html";
@@ -98,9 +95,11 @@
       window.__to = setTimeout(()=>toastEl.classList.remove("show"), 2200);
     }
 
-    function showError(msg){
+    function showError(code, msg){
       if(!box) return;
-      box.innerHTML = `<p style="color:#ff6b6b;font-size:12px;font-weight:900;margin:0;text-align:center;">${msg}</p>`;
+      box.innerHTML = `<p style="color:#ff6b6b;font-size:12px;font-weight:900;margin:0;text-align:center;">
+        Sistem yüklenemedi (${code}). ${msg || ""}
+      </p>`;
     }
 
     function renderButton(){
@@ -116,19 +115,25 @@
         </button>`;
     }
 
-    const client = createClient(SUPABASE_URL, SUPABASE_KEY, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true
-      }
-    });
-
     async function boot(){
       try{
+        // ✅ Dinamik import: hata olursa ekrana basar
+        let createClient;
+        try{
+          ({ createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm"));
+        }catch(e){
+          console.error(e);
+          showError("E_IMPORT", e?.message || "Supabase ESM import failed");
+          return;
+        }
+
+        const client = createClient(SUPABASE_URL, SUPABASE_KEY, {
+          auth: { persistSession:true, autoRefreshToken:true, detectSessionInUrl:true }
+        });
+
         renderButton();
 
-        // Session varsa home
+        // session varsa home
         const { data: sessData, error: sessErr } = await client.auth.getSession();
         if(sessErr) console.error(sessErr);
         if(sessData?.session){
@@ -136,7 +141,7 @@
           return;
         }
 
-        // Click -> OAuth
+        // click -> oauth
         const btn = document.getElementById("googleBtn");
         btn.onclick = async () => {
           try{
@@ -150,22 +155,21 @@
 
             if(error){
               console.error(error);
-              showError("Google giriş hatası: " + (error.message || error));
+              showError("E_OAUTH", error.message || String(error));
             }
           }catch(e){
             console.error(e);
-            showError("Google giriş başlatılamadı: " + (e?.message || e));
+            showError("E_OAUTH2", e?.message || String(e));
           }
         };
 
-        // Auth değişirse home
         client.auth.onAuthStateChange((_event, session)=>{
           if(session) window.location.replace(HOME_PATH);
         });
 
       }catch(e){
         console.error(e);
-        showError("Sistem yüklenemedi: " + (e?.message || e));
+        showError("E_BOOT", e?.message || String(e));
       }
     }
 
