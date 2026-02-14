@@ -1,44 +1,314 @@
-<!DOCTYPE html>
+<!-- FILE: /pages/profile.html -->
+<!doctype html>
 <html lang="tr">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-<title>italkyAI • Profil</title>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
-<style>
-  #pageContent { padding: 20px; display: flex; flex-direction: column; gap: 20px; }
-  .p-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 25px; border-radius: 28px; backdrop-filter: blur(20px); }
-  .p-label { font-size: 11px; font-weight: 900; color: #6366f1; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; }
-  .p-val { font-size: 24px; font-weight: 900; color: #fff; margin-bottom: 15px; }
-  .btn-logout { width: 100%; height: 50px; background: #fff; color: #000; border: none; border-radius: 14px; font-weight: 900; cursor: pointer; }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>italkyAI • Profil</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+
+  <style>
+    /* Orta içerik premium, shell üst/alt barı giydirir */
+    #pageContent{
+      padding: 18px;
+      display:flex;
+      flex-direction:column;
+      gap: 14px;
+    }
+
+    .p-card{
+      background: linear-gradient(145deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%);
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 28px;
+      padding: 18px;
+      backdrop-filter: blur(22px);
+      -webkit-backdrop-filter: blur(22px);
+      overflow:hidden;
+    }
+
+    .p-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+
+    .p-title{
+      font-family: "Space Grotesk", system-ui, sans-serif;
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin: 0;
+    }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.18);
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.85);
+      white-space: nowrap;
+    }
+
+    .p-grid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .row{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      padding: 12px 12px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .k{
+      font-size: 10.5px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: rgba(165,180,252,0.95);
+      margin: 0 0 6px 0;
+    }
+    .v{
+      font-size: 14px;
+      font-weight: 900;
+      color: rgba(255,255,255,0.92);
+      margin: 0;
+      text-align:right;
+      word-break: break-word;
+    }
+    .sub{
+      font-size: 11px;
+      font-weight: 800;
+      color: rgba(255,255,255,0.65);
+      margin-top: 6px;
+      text-align:right;
+    }
+
+    .wallet{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      margin-top: 12px;
+      padding: 14px;
+      border-radius: 22px;
+      background: rgba(99,102,241,0.10);
+      border: 1px solid rgba(99,102,241,0.25);
+    }
+
+    .wallet .amt{
+      font-size: 22px;
+      font-weight: 1000;
+      letter-spacing: -0.5px;
+    }
+    .wallet .unit{
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.7);
+      margin-left: 6px;
+    }
+
+    .btn{
+      height: 46px;
+      border-radius: 16px;
+      border: 0;
+      cursor:pointer;
+      font-weight: 1000;
+      letter-spacing: 0.2px;
+      padding: 0 14px;
+      user-select:none;
+    }
+    .btn:active{ transform: scale(0.98); }
+
+    .btn-primary{
+      background: linear-gradient(135deg, #a5b4fc 0%, #6366f1 55%, #ec4899 100%);
+      color:#060412;
+    }
+    .btn-ghost{
+      background: rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.92);
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+    .btn-danger-ghost{
+      background: rgba(255, 0, 90, 0.08);
+      color: rgba(255,255,255,0.85);
+      border: 1px solid rgba(255, 0, 90, 0.25);
+    }
+
+    .list{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      margin-top: 12px;
+    }
+
+    .pill{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding: 12px 12px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .pill .left{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+    .pill .t{
+      font-size: 13px;
+      font-weight: 1000;
+      color: rgba(255,255,255,0.92);
+    }
+    .pill .d{
+      font-size: 11px;
+      font-weight: 800;
+      color: rgba(255,255,255,0.60);
+    }
+
+    .footer-actions{
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+    }
+
+    .muted-note{
+      font-size: 11px;
+      font-weight: 800;
+      color: rgba(255,255,255,0.55);
+      line-height: 1.35;
+      margin-top: 8px;
+    }
+  </style>
 </head>
+
 <body>
-<div id="pageContent">
-  <div class="p-card">
-    <div class="p-label">E-Posta Adresi</div>
-    <div class="p-val" id="pEmail">...</div>
-    <div class="p-label">Token Cüzdanı</div>
-    <div class="p-val"><span id="tokenVal">0</span> TK</div>
+  <div id="pageContent">
+
+    <div class="p-card">
+      <div class="p-head">
+        <h2 class="p-title">Profil</h2>
+        <div class="badge" id="memberBadge">Üyelik: …</div>
+      </div>
+
+      <div class="p-grid">
+        <div class="row">
+          <div>
+            <div class="k">Ad Soyad</div>
+            <div class="v" id="pName">…</div>
+          </div>
+          <div style="text-align:right">
+            <div class="k">E-Posta</div>
+            <div class="v" id="pEmail">…</div>
+          </div>
+        </div>
+
+        <div class="wallet">
+          <div>
+            <div class="k" style="margin:0 0 6px 0;">Kalan Jeton</div>
+            <div class="amt"><span id="tokenVal">0</span><span class="unit">Jeton</span></div>
+          </div>
+          <button class="btn btn-primary" id="buyTokensBtn">Jeton Satın Al</button>
+        </div>
+
+        <div class="muted-note">
+          Ekonomik kural: 1 Dakika = 1 Jeton • 1 Jeton = 2 TL
+        </div>
+      </div>
+    </div>
+
+    <div class="p-card">
+      <div class="p-head">
+        <h2 class="p-title">Seviye Durumu</h2>
+        <button class="btn btn-ghost" id="goTeacherSelectBtn">Ders / Sınav</button>
+      </div>
+
+      <div class="list" id="levelsList">
+        <!-- JS dolduracak -->
+      </div>
+
+      <div class="muted-note" id="levelsEmptyNote" style="display:none;">
+        Henüz seviye sınavına katılmadınız. Dil seçip sınava girerek seviyenizi oluşturabilirsiniz.
+      </div>
+    </div>
+
+    <div class="p-card">
+      <div class="p-head">
+        <h2 class="p-title">Offline Paketler</h2>
+        <button class="btn btn-ghost" id="offlineDownloadBtn">Offline Dil Paketi İndir</button>
+      </div>
+
+      <div class="list" id="offlineList"></div>
+
+      <div class="muted-note" id="offlineEmptyNote" style="display:none;">
+        Henüz offline paket indirmediniz.
+      </div>
+    </div>
+
+    <div class="p-card">
+      <div class="p-head">
+        <h2 class="p-title">Hesap Bilgisi</h2>
+        <div class="badge" id="createdAtBadge">Kayıt: …</div>
+      </div>
+
+      <div class="p-grid">
+        <div class="row">
+          <div>
+            <div class="k">Kayıt Tarihi</div>
+            <div class="v" id="createdAtVal">…</div>
+          </div>
+          <div style="text-align:right">
+            <div class="k">Son Giriş</div>
+            <div class="v" id="lastLoginVal">…</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-actions">
+      <button class="btn btn-ghost" id="logoutBtn">Güvenli Çıkış</button>
+      <button class="btn btn-danger-ghost" id="deleteBtn">Hesabımı kalıcı olarak sil</button>
+      <div class="muted-note">
+        Kalıcı silme işlemi geri alınamaz. Onay sonrası hesap ve verileriniz silinmek üzere işlenir.
+      </div>
+    </div>
+
   </div>
-  <button class="btn-logout" id="logoutBtn">Güvenli Çıkış</button>
-</div>
-<script type="module">
-  import { mountShell } from "/js/ui_shell.js";
-  import { bootPage } from "/js/ui_guard.js";
-  import { supabase } from "/js/supabase_client.js";
 
-  mountShell({ header:true, footer:true });
-  bootPage({ protectedPage:true, header:{ nameId:"userName", picId:"userPic" }, wallet:{ elId:"tokenVal" } });
+  <script type="module">
+    import { mountShell, setHeaderTokens } from "/js/ui_shell.js";
+    import { bootPage } from "/js/ui_guard.js";
+    import { initProfilePage } from "/js/profile_page.js";
 
-  supabase.auth.getSession().then(({data}) => {
-    if(data.session) document.getElementById("pEmail").textContent = data.session.user.email;
-  });
+    mountShell();
 
-  document.getElementById("logoutBtn").onclick = async () => {
-    await supabase.auth.signOut();
-    location.replace("/pages/login.html");
-  };
-</script>
+    // Üst barda ad + foto yine senin guard sisteminden gelsin
+    bootPage({ protectedPage:true, header:{ nameId:"userName", picId:"userPic" } });
+
+    // Profil sayfasını Supabase’den doldur
+    await initProfilePage({ setHeaderTokens });
+  </script>
 </body>
 </html>
