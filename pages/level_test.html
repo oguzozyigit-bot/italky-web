@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-<title>italkyAI • Seviye Belirleme</title>
+<title>italkyAI • Seviye Sınavı</title>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
 <style>
   #pageContent { height: 100%; overflow: hidden; }
@@ -13,8 +13,9 @@
   .card { flex: 1; border-radius: 32px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); backdrop-filter: blur(20px); padding: 24px; display: flex; flex-direction: column; }
   .q-meta { color: #6366f1; font-weight: 900; font-size: 12px; text-transform: uppercase; margin-bottom: 8px; }
   .q-text { font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 20px; line-height: 1.3; }
-  .opt { width: 100%; padding: 14px; border-radius: 18px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: #fff; font-weight: 700; margin-bottom: 10px; text-align: left; cursor: pointer; transition: 0.2s; }
-  .opt.sel { background: #6366f1; border: none; }
+  .opts { display: flex; flex-direction: column; gap: 10px; flex: 1; }
+  .opt { width: 100%; padding: 14px; border-radius: 18px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: #fff; font-weight: 700; text-align: left; cursor: pointer; transition: 0.2s; }
+  .opt.sel { background: #6366f1; border: none; box-shadow: 0 8px 20px rgba(99,102,241,0.3); }
   .nav { display: flex; gap: 12px; }
   .btn { flex: 1; height: 50px; border-radius: 16px; font-weight: 900; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: #fff; }
   .btn.primary { background: #fff; color: #000; border: none; }
@@ -23,9 +24,15 @@
 <body>
 <main id="pageContent">
   <div class="wrap">
-    <div class="topbar"><div class="chip" id="langChip">Dil: —</div><div class="chip" id="timerChip">40:00</div></div>
+    <div class="topbar">
+      <div class="chip" id="langChip">Dil: —</div>
+      <div class="chip" id="timerChip">40:00</div>
+    </div>
     <div class="card" id="qCard"></div>
-    <div class="nav"><button class="btn" id="btnPrev">GERİ</button><button class="btn primary" id="btnNext">İLERİ</button></div>
+    <div class="nav">
+      <button class="btn" id="btnPrev">GERİ</button>
+      <button class="btn primary" id="btnNext">İLERİ</button>
+    </div>
   </div>
 </main>
 <script type="module">
@@ -33,51 +40,107 @@
   import { bootPage } from "/js/ui_guard.js";
   import { supabase } from "/js/supabase_client.js";
 
+  // Ekonomi Sabitleri
+  const ENTRY_FEE = 200; // 40 dk için peşin alınan
+  const TOKEN_PER_MIN = 5; // Dakika başı 5 token
+  const TOTAL_MINUTES = 40;
+
   mountShell({ scroll: "none" });
   bootPage({ protectedPage: true, header: { nameId: "userName", picId: "userPic" } });
 
   const teacherId = localStorage.getItem("italky_teacher_pref");
   if(!teacherId) location.href = "/pages/teacher_select.html";
 
-  // Soru Bankası (Kısaltılmış örnek, 50 soru yukarıdaki formatta buraya gelecek)
-  const QUESTIONS = [{ id:1, level:"A1", weight:1, question:"I ___ a student.", options:["am","is","are","be"], correct:0 }]; 
+  // Soru Bankası (Gerçekçi 50 soru yapısı için şablon)
+  const QUESTIONS = [
+    { id:1, level:"A1", weight:1, question:"I ___ a student.", options:["am","is","are","be"], correct:0 },
+    // ... Buraya Gemini/OpenAI tarafından üretilmiş 50 profesyonel soru gelecek ...
+  ]; 
 
   let idx = 0;
+  let remainingSeconds = TOTAL_MINUTES * 60;
   const answers = Array(QUESTIONS.length).fill(null);
+  let timerInterval;
+
+  // Cüzdan Kesintisi (Sınav Başlangıcında)
+  async function deductEntryFee() {
+    const { data: { user } } = await supabase.auth.getUser();
+    const { data: profile } = await supabase.from('profiles').select('tokens').eq('id', user.id).single();
+    
+    if (profile.tokens < ENTRY_FEE) {
+      alert("Yetersiz bakiye!");
+      location.href = "/pages/teacher_select.html";
+      return;
+    }
+    
+    await supabase.from('profiles').update({ tokens: profile.tokens - ENTRY_FEE }).eq('id', user.id);
+  }
+
+  function startTimer() {
+    timerInterval = setInterval(() => {
+      remainingSeconds--;
+      const m = Math.floor(remainingSeconds / 60);
+      const s = remainingSeconds % 60;
+      document.getElementById("timerChip").textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+      
+      if (remainingSeconds <= 0) {
+        clearInterval(timerInterval);
+        finish();
+      }
+    }, 1000);
+  }
 
   function render() {
     const q = QUESTIONS[idx];
     const picked = answers[idx];
     document.getElementById("qCard").innerHTML = `
-      <div class="q-meta">Soru ${idx+1} / ${QUESTIONS.length} • ${q.level}</div>
+      <div class="q-meta">Soru ${idx+1} / ${QUESTIONS.length} • Seviye: ${q.level}</div>
       <div class="q-text">${q.question}</div>
-      ${q.options.map((opt, i) => `<button class="opt ${picked===i?'sel':''}" onclick="window.pick(${i})">${opt}</button>`).join("")}
+      <div class="opts">
+        ${q.options.map((opt, i) => `<button class="opt ${picked===i?'sel':''}" onclick="window.pick(${i})">${opt}</button>`).join("")}
+      </div>
     `;
     document.getElementById("btnPrev").disabled = (idx === 0);
-    document.getElementById("btnNext").textContent = (idx === QUESTIONS.length - 1) ? "BİTİR" : "İLERİ";
+    document.getElementById("btnNext").textContent = (idx === QUESTIONS.length - 1) ? "SINAVI BİTİR" : "İLERİ";
   }
 
   window.pick = (i) => { answers[idx] = i; render(); };
 
   async function finish() {
+    clearInterval(timerInterval);
+    
+    // 1. Skor Hesaplama
     let weighted = 0;
     answers.forEach((ans, i) => { if(ans === QUESTIONS[i].correct) weighted += QUESTIONS[i].weight; });
-    
-    // Basit eşik: weightedToLevel mantığı
-    const level = weighted > 3 ? "B1" : "A1"; 
-    
-    // Supabase ve Yerel Kayıt
+    const level = weighted > 40 ? "C1" : weighted > 30 ? "B2" : weighted > 20 ? "B1" : weighted > 10 ? "A2" : "A1";
+
+    // 2. Token İadesi (Kalan süreyi hesapla)
+    const usedMinutes = Math.ceil((TOTAL_MINUTES * 60 - remainingSeconds) / 60);
+    const unusedMinutes = TOTAL_MINUTES - usedMinutes;
+    const refundTokens = unusedMinutes * TOKEN_PER_MIN;
+
     const { data: { user } } = await supabase.auth.getUser();
-    if(user) await supabase.from("profiles").update({ [`level_${teacherId}`]: level }).eq("id", user.id);
-    
+    const { data: profile } = await supabase.from('profiles').select('tokens').eq('id', user.id).single();
+
+    // Seviyeyi ve İadeyi kaydet
+    await supabase.from("profiles").update({ 
+      [`level_${teacherId}`]: level,
+      tokens: profile.tokens + refundTokens 
+    }).eq("id", user.id);
+
+    alert(`Sınav Bitti!\nSeviyeniz: ${level}\nİade Edilen: ${refundTokens} Token`);
     localStorage.setItem(`italky_level_${teacherId}`, level);
     location.href = "/pages/plan_select.html";
   }
 
   document.getElementById("btnPrev").onclick = () => { if(idx > 0) { idx--; render(); } };
   document.getElementById("btnNext").onclick = () => { if(idx < QUESTIONS.length-1) { idx++; render(); } else finish(); };
-  
-  render();
+
+  // Başlat
+  deductEntryFee().then(() => {
+    startTimer();
+    render();
+  });
 </script>
 </body>
 </html>
