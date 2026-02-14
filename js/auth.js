@@ -1,8 +1,8 @@
 // FILE: /js/auth.js
 import { supabase } from "./supabase_client.js";
 
-const HOME_PATH = "/pages/home.html";
-const container = document.getElementById("googleBtnContainer");
+const HOME = "/pages/home.html";
+const box = document.getElementById("googleBtnContainer");
 const toastEl = document.getElementById("toast");
 
 function toast(msg){
@@ -14,125 +14,65 @@ function toast(msg){
 }
 
 function showError(msg){
-  if(!container) return;
-  container.innerHTML = `
-    <div style="width:100%;max-width:320px;padding:10px 12px;border-radius:10px;
-                border:1px solid rgba(255,107,107,0.35);background:rgba(255,107,107,0.10);
-                color:#ffd1d1;font-size:12px;font-weight:900;text-align:center;">
-      ${msg}
-    </div>`;
+  if(!box) return;
+  box.innerHTML = `<p style="color:#ff6b6b;font-size:12px;font-weight:900;margin:0;text-align:center;">${msg}</p>`;
 }
 
-function renderGoogleButton(){
-  if(!container) return;
-  container.innerHTML = `
+function renderBtn(){
+  if(!box) return;
+  box.innerHTML = `
     <button id="googleBtn" type="button"
       style="width:100%;max-width:320px;height:44px;border-radius:10px;
-             border:1px solid rgba(255,255,255,0.14);background:rgba(255,255,255,0.06);
+             border:1px solid rgba(255,255,255,0.12);
+             background:rgba(255,255,255,0.06);
              color:#fff;font-size:15px;font-weight:900;cursor:pointer;">
       Google ile Giriş Yap
-    </button>`;
+    </button>
+  `;
 }
 
-async function getStorageKeySafe(){
-  // config.js varsa oradan STORAGE_KEY al; yoksa fallback
+async function boot(){
   try{
-    const mod = await import("/js/config.js");
-    if(mod && mod.STORAGE_KEY) return String(mod.STORAGE_KEY);
-  }catch{}
-  return "italky_user";
-}
+    renderBtn();
 
-async function saveUserToStorage(user){
-  try{
-    const STORAGE_KEY = await getStorageKeySafe();
-    const md = user?.user_metadata || {};
-    const name = (md.full_name || md.name || md.given_name || user?.email || "Kullanıcı").toString();
-    const picture = (md.avatar_url || md.picture || "").toString();
-
-    const payload = {
-      id: user.id,
-      name,
-      email: user.email || "",
-      picture,
-      provider: user?.app_metadata?.provider || "unknown",
-      ts: Date.now()
-    };
-
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-  }catch(e){
-    console.error("saveUserToStorage failed:", e);
-  }
-}
-
-async function redirectIfLoggedIn(){
-  const { data, error } = await supabase.auth.getSession();
-  if(error){
-    console.error("getSession error:", error);
-    return false;
-  }
-  if(data?.session?.user){
-    await saveUserToStorage(data.session.user);
-    window.location.replace(HOME_PATH);
-    return true;
-  }
-  return false;
-}
-
-async function startGoogleLogin(){
-  const btn = document.getElementById("googleBtn");
-  if(btn){ btn.disabled = true; btn.style.opacity = "0.75"; }
-
-  try{
-    const redirectTo = `${window.location.origin}${HOME_PATH}`;
-    toast("Google yönlendiriliyor...");
-
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo }
-    });
-
-    if(error){
-      console.error("signInWithOAuth error:", error);
-      showError(`Google giriş başlatılamadı: ${error.message || error}`);
-      if(btn){ btn.disabled = false; btn.style.opacity = "1"; }
+    // session varsa home
+    const { data, error } = await supabase.auth.getSession();
+    if(error) console.error("getSession:", error);
+    if(data?.session){
+      window.location.replace(HOME);
       return;
     }
-    // normalde redirect eder
+
+    // click
+    document.getElementById("googleBtn").onclick = async () => {
+      try{
+        toast("Google yönlendiriliyor...");
+        const redirectTo = window.location.origin + HOME;
+
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: "google",
+          options: { redirectTo }
+        });
+
+        if(error){
+          console.error("OAuth:", error);
+          showError("Google giriş hatası: " + (error.message || error));
+        }
+      }catch(e){
+        console.error("OAuth crash:", e);
+        showError("Google giriş başlatılamadı: " + (e?.message || e));
+      }
+    };
+
+    // auth state
+    supabase.auth.onAuthStateChange((_event, session)=>{
+      if(session) window.location.replace(HOME);
+    });
+
   }catch(e){
-    console.error("OAuth crash:", e);
-    showError("Google giriş başlatılamadı. Console hatasına bak.");
-    if(btn){ btn.disabled = false; btn.style.opacity = "1"; }
+    console.error("boot crash:", e);
+    showError("Sistem yüklenemedi: " + (e?.message || e));
   }
 }
 
-function listenAuth(){
-  supabase.auth.onAuthStateChange(async (_event, session)=>{
-    if(session?.user){
-      await saveUserToStorage(session.user);
-      window.location.replace(HOME_PATH);
-    }
-  });
-}
-
-(async function boot(){
-  try{
-    // 1) butonu her durumda çiz (erken)
-    renderGoogleButton();
-
-    // 2) session varsa home
-    const already = await redirectIfLoggedIn();
-    if(already) return;
-
-    // 3) click bağla
-    const btn = document.getElementById("googleBtn");
-    if(btn) btn.onclick = startGoogleLogin;
-
-    // 4) auth state
-    listenAuth();
-
-  }catch(e){
-    console.error("auth.js boot error:", e);
-    showError("Sistem yüklenemedi (auth.js). Console’a bak.");
-  }
-})();
+boot();
