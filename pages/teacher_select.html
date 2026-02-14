@@ -3,37 +3,33 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-<title>italkyAI • Dilini Seç</title>
+<title>italkyAI • Dil Dersi Seçimi</title>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
 <style>
-  #pageContent { height: 100%; }
+  #pageContent { height: 100%; overflow: hidden; }
 
   .wrap {
     height: 100%;
     padding: 10px 16px 20px;
     display: flex;
     flex-direction: column;
+    justify-content: flex-start;
   }
 
   .title-area {
-    margin-bottom: 24px;
+    margin-bottom: 16px;
     text-align: center;
-    padding-top: 10px;
+    padding-top: 5px;
   }
   .title-area h2 {
-    font-size: 24px;
+    font-size: 22px;
     font-weight: 900;
     margin: 0;
-    background: linear-gradient(135deg, #ffffff 0%, #6366f1 100%);
+    letter-spacing: -0.5px;
+    background: linear-gradient(135deg, #ffffff 0%, #a5b4fc 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-  }
-  .title-area p {
-    font-size: 14px;
-    color: rgba(255,255,255,0.45);
-    margin-top: 6px;
-    font-weight: 700;
   }
 
   .grid {
@@ -41,57 +37,44 @@
     width: 100%;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 14px;
+    gap: 10px;
+    /* cardH dinamik hesaplanacak */
     grid-auto-rows: var(--cardH);
+    align-content: start;
   }
 
-  /* 🚩 Premium Kart Tasarımı */
   .card {
-    height: var(--cardH);
-    border-radius: 32px;
+    border-radius: 28px;
     border: 1px solid rgba(255,255,255,0.08);
     background: linear-gradient(165deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.01) 100%);
     backdrop-filter: blur(20px);
-    padding: 16px;
     cursor: pointer;
     user-select: none;
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: all 0.3s ease;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     text-align: center;
     position: relative;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
   }
 
-  /* Bayrakların Arkasındaki Neon Işıltı */
   .iconWrap {
     width: var(--iconBox);
     height: var(--iconBox);
-    border-radius: 24px;
+    border-radius: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
     background: rgba(99, 102, 241, 0.1);
     border: 1px solid rgba(99, 102, 241, 0.2);
-    margin-bottom: 12px;
-    position: relative;
+    margin-bottom: 8px;
   }
   
-  .iconWrap::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: 24px;
-    box-shadow: 0 0 15px rgba(99, 102, 241, 0.25);
-    opacity: 0.5;
-  }
-
   .flag { 
     font-size: var(--flagSize); 
-    line-height: 1; 
-    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
   }
 
   .role {
@@ -99,22 +82,19 @@
     font-weight: 800;
     color: #a5b4fc;
     text-transform: uppercase;
-    letter-spacing: 1.5px;
-    margin-bottom: 5px;
+    letter-spacing: 1.2px;
+    margin-bottom: 2px;
   }
 
   .name {
     font-size: var(--nameSize);
-    font-weight: 1000;
+    font-weight: 900;
     color: #fff;
-    letter-spacing: -0.5px;
   }
 
-  /* Hover/Click Durumu */
   .card:active {
-    transform: scale(0.92) translateY(4px);
-    background: rgba(99, 102, 241, 0.2);
-    border-color: rgba(99, 102, 241, 0.4);
+    transform: scale(0.95);
+    background: rgba(99, 102, 241, 0.15);
   }
 </style>
 </head>
@@ -123,8 +103,7 @@
 <main id="pageContent">
   <div class="wrap">
     <div class="title-area">
-      <h2>Hangi Dilde Konuşalım?</h2>
-      <p>Özel yapay zeka eğitmenin seni bekliyor.</p>
+      <h2>Dil Dersi Seçimi Yapın</h2>
     </div>
     <div class="grid" id="teacherGrid"></div>
   </div>
@@ -134,28 +113,28 @@
   import { mountShell } from "/js/ui_shell.js";
   import { bootPage } from "/js/ui_guard.js";
 
-  // Shell ve Profil Senkronizasyonu
   mountShell({ scroll: "none" });
   bootPage({
     protectedPage: true,
     header: { nameId: "userName", picId: "userPic" }
   });
 
+  // OpenAI Ses Karakterleri ve Ülke İsimleri Eşleşmesi
   const TEACHERS = [
-    { id: "dora",   flag: "🇬🇧", role: "İngilizce",   name: "Dora" },
-    { id: "ayda",   flag: "🇩🇪", role: "Almanca",     name: "Ayda" },
-    { id: "jale",   flag: "🇫🇷", role: "Fransızca",   name: "Jale" },
-    { id: "ozan",   flag: "🇪🇸", role: "İspanyolca",  name: "Ozan" },
-    { id: "sencer", flag: "🇮🇹", role: "İtalyanca",   name: "Sencer" },
-    { id: "sungur", flag: "🇷🇺", role: "Rusça",       name: "Sungur" },
-    { id: "huma",   flag: "🇯🇵", role: "Japonca",     name: "Hüma" },
-    { id: "umay",   flag: "🇨🇳", role: "Çince",       name: "Umay" },
+    { id: "jack",    flag: "🇬🇧", role: "English",   name: "Jack",    voice: "onyx" },    // Erkek (Onyx)
+    { id: "heidi",   flag: "🇩🇪", role: "Deutsch",   name: "Heidi",   voice: "shimmer" }, // Kadın (Shimmer)
+    { id: "claire",  flag: "🇫🇷", role: "Français",  name: "Claire",  voice: "nova" },    // Kadın (Nova)
+    { id: "diego",   flag: "🇪🇸", role: "Español",   name: "Diego",   voice: "echo" },    // Erkek (Echo)
+    { id: "marco",   flag: "🇮🇹", role: "Italiano",  name: "Marco",   voice: "fable" },   // Erkek (Fable)
+    { id: "elena",   flag: "🇷🇺", role: "Pусский",   name: "Elena",   voice: "alloy" },   // Kadın/Nötr (Alloy)
+    { id: "kenji",   flag: "🇯🇵", role: "日本語",     name: "Kenji",   voice: "onyx" },    // Erkek (Onyx)
+    { id: "mei",     flag: "🇨🇳", role: "中文",       name: "Mei-Ling",voice: "shimmer" }  // Kadın (Shimmer)
   ];
 
   function render() {
     const grid = document.getElementById("teacherGrid");
     grid.innerHTML = TEACHERS.map(t => `
-      <div class="card" data-id="${t.id}">
+      <div class="card" data-id="${t.id}" data-voice="${t.voice}">
         <div class="iconWrap"><div class="flag">${t.flag}</div></div>
         <div class="role">${t.role}</div>
         <div class="name">${t.name}</div>
@@ -165,6 +144,7 @@
     grid.querySelectorAll(".card").forEach(c => {
       c.addEventListener("click", () => {
         localStorage.setItem("italky_teacher_pref", c.getAttribute("data-id"));
+        localStorage.setItem("italky_voice_pref", c.getAttribute("data-voice")); // Ses tercihini kaydet
         const levelDone = localStorage.getItem("italky_level_done") === "1";
         location.href = levelDone ? "/pages/plan_select.html" : "/pages/level_test_intro.html";
       });
@@ -174,17 +154,21 @@
   function fit() {
     const headerH = document.querySelector(".premium-header")?.offsetHeight || 0;
     const footerH = document.querySelector(".premium-footer")?.offsetHeight || 0;
-    const usable = window.innerHeight - headerH - footerH - 120;
-    const cardH = Math.max(125, Math.min(175, usable / 4));
+    // Padding ve başlık alanını çıkararak net kullanılabilir alanı bul
+    const usable = window.innerHeight - headerH - footerH - 120; 
+    
+    // Kart yüksekliğini 4 satıra tam sığacak şekilde hesapla
+    const cardH = Math.floor(usable / 4.2); 
 
     document.documentElement.style.setProperty("--cardH", cardH + "px");
-    document.documentElement.style.setProperty("--iconBox", (cardH * 0.45) + "px");
-    document.documentElement.style.setProperty("--flagSize", (cardH * 0.22) + "px");
+    document.documentElement.style.setProperty("--iconBox", (cardH * 0.40) + "px");
+    document.documentElement.style.setProperty("--flagSize", (cardH * 0.20) + "px");
     document.documentElement.style.setProperty("--roleSize", (cardH * 0.08) + "px");
-    document.documentElement.style.setProperty("--nameSize", (cardH * 0.14) + "px");
+    document.documentElement.style.setProperty("--nameSize", (cardH * 0.13) + "px");
   }
 
   render();
+  // İlk yüklemede ve pencere boyutlandığında sığdırmayı çalıştır
   requestAnimationFrame(fit);
   window.addEventListener("resize", fit);
 </script>
