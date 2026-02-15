@@ -57,7 +57,13 @@
       gap:10px 12px;
       margin-top: 14px;
     }
-    .k{ font-size:12px; font-weight:1000; color: rgba(165,180,252,0.95); letter-spacing:1px; text-transform: uppercase; }
+    .k{
+      font-size:12px;
+      font-weight:1000;
+      color: rgba(165,180,252,0.95);
+      letter-spacing:1px;
+      text-transform: uppercase;
+    }
     .v{ font-size:16px; font-weight:1000; color:#fff; }
 
     .divider{
@@ -105,6 +111,7 @@
       font-size: 12px;
       line-height: 1.45;
       display:none;
+      white-space:pre-wrap;
     }
 
     .btnRow{ margin-top:auto; display:flex; gap:10px; }
@@ -161,11 +168,11 @@
     <div class="panel">
       <div class="head">
         <h2 class="title">Ders Planı</h2>
-        <div class="chip" id="rateChip">Dakika: 2 Jeton</div>
+        <div class="chip">15 dk</div>
       </div>
 
       <div class="sub">
-        Dersler maksimum 15 dakika sürer. Ders başında peşin alınır. Ders erken biterse kalan süre iade edilir.
+        Dersler maksimum 15 dakika sürer. Ders erken biterse kalan süre iade edilir.
       </div>
 
       <div class="kv">
@@ -193,7 +200,10 @@
       <div style="height:10px;"></div>
 
       <div class="sub">Öğretmenin sana nasıl hitap etsin?</div>
-      <input class="inp" id="studentHitap" maxlength="16" placeholder="Örn: Oğuz / Başkan" />
+      <input class="inp" id="studentHitap" maxlength="16" placeholder="Örn: Oğuz / Selin / Mert" />
+      <div class="sub" style="margin-top:6px;color:rgba(255,255,255,0.65)">
+        Bu alan sadece isim içindir. Unvan/etiket kullanmayın.
+      </div>
 
       <div style="height:12px;"></div>
       <div class="warn" id="warnBox"></div>
@@ -232,7 +242,7 @@
   const teacherId = (localStorage.getItem("italky_teacher_pref") || "").trim();
   if(!teacherId) location.replace("/pages/teacher_select.html");
 
-  // Sabit öğretmen defaultları (senin kadron)
+  // ✅ Kadro defaultları (sabit)
   const COACH = {
     dora:   { name:"Dora",   style:"disciplined" },
     ayda:   { name:"Ayda",   style:"friendly" },
@@ -246,17 +256,16 @@
 
   const def = COACH[teacherId] || { name:"Dora", style:"friendly" };
 
-  let gender = "female"; // default
+  let gender = "female";
   function pickGender(v){
     gender = v;
     document.querySelectorAll("#genderRow .pill").forEach(p=>p.classList.remove("sel"));
     document.querySelector(`#genderRow .pill[data-v="${v}"]`)?.classList.add("sel");
   }
-
   pickGender("female");
+
   $("teacherName").value = def.name;
 
-  // load profile: tokens + hitap + pref
   const { data:{ session } } = await supabase.auth.getSession();
   if(!session) location.replace("/pages/login.html");
 
@@ -271,62 +280,60 @@
     warn.textContent = "Profil verisi okunamadı. Lütfen tekrar deneyin.";
   }
 
-  // header tokens
   const tokens = Number(prof?.tokens ?? 0);
   setHeaderTokens(tokens);
 
-  // student default hitap
-  $("studentHitap").value = (prof?.full_name || "").trim().slice(0,16) || "";
+  // hitap default = first name
+  const fn = String(prof?.full_name || "").trim();
+  $("studentHitap").value = fn ? (fn.split(/\s+/)[0] || fn).slice(0,16) : "";
 
-  // existing prefs
+  // varsa önceki prefs
   const prefs = (prof?.teacher_prefs && typeof prof.teacher_prefs === "object") ? prof.teacher_prefs : {};
-  const cur = prefs?.[teacherId];
+  const cur = prefs?.[teacherId] || {};
   if(cur?.gender) pickGender(cur.gender);
-  if(cur?.teacher_name) $("teacherName").value = cur.teacher_name;
-  if(cur?.student_hitap) $("studentHitap").value = cur.student_hitap;
+  if(cur?.teacher_name) $("teacherName").value = String(cur.teacher_name).slice(0,16);
+  if(cur?.student_hitap) $("studentHitap").value = String(cur.student_hitap).slice(0,16);
 
-  // gender clicks
-  document.querySelectorAll("#genderRow .pill").forEach(p=>{
-    p.addEventListener("click", ()=>pickGender(p.getAttribute("data-v")));
-  });
-
-  // jeton kontrol (şimdilik ders 15 dk)
   function showNoTokens(){
     warn.style.display = "block";
     warn.textContent =
-      "Derse katılabilmeniz için hesabınızda yeterli jeton bulunmamaktadır.\n" +
-      "Lütfen jeton yükleyerek eğitiminize devam edin.";
+`Derse katılabilmeniz için hesabınızda yeterli jeton bulunmamaktadır.
+Lütfen jeton yükleyerek eğitiminize devam edin.`;
     btnStart.textContent = "Jeton Yükle";
     btnStart.onclick = ()=>location.href="/pages/profile.html";
   }
 
-  // Şimdilik minimum 1 ders başlatma için 1 jeton bile olsa uyarı istemiyorsun,
-  // ama yetersizse yönlendirelim:
   if(tokens <= 0){
     showNoTokens();
   }
 
   $("btnBack").onclick = ()=>history.back();
 
+  document.querySelectorAll("#genderRow .pill").forEach(p=>{
+    p.addEventListener("click", ()=>pickGender(p.getAttribute("data-v")));
+  });
+
   btnStart.onclick = async ()=>{
-    // yetersiz token -> profile
-    const nowTokens = Number(prof?.tokens ?? 0);
+    // realtime token check
+    const { data: p2 } = await supabase.from("profiles").select("tokens, teacher_prefs").eq("id", session.user.id).single();
+    const nowTokens = Number(p2?.tokens ?? 0);
     if(nowTokens <= 0){
       showNoTokens();
       return;
     }
 
-    // prefs kaydet
     const teacher_name = ($("teacherName").value || "").trim().slice(0,16) || def.name;
-    const student_hitap = ($("studentHitap").value || "").trim().slice(0,16) || "";
+    const student_hitap = ($("studentHitap").value || "").trim().slice(0,16);
 
-    const nextPrefs = { ...prefs };
-    nextPrefs[teacherId] = {
-      teacher_name,
-      gender,
-      style: def.style,
-      student_hitap
-    };
+    if(student_hitap && student_hitap.length < 3){
+      warn.style.display="block";
+      warn.textContent = "Hitap alanı en az 3 karakter olmalı (örn: Oğuz).";
+      return;
+    }
+    warn.style.display="none";
+
+    const nextPrefs = (p2?.teacher_prefs && typeof p2.teacher_prefs==="object") ? { ...p2.teacher_prefs } : {};
+    nextPrefs[teacherId] = { teacher_name, gender, style: def.style, student_hitap };
 
     const { error: upErr } = await supabase
       .from("profiles")
@@ -339,6 +346,7 @@
       return;
     }
 
+    localStorage.setItem("italky_lesson_mins","15");
     toast("Hazır! Derse geçiyorsun…");
     setTimeout(()=>location.href="/pages/teacher_course.html", 250);
   };
