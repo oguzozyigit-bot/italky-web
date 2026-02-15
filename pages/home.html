@@ -9,151 +9,228 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
 
   <style>
-    /* ✅ SCROLLSUZ TAM EKRAN AYARI */
-    #pageContent {
-      height: calc(100vh - 160px); /* Üst ve alt bar payı (Shell yüksekliğine göre gerekirse ±10px oynanabilir) */
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      padding: 10px;
-      box-sizing: border-box;
-      overflow: hidden; /* Scroll'u kesinlikle kapatır */
+    /* ✅ Shell no-scroll modunda footer payını geri ekle */
+    .app-shell.no-scroll .main-content{
+      overflow:hidden !important;
+      padding-bottom: calc(var(--footerH) + 14px) !important;
+      padding-top: 14px !important;
     }
 
-    .grid-layout {
-      display: grid;
+    /* ✅ İçerik alanı: shell’in verdiği main-content alanının tamamını kullan */
+    #pageContent{
+      height: 100%;
+      overflow:hidden;
+      display:flex;
+      padding: 0;
+      margin: 0;
+    }
+
+    /* ✅ 2x4 grid — tam sığsın */
+    .grid-layout{
+      width:100%;
+      height:100%;
+      display:grid;
       grid-template-columns: 1fr 1fr;
-      grid-template-rows: repeat(4, 1fr); /* 4 satırı eşit böler */
+      grid-template-rows: repeat(4, 1fr);
       gap: 12px;
-      height: 100%;
     }
 
-    .premium-card {
+    /* ✅ Mat / premium kartlar */
+    .premium-card{
       position: relative;
-      background: rgba(255, 255, 255, 0.05);
-      border: 2.5px solid transparent; 
-      border-radius: 24px; /* Taşmayı önlemek için biraz küçültüldü */
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center; /* İçeriği dikeyde ortalar */
-      transition: all .3s ease;
-      cursor: pointer;
-      text-align: center;
-      padding: 5px;
+      border-radius: 24px;
+      border: 1.6px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.045); /* mat */
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      text-align:center;
+      padding: 8px 8px;
+      overflow:hidden;
+      transition: transform .18s ease;
+    }
+    .premium-card:active{ transform: scale(0.96); }
+
+    /* ✅ Kumlama (çok hafif) */
+    .premium-card::after{
+      content:"";
+      position:absolute; inset:0;
+      background:url("https://www.transparenttextures.com/patterns/asfalt-light.png");
+      opacity:0.10;
+      mix-blend-mode: overlay;
+      pointer-events:none;
     }
 
-    .premium-card:active { transform: scale(0.95); filter: brightness(1.2); }
-
-    /* İKONLAR: Ekran yüksekliğine göre otomatik ölçeklenir */
-    .neon-icon-wrap {
-      height: 35%; /* Kart yüksekliğinin %35'i kadar yer kaplar */
+    /* ✅ İkon kutusu: mat cam */
+    .neon-icon-wrap{
+      height: 34%;
       aspect-ratio: 1/1;
+      border-radius: 18px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
       margin-bottom: 6px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      background: rgba(0,0,0,0.12);
+      border: 1px solid rgba(255,255,255,0.12);
     }
 
-    .premium-card svg {
-      height: 100%;
+    /* ✅ İkon boyutu kartla ölçekli; glow yok (mat) */
+    .premium-card svg{
+      height: 78%;
       width: auto;
-      stroke-width: 2.2;
-      filter: drop-shadow(0 0 8px currentColor);
+      stroke-width: 2.25;
+      filter: none;
     }
 
-    /* --- RENK GRUPLARI --- */
-    .card-face { border-color: #00e5ff; box-shadow: inset 0 0 10px rgba(0, 229, 255, 0.2); }
-    .card-face svg { stroke: #00e5ff; color: #00e5ff; }
+    /* ✅ Mat renkler (parlak değil) */
+    .card-face    { border-color: rgba(0,229,255,0.55); }
+    .card-face svg{ stroke: rgba(0,229,255,0.78); }
 
-    .card-voice { border-color: #ff00ff; box-shadow: inset 0 0 10px rgba(255, 0, 255, 0.2); }
-    .card-voice svg { stroke: #ff00ff; color: #ff00ff; }
+    .card-voice    { border-color: rgba(255,0,255,0.55); }
+    .card-voice svg{ stroke: rgba(255,0,255,0.78); }
 
-    .card-text { border-color: #39ff14; box-shadow: inset 0 0 10px rgba(57, 255, 20, 0.2); }
-    .card-text svg { stroke: #39ff14; color: #39ff14; }
+    .card-text     { border-color: rgba(57,255,20,0.48); }
+    .card-text svg { stroke: rgba(57,255,20,0.70); }
 
-    .card-chat { border-color: #ffea00; box-shadow: inset 0 0 10px rgba(255, 234, 0, 0.2); }
-    .card-chat svg { stroke: #ffea00; color: #ffea00; }
+    .card-chat     { border-color: rgba(255,234,0,0.52); }
+    .card-chat svg { stroke: rgba(255,234,0,0.72); }
 
-    .card-photo { border-color: #ff5e00; box-shadow: inset 0 0 10px rgba(255, 94, 0, 0.2); }
-    .card-photo svg { stroke: #ff5e00; color: #ff5e00; }
+    .card-photo     { border-color: rgba(255,94,0,0.52); }
+    .card-photo svg { stroke: rgba(255,94,0,0.72); }
 
-    .card-teacher { border-color: #9d00ff; box-shadow: inset 0 0 10px rgba(157, 0, 255, 0.2); }
-    .card-teacher svg { stroke: #9d00ff; color: #9d00ff; }
+    .card-teacher     { border-color: rgba(157,0,255,0.52); }
+    .card-teacher svg { stroke: rgba(157,0,255,0.72); }
 
-    .card-doc { border-color: #2979ff; box-shadow: inset 0 0 10px rgba(41, 121, 255, 0.2); }
-    .card-doc svg { stroke: #2979ff; color: #2979ff; }
+    .card-doc     { border-color: rgba(41,121,255,0.52); }
+    .card-doc svg { stroke: rgba(41,121,255,0.72); }
 
-    .card-game { border-color: #00ff88; box-shadow: inset 0 0 10px rgba(0, 255, 136, 0.2); }
-    .card-game svg { stroke: #00ff88; color: #00ff88; }
+    .card-game     { border-color: rgba(0,255,136,0.50); }
+    .card-game svg { stroke: rgba(0,255,136,0.70); }
 
-    /* METİNLER: Taşmayı önlemek için fontlar optimize edildi */
-    .card-title { 
-      font-family: 'Outfit', sans-serif;
-      font-size: clamp(14px, 4vw, 17px); /* Ekran genişliğine göre büyür/küçülür */
-      font-weight: 800; 
-      color: #fff; 
-      line-height: 1.1;
+    /* ✅ Metinler: taşma yok */
+    .card-title{
+      font-family:'Outfit',sans-serif;
+      font-size: clamp(13px, 3.6vw, 16px);
+      font-weight: 900;
+      color: rgba(255,255,255,0.92);
+      line-height: 1.05;
     }
-    .card-desc { 
-      font-size: clamp(9px, 2.5vw, 10.5px);
-      color: rgba(255, 255, 255, 0.6); 
-      font-weight: 600;
+    .card-desc{
+      font-size: clamp(9px, 2.4vw, 10.5px);
+      color: rgba(255,255,255,0.62);
+      font-weight: 700;
       margin-top: 2px;
+      line-height: 1.15;
     }
   </style>
 </head>
 
 <body>
-  <div id="pageContent">
+  <main id="pageContent">
     <div class="grid-layout">
+
       <div class="premium-card card-face" data-href="/pages/facetoface.html">
-        <div class="neon-icon-wrap"><svg viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
-        <div class="text-wrap"><div class="card-title">Yüzyüze</div><div class="card-desc">Anlık Çeviri</div></div>
+        <div class="neon-icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+        </div>
+        <div class="card-title">Yüzyüze</div>
+        <div class="card-desc">Anlık Çeviri</div>
       </div>
 
       <div class="premium-card card-voice" data-href="/pages/teacher_select.html">
-        <div class="neon-icon-wrap"><svg viewBox="0 0 24 24" fill="none"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg></div>
-        <div class="text-wrap"><div class="card-title">Dil Kursu</div><div class="card-desc">Günlük Ders</div></div>
+        <div class="neon-icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+            <line x1="12" y1="19" x2="12" y2="23"/>
+          </svg>
+        </div>
+        <div class="card-title">Dil Kursu</div>
+        <div class="card-desc">Günlük Ders</div>
       </div>
 
       <div class="premium-card card-text" data-href="/pages/text_translate.html">
-        <div class="neon-icon-wrap"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7h16M4 12h16M4 17h10"/></svg></div>
-        <div class="text-wrap"><div class="card-title">Metin Çeviri</div><div class="card-desc">Hızlı ve Doğru</div></div>
+        <div class="neon-icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M4 7h16M4 12h16M4 17h10"/>
+          </svg>
+        </div>
+        <div class="card-title">Metin</div>
+        <div class="card-desc">Hızlı Çeviri</div>
       </div>
 
       <div class="premium-card card-chat" data-href="/pages/teacher_select.html">
-        <div class="neon-icon-wrap"><svg viewBox="0 0 24 24" fill="none"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 1 1-7.6-13.5 8.38 8.38 0 0 1 3.8.9L21 3z"/></svg></div>
-        <div class="text-wrap"><div class="card-title">AI Öğretmen</div><div class="card-desc">Ders Planı</div></div>
+        <div class="neon-icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 1 1-7.6-13.5 8.38 8.38 0 0 1 3.8.9L21 3z"/>
+          </svg>
+        </div>
+        <div class="card-title">AI Öğretmen</div>
+        <div class="card-desc">Ders Planı</div>
       </div>
 
       <div class="premium-card card-photo" data-href="/pages/photo.html">
-        <div class="neon-icon-wrap"><svg viewBox="0 0 24 24" fill="none"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
-        <div class="text-wrap"><div class="card-title">Foto Çeviri</div><div class="card-desc">Görselden Çevir</div></div>
+        <div class="neon-icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+            <circle cx="12" cy="13" r="4"/>
+          </svg>
+        </div>
+        <div class="card-title">Foto</div>
+        <div class="card-desc">Görsel Çeviri</div>
       </div>
 
       <div class="premium-card card-teacher" data-href="/pages/teacher_select.html">
-        <div class="neon-icon-wrap"><svg viewBox="0 0 24 24" fill="none"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div>
-        <div class="text-wrap"><div class="card-title">Kurslar</div><div class="card-desc">Eğitmenler</div></div>
+        <div class="neon-icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+          </svg>
+        </div>
+        <div class="card-title">Kurslar</div>
+        <div class="card-desc">Eğitmenler</div>
       </div>
 
       <div class="premium-card card-doc" data-href="/pages/document.html">
-        <div class="neon-icon-wrap"><svg viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
-        <div class="text-wrap"><div class="card-title">Belge Çeviri</div><div class="card-desc">Dosya Tarama</div></div>
+        <div class="neon-icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+          </svg>
+        </div>
+        <div class="card-title">Belge</div>
+        <div class="card-desc">Dosya Tarama</div>
       </div>
 
       <div class="premium-card card-game" data-href="/pages/game.html">
-        <div class="neon-icon-wrap"><svg viewBox="0 0 24 24" fill="none"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 12h4M8 10v4"/><circle cx="15" cy="11" r="1"/></svg></div>
-        <div class="text-wrap"><div class="card-title">Oyunlar</div><div class="card-desc">Eğlenerek Öğren</div></div>
+        <div class="neon-icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none">
+            <rect x="2" y="6" width="20" height="12" rx="2"/>
+            <path d="M6 12h4M8 10v4"/>
+            <circle cx="15" cy="11" r="1"/>
+          </svg>
+        </div>
+        <div class="card-title">Oyunlar</div>
+        <div class="card-desc">Eğlenerek Öğren</div>
       </div>
+
     </div>
-  </div>
+  </main>
 
   <script type="module">
     import { mountShell } from "/js/ui_shell.js";
     import { bootPage } from "/js/ui_guard.js";
 
-    mountShell();
+    // ✅ scroll yok: sabit ekran
+    mountShell({ scroll:"none" });
+
     bootPage({
       protectedPage: true,
       header: { nameId:"userName", picId:"userPic" }
