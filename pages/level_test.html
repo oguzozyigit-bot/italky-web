@@ -100,6 +100,42 @@
     line-height: 1.45;
     white-space: pre-wrap;
   }
+
+  /* RESULT OVERLAY */
+  .overlay{
+    position:fixed; inset:0;
+    background: rgba(0,0,0,0.60);
+    backdrop-filter: blur(10px);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:16px;
+    z-index:999999;
+  }
+  .overlay.show{ display:flex; }
+  .resultCard{
+    width:min(520px, 100%);
+    border-radius: 28px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(10,10,18,0.92);
+    padding: 16px;
+  }
+  .rTitle{ font-size:16px; font-weight:1000; color:#fff; margin: 4px 0 10px; }
+  .rLevel{
+    font-size:28px;
+    font-weight:1000;
+    color:#a5b4fc;
+    margin: 0 0 10px;
+    letter-spacing:-0.5px;
+  }
+  .rText{
+    font-size:13px;
+    font-weight:900;
+    color: rgba(255,255,255,0.78);
+    line-height:1.55;
+    white-space:pre-wrap;
+  }
+  .rBtns{ display:flex; gap:10px; margin-top: 12px; }
 </style>
 </head>
 <body>
@@ -122,6 +158,18 @@
   </div>
 
   <div class="note">Bilmediğin soruyu <b>Atla</b>. Süre varsa atladıkların tekrar gelir. Her soru en fazla <b>2 tur</b> gösterilir.</div>
+</div>
+
+<div class="overlay" id="resultOverlay">
+  <div class="resultCard">
+    <div class="rTitle">italky Academy • Sonuç</div>
+    <div class="rLevel" id="rLevel">—</div>
+    <div class="rText" id="rText">—</div>
+    <div class="rBtns">
+      <button class="btn btn-primary" id="rGo">Derslere Başla</button>
+      <button class="btn" id="rLater">Şimdi Değil</button>
+    </div>
+  </div>
 </div>
 
 <script type="module">
@@ -151,11 +199,9 @@
   const LANGTR = { dora:"İngilizce", ayda:"Almanca", jale:"Fransızca", ozan:"İspanyolca", sencer:"İtalyanca", sungur:"Rusça", huma:"Japonca", umay:"Çince" };
   $("langChip").textContent = `${LANGTR[teacherId] || "Dil"} • Seviye Sınavı`;
 
-  // session check
   const { data:{ session } } = await supabase.auth.getSession();
   if(!session) location.replace("/pages/login.html");
 
-  // bank url
   const BASE = "https://italky-api.onrender.com/assets/tests/";
   const map = { dora:"en_v1.json", ayda:"de_v1.json", jale:"fr_v1.json", ozan:"es_v1.json", sencer:"it_v1.json", sungur:"ru_v1.json", huma:"ja_v1.json", umay:"zh_v1.json" };
   const bankUrl = BASE + (map[teacherId] || "en_v1.json");
@@ -176,7 +222,7 @@
     throw new Error("empty bank");
   }
 
-  // start exam rpc (40 jeton)
+  // start exam (40 jeton düşer)
   let testId = null;
   try{
     const { data, error } = await rpcWithTimeout(
@@ -186,11 +232,10 @@
     if(error) throw error;
     testId = data?.[0]?.test_id || null;
   }catch(e){
-    showError("Sınav başlatılamadı.", `RPC: start_level_test\n${e?.message || e}\n\n(Anon key doğru mu?)`);
+    showError("Sınav başlatılamadı.", `RPC: start_level_test\n${e?.message || e}`);
     throw e;
   }
 
-  // state
   const TOTAL_TIME = 40*60;
   const MAX_PASSES = 2;
   let idx=0;
@@ -273,30 +318,79 @@
 
   async function finishExam(){
     if(timer) clearInterval(timer);
+
     const w = scoreWeighted();
     const level = computeLevel(w);
 
-    try{
-      const { data, error } = await rpcWithTimeout(
-        supabase.rpc("finish_level_test", {
-          p_test_id: testId,
-          p_result_level: level,
-          p_remaining_seconds: remaining
-        }),
-        7000
-      );
-      if(error) throw error;
+    const { data: finData, error: finErr } = await rpcWithTimeout(
+      supabase.rpc("finish_level_test", {
+        p_test_id: testId,
+        p_result_level: level,
+        p_remaining_seconds: remaining
+      }),
+      7000
+    );
 
-      const refund = data?.[0]?.refund_tokens ?? 0;
-      const tokensLeft = data?.[0]?.tokens_left ?? null;
+    if(finErr){
+      showError("Sonuç kaydedilemedi.", `RPC: finish_level_test\n${finErr.message}`);
+      return;
+    }
 
-      showError(
-        `Seviyeniz: ${level}`,
-        `İade: ${refund} Jeton\n${tokensLeft!=null ? "Kalan: "+tokensLeft+" Jeton" : ""}\n\nPlan seçimine yönlendiriliyorsunuz…`
-      );
-      setTimeout(()=>location.href="/pages/plan_select.html", 900);
-    }catch(e){
-      showError("Sonuç kaydedilemedi.", `RPC: finish_level_test\n${e?.message || e}`);
+    const tokensLeft = Number(finData?.[0]?.tokens_left ?? 0);
+
+    const nextMap = { A1:"A2", A2:"B1", B1:"B2", B2:"C1", C1:null };
+    const nextLevel = nextMap[level];
+
+    let text =
+`Şu anki seviyeniz ${level} düzeyindedir.
+
+İtalky Academy olarak hedefimiz sizi bir üst seviyeye taşımaktır.`;
+
+    if(nextLevel){
+      text += `
+
+Seviyenizi ${nextLevel} düzeyine çıkartmak için özel olarak hazırlanmış Akademi programımıza katılmanızı öneririz.
+
+Program boyunca yapay zeka eğitmenlerimizle düzenli dersler alacaksınız.
+Eğitmeninizin adını değiştirebilirsiniz.
+
+Her ders 15 dakika sürmektedir.
+Aynı gün birden fazla ders alabilirsiniz.
+Ders bitmeden lütfen dersi sonlandırmayın.
+Dersi bitirmeden çıkış yaparsanız aynı dersi tekrar almak zorunda kalırsınız.
+
+İtalky Academy ders programlarını uyguladığınız takdirde kısa sürede ileri seviyede yabancı dil bilgisine ulaşabilirsiniz.
+
+Program bitiminde tekrar seviye tespit sınavı yapılacaktır.`;
+    } else {
+      text += `
+
+Tebrikler! En üst seviyedesiniz.
+Akademi dersleriyle akıcılığınızı daha da güçlendirebilirsiniz.`;
+    }
+
+    if(tokensLeft <= 0){
+      text += `
+
+Derse katılabilmeniz için hesabınızda yeterli jeton bulunmamaktadır.
+Lütfen jeton yükleyerek eğitiminize devam edin.`;
+    }
+
+    $("rLevel").textContent = `Seviye: ${level}`;
+    $("rText").textContent = text;
+
+    $("resultOverlay").classList.add("show");
+
+    const goBtn = $("rGo");
+    if(tokensLeft <= 0){
+      goBtn.textContent = "Jeton Yükle";
+      goBtn.onclick = ()=>location.href="/pages/profile.html";
+    }else{
+      goBtn.textContent = "Derslere Başla";
+      goBtn.onclick = ()=>{
+        localStorage.setItem("italky_lesson_mins","15");
+        location.href="/pages/plan_select.html";
+      };
     }
   }
 
@@ -311,6 +405,8 @@
     if(ni===-1) finishExam(); else { idx=ni; render(); }
   };
 
+  $("rLater").onclick = ()=>location.href="/pages/home.html";
+
   updateTimer();
   timer = setInterval(()=>{
     remaining--;
@@ -319,6 +415,9 @@
     if(remaining===0) finishExam();
   }, 1000);
 
+  // enable + first
+  btnSkip.disabled = false;
+  btnNext.disabled = false;
   render();
 </script>
 </body>
