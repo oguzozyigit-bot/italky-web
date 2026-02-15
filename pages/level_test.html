@@ -138,6 +138,13 @@
     btnPrev.disabled = btnSkip.disabled = btnNext.disabled = true;
   }
 
+  async function rpcWithTimeout(promise, ms=7000){
+    return await Promise.race([
+      promise,
+      new Promise((_,rej)=>setTimeout(()=>rej(new Error("RPC Timeout")), ms))
+    ]);
+  }
+
   const teacherId = (localStorage.getItem("italky_teacher_pref") || "").trim();
   if(!teacherId) location.replace("/pages/teacher_select.html");
 
@@ -160,23 +167,28 @@
     bank = await res.json();
   }catch(e){
     showError("Soru bankası indirilemedi.", `URL: ${bankUrl}\nHata: ${e?.message || e}`);
-    return;
+    throw e;
   }
 
   const QUESTIONS = Array.isArray(bank?.questions) ? bank.questions : [];
   if(QUESTIONS.length === 0){
     showError("Soru bankası boş geldi.", `URL: ${bankUrl}\nversion: ${bank?.version || "—"}`);
-    return;
+    throw new Error("empty bank");
   }
 
-  // start exam RPC (40 jeton)
-  let testId=null;
-  const { data:startData, error:startErr } = await supabase.rpc("start_level_test", { p_teacher_id: teacherId });
-  if(startErr){
-    showError("Sınav başlatılamadı.", `RPC start_level_test\n${startErr.message}`);
-    return;
+  // start exam rpc (40 jeton)
+  let testId = null;
+  try{
+    const { data, error } = await rpcWithTimeout(
+      supabase.rpc("start_level_test", { p_teacher_id: teacherId }),
+      7000
+    );
+    if(error) throw error;
+    testId = data?.[0]?.test_id || null;
+  }catch(e){
+    showError("Sınav başlatılamadı.", `RPC: start_level_test\n${e?.message || e}\n\n(Anon key doğru mu?)`);
+    throw e;
   }
-  testId = startData?.[0]?.test_id || null;
 
   // state
   const TOTAL_TIME = 40*60;
@@ -264,25 +276,28 @@
     const w = scoreWeighted();
     const level = computeLevel(w);
 
-    const { data: finData, error: finErr } = await supabase.rpc("finish_level_test", {
-      p_test_id: testId,
-      p_result_level: level,
-      p_remaining_seconds: remaining
-    });
+    try{
+      const { data, error } = await rpcWithTimeout(
+        supabase.rpc("finish_level_test", {
+          p_test_id: testId,
+          p_result_level: level,
+          p_remaining_seconds: remaining
+        }),
+        7000
+      );
+      if(error) throw error;
 
-    if(finErr){
-      showError("Sonuç kaydedilemedi.", `RPC finish_level_test\n${finErr.message}`);
-      return;
+      const refund = data?.[0]?.refund_tokens ?? 0;
+      const tokensLeft = data?.[0]?.tokens_left ?? null;
+
+      showError(
+        `Seviyeniz: ${level}`,
+        `İade: ${refund} Jeton\n${tokensLeft!=null ? "Kalan: "+tokensLeft+" Jeton" : ""}\n\nPlan seçimine yönlendiriliyorsunuz…`
+      );
+      setTimeout(()=>location.href="/pages/plan_select.html", 900);
+    }catch(e){
+      showError("Sonuç kaydedilemedi.", `RPC: finish_level_test\n${e?.message || e}`);
     }
-
-    const refund = finData?.[0]?.refund_tokens ?? 0;
-    const tokensLeft = finData?.[0]?.tokens_left ?? null;
-
-    showError(
-      `Seviyeniz: ${level}`,
-      `İade: ${refund} Jeton\n${tokensLeft!=null ? "Kalan: "+tokensLeft+" Jeton" : ""}\n\nPlan seçimine yönlendiriliyorsunuz…`
-    );
-    setTimeout(()=>location.href="/pages/plan_select.html", 900);
   }
 
   btnPrev.onclick = ()=>{ if(idx>0){ idx--; render(); } };
@@ -296,7 +311,6 @@
     if(ni===-1) finishExam(); else { idx=ni; render(); }
   };
 
-  // timer
   updateTimer();
   timer = setInterval(()=>{
     remaining--;
@@ -305,7 +319,6 @@
     if(remaining===0) finishExam();
   }, 1000);
 
-  // go
   render();
 </script>
 </body>
