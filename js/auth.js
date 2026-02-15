@@ -2,18 +2,14 @@
 import { supabase } from "/js/supabase_client.js";
 import { STORAGE_KEY } from "/js/config.js";
 
-/**
- * Redirect URL mutlaka Supabase Auth -> URL Configuration -> Redirect URLs ile birebir eşleşmeli.
- * Domain kullanman doğru: italky.ai
- */
-const HOME_ABS = "https://italky.ai/pages/home.html";
+const HOME_REL = "/pages/home.html";
 const LOGIN_REL = "/pages/login.html";
+const CALLBACK_ABS = `${location.origin}/pages/auth_callback.html`;
 
 /* -----------------------------
    NAC ID (Cihaz kilidi)
 ------------------------------ */
 function getOrCreateNacId(){
-  // Web: localStorage UUID (APK’da native NAC ID ile değiştirilecek)
   const key = "NAC_ID";
   try{
     const existing = localStorage.getItem(key);
@@ -28,7 +24,6 @@ function getOrCreateNacId(){
 }
 
 async function lockThisDevice(){
-  // SQL’de public.lock_device(p_nac_id text) olmalı
   const nacId = getOrCreateNacId();
   const { error } = await supabase.rpc("lock_device", { p_nac_id: nacId });
   if(error) throw error;
@@ -36,7 +31,7 @@ async function lockThisDevice(){
 }
 
 /* -----------------------------
-   Profile ensure + cache
+   Cache helpers
 ------------------------------ */
 function buildCache(user, profile){
   return {
@@ -48,7 +43,7 @@ function buildCache(user, profile){
     member_no: profile?.member_no || null,
     offline_langs: Array.isArray(profile?.offline_langs) ? profile.offline_langs : [],
     created_at: profile?.created_at || null,
-    last_login_at: profile?.last_login_at || null,
+    last_login_at: profile?.last_login_at || null
   };
 }
 
@@ -62,39 +57,43 @@ export function readCachedUser(){
 }
 
 export function clearCachedUser(){
-  try{ localStorage.removeItem(STORAGE_KEY); }catch(_e){}
+  try{ localStorage.removeItem(STORAGE_KEY); }catch{}
 }
 
-/**
- * ✅ Giriş sonrası veya sayfa açılışında çağır:
- * - session kontrol
- * - NAC cihaz kilidi (aynı telefonda başka kullanıcıyı engeller)
- * - ensure_profile RPC ile profile satırını garanti eder (tokens=400 ilk kayıtta)
- * - cache’e yazar (ui_shell / ui_guard buradan da beslenebilir)
- */
+/* -----------------------------
+   Ensure profile + cache
+------------------------------ */
 export async function ensureAuthAndCacheUser(){
-  const { data: { session }, error: sErr } = await supabase.auth.getSession();
+  const { data:{ session }, error: sErr } = await supabase.auth.getSession();
   if(sErr) throw sErr;
   if(!session?.user) return null;
 
   const user = session.user;
-try { await supabase.rpc("cancel_account_deletion"); } catch(_) {}
+
+  // ✅ OAuth callback anında race olabiliyor: auth hazır değilse bekle
+  // (özellikle mobil webview)
+  // Burada kısa bekleme de güvenli:
+  // (session varsa yine de token refresh vs bitmemiş olabilir)
+  try{ await supabase.rpc("cancel_account_deletion"); } catch(_) {}
 
   // 1) cihaz kilidi
   try{
     await lockThisDevice();
   }catch(e){
-    // Bu cihaz başka bir hesaba bağlıysa => güvenli çıkış + login
-    await supabase.auth.signOut();
+    // başka hesaba bağlı cihaz: logout + login
+    try{ await supabase.auth.signOut(); }catch{}
     clearCachedUser();
     throw new Error(e?.message || "Cihaz kilidi alınamadı.");
   }
 
-  // 2) profile garanti (RPC)
+  // 2) profile garanti
   let profile = null;
-  const { data: p, error: pErr } = await supabase.rpc("ensure_profile");
-  if(pErr){
-    // RPC yoksa/bozuksa en azından okumayı dene
+  try{
+    const { data: p, error: pErr } = await supabase.rpc("ensure_profile");
+    if(pErr) throw pErr;
+    profile = p;
+  }catch{
+    // fallback read
     const { data: p2, error: p2Err } = await supabase
       .from("profiles")
       .select("*")
@@ -102,8 +101,6 @@ try { await supabase.rpc("cancel_account_deletion"); } catch(_) {}
       .maybeSingle();
     if(p2Err) throw p2Err;
     profile = p2;
-  }else{
-    profile = p;
   }
 
   // 3) cache
@@ -115,48 +112,40 @@ try { await supabase.rpc("cancel_account_deletion"); } catch(_) {}
 /* -----------------------------
    Login / Logout
 ------------------------------ */
-
-/**
- * ✅ Login sayfandaki butona bunu bağla:
- * document.getElementById("googleBtn").addEventListener("click", loginWithGoogle);
- */
 export async function loginWithGoogle(){
   const { error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: HOME_ABS
+      // ✅ HOME'a değil, callback'e dön
+      redirectTo: CALLBACK_ABS
     }
   });
   if(error) throw error;
 }
 
-/**
- * ✅ Profilde “Güvenli Çıkış”
- */
 export async function safeLogout(){
-  await supabase.auth.signOut();
+  try{ await supabase.auth.signOut({ scope:"global" }); }catch{}
   clearCachedUser();
+  // NAC_ID’yi silme: cihaz kilidi modelin var (istersen silersin)
   location.replace(LOGIN_REL);
 }
 
 /* -----------------------------
-   ui_guard.js köprüsü (senin sistem)
+   ui_guard.js köprüsü
 ------------------------------ */
 export async function startAuthState(callback) {
   const handleAuth = async (session) => {
     const user = session?.user || null;
-    let wallet = 0;
 
     if(user){
       try{
         const cached = await ensureAuthAndCacheUser();
-        wallet = Number(cached?.tokens ?? 0);
+        const wallet = Number(cached?.tokens ?? 0);
         callback({ user, wallet });
         return;
       }catch(e){
-        // Cihaz başka hesaba bağlı vs.
         callback({ user: null, wallet: 0 });
-        if(location.pathname !== "/pages/login.html"){
+        if(location.pathname !== LOGIN_REL){
           location.replace(LOGIN_REL);
         }
         return;
@@ -166,10 +155,10 @@ export async function startAuthState(callback) {
     callback({ user: null, wallet: 0 });
   };
 
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data:{ session } } = await supabase.auth.getSession();
   await handleAuth(session);
 
-  supabase.auth.onAuthStateChange(async (_event, session) => {
-    await handleAuth(session);
+  supabase.auth.onAuthStateChange(async (_event, session2) => {
+    await handleAuth(session2);
   });
 }
