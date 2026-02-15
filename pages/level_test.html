@@ -10,66 +10,21 @@
 <style>
   #pageContent { height: 100%; overflow: hidden; }
   .wrap { height: 100%; padding: 10px 16px 20px; display: flex; flex-direction: column; gap: 12px; }
-
   .topbar { display: flex; justify-content: space-between; gap:10px; }
-  .chip {
-    padding: 8px 12px; border-radius: 99px;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.1);
-    font-weight: 900;
-    color: #a5b4fc;
-    font-size: 11px;
-    white-space: nowrap;
-  }
+  .chip { padding: 8px 12px; border-radius: 99px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); font-weight: 900; color: #a5b4fc; font-size: 11px; white-space:nowrap; }
 
-  .card {
-    flex: 1;
-    border-radius: 32px;
-    border: 1px solid rgba(255,255,255,0.08);
-    background: rgba(255,255,255,0.03);
-    backdrop-filter: blur(20px);
-    padding: 18px;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-
+  .card { flex: 1; border-radius: 32px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); backdrop-filter: blur(20px); padding: 18px; display: flex; flex-direction: column; overflow:hidden; }
   .q-meta{ display:flex; justify-content:space-between; gap:10px; margin-top:4px; }
   .meta{ font-size: 11px; font-weight: 900; color: rgba(255,255,255,0.55); }
 
-  .q-text {
-    font-size: 18px;
-    font-weight: 1000;
-    color: #fff;
-    margin: 14px 0 14px;
-    line-height: 1.3;
-  }
-
-  .opt {
-    width: 100%;
-    padding: 14px;
-    border-radius: 18px;
-    border: 1px solid rgba(255,255,255,0.1);
-    background: rgba(0,0,0,0.2);
-    color: #fff;
-    font-weight: 900;
-    margin-bottom: 10px;
-    text-align: left;
-    cursor: pointer;
-  }
+  .q-text { font-size: 18px; font-weight: 1000; color: #fff; margin: 14px 0 14px; line-height: 1.3; }
+  .opt { width: 100%; padding: 14px; border-radius: 18px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: #fff; font-weight: 900; margin-bottom: 10px; text-align: left; cursor: pointer; }
   .opt.sel { background: #6366f1; border-color: rgba(255,255,255,0.0); }
 
   .nav { display: flex; gap: 10px; }
-  .btn {
-    flex: 1; height: 50px; border-radius: 16px;
-    font-weight: 1000; cursor: pointer;
-    border: 1px solid rgba(255,255,255,0.12);
-    background: rgba(255,255,255,0.06);
-    color: #fff;
-  }
+  .btn { flex: 1; height: 50px; border-radius: 16px; font-weight: 1000; cursor: pointer; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.06); color: #fff; }
   .btn:active{ transform:scale(.99); }
   .btn-primary { background:#fff; color:#000; border:none; }
-  .btn-muted { opacity:.65; cursor:not-allowed; }
 
   .note { margin-top:10px; font-size: 12px; color: rgba(255,255,255,0.55); font-weight: 800; line-height: 1.5; }
 
@@ -167,67 +122,17 @@
   };
   $("langChip").textContent = `${LANGMAP[teacherId] || "Dil"} • Seviye Sınavı`;
 
-  const ENTRY_FEE = 40;
   const TOTAL_TIME = 40 * 60;
   const MAX_PASSES = 2;
 
-  // ====== QUESTION BANK (50) ======
-  const QUESTIONS = [
-    {id:1,  lvl:"A1", w:1, q:"Choose the correct form: 'She ___ to the store yesterday.'", o:["go","goes","went","gone"], c:2},
-    {id:2,  lvl:"A1", w:1, q:"Choose the correct article: 'I have ___ apple.'", o:["a","an","the","—"], c:1},
-    {id:3,  lvl:"A1", w:1, q:"Choose the correct sentence.", o:["He are my friend.","He is my friend.","He am my friend.","He be my friend."], c:1},
-    {id:4,  lvl:"A1", w:1, q:"Choose the correct plural: 'child' →", o:["childs","childes","children","childrens"], c:2},
-    {id:5,  lvl:"A1", w:1, q:"Choose the correct preposition: 'I live ___ Istanbul.'", o:["in","on","at","to"], c:0},
-    {id:6,  lvl:"A1", w:1, q:"Choose the correct question.", o:["Where you are?","Where are you?","Where is you?","Where you be?"], c:1},
-    {id:7,  lvl:"A1", w:1, q:"Choose the correct negative: 'I ___ like coffee.'", o:["don't","doesn't","am not","isn't"], c:0},
-    {id:8,  lvl:"A1", w:1, q:"Choose the correct time expression: 'I wake up ___ 7:00.'", o:["in","on","at","to"], c:2},
-    {id:9,  lvl:"A1", w:1, q:"Choose the correct pronoun: '___ am happy.'", o:["He","She","I","They"], c:2},
-    {id:10, lvl:"A1", w:1, q:"Choose the correct word: 'I ___ a book now.'", o:["read","reads","am reading","reading"], c:2},
-
-    {id:11, lvl:"A2", w:2, q:"Choose the correct form: 'If it rains, we ___ at home.'", o:["stay","stayed","will stay","staying"], c:2},
-    {id:12, lvl:"A2", w:2, q:"Choose the correct comparative: 'This car is ___ than that one.'", o:["fast","faster","fastest","more fast"], c:1},
-    {id:13, lvl:"A2", w:2, q:"Choose the correct past form: 'They ___ dinner at 8 pm.'", o:["eat","eats","ate","eaten"], c:2},
-    {id:14, lvl:"A2", w:2, q:"Choose the correct modal: 'You ___ wear a seatbelt.'", o:["must","can","may","might"], c:0},
-    {id:15, lvl:"A2", w:2, q:"Choose the correct sentence.", o:["I have been to Paris last year.","I went to Paris last year.","I go to Paris last year.","I am going Paris last year."], c:1},
-    {id:16, lvl:"A2", w:2, q:"Choose the correct preposition: 'I'm interested ___ music.'", o:["at","in","on","to"], c:1},
-    {id:17, lvl:"A2", w:2, q:"Choose the correct form: 'There ___ many people here.'", o:["is","are","be","am"], c:1},
-    {id:18, lvl:"A2", w:2, q:"Choose the correct future: 'I think it ___ tomorrow.'", o:["rains","rained","will rain","rain"], c:2},
-    {id:19, lvl:"A2", w:2, q:"Choose the correct word order.", o:["Always I am late.","I always am late.","I am always late.","I late always am."], c:2},
-    {id:20, lvl:"A2", w:2, q:"Choose the correct form: 'She is good ___ math.'", o:["at","in","on","to"], c:0},
-
-    {id:21, lvl:"B1", w:3, q:"Choose the correct form: 'I ___ here since 2020.'", o:["live","lived","have lived","am living"], c:2},
-    {id:22, lvl:"B1", w:3, q:"Choose the correct passive: 'The car ___ yesterday.'", o:["stole","was stolen","is stolen","stolen"], c:1},
-    {id:23, lvl:"B1", w:3, q:"Choose the correct form: 'I wish I ___ more time.'", o:["have","had","will have","am having"], c:1},
-    {id:24, lvl:"B1", w:3, q:"Choose the correct connector: 'I was tired, ___ I went to bed early.'", o:["because","so","but","although"], c:1},
-    {id:25, lvl:"B1", w:3, q:"Choose the correct relative pronoun: 'The man ___ lives next door is a doctor.'", o:["who","which","where","when"], c:0},
-    {id:26, lvl:"B1", w:3, q:"Choose the correct modal: 'You ___ have called me. I was worried.'", o:["should","can","may","must"], c:0},
-    {id:27, lvl:"B1", w:3, q:"Choose the correct form: 'By the time we arrived, the movie ___.'", o:["starts","started","had started","has started"], c:2},
-    {id:28, lvl:"B1", w:3, q:"Choose the correct sentence.", o:["I look forward to meet you.","I look forward to meeting you.","I look forward meet you.","I look forward to met you."], c:1},
-    {id:29, lvl:"B1", w:3, q:"Choose the correct word: 'He apologized ___ being late.'", o:["for","to","at","with"], c:0},
-    {id:30, lvl:"B1", w:3, q:"Choose the correct conditional: 'If I had known, I ___ you.'", o:["call","called","would call","would have called"], c:3},
-
-    {id:31, lvl:"B2", w:4, q:"Choose the correct form: 'Hardly ___ when the phone rang.'", o:["had I sat down","I had sat down","did I sat down","I sat down"], c:0},
-    {id:32, lvl:"B2", w:4, q:"Choose the correct form: 'She suggested that he ___ earlier.'", o:["leave","leaves","left","leaving"], c:0},
-    {id:33, lvl:"B2", w:4, q:"Choose the correct phrase: 'It’s high time you ___.'", o:["go","went","have gone","going"], c:1},
-    {id:34, lvl:"B2", w:4, q:"Choose the correct collocation: '___ research'", o:["make","do","take","get"], c:1},
-    {id:35, lvl:"B2", w:4, q:"Choose the correct form: 'He denied ___ the document.'", o:["to sign","sign","signed","signing"], c:3},
-    {id:36, lvl:"B2", w:4, q:"Choose the correct sentence.", o:["Despite of the rain, we went out.","Despite the rain, we went out.","Although of the rain, we went out.","In spite the rain, we went out."], c:1},
-    {id:37, lvl:"B2", w:4, q:"Choose the correct reported speech.", o:["He said he will help.","He said he would help.","He said he helps.","He said he helped."], c:1},
-    {id:38, lvl:"B2", w:4, q:"Choose the correct word: 'The results were ___ surprising.'", o:["highly","high","strongly","deeply"], c:0},
-    {id:39, lvl:"B2", w:4, q:"Choose the correct form: 'Not only ___, but she also sings.'", o:["she dances","does she dance","she does dance","dances she"], c:1},
-    {id:40, lvl:"B2", w:4, q:"Choose the correct form: 'I’d rather you ___ me earlier.'", o:["tell","told","have told","telling"], c:1},
-
-    {id:41, lvl:"C1", w:5, q:"Meaning: 'to make a bold claim' means to…", o:["say something expensive","say something risky/confident","say something quietly","say something unclear"], c:1},
-    {id:42, lvl:"C1", w:5, q:"Choose: 'Had it not been for your help, I ___.'", o:["fail","failed","would fail","would have failed"], c:3},
-    {id:43, lvl:"C1", w:5, q:"Choose: 'The proposal was rejected ___ it lacked evidence.'", o:["owing to","despite","whereas","unless"], c:0},
-    {id:44, lvl:"C1", w:5, q:"Choose: 'This policy may ___ unintended consequences.'", o:["trigger","sparkle","flutter","wander"], c:0},
-    {id:45, lvl:"C1", w:5, q:"Choose: 'It is essential that he ___ informed.'", o:["is","be","was","being"], c:1},
-    {id:46, lvl:"C1", w:5, q:"Paraphrase: 'He was reluctant to comply.'", o:["eager to help","unwilling to cooperate","ready to agree","excited to join"], c:1},
-    {id:47, lvl:"C1", w:5, q:"Choose: 'No sooner ___ than it started snowing.'", o:["had we left","we had left","did we left","we left"], c:0},
-    {id:48, lvl:"C1", w:5, q:"Choose: 'Her argument was ___ and convincing.'", o:["coherent","coastal","coarse","comic"], c:0},
-    {id:49, lvl:"C1", w:5, q:"Choose: 'He spoke ___ the matter.'", o:["at length about","at length of","at lengths about","at long about"], c:0},
-    {id:50, lvl:"C1", w:5, q:"Choose: 'The report is said ___ next week.'", o:["to publish","to be published","publishing","published"], c:1},
-  ];
+  // ====== FETCH BANK ======
+  const bankUrl = "https://italky-api.onrender.com/assets/tests/en_v1.json";
+  const bank = await fetch(bankUrl, { cache: "no-store" }).then(r=>r.json());
+  const QUESTIONS = Array.isArray(bank?.questions) ? bank.questions : [];
+  if(QUESTIONS.length !== 50){
+    toast("Soru bankası yüklenemedi");
+    console.error("Bank bad:", bank);
+  }
 
   // ====== STATE ======
   let idx = 0;
@@ -267,11 +172,11 @@
 
     $("qCard").innerHTML = `
       <div class="q-meta">
-        <div class="meta">Soru ${idx+1}/${QUESTIONS.length} • ${q.lvl}</div>
+        <div class="meta">Soru ${idx+1}/${QUESTIONS.length} • ${q.level}</div>
         <div class="meta">${status} • ${passInfo}</div>
       </div>
-      <div class="q-text">${q.q}</div>
-      ${q.o.map((opt, i)=>`<button class="opt ${picked===i?'sel':''}" data-i="${i}">${opt}</button>`).join("")}
+      <div class="q-text">${q.question}</div>
+      ${q.options.map((opt, i)=>`<button class="opt ${picked===i?'sel':''}" data-i="${i}">${opt}</button>`).join("")}
       <div class="note">Bilmediğin soruyu <b>Atla</b>. Süre varsa tekrar gelir. Her soru en fazla <b>2 tur</b> gösterilir.</div>
     `;
 
@@ -291,12 +196,13 @@
   function scoreWeighted(){
     let weighted = 0;
     for(let i=0;i<QUESTIONS.length;i++){
-      if(answers[i] === QUESTIONS[i].c) weighted += QUESTIONS[i].w;
+      if(answers[i] === QUESTIONS[i].correct) weighted += Number(QUESTIONS[i].weight || 0);
     }
     return weighted;
   }
 
   function computeLevel(weighted){
+    // Bu eşikler bankanın ağırlığına göre ayarlı (50 soruda max ~180-190)
     if(weighted >= 175) return "C1";
     if(weighted >= 140) return "B2";
     if(weighted >= 105) return "B1";
@@ -318,8 +224,7 @@
       return;
     }
     testId = data?.[0]?.test_id;
-    const left = data?.[0]?.tokens_left;
-    toast(`Sınav başladı • Jeton: ${left ?? "—"}`);
+    toast("Sınav başladı");
 
     updateTimer();
     timer = setInterval(()=>{
@@ -338,7 +243,6 @@
     const weighted = scoreWeighted();
     const level = computeLevel(weighted);
 
-    // remaining_seconds server clamp eder
     const { data, error } = await supabase.rpc("finish_level_test", {
       p_test_id: testId,
       p_result_level: level,
@@ -391,7 +295,6 @@
   };
   $("rLater").onclick = ()=>location.href="/pages/home.html";
 
-  // GO
   await startExam();
 </script>
 </body>
