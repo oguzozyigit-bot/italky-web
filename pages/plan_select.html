@@ -11,144 +11,337 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
   <style>
-    #pageContent{ height:100%; overflow:hidden; }
-    .wrap{ height:100%; padding: 10px 16px 20px; display:flex; flex-direction:column; gap:12px; }
+    #pageContent{ height:100%; }
+    .wrap{ height:100%; padding: 12px 14px 18px; display:flex; flex-direction:column; gap:12px; overflow:hidden; }
 
-    .hero{
-      border-radius: 32px;
-      border: 1px solid rgba(255,255,255,0.08);
-      background: rgba(255,255,255,0.03);
-      backdrop-filter: blur(20px);
-      padding: 18px 16px;
-    }
-
-    .topRow{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
-    .title{
-      font-family:"Space Grotesk",system-ui,sans-serif;
-      font-size:18px;
-      font-weight:1000;
-      margin:0;
-      letter-spacing:-0.3px;
-      color:#fff;
-    }
-    .badge{
-      padding:8px 12px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.10);
-      background: rgba(0,0,0,0.18);
-      color: rgba(255,255,255,0.86);
-      font-weight: 1000;
-      font-size: 12px;
-      white-space: nowrap;
-    }
-
-    .card{
+    .panel{
       border-radius: 28px;
       border: 1px solid rgba(255,255,255,0.10);
-      background: linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+      background: rgba(255,255,255,0.03);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
       padding: 16px 14px;
-      display:flex;
-      flex-direction:column;
-      gap:10px;
     }
 
-    .row{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
-    .k{ font-size:12px; font-weight:900; color: rgba(165,180,252,0.95); letter-spacing:1px; text-transform:uppercase; }
-    .v{ font-size:14px; font-weight:1000; color:#fff; }
-
-    .note{
-      font-size:12px;
-      font-weight:800;
-      color: rgba(255,255,255,0.60);
-      line-height:1.45;
-      margin-top: 6px;
+    .head{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      margin-bottom: 10px;
     }
-
-    .btn{
-      height: 54px;
-      border-radius: 22px;
-      border:none;
-      cursor:pointer;
+    .title{
+      font-family:"Space Grotesk",system-ui,sans-serif;
       font-weight:1000;
-      font-size:14px;
-      color:#fff;
-      background: linear-gradient(135deg, #A5B4FC, #4F46E5);
-      box-shadow: 0 16px 44px rgba(79,70,229,.22);
-      margin-top:auto;
+      font-size:18px;
+      margin:0;
     }
-    .btn:active{ transform:scale(.99); }
+    .chip{
+      padding:8px 12px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,0.10);
+      background: rgba(0,0,0,0.18);
+      font-weight:1000;
+      font-size:12px;
+      color: rgba(255,255,255,0.86);
+      white-space:nowrap;
+    }
 
-    .ghost{
-      height: 54px;
-      border-radius: 22px;
-      border:1px solid rgba(255,255,255,0.12);
+    .sub{
+      font-size:12px;
+      font-weight:900;
+      color: rgba(255,255,255,0.70);
+      line-height:1.45;
+    }
+
+    .kv{
+      display:grid;
+      grid-template-columns: 1fr auto;
+      gap:10px 12px;
+      margin-top: 14px;
+    }
+    .k{ font-size:12px; font-weight:1000; color: rgba(165,180,252,0.95); letter-spacing:1px; text-transform: uppercase; }
+    .v{ font-size:16px; font-weight:1000; color:#fff; }
+
+    .divider{
+      height:1px;
+      background: rgba(255,255,255,0.10);
+      margin: 14px 0;
+    }
+
+    .row{ display:flex; gap:10px; flex-wrap:wrap; }
+    .pill{
+      flex:1;
+      min-width: 120px;
+      padding: 12px 12px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.18);
+      color:#fff;
+      font-weight:1000;
+      cursor:pointer;
+      user-select:none;
+      text-align:center;
+    }
+    .pill.sel{ background: rgba(99,102,241,0.35); border-color: rgba(99,102,241,0.55); }
+    .pill:active{ transform: scale(.99); }
+
+    .inp{
+      width:100%;
+      height:48px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.12);
       background: rgba(255,255,255,0.06);
       color:#fff;
       font-weight:1000;
-      font-size:13px;
-      cursor:pointer;
+      padding: 0 12px;
+      outline:none;
     }
-    .ghost:active{ transform:scale(.99); }
 
-    .btnRow{ display:flex; gap:10px; margin-top:auto; }
+    .warn{
+      border-radius: 18px;
+      border: 1px solid rgba(255,90,140,0.35);
+      background: rgba(255,0,90,0.10);
+      padding: 12px 12px;
+      color: rgba(255,255,255,0.92);
+      font-weight: 900;
+      font-size: 12px;
+      line-height: 1.45;
+      display:none;
+    }
+
+    .btnRow{ margin-top:auto; display:flex; gap:10px; }
+    .btn{
+      height:56px;
+      border-radius: 20px;
+      border: none;
+      cursor:pointer;
+      font-weight:1000;
+      font-size:14px;
+      user-select:none;
+      padding: 0 14px;
+    }
+    .btn:active{ transform: scale(.99); }
+    .btn-main{
+      background: linear-gradient(135deg, #a5b4fc 0%, #6366f1 55%, #ec4899 100%);
+      color:#050510;
+      flex: 1;
+    }
+    .btn-ghost{
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      color:#fff;
+      width: 110px;
+    }
+
+    .toast{
+      position: fixed;
+      left:50%;
+      top:18px;
+      transform:translateX(-50%) translateY(-120px);
+      background:rgba(10,10,18,.92);
+      border:1px solid rgba(165,180,252,.35);
+      padding:10px 14px;
+      border-radius:999px;
+      color:#fff;
+      z-index:99999;
+      font-weight:900;
+      font-size:12px;
+      transition:.28s;
+      backdrop-filter: blur(12px);
+      pointer-events:none;
+      max-width:min(92vw,520px);
+      text-align:center;
+    }
+    .toast.show{ transform:translateX(-50%) translateY(0); }
   </style>
 </head>
 
 <body>
-  <main id="pageContent">
-    <div class="wrap">
+<main id="pageContent">
+  <div class="wrap">
 
-      <section class="hero">
-        <div class="topRow">
-          <h2 class="title">Ders Planı</h2>
-          <div class="badge">Dakika: 2 Jeton</div>
-        </div>
-        <div class="note">
-          Dersler maksimum <b>15 dakika</b> sürer. Ders başında <b>30 Jeton</b> peşin alınır.
-          Ders erken biterse kalan süre iade edilir.
-        </div>
-      </section>
-
-      <section class="card">
-        <div class="row">
-          <div class="k">Süre</div>
-          <div class="v">15 Dakika</div>
-        </div>
-        <div class="row">
-          <div class="k">Ücret</div>
-          <div class="v">30 Jeton</div>
-        </div>
-        <div class="row">
-          <div class="k">Akış</div>
-          <div class="v">Ders bitince “Devam?”</div>
-        </div>
-      </section>
-
-      <div class="btnRow">
-        <button class="ghost" id="btnBack" type="button">Geri</button>
-        <button class="btn" id="btnStart" type="button">Dersi Başlat</button>
+    <div class="panel">
+      <div class="head">
+        <h2 class="title">Ders Planı</h2>
+        <div class="chip" id="rateChip">Dakika: 2 Jeton</div>
       </div>
 
+      <div class="sub">
+        Dersler maksimum 15 dakika sürer. Ders başında peşin alınır. Ders erken biterse kalan süre iade edilir.
+      </div>
+
+      <div class="kv">
+        <div class="k">SÜRE</div><div class="v">15 Dakika</div>
+        <div class="k">AKIŞ</div><div class="v">Ders bitince “Devam?”</div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="sub" style="margin-bottom:10px;">
+        Öğretmen ayarları (dersten önce):
+      </div>
+
+      <div class="sub">Öğretmen Cinsiyeti</div>
+      <div class="row" id="genderRow" style="margin-top:8px;">
+        <div class="pill" data-v="female">Kadın</div>
+        <div class="pill" data-v="male">Erkek</div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="sub">Öğretmen Adı (istersen değiştirebilirsin)</div>
+      <input class="inp" id="teacherName" maxlength="16" placeholder="Örn: Hüma" />
+
+      <div style="height:10px;"></div>
+
+      <div class="sub">Öğretmenin sana nasıl hitap etsin?</div>
+      <input class="inp" id="studentHitap" maxlength="16" placeholder="Örn: Oğuz / Başkan" />
+
+      <div style="height:12px;"></div>
+      <div class="warn" id="warnBox"></div>
     </div>
-  </main>
 
-  <script type="module">
-    import { mountShell } from "/js/ui_shell.js";
-    import { bootPage } from "/js/ui_guard.js";
+    <div class="btnRow">
+      <button class="btn btn-ghost" id="btnBack" type="button">Geri</button>
+      <button class="btn btn-main" id="btnStart" type="button">Dersi Başlat</button>
+    </div>
 
-    mountShell({ scroll:"none" });
-    bootPage({ protectedPage:true, header:{ nameId:"userName", picId:"userPic" } });
+  </div>
+</main>
 
-    // öğretmen seçili mi?
-    const teacherId = (localStorage.getItem("italky_teacher_pref") || "").trim();
-    if(!teacherId) location.href = "/pages/teacher_select.html";
+<div class="toast" id="toast"></div>
 
-    document.getElementById("btnBack").onclick = ()=>history.back();
+<script type="module">
+  import { mountShell, setHeaderTokens } from "/js/ui_shell.js";
+  import { bootPage } from "/js/ui_guard.js";
+  import { supabase } from "/js/supabase_client.js";
 
-    document.getElementById("btnStart").onclick = ()=>{
-      localStorage.setItem("italky_lesson_mins", "15"); // sabit
-      location.href = "/pages/teacher_course.html";
+  mountShell({ scroll:"none" });
+  bootPage({ protectedPage:true, header:{ nameId:"userName", picId:"userPic" } });
+
+  const $ = (id)=>document.getElementById(id);
+  const warn = $("warnBox");
+  const btnStart = $("btnStart");
+
+  function toast(msg){
+    const t = $("toast");
+    t.textContent = String(msg||"");
+    t.classList.add("show");
+    clearTimeout(window.__to);
+    window.__to = setTimeout(()=>t.classList.remove("show"), 1400);
+  }
+
+  const teacherId = (localStorage.getItem("italky_teacher_pref") || "").trim();
+  if(!teacherId) location.replace("/pages/teacher_select.html");
+
+  // Sabit öğretmen defaultları (senin kadron)
+  const COACH = {
+    dora:   { name:"Dora",   style:"disciplined" },
+    ayda:   { name:"Ayda",   style:"friendly" },
+    jale:   { name:"Jale",   style:"expert" },
+    huma:   { name:"Hüma",   style:"cheerful" },
+    sencer: { name:"Sencer", style:"friendly" },
+    ozan:   { name:"Ozan",   style:"cheerful" },
+    sungur: { name:"Sungur", style:"disciplined" },
+    umay:   { name:"Umay",   style:"expert" }
+  };
+
+  const def = COACH[teacherId] || { name:"Dora", style:"friendly" };
+
+  let gender = "female"; // default
+  function pickGender(v){
+    gender = v;
+    document.querySelectorAll("#genderRow .pill").forEach(p=>p.classList.remove("sel"));
+    document.querySelector(`#genderRow .pill[data-v="${v}"]`)?.classList.add("sel");
+  }
+
+  pickGender("female");
+  $("teacherName").value = def.name;
+
+  // load profile: tokens + hitap + pref
+  const { data:{ session } } = await supabase.auth.getSession();
+  if(!session) location.replace("/pages/login.html");
+
+  const { data: prof, error } = await supabase
+    .from("profiles")
+    .select("tokens, teacher_prefs, full_name")
+    .eq("id", session.user.id)
+    .single();
+
+  if(error){
+    warn.style.display = "block";
+    warn.textContent = "Profil verisi okunamadı. Lütfen tekrar deneyin.";
+  }
+
+  // header tokens
+  const tokens = Number(prof?.tokens ?? 0);
+  setHeaderTokens(tokens);
+
+  // student default hitap
+  $("studentHitap").value = (prof?.full_name || "").trim().slice(0,16) || "";
+
+  // existing prefs
+  const prefs = (prof?.teacher_prefs && typeof prof.teacher_prefs === "object") ? prof.teacher_prefs : {};
+  const cur = prefs?.[teacherId];
+  if(cur?.gender) pickGender(cur.gender);
+  if(cur?.teacher_name) $("teacherName").value = cur.teacher_name;
+  if(cur?.student_hitap) $("studentHitap").value = cur.student_hitap;
+
+  // gender clicks
+  document.querySelectorAll("#genderRow .pill").forEach(p=>{
+    p.addEventListener("click", ()=>pickGender(p.getAttribute("data-v")));
+  });
+
+  // jeton kontrol (şimdilik ders 15 dk)
+  function showNoTokens(){
+    warn.style.display = "block";
+    warn.textContent =
+      "Derse katılabilmeniz için hesabınızda yeterli jeton bulunmamaktadır.\n" +
+      "Lütfen jeton yükleyerek eğitiminize devam edin.";
+    btnStart.textContent = "Jeton Yükle";
+    btnStart.onclick = ()=>location.href="/pages/profile.html";
+  }
+
+  // Şimdilik minimum 1 ders başlatma için 1 jeton bile olsa uyarı istemiyorsun,
+  // ama yetersizse yönlendirelim:
+  if(tokens <= 0){
+    showNoTokens();
+  }
+
+  $("btnBack").onclick = ()=>history.back();
+
+  btnStart.onclick = async ()=>{
+    // yetersiz token -> profile
+    const nowTokens = Number(prof?.tokens ?? 0);
+    if(nowTokens <= 0){
+      showNoTokens();
+      return;
+    }
+
+    // prefs kaydet
+    const teacher_name = ($("teacherName").value || "").trim().slice(0,16) || def.name;
+    const student_hitap = ($("studentHitap").value || "").trim().slice(0,16) || "";
+
+    const nextPrefs = { ...prefs };
+    nextPrefs[teacherId] = {
+      teacher_name,
+      gender,
+      style: def.style,
+      student_hitap
     };
-  </script>
+
+    const { error: upErr } = await supabase
+      .from("profiles")
+      .update({ teacher_prefs: nextPrefs })
+      .eq("id", session.user.id);
+
+    if(upErr){
+      toast("Kaydedilemedi");
+      console.warn(upErr);
+      return;
+    }
+
+    toast("Hazır! Derse geçiyorsun…");
+    setTimeout(()=>location.href="/pages/teacher_course.html", 250);
+  };
+</script>
 </body>
 </html>
