@@ -14,8 +14,8 @@
   .card { flex: 1; border-radius: 32px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); backdrop-filter: blur(20px); padding: 18px; display: flex; flex-direction: column; overflow:hidden; }
   .q-meta{ display:flex; justify-content:space-between; gap:10px; margin-top:4px; }
   .meta{ font-size: 11px; font-weight: 900; color: rgba(255,255,255,0.55); }
-  .q-text { font-size: 18px; font-weight: 1000; color: #fff; margin: 14px 0 14px; line-height: 1.3; }
-  .opt { width: 100%; padding: 14px; border-radius: 18px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: #fff; font-weight: 900; margin-bottom: 10px; text-align: left; cursor: pointer; }
+  .q-text { font-size: 18px; font-weight: 1000; color: #fff; margin: 14px 0 14px; line-height: 1.3; white-space: pre-wrap; }
+  .opt { width: 100%; padding: 14px; border-radius: 18px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: #fff; font-weight: 900; margin-bottom: 10px; text-align: left; cursor: pointer; white-space: pre-wrap; }
   .opt.sel { background: #6366f1; border-color: rgba(255,255,255,0.0); }
   .nav { display: flex; gap: 10px; }
   .btn { flex: 1; height: 50px; border-radius: 16px; font-weight: 1000; cursor: pointer; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.06); color: #fff; }
@@ -81,7 +81,7 @@
     t.textContent = String(msg||"");
     t.classList.add("show");
     clearTimeout(window.__to);
-    window.__to = setTimeout(()=>t.classList.remove("show"), 1600);
+    window.__to = setTimeout(()=>t.classList.remove("show"), 1800);
   }
 
   const teacherId = (localStorage.getItem("italky_teacher_pref") || "").trim();
@@ -99,26 +99,31 @@
   };
   $("langChip").textContent = `${LANGMAP[teacherId] || "Dil"} • Seviye Sınavı`;
 
-  // Bank seçimi
-  const BANKS = {
-    en: "https://italky-api.onrender.com/assets/tests/en_v1.json",
-    de: "https://italky-api.onrender.com/assets/tests/de_v1.json"
-  };
+  // ✅ 8 dil banka eşlemesi
+  const BASE = "https://italky-api.onrender.com/assets/tests/";
   const teacherToBank = {
-    dora:"en", jack:"en",
-    ayda:"de", heidi:"de"
+    dora:   "en_v1.json", jack:  "en_v1.json",
+    ayda:   "de_v1.json", heidi: "de_v1.json",
+    jale:   "fr_v1.json", claire:"fr_v1.json",
+    ozan:   "es_v1.json", diego: "es_v1.json",
+    sencer: "it_v1.json", marco: "it_v1.json",
+    sungur: "ru_v1.json", elena: "ru_v1.json",
+    huma:   "ja_v1.json", kenji: "ja_v1.json",
+    umay:   "zh_v1.json", mei:   "zh_v1.json"
   };
-  const bankKey = teacherToBank[teacherId] || "en";
-  const bankUrl = BANKS[bankKey];
+
+  const bankUrl = BASE + (teacherToBank[teacherId] || "en_v1.json");
 
   const TOTAL_TIME = 40 * 60;
   const MAX_PASSES = 2;
 
-  const bank = await fetch(bankUrl, { cache:"no-store" }).then(r=>r.json());
+  // Fetch bank
+  const bank = await fetch(bankUrl, { cache:"no-store" }).then(r=>r.json()).catch(()=>null);
   const QUESTIONS = Array.isArray(bank?.questions) ? bank.questions : [];
+
   if(QUESTIONS.length !== 50){
-    toast("Soru bankası yüklenemedi");
-    console.error("Bank bad:", bank);
+    toast("Soru bankası 50 değil / yüklenemedi");
+    console.error("Bank URL:", bankUrl, bank);
   }
 
   let idx = 0;
@@ -276,7 +281,7 @@
 
   $("rGoLessons").onclick = ()=>{
     localStorage.setItem("italky_lesson_mins", "15");
-    location.href = "/pages/plan_select.html";
+    location.href="/pages/plan_select.html";
   };
   $("rLater").onclick = ()=>location.href="/pages/home.html";
 
