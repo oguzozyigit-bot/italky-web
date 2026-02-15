@@ -7,33 +7,87 @@
 <title>italkyAI • Seviye Sınavı</title>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
 <style>
-  #pageContent { height: 100%; overflow: hidden; }
-  .wrap { height: 100%; padding: 10px 16px 20px; display: flex; flex-direction: column; gap: 12px; }
-  .topbar { display: flex; justify-content: space-between; gap:10px; }
-  .chip { padding: 8px 12px; border-radius: 99px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); font-weight: 900; color: #a5b4fc; font-size: 11px; white-space:nowrap; }
-  .card { flex: 1; border-radius: 32px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); backdrop-filter: blur(20px); padding: 18px; display: flex; flex-direction: column; overflow:hidden; }
-  .q-meta{ display:flex; justify-content:space-between; gap:10px; margin-top:4px; }
-  .meta{ font-size: 11px; font-weight: 900; color: rgba(255,255,255,0.55); }
-  .q-text { font-size: 18px; font-weight: 1000; color: #fff; margin: 14px 0 14px; line-height: 1.3; white-space: pre-wrap; }
-  .opt { width: 100%; padding: 14px; border-radius: 18px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: #fff; font-weight: 900; margin-bottom: 10px; text-align: left; cursor: pointer; white-space: pre-wrap; }
-  .opt.sel { background: #6366f1; border-color: rgba(255,255,255,0.0); }
-  .nav { display: flex; gap: 10px; }
-  .btn { flex: 1; height: 50px; border-radius: 16px; font-weight: 1000; cursor: pointer; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.06); color: #fff; }
-  .btn:active{ transform:scale(.99); }
-  .btn-primary { background:#fff; color:#000; border:none; }
-  .btn:disabled{ opacity:.35; cursor:not-allowed; }
-
-  .note { margin-top:10px; font-size: 12px; color: rgba(255,255,255,0.55); font-weight: 800; line-height: 1.5; }
-
-  .toast{
-    position: fixed; left:50%; top:18px;
-    transform:translateX(-50%) translateY(-120px);
-    background:rgba(10,10,18,.92); border:1px solid rgba(165,180,252,.35);
-    padding:10px 14px; border-radius:999px; color:#fff; z-index:99999;
-    font-weight:900; font-size:12px; transition:.28s; backdrop-filter: blur(12px);
-    pointer-events:none; max-width:min(92vw,520px); text-align:center;
+  :root{
+    --bg:#02000f;
+    --card: rgba(255,255,255,0.04);
+    --border: rgba(255,255,255,0.10);
+    --muted: rgba(255,255,255,0.65);
   }
-  .toast.show{ transform:translateX(-50%) translateY(0); }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ margin:0; width:100%; height:100dvh; overflow:hidden; background:var(--bg); font-family:Outfit,sans-serif; color:#fff; }
+  .bg{
+    position:fixed; inset:-10%;
+    background:
+      radial-gradient(circle at 20% 20%, rgba(79,70,229,.38) 0%, transparent 40%),
+      radial-gradient(circle at 80% 80%, rgba(168,85,247,.28) 0%, transparent 40%),
+      radial-gradient(circle at 50% 50%, rgba(30,0,60,1) 0%, #02000f 100%);
+    filter: blur(60px);
+    pointer-events:none;
+  }
+  .wrap{
+    position:relative;
+    max-width:480px;
+    height:100%;
+    margin:0 auto;
+    padding: 12px 14px 18px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    background: rgba(10,10,30,0.40);
+    backdrop-filter: blur(30px);
+    border-left: 1px solid rgba(255,255,255,0.06);
+    border-right: 1px solid rgba(255,255,255,0.06);
+  }
+  .topbar{ display:flex; justify-content:space-between; gap:10px; }
+  .chip{
+    padding: 8px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: rgba(0,0,0,0.22);
+    color: rgba(165,180,252,0.92);
+    font-weight:1000;
+    font-size:12px;
+    white-space:nowrap;
+  }
+  .card{
+    flex:1;
+    border-radius: 28px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    padding: 16px 14px;
+    overflow:auto;
+  }
+  .q-meta{ display:flex; justify-content:space-between; gap:10px; margin-bottom:10px; }
+  .meta{ font-size: 11px; font-weight: 900; color: rgba(255,255,255,0.55); }
+  .q-text{ font-size: 18px; font-weight:1000; line-height:1.3; margin: 6px 0 14px; white-space:pre-wrap; }
+  .opt{
+    width:100%;
+    padding: 14px;
+    border-radius: 18px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(0,0,0,0.22);
+    color:#fff;
+    font-weight: 900;
+    text-align:left;
+    margin-bottom:10px;
+    cursor:pointer;
+    white-space:pre-wrap;
+  }
+  .opt.sel{ background: rgba(99,102,241,0.55); border-color: rgba(99,102,241,0.75); }
+  .nav{ display:flex; gap:10px; }
+  .btn{
+    flex:1;
+    height: 52px;
+    border-radius: 18px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.06);
+    color:#fff;
+    font-weight:1000;
+    cursor:pointer;
+  }
+  .btn-primary{ background:#fff; color:#000; border:none; }
+  .btn:disabled{ opacity:.35; cursor:not-allowed; }
+  .note{ font-size:12px; color:var(--muted); font-weight:800; line-height:1.45; }
 
   .errBox{
     border-radius: 18px;
@@ -46,57 +100,32 @@
     line-height: 1.45;
     white-space: pre-wrap;
   }
-
-  .overlay{ position:fixed; inset:0; z-index:999999; display:none; align-items:center; justify-content:center; background: rgba(0,0,0,0.55); backdrop-filter: blur(10px); padding: 16px; }
-  .overlay.show{ display:flex; }
-  .resultCard{ width:min(520px, 100%); border-radius: 28px; border: 1px solid rgba(255,255,255,0.12); background: rgba(10,10,18,0.92); padding: 16px; }
-  .rTitle{ font-size:16px; font-weight:1000; color:#fff; margin: 4px 0 10px; }
-  .rLevel{ font-size:28px; font-weight:1000; color:#a5b4fc; margin: 0 0 10px; letter-spacing:-0.5px; }
-  .rText{ font-size:13px; font-weight:900; color: rgba(255,255,255,0.78); line-height:1.5; white-space:pre-wrap; }
-  .rBtns{ display:flex; gap:10px; margin-top: 12px; }
 </style>
 </head>
 <body>
-<main id="pageContent">
-  <div class="wrap">
-    <div class="topbar">
-      <div class="chip" id="langChip">Seviye Sınavı</div>
-      <div class="chip" id="timerChip">40:00</div>
-    </div>
+<div class="bg"></div>
 
-    <div class="card" id="qCard">
-      <div class="q-text">Yükleniyor…</div>
-    </div>
-
-    <div class="nav">
-      <button class="btn" id="btnPrev" disabled>GERİ</button>
-      <button class="btn" id="btnSkip" disabled>ATLA</button>
-      <button class="btn btn-primary" id="btnNext" disabled>İLERİ</button>
-    </div>
-
-    <div class="note">Bilmediğin soruyu <b>Atla</b>. Süre varsa atladıkların tekrar gelir. Her soru en fazla <b>2 tur</b> gösterilir.</div>
+<div class="wrap">
+  <div class="topbar">
+    <div class="chip" id="langChip">Seviye Sınavı</div>
+    <div class="chip" id="timerChip">40:00</div>
   </div>
-</main>
 
-<div class="toast" id="toast"></div>
-
-<div class="overlay" id="resultOverlay">
-  <div class="resultCard">
-    <div class="rTitle">Seviye Sonucu</div>
-    <div class="rLevel" id="rLevel">—</div>
-    <div class="rText" id="rText">—</div>
-    <div class="rBtns">
-      <button class="btn btn-primary" id="rGoLessons">Evet, Derslere Geç</button>
-      <button class="btn" id="rLater">Şimdi Değil</button>
-    </div>
+  <div class="card" id="qCard">
+    <div class="q-text">Yükleniyor…</div>
   </div>
+
+  <div class="nav">
+    <button class="btn" id="btnPrev" disabled>GERİ</button>
+    <button class="btn" id="btnSkip" disabled>ATLA</button>
+    <button class="btn btn-primary" id="btnNext" disabled>İLERİ</button>
+  </div>
+
+  <div class="note">Bilmediğin soruyu <b>Atla</b>. Süre varsa atladıkların tekrar gelir. Her soru en fazla <b>2 tur</b> gösterilir.</div>
 </div>
 
 <script type="module">
-  import { mountShell } from "/js/ui_shell.js";
   import { supabase } from "/js/supabase_client.js";
-
-  mountShell({ scroll:"none" });
 
   const $ = (id)=>document.getElementById(id);
   const qCard = $("qCard");
@@ -104,228 +133,180 @@
   const btnSkip = $("btnSkip");
   const btnNext = $("btnNext");
 
-  function toast(msg){
-    const t = $("toast");
-    t.textContent = String(msg||"");
-    t.classList.add("show");
-    clearTimeout(window.__to);
-    window.__to = setTimeout(()=>t.classList.remove("show"), 1600);
-  }
-
   function showError(title, detail){
     qCard.innerHTML = `<div class="errBox">${title}\n\n${detail || ""}</div>`;
+    btnPrev.disabled = btnSkip.disabled = btnNext.disabled = true;
   }
 
-  function enableNav(on){
-    btnPrev.disabled = !on;
-    btnSkip.disabled = !on;
-    btnNext.disabled = !on;
-  }
+  const teacherId = (localStorage.getItem("italky_teacher_pref") || "").trim();
+  if(!teacherId) location.replace("/pages/teacher_select.html");
 
+  const LANGTR = { dora:"İngilizce", ayda:"Almanca", jale:"Fransızca", ozan:"İspanyolca", sencer:"İtalyanca", sungur:"Rusça", huma:"Japonca", umay:"Çince" };
+  $("langChip").textContent = `${LANGTR[teacherId] || "Dil"} • Seviye Sınavı`;
+
+  // session check
+  const { data:{ session } } = await supabase.auth.getSession();
+  if(!session) location.replace("/pages/login.html");
+
+  // bank url
+  const BASE = "https://italky-api.onrender.com/assets/tests/";
+  const map = { dora:"en_v1.json", ayda:"de_v1.json", jale:"fr_v1.json", ozan:"es_v1.json", sencer:"it_v1.json", sungur:"ru_v1.json", huma:"ja_v1.json", umay:"zh_v1.json" };
+  const bankUrl = BASE + (map[teacherId] || "en_v1.json");
+
+  let bank=null;
   try{
-    const teacherId = (localStorage.getItem("italky_teacher_pref") || "").trim();
-    if(!teacherId) location.replace("/pages/teacher_select.html");
-
-    const LANGMAP = {
-      dora:"İngilizce", ayda:"Almanca", jale:"Fransızca", ozan:"İspanyolca",
-      sencer:"İtalyanca", sungur:"Rusça", huma:"Japonca", umay:"Çince"
-    };
-    $("langChip").textContent = `${LANGMAP[teacherId] || "Dil"} • Seviye Sınavı`;
-
-    // session
-    const { data:{ session } } = await supabase.auth.getSession();
-    if(!session) location.replace("/pages/login.html");
-
-    // bank url
-    const BASE = "https://italky-api.onrender.com/assets/tests/";
-    const map = {
-      dora:"en_v1.json",
-      ayda:"de_v1.json",
-      jale:"fr_v1.json",
-      ozan:"es_v1.json",
-      sencer:"it_v1.json",
-      sungur:"ru_v1.json",
-      huma:"ja_v1.json",
-      umay:"zh_v1.json"
-    };
-    const bankUrl = BASE + (map[teacherId] || "en_v1.json");
-
-    // fetch bank (with hard error)
-    let bank = null;
-    try{
-      const res = await fetch(bankUrl, { cache:"no-store" });
-      if(!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
-      bank = await res.json();
-    }catch(e){
-      showError("Soru bankası indirilemedi.", `URL: ${bankUrl}\nHata: ${e?.message || e}`);
-      return;
-    }
-
-    const QUESTIONS = Array.isArray(bank?.questions) ? bank.questions : [];
-    if(QUESTIONS.length === 0){
-      showError("Soru bankası boş geldi.", `URL: ${bankUrl}\nBank version: ${bank?.version || "—"}\nquestions length: 0`);
-      return;
-    }
-    if(QUESTIONS.length !== 50){
-      toast(`Uyarı: Bank ${QUESTIONS.length} soru`);
-    }
-
-    // start rpc
-    let testId = null;
-    const { data: startData, error: startErr } = await supabase.rpc("start_level_test", { p_teacher_id: teacherId });
-    if(startErr){
-      showError("Sınav başlatılamadı.", `RPC: start_level_test\nHata: ${startErr.message}`);
-      return;
-    }
-    testId = startData?.[0]?.test_id || null;
-    toast("Sınav başladı");
-
-    // state
-    const TOTAL_TIME = 40 * 60;
-    const MAX_PASSES = 2;
-    let idx = 0;
-    let remaining = TOTAL_TIME;
-    let timer = null;
-
-    const answers = Array(QUESTIONS.length).fill(null);
-    const passCount = Array(QUESTIONS.length).fill(0);
-    const skipped = Array(QUESTIONS.length).fill(false);
-
-    function fmtTime(sec){
-      const m = String(Math.floor(sec/60)).padStart(2,"0");
-      const s = String(sec%60).padStart(2,"0");
-      return `${m}:${s}`;
-    }
-    function updateTimer(){ $("timerChip").textContent = fmtTime(remaining); }
-
-    function nextIndex(from){
-      for(let i=from+1;i<QUESTIONS.length;i++){
-        if(passCount[i] < MAX_PASSES && answers[i] === null) return i;
-      }
-      for(let i=0;i<QUESTIONS.length;i++){
-        if(passCount[i] < MAX_PASSES && answers[i] === null) return i;
-      }
-      return -1;
-    }
-
-    function render(){
-      const q = QUESTIONS[idx];
-      if(!q){
-        showError("Soru bulunamadı.", `idx=${idx}\nquestions length=${QUESTIONS.length}`);
-        enableNav(false);
-        return;
-      }
-
-      passCount[idx] = Math.min(MAX_PASSES, passCount[idx] + 1);
-
-      const picked = answers[idx];
-      const status = picked !== null ? "Cevaplandı" : (skipped[idx] ? "Atlandı" : "Bekliyor");
-      const passInfo = `Tur: ${passCount[idx]}/${MAX_PASSES}`;
-
-      qCard.innerHTML = `
-        <div class="q-meta">
-          <div class="meta">Soru ${idx+1}/${QUESTIONS.length} • ${q.level || "-"}</div>
-          <div class="meta">${status} • ${passInfo}</div>
-        </div>
-        <div class="q-text">${q.question || ""}</div>
-        ${(q.options || []).map((opt, i)=>`<button class="opt ${picked===i?'sel':''}" data-i="${i}" type="button">${opt}</button>`).join("")}
-        <div class="note">Bilmediğin soruyu <b>Atla</b>. Süre varsa tekrar gelir.</div>
-      `;
-
-      qCard.querySelectorAll(".opt").forEach(btn=>{
-        btn.addEventListener("click", ()=>{
-          const i = Number(btn.getAttribute("data-i"));
-          answers[idx] = i;
-          skipped[idx] = false;
-          render();
-        });
-      });
-
-      btnPrev.disabled = (idx === 0);
-      btnNext.textContent = (nextIndex(idx) === -1) ? "SINAVI TAMAMLA" : "İLERİ";
-    }
-
-    function scoreWeighted(){
-      let weighted = 0;
-      for(let i=0;i<QUESTIONS.length;i++){
-        if(answers[i] === QUESTIONS[i].correct) weighted += Number(QUESTIONS[i].weight || 0);
-      }
-      return weighted;
-    }
-
-    function computeLevel(weighted){
-      if(weighted >= 175) return "C1";
-      if(weighted >= 140) return "B2";
-      if(weighted >= 105) return "B1";
-      if(weighted >= 70)  return "A2";
-      return "A1";
-    }
-
-    async function finishExam(){
-      if(timer) clearInterval(timer);
-
-      const weighted = scoreWeighted();
-      const level = computeLevel(weighted);
-
-      const { data: finData, error: finErr } = await supabase.rpc("finish_level_test", {
-        p_test_id: testId,
-        p_result_level: level,
-        p_remaining_seconds: remaining
-      });
-
-      if(finErr){
-        showError("Sonuç kaydedilemedi.", `RPC: finish_level_test\nHata: ${finErr.message}`);
-        return;
-      }
-
-      const refund = finData?.[0]?.refund_tokens ?? 0;
-      const tokensLeft = finData?.[0]?.tokens_left ?? null;
-
-      $("rLevel").textContent = `${LANGMAP[teacherId] || "Dil"} • ${level}`;
-      $("rText").textContent =
-        `Seviyeniz: ${level}\nİade: ${refund} Jeton\n` +
-        (tokensLeft!=null ? `Kalan Jeton: ${tokensLeft}\n\n` : "\n") +
-        `Önerimiz: 15 dakikalık derslerle başlayın.`;
-
-      $("resultOverlay").classList.add("show");
-    }
-
-    // buttons
-    btnPrev.onclick = ()=>{ if(idx>0){ idx--; render(); } };
-    btnSkip.onclick = ()=>{
-      skipped[idx] = true;
-      answers[idx] = null;
-      const ni = nextIndex(idx);
-      if(ni === -1) finishExam();
-      else { idx = ni; render(); }
-    };
-    btnNext.onclick = ()=>{
-      const ni = nextIndex(idx);
-      if(ni === -1) finishExam();
-      else { idx = ni; render(); }
-    };
-
-    $("rGoLessons").onclick = ()=>{
-      localStorage.setItem("italky_lesson_mins","15");
-      location.href="/pages/plan_select.html";
-    };
-    $("rLater").onclick = ()=>location.href="/pages/home.html";
-
-    // start timer + render
-    enableNav(true);
-    updateTimer();
-    timer = setInterval(()=>{
-      remaining--;
-      if(remaining < 0) remaining = 0;
-      updateTimer();
-      if(remaining === 0) finishExam();
-    }, 1000);
-
-    render();
-
+    const res = await fetch(bankUrl, { cache:"no-store" });
+    if(!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
+    bank = await res.json();
   }catch(e){
-    showError("Beklenmeyen hata.", String(e?.message || e));
+    showError("Soru bankası indirilemedi.", `URL: ${bankUrl}\nHata: ${e?.message || e}`);
+    return;
   }
+
+  const QUESTIONS = Array.isArray(bank?.questions) ? bank.questions : [];
+  if(QUESTIONS.length === 0){
+    showError("Soru bankası boş geldi.", `URL: ${bankUrl}\nversion: ${bank?.version || "—"}`);
+    return;
+  }
+
+  // start exam RPC (40 jeton)
+  let testId=null;
+  const { data:startData, error:startErr } = await supabase.rpc("start_level_test", { p_teacher_id: teacherId });
+  if(startErr){
+    showError("Sınav başlatılamadı.", `RPC start_level_test\n${startErr.message}`);
+    return;
+  }
+  testId = startData?.[0]?.test_id || null;
+
+  // state
+  const TOTAL_TIME = 40*60;
+  const MAX_PASSES = 2;
+  let idx=0;
+  let remaining=TOTAL_TIME;
+  let timer=null;
+
+  const answers = Array(QUESTIONS.length).fill(null);
+  const passCount = Array(QUESTIONS.length).fill(0);
+  const skipped = Array(QUESTIONS.length).fill(false);
+
+  function fmtTime(sec){
+    const m = String(Math.floor(sec/60)).padStart(2,"0");
+    const s = String(sec%60).padStart(2,"0");
+    return `${m}:${s}`;
+  }
+  function updateTimer(){ $("timerChip").textContent = fmtTime(remaining); }
+
+  function nextIndex(from){
+    for(let i=from+1;i<QUESTIONS.length;i++){
+      if(passCount[i] < MAX_PASSES && answers[i] === null) return i;
+    }
+    for(let i=0;i<QUESTIONS.length;i++){
+      if(passCount[i] < MAX_PASSES && answers[i] === null) return i;
+    }
+    return -1;
+  }
+
+  function render(){
+    const q = QUESTIONS[idx];
+    if(!q){
+      showError("Soru bulunamadı.", `idx=${idx}\nquestions=${QUESTIONS.length}`);
+      return;
+    }
+
+    passCount[idx] = Math.min(MAX_PASSES, passCount[idx] + 1);
+
+    const picked = answers[idx];
+    const status = picked!==null ? "Cevaplandı" : (skipped[idx] ? "Atlandı" : "Bekliyor");
+    const passInfo = `Tur: ${passCount[idx]}/${MAX_PASSES}`;
+
+    qCard.innerHTML = `
+      <div class="q-meta">
+        <div class="meta">Soru ${idx+1}/${QUESTIONS.length} • ${q.level || "-"}</div>
+        <div class="meta">${status} • ${passInfo}</div>
+      </div>
+      <div class="q-text">${q.question || ""}</div>
+      ${(q.options || []).map((opt,i)=>`<button class="opt ${picked===i?'sel':''}" data-i="${i}" type="button">${opt}</button>`).join("")}
+      <div class="note">Bilmediğin soruyu <b>Atla</b>. Süre varsa tekrar gelir.</div>
+    `;
+
+    qCard.querySelectorAll(".opt").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        const i = Number(btn.getAttribute("data-i"));
+        answers[idx] = i;
+        skipped[idx] = false;
+        render();
+      });
+    });
+
+    btnPrev.disabled = (idx===0);
+    btnSkip.disabled = false;
+    btnNext.disabled = false;
+    btnNext.textContent = (nextIndex(idx)===-1) ? "SINAVI TAMAMLA" : "İLERİ";
+  }
+
+  function scoreWeighted(){
+    let w=0;
+    for(let i=0;i<QUESTIONS.length;i++){
+      if(answers[i] === QUESTIONS[i].correct) w += Number(QUESTIONS[i].weight||0);
+    }
+    return w;
+  }
+  function computeLevel(w){
+    if(w>=175) return "C1";
+    if(w>=140) return "B2";
+    if(w>=105) return "B1";
+    if(w>=70)  return "A2";
+    return "A1";
+  }
+
+  async function finishExam(){
+    if(timer) clearInterval(timer);
+    const w = scoreWeighted();
+    const level = computeLevel(w);
+
+    const { data: finData, error: finErr } = await supabase.rpc("finish_level_test", {
+      p_test_id: testId,
+      p_result_level: level,
+      p_remaining_seconds: remaining
+    });
+
+    if(finErr){
+      showError("Sonuç kaydedilemedi.", `RPC finish_level_test\n${finErr.message}`);
+      return;
+    }
+
+    const refund = finData?.[0]?.refund_tokens ?? 0;
+    const tokensLeft = finData?.[0]?.tokens_left ?? null;
+
+    showError(
+      `Seviyeniz: ${level}`,
+      `İade: ${refund} Jeton\n${tokensLeft!=null ? "Kalan: "+tokensLeft+" Jeton" : ""}\n\nPlan seçimine yönlendiriliyorsunuz…`
+    );
+    setTimeout(()=>location.href="/pages/plan_select.html", 900);
+  }
+
+  btnPrev.onclick = ()=>{ if(idx>0){ idx--; render(); } };
+  btnSkip.onclick = ()=>{
+    skipped[idx]=true; answers[idx]=null;
+    const ni = nextIndex(idx);
+    if(ni===-1) finishExam(); else { idx=ni; render(); }
+  };
+  btnNext.onclick = ()=>{
+    const ni = nextIndex(idx);
+    if(ni===-1) finishExam(); else { idx=ni; render(); }
+  };
+
+  // timer
+  updateTimer();
+  timer = setInterval(()=>{
+    remaining--;
+    if(remaining<0) remaining=0;
+    updateTimer();
+    if(remaining===0) finishExam();
+  }, 1000);
+
+  // go
+  render();
 </script>
 </body>
 </html>
