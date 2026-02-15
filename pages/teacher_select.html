@@ -11,43 +11,30 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
   <style>
-    /* ✅ Shell içindeki main-content üzerinde çalışıyoruz */
-    #pageContent{
-      height: auto;
-      overflow: visible;
-      position: relative;
-      z-index: 5;
-      pointer-events: auto;
-    }
-
-    .title-area{
-      text-align:center;
-      margin: 6px 0 14px;
-      pointer-events:auto;
-    }
+    #pageContent{ height:100%; }
+    .wrap{ height:100%; padding: 10px 16px 20px; display:flex; flex-direction:column; gap: 12px; }
+    .title-area{ text-align:center; margin: 10px 0 10px; }
     .title-area h2{
       margin:0;
       font-family:"Space Grotesk",system-ui,sans-serif;
-      font-size:22px;
-      font-weight:1000;
-      letter-spacing:-0.4px;
+      font-size: 22px;
+      font-weight: 1000;
+      letter-spacing: -0.4px;
       color: rgba(255,255,255,0.95);
     }
 
-    /* ✅ Footer üstüne binmesin */
     .grid{
+      flex:1;
       display:grid;
       grid-template-columns: 1fr 1fr;
       gap: 14px;
+      align-content: start;
+      overflow:auto;
       padding-bottom: calc(var(--footerH, 92px) + 28px);
-      pointer-events:auto;
-      position: relative;
-      z-index: 10;
     }
+    .grid::-webkit-scrollbar{ display:none; }
 
-    /* ✅ Button = mobilde tıklama garantisi */
     .card{
-      -webkit-tap-highlight-color: transparent;
       appearance:none;
       border:none;
       width:100%;
@@ -59,9 +46,6 @@
       padding: 18px 14px;
       cursor:pointer;
       user-select:none;
-      position:relative;
-      z-index: 20;
-      pointer-events:auto;
       display:flex;
       flex-direction:column;
       align-items:center;
@@ -70,6 +54,8 @@
       min-height: 140px;
       color:#fff;
       transition: transform .22s ease, background .22s ease;
+      position:relative;
+      z-index: 10;
     }
     .card:active{ transform: scale(.98); background: rgba(255,255,255,0.06); }
 
@@ -81,7 +67,6 @@
       box-shadow: 0 18px 44px rgba(0,0,0,0.24);
     }
     .flag{ font-size:30px; }
-
     .lang{
       font-size:12px;
       font-weight:1000;
@@ -98,7 +83,6 @@
       text-align:center;
       line-height:1.1;
     }
-
     .mini{
       position:absolute;
       top:10px; right:10px;
@@ -136,84 +120,92 @@
 </head>
 
 <body>
-  <main id="pageContent">
-    <div class="title-area">
-      <h2>Dil Dersi Seçimi Yapın</h2>
-    </div>
-
+<main id="pageContent">
+  <div class="wrap">
+    <div class="title-area"><h2>Dil Dersi Seçimi Yapın</h2></div>
     <div class="grid" id="langGrid"></div>
-  </main>
+  </div>
+</main>
 
-  <div class="toast" id="toast"></div>
+<div class="toast" id="toast"></div>
 
-  <script type="module">
-    import { mountShell } from "/js/ui_shell.js";
-    import { bootPage } from "/js/ui_guard.js";
-    import { supabase } from "/js/supabase_client.js";
+<script type="module">
+  import { mountShell } from "/js/ui_shell.js";
+  import { bootPage } from "/js/ui_guard.js";
+  import { supabase } from "/js/supabase_client.js";
 
-    mountShell(); // ✅ shell içi düzen
-    bootPage({ protectedPage:true, header:{ nameId:"userName", picId:"userPic" } });
+  mountShell();
+  bootPage({ protectedPage:true, header:{ nameId:"userName", picId:"userPic" } });
 
-    const $ = (id)=>document.getElementById(id);
-    function toast(msg){
-      const t = $("toast");
-      t.textContent = String(msg||"");
-      t.classList.add("show");
-      clearTimeout(window.__to);
-      window.__to = setTimeout(()=>t.classList.remove("show"), 1400);
+  const $ = (id)=>document.getElementById(id);
+
+  function toast(msg){
+    const t = $("toast");
+    t.textContent = String(msg||"");
+    t.classList.add("show");
+    clearTimeout(window.__to);
+    window.__to = setTimeout(()=>t.classList.remove("show"), 1500);
+  }
+
+  const LANGS = [
+    { id:"dora",   flag:"🇬🇧", lang:"ENGLISH",  local:"English" },
+    { id:"ayda",   flag:"🇩🇪", lang:"GERMAN",   local:"Deutsch" },
+    { id:"jale",   flag:"🇫🇷", lang:"FRENCH",   local:"Français" },
+    { id:"ozan",   flag:"🇪🇸", lang:"SPANISH",  local:"Español" },
+    { id:"sencer", flag:"🇮🇹", lang:"ITALIAN",  local:"Italiano" },
+    { id:"sungur", flag:"🇷🇺", lang:"RUSSIAN",  local:"Русский" },
+    { id:"huma",   flag:"🇯🇵", lang:"JAPANESE", local:"日本語" },
+    { id:"umay",   flag:"🇨🇳", lang:"CHINESE",  local:"中文" }
+  ];
+
+  let LEVELS = {};
+
+  async function loadLevels(){
+    const { data:{ user } } = await supabase.auth.getUser();
+    if(!user){ location.href="/pages/login.html"; return; }
+
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("levels")
+      .eq("id", user.id)
+      .single();
+
+    if(error){ LEVELS = {}; return; }
+    LEVELS = (data?.levels && typeof data.levels === "object") ? data.levels : {};
+  }
+
+  function render(){
+    const grid = $("langGrid");
+    grid.innerHTML = LANGS.map(l=>{
+      const lv = LEVELS?.[l.id] || "";
+      return `
+        <button class="card" type="button" data-id="${l.id}">
+          <div class="mini" style="display:${lv ? "inline-flex" : "none"}">${lv}</div>
+          <div class="flagBox"><div class="flag">${l.flag}</div></div>
+          <div class="lang">${l.lang}</div>
+          <div class="local">${l.local}</div>
+        </button>
+      `;
+    }).join("");
+  }
+
+  function go(url){
+    const full = new URL(url, location.origin).toString();
+    try{
+      location.assign(full);
+      // ✅ bazı webview'lerde assign yutuluyor: force
+      setTimeout(()=>{ window.location = full; }, 200);
+    }catch(e){
+      window.location = full;
     }
+  }
 
-    // ✅ sadece dil (öğretmen ismi yok)
-    const LANGS = [
-      { id:"dora",   flag:"🇬🇧", lang:"ENGLISH",  local:"English" },
-      { id:"ayda",   flag:"🇩🇪", lang:"GERMAN",   local:"Deutsch" },
-      { id:"jale",   flag:"🇫🇷", lang:"FRENCH",   local:"Français" },
-      { id:"ozan",   flag:"🇪🇸", lang:"SPANISH",  local:"Español" },
-      { id:"sencer", flag:"🇮🇹", lang:"ITALIAN",  local:"Italiano" },
-      { id:"sungur", flag:"🇷🇺", lang:"RUSSIAN",  local:"Русский" },
-      { id:"huma",   flag:"🇯🇵", lang:"JAPANESE", local:"日本語" },
-      { id:"umay",   flag:"🇨🇳", lang:"CHINESE",  local:"中文" }
-    ];
+  // ✅ Delegation
+  $("langGrid").addEventListener("click", (ev)=>{
+    const btn = ev.target.closest(".card");
+    if(!btn) return;
 
-    let LEVELS = {};
-
-    async function loadLevels(){
-      const { data:{ user } } = await supabase.auth.getUser();
-      if(!user){ location.href="/pages/login.html"; return; }
-
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("levels")
-        .eq("id", user.id)
-        .single();
-
-      if(error){
-        console.warn(error);
-        LEVELS = {};
-        return;
-      }
-      LEVELS = (data?.levels && typeof data.levels === "object") ? data.levels : {};
-    }
-
-    function render(){
-      const grid = $("langGrid");
-      grid.innerHTML = LANGS.map(l=>{
-        const lv = LEVELS?.[l.id] || "";
-        return `
-          <button class="card" type="button" data-id="${l.id}">
-            <div class="mini" style="display:${lv ? "inline-flex" : "none"}">${lv}</div>
-            <div class="flagBox"><div class="flag">${l.flag}</div></div>
-            <div class="lang">${l.lang}</div>
-            <div class="local">${l.local}</div>
-          </button>
-        `;
-      }).join("");
-    }
-
-    // ✅ Event delegation: her koşulda tıklanır
-    $("langGrid").addEventListener("click", (ev)=>{
-      const btn = ev.target.closest(".card");
-      if(!btn) return;
+    try{
       const tid = btn.getAttribute("data-id");
       if(!tid) return;
 
@@ -222,18 +214,22 @@
       const hasLevel = !!LEVELS?.[tid];
       if(!hasLevel){
         toast("Seviye tespit ekranına yönlendiriliyor...");
-        location.href = "/pages/level_test_intro.html";
+        go("/pages/level_test_intro.html");
       }else{
         toast("Ders planına yönlendiriliyor...");
-        location.href = "/pages/plan_select.html";
+        go("/pages/plan_select.html");
       }
-    });
+    }catch(err){
+      console.error(err);
+      toast("Geçiş hatası");
+    }
+  });
 
-    // ekstra garanti: touchstart (bazı androidlerde)
-    $("langGrid").addEventListener("touchstart", ()=>{}, { passive:true });
+  // ✅ ekstra garanti
+  $("langGrid").addEventListener("touchend", ()=>{}, { passive:true });
 
-    await loadLevels();
-    render();
-  </script>
+  await loadLevels();
+  render();
+</script>
 </body>
 </html>
