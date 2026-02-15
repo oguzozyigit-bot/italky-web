@@ -1,0 +1,131 @@
+<!-- FILE: /pages/teacher_build.html -->
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>italkyAI • Öğretmenini Oluştur</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+  <style>
+    #pageContent{height:100%;overflow:hidden}
+    .wrap{height:100%;padding:12px 16px 20px;display:flex;flex-direction:column;gap:12px}
+    .card{flex:1;border-radius:28px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.03);backdrop-filter:blur(20px);padding:16px;overflow:auto}
+    h2{margin:0 0 10px;font-family:"Space Grotesk",sans-serif;font-weight:1000}
+    .row{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}
+    .pill{flex:1;min-width:120px;padding:12px;border-radius:18px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.18);color:#fff;font-weight:1000;cursor:pointer;text-align:center}
+    .pill.sel{background:rgba(99,102,241,.35);border-color:rgba(99,102,241,.55)}
+    .inp{width:100%;height:48px;border-radius:16px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#fff;padding:0 12px;font-weight:1000}
+    .note{font-size:12px;color:rgba(255,255,255,.65);font-weight:800;line-height:1.45}
+    .btn{height:54px;border-radius:22px;border:none;background:#fff;color:#000;font-weight:1000;cursor:pointer}
+    .btn:disabled{opacity:.35;cursor:not-allowed}
+  </style>
+</head>
+<body>
+<main id="pageContent">
+  <div class="wrap">
+    <div class="card">
+      <h2>Öğretmenini Oluştur</h2>
+      <div class="note">Öğretmen, derslerde kendi adıyla konuşacak ve tarzına göre davranacak.</div>
+
+      <div style="margin-top:14px" class="note">1) Cinsiyet</div>
+      <div class="row" id="genderRow">
+        <div class="pill" data-v="male">Bay</div>
+        <div class="pill" data-v="female">Bayan</div>
+      </div>
+
+      <div class="note">2) Tarz</div>
+      <div class="row" id="styleRow">
+        <div class="pill" data-v="friendly">Samimi</div>
+        <div class="pill" data-v="cheerful">Neşeli</div>
+        <div class="pill" data-v="disciplined">Disiplinli</div>
+        <div class="pill" data-v="expert">Uzman</div>
+      </div>
+
+      <div class="note">3) Ses</div>
+      <div class="row" id="voiceRow">
+        <div class="pill" data-v="voice_1">Ses 1</div>
+        <div class="pill" data-v="voice_2">Ses 2</div>
+        <div class="pill" data-v="voice_3">Ses 3</div>
+        <div class="pill" data-v="voice_4">Ses 4</div>
+      </div>
+
+      <div class="note">4) Öğretmenine isim ver</div>
+      <input class="inp" id="tName" maxlength="16" placeholder="Örn: Lina" />
+      <div class="note" style="margin-top:8px">İpucu: Kısa ve kolay bir isim seç.</div>
+    </div>
+
+    <button class="btn" id="btnSave" disabled>Kaydet ve Devam Et</button>
+  </div>
+</main>
+
+<script type="module">
+  import { mountShell } from "/js/ui_shell.js";
+  import { bootPage } from "/js/ui_guard.js";
+  import { supabase } from "/js/supabase_client.js";
+
+  mountShell({scroll:"none"});
+  bootPage({ protectedPage:true, header:{ nameId:"userName", picId:"userPic" } });
+
+  const teacherId = (localStorage.getItem("italky_teacher_pref") || "").trim();
+  if(!teacherId) location.href="/pages/teacher_select.html";
+
+  const $ = (id)=>document.getElementById(id);
+  const btn = $("btnSave");
+
+  let gender=null, style=null, voice=null;
+
+  function selectPill(rowId){
+    const row = $(rowId);
+    row.querySelectorAll(".pill").forEach(p=>{
+      p.addEventListener("click", ()=>{
+        row.querySelectorAll(".pill").forEach(x=>x.classList.remove("sel"));
+        p.classList.add("sel");
+        const v = p.getAttribute("data-v");
+        if(rowId==="genderRow") gender=v;
+        if(rowId==="styleRow") style=v;
+        if(rowId==="voiceRow") voice=v;
+        validate();
+      });
+    });
+  }
+
+  function validate(){
+    const name = $("tName").value.trim();
+    btn.disabled = !(gender && style && voice && name.length >= 2);
+  }
+
+  $("tName").addEventListener("input", validate);
+  selectPill("genderRow");
+  selectPill("styleRow");
+  selectPill("voiceRow");
+
+  btn.addEventListener("click", async ()=>{
+    const { data:{ user } } = await supabase.auth.getUser();
+    if(!user) return location.href="/pages/login.html";
+
+    const teacher_name = $("tName").value.trim().slice(0,16);
+
+    // teacher_prefs güncelle
+    const { data: prof, error: e1 } = await supabase
+      .from("profiles")
+      .select("teacher_prefs")
+      .eq("id", user.id)
+      .single();
+
+    if(e1){ alert("Profil okunamadı"); return; }
+
+    const prefs = (prof?.teacher_prefs && typeof prof.teacher_prefs==="object") ? prof.teacher_prefs : {};
+    prefs[teacherId] = { gender, style, voice, teacher_name };
+
+    const { error: e2 } = await supabase
+      .from("profiles")
+      .update({ teacher_prefs: prefs })
+      .eq("id", user.id);
+
+    if(e2){ alert("Kaydedilemedi"); return; }
+
+    location.href="/pages/plan_select.html";
+  });
+</script>
+</body>
+</html>
