@@ -71,7 +71,6 @@
     }
     .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
 
-    /* Üyelik no satırında kopyala */
     .copyWrap{
       display:flex;
       align-items:center;
@@ -91,6 +90,17 @@
     }
     .copyBtn:active{ transform: scale(.98); }
     .copyBtn svg{ width:18px; height:18px; stroke: rgba(255,255,255,0.85); stroke-width:2.2; fill:none; }
+
+    /* Ad düzenle mini buton */
+    .editBtn{
+      width:38px;height:38px;border-radius:14px;
+      border:1px solid rgba(255,255,255,0.12);
+      background:rgba(0,0,0,0.18);
+      display:flex;align-items:center;justify-content:center;
+      cursor:pointer;user-select:none;flex:0 0 auto;
+    }
+    .editBtn:active{ transform:scale(.98); }
+    .editBtn svg{ width:18px;height:18px;stroke:rgba(255,255,255,0.85);stroke-width:2.2;fill:none; }
 
     .wallet{
       display:flex;
@@ -160,7 +170,6 @@
     }
     .linkRow:active{ transform: scale(.99); }
 
-    /* “tıklayınız” vurgusu */
     .tap{
       color: rgba(165,180,252,0.95);
       font-weight: 1000;
@@ -187,22 +196,67 @@
       text-align:center;
     }
     .toast.show{ transform: translateX(-50%) translateY(0); }
+
+    /* Mini modal */
+    .modal{
+      position:fixed; inset:0; z-index:9999999;
+      display:none; align-items:center; justify-content:center;
+      background: rgba(0,0,0,0.55);
+      backdrop-filter: blur(8px);
+      padding: 18px;
+    }
+    .modal.show{ display:flex; }
+    .modalCard{
+      width:min(420px, 100%);
+      border-radius: 26px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(10,10,18,.92);
+      padding: 14px;
+    }
+    .modalTitle{
+      font-family:"Space Grotesk",system-ui,sans-serif;
+      font-weight:900;
+      font-size:16px;
+      margin:6px 6px 10px;
+    }
+    .input{
+      width:100%;
+      height:46px;
+      border-radius: 16px;
+      border:1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06);
+      color:#fff;
+      padding: 0 12px;
+      font-weight:900;
+      font-size:14px;
+      outline:none;
+    }
+    .modalActions{ display:flex; gap:10px; margin-top:12px; }
+    .modalActions .btn{ width:100%; }
   </style>
 </head>
 
 <body>
   <div id="pageContent">
 
-    <!-- PROFİL -->
     <div class="panel">
       <div class="head">
         <h2 class="title">Profil</h2>
       </div>
 
       <div class="list">
+        <!-- ✅ Ad Soyad + düzenle -->
         <div class="line">
           <div class="k">Ad Soyad</div>
-          <div class="v" id="pName">—</div>
+          <div class="copyWrap">
+            <div class="v" id="pName">—</div>
+            <button class="editBtn" id="editNameBtn" type="button" aria-label="Adı Düzenle">
+              <svg viewBox="0 0 24 24">
+                <path d="M12 20h9"/>
+                <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4 11.5-11.5z"/>
+              </svg>
+            </button>
+          </div>
         </div>
 
         <div class="line">
@@ -211,7 +265,7 @@
         </div>
 
         <div class="line">
-          <div class="k">Üyelik Numaranız</div>
+          <div class="k">Üyelik Numarası</div>
           <div class="copyWrap">
             <div class="v mono" id="memberNo">—</div>
             <button class="copyBtn" id="copyMemberBtn" type="button" aria-label="Kopyala">
@@ -223,14 +277,13 @@
           </div>
         </div>
 
-        <!-- ✅ Alt alta iki tarih -->
         <div class="line">
-          <div class="k">Üyelik Başlangıç Tarihi</div>
+          <div class="k">Üyelik Başlangıç</div>
           <div class="v" id="createdAt">—</div>
         </div>
 
         <div class="line">
-          <div class="k">Son Giriş Tarihi</div>
+          <div class="k">Son Giriş</div>
           <div class="v" id="lastLogin">—</div>
         </div>
 
@@ -244,7 +297,6 @@
       </div>
     </div>
 
-    <!-- DİL SEVİYE DURUMU -->
     <div class="panel">
       <div class="head">
         <h2 class="title">Dil Seviye Durumu</h2>
@@ -253,11 +305,10 @@
       <div class="list" id="levelsList"></div>
 
       <div class="note linkRow" id="levelsEmptyNote" style="display:none;">
-        Katıldığınız seviye tespit sınavı bulunmamaktadır. Lütfen seviye tespit sınavına katılmak için <span class="tap">tıklayınız</span>...
+        Katıldığınız Seviye Tespit Sınavı Bulunmamaktadır. Lütfen Seviye Tespit Sınavına Katılmak için <span class="tap">tıklayınız</span>...
       </div>
     </div>
 
-    <!-- OFFLINE DİL DOSYALARI -->
     <div class="panel">
       <div class="head">
         <h2 class="title">İndirilen Offline Dil Dosyaları</h2>
@@ -266,7 +317,7 @@
       <div class="list" id="offlineList"></div>
 
       <div class="note" id="offlineEmptyNote" style="display:none;">
-        İnternete bağlanmadan çeviri yapabiliceğiniz dil dosyasını henüz indirmediniz. Lütfen istediğiniz dil dosyalarını indiriniz.
+        Henüz internete bağlanmadan çeviri yapabiliceke dil dosyası indirmediniz. Lütfen istediğiniz dil dosyalarını sıra ile indiriniz.
       </div>
 
       <div style="margin-top:12px;">
@@ -274,7 +325,6 @@
       </div>
     </div>
 
-    <!-- AKSİYONLAR -->
     <div class="panel">
       <div class="list">
         <button class="btn btn-safe" id="logoutBtn" type="button">Güvenli Çıkış</button>
@@ -285,6 +335,19 @@
   </div>
 
   <div class="toast" id="toast"></div>
+
+  <!-- Modal -->
+  <div class="modal" id="nameModal">
+    <div class="modalCard">
+      <div class="modalTitle">Adınızı Güncelleyin</div>
+      <input class="input" id="nameInput" maxlength="32" placeholder="Örn: Oğuz" />
+      <div class="note">Bu isim öğretmenin seni böyle çağırır.</div>
+      <div class="modalActions">
+        <button class="btn btn-ghost" id="cancelNameBtn" type="button">Vazgeç</button>
+        <button class="btn btn-primary" id="saveNameBtn" type="button">Kaydet</button>
+      </div>
+    </div>
+  </div>
 
   <script type="module">
     import { mountShell, setHeaderTokens } from "/js/ui_shell.js";
