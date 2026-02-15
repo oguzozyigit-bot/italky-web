@@ -23,13 +23,10 @@
     import { supabase } from "/js/supabase_client.js";
     import { ensureAuthAndCacheUser } from "/js/auth.js";
 
-    // Supabase, code/state -> session işlemini detectSessionInUrl ile yapar.
-    // Burada sadece session oluşmasını bekleyip cache'leyip home'a gideriz.
     const HOME = "/pages/home.html";
     const LOGIN = "/pages/login.html";
 
-    // küçük bekleme döngüsü
-    async function waitForSession(maxMs=7000){
+    async function waitForSession(maxMs=8000){
       const start = Date.now();
       while(Date.now()-start < maxMs){
         const { data:{ session } } = await supabase.auth.getSession();
@@ -39,12 +36,11 @@
       return null;
     }
 
-    const session = await waitForSession();
-    if(!session){
+    const s = await waitForSession();
+    if(!s){
       location.replace(LOGIN);
     }else{
       await ensureAuthAndCacheUser();
-      // URL'deki code paramlarını temizlemek için replace
       location.replace(HOME);
     }
   </script>
