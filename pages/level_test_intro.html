@@ -1,48 +1,130 @@
+<!-- FILE: /pages/level_test_intro.html -->
 <!DOCTYPE html>
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>italkyAI • Akademi Giriş</title>
+  <title>italkyAI • Seviye Tespit</title>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
   <style>
     #pageContent { height: 100%; overflow: hidden; }
-    .wrap { height: 100%; padding: 10px 16px 20px; display: flex; flex-direction: column; }
-    .hero { border-radius: 32px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); backdrop-filter: blur(20px); padding: 24px 20px; }
-    .topRow { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
-    .flagBox { width: 70px; height: 70px; border-radius: 24px; display: flex; align-items: center; justify-content: center; background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.2); }
-    .flagBox span { font-size: 34px; }
-    .who { display: flex; flex-direction: column; }
-    .role { font-size: 13px; font-weight: 800; color: #a5b4fc; text-transform: uppercase; }
-    .name { font-size: 24px; font-weight: 900; color: #fff; }
-    .cost-badge { display: inline-block; padding: 6px 12px; border-radius: 10px; background: rgba(99, 102, 241, 0.2); color: #a5b4fc; font-weight: 900; margin: 15px 0; }
+    .wrap { height: 100%; padding: 10px 16px 20px; display: flex; flex-direction: column; gap: 12px; }
+
+    .hero {
+      border-radius: 32px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.03);
+      backdrop-filter: blur(20px);
+      padding: 22px 18px;
+    }
+
+    .topRow { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+    .flagBox {
+      width: 66px; height: 66px; border-radius: 22px;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(99, 102, 241, 0.12);
+      border: 1px solid rgba(99, 102, 241, 0.22);
+      flex: 0 0 auto;
+    }
+    .flagBox span { font-size: 32px; }
+
+    .who { display: flex; flex-direction: column; min-width: 0; }
+    .role { font-size: 12px; font-weight: 900; color: #a5b4fc; text-transform: uppercase; letter-spacing: 1px; }
+    .name { font-size: 22px; font-weight: 1000; color: #fff; line-height: 1.05; }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.08);
+      margin: 10px 0 14px;
+      font-weight: 1000;
+      color: rgba(255,255,255,0.92);
+      font-size: 12px;
+      letter-spacing: .3px;
+    }
+    .badge strong{ color:#a5b4fc; }
+
     .rules { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .rule { background: rgba(0,0,0,0.2); padding: 15px; border-radius: 20px; text-align: center; border: 1px solid rgba(255,255,255,0.05); }
-    .k { font-size: 11px; color: rgba(255,255,255,0.4); text-transform: uppercase; }
-    .v { font-size: 20px; font-weight: 900; color: #fff; }
-    .btn { height: 56px; border-radius: 18px; border: none; font-weight: 900; font-size: 16px; cursor: pointer; transition: 0.2s; margin-top: auto; }
+    .rule { background: rgba(0,0,0,0.20); padding: 14px 12px; border-radius: 20px; text-align: center; border: 1px solid rgba(255,255,255,0.05); }
+    .k { font-size: 11px; color: rgba(255,255,255,0.45); text-transform: uppercase; letter-spacing: 1px; font-weight: 900; }
+    .v { font-size: 20px; font-weight: 1000; color: #fff; margin-top: 4px; }
+
+    .tips{
+      margin-top: 14px;
+      padding: 14px 12px;
+      border-radius: 22px;
+      background: rgba(0,0,0,0.18);
+      border: 1px solid rgba(255,255,255,0.06);
+      color: rgba(255,255,255,0.78);
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 1.55;
+    }
+    .tips b{ color:#fff; }
+    .mini{
+      margin-top: 10px;
+      font-size: 11px;
+      font-weight: 800;
+      color: rgba(255,255,255,0.55);
+      line-height: 1.45;
+    }
+
+    .btn {
+      height: 56px;
+      border-radius: 18px;
+      border: none;
+      font-weight: 1000;
+      font-size: 15px;
+      cursor: pointer;
+      transition: 0.2s;
+      margin-top: auto;
+    }
     .btn-main { background: #fff; color: #000; }
-    .btn-main:disabled { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.3); }
+    .btn-main:disabled { background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.35); cursor: not-allowed; }
   </style>
 </head>
 <body>
   <main id="pageContent">
     <div class="wrap">
+
       <section class="hero">
         <div class="topRow">
-          <div class="flagBox"><span id="flag">🏳️</span></div>
-          <div class="who"><div class="role" id="role">DERS SEÇİMİ</div><div class="name" id="teacherName">...</div></div>
+          <div class="flagBox"><span id="flag">🏁</span></div>
+          <div class="who">
+            <div class="role" id="role">Seviye Tespit</div>
+            <div class="name" id="teacherName">italky Academy</div>
+          </div>
         </div>
-        <div class="cost-badge">Sınav Giriş: 200 Token</div>
+
+        <div class="badge">Sınav Giriş Ücreti: <strong>40 Jeton</strong></div>
+
         <div class="rules">
           <div class="rule"><div class="k">Soru</div><div class="v">50</div></div>
           <div class="rule"><div class="k">Süre</div><div class="v">40 dk</div></div>
         </div>
-        <p style="font-size:12px; color:rgba(255,255,255,0.4); margin-top:15px;">• 10 Token = 4 TL | Dakika maliyeti 5 Token'dır.<br/>• Sınavı erken bitirirseniz, kalan sürenin tokenleri iade edilir.</p>
+
+        <div class="tips">
+          <b>Bu sınav, italky Academy ders planınızı doğru kurmak için kritiktir.</b><br/>
+          Lütfen mümkünse <b>sessiz bir ortamda</b> sınava girmenizi tavsiye ederiz. Sınav sırasında <b>dış kanallardan destek</b> (çeviri, sözlük, birinden yardım almak vb.)
+          almak, gerçek seviyenizi gizler ve dil gelişiminizi <b>yavaşlatır</b>.<br/><br/>
+          <b>Öneri:</b> Testi tek başınıza, dikkatinizi bölmeden tamamlayın. Böylece sistem size en doğru seviyeyi verir ve dersler tam hedefe oturur.
+        </div>
+
+        <div class="mini">
+          • Sınav başlatıldığında hesabınızdan <b>40 Jeton</b> düşülür.<br/>
+          • Erken bitirirseniz, kalan süreye karşılık gelen iade sistemi (ileride) uygulanabilir.
+        </div>
       </section>
+
       <button class="btn btn-main" id="btnStart" disabled>Bakiye Kontrol Ediliyor...</button>
+
     </div>
   </main>
+
   <script type="module">
     import { mountShell } from "/js/ui_shell.js";
     import { bootPage } from "/js/ui_guard.js";
@@ -51,19 +133,68 @@
     mountShell({ scroll: "none" });
     bootPage({ protectedPage: true, header: { nameId: "userName", picId: "userPic" } });
 
-    const TEACHERS = { jack:{flag:"🇬🇧", role:"English", name:"Jack"}, heidi:{flag:"🇩🇪", role:"Deutsch", name:"Heidi"}, claire:{flag:"🇫🇷", role:"Français", name:"Claire"}, diego:{flag:"🇪🇸", role:"Español", name:"Diego"}, marco:{flag:"🇮🇹", role:"Italiano", name:"Marco"}, elena:{flag:"🇷🇺", role:"Pусский", name:"Elena"}, kenji:{flag:"🇯🇵", role:"日本語", name:"Kenji"}, mei:{flag:"🇨🇳", role:"中文", name:"Mei-Ling"} };
-    const sel = localStorage.getItem("italky_teacher_pref");
+    const TEACHERS = {
+      dora:{flag:"🇬🇧", role:"English", name:"Dora"},
+      ayda:{flag:"🇩🇪", role:"Deutsch", name:"Ayda"},
+      jale:{flag:"🇫🇷", role:"Français", name:"Jale"},
+      ozan:{flag:"🇪🇸", role:"Español", name:"Ozan"},
+      sencer:{flag:"🇮🇹", role:"Italiano", name:"Sencer"},
+      sungur:{flag:"🇷🇺", role:"Русский", name:"Sungur"},
+      huma:{flag:"🇯🇵", role:"日本語", name:"Hüma"},
+      umay:{flag:"🇨🇳", role:"中文", name:"Umay"}
+    };
+
+    const sel = (localStorage.getItem("italky_teacher_pref") || "").trim();
     const t = TEACHERS[sel];
-    if(t) { document.getElementById("flag").textContent = t.flag; document.getElementById("teacherName").textContent = t.name; }
+
+    if(t){
+      document.getElementById("flag").textContent = t.flag;
+      document.getElementById("role").textContent = `Seviye Tespit • ${t.role}`;
+      document.getElementById("teacherName").textContent = `${t.name}`;
+    }else{
+      document.getElementById("role").textContent = "Seviye Tespit";
+      document.getElementById("teacherName").textContent = "italky Academy";
+    }
+
+    const FEE = 40;
 
     async function checkWallet() {
-      const { data: { user } } = await supabase.auth.getUser();
-      const { data: profile } = await supabase.from('profiles').select('tokens').eq('id', user.id).single();
       const btn = document.getElementById("btnStart");
-      if ((profile?.tokens || 0) >= 200) { btn.disabled = false; btn.textContent = "Sınavı Başlat (200 Token)"; }
-      else { btn.disabled = true; btn.textContent = "Yetersiz Bakiye (Min: 200 TK)"; }
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if(!user){
+        btn.disabled = true;
+        btn.textContent = "Giriş gerekli";
+        return;
+      }
+
+      const { data: profile, error } = await supabase
+        .from("profiles")
+        .select("tokens")
+        .eq("id", user.id)
+        .single();
+
+      if(error){
+        btn.disabled = true;
+        btn.textContent = "Bakiye okunamadı";
+        return;
+      }
+
+      const tokens = Number(profile?.tokens || 0);
+
+      if(tokens >= FEE){
+        btn.disabled = false;
+        btn.textContent = `Sınavı Başlat (${FEE} Jeton)`;
+      }else{
+        btn.disabled = true;
+        btn.textContent = `Yetersiz Bakiye (Min: ${FEE} Jeton)`;
+      }
     }
-    document.getElementById("btnStart").onclick = () => location.href = "/pages/level_test.html";
+
+    document.getElementById("btnStart").onclick = () => {
+      location.href = "/pages/level_test.html";
+    };
+
     checkWallet();
   </script>
 </body>
