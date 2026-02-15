@@ -48,16 +48,20 @@ const SHELL_CSS = `
 
 *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; }
 html,body{
-  margin:0; padding:0; width:100%; height:100%;
-  overflow:hidden; position:fixed;
+  margin:0; padding:0;
+  width:100%;
+  height:100dvh;                 /* ✅ FIX */
+  overflow:hidden;               /* ✅ kalsın */
+  position:relative;             /* ✅ FIX: fixed KALDIRILDI */
   font-family:'Outfit', sans-serif;
   background-color: var(--bg-void) !important;
   color: var(--text-main);
+  touch-action: manipulation;    /* ✅ FIX: mobile tap */
 }
 
 /* Arka plan */
 .nebula-bg{
-  position:absolute; inset:-10%; width:120%; height:120%;
+  position:fixed; inset:-10%; width:120%; height:120%;   /* ✅ FIX: fixed */
   background:
     radial-gradient(circle at 20% 20%, rgba(79, 70, 229, 0.38) 0%, transparent 40%),
     radial-gradient(circle at 80% 80%, rgba(168, 85, 247, 0.28) 0%, transparent 40%),
@@ -72,7 +76,7 @@ html,body{
   to{ transform: scale(1.1) rotate(2deg); }
 }
 .stars-field{
-  position:absolute; inset:0;
+  position:fixed; inset:0;                                  /* ✅ FIX: fixed */
   background:url("https://www.transparenttextures.com/patterns/stardust.png");
   opacity:0.38;
   z-index:1;
@@ -82,7 +86,8 @@ html,body{
 /* Shell */
 .app-shell{
   position:relative; z-index:10;
-  width:100%; max-width:480px; height:100%;
+  width:100%; max-width:480px;
+  height:100dvh;                                          /* ✅ FIX */
   margin:0 auto;
   display:flex; flex-direction:column;
   background: rgba(10,10,30,0.40);
@@ -193,8 +198,11 @@ html,body{
 .main-content{
   flex:1;
   overflow-y:auto;
+  -webkit-overflow-scrolling: touch;           /* ✅ FIX: iOS/Android scroll */
   padding: var(--edgePad) 20px calc(var(--footerH) + var(--edgePad) + env(safe-area-inset-bottom));
   scrollbar-width:none;
+  position:relative;
+  z-index: 5;
 }
 .main-content::-webkit-scrollbar{ display:none; }
 
@@ -276,27 +284,21 @@ function safeSetImg(id, src){
 
 function hydrateFromCache(){
   safeSetText("headerJeton", "—");
-
   try{
     const raw = localStorage.getItem(STORAGE_KEY);
     if(!raw) return;
     const u = JSON.parse(raw);
-
     if (u?.name) safeSetText("userName", u.name);
     if (u?.picture) safeSetImg("userPic", u.picture);
     if (u?.tokens != null) safeSetText("headerJeton", String(u.tokens));
-  }catch(_e){}
+  }catch{}
 }
 
 export function mountShell(options = {}){
   injectShellStyle();
-
-  // background flash kill
   try{ document.body.style.background = "var(--bg-void)"; }catch{}
 
-  // already mounted?
   if (document.getElementById("italkyAppShell")) {
-    // sadece scroll modunu güncelle (bazı sayfalar scroll:none istiyor)
     const main = document.getElementById("shellMain");
     if (main && options?.scroll === "none") {
       main.style.overflow = "hidden";
@@ -325,13 +327,11 @@ export function mountShell(options = {}){
   const main = shell.querySelector("#shellMain");
   main.appendChild(content);
 
-  // scroll none mode
   if (options?.scroll === "none") {
     main.style.overflow = "hidden";
     main.style.padding = "14px 20px 110px";
   }
 
-  // ✅ body'yi sıfırlamak yerine replaceChildren (flash azalır)
   document.body.replaceChildren(nebula, stars, shell);
 
   document.getElementById("brandHome")?.addEventListener("click", ()=>location.href="/pages/home.html");
@@ -340,8 +340,6 @@ export function mountShell(options = {}){
   hydrateFromCache();
 }
 
-/* Header jeton güncelle */
 export function setHeaderTokens(n){
-  const val = (n == null ? "—" : String(n));
-  safeSetText("headerJeton", val);
+  safeSetText("headerJeton", (n == null ? "—" : String(n)));
 }
