@@ -27,67 +27,92 @@
 
     .premium-card{
       position:relative;
-      background: linear-gradient(145deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%);
-      border: 1px solid rgba(255,255,255,0.10);
+      border: 1px solid rgba(255,255,255,0.14);
       border-radius: 28px;
-      padding: 14px 12px; /* ✅ biraz sıkı */
+      padding: 14px 12px;
       display:flex;
       flex-direction:column;
       align-items:center;
-      justify-content:center; /* ✅ dikey ortala */
+      justify-content:center;
       transition: all .30s cubic-bezier(0.22, 1, 0.36, 1);
       cursor:pointer;
       overflow:hidden;
       user-select:none;
       text-align:center;
+      box-shadow: 0 16px 44px rgba(0,0,0,0.22);
     }
-    .premium-card:active{ transform: scale(0.96); background: rgba(255,255,255,0.10); }
+    .premium-card:active{ transform: scale(0.96); filter: brightness(1.05); }
+
+    /* ✅ Zemin renkleri (ikonlar beyaz kalacak) */
+    .card-face    { background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%); }
+    .card-voice   { background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); }
+    .card-text    { background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); }
+    .card-chat    { background: linear-gradient(135deg, #ec4899 0%, #be185d 100%); }
+    .card-photo   { background: linear-gradient(135deg, #a855f7 0%, #6d28d9 100%); }
+    .card-teacher { background: linear-gradient(135deg, #14b8a6 0%, #0f766e 100%); }
+    .card-doc     { background: linear-gradient(135deg, #f43f5e 0%, #be123c 100%); }
+    .card-game    { background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%); }
+
+    /* hafif parlama */
+    .premium-card::before{
+      content:"";
+      position:absolute; inset:-40%;
+      background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.25), transparent 45%);
+      opacity:.6;
+      pointer-events:none;
+      transform: rotate(8deg);
+    }
 
     .neon-icon-wrap{
-      height: 38%;           /* ✅ kart yüksekliğine göre */
+      height: 38%;
       aspect-ratio: 1/1;
       border-radius:18px;
       display:flex; align-items:center; justify-content:center;
       margin-bottom: 8px;
-      background: rgba(255,255,255,0.05);
-      border:1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.18);
+      border:1px solid rgba(255,255,255,0.22);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      position:relative;
+      z-index:2;
     }
+
+    /* ✅ İKONLAR BEYAZ */
     .premium-card svg{
       height: 78%;
       width: auto;
       fill:none;
+      stroke:#ffffff;
       stroke-width:2.4;
       opacity: .98;
+      filter: none;           /* ✅ renkli glow yok */
     }
-
-    .card-face svg{ stroke:#4facfe; filter: drop-shadow(0 0 10px rgba(79,172,254,.55)); }
-    .card-voice svg{ stroke:#f5576c; filter: drop-shadow(0 0 10px rgba(245,87,108,.55)); }
-    .card-text svg{ stroke:#38f9d7; filter: drop-shadow(0 0 10px rgba(56,249,215,.50)); }
-    .card-chat svg{ stroke:#fa709a; filter: drop-shadow(0 0 10px rgba(250,112,154,.45)); }
-    .card-photo svg{ stroke:#667eea; filter: drop-shadow(0 0 10px rgba(118,75,162,.45)); }
-    .card-teacher svg{ stroke:#00d2ff; filter: drop-shadow(0 0 10px rgba(0,210,255,.45)); }
-    .card-doc svg{ stroke:#d57eeb; filter: drop-shadow(0 0 10px rgba(213,126,235,.45)); }
-    .card-game svg{ stroke:#ff9a9e; filter: drop-shadow(0 0 10px rgba(255,154,158,.40)); }
 
     .card-title{
       font-size: clamp(14px, 3.8vw, 17px);
-      font-weight:800;
+      font-weight:900;
       color:#fff;
       letter-spacing:-0.5px;
       line-height:1.05;
+      position:relative;
+      z-index:2;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.28);
     }
     .card-desc{
       font-size: clamp(9px, 2.5vw, 10.5px);
-      color: rgba(255,255,255,0.65);
-      font-weight:700;
+      color: rgba(255,255,255,0.92);
+      font-weight:800;
       margin-top:4px;
       line-height:1.15;
+      position:relative;
+      z-index:2;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.22);
+      opacity: .92;
     }
   </style>
 </head>
 
 <body>
-  <!-- ✅ SADECE ORTA İÇERİK (Shell bunu giydirir) -->
   <div id="pageContent">
     <div class="grid-layout">
 
@@ -112,7 +137,7 @@
             <line x1="12" y1="19" x2="12" y2="23"/>
           </svg>
         </div>
-        <span class="card-title">Dil Kursu</span>
+        <span class="card-title">italky Academy</span>
         <span class="card-desc">Öğretmenle Günlük Ders</span>
       </div>
 
@@ -181,11 +206,15 @@
   </div>
 
   <script type="module">
-    import { mountShell } from "/js/ui_shell.js";
+    import { mountShell, setHeaderTokens } from "/js/ui_shell.js";
     import { bootPage } from "/js/ui_guard.js";
+    import { ensureAuthAndCacheUser } from "/js/auth.js";
 
-    // ✅ scroll yok: sabit ekran (alt/üst bar arası tam sığar)
     mountShell({ scroll:"none" });
+
+    // ✅ Home açılır açılmaz cache’i doldur → jeton anında gelsin
+    const cached = await ensureAuthAndCacheUser();
+    if (cached?.tokens != null) setHeaderTokens(cached.tokens);
 
     bootPage({
       protectedPage: true,
@@ -198,4 +227,3 @@
   </script>
 </body>
 </html>
-```0
