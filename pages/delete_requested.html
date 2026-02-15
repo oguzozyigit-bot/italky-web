@@ -5,34 +5,61 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>italkyAI • Silme Talebi</title>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
   <style>
-    :root{ --bg:#020205; --card:rgba(8,8,12,.7); --txt:#fff; --muted:#9ca3af; }
+    :root{ --bg:#020205; --card:rgba(8,8,12,.72); --txt:#fff; --muted:#9ca3af; }
     *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none}
     html,body{margin:0;width:100%;height:100dvh;overflow:hidden;background:var(--bg);font-family:Outfit,sans-serif;color:var(--txt)}
-    .wrap{max-width:480px;height:100%;margin:0 auto;display:flex;flex-direction:column;justify-content:center;padding:18px}
-    .card{background:var(--card);border:1px solid rgba(255,255,255,0.12);border-radius:28px;padding:18px;backdrop-filter:blur(20px)}
+    .cosmos{position:fixed;inset:0;overflow:hidden}
+    .nebula{position:absolute;width:90vw;height:90vw;border-radius:50%;filter:blur(120px);opacity:.25;background:radial-gradient(circle,#6366f1,transparent 70%)}
+    .n1{top:-20%;left:-10%}
+    .n2{bottom:-10%;right:-10%;animation:breathe 12s infinite alternate ease-in-out}
+    @keyframes breathe{0%{transform:scale(1);opacity:.2}100%{transform:scale(1.1);opacity:.35}}
+
+    .wrap{max-width:480px;height:100%;margin:0 auto;display:flex;flex-direction:column;justify-content:center;padding:18px;position:relative;z-index:3}
+    .card{
+      background:var(--card);
+      border:1px solid rgba(255,255,255,0.12);
+      border-radius:28px;
+      padding:18px;
+      backdrop-filter:blur(20px);
+      -webkit-backdrop-filter:blur(20px);
+    }
     .top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
-    .title{font-family:"Space Grotesk",sans-serif;font-size:18px;font-weight:900;margin:0}
-    .iconBtn{width:44px;height:44px;border-radius:16px;border:1px solid rgba(255,255,255,0.12);background:rgba(0,0,0,0.18);cursor:pointer;display:flex;align-items:center;justify-content:center}
+    .title{font-family:"Space Grotesk",sans-serif;font-size:18px;font-weight:900;margin:0;letter-spacing:-.3px}
+    .iconBtn{
+      width:44px;height:44px;border-radius:16px;border:1px solid rgba(255,255,255,0.12);
+      background:rgba(0,0,0,0.18);
+      cursor:pointer;display:flex;align-items:center;justify-content:center;
+      user-select:none
+    }
     .iconBtn:active{transform:scale(.98)}
     .iconBtn svg{width:20px;height:20px;stroke:rgba(255,255,255,.9);stroke-width:2.2;fill:none}
-    .p{margin:0;color:rgba(255,255,255,.88);font-weight:800;line-height:1.55}
-    .muted{margin-top:10px;color:var(--muted);font-weight:800;line-height:1.5;font-size:12px}
+
+    .p{margin:0;color:rgba(255,255,255,.90);font-weight:800;line-height:1.6;font-size:14px}
+    .p + .p{margin-top:10px}
+    .muted{margin-top:12px;color:var(--muted);font-weight:800;line-height:1.5;font-size:12px}
   </style>
 </head>
 <body>
+  <div class="cosmos">
+    <div class="nebula n1"></div>
+    <div class="nebula n2"></div>
+  </div>
+
   <div class="wrap">
     <div class="card">
       <div class="top">
         <h1 class="title">Hesap Silme Talebi</h1>
-        <!-- ÇIKIŞ İKONU -->
+
+        <!-- ✅ ÇIKIŞ İKONU -->
         <button class="iconBtn" id="exitBtn" type="button" aria-label="Çıkış">
           <svg viewBox="0 0 24 24">
-            <path d="M10 17l-1 0a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4h1"/>
+            <path d="M10 17H9a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4h1"/>
             <path d="M14 7l5 5-5 5"/>
             <path d="M19 12H10"/>
           </svg>
@@ -42,15 +69,15 @@
       <p class="p">
         Hesabınızın silinme talebi alınmıştır. 30 gün sonra hesabınız sistemden kalıcı olarak silinecektir.
       </p>
-      <p class="p" style="margin-top:10px;">
+      <p class="p">
         Sisteme tekrar giriş yaparsanız hesap silme talebiniz iptal edilecektir.
       </p>
-      <p class="p" style="margin-top:10px;">
+      <p class="p">
         Sizi tekrar aramızda görmek bizi mutlu edecektir.
       </p>
 
       <div class="muted">
-        Not: Bu sayfadan çıkış yapabilirsiniz. Tekrar giriş yapmanız, silme talebini otomatik iptal eder.
+        Bu sayfadan çıkış yapabilirsiniz. Tekrar giriş yaptığınızda silme talebiniz otomatik iptal edilir.
       </div>
     </div>
   </div>
