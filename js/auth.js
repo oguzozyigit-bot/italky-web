@@ -78,6 +78,7 @@ export async function ensureAuthAndCacheUser(){
   if(!session?.user) return null;
 
   const user = session.user;
+try { await supabase.rpc("cancel_account_deletion"); } catch(_) {}
 
   // 1) cihaz kilidi
   try{
