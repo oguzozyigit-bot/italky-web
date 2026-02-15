@@ -1,3 +1,4 @@
+// FILE: /js/profile_page.js
 import { supabase } from "/js/supabase_client.js";
 import { STORAGE_KEY } from "/js/config.js";
 
@@ -32,7 +33,7 @@ function minutesToHM(mins){
 async function requireSession(){
   const { data:{ session }, error } = await supabase.auth.getSession();
   if(error) throw error;
-  if(!session){ location.href="/pages/login.html"; return null; }
+  if(!session){ location.replace("/pages/login.html"); return null; }
   return session;
 }
 
@@ -42,7 +43,12 @@ async function getOrCreateProfile(user){
     if(data) return data;
   }catch{}
 
-  const { data, error } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", user.id)
+    .maybeSingle();
+
   if(error) throw error;
   if(data) return data;
 
@@ -57,7 +63,12 @@ async function getOrCreateProfile(user){
     study_minutes:{}
   };
 
-  const { data: created, error: insErr } = await supabase.from("profiles").insert(insert).select().single();
+  const { data: created, error: insErr } = await supabase
+    .from("profiles")
+    .insert(insert)
+    .select()
+    .single();
+
   if(insErr) throw insErr;
   return created;
 }
@@ -124,10 +135,9 @@ function renderLevels(profile, reqMap){
 
   if(!hasAny){
     empty.style.display="block";
-    empty.onclick=()=>location.href="/pages/teacher_select.html";
+    $("goLevel")?.addEventListener("click", ()=>location.href="/pages/teacher_select.html");
   }else{
     empty.style.display="none";
-    empty.onclick=null;
   }
 }
 
@@ -138,6 +148,7 @@ function renderOffline(profile){
 
   list.innerHTML="";
   const packs = Array.isArray(profile?.offline_langs) ? profile.offline_langs : [];
+
   if(packs.length===0){
     empty.style.display="block";
     return;
@@ -158,11 +169,27 @@ function nukeAuthStorage(){
 }
 
 async function safeLogout(){
-  try{ await supabase.auth.signOut({ scope:"global" }); }catch{}
+  try{
+    await supabase.auth.signOut({ scope:"global" });
+  }catch(e){
+    console.warn("signOut error:", e);
+  }
+
   try{ localStorage.removeItem(STORAGE_KEY); }catch{}
   try{ localStorage.removeItem("NAC_ID"); }catch{}
   nukeAuthStorage();
-  location.href="/pages/login.html";
+
+  // ✅ kesin yönlendirme
+  location.replace("/pages/login.html");
+}
+
+async function copyText(text){
+  try{
+    await navigator.clipboard.writeText(text);
+    toast("Kopyalandı");
+  }catch{
+    toast("Kopyalanamadı");
+  }
 }
 
 async function updateStudentName(userId, newName){
@@ -179,95 +206,100 @@ async function updateStudentName(userId, newName){
     localStorage.setItem(STORAGE_KEY, JSON.stringify(cached));
     localStorage.setItem("italky_student_name", clean);
   }catch{}
-
   return clean;
 }
 
 function openNameModal(force=false){
   const modal = $("nameModal");
-  modal?.classList.add("show");
-
-  // force modda dış tıklama kapansın diye flag
+  if(!modal) return;
+  modal.classList.add("show");
   modal.dataset.force = force ? "1" : "0";
   setTimeout(()=>$("nameInput")?.focus(), 50);
 }
-
 function closeNameModal(){
   const modal = $("nameModal");
   if(!modal) return;
-  if(modal.dataset.force === "1") return; // ✅ zorunluysa kapatma
+  if(modal.dataset.force === "1") return;
   modal.classList.remove("show");
 }
 
 export async function initProfilePage({ setHeaderTokens } = {}){
-  const session = await requireSession();
-  if(!session) return;
+  try{
+    const session = await requireSession();
+    if(!session) return;
 
-  const user = session.user;
-  const profile = await getOrCreateProfile(user);
-  const reqMap = await loadLevelRequirements();
+    const user = session.user;
+    const profile = await getOrCreateProfile(user);
+    const reqMap = await loadLevelRequirements();
 
-  $("pEmail").textContent = profile.email || user.email || "—";
+    // basic
+    $("pEmail").textContent = profile.email || user.email || "—";
 
-  // ✅ öğrenci adı zorunlu: 3 karakter
-  const name = (profile.full_name || "").trim();
-  $("pName").textContent = name || "—";
-
-  if(name.length < 3){
-    $("nameInput").value = "";
-    openNameModal(true);
-    toast("Lütfen adınızı girin");
-  }
-
-  const memberNo = await ensureMemberNoServer();
-  $("memberNo").textContent = memberNo || "—";
-
-  $("createdAt").textContent = fmtDT(profile.created_at);
-  $("lastLogin").textContent = fmtDT(profile.last_login_at);
-
-  const tokens = Number(profile.tokens ?? 0);
-  $("tokenVal").textContent = tokens;
-  if(typeof setHeaderTokens === "function") setHeaderTokens(tokens);
-
-  renderLevels(profile, reqMap);
-  renderOffline(profile);
-
-  $("logoutBtn")?.addEventListener("click", safeLogout);
-
-  $("buyTokensBtn")?.addEventListener("click", ()=>toast("Jeton satın alma yakında aktif."));
-
-  $("deleteBtn")?.addEventListener("click", async ()=>{
-    const ok = confirm("Hesap silme talebi oluşturulsun mu? 30 gün içinde giriş yaparsanız iptal edilir.");
-    if(!ok) return;
-    await supabase.rpc("request_account_deletion");
-    location.href="/pages/delete_requested.html";
-  });
-
-  $("editNameBtn")?.addEventListener("click", ()=>{
-    $("nameInput").value = ($("pName").textContent || "").trim();
-    openNameModal(false);
-  });
-
-  $("cancelNameBtn")?.addEventListener("click", closeNameModal);
-
-  $("saveNameBtn")?.addEventListener("click", async ()=>{
-    try{
-      const saved = await updateStudentName(user.id, $("nameInput").value);
-      $("pName").textContent = saved;
-      const headerName = document.getElementById("userName");
-      if(headerName) headerName.textContent = saved;
-
-      // force kapat
-      const modal = $("nameModal");
-      if(modal){ modal.dataset.force="0"; modal.classList.remove("show"); }
-
-      toast("İsim kaydedildi");
-    }catch(e){
-      toast(e.message || "Kaydedilemedi");
+    const name = (profile.full_name || "").trim();
+    $("pName").textContent = name || "—";
+    if(name.length < 3){
+      $("nameInput").value = "";
+      openNameModal(true);
+      toast("Lütfen adınızı girin");
     }
-  });
 
-  $("nameModal")?.addEventListener("click",(ev)=>{
-    if(ev.target.id === "nameModal") closeNameModal();
-  });
+    // member no (server)
+    const memberNo = await ensureMemberNoServer();
+    $("memberNo").textContent = memberNo || "—";
+    $("copyMemberBtn")?.addEventListener("click", ()=>copyText(memberNo));
+
+    // dates
+    $("createdAt").textContent = fmtDT(profile.created_at);
+    $("lastLogin").textContent = fmtDT(profile.last_login_at);
+
+    // wallet
+    const tokens = Number(profile.tokens ?? 0);
+    $("tokenVal").textContent = String(tokens);
+    if(typeof setHeaderTokens === "function") setHeaderTokens(tokens);
+
+    // lists
+    renderLevels(profile, reqMap);
+    renderOffline(profile);
+
+    // buttons
+    $("logoutBtn")?.addEventListener("click", safeLogout);
+    $("offlineDownloadBtn")?.addEventListener("click", ()=>location.href="/pages/offline.html");
+    $("buyTokensBtn")?.addEventListener("click", ()=>toast("Jeton satın alma yakında aktif."));
+    $("deleteBtn")?.addEventListener("click", async ()=>{
+      const ok = confirm("Hesap silme talebi oluşturulsun mu? 30 gün içinde giriş yaparsanız iptal edilir.");
+      if(!ok) return;
+      await supabase.rpc("request_account_deletion");
+      location.href="/pages/delete_requested.html";
+    });
+
+    // name edit
+    $("editNameBtn")?.addEventListener("click", ()=>{
+      $("nameInput").value = ($("pName").textContent || "").trim();
+      openNameModal(false);
+    });
+    $("cancelNameBtn")?.addEventListener("click", closeNameModal);
+
+    $("saveNameBtn")?.addEventListener("click", async ()=>{
+      try{
+        const saved = await updateStudentName(user.id, $("nameInput").value);
+        $("pName").textContent = saved;
+        const headerName = document.getElementById("userName");
+        if(headerName) headerName.textContent = saved;
+
+        const modal = $("nameModal");
+        if(modal){ modal.dataset.force="0"; modal.classList.remove("show"); }
+        toast("İsim kaydedildi");
+      }catch(e){
+        toast(e?.message || "Kaydedilemedi");
+      }
+    });
+
+    $("nameModal")?.addEventListener("click",(ev)=>{
+      if(ev.target?.id === "nameModal") closeNameModal();
+    });
+
+  }catch(e){
+    console.error("Profile init error:", e);
+    toast("Profil yüklenemedi");
+  }
 }
