@@ -24,17 +24,21 @@
     .bTop{ font-size: 12px; font-weight:1000; opacity:.92; margin-bottom:6px; }
     .bTxt{ font-size: 13px; font-weight:900; line-height:1.45; white-space:pre-wrap; }
     .bTr{ margin-top:8px; padding-top:8px; border-top:1px solid rgba(255,255,255,0.10); font-size:12px; font-weight:900; color: rgba(255,255,255,0.70); white-space:pre-wrap; }
+
     .task{ border-radius: 22px; border: 1px solid rgba(255,255,255,0.10); background: rgba(0,0,0,0.18); padding: 12px 12px; }
     .q{ font-weight:1000; font-size:13px; line-height:1.25; }
     .qSub{ margin-top:6px; font-size:12px; font-weight:900; color: rgba(255,255,255,0.70); line-height:1.35; }
     .inp{ margin-top:10px; width:100%; height:48px; border-radius:18px; border:1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.06); color:#fff; font-weight:900; font-size:14px; padding: 0 12px; }
+
     .btnRow{ display:flex; gap:10px; }
     .btn{ flex:1; height:54px; border-radius:22px; border:none; cursor:pointer; font-weight:1000; font-size:14px; color:#fff; background: linear-gradient(135deg, #A5B4FC, #4F46E5); box-shadow: 0 16px 44px rgba(79,70,229,.22); }
     .btn:active{ transform: scale(.99); }
     .ghost{ flex:1; height:54px; border-radius:22px; border:1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.06); color:#fff; font-weight:1000; font-size:13px; cursor:pointer; }
     .ghost:active{ transform: scale(.99); }
+
     .toast{ position: fixed; left:50%; top:18px; transform:translateX(-50%) translateY(-120px); background:rgba(10,10,18,.92); border:1px solid rgba(165,180,252,.35); padding:10px 14px; border-radius:999px; color:#fff; z-index:99999; font-weight:900; font-size:12px; transition:.28s; backdrop-filter: blur(12px); pointer-events:none; max-width:min(92vw,520px); text-align:center; }
     .toast.show{ transform:translateX(-50%) translateY(0); }
+
     .overlay{ position:fixed; inset:0; background: rgba(0,0,0,0.55); backdrop-filter: blur(10px); display:none; align-items:center; justify-content:center; padding:16px; z-index:999999; }
     .overlay.show{ display:flex; }
     .modal{ width:min(520px,100%); border-radius:28px; border:1px solid rgba(255,255,255,0.12); background: rgba(10,10,18,0.92); padding:14px; }
@@ -59,8 +63,8 @@
         <div class="chat" id="chat"></div>
 
         <div class="task">
-          <div class="q" id="qText">Write one sentence about yourself.</div>
-          <div class="qSub" id="qTr">Kendin hakkında bir cümle yaz.</div>
+          <div class="q" id="qText">…</div>
+          <div class="qSub" id="qTr">…</div>
           <input class="inp" id="answer" placeholder="Cevabını yaz..." />
         </div>
 
@@ -90,7 +94,6 @@
     import { mountShell, setHeaderTokens } from "/js/ui_shell.js";
     import { bootPage } from "/js/ui_guard.js";
     import { supabase } from "/js/supabase_client.js";
-    import { STORAGE_KEY } from "/js/config.js";
 
     mountShell({ scroll:"none" });
     bootPage({ protectedPage:true, header:{ nameId:"userName", picId:"userPic" } });
@@ -99,8 +102,6 @@
     const chat = $("chat");
 
     const PLAN_MIN = 15;
-    const RATE = 2;
-    const CHARGE = PLAN_MIN * RATE;
     const ACTIVE_KEY = "italky_active_course_session";
 
     function toast(msg){
@@ -133,61 +134,123 @@
 
     const LANGMAP = {
       dora:"English", ayda:"Deutsch", jale:"Français", ozan:"Español",
-      sencer:"Italiano", sungur:"Русский", huma:"日本語", umay:"中文",
-      jack:"English", heidi:"Deutsch", claire:"Français", diego:"Español",
-      marco:"Italiano", elena:"Русский", kenji:"日本語", mei:"中文"
+      sencer:"Italiano", sungur:"Русский", huma:"日本語", umay:"中文"
     };
 
-    // ✅ Sabit öğretmenler + karakter
-    const COACH = {
-      dora:   { name:"Dora",   style:"disciplined", gender:"female", voice:"voice_2" },
-      ayda:   { name:"Ayda",   style:"friendly",    gender:"female", voice:"voice_1" },
-      jale:   { name:"Jale",   style:"expert",      gender:"female", voice:"voice_4" },
-      huma:   { name:"Hüma",   style:"cheerful",    gender:"female", voice:"voice_3" },
-      sencer: { name:"Sencer", style:"friendly",    gender:"male",   voice:"voice_1" },
-      ozan:   { name:"Ozan",   style:"cheerful",    gender:"male",   voice:"voice_2" },
-      sungur: { name:"Sungur", style:"disciplined", gender:"male",   voice:"voice_3" },
-      umay:   { name:"Umay",   style:"expert",      gender:"male",   voice:"voice_4" }
+    const LANGTR = {
+      dora:"İngilizce", ayda:"Almanca", jale:"Fransızca", ozan:"İspanyolca",
+      sencer:"İtalyanca", sungur:"Rusça", huma:"Japonca", umay:"Çince"
     };
 
-    const coach = COACH[teacherId] || { name:"Dora", style:"friendly", gender:"female", voice:"voice_1" };
-
-    function styleTR(s){
-      return ({ friendly:"Samimi", cheerful:"Neşeli", disciplined:"Disiplinli", expert:"Uzman" }[s] || "Samimi");
-    }
+    // Default kadro (plan_select’te style yazılıyor; ama burada fallback)
+    const DEFAULT_COACH = {
+      dora:{ name:"Dora", style:"disciplined" },
+      ayda:{ name:"Ayda", style:"friendly" },
+      jale:{ name:"Jale", style:"expert" },
+      huma:{ name:"Hüma", style:"cheerful" },
+      sencer:{ name:"Sencer", style:"friendly" },
+      ozan:{ name:"Ozan", style:"cheerful" },
+      sungur:{ name:"Sungur", style:"disciplined" },
+      umay:{ name:"Umay", style:"expert" }
+    }[teacherId] || { name:"Dora", style:"friendly" };
 
     $("whoChip").textContent = `${LANGMAP[teacherId] || "Language"} • 15 dk`;
-    $("coachSub").textContent = `Öğretmenin: ${coach.name} • Tarz: ${styleTR(coach.style)}`;
 
-    function getStudentName(){
-      try{
-        const raw = localStorage.getItem(STORAGE_KEY);
-        const c = raw ? JSON.parse(raw) : {};
-        return (c?.name || localStorage.getItem("italky_student_name") || "Student");
-      }catch{
-        return localStorage.getItem("italky_student_name") || "Student";
-      }
+    // --- PROFILE & PREFS ---
+    const { data:{ session } } = await supabase.auth.getSession();
+    if(!session) location.href="/pages/login.html";
+
+    const { data: prof, error } = await supabase
+      .from("profiles")
+      .select("tokens, full_name, teacher_prefs, levels")
+      .eq("id", session.user.id)
+      .single();
+
+    if(error){
+      toast("Profil okunamadı");
+      console.warn(error);
     }
 
-    let level = "A0";
+    const tokens = Number(prof?.tokens ?? 0);
+    setHeaderTokens(tokens);
 
-    async function loadLevelAndTokens(){
-      const { data:{ session } } = await supabase.auth.getSession();
-      if(!session){ location.href="/pages/login.html"; return; }
+    const prefs = (prof?.teacher_prefs && typeof prof.teacher_prefs === "object") ? prof.teacher_prefs : {};
+    const cur = prefs?.[teacherId] || {};
 
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("levels, tokens")
-        .eq("id", session.user.id)
-        .single();
+    const teacherName = String(cur?.teacher_name || DEFAULT_COACH.name).trim();
+    const gender = String(cur?.gender || "female").trim();
+    const style = String(cur?.style || DEFAULT_COACH.style).trim();
+    const studentHitap = String(cur?.student_hitap || "").trim();
 
-      if(!error){
-        if(data?.tokens != null) setHeaderTokens(data.tokens);
-        const lv = data?.levels?.[teacherId];
-        if(lv) level = String(lv);
+    const fullName = String(prof?.full_name || "").trim();
+    const fallbackStudent = fullName ? (fullName.split(/\s+/)[0] || fullName) : "Student";
+    const studentName = (studentHitap.length >= 3) ? studentHitap : fallbackStudent;
+
+    const level = String(prof?.levels?.[teacherId] || "A0");
+
+    $("coachSub").textContent = `Öğretmenin: ${teacherName} • (${gender === "male" ? "Erkek" : "Kadın"})`;
+
+    // --- İlk mesaj (hedef dil + TR) ---
+    const firstMsg = {
+      dora: {
+        t: `Hi ${studentName}! This is our first lesson, and I'm excited to meet you. How are you today?`,
+        tr:`Merhaba ${studentName}! Bu ilk dersimiz ve seninle tanışmak için heyecanlıyım. Bugün nasılsın?`
+      },
+      ayda: {
+        t: `Hallo ${studentName}! Das ist unsere erste Stunde, und ich freue mich, dich kennenzulernen. Wie geht's dir heute?`,
+        tr:`Merhaba ${studentName}! Bu ilk dersimiz ve seninle tanıştığım için mutluyum. Bugün nasılsın?`
+      },
+      jale: {
+        t: `Salut ${studentName} ! C’est notre premier cours et je suis ravie de faire ta connaissance. Comment ça va aujourd’hui ?`,
+        tr:`Merhaba ${studentName}! Bu ilk dersimiz ve seninle tanıştığım için çok memnunum. Bugün nasılsın?`
+      },
+      ozan: {
+        t: `¡Hola ${studentName}! Es nuestra primera clase y me alegra conocerte. ¿Cómo estás hoy?`,
+        tr:`Merhaba ${studentName}! Bu ilk dersimiz ve tanıştığımıza sevindim. Bugün nasılsın?`
+      },
+      sencer: {
+        t: `Ciao ${studentName}! È la nostra prima lezione e sono felice di conoscerti. Come stai oggi?`,
+        tr:`Merhaba ${studentName}! Bu ilk dersimiz ve tanıştığımıza sevindim. Bugün nasılsın?`
+      },
+      sungur: {
+        t: `Привет, ${studentName}! Это наш первый урок, и я рад познакомиться. Как ты сегодня?`,
+        tr:`Merhaba ${studentName}! Bu ilk dersimiz ve tanıştığımıza memnun oldum. Bugün nasılsın?`
+      },
+      huma: {
+        t: `はじめまして、${studentName}さん！はじめてのレッスンで、会えてうれしいです。今日は元気ですか？`,
+        tr:`Merhaba ${studentName}! Bu ilk dersimiz, tanıştığımıza çok sevindim. Bugün nasılsın?`
+      },
+      umay: {
+        t: `你好，${studentName}！这是我们的第一节课，很高兴认识你。你今天怎么样？`,
+        tr:`Merhaba ${studentName}! Bu ilk dersimiz, tanıştığımıza sevindim. Bugün nasılsın?`
       }
+    }[teacherId] || {
+      t: `Hi ${studentName}! I'm happy to meet you. How are you today?`,
+      tr:`Merhaba ${studentName}! Tanıştığımıza memnun oldum. Bugün nasılsın?`
+    };
+
+    addBubble({ who: teacherName, text: firstMsg.t, tr: firstMsg.tr });
+
+    function setTask(task, taskTr){
+      $("qText").textContent = task || "Write one sentence about your day.";
+      $("qTr").textContent = taskTr || "Günün hakkında bir cümle yaz.";
     }
 
+    // ilk görev dil bazlı
+    const firstTask = {
+      dora:   { t:"Write one sentence about your day.", tr:"Günün hakkında bir cümle yaz." },
+      ayda:   { t:"Schreibe einen Satz über deinen Tag.", tr:"Günün hakkında bir cümle yaz." },
+      jale:   { t:"Écris une phrase sur ta journée.", tr:"Günün hakkında bir cümle yaz." },
+      ozan:   { t:"Escribe una frase sobre tu día.", tr:"Günün hakkında bir cümle yaz." },
+      sencer: { t:"Scrivi una frase sulla tua giornata.", tr:"Günün hakkında bir cümle yaz." },
+      sungur: { t:"Напиши одно предложение о своём дне.", tr:"Günün hakkında bir cümle yaz." },
+      huma:   { t:"今日のことを一文で書いてください。", tr:"Günün hakkında bir cümle yaz." },
+      umay:   { t:"请写一句关于你今天的句子。", tr:"Günün hakkında bir cümle yaz." }
+    }[teacherId] || { t:"Write one sentence about your day.", tr:"Günün hakkında bir cümle yaz." };
+
+    setTask(firstTask.t, firstTask.tr);
+
+    // --- Timer ---
     let remainingSec = PLAN_MIN * 60;
     let tick = null;
     let sessionId = null;
@@ -232,13 +295,9 @@
     async function startNewSession(){
       const { data, error } = await supabase.rpc("start_course_15min", { p_teacher_id: teacherId });
       if(error){
-        if(String(error.message||"").includes("INSUFFICIENT_TOKENS")){
-          toast("Yetersiz jeton");
-          location.href="/pages/plan_select.html";
-          return;
-        }
-        toast("Ders başlatılamadı");
-        location.href="/pages/plan_select.html";
+        // Jeton yoksa sadece uyarı + profile
+        toast("Derse katılabilmek için jeton yüklemeniz gereklidir.");
+        setTimeout(()=>location.href="/pages/profile.html", 600);
         return;
       }
 
@@ -247,7 +306,6 @@
       remainingSec = PLAN_MIN * 60;
 
       await refreshTokens();
-      toast(`Ders başladı • ${CHARGE} Jeton`);
     }
 
     function startTimer(){
@@ -267,30 +325,21 @@
     }
 
     async function teacherReply(userText){
-      const studentName = getStudentName();
-
       const { data, error } = await supabase.functions.invoke("italky_teacher_chat", {
         body: {
           teacher_id: teacherId,
-          teacher_name: coach.name,
+          teacher_name: teacherName,
           role: LANGMAP[teacherId] || "English",
           level,
           student_name: studentName,
           user_text: userText,
-          coach_gender: coach.gender,
-          coach_style: coach.style,
-          coach_voice: coach.voice
+          coach_gender: gender,
+          coach_style: style,
+          coach_voice: cur?.voice || "voice_1"
         }
       });
-
       if(error) throw error;
       return data;
-    }
-
-    function setTask(task, taskTr){
-      $("qText").textContent = task || "Write one more sentence, please.";
-      $("qTr").textContent = taskTr || "";
-      $("qTr").style.display = taskTr ? "block" : "none";
     }
 
     async function send(){
@@ -298,13 +347,13 @@
       const txt = (input.value || "").trim();
       if(!txt) return;
 
-      addBubble({ who: getStudentName(), text: txt, isMe:true });
+      addBubble({ who: studentName, text: txt, isMe:true });
       input.value = "";
 
       try{
         const res = await teacherReply(txt);
-        addBubble({ who: coach.name, text: res?.teacher || "", tr: res?.tr || "" });
-        setTask(res?.task, res?.task_tr);
+        addBubble({ who: teacherName, text: res?.teacher || "", tr: res?.tr || "" });
+        setTask(res?.task || firstTask.t, res?.task_tr || firstTask.tr);
       }catch(e){
         console.error(e);
         toast("Öğretmen yanıt veremedi");
@@ -325,89 +374,48 @@
       }
     }
 
-    async function addStudyMinutes(){
-      try{
-        await supabase.rpc("add_study_minutes", { p_teacher_id: teacherId, p_minutes: 15 });
-      }catch{}
-    }
-
-    async function fetchProgressText(){
-      try{
-        const { data:{ session } } = await supabase.auth.getSession();
-        if(!session) return "";
-
-        const { data: prof } = await supabase
-          .from("profiles")
-          .select("study_minutes, levels")
-          .eq("id", session.user.id)
-          .single();
-
-        const studied = Number(prof?.study_minutes?.[teacherId] || 0);
-        const curLv = String(prof?.levels?.[teacherId] || "A0");
-
-        const { data: req } = await supabase
-          .from("level_requirements")
-          .select("minutes_required")
-          .eq("level", curLv)
-          .maybeSingle();
-
-        const needMin = Number(req?.minutes_required || 0);
-        const remainMin = Math.max(0, needMin - studied);
-
-        return `Seviye: ${curLv}\nToplam Çalışma: ${Math.floor(studied/60)} saat ${studied%60} dk\nBir Üst Seviyeye Kalan: ${Math.ceil(remainMin/60)} saat`;
-      }catch{
-        return "";
-      }
-    }
-
     async function endAndAskContinue(autoTimeUp=false){
       const r = await endSessionWithRefund();
-      await addStudyMinutes();
       await refreshTokens();
 
-      const refund = Number(r?.refund_tokens || 0);
       const used = Number(r?.used_minutes ?? 15);
-      const progress = await fetchProgressText();
+      const refund = Number(r?.refund_tokens ?? 0);
 
+      // ✅ ÜCRET/Jeton lafı yok
       const txt =
         (autoTimeUp ? "15 dakika tamamlandı.\n" : "Ders kapatıldı.\n") +
         `Kullanılan süre: ${used} dk\n` +
         `İade: ${refund} Jeton\n\n` +
-        (progress ? (progress + "\n\n") : "") +
-        `Devam edersek yeni 15 dk ders başlar ve 30 Jeton alınır.\nDevam edelim mi?`;
+        `Devam etmek ister misin?`;
 
       $("continueText").textContent = txt;
       $("continueOverlay").classList.add("show");
     }
 
-    async function finishNow(){
+    $("btnSend").addEventListener("click", send);
+    $("answer").addEventListener("keydown", (ev)=>{ if(ev.key === "Enter") send(); });
+
+    $("btnFinish").addEventListener("click", async ()=>{
       clearInterval(tick);
       await endAndAskContinue(false);
-    }
+    });
 
-    async function exitNow(){
+    $("btnExit").addEventListener("click", async ()=>{
       clearInterval(tick);
       await endSessionWithRefund();
       await refreshTokens();
       location.href="/pages/home.html";
-    }
-
-    $("btnSend").addEventListener("click", send);
-    $("answer").addEventListener("keydown", (ev)=>{ if(ev.key === "Enter") send(); });
-    $("btnFinish").addEventListener("click", finishNow);
-    $("btnExit").addEventListener("click", exitNow);
+    });
 
     $("btnContinueYes").addEventListener("click", async ()=>{
       $("continueOverlay").classList.remove("show");
       await startNewSession();
-
       addBubble({
-        who: coach.name,
-        text: `Hello ${getStudentName()}! Let's continue. Write one new sentence.`,
-        tr: `Merhaba ${getStudentName()}! Devam edelim. Yeni bir cümle yaz.`
+        who: teacherName,
+        text: firstMsg.t,
+        tr: firstMsg.tr
       });
-
-      setTask("Write one sentence about your day.", "Günün hakkında bir cümle yaz.");
+      setTask(firstTask.t, firstTask.tr);
       startTimer();
     });
 
@@ -417,27 +425,12 @@
     });
 
     // ---- BOOT ----
-    await loadLevelAndTokens();
-
-    // öğrenci adı yoksa profile’a
-    const nm = getStudentName();
-    if(!nm || nm.trim().length < 3){
-      location.href="/pages/profile.html";
-    }
-
     const resumed = await tryResumeActive();
     if(!resumed){
       await startNewSession();
     }
-
-    addBubble({
-      who: coach.name,
-      text: `Hello ${getStudentName()}! I am ${coach.name}. Let's start. Write one sentence about yourself.`,
-      tr: `Merhaba ${getStudentName()}! Ben ${coach.name}. Başlayalım. Kendin hakkında bir cümle yaz.`
-    });
-
-    setTask("Write one sentence about yourself.", "Kendin hakkında bir cümle yaz.");
     startTimer();
+
   </script>
 </body>
 </html>
