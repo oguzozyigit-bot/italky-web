@@ -48,12 +48,10 @@ function fmtDT(iso){
   try{
     const d = new Date(iso);
     return d.toLocaleString("tr-TR", { year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit" });
-  }catch{
-    return "—";
-  }
+  }catch{ return "—"; }
 }
 
-/* ✅ Üyelik no: 1 harf + 7 rakam; ardışık üçlü yok; üçlü tekrar yok */
+/* Üyelik no üretimi */
 function randLetter(){
   const A="ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   return A[Math.floor(Math.random()*A.length)];
@@ -66,9 +64,9 @@ function randDigits7(){
 function digitsOk(d){
   for(let i=0;i<=d.length-3;i++){
     const a=Number(d[i]), b=Number(d[i+1]), c=Number(d[i+2]);
-    if(a+1===b && b+1===c) return false; // 123
-    if(a-1===b && b-1===c) return false; // 321
-    if(a===b && b===c) return false;      // 000
+    if(a+1===b && b+1===c) return false;
+    if(a-1===b && b-1===c) return false;
+    if(a===b && b===c) return false;
   }
   return true;
 }
@@ -93,7 +91,7 @@ async function requireSessionOrRedirect(){
 }
 
 async function fetchProfile(userId){
-  // varsa ensure_profile RPC (tokens=400 + last_login_at update için ideal)
+  // varsa ensure_profile RPC
   try{
     const { data: p, error: e } = await supabase.rpc("ensure_profile");
     if(!e && p) return p;
@@ -104,13 +102,10 @@ async function fetchProfile(userId){
     .select("*")
     .eq("id", userId)
     .single();
-
   if(error) throw error;
 
-  // last_login_at güncelle
   try{
-    await supabase
-      .from("profiles")
+    await supabase.from("profiles")
       .update({ last_login_at: new Date().toISOString() })
       .eq("id", userId);
   }catch{}
@@ -134,7 +129,7 @@ async function ensureMemberNo(profile){
 }
 
 function getLevelsPairs(profile){
-  // 1) DB: profile.levels = { dora:"A2", umay:"A0" }
+  // DB: profile.levels = { dora:"A2", umay:"A0" }
   if(profile?.levels && typeof profile.levels === "object"){
     const pairs = [];
     for(const t of TEACHER_LABELS){
@@ -143,20 +138,7 @@ function getLevelsPairs(profile){
     }
     return pairs;
   }
-
-  // 2) local fallback: italky_profile.languages
-  try{
-    const lp = JSON.parse(localStorage.getItem("italky_profile") || "{}");
-    const langs = lp.languages || {};
-    const pairs = [];
-    for(const t of TEACHER_LABELS){
-      const st = langs[t.id];
-      if(st && st.level) pairs.push([t.label, String(st.level)]);
-    }
-    return pairs;
-  }catch{
-    return [];
-  }
+  return [];
 }
 
 function renderLevels(profile){
@@ -176,7 +158,7 @@ function renderLevels(profile){
   empty.onclick = null;
 
   for(const [lang, lvl] of pairs){
-    list.appendChild(lineRow(`${lang}`, `${lvl}`)); // örn İngilizce — A2
+    list.appendChild(lineRow(`${lang}`, `${lvl}`));
   }
 }
 
@@ -185,15 +167,7 @@ function renderOffline(profile){
   const empty = $("offlineEmptyNote");
   list.innerHTML = "";
 
-  let packs = Array.isArray(profile?.offline_langs) ? profile.offline_langs : [];
-
-  // fallback: localStorage italky_offline_langs
-  if(packs.length === 0){
-    try{
-      const raw = localStorage.getItem("italky_offline_langs");
-      if(raw) packs = JSON.parse(raw);
-    }catch{}
-  }
+  const packs = Array.isArray(profile?.offline_langs) ? profile.offline_langs : [];
 
   if(!packs || packs.length === 0){
     empty.style.display = "block";
@@ -230,26 +204,17 @@ async function buyTokens(){
   alert("Jeton satın alma web sürümünde kapalı. APK sürümünde Google Play ile açılacak.");
 }
 
-/**
- * Kalıcı silme:
- * - Edge Function: delete_account
- * - ÖNEMLİ: 400 jeton abuse engeli için devices(nac_id) tablosunu SİLME!
- *   Yani delete_account fonksiyonunda devices kaydı kalmalı (nac_id aynıysa yeniden bonus alamaz).
- */
-async function deleteAccountFlow(){
-  const ok1 = confirm("Hesabınızı KALICI olarak silmek istediğinize emin misiniz?");
-  if(!ok1) return;
-  const ok2 = confirm("Son kez: Bu işlem geri alınamaz. Devam edilsin mi?");
-  if(!ok2) return;
+async function requestDeletionFlow(){
+  const ok = confirm("Hesabınız için silme talebi oluşturulsun mu? 30 gün içinde tekrar giriş yaparsanız talep iptal edilir.");
+  if(!ok) return;
 
-  try{
-    const { error } = await supabase.functions.invoke("delete_account");
-    if(error) throw error;
-    alert("Hesap silme işlemi başlatıldı.");
-    await safeLogoutHard();
-  }catch(e){
-    alert("Kalıcı silme şu an aktif değil. Edge Function 'delete_account' kurulmalı.\n\nDetay: " + (e?.message || e));
+  const { error } = await supabase.rpc("request_account_deletion");
+  if(error){
+    alert(error.message);
+    return;
   }
+
+  location.href = "/pages/delete_requested.html";
 }
 
 async function copyText(text){
@@ -274,6 +239,45 @@ async function copyText(text){
   }
 }
 
+/* ✅ Ad güncelle: DB + cache + “öğrenci adı” local anahtar */
+async function updateStudentName(userId, newName){
+  const clean = String(newName || "").trim().slice(0, 32);
+  if(clean.length < 2) throw new Error("Ad en az 2 karakter olmalı.");
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ full_name: clean })
+    .eq("id", userId);
+
+  if(error) throw error;
+
+  // cache update (STORAGE_KEY)
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    const cached = raw ? JSON.parse(raw) : {};
+    cached.name = clean;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(cached));
+  }catch{}
+
+  // öğretmen sayfaları için basit key
+  try{ localStorage.setItem("italky_student_name", clean); }catch{}
+  return clean;
+}
+
+function openNameModal(currentName){
+  const modal = $("nameModal");
+  const input = $("nameInput");
+  if(!modal || !input) return;
+
+  input.value = currentName || "";
+  modal.classList.add("show");
+  setTimeout(()=>input.focus(), 50);
+}
+
+function closeNameModal(){
+  $("nameModal")?.classList.remove("show");
+}
+
 export async function initProfilePage({ setHeaderTokens } = {}){
   const session = await requireSessionOrRedirect();
   if(!session) return;
@@ -281,33 +285,26 @@ export async function initProfilePage({ setHeaderTokens } = {}){
   const user = session.user;
   const profile = await fetchProfile(user.id);
 
-  // Ad Soyad / Mail
-  $("pName").textContent =
+  const displayName =
     profile?.full_name ||
     user.user_metadata?.full_name ||
     user.user_metadata?.name ||
     "Kullanıcı";
 
-  $("pEmail").textContent =
-    profile?.email ||
-    user.email ||
-    "—";
+  $("pName").textContent = displayName;
+  $("pEmail").textContent = profile?.email || user.email || "—";
 
-  // Üyelik No (yoksa üret)
   const memberNo = await ensureMemberNo(profile);
   $("memberNo").textContent = memberNo || "—";
   $("copyMemberBtn")?.addEventListener("click", ()=>copyText(memberNo));
 
-  // Üyelik başlangıç + son login
   $("createdAt").textContent = fmtDT(profile?.created_at);
   $("lastLogin").textContent = fmtDT(profile?.last_login_at);
 
-  // Jeton
   const tokens = Number(profile?.tokens ?? 0);
   $("tokenVal").textContent = String(tokens);
   if(typeof setHeaderTokens === "function") setHeaderTokens(tokens);
 
-  // Seviye + Offline
   renderLevels(profile);
   renderOffline(profile);
 
@@ -315,5 +312,31 @@ export async function initProfilePage({ setHeaderTokens } = {}){
   $("buyTokensBtn")?.addEventListener("click", buyTokens);
   $("offlineDownloadBtn")?.addEventListener("click", ()=>location.href="/pages/offline.html");
   $("logoutBtn")?.addEventListener("click", safeLogoutHard);
-  $("deleteBtn")?.addEventListener("click", deleteAccountFlow);
+  $("deleteBtn")?.addEventListener("click", requestDeletionFlow);
+
+  // ✅ Ad düzenleme
+  $("editNameBtn")?.addEventListener("click", ()=>openNameModal(displayName));
+  $("cancelNameBtn")?.addEventListener("click", closeNameModal);
+
+  $("saveNameBtn")?.addEventListener("click", async ()=>{
+    const input = $("nameInput");
+    try{
+      const saved = await updateStudentName(user.id, input?.value);
+      $("pName").textContent = saved;
+
+      // Header’daki isim de güncellensin (ui_guard bootPage nameId="userName")
+      const headerName = document.getElementById("userName");
+      if(headerName) headerName.textContent = saved;
+
+      toast("İsim güncellendi");
+      closeNameModal();
+    }catch(e){
+      toast(e?.message || "İsim güncellenemedi");
+    }
+  });
+
+  // modal dışına tıklayınca kapat
+  $("nameModal")?.addEventListener("click", (ev)=>{
+    if(ev.target?.id === "nameModal") closeNameModal();
+  });
 }
