@@ -67,6 +67,7 @@
       padding: 12px 12px;
     }
     .q{ font-weight:1000; font-size:13px; line-height:1.25; }
+    .qSub{ margin-top:6px; font-size:12px; font-weight:900; color: rgba(255,255,255,0.70); line-height:1.35; }
     .inp{
       margin-top:10px;
       width:100%;
@@ -150,6 +151,7 @@
 
         <div class="task">
           <div class="q" id="qText">Hazır mısın? Hedef dilde 1 cümle yaz.</div>
+          <div class="qSub" id="qTr" style="display:none;"></div>
           <input class="inp" id="answer" placeholder="Cevabını yaz..." />
         </div>
 
@@ -188,10 +190,11 @@
       const b = document.createElement("div");
       b.className = "bubble " + (isMe ? "me" : "teacher");
       b.innerHTML = `
-        <div class="bTop">${who}</div>
+        <div class="bTop"></div>
         <div class="bTxt"></div>
         ${tr ? `<div class="bTr"></div>` : ""}
       `;
+      b.querySelector(".bTop").textContent = who || "";
       b.querySelector(".bTxt").textContent = text || "";
       if(tr) b.querySelector(".bTr").textContent = tr || "";
       chat.appendChild(b);
@@ -203,6 +206,8 @@
       const ss = String(s%60).padStart(2,"0");
       return `${m}:${ss}`;
     }
+
+    const ACTIVE_COURSE_KEY = "active_course_session_id";
 
     // ---- prefs ----
     const teacherId = (localStorage.getItem("italky_teacher_pref") || "").trim();
@@ -229,10 +234,10 @@
       kenji:{flag:"🇯🇵", role:"日本語", name:"Kenji"},
       mei:{flag:"🇨🇳", role:"中文", name:"Mei-Ling"},
     };
+
     const t = TEACHERS[teacherId] || {flag:"🌍", role:"English", name:"Teacher"};
     $("whoChip").textContent = `${t.flag} ${t.role} • ${t.name}`;
 
-    // student name from cache/profile
     function getStudentName(){
       try{
         const raw = localStorage.getItem(STORAGE_KEY);
@@ -248,13 +253,46 @@
     let remaining = mins * 60;
     let tick = null;
 
-    // supabase session + start course
     const { data: { session } } = await supabase.auth.getSession();
     if(!session) location.href="/pages/login.html";
 
     let courseSessionId = null;
+    let level = "A0";
 
-    async function startCourse(){
+    async function fetchLevel(){
+      try{
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("levels")
+          .eq("id", session.user.id)
+          .single();
+        if(error) return;
+        const lv = data?.levels?.[teacherId];
+        if(lv) level = String(lv);
+      }catch{}
+    }
+
+    async function reuseOrStartCourse(){
+      // ✅ refresh/double charge koruması
+      const cachedId = (localStorage.getItem(ACTIVE_COURSE_KEY) || "").trim();
+      if(cachedId){
+        // DB'de active mi bak
+        try{
+          const { data, error } = await supabase
+            .from("course_sessions")
+            .select("id,status")
+            .eq("id", cachedId)
+            .maybeSingle();
+          if(!error && data?.id && data?.status === "active"){
+            courseSessionId = cachedId;
+            toast("Ders devam ediyor");
+            return;
+          }
+        }catch{}
+        localStorage.removeItem(ACTIVE_COURSE_KEY);
+      }
+
+      // ✅ yeni oturum + peşin jeton düş
       try{
         const { data, error } = await supabase.rpc("start_course_session", {
           p_teacher_id: teacherId,
@@ -271,12 +309,10 @@
         }
 
         courseSessionId = data?.[0]?.session_id || null;
+        if(courseSessionId) localStorage.setItem(ACTIVE_COURSE_KEY, courseSessionId);
+
         const left = data?.[0]?.tokens_left;
-        if(left != null){
-          // header jeton güncellemek istersen setHeaderTokens ile yaparsın (shell'de var)
-          // şimdilik sadece toast
-          toast(`Ders başladı • Jeton: ${left}`);
-        }
+        if(left != null) toast(`Ders başladı • Jeton: ${left}`);
       }catch(e){
         console.error(e);
         toast("Ders başlatılamadı");
@@ -301,7 +337,6 @@
 
     async function teacherReply(userText){
       const studentName = getStudentName();
-      const level = "A2"; // şimdilik; level_test bitince DB’den alacağız
 
       const { data, error } = await supabase.functions.invoke("italky_teacher_chat", {
         body: {
@@ -316,6 +351,17 @@
 
       if(error) throw error;
       return data; // {teacher, tr, task?, task_tr?}
+    }
+
+    function setTask(task, taskTr){
+      $("qText").textContent = task || "Write one more sentence, please.";
+      if(taskTr){
+        $("qTr").style.display = "block";
+        $("qTr").textContent = taskTr;
+      }else{
+        $("qTr").style.display = "none";
+        $("qTr").textContent = "";
+      }
     }
 
     async function send(){
@@ -333,12 +379,7 @@
         const tr = res?.tr || "";
         addBubble({ who: `${t.name} • ${t.role}`, text: teacherText, tr });
 
-        // görev güncelle
-        if(res?.task){
-          $("qText").textContent = res.task;
-        }else{
-          $("qText").textContent = "Write one more sentence, please.";
-        }
+        setTask(res?.task, res?.task_tr);
       }catch(e){
         console.error(e);
         toast("Öğretmen yanıt veremedi");
@@ -347,39 +388,52 @@
 
     async function finishLesson(auto=false){
       try{
-        // ekstra dakika yok şimdilik
         if(courseSessionId){
           await supabase.rpc("end_course_session", { p_session_id: courseSessionId, p_extra_minutes: 0 });
         }
       }catch(e){
         console.warn(e);
       }
+
+      try{ localStorage.removeItem(ACTIVE_COURSE_KEY); }catch{}
+
       toast(auto ? "Ders tamamlandı!" : "Ders bitirildi!");
       setTimeout(()=> location.href="/pages/plan_select.html", 650);
     }
 
+    async function exitLesson(){
+      clearInterval(tick);
+      // çıkarken de session kapat (aktif kalmasın)
+      try{
+        if(courseSessionId){
+          await supabase.rpc("end_course_session", { p_session_id: courseSessionId, p_extra_minutes: 0 });
+        }
+      }catch{}
+      try{ localStorage.removeItem(ACTIVE_COURSE_KEY); }catch{}
+      location.href="/pages/home.html";
+    }
+
     $("btnSend").addEventListener("click", send);
-    $("answer").addEventListener("keydown", (ev)=>{
-      if(ev.key === "Enter") send();
-    });
+    $("answer").addEventListener("keydown", (ev)=>{ if(ev.key === "Enter") send(); });
 
     $("btnFinish").addEventListener("click", async ()=>{
       clearInterval(tick);
       await finishLesson(false);
     });
 
-    $("btnExit").addEventListener("click", ()=>{
-      clearInterval(tick);
-      location.href="/pages/home.html";
-    });
+    $("btnExit").addEventListener("click", exitLesson);
 
     // ---- boot ----
-    await startCourse();
+    await fetchLevel();
+    await reuseOrStartCourse();
+
     addBubble({
       who: `${t.name} • ${t.role}`,
       text: `Hello ${getStudentName()}! Let's start. Write one sentence about yourself.`,
       tr: `Merhaba ${getStudentName()}! Başlayalım. Kendin hakkında bir cümle yaz.`
     });
+
+    setTask("Write one sentence about yourself.", "Kendin hakkında bir cümle yaz.");
     startTimer();
   </script>
 </body>
