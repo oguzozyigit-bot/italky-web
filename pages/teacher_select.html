@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>italkyAI • Dil Dersi Seçimi</title>
+  <title>italkyAI • Dil Seçimi</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,6 +13,7 @@
   <style>
     #pageContent{ height:100%; }
     .wrap{ height:100%; padding: 10px 16px 20px; display:flex; flex-direction:column; gap: 12px; }
+
     .title-area{ text-align:center; margin: 10px 0 10px; }
     .title-area h2{
       margin:0;
@@ -34,28 +35,31 @@
     }
     .grid::-webkit-scrollbar{ display:none; }
 
+    /* ✅ Kartlar artık LINK (A) */
     .card{
-      appearance:none;
-      border:none;
-      width:100%;
-      border-radius: 28px;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(255,255,255,0.03);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      padding: 18px 14px;
-      cursor:pointer;
-      user-select:none;
       display:flex;
       flex-direction:column;
       align-items:center;
       justify-content:center;
       gap:10px;
-      min-height: 140px;
+
+      text-decoration:none;
       color:#fff;
+
+      border-radius: 28px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.03);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+
+      padding: 18px 14px;
+      min-height: 140px;
+
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
+
       transition: transform .22s ease, background .22s ease;
       position:relative;
-      z-index: 10;
     }
     .card:active{ transform: scale(.98); background: rgba(255,255,255,0.06); }
 
@@ -67,6 +71,7 @@
       box-shadow: 0 18px 44px rgba(0,0,0,0.24);
     }
     .flag{ font-size:30px; }
+
     .lang{
       font-size:12px;
       font-weight:1000;
@@ -83,6 +88,7 @@
       text-align:center;
       line-height:1.1;
     }
+
     .mini{
       position:absolute;
       top:10px; right:10px;
@@ -131,20 +137,23 @@
 
 <script type="module">
   import { mountShell } from "/js/ui_shell.js";
-  import { bootPage } from "/js/ui_guard.js";
   import { supabase } from "/js/supabase_client.js";
 
-  mountShell();
-  bootPage({ protectedPage:true, header:{ nameId:"userName", picId:"userPic" } });
+  mountShell(); // shell
 
   const $ = (id)=>document.getElementById(id);
-
   function toast(msg){
     const t = $("toast");
     t.textContent = String(msg||"");
     t.classList.add("show");
     clearTimeout(window.__to);
-    window.__to = setTimeout(()=>t.classList.remove("show"), 1500);
+    window.__to = setTimeout(()=>t.classList.remove("show"), 1400);
+  }
+
+  // ✅ Koruma: bootPage yok, direkt session kontrol
+  const { data:{ session } } = await supabase.auth.getSession();
+  if(!session){
+    location.replace("/pages/login.html");
   }
 
   const LANGS = [
@@ -158,77 +167,52 @@
     { id:"umay",   flag:"🇨🇳", lang:"CHINESE",  local:"中文" }
   ];
 
+  // levels çek
   let LEVELS = {};
-
-  async function loadLevels(){
-    const { data:{ user } } = await supabase.auth.getUser();
-    if(!user){ location.href="/pages/login.html"; return; }
-
-    const { data, error } = await supabase
+  try{
+    const { data: prof, error } = await supabase
       .from("profiles")
       .select("levels")
-      .eq("id", user.id)
+      .eq("id", session.user.id)
       .single();
 
-    if(error){ LEVELS = {}; return; }
-    LEVELS = (data?.levels && typeof data.levels === "object") ? data.levels : {};
-  }
+    if(!error){
+      LEVELS = (prof?.levels && typeof prof.levels === "object") ? prof.levels : {};
+    }
+  }catch{}
 
   function render(){
     const grid = $("langGrid");
     grid.innerHTML = LANGS.map(l=>{
       const lv = LEVELS?.[l.id] || "";
+      const href = lv ? "/pages/plan_select.html" : "/pages/level_test_intro.html";
       return `
-        <button class="card" type="button" data-id="${l.id}">
+        <a class="card" href="${href}" data-id="${l.id}">
           <div class="mini" style="display:${lv ? "inline-flex" : "none"}">${lv}</div>
           <div class="flagBox"><div class="flag">${l.flag}</div></div>
           <div class="lang">${l.lang}</div>
           <div class="local">${l.local}</div>
-        </button>
+        </a>
       `;
     }).join("");
+
+    // ✅ extra garanti: clickte localStorage set + force navigation
+    grid.querySelectorAll(".card").forEach(a=>{
+      a.addEventListener("click", (ev)=>{
+        const tid = a.getAttribute("data-id");
+        if(tid) localStorage.setItem("italky_teacher_pref", tid);
+
+        // kullanıcıya küçük feedback
+        const lv = LEVELS?.[tid] || "";
+        toast(lv ? "Ders planına geçiliyor..." : "Seviye tespit başlıyor...");
+
+        // ✅ force (bazı webviewlerde a yutulursa)
+        const url = a.getAttribute("href");
+        setTimeout(()=>{ window.location.href = url; }, 80);
+      }, { passive:true });
+    });
   }
 
-  function go(url){
-    const full = new URL(url, location.origin).toString();
-    try{
-      location.assign(full);
-      // ✅ bazı webview'lerde assign yutuluyor: force
-      setTimeout(()=>{ window.location = full; }, 200);
-    }catch(e){
-      window.location = full;
-    }
-  }
-
-  // ✅ Delegation
-  $("langGrid").addEventListener("click", (ev)=>{
-    const btn = ev.target.closest(".card");
-    if(!btn) return;
-
-    try{
-      const tid = btn.getAttribute("data-id");
-      if(!tid) return;
-
-      localStorage.setItem("italky_teacher_pref", tid);
-
-      const hasLevel = !!LEVELS?.[tid];
-      if(!hasLevel){
-        toast("Seviye tespit ekranına yönlendiriliyor...");
-        go("/pages/level_test_intro.html");
-      }else{
-        toast("Ders planına yönlendiriliyor...");
-        go("/pages/plan_select.html");
-      }
-    }catch(err){
-      console.error(err);
-      toast("Geçiş hatası");
-    }
-  });
-
-  // ✅ ekstra garanti
-  $("langGrid").addEventListener("touchend", ()=>{}, { passive:true });
-
-  await loadLevels();
   render();
 </script>
 </body>
