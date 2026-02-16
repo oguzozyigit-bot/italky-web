@@ -196,38 +196,43 @@ function speak(text, langCode) {
   const t = String(text || "").trim();
   if (!t) return;
 
-  if(nativeTtsAvailable()){
-    try{
+  // ✅ APK: NativeTTS varsa önce STOP sonra SPEAK (stuck fix)
+  if (window.NativeTTS && typeof window.NativeTTS.speak === "function") {
+    try {
+      if (typeof window.NativeTTS.stop === "function") {
+        window.NativeTTS.stop();
+      }
+    } catch (_) {}
+
+    try {
       window.NativeTTS.speak(t, String(langCode || "en"));
       return;
-    }catch(e){
+    } catch (e) {
       console.warn("NativeTTS.speak failed:", e);
+      // fallback devam
     }
   }
 
+  // ✅ Web fallback
   if (!window.speechSynthesis) return;
-  try{ window.speechSynthesis.cancel(); }catch{}
+  try { window.speechSynthesis.cancel(); } catch (_) {}
 
   const u = new SpeechSynthesisUtterance(t);
   u.lang = bcp(langCode);
-  u.volume = 1.0;
-  u.rate = 1.0;
-  u.pitch = 1.0;
+  u.volume = 1.0; u.rate = 1.0; u.pitch = 1.0;
 
-  try{
+  try {
     const voices = window.speechSynthesis.getVoices() || [];
     if (voices.length > 0) {
-      const base = canonicalLangCode(langCode);
-      const target = voices.find(v => String(v.lang||"").toLowerCase().startsWith(base)) || voices[0];
-      u.voice = target;
+      const base = String(langCode || "").split("-")[0];
+      u.voice = voices.find(v => String(v.lang || "").startsWith(base)) || voices[0];
     }
-  }catch{}
+  } catch (_) {}
 
   setTimeout(() => {
-    try{ window.speechSynthesis.speak(u); }catch(e){ console.warn("speak failed:", e); }
+    try { window.speechSynthesis.speak(u); } catch (e) { console.warn(e); }
   }, 60);
 }
-
 /* ===============================
    UI helpers
    =============================== */
