@@ -1,4 +1,4 @@
-// FILE: /js/text_translate_page.js — FIX (no DOMContentLoaded dependency)
+// FILE: /js/text_translate_page.js — FINAL (NO AUTO, EN->TR default, shell safe init)
 import { apiPOST } from "/js/api.js";
 import { getSiteLang } from "/js/i18n.js";
 import { supabase } from "/js/supabase_client.js";
@@ -16,7 +16,6 @@ function toast(msg){
   window.__to = setTimeout(()=> el.classList.remove("show"), 1800);
 }
 
-/* UI lang */
 function getSystemUILang(){
   try{
     const l = String(getSiteLang?.() || "").toLowerCase().trim();
@@ -34,7 +33,6 @@ function sourceLabel(){ return ({ tr:"Kaynak Dil", en:"Source" }[UI_LANG] || "Ka
 function targetLabel(){ return ({ tr:"Hedef Dil", en:"Target" }[UI_LANG] || "Hedef Dil"); }
 function searchLabel(){ return ({ tr:"Ara…", en:"Search…" }[UI_LANG] || "Ara…"); }
 
-/* LANGS (NO AUTO) */
 const LANGS = [
   { code:"tr", flag:"🇹🇷", bcp:"tr-TR" },
   { code:"en", flag:"🇬🇧", bcp:"en-US" },
@@ -65,7 +63,6 @@ function langObj(code){
 function langFlag(code){ return langObj(code)?.flag || "🌐"; }
 function bcp(code){ return langObj(code)?.bcp || "en-US"; }
 
-/* Localized names */
 let _dn = null;
 function getDisplayNames(){
   if(_dn && _dn.__lang === UI_LANG) return _dn;
@@ -110,9 +107,9 @@ async function ensureLogged(){
   return session.user;
 }
 
-/* State defaults EN->TR */
-const SS_FROM = "italky_text_from_v2";
-const SS_TO   = "italky_text_to_v2";
+/* Defaults EN->TR */
+const SS_FROM = "italky_text_from_v3";
+const SS_TO   = "italky_text_to_v3";
 let fromLang = sessionStorage.getItem(SS_FROM) || "en";
 let toLang   = sessionStorage.getItem(SS_TO) || "tr";
 
@@ -121,34 +118,40 @@ function persist(){
   sessionStorage.setItem(SS_TO, toLang);
 }
 function setLangUI(){
-  const fF = $("fromFlag"), fT = $("fromLangTxt"), tF = $("toFlag"), tT = $("toLangTxt");
-  if(fF) fF.textContent = langFlag(fromLang);
-  if(fT) fT.textContent = langLabel(fromLang);
-  if(tF) tF.textContent = langFlag(toLang);
-  if(tT) tT.textContent = langLabel(toLang);
+  $("fromFlag") && ($("fromFlag").textContent = langFlag(fromLang));
+  $("fromLangTxt") && ($("fromLangTxt").textContent = langLabel(fromLang));
+  $("toFlag") && ($("toFlag").textContent = langFlag(toLang));
+  $("toLangTxt") && ($("toLangTxt").textContent = langLabel(toLang));
 }
 
-/* Sheet */
+/* Kibar sheet */
 let sheetFor = "from";
+
 function openSheet(which){
   sheetFor = which;
-  const sh = $("langSheet");
-  if(!sh) return toast("Sheet yok");
-  sh.classList.add("show");
 
-  const st = $("sheetTitle");
-  const sq = $("sheetQuery");
-  if(st) st.textContent = (which==="from") ? sourceLabel() : targetLabel();
-  if(sq){
-    sq.placeholder = searchLabel();
-    sq.value = "";
-  }
+  const sheet = $("langSheet");
+  if(!sheet) return toast("Sheet bulunamadı");
+
+  // title + placeholder
+  UI_LANG = getSystemUILang();
+  $("sheetTitle") && ($("sheetTitle").textContent = (which==="from") ? sourceLabel() : targetLabel());
+  $("sheetQuery") && ($("sheetQuery").placeholder = searchLabel());
+  if($("sheetQuery")) $("sheetQuery").value = "";
+
   renderSheet("");
-  setTimeout(()=>{ try{ sq?.focus(); }catch{} }, 0);
+
+  // ✅ show after render (WebView stabil)
+  requestAnimationFrame(()=>{
+    sheet.classList.add("show");
+    setTimeout(()=>{ try{ $("sheetQuery")?.focus(); }catch{} }, 20);
+  });
 }
+
 function closeSheet(){
   $("langSheet")?.classList.remove("show");
 }
+
 function renderSheet(filter){
   const q = String(filter||"").toLowerCase().trim();
   const list = $("sheetList");
@@ -167,11 +170,11 @@ function renderSheet(filter){
     const sel = (l.code===current) ? "selected" : "";
     return `
       <div class="sheetRow ${sel}" data-code="${l.code}">
-        <div style="display:flex;align-items:center;gap:10px;min-width:0;">
-          <div style="min-width:28px;text-align:center;font-size:18px;">${l.flag}</div>
-          <div style="font-weight:900;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${langLabel(l.code)}</div>
+        <div class="rowLeft">
+          <div class="rowFlag">${l.flag}</div>
+          <div class="rowName">${langLabel(l.code)}</div>
         </div>
-        <div style="opacity:.6;font-weight:900;color:#fff;">${String(l.code).toUpperCase()}</div>
+        <div class="rowCode">${String(l.code).toUpperCase()}</div>
       </div>
     `;
   }).join("");
@@ -193,20 +196,18 @@ function speak(text, langCode){
   const t = String(text||"").trim();
   if(!t) return;
 
-  // APK bridge
   if(window.NativeTTS && typeof window.NativeTTS.speak === "function"){
     try{ window.NativeTTS.stop?.(); }catch{}
-    try{ window.NativeTTS.speak(t, String(langCode||"en")); return; }catch(e){ console.warn(e); }
+    try{ window.NativeTTS.speak(t, String(langCode||"en")); return; }catch{}
   }
 
-  // Web fallback
   if(!("speechSynthesis" in window)) return;
   try{
     const u = new SpeechSynthesisUtterance(t);
     u.lang = bcp(langCode);
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(u);
-  }catch(e){ console.warn(e); }
+  }catch{}
 }
 
 /* STT */
@@ -238,8 +239,7 @@ function startSTT(){
     const tr = e.results?.[0]?.[0]?.transcript || "";
     const txt = String(tr||"").trim();
     if(!txt) return;
-    const inEl = $("inText");
-    if(inEl) inEl.value = txt;
+    $("inText") && ($("inText").value = txt);
     await doTranslate(true);
   };
   rec.onend = ()=>{
@@ -270,16 +270,14 @@ async function doTranslate(silent=false){
     if(!silent) toast(UI_LANG==="tr" ? "Metin yaz" : "Type text");
     return;
   }
-  const outEl = $("outText");
-  if(outEl) outEl.textContent = (UI_LANG==="tr" ? "Çevriliyor…" : "Translating…");
+  $("outText") && ($("outText").textContent = (UI_LANG==="tr" ? "Çevriliyor…" : "Translating…"));
 
   try{
     const out = await translateViaApi(text, fromLang, toLang);
-    if(outEl) outEl.textContent = out || "—";
-  }catch(e){
-    if(outEl) outEl.textContent = "—";
+    $("outText") && ($("outText").textContent = out || "—");
+  }catch{
+    $("outText") && ($("outText").textContent = "—");
     if(!silent) toast(UI_LANG==="tr" ? "Çeviri alınamadı" : "Translate failed");
-    console.warn(e);
   }
 }
 
@@ -289,11 +287,10 @@ function swapLang(){
   setLangUI();
 }
 
-/* ===== INIT (runs even if DOMContentLoaded already fired) ===== */
+/* INIT (shell-safe) */
 async function init(){
-  // elementler gerçekten var mı?
-  if(!$("fromLangBtn") || !$("toLangBtn") || !$("sheetList")){
-    // shell yeni kuruyorsa 1 frame bekle
+  // shell body rebuild olabiliyor: 1 tick bekle
+  if(!$("fromLangBtn") || !$("sheetList")){
     await new Promise(r=>setTimeout(r, 80));
   }
 
@@ -304,7 +301,6 @@ async function init(){
 
   setLangUI();
 
-  // bind (id’ler yoksa patlamasın)
   $("fromLangBtn")?.addEventListener("click", ()=> openSheet("from"));
   $("toLangBtn")?.addEventListener("click", ()=> openSheet("to"));
   $("swapBtn")?.addEventListener("click", swapLang);
@@ -314,8 +310,8 @@ async function init(){
   $("sheetQuery")?.addEventListener("input", ()=> renderSheet($("sheetQuery")?.value));
 
   $("clearBtn")?.addEventListener("click", ()=>{
-    const inEl = $("inText"); if(inEl) inEl.value = "";
-    const outEl = $("outText"); if(outEl) outEl.textContent = "—";
+    $("inText") && ($("inText").value = "");
+    $("outText") && ($("outText").textContent = "—");
   });
 
   $("translateBtn")?.addEventListener("click", ()=> doTranslate(false));
@@ -332,12 +328,6 @@ async function init(){
     if(!txt || txt==="—") return toast(UI_LANG==="tr" ? "Çeviri yok" : "No output");
     speak(txt, toLang);
   });
-
-  // sheet ilk render (boş arama)
-  renderSheet("");
-
-  // debug: sheet button çalışıyor mu?
-  // toast("Text translate ready");
 }
 
 if(document.readyState === "loading"){
