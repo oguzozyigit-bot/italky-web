@@ -35,82 +35,6 @@ async function lockThisDevice(){
 }
 
 /* -----------------------------
-   Single Active Session (Kill others)
------------------------------- */
-function newSessionKey(){
-  return (globalThis.crypto?.randomUUID?.() || `sess-${Date.now()}-${Math.floor(Math.random()*1e9)}`);
-}
-
-/**
- * Bu cihaz “aktif oturum”u sahiplenir.
- * Başka cihaz login olunca key değişir -> bu cihaz kapanır.
- */
-async function claimActiveSession(userId){
-  const key = newSessionKey();
-
-  const { error } = await supabase
-    .from("profiles")
-    .update({
-      active_session_key: key,
-      active_session_updated_at: new Date().toISOString()
-    })
-    .eq("id", userId);
-
-  if(error) throw error;
-
-  try{ localStorage.setItem(ACTIVE_SESSION_LOCAL_KEY, key); }catch{}
-  return key;
-}
-
-/**
- * 10 sn’de bir DB’deki key’i kontrol eder.
- * Key değiştiyse -> logout + login
- */
-function startSingleSessionWatcher(userId){
-  if(__singleWatcherStarted) return;
-  __singleWatcherStarted = true;
-
-  let myKey = "";
-  try{ myKey = localStorage.getItem(ACTIVE_SESSION_LOCAL_KEY) || ""; }catch{}
-
-  // key yoksa watcher yapma (claim başarısız olmuş olabilir)
-  if(!myKey){
-    __singleWatcherStarted = false;
-    return;
-  }
-
-  setInterval(async ()=>{
-    try{
-      // login sayfasında zorlamayalım
-      if(location.pathname === LOGIN_REL) return;
-
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("active_session_key")
-        .eq("id", userId)
-        .single();
-
-      if(error) return;
-
-      const live = String(data?.active_session_key || "");
-      if(live && live !== myKey){
-        // başka yerde giriş yapıldı -> bu oturumu kapat
-        try{ await supabase.auth.signOut({ scope:"global" }); }catch{}
-        try{ localStorage.removeItem(STORAGE_KEY); }catch{}
-        try{ localStorage.removeItem(ACTIVE_SESSION_LOCAL_KEY); }catch{}
-        try{ localStorage.removeItem("NAC_ID"); }catch{}
-        try{
-          Object.keys(localStorage).forEach(k=>{ if(k.startsWith("sb-")) localStorage.removeItem(k); });
-        }catch{}
-
-        alert("Hesabınız başka bir cihaz/sekmede açıldığı için bu oturum kapatıldı.");
-        location.replace(LOGIN_REL);
-      }
-    }catch{}
-  }, 10000);
-}
-
-/* -----------------------------
    Cache helpers
 ------------------------------ */
 function buildCache(user, profile){
@@ -140,6 +64,86 @@ export function clearCachedUser(){
   try{ localStorage.removeItem(STORAGE_KEY); }catch{}
 }
 
+function nukeSupabaseLocal(){
+  try{
+    const keys=[];
+    for(let i=0;i<localStorage.length;i++){
+      const k = localStorage.key(i);
+      if(!k) continue;
+      if(k.startsWith("sb-")) keys.push(k);
+    }
+    keys.forEach(k=>localStorage.removeItem(k));
+  }catch{}
+}
+
+/* -----------------------------
+   Single Active Session
+   ✅ Son giren kazanır (doğru)
+   - Key sadece bu cihazda yoksa üretilir
+   - Watcher myKey'i sabitlemez, her tur localStorage'dan okur
+------------------------------ */
+function newSessionKey(){
+  return (globalThis.crypto?.randomUUID?.() || `sess-${Date.now()}-${Math.floor(Math.random()*1e9)}`);
+}
+
+async function claimActiveSessionIfNeeded(userId){
+  let myKey = "";
+  try{ myKey = (localStorage.getItem(ACTIVE_SESSION_LOCAL_KEY) || "").trim(); }catch{}
+
+  // ✅ Aynı cihazda key varsa DB'yi değiştirme (aksi halde döngü olur)
+  if(myKey) return myKey;
+
+  // ✅ Bu cihaz ilk kez giriş yapıyor -> DB'ye yaz (son giren kazanır)
+  myKey = newSessionKey();
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      active_session_key: myKey,
+      active_session_updated_at: new Date().toISOString()
+    })
+    .eq("id", userId);
+
+  if(error) throw error;
+
+  try{ localStorage.setItem(ACTIVE_SESSION_LOCAL_KEY, myKey); }catch{}
+  return myKey;
+}
+
+function startSingleSessionWatcher(userId){
+  if(__singleWatcherStarted) return;
+  __singleWatcherStarted = true;
+
+  setInterval(async ()=>{
+    try{
+      if(location.pathname === LOGIN_REL) return;
+
+      const myKey = (localStorage.getItem(ACTIVE_SESSION_LOCAL_KEY) || "").trim();
+      if(!myKey) return;
+
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("active_session_key")
+        .eq("id", userId)
+        .single();
+
+      if(error) return;
+
+      const liveKey = String(data?.active_session_key || "").trim();
+      if(liveKey && liveKey !== myKey){
+        // başka cihaz giriş yaptı -> bu oturumu kapat
+        try{ await supabase.auth.signOut({ scope:"global" }); }catch{}
+        try{ localStorage.removeItem(STORAGE_KEY); }catch{}
+        try{ localStorage.removeItem(ACTIVE_SESSION_LOCAL_KEY); }catch{}
+        // NAC_ID'yi silmiyoruz (cihaz kilidi devam etsin)
+        nukeSupabaseLocal();
+
+        alert("Hesabınız başka bir cihaz/sekmede açıldığı için bu oturum kapatıldı.");
+        location.replace(LOGIN_REL);
+      }
+    }catch{}
+  }, 5000); // 5 sn kontrol (istersen 2000 yaparız)
+}
+
 /* -----------------------------
    Ensure profile + cache
 ------------------------------ */
@@ -150,15 +154,17 @@ export async function ensureAuthAndCacheUser(){
 
   const user = session.user;
 
-  // deletion request varsa iptal
+  // deletion request varsa iptal et (varsa)
   try{ await supabase.rpc("cancel_account_deletion"); } catch(_) {}
 
-  // 1) cihaz kilidi
+  // 1) NAC cihaz kilidi (aynı telefonda farklı kullanıcı yok)
   try{
     await lockThisDevice();
   }catch(e){
+    // başka hesaba bağlı cihaz ise -> logout
     try{ await supabase.auth.signOut({ scope:"global" }); }catch{}
     clearCachedUser();
+    nukeSupabaseLocal();
     throw new Error(e?.message || "Cihaz kilidi alınamadı.");
   }
 
@@ -178,12 +184,12 @@ export async function ensureAuthAndCacheUser(){
     profile = p2;
   }
 
-  // ✅ 3) SINGLE SESSION: bu login'i aktif oturum yap
+  // ✅ 3) son giren kazanır key'i (bu cihazda yoksa yaz)
   try{
-    await claimActiveSession(user.id);
+    await claimActiveSessionIfNeeded(user.id);
   }catch(e){
-    // Claim başarısızsa sistemi düşürme; ama diğer cihaz kapatma çalışmaz
-    console.warn("claimActiveSession error:", e);
+    // key yazma başarısızsa sistemi çökertme, sadece single-session devre dışı kalır
+    console.warn("claimActiveSessionIfNeeded error:", e);
   }
 
   // 4) cache
@@ -206,9 +212,9 @@ export async function loginWithGoogle(){
 export async function safeLogout(){
   try{ await supabase.auth.signOut({ scope:"global" }); }catch{}
   clearCachedUser();
-
   try{ localStorage.removeItem(ACTIVE_SESSION_LOCAL_KEY); }catch{}
-  // NAC_ID’yi silme: cihaz kilidi modelin var (istersen silersin)
+  // NAC_ID kalabilir (cihaz kilidi)
+  nukeSupabaseLocal();
   location.replace(LOGIN_REL);
 }
 
@@ -224,7 +230,7 @@ export async function startAuthState(callback) {
         const cached = await ensureAuthAndCacheUser();
         const wallet = Number(cached?.tokens ?? 0);
 
-        // ✅ Single-session watcher başlat
+        // ✅ watcher burada başlar (tüm sayfalarda çalışır)
         startSingleSessionWatcher(user.id);
 
         callback({ user, wallet });
