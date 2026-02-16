@@ -1,189 +1,172 @@
-<!-- FILE: /pages/home.html -->
 <!DOCTYPE html>
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>italkyAI - Home</title>
-  <link rel="icon" href="data:," />
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
-
+  <title>italkyAI • Hub</title>
   <style>
-    #pageContent{ height:100%; overflow:hidden; }
+    :root {
+      --ai-gradient: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
+      --glow-online: #00ffcc;
+      --glow-offline: #ff3366;
+    }
+    #pageContent {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 10px 0 15px;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+    .academy-pro {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 24px;
+      padding: 14px 18px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex; align-items: center; gap: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .academy-pro:active { transform: scale(0.96); background: rgba(255, 255, 255, 0.1); }
 
-    .grid-layout{
-      height:100%;
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      grid-template-rows: repeat(4, 1fr);
-      gap: 14px;
+    .spectrum-logo {
+      width: 42px; height: 42px; background: #000; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      gap: 2px; flex-shrink: 0;
+    }
+    .bar { width: 2.5px; border-radius: 4px; }
+    .bar-1 { height: 8px; background: #ff0000; }
+    .bar-2 { height: 14px; background: #ff7f00; }
+    .bar-3 { height: 18px; background: #ffff00; }
+    .bar-4 { height: 24px; background: #00ff00; }
+    .bar-5 { height: 18px; background: #0000ff; }
+    .bar-6 { height: 14px; background: #4b0082; }
+    .bar-7 { height: 8px; background: #8b00ff; }
+
+    .academy-text h2 { margin: 0; font-size: 17px; font-weight: 900; color: #fff; }
+    .academy-text h2 span { background: var(--ai-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .academy-text p { margin: 0; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.4); }
+
+    .portal-zone {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      cursor: pointer; padding: 10px 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .neural-orb {
+      width: 120px; height: 120px; position: relative;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .ai-ring {
+      position: absolute; inset: -2px; border-radius: 50%; padding: 2px;
+      background: var(--ai-gradient); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask-composite: exclude; animation: rotateOrbit 15s linear infinite;
+    }
+    .orbit-energy { position: absolute; inset: -8px; animation: rotateOrbit 10s linear infinite; }
+    .e-ball { position: absolute; width: 10px; height: 10px; border-radius: 50%; }
+    .ball-l { top: -5px; left: 50%; background: #1e3a8a; box-shadow: 0 0 10px #1e3a8a; }
+    .ball-b { bottom: -5px; left: 50%; background: #801336; box-shadow: 0 0 10px #801336; }
+
+    .ai-core {
+      width: 80px; height: 80px; background: #000; border-radius: 50%;
+      background-image: linear-gradient(#000, #000), var(--ai-gradient);
+      background-origin: border-box; background-clip: content-box, border-box;
+      border: 2px solid transparent; display: flex; align-items: center; justify-content: center;
+      animation: aiBreathe 4s infinite ease-in-out;
     }
 
-    /* Kart: koyu premium */
-    .premium-card{
-      position:relative;
-      border-radius: 28px;
-      border: 1px solid rgba(255,255,255,0.10);
-      background: linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
-      padding: 14px 12px;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      text-align:center;
-      cursor:pointer;
+    .portal-info h1 { margin: 5px 0 0; font-size: 24px; font-weight: 900; color:#fff; }
+    .portal-info p { margin: 0; font-size: 12px; color: rgba(255,255,255,0.4); }
+
+    .pro-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    }
+    .pro-tile {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px; padding: 14px;
+      display: flex; align-items: center; gap: 10px;
+      cursor: pointer; transition: all 0.2s;
+      -webkit-tap-highlight-color: transparent;
       user-select:none;
-      overflow:hidden;
-      transition: transform .28s cubic-bezier(.22,1,.36,1), background .28s ease;
     }
-    .premium-card:active{ transform: scale(.965); background: rgba(255,255,255,0.10); }
-
-    /* ✅ Kesilme önleyici: ikon kutusu clamp ile sabit */
-    .neon-icon-wrap{
-      width: clamp(58px, 18vw, 78px);
-      height: clamp(58px, 18vw, 78px);
-      border-radius: 22px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      margin-bottom: 10px;
-      border: 1px solid rgba(255,255,255,0.16);
-      box-shadow: 0 18px 44px rgba(0,0,0,0.24);
-      flex: 0 0 auto;
+    .pro-tile:active { transform: scale(0.95); background: rgba(255, 255, 255, 0.1); }
+    .tile-icon {
+      width: 36px; height: 36px; border-radius: 10px; background: rgba(255,255,255,0.05);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      font-weight: 900; font-size: 14px;
     }
+    .ico-txt::before { content: "Aa"; color: #34d399; }
+    .ico-cam::before { content: "◎"; color: #60a5fa; }
+    .ico-doc::before { content: "≡"; color: #f472b6; }
+    .ico-fun::before { content: "🎯"; }
 
-    /* ✅ İkon asla yarım kalmasın */
-    .premium-card svg{
-      width: clamp(26px, 8vw, 36px);
-      height: clamp(26px, 8vw, 36px);
-      fill:none;
-      stroke:#fff;
-      stroke-width: 2.4;
-      opacity: .98;
-    }
+    .pro-tile label { font-size: 11px; font-weight: 800; color: #fff; line-height: 1.2; }
 
-    /* İkon kutusu renkleri (kart değil!) */
-    .card-face   .neon-icon-wrap{ background: linear-gradient(135deg,#22d3ee,#3b82f6); }
-    .card-voice  .neon-icon-wrap{ background: linear-gradient(135deg,#fb7185,#f97316); }
-    .card-text   .neon-icon-wrap{ background: linear-gradient(135deg,#34d399,#22c55e); }
-    .card-chat   .neon-icon-wrap{ background: linear-gradient(135deg,#f472b6,#a78bfa); }
-    .card-photo  .neon-icon-wrap{ background: linear-gradient(135deg,#a78bfa,#60a5fa); }
-    .card-teacher.neon-icon-wrap{ background: linear-gradient(135deg,#2dd4bf,#10b981); } /* ignore */
-    .card-teacher .neon-icon-wrap{ background: linear-gradient(135deg,#2dd4bf,#10b981); }
-    .card-doc    .neon-icon-wrap{ background: linear-gradient(135deg,#fda4af,#fb7185); }
-    .card-game   .neon-icon-wrap{ background: linear-gradient(135deg,#fde047,#f59e0b); }
-
-    .card-title{
-      font-size: clamp(14px, 4.2vw, 17px);
-      font-weight: 900;
-      color:#fff;
-      letter-spacing:-0.4px;
-      line-height: 1.08;
-    }
-    .card-desc{
-      margin-top: 4px;
-      font-size: clamp(9.5px, 2.7vw, 10.8px);
-      font-weight: 800;
-      color: rgba(255,255,255,0.70);
-      line-height: 1.15;
+    @keyframes rotateOrbit { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    @keyframes aiBreathe {
+      0%, 100% { transform: scale(1); opacity: 0.8; }
+      50% { transform: scale(1.04); opacity: 1; }
     }
   </style>
 </head>
 
 <body>
   <div id="pageContent">
-    <div class="grid-layout">
 
-      <div class="premium-card card-face" data-href="/pages/facetoface.html">
-        <div class="neon-icon-wrap">
-          <svg viewBox="0 0 24 24">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-            <circle cx="9" cy="7" r="4"/>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-          </svg>
-        </div>
-        <div class="card-title">Yüzyüze</div>
-        <div class="card-desc">Anlık Karşılıklı Çeviri</div>
+    <div class="academy-pro" data-nav="/pages/teacher_select.html">
+      <div class="spectrum-logo">
+        <div class="bar bar-1"></div><div class="bar bar-2"></div><div class="bar bar-3"></div>
+        <div class="bar bar-4"></div><div class="bar bar-5"></div><div class="bar bar-6"></div>
+        <div class="bar bar-7"></div>
       </div>
+      <div class="academy-text">
+        <h2>italky <span>Academy</span></h2>
+        <p>YAPAY ZEKA İLE DİL EĞİTİMİ</p>
+      </div>
+    </div>
 
-      <div class="premium-card card-voice" data-href="/pages/teacher_select.html">
-        <div class="neon-icon-wrap">
-          <svg viewBox="0 0 24 24">
+    <div class="portal-zone" data-nav="/pages/facetoface.html">
+      <div class="neural-orb">
+        <div class="ai-ring"></div>
+        <div class="orbit-energy">
+          <div class="e-ball ball-l"></div>
+          <div class="e-ball ball-b"></div>
+        </div>
+        <div class="ai-core">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5">
             <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
             <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
             <line x1="12" y1="19" x2="12" y2="23"/>
           </svg>
         </div>
-        <div class="card-title">italky Academy</div>
-        <div class="card-desc">Öğretmenle Günlük Ders</div>
       </div>
-
-      <div class="premium-card card-text" data-href="/pages/text_translate.html">
-        <div class="neon-icon-wrap">
-          <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
-        </div>
-        <div class="card-title">Metin Çeviri</div>
-        <div class="card-desc">Hızlı ve Doğru Çeviri</div>
+      <div class="portal-info" style="text-align:center">
+        <h1>FaceToFace</h1>
+        <p>Yüzyüze Anlık Çeviri</p>
       </div>
-
-      <div class="premium-card card-chat" data-href="/pages/teacher_select.html">
-        <div class="neon-icon-wrap">
-          <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 1 1-7.6-13.5 8.38 8.38 0 0 1 3.8.9L21 3z"/></svg>
-        </div>
-        <div class="card-title">Sohbet AI</div>
-        <div class="card-desc">Akıllı Asistan Sohbeti</div>
-      </div>
-
-      <div class="premium-card card-photo" data-href="/pages/photo.html">
-        <div class="neon-icon-wrap">
-          <svg viewBox="0 0 24 24">
-            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-            <circle cx="12" cy="13" r="4"/>
-          </svg>
-        </div>
-        <div class="card-title">Foto Çeviri</div>
-        <div class="card-desc">Görselden Anında Çevir</div>
-      </div>
-
-      <div class="premium-card card-teacher" data-href="/pages/teacher_select.html">
-        <div class="neon-icon-wrap">
-          <svg viewBox="0 0 24 24">
-            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-          </svg>
-        </div>
-        <div class="card-title">Öğretmen AI</div>
-        <div class="card-desc">Dil Eğitmenlerin</div>
-      </div>
-
-      <div class="premium-card card-doc" data-href="/pages/document.html">
-        <div class="neon-icon-wrap">
-          <svg viewBox="0 0 24 24">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-            <polyline points="14 2 14 8 20 8"/>
-          </svg>
-        </div>
-        <div class="card-title">Belge Çeviri</div>
-        <div class="card-desc">PDF ve Dosya Tarama</div>
-      </div>
-
-      <div class="premium-card card-game" data-href="/pages/game.html">
-        <div class="neon-icon-wrap">
-          <svg viewBox="0 0 24 24">
-            <rect x="2" y="6" width="20" height="12" rx="2"/>
-            <path d="M6 12h4M8 10v4"/>
-            <circle cx="15" cy="11" r="1"/>
-          </svg>
-        </div>
-        <div class="card-title">Oyunlar</div>
-        <div class="card-desc">Eğlenerek Öğren</div>
-      </div>
-
     </div>
+
+    <div class="pro-grid">
+      <div class="pro-tile" data-nav="/pages/text_translate.html">
+        <div class="tile-icon ico-txt"></div>
+        <label>Metinden<br>Çeviri</label>
+      </div>
+      <div class="pro-tile" data-nav="/pages/photo.html">
+        <div class="tile-icon ico-cam"></div>
+        <label>Fotoğraftan<br>Çeviri</label>
+      </div>
+      <div class="pro-tile" data-nav="/pages/document.html">
+        <div class="tile-icon ico-doc"></div>
+        <label>Belgeden<br>Çeviri</label>
+      </div>
+      <div class="pro-tile" data-nav="/pages/game.html">
+        <div class="tile-icon ico-fun"></div>
+        <label>Eğlenerek<br>Öğren</label>
+      </div>
+    </div>
+
   </div>
 
   <script type="module">
@@ -191,16 +174,32 @@
     import { bootPage } from "/js/ui_guard.js";
     import { ensureAuthAndCacheUser } from "/js/auth.js";
 
-    mountShell({ scroll:"none" });
+    mountShell({ scroll: "none" });
 
-    // Jeton ilk anda gelsin
-    const cached = await ensureAuthAndCacheUser();
+    // header/user
+    const cached = await ensureAuthAndCacheUser().catch(()=>null);
     if (cached?.tokens != null) setHeaderTokens(cached.tokens);
+    bootPage({ protectedPage: true, header: { nameId: "userName", picId: "userPic" } });
 
-    bootPage({ protectedPage:true, header:{ nameId:"userName", picId:"userPic" } });
+    // ✅ Linkler (sadece)
+    function go(url){ window.location.assign(url); }
 
-    document.querySelectorAll(".premium-card[data-href]").forEach(card=>{
-      card.addEventListener("click", ()=>location.href = card.getAttribute("data-href"));
+    document.querySelectorAll("[data-nav]").forEach(el => {
+      const url = el.getAttribute("data-nav");
+      if(!url) return;
+
+      // Mobilde daha sağlam
+      el.addEventListener("touchend", (e)=>{
+        e.preventDefault();
+        e.stopPropagation();
+        go(url);
+      }, { passive:false });
+
+      el.addEventListener("click", (e)=>{
+        e.preventDefault();
+        e.stopPropagation();
+        go(url);
+      });
     });
   </script>
 </body>
