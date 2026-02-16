@@ -3,43 +3,43 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>italkyAI • Hub</title>
+  <title>italkyAI • Neural Hub</title>
   <style>
     :root {
       --ai-gradient: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
-      --footer-h: 92px; /* Shell'den gelen alt bar yüksekliği */
+      --footer-h: 92px; 
     }
 
-    /* ✅ SCROLLSUZ TAM SIĞDIRMA */
     #pageContent {
-      height: calc(100vh - var(--footer-h) - env(safe-area-inset-top) - 100px); /* Üst ve alt barı çıkar */
+      height: calc(100vh - var(--footer-h) - env(safe-area-inset-top) - 85px); 
       display: flex;
       flex-direction: column;
-      justify-content: space-between; /* Elemanları ekrana yay */
-      padding: 5px 0 10px;
+      justify-content: flex-start;
+      gap: 12px;
+      padding: 5px 0 0;
       box-sizing: border-box;
-      overflow: hidden; /* Scroll yasak */
+      overflow: hidden;
     }
 
-    /* 1. ACADEMY (Elegant & Compact) */
+    /* 1. ACADEMY */
     .academy-pro {
       background: rgba(255, 255, 255, 0.05);
       border-radius: 22px;
       padding: 12px 16px;
       border: 1px solid rgba(255, 255, 255, 0.1);
-      display: flex; align-items: center; gap: 12px;
+      display: flex; align-items: center; gap: 14px;
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
     }
     .academy-pro:active { transform: scale(0.97); }
 
-    .spectrum-logo { gap: 2px; display: flex; align-items: center; flex-shrink: 0; }
-    .bar { width: 2.5px; border-radius: 10px; }
+    .spectrum-logo { gap: 2.5px; display: flex; align-items: center; flex-shrink: 0; }
+    .bar { width: 3px; border-radius: 10px; }
     .bar-1 { height: 8px; background: #ff0000; }
     .bar-2 { height: 12px; background: #ff7f00; }
-    .bar-3 { height: 16px; background: #ffff00; }
-    .bar-4 { height: 22px; background: #00ff00; }
-    .bar-5 { height: 16px; background: #0000ff; }
+    .bar-3 { height: 18px; background: #ffff00; }
+    .bar-4 { height: 26px; background: #00ff00; }
+    .bar-5 { height: 18px; background: #0000ff; }
     .bar-6 { height: 12px; background: #4b0082; }
     .bar-7 { height: 8px; background: #8b00ff; }
 
@@ -47,46 +47,61 @@
     .academy-text h2 span { background: var(--ai-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     .academy-text p { margin: 0; font-size: 9px; font-weight: 800; color: rgba(255,255,255,0.4); }
 
-    /* 2. FACETOFACE (Living Core) */
+    /* 2. FACETOFACE (YAŞAYAN PORTAL) */
     .portal-zone {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      cursor: pointer; padding: 5px 0;
+      cursor: pointer; padding: 10px 0;
     }
     .neural-orb {
-      width: 100px; height: 100px; position: relative;
+      width: 110px; height: 110px; position: relative;
       display: flex; align-items: center; justify-content: center;
     }
+    
+    /* Dönen AI Halkası */
     .ai-ring {
       position: absolute; inset: -3px; border-radius: 50%; padding: 2px;
       background: var(--ai-gradient); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
       mask-composite: exclude; animation: rotateOrbit 15s linear infinite;
     }
+
+    /* Karşılıklı Dönen Enerji Topları (Lacivert & Bordo) */
+    .orbit-energy {
+      position: absolute; inset: -10px; border-radius: 50%;
+      animation: rotateOrbit 8s linear infinite;
+    }
+    .e-ball { position: absolute; width: 10px; height: 10px; border-radius: 50%; filter: blur(1px); }
+    .ball-l { top: -5px; left: 50%; transform: translateX(-50%); background: #1e3a8a; box-shadow: 0 0 12px #1e3a8a; }
+    .ball-b { bottom: -5px; left: 50%; transform: translateX(-50%); background: #801336; box-shadow: 0 0 12px #801336; }
+
+    /* Nefes Alan Çekirdek */
     .ai-core {
-      width: 75px; height: 75px; background: #000; border-radius: 50%;
+      width: 80px; height: 80px; background: #000; border-radius: 50%;
       background-image: linear-gradient(#000, #000), var(--ai-gradient);
       background-origin: border-box; background-clip: content-box, border-box;
-      border: 2px solid transparent; display: flex; align-items: center; justify-content: center;
+      border: 2.5px solid transparent; display: flex; align-items: center; justify-content: center;
       animation: aiBreathe 4s infinite ease-in-out;
+      z-index: 10;
     }
-    .portal-info { text-align: center; margin-top: 10px; }
-    .portal-info h1 { margin: 0; font-size: 22px; font-weight: 900; color: #fff; letter-spacing: -1px; }
-    .portal-info p { margin: 2px 0 0; font-size: 11px; font-weight: 800; color: rgba(255,255,255,0.5); }
 
-    /* 3. PRO GRID (Compact 2x3) */
+    .portal-info { text-align: center; margin-top: 15px; }
+    .portal-info h1 { margin: 0; font-size: 24px; font-weight: 900; color: #fff; letter-spacing: -1px; }
+    .portal-info p { margin: 0; font-size: 11px; font-weight: 800; color: rgba(255,255,255,0.5); }
+
+    /* 3. PRO GRID */
     .pro-grid {
       display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
     }
     .pro-tile {
       background: rgba(255, 255, 255, 0.04);
       border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 20px; padding: 10px 14px;
+      border-radius: 20px; padding: 12px;
       display: flex; align-items: center; gap: 10px;
       cursor: pointer;
     }
     .pro-tile:active { transform: scale(0.95); }
     
     .tile-icon {
-      width: 32px; height: 32px; border-radius: 9px; background: rgba(255,255,255,0.05);
+      width: 34px; height: 34px; border-radius: 10px; background: rgba(255,255,255,0.05);
       display: flex; align-items: center; justify-content: center; flex-shrink: 0;
       font-size: 14px;
     }
@@ -100,18 +115,23 @@
     .pro-tile label { font-size: 11px; font-weight: 800; color: #fff; line-height: 1.1; }
     .pro-tile label span { background: var(--ai-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
-    /* 4. ONLINE MEETING (Compact Bar) */
+    /* 4. ONLINE MEETING BAR */
     .meeting-bar {
       background: rgba(255, 255, 255, 0.05);
       border-radius: 22px;
-      padding: 12px 16px;
+      padding: 12px 18px;
       border: 1px solid rgba(99, 102, 241, 0.2);
       display: flex; align-items: center; gap: 14px;
       cursor: pointer;
+      margin-top: 5px;
     }
 
+    /* ANIMATIONS */
     @keyframes rotateOrbit { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-    @keyframes aiBreathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); } }
+    @keyframes aiBreathe { 
+      0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(99, 102, 241, 0.2); } 
+      50% { transform: scale(1.06); box-shadow: 0 0 35px rgba(99, 102, 241, 0.4); } 
+    }
 
   </style>
 </head>
@@ -134,8 +154,12 @@
     <div class="portal-zone" data-nav="/pages/facetoface.html">
       <div class="neural-orb">
         <div class="ai-ring"></div>
+        <div class="orbit-energy">
+          <div class="energy-ball e-ball ball-l"></div>
+          <div class="energy-ball e-ball ball-b"></div>
+        </div>
         <div class="ai-core">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2">
             <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
             <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
             <line x1="12" y1="19" x2="12" y2="23"/>
@@ -171,7 +195,7 @@
       </div>
       <div class="pro-tile" data-nav="/pages/teacher_select.html">
         <div class="tile-icon ico-teacher"></div>
-        <label>Öğretmen <span>AI</span></label>
+        <label>Chat <span>AI</span></label>
       </div>
     </div>
 
