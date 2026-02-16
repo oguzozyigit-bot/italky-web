@@ -3,127 +3,139 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>italkyAI - Future Home</title>
+  <title>italkyAI - Pro Home</title>
   <style>
     :root {
-      --accent-neon: #6366f1;
-      --accent-bordo: #801336;
-      --glass-ultra: rgba(255, 255, 255, 0.03);
-      --border-light: rgba(255, 255, 255, 0.1);
+      --glass: rgba(255, 255, 255, 0.03);
+      --glass-border: rgba(255, 255, 255, 0.08);
+      --accent-bordo: #9d1b3d;
+      --accent-cyan: #22d3ee;
     }
 
     #pageContent {
       height: 100%;
       display: flex;
       flex-direction: column;
-      gap: 18px;
-      padding-bottom: 10px;
+      gap: 16px;
+      padding-bottom: 20px;
+      perspective: 1000px;
     }
 
-    /* --- HERO PORTAL (FaceToFace) --- */
-    .hero-portal {
+    /* --- PREMIUM HERO: FaceToFace --- */
+    .hero-container {
       position: relative;
-      background: linear-gradient(135deg, #1e050e 0%, #801336 100%);
+      background: linear-gradient(135deg, #1e0b11 0%, #7c1231 100%);
       border-radius: 35px;
-      padding: 30px 24px;
-      height: 220px;
+      padding: 30px;
+      min-height: 200px;
       display: flex;
       flex-direction: column;
       justify-content: flex-end;
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      box-shadow: 0 25px 50px -12px rgba(128, 19, 54, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(255,255,255,0.05);
       overflow: hidden;
       cursor: pointer;
     }
 
-    /* Uzay efekti için arka plan animasyonu */
-    .hero-portal::before {
-      content: ""; position: absolute; inset: 0;
-      background: radial-gradient(circle at 70% 20%, rgba(99, 102, 241, 0.2) 0%, transparent 60%);
-      animation: pulseOrbit 8s infinite alternate;
+    .hero-container::before {
+      content: ""; position: absolute; top: -20%; right: -10%; width: 250px; height: 250px;
+      background: radial-gradient(circle, rgba(34, 211, 238, 0.15) 0%, transparent 70%);
+      filter: blur(30px); animation: floating 6s infinite ease-in-out;
     }
 
-    .hero-icon-lg {
-      position: absolute; top: 20px; right: 20px;
-      width: 80px; height: 80px;
-      background: linear-gradient(135deg, #22d3ee, #3b82f6);
-      border-radius: 25px;
+    /* Pro İkon: FaceToFace */
+    .pro-icon-main {
+      position: absolute; top: 25px; right: 25px;
+      width: 90px; height: 90px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 28px;
       display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 0 30px rgba(34, 211, 238, 0.3);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.1);
+      box-shadow: 0 15px 35px rgba(0,0,0,0.3);
     }
-    .hero-icon-lg svg { width: 40px; height: 40px; stroke: #fff; fill: none; stroke-width: 2; }
+    .pro-icon-main svg { width: 45px; height: 45px; filter: drop-shadow(0 0 8px #22d3ee); }
 
-    .hero-title { font-size: 32px; font-weight: 900; letter-spacing: -1px; }
-    .hero-desc { font-size: 14px; opacity: 0.7; font-weight: 600; margin-bottom: 5px; }
+    .hero-title { font-size: 34px; font-weight: 900; letter-spacing: -1.5px; line-height: 1; }
+    .hero-sub { font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px; }
 
-    /* --- ACADEMY (Elegant Minimal) --- */
-    .academy-row {
-      background: var(--glass-ultra);
-      border: 1px solid var(--border-light);
-      backdrop-filter: blur(20px);
-      border-radius: 24px;
-      padding: 18px 24px;
-      display: flex;
-      align-items: center;
-      gap: 15px;
+    /* --- FULL WIDTH STRIP: Academy --- */
+    .pro-strip {
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(25px);
+      border-radius: 28px;
+      padding: 20px 24px;
+      display: flex; align-items: center; gap: 18px;
       cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
     }
-    .academy-icon {
-      width: 48px; height: 48px;
-      background: linear-gradient(135deg, #2dd4bf, #10b981);
-      border-radius: 15px;
+    .pro-strip:active { transform: scale(0.97); background: rgba(255,255,255,0.06); }
+    
+    .strip-icon {
+      width: 52px; height: 52px;
+      background: linear-gradient(135deg, #a855f7, #6366f1);
+      border-radius: 18px;
       display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
+      box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
     }
-    .academy-icon svg { width: 22px; height: 22px; stroke: #fff; fill: none; stroke-width: 2.5; }
-    .academy-text h3 { margin: 0; font-size: 17px; font-weight: 800; }
-    .academy-text p { margin: 0; font-size: 11px; opacity: 0.5; font-weight: 700; }
 
-    /* --- GRID AREA --- */
-    .smart-grid {
+    /* --- SMART GRID: Tools --- */
+    .pro-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 14px;
     }
 
-    .smart-card {
-      background: var(--glass-ultra);
-      border: 1px solid var(--border-light);
-      border-radius: 28px;
-      padding: 20px;
+    .pro-tile {
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 30px;
+      padding: 22px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 14px;
       cursor: pointer;
-      transition: all 0.3s cubic-bezier(0.2, 1, 0.3, 1);
       position: relative;
+      overflow: hidden;
     }
-    .smart-card:active { transform: scale(0.95); background: rgba(255,255,255,0.08); }
 
-    .neon-wrap {
-      width: 50px; height: 50px;
+    .tile-glow {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: radial-gradient(circle at top left, rgba(255,255,255,0.05), transparent 70%);
+      pointer-events: none;
+    }
+
+    .tile-icon {
+      width: 48px; height: 48px;
       border-radius: 16px;
       display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+      font-size: 24px;
+      transition: transform 0.3s;
     }
-    .neon-wrap svg { width: 24px; height: 24px; stroke: #fff; fill: none; stroke-width: 2.2; }
+    
+    /* İkon Gradientleri */
+    .i-text { background: linear-gradient(135deg, #34d399, #10b981); box-shadow: 0 10px 20px rgba(16, 185, 129, 0.2); }
+    .i-photo { background: linear-gradient(135deg, #60a5fa, #3b82f6); box-shadow: 0 10px 20px rgba(59, 130, 246, 0.2); }
+    .i-doc { background: linear-gradient(135deg, #f472b6, #db2777); box-shadow: 0 10px 20px rgba(219, 39, 119, 0.2); }
+    .i-game { background: linear-gradient(135deg, #fbbf24, #f59e0b); box-shadow: 0 10px 20px rgba(245, 158, 11, 0.2); }
+    .i-chat { background: linear-gradient(135deg, #818cf8, #4f46e5); box-shadow: 0 10px 20px rgba(79, 70, 229, 0.2); }
+    .i-ai { background: linear-gradient(135deg, #2dd4bf, #0d9488); box-shadow: 0 10px 20px rgba(13, 148, 136, 0.2); }
 
-    /* İkon Renkleri (Senin Home.html'den) */
-    .c-text .neon-wrap { background: linear-gradient(135deg, #34d399, #22c55e); }
-    .c-photo .neon-wrap { background: linear-gradient(135deg, #a78bfa, #60a5fa); }
-    .c-doc .neon-wrap { background: linear-gradient(135deg, #fda4af, #fb7185); }
-    .c-game .neon-wrap { background: linear-gradient(135deg, #fde047, #f59e0b); }
+    .pro-tile h4 { margin: 0; font-size: 16px; font-weight: 800; letter-spacing: -0.5px; color: #fff; }
+    .pro-tile p { margin: 0; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.4); text-transform: uppercase; }
 
-    .smart-card h4 { margin: 0; font-size: 15px; font-weight: 900; }
-    .smart-card span { font-size: 10px; opacity: 0.4; font-weight: 700; }
+    /* States */
+    .locked { opacity: 0.3; filter: saturate(0.5); pointer-events: none; }
+    .status-badge {
+      position: absolute; top: 15px; right: 20px;
+      font-size: 8px; font-weight: 900; padding: 2px 6px;
+      border-radius: 6px; background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.3);
+    }
 
-    /* Dinamik Durumlar */
-    .locked { opacity: 0.3; filter: grayscale(1); pointer-events: none; }
-    .lock-label { position: absolute; top: 15px; right: 20px; font-size: 8px; font-weight: 900; color: #fb7185; }
-
-    @keyframes pulseOrbit {
-      from { transform: scale(1) translate(0, 0); }
-      to { transform: scale(1.2) translate(-5%, 5%); }
+    @keyframes floating {
+      0%, 100% { transform: translate(0, 0); }
+      50% { transform: translate(-10px, 15px); }
     }
   </style>
 </head>
@@ -131,62 +143,86 @@
 <body>
   <div id="pageContent">
     
-    <div class="hero-portal" id="btnFfStart" data-href="/pages/facetoface.html">
-      <div class="hero-icon-lg">
-        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    <div class="hero-container" id="btnFfStart" data-href="/pages/facetoface.html">
+      <div class="pro-icon-main">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 10l5 5-5 5"/><path d="M4 4v7a4 4 0 0 0 4 4h12"/></svg>
       </div>
       <div class="hero-info">
-        <div class="hero-desc">YAPAY ZEKA İLE CANLI</div>
+        <div class="hero-sub">AI Real-Time Voice</div>
         <div class="hero-title">FaceToFace</div>
       </div>
     </div>
 
-    <div class="academy-row" id="btnAcademy" data-href="/pages/teacher_select.html">
-      <div class="academy-icon">
-        <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
+    <div class="pro-strip" id="btnAcademy" data-href="/pages/teacher_select.html">
+      <div class="strip-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
       </div>
-      <div class="academy-text">
-        <h3>italky Academy</h3>
-        <p>EĞİTMENLERLE GELECEĞİ KONUŞ</p>
+      <div class="strip-text">
+        <h4 style="margin:0; font-size:18px; font-weight:900;">italky Academy</h4>
+        <p style="margin:0; font-size:11px; color:rgba(255,255,255,0.4); font-weight:700;">PRO LEVEL EDUCATION AI</p>
       </div>
     </div>
 
-    <div class="smart-grid">
+    <div class="pro-grid">
       
-      <div class="smart-card c-text" id="tileText" data-href="/pages/text_translate.html">
-        <div class="neon-wrap"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></svg></div>
-        <div class="card-info">
+      <div class="pro-tile" id="tileText" data-href="/pages/text_translate.html">
+        <div class="tile-glow"></div>
+        <div class="tile-icon i-text">✍️</div>
+        <div>
           <h4>Metin</h4>
-          <span>SMART ENGINE</span>
+          <p>Smart Translate</p>
         </div>
-        <div class="lock-label" id="lockText"></div>
+        <div class="status-badge" id="stText">SYNCED</div>
       </div>
 
-      <div class="smart-card c-photo" id="tilePhoto" data-href="/pages/photo.html">
-        <div class="neon-wrap"><svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
-        <div class="card-info">
-          <h4>Görsel</h4>
-          <span>VISION AI</span>
+      <div class="pro-tile" id="tileChat" data-href="/pages/teacher_select.html">
+        <div class="tile-glow"></div>
+        <div class="tile-icon i-chat">💬</div>
+        <div>
+          <h4>Sohbet AI</h4>
+          <p>Intelligence</p>
         </div>
-        <div class="lock-label" id="lockPhoto"></div>
+        <div class="status-badge">AI CORE</div>
       </div>
 
-      <div class="smart-card c-doc" id="tileDoc" data-href="/pages/document.html">
-        <div class="neon-wrap"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
-        <div class="card-info">
+      <div class="pro-tile" id="tilePhoto" data-href="/pages/photo.html">
+        <div class="tile-glow"></div>
+        <div class="tile-icon i-photo">📸</div>
+        <div>
+          <h4>Fotoğraf</h4>
+          <p>Vision Scan</p>
+        </div>
+        <div class="status-badge" id="stPhoto">ONLINE</div>
+      </div>
+
+      <div class="pro-tile" id="tileTeacher" data-href="/pages/teacher_select.html">
+        <div class="tile-glow"></div>
+        <div class="tile-icon i-ai">🎓</div>
+        <div>
+          <h4>Öğretmen AI</h4>
+          <p>Personal Coach</p>
+        </div>
+        <div class="status-badge">ACTIVE</div>
+      </div>
+
+      <div class="pro-tile" id="tileDoc" data-href="/pages/document.html">
+        <div class="tile-glow"></div>
+        <div class="tile-icon i-doc">📄</div>
+        <div>
           <h4>Belge</h4>
-          <span>ANALYSIS</span>
+          <p>Doc Analyzer</p>
         </div>
-        <div class="lock-label" id="lockDoc"></div>
+        <div class="status-badge" id="stDoc">ONLINE</div>
       </div>
 
-      <div class="smart-card c-game" id="tileGame" data-href="/pages/game.html">
-        <div class="neon-wrap"><svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 12h4M8 10v4"/><circle cx="15" cy="11" r="1"/></svg></div>
-        <div class="card-info">
-          <h4>Oyun</h4>
-          <span>DAILY QUEST</span>
+      <div class="pro-tile" id="tileGame" data-href="/pages/game.html">
+        <div class="tile-glow"></div>
+        <div class="tile-icon i-game">🎮</div>
+        <div>
+          <h4>Oyunlar</h4>
+          <p>Daily Quest</p>
         </div>
-        <div class="lock-label" id="lockGame"></div>
+        <div class="status-badge" id="stGame">LOCAL</div>
       </div>
 
     </div>
@@ -197,35 +233,27 @@
     import { bootPage } from "/js/ui_guard.js";
     import { ensureAuthAndCacheUser } from "/js/auth.js";
 
-    mountShell({ scroll:"none" });
+    mountShell({ scroll: "none" });
 
     const cached = await ensureAuthAndCacheUser();
     if (cached?.tokens != null) setHeaderTokens(cached.tokens);
-    bootPage({ protectedPage:true, header:{ nameId:"userName", picId:"userPic" } });
+    bootPage({ protectedPage: true, header: { nameId: "userName", picId: "userPic" } });
 
-    function checkStates() {
+    function checkLogic() {
       const isOnline = navigator.onLine;
       const user = JSON.parse(localStorage.getItem('italky_user_v1') || '{}');
       const hasOff = (user.offline_langs || []).length > 0;
-      const hasGames = localStorage.getItem('italky_lang_pool_ready') === "1";
-
-      const config = {
-        tileText: { ok: isOnline || hasOff, msg: "LOCAL" },
-        tilePhoto: { ok: isOnline, msg: "ONLINE" },
-        tileDoc: { ok: isOnline, msg: "ONLINE" },
-        tileGame: { ok: isOnline || hasGames, msg: "OFFLINE" }
+      
+      const states = {
+        tileText: isOnline || hasOff,
+        tilePhoto: isOnline,
+        tileDoc: isOnline,
+        tileGame: true // Oyunlar genelde local cache
       };
 
-      Object.entries(config).forEach(([id, cfg]) => {
+      Object.entries(states).forEach(([id, ok]) => {
         const el = document.getElementById(id);
-        const lock = el.querySelector('.lock-label');
-        if(!cfg.ok) {
-          el.classList.add('locked');
-          lock.innerText = "KILITLI";
-        } else {
-          el.classList.remove('locked');
-          lock.innerText = cfg.msg;
-        }
+        if(!ok) el.classList.add('locked'); else el.classList.remove('locked');
       });
     }
 
@@ -233,7 +261,7 @@
       btn.onclick = () => { if(!btn.classList.contains('locked')) location.href = btn.dataset.href; };
     });
 
-    checkStates();
+    checkLogic();
   </script>
 </body>
 </html>
