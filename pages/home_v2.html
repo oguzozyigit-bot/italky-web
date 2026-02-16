@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>italkyAI • Home</title>
+  <title>italkyAI • Home v2</title>
   <link rel="icon" href="data:," />
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -12,30 +12,33 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
   <style>
-    /* Shell giydirecek: sadece orta içerik */
+    /* Shell giydiriyor: sadece içerik */
     #pageContent{
       display:flex;
       flex-direction:column;
       gap:12px;
-      padding: 2px 0; /* shell padding zaten var */
+      padding: 2px 0;
     }
 
-    /* Durum çipi */
-    .statusRow{
+    /* Premium “mood” header */
+    .moodRow{
       display:flex;
       align-items:center;
       justify-content:space-between;
       gap:10px;
     }
+
     .chip{
       display:inline-flex;
       align-items:center;
       gap:8px;
-      padding:10px 12px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,0.12);
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.12);
       background: rgba(0,0,0,0.18);
-      color: rgba(255,255,255,0.90);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      color: rgba(255,255,255,0.92);
       font-weight:1000;
       font-size:12px;
       letter-spacing:.2px;
@@ -44,32 +47,66 @@
     }
     .chip small{ font-size:11px; opacity:.72; font-weight:900; }
 
-    /* HERO (FaceToFace) */
+    .pulseDot{
+      width:8px; height:8px; border-radius:99px;
+      background: rgba(255,255,255,0.35);
+      box-shadow: 0 0 0 0 rgba(255,255,255,0.0);
+      animation: dotPulse 1.4s infinite;
+    }
+    @keyframes dotPulse{
+      0%{ box-shadow:0 0 0 0 rgba(165,180,252,0.35); }
+      70%{ box-shadow:0 0 0 10px rgba(165,180,252,0.0); }
+      100%{ box-shadow:0 0 0 0 rgba(165,180,252,0.0); }
+    }
+
+    /* HERO */
     .hero{
-      border-radius: 30px;
+      border-radius: 32px;
       border: 1px solid rgba(255,255,255,0.12);
       overflow:hidden;
       background:
-        radial-gradient(circle at 20% 20%, rgba(79,70,229,0.35) 0%, transparent 50%),
-        radial-gradient(circle at 80% 80%, rgba(236,72,153,0.16) 0%, transparent 55%),
-        linear-gradient(180deg, rgba(88,12,31,0.28) 0%, rgba(2,0,10,0.20) 100%);
-      box-shadow: 0 26px 70px rgba(0,0,0,0.55);
+        radial-gradient(circle at 18% 22%, rgba(88,12,31,0.55) 0%, transparent 52%),
+        radial-gradient(circle at 78% 78%, rgba(15,23,42,0.72) 0%, transparent 55%),
+        radial-gradient(circle at 55% 40%, rgba(79,70,229,0.30) 0%, transparent 55%),
+        linear-gradient(180deg, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.28) 100%);
+      box-shadow: 0 30px 80px rgba(0,0,0,0.60);
       padding: 16px 14px;
       display:flex;
       flex-direction:column;
-      gap:10px;
+      gap:12px;
+      position:relative;
     }
+
+    .heroGlow{
+      position:absolute;
+      inset:-40%;
+      background:
+        radial-gradient(circle at 25% 25%, rgba(165,180,252,0.18) 0%, transparent 45%),
+        radial-gradient(circle at 80% 80%, rgba(236,72,153,0.10) 0%, transparent 55%);
+      filter: blur(50px);
+      pointer-events:none;
+      opacity:.95;
+      animation: floaty 10s infinite alternate ease-in-out;
+    }
+    @keyframes floaty{
+      from{ transform: translate3d(0,0,0) scale(1); }
+      to{ transform: translate3d(3%, -2%, 0) scale(1.05); }
+    }
+
     .heroTop{
       display:flex;
       align-items:flex-start;
       justify-content:space-between;
       gap:10px;
+      position:relative;
+      z-index:2;
     }
+
     .heroTitle{
       font-family:"Space Grotesk", system-ui, sans-serif;
-      font-size: 20px;
+      font-size: 22px;
       font-weight: 1000;
-      letter-spacing:-0.4px;
+      letter-spacing:-0.6px;
       margin:0;
       color:#fff;
       line-height:1.1;
@@ -80,61 +117,66 @@
       font-weight: 900;
       color: rgba(255,255,255,0.72);
       line-height:1.35;
-      max-width: 22em;
+      max-width: 24em;
     }
 
-    .badge{
+    .heroBadge{
       display:inline-flex;
       align-items:center;
       gap:8px;
-      padding:8px 10px;
+      padding: 9px 10px;
       border-radius:999px;
       border:1px solid rgba(255,255,255,0.12);
-      background: rgba(0,0,0,0.18);
-      color: rgba(255,255,255,0.90);
+      background: rgba(0,0,0,0.20);
+      color: rgba(255,255,255,0.92);
       font-weight:1000;
       font-size:11px;
       white-space:nowrap;
     }
 
-    .heroBtnRow{
+    .heroActions{
       display:flex;
       gap:10px;
-      margin-top: 2px;
+      position:relative;
+      z-index:2;
     }
+
     .btn{
-      height: 52px;
-      border-radius: 18px;
-      border: none;
+      height: 54px;
+      border-radius: 20px;
+      border:none;
       cursor:pointer;
-      font-weight: 1000;
+      font-weight:1000;
       user-select:none;
       white-space:nowrap;
     }
     .btn:active{ transform: scale(.99); }
+
     .btnPrimary{
       flex: 1.35;
       background: linear-gradient(135deg, #A5B4FC 0%, #4F46E5 55%, #EC4899 100%);
       color:#050510;
-      box-shadow: 0 16px 44px rgba(79,70,229,.22);
+      box-shadow: 0 18px 50px rgba(79,70,229,.22);
       font-size:14px;
     }
     .btnGhost{
       flex: 1;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(0,0,0,0.18);
+      border:1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.20);
       color: rgba(255,255,255,0.92);
       font-size:13px;
     }
 
-    /* Academy (belirgin) */
+    /* Academy card (big, premium) */
     .academy{
       border-radius: 28px;
       border: 1px solid rgba(255,255,255,0.12);
+      overflow:hidden;
       background:
-        radial-gradient(circle at 15% 30%, rgba(165,180,252,0.22) 0%, transparent 55%),
-        linear-gradient(180deg, rgba(15,23,42,0.52) 0%, rgba(2,0,10,0.30) 100%);
-      box-shadow: 0 20px 60px rgba(0,0,0,0.52);
+        radial-gradient(circle at 18% 35%, rgba(165,180,252,0.20) 0%, transparent 55%),
+        radial-gradient(circle at 82% 70%, rgba(236,72,153,0.10) 0%, transparent 60%),
+        linear-gradient(180deg, rgba(15,23,42,0.62) 0%, rgba(2,0,10,0.32) 100%);
+      box-shadow: 0 22px 70px rgba(0,0,0,0.55);
       padding: 14px 14px;
       display:flex;
       align-items:center;
@@ -142,9 +184,11 @@
       gap:12px;
       cursor:pointer;
       user-select:none;
+      position:relative;
     }
     .academy:active{ transform: scale(.99); }
-    .acLeft{ min-width:0; }
+
+    .acLeft{ min-width:0; position:relative; z-index:2; }
     .acTitle{
       margin:0;
       font-size: 16px;
@@ -165,15 +209,27 @@
       padding: 0 14px;
       border-radius: 16px;
       border:none;
-      background: rgba(255,255,255,0.90);
+      background: rgba(255,255,255,0.92);
       color:#050510;
       font-weight:1000;
       cursor:pointer;
       flex: 0 0 auto;
+      position:relative;
+      z-index:2;
     }
     .acCta:active{ transform: scale(.99); }
 
-    /* Tools grid (4) */
+    .acPulse{
+      position:absolute;
+      inset:-40%;
+      background: radial-gradient(circle at 40% 40%, rgba(79,70,229,0.18) 0%, transparent 55%);
+      filter: blur(40px);
+      opacity:.85;
+      pointer-events:none;
+      animation: floaty 12s infinite alternate ease-in-out;
+    }
+
+    /* Tools grid */
     .grid{
       display:grid;
       grid-template-columns: 1fr 1fr;
@@ -191,9 +247,17 @@
       gap:10px;
       cursor:pointer;
       user-select:none;
-      min-height: 118px;
+      min-height: 120px;
+      position:relative;
+      overflow:hidden;
     }
     .tile:active{ transform: scale(.99); }
+
+    .tile.disabled{
+      opacity: .55;
+      filter: grayscale(.35);
+    }
+
     .tileTop{
       display:flex;
       align-items:center;
@@ -201,8 +265,8 @@
       gap:10px;
     }
     .iconBox{
-      width:46px;
-      height:46px;
+      width:48px;
+      height:48px;
       border-radius: 16px;
       border: 1px solid rgba(255,255,255,0.12);
       display:flex;
@@ -234,7 +298,6 @@
       line-height:1.35;
     }
 
-    /* küçük rozet: offline/online/login */
     .miniTag{
       font-size: 10.5px;
       font-weight: 1000;
@@ -243,6 +306,29 @@
       border:1px solid rgba(255,255,255,0.12);
       background: rgba(0,0,0,0.18);
       color: rgba(255,255,255,0.82);
+      white-space:nowrap;
+    }
+
+    .lockOverlay{
+      position:absolute;
+      inset:0;
+      display:none;
+      align-items:flex-end;
+      justify-content:center;
+      padding: 10px;
+      pointer-events:none;
+      background: linear-gradient(180deg, rgba(0,0,0,0.0) 0%, rgba(0,0,0,0.30) 100%);
+    }
+    .tile.disabled .lockOverlay{ display:flex; }
+    .lockPill{
+      pointer-events:none;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border:1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.30);
+      color: rgba(255,255,255,0.88);
+      font-weight:1000;
+      font-size: 11px;
       white-space:nowrap;
     }
 
@@ -260,38 +346,39 @@
 <body>
   <div id="pageContent">
 
-    <!-- status -->
-    <div class="statusRow">
-      <div class="chip" id="netChip">…</div>
-      <div class="chip"><span>Mod</span> <small id="modeChip">…</small></div>
+    <div class="moodRow">
+      <div class="chip" id="netChip"><span class="pulseDot"></span>…</div>
+      <div class="chip">Durum <small id="modeChip">…</small></div>
     </div>
 
-    <!-- hero: FaceToFace -->
+    <!-- Hero -->
     <section class="hero">
+      <div class="heroGlow"></div>
       <div class="heroTop">
         <div>
           <h2 class="heroTitle">🎙 FaceToFace</h2>
           <p class="heroSub">Gerçek zamanlı konuşarak çeviri. Tek dokunuşla başla.</p>
         </div>
-        <div class="badge" id="ffBadge">…</div>
+        <div class="heroBadge" id="ffBadge">…</div>
       </div>
 
-      <div class="heroBtnRow">
+      <div class="heroActions">
         <button class="btn btnPrimary" id="btnFfStart" type="button">Başlat</button>
         <button class="btn btnGhost" id="btnOfflinePacks" type="button">Offline Paketler</button>
       </div>
     </section>
 
-    <!-- academy: belirgin -->
+    <!-- Academy -->
     <section class="academy" id="academyCard">
+      <div class="acPulse"></div>
       <div class="acLeft">
         <h3 class="acTitle">🎓 italky Academy</h3>
         <p class="acSub">Seviye tespit ile başla. 15 dk derslerle hızlı ilerle.</p>
       </div>
-      <button class="acCta" id="btnAcademy">Derse Başla</button>
+      <button class="acCta" id="btnAcademy" type="button">Derse Başla</button>
     </section>
 
-    <!-- tools -->
+    <!-- Tools -->
     <section class="grid">
       <div class="tile" id="tileText">
         <div class="tileTop">
@@ -302,6 +389,7 @@
         </div>
         <h4 class="tileTitle">Metinden Çeviri</h4>
         <p class="tileSub">Kopyala-yapıştır, hızlı çeviri.</p>
+        <div class="lockOverlay"><div class="lockPill" id="lockText">—</div></div>
       </div>
 
       <div class="tile" id="tilePhoto">
@@ -313,6 +401,7 @@
         </div>
         <h4 class="tileTitle">Foto Çeviri</h4>
         <p class="tileSub">Görselden yazıyı çevir.</p>
+        <div class="lockOverlay"><div class="lockPill" id="lockPhoto">—</div></div>
       </div>
 
       <div class="tile" id="tileDoc">
@@ -324,6 +413,7 @@
         </div>
         <h4 class="tileTitle">Belge Çeviri</h4>
         <p class="tileSub">PDF ve dosyalar.</p>
+        <div class="lockOverlay"><div class="lockPill" id="lockDoc">—</div></div>
       </div>
 
       <div class="tile" id="tileGames">
@@ -335,10 +425,11 @@
         </div>
         <h4 class="tileTitle">Oyunlar</h4>
         <p class="tileSub">Kelime paketleriyle offline da oynanır.</p>
+        <div class="lockOverlay"><div class="lockPill" id="lockGames">—</div></div>
       </div>
     </section>
 
-    <div class="mutedLine">Tek Home. Sistem online/offline durumuna göre otomatik uyum sağlar.</div>
+    <div class="mutedLine">Tek Home • Sistem online/offline durumuna göre otomatik uyum sağlar.</div>
   </div>
 
   <script type="module">
@@ -348,41 +439,77 @@
     mountShell({ scroll:"auto" });
     bootPage({ protectedPage:true, header:{ nameId:"userName", picId:"userPic" } });
 
-    // Links
     const go = (p)=>location.href=p;
 
-    // FaceToFace
+    // links
     document.getElementById("btnFfStart")?.addEventListener("click", ()=> go("/pages/facetoface.html"));
+    document.getElementById("btnOfflinePacks")?.addEventListener("click", ()=> go("/pages/offline.html"));
 
-    // Academy entry (akışı bozma!)
     document.getElementById("academyCard")?.addEventListener("click", ()=> go("/pages/teacher_select.html"));
     document.getElementById("btnAcademy")?.addEventListener("click", (e)=>{ e.stopPropagation(); go("/pages/teacher_select.html"); });
 
-    // Tools
     document.getElementById("tileText")?.addEventListener("click", ()=> go("/pages/text_translate.html"));
     document.getElementById("tilePhoto")?.addEventListener("click", ()=> go("/pages/photo.html"));
     document.getElementById("tileDoc")?.addEventListener("click", ()=> go("/pages/document.html"));
     document.getElementById("tileGames")?.addEventListener("click", ()=> go("/pages/game.html"));
 
-    document.getElementById("btnOfflinePacks")?.addEventListener("click", ()=> go("/pages/offline.html"));
+    // helpers
+    const set = (id, txt)=>{ const el=document.getElementById(id); if(el) el.textContent = txt; };
+    const setDis = (id, on)=>{ const el=document.getElementById(id); if(el) el.classList.toggle("disabled", !!on); };
 
-    // Status logic (simple & stable)
-    function set(id, txt){ const el=document.getElementById(id); if(el) el.textContent=txt; }
+    // real online (lightweight) – optional ping (if you add /ping.txt)
+    async function checkRealOnline(){
+      if(!navigator.onLine) return false;
+      try{
+        const r = await fetch("/ping.txt", { method:"GET", cache:"no-store" });
+        return r.ok;
+      }catch{
+        return true; // fallback: assume online if navigator says so
+      }
+    }
 
-    function refreshStatus(){
-      const online = navigator.onLine;
+    function hasOfflineTranslatePack(){
+      try{
+        const u = JSON.parse(localStorage.getItem("italky_user_v1") || "{}");
+        return Array.isArray(u.offline_langs) && u.offline_langs.length > 0;
+      }catch{
+        return false;
+      }
+    }
+
+    function hasGamePacks(){
+      // senin ileride bağlayacağın key; yoksa false
+      return localStorage.getItem("italky_lang_pool_ready") === "1";
+    }
+
+    async function refreshStatus(){
+      const online = await checkRealOnline();
+      const offPack = hasOfflineTranslatePack();
+      const gamePack = hasGamePacks();
+
       set("netChip", online ? "🌐 Online" : "⚡ Offline");
       set("modeChip", online ? "Online" : "Offline");
 
-      // tags: offline-capable vs requires-internet
-      set("ffBadge", online ? "🌐 Canlı Mod" : "⚡ Offline Mod");
+      set("ffBadge", online ? "🌐 Canlı Mod" : (offPack ? "⚡ Offline Hazır" : "⚡ Offline (paket yok)"));
 
-      set("tagText", online ? "⚡ Offline" : "⚡ Offline");
-      set("tagGames", "⚡ Offline");
+      // Tags + locks
+      set("tagText", offPack ? "⚡ Offline" : (online ? "🌐 Online" : "🔒 Paket"));
+      set("tagGames", gamePack ? "⚡ Offline" : (online ? "🌐 Online" : "🔒 Paket"));
 
-      // photo/doc need internet now (you can change later)
+      // photo/doc online for now
       set("tagPhoto", online ? "🌐 Online" : "🔒 İnternet");
       set("tagDoc",   online ? "🌐 Online" : "🔒 İnternet");
+
+      // Disable rules (visual only; click still goes, user sees message later if you want)
+      setDis("tilePhoto", !online);
+      setDis("tileDoc", !online);
+      setDis("tileGames", !online && !gamePack);
+      setDis("tileText", !online && !offPack);
+
+      set("lockPhoto", "İnternet gerekli");
+      set("lockDoc", "İnternet gerekli");
+      set("lockGames", !online && !gamePack ? "Paket indir" : "");
+      set("lockText", !online && !offPack ? "Paket indir" : "");
     }
 
     refreshStatus();
