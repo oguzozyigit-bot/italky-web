@@ -32,6 +32,7 @@
     html,body{margin:0; width:100%; height:100%; background:var(--bg-void); color:var(--text); font-family:Outfit,sans-serif; overflow:hidden;}
     .container{position:relative; width:100%; height:100%; display:flex; flex-direction:column;}
 
+    /* PANELS */
     .half-screen{
       flex:1;
       position:relative;
@@ -80,6 +81,7 @@
     }
     .lang-trigger svg{width:14px; height:14px; opacity:.7}
 
+    /* POPOVER */
     .popover{
       position:absolute;
       left:50%;
@@ -107,12 +109,7 @@
     }
     .pop-close:active{transform:scale(.96);}
 
-    .pop-list{
-      flex:1;
-      overflow:auto;
-      padding:10px;
-      scrollbar-width:none;
-    }
+    .pop-list{ flex:1; overflow:auto; padding:10px; scrollbar-width:none; }
     .pop-list::-webkit-scrollbar{ width:0; height:0; display:none; }
 
     .pop-item{
@@ -139,6 +136,7 @@
     .top .popover{ top: calc(62px + var(--safe-top)); }
     .bottom .popover{ bottom: 120px; }
 
+    /* CHAT */
     .chat-body{
       flex:1;
       width:100%;
@@ -164,12 +162,31 @@
       word-break: break-word;
     }
     .bubble .txt{display:inline-block; max-width: 92%;}
-    .bubble.them .txt{ color: rgba(255,255,255,.42); font-size: 16px; font-weight: 450; line-height:1.25; }
-    .bubble.me .txt{ color: rgba(255,255,255,.78); font-size: 16px; font-weight: 650; line-height:1.2; letter-spacing:.1px; }
-    .bubble.me.is-latest .txt{ color:#fff; font-size:26px; font-weight:950; line-height:1.1; letter-spacing:.2px; }
+    .bubble.them .txt{
+      color: rgba(255,255,255,.42);
+      font-size: 16px;
+      font-weight: 450;
+      line-height:1.25;
+    }
+    .bubble.me .txt{
+      color: rgba(255,255,255,.78);
+      font-size: 16px;
+      font-weight: 650;
+      line-height:1.2;
+      letter-spacing:.1px;
+    }
+    .bubble.me.is-latest .txt{
+      color:#fff;
+      font-size:26px;
+      font-weight:950;
+      line-height:1.1;
+      letter-spacing:.2px;
+    }
 
     .bubble .spk{
-      width:34px; height:34px; border-radius:14px;
+      width:34px;
+      height:34px;
+      border-radius:14px;
       border:1px solid rgba(255,255,255,.10);
       background: rgba(0,0,0,.18);
       color:#fff;
@@ -184,6 +201,7 @@
     .bubble .spk svg{width:16px; height:16px;}
     .bubble .spk:active{transform:scale(.95);}
 
+    /* MIC */
     .mic-wrap{
       width:100%;
       display:flex;
@@ -192,36 +210,6 @@
       padding-bottom: 4px;
       z-index: 60;
     }
-
-    /* ✅ ikon-only cluster */
-    .mic-cluster{
-      width:100%;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:12px;
-    }
-    /* ÜST panelde her şey ters; sadece bu cluster'ı geri çeviriyoruz */
-    .half-screen.top .mic-cluster{
-      transform: rotate(180deg);
-      transform-origin: center;
-    }
-
-    .miniIconBtn{
-      width:56px;
-      height:56px;
-      border-radius:18px;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(0,0,0,.18);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      cursor:pointer;
-      user-select:none;
-      flex: 0 0 auto;
-    }
-    .miniIconBtn:active{ transform: scale(.98); }
-    .miniIconBtn svg{ width:22px; height:22px; stroke:#fff; stroke-width:2.2; fill:none; opacity:.92; }
 
     .btn-mic{
       width:78px;
@@ -269,6 +257,7 @@
     }
     .btn-mic:active{transform:scale(1.02);}
 
+    /* CENTER HUB */
     .center-hub{
       position:absolute;
       top:50%;
@@ -282,6 +271,35 @@
       z-index:120;
       pointer-events:none;
     }
+
+    .hub-row{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:14px;
+      pointer-events:auto;
+    }
+
+    .hub-link{
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .2px;
+      opacity: .95;
+      cursor:pointer;
+      user-select:none;
+      padding: 10px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.14);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      line-height: 1;
+      white-space: nowrap;
+    }
+    .hub-link:active{ transform: scale(.98); }
+    .hub-link.home{ color: rgba(165,180,252,.95); } /* mavi */
+    .hub-link.clear{ color: rgba(255,170,190,.92); } /* bordo/pembe */
+
     .logo-capsule{
       background:#02000a;
       border:1px solid rgba(255,255,255,.10);
@@ -295,6 +313,7 @@
       cursor:pointer;
       position:relative;
       overflow:hidden;
+
       transition: transform .38s cubic-bezier(.22,1,.36,1);
       will-change: transform;
     }
@@ -333,7 +352,7 @@
     .logo-wave .bar:nth-child(5){animation-delay:.0s}
     @keyframes bounce{0%,100%{height:10px} 50%{height:40px}}
 
-    /* logo şov */
+    /* ✅ Logo şov: mic tarafına döner; mic bırakınca hoparlör tarafında KALIR */
     #frameRoot.focus-top .logo-capsule{ transform: translateY(-18px) rotate(180deg); }
     #frameRoot.focus-bot .logo-capsule{ transform: translateY(18px) rotate(0deg); }
     #frameRoot.spk-top .logo-capsule{ transform: translateY(-14px) rotate(180deg) scale(1.02); }
@@ -345,6 +364,7 @@
   <div class="container">
 
     <div class="half-screen top" id="topSection">
+
       <div class="top-top">
         <button class="lang-trigger" id="topLangBtn">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -365,39 +385,28 @@
       <div class="chat-body" id="topBody"></div>
 
       <div class="mic-wrap">
-        <div class="mic-cluster">
-          <button class="miniIconBtn" id="homeMini" type="button" title="Ana Sayfa" aria-label="Ana Sayfa">
-            <svg viewBox="0 0 24 24">
-              <path d="M3 10.5L12 3l9 7.5"/>
-              <path d="M5 10v10h14V10"/>
-            </svg>
-          </button>
-
-          <button class="btn-mic" id="topMic" title="Mikrofon">
-            <svg viewBox="0 0 24 24">
-              <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
-              <path d="M19 11v1a7 7 0 0 1-14 0v-1"/>
-              <path d="M12 19v3"/>
-            </svg>
-          </button>
-
-          <button class="miniIconBtn" id="clearChat" type="button" title="Temizle" aria-label="Temizle">
-            <svg viewBox="0 0 24 24">
-              <path d="M3 6h18"/>
-              <path d="M8 6l1-2h6l1 2"/>
-              <path d="M7 6l1 14h8l1-14"/>
-            </svg>
-          </button>
-        </div>
+        <button class="btn-mic" id="topMic" title="Mikrofon">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
+            <path d="M19 11v1a7 7 0 0 1-14 0v-1"/>
+            <path d="M12 19v3"/>
+          </svg>
+        </button>
       </div>
     </div>
 
     <div class="center-hub">
-      <div class="logo-capsule" id="homeBtn" title="Ana sayfa">
-        <div class="logo-wave" aria-hidden="true">
-          <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+      <div class="hub-row">
+        <div class="hub-link home" id="homeLink" title="Ana sayfa">Ana Sayfa</div>
+
+        <div class="logo-capsule" id="homeBtn" title="Ana sayfa">
+          <div class="logo-wave" aria-hidden="true">
+            <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+          </div>
+          <span class="logo-text">italky<span class="logo-ai">AI</span></span>
         </div>
-        <span class="logo-text">italky<span class="logo-ai">AI</span></span>
+
+        <div class="hub-link clear" id="clearLink" title="Temizle">Temizle</div>
       </div>
     </div>
 
@@ -433,50 +442,71 @@
     </div>
   </div>
 
-  <!-- ✅ cache kır (ses geri gitmesin diye) -->
-  <script type="module" src="/js/facetoface_page.js?v=20260216_1"></script>
+  <!-- ✅ Cache kırmak için versiyon parametresi: ses geri gitmesin -->
+  <script type="module" src="/js/facetoface_page.js?v=20260216_2"></script>
 
   <script>
     const HOME = '/pages/home.html';
-    document.getElementById('homeBtn')?.addEventListener('click', ()=> location.href = HOME);
-    document.getElementById('homeMini')?.addEventListener('click', ()=> location.href = HOME);
-
-    // Logo şov: dinleyen taraf / konuşan taraf
     const root = document.getElementById('frameRoot');
     const topMic = document.getElementById('topMic');
     const botMic = document.getElementById('botMic');
     const topBody = document.getElementById('topBody');
     const botBody = document.getElementById('botBody');
 
-    function setFocus(cls){
-      root.classList.remove('focus-top','focus-bot','spk-top','spk-bot');
-      root.classList.add(cls);
+    // ✅ Home navigasyon
+    document.getElementById('homeBtn')?.addEventListener('click', ()=> location.href = HOME);
+    document.getElementById('homeLink')?.addEventListener('click', ()=> location.href = HOME);
+
+    // ✅ Temizle
+    function doClear(){
+      try{ topBody.innerHTML=''; }catch{}
+      try{ botBody.innerHTML=''; }catch{}
+      try{ window.speechSynthesis?.cancel?.(); }catch{}
+      try{ window.NativeTTS?.stop?.(); }catch{}
+    }
+    document.getElementById('clearLink')?.addEventListener('click', doClear);
+
+    // ✅ Logo şov state: hoparlör tarafını KORU
+    let lastSpeaker = "bot"; // default
+
+    function applySpeaker(){
+      root.classList.remove('focus-top','focus-bot');
+      root.classList.toggle('spk-top', lastSpeaker === "top");
+      root.classList.toggle('spk-bot', lastSpeaker === "bot");
     }
 
+    // mic dinliyorsa focus, dinleme bitince speaker tarafına geri
     const moMic = new MutationObserver(()=>{
       const topOn = topMic?.classList.contains('listening');
       const botOn = botMic?.classList.contains('listening');
 
       if(topOn){
         root.classList.add('listening');
-        setFocus('focus-top');
+        root.classList.remove('spk-top','spk-bot');
+        root.classList.add('focus-top');
+        root.classList.remove('focus-bot');
       }else if(botOn){
         root.classList.add('listening');
-        setFocus('focus-bot');
+        root.classList.remove('spk-top','spk-bot');
+        root.classList.add('focus-bot');
+        root.classList.remove('focus-top');
       }else{
         root.classList.remove('listening');
+        // ✅ mic kapanınca hoparlör tarafına dön ve orada KAL
+        applySpeaker();
       }
     });
+
     if(topMic) moMic.observe(topMic, { attributes:true, attributeFilter:['class'] });
     if(botMic) moMic.observe(botMic, { attributes:true, attributeFilter:['class'] });
 
+    // Çeviri balonu hangi tarafa geldiyse hoparlör tarafı odur (kalıcı)
     const moTop = new MutationObserver((mut)=>{
       for(const m of mut){
         for(const n of m.addedNodes){
           if(n && n.classList && n.classList.contains('bubble') && n.classList.contains('me')){
-            root.classList.remove('focus-top','focus-bot');
-            root.classList.add('spk-top');
-            setTimeout(()=>{ root.classList.remove('spk-top'); }, 900);
+            lastSpeaker = "top";
+            applySpeaker();
             return;
           }
         }
@@ -486,19 +516,19 @@
       for(const m of mut){
         for(const n of m.addedNodes){
           if(n && n.classList && n.classList.contains('bubble') && n.classList.contains('me')){
-            root.classList.remove('focus-top','focus-bot');
-            root.classList.add('spk-bot');
-            setTimeout(()=>{ root.classList.remove('spk-bot'); }, 900);
+            lastSpeaker = "bot";
+            applySpeaker();
             return;
           }
         }
       }
     });
+
     if(topBody) moTop.observe(topBody, { childList:true });
     if(botBody) moBot.observe(botBody, { childList:true });
 
-    // Temizle: JS zaten bağlı, burada ekstra müdahale yok
-    // (Buton sadece var; handler facetoface_page.js'de)
+    // ilk açılışta hoparlör tarafı
+    applySpeaker();
   </script>
 </body>
 </html>
