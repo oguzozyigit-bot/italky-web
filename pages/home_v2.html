@@ -3,152 +3,159 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>italkyAI • Neural Hub</title>
+  <title>italkyAI • Pro Hub</title>
   <style>
     :root {
-      --glow-active: #00ff88;
-      --glow-offline: #ff3e3e;
-      --glass: rgba(255, 255, 255, 0.02);
-      --border: rgba(255, 255, 255, 0.08);
+      --glow-online: #00ffcc;
+      --glow-offline: #ff3366;
+      --academy-color: #4338ca; /* Deep Sapphire */
+      --glass: rgba(255, 255, 255, 0.03);
     }
 
     #pageContent {
       height: 100%;
       display: flex;
       flex-direction: column;
-      gap: 24px;
-      padding: 10px 0 30px;
+      gap: 20px;
+      padding-bottom: 30px;
     }
 
-    /* --- 1. PRESTIGE: ITALKY ACADEMY (EN ÜSTTE, EN PRESTİJLİ) --- */
-    .academy-premium {
-      position: relative;
-      background: linear-gradient(135deg, #1a1a2e 0%, #0d0d1a 100%);
+    /* --- 1. PRESTIGE: ACADEMY LOGO & CARD --- */
+    .academy-card {
+      background: linear-gradient(135deg, #0f172a 0%, var(--academy-color) 100%);
       border-radius: 30px;
-      padding: 25px;
-      border: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: space-between;
-      box-shadow: 0 15px 35px rgba(0,0,0,0.4);
-      cursor: pointer;
-    }
-    .academy-premium::after {
-      content: "PREMIUM"; position: absolute; top: -10px; right: 20px;
-      background: #f59e0b; color: #000; font-size: 9px; font-weight: 900;
-      padding: 2px 8px; border-radius: 4px; letter-spacing: 1px;
-    }
-    .academy-info h2 { margin: 0; font-size: 22px; font-weight: 900; background: linear-gradient(to right, #fff, #a5b4fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .academy-info p { margin: 5px 0 0; font-size: 11px; color: rgba(255,255,255,0.4); font-weight: 700; letter-spacing: 1px; }
-
-    /* --- 2. THE CORE: FACETOFACE (DİNAMİK DURUM) --- */
-    .core-portal {
-      flex: 1;
-      position: relative;
-      background: radial-gradient(circle at center, rgba(128, 19, 54, 0.15) 0%, transparent 80%);
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      cursor: pointer;
-    }
-    .orb-visual {
-      width: 160px; height: 160px;
-      border-radius: 50%;
-      position: relative;
-      display: flex; align-items: center; justify-content: center;
-      transition: all 0.5s ease;
-    }
-    /* Canlı Durum Halkası */
-    .status-ring {
-      position: absolute; inset: 0; border-radius: 50%;
-      border: 2px solid transparent;
-      box-shadow: 0 0 40px -10px var(--status-color);
-      transition: all 0.5s ease;
-    }
-    .orb-inner {
-      width: 100px; height: 100px; background: #000; border-radius: 50%;
+      padding: 24px;
       border: 1px solid rgba(255,255,255,0.1);
-      display: flex; align-items: center; justify-content: center;
-      z-index: 2;
-    }
-    .status-dot {
-      width: 12px; height: 12px; border-radius: 50%;
-      position: absolute; top: 10px; right: 10px;
-      background: var(--status-color);
-      box-shadow: 0 0 15px var(--status-color);
+      display: flex; align-items: center; gap: 20px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+      cursor: pointer;
     }
 
-    /* --- 3. UTILITY GRID (MODÜLLER) --- */
-    .utility-row {
-      display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
-    }
-    .u-tool {
-      display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer;
-    }
-    .u-icon {
-      width: 60px; height: 60px; background: var(--glass);
-      border: 1px solid var(--border); border-radius: 20px;
+    /* Özel Çizim Academy Logosu */
+    .academy-logo {
+      width: 60px; height: 60px;
+      background: #fff; border-radius: 18px;
       display: flex; align-items: center; justify-content: center;
-      position: relative; transition: all 0.3s;
+      box-shadow: 0 0 20px rgba(67, 56, 202, 0.5);
+      flex-shrink: 0;
     }
-    .u-icon svg { width: 24px; height: 24px; stroke: #fff; fill: none; stroke-width: 1.5; opacity: 0.6; }
-    .u-tool label { font-size: 9px; font-weight: 900; color: rgba(255,255,255,0.3); text-transform: uppercase; }
+    .logo-symbol {
+      width: 30px; height: 30px;
+      border: 4px solid var(--academy-color);
+      border-top-left-radius: 10px; border-bottom-right-radius: 10px;
+      position: relative;
+    }
+    .logo-symbol::after {
+      content: ""; position: absolute; top: -8px; right: -8px;
+      width: 12px; height: 12px; background: #f59e0b; border-radius: 50%;
+    }
 
-    /* Dinamik Sınıflar */
-    .is-online { --status-color: var(--glow-active); }
+    .academy-text h2 { margin: 0; font-size: 20px; font-weight: 900; letter-spacing: -0.5px; }
+    .academy-text p { margin: 2px 0 0; font-size: 11px; color: rgba(255,255,255,0.5); font-weight: 700; }
+
+    /* --- 2. CORE: FACETOFACE (DİNAMİK) --- */
+    .portal-section {
+      flex: 1;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      position: relative;
+    }
+    .portal-orb {
+      width: 150px; height: 150px;
+      border-radius: 50%;
+      background: #000;
+      border: 2px solid var(--status-color);
+      box-shadow: 0 0 40px -5px var(--status-color);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: 0.5s;
+    }
+    .portal-orb svg { width: 50px; stroke: #fff; filter: drop-shadow(0 0 10px var(--status-color)); }
+
+    .status-info {
+      text-align: center; margin-top: 15px;
+    }
+    .status-info h1 { margin: 0; font-size: 28px; font-weight: 900; }
+    .status-info span { font-size: 11px; font-weight: 800; color: var(--status-color); letter-spacing: 1px; }
+
+    /* --- 3. PRO GRID: MODÜLLER --- */
+    .pro-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+    }
+    .pro-btn {
+      background: var(--glass);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 26px;
+      padding: 18px;
+      display: flex; align-items: center; gap: 12px;
+      cursor: pointer;
+    }
+    .pro-btn:active { transform: scale(0.96); }
+
+    /* Özel CSS İkonlar */
+    .icon-box {
+      width: 44px; height: 44px; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(255,255,255,0.05); flex-shrink: 0;
+    }
+    .i-text::before { content: "Aa"; font-weight: 900; color: #34d399; }
+    .i-photo::before { content: "◎"; font-weight: 900; color: #60a5fa; font-size: 20px; }
+    .i-doc::before { content: "≡"; font-weight: 900; color: #f472b6; font-size: 20px; }
+    .i-game::before { content: "🎮"; font-size: 18px; }
+
+    .pro-btn label { font-size: 13px; font-weight: 800; line-height: 1.2; color: #f8fafc; }
+
+    /* Durum Renkleri */
+    .is-online { --status-color: var(--glow-online); }
     .is-offline { --status-color: var(--glow-offline); }
 
-    .status-text {
-      margin-top: 15px; font-size: 11px; font-weight: 800; text-align: center;
-      letter-spacing: 1px; color: var(--status-color);
-    }
-
-    /* CSS Çizim İkonlar */
-    .ico-text::before { content: "Aa"; color: #fff; font-weight: 900; }
-    .ico-cam::before { content: "●"; color: #fff; font-size: 20px; }
-    .ico-doc::before { content: "≡"; color: #fff; font-size: 24px; }
-    .ico-game::before { content: "🎮"; font-size: 20px; }
-
+    .locked { opacity: 0.2; filter: grayscale(1); pointer-events: none; }
   </style>
 </head>
 
-<body class="is-online"> <div id="pageContent">
+<body class="is-online">
+  <div id="pageContent">
     
-    <div class="academy-premium" id="btnAcademy" data-href="/pages/teacher_select.html">
-      <div class="academy-info">
+    <div class="academy-card" id="btnAcademy" data-href="/pages/teacher_select.html">
+      <div class="academy-logo">
+        <div class="logo-symbol"></div>
+      </div>
+      <div class="academy-text">
         <h2>italky Academy</h2>
-        <p>PERSONAL EDUCATION SYSTEM</p>
-      </div>
-      <div style="font-size: 24px; opacity: 0.2;">🎓</div>
-    </div>
-
-    <div class="core-portal" id="btnFfStart" data-href="/pages/facetoface.html">
-      <div class="orb-visual">
-        <div class="status-ring"></div>
-        <div class="orb-inner">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
-        </div>
-        <div class="status-dot"></div>
-      </div>
-      <div class="hero-label" style="text-align:center; margin-top:20px;">
-        <h1 style="margin:0; font-size:28px; font-weight:900; letter-spacing:-1px;">FaceToFace</h1>
-        <div class="status-text" id="ffStatusText">FULL AI POWER ACTIVE</div>
+        <p>KİŞİSELLEŞTİRİLMİŞ EĞİTİM OKULU</p>
       </div>
     </div>
 
-    <div class="utility-row">
-      <div class="u-tool" id="tileText" data-href="/pages/text_translate.html">
-        <div class="u-icon ico-text"></div>
-        <label>Metin</label>
+    <div class="portal-section" id="btnFfStart" data-href="/pages/facetoface.html">
+      <div class="portal-orb">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
       </div>
-      <div class="u-tool" id="tilePhoto" data-href="/pages/photo.html">
-        <div class="u-icon ico-cam"></div>
-        <label>Görsel</label>
+      <div class="status-info">
+        <h1>FaceToFace</h1>
+        <span id="ffStatus">SİSTEM ÇEVRİMİÇİ</span>
       </div>
-      <div class="u-tool" id="tileDoc" data-href="/pages/document.html">
-        <div class="u-icon ico-doc"></div>
-        <label>Belge</label>
+    </div>
+
+    <div class="pro-grid">
+      
+      <div class="pro-btn" id="tileText" data-href="/pages/text_translate.html">
+        <div class="icon-box i-text"></div>
+        <label>Metinden<br>Çeviri</label>
       </div>
-      <div class="u-tool" id="tileGame" data-href="/pages/game.html">
-        <div class="u-icon ico-game"></div>
-        <label>Oyun</label>
+
+      <div class="pro-btn" id="tilePhoto" data-href="/pages/photo.html">
+        <div class="icon-box i-photo"></div>
+        <label>Fotoğraftan<br>Çeviri</label>
       </div>
+
+      <div class="pro-btn" id="tileDoc" data-href="/pages/document.html">
+        <div class="icon-box i-doc"></div>
+        <label>Belgeden<br>Çeviri</label>
+      </div>
+
+      <div class="pro-btn" id="tileGame" data-href="/pages/game.html">
+        <div class="icon-box i-game"></div>
+        <label>Eğlenerek<br>Öğren</label>
+      </div>
+
     </div>
 
   </div>
@@ -164,35 +171,31 @@
     if (cached?.tokens != null) setHeaderTokens(cached.tokens);
     bootPage({ protectedPage: true, header: { nameId: "userName", picId: "userPic" } });
 
-    function updateNeuralInterface() {
+    function updateHub() {
       const isOnline = navigator.onLine;
       const user = JSON.parse(localStorage.getItem('italky_user_v1') || '{}');
       const offCount = (user.offline_langs || []).length;
 
-      // Body class update (Yeşil/Kırmızı geçişi)
       document.body.className = isOnline ? 'is-online' : 'is-offline';
 
-      // FaceToFace Statüsü
-      const ffText = document.getElementById('ffStatusText');
+      const statusSpan = document.getElementById('ffStatus');
       if (isOnline) {
-        ffText.innerText = "ONLINE: 40+ DİL AKTİF";
+        statusSpan.innerText = "ONLINE: 40+ DİL AKTİF";
       } else {
-        ffText.innerText = offCount > 0 ? `OFFLINE: ${offCount} PAKET HAZIR` : "İNTERNET GEREKLİ";
+        statusSpan.innerText = offCount > 0 ? `OFFLINE: ${offCount} PAKET HAZIR` : "İNTERNET GEREKLİ";
       }
 
-      // Alt modüllerin durumları
-      const tools = ['tileText', 'tilePhoto', 'tileDoc', 'tileGame'];
-      tools.forEach(id => {
+      // Kısıtlama mantığı
+      const restrictions = {
+        tilePhoto: isOnline,
+        tileDoc: isOnline,
+        tileText: isOnline || offCount > 0,
+        tileGame: true
+      };
+
+      Object.entries(restrictions).forEach(([id, ok]) => {
         const el = document.getElementById(id);
-        const icon = el.querySelector('.u-icon');
-        // Offline'da kısıtlılık hissi
-        if(!isOnline && id !== 'tileGame' && id !== 'tileText') {
-          icon.style.opacity = "0.2";
-          icon.style.filter = "grayscale(1)";
-        } else {
-          icon.style.opacity = "1";
-          icon.style.filter = "none";
-        }
+        if(!ok) el.classList.add('locked'); else el.classList.remove('locked');
       });
     }
 
@@ -200,10 +203,9 @@
       el.onclick = () => location.href = el.dataset.href;
     });
 
-    // Anlık takip
-    updateNeuralInterface();
-    window.addEventListener('online', updateNeuralInterface);
-    window.addEventListener('offline', updateNeuralInterface);
+    updateHub();
+    window.addEventListener('online', updateHub);
+    window.addEventListener('offline', updateHub);
   </script>
 </body>
 </html>
