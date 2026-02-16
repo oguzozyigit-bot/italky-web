@@ -54,47 +54,6 @@
       --mic-accent: var(--icon-bordo);
     }
 
-    /* TOP BACK ARROW */
-    .top-back{
-      position:absolute;
-      left:14px;
-      top: calc(14px + var(--safe-top));
-      z-index: 120;
-      width:38px;
-      height:38px;
-      border-radius:14px;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(0,0,0,.18);
-      color:#fff;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      cursor:pointer;
-      user-select:none;
-    }
-    .top-back:active{transform:scale(.96);}
-
-    /* CHAT CLEAR */
-    .top-clear{
-      position:absolute;
-      left:58px;
-      top: calc(14px + var(--safe-top));
-      z-index: 120;
-      width:38px;
-      height:38px;
-      border-radius:14px;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(0,0,0,.18);
-      color:#fff;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      cursor:pointer;
-      user-select:none;
-      font-size:16px;
-    }
-    .top-clear:active{transform:scale(.96);}
-
     .top-top, .bottom-top{
       width:100%;
       display:flex;
@@ -258,6 +217,34 @@
       z-index: 60;
     }
 
+    /* ✅ Mic cluster: Ana Sayfa + Mic + Temizle (mavi mic yanına) */
+    .mic-cluster{
+      width:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:12px;
+    }
+
+    .miniBtn{
+      height:46px;
+      padding: 0 12px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.18);
+      color:#fff;
+      font-weight: 1000;
+      font-size: 12px;
+      letter-spacing:.2px;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      cursor:pointer;
+      user-select:none;
+    }
+    .miniBtn:active{ transform: scale(.98); }
+    .miniBtn svg{ width:16px; height:16px; stroke:#fff; stroke-width:2.2; fill:none; opacity:.92; }
+
     .btn-mic{
       width:78px;
       height:78px;
@@ -331,6 +318,9 @@
       cursor:pointer;
       position:relative;
       overflow:hidden;
+
+      transition: transform .38s cubic-bezier(.22,1,.36,1);
+      will-change: transform;
     }
     .logo-text{
       font-family:"Space Grotesk",sans-serif;
@@ -366,6 +356,21 @@
     .logo-wave .bar:nth-child(4){animation-delay:.15s}
     .logo-wave .bar:nth-child(5){animation-delay:.0s}
     @keyframes bounce{0%,100%{height:10px} 50%{height:40px}}
+
+    /* ✅ LOGO SHOW: nereye dönsün? */
+    #frameRoot.focus-top .logo-capsule{
+      transform: translateY(-18px) rotate(180deg);
+    }
+    #frameRoot.focus-bot .logo-capsule{
+      transform: translateY(18px) rotate(0deg);
+    }
+    /* hoparlör tarafı (çeviri balonu hangi tarafta çıktıysa) */
+    #frameRoot.spk-top .logo-capsule{
+      transform: translateY(-14px) rotate(180deg) scale(1.02);
+    }
+    #frameRoot.spk-bot .logo-capsule{
+      transform: translateY(14px) rotate(0deg) scale(1.02);
+    }
   </style>
 </head>
 
@@ -373,13 +378,6 @@
   <div class="container">
 
     <div class="half-screen top" id="topSection">
-      <button class="top-back" id="topBack" title="Başa dön">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M15 18l-6-6 6-6"/>
-        </svg>
-      </button>
-
-      <button class="top-clear" id="clearChat" title="Sohbeti temizle">🧹</button>
 
       <div class="top-top">
         <button class="lang-trigger" id="topLangBtn">
@@ -400,14 +398,29 @@
 
       <div class="chat-body" id="topBody"></div>
 
+      <!-- ✅ ACTIONS + MIC (mavi mic yanına) -->
       <div class="mic-wrap">
-        <button class="btn-mic" id="topMic" title="Mikrofon">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
-            <path d="M19 11v1a7 7 0 0 1-14 0v-1"/>
-            <path d="M12 19v3"/>
-          </svg>
-        </button>
+        <div class="mic-cluster">
+          <button class="miniBtn" id="homeMini" type="button" title="Ana sayfa">
+            <svg viewBox="0 0 24 24">
+              <path d="M3 10.5L12 3l9 7.5"/>
+              <path d="M5 10v10h14V10"/>
+            </svg>
+            Ana Sayfa
+          </button>
+
+          <button class="btn-mic" id="topMic" title="Mikrofon">
+            <svg viewBox="0 0 24 24">
+              <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
+              <path d="M19 11v1a7 7 0 0 1-14 0v-1"/>
+              <path d="M12 19v3"/>
+            </svg>
+          </button>
+
+          <button class="miniBtn" id="clearChat" type="button" title="Sohbeti temizle">
+            🧹 Temizle
+          </button>
+        </div>
       </div>
     </div>
 
@@ -453,10 +466,79 @@
   </div>
 
   <script type="module" src="/js/facetoface_page.js"></script>
+
   <script>
-    // ✅ Geri dönüş ve Home işlevlerini basitçe bağladık
-    document.getElementById('topBack').addEventListener('click', () => { history.back(); });
-    document.getElementById('homeBtn').addEventListener('click', () => { window.location.href = '/pages/home.html'; });
+    // ✅ Ana sayfa navigasyonları
+    const HOME = '/pages/home.html';
+    document.getElementById('homeBtn')?.addEventListener('click', ()=> location.href = HOME);
+    document.getElementById('homeMini')?.addEventListener('click', ()=> location.href = HOME);
+
+    // ✅ Logo şov: hangi mic dinliyorsa o tarafa, ses/çeviri hangi tarafa geldiyse oraya
+    const root = document.getElementById('frameRoot');
+    const topMic = document.getElementById('topMic');
+    const botMic = document.getElementById('botMic');
+    const topBody = document.getElementById('topBody');
+    const botBody = document.getElementById('botBody');
+
+    function setFocus(cls){
+      root.classList.remove('focus-top','focus-bot','spk-top','spk-bot');
+      root.classList.add(cls);
+    }
+
+    // Mic “listening” class’ını izleyerek taraf belirle
+    const moMic = new MutationObserver(()=>{
+      const topOn = topMic?.classList.contains('listening');
+      const botOn = botMic?.classList.contains('listening');
+
+      if(topOn){
+        root.classList.add('listening');
+        setFocus('focus-top');
+      }else if(botOn){
+        root.classList.add('listening');
+        setFocus('focus-bot');
+      }else{
+        root.classList.remove('listening');
+        // listening bittiğinde son çeviri hangi tarafa geldiyse oraya dön (spk-* bunu zaten set edecek)
+      }
+    });
+    if(topMic) moMic.observe(topMic, { attributes:true, attributeFilter:['class'] });
+    if(botMic) moMic.observe(botMic, { attributes:true, attributeFilter:['class'] });
+
+    // Çeviri balonu (bubble.me) hangi tarafa eklenirse “hoparlör tarafı” orasıdır
+    const moTop = new MutationObserver((mut)=>{
+      for(const m of mut){
+        for(const n of m.addedNodes){
+          if(n && n.classList && n.classList.contains('bubble') && n.classList.contains('me')){
+            root.classList.remove('focus-top','focus-bot');
+            root.classList.add('spk-top');
+            // kısa süre sonra spk state’i normal focus’a bırakabilirsin
+            setTimeout(()=>{ root.classList.remove('spk-top'); }, 900);
+            return;
+          }
+        }
+      }
+    });
+    const moBot = new MutationObserver((mut)=>{
+      for(const m of mut){
+        for(const n of m.addedNodes){
+          if(n && n.classList && n.classList.contains('bubble') && n.classList.contains('me')){
+            root.classList.remove('focus-top','focus-bot');
+            root.classList.add('spk-bot');
+            setTimeout(()=>{ root.classList.remove('spk-bot'); }, 900);
+            return;
+          }
+        }
+      }
+    });
+    if(topBody) moTop.observe(topBody, { childList:true });
+    if(botBody) moBot.observe(botBody, { childList:true });
+
+    // Temizle
+    document.getElementById('clearChat')?.addEventListener('click', ()=>{
+      // facetoface_page.js zaten clearChat() bağlıysa sorun olmaz; burada sadece UI tarafı
+      topBody && (topBody.innerHTML = '');
+      botBody && (botBody.innerHTML = '');
+    });
   </script>
 </body>
 </html>
