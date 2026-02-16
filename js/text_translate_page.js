@@ -1,11 +1,10 @@
-// FILE: /js/text_translate_page.js — FINAL (Shell uyumlu + AUTO fix)
+// FILE: /js/text_translate_page.js — FINAL (NO AUTO, default EN->TR, sheet fix)
 import { apiPOST } from "/js/api.js";
 import { getSiteLang } from "/js/i18n.js";
 import { supabase } from "/js/supabase_client.js";
 import { ensureAuthAndCacheUser } from "/js/auth.js";
 
 const $ = (id) => document.getElementById(id);
-
 const LOGIN_PATH = "/pages/login.html";
 
 function toast(msg){
@@ -17,9 +16,7 @@ function toast(msg){
   window.__to = setTimeout(()=> el.classList.remove("show"), 1800);
 }
 
-/* ===============================
-   UI language
-=============================== */
+/* UI lang */
 function getSystemUILang(){
   try{
     const l = String(getSiteLang?.() || "").toLowerCase().trim();
@@ -33,26 +30,12 @@ function getSystemUILang(){
 }
 let UI_LANG = getSystemUILang();
 
-const AUTO_LABELS = {
-  tr: "Dili Algıla",
-  en: "Detect language",
-  de: "Sprache erkennen",
-  it: "Rileva lingua",
-  fr: "Détecter la langue",
-  es: "Detectar idioma",
-  ru: "Определить язык"
-};
-function autoLabel(){ return AUTO_LABELS[UI_LANG] || AUTO_LABELS.tr; }
 function sourceLabel(){ return ({ tr:"Kaynak Dil", en:"Source" }[UI_LANG] || "Kaynak Dil"); }
 function targetLabel(){ return ({ tr:"Hedef Dil", en:"Target" }[UI_LANG] || "Hedef Dil"); }
 function searchLabel(){ return ({ tr:"Ara…", en:"Search…" }[UI_LANG] || "Ara…"); }
 
-/* ===============================
-   LANG registry (wide)
-=============================== */
+/* LANGS (NO AUTO) — Facetoface’e yakın genişlik */
 const LANGS = [
-  { code:"auto", flag:"✨", bcp:"" },
-
   { code:"tr", flag:"🇹🇷", bcp:"tr-TR" },
   { code:"en", flag:"🇬🇧", bcp:"en-US" },
   { code:"de", flag:"🇩🇪", bcp:"de-DE" },
@@ -61,26 +44,43 @@ const LANGS = [
   { code:"es", flag:"🇪🇸", bcp:"es-ES" },
   { code:"pt", flag:"🇵🇹", bcp:"pt-PT" },
   { code:"ru", flag:"🇷🇺", bcp:"ru-RU" },
-  { code:"ar", flag:"🇸🇦", bcp:"ar-SA" },
-  { code:"fa", flag:"🇮🇷", bcp:"fa-IR" },
-  { code:"hi", flag:"🇮🇳", bcp:"hi-IN" },
-  { code:"bn", flag:"🇧🇩", bcp:"bn-BD" },
-  { code:"id", flag:"🇮🇩", bcp:"id-ID" },
-  { code:"ms", flag:"🇲🇾", bcp:"ms-MY" },
-  { code:"vi", flag:"🇻🇳", bcp:"vi-VN" },
-  { code:"th", flag:"🇹🇭", bcp:"th-TH" },
-  { code:"zh", flag:"🇨🇳", bcp:"zh-CN" },
-  { code:"ja", flag:"🇯🇵", bcp:"ja-JP" },
-  { code:"ko", flag:"🇰🇷", bcp:"ko-KR" },
-
-  { code:"az", flag:"🇦🇿", bcp:"az-AZ" },
   { code:"uk", flag:"🇺🇦", bcp:"uk-UA" },
+  { code:"bg", flag:"🇧🇬", bcp:"bg-BG" },
   { code:"el", flag:"🇬🇷", bcp:"el-GR" },
+  { code:"ro", flag:"🇷🇴", bcp:"ro-RO" },
+  { code:"sr", flag:"🇷🇸", bcp:"sr-RS" },
+  { code:"hr", flag:"🇭🇷", bcp:"hr-HR" },
+  { code:"bs", flag:"🇧🇦", bcp:"bs-BA" },
+  { code:"sq", flag:"🇦🇱", bcp:"sq-AL" },
+  { code:"mk", flag:"🇲🇰", bcp:"mk-MK" },
+  { code:"az", flag:"🇦🇿", bcp:"az-AZ" },
+  { code:"ka", flag:"🇬🇪", bcp:"ka-GE" },
+  { code:"hy", flag:"🇦🇲", bcp:"hy-AM" },
   { code:"nl", flag:"🇳🇱", bcp:"nl-NL" },
   { code:"sv", flag:"🇸🇪", bcp:"sv-SE" },
+  { code:"no", flag:"🇳🇴", bcp:"nb-NO" },
   { code:"da", flag:"🇩🇰", bcp:"da-DK" },
   { code:"fi", flag:"🇫🇮", bcp:"fi-FI" },
   { code:"pl", flag:"🇵🇱", bcp:"pl-PL" },
+  { code:"cs", flag:"🇨🇿", bcp:"cs-CZ" },
+  { code:"sk", flag:"🇸🇰", bcp:"sk-SK" },
+  { code:"hu", flag:"🇭🇺", bcp:"hu-HU" },
+  { code:"sl", flag:"🇸🇮", bcp:"sl-SI" },
+  { code:"ar", flag:"🇸🇦", bcp:"ar-SA" },
+  { code:"he", flag:"🇮🇱", bcp:"he-IL" },
+  { code:"fa", flag:"🇮🇷", bcp:"fa-IR" },
+  { code:"ur", flag:"🇵🇰", bcp:"ur-PK" },
+  { code:"hi", flag:"🇮🇳", bcp:"hi-IN" },
+  { code:"bn", flag:"🇧🇩", bcp:"bn-BD" },
+  { code:"th", flag:"🇹🇭", bcp:"th-TH" },
+  { code:"vi", flag:"🇻🇳", bcp:"vi-VN" },
+  { code:"id", flag:"🇮🇩", bcp:"id-ID" },
+  { code:"ms", flag:"🇲🇾", bcp:"ms-MY" },
+  { code:"zh", flag:"🇨🇳", bcp:"zh-CN" },
+  { code:"ja", flag:"🇯🇵", bcp:"ja-JP" },
+  { code:"ko", flag:"🇰🇷", bcp:"ko-KR" },
+  { code:"sw", flag:"🇰🇪", bcp:"sw-KE" },
+  { code:"am", flag:"🇪🇹", bcp:"am-ET" }
 ];
 
 function canonical(code){ return String(code||"").toLowerCase().split("-")[0]; }
@@ -91,7 +91,7 @@ function langObj(code){
 function langFlag(code){ return langObj(code)?.flag || "🌐"; }
 function bcp(code){ return langObj(code)?.bcp || "en-US"; }
 
-/* localized names */
+/* Localized names */
 let _dn = null;
 function getDisplayNames(){
   if(_dn && _dn.__lang === UI_LANG) return _dn;
@@ -104,22 +104,18 @@ function getDisplayNames(){
   return _dn;
 }
 function langLabel(code){
-  const c = String(code||"").toLowerCase();
-  if(c==="auto") return autoLabel();
   const dn = getDisplayNames();
-  const base = canonical(c);
+  const base = canonical(code);
   if(dn){
     try{
       const name = dn.of(base);
       if(name) return name;
     }catch{}
   }
-  return c.toUpperCase();
+  return String(code||"").toUpperCase();
 }
 
-/* ===============================
-   Auth grace (zıplama fix)
-=============================== */
+/* Auth grace */
 async function waitForSession(graceMs=1600){
   const t0 = Date.now();
   while(Date.now()-t0 < graceMs){
@@ -141,15 +137,12 @@ async function ensureLogged(){
   return session.user;
 }
 
-/* ===============================
-   State
-=============================== */
-const SS_FROM = "italky_text_from_v1";
-const SS_TO   = "italky_text_to_v1";
+/* State defaults (EN -> TR) */
+const SS_FROM = "italky_text_from_v2";
+const SS_TO   = "italky_text_to_v2";
 
-let fromLang = sessionStorage.getItem(SS_FROM) || "auto";
+let fromLang = sessionStorage.getItem(SS_FROM) || "en";
 let toLang   = sessionStorage.getItem(SS_TO) || "tr";
-let detectedFrom = null;
 
 function persist(){
   sessionStorage.setItem(SS_FROM, fromLang);
@@ -157,20 +150,14 @@ function persist(){
 }
 
 function setLangUI(){
-  const fromShown = (fromLang==="auto")
-    ? `${autoLabel()}${detectedFrom ? ` (${String(detectedFrom).toUpperCase()})` : ""}`
-    : langLabel(fromLang);
-
-  $("fromFlag") && ($("fromFlag").textContent = fromLang==="auto" ? (detectedFrom ? langFlag(detectedFrom) : "✨") : langFlag(fromLang));
-  $("fromLangTxt") && ($("fromLangTxt").textContent = fromShown);
+  $("fromFlag") && ($("fromFlag").textContent = langFlag(fromLang));
+  $("fromLangTxt") && ($("fromLangTxt").textContent = langLabel(fromLang));
 
   $("toFlag") && ($("toFlag").textContent = langFlag(toLang));
   $("toLangTxt") && ($("toLangTxt").textContent = langLabel(toLang));
 }
 
-/* ===============================
-   Sheet
-=============================== */
+/* Sheet */
 let sheetFor = "from";
 function openSheet(which){
   sheetFor = which;
@@ -191,7 +178,6 @@ function renderSheet(filter){
   const current = (sheetFor==="from") ? fromLang : toLang;
 
   const items = LANGS.filter(l=>{
-    if(sheetFor==="to" && l.code==="auto") return false;
     if(!q) return true;
     const label = langLabel(l.code).toLowerCase();
     const code = String(l.code).toLowerCase();
@@ -214,12 +200,7 @@ function renderSheet(filter){
   list.querySelectorAll(".sheetRow").forEach(row=>{
     row.addEventListener("click", ()=>{
       const code = row.getAttribute("data-code") || "en";
-      if(sheetFor==="from"){
-        fromLang = code;
-        detectedFrom = null;
-      }else{
-        toLang = code;
-      }
+      if(sheetFor==="from") fromLang = code; else toLang = code;
       persist();
       setLangUI();
       closeSheet();
@@ -228,30 +209,7 @@ function renderSheet(filter){
   });
 }
 
-/* ===============================
-   Helpers: detect TR quickly
-=============================== */
-function detectLightTR(text){
-  const tt = String(text||"").toLowerCase();
-  if(/[çğıöşü]/.test(tt)) return "tr";
-  const trHints = [" ve ", " bir ", " için ", " değil ", " merhaba", " selam", " nasılsın", " teşekkür"];
-  for(const h of trHints) if(tt.includes(h)) return "tr";
-  return "en";
-}
-
-function applyAutoTargetRule(detected){
-  const d = String(detected||"").toLowerCase().trim();
-  if(!d) return;
-  detectedFrom = d;
-  // auto kuralı: TR -> EN; diğer -> TR
-  toLang = (d==="tr") ? "en" : "tr";
-  persist();
-  setLangUI();
-}
-
-/* ===============================
-   Native TTS + Web fallback
-=============================== */
+/* TTS */
 function speak(text, langCode){
   const t = String(text||"").trim();
   if(!t) return;
@@ -270,9 +228,7 @@ function speak(text, langCode){
   }catch{}
 }
 
-/* ===============================
-   STT
-=============================== */
+/* STT */
 let sttBusy = false;
 function buildRecognizer(langCode){
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -291,8 +247,7 @@ function startSTT(){
   if(sttBusy) return;
 
   const micBtn = $("micIn");
-  const listenCode = (fromLang==="auto") ? "tr" : fromLang;
-  const rec = buildRecognizer(listenCode);
+  const rec = buildRecognizer(fromLang);
   if(!rec){ toast(UI_LANG==="tr" ? "Mic açılamadı" : "Mic failed"); return; }
 
   sttBusy = true;
@@ -304,11 +259,6 @@ function startSTT(){
     if(!txt) return;
 
     $("inText") && ($("inText").value = txt);
-
-    if(fromLang==="auto"){
-      applyAutoTargetRule(detectLightTR(txt));
-    }
-
     await doTranslate(true);
   };
   rec.onend = ()=>{
@@ -326,25 +276,11 @@ function startSTT(){
   }
 }
 
-/* ===============================
-   Translate (apiPOST) + AUTO fix
-   - from=auto iken source göndermiyoruz
-=============================== */
+/* Translate */
 async function translateViaApi(text, source, target){
-  const body = { text, target, to_lang: target };
-
-  // ✅ AUTO hatası fix: source=auto göndermiyoruz
-  if(source && source !== "auto"){
-    body.source = source;
-    body.from_lang = source;
-  }
-
+  const body = { text, source, target, from_lang: source, to_lang: target };
   const data = await apiPOST("/api/translate", body, { timeoutMs: 20000 });
-
-  const out = String(data?.translated || data?.translation || data?.text || "").trim();
-  const det = String(data?.detected || data?.source_lang || "").trim().toLowerCase();
-
-  return { out: out || "", detected: det || null };
+  return String(data?.translated || data?.translation || data?.text || "").trim();
 }
 
 async function doTranslate(silent=false){
@@ -356,44 +292,27 @@ async function doTranslate(silent=false){
 
   $("outText") && ($("outText").textContent = (UI_LANG==="tr" ? "Çevriliyor…" : "Translating…"));
 
-  const src = (fromLang==="auto") ? "auto" : fromLang;
-
   try{
-    const { out, detected } = await translateViaApi(text, src, toLang);
-
-    if(fromLang==="auto"){
-      applyAutoTargetRule(detected || detectLightTR(text));
-    }
-
+    const out = await translateViaApi(text, fromLang, toLang);
     $("outText") && ($("outText").textContent = out || "—");
-  }catch(e){
+  }catch{
     $("outText") && ($("outText").textContent = "—");
     if(!silent) toast(UI_LANG==="tr" ? "Çeviri alınamadı" : "Translate failed");
   }
 }
 
 function swapLang(){
-  if(fromLang==="auto"){
-    toast(UI_LANG==="tr" ? "Algıla açıkken değiştirilemez" : "Can't swap");
-    return;
-  }
   const a = fromLang; fromLang = toLang; toLang = a;
-  detectedFrom = null;
   persist();
   setLangUI();
 }
 
-/* ===============================
-   Boot
-=============================== */
+/* Boot */
 document.addEventListener("DOMContentLoaded", async ()=>{
   const u = await ensureLogged();
   if(!u) return;
 
-  // i18n safe
-  try{ applyI18n(document); }catch{}
   UI_LANG = getSystemUILang();
-
   setLangUI();
 
   $("fromLangBtn")?.addEventListener("click", ()=> openSheet("from"));
@@ -407,20 +326,15 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   $("clearBtn")?.addEventListener("click", ()=>{
     $("inText") && ($("inText").value = "");
     $("outText") && ($("outText").textContent = "—");
-    detectedFrom = null;
-    persist();
-    setLangUI();
   });
 
   $("translateBtn")?.addEventListener("click", ()=> doTranslate(false));
-
   $("micIn")?.addEventListener("click", startSTT);
 
   $("speakIn")?.addEventListener("click", ()=>{
     const txt = String($("inText")?.value||"").trim();
     if(!txt) return toast(UI_LANG==="tr" ? "Metin yok" : "No text");
-    const lang = (fromLang==="auto") ? (detectedFrom || detectLightTR(txt)) : fromLang;
-    speak(txt, lang);
+    speak(txt, fromLang);
   });
 
   $("speakOut")?.addEventListener("click", ()=>{
