@@ -3,6 +3,7 @@ import { STORAGE_KEY } from "/js/config.js";
 import { getSiteLang } from "/js/i18n.js";
 import { supabase } from "/js/supabase_client.js";
 import { ensureAuthAndCacheUser } from "/js/auth.js";
+import { setHeaderTokens } from "/js/ui_shell.js";
 
 const $ = (id)=>document.getElementById(id);
 
@@ -12,6 +13,7 @@ const API_BASE = "https://italky-api.onrender.com";
 // ✅ doğru yollar
 const LOGIN_PATH = "/pages/login.html";
 const HOME_PATH  = "/pages/home.html";
+const PROFILE_PATH = "/pages/profile.html";
 
 /* ===============================
    AUTH GUARD (Supabase session)
@@ -22,7 +24,6 @@ async function requireLogin(){
     location.replace(LOGIN_PATH);
     return false;
   }
-  // cache güncelle (header/token vb için)
   try{ await ensureAuthAndCacheUser(); }catch{}
   return true;
 }
@@ -121,7 +122,6 @@ function bcp(code){ return langObj(code)?.bcp || "en-US"; }
 function langLabel(code){
   const baseCode = canonicalLangCode(code);
   const dn = getDisplayNames();
-
   if(dn){
     try{
       const name = dn.of(baseCode);
@@ -138,6 +138,45 @@ function labelChip(code){ return `${langFlag(code)} ${langLabel(code)}`; }
    =============================== */
 let topLang = "en";
 let botLang = "tr";
+
+/* ===============================
+   ✅ 1 Jeton = 60 dakika
+   - İlk mic kullanımında RPC çağır
+   - 60 dk içinde yeniden çağırma
+   =============================== */
+let sessionGranted = false;
+
+async function ensureFacetofaceSession(){
+  if(sessionGranted) return true;
+
+  try{
+    const { data, error } = await supabase.rpc("start_facetoface_session");
+    if(error){
+      const msg = String(error.message||"");
+      if(msg.includes("INSUFFICIENT_TOKENS")){
+        alert("Jeton yetersiz. Devam etmek için jeton yükleyin.");
+        location.href = PROFILE_PATH;
+        return false;
+      }
+      console.warn(error);
+      alert("FaceToFace oturumu başlatılamadı.");
+      return false;
+    }
+
+    const row = data?.[0] || {};
+    if(row?.tokens_left != null){
+      try{ setHeaderTokens(row.tokens_left); }catch{}
+    }
+
+    // charged true ise 1 jeton düştü; false ise aktif session vardı
+    sessionGranted = true;
+    return true;
+  }catch(e){
+    console.warn(e);
+    alert("FaceToFace oturumu başlatılamadı.");
+    return false;
+  }
+}
 
 /* ===============================
    TTS
@@ -157,7 +196,6 @@ function speak(text, langCode) {
   const t = String(text || "").trim();
   if (!t) return;
 
-  // APK NativeTTS
   if(nativeTtsAvailable()){
     try{
       window.NativeTTS.speak(t, String(langCode || "en"));
@@ -167,7 +205,6 @@ function speak(text, langCode) {
     }
   }
 
-  // Web fallback
   if (!window.speechSynthesis) return;
   try{ window.speechSynthesis.cancel(); }catch{}
 
@@ -357,6 +394,10 @@ function buildRecognizer(langCode){
 }
 
 async function start(which){
+  // ✅ İlk kullanımda oturum/jeton kontrol
+  const ok = await ensureFacetofaceSession();
+  if(!ok) return;
+
   const isAndroid = navigator.userAgent.includes("Android");
   if(location.protocol !== "https:" && location.hostname !== "localhost" && !isAndroid){
     alert("Mikrofon için HTTPS gerekli.");
@@ -442,7 +483,9 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   if($("topLangTxt")) $("topLangTxt").textContent = labelChip(topLang);
   if($("botLangTxt")) $("botLangTxt").textContent = labelChip(botLang);
 
-  bindNav(); bindLangButtons(); bindMicButtons();
+  bindNav();
+  bindLangButtons();
+  bindMicButtons();
 
   try{ window.speechSynthesis?.getVoices?.(); }catch{}
 
