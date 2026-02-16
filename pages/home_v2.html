@@ -3,110 +3,129 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>italkyAI • Pro Hub</title>
+  <title>italkyAI • Global Hub</title>
   <style>
     :root {
       --glow-online: #00ffcc;
       --glow-offline: #ff3366;
-      --academy-color: #4338ca; /* Deep Sapphire */
-      --glass: rgba(255, 255, 255, 0.03);
+      --academy-main: #1e1b4b; /* Elit Lacivert */
+      --academy-gold: #fbbf24;
     }
 
+    /* Gizli Scroll ve Layout Fix */
     #pageContent {
       height: 100%;
       display: flex;
       flex-direction: column;
       gap: 20px;
-      padding-bottom: 30px;
+      overflow-y: auto;
+      scrollbar-width: none; /* Firefox */
+      -ms-overflow-style: none; /* IE/Edge */
+      padding: 5px 0 20px;
     }
+    #pageContent::-webkit-scrollbar { display: none; } /* Chrome/Safari */
 
-    /* --- 1. PRESTIGE: ACADEMY LOGO & CARD --- */
-    .academy-card {
-      background: linear-gradient(135deg, #0f172a 0%, var(--academy-color) 100%);
-      border-radius: 30px;
-      padding: 24px;
-      border: 1px solid rgba(255,255,255,0.1);
+    /* --- 1. ACADEMY: ELİT OKUL TASARIMI --- */
+    .academy-premium {
+      background: linear-gradient(135deg, var(--academy-main) 0%, #000 100%);
+      border-radius: 35px;
+      padding: 26px;
+      border: 1px solid rgba(251, 191, 36, 0.2);
       display: flex; align-items: center; gap: 20px;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+      box-shadow: 0 25px 50px rgba(0,0,0,0.6);
       cursor: pointer;
+      position: relative;
+    }
+    .academy-premium::before {
+      content: ""; position: absolute; inset: 0; border-radius: 35px;
+      padding: 1px; background: linear-gradient(to right, var(--academy-gold), transparent);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor; mask-composite: exclude;
     }
 
-    /* Özel Çizim Academy Logosu */
-    .academy-logo {
-      width: 60px; height: 60px;
-      background: #fff; border-radius: 18px;
+    .academy-logo-pro {
+      width: 65px; height: 65px; background: #fff; border-radius: 20px;
       display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 0 20px rgba(67, 56, 202, 0.5);
+      box-shadow: 0 0 25px rgba(251, 191, 36, 0.4); flex-shrink: 0;
+    }
+    .academy-logo-pro span { color: var(--academy-main); font-weight: 1000; font-size: 28px; font-family: serif; }
+
+    .academy-text h2 { margin: 0; font-size: 21px; font-weight: 900; color: #fff; }
+    .academy-text p { margin: 3px 0 0; font-size: 11px; color: var(--academy-gold); font-weight: 800; letter-spacing: 0.5px; }
+
+    /* --- 2. FACETOFACE: CANLI ENERJİ PORTALI --- */
+    .portal-zone {
       flex-shrink: 0;
-    }
-    .logo-symbol {
-      width: 30px; height: 30px;
-      border: 4px solid var(--academy-color);
-      border-top-left-radius: 10px; border-bottom-right-radius: 10px;
-      position: relative;
-    }
-    .logo-symbol::after {
-      content: ""; position: absolute; top: -8px; right: -8px;
-      width: 12px; height: 12px; background: #f59e0b; border-radius: 50%;
-    }
-
-    .academy-text h2 { margin: 0; font-size: 20px; font-weight: 900; letter-spacing: -0.5px; }
-    .academy-text p { margin: 2px 0 0; font-size: 11px; color: rgba(255,255,255,0.5); font-weight: 700; }
-
-    /* --- 2. CORE: FACETOFACE (DİNAMİK) --- */
-    .portal-section {
-      flex: 1;
+      padding: 40px 0;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      position: relative;
     }
-    .portal-orb {
-      width: 150px; height: 150px;
-      border-radius: 50%;
-      background: #000;
+    .portal-orb-v2 {
+      width: 170px; height: 170px; border-radius: 50%;
+      position: relative; display: flex; align-items: center; justify-content: center;
+      background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
+    }
+
+    /* Karşılıklı Dönen Küreler (Lacivert & Bordo) */
+    .orbit-container {
+      position: absolute; inset: -10px; border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.05);
+      animation: rotateOrbit 4s linear infinite;
+    }
+    .energy-ball {
+      position: absolute; width: 14px; height: 14px; border-radius: 50%;
+      filter: blur(2px); box-shadow: 0 0 15px currentColor;
+    }
+    .ball-blue { top: -7px; left: 50%; transform: translateX(-50%); color: #1e3a8a; background: #1e3a8a; }
+    .ball-bordo { bottom: -7px; left: 50%; transform: translateX(-50%); color: #801336; background: #801336; }
+
+    .orb-center {
+      width: 110px; height: 110px; background: #000; border-radius: 50%;
       border: 2px solid var(--status-color);
-      box-shadow: 0 0 40px -5px var(--status-color);
+      box-shadow: 0 0 40px -10px var(--status-color);
       display: flex; align-items: center; justify-content: center;
-      cursor: pointer; transition: 0.5s;
+      animation: breathe 3s infinite ease-in-out;
+      z-index: 5;
     }
-    .portal-orb svg { width: 50px; stroke: #fff; filter: drop-shadow(0 0 10px var(--status-color)); }
 
-    .status-info {
-      text-align: center; margin-top: 15px;
+    .portal-info { text-align: center; margin-top: 25px; }
+    .portal-info h1 { margin: 0; font-size: 32px; font-weight: 900; letter-spacing: -1px; }
+    .portal-info p { margin: 5px 0 0; font-size: 13px; font-weight: 800; color: rgba(255,255,255,0.5); }
+    .live-status { display: block; margin-top: 10px; font-size: 10px; font-weight: 900; color: var(--status-color); letter-spacing: 2px; }
+
+    /* --- 3. PRO GRID: TAM İSİMLER --- */
+    .full-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding-bottom: 10px;
     }
-    .status-info h1 { margin: 0; font-size: 28px; font-weight: 900; }
-    .status-info span { font-size: 11px; font-weight: 800; color: var(--status-color); letter-spacing: 1px; }
-
-    /* --- 3. PRO GRID: MODÜLLER --- */
-    .pro-grid {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+    .pro-tile {
+      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 28px; padding: 20px; display: flex; align-items: center; gap: 14px;
+      cursor: pointer; transition: 0.3s;
     }
-    .pro-btn {
-      background: var(--glass);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 26px;
-      padding: 18px;
-      display: flex; align-items: center; gap: 12px;
-      cursor: pointer;
+    .pro-tile:active { transform: scale(0.95); }
+
+    .tile-icon {
+      width: 46px; height: 46px; border-radius: 15px; background: rgba(255,255,255,0.05);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
     }
-    .pro-btn:active { transform: scale(0.96); }
+    .tile-icon::before { font-weight: 900; font-size: 18px; }
 
-    /* Özel CSS İkonlar */
-    .icon-box {
-      width: 44px; height: 44px; border-radius: 14px;
-      display: flex; align-items: center; justify-content: center;
-      background: rgba(255,255,255,0.05); flex-shrink: 0;
+    .draw-txt::before { content: "Aa"; color: #34d399; }
+    .draw-cam::before { content: "◎"; color: #60a5fa; }
+    .draw-doc::before { content: "≡"; color: #f472b6; }
+    .draw-fun::before { content: "🎯"; }
+
+    .pro-tile label { font-size: 12px; font-weight: 800; color: #fff; line-height: 1.2; }
+
+    /* Animasyonlar */
+    @keyframes rotateOrbit { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    @keyframes breathe {
+      0%, 100% { transform: scale(1); opacity: 0.9; }
+      50% { transform: scale(1.05); opacity: 1; }
     }
-    .i-text::before { content: "Aa"; font-weight: 900; color: #34d399; }
-    .i-photo::before { content: "◎"; font-weight: 900; color: #60a5fa; font-size: 20px; }
-    .i-doc::before { content: "≡"; font-weight: 900; color: #f472b6; font-size: 20px; }
-    .i-game::before { content: "🎮"; font-size: 18px; }
 
-    .pro-btn label { font-size: 13px; font-weight: 800; line-height: 1.2; color: #f8fafc; }
-
-    /* Durum Renkleri */
     .is-online { --status-color: var(--glow-online); }
     .is-offline { --status-color: var(--glow-offline); }
-
     .locked { opacity: 0.2; filter: grayscale(1); pointer-events: none; }
   </style>
 </head>
@@ -114,48 +133,51 @@
 <body class="is-online">
   <div id="pageContent">
     
-    <div class="academy-card" id="btnAcademy" data-href="/pages/teacher_select.html">
-      <div class="academy-logo">
-        <div class="logo-symbol"></div>
-      </div>
+    <div class="academy-premium" id="btnAcademy" data-href="/pages/teacher_select.html">
+      <div class="academy-logo-pro"><span>it</span></div>
       <div class="academy-text">
         <h2>italky Academy</h2>
-        <p>KİŞİSELLEŞTİRİLMİŞ EĞİTİM OKULU</p>
+        <p>YAPAY ZEKA İLE DİL EĞİTİMİ</p>
       </div>
     </div>
 
-    <div class="portal-section" id="btnFfStart" data-href="/pages/facetoface.html">
-      <div class="portal-orb">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
+    <div class="portal-zone" id="btnFfStart" data-href="/pages/facetoface.html">
+      <div class="portal-orb-v2">
+        <div class="orbit-container">
+          <div class="energy-ball ball-blue"></div>
+          <div class="energy-ball ball-bordo"></div>
+        </div>
+        <div class="orb-center">
+          <svg width="45" height="45" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
+        </div>
       </div>
-      <div class="status-info">
+      <div class="portal-info">
         <h1>FaceToFace</h1>
-        <span id="ffStatus">SİSTEM ÇEVRİMİÇİ</span>
+        <p>Yüzyüze Anlık Çeviri</p>
+        <span class="live-status" id="ffLiveText">SİSTEM ÇEVRİMİÇİ</span>
       </div>
     </div>
 
-    <div class="pro-grid">
-      
-      <div class="pro-btn" id="tileText" data-href="/pages/text_translate.html">
-        <div class="icon-box i-text"></div>
+    <div class="full-grid">
+      <div class="pro-tile" id="tileText" data-href="/pages/text_translate.html">
+        <div class="tile-icon draw-txt"></div>
         <label>Metinden<br>Çeviri</label>
       </div>
 
-      <div class="pro-btn" id="tilePhoto" data-href="/pages/photo.html">
-        <div class="icon-box i-photo"></div>
+      <div class="pro-tile" id="tilePhoto" data-href="/pages/photo.html">
+        <div class="tile-icon draw-cam"></div>
         <label>Fotoğraftan<br>Çeviri</label>
       </div>
 
-      <div class="pro-btn" id="tileDoc" data-href="/pages/document.html">
-        <div class="icon-box i-doc"></div>
+      <div class="pro-tile" id="tileDoc" data-href="/pages/document.html">
+        <div class="tile-icon draw-doc"></div>
         <label>Belgeden<br>Çeviri</label>
       </div>
 
-      <div class="pro-btn" id="tileGame" data-href="/pages/game.html">
-        <div class="icon-box i-game"></div>
+      <div class="pro-tile" id="tileGame" data-href="/pages/game.html">
+        <div class="tile-icon draw-fun"></div>
         <label>Eğlenerek<br>Öğren</label>
       </div>
-
     </div>
 
   </div>
@@ -171,41 +193,40 @@
     if (cached?.tokens != null) setHeaderTokens(cached.tokens);
     bootPage({ protectedPage: true, header: { nameId: "userName", picId: "userPic" } });
 
-    function updateHub() {
+    function syncUI() {
       const isOnline = navigator.onLine;
       const user = JSON.parse(localStorage.getItem('italky_user_v1') || '{}');
-      const offCount = (user.offline_langs || []).length;
+      const packCount = (user.offline_langs || []).length;
 
       document.body.className = isOnline ? 'is-online' : 'is-offline';
 
-      const statusSpan = document.getElementById('ffStatus');
+      const liveText = document.getElementById('ffLiveText');
       if (isOnline) {
-        statusSpan.innerText = "ONLINE: 40+ DİL AKTİF";
+        liveText.innerText = "● 40+ DİL ÇEVRİMİÇİ";
       } else {
-        statusSpan.innerText = offCount > 0 ? `OFFLINE: ${offCount} PAKET HAZIR` : "İNTERNET GEREKLİ";
+        liveText.innerText = packCount > 0 ? `● ${packCount} PAKET AKTİF` : "● İNTERNET GEREKLİ";
       }
 
-      // Kısıtlama mantığı
-      const restrictions = {
+      const states = {
         tilePhoto: isOnline,
         tileDoc: isOnline,
-        tileText: isOnline || offCount > 0,
+        tileText: isOnline || packCount > 0,
         tileGame: true
       };
 
-      Object.entries(restrictions).forEach(([id, ok]) => {
+      Object.entries(states).forEach(([id, ok]) => {
         const el = document.getElementById(id);
         if(!ok) el.classList.add('locked'); else el.classList.remove('locked');
       });
     }
 
     document.querySelectorAll("[data-href]").forEach(el => {
-      el.onclick = () => location.href = el.dataset.href;
+      el.onclick = () => { if(!el.classList.contains('locked')) location.href = el.dataset.href; };
     });
 
-    updateHub();
-    window.addEventListener('online', updateHub);
-    window.addEventListener('offline', updateHub);
+    syncUI();
+    window.addEventListener('online', syncUI);
+    window.addEventListener('offline', syncUI);
   </script>
 </body>
 </html>
