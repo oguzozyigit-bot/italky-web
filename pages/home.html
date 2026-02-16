@@ -1,41 +1,131 @@
-i/* ✅ Sayfa Düzeni Güncellemesi */
-#pageContent {
-  height: calc(100vh - var(--footer-h) - env(safe-area-inset-top) - 65px); 
-  display: flex;
-  flex-direction: column;
-  padding: 10px 15px 0; /* Yanlardan biraz boşluk */
-  box-sizing: border-box;
-  overflow: hidden;
-}
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>italkyAI • Hub</title>
+  <style>
+    :root {
+      --ai-gradient: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
+      --footer-h: 92px; 
+    }
 
-/* Academy ve FaceToFace Üst Grup */
-.top-group {
-  display: flex;
-  flex-direction: column;
-  gap: 12px; /* Academy ve FaceToFace arası mesafe */
-}
+    body { margin: 0; background: #000; font-family: system-ui, -apple-system, sans-serif; color: #fff; }
 
-/* Esnek Boşluk: Diğerlerini aşağı iter */
-.spacer {
-  flex: 1;
-}
+    /* ✅ ANA DÜZEN */
+    #pageContent {
+      height: calc(100vh - var(--footer-h) - env(safe-area-inset-top) - 65px); 
+      display: flex;
+      flex-direction: column;
+      padding: 10px 16px 0;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
 
-/* Grid ve Alt Bar Grubu */
-.bottom-group {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-bottom: 8px;
-}
+    /* Üstteki Elemanları Grupla */
+    .top-section {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
 
-/* Tile İçerik Daraltma (Üst üste binmeyi önler) */
-.pro-tile {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 20px; 
-  padding: 10px 12px; /* Padding biraz azaldı */
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-}
+    /* Ortadaki Esnek Boşluk (Alttakileri aşağı iter) */
+    .flex-spacer {
+      flex: 1;
+    }
+
+    /* Alttaki Elemanları Grupla */
+    .bottom-section {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    /* Bileşen Tasarımları */
+    .academy-pro {
+      background: rgba(255, 255, 255, 0.05); border-radius: 26px; padding: 15px 20px;
+      border: 1px solid rgba(255, 255, 255, 0.1); display: flex; align-items: center; gap: 16px; cursor: pointer;
+    }
+    .spectrum-logo { gap: 3px; display: flex; align-items: center; }
+    .bar { width: 3px; border-radius: 10px; }
+    .bar-1 { height: 10px; background: #ff0000; } .bar-4 { height: 32px; background: #00ff00; } .bar-7 { height: 10px; background: #8b00ff; }
+    
+    .portal-zone { display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; padding: 10px 0; }
+    .neural-orb { width: 110px; height: 110px; position: relative; display: flex; align-items: center; justify-content: center; }
+    .ai-ring { position: absolute; inset: -4px; border-radius: 50%; padding: 2.5px; background: var(--ai-gradient); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); mask-composite: exclude; animation: rotate 15s linear infinite; }
+    .ai-core { width: 75px; height: 75px; background: #000; border-radius: 50%; border: 2.5px solid #6366f1; display: flex; align-items: center; justify-content: center; animation: breathe 4s infinite ease-in-out; z-index: 10; }
+
+    .pro-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .pro-tile { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 22px; padding: 12px; display: flex; align-items: center; gap: 10px; cursor: pointer; }
+    .tile-icon { width: 36px; height: 36px; border-radius: 12px; background: rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    
+    .long-bar { background: rgba(255, 255, 255, 0.05); border-radius: 24px; padding: 14px 20px; border: 1px solid rgba(99, 102, 241, 0.3); display: flex; align-items: center; gap: 16px; cursor: pointer; }
+
+    @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    @keyframes breathe { 0%, 100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.05); opacity: 1; } }
+  </style>
+</head>
+
+<body>
+  <div id="pageContent">
+
+    <div class="top-section">
+      <div class="academy-pro" data-nav="/pages/teacher_select.html">
+        <div class="spectrum-logo">
+          <div class="bar bar-1" style="height:10px; background:#ff0000"></div>
+          <div class="bar bar-4" style="height:30px; background:#00ff00"></div>
+          <div class="bar bar-7" style="height:10px; background:#8b00ff"></div>
+        </div>
+        <div class="academy-text">
+          <h2 style="margin:0; font-size:18px;">italky <span style="color:#6366f1">Academy</span></h2>
+          <p style="margin:0; font-size:10px; color:rgba(255,255,255,0.4)">YAPAY ZEKA İLE DİL EĞİTİMİ</p>
+        </div>
+      </div>
+
+      <div class="portal-zone" data-nav="/pages/facetoface.html">
+        <div class="neural-orb">
+          <div class="ai-ring"></div>
+          <div class="ai-core">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
+          </div>
+        </div>
+        <div style="text-align:center; margin-top:10px;">
+          <h1 style="margin:0; font-size:24px;">FaceToFace</h1>
+          <p style="margin:0; font-size:12px; color:rgba(255,255,255,0.5)">Yüzyüze Anlık Çeviri</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex-spacer"></div>
+
+    <div class="bottom-section">
+      <div class="pro-grid">
+        <div class="pro-tile" data-nav="/pages/text_translate.html"><div class="tile-icon">Aa</div><label>Metinden<br>Çeviri</label></div>
+        <div class="pro-tile" data-nav="/pages/photo.html"><div class="tile-icon">◎</div><label>Fotoğraftan<br>Çeviri</label></div>
+        <div class="pro-tile" data-nav="/pages/document.html"><div class="tile-icon">≡</div><label>Belgeden<br>Çeviri</label></div>
+        <div class="pro-tile" data-nav="/pages/game.html"><div class="tile-icon">🎯</div><label>Eğlenerek<br>Öğren</label></div>
+        <div class="pro-tile" data-nav="/pages/teacher_select.html"><div class="tile-icon">💬</div><label>Sohbet AI</label></div>
+        <div class="pro-tile" data-nav="/pages/teacher_select.html"><div class="tile-icon">🎓</div><label>Chat AI</label></div>
+      </div>
+
+      <div class="long-bar" data-nav="/pages/meeting.html">
+        <div class="tile-icon">📹</div>
+        <div>
+          <h2 style="margin:0; font-size:18px;">Online Toplantı</h2>
+          <p style="margin:0; font-size:10px; color:rgba(255,255,255,0.4)">CANLI ÇEVİRİ ODALARI</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script type="module">
+    import { mountShell } from "/js/ui_shell.js";
+    mountShell({ scroll: "none" });
+    document.querySelectorAll("[data-nav]").forEach(el => {
+      el.onclick = () => window.location.assign(el.getAttribute("data-nav"));
+    });
+  </script>
+</body>
+</html>
