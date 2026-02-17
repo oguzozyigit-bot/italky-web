@@ -1,16 +1,67 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>italkyAI</title>
-  <meta http-equiv="refresh" content="0; url=/pages/login.html" />
+
   <script>
-    // ✅ hard redirect (refresh loop olmasın)
-    location.replace("/pages/login.html");
+    (function () {
+
+      const HOME = "/pages/home.html";
+      const LOGIN = "/pages/login.html";
+      const STORAGE_KEY = "italky_user_v1";
+
+      function hasLocalUser() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return false;
+          const user = JSON.parse(raw);
+          return !!user?.email;
+        } catch {
+          return false;
+        }
+      }
+
+      function isNative() {
+        return !!(window.Native && typeof window.Native.startGoogleLogin === "function");
+      }
+
+      function go(url) {
+        location.replace(url);
+      }
+
+      // 🔥 1) Eğer local user varsa direkt HOME
+      if (hasLocalUser()) {
+        go(HOME);
+        return;
+      }
+
+      // 🔥 2) APK ise direkt LOGIN'e
+      if (isNative()) {
+        go(LOGIN);
+        return;
+      }
+
+      // 🔥 3) Web tarafı → Supabase session kontrolü
+      window.addEventListener("load", async function () {
+        try {
+          const { supabase } = await import("/js/supabase_client.js");
+          const { data: { session } } = await supabase.auth.getSession();
+
+          if (session) {
+            go(HOME);
+          } else {
+            go(LOGIN);
+          }
+        } catch {
+          go(LOGIN);
+        }
+      });
+
+    })();
   </script>
+
 </head>
-<body style="margin:0;background:#02000f;color:#fff;font-family:system-ui;display:flex;align-items:center;justify-content:center;height:100vh">
-  Yönlendiriliyor…
-</body>
+<body style="background:#02000f;"></body>
 </html>
