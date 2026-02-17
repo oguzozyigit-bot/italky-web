@@ -1,0 +1,64 @@
+<!-- FILE: /pages/auth_native.html -->
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+  <title>italkyAI • Giriş Tamamlanıyor</title>
+  <style>
+    html,body{margin:0;height:100%;background:#030014;color:#fff;font-family:system-ui}
+    .wrap{height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px}
+    .muted{opacity:.65;font-size:12px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div style="font-weight:900;font-size:18px;">Giriş tamamlanıyor…</div>
+    <div class="muted">Lütfen bekleyin</div>
+  </div>
+
+  <script type="module">
+    import { supabase } from "/js/supabase_client.js";
+    import { ensureAuthAndCacheUser } from "/js/auth.js";
+
+    const HOME = "/pages/home.html";
+    const LOGIN = "/pages/login.html";
+    const KEY = "italky_native_id_token";
+
+    async function run(){
+      const idToken = (localStorage.getItem(KEY) || "").trim();
+      if(!idToken){
+        location.replace(LOGIN);
+        return;
+      }
+
+      // token tek kullanımlık gibi davranalım
+      try{ localStorage.removeItem(KEY); }catch(_){}
+
+      try{
+        // ✅ Supabase session aç (asıl kritik)
+        const { data, error } = await supabase.auth.signInWithIdToken({
+          provider: "google",
+          token: idToken
+        });
+
+        if(error){
+          console.error(error);
+          location.replace(LOGIN);
+          return;
+        }
+
+        // ✅ profile/cache
+        await ensureAuthAndCacheUser();
+
+        location.replace(HOME);
+      }catch(e){
+        console.error(e);
+        location.replace(LOGIN);
+      }
+    }
+
+    run();
+  </script>
+</body>
+</html>
