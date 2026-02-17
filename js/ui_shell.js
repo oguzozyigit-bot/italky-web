@@ -1,345 +1,187 @@
-/* FILE: /js/ui_shell.js */
-import { STORAGE_KEY } from "/js/config.js";
-
-/* ✅ ÜST BAR + JETON */
-const HOME_HEADER_HTML = `
-<header class="premium-header">
-  <div class="brand-group" id="brandHome" title="Ana sayfa">
-    <h1><span>italky</span><span class="ai">AI</span></h1>
-    <div class="brand-slogan">BE FREE</div>
-  </div>
-
-  <div class="user-plain" id="profileBtn" title="Profil">
-    <div class="uMeta">
-      <div class="uName" id="userName">Kullanıcı</div>
-      <div class="uJeton">Jeton: <span id="headerJeton">—</span></div>
-    </div>
-    <div class="avatar"><img src="" id="userPic" alt=""></div>
-  </div>
-</header>
-`;
-
-/* ✅ ALT BAR */
-const HOME_FOOTER_HTML = `
-<footer class="premium-footer">
-  <nav class="footer-nav">
-    <a href="/pages/about.html">Hakkımızda</a>
-    <a href="/pages/faq.html">SSS</a>
-    <a href="/pages/privacy.html">Gizlilik</a>
-    <a href="/pages/contact.html">İletişim</a>
-  </nav>
-  <div class="prestige-signature">italkyAI @ italkyAcedemy By Ozyigit's</div>
-</footer>
-`;
-
-/* ✅ SHELL CSS */
-const SHELL_CSS = `
-:root{
-  --bg-void:#02000f;
-  --text-main:#fff;
-  --text-muted: rgba(255,255,255,0.65);
-  --neon-glow: 0 0 20px rgba(99,102,241,0.45);
-  --ease-premium: cubic-bezier(0.22, 1, 0.36, 1);
-
-  --footerH: 92px;
-  --bar-bg: rgba(0,0,0,0.18);
-  --edgePad: 14px;
-}
-
-*{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; }
-html,body{
-  margin:0; padding:0;
-  width:100%;
-  height:100dvh;                 /* ✅ FIX */
-  overflow:hidden;               /* ✅ kalsın */
-  position:relative;             /* ✅ FIX: fixed KALDIRILDI */
-  font-family:'Outfit', sans-serif;
-  background-color: var(--bg-void) !important;
-  color: var(--text-main);
-  touch-action: manipulation;    /* ✅ FIX: mobile tap */
-}
-
-/* Arka plan */
-.nebula-bg{
-  position:fixed; inset:-10%; width:120%; height:120%;   /* ✅ FIX: fixed */
-  background:
-    radial-gradient(circle at 20% 20%, rgba(79, 70, 229, 0.38) 0%, transparent 40%),
-    radial-gradient(circle at 80% 80%, rgba(168, 85, 247, 0.28) 0%, transparent 40%),
-    radial-gradient(circle at 50% 50%, rgba(30, 0, 60, 1) 0%, #02000f 100%);
-  filter: blur(60px);
-  z-index:0;
-  animation: nebulaPulse 15s infinite alternate ease-in-out;
-  pointer-events:none;
-}
-@keyframes nebulaPulse{
-  from{ transform: scale(1) rotate(0deg); }
-  to{ transform: scale(1.1) rotate(2deg); }
-}
-.stars-field{
-  position:fixed; inset:0;                                  /* ✅ FIX: fixed */
-  background:url("https://www.transparenttextures.com/patterns/stardust.png");
-  opacity:0.38;
-  z-index:1;
-  pointer-events:none;
-}
-
-/* Shell */
-.app-shell{
-  position:relative; z-index:10;
-  width:100%; max-width:480px;
-  height:100dvh;                                          /* ✅ FIX */
-  margin:0 auto;
-  display:flex; flex-direction:column;
-  background: rgba(10,10,30,0.40);
-  backdrop-filter: blur(30px);
-}
-
-/* Header */
-.premium-header{
-  padding: calc(10px + env(safe-area-inset-top)) 18px 10px;
-  display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
-  gap: 10px;
-
-  background: var(--bar-bg);
-  border-bottom-left-radius: 22px;
-  border-bottom-right-radius: 22px;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
-  backdrop-filter: blur(30px);
-  -webkit-backdrop-filter: blur(30px);
-}
-
-.brand-group{ cursor:pointer; user-select:none; }
-.brand-group h1{
-  font-family:'Space Grotesk', sans-serif;
-  font-size: 30px;
-  margin:0;
-  font-weight:700;
-  letter-spacing:-1px;
-  line-height: 1;
-  display:flex;
-  align-items:flex-end;
-  gap:2px;
-}
-.brand-group h1 .ai{
-  background: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
-  filter: drop-shadow(0 0 10px rgba(99,102,241,0.35));
-}
-.brand-slogan{
-  font-size: 9px;
-  font-weight: 900;
-  letter-spacing: 3.6px;
-  color: rgba(255,255,255,0.55);
-  text-transform: uppercase;
-  margin-top: 5px;
-  padding-left: 1px;
-  line-height: 1;
-  max-width: 118px;
-  overflow: hidden;
-  white-space: nowrap;
-}
-
-.user-plain{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  cursor:pointer;
-  user-select:none;
-  margin-top: 2px;
-}
-
-.uMeta{
-  display:flex;
-  flex-direction:column;
-  align-items:flex-end;
-  gap:2px;
-}
-
-.uName{
-  font-weight: 1000;
-  font-size: 14px;
-  color: rgba(255,255,255,0.92);
-  white-space: nowrap;
-  overflow:hidden;
-  text-overflow: ellipsis;
-  max-width: 190px;
-  text-align:right;
-}
-
-.uJeton{
-  font-size: 11px;
-  font-weight: 900;
-  letter-spacing: 1px;
-  color: rgba(165,180,252,0.92);
-  text-transform: uppercase;
-  line-height: 1;
-}
-
-.avatar{
-  width: 40px;
-  height: 40px;
-  border-radius: 999px;
-  overflow:hidden;
-  border: 2px solid rgba(99,102,241,0.65);
-  background: rgba(255,255,255,0.10);
-  flex: 0 0 auto;
-}
-.avatar img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  display:block;
-}
-
-/* Main */
-.main-content{
-  flex:1;
-  overflow-y:auto;
-  -webkit-overflow-scrolling: touch;           /* ✅ FIX: iOS/Android scroll */
-  padding: var(--edgePad) 20px calc(var(--footerH) + var(--edgePad) + env(safe-area-inset-bottom));
-  scrollbar-width:none;
-  position:relative;
-  z-index: 5;
-}
-.main-content::-webkit-scrollbar{ display:none; }
-
-/* Footer */
-.premium-footer{
-  position: fixed;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: 0;
-  width: min(480px, 100%);
-  height: calc(var(--footerH) + env(safe-area-inset-bottom));
-  z-index: 9999;
-
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:flex-end;
-  gap: 8px;
-
-  padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
-  border-top-left-radius: 22px;
-  border-top-right-radius: 22px;
-
-  background: var(--bar-bg);
-  border-top: 1px solid rgba(255,255,255,0.08);
-  backdrop-filter: blur(30px);
-  -webkit-backdrop-filter: blur(30px);
-}
-
-.footer-nav{
-  display:flex;
-  gap: 22px;
-  justify-content:center;
-  flex-wrap:wrap;
-  line-height:1;
-  margin: 0;
-  padding: 0;
-}
-.footer-nav a{
-  font-size: 11px;
-  font-weight: 900;
-  color: rgba(255,255,255,0.55);
-  text-decoration:none;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-.footer-nav a:active{ opacity:.85; }
-
-.prestige-signature{
-  font-size: 12px;
-  font-weight: 900;
-  letter-spacing: 1.5px;
-  background: linear-gradient(to right, #ffffff 0%, #6366f1 50%, #ffffff 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 0 8px rgba(99,102,241,0.45));
-  opacity: 0.92;
-  margin: 0;
-}
-`;
-
-function injectShellStyle(){
-  if (document.getElementById("italkyShellStyle")) return;
-  const st = document.createElement("style");
-  st.id = "italkyShellStyle";
-  st.textContent = SHELL_CSS;
-  document.head.appendChild(st);
-}
-
-function safeSetText(id, val){
-  const el = document.getElementById(id);
-  if (el) el.textContent = val ?? "";
-}
-
-function safeSetImg(id, src){
-  const el = document.getElementById(id);
-  if (el && src) el.src = src;
-}
-
-function hydrateFromCache(){
-  safeSetText("headerJeton", "—");
-  try{
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if(!raw) return;
-    const u = JSON.parse(raw);
-    if (u?.name) safeSetText("userName", u.name);
-    if (u?.picture) safeSetImg("userPic", u.picture);
-    if (u?.tokens != null) safeSetText("headerJeton", String(u.tokens));
-  }catch{}
-}
-
-export function mountShell(options = {}){
-  injectShellStyle();
-  try{ document.body.style.background = "var(--bg-void)"; }catch{}
-
-  if (document.getElementById("italkyAppShell")) {
-    const main = document.getElementById("shellMain");
-    if (main && options?.scroll === "none") {
-      main.style.overflow = "hidden";
-      main.style.padding = "14px 20px 110px";
-    } else if (main) {
-      main.style.overflow = "";
-      main.style.padding = "";
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>italkyAI • Neural Scanner</title>
+  
+  <style>
+    :root {
+      --ai-gradient: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
+      --glass: rgba(255, 255, 255, 0.05);
+      --border: rgba(255, 255, 255, 0.1);
+      /* Shell yüksekliği ile senkronize */
+      --header-h: 74px;
+      --footer-h: 92px;
     }
-    hydrateFromCache();
-    return;
-  }
 
-  const content = document.getElementById("pageContent");
-  if(!content) return;
+    /* ✅ TAM EKRAN VE SHELL DÜZENİ */
+    #pageContent {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: #030014;
+      overflow: hidden;
+    }
 
-  const nebula = document.createElement("div");
-  nebula.className = "nebula-bg";
-  const stars = document.createElement("div");
-  stars.className = "stars-field";
+    /* --- 1. PREMIUM HEADER (ÜST BAR) --- */
+    .premium-header {
+      height: var(--header-h);
+      padding: calc(10px + env(safe-area-inset-top)) 18px 10px;
+      display: flex; align-items: center; justify-content: space-between;
+      background: rgba(10, 10, 30, 0.4);
+      backdrop-filter: blur(30px);
+      border-bottom: 1px solid var(--border);
+      z-index: 1000;
+    }
+    
+    .brand-hub { cursor: pointer; display: flex; flex-direction: column; }
+    .brand-hub h1 { font-family: 'Space Grotesk', sans-serif; font-size: 24px; margin: 0; display: flex; align-items: flex-end; gap: 2px; }
+    .brand-hub h1 span.ai { background: var(--ai-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .brand-slogan { font-size: 8px; font-weight: 900; letter-spacing: 3px; color: rgba(255,255,255,0.4); text-transform: uppercase; margin-top: 2px; }
 
-  const shell = document.createElement("div");
-  shell.className = "app-shell";
-  shell.id = "italkyAppShell";
-  shell.innerHTML = HOME_HEADER_HTML + `<main class="main-content" id="shellMain"></main>` + HOME_FOOTER_HTML;
+    .user-pill { display: flex; align-items: center; gap: 10px; }
+    .u-meta { text-align: right; }
+    .u-name { font-weight: 900; font-size: 13px; color: #fff; }
+    .u-plan { font-size: 10px; color: #6366f1; font-weight: 800; }
+    .avatar-circle { width: 38px; height: 38px; border-radius: 50%; border: 2px solid #6366f1; overflow: hidden; }
+    .avatar-circle img { width: 100%; height: 100%; object-fit: cover; }
 
-  const main = shell.querySelector("#shellMain");
-  main.appendChild(content);
+    /* --- 2. NEURAL SCANNER (ANA ALAN) --- */
+    .scanner-stage {
+      flex: 1;
+      position: relative;
+      background: #000;
+      overflow: hidden;
+    }
 
-  if (options?.scroll === "none") {
-    main.style.overflow = "hidden";
-    main.style.padding = "14px 20px 110px";
-  }
+    /* Kamera Kontrolleri (Kameranın Üstünde Yüzer) */
+    .scanner-tools {
+      position: absolute; top: 15px; left: 15px; right: 15px;
+      z-index: 50; display: flex; gap: 8px;
+    }
+    .pill-select {
+      flex: 1; height: 46px; border-radius: 16px; border: 1px solid var(--border);
+      background: rgba(0,0,0,0.6); backdrop-filter: blur(10px);
+      color: #fff; font-weight: 900; font-size: 13px;
+      display: flex; align-items: center; justify-content: space-between; padding: 0 15px;
+      cursor: pointer;
+    }
+    .btn-action {
+      padding: 0 15px; height: 46px; border-radius: 16px; border: none;
+      background: var(--ai-gradient); color: #000; font-weight: 1000; font-size: 12px;
+      cursor: pointer;
+    }
 
-  document.body.replaceChildren(nebula, stars, shell);
+    video#cam { width: 100%; height: 100%; object-fit: cover; }
+    canvas#overlay { position: absolute; inset: 0; pointer-events: none; }
 
-  document.getElementById("brandHome")?.addEventListener("click", ()=>location.href="/pages/home.html");
-  document.getElementById("profileBtn")?.addEventListener("click", ()=>location.href="/pages/profile.html");
+    .scanner-hint {
+      position: absolute; bottom: 20px; left: 20px; right: 20px;
+      background: rgba(0,0,0,0.6); padding: 14px; border-radius: 18px;
+      border: 1px solid var(--border); backdrop-filter: blur(15px);
+      font-size: 11px; font-weight: 800; color: #a5b4fc; text-align: center;
+      line-height: 1.4;
+    }
 
-  hydrateFromCache();
-}
+    /* --- 3. PREMIUM FOOTER (ALT BAR) --- */
+    .premium-footer {
+      height: var(--footer-h);
+      padding: 10px 18px calc(10px + env(safe-area-inset-bottom));
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      background: rgba(10, 10, 30, 0.4);
+      backdrop-filter: blur(30px);
+      border-top: 1px solid var(--border);
+      z-index: 1000;
+    }
+    .footer-signature { font-size: 11px; font-weight: 900; color: rgba(255,255,255,0.25); letter-spacing: 1.5px; }
 
-export function setHeaderTokens(n){
-  safeSetText("headerJeton", (n == null ? "—" : String(n)));
-}
+    /* Açılır Pencere (Modal) */
+    .sheet-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+      z-index: 5000; display: none; align-items: center; justify-content: center; padding: 25px;
+      backdrop-filter: blur(10px);
+    }
+    .neural-sheet { 
+      width: 100%; max-width: 400px; background: #050510; 
+      border-radius: 30px; border: 1px solid var(--border); overflow: hidden; 
+      box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+    }
+  </style>
+</head>
+
+<body>
+  <div id="pageContent">
+
+    <header class="premium-header">
+      <div class="brand-hub" onclick="location.href='/pages/home.html'">
+        <h1>italky<span class="ai">AI</span></h1>
+        <div class="brand-slogan">BE FREE</div>
+      </div>
+      
+      <div class="user-pill">
+        <div class="u-meta">
+          <div id="userName" class="u-name">Yükleniyor...</div>
+          <div class="u-plan">PREMIUM HUB</div>
+        </div>
+        <div class="avatar-circle">
+          <img id="userPic" src="">
+        </div>
+      </div>
+    </header>
+
+    <main class="scanner-stage">
+      <div class="scanner-tools">
+        <div class="pill-select" id="toLangBtn">
+          <span id="toFlag">🇹🇷</span> <span id="toLangTxt">Türkçe</span> <span style="opacity:0.5">▾</span>
+        </div>
+        <button class="btn-action" id="speakBtn">SAY</button>
+        <button class="btn-action" id="scanBtn" style="background:#fff">SCAN</button>
+      </div>
+
+      <video id="cam" playsinline autoplay muted></video>
+      <canvas id="overlay"></canvas>
+
+      <div class="scanner-hint">
+        Yazının üzerine <b>parmağını basılı tut</b> → Anında Çeviri<br>
+        Dora seslendirmesi için <b>SAY</b> butonunu kullan.
+      </div>
+    </main>
+
+    <footer class="premium-footer">
+      <div class="footer-signature">italkyAI @ italkyAcedemia By Ozyigit's</div>
+    </footer>
+
+  </div>
+
+  <div class="sheet-overlay" id="langSheet">
+    <div class="neural-sheet">
+      <div style="padding:20px; border-bottom:1px solid var(--border); font-weight:1000; color:#fff; font-size:14px; letter-spacing:1px; text-align:center;">HEDEF DİL ANALİZİ</div>
+      <div id="sheetList" style="max-height:350px; overflow-y:auto; padding:15px;"></div>
+      <button onclick="document.getElementById('langSheet').style.display='none'" style="width:100%; padding:20px; background:rgba(255,255,255,0.03); border:none; color:#ec4899; font-weight:1000; cursor:pointer;">KAPAT</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { supabase } from "/js/supabase_client.js";
+
+    async function initScannerUI() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const cached = JSON.parse(localStorage.getItem('italky_user_v1') || '{}');
+        document.getElementById('userName').textContent = cached.name?.split(' ')[0] || "User";
+        if(cached.picture) document.getElementById('userPic').src = cached.picture;
+      }
+    }
+
+    document.getElementById('toLangBtn').onclick = () => {
+      document.getElementById('langSheet').style.display = 'flex';
+    };
+
+    initScannerUI();
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <script type="module" src="/js/photo_page.js?v=HYPER"></script>
+</body>
+</html>
