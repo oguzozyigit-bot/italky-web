@@ -142,8 +142,16 @@
         }
 
         // ✅ normal tarayıcı: supabase oauth
-        toast("Google yönlendiriliyor...");
-        await loginWithGoogle();
+        toast("Giriş başlatılıyor...");
+
+// ✅ APK (WebView) ise: native google login
+if (window.Native && typeof window.Native.startGoogleLogin === "function") {
+  window.Native.startGoogleLogin();
+  return;
+}
+
+// ✅ Normal tarayıcı ise: Supabase OAuth
+await loginWithGoogle();
 
       }catch(e){
         console.error(e);
