@@ -3,19 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>italkyAI • Neural Scanner</title>
+  <title>italkyAI • Fotoğraftan Çeviri</title>
   
   <style>
     :root {
       --ai-gradient: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
       --glass: rgba(255, 255, 255, 0.05);
       --border: rgba(255, 255, 255, 0.1);
-      /* Shell yüksekliği ile senkronize */
-      --header-h: 74px;
-      --footer-h: 92px;
+      --top-h: 74px;
+      --bot-h: 80px;
     }
 
-    /* ✅ TAM EKRAN VE SHELL DÜZENİ */
+    /* ✅ TAM EKRAN VE SHELL UYUMU */
     #pageContent {
       height: 100vh;
       display: flex;
@@ -24,148 +23,137 @@
       overflow: hidden;
     }
 
-    /* --- 1. PREMIUM HEADER (ÜST BAR) --- */
-    .premium-header {
-      height: var(--header-h);
-      padding: calc(10px + env(safe-area-inset-top)) 18px 10px;
+    /* --- 1. ÜST BAR (HEADER) --- */
+    .neural-header {
+      height: var(--top-h);
+      padding-top: env(safe-area-inset-top);
       display: flex; align-items: center; justify-content: space-between;
-      background: rgba(10, 10, 30, 0.4);
-      backdrop-filter: blur(30px);
+      padding-left: 15px; padding-right: 15px;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(20px);
       border-bottom: 1px solid var(--border);
-      z-index: 1000;
+      z-index: 100;
     }
-    
-    .brand-hub { cursor: pointer; display: flex; flex-direction: column; }
-    .brand-hub h1 { font-family: 'Space Grotesk', sans-serif; font-size: 24px; margin: 0; display: flex; align-items: flex-end; gap: 2px; }
-    .brand-hub h1 span.ai { background: var(--ai-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .brand-slogan { font-size: 8px; font-weight: 900; letter-spacing: 3px; color: rgba(255,255,255,0.4); text-transform: uppercase; margin-top: 2px; }
+    .back-btn {
+      width: 40px; height: 40px; border-radius: 12px;
+      border: 1px solid var(--border); background: var(--glass);
+      color: #fff; font-size: 18px; cursor: pointer;
+    }
+    .brand-mini { text-align: center; pointer-events: none; }
+    .brand-mini b { font-family: 'Space Grotesk', sans-serif; font-size: 20px; }
+    .user-profile { display: flex; align-items: center; gap: 10px; }
+    .user-profile img { width: 36px; height: 36px; border-radius: 50%; border: 2px solid #6366f1; }
 
-    .user-pill { display: flex; align-items: center; gap: 10px; }
-    .u-meta { text-align: right; }
-    .u-name { font-weight: 900; font-size: 13px; color: #fff; }
-    .u-plan { font-size: 10px; color: #6366f1; font-weight: 800; }
-    .avatar-circle { width: 38px; height: 38px; border-radius: 50%; border: 2px solid #6366f1; overflow: hidden; }
-    .avatar-circle img { width: 100%; height: 100%; object-fit: cover; }
-
-    /* --- 2. NEURAL SCANNER (ANA ALAN) --- */
-    .scanner-stage {
+    /* --- 2. KAMERA VE ARAÇLAR (MAIN) --- */
+    .camera-stage {
       flex: 1;
       position: relative;
       background: #000;
       overflow: hidden;
+      display: flex; flex-direction: column;
     }
 
-    /* Kamera Kontrolleri (Kameranın Üstünde Yüzer) */
-    .scanner-tools {
-      position: absolute; top: 15px; left: 15px; right: 15px;
+    /* Kamera Toolbar */
+    .cam-toolbar {
+      position: absolute; top: 15px; left: 10px; right: 10px;
       z-index: 50; display: flex; gap: 8px;
     }
-    .pill-select {
-      flex: 1; height: 46px; border-radius: 16px; border: 1px solid var(--border);
-      background: rgba(0,0,0,0.6); backdrop-filter: blur(10px);
-      color: #fff; font-weight: 900; font-size: 13px;
-      display: flex; align-items: center; justify-content: space-between; padding: 0 15px;
-      cursor: pointer;
+    .pill-btn {
+      flex: 1; height: 44px; border-radius: 14px; border: 1px solid var(--border);
+      background: rgba(0,0,0,0.5); backdrop-filter: blur(10px);
+      color: #fff; font-weight: 800; font-size: 12px;
+      display: flex; align-items: center; justify-content: space-between; padding: 0 12px;
     }
-    .btn-action {
-      padding: 0 15px; height: 46px; border-radius: 16px; border: none;
-      background: var(--ai-gradient); color: #000; font-weight: 1000; font-size: 12px;
-      cursor: pointer;
+    .action-btn {
+      padding: 0 12px; height: 44px; border-radius: 14px; border: none;
+      background: var(--ai-gradient); color: #000; font-weight: 1000; font-size: 11px;
     }
 
     video#cam { width: 100%; height: 100%; object-fit: cover; }
     canvas#overlay { position: absolute; inset: 0; pointer-events: none; }
 
-    .scanner-hint {
+    .scan-hint {
       position: absolute; bottom: 20px; left: 20px; right: 20px;
-      background: rgba(0,0,0,0.6); padding: 14px; border-radius: 18px;
-      border: 1px solid var(--border); backdrop-filter: blur(15px);
-      font-size: 11px; font-weight: 800; color: #a5b4fc; text-align: center;
-      line-height: 1.4;
+      background: rgba(0,0,0,0.6); padding: 12px; border-radius: 16px;
+      border: 1px solid var(--border); backdrop-filter: blur(10px);
+      font-size: 11px; font-weight: 700; color: #a5b4fc; text-align: center;
     }
 
-    /* --- 3. PREMIUM FOOTER (ALT BAR) --- */
-    .premium-footer {
-      height: var(--footer-h);
-      padding: 10px 18px calc(10px + env(safe-area-inset-bottom));
+    /* --- 3. ALT BAR (FOOTER) --- */
+    .neural-footer {
+      height: var(--bot-h);
+      padding-bottom: env(safe-area-inset-bottom);
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      background: rgba(10, 10, 30, 0.4);
-      backdrop-filter: blur(30px);
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(20px);
       border-top: 1px solid var(--border);
-      z-index: 1000;
+      z-index: 100;
     }
-    .footer-signature { font-size: 11px; font-weight: 900; color: rgba(255,255,255,0.25); letter-spacing: 1.5px; }
+    .footer-sig { font-size: 10px; font-weight: 900; color: rgba(255,255,255,0.3); letter-spacing: 1px; }
 
-    /* Açılır Pencere (Modal) */
-    .sheet-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.85);
-      z-index: 5000; display: none; align-items: center; justify-content: center; padding: 25px;
-      backdrop-filter: blur(10px);
+    /* Modal / Sheet */
+    .backdrop {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+      z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px;
     }
-    .neural-sheet { 
-      width: 100%; max-width: 400px; background: #050510; 
-      border-radius: 30px; border: 1px solid var(--border); overflow: hidden; 
-      box-shadow: 0 25px 50px rgba(0,0,0,0.5);
-    }
+    .sheet { width: 100%; max-width: 400px; background: #050510; border-radius: 28px; border: 1px solid var(--border); overflow: hidden; }
   </style>
 </head>
 
 <body>
   <div id="pageContent">
 
-    <header class="premium-header">
-      <div class="brand-hub" onclick="location.href='/pages/home.html'">
-        <h1>italky<span class="ai">AI</span></h1>
-        <div class="brand-slogan">BE FREE</div>
+    <header class="neural-header">
+      <button class="back-btn" onclick="location.href='/pages/home.html'">←</button>
+      <div class="brand-mini">
+        <b>italky<span style="color:#6366f1">AI</span></b>
+        <div style="font-size:8px; letter-spacing:3px; opacity:0.5">BE FREE</div>
       </div>
-      
-      <div class="user-pill">
-        <div class="u-meta">
-          <div id="userName" class="u-name">Yükleniyor...</div>
-          <div class="u-plan">PREMIUM HUB</div>
+      <div class="user-profile">
+        <div style="text-align:right">
+          <div id="userName" style="font-size:11px; font-weight:900">...</div>
+          <div style="font-size:9px; color:#34d399; font-weight:800">FREE PLAN</div>
         </div>
-        <div class="avatar-circle">
-          <img id="userPic" src="">
-        </div>
+        <img id="userPic" src="">
       </div>
     </header>
 
-    <main class="scanner-stage">
-      <div class="scanner-tools">
-        <div class="pill-select" id="toLangBtn">
-          <span id="toFlag">🇹🇷</span> <span id="toLangTxt">Türkçe</span> <span style="opacity:0.5">▾</span>
-        </div>
-        <button class="btn-action" id="speakBtn">SAY</button>
-        <button class="btn-action" id="scanBtn" style="background:#fff">SCAN</button>
+    <main class="camera-stage">
+      <div class="cam-toolbar">
+        <button class="pill-btn" id="toLangBtn">
+          <span id="toFlag">🇹🇷</span> <span id="toLangTxt">Türkçe</span> ▾
+        </button>
+        <button class="action-btn" id="speakBtn">SAY</button>
+        <button class="action-btn" id="scanBtn" style="background:#fff">SCAN</button>
       </div>
 
       <video id="cam" playsinline autoplay muted></video>
       <canvas id="overlay"></canvas>
 
-      <div class="scanner-hint">
-        Yazının üzerine <b>parmağını basılı tut</b> → Anında Çeviri<br>
-        Dora seslendirmesi için <b>SAY</b> butonunu kullan.
+      <div class="scan-hint">
+        Yazının üzerine <b>basılı tut</b> → Çeviriyi Gör<br>
+        (Dora sesi için SAY butonuna bas)
       </div>
     </main>
 
-    <footer class="premium-footer">
-      <div class="footer-signature">italkyAI @ italkyAcedemia By Ozyigit's</div>
+    <footer class="neural-footer">
+      <div class="footer-sig">italkyAI BY OZYIGIT'S 2026</div>
     </footer>
 
   </div>
 
-  <div class="sheet-overlay" id="langSheet">
-    <div class="neural-sheet">
-      <div style="padding:20px; border-bottom:1px solid var(--border); font-weight:1000; color:#fff; font-size:14px; letter-spacing:1px; text-align:center;">HEDEF DİL ANALİZİ</div>
-      <div id="sheetList" style="max-height:350px; overflow-y:auto; padding:15px;"></div>
-      <button onclick="document.getElementById('langSheet').style.display='none'" style="width:100%; padding:20px; background:rgba(255,255,255,0.03); border:none; color:#ec4899; font-weight:1000; cursor:pointer;">KAPAT</button>
+  <div class="backdrop" id="langSheet">
+    <div class="sheet">
+      <div style="padding:15px; border-bottom:1px solid var(--border); font-weight:900; color:#fff">HEDEF DİL SEÇİN</div>
+      <div id="sheetList" style="max-height:300px; overflow-y:auto; padding:10px;"></div>
+      <button onclick="document.getElementById('langSheet').style.display='none'" style="width:100%; padding:15px; background:rgba(255,255,255,0.05); border:none; color:#ec4899; font-weight:900">KAPAT</button>
     </div>
   </div>
 
   <script type="module">
     import { supabase } from "/js/supabase_client.js";
 
-    async function initScannerUI() {
+    async function syncProfile() {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         const cached = JSON.parse(localStorage.getItem('italky_user_v1') || '{}');
@@ -174,14 +162,15 @@
       }
     }
 
+    // Dil seçimi tetikleyici
     document.getElementById('toLangBtn').onclick = () => {
       document.getElementById('langSheet').style.display = 'flex';
     };
 
-    initScannerUI();
+    syncProfile();
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-  <script type="module" src="/js/photo_page.js?v=HYPER"></script>
+  <script type="module" src="/js/photo_page.js?v=MAX"></script>
 </body>
 </html>
