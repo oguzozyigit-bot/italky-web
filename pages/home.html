@@ -10,121 +10,209 @@
       --footer-h: 92px; 
     }
 
-    body { margin: 0; background: #000; font-family: system-ui, -apple-system, sans-serif; color: #fff; }
-
-    /* ✅ ANA DÜZEN */
+    /* ✅ SABİT VE KAYMA YAPMAYAN DÜZEN */
     #pageContent {
       height: calc(100vh - var(--footer-h) - env(safe-area-inset-top) - 65px); 
       display: flex;
       flex-direction: column;
-      padding: 10px 16px 0;
+      justify-content: space-between; 
+      padding: 5px 0 0;
       box-sizing: border-box;
       overflow: hidden;
     }
 
-    /* Üstteki Elemanları Grupla */
-    .top-section {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-    }
-
-    /* Ortadaki Esnek Boşluk (Alttakileri aşağı iter) */
-    .flex-spacer {
-      flex: 1;
-    }
-
-    /* Alttaki Elemanları Grupla */
-    .bottom-section {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-bottom: 8px;
-    }
-
-    /* Bileşen Tasarımları */
+    /* 1. ACADEMY */
     .academy-pro {
-      background: rgba(255, 255, 255, 0.05); border-radius: 26px; padding: 15px 20px;
-      border: 1px solid rgba(255, 255, 255, 0.1); display: flex; align-items: center; gap: 16px; cursor: pointer;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 26px;
+      padding: 15px 20px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex; align-items: center; gap: 16px;
+      cursor: pointer;
     }
     .spectrum-logo { gap: 3px; display: flex; align-items: center; }
     .bar { width: 3px; border-radius: 10px; }
-    .bar-1 { height: 10px; background: #ff0000; } .bar-4 { height: 32px; background: #00ff00; } .bar-7 { height: 10px; background: #8b00ff; }
-    
-    .portal-zone { display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; padding: 10px 0; }
-    .neural-orb { width: 110px; height: 110px; position: relative; display: flex; align-items: center; justify-content: center; }
-    .ai-ring { position: absolute; inset: -4px; border-radius: 50%; padding: 2.5px; background: var(--ai-gradient); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); mask-composite: exclude; animation: rotate 15s linear infinite; }
-    .ai-core { width: 75px; height: 75px; background: #000; border-radius: 50%; border: 2.5px solid #6366f1; display: flex; align-items: center; justify-content: center; animation: breathe 4s infinite ease-in-out; z-index: 10; }
+    .bar-1 { height: 10px; background: #ff0000; }
+    .bar-2 { height: 16px; background: #ff7f00; }
+    .bar-3 { height: 22px; background: #ffff00; }
+    .bar-4 { height: 32px; background: #00ff00; }
+    .bar-5 { height: 22px; background: #0000ff; }
+    .bar-6 { height: 16px; background: #4b0082; }
+    .bar-7 { height: 10px; background: #8b00ff; }
 
-    .pro-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .pro-tile { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 22px; padding: 12px; display: flex; align-items: center; gap: 10px; cursor: pointer; }
-    .tile-icon { width: 36px; height: 36px; border-radius: 12px; background: rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    
-    .long-bar { background: rgba(255, 255, 255, 0.05); border-radius: 24px; padding: 14px 20px; border: 1px solid rgba(99, 102, 241, 0.3); display: flex; align-items: center; gap: 16px; cursor: pointer; }
+    .academy-text h2 { margin: 0; font-size: 18px; font-weight: 900; color: #fff; }
+    .academy-text h2 span { background: var(--ai-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .academy-text p { margin: 0; font-size: 10px; font-weight: 800; color: rgba(255,255,255,0.4); }
 
-    @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-    @keyframes breathe { 0%, 100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.05); opacity: 1; } }
+    /* 2. FACETOFACE PORTAL */
+    .portal-zone {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      cursor: pointer; padding: 10px 0;
+    }
+    .neural-orb {
+      width: 120px; height: 120px; position: relative;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .ai-ring {
+      position: absolute; inset: -4px; border-radius: 50%; padding: 2.5px;
+      background: var(--ai-gradient); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask-composite: exclude; animation: rotateOrbit 15s linear infinite;
+    }
+    .orbit-energy {
+      position: absolute; inset: -12px; border-radius: 50%;
+      animation: rotateOrbit 8s linear infinite;
+    }
+    .e-ball { position: absolute; width: 12px; height: 12px; border-radius: 50%; filter: blur(1px); }
+    .ball-l { top: -6px; left: 50%; transform: translateX(-50%); background: #1e3a8a; box-shadow: 0 0 15px #1e3a8a; }
+    .ball-b { bottom: -6px; left: 50%; transform: translateX(-50%); background: #801336; box-shadow: 0 0 15px #801336; }
+
+    .ai-core {
+      width: 80px; height: 80px; background: #000; border-radius: 50%;
+      background-image: linear-gradient(#000, #000), var(--ai-gradient);
+      background-origin: border-box; background-clip: content-box, border-box;
+      border: 2.5px solid transparent; display: flex; align-items: center; justify-content: center;
+      animation: aiBreathe 4s infinite ease-in-out;
+      z-index: 10;
+    }
+    .portal-info { text-align: center; margin-top: 12px; }
+    .portal-info h1 { margin: 0; font-size: 26px; font-weight: 900; color: #fff; letter-spacing: -1.2px; }
+    .portal-info p { margin: 2px 0 0; font-size: 12px; font-weight: 800; color: rgba(255,255,255,0.5); }
+
+    /* 3. GRID */
+    .pro-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    }
+    .pro-tile {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 24px; padding: 14px;
+      display: flex; align-items: center; gap: 12px;
+      cursor: pointer;
+    }
+    .tile-icon {
+      width: 38px; height: 38px; border-radius: 12px; background: rgba(255,255,255,0.06);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      font-size: 16px;
+    }
+    .ico-txt::before { content: "Aa"; color: #34d399; font-weight: 900; }
+    .ico-cam::before { content: "◎"; color: #60a5fa; font-weight: 900; }
+    .ico-doc::before { content: "≡"; color: #f472b6; font-weight: 900; }
+    .ico-fun::before { content: "🎯"; }
+    .ico-chat::before { content: "💬"; }
+    .ico-teacher::before { content: "🎓"; }
+
+    .pro-tile label { font-size: 12px; font-weight: 800; color: #fff; line-height: 1.2; }
+    .pro-tile label span { background: var(--ai-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+    /* 4. ONLINE MEETING - GÜVENLİ BÖLGEYE SABİTLENDİ */
+    .long-bar {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 24px;
+      padding: 16px 20px;
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      display: flex; align-items: center; gap: 16px;
+      cursor: pointer;
+      margin-bottom: 8px; /* Alt barın (shell) üstünde kalması için */
+    }
+
+    @keyframes rotateOrbit { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    @keyframes aiBreathe { 
+      0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(99, 102, 241, 0.2); } 
+      50% { transform: scale(1.08); box-shadow: 0 0 40px rgba(99, 102, 241, 0.4); } 
+    }
+
   </style>
 </head>
 
 <body>
   <div id="pageContent">
 
-    <div class="top-section">
-      <div class="academy-pro" data-nav="/pages/teacher_select.html">
-        <div class="spectrum-logo">
-          <div class="bar bar-1" style="height:10px; background:#ff0000"></div>
-          <div class="bar bar-4" style="height:30px; background:#00ff00"></div>
-          <div class="bar bar-7" style="height:10px; background:#8b00ff"></div>
-        </div>
-        <div class="academy-text">
-          <h2 style="margin:0; font-size:18px;">italky <span style="color:#6366f1">Academy</span></h2>
-          <p style="margin:0; font-size:10px; color:rgba(255,255,255,0.4)">YAPAY ZEKA İLE DİL EĞİTİMİ</p>
-        </div>
+    <div class="academy-pro" data-nav="/pages/teacher_select.html">
+      <div class="spectrum-logo">
+        <div class="bar bar-1"></div><div class="bar bar-2"></div><div class="bar bar-3"></div>
+        <div class="bar bar-4"></div><div class="bar bar-5"></div><div class="bar bar-6"></div>
+        <div class="bar bar-7"></div>
       </div>
-
-      <div class="portal-zone" data-nav="/pages/facetoface.html">
-        <div class="neural-orb">
-          <div class="ai-ring"></div>
-          <div class="ai-core">
-            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
-          </div>
-        </div>
-        <div style="text-align:center; margin-top:10px;">
-          <h1 style="margin:0; font-size:24px;">FaceToFace</h1>
-          <p style="margin:0; font-size:12px; color:rgba(255,255,255,0.5)">Yüzyüze Anlık Çeviri</p>
-        </div>
+      <div class="academy-text">
+        <h2>italky <span>Academy</span></h2>
+        <p>YAPAY ZEKA İLE DİL EĞİTİMİ</p>
       </div>
     </div>
 
-    <div class="flex-spacer"></div>
-
-    <div class="bottom-section">
-      <div class="pro-grid">
-        <div class="pro-tile" data-nav="/pages/text_translate.html"><div class="tile-icon">Aa</div><label>Metinden<br>Çeviri</label></div>
-        <div class="pro-tile" data-nav="/pages/photo.html"><div class="tile-icon">◎</div><label>Fotoğraftan<br>Çeviri</label></div>
-        <div class="pro-tile" data-nav="/pages/document.html"><div class="tile-icon">≡</div><label>Belgeden<br>Çeviri</label></div>
-        <div class="pro-tile" data-nav="/pages/game.html"><div class="tile-icon">🎯</div><label>Eğlenerek<br>Öğren</label></div>
-        <div class="pro-tile" data-nav="/pages/teacher_select.html"><div class="tile-icon">💬</div><label>Sohbet AI</label></div>
-        <div class="pro-tile" data-nav="/pages/teacher_select.html"><div class="tile-icon">🎓</div><label>Chat AI</label></div>
-      </div>
-
-      <div class="long-bar" data-nav="/pages/meeting.html">
-        <div class="tile-icon">📹</div>
-        <div>
-          <h2 style="margin:0; font-size:18px;">Online Toplantı</h2>
-          <p style="margin:0; font-size:10px; color:rgba(255,255,255,0.4)">CANLI ÇEVİRİ ODALARI</p>
+    <div class="portal-zone" data-nav="/pages/facetoface.html">
+      <div class="neural-orb">
+        <div class="ai-ring"></div>
+        <div class="orbit-energy">
+          <div class="e-ball ball-l"></div>
+          <div class="e-ball ball-b"></div>
         </div>
+        <div class="ai-core">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+            <line x1="12" y1="19" x2="12" y2="23"/>
+          </svg>
+        </div>
+      </div>
+      <div class="portal-info">
+        <h1>FaceToFace</h1>
+        <p>Yüzyüze Anlık Çeviri</p>
+      </div>
+    </div>
+
+    <div class="pro-grid">
+      <div class="pro-tile" data-nav="/pages/text_translate.html">
+        <div class="tile-icon ico-txt"></div>
+        <label>Metinden<br>Çeviri</label>
+      </div>
+      <div class="pro-tile" data-nav="/pages/photo.html">
+        <div class="tile-icon ico-cam"></div>
+        <label>Fotoğraftan<br>Çeviri</label>
+      </div>
+      <div class="pro-tile" data-nav="/pages/document.html">
+        <div class="tile-icon ico-doc"></div>
+        <label>Belgeden<br>Çeviri</label>
+      </div>
+      <div class="pro-tile" data-nav="/pages/game.html">
+        <div class="tile-icon ico-fun"></div>
+        <label>Eğlenerek<br>Öğren</label>
+      </div>
+      <div class="pro-tile" data-nav="/pages/teacher_select.html">
+        <div class="tile-icon ico-chat"></div>
+        <label>Sohbet <span>AI</span></label>
+      </div>
+      <div class="pro-tile" data-nav="/pages/teacher_select.html">
+        <div class="tile-icon ico-teacher"></div>
+        <label>Chat <span>AI</span></label>
+      </div>
+    </div>
+
+    <div class="long-bar" data-nav="/pages/meeting.html">
+      <div class="tile-icon">📹</div>
+      <div class="academy-text">
+        <h2 style="font-size: 18px;">Online Toplantı</h2>
+        <p>CANLI ÇEVİRİ ODALARI</p>
       </div>
     </div>
 
   </div>
 
   <script type="module">
-    import { mountShell } from "/js/ui_shell.js";
+    import { mountShell, setHeaderTokens } from "/js/ui_shell.js";
+    import { bootPage } from "/js/ui_guard.js";
+    import { ensureAuthAndCacheUser } from "/js/auth.js";
+
     mountShell({ scroll: "none" });
+
+    const cached = await ensureAuthAndCacheUser().catch(()=>null);
+    if (cached?.tokens != null) setHeaderTokens(cached.tokens);
+    bootPage({ protectedPage: true, header: { nameId: "userName", picId: "userPic" } });
+
     document.querySelectorAll("[data-nav]").forEach(el => {
-      el.onclick = () => window.location.assign(el.getAttribute("data-nav"));
+      const url = el.getAttribute("data-nav");
+      const go = (e) => { e.preventDefault(); e.stopPropagation(); window.location.assign(url); };
+      el.onclick = go;
+      el.ontouchend = go;
     });
   </script>
 </body>
