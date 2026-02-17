@@ -29,7 +29,6 @@
       align-items: center;
     }
 
-    /* Arka Plan */
     .nebula {
       position: fixed; inset: 0;
       background: radial-gradient(circle at 50% 50%, rgba(30, 0, 60, 1) 0%, #02000f 100%);
@@ -42,7 +41,6 @@
       padding: 0 30px; z-index: 10; width: 100%; margin-top: -30px;
     }
 
-    /* 1. ÜST LOGO */
     .brand-section { text-align: center; margin-bottom: 10px; }
     .brand-section h1 { font-size: 72px; font-weight: 800; letter-spacing: -4px; line-height: 1; }
     .brand-section h1 span.ai {
@@ -50,7 +48,7 @@
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     }
 
-    /* 2. DÖNEN GERÇEK DÜNYA */
+    /* 🌍 DÖNEN DÜNYA */
     .world-container {
       position: relative; width: 280px; height: 280px;
       display: flex; align-items: center; justify-content: center;
@@ -70,7 +68,7 @@
     @keyframes rotateWorld { from { background-position: 0 0; } to { background-position: 420px 0; } }
     @keyframes breathe { from { transform: scale(1); opacity: 0.4; } to { transform: scale(1.1); opacity: 0.7; } }
 
-    /* 3. DAKTİLO YAZISI */
+    /* ⌨️ DAKTİLO */
     .typewriter-container { height: 40px; margin-top: 10px; margin-bottom: 25px; display: flex; justify-content: center; }
     .typewriter {
       font-family: 'JetBrains Mono', monospace; font-size: 15px; color: #94a3b8;
@@ -80,21 +78,20 @@
     @keyframes typing { 0%, 10% { width: 0 } 70%, 90% { width: 100% } 100% { width: 0 } }
     @keyframes blink { from, to { border-color: transparent } 50% { border-color: var(--accent) } }
 
-    /* 4. GOOGLE BUTONU */
+    /* 🔘 GOOGLE BUTONU */
     .login-box { width: 100%; max-width: 320px; margin-bottom: 25px; z-index: 20; }
     .google-btn {
       width: 100%; height: 62px; background: #fff; color: #000;
       border: none; border-radius: 40px; font-size: 16px; font-weight: 800;
       display:flex; align-items:center; justify-content:center; gap:14px;
       cursor:pointer; box-shadow: 0 15px 35px rgba(0,0,0,0.4); 
-      transition: 0.2s; position: relative;
+      transition: 0.2s;
     }
     .google-btn:active { transform: scale(0.97); }
     .g-icon { width: 24px; height: 24px; pointer-events: none; }
 
-    /* 5. FOOTER & İMZA & LINKLER */
+    /* 📜 FOOTER */
     footer { width: 100%; padding-bottom: 30px; text-align: center; z-index: 20; }
-    
     .footer-nav { display: flex; justify-content: center; gap: 20px; margin-bottom: 12px; }
     .footer-nav a { text-decoration: none; color: rgba(255,255,255,0.4); font-size: 11px; font-weight: 700; text-transform: uppercase; }
     
@@ -136,7 +133,7 @@
     </div>
 
     <div class="login-box">
-      <button class="google-btn" id="googleBtn" type="button">
+      <button class="google-btn" id="googleBtn" type="button" onclick="handleGoogleClick()">
         <svg class="g-icon" viewBox="0 0 24 24">
           <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
           <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -155,9 +152,7 @@
       <a href="/pages/privacy.html">Gizlilik</a>
       <a href="/pages/contact.html">İletişim</a>
     </div>
-
     <div class="academy-title"><b>italky</b><span>ACADEMY</span></div>
-    
     <div class="prestige-signature">italkyAI @ italkyAcademy By Ozyigit's 2026</div>
   </footer>
 
@@ -171,41 +166,40 @@
     const HOME = "/pages/home.html";
     const STORAGE_KEY = "italky_user_v1";
 
-    function toast(msg){
+    window.toast = function(msg){
       if(!toastEl) return;
       toastEl.textContent = msg;
       toastEl.classList.add("show");
       setTimeout(()=>toastEl.classList.remove("show"), 2200);
     }
 
-    // --- NATIVE BRIDGE (SENİN MOTORUN) ---
+    // --- NATIVE BRIDGE ---
     window.onNativeLoginSuccess = async function(jsonResponse) {
       try {
         const data = typeof jsonResponse === "string" ? JSON.parse(jsonResponse) : jsonResponse;
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data.user));
         localStorage.setItem("italky_token", data.token); 
-        toast("Hoş geldin " + data.user.full_name + "!");
+        window.toast("Hoş geldin " + data.user.full_name + "!");
         setTimeout(() => location.replace(HOME), 800);
-      } catch (e) {
-        toast("Giriş işlenirken hata oluştu.");
-      }
+      } catch (e) { window.toast("Giriş hatası!"); }
     };
 
     function isInApk(){
       return !!(window.Native && typeof window.Native.startGoogleLogin === "function");
     }
 
-    async function handleGoogleClick(){
+    // --- GOOGLE CLICK ---
+    window.handleGoogleClick = async function(){
       if(isInApk()){
-        toast("Güvenli giriş başlatılıyor...");
+        window.toast("Güvenli giriş başlatılıyor...");
         window.Native.startGoogleLogin(); 
       } else {
-        toast("Google yönlendiriliyor...");
+        window.toast("Google yönlendiriliyor...");
         await loginWithGoogle(); 
       }
     }
 
-    // --- DAKTİLO YAZILARI (20 ADET) ---
+    // --- DAKTİLO (20 MESAJ) ---
     const phrases = [
       "Dünyayı sizin için küçülttük.", "Dil bariyerlerini aştık.", "Sınırları kaldırdık.",
       "italkyAI ile özgürleşin.", "Yapay zeka asistanın aktif.", "Offline çeviri aktif.",
@@ -226,13 +220,28 @@
       typewriterEl.style.animation = null;
     }, 4000);
 
-    // Event Listener
-    document.getElementById("googleBtn")?.addEventListener("click", handleGoogleClick);
-
-    // Oturum Kontrolü
-    if(localStorage.getItem(STORAGE_KEY)){
-      location.replace(HOME);
+    // --- OTURUM KONTROLÜ (Refresh Döngüsünü Kıran Bölüm) ---
+    async function checkInit() {
+      const localUser = localStorage.getItem(STORAGE_KEY);
+      if (localUser) {
+        // Eğer zaten home sayfasında değilsek yönlendir
+        if (!window.location.href.includes("home.html")) {
+          location.replace(HOME);
+        }
+        return;
+      }
+      
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          await ensureAuthAndCacheUser();
+          location.replace(HOME);
+        }
+      } catch (e) { console.warn("Supabase check skipped."); }
     }
+
+    document.getElementById("googleBtn")?.addEventListener("click", window.handleGoogleClick);
+    checkInit();
   </script>
 </body>
 </html>
