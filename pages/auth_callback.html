@@ -21,10 +21,29 @@
 
   <script type="module">
     import { supabase } from "/js/supabase_client.js";
-    import { ensureAuthAndCacheUser } from "/js/auth.js";
+    import { ensureAuthAndCacheUser, clearCachedUser } from "/js/auth.js";
 
-    const HOME = "/pages/home.html";
+    const HOME  = "/pages/home.html";
     const LOGIN = "/pages/login.html";
+
+    // ✅ aynı callback tekrar tekrar çalışmasın
+    if (sessionStorage.getItem("italky_cb_lock_v1") === "1") {
+      // URL temizle
+      history.replaceState({}, "", LOGIN);
+      location.replace(LOGIN);
+    }
+    sessionStorage.setItem("italky_cb_lock_v1", "1");
+
+    function nukeSupabaseLocal(){
+      try{
+        const keys=[];
+        for(let i=0;i<localStorage.length;i++){
+          const k = localStorage.key(i);
+          if(k && k.startsWith("sb-")) keys.push(k);
+        }
+        keys.forEach(k=>localStorage.removeItem(k));
+      }catch{}
+    }
 
     async function waitForSession(maxMs=8000){
       const start = Date.now();
@@ -36,12 +55,35 @@
       return null;
     }
 
-    const s = await waitForSession();
-    if(!s){
-      location.replace(LOGIN);
-    }else{
-      await ensureAuthAndCacheUser();
-      location.replace(HOME);
+    try{
+      const s = await waitForSession();
+      if(!s){
+        // URL temizle
+        history.replaceState({}, "", LOGIN);
+        location.replace(LOGIN);
+      }else{
+        // ✅ burada patlarsa loop yapmasın diye yakalayacağız
+        await ensureAuthAndCacheUser();
+
+        // URL temizle
+        history.replaceState({}, "", HOME);
+        location.replace(HOME);
+      }
+    }catch(e){
+      console.error("auth_callback error:", e);
+
+      // ✅ Loop kırıcı: session’ı da kapat!
+      try{ await supabase.auth.signOut({ scope:"global" }); }catch(_){}
+      try{ clearCachedUser(); }catch(_){}
+      try{ localStorage.removeItem("ITALKY_ACTIVE_SESSION_KEY"); }catch(_){}
+      try{ localStorage.removeItem("NAC_ID"); }catch(_){}
+      nukeSupabaseLocal();
+
+      // URL temizle + login’e tek sefer
+      history.replaceState({}, "", LOGIN);
+      location.replace(LOGIN + "?e=auth");
+    } finally {
+      sessionStorage.removeItem("italky_cb_lock_v1");
     }
   </script>
 </body>
