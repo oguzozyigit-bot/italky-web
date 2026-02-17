@@ -13,12 +13,16 @@
   <style>
     :root{
       --bg-void:#02000f;
-      --brand-grad: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
+      --brand-grad: linear-gradient(135deg, #a5b4fc 0%, #6366f1 55%, #ec4899 100%);
       --signature-grad: linear-gradient(to right, #fff, #6366f1, #fff);
       --accent:#6366f1;
+      --muted: rgba(255,255,255,.55);
+      --muted2: rgba(255,255,255,.35);
+      --safeB: env(safe-area-inset-bottom, 0px);
     }
 
     *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; margin:0; padding:0; }
+    html,body{ height:100%; }
     body{
       background:var(--bg-void);
       color:#fff;
@@ -33,7 +37,10 @@
 
     .nebula{
       position:fixed; inset:0;
-      background: radial-gradient(circle at 50% 50%, rgba(30, 0, 60, 1) 0%, #02000f 100%);
+      background:
+        radial-gradient(circle at 25% 20%, rgba(99,102,241,.20), transparent 45%),
+        radial-gradient(circle at 80% 80%, rgba(236,72,153,.14), transparent 55%),
+        radial-gradient(circle at 50% 50%, rgba(30, 0, 60, 1) 0%, #02000f 100%);
       z-index:0;
     }
 
@@ -46,13 +53,13 @@
       justify-content:center;
       padding: 0 26px;
       z-index:10;
-      margin-top: -18px;
+      margin-top: -14px;
     }
 
     .brand-section{ text-align:center; margin-bottom: 8px; }
     .brand-section h1{
-      font-size: 68px;
-      font-weight: 900;
+      font-size: 66px;
+      font-weight: 1000;
       letter-spacing: -4px;
       line-height: 1;
     }
@@ -61,68 +68,122 @@
       -webkit-background-clip:text;
       -webkit-text-fill-color:transparent;
     }
+    .brand-sub{
+      margin-top: 8px;
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 6px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.35);
+    }
 
-    /* 🌍 Dünya */
+    /* 🌍 Daha gerçekçi dünya */
     .world-container{
       position:relative;
-      width: 270px;
-      height: 270px;
+      width: 290px;
+      height: 290px;
       display:flex;
       align-items:center;
       justify-content:center;
-      margin-top: 4px;
+      margin-top: 6px;
+      margin-bottom: 10px;
     }
-    .earth{
-      width: 190px;
-      height: 190px;
-      border-radius:50%;
-      background:url('https://upload.wikimedia.org/wikipedia/commons/2/22/Earth_Western_Hemisphere_transparent_background.png');
-      background-size:210% 100%;
-      box-shadow: inset -15px -15px 40px #000, 0 0 50px rgba(99, 102, 241, 0.30);
-      animation: rotateWorld 25s linear infinite;
-      filter: saturate(1.05);
-    }
-    .earth-light{
-      position:absolute;
-      width: 235px;
-      height: 235px;
-      border-radius:50%;
-      background: radial-gradient(circle, rgba(99,102,241,0.15) 0%, transparent 70%);
-      animation: breathe 4s infinite alternate ease-in-out;
-    }
-    @keyframes rotateWorld { from { background-position: 0 0; } to { background-position: 420px 0; } }
-    @keyframes breathe { from { transform: scale(1); opacity: .40; } to { transform: scale(1.1); opacity: .70; } }
 
+    .earth-glow{
+      position:absolute;
+      inset: 12px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(99,102,241,0.22) 0%, transparent 70%);
+      filter: blur(18px);
+      opacity: .9;
+      z-index: 0;
+      animation: glowBreath 4.8s ease-in-out infinite alternate;
+    }
+    @keyframes glowBreath{
+      from{ transform: scale(0.98); opacity: .65; }
+      to{ transform: scale(1.05); opacity: 1; }
+    }
+
+    .earth{
+      position:relative;
+      width: 210px;
+      height: 210px;
+      border-radius: 50%;
+      /* NASA Blue Marble texture (daha gerçekçi) */
+      background-image: url("https://eoimages.gsfc.nasa.gov/images/imagerecords/74000/74518/world.topo.bathy.200412.3x5400x2700.jpg");
+      background-size: cover;
+      background-position: center;
+      /* gerçekçi gölge + parlama */
+      box-shadow:
+        inset -28px -28px 60px rgba(0,0,0,0.85),
+        inset 10px 10px 28px rgba(255,255,255,0.05),
+        0 0 70px rgba(99,102,241,0.30);
+      transform-style: preserve-3d;
+      animation: rotateSphere 34s linear infinite;
+      z-index: 2;
+      overflow:hidden;
+    }
+
+    /* Bulut efekti gibi hafif parıltı katmanı (çok hafif) */
+    .earth::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      border-radius:50%;
+      background:
+        radial-gradient(circle at 30% 30%, rgba(255,255,255,0.10), transparent 55%),
+        radial-gradient(circle at 75% 60%, rgba(255,255,255,0.06), transparent 60%);
+      mix-blend-mode: screen;
+      opacity:.6;
+      pointer-events:none;
+    }
+
+    /* ✅ Ters dönme yok: rotateY */
+    @keyframes rotateSphere{
+      from{ transform: rotateY(0deg); }
+      to{ transform: rotateY(360deg); }
+    }
+
+    /* Daktilo */
     .typewriter-container{
-      height: 38px;
-      margin-top: 8px;
+      height: 44px;
+      margin-top: 6px;
       margin-bottom: 18px;
       display:flex;
       justify-content:center;
+      align-items:center;
+      width: 100%;
+      max-width: 520px;
     }
     .typewriter{
       font-family: 'JetBrains Mono', monospace;
-      font-size: 14px;
-      color:#94a3b8;
+      font-size: 16px;               /* ✅ daha büyük */
+      color: rgba(255,255,255,.65);
       border-right:2px solid var(--accent);
-      white-space:nowrap;
-      overflow:hidden;
-      width:0;
-      animation: typing 4s steps(50, end) infinite, blink .75s step-end infinite;
+      white-space: nowrap;
+      overflow: hidden;
+      width: 0;
+      animation: typing 5.6s steps(46, end) infinite, blink .85s step-end infinite; /* ✅ daha yavaş */
     }
-    @keyframes typing { 0%,10%{ width:0 } 70%,90%{ width:100% } 100%{ width:0 } }
+    @keyframes typing { 0%,10%{ width:0 } 62%,86%{ width:100% } 100%{ width:0 } }
     @keyframes blink { from,to{ border-color:transparent } 50%{ border-color:var(--accent) } }
 
-    .login-box{ width:100%; max-width: 320px; margin-bottom: 18px; z-index:20; }
+    .login-box{
+      width:100%;
+      max-width: 330px;
+      margin-bottom: 10px;
+      z-index:20;
+    }
+
     .google-btn{
       width:100%;
-      height:60px;
+      height:62px;
       border:none;
       border-radius: 40px;
       background:#fff;
       color:#000;
       font-size: 16px;
-      font-weight: 900;
+      font-weight: 1000;
       display:flex;
       align-items:center;
       justify-content:center;
@@ -135,12 +196,13 @@
     .google-btn:active{ transform: scale(.97); }
     .g-icon{ width:24px; height:24px; pointer-events:none; }
 
+    /* ✅ Footer imzayı 0.5cm yukarı */
     footer{
       width:100%;
       text-align:center;
       z-index:20;
-      padding-bottom: calc(18px + env(safe-area-inset-bottom));
-      margin-top: -4px;
+      padding-bottom: calc(18px + var(--safeB) + 18px); /* ✅ ekstra yukarı */
+      margin-top: -6px;
     }
     .footer-nav{
       display:flex;
@@ -159,12 +221,12 @@
     }
     .academy-title{
       font-size: 20px;
-      font-weight: 900;
+      font-weight: 1000;
       letter-spacing: 5px;
       margin-bottom: 6px;
       line-height:1;
     }
-    .academy-title b{ font-weight:900; text-transform: lowercase; color:#fff; }
+    .academy-title b{ font-weight:1000; text-transform: lowercase; color:#fff; }
     .academy-title span{
       background:var(--brand-grad);
       -webkit-background-clip:text;
@@ -210,10 +272,11 @@
   <div class="main">
     <div class="brand-section">
       <h1>italky<span class="ai">AI</span></h1>
+      <div class="brand-sub">BE FREE</div>
     </div>
 
     <div class="world-container" aria-hidden="true">
-      <div class="earth-light"></div>
+      <div class="earth-glow"></div>
       <div class="earth"></div>
     </div>
 
@@ -320,16 +383,15 @@
       }
     });
 
-    // Daktilo
+    // ✅ Daktilo cümleleri: daha premium + daha “açılış sayfan” tadında
     const phrases = [
-      "Dünyayı sizin için küçülttük.",
-      "Dil bariyerlerini aştık.",
-      "Sınırları kaldırdık.",
-      "italkyAI ile özgürleşin.",
-      "Anında yüz yüze iletişim.",
-      "Profesyonel akademi deneyimi.",
-      "italkyAI: Konuşmaya başla.",
-      "Dünya artık çok daha yakın."
+      "Dil bariyerlerini görünmez yapıyoruz…",
+      "italky Academy ile seviyeni netleştir…",
+      "Yüz yüze çeviri, anında ve doğal…",
+      "Offline paketlerin hazır olduğunda internet şart değil…",
+      "Akıllı ders planı: adım adım ilerle…",
+      "Dünya artık senin dilinde…",
+      "Başlamak için sadece bir hesap seç…"
     ];
     let pi = 0;
     const typeEl = document.getElementById("typewriter");
@@ -341,7 +403,7 @@
         typeEl.textContent = phrases[pi];
         typeEl.style.animation = null;
       }
-    }, 4000);
+    }, 5600);
 
     // Boot: session varsa home
     (async function boot(){
@@ -356,3 +418,4 @@
   </script>
 </body>
 </html>
+```0
