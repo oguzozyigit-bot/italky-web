@@ -103,16 +103,24 @@ function getDisplayNames(){
   }catch{ _dn = null; }
   return _dn;
 }
+
 function canonicalLangCode(code){
   const c = String(code||"").toLowerCase();
   return c.split("-")[0];
 }
+
+/* ✅ API uyumu: pt-br/zh-tw gibi kodları base’e indir */
+function normalizeApiLang(code){
+  return canonicalLangCode(code);
+}
+
 function langObj(code){
   const c = String(code||"").toLowerCase();
   return LANGS.find(x=>x.code===c) || LANGS.find(x=>x.code===canonicalLangCode(c));
 }
 function langFlag(code){ return langObj(code)?.flag || "🌐"; }
 function bcp(code){ return langObj(code)?.bcp || "en-US"; }
+
 function langLabel(code){
   const baseCode = canonicalLangCode(code);
   const dn = getDisplayNames();
@@ -296,26 +304,39 @@ function togglePop(side){
 }
 
 /* ===============================
-   TRANSLATE
+   TRANSLATE (FIXED)
    =============================== */
 async function translateViaApi(text, source, target){
   const t = String(text||"").trim();
   if(!t) return t;
 
+  // ✅ API uyumu: en-gb / pt-br / zh-tw -> base dil
+  const src = normalizeApiLang(source);
+  const dst = normalizeApiLang(target);
+
+  // aynıysa çevirmeye gerek yok
+  if(src === dst) return t;
+
   const ctrl = new AbortController();
-  const to = setTimeout(()=>ctrl.abort(), 25000); // 25s
+  const to = setTimeout(()=>ctrl.abort(), 25000);
   try{
-    const body = { text:t, source, target, from_lang:source, to_lang:target };
+    const body = { text:t, source:src, target:dst, from_lang:src, to_lang:dst };
     const r = await fetch(`${API_BASE}/api/translate`,{
       method:"POST",
       headers:{ "Content-Type":"application/json" },
       body: JSON.stringify(body),
       signal: ctrl.signal
     });
-    if(!r.ok) throw new Error(`HTTP ${r.status}`);
+
+    if(!r.ok){
+      const errTxt = await r.text().catch(()=> "");
+      console.warn("translate HTTP", r.status, errTxt);
+      return null;
+    }
+
     const data = await r.json().catch(()=>({}));
     const out = String(data?.translated||data?.translation||data?.text||"").trim();
-    return out || t;
+    return out || null;
   }catch(e){
     console.warn("translateViaApi failed:", e);
     return null;
@@ -338,7 +359,6 @@ function buildRecognizer(langCode){
   return rec;
 }
 
-// ✅ pending transcript stored until onend
 let pending = null;
 
 async function start(which){
@@ -370,10 +390,8 @@ async function start(which){
     const finalText = String(t||"").trim();
     if(!finalText) return;
 
-    // ✅ önce yazıyı kendi tarafta göster
     addBubble(which, "them", finalText, src);
 
-    // ✅ pending set, sonra rec.stop() -> onend sonrası translate + speak
     pending = { which, finalText, src, dst };
     try{ rec.stop(); }catch{}
   };
@@ -381,12 +399,10 @@ async function start(which){
   rec.onerror = (err)=>{ console.error("STT Error:", err); stopAll(); };
 
   rec.onend = async ()=>{
-    // UI
     if(active===which) active=null;
     setMicUI(which,false);
     if(!active) $("frameRoot")?.classList.remove("listening");
 
-    // ✅ Eğer pending bu rec içinse burada çevir + konuş
     const p = pending;
     if(p && p.which === which){
       pending = null;
@@ -395,14 +411,14 @@ async function start(which){
       const translated = await translateViaApi(p.finalText, p.src, p.dst);
 
       if(!translated){
-        addBubble(other, "me", "⚠️ Çeviri şu an yapılamadı.", p.dst);
+        addBubble(other, "me", "⚠️ Çeviri şu an yapılamadı.", normalizeApiLang(p.dst));
         return;
       }
 
-      addBubble(other, "me", translated, p.dst);
+      addBubble(other, "me", translated, normalizeApiLang(p.dst));
 
-      // ✅ TTS artık mic kapandıktan sonra
-      setTimeout(()=> speak(translated, p.dst), 120);
+      // ✅ mic kapandıktan sonra
+      setTimeout(()=> speak(translated, normalizeApiLang(p.dst)), 120);
     }
   };
 
