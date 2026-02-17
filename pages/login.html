@@ -1,165 +1,77 @@
-<!-- FILE: /pages/login.html -->
-<!DOCTYPE html>
-<html lang="tr">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>italkyAI • Giriş</title>
+<script type="module">
+  import { supabase } from "/js/supabase_client.js";
+  import { ensureAuthAndCacheUser, loginWithGoogle } from "/js/auth.js";
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  const toastEl = document.getElementById("toast");
+  const HOME = "/pages/home.html";
+  const STORAGE_KEY = "italky_user_v1";
 
-  <style>
-    :root { --bg-deep:#020205; --text-white:#fff; --text-grey:#9ca3af; --ai-gradient:linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#4338ca 100%); }
-    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; }
-    html,body{ margin:0; padding:0; width:100%; height:100dvh; overflow:hidden; font-family:'Outfit',sans-serif; background-color:var(--bg-deep); color:var(--text-white); display:flex; align-items:center; justify-content:center; }
-    .cosmos{ position:absolute; inset:0; z-index:0; overflow:hidden; }
-    .nebula{ position:absolute; width:90vw; height:90vw; border-radius:50%; filter:blur(120px); opacity:.25; background:radial-gradient(circle,#6366f1,transparent 70%); }
-    .n-1{ top:-20%; left:-10%; }
-    .n-2{ bottom:-10%; right:-10%; animation:breathe 12s infinite alternate ease-in-out; }
-    @keyframes breathe{ 0%{ transform:scale(1); opacity:.2;} 100%{ transform:scale(1.1); opacity:.35;} }
-    .app-frame{ width:100%; max-width:440px; height:100%; position:relative; z-index:10; display:flex; flex-direction:column; justify-content:space-between; background:rgba(8,8,12,.7); backdrop-filter:blur(20px); padding:60px 30px 30px 30px; }
-    .header-section{ text-align:center; }
-    .logo{ font-size:58px; font-weight:800; letter-spacing:-2px; line-height:1; }
-    .txt-ai{ background:var(--ai-gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-    .be-free{ letter-spacing:8px; color:#4b5563; font-size:13px; font-weight:800; margin-top:12px; }
-    .hero-text{ margin-top:50px; }
-    .hero-text h1{ font-size:26px; font-weight:700; margin-bottom:12px; }
-    .hero-text p{ font-size:15px; color:var(--text-grey); line-height:1.5; }
-    .features-list{ margin-top:30px; padding:0; list-style:none; text-align:left; display:inline-block; }
-    .features-list li{ margin-bottom:14px; font-size:16px; font-weight:500; display:flex; align-items:center; gap:12px; }
-    .features-list li::before{ content:"✦"; color:#6366f1; font-weight:900; }
+  function toast(msg){
+    if(!toastEl) return;
+    toastEl.textContent = msg;
+    toastEl.classList.add("show");
+    clearTimeout(window.__to);
+    window.__to = setTimeout(()=>toastEl.classList.remove("show"), 2200);
+  }
 
-    .action-area{ width:100%; display:flex; flex-direction:column; gap:14px; align-items:center; }
-    .google-btn{
-      width:100%; max-width:320px; height:46px; border-radius:12px;
-      border:1px solid rgba(255,255,255,0.14);
-      background:rgba(0,0,0,0.35);
-      color:#fff; font-size:15px; font-weight:900;
-      display:flex; align-items:center; justify-content:center; gap:10px;
-      cursor:pointer; user-select:none;
+  // --- NATIVE BRIDGE ---
+  
+  // 1. Android tarafı giriş yapınca bu fonksiyonu tetikleyecek
+  window.onNativeLoginSuccess = async function(jsonResponse) {
+    try {
+      const data = typeof jsonResponse === "string" ? JSON.parse(jsonResponse) : jsonResponse;
+      
+      // Gelen JWT ve Kullanıcı bilgisini sakla
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data.user));
+      localStorage.setItem("italky_token", data.token); // Backend'den gelen kendi JWT'niz
+
+      toast("Hoş geldin " + data.user.full_name + "!");
+      
+      // Sayfayı yönlendir
+      setTimeout(() => location.replace(HOME), 800);
+    } catch (e) {
+      toast("Giriş işlenirken hata oluştu.");
+      console.error("Native login error:", e);
     }
-    .google-btn:active{ transform:scale(.99); }
-    .g-icon{ width:18px; height:18px; display:inline-flex; align-items:center; justify-content:center; }
+  };
 
-    .footer-links{ display:flex; justify-content:center; gap:15px; margin-top:30px; flex-wrap:wrap; }
-    .footer-links a{ color:rgba(255,255,255,.4); text-decoration:none; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; }
-    .copyright{ text-align:center; margin-top:15px; font-size:10px; color:rgba(255,255,255,.15); font-weight:700; letter-spacing:1px; }
+  function isInApk(){
+    // Android tarafında addJavascriptInterface(..., "Native") demiştik
+    return !!(window.Native && typeof window.Native.startGoogleLogin === "function");
+  }
 
-    #toast{ position:fixed; top:18px; left:50%; transform:translateX(-50%) translateY(-120px); background:rgba(10,10,18,.92); border:1px solid rgba(165,180,252,.35); padding:10px 14px; border-radius:999px; color:#fff; z-index:9999; font-weight:900; font-size:12px; transition:.25s; backdrop-filter:blur(12px); pointer-events:none; max-width:min(92vw,520px); text-align:center; }
-    #toast.show{ transform:translateX(-50%) translateY(0); }
-  </style>
-</head>
-
-<body>
-  <div class="cosmos"><div class="nebula n-1"></div><div class="nebula n-2"></div></div>
-
-  <div class="app-frame">
-    <div class="header-section">
-      <div class="logo">italky<span class="txt-ai">AI</span></div>
-      <div class="be-free">BE FREE</div>
-
-      <div class="hero-text">
-        <h1>Yapay Zeka İle Dil Engellini Kaldır.</h1>
-        <p>Anlaşmak ve anlaşılır olmak hiç bu kadar kolay olmamıştı.</p>
-      </div>
-
-      <ul class="features-list">
-        <li>Karşılıklı Çeviri</li>
-        <li>Yapay Zeka İle Sohbet</li>
-        <li>Dil Öğretmenleri</li>
-        <li>Eğitici Dil Oyunları</li>
-      </ul>
-    </div>
-
-    <div class="bottom-area">
-      <div class="action-area">
-        <button class="google-btn" id="googleBtn" type="button">
-          <span class="g-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="18" height="18">
-              <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.2 1.2-1.5 3.6-5.5 3.6-3.3 0-6-2.7-6-6s2.7-6 6-6c1.9 0 3.2.8 3.9 1.5l2.7-2.6C17.9 2.5 15.3 1.2 12 1.2 5.9 1.2 1 6.1 1 12s4.9 10.8 11 10.8c6.3 0 10.4-4.4 10.4-10.6 0-.7-.1-1.2-.2-1.7H12z"/>
-              <path fill="#34A853" d="M3.6 7.7l3.2 2.3C7.7 8 9.7 6.5 12 6.5c1.9 0 3.2.8 3.9 1.5l2.7-2.6C17.9 2.5 15.3 1.2 12 1.2c-4.2 0-7.8 2.4-9.6 6.5z"/>
-              <path fill="#FBBC05" d="M12 22.8c3.2 0 5.9-1.1 7.9-2.9l-3.6-2.8c-1 .7-2.3 1.2-4.3 1.2-3.2 0-5.8-2.1-6.7-5l-3.4 2.6c1.8 3.5 5.4 5.9 10.1 5.9z"/>
-              <path fill="#4285F4" d="M22.2 12.2c0-.7-.1-1.2-.2-1.7H12v3.9h5.5c-.3 1.3-1.5 3.6-5.5 3.6-3.3 0-6-2.7-6-6 0-.6.1-1.1.2-1.6L2.8 10c-.6 1.2-.9 2.6-.9 4 0 5.9 4.9 10.8 11 10.8 6.3 0 10.4-4.4 10.4-10.6z"/>
-            </svg>
-          </span>
-          <span>Google ile Devam Et</span>
-        </button>
-      </div>
-
-      <div class="footer-links">
-        <a href="/pages/about.html">Hakkımızda</a>
-        <a href="/pages/faq.html">SSS</a>
-        <a href="/pages/privacy.html">Gizlilik</a>
-        <a href="/pages/contact.html">İletişim</a>
-      </div>
-      <div class="copyright">italkyAI By Ozyigit's 2026</div>
-    </div>
-  </div>
-
-  <div id="toast"></div>
-
-  <script type="module">
-    import { supabase } from "/js/supabase_client.js";
-    import { ensureAuthAndCacheUser, loginWithGoogle } from "/js/auth.js";
-
-    const toastEl = document.getElementById("toast");
-    const HOME = "/pages/home.html";
-
-    function toast(msg){
-      if(!toastEl) return;
-      toastEl.textContent = msg;
-      toastEl.classList.add("show");
-      clearTimeout(window.__to);
-      window.__to = setTimeout(()=>toastEl.classList.remove("show"), 2200);
+  async function checkSession(){
+    // APK içinde native session kontrolü
+    if(hasLocalUser()){
+      location.replace(HOME);
+      return;
     }
 
-    function isInAppWebView(){
-      // ✅ Android WebView bridge var mı?
-      return !!(window.Native && typeof window.Native.startGoogleLogin === "function");
-    }
-
-    async function checkSession(){
-      try{
-        const { data: { session } } = await supabase.auth.getSession();
-        if(session){
-          await ensureAuthAndCacheUser();
-          location.replace(HOME);
-        }
-      }catch(e){
-        console.error(e);
+    // Web için standart Supabase kontrolü
+    try{
+      const { data: { session } } = await supabase.auth.getSession();
+      if(session){
+        await ensureAuthAndCacheUser();
+        location.replace(HOME);
       }
+    }catch(e){ console.warn(e); }
+  }
+
+  async function handleGoogleClick(){
+    if(isInApk()){
+      toast("Güvenli giriş başlatılıyor...");
+      window.Native.startGoogleLogin(); // Android SDK'yı tetikler
+    } else {
+      toast("Google yönlendiriliyor...");
+      await loginWithGoogle(); // Normal Web akışı
     }
+  }
 
-    document.getElementById("googleBtn")?.addEventListener("click", async ()=>{
-      try{
-        // ✅ APK/WebView ise: web oauth çağırma, native çalıştır
-        if(isInAppWebView()){
-          toast("Uygulama içi giriş açılıyor...");
-          window.Native.startGoogleLogin();
-          return;
-        }
+  function hasLocalUser(){
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return !!raw;
+  }
 
-        // ✅ normal tarayıcı: supabase oauth
-        toast("Giriş başlatılıyor...");
-
-// ✅ APK (WebView) ise: native google login
-if (window.Native && typeof window.Native.startGoogleLogin === "function") {
-  window.Native.startGoogleLogin();
-  return;
-}
-
-// ✅ Normal tarayıcı ise: Supabase OAuth
-await loginWithGoogle();
-
-      }catch(e){
-        console.error(e);
-        toast(e?.message || "Giriş başlatılamadı.");
-      }
-    });
-
-    checkSession();
-  </script>
-</body>
-</html>
+  document.getElementById("googleBtn")?.addEventListener("click", handleGoogleClick);
+  checkSession();
+</script>
