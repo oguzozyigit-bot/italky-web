@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>italkyAI • Pro Hub</title>
+  <title>italkyAI • Hub</title>
   <style>
     :root {
       --ai-gradient: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
-      /* Alt bar ve sistem tuşları için en güvenli mesafe */
-      --shell-safe-bottom: 160px; 
+      /* Alt bar ve sistem tuşları için en güvenli, en yüksek tampon bölge */
+      --shell-safe-bottom: 180px; 
     }
 
     /* ✅ SCROLLSUZ VE TAM KORUMALI DÜZEN */
@@ -16,25 +16,26 @@
       height: 100vh;
       display: flex;
       flex-direction: column;
-      justify-content: space-between; /* Kartları tüm alana yayarak boşluğu kapatır */
+      justify-content: space-between; 
+      /* Alt barın üzerine binmemesi için kesin boşluk */
       padding: 10px 0 var(--shell-safe-bottom); 
       box-sizing: border-box;
-      gap: 12px;
+      gap: 10px;
       overflow: hidden;
     }
 
-    /* 1. FACETOFACE (DAHA BÜYÜK VE MERKEZİ) */
+    /* 1. FACETOFACE (DAHA BÜYÜK) */
     .portal-zone {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       cursor: pointer; padding: 10px 0;
       -webkit-tap-highlight-color: transparent;
     }
     .neural-orb {
-      width: 130px; height: 130px; position: relative;
+      width: 125px; height: 125px; position: relative;
       display: flex; align-items: center; justify-content: center;
     }
     .ai-ring {
-      position: absolute; inset: -5px; border-radius: 50%; padding: 3px;
+      position: absolute; inset: -5px; border-radius: 50%; padding: 2.5px;
       background: var(--ai-gradient); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
       mask-composite: exclude; animation: rotateOrbit 15s linear infinite;
     }
@@ -47,56 +48,55 @@
     .ball-b { bottom: -6px; left: 50%; transform: translateX(-50%); background: #801336; box-shadow: 0 0 15px #801336; }
 
     .ai-core {
-      width: 90px; height: 90px; background: #000; border-radius: 50%;
+      width: 85px; height: 85px; background: #000; border-radius: 50%;
       background-image: linear-gradient(#000, #000), var(--ai-gradient);
       background-origin: border-box; background-clip: content-box, border-box;
-      border: 2.5px solid transparent; display: flex; align-items: center; justify-content: center;
+      border: 2px solid transparent; display: flex; align-items: center; justify-content: center;
       animation: aiBreathe 4s infinite ease-in-out;
       z-index: 10;
     }
-    .portal-info { text-align: center; margin-top: 15px; }
-    .portal-info h1 { margin: 0; font-size: 28px; font-weight: 900; color: #fff; letter-spacing: -1px; }
-    .portal-info p { margin: 2px 0 0; font-size: 13px; font-weight: 800; color: rgba(255,255,255,0.5); }
+    .portal-info { text-align: center; margin-top: 10px; }
+    .portal-info h1 { margin: 0; font-size: 26px; font-weight: 900; color: #fff; letter-spacing: -1.2px; }
+    .portal-info p { margin: 2px 0 0; font-size: 11px; font-weight: 800; color: rgba(255,255,255,0.5); }
 
-    /* 2. ACADEMY (HAREKETLİ LOGO) */
+    /* 2. ACADEMY (EQUALIZER HAREKETLİ) */
     .academy-pro {
       background: rgba(255, 255, 255, 0.06);
-      border-radius: 28px;
-      padding: 16px 22px;
+      border-radius: 26px;
+      padding: 16px 20px;
       border: 1px solid rgba(255, 255, 255, 0.12);
       display: flex; align-items: center; gap: 16px;
       cursor: pointer;
     }
     .spectrum-logo { gap: 4px; display: flex; align-items: center; flex-shrink: 0; height: 35px; }
-    .bar { width: 4px; border-radius: 10px; animation: barMove 1.2s infinite ease-in-out; }
-    
-    .bar-1 { height: 12px; background: #ff0000; animation-delay: 0.1s; }
-    .bar-2 { height: 20px; background: #ff7f00; animation-delay: 0.3s; }
-    .bar-3 { height: 28px; background: #ffff00; animation-delay: 0.5s; }
-    .bar-4 { height: 35px; background: #00ff00; animation-delay: 0.7s; }
-    .bar-5 { height: 28px; background: #0000ff; animation-delay: 0.5s; }
-    .bar-6 { height: 20px; background: #4b0082; animation-delay: 0.3s; }
-    .bar-7 { height: 12px; background: #8b00ff; animation-delay: 0.1s; }
+    .bar { width: 4px; border-radius: 10px; animation: barMove 1s infinite ease-in-out; }
+    .bar-1 { height: 10px; background: #ff0000; animation-delay: 0.1s; }
+    .bar-2 { height: 18px; background: #ff7f00; animation-delay: 0.3s; }
+    .bar-3 { height: 26px; background: #ffff00; animation-delay: 0.5s; }
+    .bar-4 { height: 34px; background: #00ff00; animation-delay: 0.7s; }
+    .bar-5 { height: 26px; background: #0000ff; animation-delay: 0.5s; }
+    .bar-6 { height: 18px; background: #4b0082; animation-delay: 0.3s; }
+    .bar-7 { height: 10px; background: #8b00ff; animation-delay: 0.1s; }
 
-    .academy-text h2 { margin: 0; font-size: 19px; font-weight: 900; color: #fff; }
+    .academy-text h2 { margin: 0; font-size: 18px; font-weight: 900; color: #fff; }
     .academy-text h2 span { background: var(--ai-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .academy-text p { margin: 0; font-size: 11px; font-weight: 800; color: rgba(255,255,255,0.4); }
+    .academy-text p { margin: 0; font-size: 10px; font-weight: 800; color: rgba(255,255,255,0.4); }
 
-    /* 3. GRID LAYOUT (ALANI DOLDURAN KARTLAR) */
+    /* 3. GRID LAYOUT */
     .pro-grid {
       display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
     }
     .pro-tile {
       background: rgba(255, 255, 255, 0.06);
       border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 24px; padding: 18px; 
-      display: flex; align-items: center; gap: 14px;
+      border-radius: 24px; padding: 15px; 
+      display: flex; align-items: center; gap: 12px;
       cursor: pointer;
     }
     .tile-icon {
-      width: 42px; height: 42px; border-radius: 12px; background: rgba(255,255,255,0.08);
+      width: 40px; height: 40px; border-radius: 12px; background: rgba(255,255,255,0.08);
       display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-      font-size: 18px;
+      font-size: 16px;
     }
     .ico-txt::before { content: "Aa"; color: #34d399; font-weight: 900; }
     .ico-cam::before { content: "◎"; color: #60a5fa; font-weight: 900; }
@@ -105,16 +105,16 @@
     .ico-chat::before { content: "💬"; }
     .ico-teacher::before { content: "🎓"; }
 
-    .pro-tile label { font-size: 13px; font-weight: 800; color: #fff; line-height: 1.2; }
+    .pro-tile label { font-size: 12px; font-weight: 800; color: #fff; line-height: 1.2; }
     .pro-tile label span { background: var(--ai-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
-    /* 4. MEETING BAR (KESİN GÜVENLİ BÖLGE) */
+    /* 4. ONLINE MEETING (KARTLARA YAKLAŞTIRILDI) */
     .meeting-bar {
       background: rgba(255, 255, 255, 0.06);
-      border-radius: 28px;
-      padding: 18px 24px;
+      border-radius: 26px;
+      padding: 16px 20px;
       border: 1px solid rgba(99, 102, 241, 0.3);
-      display: flex; align-items: center; gap: 18px;
+      display: flex; align-items: center; gap: 16px;
       cursor: pointer;
     }
 
@@ -190,7 +190,7 @@
     <div class="meeting-bar" data-nav="/pages/meeting.html">
       <div class="tile-icon">📹</div>
       <div class="academy-text">
-        <h2 style="font-size: 18px;">Online Toplantı</h2>
+        <h2 style="font-size: 17px;">Online Toplantı</h2>
         <p>CANLI ÇEVİRİ ODALARI</p>
       </div>
     </div>
