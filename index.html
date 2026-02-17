@@ -106,6 +106,7 @@
 
     const toastEl = document.getElementById("toast");
     const HOME = "/pages/home.html";
+    const STORAGE_KEY = "italky_user_v1";
 
     function toast(msg){
       if(!toastEl) return;
@@ -115,20 +116,61 @@
       window.__to = setTimeout(()=>toastEl.classList.remove("show"), 2200);
     }
 
+    function isInApk(){
+      // ✅ Android WebView JS interface adı: "Native"
+      return !!(window.Native && typeof window.Native.startGoogleLogin === "function");
+    }
+
+    function hasLocalUser(){
+      try{
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if(!raw) return false;
+        const u = JSON.parse(raw);
+        return !!(u && u.email);
+      }catch{
+        return false;
+      }
+    }
+
     async function checkSession(){
+      // 1) Supabase session varsa direkt devam (web veya apk fark etmez)
       try{
         const { data: { session } } = await supabase.auth.getSession();
         if(session){
           toast("Oturum bulundu, devam ediliyor...");
           await ensureAuthAndCacheUser();
           location.replace(HOME);
+          return;
         }
       }catch(e){
-        console.error(e);
+        console.warn("checkSession supabase:", e);
       }
+
+      // 2) APK native login injection yaptıysa localStorage dolu olur → home
+      if(hasLocalUser()){
+        toast("Giriş tamam, devam ediliyor...");
+        location.replace(HOME);
+        return;
+      }
+
+      // 3) hiçbir şey yoksa login sayfasında kal
     }
 
-    document.getElementById("googleBtn")?.addEventListener("click", async ()=>{
+    async function handleGoogleClick(){
+      // ✅ APK: WebView OAuth YASAK → native login
+      if(isInApk()){
+        try{
+          toast("Google giriş açılıyor...");
+          window.Native.startGoogleLogin();
+          return;
+        }catch(e){
+          console.error(e);
+          toast("Native giriş başlatılamadı.");
+          return;
+        }
+      }
+
+      // ✅ Normal web: supabase oauth
       try{
         toast("Google yönlendiriliyor...");
         await loginWithGoogle();
@@ -136,7 +178,9 @@
         console.error(e);
         toast(e?.message || "Giriş başlatılamadı.");
       }
-    });
+    }
+
+    document.getElementById("googleBtn")?.addEventListener("click", handleGoogleClick);
 
     checkSession();
   </script>
