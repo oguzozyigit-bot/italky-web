@@ -28,7 +28,7 @@ const HOME_FOOTER_HTML = `
     <a href="/pages/privacy.html">Gizlilik</a>
     <a href="/pages/contact.html">İletişim</a>
   </nav>
-  <div class="prestige-signature">italkyAI @ italkyAcedemia By Ozyigit's</div>
+  <div class="prestige-signature">italkyAI @ italkyAcedemy By Ozyigit's</div>
 </footer>
 `;
 
