@@ -1,117 +1,216 @@
+<!-- FILE: /pages/login.html -->
 <!DOCTYPE html>
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>italkyAI • Pro-Elite 3000</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>italkyAI • Giriş</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 
   <style>
-    :root {
-      --bg-void: #02000f;
+    :root{
+      --bg-void:#02000f;
       --brand-grad: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
       --signature-grad: linear-gradient(to right, #fff, #6366f1, #fff);
-      --accent: #6366f1;
+      --accent:#6366f1;
+      --danger:#ff3366;
     }
-
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
-    
-    body {
-      background-color: var(--bg-void);
-      color: #fff;
-      font-family: 'Outfit', sans-serif;
-      height: 100dvh;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      align-items: center;
+    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; margin:0; padding:0; }
+    body{
+      background:var(--bg-void);
+      color:#fff;
+      font-family:'Outfit',sans-serif;
+      height:100dvh;
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
     }
-
-    .nebula {
-      position: fixed; inset: 0;
+    .nebula{
+      position:fixed; inset:0;
       background: radial-gradient(circle at 50% 50%, rgba(30, 0, 60, 1) 0%, #02000f 100%);
-      z-index: 0;
+      z-index:0;
     }
-
-    .main {
-      flex: 1; display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      padding: 0 30px; z-index: 10; width: 100%; margin-top: -30px;
+    .main{
+      flex:1;
+      width:100%;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      padding: 0 26px;
+      z-index:10;
+      margin-top: -18px;
     }
-
-    .brand-section { text-align: center; margin-bottom: 10px; }
-    .brand-section h1 { font-size: 72px; font-weight: 800; letter-spacing: -4px; line-height: 1; }
-    .brand-section h1 span.ai {
-      background: var(--brand-grad);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    .brand-section{ text-align:center; margin-bottom: 8px; }
+    .brand-section h1{
+      font-size: 68px;
+      font-weight: 800;
+      letter-spacing: -4px;
+      line-height: 1;
     }
-
-    /* 🌍 DÖNEN DÜNYA */
-    .world-container {
-      position: relative; width: 280px; height: 280px;
-      display: flex; align-items: center; justify-content: center;
+    .brand-section h1 span.ai{
+      background:var(--brand-grad);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
     }
-    .earth {
-      width: 200px; height: 200px; border-radius: 50%;
-      background: url('https://upload.wikimedia.org/wikipedia/commons/2/22/Earth_Western_Hemisphere_transparent_background.png');
-      background-size: 210% 100%;
-      box-shadow: inset -15px -15px 40px #000, 0 0 50px rgba(99, 102, 241, 0.3);
+    .world-container{
+      position:relative;
+      width: 270px;
+      height: 270px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      margin-top: 4px;
+    }
+    .earth{
+      width: 190px; height: 190px; border-radius:50%;
+      background:url('https://upload.wikimedia.org/wikipedia/commons/2/22/Earth_Western_Hemisphere_transparent_background.png');
+      background-size:210% 100%;
+      box-shadow: inset -15px -15px 40px #000, 0 0 50px rgba(99, 102, 241, 0.30);
       animation: rotateWorld 25s linear infinite;
     }
-    .earth-light {
-      position: absolute; width: 240px; height: 240px; border-radius: 50%;
-      background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+    .earth-light{
+      position:absolute;
+      width: 235px; height: 235px; border-radius:50%;
+      background: radial-gradient(circle, rgba(99,102,241,0.15) 0%, transparent 70%);
       animation: breathe 4s infinite alternate ease-in-out;
     }
     @keyframes rotateWorld { from { background-position: 0 0; } to { background-position: 420px 0; } }
-    @keyframes breathe { from { transform: scale(1); opacity: 0.4; } to { transform: scale(1.1); opacity: 0.7; } }
+    @keyframes breathe { from { transform: scale(1); opacity: .40; } to { transform: scale(1.1); opacity: .70; } }
 
-    /* ⌨️ DAKTİLO */
-    .typewriter-container { height: 40px; margin-top: 10px; margin-bottom: 25px; display: flex; justify-content: center; }
-    .typewriter {
-      font-family: 'JetBrains Mono', monospace; font-size: 15px; color: #94a3b8;
-      border-right: 2px solid var(--accent); white-space: nowrap; overflow: hidden; width: 0;
+    .typewriter-container{ height: 38px; margin-top: 8px; margin-bottom: 18px; display:flex; justify-content:center; }
+    .typewriter{
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      color:#94a3b8;
+      border-right:2px solid var(--accent);
+      white-space:nowrap;
+      overflow:hidden;
+      width:0;
       animation: typing 4s steps(50, end) infinite, blink .75s step-end infinite;
     }
-    @keyframes typing { 0%, 10% { width: 0 } 70%, 90% { width: 100% } 100% { width: 0 } }
-    @keyframes blink { from, to { border-color: transparent } 50% { border-color: var(--accent) } }
+    @keyframes typing { 0%,10%{ width:0 } 70%,90%{ width:100% } 100%{ width:0 } }
+    @keyframes blink { from,to{ border-color:transparent } 50%{ border-color:var(--accent) } }
 
-    /* 🔘 GOOGLE BUTONU */
-    .login-box { width: 100%; max-width: 320px; margin-bottom: 25px; z-index: 20; }
-    .google-btn {
-      width: 100%; height: 62px; background: #fff; color: #000;
-      border: none; border-radius: 40px; font-size: 16px; font-weight: 800;
-      display:flex; align-items:center; justify-content:center; gap:14px;
-      cursor:pointer; box-shadow: 0 15px 35px rgba(0,0,0,0.4); 
-      transition: 0.2s;
+    .login-box{ width:100%; max-width: 320px; margin-bottom: 12px; z-index:20; display:flex; flex-direction:column; gap:10px; }
+    .google-btn{
+      width:100%;
+      height:60px;
+      border:none;
+      border-radius: 40px;
+      background:#fff;
+      color:#000;
+      font-size: 16px;
+      font-weight: 900;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:14px;
+      cursor:pointer;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.40);
+      transition: .18s;
+      user-select:none;
     }
-    .google-btn:active { transform: scale(0.97); }
-    .g-icon { width: 24px; height: 24px; pointer-events: none; }
+    .google-btn:active{ transform: scale(.97); }
+    .g-icon{ width:24px; height:24px; pointer-events:none; }
 
-    /* 📜 FOOTER */
-    footer { width: 100%; padding-bottom: 30px; text-align: center; z-index: 20; }
-    .footer-nav { display: flex; justify-content: center; gap: 20px; margin-bottom: 12px; }
-    .footer-nav a { text-decoration: none; color: rgba(255,255,255,0.4); font-size: 11px; font-weight: 700; text-transform: uppercase; }
-    
-    .academy-title { font-size: 22px; font-weight: 800; letter-spacing: 6px; margin-bottom: 8px; }
-    .academy-title b { font-weight: 800; text-transform: lowercase; color: #fff; }
-    .academy-title span { background: var(--brand-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-transform: uppercase; }
+    .alt-btn{
+      width:100%;
+      height:52px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.06);
+      color:#fff;
+      font-weight: 900;
+      cursor:pointer;
+    }
+    .alt-btn:active{ transform: scale(.98); }
 
-    .prestige-signature {
-      font-size: 12px; font-weight: 900; letter-spacing: 1.5px;
-      background: var(--signature-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      opacity: 0.8;
+    .warn{
+      display:none;
+      width: min(520px, 92vw);
+      background: rgba(255, 51, 102, 0.12);
+      border: 1px solid rgba(255, 51, 102, 0.35);
+      border-radius: 18px;
+      padding: 12px 12px;
+      color: rgba(255,255,255,0.9);
+      font-weight: 800;
+      font-size: 12px;
+      line-height: 1.4;
+      margin: 10px auto 0;
     }
-    
-    #toast {
-      position: fixed; top: 18px; left: 50%; transform: translateX(-50%) translateY(-120px);
-      background: rgba(10, 10, 18, 0.95); border: 1px solid var(--accent);
-      padding: 12px 24px; border-radius: 99px; color: #fff; z-index: 9999;
-      font-weight: 700; transition: 0.3s;
+
+    footer{
+      width:100%;
+      text-align:center;
+      z-index:20;
+      padding-bottom: calc(18px + env(safe-area-inset-bottom));
+      margin-top: -4px;
     }
-    #toast.show { transform: translateX(-50%) translateY(0); }
+    .footer-nav{
+      display:flex;
+      justify-content:center;
+      gap: 18px;
+      flex-wrap:wrap;
+      margin-bottom: 10px;
+    }
+    .footer-nav a{
+      text-decoration:none;
+      color: rgba(255,255,255,0.40);
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+    .academy-title{
+      font-size: 20px;
+      font-weight: 900;
+      letter-spacing: 5px;
+      margin-bottom: 6px;
+      line-height:1;
+    }
+    .academy-title b{ font-weight:900; text-transform: lowercase; color:#fff; }
+    .academy-title span{
+      background:var(--brand-grad);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      text-transform: uppercase;
+    }
+    .prestige-signature{
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 1.2px;
+      background: var(--signature-grad);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      opacity:.82;
+    }
+
+    #toast{
+      position:fixed;
+      top: 18px;
+      left:50%;
+      transform:translateX(-50%) translateY(-120px);
+      background: rgba(10,10,18,0.95);
+      border: 1px solid var(--accent);
+      padding: 12px 18px;
+      border-radius: 999px;
+      color:#fff;
+      z-index:9999;
+      font-weight: 900;
+      font-size: 12px;
+      transition: .28s;
+      backdrop-filter: blur(12px);
+      pointer-events:none;
+      max-width: min(92vw, 520px);
+      text-align:center;
+    }
+    #toast.show{ transform:translateX(-50%) translateY(0); }
   </style>
 </head>
 
@@ -133,15 +232,25 @@
     </div>
 
     <div class="login-box">
-      <button class="google-btn" id="googleBtn" type="button" onclick="handleGoogleClick()">
-        <svg class="g-icon" viewBox="0 0 24 24">
+      <button class="google-btn" id="googleBtn" type="button">
+        <svg class="g-icon" viewBox="0 0 24 24" aria-hidden="true">
           <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
           <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
           <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
           <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
         </svg>
-        <span>google ile devam et</span>
+        <span>Google ile devam et</span>
       </button>
+
+      <!-- ✅ WebView Native yoksa Supabase OAuth’u açmaya çalışma; tarayıcıya taşı -->
+      <button class="alt-btn" id="openBrowserBtn" type="button" style="display:none;">
+        Tarayıcıda aç
+      </button>
+    </div>
+
+    <div class="warn" id="warnBox">
+      Bu cihazda güvenli giriş için uygulama içi “Native” köprüsü bulunamadı.<br>
+      “Tarayıcıda aç” ile giriş yapabilirsin. (APK güncellemesinden sonra bu uyarı kaybolur.)
     </div>
   </div>
 
@@ -166,82 +275,139 @@
     const HOME = "/pages/home.html";
     const STORAGE_KEY = "italky_user_v1";
 
-    window.toast = function(msg){
+    let navigating = false;
+
+    function toast(msg){
       if(!toastEl) return;
-      toastEl.textContent = msg;
+      toastEl.textContent = String(msg||"");
       toastEl.classList.add("show");
-      setTimeout(()=>toastEl.classList.remove("show"), 2200);
+      clearTimeout(window.__to);
+      window.__to = setTimeout(()=>toastEl.classList.remove("show"), 2200);
     }
 
-    // --- NATIVE BRIDGE ---
-    window.onNativeLoginSuccess = async function(jsonResponse) {
-      try {
-        const data = typeof jsonResponse === "string" ? JSON.parse(jsonResponse) : jsonResponse;
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(data.user));
-        localStorage.setItem("italky_token", data.token); 
-        window.toast("Hoş geldin " + data.user.full_name + "!");
-        setTimeout(() => location.replace(HOME), 800);
-      } catch (e) { window.toast("Giriş hatası!"); }
-    };
+    function goHome(){
+      if(navigating) return;
+      navigating = true;
+      location.replace(HOME);
+    }
 
-    function isInApk(){
+    function isNative(){
       return !!(window.Native && typeof window.Native.startGoogleLogin === "function");
     }
 
-    // --- GOOGLE CLICK ---
-    window.handleGoogleClick = async function(){
-      if(isInApk()){
-        window.toast("Güvenli giriş başlatılıyor...");
-        window.Native.startGoogleLogin(); 
-      } else {
-        window.toast("Google yönlendiriliyor...");
-        await loginWithGoogle(); 
-      }
+    function isWebView(){
+      const ua = navigator.userAgent || "";
+      // Android System WebView genelde "wv" taşır
+      return /; wv\)/i.test(ua) || /\bwv\b/i.test(ua);
     }
 
-    // --- DAKTİLO (20 MESAJ) ---
+    // Daktilo
     const phrases = [
-      "Dünyayı sizin için küçülttük.", "Dil bariyerlerini aştık.", "Sınırları kaldırdık.",
-      "italkyAI ile özgürleşin.", "Yapay zeka asistanın aktif.", "Offline çeviri aktif.",
-      "Geleceğe hoş geldiniz.", "7/24 kesintisiz tercüme.", "Anında yüz yüze iletişim.",
-      "Kendi dilinde dünyayı keşfet.", "İletişimin yeni boyutuna geç.", "Zamanı ve mekânı aşıyoruz.",
-      "Kültürler arası köprü kuruyoruz.", "Sesi yazıya, yazıyı sese dönüştür.", "En akıllı dil asistanın burada.",
-      "Profesyonel akademi deneyimi.", "Her dilde aynı samimiyet.", "italkyAI: Konuşmaya başla.",
-      "Dünya artık çok daha yakın.", "Dil öğrenme devri bitti."
+      "Dünyayı sizin için küçülttük.",
+      "Dil bariyerlerini aştık.",
+      "Sınırları kaldırdık.",
+      "italkyAI ile özgürleşin.",
+      "Anında yüz yüze iletişim.",
+      "Profesyonel akademi deneyimi.",
+      "italkyAI: Konuşmaya başla.",
+      "Dünya artık çok daha yakın."
     ];
-    let i = 0;
-    const typewriterEl = document.getElementById("typewriter");
-
-    setInterval(() => {
-      i = (i + 1) % phrases.length;
-      typewriterEl.style.animation = 'none';
-      typewriterEl.offsetHeight; 
-      typewriterEl.textContent = phrases[i];
-      typewriterEl.style.animation = null;
+    let pi = 0;
+    const typeEl = document.getElementById("typewriter");
+    setInterval(()=>{
+      pi = (pi + 1) % phrases.length;
+      if(typeEl){
+        typeEl.style.animation = "none";
+        typeEl.offsetHeight;
+        typeEl.textContent = phrases[pi];
+        typeEl.style.animation = null;
+      }
     }, 4000);
 
-    // --- OTURUM KONTROLÜ (Refresh Döngüsünü Kıran Bölüm) ---
-    async function checkInit() {
-      const localUser = localStorage.getItem(STORAGE_KEY);
-      if (localUser) {
-        // Eğer zaten home sayfasında değilsek yönlendir
-        if (!window.location.href.includes("home.html")) {
-          location.replace(HOME);
+    // ✅ Tarayıcıda aç (fallback)
+    const openBrowserBtn = document.getElementById("openBrowserBtn");
+    const warnBox = document.getElementById("warnBox");
+    function showBrowserFallback(){
+      if(openBrowserBtn) openBrowserBtn.style.display = "block";
+      if(warnBox) warnBox.style.display = "block";
+    }
+    openBrowserBtn?.addEventListener("click", ()=>{
+      // aynı sayfayı dış tarayıcıda açmak genelde yeterli (APK’den çıkartır)
+      window.location.href = "https://italky.ai/pages/login.html?ext=1";
+    });
+
+    // ✅ Google butonu
+    document.getElementById("googleBtn")?.addEventListener("click", async ()=>{
+      try{
+        if(isNative()){
+          toast("Güvenli giriş başlatılıyor…");
+          window.Native.startGoogleLogin();
+          return;
         }
+
+        // WebView ama native yoksa → Supabase OAuth deneme (disallowed_useragent riski)
+        if(isWebView()){
+          toast("Uygulama güncellenmeli. Tarayıcıdan giriş deneyin.");
+          showBrowserFallback();
+          return;
+        }
+
+        // Normal web
+        toast("Google yönlendiriliyor…");
+        await loginWithGoogle();
+      }catch(e){
+        console.error(e);
+        toast(e?.message || "Giriş başlatılamadı");
+      }
+    });
+
+    // ✅ Native success hook (Android evaluateJavascript ile çağrılabilir)
+    window.onNativeLoginSuccess = async function(payload){
+      try{
+        const data = (typeof payload === "string") ? JSON.parse(payload) : payload;
+        if(data?.user){
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(data.user));
+        }
+        toast("Hoş geldin!");
+        setTimeout(goHome, 600);
+      }catch(e){
+        console.error(e);
+        toast("Giriş hatası");
+      }
+    };
+
+    // ✅ Boot (loop yok)
+    (async function boot(){
+      // APK native varsa sadece local user check
+      if(isNative()){
+        try{
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if(raw){
+            const u = JSON.parse(raw);
+            if(u?.email) { goHome(); return; }
+          }
+        }catch{}
         return;
       }
-      
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-          await ensureAuthAndCacheUser();
-          location.replace(HOME);
-        }
-      } catch (e) { console.warn("Supabase check skipped."); }
-    }
 
-    document.getElementById("googleBtn")?.addEventListener("click", window.handleGoogleClick);
-    checkInit();
+      // WebView ama native yok: tarayıcı fallback göster
+      if(isWebView()){
+        showBrowserFallback();
+        return;
+      }
+
+      // Web: Supabase session varsa home
+      try{
+        const { data:{ session } } = await supabase.auth.getSession();
+        if(session){
+          toast("Oturum bulundu, devam…");
+          await ensureAuthAndCacheUser();
+          goHome();
+        }
+      }catch(e){
+        console.warn(e);
+      }
+    })();
   </script>
 </body>
 </html>
