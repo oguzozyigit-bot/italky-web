@@ -41,6 +41,7 @@
       padding: 0 30px; z-index: 10; width: 100%; margin-top: -30px;
     }
 
+    /* Üst Logo */
     .brand-section { text-align: center; margin-bottom: 10px; }
     .brand-section h1 { font-size: 72px; font-weight: 800; letter-spacing: -4px; line-height: 1; }
     .brand-section h1 span.ai {
@@ -48,7 +49,7 @@
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     }
 
-    /* 🌍 DÖNEN DÜNYA */
+    /* 🌍 Dönen Dünya */
     .world-container {
       position: relative; width: 280px; height: 280px;
       display: flex; align-items: center; justify-content: center;
@@ -68,7 +69,7 @@
     @keyframes rotateWorld { from { background-position: 0 0; } to { background-position: 420px 0; } }
     @keyframes breathe { from { transform: scale(1); opacity: 0.4; } to { transform: scale(1.1); opacity: 0.7; } }
 
-    /* ⌨️ DAKTİLO */
+    /* Daktilo */
     .typewriter-container { height: 40px; margin-top: 10px; margin-bottom: 25px; display: flex; justify-content: center; }
     .typewriter {
       font-family: 'JetBrains Mono', monospace; font-size: 15px; color: #94a3b8;
@@ -78,20 +79,19 @@
     @keyframes typing { 0%, 10% { width: 0 } 70%, 90% { width: 100% } 100% { width: 0 } }
     @keyframes blink { from, to { border-color: transparent } 50% { border-color: var(--accent) } }
 
-    /* 🔘 GOOGLE BUTONU */
+    /* Google Butonu */
     .login-box { width: 100%; max-width: 320px; margin-bottom: 25px; z-index: 20; }
     .google-btn {
       width: 100%; height: 62px; background: #fff; color: #000;
       border: none; border-radius: 40px; font-size: 16px; font-weight: 800;
       display:flex; align-items:center; justify-content:center; gap:14px;
-      cursor:pointer; box-shadow: 0 15px 35px rgba(0,0,0,0.4); 
-      transition: 0.2s;
+      cursor:pointer; box-shadow: 0 15px 35px rgba(0,0,0,0.4); transition: 0.2s;
     }
     .google-btn:active { transform: scale(0.97); }
     .g-icon { width: 24px; height: 24px; pointer-events: none; }
 
-    /* 📜 FOOTER */
-    footer { width: 100%; padding-bottom: 30px; text-align: center; z-index: 20; }
+    /* 📜 Footer (Zorunlu Görünür) */
+    footer { width: 100%; padding-bottom: 30px; text-align: center; z-index: 20; background: transparent; }
     .footer-nav { display: flex; justify-content: center; gap: 20px; margin-bottom: 12px; }
     .footer-nav a { text-decoration: none; color: rgba(255,255,255,0.4); font-size: 11px; font-weight: 700; text-transform: uppercase; }
     
@@ -166,6 +166,7 @@
     const HOME = "/pages/home.html";
     const STORAGE_KEY = "italky_user_v1";
 
+    // Global fonksiyonlar
     window.toast = function(msg){
       if(!toastEl) return;
       toastEl.textContent = msg;
@@ -173,7 +174,18 @@
       setTimeout(()=>toastEl.classList.remove("show"), 2200);
     }
 
-    // --- NATIVE BRIDGE ---
+    // Google Giriş Mantığı
+    window.handleGoogleClick = async function(){
+      if(window.Native && typeof window.Native.startGoogleLogin === "function"){
+        window.toast("Güvenli giriş başlatılıyor...");
+        window.Native.startGoogleLogin(); 
+      } else {
+        window.toast("Google yönlendiriliyor...");
+        await loginWithGoogle(); 
+      }
+    }
+
+    // Native Başarı Callback
     window.onNativeLoginSuccess = async function(jsonResponse) {
       try {
         const data = typeof jsonResponse === "string" ? JSON.parse(jsonResponse) : jsonResponse;
@@ -184,22 +196,7 @@
       } catch (e) { window.toast("Giriş hatası!"); }
     };
 
-    function isInApk(){
-      return !!(window.Native && typeof window.Native.startGoogleLogin === "function");
-    }
-
-    // --- GOOGLE CLICK ---
-    window.handleGoogleClick = async function(){
-      if(isInApk()){
-        window.toast("Güvenli giriş başlatılıyor...");
-        window.Native.startGoogleLogin(); 
-      } else {
-        window.toast("Google yönlendiriliyor...");
-        await loginWithGoogle(); 
-      }
-    }
-
-    // --- DAKTİLO (20 MESAJ) ---
+    // Daktilo Yazıları
     const phrases = [
       "Dünyayı sizin için küçülttük.", "Dil bariyerlerini aştık.", "Sınırları kaldırdık.",
       "italkyAI ile özgürleşin.", "Yapay zeka asistanın aktif.", "Offline çeviri aktif.",
@@ -214,34 +211,29 @@
 
     setInterval(() => {
       i = (i + 1) % phrases.length;
-      typewriterEl.style.animation = 'none';
-      typewriterEl.offsetHeight; 
-      typewriterEl.textContent = phrases[i];
-      typewriterEl.style.animation = null;
+      if(typewriterEl) {
+        typewriterEl.style.animation = 'none';
+        typewriterEl.offsetHeight; 
+        typewriterEl.textContent = phrases[i];
+        typewriterEl.style.animation = null;
+      }
     }, 4000);
 
-    // --- OTURUM KONTROLÜ (Refresh Döngüsünü Kıran Bölüm) ---
-    async function checkInit() {
+    // Oturum Kontrolü (Refresh Döngüsü Engelli)
+    (async function checkInit() {
       const localUser = localStorage.getItem(STORAGE_KEY);
-      if (localUser) {
-        // Eğer zaten home sayfasında değilsek yönlendir
-        if (!window.location.href.includes("home.html")) {
-          location.replace(HOME);
-        }
+      if (localUser && !window.location.href.includes("home.html")) {
+        location.replace(HOME);
         return;
       }
-      
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
           await ensureAuthAndCacheUser();
           location.replace(HOME);
         }
-      } catch (e) { console.warn("Supabase check skipped."); }
-    }
-
-    document.getElementById("googleBtn")?.addEventListener("click", window.handleGoogleClick);
-    checkInit();
+      } catch (e) {}
+    })();
   </script>
 </body>
 </html>
