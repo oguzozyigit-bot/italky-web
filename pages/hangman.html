@@ -14,7 +14,7 @@
       --red:#ff0033;
       --green:#00ff9d;
 
-      /* Dock daha kompakt */
+      /* Dock */
       --dockH: 205px;
       --shellLift: 0px;
     }
@@ -65,7 +65,7 @@
       margin-left:4px
     }
 
-    /* ✅ Jokerler: kalplerin altına alt alta */
+    /* Jokerler: kalplerin altına alt alta */
     .jokerCol{
       display:flex;
       flex-direction:column;
@@ -90,7 +90,7 @@
     .score .best{font-size:9px;font-weight:900;opacity:.55;letter-spacing:1px}
     .score .val{font-size:26px;font-weight:900;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 
-    /* ✅ HANGMAN daha yukarı */
+    /* HANGMAN daha yukarı */
     .title{
       font-family:"Space Grotesk";
       letter-spacing:12px;
@@ -101,20 +101,20 @@
       transform: translateY(-10px);
     }
 
-    /* Darağacı */
+    /* ✅ Darağacı daha yukarı (son rötuş) */
     .stage{
       flex:1;
       display:flex;
       flex-direction:column;
       align-items:center;
       justify-content:flex-start;
-      padding-top:10px;
+      padding-top:0px; /* <-- yukarı */
       gap:8px;
     }
 
     .gallows{
       width:150px;height:170px;position:relative;border-bottom:4px solid #fff;
-      transform: translateY(-10px);
+      transform: translateY(-32px); /* <-- daha yukarı */
     }
     .beam{position:absolute;background:#fff}
     .v{width:4px;height:100%;left:30px}
@@ -134,7 +134,7 @@
     .lleg{width:20px;height:3px;left:-21px;top:70px;transform:rotate(-45deg)}
     .rleg{width:20px;height:3px;left:1px;top:70px;transform:rotate(45deg)}
 
-    /* ✅ Türkçe anlam: Hangman + darağacı altındaki boşluk */
+    /* Türkçe anlam */
     .trBox{
       width:min(560px, 100%);
       padding:10px 12px;
@@ -147,10 +147,10 @@
       letter-spacing:1px;
       text-transform:uppercase;
       color:rgba(255,255,255,.70);
-      transform: translateY(-8px);
+      transform: translateY(-22px); /* darağacı yukarı çıkınca bunu da biraz yukarı aldım */
     }
 
-    /* ✅ Dock: sadece çizgiler + klavye */
+    /* Dock: sadece çizgiler + klavye */
     .dock{
       position:fixed;
       left:14px; right:14px;
@@ -223,7 +223,6 @@
         <div class="leftStack">
           <div class="hearts" id="hearts"></div>
 
-          <!-- ✅ Jokerler alt alta -->
           <div class="jokerCol">
             <div class="joker" id="j0">🃏</div>
             <div class="joker" id="j1">🃏</div>
@@ -255,7 +254,6 @@
           </div>
         </div>
 
-        <!-- ✅ Türkçe anlam burada -->
         <div class="trBox" id="trText">YÜKLENİYOR…</div>
       </div>
     </div>
@@ -282,7 +280,7 @@
 
     const $ = (id) => document.getElementById(id);
 
-    // ✅ ui_shell footer lift
+    // ui_shell footer lift
     const liftDock = () => {
       const root = getComputedStyle(document.documentElement);
       const footerH = parseFloat(root.getPropertyValue("--footerH")) || 92;
@@ -323,7 +321,7 @@
 
     // ---------- OYUN STATE ----------
     let lang = "en";
-    let diff = 3;          // 7 / 4 / 3 (limit)
+    let diff = 3;
     let lives = 3;
 
     let pool = null;
@@ -412,7 +410,6 @@
       const w = target.w.toUpperCase();
       const uniq = [...new Set(w.split(""))];
 
-      // uniq + 10
       const abc = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
       const fillers = abc.filter(l => !uniq.includes(l)).sort(()=>0.5-Math.random()).slice(0,10);
       const keys = [...uniq, ...fillers].sort(()=>0.5-Math.random());
@@ -509,7 +506,6 @@
       if(lock) return;
       if(guessed.has(letter)) return;
 
-      // tuş basma sesi
       sTap();
 
       const w = target.w.toUpperCase();
@@ -589,7 +585,6 @@
         return;
       }
 
-      // ✅ Türkçe anlam burada gösteriliyor
       $("trText").textContent = (target.tr || "—").toString().trim() || "—";
 
       renderHearts();
