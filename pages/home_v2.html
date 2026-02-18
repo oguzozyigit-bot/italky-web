@@ -3,181 +3,196 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>italkyAI • Meeting & Neural Contacts</title>
+  <title>italkyAI • Epoch 3500 Games</title>
   <style>
     :root {
-      --ai-gradient: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
-      --glass: rgba(255, 255, 255, 0.05);
-      --shell-safe: 160px;
+      --core-glow: #6366f1;
+      --ai-grad: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
+      --hyper-bg: #010008;
     }
 
-    #pageContent {
-      height: calc(100vh - var(--shell-safe));
-      display: flex; flex-direction: column; gap: 12px;
-      padding: 5px 0 15px; box-sizing: border-box; overflow: hidden;
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { 
+      margin: 0; padding: 0; width: 100%; height: 100dvh; 
+      overflow: hidden; background: var(--hyper-bg); 
+      font-family: 'Outfit', sans-serif; color: #fff;
     }
 
-    /* --- 1. REHBER PANELİ (YATAY) --- */
-    .contacts-wrapper {
-      background: var(--glass); border-radius: 24px; padding: 12px;
-      border: 1px solid rgba(255,255,255,0.08); flex-shrink: 0;
+    /* QUANTUM ARKA PLAN */
+    .quantum-void {
+      position: fixed; inset: 0; z-index: -1;
+      background: 
+        radial-gradient(circle at 10% 10%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 90% 90%, rgba(236, 72, 153, 0.15) 0%, transparent 50%);
     }
-    .contacts-title { font-size: 10px; font-weight: 1000; color: rgba(255,255,255,0.4); letter-spacing: 1.5px; margin-bottom: 10px; text-transform: uppercase; }
-    
-    .contacts-list { display: flex; gap: 12px; overflow-x: auto; scrollbar-width: none; padding-bottom: 5px; }
-    .contacts-list::-webkit-scrollbar { display: none; }
+    .grid-lines {
+      position: fixed; inset: 0; z-index: -1; opacity: 0.1;
+      background-image: linear-gradient(rgba(99,102,241,0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.2) 1px, transparent 1px);
+      background-size: 40px 40px; transform: perspective(500px) rotateX(60deg) translateY(-100px);
+      animation: gridFlow 20s linear infinite;
+    }
+    @keyframes gridFlow { from { background-position: 0 0; } to { background-position: 0 40px; } }
 
-    .contact-item {
-      flex: 0 0 55px; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer;
-    }
-    .contact-avatar {
-      width: 48px; height: 48px; border-radius: 16px; background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center;
-      font-size: 20px; transition: 0.3s;
-    }
-    .contact-item:active .contact-avatar { transform: scale(0.9); border-color: #6366f1; }
-    .contact-item span { font-size: 9px; font-weight: 800; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; text-align: center; }
-
-    /* Yeni Kişi Ekleme */
-    .add-contact-btn {
-      flex: 0 0 48px; height: 48px; border-radius: 16px; border: 2px dashed rgba(255,255,255,0.2);
-      display: flex; align-items: center; justify-content: center; cursor: pointer; color: rgba(255,255,255,0.4);
+    .mobile-frame {
+      width: 100%; max-width: 480px; height: 100%; margin: 0 auto;
+      display: flex; flex-direction: column; position: relative;
     }
 
-    /* --- 2. AKTİF TOPLANTI ODASI (CHEVRON DESIGN) --- */
-    .room-header {
-      background: radial-gradient(circle at top left, rgba(88,12,31,0.2), transparent);
-      border-radius: 22px; padding: 12px 18px; border: 1px solid rgba(255,255,255,0.05);
-      display: flex; justify-content: space-between; align-items: center;
+    /* 3500 TOPBAR */
+    header {
+      padding: calc(15px + env(safe-area-inset-top)) 20px 15px;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      background: rgba(0,0,0,0.5); backdrop-filter: blur(20px);
     }
-    .room-id { font-weight: 1000; color: #fff; font-size: 14px; letter-spacing: 1px; }
-    .room-status { font-size: 10px; color: #34d399; font-weight: 900; display: flex; align-items: center; gap: 5px; }
-    .status-dot { width: 6px; height: 6px; background: #34d399; border-radius: 50%; animation: blink 1s infinite; }
+    .back-node {
+      width: 45px; height: 45px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1);
+      display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.03);
+      cursor: pointer; font-size: 20px; transition: 0.3s;
+    }
+    .back-node:active { transform: scale(0.8) rotate(-15deg); border-color: var(--core-glow); }
 
-    /* --- 3. NEURAL CHAT WINDOW --- */
-    .chat-container {
-      flex: 1; background: rgba(0,0,0,0.3); border-radius: 30px;
-      border: 1px solid rgba(255,255,255,0.03); overflow-y: auto;
-      padding: 15px; display: flex; flex-direction: column; gap: 10px;
+    .brand-core h1 {
+      margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 24px; font-weight: 800;
+      letter-spacing: -1px; text-shadow: 0 0 15px rgba(99,102,241,0.5);
+    }
+    .brand-core h1 span { background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+    /* HOLOGRAFİK OYUN ALANI */
+    .main-engine {
+      flex: 1; overflow-y: auto; padding: 20px; 
+      display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
       scrollbar-width: none;
     }
-    .chat-container::-webkit-scrollbar { display: none; }
+    .main-engine::-webkit-scrollbar { display: none; }
 
-    .bubble { max-width: 80%; padding: 12px; border-radius: 20px; position: relative; }
-    .bubble.remote { background: rgba(255,255,255,0.06); align-self: flex-start; border-bottom-left-radius: 5px; }
-    .bubble.me { background: var(--ai-gradient); align-self: flex-end; border-bottom-right-radius: 5px; color: #fff; }
+    .module {
+      position: relative; height: 230px; border-radius: 35px;
+      background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      text-align: center; padding: 20px; cursor: pointer;
+      transition: all 0.4s cubic-bezier(0.2, 1, 0.3, 1);
+    }
+    .module:active { transform: scale(0.9) translateY(10px); }
     
-    .sender-name { font-size: 10px; font-weight: 900; color: rgba(165,180,252,1); margin-bottom: 4px; display: block; }
-    .msg-txt { font-size: 14px; font-weight: 700; line-height: 1.4; }
-    .msg-trans { font-size: 12px; font-weight: 600; opacity: 0.7; margin-top: 6px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 4px; font-style: italic; }
-
-    /* --- 4. MEETING ACTIONS --- */
-    .controls {
-      display: flex; justify-content: center; gap: 15px; padding: 10px 0; flex-shrink: 0;
+    /* Hologram Işığı Efekti */
+    .module::before {
+      content: ""; position: absolute; inset: 0; border-radius: 35px;
+      background: linear-gradient(180deg, transparent 0%, rgba(99, 102, 241, 0.1) 100%);
+      opacity: 0; transition: 0.4s;
     }
-    .btn-circle {
-      width: 55px; height: 55px; border-radius: 50%; background: rgba(0,0,0,0.5);
-      border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center;
-      cursor: pointer; transition: 0.3s;
-    }
-    .btn-circle svg { width: 22px; height: 22px; stroke: #fff; fill: none; stroke-width: 2.2; }
-    .btn-circle.active { background: #580c1f; border-color: #ff3366; box-shadow: 0 0 20px rgba(255,51,102,0.3); }
-    .btn-exit { background: #fff; }
-    .btn-exit svg { stroke: #000; }
+    .module:hover::before { opacity: 1; }
 
-    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+    .orb {
+      width: 70px; height: 70px; border-radius: 22px; margin-bottom: 15px;
+      display: flex; align-items: center; justify-content: center; font-size: 32px;
+      position: relative; z-index: 2; transform-style: preserve-3d;
+      animation: orbFloat 3s infinite ease-in-out;
+    }
+    @keyframes orbFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+    /* Renk Kodları */
+    .m1 .orb { background: linear-gradient(135deg, #FF3CAC 0%, #784BA0 100%); box-shadow: 0 10px 30px rgba(255,60,172,0.4); }
+    .m2 .orb { background: linear-gradient(135deg, #00DBDE 0%, #FC00FF 100%); box-shadow: 0 10px 30px rgba(0,219,222,0.4); }
+    .m3 .orb { background: linear-gradient(135deg, #FA8BFF 0%, #2BD2FF 100%); box-shadow: 0 10px 30px rgba(250,139,255,0.4); }
+    .m4 .orb { background: linear-gradient(135deg, #FAD961 0%, #F76B1C 100%); box-shadow: 0 10px 30px rgba(247,107,28,0.4); }
+    .m5 .orb { background: linear-gradient(135deg, #85FFBD 0%, #FFFB7D 100%); box-shadow: 0 10px 30px rgba(133,255,189,0.4); }
+    .m6 .orb { background: linear-gradient(135deg, #21D4FD 0%, #B721FF 100%); box-shadow: 0 10px 30px rgba(33,212,253,0.4); }
+
+    .module h3 { margin: 0; font-size: 16px; font-weight: 900; letter-spacing: -0.5px; }
+    .module p { margin: 5px 0 0; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.4); line-height: 1.3; }
+
+    .pulse-tag {
+      margin-top: 15px; font-size: 9px; font-weight: 900; letter-spacing: 1px;
+      color: var(--core-glow); text-transform: uppercase;
+      animation: textPulse 2s infinite;
+    }
+    @keyframes textPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+    /* FOOTER CORE */
+    footer {
+      height: 90px; display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(0deg, #000 0%, transparent 100%);
+    }
+    .core-sig {
+      font-size: 11px; font-weight: 1000; letter-spacing: 3px;
+      background: linear-gradient(90deg, #fff, var(--core-glow), #fff);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      opacity: 0.8;
+    }
+
   </style>
 </head>
 
 <body>
-  <div id="pageContent">
+  <div class="quantum-void"></div>
+  <div class="grid-lines"></div>
 
-    <div class="contacts-wrapper">
-      <div class="contacts-title">Neural Contacts • Rehberin</div>
-      <div class="contacts-list" id="contactList">
-        <div class="add-contact-btn" id="addNewContact">+</div>
-        <div class="contact-item" onclick="sendInvite('Oğuz Özyiğit')">
-          <div class="contact-avatar">🦁</div>
-          <span>Oğuz Ö.</span>
-        </div>
-        <div class="contact-item" onclick="sendInvite('Selden Özyiğit')">
-          <div class="contact-avatar">💎</div>
-          <span>Selden Ö.</span>
-        </div>
-        <div class="contact-item" onclick="sendInvite('Hans Müller')">
-          <div class="contact-avatar">🇩🇪</div>
-          <span>Hans M.</span>
-        </div>
-        <div class="contact-item" onclick="sendInvite('Yuki Tanaka')">
-          <div class="contact-avatar">🇯🇵</div>
-          <span>Yuki T.</span>
-        </div>
-        <div class="contact-item" onclick="sendInvite('Elena Petrova')">
-          <div class="contact-avatar">🇷🇺</div>
-          <span>Elena P.</span>
-        </div>
+  <div class="mobile-frame">
+    <header>
+      <div class="back-node" onclick="history.back()">‹</div>
+      <div class="brand-core">
+        <h1>italky<span>AI</span> • Core</h1>
       </div>
-    </div>
+      <div style="width:45px"></div> </header>
 
-    <div class="room-header">
-      <div class="room-id">ROOM: #ITK-77058</div>
-      <div class="room-status"><div class="status-dot"></div> 5 KATILIMCI BAĞLI</div>
-    </div>
-
-    <div class="chat-container" id="chatBox">
-      <div class="bubble remote">
-        <span class="sender-name">HANS MÜLLER</span>
-        <div class="msg-txt">Guten Morgen, fangen wir an?</div>
-        <div class="msg-trans">Günaydın, başlayalım mı?</div>
-      </div>
-      
-      <div class="bubble me">
-        <div class="msg-txt">Evet Hans, ekibi topluyorum.</div>
-        <div class="msg-trans">Yes Hans, I'm gathering the team.</div>
+    <main class="main-engine">
+      <div class="module m1" onclick="window.location.href='/pages/hangman.html'">
+        <div class="orb">😵</div>
+        <h3>Adam Asmaca</h3>
+        <p>Neural kelime veritabanı ile eşleş.</p>
+        <div class="pulse-tag">ACTIVE</div>
       </div>
 
-      <div class="bubble remote">
-        <span class="sender-name">YUKI TANAKA</span>
-        <div class="msg-txt">私は準備ができています。</div>
-        <div class="msg-trans">Ben hazırım.</div>
+      <div class="module m2" onclick="window.location.href='/pages/fast.html'">
+        <div class="orb">🔍</div>
+        <h3>Kelime Avı</h3>
+        <p>Sinaptik hızını test et, avla.</p>
+        <div class="pulse-tag">HIGH PRIORITY</div>
       </div>
-    </div>
 
-    <div class="controls">
-      <div class="btn-circle" id="micBtn">
-        <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>
+      <div class="module m3" onclick="window.location.href='/pages/cracker.html'">
+        <div class="orb">🏆</div>
+        <h3>Bilgi Yarışı</h3>
+        <p>Global zeka ile veri yarıştır.</p>
+        <div class="pulse-tag">RANKED</div>
       </div>
-      <div class="btn-circle" id="speakerBtn">
-        <svg viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
-      </div>
-      <div class="btn-circle btn-exit" onclick="location.href='/pages/home.html'">
-        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-      </div>
-    </div>
 
+      <div class="module m4" onclick="window.location.href='/pages/meteor.html'">
+        <div class="orb">🧩</div>
+        <h3>Eşleştirme</h3>
+        <p>Kuantum hafıza matrisini kur.</p>
+        <div class="pulse-tag">TRAINING</div>
+      </div>
+
+      <div class="module m5" onclick="window.location.href='/pages/spy.html'">
+        <div class="orb">🤫</div>
+        <h3>Casus Kim?</h3>
+        <p>Sızan veriyi bul, deşifre et.</p>
+        <div class="pulse-tag">PROTOCOL X</div>
+      </div>
+
+      <div class="module m6" onclick="window.location.href='/pages/gap.html'">
+        <div class="orb">🎲</div>
+        <h3>Boşluk Doldur</h3>
+        <p>Eksik kodları tamamla.</p>
+        <div class="pulse-tag">STRATEGIC</div>
+      </div>
+    </main>
+
+    <footer>
+      <div class="core-sig">ITALKY AI • NEURAL HUB • 3500</div>
+    </footer>
   </div>
 
   <script type="module">
+    import { STORAGE_KEY } from "/js/config.js";
     import { mountShell } from "/js/ui_shell.js";
     import { bootPage } from "/js/ui_guard.js";
 
+    // Shell'i kur (Navigation bar ve üst bar otomatik gelir)
     mountShell({ scroll: "none" }); 
-    bootPage({ protectedPage:true, header:{ nameId:"userName", picId:"userPic" } });
-
-    // Davet Gönderme Simülasyonu
-    window.sendInvite = (name) => {
-      alert(name + " toplantıya davet edildi!");
-    };
-
-    // Mic & Speaker Toggle
-    document.getElementById('micBtn').onclick = function() { this.classList.toggle('active'); };
-    document.getElementById('speakerBtn').onclick = function() { this.classList.toggle('active'); };
-
-    // Yeni Kişi Ekleme (Prompt)
-    document.getElementById('addNewContact').onclick = () => {
-      const id = prompt("Eklenecek üyenin ID numarasını girin:");
-      if(id) alert(id + " rehberinize eklendi.");
-    };
+    bootPage({ protectedPage: true, header: { nameId: "userName", picId: "userPic" } });
   </script>
 </body>
 </html>
