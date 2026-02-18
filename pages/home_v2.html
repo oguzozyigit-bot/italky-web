@@ -7,165 +7,126 @@
   <style>
     :root {
       --ai-gradient: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
-      --glass: rgba(255, 255, 255, 0.04);
-      --glass-border: rgba(255, 255, 255, 0.08);
+      --glass: rgba(255, 255, 255, 0.03);
+      --glass-border: rgba(255, 255, 255, 0.07);
     }
 
-    /* ✅ SHELL İÇERİK ALANI (Scroll Gizli) */
     #pageContent {
       height: calc(100vh - 190px); 
       display: flex; flex-direction: column;
-      overflow-y: auto; scrollbar-width: none; /* Firefox */
+      overflow-y: auto; scrollbar-width: none;
       padding: 10px 0 30px;
     }
-    #pageContent::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+    #pageContent::-webkit-scrollbar { display: none; }
 
-    /* ✅ GİRİFTLİ (MASONRY-LIKE) GRID TASARIMI */
+    /* GİRİFTLİ QUANTUM GRID */
     .neural-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      grid-auto-rows: auto;
-      gap: 12px;
-      padding: 5px;
+      gap: 14px;
+      padding: 8px;
     }
 
     .game-module {
       position: relative;
       background: var(--glass);
       border: 1px solid var(--glass-border);
-      border-radius: 28px;
-      padding: 20px 15px;
+      border-radius: 30px;
+      padding: 24px 16px;
       display: flex; flex-direction: column;
       align-items: center; text-align: center;
-      backdrop-filter: blur(15px);
-      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      backdrop-filter: blur(25px);
+      transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
       cursor: pointer;
+      overflow: hidden;
+    }
+    .game-module.tall { grid-row: span 2; justify-content: center; }
+
+    /* MODÜLER SEMBOLLER (ARTIK EMOJİ YOK) */
+    .symbol {
+      width: 60px; height: 60px; margin-bottom: 16px;
+      display: flex; align-items: center; justify-content: center;
+      position: relative;
     }
 
-    /* Giriftli Yapı İçin Bazı Kartları Uzun Yapıyoruz */
-    .game-module.tall { grid-row: span 2; justify-content: center; padding: 40px 15px; }
-    .game-module:active { transform: scale(0.95) rotate(-2deg); background: rgba(255,255,255,0.08); }
+    /* Adam Asmaca: Kopan bir veri hattı sembolü */
+    .sym-hangman::before { content: ""; width: 30px; height: 40px; border: 3px solid #f472b6; border-radius: 4px; box-shadow: 0 0 15px #f472b6; }
+    .sym-hangman::after { content: ""; position: absolute; top: 15px; width: 40px; height: 3px; background: #fff; transform: rotate(-45deg); }
 
-    .g-icon {
-      font-size: 38px; margin-bottom: 12px;
-      filter: drop-shadow(0 0 10px rgba(99, 102, 241, 0.5));
-      animation: float 4s infinite ease-in-out;
-    }
+    /* Kelime Avı: Radar/Tarayıcı sembolü */
+    .sym-hunt { border: 2px dashed #60a5fa; border-radius: 50%; width: 50px; height: 50px; animation: rotate 4s linear infinite; }
+    .sym-hunt::after { content: ""; width: 4px; height: 4px; background: #fff; border-radius: 50%; position: absolute; top: 10px; }
 
-    .g-name { font-size: 15px; font-weight: 900; color: #fff; margin-bottom: 6px; letter-spacing: -0.5px; }
+    /* Cümle Kurma: Bağlantılı node sembolü */
+    .sym-sent { display: flex; gap: 4px; }
+    .sym-sent div { width: 8px; height: 8px; background: #34d399; border-radius: 50%; box-shadow: 0 0 10px #34d399; }
+
+    /* Neural: Beyin dalgaları sembolü */
+    .sym-neural { width: 40px; height: 20px; border-top: 2px solid #818cf8; border-radius: 50%; animation: pulse 2s infinite; }
+
+    .g-name { font-size: 16px; font-weight: 900; color: #fff; margin-bottom: 4px; letter-spacing: -0.5px; }
     .g-desc { font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.4); line-height: 1.3; }
 
-    /* Neon Etiketler */
-    .g-tag {
-      position: absolute; top: 12px; right: 12px;
-      font-size: 8px; font-weight: 1000; padding: 3px 8px;
-      border-radius: 20px; background: rgba(0,0,0,0.3);
-      color: #a5b4fc; border: 1px solid rgba(165,180,252,0.2);
-    }
+    @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(1.2); opacity: 1; } }
 
-    @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
-
-    /* Özel Renk Glowları */
-    .m-1 { box-shadow: inset 0 0 20px rgba(236, 72, 153, 0.05); }
-    .m-2 { box-shadow: inset 0 0 20px rgba(99, 102, 241, 0.05); }
-
+    .game-module:active { transform: translateY(5px) scale(0.96); border-color: #6366f1; }
   </style>
 </head>
 
 <body>
   <div id="pageContent">
-
     <div class="neural-grid">
       
-      <div class="game-module m-1 tall" onclick="location.href='/pages/duo'">
-        <div class="g-tag">LIVE</div>
-        <div class="g-icon">🎤</div>
-        <div class="g-name">Sesli Düello</div>
-        <div class="g-desc">Duyduğun frekansı anında deşifre et.</div>
-      </div>
-
-      <div class="game-module m-2" onclick="location.href='/pages/cracker'">
-        <div class="g-tag">RANKED</div>
-        <div class="g-icon">🏆</div>
-        <div class="g-name">Bilgi Yarışı</div>
-        <div class="g-desc">Global zeka ile veri yarıştır.</div>
-      </div>
-
-      <div class="game-module m-1" onclick="location.href='/pages/friend'">
-        <div class="g-icon">🤝</div>
-        <div class="g-name">Neural Friend</div>
-        <div class="g-desc">AI ile sosyal bağlarını güçlendir.</div>
-      </div>
-
-      <div class="game-module m-2 tall" onclick="location.href='/pages/gap'">
-        <div class="g-tag">LOGIC</div>
-        <div class="g-icon">🎲</div>
-        <div class="g-name">Boşluk Doldur</div>
-        <div class="g-desc">Eksik kodları tamamla, matrisi kur.</div>
-      </div>
-
-      <div class="game-module m-1" onclick="location.href='/pages/glitch'">
-        <div class="g-icon">👾</div>
-        <div class="g-name">Glitch Hunter</div>
-        <div class="g-desc">Sistemdeki hataları yakala.</div>
-      </div>
-
-      <div class="game-module m-2" onclick="location.href='/pages/hangman'">
-        <div class="g-icon">😵</div>
+      <div class="game-module tall" onclick="location.href='/pages/hangman'">
+        <div class="symbol sym-hangman"></div>
         <div class="g-name">Adam Asmaca</div>
-        <div class="g-desc">Neural veritabanı ile kelime savaşı.</div>
+        <div class="g-desc">Kritik veri paketini deşifre et.</div>
       </div>
 
-      <div class="game-module m-1 tall" onclick="location.href='/pages/meteor'">
-        <div class="g-tag">REFLEX</div>
-        <div class="g-icon">🧩</div>
-        <div class="g-name">Eşleştirme</div>
-        <div class="g-desc">Kuantum hafıza matrisini eşle.</div>
+      <div class="game-module" onclick="location.href='/pages/duo'">
+        <div class="symbol"><svg width="30" height="30" viewBox="0 0 24 24" stroke="#6366f1" stroke-width="2.5" fill="none"><path d="M12 1v22M17 5v14M7 5v14M22 9v6M2 9v6"/></svg></div>
+        <div class="g-name">Sesli Düello</div>
+        <div class="g-desc">Frekans eşleşmesi sağla.</div>
       </div>
 
-      <div class="game-module m-2" onclick="location.href='/pages/neural'">
-        <div class="g-icon">🧠</div>
-        <div class="g-name">Neural Core</div>
-        <div class="g-desc">Zihnini AI ile senkronize et.</div>
+      <div class="game-module" onclick="location.href='/pages/cracker'">
+        <div class="symbol"><svg width="30" height="30" viewBox="0 0 24 24" stroke="#fbbf24" stroke-width="2.5" fill="none"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg></div>
+        <div class="g-name">Bilgi Yarışı</div>
+        <div class="g-desc">Global IQ testi.</div>
       </div>
 
-      <div class="game-module m-1" onclick="location.href='/pages/neural_box'">
-        <div class="g-icon">📦</div>
-        <div class="g-name">Neural Box</div>
-        <div class="g-desc">Kapalı kutudaki gizli veriyi bul.</div>
+      <div class="game-module tall" onclick="location.href='/pages/gap'">
+        <div class="symbol sym-hunt"></div>
+        <div class="g-name">Boşluk Doldur</div>
+        <div class="g-desc">Eksik algoritmayı tamamla.</div>
       </div>
 
-      <div class="game-module m-2 tall" onclick="location.href='/pages/sentence'">
-        <div class="g-tag">ADVANCED</div>
-        <div class="g-icon">✍️</div>
+      <div class="game-module" onclick="location.href='/pages/glitch'">
+        <div class="symbol"><svg width="30" height="30" viewBox="0 0 24 24" stroke="#ef4444" stroke-width="2.5" fill="none"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M9 9l6 6M15 9l-6 6"/></svg></div>
+        <div class="g-name">Glitch Hunter</div>
+        <div class="g-desc">Sistem açıklarını bul.</div>
+      </div>
+
+      <div class="game-module tall" onclick="location.href='/pages/sentence'">
+        <div class="symbol sym-sent"><div></div><div></div><div></div></div>
         <div class="g-name">Cümle Kurma</div>
-        <div class="g-desc">Kelimeleri doğru enerji hattına diz.</div>
+        <div class="g-desc">Sıralı veri dizilimi.</div>
       </div>
 
-      <div class="game-module m-1" onclick="location.href='/pages/spy'">
-        <div class="g-icon">🤫</div>
+      <div class="game-module" onclick="location.href='/pages/spy'">
+        <div class="symbol"><svg width="30" height="30" viewBox="0 0 24 24" stroke="#fff" stroke-width="2" fill="none"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
         <div class="g-name">Casus Kim?</div>
-        <div class="g-desc">Sızan veriyi bul, deşifre et.</div>
+        <div class="g-desc">Sızan yabancı veriyi bul.</div>
       </div>
 
     </div>
-
   </div>
 
   <script type="module">
     import { mountShell, hydrateFromCache } from "/js/ui_shell.js";
-
-    // ✅ UI SHELL MOUNT (Alt ve Üst Bar Otomatik Gelir)
     mountShell({ scroll: "none" }); 
     hydrateFromCache();
-
-    // Dinamik Link Yönetimi
-    document.querySelectorAll('.game-module').forEach(el => {
-      el.addEventListener('click', (e) => {
-        const path = el.getAttribute('onclick').match(/'([^']+)'/)[1];
-        window.location.href = path;
-      });
-    });
   </script>
 </body>
 </html>
