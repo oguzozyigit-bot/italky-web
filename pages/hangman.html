@@ -15,18 +15,8 @@
     html,body{margin:0;height:100%;background:var(--void-bg);color:#fff;font-family:Outfit,sans-serif;overflow:hidden}
     #pageContent{height:100dvh; padding:14px; box-sizing:border-box;}
 
-    /* ✅ SABİT LAYOUT: Alt bloklar ekrandan kaçamaz */
-    .game-engine{
-      height:100%;
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-      position:relative;
-    }
-    .top-zone{flex:0 0 auto;}
-    .mid-zone{flex:1 1 auto; min-height:0; display:flex; flex-direction:column; align-items:center; justify-content:center;}
-    .bot-zone{flex:0 0 auto; padding-bottom:6px;} /* kb her zaman görünsün */
-
+    .game-engine{ height:100%; display:flex; flex-direction:column; justify-content:space-between; position:relative; }
+    
     /* Üst Panel */
     .status-bar { display:flex; justify-content:space-between; align-items:center; }
     .heart-neon { font-size:22px; filter:drop-shadow(0 0 10px var(--neon-red)); margin-right:4px; transition:.3s; }
@@ -46,7 +36,7 @@
     .diff-card.active { border-color:var(--neon-green); background:rgba(0,255,157,.1); }
 
     /* Görsel Alan */
-    .visual-stage{ width:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; }
+    .visual-stage{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; }
     .gallows { width:150px; height:170px; position:relative; border-bottom:4px solid #fff; }
     .beam { position:absolute; background:#fff; }
     .v-beam { width:4px; height:100%; left:30px; }
@@ -59,7 +49,7 @@
 
     .organ { position:absolute; background:#fff; box-shadow:0 0 10px #fff; display:none; }
     .organ.active { display:block; }
-    .o-head { width:24px; height:24px; border:3px solid #fff; border-radius:50%; left:-12px; top:0; background:transparent; }
+    .o-head { width:24px; height:24px; border:3px solid #fff; border-radius:50%; left:-12px; top:0; }
     .o-body { width:3px; height:50px; left:-1.5px; top:24px; }
     .o-larm { width:20px; height:3px; left:-21px; top:35px; transform:rotate(-30deg); }
     .o-rarm { width:20px; height:3px; left:1px; top:35px; transform:rotate(30deg); }
@@ -68,17 +58,16 @@
 
     .q-box { padding:10px; text-align:center; font-size:12px; font-weight:900; color:rgba(255,255,255,0.4); letter-spacing:1px; text-transform:uppercase; }
 
-    /* Çizgiler */
-    .matrix { width:100%; display:flex; justify-content:center; gap:6px; flex-wrap:wrap; padding:6px 0 2px; }
-    .slot { width:28px; height:40px; border-bottom:3px solid rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:900; }
+    /* Klavye ve Çizgiler */
+    .matrix { display:flex; justify-content:center; gap:6px; flex-wrap:wrap; padding:10px 0; }
+    .slot { width:28px; height:40px; border-bottom:3px solid rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:900; }
     .slot.found { border-bottom-color:var(--neon-green); text-shadow:0 0 10px var(--neon-green); }
 
-    .joker-row { display:flex; justify-content:center; gap:12px; margin:6px 0 4px; }
+    .joker-row { display:flex; justify-content:center; gap:12px; margin-bottom:10px; }
     .joker-card { width:50px; height:65px; border-radius:12px; border:1px solid #6366f1; background:rgba(99,102,241,0.1); display:flex; align-items:center; justify-content:center; font-size:24px; cursor:pointer; }
     .joker-card.spent { opacity:0.1; filter:grayscale(1); pointer-events:none; }
 
-    /* Klavye */
-    .kb { width:100%; display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
+    .kb { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
     .key { height:40px; border-radius:10px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.05); color:#fff; font-weight:800; }
     .key.hit { background:var(--neon-green); color:#000; box-shadow:0 0 15px var(--neon-green); }
     .key.miss { background:var(--neon-red); opacity:0.3; }
@@ -90,10 +79,9 @@
 <body>
   <div id="pageContent">
     <div class="game-engine">
-
+      
       <div class="setup-overlay" id="setup">
         <div class="neural-logo">NEURAL VOID</div>
-
         <div class="flag-grid" id="langGrid">
           <div class="opt-card active" data-val="en"><span>🇬🇧</span><label>EN</label></div>
           <div class="opt-card" data-val="de"><span>🇩🇪</span><label>DE</label></div>
@@ -101,61 +89,52 @@
           <div class="opt-card" data-val="it"><span>🇮🇹</span><label>IT</label></div>
           <div class="opt-card" data-val="es"><span>🇪🇸</span><label>ES</label></div>
         </div>
-
         <div class="diff-select" id="diffGrid">
           <div class="diff-card active" data-val="3"><b>KOLAY</b></div>
           <div class="diff-card" data-val="4"><b>NORMAL</b></div>
           <div class="diff-card" data-val="5"><b>ZOR</b></div>
         </div>
-
-        <button id="startBtn" style="width:100%; padding:20px; border-radius:20px; border:none; background:var(--ai-grad); color:#fff; font-weight:900; font-size:18px; cursor:pointer;">OYUNA BAŞLA</button>
+        <button onclick="bootGame()" style="width:100%; padding:20px; border-radius:20px; border:none; background:var(--ai-grad); color:#fff; font-weight:900; font-size:18px; cursor:pointer;">OYUNA BAŞLA</button>
       </div>
 
-      <div class="top-zone">
-        <div class="status-bar">
-          <div id="heartBox" style="display:flex;"></div>
-          <div class="score-panel">
-            <div class="best-tag">REKOR: <span id="highVal">0</span></div>
-            <div class="score-val" id="liveScore">100</div>
+      <div class="status-bar">
+        <div id="heartBox" style="display:flex;"></div>
+        <div class="score-panel">
+          <div class="best-tag">REKOR: <span id="highVal">0</span></div>
+          <div class="score-val" id="liveScore">100</div>
+        </div>
+      </div>
+
+      <div class="visual-stage">
+        <div class="gallows">
+          <div class="beam v-beam"></div><div class="beam h-beam"></div><div class="rope"></div>
+          <div class="target-man" id="man">
+            <div class="organ o-head" id="o_head"></div><div class="organ o-body" id="o_body"></div>
+            <div class="organ o-larm" id="o_larm"></div><div class="organ o-rarm" id="o_rarm"></div>
+            <div class="organ o-lleg" id="o_lleg"></div><div class="organ o-rleg" id="o_rleg"></div>
           </div>
         </div>
+        <div class="q-box" id="qText"></div>
       </div>
 
-      <div class="mid-zone">
-        <div class="visual-stage">
-          <div class="gallows">
-            <div class="beam v-beam"></div><div class="beam h-beam"></div><div class="rope"></div>
-            <div class="target-man" id="man">
-              <div class="organ o-head" id="o_head"></div><div class="organ o-body" id="o_body"></div>
-              <div class="organ o-larm" id="o_larm"></div><div class="organ o-rarm" id="o_rarm"></div>
-              <div class="organ o-lleg" id="o_lleg"></div><div class="organ o-rleg" id="o_rleg"></div>
-            </div>
-          </div>
-          <div class="q-box" id="qText">—</div>
-        </div>
+      <div class="matrix" id="wordMatrix"></div>
+      
+      <div class="joker-row">
+        <div class="joker-card" id="j0" onclick="useJ(0)">🃏</div>
+        <div class="joker-card" id="j1" onclick="useJ(1)">🃏</div>
+        <div class="joker-card" id="j2" onclick="useJ(2)">🃏</div>
       </div>
 
-      <div class="bot-zone">
-        <div class="matrix" id="wordMatrix"></div>
-
-        <div class="joker-row">
-          <div class="joker-card" id="j0">🃏</div>
-          <div class="joker-card" id="j1">🃏</div>
-          <div class="joker-card" id="j2">🃏</div>
-        </div>
-
-        <div class="kb" id="kb"></div>
-      </div>
-
+      <div class="kb" id="kb"></div>
     </div>
   </div>
 
   <div class="modal" id="modal">
     <h1 id="mTitle" style="font-size:38px; font-weight:900;">MİSYON TAMAM</h1>
-    <div id="mWord" style="font-size:32px; color:#60a5fa; margin:15px 0; font-weight:900;">—</div>
-    <div id="mTr" style="opacity:0.6; font-style:italic;">(—)</div>
+    <div id="mWord" style="font-size:32px; color:#60a5fa; margin:15px 0; font-weight:900;">APPLE</div>
+    <div id="mTr" style="opacity:0.6; font-style:italic;">(Elma)</div>
     <div id="mBonus" style="color:#2ed573; font-weight:900; margin-bottom:30px; height:20px;"></div>
-    <button id="closeBtn" style="width:100%; max-width:280px; padding:20px; border-radius:20px; border:none; background:var(--ai-grad); color:#fff; font-weight:900; font-size:18px; cursor:pointer;">MİSYONA DEVAM ET</button>
+    <button onclick="closeModal()" style="width:100%; max-width:280px; padding:20px; border-radius:20px; border:none; background:var(--ai-grad); color:#fff; font-weight:900; font-size:18px; cursor:pointer;">MİSYONA DEVAM ET</button>
   </div>
 
   <script type="module">
@@ -164,233 +143,134 @@
 
     mountShell({ scroll: "none" });
 
-    const $ = (id) => document.getElementById(id);
+    let pool, target, guessed = [], mistakes = 0, jokers = 3;
+    let score = 100, lives = 3, isClean = true, lang = 'en', diff = 3;
 
-    let pool = null, target = null;
-    let guessed = [], mistakes = 0, jokers = 3;
-    let score = 100, lives = 3, isClean = true, jokerUsed = false;
-    let lang = "en", diff = 3;
-
-    const HS_KEY = "italky_hangman_high";
-    let highScore = parseInt(localStorage.getItem(HS_KEY) || "0", 10);
-    $("highVal").innerText = highScore;
-
-    // UI listeners
-    $("langGrid").onclick = (e) => {
-      const c = e.target.closest(".opt-card"); if(!c) return;
-      document.querySelectorAll("#langGrid .opt-card").forEach(x=>x.classList.remove("active"));
-      c.classList.add("active");
-      lang = c.dataset.val;
+    // UI Listeners
+    document.getElementById('langGrid').onclick = e => {
+      const c = e.target.closest('.opt-card'); if(!c) return;
+      document.querySelectorAll('#langGrid .opt-card').forEach(x=>x.classList.remove('active'));
+      c.classList.add('active'); lang = c.dataset.val;
+    };
+    document.getElementById('diffGrid').onclick = e => {
+      const c = e.target.closest('.diff-card'); if(!c) return;
+      document.querySelectorAll('#diffGrid .diff-card').forEach(x=>x.classList.remove('active'));
+      c.classList.add('active'); diff = parseInt(c.dataset.val);
     };
 
-    $("diffGrid").onclick = (e) => {
-      const c = e.target.closest(".diff-card"); if(!c) return;
-      document.querySelectorAll("#diffGrid .diff-card").forEach(x=>x.classList.remove("active"));
-      c.classList.add("active");
-      diff = parseInt(c.dataset.val, 10);
-    };
-
-    $("startBtn").onclick = async () => {
+    window.bootGame = async () => {
       pool = await loadLangPool(lang);
-      $("setup").style.display = "none";
+      document.getElementById('setup').style.display = 'none';
       startRound();
     };
 
-    $("closeBtn").onclick = () => {
-      $("modal").classList.remove("active");
-      if(lives <= 0) location.reload();
+    function startRound() {
+      document.getElementById('modal').classList.remove('active');
+      document.getElementById('man').classList.remove('swing');
+      guessed = []; mistakes = 0; jokers = 3; isClean = true; score = 100;
+      
+      const usedSet = createUsedSet(`used_hangman_${lang}`);
+      const picked = pick(pool, 1, usedSet.used, usedSet.save, (x) => x.w.length >= 3);
+      target = picked[0];
+
+      if(!target) { alert("Data yüklenemedi!"); return; }
+
+      renderWord(); renderKB(); updateVis(); renderHearts();
+      document.getElementById('liveScore').innerText = score;
+      document.getElementById('qText').innerText = target.tr;
+      for(let i=0; i<3; i++) document.getElementById(`j${i}`).classList.remove('spent');
+    }
+
+    function renderWord() {
+      document.getElementById('wordMatrix').innerHTML = target.w.split('').map(l => 
+        `<div class="slot ${guessed.includes(l.toUpperCase())?'found':''}">${guessed.includes(l.toUpperCase())?l.toUpperCase():''}</div>`
+      ).join('');
+    }
+
+    function renderKB() {
+      const kb = document.getElementById('kb');
+      const tL = [...new Set(target.w.toUpperCase().split(''))];
+      const abc = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split('');
+      const fillers = abc.filter(l => !tL.includes(l)).sort(()=>0.5-Math.random()).slice(0, 10);
+      const keys = [...tL, ...fillers].sort((a,b)=>a.localeCompare(b));
+      
+      kb.innerHTML = keys.map(l => `<button class="key" id="k-${l}" onclick="handleG('${l}')">${l}</button>`).join('');
+    }
+
+    window.handleG = (l) => {
+      if(guessed.includes(l)) return;
+      const key = document.getElementById(`k-${l}`);
+      if(target.w.toUpperCase().includes(l)) {
+        guessed.push(l); if(key) key.classList.add('hit'); renderWord();
+        if(target.w.split('').every(c => guessed.includes(c.toUpperCase()))) finish(true);
+      } else {
+        mistakes++; isClean = false; score = Math.max(0, score - 10);
+        document.getElementById('liveScore').innerText = score;
+        if(key) key.classList.add('miss'); updateVis();
+        const limit = diff === 3 ? 6 : (diff === 4 ? 4 : 3);
+        if(mistakes >= limit) finish(false);
+      }
+    };
+
+    function updateVis() {
+      document.querySelectorAll('.organ').forEach(o => o.classList.remove('active'));
+      const parts = ['o_head','o_body','o_larm','o_rarm','o_lleg','o_rleg'];
+      let toShow = [];
+      if(diff === 3) toShow = parts.slice(0, mistakes);
+      else if(diff === 4) {
+        const seq = [['o_head'],['o_body'],['o_larm','o_rarm'],['o_lleg','o_rleg']];
+        seq.slice(0, mistakes).forEach(g => toShow.push(...g));
+      } else {
+        const seq = [['o_head','o_body'],['o_larm','o_rarm'],['o_lleg','o_rleg']];
+        seq.slice(0, mistakes).forEach(g => toShow.push(...g));
+      }
+      toShow.forEach(id => document.getElementById(id)?.classList.add('active'));
+    }
+
+    function renderHearts() {
+      let h = "";
+      for(let i=0; i<lives; i++) h += '<span class="heart-neon">❤️</span>';
+      document.getElementById('heartBox').innerHTML = h;
+    }
+
+    function finish(win) {
+      if(win) {
+        const best = localStorage.getItem('italky_hangman_high') || 0;
+        if(score > best) localStorage.setItem('italky_hangman_high', score);
+        let bonus = "";
+        if(isClean && jokers === 3) { lives++; bonus = "KUSURSUZ: +1 CAN"; }
+        document.getElementById('mTitle').innerText = "MİSYON BAŞARILI";
+        document.getElementById('mTitle').style.color = "#2ed573";
+        document.getElementById('mBonus').innerText = bonus;
+      } else {
+        lives--;
+        document.getElementById('man').classList.add('swing');
+        document.getElementById('mTitle').innerText = "MİSYON BAŞARISIZ";
+        document.getElementById('mTitle').style.color = "#ff4757";
+        document.getElementById('mBonus').innerText = "-1 CAN";
+      }
+      
+      const u = new SpeechSynthesisUtterance(target.w);
+      u.lang = lang === 'en' ? 'en-US' : 'tr-TR';
+      speechSynthesis.speak(u);
+
+      document.getElementById('mWord').innerText = target.w.toUpperCase();
+      document.getElementById('mTr').innerText = `(${target.tr})`;
+      setTimeout(() => document.getElementById('modal').classList.add('active'), 800);
+    }
+
+    window.closeModal = () => {
+      if(lives <= 0) { alert("SİSTEM ÇÖKTÜ!"); location.reload(); }
       else startRound();
     };
 
-    // Joker clicks
-    for(let i=0;i<3;i++){
-      $(`j${i}`).onclick = () => useJ(i);
-    }
-
-    function applyScorePenalty(n){
-      score = Math.max(0, score - n);
-      $("liveScore").innerText = score;
-    }
-
-    function getLimit(){
-      if(diff === 3) return 7; // kolay
-      if(diff === 4) return 4; // normal
-      return 3;                // zor
-    }
-
-    function startRound(){
-      $("modal").classList.remove("active");
-      $("man").classList.remove("swing");
-      guessed = [];
-      mistakes = 0;
-      jokers = 3;
-      isClean = true;
-      jokerUsed = false;
-
-      score = 100; // ✅ doğru 100 puan
-      $("liveScore").innerText = score;
-
-      for(let i=0;i<3;i++) $(`j${i}`).classList.remove("spent");
-
-      const usedSet = createUsedSet(`used_hangman_${lang}`);
-      const picked = pick(pool, 1, usedSet.used, usedSet.save, (x) => (x?.w || "").length >= 3);
-      target = picked?.[0];
-
-      if(!target?.w){
-        $("qText").innerText = "KELİME YOK (LangPool boş olabilir)";
-        $("wordMatrix").innerHTML = "";
-        $("kb").innerHTML = "";
-        return;
-      }
-
-      $("qText").innerText = target.tr || "—";
-
-      renderHearts();
-      renderWord();
-      renderKB();
-      updateVis();
-    }
-
-    function renderHearts(){
-      const max = 3;
-      let h = "";
-      for(let i=0;i<max;i++){
-        const lost = i >= lives ? " lost" : "";
-        h += `<span class="heart-neon${lost}">❤️</span>`;
-      }
-      $("heartBox").innerHTML = h;
-    }
-
-    function renderWord(){
-      const w = target.w.toUpperCase();
-      $("wordMatrix").innerHTML = w.split("").map(ch=>{
-        const found = guessed.includes(ch);
-        return `<div class="slot ${found ? "found":""}">${found ? ch : ""}</div>`;
-      }).join("");
-    }
-
-    function renderKB(){
-      const kb = $("kb");
-      const w = target.w.toUpperCase();
-
-      const uniq = [...new Set(w.split(""))];
-      const abc = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
-      const fillers = abc.filter(l => !uniq.includes(l)).sort(()=>0.5-Math.random()).slice(0, 10);
-      const keys = [...uniq, ...fillers].sort(()=>0.5-Math.random());
-
-      kb.innerHTML = keys.map(l => `<button class="key" data-k="${l}">${l}</button>`).join("");
-
-      // ✅ Inline onclick yok: WebView’da en sağlamı bu
-      kb.querySelectorAll(".key").forEach(btn=>{
-        btn.onclick = () => handleG(btn.dataset.k);
-      });
-    }
-
-    function handleG(l){
-      if(guessed.includes(l)) return;
-
-      const w = target.w.toUpperCase();
-      const key = document.querySelector(`.key[data-k="${l}"]`);
-
-      if(w.includes(l)){
-        guessed.push(l);
-        key?.classList.add("hit");
-        renderWord();
-
-        if(w.split("").every(ch => guessed.includes(ch))) finish(true);
-      } else {
-        mistakes++;
-        isClean = false;
-        key?.classList.add("miss");
-
-        // ✅ her yanlış -10
-        applyScorePenalty(10);
-
-        updateVis();
-        if(mistakes >= getLimit()) finish(false);
-      }
-    }
-
-    function updateVis(){
-      document.querySelectorAll(".organ").forEach(o=>o.classList.remove("active"));
-
-      // Kolay(7): kafa, gövde, kol1, kol2, ayak1, ayak2 + (sen boyun istemedin burada)
-      if(diff === 3){
-        const seq = ["o_head","o_body","o_larm","o_rarm","o_lleg","o_rleg"];
-        // 7. hata için “tamamlandı” etkisini yine swing ile yapıyoruz
-        seq.slice(0, Math.min(mistakes, 6)).forEach(id => $(id)?.classList.add("active"));
-        return;
-      }
-
-      if(diff === 4){
-        const seq = [
-          ["o_head"],
-          ["o_body"],
-          ["o_larm","o_rarm"],
-          ["o_lleg","o_rleg"]
-        ];
-        seq.slice(0, mistakes).forEach(g => g.forEach(id => $(id)?.classList.add("active")));
-        return;
-      }
-
-      const seq = [
-        ["o_head"],
-        ["o_body"],
-        ["o_larm","o_rarm","o_lleg","o_rleg"]
-      ];
-      seq.slice(0, mistakes).forEach(g => g.forEach(id => $(id)?.classList.add("active")));
-    }
-
-    function finish(win){
-      if(win){
-        let bonus = "";
-        if(isClean && !jokerUsed){
-          lives++;
-          bonus = "KUSURSUZ: +1 CAN";
-        }
-
-        if(score > highScore){
-          highScore = score;
-          localStorage.setItem(HS_KEY, String(highScore));
-          $("highVal").innerText = highScore;
-        }
-
-        renderHearts();
-        $("mTitle").innerText = "MİSYON BAŞARILI";
-        $("mTitle").style.color = "#00ff9d";
-        $("mBonus").innerText = bonus;
-      } else {
-        lives--;
-        renderHearts();
-
-        $("man").classList.add("swing");
-        $("mTitle").innerText = "MİSYON BAŞARISIZ";
-        $("mTitle").style.color = "#ff0033";
-        $("mBonus").innerText = "-1 CAN";
-      }
-
-      $("mWord").innerText = target.w.toUpperCase();
-      $("mTr").innerText = `(${target.tr || "—"})`;
-      $("modal").classList.add("active");
-    }
-
-    function useJ(i){
+    window.useJ = (i) => {
       if(jokers <= 0) return;
-
-      jokerUsed = true;
-      jokers--;
-      $(`j${i}`).classList.add("spent");
-
-      // ✅ her joker -10
-      applyScorePenalty(10);
-
-      const w = target.w.toUpperCase();
-      const rem = w.split("").filter(ch => !guessed.includes(ch));
-
-      if(rem.length){
-        handleG(rem[0]); // doğru harf açar
-      }
-    }
+      const rem = target.w.toUpperCase().split('').filter(l => !guessed.includes(l));
+      if(rem.length) { jokers--; document.getElementById(`j${i}`).classList.add('spent'); handleG(rem[0]); }
+    };
+    
+    document.getElementById('highVal').innerText = localStorage.getItem('italky_hangman_high') || 0;
   </script>
 </body>
 </html>
