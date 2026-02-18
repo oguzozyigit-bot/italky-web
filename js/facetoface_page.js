@@ -1,5 +1,4 @@
 // FILE: /js/facetoface_page.js
-import { STORAGE_KEY } from "/js/config.js";
 import { getSiteLang } from "/js/i18n.js";
 import { supabase } from "/js/supabase_client.js";
 import { ensureAuthAndCacheUser } from "/js/auth.js";
@@ -109,7 +108,7 @@ function canonicalLangCode(code){
   return c.split("-")[0];
 }
 
-/* ✅ API uyumu: pt-br/zh-tw gibi kodları base’e indir */
+// ✅ API uyumu
 function normalizeApiLang(code){
   return canonicalLangCode(code);
 }
@@ -167,23 +166,25 @@ async function ensureFacetofaceSession(){
 }
 
 /* ===============================
-   TTS (Native first, web fallback)
+   TTS ✅ (Android WebView fix)
    =============================== */
 function speak(text, langCode){
   const t = String(text||"").trim();
   if(!t) return;
 
-  // ✅ APK: NativeTTS
+  // ✅ APK NativeTTS
   if(window.NativeTTS && typeof window.NativeTTS.speak === "function"){
     try{ window.NativeTTS.stop?.(); }catch{}
-    // küçük gecikme bazı cihazlarda şart
+    // ✅ kilit çözümü: 220ms bekle
     setTimeout(()=>{
-      try{ window.NativeTTS.speak(t, String(langCode||"en")); }catch(e){ console.warn("NativeTTS speak err:", e); }
-    }, 60);
+      try{ window.NativeTTS.speak(t, String(langCode||"en")); }catch(e){
+        console.warn("NativeTTS.speak failed:", e);
+      }
+    }, 220);
     return;
   }
 
-  // ✅ Web fallback
+  // Web fallback
   if(!window.speechSynthesis) return;
   try{ window.speechSynthesis.cancel(); }catch{}
 
@@ -198,7 +199,7 @@ function speak(text, langCode){
       u.voice = voices.find(v=>String(v.lang||"").toLowerCase().startsWith(base)) || voices[0];
     }
   }catch{}
-  setTimeout(()=>{ try{ window.speechSynthesis.speak(u); }catch{} }, 80);
+  setTimeout(()=>{ try{ window.speechSynthesis.speak(u); }catch{} }, 60);
 }
 
 /* ===============================
@@ -308,7 +309,7 @@ function togglePop(side){
 }
 
 /* ===============================
-   TRANSLATE (robust)
+   TRANSLATE
    =============================== */
 async function translateViaApi(text, source, target){
   const t = String(text||"").trim();
@@ -316,12 +317,10 @@ async function translateViaApi(text, source, target){
 
   const src = normalizeApiLang(source);
   const dst = normalizeApiLang(target);
-
   if(src === dst) return t;
 
   const ctrl = new AbortController();
   const to = setTimeout(()=>ctrl.abort(), 25000);
-
   try{
     const body = { text:t, source:src, target:dst, from_lang:src, to_lang:dst };
     const r = await fetch(`${API_BASE}/api/translate`,{
@@ -331,11 +330,7 @@ async function translateViaApi(text, source, target){
       signal: ctrl.signal
     });
 
-    if(!r.ok){
-      const errTxt = await r.text().catch(()=> "");
-      console.warn("translate HTTP", r.status, errTxt);
-      return null;
-    }
+    if(!r.ok) return null;
 
     const data = await r.json().catch(()=>({}));
     const out = String(data?.translated||data?.translation||data?.text||"").trim();
@@ -349,7 +344,7 @@ async function translateViaApi(text, source, target){
 }
 
 /* ===============================
-   STT (TTS AFTER onend)
+   STT (speak AFTER onend)
    =============================== */
 function buildRecognizer(langCode){
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -413,15 +408,17 @@ async function start(which){
       const other = (which==="top") ? "bot" : "top";
       const translated = await translateViaApi(p.finalText, p.src, p.dst);
 
+      const speakLang = normalizeApiLang(p.dst);
+
       if(!translated){
-        addBubble(other, "me", "⚠️ Çeviri şu an yapılamadı.", normalizeApiLang(p.dst));
+        addBubble(other, "me", "⚠️ Çeviri şu an yapılamadı.", speakLang);
         return;
       }
 
-      addBubble(other, "me", translated, normalizeApiLang(p.dst));
+      addBubble(other, "me", translated, speakLang);
 
-      // ✅ mic kapandıktan sonra konuş
-      setTimeout(()=> speak(translated, normalizeApiLang(p.dst)), 140);
+      // ✅ mic kapandıktan sonra TTS (Android fix zaten speak içinde)
+      setTimeout(()=> speak(translated, speakLang), 120);
     }
   };
 
@@ -434,11 +431,9 @@ async function start(which){
    =============================== */
 function bindNav(){
   $("homeBtn")?.addEventListener("click", ()=> location.href = HOME_PATH);
-  $("topBack")?.addEventListener("click", ()=>{
-    stopAll(); closeAllPop();
-    if(history.length>1) history.back(); else location.href = HOME_PATH;
-  });
-  $("clearChat")?.addEventListener("click", ()=> clearChat());
+  $("homeLink")?.addEventListener("click", ()=> location.href = HOME_PATH);
+
+  $("clearLink")?.addEventListener("click", ()=> clearChat());
 }
 function bindLangButtons(){
   $("topLangBtn")?.addEventListener("click",(e)=>{ e.preventDefault(); e.stopPropagation(); togglePop("top"); });
@@ -460,20 +455,12 @@ function bindMicButtons(){
 document.addEventListener("DOMContentLoaded", async ()=>{
   if(!(await requireLogin())) return;
 
-  // ✅ login cache -> header tokens (opsiyonel)
-  try{
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if(raw){
-      const u = JSON.parse(raw);
-      if(u?.tokens != null) setHeaderTokens(u.tokens);
-    }
-  }catch{}
-
   $("topLangTxt") && ($("topLangTxt").textContent = labelChip(topLang));
   $("botLangTxt") && ($("botLangTxt").textContent = labelChip(botLang));
 
   bindNav(); bindLangButtons(); bindMicButtons();
 
+  // voice preload (web)
   try{ window.speechSynthesis?.getVoices?.(); }catch{}
 
   document.addEventListener("click",(e)=>{
