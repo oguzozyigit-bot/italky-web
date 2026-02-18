@@ -14,8 +14,8 @@
       --red:#ff0033;
       --green:#00ff9d;
 
-      /* dock daha kompakt (joker üstte) */
-      --dockH: 215px;
+      /* Dock daha kompakt */
+      --dockH: 205px;
       --shellLift: 0px;
     }
 
@@ -36,13 +36,42 @@
       align-items:flex-start;
       gap:12px;
     }
-    .leftStack{display:flex;flex-direction:column;gap:8px}
-    .hearts{display:flex;align-items:center;gap:6px;flex-wrap:wrap;max-width:62vw}
-    .heart{font-size:22px;filter:drop-shadow(0 0 10px var(--red));transition:.2s}
-    .heartPlus{font-weight:900;opacity:.65;font-size:12px;letter-spacing:1px;margin-left:4px}
 
-    /* ✅ Jokerler artık kalplerin altında tek tek */
-    .jokerStack{display:flex;gap:10px;align-items:center}
+    /* Sol: Kalpler + jokerler dikey */
+    .leftStack{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      align-items:flex-start;
+    }
+
+    .hearts{
+      display:flex;
+      align-items:center;
+      gap:6px;
+      flex-wrap:wrap;
+      max-width:62vw;
+    }
+    .heart{
+      font-size:22px;
+      filter:drop-shadow(0 0 10px var(--red));
+      transition:.2s
+    }
+    .heartPlus{
+      font-weight:900;
+      opacity:.65;
+      font-size:12px;
+      letter-spacing:1px;
+      margin-left:4px
+    }
+
+    /* ✅ Jokerler: kalplerin altına alt alta */
+    .jokerCol{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      align-items:flex-start;
+    }
     .joker{
       width:44px;height:56px;border-radius:14px;
       border:1px solid rgba(99,102,241,.55);
@@ -51,25 +80,25 @@
       font-size:22px;
       cursor:pointer;
       user-select:none;
-      box-shadow: 0 0 0 rgba(0,0,0,0);
       transition:.2s;
     }
     .joker:active{transform:scale(.96)}
     .joker.spent{opacity:.14;filter:grayscale(1);pointer-events:none;transform:none}
 
+    /* Sağ: skor */
     .score{text-align:right;line-height:1.15}
     .score .best{font-size:9px;font-weight:900;opacity:.55;letter-spacing:1px}
     .score .val{font-size:26px;font-weight:900;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 
-    /* HANGMAN daha yukarı */
+    /* ✅ HANGMAN daha yukarı */
     .title{
       font-family:"Space Grotesk";
       letter-spacing:12px;
       text-align:center;
       font-size:24px;
       opacity:.86;
-      margin-top:-2px;
-      transform: translateY(-6px);
+      margin-top:-6px;
+      transform: translateY(-10px);
     }
 
     /* Darağacı */
@@ -79,11 +108,14 @@
       flex-direction:column;
       align-items:center;
       justify-content:flex-start;
-      padding-top:12px;
-      gap:10px;
+      padding-top:10px;
+      gap:8px;
     }
 
-    .gallows{width:150px;height:170px;position:relative;border-bottom:4px solid #fff; transform: translateY(-8px);}
+    .gallows{
+      width:150px;height:170px;position:relative;border-bottom:4px solid #fff;
+      transform: translateY(-10px);
+    }
     .beam{position:absolute;background:#fff}
     .v{width:4px;height:100%;left:30px}
     .h{width:95px;height:4px;left:30px;top:0}
@@ -102,21 +134,23 @@
     .lleg{width:20px;height:3px;left:-21px;top:70px;transform:rotate(-45deg)}
     .rleg{width:20px;height:3px;left:1px;top:70px;transform:rotate(45deg)}
 
-    .q{
+    /* ✅ Türkçe anlam: Hangman + darağacı altındaki boşluk */
+    .trBox{
+      width:min(560px, 100%);
       padding:10px 12px;
       border:1px solid rgba(255,255,255,.10);
       border-radius:16px;
       background:rgba(255,255,255,.05);
-      width:min(560px, 100%);
       text-align:center;
       font-weight:900;
-      font-size:12px;
+      font-size:13px;
       letter-spacing:1px;
       text-transform:uppercase;
-      color:rgba(255,255,255,.55);
+      color:rgba(255,255,255,.70);
+      transform: translateY(-8px);
     }
 
-    /* ✅ Dock: artık sadece çizgiler + klavye */
+    /* ✅ Dock: sadece çizgiler + klavye */
     .dock{
       position:fixed;
       left:14px; right:14px;
@@ -146,7 +180,7 @@
     }
     .key:active{transform:scale(.98)}
     .key.hit{background:var(--green);color:#000;box-shadow:0 0 15px var(--green)}
-    .key.miss{background:var(--red);opacity:.30}
+    .key.miss{background:var(--red);opacity:0.30}
 
     /* Modal */
     .modal{
@@ -189,8 +223,8 @@
         <div class="leftStack">
           <div class="hearts" id="hearts"></div>
 
-          <!-- ✅ Jokerler burada -->
-          <div class="jokerStack">
+          <!-- ✅ Jokerler alt alta -->
+          <div class="jokerCol">
             <div class="joker" id="j0">🃏</div>
             <div class="joker" id="j1">🃏</div>
             <div class="joker" id="j2">🃏</div>
@@ -221,7 +255,8 @@
           </div>
         </div>
 
-        <div class="q" id="hint">YÜKLENİYOR…</div>
+        <!-- ✅ Türkçe anlam burada -->
+        <div class="trBox" id="trText">YÜKLENİYOR…</div>
       </div>
     </div>
 
@@ -256,7 +291,7 @@
     setTimeout(liftDock, 0);
     setTimeout(liftDock, 250);
 
-    // ---------- SES MOTORU (DOSYASIZ) ----------
+    // ---------- SES MOTORU ----------
     let AC = null;
     const audioOn = () => {
       if(!AC){
@@ -265,7 +300,6 @@
       }
       if(AC && AC.state === "suspended") AC.resume().catch(()=>{});
     };
-
     const beep = (freq, dur=0.06, type="sine", gain=0.08) => {
       if(!AC) return;
       const t0 = AC.currentTime;
@@ -282,7 +316,6 @@
       o.start(t0);
       o.stop(t0 + dur + 0.02);
     };
-
     const sTap  = () => { audioOn(); beep(420, 0.035, "triangle", 0.05); };
     const sHit  = () => { audioOn(); beep(740, 0.06, "sine", 0.08);  beep(980, 0.05, "sine", 0.05); };
     const sMiss = () => { audioOn(); beep(190, 0.08, "square", 0.07); beep(140, 0.10, "square", 0.05); };
@@ -290,7 +323,7 @@
 
     // ---------- OYUN STATE ----------
     let lang = "en";
-    let diff = 3;          // 3 easy, 4 normal, 5 hard
+    let diff = 3;          // 7 / 4 / 3 (limit)
     let lives = 3;
 
     let pool = null;
@@ -308,7 +341,7 @@
     let best = parseInt(localStorage.getItem(HS_KEY) || "0", 10);
     $("bestVal").textContent = best;
 
-    // Joker click (üstte)
+    // Joker click
     for(let i=0;i<3;i++){
       $(`j${i}`).onclick = () => useJ(i);
     }
@@ -434,7 +467,7 @@
     function endRound(win){
       lock = true;
 
-      // ✅ sonunda doğru kelimeyi sesli oku
+      // sonunda kelimeyi sesli oku
       speakWord();
 
       if(win){
@@ -476,15 +509,13 @@
       if(lock) return;
       if(guessed.has(letter)) return;
 
-      // ✅ tuş basma sesi her durumda
+      // tuş basma sesi
       sTap();
 
       const w = target.w.toUpperCase();
       if(w.includes(letter)){
         guessed.add(letter);
         btn.classList.add("hit");
-
-        // ✅ doğru sesi
         sHit();
 
         renderWord();
@@ -494,8 +525,6 @@
         flawless = false;
         mistakes++;
         btn.classList.add("miss");
-
-        // ✅ yanlış sesi
         sMiss();
 
         applyPenalty(10);
@@ -512,9 +541,9 @@
 
       jokerUsed = true;
       jokersLeft--;
-
       $(`j${i}`).classList.add("spent");
-      applyPenalty(10); // joker -10
+
+      applyPenalty(10);
 
       const w = target.w.toUpperCase();
       const rem = w.split("").filter(ch => !guessed.has(ch));
@@ -529,7 +558,7 @@
     async function loadRealPool(){
       pool = await loadLangPool(lang);
       if(!pool?.items?.length){
-        $("hint").textContent = `HAVUZ BOŞ: ${lang}.json (items yok)`;
+        $("trText").textContent = `HAVUZ BOŞ: ${lang}.json`;
         return false;
       }
       return true;
@@ -554,13 +583,15 @@
       target = picked?.[0];
 
       if(!target?.w){
-        $("hint").textContent = "KELİME SEÇİLEMEDİ (pick boş)";
+        $("trText").textContent = "KELİME SEÇİLEMEDİ (pick boş)";
         $("matrix").innerHTML = "";
         $("kb").innerHTML = "";
         return;
       }
 
-      $("hint").textContent = target.tr || "—";
+      // ✅ Türkçe anlam burada gösteriliyor
+      $("trText").textContent = (target.tr || "—").toString().trim() || "—";
+
       renderHearts();
       renderWord();
       renderKeyboard();
