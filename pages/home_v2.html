@@ -6,111 +6,83 @@
   <title>italkyAI • Neural Games Hub</title>
   <style>
     :root {
-      --ai-gradient: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
-      --glass-border: rgba(255, 255, 255, 0.12);
-      
-      /* Pastel Zemin Renkleri (Daha opak ve belirgin) */
-      --bg-lavender: rgba(233, 213, 255, 0.08);
-      --bg-mint: rgba(187, 247, 208, 0.08);
-      --bg-salmon: rgba(251, 207, 232, 0.08);
-      --bg-sky: rgba(191, 219, 254, 0.08);
-      --bg-lemon: rgba(254, 240, 138, 0.08);
+      /* Pastel Zemin Tonları */
+      --p-lavender: #e9d5ff; --p-mint: #bbf7d0; --p-salmon: #fbcfe8; 
+      --p-sky: #bfdbfe; --p-lemon: #fef08a; --p-rose: #fecdd3;
     }
 
     #pageContent {
-      height: calc(100vh - 190px); 
+      height: calc(100vh - 180px); 
       display: flex; flex-direction: column;
       overflow-y: auto; scrollbar-width: none;
-      padding: 10px 10px 60px;
+      padding: 10px 10px 80px;
     }
     #pageContent::-webkit-scrollbar { display: none; }
 
     .neural-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 16px;
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px;
     }
 
-    /* Genel Kart Yapısı */
+    /* KART TEMELİ */
     .game-module {
-      position: relative;
-      border: 1px solid var(--glass-border);
-      border-radius: 32px;
-      padding: 26px 16px;
-      display: flex; flex-direction: column;
-      align-items: center; text-align: center;
-      backdrop-filter: blur(25px);
-      transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      cursor: pointer;
-      overflow: hidden;
+      position: relative; border-radius: 32px; padding: 25px 15px;
+      display: flex; flex-direction: column; align-items: center; text-align: center;
+      border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(25px);
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      cursor: pointer; overflow: hidden;
     }
-    
+    .game-module:active { transform: scale(0.94); }
     .game-module.tall { grid-row: span 2; justify-content: center; }
-    .game-module:active { transform: scale(0.94) translateY(5px); }
+    .game-module.wide { grid-column: span 2; flex-direction: row; text-align: left; padding: 20px 30px; gap: 25px; }
 
-    /* ✅ BOŞLUK DOLDUR: Enlemesine uzatıldı ve pastel sarı zemin */
-    .game-module.wide {
-      grid-column: span 2;
-      flex-direction: row;
-      justify-content: flex-start;
-      padding: 20px 40px;
-      text-align: left;
-      gap: 30px;
-      background: var(--bg-lemon);
-    }
+    /* PASTEL ZEMİNLER */
+    .bg-l { background: rgba(233, 213, 255, 0.12); } /* Lavender */
+    .bg-m { background: rgba(187, 247, 208, 0.12); } /* Mint */
+    .bg-s { background: rgba(251, 207, 232, 0.12); } /* Salmon */
+    .bg-b { background: rgba(191, 219, 254, 0.12); } /* Sky Blue */
+    .bg-y { background: rgba(254, 240, 138, 0.12); } /* Lemon */
 
-    /* Zemin Renk Atamaları */
-    .m-lavender { background: var(--bg-lavender); }
-    .m-mint { background: var(--bg-mint); }
-    .m-salmon { background: var(--bg-salmon); }
-    .m-sky { background: var(--bg-sky); }
+    /* İKON ALANI */
+    .icon-node { width: 65px; height: 65px; margin-bottom: 15px; position: relative; display: flex; align-items: center; justify-content: center; }
+    .wide .icon-node { margin-bottom: 0; }
 
-    /* ✅ HER İKONDA MUTLAKA ANİMASYON */
-    .icon-engine {
-      width: 75px; height: 75px; margin-bottom: 20px;
-      display: flex; align-items: center; justify-content: center;
-      position: relative;
-    }
-    .wide .icon-engine { margin-bottom: 0; }
+    /* --- ÖZEL ANİMASYONLU İKONLAR --- */
 
-    /* Adam Asmaca: Glitch yapan pastel çerçeve */
-    .i-hangman { border: 3px solid #fbcfe8; border-radius: 14px; animation: hangmanPulse 2s infinite ease-in-out; }
-    
-    /* Casus Kim: Sürekli kırpan/dönen göz */
-    .i-spy { width: 45px; height: 25px; border: 3px solid #fff; border-radius: 50% 0; transform: rotate(-45deg); animation: eyeBlink 3s infinite; }
-    .i-spy::after { content: ""; width: 12px; height: 12px; background: #bfdbfe; border-radius: 50%; animation: irisMove 3s infinite; }
+    /* 1. Adam Asmaca: Veri Hattından Sarkan Düğüm */
+    .i-hangman { border-left: 3px solid #fff; height: 40px; position: relative; animation: swing 3s infinite ease-in-out; }
+    .i-hangman::after { content: ""; position: absolute; bottom: -10px; left: -8px; width: 14px; height: 14px; border: 2px solid var(--p-salmon); border-radius: 50%; box-shadow: 0 0 10px var(--p-salmon); }
 
-    /* Bilgi Yarışı: Dönerek parlayan kupa */
-    .i-cracker svg { animation: crownSpin 4s infinite linear; filter: drop-shadow(0 0 10px #fef08a); }
+    /* 2. Kelime Avı: Dönen Arama Merceği */
+    .i-hunt { width: 45px; height: 45px; border: 3px solid var(--p-sky); border-radius: 50%; animation: pulseCircle 2s infinite; }
+    .i-hunt::after { content: ""; position: absolute; width: 20px; height: 3px; background: #fff; transform: rotate(45deg); bottom: -5px; right: -5px; }
 
-    /* Cümle Kurma: Sırayla parlayan noktalar */
-    .i-sentence { gap: 6px; }
-    .i-sentence span { width: 10px; height: 10px; background: #e9d5ff; border-radius: 50%; box-shadow: 0 0 15px #e9d5ff; animation: nodeJump 1.2s infinite ease-in-out; }
-    .i-sentence span:nth-child(2) { animation-delay: 0.2s; }
-    .i-sentence span:nth-child(3) { animation-delay: 0.4s; }
+    /* 3. Cümle Kurma: Akan Enerji Noktaları */
+    .i-sentence { display: flex; gap: 5px; }
+    .i-sentence div { width: 10px; height: 10px; background: var(--p-lavender); border-radius: 50%; animation: flow 1.5s infinite; }
+    .i-sentence div:nth-child(2) { animation-delay: 0.2s; }
+    .i-sentence div:nth-child(3) { animation-delay: 0.4s; }
 
-    /* Eşleştirme: Yanıp sönen kareler */
-    .i-meteor { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
-    .i-meteor div { width: 14px; height: 14px; background: #bbf7d0; border-radius: 4px; animation: squareFlash 1.5s infinite alternate; }
-    .i-meteor div:nth-child(2) { animation-delay: 0.3s; }
-    .i-meteor div:nth-child(3) { animation-delay: 0.6s; }
+    /* 4. Casus Kim: Takip Eden Göz */
+    .i-spy { width: 45px; height: 25px; border: 3px solid #fff; border-radius: 50% 0; transform: rotate(-45deg); }
+    .i-spy::after { content: ""; width: 10px; height: 10px; background: var(--p-sky); border-radius: 50%; animation: eyeMove 4s infinite; }
 
-    /* Boşluk Doldur: Kayan hat */
-    .i-fill { border: 3px solid #fef08a; width: 50px; height: 50px; border-radius: 50%; position: relative; }
-    .i-fill::after { content: ""; position: absolute; width: 20px; height: 4px; background: #fff; border-radius: 2px; animation: lineSlide 2s infinite linear; }
+    /* 5. Glitch Hunter: Titreyen Uyarı */
+    .i-glitch { font-size: 30px; font-weight: 900; color: #f87171; animation: jitter 0.2s infinite; }
 
-    /* Yazılar */
-    .g-name { font-size: 17px; font-weight: 900; color: #fff; margin-bottom: 5px; }
-    .g-desc { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.6); line-height: 1.4; }
+    /* 6. Eşleştirme: Yer Değiştiren Kareler */
+    .i-match { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+    .i-match div { width: 15px; height: 15px; background: var(--p-mint); border-radius: 4px; animation: swap 2s infinite; }
 
-    /* ANİMASYON TANIMLARI */
-    @keyframes hangmanPulse { 0%, 100% { transform: scale(1); border-color: #fbcfe8; } 50% { transform: scale(1.1); border-color: #fff; } }
-    @keyframes eyeBlink { 0%, 90%, 100% { transform: rotate(-45deg) scaleY(1); } 95% { transform: rotate(-45deg) scaleY(0.1); } }
-    @keyframes irisMove { 0%, 100% { transform: translate(0,0); } 50% { transform: translate(5px, -5px); } }
-    @keyframes crownSpin { 0% { transform: rotateY(0); } 100% { transform: rotateY(360deg); } }
-    @keyframes nodeJump { 0%, 100% { transform: translateY(0); opacity: 0.5; } 50% { transform: translateY(-12px); opacity: 1; } }
-    @keyframes squareFlash { from { opacity: 0.2; transform: scale(0.8); } to { opacity: 1; transform: scale(1.1); } }
-    @keyframes lineSlide { 0% { left: -10px; opacity: 0; } 50% { opacity: 1; } 100% { left: 40px; opacity: 0; } }
+    /* --- ANİMASYON KEYFRAMES --- */
+    @keyframes swing { 0%, 100% { transform: rotate(-15deg); } 50% { transform: rotate(15deg); } }
+    @keyframes pulseCircle { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(191, 219, 254, 0.4); } 70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(191, 219, 254, 0); } 100% { transform: scale(1); } }
+    @keyframes flow { 0% { opacity: 0.3; transform: translateY(0); } 50% { opacity: 1; transform: translateY(-10px); } 100% { opacity: 0.3; transform: translateY(0); } }
+    @keyframes eyeMove { 0%, 100% { transform: translate(0,0); } 25% { transform: translate(5px, -5px); } 75% { transform: translate(-5px, 5px); } }
+    @keyframes jitter { 0% { transform: translate(0); } 50% { transform: translate(2px, -2px); } 100% { transform: translate(-2px, 2px); } }
+    @keyframes swap { 0%, 100% { transform: scale(1); } 50% { transform: scale(0.7) rotate(90deg); } }
+
+    .g-name { font-size: 16px; font-weight: 900; color: #fff; margin-bottom: 5px; }
+    .g-desc { font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.5); line-height: 1.3; }
 
   </style>
 </head>
@@ -119,51 +91,73 @@
   <div id="pageContent">
     <div class="neural-grid">
       
-      <div class="game-module tall m-salmon" onclick="location.href='/pages/hangman'">
-        <div class="icon-engine i-hangman"></div>
+      <div class="game-module tall bg-s" onclick="location.href='/pages/hangman'">
+        <div class="icon-node"><div class="i-hangman"></div></div>
         <div class="g-name">Adam Asmaca</div>
-        <div class="g-desc">Sistemdeki kayıp veriyi geri yükle.</div>
+        <div class="g-desc">Sallanan veri düğümlerini çöz, kelimeyi kurtar.</div>
       </div>
 
-      <div class="game-module m-sky" onclick="location.href='/pages/spy'">
-        <div class="icon-engine i-spy"></div>
+      <div class="game-module bg-b" onclick="location.href='/pages/spy'">
+        <div class="icon-node"><div class="i-spy"></div></div>
         <div class="g-name">Casus Kim?</div>
-        <div class="g-desc">Sızan yabancı algoritmayı bul.</div>
+        <div class="g-desc">Seni izleyen gözü bul, casusu deşifre et.</div>
       </div>
 
-      <div class="game-module m-mint" onclick="location.href='/pages/cracker'">
-        <div class="icon-engine i-cracker">
-          <svg width="40" height="40" viewBox="0 0 24 24" stroke="#fef08a" stroke-width="2.5" fill="none"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg>
+      <div class="game-module bg-y" onclick="location.href='/pages/cracker'">
+        <div class="icon-node">
+          <svg width="35" height="35" viewBox="0 0 24 24" stroke="#fef08a" stroke-width="2.5" fill="none" style="animation: swing 3s infinite;"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg>
         </div>
         <div class="g-name">Bilgi Yarışı</div>
-        <div class="g-desc">Global zeka liginde yüksel.</div>
+        <div class="g-desc">Global ligde zekanı kanıtla.</div>
       </div>
 
-      <div class="game-module tall m-lavender" onclick="location.href='/pages/sentence'">
-        <div class="icon-engine i-sentence"><span></span><span></span><span></span></div>
+      <div class="game-module tall bg-l" onclick="location.href='/pages/sentence'">
+        <div class="icon-node"><div class="i-sentence"><div></div><div></div><div></div></div></div>
         <div class="g-name">Cümle Kurma</div>
-        <div class="g-desc">Semantik enerji hatlarını bağla.</div>
+        <div class="g-desc">Akan kelime enerjisini doğru sıraya diz.</div>
       </div>
 
-      <div class="game-module tall m-mint" onclick="location.href='/pages/meteor'">
-        <div class="icon-engine i-meteor"><div></div><div></div><div></div><div></div></div>
+      <div class="game-module bg-m" style="background:rgba(254, 205, 211, 0.12)" onclick="location.href='/pages/glitch'">
+        <div class="icon-node"><div class="i-glitch">!</div></div>
+        <div class="g-name">Glitch Hunter</div>
+        <div class="g-desc">Sistemdeki parazitleri temizle.</div>
+      </div>
+
+      <div class="game-module bg-l" onclick="location.href='/pages/duo'">
+        <div class="icon-node">
+          <svg width="32" height="32" viewBox="0 0 24 24" stroke="#e9d5ff" stroke-width="2.5" fill="none" style="animation: flow 2s infinite;"><path d="M12 1v22M17 5v14M7 5v14M22 9v6M2 9v6"/></svg>
+        </div>
+        <div class="g-name">Sesli Düello</div>
+        <div class="g-desc">Akustik sinyalleri yakala.</div>
+      </div>
+
+      <div class="game-module tall bg-m" onclick="location.href='/pages/meteor'">
+        <div class="icon-node"><div class="i-match"><div></div><div></div><div></div><div></div></div></div>
         <div class="g-name">Eşleştirme</div>
-        <div class="g-desc">Kuantum hafıza matrisini eşle.</div>
+        <div class="g-desc">Kuantum hafıza hücrelerini eşle.</div>
       </div>
 
-      <div class="game-module m-sky" onclick="location.href='/pages/neural'">
-        <div class="icon-engine" style="animation: hangmanPulse 3s infinite;">
-          <svg width="40" height="40" viewBox="0 0 24 24" stroke="#bfdbfe" stroke-width="2.2" fill="none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><circle cx="12" cy="12" r="3"/></svg>
+      <div class="game-module bg-b" onclick="location.href='/pages/neural_box'">
+        <div class="icon-node" style="animation: swap 4s infinite;">
+          <svg width="35" height="35" viewBox="0 0 24 24" stroke="#bfdbfe" stroke-width="2.5" fill="none"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+        </div>
+        <div class="g-name">Neural Box</div>
+        <div class="g-desc">Gizli kutudaki veriyi çıkar.</div>
+      </div>
+
+      <div class="game-module bg-y" onclick="location.href='/pages/neural'">
+        <div class="icon-node" style="animation: pulseCircle 3s infinite;">
+           <svg width="35" height="35" viewBox="0 0 24 24" stroke="#fef08a" stroke-width="2.2" fill="none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><circle cx="12" cy="12" r="3"/></svg>
         </div>
         <div class="g-name">Neural Core</div>
-        <div class="g-desc">AI ile tam senkronizasyon.</div>
+        <div class="g-desc">Zihnini AI ile mühürle.</div>
       </div>
 
-      <div class="game-module wide" onclick="location.href='/pages/gap'">
-        <div class="icon-engine i-fill"></div>
+      <div class="game-module wide bg-m" onclick="location.href='/pages/gap'">
+        <div class="icon-node"><div class="i-hunt"></div></div>
         <div>
           <div class="g-name">Boşluk Doldur</div>
-          <div class="g-desc">Matristeki eksik kodları tamamla.</div>
+          <div class="g-desc">Eksik algoritmaları yerleştir, sağda boşluk kalsın.</div>
         </div>
       </div>
 
