@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>italkyAI • NEURAL VOID (WORKING)</title>
+  <title>italkyAI • NEURAL VOID</title>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
   <style>
@@ -14,8 +14,9 @@
       --green:#00ff9d;
       --dockH: 270px;
     }
+
     html,body{margin:0;height:100%;background:var(--bg);color:#fff;font-family:Outfit,system-ui;overflow:hidden}
-    #app{height:100dvh;padding:14px;box-sizing:border-box;position:relative}
+    #pageContent{height:100dvh;padding:14px;box-sizing:border-box;position:relative}
 
     .top{
       height: calc(100% - var(--dockH));
@@ -23,9 +24,11 @@
     }
 
     .status{display:flex;justify-content:space-between;align-items:center}
-    .hearts{display:flex;align-items:center}
-    .heart{font-size:22px;filter:drop-shadow(0 0 10px var(--red));margin-right:4px;transition:.2s}
+    .hearts{display:flex;align-items:center;gap:4px;flex-wrap:wrap;max-width:60vw}
+    .heart{font-size:22px;filter:drop-shadow(0 0 10px var(--red));transition:.2s}
     .heart.lost{opacity:.12;filter:grayscale(1);transform:scale(.8)}
+    .heartPlus{font-weight:900;opacity:.65;font-size:12px;letter-spacing:1px;margin-left:4px}
+
     .score{text-align:right;line-height:1.15}
     .score .best{font-size:9px;font-weight:900;opacity:.55;letter-spacing:1px}
     .score .val{font-size:26px;font-weight:900;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
@@ -41,6 +44,7 @@
     .man{position:absolute;left:125px;top:35px;transform-origin:top center}
     .man.swing{animation:sway 1.2s infinite ease-in-out}
     @keyframes sway{0%,100%{transform:rotate(-10deg)}50%{transform:rotate(10deg)}}
+
     .organ{position:absolute;background:#fff;box-shadow:0 0 10px #fff;display:none}
     .organ.on{display:block}
     .head{width:24px;height:24px;border:3px solid #fff;border-radius:50%;left:-12px;top:0;background:transparent}
@@ -64,11 +68,11 @@
       color:rgba(255,255,255,.55);
     }
 
-    /* ✅ fixed dock: klavye/çizgi kesin görünür */
+    /* ✅ fixed dock: ui_shell footer üstüne gelmesin */
     .dock{
       position:fixed;
       left:14px; right:14px;
-      bottom: calc(env(safe-area-inset-bottom) + 10px);
+      bottom: calc(env(safe-area-inset-bottom) + 10px); /* JS ile footer kadar yükseltiyoruz */
       height: var(--dockH);
       z-index: 9999;
       border-radius:22px;
@@ -92,47 +96,6 @@
     .key{height:40px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#fff;font-weight:900}
     .key.hit{background:var(--green);color:#000;box-shadow:0 0 15px var(--green)}
     .key.miss{background:var(--red);opacity:.3}
-
-    /* Setup */
-    .setup{
-      position:fixed; inset:0; z-index:20000;
-      background:var(--bg);
-      padding:24px;
-      display:flex;flex-direction:column;
-    }
-    .logo{
-      font-family:"Space Grotesk";
-      font-size:40px;font-weight:900;text-align:center;
-      background:linear-gradient(to bottom,#fff,#6366f1);
-      -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-      letter-spacing:-2px;
-      margin:10px 0 18px;
-    }
-    .grid5{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:10px 0 18px}
-    .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0 0 20px}
-    .card{
-      background:rgba(255,255,255,.05);
-      border:1px solid #333;
-      border-radius:14px;
-      padding:12px 0;
-      text-align:center;
-      font-weight:900;
-      cursor:pointer;
-      user-select:none;
-    }
-    .card.active{border-color:#6366f1;background:rgba(99,102,241,.2)}
-    .card.diff.active{border-color:var(--green);background:rgba(0,255,157,.10)}
-    .btn{
-      width:100%;
-      padding:18px;
-      border:none;
-      border-radius:18px;
-      background:var(--grad);
-      color:#fff;
-      font-weight:900;
-      font-size:18px;
-      cursor:pointer;
-    }
 
     /* Modal */
     .modal{
@@ -167,35 +130,7 @@
 </head>
 
 <body>
-  <div id="app">
-
-    <div class="setup" id="setup">
-      <div class="logo">NEURAL VOID</div>
-
-      <div style="font-size:11px;font-weight:900;opacity:.55;letter-spacing:2px;margin:6px 0 6px;">DİL PROTOKOLÜ</div>
-      <div class="grid5" id="langGrid">
-        <div class="card active" data-lang="en">🇬🇧<div style="font-size:10px;opacity:.8;margin-top:4px">EN</div></div>
-        <div class="card" data-lang="de">🇩🇪<div style="font-size:10px;opacity:.8;margin-top:4px">DE</div></div>
-        <div class="card" data-lang="fr">🇫🇷<div style="font-size:10px;opacity:.8;margin-top:4px">FR</div></div>
-        <div class="card" data-lang="it">🇮🇹<div style="font-size:10px;opacity:.8;margin-top:4px">IT</div></div>
-        <div class="card" data-lang="es">🇪🇸<div style="font-size:10px;opacity:.8;margin-top:4px">ES</div></div>
-      </div>
-
-      <div style="font-size:11px;font-weight:900;opacity:.55;letter-spacing:2px;margin:6px 0 6px;">ZORLUK</div>
-      <div class="grid3" id="diffGrid">
-        <div class="card diff active" data-diff="3">KOLAY</div>
-        <div class="card diff" data-diff="4">NORMAL</div>
-        <div class="card diff" data-diff="5">ZOR</div>
-      </div>
-
-      <button class="btn" id="startBtn">OYUNA BAŞLA</button>
-
-      <div style="margin-top:14px;opacity:.55;font-size:12px;line-height:1.35;text-align:center">
-        Skor: 100 başlar • her yanlış -10 • her joker -10<br/>
-        Joker yok + yanlış yok → +1 can
-      </div>
-    </div>
-
+  <div id="pageContent">
     <div class="fx" id="fx"></div>
 
     <div class="top">
@@ -229,7 +164,8 @@
       </div>
     </div>
 
-    <div class="dock">
+    <!-- ✅ ui_shell içinde görünür: sabit alt panel -->
+    <div class="dock" id="dock">
       <div class="matrix" id="matrix"></div>
 
       <div class="jokerRow">
@@ -251,11 +187,25 @@
 
   </div>
 
-<script>
-(() => {
+<script type="module">
+  import { mountShell } from "/js/ui_shell.js";
+
+  // ✅ ui_shell’i aç
+  mountShell({ scroll: "none" });
+
   const $ = (id) => document.getElementById(id);
 
-  // ✅ Offline demo pool (sonra langpool ile değiştirirsin)
+  // ✅ ui_shell footer yüksekliği varsa dock’u yukarı al (footer üstüne binmesin)
+  const liftDockAboveShellFooter = () => {
+    const dock = $("dock");
+    const rootStyles = getComputedStyle(document.documentElement);
+    const footerH = parseFloat(rootStyles.getPropertyValue("--footerH")) || 92; // shell kullanıyorsa genelde var
+    dock.style.bottom = `calc(env(safe-area-inset-bottom) + ${footerH + 10}px)`;
+  };
+  setTimeout(liftDockAboveShellFooter, 0);
+  setTimeout(liftDockAboveShellFooter, 300);
+
+  // ✅ Demo pool (istersen sonra langpool'a bağlarız)
   const POOLS = {
     en: [
       { w:"APPLE",  tr:"ELMA" },
@@ -289,8 +239,9 @@
     ]
   };
 
+  // oyun state
   let lang = "en";
-  let diff = 3;           // 3 easy, 4 normal, 5 hard
+  let diff = 3;         // 3 easy, 4 normal, 5 hard
   let lives = 3;
 
   let target = null;
@@ -299,65 +250,47 @@
   let jokersLeft = 3;
 
   let score = 100;
-  let flawless = true;    // hiç yanlış yok
+  let flawless = true;
   let jokerUsed = false;
 
   let lock = false;
 
-  const HS_KEY = "italky_hangman_high_demo";
+  const HS_KEY = "italky_hangman_high";
   let best = parseInt(localStorage.getItem(HS_KEY) || "0", 10);
-
   $("bestVal").textContent = best;
 
-  // setup UI
-  $("langGrid").addEventListener("click", (e) => {
-    const c = e.target.closest(".card");
-    if(!c || !c.dataset.lang) return;
-    [...$("langGrid").querySelectorAll(".card")].forEach(x=>x.classList.remove("active"));
-    c.classList.add("active");
-    lang = c.dataset.lang;
-  });
-
-  $("diffGrid").addEventListener("click", (e) => {
-    const c = e.target.closest(".card.diff");
-    if(!c) return;
-    [...$("diffGrid").querySelectorAll(".card.diff")].forEach(x=>x.classList.remove("active"));
-    c.classList.add("active");
-    diff = parseInt(c.dataset.diff, 10);
-  });
-
-  $("startBtn").onclick = () => {
-    $("setup").style.display = "none";
-    newRound();
-  };
-
-  $("mBtn").onclick = () => {
-    $("modal").classList.remove("on");
-    if(lives <= 0){
-      location.reload();
-      return;
-    }
-    newRound();
-  };
-
-  // jokers
+  // UI (bu sayfada setup ekranı yok; istersen shell üstünden ayarları sonra bağlarız)
+  // Joker click
   for(let i=0;i<3;i++){
     $(`j${i}`).onclick = () => useJ(i);
   }
 
+  $("mBtn").onclick = () => {
+    $("modal").classList.remove("on");
+    if(lives <= 0){ location.reload(); return; }
+    newRound();
+  };
+
   function renderHearts(){
-    const max = 3;
+    // ✅ CAN ARTTIKÇA GÖRÜNÜR: 7 kalbe kadar çiz, sonrası +N
+    const showMax = 7;
+    const shown = Math.min(lives, showMax);
+    const extra = Math.max(0, lives - showMax);
+
     let html = "";
-    for(let i=0;i<max;i++){
-      html += `<span class="heart ${i>=lives ? "lost":""}">❤️</span>`;
+    for(let i=0;i<shown;i++){
+      html += `<span class="heart">❤️</span>`;
+    }
+    if(extra > 0){
+      html += `<span class="heartPlus">+${extra}</span>`;
     }
     $("hearts").innerHTML = html;
   }
 
   function getLimit(){
-    if(diff === 3) return 7; // easy
-    if(diff === 4) return 4; // normal
-    return 3;                // hard
+    if(diff === 3) return 7;
+    if(diff === 4) return 4;
+    return 3;
   }
 
   function resetMan(){
@@ -369,8 +302,6 @@
     resetMan();
     const m = mistakes;
 
-    // Sende kurallar daha detaylıydı; bu demo çizimde 6 parça var.
-    // Easy: 7 hata limiti, 6 parça + son hata “tamam” sayılır.
     if(diff === 3){
       const seq = ["p_head","p_body","p_larm","p_rarm","p_lleg","p_rleg"];
       seq.slice(0, Math.min(m, 6)).forEach(id => $(id).classList.add("on"));
@@ -385,7 +316,6 @@
       return;
     }
 
-    // hard
     if(m>=1) $("p_head").classList.add("on");
     if(m>=2) $("p_body").classList.add("on");
     if(m>=3){ $("p_larm").classList.add("on"); $("p_rarm").classList.add("on"); $("p_lleg").classList.add("on"); $("p_rleg").classList.add("on"); }
@@ -393,7 +323,6 @@
 
   function pickWord(){
     const list = POOLS[lang] || POOLS.en;
-    // basit random
     return list[Math.floor(Math.random()*list.length)];
   }
 
@@ -417,7 +346,6 @@
     // uniq + 10
     const abc = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
     const fillers = abc.filter(l => !uniq.includes(l)).sort(()=>0.5-Math.random()).slice(0,10);
-
     const keys = [...uniq, ...fillers].sort(()=>0.5-Math.random());
 
     $("kb").innerHTML = keys.map(k=>`<button class="key" data-k="${k}">${k}</button>`).join("");
@@ -470,14 +398,12 @@
     speakWord();
 
     if(win){
-      // bonus +1 life: joker yok + yanlış yok
       let bonus = "";
       if(flawless && !jokerUsed){
         lives++;
         bonus = "KUSURSUZ: +1 CAN";
       }
 
-      // highscore
       if(score > best){
         best = score;
         localStorage.setItem(HS_KEY, String(best));
@@ -490,7 +416,6 @@
       return;
     }
 
-    // lose: life-- + swing
     lives--;
     renderHearts();
 
@@ -499,7 +424,6 @@
 
     setTimeout(()=>{
       $("man").classList.remove("swing");
-
       if(lives <= 0){
         showModal("GAME OVER", getCss("--red"), `SKOR: ${score} • REKOR: ${best}`);
       }else{
@@ -518,14 +442,13 @@
       btn.classList.add("hit");
       renderWord();
 
-      // bitti mi?
       const allFound = w.split("").every(ch => guessed.has(ch));
       if(allFound) endRound(true);
     }else{
       flawless = false;
       mistakes++;
       btn.classList.add("miss");
-      applyPenalty(10);       // ✅ her yanlış -10
+      applyPenalty(10);       // yanlış -10
       updateMan();
 
       if(mistakes >= getLimit()){
@@ -542,19 +465,14 @@
     jokersLeft--;
 
     $(`j${i}`).classList.add("spent");
-    applyPenalty(10);        // ✅ her joker -10
+    applyPenalty(10);        // joker -10
 
-    // bir doğru harf aç
     const rem = target.w.split("").filter(ch => !guessed.has(ch));
     if(rem.length){
       const l = rem[0];
-      // klavyede butonu bulup bas
       const btn = $("kb").querySelector(`.key[data-k="${l}"]`);
       if(btn) press(l, btn);
-      else {
-        guessed.add(l);
-        renderWord();
-      }
+      else { guessed.add(l); renderWord(); }
     }
   }
 
@@ -570,7 +488,7 @@
     flawless = true;
     jokerUsed = false;
 
-    score = 100;              // ✅ round skoru 100
+    score = 100;
     $("scoreVal").textContent = score;
 
     resetMan();
@@ -579,6 +497,7 @@
     target = pickWord();
     $("hint").textContent = target.tr;
 
+    renderHearts();
     renderWord();
     renderKeyboard();
     updateMan();
@@ -586,7 +505,7 @@
 
   // init
   renderHearts();
-})();
+  newRound();
 </script>
 </body>
 </html>
