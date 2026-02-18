@@ -77,7 +77,7 @@
       color: rgba(255,255,255,.35);
     }
 
-    /* 🌍 Dünya */
+    /* 🌍 Daha gerçekçi dünya */
     .world-container{
       position:relative;
       width: 290px;
@@ -87,7 +87,7 @@
       justify-content:center;
       margin-top: 6px;
       margin-bottom: 10px;
-      perspective: 900px; /* ✅ 3D yüzler için gerekli */
+      perspective: 900px; /* ✅ 3D yüzler için */
     }
 
     .earth-glow{
@@ -110,9 +110,11 @@
       width: 210px;
       height: 210px;
       border-radius: 50%;
+      /* NASA Blue Marble texture (daha gerçekçi) */
       background-image: url("https://eoimages.gsfc.nasa.gov/images/imagerecords/74000/74518/world.topo.bathy.200412.3x5400x2700.jpg");
       background-size: cover;
       background-position: center;
+      /* gerçekçi gölge + parlama */
       box-shadow:
         inset -28px -28px 60px rgba(0,0,0,0.85),
         inset 10px 10px 28px rgba(255,255,255,0.05),
@@ -123,7 +125,7 @@
       overflow:hidden;
     }
 
-    /* Bulut/parıltı katmanı */
+    /* Bulut efekti gibi hafif parıltı katmanı (çok hafif) */
     .earth::before{
       content:"";
       position:absolute;
@@ -138,19 +140,19 @@
       z-index: 6;
     }
 
+    /* ✅ Ters dönme yok: rotateY */
     @keyframes rotateSphere{
       from{ transform: rotateY(0deg); }
       to{ transform: rotateY(360deg); }
     }
 
-    /* ✅ AI damgası: tek tasarım, iki yüz (front/back) */
+    /* ✅ Tek damga: ön yüz AI, arka yüz ITALKY (ayna düzeltilmiş) */
     .ai-stamp{
       position:absolute;
       inset:0;
       display:flex;
       align-items:center;
       justify-content:center;
-      font-size: 52px;
       font-weight: 1000;
       letter-spacing: 1px;
       color: rgba(255,255,255,0.92);
@@ -162,8 +164,17 @@
       backface-visibility: hidden;
       -webkit-backface-visibility: hidden;
     }
-    .ai-front{ transform: translateZ(1px); z-index: 4; }
-    .ai-back{ transform: rotateY(180deg) translateZ(1px); z-index: 3; }
+    .ai-front{
+      font-size: 52px;
+      transform: translateZ(1px);
+      z-index: 4;
+    }
+    .ai-back{
+      font-size: 38px;                /* ITALKY sığsın */
+      letter-spacing: 2px;
+      transform: rotateY(180deg) translateZ(1px) scaleX(-1); /* ✅ IA sorunu bitti */
+      z-index: 3;
+    }
 
     /* Daktilo */
     .typewriter-container{
@@ -217,6 +228,7 @@
     .google-btn:active{ transform: scale(.97); }
     .g-icon{ width:24px; height:24px; pointer-events:none; }
 
+    /* ✅ Footer imzayı 0.5cm yukarı */
     footer{
       width:100%;
       text-align:center;
@@ -299,9 +311,8 @@
       <div class="earth-glow"></div>
 
       <div class="earth">
-        <!-- ✅ Tek tasarım: ön+arka yüz -->
         <div class="ai-stamp ai-front">AI</div>
-        <div class="ai-stamp ai-back">AI</div>
+        <div class="ai-stamp ai-back">ITALKY</div>
       </div>
     </div>
 
