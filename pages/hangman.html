@@ -28,10 +28,10 @@
       display:flex;
       flex-direction:column;
       gap:10px;
-      position:relative; /* ✅ HUD'u absolute yapacağız */
+      position:relative; /* HUD absolute */
     }
 
-    /* ✅ HANGMAN en üst */
+    /* HANGMAN en üst */
     .title{
       font-family:"Space Grotesk";
       letter-spacing:14px;
@@ -43,10 +43,10 @@
       z-index:2;
     }
 
-    /* ✅ HUD: akıştan çıkıyor (darağacı artık aşağı itilmez) */
+    /* HUD absolute: yalnızca konumlandırma */
     .hud{
       position:absolute;
-      top:56px;            /* HANGMAN hemen altı */
+      top:56px;
       left:0;
       right:0;
       display:flex;
@@ -57,7 +57,7 @@
       pointer-events:auto;
     }
 
-    /* ✅ KALP + JOKER: jokerler KALPLERİN TAM ALTINDA */
+    /* SOL: sadece kalpler (3'erli satır) */
     .leftHud{
       display:flex;
       flex-direction:column;
@@ -65,31 +65,39 @@
       gap:10px;
     }
 
+    /* ✅ 3'erli satır */
     .hearts{
-      display:flex;
-      flex-wrap:wrap;
-      gap:6px;
+      display:grid;
+      grid-template-columns: repeat(3, max-content);
+      column-gap: 6px;
+      row-gap: 6px;
       align-items:center;
+      justify-items:start;
       max-width:52vw;
     }
     .heart{
       font-size:22px;
       filter:drop-shadow(0 0 10px var(--red));
     }
-    .heartPlus{
-      font-weight:900;
-      opacity:.65;
-      font-size:12px;
-      letter-spacing:1px;
-      margin-left:4px
+
+    /* SAĞ: skor */
+    .rightHud{
+      display:flex;
+      flex-direction:column;
+      align-items:flex-end;
+      gap:10px;
     }
 
+    .score{text-align:right;line-height:1.15}
+    .score .best{font-size:9px;font-weight:900;opacity:.55;letter-spacing:1px}
+    .score .val{font-size:26px;font-weight:900;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+
+    /* ✅ Jokerler sağ tarafta, puanın hemen altında */
     .jokerCol{
       display:flex;
       flex-direction:column;
       gap:10px;
-      align-items:flex-start;
-      margin-top:0;
+      align-items:flex-end;
     }
     .joker{
       width:44px;height:56px;border-radius:14px;
@@ -104,12 +112,7 @@
     .joker:active{transform:scale(.96)}
     .joker.spent{opacity:.14;filter:grayscale(1);pointer-events:none;transform:none}
 
-    /* Sağ: skor */
-    .score{text-align:right;line-height:1.15}
-    .score .best{font-size:9px;font-weight:900;opacity:.55;letter-spacing:1px}
-    .score .val{font-size:26px;font-weight:900;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-
-    /* ✅ Darağacı: HANGMAN yazısının HEMEN ALTINDA */
+    /* Darağacı */
     .stage{
       flex:1;
       display:flex;
@@ -124,7 +127,7 @@
 
     .gallows{
       width:150px;height:170px;position:relative;border-bottom:4px solid #fff;
-      transform: translateY(0px); /* ✅ hemen altına */
+      transform: translateY(0px);
     }
     .beam{position:absolute;background:#fff}
     .v{width:4px;height:100%;left:30px}
@@ -144,7 +147,7 @@
     .lleg{width:20px;height:3px;left:-21px;top:70px;transform:rotate(-45deg)}
     .rleg{width:20px;height:3px;left:1px;top:70px;transform:rotate(45deg)}
 
-    /* ✅ Türkçe: darağacının HEMEN ALTINDA */
+    /* Türkçe: darağacının altında */
     .trBox{
       width:min(560px, 100%);
       padding:10px 12px;
@@ -160,7 +163,7 @@
       margin-top:-6px;
     }
 
-    /* ALT DOCK: kelime çizgileri + klavye */
+    /* ALT DOCK */
     .dock{
       position:fixed;
       left:14px; right:14px;
@@ -231,20 +234,24 @@
     <div class="top">
       <div class="title">HANGMAN</div>
 
-      <!-- HUD akıştan çıktı: darağacı artık title'ın hemen altına gelir -->
       <div class="hud">
+        <!-- SOL: kalpler -->
         <div class="leftHud">
           <div class="hearts" id="hearts"></div>
+        </div>
+
+        <!-- SAĞ: skor + jokerler -->
+        <div class="rightHud">
+          <div class="score">
+            <div class="best">REKOR: <span id="bestVal">0</span></div>
+            <div class="val" id="scoreVal">100</div>
+          </div>
+
           <div class="jokerCol">
             <div class="joker" id="j0">🃏</div>
             <div class="joker" id="j1">🃏</div>
             <div class="joker" id="j2">🃏</div>
           </div>
-        </div>
-
-        <div class="score">
-          <div class="best">REKOR: <span id="bestVal">0</span></div>
-          <div class="val" id="scoreVal">100</div>
         </div>
       </div>
 
@@ -332,7 +339,9 @@
     // ---------- OYUN STATE ----------
     let lang = "en";
     let diff = 3;
+
     let lives = 3;
+    const MAX_LIVES = 9; // ✅ max 9 can
 
     let pool = null;
     let target = null;
@@ -349,6 +358,7 @@
     let best = parseInt(localStorage.getItem(HS_KEY) || "0", 10);
     $("bestVal").textContent = best;
 
+    // Joker click
     for(let i=0;i<3;i++){
       $(`j${i}`).onclick = () => useJ(i);
     }
@@ -360,13 +370,12 @@
     };
 
     function renderHearts(){
-      const showMax = 7;
-      const shown = Math.min(lives, showMax);
-      const extra = Math.max(0, lives - showMax);
-
+      // ✅ 3'erli satır, max 9
+      const capped = Math.max(0, Math.min(lives, MAX_LIVES));
       let html = "";
-      for(let i=0;i<shown;i++) html += `<span class="heart">❤️</span>`;
-      if(extra > 0) html += `<span class="heartPlus">+${extra}</span>`;
+      for(let i=0;i<capped;i++){
+        html += `<span class="heart">❤️</span>`;
+      }
       $("hearts").innerHTML = html;
     }
 
@@ -458,11 +467,11 @@
 
       if(win){
         let bonus = "";
-        if(flawless && !jokerUsed){
+        // ✅ Kusursuzsa +1 can, ama max 9'u geçme
+        if(flawless && !jokerUsed && lives < MAX_LIVES){
           lives++;
           bonus = "KUSURSUZ: +1 CAN";
         }
-
         renderHearts();
         showModal("MİSYON BAŞARILI", getCss("--green"), bonus);
         return;
