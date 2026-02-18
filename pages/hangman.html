@@ -3,46 +3,48 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>italkyAI • HANGMAN NEURAL VOID</title>
+  <title>italkyAI • NEURAL VOID</title>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
   <style>
-    /* ✅ SIFIR SCROLL VE PREMİUM OYUN MOTORU */
-    .game-engine { height: 100%; display: flex; flex-direction: column; justify-content: space-between; }
+    /* ✅ SIFIR SCROLL VE PRESTİGE UI */
+    .game-engine { height: 100%; display: flex; flex-direction: column; justify-content: space-between; position: relative; }
     
     .status-bar { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; }
-    .heart-neon { font-size: 20px; filter: drop-shadow(0 0 8px #ff0033); margin-right: 4px; transition: 0.4s var(--ease-premium); }
+    .heart-neon { font-size: 22px; filter: drop-shadow(0 0 10px #ff0033); transition: 0.5s var(--ease-premium); margin-right: 4px; }
     .heart-neon.lost { opacity: 0.1; filter: grayscale(1); transform: scale(0.7); }
 
-    .score-node { text-align: right; line-height: 1.1; }
-    .score-node b { font-size: 24px; color: #6366f1; }
+    .score-panel { text-align: right; line-height: 1.1; }
+    .score-panel b { font-size: 28px; font-weight: 900; background: linear-gradient(135deg, #a5b4fc, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     .best-node { font-size: 10px; font-weight: 900; opacity: 0.5; letter-spacing: 1.5px; }
 
-    /* Giriş Paneli: Bayraklar & Zorluk */
+    /* Giriş Paneli: Bayraklar & Kurallar */
     .setup-overlay { position: absolute; inset: 0; background: #010008; z-index: 2000; padding: 25px; display: flex; flex-direction: column; }
-    .neural-logo { font-family: 'Space Grotesk'; font-size: 38px; font-weight: 900; text-align: center; background: linear-gradient(135deg, #a5b4fc, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -2px; margin-bottom: 20px; }
+    .neural-logo { font-family: 'Space Grotesk'; font-size: 38px; font-weight: 900; text-align: center; background: linear-gradient(to bottom, #fff, #6366f1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -2px; margin-bottom: 20px; }
     
     .flag-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 20px 0; }
-    .opt-card { background: rgba(255,255,255,0.05); border: 1px solid #333; border-radius: 16px; padding: 15px 0; text-align: center; cursor: pointer; }
+    .opt-card { background: rgba(255,255,255,0.05); border: 1px solid #333; border-radius: 16px; padding: 15px 0; text-align: center; cursor: pointer; transition: 0.3s; }
     .opt-card.active { border-color: #6366f1; background: rgba(99,102,241,0.2); transform: scale(1.05); }
-    .opt-card span { font-size: 24px; display: block; }
-    
+    .opt-card span { font-size: 24px; display: block; margin-bottom: 5px; }
+    .opt-card label { font-size: 10px; font-weight: 900; color: #fff; }
+
     .diff-select { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 30px; }
     .diff-card { background: rgba(255,255,255,0.03); border: 1px solid #333; border-radius: 18px; padding: 15px; text-align: center; cursor: pointer; }
     .diff-card.active { border-color: #2ed573; background: rgba(46,213,115,0.1); }
+    .diff-card b { display: block; color: #fff; font-size: 13px; }
 
-    /* Darağacı: İp Sabit, Adam Sallanan */
+    /* Darağacı: İp Dahil Hazır */
     .visual-stage { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
-    .gallows { width: 150px; height: 180px; position: relative; border-bottom: 4px solid #fff; }
+    .gallows { width: 160px; height: 180px; position: relative; border-bottom: 4px solid #fff; }
     .beam { position: absolute; background: #fff; box-shadow: 0 0 15px rgba(255,255,255,0.2); }
     .v-beam { width: 4px; height: 100%; left: 30px; }
     .h-beam { width: 95px; height: 4px; left: 30px; top: 0; }
-    .rope { position: absolute; width: 2px; height: 35px; left: 125px; top: 0; background: #999; }
+    .rope { position: absolute; width: 2px; height: 35px; left: 125px; top: 0; background: #999; box-shadow: 0 0 5px rgba(255,255,255,0.3); }
 
     .target-man { position: absolute; left: 125px; top: 35px; transform-origin: top center; animation: neuralSway 5s infinite ease-in-out; }
     .organ { position: absolute; background: #fff; box-shadow: 0 0 12px #fff; display: none; }
     .organ.active { display: block; }
 
-    /* Organ Pozisyonları */
+    /* Organlar */
     .o-head { width: 26px; height: 26px; border: 3px solid #fff; border-radius: 50%; left: -13px; top: 0; }
     .o-body { width: 3px; height: 55px; left: -1.5px; top: 26px; }
     .o-larm { width: 22px; height: 3px; left: -23px; top: 40px; transform: rotate(-35deg); }
@@ -50,18 +52,22 @@
     .o-lleg { width: 22px; height: 3px; left: -23px; top: 80px; transform: rotate(-45deg); }
     .o-rleg { width: 22px; height: 3px; left: 1px; top: 80px; transform: rotate(45deg); }
 
+    /* Kelime & Klavye */
     .matrix { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; padding: 10px; }
-    .slot { width: 30px; height: 44px; border-bottom: 3px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 900; }
+    .slot { width: 32px; height: 44px; border-bottom: 3px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 900; }
     .slot.found { border-bottom-color: #2ed573; text-shadow: 0 0 15px #2ed573; }
 
-    .kb { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; padding: 10px 0; }
-    .key { height: 42px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: #fff; font-weight: 800; font-size: 15px; }
+    .joker-row { display: flex; justify-content: center; gap: 15px; margin-bottom: 15px; }
+    .joker-card { width: 55px; height: 75px; border-radius: 14px; border: 1px solid #6366f1; background: rgba(99,102,241,0.1); display: flex; align-items: center; justify-content: center; font-size: 26px; cursor: pointer; }
+    .joker-card.spent { opacity: 0.05; filter: grayscale(1); pointer-events: none; transform: translateY(15px); }
+
+    .neural-kb { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+    .key { height: 44px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: #fff; font-weight: 800; font-size: 15px; }
     .key.hit { background: #2ed573; color: #000; box-shadow: 0 0 15px #2ed573; }
     .key.miss { background: #ff4757; opacity: 0.3; }
 
-    /* MODAL */
-    .prestige-modal { position: fixed; inset: 0; background: rgba(1,0,8,0.98); z-index: 10000; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 40px; text-align: center; }
-    .prestige-modal.active { display: flex; }
+    .result-modal { position: fixed; inset: 0; background: rgba(1,0,8,0.98); z-index: 10000; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 40px; text-align: center; }
+    .result-modal.active { display: flex; }
 
     @keyframes neuralSway { 0%, 100% { transform: rotate(-8deg); } 50% { transform: rotate(8deg); } }
   </style>
@@ -74,7 +80,7 @@
       <div class="setup-overlay" id="setup">
         <div class="neural-logo">NEURAL VOID</div>
         
-        <div style="font-size:11px; font-weight:900; color:#6366f1; letter-spacing:2px;">DİL SEÇİMİ</div>
+        <div style="font-size:11px; font-weight:900; color:#6366f1; letter-spacing:2px; margin-top:10px;">DİL PROTOKOLÜ</div>
         <div class="flag-grid" id="langGrid">
           <div class="opt-card active" data-val="en"><span>🇬🇧</span><label>EN</label></div>
           <div class="opt-card" data-val="de"><span>🇩🇪</span><label>DE</label></div>
@@ -90,7 +96,7 @@
           <div class="diff-card" data-val="5"><b>ZOR</b></div>
         </div>
 
-        <button onclick="bootGame()" style="width:100%; padding:22px; border-radius:24px; border:none; background:linear-gradient(135deg,#6366f1,#ec4899); color:#fff; font-weight:900; font-size:20px; cursor:pointer;">OYUNA BAŞLA</button>
+        <button id="mainStartBtn" style="width:100%; padding:22px; border-radius:24px; border:none; background:linear-gradient(135deg,#6366f1,#ec4899); color:#fff; font-weight:900; font-size:20px; cursor:pointer;">OYUNA BAŞLA</button>
       </div>
 
       <div class="status-bar">
@@ -105,32 +111,37 @@
 
       <div class="visual-stage">
         <div class="gallows">
-          <div class="beam v-beam"></div><div class="beam h-beam"></div><div class="rope"></div>
+          <div class="beam v-beam"></div>
+          <div class="beam h-beam"></div>
+          <div class="rope"></div>
           <div class="target-man">
-            <div class="organ o-head" id="o_head"></div><div class="organ o-body" id="o_body"></div>
-            <div class="organ o-larm" id="o_larm"></div><div class="organ o-rarm" id="o_rarm"></div>
-            <div class="organ o-lleg" id="o_lleg"></div><div class="organ o-rleg" id="o_rleg"></div>
+            <div class="organ o-head" id="o_head"></div>
+            <div class="organ o-body" id="o_body"></div>
+            <div class="organ o-larm" id="o_larm"></div>
+            <div class="organ o-rarm" id="o_rarm"></div>
+            <div class="organ o-lleg" id="o_lleg"></div>
+            <div class="organ o-rleg" id="o_rleg"></div>
           </div>
         </div>
         <div id="trHint" style="margin-top:20px; font-weight:900; color:rgba(255,255,255,0.4); text-transform:uppercase; font-size:12px; letter-spacing:2px;"></div>
       </div>
 
       <div class="matrix" id="wordMatrix"></div>
-
-      <div style="display:flex; justify-content:center; gap:10px; margin-bottom:10px;">
-        <button onclick="useJ()" id="jBtn" style="padding:10px 20px; border-radius:12px; background:rgba(99,102,241,0.2); border:1px solid #6366f1; color:#fff; font-weight:900; font-size:11px;">JOKER (3)</button>
+      <div class="joker-row">
+        <div class="joker-card" id="j0">🃏</div>
+        <div class="joker-card" id="j1">🃏</div>
+        <div class="joker-card" id="j2">🃏</div>
       </div>
-
-      <div class="kb" id="kb"></div>
+      <div class="neural-kb" id="kb"></div>
     </div>
   </div>
 
-  <div class="prestige-modal" id="modal">
+  <div class="result-modal" id="modal">
     <h1 id="mTitle" style="font-size:42px; font-weight:900;">MİSYON TAMAM</h1>
     <div id="mWord" style="font-size:34px; color:#60a5fa; margin:20px 0; font-weight:900; letter-spacing:2px;">APPLE</div>
     <div id="mTr" style="opacity:0.6; font-style:italic; font-size:18px;">(Elma)</div>
     <div id="mBonus" style="color:#2ed573; font-weight:900; margin-bottom:30px; height:20px;"></div>
-    <button onclick="closeModal()" style="width:100%; max-width:280px; padding:22px; border-radius:24px; border:none; background:linear-gradient(135deg,#6366f1,#ec4899); color:#fff; font-weight:900; font-size:18px; cursor:pointer;">MİSYONA DEVAM ET</button>
+    <button id="modalContBtn" style="width:100%; max-width:280px; padding:22px; border-radius:24px; border:none; background:linear-gradient(135deg,#6366f1,#ec4899); color:#fff; font-weight:900; font-size:18px; cursor:pointer;">DEVAM ET</button>
   </div>
 
   <script type="module">
@@ -142,57 +153,60 @@
     let pool, target, guessed = [], mistakes = 0, jokers = 3;
     let score = 100, lives = 3, isClean = true, lang = 'en', diff = 3;
 
-    // Listeners
-    document.getElementById('langGrid').onclick = e => {
-      const c = e.target.closest('.opt-card'); if(!c) return;
-      document.querySelectorAll('#langGrid .opt-card').forEach(x=>x.classList.remove('active'));
-      c.classList.add('active'); lang = c.dataset.val;
-    };
-    document.getElementById('diffGrid').onclick = e => {
-      const c = e.target.closest('.diff-card'); if(!c) return;
-      document.querySelectorAll('#diffGrid .diff-card').forEach(x=>x.classList.remove('active'));
-      c.classList.add('active'); diff = parseInt(c.dataset.val);
+    const setupUI = () => {
+      document.getElementById('langGrid').onclick = e => {
+        const c = e.target.closest('.opt-card'); if(!c) return;
+        document.querySelectorAll('#langGrid .opt-card').forEach(x=>x.classList.remove('active'));
+        c.classList.add('active'); lang = c.dataset.val;
+      };
+      document.getElementById('diffGrid').onclick = e => {
+        const c = e.target.closest('.diff-card'); if(!c) return;
+        document.querySelectorAll('#diffGrid .diff-card').forEach(x=>x.classList.remove('active'));
+        c.classList.add('active'); diff = parseInt(c.dataset.val);
+      };
+      document.getElementById('mainStartBtn').onclick = bootGame;
+      document.getElementById('modalContBtn').onclick = modalContinue;
+      for(let i=0; i<3; i++) document.getElementById(`j${i}`).onclick = () => useJ(i);
     };
 
-    const high = localStorage.getItem('italky_hangman_high') || 0;
-    document.getElementById('highVal').innerText = high;
-
-    window.bootGame = async () => {
+    const bootGame = async () => {
       pool = await loadLangPool(lang);
       document.getElementById('setup').style.display = 'none';
       startRound();
     };
 
-    function startRound() {
+    const startRound = () => {
       document.getElementById('modal').classList.remove('active');
       guessed = []; mistakes = 0; jokers = 3; isClean = true; score = 100;
       const usedSet = createUsedSet(`used_hangman_${lang}`);
       const picked = pick(pool, 1, usedSet.used, usedSet.save, (x) => x.w.length >= diff);
       target = picked[0];
-
-      if(!target) { alert("Data havuzu boş!"); location.reload(); return; }
-
+      if(!target) { alert("Kelime yüklenemedi!"); return; }
       renderWord(); renderKB(); updateVis(); renderHearts();
       document.getElementById('liveScore').innerText = score;
-      document.getElementById('jBtn').innerText = `JOKER (${jokers})`;
-    }
+    };
 
-    function renderWord() {
-      document.getElementById('wordMatrix').innerHTML = target.w.split('').map(l => 
-        `<div class="slot ${guessed.includes(l.toUpperCase())?'found':''}">${guessed.includes(l.toUpperCase())?l.toUpperCase():''}</div>`
-      ).join('');
+    const renderWord = () => {
+      document.getElementById('wordMatrix').innerHTML = target.w.split('').map(l => {
+        const found = guessed.includes(l.toUpperCase());
+        return `<div class="slot ${found ? 'found' : ''}">${found ? l.toUpperCase() : ''}</div>`;
+      }).join('');
       document.getElementById('trHint').innerText = target.tr;
-    }
+    };
 
-    function renderKB() {
+    const renderKB = () => {
+      const kb = document.getElementById('kb');
       const tL = [...new Set(target.w.toUpperCase().split(''))];
       const abc = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split('');
       const fillers = abc.filter(l => !tL.includes(l)).sort(()=>0.5-Math.random()).slice(0, 13);
       const keys = [...tL, ...fillers].sort((a,b)=>a.localeCompare(b));
-      document.getElementById('kb').innerHTML = keys.map(l => `<button class="key" id="k-${l}" onclick="handleG('${l}')">${l}</button>`).join('');
-    }
+      kb.innerHTML = keys.map(l => `<button class="key" id="k-${l}">${l}</button>`).join('');
+      kb.querySelectorAll('.key').forEach(btn => {
+        btn.onclick = () => handleG(btn.innerText);
+      });
+    };
 
-    window.handleG = (l) => {
+    const handleG = (l) => {
       if(guessed.includes(l)) return;
       const key = document.getElementById(`k-${l}`);
       if(target.w.toUpperCase().includes(l)) {
@@ -207,7 +221,7 @@
       }
     };
 
-    function updateVis() {
+    const updateVis = () => {
       document.querySelectorAll('.organ').forEach(o => o.classList.remove('active'));
       const parts = ['o_head','o_body','o_larm','o_rarm','o_lleg','o_rleg'];
       let toShow = [];
@@ -219,56 +233,55 @@
         const seq = [['o_head','o_body'],['o_larm','o_rarm'],['o_lleg','o_rleg']];
         seq.slice(0, mistakes).forEach(g => toShow.push(...g));
       }
-      toShow.forEach(id => {
-        const el = document.getElementById(id);
-        if(el) el.classList.add('active');
-      });
-    }
+      toShow.forEach(id => document.getElementById(id)?.classList.add('active'));
+    };
 
-    function renderHearts() {
+    const renderHearts = () => {
       let h = "";
       for(let i=0; i<lives; i++) h += '<span class="heart-neon">❤️</span>';
       document.getElementById('heartBox').innerHTML = h;
-    }
+    };
 
-    function finish(win) {
+    const finish = (win) => {
       const u = new SpeechSynthesisUtterance(target.w);
       u.lang = lang === 'en' ? 'en-US' : 'tr-TR';
       speechSynthesis.speak(u);
-
       if(win) {
-        if(score > high) localStorage.setItem('italky_hangman_high', score);
+        if(score > highScore) localStorage.setItem('italky_hangman_high', score);
         let bonus = "";
-        if(isClean && jokers === 3) { lives++; bonus = "KUSURSUZ DEŞİFRE: +1 CAN SİSTEME EKLENDİ"; }
+        if(isClean && jokers === 3) { lives++; bonus = "KUSURSUZ DEŞİFRE: +1 CAN"; }
         document.getElementById('mTitle').innerText = "MİSYON BAŞARILI";
         document.getElementById('mTitle').style.color = "#2ed573";
         document.getElementById('mBonus').innerText = bonus;
       } else {
         lives--;
-        document.getElementById('mTitle').innerText = "MİSYON BAŞARISIZ";
+        document.getElementById('mTitle').innerText = "DEŞİFRE EDİLEMEDİ";
         document.getElementById('mTitle').style.color = "#ff4757";
-        document.getElementById('mBonus').innerText = "SİNYAL KAYBİ: -1 CAN";
+        document.getElementById('mBonus').innerText = "SİNYAL KAYBI: -1 CAN";
       }
-      
       document.getElementById('mWord').innerText = target.w.toUpperCase();
       document.getElementById('mTr').innerText = `(${target.tr})`;
       document.getElementById('modal').classList.add('active');
-    }
+    };
 
-    window.closeModal = () => {
-      if(lives <= 0) {
-        alert("SİSTEM ÇÖKTÜ! Galaktik Skorun: " + score);
-        location.reload();
-      } else {
-        startRound();
+    const modalContinue = () => {
+      if(lives <= 0) { alert("SİSTEM ÇÖKTÜ! Skorun: " + score); location.reload(); }
+      else startRound();
+    };
+
+    const useJ = (i) => {
+      if(jokers <= 0) return;
+      const rem = target.w.toUpperCase().split('').filter(l => !guessed.includes(l));
+      if(rem.length) {
+        jokers--;
+        const card = document.getElementById(`j${i}`);
+        if(card) card.classList.add('spent');
+        handleG(rem[0]);
       }
     };
 
-    window.useJ = () => {
-      if(jokers <= 0) return;
-      const rem = target.w.toUpperCase().split('').filter(l => !guessed.includes(l));
-      if(rem.length) { jokers--; document.getElementById('jBtn').innerText = `JOKER (${jokers})`; handleG(rem[0]); }
-    };
+    setupUI();
+    document.getElementById('highVal').innerText = localStorage.getItem('italky_hangman_high') || 0;
   </script>
 </body>
 </html>
