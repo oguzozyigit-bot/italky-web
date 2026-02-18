@@ -21,10 +21,7 @@
     html,body{margin:0;height:100%;background:var(--bg);color:#fff;font-family:Outfit,system-ui;overflow:hidden}
     #pageContent{height:100dvh;padding:14px;box-sizing:border-box;position:relative}
 
-    /* ✅ setup açıkken oyun görünmez */
-    body.setupOpen #pageContent{display:none}
-
-    /* ===== OYUN TASARIMI (senin tasarımın) ===== */
+    /* ÜST BLOK */
     .top{
       height: calc(100% - var(--dockH));
       display:flex;
@@ -57,13 +54,13 @@
       pointer-events:auto;
     }
 
+    /* SOL: kalpler (3x3) */
     .leftHud{
       display:flex;
       flex-direction:column;
       align-items:flex-start;
       gap:10px;
     }
-
     .hearts{
       display:grid;
       grid-template-columns: repeat(3, max-content);
@@ -73,41 +70,31 @@
       justify-items:start;
       max-width:52vw;
     }
-    .heart{
-      font-size:22px;
-      filter:drop-shadow(0 0 10px var(--red));
-    }
+    .heart{font-size:22px;filter:drop-shadow(0 0 10px var(--red));}
 
+    /* SAĞ: skor + joker (2) */
     .rightHud{
       display:flex;
       flex-direction:column;
       align-items:flex-end;
       gap:10px;
     }
-
     .score{text-align:right;line-height:1.15}
     .score .best{font-size:9px;font-weight:900;opacity:.55;letter-spacing:1px}
     .score .val{font-size:26px;font-weight:900;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 
-    .jokerCol{
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-      align-items:flex-end;
-    }
+    .jokerCol{display:flex;flex-direction:column;gap:10px;align-items:flex-end;}
     .joker{
       width:44px;height:56px;border-radius:14px;
       border:1px solid rgba(99,102,241,.55);
       background:rgba(99,102,241,.10);
       display:flex;align-items:center;justify-content:center;
-      font-size:22px;
-      cursor:pointer;
-      user-select:none;
-      transition:.2s;
+      font-size:22px;cursor:pointer;user-select:none;transition:.2s;
     }
     .joker:active{transform:scale(.96)}
     .joker.spent{opacity:.14;filter:grayscale(1);pointer-events:none;transform:none}
 
+    /* Darağacı */
     .stage{
       flex:1;
       display:flex;
@@ -119,10 +106,7 @@
       z-index:1;
     }
 
-    .gallows{
-      width:150px;height:170px;position:relative;border-bottom:4px solid #fff;
-      transform: translateY(0px);
-    }
+    .gallows{width:150px;height:170px;position:relative;border-bottom:4px solid #fff;}
     .beam{position:absolute;background:#fff}
     .v{width:4px;height:100%;left:30px}
     .h{width:95px;height:4px;left:30px;top:0}
@@ -156,6 +140,7 @@
       margin-top:-6px;
     }
 
+    /* ALT DOCK */
     .dock{
       position:fixed;
       left:14px; right:14px;
@@ -187,6 +172,7 @@
     .key.hit{background:var(--green);color:#000;box-shadow:0 0 15px var(--green)}
     .key.miss{background:var(--red);opacity:0.30}
 
+    /* MODAL */
     .modal{
       position:fixed; inset:0;
       background:rgba(1,0,8,.98);
@@ -205,9 +191,10 @@
     .mBonus{height:22px;font-weight:900;color:var(--green);margin-bottom:16px}
     .mBtn{width:100%;max-width:280px;padding:18px;border-radius:18px;border:none;background:var(--grad);color:#fff;font-weight:900;font-size:18px;cursor:pointer}
 
-    /* ===== SETUP (dil + zorluk) ===== */
+    /* ✅ SETUP overlay artık pageContent içinde (shell içinde) */
     .setup{
-      position:fixed; inset:0;
+      position:absolute;
+      inset:0;
       z-index:60000;
       background:rgba(3,0,20,.98);
       display:flex;
@@ -220,10 +207,9 @@
       font-size:34px;
       font-weight:900;
       text-align:center;
-      background:linear-gradient(to bottom,#fff,#6366f1);
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;
+      letter-spacing:2px;
       margin:6px 0 16px;
+      opacity:.95;
     }
     .setupTag{
       font-size:11px;
@@ -270,33 +256,34 @@
   </style>
 </head>
 
-<body class="setupOpen">
-  <!-- SETUP -->
-  <div class="setup" id="setup">
-    <div class="setupTitle">NEURAL VOID</div>
-
-    <div class="setupTag">DİL SEÇ</div>
-    <div class="langGrid" id="langGrid">
-      <div class="pickCard active" data-lang="en">🇬🇧<div style="font-size:10px;opacity:.75;margin-top:4px">EN</div></div>
-      <div class="pickCard" data-lang="de">🇩🇪<div style="font-size:10px;opacity:.75;margin-top:4px">DE</div></div>
-      <div class="pickCard" data-lang="fr">🇫🇷<div style="font-size:10px;opacity:.75;margin-top:4px">FR</div></div>
-      <div class="pickCard" data-lang="it">🇮🇹<div style="font-size:10px;opacity:.75;margin-top:4px">IT</div></div>
-      <div class="pickCard" data-lang="es">🇪🇸<div style="font-size:10px;opacity:.75;margin-top:4px">ES</div></div>
-    </div>
-
-    <div class="setupTag">ZORLUK</div>
-    <div class="diffGrid" id="diffGrid">
-      <div class="pickCard diff active" data-diff="3">KOLAY</div>
-      <div class="pickCard diff" data-diff="4">NORMAL</div>
-      <div class="pickCard diff" data-diff="5">ZOR</div>
-    </div>
-
-    <button class="startBtn" id="startBtn">OYUNA BAŞLA</button>
-    <div class="setupMsg" id="setupMsg"></div>
-  </div>
-
-  <!-- GAME -->
+<body>
   <div id="pageContent">
+
+    <!-- ✅ Setup overlay (shell içinde) -->
+    <div class="setup" id="setup">
+      <div class="setupTitle">HANGMAN</div>
+
+      <div class="setupTag">DİL SEÇ</div>
+      <div class="langGrid" id="langGrid">
+        <div class="pickCard active" data-lang="en">🇬🇧<div style="font-size:10px;opacity:.75;margin-top:4px">EN</div></div>
+        <div class="pickCard" data-lang="de">🇩🇪<div style="font-size:10px;opacity:.75;margin-top:4px">DE</div></div>
+        <div class="pickCard" data-lang="fr">🇫🇷<div style="font-size:10px;opacity:.75;margin-top:4px">FR</div></div>
+        <div class="pickCard" data-lang="it">🇮🇹<div style="font-size:10px;opacity:.75;margin-top:4px">IT</div></div>
+        <div class="pickCard" data-lang="es">🇪🇸<div style="font-size:10px;opacity:.75;margin-top:4px">ES</div></div>
+      </div>
+
+      <div class="setupTag">ZORLUK</div>
+      <div class="diffGrid" id="diffGrid">
+        <div class="pickCard diff active" data-diff="3">KOLAY</div>
+        <div class="pickCard diff" data-diff="4">NORMAL</div>
+        <div class="pickCard diff" data-diff="5">ZOR</div>
+      </div>
+
+      <button class="startBtn" id="startBtn">OYUNA BAŞLA</button>
+      <div class="setupMsg" id="setupMsg"></div>
+    </div>
+
+    <!-- GAME -->
     <div class="top">
       <div class="title">HANGMAN</div>
 
@@ -311,7 +298,7 @@
             <div class="val" id="scoreVal">100</div>
           </div>
 
-          <!-- ✅ Joker 2 adet -->
+          <!-- ✅ Joker 2 -->
           <div class="jokerCol">
             <div class="joker" id="j0">🃏</div>
             <div class="joker" id="j1">🃏</div>
@@ -351,12 +338,13 @@
       <div class="mBonus" id="mBonus"></div>
       <button class="mBtn" id="mBtn">DEVAM</button>
     </div>
+
   </div>
 
   <script>
     const $ = (id) => document.getElementById(id);
 
-    // --- ui_shell yükle (varsa) ---
+    // ui_shell loader
     function loadScript(src){
       return new Promise((res, rej)=>{
         const s = document.createElement("script");
@@ -367,7 +355,7 @@
       });
     }
 
-    // --- LANGPOOL_BASE config'ten çek ---
+    // config LANGPOOL_BASE
     async function readLangpoolBase(){
       if(window.LANGPOOL_BASE) return String(window.LANGPOOL_BASE);
       const r = await fetch("/js/config.js", { cache:"no-store" });
@@ -440,7 +428,7 @@
       return chosen;
     }
 
-    // ---- Game state ----
+    // --- STATE ---
     let LANGPOOL_BASE = "";
     let pool = null;
     let target = null;
@@ -466,7 +454,7 @@
     let best = parseInt(localStorage.getItem(HS_KEY) || "0", 10);
     $("bestVal").textContent = best;
 
-    // setup selections
+    // selection
     $("langGrid").addEventListener("click", (e)=>{
       const c=e.target.closest(".pickCard");
       if(!c || !c.dataset.lang) return;
@@ -618,20 +606,14 @@
         guessed.add(letter);
         btn.classList.add("hit");
         renderWord();
-
-        if(w.split("").every(ch => guessed.has(ch))){
-          endRound(true);
-        }
+        if(w.split("").every(ch => guessed.has(ch))) endRound(true);
       }else{
         btn.classList.add("miss");
         flawless = false;
         mistakes++;
-        applyPenalty(10);   // yanlış -10
+        applyPenalty(10);
         updateMan();
-
-        if(mistakes >= getLimit()){
-          endRound(false);
-        }
+        if(mistakes >= getLimit()) endRound(false);
       }
     }
 
@@ -642,7 +624,7 @@
       jokerUsed = true;
       jokersLeft--;
       (i===0?$("j0"):$("j1")).classList.add("spent");
-      applyPenalty(10);     // joker -10
+      applyPenalty(10);
 
       const w = target.w.toUpperCase();
       const rem = w.split("").filter(ch => !guessed.has(ch));
@@ -672,8 +654,8 @@
       resetMan();
 
       const usedSet = createUsedSet(`used_hangman_${lang}`);
-      const picked = pick(pool, 1, usedSet.used, usedSet.save, (x)=> (x?.w||"").length >= 3);
-      target = picked?.[0];
+      const pickedW = pick(pool, 1, usedSet.used, usedSet.save, (x)=> (x?.w||"").length >= 3);
+      target = pickedW?.[0];
 
       if(!target?.w){
         $("trText").textContent = "KELİME BULUNAMADI";
@@ -689,14 +671,11 @@
       updateMan();
     }
 
-    // START: ui_shell + pool load + enter
-    $("startBtn").addEventListener("click", async (e)=>{
-      e.preventDefault();
-      e.stopPropagation();
-
+    // START: shell + pool + enter
+    $("startBtn").addEventListener("click", async ()=>{
       $("setupMsg").textContent = "Yükleniyor…";
 
-      // ui_shell (varsa)
+      // 1) ui_shell
       try{
         await loadScript("/js/ui_shell.js");
         if(typeof window.mountShell === "function"){
@@ -704,14 +683,14 @@
         }
       }catch{}
 
-      // footer lift (ui shell varsa)
+      // 2) footer lift
       try{
         const root = getComputedStyle(document.documentElement);
         const footerH = parseFloat(root.getPropertyValue("--footerH")) || 0;
         document.documentElement.style.setProperty("--shellLift", footerH ? `${footerH + 10}px` : "0px");
       }catch{}
 
-      // pool
+      // 3) pool
       try{
         LANGPOOL_BASE = await readLangpoolBase();
         if(!LANGPOOL_BASE){
@@ -728,15 +707,13 @@
         return;
       }
 
-      // enter game
+      // 4) enter
       $("setup").style.display = "none";
-      document.body.classList.remove("setupOpen");
       $("setupMsg").textContent = "";
-
       newRound();
     });
 
-    // init hearts (setup ekranında da)
+    // initial
     renderHearts();
   </script>
 </body>
