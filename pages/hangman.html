@@ -2,419 +2,205 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>italkyAI • HANGMAN 3D</title>
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>italkyAI • NEURAL VOID</title>
   <style>
     :root {
-      --bg: #02000a;
-      --neon-blue: #00f3ff;
-      --neon-purple: #a855f7;
-      --neon-red: #ff0033;
-      --neon-green: #00ff9d;
-      --ai-grad: linear-gradient(135deg, #a5b4fc 0%, #6366f1 100%);
+      --void-bg: #010008;
+      --neural-blue: #60a5fa;
+      --neural-pink: #f472b6;
+      --ai-grad: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
     }
 
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
-    body { margin: 0; background: var(--bg); color: #fff; font-family: 'Outfit', sans-serif; height: 100dvh; overflow: hidden; }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body { margin: 0; background: var(--void-bg); color: #fff; font-family: 'Outfit', sans-serif; height: 100dvh; overflow: hidden; }
 
-    .mobile-frame { width: 100%; max-width: 480px; height: 100%; margin: 0 auto; display: flex; flex-direction: column; background: rgba(5, 0, 20, 0.98); position: relative; border-left: 1px solid rgba(255,255,255,0.05); border-right: 1px solid rgba(255,255,255,0.05); }
+    /* 🌌 DEEP SPACE BACKGROUND */
+    .nebula { position: fixed; inset: 0; background: radial-gradient(circle at 50% 50%, #1e1b4b 0%, #010008 100%); z-index: -1; }
+    .stars { position: fixed; inset: 0; background: url('https://www.transparenttextures.com/patterns/stardust.png'); opacity: 0.4; z-index: -1; }
 
-    .setup-overlay { position: absolute; inset: 0; background: var(--bg); z-index: 2000; padding: 25px; display: flex; flex-direction: column; overflow-y: scroll; scrollbar-width: none; }
-    .setup-overlay::-webkit-scrollbar { display: none; }
+    .app-container { width: 100%; max-width: 480px; height: 100%; margin: 0 auto; display: flex; flex-direction: column; position: relative; }
 
-    .game-title-3d {
-      font-family: 'Space Grotesk'; font-size: 50px; font-weight: 900; text-align: center; color: #fff; margin: 20px 0; letter-spacing: 8px;
-      text-shadow: 0 1px 0 #ccc, 0 3px 0 #bbb, 0 5px 0 #aaa, 0 10px 10px rgba(0,0,0,.2), 0 0 20px var(--neon-purple);
-    }
+    /* TOPBAR: PRESTİGE NAV */
+    .top-nav { padding: calc(15px + env(safe-area-inset-top)) 20px 10px; display: flex; align-items: center; justify-content: space-between; }
+    .back-btn { width: 42px; height: 42px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); cursor: pointer; font-size: 20px; }
+    .score-node { text-align: right; }
+    .score-node h2 { margin: 0; font-size: 24px; font-weight: 900; background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .best-score { font-size: 10px; font-weight: 800; color: rgba(255,255,255,0.4); letter-spacing: 1px; }
 
-    .section-label { font-size: 11px; font-weight: 800; color: var(--neon-purple); margin: 15px 0 8px; text-transform: uppercase; }
-    .neon-input { width: 100%; padding: 14px; border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid #333; color: #fff; font-weight: 600; margin-bottom: 10px; }
+    /* NEURAL HANGMAN VISUAL */
+    .visual-zone { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+    .gallows-3d { width: 140px; height: 160px; position: relative; border-bottom: 4px solid rgba(255,255,255,0.1); }
+    .g-part { position: absolute; background: #fff; box-shadow: 0 0 15px rgba(255,255,255,0.5); display: none; }
+    .g-part.active { display: block; }
+    
+    /* İnce hatlar */
+    .p1 { width: 4px; height: 100%; left: 20px; }
+    .p2 { width: 80px; height: 4px; left: 20px; top: 0; }
+    .p3 { width: 2px; height: 20px; left: 100px; top: 0; }
+    .p4 { width: 30px; height: 30px; border: 3px solid #fff; border-radius: 50%; left: 86px; top: 20px; } /* Kafa */
+    .p5 { width: 3px; height: 50px; left: 100px; top: 50px; } /* Gövde */
+    .p6 { width: 20px; height: 3px; left: 82px; top: 65px; transform: rotate(-30deg); }
+    .p7 { width: 20px; height: 3px; left: 100px; top: 65px; transform: rotate(30deg); }
+    .p8 { width: 20px; height: 3px; left: 82px; top: 100px; transform: rotate(-45deg); }
+    .p9 { width: 20px; height: 3px; left: 100px; top: 100px; transform: rotate(45deg); }
 
-    .grid-select { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-    .grid-select-4 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-    .opt-card { padding: 12px 5px; border-radius: 12px; border: 1px solid #333; background: rgba(255,255,255,0.03); text-align: center; cursor: pointer; transition: 0.2s; }
-    .opt-card.active { border-color: var(--neon-purple); background: rgba(168, 85, 247, 0.15); }
-    .opt-card span { display: block; font-size: 24px; margin-bottom: 5px; }
+    /* WORD MATRIX */
+    .word-display { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; padding: 20px; }
+    .letter-slot { width: 32px; height: 42px; border-bottom: 3px solid rgba(99,102,241,0.3); display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 900; color: #fff; transition: 0.3s; }
+    .letter-slot.filled { border-bottom-color: var(--neural-blue); text-shadow: 0 0 10px var(--neural-blue); }
 
-    .big-btn { width: 100%; padding: 18px; border-radius: 15px; background: var(--ai-grad); border: none; color: #fff; font-weight: 900; font-size: 16px; margin: 20px 0; cursor: pointer; box-shadow: 0 0 20px rgba(99, 102, 241, 0.3); }
+    /* NEURAL KEYBOARD */
+    .keyboard { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; padding: 20px; background: rgba(0,0,0,0.4); backdrop-filter: blur(20px); border-radius: 35px 35px 0 0; border-top: 1px solid rgba(255,255,255,0.05); }
+    .key { height: 45px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); background: rgba(255,255,255,0.03); color: #fff; font-weight: 800; font-size: 14px; cursor: pointer; transition: 0.2s; }
+    .key.wrong { background: rgba(239, 68, 68, 0.2); color: #ef4444; border-color: #ef4444; pointer-events: none; }
+    .key.correct { background: var(--ai-grad); color: #000; border-color: transparent; pointer-events: none; }
 
-    .p-name { font-size: 26px; font-weight: 900; color: var(--neon-purple); text-shadow: 0 0 10px rgba(168, 85, 247, 0.5); }
-    .game-info { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); }
-
-    .hangman-box { height: 180px; display: flex; align-items: center; justify-content: center; position: relative; }
-    .stage { width: 110px; height: 130px; position: relative; border-bottom: 4px solid #fff; }
-    .skull-icon { position: absolute; right: 20px; top: 20px; font-size: 30px; opacity: 0.2; filter: grayscale(1); }
-
-    .p { position: absolute; background: #fff; display: none; box-shadow: 0 0 8px #fff; }
-    .p.show { display: block; }
-    .p1{width:4px;height:100%;left:20px}.p2{width:60px;height:4px;left:20px;top:0}.p3{width:2px;height:15px;left:80px;top:0}
-    .p4{width:26px;height:26px;border-radius:50%;border:3px solid #fff;left:68px;top:15px}.p5{width:3px;height:45px;left:80px;top:41px}
-    .p6{width:18px;height:3px;left:63px;top:55px;transform:rotate(-30deg)}.p7{width:18px;height:3px;left:80px;top:55px;transform:rotate(30deg)}
-    .p8{width:18px;height:3px;left:63px;top:85px;transform:rotate(-45deg)}.p9{width:18px;height:3px;left:80px;top:85px;transform:rotate(45deg)}
-
-    .joker-row { display: flex; justify-content: center; gap: 15px; margin: 10px 0; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px; }
-    .j-btn { width: 45px; height: 45px; border-radius: 12px; border: 1px solid var(--neon-blue); color: var(--neon-blue); background: rgba(0, 243, 255, 0.05); font-size: 22px; cursor: pointer; }
-    .j-btn.used { opacity: 0.1; pointer-events: none; filter: grayscale(1); }
-
-    .slot { width: 28px; height: 38px; border-bottom: 3px solid var(--neon-purple); display: inline-flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 900; margin: 0 3px; }
-
-    .keyboard { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; padding: 15px; margin-top: auto; }
-    .key { height: 42px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: #fff; font-weight: 800; cursor: pointer; }
-    .key.wrong { background: var(--neon-red); opacity: 0.4; }
-    .key.correct { background: var(--neon-purple); box-shadow: 0 0 10px var(--neon-purple); }
-
-    .lb-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-weight: 600; font-size: 14px; }
-    .footer { height: 45px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; opacity: 0.3; border-top: 1px solid rgba(255,255,255,0.05); letter-spacing: 1px; }
-
-    .modal { position: absolute; inset: 0; background: rgba(0,0,0,0.98); z-index: 3000; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 30px; text-align: center; }
+    /* WIN/LOSS MODAL */
+    .modal { position: fixed; inset: 0; background: rgba(1,0,8,0.95); z-index: 1000; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px; }
     .modal.active { display: flex; }
+    .modal h1 { font-size: 40px; font-weight: 900; margin: 0; letter-spacing: -1px; }
+    .modal .word-reveal { font-size: 28px; color: var(--neural-blue); margin: 20px 0; font-weight: 800; }
+    .modal button { width: 100%; max-width: 250px; padding: 18px; border-radius: 20px; border: none; background: var(--ai-grad); color: #fff; font-weight: 900; font-size: 16px; margin-top: 30px; cursor: pointer; }
 
-    #canvas { position: absolute; top:0; left:0; pointer-events:none; z-index:4000; }
   </style>
 </head>
 <body>
 
-  <div class="mobile-frame">
-    <canvas id="canvas"></canvas>
-    <div class="setup-overlay" id="setup">
-      <div class="game-title-3d">HANGMAN</div>
+  <div class="nebula"></div>
+  <div class="stars"></div>
 
-      <div class="section-label">OYUNCULAR 👤</div>
-      <div id="pInputs"><input type="text" class="neon-input p-in" placeholder="1. Oyuncu Adı"></div>
-      <button onclick="addInput()" style="background:none; border:1px dashed #555; color:#aaa; padding:12px; border-radius:12px; width:100%; cursor:pointer; font-weight: 700;">+ YENİ OYUNCU EKLE</button>
-
-      <div class="section-label">DİL SEÇİN 🌍</div>
-      <div class="grid-select" id="langGrid">
-        <div class="opt-card active" data-val="en"><span>🇬🇧</span><label>EN</label></div>
-        <div class="opt-card" data-val="de"><span>🇩🇪</span><label>DE</label></div>
-        <div class="opt-card" data-val="fr"><span>🇫🇷</span><label>FR</label></div>
-        <div class="opt-card" data-val="it"><span>🇮🇹</span><label>IT</label></div>
-        <div class="opt-card" data-val="es"><span>🇪🇸</span><label>ES</label></div>
+  <div class="app-container">
+    <header class="top-nav">
+      <div class="back-btn" onclick="location.href='/pages/game.html'">‹</div>
+      <div class="score-node">
+        <h2 id="liveScore">0</h2>
+        <div class="best-score">BEST: <span id="bestScore">0</span></div>
       </div>
+    </header>
 
-      <div class="section-label">ZORLUK SEVİYESİ 💀</div>
-      <div class="grid-select-4" id="diffGrid">
-        <div class="opt-card active" data-val="8"><span>🌱</span><label>KOLAY</label></div>
-        <div class="opt-card" data-val="6"><span>🔥</span><label>ORTA</label></div>
-        <div class="opt-card" data-val="4"><span>💀</span><label>ZOR</label></div>
-        <div class="opt-card" data-val="2"><span>☠️</span><label>EN ZOR</label></div>
+    <div class="visual-zone">
+      <div class="gallows-3d">
+        <div class="g-part p1"></div><div class="g-part p2"></div><div class="g-part p3"></div>
+        <div class="g-part p4"></div><div class="g-part p5"></div><div class="g-part p6"></div>
+        <div class="g-part p7"></div><div class="g-part p8"></div><div class="g-part p9"></div>
       </div>
-
-      <button class="big-btn" onclick="initGame()">OYUNA BAŞLA</button>
-
-      <div class="section-label">EFSANELER LİSTESİ (TOP 5) 🏆</div>
-      <div id="lbList" style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 15px; margin-bottom: 50px;"></div>
+      <div id="trHint" style="margin-top:20px; font-weight:700; color:rgba(255,255,255,0.3); letter-spacing:1px; text-transform:uppercase; font-size:12px;">YÜKLENİYOR...</div>
     </div>
 
-    <div class="game-info">
-      <button onclick="location.href='/pages/home.html'" style="background:none; border:1px solid #333; color:#fff; padding:8px 12px; border-radius:10px; cursor:pointer;">←</button>
-      <div class="p-name" id="curPName">PLAYER</div>
-      <div style="text-align:right; font-size:12px;">
-        HAK: <b id="remR" style="color:var(--neon-green)">5/5</b><br>
-        PUAN: <b id="curS" style="color:var(--neon-blue)">0</b>
-      </div>
-    </div>
+    <div class="word-display" id="wordDisplay"></div>
 
-    <div class="hangman-box">
-      <div class="skull-icon">💀</div>
-      <div class="stage">
-        <div class="p p1"></div><div class="p p2"></div><div class="p p3"></div>
-        <div class="p p4"></div><div class="p p5"></div><div class="p p6"></div>
-        <div class="p p7"></div><div class="p p8"></div><div class="p p9"></div>
-      </div>
-    </div>
+    <div class="keyboard" id="keyboard"></div>
+  </div>
 
-    <div class="joker-row">
-      <button class="j-btn" id="j0" onclick="useJ(0)">🃏</button>
-      <button class="j-btn" id="j1" onclick="useJ(1)">🃏</button>
-      <button class="j-btn" id="j2" onclick="useJ(2)">🃏</button>
-    </div>
-
-    <div style="text-align:center; padding:10px;">
-      <div id="wordGrid"></div>
-      <div id="trHint" style="margin-top:15px; font-style:italic; opacity:0.5; font-size:16px;"></div>
-    </div>
-
-    <div class="keyboard" id="kb"></div>
-    <div class="footer">italkyAI By Ozyigit’s 2026</div>
-
-    <div class="modal" id="modal">
-      <h1 id="mTitle">BİLDİN!</h1>
-      <h2 id="mWord" style="color:var(--neon-blue); font-size:36px; margin:10px 0;">APPLE</h2>
-      <p id="mTr" style="opacity:0.7; font-size:18px;">(Elma)</p>
-      <div id="mDesc" style="margin:10px 0; font-weight:800; color:var(--neon-green);"></div>
-
-      <div id="mScoreTable" style="width:100%; background:rgba(255,255,255,0.05); border-radius:15px; padding:15px; margin:15px 0;"></div>
-
-      <div id="nextPlayerNotice" style="font-weight:900; color:var(--neon-purple); margin-bottom:10px;"></div>
-      <button class="big-btn" id="modalBtn" onclick="modalNext()">DEVAM ET</button>
-    </div>
+  <div class="modal" id="resultModal">
+    <h1 id="statusTitle">DEŞİFRE EDİLDİ</h1>
+    <div class="word-reveal" id="revealWord">APPLE</div>
+    <div id="revealTr" style="opacity:0.6; font-style:italic;">(Elma)</div>
+    <button onclick="startNewRound()">SONRAKİ VERİ</button>
   </div>
 
   <script type="module">
-    import { loadLangPool, createUsedSet, pick } from "/js/langpool.js";
+    import { loadLangPool, pick } from "/js/langpool.js";
+    import { supabase } from "/js/supabase_client.js";
 
-    let players = [], curIdx = 0, pool, usedPack, lang = 'en', maxM = 8;
-    let target, guessed = [], mistakes = 0, keysP = 0, totalJokers = 3;
+    let pool, target, guessed = [], mistakes = 0;
+    let score = 0, best = localStorage.getItem('hangman_best') || 0;
+    const maxMistakes = 9;
 
-    /* ===== Daily token gate (FREE 25) — MULTI PLAYER SPEND ===== */
-    const DAILY_FREE_TOKENS = 25;
-    function isoDateLocal(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; }
-    function getUser(){ try{ return JSON.parse(localStorage.getItem("italky_user_v1")||"{}"); }catch{ return {}; } }
-    function isPro(u){ const p=String(u?.plan||"").toUpperCase().trim(); return p==="PRO"||p==="PREMIUM"||p==="PLUS"; }
-    function uid(u){ return String(u.user_id||u.id||u.email||"guest").toLowerCase().trim(); }
-    function tokenKey(u){ return `italky_game_tokens::${uid(u)}::${isoDateLocal()}`; }
-    function tokenInitKey(u){ return `italky_game_tokens_init::${uid(u)}::${isoDateLocal()}`; }
-    function ensureDailyTokens(){
-      const u=getUser();
-      if(isPro(u)) return;
-      if(localStorage.getItem(tokenInitKey(u))) return;
-      localStorage.setItem(tokenKey(u), String(DAILY_FREE_TOKENS));
-      localStorage.setItem(tokenInitKey(u), "1");
-    }
-    function getTokens(){
-      const u=getUser();
-      if(isPro(u)) return 9999;
-      const v = Number(localStorage.getItem(tokenKey(u))||"0");
-      return Number.isFinite(v)?Math.max(0,v):0;
-    }
-    function spendMany(n){
-      const u=getUser();
-      if(isPro(u)) return true;
-      const need = Math.max(1, Math.floor(n||1));
-      const t = getTokens();
-      if(t < need) return false;
-      localStorage.setItem(tokenKey(u), String(t - need));
-      return true;
-    }
-    /* ===== end token gate ===== */
+    // URL'den zorluk seviyesini al (3, 4, 5+)
+    const urlParams = new URLSearchParams(window.location.search);
+    const minLen = parseInt(urlParams.get('minLen')) || 3;
 
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    function playSound(freq, type, dur) {
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-      gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
-      osc.connect(gain); gain.connect(audioCtx.destination);
-      osc.start(); osc.stop(audioCtx.currentTime + dur);
+    async function init() {
+      document.getElementById('bestScore').innerText = best;
+      pool = await loadLangPool('en'); // Varsayılan İngilizce
+      startNewRound();
     }
 
-    function updateLB() {
-      const lb = JSON.parse(localStorage.getItem('hangman_top5') || "[]");
-      document.getElementById('lbList').innerHTML = lb.map((p,i)=>`
-        <div class="lb-item"><span>${i+1}. ${p.n}</span><b>${p.s} Puan</b></div>
-      `).join('') || '<div style="opacity:0.3; font-size:12px;">Henüz şampiyon yok.</div>';
-    }
-    updateLB();
+    function startNewRound() {
+      document.getElementById('resultModal').classList.remove('active');
+      guessed = [];
+      mistakes = 0;
+      
+      // Havuzdan seviyeye göre kelime çek
+      const items = pool.items || pool;
+      const filtered = items.filter(x => x.w.length >= minLen);
+      target = filtered[Math.floor(Math.random() * filtered.length)];
 
-    document.querySelectorAll('.grid-select, .grid-select-4').forEach(grid => {
-      grid.onclick = (e) => {
-        const c = e.target.closest('.opt-card'); if(!c) return;
-        grid.querySelectorAll('.opt-card').forEach(x=>x.classList.remove('active'));
-        c.classList.add('active');
-        if(grid.id === 'langGrid') lang = c.dataset.val;
-        if(grid.id === 'diffGrid') maxM = parseInt(c.dataset.val);
-      };
-    });
-
-    window.addInput = () => {
-      const i = document.createElement('input'); i.className = 'neon-input p-in'; i.placeholder = 'Yeni Oyuncu';
-      document.getElementById('pInputs').appendChild(i);
-    };
-
-    function poolItemsOf(p){
-      if(Array.isArray(p)) return p;
-      if(Array.isArray(p?.items)) return p.items;
-      return [];
+      renderWord();
+      renderKeyboard();
+      updateVisuals();
     }
 
-    window.initGame = async () => {
-      /* ✅ oyuncuları oku (önce sayıyı netleştir) */
-      players = [];
-      const ins = document.querySelectorAll('.p-in');
-      ins.forEach(i => { if(i.value.trim()) players.push({ n: i.value.trim(), s: 0, r: 5 }); });
-      if(!players.length) return alert("İsim yaz!");
-
-      /* ✅ OYUNCU SAYISI KADAR HAK DÜŞ */
-      ensureDailyTokens();
-      const u = getUser();
-      const need = players.length; // 4 oyuncu => 4 hak
-      if(!isPro(u) && !spendMany(need)){
-        alert(`Bu maç için ${need} hak gerekir. Hakkın yetmiyor.`);
-        location.href="/pages/game.html";
-        return;
-      }
-
-      pool = await loadLangPool(lang);
-      const items = poolItemsOf(pool);
-      if(!items.length) return alert("Havuz boş!");
-
-      const USED_KEY = `used_hangman3d_v1_${lang}`;
-      usedPack = createUsedSet(USED_KEY);
-
-      document.getElementById('setup').style.display = 'none';
-      startTurn();
-    };
-
-    function startTurn() {
-      guessed = []; mistakes = 0; keysP = 0;
-
-      const picked = pick({ items: poolItemsOf(pool) }, 1, usedPack.used, usedPack.save, (x)=>{
-        const w = String(x.w||"").trim();
-        const tr = String(x.tr||"").trim();
-        return w.length >= 5 && tr.length >= 1 && !w.includes(" ");
-      });
-
-      target = picked?.[0];
-
-      if(!target){
-        localStorage.removeItem(`used_hangman3d_v1_${lang}`);
-        usedPack = createUsedSet(`used_hangman3d_v1_${lang}`);
-        const picked2 = pick({ items: poolItemsOf(pool) }, 1, usedPack.used, usedPack.save, (x)=>{
-          const w = String(x.w||"").trim();
-          const tr = String(x.tr||"").trim();
-          return w.length >= 5 && tr.length >= 1 && !w.includes(" ");
-        });
-        target = picked2?.[0];
-      }
-
-      if(!target) return alert("Havuzda uygun kelime yok.");
-
-      updateUI(); renderKB();
+    function renderWord() {
+      const display = document.getElementById('wordDisplay');
+      display.innerHTML = target.w.split('').map(letter => {
+        const isGuessed = guessed.includes(letter.toUpperCase());
+        return `<div class="letter-slot ${isGuessed ? 'filled' : ''}">${isGuessed ? letter.toUpperCase() : ''}</div>`;
+      }).join('');
+      document.getElementById('trHint').innerText = target.tr;
     }
 
-    function updateUI() {
-      const p = players[curIdx];
-      document.getElementById('curPName').innerText = p.n.toUpperCase();
-      document.getElementById('remR').innerText = `${p.r}/5`;
-      document.getElementById('curS').innerText = p.s;
-      document.getElementById('trHint').innerText = String(target.tr||"");
-      document.getElementById('wordGrid').innerHTML = String(target.w||"").split('').map(l =>
-        `<div class="slot">${guessed.includes(l.toUpperCase())?l.toUpperCase():''}</div>`).join('');
-      document.querySelectorAll('.p').forEach((pp,i)=>pp.classList.toggle('show', i < mistakes));
-      for(let i=0; i<3; i++) document.getElementById(`j${i}`).className = i < totalJokers ? 'j-btn' : 'j-btn used';
+    function renderKeyboard() {
+      const abc = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split('');
+      const kb = document.getElementById('keyboard');
+      kb.innerHTML = abc.map(l => `<button class="key" id="key-${l}" onclick="makeGuess('${l}')">${l}</button>`).join('');
     }
 
-    function renderKB() {
-      const abc = "ABCDEFGHIJKLMNOPQRSTUVWXYZÜĞŞİÖÇ".split('');
-      const wordChars = [...new Set(String(target.w||"").toUpperCase().split(''))];
-      let keys = [...wordChars];
-      const others = abc.filter(l => !keys.includes(l));
-      for(let i=0; i<10; i++) keys.push(others.splice(Math.floor(Math.random()*others.length), 1)[0]);
-      document.getElementById('kb').innerHTML = keys.sort((a,b)=>a.localeCompare(b)).map(l =>
-        `<button class="key" id="key-${l}" onclick="makeG('${l}', this)">${l}</button>`).join('');
-    }
+    window.makeGuess = (letter) => {
+      if (guessed.includes(letter) || mistakes >= maxMistakes) return;
 
-    window.makeG = (l, btn) => {
-      if(guessed.includes(l) || mistakes >= maxM) return;
-      keysP++;
-      if(String(target.w||"").toUpperCase().includes(l)) {
-        playSound(800, 'sine', 0.1);
-        guessed.push(l); if(btn) btn.classList.add('correct');
-        if(String(target.w||"").split('').every(c => guessed.includes(c.toUpperCase()))) finish(true);
+      const btn = document.getElementById(`key-${letter}`);
+      if (target.w.toUpperCase().includes(letter)) {
+        guessed.push(letter);
+        btn.classList.add('correct');
+        renderWord();
+        checkWin();
       } else {
-        playSound(150, 'sawtooth', 0.2);
-        mistakes++; if(btn) btn.classList.add('wrong');
-        if(mistakes >= maxM) finish(false);
+        mistakes++;
+        btn.classList.add('wrong');
+        updateVisuals();
+        checkLoss();
       }
-      updateUI();
     };
 
-    window.useJ = (id) => {
-      if(totalJokers <= 0) return;
-      const rem = String(target.w||"").toUpperCase().split('').filter(l => !guessed.includes(l));
-      if(rem.length) { totalJokers--; makeG(rem[0], document.getElementById(`key-${rem[0]}`)); }
-    };
-
-    function finish(win) {
-      const p = players[curIdx];
-      let bonus = false;
-      if(win) {
-        p.s += Math.max(1, 10 - (keysP - String(target.w||"").length));
-        if(mistakes === 0 && keysP === String(target.w||"").length) { p.r++; bonus = true; }
-      }
-      p.r--;
-      showM(win, bonus);
-      const u = new SpeechSynthesisUtterance(String(target.w||""));
-      u.lang = {en:'en-US', de:'de-DE', fr:'fr-FR', it:'it-IT', es:'es-ES'}[lang] || "en-US";
-      speechSynthesis.cancel();
-      speechSynthesis.speak(u);
+    function updateVisuals() {
+      const parts = document.querySelectorAll('.g-part');
+      parts.forEach((p, i) => p.classList.toggle('active', i < mistakes));
     }
 
-    function showM(win, b) {
-      const modal = document.getElementById('modal');
-      document.getElementById('mTitle').innerText = win ? "BİLDİN!" : "OLMADI!";
-      document.getElementById('mTitle').style.color = win ? "var(--neon-green)" : "var(--neon-red)";
-      document.getElementById('mWord').innerText = String(target.w||"").toUpperCase();
-      document.getElementById('mTr').innerText = `(${String(target.tr||"")})`;
-      document.getElementById('mDesc').innerHTML = b ? '0 HATA! +1 ÖDÜL HAK KAZANDIN!' : '';
-
-      document.getElementById('mScoreTable').innerHTML = players.map(pp => `
-        <div style="display:flex; justify-content:space-between; font-size:14px; margin-bottom:5px; color:${pp === players[curIdx] ? 'var(--neon-purple)' : '#fff'}">
-            <span>${pp.n}</span><span>Hak: ${pp.r} | Puan: ${pp.s}</span>
-        </div>
-      `).join('');
-
-      const nextIdx = findNextPlayerIdx();
-      if(nextIdx !== -1) {
-          document.getElementById('nextPlayerNotice').innerText = `SIRADAKİ: ${players[nextIdx].n.toUpperCase()}`;
-          document.getElementById('modalBtn').innerText = "DEVAM ET";
-      } else {
-          document.getElementById('nextPlayerNotice').innerText = `TURNUVA TAMAMLANDI!`;
-          document.getElementById('modalBtn').innerText = "ŞAMPİYONU GÖR";
+    function checkWin() {
+      if (target.w.split('').every(l => guessed.includes(l.toUpperCase()))) {
+        score += (target.w.length * 10);
+        document.getElementById('liveScore').innerText = score;
+        if (score > best) {
+          best = score;
+          localStorage.setItem('hangman_best', best);
+          document.getElementById('bestScore').innerText = best;
+        }
+        showResult(true);
       }
+    }
+
+    function checkLoss() {
+      if (mistakes >= maxMistakes) {
+        showResult(false);
+        score = 0; // Kaybedince puan sıfırlanır
+        document.getElementById('liveScore').innerText = score;
+      }
+    }
+
+    function showResult(win) {
+      const modal = document.getElementById('resultModal');
+      document.getElementById('statusTitle').innerText = win ? "VERİ KURTARILDI" : "BAĞLANTI KOPTU";
+      document.getElementById('statusTitle').style.color = win ? "#34d399" : "#ef4444";
+      document.getElementById('revealWord').innerText = target.w.toUpperCase();
+      document.getElementById('revealTr').innerText = `(${target.tr})`;
       modal.classList.add('active');
     }
 
-    function findNextPlayerIdx() {
-        for(let i = 1; i <= players.length; i++) {
-            let next = (curIdx + i) % players.length;
-            if(players[next].r > 0) return next;
-        }
-        return -1;
-    }
-
-    window.modalNext = () => {
-      document.getElementById('modal').classList.remove('active');
-      const nextIdx = findNextPlayerIdx();
-      if(nextIdx !== -1) {
-          curIdx = nextIdx;
-          startTurn();
-      } else {
-          endTournament();
-      }
-    };
-
-    function endTournament() {
-        const winner = [...players].sort((a,b)=>b.s-a.s)[0];
-        let lb = JSON.parse(localStorage.getItem('hangman_top5') || "[]");
-        lb.push({ n: winner.n, s: winner.s });
-        lb.sort((a,b)=>b.s-a.s);
-        localStorage.setItem('hangman_top5', JSON.stringify(lb.slice(0,5)));
-        startFireworks();
-        setTimeout(() => { alert(`ŞAMPİYON: ${winner.n}\nPUAN: ${winner.s}`); location.reload(); }, 3000);
-    }
-
-    function startFireworks() {
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-        let p = [];
-        setInterval(() => {
-            for(let i=0; i<20; i++) p.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, vx:(Math.random()-0.5)*10, vy:(Math.random()-0.5)*10, a:1, c:`hsl(${Math.random()*360},100%,50%)`});
-        }, 300);
-        function loop() {
-            ctx.clearRect(0,0,canvas.width,canvas.height);
-            p.forEach((it,i) => { it.x+=it.vx; it.y+=it.vy; it.a-=0.02; ctx.globalAlpha=it.a; ctx.fillStyle=it.c; ctx.fillRect(it.x,it.y,4,4); if(it.a<=0) p.splice(i,1); });
-            requestAnimationFrame(loop);
-        }
-        loop();
-    }
+    init();
   </script>
 </body>
 </html>
