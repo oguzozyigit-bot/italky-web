@@ -3,74 +3,72 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>italkyAI • Prestige Games Hub</title>
+  <title>italkyAI • Zero-Scroll Hub</title>
   <style>
     :root {
       --ai-grad: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
-      --glass-border: rgba(255, 255, 255, 0.1);
     }
 
+    /* ✅ EKRANA TAM SIĞDIRMA */
     #pageContent {
-      height: calc(100vh - 185px);
-      display: flex; flex-direction: column;
-      overflow-y: auto; scrollbar-width: none;
-      padding: 10px 14px 100px;
+      height: calc(100vh - 185px); /* Header ve Footer'ı çıkarınca kalan net alan */
+      display: flex;
+      flex-direction: column;
+      padding: 10px;
+      box-sizing: border-box;
+      overflow: hidden; /* Scroll tamamen yasak */
     }
-    #pageContent::-webkit-scrollbar { display: none; }
 
-    /* ✅ KİBAR VE GİRİFTLİ GRID */
     .neural-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      grid-auto-rows: minmax(110px, auto); /* Boyutlar kibarlaştırıldı */
-      gap: 12px;
+      grid-template-rows: repeat(4, 1fr); /* Ekranı 4 ana satıra böldük */
+      gap: 10px;
+      height: 100%;
     }
 
-    /* OYUN MODÜLLERİ - SLIM TASARIM */
+    /* MODÜL TASARIMI (KİBAR VE ÖLÇEKLENEBİLİR) */
     .game-module {
-      position: relative; border-radius: 28px; padding: 18px 12px;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      text-align: center; border: 1px solid var(--glass-border);
-      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      cursor: pointer; overflow: hidden;
-      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      position: relative;
+      border-radius: 24px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      border: 1px solid rgba(255,255,255,0.1);
+      backdrop-filter: blur(20px);
+      transition: all 0.3s ease;
+      cursor: pointer;
+      overflow: hidden;
+      background: rgba(255,255,255,0.03);
     }
 
-    /* Pastel & Vivid Gradyanlar (Daha İnce Ayar) */
-    .m-hangman { background: linear-gradient(145deg, rgba(88,28,135,0.4), rgba(2,0,15,0.8)); }
-    .m-spy { background: linear-gradient(145deg, rgba(30,58,138,0.4), rgba(2,0,15,0.8)); }
-    .m-cracker { background: linear-gradient(145deg, rgba(133,77,14,0.4), rgba(2,0,15,0.8)); }
-    .m-sentence { background: linear-gradient(145deg, rgba(131,24,67,0.4), rgba(2,0,15,0.8)); }
-    .m-duo { background: linear-gradient(145deg, rgba(6,78,59,0.4), rgba(2,0,15,0.8)); }
-    .m-meteor { background: linear-gradient(145deg, rgba(30,27,75,0.4), rgba(2,0,15,0.8)); }
-    .m-gap { grid-column: span 2; background: rgba(99,102,241,0.15); flex-direction: row; justify-content: flex-start; padding: 15px 25px; gap: 20px; border: 1px solid rgba(99,102,241,0.3); }
-
+    /* Giriftli Yapı */
     .tall { grid-row: span 2; }
-    .game-module:active { transform: scale(0.96); filter: brightness(1.2); }
+    .wide { grid-column: span 2; flex-direction: row !important; justify-content: space-around !important; padding: 0 30px !important; }
 
-    /* ✅ İKONLARDA KİBAR ANİMASYONLAR */
-    .icon-node { font-size: 32px; margin-bottom: 8px; position: relative; display: flex; align-items: center; justify-content: center; height: 45px; }
-    .wide .icon-node { margin-bottom: 0; }
+    /* PASTEL ZEMİNLER */
+    .bg-s { background: rgba(251, 207, 232, 0.12); }
+    .bg-b { background: rgba(191, 219, 254, 0.12); }
+    .bg-y { background: rgba(254, 240, 138, 0.12); }
+    .bg-l { background: rgba(233, 213, 255, 0.12); }
+    .bg-m { background: rgba(187, 247, 208, 0.12); }
 
-    /* Sallanan Adam Asmaca Düğümü (Kibar Sürüm) */
-    .i-hang { border-left: 2px solid #fff; height: 30px; animation: hangSwing 3s infinite ease-in-out; }
-    .i-hang::after { content: ""; position: absolute; bottom: -6px; left: -6px; width: 10px; height: 10px; background: #fbcfe8; border-radius: 50%; box-shadow: 0 0 10px #fbcfe8; }
+    .game-module:active { transform: scale(0.96); }
 
-    /* Casus Kim Gözü */
-    .i-eye { width: 38px; height: 22px; border: 2px solid #fff; border-radius: 50% 0; transform: rotate(-45deg); animation: eyeBlink 4s infinite; display: flex; align-items: center; justify-content: center; }
-    .i-eye::after { content: ""; width: 8px; height: 8px; background: #6366f1; border-radius: 50%; }
-
-    /* Cümle Kurma Noktaları */
-    .i-dots { display: flex; gap: 5px; animation: bounce 2s infinite ease-in-out; }
-    .i-dots div { width: 8px; height: 8px; background: #fff; border-radius: 50%; box-shadow: 0 0 8px #fff; }
-
-    .g-name { font-size: 14px; font-weight: 900; color: #fff; margin-bottom: 2px; }
-    .g-desc { font-size: 9px; font-weight: 700; color: rgba(255,255,255,0.5); line-height: 1.2; }
+    /* İKONLAR (ÖLÇEKLİ) */
+    .icon-node { font-size: 28px; margin-bottom: 5px; height: 35px; display: flex; align-items: center; justify-content: center; }
+    .wide .icon-node { margin-bottom: 0; font-size: 32px; }
 
     /* ANİMASYONLAR */
-    @keyframes hangSwing { 0%, 100% { transform: rotate(-15deg); } 50% { transform: rotate(15deg); } }
-    @keyframes eyeBlink { 0%, 90%, 100% { transform: rotate(-45deg) scaleY(1); } 95% { transform: rotate(-45deg) scaleY(0.1); } }
-    @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+    .i-swing { animation: swing 3s infinite ease-in-out; }
+    @keyframes swing { 0%, 100% { transform: rotate(-10deg); } 50% { transform: rotate(10deg); } }
+    @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+
+    .g-name { font-size: 13px; font-weight: 1000; color: #fff; margin-bottom: 2px; }
+    .g-desc { font-size: 9px; font-weight: 700; color: rgba(255,255,255,0.5); }
 
   </style>
 </head>
@@ -79,56 +77,54 @@
   <div id="pageContent">
     <div class="neural-grid">
       
-      <div class="game-module tall m-hangman" onclick="launchGame('hangman', '/pages/hangman', 5)">
-        <div class="icon-node"><div class="i-hang"></div></div>
+      <div class="game-module tall bg-s" onclick="launchGame('hangman', '/pages/hangman', 5)">
+        <div class="icon-node i-swing">
+          <div style="border-left: 2px solid #fff; height: 25px; position: relative;">
+            <div style="position: absolute; bottom: -5px; left: -5px; width: 8px; height: 8px; background: #fbcfe8; border-radius: 50%;"></div>
+          </div>
+        </div>
         <div class="g-name">Adam Asmaca</div>
-        <div class="g-desc">Zor: 5+ Harf</div>
+        <div class="g-desc">Zor Seviye</div>
       </div>
 
-      <div class="game-module m-spy" onclick="launchGame('spy', '/pages/spy', 4)">
-        <div class="icon-node"><div class="i-eye"></div></div>
+      <div class="game-module bg-b" onclick="launchGame('spy', '/pages/spy', 4)">
+        <div class="icon-node" style="animation: bounce 3s infinite;">👁️‍🗨️</div>
         <div class="g-name">Casus Kim?</div>
-        <div class="g-desc">Normal: 4+ Harf</div>
+        <div class="g-desc">Normal</div>
       </div>
 
-      <div class="game-module m-cracker" onclick="launchGame('cracker', '/pages/cracker', 3)">
-        <div class="icon-node" style="animation: bounce 3s infinite;">🏆</div>
+      <div class="game-module bg-y" onclick="launchGame('cracker', '/pages/cracker', 3)">
+        <div class="icon-node" style="animation: swing 2s infinite;">🏆</div>
         <div class="g-name">Bilgi Yarışı</div>
-        <div class="g-desc">Kolay: 3+ Harf</div>
+        <div class="g-desc">Kolay</div>
       </div>
 
-      <div class="game-module tall m-sentence" onclick="launchGame('sentence', '/pages/sentence', 5)">
-        <div class="icon-node"><div class="i-dots"><div></div><div></div></div></div>
+      <div class="game-module tall bg-l" onclick="launchGame('sentence', '/pages/sentence', 5)">
+        <div class="icon-node" style="display:flex; gap:4px; animation: bounce 2s infinite;">
+          <div style="width:8px; height:8px; background:#fff; border-radius:50%;"></div>
+          <div style="width:8px; height:8px; background:#fff; border-radius:50%;"></div>
+        </div>
         <div class="g-name">Cümle Kurma</div>
-        <div class="g-desc">Zor: 5+ Harf</div>
+        <div class="g-desc">Zor</div>
       </div>
 
-      <div class="game-module m-duo" onclick="launchGame('duo', '/pages/duo', 4)">
+      <div class="game-module bg-m" onclick="launchGame('duo', '/pages/duo', 4)">
         <div class="icon-node" style="animation: bounce 4s infinite;">🎤</div>
         <div class="g-name">Sesli Düello</div>
-        <div class="g-desc">Normal: 4+ Harf</div>
+        <div class="g-desc">Normal</div>
       </div>
 
-      <div class="game-module tall m-meteor" onclick="launchGame('meteor', '/pages/meteor', 5)">
-        <div class="icon-node" style="display:grid; grid-template-columns:1fr 1fr; gap:4px; animation: bounce 3s infinite alternate;">
-          <div style="width:14px; height:14px; background:#fff; border-radius:3px;"></div>
-          <div style="width:14px; height:14px; background:#fff; border-radius:3px;"></div>
-        </div>
+      <div class="game-module bg-b" onclick="launchGame('meteor', '/pages/meteor', 4)">
+        <div class="icon-node" style="animation: swing 4s infinite;">🧩</div>
         <div class="g-name">Eşleştirme</div>
-        <div class="g-desc">Zor: 5+ Harf</div>
+        <div class="g-desc">Normal</div>
       </div>
 
-      <div class="game-module m-sentence" style="background:rgba(254, 205, 211, 0.2)" onclick="launchGame('glitch', '/pages/glitch', 3)">
-        <div class="icon-node" style="font-size:24px; font-weight:1000; color:#f87171;">!</div>
-        <div class="g-name">Glitch Hunter</div>
-        <div class="g-desc">Kolay: 3+ Harf</div>
-      </div>
-
-      <div class="game-module m-gap" onclick="launchGame('gap', '/pages/gap', 4)">
-        <div class="icon-node" style="font-size:32px; animation: bounce 2s infinite;">🔍</div>
-        <div style="display:flex; flex-direction:column; align-items: flex-start;">
+      <div class="game-module wide bg-y" onclick="launchGame('gap', '/pages/gap', 4)">
+        <div class="icon-node" style="animation: bounce 2s infinite;">🔍</div>
+        <div style="display:flex; flex-direction:column; align-items:flex-start;">
           <div class="g-name">Boşluk Doldur</div>
-          <div class="g-desc">Algoritma: 4+ Harf • 24 Saat Serbest</div>
+          <div class="g-desc">Algoritma Tamamlama</div>
         </div>
       </div>
 
@@ -142,29 +138,25 @@
     mountShell({ scroll: "none" });
 
     window.launchGame = async (gameId, url, minLen) => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) return location.href = "/pages/login.html";
-        const userId = session.user.id;
-        const sessionKey = `italky_24h_${gameId}_${userId}`;
-        const lastPaid = localStorage.getItem(sessionKey);
-        const now = Date.now();
+      // 24 Saatlik Jeton Mantığı Arka Planda Çalışır...
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return location.href = "/pages/login.html";
+      
+      const sessionKey = `italky_24h_${gameId}_${session.user.id}`;
+      const lastPaid = localStorage.getItem(sessionKey);
+      if (lastPaid && (Date.now() - lastPaid) < 86400000) {
+        location.href = `${url}?minLen=${minLen}&access=granted`;
+        return;
+      }
 
-        if (lastPaid && (now - lastPaid) < (24 * 60 * 60 * 1000)) {
-          location.href = `${url}?minLen=${minLen}&access=granted`;
-          return;
-        }
-
-        const { data: p } = await supabase.from("profiles").select("tokens").eq("id", userId).single();
-        if (!p || p.tokens < 1) return alert("Bu oyun için jeton süreniz dolmuş. Devam için 1 jeton gerekiyor!");
-
-        const { data: up, error } = await supabase.from("profiles").update({ tokens: p.tokens - 1 }).eq("id", userId).select("tokens").single();
-        if (!error && up) {
-          localStorage.setItem(sessionKey, now);
-          setHeaderTokens(up.tokens);
-          location.href = `${url}?minLen=${minLen}&access=new`;
-        }
-      } catch (err) { console.error(err); }
+      const { data: p } = await supabase.from("profiles").select("tokens").eq("id", session.user.id).single();
+      if (p?.tokens > 0) {
+        await supabase.from("profiles").update({ tokens: p.tokens - 1 }).eq("id", session.user.id);
+        localStorage.setItem(sessionKey, Date.now());
+        location.href = `${url}?minLen=${minLen}&access=new`;
+      } else {
+        alert("Jeton Gerekli!");
+      }
     };
   </script>
 </body>
