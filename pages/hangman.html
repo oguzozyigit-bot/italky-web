@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>italkyAI • NEURAL VOID</title>
+
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
   <style>
@@ -16,6 +17,7 @@
       display:flex;
       flex-direction:column;
       gap:10px;
+      position:relative;
     }
     .top-wrap{flex:0 0 auto}
     .mid-wrap{flex:1 1 auto; min-height:0; display:flex; flex-direction:column; align-items:center; gap:10px;}
@@ -174,8 +176,8 @@
 
             <div class="target-man" id="man">
               <div class="organ o-head" id="o_head"></div>
-              <div class="organ o-neck" id="o_neck"></div>
               <div class="organ o-body" id="o_body"></div>
+              <div class="organ o-neck" id="o_neck"></div>
               <div class="organ o-larm" id="o_larm"></div>
               <div class="organ o-rarm" id="o_rarm"></div>
               <div class="organ o-lleg" id="o_lleg"></div>
@@ -225,8 +227,12 @@
 
     mountShell({ scroll: "none" });
 
-    // ✅ SKOR KURALI: Doğru 100, her yanlış -10, her joker -10
-    let pool, target;
+    // ✅ Skor: doğru kelime 100 | her yanlış -10 | her joker -10
+    // ✅ Bonus: hiç joker yok + hiç yanlış yok => +1 can
+    // ✅ Havuz: langpool.js sanitize => pool.items = [{w,tr,pos,lvl,sentence}, ...]
+    let pool = null;
+    let target = null;
+
     let guessed = [];
     let misses = [];
     let mistakes = 0;
@@ -234,7 +240,7 @@
 
     let score = 100;
     let lives = 3;
-    let isClean = true; // hiç yanlış yoksa true
+    let isClean = true;
     let jokerUsed = false;
 
     let lang = "en";
@@ -249,35 +255,47 @@
     let lockInput = false;
     let autoTimer = null;
 
+    const $ = (id) => document.getElementById(id);
+
     const setupUI = () => {
-      document.getElementById("langGrid").onclick = e => {
+      $("langGrid").onclick = e => {
         const c = e.target.closest(".opt-card"); if(!c) return;
         document.querySelectorAll("#langGrid .opt-card").forEach(x=>x.classList.remove("active"));
         c.classList.add("active");
         lang = c.dataset.val;
       };
-      document.getElementById("diffGrid").onclick = e => {
+
+      $("diffGrid").onclick = e => {
         const c = e.target.closest(".diff-card"); if(!c) return;
         document.querySelectorAll("#diffGrid .diff-card").forEach(x=>x.classList.remove("active"));
         c.classList.add("active");
         diff = parseInt(c.dataset.val, 10);
       };
-      document.getElementById("mainStartBtn").onclick = bootGame;
-      document.getElementById("modalContBtn").onclick = modalContinue;
-      for(let i=0;i<3;i++) document.getElementById(`j${i}`).onclick = ()=>useJ(i);
+
+      $("mainStartBtn").onclick = bootGame;
+      $("modalContBtn").onclick = modalContinue;
+
+      for(let i=0;i<3;i++) $(`j${i}`).onclick = ()=>useJ(i);
     };
 
     const bootGame = async () => {
       pool = await loadLangPool(lang);
-      document.getElementById("setup").style.display = "none";
+
+      // ✅ debug: havuz boşsa hemen yaz
+      if(!pool?.items?.length){
+        $("qText").innerText = "KELİME HAVUZU BOŞ (items yok)";
+        return;
+      }
+
+      $("setup").style.display = "none";
       startRound();
     };
 
     const startRound = () => {
       clearTimeout(autoTimer);
       lockInput = false;
-      document.getElementById("modal").classList.remove("active");
-      document.getElementById("man").classList.remove("swing");
+      $("modal").classList.remove("active");
+      $("man").classList.remove("swing");
 
       guessed = [];
       misses = [];
@@ -286,18 +304,30 @@
       jokerUsed = false;
       isClean = true;
 
-      score = 100; // ✅ doğru 100 puan başlangıç
-      document.getElementById("liveScore").innerText = score;
+      score = 100;
+      $("liveScore").innerText = score;
 
-      for(let i=0;i<3;i++){
-        const card = document.getElementById(`j${i}`);
-        if(card) card.classList.remove("spent");
-      }
+      for(let i=0;i<3;i++) $(`j${i}`).classList.remove("spent");
 
+      // ✅ pick, usedSet, tekrar engeli
       const usedSet = createUsedSet(`used_hangman_${lang}`);
-      const picked = pick(pool, 1, usedSet.used, usedSet.save, (x)=> x.w && x.w.length >= diff);
-      target = picked[0];
-      if(!target){ alert("Kelime bulunamadı! LangPool boş olabilir."); return; }
+      const picked = pick(
+        pool,
+        1,
+        usedSet.used,
+        usedSet.save,
+        // ✅ filtre: uzunluk diff değil; en az 3 harf olsun (her modda)
+        (x)=> String(x?.w || "").trim().length >= 3
+      );
+
+      target = picked?.[0] || null;
+
+      if(!target?.w){
+        $("qText").innerText = "KELİME SEÇİLEMEDİ (pick boş döndü)";
+        $("wordMatrix").innerHTML = "";
+        $("kb").innerHTML = "";
+        return;
+      }
 
       renderQuestion();
       renderWord();
@@ -308,37 +338,42 @@
     };
 
     const renderQuestion = () => {
-      // LangPool objende "q" varsa soru ondan gelir; yoksa tr kullanır.
-      const q = (target.q || target.tr || "").toString();
-      document.getElementById("qText").innerText = q ? q : "—";
+      // Langpool sanitize: tr + sentence var. Soru yoksa TR göster, varsa sentence ile zenginleştir.
+      const hint = String(target?.tr || "").trim();
+      const sent = String(target?.sentence || "").trim();
+      const q = sent ? `${hint} • ${sent}` : hint;
+      $("qText").innerText = q ? q : "—";
     };
 
     const renderWord = () => {
-      const w = target.w.toUpperCase();
-      document.getElementById("wordMatrix").innerHTML = w.split("").map(ch=>{
+      const w = String(target?.w || "").toUpperCase();
+      $("wordMatrix").innerHTML = w.split("").map(ch=>{
         const found = guessed.includes(ch);
         return `<div class="slot ${found ? "found":""}">${found ? ch : ""}</div>`;
       }).join("");
     };
 
     const renderTyped = () => {
-      document.getElementById("goodBox").innerText = guessed.length ? guessed.join(" ") : "—";
-      document.getElementById("badBox").innerText  = misses.length ? misses.join(" ")  : "—";
+      $("goodBox").innerText = guessed.length ? guessed.join(" ") : "—";
+      $("badBox").innerText  = misses.length ? misses.join(" ") : "—";
     };
 
     const buildAlphabet = () => "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
     const renderKB = () => {
-      const kb = document.getElementById("kb");
-      const w = target.w.toUpperCase();
+      const kb = $("kb");
+      const w = String(target?.w || "").toUpperCase();
       const uniq = [...new Set(w.split(""))];
 
-      // ✅ KURAL: doğru harf sayısından 10 fazla tuş
+      // ✅ KURAL: doğru harf sayısından 10 fazla (alfabe full yok)
       const extraCount = 10;
       const abc = buildAlphabet();
-      const fillers = abc.filter(l => !uniq.includes(l)).sort(()=>0.5-Math.random()).slice(0, extraCount);
+      const fillers = abc
+        .filter(l => !uniq.includes(l))
+        .sort(()=>0.5-Math.random())
+        .slice(0, extraCount);
 
-      // ✅ karıştır (alfabetik değil)
+      // ✅ karıştır
       const keys = [...uniq, ...fillers].sort(()=>0.5-Math.random());
 
       kb.innerHTML = keys.map(l=>`<button class="key" id="k-${l}">${l}</button>`).join("");
@@ -347,7 +382,7 @@
 
     const applyScorePenalty = (amount) => {
       score = Math.max(0, score - amount);
-      document.getElementById("liveScore").innerText = score;
+      $("liveScore").innerText = score;
     };
 
     const handleGuess = (l) => {
@@ -355,24 +390,23 @@
       if(guessed.includes(l) || misses.includes(l)) return;
 
       const key = document.getElementById(`k-${l}`);
-      const w = target.w.toUpperCase();
+      const w = String(target?.w || "").toUpperCase();
 
       if(w.includes(l)){
         guessed.push(l);
-        if(key) key.classList.add("hit");
+        key?.classList.add("hit");
         renderWord();
         renderTyped();
 
-        // bitti mi?
         const allFound = w.split("").every(ch => guessed.includes(ch));
         if(allFound) finish(true);
       } else {
         mistakes++;
         isClean = false;
         misses.push(l);
-        if(key) key.classList.add("miss");
+        key?.classList.add("miss");
 
-        // ✅ KURAL: her yanlış -10
+        // ✅ her yanlış -10
         applyScorePenalty(10);
 
         renderTyped();
@@ -384,30 +418,30 @@
     };
 
     const getMistakeLimit = () => {
-      if(diff === 3) return 7; // Kolay
-      if(diff === 4) return 4; // Normal
-      return 3;                // Zor
+      if(diff === 3) return 7; // Kolay: 7 hata
+      if(diff === 4) return 4; // Normal: 4 hata
+      return 3;                // Zor: 3 hata
     };
 
     const updateVis = () => {
       document.querySelectorAll(".organ").forEach(o=>o.classList.remove("active"));
 
+      // Kolay: 1 kafa, 2 gövde, 3 boyun, 4 sol kol, 5 sağ kol, 6 sol ayak, 7 sağ ayak
       if(diff === 3){
-        // Kolay: 1 kafa, 2 gövde, 3 boyun, 4 kol1, 5 kol2, 6 ayak1, 7 ayak2
         const seq = ["o_head","o_body","o_neck","o_larm","o_rarm","o_lleg","o_rleg"];
-        seq.slice(0, mistakes).forEach(id => document.getElementById(id)?.classList.add("active"));
+        seq.slice(0, mistakes).forEach(id => $(id)?.classList.add("active"));
         return;
       }
 
+      // Normal: 1 kafa, 2 gövde, 3 iki kol, 4 iki ayak
       if(diff === 4){
-        // Normal: 1 kafa, 2 gövde, 3 iki kol, 4 iki ayak
         const seq = [
           ["o_head"],
           ["o_body"],
           ["o_larm","o_rarm"],
           ["o_lleg","o_rleg"]
         ];
-        seq.slice(0, mistakes).forEach(g => g.forEach(id => document.getElementById(id)?.classList.add("active")));
+        seq.slice(0, mistakes).forEach(g => g.forEach(id => $(id)?.classList.add("active")));
         return;
       }
 
@@ -417,7 +451,7 @@
         ["o_body"],
         ["o_larm","o_rarm","o_lleg","o_rleg"]
       ];
-      seq.slice(0, mistakes).forEach(g => g.forEach(id => document.getElementById(id)?.classList.add("active")));
+      seq.slice(0, mistakes).forEach(g => g.forEach(id => $(id)?.classList.add("active")));
     };
 
     const renderHearts = () => {
@@ -427,7 +461,7 @@
         const lost = i >= lives ? " lost":"";
         h += `<span class="heart-neon${lost}">❤️</span>`;
       }
-      document.getElementById("heartBox").innerHTML = h;
+      $("heartBox").innerHTML = h;
     };
 
     const safeSpeak = (text) => {
@@ -441,7 +475,7 @@
     };
 
     const fireworks = () => {
-      const fx = document.getElementById("fx");
+      const fx = $("fx");
       const cx = Math.round(window.innerWidth * (0.25 + Math.random()*0.5));
       const cy = Math.round(window.innerHeight * (0.20 + Math.random()*0.25));
       for(let i=0;i<18;i++){
@@ -459,54 +493,61 @@
     };
 
     const showModal = (title, color, bonus, scoreLine, btnText) => {
-      document.getElementById("mTitle").innerText = title;
-      document.getElementById("mTitle").style.color = color;
-      document.getElementById("mBonus").innerText = bonus || "";
-      document.getElementById("mScoreLine").innerText = scoreLine || "";
-      document.getElementById("modalContBtn").innerText = btnText || "DEVAM";
-      document.getElementById("mWord").innerText = target.w.toUpperCase();
-      document.getElementById("mTr").innerText = `(${target.tr || "—"})`;
-      document.getElementById("modal").classList.add("active");
+      $("mTitle").innerText = title;
+      $("mTitle").style.color = color;
+      $("mBonus").innerText = bonus || "";
+      $("mScoreLine").innerText = scoreLine || "";
+      $("modalContBtn").innerText = btnText || "DEVAM";
+      $("mWord").innerText = String(target?.w || "—").toUpperCase();
+      $("mTr").innerText = `(${String(target?.tr || "—")})`;
+      $("modal").classList.add("active");
     };
 
     const finish = (win) => {
       lockInput = true;
 
       if(win){
-        safeSpeak(target.w);
+        // doğruyu yaz + sesli oku (senin kural)
+        safeSpeak(String(target?.w || ""));
 
         let bonus = "";
-        // ✅ Joker yok + hiç yanlış yok => +1 can
+        // bonus can: hiç joker yok + hiç yanlış yok
         if(isClean && !jokerUsed){
           lives++;
           bonus = "KUSURSUZ: +1 CAN";
         }
 
-        // ✅ Highscore + fireworks
+        // highscore
         if(score > highScore){
           highScore = score;
           localStorage.setItem(HS_KEY, String(highScore));
-          document.getElementById("highVal").innerText = highScore;
+          $("highVal").innerText = highScore;
           fireworks();
         }
 
         renderHearts();
         showModal("MİSYON BAŞARILI", "#2ed573", bonus, `SKOR: ${score} • REKOR: ${highScore}`, "SONRAKİ");
 
-        autoTimer = setTimeout(()=>{ document.getElementById("modal").classList.remove("active"); startRound(); }, 1100);
+        autoTimer = setTimeout(()=>{
+          $("modal").classList.remove("active");
+          startRound();
+        }, 1100);
         return;
       }
 
-      // lose
+      // kayıp: can -1
       lives--;
       renderHearts();
 
+      // sallanma: kolay 4s, normal/zor 5s
       const swingMs = (diff === 3) ? 4000 : 5000;
-      document.getElementById("man").classList.add("swing");
+      $("man").classList.add("swing");
 
       autoTimer = setTimeout(()=>{
-        document.getElementById("man").classList.remove("swing");
-        safeSpeak(target.w);
+        $("man").classList.remove("swing");
+
+        // doğruyu yaz + sesli oku (senin kural)
+        safeSpeak(String(target?.w || ""));
 
         if(lives <= 0){
           showModal("GAME OVER", "#ff4757", "SİSTEM ÇÖKTÜ!", `SKOR: ${score} • REKOR: ${highScore}`, "YENİDEN");
@@ -515,7 +556,10 @@
 
         showModal("DEŞİFRE EDİLEMEDİ", "#ff4757", "-1 CAN", `SKOR: ${score} • REKOR: ${highScore}`, "DEVAM");
 
-        autoTimer = setTimeout(()=>{ document.getElementById("modal").classList.remove("active"); startRound(); }, 1200);
+        autoTimer = setTimeout(()=>{
+          $("modal").classList.remove("active");
+          startRound();
+        }, 1200);
       }, swingMs);
     };
 
@@ -525,12 +569,12 @@
       if(lives <= 0){
         lives = 3;
         renderHearts();
-        document.getElementById("modal").classList.remove("active");
+        $("modal").classList.remove("active");
         startRound();
         return;
       }
 
-      document.getElementById("modal").classList.remove("active");
+      $("modal").classList.remove("active");
       startRound();
     };
 
@@ -538,17 +582,18 @@
       if(lockInput) return;
       if(jokers <= 0) return;
 
-      // ✅ joker kullanınca -10 puan
       jokerUsed = true;
+      jokers--;
+
+      // ✅ her joker -10
       applyScorePenalty(10);
 
-      jokers--;
-      const card = document.getElementById(`j${i}`);
-      if(card) card.classList.add("spent");
+      $(`j${i}`).classList.add("spent");
 
-      const w = target.w.toUpperCase();
+      const w = String(target?.w || "").toUpperCase();
       const rem = w.split("").filter(ch => !guessed.includes(ch));
       if(rem.length){
+        // joker doğru bir harfi açar
         handleGuess(rem[0]);
       }
     };
