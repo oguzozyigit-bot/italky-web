@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-  <title>italkyAI • Final Neural Nitro</title>
+  <title>italkyAI • Neural Nitro v3</title>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;400;600;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
@@ -12,8 +12,6 @@
     :root {
       --ai-gradient: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
       --bg-dark: #050508;
-      --home-bordo: #801336;
-      --home-lacivert: #1e3a8a;
       --border-alpha: rgba(255, 255, 255, 0.15);
     }
 
@@ -22,110 +20,111 @@
 
     .container { display: flex; flex-direction: column; height: 100dvh; width: 100%; position: relative; }
 
-    /* PANELLER - Home Sayfası Renk Geçişleri */
+    /* PANELLER */
     .half-screen {
       flex: 1; position: relative; display: flex; flex-direction: column;
       align-items: center; justify-content: space-between;
-      padding: calc(20px + env(safe-area-inset-top)) 20px;
+      padding: calc(15px + env(safe-area-inset-top)) 15px;
+      overflow: hidden;
     }
-    .half-screen.top { 
-      transform: rotate(180deg); 
-      background: linear-gradient(180deg, rgba(128, 19, 54, 0.2) 0%, var(--bg-dark) 100%);
-    }
-    .half-screen.bottom {
-      background: linear-gradient(180deg, rgba(30, 58, 138, 0.2) 0%, var(--bg-dark) 100%);
-    }
+    .half-screen.top { transform: rotate(180deg); background: linear-gradient(180deg, rgba(128, 19, 54, 0.15) 0%, var(--bg-dark) 100%); }
+    .half-screen.bottom { background: linear-gradient(180deg, rgba(30, 58, 138, 0.15) 0%, var(--bg-dark) 100%); }
 
-    /* NEURAL HUB - Logo ve Navigasyon */
-    .center-hub { height: 110px; position: relative; z-index: 500; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); backdrop-filter: blur(12px); }
+    /* ✅ MERKEZ HUB & ORİJİNAL LOGO */
+    .center-hub { height: 100px; position: relative; z-index: 500; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.5); backdrop-filter: blur(15px); }
     
     .orb-container {
-      position: relative; width: 110px; height: 110px;
+      position: relative; width: 100px; height: 100px;
       display: flex; align-items: center; justify-content: center;
       transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
       cursor: pointer;
     }
 
-    .ai-ring {
-      position: absolute; inset: 4px; border-radius: 50%; padding: 2.5px;
-      background: var(--ai-gradient);
-      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-      mask-composite: exclude;
-    }
-
-    .energy-orbit { position: absolute; inset: -5px; border-radius: 50%; animation: rotateOrbit 6s linear infinite; }
-    .e-ball { position: absolute; width: 10px; height: 10px; border-radius: 50%; filter: blur(1px); }
+    .energy-orbit { position: absolute; inset: -4px; border-radius: 50%; animation: rotateOrbit 5s linear infinite; }
+    .e-ball { position: absolute; width: 10px; height: 10px; border-radius: 50%; filter: blur(1.5px); }
     .ball-1 { top: -5px; left: 50%; transform: translateX(-50%); background: #6366f1; box-shadow: 0 0 15px #6366f1; }
     .ball-2 { bottom: -5px; left: 50%; transform: translateX(-50%); background: #ec4899; box-shadow: 0 0 15px #ec4899; }
 
     .ai-core {
-      width: 82px; height: 82px; background: #000; border-radius: 50%;
+      width: 80px; height: 80px; background: #000; border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
       border: 1px solid var(--border-alpha); z-index: 10;
-      box-shadow: inset 0 0 15px rgba(99, 102, 241, 0.15);
+      overflow: hidden;
     }
-    .logo-img { width: 65px; height: auto; transform: rotate(0deg); transition: 0.3s; }
+    /* Orijinal Yazı RengiitalkyAI */
+    .logo-text { font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 700; color: #fff; letter-spacing: 0.5px; }
+    .logo-ai { background: var(--ai-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+    /* ✅ EKOLAYZER */
+    .eq-wrap { display: flex; align-items: center; gap: 3px; height: 20px; position: absolute; opacity: 0; transition: 0.3s; z-index: 20; }
+    #frameRoot.listening .eq-wrap { opacity: 1; }
+    #frameRoot.listening .logo-text { opacity: 0; }
+    .eq-bar { width: 3px; background: var(--ai-gradient); border-radius: 10px; animation: eqAnim 0.7s infinite ease-in-out; }
 
     /* NAV BUTTONS */
     .nav-btn {
-      position: absolute; padding: 12px 22px; border-radius: 100px;
+      position: absolute; padding: 10px 18px; border-radius: 100px;
       background: rgba(255,255,255,0.06); border: 1px solid var(--border-alpha);
-      color: #fff; font-size: 11px; font-weight: 800; cursor: pointer;
-      backdrop-filter: blur(15px); z-index: 600; letter-spacing: 1.5px;
+      color: #fff; font-size: 10px; font-weight: 900; cursor: pointer;
+      backdrop-filter: blur(15px); z-index: 600;
     }
     .btn-home { left: 15px; }
     .btn-clear { right: 15px; }
 
-    /* MİKROFONLAR */
-    .btn-mic {
-      width: 85px; height: 85px; border-radius: 50%; background: #000;
-      display: flex; align-items: center; justify-content: center;
-      border: 3px solid transparent; 
-      background-image: linear-gradient(#000, #000), var(--ai-gradient);
-      background-origin: border-box; background-clip: content-box, border-box;
-      transition: 0.4s; cursor: pointer;
+    /* ✅ SCROLLABLE CHAT BODY */
+    .chat-body {
+      flex: 1; width: 100%; display: flex; flex-direction: column;
+      gap: 25px; overflow-y: auto; scrollbar-width: none;
+      padding: 20px 0; mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent);
     }
-    .btn-mic.listening { animation: aiBreathe 2s infinite ease-in-out; }
-    .btn-mic svg { width: 34px; stroke: #fff; }
+    .chat-body::-webkit-scrollbar { display: none; }
+
+    .bubble { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; width: 100%; }
+    .bubble .txt { font-size: 32px; font-weight: 200; line-height: 1.1; color: #fff; max-width: 90%; }
+    
+    /* ✅ HOPARLÖR İKONU */
+    .spk-icon { 
+      width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,0.1); 
+      display: flex; align-items: center; justify-content: center; cursor: pointer;
+      border: 1px solid var(--border-alpha);
+    }
+    .spk-icon svg { width: 20px; fill: #fff; }
 
     /* DİL SEÇİCİ */
     .lang-trigger {
       background: rgba(255,255,255,0.05); border: 1px solid var(--border-alpha);
-      padding: 12px 24px; border-radius: 100px; color: #fff;
-      font-size: 13px; font-weight: 800; display: flex; align-items: center; gap: 10px;
+      padding: 10px 20px; border-radius: 100px; color: #fff; font-size: 12px; font-weight: 800;
     }
 
-    /* POPOVERS (DİL SEÇİMİ) */
+    /* ✅ POPOVERS (AKTİF ÇALIŞIR) */
     .popover {
       position: absolute; left: 50%; transform: translateX(-50%);
-      width: min(350px, 92%); height: 380px;
-      background: radial-gradient(circle at 50% 50%, #151525 0%, #050508 100%);
-      border: 1px solid rgba(255,255,255,0.15); border-radius: 32px;
+      width: 90%; max-width: 350px; height: 350px;
+      background: #0a0a0f; border: 1px solid var(--border-alpha); border-radius: 25px;
       display: none; flex-direction: column; z-index: 1000; overflow: hidden;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.9);
     }
     .popover.show { display: flex; }
-    .half-screen.top .popover { top: 75px; transform: translateX(-50%) rotate(180deg); }
-    .half-screen.bottom .popover { bottom: 75px; }
+    .half-screen.top .popover { top: 60px; transform: translateX(-50%) rotate(180deg); }
+    .half-screen.bottom .popover { bottom: 60px; }
 
-    .pop-head { padding: 18px; border-bottom: 1px solid var(--border-alpha); display: flex; justify-content: space-between; align-items: center; }
-    .pop-list { flex: 1; overflow-y: auto; padding: 12px; }
+    .pop-head { padding: 15px; border-bottom: 1px solid var(--border-alpha); display: flex; justify-content: space-between; align-items: center; }
+    .pop-list { flex: 1; overflow-y: auto; padding: 10px; }
 
-    /* CHAT & HOPARLÖR */
-    .chat-body { flex: 1; width: 100%; display: flex; flex-direction: column; justify-content: center; gap: 20px; }
-    .bubble { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 12px; }
-    .bubble.me.is-latest .txt { font-size: 34px; font-weight: 200; line-height: 1.1; color: #fff; }
-    
-    .spk-icon { 
-      width: 48px; height: 48px; border-radius: 50%; background: rgba(255,255,255,0.08); 
-      display: flex; align-items: center; justify-content: center; cursor: pointer;
-      border: 1px solid var(--border-alpha); transition: 0.2s;
+    /* MIC */
+    .btn-mic {
+      width: 80px; height: 80px; border-radius: 50%; background: #000;
+      display: flex; align-items: center; justify-content: center;
+      border: 3px solid transparent; background-image: linear-gradient(#000, #000), var(--ai-gradient);
+      background-origin: border-box; background-clip: content-box, border-box;
+      cursor: pointer;
     }
-    .spk-icon svg { width: 22px; fill: #fff; }
+    .btn-mic.listening { animation: breathe 2s infinite ease-in-out; }
 
     @keyframes rotateOrbit { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-    @keyframes aiBreathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); box-shadow: 0 0 35px rgba(99, 102, 241, 0.4); } }
+    @keyframes eqAnim { 0%, 100% { height: 5px; } 50% { height: 25px; } }
+    @keyframes breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); box-shadow: 0 0 30px rgba(99,102,241,0.4); } }
 
-    /* Logo Yönü */
     #frameRoot.to-top .orb-container { transform: rotate(180deg); }
     #frameRoot.to-bot .orb-container { transform: rotate(0deg); }
   </style>
@@ -138,7 +137,7 @@
       <button class="lang-trigger" id="topLangBtn">🇬🇧 ENGLISH ⌵</button>
       
       <div class="popover" id="pop-top">
-        <div class="pop-head"><span style="font-weight:900; font-size:12px;">SELECT LANGUAGE</span><span id="close-top" style="cursor:pointer; font-size:18px;">✕</span></div>
+        <div class="pop-head"><b>DİL SEÇİN</b><span id="close-top" style="cursor:pointer">✕</span></div>
         <div class="pop-list" id="list-top"></div>
       </div>
 
@@ -146,7 +145,7 @@
 
       <div class="mic-wrap">
         <div class="btn-mic" id="topMic">
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 11v1a7 7 0 0 1-14 0v-1"/><path d="M12 19v3"/></svg>
+          <svg width="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 11v1a7 7 0 0 1-14 0v-1"/><path d="M12 19v3"/></svg>
         </div>
       </div>
     </div>
@@ -154,14 +153,18 @@
     <div class="center-hub">
       <div class="nav-btn btn-home" onclick="location.href='/pages/home.html'">HOME</div>
       
-      <div class="orb-container" id="homeBtn" title="Anasayfaya Dön">
+      <div class="orb-container" id="homeBtn">
         <div class="energy-orbit">
           <div class="e-ball ball-1"></div>
           <div class="e-ball ball-2"></div>
         </div>
-        <div class="ai-ring"></div>
         <div class="ai-core">
-          <img src="/assets/logo_original.png" class="logo-img" alt="italkyAI">
+          <div class="eq-wrap">
+            <div class="eq-bar" style="animation-delay:0s"></div>
+            <div class="eq-bar" style="animation-delay:0.2s"></div>
+            <div class="eq-bar" style="animation-delay:0.4s"></div>
+          </div>
+          <span class="logo-text">italky<span class="logo-ai">AI</span></span>
         </div>
       </div>
 
@@ -172,7 +175,7 @@
       <button class="lang-trigger" id="botLangBtn">🇹🇷 TÜRKÇE ⌵</button>
 
       <div class="popover" id="pop-bot">
-        <div class="pop-head"><span style="font-weight:900; font-size:12px;">DİL SEÇİNİZ</span><span id="close-bot" style="cursor:pointer; font-size:18px;">✕</span></div>
+        <div class="pop-head"><b>DİL SEÇİN</b><span id="close-bot" style="cursor:pointer">✕</span></div>
         <div class="pop-list" id="list-bot"></div>
       </div>
 
@@ -180,27 +183,20 @@
 
       <div class="mic-wrap">
         <div class="btn-mic" id="botMic">
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 11v1a7 7 0 0 1-14 0v-1"/><path d="M12 19v3"/></svg>
+          <svg width="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 11v1a7 7 0 0 1-14 0v-1"/><path d="M12 19v3"/></svg>
         </div>
       </div>
     </div>
-
   </div>
 
-  <script type="module" src="/js/facetoface_page.js?v=20260219_FINAL_RELEASE"></script>
+  <script type="module" src="/js/facetoface_page.js?v=20260219_FINAL"></script>
 
   <script>
     const root = document.getElementById('frameRoot');
     const topMic = document.getElementById('topMic');
     const botMic = document.getElementById('botMic');
-    const homeBtn = document.getElementById('homeBtn');
 
-    // 1. Logo Tıklanınca Anasayfaya Dönüş
-    homeBtn.onclick = () => location.href = '/pages/home.html';
-
-    // 2 & 3. Navigasyon İsim Güncellemeleri koda HOME ve CLEAR olarak eklendi.
-
-    // 4. Popover (Dil Seçimi) Sistemi
+    // ✅ Popover Aç/Kapat
     const bindPop = (btn, pop, cls) => {
       document.getElementById(btn).onclick = () => document.getElementById(pop).classList.add('show');
       document.getElementById(cls).onclick = (e) => { e.stopPropagation(); document.getElementById(pop).classList.remove('show'); };
@@ -211,23 +207,24 @@
     document.getElementById('clearBtn').onclick = () => {
       document.getElementById('topBody').innerHTML = '';
       document.getElementById('botBody').innerHTML = '';
-      window.speechSynthesis?.cancel?.();
     };
 
-    // Dinamik Yön Takibi
-    let activeSide = 'bot';
-    const uiObs = new MutationObserver(() => {
+    // ✅ Logo Dönüş ve Ekolayzer Mantığı
+    let side = 'bot';
+    const obs = new MutationObserver(() => {
       const isTop = topMic.classList.contains('listening');
       const isBot = botMic.classList.contains('listening');
-      if (isTop) { root.className = 'to-top'; activeSide = 'top'; }
-      else if (isBot) { root.className = 'to-bot'; activeSide = 'bot'; }
-      else { root.className = 'to-' + activeSide; }
+      if (isTop) { root.className = 'to-top listening'; side = 'top'; }
+      else if (isBot) { root.className = 'to-bot listening'; side = 'bot'; }
+      else { root.className = 'to-' + side; }
     });
-    uiObs.observe(topMic, { attributes: true });
-    uiObs.observe(botMic, { attributes: true });
-    
-    // 5. Hoparlör İkonu Desteği (JS motoru bubble oluşturduğunda şu yapıyı basar):
-    // <div class="spk-icon"><svg viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4V5zM15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14" fill="white"/></svg></div>
+    obs.observe(topMic, { attributes: true });
+    obs.observe(botMic, { attributes: true });
+
+    // ✅ Scroll Otomatik Aşağı Kaydırma
+    const autoScroll = (el) => { el.scrollTop = el.scrollHeight; };
+    new MutationObserver(() => autoScroll(document.getElementById('topBody'))).observe(document.getElementById('topBody'), {childList:true});
+    new MutationObserver(() => autoScroll(document.getElementById('botBody'))).observe(document.getElementById('botBody'), {childList:true});
   </script>
 </body>
 </html>
