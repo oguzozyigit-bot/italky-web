@@ -77,7 +77,7 @@
       color: rgba(255,255,255,.35);
     }
 
-    /* 🌍 Daha gerçekçi dünya */
+    /* 🌍 Dünya */
     .world-container{
       position:relative;
       width: 290px;
@@ -87,6 +87,7 @@
       justify-content:center;
       margin-top: 6px;
       margin-bottom: 10px;
+      perspective: 900px;
     }
 
     .earth-glow{
@@ -109,11 +110,9 @@
       width: 210px;
       height: 210px;
       border-radius: 50%;
-      /* NASA Blue Marble texture (daha gerçekçi) */
       background-image: url("https://eoimages.gsfc.nasa.gov/images/imagerecords/74000/74518/world.topo.bathy.200412.3x5400x2700.jpg");
       background-size: cover;
       background-position: center;
-      /* gerçekçi gölge + parlama */
       box-shadow:
         inset -28px -28px 60px rgba(0,0,0,0.85),
         inset 10px 10px 28px rgba(255,255,255,0.05),
@@ -124,7 +123,6 @@
       overflow:hidden;
     }
 
-    /* Bulut efekti gibi hafif parıltı katmanı (çok hafif) */
     .earth::before{
       content:"";
       position:absolute;
@@ -136,12 +134,42 @@
       mix-blend-mode: screen;
       opacity:.6;
       pointer-events:none;
+      z-index: 6;
     }
 
-    /* ✅ Ters dönme yok: rotateY */
     @keyframes rotateSphere{
       from{ transform: rotateY(0deg); }
       to{ transform: rotateY(360deg); }
+    }
+
+    /* ✅ Ön yüz ITALKY (bir tık küçük), arka yüz AI — aynalama yok */
+    .ai-stamp{
+      position:absolute;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight: 1000;
+      letter-spacing: 2px;
+      color: rgba(255,255,255,0.92);
+      text-shadow: 0 0 18px rgba(255,255,255,0.22);
+      mix-blend-mode: screen;
+      opacity: .92;
+      pointer-events:none;
+      user-select:none;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+    .ai-front{
+      font-size: 46px;              /* ✅ ITALKY bir tık küçük */
+      transform: translateZ(1px);
+      z-index: 4;
+    }
+    .ai-back{
+      font-size: 52px;              /* ✅ arka yüz AI */
+      letter-spacing: 1px;
+      transform: rotateY(180deg) translateZ(1px); /* ✅ scaleX(-1) YOK */
+      z-index: 3;
     }
 
     /* Daktilo */
@@ -157,13 +185,13 @@
     }
     .typewriter{
       font-family: 'JetBrains Mono', monospace;
-      font-size: 16px;               /* ✅ daha büyük */
+      font-size: 16px;
       color: rgba(255,255,255,.65);
       border-right:2px solid var(--accent);
       white-space: nowrap;
       overflow: hidden;
       width: 0;
-      animation: typing 5.6s steps(46, end) infinite, blink .85s step-end infinite; /* ✅ daha yavaş */
+      animation: typing 5.6s steps(46, end) infinite, blink .85s step-end infinite;
     }
     @keyframes typing { 0%,10%{ width:0 } 62%,86%{ width:100% } 100%{ width:0 } }
     @keyframes blink { from,to{ border-color:transparent } 50%{ border-color:var(--accent) } }
@@ -196,12 +224,11 @@
     .google-btn:active{ transform: scale(.97); }
     .g-icon{ width:24px; height:24px; pointer-events:none; }
 
-    /* ✅ Footer imzayı 0.5cm yukarı */
     footer{
       width:100%;
       text-align:center;
       z-index:20;
-      padding-bottom: calc(18px + var(--safeB) + 18px); /* ✅ ekstra yukarı */
+      padding-bottom: calc(18px + var(--safeB) + 18px);
       margin-top: -6px;
     }
     .footer-nav{
@@ -277,7 +304,11 @@
 
     <div class="world-container" aria-hidden="true">
       <div class="earth-glow"></div>
-      <div class="earth"></div>
+
+      <div class="earth">
+        <div class="ai-stamp ai-front">ITALKY</div>
+        <div class="ai-stamp ai-back">AI</div>
+      </div>
     </div>
 
     <div class="typewriter-container">
@@ -329,12 +360,10 @@
       return !!(window.Native && typeof window.Native.startGoogleLogin === "function");
     }
 
-    // ✅ Eğer login sayfasına OAuth parametresiyle dönülürse callback’e gönder (loop biter)
     if (location.search.includes("code=") || location.hash.includes("access_token=")) {
       location.replace("/pages/auth_callback.html" + location.search + location.hash);
     }
 
-    // ✅ Native login success: Android id_token ile çağırır
     window.onNativeLoginSuccess = async function(payload){
       try{
         const data = (typeof payload === "string") ? JSON.parse(payload) : payload;
@@ -367,7 +396,6 @@
       }
     };
 
-    // Google button
     document.getElementById("googleBtn")?.addEventListener("click", async ()=>{
       try{
         if(isNative()){
@@ -383,7 +411,6 @@
       }
     });
 
-    // ✅ Daktilo cümleleri: daha premium + daha “açılış sayfan” tadında
     const phrases = [
       "Dil bariyerlerini görünmez yapıyoruz…",
       "italky Academy ile seviyeni netleştir…",
@@ -405,7 +432,6 @@
       }
     }, 5600);
 
-    // Boot: session varsa home
     (async function boot(){
       try{
         const { data:{ session } } = await supabase.auth.getSession();
@@ -418,4 +444,3 @@
   </script>
 </body>
 </html>
-```0
