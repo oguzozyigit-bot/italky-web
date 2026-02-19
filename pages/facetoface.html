@@ -3,217 +3,136 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-  <title>italkyAI • Quantum Nitro</title>
+  <title>italkyAI • 3000 Quantum</title>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=Space+Grotesk:wght@300;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;400;900&family=Space+Grotesk:wght@300;700&display=swap" rel="stylesheet">
 
   <style>
     :root {
-      /* 3000 Yılı Paleti: Derin Uzay ve İyon Işığı */
-      --bg-void: #020205;
-      --panel-top: #0a0410;
-      --panel-bot: #040812;
-      
-      --accent-neon: #00f2ff; /* İyon Mavisi */
-      --accent-magenta: #ff0055; /* Plazma Pembesi */
-      --ai-grad: linear-gradient(135deg, #00f2ff 0%, #7000ff 100%);
-      
+      --bg: #000000;
+      --accent-top: #00d1ff; /* İyon Mavisi */
+      --accent-bot: #ff2d55; /* Plazma Pembesi */
       --glass: rgba(255, 255, 255, 0.03);
-      --glass-border: rgba(255, 255, 255, 0.08);
-      
+      --border: rgba(255, 255, 255, 0.08);
       --safe-top: env(safe-area-inset-top, 0px);
       --safe-bottom: env(safe-area-inset-bottom, 0px);
     }
 
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
     html, body { 
       margin: 0; width: 100%; height: 100%; 
-      background: var(--bg-void); 
-      color: #fff; 
-      font-family: 'Outfit', sans-serif; 
-      overflow: hidden; 
+      background: var(--bg); color: #fff; 
+      font-family: 'Outfit', sans-serif; overflow: hidden; 
     }
 
     .container { 
-      position: relative; 
-      width: 100%; 
-      height: 100dvh; 
-      display: flex; 
-      flex-direction: column;
-      background: radial-gradient(circle at center, #1a1a2e 0%, #020205 100%);
+      display: flex; flex-direction: column; height: 100dvh; width: 100%; 
     }
 
-    /* PANELLER - Holografik Derinlik */
+    /* PANELLER */
     .half-screen {
-      flex: 1;
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: calc(20px + var(--safe-top)) 20px;
-      transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+      flex: 1; position: relative; display: flex; flex-direction: column;
+      align-items: center; justify-content: space-between;
+      padding: calc(15px + var(--safe-top)) 20px;
+      transition: all 0.5s cubic-bezier(0.2, 1, 0.2, 1);
     }
 
-    .half-screen.top {
-      background: linear-gradient(180deg, rgba(12, 5, 20, 0.8) 0%, transparent 100%);
-      transform: rotate(180deg);
-      border-bottom: 1px solid var(--glass-border);
+    /* Üst taraf 180 derece dönük */
+    .half-screen.top { 
+      transform: rotate(180deg); 
+      background: linear-gradient(180deg, rgba(0, 209, 255, 0.05) 0%, transparent 100%);
     }
-
+    
     .half-screen.bottom {
-      background: linear-gradient(180deg, rgba(5, 10, 20, 0.8) 0%, transparent 100%);
-      border-top: 1px solid var(--glass-border);
+      background: linear-gradient(180deg, rgba(255, 45, 85, 0.05) 0%, transparent 100%);
     }
 
-    /* DİL SEÇİCİ - Minimalist */
-    .lang-trigger {
-      background: var(--glass);
-      border: 1px solid var(--glass-border);
-      backdrop-filter: blur(15px);
-      color: #fff;
-      padding: 8px 16px;
-      border-radius: 100px;
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      z-index: 1000;
-    }
-
-    /* CHAT BUBBLES - Akışkan */
-    .chat-body {
-      flex: 1;
-      width: 100%;
-      max-width: 600px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      gap: 20px;
-      overflow-y: auto;
-      scrollbar-width: none;
-      z-index: 10;
-    }
-
-    .bubble.me.is-latest .txt {
-      font-size: 32px;
-      font-weight: 800;
-      background: var(--ai-grad);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      filter: drop-shadow(0 0 15px rgba(0, 242, 255, 0.3));
-    }
-
-    /* MIC BUTONU - Enerji Çekirdeği */
-    .btn-mic {
-      width: 70px;
-      height: 70px;
-      border-radius: 50%;
-      background: #000;
-      border: 2px solid var(--glass-border);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      cursor: pointer;
-      transition: 0.4s;
-    }
-
-    .top .btn-mic svg { stroke: var(--accent-neon); }
-    .bottom .btn-mic svg { stroke: var(--accent-magenta); }
-
-    .btn-mic.listening {
-      box-shadow: 0 0 30px var(--accent-neon);
-      border-color: var(--accent-neon);
-    }
-
-    /* ✅ MERKEZ HUB (LOGO ÜSTE BİNMEYECEK ŞEKİLDE AYRILDI) */
+    /* HUB (ORTA BÖLGE) - Pencerelerin binmesini engelleyen bariyer */
     .center-hub {
-      position: relative;
-      height: 90px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(2, 2, 5, 0.9);
-      backdrop-filter: blur(20px);
-      z-index: 500;
-      border-top: 1px solid var(--glass-border);
-      border-bottom: 1px solid var(--glass-border);
+      height: 90px; position: relative; z-index: 1000;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.8); backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
     }
 
-    .hub-row {
-      display: flex;
-      align-items: center;
-      gap: 25px;
-    }
+    .hub-content { display: flex; align-items: center; gap: 20px; }
 
     .logo-capsule {
-      padding: 10px 25px;
-      border-radius: 100px;
-      background: #000;
-      border: 1px solid var(--accent-neon);
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      box-shadow: 0 0 20px rgba(0, 242, 255, 0.15);
+      padding: 10px 25px; border-radius: 100px; border: 1px solid var(--border);
+      background: #000; display: flex; align-items: center; gap: 10px;
+      box-shadow: 0 0 30px rgba(255,255,255,0.05); cursor: pointer;
     }
 
-    .logo-text {
-      font-family: 'Space Grotesk', sans-serif;
-      font-weight: 700;
-      font-size: 16px;
-      letter-spacing: 2px;
+    .logo-text { 
+      font-family: 'Space Grotesk', sans-serif; font-weight: 300; 
+      letter-spacing: 5px; font-size: 16px; 
     }
 
     .hub-link {
-      font-size: 10px;
-      text-transform: uppercase;
-      font-weight: 900;
-      letter-spacing: 1.5px;
-      opacity: 0.5;
-      cursor: pointer;
-      transition: 0.3s;
+      font-size: 10px; font-weight: 900; letter-spacing: 2px;
+      text-transform: uppercase; opacity: 0.4; cursor: pointer;
     }
 
-    .hub-link:hover { opacity: 1; color: var(--accent-neon); }
+    /* DİL SEÇİCİ */
+    .lang-trigger {
+      background: var(--glass); border: 1px solid var(--border);
+      padding: 8px 20px; border-radius: 100px; color: #fff;
+      font-size: 11px; font-weight: 600; letter-spacing: 1px;
+    }
 
-    /* POPOVER - Yüzen Arayüz */
+    /* POPOVERS - Logoya binmeyecek şekilde konumlandırıldı */
     .popover {
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 90%;
-      max-width: 350px;
-      background: rgba(10, 10, 20, 0.95);
-      backdrop-filter: blur(30px);
-      border: 1px solid var(--glass-border);
-      border-radius: 30px;
-      z-index: 2000;
-      height: 60vh;
+      position: absolute; left: 50%; transform: translateX(-50%);
+      width: 90%; max-width: 400px; height: 320px;
+      background: rgba(10, 10, 10, 0.98); backdrop-filter: blur(40px);
+      border: 1px solid var(--border); border-radius: 30px;
+      display: none; flex-direction: column; z-index: 2000;
+      box-shadow: 0 40px 100px rgba(0,0,0,1);
     }
-    
-    .half-screen.top .popover { top: 80px; transform: translateX(-50%) rotate(180deg); }
-    .half-screen.bottom .popover { bottom: 80px; }
+    .popover.show { display: flex; }
 
-    /* Animasyonlu Ses Dalgaları (Logo İçinde) */
-    .logo-wave {
-      display: flex;
-      gap: 3px;
+    /* Üst taraf dönük olduğu için popover da düz görünmesi için içten döner */
+    .half-screen.top .popover { top: 70px; transform: translateX(-50%) rotate(180deg); }
+    .half-screen.bottom .popover { bottom: 70px; }
+
+    /* CHAT BUBBLES */
+    .chat-body {
+      flex: 1; width: 100%; display: flex; flex-direction: column;
+      justify-content: center; gap: 15px; overflow-y: auto; scrollbar-width: none;
     }
-    .logo-wave .bar {
-      width: 2px;
-      height: 12px;
-      background: var(--accent-neon);
-      border-radius: 2px;
-      animation: neonPulse 1s infinite;
+
+    .bubble.me.is-latest .txt {
+      font-size: 38px; font-weight: 200; line-height: 1;
+      letter-spacing: -1px; text-align: center;
+      background: linear-gradient(to right, #fff, rgba(255,255,255,0.3));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     }
-    @keyframes neonPulse {
-      0%, 100% { height: 8px; opacity: 0.3; }
-      50% { height: 18px; opacity: 1; }
+
+    /* MİKROFON */
+    .btn-mic {
+      width: 80px; height: 80px; border-radius: 100%;
+      border: 1px solid var(--border); background: transparent;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; position: relative; transition: 0.3s;
+    }
+
+    .top .btn-mic svg { stroke: var(--accent-top); }
+    .bottom .btn-mic svg { stroke: var(--accent-bot); }
+
+    .btn-mic.listening {
+      border-color: #fff; box-shadow: 0 0 40px rgba(255,255,255,0.1);
+    }
+
+    .btn-mic.listening::after {
+      content: ""; position: absolute; inset: -5px;
+      border: 1px solid #fff; border-radius: 100%;
+      animation: ripple 1.5s infinite;
+    }
+
+    @keyframes ripple {
+      0% { transform: scale(1); opacity: 0.5; }
+      100% { transform: scale(1.4); opacity: 0; }
     }
   </style>
 </head>
@@ -222,59 +141,82 @@
   <div class="container">
 
     <div class="half-screen top" id="topSection">
-      <button class="lang-trigger" id="topLangBtn">
-        <span id="topLangTxt">ENG — QUANTUM</span>
-      </button>
-
+      <button class="lang-trigger" id="topLangBtn">🇬🇧 ENGLISH — QUANTUM</button>
+      
       <div class="popover" id="pop-top">
-        <div class="pop-head"><div class="pop-title">SOURCE SELECT</div><button class="pop-close" id="close-top">✕</button></div>
-        <div class="pop-list" id="list-top"></div>
+        <div style="padding:20px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between;">
+          <span style="font-size:10px; font-weight:900; letter-spacing:2px;">SELECT SOURCE</span>
+          <button id="close-top" style="background:none; border:none; color:#fff; cursor:pointer;">✕</button>
+        </div>
+        <div class="pop-list" id="list-top" style="overflow-y:auto; padding:10px;"></div>
       </div>
 
       <div class="chat-body" id="topBody"></div>
 
       <div class="mic-wrap">
         <button class="btn-mic" id="topMic">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 11v1a7 7 0 0 1-14 0v-1"/><path d="M12 19v3"/></svg>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 11v1a7 7 0 0 1-14 0v-1"/><path d="M12 19v3"/></svg>
         </button>
       </div>
     </div>
 
     <div class="center-hub">
-      <div class="hub-row">
-        <div class="hub-link home" id="homeLink">Orbit</div>
-        
+      <div class="hub-content">
+        <div class="hub-link" id="homeLink">Orbit</div>
         <div class="logo-capsule" id="homeBtn">
-          <div class="logo-wave">
-            <div class="bar"></div><div class="bar"></div><div class="bar"></div>
-          </div>
-          <span class="logo-text">ITALKY<span style="color:var(--accent-neon)">AI</span></span>
+          <span class="logo-text">ITALKY<span style="opacity:0.5">AI</span></span>
         </div>
-
-        <div class="hub-link clear" id="clearLink">Purge</div>
+        <div class="hub-link" id="clearLink">Purge</div>
       </div>
     </div>
 
     <div class="half-screen bottom" id="botSection">
-      <button class="lang-trigger" id="botLangBtn">
-        <span id="botLangTxt">TR — NATIVE</span>
-      </button>
+      <button class="lang-trigger" id="botLangBtn">🇹🇷 TÜRKÇE — NATIVE</button>
 
       <div class="popover" id="pop-bot">
-        <div class="pop-head"><div class="pop-title">TARGET SELECT</div><button class="pop-close" id="close-bot">✕</button></div>
-        <div class="pop-list" id="list-bot"></div>
+        <div style="padding:20px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between;">
+          <span style="font-size:10px; font-weight:900; letter-spacing:2px;">SELECT TARGET</span>
+          <button id="close-bot" style="background:none; border:none; color:#fff; cursor:pointer;">✕</button>
+        </div>
+        <div class="pop-list" id="list-bot" style="overflow-y:auto; padding:10px;"></div>
       </div>
 
       <div class="chat-body" id="botBody"></div>
 
       <div class="mic-wrap">
         <button class="btn-mic" id="botMic">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 11v1a7 7 0 0 1-14 0v-1"/><path d="M12 19v3"/></svg>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 11v1a7 7 0 0 1-14 0v-1"/><path d="M12 19v3"/></svg>
         </button>
       </div>
     </div>
+
   </div>
 
   <script type="module" src="/js/facetoface_page.js?v=20260219_2"></script>
+  
+  <script>
+    // Minimal UI Mantığı
+    const HOME = '/pages/home.html';
+    document.getElementById('homeBtn')?.addEventListener('click', ()=> location.href = HOME);
+    document.getElementById('homeLink')?.addEventListener('click', ()=> location.href = HOME);
+    
+    document.getElementById('clearLink')?.addEventListener('click', ()=>{
+      document.getElementById('topBody').innerHTML='';
+      document.getElementById('botBody').innerHTML='';
+      window.speechSynthesis?.cancel?.();
+    });
+
+    // Pencereleri açma/kapama mantığı (Örnek)
+    const setupPop = (btnId, popId, closeId) => {
+      const btn = document.getElementById(btnId);
+      const pop = document.getElementById(popId);
+      const close = document.getElementById(closeId);
+      btn?.addEventListener('click', () => pop.classList.add('show'));
+      close?.addEventListener('click', () => pop.classList.remove('show'));
+    };
+
+    setupPop('topLangBtn', 'pop-top', 'close-top');
+    setupPop('botLangBtn', 'pop-bot', 'close-bot');
+  </script>
 </body>
 </html>
