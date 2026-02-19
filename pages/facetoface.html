@@ -1,4 +1,3 @@
-<!-- FILE: /pages/facetoface.html -->
 <!doctype html>
 <html lang="tr">
 <head>
@@ -46,6 +45,7 @@
       overflow:hidden;
     }
 
+    /* ✅ Karşı taraf için: ÜST tarafın her şeyi 180° (yazılar da ters olacak) */
     .half-screen.top{
       background: linear-gradient(to bottom, #1a0208, var(--brand-burgundy));
       transform: rotate(180deg);
@@ -96,7 +96,8 @@
       box-shadow: 0 22px 46px rgba(0,0,0,.80);
       display:none;
       flex-direction:column;
-      z-index: 2000;
+      /* ✅ popover açılır ama mic’i engellemesin diye sadece kendi alanında */
+      z-index: 260;
       overflow:hidden;
     }
     .popover.show{display:flex;}
@@ -135,8 +136,9 @@
     .pop-name{font-weight:900; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:190px;}
     .pop-code{font-size:12px; font-weight:900; opacity:.7; text-transform:uppercase;}
 
-    .top .popover{ top: calc(62px + var(--safe-top)); }
-    .bottom .popover{ bottom: 120px; }
+    /* ✅ popover’lar logodan uzak */
+    .top .popover{ top: calc(88px + var(--safe-top)); }
+    .bottom .popover{ bottom: 148px; }
 
     /* CHAT */
     .chat-body{
@@ -226,7 +228,6 @@
       box-shadow: 0 14px 30px rgba(0,0,0,.65);
       transition: transform .18s, border-color .18s, box-shadow .18s;
       position:relative;
-      user-select:none;
     }
     .btn-mic svg{
       width:34px; height:34px;
@@ -272,16 +273,12 @@
       align-items:center;
       justify-content:center;
       z-index:120;
-      pointer-events:none;
+      pointer-events:none; /* ✅ boş alan mic’i bloklamasın */
     }
 
-    .hub-row{
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:14px;
-      pointer-events:auto;
-    }
+    /* ✅ sadece butonlar tıklansın, boş kısım TIKLAMAYI ENGELLEMESİN */
+    .hub-row{ display:flex; align-items:center; justify-content:center; gap:14px; pointer-events:none; }
+    .hub-link, .logo-capsule{ pointer-events:auto; }
 
     .hub-link{
       font-size: 12px;
@@ -312,7 +309,6 @@
       align-items:center;
       gap:12px;
       box-shadow: 0 24px 50px rgba(0,0,0,.78);
-      pointer-events:auto;
       cursor:pointer;
       position:relative;
       overflow:hidden;
@@ -355,21 +351,16 @@
     .logo-wave .bar:nth-child(5){animation-delay:.0s}
     @keyframes bounce{0%,100%{height:10px} 50%{height:40px}}
 
+    /* ✅ Logo yön mantığı:
+       - REC top: 180
+       - REC bot: 0
+       - Speak top: 180
+       - Speak bot: 0
+    */
     #frameRoot.focus-top .logo-capsule{ transform: translateY(-18px) rotate(180deg); }
     #frameRoot.focus-bot .logo-capsule{ transform: translateY(18px) rotate(0deg); }
-    #frameRoot.spk-top .logo-capsule{ transform: translateY(-14px) rotate(180deg) scale(1.02); }
-    #frameRoot.spk-bot .logo-capsule{ transform: translateY(14px) rotate(0deg) scale(1.02); }
-
-    /* =========================================================
-       ✅ ANDROID WEBVIEW CLICK FIX (ROTATE BUG)
-       Top panel ters; tıklanabilir katmanları tekrar düz çevir
-       ========================================================= */
-    .half-screen.top .top-top,
-    .half-screen.top .chat-body,
-    .half-screen.top .mic-wrap,
-    .half-screen.top .popover{
-      transform: rotate(180deg);
-    }
+    #frameRoot.spk-top  .logo-capsule{ transform: translateY(-14px) rotate(180deg) scale(1.02); }
+    #frameRoot.spk-bot  .logo-capsule{ transform: translateY(14px) rotate(0deg) scale(1.02); }
   </style>
 </head>
 
@@ -377,9 +368,8 @@
   <div class="container">
 
     <div class="half-screen top" id="topSection">
-
       <div class="top-top">
-        <button class="lang-trigger" id="topLangBtn" type="button">
+        <button class="lang-trigger" id="topLangBtn">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 0 20"/>
           </svg>
@@ -390,7 +380,7 @@
       <div class="popover" id="pop-top" role="dialog" aria-label="Üst dil seçimi">
         <div class="pop-head">
           <div class="pop-title">ÜST DİL</div>
-          <button class="pop-close" id="close-top" type="button" aria-label="Kapat">✕</button>
+          <button class="pop-close" id="close-top" aria-label="Kapat">✕</button>
         </div>
         <div class="pop-list" id="list-top"></div>
       </div>
@@ -398,7 +388,7 @@
       <div class="chat-body" id="topBody"></div>
 
       <div class="mic-wrap">
-        <button class="btn-mic" id="topMic" type="button" title="Mikrofon">
+        <button class="btn-mic" id="topMic" title="Mikrofon">
           <svg viewBox="0 0 24 24">
             <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
             <path d="M19 11v1a7 7 0 0 1-14 0v-1"/>
@@ -425,7 +415,7 @@
 
     <div class="half-screen bottom" id="botSection">
       <div class="bottom-top">
-        <button class="lang-trigger" id="botLangBtn" type="button">
+        <button class="lang-trigger" id="botLangBtn">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 0 20"/>
           </svg>
@@ -436,7 +426,7 @@
       <div class="popover" id="pop-bot" role="dialog" aria-label="Alt dil seçimi">
         <div class="pop-head">
           <div class="pop-title">ALT DİL</div>
-          <button class="pop-close" id="close-bot" type="button" aria-label="Kapat">✕</button>
+          <button class="pop-close" id="close-bot" aria-label="Kapat">✕</button>
         </div>
         <div class="pop-list" id="list-bot"></div>
       </div>
@@ -444,7 +434,7 @@
       <div class="chat-body" id="botBody"></div>
 
       <div class="mic-wrap">
-        <button class="btn-mic" id="botMic" type="button" title="Mikrofon">
+        <button class="btn-mic" id="botMic" title="Mikrofon">
           <svg viewBox="0 0 24 24">
             <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
             <path d="M19 11v1a7 7 0 0 1-14 0v-1"/>
@@ -455,8 +445,8 @@
     </div>
   </div>
 
-  <!-- ✅ JS -->
-  <script type="module" src="/js/facetoface_page.js?v=20260219_fix1"></script>
+  <!-- JS -->
+  <script type="module" src="/js/facetoface_page.js?v=20260219_fix2"></script>
 
   <script>
     const HOME = '/pages/home.html';
@@ -477,6 +467,7 @@
     }
     document.getElementById('clearLink')?.addEventListener('click', doClear);
 
+    // ✅ Logo state: son ses hangi taraftan geldiyse orada kalsın
     let lastSpeaker = "bot";
 
     function applySpeaker(){
@@ -485,6 +476,7 @@
       root.classList.toggle('spk-bot', lastSpeaker === "bot");
     }
 
+    // mic dinliyorsa focus
     const moMic = new MutationObserver(()=>{
       const topOn = topMic?.classList.contains('listening');
       const botOn = botMic?.classList.contains('listening');
@@ -508,6 +500,7 @@
     if(topMic) moMic.observe(topMic, { attributes:true, attributeFilter:['class'] });
     if(botMic) moMic.observe(botMic, { attributes:true, attributeFilter:['class'] });
 
+    // Çeviri balonu hangi tarafa geldiyse speaker tarafı orası
     const moTop = new MutationObserver((mut)=>{
       for(const m of mut){
         for(const n of m.addedNodes){
@@ -533,6 +526,15 @@
 
     if(topBody) moTop.observe(topBody, { childList:true });
     if(botBody) moBot.observe(botBody, { childList:true });
+
+    // ✅ JS tarafı “ses başladı” diye haber verirse logo o tarafa döner
+    window.addEventListener("italky_speak_side", (e)=>{
+      const side = e?.detail?.side;
+      if(side === "top" || side === "bot"){
+        lastSpeaker = side;
+        applySpeaker();
+      }
+    });
 
     applySpeaker();
   </script>
