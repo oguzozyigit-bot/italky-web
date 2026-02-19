@@ -1,9 +1,10 @@
+<!-- FILE: /pages/facetoface.html -->
 <!doctype html>
 <html lang="tr">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-  <title>italkyAI • Karşılıklı Çeviri</title>
+  <title>italkyAI • Karşılıklı Çeviri Nitro</title>
   <link rel="icon" href="data:," />
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,7 +18,7 @@
       --brand-lacivert:#0f172a;
 
       --text:#fff;
-      --muted:rgba(255,255,255,.45);
+      --muted:rgba(255,255,255,.55);
 
       --icon-bordo:#8b2635;
       --mic-navy:#5b76ff;
@@ -26,13 +27,16 @@
 
       --safe-top: env(safe-area-inset-top, 0px);
       --safe-bottom: env(safe-area-inset-bottom, 0px);
+
+      --green: #34d399; /* listening highlight */
     }
 
     *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none;}
     html,body{margin:0; width:100%; height:100%; background:var(--bg-void); color:var(--text); font-family:Outfit,sans-serif; overflow:hidden;}
+    body{min-height:100dvh;}
     .container{position:relative; width:100%; height:100%; display:flex; flex-direction:column;}
 
-    /* PANELS */
+    /* ✅ PANELLER */
     .half-screen{
       flex:1;
       position:relative;
@@ -40,15 +44,13 @@
       flex-direction:column;
       align-items:center;
       justify-content:space-between;
-      padding: calc(16px + var(--safe-top)) 18px calc(16px + var(--safe-bottom));
+      padding: calc(14px + var(--safe-top)) 18px calc(14px + var(--safe-bottom));
       gap:14px;
       overflow:hidden;
     }
-
-    /* ✅ Karşı taraf için: ÜST tarafın her şeyi 180° (yazılar da ters olacak) */
     .half-screen.top{
       background: linear-gradient(to bottom, #1a0208, var(--brand-burgundy));
-      transform: rotate(180deg);
+      transform: rotate(180deg); /* ✅ üst taraf komple 180 */
       --mic-accent: var(--mic-navy);
     }
     .half-screen.bottom{
@@ -56,13 +58,14 @@
       --mic-accent: var(--icon-bordo);
     }
 
+    /* Üst dil buton şeridi */
     .top-top, .bottom-top{
       width:100%;
       display:flex;
       align-items:center;
       justify-content:center;
-      z-index:110;
-      padding-top: 6px;
+      z-index: 420;
+      padding-top: 2px;
     }
 
     .lang-trigger{
@@ -83,26 +86,33 @@
     }
     .lang-trigger svg{width:14px; height:14px; opacity:.7}
 
-    /* POPOVER */
+    /* ✅ POPOVER (dil seçimi) */
     .popover{
       position:absolute;
       left:50%;
       transform: translateX(-50%);
-      width:min(280px, calc(100vw - 60px));
-      height:320px;
+      width:min(320px, calc(100vw - 46px));
+      height: 360px;
       background: radial-gradient(circle at 50% 50%, #2a020f 0%, #12000a 58%, #060006 100%);
       border: 1px solid rgba(139,38,53,.28);
       border-radius: 22px;
       box-shadow: 0 22px 46px rgba(0,0,0,.80);
       display:none;
       flex-direction:column;
-      /* ✅ popover açılır ama mic’i engellemesin diye sadece kendi alanında */
-      z-index: 260;
+      z-index: 999;
       overflow:hidden;
+      backdrop-filter: blur(12px);
     }
     .popover.show{display:flex;}
-    .pop-head{padding:12px; border-bottom:1px solid rgba(255,255,255,.06); display:flex; align-items:center; justify-content:space-between;}
-    .pop-title{font-weight:900; font-size:12px; opacity:.9; letter-spacing:.3px;}
+    .pop-head{
+      padding:12px;
+      border-bottom:1px solid rgba(255,255,255,.06);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .pop-title{font-weight:900; font-size:12px; opacity:.92; letter-spacing:.3px;}
     .pop-close{
       width:34px; height:34px; border-radius:14px;
       border:1px solid rgba(255,255,255,.10);
@@ -111,7 +121,6 @@
       display:flex; align-items:center; justify-content:center;
     }
     .pop-close:active{transform:scale(.96);}
-
     .pop-list{ flex:1; overflow:auto; padding:10px; scrollbar-width:none; }
     .pop-list::-webkit-scrollbar{ width:0; height:0; display:none; }
 
@@ -124,7 +133,9 @@
       cursor:pointer;
       border:1px solid transparent;
       user-select:none;
+      transition: background .12s ease, transform .12s ease;
     }
+    .pop-item:active{ transform: scale(.99); }
     .pop-item:hover{background: rgba(255,255,255,.04);}
     .pop-item.active{
       background: rgba(139,38,53,.10);
@@ -133,14 +144,14 @@
     }
     .pop-left{display:flex; align-items:center; gap:10px; min-width:0;}
     .pop-flag{font-size:18px}
-    .pop-name{font-weight:900; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:190px;}
+    .pop-name{font-weight:900; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:210px;}
     .pop-code{font-size:12px; font-weight:900; opacity:.7; text-transform:uppercase;}
 
-    /* ✅ popover’lar logodan uzak */
-    .top .popover{ top: calc(88px + var(--safe-top)); }
-    .bottom .popover{ bottom: 148px; }
+    /* Popover konumu – ortadaki logoya binmesin */
+    .half-screen.top .popover{ top: calc(62px + var(--safe-top)); }
+    .half-screen.bottom .popover{ bottom: 132px; }
 
-    /* CHAT */
+    /* ✅ CHAT */
     .chat-body{
       flex:1;
       width:100%;
@@ -181,10 +192,22 @@
     }
     .bubble.me.is-latest .txt{
       color:#fff;
-      font-size:26px;
+      font-size:28px;
       font-weight:950;
       line-height:1.1;
       letter-spacing:.2px;
+      position: relative;
+    }
+    .bubble.me.is-latest .txt::after{
+      content:"";
+      position:absolute;
+      left:0; right:0;
+      bottom:-7px;
+      height:3px;
+      border-radius: 3px;
+      background: var(--ai-grad);
+      box-shadow: 0 2px 10px rgba(99,102,241,0.5);
+      opacity:.9;
     }
 
     .bubble .spk{
@@ -205,25 +228,24 @@
     .bubble .spk svg{width:16px; height:16px;}
     .bubble .spk:active{transform:scale(.95);}
 
-    /* MIC */
+    /* ✅ MIC */
     .mic-wrap{
       width:100%;
       display:flex;
       align-items:center;
       justify-content:center;
-      padding-bottom: 4px;
+      padding-bottom: 2px;
       z-index: 60;
     }
-
     .btn-mic{
-      width:78px;
-      height:78px;
-      border-radius:26px;
+      width:80px;
+      height:80px;
+      border-radius:28px;
       cursor:pointer;
       display:flex;
       align-items:center;
       justify-content:center;
-      background: radial-gradient(circle at 50% 50%, #2a020f 0%, #12000a 58%, #060006 100%);
+      background: radial-gradient(circle, #2a020f 0%, #060006 100%);
       border: 1px solid rgba(255,255,255,.10);
       box-shadow: 0 14px 30px rgba(0,0,0,.65);
       transition: transform .18s, border-color .18s, box-shadow .18s;
@@ -236,13 +258,12 @@
       stroke-width:2;
       stroke-linecap:round; stroke-linejoin:round;
     }
-
     @keyframes recPulse{
       0%,100%{ transform: scale(1); box-shadow: 0 14px 30px rgba(0,0,0,.65); }
       50%{ transform: scale(1.06); box-shadow: 0 18px 40px rgba(0,0,0,.75); }
     }
     .btn-mic.listening{
-      border-color: rgba(255,255,255,.18);
+      border-color: rgba(52,211,153,.55);
       animation: recPulse 0.9s ease-in-out infinite;
     }
     .btn-mic.listening::after{
@@ -261,24 +282,28 @@
     }
     .btn-mic:active{transform:scale(1.02);}
 
-    /* CENTER HUB */
+    /* ✅ CENTER HUB (tıklamayı mic’lerden çalmaz) */
     .center-hub{
       position:absolute;
       top:50%;
       left:0;
       width:100%;
-      height:74px;
+      height: 78px;
       transform: translateY(-50%);
       display:flex;
       align-items:center;
       justify-content:center;
-      z-index:120;
-      pointer-events:none; /* ✅ boş alan mic’i bloklamasın */
+      z-index: 300;
+      pointer-events:none; /* ✅ cam yok */
     }
-
-    /* ✅ sadece butonlar tıklansın, boş kısım TIKLAMAYI ENGELLEMESİN */
-    .hub-row{ display:flex; align-items:center; justify-content:center; gap:14px; pointer-events:none; }
-    .hub-link, .logo-capsule{ pointer-events:auto; }
+    .hub-row{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:14px;
+      pointer-events:none; /* ✅ row da pasif */
+    }
+    .hub-link, .logo-capsule{ pointer-events:auto; } /* ✅ sadece bunlar aktif */
 
     .hub-link{
       font-size: 12px;
@@ -287,7 +312,7 @@
       opacity: .95;
       cursor:pointer;
       user-select:none;
-      padding: 10px 10px;
+      padding: 10px 12px;
       border-radius: 999px;
       border: 1px solid rgba(255,255,255,.10);
       background: rgba(0,0,0,.14);
@@ -300,9 +325,10 @@
     .hub-link.home{ color: rgba(165,180,252,.95); }
     .hub-link.clear{ color: rgba(255,170,190,.92); }
 
+    /* ✅ LOGO + S-WAVE */
     .logo-capsule{
       background:#02000a;
-      border:1px solid rgba(255,255,255,.10);
+      border:1px solid rgba(255,255,255,.12);
       padding:12px 22px;
       border-radius:999px;
       display:flex;
@@ -312,7 +338,6 @@
       cursor:pointer;
       position:relative;
       overflow:hidden;
-
       transition: transform .38s cubic-bezier(.22,1,.36,1);
       will-change: transform;
     }
@@ -340,33 +365,36 @@
     }
     #frameRoot.listening .logo-wave{opacity:1;}
     .logo-wave .bar{
-      width:3px; height:10px;
-      border-radius:3px;
-      background: rgba(165,180,252,.42);
-      animation: bounce 0.9s infinite ease-in-out;
+      width:4px;
+      border-radius:4px;
+      background: rgba(165,180,252,.55);
+      animation: sWaveBounce 0.8s infinite ease-in-out;
     }
-    .logo-wave .bar:nth-child(2){animation-delay:.15s}
-    .logo-wave .bar:nth-child(3){animation-delay:.28s}
-    .logo-wave .bar:nth-child(4){animation-delay:.15s}
-    .logo-wave .bar:nth-child(5){animation-delay:.0s}
-    @keyframes bounce{0%,100%{height:10px} 50%{height:40px}}
+    .logo-wave .bar:nth-child(1){ animation-delay: 0.1s; height: 10px; }
+    .logo-wave .bar:nth-child(2){ animation-delay: 0.3s; height: 20px; }
+    .logo-wave .bar:nth-child(3){ animation-delay: 0.5s; height: 35px; }
+    .logo-wave .bar:nth-child(4){ animation-delay: 0.3s; height: 20px; }
+    .logo-wave .bar:nth-child(5){ animation-delay: 0.1s; height: 10px; }
 
-    /* ✅ Logo yön mantığı:
-       - REC top: 180
-       - REC bot: 0
-       - Speak top: 180
-       - Speak bot: 0
-    */
-    #frameRoot.focus-top .logo-capsule{ transform: translateY(-18px) rotate(180deg); }
-    #frameRoot.focus-bot .logo-capsule{ transform: translateY(18px) rotate(0deg); }
-    #frameRoot.spk-top  .logo-capsule{ transform: translateY(-14px) rotate(180deg) scale(1.02); }
-    #frameRoot.spk-bot  .logo-capsule{ transform: translateY(14px) rotate(0deg) scale(1.02); }
+    @keyframes sWaveBounce{
+      0%,100%{ transform: scaleY(1); opacity: 0.45; }
+      50%{ transform: scaleY(2.2); opacity: 1; filter: blur(1px); }
+    }
+
+    /* ✅ Logo davranışı
+       - mic basınca focus-top/focus-bot
+       - çeviri/ses tarafı spk-top/spk-bot */
+    #frameRoot.focus-top .logo-capsule{ transform: translateY(-20px) rotate(180deg); }
+    #frameRoot.focus-bot .logo-capsule{ transform: translateY(20px) rotate(0deg); }
+    #frameRoot.spk-top   .logo-capsule{ transform: translateY(-14px) rotate(180deg) scale(1.02); }
+    #frameRoot.spk-bot   .logo-capsule{ transform: translateY(14px) rotate(0deg) scale(1.02); }
   </style>
 </head>
 
 <body id="frameRoot">
   <div class="container">
 
+    <!-- TOP PANEL (180°) -->
     <div class="half-screen top" id="topSection">
       <div class="top-top">
         <button class="lang-trigger" id="topLangBtn">
@@ -398,7 +426,8 @@
       </div>
     </div>
 
-    <div class="center-hub">
+    <!-- CENTER HUB -->
+    <div class="center-hub" aria-hidden="false">
       <div class="hub-row">
         <div class="hub-link home" id="homeLink" title="Ana sayfa">Ana Sayfa</div>
 
@@ -413,6 +442,7 @@
       </div>
     </div>
 
+    <!-- BOTTOM PANEL -->
     <div class="half-screen bottom" id="botSection">
       <div class="bottom-top">
         <button class="lang-trigger" id="botLangBtn">
@@ -445,68 +475,55 @@
     </div>
   </div>
 
-  <!-- JS -->
-  <script type="module" src="/js/facetoface_page.js?v=20260219_fix2"></script>
+  <!-- ✅ ÇALIŞAN MOTOR -->
+  <script type="module" src="/js/facetoface_page.js?v=20260219_1"></script>
 
+  <!-- ✅ Logo yön/kalma mantığı (UI) -->
   <script>
-    const HOME = '/pages/home.html';
     const root = document.getElementById('frameRoot');
     const topMic = document.getElementById('topMic');
     const botMic = document.getElementById('botMic');
     const topBody = document.getElementById('topBody');
     const botBody = document.getElementById('botBody');
 
-    document.getElementById('homeBtn')?.addEventListener('click', ()=> location.href = HOME);
-    document.getElementById('homeLink')?.addEventListener('click', ()=> location.href = HOME);
+    // hoparlör tarafı hafızası
+    let lastSpeaker = "bot"; // default
 
-    function doClear(){
-      try{ topBody.innerHTML=''; }catch{}
-      try{ botBody.innerHTML=''; }catch{}
-      try{ window.speechSynthesis?.cancel?.(); }catch{}
-      try{ window.NativeTTS?.stop?.(); }catch{}
+    function setMode(mode){
+      // mode: focus-top/focus-bot/spk-top/spk-bot/none
+      root.classList.remove('focus-top','focus-bot','spk-top','spk-bot');
+      if(mode) root.classList.add(mode);
     }
-    document.getElementById('clearLink')?.addEventListener('click', doClear);
-
-    // ✅ Logo state: son ses hangi taraftan geldiyse orada kalsın
-    let lastSpeaker = "bot";
-
     function applySpeaker(){
-      root.classList.remove('focus-top','focus-bot');
-      root.classList.toggle('spk-top', lastSpeaker === "top");
-      root.classList.toggle('spk-bot', lastSpeaker === "bot");
+      setMode(lastSpeaker === "top" ? "spk-top" : "spk-bot");
     }
 
-    // mic dinliyorsa focus
+    // mic dinliyorsa focus, bitince speaker’a dön
     const moMic = new MutationObserver(()=>{
       const topOn = topMic?.classList.contains('listening');
       const botOn = botMic?.classList.contains('listening');
 
       if(topOn){
         root.classList.add('listening');
-        root.classList.remove('spk-top','spk-bot');
-        root.classList.add('focus-top');
-        root.classList.remove('focus-bot');
+        setMode("focus-top");
       }else if(botOn){
         root.classList.add('listening');
-        root.classList.remove('spk-top','spk-bot');
-        root.classList.add('focus-bot');
-        root.classList.remove('focus-top');
+        setMode("focus-bot");
       }else{
         root.classList.remove('listening');
         applySpeaker();
       }
     });
-
     if(topMic) moMic.observe(topMic, { attributes:true, attributeFilter:['class'] });
     if(botMic) moMic.observe(botMic, { attributes:true, attributeFilter:['class'] });
 
-    // Çeviri balonu hangi tarafa geldiyse speaker tarafı orası
+    // çeviri balonu hangi tarafa geldiyse speaker odur
     const moTop = new MutationObserver((mut)=>{
       for(const m of mut){
         for(const n of m.addedNodes){
           if(n && n.classList && n.classList.contains('bubble') && n.classList.contains('me')){
             lastSpeaker = "top";
-            applySpeaker();
+            if(!root.classList.contains('listening')) applySpeaker();
             return;
           }
         }
@@ -517,25 +534,33 @@
         for(const n of m.addedNodes){
           if(n && n.classList && n.classList.contains('bubble') && n.classList.contains('me')){
             lastSpeaker = "bot";
-            applySpeaker();
+            if(!root.classList.contains('listening')) applySpeaker();
             return;
           }
         }
       }
     });
-
     if(topBody) moTop.observe(topBody, { childList:true });
     if(botBody) moBot.observe(botBody, { childList:true });
 
-    // ✅ JS tarafı “ses başladı” diye haber verirse logo o tarafa döner
-    window.addEventListener("italky_speak_side", (e)=>{
-      const side = e?.detail?.side;
-      if(side === "top" || side === "bot"){
-        lastSpeaker = side;
-        applySpeaker();
-      }
-    });
+    // kullanıcı hoparlör ikonuna basarsa da o taraf “speaker” olsun
+    document.addEventListener("click",(e)=>{
+      const spkBtn = e.target && e.target.closest ? e.target.closest(".bubble.me .spk") : null;
+      if(!spkBtn) return;
 
+      const bubble = spkBtn.closest(".bubble.me");
+      if(!bubble) return;
+
+      // hangi panel içinde?
+      const inTop = !!bubble.closest("#topBody");
+      const inBot = !!bubble.closest("#botBody");
+      if(inTop) lastSpeaker = "top";
+      else if(inBot) lastSpeaker = "bot";
+
+      if(!root.classList.contains('listening')) applySpeaker();
+    }, true);
+
+    // ilk açılış
     applySpeaker();
   </script>
 </body>
