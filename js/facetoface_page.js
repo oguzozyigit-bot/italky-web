@@ -108,7 +108,7 @@ function canonicalLangCode(code){
   return c.split("-")[0];
 }
 
-// ✅ API uyumu
+// ✅ API uyumu: pt-br/zh-tw -> pt/zh
 function normalizeApiLang(code){
   return canonicalLangCode(code);
 }
@@ -167,15 +167,21 @@ async function ensureFacetofaceSession(){
 
 /* ===============================
    TTS ✅ (Android WebView fix)
+   - stop()
+   - kısa bekleme
+   - speak()
    =============================== */
 function speak(text, langCode){
   const t = String(text||"").trim();
   if(!t) return;
 
+  // debug (istersen sonra sil)
+  try{ console.log("NativeTTS:", typeof window.NativeTTS); }catch{}
+
   // ✅ APK NativeTTS
   if(window.NativeTTS && typeof window.NativeTTS.speak === "function"){
     try{ window.NativeTTS.stop?.(); }catch{}
-    // ✅ kilit çözümü: 220ms bekle
+    // ✅ kilit çözümü: kısa bekleme
     setTimeout(()=>{
       try{ window.NativeTTS.speak(t, String(langCode||"en")); }catch(e){
         console.warn("NativeTTS.speak failed:", e);
@@ -417,7 +423,6 @@ async function start(which){
 
       addBubble(other, "me", translated, speakLang);
 
-      // ✅ mic kapandıktan sonra TTS (Android fix zaten speak içinde)
       setTimeout(()=> speak(translated, speakLang), 120);
     }
   };
@@ -432,7 +437,6 @@ async function start(which){
 function bindNav(){
   $("homeBtn")?.addEventListener("click", ()=> location.href = HOME_PATH);
   $("homeLink")?.addEventListener("click", ()=> location.href = HOME_PATH);
-
   $("clearLink")?.addEventListener("click", ()=> clearChat());
 }
 function bindLangButtons(){
@@ -460,7 +464,6 @@ document.addEventListener("DOMContentLoaded", async ()=>{
 
   bindNav(); bindLangButtons(); bindMicButtons();
 
-  // voice preload (web)
   try{ window.speechSynthesis?.getVoices?.(); }catch{}
 
   document.addEventListener("click",(e)=>{
