@@ -1,331 +1,490 @@
-// FILE: /js/document_page.js  (FINAL)
-import { STORAGE_KEY } from "/js/config.js";
-import { apiPOST } from "/js/api.js";
+// FILE: /js/facetoface_page.js
+import { getSiteLang } from "/js/i18n.js";
+import { supabase } from "/js/supabase_client.js";
+import { ensureAuthAndCacheUser } from "/js/auth.js";
+import { setHeaderTokens } from "/js/ui_shell.js";
 
 const $ = (id)=>document.getElementById(id);
-function safeJson(s, fb={}){ try{ return JSON.parse(s||""); }catch{ return fb; } }
 
-function toast(msg){
-  const t = $("toast");
-  if(!t) return;
-  t.textContent = msg;
-  t.classList.add("show");
-  clearTimeout(window.__to);
-  window.__to = setTimeout(()=> t.classList.remove("show"), 1800);
-}
+const API_BASE = "https://italky-api.onrender.com";
+const LOGIN_PATH = "/pages/login.html";
+const HOME_PATH  = "/pages/home.html";
+const PROFILE_PATH = "/pages/profile.html";
 
-function termsKey(email=""){
-  return `italky_terms_accepted_at::${String(email||"").toLowerCase().trim()}`;
-}
-function getUser(){ return safeJson(localStorage.getItem(STORAGE_KEY), {}); }
-function ensureLogged(){
-  const u = getUser();
-  if(!u?.email){ location.replace("/index.html"); return null; }
-  if(!localStorage.getItem(termsKey(u.email))){ location.replace("/index.html"); return null; }
-  return u;
-}
-
-function paintHeader(u){
-  const full = (u.fullname || u.name || u.display_name || u.email || "—").trim();
-  $("userName").textContent = full;
-  $("userPlan").textContent = String(u.plan || "FREE").toUpperCase();
-
-  const avatarBtn = $("avatarBtn");
-  const fallback = $("avatarFallback");
-  const pic = String(u.picture || u.avatar || u.avatar_url || "").trim();
-  if(pic){
-    avatarBtn.innerHTML = `<img src="${pic}" alt="avatar" referrerpolicy="no-referrer">`;
-  }else{
-    fallback.textContent = (full && full[0]) ? full[0].toUpperCase() : "•";
+/* ===============================
+   AUTH
+================================ */
+async function requireLogin(){
+  const { data:{ session } } = await supabase.auth.getSession();
+  if(!session?.user){
+    location.replace(LOGIN_PATH);
+    return false;
   }
-  avatarBtn.addEventListener("click", ()=> location.href="/pages/profile.html");
+  try{ await ensureAuthAndCacheUser(); }catch{}
+  return true;
 }
 
-/* ===== Languages ===== */
+function getSystemUILang(){
+  try{
+    const l = String(getSiteLang?.() || "").toLowerCase().trim();
+    if(l) return l;
+  }catch{}
+  try{
+    const l2 = String(localStorage.getItem("italky_site_lang_v1") || "").toLowerCase().trim();
+    if(l2) return l2;
+  }catch{}
+  return "tr";
+}
+let UI_LANG = getSystemUILang();
+
+/* ===============================
+   LANGS
+================================ */
 const LANGS = [
-  { code:"tr", name:"Türkçe", flag:"🇹🇷" },
-  { code:"en", name:"İngilizce", flag:"🇬🇧" },
-  { code:"de", name:"Almanca", flag:"🇩🇪" },
-  { code:"fr", name:"Fransızca", flag:"🇫🇷" },
-  { code:"it", name:"İtalyanca", flag:"🇮🇹" },
-  { code:"es", name:"İspanyolca", flag:"🇪🇸" },
-  { code:"pt", name:"Portekizce", flag:"🇵🇹" },
-  { code:"pt-br", name:"Portekizce (Brezilya)", flag:"🇧🇷" },
-  { code:"ru", name:"Rusça", flag:"🇷🇺" },
-  { code:"ar", name:"Arapça", flag:"🇸🇦" },
-  { code:"zh", name:"Çince", flag:"🇨🇳" },
-  { code:"zh-tw", name:"Çince (Geleneksel)", flag:"🇹🇼" },
-  { code:"ja", name:"Japonca", flag:"🇯🇵" },
-  { code:"ko", name:"Korece", flag:"🇰🇷" },
+  { code:"tr", flag:"🇹🇷", bcp:"tr-TR" },
+  { code:"en", flag:"🇬🇧", bcp:"en-US" },
+  { code:"de", flag:"🇩🇪", bcp:"de-DE" },
+  { code:"fr", flag:"🇫🇷", bcp:"fr-FR" },
+  { code:"it", flag:"🇮🇹", bcp:"it-IT" },
+  { code:"es", flag:"🇪🇸", bcp:"es-ES" },
+  { code:"pt", flag:"🇵🇹", bcp:"pt-PT" },
+  { code:"pt-br", flag:"🇧🇷", bcp:"pt-BR" },
+  { code:"nl", flag:"🇳🇱", bcp:"nl-NL" },
+  { code:"sv", flag:"🇸🇪", bcp:"sv-SE" },
+  { code:"no", flag:"🇳🇴", bcp:"nb-NO" },
+  { code:"da", flag:"🇩🇰", bcp:"da-DK" },
+  { code:"fi", flag:"🇫🇮", bcp:"fi-FI" },
+  { code:"pl", flag:"🇵🇱", bcp:"pl-PL" },
+  { code:"cs", flag:"🇨🇿", bcp:"cs-CZ" },
+  { code:"sk", flag:"🇸🇰", bcp:"sk-SK" },
+  { code:"hu", flag:"🇭🇺", bcp:"hu-HU" },
+  { code:"ro", flag:"🇷🇴", bcp:"ro-RO" },
+  { code:"bg", flag:"🇧🇬", bcp:"bg-BG" },
+  { code:"el", flag:"🇬🇷", bcp:"el-GR" },
+  { code:"uk", flag:"🇺🇦", bcp:"uk-UA" },
+  { code:"ru", flag:"🇷🇺", bcp:"ru-RU" },
+  { code:"az", flag:"🇦🇿", bcp:"az-AZ" },
+  { code:"ka", flag:"🇬🇪", bcp:"ka-GE" },
+  { code:"hy", flag:"🇦🇲", bcp:"hy-AM" },
+  { code:"ar", flag:"🇸🇦", bcp:"ar-SA" },
+  { code:"he", flag:"🇮🇱", bcp:"he-IL" },
+  { code:"fa", flag:"🇮🇷", bcp:"fa-IR" },
+  { code:"ur", flag:"🇵🇰", bcp:"ur-PK" },
+  { code:"hi", flag:"🇮🇳", bcp:"hi-IN" },
+  { code:"bn", flag:"🇧🇩", bcp:"bn-BD" },
+  { code:"id", flag:"🇮🇩", bcp:"id-ID" },
+  { code:"ms", flag:"🇲🇾", bcp:"ms-MY" },
+  { code:"vi", flag:"🇻🇳", bcp:"vi-VN" },
+  { code:"th", flag:"🇹🇭", bcp:"th-TH" },
+  { code:"zh", flag:"🇨🇳", bcp:"zh-CN" },
+  { code:"zh-tw", flag:"🇹🇼", bcp:"zh-TW" },
+  { code:"ja", flag:"🇯🇵", bcp:"ja-JP" },
+  { code:"ko", flag:"🇰🇷", bcp:"ko-KR" }
 ];
-function langBy(code){ return LANGS.find(x=>x.code===code) || { code, name: code, flag:"🌐" }; }
 
-const SS_TO = "italky_doc_to_lang_v2";
-let toLang = sessionStorage.getItem(SS_TO) || "tr";
-function setToUI(){
-  $("toFlag").textContent = langBy(toLang).flag;
-  $("toLangTxt").textContent = langBy(toLang).name;
-  sessionStorage.setItem(SS_TO, toLang);
+function canonicalLangCode(code){
+  const c = String(code||"").toLowerCase();
+  return c.split("-")[0];
+}
+function normalizeApiLang(code){
+  return canonicalLangCode(code);
+}
+function langObj(code){
+  const c = String(code||"").toLowerCase();
+  return LANGS.find(x=>x.code===c) || LANGS.find(x=>x.code===canonicalLangCode(c));
+}
+function bcp(code){ return langObj(code)?.bcp || "en-US"; }
+
+function langLabel(code){
+  const base = canonicalLangCode(code);
+  try{
+    const dn = new Intl.DisplayNames([UI_LANG], { type:"language" });
+    const name = dn.of(base);
+    if(name) return name;
+  }catch{}
+  return String(code||"").toUpperCase();
+}
+function labelChip(code){
+  const o = langObj(code);
+  const flag = o?.flag || "🌐";
+  return `${flag} ${langLabel(code)}`;
 }
 
-function openSheet(){
-  $("langSheet").classList.add("show");
-  $("sheetQuery").value = "";
-  renderSheet("");
-  setTimeout(()=>{ try{ $("sheetQuery").focus(); }catch{} }, 0);
+/* ===============================
+   STATE
+================================ */
+let topLang = "en";
+let botLang = "tr";
+
+/* ===============================
+   TOKEN SESSION
+================================ */
+let sessionGranted = false;
+async function ensureFacetofaceSession(){
+  if(sessionGranted) return true;
+  try{
+    const { data, error } = await supabase.rpc("start_facetoface_session");
+    if(error){
+      const msg = String(error.message||"");
+      if(msg.includes("INSUFFICIENT_TOKENS")){
+        alert("Jeton yetersiz. Devam etmek için jeton yükleyin.");
+        location.href = PROFILE_PATH;
+        return false;
+      }
+      alert("FaceToFace oturumu başlatılamadı.");
+      return false;
+    }
+    const row = data?.[0] || {};
+    if(row?.tokens_left != null) setHeaderTokens(row.tokens_left);
+    sessionGranted = true;
+    return true;
+  }catch{
+    alert("FaceToFace oturumu başlatılamadı.");
+    return false;
+  }
 }
-function closeSheet(){ $("langSheet").classList.remove("show"); }
-function renderSheet(filter){
-  const q = String(filter||"").toLowerCase().trim();
-  const list = $("sheetList");
+
+/* ===============================
+   TTS (Android WebView fix)
+================================ */
+function speak(text, langCode){
+  const t = String(text||"").trim();
+  if(!t) return;
+
+  // ✅ APK NativeTTS
+  if(window.NativeTTS && typeof window.NativeTTS.speak === "function"){
+    try{ window.NativeTTS.stop?.(); }catch{}
+    setTimeout(()=>{
+      try{ window.NativeTTS.speak(t, String(langCode||"en")); }catch(e){ console.warn(e); }
+    }, 220);
+    return;
+  }
+
+  // Web fallback
+  if(!window.speechSynthesis) return;
+  try{ window.speechSynthesis.cancel(); }catch{}
+  const u = new SpeechSynthesisUtterance(t);
+  u.lang = bcp(langCode);
+  u.volume=1; u.rate=1; u.pitch=1;
+  setTimeout(()=>{ try{ window.speechSynthesis.speak(u); }catch{} }, 60);
+}
+
+/* ===============================
+   UI HELPERS
+================================ */
+function closeAllPop(){
+  $("pop-top")?.classList.remove("show");
+  $("pop-bot")?.classList.remove("show");
+}
+
+function renderPop(side){
+  const list = $(side==="top" ? "list-top" : "list-bot");
   if(!list) return;
+  const sel = (side==="top") ? topLang : botLang;
 
-  const items = LANGS.filter(l=>{
-    if(!q) return true;
-    const hay = `${l.name} ${l.code}`.toLowerCase();
-    return hay.includes(q);
-  });
-
-  list.innerHTML = items.map(l=>{
-    const sel = (l.code===toLang) ? "selected" : "";
-    return `
-      <div class="sheetRow ${sel}" data-code="${l.code}">
-        <div class="left">
-          <div class="code" style="min-width:28px; text-align:center;">${l.flag}</div>
-          <div class="name">${l.name}</div>
-        </div>
-        <div class="code">${l.code.toUpperCase()}</div>
+  list.innerHTML = LANGS.map(l=>`
+    <div class="pop-item ${l.code===sel?"active":""}" data-code="${l.code}">
+      <div class="pop-left">
+        <div class="pop-flag">${l.flag}</div>
+        <div class="pop-name">${langLabel(l.code)}</div>
       </div>
-    `;
-  }).join("");
+      <div class="pop-code">${String(l.code).toUpperCase()}</div>
+    </div>
+  `).join("");
 
-  list.querySelectorAll(".sheetRow").forEach(row=>{
-    row.addEventListener("click", ()=>{
-      toLang = row.getAttribute("data-code") || "tr";
-      setToUI();
-      closeSheet();
-      toast("Dil seçildi");
+  list.querySelectorAll(".pop-item").forEach(item=>{
+    item.addEventListener("click", (e)=>{
+      e.preventDefault(); e.stopPropagation();
+      const code = item.getAttribute("data-code") || "en";
+      if(side==="top") topLang = code; else botLang = code;
+
+      const t = (side==="top") ? $("topLangTxt") : $("botLangTxt");
+      if(t) t.textContent = labelChip(code);
+
+      closeAllPop();
     });
   });
 }
 
-/* ===== UI status ===== */
-function setTopStatus(msg){ $("statusTop").textContent = msg; }
-function setBotStatus(msg){ $("statusBot").textContent = msg; }
+function togglePopover(side){
+  const pop = $(side==="top" ? "pop-top" : "pop-bot");
+  if(!pop) return;
 
-/* ===== State ===== */
-const state = {
-  file: null,
-  kind: "",        // image|pdf
-  imageCanvas: null
-};
+  const willShow = !pop.classList.contains("show");
+  closeAllPop();
 
-function clearPreview(){
-  $("imgPreview").style.display = "none";
-  $("pdfCanvas").style.display = "none";
-  $("imgPreview").src = "";
-  const c = $("pdfCanvas");
-  const ctx = c.getContext("2d");
-  ctx.clearRect(0,0,c.width,c.height);
-  state.imageCanvas = null;
-  state.kind = "";
-  state.file = null;
-}
-
-/* ===== File readers ===== */
-async function readFileAsDataURL(file){ return await new Promise((res, rej)=>{ const fr=new FileReader(); fr.onload=()=>res(fr.result); fr.onerror=rej; fr.readAsDataURL(file); }); }
-async function readFileAsArrayBuffer(file){ return await file.arrayBuffer(); }
-
-/* ===== Render PDF first page ===== */
-async function renderPdfFirstPageToCanvas(pdfBytes){
-  if(!window.pdfjsLib) throw new Error("pdfjs missing");
-  try{
-    window.pdfjsLib.GlobalWorkerOptions.workerSrc =
-      "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.worker.min.js";
-  }catch{}
-
-  const loadingTask = window.pdfjsLib.getDocument({ data: pdfBytes });
-  const pdf = await loadingTask.promise;
-  const page = await pdf.getPage(1);
-
-  const viewport = page.getViewport({ scale: 1.6 });
-  const canvas = $("pdfCanvas");
-  const ctx = canvas.getContext("2d");
-
-  canvas.width = Math.floor(viewport.width);
-  canvas.height = Math.floor(viewport.height);
-
-  await page.render({ canvasContext: ctx, viewport }).promise;
-
-  canvas.style.display = "block";
-  $("imgPreview").style.display = "none";
-
-  state.imageCanvas = canvas;
-}
-
-/* ===== Render image to offscreen canvas ===== */
-async function renderImageToCanvas(dataUrl){
-  const img = new Image();
-  img.crossOrigin = "anonymous";
-  img.src = dataUrl;
-  await new Promise((r, rej)=>{ img.onload=r; img.onerror=rej; });
-
-  $("imgPreview").src = dataUrl;
-  $("imgPreview").style.display = "block";
-  $("pdfCanvas").style.display = "none";
-
-  const c = document.createElement("canvas");
-  c.width = img.naturalWidth;
-  c.height = img.naturalHeight;
-  c.getContext("2d").drawImage(img, 0, 0);
-  state.imageCanvas = c;
-}
-
-/* ===== OCR worker ===== */
-let OCR_READY = false;
-let OCR_WORKER = null;
-
-async function initOCR(){
-  if(OCR_READY) return;
-  if(!window.Tesseract) throw new Error("tesseract missing");
-
-  setTopStatus("OCR hazırlanıyor…");
-  OCR_WORKER = await window.Tesseract.createWorker("eng+tur", 1, { logger: ()=>{} });
-  try{
-    await OCR_WORKER.setParameters({ tessedit_pageseg_mode: "6", preserve_interword_spaces: "1" });
-  }catch{}
-  OCR_READY = true;
-  setTopStatus("Hazır");
-}
-
-async function doOCR(){
-  if(!state.imageCanvas) throw new Error("no image canvas");
-  await initOCR();
-  setTopStatus("OCR taranıyor…");
-  setBotStatus("OCR…");
-  $("outText").value = "";
-
-  const { data } = await OCR_WORKER.recognize(state.imageCanvas);
-  const txt = String(data?.text || "").trim();
-  setTopStatus(txt ? "OCR tamam" : "Yazı bulunamadı");
-  return txt;
-}
-
-/* ===== Translate ===== */
-async function translateViaApi(text, target){
-  const clean = String(text||"").replace(/\s+/g," ").trim();
-  if(!clean) return "";
-
-  const data = await apiPOST("/api/translate", {
-    text: clean, source:"", target, from_lang:"", to_lang: target
-  }, { timeoutMs: 25000 });
-
-  const out = String(data?.translated || data?.translation || data?.text || data?.translated_text || "").trim() || clean;
-  return out;
-}
-
-/* ===== File handling ===== */
-async function handlePickedFile(file){
-  clearPreview();
-
-  state.file = file;
-  const type = String(file.type || "").toLowerCase();
-
-  try{
-    if(type.includes("pdf")){
-      state.kind = "pdf";
-      setTopStatus("PDF yükleniyor…");
-      const bytes = await readFileAsArrayBuffer(file);
-      await renderPdfFirstPageToCanvas(bytes);
-      setTopStatus("PDF hazır (1. sayfa)");
-      setBotStatus("ÇEVİR'e bas");
-    }else if(type.startsWith("image/")){
-      state.kind = "image";
-      setTopStatus("Görsel yükleniyor…");
-      const url = await readFileAsDataURL(file);
-      await renderImageToCanvas(url);
-      setTopStatus("Görsel hazır");
-      setBotStatus("ÇEVİR'e bas");
-    }else{
-      toast("Desteklenmeyen format");
-      setTopStatus("Format desteklenmiyor");
-    }
-  }catch(e){
-    console.error(e);
-    toast("Dosya açılamadı");
-    setTopStatus("Hata");
+  if(willShow){
+    pop.classList.add("show");
+    renderPop(side);
+    const list = $(side==="top" ? "list-top" : "list-bot");
+    try{ if(list) list.scrollTop = 0; }catch{}
   }
 }
 
-/* ===== Run flow ===== */
-let busy = false;
+function addBubble(side, kind, text, langForSpeak){
+  const wrap = (side==="top") ? $("topBody") : $("botBody");
+  if(!wrap) return;
 
-async function run(){
-  if(busy) return;
-  if(!state.file || !state.imageCanvas){
-    toast("Önce dosya/kamera seç");
+  const bubble = document.createElement("div");
+  bubble.className = `bubble ${kind}`;
+
+  const txt = document.createElement("span");
+  txt.className = "txt";
+  txt.textContent = String(text||"").trim() || "—";
+  bubble.appendChild(txt);
+
+  // ✅ Hoparlör: metnin hemen bitiminde
+  if(kind === "me"){
+    const spk = document.createElement("button");
+    spk.className = "spk-icon";
+    spk.type = "button";
+    spk.innerHTML = `
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M3 10v4h4l5 4V6L7 10H3z"></path>
+        <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v8.06c1.48-.74 2.5-2.26 2.5-4.03z"></path>
+        <path d="M14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"></path>
+      </svg>
+    `;
+    spk.addEventListener("click", (e)=>{
+      e.preventDefault(); e.stopPropagation();
+      speak(txt.textContent, langForSpeak);
+    });
+    bubble.appendChild(spk);
+
+    // ✅ sadece son çeviri büyük kalsın
+    wrap.querySelectorAll(".bubble.me.is-latest").forEach(x=>x.classList.remove("is-latest"));
+    bubble.classList.add("is-latest");
+  }
+
+  wrap.appendChild(bubble);
+  try{ wrap.scrollTop = wrap.scrollHeight; }catch{}
+}
+
+/* ===============================
+   TRANSLATE
+================================ */
+async function translateViaApi(text, source, target){
+  const t = String(text||"").trim();
+  if(!t) return t;
+
+  const src = normalizeApiLang(source);
+  const dst = normalizeApiLang(target);
+  if(src === dst) return t;
+
+  const ctrl = new AbortController();
+  const to = setTimeout(()=>ctrl.abort(), 25000);
+
+  try{
+    // ✅ Backend’in beklediği format: from_lang / to_lang
+    const body = { text:t, from_lang:src, to_lang:dst };
+
+    const r = await fetch(`${API_BASE}/api/translate`,{
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify(body),
+      signal: ctrl.signal
+    });
+
+    if(!r.ok){
+      const err = await r.text().catch(()=> "");
+      console.warn("translate HTTP", r.status, err);
+      return null;
+    }
+
+    const data = await r.json().catch(()=>({}));
+    const out = String(data?.translated||data?.translation||data?.text||"").trim();
+    return out || null;
+  }catch(e){
+    console.warn("translateViaApi failed:", e);
+    return null;
+  }finally{
+    clearTimeout(to);
+  }
+}
+
+/* ===============================
+   STT
+================================ */
+function buildRecognizer(langCode){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR) return null;
+  const rec = new SR();
+  rec.lang = bcp(langCode);
+  rec.interimResults = false;
+  rec.continuous = false;
+  rec.maxAlternatives = 1;
+  return rec;
+}
+
+let active = null;
+let recTop = null;
+let recBot = null;
+let pending = null;
+
+/* ✅ Logo rotate logic */
+let lastSpeakerSide = "bot"; // default: alt
+function setRootState(cls){
+  const root = $("frameRoot");
+  if(!root) return;
+  root.classList.remove("to-top","to-bot","listening");
+  cls.split(" ").filter(Boolean).forEach(c=>root.classList.add(c));
+}
+
+function setMicUI(which, on){
+  const btn = (which==="top") ? $("topMic") : $("botMic");
+  btn?.classList.toggle("listening", !!on);
+
+  const anyOn = !!on || !!recTop || !!recBot;
+  const root = $("frameRoot");
+  root?.classList.toggle("listening", anyOn);
+}
+
+function stopAll(){
+  try{ recTop?.stop?.(); }catch{}
+  try{ recBot?.stop?.(); }catch{}
+  recTop=null; recBot=null; active=null;
+  setMicUI("top", false);
+  setMicUI("bot", false);
+  try{ window.NativeTTS?.stop?.(); }catch{}
+  try{ window.speechSynthesis?.cancel?.(); }catch{}
+}
+
+async function start(which){
+  const ok = await ensureFacetofaceSession();
+  if(!ok) return;
+
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR){
+    alert("Bu cihaz SpeechRecognition desteklemiyor.");
     return;
   }
 
-  busy = true;
-  try{
-    const ocrText = await doOCR();
-    if(!ocrText){
-      setBotStatus("OCR boş");
-      return;
-    }
+  if(active && active !== which) stopAll();
 
-    setBotStatus("Çeviri…");
-    const translated = await translateViaApi(ocrText, toLang);
+  const src = (which==="top") ? topLang : botLang;
+  const dst = (which==="top") ? botLang : topLang;
 
-    $("outText").value = translated || "";
-    setBotStatus("Tamam");
-  }catch(e){
-    console.error(e);
-    toast("İşlem başarısız");
-    setBotStatus("Hata");
-  }finally{
-    busy = false;
+  const rec = buildRecognizer(src);
+  if(!rec){
+    alert("Mikrofon başlatılamadı.");
+    return;
   }
+
+  active = which;
+  setMicUI(which, true);
+
+  // ✅ mic’e basan tarafa logo döner
+  if(which === "top") setRootState("to-top listening");
+  else setRootState("to-bot listening");
+
+  rec.onresult = (e)=>{
+    const t = e.results?.[0]?.[0]?.transcript || "";
+    const finalText = String(t||"").trim();
+    if(!finalText) return;
+
+    addBubble(which, "them", finalText, src);
+    pending = { which, finalText, src, dst };
+
+    try{ rec.stop(); }catch{}
+  };
+
+  rec.onerror = (err)=>{
+    console.error("STT Error:", err);
+    stopAll();
+    // mic durunca en son ses tarafına dön
+    setRootState(lastSpeakerSide === "top" ? "to-top" : "to-bot");
+  };
+
+  rec.onend = async ()=>{
+    if(active === which) active = null;
+    setMicUI(which, false);
+
+    const p = pending;
+    if(p && p.which === which){
+      pending = null;
+
+      const other = (which==="top") ? "bot" : "top";
+      const translated = await translateViaApi(p.finalText, p.src, p.dst);
+      const speakLang = normalizeApiLang(p.dst);
+
+      if(!translated){
+        addBubble(other, "me", "⚠️ Çeviri şu an yapılamadı.", speakLang);
+        // mic bitti -> en son ses tarafı
+        setRootState(lastSpeakerSide === "top" ? "to-top" : "to-bot");
+        return;
+      }
+
+      addBubble(other, "me", translated, speakLang);
+
+      // ✅ sesin geldiği taraf “kalıcı”
+      lastSpeakerSide = other;
+      setRootState(other === "top" ? "to-top" : "to-bot");
+
+      // ✅ otomatik ses
+      setTimeout(()=> speak(translated, speakLang), 160);
+    } else {
+      setRootState(lastSpeakerSide === "top" ? "to-top" : "to-bot");
+    }
+  };
+
+  if(which==="top") recTop = rec; else recBot = rec;
+  try{ rec.start(); }catch(e){ console.warn(e); stopAll(); }
 }
 
-/* ===== Boot ===== */
-document.addEventListener("DOMContentLoaded", ()=>{
-  const u = ensureLogged();
-  if(!u) return;
+/* ===============================
+   BINDINGS
+================================ */
+function bindUI(){
+  // home
+  $("homeBtn")?.addEventListener("click", ()=> location.href = HOME_PATH);
+  $("homeLink")?.addEventListener("click", ()=> location.href = HOME_PATH);
 
-  paintHeader(u);
-
-  $("backBtn")?.addEventListener("click", ()=>{
-    if(history.length>1) history.back();
-    else location.href="/pages/home.html";
-  });
-  $("logoHome")?.addEventListener("click", ()=> location.href="/pages/home.html");
-
-  setToUI();
-
-  $("toLangBtn")?.addEventListener("click", openSheet);
-  $("sheetClose")?.addEventListener("click", closeSheet);
-  $("langSheet")?.addEventListener("click", (ev)=>{ if(ev.target === $("langSheet")) closeSheet(); });
-  $("sheetQuery")?.addEventListener("input", ()=> renderSheet($("sheetQuery").value));
-
-  $("pickFileBtn")?.addEventListener("click", ()=> $("filePick").click());
-  $("pickCamBtn")?.addEventListener("click", ()=> $("camPick").click());
-
-  $("filePick")?.addEventListener("change", (e)=>{
-    const f = e.target.files?.[0];
-    if(f) handlePickedFile(f);
-    e.target.value = "";
+  // clear
+  $("clearBtn")?.addEventListener("click", ()=>{
+    stopAll();
+    if($("topBody")) $("topBody").innerHTML="";
+    if($("botBody")) $("botBody").innerHTML="";
   });
 
-  $("camPick")?.addEventListener("change", (e)=>{
-    const f = e.target.files?.[0];
-    if(f) handlePickedFile(f);
-    e.target.value = "";
+  // popover
+  $("topLangBtn")?.addEventListener("click",(e)=>{ e.preventDefault(); e.stopPropagation(); togglePopover("top"); });
+  $("botLangBtn")?.addEventListener("click",(e)=>{ e.preventDefault(); e.stopPropagation(); togglePopover("bot"); });
+
+  $("close-top")?.addEventListener("click",(e)=>{ e.preventDefault(); e.stopPropagation(); closeAllPop(); });
+  $("close-bot")?.addEventListener("click",(e)=>{ e.preventDefault(); e.stopPropagation(); closeAllPop(); });
+
+  // dışarı tıkla -> kapat
+  document.addEventListener("click",(e)=>{
+    const pt = $("pop-top");
+    const pb = $("pop-bot");
+    const insidePop = (pt && pt.contains(e.target)) || (pb && pb.contains(e.target));
+    const isBtn = e.target?.closest?.("#topLangBtn,#botLangBtn");
+    if(!insidePop && !isBtn) closeAllPop();
+  }, { capture:true });
+
+  // mic
+  $("topMic")?.addEventListener("click",(e)=>{
+    e.preventDefault(); e.stopPropagation(); closeAllPop();
+    if(active==="top") stopAll(); else start("top");
   });
+  $("botMic")?.addEventListener("click",(e)=>{
+    e.preventDefault(); e.stopPropagation(); closeAllPop();
+    if(active==="bot") stopAll(); else start("bot");
+  });
+}
 
-  $("runBtn")?.addEventListener("click", run);
+document.addEventListener("DOMContentLoaded", async ()=>{
+  if(!(await requireLogin())) return;
 
-  setTopStatus("Dosya veya Kamera seç");
-  setBotStatus("—");
+  // init labels
+  if($("topLangTxt")) $("topLangTxt").textContent = labelChip(topLang);
+  if($("botLangTxt")) $("botLangTxt").textContent = labelChip(botLang);
+
+  bindUI();
+
+  // preload voices (web)
+  try{ window.speechSynthesis?.getVoices?.(); }catch{}
+
+  // initial logo side
+  setRootState("to-bot");
 });
