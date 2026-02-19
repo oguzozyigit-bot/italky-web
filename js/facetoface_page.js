@@ -1,9 +1,10 @@
+// FILE: /js/facetoface_page.js
 import { getSiteLang } from "/js/i18n.js";
 import { supabase } from "/js/supabase_client.js";
 import { ensureAuthAndCacheUser } from "/js/auth.js";
 import { setHeaderTokens } from "/js/ui_shell.js";
 
-const $ = (id)=>document.getElementById(id);
+const $ = (id) => document.getElementById(id);
 
 const API_BASE = "https://italky-api.onrender.com";
 const LOGIN_PATH = "/pages/login.html";
@@ -12,7 +13,7 @@ const PROFILE_PATH = "/pages/profile.html";
 
 /* ===============================
    AUTH
-   =============================== */
+=============================== */
 async function requireLogin(){
   const { data:{ session } } = await supabase.auth.getSession();
   if(!session?.user){
@@ -38,7 +39,7 @@ let UI_LANG = getSystemUILang();
 
 /* ===============================
    LANGS
-   =============================== */
+=============================== */
 const LANGS = [
   { code:"tr", flag:"🇹🇷", bcp:"tr-TR" },
   { code:"en", flag:"🇬🇧", bcp:"en-US" },
@@ -106,8 +107,9 @@ function canonicalLangCode(code){
   const c = String(code||"").toLowerCase();
   return c.split("-")[0];
 }
-function normalizeApiLang(code){ return canonicalLangCode(code); }
-
+function normalizeApiLang(code){
+  return canonicalLangCode(code);
+}
 function langObj(code){
   const c = String(code||"").toLowerCase();
   return LANGS.find(x=>x.code===c) || LANGS.find(x=>x.code===canonicalLangCode(c));
@@ -124,17 +126,16 @@ function langLabel(code){
   if(UI_LANG === "tr" && TR_FALLBACK[baseCode]) return TR_FALLBACK[baseCode];
   return String(code||"").toUpperCase();
 }
-function labelChip(code){ return `${langFlag(code)} ${langLabel(code)}`; }
 
 /* ===============================
    STATE
-   =============================== */
+=============================== */
 let topLang = "en";
 let botLang = "tr";
 
 /* ===============================
    FACE2FACE TOKEN SESSION
-   =============================== */
+=============================== */
 let sessionGranted = false;
 async function ensureFacetofaceSession(){
   if(sessionGranted) return true;
@@ -161,22 +162,11 @@ async function ensureFacetofaceSession(){
 }
 
 /* ===============================
-   TTS ✅
-   - Çeviri gelince otomatik ses
-   - Kullanıcı hoparlöre basınca tekrar ses
-   - Logo tarafı: event ile bildir
-   =============================== */
-function emitSpeakSide(side){
-  try{
-    window.dispatchEvent(new CustomEvent("italky_speak_side", { detail:{ side } }));
-  }catch{}
-}
-
-function speak(text, langCode, sideHint){
+   TTS (Android WebView)
+=============================== */
+function speak(text, langCode){
   const t = String(text||"").trim();
   if(!t) return;
-
-  if(sideHint === "top" || sideHint === "bot") emitSpeakSide(sideHint);
 
   // APK NativeTTS
   if(window.NativeTTS && typeof window.NativeTTS.speak === "function"){
@@ -204,120 +194,97 @@ function speak(text, langCode, sideHint){
       u.voice = voices.find(v=>String(v.lang||"").toLowerCase().startsWith(base)) || voices[0];
     }
   }catch{}
-
   setTimeout(()=>{ try{ window.speechSynthesis.speak(u); }catch{} }, 60);
 }
 
 /* ===============================
-   UI
-   =============================== */
-function markLatestTranslation(side){
-  const wrap = (side === "top") ? $("topBody") : $("botBody");
-  if(!wrap) return;
-  wrap.querySelectorAll(".bubble.me.is-latest").forEach(el=>el.classList.remove("is-latest"));
-  const allMe = wrap.querySelectorAll(".bubble.me");
-  const last = allMe[allMe.length-1];
-  if(last) last.classList.add("is-latest");
-}
+   UI helpers
+=============================== */
 function closeAllPop(){
   $("pop-top")?.classList.remove("show");
   $("pop-bot")?.classList.remove("show");
 }
-let active=null, recTop=null, recBot=null;
 
-function setMicUI(which, on){
-  const btn = (which==="top") ? $("topMic") : $("botMic");
-  btn?.classList.toggle("listening", !!on);
-  const anyOn = !!on || !!recTop || !!recBot;
-  $("frameRoot")?.classList.toggle("listening", anyOn);
+function setLangButtonTexts(){
+  const topBtn = $("topLangBtn");
+  const botBtn = $("botLangBtn");
+  if(topBtn) topBtn.textContent = `${langFlag(topLang)} ${langLabel(topLang).toUpperCase()} ⌵`;
+  if(botBtn) botBtn.textContent = `${langFlag(botLang)} ${langLabel(botLang).toUpperCase()} ⌵`;
 }
-function stopAll(){
-  try{ recTop?.stop?.(); }catch{}
-  try{ recBot?.stop?.(); }catch{}
-  recTop=null; recBot=null; active=null;
-  setMicUI("top", false); setMicUI("bot", false);
-  $("frameRoot")?.classList.remove("listening");
-  try{ window.speechSynthesis?.cancel?.(); }catch{}
-  try{ window.NativeTTS?.stop?.(); }catch{}
+
+function renderPop(side){
+  const list = $(side==="top" ? "list-top" : "list-bot");
+  if(!list) return;
+  const sel = (side==="top") ? topLang : botLang;
+
+  list.innerHTML = LANGS.map(l=>{
+    const active = l.code === sel ? "active" : "";
+    return `
+      <div class="pop-item ${active}" data-code="${l.code}">
+        <div class="pop-left">
+          <div class="pop-flag">${l.flag}</div>
+          <div class="pop-name">${langLabel(l.code)}</div>
+        </div>
+        <div class="pop-code">${String(l.code).toUpperCase()}</div>
+      </div>
+    `;
+  }).join("");
+
+  list.querySelectorAll(".pop-item").forEach(item=>{
+    item.addEventListener("click",(e)=>{
+      e.preventDefault();
+      e.stopPropagation();
+      const code = item.getAttribute("data-code") || "en";
+      if(side==="top") topLang = code; else botLang = code;
+
+      setLangButtonTexts();
+      stopAll(); // dil değişince mic reset
+      closeAllPop();
+    });
+  });
 }
-function clearChat(){
-  closeAllPop(); stopAll();
-  $("topBody") && ($("topBody").innerHTML="");
-  $("botBody") && ($("botBody").innerHTML="");
-}
+
 function addBubble(side, kind, text, langForSpeak){
   const wrap = (side==="top") ? $("topBody") : $("botBody");
   if(!wrap) return;
 
+  const bubble = document.createElement("div");
+  bubble.className = `bubble ${kind}`;
+
+  // ✅ Metin + hoparlör aynı satır
   const row = document.createElement("div");
-  row.className = `bubble ${kind}`;
+  row.className = "txt-row";
 
   const txt = document.createElement("span");
-  txt.className="txt";
+  txt.className = "txt";
   txt.textContent = String(text||"").trim() || "—";
   row.appendChild(txt);
 
-  // ✅ Kullanıcı hoparlöre basınca tekrar dinlesin
-  if(kind==="me"){
-    const spk = document.createElement("button");
-    spk.className="spk";
-    spk.type="button";
+  // ✅ Hoparlör sadece çeviri (me) için
+  if(kind === "me"){
+    const spk = document.createElement("div");
+    spk.className = "spk-icon";
     spk.innerHTML = `
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
-      </svg>`;
+      <svg viewBox="0 0 24 24">
+        <path d="M3 10v4h4l5 4V6L7 10H3zm13.5 2c0-1.77-1.02-3.29-2.5-4.03v8.06c1.48-.74 2.5-2.26 2.5-4.03zM14 3.23v2.06c2.89 1 5 3.77 5 6.71s-2.11 5.71-5 6.71v2.06c4.01-1.07 7-4.71 7-8.77s-2.99-7.7-7-8.77z"></path>
+      </svg>
+    `;
     spk.addEventListener("click",(e)=>{
       e.preventDefault(); e.stopPropagation();
-      speak(txt.textContent, langForSpeak, side); // ✅ logo o tarafa dönsün
+      speak(txt.textContent, langForSpeak);
     });
     row.appendChild(spk);
   }
 
-  wrap.appendChild(row);
-  if(kind==="me") markLatestTranslation(side);
+  bubble.appendChild(row);
+  wrap.appendChild(bubble);
+
   try{ wrap.scrollTop = wrap.scrollHeight; }catch{}
 }
 
 /* ===============================
-   Popover
-   =============================== */
-function renderPop(side){
-  const list = $(side==="top" ? "list-top":"list-bot");
-  if(!list) return;
-  const sel = (side==="top") ? topLang : botLang;
-
-  list.innerHTML = LANGS.map(l=>`
-    <div class="pop-item ${l.code===sel?"active":""}" data-code="${l.code}">
-      <div class="pop-left">
-        <div class="pop-flag">${l.flag}</div>
-        <div class="pop-name">${langLabel(l.code)}</div>
-      </div>
-      <div class="pop-code">${String(l.code).toUpperCase()}</div>
-    </div>`).join("");
-
-  list.querySelectorAll(".pop-item").forEach(item=>{
-    item.addEventListener("click", ()=>{
-      const code = item.getAttribute("data-code") || "en";
-      if(side==="top") topLang=code; else botLang=code;
-      const tTxt = side==="top" ? $("topLangTxt") : $("botLangTxt");
-      if(tTxt) tTxt.textContent = labelChip(code);
-      stopAll(); closeAllPop();
-    });
-  });
-}
-function togglePop(side){
-  const pop = $(side==="top" ? "pop-top":"pop-bot");
-  if(!pop) return;
-  const willShow = !pop.classList.contains("show");
-  closeAllPop();
-  if(!willShow) return;
-  pop.classList.add("show");
-  renderPop(side);
-}
-
-/* ===============================
-   TRANSLATE
-   =============================== */
+   Translate
+=============================== */
 async function translateViaApi(text, source, target){
   const t = String(text||"").trim();
   if(!t) return t;
@@ -329,14 +296,21 @@ async function translateViaApi(text, source, target){
   const ctrl = new AbortController();
   const to = setTimeout(()=>ctrl.abort(), 25000);
   try{
-    const body = { text:t, from_lang:src, to_lang:dst };
+    // ✅ Bizim API bu body’yi kabul ediyor:
+    const body = { text:t, from_lang:src, to_lang:dst, source:src, target:dst };
     const r = await fetch(`${API_BASE}/api/translate`,{
       method:"POST",
       headers:{ "Content-Type":"application/json" },
       body: JSON.stringify(body),
       signal: ctrl.signal
     });
-    if(!r.ok) return null;
+
+    if(!r.ok){
+      const errTxt = await r.text().catch(()=> "");
+      console.warn("translate HTTP", r.status, errTxt);
+      return null;
+    }
+
     const data = await r.json().catch(()=>({}));
     const out = String(data?.translated||data?.translation||data?.text||"").trim();
     return out || null;
@@ -350,40 +324,58 @@ async function translateViaApi(text, source, target){
 
 /* ===============================
    STT
-   =============================== */
+=============================== */
+let active = null, recTop = null, recBot = null;
+let pending = null;
+
+function setMicUI(which, on){
+  const btn = (which==="top") ? $("topMic") : $("botMic");
+  btn?.classList.toggle("listening", !!on);
+  const anyOn = !!on || !!recTop || !!recBot;
+  $("frameRoot")?.classList.toggle("listening", anyOn);
+}
+
+function stopAll(){
+  try{ recTop?.stop?.(); }catch{}
+  try{ recBot?.stop?.(); }catch{}
+  recTop=null; recBot=null; active=null;
+  setMicUI("top", false);
+  setMicUI("bot", false);
+  try{ window.speechSynthesis?.cancel?.(); }catch{}
+  try{ window.NativeTTS?.stop?.(); }catch{}
+}
+
 function buildRecognizer(langCode){
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if(!SR) return null;
   const rec = new SR();
   rec.lang = bcp(langCode);
-  rec.interimResults=false;
-  rec.continuous=false;
-  rec.maxAlternatives=1;
+  rec.interimResults = false;
+  rec.continuous = false;
+  rec.maxAlternatives = 1;
   return rec;
 }
-
-let pending = null;
 
 async function start(which){
   const ok = await ensureFacetofaceSession();
   if(!ok) return;
 
-  const isAndroid = navigator.userAgent.includes("Android");
-  if(location.protocol!=="https:" && location.hostname!=="localhost" && !isAndroid){
-    alert("Mikrofon için HTTPS gerekli.");
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR){
+    alert("Bu cihaz SpeechRecognition desteklemiyor.");
     return;
   }
 
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if(!SR){ alert("Bu tarayıcı SpeechRecognition desteklemiyor."); return; }
-
-  if(active && active!==which) stopAll();
+  if(active && active !== which) stopAll();
 
   const src = (which==="top") ? topLang : botLang;
   const dst = (which==="top") ? botLang : topLang;
 
   const rec = buildRecognizer(src);
-  if(!rec){ alert("Mikrofon başlatılamadı."); return; }
+  if(!rec){
+    alert("Mikrofon başlatılamadı.");
+    return;
+  }
 
   active = which;
   setMicUI(which, true);
@@ -398,12 +390,14 @@ async function start(which){
     try{ rec.stop(); }catch{}
   };
 
-  rec.onerror = (err)=>{ console.error("STT Error:", err); stopAll(); };
+  rec.onerror = (err)=>{
+    console.error("STT Error:", err);
+    stopAll();
+  };
 
   rec.onend = async ()=>{
-    if(active===which) active=null;
-    setMicUI(which,false);
-    if(!active) $("frameRoot")?.classList.remove("listening");
+    if(active === which) active = null;
+    setMicUI(which, false);
 
     const p = pending;
     if(p && p.which === which){
@@ -418,54 +412,80 @@ async function start(which){
         return;
       }
 
-      // ✅ Çeviri balonu
       addBubble(other, "me", translated, speakLang);
 
-      // ✅ Otomatik ses (logo da o tarafa döner)
-      setTimeout(()=> speak(translated, speakLang, other), 160);
+      // ✅ otomatik ses
+      setTimeout(()=> speak(translated, speakLang), 120);
     }
   };
 
-  if(which==="top") recTop=rec; else recBot=rec;
-  try{ rec.start(); }catch{ stopAll(); }
+  if(which==="top") recTop = rec; else recBot = rec;
+
+  try{ rec.start(); }catch(e){
+    console.warn("rec.start failed:", e);
+    stopAll();
+  }
 }
 
 /* ===============================
    Bindings
-   =============================== */
-function bindNav(){
-  $("homeBtn")?.addEventListener("click", ()=> location.href = HOME_PATH);
-  $("homeLink")?.addEventListener("click", ()=> location.href = HOME_PATH);
-  $("clearLink")?.addEventListener("click", ()=> clearChat());
-}
-function bindLangButtons(){
-  $("topLangBtn")?.addEventListener("click",(e)=>{ e.preventDefault(); e.stopPropagation(); togglePop("top"); });
-  $("botLangBtn")?.addEventListener("click",(e)=>{ e.preventDefault(); e.stopPropagation(); togglePop("bot"); });
-  $("close-top")?.addEventListener("click",(e)=>{ e.preventDefault(); e.stopPropagation(); closeAllPop(); });
-  $("close-bot")?.addEventListener("click",(e)=>{ e.preventDefault(); e.stopPropagation(); closeAllPop(); });
-}
-function bindMicButtons(){
+=============================== */
+function bindUI(){
+  // mic
   $("topMic")?.addEventListener("click",(e)=>{
-    e.preventDefault(); closeAllPop();
+    e.preventDefault(); e.stopPropagation();
+    closeAllPop();
     if(active==="top") stopAll(); else start("top");
   });
   $("botMic")?.addEventListener("click",(e)=>{
-    e.preventDefault(); closeAllPop();
+    e.preventDefault(); e.stopPropagation();
+    closeAllPop();
     if(active==="bot") stopAll(); else start("bot");
   });
+
+  // lang btn -> pop
+  $("topLangBtn")?.addEventListener("click",(e)=>{
+    e.preventDefault(); e.stopPropagation();
+    const pop = $("pop-top");
+    if(!pop) return;
+    const willShow = !pop.classList.contains("show");
+    closeAllPop();
+    if(willShow){
+      pop.classList.add("show");
+      renderPop("top");
+    }
+  });
+
+  $("botLangBtn")?.addEventListener("click",(e)=>{
+    e.preventDefault(); e.stopPropagation();
+    const pop = $("pop-bot");
+    if(!pop) return;
+    const willShow = !pop.classList.contains("show");
+    closeAllPop();
+    if(willShow){
+      pop.classList.add("show");
+      renderPop("bot");
+    }
+  });
+
+  // clear
+  $("clearBtn")?.addEventListener("click",(e)=>{
+    e.preventDefault(); e.stopPropagation();
+    stopAll();
+    $("topBody") && ($("topBody").innerHTML="");
+    $("botBody") && ($("botBody").innerHTML="");
+  });
+
+  // logo -> home (isteğe bağlı)
+  $("homeBtn")?.addEventListener("click", ()=> location.href = HOME_PATH);
 }
 
 document.addEventListener("DOMContentLoaded", async ()=>{
   if(!(await requireLogin())) return;
 
-  $("topLangTxt") && ($("topLangTxt").textContent = labelChip(topLang));
-  $("botLangTxt") && ($("botLangTxt").textContent = labelChip(botLang));
+  setLangButtonTexts();
+  bindUI();
 
-  bindNav(); bindLangButtons(); bindMicButtons();
-
+  // voice preload (web)
   try{ window.speechSynthesis?.getVoices?.(); }catch{}
-
-  document.addEventListener("click",(e)=>{
-    if(!$("pop-top")?.contains(e.target) && !$("pop-bot")?.contains(e.target) && !e.target.closest(".lang-trigger")) closeAllPop();
-  },{capture:true});
 });
