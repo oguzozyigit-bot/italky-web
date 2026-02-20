@@ -142,7 +142,7 @@
       to{ transform: rotateY(360deg); }
     }
 
-    /* ✅ Ön yüz ITALKY (bir tık küçük), arka yüz AI — aynalama yok */
+    /* ✅ Ön yüz ITALKY, arka yüz AI — aynalama yok */
     .ai-stamp{
       position:absolute;
       inset:0;
@@ -161,14 +161,14 @@
       -webkit-backface-visibility: hidden;
     }
     .ai-front{
-      font-size: 46px;              /* ✅ ITALKY bir tık küçük */
+      font-size: 46px;
       transform: translateZ(1px);
       z-index: 4;
     }
     .ai-back{
-      font-size: 52px;              /* ✅ arka yüz AI */
+      font-size: 52px;
       letter-spacing: 1px;
-      transform: rotateY(180deg) translateZ(1px); /* ✅ scaleX(-1) YOK */
+      transform: rotateY(180deg) translateZ(1px);
       z-index: 3;
     }
 
@@ -347,6 +347,7 @@
 
     const toastEl = document.getElementById("toast");
     const HOME = "/pages/home.html";
+    const CALLBACK = "/pages/auth_callback.html";
 
     function toast(msg){
       if(!toastEl) return;
@@ -360,10 +361,16 @@
       return !!(window.Native && typeof window.Native.startGoogleLogin === "function");
     }
 
-    if (location.search.includes("code=") || location.hash.includes("access_token=")) {
-      location.replace("/pages/auth_callback.html" + location.search + location.hash);
-    }
+    // ✅ Web OAuth dönüşü login’e geldiyse: callback sayfasına TEK SEFERDE geçir
+    (function bounceToCallbackIfNeeded(){
+      const hasCode = new URLSearchParams(location.search).has("code");
+      const hasToken = location.hash.includes("access_token=");
+      if((hasCode || hasToken) && !location.pathname.endsWith("/pages/auth_callback.html")){
+        location.replace(CALLBACK + location.search + location.hash);
+      }
+    })();
 
+    // ✅ Native login (APK) -> id_token ile Supabase session aç
     window.onNativeLoginSuccess = async function(payload){
       try{
         const data = (typeof payload === "string") ? JSON.parse(payload) : payload;
@@ -396,6 +403,7 @@
       }
     };
 
+    // Google button
     document.getElementById("googleBtn")?.addEventListener("click", async ()=>{
       try{
         if(isNative()){
@@ -411,6 +419,7 @@
       }
     });
 
+    // Daktilo
     const phrases = [
       "Dil bariyerlerini görünmez yapıyoruz…",
       "italky Academy ile seviyeni netleştir…",
@@ -432,6 +441,7 @@
       }
     }, 5600);
 
+    // ✅ Session varsa direkt home
     (async function boot(){
       try{
         const { data:{ session } } = await supabase.auth.getSession();
