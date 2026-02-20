@@ -1,475 +1,317 @@
+<!-- FILE: /pages/spy.html -->
 <!DOCTYPE html>
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>ITALKY • Audio Spy — Elite Eternal</title>
+<title>italkyAI • Audio Spy</title>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 
 <style>
 :root{
-  --bg:#000900; --radar:#00ffcc; --radar-dim:rgba(0,255,204,.15);
-  --alert:#ff3300; --ok:#00e676; --text:#e0fffb; --border:rgba(0,255,204,.3); --gold:#ffb800;
+  --bg:#000900;
+  --radar:#00ffcc;
+  --radar-dim:rgba(0,255,204,.15);
+  --alert:#ff3300;
+  --ok:#00e676;
+  --text:#e0fffb;
+  --border:rgba(0,255,204,.30);
+  --gold:#ffb800;
+
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
-html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:'Outfit',sans-serif;color:var(--text)}
-.bg{position:absolute;inset:-50%;width:200%;height:200%;
+
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;background:var(--bg);font-family:'Outfit',sans-serif;color:var(--text);overflow:hidden}
+
+/* Shell içine girecek */
+#pageContent{
+  height: 100%;
+  width: 100%;
+  position: relative;
+}
+
+/* Arka grid */
+.bg{
+  position:absolute; inset:-50%; width:200%; height:200%;
   background-image: radial-gradient(var(--border) 1px, transparent 1px);
-  background-size:60px 60px; opacity:.1; animation:spin 60s linear infinite}
+  background-size:60px 60px; opacity:.10;
+  animation:spin 60s linear infinite;
+  pointer-events:none;
+}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-.app{position:relative;max-width:480px;height:100%;margin:0 auto;border:1px solid var(--border);
-  background:rgba(0,15,10,.9);display:flex;flex-direction:column;z-index:5}
-@media(min-width:520px){.app{height:92vh;border-radius:24px;margin-top:4vh}}
-
-.header{
-  height:70px; padding-top: var(--safe-top);
-  display:flex;align-items:center;justify-content:space-between;padding-left:16px;padding-right:16px;
-  border-bottom:1px solid var(--border); background: rgba(0,0,0,0.3);
+/* İç panel (shell main içinde) */
+.spy-wrap{
+  position:relative;
+  height: 100%;
+  display:flex;
+  flex-direction:column;
+  gap: 12px;
+  padding: 14px 14px calc(14px + var(--safe-bottom));
 }
-.score-box{text-align:left}
-.score{font-family:'Share Tech Mono';font-size:20px;color:var(--radar);text-shadow:0 0 10px var(--radar)}
-.pb-chip{font-size:10px;color:var(--gold);font-weight:800}
+
+/* Mini HUD (shell header zaten var, burada oyun HUD’u) */
+.hud{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+
+  padding: 12px 12px;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: rgba(0,15,10,.55);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+.score-box{text-align:left; line-height:1.05}
+.score{
+  font-family:'Share Tech Mono';
+  font-size:22px;
+  color:var(--radar);
+  text-shadow:0 0 10px var(--radar);
+}
+.pb-chip{font-size:10px;color:var(--gold);font-weight:900;letter-spacing:.6px;margin-top:4px}
+.hTitle{
+  font-family:'Share Tech Mono';
+  font-size: 13px;
+  letter-spacing: 1px;
+  opacity: .9;
+  white-space:nowrap;
+}
+.hRight{display:flex;align-items:center;gap:10px}
 .btn{
-  width:38px;height:38px;border-radius:12px;
+  width:40px;height:40px;border-radius:14px;
   border:1px solid var(--border);
   background:rgba(0,40,30,.45);
   display:flex;align-items:center;justify-content:center;
-  cursor:pointer; transition:.2s;
+  cursor:pointer; transition:.18s;
+  user-select:none;
 }
 .btn:active{transform:scale(.96); background:rgba(0,255,204,.12)}
 
-.main{flex:1;padding:16px;display:none;flex-direction:column;justify-content:space-between;padding-bottom:calc(16px + var(--safe-bottom))}
+/* Oyun gövde */
+.main{
+  flex:1;
+  display:none;
+  flex-direction:column;
+  justify-content:space-between;
+  gap: 12px;
+  min-height: 0;
 
-.visual{width:160px;height:160px;border:2px solid var(--border);border-radius:50%;margin:5px auto;
-  position:relative;background:radial-gradient(circle,rgba(0,255,204,0.1) 0%,transparent 70%);
-  box-shadow:0 0 30px var(--radar-dim)}
-.scan{position:absolute;inset:0;border-radius:50%;
+  padding: 14px;
+  border-radius: 22px;
+  border: 1px solid var(--border);
+  background: rgba(0,15,10,.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.visual{
+  width:170px;height:170px;border:2px solid var(--border);border-radius:50%;
+  margin:4px auto 2px;
+  position:relative;
+  background:radial-gradient(circle,rgba(0,255,204,0.10) 0%,transparent 70%);
+  box-shadow:0 0 30px var(--radar-dim);
+}
+.scan{
+  position:absolute;inset:0;border-radius:50%;
   background:conic-gradient(from 0deg,transparent 0deg,rgba(0,255,204,0.12) 60deg,var(--radar) 360deg);
-  opacity:.15; animation:scan 4s linear infinite}
+  opacity:.15; animation:scan 4s linear infinite
+}
 @keyframes scan{to{transform:rotate(360deg)}}
 
 .wave{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:4px}
 .wave.playing .bar{animation:eq .5s infinite ease-in-out alternate;background:var(--radar)}
-.bar{width:5px;height:12px;border-radius:3px;background:var(--radar);opacity:.3}
-@keyframes eq{to{height:50px;opacity:1;box-shadow:0 0 10px var(--radar)}}
+.bar{width:5px;height:12px;border-radius:3px;background:var(--radar);opacity:.28}
+@keyframes eq{to{height:52px;opacity:1;box-shadow:0 0 10px var(--radar)}}
 
-.listen-btn{margin:5px auto 15px;padding:12px 30px;border-radius:30px;border:2px solid var(--radar);
-  background:transparent;color:var(--radar);font-family:'Share Tech Mono';font-size:14px;cursor:pointer;transition:0.2s; font-weight: 800;}
-.listen-btn:active:not(:disabled){transform:scale(0.95);background:var(--radar-dim)}
-.listen-btn:disabled{opacity:.4; border-color: #555; color: #555;}
+.listen-btn{
+  margin: 2px auto 6px;
+  padding: 12px 30px;
+  border-radius: 30px;
+  border:2px solid var(--radar);
+  background:transparent;
+  color:var(--radar);
+  font-family:'Share Tech Mono';
+  font-size:14px;
+  cursor:pointer;
+  transition:.16s;
+  font-weight:900;
+}
+.listen-btn:active:not(:disabled){transform:scale(.96);background:var(--radar-dim)}
+.listen-btn:disabled{opacity:.4;border-color:#555;color:#555;cursor:not-allowed}
 
 .opts{display:flex;flex-direction:column;gap:10px}
-.opt{padding:15px;border-radius:14px;border:1px solid var(--border);
-  background:rgba(0,40,30,.6);cursor:pointer;font-weight:700;transition:0.2s;text-align:center; font-size: 15px;}
+.opt{
+  padding:15px;
+  border-radius:14px;
+  border:1px solid var(--border);
+  background:rgba(0,40,30,.55);
+  cursor:pointer;
+  font-weight:900;
+  transition:.16s;
+  text-align:center;
+  font-size: 15px;
+  user-select:none;
+}
 .opt:active{transform:scale(.99)}
-.opt.correct{border-color:var(--ok);background:rgba(0,230,118,.2);color:var(--ok)}
-.opt.wrong{border-color:var(--alert);background:rgba(255,51,0,.2);color:var(--alert)}
+.opt.correct{border-color:var(--ok);background:rgba(0,230,118,.16);color:var(--ok)}
+.opt.wrong{border-color:var(--alert);background:rgba(255,51,0,.16);color:var(--alert)}
 
-.stats-bar{display:flex;justify-content:space-between;align-items:center;padding:10px 0;font-family:'Share Tech Mono';font-size:11px;color:var(--radar)}
-
-.modal{position:absolute;inset:0;background:rgba(0,0,0,0.96);display:flex;align-items:center;justify-content:center;z-index:100}
-.card{background:#001510;border:1px solid var(--radar);border-radius:24px;padding:30px;width:88%;text-align:center}
-.lang-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:20px 0}
-.lang-btn{padding:12px 0;border-radius:10px;border:1px solid var(--radar);color:var(--radar);
-  font-family:'Share Tech Mono';font-weight:900;cursor:pointer;background:transparent}
-.lang-btn.active{background:var(--radar);color:#000}
-.main-btn{width:100%;padding:16px;border:none;border-radius:14px;background:var(--radar);
-  color:#000;font-weight:900;margin-top:15px;cursor:pointer}
-.exit-btn { background: #1a1a1a !important; color: #ff3300 !important; border: 1px solid #ff3300 !important; }
-
-.hidden{display:none!important}
+.stats-bar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding: 6px 2px 0;
+  font-family:'Share Tech Mono';
+  font-size:11px;
+  color:var(--radar);
+}
 
 .toast{
-  position:absolute;top:82px;left:50%;transform:translateX(-50%);
-  background:rgba(0,15,10,.95); border:1px solid var(--radar);
-  padding:8px 20px;border-radius:20px;font-weight:900;font-size:12px;
-  opacity:0;transition:0.25s;z-index:100; pointer-events:none;
+  position: fixed;
+  left:50%;
+  top: calc(16px + var(--safe-top));
+  transform:translateX(-50%) translateY(-120px);
+  background:rgba(0,15,10,.95);
+  border:1px solid var(--radar);
+  padding:10px 16px;
+  border-radius:999px;
+  font-weight:1000;
+  font-size:12px;
+  opacity:0;
+  transition:0.25s;
+  z-index: 999999;
+  pointer-events:none;
+  max-width:min(92vw,520px);
+  text-align:center;
 }
+.toast.show{transform:translateX(-50%) translateY(0); opacity:1}
+
+/* Modal */
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.92);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index: 99999;
+  padding: 18px;
+}
+.card{
+  background:#001510;
+  border:1px solid var(--radar);
+  border-radius:24px;
+  padding: 20px 16px;
+  width: min(440px, 100%);
+  text-align:center;
+}
+.lang-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:16px 0}
+.lang-btn{
+  padding:12px 0;border-radius:12px;border:1px solid var(--radar);color:var(--radar);
+  font-family:'Share Tech Mono';font-weight:1000;cursor:pointer;background:transparent
+}
+.lang-btn.active{background:var(--radar);color:#000}
+.main-btn{
+  width:100%;
+  padding:16px;
+  border:none;
+  border-radius:14px;
+  background:var(--radar);
+  color:#000;
+  font-weight:1000;
+  margin-top:12px;
+  cursor:pointer
+}
+.exit-btn{ background:#141414 !important; color:#ff3300 !important; border:1px solid #ff3300 !important; }
+.hidden{display:none!important}
 </style>
 </head>
 
 <body>
-<div class="bg"></div>
+  <div id="pageContent">
 
-<div class="app">
-  <div class="header">
-    <div class="score-box">
-      <div class="score" id="scoreDisp">0</div>
-      <div class="pb-chip" id="pbDisp">PB: 0</div>
+    <div class="bg"></div>
+
+    <div class="spy-wrap">
+
+      <div class="hud">
+        <div class="score-box">
+          <div class="score" id="scoreDisp">0</div>
+          <div class="pb-chip" id="pbDisp">PB: 0</div>
+        </div>
+
+        <div class="hTitle">AUDIO_SPY</div>
+
+        <div class="hRight">
+          <div class="btn" id="soundBtn" title="Ses">🔊</div>
+        </div>
+      </div>
+
+      <div class="main" id="gameArea">
+        <div>
+          <div class="visual">
+            <div class="scan"></div>
+            <div class="wave" id="wave">
+              <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+            </div>
+          </div>
+
+          <button class="listen-btn" id="listenBtn">▶ SİNYALİ DİNLE</button>
+
+          <div class="opts" id="optionsArea"></div>
+        </div>
+
+        <div class="stats-bar">
+          <div id="momDisp" style="color:var(--ok); font-weight:1000">x1.00 MOMENTUM</div>
+          <div id="livesDisp">❤️❤️❤️</div>
+        </div>
+      </div>
+
     </div>
-    <div class="title" style="font-family: 'Share Tech Mono'; font-size: 14px;">AUDIO_SPY</div>
-    <div class="btn" id="soundBtn">🔊</div>
-  </div>
 
-  <div class="main" id="gameArea">
-    <div class="visual">
-      <div class="scan"></div>
-      <div class="wave" id="wave">
-        <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+    <div class="toast" id="toast">—</div>
+
+    <!-- Start modal -->
+    <div class="modal" id="startModal">
+      <div class="card">
+        <h2 style="color:var(--radar);font-family:'Share Tech Mono';margin:0">INCOMING SIGNAL</h2>
+        <p style="opacity:.75;font-size:13px;margin:10px 0;line-height:1.45">
+          2 Doğru = +1 Can 🛠️ (Max 3 Can)<br>
+          Sinyali dinle ve deşifre et.
+        </p>
+        <div class="lang-grid">
+          <button class="lang-btn active" data-lang="en">EN</button>
+          <button class="lang-btn" data-lang="de">DE</button>
+          <button class="lang-btn" data-lang="fr">FR</button>
+          <button class="lang-btn" data-lang="es">ES</button>
+          <button class="lang-btn" data-lang="it">IT</button>
+        </div>
+        <button class="main-btn" id="startBtn">SİSTEMİ BOOT ET</button>
       </div>
     </div>
 
-    <button class="listen-btn" id="listenBtn">▶ SİNYALİ DİNLE</button>
-
-    <div id="resToast" class="toast">TAMİR EDİLDİ ❤️</div>
-
-    <div class="opts" id="optionsArea"></div>
-
-    <div class="stats-bar">
-      <div id="momDisp" style="color:var(--ok); font-weight:800">x1.00 MOMENTUM</div>
-      <div id="livesDisp">❤️❤️❤️</div>
+    <!-- End modal -->
+    <div class="modal hidden" id="endModal">
+      <div class="card">
+        <h2 id="endTitle" style="color:var(--radar);font-family:'Share Tech Mono';margin:0">SIGNAL COMPLETE</h2>
+        <p id="endStats" style="margin:16px 0; font-size:15px; line-height:1.6"></p>
+        <button class="main-btn" id="continueBtn">DEŞİFREYE DEVAM (RİSK)</button>
+        <button class="main-btn exit-btn" id="exitBtn">ÇIKIŞ</button>
+      </div>
     </div>
+
   </div>
-</div>
 
-<div class="modal" id="startModal">
-  <div class="card">
-    <h2 style="color:var(--radar);font-family:'Share Tech Mono';margin:0">INCOMING SIGNAL</h2>
-    <p style="opacity:.7;font-size:13px;margin:10px 0">2 Doğru = +1 Can 🛠️ (Max 3 Can)<br>Sinyali dinle ve deşifre et.</p>
-    <div class="lang-grid">
-      <button class="lang-btn active" data-lang="en">EN</button>
-      <button class="lang-btn" data-lang="de">DE</button>
-      <button class="lang-btn" data-lang="fr">FR</button>
-      <button class="lang-btn" data-lang="es">ES</button>
-      <button class="lang-btn" data-lang="it">IT</button>
-    </div>
-    <button class="main-btn" id="startBtn">SİSTEMİ BOOT ET</button>
-  </div>
-</div>
+  <script type="module">
+    import { mountShell } from "/js/ui_shell.js";
+    mountShell({ scroll:"none" });
+  </script>
 
-<div class="modal hidden" id="endModal">
-  <div class="card">
-    <h2 id="endTitle" style="color:var(--radar);font-family:'Share Tech Mono';margin:0">SIGNAL COMPLETE</h2>
-    <p id="endStats" style="margin:16px 0; font-size:15px; line-height:1.6"></p>
-    <button class="main-btn" id="continueBtn">DEŞİFREYE DEVAM (RİSK)</button>
-    <button class="main-btn exit-btn" id="exitBtn">ÇIKIŞ</button>
-  </div>
-</div>
-
-<script type="module">
-import { loadLangPool, createUsedSet, pick } from "/js/langpool.js";
-
-const $ = id => document.getElementById(id);
-
-let lang = "en";
-let muted = false, totalScore = 0, setScore = 0, momentum = 1.0, lives = 3, combo = 0;
-let currentItem = null, cooldown = false;
-let setCounter = 0, runActive = false;
-let poolItems = [];
-let speaking = false;
-let lastUtter = null;
-
-const LANGMAP = {en:"en-US", de:"de-DE", fr:"fr-FR", es:"es-ES", it:"it-IT"};
-
-/* ===== ONLY FIX: correct detection (no structure change) ===== */
-const norm = (s)=>
-  String(s||"").trim().toLowerCase()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
-    .replace(/\s+/g," ");
-
-/* ===== GAMEKIT MIN (only gating) ===== */
-const DAILY_FREE_TOKENS = 25;
-function isoDateLocal(){
-  const d=new Date();
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
-}
-function getUser(){ try{ return JSON.parse(localStorage.getItem("italky_user_v1")||"{}"); }catch{ return {}; } }
-function isPro(u){
-  const p = String(u?.plan||"").toUpperCase().trim();
-  return p==="PRO" || p==="PREMIUM" || p==="PLUS";
-}
-function uid(u){ return String(u.user_id||u.id||u.email||"guest").toLowerCase().trim(); }
-function tokenKey(u){ return `italky_game_tokens::${uid(u)}::${isoDateLocal()}`; }
-function tokenInitKey(u){ return `italky_game_tokens_init::${uid(u)}::${isoDateLocal()}`; }
-function ensureDailyTokens(){
-  const u=getUser();
-  if(isPro(u)) return;
-  if(localStorage.getItem(tokenInitKey(u))) return;
-  localStorage.setItem(tokenKey(u), String(DAILY_FREE_TOKENS));
-  localStorage.setItem(tokenInitKey(u), "1");
-}
-function getTokens(){
-  const u=getUser();
-  if(isPro(u)) return 9999;
-  const v = Number(localStorage.getItem(tokenKey(u))||"0");
-  return Number.isFinite(v)?Math.max(0,v):0;
-}
-function spendToken(){
-  const u=getUser();
-  if(isPro(u)) return true;
-  const t=getTokens();
-  if(t<=0) return false;
-  localStorage.setItem(tokenKey(u), String(t-1));
-  return true;
-}
-
-function updatePB() {
-  const pb = parseInt(localStorage.getItem(`audio_spy_pb_${lang}`) || "0", 10);
-  $("pbDisp").textContent = `PB: ${pb}`;
-}
-
-function toast(msg, color="var(--radar)"){
-  const t = $("resToast");
-  t.textContent = msg; t.style.borderColor = color; t.style.color = color; t.style.opacity = "1";
-  setTimeout(()=> t.style.opacity="0", 1500);
-}
-
-function setListenLabel(state){
-  const btn = $("listenBtn");
-  if(state === "playing"){
-    btn.textContent = "⏳ SİNYAL ÇALIYOR";
-    btn.disabled = true;
-  } else if(state === "wait"){
-    btn.textContent = "… BEKLE";
-    btn.disabled = true;
-  } else {
-    btn.textContent = "▶ SİNYALİ DİNLE";
-    btn.disabled = false;
-  }
-}
-
-document.querySelectorAll(".lang-btn").forEach(b => {
-  b.onclick = () => {
-    document.querySelectorAll(".lang-btn").forEach(x => x.classList.remove("active"));
-    b.classList.add("active");
-    lang = b.dataset.lang;
-    updatePB();
-  };
-});
-
-$("soundBtn").onclick = () => {
-  muted = !muted;
-  $("soundBtn").textContent = muted ? "🔇" : "🔊";
-  if(muted) stopSpeak();
-};
-
-$("startBtn").onclick = async () => {
-  ensureDailyTokens();
-  const u=getUser();
-  if(!isPro(u) && !spendToken()){
-    alert("Hakkın bitti. Hak kazan veya PRO’ya geç.");
-    location.href="/pages/game.html";
-    return;
-  }
-
-  $("startModal").classList.add("hidden");
-  $("gameArea").style.display = "flex";
-  if(!runActive) {
-    totalScore = 0; lives = 3; momentum = 1.0; combo = 0; runActive = true;
-  }
-  await initSet();
-};
-
-async function initSet(isBank = false) {
-  if(isBank) { lives = 3; momentum = 1.0; combo = 0; }
-  setCounter = 0; setScore = 0;
-  cooldown = false;
-  stopSpeak();
-  setListenLabel("idle");
-
-  const data = await loadLangPool(lang);
-  const USED_KEY = `used_audio_spy_v2_${lang}`;
-  const { used, save } = createUsedSet(USED_KEY);
-
-  let picked = pick(data, 12, used, save);
-  if (!picked || picked.length < 8) {
-    localStorage.removeItem(USED_KEY);
-    const cleanUsed = new Set();
-    picked = pick(data, 12, cleanUsed, save);
-  }
-
-  poolItems = picked || [];
-  try { save(poolItems.map(x => x.sentence || x.w)); } catch(e){}
-
-  updateUI();
-  nextSignal();
-}
-
-function nextSignal() {
-  if(setCounter >= 8 || lives <= 0) {
-    finishSet(lives <= 0);
-    return;
-  }
-
-  const w = poolItems[setCounter];
-  currentItem = {
-    say: (w?.sentence || `Listen: ${w?.w || "signal"}.`),
-    ans: w?.tr || "",
-    w: w?.w || ""
-  };
-
-  buildOptions(currentItem.ans);
-  setTimeout(() => playSignal(), 500);
-}
-
-function buildOptions(correct) {
-  const opts = [correct];
-  while(opts.length < 4) {
-    const r = poolItems[Math.floor(Math.random() * poolItems.length)]?.tr;
-    if(r && !opts.some(x=>norm(x)===norm(r))) opts.push(r);
-  }
-  opts.sort(() => Math.random() - 0.5);
-
-  const area = $("optionsArea");
-  area.innerHTML = "";
-  opts.forEach(v => {
-    const d = document.createElement("div");
-    d.className = "opt";
-    d.textContent = v;
-    d.onclick = () => handleChoice(d, v);
-    area.appendChild(d);
-  });
-}
-
-function lockOptions(lock=true){
-  document.querySelectorAll(".opt").forEach(x => x.style.pointerEvents = lock ? "none" : "auto");
-}
-
-function playSignal() {
-  if(speaking || cooldown || !currentItem) return;
-  setListenLabel("playing");
-  $("wave").classList.add("playing");
-  speak(currentItem.say, () => {
-    $("wave").classList.remove("playing");
-    setListenLabel("idle");
-  });
-}
-
-$("listenBtn").onclick = playSignal;
-
-function handleChoice(el, val) {
-  if(cooldown || !currentItem) return;
-  cooldown = true;
-  lockOptions(true);
-  setListenLabel("wait");
-
-  const isCorrect = norm(val) === norm(currentItem.ans);
-
-  if(isCorrect) {
-    el.classList.add("correct");
-    const gain = Math.round(100 * momentum);
-    totalScore += gain; setScore += gain;
-    momentum = Math.min(1.6, momentum + 0.05);
-    combo++;
-
-    if(combo > 0 && combo % 2 === 0) {
-      if(lives < 3) { lives++; toast("TAMİR EDİLDİ ❤️+1", "var(--ok)"); }
-      else { toast("FLOW STABİL ⚡", "var(--radar)"); }
-    }
-
-    $("wave").classList.add("playing");
-    speak(currentItem.say, () => {
-      $("wave").classList.remove("playing");
-      resetSignal();
-      nextSignal();
-    });
-  } else {
-    el.classList.add("wrong");
-    lives--;
-    combo = 0;
-    momentum = Math.max(1.0, momentum - 0.2);
-
-    document.querySelectorAll(".opt").forEach(x => {
-      if(norm(x.textContent) === norm(currentItem.ans)) x.classList.add("correct");
-    });
-
-    $("wave").classList.add("playing");
-    speak(currentItem.say, () => {
-      $("wave").classList.remove("playing");
-      resetSignal();
-      (lives > 0) ? nextSignal() : finishSet(true);
-    });
-  }
-  updateUI();
-}
-
-function resetSignal() {
-  cooldown = false;
-  setCounter++;
-  lockOptions(false);
-  setListenLabel("idle");
-}
-
-function updateUI() {
-  $("scoreDisp").textContent = totalScore;
-  $("momDisp").textContent = `x${momentum.toFixed(2)} MOMENTUM`;
-  $("livesDisp").textContent = "❤️".repeat(Math.max(0, lives)) + "💀".repeat(3 - Math.max(0, lives));
-}
-
-function finishSet(died) {
-  stopSpeak();
-  setListenLabel("idle");
-  const pb = parseInt(localStorage.getItem(`audio_spy_pb_${lang}`) || "0", 10);
-  if(totalScore > pb) localStorage.setItem(`audio_spy_pb_${lang}`, totalScore);
-
-  $("endModal").classList.remove("hidden");
-  $("endTitle").textContent = died ? "SIGNAL LOST" : "SECTOR DECODED";
-  $("endTitle").style.color = died ? "var(--alert)" : "var(--radar)";
-  $("endStats").innerHTML = `TOPLAM SKOR: <b>${totalScore}</b><br>MOMENTUM: <b>x${momentum.toFixed(2)}</b>`;
-
-  if(died) {
-    $("continueBtn").classList.add("hidden");
-    runActive = false;
-  } else {
-    $("continueBtn").classList.remove("hidden");
-  }
-  updatePB();
-}
-
-$("continueBtn").onclick = () => {
-  ensureDailyTokens();
-  const u=getUser();
-  if(!isPro(u) && !spendToken()){
-    alert("Hakkın bitti. Hak kazan veya PRO’ya geç.");
-    location.href="/pages/game.html";
-    return;
-  }
-  $("endModal").classList.add("hidden");
-  initSet(false);
-};
-
-$("exitBtn").onclick = () => {
-  if(confirm("Operasyonu durdurup üsse dönmek istiyor musunuz?")) {
-    location.href = '/pages/game.html';
-  }
-};
-
-function stopSpeak(){
-  speaking = false;
-  try { speechSynthesis.cancel(); } catch {}
-  lastUtter = null;
-}
-
-function speak(txt, onDone) {
-  if(muted || !txt) { onDone && onDone(); return; }
-  stopSpeak();
-
-  const u = new SpeechSynthesisUtterance(txt);
-  lastUtter = u;
-  u.lang = LANGMAP[lang] || "en-US";
-  u.rate = 0.85;
-  speaking = true;
-
-  const finish = () => {
-    if(lastUtter !== u) return;
-    speaking = false;
-    onDone && onDone();
-  };
-
-  u.onend = finish;
-  u.onerror = finish;
-
-  try { speechSynthesis.speak(u); }
-  catch { finish(); }
-}
-
-window.addEventListener('load', () => {
-  updatePB();
-  setListenLabel("idle");
-});
-</script>
+  <script type="module" src="/js/spy_page.js?v=1"></script>
 </body>
 </html>
