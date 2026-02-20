@@ -12,12 +12,16 @@
 
   <style>
     :root{
-      --p-lavender: rgba(233, 213, 255, 0.15);
-      --p-mint: rgba(187, 247, 208, 0.15);
-      --p-salmon: rgba(251, 207, 232, 0.15);
-      --p-sky: rgba(191, 219, 254, 0.15);
-      --p-lemon: rgba(254, 240, 138, 0.15);
       --bd: rgba(255,255,255,0.10);
+
+      --p-lav: rgba(233, 213, 255, 0.18);
+      --p-mint: rgba(187, 247, 208, 0.18);
+      --p-salmon: rgba(251, 207, 232, 0.18);
+      --p-sky: rgba(191, 219, 254, 0.18);
+      --p-lemon: rgba(254, 240, 138, 0.18);
+
+      --good: rgba(34,197,94,1);
+      --bad: rgba(239,68,68,1);
     }
 
     #pageContent{
@@ -38,13 +42,13 @@
       padding: 12px 12px;
       border-radius: 18px;
       border: 1px solid var(--bd);
-      background: rgba(255,255,255,0.04);
+      background: rgba(255,255,255,0.05);
       backdrop-filter: blur(14px);
       -webkit-backdrop-filter: blur(14px);
     }
     .hTitle{
       font-weight:1000;
-      letter-spacing:.5px;
+      letter-spacing:.2px;
       font-size: 13px;
       color: rgba(255,255,255,0.92);
       display:flex;
@@ -60,7 +64,7 @@
       padding: 8px 10px;
       border-radius: 999px;
       border: 1px solid rgba(99,102,241,0.35);
-      background: rgba(99,102,241,0.10);
+      background: rgba(99,102,241,0.12);
       font-weight: 1000;
       font-size: 11px;
       color: rgba(165,180,252,0.95);
@@ -87,28 +91,55 @@
       border: 1px solid var(--bd);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
-      transition: transform .22s cubic-bezier(.22,1,.36,1), background .22s ease, opacity .22s ease;
+      transition: transform .22s cubic-bezier(.22,1,.36,1), background .22s ease, opacity .22s ease, filter .22s ease;
       cursor: pointer;
       user-select:none;
       overflow:hidden;
       min-height: 0;
+      box-shadow: 0 18px 44px rgba(0,0,0,0.22);
     }
     .game-module:active{ transform: scale(0.965); opacity: 0.92; }
 
     .tall{ grid-row: span 2; }
-    .wide{ grid-column: span 2; flex-direction: row !important; gap: 16px !important; padding: 0 18px !important; justify-content:flex-start !important; text-align:left !important; }
+    .wide{
+      grid-column: span 2;
+      flex-direction: row !important;
+      gap: 16px !important;
+      padding: 0 18px !important;
+      justify-content:flex-start !important;
+      text-align:left !important;
+    }
 
     .bg-s{ background: var(--p-salmon); }
     .bg-b{ background: var(--p-sky); }
     .bg-y{ background: var(--p-lemon); }
-    .bg-l{ background: var(--p-lavender); }
+    .bg-l{ background: var(--p-lav); }
     .bg-m{ background: var(--p-mint); }
 
+    /* ✅ 24h durum ikonu (yazı yok) */
+    .statusDot{
+      position:absolute;
+      top: 10px;
+      left: 10px;
+      width: 12px;
+      height: 12px;
+      border-radius: 999px;
+      border: 2px solid rgba(255,255,255,0.35);
+      background: var(--bad);
+      box-shadow: 0 0 0 6px rgba(239,68,68,0.10);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    .statusDot.on{
+      background: var(--good);
+      box-shadow: 0 0 0 6px rgba(34,197,94,0.10);
+    }
+
+    /* Daha renkli ikon kapsülleri */
     .icon-node{
-      width:44px;height:44px;
+      width:46px;height:46px;
       border-radius: 16px;
-      border:1px solid rgba(255,255,255,0.12);
-      background: rgba(0,0,0,0.12);
+      border:1px solid rgba(255,255,255,0.14);
       display:flex;
       align-items:center;
       justify-content:center;
@@ -119,24 +150,20 @@
     }
     .wide .icon-node{ margin-bottom:0; }
 
-    .g-name{ font-size: 13px; font-weight: 1000; color: #fff; margin-bottom: 2px; letter-spacing: -0.3px; }
-    .g-desc{ font-size: 9.8px; font-weight: 800; color: rgba(255,255,255,0.55); }
+    .ico-hang{ background: linear-gradient(135deg, rgba(236,72,153,0.45), rgba(99,102,241,0.30)); }
+    .ico-spy{  background: linear-gradient(135deg, rgba(59,130,246,0.42), rgba(34,197,94,0.22)); }
+    .ico-quiz{ background: linear-gradient(135deg, rgba(245,158,11,0.45), rgba(236,72,153,0.22)); }
+    .ico-sent{ background: linear-gradient(135deg, rgba(168,85,247,0.42), rgba(59,130,246,0.22)); }
+    .ico-duel{ background: linear-gradient(135deg, rgba(34,197,94,0.40), rgba(59,130,246,0.22)); }
+    .ico-match{background: linear-gradient(135deg, rgba(59,130,246,0.35), rgba(245,158,11,0.20)); }
+    .ico-gap{  background: linear-gradient(135deg, rgba(34,197,94,0.30), rgba(236,72,153,0.20)); }
 
-    /* küçük “24h pass” etiketi */
-    .pass{
-      position:absolute;
-      top: 10px;
-      right: 10px;
-      padding: 7px 9px;
-      border-radius: 999px;
-      font-size: 10px;
-      font-weight: 1000;
-      letter-spacing: .4px;
-      border:1px solid rgba(255,255,255,0.12);
-      background: rgba(0,0,0,0.14);
-      color: rgba(255,255,255,0.82);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
+    .g-name{ font-size: 13px; font-weight: 1000; color: #fff; margin-bottom: 2px; letter-spacing: -0.3px; }
+    .g-desc{ font-size: 9.8px; font-weight: 800; color: rgba(255,255,255,0.58); }
+
+    .disabled{
+      opacity: .35;
+      filter: grayscale(1);
     }
 
     /* Toast */
@@ -160,11 +187,6 @@
       text-align:center;
     }
     .toast.show{ transform: translateX(-50%) translateY(0); }
-
-    .disabled{
-      opacity: .35;
-      filter: grayscale(1);
-    }
   </style>
 </head>
 
@@ -182,50 +204,50 @@
     <div class="neural-grid">
       <!-- Hangman -->
       <div class="game-module tall bg-s" data-game="hangman" data-url="/pages/hangman.html">
-        <div class="pass" data-pass="hangman">24h PASS</div>
-        <div class="icon-node">⛓️</div>
+        <div class="statusDot" data-dot="hangman"></div>
+        <div class="icon-node ico-hang">⛓️</div>
         <div class="g-name">Adam Asmaca</div>
         <div class="g-desc">Kelime • Refleks • Puan</div>
       </div>
 
       <div class="game-module bg-b" data-game="spy" data-url="/pages/spy.html">
-        <div class="pass" data-pass="spy">24h PASS</div>
-        <div class="icon-node">👁️</div>
+        <div class="statusDot" data-dot="spy"></div>
+        <div class="icon-node ico-spy">👁️</div>
         <div class="g-name">Casus Kim?</div>
         <div class="g-desc">Sezgi • Hız • Dikkat</div>
       </div>
 
       <div class="game-module bg-y" data-game="quiz" data-url="/pages/quiz.html">
-        <div class="pass" data-pass="quiz">24h PASS</div>
-        <div class="icon-node">🏆</div>
+        <div class="statusDot" data-dot="quiz"></div>
+        <div class="icon-node ico-quiz">🏆</div>
         <div class="g-name">Bilgi Yarışı</div>
         <div class="g-desc">Genel • Kelime • Hız</div>
       </div>
 
       <div class="game-module tall bg-l" data-game="sentence" data-url="/pages/sentence.html">
-        <div class="pass" data-pass="sentence">24h PASS</div>
-        <div class="icon-node">🧠</div>
+        <div class="statusDot" data-dot="sentence"></div>
+        <div class="icon-node ico-sent">🧠</div>
         <div class="g-name">Cümle Kurma</div>
         <div class="g-desc">Gramer • Pratik</div>
       </div>
 
       <div class="game-module bg-m" data-game="duel" data-url="/pages/duel.html">
-        <div class="pass" data-pass="duel">24h PASS</div>
-        <div class="icon-node">🎤</div>
+        <div class="statusDot" data-dot="duel"></div>
+        <div class="icon-node ico-duel">🎤</div>
         <div class="g-name">Sesli Düello</div>
         <div class="g-desc">Telaffuz • Hız</div>
       </div>
 
       <div class="game-module bg-b" data-game="match" data-url="/pages/match.html">
-        <div class="pass" data-pass="match">24h PASS</div>
-        <div class="icon-node">🧩</div>
+        <div class="statusDot" data-dot="match"></div>
+        <div class="icon-node ico-match">🧩</div>
         <div class="g-name">Eşleştirme</div>
         <div class="g-desc">Hafıza • Kelime</div>
       </div>
 
       <div class="game-module wide bg-m" data-game="gap" data-url="/pages/gap.html">
-        <div class="pass" data-pass="gap">24h PASS</div>
-        <div class="icon-node">🔍</div>
+        <div class="statusDot" data-dot="gap"></div>
+        <div class="icon-node ico-gap">🔍</div>
         <div style="display:flex; flex-direction:column; gap:4px;">
           <div class="g-name">Boşluk Doldur</div>
           <div class="g-desc">Algoritma Tamamlama Protokolü</div>
@@ -237,6 +259,6 @@
 
   <div class="toast" id="toast"></div>
 
-  <script type="module" src="/js/games_menu.js?v=1"></script>
+  <script type="module" src="/js/games_menu.js?v=2"></script>
 </body>
 </html>
