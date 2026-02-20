@@ -1,10 +1,249 @@
 <!doctype html>
 <html lang="tr">
 <head>
-  <meta charset="utf-8" />
-  <meta http-equiv="refresh" content="0; url=/pages/admin.html" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
   <title>italkyAI • Admin</title>
+  <link rel="icon" href="data:," />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#02000f;
+      --bd: rgba(255,255,255,0.10);
+      --panel: rgba(255,255,255,0.04);
+      --muted: rgba(255,255,255,0.60);
+      --accent: #6366f1;
+      --ok: #00e676;
+      --bad:#ff1744;
+      --warn:#ffb800;
+    }
+    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    html,body{ margin:0; height:100%; background:var(--bg); color:#fff; font-family:Outfit,sans-serif; overflow:hidden; }
+
+    #pageContent{
+      height:100%;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      padding:12px;
+      overflow:hidden;
+    }
+
+    .card{
+      border:1px solid var(--bd);
+      background: var(--panel);
+      border-radius: 18px;
+      padding: 12px;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    .topRow{
+      display:flex; gap:10px; align-items:center; justify-content:space-between;
+      flex-wrap:wrap;
+    }
+
+    .title{
+      font-family:"Space Grotesk",sans-serif;
+      font-weight:800;
+      letter-spacing:.5px;
+      font-size:16px;
+      display:flex; align-items:center; gap:8px;
+    }
+    .pill{
+      padding:7px 10px;
+      border-radius:999px;
+      border:1px solid rgba(99,102,241,0.35);
+      background: rgba(99,102,241,0.10);
+      font-weight:900;
+      font-size:11px;
+      color: rgba(165,180,252,0.95);
+      white-space:nowrap;
+    }
+
+    .controls{
+      display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+      width:100%;
+    }
+    .in{
+      flex: 1;
+      min-width: 220px;
+      height: 44px;
+      border-radius: 14px;
+      border: 1px solid var(--bd);
+      background: rgba(0,0,0,0.20);
+      color:#fff;
+      padding: 0 12px;
+      outline:none;
+      font-weight:800;
+    }
+    .btn{
+      height:44px;
+      border-radius:14px;
+      border:1px solid var(--bd);
+      background: rgba(0,0,0,0.18);
+      color:#fff;
+      padding:0 14px;
+      font-weight:900;
+      cursor:pointer;
+      transition:.15s;
+      white-space:nowrap;
+    }
+    .btn:active{ transform:scale(.98); }
+    .btn.ok{ border-color: rgba(0,230,118,0.35); background: rgba(0,230,118,0.10); }
+    .btn.bad{ border-color: rgba(255,23,68,0.35); background: rgba(255,23,68,0.10); }
+    .btn.warn{ border-color: rgba(255,184,0,0.35); background: rgba(255,184,0,0.10); }
+
+    .tableWrap{
+      flex:1;
+      overflow:auto;
+      border-radius:18px;
+      border:1px solid var(--bd);
+      background: rgba(0,0,0,0.14);
+    }
+    .tableWrap::-webkit-scrollbar{ width:0; height:0; display:none; }
+
+    table{
+      width:100%;
+      border-collapse: collapse;
+      min-width: 860px;
+    }
+    thead th{
+      position: sticky;
+      top:0;
+      background: rgba(0,0,0,0.55);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      text-align:left;
+      font-size:11px;
+      letter-spacing:.6px;
+      text-transform: uppercase;
+      padding:12px;
+      border-bottom:1px solid var(--bd);
+      color: rgba(255,255,255,0.75);
+      font-weight:1000;
+      z-index:2;
+    }
+    tbody td{
+      padding:12px;
+      border-bottom:1px solid rgba(255,255,255,0.06);
+      font-size:12px;
+      color: rgba(255,255,255,0.86);
+      vertical-align:middle;
+    }
+
+    .mini{
+      font-size:11px;
+      color: var(--muted);
+      font-weight:800;
+    }
+    .role{
+      padding:8px 10px;
+      border-radius:12px;
+      border:1px solid var(--bd);
+      background: rgba(0,0,0,0.18);
+      color:#fff;
+      font-weight:900;
+      font-size:12px;
+      outline:none;
+    }
+    .tokenBox{
+      display:flex; align-items:center; gap:8px;
+    }
+    .num{
+      min-width: 50px;
+      text-align:right;
+      font-weight:1000;
+      color: rgba(165,180,252,0.95);
+    }
+    .tinyBtn{
+      width:36px; height:32px;
+      border-radius:10px;
+      border:1px solid var(--bd);
+      background: rgba(0,0,0,0.18);
+      color:#fff;
+      font-weight:1000;
+      cursor:pointer;
+    }
+    .tinyBtn:active{ transform:scale(.98); }
+    .tag{
+      display:inline-flex; align-items:center; gap:6px;
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:11px;
+      font-weight:1000;
+      border:1px solid var(--bd);
+      background: rgba(255,255,255,0.04);
+    }
+    .tag.ok{ border-color: rgba(0,230,118,0.35); color: rgba(0,230,118,0.95); }
+    .tag.bad{ border-color: rgba(255,23,68,0.35); color: rgba(255,23,68,0.95); }
+    .tag.warn{ border-color: rgba(255,184,0,0.35); color: rgba(255,184,0,0.95); }
+
+    #toast{
+      position: fixed;
+      left:50%;
+      top:18px;
+      transform: translateX(-50%) translateY(-120px);
+      background: rgba(10,10,18,0.95);
+      border: 1px solid rgba(99,102,241,0.35);
+      padding: 10px 14px;
+      border-radius: 999px;
+      color:#fff;
+      z-index: 999999;
+      font-weight: 1000;
+      font-size: 12px;
+      transition: .28s;
+      backdrop-filter: blur(12px);
+      pointer-events:none;
+      max-width: min(92vw, 520px);
+      text-align:center;
+    }
+    #toast.show{ transform: translateX(-50%) translateY(0); }
+  </style>
 </head>
-<body></body>
+
+<body>
+  <div id="pageContent">
+    <div class="card">
+      <div class="topRow">
+        <div class="title">🛡️ italkyAI Admin <span class="pill" id="meRole">—</span></div>
+        <div class="pill" id="meEmail">—</div>
+      </div>
+
+      <div class="controls" style="margin-top:10px;">
+        <input class="in" id="q" placeholder="Ara: email / isim / user_id" />
+        <button class="btn ok" id="refreshBtn">Yenile</button>
+        <button class="btn warn" id="onlyAdminsBtn">Sadece Admin</button>
+        <button class="btn bad" id="logoutBtn">Çıkış</button>
+      </div>
+
+      <div class="mini" style="margin-top:10px;">
+        Bu panel sadece <b>admin</b> / <b>superadmin</b> içindir. Tüm aksiyonlar backend üzerinden güvenli çalışır.
+      </div>
+    </div>
+
+    <div class="tableWrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:240px;">Kullanıcı</th>
+            <th style="width:260px;">Email</th>
+            <th style="width:160px;">User ID</th>
+            <th style="width:160px;">Rol</th>
+            <th style="width:180px;">Jeton</th>
+            <th style="width:180px;">Durum</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+  <script type="module" src="/js/admin_page.js?v=1"></script>
+</body>
 </html>
