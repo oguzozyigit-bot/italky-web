@@ -1,18 +1,27 @@
+// FILE: /js/admin_page.js
 import { supabase } from "/js/supabase_client.js";
 import { safeLogout } from "/js/auth.js";
 import { mountShell } from "/js/ui_shell.js";
 
-const API_BASE = "https://italky-api.onrender.com"; // italky-api servisiniz
+mountShell({ scroll: "auto" });
+
 const $ = (id)=>document.getElementById(id);
 
-function toast(msg){
-  const el = $("toast");
-  if(!el) return;
-  el.textContent = String(msg||"");
-  el.classList.add("show");
-  clearTimeout(window.__tto);
-  window.__tto = setTimeout(()=>el.classList.remove("show"), 2200);
+const API = "https://italky-api.onrender.com/api";
+
+function tab(name){
+  ["users","deploy","github"].forEach(t=>{
+    document.querySelector(`.tab[data-tab="${t}"]`)?.classList.toggle("active", t===name);
+    $(`panel${t.charAt(0).toUpperCase()+t.slice(1)}`).style.display = (t===name) ? "block":"none";
+  });
 }
+
+document.querySelectorAll(".tab").forEach(el=>{
+  el.addEventListener("click", ()=> tab(el.dataset.tab));
+});
+
+$("homeBtn").onclick = ()=> location.href="/pages/home.html";
+$("logoutBtn").onclick = ()=> safeLogout();
 
 async function getAccessToken(){
   const { data:{ session } } = await supabase.auth.getSession();
@@ -21,214 +30,149 @@ async function getAccessToken(){
 
 async function api(path, opts={}){
   const token = await getAccessToken();
-  const r = await fetch(`${API_BASE}${path}`, {
+  if(!token) throw new Error("NO_SESSION");
+  const r = await fetch(`${API}${path}`, {
     ...opts,
     headers: {
-      "Content-Type": "application/json",
-      ...(opts.headers||{}),
+      "Content-Type":"application/json",
       "Authorization": `Bearer ${token}`,
+      ...(opts.headers||{})
     }
   });
-  const txt = await r.text().catch(()=> "");
-  let data = null;
-  try{ data = txt ? JSON.parse(txt) : null; }catch{ data = { raw: txt }; }
-  if(!r.ok){
-    const msg = data?.detail || data?.error || `HTTP ${r.status}`;
-    throw new Error(msg);
-  }
-  return data;
-}
-
-let onlyAdmins = false;
-
-function roleTag(role){
-  const r = String(role||"user").toLowerCase();
-  if(r === "superadmin") return `<span class="tag ok">SUPERADMIN</span>`;
-  if(r === "admin") return `<span class="tag ok">ADMIN</span>`;
-  if(r === "moderator") return `<span class="tag warn">MOD</span>`;
-  return `<span class="tag">USER</span>`;
-}
-
-function statusTag(u){
-  // basit: jeton 0 ise warn, yoksa ok
-  const t = Number(u?.tokens ?? 0);
-  if(t <= 0) return `<span class="tag warn">JETON: 0</span>`;
-  return `<span class="tag ok">AKTİF</span>`;
-}
-
-function rowHtml(u){
-  const id = u.id;
-  const name = u.name || "Kullanıcı";
-  const email = u.email || "";
-  const role = (u.role || "user").toLowerCase();
-  const tokens = Number(u.tokens ?? 0);
-
-  return `
-  <tr data-id="${id}">
-    <td>
-      <div style="display:flex; flex-direction:column; gap:4px;">
-        <div style="font-weight:1000;">${escapeHtml(name)}</div>
-        <div class="mini">${roleTag(role)}</div>
-      </div>
-    </td>
-    <td>
-      <div style="display:flex; flex-direction:column; gap:4px;">
-        <div style="font-weight:900;">${escapeHtml(email)}</div>
-        <div class="mini">${escapeHtml(u.last_login_at || "")}</div>
-      </div>
-    </td>
-    <td class="mini">${escapeHtml(id)}</td>
-    <td>
-      <select class="role" data-role>
-        ${["user","moderator","admin","superadmin"].map(r=>(
-          `<option value="${r}" ${r===role?"selected":""}>${r.toUpperCase()}</option>`
-        )).join("")}
-      </select>
-      <button class="btn ok" data-save-role style="height:34px; margin-left:8px;">Kaydet</button>
-    </td>
-    <td>
-      <div class="tokenBox">
-        <span class="num" data-tokens>${tokens}</span>
-        <button class="tinyBtn" data-tminus title="-1">−</button>
-        <button class="tinyBtn" data-tplus title="+1">+</button>
-      </div>
-    </td>
-    <td>${statusTag(u)}</td>
-  </tr>`;
-}
-
-function escapeHtml(s){
-  return String(s||"")
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#039;");
+  const txt = await r.text();
+  let j = null; try{ j = JSON.parse(txt); }catch{ j = { raw: txt }; }
+  if(!r.ok) throw new Error(j?.detail || txt || `HTTP_${r.status}`);
+  return j;
 }
 
 async function boot(){
-  // ui shell (admin sayfasında da üst-alt bar olsun istiyorsan)
-  try{ mountShell({ scroll: "auto" }); }catch{}
-
-  // login kontrol
-  const { data:{ session } } = await supabase.auth.getSession();
-  if(!session){
-    location.replace("/pages/login.html");
-    return;
-  }
-
-  // yetki kontrolü
+  // admin mi?
   try{
-    const me = await api("/api/admin/me");
-    $("meRole").textContent = String(me?.role||"—").toUpperCase();
-    $("meEmail").textContent = me?.email || "—";
+    const me = await api("/admin/me");
+    $("meLine").textContent = `Yetki: ${me.me.role} • UID: ${me.me.user_id}`;
   }catch(e){
-    toast("Yetkisiz: admin değil");
+    $("meLine").textContent = "Admin değil / oturum yok";
     location.replace("/pages/home.html");
     return;
   }
-
-  bind();
-  await refresh();
+  await renderUsers();
+  renderDeploy();
+  renderGithub();
 }
 
-function bind(){
-  $("logoutBtn")?.addEventListener("click", async ()=>{
-    await safeLogout();
-  });
-
-  $("refreshBtn")?.addEventListener("click", refresh);
-
-  $("onlyAdminsBtn")?.addEventListener("click", async ()=>{
-    onlyAdmins = !onlyAdmins;
-    $("onlyAdminsBtn").classList.toggle("ok", onlyAdmins);
-    $("onlyAdminsBtn").textContent = onlyAdmins ? "Admin Filtre: Açık" : "Sadece Admin";
-    await refresh();
-  });
-
-  $("q")?.addEventListener("input", ()=>{
-    // client-side filtre
-    const q = String($("q").value||"").toLowerCase().trim();
-    const rows = document.querySelectorAll("#rows tr");
-    rows.forEach(tr=>{
-      const t = tr.textContent.toLowerCase();
-      tr.style.display = (!q || t.includes(q)) ? "" : "none";
-    });
-  });
-
-  $("rows")?.addEventListener("click", async (e)=>{
-    const tr = e.target.closest("tr[data-id]");
-    if(!tr) return;
-    const userId = tr.getAttribute("data-id");
-
-    // token + / -
-    if(e.target.closest("[data-tplus]")){
-      await changeTokens(userId, +1, tr);
-      return;
-    }
-    if(e.target.closest("[data-tminus]")){
-      await changeTokens(userId, -1, tr);
-      return;
-    }
-
-    // role save
-    if(e.target.closest("[data-save-role]")){
-      const sel = tr.querySelector("[data-role]");
-      const role = sel?.value || "user";
-      await changeRole(userId, role, tr);
-      return;
-    }
-  });
-}
-
-async function refresh(){
+async function renderUsers(){
+  const box = $("panelUsers");
+  box.innerHTML = `<div class="muted">Yükleniyor…</div>`;
   try{
-    toast("Yükleniyor…");
-    const list = await api(`/api/admin/users?only_admins=${onlyAdmins ? "1":"0"}`);
-    const rowsEl = $("rows");
-    rowsEl.innerHTML = (list||[]).map(rowHtml).join("");
+    const r = await api("/admin/users");
+    const items = r.items || [];
+    box.innerHTML = `
+      <div class="grid">
+        ${items.map(u=>`
+          <div class="card">
+            <div style="display:flex;justify-content:space-between;gap:10px;align-items:center">
+              <div>
+                <div style="font-weight:1000">${u.full_name || "—"}</div>
+                <div class="muted">${u.email || "—"} • ${u.id}</div>
+                <div class="muted">Jeton: ${u.tokens ?? "—"} • Role: <b>${u.role || "user"}</b></div>
+              </div>
+              <div style="min-width:180px">
+                <select class="inp" data-role="${u.id}">
+                  <option value="user" ${u.role==="user"?"selected":""}>user</option>
+                  <option value="admin" ${u.role==="admin"?"selected":""}>admin</option>
+                  <option value="superadmin" ${u.role==="superadmin"?"selected":""}>superadmin</option>
+                </select>
+                <button class="btn primary" data-save="${u.id}" style="margin-top:8px;width:100%">Kaydet</button>
+              </div>
+            </div>
+          </div>
+        `).join("")}
+      </div>
+    `;
 
-    // filtre tekrar uygula
-    $("q")?.dispatchEvent(new Event("input"));
+    box.querySelectorAll("[data-save]").forEach(btn=>{
+      btn.addEventListener("click", async ()=>{
+        const uid = btn.getAttribute("data-save");
+        const sel = box.querySelector(`[data-role="${uid}"]`);
+        const role = sel?.value || "user";
+        btn.textContent = "…";
+        try{
+          await api("/admin/users/role", { method:"POST", body: JSON.stringify({ user_id: uid, role }) });
+          btn.textContent = "Kaydedildi";
+          setTimeout(()=>btn.textContent="Kaydet", 900);
+          await renderUsers();
+        }catch(e){
+          alert(e.message || String(e));
+          btn.textContent = "Kaydet";
+        }
+      });
+    });
 
-    toast(`Yüklendi: ${list?.length||0}`);
   }catch(e){
-    console.error(e);
-    toast(e?.message || "Hata");
+    box.innerHTML = `<div class="card">Hata: ${e.message || e}</div>`;
   }
 }
 
-async function changeRole(userId, role, tr){
-  try{
-    toast("Rol güncelleniyor…");
-    const out = await api(`/api/admin/user/${encodeURIComponent(userId)}/role`, {
-      method:"POST",
-      body: JSON.stringify({ role })
-    });
-    toast("Rol güncellendi");
-    // satırdaki role tag’i güncellemek için hızlı refresh:
-    await refresh();
-  }catch(e){
-    console.error(e);
-    toast(e?.message || "Rol güncellenemedi");
-  }
+function renderDeploy(){
+  const box = $("panelDeploy");
+  box.innerHTML = `
+    <div class="card">
+      <div style="font-weight:1000;margin-bottom:8px">Deploy</div>
+      <div class="muted">Vercel/Render deploy hook ile tetikler.</div>
+      <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
+        <button class="btn primary" id="depVercel">Vercel Deploy</button>
+        <button class="btn primary" id="depRender">Render Deploy</button>
+      </div>
+    </div>
+  `;
+
+  box.querySelector("#depVercel").onclick = async ()=>{
+    try{ await api("/admin/deploy/vercel", { method:"POST" }); alert("Vercel deploy tetiklendi"); }
+    catch(e){ alert(e.message || e); }
+  };
+  box.querySelector("#depRender").onclick = async ()=>{
+    try{ await api("/admin/deploy/render", { method:"POST" }); alert("Render deploy tetiklendi"); }
+    catch(e){ alert(e.message || e); }
+  };
 }
 
-async function changeTokens(userId, delta, tr){
-  try{
-    toast("Jeton güncelleniyor…");
-    const out = await api(`/api/admin/user/${encodeURIComponent(userId)}/tokens`, {
-      method:"POST",
-      body: JSON.stringify({ delta })
-    });
-    // UI update
-    const n = tr.querySelector("[data-tokens]");
-    if(n) n.textContent = String(out?.tokens ?? n.textContent);
-    toast("Jeton güncellendi");
-  }catch(e){
-    console.error(e);
-    toast(e?.message || "Jeton güncellenemedi");
-  }
+function renderGithub(){
+  const box = $("panelGithub");
+  box.innerHTML = `
+    <div class="card">
+      <div style="font-weight:1000;margin-bottom:8px">GitHub Dosya Commit</div>
+      <div class="muted">Örn: pages/hangman.html veya js/hangman_page.js</div>
+
+      <div style="display:grid;gap:10px;margin-top:10px">
+        <input class="inp" id="ghPath" placeholder="path (örn: pages/hangman.html)" />
+        <input class="inp" id="ghMsg" placeholder="commit message" value="admin update" />
+        <textarea id="ghContent" placeholder="dosya içeriği..."></textarea>
+        <button class="btn primary" id="ghCommit">Commit</button>
+      </div>
+    </div>
+  `;
+
+  box.querySelector("#ghCommit").onclick = async ()=>{
+    const path = box.querySelector("#ghPath").value.trim();
+    const message = box.querySelector("#ghMsg").value.trim() || "admin update";
+    const content = box.querySelector("#ghContent").value;
+
+    if(!path){ alert("path boş"); return; }
+
+    const btn = box.querySelector("#ghCommit");
+    btn.textContent = "Gönderiliyor…";
+    try{
+      await api("/admin/github/commit", {
+        method:"POST",
+        body: JSON.stringify({ path, message, content, branch:"main" })
+      });
+      alert("Commit OK");
+    }catch(e){
+      alert(e.message || e);
+    }finally{
+      btn.textContent = "Commit";
+    }
+  };
 }
 
-document.addEventListener("DOMContentLoaded", boot);
+boot();
