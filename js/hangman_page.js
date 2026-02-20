@@ -1,37 +1,34 @@
 // FILE: /js/hangman_page.js
 import { mountShell } from "/js/ui_shell.js";
 
-// ---------- helpers ----------
-const $ = (id)=>document.getElementById(id);
+const $ = (id) => document.getElementById(id);
 
-function norm(s){
-  return String(s||"")
+// ---- UI SHELL ----
+mountShell({ scroll:"none" });
+
+// footer lift (dock alt bara girmesin)
+try{
+  const root = getComputedStyle(document.documentElement);
+  const footerH = parseFloat(root.getPropertyValue("--footerH")) || 0;
+  document.documentElement.style.setProperty("--shellLift", footerH ? `${footerH + 10}px` : "0px");
+}catch{}
+
+// ---- LangPool base from config.js ----
+async function readLangpoolBase(){
+  if(window.LANGPOOL_BASE) return String(window.LANGPOOL_BASE);
+  const r = await fetch("/js/config.js", { cache:"no-store" });
+  const t = await r.text();
+  const m = t.match(/LANGPOOL_BASE\s*=\s*["']([^"']+)["']/);
+  return (m && m[1]) ? m[1] : "";
+}
+
+const norm = (s) =>
+  String(s || "")
     .toLowerCase()
     .trim()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/[.,!?]/g, "");
-}
-
-function shuffle(arr){
-  const a=[...arr];
-  for(let i=a.length-1;i>0;i--){
-    const j=Math.floor(Math.random()*(i+1));
-    [a[i],a[j]]=[a[j],a[i]];
-  }
-  return a;
-}
-
-function createUsedSet(storageKey){
-  let used = new Set();
-  try{
-    const raw = localStorage.getItem(storageKey);
-    const arr = JSON.parse(raw || "[]");
-    if(Array.isArray(arr)) used = new Set(arr);
-  }catch{}
-  const save = () => { try{ localStorage.setItem(storageKey, JSON.stringify([...used])); }catch{} };
-  return { used, save };
-}
 
 function sanitize(data){
   const items = Array.isArray(data?.items) ? data.items : [];
@@ -49,13 +46,6 @@ function sanitize(data){
   return { lang: String(data?.lang||""), version: data?.version||1, items: out };
 }
 
-async function readLangpoolBase(){
-  const r = await fetch("/js/config.js", { cache:"no-store" });
-  const t = await r.text();
-  const m = t.match(/LANGPOOL_BASE\s*=\s*["']([^"']+)["']/);
-  return (m && m[1]) ? m[1] : "";
-}
-
 async function loadLangPoolDirect(lang, base){
   const L = String(lang||"").trim().toLowerCase();
   const url = `${base}/${encodeURIComponent(L)}.json`;
@@ -64,55 +54,45 @@ async function loadLangPoolDirect(lang, base){
   return sanitize(await r.json());
 }
 
-// ---------- sound ----------
-const AC = (window.AudioContext || window.webkitAudioContext) ? new (window.AudioContext || window.webkitAudioContext)() : null;
-function beep(freq=880, ms=110, type="sine", vol=0.04){
+function createUsedSet(storageKey){
+  let used = new Set();
   try{
-    if(!AC) return;
-    const o = AC.createOscillator();
-    const g = AC.createGain();
-    o.type = type;
-    o.frequency.value = freq;
-    g.gain.value = vol;
-    o.connect(g); g.connect(AC.destination);
-    o.start();
-    setTimeout(()=>{ try{o.stop()}catch{} }, ms);
+    const raw = localStorage.getItem(storageKey);
+    const arr = JSON.parse(raw || "[]");
+    if(Array.isArray(arr)) used = new Set(arr);
   }catch{}
+  const save = () => { try{ localStorage.setItem(storageKey, JSON.stringify([...used])); }catch{} };
+  return { used, save };
 }
 
-function speakWord(text, langCode){
-  try{
-    const t = String(text||"").trim();
-    if(!t) return;
-
-    if(window.NativeTTS && typeof window.NativeTTS.speak === "function"){
-      try{ window.NativeTTS.stop?.(); }catch{}
-      setTimeout(()=>{ try{ window.NativeTTS.speak(t, langCode); }catch{} }, 180);
-      return;
-    }
-
-    if(!("speechSynthesis" in window)) return;
-    const u = new SpeechSynthesisUtterance(t);
-    const map = {en:"en-US",de:"de-DE",fr:"fr-FR",it:"it-IT",es:"es-ES"};
-    u.lang = map[langCode] || "en-US";
-    speechSynthesis.cancel();
-    speechSynthesis.speak(u);
-  }catch{}
+function shuffle(arr){
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
 }
 
-// ---------- rules ----------
-function mistakeLimit(diff){
-  if(diff===3) return 6; // kolay
-  if(diff===4) return 4; // normal
-  return 2;              // zor
+function pick(pool, count, usedSet, saveUsed, filterFn){
+  const items = Array.isArray(pool?.items)? pool.items : [];
+  if(!items.length) return [];
+  const candidates = items.filter(x => x?.w && !usedSet.has(norm(x.w)) && (!filterFn || filterFn(x)));
+  if(candidates.length < count) usedSet.clear();
+  const fresh = items.filter(x => x?.w && !usedSet.has(norm(x.w)) && (!filterFn || filterFn(x)));
+  const chosen = shuffle(fresh).slice(0,count);
+  chosen.forEach(x=>usedSet.add(norm(x.w)));
+  if(saveUsed) saveUsed();
+  return chosen;
 }
 
-// Best key per language+diff
-function bestKey(lang, diff){
-  return `italky_hangman_best_${String(lang)}_${String(diff)}`;
-}
+// ---- SCORE RULES (Senin istediğin) ----
+// 1) Best score: her dil + her seviye ayrı, sonsuza kadar saklanır
+// 2) RoundScore: her kelime 100 ile başlar, yanlış+joker -10
+// 3) Lives: 3, flawless+no joker => +1 life (max 9)
+// 4) Kelime bilemezse: 1 can gider, puan almaz
+// 5) TotalScore: doğru kelimelerin puanları birikir (GameOver'a kadar)
 
-// ---------- state ----------
 let LANGPOOL_BASE = "";
 let pool = null;
 let target = null;
@@ -123,99 +103,42 @@ let diff = 3;
 let lives = 3;
 const MAX_LIVES = 9;
 
+let totalScore = 0;     // biriken
+let roundScore = 100;   // kelime puanı
 let guessed = new Set();
 let mistakes = 0;
 
+let jokersLeft = 2;
 const MAX_JOKERS = 2;
-let jokerUsedCount = 0;     // ✅ kaç joker kullanıldı (0..2)
+
 let flawless = true;
+let jokerUsed = false;
 let lock = false;
 
-// scoring
-let bestGame = 0;      // en yüksek "toplam skor" (game over'a kadar biriken)
-let roundScore = 100;  // bu kelimenin skoru
-let runScore = 0;      // biriken toplam skor
-
-function loadBest(){
-  bestGame = parseInt(localStorage.getItem(bestKey(lang, diff)) || "0", 10) || 0;
+// Best key per lang+diff
+function bestKey(){
+  return `italky_hangman_best::${lang}::${diff}`;
+}
+function getBest(){
+  return parseInt(localStorage.getItem(bestKey()) || "0", 10);
+}
+function setBest(v){
+  try{ localStorage.setItem(bestKey(), String(v)); }catch{}
 }
 
-function saveBest(){
-  try{ localStorage.setItem(bestKey(lang, diff), String(bestGame)); }catch{}
+function paint(){
+  $("bestVal").textContent = String(getBest());
+  $("scoreVal").textContent = String(totalScore);
+  $("roundVal").textContent = String(roundScore);
 }
 
-function paintScores(){
-  $("bestVal").textContent = String(bestGame);
-  $("scoreVal").textContent = String(runScore + roundScore);
+function getMistakeLimit(){
+  // easy(3)=6, normal(4)=4, hard(5)=2
+  if(diff===3) return 6;
+  if(diff===4) return 4;
+  return 2;
 }
 
-function startNewGame(){
-  lives = 3;
-  runScore = 0;
-  roundScore = 100;
-  mistakes = 0;
-  guessed = new Set();
-  jokerUsedCount = 0;
-  flawless = true;
-  lock = false;
-
-  loadBest();
-  renderHearts();
-  updateMan();
-  paintScores();
-  setJokersUI();
-}
-
-function startNewRound(){
-  lock = false;
-  guessed = new Set();
-  mistakes = 0;
-  roundScore = 100;
-  flawless = true;
-  jokerUsedCount = 0;
-  setJokersUI();
-
-  // pick new word
-  const usedSet = createUsedSet(`used_hangman_${lang}`);
-  const items = Array.isArray(pool?.items) ? pool.items : [];
-  if(!items.length){
-    target = null;
-    $("trText").textContent = "KELİME BULUNAMADI";
-    $("matrix").innerHTML = "";
-    $("kb").innerHTML = "";
-    paintScores();
-    return;
-  }
-
-  // yeterli aday yoksa used reset
-  const candidates = items.filter(x => x?.w && !usedSet.used.has(norm(x.w)) && (String(x.w).trim().length >= 3));
-  if(candidates.length < 1) usedSet.used.clear();
-
-  const fresh = items.filter(x => x?.w && !usedSet.used.has(norm(x.w)) && (String(x.w).trim().length >= 3));
-  const pickOne = shuffle(fresh).slice(0,1)[0];
-  if(pickOne?.w){
-    usedSet.used.add(norm(pickOne.w));
-    usedSet.save();
-  }
-  target = pickOne || null;
-
-  if(!target?.w){
-    $("trText").textContent = "KELİME BULUNAMADI";
-    $("matrix").innerHTML = "";
-    $("kb").innerHTML = "";
-    paintScores();
-    return;
-  }
-
-  $("trText").textContent = (target.tr || "—").trim() || "—";
-
-  renderWord();
-  renderKeyboard();
-  updateMan();
-  paintScores();
-}
-
-// ---------- UI ----------
 function renderHearts(){
   const capped = Math.max(0, Math.min(lives, MAX_LIVES));
   let html = "";
@@ -231,15 +154,9 @@ function resetMan(){
 function updateMan(){
   resetMan();
   const seq = ["p_head","p_body","p_larm","p_rarm","p_lleg","p_rleg"];
-  const showCount = Math.min(mistakeLimit(diff), 6);
+  const limit = getMistakeLimit();
+  const showCount = Math.min(limit, 6);
   seq.slice(0, Math.min(mistakes, showCount)).forEach(id => $(id).classList.add("on"));
-}
-
-function setJokersUI(){
-  const j0 = $("j0"), j1 = $("j1");
-  if(!j0 || !j1) return;
-  j0.classList.toggle("spent", jokerUsedCount >= 1);
-  j1.classList.toggle("spent", jokerUsedCount >= 2);
 }
 
 function renderWord(){
@@ -253,28 +170,34 @@ function renderWord(){
 function renderKeyboard(){
   const w = target.w.toUpperCase();
   const uniq = [...new Set(w.split(""))];
-
   const abc = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
   const fillers = abc.filter(l => !uniq.includes(l)).sort(()=>0.5-Math.random()).slice(0,10);
   const keys = [...uniq, ...fillers].sort(()=>0.5-Math.random());
 
-  $("kb").innerHTML = keys.map(k=>`<button class="key" data-k="${k}" type="button">${k}</button>`).join("");
+  $("kb").innerHTML = keys.map(k=>`<button class="key" data-k="${k}">${k}</button>`).join("");
   $("kb").querySelectorAll(".key").forEach(btn=>{
-    btn.addEventListener("click", ()=> press(btn.dataset.k, btn));
+    btn.onclick = () => press(btn.dataset.k, btn);
   });
 }
 
-// ---------- gameplay ----------
-function applyPenalty(n){
-  roundScore = Math.max(0, roundScore - n);
-  paintScores();
-}
+function speakWord(text){
+  try{
+    const t = String(text||"").trim();
+    if(!t) return;
 
-function endGameIfBest(){
-  if(runScore > bestGame){
-    bestGame = runScore;
-    saveBest();
-  }
+    if(window.NativeTTS && typeof window.NativeTTS.speak === "function"){
+      try{ window.NativeTTS.stop?.(); }catch{}
+      setTimeout(()=>{ try{ window.NativeTTS.speak(t, lang); }catch{} }, 180);
+      return;
+    }
+
+    if(!("speechSynthesis" in window)) return;
+    const map = {en:"en-US",de:"de-DE",fr:"fr-FR",it:"it-IT",es:"es-ES"};
+    const u = new SpeechSynthesisUtterance(t);
+    u.lang = map[lang] || "en-US";
+    speechSynthesis.cancel();
+    speechSynthesis.speak(u);
+  }catch{}
 }
 
 function showModal(title, color, bonus){
@@ -286,168 +209,173 @@ function showModal(title, color, bonus){
   $("modal").classList.add("on");
 }
 
+$("mBtn").onclick = () => {
+  $("modal").classList.remove("on");
+
+  if(lives <= 0){
+    location.reload();
+    return;
+  }
+  newRound();
+};
+
+function applyPenalty(){
+  roundScore = Math.max(0, roundScore - 10);
+  paint();
+}
+
 function endRound(win){
   lock = true;
-  speakWord(target.w, lang);
+
+  // round bitince kelimeyi seslendir
+  speakWord(target.w);
 
   if(win){
-    runScore += roundScore;
+    // ✅ doğru: kelime puanı totalScore'a eklenir
+    totalScore += roundScore;
 
-    beep(880, 90, "sine", 0.05);
-    beep(1320, 90, "sine", 0.04);
-
-    let bonus = `+${roundScore} PUAN\nTOPLAM: ${runScore}`;
-
-    // kusursuz bonus: hiç hata yok + joker yok => +1 can (max 9)
-    if(flawless && jokerUsedCount === 0 && lives < MAX_LIVES){
+    // ✅ flawless & joker yoksa +1 life (max 9)
+    let bonus = `+${roundScore} PUAN\nTOPLAM SKOR: ${totalScore}`;
+    if(flawless && !jokerUsed && lives < MAX_LIVES){
       lives++;
-      bonus += "\nKUSURSUZ: +1 CAN";
+      bonus += `\nKUSURSUZ: +1 CAN`;
     }
+
+    // ✅ Best score kontrol (lang+diff)
+    const b = getBest();
+    if(totalScore > b) setBest(totalScore);
 
     renderHearts();
-    loadBest(); // lang/diff anahtarına göre
-    if(runScore > bestGame){
-      bestGame = runScore;
-      saveBest();
-    }
-    paintScores();
+    paint();
 
     showModal("MİSYON BAŞARILI", "#00ff9d", bonus);
     return;
   }
 
+  // ❌ yanlış kelime: can gider, puan eklenmez
   lives--;
   renderHearts();
   $("man").classList.add("swing");
 
-  beep(180, 140, "square", 0.04);
-
+  const swingMs = 2200;
   setTimeout(()=>{
     $("man").classList.remove("swing");
-
     if(lives <= 0){
-      endGameIfBest();
-      paintScores();
-      showModal("GAME OVER", "#ff0033", `TOPLAM SKOR: ${runScore}\nREKOR: ${bestGame}`);
+      // ✅ game over: totalScore kalır, best zaten tutulur
+      showModal("GAME OVER", "#ff0033", `TOPLAM SKOR: ${totalScore}\nEN YÜKSEK: ${getBest()}`);
     }else{
       showModal("DEŞİFRE EDİLEMEDİ", "#ff0033", "-1 CAN");
     }
-  }, 2500);
+  }, swingMs);
 }
 
 function press(letter, btn){
   if(lock) return;
-  if(!letter) return;
-  letter = String(letter).toUpperCase();
   if(guessed.has(letter)) return;
 
   const w = target.w.toUpperCase();
   if(w.includes(letter)){
     guessed.add(letter);
-    btn?.classList.add("hit");
-    beep(740, 70, "sine", 0.03);
-
+    btn.classList.add("hit");
     renderWord();
     if(w.split("").every(ch => guessed.has(ch))) endRound(true);
   }else{
-    btn?.classList.add("miss");
-    beep(220, 90, "square", 0.03);
-
+    btn.classList.add("miss");
     flawless = false;
     mistakes++;
-    applyPenalty(10);
+    applyPenalty();
     updateMan();
-
-    if(mistakes >= mistakeLimit(diff)) endRound(false);
+    if(mistakes >= getMistakeLimit()) endRound(false);
   }
 }
 
-function jokerReveal(){
+function useJ(i){
   if(lock) return;
-  if(jokerUsedCount >= MAX_JOKERS) return;
+  if(jokersLeft <= 0) return;
 
-  jokerUsedCount++;
-  setJokersUI();
+  jokerUsed = true;
+  jokersLeft--;
 
-  flawless = false;        // joker kusursuzu bozar
-  applyPenalty(10);
-  beep(520, 90, "sine", 0.03);
+  // ✅ iki joker de çalışsın
+  const el = (i===0) ? $("j0") : $("j1");
+  el.classList.add("spent");
+
+  applyPenalty();
 
   const w = target.w.toUpperCase();
-  const remaining = w.split("").filter(ch => !guessed.has(ch));
-  if(!remaining.length) return;
-
-  // rastgele bir harf aç
-  const pick = remaining[Math.floor(Math.random()*remaining.length)];
-  const btn = $("kb").querySelector(`.key[data-k="${pick}"]`);
-  if(btn){
-    press(pick, btn);
-  }else{
-    guessed.add(pick);
-    renderWord();
-    if(w.split("").every(ch => guessed.has(ch))) endRound(true);
+  const rem = w.split("").filter(ch => !guessed.has(ch));
+  if(rem.length){
+    const l = rem[0];
+    const btn = $("kb").querySelector(`.key[data-k="${l}"]`);
+    if(btn) press(l, btn);
+    else { guessed.add(l); renderWord(); }
   }
 }
 
-// ---------- setup / shell ----------
-function applyShellLift(){
-  try{
-    const footerH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--footerH")) || 0;
-    document.documentElement.style.setProperty("--shellLift", footerH ? `${footerH + 10}px` : "0px");
-  }catch{}
+$("j0").onclick = ()=>useJ(0);
+$("j1").onclick = ()=>useJ(1);
+
+function newRound(){
+  lock = false;
+  guessed = new Set();
+  mistakes = 0;
+
+  // ✅ joker reset
+  jokersLeft = MAX_JOKERS;
+  $("j0").classList.remove("spent");
+  $("j1").classList.remove("spent");
+
+  flawless = true;
+  jokerUsed = false;
+
+  // ✅ yeni kelime puanı 100
+  roundScore = 100;
+
+  resetMan();
+
+  const usedSet = createUsedSet(`used_hangman_${lang}`);
+  const pickedW = pick(pool, 1, usedSet.used, usedSet.save, (x)=> (x?.w||"").length >= 3);
+  target = pickedW?.[0];
+
+  if(!target?.w){
+    $("trText").textContent = "KELİME BULUNAMADI";
+    $("matrix").innerHTML = "";
+    $("kb").innerHTML = "";
+    paint();
+    return;
+  }
+
+  $("trText").textContent = (target.tr || "—").trim() || "—";
+
+  renderHearts();
+  renderWord();
+  renderKeyboard();
+  updateMan();
+  paint();
 }
 
-function bindSetup(){
-  // selection
-  $("langGrid").addEventListener("click", (e)=>{
-    const c = e.target.closest(".pickCard");
-    if(!c || !c.dataset.lang) return;
-    [...$("langGrid").querySelectorAll(".pickCard")].forEach(x=>x.classList.remove("active"));
-    c.classList.add("active");
-    lang = c.dataset.lang;
-  });
+// ---- Setup seçimleri ----
+$("langGrid").addEventListener("click", (e)=>{
+  const c=e.target.closest(".pickCard");
+  if(!c || !c.dataset.lang) return;
+  [...$("langGrid").querySelectorAll(".pickCard")].forEach(x=>x.classList.remove("active"));
+  c.classList.add("active");
+  lang = c.dataset.lang;
+});
 
-  $("diffGrid").addEventListener("click", (e)=>{
-    const c = e.target.closest(".pickCard.diff");
-    if(!c) return;
-    [...$("diffGrid").querySelectorAll(".pickCard.diff")].forEach(x=>x.classList.remove("active"));
-    c.classList.add("active");
-    diff = parseInt(c.dataset.diff,10);
-  });
+$("diffGrid").addEventListener("click", (e)=>{
+  const c=e.target.closest(".pickCard.diff");
+  if(!c) return;
+  [...$("diffGrid").querySelectorAll(".pickCard.diff")].forEach(x=>x.classList.remove("active"));
+  c.classList.add("active");
+  diff = parseInt(c.dataset.diff,10);
+});
 
-  $("mBtn").addEventListener("click", ()=>{
-    $("modal").classList.remove("on");
-    if(lives <= 0){
-      // yeni oyun
-      startNewGame();
-      startNewRound();
-      return;
-    }
-    // yeni kelime
-    startNewRound();
-  });
+// ---- Start ----
+$("startBtn").addEventListener("click", async ()=>{
+  $("setupMsg").textContent = "Yükleniyor…";
 
-  // ✅ 2 joker: capture ile garanti
-  const j0 = $("j0"), j1 = $("j1");
-  const bindJ = (el)=>{
-    if(!el) return;
-    el.addEventListener("click", (ev)=>{
-      ev.preventDefault();
-      ev.stopPropagation();
-      jokerReveal();
-    }, { capture:true });
-    el.addEventListener("touchend", (ev)=>{
-      ev.preventDefault();
-      ev.stopPropagation();
-      jokerReveal();
-    }, { passive:false, capture:true });
-  };
-  bindJ(j0); bindJ(j1);
-
-  $("startBtn").addEventListener("click", async ()=>{
-    $("setupMsg").textContent = "Yükleniyor…";
-
-    // Langpool base
+  try{
     LANGPOOL_BASE = await readLangpoolBase();
     if(!LANGPOOL_BASE){
       $("setupMsg").textContent = "LANGPOOL_BASE bulunamadı (/js/config.js).";
@@ -459,29 +387,23 @@ function bindSetup(){
       $("setupMsg").textContent = `Havuz boş: ${LANGPOOL_BASE}/${lang}.json`;
       return;
     }
+  }catch(err){
+    $("setupMsg").textContent = "Havuz yükleme hatası:\n" + String(err);
+    return;
+  }
 
-    // per-lang+diff best yükle
-    loadBest();
-    paintScores();
-
-    $("setup").style.display = "none";
-    $("setupMsg").textContent = "";
-
-    startNewGame();
-    startNewRound();
-  });
-}
-
-async function boot(){
-  // ✅ Sayfa daha açılır açılmaz shell gelsin (üst/alt bar görünür)
-  mountShell({ scroll:"none" });
-  applyShellLift();
-  bindSetup();
-
-  // ilk skor alanı
-  loadBest();
-  paintScores();
+  // ✅ yeni oyun başlangıcı
+  lives = 3;
+  totalScore = 0;
   renderHearts();
-}
+  paint();
 
-boot();
+  $("setup").style.display = "none";
+  $("setupMsg").textContent = "";
+
+  newRound();
+});
+
+// initial render
+renderHearts();
+paint();
