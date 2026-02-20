@@ -1,3 +1,4 @@
+<!-- FILE: /pages/hangman.html -->
 <!doctype html>
 <html lang="tr">
 <head>
@@ -15,7 +16,7 @@
       --green:#00ff9d;
 
       --dockH: 220px;
-      --shellLift: 0px;
+      --shellLift: 0px; /* ui_shell footer yüksekliğine göre JS set edecek */
     }
 
     html,body{margin:0;height:100%;background:var(--bg);color:#fff;font-family:Outfit,system-ui;overflow:hidden}
@@ -167,6 +168,7 @@
       height:38px;border-radius:10px;border:1px solid rgba(255,255,255,.12);
       background:rgba(255,255,255,.06);color:#fff;font-weight:900;
       transition:.12s;
+      cursor:pointer;
     }
     .key:active{transform:scale(.98)}
     .key.hit{background:var(--green);color:#000;box-shadow:0 0 15px var(--green)}
@@ -188,10 +190,28 @@
     .mTitle{font-size:38px;font-weight:900;margin:0}
     .mWord{font-size:32px;font-weight:900;color:#60a5fa;margin:14px 0}
     .mTr{opacity:.65;font-style:italic;margin-bottom:12px}
-    .mBonus{height:22px;font-weight:900;color:var(--green);margin-bottom:16px;white-space:pre-wrap}
-    .mBtn{width:100%;max-width:280px;padding:18px;border-radius:18px;border:none;background:var(--grad);color:#fff;font-weight:900;font-size:18px;cursor:pointer}
+    .mBonus{
+      min-height: 22px;
+      font-weight:900;
+      color:var(--green);
+      margin-bottom:16px;
+      white-space:pre-wrap;
+      line-height:1.4;
+    }
+    .mBtn{
+      width:100%;
+      max-width:280px;
+      padding:18px;
+      border-radius:18px;
+      border:none;
+      background:var(--grad);
+      color:#fff;
+      font-weight:900;
+      font-size:18px;
+      cursor:pointer
+    }
 
-    /* ✅ SETUP overlay artık pageContent içinde (shell içinde) */
+    /* SETUP overlay */
     .setup{
       position:absolute;
       inset:0;
@@ -259,7 +279,6 @@
 <body>
   <div id="pageContent">
 
-    <!-- ✅ Setup overlay -->
     <div class="setup" id="setup">
       <div class="setupTitle">HANGMAN</div>
 
@@ -283,7 +302,6 @@
       <div class="setupMsg" id="setupMsg"></div>
     </div>
 
-    <!-- GAME -->
     <div class="top">
       <div class="title">HANGMAN</div>
 
@@ -340,492 +358,7 @@
 
   </div>
 
-  <script>
-    const $ = (id) => document.getElementById(id);
-
-    // ui_shell loader
-    function loadScript(src){
-      return new Promise((res, rej)=>{
-        const s = document.createElement("script");
-        s.src = src;
-        s.onload = () => res(true);
-        s.onerror = () => rej(new Error("Script load fail: " + src));
-        document.head.appendChild(s);
-      });
-    }
-
-    // config LANGPOOL_BASE
-    async function readLangpoolBase(){
-      if(window.LANGPOOL_BASE) return String(window.LANGPOOL_BASE);
-      const r = await fetch("/js/config.js", { cache:"no-store" });
-      const t = await r.text();
-      const m = t.match(/LANGPOOL_BASE\s*=\s*["']([^"']+)["']/);
-      return (m && m[1]) ? m[1] : "";
-    }
-
-    const norm = (s) =>
-      String(s || "")
-        .toLowerCase()
-        .trim()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .replace(/[.,!?]/g, "");
-
-    function sanitize(data){
-      const items = Array.isArray(data?.items) ? data.items : [];
-      const seen = new Set();
-      const out = [];
-      for(const it of items){
-        const w = String(it?.w || "").trim();
-        const tr = String(it?.tr || "").trim();
-        if(!w || !tr) continue;
-        const k = norm(w);
-        if(seen.has(k)) continue;
-        seen.add(k);
-        out.push({ w, tr });
-      }
-      return { lang: String(data?.lang||""), version: data?.version||1, items: out };
-    }
-
-    async function loadLangPoolDirect(lang, base){
-      const L = String(lang||"").trim().toLowerCase();
-      const url = `${base}/${encodeURIComponent(L)}.json`;
-      const r = await fetch(url, { cache:"no-store" });
-      if(!r.ok) return { lang:L, version:1, items:[] };
-      return sanitize(await r.json());
-    }
-
-    function createUsedSet(storageKey){
-      let used = new Set();
-      try{
-        const raw = localStorage.getItem(storageKey);
-        const arr = JSON.parse(raw || "[]");
-        if(Array.isArray(arr)) used = new Set(arr);
-      }catch{}
-      const save = () => { try{ localStorage.setItem(storageKey, JSON.stringify([...used])); }catch{} };
-      return { used, save };
-    }
-
-    function shuffle(arr){
-      const a=[...arr];
-      for(let i=a.length-1;i>0;i--){
-        const j=Math.floor(Math.random()*(i+1));
-        [a[i],a[j]]=[a[j],a[i]];
-      }
-      return a;
-    }
-
-    function pick(pool, count, usedSet, saveUsed, filterFn){
-      const items = Array.isArray(pool?.items)? pool.items : [];
-      if(!items.length) return [];
-      const candidates = items.filter(x => x?.w && !usedSet.has(norm(x.w)) && (!filterFn || filterFn(x)));
-      if(candidates.length < count) usedSet.clear();
-      const fresh = items.filter(x => x?.w && !usedSet.has(norm(x.w)) && (!filterFn || filterFn(x)));
-      const chosen = shuffle(fresh).slice(0,count);
-      chosen.forEach(x=>usedSet.add(norm(x.w)));
-      if(saveUsed) saveUsed();
-      return chosen;
-    }
-
-    /* =========================
-       ✅ SCORE RULES (FIXED)
-       - roundScore: her kelime 100’den başlar, yanlışlarda düşer
-       - runScore: sadece BİLİNEN kelimelerin puanı birikir (toplam skor)
-       - rekor: şimdiye kadarki en yüksek runScore (100 oyun da oynansa max kalır)
-    ========================= */
-    const BEST_KEY = "italky_hangman_best_game";
-    let bestGame = parseInt(localStorage.getItem(BEST_KEY) || "0", 10);
-
-    let roundScore = 100;  // mevcut kelimenin puanı
-    let runScore = 0;      // oyundaki toplam puan (biriken)
-
-    function totalScoreNow(){ return runScore + roundScore; }
-    function paintScores(){
-      $("bestVal").textContent = String(bestGame);
-      $("scoreVal").textContent = String(totalScoreNow());
-    }
-    function saveBest(){
-      try{ localStorage.setItem(BEST_KEY, String(bestGame)); }catch{}
-    }
-
-    /* =========================
-       ✅ LIMITS (FIXED)
-       Easy: 6 hata -> GameOver
-       Normal: 4 hata
-       Hard: 2 hata
-    ========================= */
-    function getMistakeLimit(){
-      if(diff===3) return 6;
-      if(diff===4) return 4;
-      return 2;
-    }
-
-    /* =========================
-       ✅ SIMPLE SFX (Web)
-       - doğru/yanlış mini ses (web)
-       - kelime seslendirme: target dil
-    ========================= */
-    const AC = (window.AudioContext || window.webkitAudioContext) ? new (window.AudioContext || window.webkitAudioContext)() : null;
-    function beep(freq=880, ms=110, type="sine", vol=0.04){
-      try{
-        if(!AC) return;
-        const o = AC.createOscillator();
-        const g = AC.createGain();
-        o.type = type;
-        o.frequency.value = freq;
-        g.gain.value = vol;
-        o.connect(g); g.connect(AC.destination);
-        o.start();
-        setTimeout(()=>{ try{o.stop()}catch{} }, ms);
-      }catch{}
-    }
-
-    function speakWord(text, langCode){
-      try{
-        const t = String(text||"").trim();
-        if(!t) return;
-
-        // APK NativeTTS varsa onu kullan
-        if(window.NativeTTS && typeof window.NativeTTS.speak === "function"){
-          try{ window.NativeTTS.stop?.(); }catch{}
-          setTimeout(()=>{ try{ window.NativeTTS.speak(t, langCode); }catch{} }, 180);
-          return;
-        }
-
-        if(!("speechSynthesis" in window)) return;
-        const u = new SpeechSynthesisUtterance(t);
-        const map = {en:"en-US",de:"de-DE",fr:"fr-FR",it:"it-IT",es:"es-ES"};
-        u.lang = map[langCode] || "en-US";
-        speechSynthesis.cancel();
-        speechSynthesis.speak(u);
-      }catch{}
-    }
-
-    /* =========================
-       --- STATE ---
-    ========================= */
-    let LANGPOOL_BASE = "";
-    let pool = null;
-    let target = null;
-
-    let lang = "en";
-    let diff = 3;
-
-    let lives = 3;
-    const MAX_LIVES = 9;
-
-    let guessed = new Set();
-    let mistakes = 0;
-
-    let jokersLeft = 2;
-    const MAX_JOKERS = 2;
-
-    let flawless = true;
-    let jokerUsed = false;
-    let lock = false;
-
-    // init UI
-    $("bestVal").textContent = bestGame;
-    $("scoreVal").textContent = totalScoreNow();
-
-    // selection
-    $("langGrid").addEventListener("click", (e)=>{
-      const c=e.target.closest(".pickCard");
-      if(!c || !c.dataset.lang) return;
-      [...$("langGrid").querySelectorAll(".pickCard")].forEach(x=>x.classList.remove("active"));
-      c.classList.add("active");
-      lang = c.dataset.lang;
-    });
-
-    $("diffGrid").addEventListener("click", (e)=>{
-      const c=e.target.closest(".pickCard.diff");
-      if(!c) return;
-      [...$("diffGrid").querySelectorAll(".pickCard.diff")].forEach(x=>x.classList.remove("active"));
-      c.classList.add("active");
-      diff = parseInt(c.dataset.diff,10);
-    });
-
-    function renderHearts(){
-      const capped = Math.max(0, Math.min(lives, MAX_LIVES));
-      let html = "";
-      for(let i=0;i<capped;i++) html += `<span class="heart">❤️</span>`;
-      $("hearts").innerHTML = html;
-    }
-
-    function resetMan(){
-      ["p_head","p_body","p_larm","p_rarm","p_lleg","p_rleg"].forEach(id => $(id).classList.remove("on"));
-      $("man").classList.remove("swing");
-    }
-
-    function updateMan(){
-      resetMan();
-      const m = mistakes;
-
-      // görsel aynı kalsın: 6 parça (kolayda 6 hata tam)
-      const seq = ["p_head","p_body","p_larm","p_rarm","p_lleg","p_rleg"];
-
-      // limit 2 ise sadece head+body göster, 4 ise 4 parça, 6 ise 6 parça
-      const limit = getMistakeLimit();
-      const showCount = Math.min(limit, 6);
-
-      seq.slice(0, Math.min(m, showCount)).forEach(id => $(id).classList.add("on"));
-    }
-
-    function renderWord(){
-      const w = target.w.toUpperCase();
-      $("matrix").innerHTML = w.split("").map(ch=>{
-        const found = guessed.has(ch);
-        return `<div class="slot ${found ? "found":""}">${found ? ch : ""}</div>`;
-      }).join("");
-    }
-
-    function renderKeyboard(){
-      const w = target.w.toUpperCase();
-      const uniq = [...new Set(w.split(""))];
-      const abc = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
-      const fillers = abc.filter(l => !uniq.includes(l)).sort(()=>0.5-Math.random()).slice(0,10);
-      const keys = [...uniq, ...fillers].sort(()=>0.5-Math.random());
-
-      $("kb").innerHTML = keys.map(k=>`<button class="key" data-k="${k}">${k}</button>`).join("");
-      $("kb").querySelectorAll(".key").forEach(btn=>{
-        btn.onclick = () => press(btn.dataset.k, btn);
-      });
-    }
-
-    function showModal(title, color, bonus){
-      $("mTitle").textContent = title;
-      $("mTitle").style.color = color;
-      $("mWord").textContent = target.w.toUpperCase();
-      $("mTr").textContent = `(${target.tr || "—"})`;
-      $("mBonus").textContent = bonus || "";
-      $("modal").classList.add("on");
-    }
-
-    function startNewGameScores(){
-      runScore = 0;
-      roundScore = 100;
-      paintScores();
-    }
-
-    function startNewRoundScores(){
-      roundScore = 100;
-      paintScores();
-    }
-
-    function applyPenalty(n){
-      roundScore = Math.max(0, roundScore - n);
-      paintScores();
-    }
-
-    $("mBtn").onclick = () => {
-      $("modal").classList.remove("on");
-
-      // game over ise yeni oyun başlat
-      if(lives <= 0){
-        // aynı sayfa reload (tam reset)
-        location.reload();
-        return;
-      }
-
-      // yeni kelime
-      newRound();
-    };
-
-    function endGame(){
-      // ✅ oyun bittiğinde rekor = max(runScore)
-      if(runScore > bestGame){
-        bestGame = runScore;
-        saveBest();
-      }
-    }
-
-    function endRound(win){
-      lock = true;
-
-      // oyun bitince kelimeyi seslendir
-      speakWord(target.w, lang);
-
-      if(win){
-        // ✅ doğru: puanı oyuna ekle
-        runScore += roundScore;
-        // doğru sfx
-        beep(880, 90, "sine", 0.05);
-        beep(1320, 90, "sine", 0.04);
-
-        // bonus can (senin eski kuralın kalsın)
-        let bonus = `+${roundScore} PUAN\nTOPLAM: ${runScore}`;
-        if(flawless && !jokerUsed && lives < MAX_LIVES){
-          lives++;
-          bonus += "\nKUSURSUZ: +1 CAN";
-        }
-
-        // round bitti -> bir sonraki roundScore sıfırdan
-        startNewRoundScores();
-        renderHearts();
-        showModal("MİSYON BAŞARILI", "#00ff9d", bonus);
-        return;
-      }
-
-      // yanlış: 1 can gider
-      lives--;
-      renderHearts();
-      $("man").classList.add("swing");
-
-      // yanlış sfx
-      beep(180, 140, "square", 0.04);
-
-      const swingMs = 2500;
-      setTimeout(()=>{
-        $("man").classList.remove("swing");
-
-        if(lives <= 0){
-          endGame();
-          showModal("GAME OVER", "#ff0033", `TOPLAM SKOR: ${runScore}\nREKOR: ${bestGame}`);
-        }else{
-          showModal("DEŞİFRE EDİLEMEDİ", "#ff0033", "-1 CAN");
-        }
-      }, swingMs);
-    }
-
-    function press(letter, btn){
-      if(lock) return;
-      if(guessed.has(letter)) return;
-
-      const w = target.w.toUpperCase();
-      if(w.includes(letter)){
-        guessed.add(letter);
-        btn.classList.add("hit");
-
-        // doğru harf: küçük ses
-        beep(740, 70, "sine", 0.03);
-
-        renderWord();
-        if(w.split("").every(ch => guessed.has(ch))) endRound(true);
-      }else{
-        btn.classList.add("miss");
-
-        // yanlış harf: küçük ses
-        beep(220, 90, "square", 0.03);
-
-        flawless = false;
-        mistakes++;
-        applyPenalty(10);
-        updateMan();
-
-        if(mistakes >= getMistakeLimit()) endRound(false);
-      }
-    }
-
-    function useJ(i){
-      if(lock) return;
-      if(jokersLeft <= 0) return;
-
-      jokerUsed = true;
-      jokersLeft--;
-      (i===0?$("j0"):$("j1")).classList.add("spent");
-
-      // joker cezası
-      applyPenalty(10);
-
-      const w = target.w.toUpperCase();
-      const rem = w.split("").filter(ch => !guessed.has(ch));
-      if(rem.length){
-        const l = rem[0];
-        const btn = $("kb").querySelector(`.key[data-k="${l}"]`);
-        if(btn) press(l, btn);
-        else { guessed.add(l); renderWord(); }
-      }
-    }
-
-    $("j0").onclick = ()=>useJ(0);
-    $("j1").onclick = ()=>useJ(1);
-
-    function newRound(){
-      lock = false;
-      guessed = new Set();
-      mistakes = 0;
-      jokersLeft = MAX_JOKERS;
-      flawless = true;
-      jokerUsed = false;
-
-      $("j0").classList.remove("spent");
-      $("j1").classList.remove("spent");
-
-      resetMan();
-
-      const usedSet = createUsedSet(`used_hangman_${lang}`);
-      const pickedW = pick(pool, 1, usedSet.used, usedSet.save, (x)=> (x?.w||"").length >= 3);
-      target = pickedW?.[0];
-
-      if(!target?.w){
-        $("trText").textContent = "KELİME BULUNAMADI";
-        $("matrix").innerHTML = "";
-        $("kb").innerHTML = "";
-        return;
-      }
-
-      $("trText").textContent = (target.tr || "—").trim() || "—";
-
-      // ✅ yeni kelime başlarken roundScore tazelenir
-      startNewRoundScores();
-
-      renderHearts();
-      renderWord();
-      renderKeyboard();
-      updateMan();
-    }
-
-    // START: shell + pool + enter
-    $("startBtn").addEventListener("click", async ()=>{
-      $("setupMsg").textContent = "Yükleniyor…";
-
-      // 1) ui_shell
-      try{
-        await loadScript("/js/ui_shell.js");
-        if(typeof window.mountShell === "function"){
-          window.mountShell({ scroll: "none" });
-        }
-      }catch{}
-
-      // 2) footer lift
-      try{
-        const root = getComputedStyle(document.documentElement);
-        const footerH = parseFloat(root.getPropertyValue("--footerH")) || 0;
-        document.documentElement.style.setProperty("--shellLift", footerH ? `${footerH + 10}px` : "0px");
-      }catch{}
-
-      // 3) pool
-      try{
-        LANGPOOL_BASE = await readLangpoolBase();
-        if(!LANGPOOL_BASE){
-          $("setupMsg").textContent = "LANGPOOL_BASE bulunamadı (/js/config.js).";
-          return;
-        }
-        pool = await loadLangPoolDirect(lang, LANGPOOL_BASE);
-        if(!pool?.items?.length){
-          $("setupMsg").textContent = `Havuz boş: ${LANGPOOL_BASE}/${lang}.json`;
-          return;
-        }
-      }catch(err){
-        $("setupMsg").textContent = "Havuz yükleme hatası:\n" + String(err);
-        return;
-      }
-
-      // 4) enter
-      $("setup").style.display = "none";
-      $("setupMsg").textContent = "";
-
-      // ✅ yeni oyun başlangıcı
-      lives = 3;
-      renderHearts();
-      startNewGameScores();
-
-      newRound();
-    });
-
-    // initial
-    renderHearts();
-    paintScores();
-  </script>
+  <!-- ✅ Tek JS -->
+  <script type="module" src="/js/hangman_page.js?v=1"></script>
 </body>
 </html>
