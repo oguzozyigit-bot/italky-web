@@ -15,3 +15,8 @@ export const supabase = createClient(
     }
   }
 );
+
+// DEBUG: Console’dan erişmek için
+if (typeof window !== "undefined") {
+  window.supabase = supabase;
+}
