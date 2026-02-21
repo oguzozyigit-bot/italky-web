@@ -5,18 +5,26 @@ const SITE_LANG_KEY = "italky_site_lang_v2";
 // İstersen sonra kendi backend’ine alırız.
 const IP_LANG_ENDPOINT = "https://ipapi.co/json/";
 
-const LANGS = [
-  { code:"tr", flag:"🇹🇷" }, { code:"en", flag:"🇬🇧" }, { code:"de", flag:"🇩🇪" }, { code:"fr", flag:"🇫🇷" },
-  { code:"it", flag:"🇮🇹" }, { code:"es", flag:"🇪🇸" }, { code:"pt", flag:"🇵🇹" }, { code:"pt-BR", flag:"🇧🇷" },
-  { code:"nl", flag:"🇳🇱" }, { code:"sv", flag:"🇸🇪" }, { code:"nb", flag:"🇳🇴" }, { code:"da", flag:"🇩🇰" },
-  { code:"fi", flag:"🇫🇮" }, { code:"pl", flag:"🇵🇱" }, { code:"cs", flag:"🇨🇿" }, { code:"sk", flag:"🇸🇰" },
-  { code:"hu", flag:"🇭🇺" }, { code:"ro", flag:"🇷🇴" }, { code:"bg", flag:"🇧🇬" }, { code:"el", flag:"🇬🇷" },
-  { code:"uk", flag:"🇺🇦" }, { code:"ru", flag:"🇷🇺" }, { code:"az", flag:"🇦🇿" }, { code:"ka", flag:"🇬🇪" },
-  { code:"hy", flag:"🇦🇲" }, { code:"ar", flag:"🇸🇦" }, { code:"he", flag:"🇮🇱" }, { code:"fa", flag:"🇮🇷" },
-  { code:"ur", flag:"🇵🇰" }, { code:"hi", flag:"🇮🇳" }, { code:"bn", flag:"🇧🇩" }, { code:"id", flag:"🇮🇩" },
-  { code:"ms", flag:"🇲🇾" }, { code:"vi", flag:"🇻🇳" }, { code:"th", flag:"🇹🇭" },
-  { code:"zh", flag:"🇨🇳" }, { code:"zh-TW", flag:"🇹🇼" }, { code:"ja", flag:"🇯🇵" }, { code:"ko", flag:"🇰🇷" },
-  { code:"sw", flag:"🇰🇪" }, { code:"am", flag:"🇪🇹" }
+const FLAG = {
+  tr:"🇹🇷", en:"🇬🇧", de:"🇩🇪", fr:"🇫🇷", it:"🇮🇹", es:"🇪🇸", pt:"🇵🇹", ru:"🇷🇺",
+  ar:"🇸🇦", fa:"🇮🇷", hi:"🇮🇳", zh:"🇨🇳", ja:"🇯🇵", ko:"🇰🇷", id:"🇮🇩", vi:"🇻🇳", th:"🇹🇭",
+  nl:"🇳🇱", sv:"🇸🇪", no:"🇳🇴", da:"🇩🇰", fi:"🇫🇮", pl:"🇵🇱", cs:"🇨🇿", sk:"🇸🇰", hu:"🇭🇺",
+  ro:"🇷🇴", bg:"🇧🇬", el:"🇬🇷", uk:"🇺🇦", az:"🇦🇿", ka:"🇬🇪", hy:"🇦🇲", he:"🇮🇱", ur:"🇵🇰",
+  bn:"🇧🇩"
+};
+
+// mountLangPicker içindeki “label” güncellemesini bul:
+// örn: document.getElementById(labelId).textContent = ...
+// bunu şu şekilde değiştir:
+
+function setLabel(labelId, code){
+  const el = document.getElementById(labelId);
+  if(!el) return;
+  const c = String(code||"").toLowerCase();
+  const base = c.split("-")[0];
+  const flag = FLAG[c] || FLAG[base] || "🌐";
+  el.textContent = `${flag} ${base.toUpperCase()}`;
+}
 ];
 
 function baseCode(code){
