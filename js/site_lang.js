@@ -1,94 +1,111 @@
 // FILE: /js/site_lang.js
-const SITE_LANG_KEY = "italky_site_lang_v2";
 
-// “Ülke/IP’den dil” için hafif servis.
-// İstersen sonra kendi backend’ine alırız.
+const SITE_LANG_KEY = "italky_site_lang_v2";
 const IP_LANG_ENDPOINT = "https://ipapi.co/json/";
 
-const FLAG = {
-  tr:"🇹🇷", en:"🇬🇧", de:"🇩🇪", fr:"🇫🇷", it:"🇮🇹", es:"🇪🇸", pt:"🇵🇹", ru:"🇷🇺",
-  ar:"🇸🇦", fa:"🇮🇷", hi:"🇮🇳", zh:"🇨🇳", ja:"🇯🇵", ko:"🇰🇷", id:"🇮🇩", vi:"🇻🇳", th:"🇹🇭",
-  nl:"🇳🇱", sv:"🇸🇪", no:"🇳🇴", da:"🇩🇰", fi:"🇫🇮", pl:"🇵🇱", cs:"🇨🇿", sk:"🇸🇰", hu:"🇭🇺",
-  ro:"🇷🇴", bg:"🇧🇬", el:"🇬🇷", uk:"🇺🇦", az:"🇦🇿", ka:"🇬🇪", hy:"🇦🇲", he:"🇮🇱", ur:"🇵🇰",
-  bn:"🇧🇩"
-};
+/* ======================================================
+   FULL LANGUAGE LIST (All supported site languages)
+====================================================== */
 
-// mountLangPicker içindeki “label” güncellemesini bul:
-// örn: document.getElementById(labelId).textContent = ...
-// bunu şu şekilde değiştir:
-
-function setLabel(labelId, code){
-  const el = document.getElementById(labelId);
-  if(!el) return;
-  const c = String(code||"").toLowerCase();
-  const base = c.split("-")[0];
-  const flag = FLAG[c] || FLAG[base] || "🌐";
-  el.textContent = `${flag} ${base.toUpperCase()}`;
-}
+const LANGS = [
+  { code:"tr", flag:"🇹🇷" },
+  { code:"en", flag:"🇬🇧" },
+  { code:"de", flag:"🇩🇪" },
+  { code:"fr", flag:"🇫🇷" },
+  { code:"it", flag:"🇮🇹" },
+  { code:"es", flag:"🇪🇸" },
+  { code:"pt", flag:"🇵🇹" },
+  { code:"ru", flag:"🇷🇺" },
+  { code:"ar", flag:"🇸🇦" },
+  { code:"fa", flag:"🇮🇷" },
+  { code:"hi", flag:"🇮🇳" },
+  { code:"zh", flag:"🇨🇳" },
+  { code:"ja", flag:"🇯🇵" },
+  { code:"ko", flag:"🇰🇷" },
+  { code:"id", flag:"🇮🇩" },
+  { code:"vi", flag:"🇻🇳" },
+  { code:"th", flag:"🇹🇭" },
+  { code:"nl", flag:"🇳🇱" },
+  { code:"sv", flag:"🇸🇪" },
+  { code:"no", flag:"🇳🇴" },
+  { code:"da", flag:"🇩🇰" },
+  { code:"fi", flag:"🇫🇮" },
+  { code:"pl", flag:"🇵🇱" },
+  { code:"cs", flag:"🇨🇿" },
+  { code:"sk", flag:"🇸🇰" },
+  { code:"hu", flag:"🇭🇺" },
+  { code:"ro", flag:"🇷🇴" },
+  { code:"bg", flag:"🇧🇬" },
+  { code:"el", flag:"🇬🇷" },
+  { code:"uk", flag:"🇺🇦" },
+  { code:"az", flag:"🇦🇿" },
+  { code:"ka", flag:"🇬🇪" },
+  { code:"hy", flag:"🇦🇲" },
+  { code:"he", flag:"🇮🇱" },
+  { code:"ur", flag:"🇵🇰" },
+  { code:"bn", flag:"🇧🇩" }
 ];
 
+/* ======================================================
+   HELPERS
+====================================================== */
+
 function baseCode(code){
-  return String(code||"").toLowerCase().split("-")[0];
+  return String(code || "").toLowerCase().split("-")[0];
 }
 
 function findLang(code){
-  const c = String(code||"").trim();
-  if(!c) return null;
-  // exact
-  const exact = LANGS.find(x => String(x.code).toLowerCase() === c.toLowerCase());
-  if(exact) return exact;
-  // base match
-  const b = baseCode(c);
-  return LANGS.find(x => baseCode(x.code) === b) || null;
+  const b = baseCode(code);
+  return LANGS.find(l => l.code === b) || LANGS[1]; // fallback en
 }
 
-function getDN(lang){
-  try{ return new Intl.DisplayNames([lang], { type:"language" }); }catch{ return null; }
-}
+/* ======================================================
+   CORE GET / SET
+====================================================== */
 
 export function getSiteLang(){
-  try{
-    const saved = localStorage.getItem(SITE_LANG_KEY);
-    if(saved && findLang(saved)) return findLang(saved).code;
-  }catch{}
-  // fallback
-  return "en";
-}
-
-export async function detectSiteLang(){
-  // 1) saved
-  try{
-    const saved = localStorage.getItem(SITE_LANG_KEY);
-    if(saved && findLang(saved)) return findLang(saved).code;
-  }catch{}
-
-  // 2) IP
-  try{
-    const r = await fetch(IP_LANG_ENDPOINT, { cache:"no-store" });
-    if(r.ok){
-      const j = await r.json();
-      const lang = String(j?.languages || j?.language || "").split(",")[0].trim(); // ipapi: "en,fr"
-      const picked = findLang(lang);
-      if(picked) return picked.code;
-    }
-  }catch{}
-
-  // 3) navigator
-  try{
-    const nav = navigator.language || "en";
-    const picked = findLang(nav);
-    if(picked) return picked.code;
-  }catch{}
+  const saved = localStorage.getItem(SITE_LANG_KEY);
+  if(saved && findLang(saved)) return findLang(saved).code;
   return "en";
 }
 
 export function setSiteLang(code){
   const picked = findLang(code);
-  if(!picked) return;
-  try{ localStorage.setItem(SITE_LANG_KEY, picked.code); }catch{}
-  // sayfa içi “UI metni” güncellemesi istersen burada tetiklenir
-  try{ window.dispatchEvent(new CustomEvent("italky:lang-changed", { detail: { lang: picked.code } })); }catch{}
+  localStorage.setItem(SITE_LANG_KEY, picked.code);
+  window.dispatchEvent(new CustomEvent("italky:lang-changed", {
+    detail: { lang: picked.code }
+  }));
 }
+
+/* ======================================================
+   AUTO DETECT (IP + Browser)
+====================================================== */
+
+export async function detectSiteLang(){
+  // 1) Saved
+  const saved = localStorage.getItem(SITE_LANG_KEY);
+  if(saved && findLang(saved)) return saved;
+
+  // 2) IP based
+  try{
+    const r = await fetch(IP_LANG_ENDPOINT, { cache:"no-store" });
+    if(r.ok){
+      const j = await r.json();
+      const ipLang = baseCode(j?.languages || j?.language || "");
+      if(findLang(ipLang)) return ipLang;
+    }
+  }catch{}
+
+  // 3) Browser
+  const nav = baseCode(navigator.language);
+  if(findLang(nav)) return nav;
+
+  return "en";
+}
+
+/* ======================================================
+   MOUNT LANGUAGE PICKER
+====================================================== */
 
 export function mountLangPicker({
   btnId="langBtn",
@@ -98,6 +115,7 @@ export function mountLangPicker({
   closeId="langSheetClose",
   labelId="langLabel"
 } = {}){
+
   const btn = document.getElementById(btnId);
   const sheet = document.getElementById(sheetId);
   const list = document.getElementById(listId);
@@ -107,69 +125,49 @@ export function mountLangPicker({
 
   if(!btn || !sheet || !list) return;
 
-  const render = (filter="")=>{
-    const ui = getSiteLang();
-    const dn = getDN(ui);
-    const q = String(filter||"").toLowerCase().trim();
+  function applyLabel(){
+    const lang = getSiteLang();
+    const picked = findLang(lang);
+    if(label){
+      label.textContent = `${picked.flag} ${picked.code.toUpperCase()}`;
+    }
+  }
 
-    const items = LANGS.filter(x=>{
-      const c = String(x.code).toLowerCase();
-      const name = dn ? String(dn.of(baseCode(x.code))||"") : "";
-      const hay = (name + " " + c).toLowerCase();
-      return !q || hay.includes(q);
-    });
-
-    list.innerHTML = items.map(x=>{
-      const code = x.code;
-      const name = dn ? (dn.of(baseCode(code)) || code) : code;
-      return `
-        <div class="sheet-row" data-code="${code}">
-          <div class="sheet-left">
-            <div class="sheet-flag">${x.flag}</div>
-            <div class="sheet-name">${name}</div>
-          </div>
-          <div class="sheet-code">${code}</div>
+  function render(filter=""){
+    const q = String(filter).toLowerCase();
+    list.innerHTML = LANGS
+      .filter(l => l.code.includes(q))
+      .map(l => `
+        <div class="sheet-row" data-code="${l.code}">
+          <span class="sheet-flag">${l.flag}</span>
+          <span class="sheet-name">${l.code.toUpperCase()}</span>
         </div>
-      `;
-    }).join("");
+      `).join("");
 
     list.querySelectorAll(".sheet-row").forEach(row=>{
       row.addEventListener("click", ()=>{
-        const code = row.getAttribute("data-code") || "en";
+        const code = row.getAttribute("data-code");
         setSiteLang(code);
-        applyLangLabel();
+        applyLabel();
         sheet.classList.remove("show");
       });
     });
-  };
-
-  const applyLangLabel = ()=>{
-    const lang = getSiteLang();
-    const picked = findLang(lang) || findLang("en");
-    if(label && picked){
-      // label: “🇹🇷 TR” gibi
-      label.textContent = `${picked.flag} ${String(picked.code).toUpperCase()}`;
-    }
-  };
+  }
 
   btn.addEventListener("click", ()=>{
     render(query?.value || "");
     sheet.classList.add("show");
-    setTimeout(()=>{ try{ query?.focus(); }catch{} }, 50);
+    setTimeout(()=> query?.focus(), 50);
   });
 
   close?.addEventListener("click", ()=> sheet.classList.remove("show"));
-  sheet.addEventListener("click", (e)=>{
+  sheet.addEventListener("click", e=>{
     if(e.target === sheet) sheet.classList.remove("show");
   });
 
   query?.addEventListener("input", ()=> render(query.value));
 
-  // first label paint
-  applyLangLabel();
+  applyLabel();
 
-  // when lang changes elsewhere
-  window.addEventListener("italky:lang-changed", ()=>{
-    applyLangLabel();
-  });
+  window.addEventListener("italky:lang-changed", applyLabel);
 }
