@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>italkyAI • Abonelik Yok. Özgürlük Var.</title>
+  <title>italkyAI • Dünyayı Anla, Kendini Anlat</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,21 +12,26 @@
 
   <style>
     :root{
-      --bg:#ffffff;
+      /* Soft white (göz almaz) */
+      --bg: #f6f7fb;
+      --card: #ffffff;
       --ink:#0b1020;
       --muted:#5c6477;
       --muted2:#7a8396;
-      --line: rgba(12,18,40,.12);
-      --soft: rgba(12,18,40,.06);
+      --line: rgba(12,18,40,.10);
 
       --ai1:#6366f1;
       --ai2:#ec4899;
       --aiGrad: linear-gradient(135deg, var(--ai1), var(--ai2));
 
+      --mint:#22c55e;
+      --sky:#38bdf8;
+      --amber:#f59e0b;
+
       --shadow: 0 18px 45px rgba(10,12,25,.10);
       --shadow2: 0 10px 24px rgba(10,12,25,.08);
 
-      --maxW: 1140px;
+      --maxW: 1180px;
       --pad: clamp(14px, 3.2vw, 24px);
 
       --topH: 78px;
@@ -46,12 +51,13 @@
     }
     a{ color:inherit; text-decoration:none; }
 
-    /* ====== TOP BAR ====== */
+    /* ====== TOP BAR (sabit) ====== */
     header{
-      position: sticky; top:0; z-index: 9999;
+      position: fixed; top:0; left:0; right:0;
+      z-index: 9999;
       height: calc(var(--topH) + env(safe-area-inset-top));
       padding-top: env(safe-area-inset-top);
-      background: rgba(255,255,255,.82);
+      background: rgba(246,247,251,.88);
       backdrop-filter: blur(16px);
       border-bottom: 1px solid var(--line);
     }
@@ -66,7 +72,7 @@
     }
 
     .brand{
-      min-width: 180px;
+      min-width: 190px;
       display:flex;
       flex-direction:column;
       gap: 4px;
@@ -105,6 +111,7 @@
       scrollbar-width:none;
     }
     .chipNav::-webkit-scrollbar{ display:none; }
+
     .chip{
       flex: 0 0 auto;
       display:flex;
@@ -113,7 +120,7 @@
       padding: 10px 12px;
       border-radius: 999px;
       border: 1px solid rgba(12,18,40,.12);
-      background: rgba(12,18,40,.03);
+      background: rgba(255,255,255,.72);
       font-size: 12px;
       font-weight: 1000;
       color: rgba(12,18,40,.86);
@@ -128,7 +135,7 @@
     }
     .chip:active{ transform: scale(.985); }
     .chip:hover{
-      background: rgba(12,18,40,.045);
+      background: rgba(255,255,255,.92);
       border-color: rgba(99,102,241,.22);
     }
 
@@ -143,7 +150,7 @@
       padding: 0 14px;
       border-radius: 999px;
       border: 1px solid rgba(12,18,40,.14);
-      background:#fff;
+      background: #fff;
       box-shadow: 0 10px 20px rgba(10,12,25,.06);
       font-weight: 1000;
       font-size: 12px;
@@ -156,10 +163,13 @@
       gap: 8px;
     }
     .btn.primary{
-      border: none;
+      border:none;
       background: var(--aiGrad);
       color:#fff;
-      box-shadow: 0 16px 34px rgba(99,102,241,.20);
+      box-shadow: 0 16px 34px rgba(99,102,241,.18);
+    }
+    .btn.ghost{
+      background: rgba(255,255,255,.70);
     }
     .btn:active{ transform: scale(.99); }
 
@@ -167,26 +177,26 @@
     .wrap{
       max-width: var(--maxW);
       margin: 0 auto;
-      padding: 22px var(--pad) calc(var(--botH) + env(safe-area-inset-bottom) + 22px);
+      padding: calc(var(--topH) + env(safe-area-inset-top) + 18px) var(--pad) calc(var(--botH) + env(safe-area-inset-bottom) + 22px);
     }
-
-    section{ scroll-margin-top: calc(var(--topH) + env(safe-area-inset-top) + 14px); }
+    section{ scroll-margin-top: calc(var(--topH) + env(safe-area-inset-top) + 18px); }
 
     /* ====== HERO ====== */
     .hero{
       border-radius: calc(var(--r1) + 10px);
       border: 1px solid var(--line);
       background:
-        radial-gradient(circle at 18% 18%, rgba(99,102,241,.10) 0%, transparent 46%),
-        radial-gradient(circle at 82% 20%, rgba(236,72,153,.08) 0%, transparent 46%),
-        #fff;
+        radial-gradient(circle at 12% 18%, rgba(99,102,241,.12) 0%, transparent 50%),
+        radial-gradient(circle at 88% 18%, rgba(236,72,153,.10) 0%, transparent 52%),
+        radial-gradient(circle at 50% 110%, rgba(34,197,94,.08) 0%, transparent 45%),
+        var(--card);
       box-shadow: var(--shadow);
       overflow:hidden;
       padding: clamp(18px, 3vw, 32px);
     }
     .heroGrid{
       display:grid;
-      grid-template-columns: 1.1fr .9fr;
+      grid-template-columns: 1.08fr .92fr;
       gap: clamp(14px, 3vw, 28px);
       align-items:stretch;
     }
@@ -200,11 +210,11 @@
       gap: 10px;
       padding: 8px 12px;
       border-radius: 999px;
-      border: 1px solid rgba(99,102,241,.18);
-      background: rgba(99,102,241,.07);
+      border: 1px solid rgba(99,102,241,.16);
+      background: rgba(99,102,241,.06);
       font-weight: 1000;
       font-size: 12px;
-      color: rgba(12,18,40,.88);
+      color: rgba(12,18,40,.86);
       width: fit-content;
     }
     .hKicker b{
@@ -229,32 +239,75 @@
     .hSub{
       margin: 12px 0 0;
       font-size: clamp(14px, 2.2vw, 18px);
-      color: rgba(12,18,40,.70);
+      color: rgba(12,18,40,.68);
       font-weight: 700;
-      line-height: 1.5;
-      max-width: 70ch;
+      line-height: 1.55;
+      max-width: 72ch;
     }
 
-    .heroBadges{
+    .heroList{
       margin-top: 14px;
+      display:grid;
+      gap: 10px;
+      max-width: 72ch;
+    }
+    .hLi{
+      display:flex;
+      gap: 10px;
+      align-items:flex-start;
+      font-weight: 800;
+      color: rgba(12,18,40,.80);
+      line-height: 1.25;
+    }
+    .hLi::before{
+      content:"✦";
+      color: rgba(99,102,241,.95);
+      font-weight: 1300;
+      margin-top: 1px;
+    }
+
+    .heroActions{
+      margin-top: 16px;
       display:flex;
       flex-wrap:wrap;
       gap: 10px;
+      align-items:center;
     }
-    .badge{
-      padding: 10px 12px;
+    .pill{
+      height: 44px;
+      padding: 0 14px;
       border-radius: 999px;
       border: 1px solid rgba(12,18,40,.12);
-      background: rgba(12,18,40,.03);
-      font-size: 12px;
+      background: rgba(255,255,255,.86);
+      box-shadow: 0 10px 22px rgba(10,12,25,.06);
+      display:inline-flex;
+      align-items:center;
+      gap: 10px;
       font-weight: 1000;
-      color: rgba(12,18,40,.82);
+      cursor:pointer;
+      user-select:none;
     }
-    .badge strong{
-      color: rgba(99,102,241,.95);
-      font-weight: 1200;
+    .pill .ic{
+      width: 30px; height:30px; border-radius: 999px;
+      display:flex; align-items:center; justify-content:center;
+      color:#fff; font-weight: 1200;
+      box-shadow: 0 12px 26px rgba(10,12,25,.10);
+      flex: 0 0 auto;
+    }
+    .ic.p1{ background: linear-gradient(135deg, var(--ai1), var(--ai2)); }
+    .ic.p2{ background: linear-gradient(135deg, var(--sky), #0ea5e9); }
+    .ic.p3{ background: linear-gradient(135deg, var(--mint), #16a34a); }
+    .ic.p4{ background: linear-gradient(135deg, var(--amber), #ef4444); }
+
+    .heroNote{
+      margin-top: 10px;
+      color: rgba(12,18,40,.58);
+      font-weight: 800;
+      font-size: 12px;
+      line-height: 1.35;
     }
 
+    /* ====== Slider ====== */
     .slider{
       border-radius: calc(var(--r1) + 10px);
       border: 1px solid var(--line);
@@ -262,7 +315,7 @@
       overflow:hidden;
       background:#fff;
       position:relative;
-      min-height: 380px;
+      min-height: 420px;
     }
     .slide{
       position:absolute; inset:0;
@@ -275,13 +328,13 @@
     .shade{
       position:absolute; inset:0;
       background:
-        linear-gradient(180deg, rgba(255,255,255,0.0) 0%, rgba(255,255,255,0.05) 45%, rgba(255,255,255,0.92) 100%);
+        linear-gradient(180deg, rgba(255,255,255,0.0) 0%, rgba(255,255,255,0.06) 45%, rgba(255,255,255,0.94) 100%);
     }
     .cap{
       position:absolute; left: 14px; right: 14px; bottom: 14px;
       border-radius: 18px;
       border: 1px solid rgba(12,18,40,.10);
-      background: rgba(255,255,255,.84);
+      background: rgba(255,255,255,.86);
       backdrop-filter: blur(10px);
       padding: 12px 12px;
     }
@@ -302,7 +355,7 @@
     .dots{
       position:absolute; top: 12px; right: 12px; z-index:5;
       display:flex; gap:7px;
-      background: rgba(255,255,255,.75);
+      background: rgba(255,255,255,.78);
       border: 1px solid rgba(12,18,40,.10);
       backdrop-filter: blur(10px);
       border-radius: 999px;
@@ -316,9 +369,9 @@
     }
     .dot.active{ background: var(--aiGrad); }
 
-    /* ====== SECTION HEAD ====== */
+    /* ====== Section Head ====== */
     .secHead{
-      margin-top: 26px;
+      margin-top: 28px;
       display:flex;
       align-items:flex-end;
       justify-content:space-between;
@@ -332,15 +385,15 @@
     }
     .secHead p{
       margin:0;
-      color: rgba(12,18,40,.65);
+      color: rgba(12,18,40,.64);
       font-weight: 700;
-      max-width: 70ch;
-      line-height: 1.4;
+      max-width: 76ch;
+      line-height: 1.45;
     }
 
     .card{
       margin-top: 14px;
-      background:#fff;
+      background: var(--card);
       border: 1px solid var(--line);
       border-radius: calc(var(--r1) + 10px);
       box-shadow: var(--shadow);
@@ -375,9 +428,9 @@
     .desc{
       margin:0;
       font-size: 15px;
-      color: rgba(12,18,40,.70);
+      color: rgba(12,18,40,.68);
       font-weight: 700;
-      line-height: 1.55;
+      line-height: 1.6;
     }
     .bullets{
       margin: 14px 0 0;
@@ -400,41 +453,27 @@
       font-weight: 1300;
       margin-top: 1px;
     }
-    .priceChip{
-      margin-top: 14px;
-      display:inline-flex;
-      align-items:center;
-      gap: 10px;
-      padding: 10px 12px;
-      border-radius: 999px;
-      background: rgba(99,102,241,.08);
-      border: 1px solid rgba(99,102,241,.18);
-      font-weight: 1100;
-      color: rgba(12,18,40,.88);
-    }
-    .priceChip b{ color: rgba(99,102,241,.95); }
-
     .imgCard{
       border-radius: calc(var(--r1) + 10px);
       overflow:hidden;
       border: 1px solid var(--line);
       box-shadow: var(--shadow2);
       background:#fff;
-      min-height: 360px;
+      min-height: 380px;
       position:relative;
     }
     .imgCard img{ width:100%; height:100%; object-fit: cover; display:block; }
     .stamp{
       position:absolute;
       left: 14px; bottom: 14px;
-      background: rgba(255,255,255,.86);
+      background: rgba(255,255,255,.88);
       border: 1px solid rgba(12,18,40,.10);
       backdrop-filter: blur(10px);
       border-radius: 16px;
       padding: 10px 10px;
       font-weight: 1100;
       color: rgba(12,18,40,.86);
-      max-width: 78%;
+      max-width: 80%;
     }
     .stamp small{
       display:block;
@@ -443,7 +482,7 @@
       color: rgba(12,18,40,.62);
     }
 
-    /* ====== MODULE GRID ====== */
+    /* ====== MODULE GRID (daha açıklamalı) ====== */
     .grid{
       display:grid;
       grid-template-columns: repeat(12, 1fr);
@@ -454,7 +493,7 @@
       grid-column: span 4;
       border-radius: 22px;
       border: 1px solid var(--line);
-      background:#fff;
+      background: #fff;
       box-shadow: var(--shadow2);
       padding: 16px 14px;
       position:relative;
@@ -477,81 +516,43 @@
     }
     .mName{ font-weight: 1200; font-size: 14px; letter-spacing: -0.2px; }
     .mIcon{
-      width: 36px; height:36px;
+      width: 38px; height:38px;
       border-radius: 14px;
-      background: rgba(99,102,241,.10);
-      border: 1px solid rgba(99,102,241,.18);
+      border: 1px solid rgba(12,18,40,.10);
       display:flex; align-items:center; justify-content:center;
       font-size: 18px;
       flex: 0 0 auto;
+      color:#fff;
     }
+    .mIcon.i1{ background: linear-gradient(135deg, var(--ai1), var(--ai2)); }
+    .mIcon.i2{ background: linear-gradient(135deg, var(--sky), #0ea5e9); }
+    .mIcon.i3{ background: linear-gradient(135deg, var(--mint), #16a34a); }
+    .mIcon.i4{ background: linear-gradient(135deg, var(--amber), #ef4444); }
+
     .mDesc{
       position:relative; z-index:2;
       margin-top: 10px;
       font-size: 13px;
       font-weight: 700;
       color: rgba(12,18,40,.66);
-      line-height: 1.35;
-      min-height: 56px;
+      line-height: 1.45;
+      min-height: 68px;
     }
-    .mCost{
+    .mHow{
       position:relative; z-index:2;
-      margin-top: 12px;
-      padding-top: 12px;
-      border-top: 1px dashed rgba(12,18,40,.18);
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap: 10px;
-      font-weight: 1100;
-      font-size: 13px;
-      color: rgba(12,18,40,.86);
+      margin-top: 10px;
+      padding: 10px 10px;
+      border-radius: 16px;
+      background: rgba(12,18,40,.03);
+      border: 1px dashed rgba(12,18,40,.14);
+      font-size: 12px;
+      font-weight: 800;
+      color: rgba(12,18,40,.70);
+      line-height: 1.35;
     }
-    .mCost b{ color: rgba(99,102,241,.95); }
 
     @media(max-width: 980px){ .m{ grid-column: span 6; } }
     @media(max-width: 640px){ .m{ grid-column: span 12; } }
-
-    /* ====== OFFLINE ====== */
-    .offline{
-      margin-top: 14px;
-      border-radius: calc(var(--r1) + 10px);
-      border: 1px solid rgba(99,102,241,.22);
-      background: linear-gradient(135deg, rgba(99,102,241,.14), rgba(236,72,153,.10), #fff);
-      box-shadow: var(--shadow);
-      padding: clamp(18px, 3vw, 30px);
-    }
-    .offline h3{
-      margin:0;
-      font-size: clamp(20px, 3vw, 34px);
-      font-weight: 1200;
-      letter-spacing: -0.6px;
-    }
-    .offline p{
-      margin: 10px 0 0;
-      color: rgba(12,18,40,.70);
-      font-weight: 700;
-      line-height: 1.55;
-      max-width: 78ch;
-    }
-    .offline .big{
-      margin-top: 14px;
-      display:inline-flex;
-      align-items:center;
-      gap: 10px;
-      padding: 12px 14px;
-      border-radius: 18px;
-      background: #0b1020;
-      color:#fff;
-      font-weight: 1200;
-      box-shadow: 0 18px 44px rgba(10,12,25,.22);
-    }
-    .offline .big span{
-      background: var(--aiGrad);
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;
-      font-weight: 1300;
-    }
 
     /* ====== FAQ ====== */
     .faq{
@@ -577,19 +578,19 @@
       margin: 10px 0 0;
       color: rgba(12,18,40,.70);
       font-weight: 700;
-      line-height: 1.55;
+      line-height: 1.6;
     }
 
-    /* ====== BOTTOM BAR ====== */
+    /* ====== BOTTOM BAR (sabit) ====== */
     .bottomBar{
       position: fixed;
       left:0; right:0; bottom:0;
+      z-index: 9998;
       height: calc(var(--botH) + env(safe-area-inset-bottom));
       padding-bottom: env(safe-area-inset-bottom);
-      background: rgba(255,255,255,.88);
+      background: rgba(246,247,251,.90);
       backdrop-filter: blur(14px);
       border-top: 1px solid var(--line);
-      z-index: 9998;
       display:flex;
       align-items:center;
       justify-content:center;
@@ -602,11 +603,17 @@
       justify-content:space-between;
       gap: 12px;
       font-weight: 900;
-      color: rgba(12,18,40,.78);
+      color: rgba(12,18,40,.74);
       font-size: 12px;
     }
-    .bottomInner .mini{ line-height: 1.25; }
-    .bottomInner .mini b{ color: rgba(99,102,241,.95); }
+    .bottomInner .mini{
+      line-height: 1.25;
+      color: rgba(12,18,40,.70);
+      font-weight: 900;
+    }
+    .bottomInner .mini b{
+      color: rgba(99,102,241,.95);
+    }
     .links{
       display:flex;
       gap: 14px;
@@ -614,7 +621,7 @@
       justify-content:flex-end;
     }
     .links a{
-      color: rgba(12,18,40,.60);
+      color: rgba(12,18,40,.58);
       font-weight: 1100;
       text-transform: uppercase;
       letter-spacing: .9px;
@@ -622,6 +629,7 @@
       cursor:pointer;
     }
 
+    /* Motion reduce */
     @media (prefers-reduced-motion: reduce){
       *{ scroll-behavior: auto !important; transition:none !important; animation:none !important; }
     }
@@ -642,14 +650,12 @@
       <div class="chip" data-scroll="#facetoface"><span class="dot"></span>FaceToFace</div>
       <div class="chip" data-scroll="#academy"><span class="dot"></span>italky Academy</div>
       <div class="chip" data-scroll="#modules"><span class="dot"></span>Modüller</div>
-      <div class="chip" data-scroll="#pricing"><span class="dot"></span>Jeton Menüsü</div>
-      <div class="chip" data-scroll="#offline"><span class="dot"></span>Offline Paket</div>
       <div class="chip" data-scroll="#faq"><span class="dot"></span>SSS</div>
       <div class="chip" data-scroll="#contact"><span class="dot"></span>İletişim</div>
     </nav>
 
     <div class="cta">
-      <button class="btn" id="btnPlay" type="button">Google Play</button>
+      <button class="btn ghost" id="btnLearn" type="button">Nasıl Çalışır?</button>
       <button class="btn primary" id="btnDownload" type="button">Uygulamayı İndir</button>
     </div>
   </div>
@@ -661,23 +667,32 @@
   <section id="hero" class="hero">
     <div class="heroGrid">
       <div>
-        <div class="hKicker">ABONELİK YOK • <b>JETON SİSTEMİ</b> • KULLAN VE BİTİR</div>
-        <h1>Cebinizdeki <span class="grad">Öğretmen.</span><br/>Cebinizdeki <span class="grad">Tercüman.</span></h1>
+        <div class="hKicker">Cebindeki <b>AI Öğretmen</b> + <b>AI Tercüman</b></div>
+
+        <h1>Dil bilmemek sorun değil.<br><span class="grad">Anlaşamamak</span> sorun.</h1>
+
         <p class="hSub">
           italkyAI; konuşmayı, okumayı ve öğrenmeyi tek uygulamada birleştirir.
-          Kullanmıyorsan ödeme yok. Kontrol sende.
+          Kafede, işte, seyahatte, okulda… “anlaşma” işini senin yerine çözer.
         </p>
 
-        <div class="heroBadges">
-          <div class="badge"><strong>1 Jeton = 2 TL</strong> (basit ve şeffaf)</div>
-          <div class="badge"><strong>FaceToFace</strong> anlık sesli çeviri</div>
-          <div class="badge"><strong>Academy</strong> seviye + ders planı</div>
-          <div class="badge"><strong>Toplantı</strong> 2–20 kişi, herkes anlasın</div>
+        <div class="heroList">
+          <div class="hLi">FaceToFace ile masaya bırak — anlık sesli çeviri.</div>
+          <div class="hLi">Fotoğraftan / Belgeden çeviri — menü, tabela, PDF…</div>
+          <div class="hLi">italky Academy — seviye tespit + kişisel ders planı.</div>
+          <div class="hLi">Oyunlar — kelimeyi “eğlenerek” kalıcı yap.</div>
+          <div class="hLi">Online toplantı — 2 kişi de olur 20 kişi de; herkes anlar.</div>
         </div>
 
-        <div class="heroBadges" style="margin-top:10px;">
-          <div class="badge">Hedef: <strong>“İndirdim, hemen işime yaradı.”</strong></div>
-          <div class="badge">Dert: <strong>Abonelik tuzağı yok.</strong></div>
+        <div class="heroActions">
+          <div class="pill" data-scroll="#facetoface"><span class="ic p2">🎧</span> FaceToFace’i gör</div>
+          <div class="pill" data-scroll="#academy"><span class="ic p1">🎓</span> Academy’i gör</div>
+          <div class="pill" data-scroll="#modules"><span class="ic p3">🧩</span> Tüm modüller</div>
+          <div class="pill" data-scroll="#faq"><span class="ic p4">❓</span> SSS</div>
+        </div>
+
+        <div class="heroNote">
+          Abonelik yok. Sabit ücret yok. (Fiyat/jeton detayı sayfanın en altında kısa not olarak.)
         </div>
       </div>
 
@@ -685,38 +700,38 @@
         <div class="dots" id="dots"></div>
 
         <div class="slide active">
-          <img src="https://images.unsplash.com/photo-1543269865-cbf427effbad?auto=format&fit=crop&w=1600&q=80" alt="Kafede konuşan insanlar" />
+          <img src="https://images.unsplash.com/photo-1543269865-cbf427effbad?auto=format&fit=crop&w=1800&q=80" alt="Kafede sohbet" />
           <div class="shade"></div>
           <div class="cap">
             <div class="k">FACETOFACE</div>
-            <div class="t">Masaya bırak. Herkes kendi dilinde konuşsun. italkyAI çevirsin.</div>
+            <div class="t">Kafede iki kişi, iki dil. italkyAI aradaki köprü.</div>
           </div>
         </div>
 
         <div class="slide">
-          <img src="https://images.unsplash.com/photo-1521017432531-fbd92d768814?auto=format&fit=crop&w=1600&q=80" alt="Menü fotoğrafı" />
+          <img src="https://images.unsplash.com/photo-1521017432531-fbd92d768814?auto=format&fit=crop&w=1800&q=80" alt="Menü fotoğrafı" />
           <div class="shade"></div>
           <div class="cap">
             <div class="k">FOTOĞRAFTAN ÇEVİRİ</div>
-            <div class="t">Menü / tabela / kitap… Çek ve kendi dilinde oku.</div>
+            <div class="t">Japonca menü? Fotoğraf çek, saniyede anla.</div>
           </div>
         </div>
 
         <div class="slide">
-          <img src="https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=1600&q=80" alt="Toplantı" />
+          <img src="https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=1800&q=80" alt="Toplantı" />
           <div class="shade"></div>
           <div class="cap">
             <div class="k">ONLINE TOPLANTI</div>
-            <div class="t">İster 2 kişi ister 20 kişi. Herkes konuşsun, herkes anlasın.</div>
+            <div class="t">Toplantıda herkes kendi dilinde konuşsun. Herkes anlasın.</div>
           </div>
         </div>
 
         <div class="slide">
-          <img src="https://images.unsplash.com/photo-1516387938699-a93567ec168e?auto=format&fit=crop&w=1600&q=80" alt="Çalışma" />
+          <img src="https://images.unsplash.com/photo-1516387938699-a93567ec168e?auto=format&fit=crop&w=1800&q=80" alt="Çalışma" />
           <div class="shade"></div>
           <div class="cap">
             <div class="k">ITALKY ACADEMY</div>
-            <div class="t">Seviye tespit → AI ders planı → 15 dk odak dersler.</div>
+            <div class="t">Seviye → analiz → kısa derslerle hızlı yükseliş.</div>
           </div>
         </div>
       </div>
@@ -728,7 +743,10 @@
     <div class="secHead">
       <div>
         <h2>FaceToFace</h2>
-        <p>Konuş. Telefon çevirsin. Karşı taraf anlasın. Sen de onun cevabını kendi dilinde duy.</p>
+        <p>
+          “Telefonu masaya bırak.” Bu modun felsefesi bu. Siz konuşun, italkyAI çevirsin ve seslendirsin.
+          Göz teması kaybolmasın, akış bozulmasın.
+        </p>
       </div>
     </div>
 
@@ -736,22 +754,22 @@
       <div class="featRow">
         <div>
           <div class="kicker">Amiral Gemisi</div>
-          <div class="title">“Göz teması kaybolmasın.”</div>
+          <div class="title">Turist gibi değil, yerli gibi yaşa.</div>
           <p class="desc">
-            Telefon masada durur. Siz konuşursunuz. italkyAI çevirmeyi otomatik seslendirir.
-            İstersen çeviri balonunun yanındaki hoparlöre dokunup tekrar dinlersin.
+            Garsona sipariş verirken, otelde resepsiyonda, sokakta yol sorarken…
+            italkyAI arka planda tercüman gibi çalışır. Üstelik çeviriyi otomatik seslendirir;
+            istersen balonun yanındaki hoparlörden tekrar dinlersin.
           </p>
           <ul class="bullets">
-            <li>Kafe, otel, yol tarifi, alışveriş… anında “anlaşma” modu.</li>
-            <li>Çok dil: üst/alt dil seçersin, sistem çalışır.</li>
-            <li>Abonelik yok: ihtiyacın olduğunda aç, bitince kapat.</li>
+            <li>Üst/alt dil seçimiyle çok dilli kullanım</li>
+            <li>Konuşma akışını bozmaz (ekran “yardımcı” olur)</li>
+            <li>Kısa sürede maksimum fayda (anlık ihtiyaçlar için)</li>
           </ul>
-          <div class="priceChip">Maliyet: <b>2 Jeton</b> • <b>24 dakika</b> kullanım</div>
         </div>
 
         <div class="imgCard">
-          <img src="https://images.unsplash.com/photo-1520975682094-4a167b4f1c70?auto=format&fit=crop&w=1600&q=80" alt="Sohbet" />
-          <div class="stamp">Gerçek sahne: masada sohbet, ekranda çeviri.<small>Turist modu bitti.</small></div>
+          <img src="https://images.unsplash.com/photo-1520975682094-4a167b4f1c70?auto=format&fit=crop&w=1800&q=80" alt="Sohbet" />
+          <div class="stamp">Gerçek sahne: masada sohbet, ekranda çeviri.<small>Konuşma devam eder.</small></div>
         </div>
       </div>
     </div>
@@ -762,30 +780,32 @@
     <div class="secHead">
       <div>
         <h2>italky Academy</h2>
-        <p>AI öğretmen — stres yok, çekinme yok. Kısa derslerle her gün ilerle.</p>
+        <p>
+          Dil öğrenmek “uzun ve pahalı” olmak zorunda değil. Kısa dersler, net hedefler, düzenli pratik.
+          Yapay zekâ öğretmen; stres yok, çekinme yok.
+        </p>
       </div>
     </div>
 
     <div class="card">
       <div class="featRow rev">
         <div class="imgCard">
-          <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1600&q=80" alt="Ders" />
-          <div class="stamp">Seviye → analiz → ders planı<small>Odak: hızlı gelişim.</small></div>
+          <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1800&q=80" alt="Ders" />
+          <div class="stamp">Seviye → analiz → kişisel plan<small>Hızlı ve ölçülebilir gelişim.</small></div>
         </div>
 
         <div>
           <div class="kicker">Gerçek Gelişim</div>
-          <div class="title">Önce seviyeni gör, sonra yüksel.</div>
+          <div class="title">Önce nerede olduğunu gör, sonra yüksel.</div>
           <p class="desc">
-            Seviye tespit sınavı ile başlarsın. AI öğretmen eksiklerini bulur ve 15 dakikalık derslerle
-            günlük bir rutin kurar. İstersen aynı gün birden fazla ders alırsın.
+            Seviye tespit sınavı ile başlarsın. Sistem zayıf noktalarını çıkarır.
+            Sonra 15 dakikalık derslerle günlük planın oluşur.
           </p>
           <ul class="bullets">
-            <li>Seviye tespit: 10 Jeton (tek sefer)</li>
-            <li>Ders: 15 Jeton (15 dk)</li>
-            <li>Hedef dil + Türkçe açıklama: net ve anlaşılır</li>
+            <li>Seviyeyi “tahmin” etmez, ölçer</li>
+            <li>Dersler kısa: odak yüksek, zaman kaybı yok</li>
+            <li>Tek uygulama: pratik + ölçüm + tekrar</li>
           </ul>
-          <div class="priceChip">Seviye Tespit: <b>10 Jeton</b> • Ders: <b>15 Jeton</b></div>
         </div>
       </div>
     </div>
@@ -796,7 +816,10 @@
     <div class="secHead">
       <div>
         <h2>Modüller</h2>
-        <p>Her modülün bir amacı var. “Sadece cool” değil — gerçekten iş görsün diye.</p>
+        <p>
+          Her modül tek bir şeye odaklanır: “işe yarasın”.
+          Karmaşık değil; anlaşılır, hızlı ve pratik.
+        </p>
       </div>
     </div>
 
@@ -804,118 +827,60 @@
       <div class="grid">
 
         <div class="m">
-          <div class="mTop"><div class="mName">Metinden Çeviri</div><div class="mIcon">📝</div></div>
-          <div class="mDesc">Mesaj, mail, uzun metin… 24 saat boyunca rahat rahat çevir.</div>
-          <div class="mCost"><span>Süre</span><b>1 Jeton / 24 Saat</b></div>
+          <div class="mTop"><div class="mName">Metinden Çeviri</div><div class="mIcon i2">📝</div></div>
+          <div class="mDesc">Mesaj, mail, uzun metin… hızlı ve anlaşılır çeviri.</div>
+          <div class="mHow">Ne zaman kullanılır? • “Göndermeden önce emin olmak istiyorum.”</div>
         </div>
 
         <div class="m">
-          <div class="mTop"><div class="mName">Belgeden Çeviri</div><div class="mIcon">📄</div></div>
-          <div class="mDesc">PDF/Word içeriklerini hızlıca anla. İş ve okul için.</div>
-          <div class="mCost"><span>Süre</span><b>1 Jeton / 24 Saat</b></div>
+          <div class="mTop"><div class="mName">Belgeden Çeviri</div><div class="mIcon i1">📄</div></div>
+          <div class="mDesc">PDF/Word içeriklerini hızlıca anla. İş, okul, sözleşme.</div>
+          <div class="mHow">Ne zaman kullanılır? • “Belgeyi okuyup anlamam lazım.”</div>
         </div>
 
         <div class="m">
-          <div class="mTop"><div class="mName">Fotoğraftan Çeviri</div><div class="mIcon">📸</div></div>
-          <div class="mDesc">Menü/tabela/kitap… Çek ve anında kendi dilinde oku.</div>
-          <div class="mCost"><span>Süre</span><b>1 Jeton / 24 Saat</b></div>
+          <div class="mTop"><div class="mName">Fotoğraftan Çeviri</div><div class="mIcon i3">📸</div></div>
+          <div class="mDesc">Menü/tabela/kitap… fotoğrafla çeviri.</div>
+          <div class="mHow">Ne zaman kullanılır? • “Şu yazıda ne yazıyor?”</div>
         </div>
 
         <div class="m">
-          <div class="mTop"><div class="mName">Eğlenerek Öğren</div><div class="mIcon">🎮</div></div>
-          <div class="mDesc">Kelime oyunlarıyla “öğrenme”yi refleks haline getir.</div>
-          <div class="mCost"><span>Süre</span><b>1 Jeton / 24 Saat</b></div>
+          <div class="mTop"><div class="mName">Eğlenerek Öğren</div><div class="mIcon i4">🎮</div></div>
+          <div class="mDesc">Kelime oyunlarıyla öğrenmeyi refleks haline getir.</div>
+          <div class="mHow">Ne zaman kullanılır? • “Sıkılmadan pratik istiyorum.”</div>
         </div>
 
         <div class="m">
-          <div class="mTop"><div class="mName">Chat AI</div><div class="mIcon">🧠</div></div>
-          <div class="mDesc">Pratik odaklı: konu seç, konuş, düzeltme al, geliş.</div>
-          <div class="mCost"><span>Süre</span><b>5 Jeton / 60 dk</b></div>
+          <div class="mTop"><div class="mName">Chat AI</div><div class="mIcon i2">🧠</div></div>
+          <div class="mDesc">Pratik ortağın: konu seç, konuş, düzeltme al.</div>
+          <div class="mHow">Ne zaman kullanılır? • “Konuşmamı geliştirmek istiyorum.”</div>
         </div>
 
         <div class="m">
-          <div class="mTop"><div class="mName">Sohbet AI</div><div class="mIcon">💬</div></div>
-          <div class="mDesc">Serbest akış: günlük konuşma, dertleşme, pratik.</div>
-          <div class="mCost"><span>Süre</span><b>10 Jeton / 60 dk</b></div>
+          <div class="mTop"><div class="mName">Sohbet AI</div><div class="mIcon i1">💬</div></div>
+          <div class="mDesc">Serbest akış: günlük sohbet, dertleşme, rahat pratik.</div>
+          <div class="mHow">Ne zaman kullanılır? • “Rahatsam öğrenirim.”</div>
         </div>
 
         <div class="m">
-          <div class="mTop"><div class="mName">Konuşkan AI</div><div class="mIcon">🗣️</div></div>
-          <div class="mDesc">Sesli pratik: konuş, cevap al, tekrar et. Akıcılık kazan.</div>
-          <div class="mCost"><span>Süre</span><b>10 Jeton / 60 dk</b></div>
+          <div class="mTop"><div class="mName">Konuşkan AI</div><div class="mIcon i3">🗣️</div></div>
+          <div class="mDesc">Sesli pratik: konuş, yanıt al, tekrar et. Akıcılık kazan.</div>
+          <div class="mHow">Ne zaman kullanılır? • “Dilim dönmüyor, hızlanmak istiyorum.”</div>
         </div>
 
         <div class="m">
-          <div class="mTop"><div class="mName">Online Toplantı</div><div class="mIcon">🎥</div></div>
-          <div class="mDesc">Herkese açık: 2 kişi de olur, 20 kişi de. Anlık anlaş.</div>
-          <div class="mCost"><span>Süre</span><b>20 Jeton / 60 dk</b></div>
+          <div class="mTop"><div class="mName">Online Toplantı</div><div class="mIcon i4">🎥</div></div>
+          <div class="mDesc">2 kişi de olur, 20 kişi de. Herkes konuşsun, herkes anlasın.</div>
+          <div class="mHow">Ne zaman kullanılır? • “Toplantıda dil engeli istemiyorum.”</div>
         </div>
 
         <div class="m">
-          <div class="mTop"><div class="mName">Seviye Tespit</div><div class="mIcon">🧪</div></div>
-          <div class="mDesc">AI analiz eder: seviyen, eksiklerin ve hedef yol haritan.</div>
-          <div class="mCost"><span>Tek sefer</span><b>10 Jeton</b></div>
+          <div class="mTop"><div class="mName">Offline Dil Paketi</div><div class="mIcon i1">📦</div></div>
+          <div class="mDesc">İnternet yokken bile FaceToFace + Metin Çeviri.</div>
+          <div class="mHow">Ne zaman kullanılır? • “Uçak/dağ/çekmeyen yer…”</div>
         </div>
 
       </div>
-    </div>
-  </section>
-
-  <!-- PRICING -->
-  <section id="pricing">
-    <div class="secHead">
-      <div>
-        <h2>Jeton Menüsü</h2>
-        <p>Şeffaf ve anlaşılır: “Ben neye ne ödüyorum?” sorusu burada bitiyor.</p>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="featRow">
-        <div>
-          <div class="kicker">Şeffaf fiyat</div>
-          <div class="title">1 Jeton = <span class="grad">2 TL</span></div>
-          <p class="desc">
-            Abonelik yok. Kullandığın kadar öde. “İptal unutursan para gider” devri bitti.
-          </p>
-          <ul class="bullets">
-            <li>FaceToFace: 2 Jeton / 24 dk</li>
-            <li>Metinden Çeviri: 1 Jeton / 24 saat</li>
-            <li>Belgeden Çeviri: 1 Jeton / 24 saat</li>
-            <li>Fotoğraftan Çeviri: 1 Jeton / 24 saat</li>
-            <li>Oyunlar: 1 Jeton / 24 saat</li>
-            <li>Seviye Tespit: 10 Jeton</li>
-            <li>Ders: 15 Jeton</li>
-            <li>Chat AI: 5 Jeton / 60 dk</li>
-            <li>Sohbet / Konuşkan AI: 10 Jeton / 60 dk</li>
-            <li>Online Toplantı: 20 Jeton / 60 dk</li>
-          </ul>
-        </div>
-
-        <div class="imgCard">
-          <img src="https://images.unsplash.com/photo-1520975916090-3105956dac38?auto=format&fit=crop&w=1600&q=80" alt="Kullanım" />
-          <div class="stamp">“Kullanmadığın şeye para yok.”<small>Kontrol tamamen sende.</small></div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- OFFLINE -->
-  <section id="offline">
-    <div class="secHead">
-      <div>
-        <h2>Offline Dil Paketi</h2>
-        <p>İnternet yoksa da anlaşma devam.</p>
-      </div>
-    </div>
-
-    <div class="offline">
-      <h3>İnternetin bitse de sohbetin bitmesin.</h3>
-      <p>
-        Offline Dil Paketi ile <b>FaceToFace</b> ve <b>Metinden Çeviri</b> modüllerini
-        <b>365 gün</b> çevrimdışı kullanırsın. Uçak, dağ, bodrum katı… fark etmez.
-      </p>
-      <div class="big">Paket: <span>100 Jeton / 365 Gün</span></div>
     </div>
   </section>
 
@@ -924,30 +889,30 @@
     <div class="secHead">
       <div>
         <h2>SSS</h2>
-        <p>Kısa ve net cevaplar.</p>
+        <p>Kısa, net ve güven veren cevaplar.</p>
       </div>
     </div>
 
     <div class="faq">
       <details>
+        <summary>Bu uygulama kimler için?</summary>
+        <p>Seyahat edenler, iş toplantısı yapanlar, dil öğrenmek isteyenler, yurtdışında yaşayanlar… Kısacası “anlaşma” ihtiyacı olan herkes için.</p>
+      </details>
+      <details>
         <summary>Abonelik var mı?</summary>
-        <p>Hayır. italkyAI abonelik satmaz. Jeton alırsın, ihtiyacın olunca kullanırsın.</p>
+        <p>Hayır. Abonelik yok. İhtiyacın olduğunda kullanırsın. Kontrol sende.</p>
       </details>
       <details>
-        <summary>Chat AI nedir?</summary>
-        <p><b>Pratik odaklı</b> bir moddur. Konu seçersin, konuşursun, hatalarını düzelttirirsin. Dil pratiği için “antrenman salonu” gibi.</p>
+        <summary>Chat AI ve Sohbet AI farkı ne?</summary>
+        <p><b>Chat AI</b> pratik ve düzeltme odaklıdır. <b>Sohbet AI</b> daha serbest, daha rahat konuşma akışıdır.</p>
       </details>
       <details>
-        <summary>Sohbet AI nedir?</summary>
-        <p><b>Serbest akış</b> modudur. Dertleşme, günlük konuşma, sohbet… Daha rahat ve daha “insan gibi” akış hedefler.</p>
+        <summary>Online toplantı kaç kişi?</summary>
+        <p>Herkese açık: 2 kişi de olur, 20 kişi de. Hedef: herkesin birbirini anlaması.</p>
       </details>
       <details>
-        <summary>Konuşkan AI nedir?</summary>
-        <p>Sesli pratik odaklıdır. Konuşursun, cevap alırsın, tekrar edersin. Akıcılığı hızlandırmak için tasarlanır.</p>
-      </details>
-      <details>
-        <summary>Online toplantı kaç kişilik?</summary>
-        <p>Herkese açık: 2 kişi de olur 20 kişi de. Dil bariyeri artık “toplantı bariyeri” değildir.</p>
+        <summary>Offline paket ne işe yarar?</summary>
+        <p>İnternetin olmadığı anlarda FaceToFace ve Metin Çeviri’yi kullanmaya devam edebilmen için.</p>
       </details>
     </div>
   </section>
@@ -964,28 +929,30 @@
     <div class="card">
       <p style="margin:0; font-weight:800; color: rgba(12,18,40,.78); line-height:1.7;">
         Mail: <b>info@italky.ai</b><br>
-        Basın / İş birliği: <b>partner@italky.ai</b><br>
-        Destek: <b>support@italky.ai</b>
+        Destek: <b>support@italky.ai</b><br>
+        İş birliği: <b>partner@italky.ai</b>
       </p>
     </div>
   </section>
 
 </div>
 
+<!-- Bottom bar -->
 <div class="bottomBar">
   <div class="bottomInner">
-    <div class="mini">Abonelik yok • <b>1 Jeton = 2 TL</b> • Kullan ve bitir</div>
+    <div class="mini">Abonelik yok • İstersen “kullandıkça öde” modeli • <b>Detaylar uygulama içinde</b></div>
     <div class="links">
+      <a data-scroll="#facetoface">FaceToFace</a>
+      <a data-scroll="#academy">Academy</a>
+      <a data-scroll="#modules">Modüller</a>
       <a data-scroll="#faq">SSS</a>
       <a data-scroll="#contact">İletişim</a>
-      <a id="privacyLink">Gizlilik</a>
-      <a id="aboutLink">Hakkımızda</a>
     </div>
   </div>
 </div>
 
 <script>
-  // ===== Smooth scroll =====
+  /* ===== Smooth scroll ===== */
   function scrollToSel(sel){
     const el = document.querySelector(sel);
     if(!el) return;
@@ -1001,10 +968,11 @@
   document.querySelector(".brand")?.addEventListener("click", ()=> scrollToSel("#hero"));
   document.querySelector(".brand")?.addEventListener("keydown", (e)=>{ if(e.key==="Enter") scrollToSel("#hero"); });
 
-  // ===== Slider =====
+  document.getElementById("btnLearn")?.addEventListener("click", ()=> scrollToSel("#modules"));
+
+  /* ===== Slider ===== */
   const slides = Array.from(document.querySelectorAll(".slide"));
   const dotsWrap = document.getElementById("dots");
-
   slides.forEach((_, i)=>{
     const d = document.createElement("div");
     d.className = "dot" + (i===0 ? " active":"");
@@ -1012,9 +980,7 @@
     dotsWrap.appendChild(d);
   });
   const dots = Array.from(document.querySelectorAll(".dot"));
-
-  let idx = 0;
-  let timer = null;
+  let idx = 0, timer = null;
 
   function setSlide(i, resetTimer){
     idx = i % slides.length;
@@ -1027,17 +993,9 @@
   }
   timer = setInterval(()=> setSlide((idx+1)%slides.length, false), 4200);
 
-  // ===== Store links (placeholder) =====
-  // Yayına alınca gerçek linkleri koy:
+  /* ===== Store links (placeholder) ===== */
   const PLAY_URL = "https://play.google.com/store/apps/details?id=YOUR_APP_ID";
-  const APP_URL  = PLAY_URL;
-
-  document.getElementById("btnPlay")?.addEventListener("click", ()=> window.location.href = PLAY_URL);
-  document.getElementById("btnDownload")?.addEventListener("click", ()=> window.location.href = APP_URL);
-
-  // footer placeholder links
-  document.getElementById("privacyLink")?.addEventListener("click", ()=> alert("Gizlilik sayfasını /pages/privacy.html olarak bağlayacağız."));
-  document.getElementById("aboutLink")?.addEventListener("click", ()=> alert("Hakkımızda sayfasını /pages/about.html olarak bağlayacağız."));
+  document.getElementById("btnDownload")?.addEventListener("click", ()=> window.location.href = PLAY_URL);
 </script>
 
 </body>
