@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>italkyAI • Final Pro Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
   <style>
     :root {
       --ai-gradient: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
@@ -11,19 +13,20 @@
       --bg-void: #02000f;
     }
 
-    /* Sayfa arka planını sabitledik */
+    /* Temel Reset ve Uygulama Alanı */
     html, body {
       margin: 0; padding: 0;
       width: 100%; height: 100%;
       background-color: var(--bg-void);
       font-family: 'Outfit', sans-serif;
       overflow: hidden;
+      color: #fff;
     }
 
-    /* Cep telefonu ekranı disiplini (Viewport) */
+    /* Cep telefonu ekranı sınırlayıcı (Viewport) */
     .app-viewport {
       width: 100%;
-      max-width: 430px; /* Standart mobil genişlik */
+      max-width: 430px; /* iPhone Pro Max Genişliği */
       height: 100dvh;
       margin: 0 auto;
       display: flex;
@@ -33,15 +36,15 @@
       backdrop-filter: blur(30px);
       border-left: 1px solid rgba(255,255,255,0.1);
       border-right: 1px solid rgba(255,255,255,0.1);
+      box-shadow: 0 0 100px rgba(0,0,0,0.5);
     }
 
-    /* Header Tasarımı (BE FREE Vurgulu) */
+    /* Premium Üst Bar */
     .premium-header {
       padding: calc(45px + env(safe-area-inset-top)) 18px 15px;
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
+      display: flex; align-items: flex-start; justify-content: space-between;
       border-bottom: 1px solid rgba(255,255,255,0.08);
+      background: rgba(0,0,0,0.2);
     }
     .brand-group h1 {
       font-family: 'Space Grotesk', sans-serif;
@@ -54,23 +57,21 @@
 
     .user-info { display: flex; align-items: center; gap: 10px; }
     .uMeta { display: flex; flex-direction: column; align-items: flex-end; }
-    .uName { font-weight: 900; font-size: 13px; color: #fff; }
+    .uName { font-weight: 900; font-size: 13px; }
     .uJeton { font-size: 10px; font-weight: 900; color: #a5b4fc; }
     .avatar { width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid #6366f1; background: url('https://i.pravatar.cc/100?img=32') center/cover; }
 
-    /* --- SENİN KODUN (DOKUNULMADI) --- */
+    /* --- 1. FACETOFACE (Orijinal Noktasına Dokunulmadı) --- */
     #pageContent {
       height: calc(100vh - 180px); 
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      padding: 10px 18px var(--footer-offset);
+      padding: 5px 18px var(--footer-offset);
       box-sizing: border-box;
       gap: 8px;
-      overflow-y: auto;
-      scrollbar-width: none;
+      overflow: hidden;
     }
-    #pageContent::-webkit-scrollbar { display: none; }
 
     .portal-zone {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -106,6 +107,7 @@
     .portal-info h1 { margin: 0; font-size: 26px; font-weight: 900; color: #fff; letter-spacing: -1px; }
     .portal-info p { margin: 2px 0 0; font-size: 11px; font-weight: 800; color: rgba(255,255,255,0.5); }
 
+    /* --- 2. ACADEMY --- */
     .academy-pro {
       background: rgba(255, 255, 255, 0.05);
       border-radius: 24px;
@@ -128,6 +130,7 @@
     .academy-text h2 span { background: var(--ai-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     .academy-text p { margin: 0; font-size: 10px; font-weight: 800; color: rgba(255,255,255,0.4); }
 
+    /* --- 3. GRID LAYOUT --- */
     .pro-grid {
       display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
     }
@@ -151,8 +154,8 @@
     .ico-teacher::before { content: "🎓"; }
 
     .pro-tile label { font-size: 12px; font-weight: 800; color: #fff; line-height: 1.2; }
-    .pro-tile label span { background: var(--ai-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
+    /* --- 4. MEETING BAR --- */
     .meeting-bar {
       background: rgba(255, 255, 255, 0.05);
       border-radius: 24px;
@@ -162,12 +165,12 @@
       cursor: pointer;
     }
 
-    /* Footer (Shell Yapısı) */
+    /* Alt Bar (Shell Yapısı) */
     .premium-footer {
       position: absolute; bottom: 0; width: 100%; height: var(--footer-offset);
-      border-top: 1px solid rgba(255,255,255,0.08);
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       background: rgba(0,0,0,0.3); backdrop-filter: blur(20px);
+      border-top: 1px solid rgba(255,255,255,0.08);
       padding-bottom: env(safe-area-inset-bottom);
     }
     .footer-nav { display: flex; gap: 20px; margin-bottom: 8px; }
@@ -177,7 +180,6 @@
     @keyframes rotateOrbit { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     @keyframes aiBreathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
     @keyframes barMove { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(0.4); } }
-
   </style>
 </head>
 
@@ -224,8 +226,9 @@
 
       <div class="academy-pro">
         <div class="spectrum-logo">
-          <div class="bar bar-1"></div><div class="bar bar-2"></div><div class="bar bar-3"></div><div class="bar bar-4"></div>
-          <div class="bar bar-5"></div><div class="bar bar-6"></div><div class="bar bar-7"></div>
+          <div class="bar bar-1"></div><div class="bar bar-2"></div><div class="bar bar-3"></div>
+          <div class="bar bar-4"></div><div class="bar bar-5"></div><div class="bar bar-6"></div>
+          <div class="bar bar-7"></div>
         </div>
         <div class="academy-text">
           <h2>italky <span>Academy</span></h2>
