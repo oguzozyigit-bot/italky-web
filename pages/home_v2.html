@@ -1,311 +1,173 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>italkyAI • Yapay Zekâ Destekli İletişim Platformu</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>italkyAI | İletişimin Geleceği</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #000000;
+            --accent: #6366f1;
+            --accent-2: #ec4899;
+            --text: #ffffff;
+            --glass: rgba(255, 255, 255, 0.05);
+            --border: rgba(255, 255, 255, 0.1);
+        }
 
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background-color: var(--bg); 
+            color: var(--text); 
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
 
-<style>
-:root{
-  --bg:#050508;
-  --grad: linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
-  --text:#ffffff;
-  --muted:rgba(255,255,255,0.65);
-}
+        /* --- NAVIGATION --- */
+        header {
+            position: fixed;
+            top: 0; width: 100%;
+            padding: 20px 5%;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(15px);
+            border-bottom: 1px solid var(--border);
+        }
+        .logo { font-weight: 800; font-size: 24px; letter-spacing: -1px; }
+        .logo span { color: var(--accent); }
+        nav a { color: #fff; text-decoration: none; margin: 0 15px; font-size: 14px; font-weight: 500; opacity: 0.7; transition: 0.3s; }
+        nav a:hover { opacity: 1; color: var(--accent); }
 
-*{box-sizing:border-box;margin:0;padding:0}
-body{
-  font-family:'Outfit',sans-serif;
-  background:var(--bg);
-  color:var(--text);
-  scroll-behavior:smooth;
-}
+        /* --- HERO SECTION --- */
+        .hero {
+            height: 100vh;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            text-align: center;
+            background: radial-gradient(circle at center, #1e1b4b 0%, #000 70%);
+            padding: 0 10%;
+        }
+        .hero h1 { 
+            font-size: clamp(40px, 8vw, 90px); 
+            font-weight: 800; line-height: 1; 
+            background: linear-gradient(to bottom, #fff, #666);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin-bottom: 20px;
+        }
+        .hero p { font-size: clamp(16px, 2vw, 22px); color: #a1a1aa; max-width: 700px; margin-bottom: 40px; }
 
-/* SABİT ÜST BAR */
-header{
-  position:fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:70px;
-  background:rgba(0,0,0,0.6);
-  backdrop-filter:blur(20px);
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:0 30px;
-  z-index:999;
-}
+        /* --- GIANT BANNERS (Büyük Görseller) --- */
+        .feature-hero {
+            position: relative;
+            width: 90%;
+            margin: 40px auto;
+            height: 600px;
+            border-radius: 40px;
+            overflow: hidden;
+            display: flex; align-items: flex-end;
+            padding: 60px;
+            border: 1px solid var(--border);
+        }
+        .banner-face { background: url('https://images.unsplash.com/photo-1543269865-cbf427effbad?auto=format&fit=crop&q=80&w=2000') center/cover; }
+        .banner-academy { background: url('https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&q=80&w=2000') center/cover; }
+        .banner-meeting { background: url('https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&q=80&w=2000') center/cover; }
 
-.logo{
-  font-weight:900;
-  font-size:20px;
-}
+        .feature-hero::before {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.9) 10%, transparent 60%);
+        }
 
-.logo span{
-  background:var(--grad);
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
-}
+        .feature-content { position: relative; z-index: 2; max-width: 600px; }
+        .feature-content h2 { font-size: 48px; font-weight: 800; margin-bottom: 15px; }
+        .tag { background: var(--accent); padding: 5px 15px; border-radius: 20px; font-size: 12px; font-weight: 800; text-transform: uppercase; margin-bottom: 15px; display: inline-block; }
 
-nav{
-  display:flex;
-  gap:25px;
-}
+        /* --- GRID SECTION --- */
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            padding: 0 5% 100px;
+        }
+        .card {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            padding: 40px;
+            border-radius: 30px;
+            transition: 0.4s;
+        }
+        .card:hover { border-color: var(--accent); transform: translateY(-5px); }
+        .card h3 { font-size: 24px; margin-bottom: 15px; color: var(--accent); }
 
-nav a{
-  color:#fff;
-  text-decoration:none;
-  font-weight:600;
-  font-size:14px;
-  opacity:.8;
-}
+        /* --- BUTTONS --- */
+        .btn {
+            padding: 16px 35px;
+            border-radius: 100px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: 0.3s;
+            display: inline-block;
+        }
+        .btn-primary { background: #fff; color: #000; }
+        .btn-primary:hover { transform: scale(1.05); }
 
-nav a:hover{opacity:1}
-
-.download-btn{
-  background:var(--grad);
-  padding:10px 18px;
-  border-radius:30px;
-  font-weight:800;
-  font-size:13px;
-  text-decoration:none;
-  color:#fff;
-}
-
-/* GENEL SECTION */
-section{
-  min-height:100vh;
-  padding:120px 12% 80px;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-}
-
-/* HERO */
-.hero{
-  text-align:left;
-}
-
-.hero h1{
-  font-size:58px;
-  font-weight:900;
-  line-height:1.1;
-  margin-bottom:20px;
-}
-
-.hero p{
-  font-size:20px;
-  color:var(--muted);
-  max-width:600px;
-  margin-bottom:35px;
-}
-
-.hero-buttons{
-  display:flex;
-  gap:20px;
-}
-
-.primary-btn{
-  background:var(--grad);
-  padding:16px 28px;
-  border-radius:40px;
-  font-weight:900;
-  font-size:16px;
-  text-decoration:none;
-  color:#fff;
-}
-
-.secondary-btn{
-  border:1px solid rgba(255,255,255,0.3);
-  padding:16px 28px;
-  border-radius:40px;
-  font-weight:700;
-  text-decoration:none;
-  color:#fff;
-}
-
-/* BANNER SLIDER */
-.slider{
-  display:flex;
-  overflow-x:auto;
-  gap:30px;
-  padding-top:40px;
-  scroll-snap-type:x mandatory;
-}
-
-.slide{
-  min-width:80%;
-  height:380px;
-  border-radius:30px;
-  background-size:cover;
-  background-position:center;
-  position:relative;
-  scroll-snap-align:center;
-  display:flex;
-  align-items:flex-end;
-  padding:30px;
-}
-
-.slide::after{
-  content:"";
-  position:absolute;
-  inset:0;
-  background:linear-gradient(to top,rgba(0,0,0,0.7),transparent);
-  border-radius:30px;
-}
-
-.slide h2{
-  position:relative;
-  z-index:2;
-  font-size:28px;
-  font-weight:900;
-}
-
-/* FEATURES */
-.features{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
-  gap:40px;
-}
-
-.feature-box{
-  padding:30px;
-  border-radius:20px;
-  background:rgba(255,255,255,0.03);
-  border:1px solid rgba(255,255,255,0.08);
-}
-
-.feature-box h3{
-  font-size:22px;
-  margin-bottom:10px;
-}
-
-.feature-box p{
-  color:var(--muted);
-  font-size:15px;
-  line-height:1.6;
-}
-
-/* FOOTER */
-footer{
-  padding:60px 12%;
-  background:#000;
-}
-
-.footer-links{
-  display:flex;
-  gap:30px;
-  margin-bottom:20px;
-}
-
-.footer-links a{
-  color:#fff;
-  text-decoration:none;
-  font-size:13px;
-  opacity:.7;
-}
-
-.signature{
-  font-size:12px;
-  opacity:.4;
-}
-</style>
+        footer { text-align: center; padding: 100px 5%; border-top: 1px solid var(--border); opacity: 0.5; font-size: 14px; }
+    </style>
 </head>
-
 <body>
 
 <header>
-  <div class="logo">italky<span>AI</span></div>
-  <nav>
-    <a href="#face">Face to Face</a>
-    <a href="#academy">italky Academy</a>
-    <a href="#games">Oyunlar</a>
-    <a href="#meeting">Toplantı</a>
-  </nav>
-  <a href="/app" class="download-btn">Uygulamayı Aç</a>
+    <div class="logo">italky<span>AI</span></div>
+    <nav>
+        <a href="#face">Face to Face</a>
+        <a href="#academy">Academy</a>
+        <a href="#games">Oyunlar</a>
+        <a href="#meeting">Meeting</a>
+    </nav>
+    <a href="#" class="btn btn-primary" style="padding: 10px 20px; font-size: 12px;">BAŞLAT</a>
 </header>
 
-<!-- HERO -->
 <section class="hero">
-  <h1>Dil Bariyerlerini <br>Yapay Zekâ ile Kaldırın</h1>
-  <p>Gerçek zamanlı çeviri, AI öğretmen, yüz yüze konuşma ve online toplantı desteği. Tek uygulama. Sınırsız iletişim.</p>
-  <div class="hero-buttons">
-    <a href="/app" class="primary-btn">Uygulamayı Başlat</a>
-    <a href="#face" class="secondary-btn">Nasıl Çalışır?</a>
-  </div>
-
-  <div class="slider">
-    <div class="slide" style="background-image:url('https://images.unsplash.com/photo-1522202176988-66273c2fd55f')">
-      <h2>Yüz Yüze AI Çeviri</h2>
+    <h1>Konuşun, <br> Dünya Sizi Dinlesin.</h1>
+    <p>Dil engellerini saniyeler içinde yok eden yapay zekâ teknolojisi. Artık herkesle, her yerde, kendi dilinizde konuşun.</p>
+    <div class="hero-btns">
+        <a href="#" class="btn btn-primary">Hemen Dene</a>
     </div>
-    <div class="slide" style="background-image:url('https://images.unsplash.com/photo-1504384308090-c894fdcc538d')">
-      <h2>Toplantıda Herkes Sizi Anlasın</h2>
-    </div>
-    <div class="slide" style="background-image:url('https://images.unsplash.com/photo-1543269865-cbf427effbad')">
-      <h2>AI Öğretmen ile Öğrenin</h2>
-    </div>
-  </div>
 </section>
 
-<!-- FACE -->
-<section id="face">
-  <div class="features">
-    <div class="feature-box">
-      <h3>Gerçek Zamanlı Konuşma</h3>
-      <p>İki kişi veya 20 kişi fark etmez. Konuşun. Herkes kendi dilinde anlasın.</p>
+<section id="face" class="feature-hero banner-face">
+    <div class="feature-content">
+        <span class="tag">Gerçek Zamanlı</span>
+        <h2>Face to Face</h2>
+        <p>Karşılıklı konuşurken telefonunuzu araya koyun. Siz Türkçe söyleyin, o saniyeler içinde hedef dilde seslendirsin. Turistik geziler artık çok daha kolay.</p>
     </div>
-    <div class="feature-box">
-      <h3>Yüksek Hızlı Çeviri Motoru</h3>
-      <p>Milisaniyeler içinde karşı tarafa aktarılan doğal ve akıcı çeviri.</p>
-    </div>
-  </div>
 </section>
 
-<!-- ACADEMY -->
-<section id="academy">
-  <div class="features">
-    <div class="feature-box">
-      <h3>AI Öğretmen</h3>
-      <p>7/24 aktif yapay zekâ. Hatalarınızı düzeltir, seviyenize göre içerik üretir.</p>
+<section id="academy" class="feature-hero banner-academy">
+    <div class="feature-content">
+        <span class="tag">Eğitim</span>
+        <h2>italky Academy</h2>
+        <p>7/24 yanınızda olan bir özel öğretmen. Hatalarınızı düzeltir, aksanınızı geliştirir ve size özel bir müfredat oluşturur. Kitapları unutun, konuşmaya odaklanın.</p>
     </div>
-    <div class="feature-box">
-      <h3>Gerçek Konuşma Pratiği</h3>
-      <p>Ezber değil. Konuşarak öğrenme.</p>
-    </div>
-  </div>
 </section>
 
-<!-- GAMES -->
-<section id="games">
-  <div class="features">
-    <div class="feature-box">
-      <h3>Oyunlaştırılmış Öğrenme</h3>
-      <p>Kelime avı, refleks testleri ve interaktif görevlerle eğlenerek ilerleyin.</p>
+<div class="grid-container">
+    <div class="card" id="meeting">
+        <h3>italky Meeting</h3>
+        <p>Zoom veya Google Meet üzerinden global toplantılara katılın. Yapay zekâmız toplantıyı anlık çevirir ve alt yazı olarak ekranınıza yansıtır.</p>
     </div>
-  </div>
-</section>
-
-<!-- MEETING -->
-<section id="meeting">
-  <div class="features">
-    <div class="feature-box">
-      <h3>Online Toplantı Entegrasyonu</h3>
-      <p>Zoom, Meet veya fiziksel toplantı fark etmez. Siz konuşun. Herkes anlasın.</p>
+    <div class="card" id="games">
+        <h3>Eğlenceli Oyunlar</h3>
+        <p>Kelime haznenizi geliştirmek sıkıcı olmak zorunda değil. İnteraktif oyunlar ve yarışmalarla dil öğrenimini bir hobiye dönüştürün.</p>
     </div>
-  </div>
-</section>
+    <div class="card">
+        <h3>20+ Dil Desteği</h3>
+        <p>İngilizce'den Japonca'ya, Almanca'dan Swahili'ye kadar geniş dil kütüphanesi ile sınırları kaldırın.</p>
+    </div>
+</div>
 
 <footer>
-  <div class="footer-links">
-    <a href="#">SSS</a>
-    <a href="#">Hakkımızda</a>
-    <a href="#">İletişim</a>
-    <a href="#">Gizlilik</a>
-  </div>
-  <div class="signature">italkyAI © 2026 By Ozyigit's</div>
+    <p>italkyAI © 2026 • By Ozyigit's • Geleceği Konuşuyoruz.</p>
 </footer>
 
 </body>
