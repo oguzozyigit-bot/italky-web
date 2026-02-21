@@ -504,64 +504,62 @@ html,body{
   box-shadow: 0 0 18px rgba(236,72,153,0.35);
   display:inline-block;
 }
-/* === TOPBAR ALIGN FIX (icons too high) === */
+
+/* ======================================================
+   ✅ TOPBAR ALIGN FIX (icons too high + lang in topbar)
+   - Menüler ortalanır
+   - Dil butonu nav ile aynı hizada
+   - Aktif link “altı çizgi yok”, sadece renk/grad
+====================================================== */
+
 .topbar{
-  height: 72px; /* bar yüksekliği */
-  display:flex;
-  align-items:center; /* DİKEY ORTA */
+  height: calc(72px + env(safe-area-inset-top));
 }
 
 .topbar-inner{
-  height: 72px;
-  display:flex;
-  align-items:center; /* DİKEY ORTA */
-  justify-content:space-between;
-  gap:14px;
+  min-height: 72px;
+  align-items: center;
 }
 
 .nav{
-  height: 72px;
-  display:flex;
-  align-items:center;  /* DİKEY ORTA */
-  gap:10px;
+  min-height: 72px;
+  align-items: center;
 }
 
-/* Menü linkleri / butonlar aynı hizada */
 .nav a, .nav button{
   height: 44px;
+  padding: 0 12px;
   display:inline-flex;
   align-items:center;
   justify-content:center;
   line-height: 1;
-  padding: 0 12px;
   border-radius: 999px;
 }
 
-/* Eğer sen ikonlu “pill” buton kullanıyorsan */
-.nav a .ico, .nav button .ico{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  width: 18px;
-  height: 18px;
-  margin-right: 8px;
-  transform: translateY(0); /* yukarı kaymayı sıfırla */
+.nav a.active,
+.nav button.active{
+  border: none;
+  background: var(--grad);
+  color: #fff;
+  box-shadow: 0 18px 60px rgba(99,102,241,0.25);
 }
 
-/* Dil butonu */
-.langbtn{
+.nav a.primary.active{
+  filter: brightness(1.05);
+}
+
+.nav .langbtn{
   height: 44px;
   padding: 0 12px;
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  gap:8px;
+  gap:10px;
 }
 
-/* Bayrak + kod aynı hizada dursun */
 #langLabel{
   display:inline-flex;
   align-items:center;
   gap:8px;
-  font-weight: 800;
+  font-weight: 1000;
 }
