@@ -1,76 +1,91 @@
 // FILE: /js/site_banner.js
-(function(){
-  const wrap = document.getElementById("bannerRail");
-  const img  = document.getElementById("heroBannerImg");
-  const dots = document.getElementById("bannerDots");
-  if(!wrap || !img || !dots) return;
+// Simple, fast banner carousel (auto + swipe) for home_v2
 
-  // 10 gerçek görsel (Unsplash) — konu: çeviri, toplantı, eğitim, seyahat
-  const IMAGES = [
-    { src:"https://images.unsplash.com/photo-1543269865-cbf427effbad?auto=format&fit=crop&w=1800&q=80", alt:"FaceToFace cafe" },
-    { src:"https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=1800&q=80", alt:"Online meeting" },
-    { src:"https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1800&q=80", alt:"Academy learning" },
-    { src:"https://images.unsplash.com/photo-1512428559087-560fa5ceab42?auto=format&fit=crop&w=1800&q=80", alt:"Photo translate" },
-    { src:"https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=1800&q=80", alt:"Document translate" },
-    { src:"https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=1800&q=80", alt:"Text translate" },
-    { src:"https://images.unsplash.com/photo-1516589091380-5d8e87df6999?auto=format&fit=crop&w=1800&q=80", alt:"Chat AI" },
-    { src:"https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1800&q=80", alt:"Speaking AI" },
-    { src:"https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=1800&q=80", alt:"Business translation" },
-    { src:"https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1800&q=80", alt:"Travel signs" }
-  ];
+export function mountBannerCarousel({
+  rootId = "bannerRail",
+  dotsId = "bannerDots",
+  intervalMs = 5200
+} = {}) {
+  const root = document.getElementById(rootId);
+  if (!root) return;
 
-  let idx = 0;
-  let lock = false;
+  const dots = document.getElementById(dotsId);
+
+  const slides = Array.from(root.querySelectorAll(".banner-slide"));
+  if (!slides.length) return;
+
+  let i = 0;
   let timer = null;
+  let isDown = false;
+  let startX = 0;
+  let dx = 0;
 
-  function renderDots(){
-    dots.innerHTML = IMAGES.map((_,i)=>`<span class="bdot ${i===idx?"on":""}" data-i="${i}"></span>`).join("");
-    dots.querySelectorAll(".bdot").forEach(d=>{
-      d.addEventListener("click", ()=>{
-        const i = Number(d.getAttribute("data-i")||0);
-        go(i, true);
+  function setActive(idx) {
+    i = (idx + slides.length) % slides.length;
+    slides.forEach((s, k) => s.classList.toggle("active", k === i));
+    if (dots) {
+      const all = Array.from(dots.querySelectorAll(".dot"));
+      all.forEach((d, k) => d.classList.toggle("on", k === i));
+    }
+  }
+
+  function next() { setActive(i + 1); }
+  function start() {
+    stop();
+    timer = setInterval(next, intervalMs);
+  }
+  function stop() {
+    if (timer) clearInterval(timer);
+    timer = null;
+  }
+
+  // build dots
+  if (dots) {
+    dots.innerHTML = slides.map((_s, k)=>`<button class="dot ${k===0?"on":""}" data-i="${k}" aria-label="banner ${k+1}"></button>`).join("");
+    dots.querySelectorAll(".dot").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        const idx = Number(btn.getAttribute("data-i")||"0");
+        setActive(idx);
+        start();
       });
     });
   }
 
-  function go(i, user=false){
-    if(lock) return;
-    lock = true;
+  // swipe (pointer)
+  root.addEventListener("pointerdown", (e)=>{
+    isDown = true;
+    startX = e.clientX;
+    dx = 0;
+    stop();
+    root.setPointerCapture(e.pointerId);
+  });
 
-    idx = (i + IMAGES.length) % IMAGES.length;
-    img.style.opacity = "0";
+  root.addEventListener("pointermove", (e)=>{
+    if(!isDown) return;
+    dx = e.clientX - startX;
+  });
 
-    setTimeout(()=>{
-      img.src = IMAGES[idx].src;
-      img.alt = IMAGES[idx].alt;
-      img.onload = ()=>{ img.style.opacity="1"; };
-      renderDots();
-      lock = false;
-    }, 220);
+  root.addEventListener("pointerup", ()=>{
+    if(!isDown) return;
+    isDown = false;
 
-    if(user) restart();
-  }
+    const threshold = 45; // px
+    if(dx > threshold) setActive(i - 1);
+    else if(dx < -threshold) setActive(i + 1);
 
-  function next(){ go(idx+1); }
-  function restart(){
-    if(timer) clearInterval(timer);
-    timer = setInterval(next, 5200);
-  }
+    start();
+  });
 
-  // swipe
-  let x0 = null;
-  wrap.addEventListener("touchstart",(e)=>{ x0 = e.touches?.[0]?.clientX ?? null; }, {passive:true});
-  wrap.addEventListener("touchend",(e)=>{
-    if(x0==null) return;
-    const x1 = e.changedTouches?.[0]?.clientX ?? x0;
-    const dx = x1 - x0;
-    x0 = null;
-    if(Math.abs(dx) < 30) return;
-    if(dx < 0) go(idx+1, true); else go(idx-1, true);
-  }, {passive:true});
+  root.addEventListener("pointercancel", ()=>{
+    isDown = false;
+    start();
+  });
+
+  // allow manual pause on hover (desktop)
+  root.addEventListener("mouseenter", stop);
+  root.addEventListener("mouseleave", start);
 
   // init
-  img.style.transition = "opacity .25s";
-  renderDots();
-  restart();
-})();
+  setActive(0);
+  start();
+}
