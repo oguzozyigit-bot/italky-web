@@ -2,107 +2,179 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>italkyAI • Interactive Showcase</title>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;400;600;900&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>italkyAI Hub • Geleceğin İletişimi</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
   <style>
+    /* --- MASTER VARIABLES --- */
     :root {
       --ai-gradient: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
-      --bg: #02000f;
+      --bg-void: #02000f;
+      --glass: rgba(255, 255, 255, 0.05);
+      --border: rgba(255, 255, 255, 0.1);
     }
+
     * { box-sizing: border-box; scroll-behavior: smooth; }
-    body { margin: 0; background: var(--bg); color: #fff; font-family: 'Outfit', sans-serif; overflow-x: hidden; }
+    body { margin: 0; background: var(--bg-void); color: #fff; font-family: 'Outfit', sans-serif; overflow-x: hidden; }
 
-    /* --- GLOBAL UI --- */
-    .section-layer {
-      height: 100vh; display: flex; align-items: center; justify-content: center;
-      padding: 0 8%; gap: 60px; border-bottom: 1px solid rgba(255,255,255,0.05);
+    /* --- GLOBAL NAVBAR (WEB SITESI ICIN) --- */
+    .web-nav {
+      position: fixed; top: 0; width: 100%; z-index: 1000;
+      background: rgba(0,0,0,0.4); backdrop-filter: blur(20px);
+      padding: 15px 5%; display: flex; justify-content: space-between; align-items: center;
+      border-bottom: 1px solid var(--border);
     }
-    
+    .web-brand { font-family: 'Space Grotesk', sans-serif; font-size: 24px; font-weight: 900; color: #fff; text-decoration: none; }
+    .web-brand span { color: #6366f1; }
+
+    /* --- SECTION LAYOUT --- */
+    section {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      padding: 120px 8% 80px; gap: 60px; border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+
+    .info-side { max-width: 600px; z-index: 10; }
+    .info-side h1 { font-size: clamp(40px, 6vw, 85px); line-height: 0.9; font-weight: 900; margin: 0; }
+    .info-side p { font-size: 20px; opacity: 0.7; margin: 30px 0; line-height: 1.5; }
+
+    /* --- THE 3D SMARTPHONE MOCKUP --- */
     .phone-mockup {
-      width: 320px; height: 660px; background: #000; border-radius: 45px;
-      border: 8px solid #1a1a1a; position: relative; overflow: hidden;
-      box-shadow: 0 40px 100px rgba(0,0,0,0.8), 0 0 20px rgba(99, 102, 241, 0.2);
-      flex-shrink: 0; z-index: 10;
+      width: 360px; height: 740px; background: #000; border-radius: 50px;
+      border: 10px solid #1a1a1a; position: relative; overflow: hidden;
+      box-shadow: 0 50px 100px rgba(0,0,0,0.8), 0 0 30px rgba(99, 102, 241, 0.3);
+      flex-shrink: 0;
     }
 
-    .app-screen { width: 100%; height: 100%; overflow: hidden; position: relative; background: #000; }
-    
-    .info-side { max-width: 550px; }
-    .info-side h2 { font-size: clamp(32px, 5vw, 70px); font-weight: 900; margin: 0; line-height: 0.9; }
-    .info-side p { font-size: 18px; opacity: 0.7; margin: 25px 0; line-height: 1.6; }
+    /* --- APP UI SIMULATION (Senin Kodun) --- */
+    .app-viewport {
+      width: 100%; height: 100%; display: flex; flex-direction: column;
+      background: var(--bg-void); color: #fff; padding: 0;
+    }
 
-    /* --- ANIMASYONLAR --- */
-    .float { animation: floatAnim 6s infinite ease-in-out; }
-    @keyframes floatAnim { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+    /* APP HEADER */
+    .app-header {
+      padding: 45px 18px 15px; display: flex; justify-content: space-between; align-items: flex-start;
+      background: rgba(0,0,0,0.2); border-bottom: 1px solid var(--border);
+    }
+    .app-header .brand h1 { font-family: 'Space Grotesk', sans-serif; font-size: 24px; margin: 0; font-weight: 700; }
+    .app-header .brand .ai { background: var(--ai-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .avatar { width: 38px; height: 38px; border-radius: 50%; border: 2px solid #6366f1; }
 
-    /* --- APP UI ELEMENTLERİ (Hub İkonlar) --- */
-    .hub-tile { cursor: pointer; transition: 0.3s; }
-    .hub-tile:hover { transform: scale(1.05); filter: brightness(1.3); }
+    /* APP CONTENT (Birebir senin yolladığın Hub kodunun vizyonu) */
+    .app-content { flex: 1; padding: 20px; overflow-y: auto; scrollbar-width: none; }
+    .app-content::-webkit-scrollbar { display: none; }
 
-    /* Banner Image Area */
-    .feature-banner {
-      width: 100%; height: 220px; border-radius: 20px; margin-bottom: 30px;
-      background-size: cover; background-position: center;
-      border: 1px solid rgba(255,255,255,0.1);
+    /* Neural Orb */
+    .neural-orb { width: 110px; height: 110px; margin: 20px auto; position: relative; display: flex; align-items: center; justify-content: center; }
+    .ai-ring { position: absolute; inset: -3px; border-radius: 50%; padding: 2px; background: var(--ai-gradient); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); mask-composite: exclude; animation: rotateOrbit 15s linear infinite; }
+    .ai-core { width: 85px; height: 85px; border-radius: 50%; background: #000; border: 2px solid transparent; background-image: linear-gradient(#000,#000), var(--ai-gradient); background-origin: border-box; background-clip: content-box, border-box; display: flex; align-items: center; justify-content: center; animation: aiBreathe 4s infinite ease-in-out; }
+
+    /* Academy & Grid */
+    .academy-pro { background: var(--glass); border-radius: 20px; padding: 12px; margin-top: 20px; border: 1px solid var(--border); display: flex; gap: 12px; align-items: center; }
+    .bar { width: 3px; border-radius: 10px; animation: barMove 1.2s infinite; }
+    .pro-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 15px; }
+    .pro-tile { background: var(--glass); border-radius: 18px; padding: 12px; font-size: 11px; font-weight: 800; border: 1px solid var(--border); }
+
+    /* APP FOOTER */
+    .app-footer { padding: 15px; text-align: center; border-top: 1px solid var(--border); background: rgba(0,0,0,0.3); font-size: 10px; opacity: 0.5; font-weight: 900; }
+
+    /* --- CTAs --- */
+    .btn-mega { padding: 22px 50px; border-radius: 100px; background: var(--ai-gradient); color: #fff; font-weight: 900; font-size: 18px; text-decoration: none; display: inline-block; transition: 0.4s; box-shadow: 0 10px 40px rgba(99, 102, 241, 0.4); }
+    .btn-mega:hover { transform: scale(1.1); box-shadow: 0 20px 60px rgba(236, 72, 153, 0.5); }
+
+    .nav-tools { position: fixed; right: 20px; bottom: 100px; display: flex; flex-direction: column; gap: 10px; z-index: 1000; }
+    .tool-btn { width: 50px; height: 50px; border-radius: 50%; background: #fff; color: #000; display: flex; align-items: center; justify-content: center; font-weight: 900; text-decoration: none; cursor: pointer; border: none; }
+
+    /* --- ANIMATIONS --- */
+    @keyframes rotateOrbit { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    @keyframes aiBreathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+    @keyframes barMove { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(0.4); } }
+
+    @media (max-width: 1024px) {
+      section { flex-direction: column; text-align: center; }
+      .phone-mockup { width: 300px; height: 620px; }
     }
   </style>
 </head>
 <body>
 
-  <section class="section-layer" id="home-hub">
-    <div class="phone-mockup float">
-      <div class="app-screen" style="padding: 40px 15px;">
-        <div style="text-align:center; margin-bottom:30px;">
-          <div style="width:100px; height:100px; border:2px solid #6366f1; border-radius:50%; margin:0 auto; display:flex; align-items:center; justify-content:center; box-shadow:0 0 20px rgba(99,102,241,0.4);">
-             🎙️
+  <nav class="web-nav">
+    <a href="#" class="web-brand">italky<span>AI</span></a>
+    <div style="display: flex; gap: 20px; align-items: center;">
+      <a href="#download" class="tool-btn" style="width: auto; padding: 0 20px; border-radius: 50px; font-size: 12px;">UYGULAMAYI İNDİR</a>
+    </div>
+  </nav>
+
+  <div class="nav-tools">
+    <a href="#" class="tool-btn" title="Başa Dön">↑</a>
+    <button class="tool-btn" onclick="window.scrollBy(0, window.innerHeight)" title="Aşağı İndir">↓</button>
+  </div>
+
+  <main>
+    <section id="hub-start">
+      <div class="info-side">
+        <div style="color: #6366f1; letter-spacing: 5px; font-weight: 900; margin-bottom: 20px;">AI ECOSYSTEM v1</div>
+        <h1>SADECE ÇEVİRİ DEĞİL<br><span style="background: var(--ai-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">BİR AKADEMİ</span></h1>
+        <p>Dünya ile arandaki engelleri kaldırın. italkyAI; anlık iletişim kuran FaceToFace teknolojisi ve seni geliştiren AI Akademi'yi tek merkezde birleştirir.</p>
+        <a href="#download" class="btn-mega">SİSTEME GİRİŞ YAP</a>
+      </div>
+
+      <div class="phone-mockup">
+        <div class="app-viewport">
+          <div class="app-header">
+            <div class="brand"><h1>italky<span class="ai">AI</span></h1></div>
+            <div style="text-align: right;">
+              <div style="font-size: 11px; font-weight: 900; color: #a5b4fc;">Jeton: 328</div>
+              <div class="avatar"></div>
+            </div>
           </div>
-          <h1 style="font-size:22px; margin-top:15px;">italkyAI Hub</h1>
-        </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-          <div class="hub-tile" onclick="location.href='#face-feature'" style="background:rgba(255,255,255,0.05); padding:20px; border-radius:15px; text-align:center; font-size:12px; font-weight:900; border:1px solid rgba(99,102,241,0.3);">🗣️ FaceToFace</div>
-          <div class="hub-tile" onclick="location.href='#academy-feature'" style="background:rgba(255,255,255,0.05); padding:20px; border-radius:15px; text-align:center; font-size:12px; font-weight:900;">🎓 Academy</div>
-          <div class="hub-tile" style="background:rgba(255,255,255,0.05); padding:20px; border-radius:15px; text-align:center; font-size:12px; font-weight:900;">📸 Photo</div>
-          <div class="hub-tile" style="background:rgba(255,255,255,0.05); padding:20px; border-radius:15px; text-align:center; font-size:12px; font-weight:900;">📹 Meeting</div>
-        </div>
-      </div>
-    </div>
-    
-    <div class="info-side">
-      <h2 style="color: #6366f1;">TEK DOKUNUŞLA<br>DÜNYAYI AÇIN.</h2>
-      <p>İletişimin tüm formları burada başlar. İster anlık konuşma, ister profesyonel eğitim. Uygulamanızın kalbinde geziniyorsunuz.</p>
-      <div style="display:flex; gap:10px;">
-        <span style="padding:10px 20px; border-radius:50px; border:1px solid #6366f1; font-size:12px; font-weight:900;">HUB v2.0</span>
-      </div>
-    </div>
-  </section>
+          <div class="app-content">
+            <div class="neural-orb" onclick="window.location.href='#facetoface-section'">
+              <div class="ai-ring"></div>
+              <div class="ai-core">
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2">
+                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/>
+                </svg>
+              </div>
+            </div>
+            <div style="text-align:center; font-weight:900; margin-bottom:20px;">FaceToFace<br><span style="font-size:9px; opacity:0.5;">Yüzyüze Anlık Çeviri</span></div>
 
-  <section class="section-layer" id="face-feature" style="background: radial-gradient(circle at left, #1e0b1b 0%, #02000f 100%);">
-    <div class="info-side">
-      <div style="color: #ec4899; font-weight:900; letter-spacing:3px; margin-bottom:15px;">AMİRAL GEMİSİ</div>
-      <h2>FACETOFACE<br><span style="color: #ec4899;">NEURAL NITRO</span></h2>
-      <p>Masaya koyun ve konuşun. Karşınızdaki kişi sizi kendi dilinde duysun, siz onu kendi dilinizde. Nitro v3 motoru ile sıfır gecikmeli, duygusal derinliği olan çeviri deneyimi.</p>
-    </div>
+            <div class="academy-pro">
+              <div style="display:flex; gap:3px; height:24px; align-items:center;">
+                <div class="bar" style="height:10px; background:#ff0000;"></div>
+                <div class="bar" style="height:20px; background:#ff7f00;"></div>
+                <div class="bar" style="height:24px; background:#00ff00;"></div>
+              </div>
+              <div style="font-weight:900; font-size:14px;">italky <span style="color:#6366f1">Academy</span><br><span style="font-size:8px; opacity:0.5;">YAPAY ZEKA İLE DİL EĞİTİMİ</span></div>
+            </div>
 
-    <div class="phone-mockup">
-      <div class="app-screen">
-        <div style="height:50%; background:linear-gradient(to bottom, #801336, #000); display:flex; align-items:center; justify-content:center; transform:rotate(180deg); border-bottom:1px solid rgba(255,255,255,0.1);">
-           <div style="text-align:center; opacity:0.6;">
-              <div style="font-size:12px; font-weight:900;">ENGLISH</div>
-              <div style="font-size:24px; font-weight:900; margin-top:10px;">How can I help you?</div>
-           </div>
-        </div>
-        <div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width:60px; height:60px; background:#000; border-radius:50%; border:2px solid #ec4899; z-index:100; display:flex; align-items:center; justify-content:center; font-weight:900;">italky</div>
-        <div style="height:50%; background:linear-gradient(to bottom, #1e3a8a, #000); display:flex; align-items:center; justify-content:center;">
-           <div style="text-align:center;">
-              <div style="font-size:12px; font-weight:900; color:#6366f1;">TÜRKÇE</div>
-              <div style="font-size:24px; font-weight:900; margin-top:10px;">Size nasıl yardımcı olabilirim?</div>
-           </div>
+            <div class="pro-grid">
+              <div class="pro-tile">Metinden Çeviri</div>
+              <div class="pro-tile">Fotoğraftan Çeviri</div>
+              <div class="pro-tile">Sohbet AI</div>
+              <div class="pro-tile">Eğlenerek Öğren</div>
+            </div>
+          </div>
+
+          <div class="app-footer">italkyAI @ italkyAcedemia By Ozyigit's</div>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  </body>
+    <section id="download" style="background: radial-gradient(circle at center, #1e1b4b 0%, #02000f 100%); text-align: center;">
+      <div class="info-side" style="max-width: 1000px;">
+        <h1>DÜNYAYI CEBİNE İNDİR</h1>
+        <p>italkyAI'nın gücünü keşfetmek için hemen tıkla. Sınır yok, sadece özgürlük var.</p>
+        <div style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-top: 40px;">
+          <a href="#" class="btn-mega">APP STORE</a>
+          <a href="#" class="btn-mega" style="background: #fff; color: #000;">GOOGLE PLAY</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+</body>
 </html>
