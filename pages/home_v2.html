@@ -1,1002 +1,209 @@
-<!-- FILE: /pages/home_v2.html -->
-<!DOCTYPE html>
-<html lang="tr">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>italkyAI • Dünyayı Anla, Kendini Anlat</title>
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
-
-  <style>
-    :root{
-      /* Soft white (göz almaz) */
-      --bg: #f6f7fb;
-      --card: #ffffff;
-      --ink:#0b1020;
-      --muted:#5c6477;
-      --muted2:#7a8396;
-      --line: rgba(12,18,40,.10);
-
-      --ai1:#6366f1;
-      --ai2:#ec4899;
-      --aiGrad: linear-gradient(135deg, var(--ai1), var(--ai2));
-
-      --mint:#22c55e;
-      --sky:#38bdf8;
-      --amber:#f59e0b;
-
-      --shadow: 0 18px 45px rgba(10,12,25,.10);
-      --shadow2: 0 10px 24px rgba(10,12,25,.08);
-
-      --maxW: 1180px;
-      --pad: clamp(14px, 3.2vw, 24px);
-
-      --topH: 78px;
-      --botH: 74px;
-
-      --r1: 26px;
-      --r2: 18px;
-    }
-
-    *{ box-sizing:border-box; }
-    html,body{ margin:0; padding:0; width:100%; height:100%; }
-    body{
-      font-family: Outfit, system-ui, -apple-system, Segoe UI, Roboto, Arial;
-      background: var(--bg);
-      color: var(--ink);
-      overflow-x:hidden;
-    }
-    a{ color:inherit; text-decoration:none; }
-
-    /* ====== TOP BAR (sabit) ====== */
-    header{
-      position: fixed; top:0; left:0; right:0;
-      z-index: 9999;
-      height: calc(var(--topH) + env(safe-area-inset-top));
-      padding-top: env(safe-area-inset-top);
-      background: rgba(246,247,251,.88);
-      backdrop-filter: blur(16px);
-      border-bottom: 1px solid var(--line);
-    }
-    .topbar{
-      height: var(--topH);
-      max-width: var(--maxW);
-      margin: 0 auto;
-      padding: 0 var(--pad);
-      display:flex;
-      align-items:center;
-      gap: 14px;
-    }
-
-    .brand{
-      min-width: 190px;
-      display:flex;
-      flex-direction:column;
-      gap: 4px;
-      cursor:pointer;
-      user-select:none;
-    }
-    .brand .logo{
-      font-size: 22px;
-      font-weight: 1000;
-      letter-spacing: -0.4px;
-      display:flex;
-      gap:4px;
-      align-items:baseline;
-      line-height:1;
-    }
-    .brand .logo .ai{
-      background: var(--aiGrad);
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;
-    }
-    .brand .tag{
-      font-size: 11px;
-      font-weight: 1000;
-      letter-spacing: 3.2px;
-      color: rgba(12,18,40,.55);
-      text-transform: uppercase;
-      line-height:1;
-    }
-
-    .chipNav{
-      flex: 1;
-      display:flex;
-      gap: 10px;
-      overflow:auto;
-      padding: 10px 0;
-      scrollbar-width:none;
-    }
-    .chipNav::-webkit-scrollbar{ display:none; }
-
-    .chip{
-      flex: 0 0 auto;
-      display:flex;
-      align-items:center;
-      gap: 8px;
-      padding: 10px 12px;
-      border-radius: 999px;
-      border: 1px solid rgba(12,18,40,.12);
-      background: rgba(255,255,255,.72);
-      font-size: 12px;
-      font-weight: 1000;
-      color: rgba(12,18,40,.86);
-      cursor:pointer;
-      user-select:none;
-      white-space: nowrap;
-      transition: transform .15s ease, background .15s ease, border-color .15s ease;
-    }
-    .chip .dot{
-      width: 8px; height:8px; border-radius:99px;
-      background: var(--aiGrad);
-    }
-    .chip:active{ transform: scale(.985); }
-    .chip:hover{
-      background: rgba(255,255,255,.92);
-      border-color: rgba(99,102,241,.22);
-    }
-
-    .cta{
-      display:flex;
-      gap: 10px;
-      align-items:center;
-      flex: 0 0 auto;
-    }
-    .btn{
-      height: 42px;
-      padding: 0 14px;
-      border-radius: 999px;
-      border: 1px solid rgba(12,18,40,.14);
-      background: #fff;
-      box-shadow: 0 10px 20px rgba(10,12,25,.06);
-      font-weight: 1000;
-      font-size: 12px;
-      cursor:pointer;
-      user-select:none;
-      white-space: nowrap;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      gap: 8px;
-    }
-    .btn.primary{
-      border:none;
-      background: var(--aiGrad);
-      color:#fff;
-      box-shadow: 0 16px 34px rgba(99,102,241,.18);
-    }
-    .btn.ghost{
-      background: rgba(255,255,255,.70);
-    }
-    .btn:active{ transform: scale(.99); }
-
-    /* ====== WRAP ====== */
-    .wrap{
-      max-width: var(--maxW);
-      margin: 0 auto;
-      padding: calc(var(--topH) + env(safe-area-inset-top) + 18px) var(--pad) calc(var(--botH) + env(safe-area-inset-bottom) + 22px);
-    }
-    section{ scroll-margin-top: calc(var(--topH) + env(safe-area-inset-top) + 18px); }
-
-    /* ====== HERO ====== */
-    .hero{
-      border-radius: calc(var(--r1) + 10px);
-      border: 1px solid var(--line);
-      background:
-        radial-gradient(circle at 12% 18%, rgba(99,102,241,.12) 0%, transparent 50%),
-        radial-gradient(circle at 88% 18%, rgba(236,72,153,.10) 0%, transparent 52%),
-        radial-gradient(circle at 50% 110%, rgba(34,197,94,.08) 0%, transparent 45%),
-        var(--card);
-      box-shadow: var(--shadow);
-      overflow:hidden;
-      padding: clamp(18px, 3vw, 32px);
-    }
-    .heroGrid{
-      display:grid;
-      grid-template-columns: 1.08fr .92fr;
-      gap: clamp(14px, 3vw, 28px);
-      align-items:stretch;
-    }
-    @media(max-width: 920px){
-      .heroGrid{ grid-template-columns: 1fr; }
-    }
-
-    .hKicker{
-      display:inline-flex;
-      align-items:center;
-      gap: 10px;
-      padding: 8px 12px;
-      border-radius: 999px;
-      border: 1px solid rgba(99,102,241,.16);
-      background: rgba(99,102,241,.06);
-      font-weight: 1000;
-      font-size: 12px;
-      color: rgba(12,18,40,.86);
-      width: fit-content;
-    }
-    .hKicker b{
-      background: var(--aiGrad);
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;
-      font-weight: 1200;
-    }
-
-    h1{
-      margin: 12px 0 0;
-      font-size: clamp(30px, 4.6vw, 60px);
-      line-height: 0.98;
-      letter-spacing: -1.2px;
-      font-weight: 1200;
-    }
-    .grad{
-      background: var(--aiGrad);
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;
-    }
-    .hSub{
-      margin: 12px 0 0;
-      font-size: clamp(14px, 2.2vw, 18px);
-      color: rgba(12,18,40,.68);
-      font-weight: 700;
-      line-height: 1.55;
-      max-width: 72ch;
-    }
-
-    .heroList{
-      margin-top: 14px;
-      display:grid;
-      gap: 10px;
-      max-width: 72ch;
-    }
-    .hLi{
-      display:flex;
-      gap: 10px;
-      align-items:flex-start;
-      font-weight: 800;
-      color: rgba(12,18,40,.80);
-      line-height: 1.25;
-    }
-    .hLi::before{
-      content:"✦";
-      color: rgba(99,102,241,.95);
-      font-weight: 1300;
-      margin-top: 1px;
-    }
-
-    .heroActions{
-      margin-top: 16px;
-      display:flex;
-      flex-wrap:wrap;
-      gap: 10px;
-      align-items:center;
-    }
-    .pill{
-      height: 44px;
-      padding: 0 14px;
-      border-radius: 999px;
-      border: 1px solid rgba(12,18,40,.12);
-      background: rgba(255,255,255,.86);
-      box-shadow: 0 10px 22px rgba(10,12,25,.06);
-      display:inline-flex;
-      align-items:center;
-      gap: 10px;
-      font-weight: 1000;
-      cursor:pointer;
-      user-select:none;
-    }
-    .pill .ic{
-      width: 30px; height:30px; border-radius: 999px;
-      display:flex; align-items:center; justify-content:center;
-      color:#fff; font-weight: 1200;
-      box-shadow: 0 12px 26px rgba(10,12,25,.10);
-      flex: 0 0 auto;
-    }
-    .ic.p1{ background: linear-gradient(135deg, var(--ai1), var(--ai2)); }
-    .ic.p2{ background: linear-gradient(135deg, var(--sky), #0ea5e9); }
-    .ic.p3{ background: linear-gradient(135deg, var(--mint), #16a34a); }
-    .ic.p4{ background: linear-gradient(135deg, var(--amber), #ef4444); }
-
-    .heroNote{
-      margin-top: 10px;
-      color: rgba(12,18,40,.58);
-      font-weight: 800;
-      font-size: 12px;
-      line-height: 1.35;
-    }
-
-    /* ====== Slider ====== */
-    .slider{
-      border-radius: calc(var(--r1) + 10px);
-      border: 1px solid var(--line);
-      box-shadow: var(--shadow2);
-      overflow:hidden;
-      background:#fff;
-      position:relative;
-      min-height: 420px;
-    }
-    .slide{
-      position:absolute; inset:0;
-      opacity:0;
-      transform: scale(1.02);
-      transition: opacity .45s ease, transform .55s ease;
-    }
-    .slide.active{ opacity:1; transform: scale(1); }
-    .slide img{ width:100%; height:100%; object-fit:cover; display:block; }
-    .shade{
-      position:absolute; inset:0;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,0.0) 0%, rgba(255,255,255,0.06) 45%, rgba(255,255,255,0.94) 100%);
-    }
-    .cap{
-      position:absolute; left: 14px; right: 14px; bottom: 14px;
-      border-radius: 18px;
-      border: 1px solid rgba(12,18,40,.10);
-      background: rgba(255,255,255,.86);
-      backdrop-filter: blur(10px);
-      padding: 12px 12px;
-    }
-    .cap .k{
-      font-size: 11px;
-      font-weight: 1200;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: rgba(99,102,241,.92);
-    }
-    .cap .t{
-      margin-top: 6px;
-      font-size: 14px;
-      font-weight: 1100;
-      color: rgba(12,18,40,.88);
-      line-height: 1.25;
-    }
-    .dots{
-      position:absolute; top: 12px; right: 12px; z-index:5;
-      display:flex; gap:7px;
-      background: rgba(255,255,255,.78);
-      border: 1px solid rgba(12,18,40,.10);
-      backdrop-filter: blur(10px);
-      border-radius: 999px;
-      padding: 8px 10px;
-    }
-    .dot{
-      width: 10px; height:10px;
-      border-radius: 99px;
-      background: rgba(12,18,40,.18);
-      cursor:pointer;
-    }
-    .dot.active{ background: var(--aiGrad); }
-
-    /* ====== Section Head ====== */
-    .secHead{
-      margin-top: 28px;
-      display:flex;
-      align-items:flex-end;
-      justify-content:space-between;
-      gap: 14px;
-    }
-    .secHead h2{
-      margin:0;
-      font-size: clamp(20px, 3.2vw, 34px);
-      letter-spacing: -0.6px;
-      font-weight: 1200;
-    }
-    .secHead p{
-      margin:0;
-      color: rgba(12,18,40,.64);
-      font-weight: 700;
-      max-width: 76ch;
-      line-height: 1.45;
-    }
-
-    .card{
-      margin-top: 14px;
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: calc(var(--r1) + 10px);
-      box-shadow: var(--shadow);
-      padding: clamp(14px, 2.6vw, 22px);
-    }
-
-    .featRow{
-      display:grid;
-      grid-template-columns: 1.02fr .98fr;
-      gap: clamp(14px, 2.8vw, 26px);
-      align-items:center;
-    }
-    .featRow.rev{ grid-template-columns: .98fr 1.02fr; }
-    @media(max-width: 920px){
-      .featRow, .featRow.rev{ grid-template-columns: 1fr; }
-    }
-
-    .kicker{
-      font-size: 12px;
-      font-weight: 1200;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: rgba(236,72,153,.92);
-    }
-    .title{
-      margin: 10px 0 10px;
-      font-size: clamp(22px, 3.4vw, 44px);
-      letter-spacing: -0.8px;
-      font-weight: 1200;
-      line-height: 1.06;
-    }
-    .desc{
-      margin:0;
-      font-size: 15px;
-      color: rgba(12,18,40,.68);
-      font-weight: 700;
-      line-height: 1.6;
-    }
-    .bullets{
-      margin: 14px 0 0;
-      padding:0;
-      list-style:none;
-      display:grid;
-      gap: 9px;
-    }
-    .bullets li{
-      display:flex;
-      gap: 10px;
-      align-items:flex-start;
-      font-weight: 800;
-      color: rgba(12,18,40,.78);
-      line-height: 1.25;
-    }
-    .bullets li::before{
-      content:"✦";
-      color: rgba(99,102,241,.95);
-      font-weight: 1300;
-      margin-top: 1px;
-    }
-    .imgCard{
-      border-radius: calc(var(--r1) + 10px);
-      overflow:hidden;
-      border: 1px solid var(--line);
-      box-shadow: var(--shadow2);
-      background:#fff;
-      min-height: 380px;
-      position:relative;
-    }
-    .imgCard img{ width:100%; height:100%; object-fit: cover; display:block; }
-    .stamp{
-      position:absolute;
-      left: 14px; bottom: 14px;
-      background: rgba(255,255,255,.88);
-      border: 1px solid rgba(12,18,40,.10);
-      backdrop-filter: blur(10px);
-      border-radius: 16px;
-      padding: 10px 10px;
-      font-weight: 1100;
-      color: rgba(12,18,40,.86);
-      max-width: 80%;
-    }
-    .stamp small{
-      display:block;
-      margin-top: 4px;
-      font-weight: 900;
-      color: rgba(12,18,40,.62);
-    }
-
-    /* ====== MODULE GRID (daha açıklamalı) ====== */
-    .grid{
-      display:grid;
-      grid-template-columns: repeat(12, 1fr);
-      gap: 12px;
-      margin-top: 12px;
-    }
-    .m{
-      grid-column: span 4;
-      border-radius: 22px;
-      border: 1px solid var(--line);
-      background: #fff;
-      box-shadow: var(--shadow2);
-      padding: 16px 14px;
-      position:relative;
-      overflow:hidden;
-    }
-    .m::after{
-      content:"";
-      position:absolute; inset:auto -20% -70% -20%;
-      height: 170px;
-      background: radial-gradient(circle at 40% 20%, rgba(99,102,241,.14), transparent 70%);
-      transform: rotate(6deg);
-      pointer-events:none;
-    }
-    .mTop{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap: 10px;
-      position:relative; z-index:2;
-    }
-    .mName{ font-weight: 1200; font-size: 14px; letter-spacing: -0.2px; }
-    .mIcon{
-      width: 38px; height:38px;
-      border-radius: 14px;
-      border: 1px solid rgba(12,18,40,.10);
-      display:flex; align-items:center; justify-content:center;
-      font-size: 18px;
-      flex: 0 0 auto;
-      color:#fff;
-    }
-    .mIcon.i1{ background: linear-gradient(135deg, var(--ai1), var(--ai2)); }
-    .mIcon.i2{ background: linear-gradient(135deg, var(--sky), #0ea5e9); }
-    .mIcon.i3{ background: linear-gradient(135deg, var(--mint), #16a34a); }
-    .mIcon.i4{ background: linear-gradient(135deg, var(--amber), #ef4444); }
-
-    .mDesc{
-      position:relative; z-index:2;
-      margin-top: 10px;
-      font-size: 13px;
-      font-weight: 700;
-      color: rgba(12,18,40,.66);
-      line-height: 1.45;
-      min-height: 68px;
-    }
-    .mHow{
-      position:relative; z-index:2;
-      margin-top: 10px;
-      padding: 10px 10px;
-      border-radius: 16px;
-      background: rgba(12,18,40,.03);
-      border: 1px dashed rgba(12,18,40,.14);
-      font-size: 12px;
-      font-weight: 800;
-      color: rgba(12,18,40,.70);
-      line-height: 1.35;
-    }
-
-    @media(max-width: 980px){ .m{ grid-column: span 6; } }
-    @media(max-width: 640px){ .m{ grid-column: span 12; } }
-
-    /* ====== FAQ ====== */
-    .faq{
-      margin-top: 12px;
-      display:grid;
-      gap: 12px;
-    }
-    details{
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      background:#fff;
-      padding: 12px 14px;
-      box-shadow: 0 12px 26px rgba(10,12,25,.06);
-    }
-    summary{
-      cursor:pointer;
-      font-weight: 1100;
-      color: rgba(12,18,40,.90);
-      list-style:none;
-    }
-    summary::-webkit-details-marker{ display:none; }
-    details p{
-      margin: 10px 0 0;
-      color: rgba(12,18,40,.70);
-      font-weight: 700;
-      line-height: 1.6;
-    }
-
-    /* ====== BOTTOM BAR (sabit) ====== */
-    .bottomBar{
-      position: fixed;
-      left:0; right:0; bottom:0;
-      z-index: 9998;
-      height: calc(var(--botH) + env(safe-area-inset-bottom));
-      padding-bottom: env(safe-area-inset-bottom);
-      background: rgba(246,247,251,.90);
-      backdrop-filter: blur(14px);
-      border-top: 1px solid var(--line);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-    }
-    .bottomInner{
-      width: min(var(--maxW), 100%);
-      padding: 0 var(--pad);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap: 12px;
-      font-weight: 900;
-      color: rgba(12,18,40,.74);
-      font-size: 12px;
-    }
-    .bottomInner .mini{
-      line-height: 1.25;
-      color: rgba(12,18,40,.70);
-      font-weight: 900;
-    }
-    .bottomInner .mini b{
-      color: rgba(99,102,241,.95);
-    }
-    .links{
-      display:flex;
-      gap: 14px;
-      flex-wrap:wrap;
-      justify-content:flex-end;
-    }
-    .links a{
-      color: rgba(12,18,40,.58);
-      font-weight: 1100;
-      text-transform: uppercase;
-      letter-spacing: .9px;
-      font-size: 10px;
-      cursor:pointer;
-    }
-
-    /* Motion reduce */
-    @media (prefers-reduced-motion: reduce){
-      *{ scroll-behavior: auto !important; transition:none !important; animation:none !important; }
-    }
-  </style>
-</head>
-
-<body>
-
-<header>
-  <div class="topbar">
-    <div class="brand" data-scroll="#hero" tabindex="0" title="Başa dön">
-      <div class="logo">italky<span class="ai">AI</span></div>
-      <div class="tag">BE FREE</div>
-    </div>
-
-    <nav class="chipNav" aria-label="Bölümler">
-      <div class="chip" data-scroll="#hero"><span class="dot"></span>Anasayfa</div>
-      <div class="chip" data-scroll="#facetoface"><span class="dot"></span>FaceToFace</div>
-      <div class="chip" data-scroll="#academy"><span class="dot"></span>italky Academy</div>
-      <div class="chip" data-scroll="#modules"><span class="dot"></span>Modüller</div>
-      <div class="chip" data-scroll="#faq"><span class="dot"></span>SSS</div>
-      <div class="chip" data-scroll="#contact"><span class="dot"></span>İletişim</div>
-    </nav>
-
-    <div class="cta">
-      <button class="btn ghost" id="btnLearn" type="button">Nasıl Çalışır?</button>
-      <button class="btn primary" id="btnDownload" type="button">Uygulamayı İndir</button>
-    </div>
-  </div>
-</header>
-
-<div class="wrap">
-
-  <!-- HERO -->
-  <section id="hero" class="hero">
-    <div class="heroGrid">
-      <div>
-        <div class="hKicker">Cebindeki <b>AI Öğretmen</b> + <b>AI Tercüman</b></div>
-
-        <h1>Dil bilmemek sorun değil.<br><span class="grad">Anlaşamamak</span> sorun.</h1>
-
-        <p class="hSub">
-          italkyAI; konuşmayı, okumayı ve öğrenmeyi tek uygulamada birleştirir.
-          Kafede, işte, seyahatte, okulda… “anlaşma” işini senin yerine çözer.
-        </p>
-
-        <div class="heroList">
-          <div class="hLi">FaceToFace ile masaya bırak — anlık sesli çeviri.</div>
-          <div class="hLi">Fotoğraftan / Belgeden çeviri — menü, tabela, PDF…</div>
-          <div class="hLi">italky Academy — seviye tespit + kişisel ders planı.</div>
-          <div class="hLi">Oyunlar — kelimeyi “eğlenerek” kalıcı yap.</div>
-          <div class="hLi">Online toplantı — 2 kişi de olur 20 kişi de; herkes anlar.</div>
-        </div>
-
-        <div class="heroActions">
-          <div class="pill" data-scroll="#facetoface"><span class="ic p2">🎧</span> FaceToFace’i gör</div>
-          <div class="pill" data-scroll="#academy"><span class="ic p1">🎓</span> Academy’i gör</div>
-          <div class="pill" data-scroll="#modules"><span class="ic p3">🧩</span> Tüm modüller</div>
-          <div class="pill" data-scroll="#faq"><span class="ic p4">❓</span> SSS</div>
-        </div>
-
-        <div class="heroNote">
-          Abonelik yok. Sabit ücret yok. (Fiyat/jeton detayı sayfanın en altında kısa not olarak.)
-        </div>
-      </div>
-
-      <div class="slider" aria-label="Gerçek kullanım senaryoları">
-        <div class="dots" id="dots"></div>
-
-        <div class="slide active">
-          <img src="https://images.unsplash.com/photo-1543269865-cbf427effbad?auto=format&fit=crop&w=1800&q=80" alt="Kafede sohbet" />
-          <div class="shade"></div>
-          <div class="cap">
-            <div class="k">FACETOFACE</div>
-            <div class="t">Kafede iki kişi, iki dil. italkyAI aradaki köprü.</div>
-          </div>
-        </div>
-
-        <div class="slide">
-          <img src="https://images.unsplash.com/photo-1521017432531-fbd92d768814?auto=format&fit=crop&w=1800&q=80" alt="Menü fotoğrafı" />
-          <div class="shade"></div>
-          <div class="cap">
-            <div class="k">FOTOĞRAFTAN ÇEVİRİ</div>
-            <div class="t">Japonca menü? Fotoğraf çek, saniyede anla.</div>
-          </div>
-        </div>
-
-        <div class="slide">
-          <img src="https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=1800&q=80" alt="Toplantı" />
-          <div class="shade"></div>
-          <div class="cap">
-            <div class="k">ONLINE TOPLANTI</div>
-            <div class="t">Toplantıda herkes kendi dilinde konuşsun. Herkes anlasın.</div>
-          </div>
-        </div>
-
-        <div class="slide">
-          <img src="https://images.unsplash.com/photo-1516387938699-a93567ec168e?auto=format&fit=crop&w=1800&q=80" alt="Çalışma" />
-          <div class="shade"></div>
-          <div class="cap">
-            <div class="k">ITALKY ACADEMY</div>
-            <div class="t">Seviye → analiz → kısa derslerle hızlı yükseliş.</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- FACETOFACE -->
-  <section id="facetoface">
-    <div class="secHead">
-      <div>
-        <h2>FaceToFace</h2>
-        <p>
-          “Telefonu masaya bırak.” Bu modun felsefesi bu. Siz konuşun, italkyAI çevirsin ve seslendirsin.
-          Göz teması kaybolmasın, akış bozulmasın.
-        </p>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="featRow">
-        <div>
-          <div class="kicker">Amiral Gemisi</div>
-          <div class="title">Turist gibi değil, yerli gibi yaşa.</div>
-          <p class="desc">
-            Garsona sipariş verirken, otelde resepsiyonda, sokakta yol sorarken…
-            italkyAI arka planda tercüman gibi çalışır. Üstelik çeviriyi otomatik seslendirir;
-            istersen balonun yanındaki hoparlörden tekrar dinlersin.
-          </p>
-          <ul class="bullets">
-            <li>Üst/alt dil seçimiyle çok dilli kullanım</li>
-            <li>Konuşma akışını bozmaz (ekran “yardımcı” olur)</li>
-            <li>Kısa sürede maksimum fayda (anlık ihtiyaçlar için)</li>
-          </ul>
-        </div>
-
-        <div class="imgCard">
-          <img src="https://images.unsplash.com/photo-1520975682094-4a167b4f1c70?auto=format&fit=crop&w=1800&q=80" alt="Sohbet" />
-          <div class="stamp">Gerçek sahne: masada sohbet, ekranda çeviri.<small>Konuşma devam eder.</small></div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ACADEMY -->
-  <section id="academy">
-    <div class="secHead">
-      <div>
-        <h2>italky Academy</h2>
-        <p>
-          Dil öğrenmek “uzun ve pahalı” olmak zorunda değil. Kısa dersler, net hedefler, düzenli pratik.
-          Yapay zekâ öğretmen; stres yok, çekinme yok.
-        </p>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="featRow rev">
-        <div class="imgCard">
-          <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1800&q=80" alt="Ders" />
-          <div class="stamp">Seviye → analiz → kişisel plan<small>Hızlı ve ölçülebilir gelişim.</small></div>
-        </div>
-
-        <div>
-          <div class="kicker">Gerçek Gelişim</div>
-          <div class="title">Önce nerede olduğunu gör, sonra yüksel.</div>
-          <p class="desc">
-            Seviye tespit sınavı ile başlarsın. Sistem zayıf noktalarını çıkarır.
-            Sonra 15 dakikalık derslerle günlük planın oluşur.
-          </p>
-          <ul class="bullets">
-            <li>Seviyeyi “tahmin” etmez, ölçer</li>
-            <li>Dersler kısa: odak yüksek, zaman kaybı yok</li>
-            <li>Tek uygulama: pratik + ölçüm + tekrar</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- MODULES -->
-  <section id="modules">
-    <div class="secHead">
-      <div>
-        <h2>Modüller</h2>
-        <p>
-          Her modül tek bir şeye odaklanır: “işe yarasın”.
-          Karmaşık değil; anlaşılır, hızlı ve pratik.
-        </p>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="grid">
-
-        <div class="m">
-          <div class="mTop"><div class="mName">Metinden Çeviri</div><div class="mIcon i2">📝</div></div>
-          <div class="mDesc">Mesaj, mail, uzun metin… hızlı ve anlaşılır çeviri.</div>
-          <div class="mHow">Ne zaman kullanılır? • “Göndermeden önce emin olmak istiyorum.”</div>
-        </div>
-
-        <div class="m">
-          <div class="mTop"><div class="mName">Belgeden Çeviri</div><div class="mIcon i1">📄</div></div>
-          <div class="mDesc">PDF/Word içeriklerini hızlıca anla. İş, okul, sözleşme.</div>
-          <div class="mHow">Ne zaman kullanılır? • “Belgeyi okuyup anlamam lazım.”</div>
-        </div>
-
-        <div class="m">
-          <div class="mTop"><div class="mName">Fotoğraftan Çeviri</div><div class="mIcon i3">📸</div></div>
-          <div class="mDesc">Menü/tabela/kitap… fotoğrafla çeviri.</div>
-          <div class="mHow">Ne zaman kullanılır? • “Şu yazıda ne yazıyor?”</div>
-        </div>
-
-        <div class="m">
-          <div class="mTop"><div class="mName">Eğlenerek Öğren</div><div class="mIcon i4">🎮</div></div>
-          <div class="mDesc">Kelime oyunlarıyla öğrenmeyi refleks haline getir.</div>
-          <div class="mHow">Ne zaman kullanılır? • “Sıkılmadan pratik istiyorum.”</div>
-        </div>
-
-        <div class="m">
-          <div class="mTop"><div class="mName">Chat AI</div><div class="mIcon i2">🧠</div></div>
-          <div class="mDesc">Pratik ortağın: konu seç, konuş, düzeltme al.</div>
-          <div class="mHow">Ne zaman kullanılır? • “Konuşmamı geliştirmek istiyorum.”</div>
-        </div>
-
-        <div class="m">
-          <div class="mTop"><div class="mName">Sohbet AI</div><div class="mIcon i1">💬</div></div>
-          <div class="mDesc">Serbest akış: günlük sohbet, dertleşme, rahat pratik.</div>
-          <div class="mHow">Ne zaman kullanılır? • “Rahatsam öğrenirim.”</div>
-        </div>
-
-        <div class="m">
-          <div class="mTop"><div class="mName">Konuşkan AI</div><div class="mIcon i3">🗣️</div></div>
-          <div class="mDesc">Sesli pratik: konuş, yanıt al, tekrar et. Akıcılık kazan.</div>
-          <div class="mHow">Ne zaman kullanılır? • “Dilim dönmüyor, hızlanmak istiyorum.”</div>
-        </div>
-
-        <div class="m">
-          <div class="mTop"><div class="mName">Online Toplantı</div><div class="mIcon i4">🎥</div></div>
-          <div class="mDesc">2 kişi de olur, 20 kişi de. Herkes konuşsun, herkes anlasın.</div>
-          <div class="mHow">Ne zaman kullanılır? • “Toplantıda dil engeli istemiyorum.”</div>
-        </div>
-
-        <div class="m">
-          <div class="mTop"><div class="mName">Offline Dil Paketi</div><div class="mIcon i1">📦</div></div>
-          <div class="mDesc">İnternet yokken bile FaceToFace + Metin Çeviri.</div>
-          <div class="mHow">Ne zaman kullanılır? • “Uçak/dağ/çekmeyen yer…”</div>
-        </div>
-
-      </div>
-    </div>
-  </section>
-
-  <!-- FAQ -->
-  <section id="faq">
-    <div class="secHead">
-      <div>
-        <h2>SSS</h2>
-        <p>Kısa, net ve güven veren cevaplar.</p>
-      </div>
-    </div>
-
-    <div class="faq">
-      <details>
-        <summary>Bu uygulama kimler için?</summary>
-        <p>Seyahat edenler, iş toplantısı yapanlar, dil öğrenmek isteyenler, yurtdışında yaşayanlar… Kısacası “anlaşma” ihtiyacı olan herkes için.</p>
-      </details>
-      <details>
-        <summary>Abonelik var mı?</summary>
-        <p>Hayır. Abonelik yok. İhtiyacın olduğunda kullanırsın. Kontrol sende.</p>
-      </details>
-      <details>
-        <summary>Chat AI ve Sohbet AI farkı ne?</summary>
-        <p><b>Chat AI</b> pratik ve düzeltme odaklıdır. <b>Sohbet AI</b> daha serbest, daha rahat konuşma akışıdır.</p>
-      </details>
-      <details>
-        <summary>Online toplantı kaç kişi?</summary>
-        <p>Herkese açık: 2 kişi de olur, 20 kişi de. Hedef: herkesin birbirini anlaması.</p>
-      </details>
-      <details>
-        <summary>Offline paket ne işe yarar?</summary>
-        <p>İnternetin olmadığı anlarda FaceToFace ve Metin Çeviri’yi kullanmaya devam edebilmen için.</p>
-      </details>
-    </div>
-  </section>
-
-  <!-- CONTACT -->
-  <section id="contact">
-    <div class="secHead">
-      <div>
-        <h2>İletişim</h2>
-        <p>Geri bildirim, iş birlikleri, basın.</p>
-      </div>
-    </div>
-
-    <div class="card">
-      <p style="margin:0; font-weight:800; color: rgba(12,18,40,.78); line-height:1.7;">
-        Mail: <b>info@italky.ai</b><br>
-        Destek: <b>support@italky.ai</b><br>
-        İş birliği: <b>partner@italky.ai</b>
-      </p>
-    </div>
-  </section>
-
-</div>
-
-<!-- Bottom bar -->
-<div class="bottomBar">
-  <div class="bottomInner">
-    <div class="mini">Abonelik yok • İstersen “kullandıkça öde” modeli • <b>Detaylar uygulama içinde</b></div>
-    <div class="links">
-      <a data-scroll="#facetoface">FaceToFace</a>
-      <a data-scroll="#academy">Academy</a>
-      <a data-scroll="#modules">Modüller</a>
-      <a data-scroll="#faq">SSS</a>
-      <a data-scroll="#contact">İletişim</a>
-    </div>
-  </div>
-</div>
-
-<script>
-  /* ===== Smooth scroll ===== */
-  function scrollToSel(sel){
-    const el = document.querySelector(sel);
-    if(!el) return;
-    el.scrollIntoView({ behavior: "smooth", block: "start" });
+<style>
+  :root{
+    --bg:#030014;
+    --card: rgba(255,255,255,.04);
+    --border: rgba(255,255,255,.10);
+    --text: rgba(255,255,255,.92);
+    --muted: rgba(255,255,255,.62);
+    --aiGrad: linear-gradient(135deg,#a5b4fc 0%,#6366f1 45%,#ec4899 100%);
   }
-  document.querySelectorAll("[data-scroll]").forEach(x=>{
-    x.addEventListener("click", (e)=>{
-      e.preventDefault();
-      const sel = x.getAttribute("data-scroll");
-      if(sel) scrollToSel(sel);
-    });
-  });
-  document.querySelector(".brand")?.addEventListener("click", ()=> scrollToSel("#hero"));
-  document.querySelector(".brand")?.addEventListener("keydown", (e)=>{ if(e.key==="Enter") scrollToSel("#hero"); });
 
-  document.getElementById("btnLearn")?.addEventListener("click", ()=> scrollToSel("#modules"));
-
-  /* ===== Slider ===== */
-  const slides = Array.from(document.querySelectorAll(".slide"));
-  const dotsWrap = document.getElementById("dots");
-  slides.forEach((_, i)=>{
-    const d = document.createElement("div");
-    d.className = "dot" + (i===0 ? " active":"");
-    d.addEventListener("click", ()=> setSlide(i, true));
-    dotsWrap.appendChild(d);
-  });
-  const dots = Array.from(document.querySelectorAll(".dot"));
-  let idx = 0, timer = null;
-
-  function setSlide(i, resetTimer){
-    idx = i % slides.length;
-    slides.forEach((s,k)=> s.classList.toggle("active", k===idx));
-    dots.forEach((d,k)=> d.classList.toggle("active", k===idx));
-    if(resetTimer){
-      clearInterval(timer);
-      timer = setInterval(()=> setSlide((idx+1)%slides.length, false), 4200);
-    }
+  .ai-badge{
+    display:inline-flex; align-items:center; gap:8px;
+    padding:8px 12px; border-radius:999px;
+    border:1px solid rgba(165,180,252,.35);
+    background: rgba(0,0,0,.28);
+    backdrop-filter: blur(10px);
+    font-weight:900; font-size:12px; letter-spacing:.4px;
   }
-  timer = setInterval(()=> setSlide((idx+1)%slides.length, false), 4200);
+  .ai-dot{
+    width:10px; height:10px; border-radius:50%;
+    background: var(--aiGrad);
+    box-shadow: 0 0 18px rgba(99,102,241,.55);
+  }
+  .ai-title{
+    font-size: clamp(28px, 4.6vw, 52px);
+    font-weight: 950;
+    line-height: 1.05;
+    margin: 10px 0 10px;
+  }
+  .ai-title span{
+    background: var(--aiGrad);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .ai-sub{
+    color: var(--muted);
+    font-size: 16px;
+    max-width: 860px;
+  }
 
-  /* ===== Store links (placeholder) ===== */
-  const PLAY_URL = "https://play.google.com/store/apps/details?id=YOUR_APP_ID";
-  document.getElementById("btnDownload")?.addEventListener("click", ()=> window.location.href = PLAY_URL);
-</script>
+  /* HERO banners */
+  .heroWrap{
+    margin-top: 110px; /* sticky header varsa */
+    padding: 26px 8%;
+  }
+  .heroCard{
+    position:relative;
+    border-radius: 34px;
+    border: 1px solid var(--border);
+    background: radial-gradient(circle at 20% 20%, rgba(99,102,241,.18), rgba(3,0,20,.72) 60%, rgba(236,72,153,.08));
+    overflow:hidden;
+    padding: 26px;
+  }
+  .heroRail{
+    margin-top: 18px;
+    display:flex;
+    gap: 14px;
+    overflow:auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 6px;
+  }
+  .heroRail::-webkit-scrollbar{ display:none; }
+  .banner{
+    min-width: min(560px, 86vw);
+    height: 220px;
+    border-radius: 26px;
+    border: 1px solid rgba(255,255,255,.10);
+    overflow:hidden;
+    position:relative;
+    scroll-snap-align: start;
+    background: rgba(255,255,255,.04);
+  }
+  .banner img{
+    width:100%; height:100%;
+    object-fit: cover;
+    filter: saturate(1.08) contrast(1.05);
+    transform: scale(1.03);
+  }
+  .banner::after{
+    content:"";
+    position:absolute; inset:0;
+    background: linear-gradient(90deg, rgba(0,0,0,.62), rgba(0,0,0,.10));
+  }
+  .bannerTxt{
+    position:absolute;
+    left: 16px; bottom: 16px;
+    right: 16px;
+    z-index:2;
+  }
+  .bannerKicker{
+    display:inline-flex; align-items:center; gap:8px;
+    padding:8px 10px; border-radius:999px;
+    border:1px solid rgba(255,255,255,.18);
+    background: rgba(0,0,0,.35);
+    font-weight:900; font-size:12px;
+  }
+  .bannerH{
+    margin-top: 10px;
+    font-size: 22px;
+    font-weight: 950;
+  }
+  .bannerP{
+    color: rgba(255,255,255,.72);
+    font-size: 13px;
+    margin-top: 6px;
+    max-width: 520px;
+  }
 
-</body>
-</html>
+  /* Modules grid */
+  .modsWrap{ padding: 26px 8% 70px; }
+  .modsHead{
+    display:flex; justify-content:space-between; gap:16px; align-items:end;
+    margin-bottom: 18px;
+  }
+  .modsHead h2{
+    font-size: 34px; font-weight: 950;
+    letter-spacing: -1px;
+    margin:0;
+  }
+  .modsHead p{
+    margin:0; color: var(--muted); max-width: 520px;
+  }
+
+  .modsGrid{
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+  }
+  .modCard{
+    border-radius: 28px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    overflow:hidden;
+    transition: transform .25s ease, border-color .25s ease;
+  }
+  .modCard:hover{
+    transform: translateY(-4px);
+    border-color: rgba(165,180,252,.35);
+  }
+  .modImg{
+    height: 160px;
+    position:relative;
+    overflow:hidden;
+    background: rgba(255,255,255,.04);
+  }
+  .modImg img{ width:100%; height:100%; object-fit:cover; }
+  .modImg::after{
+    content:"";
+    position:absolute; inset:0;
+    background: linear-gradient(180deg, rgba(0,0,0,.05), rgba(0,0,0,.75));
+  }
+  .modBody{ padding: 16px; }
+  .modTop{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    margin-bottom: 10px;
+  }
+
+  /* Renkli ikon kapsülü */
+  .iconPill{
+    width: 44px; height: 44px;
+    border-radius: 16px;
+    display:flex; align-items:center; justify-content:center;
+    border: 1px solid rgba(255,255,255,.10);
+    box-shadow: 0 10px 26px rgba(0,0,0,.35);
+    position:relative;
+    overflow:hidden;
+  }
+  .iconPill::before{
+    content:"";
+    position:absolute; inset:-40%;
+    background: var(--g, var(--aiGrad));
+    filter: blur(0px);
+    transform: rotate(25deg);
+    opacity:.95;
+  }
+  .iconPill span{
+    position:relative;
+    font-weight: 1000;
+    font-size: 18px;
+    color:#05050a;
+  }
+
+  .tagAI{
+    display:inline-flex; align-items:center; gap:7px;
+    padding:6px 10px; border-radius:999px;
+    background: rgba(0,0,0,.28);
+    border:1px solid rgba(255,255,255,.12);
+    font-weight:900; font-size:11px;
+    color: rgba(255,255,255,.86);
+  }
+  .tagAI b{
+    background: var(--aiGrad);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .modTitle{
+    font-size: 18px;
+    font-weight: 950;
+    margin: 0 0 6px;
+  }
+  .modDesc{
+    margin:0;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+</style>
