@@ -5,9 +5,131 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>italkyAI • BE FREE</title>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/pages/site_2050.css?v=2050_1">
+
+  <!-- ✅ HOME_V2 ek polish (banner + icon renk + küçük animasyon) -->
+  <style>
+    /* --- subtle reveal --- */
+    .reveal { opacity: 0; transform: translateY(10px); }
+    .reveal.on { opacity: 1; transform: translateY(0); transition: .55s ease; }
+
+    /* --- Banner carousel inside hero-card --- */
+    .hero-card{ position:relative; }
+    .hero-banner-wrap{
+      position: relative;
+      width: 100%;
+      height: 290px;
+      overflow: hidden;
+    }
+    .hero-banner-wrap img{
+      position:absolute; inset:0;
+      width:100%; height:100%;
+      object-fit:cover;
+      opacity:0;
+      transform: scale(1.02);
+      transition: opacity .55s ease, transform .9s ease;
+      filter: saturate(1.05) contrast(1.03);
+    }
+    .hero-banner-wrap img.active{
+      opacity:1;
+      transform: scale(1);
+    }
+    .hero-banner-overlay{
+      position:absolute; inset:0;
+      background: radial-gradient(circle at 30% 10%, rgba(99,102,241,0.25) 0%, transparent 50%),
+                  radial-gradient(circle at 70% 90%, rgba(236,72,153,0.18) 0%, transparent 55%),
+                  linear-gradient(180deg, rgba(0,0,0,0.15), rgba(0,0,0,0.35));
+      pointer-events:none;
+    }
+    .hero-banner-meta{
+      position:absolute; left: 14px; right: 14px; bottom: 12px;
+      display:flex; align-items:flex-end; justify-content:space-between; gap: 10px;
+      pointer-events: none;
+    }
+    .hero-caption{
+      pointer-events:none;
+      max-width: 78%;
+      background: rgba(0,0,0,0.35);
+      border: 1px solid rgba(255,255,255,0.14);
+      backdrop-filter: blur(10px);
+      border-radius: 18px;
+      padding: 10px 12px;
+      box-shadow: 0 18px 60px rgba(0,0,0,0.35);
+    }
+    .hero-caption b{
+      display:block;
+      font-weight: 1000;
+      font-size: 12px;
+      letter-spacing: .2px;
+      color: rgba(255,255,255,0.92);
+      margin-bottom: 4px;
+    }
+    .hero-caption span{
+      display:block;
+      font-weight: 800;
+      font-size: 12px;
+      line-height: 1.35;
+      color: rgba(255,255,255,0.72);
+    }
+    .hero-dots{
+      pointer-events:auto;
+      display:flex; gap: 8px;
+      align-items:center;
+      justify-content:flex-end;
+    }
+    .dot{
+      width: 8px; height: 8px;
+      border-radius: 99px;
+      border: 1px solid rgba(255,255,255,0.22);
+      background: rgba(255,255,255,0.10);
+      cursor:pointer;
+      transition: .2s;
+    }
+    .dot.active{
+      width: 22px;
+      background: linear-gradient(135deg, rgba(165,180,252,0.95), rgba(236,72,153,0.85));
+      border-color: rgba(255,255,255,0.12);
+      box-shadow: 0 0 18px rgba(99,102,241,0.35);
+    }
+
+    /* --- richer icon look (still your layout) --- */
+    .card .icon{
+      position: relative;
+      overflow:hidden;
+      box-shadow: 0 18px 60px rgba(0,0,0,0.35);
+    }
+    .card .icon::before{
+      content:"";
+      position:absolute; inset:-40%;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.22) 0%, transparent 45%),
+                  radial-gradient(circle at 70% 80%, rgba(255,255,255,0.12) 0%, transparent 55%);
+      transform: rotate(12deg);
+      opacity:.8;
+    }
+    .card .icon svg{
+      position: relative;
+      z-index: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    /* --- nav active visual (if site_nav sets .active) --- */
+    .nav .navlink.active{
+      border:none !important;
+      background: var(--grad) !important;
+      color:#fff !important;
+      box-shadow: 0 18px 60px rgba(99,102,241,0.25);
+    }
+
+    /* --- small responsive tweak for crowded nav --- */
+    @media (max-width: 980px){
+      .nav{ gap:8px; }
+      .nav a, .nav button{ font-size: 11px; padding: 0 10px; height: 42px; }
+    }
+  </style>
 </head>
 
 <body>
@@ -23,20 +145,20 @@
           <div class="brand-slogan">BE FREE</div>
         </a>
 
-        <nav class="nav">
+        <nav class="nav" id="topNav">
           <!-- MODÜLLER: tıklayınca sayfa -->
-          <a href="/pages/module_facetoface.html">FaceToFace</a>
-          <a href="/pages/module_academy.html">italky Academy</a>
-          <a href="/pages/module_games.html">Eğlenerek Öğren</a>
-          <a href="/pages/module_photo.html">Fotoğraftan Çeviri</a>
-          <a href="/pages/module_text.html">Metinden Çeviri</a>
-          <a href="/pages/module_document.html">Belgeden Çeviri</a>
-          <a href="/pages/module_chat.html">Sohbet AI</a>
-          <a href="/pages/module_speaking.html">Konuşkan AI</a>
-          <a href="/pages/module_meeting.html" class="primary">Online Toplantı</a>
+          <a class="navlink" href="/pages/module_facetoface.html">FaceToFace</a>
+          <a class="navlink" href="/pages/module_academy.html">italky Academy</a>
+          <a class="navlink" href="/pages/module_games.html">Eğlenerek Öğren</a>
+          <a class="navlink" href="/pages/module_photo.html">Fotoğraftan Çeviri</a>
+          <a class="navlink" href="/pages/module_text.html">Metinden Çeviri</a>
+          <a class="navlink" href="/pages/module_document.html">Belgeden Çeviri</a>
+          <a class="navlink" href="/pages/module_chat.html">Sohbet AI</a>
+          <a class="navlink" href="/pages/module_speaking.html">Konuşkan AI</a>
+          <a class="navlink primary" href="/pages/module_meeting.html">Online Toplantı</a>
 
           <!-- Dil seçici -->
-          <button class="langbtn" id="langBtn" type="button" title="Language">
+          <button class="langbtn navlink" id="langBtn" type="button" title="Language">
             <span class="langdot"></span>
             <span id="langLabel">🌐</span>
           </button>
@@ -47,7 +169,7 @@
     <main class="page">
 
       <!-- HERO -->
-      <section class="hero section" style="border-top:none;">
+      <section class="hero section reveal" style="border-top:none;">
         <div class="hero-grid">
 
           <div>
@@ -80,15 +202,77 @@
               <div class="pill"><b>Meeting</b> • 20 kişi, 20 dil, tek oda</div>
               <div class="pill"><b>Offline</b> • İnternet yoksa da devam</div>
             </div>
-            <img class="hero-banner" alt="italkyAI banner"
-                 src="https://images.unsplash.com/photo-1543269865-cbf427effbad?auto=format&fit=crop&w=1600&q=80">
+
+            <!-- ✅ Auto + swipe banner -->
+            <div class="hero-banner-wrap" id="heroBanner">
+              <div class="hero-banner-overlay"></div>
+
+              <!-- 10’a yakın gerçek görsel -->
+              <img class="active" alt="FaceToFace cafe"
+                   data-title="FaceToFace • Masada gerçek konuşma"
+                   data-desc="Kafede sipariş ver, müzede soru sor, sokakta yol tarif et. Sen konuş, italkyAI çevirsin."
+                   src="https://images.unsplash.com/photo-1543269865-cbf427effbad?auto=format&fit=crop&w=1600&q=80">
+
+              <img alt="Photo translate menu"
+                   data-title="Fotoğraftan Çeviri • Menü / tabela / kitap"
+                   data-desc="Telefonu kaldır, görüntüyü yakala. Yazı kendi dilinde aksın."
+                   src="https://images.unsplash.com/photo-1512428559087-560fa5ceab42?auto=format&fit=crop&w=1600&q=80">
+
+              <img alt="Online meeting"
+                   data-title="Online Toplantı • 2 kişi de olur, 20 kişi de"
+                   data-desc="Herkes kendi dilinde konuşur, herkes anlar. Aynı odada aynı anda."
+                   src="https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=1600&q=80">
+
+              <img alt="Learning at night"
+                   data-title="italky Academy • 15 dakikada gerçek pratik"
+                   data-desc="AI öğretmen eksiklerini görür, kısa ve net ders çıkarır."
+                   src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1600&q=80">
+
+              <img alt="Document translate"
+                   data-title="Belgeden Çeviri • PDF / dosya okuma"
+                   data-desc="Anlamadan imzalama yok. Dosyanın özünü hızlıca kavra."
+                   src="https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=1600&q=80">
+
+              <img alt="Text translate"
+                   data-title="Metinden Çeviri • Mesaj / e-posta / uzun metin"
+                   data-desc="Günlük kullanımda hız. İşte netlik. Metnin akışını bozmadan."
+                   src="https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=1600&q=80">
+
+              <img alt="Chat AI"
+                   data-title="Sohbet AI • Dertleşme + pratik + rahatlama"
+                   data-desc="Yargısız, sıkılmayan, her an hazır bir konuşma partneri."
+                   src="https://images.unsplash.com/photo-1516589091380-5d8e87df6999?auto=format&fit=crop&w=1600&q=80">
+
+              <img alt="Speaking AI"
+                   data-title="Konuşkan AI • Telaffuz + ritim + özgüven"
+                   data-desc="Akıcı konuşma simülasyonu. Küçük düzeltmelerle büyük fark."
+                   src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1600&q=80">
+
+              <img alt="Games"
+                   data-title="Eğlenerek Öğren • Oyunla tekrar"
+                   data-desc="Kelime, refleks, tekrar… Dil kasını oyunla büyüt."
+                   src="https://images.unsplash.com/photo-1520975693411-b4a5d5b56925?auto=format&fit=crop&w=1600&q=80">
+
+              <img alt="Travel"
+                   data-title="Seyahat • Yerli gibi yaşa"
+                   data-desc="Gittiğin yerde çekinme. İletişim artık özgür."
+                   src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1600&q=80">
+
+              <div class="hero-banner-meta">
+                <div class="hero-caption" id="heroCaption">
+                  <b>FaceToFace • Masada gerçek konuşma</b>
+                  <span>Kafede sipariş ver, müzede soru sor, sokakta yol tarif et. Sen konuş, italkyAI çevirsin.</span>
+                </div>
+                <div class="hero-dots" id="heroDots" aria-label="Banner dots"></div>
+              </div>
+            </div>
           </div>
 
         </div>
       </section>
 
       <!-- MODULES -->
-      <section class="section" id="modules">
+      <section class="section reveal" id="modules">
         <h2 class="h2">Uygulamada neler var?</h2>
         <p class="sub">
           Her modül ayrı sayfaya gider ve “ne işe yarar / kim için / nasıl çalışır / en önemli kurallar” net anlatılır.
@@ -97,7 +281,7 @@
 
         <div class="cards">
           <a class="card" href="/pages/module_facetoface.html">
-            <div class="icon" style="background:rgba(14,165,233,.16)">
+            <div class="icon" style="background:linear-gradient(135deg, rgba(14,165,233,.24), rgba(99,102,241,.16));">
               <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
             </div>
             <h3>FaceToFace AI</h3>
@@ -106,7 +290,7 @@
           </a>
 
           <a class="card" href="/pages/module_academy.html">
-            <div class="icon" style="background:rgba(99,102,241,.18)">
+            <div class="icon" style="background:linear-gradient(135deg, rgba(99,102,241,.24), rgba(236,72,153,.14));">
               <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14"/><path d="M22 3h-6a4 4 0 0 0-4 4v14"/></svg>
             </div>
             <h3>italky Academy</h3>
@@ -115,7 +299,7 @@
           </a>
 
           <a class="card" href="/pages/module_meeting.html">
-            <div class="icon" style="background:rgba(236,72,153,.16)">
+            <div class="icon" style="background:linear-gradient(135deg, rgba(236,72,153,.22), rgba(165,180,252,.14));">
               <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
             </div>
             <h3>Online Toplantı</h3>
@@ -124,7 +308,7 @@
           </a>
 
           <a class="card" href="/pages/module_text.html">
-            <div class="icon" style="background:rgba(34,197,94,.16)">
+            <div class="icon" style="background:linear-gradient(135deg, rgba(34,197,94,.18), rgba(14,165,233,.14));">
               <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
             </div>
             <h3>Metinden Çeviri</h3>
@@ -133,7 +317,7 @@
           </a>
 
           <a class="card" href="/pages/module_photo.html">
-            <div class="icon" style="background:rgba(14,165,233,.16)">
+            <div class="icon" style="background:linear-gradient(135deg, rgba(14,165,233,.18), rgba(236,72,153,.14));">
               <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
             </div>
             <h3>Fotoğraftan Çeviri</h3>
@@ -142,7 +326,7 @@
           </a>
 
           <a class="card" href="/pages/module_document.html">
-            <div class="icon" style="background:rgba(99,102,241,.18)">
+            <div class="icon" style="background:linear-gradient(135deg, rgba(99,102,241,.22), rgba(14,165,233,.12));">
               <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
             </div>
             <h3>Belgeden Çeviri</h3>
@@ -151,7 +335,7 @@
           </a>
 
           <a class="card" href="/pages/module_chat.html">
-            <div class="icon" style="background:rgba(34,197,94,.16)">
+            <div class="icon" style="background:linear-gradient(135deg, rgba(34,197,94,.16), rgba(165,180,252,.12));">
               <svg viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg>
             </div>
             <h3>Sohbet AI</h3>
@@ -160,7 +344,7 @@
           </a>
 
           <a class="card" href="/pages/module_speaking.html">
-            <div class="icon" style="background:rgba(236,72,153,.16)">
+            <div class="icon" style="background:linear-gradient(135deg, rgba(236,72,153,.18), rgba(99,102,241,.12));">
               <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>
             </div>
             <h3>Konuşkan AI</h3>
@@ -169,7 +353,7 @@
           </a>
 
           <a class="card" href="/pages/module_games.html">
-            <div class="icon" style="background:rgba(14,165,233,.16)">
+            <div class="icon" style="background:linear-gradient(135deg, rgba(14,165,233,.18), rgba(34,197,94,.12));">
               <svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 12h4M8 10v4"/></svg>
             </div>
             <h3>Eğlenerek Öğren</h3>
@@ -177,45 +361,53 @@
             <span class="tag">Gamification</span>
           </a>
         </div>
-
-        <div class="big-banner" style="margin-top:18px;">
-          <img alt="kafe face to face"
-               src="https://images.unsplash.com/photo-1520975693411-b4a5d5b56925?auto=format&fit=crop&w=1600&q=80">
-        </div>
       </section>
 
       <!-- SCENARIOS -->
-      <section class="section" id="scenarios">
+      <section class="section reveal" id="scenarios">
         <h2 class="h2">Gerçek hayat senaryoları</h2>
         <p class="sub">
           Kullanıcı “Ne işe yarıyor?” diye değil, “Ben bunu yarın nerede kullanacağım?” diye karar verir.
           italkyAI bu soruya görsel ve net cevap verir.
         </p>
 
+        <div class="big-banner" style="margin-top:16px;">
+          <img alt="meeting with subtitles feel"
+               src="https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=1600&q=80">
+        </div>
+
         <div class="cards">
           <div class="card" style="grid-column:span 6;">
-            <div class="icon" style="background:rgba(236,72,153,.16)"><svg viewBox="0 0 24 24"><path d="M3 12h18"/><path d="M12 3v18"/></svg></div>
+            <div class="icon" style="background:linear-gradient(135deg, rgba(236,72,153,.18), rgba(99,102,241,.12));">
+              <svg viewBox="0 0 24 24"><path d="M3 12h18"/><path d="M12 3v18"/></svg>
+            </div>
             <h3>Kafe / Restoran</h3>
             <p>Garsonla konuş, menüyü çevir, siparişi doğru ver. Turist gibi değil, yerli gibi.</p>
             <span class="tag">FaceToFace + Fotoğraf</span>
           </div>
 
           <div class="card" style="grid-column:span 6;">
-            <div class="icon" style="background:rgba(99,102,241,.18)"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h8M8 16h6"/></svg></div>
+            <div class="icon" style="background:linear-gradient(135deg, rgba(99,102,241,.20), rgba(14,165,233,.12));">
+              <svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h8M8 16h6"/></svg>
+            </div>
             <h3>İş / Toplantı</h3>
             <p>20 farklı dil konuşulan tek toplantı… italkyAI ile herkes aynı masada.</p>
             <span class="tag">Online Meeting</span>
           </div>
 
           <div class="card" style="grid-column:span 6;">
-            <div class="icon" style="background:rgba(34,197,94,.16)"><svg viewBox="0 0 24 24"><path d="M12 2l10 6-10 6L2 8z"/><path d="M2 8v8l10 6 10-6V8"/></svg></div>
+            <div class="icon" style="background:linear-gradient(135deg, rgba(34,197,94,.16), rgba(165,180,252,.10));">
+              <svg viewBox="0 0 24 24"><path d="M12 2l10 6-10 6L2 8z"/><path d="M2 8v8l10 6 10-6V8"/></svg>
+            </div>
             <h3>Gece Pratiği</h3>
             <p>Yatağında 15 dakika… AI öğretmenle konuş, hatalarını düzelt, ilerle.</p>
             <span class="tag">italky Academy</span>
           </div>
 
           <div class="card" style="grid-column:span 6;">
-            <div class="icon" style="background:rgba(14,165,233,.16)"><svg viewBox="0 0 24 24"><path d="M21 10a7 7 0 0 1-14 0"/><path d="M12 2a3 3 0 0 0-3 3v5a3 3 0 0 0 6 0V5"/></svg></div>
+            <div class="icon" style="background:linear-gradient(135deg, rgba(14,165,233,.16), rgba(236,72,153,.10));">
+              <svg viewBox="0 0 24 24"><path d="M21 10a7 7 0 0 1-14 0"/><path d="M12 2a3 3 0 0 0-3 3v5a3 3 0 0 0 6 0V5"/></svg>
+            </div>
             <h3>Uçak / İnternet yok</h3>
             <p>İnternet yoksa da iletişim bitmesin. Offline paket mantığı bunun için.</p>
             <span class="tag">Offline</span>
@@ -224,7 +416,7 @@
       </section>
 
       <!-- RULES -->
-      <section class="section" id="rules">
+      <section class="section reveal" id="rules">
         <h2 class="h2">Kurallar & Netlik</h2>
         <p class="sub">
           İnsanlar “gizli ücret / karmaşa / sürpriz” sevmiyor. Biz de sevmiyoruz.
@@ -233,14 +425,18 @@
 
         <div class="cards">
           <div class="card" style="grid-column:span 6;">
-            <div class="icon" style="background:rgba(255,255,255,.08)"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4 11.5-11.5z"/></svg></div>
+            <div class="icon" style="background:linear-gradient(135deg, rgba(255,255,255,.10), rgba(99,102,241,.10));">
+              <svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4 11.5-11.5z"/></svg>
+            </div>
             <h3>Şeffaf kullanım</h3>
             <p>Ne alıyorsan o. Abonelik zorunlu değil. İhtiyacın kadar.</p>
             <span class="tag">Güven</span>
           </div>
 
           <div class="card" style="grid-column:span 6;">
-            <div class="icon" style="background:rgba(255,255,255,.08)"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></div>
+            <div class="icon" style="background:linear-gradient(135deg, rgba(255,255,255,.10), rgba(236,72,153,.08));">
+              <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+            </div>
             <h3>Tek ekosistem</h3>
             <p>Çeviri, öğrenme, toplantı… ayrı uygulama değil, aynı deneyim.</p>
             <span class="tag">Tutarlılık</span>
@@ -249,7 +445,7 @@
       </section>
 
       <!-- DOWNLOAD -->
-      <section class="section" id="download">
+      <section class="section reveal" id="download">
         <h2 class="h2">Uygulamayı indir</h2>
         <p class="sub">Play Store / App Store butonlarını sen ekleyeceksin. Biz burayı hazır bıraktık.</p>
 
@@ -296,11 +492,9 @@
   <script type="module">
     import { detectSiteLang, setSiteLang, mountLangPicker } from "/js/site_lang.js";
 
-    // 1) auto language
     const picked = await detectSiteLang();
     setSiteLang(picked);
 
-    // 2) mount picker
     mountLangPicker({
       btnId:"langBtn",
       sheetId:"langSheet",
@@ -309,6 +503,93 @@
       closeId:"langSheetClose",
       labelId:"langLabel"
     });
+  </script>
+
+  <!-- ✅ Nav active -->
+  <script src="/js/site_nav.js?v=2050_1"></script>
+
+  <!-- ✅ Banner carousel + swipe + reveal -->
+  <script>
+    // --- reveal on scroll (light) ---
+    (function(){
+      const els = Array.from(document.querySelectorAll(".reveal"));
+      const io = new IntersectionObserver((entries)=>{
+        entries.forEach(e=>{
+          if(e.isIntersecting) e.target.classList.add("on");
+        });
+      }, { threshold: 0.12 });
+      els.forEach(el=>io.observe(el));
+    })();
+
+    // --- banner carousel ---
+    (function(){
+      const wrap = document.getElementById("heroBanner");
+      if(!wrap) return;
+
+      const imgs = Array.from(wrap.querySelectorAll("img"));
+      const caption = document.getElementById("heroCaption");
+      const dotsWrap = document.getElementById("heroDots");
+
+      let idx = 0;
+      let timer = null;
+      let touchX = null;
+
+      function paintDots(){
+        if(!dotsWrap) return;
+        dotsWrap.innerHTML = imgs.map((_, i)=>`<button class="dot ${i===idx?'active':''}" data-i="${i}" aria-label="banner ${i+1}"></button>`).join("");
+        dotsWrap.querySelectorAll(".dot").forEach(b=>{
+          b.addEventListener("click", ()=>{
+            const n = Number(b.getAttribute("data-i"));
+            go(n);
+            restart();
+          });
+        });
+      }
+
+      function setCaption(i){
+        if(!caption) return;
+        const im = imgs[i];
+        const t = im.getAttribute("data-title") || "italkyAI";
+        const d = im.getAttribute("data-desc") || "";
+        caption.innerHTML = `<b>${t}</b><span>${d}</span>`;
+      }
+
+      function go(next){
+        idx = (next + imgs.length) % imgs.length;
+        imgs.forEach((im, i)=>im.classList.toggle("active", i===idx));
+        setCaption(idx);
+        paintDots();
+      }
+
+      function next(){ go(idx+1); }
+      function restart(){
+        clearInterval(timer);
+        timer = setInterval(next, 5200);
+      }
+
+      // init
+      go(0);
+      restart();
+
+      // swipe support
+      wrap.addEventListener("touchstart", (e)=>{
+        touchX = e.touches?.[0]?.clientX ?? null;
+      }, {passive:true});
+
+      wrap.addEventListener("touchend", (e)=>{
+        if(touchX == null) return;
+        const x2 = e.changedTouches?.[0]?.clientX ?? null;
+        if(x2 == null) return;
+
+        const dx = x2 - touchX;
+        if(Math.abs(dx) > 40){
+          if(dx < 0) go(idx+1);
+          else go(idx-1);
+          restart();
+        }
+        touchX = null;
+      }, {passive:true});
+    })();
   </script>
 </body>
 </html>
