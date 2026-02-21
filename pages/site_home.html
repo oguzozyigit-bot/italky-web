@@ -1,0 +1,460 @@
+<!-- FILE: /pages/site_home.html -->
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+  <title>italkyAI • Site</title>
+  <link rel="icon" href="data:,"/>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#02000f;
+      --panel: rgba(255,255,255,0.06);
+      --bd: rgba(255,255,255,0.10);
+      --txt: rgba(255,255,255,0.92);
+      --muted: rgba(255,255,255,0.62);
+      --grad: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
+      --glow: 0 0 26px rgba(99,102,241,0.28);
+      --r: 22px;
+      --pad: 16px;
+      --gap: 14px;
+    }
+
+    html,body{height:100%;margin:0;background:var(--bg);color:#fff;font-family:Outfit,system-ui;overflow-x:hidden}
+    .wrap{
+      width:min(1100px, 92vw);
+      margin: 0 auto;
+      padding: 18px 0 48px;
+      display:flex;
+      flex-direction:column;
+      gap: 16px;
+    }
+
+    /* Top Bar (site) */
+    .topbar{
+      position:sticky; top:0;
+      z-index: 50;
+      padding: 12px 0;
+      background: linear-gradient(to bottom, rgba(2,0,15,0.92), rgba(2,0,15,0.55), transparent);
+      backdrop-filter: blur(10px);
+    }
+    .topbarInner{
+      border:1px solid var(--bd);
+      background: rgba(0,0,0,0.22);
+      border-radius: 20px;
+      padding: 12px 14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+    }
+    .brand{
+      display:flex; flex-direction:column; gap:4px;
+      min-width:0;
+    }
+    .brand h1{
+      margin:0;
+      font-family:"Space Grotesk",sans-serif;
+      font-size: 22px;
+      letter-spacing:-.4px;
+      line-height:1.05;
+      font-weight:800;
+      white-space:nowrap;
+    }
+    .brand .ai{
+      background: var(--grad);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+    .slogan{
+      font-size: 10px;
+      font-weight: 1000;
+      letter-spacing: 3px;
+      color: rgba(255,255,255,0.45);
+      text-transform: uppercase;
+    }
+
+    .nav{
+      display:flex;
+      gap: 10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .nav a{
+      text-decoration:none;
+      font-size: 11px;
+      font-weight: 1000;
+      color: rgba(255,255,255,0.78);
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.05);
+      transition: transform .18s ease, opacity .18s ease;
+      user-select:none;
+    }
+    .nav a:active{ transform: scale(.98); opacity:.9; }
+
+    /* HERO */
+    .hero{
+      position:relative;
+      border-radius: 28px;
+      border: 1px solid var(--bd);
+      background:
+        radial-gradient(circle at 18% 20%, rgba(99,102,241,.28), transparent 45%),
+        radial-gradient(circle at 80% 65%, rgba(236,72,153,.18), transparent 55%),
+        radial-gradient(circle at 50% 50%, rgba(30, 0, 60, 1) 0%, rgba(2,0,15,1) 100%);
+      overflow:hidden;
+      padding: 18px;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.55);
+    }
+    .heroOrb{
+      position:absolute;
+      width: 220px; height: 220px;
+      border-radius: 50%;
+      right: -80px; top:-90px;
+      background: radial-gradient(circle, rgba(165,180,252,.30) 0%, rgba(99,102,241,.10) 40%, transparent 70%);
+      filter: blur(4px);
+      pointer-events:none;
+      animation: orb 9s ease-in-out infinite alternate;
+      opacity: .9;
+    }
+    @keyframes orb{
+      from{ transform: translate(0,0) scale(1); }
+      to{ transform: translate(-18px,14px) scale(1.08); }
+    }
+
+    .heroGrid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      align-items:start;
+    }
+
+    .heroTitle{
+      font-family:"Space Grotesk",sans-serif;
+      font-size: 28px;
+      margin:0;
+      font-weight: 900;
+      letter-spacing:-.6px;
+      line-height:1.05;
+      color:#fff;
+    }
+    .heroTitle .ai{
+      background: var(--grad);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+    .heroSub{
+      margin-top: 8px;
+      font-size: 13px;
+      font-weight: 800;
+      color: rgba(255,255,255,0.72);
+      line-height:1.45;
+      max-width: 62ch;
+    }
+
+    .chips{
+      margin-top: 10px;
+      display:flex;
+      gap: 8px;
+      flex-wrap:wrap;
+    }
+    .chip{
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.18);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      font-size: 11px;
+      font-weight: 1000;
+      letter-spacing:.2px;
+      color: rgba(255,255,255,0.86);
+      display:flex; align-items:center; gap:8px;
+      user-select:none;
+    }
+    .dot{width:8px;height:8px;border-radius:99px;background: rgba(0,255,157,0.85);box-shadow: 0 0 14px rgba(0,255,157,0.35);}
+    .heroCTA{
+      margin-top: 14px;
+      display:flex;
+      flex-wrap:wrap;
+      gap: 10px;
+    }
+    .btn{
+      border:none;
+      cursor:pointer;
+      user-select:none;
+      font-weight: 1000;
+      border-radius: 18px;
+      padding: 14px 14px;
+      font-size: 14px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      transition: transform .18s ease, opacity .18s ease;
+    }
+    .btn:active{ transform: scale(.98); opacity:.92; }
+    .btnPrimary{ background: var(--grad); color:#fff; box-shadow: var(--glow); flex: 1 1 220px; min-width: 220px; }
+    .btnGhost{ background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: rgba(255,255,255,0.92); flex: 1 1 180px; min-width: 180px; }
+
+    /* MODULES */
+    .sectionTitle{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding: 2px 2px 0;
+      margin-top: 6px;
+    }
+    .sectionTitle h2{
+      margin:0;
+      font-size: 12px;
+      letter-spacing: .6px;
+      font-weight: 1000;
+      color: rgba(255,255,255,0.85);
+      text-transform: uppercase;
+    }
+    .sectionHint{
+      font-size: 11px;
+      font-weight: 900;
+      color: rgba(255,255,255,0.45);
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    .card{
+      border-radius: 22px;
+      border: 1px solid var(--bd);
+      background: rgba(255,255,255,0.05);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      padding: 14px;
+      display:flex;
+      align-items:center;
+      gap: 12px;
+      cursor:pointer;
+      user-select:none;
+      transition: transform .18s ease, background .18s ease;
+    }
+    .card:active{ transform: scale(.985); }
+
+    .ic{
+      width: 46px; height: 46px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background:
+        radial-gradient(circle at 30% 30%, rgba(165,180,252,.22), transparent 55%),
+        rgba(0,0,0,0.14);
+      box-shadow: 0 18px 40px rgba(0,0,0,0.35);
+      display:flex; align-items:center; justify-content:center;
+      position:relative;
+      overflow:hidden;
+      flex: 0 0 auto;
+    }
+    .ic svg{width:22px;height:22px;stroke:#fff;opacity:.92;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+
+    .meta{min-width:0;display:flex;flex-direction:column;gap:3px;flex:1}
+    .name{font-size: 15px;font-weight: 1000;color:#fff;letter-spacing: -.2px;line-height:1.1}
+    .desc{font-size: 11.5px;font-weight: 800;color: rgba(255,255,255,0.58);line-height:1.35}
+
+    .go{
+      width: 36px; height: 36px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.12);
+      display:flex;align-items:center;justify-content:center;
+      flex: 0 0 auto;
+    }
+    .go svg{width:18px;height:18px;stroke:#fff;opacity:.75;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+
+    /* Footer */
+    .foot{
+      margin-top: 16px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      padding-top: 14px;
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+      align-items:center;
+      color: rgba(255,255,255,0.55);
+      font-size: 12px;
+      font-weight: 900;
+    }
+    .footNav{display:flex;gap:18px;flex-wrap:wrap;justify-content:center}
+    .footNav a{color: rgba(255,255,255,0.50); text-decoration:none; font-weight:900; font-size: 11px; text-transform:uppercase; letter-spacing:.4px}
+
+    @media (min-width: 900px){
+      .heroGrid{ grid-template-columns: 1.2fr 0.8fr; }
+      .grid{ grid-template-columns: 1fr 1fr; }
+      .heroTitle{ font-size: 36px; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="topbar">
+    <div class="wrap" style="padding-bottom:0">
+      <div class="topbarInner">
+        <div class="brand">
+          <h1>italky<span class="ai">AI</span></h1>
+          <div class="slogan">BE FREE</div>
+        </div>
+
+        <div class="nav">
+          <a href="#modules">Modüller</a>
+          <a href="/pages/login.html">Giriş</a>
+          <a href="/pages/contact.html">İletişim</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <main class="wrap">
+    <section class="hero">
+      <div class="heroOrb" aria-hidden="true"></div>
+
+      <div class="heroGrid">
+        <div>
+          <h2 class="heroTitle">Cebindeki Global Öğretmen<br/>Cebindeki Tercüman <span class="ai">italkyAI</span></h2>
+          <div class="heroSub">
+            Konuşma, çeviri, oyun ve ders deneyimini tek ekosistemde birleştirir.
+            Mobilde hızlı, web’de etkileyici. “AI sitesi” hissi burada başlar.
+          </div>
+
+          <div class="chips">
+            <div class="chip"><span class="dot"></span> Live Face-to-Face</div>
+            <div class="chip">⚡ Google Translate</div>
+            <div class="chip">🎮 Gamification</div>
+            <div class="chip">👩‍🏫 Academy</div>
+          </div>
+
+          <div class="heroCTA">
+            <button class="btn btnPrimary" id="ctaTry">Hemen Dene • FaceToFace</button>
+            <button class="btn btnGhost" id="ctaScroll">Modüllere İn</button>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div class="card" data-href="/pages/facetoface.html" style="background:rgba(255,255,255,0.06)">
+            <div class="ic">
+              <svg viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 11v1a7 7 0 0 1-14 0v-1"/><path d="M12 19v3"/></svg>
+            </div>
+            <div class="meta">
+              <div class="name">FaceToFace</div>
+              <div class="desc">Anlık konuşma çevirisi + otomatik ses.</div>
+            </div>
+            <div class="go"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></div>
+          </div>
+
+          <div class="card" data-href="/pages/game.html">
+            <div class="ic">
+              <svg viewBox="0 0 24 24"><path d="M6 14h2"/><path d="M7 13v2"/><path d="M15 13h.01"/><path d="M18 11h.01"/><path d="M5 7h14a2 2 0 0 1 2 2v6a3 3 0 0 1-3 3h-1l-2-2H9l-2 2H6a3 3 0 0 1-3-3V9a2 2 0 0 1 2-2z"/></svg>
+            </div>
+            <div class="meta">
+              <div class="name">Oyun Merkezi</div>
+              <div class="desc">Kelime, refleks, skor. Sıkılmadan öğren.</div>
+            </div>
+            <div class="go"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></div>
+          </div>
+
+          <div class="card" data-href="/pages/academy.html">
+            <div class="ic">
+              <svg viewBox="0 0 24 24"><path d="M12 3l10 6-10 6L2 9l10-6z"/><path d="M22 9v6"/><path d="M6 12v6c0 1 3 3 6 3s6-2 6-3v-6"/></svg>
+            </div>
+            <div class="meta">
+              <div class="name">italky Academy</div>
+              <div class="desc">Seviye + kısa ders planı (AI öğretmen).</div>
+            </div>
+            <div class="go"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="sectionTitle" id="modules">
+      <h2>Modüller</h2>
+      <div class="sectionHint">Tek tıkla giriş</div>
+    </div>
+
+    <section class="grid">
+      <div class="card" data-href="/pages/translate_text.html">
+        <div class="ic">
+          <svg viewBox="0 0 24 24"><path d="M4 5h7"/><path d="M7 4v2"/><path d="M5 9h6"/><path d="M4 19h7"/><path d="M14 5l6 14"/><path d="M13 19h6"/><path d="M15 15h4"/></svg>
+        </div>
+        <div class="meta">
+          <div class="name">Metinden Çeviri</div>
+          <div class="desc">Mesaj, metin, e-posta: hızlı çeviri.</div>
+        </div>
+        <div class="go"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></div>
+      </div>
+
+      <div class="card" data-href="/pages/ocr.html">
+        <div class="ic">
+          <svg viewBox="0 0 24 24"><path d="M4 7V5a2 2 0 0 1 2-2h2"/><path d="M20 7V5a2 2 0 0 0-2-2h-2"/><path d="M4 17v2a2 2 0 0 0 2 2h2"/><path d="M20 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 12h10"/></svg>
+        </div>
+        <div class="meta">
+          <div class="name">Fotoğraftan Çeviri</div>
+          <div class="desc">Çek → oku → çevir (menü/kitap/tabela).</div>
+        </div>
+        <div class="go"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></div>
+      </div>
+
+      <div class="card" data-href="/pages/meeting.html">
+        <div class="ic">
+          <svg viewBox="0 0 24 24"><path d="M15 10l4-2v8l-4-2v-4z"/><path d="M3 8a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8z"/></svg>
+        </div>
+        <div class="meta">
+          <div class="name">Online Toplantı</div>
+          <div class="desc">Çeviri odaları (hazırlık / beta).</div>
+        </div>
+        <div class="go"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></div>
+      </div>
+
+      <div class="card" data-href="/pages/chat.html">
+        <div class="ic">
+          <svg viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg>
+        </div>
+        <div class="meta">
+          <div class="name">Sohbet AI</div>
+          <div class="desc">Kısa sor, net cevap al. Hızlı yardımcı.</div>
+        </div>
+        <div class="go"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></div>
+      </div>
+    </section>
+
+    <footer class="foot">
+      <div class="footNav">
+        <a href="/pages/about.html">Hakkımızda</a>
+        <a href="/pages/faq.html">SSS</a>
+        <a href="/pages/privacy.html">Gizlilik</a>
+        <a href="/pages/contact.html">İletişim</a>
+      </div>
+      <div style="background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;opacity:.9">
+        italkyAI • By Ozyigit's
+      </div>
+    </footer>
+  </main>
+
+  <script>
+    const go = (href)=>location.href = href;
+
+    document.getElementById("ctaTry")?.addEventListener("click", ()=>go("/pages/facetoface.html"));
+    document.getElementById("ctaScroll")?.addEventListener("click", ()=>{
+      document.getElementById("modules")?.scrollIntoView({behavior:"smooth", block:"start"});
+    });
+
+    document.querySelectorAll(".card[data-href]").forEach(el=>{
+      el.addEventListener("click", ()=> go(el.getAttribute("data-href")));
+    });
+  </script>
+</body>
+</html>
