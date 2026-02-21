@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>italkyAI • Sadece Çeviri Değil</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -10,112 +10,300 @@
     :root {
       --ai-gradient: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
       --bg-void: #02000f;
+
+      /* header yüksekliğini JS ile ölçüp buraya yazacağız */
+      --headerH: 98px;
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    html, body { 
-      margin: 0; padding: 0; width: 100%; height: 100%; 
-      background: var(--bg-void); color: #fff; font-family: 'Outfit', sans-serif; 
+    html, body {
+      margin: 0; padding: 0; width: 100%;
+      height: 100dvh;
+      background: var(--bg-void);
+      color: #fff;
+      font-family: 'Outfit', sans-serif;
+      overflow-x: hidden;
+    }
+    @supports not (height: 100dvh){
+      html,body{ height:100vh; }
     }
 
     /* 🌌 Arka Plan Nebula */
     .nebula {
       position: fixed; inset: 0; z-index: -1;
       background: radial-gradient(circle at 50% 20%, rgba(99, 102, 241, 0.15) 0%, var(--bg-void) 80%);
+      pointer-events:none;
     }
 
     /* 🌐 Üst Navigasyon */
     .header-nav {
-      position: fixed; top: 0; width: 100%; z-index: 1000;
-      background: rgba(0,0,0,0.8); backdrop-filter: blur(20px);
+      position: fixed; top: 0; left:0; right:0;
+      z-index: 1000;
+      background: rgba(0,0,0,0.78);
+      backdrop-filter: blur(20px);
       border-bottom: 1px solid rgba(255,255,255,0.1);
-      padding: 10px 15px; display: flex; flex-direction: column; align-items: center;
+      padding: calc(10px + env(safe-area-inset-top)) 15px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
-    .nav-inner { width: 100%; max-width: 430px; display: flex; justify-content: space-between; align-items: center; }
-    .brand-box h1 { font-family: 'Space Grotesk', sans-serif; font-size: 18px; margin: 0; font-weight: 700; }
+    .nav-inner {
+      width: 100%;
+      max-width: 430px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+    .brand-box h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 18px;
+      margin: 0;
+      font-weight: 700;
+      line-height:1;
+    }
     .brand-box h1 span { color: #6366f1; }
-    .brand-sub { font-size: 6px; font-weight: 900; letter-spacing: 2px; opacity: 0.5; text-transform: uppercase; }
+    .brand-sub {
+      font-size: 6px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      opacity: 0.55;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    .btn-login {
+      padding: 10px 16px;
+      border-radius: 50px;
+      background: var(--ai-gradient);
+      color: #fff;
+      font-weight: 900;
+      text-decoration: none;
+      font-size: 11px;
+      user-select:none;
+      white-space:nowrap;
+    }
 
     .nav-links-scroll {
-      display: flex; gap: 12px; margin-top: 8px; overflow-x: auto;
-      width: 100%; max-width: 430px; scrollbar-width: none;
+      display: flex;
+      gap: 12px;
+      margin-top: 10px;
+      overflow-x: auto;
+      width: 100%;
+      max-width: 430px;
+      scrollbar-width: none;
+      padding-bottom: 4px;
     }
     .nav-links-scroll::-webkit-scrollbar { display: none; }
-    .nav-links-scroll a { font-size: 8px; font-weight: 900; color: rgba(255,255,255,0.4); text-decoration: none; text-transform: uppercase; white-space: nowrap; }
+    .nav-links-scroll a {
+      font-size: 9px;
+      font-weight: 900;
+      color: rgba(255,255,255,0.55);
+      text-decoration: none;
+      text-transform: uppercase;
+      white-space: nowrap;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.04);
+      user-select:none;
+    }
+    .nav-links-scroll a:active{ transform: scale(.98); }
 
-    /* 🎯 Ana Konteynır (Mobilde Tam Oturur) */
+    /* 🎯 Ana Konteynır */
     .master-container {
-      width: 100%; max-width: 430px; margin: 0 auto;
-      display: flex; flex-direction: column; align-items: center;
-      padding: 100px 15px 40px;
+      width: 100%;
+      max-width: 430px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+
+      /* ✅ header yüksekliği kadar aşağı it */
+      padding: calc(var(--headerH) + 18px) 15px 40px;
     }
 
-    .marketing-text { text-align: center; margin-bottom: 25px; }
-    .marketing-text h2 { font-size: 26px; font-weight: 900; line-height: 1; margin: 0; text-transform: uppercase; }
-    .marketing-text h2 .grad { background: var(--ai-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .marketing-text p { font-size: 12px; opacity: 0.6; margin: 10px 0; line-height: 1.4; }
+    .marketing-text { text-align: center; margin-bottom: 22px; }
+    .marketing-text h2 {
+      font-size: 26px;
+      font-weight: 900;
+      line-height: 1.05;
+      margin: 0;
+      text-transform: uppercase;
+      letter-spacing: -0.6px;
+    }
+    .marketing-text h2 .grad {
+      background: var(--ai-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .marketing-text p {
+      font-size: 12px;
+      opacity: 0.72;
+      margin: 10px 0;
+      line-height: 1.45;
+    }
 
-    /* 📱 Telefon Çerçevesi (Görüntüdeki Gibi) */
+    /* 📱 Telefon Çerçevesi */
     .phone-wrapper {
-      width: 100%; max-width: 320px;
-      aspect-ratio: 9 / 18.5; /* Gerçek telefon oranı */
-      background: #000; border-radius: 40px;
+      width: clamp(280px, 82vw, 360px);
+      aspect-ratio: 9 / 18.5;
+      background: #000;
+      border-radius: 40px;
       border: 7px solid #1a1a1a;
-      position: relative; overflow: hidden;
+      position: relative;
+      overflow: hidden;
+
+      /* ✅ kısa ekranlarda taşmayı engelle */
+      max-height: min(74vh, 720px);
+
       box-shadow: 0 30px 60px rgba(0,0,0,0.8), 0 0 15px rgba(99, 102, 241, 0.2);
     }
 
-    /* 🏠 Uygulama İçi (Birebir home.html) */
+    /* 🏠 Uygulama Preview */
     .app-root { height: 100%; display: flex; flex-direction: column; background: #02000f; }
-    
-    .app-top { padding: 30px 12px 8px; display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid rgba(255,255,255,0.06); }
-    .app-brand h1 { font-family: 'Space Grotesk', sans-serif; font-size: 18px; margin: 0; font-weight: 700; }
-    .app-brand .ai { background: var(--ai-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    
+
+    .app-top {
+      padding: 26px 12px 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      background: rgba(0,0,0,0.12);
+    }
+    .app-brand h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 18px;
+      margin: 0;
+      font-weight: 700;
+      line-height:1;
+    }
+    .app-brand .ai {
+      background: var(--ai-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
     .app-user { display: flex; align-items: center; gap: 6px; }
     .app-user span { font-size: 9px; font-weight: 900; color: #a5b4fc; }
-    .app-avatar { width: 28px; height: 28px; border-radius: 50%; border: 1.5px solid #6366f1; background: url('https://i.pravatar.cc/100?img=32') center/cover; }
+    .app-avatar {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      border: 1.5px solid #6366f1;
+      background: url('https://i.pravatar.cc/100?img=32') center/cover;
+      flex:0 0 auto;
+    }
 
-    .app-scroll { flex: 1; padding: 10px; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; scrollbar-width: none; }
+    .app-scroll {
+      flex: 1;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      overflow-y: auto;
+      scrollbar-width: none;
+    }
     .app-scroll::-webkit-scrollbar { display: none; }
 
-    /* Hub Orb Area */
-    .hub-orb-zone { padding: 5px 0; display: flex; flex-direction: column; align-items: center; }
+    /* Hub Orb */
+    .hub-orb-zone { padding: 6px 0 2px; display: flex; flex-direction: column; align-items: center; }
     .orb-ring { width: 90px; height: 90px; position: relative; display: flex; align-items: center; justify-content: center; }
-    .orb-glow { position: absolute; inset: -3px; border-radius: 50%; border: 2px solid transparent; background: var(--ai-gradient) border-box; -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0); mask-composite: exclude; animation: rot 12s linear infinite; }
+    .orb-glow {
+      position: absolute; inset: -3px; border-radius: 50%;
+      border: 2px solid transparent;
+      background: var(--ai-gradient) border-box;
+      -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+      mask-composite: exclude;
+      animation: rot 12s linear infinite;
+    }
     @keyframes rot { from {transform:rotate(0deg)} to {transform:rotate(360deg)} }
-    .orb-inner { width: 65px; height: 65px; background: #000; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 15px rgba(99,102,241,0.3); border: 1px solid rgba(255,255,255,0.1); }
+    .orb-inner {
+      width: 65px; height: 65px;
+      background: #000;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 15px rgba(99,102,241,0.3);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
 
     /* Academy Bar */
-    .academy-line { background: rgba(255,255,255,0.04); border-radius: 18px; padding: 10px 12px; border: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 10px; }
+    .academy-line {
+      background: rgba(255,255,255,0.04);
+      border-radius: 18px;
+      padding: 10px 12px;
+      border: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
     .spectrum-dots { display: flex; gap: 2.5px; align-items: flex-end; height: 16px; }
     .s-dot { width: 3px; border-radius: 10px; background: #6366f1; animation: sAnim 1s infinite alternate; }
     @keyframes sAnim { from {height: 4px} to {height: 16px} }
 
     /* Hub Grid */
     .hub-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-    .grid-tile { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 8px; display: flex; align-items: center; gap: 8px; }
-    .tile-ico { width: 28px; height: 28px; border-radius: 8px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; font-size: 11px; color: #6366f1; }
+    .grid-tile {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+      padding: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .tile-ico {
+      width: 28px; height: 28px; border-radius: 8px;
+      background: rgba(255,255,255,0.05);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px;
+      color: #6366f1;
+      flex:0 0 auto;
+    }
     .grid-tile label { font-size: 9px; font-weight: 800; color: #fff; line-height: 1.2; }
 
-    /* 🔘 Nav Tools (Başa Dön/Aşağı İn) */
-    .floating-btns { position: fixed; right: 10px; bottom: 20px; display: flex; flex-direction: column; gap: 8px; z-index: 2000; }
-    .f-btn { width: 35px; height: 35px; border-radius: 50%; background: #fff; color: #000; border: none; font-weight: 900; font-size: 14px; }
+    /* Floating buttons */
+    .floating-btns {
+      position: fixed;
+      right: 10px;
+      bottom: calc(20px + env(safe-area-inset-bottom));
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 2000;
+    }
+    .f-btn {
+      width: 35px; height: 35px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.92);
+      color: #000;
+      border: none;
+      font-weight: 900;
+      font-size: 14px;
+      cursor:pointer;
+    }
+    .f-btn:active{ transform: scale(.97); }
 
-    .btn-login { padding: 12px 25px; border-radius: 50px; background: var(--ai-gradient); color: #fff; font-weight: 900; text-decoration: none; font-size: 11px; }
+    /* CTA bottom */
+    .store-row{
+      display:flex;
+      gap:10px;
+      margin-top:15px;
+      justify-content:center;
+      flex-wrap:wrap;
+    }
   </style>
 </head>
 <body>
 
   <div class="nebula"></div>
 
-  <nav class="header-nav">
+  <nav class="header-nav" id="headerNav">
     <div class="nav-inner">
       <div class="brand-box">
         <h1>italky<span>AI</span></h1>
         <div class="brand-sub">BE FREE</div>
       </div>
-      <a href="#indir" class="btn-login" style="padding: 6px 12px; font-size: 9px;">İNDİR</a>
+      <a href="#indir" class="btn-login" style="padding: 8px 12px; font-size: 10px;">İNDİR</a>
     </div>
     <div class="nav-links-scroll">
       <a href="#face">FaceToFace</a><a href="#acad">Academy</a><a href="#text">Metin</a>
@@ -125,23 +313,27 @@
   </nav>
 
   <div class="floating-btns">
-    <button class="f-btn" onclick="window.scrollTo(0,0)">↑</button>
-    <button class="f-btn" onclick="window.scrollBy(0, window.innerHeight)">↓</button>
+    <button class="f-btn" type="button" onclick="window.scrollTo({top:0, behavior:'smooth'})">↑</button>
+    <button class="f-btn" type="button" onclick="window.scrollBy({top: window.innerHeight*0.85, behavior:'smooth'})">↓</button>
   </div>
 
   <div class="master-container">
     <div class="marketing-text">
       <h2>Sadece Çeviri Değil<br><span class="grad">Bir Akademi</span></h2>
-      <p>Dünyayı anlamak için sadece çeviri yetmez.<br>italkyAI ile hem iletişim kurun hem de öğrenin.</p>
-      <a href="#" class="btn-login">SİSTEME GİRİŞ YAP</a>
+      <p>
+        Dünyayı anlamak için sadece çeviri yetmez.<br>
+        italkyAI ile hem iletişim kurun hem de öğrenin.
+      </p>
+      <a href="/pages/login.html" class="btn-login">SİSTEME GİRİŞ YAP</a>
     </div>
 
-    <div class="phone-wrapper">
+    <!-- Telefon preview -->
+    <div class="phone-wrapper" id="face">
       <div class="app-root">
         <header class="app-top">
           <div class="app-brand">
             <h1>italky<span class="ai">AI</span></h1>
-            <div style="font-size:5px; font-weight:900; opacity:0.5; letter-spacing:1px;">BE FREE</div>
+            <div style="font-size:5px; font-weight:900; opacity:0.55; letter-spacing:1px;">BE FREE</div>
           </div>
           <div class="app-user">
             <span>Jeton: 328</span>
@@ -154,55 +346,79 @@
             <div class="orb-ring">
               <div class="orb-glow"></div>
               <div class="orb-inner">
-                <svg width="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 11v1a7 7 0 0 1-14 0v-1"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
+                <svg width="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5">
+                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                  <path d="M19 11v1a7 7 0 0 1-14 0v-1"/>
+                  <line x1="12" y1="19" x2="12" y2="23"/>
+                </svg>
               </div>
             </div>
             <h3 style="margin:6px 0 0; font-size:16px; font-weight:900;">FaceToFace</h3>
-            <p style="margin:0; font-size:8px; opacity:0.5; font-weight:800;">Yüzyüze Anlık Çeviri</p>
+            <p style="margin:0; font-size:8px; opacity:0.55; font-weight:800;">Yüzyüze Anlık Çeviri</p>
           </div>
 
-          <div class="academy-line">
+          <div class="academy-line" id="acad">
             <div class="spectrum-dots">
               <div class="s-dot" style="background:#ff0000; animation-delay:0.1s"></div>
               <div class="s-dot" style="background:#ff7f00; animation-delay:0.3s"></div>
               <div class="s-dot" style="background:#00ff00; animation-delay:0.5s"></div>
             </div>
             <div style="text-align:left;">
-              <h4 style="margin:0; font-size:14px; font-weight:900;">italky <span class="grad">Academy</span></h4>
-              <p style="margin:0; font-size:8px; opacity:0.4; font-weight:800;">YAPAY ZEKA İLE DİL EĞİTİMİ</p>
+              <h4 style="margin:0; font-size:14px; font-weight:900;">italky <span class="grad" style="background:var(--ai-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Academy</span></h4>
+              <p style="margin:0; font-size:8px; opacity:0.45; font-weight:800;">YAPAY ZEKA İLE DİL EĞİTİMİ</p>
             </div>
           </div>
 
           <div class="hub-grid">
-            <div class="grid-tile"><div class="tile-ico" style="color:#34d399">Aa</div><label>Metinden<br>Çeviri</label></div>
-            <div class="grid-tile"><div class="tile-ico" style="color:#60a5fa">◎</div><label>Fotoğraftan<br>Çeviri</label></div>
-            <div class="grid-tile"><div class="tile-ico" style="color:#f472b6">≡</div><label>Belgeden<br>Çeviri</label></div>
-            <div class="grid-tile"><div class="tile-ico">🎯</div><label>Eğlenerek<br>Öğren</label></div>
-            <div class="grid-tile"><div class="tile-ico">💬</div><label>Sohbet <span class="grad">AI</span></label></div>
-            <div class="grid-tile"><div class="tile-ico">🎓</div><label>Chat <span class="grad">AI</span></label></div>
+            <div class="grid-tile" id="text"><div class="tile-ico" style="color:#34d399">Aa</div><label>Metinden<br>Çeviri</label></div>
+            <div class="grid-tile" id="photo"><div class="tile-ico" style="color:#60a5fa">◎</div><label>Fotoğraftan<br>Çeviri</label></div>
+            <div class="grid-tile" id="doc"><div class="tile-ico" style="color:#f472b6">≡</div><label>Belgeden<br>Çeviri</label></div>
+            <div class="grid-tile" id="game"><div class="tile-ico">🎯</div><label>Eğlenerek<br>Öğren</label></div>
+            <div class="grid-tile" id="chat"><div class="tile-ico">💬</div><label>Sohbet <span style="background:var(--ai-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">AI</span></label></div>
+            <div class="grid-tile"><div class="tile-ico">🎓</div><label>Chat <span style="background:var(--ai-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">AI</span></label></div>
           </div>
 
-          <div class="academy-line" style="border-color: rgba(99,102,241,0.2);">
+          <div class="academy-line" id="meet" style="border-color: rgba(99,102,241,0.2);">
             <div style="font-size:16px;">📹</div>
             <div style="text-align:left;">
               <h4 style="margin:0; font-size:13px; font-weight:900;">Online Toplantı</h4>
-              <p style="margin:0; font-size:8px; opacity:0.4; font-weight:800;">CANLI ÇEVİRİ ODALARI</p>
+              <p style="margin:0; font-size:8px; opacity:0.45; font-weight:800;">CANLI ÇEVİRİ ODALARI</p>
             </div>
           </div>
         </div>
-        
-        <footer style="padding:10px; text-align:center; font-size:8px; opacity:0.3; border-top:1px solid rgba(255,255,255,0.05);">italkyAI @ italkyAcedemia By Ozyigit's</footer>
+
+        <footer style="padding:10px; text-align:center; font-size:8px; opacity:0.35; border-top:1px solid rgba(255,255,255,0.05);">
+          italkyAI @ italkyAcademy By Ozyigit's
+        </footer>
       </div>
     </div>
 
     <div class="marketing-text" id="indir" style="margin-top:40px;">
        <h2 style="font-size:20px;">ÖZGÜRLÜĞÜ İNDİR</h2>
-       <div style="display:flex; gap:10px; margin-top:15px; justify-content:center;">
+       <p style="opacity:.7">Android ve iOS sürümleriyle her yerde aynı deneyim.</p>
+       <div class="store-row">
          <a href="#" class="btn-login" style="background:#fff; color:#000;">APP STORE</a>
          <a href="#" class="btn-login">PLAY STORE</a>
        </div>
     </div>
   </div>
+
+  <script>
+    // ✅ header yüksekliğini ölç ve içeriği tam oturt
+    (function(){
+      const header = document.getElementById("headerNav");
+      if(!header) return;
+
+      const apply = ()=>{
+        const h = header.getBoundingClientRect().height || 98;
+        document.documentElement.style.setProperty("--headerH", Math.ceil(h) + "px");
+      };
+
+      apply();
+      window.addEventListener("resize", apply);
+      window.addEventListener("orientationchange", apply);
+    })();
+  </script>
 
 </body>
 </html>
