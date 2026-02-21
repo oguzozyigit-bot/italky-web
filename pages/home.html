@@ -4,8 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>italkyAI • Final Pro Hub</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
   <style>
     :root {
       --ai-gradient: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
@@ -26,7 +24,7 @@
     /* Cep telefonu ekranı sınırlayıcı (Viewport) */
     .app-viewport {
       width: 100%;
-      max-width: 430px; /* iPhone Pro Max Genişliği */
+      max-width: 430px; 
       height: 100dvh;
       margin: 0 auto;
       display: flex;
@@ -36,7 +34,6 @@
       backdrop-filter: blur(30px);
       border-left: 1px solid rgba(255,255,255,0.1);
       border-right: 1px solid rgba(255,255,255,0.1);
-      box-shadow: 0 0 100px rgba(0,0,0,0.5);
     }
 
     /* Premium Üst Bar */
@@ -61,18 +58,21 @@
     .uJeton { font-size: 10px; font-weight: 900; color: #a5b4fc; }
     .avatar { width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid #6366f1; background: url('https://i.pravatar.cc/100?img=32') center/cover; }
 
-    /* --- 1. FACETOFACE (Orijinal Noktasına Dokunulmadı) --- */
+    /* --- PAGE CONTENT --- */
     #pageContent {
       height: calc(100vh - 180px); 
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      padding: 5px 18px var(--footer-offset);
+      padding: 10px 18px var(--footer-offset);
       box-sizing: border-box;
       gap: 8px;
-      overflow: hidden;
+      overflow-y: auto;
+      scrollbar-width: none;
     }
+    #pageContent::-webkit-scrollbar { display: none; }
 
+    /* 1. FACETOFACE */
     .portal-zone {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       cursor: pointer; padding: 5px 0;
@@ -107,7 +107,7 @@
     .portal-info h1 { margin: 0; font-size: 26px; font-weight: 900; color: #fff; letter-spacing: -1px; }
     .portal-info p { margin: 2px 0 0; font-size: 11px; font-weight: 800; color: rgba(255,255,255,0.5); }
 
-    /* --- 2. ACADEMY --- */
+    /* 2. ACADEMY */
     .academy-pro {
       background: rgba(255, 255, 255, 0.05);
       border-radius: 24px;
@@ -130,7 +130,7 @@
     .academy-text h2 span { background: var(--ai-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     .academy-text p { margin: 0; font-size: 10px; font-weight: 800; color: rgba(255,255,255,0.4); }
 
-    /* --- 3. GRID LAYOUT --- */
+    /* 3. GRID LAYOUT */
     .pro-grid {
       display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
     }
@@ -155,7 +155,7 @@
 
     .pro-tile label { font-size: 12px; font-weight: 800; color: #fff; line-height: 1.2; }
 
-    /* --- 4. MEETING BAR --- */
+    /* 4. MEETING BAR */
     .meeting-bar {
       background: rgba(255, 255, 255, 0.05);
       border-radius: 24px;
@@ -165,7 +165,7 @@
       cursor: pointer;
     }
 
-    /* Alt Bar (Shell Yapısı) */
+    /* Alt Bar (Shell) */
     .premium-footer {
       position: absolute; bottom: 0; width: 100%; height: var(--footer-offset);
       display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -203,7 +203,7 @@
 
     <div id="pageContent">
 
-      <div class="portal-zone">
+      <div class="portal-zone" data-nav="/pages/facetoface.html">
         <div class="neural-orb">
           <div class="ai-ring"></div>
           <div class="orbit-energy">
@@ -224,11 +224,10 @@
         </div>
       </div>
 
-      <div class="academy-pro">
+      <div class="academy-pro" data-nav="/pages/teacher_select.html">
         <div class="spectrum-logo">
-          <div class="bar bar-1"></div><div class="bar bar-2"></div><div class="bar bar-3"></div>
-          <div class="bar bar-4"></div><div class="bar bar-5"></div><div class="bar bar-6"></div>
-          <div class="bar bar-7"></div>
+          <div class="bar bar-1"></div><div class="bar bar-2"></div><div class="bar bar-3"></div><div class="bar bar-4"></div>
+          <div class="bar bar-5"></div><div class="bar bar-6"></div><div class="bar bar-7"></div>
         </div>
         <div class="academy-text">
           <h2>italky <span>Academy</span></h2>
@@ -237,15 +236,15 @@
       </div>
 
       <div class="pro-grid">
-        <div class="pro-tile"><div class="tile-icon ico-txt"></div><label>Metinden<br>Çeviri</label></div>
-        <div class="pro-tile"><div class="tile-icon ico-cam"></div><label>Fotoğraftan<br>Çeviri</label></div>
-        <div class="pro-tile"><div class="tile-icon ico-doc"></div><label>Belgeden<br>Çeviri</label></div>
-        <div class="pro-tile"><div class="tile-icon ico-fun"></div><label>Eğlenerek<br>Öğren</label></div>
-        <div class="pro-tile"><div class="tile-icon ico-chat"></div><label>Sohbet <span>AI</span></label></div>
-        <div class="pro-tile"><div class="tile-icon ico-teacher"></div><label>Chat <span>AI</span></label></div>
+        <div class="pro-tile" data-nav="/pages/text_translate.html"><div class="tile-icon ico-txt"></div><label>Metinden<br>Çeviri</label></div>
+        <div class="pro-tile" data-nav="/pages/photo.html"><div class="tile-icon ico-cam"></div><label>Fotoğraftan<br>Çeviri</label></div>
+        <div class="pro-tile" data-nav="/pages/document.html"><div class="tile-icon ico-doc"></div><label>Belgeden<br>Çeviri</label></div>
+        <div class="pro-tile" data-nav="/pages/game.html"><div class="tile-icon ico-fun"></div><label>Eğlenerek<br>Öğren</label></div>
+        <div class="pro-tile" data-nav="/pages/teacher_select.html"><div class="tile-icon ico-chat"></div><label>Sohbet <span>AI</span></label></div>
+        <div class="pro-tile" data-nav="/pages/teacher_select.html"><div class="tile-icon ico-teacher"></div><label>Chat <span>AI</span></label></div>
       </div>
 
-      <div class="meeting-bar">
+      <div class="meeting-bar" data-nav="/pages/meeting.html">
         <div class="tile-icon">📹</div>
         <div class="academy-text">
           <h2 style="font-size: 17px;">Online Toplantı</h2>
