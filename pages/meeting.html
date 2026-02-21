@@ -1,194 +1,125 @@
+<!-- FILE: /pages/module_meeting.html -->
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>italkyAI • Global Meeting</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>italkyAI • Online Toplantı</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/pages/site_2050.css?v=2050_1">
   <style>
-    :root {
-      --ai-gradient: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
-      --glass: rgba(255, 255, 255, 0.05);
-      --neon: #6366f1;
-    }
-
-    /* Üst ve Alt Barı Öldür, Arka Planı Canlandır */
-    body, html {
-      margin: 0; padding: 0; width: 100%; height: 100vh;
-      background: #02000f; font-family: 'Outfit', sans-serif;
-      overflow: hidden; color: #fff;
-    }
-
-    .nebula {
-      position: fixed; inset: 0; z-index: -1;
-      background: radial-gradient(circle at 50% 50%, #1e1b4b 0%, #02000f 100%);
-    }
-
-    /* ✅ TAM EKRAN CONTAINER */
-    #meetingHub {
-      height: 100vh;
-      display: flex; flex-direction: column;
-      padding: env(safe-area-inset-top) 15px env(safe-area-inset-bottom);
-      box-sizing: border-box;
-      gap: 15px;
-    }
-
-    /* 1. YÜZER ÜST PANEL (Floating Header) */
-    .floating-header {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 15px; background: rgba(255,255,255,0.03);
-      border-radius: 24px; border: 1px solid rgba(255,255,255,0.1);
-      backdrop-filter: blur(20px); margin-top: 10px;
-    }
-    .room-badge { display: flex; flex-direction: column; }
-    .room-badge b { font-size: 16px; letter-spacing: 1px; }
-    .room-badge span { font-size: 10px; color: #34d399; font-weight: 900; }
-
-    .my-mini-profile { display: flex; align-items: center; gap: 10px; }
-    .my-mini-profile img { width: 38px; height: 38px; border-radius: 50%; border: 2px solid var(--neon); }
-
-    /* 2. NEURAL REHBER (PARTICIPANTS) */
-    .participants-zone {
-      display: flex; gap: 12px; overflow-x: auto; padding: 5px 0;
-      scrollbar-width: none;
-    }
-    .participants-zone::-webkit-scrollbar { display: none; }
-
-    .u-node {
-      flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 6px;
-    }
-    .u-circle {
-      width: 60px; height: 60px; border-radius: 20px;
-      background: var(--glass); border: 1px solid rgba(255,255,255,0.1);
-      display: flex; align-items: center; justify-content: center;
-      position: relative; font-size: 24px;
-    }
-    .u-circle img { width: 100%; height: 100%; border-radius: 20px; object-fit: cover; }
-    .u-circle.active { border: 2px solid #34d399; box-shadow: 0 0 15px rgba(52, 211, 153, 0.3); }
-    .u-node span { font-size: 10px; font-weight: 800; opacity: 0.8; }
-
-    /* 3. ANA CHAT AKIŞI (GENİŞ ALAN) */
-    .neural-stream {
-      flex: 1; background: rgba(255,255,255,0.02); border-radius: 35px;
-      border: 1px solid rgba(255,255,255,0.05); padding: 20px;
-      display: flex; flex-direction: column; gap: 15px;
-      overflow-y: auto; scrollbar-width: none;
-    }
-    .neural-stream::-webkit-scrollbar { display: none; }
-
-    .bubble { max-width: 85%; padding: 15px; border-radius: 25px; line-height: 1.5; }
-    .bubble.in { background: rgba(255,255,255,0.06); align-self: flex-start; border-bottom-left-radius: 5px; }
-    .bubble.out { background: var(--ai-gradient); align-self: flex-end; border-bottom-right-radius: 5px; }
-    
-    .sender { font-size: 11px; font-weight: 1000; color: #a5b4fc; margin-bottom: 5px; display: block; }
-    .orig { font-size: 15px; font-weight: 700; }
-    .trans { font-size: 13px; font-weight: 600; opacity: 0.7; margin-top: 8px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 6px; font-style: italic; }
-
-    /* 4. YÜZER KONTROL PANELİ (Floating Controls) */
-    .floating-controls {
-      display: flex; justify-content: space-around; align-items: center;
-      padding: 15px; background: rgba(0,0,0,0.6);
-      border-radius: 30px; border: 1px solid rgba(255,255,255,0.1);
-      backdrop-filter: blur(20px); margin-bottom: 10px;
-    }
-
-    .ctrl-icon {
-      width: 50px; height: 50px; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; transition: 0.3s;
-    }
-    .ctrl-icon svg { width: 24px; height: 24px; stroke: #fff; fill: none; stroke-width: 2.2; }
-    .ctrl-icon.warn { background: #580c1f; }
-    .ctrl-icon.add { background: var(--ai-gradient); color: #000; }
-
+    .hero-img{ width:100%; height: 460px; object-fit:cover; border-radius: var(--radius); border:1px solid rgba(255,255,255,0.12); box-shadow: 0 22px 70px rgba(0,0,0,0.35); }
+    @media (max-width: 820px){ .hero-img{ height: 280px; } }
   </style>
 </head>
-
 <body>
-  <div class="nebula"></div>
-
-  <div id="meetingHub">
-    
-    <div class="floating-header">
-      <div class="room-badge">
-        <b>HUB #OZY-2026</b>
-        <span>● 12 KATILIMCI AKTİF</span>
+  <div class="bg2050"></div><div class="stars2050"></div>
+  <div class="shell">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="brand" href="/pages/home_v2.html">
+          <div class="brand-line">italky<span class="brand-ai">AI</span></div>
+          <div class="brand-slogan">BE FREE</div>
+        </a>
+        <nav class="nav" id="topNav">
+          <a class="navlink" href="/pages/module_facetoface.html">FaceToFace</a>
+          <a class="navlink" href="/pages/module_academy.html">italky Academy</a>
+          <a class="navlink" href="/pages/module_games.html">Eğlenerek Öğren</a>
+          <a class="navlink" href="/pages/module_photo.html">Fotoğraftan Çeviri</a>
+          <a class="navlink" href="/pages/module_text.html">Metinden Çeviri</a>
+          <a class="navlink" href="/pages/module_document.html">Belgeden Çeviri</a>
+          <a class="navlink" href="/pages/module_chat.html">Sohbet AI</a>
+          <a class="navlink" href="/pages/module_speaking.html">Konuşkan AI</a>
+          <a class="navlink primary active" href="/pages/module_meeting.html">Online Toplantı</a>
+          <button class="langbtn navlink" id="langBtn" type="button"><span class="langdot"></span><span id="langLabel">🌐</span></button>
+        </nav>
       </div>
-      <div class="my-mini-profile">
-        <div style="text-align: right">
-          <div id="dispName" style="font-weight: 900; font-size: 14px;">...</div>
-          <div id="dispID" style="font-size: 10px; opacity: 0.5;">ID: —</div>
+    </header>
+
+    <main class="page">
+      <section class="section" style="border-top:none;">
+        <div class="kicker"><i></i> Global iletişim</div>
+        <h1 class="hero-title">Online <span class="grad">Toplantı</span></h1>
+        <p class="sub">
+          Dünyanın her yerinden 20 farklı dil konuşan insanlar… Tek toplantıda birbirini anlar.
+          italkyAI toplantı modülü “dil bariyerini” toplantının dışına iter.
+        </p>
+
+        <div class="hero-cta" style="margin-top:12px;">
+          <a class="btn primary" href="#download">Google Play</a>
+          <a class="btn ghost" href="#download">App Store</a>
+          <a class="btn" href="/pages/meeting.html">Uygulamada Aç</a>
         </div>
-        <img src="" id="dispPic">
+
+        <div style="margin-top:16px;">
+          <img class="hero-img"
+               src="https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=1800&q=80"
+               alt="global meeting">
+        </div>
+
+        <div class="cards" style="margin-top:16px;">
+          <div class="card" style="grid-column:span 6;">
+            <div class="icon" style="background:linear-gradient(135deg, rgba(99,102,241,.20), rgba(236,72,153,.12));">
+              <svg viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg>
+            </div>
+            <h3>Tek oda, çok dil</h3>
+            <p>Katılımcılar kendi dilinde konuşur; sistem herkesin diline çevirir. Toplantı akışı bozulmaz.</p>
+            <span class="tag">2 kişi de olur • 20 kişi de</span>
+          </div>
+
+          <div class="card" style="grid-column:span 6;">
+            <div class="icon" style="background:linear-gradient(135deg, rgba(34,197,94,.18), rgba(14,165,233,.12));">
+              <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+            </div>
+            <h3>İş için güven</h3>
+            <p>Yabancı müşteriyle görüşme, sunum, teklif… Dil, iş bariyeri olmaktan çıkar.</p>
+            <span class="tag">B2B hazır</span>
+          </div>
+        </div>
+
+        <div class="big-banner">
+          <img src="https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=1800&q=80"
+               alt="business meeting">
+        </div>
+      </section>
+
+      <section class="section" id="download">
+        <h2 class="h2">İndir ve tek toplantıda herkes anlasın</h2>
+        <p class="sub">BE FREE: Dil bariyeriyle uğraşma. Toplantına odaklan.</p>
+        <div class="hero-cta" style="margin-top:14px;">
+          <a class="btn primary" href="#">Google Play</a>
+          <a class="btn ghost" href="#">App Store</a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="bottombar">
+      <div class="bottombar-inner">
+        <div class="bottom-links">
+          <a href="/pages/module_about.html">Hakkımızda</a>
+          <a href="/pages/module_faq.html">SSS</a>
+          <a href="/pages/module_privacy.html">Gizlilik</a>
+          <a href="/pages/module_contact.html">İletişim</a>
+        </div>
+        <div class="bottom-sign">italkyAI • BE FREE • By Ozyigit’s • 2026</div>
       </div>
+    </footer>
+  </div>
+
+  <div class="sheet" id="langSheet">
+    <div class="sheet-card">
+      <div class="sheet-top">
+        <b>Language</b><input id="langSheetQuery" placeholder="Search language…"><button id="langSheetClose">✕</button>
+      </div>
+      <div class="sheet-list" id="langSheetList"></div>
     </div>
-
-    <div class="participants-zone" id="pList">
-      <div class="u-node">
-        <div class="u-circle active"><img src="https://i.pravatar.cc/100?u=1"></div>
-        <span>Oğuz</span>
-      </div>
-      <div class="u-node">
-        <div class="u-circle"><img src="https://i.pravatar.cc/100?u=2"></div>
-        <span>Selden</span>
-      </div>
-      <div class="u-node">
-        <div class="u-circle"><img src="https://i.pravatar.cc/100?u=3"></div>
-        <span>Hans</span>
-      </div>
-      </div>
-
-    <div class="neural-stream" id="chatStream">
-      <div class="bubble in">
-        <span class="sender">HANS MÜLLER</span>
-        <div class="orig">Is the universal translation active?</div>
-        <div class="trans">Evrensel çeviri aktif mi?</div>
-      </div>
-      <div class="bubble out">
-        <div class="orig">Evet Hans, 2050 teknolojisi devrede.</div>
-        <div class="trans">Yes Hans, 2050 technology is in play.</div>
-      </div>
-    </div>
-
-    <div class="floating-controls">
-      <div class="ctrl-icon" id="mic"><svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg></div>
-      <div class="ctrl-icon add" id="inviteBtn"><b style="font-size: 20px;">+</b></div>
-      <div class="ctrl-icon" id="sound"><svg viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg></div>
-      <div class="ctrl-icon warn" onclick="location.href='/pages/home.html'"><svg viewBox="0 0 24 24"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg></div>
-    </div>
-
   </div>
 
   <script type="module">
-    import { supabase } from "/js/supabase_client.js";
-
-    // ✅ PROFiL VERİLERİNİ ÇEK
-    async function loadIdentity() {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
-
-      const { data: p } = await supabase
-        .from("profiles")
-        .select("full_name, member_no")
-        .eq("id", session.user.id)
-        .single();
-
-      if (p) {
-        document.getElementById('dispName').textContent = p.full_name.split(' ')[0];
-        document.getElementById('dispID').textContent = "ID: " + p.member_no;
-        // LocalStorage'dan resmi çek (Shell'in önbelleği)
-        const cached = JSON.parse(localStorage.getItem('italky_user_v1') || '{}');
-        if(cached.picture) document.getElementById('dispPic').src = cached.picture;
-      }
-    }
-
-    document.getElementById('inviteBtn').onclick = () => {
-      const id = prompt("Üye Numarasını Girin:");
-      if(id) alert(id + " davet edildi.");
-    };
-
-    document.getElementById('mic').onclick = function() { this.classList.toggle('warn'); };
-    
-    loadIdentity();
+    import { detectSiteLang, setSiteLang, mountLangPicker } from "/js/site_lang.js";
+    const picked = await detectSiteLang(); setSiteLang(picked);
+    mountLangPicker({ btnId:"langBtn", sheetId:"langSheet", listId:"langSheetList", queryId:"langSheetQuery", closeId:"langSheetClose", labelId:"langLabel" });
   </script>
 </body>
 </html>
