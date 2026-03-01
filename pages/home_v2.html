@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-<title>italkyAI • Solar Matrix 2126</title>
+<title>italkyAI • Quantum Hub</title>
 
 <meta name="theme-color" content="#000000">
 <style>
@@ -13,11 +13,10 @@
 
 <style>
 :root {
-  --blue-sun: #4f46e5;
+  --blue-sun: #6366f1;
   --green-sun: #10b981;
   --purple-sun: #a855f7;
-  --glass: rgba(255, 255, 255, 0.03);
-  --border: rgba(255, 255, 255, 0.08);
+  --glass-border: rgba(255, 255, 255, 0.1);
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
@@ -26,9 +25,11 @@
   height: 100vh;
   display: flex;
   flex-direction: column;
-  padding-top: calc(env(safe-area-inset-top) + 40px);
-  padding-bottom: calc(env(safe-area-inset-bottom) + 80px);
-  background: radial-gradient(circle at 50% 50%, #080812 0%, #000 100%);
+  /* UI Shell barlarının arasına milimetrik oturtma */
+  padding-top: calc(env(safe-area-inset-top) + 60px);
+  padding-bottom: calc(env(safe-area-inset-bottom) + 85px);
+  background: radial-gradient(circle at 50% 50%, #05050a 0%, #000 100%);
+  position: relative;
 }
 
 .main-hub {
@@ -36,46 +37,50 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 12px;
+  padding: 14px;
+  z-index: 1;
 }
 
-/* ===== CYBER CARD: SOLAR SYSTEM ===== */
+/* ===== CYBER CARD: NEON DEPTH ===== */
 .cyber-card {
   flex: 1;
   position: relative;
-  background: var(--glass);
-  border: 1px solid var(--border);
-  border-radius: 32px;
+  border-radius: 30px;
+  border: 1px solid var(--glass-border);
   overflow: hidden;
   cursor: pointer;
   display: flex;
   align-items: center;
   padding: 0 24px;
-  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  /* Hafif derinlik veren arka planlar */
+  background: linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%);
   backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
-.cyber-card:active { transform: scale(0.97); background: rgba(255,255,255,0.06); }
+/* Kartın kendi rengini belli eden hafif parıltı (Canlı değil, asil) */
+.tr-card { background: linear-gradient(145deg, rgba(99, 102, 241, 0.08) 0%, rgba(0,0,0,0.4) 100%); border-color: rgba(99, 102, 241, 0.2); }
+.ac-card { background: linear-gradient(145deg, rgba(16, 185, 129, 0.08) 0%, rgba(0,0,0,0.4) 100%); border-color: rgba(16, 185, 129, 0.2); }
+.hp-card { background: linear-gradient(145deg, rgba(168, 85, 247, 0.08) 0%, rgba(0,0,0,0.4) 100%); border-color: rgba(168, 85, 247, 0.2); }
 
-/* Güneş Sistemi Animasyonu */
+.cyber-card:active { transform: scale(0.975); filter: brightness(1.2); }
+
+/* Solar Sistem */
 .solar-system {
-  width: 90px;
-  height: 90px;
+  width: 80px; height: 80px;
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
   margin-right: 20px;
 }
 
 .sun {
-  width: 30px;
-  height: 30px;
+  width: 24px; height: 24px;
   background: var(--sun-color);
   border-radius: 50%;
-  filter: blur(8px);
-  box-shadow: 0 0 25px var(--sun-color);
+  filter: blur(6px);
+  box-shadow: 0 0 20px var(--sun-color);
   z-index: 5;
   animation: sun-pulse 3s infinite ease-in-out;
 }
@@ -86,124 +91,83 @@
   border-radius: 50%;
   animation: rotate linear infinite;
 }
-
-.orbit-1 { width: 60px; height: 60px; animation-duration: 4s; }
-.orbit-2 { width: 90px; height: 90px; animation-duration: 7s; animation-direction: reverse; }
+.orbit-1 { width: 50px; height: 50px; animation-duration: 4s; }
+.orbit-2 { width: 80px; height: 80px; animation-duration: 7s; animation-direction: reverse; }
 
 .planet {
   position: absolute;
-  width: 6px; height: 6px;
+  width: 5px; height: 5px;
   background: #fff;
   border-radius: 50%;
   top: 0; left: 50%;
   transform: translateX(-50%);
-  box-shadow: 0 0 10px #fff;
-}
-
-.planet-data {
-  width: 4px; height: 12px;
-  background: var(--sun-color);
-  border-radius: 2px;
+  box-shadow: 0 0 8px #fff;
 }
 
 @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-@keyframes sun-pulse { 0%, 100% { transform: scale(1); opacity: 0.6; } 50% { transform: scale(1.3); opacity: 1; } }
+@keyframes sun-pulse { 0%, 100% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(1.2); opacity: 0.9; } }
 
-/* İçerik Yazıları */
-.card-content {
-  flex: 1;
-  z-index: 10;
-}
+/* İçerik */
+.card-content { flex: 1; position: relative; z-index: 10; }
+.card-title { font-family: 'Space Grotesk'; font-size: 20px; font-weight: 700; color: #fff; margin: 0; }
+.card-desc { font-family: 'Outfit'; font-size: 11px; color: rgba(255,255,255,0.5); line-height: 1.5; margin-top: 5px; max-width: 220px; }
 
-.card-title {
-  font-family: 'Space Grotesk';
-  font-size: 20px;
-  font-weight: 700;
-  color: #fff;
-  margin: 0;
+/* Data Stream */
+.data-stream {
+  position: absolute; right: 20px; top: 15px;
+  font-family: monospace; font-size: 7px;
+  color: var(--sun-color); opacity: 0.5;
+  text-align: right; pointer-events: none;
   letter-spacing: 1px;
 }
 
-.card-desc {
-  font-family: 'Outfit';
-  font-size: 11px;
-  color: rgba(255,255,255,0.5);
-  line-height: 1.5;
-  margin-top: 6px;
-  max-width: 200px;
-}
-
-/* Teknik Veri Sızıntısı */
-.data-stream {
-  position: absolute;
-  right: 20px;
-  top: 20px;
-  font-family: monospace;
-  font-size: 7px;
-  color: var(--sun-color);
-  opacity: 0.4;
-  text-align: right;
-  pointer-events: none;
-}
-
-/* Renk Atamaları */
 .tr-card { --sun-color: var(--blue-sun); }
 .ac-card { --sun-color: var(--green-sun); }
 .hp-card { --sun-color: var(--purple-sun); }
-
-/* Arka plandaki grid hareketi */
-.grid-overlay {
-  position: absolute; inset: 0;
-  background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-                    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
-  background-size: 40px 40px;
-  z-index: 0;
-}
 
 </style>
 </head>
 
 <body>
-<div class="grid-overlay"></div>
 <main id="pageContent">
   <div class="main-hub">
 
     <div class="cyber-card tr-card" onclick="goTranslate()">
-      <div class="data-stream">NEURAL_SYNC: ACTIVE<br>STREAM_LATENCY: 0.01ms<br>BUFFER_CORE: 2126v</div>
+      <div class="data-stream">QUANTUM_VOICE: ON<br>SYNC_STABLE: 99.9%</div>
       <div class="solar-system">
         <div class="sun"></div>
         <div class="orbit orbit-1"><div class="planet"></div></div>
-        <div class="orbit orbit-2"><div class="planet" style="background:var(--blue-sun); width:8px; height:8px;"></div></div>
+        <div class="orbit orbit-2"><div class="planet" style="background:var(--blue-sun);"></div></div>
       </div>
       <div class="card-content">
-        <h2 class="card-title">Translate Pro</h2>
-        <p class="card-desc">FaceToFace teknolojisi ile anlık sesli çeviri, Walkie Talkie modu ve kuantum metin işleme motoru.</p>
+        <h2 class="card-title">Translate</h2>
+        <p class="card-desc">FaceToFace teknolojisi ile anlık sesli çeviri ve kuantum metin işleme.</p>
       </div>
     </div>
 
     <div class="cyber-card ac-card" onclick="goAcademy()">
-      <div class="data-stream">DB_LEARN: CONNECTED<br>USER_PROGRESS: 84%<br>GEN_AI: READY</div>
+      <div class="data-stream">AI_COACH: ONLINE<br>MODULES: READY</div>
       <div class="solar-system">
         <div class="sun"></div>
         <div class="orbit orbit-1"><div class="planet" style="box-shadow: 0 0 10px var(--green-sun);"></div></div>
         <div class="orbit orbit-2"><div class="planet"></div></div>
       </div>
       <div class="card-content">
-        <h2 class="card-title">Dil Akademisi</h2>
-        <p class="card-desc">Seviye tespit sınavları, AI destekli birebir pratik odaları ve oyunlaştırılmış eğitim modülleri.</p>
+        <h2 class="card-title">Akademi</h2>
+        <p class="card-desc">Birebir AI pratik odaları ve oyunlaştırılmış eğitim modülleri.</p>
       </div>
     </div>
 
     <div class="cyber-card hp-card" onclick="goHelper()">
-      <div class="data-stream">LOGIC_UNIT: OVERCLOCKED<br>VISION_SCAN: ENABLED<br>CALC_SPEED: EXAFLOPS</div>
+      <div class="data-stream">SCI_CORE: ACTIVE<br>SCANNER: 8K_RES</div>
       <div class="solar-system">
         <div class="sun"></div>
         <div class="orbit orbit-1"><div class="planet"></div></div>
-        <div class="orbit orbit-2"><div class="planet" style="background:var(--purple-sun); height:4px; width:10px; border-radius:2px;"></div></div>
+        <div class="orbit orbit-2"><div class="planet" style="background:var(--purple-sun);"></div></div>
       </div>
       <div class="card-content">
-        <h2 class="card-title">AI Co-Pilot</h2>
-        <p class="card-desc">Soru tarama özelliği ile Matematik, Fizik ve Kimya problemlerini saniyeler içinde çözen bilim koçu.</p>
+        <h2 class="card-title">Co-Pilot</h2>
+        <p class="card-desc">Matematik ve Fen problemlerini saniyeler içinde çözen bilim koçu.</p>
       </div>
     </div>
 
