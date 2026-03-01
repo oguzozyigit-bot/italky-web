@@ -1,309 +1,442 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-<title>italkyAI • Offline Terminal</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>italkyAI • Offline Terminal</title>
 
-<meta name="theme-color" content="#000000">
-<style>
-html,body{
-  background:#000 !important;
-  margin:0;
-  padding:0;
-  overflow-x:hidden;
-  font-family:'Outfit', sans-serif;
-}
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=Space+Grotesk:wght@700&display=swap');
-</style>
+  <meta name="theme-color" content="#02000f">
+  <style>html,body{background:#02000f !important;}</style>
 
-<style>
-:root{
-  --glass: rgba(255,255,255,0.04);
-  --glass-border: rgba(255,255,255,0.10);
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
-  --dl-grad: linear-gradient(135deg,#6366f1 0%,#8b5cf6 45%,#ec4899 100%);
-  --dl-glow: rgba(139,92,246,.35);
+  <style>
+    :root{
+      --aiGrad: linear-gradient(135deg,#a5b4fc 0%,#6366f1 45%,#ec4899 100%);
+      --border: rgba(255,255,255,0.12);
+      --glass: rgba(255,255,255,0.04);
+      --muted: rgba(255,255,255,0.68);
 
-  /* ✅ Soft Mint Green */
-  --mint-grad: linear-gradient(135deg,#34d399 0%,#10b981 100%);
-  --mint-glow: rgba(16,185,129,.25);
-}
+      /* milenyum “download” tonu (kırmızı yok) */
+      --dlGrad: linear-gradient(135deg, rgba(0,243,255,.92) 0%, rgba(99,102,241,.92) 55%, rgba(236,72,153,.70) 100%);
+      --dlBorder: rgba(0,243,255,0.28);
 
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none;}
+      /* soft yeşil (göz yormaz) */
+      --okGrad: linear-gradient(135deg, rgba(34,197,94,.18) 0%, rgba(16,185,129,.14) 60%, rgba(255,255,255,.06) 100%);
+      --okBorder: rgba(34,197,94,0.30);
+      --okText: rgba(210,255,230,0.92);
 
-#pageContent{
-  height:100%;
-  display:flex;
-  flex-direction:column;
-  background: radial-gradient(circle at 50% 20%, #0a0a25 0%, #000 100%);
-}
+      --warn: rgba(245,158,11,.95);
+      --shadow: 0 18px 50px rgba(0,0,0,0.35);
+    }
 
-.main-wrap{
-  flex:1;
-  max-width:520px;
-  margin:0 auto;
+    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; }
 
-  /* ✅ Alt bar payı optimize */
-  padding:
-    10px
-    14px
-    calc(var(--footerH,92px) + env(safe-area-inset-bottom) - 6px);
+    /* ui_shell main içine taşınacak */
+    #pageContent{
+      height:100%;
+    }
 
-  display:flex;
-  flex-direction:column;
-  gap:6px; /* daha sık */
-}
+    .wrap{
+      max-width: 520px;
+      margin: 0 auto;
+      height:100%;
+      display:flex;
+      flex-direction:column;
+      gap: 8px;
 
-/* Top info */
-.stats-hub{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  background:var(--glass);
-  border:1px solid var(--glass-border);
-  border-radius:14px;
-  padding:8px 12px;
-  backdrop-filter:blur(16px);
-}
-.stat-item{
-  font-size:11px;
-  font-weight:900;
-  color:rgba(255,255,255,.45);
-}
-.stat-item span{
-  color:#fff;
-  margin-left:6px;
-}
+      /* ✅ kenarlar yakın (çok uzak değil) */
+      padding: 10px 10px calc(var(--footerH, 92px) + env(safe-area-inset-bottom) + 6px);
+    }
 
-/* Header */
-.hero{
-  text-align:center;
-  padding:4px 0;
-}
-.hero h1{
-  font-family:'Space Grotesk';
-  font-size:18px;
-  font-weight:1000;
-  margin:0;
-}
-.hero p{
-  font-size:11px;
-  color:rgba(255,255,255,.55);
-  margin-top:4px;
-  font-weight:800;
-  line-height:1.35;
-}
+    .topRow{
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.03);
+      border-radius: 18px;
+      padding: 10px 12px;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .topRow .k{
+      font-size: 11px;
+      font-weight: 1000;
+      letter-spacing: .6px;
+      color: rgba(255,255,255,0.58);
+      text-transform: uppercase;
+      white-space:nowrap;
+    }
+    .topRow .v{
+      font-size: 12px;
+      font-weight: 1000;
+      color:#fff;
+      white-space:nowrap;
+    }
 
-/* Native language */
-.nativeBox{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:8px;
-  padding:8px 10px;
-  border-radius:14px;
-  border:1px solid var(--glass-border);
-  background:var(--glass);
-  backdrop-filter:blur(14px);
-}
-.nativeSel{
-  height:36px;
-  border-radius:10px;
-  border:1px solid var(--glass-border);
-  background:rgba(0,0,0,.25);
-  color:#fff;
-  font-weight:1000;
-  padding:0 8px;
-}
+    .hero{
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.03);
+      border-radius: 20px;
+      padding: 10px 12px;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+    .hero h1{
+      margin:0;
+      font-family:"Space Grotesk",system-ui,sans-serif;
+      font-size: 16px;
+      font-weight: 1000;
+      letter-spacing: -.2px;
+      color:#fff;
+    }
+    .hero p{
+      margin:6px 0 0;
+      font-size: 12px;
+      font-weight: 900;
+      line-height: 1.45;
+      color: var(--muted);
+    }
+    .hero p b{ color:#fff; }
 
-/* List */
-#langList{
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-}
+    /* list */
+    #langList{
+      flex:1;
+      min-height:0;
+      display:flex;
+      flex-direction:column;
 
-/* Cards */
-.lang-card{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:10px 12px;
-  border-radius:16px;
-  border:1px solid var(--glass-border);
-  background:var(--glass);
-  backdrop-filter:blur(14px);
-  min-height:56px;
-}
+      /* ✅ alt boşluk sorunu: gap’i küçük tut */
+      gap: 8px;
 
-.lang-info{
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
-.lang-flag{
-  font-size:20px;
-}
-.lang-title{
-  font-size:14px;
-  font-weight:1000;
-}
-.lang-status{
-  font-size:10px;
-  font-weight:800;
-  color:rgba(255,255,255,.55);
-}
+      /* ✅ scroll yok / var: shellMain auto; sayfa taşarsa scroll olabilir */
+    }
 
-/* ✅ Download button */
-.btn-dl{
-  width:140px; /* genişletildi */
-  height:40px;
-  border-radius:14px;
-  border:none;
-  background:var(--dl-grad);
-  color:#fff;
-  font-weight:1000;
-  font-size:12px;
-  cursor:pointer;
+    .langCard{
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.03);
+      border-radius: 22px;
+      padding: 12px 12px;
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      box-shadow: var(--shadow);
+    }
 
-  box-shadow:
-    0 8px 20px var(--dl-glow),
-    inset 0 2px 4px rgba(255,255,255,.25),
-    inset 0 -2px 6px rgba(0,0,0,.25);
+    .left{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      min-width:0;
+    }
+    .flag{
+      width: 42px;
+      height: 42px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.20);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size: 22px;
+      flex: 0 0 auto;
+      filter: drop-shadow(0 10px 18px rgba(0,0,0,0.25));
+    }
+    .meta{
+      min-width:0;
+      display:flex;
+      flex-direction:column;
+      gap: 2px;
+    }
+    .name{
+      font-size: 15px;
+      font-weight: 1000;
+      color:#fff;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .status{
+      font-size: 11px;
+      font-weight: 900;
+      color: rgba(255,255,255,0.62);
+      display:flex;
+      align-items:center;
+      gap: 6px;
+      white-space:nowrap;
+    }
+    .dot{
+      width:7px;height:7px;
+      border-radius: 99px;
+      background: rgba(255,255,255,0.25);
+      box-shadow: 0 0 12px rgba(255,255,255,0.12);
+      flex: 0 0 auto;
+    }
+    .dot.ok{ background: rgba(34,197,94,.95); box-shadow: 0 0 12px rgba(34,197,94,.35); }
+    .dot.exp{ background: rgba(245,158,11,.95); box-shadow: 0 0 12px rgba(245,158,11,.35); }
 
-  transition:.2s ease;
-}
-.btn-dl:active{
-  transform:translateY(1px) scale(.98);
-  filter:brightness(1.05);
-}
+    /* ✅ BUTTON: geniş ama taşmaz */
+    .btnDL{
+      height: 44px;
+      min-width: 148px;
+      padding: 0 14px;
+      border-radius: 18px;
+      border: 1px solid var(--dlBorder);
+      background: rgba(0,0,0,0.18);
+      color:#fff;
+      font-weight: 1000;
+      font-size: 13px;
+      cursor:pointer;
+      user-select:none;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap: 8px;
+      position:relative;
+      overflow:hidden;
+      flex: 0 0 auto;
+    }
+    .btnDL::before{
+      content:"";
+      position:absolute;
+      inset:-2px;
+      background: var(--dlGrad);
+      opacity: .22;
+      filter: blur(0px);
+      transform: translateX(-120%);
+      animation: sheen 2.6s ease-in-out infinite;
+      pointer-events:none;
+    }
+    @keyframes sheen{
+      0%{ transform: translateX(-120%); opacity:.05; }
+      45%{ opacity:.22; }
+      60%{ transform: translateX(120%); opacity:.18; }
+      100%{ transform: translateX(120%); opacity:.05; }
+    }
+    .btnDL:active{ transform: scale(.99); }
 
-/* ✅ Soft Mint after download */
-.btn-owned{
-  background:var(--mint-grad);
-  box-shadow:
-    0 6px 16px var(--mint-glow),
-    inset 0 2px 4px rgba(255,255,255,.25),
-    inset 0 -2px 6px rgba(0,0,0,.25);
-  cursor:default;
-}
+    .btnDL.disabled{
+      opacity:.55;
+      cursor:not-allowed;
+    }
 
-.toast{
-  position:fixed;
-  left:50%;
-  top:20px;
-  transform:translateX(-50%) translateY(-100px);
-  background:rgba(10,10,20,.92);
-  border:1px solid var(--glass-border);
-  padding:8px 14px;
-  border-radius:999px;
-  font-size:12px;
-  font-weight:1000;
-  opacity:0;
-  transition:.25s;
-}
-.toast.show{
-  transform:translateX(-50%) translateY(0);
-  opacity:1;
-}
-</style>
+    .btnDL.done{
+      border: 1px solid var(--okBorder);
+      background: var(--okGrad);
+      color: var(--okText);
+    }
+    .btnDL.done::before{ display:none; }
+
+    .btnDL .ico{ position:relative; z-index:2; }
+    .btnDL .txt{ position:relative; z-index:2; }
+
+    .toast{
+      position: fixed;
+      left:50%;
+      top:18px;
+      transform: translateX(-50%) translateY(-120px);
+      background: rgba(10,10,18,0.95);
+      border: 1px solid rgba(165,180,252,0.35);
+      padding: 10px 14px;
+      border-radius: 999px;
+      color:#fff;
+      z-index: 999999;
+      font-weight: 1000;
+      font-size: 12px;
+      transition: .25s;
+      backdrop-filter: blur(12px);
+      pointer-events:none;
+      max-width: min(92vw, 520px);
+      text-align:center;
+    }
+    .toast.show{ transform: translateX(-50%) translateY(0); }
+
+    @media (max-height: 740px){
+      .wrap{ padding: 8px 10px calc(var(--footerH,92px) + env(safe-area-inset-bottom) + 6px); }
+      .langCard{ padding: 10px 10px; }
+      .btnDL{ min-width: 140px; height: 42px; border-radius: 16px; }
+      .flag{ width:40px;height:40px;border-radius:15px; }
+      .name{ font-size: 14px; }
+    }
+  </style>
 </head>
 
 <body>
-<main id="pageContent">
-<div class="main-wrap">
+  <main id="pageContent">
+    <div class="wrap">
 
-<section class="stats-hub">
-  <div class="stat-item">SÜRE<span>365 Gün</span></div>
-  <div class="stat-item">ÜCRET<span>50 Jeton</span></div>
-</section>
-
-<header class="hero">
-  <h1>Offline Terminal</h1>
-  <p>Dili bir kez indir, internet olmadan çift yönlü çeviri kullan.</p>
-</header>
-
-<section class="nativeBox">
-  <div style="font-size:11px;font-weight:1000;color:rgba(255,255,255,.65);">
-    Senin Dilin
-  </div>
-  <select class="nativeSel" id="nativeSel">
-    <option value="tr">🇹🇷 Türkçe</option>
-    <option value="en">🇬🇧 İngilizce</option>
-    <option value="de">🇩🇪 Almanca</option>
-    <option value="fr">🇫🇷 Fransızca</option>
-    <option value="it">🇮🇹 İtalyanca</option>
-    <option value="es">🇪🇸 İspanyolca</option>
-  </select>
-</section>
-
-<div id="langList"></div>
-
-</div>
-</main>
-
-<div class="toast" id="toast"></div>
-
-<script type="module">
-const $=id=>document.getElementById(id);
-const toastEl=$("toast");
-
-function toast(m){
-  toastEl.textContent=m;
-  toastEl.classList.add("show");
-  setTimeout(()=>toastEl.classList.remove("show"),1800);
-}
-
-const LANGS=[
- {code:"en",name:"İngilizce",flag:"🇬🇧"},
- {code:"de",name:"Almanca",flag:"🇩🇪"},
- {code:"tr",name:"Türkçe",flag:"🇹🇷"},
- {code:"fr",name:"Fransızca",flag:"🇫🇷"},
- {code:"it",name:"İtalyanca",flag:"🇮🇹"},
- {code:"es",name:"İspanyolca",flag:"🇪🇸"}
-];
-
-let native=$("nativeSel").value;
-
-$("nativeSel").addEventListener("change",e=>{
-  native=e.target.value;
-  render();
-});
-
-function render(){
-  const list=$("langList");
-  list.innerHTML="";
-  LANGS.filter(l=>l.code!==native).forEach(lang=>{
-    const card=document.createElement("div");
-    card.className="lang-card";
-
-    card.innerHTML=`
-      <div class="lang-info">
-        <div class="lang-flag">${lang.flag}</div>
-        <div>
-          <div class="lang-title">${lang.name}</div>
-          <div class="lang-status">Hazır</div>
-        </div>
+      <div class="topRow">
+        <div class="k">Paket Süresi</div>
+        <div class="v">365 Gün</div>
       </div>
-    `;
 
-    const btn=document.createElement("button");
-    btn.className="btn-dl";
-    btn.textContent="⬇ İndir";
+      <section class="hero">
+        <h1>Offline Terminal</h1>
+        <p>
+          Online iken indir, sonra internetsiz kullan.<br/>
+          Seçtiğin dile göre sistem <b>iki yön</b> paketi (TR↔Dil) otomatik hazırlar.
+        </p>
+      </section>
 
-    btn.onclick=()=>{
-      btn.textContent="İndirildi";
-      btn.classList.add("btn-owned");
-      btn.disabled=true;
-      toast(`${lang.name} Paketi Aktif ✅`);
-    };
+      <div id="langList"></div>
 
-    card.appendChild(btn);
-    list.appendChild(card);
-  });
-}
-render();
-</script>
+    </div>
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <script type="module">
+    import { mountShell, setHeaderTokens } from "/js/ui_shell.js";
+    import { supabase } from "/js/supabase_client.js";
+    mountShell({ scroll:"auto" });
+
+    const $ = (id)=>document.getElementById(id);
+    const toastEl = $("toast");
+    const list = $("langList");
+
+    function toast(msg){
+      toastEl.textContent = String(msg||"");
+      toastEl.classList.add("show");
+      clearTimeout(window.__to);
+      window.__to = setTimeout(()=>toastEl.classList.remove("show"), 1900);
+    }
+
+    const LANGS = [
+      { code:"tr", name:"Türkçe",    flag:"🇹🇷" },
+      { code:"en", name:"İngilizce", flag:"🇬🇧" },
+      { code:"de", name:"Almanca",   flag:"🇩🇪" },
+      { code:"fr", name:"Fransızca", flag:"🇫🇷" },
+      { code:"it", name:"İtalyanca", flag:"🇮🇹" },
+      { code:"es", name:"İspanyolca",flag:"🇪🇸" },
+    ];
+
+    const FEE = 50;
+    const DAYS = 365;
+
+    const { data:{ session } } = await supabase.auth.getSession();
+    if(!session?.user){
+      location.replace("/pages/login.html");
+      throw new Error("no session");
+    }
+    const userId = session.user.id;
+
+    function daysLeft(expiresAt){
+      try{
+        const ms = new Date(expiresAt).getTime() - Date.now();
+        return Math.ceil(ms / (1000*60*60*24));
+      }catch{ return 0; }
+    }
+
+    async function fetchState(){
+      const [{ data: prof }, { data: packs }] = await Promise.all([
+        supabase.from("profiles").select("tokens").eq("id", userId).maybeSingle(),
+        supabase.from("offline_packs").select("lang_code, expires_at").eq("user_id", userId)
+      ]);
+      return { tokens: Number(prof?.tokens ?? 0), packs: Array.isArray(packs)?packs:[] };
+    }
+
+    function packStatus(packs, code){
+      const p = packs.find(x=>String(x.lang_code||"").toLowerCase() === String(code||"").toLowerCase());
+      if(!p) return { state:"none", left:0 };
+      const left = daysLeft(p.expires_at);
+      if(left > 0) return { state:"active", left };
+      return { state:"expired", left:0 };
+    }
+
+    function btnLabel(state, tokensOk){
+      if(state === "active") return { text:"İndirildi", mode:"done", ico:"✓" };
+      if(state === "expired") return { text:"Yenile", mode: tokensOk ? "buy" : "disabled", ico:"⭮" };
+      return { text:"İndir", mode: tokensOk ? "buy" : "disabled", ico:"↓" };
+    }
+
+    async function purchase(langCode){
+      // Not: RPC senin tarafında: purchase_offline_pack(p_lang_code,p_days,p_fee)
+      return await supabase.rpc("purchase_offline_pack", {
+        p_lang_code: langCode,
+        p_days: DAYS,
+        p_fee: FEE
+      });
+    }
+
+    async function render(){
+      const { tokens, packs } = await fetchState();
+      try{ setHeaderTokens(tokens); }catch{}
+
+      list.innerHTML = "";
+
+      LANGS.forEach(l=>{
+        const st = packStatus(packs, l.code);
+        const tokensOk = tokens >= FEE;
+
+        const card = document.createElement("div");
+        card.className = "langCard";
+
+        const left = document.createElement("div");
+        left.className = "left";
+        left.innerHTML = `
+          <div class="flag">${l.flag}</div>
+          <div class="meta">
+            <div class="name">${l.name}</div>
+            <div class="status">
+              <span class="dot ${st.state==="active"?"ok":(st.state==="expired"?"exp":"")}" ></span>
+              ${st.state==="active" ? `Aktif • ${st.left} gün` : (st.state==="expired" ? "Süresi doldu" : "Hazır değil")}
+            </div>
+          </div>
+        `;
+
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "btnDL";
+
+        const lbl = btnLabel(st.state, tokensOk);
+        if(lbl.mode === "done"){
+          btn.classList.add("done");
+          btn.disabled = true;
+        }else if(lbl.mode === "disabled"){
+          btn.classList.add("disabled");
+          btn.disabled = false; // tıklayınca profile yönlendireceğiz
+        }
+
+        btn.innerHTML = `<span class="ico">${lbl.ico}</span><span class="txt">${lbl.text}</span>`;
+
+        btn.onclick = async ()=>{
+          if(lbl.mode === "done") return;
+
+          if(!tokensOk && st.state !== "active"){
+            toast("Jeton yetersiz. Profil’e yönlendiriyorum.");
+            setTimeout(()=>location.href="/pages/profile.html", 650);
+            return;
+          }
+
+          btn.disabled = true;
+          btn.classList.remove("disabled");
+          btn.innerHTML = `<span class="ico">⏳</span><span class="txt">İşleniyor</span>`;
+
+          const { error } = await purchase(l.code);
+          if(error){
+            toast("Hata: " + (error.message || "Satın alma başarısız"));
+            await render();
+            return;
+          }
+
+          toast(`${l.name} paketi aktif ✅`);
+          await render();
+        };
+
+        card.appendChild(left);
+        card.appendChild(btn);
+        list.appendChild(card);
+      });
+    }
+
+    render();
+  </script>
 </body>
 </html>
