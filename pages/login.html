@@ -77,7 +77,6 @@
       color: rgba(255,255,255,.35);
     }
 
-    /* 🌍 Dünya */
     .world-container{
       position:relative;
       width: 290px;
@@ -142,7 +141,6 @@
       to{ transform: rotateY(360deg); }
     }
 
-    /* ✅ Ön yüz ITALKY, arka yüz AI — aynalama yok */
     .ai-stamp{
       position:absolute;
       inset:0;
@@ -172,7 +170,6 @@
       z-index: 3;
     }
 
-    /* Daktilo */
     .typewriter-container{
       height: 44px;
       margin-top: 6px;
@@ -304,7 +301,6 @@
 
     <div class="world-container" aria-hidden="true">
       <div class="earth-glow"></div>
-
       <div class="earth">
         <div class="ai-stamp ai-front">ITALKY</div>
         <div class="ai-stamp ai-back">AI</div>
@@ -351,6 +347,7 @@
     const CALLBACK = "/pages/auth_callback.html";
     const SETUP_OFFLINE = "/pages/setup_offline.html";
 
+    // ✅ first boot flag (setup tamamlandı mı)
     const FIRST_BOOT_KEY = "italky_first_boot_done_v1";
 
     function toast(msg){
@@ -365,13 +362,41 @@
       return !!(window.Native && typeof window.Native.startGoogleLogin === "function");
     }
 
-    function goPostLogin(){
-      // ✅ ilk kurulum offline setup
-      if(localStorage.getItem(FIRST_BOOT_KEY) !== "1"){
+    // ✅ Post-login routing (tek merkez)
+    async function routeAfterLogin(session){
+      try{
+        // cache user (tokens, pic vs)
+        await ensureAuthAndCacheUser();
+
+        // setup tamamlanmışsa direkt home
+        if(localStorage.getItem(FIRST_BOOT_KEY) === "1"){
+          location.replace(HOME);
+          return;
+        }
+
+        // DB’de base_lang var mı kontrol et (setup yapılmış say)
+        const { data: prof } = await supabase
+          .from("profiles")
+          .select("base_lang")
+          .eq("id", session.user.id)
+          .maybeSingle();
+
+        const base = String(prof?.base_lang || "").trim().toLowerCase();
+        if(base){
+          // base_lang doluysa setup bitmiş kabul ediyoruz
+          localStorage.setItem(FIRST_BOOT_KEY, "1");
+          location.replace(HOME);
+          return;
+        }
+
+        // ✅ base_lang yok -> setup'a
         location.replace(SETUP_OFFLINE);
-        return;
+
+      }catch(e){
+        console.error(e);
+        // hata olursa yine de home'a atma; setup'a götür
+        location.replace(SETUP_OFFLINE);
       }
-      location.replace(HOME);
     }
 
     // ✅ Web OAuth dönüşü login’e geldiyse: callback sayfasına TEK SEFERDE geçir
@@ -406,9 +431,14 @@
           return;
         }
 
-        await ensureAuthAndCacheUser();
+        const { data:{ session } } = await supabase.auth.getSession();
+        if(!session){
+          toast("Oturum bulunamadı.");
+          return;
+        }
+
         toast("Hoş geldin!");
-        setTimeout(()=>goPostLogin(), 450);
+        setTimeout(()=>routeAfterLogin(session), 350);
 
       }catch(e){
         console.error(e);
@@ -455,30 +485,13 @@
     }, 5600);
 
     // ✅ Session varsa direkt post-login akışı
-    // ✅ Session varsa: base_lang kontrol → kuruluma yönlendir
-(async function boot(){
-  try{
-    const { data:{ session } } = await supabase.auth.getSession();
-    if(!session) return;
-
-    await ensureAuthAndCacheUser();
-
-    const { data: prof } = await supabase
-      .from("profiles")
-      .select("base_lang")
-      .eq("id", session.user.id)
-      .maybeSingle();
-
-    const base = String(prof?.base_lang || "").trim().toLowerCase();
-
-    if(!base){
-      location.replace("/pages/setup_offline.html");
-      return;
-    }
-
-    location.replace(HOME);
-  }catch(_e){}
-})();
+    (async function boot(){
+      try{
+        const { data:{ session } } = await supabase.auth.getSession();
+        if(!session) return;
+        await routeAfterLogin(session);
+      }catch(_e){}
+    })();
   </script>
 </body>
 </html>
