@@ -1,502 +1,261 @@
-<!-- FILE: /pages/text_translate.html -->
 <!doctype html>
 <html lang="tr">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-  <title>italkyAI • Metinden Çeviri</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+<title>italkyAI • Quantum Translate</title>
 
-  <meta name="theme-color" content="#02000f">
-  <style>html,body{background:#02000f !important;}</style>
+<meta name="theme-color" content="#000000">
+<style>
+  html,body{background:#000 !important; margin:0; padding:0; overflow:hidden; font-family:'Outfit', sans-serif;}
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=Space+Grotesk:wght@700&display=swap');
+</style>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ai-grad: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
+  --blue: #60a5fa;
+  --glass: rgba(255, 255, 255, 0.03);
+  --glass-border: rgba(255, 255, 255, 0.12);
+}
 
-  <style>
-    :root{
-      --border: rgba(255,255,255,0.12);
-      --glass: rgba(255,255,255,0.04);
-      --muted: rgba(255,255,255,0.70);
-      --aiGrad: linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
-      --ok: rgba(34,197,94,0.95);
-      --bad: rgba(255,90,140,0.95);
-      --warn: rgba(245,158,11,0.95);
-    }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
 
-    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; }
-    #pageContent{ height:100%; }
+#pageContent {
+  height: 100vh;
+  display: flex; flex-direction: column;
+  padding-top: calc(env(safe-area-inset-top) + 40px);
+  padding-bottom: calc(env(safe-area-inset-bottom) + 85px);
+  background: radial-gradient(circle at 50% 20%, #0a0a20 0%, #000 100%);
+}
 
-    .wrap{
-      max-width: 560px;
-      margin: 0 auto;
-      height: 100%;
-      padding: 12px 14px;
-      display:flex;
-      flex-direction:column;
-      gap: 10px;
-    }
+.main-wrap {
+  flex: 1;
+  display: flex; flex-direction: column;
+  padding: 14px;
+  gap: 12px;
+}
 
-    .hero{
-      border:1px solid var(--border);
-      background: rgba(255,255,255,0.03);
-      border-radius: 22px;
-      padding: 12px 14px;
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-    }
-    .heroTop{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
-    .hTitle{
-      margin:0;
-      font-family:"Space Grotesk",system-ui,sans-serif;
-      font-weight:1000;
-      font-size: 16px;
-      letter-spacing: -.2px;
-      color:#fff;
-    }
-    .pill{
-      padding: 7px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(0,0,0,0.18);
-      font-weight: 1000;
-      font-size: 12px;
-      color: rgba(255,255,255,0.90);
-      white-space: nowrap;
-    }
-    .heroText{
-      margin: 6px 0 0;
-      font-size: 12px;
-      font-weight: 900;
-      color: var(--muted);
-      line-height: 1.55;
-    }
+/* ===== 1. DİL SEÇİCİ (FLOAT PANEL) ===== */
+.lang-hub {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 24px;
+  padding: 8px 16px;
+  backdrop-filter: blur(20px);
+}
 
-    .grid{
-      flex:1;
-      min-height:0;
-      display:grid;
-      grid-template-columns: 1fr;
-      gap:10px;
-    }
+.select-box {
+  background: transparent; border: none; color: #fff;
+  font-family: 'Space Grotesk'; font-size: 14px; font-weight: 700;
+  cursor: pointer; appearance: none; text-align: center;
+}
 
-    .card{
-      border:1px solid var(--border);
-      background: var(--glass);
-      border-radius: 22px;
-      padding: 12px;
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      overflow:hidden;
-    }
+.swap-trigger {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);
+  color: #fff; display: flex; align-items: center; justify-content: center;
+  transition: 0.3s;
+}
+.swap-trigger:active { transform: rotate(180deg) scale(0.9); }
 
-    .row{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      flex-wrap:wrap;
-    }
+/* ===== 2. QUANTUM GATE (GİRİŞ & ÇIKIŞ) ===== */
+.quantum-gate {
+  flex: 1;
+  display: flex; flex-direction: column;
+  gap: 4px;
+}
 
-    .select{
-      flex:1;
-      min-width: 140px;
-      height: 44px;
-      border-radius: 16px;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(0,0,0,0.18);
-      color:#fff;
-      font-weight: 1000;
-      padding: 0 10px;
-    }
+.gate-panel {
+  flex: 1;
+  position: relative;
+  border-radius: 30px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255,255,255,0.02);
+  display: flex; flex-direction: column;
+  padding: 20px;
+  overflow: hidden;
+}
 
-    .swap{
-      width: 44px;
-      height: 44px;
-      border-radius: 16px;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(255,255,255,0.06);
-      color:#fff;
-      font-weight: 1000;
-      cursor:pointer;
-      user-select:none;
-    }
-    .swap:active{ transform: scale(.98); }
+textarea {
+  flex: 1; background: transparent; border: none;
+  color: #fff; font-size: 18px; font-weight: 300;
+  line-height: 1.5; resize: none; width: 100%;
+}
 
-    textarea{
-      width:100%;
-      min-height: 140px;
-      border-radius: 18px;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(0,0,0,0.18);
-      color:#fff;
-      font-weight: 900;
-      padding: 12px;
-      line-height: 1.45;
-      resize: vertical;
-    }
+.output-area {
+  flex: 1; color: #a5b4fc; font-size: 18px;
+  font-weight: 600; line-height: 1.5; overflow-y: auto;
+  white-space: pre-wrap;
+}
 
-    .out{
-      border-radius: 18px;
-      border: 1px solid rgba(255,255,255,0.10);
-      background: rgba(0,0,0,0.18);
-      padding: 12px;
-      color: rgba(255,255,255,0.90);
-      font-weight: 900;
-      line-height: 1.55;
-      white-space: pre-wrap;
-      min-height: 120px;
-    }
+/* Veri Akışı Çizgisi */
+.gate-divider {
+  height: 2px; width: 100%;
+  background: var(--ai-grad);
+  position: relative;
+  box-shadow: 0 0 15px #6366f1;
+}
+.gate-divider::after {
+  content: "⚡"; position: absolute; left: 50%; top: 50%;
+  transform: translate(-50%, -50%); font-size: 10px;
+}
 
-    .btnRow{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-top: 10px;
-    }
+/* ===== 3. ACTION BAR (FOTO & ÇEVİR) ===== */
+.action-bar {
+  display: flex; gap: 10px; align-items: center;
+}
 
-    .btn{
-      flex:1;
-      min-width: 160px;
-      height: 52px;
-      border-radius: 18px;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(255,255,255,0.06);
-      color:#fff;
-      font-weight: 1000;
-      cursor:pointer;
-      user-select:none;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:10px;
-    }
-    .btn:active{ transform: scale(.99); }
-    .btnMain{
-      border:none;
-      background:#fff;
-      color:#000;
-    }
+.btn-scan {
+  flex: 1; height: 60px; border-radius: 20px;
+  border: 1px dashed var(--blue);
+  background: rgba(96, 165, 250, 0.05);
+  color: var(--blue); display: flex; align-items: center;
+  justify-content: center; gap: 10px; font-weight: 900;
+  cursor: pointer; position: relative; overflow: hidden;
+}
 
-    .file{
-      width:100%;
-      height: 52px;
-      border-radius: 18px;
-      border: 1px dashed rgba(255,255,255,0.22);
-      background: rgba(0,0,0,0.18);
-      color:#fff;
-      font-weight: 900;
-      padding: 12px;
-    }
+.btn-main {
+  width: 80px; height: 60px; border-radius: 20px;
+  background: #fff; color: #000; border: none;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 900; cursor: pointer;
+}
 
-    .status{
-      margin-top: 8px;
-      font-size: 12px;
-      font-weight: 900;
-      color: rgba(255,255,255,0.72);
-      line-height: 1.45;
-    }
-    .status.ok{ color: var(--ok); }
-    .status.bad{ color: var(--bad); }
-    .status.warn{ color: var(--warn); }
+/* Scan Line Animation */
+.scan-line {
+  position: absolute; top: 0; left: 0; width: 100%; height: 2px;
+  background: var(--blue); box-shadow: 0 0 15px var(--blue);
+  animation: scanning 3s linear infinite; opacity: 0.5;
+}
+@keyframes scanning { 0% { top: 0; } 100% { top: 100%; } }
 
-    .toast{
-      position: fixed;
-      left:50%;
-      top:18px;
-      transform: translateX(-50%) translateY(-120px);
-      background: rgba(10,10,18,0.95);
-      border: 1px solid rgba(165,180,252,0.35);
-      padding: 10px 14px;
-      border-radius: 999px;
-      color:#fff;
-      z-index: 999999;
-      font-weight: 1000;
-      font-size: 12px;
-      transition: .25s;
-      backdrop-filter: blur(12px);
-      pointer-events:none;
-      max-width: min(92vw, 520px);
-      text-align:center;
-    }
-    .toast.show{ transform: translateX(-50%) translateY(0); }
-  </style>
+</style>
 </head>
 
 <body>
 <main id="pageContent">
-  <div class="wrap">
+  <div class="main-wrap">
 
-    <section class="hero">
-      <div class="heroTop">
-        <h1 class="hTitle">Metinden Çeviri</h1>
-        <div class="pill">OCR + Translate</div>
+    <section class="lang-hub">
+      <select class="select-box" id="fromSel"></select>
+      <button class="swap-trigger" id="btnSwap">⇄</button>
+      <select class="select-box" id="toSel"></select>
+    </section>
+
+    <section class="quantum-gate">
+      <div class="gate-panel">
+        <textarea id="srcTxt" placeholder="Buraya yazın veya taratın..."></textarea>
       </div>
-      <div class="heroText">
-        Metin yapıştır → çevir. <br/>
-        Ya da fotoğraf seç → metne dök → otomatik çevir.
+      
+      <div class="gate-divider"></div>
+
+      <div class="gate-panel" style="background: rgba(99, 102, 241, 0.03);">
+        <div class="output-area" id="dstTxt">Çeviri burada görünecek...</div>
       </div>
     </section>
 
-    <section class="card">
-      <div class="row">
-        <select class="select" id="fromSel" aria-label="Kaynak dil"></select>
-        <button class="swap" id="btnSwap" type="button" title="Dilleri değiştir">⇄</button>
-        <select class="select" id="toSel" aria-label="Hedef dil"></select>
-      </div>
-      <div class="status" id="langHint" style="margin-top:8px;">Kaynak ve hedef dili seç.</div>
-    </section>
-
-    <section class="grid">
-      <section class="card">
-        <div style="font-weight:1000; margin-bottom:8px;">Metin</div>
-        <textarea id="srcTxt" placeholder="Buraya metni yapıştır..."></textarea>
-
-        <div class="btnRow">
-          <button class="btn btnMain" id="btnTranslate" type="button">Çevir</button>
-          <button class="btn" id="btnClear" type="button">Temizle</button>
-        </div>
-
-        <div class="status" id="txtStatus">Hazır</div>
-      </section>
-
-      <section class="card">
-        <div style="font-weight:1000; margin-bottom:8px;">Fotoğraftan Çeviri</div>
-        <input class="file" id="imgFile" type="file" accept="image/*" capture="environment" />
-        <div class="btnRow">
-          <button class="btn btnMain" id="btnOcrTranslate" type="button">Fotoğraftan Çevir</button>
-          <button class="btn" id="btnUseText" type="button">Metni Yukarı Al</button>
-        </div>
-        <div class="status warn" id="ocrNote">
-          Fotoğraf seç → “Fotoğraftan Çevir”.
-        </div>
-      </section>
-
-      <section class="card">
-        <div style="font-weight:1000; margin-bottom:8px;">Çeviri</div>
-        <div class="out" id="dstTxt">—</div>
-        <div class="status" id="outStatus">—</div>
-      </section>
+    <section class="action-bar">
+      <label class="btn-scan">
+        <div class="scan-line"></div>
+        <input type="file" id="imgFile" accept="image/*" capture="environment" style="display:none">
+        <span>📷 FOTOĞRAF TARAT</span>
+      </label>
+      
+      <button class="btn-main" id="btnTranslate">
+        GO
+      </button>
     </section>
 
   </div>
 </main>
 
-<div class="toast" id="toast"></div>
-
 <script type="module">
   import { mountShell } from "/js/ui_shell.js";
-  mountShell({ scroll:"auto" });
+  mountShell({ scroll:"none" });
 
   const API_BASE = "https://italky-api.onrender.com";
-
   const $ = (id)=>document.getElementById(id);
 
-  const fromSel = $("fromSel");
-  const toSel   = $("toSel");
-  const srcTxt  = $("srcTxt");
-  const dstTxt  = $("dstTxt");
-
-  const txtStatus = $("txtStatus");
-  const outStatus = $("outStatus");
-  const langHint  = $("langHint");
-
-  const imgFile = $("imgFile");
-
-  let lastOcrText = "";
-  let lastTranslated = "";
-
-  function toast(msg){
-    const t = $("toast");
-    t.textContent = String(msg||"");
-    t.classList.add("show");
-    clearTimeout(window.__to);
-    window.__to = setTimeout(()=>t.classList.remove("show"), 1700);
-  }
-
-  // ✅ Translate modülü: çok dil (mümkün olduğunca)
-  // (Backend destekliyorsa çalışır; desteklemiyorsa yine hata döner ama UI hazır.)
   const LANGS = [
-    { code:"auto", name:"Auto Detect" },
-    { code:"tr", name:"Türkçe" },
-    { code:"en", name:"English" },
-    { code:"de", name:"Deutsch" },
-    { code:"fr", name:"Français" },
-    { code:"it", name:"Italiano" },
-    { code:"es", name:"Español" },
-    { code:"ru", name:"Русский" },
-    { code:"ar", name:"العربية" },
-    { code:"fa", name:"فارسی" },
-    { code:"ur", name:"اردو" },
-    { code:"hi", name:"हिन्दी" },
-    { code:"bn", name:"বাংলা" },
-    { code:"id", name:"Bahasa Indonesia" },
-    { code:"ms", name:"Bahasa Melayu" },
-    { code:"vi", name:"Tiếng Việt" },
-    { code:"th", name:"ไทย" },
-    { code:"zh", name:"中文" },
-    { code:"ja", name:"日本語" },
-    { code:"ko", name:"한국어" },
-    { code:"pt", name:"Português" },
-    { code:"nl", name:"Nederlands" },
-    { code:"pl", name:"Polski" },
-    { code:"sv", name:"Svenska" },
-    { code:"no", name:"Norsk" },
-    { code:"da", name:"Dansk" },
-    { code:"fi", name:"Suomi" },
-    { code:"cs", name:"Čeština" },
-    { code:"sk", name:"Slovenčina" },
-    { code:"hu", name:"Magyar" },
-    { code:"ro", name:"Română" },
-    { code:"bg", name:"Български" },
-    { code:"el", name:"Ελληνικά" },
-    { code:"uk", name:"Українська" },
-    { code:"he", name:"עברית" },
+    { code:"auto", name:"OTOMATİK" },
+    { code:"tr", name:"TÜRKÇE" }, { code:"en", name:"ENGLISH" },
+    { code:"de", name:"DEUTSCH" }, { code:"fr", name:"FRANÇAIS" },
+    { code:"it", name:"ITALIANO" }, { code:"es", name:"ESPAÑOL" }
   ];
 
-  function fillSelect(sel, def){
-    sel.innerHTML = LANGS.map(l=>`<option value="${l.code}">${l.name}</option>`).join("");
-    sel.value = def;
-  }
+  const fromSel = $("fromSel");
+  const toSel = $("toSel");
+  
+  fromSel.innerHTML = LANGS.map(l=>`<option value="${l.code}">${l.name}</option>`).join("");
+  toSel.innerHTML = LANGS.filter(l=>l.code!=="auto").map(l=>`<option value="${l.code}">${l.name}</option>`).join("");
+  
+  fromSel.value = "auto";
+  toSel.value = "tr";
 
-  fillSelect(fromSel, "auto");
-  fillSelect(toSel, "tr");
+  // Çeviri İşlemi
+  $("btnTranslate").onclick = async () => {
+    const text = $("srcTxt").value.trim();
+    if(!text) return;
 
-  function currentLangs(){
-    const from = String(fromSel.value || "auto").trim();
-    const to = String(toSel.value || "tr").trim();
-    langHint.textContent = `Kaynak: ${from.toUpperCase()} → Hedef: ${to.toUpperCase()}`;
-    return { from, to };
-  }
-  currentLangs();
+    $("dstTxt").style.opacity = "0.5";
+    $("dstTxt").textContent = "İşleniyor...";
 
-  fromSel.onchange = currentLangs;
-  toSel.onchange = currentLangs;
-
-  $("btnSwap").onclick = ()=>{
-    const a = fromSel.value;
-    const b = toSel.value;
-    // auto ile swap mantıklı değil: auto'yu hedef yapmayalım
-    if(b === "auto"){
-      toast("Auto Detect hedef olamaz.");
-      return;
-    }
-    fromSel.value = b;
-    toSel.value = (a === "auto") ? "tr" : a;
-    currentLangs();
-  };
-
-  $("btnClear").onclick = ()=>{
-    srcTxt.value = "";
-    dstTxt.textContent = "—";
-    lastOcrText = "";
-    lastTranslated = "";
-    txtStatus.textContent = "Temizlendi";
-    outStatus.textContent = "—";
-  };
-
-  async function translateText(text){
-    const { from, to } = currentLangs();
-    const q = String(text||"").trim();
-    if(!q) throw new Error("Metin boş");
-
-    const r = await fetch(`${API_BASE}/api/translate_ai`,{
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify({
-        text: q,
-        from_lang: from,
-        to_lang: to
-      })
-    });
-
-    const j = await r.json().catch(()=>null);
-    if(!r.ok){
-      const msg = j?.detail || JSON.stringify(j) || "Çeviri hatası";
-      throw new Error(msg);
-    }
-    return (j?.translated || j?.text || j?.translation || "").toString().trim();
-  }
-
-  $("btnTranslate").onclick = async ()=>{
-    try{
-      txtStatus.textContent = "Çevriliyor…";
-      outStatus.textContent = "—";
-      const out = await translateText(srcTxt.value);
-      dstTxt.textContent = out || "Çeviri boş döndü.";
-      txtStatus.textContent = "Bitti ✅";
-      outStatus.textContent = "Metinden çeviri";
-    }catch(e){
-      txtStatus.textContent = "Hata";
-      dstTxt.textContent = `Çeviri yapılamadı:\n${e?.message || e}`;
-      outStatus.textContent = "—";
+    try {
+      const r = await fetch(`${API_BASE}/api/translate_ai`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: text,
+          from_lang: fromSel.value,
+          to_lang: toSel.value
+        })
+      });
+      const j = await r.json();
+      $("dstTxt").textContent = j.translated || "Hata oluştu.";
+    } catch(e) {
+      $("dstTxt").textContent = "Bağlantı hatası.";
+    } finally {
+      $("dstTxt").style.opacity = "1";
     }
   };
 
-  async function ocrTranslate(file){
-    const { from, to } = currentLangs();
+  // Fotoğraf Tarama
+  $("imgFile").onchange = async (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
 
+    $("srcTxt").value = "Fotoğraf işleniyor...";
+    
     const fd = new FormData();
     fd.append("image", file);
-    fd.append("from_lang", from);
-    fd.append("to_lang", to);
+    fd.append("from_lang", fromSel.value);
+    fd.append("to_lang", toSel.value);
 
-    const r = await fetch(`${API_BASE}/api/translate/ocr_translate`,{
-      method:"POST",
-      body: fd
-    });
-
-    const j = await r.json().catch(()=>null);
-    if(!r.ok){
-      const msg = j?.detail || JSON.stringify(j) || "OCR çeviri hatası";
-      throw new Error(msg);
-    }
-    if(!j?.ok) throw new Error(j?.error || "OCR çeviri başarısız");
-    return j;
-  }
-
-  $("btnOcrTranslate").onclick = async ()=>{
-    const f = imgFile.files?.[0];
-    if(!f){
-      toast("Önce fotoğraf seç");
-      return;
-    }
-
-    try{
-      $("ocrNote").className = "status warn";
-      $("ocrNote").textContent = "Fotoğraftan metin çıkarılıyor…";
-
-      const j = await ocrTranslate(f);
-
-      lastOcrText = (j.extracted_text || "").toString();
-      lastTranslated = (j.translated_text || "").toString();
-
-      // aşağıda sonucu göster
-      dstTxt.textContent = lastTranslated || "Çeviri boş döndü.";
-      outStatus.textContent = "Fotoğraf → OCR → Çeviri ✅";
-
-      // kullanıcı isterse metni textarea’ya alsın
-      $("ocrNote").className = "status ok";
-      $("ocrNote").textContent = "Bitti ✅ İstersen “Metni Yukarı Al” ile düzenleyebilirsin.";
-
-    }catch(e){
-      $("ocrNote").className = "status bad";
-      $("ocrNote").textContent = `Hata: ${e?.message || e}`;
-      dstTxt.textContent = `OCR/Çeviri yapılamadı:\n${e?.message || e}`;
-      outStatus.textContent = "—";
+    try {
+      const r = await fetch(`${API_BASE}/api/translate/ocr_translate`, {
+        method: "POST",
+        body: fd
+      });
+      const j = await r.json();
+      if(j.ok) {
+        $("srcTxt").value = j.extracted_text;
+        $("dstTxt").textContent = j.translated_text;
+      }
+    } catch(e) {
+      $("srcTxt").value = "Tarama hatası.";
     }
   };
 
-  $("btnUseText").onclick = ()=>{
-    if(!lastOcrText){
-      toast("Önce fotoğraftan çevir");
-      return;
+  $("btnSwap").onclick = () => {
+    const a = fromSel.value;
+    const b = toSel.value;
+    if(a !== "auto") {
+      fromSel.value = b;
+      toSel.value = a;
     }
-    srcTxt.value = lastOcrText;
-    toast("Metin yukarı alındı");
-    txtStatus.textContent = "OCR metni eklendi";
   };
-
 </script>
 </body>
 </html>
