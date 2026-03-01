@@ -235,6 +235,11 @@ Seçim yaptıktan sonra:
   const $ = (id)=>document.getElementById(id);
   const toastEl = $("toast");
   const infoBox = $("infoBox");
+  const btnGo = $("btnGo");
+
+  const HOME = "/pages/home.html";
+  const OFFLINE = "/pages/offline_languages.html";
+  const FIRST_BOOT_KEY = "italky_first_boot_done_v1";
 
   function toast(msg){
     toastEl.textContent = String(msg||"");
@@ -257,28 +262,34 @@ Seçim yaptıktan sonra:
     location.replace("/pages/login.html");
     throw new Error("no session");
   }
+  const userId = session.user.id;
 
-  // mevcut base_lang var mı?
-  let currentBase = "";
+  // Eğer daha önce bitirdiyse (local flag), direkt offline sayfasına
+  if(localStorage.getItem(FIRST_BOOT_KEY) === "1"){
+    location.replace(OFFLINE);
+    throw new Error("already setup (local)");
+  }
+
+  // DB’de base_lang varsa direkt offline sayfasına
   try{
     const { data: prof } = await supabase
       .from("profiles")
-      .select("base_lang, offline_trial_done")
-      .eq("id", session.user.id)
+      .select("base_lang")
+      .eq("id", userId)
       .maybeSingle();
 
-    currentBase = String(prof?.base_lang || "").trim().toLowerCase();
-    if(currentBase){
-      // zaten seçmiş -> direkt indir sayfasına
-      location.replace("/pages/offline_languages.html");
-      throw new Error("already has base_lang");
+    const base = String(prof?.base_lang || "").trim().toLowerCase();
+    if(base){
+      localStorage.setItem(FIRST_BOOT_KEY, "1");
+      location.replace(OFFLINE);
+      throw new Error("already setup (db)");
     }
   }catch{}
 
   let picked = "";
   const row = $("langRow");
 
-  function render(){
+  function paint(){
     row.innerHTML = LANGS.map(l=>{
       const sel = (picked === l.code) ? "sel" : "";
       return `
@@ -295,7 +306,8 @@ Seçim yaptıktan sonra:
     row.querySelectorAll(".langBtn").forEach(btn=>{
       btn.addEventListener("click", ()=>{
         picked = String(btn.getAttribute("data-code")||"").trim().toLowerCase();
-        $("btnGo").disabled = !picked;
+        btnGo.disabled = !picked;
+
         infoBox.textContent =
 `Seçilen dil: ${picked.toUpperCase()}
 Sistem şunları 30 gün deneme olarak aktive edecek:
@@ -303,39 +315,66 @@ Sistem şunları 30 gün deneme olarak aktive edecek:
 - en-${picked}
 
 Sonra indirme ekranına geçeceksin.`;
-        render();
+        // tekrar render yok! sadece seçimi işaretle:
+        row.querySelectorAll(".langBtn").forEach(x=>x.classList.remove("sel"));
+        btn.classList.add("sel");
       });
     });
   }
-  render();
+  paint();
 
   $("btnSkip").onclick = ()=>{
-    // atla: home'a dön (istersen profile da olabilir)
-    location.href = "/pages/home.html";
+    // setup atlanırsa HOME (istersen burada da offline'a atabilirsin)
+    location.replace(HOME);
   };
 
-  $("btnGo").onclick = async ()=>{
+  async function setBaseLang(code){
+    // 1) RPC varsa kullan
+    const { error: rpcErr } = await supabase.rpc("set_base_lang", { p_base_lang: code });
+    if(!rpcErr) return true;
+
+    // 2) fallback: doğrudan profiles update (RLS izin veriyorsa)
+    const { error: upErr } = await supabase
+      .from("profiles")
+      .update({ base_lang: code })
+      .eq("id", userId);
+
+    if(upErr) throw rpcErr; // asıl hatayı göster
+    return true;
+  }
+
+  async function grantTrialOnce(){
+    // önerilen RPC: kullanıcıya 30 gün EN<->BASE trial (tek sefer)
+    // yoksa hata döner -> kullanıcıya net söyle
+    const { data, error } = await supabase.rpc("grant_offline_trial_once");
+    if(error) throw error;
+    return data;
+  }
+
+  btnGo.onclick = async ()=>{
     if(!picked) return;
 
-    $("btnGo").disabled = true;
+    btnGo.disabled = true;
     toast("Kaydediliyor…");
 
     try{
       // 1) base_lang kaydet
-      const { error: e1 } = await supabase.rpc("set_base_lang", { p_base_lang: picked });
-      if(e1) throw e1;
+      await setBaseLang(picked);
 
-      // 2) trial paketlerini tek sefer ver
-      const { data, error: e2 } = await supabase.rpc("grant_offline_trial_once");
-      if(e2) throw e2;
+      // 2) trial ver
+      toast("Deneme paketi açılıyor…");
+      await grantTrialOnce();
 
-      toast("Deneme paketin aktif ✅");
-      setTimeout(()=>location.replace("/pages/offline_languages.html"), 450);
+      // 3) local flag
+      localStorage.setItem(FIRST_BOOT_KEY, "1");
+
+      toast("Kurulum tamam ✅");
+      setTimeout(()=>location.replace(OFFLINE), 350);
 
     }catch(e){
       console.error(e);
       toast(e?.message || "Hata oldu");
-      $("btnGo").disabled = false;
+      btnGo.disabled = false;
     }
   };
 </script>
