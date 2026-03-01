@@ -1,267 +1,210 @@
-<!-- FILE: /pages/helper_home.html -->
 <!doctype html>
 <html lang="tr">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-  <title>italkyAI • Teacher AI</title>
+  <title>italkyAI • Teacher AI Hub</title>
 
-  <meta name="theme-color" content="#02000f">
-  <style>html,body{background:#02000f !important;}</style>
+  <meta name="theme-color" content="#000000">
+  <style>html,body{background:#000 !important; margin:0; padding:0; overflow:hidden; font-family:'Outfit', sans-serif;}</style>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
   <style>
-    :root{
-      --border: rgba(255,255,255,0.12);
-      --glass: rgba(255,255,255,0.04);
-      --muted: rgba(255,255,255,0.68);
+    :root {
+      --ai-grad: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
       --purple: #a855f7;
       --blue: #60a5fa;
-      --ai-grad: linear-gradient(135deg,#a5b4fc 0%,#6366f1 45%,#ec4899 100%);
-    }
-    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; }
-    #pageContent{ height:100%; overflow:hidden; }
-
-    .wrap{
-      height:100%;
-      max-width:520px;
-      margin:0 auto;
-      padding: 12px;
-      display:flex;
-      flex-direction:column;
-      gap: 10px;
+      --glass-border: rgba(255, 255, 255, 0.12);
     }
 
-    .hero{
-      border: 1px solid var(--border);
-      background: var(--glass);
-      border-radius: 22px;
-      padding: 12px 14px;
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-    }
-    .hero h1{
-      margin:0;
-      font-family:"Space Grotesk";
-      font-size:16px;
-      font-weight:1000;
-      color:#fff;
-      letter-spacing:-.2px;
-      display:flex;
-      gap:8px;
-      align-items:baseline;
-    }
-    .hero h1 .ai{
-      background: var(--ai-grad);
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;
-      font-weight:1000;
-    }
-    .hero p{
-      margin:6px 0 0;
-      font-size:12px;
-      font-weight:900;
-      color: var(--muted);
-      line-height:1.55;
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+
+    #pageContent {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      /* UI Shell barları arasına tam oturtma */
+      padding-top: calc(env(safe-area-inset-top) + 40px);
+      padding-bottom: calc(env(safe-area-inset-bottom) + 85px);
+      background: radial-gradient(circle at 50% 20%, #100515 0%, #000 100%);
     }
 
-    .stage{
-      flex:1;
-      min-height:0;
-      display:flex;
-      flex-direction:column;
-      justify-content:center;
-      gap:10px;
+    .main-hub {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 10px 14px;
+      z-index: 2;
     }
 
-    .bigCard{
-      flex:1;
-      min-height: 320px;
-      border-radius: 28px;
-      border:1px solid rgba(168,85,247,0.28);
-      background:
-        linear-gradient(145deg, rgba(168,85,247,0.14) 0%, rgba(0,0,0,0.55) 100%);
-      position:relative;
-      overflow:hidden;
-      display:flex;
-      flex-direction:column;
-      justify-content:center;
-      align-items:center;
-      text-align:center;
-      padding: 18px;
-      cursor:pointer;
-      user-select:none;
-      transition: transform .18s ease, filter .18s ease;
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
-    }
-    .bigCard:active{ transform: scale(.985); filter: brightness(1.06); }
-
-    /* FX */
-    .fx{ position:absolute; inset:0; pointer-events:none; }
-    .fx:before{
-      content:"";
-      position:absolute; inset:-30%;
-      background:
-        radial-gradient(circle at 20% 30%, rgba(168,85,247,.38) 0%, transparent 45%),
-        radial-gradient(circle at 80% 70%, rgba(96,165,250,.20) 0%, transparent 45%);
-      filter: blur(34px);
-      animation: drift 10s ease-in-out infinite alternate;
-      opacity:.95;
-    }
-    @keyframes drift{
-      from{ transform: translate3d(-10px,-8px,0) scale(1); }
-      to{ transform: translate3d(10px,8px,0) scale(1.08); }
+    /* ===== 1. SCANNER PORTAL (TOP) ===== */
+    .scanner-portal {
+      flex: 0 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      padding: 15px 0;
+      user-select: none;
+      position: relative;
     }
 
-    .formula{
-      position:absolute;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-      font-size: 11px;
-      color: rgba(168,85,247,0.85);
-      opacity:0;
-      animation: formulaUp 3.4s linear infinite;
-    }
-    .formula.f1{ left: 16%; bottom: -10px; animation-delay: .2s; }
-    .formula.f2{ left: 58%; bottom: -10px; animation-delay: 1.0s; color: rgba(96,165,250,0.85); }
-    .formula.f3{ left: 78%; bottom: -10px; animation-delay: 1.8s; }
-    @keyframes formulaUp{
-      0%{ transform: translateY(20px); opacity:0; }
-      20%{ opacity:.55; }
-      80%{ opacity:.35; }
-      100%{ transform: translateY(-240px); opacity:0; }
+    /* Formüllerin yukarı süzülme animasyonu */
+    .formula-rain { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+    .f-item { position: absolute; bottom: -20px; font-family: monospace; font-size: 10px; color: var(--purple); opacity: 0; animation: f-float 4s infinite linear; }
+    @keyframes f-float {
+      0% { transform: translateY(0) rotate(0); opacity: 0; }
+      20% { opacity: 0.6; }
+      80% { opacity: 0.6; }
+      100% { transform: translateY(-160px) rotate(10deg); opacity: 0; }
     }
 
-    .orb{
-      width: 120px;
-      height: 120px;
-      border-radius: 999px;
-      position:relative;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      margin-bottom: 10px;
+    .neural-orb {
+      width: 110px; height: 110px;
+      position: relative;
+      display: flex; align-items: center; justify-content: center;
     }
-    .ring{
-      position:absolute; inset:-5px;
-      border-radius:999px;
+
+    .ai-ring {
+      position: absolute; inset: -4px; border-radius: 50%; padding: 2.5px;
       background: var(--ai-grad);
       -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
       mask-composite: exclude;
-      padding: 3px;
-      animation: spin 10s linear infinite;
-      opacity:.95;
-    }
-    @keyframes spin{ to{ transform: rotate(360deg);} }
-
-    .core{
-      width: 92px;
-      height: 92px;
-      border-radius: 999px;
-      background: rgba(0,0,0,0.55);
-      border: 1px solid rgba(255,255,255,0.10);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      box-shadow: 0 0 34px rgba(168,85,247,0.22);
-      animation: breathe 3.6s ease-in-out infinite;
-    }
-    @keyframes breathe{
-      0%,100%{ transform: scale(1); }
-      50%{ transform: scale(1.06); }
+      animation: rotateOrb 15s linear infinite;
     }
 
-    .camIcon{
-      font-size: 38px;
-      line-height: 1;
-      filter: drop-shadow(0 10px 18px rgba(0,0,0,0.35));
+    .ai-core {
+      width: 82px; height: 82px; background: #000; border-radius: 50%;
+      background-image: linear-gradient(#000, #000), var(--ai-grad);
+      background-origin: border-box; background-clip: content-box, border-box;
+      border: 2px solid transparent;
+      display: flex; align-items: center; justify-content: center;
+      animation: aiBreathe 4s infinite ease-in-out;
+      z-index: 10;
+      box-shadow: 0 0 30px rgba(168, 85, 247, 0.3);
     }
 
-    .bigTitle{
-      margin:0;
-      font-family:"Space Grotesk";
-      font-size: 22px;
-      font-weight: 1000;
-      letter-spacing: -0.6px;
-      color:#fff;
-    }
-    .bigSub{
-      margin:6px 0 0;
-      font-size: 12px;
-      font-weight: 900;
-      color: rgba(255,255,255,0.68);
-      line-height: 1.45;
-      max-width: 340px;
+    .portal-info { text-align: center; margin-top: 12px; }
+    .portal-title { font-family: 'Space Grotesk'; font-size: 24px; font-weight: 900; color: #fff; margin: 0; letter-spacing: -1px; }
+    .portal-title span { background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .portal-desc { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; }
+
+    /* ===== 2. KARTLAR (DOLDURAN YAPI) ===== */
+    .hub-cards {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
     }
 
-    .ctaRow{
-      width: 100%;
-      max-width: 420px;
-      margin-top: 14px;
-      display:flex;
-      gap:10px;
+    .helper-card {
+      flex: 1;
+      position: relative;
+      border-radius: 30px;
+      border: 1px solid var(--glass-border);
+      overflow: hidden;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(25px);
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    .btn{
-      flex:1;
-      height: 54px;
-      border-radius: 18px;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(255,255,255,0.06);
-      color:#fff;
-      font-weight:1000;
-      cursor:pointer;
-      user-select:none;
-    }
-    .btn:active{ transform: scale(.99); }
-    .btnMain{
-      background: #fff;
-      color:#000;
-      border:none;
-    }
+
+    .helper-card:active { transform: scale(0.98); filter: brightness(1.2); }
+
+    /* Renk Temaları */
+    .scan-card { background: linear-gradient(145deg, rgba(168, 85, 247, 0.1) 0%, rgba(0,0,0,0.6) 100%); border-color: rgba(168, 85, 247, 0.25); }
+    .solve-card { background: linear-gradient(145deg, rgba(99, 102, 241, 0.1) 0%, rgba(0,0,0,0.6) 100%); border-color: rgba(99, 102, 241, 0.25); }
+
+    /* Solar Core (Teacher Stil) */
+    .solar { width: 70px; height: 70px; position: relative; flex-shrink: 0; margin-right: 20px; }
+    .sun { width: 22px; height: 22px; background: var(--sun-color); border-radius: 50%; filter: blur(6px); box-shadow: 0 0 18px var(--sun-color); position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); animation: sunPulse 3s infinite; }
+    .orbit { position: absolute; border: 1px solid rgba(255,255,255,0.06); border-radius: 50%; animation: rotateOrb linear infinite; }
+    .orbit1 { width: 44px; height: 44px; top: 13px; left: 13px; animation-duration: 4s; }
+    .orbit2 { width: 70px; height: 70px; animation-duration: 7s; animation-direction: reverse; }
+    .planet { width: 5px; height: 5px; background: #fff; border-radius: 50%; position: absolute; top: 0; left: 50%; transform: translateX(-50%); }
+
+    /* Animations */
+    @keyframes rotateOrb { from { transform: rotate(0); } to { transform: rotate(360deg); } }
+    @keyframes aiBreathe { 0%,100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+    @keyframes sunPulse { 0%,100% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(1.15); opacity: 0.8; } }
+
+    /* Content */
+    .card-content { flex: 1; z-index: 10; }
+    .card-title { font-family: 'Space Grotesk'; font-size: 21px; font-weight: 700; color: #fff; margin: 0; }
+    .card-title .ai { background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .card-desc { font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 5px; line-height: 1.4; }
+
+    .scan-card { --sun-color: var(--purple); }
+    .solve-card { --sun-color: var(--blue); }
+
+    /* Scan Line Effect for Scan Card */
+    .scan-line { position: absolute; left: 0; width: 100%; height: 2px; background: var(--purple); box-shadow: 0 0 15px var(--purple); animation: scanV 3s linear infinite; opacity: 0.4; }
+    @keyframes scanV { 0% { top: 0; } 100% { top: 100%; } }
+
   </style>
 </head>
 
 <body>
 <main id="pageContent">
-  <div class="wrap">
+  <div class="main-hub">
 
-    <section class="hero">
-      <h1>Teacher <span class="ai">AI</span></h1>
-      <p>
-        Matematik • Fizik • Kimya • Türkçe • Yabancı Dil<br/>
-        Fotoğrafını çek → soruyu seç → adım adım anlatarak çözelim.
-      </p>
-    </section>
-
-    <section class="stage">
-      <div class="bigCard" id="goScan">
-        <div class="fx">
-          <div class="formula f1">x² + y²</div>
-          <div class="formula f2">E = mc²</div>
-          <div class="formula f3">Δ = b² − 4ac</div>
-        </div>
-
-        <div class="orb" aria-hidden="true">
-          <div class="ring"></div>
-          <div class="core">
-            <div class="camIcon">📷</div>
-          </div>
-        </div>
-
-        <h2 class="bigTitle">Foto Çek • Kırp • Çöz</h2>
-        <div class="bigSub">
-          Bir sayfada birden fazla soru olabilir. Dikdörtgenle seç, kırp ve çözümü al.
-        </div>
-
-        <div class="ctaRow">
-          <button class="btn btnMain" id="btnStart" type="button">Şimdi Başla</button>
-          <button class="btn" id="btnHow" type="button">Nasıl Çalışır?</button>
+    <div class="scanner-portal" onclick="location.href='/pages/scan_solve.html'">
+      <div class="formula-rain">
+        <div class="f-item" style="left: 15%; animation-delay: 0s;">E=mc²</div>
+        <div class="f-item" style="left: 75%; animation-delay: 1.5s;">πr²</div>
+        <div class="f-item" style="left: 50%; animation-delay: 0.8s;">Δ=b²-4ac</div>
+      </div>
+      <div class="neural-orb">
+        <div class="ai-ring"></div>
+        <div class="ai-core">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+            <circle cx="12" cy="13" r="4"/>
+          </svg>
         </div>
       </div>
-    </section>
+      <div class="portal-info">
+        <h1 class="portal-title">Teacher <span>AI</span></h1>
+        <p class="portal-desc">Foto Çek • Kırp • Çöz</p>
+      </div>
+    </div>
+
+    <div class="hub-cards">
+
+      <div class="helper-card scan-card" onclick="location.href='/pages/scan_solve.html'">
+        <div class="scan-line"></div>
+        <div class="solar">
+          <div class="sun"></div>
+          <div class="orbit orbit1"><div class="planet"></div></div>
+          <div class="orbit orbit2"></div>
+        </div>
+        <div class="card-content">
+          <h2 class="card-title">Hızlı Tarama</h2>
+          <p class="card-desc">Sayfadaki soruyu dikdörtgenle seç, yapay zeka anında adım adım çözsün.</p>
+        </div>
+      </div>
+
+      <div class="helper-card solve-card" onclick="location.href='/pages/helper_chat.html'">
+        <div class="solar">
+          <div class="sun" style="filter: blur(8px); opacity: 0.4;"></div>
+          <div class="orbit orbit1" style="border-radius: 4px;"></div>
+          <div class="orbit orbit2"><div class="planet" style="width:10px; border-radius:2px;"></div></div>
+        </div>
+        <div class="card-content">
+          <h2 class="card-title">Bilim Koçu</h2>
+          <p class="card-desc">Matematik, Fizik, Kimya ve Biyoloji alanında uzman AI ile soru-cevap yap.</p>
+        </div>
+      </div>
+
+    </div>
 
   </div>
 </main>
@@ -269,15 +212,6 @@
 <script type="module">
   import { mountShell } from "/js/ui_shell.js";
   mountShell({ scroll:"none" });
-
-  const go = ()=>location.href="/pages/scan_solve.html";
-  document.getElementById("goScan").onclick = go;
-  document.getElementById("btnStart").onclick = (e)=>{ e.stopPropagation(); go(); };
-
-  document.getElementById("btnHow").onclick = (e)=>{
-    e.stopPropagation();
-    alert("1) Foto çek / galeriden seç\n2) Soruyu parmağınla çerçevele (kırp)\n3) Metni çıkar → Çöz\n\nNot: Çok soru varsa tek tek seçip çözebilirsin.");
-  };
 </script>
 </body>
 </html>
