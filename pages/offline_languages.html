@@ -3,190 +3,118 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>italkyAI • Offline Diller</title>
+  <title>italkyAI • Offline Terminal</title>
 
   <meta name="theme-color" content="#000000">
   <style>
-    html,body{
-      background:#000 !important;
-      margin:0;
-      padding:0;
-      font-family:'Outfit', sans-serif;
-    }
+    html,body{background:#000 !important; margin:0; padding:0; overflow-x:hidden; font-family:'Outfit', sans-serif;}
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=Space+Grotesk:wght@700&display=swap');
   </style>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
-
   <style>
-    :root{
-      --ai-grad: linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
-      --glass: rgba(255,255,255,0.04);
-      --border: rgba(255,255,255,0.10);
-      --green:#34d399;
-      --warn:#f59e0b;
+    :root {
+      --ai-grad: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
+      --glass: rgba(255, 255, 255, 0.03);
+      --glass-border: rgba(255, 255, 255, 0.1);
+      --green: #34d399;
+      --warn: #f59e0b;
     }
-    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none;}
 
-    #pageContent{
-      height:100%;
-      display:flex;
-      flex-direction:column;
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+
+    /* ✅ Kural Seti Uygulandı */
+    #pageContent {
+      height: 100%;
+      display: flex; flex-direction: column;
       background: radial-gradient(circle at 50% 20%, #0a0a25 0%, #000 100%);
     }
 
-    .wrap{
-      flex:1;
-      max-width:520px;
-      margin:0 auto;
-      padding:16px;
-      display:flex;
-      flex-direction:column;
-      gap:14px;
+    .main-wrap {
+      flex: 1;
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-height: 0;
     }
 
-    .topRow{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      border:1px solid var(--border);
-      background:var(--glass);
-      border-radius:18px;
-      padding:10px 12px;
-      backdrop-filter: blur(14px);
+    /* Top Stats Bar */
+    .stats-hub {
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--glass); border: 1px solid var(--glass-border);
+      border-radius: 20px; padding: 12px 18px; backdrop-filter: blur(20px);
     }
-    .topRow .t1{ font-weight:1000; color:#fff; }
-    .topRow .t2{ font-weight:1000; color:rgba(165,180,252,0.95); }
+    .stat-item { font-size: 13px; font-weight: 800; color: rgba(255,255,255,0.4); }
+    .stat-item span { color: #fff; font-weight: 900; margin-left: 5px; }
 
-    .header{
-      text-align:center;
-      margin-top:4px;
-    }
-    .header h1{
-      font-family:'Space Grotesk';
-      font-size:22px;
-      font-weight:800;
-      color:#fff;
-      margin:0;
-    }
-    .header p{
-      font-size:12px;
-      color:rgba(255,255,255,0.55);
-      margin-top:6px;
-      font-weight:700;
-      line-height:1.4;
+    /* Header Section */
+    .hero { text-align: center; padding: 10px 0; }
+    .hero h1 { font-family: 'Space Grotesk'; font-size: 26px; font-weight: 900; color: #fff; margin: 0; letter-spacing: -0.5px; }
+    .hero p { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 8px; line-height: 1.5; font-weight: 600; }
+
+    /* ✅ Language Cards */
+    #langList { display: flex; flex-direction: column; gap: 10px; }
+
+    .lang-card {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px; border-radius: 24px; border: 1px solid var(--glass-border);
+      background: var(--glass); backdrop-filter: blur(20px); transition: 0.3s;
     }
 
-    .lang-card{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      padding:14px 14px;
-      border-radius:20px;
-      border:1px solid var(--border);
-      background:var(--glass);
-      backdrop-filter:blur(20px);
-      gap:12px;
+    .lang-info { display: flex; align-items: center; gap: 14px; min-width: 0; }
+    .lang-flag { font-size: 28px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.2)); }
+    .lang-meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .lang-title { font-size: 16px; font-weight: 900; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .lang-status { font-size: 11px; font-weight: 800; display: flex; align-items: center; gap: 5px; }
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; }
+
+    /* ✅ 3D OVAL BUTON */
+    .btn-3d {
+      min-width: 120px; height: 44px; border-radius: 22px; border: none;
+      background: var(--ai-grad); color: #fff; font-weight: 900; font-size: 13px;
+      cursor: pointer; position: relative;
+      box-shadow: 
+        0 4px 15px rgba(99, 102, 241, 0.3),
+        inset 0 2px 4px rgba(255, 255, 255, 0.3),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.2);
+      transition: all 0.2s;
+    }
+    .btn-3d:active { transform: translateY(2px) scale(0.98); box-shadow: 0 2px 5px rgba(99, 102, 241, 0.4); }
+
+    .btn-owned {
+      background: rgba(255, 255, 255, 0.05); border: 1px solid var(--glass-border);
+      box-shadow: none; color: rgba(255,255,255,0.3); cursor: default;
     }
 
-    .lang-left{
-      display:flex;
-      align-items:center;
-      gap:12px;
-      min-width:0;
+    .toast {
+      position: fixed; left: 50%; top: 20px; transform: translateX(-50%) translateY(-100px);
+      background: rgba(10, 10, 20, 0.9); border: 1px solid var(--glass-border);
+      padding: 10px 20px; border-radius: 30px; color: #fff; font-weight: 900;
+      font-size: 13px; transition: 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+      backdrop-filter: blur(10px); z-index: 9999; opacity: 0;
     }
-    .flag{ font-size:26px; }
-    .meta{
-      min-width:0;
-      display:flex;
-      flex-direction:column;
-      gap:2px;
-    }
-    .lang-name{
-      font-size:15px;
-      font-weight:1000;
-      color:#fff;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-    .lang-sub{
-      font-size:11px;
-      font-weight:900;
-      color:rgba(255,255,255,0.60);
-    }
-    .lang-sub.ok{ color: rgba(52,211,153,0.95); }
-    .lang-sub.warn{ color: rgba(245,158,11,0.95); }
-
-    .btn{
-      min-width:130px;
-      height:40px;
-      border-radius:14px;
-      border:none;
-      background:var(--ai-grad);
-      color:#fff;
-      font-weight:1000;
-      font-size:12px;
-      cursor:pointer;
-      box-shadow:0 6px 18px rgba(99,102,241,0.25);
-      transition:.15s;
-      white-space:nowrap;
-    }
-    .btn:active{ transform:scale(.98); }
-
-    .btnSecondary{
-      background:rgba(255,255,255,0.06);
-      border:1px solid rgba(255,255,255,0.14);
-      box-shadow:none;
-    }
-
-    .btnDisabled{
-      opacity:.55;
-      cursor:default;
-    }
-
-    .toast{
-      position: fixed;
-      left:50%;
-      top:18px;
-      transform: translateX(-50%) translateY(-120px);
-      background: rgba(10,10,18,0.95);
-      border: 1px solid rgba(165,180,252,0.35);
-      padding: 10px 14px;
-      border-radius: 999px;
-      color:#fff;
-      z-index: 999999;
-      font-weight: 1000;
-      font-size: 12px;
-      transition: .25s;
-      backdrop-filter: blur(12px);
-      pointer-events:none;
-      max-width: min(92vw, 520px);
-      text-align:center;
-    }
-    .toast.show{ transform: translateX(-50%) translateY(0); }
+    .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
   </style>
 </head>
 
 <body>
 <main id="pageContent">
-  <div class="wrap">
+  <div class="main-wrap">
 
-    <div class="topRow">
-      <div class="t1">Paket Süresi: <span style="color:#fff">365 Gün</span></div>
-      <div class="t2">Ücret: <span style="color:#fff">50 Jeton</span></div>
-    </div>
+    <section class="stats-hub">
+      <div class="stat-item">PAKET SÜRESİ <span>365 GÜN</span></div>
+      <div class="stat-item">BİRİM FİYAT <span>50 JETON</span></div>
+    </section>
 
-    <div class="header">
-      <h1>Offline Dil Paketleri</h1>
-      <p>
-        Online iken satın al ve indir.<br/>
-        Sonra internetsiz ortamda çeviri modüllerinde kullan.
-      </p>
-    </div>
+    <header class="hero">
+      <h1>Offline Terminal</h1>
+      <p>Yapay zeka gücünü internetin olmadığı<br/>yerlerde de jilet gibi kullan.</p>
+    </header>
 
-    <div id="langList"></div>
+    <div id="langList">
+      </div>
 
   </div>
 </main>
@@ -198,14 +126,13 @@
   import { supabase } from "/js/supabase_client.js";
   mountShell({ scroll:"auto" });
 
-  const $ = (id)=>document.getElementById(id);
-
+  const $ = (id) => document.getElementById(id);
   const toastEl = $("toast");
-  function toast(msg){
-    toastEl.textContent = String(msg||"");
+
+  function showToast(msg) {
+    toastEl.textContent = msg;
     toastEl.classList.add("show");
-    clearTimeout(window.__to);
-    window.__to = setTimeout(()=>toastEl.classList.remove("show"), 1700);
+    setTimeout(() => toastEl.classList.remove("show"), 2000);
   }
 
   const LANGUAGES = [
@@ -220,112 +147,86 @@
   const FEE = 50;
   const DAYS = 365;
 
-  const list = $("langList");
-
-  // session
-  const { data:{ session } } = await supabase.auth.getSession();
-  if(!session?.user){
-    location.replace("/pages/login.html");
-  }
+  const { data: { session } } = await supabase.auth.getSession();
+  if(!session?.user) location.replace("/pages/login.html");
   const userId = session.user.id;
 
-  async function loadProfileAndPacks(){
+  async function render() {
     const [{ data: prof }, { data: packs }] = await Promise.all([
       supabase.from("profiles").select("tokens").eq("id", userId).maybeSingle(),
       supabase.from("offline_packs").select("lang_code, expires_at").eq("user_id", userId)
     ]);
 
     const tokens = Number(prof?.tokens ?? 0);
-    try{ setHeaderTokens(tokens); }catch{}
-    return { tokens, packs: Array.isArray(packs) ? packs : [] };
-  }
-
-  function daysLeft(expiresAt){
-    const exp = new Date(expiresAt).getTime();
-    const diff = exp - Date.now();
-    return Math.ceil(diff / (24*60*60*1000));
-  }
-
-  function packFor(code, packs){
-    return packs.find(p => String(p.lang_code).toLowerCase() === String(code).toLowerCase()) || null;
-  }
-
-  async function render(){
-    const { tokens, packs } = await loadProfileAndPacks();
-
+    try { setHeaderTokens(tokens); } catch {}
+    
+    const list = $("langList");
     list.innerHTML = "";
-    LANGUAGES.forEach(lang=>{
-      const p = packFor(lang.code, packs);
-      const active = p && daysLeft(p.expires_at) > 0;
-      const leftDays = p ? daysLeft(p.expires_at) : 0;
+
+    LANGUAGES.forEach(lang => {
+      const pack = packs?.find(p => p.lang_code === lang.code);
+      const daysLeft = pack ? Math.ceil((new Date(pack.expires_at) - Date.now()) / (1000*60*60*24)) : 0;
+      const isActive = daysLeft > 0;
 
       const card = document.createElement("div");
       card.className = "lang-card";
+      
+      let statusColor = isActive ? "var(--green)" : (pack ? "var(--warn)" : "rgba(255,255,255,0.2)");
+      let statusText = isActive ? `Aktif • ${daysLeft} Gün` : (pack ? "Süresi Doldu" : "Satın Alınmadı");
 
-      const left = document.createElement("div");
-      left.className = "lang-left";
-      left.innerHTML = `
-        <div class="flag">${lang.flag}</div>
-        <div class="meta">
-          <div class="lang-name">${lang.name}</div>
-          <div class="lang-sub ${active ? "ok" : (p ? "warn" : "")}">
-            ${active ? `Aktif • ${leftDays} gün kaldı` : (p ? "Süresi doldu" : "Satın alınmadı")}
+      card.innerHTML = `
+        <div class="lang-info">
+          <div class="lang-flag">${lang.flag}</div>
+          <div class="lang-meta">
+            <div class="lang-title">${lang.name}</div>
+            <div class="lang-status" style="color:${statusColor}">
+              <div class="status-dot" style="background:${statusColor}"></div>
+              ${statusText}
+            </div>
           </div>
         </div>
       `;
 
       const btn = document.createElement("button");
-      btn.className = "btn";
-
-      if(active){
+      btn.className = "btn-3d";
+      
+      if(isActive) {
         btn.textContent = "İndirildi";
-        btn.classList.add("btnSecondary","btnDisabled");
+        btn.classList.add("btn-owned");
         btn.disabled = true;
-      }else{
+      } else {
         btn.textContent = (tokens >= FEE) ? `Satın Al (50)` : `Jeton Yetersiz`;
-        if(tokens < FEE){
-          btn.classList.add("btnSecondary");
-          btn.onclick = ()=>location.href="/pages/profile.html";
-        }else{
-          btn.onclick = async ()=>{
-            btn.disabled = true;
-            btn.textContent = "Satın alınıyor…";
-            toast("Paket açılıyor…");
+        if(tokens < FEE) btn.classList.add("btn-owned");
+        
+        btn.onclick = async () => {
+          if(tokens < FEE) return location.href = "/pages/profile.html";
+          
+          btn.disabled = true;
+          btn.textContent = "Yükleniyor...";
+          
+          const { data, error } = await supabase.rpc("purchase_offline_pack", {
+            p_lang_code: lang.code,
+            p_days: DAYS,
+            p_fee: FEE
+          });
 
-            const { data, error } = await supabase.rpc("purchase_offline_pack", {
-              p_lang_code: lang.code,
-              p_days: DAYS,
-              p_fee: FEE
-            });
+          if(error) {
+            showToast("Hata: " + error.message);
+            render();
+            return;
+          }
 
-            if(error){
-              toast(error.message || "Satın alma başarısız");
-              btn.disabled = false;
-              btn.textContent = `Satın Al (50)`;
-              return;
-            }
-
-            const row = Array.isArray(data) ? (data[0] || null) : data;
-            const tokensLeft = row?.tokens_left;
-            if(tokensLeft != null){
-              try{ setHeaderTokens(tokensLeft); }catch{}
-            }
-
-            toast("Satın alındı ✅");
-            // “indir” kısmı şimdilik otomatik “İndirildi”ye geçsin
-            // gerçek dosya indirme geldiğinde buraya bağlayacağız
-            await render();
-          };
-        }
+          showToast(`${lang.name} Paketi Aktif ✅`);
+          render();
+        };
       }
 
-      card.appendChild(left);
       card.appendChild(btn);
       list.appendChild(card);
     });
   }
 
-  await render();
+  render();
 </script>
 </body>
 </html>
