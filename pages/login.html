@@ -455,15 +455,30 @@
     }, 5600);
 
     // ✅ Session varsa direkt post-login akışı
-    (async function boot(){
-      try{
-        const { data:{ session } } = await supabase.auth.getSession();
-        if(session){
-          await ensureAuthAndCacheUser();
-          goPostLogin();
-        }
-      }catch(_e){}
-    })();
+    // ✅ Session varsa: base_lang kontrol → kuruluma yönlendir
+(async function boot(){
+  try{
+    const { data:{ session } } = await supabase.auth.getSession();
+    if(!session) return;
+
+    await ensureAuthAndCacheUser();
+
+    const { data: prof } = await supabase
+      .from("profiles")
+      .select("base_lang")
+      .eq("id", session.user.id)
+      .maybeSingle();
+
+    const base = String(prof?.base_lang || "").trim().toLowerCase();
+
+    if(!base){
+      location.replace("/pages/setup_offline.html");
+      return;
+    }
+
+    location.replace(HOME);
+  }catch(_e){}
+})();
   </script>
 </body>
 </html>
