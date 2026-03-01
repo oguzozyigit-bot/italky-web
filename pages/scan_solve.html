@@ -19,6 +19,8 @@
       --card: rgba(255,255,255,0.04);
       --muted: rgba(255,255,255,0.72);
       --aiGrad: linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
+      --ok: rgba(34,197,94,0.95);
+      --bad: rgba(255,90,140,0.95);
     }
     *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none;}
     #pageContent{height:100%}
@@ -27,11 +29,13 @@
     .card{border:1px solid var(--border);background:var(--card);border-radius:22px;padding:12px;backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);}
     .title{font-family:'Space Grotesk';font-weight:1000;font-size:16px;color:#fff}
     .hint{font-size:12px;font-weight:900;color:var(--muted);line-height:1.5}
+
     .row{display:flex; gap:10px; flex-wrap:wrap}
     .btn{height:52px;border-radius:18px;border:none;font-weight:1000;cursor:pointer; flex:1; min-width:140px}
     .btnMain{background:#fff;color:#000}
     .btnGhost{border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.06);color:#fff}
     .btn:active{transform:scale(.99)}
+    .btn:disabled{opacity:.45; cursor:not-allowed}
 
     .stage{position:relative;border-radius:18px;overflow:hidden;border:1px solid rgba(255,255,255,0.10);background:rgba(0,0,0,0.25)}
     canvas{width:100%;height:auto;display:block}
@@ -40,8 +44,10 @@
     .pill{
       padding:10px 12px;border-radius:999px;border:1px solid rgba(255,255,255,0.12);
       background:rgba(0,0,0,0.18);color:#fff;font-weight:1000;font-size:12px;cursor:pointer;
+      user-select:none;
     }
     .pill.sel{background:rgba(99,102,241,0.35);border-color:rgba(99,102,241,0.55)}
+
     input[type="file"]{
       width:100%;
       padding:10px;
@@ -74,6 +80,7 @@
       background:rgba(0,0,0,0.18);font-weight:1000;font-size:12px;color:rgba(165,180,252,0.95);
       white-space:nowrap;
     }
+
     .outBox{
       border-radius:18px;border:1px solid rgba(255,255,255,0.10);
       background:rgba(0,0,0,0.18);
@@ -83,7 +90,79 @@
       line-height:1.55;
       white-space:pre-wrap;
     }
-    .sep{height:1px;background:rgba(255,255,255,0.10);margin:10px 0}
+
+    .qBlock{
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,0.10);
+      background:rgba(255,255,255,0.03);
+      padding:12px;
+      margin-top:10px;
+    }
+    .qHead{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:8px;
+    }
+    .qNo{
+      font-family:"Space Grotesk";
+      font-weight:1000;
+      font-size:14px;
+      color:#fff;
+    }
+    .metaMini{
+      font-size:11px;
+      font-weight:900;
+      color: rgba(255,255,255,0.68);
+      white-space:nowrap;
+    }
+    .steps{
+      margin-top:10px;
+      padding-top:10px;
+      border-top:1px solid rgba(255,255,255,0.10);
+      color: rgba(255,255,255,0.88);
+    }
+    .final{
+      margin-top:10px;
+      padding:10px 12px;
+      border-radius:16px;
+      border:1px solid rgba(34,197,94,0.22);
+      background: rgba(34,197,94,0.08);
+      color:#fff;
+      font-weight:1000;
+    }
+    .ctaRow{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:10px;
+    }
+    .btnCTA{
+      height:46px;
+      border-radius:16px;
+      border:none;
+      font-weight:1000;
+      cursor:pointer;
+      padding:0 14px;
+      background: var(--aiGrad);
+      color:#050510;
+      flex:1;
+      min-width: 180px;
+    }
+    .btnCTA:active{transform:scale(.99)}
+    .btnCTAGhost{
+      height:46px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06);
+      color:#fff;
+      font-weight:1000;
+      cursor:pointer;
+      padding:0 14px;
+      flex:1;
+      min-width: 180px;
+    }
 
     .toast{
       position: fixed;
@@ -120,16 +199,15 @@
         3) Metin çıkar (şimdilik manuel) → Çöz
       </div>
 
-      <div class="pillRow" id="gradeRow" aria-label="Sınıf seç">
-        <div class="pill sel" data-grade="ortaokul" data-grade-no="8">Ortaokul (8)</div>
-        <div class="pill" data-grade="lise" data-grade-no="10">Lise (10)</div>
-        <div class="pill" data-grade="lise" data-grade-no="12">Lise (12)</div>
+      <div class="pillRow" id="gradeRow" aria-label="Kademe seç">
+        <div class="pill sel" data-grade="ortaokul">Ortaokul</div>
+        <div class="pill" data-grade="lise">Lise</div>
       </div>
 
-      <div class="pillRow" id="lessonRow" aria-label="Ders seç">
-        <div class="pill sel" data-lesson="Matematik">Matematik</div>
-        <div class="pill" data-lesson="Fen">Fen</div>
-        <div class="pill" data-lesson="Turkce">Türkçe</div>
+      <div class="pillRow" id="modeRow" aria-label="Mod seç">
+        <div class="pill sel" data-mode="auto">Auto</div>
+        <div class="pill" data-mode="single">Tek Soru</div>
+        <div class="pill" data-mode="multi">Çok Soru</div>
       </div>
     </div>
 
@@ -150,7 +228,7 @@
     <div class="card">
       <div class="outTitle">
         <span>Soru Metni</span>
-        <span class="badge" id="metaBadge">8 • Matematik</span>
+        <span class="badge" id="metaBadge">Ortaokul • Auto</span>
       </div>
 
       <textarea id="txt" placeholder="Metin burada… (istersen düzelt)"></textarea>
@@ -166,9 +244,9 @@
         <span>Çözüm</span>
         <span class="badge" id="outBadge">Hazır</span>
       </div>
-      <div class="outBox" id="out">
-        Çözüm burada görünecek…
-      </div>
+
+      <div class="outBox" id="out">Çözüm burada görünecek…</div>
+      <div id="outList"></div>
     </div>
 
   </div>
@@ -196,16 +274,16 @@
   const ctx = cv.getContext("2d");
   const txt = $("txt");
   const out = $("out");
+  const outList = $("outList");
   const outBadge = $("outBadge");
   const metaBadge = $("metaBadge");
 
-  // selected meta
-  let gradeGroup = "ortaokul";
-  let gradeNo = 8;
-  let lesson = "Matematik";
+  // selected meta (backend uyumlu)
+  let grade = "ortaokul";   // backend: "ortaokul" | "lise"
+  let mode = "auto";        // auto | single | multi
 
   function refreshMeta(){
-    metaBadge.textContent = `${gradeNo} • ${lesson}`;
+    metaBadge.textContent = `${grade === "lise" ? "Lise" : "Ortaokul"} • ${mode.toUpperCase()}`;
   }
   refreshMeta();
 
@@ -222,12 +300,11 @@
   }
 
   bindPills("gradeRow", (p)=>{
-    gradeGroup = p.getAttribute("data-grade") || "ortaokul";
-    gradeNo = Number(p.getAttribute("data-grade-no") || "8") || 8;
+    grade = (p.getAttribute("data-grade") || "ortaokul").trim();
   });
 
-  bindPills("lessonRow", (p)=>{
-    lesson = p.getAttribute("data-lesson") || "Matematik";
+  bindPills("modeRow", (p)=>{
+    mode = (p.getAttribute("data-mode") || "auto").trim();
   });
 
   // image state
@@ -297,7 +374,6 @@
     const p = pos(e);
     sel.w = p.x - start.x;
     sel.h = p.y - start.y;
-    // normalize
     if(sel.w < 0){ sel.x = p.x; sel.w = Math.abs(sel.w); } else sel.x = start.x;
     if(sel.h < 0){ sel.y = p.y; sel.h = Math.abs(sel.h); } else sel.y = start.y;
     draw();
@@ -319,11 +395,8 @@
     toast("Kırpıldı");
   };
 
-  // MVP: OCR yok (şimdilik)
   $("btnExtract").onclick = async ()=>{
-    // ileride burada backend OCR endpoint çağrılacak: /api/exam/ocr_image veya /api/ocr
-    // şimdilik kullanıcı yapıştırır/düzeltir:
-    toast("OCR şu an MVP’de kapalı. Metni yapıştırıp ‘Çöz’ de.");
+    toast("OCR şu an kapalı. Metni yapıştırıp ‘Çöz’ de. (Sonraki adım: otomatik OCR)");
     txt.focus();
   };
 
@@ -331,20 +404,19 @@
     txt.value = "";
     outBadge.textContent = "Hazır";
     out.textContent = "Çözüm burada görünecek…";
+    outList.innerHTML = "";
   };
 
-  // ✅ BURASI: senin sorduğun fetch çağrısı burada
   async function solveQuestion(extractedText){
     const res = await fetch(`${API_BASE}/api/exam/solve_text`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        text: extractedText,      // OCR’dan gelen (şimdilik textarea)
-        grade: gradeGroup,        // "ortaokul" / "lise"
-        grade_no: gradeNo,        // 8/10/12
-        lesson: lesson,           // Matematik/Fen/Turkce
-        student_answer: "",       // varsa
-        mode: "auto"              // auto en iyisi
+        text: extractedText,
+        grade: grade,           // ✅ backend uyumlu: "ortaokul" | "lise"
+        locale: "tr",
+        student_answer: "",
+        mode: mode              // auto | single | multi
       })
     });
 
@@ -356,33 +428,98 @@
     return data;
   }
 
-  function renderSolution(data){
-    // Beklenen alanlar: solution / steps / answer / topic / suggest
-    const solution = data?.solution || data?.full_solution_text || "";
-    const steps = Array.isArray(data?.solution_steps) ? data.solution_steps : (Array.isArray(data?.steps) ? data.steps : []);
-    const answer = data?.answer || data?.final_answer || "";
-    const topic = data?.topic || data?.unit || "";
-    const suggest = data?.suggest || data?.cta || "";
+  function renderSolvedList(data){
+    outList.innerHTML = "";
 
-    let textOut = "";
-    if(topic) textOut += `Konu: ${topic}\n\n`;
-    if(answer) textOut += `Cevap: ${answer}\n\n`;
-
-    if(steps.length){
-      textOut += "Adım adım çözüm:\n";
-      steps.forEach((s,i)=>{ textOut += `${i+1}) ${s}\n`; });
-      textOut += "\n";
+    const arr = Array.isArray(data?.questions) ? data.questions : [];
+    if(!arr.length){
+      out.textContent = "Soru bulunamadı / çözüm üretilemedi.";
+      return;
     }
 
-    if(solution) textOut += `Açıklama:\n${solution}\n\n`;
+    // üst özet
+    out.textContent = `Bulunan soru sayısı: ${arr.length}\n`;
 
-    // Ders CTA
-    const cta =
-      suggest ||
-      "Bu konuyu daha sağlam oturtmak ister misin?\nİstersen şimdi bu konuda 15 dakikalık mini özel derse geçebiliriz.";
-    textOut += cta;
+    arr.forEach((q)=>{
+      const steps = Array.isArray(q.steps) ? q.steps : [];
+      const choices = Array.isArray(q.choices) ? q.choices : null;
 
-    out.textContent = textOut.trim();
+      const box = document.createElement("div");
+      box.className = "qBlock";
+
+      const meta = `${q.topic || "Konu"} • ${q.difficulty || "Orta"}`;
+      box.innerHTML = `
+        <div class="qHead">
+          <div class="qNo">Soru ${q.q_no || 1}</div>
+          <div class="metaMini">${meta}</div>
+        </div>
+
+        <div class="outBox" style="background:rgba(0,0,0,0.14)">
+${(q.question || "").trim()}
+        </div>
+
+        ${choices ? `
+        <div class="steps">
+          <div style="font-weight:1000;margin-bottom:6px;">Şıklar</div>
+          <div class="outBox" style="background:rgba(0,0,0,0.12)">${choices.join("\n")}</div>
+        </div>` : ""}
+
+        <div class="steps">
+          <div style="font-weight:1000;margin-bottom:6px;">Adım adım çözüm</div>
+          <div class="outBox" style="background:rgba(0,0,0,0.12)">${steps.map((s,i)=>`${i+1}) ${s}`).join("\n")}</div>
+        </div>
+
+        <div class="final">Cevap: ${q.final_answer || "—"}</div>
+
+        <div class="outBox" style="margin-top:10px;background:rgba(0,0,0,0.12)">
+${(q.explanation_short || "").trim()}
+        </div>
+
+        <div class="ctaRow">
+          <button class="btnCTA" type="button" data-topic="${encodeURIComponent(q.topic||"Konu")}" data-grade="${encodeURIComponent(grade)}">
+            15 Dakikada Bu Konuyu Öğren
+          </button>
+          <button class="btnCTAGhost" type="button" data-copy="1">
+            Çözümü Kopyala
+          </button>
+        </div>
+      `;
+
+      // CTA: şimdilik yönlendirme placeholder (sonra plan_select / academy flow’a bağlarız)
+      box.querySelector(".btnCTA")?.addEventListener("click", ()=>{
+        const topic = q.topic || "Konu";
+        toast("Özel ders akışı bir sonraki adım. (Hazır olunca bu buton Plan’a bağlanacak)");
+        // ileride örnek:
+        // location.href = `/pages/plan_select.html?mode=exam&grade=${grade}&topic=${encodeURIComponent(topic)}`;
+      });
+
+      // copy
+      box.querySelector(".btnCTAGhost")?.addEventListener("click", async ()=>{
+        const textToCopy =
+`Soru ${q.q_no}
+Konu: ${q.topic}
+Zorluk: ${q.difficulty}
+
+${q.question}
+
+Adımlar:
+${steps.map((s,i)=>`${i+1}) ${s}`).join("\n")}
+
+Cevap: ${q.final_answer}
+
+Kısa açıklama:
+${q.explanation_short}
+`;
+        try{
+          await navigator.clipboard.writeText(textToCopy);
+          toast("Kopyalandı ✅");
+        }catch{
+          toast("Kopyalanamadı (izin?)");
+        }
+      });
+
+      outList.appendChild(box);
+    });
   }
 
   $("btnSolve").onclick = async ()=>{
@@ -390,15 +527,18 @@
     if(!q){
       outBadge.textContent = "Uyarı";
       out.textContent = "Soru metni boş.";
+      outList.innerHTML = "";
       return;
     }
+
     outBadge.textContent = "Çözülüyor…";
     out.textContent = "Çözüm hazırlanıyor…";
+    outList.innerHTML = "";
 
     try{
       const data = await solveQuestion(q);
       outBadge.textContent = "Bitti ✅";
-      renderSolution(data);
+      renderSolvedList(data);
     }catch(e){
       outBadge.textContent = "Hata";
       out.textContent = `Çözülemedi:\n${e?.message || e}`;
