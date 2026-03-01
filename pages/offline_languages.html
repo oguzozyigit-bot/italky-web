@@ -1,340 +1,314 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>italkyAI • Offline Terminal</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<title>italkyAI • Offline Terminal</title>
 
-  <meta name="theme-color" content="#000000">
-  <style>
-    html,body{background:#000 !important; margin:0; padding:0; overflow-x:hidden; font-family:'Outfit', sans-serif;}
-    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=Space+Grotesk:wght@700&display=swap');
-  </style>
+<meta name="theme-color" content="#000000">
+<style>
+html,body{
+  background:#000 !important;
+  margin:0;
+  padding:0;
+  overflow-x:hidden;
+  font-family:'Outfit', sans-serif;
+}
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=Space+Grotesk:wght@700&display=swap');
+</style>
 
-  <style>
-    :root {
-      --ai-grad: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
-      --glass: rgba(255, 255, 255, 0.03);
-      --glass-border: rgba(255, 255, 255, 0.1);
-      --green: #34d399;
-      --warn: #f59e0b;
+<style>
+:root{
+  --glass: rgba(255,255,255,0.04);
+  --glass-border: rgba(255,255,255,0.10);
+  --green:#34d399;
 
-      /* ✅ kırmızı geçişli buton */
-      --dl-grad: linear-gradient(135deg, rgba(255,90,140,0.95) 0%, rgba(236,72,153,0.92) 55%, rgba(251,113,133,0.92) 100%);
-      --dl-glow: rgba(236,72,153,0.25);
-    }
+  /* ✅ Milenyum buton rengi */
+  --dl-grad: linear-gradient(135deg,#6366f1 0%,#8b5cf6 45%,#ec4899 100%);
+  --dl-glow: rgba(139,92,246,.35);
+}
 
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none;}
 
-    /* ✅ ui_shell ile uyum */
-    #pageContent {
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      background: radial-gradient(circle at 50% 20%, #0a0a25 0%, #000 100%);
-    }
+/* ui_shell uyumlu */
+#pageContent{
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  background: radial-gradient(circle at 50% 20%, #0a0a25 0%, #000 100%);
+}
 
-    .main-wrap {
-      flex: 1;
-      max-width: 520px;
-      margin: 0 auto;
+.main-wrap{
+  flex:1;
+  max-width:520px;
+  margin:0 auto;
 
-      /* ✅ alt bar altında kalmasın */
-      padding: 12px 14px calc(var(--footerH, 92px) + env(safe-area-inset-bottom) + 16px);
+  /* ✅ alt bar boşluğu */
+  padding:
+    10px
+    14px
+    calc(var(--footerH,92px) + env(safe-area-inset-bottom) + 10px);
 
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      min-height: 0;
-    }
+  display:flex;
+  flex-direction:column;
+  gap:8px; /* önce 12 idi → daraltıldı */
+}
 
-    /* Top Stats Bar */
-    .stats-hub {
-      display: flex; align-items: center; justify-content: space-between;
-      background: var(--glass); border: 1px solid var(--glass-border);
-      border-radius: 18px; padding: 10px 14px; backdrop-filter: blur(20px);
-    }
-    .stat-item { font-size: 12px; font-weight: 900; color: rgba(255,255,255,0.45); letter-spacing:.3px; }
-    .stat-item span { color: #fff; font-weight: 1000; margin-left: 6px; }
+/* Top info */
+.stats-hub{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  background:var(--glass);
+  border:1px solid var(--glass-border);
+  border-radius:16px;
+  padding:8px 12px;
+  backdrop-filter:blur(16px);
+}
+.stat-item{
+  font-size:11px;
+  font-weight:900;
+  color:rgba(255,255,255,.45);
+}
+.stat-item span{
+  color:#fff;
+  margin-left:6px;
+}
 
-    /* Header */
-    .hero { text-align: center; padding: 6px 0 2px; }
-    .hero h1 { font-family: 'Space Grotesk'; font-size: 22px; font-weight: 1000; color: #fff; margin: 0; letter-spacing: -0.5px; }
-    .hero p { font-size: 12px; color: rgba(255,255,255,0.55); margin-top: 6px; line-height: 1.45; font-weight: 800; }
+/* Header */
+.hero{
+  text-align:center;
+  padding:4px 0;
+}
+.hero h1{
+  font-family:'Space Grotesk';
+  font-size:20px;
+  font-weight:1000;
+  margin:0;
+}
+.hero p{
+  font-size:11px;
+  color:rgba(255,255,255,.55);
+  margin-top:4px;
+  font-weight:800;
+  line-height:1.4;
+}
 
-    /* Native language selector */
-    .nativeBox{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      padding: 10px 12px;
-      border-radius: 18px;
-      border: 1px solid rgba(255,255,255,0.10);
-      background: rgba(255,255,255,0.03);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-    }
-    .nativeBox .lbl{
-      font-size:12px;
-      font-weight:1000;
-      color: rgba(255,255,255,0.70);
-      white-space:nowrap;
-    }
-    .nativeSel{
-      flex:1;
-      height: 42px;
-      border-radius: 14px;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(0,0,0,0.18);
-      color:#fff;
-      font-weight:1000;
-      padding: 0 10px;
-      max-width: 240px;
-    }
+/* Native language */
+.nativeBox{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  padding:8px 10px;
+  border-radius:16px;
+  border:1px solid var(--glass-border);
+  background:var(--glass);
+  backdrop-filter:blur(14px);
+}
+.nativeBox .lbl{
+  font-size:11px;
+  font-weight:1000;
+  color:rgba(255,255,255,.65);
+}
+.nativeSel{
+  height:38px;
+  border-radius:12px;
+  border:1px solid var(--glass-border);
+  background:rgba(0,0,0,.25);
+  color:#fff;
+  font-weight:1000;
+  padding:0 8px;
+  max-width:200px;
+}
 
-    /* List */
-    #langList { display: flex; flex-direction: column; gap: 10px; min-height:0; }
+/* List */
+#langList{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
 
-    /* ✅ Kartları biraz küçült */
-    .lang-card {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 12px 12px; border-radius: 20px; border: 1px solid var(--glass-border);
-      background: var(--glass); backdrop-filter: blur(18px);
-      transition: transform .18s ease, filter .18s ease;
-      min-height: 64px;
-    }
-    .lang-card:active{ transform: scale(.99); filter: brightness(1.06); }
+/* Cards */
+.lang-card{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:10px 12px;
+  border-radius:18px;
+  border:1px solid var(--glass-border);
+  background:var(--glass);
+  backdrop-filter:blur(14px);
+  min-height:60px;
+}
 
-    .lang-info { display: flex; align-items: center; gap: 12px; min-width: 0; }
-    .lang-flag { font-size: 24px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.18)); }
-    .lang-meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-    .lang-title { font-size: 14px; font-weight: 1000; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .lang-status { font-size: 11px; font-weight: 900; display: flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.65); }
-    .status-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.20); }
+.lang-info{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.lang-flag{
+  font-size:22px;
+}
+.lang-title{
+  font-size:14px;
+  font-weight:1000;
+}
+.lang-status{
+  font-size:10px;
+  font-weight:800;
+  color:rgba(255,255,255,.55);
+}
 
-    /* ✅ “İndir” butonu (kırmızı geçişli) */
-    .btn-dl{
-      min-width: 116px;
-      height: 42px;
-      border-radius: 18px;
-      border: none;
-      background: var(--dl-grad);
-      color:#120006;
-      font-weight: 1000;
-      font-size: 13px;
-      cursor: pointer;
-      box-shadow:
-        0 10px 26px var(--dl-glow),
-        inset 0 2px 4px rgba(255,255,255,0.28),
-        inset 0 -2px 6px rgba(0,0,0,0.22);
-      transition: transform .18s ease, filter .18s ease, opacity .18s ease;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:8px;
-      user-select:none;
-      white-space:nowrap;
-    }
-    .btn-dl:active{ transform: translateY(1px) scale(.99); filter: brightness(1.05); }
+/* ✅ Milenyum buton */
+.btn-dl{
+  width:120px;
+  height:40px;
+  border-radius:14px;
+  border:none;
+  background:var(--dl-grad);
+  color:#fff;
+  font-weight:1000;
+  font-size:12px;
+  cursor:pointer;
 
-    /* ✅ indirildi state */
-    .btn-owned{
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.12);
-      box-shadow:none;
-      color: rgba(255,255,255,0.75);
-      cursor: default;
-    }
-    .btn-owned:active{ transform:none; filter:none; }
+  box-shadow:
+    0 8px 22px var(--dl-glow),
+    inset 0 2px 4px rgba(255,255,255,.25),
+    inset 0 -2px 6px rgba(0,0,0,.25);
 
-    .toast{
-      position: fixed; left: 50%; top: 20px;
-      transform: translateX(-50%) translateY(-100px);
-      background: rgba(10, 10, 20, 0.92);
-      border: 1px solid rgba(255,255,255,0.12);
-      padding: 10px 16px;
-      border-radius: 999px;
-      color: #fff;
-      font-weight: 1000;
-      font-size: 12px;
-      transition: 0.25s cubic-bezier(0.18, 0.89, 0.32, 1.28);
-      backdrop-filter: blur(10px);
-      z-index: 9999;
-      opacity: 0;
-      max-width: min(92vw, 520px);
-      text-align:center;
-    }
-    .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-  </style>
+  transition:.2s ease;
+}
+.btn-dl:active{
+  transform:translateY(1px) scale(.98);
+  filter:brightness(1.05);
+}
+
+/* İndirildi */
+.btn-owned{
+  background:rgba(255,255,255,.06);
+  border:1px solid var(--glass-border);
+  box-shadow:none;
+  color:rgba(255,255,255,.65);
+  cursor:default;
+}
+
+.toast{
+  position:fixed;
+  left:50%;
+  top:20px;
+  transform:translateX(-50%) translateY(-100px);
+  background:rgba(10,10,20,.92);
+  border:1px solid var(--glass-border);
+  padding:8px 14px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:1000;
+  opacity:0;
+  transition:.25s;
+}
+.toast.show{
+  transform:translateX(-50%) translateY(0);
+  opacity:1;
+}
+</style>
 </head>
 
 <body>
 <main id="pageContent">
-  <div class="main-wrap">
+<div class="main-wrap">
 
-    <section class="stats-hub">
-      <div class="stat-item">PAKET SÜRESİ<span>365 GÜN</span></div>
-      <div class="stat-item">ÜCRET<span>50 Jeton</span></div>
-    </section>
+<section class="stats-hub">
+  <div class="stat-item">SÜRE<span>365 Gün</span></div>
+  <div class="stat-item">ÜCRET<span>50 Jeton</span></div>
+</section>
 
-    <header class="hero">
-      <h1>Offline Terminal</h1>
-      <p>Online iken indir, internet yokken çevir. <br/>Seçtiğin dil için sistem iki yönü birlikte indirir.</p>
-    </header>
+<header class="hero">
+  <h1>Offline Terminal</h1>
+  <p>Online indir. Offline çevir. İki yönlü paket otomatik yüklenir.</p>
+</header>
 
-    <section class="nativeBox">
-      <div class="lbl">Senin dilin</div>
-      <select class="nativeSel" id="nativeSel">
-        <option value="tr">🇹🇷 Türkçe</option>
-        <option value="en">🇬🇧 İngilizce</option>
-        <option value="de">🇩🇪 Almanca</option>
-        <option value="fr">🇫🇷 Fransızca</option>
-        <option value="it">🇮🇹 İtalyanca</option>
-        <option value="es">🇪🇸 İspanyolca</option>
-      </select>
-    </section>
+<section class="nativeBox">
+  <div class="lbl">Senin Dilin</div>
+  <select class="nativeSel" id="nativeSel">
+    <option value="tr">🇹🇷 Türkçe</option>
+    <option value="en">🇬🇧 İngilizce</option>
+    <option value="de">🇩🇪 Almanca</option>
+    <option value="fr">🇫🇷 Fransızca</option>
+    <option value="it">🇮🇹 İtalyanca</option>
+    <option value="es">🇪🇸 İspanyolca</option>
+  </select>
+</section>
 
-    <div id="langList"></div>
-  </div>
+<div id="langList"></div>
+
+</div>
 </main>
 
 <div class="toast" id="toast"></div>
 
 <script type="module">
-  import { mountShell, setHeaderTokens } from "/js/ui_shell.js";
-  import { supabase } from "/js/supabase_client.js";
-  mountShell({ scroll:"auto" });
+import { mountShell } from "/js/ui_shell.js";
+mountShell({ scroll:"auto" });
 
-  const $ = (id) => document.getElementById(id);
-  const toastEl = $("toast");
+const $=id=>document.getElementById(id);
+const toastEl=$("toast");
+function toast(m){
+  toastEl.textContent=m;
+  toastEl.classList.add("show");
+  setTimeout(()=>toastEl.classList.remove("show"),1800);
+}
 
-  function showToast(msg) {
-    toastEl.textContent = String(msg||"");
-    toastEl.classList.add("show");
-    clearTimeout(window.__to);
-    window.__to = setTimeout(() => toastEl.classList.remove("show"), 1800);
-  }
+const LANGS=[
+ {code:"en",name:"İngilizce",flag:"🇬🇧"},
+ {code:"de",name:"Almanca",flag:"🇩🇪"},
+ {code:"tr",name:"Türkçe",flag:"🇹🇷"},
+ {code:"fr",name:"Fransızca",flag:"🇫🇷"},
+ {code:"it",name:"İtalyanca",flag:"🇮🇹"},
+ {code:"es",name:"İspanyolca",flag:"🇪🇸"}
+];
 
-  const LANGUAGES = [
-    {code:"en", name:"İngilizce", flag:"🇬🇧"},
-    {code:"de", name:"Almanca", flag:"🇩🇪"},
-    {code:"tr", name:"Türkçe", flag:"🇹🇷"},
-    {code:"fr", name:"Fransızca", flag:"🇫🇷"},
-    {code:"it", name:"İtalyanca", flag:"🇮🇹"},
-    {code:"es", name:"İspanyolca", flag:"🇪🇸"}
-  ];
+let native=$("nativeSel").value;
 
-  // ✅ şu an “hiç olmazsa” plan: 2 zip direkt indir
-  const OFFLINE_BASE = "https://auth.italky.ai/storage/v1/object/public/offline/langpacks";
-
-  // geleceğe hazır (jeton/paket mantığı duruyor ama butonda “Satın Al” yazmıyoruz)
-  const FEE = 50;
-  const DAYS = 365;
-
-  const { data: { session } } = await supabase.auth.getSession();
-  if(!session?.user) location.replace("/pages/login.html");
-  const userId = session.user.id;
-
-  // native lang
-  const nativeSel = $("nativeSel");
-  let nativeLang = (localStorage.getItem("italky_native_lang") || "tr").trim().toLowerCase();
-  if(nativeSel){
-    nativeSel.value = nativeLang;
-    nativeSel.addEventListener("change", ()=>{
-      nativeLang = (nativeSel.value || "tr").trim().toLowerCase();
-      localStorage.setItem("italky_native_lang", nativeLang);
-      render();
-    });
-  }
-
-  function pairUrl(a,b){
-    // offline/langpacks/en-tr/model.zip
-    return `${OFFLINE_BASE}/${encodeURIComponent(a)}-${encodeURIComponent(b)}/model.zip`;
-  }
-
-  function downloadUrl(url){
-    // mobilde en stabil: _blank
-    window.open(url, "_blank");
-  }
-
-  function downloadBundle(native, target){
-    // native-target ve target-native ikisini de indir
-    const u1 = pairUrl(native, target);
-    const u2 = pairUrl(target, native);
-    downloadUrl(u1);
-    setTimeout(()=>downloadUrl(u2), 350); // sekmeler çakışmasın
-  }
-
-  async function render() {
-    // tokens + offline_packs (geleceğe hazır)
-    const [{ data: prof }, { data: packs }] = await Promise.all([
-      supabase.from("profiles").select("tokens").eq("id", userId).maybeSingle(),
-      supabase.from("offline_packs").select("lang_code, expires_at").eq("user_id", userId)
-    ]);
-
-    const tokens = Number(prof?.tokens ?? 0);
-    try { setHeaderTokens(tokens); } catch {}
-
-    const list = $("langList");
-    list.innerHTML = "";
-
-    LANGUAGES
-      .filter(l => l.code !== nativeLang) // native dili listeden çıkar
-      .forEach(lang => {
-        const pack = packs?.find(p => p.lang_code === lang.code);
-        const daysLeft = pack ? Math.ceil((new Date(pack.expires_at) - Date.now()) / (1000*60*60*24)) : 0;
-        const isActive = daysLeft > 0;
-
-        const card = document.createElement("div");
-        card.className = "lang-card";
-
-        const statusDotColor = isActive ? "var(--green)" : (pack ? "var(--warn)" : "rgba(255,255,255,0.20)");
-        const statusText = isActive ? `Aktif • ${daysLeft} gün` : (pack ? "Süresi doldu" : "Hazır");
-
-        card.innerHTML = `
-          <div class="lang-info">
-            <div class="lang-flag">${lang.flag}</div>
-            <div class="lang-meta">
-              <div class="lang-title">${lang.name}</div>
-              <div class="lang-status">
-                <div class="status-dot" style="background:${statusDotColor}"></div>
-                ${statusText}
-              </div>
-            </div>
-          </div>
-        `;
-
-        const btn = document.createElement("button");
-        btn.className = "btn-dl";
-
-        // Şimdilik: direkt indirilebilir yap (hiç olmazsa çalışsın)
-        // Paket sistemi devreye alındığında burada önce purchase_offline_pack çağırırsın.
-        btn.innerHTML = `⬇️ İndir`;
-        btn.onclick = async ()=>{
-          // eğer paketi zorunlu kılacaksan:
-          // - tokens < FEE ise profile
-          // - rpc purchase_offline_pack
-          // - sonra downloadBundle
-          //
-          // şimdilik direkt indir:
-          showToast(`${lang.name} indiriliyor…`);
-          downloadBundle(nativeLang, lang.code);
-        };
-
-        // aktif paket varsa butonu "İndirildi" yap (sadece UI)
-        if(isActive){
-          btn.innerHTML = `✅ İndirildi`;
-          btn.classList.add("btn-owned");
-          btn.disabled = true;
-        }
-
-        card.appendChild(btn);
-        list.appendChild(card);
-      });
-  }
-
+$("nativeSel").addEventListener("change",e=>{
+  native=e.target.value;
   render();
+});
+
+function render(){
+  const list=$("langList");
+  list.innerHTML="";
+  LANGS.filter(l=>l.code!==native).forEach(lang=>{
+    const card=document.createElement("div");
+    card.className="lang-card";
+
+    card.innerHTML=`
+      <div class="lang-info">
+        <div class="lang-flag">${lang.flag}</div>
+        <div>
+          <div class="lang-title">${lang.name}</div>
+          <div class="lang-status">Hazır</div>
+        </div>
+      </div>
+    `;
+
+    const btn=document.createElement("button");
+    btn.className="btn-dl";
+    btn.textContent="⬇ İndir";
+
+    btn.onclick=()=>{
+      const url1=`/offline/langpacks/${native}-${lang.code}/model.zip`;
+      const url2=`/offline/langpacks/${lang.code}-${native}/model.zip`;
+      window.open(url1,"_blank");
+      setTimeout(()=>window.open(url2,"_blank"),300);
+      toast(`${lang.name} indiriliyor`);
+    };
+
+    card.appendChild(btn);
+    list.appendChild(card);
+  });
+}
+render();
 </script>
 </body>
 </html>
