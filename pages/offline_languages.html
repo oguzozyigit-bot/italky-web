@@ -19,11 +19,11 @@
       --muted: rgba(255,255,255,0.70);
       --aiGrad: linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
 
-      --btnGrad: linear-gradient(135deg, rgba(236,72,153,0.22) 0%, rgba(99,102,241,0.30) 55%, rgba(165,180,252,0.22) 100%);
+      --btnGrad: linear-gradient(135deg, rgba(236,72,153,0.16) 0%, rgba(99,102,241,0.24) 55%, rgba(165,180,252,0.14) 100%);
       --btnBorder: rgba(255,255,255,0.14);
 
-      --doneGrad: linear-gradient(135deg, rgba(34,197,94,0.12) 0%, rgba(16,185,129,0.10) 60%, rgba(165,180,252,0.08) 100%);
-      --doneBorder: rgba(34,197,94,0.22);
+      --doneGrad: linear-gradient(135deg, rgba(34,197,94,0.10) 0%, rgba(16,185,129,0.10) 60%, rgba(165,180,252,0.06) 100%);
+      --doneBorder: rgba(34,197,94,0.20);
     }
 
     *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; }
@@ -155,6 +155,7 @@
       justify-content:center;
       gap:8px;
       box-shadow: 0 10px 22px rgba(0,0,0,0.25);
+      white-space:nowrap;
     }
     .btn:active{ transform: scale(.99); }
     .btn.disabled{
@@ -198,8 +199,7 @@
     <section class="hero">
       <div class="h1">Offline Çeviri Paketleri</div>
       <div class="p">
-        Kendi dilin seçildikten sonra sistem <b>2 yön</b> çalışır: <b>BASE↔EN</b> ve <b>BASE↔hedef</b> mantığıyla.
-        Bu sayfa hedef dili seçip iki zip’i indirmen için.
+        Bu sayfa hedef dili seçip <b>iki yön</b> paketi (A→B ve B→A) indirmen içindir.
       </div>
       <div class="pillRow">
         <div class="pill">Süre: <b>365 gün</b></div>
@@ -246,7 +246,8 @@
   const FEE = 50;
   const DAYS = 365;
 
-  const DL_KEY = "italky_offline_downloaded_v1"; // local flag: {"tr-en":true,...}
+  // local flag (downloaded)
+  const DL_KEY = "italky_offline_downloaded_v1"; // {"tr-en":true,"en-tr":true}
 
   function loadDL(){
     try{ return JSON.parse(localStorage.getItem(DL_KEY)||"{}") || {}; }catch{ return {}; }
@@ -255,34 +256,41 @@
     try{ localStorage.setItem(DL_KEY, JSON.stringify(obj||{})); }catch{}
   }
 
-  function norm(x){ return String(x||"").trim().toLowerCase(); }
+  const norm = (x)=>String(x||"").trim().toLowerCase();
 
-  function downloadFile(url, filename){
+  function forceDownload(url){
+    // Android WebView/Chrome: window.open genelde daha garanti
+    try{
+      window.open(url, "_blank", "noopener,noreferrer");
+      return;
+    }catch{}
     const a = document.createElement("a");
     a.href = url;
-    a.download = filename || "";
+    a.target = "_blank";
+    a.rel = "noopener";
+    a.download = "";
     document.body.appendChild(a);
     a.click();
     a.remove();
   }
 
   async function purchasePair(base, target){
-    // 2 yön satın al / uzat: base-target ve target-base
     const p1 = `${base}-${target}`;
     const p2 = `${target}-${base}`;
 
+    // 1) ücretli
     const r1 = await supabase.rpc("purchase_offline_pack", { p_lang_code: p1, p_days: DAYS, p_fee: FEE });
     if(r1.error) return { error: r1.error };
 
-    const r2 = await supabase.rpc("purchase_offline_pack", { p_lang_code: p2, p_days: DAYS, p_fee: 0 }); // 2. yön için tekrar ücret alma
-    // Not: İstersen burada da ücret alırsın. Şimdilik "paket 2 yön" tek ücret mantığı.
+    // 2) ikinci yön ücretsiz (tek ücret mantığı)
+    const r2 = await supabase.rpc("purchase_offline_pack", { p_lang_code: p2, p_days: DAYS, p_fee: 0 });
     if(r2.error) return { error: r2.error };
 
     return { ok:true };
   }
 
-  async function fetchLinks(accessToken, base, target){
-    const res = await fetch(`${API_BASE}/api/offline/get_links`,{
+  async function getSignedLink(accessToken, base, target){
+    const res = await fetch(`${API_BASE}/api/offline/get_link`,{
       method:"POST",
       headers:{
         "Content-Type":"application/json",
@@ -291,8 +299,8 @@
       body: JSON.stringify({ base_lang: base, target_lang: target })
     });
     const j = await res.json().catch(()=>null);
-    if(!res.ok) throw new Error(j?.detail || `HTTP ${res.status}`);
-    return j;
+    if(!res.ok || !j?.ok) throw new Error(j?.detail || `HTTP ${res.status}`);
+    return String(j.url || "").trim();
   }
 
   function isPackActive(packs, code){
@@ -309,7 +317,6 @@
       return;
     }
 
-    // profile + packs
     const [{ data: prof }, { data: packs }] = await Promise.all([
       supabase.from("profiles").select("tokens, base_lang").eq("id", session.user.id).maybeSingle(),
       supabase.from("offline_packs").select("lang_code, expires_at").eq("user_id", session.user.id)
@@ -323,17 +330,14 @@
       location.replace("/pages/setup_offline.html");
       return;
     }
-
     $("basePill").innerHTML = `Base: <b>${base.toUpperCase()}</b>`;
 
     const dl = loadDL();
-
-    // base hariç hedef listesi
-    const targets = LANGS.filter(l=>l.code !== base);
+    const targets = LANGS.filter(l=>norm(l.code) !== base);
 
     list.innerHTML = "";
 
-    targets.forEach(l=>{
+    for(const l of targets){
       const target = norm(l.code);
       const p1 = `${base}-${target}`;
       const p2 = `${target}-${base}`;
@@ -354,7 +358,7 @@
         <div class="meta">
           <div class="name">${l.name}</div>
           <div class="sub">
-            ${downloaded ? "İndirildi • Offline hazır" : (entitled ? "Paket aktif • İndir" : "Paket gerekli • 50 jeton / 365 gün")}
+            ${downloaded ? "İndirildi • Offline hazır" : (entitled ? "Paket aktif • İndirmek için tıkla" : "Paket gerekli • 50 jeton / 365 gün")}
           </div>
         </div>
       `;
@@ -371,64 +375,78 @@
         btn.innerHTML = `<span>⬇️</span><span>İndir</span>`;
       }
 
+      let busy = false;
+
       btn.onclick = async ()=>{
-        if(downloaded) return;
+        if(busy || downloaded) return;
+        busy = true;
 
-        // token yoksa profile
-        if(!entitled){
-          if(tokens < FEE){
-            toast("Jeton yetersiz. Profil’e yönlendiriyorum.");
-            setTimeout(()=>location.href="/pages/profile.html", 650);
-            return;
-          }
-
-          btn.disabled = true;
-          btn.classList.add("disabled");
-          btn.textContent = "Aktif ediliyor…";
-
-          const r = await purchasePair(base, target);
-          if(r.error){
-            toast("Hata: " + (r.error.message || "İşlem başarısız"));
-            await render();
-            return;
-          }
-          toast("Paket aktif ✅");
+        const { data:{ session } } = await supabase.auth.getSession();
+        if(!session?.access_token){
+          toast("Oturum yok. Tekrar giriş yap.");
+          location.href="/pages/login.html";
+          return;
         }
 
-        // download
-        btn.disabled = true;
-        btn.classList.remove("disabled");
-        btn.textContent = "Link alınıyor…";
-
         try{
-          const links = await fetchLinks(session.access_token, base, target);
+          // 1) paket yoksa satın al
+          if(!entitled){
+            if(tokens < FEE){
+              toast("Jeton yetersiz. Profil’e yönlendiriyorum.");
+              setTimeout(()=>location.href="/pages/profile.html", 650);
+              return;
+            }
+
+            btn.disabled = true;
+            btn.classList.add("disabled");
+            btn.textContent = "Aktif ediliyor…";
+
+            const r = await purchasePair(base, target);
+            if(r.error){
+              toast("Hata: " + (r.error.message || "İşlem başarısız"));
+              await render();
+              return;
+            }
+            toast("Paket aktif ✅");
+          }
+
+          // 2) iki link al ve indir
+          btn.disabled = true;
+          btn.classList.remove("disabled");
+          btn.textContent = "Link alınıyor…";
+
+          const url1 = await getSignedLink(session.access_token, base, target);   // base-target
+          const url2 = await getSignedLink(session.access_token, target, base);  // target-base
 
           btn.textContent = "İndiriliyor…";
 
-          // iki zip’i indir
-          downloadFile(links.url_1, `${links.pair_1}.zip`);
-          setTimeout(()=>downloadFile(links.url_2, `${links.pair_2}.zip`), 450);
+          forceDownload(url1);
+          setTimeout(()=>forceDownload(url2), 500);
 
-          // local flag
+          // 3) local flag (indir tetiklendi)
           const cur = loadDL();
-          cur[links.pair_1] = true;
-          cur[links.pair_2] = true;
+          cur[`${base}-${target}`] = true;
+          cur[`${target}-${base}`] = true;
           saveDL(cur);
 
           toast("İndirme başladı ✅");
-          setTimeout(()=>render(), 800);
+
+          setTimeout(()=>render(), 900);
 
         }catch(e){
-          toast("Link alınamadı: " + (e?.message || e));
+          toast("İndirme linki alınamadı: " + (e?.message || e));
           btn.disabled = false;
+          btn.classList.remove("disabled");
           btn.innerHTML = `<span>⬇️</span><span>İndir</span>`;
+        } finally {
+          busy = false;
         }
       };
 
       card.appendChild(left);
       card.appendChild(btn);
       list.appendChild(card);
-    });
+    }
   }
 
   render();
