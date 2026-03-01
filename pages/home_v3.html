@@ -17,13 +17,12 @@
     :root{
       --border: rgba(255,255,255,0.12);
       --glass: rgba(255,255,255,0.04);
-      --muted: rgba(255,255,255,0.65);
+      --muted: rgba(255,255,255,0.68);
       --purple: #a855f7;
       --blue: #60a5fa;
       --ai-grad: linear-gradient(135deg,#a5b4fc 0%,#6366f1 45%,#ec4899 100%);
     }
     *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; }
-
     #pageContent{ height:100%; overflow:hidden; }
 
     .wrap{
@@ -74,17 +73,17 @@
       min-height:0;
       display:flex;
       flex-direction:column;
+      justify-content:center;
       gap:10px;
     }
 
-    /* BIG CENTER CARD */
     .bigCard{
       flex:1;
-      min-height: 260px;
+      min-height: 320px;
       border-radius: 28px;
       border:1px solid rgba(168,85,247,0.28);
       background:
-        linear-gradient(145deg, rgba(168,85,247,0.12) 0%, rgba(0,0,0,0.55) 100%);
+        linear-gradient(145deg, rgba(168,85,247,0.14) 0%, rgba(0,0,0,0.55) 100%);
       position:relative;
       overflow:hidden;
       display:flex;
@@ -101,21 +100,17 @@
     }
     .bigCard:active{ transform: scale(.985); filter: brightness(1.06); }
 
-    /* floating formulas */
-    .fx{
-      position:absolute; inset:0;
-      pointer-events:none;
-      opacity: 1;
-    }
+    /* FX */
+    .fx{ position:absolute; inset:0; pointer-events:none; }
     .fx:before{
       content:"";
       position:absolute; inset:-30%;
       background:
-        radial-gradient(circle at 20% 30%, rgba(168,85,247,.35) 0%, transparent 45%),
-        radial-gradient(circle at 80% 70%, rgba(96,165,250,.18) 0%, transparent 45%);
+        radial-gradient(circle at 20% 30%, rgba(168,85,247,.38) 0%, transparent 45%),
+        radial-gradient(circle at 80% 70%, rgba(96,165,250,.20) 0%, transparent 45%);
       filter: blur(34px);
       animation: drift 10s ease-in-out infinite alternate;
-      opacity:.9;
+      opacity:.95;
     }
     @keyframes drift{
       from{ transform: translate3d(-10px,-8px,0) scale(1); }
@@ -127,7 +122,7 @@
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
       font-size: 11px;
       color: rgba(168,85,247,0.85);
-      opacity:.0;
+      opacity:0;
       animation: formulaUp 3.4s linear infinite;
     }
     .formula.f1{ left: 16%; bottom: -10px; animation-delay: .2s; }
@@ -137,13 +132,12 @@
       0%{ transform: translateY(20px); opacity:0; }
       20%{ opacity:.55; }
       80%{ opacity:.35; }
-      100%{ transform: translateY(-220px); opacity:0; }
+      100%{ transform: translateY(-240px); opacity:0; }
     }
 
-    /* camera orb */
     .orb{
-      width: 110px;
-      height: 110px;
+      width: 120px;
+      height: 120px;
       border-radius: 999px;
       position:relative;
       display:flex;
@@ -152,7 +146,7 @@
       margin-bottom: 10px;
     }
     .ring{
-      position:absolute; inset:-4px;
+      position:absolute; inset:-5px;
       border-radius:999px;
       background: var(--ai-grad);
       -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
@@ -164,15 +158,15 @@
     @keyframes spin{ to{ transform: rotate(360deg);} }
 
     .core{
-      width: 86px;
-      height: 86px;
+      width: 92px;
+      height: 92px;
       border-radius: 999px;
       background: rgba(0,0,0,0.55);
       border: 1px solid rgba(255,255,255,0.10);
       display:flex;
       align-items:center;
       justify-content:center;
-      box-shadow: 0 0 30px rgba(168,85,247,0.22);
+      box-shadow: 0 0 34px rgba(168,85,247,0.22);
       animation: breathe 3.6s ease-in-out infinite;
     }
     @keyframes breathe{
@@ -181,7 +175,7 @@
     }
 
     .camIcon{
-      font-size: 34px;
+      font-size: 38px;
       line-height: 1;
       filter: drop-shadow(0 10px 18px rgba(0,0,0,0.35));
     }
@@ -200,57 +194,32 @@
       font-weight: 900;
       color: rgba(255,255,255,0.68);
       line-height: 1.45;
-      max-width: 320px;
+      max-width: 340px;
     }
 
-    .miniRow{
+    .ctaRow{
+      width: 100%;
+      max-width: 420px;
+      margin-top: 14px;
       display:flex;
       gap:10px;
     }
-
-    .miniCard{
+    .btn{
       flex:1;
-      border-radius: 22px;
-      border:1px solid var(--border);
-      background: rgba(255,255,255,0.03);
-      padding: 14px;
-      display:flex;
-      gap: 12px;
-      align-items:center;
+      height: 54px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06);
+      color:#fff;
+      font-weight:1000;
       cursor:pointer;
       user-select:none;
-      transition: transform .18s ease, filter .18s ease;
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
     }
-    .miniCard:active{ transform: scale(.985); filter: brightness(1.06); }
-
-    .miniIco{
-      width: 44px; height: 44px;
-      border-radius: 16px;
-      border:1px solid rgba(255,255,255,0.10);
-      background: rgba(0,0,0,0.18);
-      display:flex; align-items:center; justify-content:center;
-      font-size: 20px;
-      flex:0 0 auto;
-    }
-    .miniTxt{ min-width:0; }
-    .miniTxt b{
-      display:block;
-      font-size: 13px;
-      font-weight: 1000;
-      color:#fff;
-      margin-bottom: 2px;
-      white-space: nowrap;
-      overflow:hidden;
-      text-overflow: ellipsis;
-    }
-    .miniTxt span{
-      display:block;
-      font-size: 11px;
-      font-weight: 900;
-      color: rgba(255,255,255,0.60);
-      line-height: 1.25;
+    .btn:active{ transform: scale(.99); }
+    .btnMain{
+      background: #fff;
+      color:#000;
+      border:none;
     }
   </style>
 </head>
@@ -263,13 +232,11 @@
       <h1>Teacher <span class="ai">AI</span></h1>
       <p>
         Matematik • Fizik • Kimya • Türkçe • Yabancı Dil<br/>
-        Fotoğrafını çek, soruyu seç, ben de adım adım anlatayım.
+        Fotoğrafını çek → soruyu seç → adım adım anlatarak çözelim.
       </p>
     </section>
 
     <section class="stage">
-
-      <!-- BIG -->
       <div class="bigCard" id="goScan">
         <div class="fx">
           <div class="formula f1">x² + y²</div>
@@ -284,32 +251,18 @@
           </div>
         </div>
 
-        <h2 class="bigTitle">Foto Çek • Soruyu Seç • Çöz</h2>
+        <h2 class="bigTitle">Foto Çek • Kırp • Çöz</h2>
         <div class="bigSub">
-          Bir sayfada birden fazla soru olabilir. Dikdörtgenle seç, kırp, metni kontrol et ve çözümü al.
+          Bir sayfada birden fazla soru olabilir. Dikdörtgenle seç, kırp ve çözümü al.
+        </div>
+
+        <div class="ctaRow">
+          <button class="btn btnMain" id="btnStart" type="button">Şimdi Başla</button>
+          <button class="btn" id="btnHow" type="button">Nasıl Çalışır?</button>
         </div>
       </div>
-
-      <!-- MINI -->
-      <div class="miniRow">
-        <div class="miniCard" id="goPaste">
-          <div class="miniIco">📝</div>
-          <div class="miniTxt">
-            <b>Metin Yapıştır • Çöz</b>
-            <span>Foto yoksa direkt metni gönder</span>
-          </div>
-        </div>
-
-        <div class="miniCard" id="goWeak">
-          <div class="miniIco">🎯</div>
-          <div class="miniTxt">
-            <b>Yanlışlarımı Anlat</b>
-            <span>Hangi konularda zorlanıyorsun?</span>
-          </div>
-        </div>
-      </div>
-
     </section>
+
   </div>
 </main>
 
@@ -317,9 +270,14 @@
   import { mountShell } from "/js/ui_shell.js";
   mountShell({ scroll:"none" });
 
-  document.getElementById("goScan").onclick = ()=>location.href="/pages/scan_solve.html";
-  document.getElementById("goPaste").onclick = ()=>location.href="/pages/scan_solve.html#paste";
-  document.getElementById("goWeak").onclick = ()=>location.href="/pages/scan_solve.html#weak";
+  const go = ()=>location.href="/pages/scan_solve.html";
+  document.getElementById("goScan").onclick = go;
+  document.getElementById("btnStart").onclick = (e)=>{ e.stopPropagation(); go(); };
+
+  document.getElementById("btnHow").onclick = (e)=>{
+    e.stopPropagation();
+    alert("1) Foto çek / galeriden seç\n2) Soruyu parmağınla çerçevele (kırp)\n3) Metni çıkar → Çöz\n\nNot: Çok soru varsa tek tek seçip çözebilirsin.");
+  };
 </script>
 </body>
 </html>
