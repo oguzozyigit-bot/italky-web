@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-<title>italkyAI • Quantum Hub</title>
+<title>italkyAI • Global Hub</title>
 
 <meta name="theme-color" content="#000000">
 <style>
@@ -13,6 +13,7 @@
 
 <style>
 :root {
+  --ai-grad: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
   --blue-sun: #6366f1;
   --green-sun: #10b981;
   --purple-sun: #a855f7;
@@ -25,10 +26,10 @@
   height: 100vh;
   display: flex;
   flex-direction: column;
-  /* UI Shell barlarının arasına milimetrik oturtma */
-  padding-top: calc(env(safe-area-inset-top) + 60px);
-  padding-bottom: calc(env(safe-area-inset-bottom) + 85px);
-  background: radial-gradient(circle at 50% 50%, #05050a 0%, #000 100%);
+  /* Üst bar boşluğu daraltıldı, kartlar yukarı çekildi */
+  padding-top: calc(env(safe-area-inset-top) + 38px); 
+  padding-bottom: calc(env(safe-area-inset-bottom) + 82px);
+  background: radial-gradient(circle at 50% 50%, #080815 0%, #000 100%);
   position: relative;
 }
 
@@ -36,63 +37,62 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 14px;
+  gap: 10px;
+  padding: 12px;
   z-index: 1;
 }
 
-/* ===== CYBER CARD: NEON DEPTH ===== */
+/* ===== PREMIUM CYBER CARD ===== */
 .cyber-card {
   flex: 1;
   position: relative;
-  border-radius: 30px;
+  border-radius: 28px;
   border: 1px solid var(--glass-border);
   overflow: hidden;
   cursor: pointer;
   display: flex;
   align-items: center;
-  padding: 0 24px;
+  padding: 0 22px;
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  /* Hafif derinlik veren arka planlar */
-  background: linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
 }
 
-/* Kartın kendi rengini belli eden hafif parıltı (Canlı değil, asil) */
-.tr-card { background: linear-gradient(145deg, rgba(99, 102, 241, 0.08) 0%, rgba(0,0,0,0.4) 100%); border-color: rgba(99, 102, 241, 0.2); }
-.ac-card { background: linear-gradient(145deg, rgba(16, 185, 129, 0.08) 0%, rgba(0,0,0,0.4) 100%); border-color: rgba(16, 185, 129, 0.2); }
-.hp-card { background: linear-gradient(145deg, rgba(168, 85, 247, 0.08) 0%, rgba(0,0,0,0.4) 100%); border-color: rgba(168, 85, 247, 0.2); }
+/* Renk Atmosferi */
+.tr-card { background: linear-gradient(145deg, rgba(99, 102, 241, 0.08) 0%, rgba(0,0,0,0.5) 100%); border-color: rgba(99, 102, 241, 0.25); }
+.ac-card { background: linear-gradient(145deg, rgba(16, 185, 129, 0.08) 0%, rgba(0,0,0,0.5) 100%); border-color: rgba(16, 185, 129, 0.25); }
+.tc-card { background: linear-gradient(145deg, rgba(168, 85, 247, 0.08) 0%, rgba(0,0,0,0.5) 100%); border-color: rgba(168, 85, 247, 0.25); }
 
-.cyber-card:active { transform: scale(0.975); filter: brightness(1.2); }
+.cyber-card:active { transform: scale(0.98); filter: brightness(1.2); }
 
-/* Solar Sistem */
+/* Solar Core Animasyonu */
 .solar-system {
-  width: 80px; height: 80px;
+  width: 75px; height: 75px;
   position: relative;
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
-  margin-right: 20px;
+  margin-right: 18px;
 }
 
 .sun {
-  width: 24px; height: 24px;
+  width: 22px; height: 22px;
   background: var(--sun-color);
   border-radius: 50%;
-  filter: blur(6px);
-  box-shadow: 0 0 20px var(--sun-color);
+  filter: blur(5px);
+  box-shadow: 0 0 18px var(--sun-color);
   z-index: 5;
   animation: sun-pulse 3s infinite ease-in-out;
 }
 
 .orbit {
   position: absolute;
-  border: 1px solid rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.06);
   border-radius: 50%;
   animation: rotate linear infinite;
 }
-.orbit-1 { width: 50px; height: 50px; animation-duration: 4s; }
-.orbit-2 { width: 80px; height: 80px; animation-duration: 7s; animation-direction: reverse; }
+.orbit-1 { width: 48px; height: 48px; animation-duration: 4s; }
+.orbit-2 { width: 75px; height: 75px; animation-duration: 7s; animation-direction: reverse; }
 
 .planet {
   position: absolute;
@@ -105,25 +105,30 @@
 }
 
 @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-@keyframes sun-pulse { 0%, 100% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(1.2); opacity: 0.9; } }
+@keyframes sun-pulse { 0%, 100% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(1.15); opacity: 0.8; } }
 
-/* İçerik */
+/* İçerik ve AI Renklendirme */
 .card-content { flex: 1; position: relative; z-index: 10; }
-.card-title { font-family: 'Space Grotesk'; font-size: 20px; font-weight: 700; color: #fff; margin: 0; }
-.card-desc { font-family: 'Outfit'; font-size: 11px; color: rgba(255,255,255,0.5); line-height: 1.5; margin-top: 5px; max-width: 220px; }
+.card-title { font-family: 'Space Grotesk'; font-size: 21px; font-weight: 700; color: #fff; margin: 0; letter-spacing: -0.5px; }
+.card-title .ai {
+  background: var(--ai-grad);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 800;
+}
+.card-desc { font-family: 'Outfit'; font-size: 11px; color: rgba(255,255,255,0.45); line-height: 1.4; margin-top: 4px; max-width: 210px; }
 
-/* Data Stream */
+/* Data Stream Köşe Yazısı */
 .data-stream {
-  position: absolute; right: 20px; top: 15px;
+  position: absolute; right: 18px; top: 15px;
   font-family: monospace; font-size: 7px;
-  color: var(--sun-color); opacity: 0.5;
+  color: var(--sun-color); opacity: 0.6;
   text-align: right; pointer-events: none;
-  letter-spacing: 1px;
 }
 
 .tr-card { --sun-color: var(--blue-sun); }
 .ac-card { --sun-color: var(--green-sun); }
-.hp-card { --sun-color: var(--purple-sun); }
+.tc-card { --sun-color: var(--purple-sun); }
 
 </style>
 </head>
@@ -133,41 +138,41 @@
   <div class="main-hub">
 
     <div class="cyber-card tr-card" onclick="goTranslate()">
-      <div class="data-stream">QUANTUM_VOICE: ON<br>SYNC_STABLE: 99.9%</div>
+      <div class="data-stream">QUANTUM_ENGINE: ACTIVE<br>SYNC: 0.001ms</div>
       <div class="solar-system">
         <div class="sun"></div>
         <div class="orbit orbit-1"><div class="planet"></div></div>
         <div class="orbit orbit-2"><div class="planet" style="background:var(--blue-sun);"></div></div>
       </div>
       <div class="card-content">
-        <h2 class="card-title">Translate</h2>
-        <p class="card-desc">FaceToFace teknolojisi ile anlık sesli çeviri ve kuantum metin işleme.</p>
+        <h2 class="card-title">Translate <span class="ai">AI</span></h2>
+        <p class="card-desc">FaceToFace teknolojisi ile anlık sesli çeviri ve ultra hızlı kuantum motoru.</p>
       </div>
     </div>
 
     <div class="cyber-card ac-card" onclick="goAcademy()">
-      <div class="data-stream">AI_COACH: ONLINE<br>MODULES: READY</div>
+      <div class="data-stream">NEURAL_PATH: STABLE<br>NODES: 4096+</div>
       <div class="solar-system">
         <div class="sun"></div>
         <div class="orbit orbit-1"><div class="planet" style="box-shadow: 0 0 10px var(--green-sun);"></div></div>
         <div class="orbit orbit-2"><div class="planet"></div></div>
       </div>
       <div class="card-content">
-        <h2 class="card-title">Akademi</h2>
-        <p class="card-desc">Birebir AI pratik odaları ve oyunlaştırılmış eğitim modülleri.</p>
+        <h2 class="card-title">Academy <span class="ai">AI</span></h2>
+        <p class="card-desc">Birebir AI pratik odaları, seviye tespit sınavları ve oyunlaştırılmış eğitim.</p>
       </div>
     </div>
 
-    <div class="cyber-card hp-card" onclick="goHelper()">
-      <div class="data-stream">SCI_CORE: ACTIVE<br>SCANNER: 8K_RES</div>
+    <div class="cyber-card tc-card" onclick="goTeacher()">
+      <div class="data-stream">CORE_LOGIC: HIGH<br>SCANNER: ENABLED</div>
       <div class="solar-system">
         <div class="sun"></div>
         <div class="orbit orbit-1"><div class="planet"></div></div>
         <div class="orbit orbit-2"><div class="planet" style="background:var(--purple-sun);"></div></div>
       </div>
       <div class="card-content">
-        <h2 class="card-title">Co-Pilot</h2>
-        <p class="card-desc">Matematik ve Fen problemlerini saniyeler içinde çözen bilim koçu.</p>
+        <h2 class="card-title">Teacher <span class="ai">AI</span></h2>
+        <p class="card-desc">Matematik ve Fen problemlerini saniyeler içinde çözen kişisel bilim koçun.</p>
       </div>
     </div>
 
@@ -180,7 +185,7 @@ mountShell({ scroll:"none" });
 
 window.goTranslate = () => location.href="/pages/translate_home.html";
 window.goAcademy  = () => location.href="/pages/academy_home.html";
-window.goHelper   = () => location.href="/pages/helper_home.html";
+window.goTeacher  = () => location.href="/pages/helper_home.html";
 </script>
 </body>
 </html>
