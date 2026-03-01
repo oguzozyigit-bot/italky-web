@@ -5,97 +5,146 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
 <title>italkyAI • Global Hub</title>
 
-<meta name="theme-color" content="#000000">
-<style>
-  html,body{background:#000 !important; margin:0; padding:0; overflow:hidden;}
-  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=Space+Grotesk:wght@300;700&display=swap');
-</style>
+<meta name="theme-color" content="#02000f">
+<style>html,body{background:#02000f !important; margin:0; padding:0; overflow:hidden;}</style>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=Space+Grotesk:wght@300;700&display=swap" rel="stylesheet">
 
 <style>
-:root {
+:root{
   --ai-grad: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
-  --blue-sun: #6366f1;
-  --green-sun: #10b981;
-  --purple-sun: #a855f7;
-  --glass-border: rgba(255, 255, 255, 0.1);
+  --blue-sun:#6366f1;
+  --green-sun:#10b981;
+  --purple-sun:#a855f7;
+  --glass-border: rgba(255,255,255,0.10);
+  --glass: rgba(255,255,255,0.02);
 }
 
-* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+*{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; }
 
-#pageContent {
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  /* Üst bar boşluğu daraltıldı, kartlar yukarı çekildi */
-  padding-top: calc(env(safe-area-inset-top) + 38px); 
-  padding-bottom: calc(env(safe-area-inset-bottom) + 82px);
-  background: radial-gradient(circle at 50% 50%, #080815 0%, #000 100%);
-  position: relative;
+/* ✅ ui_shell içine taşınacak alan */
+#pageContent{
+  height: 100%;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  position:relative;
+  /* ✅ alt bar asla üstüne binmesin */
+  padding-bottom: calc(var(--footerH, 0px) + 12px);
 }
 
-.main-hub {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
+/* ✅ arka plan (shell bg var ama bu daha “hub” hissi verir) */
+.hub-bg{
+  position:absolute; inset:0;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 50% 15%, rgba(99,102,241,0.18) 0%, transparent 45%),
+    radial-gradient(circle at 20% 80%, rgba(236,72,153,0.10) 0%, transparent 45%),
+    radial-gradient(circle at 80% 75%, rgba(16,185,129,0.10) 0%, transparent 45%);
+  filter: blur(26px);
+  opacity: .85;
+}
+
+.main-hub{
+  position:relative;
+  z-index:2;
+  flex:1;
+  display:flex;
+  flex-direction:column;
   gap: 10px;
-  padding: 12px;
-  z-index: 1;
+  padding: 12px;            /* ✅ kenarlarda boşluk minimum */
+  padding-top: 10px;         /* ✅ üstte boşluk azalt */
+  overflow:hidden;
 }
 
 /* ===== PREMIUM CYBER CARD ===== */
-.cyber-card {
-  flex: 1;
-  position: relative;
+.cyber-card{
+  flex:1;
+  position:relative;
   border-radius: 28px;
   border: 1px solid var(--glass-border);
-  overflow: hidden;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  padding: 0 22px;
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  background: rgba(255, 255, 255, 0.02);
-  backdrop-filter: blur(25px);
-  -webkit-backdrop-filter: blur(25px);
+  overflow:hidden;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  padding: 0 18px;
+  transition: transform .35s cubic-bezier(0.16, 1, 0.3, 1), filter .35s ease;
+  background: var(--glass);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  will-change: transform;
+}
+
+/* ✅ Scan line (çok pro) */
+.cyber-card::after{
+  content:"";
+  position:absolute; inset:-20%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.10), transparent);
+  transform: translateX(-140%);
+  animation: scan 3.2s ease-in-out infinite;
+  opacity:.35;
+  pointer-events:none;
+}
+@keyframes scan{
+  0%{ transform: translateX(-140%); }
+  60%{ transform: translateX(140%); }
+  100%{ transform: translateX(140%); }
 }
 
 /* Renk Atmosferi */
-.tr-card { background: linear-gradient(145deg, rgba(99, 102, 241, 0.08) 0%, rgba(0,0,0,0.5) 100%); border-color: rgba(99, 102, 241, 0.25); }
-.ac-card { background: linear-gradient(145deg, rgba(16, 185, 129, 0.08) 0%, rgba(0,0,0,0.5) 100%); border-color: rgba(16, 185, 129, 0.25); }
-.tc-card { background: linear-gradient(145deg, rgba(168, 85, 247, 0.08) 0%, rgba(0,0,0,0.5) 100%); border-color: rgba(168, 85, 247, 0.25); }
-
-.cyber-card:active { transform: scale(0.98); filter: brightness(1.2); }
-
-/* Solar Core Animasyonu */
-.solar-system {
-  width: 75px; height: 75px;
-  position: relative;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-  margin-right: 18px;
+.tr-card{
+  background: linear-gradient(145deg, rgba(99, 102, 241, 0.10) 0%, rgba(0,0,0,0.55) 100%);
+  border-color: rgba(99, 102, 241, 0.28);
+}
+.ac-card{
+  background: linear-gradient(145deg, rgba(16, 185, 129, 0.10) 0%, rgba(0,0,0,0.55) 100%);
+  border-color: rgba(16, 185, 129, 0.28);
+}
+.tc-card{
+  background: linear-gradient(145deg, rgba(168, 85, 247, 0.10) 0%, rgba(0,0,0,0.55) 100%);
+  border-color: rgba(168, 85, 247, 0.28);
 }
 
-.sun {
+.cyber-card:active{
+  transform: scale(0.985);
+  filter: brightness(1.12);
+}
+
+/* Solar Core Animasyonu */
+.solar-system{
+  width: 74px;
+  height: 74px;
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex: 0 0 auto;
+  margin-right: 16px;
+}
+
+.sun{
   width: 22px; height: 22px;
   background: var(--sun-color);
   border-radius: 50%;
   filter: blur(5px);
   box-shadow: 0 0 18px var(--sun-color);
   z-index: 5;
-  animation: sun-pulse 3s infinite ease-in-out;
+  animation: sun-pulse 2.9s infinite ease-in-out;
 }
 
-.orbit {
-  position: absolute;
+.orbit{
+  position:absolute;
   border: 1px solid rgba(255,255,255,0.06);
   border-radius: 50%;
   animation: rotate linear infinite;
 }
-.orbit-1 { width: 48px; height: 48px; animation-duration: 4s; }
-.orbit-2 { width: 75px; height: 75px; animation-duration: 7s; animation-direction: reverse; }
+.orbit-1{ width: 48px; height: 48px; animation-duration: 4s; }
+.orbit-2{ width: 74px; height: 74px; animation-duration: 7s; animation-direction: reverse; }
 
-.planet {
-  position: absolute;
+.planet{
+  position:absolute;
   width: 5px; height: 5px;
   background: #fff;
   border-radius: 50%;
@@ -104,37 +153,64 @@
   box-shadow: 0 0 8px #fff;
 }
 
-@keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-@keyframes sun-pulse { 0%, 100% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(1.15); opacity: 0.8; } }
+@keyframes rotate{ from{ transform: rotate(0deg);} to{ transform: rotate(360deg);} }
+@keyframes sun-pulse{ 0%,100%{ transform: scale(1); opacity: 0.5;} 50%{ transform: scale(1.16); opacity: 0.85;} }
 
-/* İçerik ve AI Renklendirme */
-.card-content { flex: 1; position: relative; z-index: 10; }
-.card-title { font-family: 'Space Grotesk'; font-size: 21px; font-weight: 700; color: #fff; margin: 0; letter-spacing: -0.5px; }
-.card-title .ai {
+/* İçerik */
+.card-content{ flex:1; position:relative; z-index:10; min-width:0; }
+.card-title{
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 21px;
+  font-weight: 700;
+  color:#fff;
+  margin:0;
+  letter-spacing:-0.5px;
+  white-space:nowrap;
+}
+.card-title .ai{
   background: var(--ai-grad);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  font-weight: 800;
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  font-weight: 900;
 }
-.card-desc { font-family: 'Outfit'; font-size: 11px; color: rgba(255,255,255,0.45); line-height: 1.4; margin-top: 4px; max-width: 210px; }
-
-/* Data Stream Köşe Yazısı */
-.data-stream {
-  position: absolute; right: 18px; top: 15px;
-  font-family: monospace; font-size: 7px;
-  color: var(--sun-color); opacity: 0.6;
-  text-align: right; pointer-events: none;
+.card-desc{
+  font-family: 'Outfit', sans-serif;
+  font-size: 11px;
+  color: rgba(255,255,255,0.48);
+  line-height: 1.4;
+  margin-top: 4px;
+  max-width: 260px;
 }
 
-.tr-card { --sun-color: var(--blue-sun); }
-.ac-card { --sun-color: var(--green-sun); }
-.tc-card { --sun-color: var(--purple-sun); }
+/* sağ üst data stream */
+.data-stream{
+  position:absolute; right: 14px; top: 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 7px;
+  color: var(--sun-color);
+  opacity: .58;
+  text-align:right;
+  pointer-events:none;
+}
 
+.tr-card{ --sun-color: var(--blue-sun); }
+.ac-card{ --sun-color: var(--green-sun); }
+.tc-card{ --sun-color: var(--purple-sun); }
+
+/* küçük ekranlarda daha sıkı */
+@media (max-height: 740px){
+  .main-hub{ gap: 8px; padding: 10px; }
+  .cyber-card{ border-radius: 24px; padding: 0 14px; }
+  .solar-system{ width: 68px; height: 68px; margin-right: 14px; }
+  .card-title{ font-size: 19px; }
+}
 </style>
 </head>
 
 <body>
 <main id="pageContent">
+  <div class="hub-bg"></div>
+
   <div class="main-hub">
 
     <div class="cyber-card tr-card" onclick="goTranslate()">
@@ -146,7 +222,7 @@
       </div>
       <div class="card-content">
         <h2 class="card-title">Translate <span class="ai">AI</span></h2>
-        <p class="card-desc">FaceToFace teknolojisi ile anlık sesli çeviri ve ultra hızlı kuantum motoru.</p>
+        <p class="card-desc">FaceToFace • WalkieTalkie • Metinden Çeviri</p>
       </div>
     </div>
 
@@ -158,8 +234,8 @@
         <div class="orbit orbit-2"><div class="planet"></div></div>
       </div>
       <div class="card-content">
-        <h2 class="card-title">Academy <span class="ai">AI</span></h2>
-        <p class="card-desc">Birebir AI pratik odaları, seviye tespit sınavları ve oyunlaştırılmış eğitim.</p>
+        <h2 class="card-title">Dil Akademisi <span class="ai">AI</span></h2>
+        <p class="card-desc">Seviye • Ders • AI Pratik • Oyun</p>
       </div>
     </div>
 
@@ -171,8 +247,8 @@
         <div class="orbit orbit-2"><div class="planet" style="background:var(--purple-sun);"></div></div>
       </div>
       <div class="card-content">
-        <h2 class="card-title">Teacher <span class="ai">AI</span></h2>
-        <p class="card-desc">Matematik ve Fen problemlerini saniyeler içinde çözen kişisel bilim koçun.</p>
+        <h2 class="card-title">Yardımcı Öğretmen <span class="ai">AI</span></h2>
+        <p class="card-desc">Soru Tara • Matematik • Fizik • Kimya</p>
       </div>
     </div>
 
@@ -180,12 +256,12 @@
 </main>
 
 <script type="module">
-import { mountShell } from "/js/ui_shell.js";
-mountShell({ scroll:"none" });
+  import { mountShell } from "/js/ui_shell.js";
+  mountShell({ scroll:"none" });
 
-window.goTranslate = () => location.href="/pages/translate_home.html";
-window.goAcademy  = () => location.href="/pages/academy_home.html";
-window.goTeacher  = () => location.href="/pages/helper_home.html";
+  window.goTranslate = () => location.href="/pages/translate_home.html";
+  window.goAcademy  = () => location.href="/pages/academy_home.html";
+  window.goTeacher  = () => location.href="/pages/helper_home.html";
 </script>
 </body>
 </html>
