@@ -14,28 +14,122 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
   <style>
-    *{box-sizing:border-box}
+    :root{
+      --border: rgba(255,255,255,0.12);
+      --card: rgba(255,255,255,0.04);
+      --muted: rgba(255,255,255,0.72);
+      --aiGrad: linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
+    }
+    *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none;}
     #pageContent{height:100%}
+
     .wrap{max-width:520px;margin:0 auto;padding:12px 14px;display:flex;flex-direction:column;gap:10px}
-    .card{border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);border-radius:22px;padding:12px}
-    .btn{height:52px;border-radius:18px;border:none;font-weight:1000;cursor:pointer}
+    .card{border:1px solid var(--border);background:var(--card);border-radius:22px;padding:12px;backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);}
+    .title{font-family:'Space Grotesk';font-weight:1000;font-size:16px;color:#fff}
+    .hint{font-size:12px;font-weight:900;color:var(--muted);line-height:1.5}
+    .row{display:flex; gap:10px; flex-wrap:wrap}
+    .btn{height:52px;border-radius:18px;border:none;font-weight:1000;cursor:pointer; flex:1; min-width:140px}
     .btnMain{background:#fff;color:#000}
     .btnGhost{border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.06);color:#fff}
+    .btn:active{transform:scale(.99)}
+
     .stage{position:relative;border-radius:18px;overflow:hidden;border:1px solid rgba(255,255,255,0.10);background:rgba(0,0,0,0.25)}
     canvas{width:100%;height:auto;display:block}
-    .hint{font-size:12px;font-weight:900;color:rgba(255,255,255,0.72);line-height:1.5}
-    textarea{width:100%;min-height:90px;border-radius:18px;border:1px solid rgba(255,255,255,0.12);background:rgba(0,0,0,0.2);color:#fff;padding:12px;font-weight:900}
+
+    .pillRow{display:flex; gap:10px; flex-wrap:wrap; margin-top:8px}
+    .pill{
+      padding:10px 12px;border-radius:999px;border:1px solid rgba(255,255,255,0.12);
+      background:rgba(0,0,0,0.18);color:#fff;font-weight:1000;font-size:12px;cursor:pointer;
+    }
+    .pill.sel{background:rgba(99,102,241,0.35);border-color:rgba(99,102,241,0.55)}
+    input[type="file"]{
+      width:100%;
+      padding:10px;
+      border-radius:18px;
+      border:1px dashed rgba(255,255,255,0.16);
+      background:rgba(0,0,0,0.18);
+      color:#fff;
+      font-weight:900;
+    }
+
+    textarea{
+      width:100%;
+      min-height:110px;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,0.12);
+      background:rgba(0,0,0,0.20);
+      color:#fff;
+      padding:12px;
+      font-weight:900;
+      line-height:1.45;
+      resize:vertical;
+    }
+
+    .outTitle{
+      font-weight:1000;color:#fff;margin:0 0 8px 0;
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+    }
+    .badge{
+      padding:7px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.12);
+      background:rgba(0,0,0,0.18);font-weight:1000;font-size:12px;color:rgba(165,180,252,0.95);
+      white-space:nowrap;
+    }
+    .outBox{
+      border-radius:18px;border:1px solid rgba(255,255,255,0.10);
+      background:rgba(0,0,0,0.18);
+      padding:12px;
+      color:rgba(255,255,255,0.88);
+      font-weight:900;
+      line-height:1.55;
+      white-space:pre-wrap;
+    }
+    .sep{height:1px;background:rgba(255,255,255,0.10);margin:10px 0}
+
+    .toast{
+      position: fixed;
+      left:50%;
+      top:18px;
+      transform: translateX(-50%) translateY(-120px);
+      background: rgba(10,10,18,0.95);
+      border: 1px solid rgba(165,180,252,0.35);
+      padding: 10px 14px;
+      border-radius: 999px;
+      color:#fff;
+      z-index: 999999;
+      font-weight: 1000;
+      font-size: 12px;
+      transition: .25s;
+      backdrop-filter: blur(12px);
+      pointer-events:none;
+      max-width: min(92vw, 520px);
+      text-align:center;
+    }
+    .toast.show{ transform: translateX(-50%) translateY(0); }
   </style>
 </head>
+
 <body>
 <main id="pageContent">
   <div class="wrap">
+
     <div class="card">
-      <div style="font-family:'Space Grotesk';font-weight:1000;font-size:16px;">Foto Çek • Kırp • Çöz</div>
+      <div class="title">Foto Çek • Kırp • Çöz</div>
       <div class="hint" style="margin-top:6px;">
         1) Foto seç (kamera/galeri)<br>
         2) Soruyu parmağınla çerçevele (kırp)<br>
-        3) Metin çıkar (istersen düzelt) → Çöz
+        3) Metin çıkar (şimdilik manuel) → Çöz
+      </div>
+
+      <div class="pillRow" id="gradeRow" aria-label="Sınıf seç">
+        <div class="pill sel" data-grade="ortaokul" data-grade-no="8">Ortaokul (8)</div>
+        <div class="pill" data-grade="lise" data-grade-no="10">Lise (10)</div>
+        <div class="pill" data-grade="lise" data-grade-no="12">Lise (12)</div>
+      </div>
+
+      <div class="pillRow" id="lessonRow" aria-label="Ders seç">
+        <div class="pill sel" data-lesson="Matematik">Matematik</div>
+        <div class="pill" data-lesson="Fen">Fen</div>
+        <div class="pill" data-lesson="Turkce">Türkçe</div>
       </div>
     </div>
 
@@ -46,42 +140,97 @@
         <canvas id="cv"></canvas>
       </div>
       <div class="hint" style="margin-top:8px;">Kırpma: resim üstünde sürükleyerek dikdörtgen seç.</div>
-      <div style="display:flex; gap:10px; margin-top:10px;">
+
+      <div class="row" style="margin-top:10px;">
         <button class="btn btnGhost" id="btnCrop" type="button">Kırp</button>
         <button class="btn btnMain" id="btnExtract" type="button">Metin Çıkar</button>
       </div>
     </div>
 
     <div class="card">
-      <div style="font-weight:1000;">Soru Metni</div>
+      <div class="outTitle">
+        <span>Soru Metni</span>
+        <span class="badge" id="metaBadge">8 • Matematik</span>
+      </div>
+
       <textarea id="txt" placeholder="Metin burada… (istersen düzelt)"></textarea>
-      <div style="display:flex; gap:10px; margin-top:10px;">
+
+      <div class="row" style="margin-top:10px;">
         <button class="btn btnGhost" id="btnClear" type="button">Temizle</button>
         <button class="btn btnMain" id="btnSolve" type="button">Çöz</button>
       </div>
     </div>
 
-    <div class="card" id="out">
-      Çözüm burada görünecek…
+    <div class="card" id="outCard">
+      <div class="outTitle">
+        <span>Çözüm</span>
+        <span class="badge" id="outBadge">Hazır</span>
+      </div>
+      <div class="outBox" id="out">
+        Çözüm burada görünecek…
+      </div>
     </div>
+
   </div>
 </main>
+
+<div class="toast" id="toast"></div>
 
 <script type="module">
   import { mountShell } from "/js/ui_shell.js";
   mountShell({ scroll:"auto" });
 
-  // MVP: OCR yoksa bile çalışsın diye “metni kullanıcı düzeltebilir” mantığı
-  // İstersen backend OCR ekleyince btnExtract OCR’a bağlanır.
-
   const API_BASE = "https://italky-api.onrender.com";
 
-  const file = document.getElementById("file");
-  const cv = document.getElementById("cv");
-  const ctx = cv.getContext("2d");
-  const txt = document.getElementById("txt");
-  const out = document.getElementById("out");
+  const $ = (id)=>document.getElementById(id);
+  const toastEl = $("toast");
+  function toast(msg){
+    toastEl.textContent = String(msg||"");
+    toastEl.classList.add("show");
+    clearTimeout(window.__to);
+    window.__to = setTimeout(()=>toastEl.classList.remove("show"), 1700);
+  }
 
+  const file = $("file");
+  const cv = $("cv");
+  const ctx = cv.getContext("2d");
+  const txt = $("txt");
+  const out = $("out");
+  const outBadge = $("outBadge");
+  const metaBadge = $("metaBadge");
+
+  // selected meta
+  let gradeGroup = "ortaokul";
+  let gradeNo = 8;
+  let lesson = "Matematik";
+
+  function refreshMeta(){
+    metaBadge.textContent = `${gradeNo} • ${lesson}`;
+  }
+  refreshMeta();
+
+  function bindPills(rowId, onPick){
+    const row = $(rowId);
+    row.querySelectorAll(".pill").forEach(p=>{
+      p.addEventListener("click", ()=>{
+        row.querySelectorAll(".pill").forEach(x=>x.classList.remove("sel"));
+        p.classList.add("sel");
+        onPick(p);
+        refreshMeta();
+      });
+    });
+  }
+
+  bindPills("gradeRow", (p)=>{
+    gradeGroup = p.getAttribute("data-grade") || "ortaokul";
+    gradeNo = Number(p.getAttribute("data-grade-no") || "8") || 8;
+  });
+
+  bindPills("lessonRow", (p)=>{
+    lesson = p.getAttribute("data-lesson") || "Matematik";
+  });
+
+  // image state
   let img = new Image();
   let imgLoaded = false;
 
@@ -122,6 +271,7 @@
       fitCanvasToImage(img);
       sel=null;
       draw();
+      toast("Foto yüklendi");
     };
     img.src = url;
   };
@@ -155,50 +305,104 @@
 
   cv.addEventListener("pointerup",()=>{ dragging=false; start=null; });
 
-  document.getElementById("btnCrop").onclick = ()=>{
-    if(!imgLoaded || !sel) return;
+  $("btnCrop").onclick = ()=>{
+    if(!imgLoaded || !sel) { toast("Önce alan seç"); return; }
     const tmp = document.createElement("canvas");
     tmp.width = Math.max(1, Math.floor(sel.w));
     tmp.height = Math.max(1, Math.floor(sel.h));
     tmp.getContext("2d").drawImage(cv, sel.x, sel.y, sel.w, sel.h, 0,0, tmp.width, tmp.height);
 
-    // replace
     cv.width = tmp.width;
     cv.height = tmp.height;
     ctx.drawImage(tmp,0,0);
     sel=null;
+    toast("Kırpıldı");
   };
 
-  // MVP: metin çıkarma = kullanıcıya “buraya yapıştır” + ileride OCR
-  document.getElementById("btnExtract").onclick = async ()=>{
-    out.textContent = "OCR şu an MVP’de kapalı. Metni kendin yapıştır veya düzelt. (Sonraki adım: backend OCR)";
+  // MVP: OCR yok (şimdilik)
+  $("btnExtract").onclick = async ()=>{
+    // ileride burada backend OCR endpoint çağrılacak: /api/exam/ocr_image veya /api/ocr
+    // şimdilik kullanıcı yapıştırır/düzeltir:
+    toast("OCR şu an MVP’de kapalı. Metni yapıştırıp ‘Çöz’ de.");
     txt.focus();
   };
 
-  document.getElementById("btnClear").onclick = ()=>{
+  $("btnClear").onclick = ()=>{
     txt.value = "";
+    outBadge.textContent = "Hazır";
     out.textContent = "Çözüm burada görünecek…";
   };
 
-  document.getElementById("btnSolve").onclick = async ()=>{
-    const q = (txt.value || "").trim();
-    if(!q){ out.textContent = "Soru metni boş."; return; }
-    out.textContent = "Çözülüyor…";
-
-    // Backend solve endpoint (aşağıda router veriyorum)
-    const r = await fetch(`${API_BASE}/api/exam/solve_text`,{
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify({ text: q, grade: 8, lesson: "Matematik" })
+  // ✅ BURASI: senin sorduğun fetch çağrısı burada
+  async function solveQuestion(extractedText){
+    const res = await fetch(`${API_BASE}/api/exam/solve_text`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text: extractedText,      // OCR’dan gelen (şimdilik textarea)
+        grade: gradeGroup,        // "ortaokul" / "lise"
+        grade_no: gradeNo,        // 8/10/12
+        lesson: lesson,           // Matematik/Fen/Turkce
+        student_answer: "",       // varsa
+        mode: "auto"              // auto en iyisi
+      })
     });
 
-    if(!r.ok){
-      const t = await r.text().catch(()=> "");
-      out.textContent = `Hata: HTTP ${r.status}\n${t}`;
+    const data = await res.json().catch(()=>null);
+    if(!res.ok){
+      const msg = data?.detail || JSON.stringify(data) || "Bilinmeyen hata";
+      throw new Error(`HTTP ${res.status} • ${msg}`);
+    }
+    return data;
+  }
+
+  function renderSolution(data){
+    // Beklenen alanlar: solution / steps / answer / topic / suggest
+    const solution = data?.solution || data?.full_solution_text || "";
+    const steps = Array.isArray(data?.solution_steps) ? data.solution_steps : (Array.isArray(data?.steps) ? data.steps : []);
+    const answer = data?.answer || data?.final_answer || "";
+    const topic = data?.topic || data?.unit || "";
+    const suggest = data?.suggest || data?.cta || "";
+
+    let textOut = "";
+    if(topic) textOut += `Konu: ${topic}\n\n`;
+    if(answer) textOut += `Cevap: ${answer}\n\n`;
+
+    if(steps.length){
+      textOut += "Adım adım çözüm:\n";
+      steps.forEach((s,i)=>{ textOut += `${i+1}) ${s}\n`; });
+      textOut += "\n";
+    }
+
+    if(solution) textOut += `Açıklama:\n${solution}\n\n`;
+
+    // Ders CTA
+    const cta =
+      suggest ||
+      "Bu konuyu daha sağlam oturtmak ister misin?\nİstersen şimdi bu konuda 15 dakikalık mini özel derse geçebiliriz.";
+    textOut += cta;
+
+    out.textContent = textOut.trim();
+  }
+
+  $("btnSolve").onclick = async ()=>{
+    const q = (txt.value || "").trim();
+    if(!q){
+      outBadge.textContent = "Uyarı";
+      out.textContent = "Soru metni boş.";
       return;
     }
-    const j = await r.json();
-    out.textContent = j?.solution || JSON.stringify(j,null,2);
+    outBadge.textContent = "Çözülüyor…";
+    out.textContent = "Çözüm hazırlanıyor…";
+
+    try{
+      const data = await solveQuestion(q);
+      outBadge.textContent = "Bitti ✅";
+      renderSolution(data);
+    }catch(e){
+      outBadge.textContent = "Hata";
+      out.textContent = `Çözülemedi:\n${e?.message || e}`;
+    }
   };
 </script>
 </body>
