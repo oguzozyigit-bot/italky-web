@@ -18,7 +18,6 @@
       --glass-border: rgba(255, 255, 255, 0.1);
       --green: #34d399;
       --warn: #f59e0b;
-      --bad: #ef4444;
       --muted: rgba(255,255,255,0.55);
     }
 
@@ -30,11 +29,13 @@
       background: radial-gradient(circle at 50% 20%, #0a0a25 0%, #000 100%);
     }
 
+    /* ✅ ui_shell footer ile çakışmasın */
     .main-wrap {
       flex: 1;
       max-width: 520px;
       margin: 0 auto;
       padding: 14px;
+      padding-bottom: calc(var(--footerH, 92px) + env(safe-area-inset-bottom) + 14px);
       display: flex;
       flex-direction: column;
       gap: 12px;
@@ -46,11 +47,11 @@
       background: var(--glass); border: 1px solid var(--glass-border);
       border-radius: 20px; padding: 12px 18px; backdrop-filter: blur(20px);
     }
-    .stat-item { font-size: 12px; font-weight: 900; color: rgba(255,255,255,0.42); letter-spacing:.2px; }
+    .stat-item { font-size: 12px; font-weight: 900; color: rgba(255,255,255,0.42); }
     .stat-item span { color: #fff; font-weight: 900; margin-left: 6px; }
 
-    .hero { text-align: center; padding: 10px 0; }
-    .hero h1 { font-family: 'Space Grotesk'; font-size: 26px; font-weight: 900; color: #fff; margin: 0; letter-spacing: -0.5px; }
+    .hero { text-align: center; padding: 6px 0 2px; }
+    .hero h1 { font-family: 'Space Grotesk'; font-size: 24px; font-weight: 900; color: #fff; margin: 0; letter-spacing: -0.5px; }
     .hero p { font-size: 12px; color: rgba(255,255,255,0.55); margin-top: 8px; line-height: 1.5; font-weight: 700; }
 
     .selector {
@@ -87,19 +88,20 @@
     .lang-card {
       display: flex; align-items: center; justify-content: space-between;
       padding: 16px; border-radius: 24px; border: 1px solid var(--glass-border);
-      background: var(--glass); backdrop-filter: blur(20px); transition: 0.3s;
+      background: var(--glass); backdrop-filter: blur(20px);
       gap: 12px;
     }
 
     .lang-info { display: flex; align-items: center; gap: 14px; min-width: 0; }
     .lang-flag { font-size: 28px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.2)); }
-    .lang-meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .lang-meta { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
     .lang-title { font-size: 16px; font-weight: 900; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .lang-sub { font-size: 11px; font-weight: 900; color: rgba(255,255,255,0.55); }
 
     .lang-status { font-size: 11px; font-weight: 900; display: flex; align-items: center; gap: 6px; }
     .status-dot { width: 7px; height: 7px; border-radius: 50%; }
 
+    /* ✅ Buton: İndir / İndirildi */
     .btn-3d {
       min-width: 132px; height: 44px; border-radius: 22px; border: none;
       background: var(--ai-grad); color: #fff; font-weight: 900; font-size: 13px;
@@ -110,6 +112,7 @@
         inset 0 -2px 4px rgba(0, 0, 0, 0.2);
       transition: all 0.2s;
       user-select:none;
+      display:flex; align-items:center; justify-content:center; gap:8px;
     }
     .btn-3d:active { transform: translateY(2px) scale(0.98); box-shadow: 0 2px 5px rgba(99, 102, 241, 0.4); }
 
@@ -119,6 +122,12 @@
       box-shadow: none;
       color: rgba(255,255,255,0.35);
       cursor: default;
+    }
+
+    .btn-ico{
+      width:18px; height:18px;
+      display:inline-flex; align-items:center; justify-content:center;
+      filter: drop-shadow(0 6px 14px rgba(0,0,0,0.35));
     }
 
     .toast {
@@ -148,7 +157,7 @@
       <h1>Offline Terminal</h1>
       <p>
         “Senin Dilin” + hedef dil seç.<br/>
-        Sistem otomatik iki yönü indirir: <b>sen↔hedef</b>
+        Sistem otomatik <b>iki yönü</b> indirir: <b>sen ↔ hedef</b>
       </p>
     </header>
 
@@ -180,15 +189,14 @@
   }
 
   const LANGUAGES = [
-    {code:"tr", name:"Türkçe",   flag:"🇹🇷"},
+    {code:"tr", name:"Türkçe",    flag:"🇹🇷"},
     {code:"en", name:"İngilizce", flag:"🇬🇧"},
-    {code:"de", name:"Almanca",  flag:"🇩🇪"},
-    {code:"fr", name:"Fransızca",flag:"🇫🇷"},
-    {code:"it", name:"İtalyanca",flag:"🇮🇹"},
+    {code:"de", name:"Almanca",   flag:"🇩🇪"},
+    {code:"fr", name:"Fransızca", flag:"🇫🇷"},
+    {code:"it", name:"İtalyanca", flag:"🇮🇹"},
     {code:"es", name:"İspanyolca",flag:"🇪🇸"}
   ];
 
-  // 50 jeton / 365 gün
   const FEE = 50;
   const DAYS = 365;
 
@@ -196,11 +204,8 @@
   if(!session?.user) location.replace("/pages/login.html");
   const userId = session.user.id;
 
-  // native language selector
   const nativeSel = $("nativeSel");
   nativeSel.innerHTML = LANGUAGES.map(l=>`<option value="${l.code}">${l.flag} ${l.name}</option>`).join("");
-
-  // default: TR (istersen profilden çekebiliriz)
   nativeSel.value = localStorage.getItem("italky_native_lang") || "tr";
   nativeSel.addEventListener("change", ()=>{
     localStorage.setItem("italky_native_lang", nativeSel.value);
@@ -227,12 +232,11 @@
     const list = $("langList");
     list.innerHTML = "";
 
-    // Hedef diller: native hariç
     const targets = LANGUAGES.filter(l=>l.code !== native);
 
     targets.forEach(target => {
-      const a = pair(native, target.code);  // native->target
-      const b = pair(target.code, native);  // target->native
+      const a = pair(native, target.code);
+      const b = pair(target.code, native);
 
       const pa = packs?.find(p => p.lang_code === a);
       const pb = packs?.find(p => p.lang_code === b);
@@ -243,7 +247,6 @@
       const aActive = aLeft > 0;
       const bActive = bLeft > 0;
 
-      // ✅ “aktif” sayılması için ikisi de aktif
       const isActive = aActive && bActive;
       const anyOwned = !!pa || !!pb;
       const minLeft = isActive ? Math.min(aLeft, bLeft) : Math.max(aLeft, bLeft);
@@ -254,14 +257,14 @@
       let statusColor = isActive ? "var(--green)" : (anyOwned ? "var(--warn)" : "rgba(255,255,255,0.22)");
       let statusText = isActive
         ? `Aktif • ${minLeft} Gün`
-        : (anyOwned ? "Eksik / Süresi Doldu (çift yön gerekli)" : "Satın Alınmadı");
+        : (anyOwned ? "Eksik / Süresi Doldu (çift yön gerekir)" : "İndirmek için tıklayınız");
 
       card.innerHTML = `
         <div class="lang-info">
           <div class="lang-flag">${target.flag}</div>
           <div class="lang-meta">
             <div class="lang-title">${target.name}</div>
-            <div class="lang-sub">${native.toUpperCase()} ↔ ${target.code.toUpperCase()} (2 yön)</div>
+            <div class="lang-sub">${native.toUpperCase()} ↔ ${target.code.toUpperCase()}</div>
             <div class="lang-status" style="color:${statusColor}">
               <div class="status-dot" style="background:${statusColor}"></div>
               ${statusText}
@@ -274,23 +277,22 @@
       btn.className = "btn-3d";
 
       if(isActive) {
-        btn.textContent = "İndirildi";
+        btn.innerHTML = `<span class="btn-ico">✅</span> İndirildi`;
         btn.classList.add("btn-owned");
         btn.disabled = true;
       } else {
-        btn.textContent = (tokens >= FEE) ? `Satın Al (50)` : `Jeton Yetersiz`;
-        if(tokens < FEE) btn.classList.add("btn-owned");
+        btn.innerHTML = `<span class="btn-ico">⬇️</span> İndir`;
 
         btn.onclick = async () => {
           if(tokens < FEE){
-            location.href = "/pages/profile.html";
+            showToast("Jeton yetersiz. Jeton yükleyin.");
+            setTimeout(()=>location.href="/pages/profile.html", 650);
             return;
           }
 
           btn.disabled = true;
-          btn.textContent = "Aktifleştiriliyor...";
+          btn.textContent = "İndiriliyor...";
 
-          // ✅ tek satın alma -> 2 paketi birden aç
           const { error } = await supabase.rpc("purchase_offline_bundle", {
             p_native_lang: native,
             p_target_lang: target.code,
