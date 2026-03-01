@@ -3,214 +3,157 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-<title>italkyAI • Neural Matrix 2126</title>
+<title>italkyAI • Home</title>
 
 <meta name="theme-color" content="#000000">
 <style>
-  html,body{background:#000 !important; margin:0; padding:0; overflow:hidden; font-family:'Outfit', sans-serif;}
-  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=Space+Grotesk:wght@700&display=swap');
+html,body{
+  background:#000 !important;
+  margin:0;
+  padding:0;
+  overflow:hidden;
+  font-family:'Outfit', sans-serif;
+}
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=Space+Grotesk:wght@700&display=swap');
 </style>
 
 <style>
 :root{
-  --ai-grad: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
-  --blue-sun:#6366f1;
-  --green-sun:#10b981;
-  --purple-sun:#a855f7;
-  --glass: rgba(255,255,255,0.03);
+  --ai-grad: linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
+  --glass: rgba(255,255,255,0.04);
   --glass-border: rgba(255,255,255,0.12);
+  --blue:#6366f1;
+  --green:#10b981;
+  --purple:#a855f7;
 }
 
-*{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; }
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none;}
 
-/* ✅ ui_shell shellMain içine taşınır -> 100% kullan */
 #pageContent{
-  height: 100%;
+  height:100%;
   display:flex;
   flex-direction:column;
   overflow:hidden;
-
-  /* header alanı */
-  padding-top: calc(env(safe-area-inset-top) + 38px);
-
-  /* ✅ footer boşluğu ui_shell zaten verir -> burada sıfır */
+  padding-top: 0; /* ✅ boşluk tamamen kaldırıldı */
   padding-bottom: 0;
-
-  background: radial-gradient(circle at 50% 50%, #08081a 0%, #000 100%);
+  background: radial-gradient(circle at 50% 40%, #09091a 0%, #000 100%);
 }
 
-/* ✅ alt bar çok uzak olmasın */
 .main-hub{
   flex:1;
-  min-height:0;
   display:flex;
   flex-direction:column;
   gap:10px;
-
-  /* kenarlarda boşluk bırakma */
-  padding: 12px;
-
-  /* ✅ alt bar yakınlaşsın (boşluk küçüldü) */
-  padding-bottom: 6px;
+  padding: 8px 12px 6px 12px; /* ✅ üst boşluk minimize */
 }
 
-/* ===== CYBER CARD BASE ===== */
+/* ===== PREMIUM CARD ===== */
 .cyber-card{
-  flex: 1;
-  min-height: 0;
+  flex:1;
   position:relative;
-  border-radius:28px;
+  border-radius:26px;
   border:1px solid var(--glass-border);
-  overflow:hidden;
-  cursor:pointer;
+  background: var(--glass);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
   display:flex;
   align-items:center;
-  padding: 0 20px;
-  transition: all .35s cubic-bezier(0.16, 1, 0.3, 1);
-  background: var(--glass);
-  backdrop-filter: blur(25px);
-  -webkit-backdrop-filter: blur(25px);
-}
-.cyber-card:active{ transform: scale(0.985); }
-
-/* Renk Temaları */
-.tr-card{
-  background: linear-gradient(145deg, rgba(99,102,241,0.08) 0%, rgba(0,0,0,0.5) 100%);
-  border-color: rgba(99,102,241,0.25);
-}
-.ac-card{
-  background: linear-gradient(145deg, rgba(16,185,129,0.08) 0%, rgba(0,0,0,0.5) 100%);
-  border-color: rgba(16,185,129,0.25);
-}
-.tc-card{
-  background: linear-gradient(145deg, rgba(168,85,247,0.08) 0%, rgba(0,0,0,0.5) 100%);
-  border-color: rgba(168,85,247,0.25);
+  padding: 0 18px;
+  overflow:hidden;
+  cursor:pointer;
+  transition: all .35s ease;
 }
 
-/* ===== SOLAR SYSTEM (SOL TARAF) ===== */
-.solar-system{
-  width:70px; height:70px;
+/* İç ışık akışı */
+.cyber-card::before{
+  content:"";
+  position:absolute;
+  inset:-40%;
+  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.08) 0%, transparent 40%);
+  opacity:0;
+  transition:.5s;
+}
+.cyber-card:active::before{
+  opacity:1;
+}
+
+/* Hover glow (masaüstü için) */
+@media (hover:hover){
+  .cyber-card:hover{
+    transform: translateY(-4px);
+    box-shadow: 0 0 30px rgba(99,102,241,.25);
+  }
+}
+
+/* Renk varyasyonları */
+.tr-card{ border-color: rgba(99,102,241,.35); }
+.ac-card{ border-color: rgba(16,185,129,.35); }
+.tc-card{ border-color: rgba(168,85,247,.35); }
+
+/* SOLAR */
+.solar{
+  width:64px;
+  height:64px;
   position:relative;
-  display:flex; align-items:center; justify-content:center;
   flex-shrink:0;
-  margin-right:18px;
+  margin-right:16px;
 }
 .sun{
-  width:20px; height:20px;
-  background: var(--sun-color);
+  width:18px;height:18px;
+  background: var(--sun);
   border-radius:50%;
-  filter: blur(5px);
-  box-shadow: 0 0 15px var(--sun-color);
-  z-index:5;
-  animation: sun-pulse 3s infinite ease-in-out;
+  filter: blur(4px);
+  box-shadow: 0 0 18px var(--sun);
+  position:absolute;
+  left:50%;top:50%;
+  transform:translate(-50%,-50%);
 }
 .orbit{
   position:absolute;
-  border:1px solid rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,.07);
   border-radius:50%;
-  animation: rotate linear infinite;
+  animation: spin linear infinite;
 }
-.orbit-1{ width:44px; height:44px; animation-duration:4s; }
-.orbit-2{ width:70px; height:70px; animation-duration:7s; animation-direction: reverse; }
+.orbit1{width:40px;height:40px;top:12px;left:12px;animation-duration:4s;}
+.orbit2{width:64px;height:64px;animation-duration:7s;animation-direction:reverse;}
 .planet{
-  position:absolute;
-  width:4px; height:4px;
+  width:4px;height:4px;
   background:#fff;
   border-radius:50%;
-  top:0; left:50%;
-  transform: translateX(-50%);
-  box-shadow: 0 0 8px #fff;
-}
-@keyframes rotate{ from{transform:rotate(0)} to{transform:rotate(360deg)} }
-@keyframes sun-pulse{ 0%,100%{transform:scale(1);opacity:.5} 50%{transform:scale(1.1);opacity:.85} }
-
-/* ===== 1. TRANSLATE AI: EKOLAYZER ===== */
-.eq-container{
   position:absolute;
-  bottom: 10px;                 /* ✅ biraz yukarı, taşma yok */
-  left: 0;
-  width:100%;
-  height:20px;
-  display:flex;
-  align-items:flex-end;
-  justify-content:space-around;
-  padding: 0 20px;
-  opacity: .35;
-  pointer-events:none;
+  top:-2px;left:50%;
+  transform:translateX(-50%);
 }
-.eq-bar{
-  width:3px;
-  background: var(--blue-sun);
-  border-radius: 2px 2px 0 0;
-  animation: eq .85s infinite alternate ease-in-out;
-}
-@keyframes eq{ 0%{height:4px} 100%{height:18px} }
-
-/* ===== 2. ACADEMY AI: KEP FIRLATMA ===== */
-.cap-rain{ position:absolute; inset:0; pointer-events:none; overflow:hidden; }
-.cap{ position:absolute; bottom:-20px; font-size:16px; opacity:0; animation: cap-fly 4.2s infinite linear; }
-@keyframes cap-fly{
-  0%{ transform: translateY(0) rotate(0); opacity:0; }
-  20%{ opacity:.55; }
-  80%{ opacity:.55; }
-  100%{ transform: translateY(-150px) rotate(360deg); opacity:0; }
+@keyframes spin{
+  from{transform:rotate(0deg);}
+  to{transform:rotate(360deg);}
 }
 
-/* ===== 3. TEACHER AI: FORMÜL YAĞMURU ===== */
-.formula-container{ position:absolute; inset:0; pointer-events:none; }
-.formula{
-  position:absolute;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
-  font-size: 10px;
-  color: var(--purple-sun);
-  opacity: 0;
-  animation: formula-up 3.2s infinite linear;
-}
-@keyframes formula-up{
-  0%{ transform: translateY(26px); opacity:0; }
-  30%{ opacity:.6; }
-  90%{ opacity:0; }
-  100%{ transform: translateY(-60px); opacity:0; }
-}
-
-/* İÇERİK */
-.card-content{ flex:1; position:relative; z-index:10; min-width:0; }
+/* TEXT */
+.card-content{flex:1;}
 .card-title{
   font-family:'Space Grotesk';
-  font-size:21px;
+  font-size:20px;
   font-weight:700;
-  color:#fff;
   margin:0;
-  letter-spacing:-0.4px;
+  color:#fff;
 }
 .card-title .ai{
-  background: var(--ai-grad);
+  background:var(--ai-grad);
   -webkit-background-clip:text;
   -webkit-text-fill-color:transparent;
-  font-weight:900;
 }
 .card-desc{
   font-size:11px;
-  color: rgba(255,255,255,0.45);
   margin-top:4px;
-  line-height:1.4;
-  max-width: 260px;
+  color:rgba(255,255,255,.45);
 }
 
-.tr-card{ --sun-color: var(--blue-sun); }
-.ac-card{ --sun-color: var(--green-sun); }
-.tc-card{ --sun-color: var(--purple-sun); }
+/* Sun colors */
+.tr-card{ --sun: var(--blue); }
+.ac-card{ --sun: var(--green); }
+.tc-card{ --sun: var(--purple); }
 
-/* ✅ kısa ekranlarda daha da “aşağı boşluk” azalt */
-@media (max-height: 740px){
-  #pageContent{ padding-top: calc(env(safe-area-inset-top) + 30px); }
-  .main-hub{ padding: 10px; gap: 8px; padding-bottom: 4px; }
-  .cyber-card{ border-radius: 24px; padding: 0 16px; }
-  .card-title{ font-size: 19px; }
-  .solar-system{ width:64px; height:64px; margin-right:14px; }
-  .orbit-2{ width:64px; height:64px; }
-  .eq-container{ bottom: 8px; }
-}
 </style>
 </head>
 
@@ -218,63 +161,42 @@
 <main id="pageContent">
   <div class="main-hub">
 
+    <!-- TRANSLATE -->
     <div class="cyber-card tr-card" onclick="goTranslate()">
-      <div class="eq-container">
-        <div class="eq-bar" style="animation-delay:0.10s;height:12px"></div>
-        <div class="eq-bar" style="animation-delay:0.35s;height:18px"></div>
-        <div class="eq-bar" style="animation-delay:0.20s;height:8px"></div>
-        <div class="eq-bar" style="animation-delay:0.55s;height:15px"></div>
-        <div class="eq-bar" style="animation-delay:0.42s;height:10px"></div>
-      </div>
-
-      <div class="solar-system">
+      <div class="solar">
         <div class="sun"></div>
-        <div class="orbit orbit-1"><div class="planet"></div></div>
-        <div class="orbit orbit-2"><div class="planet" style="background:var(--blue-sun)"></div></div>
+        <div class="orbit orbit1"><div class="planet"></div></div>
+        <div class="orbit orbit2"><div class="planet"></div></div>
       </div>
-
       <div class="card-content">
         <h2 class="card-title">Translate <span class="ai">AI</span></h2>
         <p class="card-desc">FaceToFace • Walkie Talkie • Metinden Çeviri</p>
       </div>
     </div>
 
+    <!-- ACADEMY -->
     <div class="cyber-card ac-card" onclick="goAcademy()">
-      <div class="cap-rain">
-        <div class="cap" style="left:20%; animation-delay:0s">🎓</div>
-        <div class="cap" style="left:50%; animation-delay:1.5s">🎓</div>
-        <div class="cap" style="left:80%; animation-delay:0.7s">🎓</div>
-      </div>
-
-      <div class="solar-system">
+      <div class="solar">
         <div class="sun"></div>
-        <div class="orbit orbit-1"><div class="planet" style="box-shadow:0 0 10px var(--green-sun)"></div></div>
-        <div class="orbit orbit-2"><div class="planet"></div></div>
+        <div class="orbit orbit1"><div class="planet"></div></div>
+        <div class="orbit orbit2"><div class="planet"></div></div>
       </div>
-
       <div class="card-content">
         <h2 class="card-title">Academy <span class="ai">AI</span></h2>
-        <p class="card-desc">Seviye Tespit • Dil Dersi • AI Pratik • Oyunlar</p>
+        <p class="card-desc">Seviye Tespit • Dil Dersi • AI Pratik • Oyun</p>
       </div>
     </div>
 
+    <!-- TEACHER -->
     <div class="cyber-card tc-card" onclick="goTeacher()">
-      <div class="formula-container">
-        <div class="formula" style="left:40%; bottom:20px; animation-delay:0s">E=mc²</div>
-        <div class="formula" style="left:60%; bottom:10px; animation-delay:1s">πr²</div>
-        <div class="formula" style="left:75%; bottom:25px; animation-delay:0.5s">x²+y²</div>
-        <div class="formula" style="left:50%; bottom:30px; animation-delay:1.5s">Δt</div>
-      </div>
-
-      <div class="solar-system">
+      <div class="solar">
         <div class="sun"></div>
-        <div class="orbit orbit-1"><div class="planet"></div></div>
-        <div class="orbit orbit-2"><div class="planet" style="background:var(--purple-sun)"></div></div>
+        <div class="orbit orbit1"><div class="planet"></div></div>
+        <div class="orbit orbit2"><div class="planet"></div></div>
       </div>
-
       <div class="card-content">
         <h2 class="card-title">Teacher <span class="ai">AI</span></h2>
-        <p class="card-desc">Foto çek → soru seç → adım adım çözüm + mini ders</p>
+        <p class="card-desc">Foto Çek • Soru Çöz • Mini Ders</p>
       </div>
     </div>
 
@@ -282,12 +204,12 @@
 </main>
 
 <script type="module">
-  import { mountShell } from "/js/ui_shell.js";
-  mountShell({ scroll:"none" });
+import { mountShell } from "/js/ui_shell.js";
+mountShell({ scroll:"none" });
 
-  window.goTranslate = () => location.href="/pages/translate_home.html";
-  window.goAcademy  = () => location.href="/pages/academy_home.html";
-  window.goTeacher  = () => location.href="/pages/helper_home.html";
+window.goTranslate = () => location.href="/pages/translate_home.html";
+window.goAcademy  = () => location.href="/pages/academy_home.html";
+window.goTeacher  = () => location.href="/pages/helper_home.html";
 </script>
 </body>
 </html>
