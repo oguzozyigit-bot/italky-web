@@ -33,11 +33,7 @@
     }
 
     *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; }
-
-    /* ui_shell main içine taşınacak */
-    #pageContent{
-      height:100%;
-    }
+    #pageContent{ height:100%; }
 
     .wrap{
       max-width: 520px;
@@ -46,8 +42,6 @@
       display:flex;
       flex-direction:column;
       gap: 8px;
-
-      /* ✅ kenarlar yakın (çok uzak değil) */
       padding: 10px 10px calc(var(--footerH, 92px) + env(safe-area-inset-bottom) + 6px);
     }
 
@@ -103,17 +97,43 @@
     }
     .hero p b{ color:#fff; }
 
-    /* list */
+    /* ✅ Kendi dilin seçimi — tasarım bozulmadan */
+    .myLangRow{
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.03);
+      border-radius: 18px;
+      padding: 10px 12px;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .myLangRow .label{
+      font-size: 12px;
+      font-weight: 1000;
+      color: rgba(255,255,255,0.82);
+      white-space:nowrap;
+    }
+    .myLangRow select{
+      height: 40px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.18);
+      color:#fff;
+      font-weight: 1000;
+      font-size: 12px;
+      padding: 0 10px;
+      max-width: 220px;
+    }
+
     #langList{
       flex:1;
       min-height:0;
       display:flex;
       flex-direction:column;
-
-      /* ✅ alt boşluk sorunu: gap’i küçük tut */
       gap: 8px;
-
-      /* ✅ scroll yok / var: shellMain auto; sayfa taşarsa scroll olabilir */
     }
 
     .langCard{
@@ -182,7 +202,6 @@
     .dot.ok{ background: rgba(34,197,94,.95); box-shadow: 0 0 12px rgba(34,197,94,.35); }
     .dot.exp{ background: rgba(245,158,11,.95); box-shadow: 0 0 12px rgba(245,158,11,.35); }
 
-    /* ✅ BUTTON: geniş ama taşmaz */
     .btnDL{
       height: 44px;
       min-width: 148px;
@@ -209,7 +228,6 @@
       inset:-2px;
       background: var(--dlGrad);
       opacity: .22;
-      filter: blur(0px);
       transform: translateX(-120%);
       animation: sheen 2.6s ease-in-out infinite;
       pointer-events:none;
@@ -264,6 +282,7 @@
       .btnDL{ min-width: 140px; height: 42px; border-radius: 16px; }
       .flag{ width:40px;height:40px;border-radius:15px; }
       .name{ font-size: 14px; }
+      .myLangRow select{ height: 38px; }
     }
   </style>
 </head>
@@ -274,16 +293,22 @@
 
       <div class="topRow">
         <div class="k">Paket Süresi</div>
-        <div class="v">365 Gün</div>
+        <div class="v">365 Gün • 50 Jeton</div>
       </div>
 
       <section class="hero">
         <h1>Offline Terminal</h1>
         <p>
-          Online iken indir, sonra internetsiz kullan.<br/>
-          Seçtiğin dile göre sistem <b>iki yön</b> paketi (TR↔Dil) otomatik hazırlar.
+          <b>Önce kendi dilini seç</b>. Sonra hedef dili indirince sistem otomatik <b>iki yön</b> paketi hazırlar.<br/>
+          Örn: TR seç → EN indir ⇒ <b>tr-en + en-tr</b>
         </p>
       </section>
+
+      <!-- ✅ Kendi dili seç -->
+      <div class="myLangRow">
+        <div class="label">Benim Dilim</div>
+        <select id="myLangSel"></select>
+      </div>
 
       <div id="langList"></div>
 
@@ -300,6 +325,7 @@
     const $ = (id)=>document.getElementById(id);
     const toastEl = $("toast");
     const list = $("langList");
+    const mySel = $("myLangSel");
 
     function toast(msg){
       toastEl.textContent = String(msg||"");
@@ -327,6 +353,18 @@
     }
     const userId = session.user.id;
 
+    // ✅ “Benim dilim” default: tr (istersen profile’dan çekeriz sonra)
+    let myLang = (localStorage.getItem("offline_my_lang") || "tr").toLowerCase().trim();
+    if(!LANGS.find(x=>x.code===myLang)) myLang = "tr";
+
+    mySel.innerHTML = LANGS.map(l=>`<option value="${l.code}">${l.flag} ${l.name}</option>`).join("");
+    mySel.value = myLang;
+    mySel.addEventListener("change", ()=>{
+      myLang = String(mySel.value||"tr").toLowerCase().trim();
+      localStorage.setItem("offline_my_lang", myLang);
+      render();
+    });
+
     function daysLeft(expiresAt){
       try{
         const ms = new Date(expiresAt).getTime() - Date.now();
@@ -342,7 +380,8 @@
       return { tokens: Number(prof?.tokens ?? 0), packs: Array.isArray(packs)?packs:[] };
     }
 
-    function packStatus(packs, code){
+    // ✅ pack key: "tr-en" gibi
+    function packActive(packs, code){
       const p = packs.find(x=>String(x.lang_code||"").toLowerCase() === String(code||"").toLowerCase());
       if(!p) return { state:"none", left:0 };
       const left = daysLeft(p.expires_at);
@@ -350,19 +389,43 @@
       return { state:"expired", left:0 };
     }
 
+    function combinedState(packs, a, b){
+      const p1 = packActive(packs, `${a}-${b}`);
+      const p2 = packActive(packs, `${b}-${a}`);
+
+      // “İndirildi” için ikisi de aktif olmalı
+      if(p1.state==="active" && p2.state==="active"){
+        return { state:"active", left: Math.min(p1.left, p2.left) };
+      }
+
+      // biri expired/none ise partial
+      const anyExists = (p1.state!=="none" || p2.state!=="none");
+      if(anyExists){
+        return { state:"partial", left: Math.max(p1.left, p2.left) };
+      }
+      return { state:"none", left:0 };
+    }
+
     function btnLabel(state, tokensOk){
       if(state === "active") return { text:"İndirildi", mode:"done", ico:"✓" };
-      if(state === "expired") return { text:"Yenile", mode: tokensOk ? "buy" : "disabled", ico:"⭮" };
+      if(state === "partial") return { text:"Tamamla", mode: tokensOk ? "buy" : "disabled", ico:"⭮" };
       return { text:"İndir", mode: tokensOk ? "buy" : "disabled", ico:"↓" };
     }
 
-    async function purchase(langCode){
-      // Not: RPC senin tarafında: purchase_offline_pack(p_lang_code,p_days,p_fee)
+    async function purchase(code){
       return await supabase.rpc("purchase_offline_pack", {
-        p_lang_code: langCode,
+        p_lang_code: code,
         p_days: DAYS,
         p_fee: FEE
       });
+    }
+
+    async function purchasePair(a,b){
+      // sırayla iki yön
+      const r1 = await purchase(`${a}-${b}`);
+      if(r1.error) return r1;
+      const r2 = await purchase(`${b}-${a}`);
+      return r2;
     }
 
     async function render(){
@@ -372,21 +435,42 @@
       list.innerHTML = "";
 
       LANGS.forEach(l=>{
-        const st = packStatus(packs, l.code);
-        const tokensOk = tokens >= FEE;
+        const target = l.code;
+        const isSame = (target === myLang);
+
+        const st = isSame ? { state:"same", left:0 } : combinedState(packs, myLang, target);
+        const tokensOk = tokens >= (FEE * 2); // ✅ iki paket satın alacağı için 2x kontrol
 
         const card = document.createElement("div");
         card.className = "langCard";
 
         const left = document.createElement("div");
         left.className = "left";
+
+        let dotCls = "";
+        let stText = "";
+
+        if(isSame){
+          dotCls = "";
+          stText = "Kendi dilin";
+        }else if(st.state === "active"){
+          dotCls = "ok";
+          stText = `Aktif • ${st.left} gün`;
+        }else if(st.state === "partial"){
+          dotCls = "exp";
+          stText = "Kısmi • İki yön tamamlanmalı";
+        }else{
+          dotCls = "";
+          stText = "Hazır değil";
+        }
+
         left.innerHTML = `
           <div class="flag">${l.flag}</div>
           <div class="meta">
             <div class="name">${l.name}</div>
             <div class="status">
-              <span class="dot ${st.state==="active"?"ok":(st.state==="expired"?"exp":"")}" ></span>
-              ${st.state==="active" ? `Aktif • ${st.left} gün` : (st.state==="expired" ? "Süresi doldu" : "Hazır değil")}
+              <span class="dot ${dotCls}"></span>
+              ${stText}
             </div>
           </div>
         `;
@@ -395,40 +479,44 @@
         btn.type = "button";
         btn.className = "btnDL";
 
-        const lbl = btnLabel(st.state, tokensOk);
-        if(lbl.mode === "done"){
-          btn.classList.add("done");
-          btn.disabled = true;
-        }else if(lbl.mode === "disabled"){
+        if(isSame){
           btn.classList.add("disabled");
-          btn.disabled = false; // tıklayınca profile yönlendireceğiz
-        }
-
-        btn.innerHTML = `<span class="ico">${lbl.ico}</span><span class="txt">${lbl.text}</span>`;
-
-        btn.onclick = async ()=>{
-          if(lbl.mode === "done") return;
-
-          if(!tokensOk && st.state !== "active"){
-            toast("Jeton yetersiz. Profil’e yönlendiriyorum.");
-            setTimeout(()=>location.href="/pages/profile.html", 650);
-            return;
-          }
-
           btn.disabled = true;
-          btn.classList.remove("disabled");
-          btn.innerHTML = `<span class="ico">⏳</span><span class="txt">İşleniyor</span>`;
-
-          const { error } = await purchase(l.code);
-          if(error){
-            toast("Hata: " + (error.message || "Satın alma başarısız"));
-            await render();
-            return;
+          btn.innerHTML = `<span class="ico">—</span><span class="txt">Seçili</span>`;
+        }else{
+          const lbl = btnLabel(st.state, tokensOk);
+          if(lbl.mode === "done"){
+            btn.classList.add("done");
+            btn.disabled = true;
+          }else if(lbl.mode === "disabled"){
+            btn.classList.add("disabled");
           }
+          btn.innerHTML = `<span class="ico">${lbl.ico}</span><span class="txt">${lbl.text}</span>`;
 
-          toast(`${l.name} paketi aktif ✅`);
-          await render();
-        };
+          btn.onclick = async ()=>{
+            if(lbl.mode === "done") return;
+
+            if(!tokensOk){
+              toast("Jeton yetersiz. Profil’e yönlendiriyorum.");
+              setTimeout(()=>location.href="/pages/profile.html", 650);
+              return;
+            }
+
+            btn.disabled = true;
+            btn.classList.remove("disabled");
+            btn.innerHTML = `<span class="ico">⏳</span><span class="txt">İndiriliyor</span>`;
+
+            const { error } = await purchasePair(myLang, target);
+            if(error){
+              toast("Hata: " + (error.message || "İşlem başarısız"));
+              await render();
+              return;
+            }
+
+            toast(`${l.name} paketi aktif ✅ (2 yön)`);
+            await render();
+          };
+        }
 
         card.appendChild(left);
         card.appendChild(btn);
