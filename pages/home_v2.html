@@ -1,4 +1,4 @@
-<!-- FILE: /pages/home_pro.html -->
+<!-- FILE: /pages/home_v3.html -->
 <!doctype html>
 <html lang="tr">
 <head>
@@ -15,159 +15,152 @@ html,body{background:#02000f !important;}
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
 <style>
-:root{
-  --glass: rgba(255,255,255,0.05);
-  --border: rgba(255,255,255,0.12);
-  --aiGrad: linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
-}
-
+*{box-sizing:border-box}
 #pageContent{
   height:100%;
+  padding:0;
   display:flex;
   flex-direction:column;
-  padding:14px;
 }
 
-.mainWrap{
+.main{
   flex:1;
   display:flex;
   flex-direction:column;
-  gap:14px;
-  max-width:520px;
-  margin:0 auto;
-}
-
-.module{
-  flex:1;
-  border-radius:28px;
-  border:1px solid var(--border);
-  background:var(--glass);
-  backdrop-filter: blur(22px);
-  -webkit-backdrop-filter: blur(22px);
-  padding:18px;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  position:relative;
   overflow:hidden;
-  transition: all .45s cubic-bezier(.2,.8,.2,1);
-  cursor:pointer;
 }
 
-.module:hover{
-  transform: translateY(-4px);
-  box-shadow: 0 25px 60px rgba(0,0,0,.45);
-}
-
-.moduleTitle{
-  font-family:"Space Grotesk";
-  font-size:20px;
-  font-weight:900;
-  margin-bottom:10px;
-}
-
-.moduleDesc{
-  font-size:12px;
-  font-weight:900;
-  color:rgba(255,255,255,.65);
-}
-
-.subMenu{
-  margin-top:14px;
-  display:none;
-  flex-direction:column;
-  gap:10px;
-  animation: fadeIn .4s ease forwards;
-}
-
-.subItem{
-  padding:10px 14px;
-  border-radius:14px;
-  border:1px solid rgba(255,255,255,.1);
-  background:rgba(0,0,0,.25);
-  font-weight:900;
-  font-size:13px;
-  transition:.25s;
-}
-
-.subItem:hover{
-  background:rgba(99,102,241,.25);
-  border-color:rgba(99,102,241,.45);
-}
-
-.module.active{
-  flex:2.3;
-}
-
-.module.active .subMenu{
+/* ===== GENEL MODÜL ===== */
+.mod{
+  flex:1;
+  position:relative;
   display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:22px;
+  cursor:pointer;
+  transition:.45s cubic-bezier(.2,.8,.2,1);
+  overflow:hidden;
 }
 
-.module.blur{
-  filter:blur(3px);
-  opacity:.45;
-  transform:scale(.95);
+.mod:active{transform:scale(.98)}
+
+.modTitle{
+  font-family:"Space Grotesk";
+  font-size:22px;
+  font-weight:900;
+  z-index:2;
 }
 
-.glow{
+.modSub{
+  font-size:13px;
+  font-weight:900;
+  opacity:.9;
+  margin-top:8px;
+  z-index:2;
+}
+
+.modInner{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  text-align:center;
+  z-index:2;
+}
+
+/* ===== TRANSLATE ===== */
+.translate{
+  background:linear-gradient(135deg,#4f46e5,#7c3aed,#ec4899);
+}
+
+.translate .circle{
   position:absolute;
-  width:260px;
-  height:260px;
-  background:var(--aiGrad);
-  filter:blur(120px);
-  opacity:.2;
-  right:-80px;
-  bottom:-80px;
-  pointer-events:none;
+  width:220px;
+  height:220px;
+  border-radius:50%;
+  border:4px solid rgba(255,255,255,.25);
+  animation:spin 10s linear infinite;
 }
 
-@keyframes fadeIn{
-  from{opacity:0; transform:translateY(10px);}
-  to{opacity:1; transform:translateY(0);}
+@keyframes spin{
+  from{transform:rotate(0)}
+  to{transform:rotate(360deg)}
+}
+
+/* ===== AKADEMİ ===== */
+.academy{
+  background:linear-gradient(135deg,#0ea5e9,#22c55e,#6366f1);
+}
+
+.academy .wave{
+  position:absolute;
+  bottom:0;
+  width:200%;
+  height:120px;
+  background:rgba(255,255,255,.15);
+  border-radius:50%;
+  animation:waveMove 6s infinite linear;
+}
+
+@keyframes waveMove{
+  from{transform:translateX(0)}
+  to{transform:translateX(-50%)}
+}
+
+/* ===== YARDIMCI ===== */
+.helper{
+  background:linear-gradient(135deg,#f97316,#ef4444,#a855f7);
+}
+
+.helper .pulse{
+  position:absolute;
+  width:200px;
+  height:200px;
+  border-radius:50%;
+  background:rgba(255,255,255,.18);
+  animation:pulse 3s infinite;
+}
+
+@keyframes pulse{
+  0%{transform:scale(.8);opacity:.7}
+  70%{transform:scale(1.3);opacity:0}
+  100%{opacity:0}
+}
+
+.mod:hover{
+  filter:brightness(1.08);
 }
 </style>
 </head>
 
 <body>
 <main id="pageContent">
-  <div class="mainWrap">
+  <div class="main">
 
-    <!-- 1️⃣ TRANSLATE -->
-    <div class="module" id="modTranslate">
-      <div class="glow"></div>
-      <div class="moduleTitle">Translate</div>
-      <div class="moduleDesc">Anlık konuşma ve metin çeviri modülleri</div>
-      <div class="subMenu">
-        <div class="subItem">Facetoface</div>
-        <div class="subItem">Walkie Talkie</div>
-        <div class="subItem">Metinden Çeviri</div>
+    <!-- 1 TRANSLATE -->
+    <div class="mod translate" onclick="goTranslate()">
+      <div class="circle"></div>
+      <div class="modInner">
+        <div class="modTitle">Translate</div>
+        <div class="modSub">Facetoface • Walkie Talkie • Metin Çeviri</div>
       </div>
     </div>
 
-    <!-- 2️⃣ DİL AKADEMİSİ -->
-    <div class="module" id="modAcademy">
-      <div class="glow"></div>
-      <div class="moduleTitle">Dil Akademisi</div>
-      <div class="moduleDesc">Seviye belirle, ders al, AI ile pratik yap</div>
-      <div class="subMenu">
-        <div class="subItem">Seviye Tespit</div>
-        <div class="subItem">Dil Dersi</div>
-        <div class="subItem">AI ile Pratik</div>
-        <div class="subItem">Eğlenerek Öğren</div>
+    <!-- 2 AKADEMİ -->
+    <div class="mod academy" onclick="goAcademy()">
+      <div class="wave"></div>
+      <div class="modInner">
+        <div class="modTitle">Dil Akademisi</div>
+        <div class="modSub">Seviye • Ders • AI Pratik • Oyun</div>
       </div>
     </div>
 
-    <!-- 3️⃣ YARDIMCI ÖĞRETMEN -->
-    <div class="module" id="modHelper">
-      <div class="glow"></div>
-      <div class="moduleTitle">Yardımcı Öğretmen</div>
-      <div class="moduleDesc">Soru tara, çözüm al, özel ders planla</div>
-      <div class="subMenu">
-        <div class="subItem">Matematik</div>
-        <div class="subItem">Fizik</div>
-        <div class="subItem">Kimya</div>
-        <div class="subItem">Türkçe</div>
-        <div class="subItem">Yabancı Dil</div>
+    <!-- 3 YARDIMCI -->
+    <div class="mod helper" onclick="goHelper()">
+      <div class="pulse"></div>
+      <div class="modInner">
+        <div class="modTitle">Yardımcı Öğretmen</div>
+        <div class="modSub">Matematik • Fizik • Kimya • Soru Tara</div>
       </div>
     </div>
 
@@ -178,29 +171,9 @@ html,body{background:#02000f !important;}
 import { mountShell } from "/js/ui_shell.js";
 mountShell({ scroll:"none" });
 
-const modules = document.querySelectorAll(".module");
-
-modules.forEach(mod=>{
-  mod.addEventListener("click", ()=>{
-    modules.forEach(m=>{
-      if(m === mod){
-        m.classList.toggle("active");
-      }else{
-        m.classList.remove("active");
-      }
-    });
-
-    // blur logic
-    const anyActive = document.querySelector(".module.active");
-    modules.forEach(m=>{
-      if(anyActive && m !== anyActive){
-        m.classList.add("blur");
-      }else{
-        m.classList.remove("blur");
-      }
-    });
-  });
-});
+window.goTranslate = () => location.href="/pages/translate_home.html";
+window.goAcademy  = () => location.href="/pages/academy_home.html";
+window.goHelper   = () => location.href="/pages/helper_home.html";
 </script>
 </body>
 </html>
