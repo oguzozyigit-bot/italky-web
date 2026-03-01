@@ -1,178 +1,185 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="tr">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-  <title>italkyAI • Neural Call</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+<title>italkyAI • Translate AI Hub</title>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+<meta name="theme-color" content="#000000">
+<style>
+  html,body{background:#000 !important; margin:0; padding:0; overflow:hidden; font-family:'Outfit', sans-serif;}
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=Space+Grotesk:wght@700&display=swap');
+</style>
 
-  <style>
-    :root {
-      --ai-gradient: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
-      --bg-void: #02000f;
-      --quantum-blue: #6366f1;
-      --footer-height: 140px;
-    }
+<style>
+:root {
+  --ai-grad: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
+  --blue-sun: #60a5fa;
+  --glass: rgba(255, 255, 255, 0.03);
+  --glass-border: rgba(255, 255, 255, 0.12);
+}
 
-    html, body {
-      margin: 0; padding: 0; width: 100%; height: 100%;
-      background-color: var(--bg-void); font-family: 'Outfit', sans-serif;
-      overflow: hidden; color: #fff;
-    }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
 
-    .app-viewport {
-      width: 100%; max-width: 430px; height: 100dvh; margin: 0 auto;
-      display: flex; flex-direction: column; position: relative;
-      background: rgba(10, 10, 30, 0.4); backdrop-filter: blur(40px);
-    }
+#pageContent {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  /* UI Shell barlarının arasına tam oturtma */
+  padding-top: calc(env(safe-area-inset-top) + 40px);
+  padding-bottom: calc(env(safe-area-inset-bottom) + 82px);
+  background: radial-gradient(circle at 50% 20%, #0a0a20 0%, #000 100%);
+}
 
-    /* --- UI_SHELL HEADER --- */
-    .premium-header {
-      padding: calc(45px + env(safe-area-inset-top)) 18px 15px;
-      display: flex; align-items: flex-start; justify-content: space-between;
-      border-bottom: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.2);
-    }
-    .brand-group h1 {
-      font-family: 'Space Grotesk', sans-serif; font-size: 22px; margin: 0; font-weight: 700;
-    }
-    .brand-group .ai { background: var(--ai-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    
-    .room-badge {
-      background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3);
-      padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 900; color: #a5b4fc;
-    }
+.main-hub {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 14px;
+}
 
-    /* --- CENTRAL SYNC ZONE --- */
-    .sync-zone {
-      flex: 1; display: flex; flex-direction: column; 
-      padding: 20px 18px; gap: 20px; overflow: hidden;
-    }
+/* ===== TRANSLATE CARD BASE ===== */
+.trans-card {
+  flex: 1;
+  position: relative;
+  border-radius: 30px;
+  border: 1px solid var(--glass-border);
+  background: linear-gradient(145deg, rgba(96,165,250,0.08) 0%, rgba(0,0,0,0.6) 100%);
+  overflow: hidden;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+}
 
-    /* Aktif Konuşmacı Halkası */
-    .voice-visualizer {
-      height: 120px; display: flex; align-items: center; justify-content: center; position: relative;
-    }
-    .pulse-ring {
-      position: absolute; width: 80px; height: 80px; border-radius: 50%;
-      border: 2px solid var(--quantum-blue); opacity: 0;
-    }
-    .listening .pulse-ring { animation: pulseOut 2s infinite; }
+.trans-card:active { transform: scale(0.98); filter: brightness(1.2); }
 
-    /* Mesaj Balonları: Holografik Akış */
-    #chat {
-      flex: 1; display: flex; flex-direction: column; gap: 20px;
-      overflow-y: auto; scrollbar-width: none;
-      mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent);
-    }
-    #chat::-webkit-scrollbar { display: none; }
+/* Solar Core Animasyonu (Translate Temalı) */
+.solar {
+  width: 68px; height: 68px;
+  position: relative; flex-shrink: 0; margin-right: 18px;
+}
+.sun {
+  width: 20px; height: 20px;
+  background: var(--blue-sun);
+  border-radius: 50%;
+  filter: blur(5px);
+  box-shadow: 0 0 18px var(--blue-sun);
+  position: absolute; left: 50%; top: 50%;
+  transform: translate(-50%,-50%);
+  animation: sunPulse 3s infinite;
+}
+@keyframes sunPulse { 0%,100%{transform:translate(-50%,-50%) scale(1); opacity:0.6;} 50%{transform:translate(-50%,-50%) scale(1.15); opacity:0.9;} }
 
-    .bubble { display: flex; flex-direction: column; gap: 6px; animation: slideUp 0.4s ease-out; }
-    .bubble.them { align-items: flex-start; text-align: left; }
-    .bubble.me { align-items: flex-end; text-align: right; }
+.orbit { position: absolute; border: 1px solid rgba(255,255,255,0.06); border-radius: 50%; animation: rotate linear infinite; }
+.orbit1 { width: 44px; height: 44px; top: 12px; left: 12px; animation-duration: 4s; }
+.orbit2 { width: 68px; height: 68px; animation-duration: 7s; animation-direction: reverse; }
+.planet { width: 4px; height: 4px; background: #fff; border-radius: 50%; position: absolute; top: 0; left: 50%; transform: translateX(-50%); }
 
-    .txt-main { 
-      font-size: 24px; font-weight: 900; line-height: 1.1; 
-      max-width: 85%; letter-spacing: -0.5px;
-    }
-    .them .txt-main { color: #fff; text-shadow: 0 0 20px rgba(255,255,255,0.2); }
-    .me .txt-main { background: var(--ai-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+@keyframes rotate { from{transform:rotate(0deg);} to{transform:rotate(360deg);} }
 
-    .txt-sub { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.4); max-width: 80%; }
+/* İçerik */
+.card-content { flex: 1; z-index: 10; }
+.card-title { font-family: 'Space Grotesk'; font-size: 20px; font-weight: 700; color: #fff; margin: 0; }
+.card-title .ai { background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.card-desc { font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 4px; line-height: 1.4; }
 
-    /* --- CONTROL HUB --- */
-    .control-hub {
-      padding: 20px 20px calc(20px + env(safe-area-inset-bottom));
-      display: flex; flex-direction: column; align-items: center; gap: 15px;
-      background: linear-gradient(to top, rgba(0,0,0,0.6), transparent);
-    }
+/* ===== ÖZEL EFEKTLER ===== */
 
-    .talk-btn {
-      width: 70px; height: 70px; border-radius: 50%; border: none;
-      background: var(--ai-gradient); display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 0 30px rgba(99, 102, 241, 0.4); cursor: pointer;
-      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-    .talk-btn:active { transform: scale(0.9); }
-    .talk-btn.listening { transform: scale(1.1); box-shadow: 0 0 50px rgba(236, 72, 153, 0.6); }
+/* FaceToFace: Neural Waves */
+.waves { position: absolute; inset: 0; opacity: 0.2; pointer-events: none; }
+.wave { position: absolute; border: 1px solid var(--blue-sun); border-radius: 50%; inset: 20%; animation: waveOut 4s infinite; }
+@keyframes waveOut { 0% { transform: scale(0.5); opacity: 1; } 100% { transform: scale(2.5); opacity: 0; } }
 
-    .hint-text { font-size: 11px; font-weight: 900; color: rgba(255,255,255,0.3); letter-spacing: 2px; text-transform: uppercase; }
+/* Text: Scan Line */
+.scan { position: absolute; inset: 0; background: linear-gradient(to bottom, transparent, rgba(96,165,250,0.1), transparent); height: 20%; width: 100%; animation: scanDown 3s linear infinite; }
+@keyframes scanDown { 0% { top: -20%; } 100% { top: 120%; } }
 
-    /* Action Bar */
-    .action-bar { display: flex; gap: 20px; }
-    .act-btn {
-      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
-      padding: 8px 20px; border-radius: 20px; font-size: 12px; font-weight: 800; color: #fff;
-    }
+/* Walkie: EQ */
+.eq { position: absolute; right: 20px; bottom: 15px; display: flex; gap: 3px; align-items: flex-end; height: 15px; opacity: 0.5; }
+.eq-bar { width: 2px; background: var(--blue-sun); animation: eqPulse 0.5s infinite alternate; }
+@keyframes eqPulse { 0% { height: 2px; } 100% { height: 15px; } }
 
-    /* Animations */
-    @keyframes pulseOut {
-      0% { transform: scale(1); opacity: 0.8; }
-      100% { transform: scale(2.5); opacity: 0; }
-    }
-    @keyframes slideUp {
-      from { transform: translateY(20px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
-    }
+/* Offline: Download Indicator */
+.dl-flow { position: absolute; right: 20px; top: 20px; color: var(--blue-sun); font-size: 12px; animation: dlFlow 2s infinite; opacity: 0.5; }
+@keyframes dlFlow { 0% { transform: translateY(-10px); opacity: 0; } 50% { opacity: 1; } 100% { transform: translateY(10px); opacity: 0; } }
 
-  </style>
+</style>
 </head>
+
 <body>
-  <div class="app-viewport">
+<main id="pageContent">
+  <div class="main-hub">
 
-    <header class="premium-header">
-      <div class="brand-group">
-        <h1>italky<span class="ai">AI</span></h1>
+    <div class="trans-card" onclick="go('/facetoface.html')">
+      <div class="waves"><div class="wave"></div><div class="wave" style="animation-delay:2s"></div></div>
+      <div class="solar">
+        <div class="sun"></div>
+        <div class="orbit orbit1"><div class="planet"></div></div>
+        <div class="orbit orbit2"><div class="planet"></div></div>
       </div>
-      <div class="room-badge" id="roomPill">SYNC_ROOM: —</div>
-      <button class="act-btn" id="btnLeave" style="background:rgba(239, 68, 68, 0.1); border-color:rgba(239, 68, 68, 0.2); color:#ef4444;">BİTİR</button>
-    </header>
-
-    <div class="sync-zone">
-      <div class="voice-visualizer" id="visualizerContainer">
-        <div class="pulse-ring" style="animation-delay: 0s"></div>
-        <div class="pulse-ring" style="animation-delay: 0.5s"></div>
-        <div class="ai-orb" style="width: 80px; height: 80px; background: #000; border-radius: 50%; border: 2px solid #fff; display: flex; align-items: center; justify-content: center; z-index: 5; box-shadow: 0 0 20px rgba(255,255,255,0.2);">
-           <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 11v1a7 7 0 0 1-14 0v-2"/></svg>
-        </div>
+      <div class="card-content">
+        <h2 class="card-title">FaceToFace <span class="ai">AI</span></h2>
+        <p class="card-desc">Karşılıklı konuşmaları anlık olarak tespit eder ve sesli çevirir.</p>
       </div>
-
-      <div id="chat">
-        </div>
     </div>
 
-    <div class="control-hub">
-      <div class="hint-text" id="hint">DOKUN VE KONUŞ</div>
-      
-      <button class="talk-btn" id="btnTalk">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5">
-          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
-          <path d="M19 11v1a7 7 0 0 1-14 0v-2"/>
-        </svg>
-      </button>
+    <div class="trans-card" onclick="go('/pages/text_translate.html')">
+      <div class="scan"></div>
+      <div class="solar">
+        <div class="sun" style="filter: blur(8px); transform: translate(-50%,-50%) scale(0.8)"></div>
+        <div class="orbit orbit1" style="border-radius: 4px;"></div>
+        <div class="orbit orbit2" style="border-radius: 8px;"></div>
+      </div>
+      <div class="card-content">
+        <h2 class="card-title">Metin Çeviri <span class="ai">AI</span></h2>
+        <p class="card-desc">Karmaşık metinleri ve belgeleri kuantum hızıyla yerelleştirir.</p>
+      </div>
+    </div>
 
-      <div class="action-bar">
-        <div class="pill" id="rolePill" style="font-size:10px; opacity:0.5; font-weight:900; letter-spacing:1px;">SYNCING...</div>
+    <div class="trans-card" onclick="go('/pages/f2f_connect.html')">
+      <div class="eq">
+        <div class="eq-bar" style="animation-delay:0.1s"></div>
+        <div class="eq-bar" style="animation-delay:0.3s"></div>
+        <div class="eq-bar" style="animation-delay:0.2s"></div>
+        <div class="eq-bar" style="animation-delay:0.4s"></div>
+      </div>
+      <div class="solar">
+        <div class="sun"></div>
+        <div class="orbit orbit1"></div>
+        <div class="orbit orbit2"><div class="planet" style="width:8px; border-radius:2px;"></div></div>
+      </div>
+      <div class="card-content">
+        <h2 class="card-title">Walkie-Talkie <span class="ai">AI</span></h2>
+        <p class="card-desc">Bas-konuş mantığıyla uzak mesafeli anlık sesli iletişim odaları.</p>
+      </div>
+    </div>
+
+    <div class="trans-card" onclick="go('/facetoface_offline.html')">
+      <div class="dl-flow">↓</div>
+      <div class="solar">
+        <div class="sun"></div>
+        <div class="orbit orbit1" style="border-style: dashed; opacity: 0.3;"></div>
+        <div class="orbit orbit2" style="border-style: dashed; opacity: 0.3;"></div>
+      </div>
+      <div class="card-content">
+        <h2 class="card-title">Offline <span class="ai">AI</span></h2>
+        <p class="card-desc">İnternet bağlantısı olmadan, indirilen paketlerle tam gizlilikte çeviri.</p>
       </div>
     </div>
 
   </div>
+</main>
 
-  <script type="module" src="/js/f2f_call.js?v=2"></script>
-  <script>
-    // Dinamik Görsel Efektler için
-    const btnTalk = document.getElementById('btnTalk');
-    const container = document.querySelector('.app-viewport');
+<script type="module">
+  import { mountShell } from "/js/ui_shell.js";
+  mountShell({ scroll:"none" });
 
-    btnTalk.addEventListener('mousedown', () => {
-        container.classList.add('listening');
-        btnTalk.classList.add('listening');
-    });
-    btnTalk.addEventListener('mouseup', () => {
-        container.classList.remove('listening');
-        btnTalk.classList.remove('listening');
-    });
-  </script>
+  window.go = (url) => location.href = url;
+</script>
 </body>
 </html>
