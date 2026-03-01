@@ -1,0 +1,79 @@
+<!-- FILE: /pages/exam_hub.html -->
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+  <title>italkyAI • Sınav Merkezi</title>
+
+  <meta name="theme-color" content="#02000f">
+  <style>html,body{background:#02000f !important;}</style>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <main id="pageContent">
+    <div style="padding:12px 14px; max-width:520px; margin:0 auto;">
+      <div style="border:1px solid rgba(255,255,255,0.12); background:rgba(255,255,255,0.04); border-radius:22px; padding:14px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+          <div style="font-family:'Space Grotesk'; font-weight:1000; font-size:16px;">Sınav Merkezi</div>
+          <div style="padding:7px 10px; border-radius:999px; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.18); font-weight:1000; font-size:12px;">LGS • 8. Sınıf</div>
+        </div>
+        <div style="margin-top:8px; font-size:12px; font-weight:900; color:rgba(255,255,255,0.72); line-height:1.55;">
+          Gerçek deneme mantığı: süreli, geri dönüş var, sonuçta yanlışlar için adım adım çözüm ve mini ders önerisi.
+        </div>
+      </div>
+
+      <div style="height:12px;"></div>
+
+      <button id="btnStart" style="width:100%; height:56px; border-radius:18px; border:none; font-weight:1000; font-size:14px; cursor:pointer; background:#fff; color:#000;">
+        Denemeyi Başlat
+      </button>
+
+      <div style="height:10px;"></div>
+
+      <button id="btnScan" style="width:100%; height:56px; border-radius:18px; border:1px solid rgba(255,255,255,0.12); font-weight:1000; font-size:14px; cursor:pointer; background:rgba(255,255,255,0.06); color:#fff;">
+        Kamera ile Soru Çöz
+      </button>
+
+      <div id="toast" style="position:fixed; left:50%; top:18px; transform:translateX(-50%) translateY(-120px); background:rgba(10,10,18,0.95); border:1px solid rgba(165,180,252,0.35); padding:10px 14px; border-radius:999px; color:#fff; z-index:999999; font-weight:1000; font-size:12px; transition:.25s; backdrop-filter: blur(12px); pointer-events:none; max-width:min(92vw,520px); text-align:center;"></div>
+    </div>
+  </main>
+
+  <script type="module">
+    import { mountShell } from "/js/ui_shell.js";
+    import { supabase } from "/js/supabase_client.js";
+    mountShell({ scroll:"none" });
+
+    const toast = (msg)=>{
+      const t = document.getElementById("toast");
+      t.textContent = String(msg||"");
+      t.classList.add("show");
+      t.style.transform = "translateX(-50%) translateY(0)";
+      clearTimeout(window.__to);
+      window.__to = setTimeout(()=>{ t.style.transform="translateX(-50%) translateY(-120px)"; }, 1600);
+    };
+
+    const { data:{ session } } = await supabase.auth.getSession();
+    if(!session?.user) location.replace("/pages/login.html");
+
+    document.getElementById("btnScan").onclick = ()=>location.href="/pages/scan_solve.html";
+
+    document.getElementById("btnStart").onclick = async ()=>{
+      toast("Deneme hazırlanıyor…");
+      const { data, error } = await supabase.rpc("create_exam_attempt", { p_exam: "LGS", p_grade: 8, p_template_id: null });
+      if(error){
+        toast(error.message || "Başlatılamadı");
+        return;
+      }
+      const row = Array.isArray(data) ? data[0] : data;
+      const attemptId = row?.attempt_id || row?.id || null;
+      if(!attemptId){ toast("attempt_id alınamadı"); return; }
+
+      location.href = `/pages/exam_take.html?id=${encodeURIComponent(attemptId)}`;
+    };
+  </script>
+</body>
+</html>
