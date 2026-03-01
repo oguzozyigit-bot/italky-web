@@ -494,37 +494,76 @@
           btn.innerHTML = `<span class="ico">${lbl.ico}</span><span class="txt">${lbl.text}</span>`;
 
           btn.onclick = async ()=>{
-            if(lbl.mode === "done") return;
+  if(lbl.mode === "done") return;
 
-            if(!tokensOk){
-              toast("Jeton yetersiz. Profil’e yönlendiriyorum.");
-              setTimeout(()=>location.href="/pages/profile.html", 650);
-              return;
-            }
+  if(!tokensOk){
+    toast("Jeton yetersiz. Profil’e yönlendiriyorum.");
+    setTimeout(()=>location.href="/pages/profile.html", 650);
+    return;
+  }
 
-            btn.disabled = true;
-            btn.classList.remove("disabled");
-            btn.innerHTML = `<span class="ico">⏳</span><span class="txt">İndiriliyor</span>`;
+  btn.disabled = true;
+  btn.classList.remove("disabled");
+  btn.innerHTML = `<span class="ico">⏳</span><span class="txt">İndiriliyor</span>`;
 
-            const { error } = await purchasePair(myLang, target);
-            if(error){
-              toast("Hata: " + (error.message || "İşlem başarısız"));
-              await render();
-              return;
-            }
+  // 1) Satın al / uzat (DB kaydı + token düş)
+  const { error } = await purchasePair(myLang, target);
+  if(error){
+    toast("Hata: " + (error.message || "İşlem başarısız"));
+    await render();
+    return;
+  }
 
-            toast(`${l.name} paketi aktif ✅ (2 yön)`);
-            await render();
-          };
-        }
+  // 2) Session al (Bearer ile link isteyeceğiz)
+  const { data:{ session } } = await supabase.auth.getSession();
+  if(!session?.access_token){
+    toast("Oturum bulunamadı. Tekrar giriş yap.");
+    btn.disabled = false;
+    await render();
+    return;
+  }
 
-        card.appendChild(left);
-        card.appendChild(btn);
-        list.appendChild(card);
-      });
+  // 3) Backend’den SIGNED DOWNLOAD LINK al
+  try{
+    const res = await fetch(`${API_BASE}/api/offline/get_link`, {
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "Authorization":"Bearer " + session.access_token
+      },
+      body: JSON.stringify({
+        base_lang: myLang,
+        target_lang: target
+      })
+    });
+
+    const data = await res.json().catch(()=>null);
+
+    if(!res.ok || !data?.ok || !data?.url){
+      toast("İndirme linki alınamadı.");
+      console.log("get_link fail:", res.status, data);
+      btn.disabled = false;
+      await render();
+      return;
     }
 
-    render();
+    // 4) İNDİRMEYİ BAŞLAT
+    // WebView / tarayıcı: direkt URL’e yönlendirince indirme başlar
+    // (APK tarafında DownloadManager yakalıyorsun)
+    toast("İndirme başlıyor…");
+    window.location.href = data.url;
+
+    // UI: render zaten “aktif” durumunu gösterecek
+    setTimeout(()=>render(), 1200);
+
+  }catch(e){
+    console.log("download err:", e);
+    toast("İndirme başlatılamadı.");
+    btn.disabled = false;
+    await render();
+    return;
+  }
+};
   </script>
 </body>
 </html>
