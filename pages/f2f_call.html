@@ -62,29 +62,23 @@
       width: 40px; height: 40px; border-radius: 12px;
       border: 1px solid var(--glass-border); background: var(--glass);
       color: #fff; font-weight: 1000; display: flex; align-items: center; justify-content: center; cursor: pointer;
+      user-select:none;
     }
     .backBtn:active{ transform: scale(.96); }
 
     .brand { display: flex; flex-direction: column; align-items: center; user-select:none; }
     .brand-name { font-family: 'Space Grotesk'; font-size: 18px; font-weight: 700; }
     .brand-name span { background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .brand-sub { font-size: 8px; color: rgba(255,255,255,0.4); font-weight: 800; letter-spacing: 2px; }
 
     /* ROOM BAR */
     .roomBar {
       height: var(--roomH); display: flex; align-items: center; justify-content: space-between;
       padding: 0 14px; background: rgba(0,0,0,.20); border-bottom: 1px solid var(--glass-border); flex-shrink: 0;
     }
-    .roomLeft{ display:flex; align-items:center; gap:8px; min-width:0; }
-    .roomLabel{ font-size: 11px; font-weight: 900; color: rgba(255,255,255,0.6); white-space:nowrap; }
     .roomPill {
       padding: 6px 12px; border-radius: 10px; background: var(--glass);
-      border: 1px solid var(--glass-border); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 900; letter-spacing: 1px;
+      border: 1px solid var(--glass-border); font-family: monospace; font-weight: 900; letter-spacing: 1px;
       cursor:pointer;
-      max-width: 210px;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      white-space:nowrap;
     }
     .langSelect {
       height: 30px; border-radius: 8px; border: 1px solid var(--glass-border);
@@ -93,168 +87,91 @@
       max-width: 140px;
     }
 
-    /* ✅ PEOPLE BAR (AVATAR YOK — SADECE İSİM) */
+    /* ✅ PEOPLE BAR (AVATAR + İSİM KALSIN) */
     .peopleBar {
-      height: var(--peopleH);
-      display: flex; align-items: center; gap: 8px;
-      padding: 0 12px;
-      background: rgba(255,255,255,0.02);
-      border-bottom: 1px solid var(--glass-border);
-      flex-shrink: 0;
+      height: var(--peopleH); display: flex; align-items: center; gap: 8px;
+      padding: 0 12px; background: rgba(255,255,255,0.02);
+      border-bottom: 1px solid var(--glass-border); flex-shrink: 0;
     }
-    .peopleCount { font-size: 11px; font-weight: 1000; color: #a5b4fc; min-width: 20px; text-align:center; }
-
-    .peopleScroll {
-      flex: 1;
-      display: flex;
-      gap: 8px;
-      overflow-x: auto;
-      scrollbar-width: none;
-      -webkit-overflow-scrolling: touch;
-    }
+    .peopleCount { font-size: 11px; font-weight: 900; color: #6366f1; min-width: 20px; }
+    .peopleScroll { flex: 1; display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
     .peopleScroll::-webkit-scrollbar { display: none; }
 
-    .namePill{
-      flex: 0 0 auto;
-      height: 34px;
-      padding: 0 12px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.10);
-      background: rgba(0,0,0,0.18);
-      display:flex;
-      align-items:center;
-      gap:8px;
-      font-weight: 1000;
-      font-size: 12px;
-      color: rgba(255,255,255,0.88);
-      max-width: 180px;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      white-space:nowrap;
-      user-select:none;
+    .pItem { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+    .pAvatar {
+      width: 32px; height: 32px;
+      border-radius: 50%; border: 1.5px solid var(--glass-border);
+      overflow: hidden; background: var(--glass);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 900;
     }
-    .dot{
-      width:8px;height:8px;border-radius:99px;
-      background: rgba(34,197,94,0.95);
-      box-shadow: 0 0 12px rgba(34,197,94,0.35);
-      flex: 0 0 auto;
-    }
-    .dot.off{
-      background: rgba(239,68,68,0.95);
-      box-shadow: 0 0 12px rgba(239,68,68,0.35);
-    }
+    .pAvatar img { width: 100%; height: 100%; object-fit: cover; }
+    .pName { font-size: 8px; font-weight: 800; color: rgba(255,255,255,0.4); max-width: 38px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-    /* CHAT AREA */
+    /* ✅ CHAT AREA (AVATAR YOK) */
     .chat-area {
-      flex: 1;
-      min-height:0;
-      overflow-y: auto;
-      padding: 16px 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      scrollbar-width: none;
-      -webkit-overflow-scrolling: touch;
+      flex: 1; min-height:0;
+      overflow-y: auto; padding: 16px;
+      display: flex; flex-direction: column; gap: 14px;
+      scrollbar-width: none; -webkit-overflow-scrolling: touch;
     }
     .chat-area::-webkit-scrollbar { display: none; }
 
-    .bubble {
-      max-width: 88%;
-      padding: 10px 14px;
-      border-radius: 18px;
-      font-size: 14px;
-      font-weight: 800;
-      line-height: 1.45;
-      backdrop-filter: blur(10px);
-      border: 1px solid var(--glass-border);
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
-    .bubble.left { align-self: flex-start; background: var(--glass); border-bottom-left-radius: 6px; }
-    .bubble.right { align-self: flex-end; background: linear-gradient(135deg, var(--bordo) 0%, #000 100%); border-bottom-right-radius: 6px; color: #fbcfe8; border-color: rgba(236,72,153,0.2); }
+    .msgRow { display: flex; flex-direction: column; max-width: 85%; }
+    .msgRow.left { align-self: flex-start; }
+    .msgRow.right { align-self: flex-end; align-items: flex-end; }
 
-    /* ✅ SYSTEM MESSAGE */
-    .bubble.sys{
-      align-self:center;
-      max-width: 92%;
-      text-align:center;
+    .bubble {
+      padding: 10px 14px; border-radius: 18px; font-size: 14px; line-height: 1.45;
+      backdrop-filter: blur(10px); border: 1px solid var(--glass-border);
+      white-space: pre-wrap; word-break: break-word;
+    }
+    .left .bubble { background: var(--glass); border-bottom-left-radius: 4px; }
+    .right .bubble { background: linear-gradient(135deg, var(--bordo) 0%, #000 100%); border-bottom-right-radius: 4px; color: #fbcfe8; border-color: rgba(236,72,153,0.2); }
+
+    /* ✅ SYSTEM MESSAGE (AYRILDI/KATILDI) */
+    .sysRow{ align-self:center; max-width: 92%; }
+    .sysBubble{
+      padding: 10px 14px;
+      border-radius: 999px;
       font-size: 12px;
-      font-weight: 1000;
+      font-weight: 900;
       color: rgba(255,255,255,0.72);
       background: rgba(255,255,255,0.06);
       border: 1px dashed rgba(255,255,255,0.14);
+      text-align:center;
+      backdrop-filter: blur(10px);
     }
 
     /* INPUT DOCK */
     .input-dock {
-      height: var(--dockH);
-      padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
-      background: rgba(0,0,0,0.5);
-      backdrop-filter: blur(25px);
-      border-top: 1px solid var(--glass-border);
-      flex-shrink: 0;
+      height: var(--dockH); padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+      background: rgba(0,0,0,0.5); backdrop-filter: blur(25px);
+      border-top: 1px solid var(--glass-border); flex-shrink: 0;
     }
     .dock-inner {
-      height: 52px;
-      background: rgba(255,255,255,0.05);
-      border-radius: 26px;
-      border: 1px solid var(--glass-border);
-      display: flex;
-      align-items: center;
-      padding: 0 6px 0 16px;
+      height: 52px; background: rgba(255,255,255,0.05); border-radius: 26px;
+      border: 1px solid var(--glass-border); display: flex; align-items: center; padding: 0 6px 0 16px;
       gap: 8px;
     }
     #msgInput {
-      flex: 1;
-      background: transparent;
-      border: none;
-      color: #fff;
-      font-size: 14px;
-      font-family: inherit;
-      resize:none;
-      line-height: 18px;
-      padding: 10px 6px;
-      max-height: 120px;
-      overflow:hidden;
+      flex: 1; background: transparent; border: none; color: #fff; font-size: 14px; font-family: inherit;
+      resize:none; line-height: 18px; padding: 10px 6px; max-height: 120px; overflow:hidden;
     }
 
     .icon-btn, .send-btn {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      border: none;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
+      width: 40px; height: 40px; border-radius: 50%; border: none;
+      display: flex; align-items: center; justify-content: center; cursor: pointer;
       user-select:none;
-      flex: 0 0 auto;
     }
-    #micBtn {
-      background: transparent;
-      color: #fff;
-      font-size: 18px;
-      border: 1px solid var(--glass-border);
-    }
+    #micBtn { background: transparent; color: #fff; font-size: 18px; border: 1px solid var(--glass-border); }
     #micBtn.listening { background: #ef4444; border: none; animation: pulse 1s infinite; }
-    #sendBtn {
-      background: var(--ai-grad);
-      color: #fff;
-      box-shadow: 0 4px 12px rgba(99,102,241,0.3);
-      font-weight: 1000;
-    }
+    #sendBtn { background: var(--ai-grad); color: #fff; margin-left: 8px; box-shadow: 0 4px 12px rgba(99,102,241,0.3); font-weight: 1000; }
 
     .signatureBar {
-      height: var(--sigH);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 9px;
-      font-weight: 900;
-      color: rgba(255,255,255,0.2);
-      letter-spacing: 1px;
-      background: #000;
-      border-top: 1px solid rgba(255,255,255,0.03);
+      height: var(--sigH); display: flex; align-items: center; justify-content: center;
+      font-size: 9px; font-weight: 900; color: rgba(255,255,255,0.2); letter-spacing: 1px;
+      background: #000; border-top: 1px solid rgba(255,255,255,0.03);
       user-select:none;
     }
 
@@ -271,19 +188,16 @@
   <div class="mobile-frame" id="mobileFrame">
     <header class="topbar">
       <button class="backBtn" id="backBtn" type="button">←</button>
-
       <div class="brand" id="logoHome" title="Ana sayfa">
         <div class="brand-name">italky<span>AI</span></div>
-        <div class="brand-sub">WALKIE TALKIE</div>
+        <div style="font-size: 8px; color: rgba(255,255,255,0.4); font-weight: 800; letter-spacing: 2px;">WALKIE TALKIE</div>
       </div>
-
       <button class="backBtn" id="exitBtn" type="button">✕</button>
     </header>
 
-    <div class="roomBar" id="roomBar" style="display:none;">
-      <div class="roomLeft">
-        <div class="roomLabel">FREKANS:</div>
-        <div class="roomPill" id="roomPill">---</div>
+    <div class="roomBar" id="roomBar" style="display: none;">
+      <div style="font-size: 11px; font-weight: 900; color: rgba(255,255,255,0.6);">
+        FREKANS: <span class="roomPill" id="roomPill">---</span>
       </div>
       <select class="langSelect" id="langSelect"></select>
     </div>
@@ -298,8 +212,8 @@
     <div class="input-dock">
       <div class="dock-inner">
         <textarea id="msgInput" rows="1" placeholder="Konuş ya da yaz..." spellcheck="false"></textarea>
-        <button id="micBtn" class="icon-btn" type="button" aria-label="Mikrofon">🎙️</button>
-        <button id="sendBtn" class="send-btn" type="button" aria-label="Gönder">⚡</button>
+        <button id="micBtn" class="icon-btn" type="button">🎙️</button>
+        <button id="sendBtn" class="send-btn" type="button">⚡</button>
       </div>
     </div>
 
@@ -310,7 +224,7 @@
     import { mountShell } from "/js/ui_shell.js";
     mountShell({ scroll:"none" });
 
-    // Room code
+    // Oda Kodu & Kopyalama
     const p = new URLSearchParams(location.search);
     const room = String(p.get("room")||"").trim().toUpperCase();
     if(room) {
@@ -327,7 +241,7 @@
       };
     }
 
-    // Enter=send, Shift+Enter=new line
+    // ✅ Enter = gönder, Shift+Enter = alt satır
     const msg = document.getElementById("msgInput");
     const send = document.getElementById("sendBtn");
     msg?.addEventListener("keydown",(e)=>{
@@ -337,44 +251,57 @@
       }
     });
 
-    // ✅ f2f_call.js bununla UI'a yazacak:
+    // ✅ UI HOOK: f2f_call.js burayı kullanacak
     const chat = document.getElementById("chat");
     const peopleScroll = document.getElementById("peopleScroll");
     const peopleCount = document.getElementById("peopleCount");
 
     function addSys(text){
-      const d = document.createElement("div");
-      d.className = "bubble sys";
-      d.textContent = String(text||"");
-      chat.appendChild(d);
+      const row = document.createElement("div");
+      row.className = "sysRow";
+      const b = document.createElement("div");
+      b.className = "sysBubble";
+      b.textContent = String(text||"");
+      row.appendChild(b);
+      chat.appendChild(row);
       chat.scrollTop = chat.scrollHeight;
     }
+
     function addMsg(side, text){
-      const d = document.createElement("div");
-      d.className = "bubble " + (side === "right" ? "right" : "left");
-      d.textContent = String(text||"");
-      chat.appendChild(d);
+      const row = document.createElement("div");
+      row.className = "msgRow " + (side === "right" ? "right" : "left");
+      const b = document.createElement("div");
+      b.className = "bubble";
+      b.textContent = String(text||"");
+      row.appendChild(b);
+      chat.appendChild(row);
       chat.scrollTop = chat.scrollHeight;
     }
 
     function renderPeople(list){
-      // list: [{name:"Oğuz", online:true}, ...]
       const arr = Array.isArray(list) ? list : [];
       peopleCount.textContent = String(arr.length || 0);
 
+      // Beklenen: [{name, avatar_url?}]
       peopleScroll.innerHTML = arr.map(p=>{
         const nm = String(p?.name || "Kullanıcı").trim() || "Kullanıcı";
-        const online = !!p?.online;
+        const av = String(p?.avatar_url || p?.avatar || p?.photo || "").trim();
+
+        const initials = nm.split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0]?.toUpperCase()||"").join("") || "U";
+
+        const avatarHtml = av
+          ? `<img src="${av}" alt="">`
+          : `<div>${initials}</div>`;
+
         return `
-          <div class="namePill" title="${nm}">
-            <span class="dot ${online ? "" : "off"}"></span>
-            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px;">${nm}</span>
+          <div class="pItem" title="${nm}">
+            <div class="pAvatar">${avatarHtml}</div>
+            <div class="pName">${nm}</div>
           </div>
         `;
       }).join("");
     }
 
-    // Global UI API (f2f_call.js bunu kullanacak)
     window.WT_UI = {
       sys: addSys,
       msg: addMsg,
@@ -382,6 +309,6 @@
     };
   </script>
 
-  <script type="module" src="/js/f2f_call.js?v=CHAT_WT_FINAL_006"></script>
+  <script type="module" src="/js/f2f_call.js?v=CHAT_WT_FINAL_007"></script>
 </body>
 </html>
