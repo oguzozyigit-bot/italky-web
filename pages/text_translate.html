@@ -50,7 +50,7 @@
 .select-box {
   background: transparent; border: none; color: #fff;
   font-family: 'Space Grotesk'; font-size: 13px; font-weight: 700;
-  cursor: pointer; appearance: none; max-width: 120px;
+  cursor: pointer; appearance: none;
 }
 
 .swap-trigger {
@@ -78,27 +78,45 @@
 }
 
 .panel-in { border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-bottom: none; }
-.panel-out {
+.panel-out { 
   border-top-left-radius: 0; border-top-right-radius: 0; border-top: none;
   background: linear-gradient(180deg, var(--bordo) 0%, #000 100%);
   border-color: rgba(236, 72, 153, 0.2);
 }
 
+/* ✅ Sağ Üst Aksiyon Butonları (Mic & Speaker) */
+.panel-action {
+  position: absolute;
+  top: 12px; right: 12px;
+  width: 38px; height: 38px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--glass-border);
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; z-index: 30;
+  font-size: 18px;
+  transition: all 0.2s;
+}
+.panel-action:active { transform: scale(0.9); background: rgba(255,255,255,0.1); }
+
 textarea {
   flex: 1; background: transparent; border: none;
   color: #fff; font-size: 17px; font-weight: 300;
   line-height: 1.5; resize: none; width: 100%;
+  padding-right: 40px; /* Butonun altına girmesin */
 }
 
 .output-area {
   flex: 1; color: #fbcfe8; font-size: 17px;
   font-weight: 600; line-height: 1.5; overflow-y: auto;
   white-space: pre-wrap;
+  padding-right: 40px;
 }
 
-/* ===== 3D KOMUT BARI (BOYDAN BOYA) ===== */
+/* ===== MERKEZİ İŞLEM BARI ===== */
 .command-bar {
-  height: 64px;
+  height: 58px;
   background: rgba(20,20,30,0.4);
   border-left: 1px solid var(--glass-border);
   border-right: 1px solid var(--glass-border);
@@ -115,53 +133,23 @@ textarea {
   gap: 8px; cursor: pointer; height: 100%;
 }
 
-.btn-icon{
-  width: 54px;
-  height: 46px;
-  border-radius: 18px;
-  border: 1px solid var(--glass-border);
-  background: rgba(255,255,255,0.05);
-  color:#fff;
-  font-weight: 1000;
-  font-size: 18px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  cursor:pointer;
-}
-.btn-icon:active{ transform: translateY(1px) scale(0.98); }
-
-/* ✅ 3D ÇEVİR BUTONU */
 .btn-3d {
   flex: 1.2;
-  height: 46px;
+  height: 44px;
   border-radius: 20px;
   border: none;
   background: var(--ai-grad);
   color: #fff;
-  font-weight: 900;
-  font-size: 14px;
-  letter-spacing: 1px;
-  cursor: pointer;
+  font-weight: 900; font-size: 14px;
   display: flex; align-items: center; justify-content: center;
   gap: 8px;
-  box-shadow:
-    0 4px 15px rgba(99, 102, 241, 0.4),
-    inset 0 2px 4px rgba(255, 255, 255, 0.3),
-    inset 0 -2px 4px rgba(0, 0, 0, 0.2);
-  position: relative;
-  transition: all 0.2s ease;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.3);
+  cursor: pointer;
 }
+.btn-3d:active { transform: translateY(2px) scale(0.98); }
 
-.btn-3d:active {
-  transform: translateY(2px) scale(0.98);
-  box-shadow:
-    0 2px 5px rgba(99, 102, 241, 0.4),
-    inset 0 1px 2px rgba(0, 0, 0, 0.3);
-}
+.divider { width: 1px; background: var(--glass-border); height: 24px; margin: 0 10px; }
 
-.divider { width: 1px; background: var(--glass-border); height: 30px; margin: 0 10px; }
 </style>
 </head>
 
@@ -177,31 +165,25 @@ textarea {
 
     <section class="quantum-gate">
       <div class="gate-panel panel-in">
-        <textarea id="srcTxt" placeholder="Metin girin... (Enter: çevir • Shift+Enter: alt satır)"></textarea>
+        <button class="panel-action" id="btnMic" type="button" title="Konuş">🎙️</button>
+        <textarea id="srcTxt" placeholder="Metin girin..."></textarea>
       </div>
-
+      
       <div class="command-bar">
         <label class="bar-btn">
           <input type="file" id="imgFile" accept="image/*" capture="environment" style="display:none">
           <span>📷 FOTOĞRAF TARAT</span>
         </label>
-
+        
         <div class="divider"></div>
-
-        <!-- ✅ Mic -->
-        <button class="btn-icon" id="btnMic" type="button" title="Konuş → yaz">🎙️</button>
-
-        <!-- ✅ Speak -->
-        <button class="btn-icon" id="btnSpeak" type="button" title="Çeviriyi oku">🔊</button>
-
-        <div class="divider"></div>
-
-        <button class="btn-3d" id="btnTranslate" type="button">
+        
+        <button class="btn-3d" id="btnTranslate">
           ⚡ ÇEVİR
         </button>
       </div>
 
       <div class="gate-panel panel-out">
+        <button class="panel-action" id="btnSpeak" type="button" title="Dinle">🔊</button>
         <div class="output-area" id="dstTxt">...</div>
       </div>
     </section>
@@ -225,29 +207,27 @@ textarea {
 
   const fromSel = $("fromSel");
   const toSel = $("toSel");
-
+  
   const fill = (sel, list) => sel.innerHTML = list.map(l=>`<option value="${l.code}">${l.name}</option>`).join("");
   fill(fromSel, LANG_POOL);
   fill(toSel, LANG_POOL.filter(x=>x.code!=="auto"));
-
+  
   fromSel.value = "auto";
   toSel.value = "tr";
 
-  // --- Translate ---
+  // --- Translate Core ---
   async function doTranslate(){
     const text = $("srcTxt").value.trim();
     if(!text) return;
-
     $("dstTxt").style.opacity = "0.4";
-    $("dstTxt").textContent = "Kuantum motoru devrede...";
-
+    $("dstTxt").textContent = "Çevriliyor...";
     try {
       const r = await fetch(`${API_BASE}/api/translate_ai`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text, from_lang: fromSel.value, to_lang: toSel.value })
       });
-      const j = await r.json().catch(()=> ({}));
+      const j = await r.json();
       $("dstTxt").textContent = j.translated || "Hata!";
     } catch(e) {
       $("dstTxt").textContent = "API Hatası.";
@@ -258,184 +238,86 @@ textarea {
 
   $("btnTranslate").onclick = doTranslate;
 
-  // ✅ Enter: translate (Shift+Enter: newline)
-  $("srcTxt").addEventListener("keydown", (ev)=>{
-    if(ev.key === "Enter" && !ev.shiftKey){
-      ev.preventDefault();
-      doTranslate();
-    }
-  });
+  // Enter to translate
+  $("srcTxt").onkeydown = (e) => {
+    if(e.key === "Enter" && !e.shiftKey) { e.preventDefault(); doTranslate(); }
+  };
 
-  // --- Photo OCR (timeout + abort + fallback) ---
-  $("imgFile").onchange = async (e) => {
-    const file = e.target.files?.[0];
-    if(!file) return;
-    e.target.value = "";
-
-    $("srcTxt").value = "Görüntü analiz ediliyor… (maks 20 sn)";
-    $("dstTxt").style.opacity = "0.55";
-    $("dstTxt").textContent = "OCR bekleniyor…";
-
-    const ctrl = new AbortController();
-    const kill = setTimeout(()=>ctrl.abort(), 20000);
-
+  // --- TTS (Speaker) ---
+  let audio = null;
+  $("btnSpeak").onclick = async () => {
+    const t = $("dstTxt").textContent.trim();
+    if(!t || t === "...") return;
     try {
-      const fd = new FormData();
-      fd.append("image", file, "scan.jpg");
-      fd.append("from_lang", fromSel.value);
-      fd.append("to_lang", toSel.value);
-
-      const r = await fetch(`${API_BASE}/api/translate/ocr_translate`, {
+      if(audio) { audio.pause(); audio = null; }
+      const r = await fetch(`${API_BASE}/api/tts`, {
         method: "POST",
-        body: fd,
-        signal: ctrl.signal
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: t, lang: toSel.value })
       });
-
-      if(!r.ok){
-        const t = await r.text().catch(()=> "");
-        throw new Error(`OCR HTTP ${r.status} ${t}`);
+      const j = await r.json();
+      if(j.audio_base64) {
+        audio = new Audio("data:audio/mpeg;base64," + j.audio_base64);
+        audio.play();
       }
+    } catch(e) { console.error("TTS Error"); }
+  };
 
-      const j = await r.json().catch(()=> ({}));
-      const extracted = String(j.extracted_text || "").trim();
-      const translated = String(j.translated_text || "").trim();
-
-      $("srcTxt").value = extracted || "OCR boş döndü. Metni manuel yazıp ⚡ ÇEVİR’e basabilirsin.";
-      $("dstTxt").textContent = translated || "Çeviri boş. Metni düzeltip ⚡ ÇEVİR’e bas.";
-
-    } catch(err) {
-      const msg = (err?.name === "AbortError")
-        ? "OCR çok uzadı (timeout). Metni manuel yazıp ⚡ ÇEVİR’e bas."
-        : `OCR çalışmadı. Metni manuel yazıp ⚡ ÇEVİR’e bas.\n\n(${err?.message || err})`;
-
-      $("srcTxt").value = msg;
-      $("dstTxt").textContent = "OCR şu an devre dışı / hatalı. Manuel devam.";
-    } finally {
-      clearTimeout(kill);
-      $("dstTxt").style.opacity = "1";
+  // --- STT (Mic) ---
+  let recording = false;
+  let rec = null;
+  let chunks = [];
+  
+  $("btnMic").onclick = async () => {
+    if(!recording) {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      rec = new MediaRecorder(stream);
+      chunks = [];
+      rec.ondataavailable = e => chunks.push(e.data);
+      rec.onstop = async () => {
+        const blob = new Blob(chunks, { type: 'audio/webm' });
+        const fd = new FormData();
+        fd.append("file", blob);
+        fd.append("lang", fromSel.value === "auto" ? "en" : fromSel.value);
+        $("srcTxt").value = "Dinleniyor...";
+        const r = await fetch(`${API_BASE}/api/stt`, { method: "POST", body: fd });
+        const j = await r.json();
+        $("srcTxt").value = j.text || "";
+        doTranslate();
+      };
+      rec.start();
+      recording = true;
+      $("btnMic").textContent = "⏺️";
+    } else {
+      rec.stop();
+      recording = false;
+      $("btnMic").textContent = "🎙️";
     }
   };
 
-  // --- Swap ---
+  // --- Photo ---
+  $("imgFile").onchange = async (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+    $("srcTxt").value = "Tarama başlatıldı...";
+    const fd = new FormData();
+    fd.append("image", file);
+    fd.append("from_lang", fromSel.value);
+    fd.append("to_lang", toSel.value);
+    try {
+      const r = await fetch(`${API_BASE}/api/translate/ocr_translate`, { method: "POST", body: fd });
+      const j = await r.json();
+      if(j.ok) {
+        $("srcTxt").value = j.extracted_text;
+        $("dstTxt").textContent = j.translated_text;
+      }
+    } catch(e) { $("srcTxt").value = "Tarama başarısız."; }
+  };
+
   $("btnSwap").onclick = () => {
     const a = fromSel.value;
     const b = toSel.value;
     if(a !== "auto") { fromSel.value = b; toSel.value = a; }
-  };
-
-  // --- TTS (speak translated text) ---
-  let audioEl = null;
-  async function speakText(text){
-    const t = String(text||"").trim();
-    if(!t) return;
-
-    try{
-      if(audioEl){
-        try{ audioEl.pause(); }catch{}
-        audioEl = null;
-      }
-
-      const lang = toSel.value || "tr"; // çeviriyi hedef dilde okut
-      const r = await fetch(`${API_BASE}/api/tts`,{
-        method:"POST",
-        headers:{ "Content-Type":"application/json" },
-        body: JSON.stringify({ text: t, lang })
-      });
-      const j = await r.json().catch(()=> ({}));
-      if(!j.ok || !j.audio_base64){
-        throw new Error(j.error || "TTS_UNAVAILABLE");
-      }
-      audioEl = new Audio("data:audio/mpeg;base64," + j.audio_base64);
-      await audioEl.play();
-    }catch(e){
-      // sessizce olmaz; kullanıcı bilsin
-      $("dstTxt").textContent = $("dstTxt").textContent + "\n\n(🔊 Ses şu an kullanılamıyor)";
-    }
-  }
-
-  $("btnSpeak").onclick = ()=> speakText($("dstTxt").textContent);
-
-  // --- Mic STT -> /api/stt ---
-  let mediaStream=null;
-  let rec=null;
-  let chunks=[];
-  let recording=false;
-
-  function pickMime(){
-    const candidates = ["audio/webm;codecs=opus","audio/webm","audio/ogg;codecs=opus","audio/ogg"];
-    for(const c of candidates){
-      try{ if(window.MediaRecorder?.isTypeSupported?.(c)) return c; }catch{}
-    }
-    return "";
-  }
-
-  async function ensureMic(){
-    if(mediaStream) return mediaStream;
-    mediaStream = await navigator.mediaDevices.getUserMedia({ audio:true });
-    return mediaStream;
-  }
-
-  async function sttSend(blob){
-    const fd = new FormData();
-    fd.append("file", blob, "speech.webm");
-
-    // STT dili: kaynak dili (fromSel auto ise hedefe göre değil, auto yapmayalım -> en mantıklısı input dili)
-    // auto ise en mantıklı: toSel değil, "en" default. Ama konuşma genelde kaynak dil olur:
-    const sttLang = (fromSel.value && fromSel.value !== "auto") ? fromSel.value : "en";
-    fd.append("lang", sttLang);
-
-    const r = await fetch(`${API_BASE}/api/stt`, { method:"POST", body: fd });
-    if(!r.ok){
-      const t = await r.text().catch(()=> "");
-      throw new Error(`STT HTTP ${r.status} ${t}`);
-    }
-    const j = await r.json().catch(()=> ({}));
-    const text = String(j.text || j.transcript || j.result || "").trim();
-    if(!text) throw new Error("STT boş döndü");
-    return text;
-  }
-
-  async function startRec(){
-    await ensureMic();
-    chunks=[];
-    const mime = pickMime();
-    rec = new MediaRecorder(mediaStream, mime ? { mimeType: mime } : undefined);
-
-    rec.ondataavailable = (e)=>{ if(e.data && e.data.size) chunks.push(e.data); };
-    rec.onstop = async ()=>{
-      try{
-        const blob = new Blob(chunks, { type: chunks[0]?.type || "audio/webm" });
-        $("srcTxt").value = "Konuşma çözümleniyor…";
-        const text = await sttSend(blob);
-        $("srcTxt").value = text;
-        // otomatik çevir
-        await doTranslate();
-      }catch(e){
-        $("srcTxt").value = `STT hata: ${e?.message || e}`;
-      }finally{
-        recording=false;
-        $("btnMic").textContent = "🎙️";
-      }
-    };
-
-    recording=true;
-    $("btnMic").textContent = "⏺";
-    rec.start();
-  }
-
-  function stopRec(){
-    try{ if(rec && rec.state !== "inactive") rec.stop(); }catch{}
-  }
-
-  $("btnMic").onclick = async ()=>{
-    try{
-      if(!recording) await startRec();
-      else stopRec();
-    }catch(e){
-      recording=false;
-      $("btnMic").textContent = "🎙️";
-      $("srcTxt").value = `Mikrofon hatası: ${e?.message || e}`;
-    }
   };
 </script>
 </body>
