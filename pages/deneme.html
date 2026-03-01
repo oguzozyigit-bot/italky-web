@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-<title>italkyAI • Quantum OS V2</title>
+<title>italkyAI • Quantum OS V3</title>
 
 <style>
   html,body{ background:#000 !important; margin:0; padding:0; overflow:hidden; font-family:'Outfit', sans-serif; color:#fff; }
@@ -23,158 +23,149 @@
 
 #pageContent {
   height: 100%;
-  display: flex; flex-direction: column;
-  background: radial-gradient(circle at 50% 50%, #08081a 0%, #000 100%);
+  display: flex;
+  flex-direction: column;
+  background: #000;
   position: relative;
 }
 
-/* ===== 1. ARKA PLAN VE RADAR (SABİT) ===== */
-.radar-bg {
+/* ===== 1. YAŞAYAN ARKA PLAN (QUANTUM GRID) ===== */
+.quantum-grid {
   position: absolute; inset: 0;
   background-image: 
-    repeating-linear-gradient(rgba(255,255,255,0.01) 0 1px, transparent 1px 30px),
-    repeating-linear-gradient(90deg, rgba(255,255,255,0.01) 0 1px, transparent 1px 30px);
-  opacity: 0.5; pointer-events: none;
+    linear-gradient(rgba(0, 210, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 210, 255, 0.03) 1px, transparent 1px);
+  background-size: 30px 30px;
+  perspective: 500px;
+  opacity: 0.5;
 }
-.scan-pulse {
-  position: absolute; width: 200vw; height: 200vw;
-  top: 50%; left: 50%; transform: translate(-50%, -50%);
-  background: conic-gradient(from 0deg, transparent 0deg, rgba(99, 102, 241, 0.05) 90deg, transparent 180deg);
-  animation: radarRotate 8s linear infinite;
+.grid-flow {
+  position: absolute; inset: 0;
+  background: linear-gradient(to bottom, transparent, rgba(99, 102, 241, 0.05), transparent);
+  animation: gridMove 4s linear infinite;
 }
-@keyframes radarRotate { from { transform: translate(-50%, -50%) rotate(0deg); } to { transform: translate(-50%, -50%) rotate(360deg); } }
+@keyframes gridMove { from { transform: translateY(-100%); } to { transform: translateY(100%); } }
 
-/* ===== 2. TERMİNAL HUB (DİKEY DİZİLİM) ===== */
-.terminal-hub {
-  flex: 1; display: flex; flex-direction: column;
-  justify-content: center; gap: 20px; padding: 20px; z-index: 10;
+/* ===== 2. ÜÇE BÖLÜNMÜŞ TERMİNAL KATMANLARI ===== */
+.terminal-layers {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
+  gap: 8px;
+  z-index: 10;
 }
 
-/* ===== 3. CYBER-BUTON (AĞIR VE BASILABİLİR) ===== */
-.cyber-btn {
+/* ✅ YAŞAYAN BUTON PANELİ */
+.os-btn {
+  flex: 1; /* Ekranı tam üçe böler */
   position: relative;
-  height: 100px; /* Sabit yükseklik, daha tok duruş */
   border-radius: 24px;
-  border: 2px solid var(--glass-border);
+  border: 1px solid var(--glass-border);
   background: rgba(255,255,255,0.02);
-  cursor: pointer;
-  display: flex; align-items: center; padding: 0 25px;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 30px;
   overflow: hidden;
-  transition: 0.2s cubic-bezier(0.2, 0, 0, 1);
-  /* 3D Hissiyatı için gölge */
-  box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Arka plan ışık akışı */
-.cyber-btn::before {
+/* Basılma Hissiyatı (3D Çökme) */
+.os-btn:active {
+  transform: scale(0.97) translateY(4px);
+  background: rgba(255,255,255,0.05);
+  box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+}
+
+/* İçerik Animasyonu: Arka planda gezen ışık hüzmesi */
+.os-btn::after {
   content: ""; position: absolute; inset: 0;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.03), transparent);
-  transform: translateX(-100%);
-  transition: transform 0.5s;
+  background: linear-gradient(120deg, transparent, rgba(255,255,255,0.03), transparent);
+  transform: translateX(-150%);
+  transition: transform 0.6s;
 }
-.cyber-btn:hover::before { transform: translateX(100%); }
+.os-btn:hover::after { transform: translateX(150%); }
 
-/* ✅ BASILMA EFEKTİ (3D Çökme) */
-.cyber-btn:active {
-  transform: translateY(4px) scale(0.98);
-  box-shadow: 0 5px 15px -5px rgba(0,0,0,0.7);
-  border-color: var(--neon-color);
-  filter: brightness(1.2);
-}
-
-/* Sol Neon Çizgi (Aktivasyon Hattı) */
-.btn-line {
-  position: absolute; left: 0; top: 20px; bottom: 20px; width: 4px;
-  border-radius: 0 4px 4px 0;
-  background: var(--neon-color);
-  box-shadow: 0 0 15px var(--neon-color);
-  transition: 0.3s;
+/* Sol Neon Aktif Hattı */
+.status-light {
+  position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+  background: var(--btn-color);
+  box-shadow: 0 0 15px var(--btn-color);
+  animation: flicker 2s infinite;
 }
 
-/* İkon Alanı */
-.btn-icon-box {
-  width: 50px; height: 50px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 28px; margin-right: 20px;
-  position: relative;
-}
-/* İkon arkasındaki holografik hare */
-.btn-icon-box::after {
-  content: ""; position: absolute; inset: 0;
-  background: var(--neon-color);
-  border-radius: 50%; filter: blur(15px);
-  opacity: 0.2; transition: 0.3s;
-}
-.cyber-btn:active .btn-icon-box::after { opacity: 0.4; filter: blur(10px); }
-
-/* Metin Alanı */
-.btn-content { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+/* Başlık ve AI Vurgusu */
+.content-wrap { display: flex; flex-direction: column; gap: 4px; z-index: 2; }
 .btn-title {
-  font-family: 'Space Grotesk'; font-size: 22px; font-weight: 800;
-  color: #fff; margin: 0; letter-spacing: -0.5px;
+  font-family: 'Space Grotesk'; font-size: 28px; font-weight: 800;
+  color: #fff; margin: 0; letter-spacing: -1px;
 }
 .btn-title span { background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-.btn-desc {
-  font-size: 11px; color: rgba(255,255,255,0.5);
-  font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px;
+.btn-sub {
+  font-size: 10px; color: rgba(255,255,255,0.4);
+  font-weight: 900; letter-spacing: 3px; text-transform: uppercase;
+}
+
+/* Sağ Taraf: Canlı Veri Akışı (OS Hissiyatı) */
+.data-stream {
+  text-align: right; font-family: monospace; font-size: 8px;
+  color: var(--btn-color); opacity: 0.6; line-height: 1.5;
 }
 
 /* Renk Temaları */
-.node-tr { --neon-color: var(--neon-blue); }
-.node-ac { --neon-color: var(--neon-green); }
-.node-tc { --neon-color: var(--neon-pink); }
+.tr-node { --btn-color: var(--neon-blue); }
+.ac-node { --btn-color: var(--neon-green); }
+.tc-node { --btn-color: var(--neon-pink); }
 
-/* Alt Bar (Status) */
-.status-bar {
-  height: 34px; padding: 0 20px; display: flex; align-items: center;
-  justify-content: space-between; font-size: 9px; font-weight: 900;
-  background: rgba(0,0,0,0.7); border-top: 1px solid var(--glass-border);
-  color: rgba(255,255,255,0.3); letter-spacing: 1px;
+@keyframes flicker {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
 }
 </style>
 </head>
 
 <body>
 <main id="pageContent">
-  <div class="radar-bg"></div>
-  <div class="scan-pulse"></div>
-
-  <div class="terminal-hub">
-    
-    <button class="cyber-btn node-tr" onclick="location.href='/pages/translate_home.html'">
-      <div class="btn-line"></div>
-      <div class="btn-icon-box">📡</div>
-      <div class="btn-content">
-        <h2 class="btn-title">Translate<span>.OS</span></h2>
-        <p class="btn-desc">Quantum Language Decoder</p>
-      </div>
-    </button>
-
-    <button class="cyber-btn node-ac" onclick="location.href='/pages/academy_home.html'">
-      <div class="btn-line"></div>
-      <div class="btn-icon-box">🧠</div>
-      <div class="btn-content">
-        <h2 class="btn-title">Academy<span>.OS</span></h2>
-        <p class="btn-desc">Neural Path Optimizer</p>
-      </div>
-    </button>
-
-    <button class="cyber-btn node-tc" onclick="location.href='/pages/helper_home.html'">
-      <div class="btn-line"></div>
-      <div class="btn-icon-box">🧬</div>
-      <div class="btn-content">
-        <h2 class="btn-title">Teacher<span>.OS</span></h2>
-        <p class="btn-desc">Logic Core Solver</p>
-      </div>
-    </button>
-
+  <div class="quantum-grid">
+    <div class="grid-flow"></div>
   </div>
 
-  <footer class="status-bar">
-    <div>italkyAI QUANTUM KERNEL v2.0</div>
-    <div>CORE: ACTIVE</div>
-    <div>@ozyigit_algo</div>
-  </footer>
+  <div class="terminal-layers">
+    
+    <div class="os-btn tr-node" onclick="location.href='/pages/translate_home.html'">
+      <div class="status-light"></div>
+      <div class="content-wrap">
+        <h2 class="btn-title">Translate <span>AI</span></h2>
+        <div class="btn-sub">Quantum Neural Decoder</div>
+      </div>
+      <div class="data-stream">
+        STATUS: ACTIVE<br>CORE: 0x88AF<br>LATENCY: 1ms
+      </div>
+    </div>
+
+    <div class="os-btn ac-node" onclick="location.href='/pages/academy_home.html'">
+      <div class="status-light"></div>
+      <div class="content-wrap">
+        <h2 class="btn-title">Academy <span>AI</span></h2>
+        <div class="btn-sub">Logic Path Optimizer</div>
+      </div>
+      <div class="data-stream">
+        DB: ONLINE<br>MODULE: READY<br>SYNC: 100%
+      </div>
+    </div>
+
+    <div class="os-btn tc-node" onclick="location.href='/pages/helper_home.html'">
+      <div class="status-light"></div>
+      <div class="content-wrap">
+        <h2 class="btn-title">Teacher <span>AI</span></h2>
+        <div class="btn-sub">Problem Solver Core</div>
+      </div>
+      <div class="data-stream">
+        SCAN: ENABLED<br>CALC: AUTO<br>MODE: EXPERT
+      </div>
+    </div>
+
+  </div>
 </main>
 
 <script type="module">
