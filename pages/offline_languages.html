@@ -3,178 +3,124 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>italkyAI • Offline Terminal</title>
+  <title>italkyAI • Offline Diller</title>
 
   <meta name="theme-color" content="#02000f">
   <style>html,body{background:#02000f !important;}</style>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
   <style>
     :root{
-      --aiGrad: linear-gradient(135deg,#a5b4fc 0%,#6366f1 45%,#ec4899 100%);
       --border: rgba(255,255,255,0.12);
       --glass: rgba(255,255,255,0.04);
-      --muted: rgba(255,255,255,0.68);
+      --muted: rgba(255,255,255,0.70);
+      --aiGrad: linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
 
-      /* milenyum “download” tonu (kırmızı yok) */
-      --dlGrad: linear-gradient(135deg, rgba(0,243,255,.92) 0%, rgba(99,102,241,.92) 55%, rgba(236,72,153,.70) 100%);
-      --dlBorder: rgba(0,243,255,0.28);
+      --btnGrad: linear-gradient(135deg, rgba(236,72,153,0.22) 0%, rgba(99,102,241,0.30) 55%, rgba(165,180,252,0.22) 100%);
+      --btnBorder: rgba(255,255,255,0.14);
 
-      /* soft yeşil (göz yormaz) */
-      --okGrad: linear-gradient(135deg, rgba(34,197,94,.18) 0%, rgba(16,185,129,.14) 60%, rgba(255,255,255,.06) 100%);
-      --okBorder: rgba(34,197,94,0.30);
-      --okText: rgba(210,255,230,0.92);
-
-      --warn: rgba(245,158,11,.95);
-      --shadow: 0 18px 50px rgba(0,0,0,0.35);
+      --doneGrad: linear-gradient(135deg, rgba(34,197,94,0.12) 0%, rgba(16,185,129,0.10) 60%, rgba(165,180,252,0.08) 100%);
+      --doneBorder: rgba(34,197,94,0.22);
     }
 
     *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; }
     #pageContent{ height:100%; }
 
     .wrap{
-      max-width: 520px;
-      margin: 0 auto;
+      max-width:520px;
+      margin:0 auto;
       height:100%;
+      padding: 10px 12px;
       display:flex;
       flex-direction:column;
-      gap: 8px;
-      padding: 10px 10px calc(var(--footerH, 92px) + env(safe-area-inset-bottom) + 6px);
-    }
-
-    .topRow{
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,0.03);
-      border-radius: 18px;
-      padding: 10px 12px;
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
       gap:10px;
-    }
-    .topRow .k{
-      font-size: 11px;
-      font-weight: 1000;
-      letter-spacing: .6px;
-      color: rgba(255,255,255,0.58);
-      text-transform: uppercase;
-      white-space:nowrap;
-    }
-    .topRow .v{
-      font-size: 12px;
-      font-weight: 1000;
-      color:#fff;
-      white-space:nowrap;
     }
 
     .hero{
+      border-radius: 22px;
       border: 1px solid var(--border);
-      background: rgba(255,255,255,0.03);
-      border-radius: 20px;
-      padding: 10px 12px;
+      background: var(--glass);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
+      padding: 12px 12px;
     }
-    .hero h1{
-      margin:0;
+    .h1{
       font-family:"Space Grotesk",system-ui,sans-serif;
-      font-size: 16px;
-      font-weight: 1000;
-      letter-spacing: -.2px;
+      font-weight:1000;
+      font-size:16px;
+      margin:0;
       color:#fff;
+      letter-spacing:-.2px;
     }
-    .hero p{
+    .p{
       margin:6px 0 0;
-      font-size: 12px;
-      font-weight: 900;
-      line-height: 1.45;
-      color: var(--muted);
+      font-size:12px;
+      font-weight:900;
+      line-height:1.55;
+      color: rgba(255,255,255,0.72);
     }
-    .hero p b{ color:#fff; }
-
-    /* ✅ Kendi dilin seçimi — tasarım bozulmadan */
-    .myLangRow{
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,0.03);
-      border-radius: 18px;
-      padding: 10px 12px;
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
+    .pillRow{
+      margin-top:10px;
       display:flex;
-      align-items:center;
-      justify-content:space-between;
       gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
     }
-    .myLangRow .label{
-      font-size: 12px;
-      font-weight: 1000;
-      color: rgba(255,255,255,0.82);
+    .pill{
+      padding: 8px 12px;
+      border-radius: 999px;
+      border:1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.18);
+      font-weight:1000;
+      font-size:12px;
+      color:#fff;
       white-space:nowrap;
     }
-    .myLangRow select{
-      height: 40px;
-      border-radius: 14px;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(0,0,0,0.18);
-      color:#fff;
-      font-weight: 1000;
-      font-size: 12px;
-      padding: 0 10px;
-      max-width: 220px;
+    .pill b{
+      background: var(--aiGrad);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
     }
 
-    #langList{
+    .list{
       flex:1;
       min-height:0;
       display:flex;
       flex-direction:column;
-      gap: 8px;
+      gap:10px;
+      justify-content:flex-start;
     }
 
-    .langCard{
+    .card{
+      border-radius: 24px;
       border: 1px solid var(--border);
       background: rgba(255,255,255,0.03);
-      border-radius: 22px;
-      padding: 12px 12px;
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      padding: 12px;
       display:flex;
       align-items:center;
       justify-content:space-between;
-      gap: 10px;
-      box-shadow: var(--shadow);
+      gap: 12px;
     }
-
     .left{
+      min-width:0;
       display:flex;
       align-items:center;
-      gap: 10px;
-      min-width:0;
+      gap:12px;
     }
     .flag{
-      width: 42px;
-      height: 42px;
-      border-radius: 16px;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(0,0,0,0.20);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size: 22px;
-      flex: 0 0 auto;
-      filter: drop-shadow(0 10px 18px rgba(0,0,0,0.25));
+      width:42px;height:42px;border-radius:16px;
+      border:1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.18);
+      display:flex;align-items:center;justify-content:center;
+      font-size:22px;
+      flex:0 0 auto;
     }
-    .meta{
-      min-width:0;
-      display:flex;
-      flex-direction:column;
-      gap: 2px;
-    }
+    .meta{ min-width:0; display:flex; flex-direction:column; gap:2px; }
     .name{
       font-size: 15px;
       font-weight: 1000;
@@ -183,77 +129,44 @@
       overflow:hidden;
       text-overflow:ellipsis;
     }
-    .status{
+    .sub{
       font-size: 11px;
       font-weight: 900;
       color: rgba(255,255,255,0.62);
-      display:flex;
-      align-items:center;
-      gap: 6px;
+      line-height:1.2;
       white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
     }
-    .dot{
-      width:7px;height:7px;
-      border-radius: 99px;
-      background: rgba(255,255,255,0.25);
-      box-shadow: 0 0 12px rgba(255,255,255,0.12);
-      flex: 0 0 auto;
-    }
-    .dot.ok{ background: rgba(34,197,94,.95); box-shadow: 0 0 12px rgba(34,197,94,.35); }
-    .dot.exp{ background: rgba(245,158,11,.95); box-shadow: 0 0 12px rgba(245,158,11,.35); }
 
-    .btnDL{
-      height: 44px;
-      min-width: 148px;
+    .btn{
+      height: 46px;
+      min-width: 150px;
       padding: 0 14px;
       border-radius: 18px;
-      border: 1px solid var(--dlBorder);
-      background: rgba(0,0,0,0.18);
+      border: 1px solid var(--btnBorder);
+      background: var(--btnGrad);
       color:#fff;
-      font-weight: 1000;
-      font-size: 13px;
+      font-weight:1000;
       cursor:pointer;
       user-select:none;
       display:flex;
       align-items:center;
       justify-content:center;
-      gap: 8px;
-      position:relative;
-      overflow:hidden;
-      flex: 0 0 auto;
+      gap:8px;
+      box-shadow: 0 10px 22px rgba(0,0,0,0.25);
     }
-    .btnDL::before{
-      content:"";
-      position:absolute;
-      inset:-2px;
-      background: var(--dlGrad);
-      opacity: .22;
-      transform: translateX(-120%);
-      animation: sheen 2.6s ease-in-out infinite;
-      pointer-events:none;
-    }
-    @keyframes sheen{
-      0%{ transform: translateX(-120%); opacity:.05; }
-      45%{ opacity:.22; }
-      60%{ transform: translateX(120%); opacity:.18; }
-      100%{ transform: translateX(120%); opacity:.05; }
-    }
-    .btnDL:active{ transform: scale(.99); }
-
-    .btnDL.disabled{
+    .btn:active{ transform: scale(.99); }
+    .btn.disabled{
       opacity:.55;
       cursor:not-allowed;
+      box-shadow:none;
     }
-
-    .btnDL.done{
-      border: 1px solid var(--okBorder);
-      background: var(--okGrad);
-      color: var(--okText);
+    .btn.done{
+      background: var(--doneGrad);
+      border-color: var(--doneBorder);
+      color: rgba(255,255,255,0.88);
     }
-    .btnDL.done::before{ display:none; }
-
-    .btnDL .ico{ position:relative; z-index:2; }
-    .btnDL .txt{ position:relative; z-index:2; }
 
     .toast{
       position: fixed;
@@ -275,295 +188,250 @@
       text-align:center;
     }
     .toast.show{ transform: translateX(-50%) translateY(0); }
-
-    @media (max-height: 740px){
-      .wrap{ padding: 8px 10px calc(var(--footerH,92px) + env(safe-area-inset-bottom) + 6px); }
-      .langCard{ padding: 10px 10px; }
-      .btnDL{ min-width: 140px; height: 42px; border-radius: 16px; }
-      .flag{ width:40px;height:40px;border-radius:15px; }
-      .name{ font-size: 14px; }
-      .myLangRow select{ height: 38px; }
-    }
   </style>
 </head>
 
 <body>
-  <main id="pageContent">
-    <div class="wrap">
+<main id="pageContent">
+  <div class="wrap">
 
-      <div class="topRow">
-        <div class="k">Paket Süresi</div>
-        <div class="v">365 Gün • 50 Jeton</div>
+    <section class="hero">
+      <div class="h1">Offline Çeviri Paketleri</div>
+      <div class="p">
+        Kendi dilin seçildikten sonra sistem <b>2 yön</b> çalışır: <b>BASE↔EN</b> ve <b>BASE↔hedef</b> mantığıyla.
+        Bu sayfa hedef dili seçip iki zip’i indirmen için.
       </div>
-
-      <section class="hero">
-        <h1>Offline Terminal</h1>
-        <p>
-          <b>Önce kendi dilini seç</b>. Sonra hedef dili indirince sistem otomatik <b>iki yön</b> paketi hazırlar.<br/>
-          Örn: TR seç → EN indir ⇒ <b>tr-en + en-tr</b>
-        </p>
-      </section>
-
-      <!-- ✅ Kendi dili seç -->
-      <div class="myLangRow">
-        <div class="label">Benim Dilim</div>
-        <select id="myLangSel"></select>
+      <div class="pillRow">
+        <div class="pill">Süre: <b>365 gün</b></div>
+        <div class="pill">Ücret: <b>50 jeton</b></div>
+        <div class="pill" id="basePill">Base: <b>—</b></div>
       </div>
+    </section>
 
-      <div id="langList"></div>
+    <section class="list" id="list"></section>
 
-    </div>
-  </main>
+  </div>
+</main>
 
-  <div class="toast" id="toast"></div>
+<div class="toast" id="toast"></div>
 
-  <script type="module">
-    import { mountShell, setHeaderTokens } from "/js/ui_shell.js";
-    import { supabase } from "/js/supabase_client.js";
-    mountShell({ scroll:"auto" });
+<script type="module">
+  import { mountShell, setHeaderTokens } from "/js/ui_shell.js";
+  import { supabase } from "/js/supabase_client.js";
 
-    const $ = (id)=>document.getElementById(id);
-    const toastEl = $("toast");
-    const list = $("langList");
-    const mySel = $("myLangSel");
+  mountShell({ scroll:"auto" });
 
-    function toast(msg){
-      toastEl.textContent = String(msg||"");
-      toastEl.classList.add("show");
-      clearTimeout(window.__to);
-      window.__to = setTimeout(()=>toastEl.classList.remove("show"), 1900);
-    }
+  const API_BASE = "https://italky-api.onrender.com";
 
-    const LANGS = [
-      { code:"tr", name:"Türkçe",    flag:"🇹🇷" },
-      { code:"en", name:"İngilizce", flag:"🇬🇧" },
-      { code:"de", name:"Almanca",   flag:"🇩🇪" },
-      { code:"fr", name:"Fransızca", flag:"🇫🇷" },
-      { code:"it", name:"İtalyanca", flag:"🇮🇹" },
-      { code:"es", name:"İspanyolca",flag:"🇪🇸" },
-    ];
+  const $ = (id)=>document.getElementById(id);
+  const list = $("list");
+  const toastEl = $("toast");
 
-    const FEE = 50;
-    const DAYS = 365;
-
-    const { data:{ session } } = await supabase.auth.getSession();
-    if(!session?.user){
-      location.replace("/pages/login.html");
-      throw new Error("no session");
-    }
-    const userId = session.user.id;
-
-    // ✅ “Benim dilim” default: tr (istersen profile’dan çekeriz sonra)
-    let myLang = (localStorage.getItem("offline_my_lang") || "tr").toLowerCase().trim();
-    if(!LANGS.find(x=>x.code===myLang)) myLang = "tr";
-
-    mySel.innerHTML = LANGS.map(l=>`<option value="${l.code}">${l.flag} ${l.name}</option>`).join("");
-    mySel.value = myLang;
-    mySel.addEventListener("change", ()=>{
-      myLang = String(mySel.value||"tr").toLowerCase().trim();
-      localStorage.setItem("offline_my_lang", myLang);
-      render();
-    });
-
-    function daysLeft(expiresAt){
-      try{
-        const ms = new Date(expiresAt).getTime() - Date.now();
-        return Math.ceil(ms / (1000*60*60*24));
-      }catch{ return 0; }
-    }
-
-    async function fetchState(){
-      const [{ data: prof }, { data: packs }] = await Promise.all([
-        supabase.from("profiles").select("tokens").eq("id", userId).maybeSingle(),
-        supabase.from("offline_packs").select("lang_code, expires_at").eq("user_id", userId)
-      ]);
-      return { tokens: Number(prof?.tokens ?? 0), packs: Array.isArray(packs)?packs:[] };
-    }
-
-    // ✅ pack key: "tr-en" gibi
-    function packActive(packs, code){
-      const p = packs.find(x=>String(x.lang_code||"").toLowerCase() === String(code||"").toLowerCase());
-      if(!p) return { state:"none", left:0 };
-      const left = daysLeft(p.expires_at);
-      if(left > 0) return { state:"active", left };
-      return { state:"expired", left:0 };
-    }
-
-    function combinedState(packs, a, b){
-      const p1 = packActive(packs, `${a}-${b}`);
-      const p2 = packActive(packs, `${b}-${a}`);
-
-      // “İndirildi” için ikisi de aktif olmalı
-      if(p1.state==="active" && p2.state==="active"){
-        return { state:"active", left: Math.min(p1.left, p2.left) };
-      }
-
-      // biri expired/none ise partial
-      const anyExists = (p1.state!=="none" || p2.state!=="none");
-      if(anyExists){
-        return { state:"partial", left: Math.max(p1.left, p2.left) };
-      }
-      return { state:"none", left:0 };
-    }
-
-    function btnLabel(state, tokensOk){
-      if(state === "active") return { text:"İndirildi", mode:"done", ico:"✓" };
-      if(state === "partial") return { text:"Tamamla", mode: tokensOk ? "buy" : "disabled", ico:"⭮" };
-      return { text:"İndir", mode: tokensOk ? "buy" : "disabled", ico:"↓" };
-    }
-
-    async function purchase(code){
-      return await supabase.rpc("purchase_offline_pack", {
-        p_lang_code: code,
-        p_days: DAYS,
-        p_fee: FEE
-      });
-    }
-
-    async function purchasePair(a,b){
-      // sırayla iki yön
-      const r1 = await purchase(`${a}-${b}`);
-      if(r1.error) return r1;
-      const r2 = await purchase(`${b}-${a}`);
-      return r2;
-    }
-
-    async function render(){
-      const { tokens, packs } = await fetchState();
-      try{ setHeaderTokens(tokens); }catch{}
-
-      list.innerHTML = "";
-
-      LANGS.forEach(l=>{
-        const target = l.code;
-        const isSame = (target === myLang);
-
-        const st = isSame ? { state:"same", left:0 } : combinedState(packs, myLang, target);
-        const tokensOk = tokens >= (FEE * 2); // ✅ iki paket satın alacağı için 2x kontrol
-
-        const card = document.createElement("div");
-        card.className = "langCard";
-
-        const left = document.createElement("div");
-        left.className = "left";
-
-        let dotCls = "";
-        let stText = "";
-
-        if(isSame){
-          dotCls = "";
-          stText = "Kendi dilin";
-        }else if(st.state === "active"){
-          dotCls = "ok";
-          stText = `Aktif • ${st.left} gün`;
-        }else if(st.state === "partial"){
-          dotCls = "exp";
-          stText = "Kısmi • İki yön tamamlanmalı";
-        }else{
-          dotCls = "";
-          stText = "Hazır değil";
-        }
-
-        left.innerHTML = `
-          <div class="flag">${l.flag}</div>
-          <div class="meta">
-            <div class="name">${l.name}</div>
-            <div class="status">
-              <span class="dot ${dotCls}"></span>
-              ${stText}
-            </div>
-          </div>
-        `;
-
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "btnDL";
-
-        if(isSame){
-          btn.classList.add("disabled");
-          btn.disabled = true;
-          btn.innerHTML = `<span class="ico">—</span><span class="txt">Seçili</span>`;
-        }else{
-          const lbl = btnLabel(st.state, tokensOk);
-          if(lbl.mode === "done"){
-            btn.classList.add("done");
-            btn.disabled = true;
-          }else if(lbl.mode === "disabled"){
-            btn.classList.add("disabled");
-          }
-          btn.innerHTML = `<span class="ico">${lbl.ico}</span><span class="txt">${lbl.text}</span>`;
-
-          btn.onclick = async ()=>{
-  if(lbl.mode === "done") return;
-
-  if(!tokensOk){
-    toast("Jeton yetersiz. Profil’e yönlendiriyorum.");
-    setTimeout(()=>location.href="/pages/profile.html", 650);
-    return;
+  function toast(msg){
+    toastEl.textContent = String(msg||"");
+    toastEl.classList.add("show");
+    clearTimeout(window.__to);
+    window.__to = setTimeout(()=>toastEl.classList.remove("show"), 1800);
   }
 
-  btn.disabled = true;
-  btn.classList.remove("disabled");
-  btn.innerHTML = `<span class="ico">⏳</span><span class="txt">İndiriliyor</span>`;
+  const LANGS = [
+    { code:"tr", name:"Türkçe",    flag:"🇹🇷" },
+    { code:"en", name:"English",   flag:"🇬🇧" },
+    { code:"de", name:"Deutsch",   flag:"🇩🇪" },
+    { code:"fr", name:"Français",  flag:"🇫🇷" },
+    { code:"it", name:"Italiano",  flag:"🇮🇹" },
+    { code:"es", name:"Español",   flag:"🇪🇸" },
+  ];
 
-  // 1) Satın al / uzat (DB kaydı + token düş)
-  const { error } = await purchasePair(myLang, target);
-  if(error){
-    toast("Hata: " + (error.message || "İşlem başarısız"));
-    await render();
-    return;
+  const FEE = 50;
+  const DAYS = 365;
+
+  const DL_KEY = "italky_offline_downloaded_v1"; // local flag: {"tr-en":true,...}
+
+  function loadDL(){
+    try{ return JSON.parse(localStorage.getItem(DL_KEY)||"{}") || {}; }catch{ return {}; }
+  }
+  function saveDL(obj){
+    try{ localStorage.setItem(DL_KEY, JSON.stringify(obj||{})); }catch{}
   }
 
-  // 2) Session al (Bearer ile link isteyeceğiz)
-  const { data:{ session } } = await supabase.auth.getSession();
-  if(!session?.access_token){
-    toast("Oturum bulunamadı. Tekrar giriş yap.");
-    btn.disabled = false;
-    await render();
-    return;
+  function norm(x){ return String(x||"").trim().toLowerCase(); }
+
+  function downloadFile(url, filename){
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename || "";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
   }
 
-  // 3) Backend’den SIGNED DOWNLOAD LINK al
-  try{
-    const res = await fetch(`${API_BASE}/api/offline/get_link`, {
+  async function purchasePair(base, target){
+    // 2 yön satın al / uzat: base-target ve target-base
+    const p1 = `${base}-${target}`;
+    const p2 = `${target}-${base}`;
+
+    const r1 = await supabase.rpc("purchase_offline_pack", { p_lang_code: p1, p_days: DAYS, p_fee: FEE });
+    if(r1.error) return { error: r1.error };
+
+    const r2 = await supabase.rpc("purchase_offline_pack", { p_lang_code: p2, p_days: DAYS, p_fee: 0 }); // 2. yön için tekrar ücret alma
+    // Not: İstersen burada da ücret alırsın. Şimdilik "paket 2 yön" tek ücret mantığı.
+    if(r2.error) return { error: r2.error };
+
+    return { ok:true };
+  }
+
+  async function fetchLinks(accessToken, base, target){
+    const res = await fetch(`${API_BASE}/api/offline/get_links`,{
       method:"POST",
       headers:{
         "Content-Type":"application/json",
-        "Authorization":"Bearer " + session.access_token
+        "Authorization":"Bearer " + accessToken
       },
-      body: JSON.stringify({
-        base_lang: myLang,
-        target_lang: target
-      })
+      body: JSON.stringify({ base_lang: base, target_lang: target })
     });
+    const j = await res.json().catch(()=>null);
+    if(!res.ok) throw new Error(j?.detail || `HTTP ${res.status}`);
+    return j;
+  }
 
-    const data = await res.json().catch(()=>null);
+  function isPackActive(packs, code){
+    const it = packs?.find(x=>norm(x.lang_code) === norm(code));
+    if(!it?.expires_at) return false;
+    const exp = new Date(it.expires_at).getTime();
+    return Number.isFinite(exp) && exp > Date.now();
+  }
 
-    if(!res.ok || !data?.ok || !data?.url){
-      toast("İndirme linki alınamadı.");
-      console.log("get_link fail:", res.status, data);
-      btn.disabled = false;
-      await render();
+  async function render(){
+    const { data:{ session } } = await supabase.auth.getSession();
+    if(!session?.user){
+      location.replace("/pages/login.html");
       return;
     }
 
-    // 4) İNDİRMEYİ BAŞLAT
-    // WebView / tarayıcı: direkt URL’e yönlendirince indirme başlar
-    // (APK tarafında DownloadManager yakalıyorsun)
-    toast("İndirme başlıyor…");
-    window.location.href = data.url;
+    // profile + packs
+    const [{ data: prof }, { data: packs }] = await Promise.all([
+      supabase.from("profiles").select("tokens, base_lang").eq("id", session.user.id).maybeSingle(),
+      supabase.from("offline_packs").select("lang_code, expires_at").eq("user_id", session.user.id)
+    ]);
 
-    // UI: render zaten “aktif” durumunu gösterecek
-    setTimeout(()=>render(), 1200);
+    const tokens = Number(prof?.tokens ?? 0);
+    try{ setHeaderTokens(tokens); }catch{}
 
-  }catch(e){
-    console.log("download err:", e);
-    toast("İndirme başlatılamadı.");
-    btn.disabled = false;
-    await render();
-    return;
+    const base = norm(prof?.base_lang || "");
+    if(!base){
+      location.replace("/pages/setup_offline.html");
+      return;
+    }
+
+    $("basePill").innerHTML = `Base: <b>${base.toUpperCase()}</b>`;
+
+    const dl = loadDL();
+
+    // base hariç hedef listesi
+    const targets = LANGS.filter(l=>l.code !== base);
+
+    list.innerHTML = "";
+
+    targets.forEach(l=>{
+      const target = norm(l.code);
+      const p1 = `${base}-${target}`;
+      const p2 = `${target}-${base}`;
+
+      const active1 = isPackActive(packs, p1);
+      const active2 = isPackActive(packs, p2);
+      const entitled = active1 && active2;
+
+      const downloaded = !!dl[p1] && !!dl[p2];
+
+      const card = document.createElement("div");
+      card.className = "card";
+
+      const left = document.createElement("div");
+      left.className = "left";
+      left.innerHTML = `
+        <div class="flag">${l.flag}</div>
+        <div class="meta">
+          <div class="name">${l.name}</div>
+          <div class="sub">
+            ${downloaded ? "İndirildi • Offline hazır" : (entitled ? "Paket aktif • İndir" : "Paket gerekli • 50 jeton / 365 gün")}
+          </div>
+        </div>
+      `;
+
+      const btn = document.createElement("button");
+      btn.className = "btn";
+      btn.type = "button";
+
+      if(downloaded){
+        btn.classList.add("done");
+        btn.textContent = "İndirildi";
+        btn.disabled = true;
+      }else{
+        btn.innerHTML = `<span>⬇️</span><span>İndir</span>`;
+      }
+
+      btn.onclick = async ()=>{
+        if(downloaded) return;
+
+        // token yoksa profile
+        if(!entitled){
+          if(tokens < FEE){
+            toast("Jeton yetersiz. Profil’e yönlendiriyorum.");
+            setTimeout(()=>location.href="/pages/profile.html", 650);
+            return;
+          }
+
+          btn.disabled = true;
+          btn.classList.add("disabled");
+          btn.textContent = "Aktif ediliyor…";
+
+          const r = await purchasePair(base, target);
+          if(r.error){
+            toast("Hata: " + (r.error.message || "İşlem başarısız"));
+            await render();
+            return;
+          }
+          toast("Paket aktif ✅");
+        }
+
+        // download
+        btn.disabled = true;
+        btn.classList.remove("disabled");
+        btn.textContent = "Link alınıyor…";
+
+        try{
+          const links = await fetchLinks(session.access_token, base, target);
+
+          btn.textContent = "İndiriliyor…";
+
+          // iki zip’i indir
+          downloadFile(links.url_1, `${links.pair_1}.zip`);
+          setTimeout(()=>downloadFile(links.url_2, `${links.pair_2}.zip`), 450);
+
+          // local flag
+          const cur = loadDL();
+          cur[links.pair_1] = true;
+          cur[links.pair_2] = true;
+          saveDL(cur);
+
+          toast("İndirme başladı ✅");
+          setTimeout(()=>render(), 800);
+
+        }catch(e){
+          toast("Link alınamadı: " + (e?.message || e));
+          btn.disabled = false;
+          btn.innerHTML = `<span>⬇️</span><span>İndir</span>`;
+        }
+      };
+
+      card.appendChild(left);
+      card.appendChild(btn);
+      list.appendChild(card);
+    });
   }
-};
-  </script>
+
+  render();
+</script>
 </body>
 </html>
