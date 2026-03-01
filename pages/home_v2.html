@@ -3,23 +3,31 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-<title>italkyAI • Quantum Home</title>
+<title>italkyAI • Neural Hub</title>
 
 <meta name="theme-color" content="#000000">
 <style>
   html,body{background:#000 !important; margin:0; padding:0; overflow:hidden;}
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=Space+Grotesk:wght@300;700&display=swap');
 </style>
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=Space+Grotesk:wght@300;700&display=swap" rel="stylesheet">
-
 <style>
+:root {
+  --ai-gradient: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
+  --accent-blue: #4f46e5;
+  --accent-green: #10b981;
+  --accent-purple: #a855f7;
+}
+
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
 
 #pageContent {
   height: 100vh;
   display: flex;
   flex-direction: column;
+  /* UI Shell barları arasına sığması için padding */
+  padding-top: calc(env(safe-area-inset-top) + 60px);
+  padding-bottom: calc(env(safe-area-inset-bottom) + 85px);
 }
 
 .main {
@@ -27,129 +35,112 @@
   display: flex;
   flex-direction: column;
   background: #000;
-  gap: 2px; /* Keskin ayrım çizgisi */
+  gap: 1px;
 }
 
-/* ===== 22. YY MODÜL TEMELLERİ ===== */
+/* ===== NEURAL MODÜL ===== */
 .mod {
   flex: 1;
   position: relative;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
+  padding: 0 30px;
   cursor: pointer;
   overflow: hidden;
-  transition: flex 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-/* Dokunulduğunda o alanın genişlemesi */
-.mod:active {
-  flex: 1.4;
+  transition: flex 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .modInner {
   position: relative;
   z-index: 10;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  gap: 25px;
   pointer-events: none;
-  mix-blend-mode: difference; /* Arka plana göre renk değiştirir */
 }
 
 .modTitle {
   font-family: "Space Grotesk";
-  font-size: clamp(26px, 7vw, 36px);
+  font-size: 24px;
   font-weight: 300;
   color: #fff;
-  letter-spacing: 6px;
+  letter-spacing: 2px;
   text-transform: uppercase;
   margin: 0;
 }
 
 .modSub {
   font-family: "Outfit";
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
-  color: rgba(255,255,255,0.6);
-  letter-spacing: 2px;
-  margin-top: 14px;
+  color: rgba(255,255,255,0.5);
+  letter-spacing: 1.5px;
+  margin-top: 6px;
   text-transform: uppercase;
 }
 
-/* ===== DİNAMİK PLAZMA EFEKTLERİ ===== */
-.canvas-bg {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
+/* ===== FACETOFACE STYLE ORB ANIMASYONLARI ===== */
+.orb-container {
+  width: 70px;
+  height: 70px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
-.glass-grain {
-  position: absolute;
-  inset: 0;
-  background: url('https://grainy-gradients.vercel.app/noise.svg');
-  opacity: 0.2;
+.ai-ring {
+  position: absolute; inset: -2px; border-radius: 50%; padding: 2px;
+  background: var(--ring-color, var(--ai-gradient));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  animation: rotateOrb 10s linear infinite;
+  opacity: 0.7;
+}
+
+.ai-core {
+  width: 50px; height: 50px; border-radius: 50%;
+  background: #000; border: 1.5px solid rgba(255,255,255,0.1);
+  display: flex; align-items: center; justify-content: center;
   z-index: 5;
+  box-shadow: 0 0 20px var(--glow-color);
+  animation: breathe 3s infinite ease-in-out;
+}
+
+.orbit-energy {
+  position: absolute; inset: -8px; border-radius: 50%;
+  animation: rotateOrb var(--speed, 6s) linear infinite;
+}
+
+.e-ball {
+  position: absolute; width: 8px; height: 8px; border-radius: 50%;
+  filter: blur(1px); left: 50%; transform: translateX(-50%);
+}
+
+.ball-top { top: -4px; background: var(--ball-color, #fff); box-shadow: 0 0 12px var(--ball-color, #fff); }
+
+@keyframes rotateOrb { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes breathe { 0%, 100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.1); opacity: 1; } }
+
+/* ===== BÖLÜM ÖZEL RENKLERİ ===== */
+.translate { --glow-color: rgba(99, 102, 241, 0.3); --ring-color: linear-gradient(135deg, #4f46e5, #ec4899); --ball-color: #4f46e5; --speed: 5s; }
+.academy { --glow-color: rgba(16, 185, 129, 0.3); --ring-color: linear-gradient(135deg, #10b981, #6366f1); --ball-color: #10b981; --speed: 8s; }
+.helper { --glow-color: rgba(168, 85, 247, 0.3); --ring-color: linear-gradient(135deg, #a855f7, #f97316); --ball-color: #a855f7; --speed: 4s; }
+
+/* Arka Plan Hareketli Blob */
+.mod-bg-blob {
+  position: absolute;
+  width: 300px; height: 300px;
+  background: var(--glow-color);
+  filter: blur(100px);
+  opacity: 0.2;
+  z-index: 1;
   pointer-events: none;
 }
 
-.shimmer {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
-  transform: translateX(-100%) skewX(-15deg);
-  animation: shimmer 4s infinite;
-  z-index: 6;
-}
-
-@keyframes shimmer {
-  0% { transform: translateX(-150%) skewX(-15deg); }
-  100% { transform: translateX(150%) skewX(-15deg); }
-}
-
-/* 1. TRANSLATE: Kuantum Mavisi & Pulse */
-.translate { background: #050510; }
-.translate .blob {
-  position: absolute;
-  width: 350px; height: 350px;
-  background: radial-gradient(circle, #4f46e5 0%, transparent 70%);
-  filter: blur(40px);
-  animation: float 8s infinite alternate ease-in-out;
-}
-
-/* 2. AKADEMİ: Biyolüminesans & Dalga */
-.academy { background: #051005; }
-.academy .blob {
-  position: absolute;
-  width: 450px; height: 300px;
-  background: radial-gradient(circle, #10b981 0%, transparent 70%);
-  filter: blur(50px);
-  animation: float 12s infinite alternate-reverse ease-in-out;
-}
-
-/* 3. YARDIMCI: Enerji Moru & Patlama */
-.helper { background: #100510; }
-.helper .blob {
-  position: absolute;
-  width: 400px; height: 400px;
-  background: radial-gradient(circle, #a855f7 0%, transparent 70%);
-  filter: blur(45px);
-  animation: float 10s infinite alternate ease-in-out;
-}
-
-@keyframes float {
-  0% { transform: translate(-30%, -30%) scale(1); }
-  100% { transform: translate(30%, 30%) scale(1.3); }
-}
-
-/* Tarama Çizgileri */
-.scanlines {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.2) 50%);
-  background-size: 100% 4px;
-  z-index: 7;
-  pointer-events: none;
-  opacity: 0.3;
-}
+.mod:active { flex: 1.3; background: rgba(255,255,255,0.03); }
 
 </style>
 </head>
@@ -159,35 +150,61 @@
   <div class="main">
 
     <div class="mod translate" onclick="goTranslate()">
-      <div class="blob"></div>
-      <div class="glass-grain"></div>
-      <div class="scanlines"></div>
-      <div class="shimmer"></div>
+      <div class="mod-bg-blob"></div>
       <div class="modInner">
-        <h2 class="modTitle">Translate</h2>
-        <div class="modSub">Quantum • FaceToFace • Walkie</div>
+        <div class="orb-container">
+          <div class="ai-ring"></div>
+          <div class="orbit-energy"><div class="e-ball ball-top"></div></div>
+          <div class="ai-core">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">
+              <path d="M5 8l6 6 6-6M2 12h20"/>
+            </svg>
+          </div>
+        </div>
+        <div class="text-group">
+          <h2 class="modTitle">Translate</h2>
+          <div class="modSub">Quantum • FaceToFace • Voice</div>
+        </div>
       </div>
     </div>
 
     <div class="mod academy" onclick="goAcademy()">
-      <div class="blob"></div>
-      <div class="glass-grain"></div>
-      <div class="scanlines"></div>
-      <div class="shimmer" style="animation-delay: 1s;"></div>
+      <div class="mod-bg-blob" style="right: -100px;"></div>
       <div class="modInner">
-        <h2 class="modTitle">Akademi</h2>
-        <div class="modSub">DeepLearn • AI Practice • Gamify</div>
+        <div class="orb-container">
+          <div class="ai-ring"></div>
+          <div class="orbit-energy"><div class="e-ball ball-top"></div></div>
+          <div class="ai-core">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">
+              <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+              <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+            </svg>
+          </div>
+        </div>
+        <div class="text-group">
+          <h2 class="modTitle">Akademi</h2>
+          <div class="modSub">DeepLearn • Practice • Lessons</div>
+        </div>
       </div>
     </div>
 
     <div class="mod helper" onclick="goHelper()">
-      <div class="blob"></div>
-      <div class="glass-grain"></div>
-      <div class="scanlines"></div>
-      <div class="shimmer" style="animation-delay: 2s;"></div>
+      <div class="mod-bg-blob"></div>
       <div class="modInner">
-        <h2 class="modTitle">Co-Pilot</h2>
-        <div class="modSub">Sci-Core • Math • Scan & Solve</div>
+        <div class="orb-container">
+          <div class="ai-ring"></div>
+          <div class="orbit-energy"><div class="e-ball ball-top"></div></div>
+          <div class="ai-core">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41m12.72-12.72l-1.41 1.41"/>
+            </svg>
+          </div>
+        </div>
+        <div class="text-group">
+          <h2 class="modTitle">Co-Pilot</h2>
+          <div class="modSub">Sci-Core • Math • Scan & Solve</div>
+        </div>
       </div>
     </div>
 
