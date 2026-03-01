@@ -22,84 +22,73 @@
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
 
-    /* ✅ Kural Seti */
+    /* ✅ Kural Seti Uygulandı */
     #pageContent {
       height: 100%;
       display: flex; flex-direction: column;
       background: radial-gradient(circle at 50% -10%, #1a0a25 0%, #000 100%);
     }
 
-    .main-hub {
-      flex: 1;
-      display: flex; flex-direction: column;
-      padding: 12px;
-      gap: 12px;
-      min-height: 0;
-    }
+    .main-hub { flex: 1; display: flex; flex-direction: column; padding: 12px; gap: 12px; min-height: 0; }
 
-    /* ===== 1. QUANTUM SPECTRUM (TOP - NO ORB) ===== */
-    .spectrum-header {
-      flex: 0 0 120px;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .wave-container {
-      display: flex; align-items: center; gap: 4px; height: 40px;
-    }
-
-    .wave-bar {
-      width: 3px; height: 10px; background: var(--ai-grad);
-      border-radius: 10px; animation: waveGrowth 1.2s infinite ease-in-out;
-    }
-
-    @keyframes waveGrowth {
-      0%, 100% { height: 10px; opacity: 0.3; }
-      50% { height: 40px; opacity: 1; }
-    }
-
-    .portal-info { text-align: center; margin-top: 15px; }
-    .portal-title { font-family: 'Space Grotesk'; font-size: 24px; font-weight: 900; color: #fff; margin: 0; letter-spacing: -0.5px; }
+    /* ===== SPECTRUM HEADER ===== */
+    .spectrum-header { flex: 0 0 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; }
+    .wave-container { display: flex; align-items: center; gap: 4px; height: 30px; }
+    .wave-bar { width: 3px; height: 10px; background: var(--ai-grad); border-radius: 10px; animation: waveGrowth 1.2s infinite ease-in-out; }
+    @keyframes waveGrowth { 0%, 100% { height: 10px; opacity: 0.3; } 50% { height: 30px; opacity: 1; } }
+    .portal-title { font-family: 'Space Grotesk'; font-size: 22px; font-weight: 900; color: #fff; margin-top: 10px; }
     .portal-title span { background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
-    /* ===== 2. FREQUENCY CARDS (VERTICAL FILL) ===== */
+    /* ===== CARDS & PANELS ===== */
     .hub-cards { flex: 1; display: flex; flex-direction: column; gap: 12px; min-height: 0; }
-
     .cyber-card {
       flex: 1; position: relative; border-radius: 32px; border: 1px solid var(--glass-border);
       overflow: hidden; cursor: pointer; display: flex; align-items: center; padding: 0 24px;
       background: var(--glass); backdrop-filter: blur(30px); transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     }
-
-    .cyber-card:active { transform: scale(0.98); filter: brightness(1.2); }
-
-    /* Host: Signal Lines */
+    .cyber-card:active { transform: scale(0.98); }
+    
     .host-card { background: linear-gradient(145deg, rgba(99, 102, 241, 0.12) 0%, rgba(0,0,0,0.6) 100%); }
-    .signal-line { position: absolute; left: 0; width: 100%; height: 1px; background: var(--blue); opacity: 0.2; animation: signalSlide 3s infinite linear; }
-
-    /* Join: Pulse Scanner */
     .join-card { background: linear-gradient(145deg, rgba(236, 72, 153, 0.12) 0%, rgba(0,0,0,0.6) 100%); }
-    .scan-box { position: absolute; right: -20px; top: -20px; width: 120px; height: 120px; border: 1px dashed var(--pink); border-radius: 50%; opacity: 0.3; animation: spin 10s linear infinite; }
 
     .card-content { flex: 1; z-index: 10; }
-    .card-title { font-family: 'Space Grotesk'; font-size: 22px; font-weight: 700; color: #fff; margin: 0; }
-    .card-desc { font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 6px; line-height: 1.4; max-width: 220px; }
+    .card-title { font-family: 'Space Grotesk'; font-size: 20px; font-weight: 700; color: #fff; margin: 0; }
+    .card-desc { font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 6px; line-height: 1.4; }
 
-    /* 3D Butonlar */
-    .btn-3d { 
-      height: 56px; border-radius: 20px; border: none; 
-      background: var(--ai-grad); color: #fff; font-weight: 900; 
-      box-shadow: 0 6px 20px rgba(99,102,241,0.3), inset 0 2px 4px rgba(255,255,255,0.3);
-      cursor: pointer; width: 100%; font-size: 15px; letter-spacing: 1px;
-    }
-
+    /* ===== HOST & JOIN PANELS (HIDE/SHOW) ===== */
+    .panel-view { flex: 1; display: flex; flex-direction: column; gap: 12px; min-height: 0; }
     .hide { display: none !important; }
 
-    /* Animations */
-    @keyframes signalSlide { 0% { top: 0; } 100% { top: 100%; } }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    .qr-zone {
+      flex: 1; background: rgba(0,0,0,0.3); border-radius: 28px; border: 1px solid var(--glass-border);
+      display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;
+    }
+    .qr-img-box { width: 200px; height: 200px; border-radius: 20px; background: #fff; padding: 10px; display:flex; align-items:center; justify-content:center; }
+    .qr-img-box img { width: 100%; height: auto; }
+    
+    .room-code-display { font-family: 'Space Grotesk'; font-size: 32px; font-weight: 900; letter-spacing: 6px; color: #fff; margin-top: 15px; }
 
+    .input-field {
+      width: 100%; height: 60px; background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border);
+      border-radius: 20px; color: #fff; text-align: center; font-size: 22px; font-weight: 900; letter-spacing: 4px;
+    }
+
+    /* ===== BUTTONS ===== */
+    .btn-3d {
+      height: 56px; border-radius: 20px; border: none; background: var(--ai-grad);
+      color: #fff; font-weight: 900; font-size: 15px; cursor: pointer;
+      box-shadow: 0 6px 20px rgba(99,102,241,0.3), inset 0 2px 4px rgba(255,255,255,0.3);
+    }
+    .btn-ghost {
+      height: 50px; border-radius: 18px; border: 1px solid var(--glass-border);
+      background: rgba(255,255,255,0.05); color: #fff; font-weight: 800; font-size: 13px; cursor: pointer;
+    }
+
+    /* ===== SCANNER OVERLAY ===== */
+    .scanner-overlay { position: fixed; inset: 0; background: #000; z-index: 9999; display: none; flex-direction: column; }
+    .scanner-overlay.show { display: flex; }
+    .scanner-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; color: #fff; font-weight: 900; }
+    #scanVideo { flex: 1; object-fit: cover; }
   </style>
 </head>
 
@@ -109,63 +98,98 @@
 
     <header class="spectrum-header">
       <div class="wave-container">
-        <div class="wave-bar" style="animation-delay: 0.0s"></div>
-        <div class="wave-bar" style="animation-delay: 0.2s"></div>
-        <div class="wave-bar" style="animation-delay: 0.4s"></div>
-        <div class="wave-bar" style="animation-delay: 0.6s"></div>
-        <div class="wave-bar" style="animation-delay: 0.4s"></div>
-        <div class="wave-bar" style="animation-delay: 0.2s"></div>
-        <div class="wave-bar" style="animation-delay: 0.0s"></div>
+        <div class="wave-bar" style="animation-delay:0s"></div>
+        <div class="wave-bar" style="animation-delay:0.2s"></div>
+        <div class="wave-bar" style="animation-delay:0.4s"></div>
+        <div class="wave-bar" style="animation-delay:0.2s"></div>
+        <div class="wave-bar" style="animation-delay:0s"></div>
       </div>
-      <div class="portal-info">
-        <h1 class="portal-title">Walkie<span>Talkie</span></h1>
-      </div>
+      <div class="portal-title">Walkie<span>Talkie</span></div>
     </header>
 
     <div class="hub-cards" id="homeCards">
       <div class="cyber-card host-card" id="goHost">
-        <div class="signal-line"></div>
         <div class="card-content">
           <h2 class="card-title">Kanal Oluştur</h2>
-          <p class="card-desc">Kendi frekansını kur, kodunu paylaş ve sınırsız katılımcıyla anlık konuşmaya başla.</p>
+          <p class="card-desc">Sınırsız katılımcı. Kod/QR ile paylaşılır. Herkes kendi dilinde konuşur.</p>
         </div>
-        <span style="font-size: 40px; opacity: 0.8;">📡</span>
+        <span style="font-size: 40px;">📡</span>
       </div>
 
       <div class="cyber-card join-card" id="goGuest">
-        <div class="scan-box"></div>
         <div class="card-content">
           <h2 class="card-title">Kanala Bağlan</h2>
-          <p class="card-desc">Mevcut bir frekans kodunu gir veya QR taratıp odaya anında giriş yap.</p>
+          <p class="card-desc">QR okut veya sana gönderilen 6 haneli frekans kodunu gir.</p>
         </div>
-        <span style="font-size: 40px; opacity: 0.8;">🔑</span>
+        <span style="font-size: 40px;">🔑</span>
       </div>
     </div>
 
-    <div class="panel-view hide" id="hostPanel" style="flex:1; display:flex; flex-direction:column; gap:15px; min-height:0;">
-       <div style="flex:1; background:rgba(0,0,0,0.4); border-radius:30px; border:1px solid var(--glass-border); display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px;">
-          <img id="qrImg" style="width:200px; height:200px; border-radius:20px; background:#fff; padding:10px;"/>
-          <div style="font-family:'Space Grotesk'; font-size:36px; font-weight:900; letter-spacing:6px; color:#fff; margin-top:20px;">X8K4PZ</div>
-       </div>
-       <button class="btn-3d" id="btnGoCall">SİNYALİ BAŞLAT</button>
-       <button id="btnBackHost" style="background:none; border:none; color:rgba(255,255,255,0.4); font-weight:900; text-decoration:underline; padding:10px; cursor:pointer;">GERİ DÖN</button>
+    <div class="panel-view hide" id="hostPanel">
+      <div class="qr-zone">
+        <div class="qr-img-box"><img id="qrImg" src="" alt="QR" /></div>
+        <div class="room-code-display" id="roomCode">------</div>
+        <div id="hostStatus" style="font-size:10px; color:var(--blue); margin-top:10px;">Bağlantı Bekleniyor...</div>
+      </div>
+      <button class="btn-3d" id="btnGoCall">SİNYALİ BAŞLAT</button>
+      <div style="display:flex; gap:10px;">
+        <button class="btn-ghost" id="btnCopy" style="flex:1;">KODU KOPYALA</button>
+        <button class="btn-ghost" id="btnBackHost" style="flex:1;">GERİ</button>
+      </div>
+    </div>
+
+    <div class="panel-view hide" id="joinPanel">
+      <div class="qr-zone" style="flex: 0 0 auto; gap:15px; padding:30px 20px;">
+        <button class="btn-3d" id="btnScan" style="width:100%;">📷 QR KODU OKUT</button>
+        <div style="color:rgba(255,255,255,0.3); font-size:12px; font-weight:900;">VEYA KOD GİR</div>
+        <input class="input-field" id="roomInput" placeholder="KODU YAZ" maxlength="8" />
+      </div>
+      <button class="btn-3d" id="btnJoin">BAĞLAN</button>
+      <button class="btn-ghost" id="btnBackJoin">ANA MENÜYE DÖN</button>
     </div>
 
   </div>
 </main>
+
+<div class="scanner-overlay" id="scanner">
+  <div class="scanner-header">
+    <span>QR TARAYICI</span>
+    <button id="scanClose" style="background:none; border:none; color:#fff; font-weight:900;">KAPAT</button>
+  </div>
+  <video id="scanVideo" playsinline></video>
+</div>
 
 <script type="module">
   import { mountShell } from "/js/ui_shell.js";
   mountShell({ scroll:"none" });
 
   const $ = (id) => document.getElementById(id);
+  
+  // UI Yönlendirme
   const setMode = (m) => {
-    $("hostPanel").classList.toggle("hide", m!=="host");
-    $("homeCards").classList.toggle("hide", m!=="home");
+    $("homeCards").classList.toggle("hide", m !== "home");
+    $("hostPanel").classList.toggle("hide", m !== "host");
+    $("joinPanel").classList.toggle("hide", m !== "join");
   };
 
-  $("goHost").onclick = () => setMode("host");
+  $("goHost").onclick = () => { setMode("host"); history.replaceState(null,"", "?mode=host"); };
+  $("goGuest").onclick = () => { setMode("join"); history.replaceState(null,"", "?mode=join"); };
   $("btnBackHost").onclick = () => setMode("home");
+  $("btnBackJoin").onclick = () => setMode("home");
+
+  // Scanner Kontrol
+  $("btnScan").onclick = () => $("scanner").classList.add("show");
+  $("scanClose").onclick = () => $("scanner").classList.remove("show");
+
+  // Linkten gelen join kodunu yakala
+  const urlParams = new URLSearchParams(window.location.search);
+  const joinCode = urlParams.get('join');
+  if(joinCode) {
+    setMode("join");
+    $("roomInput").value = joinCode.toUpperCase();
+  }
 </script>
+
+<script type="module" src="/js/f2f_connect.js?v=WT_CONNECT_V4"></script>
 </body>
 </html>
