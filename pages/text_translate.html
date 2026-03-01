@@ -15,142 +15,114 @@
 :root {
   --ai-grad: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
   --blue: #60a5fa;
-  --glass: rgba(255, 255, 255, 0.03);
+  --bordo: #2d0a0a; /* İstediğin bordo zemin */
   --glass-border: rgba(255, 255, 255, 0.12);
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
 
-/* ✅ ui_shell içinde #pageContent shellMain'e taşınıyor.
-      Bu yüzden 100vh yerine %100 ve shell padding ile çakışmayacak şekilde ayar. */
+/* ✅ Kural Seti: height: 100% ve padding yok */
 #pageContent {
   height: 100%;
   display: flex; flex-direction: column;
-
-  /* ❌ ui_shell zaten header/footer alanını yönetiyor.
-     Buradaki ekstra padding-top/bottom boşluk yapar.
-     Tasarımı bozmadan 0'a çekiyoruz. */
-  padding-top: 0;
-  padding-bottom: 0;
-
   background: radial-gradient(circle at 50% 20%, #0a0a20 0%, #000 100%);
-  overflow: hidden;
 }
 
-/* ✅ shellMain altında sıkışmasın diye biraz iç padding ver
-   (tasarımın kendi spacing'i korunuyor) */
 .main-wrap {
   flex: 1;
   display: flex; flex-direction: column;
-  padding: 14px;
-  gap: 12px;
-  min-height: 0;
+  padding: 12px;
+  gap: 8px;
+  min-height: 0; /* ✅ Kural Seti: flex children için zorunlu */
 }
 
-/* ===== 1. DİL SEÇİCİ (FLOAT PANEL) ===== */
+/* ===== DİL SEÇİCİ ===== */
 .lang-hub {
   display: flex; align-items: center; justify-content: space-between;
-  background: var(--glass);
+  background: rgba(255,255,255,0.03);
   border: 1px solid var(--glass-border);
-  border-radius: 24px;
-  padding: 8px 16px;
+  border-radius: 20px;
+  padding: 6px 14px;
   backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
 }
 
 .select-box {
   background: transparent; border: none; color: #fff;
-  font-family: 'Space Grotesk'; font-size: 14px; font-weight: 700;
-  cursor: pointer; appearance: none; text-align: center;
+  font-family: 'Space Grotesk'; font-size: 13px; font-weight: 700;
+  cursor: pointer; appearance: none;
 }
 
 .swap-trigger {
-  width: 36px; height: 36px; border-radius: 50%;
+  width: 32px; height: 32px; border-radius: 50%;
   background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);
   color: #fff; display: flex; align-items: center; justify-content: center;
-  transition: 0.3s;
 }
-.swap-trigger:active { transform: rotate(180deg) scale(0.9); }
 
-/* ===== 2. QUANTUM GATE (GİRİŞ & ÇIKIŞ) ===== */
+/* ===== QUANTUM GATE ===== */
 .quantum-gate {
   flex: 1;
-  min-height: 0;
   display: flex; flex-direction: column;
-  gap: 4px;
+  position: relative;
+  min-height: 0;
 }
 
 .gate-panel {
   flex: 1;
-  min-height: 0;
   position: relative;
-  border-radius: 30px;
+  border-radius: 24px;
   border: 1px solid var(--glass-border);
   background: rgba(255,255,255,0.02);
   display: flex; flex-direction: column;
-  padding: 20px;
+  padding: 18px;
   overflow: hidden;
+  min-height: 0;
+}
+
+/* Çeviri tarafı bordo zemin */
+.panel-out {
+  background: linear-gradient(180deg, var(--bordo) 0%, #000 100%);
+  border-color: rgba(236, 72, 153, 0.2);
 }
 
 textarea {
-  flex: 1;
-  min-height: 0;
-  background: transparent; border: none;
-  color: #fff; font-size: 18px; font-weight: 300;
+  flex: 1; background: transparent; border: none;
+  color: #fff; font-size: 17px; font-weight: 300;
   line-height: 1.5; resize: none; width: 100%;
 }
 
 .output-area {
-  flex: 1;
-  min-height: 0;
-  color: #a5b4fc; font-size: 18px;
+  flex: 1; color: #fbcfe8; font-size: 17px;
   font-weight: 600; line-height: 1.5; overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
   white-space: pre-wrap;
 }
 
-/* Veri Akışı Çizgisi */
+/* ===== ORTADAKİ AKSİYON HATTI ===== */
 .gate-divider {
-  height: 2px; width: 100%;
-  background: var(--ai-grad);
+  height: 60px; /* Butonların sığacağı yükseklik */
+  width: 100%;
+  display: flex; align-items: center; justify-content: center;
+  gap: 12px;
   position: relative;
-  box-shadow: 0 0 15px #6366f1;
-  flex: 0 0 auto;
-}
-.gate-divider::after {
-  content: "⚡"; position: absolute; left: 50%; top: 50%;
-  transform: translate(-50%, -50%); font-size: 10px;
-}
-
-/* ===== 3. ACTION BAR (FOTO & ÇEVİR) ===== */
-.action-bar {
-  display: flex; gap: 10px; align-items: center;
-  flex: 0 0 auto;
+  z-index: 10;
+  margin: -30px 0; /* Panellerin tam ortasına bindir */
 }
 
 .btn-scan {
-  flex: 1; height: 60px; border-radius: 20px;
-  border: 1px dashed var(--blue);
-  background: rgba(96, 165, 250, 0.05);
+  height: 50px; padding: 0 15px; border-radius: 25px;
+  border: 1px solid var(--blue);
+  background: #000;
   color: var(--blue); display: flex; align-items: center;
-  justify-content: center; gap: 10px; font-weight: 900;
-  cursor: pointer; position: relative; overflow: hidden;
+  gap: 8px; font-size: 11px; font-weight: 900;
+  cursor: pointer; box-shadow: 0 0 20px rgba(96, 165, 250, 0.3);
 }
 
 .btn-main {
-  width: 80px; height: 60px; border-radius: 20px;
-  background: #fff; color: #000; border: none;
+  width: 50px; height: 50px; border-radius: 25px;
+  background: var(--ai-grad); color: #fff; border: none;
   display: flex; align-items: center; justify-content: center;
   font-weight: 900; cursor: pointer;
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
 }
-
-/* Scan Line Animation */
-.scan-line {
-  position: absolute; top: 0; left: 0; width: 100%; height: 2px;
-  background: var(--blue); box-shadow: 0 0 15px var(--blue);
-  animation: scanning 3s linear infinite; opacity: 0.5;
-}
-@keyframes scanning { 0% { top: 0; } 100% { top: 100%; } }
 
 </style>
 </head>
@@ -161,94 +133,112 @@ textarea {
 
     <section class="lang-hub">
       <select class="select-box" id="fromSel"></select>
-      <button class="swap-trigger" id="btnSwap" type="button">⇄</button>
+      <button class="swap-trigger" id="btnSwap">⇄</button>
       <select class="select-box" id="toSel"></select>
     </section>
 
     <section class="quantum-gate">
       <div class="gate-panel">
-        <textarea id="srcTxt" placeholder="Buraya yazın veya taratın..."></textarea>
+        <textarea id="srcTxt" placeholder="Metin yazın..."></textarea>
+      </div>
+      
+      <div class="gate-divider">
+        <label class="btn-scan">
+          <input type="file" id="imgFile" accept="image/*" capture="environment" style="display:none">
+          <span>📷 TARAT</span>
+        </label>
+        
+        <button class="btn-main" id="btnTranslate">GO</button>
       </div>
 
-      <div class="gate-divider"></div>
-
-      <div class="gate-panel" style="background: rgba(99, 102, 241, 0.03);">
+      <div class="gate-panel panel-out">
         <div class="output-area" id="dstTxt">Çeviri burada görünecek...</div>
       </div>
-    </section>
-
-    <section class="action-bar">
-      <label class="btn-scan">
-        <div class="scan-line"></div>
-        <input type="file" id="imgFile" accept="image/*" capture="environment" style="display:none">
-        <span>📷 FOTOĞRAF TARAT</span>
-      </label>
-
-      <button class="btn-main" id="btnTranslate" type="button">GO</button>
     </section>
 
   </div>
 </main>
 
 <script type="module">
+  // ✅ Kural Seti: mountShell en üstte
   import { mountShell } from "/js/ui_shell.js";
-  // ✅ ui_shell: bu sayfa kendi içinde scroll istemiyor
   mountShell({ scroll:"none" });
 
   const API_BASE = "https://italky-api.onrender.com";
   const $ = (id)=>document.getElementById(id);
 
-  // ✅ Translate modülünde “mümkün olduğunca çok dil” istedin.
-  // Şimdilik UI listesi örnek. Sonraki adım: backend /api/lang_pool’dan çekip buraya basacağız.
+  // Dil listesini API'den çekme hedefi için UI hazırlığı
   const LANGS = [
     { code:"auto", name:"OTOMATİK" },
     { code:"tr", name:"TÜRKÇE" }, { code:"en", name:"ENGLISH" },
     { code:"de", name:"DEUTSCH" }, { code:"fr", name:"FRANÇAIS" },
     { code:"it", name:"ITALIANO" }, { code:"es", name:"ESPAÑOL" },
-    { code:"ru", name:"РУССКИЙ" }, { code:"ar", name:"العربية" },
-    { code:"fa", name:"فارسی" }, { code:"zh", name:"中文" },
-    { code:"ja", name:"日本語" }, { code:"ko", name:"한국어" }
+    { code:"ru", name:"RUSÇA" }, { code:"ar", name:"ARAPÇA" }
   ];
 
   const fromSel = $("fromSel");
   const toSel = $("toSel");
-
+  
   fromSel.innerHTML = LANGS.map(l=>`<option value="${l.code}">${l.name}</option>`).join("");
   toSel.innerHTML = LANGS.filter(l=>l.code!=="auto").map(l=>`<option value="${l.code}">${l.name}</option>`).join("");
-
+  
   fromSel.value = "auto";
   toSel.value = "tr";
 
-  // ✅ Çeviri İşlemi: /api/translate (Google->OpenAI fallback yaptığımız endpoint)
+  // Çeviri İşlemi
   $("btnTranslate").onclick = async () => {
     const text = $("srcTxt").value.trim();
     if(!text) return;
 
     $("dstTxt").style.opacity = "0.5";
-    $("dstTxt").textContent = "İşleniyor...";
+    $("dstTxt").textContent = "Kuantum motoru işliyor...";
 
     try {
-      const r = await fetch(`${API_BASE}/api/translate`, {
+      const r = await fetch(`${API_BASE}/api/translate_ai`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          text,
+          text: text,
           from_lang: fromSel.value,
           to_lang: toSel.value
         })
       });
-
-      const j = await r.json().catch(()=> ({}));
+      const j = await r.json();
       $("dstTxt").textContent = j.translated || "Hata oluştu.";
-
     } catch(e) {
-      $("dstTxt").textContent = "Bağlantı hatası.";
+      $("dstTxt").textContent = "Bağlantı kesildi.";
     } finally {
       $("dstTxt").style.opacity = "1";
     }
   };
 
-  // ✅ Swap
+  // Fotoğraf Tarama
+  $("imgFile").onchange = async (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+
+    $("srcTxt").value = "Fotoğraf analiz ediliyor...";
+    
+    const fd = new FormData();
+    fd.append("image", file);
+    fd.append("from_lang", fromSel.value);
+    fd.append("to_lang", toSel.value);
+
+    try {
+      const r = await fetch(`${API_BASE}/api/translate/ocr_translate`, {
+        method: "POST",
+        body: fd
+      });
+      const j = await r.json();
+      if(j.ok) {
+        $("srcTxt").value = j.extracted_text;
+        $("dstTxt").textContent = j.translated_text;
+      }
+    } catch(e) {
+      $("srcTxt").value = "Tarama başarısız.";
+    }
+  };
+
   $("btnSwap").onclick = () => {
     const a = fromSel.value;
     const b = toSel.value;
@@ -256,16 +246,6 @@ textarea {
       fromSel.value = b;
       toSel.value = a;
     }
-  };
-
-  // ✅ Fotoğraf Tarama: şimdilik endpoint yok → kullanıcıya MVP mesajı
-  // Sonraki sürümde /api/ocr veya /api/exam/ocr_image gibi endpoint bağlarız.
-  $("imgFile").onchange = async (e) => {
-    const file = e.target.files?.[0];
-    if(!file) return;
-
-    $("srcTxt").value = "Fotoğraf alındı. OCR modülü bir sonraki adımda bağlanacak.";
-    $("dstTxt").textContent = "Önce OCR → sonra çeviri çalışacak.";
   };
 </script>
 </body>
