@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-  <title>italkyAI • Teacher AI Hub</title>
+  <title>italkyAI • Teacher AI Terminal</title>
 
   <meta name="theme-color" content="#000000">
   <style>html,body{background:#000 !important; margin:0; padding:0; overflow:hidden; font-family:'Outfit', sans-serif;}</style>
@@ -16,8 +16,7 @@
     :root {
       --ai-grad: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
       --purple: #a855f7;
-      --blue: #60a5fa;
-      --glass-border: rgba(255, 255, 255, 0.12);
+      --glass-border: rgba(255, 255, 255, 0.15);
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
@@ -26,128 +25,122 @@
       height: 100vh;
       display: flex;
       flex-direction: column;
-      /* UI Shell barları arasına tam oturtma */
       padding-top: calc(env(safe-area-inset-top) + 40px);
       padding-bottom: calc(env(safe-area-inset-bottom) + 85px);
-      background: radial-gradient(circle at 50% 20%, #100515 0%, #000 100%);
+      background: radial-gradient(circle at 50% 30%, #150520 0%, #000 100%);
+      position: relative;
     }
 
     .main-hub {
       flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 12px;
-      padding: 10px 14px;
+      padding: 20px;
       z-index: 2;
     }
 
-    /* ===== 1. SCANNER PORTAL (TOP) ===== */
-    .scanner-portal {
-      flex: 0 0 auto;
+    /* ===== 1. TEACHER AI HEADER ===== */
+    .header-zone {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .header-zone h1 {
+      font-family: 'Space Grotesk';
+      font-size: 28px;
+      font-weight: 900;
+      color: #fff;
+      margin: 0;
+      letter-spacing: -1px;
+    }
+    .header-zone h1 span {
+      background: var(--ai-grad);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .header-zone p {
+      font-size: 13px;
+      color: rgba(255,255,255,0.5);
+      margin-top: 8px;
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+
+    /* ===== 2. DEV SCANNER CARD (EKRANI DOLDURAN) ===== */
+    .scanner-hero {
+      flex: 1;
+      position: relative;
+      border-radius: 40px;
+      border: 1px solid var(--glass-border);
+      background: linear-gradient(145deg, rgba(168, 85, 247, 0.15) 0%, rgba(0,0,0,0.7) 100%);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      padding: 15px 0;
-      user-select: none;
-      position: relative;
-    }
-
-    /* Formüllerin yukarı süzülme animasyonu */
-    .formula-rain { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
-    .f-item { position: absolute; bottom: -20px; font-family: monospace; font-size: 10px; color: var(--purple); opacity: 0; animation: f-float 4s infinite linear; }
-    @keyframes f-float {
-      0% { transform: translateY(0) rotate(0); opacity: 0; }
-      20% { opacity: 0.6; }
-      80% { opacity: 0.6; }
-      100% { transform: translateY(-160px) rotate(10deg); opacity: 0; }
-    }
-
-    .neural-orb {
-      width: 110px; height: 110px;
-      position: relative;
-      display: flex; align-items: center; justify-content: center;
-    }
-
-    .ai-ring {
-      position: absolute; inset: -4px; border-radius: 50%; padding: 2.5px;
-      background: var(--ai-grad);
-      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-      mask-composite: exclude;
-      animation: rotateOrb 15s linear infinite;
-    }
-
-    .ai-core {
-      width: 82px; height: 82px; background: #000; border-radius: 50%;
-      background-image: linear-gradient(#000, #000), var(--ai-grad);
-      background-origin: border-box; background-clip: content-box, border-box;
-      border: 2px solid transparent;
-      display: flex; align-items: center; justify-content: center;
-      animation: aiBreathe 4s infinite ease-in-out;
-      z-index: 10;
-      box-shadow: 0 0 30px rgba(168, 85, 247, 0.3);
-    }
-
-    .portal-info { text-align: center; margin-top: 12px; }
-    .portal-title { font-family: 'Space Grotesk'; font-size: 24px; font-weight: 900; color: #fff; margin: 0; letter-spacing: -1px; }
-    .portal-title span { background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .portal-desc { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; }
-
-    /* ===== 2. KARTLAR (DOLDURAN YAPI) ===== */
-    .hub-cards {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .helper-card {
-      flex: 1;
-      position: relative;
-      border-radius: 30px;
-      border: 1px solid var(--glass-border);
       overflow: hidden;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      padding: 0 24px;
-      background: rgba(255, 255, 255, 0.03);
-      backdrop-filter: blur(25px);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
       transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    .helper-card:active { transform: scale(0.98); filter: brightness(1.2); }
+    .scanner-hero:active { transform: scale(0.97); filter: brightness(1.2); }
 
-    /* Renk Temaları */
-    .scan-card { background: linear-gradient(145deg, rgba(168, 85, 247, 0.1) 0%, rgba(0,0,0,0.6) 100%); border-color: rgba(168, 85, 247, 0.25); }
-    .solve-card { background: linear-gradient(145deg, rgba(99, 102, 241, 0.1) 0%, rgba(0,0,0,0.6) 100%); border-color: rgba(99, 102, 241, 0.25); }
+    /* Grift Formül Animasyonu */
+    .formula-layer { position: absolute; inset: 0; pointer-events: none; opacity: 0.4; }
+    .f-node { position: absolute; font-family: monospace; font-size: 12px; color: var(--purple); opacity: 0; animation: f-float 5s infinite linear; }
+    @keyframes f-float {
+      0% { transform: translateY(50px) rotate(0); opacity: 0; }
+      20% { opacity: 0.8; }
+      80% { opacity: 0.8; }
+      100% { transform: translateY(-300px) rotate(15deg); opacity: 0; }
+    }
 
-    /* Solar Core (Teacher Stil) */
-    .solar { width: 70px; height: 70px; position: relative; flex-shrink: 0; margin-right: 20px; }
-    .sun { width: 22px; height: 22px; background: var(--sun-color); border-radius: 50%; filter: blur(6px); box-shadow: 0 0 18px var(--sun-color); position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); animation: sunPulse 3s infinite; }
-    .orbit { position: absolute; border: 1px solid rgba(255,255,255,0.06); border-radius: 50%; animation: rotateOrb linear infinite; }
-    .orbit1 { width: 44px; height: 44px; top: 13px; left: 13px; animation-duration: 4s; }
-    .orbit2 { width: 70px; height: 70px; animation-duration: 7s; animation-direction: reverse; }
-    .planet { width: 5px; height: 5px; background: #fff; border-radius: 50%; position: absolute; top: 0; left: 50%; transform: translateX(-50%); }
+    /* Scan Line */
+    .scan-bar {
+      position: absolute; left: 0; width: 100%; height: 3px;
+      background: var(--purple);
+      box-shadow: 0 0 25px var(--purple);
+      animation: scanMove 4s linear infinite;
+      z-index: 5;
+    }
+    @keyframes scanMove { 0% { top: 0; } 100% { top: 100%; } }
 
-    /* Animations */
+    /* Neural Orb Scanner */
+    .orb-scanner {
+      width: 140px; height: 140px;
+      position: relative;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 25px;
+    }
+    .ring-outer {
+      position: absolute; inset: -10px; border-radius: 50%; padding: 3px;
+      background: var(--ai-grad);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask-composite: exclude;
+      animation: rotateOrb 10s linear infinite;
+    }
+    .ring-inner {
+      position: absolute; inset: 5px; border-radius: 50%;
+      border: 1px dashed rgba(255,255,255,0.2);
+      animation: rotateOrb 6s linear infinite reverse;
+    }
+    .core-cam {
+      width: 90px; height: 90px;
+      background: #000; border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.1);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 10;
+      box-shadow: 0 0 40px rgba(168, 85, 247, 0.4);
+      animation: breathe 3s infinite ease-in-out;
+    }
+
+    /* Alt Yazılar */
+    .cta-text { text-align: center; z-index: 10; padding: 0 20px; }
+    .cta-text h2 { font-family: 'Space Grotesk'; font-size: 26px; font-weight: 700; color: #fff; margin: 0; }
+    .cta-text p { font-size: 13px; color: rgba(255,255,255,0.45); margin-top: 10px; line-height: 1.5; }
+
+    /* Global Anims */
     @keyframes rotateOrb { from { transform: rotate(0); } to { transform: rotate(360deg); } }
-    @keyframes aiBreathe { 0%,100% { transform: scale(1); } 50% { transform: scale(1.06); } }
-    @keyframes sunPulse { 0%,100% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(1.15); opacity: 0.8; } }
-
-    /* Content */
-    .card-content { flex: 1; z-index: 10; }
-    .card-title { font-family: 'Space Grotesk'; font-size: 21px; font-weight: 700; color: #fff; margin: 0; }
-    .card-title .ai { background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .card-desc { font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 5px; line-height: 1.4; }
-
-    .scan-card { --sun-color: var(--purple); }
-    .solve-card { --sun-color: var(--blue); }
-
-    /* Scan Line Effect for Scan Card */
-    .scan-line { position: absolute; left: 0; width: 100%; height: 2px; background: var(--purple); box-shadow: 0 0 15px var(--purple); animation: scanV 3s linear infinite; opacity: 0.4; }
-    @keyframes scanV { 0% { top: 0; } 100% { top: 100%; } }
+    @keyframes breathe { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
 
   </style>
 </head>
@@ -156,55 +149,38 @@
 <main id="pageContent">
   <div class="main-hub">
 
-    <div class="scanner-portal" onclick="location.href='/pages/scan_solve.html'">
-      <div class="formula-rain">
-        <div class="f-item" style="left: 15%; animation-delay: 0s;">E=mc²</div>
-        <div class="f-item" style="left: 75%; animation-delay: 1.5s;">πr²</div>
-        <div class="f-item" style="left: 50%; animation-delay: 0.8s;">Δ=b²-4ac</div>
+    <header class="header-zone">
+      <h1>Teacher <span class="ai">AI</span></h1>
+      <p>BİLİM KOÇU • SCAN & SOLVE</p>
+    </header>
+
+    <section class="scanner-hero" onclick="location.href='/pages/scan_solve.html'">
+      
+      <div class="scan-bar"></div>
+      <div class="formula-layer">
+        <div class="f-node" style="left: 10%; animation-delay: 0s;">E=mc²</div>
+        <div class="f-node" style="left: 80%; animation-delay: 2s;">Δ = b² - 4ac</div>
+        <div class="f-node" style="left: 40%; animation-delay: 1s;">∫ f(x)dx</div>
+        <div class="f-node" style="left: 65%; animation-delay: 3s;">H₂O + CO₂</div>
       </div>
-      <div class="neural-orb">
-        <div class="ai-ring"></div>
-        <div class="ai-core">
-          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2">
+
+      <div class="orb-scanner">
+        <div class="ring-outer"></div>
+        <div class="ring-inner"></div>
+        <div class="core-cam">
+          <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">
             <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
             <circle cx="12" cy="13" r="4"/>
           </svg>
         </div>
       </div>
-      <div class="portal-info">
-        <h1 class="portal-title">Teacher <span>AI</span></h1>
-        <p class="portal-desc">Foto Çek • Kırp • Çöz</p>
-      </div>
-    </div>
 
-    <div class="hub-cards">
-
-      <div class="helper-card scan-card" onclick="location.href='/pages/scan_solve.html'">
-        <div class="scan-line"></div>
-        <div class="solar">
-          <div class="sun"></div>
-          <div class="orbit orbit1"><div class="planet"></div></div>
-          <div class="orbit orbit2"></div>
-        </div>
-        <div class="card-content">
-          <h2 class="card-title">Hızlı Tarama</h2>
-          <p class="card-desc">Sayfadaki soruyu dikdörtgenle seç, yapay zeka anında adım adım çözsün.</p>
-        </div>
+      <div class="cta-text">
+        <h2>FOTOĞRAF ÇEK VE ÇÖZ</h2>
+        <p>Sorunun fotoğrafını çek, alanı kırp ve adım adım yapay zeka anlatımıyla çözüme ulaş.</p>
       </div>
 
-      <div class="helper-card solve-card" onclick="location.href='/pages/helper_chat.html'">
-        <div class="solar">
-          <div class="sun" style="filter: blur(8px); opacity: 0.4;"></div>
-          <div class="orbit orbit1" style="border-radius: 4px;"></div>
-          <div class="orbit orbit2"><div class="planet" style="width:10px; border-radius:2px;"></div></div>
-        </div>
-        <div class="card-content">
-          <h2 class="card-title">Bilim Koçu</h2>
-          <p class="card-desc">Matematik, Fizik, Kimya ve Biyoloji alanında uzman AI ile soru-cevap yap.</p>
-        </div>
-      </div>
-
-    </div>
+    </section>
 
   </div>
 </main>
