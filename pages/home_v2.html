@@ -1,155 +1,487 @@
+<!-- FILE: /pages/home.html -->
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-    <title>italky Academy • Universal STEM</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
-    
-    <style>
-        /* Academy'ye Özel Ek Stil */
-        .academy-container {
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: calc(100dvh - 180px); /* Header ve Footer arası merkezleme */
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>italkyAI • Hub</title>
 
-        .status-badge {
-            background: rgba(99, 102, 241, 0.1);
-            border: 1px solid rgba(99, 102, 241, 0.3);
-            padding: 6px 14px;
-            border-radius: 999px;
-            font-size: 11px;
-            font-weight: 900;
-            color: #a5b4fc;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 30px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
+  <meta name="theme-color" content="#02000f">
+  <style>html,body{background:#02000f !important;}</style>
 
-        .status-dot {
-            width: 6px; height: 6px;
-            background: #2ecc71;
-            border-radius: 50%;
-            box-shadow: 0 0 10px #2ecc71;
-        }
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
-        /* Ana Çözücü Butonu */
-        .solver-btn {
-            position: relative;
-            width: 180px;
-            height: 180px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.03);
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 0 0 40px rgba(0,0,0,0.5);
-        }
+  <style>
+    :root{
+      --border: rgba(255,255,255,0.12);
+      --card: rgba(255,255,255,0.05);
+      --muted: rgba(255,255,255,0.66);
+      --aiGrad: linear-gradient(135deg,#a5b4fc 0%,#6366f1 55%,#ec4899 100%);
+      --ok: rgba(34,197,94,.95);
+      --warn: rgba(245,158,11,.95);
+    }
+    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; }
 
-        .solver-btn:active { transform: scale(0.9); }
+    /* ui_shell main içine taşınacak */
+    #pageContent{
+      height:100%;
+      padding: 10px 12px;
+    }
+    .wrap{
+      max-width: 520px;
+      margin: 0 auto;
+      min-height:100%;
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+      padding-bottom: 10px;
+    }
 
-        .solver-btn::before {
-            content: '';
-            position: absolute;
-            inset: -8px;
-            border-radius: 50%;
-            background: var(--ai-gradient);
-            z-index: -1;
-            opacity: 0.2;
-            filter: blur(15px);
-        }
+    /* HERO */
+    .hero{
+      position:relative;
+      border-radius: 26px;
+      border:1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      padding: 14px;
+      overflow:hidden;
+    }
+    .hero::before{
+      content:"";
+      position:absolute; inset:-40%;
+      background:
+        radial-gradient(circle at 20% 30%, rgba(99,102,241,.26) 0%, transparent 42%),
+        radial-gradient(circle at 85% 25%, rgba(236,72,153,.18) 0%, transparent 40%),
+        radial-gradient(circle at 50% 85%, rgba(168,85,247,.16) 0%, transparent 45%);
+      filter: blur(36px);
+      opacity:.9;
+      animation: drift 10s ease-in-out infinite alternate;
+      pointer-events:none;
+    }
+    @keyframes drift{
+      from{ transform: translate3d(-10px,-8px,0) scale(1); }
+      to  { transform: translate3d(10px,8px,0) scale(1.06); }
+    }
+    .heroTop{
+      position:relative;
+      z-index:2;
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:10px;
+    }
+    .hTitle{
+      margin:0;
+      font-family:"Space Grotesk",system-ui,sans-serif;
+      font-weight:1000;
+      font-size:16px;
+      letter-spacing:-.2px;
+      color:#fff;
+    }
+    .hSub{
+      margin: 6px 0 0;
+      font-size: 12px;
+      font-weight: 900;
+      color: var(--muted);
+      line-height: 1.45;
+      position:relative;
+      z-index:2;
+    }
+    .chips{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      align-items:flex-end;
+      position:relative;
+      z-index:2;
+    }
+    .chip{
+      padding: 7px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.18);
+      color: rgba(255,255,255,0.92);
+      font-weight: 1000;
+      font-size: 12px;
+      white-space: nowrap;
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+    .dot{
+      width:8px;height:8px;border-radius:99px;
+      background: rgba(165,180,252,.95);
+      box-shadow: 0 0 14px rgba(165,180,252,.55);
+      animation: pulse 1.15s ease-in-out infinite;
+    }
+    @keyframes pulse{ 0%,100%{transform:scale(1);opacity:.8} 50%{transform:scale(1.35);opacity:1} }
 
-        .solver-icon { font-size: 54px; margin-bottom: 10px; }
-        .solver-label { font-weight: 900; font-size: 14px; letter-spacing: 1px; }
+    /* SECTIONS */
+    .section{
+      border-radius: 22px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.03);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      padding: 12px;
+    }
+    .secTop{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom: 10px;
+    }
+    .secTitle{
+      margin:0;
+      font-weight:1000;
+      font-size: 13px;
+      color:#fff;
+      letter-spacing:.2px;
+    }
+    .secHint{
+      font-size: 11px;
+      font-weight: 900;
+      color: rgba(255,255,255,0.60);
+      white-space:nowrap;
+    }
 
-        .hint-text {
-            margin-top: 40px;
-            text-align: center;
-            max-width: 260px;
-        }
+    /* MODULE CARDS */
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
 
-        .hint-text h2 { font-size: 20px; font-weight: 900; margin: 0 0 10px; }
-        .hint-text p { font-size: 13px; opacity: 0.5; line-height: 1.5; margin: 0; }
+    .mod{
+      width:100%;
+      border-radius: 22px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      padding: 14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+      cursor:pointer;
+      user-select:none;
+      transition: transform .16s ease, background .16s ease, border-color .16s ease;
+      position:relative;
+      overflow:hidden;
+    }
+    .mod:active{ transform: scale(.988); background: rgba(255,255,255,0.07); border-color: rgba(165,180,252,0.30); }
 
-        /* Analiz Animasyonu (Gizli) */
-        #loadingOverlay {
-            display: none;
-            text-align: center;
-            margin-top: 20px;
-        }
-        .pulse {
-            width: 40px; height: 40px;
-            border: 3px solid rgba(99, 102, 241, 0.3);
-            border-top-color: #6366f1;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 15px;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-    </style>
+    .mod::before{
+      content:"";
+      position:absolute; inset:-80px;
+      background: conic-gradient(from 0deg, rgba(165,180,252,.0), rgba(165,180,252,.25), rgba(236,72,153,.0));
+      opacity:.0;
+      transition: opacity .2s ease;
+    }
+    .mod:hover::before{ opacity:.12; }
+    .mod > *{ position:relative; z-index:2; }
+
+    .left{
+      display:flex;
+      align-items:center;
+      gap: 12px;
+      min-width:0;
+    }
+
+    .ico{
+      width: 46px;
+      height: 46px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.18);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      flex: 0 0 auto;
+      overflow:hidden;
+      position:relative;
+    }
+    .ico::after{
+      content:"";
+      position:absolute; inset:-30px;
+      background: radial-gradient(circle, rgba(99,102,241,.35), transparent 60%);
+      animation: icoGlow 1.4s ease-in-out infinite;
+      opacity:.55;
+    }
+    @keyframes icoGlow{ 0%,100%{transform:scale(.85);opacity:.35} 50%{transform:scale(1.12);opacity:.7} }
+    .emoji{
+      position:relative;
+      z-index:2;
+      font-size: 22px;
+      filter: drop-shadow(0 10px 18px rgba(0,0,0,0.25));
+    }
+
+    .txt{
+      min-width:0;
+      display:flex;
+      flex-direction:column;
+      gap: 3px;
+    }
+    .name{
+      font-size: 15px;
+      font-weight: 1000;
+      color:#fff;
+      letter-spacing:-.2px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .desc{
+      font-size: 11px;
+      font-weight: 900;
+      color: rgba(255,255,255,0.62);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .right{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      flex: 0 0 auto;
+    }
+    .tag{
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.18);
+      font-size: 12px;
+      font-weight: 1000;
+      color: rgba(255,255,255,0.88);
+      white-space:nowrap;
+    }
+    .chev{
+      width: 34px; height: 34px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06);
+      display:flex; align-items:center; justify-content:center;
+      color: rgba(255,255,255,0.86);
+      font-weight: 1000;
+    }
+
+    /* compact screens */
+    @media (max-height: 740px){
+      .hero{ padding: 12px; }
+      .mod{ padding: 12px; }
+      .ico{ width:44px; height:44px; }
+      .name{ font-size:14px; }
+    }
+  </style>
 </head>
+
 <body>
+<main id="pageContent">
+  <div class="wrap">
 
-    <div id="pageContent">
-        <div class="academy-container">
-            
-            <div class="status-badge">
-                <div class="status-dot"></div>
-                italkyAI STEM Engine Active
-            </div>
-
-            <div class="solver-btn" id="startSolver">
-                <div class="solver-icon">📸</div>
-                <div class="solver-label">SORU ÇÖZ</div>
-                <input type="file" id="camInput" accept="image/*" capture="environment" style="display:none;">
-            </div>
-
-            <div class="hint-text">
-                <h2>Evrensel Zeka</h2>
-                <p>Matematik, Fizik, Kimya veya Biyoloji sorusunun fotoğrafını çek. italkyAI anında analiz etsin.</p>
-            </div>
-
-            <div id="loadingOverlay">
-                <div class="pulse"></div>
-                <div style="font-weight: 900; font-size: 12px; color: #a5b4fc;">SORU ANALİZ EDİLİYOR...</div>
-            </div>
-
+    <section class="hero">
+      <div class="heroTop">
+        <div>
+          <h1 class="hTitle">Bugün ne yapıyoruz?</h1>
+          <p class="hSub">Çeviri • Akademi • Pratik • Oyun • Sınav • Soru Çöz • Offline</p>
         </div>
-    </div>
+        <div class="chips">
+          <div class="chip"><span class="dot"></span> Canlı</div>
+          <div class="chip" id="chipUser">—</div>
+        </div>
+      </div>
+    </section>
 
-    <script type="module">
-        import { mountShell } from "/js/ui_shell.js";
-        
-        // Shell'i giydir
-        mountShell({ scroll: "auto" });
+    <section class="section">
+      <div class="secTop">
+        <h2 class="secTitle">Çeviri</h2>
+        <div class="secHint">anlık & metin</div>
+      </div>
+      <div class="grid">
+        <div class="mod" data-href="/facetoface.html">
+          <div class="left">
+            <div class="ico"><div class="emoji">🗣️</div></div>
+            <div class="txt">
+              <div class="name">FaceToFace</div>
+              <div class="desc">Konuş → Anında çeviri, sesli</div>
+            </div>
+          </div>
+          <div class="right">
+            <div class="tag">LIVE</div><div class="chev">›</div>
+          </div>
+        </div>
 
-        const btn = document.getElementById('startSolver');
-        const input = document.getElementById('camInput');
-        const loading = document.getElementById('loadingOverlay');
+        <div class="mod" data-href="/pages/text_translate.html">
+          <div class="left">
+            <div class="ico"><div class="emoji">📝</div></div>
+            <div class="txt">
+              <div class="name">Metinden Çeviri</div>
+              <div class="desc">Yapıştır → çevir, düzenle</div>
+            </div>
+          </div>
+          <div class="right">
+            <div class="tag">TEXT</div><div class="chev">›</div>
+          </div>
+        </div>
 
-        btn.onclick = () => input.click();
+        <div class="mod" data-href="/facetoface_offline.html">
+          <div class="left">
+            <div class="ico"><div class="emoji">⬇️</div></div>
+            <div class="txt">
+              <div class="name">Offline Çeviri</div>
+              <div class="desc">Dil paketleriyle internetsiz</div>
+            </div>
+          </div>
+          <div class="right">
+            <div class="tag">OFFLINE</div><div class="chev">›</div>
+          </div>
+        </div>
+      </div>
+    </section>
 
-        input.onchange = (e) => {
-            if(e.target.files.length > 0) {
-                // Görsel seçildiğinde arayüzü güncelle
-                btn.style.display = 'none';
-                loading.style.display = 'block';
-                
-                // Burada backend'e (Gemini/OpenAI) gönderme işlemi başlayacak
-                console.log("Dosya hazır, analiz başlıyor...");
-            }
-        };
-    </script>
+    <section class="section">
+      <div class="secTop">
+        <h2 class="secTitle">Dil Gelişim</h2>
+        <div class="secHint">seviye • ders • pratik</div>
+      </div>
+
+      <div class="grid">
+        <div class="mod" data-href="/pages/level_test_hub.html">
+          <div class="left">
+            <div class="ico"><div class="emoji">📊</div></div>
+            <div class="txt">
+              <div class="name">Seviye Tespit</div>
+              <div class="desc">6 dil • 40 dk • v1..v6</div>
+            </div>
+          </div>
+          <div class="right">
+            <div class="tag">TEST</div><div class="chev">›</div>
+          </div>
+        </div>
+
+        <div class="mod" data-href="/pages/plan_select.html">
+          <div class="left">
+            <div class="ico"><div class="emoji">🎓</div></div>
+            <div class="txt">
+              <div class="name">Dil Dersi</div>
+              <div class="desc">15 dk ders • devam/ara</div>
+            </div>
+          </div>
+          <div class="right">
+            <div class="tag">ACADEMY</div><div class="chev">›</div>
+          </div>
+        </div>
+
+        <div class="mod" data-href="/pages/practice_ai.html">
+          <div class="left">
+            <div class="ico"><div class="emoji">🤖</div></div>
+            <div class="txt">
+              <div class="name">AI ile Pratik</div>
+              <div class="desc">Havuzdan • tekrar yok • ses</div>
+            </div>
+          </div>
+          <div class="right">
+            <div class="tag">SPEAK</div><div class="chev">›</div>
+          </div>
+        </div>
+
+        <div class="mod" data-href="/pages/game_lang_select.html">
+          <div class="left">
+            <div class="ico"><div class="emoji">🎮</div></div>
+            <div class="txt">
+              <div class="name">Eğlenerek Öğren</div>
+              <div class="desc">Oyun dili seç → oyuna gir</div>
+            </div>
+          </div>
+          <div class="right">
+            <div class="tag">GAMES</div><div class="chev">›</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="secTop">
+        <h2 class="secTitle">Soru Tara • Çöz</h2>
+        <div class="secHint">foto • kırp • anlat</div>
+      </div>
+      <div class="grid">
+        <div class="mod" data-href="/pages/scan_solve.html">
+          <div class="left">
+            <div class="ico"><div class="emoji">📷</div></div>
+            <div class="txt">
+              <div class="name">Foto Çek Çöz</div>
+              <div class="desc">Soru seç → çözüm + öneri</div>
+            </div>
+          </div>
+          <div class="right">
+            <div class="tag">PRO</div><div class="chev">›</div>
+          </div>
+        </div>
+
+        <div class="mod" data-href="/pages/f2f_connect.html">
+          <div class="left">
+            <div class="ico"><div class="emoji">📡</div></div>
+            <div class="txt">
+              <div class="name">WalkieTalkie</div>
+              <div class="desc">Toplantı salonu • anlık</div>
+            </div>
+          </div>
+          <div class="right">
+            <div class="tag">ROOM</div><div class="chev">›</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<script type="module">
+  import { mountShell } from "/js/ui_shell.js";
+  import { supabase } from "/js/supabase_client.js";
+
+  mountShell({ scroll:"auto" });
+
+  // link
+  function go(url){
+    if(!url) return;
+    try{ location.assign(url); }catch{ location.href=url; }
+  }
+  document.querySelectorAll("[data-href]").forEach(el=>{
+    const url = el.getAttribute("data-href");
+    const h = (e)=>{ e.preventDefault(); e.stopPropagation(); go(url); };
+    el.addEventListener("click", h, { passive:false });
+    el.addEventListener("touchend", h, { passive:false });
+  });
+
+  // hero chip user (adı + jeton)
+  const chipUser = document.getElementById("chipUser");
+  try{
+    const { data:{ session } } = await supabase.auth.getSession();
+    if(session?.user){
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("full_name, tokens")
+        .eq("id", session.user.id)
+        .maybeSingle();
+
+      const full = String(prof?.full_name || "Kullanıcı").trim();
+      const parts = full.split(/\s+/).filter(Boolean);
+      const first = parts.length>1 ? parts.slice(0,-1).join(" ") : (parts[0] || "Kullanıcı");
+      const tk = Number(prof?.tokens ?? 0);
+      chipUser.textContent = `${first} • Jeton ${tk}`;
+    }else{
+      chipUser.textContent = "Misafir";
+    }
+  }catch{
+    chipUser.textContent = "—";
+  }
+</script>
 </body>
 </html>
