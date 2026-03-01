@@ -78,7 +78,7 @@
 }
 
 .panel-in { border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-bottom: none; }
-.panel-out { 
+.panel-out {
   border-top-left-radius: 0; border-top-right-radius: 0; border-top: none;
   background: linear-gradient(180deg, var(--bordo) 0%, #000 100%);
   border-color: rgba(236, 72, 153, 0.2);
@@ -119,7 +119,7 @@ textarea {
 .btn-3d {
   flex: 1.2;
   height: 46px;
-  border-radius: 20px; /* İstediğin ovallik */
+  border-radius: 20px;
   border: none;
   background: var(--ai-grad);
   color: #fff;
@@ -129,8 +129,7 @@ textarea {
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   gap: 8px;
-  /* 3D Derinlik Efektleri */
-  box-shadow: 
+  box-shadow:
     0 4px 15px rgba(99, 102, 241, 0.4),
     inset 0 2px 4px rgba(255, 255, 255, 0.3),
     inset 0 -2px 4px rgba(0, 0, 0, 0.2);
@@ -141,13 +140,12 @@ textarea {
 
 .btn-3d:active {
   transform: translateY(2px) scale(0.98);
-  box-shadow: 
+  box-shadow:
     0 2px 5px rgba(99, 102, 241, 0.4),
     inset 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .divider { width: 1px; background: var(--glass-border); height: 30px; margin: 0 10px; }
-
 </style>
 </head>
 
@@ -157,7 +155,7 @@ textarea {
 
     <section class="lang-hub">
       <select class="select-box" id="fromSel"></select>
-      <button class="swap-trigger" id="btnSwap">⇄</button>
+      <button class="swap-trigger" id="btnSwap" type="button">⇄</button>
       <select class="select-box" id="toSel"></select>
     </section>
 
@@ -165,16 +163,16 @@ textarea {
       <div class="gate-panel panel-in">
         <textarea id="srcTxt" placeholder="Metin girin..."></textarea>
       </div>
-      
+
       <div class="command-bar">
         <label class="bar-btn">
           <input type="file" id="imgFile" accept="image/*" capture="environment" style="display:none">
           <span>📷 FOTOĞRAF TARAT</span>
         </label>
-        
+
         <div class="divider"></div>
-        
-        <button class="btn-3d" id="btnTranslate">
+
+        <button class="btn-3d" id="btnTranslate" type="button">
           ⚡ ÇEVİR
         </button>
       </div>
@@ -203,26 +201,29 @@ textarea {
 
   const fromSel = $("fromSel");
   const toSel = $("toSel");
-  
+
   const fill = (sel, list) => sel.innerHTML = list.map(l=>`<option value="${l.code}">${l.name}</option>`).join("");
   fill(fromSel, LANG_POOL);
   fill(toSel, LANG_POOL.filter(x=>x.code!=="auto"));
-  
+
   fromSel.value = "auto";
   toSel.value = "tr";
 
+  // ✅ ÇEVİR
   $("btnTranslate").onclick = async () => {
     const text = $("srcTxt").value.trim();
     if(!text) return;
+
     $("dstTxt").style.opacity = "0.4";
     $("dstTxt").textContent = "Kuantum motoru devrede...";
+
     try {
       const r = await fetch(`${API_BASE}/api/translate_ai`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: text, from_lang: fromSel.value, to_lang: toSel.value })
+        body: JSON.stringify({ text, from_lang: fromSel.value, to_lang: toSel.value })
       });
-      const j = await r.json();
+      const j = await r.json().catch(()=> ({}));
       $("dstTxt").textContent = j.translated || "Hata!";
     } catch(e) {
       $("dstTxt").textContent = "API Hatası.";
@@ -231,23 +232,83 @@ textarea {
     }
   };
 
+  // ✅ FOTOĞRAF TARAT — TAKILMA YOK (timeout + abort + fallback)
   $("imgFile").onchange = async (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
     if(!file) return;
-    $("srcTxt").value = "OCR Analizi...";
-    const fd = new FormData();
-    fd.append("image", file);
-    fd.append("from_lang", fromSel.value);
-    fd.append("to_lang", toSel.value);
+
+    // kullanıcı aynı dosyayı tekrar seçebilsin diye:
+    e.target.value = "";
+
+    $("srcTxt").value = "Görüntü analiz ediliyor… (maks 20 sn)";
+    $("dstTxt").style.opacity = "0.55";
+    $("dstTxt").textContent = "OCR bekleniyor…";
+
+    const ctrl = new AbortController();
+    const kill = setTimeout(()=>ctrl.abort(), 20000);
+
     try {
-      const r = await fetch(`${API_BASE}/api/translate/ocr_translate`, { method: "POST", body: fd });
-      const j = await r.json();
-      if(j.ok) {
-        $("srcTxt").value = j.extracted_text;
-        $("dstTxt").textContent = j.translated_text;
+      const fd = new FormData();
+      // backend hangi alanı bekliyorsa: "image" veya "file" (biz image gönderiyoruz)
+      fd.append("image", file, "scan.jpg");
+      fd.append("from_lang", fromSel.value);
+      fd.append("to_lang", toSel.value);
+
+      // ✅ Senin yazdığın endpoint burada:
+      const r = await fetch(`${API_BASE}/api/translate/ocr_translate`, {
+        method: "POST",
+        body: fd,
+        signal: ctrl.signal
+      });
+
+      // cevap yoksa/404/500: takılma yok, fallback
+      if(!r.ok){
+        const t = await r.text().catch(()=> "");
+        throw new Error(`OCR HTTP ${r.status} ${t}`);
       }
-    } catch(e) {
-      $("srcTxt").value = "Hata.";
+
+      const j = await r.json().catch(()=> ({}));
+
+      // beklenen: { ok:true, extracted_text:"...", translated_text:"..." }
+      const extracted = String(j.extracted_text || "").trim();
+      const translated = String(j.translated_text || "").trim();
+
+      if(extracted){
+        $("srcTxt").value = extracted;
+      }else{
+        $("srcTxt").value = "OCR boş döndü. Metni manuel yazıp ⚡ ÇEVİR’e basabilirsin.";
+      }
+
+      if(translated){
+        $("dstTxt").textContent = translated;
+      }else{
+        // çeviri boşsa otomatik çeviri dene
+        $("dstTxt").textContent = "Çeviriliyor…";
+        const text = extracted || $("srcTxt").value.trim();
+        if(text){
+          const tr = await fetch(`${API_BASE}/api/translate_ai`,{
+            method:"POST",
+            headers:{ "Content-Type":"application/json" },
+            signal: ctrl.signal,
+            body: JSON.stringify({ text, from_lang: fromSel.value, to_lang: toSel.value })
+          });
+          const tj = await tr.json().catch(()=> ({}));
+          $("dstTxt").textContent = tj.translated || "Çeviri alınamadı. Metni düzeltip tekrar deneyin.";
+        }else{
+          $("dstTxt").textContent = "Çeviri için metin yok.";
+        }
+      }
+
+    } catch(err) {
+      const msg = (err?.name === "AbortError")
+        ? "OCR çok uzadı (timeout). Metni manuel yazıp ⚡ ÇEVİR’e bas."
+        : `OCR çalışmadı. Metni manuel yazıp ⚡ ÇEVİR’e bas.\n\n(${err?.message || err})`;
+
+      $("srcTxt").value = msg;
+      $("dstTxt").textContent = "OCR şu an devre dışı / hatalı. Manuel devam.";
+    } finally {
+      clearTimeout(kill);
+      $("dstTxt").style.opacity = "1";
     }
   };
 
