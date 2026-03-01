@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-<title>italkyAI • Neural Hub</title>
+<title>italkyAI • Translate AI Hub</title>
 
 <meta name="theme-color" content="#000000">
 <style>
@@ -14,9 +14,9 @@
 <style>
 :root {
   --ai-grad: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
-  --blue-sun: #60a5fa;
-  --green-sun: #10b981;
-  --purple-sun: #a855f7;
+  --blue: #60a5fa;
+  --green: #34d399;
+  --purple: #a855f7;
   --glass-border: rgba(255, 255, 255, 0.12);
 }
 
@@ -24,142 +24,74 @@
 
 #pageContent {
   height: 100vh;
-  display: flex;
-  flex-direction: column;
-  /* UI Shell barlarının arasına tam oturtma */
+  display: flex; flex-direction: column;
   padding-top: calc(env(safe-area-inset-top) + 40px);
   padding-bottom: calc(env(safe-area-inset-bottom) + 85px);
   background: radial-gradient(circle at 50% 20%, #0a0a25 0%, #000 100%);
 }
 
-.main-hub {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 10px 14px;
-}
+.main-hub { flex: 1; display: flex; flex-direction: column; gap: 12px; padding: 10px 14px; }
 
-/* ===== 1. FACETOFACE PORTAL (BOZULMAYAN TASARIM) ===== */
+/* ===== 1. FACETOFACE PORTAL (BOZULMAYAN EFSANE) ===== */
 .f2f-portal {
   flex: 0 0 auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  padding: 15px 0;
-  user-select: none;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  cursor: pointer; padding: 10px 0; margin-bottom: 5px;
 }
-
-.neural-orb {
-  width: 110px; height: 110px;
-  position: relative;
-  display: flex; align-items: center; justify-content: center;
-}
-
-.ai-ring {
-  position: absolute; inset: -4px; border-radius: 50%; padding: 2.5px;
-  background: var(--ai-grad);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask-composite: exclude;
-  animation: rotateOrb 15s linear infinite;
-}
-
+.neural-orb { width: 110px; height: 110px; position: relative; display: flex; align-items: center; justify-content: center; }
+.ai-ring { position: absolute; inset: -4px; border-radius: 50%; padding: 2.5px; background: var(--ai-grad); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); mask-composite: exclude; animation: rotateOrb 15s linear infinite; }
 .orbit-energy { position: absolute; inset: -12px; border-radius: 50%; animation: rotateOrb 8s linear infinite; }
 .e-ball { position: absolute; width: 11px; height: 11px; border-radius: 50%; filter: blur(1px); }
 .ball-l { top:-5px; left:50%; transform:translateX(-50%); background:#1e3a8a; box-shadow:0 0 15px #1e3a8a; }
 .ball-b { bottom:-5px; left:50%; transform:translateX(-50%); background:#801336; box-shadow:0 0 15px #801336; }
-
-.ai-core {
-  width: 82px; height: 82px; background: #000; border-radius: 50%;
-  background-image: linear-gradient(#000, #000), var(--ai-grad);
-  background-origin: border-box; background-clip: content-box, border-box;
-  border: 2px solid transparent;
-  display: flex; align-items: center; justify-content: center;
-  animation: aiBreathe 4s infinite ease-in-out;
-  z-index: 10;
-}
-
-.f2f-info { text-align: center; margin-top: 10px; }
-.f2f-title { font-family: 'Space Grotesk'; font-size: 26px; font-weight: 900; color: #fff; margin: 0; letter-spacing: -1px; }
+.ai-core { width: 82px; height: 82px; background: #000; border-radius: 50%; background-image: linear-gradient(#000, #000), var(--ai-grad); background-origin: border-box; background-clip: content-box, border-box; border: 2px solid transparent; display: flex; align-items: center; justify-content: center; animation: aiBreathe 4s infinite ease-in-out; z-index: 10; }
+.f2f-title { font-family: 'Space Grotesk'; font-size: 24px; font-weight: 900; color: #fff; margin-top: 10px; letter-spacing: -1px; }
 .f2f-title .ai { background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
-/* ===== 2. DEV KARTLAR (EKRANI DOLDURAN) ===== */
-.hub-cards {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+/* ===== 2. DİĞER MODÜLLER (EKRANI DOLDURAN) ===== */
+.hub-cards { flex: 1; display: flex; flex-direction: column; gap: 12px; }
+
+.trans-card {
+  flex: 1; position: relative; border-radius: 30px; border: 1px solid var(--glass-border);
+  overflow: hidden; cursor: pointer; display: flex; align-items: center; padding: 0 24px;
+  background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(25px); transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
+.trans-card:active { transform: scale(0.98); filter: brightness(1.2); }
 
-.cyber-card {
-  flex: 1; /* Eşit şekilde büyürler */
-  position: relative;
-  border-radius: 32px;
-  border: 1px solid var(--glass-border);
-  overflow: hidden;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  padding: 0 24px;
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(25px);
-  -webkit-backdrop-filter: blur(25px);
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
+/* Renkler */
+.text-card { background: linear-gradient(145deg, rgba(96, 165, 250, 0.1) 0%, rgba(0,0,0,0.5) 100%); }
+.walkie-card { background: linear-gradient(145deg, rgba(52, 211, 153, 0.1) 0%, rgba(0,0,0,0.5) 100%); }
+.offline-card { background: linear-gradient(145deg, rgba(192, 132, 252, 0.1) 0%, rgba(0,0,0,0.5) 100%); }
 
-.cyber-card:active { transform: scale(0.98); filter: brightness(1.2); }
+/* ===== FARKLI ANİMASYONLAR (YUVARLAK DEĞİL) ===== */
 
-/* Renk Temaları */
-.tr-card { background: linear-gradient(145deg, rgba(99, 102, 241, 0.1) 0%, rgba(0,0,0,0.5) 100%); }
-.ac-card { background: linear-gradient(145deg, rgba(16, 185, 129, 0.1) 0%, rgba(0,0,0,0.5) 100%); }
-.tc-card { background: linear-gradient(145deg, rgba(168, 85, 247, 0.1) 0%, rgba(0,0,0,0.5) 100%); }
+/* 1. Metin Çeviri: Matrix/Scan Line */
+.matrix-line { position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: var(--blue); box-shadow: 0 0 15px var(--blue); animation: scanLine 3s linear infinite; opacity: 0.5; }
+.text-blocks { width: 60px; height: 40px; border: 1px solid var(--blue); display: flex; flex-direction: column; gap: 4px; padding: 4px; margin-right: 20px; position: relative; }
+.line { height: 3px; background: rgba(255,255,255,0.2); width: 100%; border-radius: 1px; animation: textTyping 2s infinite alternate; }
 
-/* Solar Core Animasyonu */
-.solar { width: 75px; height: 75px; position: relative; flex-shrink: 0; margin-right: 20px; }
-.sun {
-  width: 22px; height: 22px; background: var(--sun-color);
-  border-radius: 50%; filter: blur(5px);
-  box-shadow: 0 0 18px var(--sun-color);
-  position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);
-  animation: sunPulse 3s infinite;
-}
-.orbit { position: absolute; border: 1px solid rgba(255,255,255,0.06); border-radius: 50%; animation: rotateOrb linear infinite; }
-.orbit1 { width: 48px; height: 48px; top: 13.5px; left: 13.5px; animation-duration: 4s; }
-.orbit2 { width: 75px; height: 75px; animation-duration: 7s; animation-direction: reverse; }
-.planet { width: 5px; height: 5px; background: #fff; border-radius: 50%; position: absolute; top: 0; left: 50%; transform: translateX(-50%); }
+/* 2. Walkie Talkie: EQ Bars */
+.eq-container { width: 60px; height: 40px; display: flex; align-items: flex-end; gap: 4px; margin-right: 20px; }
+.eq-bar { flex: 1; background: var(--green); border-radius: 2px 2px 0 0; animation: eqPulse 0.5s infinite alternate; }
 
-/* ===== ÖZEL EFEKTLER (İsteğine Göre) ===== */
-/* Translate: EQ */
-.eq { position: absolute; bottom: 0; left: 0; width: 100%; height: 25px; display: flex; align-items: flex-end; justify-content: space-around; padding: 0 20px; opacity: 0.3; }
-.eq-bar { width: 3px; background: var(--blue-sun); border-radius: 2px; animation: eqAnim 0.8s infinite alternate; }
+/* 3. Offline: Digital Flow */
+.flow-container { width: 60px; height: 40px; position: relative; margin-right: 20px; overflow: hidden; border: 1px dashed var(--purple); border-radius: 8px; }
+.flow-dot { position: absolute; width: 4px; height: 4px; background: var(--purple); border-radius: 50%; left: 50%; transform: translateX(-50%); animation: flowDown 1.5s infinite linear; }
 
-/* Academy: Cap Rain */
-.cap-rain { position: absolute; inset: 0; pointer-events: none; overflow: hidden; opacity: 0.4; }
-.cap { position: absolute; bottom: -20px; font-size: 18px; animation: capFly 4s infinite linear; }
-
-/* Teacher: Formula Float */
-.formulas { position: absolute; inset: 0; pointer-events: none; opacity: 0.5; overflow: hidden; }
-.f { position: absolute; bottom: -10px; font-family: monospace; font-size: 11px; color: var(--purple-sun); animation: formulaUp 3s infinite linear; }
-
-/* Animations */
+/* Keyframes */
 @keyframes rotateOrb { from { transform: rotate(0); } to { transform: rotate(360deg); } }
 @keyframes aiBreathe { 0%,100% { transform: scale(1); } 50% { transform: scale(1.06); } }
-@keyframes sunPulse { 0%,100% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(1.2); opacity: 0.8; } }
-@keyframes eqAnim { from { height: 4px; } to { height: 20px; } }
-@keyframes capFly { 0% { transform: translateY(0) rotate(0); opacity: 0; } 20% { opacity: 1; } 80% { opacity: 1; } 100% { transform: translateY(-150px) rotate(360deg); opacity: 0; } }
-@keyframes formulaUp { 0% { transform: translateY(0); opacity: 0; } 30% { opacity: 1; } 90% { opacity: 0; } 100% { transform: translateY(-100px); opacity: 0; } }
+@keyframes scanLine { 0% { top: 0; } 100% { top: 100%; } }
+@keyframes textTyping { 0% { width: 20%; } 100% { width: 100%; } }
+@keyframes eqPulse { from { height: 10%; } to { height: 100%; } }
+@keyframes flowDown { 0% { top: -10%; opacity: 0; } 50% { opacity: 1; } 100% { top: 110%; opacity: 0; } }
 
-/* Content Text */
+/* Content */
 .card-content { flex: 1; z-index: 10; }
-.card-title { font-family: 'Space Grotesk'; font-size: 22px; font-weight: 700; color: #fff; margin: 0; }
-.card-title .ai { background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900; }
-.card-desc { font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 5px; line-height: 1.4; }
+.card-title { font-family: 'Space Grotesk'; font-size: 20px; font-weight: 700; color: #fff; margin: 0; }
+.card-title .ai { background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.card-desc { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 4px; line-height: 1.3; }
 
-.tr-card { --sun-color: var(--blue-sun); }
-.ac-card { --sun-color: var(--green-sun); }
-.tc-card { --sun-color: var(--purple-sun); }
 </style>
 </head>
 
@@ -179,63 +111,48 @@
           </svg>
         </div>
       </div>
-      <div class="f2f-info">
-        <h1 class="f2f-title">FaceToFace <span class="ai">AI</span></h1>
-      </div>
+      <h1 class="f2f-title">FaceToFace <span class="ai">AI</span></h1>
     </div>
 
     <div class="hub-cards">
 
-      <div class="cyber-card tr-card" onclick="location.href='/pages/translate_home.html'">
-        <div class="eq">
-          <div class="eq-bar" style="animation-delay:0.1s"></div>
-          <div class="eq-bar" style="animation-delay:0.3s"></div>
-          <div class="eq-bar" style="animation-delay:0.2s"></div>
-          <div class="eq-bar" style="animation-delay:0.5s"></div>
-          <div class="eq-bar" style="animation-delay:0.4s"></div>
-        </div>
-        <div class="solar">
-          <div class="sun"></div>
-          <div class="orbit orbit1"><div class="planet"></div></div>
-          <div class="orbit orbit2"><div class="planet" style="background:var(--blue-sun)"></div></div>
+      <div class="trans-card text-card" onclick="location.href='/pages/text_translate.html'">
+        <div class="matrix-line"></div>
+        <div class="text-blocks">
+          <div class="line" style="animation-delay: 0s"></div>
+          <div class="line" style="animation-delay: 0.2s"></div>
+          <div class="line" style="animation-delay: 0.4s"></div>
+          <div class="line" style="animation-delay: 0.6s"></div>
         </div>
         <div class="card-content">
-          <h2 class="card-title">Translate <span class="ai">AI</span></h2>
-          <p class="card-desc">FaceToFace • Walkie Talkie • Metin Çeviri</p>
+          <h2 class="card-title">Metin Çeviri <span class="ai">AI</span></h2>
+          <p class="card-desc">Karmaşık metinleri ve dökümanları kuantum hızıyla yerelleştir.</p>
         </div>
       </div>
 
-      <div class="cyber-card ac-card" onclick="location.href='/pages/academy_home.html'">
-        <div class="cap-rain">
-          <div class="cap" style="left:20%; animation-delay:0s">🎓</div>
-          <div class="cap" style="left:50%; animation-delay:1.5s">🎓</div>
-          <div class="cap" style="left:80%; animation-delay:0.7s">🎓</div>
-        </div>
-        <div class="solar">
-          <div class="sun"></div>
-          <div class="orbit orbit1"><div class="planet" style="box-shadow: 0 0 10px var(--green-sun)"></div></div>
-          <div class="orbit orbit2"><div class="planet"></div></div>
+      <div class="trans-card walkie-card" onclick="location.href='/pages/f2f_connect.html'">
+        <div class="eq-container">
+          <div class="eq-bar" style="animation-delay: 0.1s"></div>
+          <div class="eq-bar" style="animation-delay: 0.3s"></div>
+          <div class="eq-bar" style="animation-delay: 0.2s"></div>
+          <div class="eq-bar" style="animation-delay: 0.4s"></div>
+          <div class="eq-bar" style="animation-delay: 0.5s"></div>
         </div>
         <div class="card-content">
-          <h2 class="card-title">Academy <span class="ai">AI</span></h2>
-          <p class="card-desc">Seviye • Ders • AI Pratik • Oyun</p>
+          <h2 class="card-title">Walkie-Talkie <span class="ai">AI</span></h2>
+          <p class="card-desc">Uzak mesafeli anlık sesli iletişim odaları.</p>
         </div>
       </div>
 
-      <div class="cyber-card tc-card" onclick="location.href='/pages/helper_home.html'">
-        <div class="formulas">
-          <div class="f" style="left:30%; animation-delay:0s">E=mc²</div>
-          <div class="f" style="left:60%; animation-delay:1s">πr²</div>
-          <div class="f" style="left:80%; animation-delay:0.5s">Δt</div>
-        </div>
-        <div class="solar">
-          <div class="sun"></div>
-          <div class="orbit orbit1"><div class="planet"></div></div>
-          <div class="orbit orbit2"><div class="planet" style="background:var(--purple-sun)"></div></div>
+      <div class="trans-card offline-card" onclick="location.href='/facetoface_offline.html'">
+        <div class="flow-container">
+          <div class="flow-dot" style="animation-delay: 0s"></div>
+          <div class="flow-dot" style="animation-delay: 0.5s"></div>
+          <div class="flow-dot" style="animation-delay: 1s"></div>
         </div>
         <div class="card-content">
-          <h2 class="card-title">Teacher <span class="ai">AI</span></h2>
-          <p class="card-desc">Soru Tara • Matematik • Fizik • Kimya</p>
+          <h2 class="card-title">Offline Çeviri <span class="ai">AI</span></h2>
+          <p class="card-desc">İnternet olmadan, indirilen paketlerle tam gizlilik.</p>
         </div>
       </div>
 
