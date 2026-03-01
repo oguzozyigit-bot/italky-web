@@ -21,7 +21,7 @@
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
 
-/* ✅ Kural Seti Uygulandı */
+/* ✅ Kural Seti */
 #pageContent {
   height: 100%;
   display: flex; flex-direction: column;
@@ -32,7 +32,7 @@
   flex: 1;
   display: flex; flex-direction: column;
   padding: 10px;
-  gap: 0; /* Bar araya gireceği için gap'i sıfırladım */
+  gap: 0;
   min-height: 0;
 }
 
@@ -56,7 +56,7 @@
 .swap-trigger {
   width: 30px; height: 30px; border-radius: 50%;
   background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);
-  color: #fff; display: flex; align-items: center; justify-content: center; font-size: 14px;
+  color: #fff; display: flex; align-items: center; justify-content: center;
 }
 
 /* ===== QUANTUM GATE ===== */
@@ -69,18 +69,15 @@
 .gate-panel {
   flex: 1;
   position: relative;
-  border-radius: 24px;
+  border-radius: 28px;
   border: 1px solid var(--glass-border);
   background: rgba(255,255,255,0.02);
   display: flex; flex-direction: column;
-  padding: 16px;
+  padding: 18px;
   min-height: 0;
 }
 
-/* Giriş Paneli Alt Köşeleri Düz (Barla birleşsin) */
 .panel-in { border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-bottom: none; }
-
-/* Çıkış Paneli Üst Köşeleri Düz ve Bordo */
 .panel-out { 
   border-top-left-radius: 0; border-top-right-radius: 0; border-top: none;
   background: linear-gradient(180deg, var(--bordo) 0%, #000 100%);
@@ -99,39 +96,57 @@ textarea {
   white-space: pre-wrap;
 }
 
-/* ===== MERKEZİ İŞLEM BARI (BOYDAN BOYA) ===== */
+/* ===== 3D KOMUT BARI (BOYDAN BOYA) ===== */
 .command-bar {
-  height: 54px;
-  background: rgba(255,255,255,0.05);
+  height: 64px;
+  background: rgba(20,20,30,0.4);
   border-left: 1px solid var(--glass-border);
   border-right: 1px solid var(--glass-border);
-  display: flex; align-items: stretch;
+  display: flex; align-items: center;
+  padding: 0 10px;
   position: relative;
   z-index: 20;
-}
-/* Barın ortasından geçen neon çizgi */
-.command-bar::after {
-  content: ""; position: absolute; left: 0; right: 0; top: 50%;
-  height: 1px; background: var(--ai-grad); opacity: 0.3;
 }
 
 .bar-btn {
   flex: 1; border: none; background: transparent;
-  color: #fff; font-weight: 900; font-size: 12px;
+  color: rgba(255,255,255,0.6); font-weight: 900; font-size: 11px;
   display: flex; align-items: center; justify-content: center;
-  gap: 8px; cursor: pointer; transition: 0.2s;
-  position: relative; z-index: 2;
+  gap: 8px; cursor: pointer; height: 100%;
 }
 
-.bar-btn:active { background: rgba(255,255,255,0.1); }
-
-.divider { width: 1px; background: var(--glass-border); margin: 10px 0; }
-
-.btn-translate-active {
+/* ✅ 3D ÇEVİR BUTONU */
+.btn-3d {
+  flex: 1.2;
+  height: 46px;
+  border-radius: 20px; /* İstediğin ovallik */
+  border: none;
   background: var(--ai-grad);
   color: #fff;
-  text-shadow: 0 0 10px rgba(0,0,0,0.5);
+  font-weight: 900;
+  font-size: 14px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  gap: 8px;
+  /* 3D Derinlik Efektleri */
+  box-shadow: 
+    0 4px 15px rgba(99, 102, 241, 0.4),
+    inset 0 2px 4px rgba(255, 255, 255, 0.3),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.2);
+  position: relative;
+  transition: all 0.2s ease;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
 }
+
+.btn-3d:active {
+  transform: translateY(2px) scale(0.98);
+  box-shadow: 
+    0 2px 5px rgba(99, 102, 241, 0.4),
+    inset 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.divider { width: 1px; background: var(--glass-border); height: 30px; margin: 0 10px; }
 
 </style>
 </head>
@@ -148,7 +163,7 @@ textarea {
 
     <section class="quantum-gate">
       <div class="gate-panel panel-in">
-        <textarea id="srcTxt" placeholder="Metin yazın veya yapıştırın..."></textarea>
+        <textarea id="srcTxt" placeholder="Metin girin..."></textarea>
       </div>
       
       <div class="command-bar">
@@ -159,13 +174,13 @@ textarea {
         
         <div class="divider"></div>
         
-        <button class="bar-btn btn-translate-active" id="btnTranslate">
+        <button class="btn-3d" id="btnTranslate">
           ⚡ ÇEVİR
         </button>
       </div>
 
       <div class="gate-panel panel-out">
-        <div class="output-area" id="dstTxt">Çeviri sonucu burada belirecek...</div>
+        <div class="output-area" id="dstTxt">...</div>
       </div>
     </section>
 
@@ -179,17 +194,11 @@ textarea {
   const API_BASE = "https://italky-api.onrender.com";
   const $ = (id)=>document.getElementById(id);
 
-  // ✅ Çok daha fazla dil (60+)
   const LANG_POOL = [
     {code:"auto", name:"OTOMATİK"}, {code:"tr", name:"TÜRKÇE"}, {code:"en", name:"İNGİLİZCE"},
     {code:"de", name:"ALMANCA"}, {code:"fr", name:"FRANSIZCA"}, {code:"it", name:"İTALYANCA"},
     {code:"es", name:"İSPANYOLCA"}, {code:"ru", name:"RUSÇA"}, {code:"ar", name:"ARAPÇA"},
-    {code:"zh", name:"ÇİNCE"}, {code:"ja", name:"JAPONCA"}, {code:"ko", name:"KORECE"},
-    {code:"pt", name:"PORTEKİZCE"}, {code:"nl", name:"HOLLANDACA"}, {code:"pl", name:"LEHÇE"},
-    {code:"sv", name:"İSVEÇÇE"}, {code:"da", name:"DANİMARKACA"}, {code:"fi", name:"FİNCE"},
-    {code:"no", name:"NORVEÇÇE"}, {code:"cs", name:"ÇEKÇE"}, {code:"el", name:"YUNANCA"},
-    {code:"he", name:"İBRANİCE"}, {code:"hi", name:"HİNTÇE"}, {code:"id", name:"ENDONEZYACA"},
-    {code:"uk", name:"UKRAYNACA"}, {code:"fa", name:"FARSÇA"}, {code:"az", name:"AZERBAYCANCA"}
+    {code:"zh", name:"ÇİNCE"}, {code:"ja", name:"JAPONCA"}, {code:"ko", name:"KORECE"}
   ];
 
   const fromSel = $("fromSel");
@@ -206,7 +215,7 @@ textarea {
     const text = $("srcTxt").value.trim();
     if(!text) return;
     $("dstTxt").style.opacity = "0.4";
-    $("dstTxt").textContent = "Kuantum çeviri yapılıyor...";
+    $("dstTxt").textContent = "Kuantum motoru devrede...";
     try {
       const r = await fetch(`${API_BASE}/api/translate_ai`, {
         method: "POST",
@@ -214,9 +223,9 @@ textarea {
         body: JSON.stringify({ text: text, from_lang: fromSel.value, to_lang: toSel.value })
       });
       const j = await r.json();
-      $("dstTxt").textContent = j.translated || "Bir hata oluştu.";
+      $("dstTxt").textContent = j.translated || "Hata!";
     } catch(e) {
-      $("dstTxt").textContent = "API Bağlantı hatası.";
+      $("dstTxt").textContent = "API Hatası.";
     } finally {
       $("dstTxt").style.opacity = "1";
     }
@@ -225,7 +234,7 @@ textarea {
   $("imgFile").onchange = async (e) => {
     const file = e.target.files[0];
     if(!file) return;
-    $("srcTxt").value = "Görüntü analiz ediliyor...";
+    $("srcTxt").value = "OCR Analizi...";
     const fd = new FormData();
     fd.append("image", file);
     fd.append("from_lang", fromSel.value);
@@ -238,7 +247,7 @@ textarea {
         $("dstTxt").textContent = j.translated_text;
       }
     } catch(e) {
-      $("srcTxt").value = "OCR başarısız.";
+      $("srcTxt").value = "Hata.";
     }
   };
 
