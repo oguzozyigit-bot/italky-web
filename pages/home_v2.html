@@ -1,518 +1,206 @@
-<!-- FILE: /pages/home.html -->
-<!DOCTYPE html>
+<!-- FILE: /pages/home_pro.html -->
+<!doctype html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>italkyAI • Hub</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+<title>italkyAI • Home</title>
 
-  <meta name="theme-color" content="#02000f">
-  <style>html,body{background:#02000f !important;}</style>
+<meta name="theme-color" content="#02000f">
+<style>
+html,body{background:#02000f !important;}
+</style>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
-  <style>
-    :root{
-      --border: rgba(255,255,255,0.12);
-      --card: rgba(255,255,255,0.05);
-      --muted: rgba(255,255,255,0.66);
-      --aiGrad: linear-gradient(135deg,#a5b4fc 0%,#6366f1 55%,#ec4899 100%);
-      --glass: rgba(255,255,255,0.04);
-    }
-    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; }
+<style>
+:root{
+  --glass: rgba(255,255,255,0.05);
+  --border: rgba(255,255,255,0.12);
+  --aiGrad: linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
+}
 
-    /* ui_shell main içine taşınacak */
-    #pageContent{ height:100%; padding: 10px 12px; }
-    .wrap{
-      max-width: 520px;
-      margin: 0 auto;
-      min-height: 100%;
-      display:flex;
-      flex-direction:column;
-      gap: 10px;
-      padding-bottom: 10px;
-    }
+#pageContent{
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  padding:14px;
+}
 
-    /* HERO */
-    .hero{
-      position:relative;
-      border-radius: 26px;
-      border:1px solid rgba(255,255,255,0.10);
-      background: rgba(255,255,255,0.04);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      padding: 14px;
-      overflow:hidden;
-    }
-    .hero::before{
-      content:"";
-      position:absolute; inset:-45%;
-      background:
-        radial-gradient(circle at 18% 30%, rgba(99,102,241,.28) 0%, transparent 42%),
-        radial-gradient(circle at 85% 25%, rgba(236,72,153,.18) 0%, transparent 40%),
-        radial-gradient(circle at 50% 85%, rgba(168,85,247,.16) 0%, transparent 45%);
-      filter: blur(36px);
-      opacity:.92;
-      animation: drift 10s ease-in-out infinite alternate;
-      pointer-events:none;
-    }
-    @keyframes drift{
-      from{ transform: translate3d(-10px,-8px,0) scale(1); }
-      to  { transform: translate3d(10px,8px,0) scale(1.06); }
-    }
-    .heroTop{
-      position:relative;
-      z-index:2;
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-start;
-      gap:10px;
-    }
-    .hTitle{
-      margin:0;
-      font-family:"Space Grotesk",system-ui,sans-serif;
-      font-weight:1000;
-      font-size:16px;
-      letter-spacing:-.2px;
-      color:#fff;
-    }
-    .hSub{
-      margin: 6px 0 0;
-      font-size: 12px;
-      font-weight: 900;
-      color: var(--muted);
-      line-height: 1.45;
-    }
-    .chips{
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-      align-items:flex-end;
-      position:relative;
-      z-index:2;
-    }
-    .chip{
-      padding: 7px 10px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,0.12);
-      background: rgba(0,0,0,0.18);
-      color: rgba(255,255,255,0.92);
-      font-weight: 1000;
-      font-size: 12px;
-      white-space: nowrap;
-      display:flex;
-      gap:8px;
-      align-items:center;
-    }
-    .dot{
-      width:8px;height:8px;border-radius:99px;
-      background: rgba(165,180,252,.95);
-      box-shadow: 0 0 14px rgba(165,180,252,.55);
-      animation: pulse 1.15s ease-in-out infinite;
-    }
-    @keyframes pulse{ 0%,100%{transform:scale(1);opacity:.8} 50%{transform:scale(1.35);opacity:1} }
+.mainWrap{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  max-width:520px;
+  margin:0 auto;
+}
 
-    /* SECTION */
-    .section{
-      border-radius: 22px;
-      border: 1px solid rgba(255,255,255,0.10);
-      background: rgba(255,255,255,0.03);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      padding: 12px;
-      position:relative;
-      overflow:hidden;
-    }
-    .section::before{
-      content:"";
-      position:absolute; inset:-80px;
-      background: conic-gradient(from 0deg, rgba(165,180,252,.0), rgba(165,180,252,.16), rgba(236,72,153,.0));
-      opacity:.14;
-      filter: blur(28px);
-      animation: spin 10s linear infinite;
-      pointer-events:none;
-    }
-    @keyframes spin{ to{ transform: rotate(360deg);} }
+.module{
+  flex:1;
+  border-radius:28px;
+  border:1px solid var(--border);
+  background:var(--glass);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  padding:18px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  position:relative;
+  overflow:hidden;
+  transition: all .45s cubic-bezier(.2,.8,.2,1);
+  cursor:pointer;
+}
 
-    .secTop{
-      position:relative; z-index:2;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      margin-bottom: 10px;
-    }
-    .secTitle{
-      margin:0;
-      font-family:"Space Grotesk",system-ui,sans-serif;
-      font-weight:1000;
-      font-size: 14px;
-      color:#fff;
-      letter-spacing:-.2px;
-      display:flex;
-      align-items:center;
-      gap:8px;
-    }
-    .secTitle .badgeMini{
-      font-family:'Outfit',sans-serif;
-      padding: 6px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(0,0,0,0.18);
-      font-size: 11px;
-      font-weight: 1000;
-      color: rgba(255,255,255,0.86);
-      white-space:nowrap;
-    }
-    .secHint{
-      position:relative; z-index:2;
-      font-size: 11px;
-      font-weight: 900;
-      color: rgba(255,255,255,0.62);
-      white-space:nowrap;
-    }
+.module:hover{
+  transform: translateY(-4px);
+  box-shadow: 0 25px 60px rgba(0,0,0,.45);
+}
 
-    /* GRID / CARDS */
-    .grid{
-      position:relative; z-index:2;
-      display:grid;
-      grid-template-columns: 1fr;
-      gap: 10px;
-    }
+.moduleTitle{
+  font-family:"Space Grotesk";
+  font-size:20px;
+  font-weight:900;
+  margin-bottom:10px;
+}
 
-    .mod{
-      width:100%;
-      border-radius: 22px;
-      border: 1px solid var(--border);
-      background: var(--card);
-      padding: 14px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap: 12px;
-      cursor:pointer;
-      user-select:none;
-      transition: transform .16s ease, background .16s ease, border-color .16s ease;
-      position:relative;
-      overflow:hidden;
-    }
-    .mod:active{ transform: scale(.988); background: rgba(255,255,255,0.07); border-color: rgba(165,180,252,0.30); }
+.moduleDesc{
+  font-size:12px;
+  font-weight:900;
+  color:rgba(255,255,255,.65);
+}
 
-    .mod::after{
-      content:"";
-      position:absolute;
-      inset:-2px;
-      background: linear-gradient(90deg, rgba(99,102,241,0), rgba(99,102,241,.25), rgba(236,72,153,0));
-      transform: translateX(-120%);
-      animation: scan 1.55s ease-in-out infinite;
-      opacity:.35;
-      pointer-events:none;
-    }
-    @keyframes scan{
-      0%{ transform: translateX(-130%); }
-      60%{ transform: translateX(130%); }
-      100%{ transform: translateX(130%); }
-    }
-    .mod > *{ position:relative; z-index:2; }
+.subMenu{
+  margin-top:14px;
+  display:none;
+  flex-direction:column;
+  gap:10px;
+  animation: fadeIn .4s ease forwards;
+}
 
-    .left{
-      display:flex;
-      align-items:center;
-      gap: 12px;
-      min-width:0;
-    }
+.subItem{
+  padding:10px 14px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.1);
+  background:rgba(0,0,0,.25);
+  font-weight:900;
+  font-size:13px;
+  transition:.25s;
+}
 
-    .ico{
-      width: 46px;
-      height: 46px;
-      border-radius: 18px;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(0,0,0,0.18);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      flex: 0 0 auto;
-      overflow:hidden;
-      position:relative;
-    }
-    .ico::before{
-      content:"";
-      position:absolute; inset:-26px;
-      background: radial-gradient(circle, rgba(99,102,241,.35), transparent 62%);
-      animation: icoGlow 1.4s ease-in-out infinite;
-      opacity:.55;
-      pointer-events:none;
-    }
-    @keyframes icoGlow{ 0%,100%{transform:scale(.85);opacity:.35} 50%{transform:scale(1.12);opacity:.7} }
+.subItem:hover{
+  background:rgba(99,102,241,.25);
+  border-color:rgba(99,102,241,.45);
+}
 
-    .emoji{
-      position:relative;
-      z-index:2;
-      font-size: 22px;
-      filter: drop-shadow(0 10px 18px rgba(0,0,0,0.25));
-    }
+.module.active{
+  flex:2.3;
+}
 
-    .txt{
-      min-width:0;
-      display:flex;
-      flex-direction:column;
-      gap: 3px;
-    }
-    .name{
-      font-size: 15px;
-      font-weight: 1000;
-      color:#fff;
-      letter-spacing:-.2px;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-    .desc{
-      font-size: 11px;
-      font-weight: 900;
-      color: rgba(255,255,255,0.62);
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
+.module.active .subMenu{
+  display:flex;
+}
 
-    .right{
-      display:flex;
-      align-items:center;
-      gap: 10px;
-      flex: 0 0 auto;
-    }
-    .tag{
-      padding: 7px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(0,0,0,0.18);
-      font-size: 12px;
-      font-weight: 1000;
-      color: rgba(255,255,255,0.88);
-      white-space:nowrap;
-    }
-    .chev{
-      width: 34px; height: 34px;
-      border-radius: 14px;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(255,255,255,0.06);
-      display:flex; align-items:center; justify-content:center;
-      color: rgba(255,255,255,0.86);
-      font-weight: 1000;
-    }
+.module.blur{
+  filter:blur(3px);
+  opacity:.45;
+  transform:scale(.95);
+}
 
-    @media (max-height: 740px){
-      .hero{ padding: 12px; }
-      .mod{ padding: 12px; }
-      .ico{ width:44px; height:44px; }
-      .name{ font-size:14px; }
-    }
-  </style>
+.glow{
+  position:absolute;
+  width:260px;
+  height:260px;
+  background:var(--aiGrad);
+  filter:blur(120px);
+  opacity:.2;
+  right:-80px;
+  bottom:-80px;
+  pointer-events:none;
+}
+
+@keyframes fadeIn{
+  from{opacity:0; transform:translateY(10px);}
+  to{opacity:1; transform:translateY(0);}
+}
+</style>
 </head>
 
 <body>
 <main id="pageContent">
-  <div class="wrap">
+  <div class="mainWrap">
 
-    <section class="hero">
-      <div class="heroTop">
-        <div>
-          <h1 class="hTitle">italkyAI Modülleri</h1>
-          <p class="hSub">3 ana bölüm: Çeviri • Dil Akademisi • Yardımcı Öğretmen</p>
-        </div>
-        <div class="chips">
-          <div class="chip"><span class="dot"></span> Aktif</div>
-          <div class="chip" id="chipUser">—</div>
-        </div>
+    <!-- 1️⃣ TRANSLATE -->
+    <div class="module" id="modTranslate">
+      <div class="glow"></div>
+      <div class="moduleTitle">Translate</div>
+      <div class="moduleDesc">Anlık konuşma ve metin çeviri modülleri</div>
+      <div class="subMenu">
+        <div class="subItem">Facetoface</div>
+        <div class="subItem">Walkie Talkie</div>
+        <div class="subItem">Metinden Çeviri</div>
       </div>
-    </section>
+    </div>
 
-    <!-- 1) TRANSLATE -->
-    <section class="section">
-      <div class="secTop">
-        <h2 class="secTitle">Translate <span class="badgeMini">Konuş • Yaz • Toplantı</span></h2>
-        <div class="secHint">hızlı çeviri</div>
+    <!-- 2️⃣ DİL AKADEMİSİ -->
+    <div class="module" id="modAcademy">
+      <div class="glow"></div>
+      <div class="moduleTitle">Dil Akademisi</div>
+      <div class="moduleDesc">Seviye belirle, ders al, AI ile pratik yap</div>
+      <div class="subMenu">
+        <div class="subItem">Seviye Tespit</div>
+        <div class="subItem">Dil Dersi</div>
+        <div class="subItem">AI ile Pratik</div>
+        <div class="subItem">Eğlenerek Öğren</div>
       </div>
+    </div>
 
-      <div class="grid">
-        <div class="mod" data-href="/facetoface.html">
-          <div class="left">
-            <div class="ico"><div class="emoji">🗣️</div></div>
-            <div class="txt">
-              <div class="name">FaceToFace</div>
-              <div class="desc">Konuş → anında çeviri, sesli</div>
-            </div>
-          </div>
-          <div class="right"><div class="tag">LIVE</div><div class="chev">›</div></div>
-        </div>
-
-        <div class="mod" data-href="/pages/f2f_connect.html">
-          <div class="left">
-            <div class="ico"><div class="emoji">📡</div></div>
-            <div class="txt">
-              <div class="name">WalkieTalkie</div>
-              <div class="desc">Toplantı odası • grup konuşması</div>
-            </div>
-          </div>
-          <div class="right"><div class="tag">ROOM</div><div class="chev">›</div></div>
-        </div>
-
-        <div class="mod" data-href="/pages/text_translate.html">
-          <div class="left">
-            <div class="ico"><div class="emoji">📝</div></div>
-            <div class="txt">
-              <div class="name">Metinden Çeviri</div>
-              <div class="desc">Yapıştır → çevir, düzenle</div>
-            </div>
-          </div>
-          <div class="right"><div class="tag">TEXT</div><div class="chev">›</div></div>
-        </div>
+    <!-- 3️⃣ YARDIMCI ÖĞRETMEN -->
+    <div class="module" id="modHelper">
+      <div class="glow"></div>
+      <div class="moduleTitle">Yardımcı Öğretmen</div>
+      <div class="moduleDesc">Soru tara, çözüm al, özel ders planla</div>
+      <div class="subMenu">
+        <div class="subItem">Matematik</div>
+        <div class="subItem">Fizik</div>
+        <div class="subItem">Kimya</div>
+        <div class="subItem">Türkçe</div>
+        <div class="subItem">Yabancı Dil</div>
       </div>
-    </section>
-
-    <!-- 2) DİL AKADEMİSİ -->
-    <section class="section">
-      <div class="secTop">
-        <h2 class="secTitle">Dil Akademisi <span class="badgeMini">Seviye • Ders • Pratik</span></h2>
-        <div class="secHint">6 dil</div>
-      </div>
-
-      <div class="grid">
-        <div class="mod" data-href="/pages/level_test_hub.html">
-          <div class="left">
-            <div class="ico"><div class="emoji">📊</div></div>
-            <div class="txt">
-              <div class="name">Seviye Tespit</div>
-              <div class="desc">40 dk • v1..v6 • sonuç profilde</div>
-            </div>
-          </div>
-          <div class="right"><div class="tag">TEST</div><div class="chev">›</div></div>
-        </div>
-
-        <div class="mod" data-href="/pages/plan_select.html">
-          <div class="left">
-            <div class="ico"><div class="emoji">🎓</div></div>
-            <div class="txt">
-              <div class="name">Dil Dersi</div>
-              <div class="desc">15 dk ders • devam/ara</div>
-            </div>
-          </div>
-          <div class="right"><div class="tag">ACADEMY</div><div class="chev">›</div></div>
-        </div>
-
-        <div class="mod" data-href="/pages/practice_ai.html">
-          <div class="left">
-            <div class="ico"><div class="emoji">🤖</div></div>
-            <div class="txt">
-              <div class="name">AI ile Pratik</div>
-              <div class="desc">Havuzdan • ses • tekrar yok</div>
-            </div>
-          </div>
-          <div class="right"><div class="tag">SPEAK</div><div class="chev">›</div></div>
-        </div>
-
-        <div class="mod" data-href="/pages/game_lang_select.html">
-          <div class="left">
-            <div class="ico"><div class="emoji">🎮</div></div>
-            <div class="txt">
-              <div class="name">Eğlenerek Öğren</div>
-              <div class="desc">Oyun dili seç → oyuna gir</div>
-            </div>
-          </div>
-          <div class="right"><div class="tag">GAMES</div><div class="chev">›</div></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 3) YARDIMCI ÖĞRETMEN -->
-    <section class="section">
-      <div class="secTop">
-        <h2 class="secTitle">Yardımcı Öğretmen <span class="badgeMini">Foto • Kırp • Anlat</span></h2>
-        <div class="secHint">Lise/Ortaokul</div>
-      </div>
-
-      <div class="grid">
-        <div class="mod" data-href="/pages/scan_solve.html?lesson=Matematik">
-          <div class="left">
-            <div class="ico"><div class="emoji">➗</div></div>
-            <div class="txt">
-              <div class="name">Matematik</div>
-              <div class="desc">Denklem • problem • geometri</div>
-            </div>
-          </div>
-          <div class="right"><div class="tag">PRO</div><div class="chev">›</div></div>
-        </div>
-
-        <div class="mod" data-href="/pages/scan_solve.html?lesson=Fizik">
-          <div class="left">
-            <div class="ico"><div class="emoji">⚡</div></div>
-            <div class="txt">
-              <div class="name">Fizik</div>
-              <div class="desc">Kuvvet • enerji • elektrik</div>
-            </div>
-          </div>
-          <div class="right"><div class="tag">PRO</div><div class="chev">›</div></div>
-        </div>
-
-        <div class="mod" data-href="/pages/scan_solve.html?lesson=Kimya">
-          <div class="left">
-            <div class="ico"><div class="emoji">🧪</div></div>
-            <div class="txt">
-              <div class="name">Kimya</div>
-              <div class="desc">Mol • tepkime • çözünürlük</div>
-            </div>
-          </div>
-          <div class="right"><div class="tag">PRO</div><div class="chev">›</div></div>
-        </div>
-      </div>
-    </section>
+    </div>
 
   </div>
 </main>
 
 <script type="module">
-  import { mountShell } from "/js/ui_shell.js";
-  import { supabase } from "/js/supabase_client.js";
+import { mountShell } from "/js/ui_shell.js";
+mountShell({ scroll:"none" });
 
-  mountShell({ scroll:"auto" });
+const modules = document.querySelectorAll(".module");
 
-  // navigasyon
-  function go(url){
-    if(!url) return;
-    try{ location.assign(url); }catch{ location.href=url; }
-  }
-  document.querySelectorAll("[data-href]").forEach(el=>{
-    const url = el.getAttribute("data-href");
-    const h = (e)=>{ e.preventDefault(); e.stopPropagation(); go(url); };
-    el.addEventListener("click", h, { passive:false });
-    el.addEventListener("touchend", h, { passive:false });
+modules.forEach(mod=>{
+  mod.addEventListener("click", ()=>{
+    modules.forEach(m=>{
+      if(m === mod){
+        m.classList.toggle("active");
+      }else{
+        m.classList.remove("active");
+      }
+    });
+
+    // blur logic
+    const anyActive = document.querySelector(".module.active");
+    modules.forEach(m=>{
+      if(anyActive && m !== anyActive){
+        m.classList.add("blur");
+      }else{
+        m.classList.remove("blur");
+      }
+    });
   });
-
-  // hero chip user (ad + jeton)
-  const chipUser = document.getElementById("chipUser");
-  try{
-    const { data:{ session } } = await supabase.auth.getSession();
-    if(session?.user){
-      const { data: prof } = await supabase
-        .from("profiles")
-        .select("full_name, tokens")
-        .eq("id", session.user.id)
-        .maybeSingle();
-
-      const full = String(prof?.full_name || "Kullanıcı").trim();
-      const parts = full.split(/\s+/).filter(Boolean);
-      const first = parts.length>1 ? parts.slice(0,-1).join(" ") : (parts[0] || "Kullanıcı");
-      const tk = Number(prof?.tokens ?? 0);
-      chipUser.textContent = `${first} • Jeton ${tk}`;
-    }else{
-      chipUser.textContent = "Misafir";
-    }
-  }catch{
-    chipUser.textContent = "—";
-  }
+});
 </script>
 </body>
 </html>
