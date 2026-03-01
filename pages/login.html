@@ -224,34 +224,6 @@
     .google-btn:active{ transform: scale(.97); }
     .g-icon{ width:24px; height:24px; pointer-events:none; }
 
-    /* ✅ OFFLINE BUTTON */
-    .offline-btn{
-      width:100%;
-      height:54px;
-      margin-top:10px;
-      border-radius: 28px;
-      border: 1px solid rgba(255,255,255,0.14);
-      background: linear-gradient(135deg, rgba(0,243,255,0.20) 0%, rgba(99,102,241,0.38) 55%, rgba(236,72,153,0.22) 100%);
-      color:#fff;
-      font-weight: 1000;
-      font-size: 14px;
-      cursor:pointer;
-      display:none;
-      box-shadow: 0 16px 40px rgba(0,0,0,0.35);
-    }
-    .offline-btn:active{ transform: scale(.985); }
-    .offline-btn[disabled]{ opacity:.45; cursor:not-allowed; }
-
-    .offline-hint{
-      display:none;
-      margin-top:8px;
-      font-size:12px;
-      font-weight:900;
-      color: rgba(255,255,255,0.60);
-      line-height:1.4;
-      text-align:center;
-    }
-
     footer{
       width:100%;
       text-align:center;
@@ -353,12 +325,6 @@
         </svg>
         <span>Google ile devam et</span>
       </button>
-
-      <!-- ✅ OFFLINE CTA -->
-      <button class="offline-btn" id="btnOffline" type="button">
-        📡 Offline Çeviri
-      </button>
-      <div class="offline-hint" id="offlineHint"></div>
     </div>
   </div>
 
@@ -378,11 +344,14 @@
   <script type="module">
     import { supabase } from "/js/supabase_client.js";
     import { ensureAuthAndCacheUser, loginWithGoogle } from "/js/auth.js";
-    import { initOfflineBootstrap, refreshOfflineUI } from "/js/offline_manager.js";
 
     const toastEl = document.getElementById("toast");
+
     const HOME = "/pages/home.html";
     const CALLBACK = "/pages/auth_callback.html";
+    const SETUP_OFFLINE = "/pages/setup_offline.html";
+
+    const FIRST_BOOT_KEY = "italky_first_boot_done_v1";
 
     function toast(msg){
       if(!toastEl) return;
@@ -394,6 +363,15 @@
 
     function isNative(){
       return !!(window.Native && typeof window.Native.startGoogleLogin === "function");
+    }
+
+    function goPostLogin(){
+      // ✅ ilk kurulum offline setup
+      if(localStorage.getItem(FIRST_BOOT_KEY) !== "1"){
+        location.replace(SETUP_OFFLINE);
+        return;
+      }
+      location.replace(HOME);
     }
 
     // ✅ Web OAuth dönüşü login’e geldiyse: callback sayfasına TEK SEFERDE geçir
@@ -430,7 +408,7 @@
 
         await ensureAuthAndCacheUser();
         toast("Hoş geldin!");
-        setTimeout(()=>location.replace(HOME), 450);
+        setTimeout(()=>goPostLogin(), 450);
 
       }catch(e){
         console.error(e);
@@ -476,28 +454,13 @@
       }
     }, 5600);
 
-    // ✅ OFFLINE BOOTSTRAP (ilk kurulum: EN trial indir)
-    await initOfflineBootstrap();
-
-    // ✅ OFFLINE UI (internet yoksa buton göster)
-    function refreshOffline(){
-      refreshOfflineUI({
-        buttonId: "btnOffline",
-        hintId: "offlineHint",
-        onOpen: ()=> location.href="/pages/facetoface_offline.html"
-      });
-    }
-    window.addEventListener("online", refreshOffline);
-    window.addEventListener("offline", refreshOffline);
-    refreshOffline();
-
-    // ✅ Session varsa direkt home (AMA offline iken otomatik yönlendirme YOK!)
+    // ✅ Session varsa direkt post-login akışı
     (async function boot(){
       try{
         const { data:{ session } } = await supabase.auth.getSession();
-        if(session && navigator.onLine){
+        if(session){
           await ensureAuthAndCacheUser();
-          location.replace(HOME);
+          goPostLogin();
         }
       }catch(_e){}
     })();
