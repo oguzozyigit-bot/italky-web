@@ -16,13 +16,13 @@
   <style>
     :root{
       --border: rgba(255,255,255,0.12);
-      --card: rgba(255,255,255,0.04);
+      --glass: rgba(255,255,255,0.04);
       --muted: rgba(255,255,255,0.70);
-      --aiGrad: linear-gradient(135deg,#a5b4fc 0%,#6366f1 55%,#ec4899 100%);
+      --aiGrad: linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
     }
-    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none}
-    #pageContent{height:100%}
+    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; }
 
+    #pageContent{ height:100%; }
     .wrap{
       max-width:520px;
       margin:0 auto;
@@ -30,98 +30,143 @@
       padding: 12px 14px;
       display:flex;
       flex-direction:column;
-      gap:10px;
-      justify-content:center;
+      gap: 12px;
     }
 
-    .card{
-      border-radius: 26px;
+    .hero{
+      border-radius: 24px;
       border: 1px solid var(--border);
-      background: var(--card);
+      background: rgba(255,255,255,0.04);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
-      padding: 14px;
+      padding: 14px 14px;
     }
-
-    .h{
+    .h1{
       font-family:"Space Grotesk",system-ui,sans-serif;
       font-weight:1000;
-      font-size:18px;
+      font-size:16px;
       margin:0;
       color:#fff;
-      letter-spacing:-.3px;
+      letter-spacing:-.2px;
     }
     .p{
       margin:8px 0 0;
       font-size:12px;
       font-weight:900;
-      color: var(--muted);
       line-height:1.55;
+      color: rgba(255,255,255,0.72);
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border:1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.18);
+      font-weight:1000;
+      font-size:12px;
+      color:#fff;
+      margin-top:10px;
+      white-space:nowrap;
+    }
+    .pill b{
+      background: var(--aiGrad);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
     }
 
-    .packRow{
-      margin-top:12px;
+    .card{
+      flex:1;
+      min-height:0;
+      border-radius: 26px;
+      border: 1px solid var(--border);
+      background: var(--glass);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      padding: 14px;
+      display:flex;
+      flex-direction:column;
+      gap: 12px;
+      overflow:hidden;
+    }
+
+    .row{ display:flex; gap:10px; flex-wrap:wrap; }
+
+    .langBtn{
+      flex:1;
+      min-width: 150px;
+      height: 56px;
+      border-radius: 18px;
+      border:1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.18);
+      color:#fff;
+      font-weight:1000;
       display:flex;
       align-items:center;
       justify-content:space-between;
-      gap:10px;
-      padding: 12px;
-      border-radius: 22px;
-      border: 1px solid rgba(255,255,255,0.10);
-      background: rgba(0,0,0,0.18);
-    }
-    .left{
-      display:flex; align-items:center; gap:10px; min-width:0;
-    }
-    .flag{
-      width:44px; height:44px; border-radius:18px;
-      display:flex; align-items:center; justify-content:center;
-      border:1px solid rgba(255,255,255,0.12);
-      background: rgba(255,255,255,0.06);
-      font-size:22px;
-      flex:0 0 auto;
-    }
-    .meta{ min-width:0; }
-    .name{
-      font-size:14px;
-      font-weight:1000;
-      color:#fff;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-    .sub{
-      margin-top:2px;
-      font-size:11px;
-      font-weight:900;
-      color: rgba(255,255,255,0.62);
-    }
-
-    .btn{
-      width:100%;
-      height:56px;
-      border-radius: 20px;
-      border:none;
-      background: var(--aiGrad);
-      color:#050510;
-      font-weight:1000;
-      font-size:14px;
+      padding: 0 14px;
       cursor:pointer;
       user-select:none;
-      margin-top: 10px;
+      transition: transform .16s ease, background .16s ease;
     }
-    .btn:active{ transform: scale(.99); }
-    .btn[disabled]{ opacity:.45; cursor:not-allowed; }
-
-    .status{
-      margin-top:10px;
+    .langBtn:active{ transform: scale(.99); }
+    .langBtn.sel{
+      background: rgba(99,102,241,0.22);
+      border-color: rgba(99,102,241,0.55);
+    }
+    .lLeft{ display:flex; align-items:center; gap:10px; min-width:0; }
+    .flag{ font-size:18px; }
+    .lname{ font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .code{
+      padding: 7px 10px;
+      border-radius: 999px;
+      border:1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06);
       font-size:12px;
-      font-weight:900;
-      color: rgba(255,255,255,0.75);
-      white-space:pre-wrap;
-      line-height:1.5;
-      min-height: 40px;
+      font-weight:1000;
+      color: rgba(255,255,255,0.9);
     }
+
+    .info{
+      border-radius: 18px;
+      border: 1px solid rgba(165,180,252,0.25);
+      background: rgba(99,102,241,0.10);
+      padding: 12px;
+      color: rgba(255,255,255,0.90);
+      font-weight: 900;
+      font-size: 12px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+    }
+
+    .btnRow{
+      display:flex;
+      gap:10px;
+      margin-top:auto;
+    }
+    .btn{
+      height: 56px;
+      border-radius: 20px;
+      border:none;
+      font-weight:1000;
+      cursor:pointer;
+      user-select:none;
+      padding: 0 14px;
+    }
+    .btnGhost{
+      width: 120px;
+      background: rgba(255,255,255,0.08);
+      border:1px solid rgba(255,255,255,0.12);
+      color:#fff;
+    }
+    .btnMain{
+      flex:1;
+      background:#fff;
+      color:#000;
+    }
+    .btn:disabled{ opacity:.5; cursor:not-allowed; }
+    .btn:active{ transform: scale(.99); }
 
     .toast{
       position: fixed;
@@ -149,26 +194,33 @@
 <body>
 <main id="pageContent">
   <div class="wrap">
-    <div class="card">
-      <div class="h">Kurulumu Tamamla</div>
+
+    <section class="hero">
+      <div class="h1">Kurulumu Tamamla</div>
       <div class="p">
-        İlk kurulumda sana <b>30 gün ücretsiz</b> Offline İngilizce paketi tanımlıyoruz.<br/>
-        Bu paketle internet olmadan <b>TR ↔ EN</b> çeviri yapabilirsin.
+        Kendi dilini seç → sistem otomatik olarak <b>İngilizce ↔ seçtiğin dil</b> offline paketini <b>30 gün deneme</b> olarak aktive eder.
+      </div>
+      <div class="pill">Deneme: <b>30 gün</b> • Paket: <b>EN ↔ Base</b></div>
+    </section>
+
+    <section class="card">
+      <div class="p" style="margin:0">Kendi dilin:</div>
+
+      <div class="row" id="langRow"></div>
+
+      <div class="info" id="infoBox">
+Seçim yaptıktan sonra:
+1) Dilin profile'a kaydedilir
+2) 30 günlük deneme paketleri aktive edilir
+3) İndirme ekranına yönlendirilirsin
       </div>
 
-      <div class="packRow">
-        <div class="left">
-          <div class="flag">🇹🇷⇄🇬🇧</div>
-          <div class="meta">
-            <div class="name">Offline İngilizce Paketi</div>
-            <div class="sub">Deneme: 30 Gün • Paketler: tr-en + en-tr</div>
-          </div>
-        </div>
+      <div class="btnRow">
+        <button class="btn btnGhost" id="btnSkip" type="button">Şimdi Değil</button>
+        <button class="btn btnMain" id="btnGo" type="button" disabled>Devam Et</button>
       </div>
+    </section>
 
-      <button class="btn" id="btnInstall" type="button">Kurulumu Tamamla (İndir)</button>
-      <div class="status" id="status">Hazır.</div>
-    </div>
   </div>
 </main>
 
@@ -177,50 +229,113 @@
 <script type="module">
   import { mountShell } from "/js/ui_shell.js";
   import { supabase } from "/js/supabase_client.js";
-  import { initOfflineBootstrap } from "/js/offline_manager.js";
 
   mountShell({ scroll:"none" });
 
   const $ = (id)=>document.getElementById(id);
   const toastEl = $("toast");
-  const statusEl = $("status");
-  const btn = $("btnInstall");
-
-  const FIRST_BOOT_KEY = "italky_first_boot_done_v1";
+  const infoBox = $("infoBox");
 
   function toast(msg){
     toastEl.textContent = String(msg||"");
     toastEl.classList.add("show");
     clearTimeout(window.__to);
-    window.__to = setTimeout(()=>toastEl.classList.remove("show"), 1600);
+    window.__to = setTimeout(()=>toastEl.classList.remove("show"), 1700);
   }
 
-  // session şart
+  const LANGS = [
+    { code:"tr", name:"Türkçe",    flag:"🇹🇷" },
+    { code:"en", name:"English",   flag:"🇬🇧" },
+    { code:"de", name:"Deutsch",   flag:"🇩🇪" },
+    { code:"fr", name:"Français",  flag:"🇫🇷" },
+    { code:"it", name:"Italiano",  flag:"🇮🇹" },
+    { code:"es", name:"Español",   flag:"🇪🇸" },
+  ];
+
   const { data:{ session } } = await supabase.auth.getSession();
   if(!session?.user){
     location.replace("/pages/login.html");
     throw new Error("no session");
   }
 
-  // zaten yapıldıysa direkt home
-  if(localStorage.getItem(FIRST_BOOT_KEY) === "1"){
-    location.replace("/pages/home.html");
-  }
+  // mevcut base_lang var mı?
+  let currentBase = "";
+  try{
+    const { data: prof } = await supabase
+      .from("profiles")
+      .select("base_lang, offline_trial_done")
+      .eq("id", session.user.id)
+      .maybeSingle();
 
-  btn.onclick = async ()=>{
-    btn.disabled = true;
-    statusEl.textContent = "İndiriliyor…\nLütfen uygulamadan çıkma.";
-    toast("Offline paket indiriliyor…");
+    currentBase = String(prof?.base_lang || "").trim().toLowerCase();
+    if(currentBase){
+      // zaten seçmiş -> direkt indir sayfasına
+      location.replace("/pages/offline_languages.html");
+      throw new Error("already has base_lang");
+    }
+  }catch{}
+
+  let picked = "";
+  const row = $("langRow");
+
+  function render(){
+    row.innerHTML = LANGS.map(l=>{
+      const sel = (picked === l.code) ? "sel" : "";
+      return `
+        <button class="langBtn ${sel}" type="button" data-code="${l.code}">
+          <span class="lLeft">
+            <span class="flag">${l.flag}</span>
+            <span class="lname">${l.name}</span>
+          </span>
+          <span class="code">${l.code.toUpperCase()}</span>
+        </button>
+      `;
+    }).join("");
+
+    row.querySelectorAll(".langBtn").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        picked = String(btn.getAttribute("data-code")||"").trim().toLowerCase();
+        $("btnGo").disabled = !picked;
+        infoBox.textContent =
+`Seçilen dil: ${picked.toUpperCase()}
+Sistem şunları 30 gün deneme olarak aktive edecek:
+- ${picked}-en
+- en-${picked}
+
+Sonra indirme ekranına geçeceksin.`;
+        render();
+      });
+    });
+  }
+  render();
+
+  $("btnSkip").onclick = ()=>{
+    // atla: home'a dön (istersen profile da olabilir)
+    location.href = "/pages/home.html";
+  };
+
+  $("btnGo").onclick = async ()=>{
+    if(!picked) return;
+
+    $("btnGo").disabled = true;
+    toast("Kaydediliyor…");
 
     try{
-      await initOfflineBootstrap(); // 30 gün trial indir (tr-en + en-tr)
-      statusEl.textContent = "Hazır ✅\nOffline İngilizce paketi aktif.";
-      toast("Kurulum tamamlandı ✅");
-      setTimeout(()=>location.replace("/pages/home.html"), 650);
+      // 1) base_lang kaydet
+      const { error: e1 } = await supabase.rpc("set_base_lang", { p_base_lang: picked });
+      if(e1) throw e1;
+
+      // 2) trial paketlerini tek sefer ver
+      const { data, error: e2 } = await supabase.rpc("grant_offline_trial_once");
+      if(e2) throw e2;
+
+      toast("Deneme paketin aktif ✅");
+      setTimeout(()=>location.replace("/pages/offline_languages.html"), 450);
+
     }catch(e){
-      statusEl.textContent = "İndirme başarısız.\nİnterneti kontrol edip tekrar dene.";
-      btn.disabled = false;
-      toast("İndirilemedi");
+      console.error(e);
+      toast(e?.message || "Hata oldu");
+      $("btnGo").disabled = false;
     }
   };
 </script>
