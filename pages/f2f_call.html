@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>italkyAI • Walkie Talkie</title>
+  <title>italkyAI • Walkie Talkie Terminal</title>
 
   <meta name="theme-color" content="#030014">
-  <style>html,body{background:#030014 !important; margin:0; padding:0; overflow:hidden;}</style>
+  <style>html,body{background:#000 !important; margin:0; padding:0; overflow:hidden;}</style>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
@@ -18,31 +18,26 @@
       --glass: rgba(255, 255, 255, 0.03);
       --glass-border: rgba(255, 255, 255, 0.1);
       --topH: 70px;
-      --infoH: 40px;
-      --inputH: 85px;
+      --roomH: 42px;
+      --peopleH: 65px;
+      --dockH: 85px;
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
     
-    /* ✅ Kural Seti Uygulandı */
+    /* ✅ Kural Seti Uygulandı: height 100% */
     body {
       width: 100%; height: 100%;
       font-family: 'Outfit', sans-serif;
       background: #000; color: #fff;
+      overflow: hidden;
     }
 
-    /* Kuantum Arka Plan */
     .quantum-bg {
       position: fixed; inset: 0; z-index: 0;
       background: radial-gradient(circle at 50% 20%, #0a0a25 0%, #000 100%);
     }
-    .energy-cloud {
-      position: absolute; width: 80vw; height: 80vw;
-      background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
-      filter: blur(80px); animation: drift 20s infinite alternate ease-in-out;
-    }
 
-    /* Main Frame */
     #pageContent {
       height: 100%; display: flex; flex-direction: column;
       position: relative; z-index: 10;
@@ -51,128 +46,153 @@
       border-right: 1px solid var(--glass-border);
     }
 
-    /* TOP BAR & INFO */
+    /* TOP BAR */
     .header {
       height: var(--topH); display: flex; align-items: center; justify-content: space-between;
-      padding: 0 16px; background: rgba(0,0,0,0.4); backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--glass-border);
+      padding: 0 14px; background: rgba(0,0,0,0.4); backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--glass-border); flex-shrink: 0;
     }
-    .back-btn { width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--glass-border); background: var(--glass); color: #fff; cursor: pointer; }
-    
+    .brand-zone { display: flex; flex-direction: column; align-items: center; cursor: pointer; }
+    .brand-name { font-family: 'Space Grotesk'; font-size: 18px; font-weight: 700; color: #fff; letter-spacing: -0.5px; }
+    .brand-name span { background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .brand-slogan { font-size: 8px; color: rgba(255,255,255,0.4); letter-spacing: 3px; font-weight: 800; margin-top: 2px; }
+
+    .nav-btn { width: 40px; height: 40px; border-radius: 14px; border: 1px solid var(--glass-border); background: var(--glass); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 900; }
+
+    /* ROOM BAR & LANG SELECT */
     .room-bar {
-      height: var(--infoH); background: rgba(255,255,255,0.02);
-      display: flex; align-items: center; justify-content: center;
-      gap: 10px; font-size: 12px; font-weight: 800; border-bottom: 1px solid var(--glass-border);
+      height: var(--roomH); background: rgba(0,0,0,0.2);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 14px; border-bottom: 1px solid var(--glass-border); flex-shrink: 0;
     }
-    .room-pill { padding: 4px 12px; background: var(--ai-grad); border-radius: 20px; color: #fff; font-family: monospace; letter-spacing: 2px; }
+    .room-info { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 800; color: rgba(255,255,255,0.6); }
+    .room-pill { padding: 4px 10px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 10px; color: #fff; font-family: monospace; letter-spacing: 1px; cursor: pointer; }
+    
+    .lang-select-ui { 
+      height: 28px; background: transparent; border: 1px solid var(--glass-border); 
+      border-radius: 8px; color: var(--ai1); font-size: 10px; font-weight: 900; padding: 0 5px;
+    }
+
+    /* PEOPLE STRIP */
+    .people-bar {
+      height: var(--peopleH); display: flex; align-items: center; gap: 12px;
+      padding: 0 14px; background: rgba(255,255,255,0.01);
+      border-bottom: 1px solid var(--glass-border); flex-shrink: 0;
+    }
+    .people-count { font-size: 12px; font-weight: 900; color: var(--ai-grad); min-width: 20px; }
+    .people-scroll { flex: 1; display: flex; gap: 12px; overflow-x: auto; scrollbar-width: none; }
+    .people-scroll::-webkit-scrollbar { display: none; }
+    .p-item { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .p-avatar { width: 34px; height: 34px; border-radius: 50%; border: 1.5px solid var(--glass-border); overflow: hidden; background: var(--glass); }
+    .p-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .p-name { font-size: 9px; font-weight: 800; color: rgba(255,255,255,0.4); max-width: 40px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
     /* CHAT AREA */
-    .chat-scroller {
-      flex: 1; min-height: 0; overflow-y: auto; padding: 20px 16px;
-      display: flex; flex-direction: column; gap: 15px;
+    .chat-area {
+      flex: 1; min-height: 0; overflow-y: auto; padding: 16px;
+      display: flex; flex-direction: column; gap: 16px;
       scrollbar-width: none;
     }
-    .chat-scroller::-webkit-scrollbar { display: none; }
+    .chat-area::-webkit-scrollbar { display: none; }
 
-    /* Mesaj Balonları */
-    .msg-row { display: flex; flex-direction: column; max-width: 85%; }
+    .msg-row { display: flex; flex-direction: column; max-width: 85%; position: relative; }
     .msg-row.left { align-self: flex-start; }
     .msg-row.right { align-self: flex-end; align-items: flex-end; }
 
     .msg-bubble {
-      padding: 12px 16px; border-radius: 22px; font-size: 15px; line-height: 1.5;
-      backdrop-filter: blur(10px); border: 1px solid var(--glass-border);
+      padding: 12px 16px; border-radius: 20px; font-size: 14px; line-height: 1.5;
+      backdrop-filter: blur(10px); border: 1px solid var(--glass-border); position: relative;
     }
-    .left .msg-bubble { background: var(--glass); border-bottom-left-radius: 4px; color: #fff; }
-    .right .msg-bubble { background: linear-gradient(135deg, var(--bordo) 0%, #1a0505 100%); border-bottom-right-radius: 4px; color: #fbcfe8; }
+    .left .msg-bubble { background: var(--glass); border-bottom-left-radius: 4px; }
+    .right .msg-bubble { background: linear-gradient(135deg, var(--bordo) 0%, #000 100%); border-bottom-right-radius: 4px; color: #fbcfe8; border-color: rgba(236, 72, 153, 0.2); }
 
-    .sender-name { font-size: 10px; font-weight: 900; color: rgba(255,255,255,0.4); margin-bottom: 4px; text-transform: uppercase; }
+    .speaker-btn { position: absolute; top: -5px; width: 24px; height: 24px; border-radius: 50%; background: #000; border: 1px solid var(--glass-border); display: flex; align-items: center; justify-content: center; font-size: 12px; cursor: pointer; z-index: 5; }
+    .left .speaker-btn { right: -10px; }
+    .right .speaker-btn { left: -10px; }
 
-    /* INPUT DOCK (3D & Modern) */
+    /* INPUT DOCK */
     .input-dock {
-      height: var(--inputH); padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+      height: var(--dockH); padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
       background: rgba(0,0,0,0.6); backdrop-filter: blur(25px);
-      border-top: 1px solid var(--glass-border);
+      border-top: 1px solid var(--glass-border); flex-shrink: 0;
     }
     .dock-inner {
-      height: 54px; background: var(--glass); border-radius: 27px;
-      border: 1px solid var(--glass-border); display: flex; align-items: center; padding: 0 6px 0 20px;
+      height: 52px; background: rgba(255,255,255,0.04); border-radius: 26px;
+      border: 1px solid var(--glass-border); display: flex; align-items: center; padding: 0 6px 0 18px;
     }
-    #msgInput {
-      flex: 1; background: transparent; border: none; color: #fff;
-      font-size: 15px; font-family: inherit;
-    }
-    .dock-btns { display: flex; gap: 8px; }
+    #msgInput { flex: 1; background: transparent; border: none; color: #fff; font-size: 14px; font-family: inherit; }
+    
     .circle-btn {
-      width: 42px; height: 42px; border-radius: 50%; border: none;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; transition: 0.2s;
+      width: 40px; height: 40px; border-radius: 50%; border: none;
+      display: flex; align-items: center; justify-content: center; cursor: pointer;
     }
-    .btn-mic { background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--glass-border); }
-    .btn-mic.active { background: #ff0055; box-shadow: 0 0 15px #ff0055; border: none; }
-    .btn-send { background: var(--ai-grad); color: #fff; box-shadow: 0 4px 12px rgba(99,102,241,0.4); }
+    #micBtn { background: transparent; color: #fff; font-size: 18px; position: relative; }
+    #micBtn.listening::after { content: ""; position: absolute; inset: -4px; border: 2px solid var(--ai2); border-radius: 50%; animation: pulse 1s infinite; }
+    #sendBtn { background: var(--ai-grad); color: #fff; margin-left: 8px; box-shadow: 0 4px 12px rgba(99,102,241,0.3); }
 
-    @keyframes drift { from { transform: translate(-10%, -10%); } to { transform: translate(10%, 10%); } }
+    @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(1.4); opacity: 0; } }
   </style>
 </head>
 
 <body>
-  <div class="quantum-bg">
-    <div class="energy-cloud"></div>
-  </div>
+  <div class="quantum-bg"></div>
 
   <main id="pageContent">
     <header class="header">
-      <button class="back-btn" id="backBtn">←</button>
-      <div style="text-align: center;">
-        <div style="font-weight: 900; font-size: 16px; letter-spacing: -0.5px;">italky<span style="color:#6366f1">AI</span></div>
-        <div style="font-size: 8px; color: rgba(255,255,255,0.4); letter-spacing: 2px; font-weight: 700;">WALKIE TALKIE</div>
+      <button class="nav-btn" id="backBtn">←</button>
+      <div class="brand-zone" id="logoHome">
+        <div class="brand-name">italky<span>AI</span></div>
+        <div class="brand-slogan">BE FREE</div>
       </div>
-      <button class="back-btn" id="exitBtn">✕</button>
+      <button class="nav-btn" id="exitBtn">✕</button>
     </header>
 
     <div class="room-bar" id="roomBar" style="display: none;">
-      FREKANS KODU: <span class="room-pill" id="roomPill">---</span>
+      <div class="room-info">
+        KOD: <span class="room-pill" id="roomPill" title="Kopyala">---</span>
+      </div>
+      <select class="lang-select-ui" id="langSelect"></select>
     </div>
 
-    <div class="chat-scroller" id="chat">
-      <div class="msg-row left">
-        <span class="sender-name">Oğuz Özyiğit</span>
-        <div class="msg-bubble">Selam Başkanım, sistem jilet gibi çalışıyor.</div>
-      </div>
-      <div class="msg-row right">
-        <span class="sender-name">italkyAI</span>
-        <div class="msg-bubble">Harika! Şimdi sınırsız frekansta sesimizi dünyaya duyurma vakti.</div>
-      </div>
+    <div class="people-bar">
+      <div class="people-count" id="peopleCount">1</div>
+      <div class="people-scroll" id="peopleScroll">
+        </div>
     </div>
+
+    <div class="chat-area" id="chat">
+      </div>
 
     <footer class="input-dock">
       <div class="dock-inner">
-        <input type="text" id="msgInput" placeholder="Mesajınızı fısıldayın..." autocomplete="off">
-        <div class="dock-btns">
-          <button class="circle-btn btn-mic" id="micBtn">🎙️</button>
-          <button class="circle-btn btn-send" id="sendBtn">⚡</button>
-        </div>
+        <textarea id="msgInput" rows="1" placeholder="Konuşun veya yazın..."></textarea>
+        <button class="circle-btn" id="micBtn" title="Konuş">🎙️</button>
+        <button class="circle-btn" id="sendBtn" title="Gönder">⚡</button>
       </div>
     </footer>
   </main>
 
   <script type="module">
-    // Oda Kodu Yakalama
+    // Oda Kodu & Kopyalama İşlemi
     const params = new URLSearchParams(location.search);
     const room = params.get("room")?.toUpperCase();
     if(room) {
       document.getElementById("roomBar").style.display = "flex";
       document.getElementById("roomPill").textContent = room;
+      document.getElementById("roomPill").onclick = () => {
+        navigator.clipboard.writeText(room);
+        alert("Kod kopyalandı: " + room);
+      };
     }
 
-    // Input Focus Fix for iOS
-    const input = document.getElementById("msgInput");
-    input.addEventListener("focus", () => {
-      setTimeout(() => window.scrollTo(0,0), 100);
-    });
+    // Input Yüksekliği (Auto-resize olmasa da UX için sabit tutuldu)
+    const msgInput = document.getElementById("msgInput");
+    msgInput.oninput = function() {
+      this.style.height = 'auto';
+      this.style.height = (this.scrollHeight) + 'px';
+    };
   </script>
 
-  <script type="module" src="/js/f2f_call.js?v=CHAT_WT_FINAL_002"></script>
+  <script type="module" src="/js/f2f_call.js?v=CHAT_WT_FINAL_003"></script>
 </body>
 </html>
