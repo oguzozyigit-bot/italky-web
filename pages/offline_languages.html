@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>italkyAI • Offline Diller</title>
+
+  <meta name="theme-color" content="#000000">
+  <style>
+    html,body{
+      background:#000 !important;
+      margin:0;
+      padding:0;
+      font-family:'Outfit', sans-serif;
+    }
+  </style>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --ai-grad: linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
+      --glass: rgba(255,255,255,0.04);
+      --border: rgba(255,255,255,0.10);
+      --green:#34d399;
+      --warn:#f59e0b;
+    }
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none;}
+
+    #pageContent{
+      height:100%;
+      display:flex;
+      flex-direction:column;
+      background: radial-gradient(circle at 50% 20%, #0a0a25 0%, #000 100%);
+    }
+
+    .wrap{
+      flex:1;
+      max-width:520px;
+      margin:0 auto;
+      padding:16px;
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+    }
+
+    .topRow{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      border:1px solid var(--border);
+      background:var(--glass);
+      border-radius:18px;
+      padding:10px 12px;
+      backdrop-filter: blur(14px);
+    }
+    .topRow .t1{ font-weight:1000; color:#fff; }
+    .topRow .t2{ font-weight:1000; color:rgba(165,180,252,0.95); }
+
+    .header{
+      text-align:center;
+      margin-top:4px;
+    }
+    .header h1{
+      font-family:'Space Grotesk';
+      font-size:22px;
+      font-weight:800;
+      color:#fff;
+      margin:0;
+    }
+    .header p{
+      font-size:12px;
+      color:rgba(255,255,255,0.55);
+      margin-top:6px;
+      font-weight:700;
+      line-height:1.4;
+    }
+
+    .lang-card{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:14px 14px;
+      border-radius:20px;
+      border:1px solid var(--border);
+      background:var(--glass);
+      backdrop-filter:blur(20px);
+      gap:12px;
+    }
+
+    .lang-left{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-width:0;
+    }
+    .flag{ font-size:26px; }
+    .meta{
+      min-width:0;
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+    }
+    .lang-name{
+      font-size:15px;
+      font-weight:1000;
+      color:#fff;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .lang-sub{
+      font-size:11px;
+      font-weight:900;
+      color:rgba(255,255,255,0.60);
+    }
+    .lang-sub.ok{ color: rgba(52,211,153,0.95); }
+    .lang-sub.warn{ color: rgba(245,158,11,0.95); }
+
+    .btn{
+      min-width:130px;
+      height:40px;
+      border-radius:14px;
+      border:none;
+      background:var(--ai-grad);
+      color:#fff;
+      font-weight:1000;
+      font-size:12px;
+      cursor:pointer;
+      box-shadow:0 6px 18px rgba(99,102,241,0.25);
+      transition:.15s;
+      white-space:nowrap;
+    }
+    .btn:active{ transform:scale(.98); }
+
+    .btnSecondary{
+      background:rgba(255,255,255,0.06);
+      border:1px solid rgba(255,255,255,0.14);
+      box-shadow:none;
+    }
+
+    .btnDisabled{
+      opacity:.55;
+      cursor:default;
+    }
+
+    .toast{
+      position: fixed;
+      left:50%;
+      top:18px;
+      transform: translateX(-50%) translateY(-120px);
+      background: rgba(10,10,18,0.95);
+      border: 1px solid rgba(165,180,252,0.35);
+      padding: 10px 14px;
+      border-radius: 999px;
+      color:#fff;
+      z-index: 999999;
+      font-weight: 1000;
+      font-size: 12px;
+      transition: .25s;
+      backdrop-filter: blur(12px);
+      pointer-events:none;
+      max-width: min(92vw, 520px);
+      text-align:center;
+    }
+    .toast.show{ transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+
+<body>
+<main id="pageContent">
+  <div class="wrap">
+
+    <div class="topRow">
+      <div class="t1">Paket Süresi: <span style="color:#fff">365 Gün</span></div>
+      <div class="t2">Ücret: <span style="color:#fff">50 Jeton</span></div>
+    </div>
+
+    <div class="header">
+      <h1>Offline Dil Paketleri</h1>
+      <p>
+        Online iken satın al ve indir.<br/>
+        Sonra internetsiz ortamda çeviri modüllerinde kullan.
+      </p>
+    </div>
+
+    <div id="langList"></div>
+
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  import { mountShell, setHeaderTokens } from "/js/ui_shell.js";
+  import { supabase } from "/js/supabase_client.js";
+  mountShell({ scroll:"auto" });
+
+  const $ = (id)=>document.getElementById(id);
+
+  const toastEl = $("toast");
+  function toast(msg){
+    toastEl.textContent = String(msg||"");
+    toastEl.classList.add("show");
+    clearTimeout(window.__to);
+    window.__to = setTimeout(()=>toastEl.classList.remove("show"), 1700);
+  }
+
+  const LANGUAGES = [
+    {code:"en", name:"İngilizce", flag:"🇬🇧"},
+    {code:"de", name:"Almanca", flag:"🇩🇪"},
+    {code:"tr", name:"Türkçe", flag:"🇹🇷"},
+    {code:"fr", name:"Fransızca", flag:"🇫🇷"},
+    {code:"it", name:"İtalyanca", flag:"🇮🇹"},
+    {code:"es", name:"İspanyolca", flag:"🇪🇸"}
+  ];
+
+  const FEE = 50;
+  const DAYS = 365;
+
+  const list = $("langList");
+
+  // session
+  const { data:{ session } } = await supabase.auth.getSession();
+  if(!session?.user){
+    location.replace("/pages/login.html");
+  }
+  const userId = session.user.id;
+
+  async function loadProfileAndPacks(){
+    const [{ data: prof }, { data: packs }] = await Promise.all([
+      supabase.from("profiles").select("tokens").eq("id", userId).maybeSingle(),
+      supabase.from("offline_packs").select("lang_code, expires_at").eq("user_id", userId)
+    ]);
+
+    const tokens = Number(prof?.tokens ?? 0);
+    try{ setHeaderTokens(tokens); }catch{}
+    return { tokens, packs: Array.isArray(packs) ? packs : [] };
+  }
+
+  function daysLeft(expiresAt){
+    const exp = new Date(expiresAt).getTime();
+    const diff = exp - Date.now();
+    return Math.ceil(diff / (24*60*60*1000));
+  }
+
+  function packFor(code, packs){
+    return packs.find(p => String(p.lang_code).toLowerCase() === String(code).toLowerCase()) || null;
+  }
+
+  async function render(){
+    const { tokens, packs } = await loadProfileAndPacks();
+
+    list.innerHTML = "";
+    LANGUAGES.forEach(lang=>{
+      const p = packFor(lang.code, packs);
+      const active = p && daysLeft(p.expires_at) > 0;
+      const leftDays = p ? daysLeft(p.expires_at) : 0;
+
+      const card = document.createElement("div");
+      card.className = "lang-card";
+
+      const left = document.createElement("div");
+      left.className = "lang-left";
+      left.innerHTML = `
+        <div class="flag">${lang.flag}</div>
+        <div class="meta">
+          <div class="lang-name">${lang.name}</div>
+          <div class="lang-sub ${active ? "ok" : (p ? "warn" : "")}">
+            ${active ? `Aktif • ${leftDays} gün kaldı` : (p ? "Süresi doldu" : "Satın alınmadı")}
+          </div>
+        </div>
+      `;
+
+      const btn = document.createElement("button");
+      btn.className = "btn";
+
+      if(active){
+        btn.textContent = "İndirildi";
+        btn.classList.add("btnSecondary","btnDisabled");
+        btn.disabled = true;
+      }else{
+        btn.textContent = (tokens >= FEE) ? `Satın Al (50)` : `Jeton Yetersiz`;
+        if(tokens < FEE){
+          btn.classList.add("btnSecondary");
+          btn.onclick = ()=>location.href="/pages/profile.html";
+        }else{
+          btn.onclick = async ()=>{
+            btn.disabled = true;
+            btn.textContent = "Satın alınıyor…";
+            toast("Paket açılıyor…");
+
+            const { data, error } = await supabase.rpc("purchase_offline_pack", {
+              p_lang_code: lang.code,
+              p_days: DAYS,
+              p_fee: FEE
+            });
+
+            if(error){
+              toast(error.message || "Satın alma başarısız");
+              btn.disabled = false;
+              btn.textContent = `Satın Al (50)`;
+              return;
+            }
+
+            const row = Array.isArray(data) ? (data[0] || null) : data;
+            const tokensLeft = row?.tokens_left;
+            if(tokensLeft != null){
+              try{ setHeaderTokens(tokensLeft); }catch{}
+            }
+
+            toast("Satın alındı ✅");
+            // “indir” kısmı şimdilik otomatik “İndirildi”ye geçsin
+            // gerçek dosya indirme geldiğinde buraya bağlayacağız
+            await render();
+          };
+        }
+      }
+
+      card.appendChild(left);
+      card.appendChild(btn);
+      list.appendChild(card);
+    });
+  }
+
+  await render();
+</script>
+</body>
+</html>
