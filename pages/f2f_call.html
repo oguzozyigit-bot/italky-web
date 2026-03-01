@@ -1,4 +1,3 @@
-<!-- FILE: /pages/f2f_call.html -->
 <!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -7,528 +6,171 @@
   <title>italkyAI • Walkie Talkie</title>
 
   <meta name="theme-color" content="#030014">
-  <style>html,body{background:#030014 !important;}</style>
+  <style>html,body{background:#030014 !important; margin:0; padding:0; overflow:hidden;}</style>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
   <style>
-    :root{
-      --frameW: min(480px, calc(100vw - 18px));
-      --topH: 74px;
-      --roomH: 44px;
-      --peopleH: 56px;
-      --dockH: 78px;
-      --sigH: 34px;
-
-      --bg:#030014;
-      --text: rgba(255,255,255,.92);
-      --muted: rgba(255,255,255,.60);
-      --border: rgba(255,255,255,.10);
-
-      --ai1:#A5B4FC;
-      --ai2:#4F46E5;
-      --befree:#6B7280;
-
-      --card: rgba(0,0,0,.18);
-      --glass: rgba(255,255,255,.04);
+    :root {
+      --ai-grad: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
+      --bordo: #2d0a0a;
+      --glass: rgba(255, 255, 255, 0.03);
+      --glass-border: rgba(255, 255, 255, 0.1);
+      --topH: 70px;
+      --infoH: 40px;
+      --inputH: 85px;
     }
 
-    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; }
-    html,body{
-      margin:0; padding:0; width:100%; height:100dvh;
-      overflow:hidden; position:fixed;
-      font-family:'Outfit', sans-serif;
-      background:var(--bg);
-      color:var(--text);
-      display:flex; align-items:center; justify-content:center;
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+    
+    /* ✅ Kural Seti Uygulandı */
+    body {
+      width: 100%; height: 100%;
+      font-family: 'Outfit', sans-serif;
+      background: #000; color: #fff;
     }
 
-    /* background */
-    .cosmos-bg{ position:absolute; inset:-50%; width:200%; height:200%; background:var(--bg); z-index:0; pointer-events:none; }
-    .orb{ position:absolute; border-radius:50%; filter: blur(90px); opacity:.28; animation: floatOrbit 30s infinite alternate ease-in-out; }
-    .orb-1{ top:10%; left:10%; width:60vw; height:60vw; background: radial-gradient(circle, rgba(79,70,229,.55), transparent 70%); }
-    .orb-2{ bottom:10%; right:10%; width:50vw; height:50vw; background: radial-gradient(circle, rgba(165,180,252,.45), transparent 70%); animation-delay:-5s; }
-    @keyframes floatOrbit{ 0%{ transform: translate(0,0) scale(1);} 100%{ transform: translate(10%,-10%) scale(1.1);} }
-    .noise{
-      position:absolute; inset:0;
-      background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
-      pointer-events:none; mix-blend-mode:overlay; z-index:1;
+    /* Kuantum Arka Plan */
+    .quantum-bg {
+      position: fixed; inset: 0; z-index: 0;
+      background: radial-gradient(circle at 50% 20%, #0a0a25 0%, #000 100%);
+    }
+    .energy-cloud {
+      position: absolute; width: 80vw; height: 80vw;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+      filter: blur(80px); animation: drift 20s infinite alternate ease-in-out;
     }
 
-    .mobile-frame{
-      width:100%; max-width:480px; height:100%;
-      position:relative; z-index:10;
-      background: rgba(8, 8, 20, 0.65);
-      backdrop-filter: blur(25px);
-      overflow:hidden;
-      display:flex; flex-direction:column;
-    }
-    @media(min-width:520px){
-      .mobile-frame{
-        height:92vh;
-        border-radius:40px;
-        border:1px solid rgba(255,255,255,0.08);
-        box-shadow:0 40px 100px -20px rgba(0,0,0,0.9);
-      }
+    /* Main Frame */
+    #pageContent {
+      height: 100%; display: flex; flex-direction: column;
+      position: relative; z-index: 10;
+      max-width: 500px; margin: 0 auto;
+      border-left: 1px solid var(--glass-border);
+      border-right: 1px solid var(--glass-border);
     }
 
-    /* TOP BAR */
-    .topbar{
-      position: sticky;
-      top: 0;
-      z-index: 3000;
-      height: var(--topH);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      padding: 0 12px;
-      border-bottom:1px solid rgba(255,255,255,.08);
-      background: rgba(0,0,0,.35);
-      backdrop-filter: blur(12px);
+    /* TOP BAR & INFO */
+    .header {
+      height: var(--topH); display: flex; align-items: center; justify-content: space-between;
+      padding: 0 16px; background: rgba(0,0,0,0.4); backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--glass-border);
     }
-    .leftControls{ display:flex; align-items:center; gap:10px; min-width:0; }
-    .backBtn{
-      width:44px;height:44px;border-radius:16px;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(0,0,0,.18);
-      color:#fff;
-      font-size:20px;font-weight:1000;
-      display:flex;align-items:center;justify-content:center;
-      cursor:pointer; user-select:none;
+    .back-btn { width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--glass-border); background: var(--glass); color: #fff; cursor: pointer; }
+    
+    .room-bar {
+      height: var(--infoH); background: rgba(255,255,255,0.02);
+      display: flex; align-items: center; justify-content: center;
+      gap: 10px; font-size: 12px; font-weight: 800; border-bottom: 1px solid var(--glass-border);
     }
-    .backBtn:active{ transform: scale(.96); }
-
-    .mini-brand{
-      display:flex; flex-direction:column;
-      user-select:none; cursor:pointer; line-height:1;
-      margin-top: 2px;
-    }
-    .logo-line{
-      font-family:'Space Grotesk', sans-serif;
-      font-size: 20px;
-      letter-spacing: -0.4px;
-      display:flex; align-items:flex-end; gap:2px;
-    }
-    .logo-main{ font-weight:700; color:#FFFFFF; }
-    .logo-ai{
-      font-weight:700;
-      background: linear-gradient(135deg, var(--ai1) 0%, var(--ai2) 100%);
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;
-    }
-    .logo-slogan{
-      font-size:10px;
-      font-weight:700;
-      letter-spacing: 4px;
-      color: var(--befree);
-      margin-top: 5px;
-      padding-left: 2px;
-      text-transform: uppercase;
-    }
-
-    .rightControls{ display:flex; align-items:center; gap:10px; min-width:0; }
-    .langSelect{
-      height: 38px;
-      border-radius: 14px;
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(0,0,0,.18);
-      color: rgba(255,255,255,.92);
-      font-weight: 900;
-      font-size: 12px;
-      padding: 0 10px;
-      max-width: 150px;
-    }
-    .exitBtn{
-      width:40px; height:40px;
-      border-radius: 16px;
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(0,0,0,.18);
-      color:#fff;
-      font-weight:1000;
-      cursor:pointer;
-      user-select:none;
-      display:flex; align-items:center; justify-content:center;
-    }
-    .exitBtn:active{ transform: scale(.96); }
-
-    /* ✅ ROOM CODE BAR */
-    .roomBar{
-      height: var(--roomH);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      padding: 8px 10px;
-      background: rgba(0,0,0,.20);
-      border-bottom: 1px solid rgba(255,255,255,.06);
-    }
-    .roomLeft{
-      display:flex; align-items:center; gap:10px; min-width:0;
-      font-weight: 1000;
-      letter-spacing: .6px;
-      color: rgba(255,255,255,.82);
-    }
-    .roomPill{
-      padding: 8px 10px;
-      border-radius: 14px;
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.05);
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace;
-      font-weight: 900;
-      letter-spacing: 2px;
-      color:#fff;
-      max-width: 240px;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      white-space:nowrap;
-    }
-    .copyBtn{
-      width:42px;height:42px;
-      border-radius:16px;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(0,0,0,.18);
-      display:flex; align-items:center; justify-content:center;
-      cursor:pointer; user-select:none;
-      flex: 0 0 auto;
-    }
-    .copyBtn:active{ transform: scale(.96); }
-    .copyBtn svg{ width:18px;height:18px; stroke: rgba(255,255,255,.9); fill:none; stroke-width:2.2; }
-
-    /* PARTICIPANTS STRIP */
-    .peopleBar{
-      height: var(--peopleH);
-      display:flex;
-      align-items:center;
-      gap:10px;
-      padding: 8px 10px;
-      background: rgba(0,0,0,.22);
-      border-bottom: 1px solid rgba(255,255,255,.06);
-      z-index: 2500;
-    }
-    .peopleCount{
-      font-size:12px;
-      font-weight:900;
-      color: rgba(255,255,255,.70);
-      white-space:nowrap;
-      min-width: 18px;
-      text-align:center;
-    }
-    .peopleScroll{
-      flex:1;
-      display:flex;
-      gap:10px;
-      overflow-x:auto;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width:none;
-      padding-bottom:2px;
-    }
-    .peopleScroll::-webkit-scrollbar{ display:none; }
-
-    .pItem{
-      flex: 0 0 auto;
-      width:48px;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      gap:6px;
-    }
-    .pAvatar{
-      width:40px; height:40px;
-      border-radius:999px;
-      overflow:hidden;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(255,255,255,.06);
-      display:flex; align-items:center; justify-content:center;
-      font-weight: 900;
-      color: rgba(255,255,255,.86);
-      user-select:none;
-    }
-    .pAvatar img{ width:100%; height:100%; object-fit:cover; display:block; }
-    .pName{
-      font-size:10px;
-      font-weight: 900;
-      opacity:.65;
-      white-space:nowrap;
-      max-width:48px;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
+    .room-pill { padding: 4px 12px; background: var(--ai-grad); border-radius: 20px; color: #fff; font-family: monospace; letter-spacing: 2px; }
 
     /* CHAT AREA */
-    #chat.chat-area{
-      position: absolute;
-      left: 0; right: 0;
-      top: calc(var(--topH) + var(--roomH) + var(--peopleH));
-      bottom: calc(var(--dockH) + var(--sigH) + env(safe-area-inset-bottom));
-      padding: 14px 12px;
+    .chat-scroller {
+      flex: 1; min-height: 0; overflow-y: auto; padding: 20px 16px;
+      display: flex; flex-direction: column; gap: 15px;
+      scrollbar-width: none;
+    }
+    .chat-scroller::-webkit-scrollbar { display: none; }
 
-      overflow-y:auto;
-      -webkit-overflow-scrolling: touch;
-      overscroll-behavior: contain;
-      touch-action: pan-y;
+    /* Mesaj Balonları */
+    .msg-row { display: flex; flex-direction: column; max-width: 85%; }
+    .msg-row.left { align-self: flex-start; }
+    .msg-row.right { align-self: flex-end; align-items: flex-end; }
 
-      scrollbar-width:none;
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-      min-height:0;
-      min-width:0;
+    .msg-bubble {
+      padding: 12px 16px; border-radius: 22px; font-size: 15px; line-height: 1.5;
+      backdrop-filter: blur(10px); border: 1px solid var(--glass-border);
     }
-    #chat.chat-area::-webkit-scrollbar{ display:none; }
-    #chat.chat-area::before{ content:""; flex:1 0 auto; }
+    .left .msg-bubble { background: var(--glass); border-bottom-left-radius: 4px; color: #fff; }
+    .right .msg-bubble { background: linear-gradient(135deg, var(--bordo) 0%, #1a0505 100%); border-bottom-right-radius: 4px; color: #fbcfe8; }
 
-    .msgRow{ display:flex; gap:10px; align-items:flex-end; max-width: 92%; }
-    .msgRow.left{ align-self:flex-start; }
-    .msgRow.right{ align-self:flex-end; flex-direction: row-reverse; }
+    .sender-name { font-size: 10px; font-weight: 900; color: rgba(255,255,255,0.4); margin-bottom: 4px; text-transform: uppercase; }
 
-    .msgAvatar{
-      width:34px; height:34px; border-radius:999px;
-      overflow:hidden;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(255,255,255,.06);
-      flex: 0 0 auto;
-      display:flex; align-items:center; justify-content:center;
-      font-weight: 900;
-      color: rgba(255,255,255,.85);
-      user-select:none;
+    /* INPUT DOCK (3D & Modern) */
+    .input-dock {
+      height: var(--inputH); padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+      background: rgba(0,0,0,0.6); backdrop-filter: blur(25px);
+      border-top: 1px solid var(--glass-border);
     }
-    .msgAvatar img{ width:100%; height:100%; object-fit:cover; display:block; }
+    .dock-inner {
+      height: 54px; background: var(--glass); border-radius: 27px;
+      border: 1px solid var(--glass-border); display: flex; align-items: center; padding: 0 6px 0 20px;
+    }
+    #msgInput {
+      flex: 1; background: transparent; border: none; color: #fff;
+      font-size: 15px; font-family: inherit;
+    }
+    .dock-btns { display: flex; gap: 8px; }
+    .circle-btn {
+      width: 42px; height: 42px; border-radius: 50%; border: none;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: 0.2s;
+    }
+    .btn-mic { background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--glass-border); }
+    .btn-mic.active { background: #ff0055; box-shadow: 0 0 15px #ff0055; border: none; }
+    .btn-send { background: var(--ai-grad); color: #fff; box-shadow: 0 4px 12px rgba(99,102,241,0.4); }
 
-    .bubbleWrap{ display:flex; flex-direction:column; gap:4px; min-width:0; }
-    .nameLine{
-      font-size: 11px;
-      font-weight: 900;
-      opacity: .60;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      max-width: 260px;
-    }
-
-    .bubble{
-      max-width:100%;
-      padding:10px 14px;
-      border-radius:16px;
-      font-size:14px;
-      line-height:1.45;
-      border:1px solid rgba(255,255,255,.10);
-      background: var(--card);
-      box-shadow: 0 12px 28px rgba(0,0,0,.22);
-      backdrop-filter: blur(8px);
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
-    .bubble.bot{
-      border-left:4px solid var(--ai2);
-      background: rgba(79,70,229,.12);
-    }
-    .bubble.user{
-      border-right:4px solid var(--befree);
-      background: rgba(107,114,128,.14);
-      text-align:right;
-    }
-
-    /* INPUT DOCK */
-    .input-dock{
-      position: fixed;
-      left: 50%;
-      transform: translateX(-50%);
-      width: var(--frameW);
-      bottom: calc(var(--sigH) + env(safe-area-inset-bottom));
-      z-index: 2600;
-      padding: 10px 12px;
-      background: rgba(0,0,0,.32);
-      border-top: 1px solid rgba(255,255,255,.08);
-      backdrop-filter: blur(12px);
-      pointer-events: none;
-    }
-    .dock-inner{
-      pointer-events:auto;
-      width:100%;
-      min-height:54px;
-      display:flex;
-      align-items:flex-end;
-      gap:8px;
-      background: var(--glass);
-      border: 1px solid rgba(255,255,255,.10);
-      border-radius: 26px;
-      padding: 8px;
-    }
-    #msgInput{
-      flex: 1 1 auto;
-      min-width:0;
-      background: transparent;
-      border:none;
-      outline:none;
-      color:#fff;
-      font-size:14px;
-      padding:10px 6px;
-      line-height:18px;
-      font-family:inherit;
-      resize:none;
-      white-space:normal;
-      overflow:hidden;
-      max-height: 120px;
-    }
-    .icon-btn, .send-btn{
-      width:42px; height:42px;
-      border-radius:16px;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.22);
-      display:flex; align-items:center; justify-content:center;
-      cursor:pointer; user-select:none;
-      flex-shrink:0;
-    }
-    .icon-btn svg, .send-btn svg{
-      width:21px; height:21px;
-      stroke: rgba(255,255,255,.88);
-      fill:none;
-      stroke-width:2;
-      stroke-linecap:round;
-      stroke-linejoin:round;
-      opacity:.95;
-    }
-    .icon-btn.listening{
-      border-color: rgba(79,70,229,.45);
-      background: rgba(79,70,229,.16);
-      box-shadow: 0 0 18px rgba(79,70,229,.20);
-      position: relative;
-    }
-    .icon-btn.listening::after{
-      content:"";
-      position:absolute;
-      inset:-7px;
-      border-radius: 18px;
-      border: 2px solid rgba(165,180,252,.55);
-      animation: micPulse 1.15s ease-in-out infinite;
-    }
-    @keyframes micPulse{
-      0%{ transform: scale(0.92); opacity:.75; }
-      50%{ transform: scale(1.08); opacity:.28; }
-      100%{ transform: scale(0.92); opacity:.75; }
-    }
-
-    /* SIGNATURE */
-    .signatureBar{
-      position: fixed;
-      left: 50%;
-      transform: translateX(-50%);
-      width: var(--frameW);
-      bottom: 0;
-      z-index: 2400;
-      height: var(--sigH);
-      padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
-      background: rgba(3, 0, 20, 0.95);
-      border-top: 1px solid rgba(255,255,255,.05);
-      backdrop-filter: blur(10px);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size: 10px;
-      font-weight: 900;
-      letter-spacing: .6px;
-      color: rgba(255,255,255,0.25);
-    }
+    @keyframes drift { from { transform: translate(-10%, -10%); } to { transform: translate(10%, 10%); } }
   </style>
 </head>
 
 <body>
-  <div class="cosmos-bg">
-    <div class="orb orb-1"></div>
-    <div class="orb orb-2"></div>
+  <div class="quantum-bg">
+    <div class="energy-cloud"></div>
   </div>
-  <div class="noise"></div>
 
-  <div class="mobile-frame" id="mobileFrame">
+  <main id="pageContent">
+    <header class="header">
+      <button class="back-btn" id="backBtn">←</button>
+      <div style="text-align: center;">
+        <div style="font-weight: 900; font-size: 16px; letter-spacing: -0.5px;">italky<span style="color:#6366f1">AI</span></div>
+        <div style="font-size: 8px; color: rgba(255,255,255,0.4); letter-spacing: 2px; font-weight: 700;">WALKIE TALKIE</div>
+      </div>
+      <button class="back-btn" id="exitBtn">✕</button>
+    </header>
 
-    <div class="topbar">
-      <div class="leftControls">
-        <button class="backBtn" id="backBtn" aria-label="Geri">←</button>
+    <div class="room-bar" id="roomBar" style="display: none;">
+      FREKANS KODU: <span class="room-pill" id="roomPill">---</span>
+    </div>
 
-        <div class="mini-brand" id="logoHome" title="Ana sayfa">
-          <div class="logo-line">
-            <span class="logo-main">italky</span><span class="logo-ai">AI</span>
-          </div>
-          <div class="logo-slogan">BE FREE</div>
+    <div class="chat-scroller" id="chat">
+      <div class="msg-row left">
+        <span class="sender-name">Oğuz Özyiğit</span>
+        <div class="msg-bubble">Selam Başkanım, sistem jilet gibi çalışıyor.</div>
+      </div>
+      <div class="msg-row right">
+        <span class="sender-name">italkyAI</span>
+        <div class="msg-bubble">Harika! Şimdi sınırsız frekansta sesimizi dünyaya duyurma vakti.</div>
+      </div>
+    </div>
+
+    <footer class="input-dock">
+      <div class="dock-inner">
+        <input type="text" id="msgInput" placeholder="Mesajınızı fısıldayın..." autocomplete="off">
+        <div class="dock-btns">
+          <button class="circle-btn btn-mic" id="micBtn">🎙️</button>
+          <button class="circle-btn btn-send" id="sendBtn">⚡</button>
         </div>
       </div>
-
-      <div class="rightControls">
-        <select class="langSelect" id="langSelect" title="Dil Seç"></select>
-        <button class="exitBtn" id="exitBtn" title="Çık">✕</button>
-      </div>
-    </div>
-
-    <!-- ✅ ODA KODU BAR -->
-    <div class="roomBar" id="roomBar" style="display:none">
-      <div class="roomLeft">
-        <div style="opacity:.7">KOD:</div>
-        <div class="roomPill" id="roomPill">—</div>
-      </div>
-      <button class="copyBtn" id="copyRoomBtn" title="Kodu kopyala" aria-label="Kodu kopyala">
-        <svg viewBox="0 0 24 24">
-          <rect x="9" y="9" width="10" height="10" rx="2"></rect>
-          <path d="M7 15H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v1"></path>
-        </svg>
-      </button>
-    </div>
-
-    <div class="peopleBar">
-      <div class="peopleCount" id="peopleCount">1</div>
-      <div class="peopleScroll" id="peopleScroll"></div>
-    </div>
-
-    <div class="chat-area" id="chat"></div>
-
-    <div class="input-dock">
-      <div class="dock-inner">
-        <textarea id="msgInput" rows="1" placeholder="Yaz ya da konuş…" spellcheck="false"></textarea>
-
-        <button class="icon-btn" id="micBtn" aria-label="Mikrofon">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
-            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-            <line x1="12" y1="19" x2="12" y2="23"></line>
-            <line x1="8" y1="23" x2="16" y2="23"></line>
-          </svg>
-        </button>
-
-        <button class="send-btn" id="sendBtn" aria-label="Gönder">
-          <svg viewBox="0 0 24 24">
-            <path d="M22 2L11 13"></path>
-            <path d="M22 2L15 22L11 13L2 9L22 2Z"></path>
-          </svg>
-        </button>
-      </div>
-    </div>
-
-    <div class="signatureBar">italkyAI @ italkyAcedemia By Ozyigit’s</div>
-
-  </div>
+    </footer>
+  </main>
 
   <script type="module">
-    // room pill (UI only)
-    const p = new URLSearchParams(location.search);
-    const room = String(p.get("room")||"").trim().toUpperCase();
-    const bar = document.getElementById("roomBar");
-    const pill = document.getElementById("roomPill");
-    const copy = document.getElementById("copyRoomBtn");
-
-    if(room && bar && pill){
-      bar.style.display = "flex";
-      pill.textContent = room;
-      copy?.addEventListener("click", async ()=>{
-        try{
-          await navigator.clipboard.writeText(room);
-          copy.style.opacity = "0.75";
-          setTimeout(()=>copy.style.opacity="1", 500);
-        }catch{
-          alert("Kod: " + room);
-        }
-      });
+    // Oda Kodu Yakalama
+    const params = new URLSearchParams(location.search);
+    const room = params.get("room")?.toUpperCase();
+    if(room) {
+      document.getElementById("roomBar").style.display = "flex";
+      document.getElementById("roomPill").textContent = room;
     }
+
+    // Input Focus Fix for iOS
+    const input = document.getElementById("msgInput");
+    input.addEventListener("focus", () => {
+      setTimeout(() => window.scrollTo(0,0), 100);
+    });
   </script>
 
   <script type="module" src="/js/f2f_call.js?v=CHAT_WT_FINAL_002"></script>
