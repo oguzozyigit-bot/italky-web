@@ -21,19 +21,30 @@
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
 
+/* ✅ ui_shell içinde #pageContent shellMain'e taşınıyor.
+      Bu yüzden 100vh yerine %100 ve shell padding ile çakışmayacak şekilde ayar. */
 #pageContent {
-  height: 100vh;
+  height: 100%;
   display: flex; flex-direction: column;
-  padding-top: calc(env(safe-area-inset-top) + 40px);
-  padding-bottom: calc(env(safe-area-inset-bottom) + 85px);
+
+  /* ❌ ui_shell zaten header/footer alanını yönetiyor.
+     Buradaki ekstra padding-top/bottom boşluk yapar.
+     Tasarımı bozmadan 0'a çekiyoruz. */
+  padding-top: 0;
+  padding-bottom: 0;
+
   background: radial-gradient(circle at 50% 20%, #0a0a20 0%, #000 100%);
+  overflow: hidden;
 }
 
+/* ✅ shellMain altında sıkışmasın diye biraz iç padding ver
+   (tasarımın kendi spacing'i korunuyor) */
 .main-wrap {
   flex: 1;
   display: flex; flex-direction: column;
   padding: 14px;
   gap: 12px;
+  min-height: 0;
 }
 
 /* ===== 1. DİL SEÇİCİ (FLOAT PANEL) ===== */
@@ -44,6 +55,7 @@
   border-radius: 24px;
   padding: 8px 16px;
   backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
 .select-box {
@@ -63,12 +75,14 @@
 /* ===== 2. QUANTUM GATE (GİRİŞ & ÇIKIŞ) ===== */
 .quantum-gate {
   flex: 1;
+  min-height: 0;
   display: flex; flex-direction: column;
   gap: 4px;
 }
 
 .gate-panel {
   flex: 1;
+  min-height: 0;
   position: relative;
   border-radius: 30px;
   border: 1px solid var(--glass-border);
@@ -79,14 +93,19 @@
 }
 
 textarea {
-  flex: 1; background: transparent; border: none;
+  flex: 1;
+  min-height: 0;
+  background: transparent; border: none;
   color: #fff; font-size: 18px; font-weight: 300;
   line-height: 1.5; resize: none; width: 100%;
 }
 
 .output-area {
-  flex: 1; color: #a5b4fc; font-size: 18px;
+  flex: 1;
+  min-height: 0;
+  color: #a5b4fc; font-size: 18px;
   font-weight: 600; line-height: 1.5; overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   white-space: pre-wrap;
 }
 
@@ -96,6 +115,7 @@ textarea {
   background: var(--ai-grad);
   position: relative;
   box-shadow: 0 0 15px #6366f1;
+  flex: 0 0 auto;
 }
 .gate-divider::after {
   content: "⚡"; position: absolute; left: 50%; top: 50%;
@@ -105,6 +125,7 @@ textarea {
 /* ===== 3. ACTION BAR (FOTO & ÇEVİR) ===== */
 .action-bar {
   display: flex; gap: 10px; align-items: center;
+  flex: 0 0 auto;
 }
 
 .btn-scan {
@@ -140,7 +161,7 @@ textarea {
 
     <section class="lang-hub">
       <select class="select-box" id="fromSel"></select>
-      <button class="swap-trigger" id="btnSwap">⇄</button>
+      <button class="swap-trigger" id="btnSwap" type="button">⇄</button>
       <select class="select-box" id="toSel"></select>
     </section>
 
@@ -148,7 +169,7 @@ textarea {
       <div class="gate-panel">
         <textarea id="srcTxt" placeholder="Buraya yazın veya taratın..."></textarea>
       </div>
-      
+
       <div class="gate-divider"></div>
 
       <div class="gate-panel" style="background: rgba(99, 102, 241, 0.03);">
@@ -162,10 +183,8 @@ textarea {
         <input type="file" id="imgFile" accept="image/*" capture="environment" style="display:none">
         <span>📷 FOTOĞRAF TARAT</span>
       </label>
-      
-      <button class="btn-main" id="btnTranslate">
-        GO
-      </button>
+
+      <button class="btn-main" id="btnTranslate" type="button">GO</button>
     </section>
 
   </div>
@@ -173,28 +192,34 @@ textarea {
 
 <script type="module">
   import { mountShell } from "/js/ui_shell.js";
+  // ✅ ui_shell: bu sayfa kendi içinde scroll istemiyor
   mountShell({ scroll:"none" });
 
   const API_BASE = "https://italky-api.onrender.com";
   const $ = (id)=>document.getElementById(id);
 
+  // ✅ Translate modülünde “mümkün olduğunca çok dil” istedin.
+  // Şimdilik UI listesi örnek. Sonraki adım: backend /api/lang_pool’dan çekip buraya basacağız.
   const LANGS = [
     { code:"auto", name:"OTOMATİK" },
     { code:"tr", name:"TÜRKÇE" }, { code:"en", name:"ENGLISH" },
     { code:"de", name:"DEUTSCH" }, { code:"fr", name:"FRANÇAIS" },
-    { code:"it", name:"ITALIANO" }, { code:"es", name:"ESPAÑOL" }
+    { code:"it", name:"ITALIANO" }, { code:"es", name:"ESPAÑOL" },
+    { code:"ru", name:"РУССКИЙ" }, { code:"ar", name:"العربية" },
+    { code:"fa", name:"فارسی" }, { code:"zh", name:"中文" },
+    { code:"ja", name:"日本語" }, { code:"ko", name:"한국어" }
   ];
 
   const fromSel = $("fromSel");
   const toSel = $("toSel");
-  
+
   fromSel.innerHTML = LANGS.map(l=>`<option value="${l.code}">${l.name}</option>`).join("");
   toSel.innerHTML = LANGS.filter(l=>l.code!=="auto").map(l=>`<option value="${l.code}">${l.name}</option>`).join("");
-  
+
   fromSel.value = "auto";
   toSel.value = "tr";
 
-  // Çeviri İşlemi
+  // ✅ Çeviri İşlemi: /api/translate (Google->OpenAI fallback yaptığımız endpoint)
   $("btnTranslate").onclick = async () => {
     const text = $("srcTxt").value.trim();
     if(!text) return;
@@ -203,17 +228,19 @@ textarea {
     $("dstTxt").textContent = "İşleniyor...";
 
     try {
-      const r = await fetch(`${API_BASE}/api/translate_ai`, {
+      const r = await fetch(`${API_BASE}/api/translate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          text: text,
+          text,
           from_lang: fromSel.value,
           to_lang: toSel.value
         })
       });
-      const j = await r.json();
+
+      const j = await r.json().catch(()=> ({}));
       $("dstTxt").textContent = j.translated || "Hata oluştu.";
+
     } catch(e) {
       $("dstTxt").textContent = "Bağlantı hatası.";
     } finally {
@@ -221,33 +248,7 @@ textarea {
     }
   };
 
-  // Fotoğraf Tarama
-  $("imgFile").onchange = async (e) => {
-    const file = e.target.files[0];
-    if(!file) return;
-
-    $("srcTxt").value = "Fotoğraf işleniyor...";
-    
-    const fd = new FormData();
-    fd.append("image", file);
-    fd.append("from_lang", fromSel.value);
-    fd.append("to_lang", toSel.value);
-
-    try {
-      const r = await fetch(`${API_BASE}/api/translate/ocr_translate`, {
-        method: "POST",
-        body: fd
-      });
-      const j = await r.json();
-      if(j.ok) {
-        $("srcTxt").value = j.extracted_text;
-        $("dstTxt").textContent = j.translated_text;
-      }
-    } catch(e) {
-      $("srcTxt").value = "Tarama hatası.";
-    }
-  };
-
+  // ✅ Swap
   $("btnSwap").onclick = () => {
     const a = fromSel.value;
     const b = toSel.value;
@@ -255,6 +256,16 @@ textarea {
       fromSel.value = b;
       toSel.value = a;
     }
+  };
+
+  // ✅ Fotoğraf Tarama: şimdilik endpoint yok → kullanıcıya MVP mesajı
+  // Sonraki sürümde /api/ocr veya /api/exam/ocr_image gibi endpoint bağlarız.
+  $("imgFile").onchange = async (e) => {
+    const file = e.target.files?.[0];
+    if(!file) return;
+
+    $("srcTxt").value = "Fotoğraf alındı. OCR modülü bir sonraki adımda bağlanacak.";
+    $("dstTxt").textContent = "Önce OCR → sonra çeviri çalışacak.";
   };
 </script>
 </body>
