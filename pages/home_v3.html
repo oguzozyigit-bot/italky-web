@@ -3,287 +3,99 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-<title>italkyAI • Translate AI Hub</title>
+<title>italkyAI • Academy Hub</title>
 
-<meta name="theme-color" content="#02000f">
-<style>html,body{background:#02000f !important; margin:0; padding:0; overflow:hidden; font-family:'Outfit', sans-serif;}</style>
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+<meta name="theme-color" content="#000000">
+<style>
+  html,body{background:#000 !important; margin:0; padding:0; overflow:hidden; font-family:'Outfit', sans-serif;}
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=Space+Grotesk:wght@700&display=swap');
+</style>
 
 <style>
-:root{
-  --ai-grad: linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
-  --blue:#60a5fa;
-  --green:#34d399;
-  --purple:#a855f7;
-  --glass-border: rgba(255,255,255,0.12);
+:root {
+  --ai-grad: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
+  --green: #10b981;
+  --blue: #60a5fa;
+  --orange: #f97316;
+  --glass-border: rgba(255, 255, 255, 0.12);
 }
 
-*{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
 
-/* ✅ ui_shell içine taşınacak alan */
-#pageContent{
-  height: 100%;
-  display:flex;
-  flex-direction:column;
-  overflow:hidden;
-  background: radial-gradient(circle at 50% 20%, #0a0a25 0%, #000 100%);
+#pageContent {
+  height: 100vh;
+  display: flex; flex-direction: column;
+  padding-top: calc(env(safe-area-inset-top) + 40px);
+  padding-bottom: calc(env(safe-area-inset-bottom) + 85px);
+  background: radial-gradient(circle at 50% 20%, #051510 0%, #000 100%);
 }
 
-/* ✅ içerik: shellMain zaten padding-bottom veriyor */
-.main-hub{
-  flex:1;
-  min-height:0;
-  display:flex;
-  flex-direction:column;
-  gap: 10px;
-  padding: 10px 12px 8px;
-}
+.main-hub { flex: 1; display: flex; flex-direction: column; gap: 10px; padding: 10px 14px; }
 
-/* ==========================
-   1) FACETOFACE PORTAL
-========================== */
-.f2f-portal{
+/* ===== 1. SEVİYE TESPİT PORTAL (TOP) ===== */
+.portal-top {
   flex: 0 0 auto;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  cursor:pointer;
-  padding: 6px 0 2px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  cursor: pointer; padding: 10px 0;
 }
+.neural-orb { width: 110px; height: 110px; position: relative; display: flex; align-items: center; justify-content: center; }
+.ai-ring { position: absolute; inset: -4px; border-radius: 50%; padding: 2.5px; background: var(--ai-grad); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); mask-composite: exclude; animation: rotateOrb 15s linear infinite; }
+.orbit-energy { position: absolute; inset: -12px; border-radius: 50%; animation: rotateOrb 8s linear infinite; }
+/* Seviye Check Enerjisi */
+.e-ball { position: absolute; width: 12px; height: 12px; border-radius: 50%; display:flex; align-items:center; justify-content:center; font-size:8px; font-weight:900; color:#fff; }
+.ball-l { top:-5px; left:50%; transform:translateX(-50%); background:var(--green); box-shadow:0 0 15px var(--green); }
+.ball-b { bottom:-5px; left:50%; transform:translateX(-50%); background:var(--blue); box-shadow:0 0 15px var(--blue); }
 
-.neural-orb{
-  width: 110px;
-  height: 110px;
-  position: relative;
-  display:flex;
-  align-items:center;
-  justify-content:center;
+.ai-core { 
+    width: 82px; height: 82px; background: #000; border-radius: 50%; 
+    border: 2px solid transparent; background-image: linear-gradient(#000, #000), var(--ai-grad);
+    background-origin: border-box; background-clip: content-box, border-box;
+    display: flex; align-items: center; justify-content: center; 
+    animation: aiBreathe 4s infinite ease-in-out; z-index: 10;
 }
+.portal-title { font-family: 'Space Grotesk'; font-size: 22px; font-weight: 700; color: #fff; margin-top: 10px; letter-spacing: -1px; }
+.portal-title span { background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
-.ai-ring{
-  position:absolute;
-  inset:-4px;
-  border-radius:50%;
-  padding:2.5px;
-  background: var(--ai-grad);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask-composite: exclude;
-  animation: rotateOrb 15s linear infinite;
-}
-.orbit-energy{
-  position:absolute;
-  inset:-12px;
-  border-radius:50%;
-  animation: rotateOrb 8s linear infinite;
-}
-.e-ball{
-  position:absolute;
-  width:11px;height:11px;
-  border-radius:50%;
-  filter: blur(1px);
-}
-.ball-l{
-  top:-5px; left:50%;
-  transform:translateX(-50%);
-  background:#1e3a8a;
-  box-shadow:0 0 15px #1e3a8a;
-}
-.ball-b{
-  bottom:-5px; left:50%;
-  transform:translateX(-50%);
-  background:#801336;
-  box-shadow:0 0 15px #801336;
-}
-.ai-core{
-  width:82px;height:82px;
-  background:#000;
-  border-radius:50%;
-  background-image: linear-gradient(#000,#000), var(--ai-grad);
-  background-origin:border-box;
-  background-clip: content-box, border-box;
-  border:2px solid transparent;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  animation: aiBreathe 4s infinite ease-in-out;
-  z-index:10;
-}
+/* ===== 2. KARTLAR (EŞİT DAĞILIM) ===== */
+.hub-cards { flex: 1; display: flex; flex-direction: column; gap: 10px; }
 
-.f2f-title{
-  font-family:'Space Grotesk';
-  font-size: 22px;
-  font-weight: 900;
-  color:#fff;
-  margin: 8px 0 0;
-  letter-spacing:-1px;
+.academy-card {
+  flex: 1; position: relative; border-radius: 28px; border: 1px solid var(--glass-border);
+  overflow: hidden; cursor: pointer; display: flex; align-items: center; padding: 0 20px;
+  background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(25px); transition: all 0.3s ease;
 }
-.f2f-title .ai{
-  background: var(--ai-grad);
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
-}
+.academy-card:active { transform: scale(0.98); filter: brightness(1.2); }
 
-/* ==========================
-   2) MODÜL KARTLARI
-========================== */
-.hub-cards{
-  flex:1;
-  min-height:0;
-  display:flex;
-  flex-direction:column;
-  gap: 10px;
-}
+/* Renkler */
+.lesson-card { background: linear-gradient(145deg, rgba(96, 165, 250, 0.08) 0%, rgba(0,0,0,0.6) 100%); }
+.practice-card { background: linear-gradient(145deg, rgba(16, 185, 129, 0.08) 0%, rgba(0,0,0,0.6) 100%); }
+.game-card { background: linear-gradient(145deg, rgba(249, 115, 22, 0.08) 0%, rgba(0,0,0,0.6) 100%); }
 
-/* kart base */
-.trans-card{
-  flex: 1;
-  min-height: 86px;
-  position:relative;
-  border-radius: 30px;
-  border: 1px solid var(--glass-border);
-  overflow:hidden;
-  cursor:pointer;
-  display:flex;
-  align-items:center;
-  padding: 0 18px;
-  background: rgba(255,255,255,0.03);
-  backdrop-filter: blur(25px);
-  -webkit-backdrop-filter: blur(25px);
-  transition: transform .22s ease, filter .22s ease;
-}
-.trans-card:active{ transform: scale(0.985); filter: brightness(1.12); }
+/* ===== ÖZEL ANİMASYONLAR ===== */
 
-/* renkler */
-.text-card{
-  background: linear-gradient(145deg, rgba(96,165,250,0.14) 0%, rgba(0,0,0,0.55) 100%);
-  border-color: rgba(96,165,250,0.30);
-}
-.walkie-card{
-  background: linear-gradient(145deg, rgba(52,211,153,0.14) 0%, rgba(0,0,0,0.55) 100%);
-  border-color: rgba(52,211,153,0.30);
-}
-.offline-card{
-  background: linear-gradient(145deg, rgba(192,132,252,0.14) 0%, rgba(0,0,0,0.55) 100%);
-  border-color: rgba(192,132,252,0.30);
-}
+/* Lesson: Book Flip/Pulse */
+.icon-wrap { width: 50px; height: 50px; position: relative; margin-right: 18px; display: flex; align-items: center; justify-content: center; }
+.book-glow { position: absolute; inset: 0; background: var(--blue); filter: blur(15px); opacity: 0.3; animation: pulse 2s infinite; }
 
-/* 1) Metin çeviri: scan line */
-.matrix-line{
-  position:absolute;
-  top:0; left:0;
-  width:100%;
-  height:2px;
-  background: var(--blue);
-  box-shadow: 0 0 16px var(--blue);
-  animation: scanLine 3s linear infinite;
-  opacity:0.55;
-  pointer-events:none;
-}
-@keyframes scanLine { 0%{ top:0; } 100%{ top:100%; } }
+/* Practice: Wave Ripple */
+.ripple-wrap { width: 50px; height: 50px; position: relative; margin-right: 18px; }
+.ripple { position: absolute; inset: 0; border: 2px solid var(--green); border-radius: 50%; animation: rippleOut 2s infinite; }
 
-.text-blocks{
-  width: 62px;
-  height: 40px;
-  border: 1px solid rgba(96,165,250,0.55);
-  border-radius: 12px;
-  display:flex;
-  flex-direction:column;
-  gap:4px;
-  padding:6px 6px;
-  margin-right: 16px;
-  background: rgba(0,0,0,0.14);
-}
-.line{
-  height:3px;
-  border-radius: 999px;
-  background: rgba(255,255,255,0.18);
-  animation: textTyping 1.9s infinite alternate;
-}
-@keyframes textTyping { 0%{ width:24%; } 100%{ width:100%; } }
+/* Game: Floating Target */
+.target-wrap { width: 50px; height: 50px; position: relative; margin-right: 18px; display: flex; align-items: center; justify-content: center; }
+.target-dot { position: absolute; width: 10px; height: 10px; background: var(--orange); border-radius: 50%; animation: float 1.5s infinite alternate; }
 
-/* 2) Walkie: EQ */
-.eq-container{
-  width: 62px;
-  height: 40px;
-  display:flex;
-  align-items:flex-end;
-  gap:4px;
-  margin-right: 16px;
-}
-.eq-bar{
-  flex:1;
-  background: rgba(52,211,153,0.9);
-  border-radius: 4px 4px 0 0;
-  animation: eqPulse .55s infinite alternate;
-  box-shadow: 0 0 10px rgba(52,211,153,0.35);
-}
-@keyframes eqPulse { from{ height:18%; opacity:.45; } to{ height:100%; opacity:.9; } }
+@keyframes rotateOrb { from { transform: rotate(0); } to { transform: rotate(360deg); } }
+@keyframes aiBreathe { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+@keyframes pulse { 0%,100% { opacity: 0.2; } 50% { opacity: 0.5; } }
+@keyframes rippleOut { 0% { transform: scale(0.3); opacity: 1; } 100% { transform: scale(1.2); opacity: 0; } }
+@keyframes float { from { transform: translateY(-8px); } to { transform: translateY(8px); } }
 
-/* 3) Offline: flow dots */
-.flow-container{
-  width: 62px;
-  height: 40px;
-  position:relative;
-  margin-right: 16px;
-  overflow:hidden;
-  border: 1px dashed rgba(192,132,252,0.65);
-  border-radius: 12px;
-  background: rgba(0,0,0,0.14);
-}
-.flow-dot{
-  position:absolute;
-  width:4px;height:4px;
-  background: rgba(192,132,252,0.95);
-  border-radius:50%;
-  left:50%;
-  transform:translateX(-50%);
-  animation: flowDown 1.5s infinite linear;
-  box-shadow: 0 0 10px rgba(192,132,252,0.45);
-}
-@keyframes flowDown {
-  0% { top:-10%; opacity:0; }
-  45%{ opacity:1; }
-  100% { top:110%; opacity:0; }
-}
+/* Content */
+.card-content { flex: 1; z-index: 10; }
+.card-title { font-family: 'Space Grotesk'; font-size: 19px; font-weight: 700; color: #fff; margin: 0; }
+.card-desc { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 4px; line-height: 1.3; }
 
-/* içerik */
-.card-content{ flex:1; z-index:2; }
-.card-title{
-  font-family:'Space Grotesk';
-  font-size: 20px;
-  font-weight: 800;
-  color:#fff;
-  margin:0;
-  letter-spacing:-.2px;
-}
-.card-title .ai{
-  background: var(--ai-grad);
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
-  font-weight: 900;
-}
-.card-desc{
-  font-size: 11px;
-  color: rgba(255,255,255,0.45);
-  margin-top: 4px;
-  line-height: 1.35;
-}
-
-/* portal küçült (çok kısa ekran) */
-@media (max-height: 740px){
-  .neural-orb{ width:98px; height:98px; }
-  .ai-core{ width:74px; height:74px; }
-  .f2f-title{ font-size:20px; }
-  .main-hub{ gap:8px; padding: 8px 10px 6px; }
-  .hub-cards{ gap:8px; }
-  .trans-card{ border-radius: 26px; min-height: 80px; }
-}
-@keyframes rotateOrb{ from{ transform: rotate(0); } to{ transform: rotate(360deg); } }
-@keyframes aiBreathe{ 0%,100%{ transform: scale(1);} 50%{ transform: scale(1.06);} }
 </style>
 </head>
 
@@ -291,60 +103,52 @@
 <main id="pageContent">
   <div class="main-hub">
 
-    <div class="f2f-portal" onclick="location.href='/facetoface.html'">
+    <div class="portal-top" onclick="location.href='/pages/level_test_hub.html'">
       <div class="neural-orb">
         <div class="ai-ring"></div>
-        <div class="orbit-energy"><div class="e-ball ball-l"></div><div class="e-ball ball-b"></div></div>
+        <div class="orbit-energy"><div class="e-ball ball-l">A1</div><div class="e-ball ball-b">C2</div></div>
         <div class="ai-core">
-          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2">
-            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
-            <path d="M19 11v1a7 7 0 0 1-14 0v-2"/>
-            <line x1="12" y1="19" x2="12" y2="23"/>
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5">
+            <path d="M20 6L9 17l-5-5"/>
           </svg>
         </div>
       </div>
-      <h1 class="f2f-title">FaceToFace <span class="ai">AI</span></h1>
+      <h1 class="portal-title">Seviye Tespit <span>Sınavı</span></h1>
     </div>
 
     <div class="hub-cards">
 
-      <div class="trans-card text-card" onclick="location.href='/pages/text_translate.html'">
-        <div class="matrix-line"></div>
-        <div class="text-blocks" aria-hidden="true">
-          <div class="line" style="animation-delay:0s"></div>
-          <div class="line" style="animation-delay:.2s"></div>
-          <div class="line" style="animation-delay:.4s"></div>
-          <div class="line" style="animation-delay:.6s"></div>
+      <div class="academy-card lesson-card" onclick="location.href='/pages/teacher_select.html'">
+        <div class="icon-wrap">
+          <div class="book-glow"></div>
+          <span style="font-size: 24px; z-index: 2;">📚</span>
         </div>
         <div class="card-content">
-          <h2 class="card-title">Metinden Çeviri <span class="ai">AI</span></h2>
-          <p class="card-desc">Belgeler, mesajlar, uzun metinler • Hızlı ve doğal</p>
+          <h2 class="card-title">Language Lesson <span>AI</span></h2>
+          <p class="card-desc">Birebir yapay zeka öğretmenleri ile kişiselleştirilmiş dil dersleri.</p>
         </div>
       </div>
 
-      <div class="trans-card walkie-card" onclick="location.href='/pages/f2f_connect.html'">
-        <div class="eq-container" aria-hidden="true">
-          <div class="eq-bar" style="animation-delay:.10s"></div>
-          <div class="eq-bar" style="animation-delay:.30s"></div>
-          <div class="eq-bar" style="animation-delay:.20s"></div>
-          <div class="eq-bar" style="animation-delay:.40s"></div>
-          <div class="eq-bar" style="animation-delay:.55s"></div>
+      <div class="academy-card practice-card" onclick="location.href='/pages/practice_ai.html'">
+        <div class="ripple-wrap">
+          <div class="ripple" style="animation-delay: 0s"></div>
+          <div class="ripple" style="animation-delay: 1s"></div>
+          <span style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:24px;">🎙️</span>
         </div>
         <div class="card-content">
-          <h2 class="card-title">Walkie Talkie <span class="ai">AI</span></h2>
-          <p class="card-desc">2 telefon • toplantı odası • canlı iletişim</p>
+          <h2 class="card-title">AI ile Pratik <span>Yap</span></h2>
+          <p class="card-desc">Konuşma odaklı senaryolarla dilini özgürce geliştir.</p>
         </div>
       </div>
 
-      <div class="trans-card offline-card" onclick="location.href='/facetoface_offline.html'">
-        <div class="flow-container" aria-hidden="true">
-          <div class="flow-dot" style="animation-delay:0s"></div>
-          <div class="flow-dot" style="animation-delay:.5s"></div>
-          <div class="flow-dot" style="animation-delay:1s"></div>
+      <div class="academy-card game-card" onclick="location.href='/pages/game_lang_select.html'">
+        <div class="target-wrap">
+          <div class="target-dot"></div>
+          <span style="font-size: 24px; z-index: 2;">🎯</span>
         </div>
         <div class="card-content">
-          <h2 class="card-title">Offline Çeviri <span class="ai">AI</span></h2>
-          <p class="card-desc">İnternetsiz kullanım • indirilen paketler • gizlilik</p>
+          <h2 class="card-title">Eğlenerek <span>Öğren</span></h2>
+          <p class="card-desc">Oyunlarla kelime dağarcığını ve gramerini test et.</p>
         </div>
       </div>
 
