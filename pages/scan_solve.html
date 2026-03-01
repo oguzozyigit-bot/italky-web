@@ -1,0 +1,205 @@
+<!-- FILE: /pages/scan_solve.html -->
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+  <title>italkyAI • Foto Çek Çöz</title>
+
+  <meta name="theme-color" content="#02000f">
+  <style>html,body{background:#02000f !important;}</style>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+
+  <style>
+    *{box-sizing:border-box}
+    #pageContent{height:100%}
+    .wrap{max-width:520px;margin:0 auto;padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+    .card{border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);border-radius:22px;padding:12px}
+    .btn{height:52px;border-radius:18px;border:none;font-weight:1000;cursor:pointer}
+    .btnMain{background:#fff;color:#000}
+    .btnGhost{border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.06);color:#fff}
+    .stage{position:relative;border-radius:18px;overflow:hidden;border:1px solid rgba(255,255,255,0.10);background:rgba(0,0,0,0.25)}
+    canvas{width:100%;height:auto;display:block}
+    .hint{font-size:12px;font-weight:900;color:rgba(255,255,255,0.72);line-height:1.5}
+    textarea{width:100%;min-height:90px;border-radius:18px;border:1px solid rgba(255,255,255,0.12);background:rgba(0,0,0,0.2);color:#fff;padding:12px;font-weight:900}
+  </style>
+</head>
+<body>
+<main id="pageContent">
+  <div class="wrap">
+    <div class="card">
+      <div style="font-family:'Space Grotesk';font-weight:1000;font-size:16px;">Foto Çek • Kırp • Çöz</div>
+      <div class="hint" style="margin-top:6px;">
+        1) Foto seç (kamera/galeri)<br>
+        2) Soruyu parmağınla çerçevele (kırp)<br>
+        3) Metin çıkar (istersen düzelt) → Çöz
+      </div>
+    </div>
+
+    <div class="card">
+      <input id="file" type="file" accept="image/*" capture="environment" />
+      <div style="height:10px;"></div>
+      <div class="stage">
+        <canvas id="cv"></canvas>
+      </div>
+      <div class="hint" style="margin-top:8px;">Kırpma: resim üstünde sürükleyerek dikdörtgen seç.</div>
+      <div style="display:flex; gap:10px; margin-top:10px;">
+        <button class="btn btnGhost" id="btnCrop" type="button">Kırp</button>
+        <button class="btn btnMain" id="btnExtract" type="button">Metin Çıkar</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="font-weight:1000;">Soru Metni</div>
+      <textarea id="txt" placeholder="Metin burada… (istersen düzelt)"></textarea>
+      <div style="display:flex; gap:10px; margin-top:10px;">
+        <button class="btn btnGhost" id="btnClear" type="button">Temizle</button>
+        <button class="btn btnMain" id="btnSolve" type="button">Çöz</button>
+      </div>
+    </div>
+
+    <div class="card" id="out">
+      Çözüm burada görünecek…
+    </div>
+  </div>
+</main>
+
+<script type="module">
+  import { mountShell } from "/js/ui_shell.js";
+  mountShell({ scroll:"auto" });
+
+  // MVP: OCR yoksa bile çalışsın diye “metni kullanıcı düzeltebilir” mantığı
+  // İstersen backend OCR ekleyince btnExtract OCR’a bağlanır.
+
+  const API_BASE = "https://italky-api.onrender.com";
+
+  const file = document.getElementById("file");
+  const cv = document.getElementById("cv");
+  const ctx = cv.getContext("2d");
+  const txt = document.getElementById("txt");
+  const out = document.getElementById("out");
+
+  let img = new Image();
+  let imgLoaded = false;
+
+  // crop rect
+  let dragging=false;
+  let sel=null; // {x,y,w,h}
+  let start=null;
+
+  function fitCanvasToImage(image){
+    const maxW = 900;
+    const scale = Math.min(1, maxW / image.width);
+    cv.width = Math.floor(image.width * scale);
+    cv.height = Math.floor(image.height * scale);
+    ctx.drawImage(image, 0,0, cv.width, cv.height);
+  }
+
+  function draw(){
+    if(!imgLoaded) return;
+    ctx.clearRect(0,0,cv.width,cv.height);
+    ctx.drawImage(img, 0,0, cv.width, cv.height);
+
+    if(sel){
+      ctx.save();
+      ctx.strokeStyle = "rgba(165,180,252,0.95)";
+      ctx.lineWidth = 3;
+      ctx.strokeRect(sel.x, sel.y, sel.w, sel.h);
+      ctx.restore();
+    }
+  }
+
+  file.onchange = ()=>{
+    const f = file.files?.[0];
+    if(!f) return;
+    const url = URL.createObjectURL(f);
+    img = new Image();
+    img.onload = ()=>{
+      imgLoaded = true;
+      fitCanvasToImage(img);
+      sel=null;
+      draw();
+    };
+    img.src = url;
+  };
+
+  function pos(ev){
+    const r = cv.getBoundingClientRect();
+    const x = (ev.touches?ev.touches[0].clientX:ev.clientX) - r.left;
+    const y = (ev.touches?ev.touches[0].clientY:ev.clientY) - r.top;
+    return {x,y};
+  }
+
+  cv.addEventListener("pointerdown",(e)=>{
+    if(!imgLoaded) return;
+    dragging=true;
+    const p = pos(e);
+    start=p;
+    sel={x:p.x,y:p.y,w:0,h:0};
+    draw();
+  });
+
+  cv.addEventListener("pointermove",(e)=>{
+    if(!dragging || !sel || !start) return;
+    const p = pos(e);
+    sel.w = p.x - start.x;
+    sel.h = p.y - start.y;
+    // normalize
+    if(sel.w < 0){ sel.x = p.x; sel.w = Math.abs(sel.w); } else sel.x = start.x;
+    if(sel.h < 0){ sel.y = p.y; sel.h = Math.abs(sel.h); } else sel.y = start.y;
+    draw();
+  });
+
+  cv.addEventListener("pointerup",()=>{ dragging=false; start=null; });
+
+  document.getElementById("btnCrop").onclick = ()=>{
+    if(!imgLoaded || !sel) return;
+    const tmp = document.createElement("canvas");
+    tmp.width = Math.max(1, Math.floor(sel.w));
+    tmp.height = Math.max(1, Math.floor(sel.h));
+    tmp.getContext("2d").drawImage(cv, sel.x, sel.y, sel.w, sel.h, 0,0, tmp.width, tmp.height);
+
+    // replace
+    cv.width = tmp.width;
+    cv.height = tmp.height;
+    ctx.drawImage(tmp,0,0);
+    sel=null;
+  };
+
+  // MVP: metin çıkarma = kullanıcıya “buraya yapıştır” + ileride OCR
+  document.getElementById("btnExtract").onclick = async ()=>{
+    out.textContent = "OCR şu an MVP’de kapalı. Metni kendin yapıştır veya düzelt. (Sonraki adım: backend OCR)";
+    txt.focus();
+  };
+
+  document.getElementById("btnClear").onclick = ()=>{
+    txt.value = "";
+    out.textContent = "Çözüm burada görünecek…";
+  };
+
+  document.getElementById("btnSolve").onclick = async ()=>{
+    const q = (txt.value || "").trim();
+    if(!q){ out.textContent = "Soru metni boş."; return; }
+    out.textContent = "Çözülüyor…";
+
+    // Backend solve endpoint (aşağıda router veriyorum)
+    const r = await fetch(`${API_BASE}/api/exam/solve_text`,{
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ text: q, grade: 8, lesson: "Matematik" })
+    });
+
+    if(!r.ok){
+      const t = await r.text().catch(()=> "");
+      out.textContent = `Hata: HTTP ${r.status}\n${t}`;
+      return;
+    }
+    const j = await r.json();
+    out.textContent = j?.solution || JSON.stringify(j,null,2);
+  };
+</script>
+</body>
+</html>
