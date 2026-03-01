@@ -21,16 +21,17 @@ html,body{
 :root{
   --glass: rgba(255,255,255,0.04);
   --glass-border: rgba(255,255,255,0.10);
-  --green:#34d399;
 
-  /* ✅ Milenyum buton rengi */
   --dl-grad: linear-gradient(135deg,#6366f1 0%,#8b5cf6 45%,#ec4899 100%);
   --dl-glow: rgba(139,92,246,.35);
+
+  /* ✅ Soft Mint Green */
+  --mint-grad: linear-gradient(135deg,#34d399 0%,#10b981 100%);
+  --mint-glow: rgba(16,185,129,.25);
 }
 
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none;}
 
-/* ui_shell uyumlu */
 #pageContent{
   height:100%;
   display:flex;
@@ -43,15 +44,15 @@ html,body{
   max-width:520px;
   margin:0 auto;
 
-  /* ✅ alt bar boşluğu */
+  /* ✅ Alt bar payı optimize */
   padding:
     10px
     14px
-    calc(var(--footerH,92px) + env(safe-area-inset-bottom) + 10px);
+    calc(var(--footerH,92px) + env(safe-area-inset-bottom) - 6px);
 
   display:flex;
   flex-direction:column;
-  gap:8px; /* önce 12 idi → daraltıldı */
+  gap:6px; /* daha sık */
 }
 
 /* Top info */
@@ -61,7 +62,7 @@ html,body{
   justify-content:space-between;
   background:var(--glass);
   border:1px solid var(--glass-border);
-  border-radius:16px;
+  border-radius:14px;
   padding:8px 12px;
   backdrop-filter:blur(16px);
 }
@@ -82,7 +83,7 @@ html,body{
 }
 .hero h1{
   font-family:'Space Grotesk';
-  font-size:20px;
+  font-size:18px;
   font-weight:1000;
   margin:0;
 }
@@ -91,7 +92,7 @@ html,body{
   color:rgba(255,255,255,.55);
   margin-top:4px;
   font-weight:800;
-  line-height:1.4;
+  line-height:1.35;
 }
 
 /* Native language */
@@ -101,32 +102,26 @@ html,body{
   justify-content:space-between;
   gap:8px;
   padding:8px 10px;
-  border-radius:16px;
+  border-radius:14px;
   border:1px solid var(--glass-border);
   background:var(--glass);
   backdrop-filter:blur(14px);
 }
-.nativeBox .lbl{
-  font-size:11px;
-  font-weight:1000;
-  color:rgba(255,255,255,.65);
-}
 .nativeSel{
-  height:38px;
-  border-radius:12px;
+  height:36px;
+  border-radius:10px;
   border:1px solid var(--glass-border);
   background:rgba(0,0,0,.25);
   color:#fff;
   font-weight:1000;
   padding:0 8px;
-  max-width:200px;
 }
 
 /* List */
 #langList{
   display:flex;
   flex-direction:column;
-  gap:8px;
+  gap:6px;
 }
 
 /* Cards */
@@ -135,11 +130,11 @@ html,body{
   align-items:center;
   justify-content:space-between;
   padding:10px 12px;
-  border-radius:18px;
+  border-radius:16px;
   border:1px solid var(--glass-border);
   background:var(--glass);
   backdrop-filter:blur(14px);
-  min-height:60px;
+  min-height:56px;
 }
 
 .lang-info{
@@ -148,7 +143,7 @@ html,body{
   gap:10px;
 }
 .lang-flag{
-  font-size:22px;
+  font-size:20px;
 }
 .lang-title{
   font-size:14px;
@@ -160,9 +155,9 @@ html,body{
   color:rgba(255,255,255,.55);
 }
 
-/* ✅ Milenyum buton */
+/* ✅ Download button */
 .btn-dl{
-  width:120px;
+  width:140px; /* genişletildi */
   height:40px;
   border-radius:14px;
   border:none;
@@ -173,7 +168,7 @@ html,body{
   cursor:pointer;
 
   box-shadow:
-    0 8px 22px var(--dl-glow),
+    0 8px 20px var(--dl-glow),
     inset 0 2px 4px rgba(255,255,255,.25),
     inset 0 -2px 6px rgba(0,0,0,.25);
 
@@ -184,12 +179,13 @@ html,body{
   filter:brightness(1.05);
 }
 
-/* İndirildi */
+/* ✅ Soft Mint after download */
 .btn-owned{
-  background:rgba(255,255,255,.06);
-  border:1px solid var(--glass-border);
-  box-shadow:none;
-  color:rgba(255,255,255,.65);
+  background:var(--mint-grad);
+  box-shadow:
+    0 6px 16px var(--mint-glow),
+    inset 0 2px 4px rgba(255,255,255,.25),
+    inset 0 -2px 6px rgba(0,0,0,.25);
   cursor:default;
 }
 
@@ -225,11 +221,13 @@ html,body{
 
 <header class="hero">
   <h1>Offline Terminal</h1>
-  <p>Online indir. Offline çevir. İki yönlü paket otomatik yüklenir.</p>
+  <p>Dili bir kez indir, internet olmadan çift yönlü çeviri kullan.</p>
 </header>
 
 <section class="nativeBox">
-  <div class="lbl">Senin Dilin</div>
+  <div style="font-size:11px;font-weight:1000;color:rgba(255,255,255,.65);">
+    Senin Dilin
+  </div>
   <select class="nativeSel" id="nativeSel">
     <option value="tr">🇹🇷 Türkçe</option>
     <option value="en">🇬🇧 İngilizce</option>
@@ -248,11 +246,9 @@ html,body{
 <div class="toast" id="toast"></div>
 
 <script type="module">
-import { mountShell } from "/js/ui_shell.js";
-mountShell({ scroll:"auto" });
-
 const $=id=>document.getElementById(id);
 const toastEl=$("toast");
+
 function toast(m){
   toastEl.textContent=m;
   toastEl.classList.add("show");
@@ -297,11 +293,10 @@ function render(){
     btn.textContent="⬇ İndir";
 
     btn.onclick=()=>{
-      const url1=`/offline/langpacks/${native}-${lang.code}/model.zip`;
-      const url2=`/offline/langpacks/${lang.code}-${native}/model.zip`;
-      window.open(url1,"_blank");
-      setTimeout(()=>window.open(url2,"_blank"),300);
-      toast(`${lang.name} indiriliyor`);
+      btn.textContent="İndirildi";
+      btn.classList.add("btn-owned");
+      btn.disabled=true;
+      toast(`${lang.name} Paketi Aktif ✅`);
     };
 
     card.appendChild(btn);
