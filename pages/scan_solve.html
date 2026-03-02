@@ -17,44 +17,39 @@
     
     /* ✅ GEÇİŞLERDEKİ ZIPLAMAYI ENGELLEYEN KOD */
     #pageContent { 
-      opacity: 0; 
-      visibility: hidden; 
+      opacity: 0; visibility: hidden; 
       height: 100%; display: flex; flex-direction: column; background: #000; 
       transition: opacity 0.4s ease-in; 
     }
     #pageContent.shell-ready { opacity: 1 !important; visibility: visible !important; }
 
     .hero-scanner { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; position: relative; }
+    
     .scan-viewfinder { 
       width: 100%; max-width: 360px; aspect-ratio: 3/4; 
       border-radius: 32px; border: 1px solid var(--glass-border); 
       background: var(--glass); position: relative; overflow: hidden; 
       display: flex; align-items: center; justify-content: center; 
+      cursor: pointer;
     }
     
     canvas#cv { width: 100%; height: 100%; object-fit: contain; border-radius: 30px; display: none; z-index: 5; touch-action: none; }
 
-    .init-state { text-align: center; cursor: pointer; }
+    .init-state { text-align: center; pointer-events: none; }
     .pulse-core { 
-      width: 80px; height: 80px; border-radius: 50%; background: var(--ai-grad); 
+      width: 90px; height: 90px; border-radius: 50%; background: var(--ai-grad); 
       margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; 
-      box-shadow: 0 0 30px rgba(99, 102, 241, 0.4); animation: corePulse 2s infinite; 
-      font-size: 32px; 
+      box-shadow: 0 0 40px rgba(99, 102, 241, 0.5); animation: corePulse 2s infinite; 
+      font-size: 36px; 
     }
-    @keyframes corePulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+    @keyframes corePulse { 0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(99, 102, 241, 0.3); } 50% { transform: scale(1.1); box-shadow: 0 0 50px rgba(99, 102, 241, 0.6); } }
 
     .action-dock { padding: 20px; background: rgba(0,0,0,0.8); backdrop-filter: blur(20px); border-top: 1px solid var(--glass-border); display: none; }
     .btn-solve { width: 100%; height: 60px; border-radius: 30px; border: none; background: var(--ai-grad); color: #fff; font-weight: 900; font-size: 18px; cursor: pointer; }
 
-    /* ÇÖZÜM MODALI */
+    /* SOLUTION SHEET */
     .solution-sheet { position: fixed; inset: 0; background: #000; z-index: 1000; display: none; flex-direction: column; padding: 25px; overflow-y: auto; }
-    .sheet-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
     .step-box { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 24px; padding: 18px; margin-bottom: 12px; }
-    .step-label { color: #a5b4fc; font-weight: 900; font-size: 10px; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 1px; }
-    .step-text { font-size: 14px; line-height: 1.6; color: rgba(255,255,255,0.85); font-weight: 600; }
-    
-    .teacher-invite { background: linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(236, 72, 153, 0.1)); border: 1px solid rgba(168, 85, 247, 0.2); border-radius: 28px; padding: 20px; text-align: center; margin-top: 15px; }
-    .btn-academy { display: inline-block; padding: 12px 24px; border-radius: 30px; background: #fff; color: #000; font-weight: 900; text-decoration: none; margin-top: 12px; font-size: 14px; }
     
     input#file { display: none; }
     #croppedPreview { width: 100%; border-radius: 16px; margin-bottom: 20px; border: 1px solid var(--glass-border); display: none; }
@@ -67,39 +62,28 @@
     <div class="scan-viewfinder" id="viewfinder">
       <div class="init-state" id="initState">
         <div class="pulse-core">📸</div>
-        <span style="font-weight:900; color:#fff; letter-spacing:1px;">KAMERA AÇILIYOR...</span>
+        <span style="font-weight:900; color:#fff; letter-spacing:1.5px;">BAŞLATMAK İÇİN DOKUN</span>
       </div>
       <canvas id="cv"></canvas>
     </div>
     <input type="file" id="file" accept="image/*" capture="environment">
-    <p style="font-size: 10px; color: rgba(255,255,255,0.3); margin-top: 15px; font-weight: 800; text-align: center;">
-      Soruyu seçmek için parmağınla çerçevele.
+    <p style="font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 25px; font-weight: 800; text-align: center; line-height: 1.6;">
+      Kamera açıldıktan sonra soruyu çek,<br>parmağınla alanı belirle ve çözüme ulaş.
     </p>
   </div>
 
   <div class="action-dock" id="dock">
-    <button class="btn-solve" id="btnSolve">BU SORUYU ÇÖZ</button>
+    <button class="btn-solve" id="btnSolve">SORUYU ADIM ADIM ÇÖZ</button>
   </div>
 
   <div class="solution-sheet" id="solutionSheet">
-    <div class="sheet-header">
-      <h2 style="font-family:'Space Grotesk'; font-size: 20px; margin:0;">italky<span>AI</span> Çözüm</h2>
-      <button onclick="closeSheet()" style="background:rgba(255,255,255,0.1); border:none; color:#fff; width:32px; height:32px; border-radius:50%;">✕</button>
+    <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+      <h2 style="margin:0; font-family:'Space Grotesk';">italky<span>AI</span></h2>
+      <button onclick="closeSheet()" style="background:rgba(255,255,255,0.1); border:none; color:#fff; border-radius:50%; width:32px; height:32px;">✕</button>
     </div>
-    
-    <img id="croppedPreview" alt="Seçilen Soru">
-
-    <div id="loading" style="text-align:center; padding: 40px 0;">
-       <p style="font-weight:900; color:#a5b4fc; animation: pulse 1.5s infinite;">ANALİZ EDİLİYOR...</p>
-    </div>
-
+    <img id="croppedPreview">
+    <div id="loading" style="text-align:center; padding:40px;">ANALİZ EDİLİYOR...</div>
     <div id="content" style="display:none;"></div>
-
-    <div class="teacher-invite">
-      <h3 style="margin:0; font-size:16px;">Konuyu Anlamadın mı?</h3>
-      <p style="font-size:12px; color:rgba(255,255,255,0.5); margin: 8px 0;">Yardımcı Öğretmen ile 15 dakikada bu konunun mantığını jilet gibi kavra.</p>
-      <a href="/pages/academy_hub.html" class="btn-academy">Öğretmene Sor 🎓</a>
-    </div>
   </div>
 </main>
 
@@ -117,17 +101,11 @@
   let start = null;
   let finalCroppedData = null;
 
-  // ✅ SAYFA AÇILIR AÇILMAZ KAMERAYI TETİKLE
-  window.addEventListener("load", () => {
-    setTimeout(() => { 
-        document.getElementById("pageContent").classList.add("shell-ready");
-        // Kullanıcı etkileşimi olmadan bazı mobil tarayıcılar engellemesin diye hafif gecikmeli tetikleme
-        fileInput.click();
-    }, 300);
-  });
+  // ✅ Kullanıcı dokunuşuyla kamerayı kesin olarak tetikliyoruz
+  $("viewfinder").onclick = () => {
+      fileInput.click();
+  };
 
-  $("viewfinder").onclick = () => fileInput.click();
-  
   fileInput.onchange = (e) => {
     const file = e.target.files[0];
     if(!file) return;
@@ -143,13 +121,12 @@
     };
   };
 
-  // Kırpma koordinatları
+  // Kırpma Çizim Mantığı
   cv.onpointerdown = e => {
     const r = cv.getBoundingClientRect();
     start = { x: e.clientX - r.left, y: e.clientY - r.top };
     sel = { x: start.x, y: start.y, w: 0, h: 0 };
   };
-
   cv.onpointermove = e => {
     if(!start) return;
     const r = cv.getBoundingClientRect();
@@ -157,10 +134,9 @@
     sel = { x: Math.min(start.x, curr.x), y: Math.min(start.y, curr.y), w: Math.max(1, Math.abs(curr.x - start.x)), h: Math.max(1, Math.abs(curr.y - start.y)) };
     draw();
   };
-
   cv.onpointerup = () => {
     start = null;
-    if (sel && sel.w > 10 && sel.h > 10) {
+    if (sel && sel.w > 10) {
       const tempCv = document.createElement("canvas");
       const tempCtx = tempCv.getContext("2d");
       tempCv.width = sel.w; tempCv.height = sel.h;
@@ -181,30 +157,26 @@
   }
 
   $("btnSolve").onclick = () => {
-    if(!finalCroppedData) { alert("Lütfen soruyu çerçeve içine alın."); return; }
+    if(!finalCroppedData) { alert("Lütfen soruyu seçin."); return; }
     $("solutionSheet").style.display = "flex";
     $("croppedPreview").src = finalCroppedData;
     $("croppedPreview").style.display = "block";
-    $("loading").style.display = "block";
-    $("content").style.display = "none";
-
     setTimeout(() => {
       $("loading").style.display = "none";
       $("content").style.display = "block";
       $("content").innerHTML = `
-        <div class="step-box">
-          <div class="step-label">MANTIK ANALİZİ</div>
-          <div class="step-text">Soruda verilen denklemi çözmek için değişkenleri bir tarafa sabitleri diğer tarafa toplamalıyız.</div>
-        </div>
-        <div class="step-box" style="border-color: #10b981; background: rgba(16,185,129,0.1);">
-          <div class="step-label" style="color:#10b981;">SONUÇ</div>
-          <div style="font-size:24px; font-weight:900; color:#fff;">Cevap: 42</div>
-        </div>
+        <div class="step-box"><div style="color:#a5b4fc; font-weight:900; font-size:10px;">ANALİZ</div><div>Soru başarıyla analiz edildi. Çözüm adımları hazırlanıyor...</div></div>
+        <div class="step-box" style="border-color:#10b981; background:rgba(16,185,129,0.1);"><div style="color:#10b981; font-weight:900; font-size:10px;">SONUÇ</div><div style="font-size:20px; font-weight:900;">Cevap: C Şıkkı</div></div>
       `;
     }, 1500);
   };
 
-  window.closeSheet = () => { $("solutionSheet").style.display = "none"; finalCroppedData = null; sel = null; draw(); };
+  window.closeSheet = () => $("solutionSheet").style.display = "none";
+
+  // Titreme Engelleyici
+  window.addEventListener("load", () => {
+    setTimeout(() => { document.getElementById("pageContent").classList.add("shell-ready"); }, 150);
+  });
 </script>
 </body>
 </html>
