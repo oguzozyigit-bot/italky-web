@@ -147,20 +147,21 @@
     @keyframes rotateOrb { from { transform: rotate(0); } to { transform: rotate(360deg); } }
     @keyframes breathe { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
 
-    /* küçük bilgi etiketi */
-    .mini-note{
-      position:absolute; bottom:14px; left:50%;
+    /* mini durum */
+    .toast{
+      position:absolute; bottom:16px; left:50%;
       transform:translateX(-50%);
-      font-size:10px;
-      color:rgba(255,255,255,.45);
-      letter-spacing:1px;
-      background:rgba(0,0,0,.35);
+      background:rgba(0,0,0,.45);
       border:1px solid rgba(255,255,255,.12);
-      padding:6px 10px;
+      color:rgba(255,255,255,.9);
+      padding:8px 12px;
       border-radius:999px;
-      z-index:20;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
+      font-size:12px;
+      letter-spacing:.5px;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      display:none;
+      z-index:50;
     }
   </style>
 </head>
@@ -175,8 +176,8 @@
     </header>
 
     <section class="scanner-hero" id="btnStartTerminal">
-      <div class="scan-bar"></div>
 
+      <div class="scan-bar"></div>
       <div class="formula-layer">
         <div class="f-node" style="left: 20%; animation-delay: 0s;">E=mc²</div>
         <div class="f-node" style="left: 70%; animation-delay: 1.5s;">Δ = b² - 4ac</div>
@@ -201,7 +202,7 @@
         <p>Takıldığın sorunun fotoğrafını çek, alanı seç ve yapay zeka adım adım anlatarak çözsün.</p>
       </div>
 
-      <div class="mini-note">TIKLA → KAMERA AÇILSIN → ÇERÇEVELE → ÇÖZ</div>
+      <div class="toast" id="toast">Foto işleniyor…</div>
     </section>
 
   </div>
@@ -212,9 +213,56 @@
   mountShell({ scroll:"none" });
 
   const btn = document.getElementById("btnStartTerminal");
+  const toast = document.getElementById("toast");
+
+  function showToast(t){
+    toast.textContent = t;
+    toast.style.display = "block";
+  }
+  function hideToast(){
+    toast.style.display = "none";
+  }
+
+  // ✅ Foto küçültme + sıkıştırma (sessionStorage taşmasın)
+  async function compressToDataURL(file, maxSide=1600, quality=0.85){
+    const dataUrl = await new Promise((resolve, reject)=>{
+      const r = new FileReader();
+      r.onload = ()=>resolve(String(r.result || ""));
+      r.onerror = ()=>reject(new Error("file_read_fail"));
+      r.readAsDataURL(file);
+    });
+
+    const img = await new Promise((resolve, reject)=>{
+      const im = new Image();
+      im.onload = ()=>resolve(im);
+      im.onerror = ()=>reject(new Error("img_load_fail"));
+      im.src = dataUrl;
+    });
+
+    const w = img.naturalWidth || 1;
+    const h = img.naturalHeight || 1;
+
+    let nw = w, nh = h;
+    if(Math.max(w,h) > maxSide){
+      const s = maxSide / Math.max(w,h);
+      nw = Math.round(w*s);
+      nh = Math.round(h*s);
+    }
+
+    const canvas = document.createElement("canvas");
+    canvas.width = nw; canvas.height = nh;
+    const ctx = canvas.getContext("2d");
+
+    // biraz daha net çizim
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(img, 0, 0, nw, nh);
+
+    // jpeg export
+    return canvas.toDataURL("image/jpeg", quality);
+  }
 
   btn.onclick = () => {
-    // Kamera aç (mobilde capture="environment" arka kamerayı hedefler)
     const input = document.createElement("input");
     input.type = "file";
     input.accept = "image/*";
@@ -222,21 +270,25 @@
     input.style.display = "none";
     document.body.appendChild(input);
 
-    input.onchange = () => {
+    input.onchange = async () => {
       const file = input.files && input.files[0];
-      if (!file) { input.remove(); return; }
+      input.remove();
+      if (!file) return;
 
-      const reader = new FileReader();
-      reader.onload = () => {
-        try{
-          // Foto base64 -> crop sayfasına taşı
-          sessionStorage.setItem("exam_photo", String(reader.result || ""));
-        }catch(e){}
+      try{
+        showToast("Foto optimize ediliyor…");
+        const small = await compressToDataURL(file, 1600, 0.85);
 
-        input.remove();
+        // sessionStorage'a yaz (artık taşmaz)
+        sessionStorage.setItem("exam_photo", small);
+
+        hideToast();
         location.href = "/pages/exam_crop.html";
-      };
-      reader.readAsDataURL(file);
+      }catch(e){
+        hideToast();
+        // en azından kullanıcıya mesaj
+        alert("Foto işlenemedi. Lütfen tekrar dene.");
+      }
     };
 
     input.click();
