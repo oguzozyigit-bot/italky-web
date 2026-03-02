@@ -15,15 +15,32 @@
       --glass-border: rgba(255, 255, 255, 0.12);
     }
     
-    #pageContent { opacity: 0; visibility: hidden; height: 100%; display: flex; flex-direction: column; background: #000; transition: opacity 0.4s ease-in; }
+    /* ✅ GEÇİŞLERDEKİ ZIPLAMAYI ENGELLEYEN KOD */
+    #pageContent { 
+      opacity: 0; 
+      visibility: hidden; 
+      height: 100%; display: flex; flex-direction: column; background: #000; 
+      transition: opacity 0.4s ease-in; 
+    }
     #pageContent.shell-ready { opacity: 1 !important; visibility: visible !important; }
 
     .hero-scanner { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; position: relative; }
-    .scan-viewfinder { width: 100%; max-width: 360px; aspect-ratio: 3/4; border-radius: 32px; border: 1px solid var(--glass-border); background: var(--glass); position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+    .scan-viewfinder { 
+      width: 100%; max-width: 360px; aspect-ratio: 3/4; 
+      border-radius: 32px; border: 1px solid var(--glass-border); 
+      background: var(--glass); position: relative; overflow: hidden; 
+      display: flex; align-items: center; justify-content: center; 
+    }
+    
     canvas#cv { width: 100%; height: 100%; object-fit: contain; border-radius: 30px; display: none; z-index: 5; touch-action: none; }
 
     .init-state { text-align: center; cursor: pointer; }
-    .pulse-core { width: 80px; height: 80px; border-radius: 50%; background: var(--ai-grad); margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 30px rgba(99, 102, 241, 0.4); animation: corePulse 2s infinite; font-size: 32px; }
+    .pulse-core { 
+      width: 80px; height: 80px; border-radius: 50%; background: var(--ai-grad); 
+      margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; 
+      box-shadow: 0 0 30px rgba(99, 102, 241, 0.4); animation: corePulse 2s infinite; 
+      font-size: 32px; 
+    }
     @keyframes corePulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
 
     .action-dock { padding: 20px; background: rgba(0,0,0,0.8); backdrop-filter: blur(20px); border-top: 1px solid var(--glass-border); display: none; }
@@ -49,28 +66,28 @@
   <div class="hero-scanner">
     <div class="scan-viewfinder" id="viewfinder">
       <div class="init-state" id="initState">
-        <div class="pulse-core">💎</div>
-        <span style="font-weight:900; color:#fff; letter-spacing:1px;">SORUYU SEÇ</span>
+        <div class="pulse-core">📸</div>
+        <span style="font-weight:900; color:#fff; letter-spacing:1px;">KAMERA AÇILIYOR...</span>
       </div>
       <canvas id="cv"></canvas>
     </div>
     <input type="file" id="file" accept="image/*" capture="environment">
     <p style="font-size: 10px; color: rgba(255,255,255,0.3); margin-top: 15px; font-weight: 800; text-align: center;">
-      Sorunun etrafını parmağınla çizerek seç.
+      Soruyu seçmek için parmağınla çerçevele.
     </p>
   </div>
 
   <div class="action-dock" id="dock">
-    <button class="btn-solve" id="btnSolve">SADECE SEÇİLENİ ÇÖZ</button>
+    <button class="btn-solve" id="btnSolve">BU SORUYU ÇÖZ</button>
   </div>
 
   <div class="solution-sheet" id="solutionSheet">
     <div class="sheet-header">
-      <h2 style="font-family:'Space Grotesk'; font-size: 20px; margin:0;">Kuantum Çözüm</h2>
+      <h2 style="font-family:'Space Grotesk'; font-size: 20px; margin:0;">italky<span>AI</span> Çözüm</h2>
       <button onclick="closeSheet()" style="background:rgba(255,255,255,0.1); border:none; color:#fff; width:32px; height:32px; border-radius:50%;">✕</button>
     </div>
     
-    <img id="croppedPreview" alt="Kırpılan Soru">
+    <img id="croppedPreview" alt="Seçilen Soru">
 
     <div id="loading" style="text-align:center; padding: 40px 0;">
        <p style="font-weight:900; color:#a5b4fc; animation: pulse 1.5s infinite;">ANALİZ EDİLİYOR...</p>
@@ -100,6 +117,15 @@
   let start = null;
   let finalCroppedData = null;
 
+  // ✅ SAYFA AÇILIR AÇILMAZ KAMERAYI TETİKLE
+  window.addEventListener("load", () => {
+    setTimeout(() => { 
+        document.getElementById("pageContent").classList.add("shell-ready");
+        // Kullanıcı etkileşimi olmadan bazı mobil tarayıcılar engellemesin diye hafif gecikmeli tetikleme
+        fileInput.click();
+    }, 300);
+  });
+
   $("viewfinder").onclick = () => fileInput.click();
   
   fileInput.onchange = (e) => {
@@ -117,6 +143,7 @@
     };
   };
 
+  // Kırpma koordinatları
   cv.onpointerdown = e => {
     const r = cv.getBoundingClientRect();
     start = { x: e.clientX - r.left, y: e.clientY - r.top };
@@ -134,7 +161,6 @@
   cv.onpointerup = () => {
     start = null;
     if (sel && sel.w > 10 && sel.h > 10) {
-      // ✅ GERÇEK KIRPMA: Sadece seçilen alanı yeni bir canvas'a alıp dataUrl yapıyoruz
       const tempCv = document.createElement("canvas");
       const tempCtx = tempCv.getContext("2d");
       tempCv.width = sel.w; tempCv.height = sel.h;
@@ -155,44 +181,30 @@
   }
 
   $("btnSolve").onclick = () => {
-    if(!finalCroppedData) { alert("Lütfen önce bir soru seçin."); return; }
-    
+    if(!finalCroppedData) { alert("Lütfen soruyu çerçeve içine alın."); return; }
     $("solutionSheet").style.display = "flex";
     $("croppedPreview").src = finalCroppedData;
     $("croppedPreview").style.display = "block";
     $("loading").style.display = "block";
     $("content").style.display = "none";
 
-    // AI Analiz Simülasyonu
     setTimeout(() => {
       $("loading").style.display = "none";
       $("content").style.display = "block";
       $("content").innerHTML = `
         <div class="step-box">
           <div class="step-label">MANTIK ANALİZİ</div>
-          <div class="step-text">Soruda bizden istenen x değerini bulmak için önce parantez içindeki işlemi dağıtmamız gerekiyor...</div>
-        </div>
-        <div class="step-box">
-          <div class="step-label">ADIM 1: DAĞITMA</div>
-          <div class="step-text">3(x-2) ifadesini 3x-6 şeklinde açıyoruz. Eşitliğin diğer tarafındaki 12 ile işleme devam ediyoruz.</div>
+          <div class="step-text">Soruda verilen denklemi çözmek için değişkenleri bir tarafa sabitleri diğer tarafa toplamalıyız.</div>
         </div>
         <div class="step-box" style="border-color: #10b981; background: rgba(16,185,129,0.1);">
-          <div class="step-label" style="color:#10b981;">FİNAL SONUÇ</div>
-          <div style="font-size:24px; font-weight:900; color:#fff;">Cevap: x = 6</div>
-        </div>
-        <div class="step-box">
-          <div class="step-label">NEDEN BÖYLE?</div>
-          <div class="step-text">Eşitliğin solundaki -6 değerini karşıya +6 olarak geçirdik ve 3x = 18 sonucuna ulaştık. Her iki tarafı 3'e bölünce x = 6 bulduk.</div>
+          <div class="step-label" style="color:#10b981;">SONUÇ</div>
+          <div style="font-size:24px; font-weight:900; color:#fff;">Cevap: 42</div>
         </div>
       `;
-    }, 1800);
+    }, 1500);
   };
 
   window.closeSheet = () => { $("solutionSheet").style.display = "none"; finalCroppedData = null; sel = null; draw(); };
-
-  window.addEventListener("load", () => {
-    setTimeout(() => { document.getElementById("pageContent").classList.add("shell-ready"); }, 150);
-  });
 </script>
 </body>
 </html>
