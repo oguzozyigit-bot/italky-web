@@ -1,11 +1,7 @@
 // FILE: /js/f2f_call.js
-// ✅ WalkieTalkie FINAL: AI sohbet YOK (sadece kullanıcılar arası)
-// ✅ Presence + roster ile katılımcı şeridi
-// ✅ Tek kişiyken mesaj göstermeme
-// ✅ Balonlarda avatar yok (sadece isim + balon)
-// ✅ Dil seçimi her zaman dolar
-// ✅ NEW: Push-to-talk (basılı tut → konuş, bırak → gönder)
-// ✅ NEW: Gelen mesajı otomatik TTS ile seslendir (anti-overlap)
+// ✅ WalkieTalkie FINAL: OpenAI YOK
+// ✅ NEW: Floor control (tek kişi konuşur) + "X konuşuyor…" + mic kilidi
+// ✅ Push-to-talk (basılı tut)
 
 import { LANG_POOL } from "/js/lang_pool_full.js";
 import { STORAGE_KEY } from "/js/config.js";
@@ -21,7 +17,6 @@ const role = String(params.get("role") || "").trim().toLowerCase();
 let myLang = String(params.get("me_lang") || localStorage.getItem("f2f_my_lang") || "tr").trim().toLowerCase();
 localStorage.setItem("f2f_my_lang", myLang);
 
-// ✅ Auto TTS (varsayılan açık)
 let autoTTS = (localStorage.getItem("wt_auto_tts") ?? "1") === "1";
 
 // UI
@@ -167,7 +162,7 @@ function localCleanText(text){
   return s;
 }
 
-// bubble (NO avatar in chat)
+// bubble
 function addMessage(side, name, text){
   if(!chat) return;
 
@@ -217,7 +212,7 @@ function isEchoIncoming(txt){
   return false;
 }
 
-// translate (display) — Google backend (endpoint adı translate_ai)
+// translate display (Google)
 async function translateAI(text, from, to){
   const t = String(text||"").trim();
   if(!t) return t;
@@ -258,17 +253,15 @@ async function sttBlob(blob, lang){
 }
 
 /* ===============================
-   ✅ AUTO TTS for incoming (anti-overlap + abort + token)
+   AUTO TTS incoming (anti-overlap)
 ================================ */
 let ttsAudio = null;
 let ttsCtl = null;
 let ttsToken = 0;
-let ttsLastAt = 0;
 
 function stopTTS(){
   try{ ttsCtl?.abort?.(); }catch{}
   ttsCtl = null;
-
   try{
     if(ttsAudio){
       ttsAudio.pause();
@@ -283,16 +276,11 @@ async function speakText(text, lang){
   const t = String(text||"").trim();
   if(!t) return;
 
-  const now = Date.now();
-  if(now - ttsLastAt < 160) return; // spam kes
-  ttsLastAt = now;
-
   stopTTS();
   const my = ++ttsToken;
 
   try{
     ttsCtl = new AbortController();
-
     const r = await fetch(`${API_BASE}/api/tts`,{
       method:"POST",
       headers:{ "Content-Type":"application/json" },
@@ -321,7 +309,59 @@ async function speakText(text, lang){
   }
 }
 
-// WS
+/* ===============================
+   FLOOR UI + mic lock
+================================ */
+let floorActive = false;
+let floorHolderId = "";
+let floorHolderName = "";
+let myHasFloor = false;
+
+let floorBanner = null;
+function ensureFloorBanner(){
+  if(floorBanner) return floorBanner;
+  floorBanner = document.createElement("div");
+  floorBanner.style.position = "fixed";
+  floorBanner.style.left = "50%";
+  floorBanner.style.top = "12px";
+  floorBanner.style.transform = "translateX(-50%)";
+  floorBanner.style.zIndex = "999999";
+  floorBanner.style.padding = "10px 14px";
+  floorBanner.style.borderRadius = "999px";
+  floorBanner.style.border = "1px solid rgba(255,255,255,0.14)";
+  floorBanner.style.background = "rgba(0,0,0,0.65)";
+  floorBanner.style.backdropFilter = "blur(12px)";
+  floorBanner.style.color = "rgba(255,255,255,0.92)";
+  floorBanner.style.fontFamily = "Outfit,system-ui,sans-serif";
+  floorBanner.style.fontWeight = "900";
+  floorBanner.style.fontSize = "12px";
+  floorBanner.style.opacity = "0";
+  floorBanner.style.transition = "opacity .15s ease";
+  floorBanner.style.pointerEvents = "none";
+  document.body.appendChild(floorBanner);
+  return floorBanner;
+}
+
+function showBanner(text){
+  const el = ensureFloorBanner();
+  el.textContent = text;
+  el.style.opacity = "1";
+}
+
+function hideBanner(){
+  const el = ensureFloorBanner();
+  el.style.opacity = "0";
+}
+
+function setMicLocked(locked){
+  if(!micBtn) return;
+  micBtn.style.pointerEvents = locked ? "none" : "auto";
+  micBtn.style.opacity = locked ? "0.45" : "1";
+}
+
+/* ===============================
+   WS + FLOOR
+================================ */
 let ws = null;
 let presenceKnown = false;
 let presenceCount = 1;
@@ -371,9 +411,48 @@ function connect(){
       const c = Number(msg.count||0);
       presenceCount = (Number.isFinite(c) && c >= 0) ? c : 1;
       if(peopleCount) peopleCount.textContent = String(Math.max(1, presenceCount));
-
       if(msg.roster) applyRoster(msg.roster);
       upsertParticipant(clientId, MY.name, MY.picture);
+      return;
+    }
+
+    // ✅ floor state broadcast
+    if(msg.type === "floor_state"){
+      floorActive = !!msg.active;
+      floorHolderId = String(msg.holder_id || "");
+      floorHolderName = String(msg.holder_name || "");
+      myHasFloor = floorActive && floorHolderId && (floorHolderId === clientId);
+
+      if(!floorActive){
+        hideBanner();
+        setMicLocked(false);
+      }else{
+        if(myHasFloor){
+          showBanner("🎙️ Sen konuşuyorsun…");
+          setMicLocked(false);
+        }else{
+          showBanner(`🎙️ ${floorHolderName || "Birisi"} konuşuyor…`);
+          setMicLocked(true);
+        }
+      }
+      return;
+    }
+
+    if(msg.type === "floor_granted"){
+      // floor_state de gelir ama garanti olsun
+      myHasFloor = true;
+      setMicLocked(false);
+      showBanner("🎙️ Sen konuşuyorsun…");
+      return;
+    }
+
+    if(msg.type === "floor_busy"){
+      myHasFloor = false;
+      floorActive = true;
+      floorHolderId = String(msg.holder_id || "");
+      floorHolderName = String(msg.holder_name || "");
+      showBanner(`🎙️ ${floorHolderName || "Birisi"} konuşuyor…`);
+      setMicLocked(true);
       return;
     }
 
@@ -403,8 +482,6 @@ function connect(){
       if(!shown) return;
 
       addMessage("left", fromName, shown);
-
-      // ✅ AUTO TTS: okunan dil = myLang (çünkü ekranda gösterilen bu)
       speakText(shown, myLang);
     }
   };
@@ -413,7 +490,9 @@ function connect(){
 }
 connect();
 
-// SEND typed
+/* ===============================
+   SEND typed
+================================ */
 async function sendTyped(){
   const raw = String(msgInput?.value || "").trim();
   if(!raw) return;
@@ -443,11 +522,30 @@ async function sendTyped(){
 sendBtn?.addEventListener("click", sendTyped);
 
 /* ===============================
-   ✅ PUSH-TO-TALK (hold to record)
+   PUSH-TO-TALK + FLOOR
 ================================ */
 let recJob=null, isBusy=false;
 let pressActive = false;
+let waitingFloor = false;
 
+async function requestFloor(){
+  if(!ws || ws.readyState !== 1) return false;
+  waitingFloor = true;
+  try{
+    ws.send(JSON.stringify({ type:"floor_request" }));
+    return true;
+  }catch{
+    waitingFloor = false;
+    return false;
+  }
+}
+
+function releaseFloor(){
+  if(!ws || ws.readyState !== 1) return;
+  try{ ws.send(JSON.stringify({ type:"floor_release" })); }catch{}
+}
+
+// start record (after floor granted)
 async function startRecord(){
   if(isBusy || recJob) return;
   isBusy=true;
@@ -459,7 +557,6 @@ async function startRecord(){
     mr.ondataavailable = (e)=>{ if(e.data && e.data.size) chunks.push(e.data); };
     mr.start(250);
 
-    // güvenlik: 12sn auto-stop
     const timer = setTimeout(()=> stopRecord(), 12000);
 
     recJob = { stream, mr, chunks, timer };
@@ -500,10 +597,12 @@ async function stopRecord(){
       }));
     }
   }catch{}
-  finally{ isBusy=false; }
+  finally{
+    isBusy=false;
+  }
 }
 
-// ✅ Hold handlers (touch + mouse + pen)
+// Hold handlers
 function bindPushToTalk(btn){
   if(!btn) return;
 
@@ -512,7 +611,32 @@ function bindPushToTalk(btn){
     e.stopPropagation();
     if(pressActive) return;
     pressActive = true;
-    await startRecord();
+
+    // if someone else holds floor, do nothing
+    if(floorActive && !myHasFloor){
+      showBanner(`🎙️ ${floorHolderName || "Birisi"} konuşuyor…`);
+      setMicLocked(true);
+      pressActive = false;
+      return;
+    }
+
+    // request floor; actual start will happen when floor_granted/floor_state says myHasFloor
+    const ok = await requestFloor();
+    if(!ok){
+      pressActive = false;
+      return;
+    }
+
+    // wait a tiny moment for grant; if granted quickly start record
+    setTimeout(async ()=>{
+      if(!pressActive) return;
+      if(myHasFloor){
+        await startRecord();
+      }else{
+        // still waiting → show banner
+        showBanner("🎙️ Sinyal alınıyor…");
+      }
+    }, 120);
   };
 
   const up = async (e)=>{
@@ -520,7 +644,13 @@ function bindPushToTalk(btn){
     e.stopPropagation();
     if(!pressActive) return;
     pressActive = false;
-    await stopRecord();
+
+    // if we started recording, stop
+    if(recJob) await stopRecord();
+
+    // release floor always (if we had)
+    releaseFloor();
+    waitingFloor = false;
   };
 
   btn.addEventListener("pointerdown", down, { passive:false });
@@ -528,7 +658,7 @@ function bindPushToTalk(btn){
   btn.addEventListener("pointercancel", up, { passive:false });
   btn.addEventListener("pointerleave", up, { passive:false });
 
-  // fallback (eski click toggle)
+  // swallow click
   btn.addEventListener("click",(e)=>{ e.preventDefault(); e.stopPropagation(); }, { passive:false });
 }
 
