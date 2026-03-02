@@ -3,9 +3,8 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-<title>italkyAI • Home</title>
+<title>italkyAI • Quantum OS V7</title>
 
-<meta name="theme-color" content="#000000">
 <style>
   html,body{background:#000 !important; margin:0; padding:0; overflow:hidden; font-family:'Outfit', sans-serif;}
   @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=Space+Grotesk:wght@700&display=swap');
@@ -14,253 +13,88 @@
 <style>
 :root{
   --ai-grad: linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
+  --blue: #00d2ff; --green: #39ff14; --pink: #ff007f;
   --glass-border: rgba(255,255,255,0.12);
-
-  --blue:#60a5fa;
-  --blue2:#6366f1;
-
-  --green:#34d399;
-  --green2:#10b981;
-
-  --purple:#c084fc;
-  --purple2:#a855f7;
 }
-
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none;}
 
-#pageContent{
-  height:100%;
-  display:flex;
-  flex-direction:column;
-  overflow:hidden;
-  padding-top: 0; /* ✅ üst boşluk yok */
-  padding-bottom: 0;
-  background: radial-gradient(circle at 50% 40%, #0a0a20 0%, #000 100%);
+#pageContent {
+  height: 100%;
+  display: flex; flex-direction: column;
+  background: radial-gradient(circle at 50% 50%, #0a0a25 0%, #000 100%);
+  position: relative;
 }
 
-.main-hub{
-  flex:1;
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-  padding: 8px 12px 6px 12px;
+.main-hub {
+  flex: 1; display: flex; flex-direction: column;
+  gap: 15px; padding: 15px; min-height: 0;
 }
 
-/* ===== CARD BASE ===== */
-.cyber-card{
-  flex:1;
-  position:relative;
-  border-radius:28px;
-  border:1px solid var(--glass-border);
-  overflow:hidden;
-  cursor:pointer;
-  display:flex;
-  align-items:center;
-  padding: 0 18px;
-  transition: transform .22s ease, filter .22s ease;
-  backdrop-filter: blur(28px);
-  -webkit-backdrop-filter: blur(28px);
-}
-.cyber-card:active{ transform: scale(0.985); filter: brightness(1.12); }
-
-/* İç ışık akışı */
-.cyber-card::before{
-  content:"";
-  position:absolute; inset:-40%;
-  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.12) 0%, transparent 45%);
-  opacity:.55;
-  filter: blur(14px);
-  animation: glowDrift 7.5s ease-in-out infinite alternate;
-  pointer-events:none;
-}
-@keyframes glowDrift{
-  from{ transform: translate3d(-14px,-10px,0) scale(1); }
-  to{ transform: translate3d(14px,10px,0) scale(1.06); }
+/* ===== CYBER PANEL (BUTON) ===== */
+.os-panel {
+  flex: 1; position: relative; border-radius: 32px;
+  border: 1px solid var(--glass-border);
+  overflow: hidden; cursor: pointer; display: flex; align-items: center; justify-content: space-between;
+  padding: 0 25px;
+  background: var(--panel-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 15px 35px -15px rgba(0,0,0,0.8);
 }
 
-/* Sağ üst “data stream” */
-.data{
-  position:absolute;
-  top:12px; right:14px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 8px;
-  line-height: 1.2;
-  opacity:.55;
-  text-align:right;
-  pointer-events:none;
+.os-panel:active { transform: scale(0.96) translateY(6px); border-color: var(--neon-color); }
+
+/* Renk Temaları */
+.tr-node { --neon-color: var(--blue); --panel-bg: linear-gradient(145deg, rgba(0, 210, 255, 0.12), rgba(0,0,0,0.7)); }
+.ac-node { --neon-color: var(--green); --panel-bg: linear-gradient(145deg, rgba(57, 255, 20, 0.08), rgba(0,0,0,0.7)); }
+.tc-node { --neon-color: var(--pink); --panel-bg: linear-gradient(145deg, rgba(255, 0, 127, 0.12), rgba(0,0,0,0.7)); }
+
+/* ✅ CANLI VE RENKLİ İKONLAR (OS CORE) */
+.icon-container {
+  position: relative; width: 80px; height: 80px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; z-index: 5;
 }
 
-/* ===== THEMES (tam farklı) ===== */
-.tr-card{
-  background: linear-gradient(145deg, rgba(96,165,250,0.18) 0%, rgba(99,102,241,0.08) 35%, rgba(0,0,0,0.55) 100%);
-  border-color: rgba(96,165,250,0.35);
+/* İkon Arkasındaki Enerji Halkası */
+.energy-ring {
+  position: absolute; inset: 0;
+  border: 2px solid var(--neon-color);
+  border-radius: 50%; opacity: 0.3;
+  animation: ringPulse 2s infinite alternate ease-in-out;
 }
-.ac-card{
-  background: linear-gradient(145deg, rgba(52,211,153,0.16) 0%, rgba(16,185,129,0.06) 35%, rgba(0,0,0,0.55) 100%);
-  border-color: rgba(52,211,153,0.35);
-}
-.tc-card{
-  background: linear-gradient(145deg, rgba(192,132,252,0.16) 0%, rgba(168,85,247,0.06) 35%, rgba(0,0,0,0.55) 100%);
-  border-color: rgba(192,132,252,0.35);
-}
-
-.tr-card .data{ color: rgba(96,165,250,0.95); }
-.ac-card .data{ color: rgba(52,211,153,0.95); }
-.tc-card .data{ color: rgba(192,132,252,0.95); }
-
-/* ===== SOLAR ===== */
-.solar{
-  width:70px;height:70px;
-  position:relative;
-  flex-shrink:0;
-  margin-right:16px;
-}
-.sun{
-  width:20px;height:20px;
-  background: var(--sun);
-  border-radius:50%;
-  filter: blur(4px);
-  box-shadow: 0 0 22px var(--sun);
-  position:absolute; left:50%; top:50%;
-  transform:translate(-50%,-50%);
-  opacity:.85;
-  animation: sunPulse 2.6s ease-in-out infinite;
-}
-@keyframes sunPulse{
-  0%,100%{ transform:translate(-50%,-50%) scale(1); opacity:.65; }
-  50%{ transform:translate(-50%,-50%) scale(1.18); opacity:.92; }
-}
-.orbit{
-  position:absolute;
-  border:1px solid rgba(255,255,255,.08);
-  border-radius:50%;
-  animation: spin linear infinite;
-}
-.orbit1{width:44px;height:44px;top:13px;left:13px;animation-duration:4s;}
-.orbit2{width:70px;height:70px;animation-duration:7s;animation-direction:reverse;}
-.planet{
-  width:4px;height:4px;
-  background:#fff;border-radius:50%;
-  position:absolute; top:-2px; left:50%;
-  transform:translateX(-50%);
-  box-shadow: 0 0 10px rgba(255,255,255,.85);
-}
-@keyframes spin{ from{transform:rotate(0deg);} to{transform:rotate(360deg);} }
-
-.tr-card{ --sun: var(--blue2); }
-.ac-card{ --sun: var(--green2); }
-.tc-card{ --sun: var(--purple2); }
-
-/* ===== TEXT ===== */
-.card-content{ flex:1; position:relative; z-index:2; }
-.card-title{
-  font-family:'Space Grotesk';
-  font-size:21px;
-  font-weight:700;
-  margin:0;
-  color:#fff;
-  letter-spacing:-.3px;
-}
-.card-title .ai{
-  background: var(--ai-grad);
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
-  font-weight:900;
-}
-.card-desc{
-  font-size:11px;
-  color: rgba(255,255,255,.50);
-  margin-top: 4px;
-  line-height: 1.35;
-  max-width: 260px;
+.energy-ring::after {
+  content: ""; position: absolute; inset: -8px;
+  border: 1px dashed var(--neon-color);
+  border-radius: 50%; animation: spin 10s linear infinite; opacity: 0.4;
 }
 
-/* ===== EXTRA SHOW (3 ayrı animasyon) ===== */
-
-/* 1) Translate: EQ + scan line */
-.eq{
-  position:absolute;
-  left:14px; right:14px;
-  bottom:10px;
-  height:22px;
-  display:flex;
-  align-items:flex-end;
-  justify-content:space-between;
-  gap:6px;
-  opacity:.45;
-  pointer-events:none;
-}
-.eq span{
-  flex:1;
-  height:6px;
-  border-radius:3px 3px 0 0;
-  background: rgba(96,165,250,0.95);
-  animation: eq 0.85s infinite alternate;
-}
-.eq span:nth-child(2){ animation-delay:.10s; }
-.eq span:nth-child(3){ animation-delay:.22s; }
-.eq span:nth-child(4){ animation-delay:.34s; }
-.eq span:nth-child(5){ animation-delay:.18s; }
-.eq span:nth-child(6){ animation-delay:.28s; }
-.eq span:nth-child(7){ animation-delay:.06s; }
-@keyframes eq{
-  0%{ height:4px; opacity:.35; }
-  100%{ height:20px; opacity:.7; }
-}
-.scanLine{
-  position:absolute;
-  inset:0;
-  background: linear-gradient(90deg, transparent, rgba(96,165,250,.30), transparent);
-  transform: translateX(-140%);
-  opacity:.55;
-  animation: scan 2.2s ease-in-out infinite;
-  pointer-events:none;
-}
-@keyframes scan{
-  0%{ transform: translateX(-140%); }
-  55%{ transform: translateX(140%); }
-  100%{ transform: translateX(140%); }
+.main-icon {
+  font-size: 38px; z-index: 10;
+  filter: drop-shadow(0 0 15px var(--neon-color));
+  animation: iconFloat 3s infinite alternate ease-in-out;
 }
 
-/* 2) Academy: cap rain */
-.capRain{ position:absolute; inset:0; pointer-events:none; overflow:hidden; opacity:.75; }
-.cap{
-  position:absolute;
-  bottom:-30px;
-  font-size:18px;
-  animation: capFly 3.8s linear infinite;
-  filter: drop-shadow(0 10px 20px rgba(0,0,0,.35));
-}
-.cap:nth-child(1){ left:18%; animation-delay:0s; }
-.cap:nth-child(2){ left:52%; animation-delay:1.1s; }
-.cap:nth-child(3){ left:82%; animation-delay:.55s; }
-@keyframes capFly{
-  0%{ transform: translateY(0) rotate(0deg); opacity:0; }
-  15%{ opacity:.55; }
-  85%{ opacity:.55; }
-  100%{ transform: translateY(-170px) rotate(360deg); opacity:0; }
+/* İçerik */
+.content-wrap { display: flex; flex-direction: column; gap: 4px; z-index: 10; }
+.btn-title { font-family: 'Space Grotesk'; font-size: 26px; font-weight: 800; color: #fff; margin: 0; }
+.btn-title span { background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.btn-desc { font-size: 10px; color: rgba(255,255,255,0.6); font-weight: 900; letter-spacing: 2px; text-transform: uppercase; }
+
+/* Durum Etiketi */
+.status-tag {
+  position: absolute; top: 12px; right: 20px;
+  font-family: monospace; font-size: 8px; color: var(--neon-color);
+  background: rgba(0,0,0,0.4); padding: 4px 8px; border-radius: 8px;
+  border: 1px solid var(--neon-color); opacity: 0.7;
 }
 
-/* 3) Teacher: formulas floating */
-.formulas{ position:absolute; inset:0; pointer-events:none; opacity:.65; overflow:hidden; }
-.f{
-  position:absolute;
-  bottom:-10px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 11px;
-  color: rgba(192,132,252,.95);
-  animation: fUp 3.2s linear infinite;
-}
-.f:nth-child(1){ left:22%; animation-delay:0s; }
-.f:nth-child(2){ left:48%; animation-delay:1.1s; }
-.f:nth-child(3){ left:74%; animation-delay:.55s; }
-.f:nth-child(4){ left:60%; animation-delay:1.7s; }
-@keyframes fUp{
-  0%{ transform: translateY(0); opacity:0; }
-  20%{ opacity:.7; }
-  90%{ opacity:0; }
-  100%{ transform: translateY(-120px); opacity:0; }
-}
+/* Animasyonlar */
+@keyframes ringPulse { from { transform: scale(0.9); opacity: 0.2; } to { transform: scale(1.1); opacity: 0.5; } }
+@keyframes spin { from { transform: rotate(0); } to { transform: rotate(360deg); } }
+@keyframes iconFloat { from { transform: translateY(-4px) rotate(-5deg); } to { transform: translateY(4px) rotate(5deg); } }
+
 </style>
 </head>
 
@@ -268,69 +102,38 @@
 <main id="pageContent">
   <div class="main-hub">
 
-    <!-- TRANSLATE -->
-    <div class="cyber-card tr-card" onclick="goTranslate()">
-      <div class="scanLine"></div>
-      <div class="data">QUANTUM: ACTIVE<br>LATENCY: 0.001ms</div>
-
-      <div class="eq" aria-hidden="true">
-        <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+    <div class="os-panel tr-node" onclick="location.href='/pages/translate_home.html'">
+      <div class="status-tag">SİNYAL: AKTİF</div>
+      <div class="content-wrap">
+        <h2 class="btn-title">Translate <span>AI</span></h2>
+        <div class="btn-desc">Nöral Dil Akışı</div>
       </div>
-
-      <div class="solar">
-        <div class="sun"></div>
-        <div class="orbit orbit1"><div class="planet"></div></div>
-        <div class="orbit orbit2"><div class="planet" style="background:rgba(96,165,250,.9)"></div></div>
-      </div>
-
-      <div class="card-content">
-        <h2 class="card-title">Translate <span class="ai">AI</span></h2>
-        <p class="card-desc">FaceToFace • Walkie Talkie • Metinden Çeviri</p>
+      <div class="icon-container">
+        <div class="energy-ring"></div>
+        <div class="main-icon">📡</div>
       </div>
     </div>
 
-    <!-- ACADEMY -->
-    <div class="cyber-card ac-card" onclick="goAcademy()">
-      <div class="data">NEURAL PATH<br>MODULES: READY</div>
-
-      <div class="capRain" aria-hidden="true">
-        <div class="cap">🎓</div>
-        <div class="cap">🎓</div>
-        <div class="cap">🎓</div>
+    <div class="os-panel ac-node" onclick="location.href='/pages/academy_home.html'">
+      <div class="status-tag">MODÜL: HAZIR</div>
+      <div class="content-wrap">
+        <h2 class="btn-title">Academy <span>AI</span></h2>
+        <div class="btn-desc">Bilgelik ve Eğitim Yolu</div>
       </div>
-
-      <div class="solar">
-        <div class="sun"></div>
-        <div class="orbit orbit1"><div class="planet"></div></div>
-        <div class="orbit orbit2"><div class="planet" style="background:rgba(52,211,153,.9)"></div></div>
-      </div>
-
-      <div class="card-content">
-        <h2 class="card-title">Academy <span class="ai">AI</span></h2>
-        <p class="card-desc">Seviye Tespit • Dil Dersi • AI Pratik • Oyun</p>
-      </div>
+      <div class="icon-container">
+        <div class="energy-ring"></div>
+        <div class="main-icon">💎</div> </div>
     </div>
 
-    <!-- TEACHER -->
-    <div class="cyber-card tc-card" onclick="goTeacher()">
-      <div class="data">CORE LOGIC<br>SCAN: ENABLED</div>
-
-      <div class="formulas" aria-hidden="true">
-        <div class="f">E=mc²</div>
-        <div class="f">πr²</div>
-        <div class="f">x²+y²</div>
-        <div class="f">Δt</div>
+    <div class="os-panel tc-node" onclick="location.href='/pages/helper_home.html'">
+      <div class="status-tag">SENKRON: AÇIK</div>
+      <div class="content-wrap">
+        <h2 class="btn-title">Teacher <span>AI</span></h2>
+        <div class="btn-desc">Mantıksal Çözüm Motoru</div>
       </div>
-
-      <div class="solar">
-        <div class="sun"></div>
-        <div class="orbit orbit1"><div class="planet"></div></div>
-        <div class="orbit orbit2"><div class="planet" style="background:rgba(192,132,252,.9)"></div></div>
-      </div>
-
-      <div class="card-content">
-        <h2 class="card-title">Teacher <span class="ai">AI</span></h2>
-        <p class="card-desc">Fotoğraf Çek • Soru Çöz • Mini Ders</p>
+      <div class="icon-container">
+        <div class="energy-ring"></div>
+        <div class="main-icon">🧬</div>
       </div>
     </div>
 
@@ -340,28 +143,6 @@
 <script type="module">
   import { mountShell } from "/js/ui_shell.js";
   mountShell({ scroll:"none" });
-
-  // Kartları seç
-  const cards = document.querySelectorAll(".cyber-card");
-
-  // Sırasıyla bağla
-  if(cards[0]){
-    cards[0].addEventListener("click", ()=>{
-      location.href = "/pages/translate_home.html";
-    });
-  }
-
-  if(cards[1]){
-    cards[1].addEventListener("click", ()=>{
-      location.href = "/pages/academy_home.html";
-    });
-  }
-
-  if(cards[2]){
-    cards[2].addEventListener("click", ()=>{
-      location.href = "/pages/helper_home.html";
-    });
-  }
 </script>
 </body>
 </html>
