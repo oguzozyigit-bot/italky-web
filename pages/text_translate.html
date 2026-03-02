@@ -78,7 +78,7 @@
 }
 
 .panel-in { border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-bottom: none; }
-.panel-out { 
+.panel-out {
   border-top-left-radius: 0; border-top-right-radius: 0; border-top: none;
   background: linear-gradient(180deg, var(--bordo) 0%, #000 100%);
   border-color: rgba(236, 72, 153, 0.2);
@@ -149,7 +149,6 @@ textarea {
 .btn-3d:active { transform: translateY(2px) scale(0.98); }
 
 .divider { width: 1px; background: var(--glass-border); height: 24px; margin: 0 10px; }
-
 </style>
 </head>
 
@@ -168,15 +167,15 @@ textarea {
         <button class="panel-action" id="btnMic" type="button" title="Konuş">🎙️</button>
         <textarea id="srcTxt" placeholder="Metin girin..."></textarea>
       </div>
-      
+
       <div class="command-bar">
         <label class="bar-btn">
           <input type="file" id="imgFile" accept="image/*" capture="environment" style="display:none">
           <span>📷 FOTOĞRAF TARAT</span>
         </label>
-        
+
         <div class="divider"></div>
-        
+
         <button class="btn-3d" id="btnTranslate">
           ⚡ ÇEVİR
         </button>
@@ -198,8 +197,9 @@ textarea {
   const API_BASE = "https://italky-api.onrender.com";
   const $ = (id)=>document.getElementById(id);
 
+  // ✅ AUTO kaldırıldı
   const LANG_POOL = [
-    {code:"auto", name:"OTOMATİK"}, {code:"tr", name:"TÜRKÇE"}, {code:"en", name:"İNGİLİZCE"},
+    {code:"tr", name:"TÜRKÇE"}, {code:"en", name:"İNGİLİZCE"},
     {code:"de", name:"ALMANCA"}, {code:"fr", name:"FRANSIZCA"}, {code:"it", name:"İTALYANCA"},
     {code:"es", name:"İSPANYOLCA"}, {code:"ru", name:"RUSÇA"}, {code:"ar", name:"ARAPÇA"},
     {code:"zh", name:"ÇİNCE"}, {code:"ja", name:"JAPONCA"}, {code:"ko", name:"KORECE"}
@@ -207,13 +207,14 @@ textarea {
 
   const fromSel = $("fromSel");
   const toSel = $("toSel");
-  
+
   const fill = (sel, list) => sel.innerHTML = list.map(l=>`<option value="${l.code}">${l.name}</option>`).join("");
   fill(fromSel, LANG_POOL);
-  fill(toSel, LANG_POOL.filter(x=>x.code!=="auto"));
-  
-  fromSel.value = "auto";
-  toSel.value = "tr";
+  fill(toSel, LANG_POOL);
+
+  // ✅ İlk açılış TR -> EN
+  fromSel.value = "tr";
+  toSel.value = "en";
 
   // --- Translate Core ---
   async function doTranslate(){
@@ -267,7 +268,7 @@ textarea {
   let recording = false;
   let rec = null;
   let chunks = [];
-  
+
   $("btnMic").onclick = async () => {
     if(!recording) {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -278,7 +279,9 @@ textarea {
         const blob = new Blob(chunks, { type: 'audio/webm' });
         const fd = new FormData();
         fd.append("file", blob);
-        fd.append("lang", fromSel.value === "auto" ? "en" : fromSel.value);
+        // ✅ auto yok: direkt seçili kaynak dili gönder
+        fd.append("lang", fromSel.value);
+
         $("srcTxt").value = "Dinleniyor...";
         const r = await fetch(`${API_BASE}/api/stt`, { method: "POST", body: fd });
         const j = await r.json();
@@ -295,7 +298,7 @@ textarea {
     }
   };
 
-  // --- Photo ---
+  // --- Photo (OCR + Translate) ---
   $("imgFile").onchange = async (e) => {
     const file = e.target.files[0];
     if(!file) return;
@@ -310,14 +313,20 @@ textarea {
       if(j.ok) {
         $("srcTxt").value = j.extracted_text;
         $("dstTxt").textContent = j.translated_text;
+      } else {
+        $("srcTxt").value = "Tarama başarısız.";
       }
-    } catch(e) { $("srcTxt").value = "Tarama başarısız."; }
+    } catch(e) {
+      $("srcTxt").value = "Tarama başarısız.";
+    }
   };
 
+  // Swap
   $("btnSwap").onclick = () => {
     const a = fromSel.value;
     const b = toSel.value;
-    if(a !== "auto") { fromSel.value = b; toSel.value = a; }
+    fromSel.value = b;
+    toSel.value = a;
   };
 </script>
 </body>
