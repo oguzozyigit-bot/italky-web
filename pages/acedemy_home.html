@@ -8,6 +8,18 @@
 <style>
   html,body{background:#000 !important; margin:0; padding:0; overflow:hidden; font-family:'Outfit', sans-serif;}
   @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=Space+Grotesk:wght@700&display=swap');
+
+  /* ✅ KIRPILMAYI ÖNLEYEN KRİTİK STİL (Shell gelene kadar içeriği gizler) */
+  #pageContent { 
+    opacity: 0 !important; 
+    visibility: hidden !important; 
+    transform: translateZ(0); /* GPU Hızlandırma */
+  }
+  #pageContent.shell-ready { 
+    opacity: 1 !important; 
+    visibility: visible !important; 
+    transition: opacity 0.4s ease-in; 
+  }
 </style>
 
 <style>
@@ -46,20 +58,31 @@
   position: relative; display: flex; align-items: center; justify-content: center;
 }
 
-/* Dönen Kuantum Halkaları */
+/* ✅ HAREKETLİ HALKALAR (GPU Hızlandırmalı) */
 .scanner-ring {
   position: absolute; inset: 0;
   border: 2px solid rgba(165, 180, 252, 0.2);
   border-radius: 50%;
+  will-change: transform; /* Mobil için işlemciye bildiriyoruz */
 }
-.scanner-ring.outer { animation: rotate 10s linear infinite; border-style: dashed; }
-.scanner-ring.inner { inset: 15px; border: 2px solid var(--ai-grad); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); mask-composite: exclude; animation: rotate 6s linear infinite reverse; }
+.scanner-ring.outer { 
+  animation: rotateAction 10s linear infinite; 
+  border-style: dashed; 
+}
+.scanner-ring.inner { 
+  inset: 15px; 
+  border: 2px solid var(--ai-grad); 
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); 
+  mask-composite: exclude; 
+  animation: rotateAction 6s linear infinite reverse; 
+}
 
 /* Seviye Topları */
 .level-dot {
   position: absolute; width: 14px; height: 14px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   font-size: 8px; font-weight: 900; color: #fff; box-shadow: 0 0 15px currentColor;
+  will-change: transform;
 }
 .dot-a1 { top: -5px; background: var(--neon-green); color: var(--neon-green); }
 .dot-c1 { bottom: -5px; background: var(--neon-blue); color: var(--neon-blue); }
@@ -68,7 +91,7 @@
   width: 70px; height: 70px; border-radius: 50%;
   background: #000; border: 2px solid rgba(255,255,255,0.1);
   display: flex; align-items: center; justify-content: center;
-  font-size: 28px; z-index: 5; transition: 0.3s;
+  font-size: 28px; z-index: 5; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: inset 0 0 15px rgba(99, 102, 241, 0.4);
 }
 .portal-top:active .core-button { transform: scale(0.9); box-shadow: 0 0 30px var(--neon-blue); }
@@ -87,7 +110,8 @@
   overflow: hidden; cursor: pointer; display: flex; align-items: center;
   padding: 0 20px; background: var(--card-bg);
   backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity;
 }
 .os-card:active { transform: scale(0.97) translateY(4px); border-color: var(--card-color); }
 
@@ -112,10 +136,14 @@
 
 .card-info { flex: 1; }
 .card-info h2 { font-family: 'Space Grotesk'; font-size: 19px; font-weight: 800; color: #fff; margin: 0; }
-.card-info h2 span { background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.card-info h2 span { background: var(--ai-grad); -webkit-background-clip:text; -webkit-text-fill-color: transparent; }
 .card-info p { font-size: 10px; color: rgba(255,255,255,0.4); margin-top: 5px; font-weight: 700; line-height: 1.4; text-transform: uppercase; letter-spacing: 0.5px; }
 
-@keyframes rotate { from { transform: rotate(0); } to { transform: rotate(360deg); } }
+/* ✅ MOBİL UYUMLU ROTASYON ANİMASYONU */
+@keyframes rotateAction { 
+  from { transform: rotate(0deg); } 
+  to { transform: rotate(360deg); } 
+}
 </style>
 </head>
 
@@ -166,8 +194,17 @@
 </main>
 
 <script type="module">
-  import { mountShell } from "/js/ui_shell.js";
+  // ✅ Versiyon ekleyerek cache kırıyoruz, anında yeni kodu alıyoruz
+  import { mountShell } from "/js/ui_shell.js?v=2026.03.02";
+  
+  // Shell monte edildikten sonra içeriği göster (Kırpılmayı bitiren son hamle)
   mountShell({ scroll:"none" });
+  
+  window.addEventListener("load", () => {
+    setTimeout(() => {
+      document.getElementById("pageContent").classList.add("shell-ready");
+    }, 150);
+  });
 </script>
 </body>
 </html>
