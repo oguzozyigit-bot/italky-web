@@ -11,87 +11,36 @@
     
     :root {
       --ai-grad: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
-      --neon-purple: #a855f7;
       --glass: rgba(255, 255, 255, 0.05);
       --glass-border: rgba(255, 255, 255, 0.12);
     }
     
-    /* ✅ KIRPILMAYI ÖNLEYEN KRİTİK STİL */
-    #pageContent { 
-      opacity: 0 !important; 
-      visibility: hidden !important; 
-      height: 100%; display: flex; flex-direction: column; background: #000;
-    }
-    #pageContent.shell-ready { 
-      opacity: 1 !important; 
-      visibility: visible !important; 
-      transition: opacity 0.4s ease-in; 
-    }
+    #pageContent { opacity: 0; visibility: hidden; height: 100%; display: flex; flex-direction: column; background: #000; transition: opacity 0.4s ease-in; }
+    #pageContent.shell-ready { opacity: 1 !important; visibility: visible !important; }
 
-    /* VİZÖR ALANI */
-    .hero-scanner {
-      flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-      padding: 20px; position: relative;
-    }
-    
-    .scan-viewfinder {
-      width: 100%; max-width: 360px; aspect-ratio: 3/4;
-      border-radius: 32px; border: 1px solid var(--glass-border);
-      background: var(--glass); position: relative; overflow: hidden;
-      display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 0 40px rgba(0,0,0,0.5);
-    }
+    .hero-scanner { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; position: relative; }
+    .scan-viewfinder { width: 100%; max-width: 360px; aspect-ratio: 3/4; border-radius: 32px; border: 1px solid var(--glass-border); background: var(--glass); position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+    canvas#cv { width: 100%; height: 100%; object-fit: contain; border-radius: 30px; display: none; z-index: 5; touch-action: none; }
 
-    canvas#cv { width: 100%; height: 100%; object-fit: contain; border-radius: 30px; display: none; z-index: 5; }
+    .init-state { text-align: center; cursor: pointer; }
+    .pulse-core { width: 80px; height: 80px; border-radius: 50%; background: var(--ai-grad); margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 30px rgba(99, 102, 241, 0.4); animation: corePulse 2s infinite; font-size: 32px; }
+    @keyframes corePulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
 
-    /* Yükleme Ekranı (İlk giriş) */
-    .init-state { text-align: center; z-index: 10; cursor: pointer; }
-    .init-state .pulse-core {
-      width: 80px; height: 80px; border-radius: 50%; background: var(--ai-grad);
-      margin: 0 auto 20px; display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 0 30px rgba(99, 102, 241, 0.4);
-      animation: corePulse 2s infinite;
-    }
-    @keyframes corePulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.7; } 100% { transform: scale(1); opacity: 1; } }
-    .init-state span { font-weight: 900; font-size: 14px; color: #fff; letter-spacing: 2px; }
-
-    /* ALT PANEL */
-    .action-dock {
-      padding: 20px; background: rgba(0,0,0,0.8); backdrop-filter: blur(20px);
-      border-top: 1px solid var(--glass-border); display: none;
-    }
-    .btn-solve {
-      width: 100%; height: 60px; border-radius: 30px; border: none;
-      background: var(--ai-grad); color: #fff; font-weight: 900; font-size: 18px;
-      cursor: pointer; transition: 0.3s;
-    }
-    .btn-solve:active { transform: scale(0.95); }
+    .action-dock { padding: 20px; background: rgba(0,0,0,0.8); backdrop-filter: blur(20px); border-top: 1px solid var(--glass-border); display: none; }
+    .btn-solve { width: 100%; height: 60px; border-radius: 30px; border: none; background: var(--ai-grad); color: #fff; font-weight: 900; font-size: 18px; cursor: pointer; }
 
     /* ÇÖZÜM MODALI */
-    .solution-sheet {
-      position: fixed; inset: 0; background: #000; z-index: 1000;
-      display: none; flex-direction: column; padding: 25px; overflow-y: auto;
-    }
-    .sheet-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+    .solution-sheet { position: fixed; inset: 0; background: #000; z-index: 1000; display: none; flex-direction: column; padding: 25px; overflow-y: auto; }
+    .sheet-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .step-box { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 24px; padding: 18px; margin-bottom: 12px; }
+    .step-label { color: #a5b4fc; font-weight: 900; font-size: 10px; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 1px; }
+    .step-text { font-size: 14px; line-height: 1.6; color: rgba(255,255,255,0.85); font-weight: 600; }
     
-    .step-box {
-      background: var(--glass); border: 1px solid var(--glass-border);
-      border-radius: 24px; padding: 20px; margin-bottom: 15px;
-    }
-    .step-label { color: #a5b4fc; font-weight: 900; font-size: 11px; text-transform: uppercase; margin-bottom: 10px; }
+    .teacher-invite { background: linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(236, 72, 153, 0.1)); border: 1px solid rgba(168, 85, 247, 0.2); border-radius: 28px; padding: 20px; text-align: center; margin-top: 15px; }
+    .btn-academy { display: inline-block; padding: 12px 24px; border-radius: 30px; background: #fff; color: #000; font-weight: 900; text-decoration: none; margin-top: 12px; font-size: 14px; }
     
-    /* ÖĞRETMEN CTA */
-    .teacher-invite {
-      background: linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(236, 72, 153, 0.15));
-      border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 28px;
-      padding: 25px; text-align: center; margin-top: 20px;
-    }
-    .btn-academy {
-      display: inline-block; padding: 14px 28px; border-radius: 30px;
-      background: #fff; color: #000; font-weight: 900; text-decoration: none; margin-top: 15px;
-    }
-
     input#file { display: none; }
+    #croppedPreview { width: 100%; border-radius: 16px; margin-bottom: 20px; border: 1px solid var(--glass-border); display: none; }
   </style>
 </head>
 
@@ -101,36 +50,37 @@
     <div class="scan-viewfinder" id="viewfinder">
       <div class="init-state" id="initState">
         <div class="pulse-core">💎</div>
-        <span>DOSYA SEÇ VEYA ÇEK</span>
+        <span style="font-weight:900; color:#fff; letter-spacing:1px;">SORUYU SEÇ</span>
       </div>
       <canvas id="cv"></canvas>
     </div>
     <input type="file" id="file" accept="image/*" capture="environment">
-    <p style="font-size: 10px; color: rgba(255,255,255,0.3); margin-top: 20px; font-weight: 800; text-align: center; padding: 0 40px;">
-      Çözmek istediğin soruyu parmağınla çerçeve içine al.
+    <p style="font-size: 10px; color: rgba(255,255,255,0.3); margin-top: 15px; font-weight: 800; text-align: center;">
+      Sorunun etrafını parmağınla çizerek seç.
     </p>
   </div>
 
   <div class="action-dock" id="dock">
-    <button class="btn-solve" id="btnSolve">SORUYU ANALİZ ET</button>
+    <button class="btn-solve" id="btnSolve">SADECE SEÇİLENİ ÇÖZ</button>
   </div>
 
   <div class="solution-sheet" id="solutionSheet">
     <div class="sheet-header">
-      <h2 style="font-family:'Space Grotesk'; font-size: 22px; margin:0;">italky<span>AI</span> Çözüm</h2>
-      <button onclick="closeSheet()" style="background:rgba(255,255,255,0.1); border:none; color:#fff; width:36px; height:36px; border-radius:50%;">✕</button>
+      <h2 style="font-family:'Space Grotesk'; font-size: 20px; margin:0;">Kuantum Çözüm</h2>
+      <button onclick="closeSheet()" style="background:rgba(255,255,255,0.1); border:none; color:#fff; width:32px; height:32px; border-radius:50%;">✕</button>
     </div>
     
-    <div id="loading" style="text-align:center; padding: 50px 0;">
-       <p style="font-weight:900; color:#a5b4fc; letter-spacing: 2px;">ANALİZ EDİLİYOR...</p>
+    <img id="croppedPreview" alt="Kırpılan Soru">
+
+    <div id="loading" style="text-align:center; padding: 40px 0;">
+       <p style="font-weight:900; color:#a5b4fc; animation: pulse 1.5s infinite;">ANALİZ EDİLİYOR...</p>
     </div>
 
-    <div id="content" style="display:none;">
-      </div>
+    <div id="content" style="display:none;"></div>
 
     <div class="teacher-invite">
-      <h3 style="margin:0; font-size:18px;">Hala kafan mı karışık?</h3>
-      <p style="font-size:13px; color:rgba(255,255,255,0.5); margin: 10px 0;">Bu sorunun mantığını 15 dakikalık özel bir dersle Yardımcı Öğretmen'den dinlemek ister misin?</p>
+      <h3 style="margin:0; font-size:16px;">Konuyu Anlamadın mı?</h3>
+      <p style="font-size:12px; color:rgba(255,255,255,0.5); margin: 8px 0;">Yardımcı Öğretmen ile 15 dakikada bu konunun mantığını jilet gibi kavra.</p>
       <a href="/pages/academy_hub.html" class="btn-academy">Öğretmene Sor 🎓</a>
     </div>
   </div>
@@ -143,15 +93,15 @@
   const $ = (id) => document.getElementById(id);
   const cv = $("cv");
   const ctx = cv.getContext("2d");
-  const viewfinder = $("viewfinder");
   const fileInput = $("file");
 
   let img = new Image();
   let sel = null;
   let start = null;
+  let finalCroppedData = null;
 
-  // Foto Seçme
-  viewfinder.onclick = () => fileInput.click();
+  $("viewfinder").onclick = () => fileInput.click();
+  
   fileInput.onchange = (e) => {
     const file = e.target.files[0];
     if(!file) return;
@@ -159,7 +109,7 @@
     img.onload = () => {
       $("initState").style.display = "none";
       cv.style.display = "block";
-      const scale = Math.min(viewfinder.clientWidth / img.width, viewfinder.clientHeight / img.height);
+      const scale = Math.min($("viewfinder").clientWidth / img.width, $("viewfinder").clientHeight / img.height);
       cv.width = img.width * scale;
       cv.height = img.height * scale;
       draw();
@@ -167,20 +117,31 @@
     };
   };
 
-  // Kırpma Mantığı
   cv.onpointerdown = e => {
     const r = cv.getBoundingClientRect();
     start = { x: e.clientX - r.left, y: e.clientY - r.top };
     sel = { x: start.x, y: start.y, w: 0, h: 0 };
   };
+
   cv.onpointermove = e => {
     if(!start) return;
     const r = cv.getBoundingClientRect();
     const curr = { x: e.clientX - r.left, y: e.clientY - r.top };
-    sel = { x: Math.min(start.x, curr.x), y: Math.min(start.y, curr.y), w: Math.abs(curr.x - start.x), h: Math.abs(curr.y - start.y) };
+    sel = { x: Math.min(start.x, curr.x), y: Math.min(start.y, curr.y), w: Math.max(1, Math.abs(curr.x - start.x)), h: Math.max(1, Math.abs(curr.y - start.y)) };
     draw();
   };
-  cv.onpointerup = () => start = null;
+
+  cv.onpointerup = () => {
+    start = null;
+    if (sel && sel.w > 10 && sel.h > 10) {
+      // ✅ GERÇEK KIRPMA: Sadece seçilen alanı yeni bir canvas'a alıp dataUrl yapıyoruz
+      const tempCv = document.createElement("canvas");
+      const tempCtx = tempCv.getContext("2d");
+      tempCv.width = sel.w; tempCv.height = sel.h;
+      tempCtx.drawImage(cv, sel.x, sel.y, sel.w, sel.h, 0, 0, sel.w, sel.h);
+      finalCroppedData = tempCv.toDataURL();
+    }
+  };
 
   function draw() {
     ctx.clearRect(0,0,cv.width,cv.height);
@@ -193,32 +154,42 @@
     }
   }
 
-  // Çözüm Tetikleyici
   $("btnSolve").onclick = () => {
+    if(!finalCroppedData) { alert("Lütfen önce bir soru seçin."); return; }
+    
     $("solutionSheet").style.display = "flex";
+    $("croppedPreview").src = finalCroppedData;
+    $("croppedPreview").style.display = "block";
+    $("loading").style.display = "block";
+    $("content").style.display = "none";
+
+    // AI Analiz Simülasyonu
     setTimeout(() => {
       $("loading").style.display = "none";
       $("content").style.display = "block";
       $("content").innerHTML = `
         <div class="step-box">
-          <div class="step-label">KONU ANALİZİ</div>
-          <div style="font-weight:900;">Denklemler ve Eşitsizlikler</div>
+          <div class="step-label">MANTIK ANALİZİ</div>
+          <div class="step-text">Soruda bizden istenen x değerini bulmak için önce parantez içindeki işlemi dağıtmamız gerekiyor...</div>
         </div>
         <div class="step-box">
-          <div class="step-label">ADIM ADIM ÇÖZÜM</div>
-          <div style="line-height:1.6; color:rgba(255,255,255,0.8);">Verilen denklemde bilinmeyenleri bir tarafa toplayarak işleme başlıyoruz...</div>
+          <div class="step-label">ADIM 1: DAĞITMA</div>
+          <div class="step-text">3(x-2) ifadesini 3x-6 şeklinde açıyoruz. Eşitliğin diğer tarafındaki 12 ile işleme devam ediyoruz.</div>
         </div>
         <div class="step-box" style="border-color: #10b981; background: rgba(16,185,129,0.1);">
-          <div class="step-label" style="color:#10b981;">SONUÇ</div>
-          <div style="font-size:22px; font-weight:900; color:#fff;">Cevap: B Şıkkı (12)</div>
+          <div class="step-label" style="color:#10b981;">FİNAL SONUÇ</div>
+          <div style="font-size:24px; font-weight:900; color:#fff;">Cevap: x = 6</div>
+        </div>
+        <div class="step-box">
+          <div class="step-label">NEDEN BÖYLE?</div>
+          <div class="step-text">Eşitliğin solundaki -6 değerini karşıya +6 olarak geçirdik ve 3x = 18 sonucuna ulaştık. Her iki tarafı 3'e bölünce x = 6 bulduk.</div>
         </div>
       `;
-    }, 1200);
+    }, 1800);
   };
 
-  window.closeSheet = () => $("solutionSheet").style.display = "none";
+  window.closeSheet = () => { $("solutionSheet").style.display = "none"; finalCroppedData = null; sel = null; draw(); };
 
-  // ✅ Titreme engelleyiciyi devreye al
   window.addEventListener("load", () => {
     setTimeout(() => { document.getElementById("pageContent").classList.add("shell-ready"); }, 150);
   });
