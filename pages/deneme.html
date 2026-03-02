@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-<title>italkyAI • Quantum OS V5</title>
+<title>italkyAI • Quantum OS V6</title>
 
 <style>
   html,body{background:#000 !important; margin:0; padding:0; overflow:hidden; font-family:'Outfit', sans-serif;}
@@ -13,79 +13,87 @@
 <style>
 :root{
   --ai-grad: linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
-  --blue: #60a5fa; --green: #34d399; --pink: #ec4899;
-  --glass-border: rgba(255,255,255,0.06);
+  --blue: #00d2ff; --green: #39ff14; --pink: #ff007f;
+  --glass-border: rgba(255,255,255,0.12);
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none;}
 
 #pageContent {
   height: 100%;
   display: flex; flex-direction: column;
-  background: radial-gradient(circle at 50% 50%, #08081a 0%, #000 100%);
+  background: radial-gradient(circle at 50% 50%, #0a0a25 0%, #000 100%);
   position: relative;
 }
 
 .main-hub {
   flex: 1; display: flex; flex-direction: column;
-  gap: 12px; padding: 12px; min-height: 0; /* ✅ Kural Seti */
+  gap: 15px; padding: 15px; min-height: 0;
 }
 
-/* ===== BASE CARD ===== */
-.cyber-card {
-  flex: 1; position: relative; border-radius: 30px;
+/* ===== CYBER PANEL (BUTON) ===== */
+.os-panel {
+  flex: 1; position: relative; border-radius: 32px;
   border: 1px solid var(--glass-border);
-  overflow: hidden; cursor: pointer; display: flex; align-items: center; padding: 0 25px;
-  background: rgba(255,255,255,0.01);
+  overflow: hidden; cursor: pointer; display: flex; align-items: center; justify-content: space-between;
+  padding: 0 25px;
+  background: var(--panel-bg);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
-}
-.cyber-card:active { transform: scale(0.97) translateY(4px); filter: brightness(1.2); }
-
-/* Kenar Işıması (Neon Flow) */
-.cyber-card::after {
-  content: ""; position: absolute; inset: 0;
-  background: linear-gradient(120deg, transparent, rgba(255,255,255,0.03), transparent);
-  transform: translateX(-150%); transition: transform 0.6s;
-}
-.cyber-card:hover::after { transform: translateX(150%); }
-
-/* Sol Aktif Çizgi */
-.btn-line {
-  position: absolute; left: 0; top: 20px; bottom: 20px; width: 4px;
-  background: var(--btn-color); box-shadow: 0 0 15px var(--btn-color);
-  border-radius: 0 4px 4px 0;
+  box-shadow: 0 15px 35px -15px rgba(0,0,0,0.8);
 }
 
-/* ✅ KART GÖRSELLERİ (Ruh Katmanları) */
-.card-visual {
-  position: absolute; right: -20px; top: 0; bottom: 0; width: 65%;
-  opacity: 0.15; /* Sadece bir hayalet gibi arkada süzülür */
-  background-size: contain; background-repeat: no-repeat; background-position: right center;
-  pointer-events: none; transition: 0.5s; z-index: 1;
-}
-.cyber-card:active .card-visual { opacity: 0.4; transform: scale(1.05) translateX(-10px); }
+.os-panel:active { transform: scale(0.96) translateY(6px); border-color: var(--neon-color); }
 
 /* Renk Temaları */
-.tr-node { 
-  --btn-color: var(--blue); 
-  background: linear-gradient(145deg, rgba(96,165,250,0.06), rgba(0,0,0,0.6));
-}
-.ac-node { 
-  --btn-color: var(--green); 
-  background: linear-gradient(145deg, rgba(52,211,153,0.04), rgba(0,0,0,0.6));
-}
-.tc-node { 
-  --btn-color: var(--pink); 
-  background: linear-gradient(145deg, rgba(236,72,153,0.06), rgba(0,0,0,0.6));
+.tr-node { --neon-color: var(--blue); --panel-bg: linear-gradient(145deg, rgba(0, 210, 255, 0.12), rgba(0,0,0,0.7)); }
+.ac-node { --neon-color: var(--green); --panel-bg: linear-gradient(145deg, rgba(57, 255, 20, 0.08), rgba(0,0,0,0.7)); }
+.tc-node { --neon-color: var(--pink); --panel-bg: linear-gradient(145deg, rgba(255, 0, 127, 0.12), rgba(0,0,0,0.7)); }
+
+/* ✅ CANLI VE RENKLİ İKONLAR (OS CORE) */
+.icon-container {
+  position: relative; width: 80px; height: 80px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; z-index: 5;
 }
 
-/* CONTENT */
-.card-content { position: relative; z-index: 10; pointer-events: none; }
-.card-title { font-family: 'Space Grotesk'; font-size: 26px; font-weight: 800; color: #fff; margin: 0; }
-.card-title span { background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-.card-desc { font-size: 10px; color: rgba(255,255,255,0.4); margin-top: 5px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; }
+/* İkon Arkasındaki Enerji Halkası */
+.energy-ring {
+  position: absolute; inset: 0;
+  border: 2px solid var(--neon-color);
+  border-radius: 50%; opacity: 0.3;
+  animation: ringPulse 2s infinite alternate ease-in-out;
+}
+.energy-ring::after {
+  content: ""; position: absolute; inset: -8px;
+  border: 1px dashed var(--neon-color);
+  border-radius: 50%; animation: spin 10s linear infinite; opacity: 0.4;
+}
+
+.main-icon {
+  font-size: 38px; z-index: 10;
+  filter: drop-shadow(0 0 15px var(--neon-color));
+  animation: iconFloat 3s infinite alternate ease-in-out;
+}
+
+/* Content */
+.content-wrap { display: flex; flex-direction: column; gap: 4px; z-index: 10; }
+.btn-title { font-family: 'Space Grotesk'; font-size: 26px; font-weight: 800; color: #fff; margin: 0; }
+.btn-title span { background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.btn-desc { font-size: 10px; color: rgba(255,255,255,0.5); font-weight: 900; letter-spacing: 2px; text-transform: uppercase; }
+
+/* Data Stream */
+.status-tag {
+  position: absolute; top: 12px; right: 20px;
+  font-family: monospace; font-size: 8px; color: var(--neon-color);
+  background: rgba(0,0,0,0.4); padding: 4px 8px; border-radius: 8px;
+  border: 1px solid var(--neon-color); opacity: 0.7;
+}
+
+/* Animations */
+@keyframes ringPulse { from { transform: scale(0.9); opacity: 0.2; } to { transform: scale(1.1); opacity: 0.5; } }
+@keyframes spin { from { transform: rotate(0); } to { transform: rotate(360deg); } }
+@keyframes iconFloat { from { transform: translateY(-4px) rotate(-5deg); } to { transform: translateY(4px) rotate(5deg); } }
 
 </style>
 </head>
@@ -94,36 +102,39 @@
 <main id="pageContent">
   <div class="main-hub">
 
-    <div class="cyber-card tr-node" onclick="location.href='/pages/translate_home.html'">
-      <div class="btn-line"></div>
-      
-      <div class="card-visual" style="background-image: url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 400 300%27%3E%3Cdefs%3E%3CradialGradient id=%27g%27 cx=%27200%27 cy=%27150%27 r=%27100%27 gradientUnits=%27userSpaceOnWrite%27%3E%3Cstop offset=%270%25%27 stop-color=%27%23a5b4fc%27/%3E%3Cstop offset=%27100%25%27 stop-color=%27transparent%27/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx=%27200%27 cy=%27150%27 r=%27100%27 fill=%27url(%23g)%27 filter=%27blur(40px)%27/%3E%3Cellipse cx=%27200%27 cy=%27150%27 rx=%27150%27 ry=%2750%27 fill=%27none%27 stroke=%27%23fff%27 stroke-width=%270.5%27 stroke-dasharray=%275 5%27 opacity=%270.3%27/%3E%3Cellipse cx=%27200%27 cy=%27150%27 rx=%2750%27 ry=%27150%27 fill=%27none%27 stroke=%27%23fff%27 stroke-width=%270.5%27 stroke-dasharray=%275 5%27 opacity=%270.3%27/%3E%3C/svg%3E')"></div>
-      
-      <div class="card-content">
-        <h2 class="card-title">Translate <span>AI</span></h2>
-        <p class="card-desc">Evrensel Dil Çözücü</p>
+    <div class="os-panel tr-node" onclick="location.href='/pages/translate_home.html'">
+      <div class="status-tag">SIGNAL: 99%</div>
+      <div class="content-wrap">
+        <h2 class="btn-title">Translate <span>AI</span></h2>
+        <div class="btn-desc">Neural Language Stream</div>
+      </div>
+      <div class="icon-container">
+        <div class="energy-ring"></div>
+        <div class="main-icon">📡</div>
       </div>
     </div>
 
-    <div class="cyber-card ac-node" onclick="location.href='/pages/academy_home.html'">
-      <div class="btn-line"></div>
-      
-      <div class="card-visual" style="background-image: url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 400 300%27%3E%3Cdefs%3E%3CradialGradient id=%27g%27 cx=%27200%27 cy=%27150%27 r=%27100%27 gradientUnits=%27userSpaceOnWrite%27%3E%3Cstop offset=%270%25%27 stop-color=%27%2334d399%27/%3E%3Cstop offset=%27100%25%27 stop-color=%27transparent%27/%3E%3C/radialGradient%3E%3C/defs%3E%3Crect x=%27150%27 y=%27100%27 width=%27100%27 height=%27100%27 fill=%27url(%23g)%27 filter=%27blur(30px)%27 opacity=%270.5%27/%3E%3Crect x=%27100%27 y=%2750%27 width=%2750%27 height=%2750%27 fill=%27%23fff%27 opacity=%270.2%27/%3E%3Crect x=%27250%27 y=%27150%27 width=%2750%27 height=%2750%27 fill=%27%23fff%27 opacity=%270.1%27/%3E%3Crect x=%27180%27 y=%27200%27 width=%2740%27 height=%2740%27 fill=%27%23fff%27 opacity=%270.15%27/%3E%3C/svg%3E')"></div>
-      
-      <div class="card-content">
-        <h2 class="card-title">Academy <span>AI</span></h2>
-        <p class="card-desc">Nöral Öğrenme Platformu</p>
+    <div class="os-panel ac-node" onclick="location.href='/pages/academy_home.html'">
+      <div class="status-tag">CORE: READY</div>
+      <div class="content-wrap">
+        <h2 class="btn-title">Academy <span>AI</span></h2>
+        <div class="btn-desc">Logic Path Optimizer</div>
+      </div>
+      <div class="icon-container">
+        <div class="energy-ring"></div>
+        <div class="main-icon">🧠</div>
       </div>
     </div>
 
-    <div class="cyber-card tc-node" onclick="location.href='/pages/helper_home.html'">
-      <div class="btn-line"></div>
-      
-      <div class="card-visual" style="background-image: url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 400 300%27%3E%3Cdefs%3E%3CradialGradient id=%27g%27 cx=%27200%27 cy=%27150%27 r=%27100%27 gradientUnits=%27userSpaceOnWrite%27%3E%3Cstop offset=%270%25%27 stop-color=%27%23ec4899%27/%3E%3Cstop offset=%27100%25%27 stop-color=%27transparent%27/%3E%3C/radialGradient%3E%3C/defs%3E%3Cpath d=%27M200 50 L250 150 L200 250 L150 150 Z%27 fill=%27url(%23g)%27 filter=%27blur(35px)%27/%3E%3Cpath d=%27M200 70 L230 150 L200 230 L170 150 Z%27 fill=%27none%27 stroke=%27%23fff%27 stroke-width=%270.5%27 opacity=%270.3%27/%3E%3Cpath d=%27M200 100 L210 150 L200 200 L190 150 Z%27 fill=%27none%27 stroke=%27%23fff%27 stroke-width=%270.5%27 opacity=%270.2%27/%3E%3C/svg%3E')"></div>
-      
-      <div class="card-content">
-        <h2 class="card-title">Teacher <span>AI</span></h2>
-        <p class="card-desc">Akıllı Çözüm Asistanı</p>
+    <div class="os-panel tc-node" onclick="location.href='/pages/helper_home.html'">
+      <div class="status-tag">SYNC: ACTIVE</div>
+      <div class="content-wrap">
+        <h2 class="btn-title">Teacher <span>AI</span></h2>
+        <div class="btn-desc">Logic Problem Solver</div>
+      </div>
+      <div class="icon-container">
+        <div class="energy-ring"></div>
+        <div class="main-icon">🧬</div>
       </div>
     </div>
 
