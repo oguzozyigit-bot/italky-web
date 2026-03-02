@@ -1,247 +1,182 @@
-/* FILE: /js/ui_shell.js */
-import { STORAGE_KEY } from "/js/config.js";
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+<title>italkyAI • Quantum OS V4</title>
 
-/* ===============================
-    HOME HEADER/FOOTER (QUANTUM)
-================================ */
-const HOME_HEADER_HTML = `
-<header class="premium-header" id="italkyHeader">
-  <div class="brand-group" id="brandHome" style="cursor:pointer;">
-    <h1><span>italky</span><span class="ai">AI</span></h1>
-    <div class="brand-slogan">BE FREE</div>
-  </div>
+<style>
+  html,body{ background:#000 !important; margin:0; padding:0; overflow:hidden; font-family:'Outfit', sans-serif; color:#fff; }
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=Space+Grotesk:wght@700&display=swap');
+</style>
 
-  <div class="user-info" id="profileBtn" title="Profil">
-    <div class="uMeta">
-      <div class="uName" id="userName">Kullanıcı</div>
-      <div class="uJeton">Jeton: <span id="headerJeton">—</span></div>
+<style>
+:root {
+  --neon-blue: #00d2ff;
+  --neon-green: #39ff14;
+  --neon-pink: #ff007f;
+  --ai-grad: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
+  --glass-border: rgba(255,255,255,0.12);
+}
+
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none;}
+
+#pageContent {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  /* ✅ Zemin artık düz siyah değil, derinlikli bir uzay */
+  background: radial-gradient(circle at 50% 50%, #0d0d2b 0%, #050510 100%);
+  position: relative;
+}
+
+/* ===== 1. YAŞAYAN ZEMİN (QUANTUM VOID) ===== */
+.void-light {
+  position: absolute; width: 100%; height: 100%;
+  background: 
+    radial-gradient(circle at 10% 20%, rgba(0, 210, 255, 0.05) 0%, transparent 40%),
+    radial-gradient(circle at 90% 80%, rgba(255, 0, 127, 0.05) 0%, transparent 40%);
+  pointer-events: none;
+}
+
+.terminal-layers {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  gap: 15px;
+  z-index: 10;
+}
+
+/* ===== 2. PASTEL ENERJİ BUTONLARI ===== */
+.os-btn {
+  flex: 1;
+  position: relative;
+  border-radius: 28px;
+  border: 1px solid var(--glass-border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 30px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  
+  /* ✅ Siyah yerine transparan pastel zemin */
+  background: var(--btn-bg);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  
+  /* Dış ışıma */
+  box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5), 0 0 20px -10px var(--btn-color);
+}
+
+/* ✅ Butonun altındaki enerji havuzu */
+.btn-glow {
+  position: absolute; inset: 0;
+  background: radial-gradient(circle at 0% 50%, var(--btn-color) 0%, transparent 60%);
+  opacity: 0.15;
+  transition: 0.3s;
+}
+
+.os-btn:active {
+  transform: scale(0.96) translateY(5px);
+  border-color: var(--btn-color);
+  box-shadow: 0 0 30px -5px var(--btn-color);
+}
+.os-btn:active .btn-glow { opacity: 0.4; }
+
+/* Başlık ve AI Vurgusu */
+.content-wrap { display: flex; flex-direction: column; gap: 5px; z-index: 5; }
+.btn-title {
+  font-family: 'Space Grotesk'; font-size: 26px; font-weight: 800;
+  color: #fff; margin: 0; letter-spacing: -1px;
+}
+.btn-title span { background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.btn-sub {
+  font-size: 10px; color: rgba(255,255,255,0.6);
+  font-weight: 800; letter-spacing: 2px; text-transform: uppercase;
+}
+
+/* Sağ Taraf: Canlı Mekanik (Icon & Data) */
+.btn-visuals {
+  display: flex; align-items: center; gap: 20px; z-index: 5;
+}
+.os-icon {
+  font-size: 32px;
+  filter: drop-shadow(0 0 10px var(--btn-color));
+  animation: float 3s infinite alternate ease-in-out;
+}
+.data-box {
+  text-align: right; font-family: monospace; font-size: 8px;
+  color: var(--btn-color); opacity: 0.8; line-height: 1.4;
+  border-left: 1px solid var(--btn-color); padding-left: 10px;
+}
+
+/* ✅ RENK TEMALARI (Pastel Geçişler) */
+.tr-node { 
+  --btn-color: var(--neon-blue); 
+  --btn-bg: linear-gradient(145deg, rgba(0, 210, 255, 0.1), rgba(0,0,0,0.6));
+}
+.ac-node { 
+  --btn-color: var(--neon-green); 
+  --btn-bg: linear-gradient(145deg, rgba(57, 255, 20, 0.08), rgba(0,0,0,0.6));
+}
+.tc-node { 
+  --btn-color: var(--neon-pink); 
+  --btn-bg: linear-gradient(145deg, rgba(255, 0, 127, 0.1), rgba(0,0,0,0.6));
+}
+
+@keyframes float { from { transform: translateY(-3px); } to { transform: translateY(3px); } }
+</style>
+</head>
+
+<body>
+<main id="pageContent">
+  <div class="void-light"></div>
+
+  <div class="terminal-layers">
+    
+    <div class="os-btn tr-node" onclick="location.href='/pages/translate_home.html'">
+      <div class="btn-glow"></div>
+      <div class="content-wrap">
+        <h2 class="btn-title">Translate <span>AI</span></h2>
+        <div class="btn-sub">NEURAL FREQUENCY</div>
+      </div>
+      <div class="btn-visuals">
+        <div class="data-box">SYS: ACTIVE<br>FRQ: 432Hz<br>BUFF: 0ms</div>
+        <div class="os-icon">🌐</div>
+      </div>
     </div>
-    <div class="avatar"><img src="" id="userPic" alt=""></div>
+
+    <div class="os-btn ac-node" onclick="location.href='/pages/academy_home.html'">
+      <div class="btn-glow"></div>
+      <div class="content-wrap">
+        <h2 class="btn-title">Academy <span>AI</span></h2>
+        <div class="btn-sub">LOGIC OPTIMIZER</div>
+      </div>
+      <div class="btn-visuals">
+        <div class="data-box">LEVEL: PRO<br>RANK: ELITE<br>XP: 99.8%</div>
+        <div class="os-icon">🧠</div>
+      </div>
+    </div>
+
+    <div class="os-btn tc-node" onclick="location.href='/pages/helper_home.html'">
+      <div class="btn-glow"></div>
+      <div class="content-wrap">
+        <h2 class="btn-title">Teacher <span>AI</span></h2>
+        <div class="btn-sub">SOLUTION ENGINE</div>
+      </div>
+      <div class="btn-visuals">
+        <div class="data-box">SCAN: ON<br>CALC: SYNC<br>ACC: 100%</div>
+        <div class="os-icon">🧬</div>
+      </div>
+    </div>
+
   </div>
-</header>
-`;
+</main>
 
-const HOME_FOOTER_HTML = `
-<footer class="premium-footer" id="italkyFooter">
-  <nav class="footer-nav">
-    <a href="/pages/about.html">Hakkımızda</a>
-    <a href="/pages/faq.html">SSS</a>
-    <a href="/pages/privacy.html">Gizlilik</a>
-    <a href="/pages/contact.html">İletişim</a>
-  </nav>
-  <div class="signature">italkyAI @ italkyAcademy By Ozyigit's • 2026</div>
-</footer>
-`;
-
-/* ===============================
-    SHELL CSS (OS V3 MODERNA)
-================================ */
-const SHELL_CSS = `
-:root{
-  --ai-gradient: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
-  --bg-void: #000;
-  --footerH: 0px;
-}
-
-*{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; }
-
-html, body{
-  margin:0; padding:0;
-  width:100%; height:100%;
-  background: var(--bg-void) !important;
-  font-family:'Outfit', sans-serif;
-  overflow:hidden;
-  color:#fff;
-}
-
-/* 🟣 Quantum Nebula Background */
-.italky-bg{
-  position: fixed; inset: 0;
-  pointer-events:none; z-index: 0;
-  background: radial-gradient(circle at 50% 30%, #0d0d2b 0%, #000 100%);
-}
-
-/* App Frame */
-.app-viewport{
-  position:relative;
-  z-index: 5;
-  width:100%;
-  max-width:430px;
-  height:100dvh;
-  margin:0 auto;
-  display:flex;
-  flex-direction:column;
-  background: rgba(10, 10, 30, 0.4);
-  backdrop-filter: blur(30px);
-  -webkit-backdrop-filter: blur(30px);
-  border-left: 1px solid rgba(255,255,255,0.08);
-  border-right: 1px solid rgba(255,255,255,0.08);
-  overflow:hidden;
-}
-
-/* HEADER: Ovallik eklendi, ölçü korundu */
-.premium-header{
-  padding: calc(45px + env(safe-area-inset-top)) 18px 15px;
-  display:flex; align-items:flex-start; justify-content:space-between;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
-  background: rgba(0,0,0,0.3);
-  border-radius: 0 0 24px 24px; /* ✅ Yumuşak Alt Köşeler */
-  flex: 0 0 auto;
-}
-.brand-group h1{
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 26px; margin: 0; font-weight: 700; line-height: 1;
-  display:flex; gap:2px;
-}
-.brand-group h1 .ai{
-  background: var(--ai-gradient);
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
-}
-.brand-slogan{
-  font-size: 8px; font-weight: 900; letter-spacing: 3px;
-  color: rgba(255,255,255,0.5); text-transform: uppercase;
-  margin-top: 5px;
-}
-
-.user-info{ display:flex; align-items:center; gap:12px; cursor:pointer; user-select:none; }
-.uMeta{ display:flex; flex-direction:column; align-items:flex-end; gap:2px; }
-.uName{ font-weight:900; font-size:13px; max-width: 140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.uJeton{ 
-    font-size:10px; font-weight:900; color:#a5b4fc; 
-    background: rgba(165,180,252,0.12); padding: 2px 8px; border-radius: 8px; 
-}
-.avatar{
-  width:38px; height:38px;
-  border-radius:50%;
-  border: 1.5px solid #6366f1;
-  overflow:hidden;
-  background: rgba(0,0,0,0.3);
-  box-shadow: 0 0 10px rgba(99,102,241,0.2);
-}
-.avatar img{ width:100%; height:100%; object-fit:cover; display:block; }
-
-/* MAIN CONTENT */
-.shellMain{
-  flex:1; min-height:0; overflow-y:auto;
-  -webkit-overflow-scrolling: touch;
-  padding-bottom: calc(var(--footerH) + 12px);
-}
-.shellMain::-webkit-scrollbar{ display:none; }
-
-/* FOOTER: Ovallik eklendi, ölçü korundu */
-.premium-footer{
-  position:absolute;
-  left:0; right:0; bottom:0;
-  display:flex; flex-direction:column; align-items:center;
-  background: rgba(10, 10, 25, 0.6);
-  backdrop-filter: blur(25px);
-  border-top: 1px solid rgba(255,255,255,0.1);
-  border-radius: 28px 28px 0 0; /* ✅ Yumuşak Üst Köşeler */
-  padding: 12px 10px calc(10px + env(safe-area-inset-bottom));
-  z-index: 50;
-}
-.footer-nav{ display:flex; gap:20px; margin-bottom: 8px; justify-content:center; }
-.footer-nav a{
-  font-size:10px; font-weight:900; color: rgba(255,255,255,0.4);
-  text-decoration:none; text-transform: uppercase;
-}
-.signature{
-  font-size:10px; font-weight:900;
-  background: linear-gradient(to right, #6366f1, #ec4899);
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
-  opacity: 0.8;
-}
-`;
-
-/* ===============================
-    HELPERS & MOUNT (Logic Protected)
-================================ */
-function injectShellStyle(){
-  if(document.getElementById("italkyShellStyle")) return;
-  const st = document.createElement("style");
-  st.id = "italkyShellStyle";
-  st.textContent = SHELL_CSS;
-  document.head.appendChild(st);
-}
-
-export function shortDisplayName(fullName){
-  const s = String(fullName || "").trim().replace(/\s+/g," ");
-  if(!s) return "Kullanıcı";
-  const parts = s.split(" ").filter(Boolean);
-  if(parts.length === 1) return parts[0];
-  const last = parts[parts.length-1];
-  const first = parts.slice(0,-1).join(" ");
-  return `${first} ${last?.[0] ? last[0].toUpperCase() + "." : ""}`.trim();
-}
-
-function safeSetText(id, val){
-  const el = document.getElementById(id);
-  if(el) el.textContent = (val ?? "");
-}
-
-function safeSetImg(id, src){
-  const el = document.getElementById(id);
-  if(el && src) el.src = src;
-}
-
-export function setHeaderTokens(n){
-  safeSetText("headerJeton", (n == null ? "—" : String(n)));
-}
-
-export function hydrateFromCache(){
-  try{
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if(!raw) return;
-    const u = JSON.parse(raw);
-    const nm = u?.display_name || u?.name || u?.full_name || u?.email || "";
-    safeSetText("userName", shortDisplayName(nm));
-    const pic = u?.picture || u?.avatar || u?.avatar_url || "";
-    if(pic) safeSetImg("userPic", pic);
-    if(u?.tokens != null) safeSetText("headerJeton", String(u.tokens));
-  }catch{}
-}
-
-function syncFooterHeight(){
-  try{
-    const footer = document.getElementById("italkyFooter");
-    if(!footer) return;
-    const h = Math.round(footer.getBoundingClientRect().height || 0);
-    if(h > 0) document.documentElement.style.setProperty("--footerH", h + "px");
-  }catch{}
-}
-
-export function mountShell(options = {}){
-  injectShellStyle();
-  if(document.getElementById("italkyAppShell")){
-    hydrateFromCache();
-    return;
-  }
-
-  const content = document.getElementById("pageContent");
-  if(!content) return;
-
-  const bg = document.createElement("div");
-  bg.className = "italky-bg";
-
-  const shell = document.createElement("div");
-  shell.className = "app-viewport";
-  shell.id = "italkyAppShell";
-  shell.innerHTML = HOME_HEADER_HTML + `<main class="shellMain" id="shellMain"></main>` + HOME_FOOTER_HTML;
-
-  const main = shell.querySelector("#shellMain");
-  main.appendChild(content);
-  main.style.overflowY = (options?.scroll === "none") ? "hidden" : "auto";
-
-  document.body.prepend(bg, shell);
-
-  document.getElementById("brandHome")?.addEventListener("click", ()=>location.href="/pages/home.html");
-  document.getElementById("profileBtn")?.addEventListener("click", ()=>location.href="/pages/profile.html");
-
-  hydrateFromCache();
-  syncFooterHeight();
-
-  window.addEventListener("resize", syncFooterHeight);
-  setTimeout(syncFooterHeight, 200);
-}
+<script type="module">
+  import { mountShell } from "/js/ui_shell.js";
+  mountShell({ scroll:"none" });
+</script>
+</body>
+</html>
