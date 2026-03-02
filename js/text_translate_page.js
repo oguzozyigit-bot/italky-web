@@ -36,7 +36,7 @@ const sheetQuery = $("sheetQuery");
 const API_BASE = "https://italky-api.onrender.com"; // italky-api
 const LANGS_ENDPOINT = `${API_BASE}/api/translate/languages`;
 
-// LibreTranslate endpoint’in senin API’de /api/translate ise:
+// Backend /api/translate:
 const TRANSLATE_ENDPOINT = `${API_BASE}/api/translate`;
 
 /* -------------------------
@@ -45,8 +45,9 @@ const TRANSLATE_ENDPOINT = `${API_BASE}/api/translate`;
 let LANGS = []; // [{code, name, flag?}]
 let activePick = "from"; // from/to
 
-let fromLang = "en";
-let toLang = "tr";
+// ✅ DEFAULT: TR -> EN (dil algılama yok)
+let fromLang = "tr";
+let toLang = "en";
 
 function canonical(code){
   return String(code || "").toLowerCase().trim();
@@ -77,8 +78,8 @@ function labelOf(code){
 function refreshHeader(){
   fromFlag.textContent = flagOf(fromLang);
   toFlag.textContent   = flagOf(toLang);
-  fromTxt.textContent  = String(fromLang || "EN").toUpperCase();
-  toTxt.textContent    = String(toLang || "TR").toUpperCase();
+  fromTxt.textContent  = String(fromLang || "TR").toUpperCase();
+  toTxt.textContent    = String(toLang || "EN").toUpperCase();
 }
 
 /* -------------------------
@@ -131,7 +132,6 @@ function renderSheet(filter=""){
 
 function openSheet(which){
   activePick = which;
-  // listeyi her açışta güncelle (dil sayısı artınca)
   renderSheet(sheetQuery.value || "");
   window.__OPEN_LANG_SHEET__?.();
 }
@@ -184,9 +184,9 @@ async function startMic(){
     return;
   }
 
-  // mevcut çalışıyorsa kapat
   try{ rec?.stop?.(); }catch{}
   rec = buildRecognizer(fromLang);
+
   if(!rec){
     alert("Mikrofon başlatılamadı.");
     return;
@@ -217,10 +217,7 @@ async function startMic(){
 
 /* -------------------------
    TRANSLATE
-   ✅ Senin backend /api/translate şu gövdelerden birini istiyor olabilir.
-   Biz her ikisini de gönderiyoruz:
-   - source/target
-   - from_lang/to_lang
+   ✅ Dil algılama yok: from_lang/source her zaman seçili dil.
 -------------------------- */
 async function translate(){
   const t = String(inText.value || "").trim();
@@ -273,13 +270,13 @@ async function translate(){
 }
 
 /* -------------------------
-   LOAD LANGS (Render LibreTranslate → API proxy)
+   LOAD LANGS
+   ✅ auto/detect seçenekleri varsa listeye sokma
 -------------------------- */
 async function loadLangs(){
-  // fallback sabit liste (en kötü durumda bile UI boş kalmaz)
   const fallback = [
-    {code:"en", name:"English"},
     {code:"tr", name:"Türkçe"},
+    {code:"en", name:"English"},
     {code:"de", name:"Deutsch"},
     {code:"fr", name:"Français"},
     {code:"es", name:"Español"},
@@ -293,7 +290,9 @@ async function loadLangs(){
     const r = await fetch(LANGS_ENDPOINT, { method:"GET" });
     const data = await r.json().catch(()=>null);
     if(Array.isArray(data) && data.length){
-      LANGS = data.map(x => ({ code: canonical(x.code), name: x.name || String(x.code||"") }));
+      LANGS = data
+        .map(x => ({ code: canonical(x.code), name: x.name || String(x.code||"") }))
+        .filter(x => x.code && x.code !== "auto" && x.code !== "detect"); // ✅ detect yok
       return;
     }
   }catch(e){
@@ -359,6 +358,11 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   if(!(await requireLogin())) return;
 
   await loadLangs();
+
+  // ✅ İlk açılış TR->EN
+  fromLang = "tr";
+  toLang = "en";
+
   refreshHeader();
   renderSheet("");
 
