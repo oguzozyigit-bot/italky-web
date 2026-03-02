@@ -11,69 +11,84 @@
     
     :root {
       --ai-grad: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
+      --neon-purple: #a855f7;
       --glass: rgba(255, 255, 255, 0.05);
       --glass-border: rgba(255, 255, 255, 0.12);
     }
     
-    #pageContent { height: 100%; display: flex; flex-direction: column; background: #000; position: relative; }
+    /* ✅ KIRPILMAYI ÖNLEYEN KRİTİK STİL */
+    #pageContent { 
+      opacity: 0 !important; 
+      visibility: hidden !important; 
+      height: 100%; display: flex; flex-direction: column; background: #000;
+    }
+    #pageContent.shell-ready { 
+      opacity: 1 !important; 
+      visibility: visible !important; 
+      transition: opacity 0.4s ease-in; 
+    }
 
-    /* STEP 1: KAMERA / YÜKLEME ALANI */
+    /* VİZÖR ALANI */
     .hero-scanner {
       flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-      padding: 20px; position: relative; overflow: hidden;
+      padding: 20px; position: relative;
     }
     
-    .scan-frame {
-      width: 100%; max-width: 340px; aspect-ratio: 3/4;
-      border-radius: 32px; border: 2px dashed var(--glass-border);
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      background: var(--glass); position: relative; transition: 0.3s;
+    .scan-viewfinder {
+      width: 100%; max-width: 360px; aspect-ratio: 3/4;
+      border-radius: 32px; border: 1px solid var(--glass-border);
+      background: var(--glass); position: relative; overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 40px rgba(0,0,0,0.5);
     }
-    
-    .scan-frame.has-img { border: 2px solid var(--glass-border); background: #000; }
-    
-    canvas#cv { width: 100%; height: 100%; object-fit: contain; border-radius: 30px; display: none; }
-    .upload-ui { text-align: center; }
-    .upload-ui .icon { font-size: 48px; margin-bottom: 10px; display: block; }
-    .upload-ui .txt { font-weight: 800; font-size: 16px; color: rgba(255,255,255,0.6); }
 
-    /* STEP 2: KIRPMA VE KONTROL */
+    canvas#cv { width: 100%; height: 100%; object-fit: contain; border-radius: 30px; display: none; z-index: 5; }
+
+    /* Yükleme Ekranı (İlk giriş) */
+    .init-state { text-align: center; z-index: 10; cursor: pointer; }
+    .init-state .pulse-core {
+      width: 80px; height: 80px; border-radius: 50%; background: var(--ai-grad);
+      margin: 0 auto 20px; display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 30px rgba(99, 102, 241, 0.4);
+      animation: corePulse 2s infinite;
+    }
+    @keyframes corePulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.7; } 100% { transform: scale(1); opacity: 1; } }
+    .init-state span { font-weight: 900; font-size: 14px; color: #fff; letter-spacing: 2px; }
+
+    /* ALT PANEL */
     .action-dock {
-      padding: 15px; background: rgba(0,0,0,0.8); backdrop-filter: blur(20px);
+      padding: 20px; background: rgba(0,0,0,0.8); backdrop-filter: blur(20px);
       border-top: 1px solid var(--glass-border); display: none;
     }
     .btn-solve {
-      width: 100%; height: 56px; border-radius: 28px; border: none;
+      width: 100%; height: 60px; border-radius: 30px; border: none;
       background: var(--ai-grad); color: #fff; font-weight: 900; font-size: 18px;
-      box-shadow: 0 10px 25px rgba(99, 102, 241, 0.4); cursor: pointer;
+      cursor: pointer; transition: 0.3s;
     }
+    .btn-solve:active { transform: scale(0.95); }
 
-    /* STEP 3: ÇÖZÜM PANELİ (BOTTOM SHEET TARZI) */
-    .solution-panel {
+    /* ÇÖZÜM MODALI */
+    .solution-sheet {
       position: fixed; inset: 0; background: #000; z-index: 1000;
-      display: none; flex-direction: column; padding: 20px; overflow-y: auto;
+      display: none; flex-direction: column; padding: 25px; overflow-y: auto;
     }
-    .solution-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-    .solution-content { flex: 1; }
+    .sheet-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
     
-    .step-card {
+    .step-box {
       background: var(--glass); border: 1px solid var(--glass-border);
-      border-radius: 20px; padding: 16px; margin-bottom: 12px;
+      border-radius: 24px; padding: 20px; margin-bottom: 15px;
     }
-    .step-num { color: #a5b4fc; font-weight: 900; font-size: 12px; text-transform: uppercase; margin-bottom: 8px; }
-    .step-txt { font-size: 15px; line-height: 1.6; color: rgba(255,255,255,0.9); }
-
-    /* ✅ YARDIMCI ÖĞRETMEN KANCASI (En Önemli Yer) */
-    .teacher-cta {
-      background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(236, 72, 153, 0.1));
-      border: 1px solid rgba(165, 180, 252, 0.3); border-radius: 24px;
-      padding: 20px; text-align: center; margin-top: 20px;
+    .step-label { color: #a5b4fc; font-weight: 900; font-size: 11px; text-transform: uppercase; margin-bottom: 10px; }
+    
+    /* ÖĞRETMEN CTA */
+    .teacher-invite {
+      background: linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(236, 72, 153, 0.15));
+      border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 28px;
+      padding: 25px; text-align: center; margin-top: 20px;
     }
-    .teacher-cta h3 { margin: 0 0 10px; font-size: 18px; font-weight: 900; }
-    .teacher-cta p { font-size: 13px; color: rgba(255,255,255,0.6); margin-bottom: 15px; }
-    .btn-teacher {
-      display: inline-block; padding: 12px 24px; border-radius: 99px;
-      background: #fff; color: #000; font-weight: 900; text-decoration: none;
+    .btn-academy {
+      display: inline-block; padding: 14px 28px; border-radius: 30px;
+      background: #fff; color: #000; font-weight: 900; text-decoration: none; margin-top: 15px;
     }
 
     input#file { display: none; }
@@ -82,42 +97,41 @@
 
 <body>
 <main id="pageContent">
-  <div class="hero-scanner" id="dropZone">
-    <div class="scan-frame" id="frame">
-      <div class="upload-ui" id="uploadUI">
-        <span class="icon">📸</span>
-        <span class="txt">Soruyu Çek veya Yükle</span>
+  <div class="hero-scanner">
+    <div class="scan-viewfinder" id="viewfinder">
+      <div class="init-state" id="initState">
+        <div class="pulse-core">💎</div>
+        <span>DOSYA SEÇ VEYA ÇEK</span>
       </div>
       <canvas id="cv"></canvas>
     </div>
     <input type="file" id="file" accept="image/*" capture="environment">
-    <p style="font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 15px; font-weight: 800;">
-      * Birden fazla soru varsa çözmek istediğini çerçevele.
+    <p style="font-size: 10px; color: rgba(255,255,255,0.3); margin-top: 20px; font-weight: 800; text-align: center; padding: 0 40px;">
+      Çözmek istediğin soruyu parmağınla çerçeve içine al.
     </p>
   </div>
 
   <div class="action-dock" id="dock">
-    <button class="btn-solve" id="btnSolve">Soruyu Analiz Et & Çöz</button>
+    <button class="btn-solve" id="btnSolve">SORUYU ANALİZ ET</button>
   </div>
 
-  <div class="solution-panel" id="solutionPanel">
-    <div class="solution-header">
-      <h2 style="font-family:'Space Grotesk'; font-size: 20px; margin:0;">italky<span>AI</span> Çözümü</h2>
-      <button onclick="closeSolution()" style="background:none; border:none; color:#fff; font-size:24px;">✕</button>
+  <div class="solution-sheet" id="solutionSheet">
+    <div class="sheet-header">
+      <h2 style="font-family:'Space Grotesk'; font-size: 22px; margin:0;">italky<span>AI</span> Çözüm</h2>
+      <button onclick="closeSheet()" style="background:rgba(255,255,255,0.1); border:none; color:#fff; width:36px; height:36px; border-radius:50%;">✕</button>
     </div>
     
-    <div id="solutionLoading" style="text-align:center; padding: 40px 0;">
-       <div class="spinner"></div>
-       <p style="margin-top:15px; font-weight:800; color:#a5b4fc;">AI Soruyu Çözüyor...</p>
+    <div id="loading" style="text-align:center; padding: 50px 0;">
+       <p style="font-weight:900; color:#a5b4fc; letter-spacing: 2px;">ANALİZ EDİLİYOR...</p>
     </div>
 
-    <div class="solution-content" id="solutionContent" style="display:none;">
+    <div id="content" style="display:none;">
       </div>
 
-    <div class="teacher-cta">
-      <h3>Bu konuda eksik mi hissettin?</h3>
-      <p>Bu sorunun mantığını anlamadıysan, Yardımcı Öğretmen ile 15 dakikalık hızlı bir özel ders yapabilirsin.</p>
-      <a href="#" class="btn-teacher" id="btnGoTeacher">Öğretmenle Anla 🎓</a>
+    <div class="teacher-invite">
+      <h3 style="margin:0; font-size:18px;">Hala kafan mı karışık?</h3>
+      <p style="font-size:13px; color:rgba(255,255,255,0.5); margin: 10px 0;">Bu sorunun mantığını 15 dakikalık özel bir dersle Yardımcı Öğretmen'den dinlemek ister misin?</p>
+      <a href="/pages/academy_hub.html" class="btn-academy">Öğretmene Sor 🎓</a>
     </div>
   </div>
 </main>
@@ -129,8 +143,7 @@
   const $ = (id) => document.getElementById(id);
   const cv = $("cv");
   const ctx = cv.getContext("2d");
-  const frame = $("frame");
-  const uploadUI = $("uploadUI");
+  const viewfinder = $("viewfinder");
   const fileInput = $("file");
 
   let img = new Image();
@@ -138,95 +151,77 @@
   let start = null;
 
   // Foto Seçme
-  frame.onclick = () => fileInput.click();
+  viewfinder.onclick = () => fileInput.click();
   fileInput.onchange = (e) => {
     const file = e.target.files[0];
     if(!file) return;
     img.src = URL.createObjectURL(file);
     img.onload = () => {
-      frame.classList.add("has-img");
-      uploadUI.style.display = "none";
+      $("initState").style.display = "none";
       cv.style.display = "block";
-      fitCanvas();
+      const scale = Math.min(viewfinder.clientWidth / img.width, viewfinder.clientHeight / img.height);
+      cv.width = img.width * scale;
+      cv.height = img.height * scale;
       draw();
       $("dock").style.display = "block";
     };
   };
 
-  function fitCanvas() {
-    const scale = Math.min(frame.clientWidth / img.width, frame.clientHeight / img.height);
-    cv.width = img.width * scale;
-    cv.height = img.height * scale;
-    ctx.drawImage(img, 0, 0, cv.width, cv.height);
-  }
-
-  // Kırpma İşlemi (Touch & Mouse)
-  cv.addEventListener("pointerdown", e => {
-    const rect = cv.getBoundingClientRect();
-    start = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  // Kırpma Mantığı
+  cv.onpointerdown = e => {
+    const r = cv.getBoundingClientRect();
+    start = { x: e.clientX - r.left, y: e.clientY - r.top };
     sel = { x: start.x, y: start.y, w: 0, h: 0 };
-  });
-
-  cv.addEventListener("pointermove", e => {
+  };
+  cv.onpointermove = e => {
     if(!start) return;
-    const rect = cv.getBoundingClientRect();
-    const curr = { x: e.clientX - rect.left, y: e.clientY - rect.top };
-    sel = {
-      x: Math.min(start.x, curr.x),
-      y: Math.min(start.y, curr.y),
-      w: Math.abs(curr.x - start.x),
-      h: Math.abs(curr.y - start.y)
-    };
+    const r = cv.getBoundingClientRect();
+    const curr = { x: e.clientX - r.left, y: e.clientY - r.top };
+    sel = { x: Math.min(start.x, curr.x), y: Math.min(start.y, curr.y), w: Math.abs(curr.x - start.x), h: Math.abs(curr.y - start.y) };
     draw();
-  });
-
-  cv.addEventListener("pointerup", () => start = null);
+  };
+  cv.onpointerup = () => start = null;
 
   function draw() {
     ctx.clearRect(0,0,cv.width,cv.height);
     ctx.drawImage(img, 0,0, cv.width, cv.height);
     if(sel) {
-      ctx.strokeStyle = "#6366f1";
-      ctx.lineWidth = 3;
-      ctx.setLineDash([5, 5]);
-      ctx.strokeRect(sel.x, sel.y, sel.w, sel.h);
-      // Karartma efekti
-      ctx.fillStyle = "rgba(0,0,0,0.5)";
-      ctx.fillRect(0,0,cv.width, sel.y);
-      ctx.fillRect(0, sel.y+sel.h, cv.width, cv.height);
-      ctx.fillRect(0, sel.y, sel.x, sel.h);
-      ctx.fillRect(sel.x+sel.w, sel.y, cv.width, sel.h);
+      ctx.strokeStyle = "#a855f7"; ctx.lineWidth = 3; ctx.strokeRect(sel.x, sel.y, sel.w, sel.h);
+      ctx.fillStyle = "rgba(0,0,0,0.6)";
+      ctx.fillRect(0,0,cv.width, sel.y); ctx.fillRect(0, sel.y+sel.h, cv.width, cv.height);
+      ctx.fillRect(0, sel.y, sel.x, sel.h); ctx.fillRect(sel.x+sel.w, sel.y, cv.width, sel.h);
     }
   }
 
-  // Çözüm Akışı
-  $("btnSolve").onclick = async () => {
-    $("solutionPanel").style.display = "flex";
-    $("solutionLoading").style.display = "block";
-    $("solutionContent").style.display = "none";
-    
-    // Simüle edilmiş AI Çözüm (Backend'e sel canvas'ı veya koordinatları gönderilir)
+  // Çözüm Tetikleyici
+  $("btnSolve").onclick = () => {
+    $("solutionSheet").style.display = "flex";
     setTimeout(() => {
-      $("solutionLoading").style.display = "none";
-      $("solutionContent").style.display = "block";
-      $("solutionContent").innerHTML = `
-        <div class="step-card">
-          <div class="step-num">Analiz Edilen Konu</div>
-          <div class="step-txt" style="font-weight:900;">Üslü Sayılar • Ortaokul Seviyesi</div>
+      $("loading").style.display = "none";
+      $("content").style.display = "block";
+      $("content").innerHTML = `
+        <div class="step-box">
+          <div class="step-label">KONU ANALİZİ</div>
+          <div style="font-weight:900;">Denklemler ve Eşitsizlikler</div>
         </div>
-        <div class="step-card">
-          <div class="step-num">Adım 1</div>
-          <div class="step-txt">Soruda verilen 2^x = 8 ifadesini tabanları eşitleyecek şekilde düzenleyelim.</div>
+        <div class="step-box">
+          <div class="step-label">ADIM ADIM ÇÖZÜM</div>
+          <div style="line-height:1.6; color:rgba(255,255,255,0.8);">Verilen denklemde bilinmeyenleri bir tarafa toplayarak işleme başlıyoruz...</div>
         </div>
-        <div class="step-card" style="border-color: #10b981; background: rgba(16,185,129,0.1);">
-          <div class="step-num" style="color:#10b981;">Final Cevap</div>
-          <div class="step-txt" style="font-size:20px; font-weight:900;">x = 3</div>
+        <div class="step-box" style="border-color: #10b981; background: rgba(16,185,129,0.1);">
+          <div class="step-label" style="color:#10b981;">SONUÇ</div>
+          <div style="font-size:22px; font-weight:900; color:#fff;">Cevap: B Şıkkı (12)</div>
         </div>
       `;
-    }, 1500);
+    }, 1200);
   };
 
-  window.closeSolution = () => $("solutionPanel").style.display = "none";
+  window.closeSheet = () => $("solutionSheet").style.display = "none";
+
+  // ✅ Titreme engelleyiciyi devreye al
+  window.addEventListener("load", () => {
+    setTimeout(() => { document.getElementById("pageContent").classList.add("shell-ready"); }, 150);
+  });
 </script>
 </body>
 </html>
