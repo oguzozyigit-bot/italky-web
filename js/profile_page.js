@@ -4,9 +4,12 @@
 // ✅ Profil ekranı: DB olmasa bile session'dan doldurur
 // ✅ Güvenli çıkış %100 çalışır (signOut patlasa bile)
 // ✅ last_login_at günceller + shell cache’i tazeler
+// ✅ PRODUCTION SAFE: Account delete = HARD DELETE (Render API) / 30 gün yok
 
 import { supabase } from "/js/supabase_client.js";
 import { STORAGE_KEY } from "/js/config.js";
+
+const API_BASE = "https://italky-api.onrender.com"; // ✅ Render backend
 
 const $ = (id)=>document.getElementById(id);
 
@@ -216,6 +219,29 @@ function renderLevels(profile){
   if(go) go.onclick = ()=>location.href="/pages/teacher_select.html";
 }
 
+/* ✅ HARD DELETE (Render API) */
+async function hardDeleteAccount(){
+  const { data:{ session } } = await supabase.auth.getSession();
+  const token = session?.access_token;
+  if(!token) throw new Error("Oturum bulunamadı.");
+
+  const r = await fetch(`${API_BASE}/api/account/delete`, {
+    method: "POST",
+    headers: { "Authorization": `Bearer ${token}` }
+  });
+
+  const j = await r.json().catch(()=> ({}));
+  if(!r.ok) throw new Error(j.detail || j.error || "Hesap silme başarısız.");
+
+  // local temizle + çıkış
+  try{ await supabase.auth.signOut(); }catch(e){ console.warn("[signOut after delete]", e); }
+  try{ localStorage.removeItem(STORAGE_KEY); }catch{}
+  try{ localStorage.removeItem("NAC_ID"); }catch{}
+  nukeAuthStorage();
+  try{ sessionStorage.clear(); }catch{}
+  location.replace("/pages/login.html");
+}
+
 export async function initProfilePage({ setHeaderTokens } = {}){
   // ✅ Butonları en baştan bağla (click kaçmasın)
   const logoutBtn = $("logoutBtn");
@@ -312,18 +338,19 @@ export async function initProfilePage({ setHeaderTokens } = {}){
   renderLevels(profile);
   renderOffline(profile);
 
-  // delete butonu
+  // ✅ HARD DELETE button (production-safe)
   const deleteBtn = $("deleteBtn");
   if(deleteBtn){
     deleteBtn.addEventListener("click", async ()=>{
-      const ok = confirm("Hesap silme talebi oluşturulsun mu? 30 gün içinde giriş yaparsanız iptal edilir.");
+      const ok = confirm("Hesabınız kalıcı olarak silinecek. Bu işlem geri alınamaz. Devam edilsin mi?");
       if(!ok) return;
+
+      toast("Hesap siliniyor...");
       try{
-        await supabase.rpc("request_account_deletion");
-        location.href="/pages/delete_requested.html";
+        await hardDeleteAccount();
       }catch(e){
         console.warn(e);
-        toast("Silme talebi kaydedilemedi");
+        toast(String(e?.message || "Hesap silinemedi"));
       }
     });
   }
