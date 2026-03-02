@@ -6,6 +6,7 @@
 // ✅ Sesli komutla dil değiştir: /api/command_parse
 // ✅ Daktilo çeviri + TTS + hoparlör üst üste binmez
 // ✅ IMPORTANT: FaceToFace'te "chat" tarzı YOK. Sadece çeviri.
+// ✅ FIX: Hoparlör artık boş closure text değil, balonun .txt içeriğini okur (daktilo sonrası replay çalışır)
 
 import { LANG_POOL } from "/js/lang_pool_full.js";
 import { getSiteLang } from "/js/i18n.js";
@@ -429,9 +430,6 @@ async function playAudioBlob(blob){
 
 /* ===============================
    TTS (GOOGLE-ONLY)
-   Backend /api/tts artık:
-   - ok:true  -> audio_base64 gelir (google)
-   - ok:false -> TTS_UNAVAILABLE (google kapalı)  ✅ OpenAI fallback yok
 ================================ */
 let ttsWarnAt = 0;
 
@@ -453,7 +451,6 @@ async function speakLocal(text, langCode){
       body: JSON.stringify({ text: t, lang, speaking_rate: 1, pitch: 0 })
     });
 
-    // HTTP hata: sessiz geç (çok spam olmasın)
     if(!res.ok){
       if(Date.now() - ttsWarnAt > 4000){
         ttsWarnAt = Date.now();
@@ -464,9 +461,7 @@ async function speakLocal(text, langCode){
 
     const data = await res.json().catch(()=>null);
 
-    // ✅ Google yoksa: ok:false gelir → sessizce çık
     if(!data || data.ok !== true || !data.audio_base64){
-      // sadece arada bir uyar
       if(Date.now() - ttsWarnAt > 4000){
         ttsWarnAt = Date.now();
         toast("🔇 Ses şu an kapalı");
@@ -505,7 +500,6 @@ async function parseCommand(text){
 
 /* ===============================
    TRANSLATE (STRICT)
-   NOTE: style:"fast" => chat vari cevap riskini keser
 ================================ */
 async function translateViaApi(text, source, target){
   const t = String(text||"").trim();
@@ -522,10 +516,10 @@ async function translateViaApi(text, source, target){
       text: t,
       from_lang: src,
       to_lang: dst,
-      style: "fast",         // ✅ chat değil
+      style: "fast",
       provider: "auto",
-      strict: true,          // (backend ignore etse bile zarar yok)
-      no_extra: true          // (backend ignore etse bile zarar yok)
+      strict: true,
+      no_extra: true
     })
   });
   if(!r.ok) return null;
@@ -535,22 +529,15 @@ async function translateViaApi(text, source, target){
 
 /* ===============================
    LOCAL CLEAN (NO AI)
-   - Chat hissini bitirir. Sadece düzenler.
 ================================ */
 function localCleanSpeechText(text){
   let s = String(text||"").trim();
   if(!s) return s;
 
-  // normalize spaces
   s = s.replace(/\s+/g, " ").trim();
-
-  // remove repeated tiny fillers (çok abartmadan)
   s = s.replace(/\b(eee+|ııı+|umm+|hmm+)\b/gi, "").replace(/\s+/g, " ").trim();
 
-  // basic punctuation
   if(!/[.!?…]$/.test(s)) s += ".";
-
-  // capitalize first letter (Latin)
   s = s.charAt(0).toUpperCase() + s.slice(1);
 
   return s.trim();
@@ -596,6 +583,7 @@ async function typeWriter(el, text, speed=TYPE_SPEED_MS){
 
 /* ===============================
    BUBBLES + SPEAKER
+   ✅ FIX: speaker reads bubble .txt content (works after typewriter)
 ================================ */
 function clearLatestTranslated(side){
   const wrap = (side==="top") ? $("topBody") : $("botBody");
@@ -603,14 +591,13 @@ function clearLatestTranslated(side){
   wrap.querySelectorAll(".bubble.me.is-latest").forEach(el=>el.classList.remove("is-latest"));
 }
 
-function makeSpeakerIcon(onClick){
+function makeSpeakerIcon(){
   const btn = document.createElement("div");
   btn.className="spk-icon";
   btn.innerHTML = `
     <svg viewBox="0 0 24 24" aria-hidden="true">
       <path d="M3 10v4h4l5 4V6L7 10H3zm13.5 2c0-1.77-1.02-3.29-2.5-4.03v8.06c1.48-.74 2.5-2.26 2.5-4.03zM14 3.23v2.06c2.89 0 5.23 2.34 5.23 5.23S16.89 15.75 14 15.75v2.06c4.02 0 7.29-3.27 7.29-7.29S18.02 3.23 14 3.23z"/>
     </svg>`;
-  btn.addEventListener("click", onClick);
   return btn;
 }
 
@@ -622,8 +609,23 @@ function addBubble(side, kind, text, opts={}){
   bubble.className = `bubble ${kind}`;
   if(kind === "me" && opts.latest) bubble.classList.add("is-latest");
 
+  // ✅ Speaker: read from bubble content (not closure text)
   if(kind === "me" && opts.speakable){
-    bubble.appendChild(makeSpeakerIcon(()=> speakLocal(text, opts.speakLang||"en")));
+    bubble.dataset.ttsLang = String(opts.speakLang || "en");
+    const spk = makeSpeakerIcon();
+
+    spk.addEventListener("click", (e)=>{
+      e.preventDefault();
+      e.stopPropagation();
+      const txtEl = bubble.querySelector(".txt");
+      const currentText = String(txtEl?.textContent || "").trim();
+      if(!currentText) return toast("Metin yok");
+
+      const lg = String(bubble.dataset.ttsLang || "en");
+      speakLocal(currentText, lg);
+    });
+
+    bubble.appendChild(spk);
   }
 
   const txt = document.createElement("span");
@@ -783,7 +785,6 @@ async function stopAndProcess(){
     return;
   }
 
-  // ✅ komut kontrolü RAW metinden (düzeltmeden önce)
   const cmd = await parseCommand(text);
   if(cmd && cmd.is_command && cmd.target_lang){
     if(which === "top"){
@@ -800,7 +801,6 @@ async function stopAndProcess(){
     return;
   }
 
-  // ✅ LOCAL temizle (AI yok)
   const cleaned = localCleanSpeechText(text);
 
   try{
@@ -818,6 +818,8 @@ async function stopAndProcess(){
   }
 
   clearLatestTranslated(other);
+
+  // ✅ Bubble first empty, then typewriter fills; speaker now reads bubble text
   const node = addBubble(other, "me", "", { latest:true, speakable:true, speakLang:dst });
   if(node?.txt) await typeWriter(node.txt, translated, TYPE_SPEED_MS);
 
