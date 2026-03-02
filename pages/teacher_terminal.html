@@ -4,41 +4,30 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
   <title>italkyAI • Teacher AI Terminal</title>
-
   <meta name="theme-color" content="#000000">
-  <style>html,body{background:#000 !important; margin:0; padding:0; overflow:hidden; font-family:'Outfit', sans-serif;}</style>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
   <style>
+    html,body{background:#000 !important; margin:0; padding:0; overflow:hidden; font-family:'Outfit', sans-serif;}
     :root {
       --ai-grad: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
       --purple: #a855f7;
       --glass-border: rgba(255, 255, 255, 0.15);
     }
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
-    #pageContent {
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
+    #pageContent{
+      height:100vh; display:flex; flex-direction:column;
       background: radial-gradient(circle at 50% 30%, #150520 0%, #000 100%);
-      overflow: hidden;
-      padding: 0;
+      overflow:hidden;
     }
-    .main-hub {
-      flex: 1;
-      min-height: 0;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      padding: 20px;
-    }
-    .header-zone { text-align:center; margin-bottom:20px; }
-    .header-zone h1 { font-family:'Space Grotesk'; font-size:28px; font-weight:900; color:#fff; margin:0; letter-spacing:-1px; }
-    .header-zone h1 span { background:var(--ai-grad); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-    .header-zone p { font-size:13px; color:rgba(255,255,255,0.5); margin-top:8px; font-weight:600; letter-spacing:1px; }
+    .main-hub{ flex:1; min-height:0; display:flex; flex-direction:column; padding:20px; }
+    .header-zone{ text-align:center; margin-bottom:20px; }
+    .header-zone h1{ font-family:'Space Grotesk'; font-size:28px; font-weight:900; color:#fff; margin:0; letter-spacing:-1px; }
+    .header-zone h1 span{ background:var(--ai-grad); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .header-zone p{ font-size:13px; color:rgba(255,255,255,0.5); margin-top:8px; font-weight:600; letter-spacing:1px; }
 
     .scanner-hero{
       flex:1; min-height:0; position:relative; border-radius:40px;
@@ -51,8 +40,7 @@
     }
     .scanner-hero:active{ transform:scale(.97); filter:brightness(1.2); }
 
-    .scan-bar{
-      position:absolute; left:0; width:100%; height:3px; z-index:5;
+    .scan-bar{ position:absolute; left:0; width:100%; height:3px; z-index:5;
       background:var(--purple); box-shadow:0 0 25px var(--purple);
       animation:scanMove 4s linear infinite;
     }
@@ -73,6 +61,7 @@
       box-shadow:0 0 40px rgba(168, 85, 247, 0.4);
       animation:breathe 3s infinite ease-in-out;
     }
+
     .cta-text{ text-align:center; z-index:10; padding:0 20px; }
     .cta-text h2{ font-family:'Space Grotesk'; font-size:26px; font-weight:700; color:#fff; margin:0; }
     .cta-text p{ font-size:13px; color:rgba(255,255,255,0.45); margin-top:10px; line-height:1.5; }
@@ -86,6 +75,7 @@
       color:#fff; padding:10px 14px; border-radius:999px;
       font-size:12px; letter-spacing:.6px; display:none; z-index:50;
       backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      max-width:90vw; text-align:center;
     }
   </style>
 </head>
@@ -114,10 +104,10 @@
 
       <div class="cta-text">
         <h2>FOTOĞRAF ÇEK VE ÇÖZ</h2>
-        <p>Takıldığın sorunun fotoğrafını çek, alanı seç ve yapay zeka adım adım anlatarak çözsün.</p>
+        <p>Fotoğrafı çek, alanı seç, italkyAI adım adım anlatsın.</p>
       </div>
 
-      <div class="toast" id="toast">Foto hazırlanıyor…</div>
+      <div class="toast" id="toast">Hazırlanıyor…</div>
     </section>
   </div>
 </main>
@@ -138,9 +128,8 @@
     });
   }
 
-  async function compressToJpegDataURL(file, maxSide=1400, quality=0.82){
+  async function compressToJpegDataURL(file, maxSide=1600, quality=0.85){
     const dataUrl = await readAsDataURL(file);
-
     const img = await new Promise((resolve, reject)=>{
       const im = new Image();
       im.onload = ()=>resolve(im);
@@ -164,8 +153,19 @@
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = "high";
     ctx.drawImage(img, 0, 0, nw, nh);
-
     return c.toDataURL("image/jpeg", quality);
+  }
+
+  function dataUrlToMiniPayload(dataUrl){
+    // data:image/jpeg;base64,XXXX -> just XXXX (hash için daha kısa)
+    const i = dataUrl.indexOf(",");
+    return i >= 0 ? dataUrl.slice(i+1) : dataUrl;
+  }
+
+  function goCropWithPayload(base64payload){
+    // 1) hash ile taşı
+    const target = "/pages/exam_crop.html#img=" + encodeURIComponent(base64payload);
+    location.href = target;
   }
 
   btn.onclick = () => {
@@ -182,15 +182,36 @@
       if(!file) return;
 
       try{
-        showToast("Foto optimize ediliyor…");
-        const jpeg = await compressToJpegDataURL(file, 1400, 0.82);
+        showToast("Optimize ediliyor…");
 
-        // debug: uzunluk gör
-        // console.log("jpeg len", jpeg.length);
+        // kademeli sıkıştırma: büyükse kalite düşür
+        let maxSide = 1600;
+        let q = 0.85;
+        let jpeg = "";
 
-        sessionStorage.setItem("exam_photo", jpeg);
+        for(let attempt=0; attempt<4; attempt++){
+          jpeg = await compressToJpegDataURL(file, maxSide, q);
+          const payload = dataUrlToMiniPayload(jpeg);
+
+          // hash çok büyürse bir tık daha küçült
+          if(payload.length < 1_800_000){ // ~1.8MB güvenli
+            hideToast();
+
+            // yedek olarak sessionStorage'a da at (olursa)
+            try{ sessionStorage.setItem("exam_photo", jpeg); }catch(e){}
+
+            goCropWithPayload(payload);
+            return;
+          }
+
+          // bir kademe küçült
+          maxSide = Math.max(1100, Math.round(maxSide * 0.82));
+          q = Math.max(0.62, q - 0.10);
+        }
+
         hideToast();
-        location.href = "/pages/exam_crop.html";
+        alert("Foto çok büyük. Lütfen daha yakın çekip tekrar dene.");
+
       }catch(e){
         hideToast();
         alert("Foto işlenemedi. Lütfen tekrar dene.");
