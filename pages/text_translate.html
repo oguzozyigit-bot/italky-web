@@ -245,12 +245,27 @@ textarea {
   };
 
   // --- TTS (Speaker) ---
+  // ✅ Fix: tekrar basınca önceki sesi durdur, yenisini baştan çal
   let audio = null;
+
+  function stopSpeak(){
+    try{
+      if(audio){
+        audio.pause();
+        audio.currentTime = 0;
+      }
+    }catch{}
+    audio = null;
+  }
+
   $("btnSpeak").onclick = async () => {
     const t = $("dstTxt").textContent.trim();
     if(!t || t === "...") return;
+
+    // ✅ her basışta önceki sesi kes
+    stopSpeak();
+
     try {
-      if(audio) { audio.pause(); audio = null; }
       const r = await fetch(`${API_BASE}/api/tts`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -259,9 +274,15 @@ textarea {
       const j = await r.json();
       if(j.audio_base64) {
         audio = new Audio("data:audio/mpeg;base64," + j.audio_base64);
-        audio.play();
+        audio.playsInline = true;
+        audio.onended = () => { audio = null; };
+        audio.onerror = () => { audio = null; };
+        await audio.play();
       }
-    } catch(e) { console.error("TTS Error"); }
+    } catch(e) {
+      console.error("TTS Error", e);
+      stopSpeak();
+    }
   };
 
   // --- STT (Mic) ---
