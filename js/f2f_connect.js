@@ -21,6 +21,23 @@ function setText(id, v){
   if(el) el.textContent = String(v ?? "");
 }
 
+/* ===== ensure hint nodes (HTML’de yoksa ekle) ===== */
+function ensureHint(elId, parentId){
+  let el = $(elId);
+  if(el) return el;
+  const p = $(parentId);
+  if(!p) return null;
+  el = document.createElement("div");
+  el.id = elId;
+  el.style.marginTop = "10px";
+  el.style.fontSize = "12px";
+  el.style.fontWeight = "900";
+  el.style.color = "rgba(255,255,255,0.6)";
+  el.style.textAlign = "center";
+  p.appendChild(el);
+  return el;
+}
+
 /* ===== Profile cache ===== */
 function getProfileFromCache(){
   try{
@@ -73,7 +90,6 @@ async function createRoomOnBackend(room, timeoutMs=4500){
           clearTimeout(to);
           return finish(true);
         }
-        // room_created gelmese bile presence gelirse oda var
         if(msg.type === "presence"){
           clearTimeout(to);
           return finish(true);
@@ -121,7 +137,10 @@ async function wsJoinCheck(room, timeoutMs=2500){
 let scanStream=null;
 let scanTimer=null;
 
-function setScanHint(msg){ setText("scanHint", msg); }
+function setScanHint(msg){
+  const hint = ensureHint("scanHint", "scanner");
+  if(hint) hint.textContent = String(msg||"");
+}
 
 async function stopScanner(){
   try{ if(scanTimer) clearInterval(scanTimer); }catch{}
@@ -168,7 +187,7 @@ async function startScanner(){
   }
 
   if(!scanStream){
-    setScanHint("Kamera açılamadı. (İzin / WebView) Kod girerek devam et.");
+    setScanHint("Kamera açılamadı. Kod girerek devam et.");
     return;
   }
 
@@ -181,7 +200,7 @@ async function startScanner(){
   }
 
   if(!hasBD){
-    setScanHint("Bu cihaz QR okumayı desteklemiyor. Kod girerek devam et.");
+    setScanHint("QR okuma desteklenmiyor. Kodu gir veya panodan yapıştır.");
     return;
   }
 
@@ -206,18 +225,17 @@ async function startScanner(){
   }, 240);
 }
 
-/* ===== MODE UI (tek kaynak: JS) ===== */
+/* ===== MODE UI ===== */
 function setMode(m){
+  // ✅ HTML id fix: homeCards var
+  $("homeCards")?.classList.toggle("hide", m!=="home");
   $("hostPanel")?.classList.toggle("hide", m!=="host");
   $("joinPanel")?.classList.toggle("hide", m!=="join");
-  $("cardHome")?.classList.toggle("hide", m!=="home");
-  $("cardActions")?.classList.toggle("hide", m!=="home");
 }
 
 function setUrlMode(mode, extra={}){
   const u = new URL(location.href);
   u.searchParams.set("mode", mode);
-  // join paramını temizle/kur
   if(extra.join){
     u.searchParams.set("join", extra.join);
   }else{
@@ -262,6 +280,8 @@ async function initHostMode(){
 }
 
 function initJoinMode(){
+  ensureHint("joinHint", "joinPanel");
+
   const join = qs("join");
   if(join && $("roomInput")){
     $("roomInput").value = normRoom(join);
@@ -272,6 +292,36 @@ function initJoinMode(){
 
   $("btnScan")?.addEventListener("click", ()=> startScanner());
   $("scanClose")?.addEventListener("click", ()=> stopScanner());
+
+  // ✅ Clipboard paste fallback (QR yoksa)
+  if(!$("btnPaste")){
+    const btn = document.createElement("button");
+    btn.id = "btnPaste";
+    btn.className = "btn-ghost";
+    btn.textContent = "📋 PANODAN YAPIŞTIR";
+    btn.style.marginTop = "10px";
+    btn.onclick = async ()=>{
+      try{
+        const txt = await navigator.clipboard.readText();
+        const s = String(txt||"").trim();
+        if(!s) return;
+        // link ise join paramını çek
+        let code = s;
+        try{
+          const u = new URL(s, location.origin);
+          code = u.searchParams.get("join") || s;
+        }catch{}
+        code = normRoom(code);
+        if(code && $("roomInput")) $("roomInput").value = code;
+        setText("joinHint", "Panodan alındı ✅ Bağlan’a bas.");
+      }catch{
+        alert("Pano okunamadı. Kodu elle gir.");
+      }
+    };
+    // joinPanel içindeki qr-zone’a ekle
+    const zone = $("joinPanel")?.querySelector?.(".qr-zone");
+    zone?.appendChild(btn);
+  }
 
   $("btnJoin")?.addEventListener("click", async ()=>{
     const room = normRoom($("roomInput")?.value || "");
@@ -296,7 +346,6 @@ function initJoinMode(){
 
 /* ===== BOOT ===== */
 document.addEventListener("DOMContentLoaded", async ()=>{
-  // Butonlar
   $("goHost")?.addEventListener("click", async ()=>{
     setUrlMode("host");
     setMode("host");
@@ -321,7 +370,6 @@ document.addEventListener("DOMContentLoaded", async ()=>{
     stopScanner();
   });
 
-  // Sayfa açılış modu
   const mode = qs("mode") || (qs("join") ? "join" : "home");
   setMode(mode);
 
@@ -331,7 +379,6 @@ document.addEventListener("DOMContentLoaded", async ()=>{
     initJoinMode();
   }
 
-  // Scanner kapatma garanti
   document.addEventListener("visibilitychange", ()=>{
     if(document.hidden) stopScanner();
   });
