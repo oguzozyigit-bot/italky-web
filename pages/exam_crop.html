@@ -10,9 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
 <style>
-:root{
-  --ai-grad: linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
-}
+:root{ --ai-grad: linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%); --muted: rgba(255,255,255,.6); }
 html,body{margin:0;background:#000;font-family:'Outfit',sans-serif;overflow:hidden;}
 #pageContent{height:100vh; background: radial-gradient(circle at 50% 30%, #150520 0%, #000 100%); position:relative;}
 .stage{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; padding:16px;}
@@ -24,11 +22,23 @@ html,body{margin:0;background:#000;font-family:'Outfit',sans-serif;overflow:hidd
 .btn{flex:1; border-radius:16px; border:1px solid rgba(255,255,255,.14); background: rgba(0,0,0,.35); color:#fff; padding:12px 12px; font-weight:900;}
 .btn.primary{background:var(--ai-grad); border-color:transparent;}
 .btn.small{flex:0 0 auto; padding:12px 14px}
+#result{
+  position:absolute; top:14px; right:14px; z-index:25; width:min(44vw, 380px); max-height:42vh; overflow:auto;
+  border-radius:18px; border:1px solid rgba(255,255,255,.12); background: rgba(0,0,0,.45);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  padding:12px; display:none;
+}
+#result h3{margin:0 0 6px 0; font-family:'Space Grotesk'; font-size:14px;}
+.badge{display:inline-block; font-size:10px; padding:4px 8px; border-radius:999px; border:1px solid rgba(255,255,255,.16); background: rgba(0,0,0,.25); color:rgba(255,255,255,.85);}
+.muted{color:var(--muted); font-size:12px; line-height:1.35}
+.ans{margin-top:10px; font-weight:900; font-size:14px; background: rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12); padding:10px; border-radius:14px;}
+.steps{margin-top:10px; font-size:12px; color:rgba(255,255,255,.85); line-height:1.45}
 #debug{
   position:absolute; top:14px; left:14px; z-index:40;
   font-size:11px; color:rgba(255,255,255,.85);
   background:rgba(0,0,0,.45); border:1px solid rgba(255,255,255,.12);
   padding:8px 10px; border-radius:14px;
+  max-width:60vw;
 }
 </style>
 </head>
@@ -39,8 +49,16 @@ html,body{margin:0;background:#000;font-family:'Outfit',sans-serif;overflow:hidd
     <div id="wrap">
       <div id="hint">👇 PARMAĞINLA SORUYU ÇERÇEVELE</div>
       <div id="debug">DEBUG: açıldı</div>
+
       <img id="photo" alt="photo"/>
       <canvas id="overlay"></canvas>
+
+      <div id="result">
+        <h3>italkyAI Çözüm</h3>
+        <div class="muted" id="topicLine"></div>
+        <div class="ans" id="finalAnswer"></div>
+        <div class="steps" id="steps"></div>
+      </div>
 
       <div id="topbar">
         <button class="btn small" id="btnBack">⬅︎ Geri</button>
@@ -52,7 +70,7 @@ html,body{margin:0;background:#000;font-family:'Outfit',sans-serif;overflow:hidd
 </main>
 
 <script>
-  const API_BASE = "https://italky-api.onrender.com"; // sabit
+  const API_BASE = "https://italky-api.onrender.com";
   const BACK_PAGE = "/pages/teacher_terminal.html";
 
   const photo = document.getElementById("photo");
@@ -65,15 +83,39 @@ html,body{margin:0;background:#000;font-family:'Outfit',sans-serif;overflow:hidd
   const btnReset = document.getElementById("btnReset");
   const btnSolve = document.getElementById("btnSolve");
 
+  const resultBox = document.getElementById("result");
+  const topicLine = document.getElementById("topicLine");
+  const finalAnswer = document.getElementById("finalAnswer");
+  const stepsEl = document.getElementById("steps");
+
   let drag = {active:false, x0:0, y0:0, x1:0, y1:0};
 
-  const stored = sessionStorage.getItem("exam_photo");
-  if(!stored){
-    debug.textContent = "DEBUG: FOTO GELMEDİ (sessionStorage boş)";
-    // burada geri atmak yerine ekranda kalıyoruz ki teşhis net olsun
-  } else {
-    debug.textContent = "DEBUG: FOTO OK (len=" + stored.length + ")";
-    photo.src = stored;
+  function getHashPayload(){
+    const h = location.hash || "";
+    const m = h.match(/img=([^&]+)/);
+    return m ? decodeURIComponent(m[1]) : "";
+  }
+
+  function buildDataUrlFromPayload(payload){
+    if(!payload) return "";
+    // JPEG payload -> data url
+    return "data:image/jpeg;base64," + payload;
+  }
+
+  // 1) Foto: hash -> sessionStorage -> none
+  const payload = getHashPayload();
+  let dataUrl = payload ? buildDataUrlFromPayload(payload) : "";
+
+  if(!dataUrl){
+    const stored = sessionStorage.getItem("exam_photo");
+    if(stored) dataUrl = stored;
+  }
+
+  if(!dataUrl){
+    debug.textContent = "DEBUG: FOTO YOK (hash ve sessionStorage boş).";
+  }else{
+    debug.textContent = "DEBUG: FOTO OK (len=" + dataUrl.length + ")";
+    photo.src = dataUrl;
   }
 
   function fitCanvas(){
@@ -129,6 +171,7 @@ html,body{margin:0;background:#000;font-family:'Outfit',sans-serif;overflow:hidd
     drag.x0 = drag.x1 = p.x;
     drag.y0 = drag.y1 = p.y;
     hint.style.display="none";
+    resultBox.style.display="none";
     canvas.setPointerCapture(e.pointerId);
     drawOverlay();
   });
@@ -143,6 +186,7 @@ html,body{margin:0;background:#000;font-family:'Outfit',sans-serif;overflow:hidd
   btnReset.onclick = ()=>{
     drag = {active:false, x0:0, y0:0, x1:0, y1:0};
     hint.style.display="block";
+    resultBox.style.display="none";
     drawOverlay();
   };
 
@@ -205,6 +249,15 @@ html,body{margin:0;background:#000;font-family:'Outfit',sans-serif;overflow:hidd
     return t.toDataURL("image/jpeg", 0.9);
   }
 
+  function showResult(data){
+    resultBox.style.display = "block";
+    const topic = data.topic ? String(data.topic) : "";
+    topicLine.innerHTML = topic ? `<span class="badge">${topic}</span>` : `<span class="badge">Konu</span>`;
+    finalAnswer.textContent = data.final_answer ? String(data.final_answer) : "Cevap oluşturulamadı";
+    const steps = Array.isArray(data.explanation_steps) ? data.explanation_steps : [];
+    stepsEl.innerHTML = steps.length ? steps.map(s=>`• ${String(s)}`).join("<br>") : `<span class="muted">Adımlar gelmedi.</span>`;
+  }
+
   btnSolve.onclick = async ()=>{
     btnSolve.disabled = true;
     btnSolve.textContent = "ÇÖZÜLÜYOR…";
@@ -217,15 +270,20 @@ html,body{margin:0;background:#000;font-family:'Outfit',sans-serif;overflow:hidd
       });
       const data = await res.json().catch(()=> ({}));
       if(!res.ok) throw new Error(data.detail || data.message || ("Hata " + res.status));
-
-      alert(data.final_answer || "Çözüm geldi (final_answer yok)");
+      showResult(data);
     }catch(e){
-      alert(e.message || "Hata");
+      resultBox.style.display="block";
+      topicLine.innerHTML = `<span class="badge">Hata</span>`;
+      finalAnswer.textContent = e.message || "Hata";
+      stepsEl.innerHTML = `<span class="muted">Tekrar dene.</span>`;
     }finally{
       btnSolve.disabled = false;
       btnSolve.textContent = "Çözümü Al";
     }
   };
+
+  // ilk overlay
+  btnReset.onclick();
 </script>
 </body>
 </html>
