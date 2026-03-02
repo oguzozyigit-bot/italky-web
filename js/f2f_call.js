@@ -4,6 +4,8 @@
 // ✅ Tek kişiyken mesaj göstermeme
 // ✅ Balonlarda avatar yok (sadece isim + balon)
 // ✅ Dil seçimi her zaman dolar
+// ✅ NEW: Push-to-talk (basılı tut → konuş, bırak → gönder)
+// ✅ NEW: Gelen mesajı otomatik TTS ile seslendir (anti-overlap)
 
 import { LANG_POOL } from "/js/lang_pool_full.js";
 import { STORAGE_KEY } from "/js/config.js";
@@ -18,6 +20,9 @@ const role = String(params.get("role") || "").trim().toLowerCase();
 
 let myLang = String(params.get("me_lang") || localStorage.getItem("f2f_my_lang") || "tr").trim().toLowerCase();
 localStorage.setItem("f2f_my_lang", myLang);
+
+// ✅ Auto TTS (varsayılan açık)
+let autoTTS = (localStorage.getItem("wt_auto_tts") ?? "1") === "1";
 
 // UI
 const chat = $("chat");
@@ -79,7 +84,7 @@ if(langSelect){
   });
 }
 
-// Exit confirm (çok basit)
+// Exit confirm
 function askExit(){
   const ok = confirm("Sohbetten çıkmak istiyor musunuz?");
   if(ok) location.href = "/pages/home.html";
@@ -162,7 +167,7 @@ function localCleanText(text){
   return s;
 }
 
-// ✅ bubble (NO avatar in chat)
+// bubble (NO avatar in chat)
 function addMessage(side, name, text){
   if(!chat) return;
 
@@ -212,7 +217,7 @@ function isEchoIncoming(txt){
   return false;
 }
 
-// translate (display)
+// translate (display) — Google backend (endpoint adı translate_ai)
 async function translateAI(text, from, to){
   const t = String(text||"").trim();
   if(!t) return t;
@@ -234,7 +239,7 @@ async function translateAI(text, from, to){
   }
 }
 
-// STT backend
+// STT backend — Google STT
 function pickMime(){
   const cands = ["audio/webm;codecs=opus","audio/webm","audio/ogg;codecs=opus","audio/ogg"];
   for(const m of cands){
@@ -250,6 +255,70 @@ async function sttBlob(blob, lang){
   if(!r.ok) throw new Error(await r.text());
   const j = await r.json().catch(()=>({}));
   return String(j.text||"").trim();
+}
+
+/* ===============================
+   ✅ AUTO TTS for incoming (anti-overlap + abort + token)
+================================ */
+let ttsAudio = null;
+let ttsCtl = null;
+let ttsToken = 0;
+let ttsLastAt = 0;
+
+function stopTTS(){
+  try{ ttsCtl?.abort?.(); }catch{}
+  ttsCtl = null;
+
+  try{
+    if(ttsAudio){
+      ttsAudio.pause();
+      ttsAudio.currentTime = 0;
+    }
+  }catch{}
+  ttsAudio = null;
+}
+
+async function speakText(text, lang){
+  if(!autoTTS) return;
+  const t = String(text||"").trim();
+  if(!t) return;
+
+  const now = Date.now();
+  if(now - ttsLastAt < 160) return; // spam kes
+  ttsLastAt = now;
+
+  stopTTS();
+  const my = ++ttsToken;
+
+  try{
+    ttsCtl = new AbortController();
+
+    const r = await fetch(`${API_BASE}/api/tts`,{
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ text: t, lang: norm(lang) }),
+      signal: ttsCtl.signal
+    });
+
+    if(my !== ttsToken) return;
+    if(!r.ok) return;
+
+    const j = await r.json().catch(()=>null);
+    if(my !== ttsToken) return;
+
+    const b64 = j?.audio_base64;
+    if(!b64) return;
+
+    ttsAudio = new Audio("data:audio/mpeg;base64," + b64);
+    ttsAudio.playsInline = true;
+    ttsAudio.onended = ()=>{ if(my === ttsToken) ttsAudio=null; };
+    ttsAudio.onerror = ()=>{ if(my === ttsToken) ttsAudio=null; };
+
+    if(my !== ttsToken) return;
+    await ttsAudio.play();
+  }catch{
+    // abort normal
+  }
 }
 
 // WS
@@ -334,6 +403,9 @@ function connect(){
       if(!shown) return;
 
       addMessage("left", fromName, shown);
+
+      // ✅ AUTO TTS: okunan dil = myLang (çünkü ekranda gösterilen bu)
+      speakText(shown, myLang);
     }
   };
 
@@ -370,11 +442,14 @@ async function sendTyped(){
 }
 sendBtn?.addEventListener("click", sendTyped);
 
-// MIC
+/* ===============================
+   ✅ PUSH-TO-TALK (hold to record)
+================================ */
 let recJob=null, isBusy=false;
+let pressActive = false;
 
 async function startRecord(){
-  if(isBusy) return;
+  if(isBusy || recJob) return;
   isBusy=true;
   try{
     const stream = await navigator.mediaDevices.getUserMedia({ audio:true });
@@ -384,7 +459,9 @@ async function startRecord(){
     mr.ondataavailable = (e)=>{ if(e.data && e.data.size) chunks.push(e.data); };
     mr.start(250);
 
+    // güvenlik: 12sn auto-stop
     const timer = setTimeout(()=> stopRecord(), 12000);
+
     recJob = { stream, mr, chunks, timer };
     micBtn?.classList.add("listening");
   }catch{}
@@ -402,6 +479,7 @@ async function stopRecord(){
 
     const blob = new Blob(recJob.chunks, { type: recJob.mr.mimeType || "audio/webm" });
     recJob=null;
+
     if(!blob || blob.size < 800) return;
 
     const raw = await sttBlob(blob, myLang);
@@ -425,7 +503,33 @@ async function stopRecord(){
   finally{ isBusy=false; }
 }
 
-micBtn?.addEventListener("click", ()=>{
-  if(!recJob) return startRecord();
-  return stopRecord();
-});
+// ✅ Hold handlers (touch + mouse + pen)
+function bindPushToTalk(btn){
+  if(!btn) return;
+
+  const down = async (e)=>{
+    e.preventDefault();
+    e.stopPropagation();
+    if(pressActive) return;
+    pressActive = true;
+    await startRecord();
+  };
+
+  const up = async (e)=>{
+    e.preventDefault();
+    e.stopPropagation();
+    if(!pressActive) return;
+    pressActive = false;
+    await stopRecord();
+  };
+
+  btn.addEventListener("pointerdown", down, { passive:false });
+  btn.addEventListener("pointerup", up, { passive:false });
+  btn.addEventListener("pointercancel", up, { passive:false });
+  btn.addEventListener("pointerleave", up, { passive:false });
+
+  // fallback (eski click toggle)
+  btn.addEventListener("click",(e)=>{ e.preventDefault(); e.stopPropagation(); }, { passive:false });
+}
+
+bindPushToTalk(micBtn);
