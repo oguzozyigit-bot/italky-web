@@ -2,50 +2,43 @@
 import { STORAGE_KEY } from "/js/config.js";
 
 /* ===============================
-    HOME HEADER/FOOTER (QUANTUM UPGRADE)
+    HOME HEADER/FOOTER (QUANTUM)
 ================================ */
 const HOME_HEADER_HTML = `
 <header class="premium-header" id="italkyHeader">
   <div class="brand-group" id="brandHome" style="cursor:pointer;">
-    <div class="logo-wrap">
-      <h1><span>italky</span><span class="ai">AI</span></h1>
-      <div class="brand-slogan">QUANTUM TERMINAL</div>
-    </div>
+    <h1><span>italky</span><span class="ai">AI</span></h1>
+    <div class="brand-slogan">BE FREE</div>
   </div>
 
   <div class="user-info" id="profileBtn" title="Profil">
     <div class="uMeta">
       <div class="uName" id="userName">Kullanıcı</div>
-      <div class="uJeton"><span class="j-icon">⚡</span> <span id="headerJeton">—</span></div>
+      <div class="uJeton">Jeton: <span id="headerJeton">—</span></div>
     </div>
-    <div class="avatar-frame">
-      <div class="avatar-glow"></div>
-      <div class="avatar"><img src="" id="userPic" alt=""></div>
-    </div>
+    <div class="avatar"><img src="" id="userPic" alt=""></div>
   </div>
 </header>
 `;
 
 const HOME_FOOTER_HTML = `
 <footer class="premium-footer" id="italkyFooter">
-  <div class="footer-blur-bg"></div>
   <nav class="footer-nav">
     <a href="/pages/about.html">Hakkımızda</a>
     <a href="/pages/faq.html">SSS</a>
     <a href="/pages/privacy.html">Gizlilik</a>
     <a href="/pages/contact.html">İletişim</a>
   </nav>
-  <div class="signature">italkyAI @ italkyAcademy • By Ozyigit</div>
+  <div class="signature">italkyAI @ italkyAcademy By Ozyigit's • 2026</div>
 </footer>
 `;
 
 /* ===============================
-    SHELL CSS (OS V3 İLE TAM UYUMLU)
+    SHELL CSS (OS V3 MODERNA)
 ================================ */
 const SHELL_CSS = `
 :root{
   --ai-gradient: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
-  --neon-blue: #00d2ff;
   --bg-void: #000;
   --footerH: 0px;
 }
@@ -55,18 +48,20 @@ const SHELL_CSS = `
 html, body{
   margin:0; padding:0;
   width:100%; height:100%;
-  background: #000 !important;
+  background: var(--bg-void) !important;
   font-family:'Outfit', sans-serif;
   overflow:hidden;
   color:#fff;
 }
 
-/* 🟣 Kuantum Uzay Arka Planı */
+/* 🟣 Quantum Nebula Background */
 .italky-bg{
-  position: fixed; inset: 0; z-index: 0;
+  position: fixed; inset: 0;
+  pointer-events:none; z-index: 0;
   background: radial-gradient(circle at 50% 30%, #0d0d2b 0%, #000 100%);
 }
 
+/* App Frame */
 .app-viewport{
   position:relative;
   z-index: 5;
@@ -76,25 +71,27 @@ html, body{
   margin:0 auto;
   display:flex;
   flex-direction:column;
-  border-left: 1px solid rgba(255,255,255,0.05);
-  border-right: 1px solid rgba(255,255,255,0.05);
+  background: rgba(10, 10, 30, 0.4);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border-left: 1px solid rgba(255,255,255,0.08);
+  border-right: 1px solid rgba(255,255,255,0.08);
   overflow:hidden;
 }
 
-/* 🚀 HEADER: Holografik Terminal */
+/* HEADER: Ovallik eklendi, ölçü korundu */
 .premium-header{
-  padding: calc(40px + env(safe-area-inset-top)) 20px 15px;
-  display:flex; align-items:center; justify-content:space-between;
-  background: rgba(0,0,0,0.3);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  padding: calc(45px + env(safe-area-inset-top)) 18px 15px;
+  display:flex; align-items:flex-start; justify-content:space-between;
   border-bottom: 1px solid rgba(255,255,255,0.08);
+  background: rgba(0,0,0,0.3);
+  border-radius: 0 0 24px 24px; /* ✅ Yumuşak Alt Köşeler */
   flex: 0 0 auto;
-  z-index: 100;
 }
 .brand-group h1{
   font-family: 'Space Grotesk', sans-serif;
-  font-size: 24px; margin: 0; font-weight: 800; display:flex; gap:2px;
+  font-size: 26px; margin: 0; font-weight: 700; line-height: 1;
+  display:flex; gap:2px;
 }
 .brand-group h1 .ai{
   background: var(--ai-gradient);
@@ -103,66 +100,63 @@ html, body{
 }
 .brand-slogan{
   font-size: 8px; font-weight: 900; letter-spacing: 3px;
-  color: var(--neon-blue); text-transform: uppercase; margin-top: 4px;
+  color: rgba(255,255,255,0.5); text-transform: uppercase;
+  margin-top: 5px;
 }
 
-/* Kullanıcı Alanı */
+.user-info{ display:flex; align-items:center; gap:12px; cursor:pointer; user-select:none; }
 .uMeta{ display:flex; flex-direction:column; align-items:flex-end; gap:2px; }
-.uName{ font-weight:800; font-size:12px; opacity:0.8; }
+.uName{ font-weight:900; font-size:13px; max-width: 140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .uJeton{ 
-  font-size:11px; font-weight:1000; color:#fff;
-  background: rgba(99, 102, 241, 0.2);
-  padding: 2px 8px; border-radius: 20px;
-  border: 1px solid rgba(165, 180, 252, 0.2);
-}
-.avatar-frame { position: relative; width: 38px; height: 38px; }
-.avatar-glow {
-  position: absolute; inset: -2px; border-radius: 50%;
-  background: var(--ai-gradient); filter: blur(4px); opacity: 0.5;
+    font-size:10px; font-weight:900; color:#a5b4fc; 
+    background: rgba(165,180,252,0.12); padding: 2px 8px; border-radius: 8px; 
 }
 .avatar{
-  position: relative; width: 100%; height: 100%;
-  border-radius:50%; border: 1.5px solid rgba(255,255,255,0.2);
-  overflow:hidden; background: #000; z-index: 2;
+  width:38px; height:38px;
+  border-radius:50%;
+  border: 1.5px solid #6366f1;
+  overflow:hidden;
+  background: rgba(0,0,0,0.3);
+  box-shadow: 0 0 10px rgba(99,102,241,0.2);
 }
-.avatar img{ width:100%; height:100%; object-fit:cover; }
+.avatar img{ width:100%; height:100%; object-fit:cover; display:block; }
 
-/* MAIN AREA */
+/* MAIN CONTENT */
 .shellMain{
   flex:1; min-height:0; overflow-y:auto;
   -webkit-overflow-scrolling: touch;
-  padding-bottom: calc(var(--footerH) + 10px);
+  padding-bottom: calc(var(--footerH) + 12px);
 }
 .shellMain::-webkit-scrollbar{ display:none; }
 
-/* 🛸 FOOTER: Yüzen Kontrol Paneli */
+/* FOOTER: Ovallik eklendi, ölçü korundu */
 .premium-footer{
   position:absolute;
-  left:10px; right:10px; bottom:10px; /* Kenarlardan boşluk bırakarak yüzer hale getirdim */
+  left:0; right:0; bottom:0;
   display:flex; flex-direction:column; align-items:center;
   background: rgba(10, 10, 25, 0.6);
   backdrop-filter: blur(25px);
-  -webkit-backdrop-filter: blur(25px);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 24px; /* Oval köşeler */
-  padding: 12px 10px calc(12px + env(safe-area-inset-bottom));
+  border-top: 1px solid rgba(255,255,255,0.1);
+  border-radius: 28px 28px 0 0; /* ✅ Yumuşak Üst Köşeler */
+  padding: 12px 10px calc(10px + env(safe-area-inset-bottom));
   z-index: 50;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
 }
-.footer-nav{ display:flex; gap:18px; margin-bottom: 8px; }
+.footer-nav{ display:flex; gap:20px; margin-bottom: 8px; justify-content:center; }
 .footer-nav a{
   font-size:10px; font-weight:900; color: rgba(255,255,255,0.4);
-  text-decoration:none; text-transform: uppercase; letter-spacing: 1px;
+  text-decoration:none; text-transform: uppercase;
 }
 .signature{
-  font-size:10px; font-weight:1000;
-  color: rgba(255,255,255,0.2);
-  text-align:center; letter-spacing: 0.5px;
+  font-size:10px; font-weight:900;
+  background: linear-gradient(to right, #6366f1, #ec4899);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  opacity: 0.8;
 }
 `;
 
 /* ===============================
-    MOUNT & HELPERS
+    HELPERS & MOUNT (Logic Protected)
 ================================ */
 function injectShellStyle(){
   if(document.getElementById("italkyShellStyle")) return;
@@ -177,7 +171,9 @@ export function shortDisplayName(fullName){
   if(!s) return "Kullanıcı";
   const parts = s.split(" ").filter(Boolean);
   if(parts.length === 1) return parts[0];
-  return `${parts[0]} ${parts[parts.length-1][0].toUpperCase()}.`;
+  const last = parts[parts.length-1];
+  const first = parts.slice(0,-1).join(" ");
+  return `${first} ${last?.[0] ? last[0].toUpperCase() + "." : ""}`.trim();
 }
 
 function safeSetText(id, val){
@@ -203,7 +199,7 @@ export function hydrateFromCache(){
     safeSetText("userName", shortDisplayName(nm));
     const pic = u?.picture || u?.avatar || u?.avatar_url || "";
     if(pic) safeSetImg("userPic", pic);
-    if(u?.tokens != null) setHeaderTokens(u.tokens);
+    if(u?.tokens != null) safeSetText("headerJeton", String(u.tokens));
   }catch{}
 }
 
@@ -212,7 +208,7 @@ function syncFooterHeight(){
     const footer = document.getElementById("italkyFooter");
     if(!footer) return;
     const h = Math.round(footer.getBoundingClientRect().height || 0);
-    if(h > 0) document.documentElement.style.setProperty("--footerH", h + 40 + "px"); // Boşluk payı eklendi
+    if(h > 0) document.documentElement.style.setProperty("--footerH", h + "px");
   }catch{}
 }
 
@@ -247,5 +243,5 @@ export function mountShell(options = {}){
   syncFooterHeight();
 
   window.addEventListener("resize", syncFooterHeight);
-  setTimeout(syncFooterHeight, 300);
+  setTimeout(syncFooterHeight, 200);
 }
