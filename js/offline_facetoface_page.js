@@ -1,21 +1,22 @@
 // FILE: /js/offline_facetoface_page.js
 // ✅ Offline Face-to-Face (Metin ağırlıklı) — Mic zorunlu değil
-// ✅ Offline’da STT yok: Mic butonu “Metin Gir” açar (profesyonel ve stabil)
-// ✅ TTS var: NativeTTS varsa onu kullanır (offline), yoksa speechSynthesis fallback
-// ✅ Dil seçimi (popover) çalışır
-// ✅ Çeviri: ŞİMDİLİK
-//    - İnternet varsa: /api/translate_ai ile çevirir (online kalite)
-//    - İnternet yoksa: "Offline model motoru yakında" mesajı gösterir
-//      (İndirilen zip’leri doğrulama / gerçek offline motoru bir sonraki adımda JS + PY ile bağlayacağız)
+// ✅ Mic butonu: Offline’da "Metin Gir" çalışır (stabil)
+// ✅ TTS: NativeTTS varsa offline çalışır; yoksa speechSynthesis fallback
+// ✅ Model kontrol: seçilen dil çiftinin 2 yön zip’i cache’te yoksa offline’da uyarır ve Offline Diller sayfasına yollar
+// ✅ Çeviri: İnternet varsa /api/translate_ai ile (online kalite), internet yoksa "Offline motor yakında" (şimdilik)
 
 import { LANG_POOL } from "/js/lang_pool_full.js";
+import { supabase } from "/js/supabase_client.js";
 
 const API_BASE = "https://italky-api.onrender.com";
+const BUCKET = "offline";
+const CACHE_NAME = "italky-offline-v1";
+
 const $ = (id)=>document.getElementById(id);
 
 const BCP = {
-  "tr":"tr-TR","en":"en-US","de":"de-DE","fr":"fr-FR","it":"it-IT","es":"es-ES",
-  "ru":"ru-RU","el":"el-GR","az":"az-AZ","ka":"ka-GE"
+  tr:"tr-TR", en:"en-US", de:"de-DE", fr:"fr-FR", it:"it-IT", es:"es-ES",
+  ru:"ru-RU", el:"el-GR", az:"az-AZ", ka:"ka-GE"
 };
 
 const LANGS = (Array.isArray(LANG_POOL) ? LANG_POOL : []).map(l=>{
@@ -24,6 +25,8 @@ const LANGS = (Array.isArray(LANG_POOL) ? LANG_POOL : []).map(l=>{
   return { code, flag: l.flag||"🌐", name: l.name||code.toUpperCase(), bcp: BCP[code] || "en-US" };
 }).filter(Boolean);
 
+const allowed = new Set(["tr","en","de","fr","it","es","ru","el","az","ka"]);
+
 function canonical(code){
   return String(code||"").toLowerCase().split("-")[0].trim();
 }
@@ -31,13 +34,14 @@ function langObj(code){
   const c = canonical(code);
   return LANGS.find(x=>x.code===c) || { code:c, flag:"🌐", name:c.toUpperCase(), bcp: BCP[c]||"en-US" };
 }
+function labelChip(code){
+  const o = langObj(code);
+  return `${o.flag} ${o.name}`;
+}
 
-let topLang = "en";
-let botLang = "tr";
-
+// UI refs
 const topBody = $("topBody");
 const botBody = $("botBody");
-
 const topMic = $("topMic");
 const botMic = $("botMic");
 
@@ -52,20 +56,11 @@ const listTop = $("list-top");
 const listBot = $("list-bot");
 const closeTop = $("close-top");
 const closeBot = $("close-bot");
-
 const clearChat = $("clearChat");
 
 function setFrameListening(on){
   const root = document.getElementById("frameRoot");
   if(root) root.classList.toggle("listening", !!on);
-}
-
-/* ===============================
-   UI helpers
-================================ */
-function labelChip(code){
-  const o = langObj(code);
-  return `${o.flag} ${o.name}`;
 }
 
 function refreshLangLabels(){
@@ -83,8 +78,6 @@ function renderPop(side){
   const sel = side==="top" ? topLang : botLang;
   if(!list) return;
 
-  // Offline’da büyük dilleri istemiyorsun; burada gösterilecek dilleri filtreleyebilirsin:
-  const allowed = new Set(["tr","en","de","fr","it","es","ru","el","az","ka"]);
   const items = LANGS.filter(x=>allowed.has(canonical(x.code)));
 
   list.innerHTML = items.map(l=>{
@@ -111,41 +104,55 @@ function renderPop(side){
 }
 
 /* ===============================
-   Bubble + Speaker (replay safe)
+   Cache helpers (model var mı?)
 ================================ */
-let audioObj = null;
-let audioCtl = null;
-let audioToken = 0;
+function pairPath(pair){ return `langpacks/${pair}/model.zip`; }
+function publicUrl(path){
+  const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
+  return data?.publicUrl || "";
+}
+async function cacheOpen(){ return await caches.open(CACHE_NAME); }
+async function isCached(url){
+  const c = await cacheOpen();
+  const m = await c.match(url);
+  return !!m;
+}
 
+async function ensurePairInstalled(src, dst){
+  const a = `${canonical(src)}-${canonical(dst)}`;
+  const b = `${canonical(dst)}-${canonical(src)}`;
+
+  const u1 = publicUrl(pairPath(a));
+  const u2 = publicUrl(pairPath(b));
+  if(!u1 || !u2) return false;
+
+  const ok1 = await isCached(u1);
+  const ok2 = await isCached(u2);
+  return ok1 && ok2;
+}
+
+/* ===============================
+   Bubble + Speaker
+================================ */
 function stopAudio(){
-  try{ audioCtl?.abort?.(); }catch{}
-  audioCtl = null;
-  try{
-    if(audioObj){
-      audioObj.pause();
-      audioObj.currentTime = 0;
-    }
-  }catch{}
-  audioObj = null;
+  try{ window.speechSynthesis?.cancel?.(); }catch{}
+  try{ window.NativeTTS?.stop?.(); }catch{}
 }
 
 function speak(text, langCode){
   const t = String(text||"").trim();
   if(!t) return;
 
-  // ✅ Önce mevcut sesi kes
   stopAudio();
 
-  // ✅ NativeTTS (APK) varsa offline çalışır
+  // ✅ NativeTTS varsa offline
   if(window.NativeTTS && typeof window.NativeTTS.speak === "function"){
-    try{ window.NativeTTS.stop?.(); }catch{}
     try{ window.NativeTTS.speak(t, canonical(langCode)); }catch{}
     return;
   }
 
-  // ✅ Web fallback
+  // web fallback
   if(!window.speechSynthesis) return;
-  try{ window.speechSynthesis.cancel(); }catch{}
   const u = new SpeechSynthesisUtterance(t);
   u.lang = langObj(langCode).bcp;
   u.rate = 1; u.pitch = 1; u.volume = 1;
@@ -169,7 +176,7 @@ function addBubble(side, kind, text, opts={}){
         <path d="M19 5a8 8 0 0 1 0 14"></path>
       </svg>
     `;
-    spk.addEventListener("click", (e)=>{
+    spk.addEventListener("click",(e)=>{
       e.preventDefault(); e.stopPropagation();
       const txt = row.querySelector(".txt")?.textContent || "";
       speak(txt, opts.speakLang || "en");
@@ -178,7 +185,7 @@ function addBubble(side, kind, text, opts={}){
   }
 
   const txt = document.createElement("span");
-  txt.className = "txt";
+  txt.className="txt";
   txt.textContent = String(text||"").trim();
   row.appendChild(txt);
 
@@ -194,17 +201,15 @@ function clearLatest(side){
 }
 
 /* ===============================
-   Offline translate (stub now)
+   Translate (online if available)
 ================================ */
 async function translateText(text, from, to){
   const t = String(text||"").trim();
   if(!t) return "";
-
   const src = canonical(from);
   const dst = canonical(to);
   if(src === dst) return t;
 
-  // ✅ İnternet varsa online çeviri (kaliteli)
   if(navigator.onLine){
     try{
       const r = await fetch(`${API_BASE}/api/translate_ai`,{
@@ -220,29 +225,37 @@ async function translateText(text, from, to){
     }
   }
 
-  // ❌ İnternet yoksa: gerçek offline motor bir sonraki adımda bağlanacak
+  // offline motor daha sonra
   return null;
 }
 
 /* ===============================
-   Input flow (Mic = Text input)
+   Offline input flow (Mic = Text input)
 ================================ */
+let topLang = "en";
+let botLang = "tr";
+
 async function askTextInput(side){
-  // side konuşan taraf (top/bot). Biz offline’da mic yerine prompt kullanıyoruz.
   const src = side==="top" ? topLang : botLang;
   const dst = side==="top" ? botLang : topLang;
   const other = side==="top" ? "bot" : "top";
 
-  const labelSrc = langObj(src).name;
-  const labelDst = langObj(dst).name;
+  // ✅ offline model kontrol (yalnız offline iken)
+  if(!navigator.onLine){
+    const ok = await ensurePairInstalled(src, dst);
+    if(!ok){
+      alert("Bu dil çifti offline indirili değil. Önce Offline Diller sayfasından indir.");
+      location.href = "/pages/offline_languages.html";
+      return;
+    }
+  }
 
-  const raw = prompt(`${labelSrc} yazın → ${labelDst} çevrilecek:`) || "";
+  const raw = prompt(`${langObj(src).name} yazın → ${langObj(dst).name} çevrilecek:`) || "";
   const text = String(raw).trim();
   if(!text) return;
 
   setFrameListening(true);
   try{
-    // kaynak metni “them” gibi gösterelim (okunan tarafın kendi ekranı gibi)
     addBubble(side, "them", text);
 
     const tr = await translateText(text, src, dst);
@@ -250,13 +263,13 @@ async function askTextInput(side){
     clearLatest(other);
 
     if(!tr){
-      addBubble(other, "me", "⚠️ Offline çeviri motoru yakında. İnternetle çeviri yapabilirsin.", { latest:true, speakLang: dst });
+      addBubble(other, "me", "⚠️ Offline çeviri motoru bir sonraki adım. Şimdilik internet varsa çevirir.", { latest:true, speakLang: dst });
       return;
     }
 
     addBubble(other, "me", tr, { latest:true, speakLang: dst });
-    // otomatik oku
     speak(tr, dst);
+
   }finally{
     setFrameListening(false);
   }
@@ -268,22 +281,22 @@ async function askTextInput(side){
 function bind(){
   refreshLangLabels();
 
-  topLangBtn?.addEventListener("click", (e)=>{
+  topLangBtn?.addEventListener("click",(e)=>{
     e.preventDefault(); e.stopPropagation();
     closeAllPop();
     renderPop("top");
     popTop?.classList.add("show");
   });
 
-  botLangBtn?.addEventListener("click", (e)=>{
+  botLangBtn?.addEventListener("click",(e)=>{
     e.preventDefault(); e.stopPropagation();
     closeAllPop();
     renderPop("bot");
     popBot?.classList.add("show");
   });
 
-  closeTop?.addEventListener("click", (e)=>{ e.preventDefault(); e.stopPropagation(); closeAllPop(); });
-  closeBot?.addEventListener("click", (e)=>{ e.preventDefault(); e.stopPropagation(); closeAllPop(); });
+  closeTop?.addEventListener("click",(e)=>{ e.preventDefault(); e.stopPropagation(); closeAllPop(); });
+  closeBot?.addEventListener("click",(e)=>{ e.preventDefault(); e.stopPropagation(); closeAllPop(); });
 
   document.addEventListener("click",(e)=>{
     const inside = (popTop && popTop.contains(e.target)) || (popBot && popBot.contains(e.target));
@@ -297,7 +310,6 @@ function bind(){
     if(botBody) botBody.innerHTML = "";
   });
 
-  // ✅ Offline: mic = text input
   topMic?.addEventListener("click", async (e)=>{
     e.preventDefault(); e.stopPropagation();
     await askTextInput("top");
