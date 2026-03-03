@@ -1,3 +1,4 @@
+<!-- FILE: /pages/offline_languages.html -->
 <!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -229,9 +230,7 @@
 
   mountShell({ scroll:"auto" });
 
-  const API_BASE = "https://italky-api.onrender.com";
   const BUCKET = "offline";
-  const CACHE_NAME = "italky-offline-v1";
 
   const $ = (id)=>document.getElementById(id);
   const list = $("list");
@@ -257,84 +256,16 @@
     { code:"ka", name:"ქართული",   flag:"🇬🇪" },
   ];
 
-  // ✅ base dil TR sabit (offline cihaz mantığı)
+  // ✅ base dil TR sabit
   const base = "tr";
   $("basePill").innerHTML = `Base: <b>${base.toUpperCase()}</b>`;
 
+  const norm = (s)=>String(s||"").trim().toLowerCase().replace("_","-");
   function pairPath(pair){ return `langpacks/${pair}/model.zip`; }
 
   function publicUrl(path){
     const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
     return data?.publicUrl || "";
-  }
-
-  async function cacheOpen(){ return await caches.open(CACHE_NAME); }
-  async function isCached(url){
-    const c = await cacheOpen();
-    const m = await c.match(url);
-    return !!m;
-  }
-  async function cacheDelete(url){
-    const c = await cacheOpen();
-    await c.delete(url);
-  }
-
-  async function cachePutStream(url, res, onProgress){
-    const cache = await cacheOpen();
-    const total = Number(res.headers.get("content-length") || "0") || 0;
-    const body = res.body;
-
-    if(!body){
-      await cache.put(url, res);
-      onProgress?.(100, "Kaydedildi ✅");
-      return;
-    }
-
-    const [s1, s2] = body.tee();
-    const reader = s1.getReader();
-    let loaded = 0;
-
-    const pump = async ()=>{
-      while(true){
-        const { done, value } = await reader.read();
-        if(done) break;
-        loaded += (value?.byteLength || 0);
-
-        if(total){
-          const pct = Math.round((loaded/total)*100);
-          onProgress?.(pct, `İndiriliyor… ${pct}%`);
-        }else{
-          onProgress?.(0, `İndiriliyor… ${(loaded/1024/1024).toFixed(1)} MB`);
-        }
-      }
-    };
-
-    const p1 = pump();
-    const newRes = new Response(s2, { headers: res.headers });
-    await cache.put(url, newRes);
-    await p1;
-    onProgress?.(100, "Kaydedildi ✅");
-  }
-
-  async function downloadOne(pair, onProgress){
-    const url = publicUrl(pairPath(pair));
-    if(!url) throw new Error("URL yok: " + pair);
-
-    if(await isCached(url)){
-      onProgress?.(100, "Zaten var");
-      return;
-    }
-
-    const r = await fetch(url, { method:"GET" });
-    if(!r.ok) throw new Error(`İndirme hatası ${pair}: ${r.status}`);
-
-    await cachePutStream(url, r, onProgress);
-  }
-
-  async function downloadTwoWay(a, b, onProgress){
-    await downloadOne(a, (p,t)=>onProgress?.(Math.round(p*0.5), `1/2 ${a}: ${t}`));
-    await downloadOne(b, (p,t)=>onProgress?.(50 + Math.round(p*0.5), `2/2 ${b}: ${t}`));
-    onProgress?.(100, "Tamam ✅");
   }
 
   function netPaint(){
@@ -344,20 +275,32 @@
   window.addEventListener("offline", netPaint);
   netPaint();
 
-  async function render(){
-    const targets = LANGS.filter(l=>l.code !== base);
+  // ✅ Native bridge helpers
+  function nativeReady(){
+    return !!(window.Offline && typeof window.Offline.installFromUrl === "function" && typeof window.Offline.isInstalled === "function");
+  }
+  function isInstalledNative(pair){
+    try{ return !!window.Offline.isInstalled(norm(pair)); }catch{ return false; }
+  }
+  function installNative(pair, url){
+    window.Offline.installFromUrl(norm(pair), String(url||"").trim());
+  }
 
+  async function render(){
+    const targets = LANGS.filter(l=>norm(l.code) !== base);
     list.innerHTML = "";
 
+    const hasNative = nativeReady();
+    if(!hasNative){
+      toast("Offline bridge yok. APK içinde 'window.Offline' hazır olmalı.");
+    }
+
     for(const l of targets){
-      const target = l.code;
+      const target = norm(l.code);
       const p1 = `${base}-${target}`;
       const p2 = `${target}-${base}`;
 
-      const u1 = publicUrl(pairPath(p1));
-      const u2 = publicUrl(pairPath(p2));
-
-      const installed = u1 && u2 && (await isCached(u1)) && (await isCached(u2));
+      const installed = hasNative ? (isInstalledNative(p1) && isInstalledNative(p2)) : false;
 
       const card = document.createElement("div");
       card.className = "card";
@@ -369,7 +312,7 @@
         <div class="meta">
           <div class="name">${l.name}</div>
           <div class="sub">
-            ${installed ? "İndirildi • Offline hazır" : "İndirince iki yön birlikte iner (TR↔" + target.toUpperCase() + ")"}
+            ${installed ? "Kuruldu • Offline hazır" : "İndirince iki yön birlikte kurulur (TR↔" + target.toUpperCase() + ")"}
           </div>
         </div>
       `;
@@ -386,11 +329,11 @@
 
       let busy = false;
 
-      async function setBusy(on, txt){
+      function setBusy(on, txt){
         busy = !!on;
         if(on){
           btn.classList.add("disabled");
-          btn.textContent = txt || "İndiriliyor…";
+          btn.textContent = txt || "Kuruluyor…";
         }else{
           btn.classList.remove("disabled");
           btn.innerHTML = `<span>⬇️</span><span>İndir</span>`;
@@ -399,7 +342,7 @@
 
       if(installed){
         btn.classList.add("done");
-        btn.textContent = "İndirildi";
+        btn.textContent = "Kuruldu";
         btn.disabled = true;
       }else{
         btn.innerHTML = `<span>⬇️</span><span>İndir</span>`;
@@ -412,33 +355,55 @@
           toast("İndirmek için internet gerekir.");
           return;
         }
+        if(!nativeReady()){
+          toast("Offline bridge hazır değil (window.Offline yok).");
+          return;
+        }
+
+        const url1 = publicUrl(pairPath(p1));
+        const url2 = publicUrl(pairPath(p2));
+        if(!url1 || !url2){
+          toast("Dosya linki yok (Supabase path).");
+          return;
+        }
 
         try{
-          await setBusy(true, "Hazırlanıyor…");
-          await downloadTwoWay(p1, p2, (pct, txt)=>setBusy(true, `${txt}`));
-          toast("Offline hazır ✅");
-          await render();
+          setBusy(true, "Kurulum başlıyor…");
+          installNative(p1, url1);
+          setTimeout(()=>installNative(p2, url2), 700);
+
+          toast("İndirme + kurulum başladı ✅");
+
+          // ✅ Kurulum bitene kadar kısa polling (max ~60sn)
+          const started = Date.now();
+          const poll = setInterval(async ()=>{
+            const ok = isInstalledNative(p1) && isInstalledNative(p2);
+            if(ok){
+              clearInterval(poll);
+              toast("Offline kuruldu ✅");
+              await render();
+              return;
+            }
+            const elapsed = Date.now() - started;
+            if(elapsed > 60000){
+              clearInterval(poll);
+              toast("Kurulum sürüyor… (dosya büyük)");
+              await render();
+              return;
+            }
+            setBusy(true, "İndiriliyor… (büyük dosya)");
+          }, 2200);
+
         }catch(e){
           console.warn(e);
-          toast("İndirme başarısız");
-          await setBusy(false);
+          toast("Kurulum başlatılamadı");
+          setBusy(false);
         }
       };
 
+      // ✅ Silme: Native tarafına henüz uninstall eklemedik (kırılmasın diye uyar)
       del.onclick = async ()=>{
-        if(busy) return;
-        if(!confirm("Bu dili offline’dan silmek istiyor musun?")) return;
-        try{
-          await setBusy(true, "Siliniyor…");
-          if(u1) await cacheDelete(u1);
-          if(u2) await cacheDelete(u2);
-          toast("Silindi ✅");
-          await render();
-        }catch(e){
-          console.warn(e);
-          toast("Silinemedi");
-          await setBusy(false);
-        }
+        toast("Silme özelliğini bir sonraki adımda ekliyoruz.");
       };
 
       card.appendChild(left);
@@ -455,10 +420,6 @@
   }
 
   render();
-  <script>
-setTimeout(()=>{
-  alert(window.Offline ? "Offline bridge OK ✅" : "Offline bridge YOK ❌");
-}, 700);
 </script>
 </body>
 </html>
