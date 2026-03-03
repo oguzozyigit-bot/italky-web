@@ -6,6 +6,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>italkyAI • Giriş</title>
 
+  <!-- ✅ OFFLINE: login göstermeden offline sayfaya -->
+  <script>
+  (function(){
+    try{
+      if(navigator.onLine === false){
+        location.replace("/pages/offline_languages.html");
+      }
+    }catch{}
+  })();
+  </script>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -365,16 +376,13 @@
     // ✅ Post-login routing (tek merkez)
     async function routeAfterLogin(session){
       try{
-        // cache user (tokens, pic vs)
         await ensureAuthAndCacheUser();
 
-        // setup tamamlanmışsa direkt home
         if(localStorage.getItem(FIRST_BOOT_KEY) === "1"){
           location.replace(HOME);
           return;
         }
 
-        // DB’de base_lang var mı kontrol et (setup yapılmış say)
         const { data: prof } = await supabase
           .from("profiles")
           .select("base_lang")
@@ -383,18 +391,15 @@
 
         const base = String(prof?.base_lang || "").trim().toLowerCase();
         if(base){
-          // base_lang doluysa setup bitmiş kabul ediyoruz
           localStorage.setItem(FIRST_BOOT_KEY, "1");
           location.replace(HOME);
           return;
         }
 
-        // ✅ base_lang yok -> setup'a
         location.replace(SETUP_OFFLINE);
 
       }catch(e){
         console.error(e);
-        // hata olursa yine de home'a atma; setup'a götür
         location.replace(SETUP_OFFLINE);
       }
     }
@@ -492,15 +497,6 @@
         await routeAfterLogin(session);
       }catch(_e){}
     })();
-   <script>
-(function(){
-  try{
-    // offline ise login göstermeden offline merkeze
-    if(navigator.onLine === false){
-      location.replace("/pages/offline_home.html");
-    }
-  }catch{}
-})();
-   </script> 
+  </script>
 </body>
 </html>
