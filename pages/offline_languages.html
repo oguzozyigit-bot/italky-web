@@ -162,11 +162,18 @@
       opacity:.55;
       cursor:not-allowed;
       box-shadow:none;
+      pointer-events:none;
     }
     .btn.done{
       background: var(--doneGrad);
       border-color: var(--doneBorder);
       color: rgba(255,255,255,0.88);
+    }
+    .btn.danger{
+      background: transparent;
+      border-color: rgba(255,0,90,0.30);
+      color: rgba(255,90,140,0.95);
+      min-width: 120px;
     }
 
     .toast{
@@ -199,12 +206,13 @@
     <section class="hero">
       <div class="h1">Offline Çeviri Paketleri</div>
       <div class="p">
-        Bu sayfa hedef dili seçip <b>iki yön</b> paketi (A→B ve B→A) indirmen içindir.
+        İnternet varken indir. İnternet yokken <b>offline</b> kullan.
+        Seçtiğin hedef dil için <b>iki yön</b> paket (A→B + B→A) birlikte iner.
       </div>
       <div class="pillRow">
-        <div class="pill">Süre: <b>365 gün</b></div>
-        <div class="pill">Ücret: <b>50 jeton</b></div>
-        <div class="pill" id="basePill">Base: <b>—</b></div>
+        <div class="pill">Ücret: <b>Ücretsiz</b></div>
+        <div class="pill" id="netPill">Ağ: <b>—</b></div>
+        <div class="pill" id="basePill">Base: <b>TR</b></div>
       </div>
     </section>
 
@@ -216,12 +224,14 @@
 <div class="toast" id="toast"></div>
 
 <script type="module">
-  import { mountShell, setHeaderTokens } from "/js/ui_shell.js";
+  import { mountShell } from "/js/ui_shell.js";
   import { supabase } from "/js/supabase_client.js";
 
   mountShell({ scroll:"auto" });
 
   const API_BASE = "https://italky-api.onrender.com";
+  const BUCKET = "offline";
+  const CACHE_NAME = "italky-offline-v1";
 
   const $ = (id)=>document.getElementById(id);
   const list = $("list");
@@ -241,112 +251,113 @@
     { code:"fr", name:"Français",  flag:"🇫🇷" },
     { code:"it", name:"Italiano",  flag:"🇮🇹" },
     { code:"es", name:"Español",   flag:"🇪🇸" },
+    { code:"ru", name:"Русский",   flag:"🇷🇺" },
+    { code:"el", name:"Ελληνικά",  flag:"🇬🇷" },
+    { code:"az", name:"Azərbaycanca", flag:"🇦🇿" },
+    { code:"ka", name:"ქართული",   flag:"🇬🇪" },
   ];
 
-  const FEE = 50;
-  const DAYS = 365;
+  // ✅ base dil TR sabit (offline cihaz mantığı)
+  const base = "tr";
+  $("basePill").innerHTML = `Base: <b>${base.toUpperCase()}</b>`;
 
-  // local flag (downloaded)
-  const DL_KEY = "italky_offline_downloaded_v1"; // {"tr-en":true,"en-tr":true}
+  function pairPath(pair){ return `langpacks/${pair}/model.zip`; }
 
-  function loadDL(){
-    try{ return JSON.parse(localStorage.getItem(DL_KEY)||"{}") || {}; }catch{ return {}; }
-  }
-  function saveDL(obj){
-    try{ localStorage.setItem(DL_KEY, JSON.stringify(obj||{})); }catch{}
+  function publicUrl(path){
+    const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
+    return data?.publicUrl || "";
   }
 
-  const norm = (x)=>String(x||"").trim().toLowerCase();
+  async function cacheOpen(){ return await caches.open(CACHE_NAME); }
+  async function isCached(url){
+    const c = await cacheOpen();
+    const m = await c.match(url);
+    return !!m;
+  }
+  async function cacheDelete(url){
+    const c = await cacheOpen();
+    await c.delete(url);
+  }
 
-  function forceDownload(url){
-    // Android WebView/Chrome: window.open genelde daha garanti
-    try{
-      window.open(url, "_blank", "noopener,noreferrer");
+  async function cachePutStream(url, res, onProgress){
+    const cache = await cacheOpen();
+    const total = Number(res.headers.get("content-length") || "0") || 0;
+    const body = res.body;
+
+    if(!body){
+      await cache.put(url, res);
+      onProgress?.(100, "Kaydedildi ✅");
       return;
-    }catch{}
-    const a = document.createElement("a");
-    a.href = url;
-    a.target = "_blank";
-    a.rel = "noopener";
-    a.download = "";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+    }
+
+    const [s1, s2] = body.tee();
+    const reader = s1.getReader();
+    let loaded = 0;
+
+    const pump = async ()=>{
+      while(true){
+        const { done, value } = await reader.read();
+        if(done) break;
+        loaded += (value?.byteLength || 0);
+
+        if(total){
+          const pct = Math.round((loaded/total)*100);
+          onProgress?.(pct, `İndiriliyor… ${pct}%`);
+        }else{
+          onProgress?.(0, `İndiriliyor… ${(loaded/1024/1024).toFixed(1)} MB`);
+        }
+      }
+    };
+
+    const p1 = pump();
+    const newRes = new Response(s2, { headers: res.headers });
+    await cache.put(url, newRes);
+    await p1;
+    onProgress?.(100, "Kaydedildi ✅");
   }
 
-  async function purchasePair(base, target){
-    const p1 = `${base}-${target}`;
-    const p2 = `${target}-${base}`;
+  async function downloadOne(pair, onProgress){
+    const url = publicUrl(pairPath(pair));
+    if(!url) throw new Error("URL yok: " + pair);
 
-    // 1) ücretli
-    const r1 = await supabase.rpc("purchase_offline_pack", { p_lang_code: p1, p_days: DAYS, p_fee: FEE });
-    if(r1.error) return { error: r1.error };
+    if(await isCached(url)){
+      onProgress?.(100, "Zaten var");
+      return;
+    }
 
-    // 2) ikinci yön ücretsiz (tek ücret mantığı)
-    const r2 = await supabase.rpc("purchase_offline_pack", { p_lang_code: p2, p_days: DAYS, p_fee: 0 });
-    if(r2.error) return { error: r2.error };
+    const r = await fetch(url, { method:"GET" });
+    if(!r.ok) throw new Error(`İndirme hatası ${pair}: ${r.status}`);
 
-    return { ok:true };
+    await cachePutStream(url, r, onProgress);
   }
 
-  async function getSignedLink(accessToken, base, target){
-    const res = await fetch(`${API_BASE}/api/offline/get_link`,{
-      method:"POST",
-      headers:{
-        "Content-Type":"application/json",
-        "Authorization":"Bearer " + accessToken
-      },
-      body: JSON.stringify({ base_lang: base, target_lang: target })
-    });
-    const j = await res.json().catch(()=>null);
-    if(!res.ok || !j?.ok) throw new Error(j?.detail || `HTTP ${res.status}`);
-    return String(j.url || "").trim();
+  async function downloadTwoWay(a, b, onProgress){
+    await downloadOne(a, (p,t)=>onProgress?.(Math.round(p*0.5), `1/2 ${a}: ${t}`));
+    await downloadOne(b, (p,t)=>onProgress?.(50 + Math.round(p*0.5), `2/2 ${b}: ${t}`));
+    onProgress?.(100, "Tamam ✅");
   }
 
-  function isPackActive(packs, code){
-    const it = packs?.find(x=>norm(x.lang_code) === norm(code));
-    if(!it?.expires_at) return false;
-    const exp = new Date(it.expires_at).getTime();
-    return Number.isFinite(exp) && exp > Date.now();
+  function netPaint(){
+    $("netPill").innerHTML = navigator.onLine ? `Ağ: <b>ONLINE</b>` : `Ağ: <b>OFFLINE</b>`;
   }
+  window.addEventListener("online", netPaint);
+  window.addEventListener("offline", netPaint);
+  netPaint();
 
   async function render(){
-    const { data:{ session } } = await supabase.auth.getSession();
-    if(!session?.user){
-      location.replace("/pages/login.html");
-      return;
-    }
-
-    const [{ data: prof }, { data: packs }] = await Promise.all([
-      supabase.from("profiles").select("tokens, base_lang").eq("id", session.user.id).maybeSingle(),
-      supabase.from("offline_packs").select("lang_code, expires_at").eq("user_id", session.user.id)
-    ]);
-
-    const tokens = Number(prof?.tokens ?? 0);
-    try{ setHeaderTokens(tokens); }catch{}
-
-    const base = norm(prof?.base_lang || "");
-    if(!base){
-      location.replace("/pages/setup_offline.html");
-      return;
-    }
-    $("basePill").innerHTML = `Base: <b>${base.toUpperCase()}</b>`;
-
-    const dl = loadDL();
-    const targets = LANGS.filter(l=>norm(l.code) !== base);
+    const targets = LANGS.filter(l=>l.code !== base);
 
     list.innerHTML = "";
 
     for(const l of targets){
-      const target = norm(l.code);
+      const target = l.code;
       const p1 = `${base}-${target}`;
       const p2 = `${target}-${base}`;
 
-      const active1 = isPackActive(packs, p1);
-      const active2 = isPackActive(packs, p2);
-      const entitled = active1 && active2;
+      const u1 = publicUrl(pairPath(p1));
+      const u2 = publicUrl(pairPath(p2));
 
-      const downloaded = !!dl[p1] && !!dl[p2];
+      const installed = u1 && u2 && (await isCached(u1)) && (await isCached(u2));
 
       const card = document.createElement("div");
       card.className = "card";
@@ -358,7 +369,7 @@
         <div class="meta">
           <div class="name">${l.name}</div>
           <div class="sub">
-            ${downloaded ? "İndirildi • Offline hazır" : (entitled ? "Paket aktif • İndirmek için tıkla" : "Paket gerekli • 50 jeton / 365 gün")}
+            ${installed ? "İndirildi • Offline hazır" : "İndirince iki yön birlikte iner (TR↔" + target.toUpperCase() + ")"}
           </div>
         </div>
       `;
@@ -367,7 +378,26 @@
       btn.className = "btn";
       btn.type = "button";
 
-      if(downloaded){
+      const del = document.createElement("button");
+      del.className = "btn danger";
+      del.type="button";
+      del.textContent = "Sil";
+      del.style.display = installed ? "flex" : "none";
+
+      let busy = false;
+
+      async function setBusy(on, txt){
+        busy = !!on;
+        if(on){
+          btn.classList.add("disabled");
+          btn.textContent = txt || "İndiriliyor…";
+        }else{
+          btn.classList.remove("disabled");
+          btn.innerHTML = `<span>⬇️</span><span>İndir</span>`;
+        }
+      }
+
+      if(installed){
         btn.classList.add("done");
         btn.textContent = "İndirildi";
         btn.disabled = true;
@@ -375,76 +405,51 @@
         btn.innerHTML = `<span>⬇️</span><span>İndir</span>`;
       }
 
-      let busy = false;
-
       btn.onclick = async ()=>{
-        if(busy || downloaded) return;
-        busy = true;
+        if(busy || installed) return;
 
-        const { data:{ session } } = await supabase.auth.getSession();
-        if(!session?.access_token){
-          toast("Oturum yok. Tekrar giriş yap.");
-          location.href="/pages/login.html";
+        if(!navigator.onLine){
+          toast("İndirmek için internet gerekir.");
           return;
         }
 
         try{
-          // 1) paket yoksa satın al
-          if(!entitled){
-            if(tokens < FEE){
-              toast("Jeton yetersiz. Profil’e yönlendiriyorum.");
-              setTimeout(()=>location.href="/pages/profile.html", 650);
-              return;
-            }
-
-            btn.disabled = true;
-            btn.classList.add("disabled");
-            btn.textContent = "Aktif ediliyor…";
-
-            const r = await purchasePair(base, target);
-            if(r.error){
-              toast("Hata: " + (r.error.message || "İşlem başarısız"));
-              await render();
-              return;
-            }
-            toast("Paket aktif ✅");
-          }
-
-          // 2) iki link al ve indir
-          btn.disabled = true;
-          btn.classList.remove("disabled");
-          btn.textContent = "Link alınıyor…";
-
-          const url1 = await getSignedLink(session.access_token, base, target);   // base-target
-          const url2 = await getSignedLink(session.access_token, target, base);  // target-base
-
-          btn.textContent = "İndiriliyor…";
-
-          forceDownload(url1);
-          setTimeout(()=>forceDownload(url2), 500);
-
-          // 3) local flag (indir tetiklendi)
-          const cur = loadDL();
-          cur[`${base}-${target}`] = true;
-          cur[`${target}-${base}`] = true;
-          saveDL(cur);
-
-          toast("İndirme başladı ✅");
-
-          setTimeout(()=>render(), 900);
-
+          await setBusy(true, "Hazırlanıyor…");
+          await downloadTwoWay(p1, p2, (pct, txt)=>setBusy(true, `${txt}`));
+          toast("Offline hazır ✅");
+          await render();
         }catch(e){
-          toast("İndirme linki alınamadı: " + (e?.message || e));
-          btn.disabled = false;
-          btn.classList.remove("disabled");
-          btn.innerHTML = `<span>⬇️</span><span>İndir</span>`;
-        } finally {
-          busy = false;
+          console.warn(e);
+          toast("İndirme başarısız");
+          await setBusy(false);
+        }
+      };
+
+      del.onclick = async ()=>{
+        if(busy) return;
+        if(!confirm("Bu dili offline’dan silmek istiyor musun?")) return;
+        try{
+          await setBusy(true, "Siliniyor…");
+          if(u1) await cacheDelete(u1);
+          if(u2) await cacheDelete(u2);
+          toast("Silindi ✅");
+          await render();
+        }catch(e){
+          console.warn(e);
+          toast("Silinemedi");
+          await setBusy(false);
         }
       };
 
       card.appendChild(left);
-      card.appendChild(btn);
+
+      const right = document.createElement("div");
+      right.style.display="flex";
+      right.style.gap="8px";
+      right.appendChild(btn);
+      right.appendChild(del);
+
+      card.appendChild(right);
       list.appendChild(card);
     }
   }
