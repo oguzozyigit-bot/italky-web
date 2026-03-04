@@ -403,8 +403,29 @@
 
       // ✅ Silme: Native tarafına henüz uninstall eklemedik (kırılmasın diye uyar)
       del.onclick = async ()=>{
-        toast("Silme özelliğini bir sonraki adımda ekliyoruz.");
-      };
+  if(busy) return;
+  if(!nativeReady()){
+    toast("Offline bridge hazır değil.");
+    return;
+  }
+  if(typeof window.Offline.uninstall !== "function"){
+    toast("Silme (uninstall) native tarafta yok. (OfflineBridge'e eklenmeli)");
+    return;
+  }
+  if(!confirm("Bu dili offline'dan silmek istiyor musun?")) return;
+
+  try{
+    setBusy(true, "Siliniyor…");
+    window.Offline.uninstall(norm(p1));
+    setTimeout(()=>window.Offline.uninstall(norm(p2)), 500);
+    toast("Silme başlatıldı ✅");
+    setTimeout(()=>render(), 1200);
+  }catch(e){
+    console.warn(e);
+    toast("Silinemedi");
+    setBusy(false);
+  }
+};
 
       card.appendChild(left);
 
