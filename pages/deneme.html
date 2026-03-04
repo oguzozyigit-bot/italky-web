@@ -5,15 +5,48 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
 <title>italkyAI • Quantum OS V7</title>
 
+<script>
+(function(){
+  try{
+    if(navigator.onLine === false){
+      location.replace("/pages/offline_languages.html");
+    }
+  }catch{}
+})();
+</script>
+
 <style>
-  html,body{background:#000 !important; margin:0; padding:0; overflow:hidden; font-family:'Outfit', sans-serif;}
+  /* Sayfa genel arka planı artık düz siyah değil, örnekteki gibi yumuşak bir degrade.
+     Metin rengi varsayılan olarak beyaz. */
+  html,body{
+    background: linear-gradient(135deg, #FDEBD0 0%, #F5CBA7 100%) !important; 
+    margin:0; 
+    padding:0; 
+    overflow:hidden; 
+    font-family:'Outfit', sans-serif;
+    color: #fff; /* Genel metin rengini beyaz yapalım */
+  }
   @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=Space+Grotesk:wght@700&display=swap');
 </style>
 
 <style>
 :root{
+  /* Ana AI degrade rengi (aynı kaldı) */
   --ai-grad: linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
-  --blue: #00d2ff; --green: #39ff14; --pink: #ff007f;
+  
+  /* ✅ ÖRNEK GÖRSELDEKİ CANLI RENKLERİ KULLANARAK DEĞİŞTİRDİK:
+     Translate (📡): Canlı Pembe (Örnek Revenue kutusu gibi)
+     Academy (💎): Parlak Mavi (Örnek Net Profit kutusu gibi)
+     Teacher (🧬): Neon Yeşil (Örnekteki 'K' harfleri gibi canlı)
+  */
+  --pink: #E84DFB; /* Canlı Pembe - Örnek Revenue kutusu */
+  --blue: #5C67F2; /* Canlı Mavi - Örnek Net Profit kutusu */
+  --green: #A4EB30; /* Canlı Neon Yeşil - Örnekteki 'K' harfleri gibi parlak */
+  
+  /* Panellerin siyah arka planı için opaklık ayarı */
+  --panel-opacity: 0.85; 
+
+  var(--blue); --green: #39ff14; --pink: #ff007f;
   --glass-border: rgba(255,255,255,0.12);
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none;}
@@ -21,7 +54,8 @@
 #pageContent {
   height: 100%;
   display: flex; flex-direction: column;
-  background: radial-gradient(circle at 50% 50%, #0a0a25 0%, #000 100%);
+  /* radial-gradient arka planı body'ye aldığımız için bunu silebiliriz veya transparan bırakabiliriz. */
+  /* background: radial-gradient(circle at 50% 50%, #0a0a25 0%, #000 100%); */
   position: relative;
 }
 
@@ -36,7 +70,8 @@
   border: 1px solid var(--glass-border);
   overflow: hidden; cursor: pointer; display: flex; align-items: center; justify-content: space-between;
   padding: 0 25px;
-  background: var(--panel-bg);
+  /* ✅ Panellerin arka planını siyah yaptık, ancak metinler beyaz kalsın. */
+  background: rgba(0, 0, 0, var(--panel-opacity)); 
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
@@ -46,9 +81,16 @@
 .os-panel:active { transform: scale(0.96) translateY(6px); border-color: var(--neon-color); }
 
 /* Renk Temaları */
-.tr-node { --neon-color: var(--blue); --panel-bg: linear-gradient(145deg, rgba(0, 210, 255, 0.12), rgba(0,0,0,0.7)); }
-.ac-node { --neon-color: var(--green); --panel-bg: linear-gradient(145deg, rgba(57, 255, 20, 0.08), rgba(0,0,0,0.7)); }
-.tc-node { --neon-color: var(--pink); --panel-bg: linear-gradient(145deg, rgba(255, 0, 127, 0.12), rgba(0,0,0,0.7)); }
+/* ✅ Neon renkleri ve panel arka plan degrade efektlerini güncelledik. */
+.tr-node { --neon-color: var(--pink); --panel-bg: linear-gradient(145deg, rgba(232, 77, 251, 0.2), rgba(0,0,0,0.8)); }
+.ac-node { --neon-color: var(--blue); --panel-bg: linear-gradient(145deg, rgba(92, 103, 242, 0.2), rgba(0,0,0,0.8)); }
+.tc-node { --neon-color: var(--green); --panel-bg: linear-gradient(145deg, rgba(164, 235, 48, 0.2), rgba(0,0,0,0.8)); }
+
+/* Panellere degrade efektini uyguluyoruz */
+.os-panel {
+    background: var(--panel-bg);
+}
+
 
 /* ✅ CANLI VE RENKLİ İKONLAR (OS CORE) */
 .icon-container {
@@ -94,7 +136,6 @@
 @keyframes ringPulse { from { transform: scale(0.9); opacity: 0.2; } to { transform: scale(1.1); opacity: 0.5; } }
 @keyframes spin { from { transform: rotate(0); } to { transform: rotate(360deg); } }
 @keyframes iconFloat { from { transform: translateY(-4px) rotate(-5deg); } to { transform: translateY(4px) rotate(5deg); } }
-
 </style>
 </head>
 
@@ -114,7 +155,7 @@
       </div>
     </div>
 
-    <div class="os-panel ac-node" onclick="location.href='/pages/academy_home.html'">
+    <div class="os-panel ac-node" onclick="location.href='/pages/acedemy_home.html'">
       <div class="status-tag">MODÜL: HAZIR</div>
       <div class="content-wrap">
         <h2 class="btn-title">Academy <span>AI</span></h2>
@@ -122,7 +163,8 @@
       </div>
       <div class="icon-container">
         <div class="energy-ring"></div>
-        <div class="main-icon">💎</div> </div>
+        <div class="main-icon">💎</div>
+      </div>
     </div>
 
     <div class="os-panel tc-node" onclick="location.href='/pages/helper_home.html'">
