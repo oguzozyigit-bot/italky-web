@@ -1,17 +1,7 @@
-// FILE: /js/offline_facetoface_page.js
-// ✅ Offline Face-to-Face (Metin ağırlıklı) — Mic zorunlu değil
-// ✅ Mic butonu: Offline’da "Metin Gir" çalışır (stabil)
-// ✅ TTS: NativeTTS varsa offline çalışır; yoksa speechSynthesis fallback
-// ✅ Model kontrol: seçilen dil çiftinin 2 yön zip’i cache’te yoksa offline’da uyarır ve Offline Diller sayfasına yollar
-// ✅ Çeviri: İnternet varsa /api/translate_ai ile (online kalite), internet yoksa "Offline motor yakında" (şimdilik)
+// FILE: app/src/main/assets/js/offline_facetoface_page.js
+import { LANG_POOL } from "./lang_pool_full.js";
 
-import { LANG_POOL } from "/js/lang_pool_full.js";
-import { supabase } from "/js/supabase_client.js";
-
-const API_BASE = "https://italky-api.onrender.com";
-const BUCKET = "offline";
-const CACHE_NAME = "italky-offline-v1";
-
+const API_BASE = "https://italky-api.onrender.com"; // online varsa kullanır
 const $ = (id)=>document.getElementById(id);
 
 const BCP = {
@@ -39,7 +29,6 @@ function labelChip(code){
   return `${o.flag} ${o.name}`;
 }
 
-// UI refs
 const topBody = $("topBody");
 const botBody = $("botBody");
 const topMic = $("topMic");
@@ -63,11 +52,13 @@ function setFrameListening(on){
   if(root) root.classList.toggle("listening", !!on);
 }
 
+let topLang = "en";
+let botLang = "tr";
+
 function refreshLangLabels(){
   if(topLangTxt) topLangTxt.textContent = labelChip(topLang);
   if(botLangTxt) botLangTxt.textContent = labelChip(botLang);
 }
-
 function closeAllPop(){
   popTop?.classList.remove("show");
   popBot?.classList.remove("show");
@@ -104,54 +95,41 @@ function renderPop(side){
 }
 
 /* ===============================
-   Cache helpers (model var mı?)
+   Offline model kontrol: Native OfflineBridge
+   ✅ OfflineBridge.isInstalled("tr-en") true/false
 ================================ */
-function pairPath(pair){ return `langpacks/${pair}/model.zip`; }
-function publicUrl(path){
-  const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
-  return data?.publicUrl || "";
+function hasOfflineBridge(){
+  return !!(window.Offline && typeof window.Offline.isInstalled === "function");
 }
-async function cacheOpen(){ return await caches.open(CACHE_NAME); }
-async function isCached(url){
-  const c = await cacheOpen();
-  const m = await c.match(url);
-  return !!m;
-}
-
-async function ensurePairInstalled(src, dst){
-  const a = `${canonical(src)}-${canonical(dst)}`;
-  const b = `${canonical(dst)}-${canonical(src)}`;
-
-  const u1 = publicUrl(pairPath(a));
-  const u2 = publicUrl(pairPath(b));
-  if(!u1 || !u2) return false;
-
-  const ok1 = await isCached(u1);
-  const ok2 = await isCached(u2);
-  return ok1 && ok2;
+function isPairInstalled(a, b){
+  if(!hasOfflineBridge()) return false;
+  try{
+    const p1 = `${canonical(a)}-${canonical(b)}`;
+    const p2 = `${canonical(b)}-${canonical(a)}`;
+    return !!window.Offline.isInstalled(p1) && !!window.Offline.isInstalled(p2);
+  }catch{
+    return false;
+  }
 }
 
 /* ===============================
-   Bubble + Speaker
+   Bubble + TTS
 ================================ */
 function stopAudio(){
   try{ window.speechSynthesis?.cancel?.(); }catch{}
   try{ window.NativeTTS?.stop?.(); }catch{}
 }
-
 function speak(text, langCode){
   const t = String(text||"").trim();
   if(!t) return;
 
   stopAudio();
 
-  // ✅ NativeTTS varsa offline
   if(window.NativeTTS && typeof window.NativeTTS.speak === "function"){
     try{ window.NativeTTS.speak(t, canonical(langCode)); }catch{}
     return;
   }
 
-  // web fallback
   if(!window.speechSynthesis) return;
   const u = new SpeechSynthesisUtterance(t);
   u.lang = langObj(langCode).bcp;
@@ -193,7 +171,6 @@ function addBubble(side, kind, text, opts={}){
   try{ wrap.scrollTop = wrap.scrollHeight; }catch{}
   return row;
 }
-
 function clearLatest(side){
   const wrap = side==="top" ? topBody : botBody;
   if(!wrap) return;
@@ -201,7 +178,9 @@ function clearLatest(side){
 }
 
 /* ===============================
-   Translate (online if available)
+   Translate
+   - Online varsa API
+   - Offline ise: şimdilik yok (CT2/JNI bağlanınca dolacak)
 ================================ */
 async function translateText(text, from, to){
   const t = String(text||"").trim();
@@ -225,27 +204,27 @@ async function translateText(text, from, to){
     }
   }
 
-  // offline motor daha sonra
+  // ✅ Offline motor bir sonraki adım (CT2/JNI)
   return null;
 }
 
 /* ===============================
-   Offline input flow (Mic = Text input)
+   Input flow (Mic = prompt)
 ================================ */
-let topLang = "en";
-let botLang = "tr";
-
 async function askTextInput(side){
   const src = side==="top" ? topLang : botLang;
   const dst = side==="top" ? botLang : topLang;
   const other = side==="top" ? "bot" : "top";
 
-  // ✅ offline model kontrol (yalnız offline iken)
+  // ✅ Offline ise model şart
   if(!navigator.onLine){
-    const ok = await ensurePairInstalled(src, dst);
+    if(!hasOfflineBridge()){
+      alert("OfflineBridge yok: APK içinde window.Offline hazır olmalı.");
+      return;
+    }
+    const ok = isPairInstalled(src, dst);
     if(!ok){
-      alert("Bu dil çifti offline indirili değil. Önce Offline Diller sayfasından indir.");
-      location.href = "/pages/offline_languages.html";
+      alert("Bu dil çifti offline kurulmamış. İnternetle paket indirip kurmalısın.");
       return;
     }
   }
@@ -259,11 +238,10 @@ async function askTextInput(side){
     addBubble(side, "them", text);
 
     const tr = await translateText(text, src, dst);
-
     clearLatest(other);
 
     if(!tr){
-      addBubble(other, "me", "⚠️ Offline çeviri motoru bir sonraki adım. Şimdilik internet varsa çevirir.", { latest:true, speakLang: dst });
+      addBubble(other, "me", "⚠️ Offline çeviri motoru henüz bağlı değil. İnternet varsa çevirir.", { latest:true, speakLang: dst });
       return;
     }
 
@@ -283,15 +261,13 @@ function bind(){
 
   topLangBtn?.addEventListener("click",(e)=>{
     e.preventDefault(); e.stopPropagation();
-    closeAllPop();
-    renderPop("top");
+    closeAllPop(); renderPop("top");
     popTop?.classList.add("show");
   });
 
   botLangBtn?.addEventListener("click",(e)=>{
     e.preventDefault(); e.stopPropagation();
-    closeAllPop();
-    renderPop("bot");
+    closeAllPop(); renderPop("bot");
     popBot?.classList.add("show");
   });
 
