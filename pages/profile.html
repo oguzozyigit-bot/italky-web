@@ -19,6 +19,8 @@
       display:flex;
       flex-direction:column;
       gap:12px;
+      max-width: 560px;
+      margin: 0 auto;
     }
     .panel{
       background: linear-gradient(145deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%);
@@ -46,7 +48,11 @@
       border: 1px solid rgba(255,255,255,0.08);
     }
     .k{ font-size: 12px; font-weight: 900; color: rgba(165,180,252,0.95); letter-spacing: 1px; white-space: nowrap; }
-    .v{ font-size: 13px; font-weight: 900; color: rgba(255,255,255,0.92); text-align:right; max-width: 64%; word-break: break-word; }
+    .v{
+      font-size: 13px; font-weight: 900; color: rgba(255,255,255,0.92);
+      text-align:right; max-width: 64%;
+      word-break: break-word;
+    }
     .mono{ font-family: ui-monospace, Menlo, Monaco, Consolas, "Courier New", monospace; }
 
     .copyWrap{ display:flex; align-items:center; gap:10px; justify-content:flex-end; max-width: 64%; }
@@ -74,17 +80,12 @@
     }
     .btn:active{ transform: scale(0.98); }
     .btn-primary{ background: linear-gradient(135deg, #a5b4fc 0%, #6366f1 55%, #ec4899 100%); color:#050510; }
-    .btn-ghost{ background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); color: rgba(255,255,255,0.92); }
     .btn-safe{ background: rgba(0, 200, 120, 0.18); border: 1px solid rgba(0, 200, 120, 0.35); color: rgba(255,255,255,0.92); }
     .btn-dangerText{ background: transparent; border: 1px solid rgba(255, 0, 90, 0.30); color: rgba(255, 90, 140, 0.95); }
 
     .note{ font-size: 11px; font-weight: 800; color: rgba(255,255,255,0.55); line-height: 1.35; margin-top: 8px; }
     .tap{ color: rgba(165,180,252,0.95); font-weight: 1000; text-decoration: underline; cursor:pointer; }
-    /* ✅ linkler için (a.tap) */
     a.tap{ text-decoration: underline; }
-
-    /* ✅ privacy/account deletion notunda kullanılan highlight */
-    .highlight{ color: rgba(255,255,255,0.92); font-weight: 1000; }
 
     .toast{
       position: fixed; left:50%; top:18px;
@@ -108,8 +109,6 @@
 </head>
 
 <body>
-  <!-- ✅ ÖNEMLİ: mountShell body'yi yeniden kurar.
-       Bu yüzden toast da pageContent ile birlikte taşınmalı -->
   <div id="pageContent">
 
     <div class="panel">
@@ -136,46 +135,17 @@
           </div>
         </div>
 
-        <div class="line">
-          <div class="k">Üyelik Başlangıç</div>
-          <div class="v" id="createdAt">—</div>
-        </div>
-
-        <div class="line">
-          <div class="k">Son Giriş</div>
-          <div class="v" id="lastLogin">—</div>
-        </div>
-
         <div class="wallet">
           <div>
-            <div class="k" style="margin-bottom:6px;">Mevcut Jeton Adeti</div>
+            <div class="k" style="margin-bottom:6px;">Mevcut Jeton</div>
             <div class="amt"><span id="tokenVal">0</span> Jeton</div>
           </div>
           <button class="btn btn-primary" id="buyTokensBtn" type="button">Jeton Yükle</button>
         </div>
 
-        <!-- ✅ NEW: ödeme henüz yoksa kullanıcıyı bilgilendir -->
         <div class="note" id="buyTokensNote">
           Jeton yükleme yakında Google Play üzerinden aktif edilecektir.
         </div>
-
-      </div>
-    </div>
-
-    <div class="panel">
-      <div class="head"><h2 class="title">Dil Seviye Durumu</h2></div>
-      <div class="list" id="levelsList"></div>
-      <div class="note" id="levelsEmptyNote" style="display:none;">
-        Katıldığınız Seviye Tespit Sınavı Bulunmamaktadır. <span class="tap" id="goLevel">Seviye sınavına git</span>
-      </div>
-    </div>
-
-    <div class="panel">
-      <div class="head"><h2 class="title">İndirilen Offline Dil Dosyaları</h2></div>
-      <div class="list" id="offlineList"></div>
-      <div class="note" id="offlineEmptyNote" style="display:none;">Henüz offline dil dosyası indirmediniz.</div>
-      <div style="margin-top:12px;">
-        <button class="btn btn-ghost" id="offlineDownloadBtn" type="button">Offline Dil Paketi İndir</button>
       </div>
     </div>
 
@@ -185,9 +155,7 @@
         <button class="btn btn-dangerText" id="deleteBtn" type="button">Hesabımı Kalıcı Olarak Sil</button>
       </div>
 
-      <!-- ✅ NEW: Account Deletion + Privacy linkli bilgilendirme -->
       <div class="note" style="margin-top:10px;">
-        Hesap silme işlemi uygulama içinden yapılır: <span class="highlight">Profil &gt; Hesabımı Kalıcı Olarak Sil</span>.<br>
         Detaylı açıklama:
         <a class="tap" href="/pages/account-deletion.html">Account Deletion</a>
         • Gizlilik:
@@ -199,16 +167,23 @@
   </div>
 
   <script type="module">
-  import { mountShell, setHeaderTokens } from "/js/ui_shell.js";
-  import { initProfilePage } from "/js/profile_page.js";
+    import { mountShell, setHeaderTokens } from "/js/ui_shell.js";
+    import { initProfilePage } from "/js/profile_page.js";
 
-  try{ mountShell(); }catch(e){ console.error("[mountShell]", e); }
+    // ✅ Shell
+    try{ mountShell(); }catch(e){ console.error("[mountShell]", e); }
 
-  try{
-    await initProfilePage({ setHeaderTokens });
-  }catch(e){
-    console.error("[initProfilePage]", e);
-  }
-</script>
+    // ✅ Profile init (Supabase'den doldurur)
+    try{
+      await initProfilePage({ setHeaderTokens });
+    }catch(e){
+      console.error("[initProfilePage]", e);
+    }
+
+    // ✅ Jeton Yükle: sayfaya git
+    document.getElementById("buyTokensBtn")?.addEventListener("click", ()=>{
+      location.href = "/pages/jetonbuy.html";
+    });
+  </script>
 </body>
 </html>
