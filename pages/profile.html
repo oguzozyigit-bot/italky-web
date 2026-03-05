@@ -14,14 +14,17 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
   <style>
+    /* ✅ ALT BOŞLUK FIX:
+       footerH + safe-area kadar yeter, ekstra 22px kaldırıldı */
     #pageContent{
-      padding: 16px 14px calc(var(--footerH, 92px) + env(safe-area-inset-bottom) + 22px);
+      padding: 16px 14px calc(var(--footerH, 92px) + env(safe-area-inset-bottom) + 8px);
       display:flex;
       flex-direction:column;
       gap:12px;
       max-width: 560px;
       margin: 0 auto;
     }
+
     .panel{
       background: linear-gradient(145deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%);
       border: 1px solid rgba(255,255,255,0.12);
@@ -39,6 +42,7 @@
       letter-spacing: -0.3px;
       color: rgba(255,255,255,0.92);
     }
+
     .list{ display:flex; flex-direction:column; gap: 10px; margin-top: 10px; }
 
     .line{
@@ -47,9 +51,14 @@
       background: rgba(255,255,255,0.05);
       border: 1px solid rgba(255,255,255,0.08);
     }
-    .k{ font-size: 12px; font-weight: 900; color: rgba(165,180,252,0.95); letter-spacing: 1px; white-space: nowrap; }
+    .k{
+      font-size: 12px; font-weight: 900;
+      color: rgba(165,180,252,0.95);
+      letter-spacing: 1px; white-space: nowrap;
+    }
     .v{
-      font-size: 13px; font-weight: 900; color: rgba(255,255,255,0.92);
+      font-size: 13px; font-weight: 900;
+      color: rgba(255,255,255,0.92);
       text-align:right; max-width: 64%;
       word-break: break-word;
     }
@@ -79,6 +88,7 @@
       border: none; cursor:pointer; font-weight: 1000; user-select:none; white-space: nowrap;
     }
     .btn:active{ transform: scale(0.98); }
+
     .btn-primary{ background: linear-gradient(135deg, #a5b4fc 0%, #6366f1 55%, #ec4899 100%); color:#050510; }
     .btn-safe{ background: rgba(0, 200, 120, 0.18); border: 1px solid rgba(0, 200, 120, 0.35); color: rgba(255,255,255,0.92); }
     .btn-dangerText{ background: transparent; border: 1px solid rgba(255, 0, 90, 0.30); color: rgba(255, 90, 140, 0.95); }
@@ -135,6 +145,17 @@
           </div>
         </div>
 
+        <!-- ✅ İSTEDİĞİN 2 SATIR -->
+        <div class="line">
+          <div class="k">Üyelik Tarihi</div>
+          <div class="v" id="createdAt">—</div>
+        </div>
+
+        <div class="line">
+          <div class="k">Son Giriş</div>
+          <div class="v" id="lastLogin">—</div>
+        </div>
+
         <div class="wallet">
           <div>
             <div class="k" style="margin-bottom:6px;">Mevcut Jeton</div>
@@ -151,6 +172,7 @@
 
     <div class="panel">
       <div class="list">
+        <!-- ✅ Güvenli çıkış üstte -->
         <button class="btn btn-safe" id="logoutBtn" type="button">Güvenli Çıkış</button>
         <button class="btn btn-dangerText" id="deleteBtn" type="button">Hesabımı Kalıcı Olarak Sil</button>
       </div>
@@ -170,17 +192,14 @@
     import { mountShell, setHeaderTokens } from "/js/ui_shell.js";
     import { initProfilePage } from "/js/profile_page.js";
 
-    // ✅ Shell
     try{ mountShell(); }catch(e){ console.error("[mountShell]", e); }
 
-    // ✅ Profile init (Supabase'den doldurur)
     try{
       await initProfilePage({ setHeaderTokens });
     }catch(e){
       console.error("[initProfilePage]", e);
     }
 
-    // ✅ Jeton Yükle: sayfaya git
     document.getElementById("buyTokensBtn")?.addEventListener("click", ()=>{
       location.href = "/pages/jetonbuy.html";
     });
