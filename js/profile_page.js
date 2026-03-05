@@ -1,16 +1,17 @@
 // FILE: /js/profile_page.js
-// ✅ FIXED: profiles tablosunda "uuid" YOK → doğru kolon "id" (auth.users.id ile aynı)
-// ✅ RLS kuralı: auth.uid() = profiles.id
-// ✅ Profil ekranı: DB olmasa bile session'dan doldurur
-// ✅ Güvenli çıkış %100 çalışır (signOut patlasa bile)
-// ✅ last_login_at günceller + shell cache’i tazeler
-// ✅ PRODUCTION SAFE: Account delete = HARD DELETE (Render API) / 30 gün yok
+// ✅ profiles.id = auth.users.id
+// ✅ RLS: auth.uid() = profiles.id
+// ✅ Tarih formatı: GG/AA/YYYY • SS:DD
+// ✅ Offline/Level bölümleri HTML'den kalksa bile JS patlamaz
+// ✅ Jeton Yükle -> /pages/jetonbuy.html
+// ✅ Güvenli çıkış %100
+// ✅ last_login_at günceller + shell cache tazeler
+// ✅ Account delete = HARD DELETE (Render API)
 
 import { supabase } from "/js/supabase_client.js";
 import { STORAGE_KEY } from "/js/config.js";
 
-const API_BASE = "https://italky-api.onrender.com"; // ✅ Render backend
-
+const API_BASE = "https://italky-api.onrender.com";
 const $ = (id)=>document.getElementById(id);
 
 function safeText(id, val){
@@ -29,12 +30,22 @@ function toast(msg){
   clearTimeout(window.__to);
   window.__to = setTimeout(()=>t.classList.remove("show"), 1800);
 }
+
+/* ✅ İSTEDİĞİN FORMAT: GG/AA/YYYY • SS:DD */
 function fmtDT(iso){
   if(!iso) return "—";
   try{
     const d = new Date(iso);
-    return d.toLocaleString("tr-TR", { year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit" });
-  }catch{ return "—"; }
+    if(Number.isNaN(d.getTime())) return "—";
+    const dd = String(d.getDate()).padStart(2,"0");
+    const mm = String(d.getMonth()+1).padStart(2,"0");
+    const yy = d.getFullYear();
+    const hh = String(d.getHours()).padStart(2,"0");
+    const mi = String(d.getMinutes()).padStart(2,"0");
+    return `${dd}/${mm}/${yy} • ${hh}:${mi}`;
+  }catch{
+    return "—";
+  }
 }
 
 /* ✅ İsim kısaltma: "Oğuz Ö." / "Huri Hüma Ö." / "Mustafa" */
@@ -132,12 +143,12 @@ function paintFromSession(user){
   }catch{}
 }
 
-/* ✅ DB’den çek (DOĞRU: profiles.id = auth.users.id) */
+/* ✅ DB’den çek */
 async function tryLoadProfile(userId){
   try{
     const { data, error } = await supabase
       .from("profiles")
-      .select("id,email,full_name,avatar_url,tokens,member_no,created_at,last_login_at,levels,offline_langs,study_minutes,role")
+      .select("id,email,full_name,avatar_url,tokens,member_no,created_at,last_login_at")
       .eq("id", userId)
       .maybeSingle();
     if(error) throw error;
@@ -148,7 +159,7 @@ async function tryLoadProfile(userId){
   }
 }
 
-/* ✅ Yoksa oluştur (id zorunlu) */
+/* ✅ Yoksa oluştur */
 async function tryInsertProfile(user){
   try{
     const metaName = String(user.user_metadata?.full_name || user.user_metadata?.name || "").trim();
@@ -160,9 +171,9 @@ async function tryInsertProfile(user){
       full_name: metaName || null,
       avatar_url: metaPic || null,
       tokens: 0,
-      levels: {},
-      offline_langs: [],
-      study_minutes: {}
+      levels: {},           // tablo bekliyorsa dursun
+      offline_langs: [],    // tablo bekliyorsa dursun
+      study_minutes: {}     // tablo bekliyorsa dursun
     };
 
     const { data, error } = await supabase
@@ -187,36 +198,8 @@ async function touchLastLogin(userId){
       .update({ last_login_at: new Date().toISOString() })
       .eq("id", userId);
   }catch(e){
-    // RLS engellese bile sayfayı bozmasın
     console.warn("[last_login_at update]", e);
   }
-}
-
-function renderOffline(profile){
-  const list = $("offlineList");
-  if(list) list.innerHTML = "";
-  const packs = Array.isArray(profile?.offline_langs) ? profile.offline_langs : [];
-  safeShow("offlineEmptyNote", packs.length === 0);
-
-  if(list && packs.length){
-    for(const p of packs){
-      const row = document.createElement("div");
-      row.className = "line";
-      row.innerHTML = `<div class="k">${String(p)}</div><div class="v">Hazır</div>`;
-      list.appendChild(row);
-    }
-  }
-}
-
-function renderLevels(profile){
-  const list = $("levelsList");
-  if(list) list.innerHTML = "";
-  const levels = (profile?.levels && typeof profile.levels === "object") ? profile.levels : {};
-  const hasAny = Object.keys(levels).length > 0;
-
-  safeShow("levelsEmptyNote", !hasAny);
-  const go = $("goLevel");
-  if(go) go.onclick = ()=>location.href="/pages/teacher_select.html";
 }
 
 /* ✅ HARD DELETE (Render API) */
@@ -233,7 +216,6 @@ async function hardDeleteAccount(){
   const j = await r.json().catch(()=> ({}));
   if(!r.ok) throw new Error(j.detail || j.error || "Hesap silme başarısız.");
 
-  // local temizle + çıkış
   try{ await supabase.auth.signOut(); }catch(e){ console.warn("[signOut after delete]", e); }
   try{ localStorage.removeItem(STORAGE_KEY); }catch{}
   try{ localStorage.removeItem("NAC_ID"); }catch{}
@@ -243,17 +225,13 @@ async function hardDeleteAccount(){
 }
 
 export async function initProfilePage({ setHeaderTokens } = {}){
-  // ✅ Butonları en baştan bağla (click kaçmasın)
-  const logoutBtn = $("logoutBtn");
-  if(logoutBtn){
-    logoutBtn.addEventListener("click", (e)=>{ e.preventDefault(); safeLogoutHard(); });
-  }
+  // ✅ Butonlar (varsa bağla)
+  $("logoutBtn")?.addEventListener("click", (e)=>{ e.preventDefault(); safeLogoutHard(); });
 
-  const offBtn = $("offlineDownloadBtn");
-  if(offBtn) offBtn.addEventListener("click", ()=>location.href="/pages/offline.html");
-
-  const buyBtn = $("buyTokensBtn");
-  if(buyBtn) buyBtn.addEventListener("click", ()=>toast("Jeton yükleme yakında (Google Play)."));
+  // ✅ Jeton Yükle -> sayfaya git
+  $("buyTokensBtn")?.addEventListener("click", ()=>{
+    location.href = "/pages/jetonbuy.html";
+  });
 
   // ✅ session
   const { data:{ session } } = await supabase.auth.getSession();
@@ -275,25 +253,26 @@ export async function initProfilePage({ setHeaderTokens } = {}){
   // ✅ last_login_at
   await touchLastLogin(user.id);
 
-  // DB yoksa bile sayfa boş kalmasın
+  // DB yoksa: session ekranı kalsın
   if(!profile){
     safeText("memberNo", "—");
     safeText("createdAt", "—");
     safeText("lastLogin", "—");
     safeText("tokenVal", "0");
     if(typeof setHeaderTokens === "function") setHeaderTokens(0);
-    renderLevels(null);
-    renderOffline(null);
     toast("Profil verisi alınamadı. (profiles RLS: auth.uid() = id olmalı)");
     return;
   }
 
-  // ✅ ekrana bas
-  const fullName = profile.full_name || (user.user_metadata?.full_name || user.user_metadata?.name) || (user.email||"—");
+  const fullName =
+    profile.full_name ||
+    (user.user_metadata?.full_name || user.user_metadata?.name) ||
+    (user.email || "—");
+
   safeText("pEmail", profile.email || user.email || "—");
   safeText("pName", fullName);
 
-  // member no yoksa üret ve id ile update et
+  // member no yoksa üret
   let memberNo = profile.member_no;
   if(!memberNo){
     memberNo = genMemberNo();
@@ -303,6 +282,7 @@ export async function initProfilePage({ setHeaderTokens } = {}){
   }
   safeText("memberNo", memberNo || "—");
 
+  // ✅ Tarihler
   safeText("createdAt", fmtDT(profile.created_at));
   safeText("lastLogin", fmtDT(profile.last_login_at));
 
@@ -331,27 +311,19 @@ export async function initProfilePage({ setHeaderTokens } = {}){
     avatar_url: (profile.avatar_url || user.user_metadata?.picture || "")
   });
 
-  // ✅ copy member no
-  const copyBtn = $("copyMemberBtn");
-  if(copyBtn) copyBtn.addEventListener("click", ()=>copyText(memberNo || ""));
+  // ✅ copy
+  $("copyMemberBtn")?.addEventListener("click", ()=>copyText(memberNo || ""));
 
-  renderLevels(profile);
-  renderOffline(profile);
-
-  // ✅ HARD DELETE button (production-safe)
-  const deleteBtn = $("deleteBtn");
-  if(deleteBtn){
-    deleteBtn.addEventListener("click", async ()=>{
-      const ok = confirm("Hesabınız kalıcı olarak silinecek. Bu işlem geri alınamaz. Devam edilsin mi?");
-      if(!ok) return;
-
-      toast("Hesap siliniyor...");
-      try{
-        await hardDeleteAccount();
-      }catch(e){
-        console.warn(e);
-        toast(String(e?.message || "Hesap silinemedi"));
-      }
-    });
-  }
+  // ✅ delete
+  $("deleteBtn")?.addEventListener("click", async ()=>{
+    const ok = confirm("Hesabınız kalıcı olarak silinecek. Bu işlem geri alınamaz. Devam edilsin mi?");
+    if(!ok) return;
+    toast("Hesap siliniyor...");
+    try{
+      await hardDeleteAccount();
+    }catch(e){
+      console.warn(e);
+      toast(String(e?.message || "Hesap silinemedi"));
+    }
+  });
 }
