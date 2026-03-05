@@ -2,8 +2,8 @@
 <!doctype html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
   <title>italkyAI • Jeton Nedir?</title>
 
   <meta name="theme-color" content="#02000f">
@@ -15,130 +15,160 @@
 
   <style>
     #pageContent{
-      padding: 16px 14px calc(var(--footerH, 92px) + env(safe-area-inset-bottom) + 10px);
-      max-width: 560px;
-      margin: 0 auto;
-      display:flex;
-      flex-direction:column;
-      gap:12px;
+      padding: 14px 14px calc(var(--footerH,92px) + env(safe-area-inset-bottom) + 18px);
     }
 
-    .panel{
-      background: linear-gradient(145deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%);
+    .hero{
+      border-radius: 28px;
       border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 26px;
-      padding: 14px 14px;
+      background: linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
       backdrop-filter: blur(18px);
       -webkit-backdrop-filter: blur(18px);
+      padding: 18px 16px;
+      position: relative;
+      overflow:hidden;
+      box-shadow: 0 18px 44px rgba(0,0,0,0.35);
+      margin-bottom: 12px;
+    }
+    .glow{
+      position:absolute; inset:-120px;
+      background:
+        radial-gradient(circle at 25% 30%, rgba(165,180,252,0.28) 0%, transparent 45%),
+        radial-gradient(circle at 80% 60%, rgba(236,72,153,0.22) 0%, transparent 45%);
+      filter: blur(20px);
+      pointer-events:none;
     }
 
+    .hTop{ position:relative; display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
     .title{
+      margin:0;
       font-family:"Space Grotesk", system-ui, sans-serif;
       font-size: 20px;
-      font-weight: 1000;
-      margin: 0 0 8px;
-      color: rgba(255,255,255,0.92);
+      font-weight: 900;
+      color: rgba(255,255,255,0.95);
       letter-spacing: -0.3px;
     }
-
     .sub{
-      margin: 0;
+      position:relative;
+      margin:8px 0 0;
       font-size: 12px;
       font-weight: 800;
+      color: rgba(255,255,255,0.68);
       line-height: 1.5;
-      color: rgba(255,255,255,0.62);
+      max-width: 95%;
     }
 
-    .pillRow{ display:flex; gap:10px; flex-wrap:wrap; margin-top: 10px; }
-    .pill{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding: 10px 12px;
+    .badge{
+      position:relative;
+      flex:0 0 auto;
+      padding: 8px 10px;
       border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(0,0,0,0.18);
+      border: 1px solid rgba(99,102,241,0.35);
+      background: rgba(99,102,241,0.12);
       font-weight: 1000;
-      font-size: 12px;
-      color: rgba(255,255,255,0.90);
-      user-select:none;
-    }
-    .pill b{
-      color:#a5b4fc;
-      letter-spacing:.3px;
+      font-size: 11px;
+      color: rgba(165,180,252,0.95);
+      white-space: nowrap;
     }
 
-    .list{
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
       margin-top: 12px;
-      display:flex;
-      flex-direction:column;
-      gap:10px;
     }
 
-    .item{
+    .card{
+      border-radius: 22px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.04);
+      padding: 14px 14px;
       display:flex;
-      gap:10px;
-      padding: 12px 12px;
-      border-radius: 20px;
-      border: 1px solid rgba(255,255,255,0.08);
-      background: rgba(255,255,255,0.05);
+      gap: 12px;
+      align-items:flex-start;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
     }
+
     .ico{
-      width:36px; height:36px;
-      border-radius: 14px;
+      width: 40px; height: 40px;
+      border-radius: 16px;
       border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(0,0,0,0.18);
-      display:flex;
-      align-items:center;
-      justify-content:center;
+      background: rgba(0,0,0,0.22);
+      display:flex; align-items:center; justify-content:center;
+      font-size: 18px;
       flex: 0 0 auto;
-      font-size: 16px;
+      box-shadow: 0 14px 28px rgba(0,0,0,0.25);
     }
-    .txt{ min-width:0; }
-    .h{
-      margin: 0;
+
+    .ct{ flex:1; min-width:0; }
+    .ct h3{
+      margin:0;
       font-size: 13px;
       font-weight: 1000;
-      color: rgba(255,255,255,0.92);
+      color:#fff;
       letter-spacing: -0.2px;
     }
-    .p{
-      margin: 4px 0 0;
+    .ct p{
+      margin:6px 0 0;
       font-size: 11.5px;
       font-weight: 800;
-      color: rgba(255,255,255,0.60);
+      color: rgba(255,255,255,0.62);
       line-height: 1.45;
     }
 
-    .note{
-      margin-top: 10px;
-      font-size: 11px;
-      font-weight: 800;
-      color: rgba(255,255,255,0.55);
+    .callout{
+      margin-top: 12px;
+      border-radius: 24px;
+      border: 1px solid rgba(236,72,153,0.28);
+      background: rgba(236,72,153,0.10);
+      padding: 14px 14px;
+      color: rgba(255,255,255,0.86);
+      font-weight: 900;
+      font-size: 12px;
       line-height: 1.5;
     }
+    .callout b{ color:#fff; }
 
-    .btnRow{ display:flex; gap:10px; margin-top: 10px; }
+    .btnRow{
+      margin-top: 12px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
     .btn{
-      height: 46px;
+      height: 52px;
       border-radius: 18px;
       border: none;
       cursor:pointer;
       font-weight: 1000;
       user-select:none;
       padding: 0 14px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
       flex:1;
+      min-width: 160px;
     }
-    .btn:active{ transform: scale(.99); }
-    .btn-main{
+    .btnPrimary{
       background: linear-gradient(135deg, #a5b4fc 0%, #6366f1 55%, #ec4899 100%);
       color:#050510;
+      box-shadow: 0 18px 46px rgba(99,102,241,0.18);
     }
-    .btn-ghost{
+    .btnGhost{
       background: rgba(255,255,255,0.08);
       border: 1px solid rgba(255,255,255,0.12);
       color:#fff;
-      flex: 0 0 120px;
+    }
+    .btn:active{ transform: scale(.99); opacity:.96; }
+
+    .miniNote{
+      margin-top:10px;
+      font-size: 11px;
+      font-weight: 800;
+      color: rgba(255,255,255,0.55);
+      line-height: 1.5;
     }
   </style>
 </head>
@@ -146,109 +176,85 @@
 <body>
   <div id="pageContent">
 
-    <div class="panel">
-      <h1 class="title">Jeton Nedir?</h1>
-      <p class="sub">
-        Jeton, italkyAI içindeki özellikleri kullanmak için “tek para birimi”dir.
-        Gereksiz abonelik karmaşası yok: ne kullanırsan onu yönetirsin.
-      </p>
+    <section class="hero">
+      <div class="glow"></div>
 
-      <div class="pillRow">
-        <div class="pill">🎟️ <b>1 Jeton</b> = bir kullanım hakkı / paket aktivasyonu</div>
-        <div class="pill">⏱️ Birçok özellikte <b>24 saat</b> erişim</div>
+      <div class="hTop">
+        <div>
+          <h1 class="title">Jeton Nedir?</h1>
+          <p class="sub">
+            Jeton, italkyAI içindeki tüm premium özelliklerin anahtarıdır.  
+            Küçük harcamalarla, büyük işleri **tek sistemde** yürütürsünüz.
+          </p>
+        </div>
+        <div class="badge">1 Jeton = Premium Erişim</div>
       </div>
-    </div>
 
-    <div class="panel">
-      <h2 class="title" style="font-size:18px;margin-bottom:4px;">1 Jetonla Ne Yapabilirsiniz?</h2>
-      <p class="sub">Aşağıdaki haklar, italkyAI ekosistemindeki en popüler kullanım senaryolarıdır.</p>
-
-      <div class="list">
-
-        <div class="item">
-          <div class="ico">📦</div>
-          <div class="txt">
-            <p class="h">Offline Dil Paketi İndir</p>
-            <p class="p">İstediğiniz dili telefona indirirsiniz. İnternet sadece indirirken gerekir. Her dil paketi için <b>1 jeton</b>.</p>
+      <div class="grid">
+        <div class="card">
+          <div class="ico">🌍</div>
+          <div class="ct">
+            <h3>Offline Dil Paketi</h3>
+            <p>İstediğin dili indir, internetsiz kullan. Paket indirme başına jeton ile.</p>
           </div>
         </div>
 
-        <div class="item">
+        <div class="card">
           <div class="ico">🎮</div>
-          <div class="txt">
-            <p class="h">Eğlenerek Öğren • 24 Saat</p>
-            <p class="p">Oyun merkezindeki pratik oyunlarına 24 saat giriş hakkı (ilk girişte 1 jeton).</p>
+          <div class="ct">
+            <h3>Oyun Merkezi</h3>
+            <p>Oyunlara 24 saat giriş hakkı (ilk girişte jeton). Pratik, hız ve kelime.</p>
           </div>
         </div>
 
-        <div class="item">
-          <div class="ico">🗣️</div>
-          <div class="txt">
-            <p class="h">FaceToFace Çeviri • 24 Saat</p>
-            <p class="p">Yüzyüze anlık çeviri özelliğini 24 saat sınırsız kullanırsınız.</p>
+        <div class="card">
+          <div class="ico">🎙️</div>
+          <div class="ct">
+            <h3>FaceToFace Çeviri</h3>
+            <p>Yüz yüze konuş, anlık çeviri al. Jeton ile kullanım hakkı.</p>
           </div>
         </div>
 
-        <div class="item">
-          <div class="ico">📝</div>
-          <div class="txt">
-            <p class="h">Metinden Çeviri • 24 Saat</p>
-            <p class="p">AI destekli metin çeviriyi 24 saat sınırsız kullanırsınız.</p>
-          </div>
-        </div>
-
-        <div class="item">
-          <div class="ico">📡</div>
-          <div class="txt">
-            <p class="h">WalkieTalkie • 24 Saat</p>
-            <p class="p">Sınırsız katılımcı ile yazışmalı sohbet/mini toplantı. Her katılımcı kendi dilinde görür.</p>
-          </div>
-        </div>
-
-        <div class="item">
-          <div class="ico">🧭</div>
-          <div class="txt">
-            <p class="h">Gerçek Zamanlı Seviye Tespit</p>
-            <p class="p">Dil seviye tespit sınavına katılım hakkı.</p>
-          </div>
-        </div>
-
-        <div class="item">
-          <div class="ico">🎓</div>
-          <div class="txt">
-            <p class="h">AI Teacher ile 1 Ders</p>
-            <p class="p">Yapay zekâ öğretmenle ders alarak seviyenizi artırırsınız (binlerce TL kurs masrafı yerine).</p>
-          </div>
-        </div>
-
-        <div class="item">
+        <div class="card">
           <div class="ico">💬</div>
-          <div class="txt">
-            <p class="h">AI ile Dil Pratiği</p>
-            <p class="p">Yapay zekâ ile dil pratiği yaparsınız (kullanım modeli jetona göre planlanır).</p>
+          <div class="ct">
+            <h3>Metinden Çeviri</h3>
+            <p>AI destekli metin çeviri. Jeton ile 24 saat sınırsız plan modeli.</p>
           </div>
         </div>
 
-        <div class="item">
-          <div class="ico">📚</div>
-          <div class="txt">
-            <p class="h">Ders Soru Çözümü</p>
-            <p class="p">Matematik/Fizik/Kimya gibi derslerde sorularınızı çözdürür, adım adım öğrenirsiniz (kullanım modeli jetona göre planlanır).</p>
+        <div class="card">
+          <div class="ico">📡</div>
+          <div class="ct">
+            <h3>Walkie Talkie</h3>
+            <p>Katılımcılar kendi dilinde görür. Toplantı / grup sohbet için güçlü çözüm.</p>
           </div>
         </div>
 
+        <div class="card">
+          <div class="ico">🎓</div>
+          <div class="ct">
+            <h3>Seviye Tespit & Ders</h3>
+            <p>Seviye sınavı ve Teacher dersleri jetonla çalışır. Binlerce TL yerine jeton.</p>
+          </div>
+        </div>
       </div>
 
-      <div class="note">
-        Not: Bazı özellikler “24 saat erişim”, bazıları “tek kullanım hakkı” mantığıyla çalışır.
-        Ürün büyüdükçe tüm haklar Jeton sayfasında güncel tutulur.
+      <div class="callout">
+        <b>Öneri:</b> Jeton alınca sadece “çeviri” değil, oyun + ders + offline kullanım da açılır.  
+        Yani jeton = “tek uygulamada her şey”.
       </div>
 
       <div class="btnRow">
-        <button class="btn btn-ghost" id="btnBack" type="button">Geri</button>
-        <button class="btn btn-main" id="btnGoMarket" type="button">Jeton Yükle</button>
+        <button class="btn btnPrimary" id="goMarket">⚡ Jeton Yükle</button>
+        <button class="btn btnGhost" id="goBack">Geri</button>
       </div>
-    </div>
+
+      <div class="miniNote">
+        Not: Jeton yükleme ekranı şu an Market tasarımıdır. Ödeme altyapısı aktif olunca Google Play / Apple üzerinden çalışır.
+      </div>
+
+    </section>
 
   </div>
 
@@ -256,8 +262,8 @@
     import { mountShell } from "/js/ui_shell.js";
     mountShell();
 
-    document.getElementById("btnBack")?.addEventListener("click", ()=>history.back());
-    document.getElementById("btnGoMarket")?.addEventListener("click", ()=>location.href="/pages/jetonbuy.html");
+    document.getElementById("goMarket").onclick = ()=>location.href="/pages/jetonbuy.html";
+    document.getElementById("goBack").onclick = ()=>history.back();
   </script>
 </body>
 </html>
