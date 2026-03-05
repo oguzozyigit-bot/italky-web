@@ -2,166 +2,269 @@
 <!doctype html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>italkyAI • Jeton Yükle</title>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+<title>italkyAI • Jeton Market</title>
 
-  <meta name="theme-color" content="#02000f">
-  <style>html,body{background:#02000f !important;}</style>
+<meta name="theme-color" content="#02000f">
+<style>html,body{background:#02000f!important}</style>
 
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
-  <style>
-    #pageContent{
-      padding: 20px 16px calc(var(--footerH, 92px) + env(safe-area-inset-bottom) + 18px);
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-      max-width: 560px;
-      margin: 0 auto;
-    }
+<style>
 
-    .header{ text-align:center; margin-bottom: 6px; }
-    .header h1{
-      font-family:'Space Grotesk', sans-serif;
-      font-size:24px;
-      font-weight:900;
-      margin:0;
-      color:#a5b4fc;
-    }
-    .header p{ font-size:13px; color: rgba(255,255,255,0.6); margin: 8px 0 0; font-weight: 800; }
+#pageContent{
+padding:16px 14px calc(var(--footerH,92px) + env(safe-area-inset-bottom) + 20px);
+display:flex;
+flex-direction:column;
+gap:12px;
+max-width:560px;
+margin:auto;
+}
 
-    .pkg{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap: 12px;
-      padding:16px;
-      border-radius:22px;
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.10);
-      transition: .2s;
-      cursor:pointer;
-      user-select:none;
-    }
-    .pkg:active{ transform: scale(0.985); background: rgba(99,102,241,0.18); }
-    .pkg-info{ display:flex; flex-direction:column; gap:4px; }
-    .pkg-amt{ font-size:18px; font-weight:1000; }
-    .pkg-price{ font-size:14px; color:#a5b4fc; font-weight:900; letter-spacing:.2px; }
-    .pkg-icon{ font-size:18px; opacity:.9; }
+/* HEADER */
 
-    .pkg-best{
-      background: linear-gradient(135deg, #f59e0b, #ef4444);
-      padding:4px 10px;
-      border-radius:10px;
-      font-size:10px;
-      font-weight:1000;
-      text-transform:uppercase;
-      white-space:nowrap;
-    }
+.head{
+text-align:center;
+margin-bottom:8px;
+}
 
-    .note{
-      margin-top: 6px;
-      font-size: 11px;
-      font-weight: 800;
-      color: rgba(255,255,255,0.55);
-      line-height: 1.45;
-      text-align:center;
-    }
+.head h1{
+font-family:"Space Grotesk";
+font-size:26px;
+font-weight:1000;
+margin:0;
+background:linear-gradient(135deg,#a5b4fc,#6366f1,#ec4899);
+-webkit-background-clip:text;
+-webkit-text-fill-color:transparent;
+}
 
-    .toast{
-      position: fixed; left:50%; top:18px;
-      transform: translateX(-50%) translateY(-120px);
-      background: rgba(10,10,18,.92);
-      border:1px solid rgba(165,180,252,.35);
-      padding: 10px 14px;
-      border-radius: 999px;
-      color:#fff;
-      z-index:999999;
-      font-weight:900;
-      font-size:12px;
-      transition:.25s;
-      backdrop-filter: blur(12px);
-      pointer-events:none;
-      max-width:min(92vw, 520px);
-      text-align:center;
-    }
-    .toast.show{ transform: translateX(-50%) translateY(0); }
-  </style>
+.head p{
+margin:6px 0 0;
+font-size:12px;
+font-weight:800;
+color:rgba(255,255,255,0.6);
+}
+
+/* PACKAGE */
+
+.pkg{
+position:relative;
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:10px;
+
+padding:16px 16px;
+border-radius:26px;
+
+background:linear-gradient(145deg,
+rgba(255,255,255,0.08),
+rgba(255,255,255,0.02)
+);
+
+border:1px solid rgba(255,255,255,0.12);
+
+backdrop-filter:blur(18px);
+-webkit-backdrop-filter:blur(18px);
+
+cursor:pointer;
+transition:.22s;
+}
+
+.pkg:active{
+transform:scale(.97);
+}
+
+/* BEST PACKAGE */
+
+.pkg.best{
+border:1px solid rgba(99,102,241,0.5);
+background:
+linear-gradient(145deg,
+rgba(99,102,241,0.25),
+rgba(236,72,153,0.15)
+);
+}
+
+.bestBadge{
+position:absolute;
+top:-10px;
+right:14px;
+background:linear-gradient(135deg,#6366f1,#ec4899);
+padding:5px 10px;
+border-radius:10px;
+font-size:10px;
+font-weight:900;
+text-transform:uppercase;
+}
+
+/* PACKAGE INFO */
+
+.pkgLeft{
+display:flex;
+flex-direction:column;
+gap:4px;
+}
+
+.amt{
+font-size:20px;
+font-weight:1000;
+letter-spacing:-0.3px;
+}
+
+.price{
+font-size:14px;
+font-weight:900;
+color:#a5b4fc;
+}
+
+.bonus{
+font-size:10px;
+font-weight:900;
+color:rgba(255,255,255,0.55);
+}
+
+/* ICON */
+
+.ico{
+font-size:24px;
+}
+
+/* FOOT NOTE */
+
+.note{
+margin-top:10px;
+font-size:11px;
+font-weight:800;
+line-height:1.5;
+color:rgba(255,255,255,0.55);
+text-align:center;
+}
+
+/* BTN */
+
+.infoBtn{
+margin-top:6px;
+font-size:12px;
+font-weight:900;
+color:#a5b4fc;
+text-align:center;
+cursor:pointer;
+}
+
+</style>
 </head>
 
 <body>
-  <div id="pageContent">
-    <div class="header">
-      <h1>Jeton Market</h1>
-      <p>Konuşmaya devam etmek için paket seçin</p>
-    </div>
 
-    <div class="pkg" data-id="jeton_10">
-      <div class="pkg-info"><span class="pkg-amt">10 Jeton</span><span class="pkg-price">29 TL</span></div>
-      <div class="pkg-icon">⚡</div>
-    </div>
+<div id="pageContent">
 
-    <div class="pkg" data-id="jeton_20">
-      <div class="pkg-info"><span class="pkg-amt">20 Jeton</span><span class="pkg-price">54 TL</span></div>
-      <div class="pkg-icon">✨</div>
-    </div>
+<div class="head">
+<h1>Jeton Market</h1>
+<p>italkyAI özelliklerini kullanmak için jeton paketini seç</p>
+</div>
 
-    <div class="pkg" data-id="jeton_50">
-      <div class="pkg-info"><span class="pkg-amt">50 Jeton</span><span class="pkg-price">119 TL</span></div>
-      <div class="pkg-icon">🔥</div>
-    </div>
+<!-- 10 -->
 
-    <div class="pkg" data-id="jeton_100" style="border:2px solid #6366f1; background: rgba(99,102,241,0.10);">
-      <div class="pkg-info"><span class="pkg-amt">100 Jeton</span><span class="pkg-price">199 TL</span></div>
-      <span class="pkg-best">Popüler</span>
-    </div>
+<div class="pkg" onclick="buy('jeton_10')">
+<div class="pkgLeft">
+<div class="amt">10 Jeton</div>
+<div class="price">29 TL</div>
+<div class="bonus">Başlangıç paketi</div>
+</div>
+<div class="ico">⚡</div>
+</div>
 
-    <div class="pkg" data-id="jeton_250">
-      <div class="pkg-info"><span class="pkg-amt">250 Jeton</span><span class="pkg-price">449 TL</span></div>
-      <div class="pkg-icon">💎</div>
-    </div>
+<!-- 20 -->
 
-    <div class="pkg" data-id="jeton_500" style="background: rgba(236,72,153,0.10); border: 1px solid rgba(236,72,153,0.40);">
-      <div class="pkg-info"><span class="pkg-amt">500 Jeton</span><span class="pkg-price">849 TL</span></div>
-      <span class="pkg-best" style="background:#ec4899;">VIP</span>
-    </div>
+<div class="pkg" onclick="buy('jeton_20')">
+<div class="pkgLeft">
+<div class="amt">20 Jeton</div>
+<div class="price">54 TL</div>
+<div class="bonus">%7 avantaj</div>
+</div>
+<div class="ico">✨</div>
+</div>
 
-    <div class="note">
-      Ödeme Android tarafında aktif edilecek. Şimdilik paket seçimi test amaçlıdır.
-    </div>
-  </div>
+<!-- 50 -->
 
-  <div class="toast" id="toast"></div>
+<div class="pkg" onclick="buy('jeton_50')">
+<div class="pkgLeft">
+<div class="amt">50 Jeton</div>
+<div class="price">119 TL</div>
+<div class="bonus">%18 avantaj</div>
+</div>
+<div class="ico">🔥</div>
+</div>
 
-  <script type="module">
-    import { mountShell } from "/js/ui_shell.js";
-    mountShell();
+<!-- 100 -->
 
-    const toast = (msg)=>{
-      const t = document.getElementById("toast");
-      if(!t) return;
-      t.textContent = String(msg||"");
-      t.classList.add("show");
-      clearTimeout(window.__to);
-      window.__to = setTimeout(()=>t.classList.remove("show"), 1400);
-    };
+<div class="pkg best" onclick="buy('jeton_100')">
+<div class="bestBadge">En Popüler</div>
 
-    // ✅ satın alma stub
-    window.buy = (id)=>{
-      console.log("Satın alma tetiklendi:", id);
-      toast("Paket seçildi: " + id);
+<div class="pkgLeft">
+<div class="amt">100 Jeton</div>
+<div class="price">199 TL</div>
+<div class="bonus">%31 avantaj</div>
+</div>
 
-      // Android bridge örneği (sonra):
-      // if(window.AndroidBilling?.buy) AndroidBilling.buy(id);
-    };
+<div class="ico">💎</div>
+</div>
 
-    document.querySelectorAll(".pkg[data-id]").forEach(el=>{
-      el.addEventListener("click", ()=>{
-        const id = el.getAttribute("data-id");
-        window.buy(id);
-      });
-    });
-  </script>
+<!-- 250 -->
+
+<div class="pkg" onclick="buy('jeton_250')">
+<div class="pkgLeft">
+<div class="amt">250 Jeton</div>
+<div class="price">449 TL</div>
+<div class="bonus">%38 avantaj</div>
+</div>
+<div class="ico">🚀</div>
+</div>
+
+<!-- 500 -->
+
+<div class="pkg best" onclick="buy('jeton_500')">
+<div class="bestBadge">VIP</div>
+
+<div class="pkgLeft">
+<div class="amt">500 Jeton</div>
+<div class="price">849 TL</div>
+<div class="bonus">%42 avantaj</div>
+</div>
+
+<div class="ico">👑</div>
+</div>
+
+<div class="infoBtn" onclick="location.href='/pages/jeton-nedir.html'">
+Jeton nedir?
+</div>
+
+<div class="note">
+Jetonlar italkyAI özelliklerini kullanmanızı sağlar.<br>
+Dil pratiği, çeviri, oyunlar ve AI öğretmen derslerinde kullanılabilir.
+</div>
+
+</div>
+
+<script type="module">
+
+import { mountShell } from "/js/ui_shell.js";
+mountShell();
+
+window.buy = (id)=>{
+console.log("Jeton satın alma:",id);
+
+// burada Android Billing veya ödeme sistemi bağlanacak
+// şimdilik sadece log
+
+alert("Satın alma sistemi yakında aktif olacak.");
+};
+
+</script>
+
 </body>
 </html>
