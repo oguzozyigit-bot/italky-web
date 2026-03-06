@@ -3,30 +3,22 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-<title>italkyAI • Quantum OS V7</title>
-
-<style>
-  html { background: #020205 !important; } /* Tarayıcı henüz render yapmadan siyah kalsın */
-  body { opacity: 0; transition: opacity 0.3s ease; margin: 0; } /* Shell gelene kadar gizle */
-  body.ui-ready { opacity: 1; } /* Hazır olduğunda göster */
-</style>
-
-<link rel="modulepreload" href="/js/ui_shell.js">
+<title>italkyAI • Translate AI Hub</title>
 
 <style>
   :root {
-    --bg-dark: #020205;
-    --accent-blue: #00d2ff;
-    --accent-purple: #9d50bb;
-    --accent-green: #39ff14;
-    --glass: rgba(255, 255, 255, 0.03);
+    --ai-grad: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+    --blue: #00d2ff;
+    --green: #00ff88;
+    --purple: #bd00ff;
+    --glass: rgba(255, 255, 255, 0.04);
     --glass-border: rgba(255, 255, 255, 0.1);
   }
 
-  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Plus+Jakarta+Sans:wght@700&display=swap');
 
   html, body { 
-    background: var(--bg-dark); margin: 0; padding: 0; 
+    background: #050508; margin: 0; padding: 0; 
     height: 100vh; width: 100vw; overflow: hidden; 
     font-family: 'Outfit', sans-serif; color: white;
   }
@@ -34,119 +26,155 @@
   #pageContent {
     height: 100%; width: 100%;
     display: flex; flex-direction: column;
-    background: radial-gradient(circle at 50% 50%, #0a0a20 0%, #020205 100%);
-  }
-
-  .main-hub {
-    flex: 1; display: flex; flex-direction: column;
-    padding: 10px 15px; 
-    gap: 10px;
-  }
-
-  /* Genişletilmiş Premium Card */
-  .os-card {
     position: relative;
-    flex: 1;
-    background: var(--glass);
-    border: 1px solid var(--glass-border);
-    border-radius: 24px;
-    display: flex; align-items: center;
-    padding: 20px 25px;
-    overflow: hidden;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    transition: all 0.4s cubic-bezier(0.15, 1, 0.3, 1);
+    background: radial-gradient(circle at 50% 10%, rgba(99, 102, 241, 0.1), transparent 40%),
+                radial-gradient(circle at 50% 90%, rgba(236, 72, 153, 0.05), transparent 40%);
   }
 
-  .os-card:active { transform: scale(0.97); background: rgba(255,255,255,0.06); }
+  .main-hub { flex: 1; display: flex; flex-direction: column; gap: 15px; padding: 20px 16px; }
 
-  .card-info { flex: 1; z-index: 10; display: flex; flex-direction: column; justify-content: center; }
-  .card-info h2 { font-size: 26px; font-weight: 800; margin: 0 0 8px 0; letter-spacing: -0.5px; }
+  /* ===== 1. FACETOFACE PORTAL (ANA ODAK) ===== */
+  .f2f-portal {
+    flex: 0 0 auto;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 20px 0; cursor: pointer;
+  }
   
-  .desc-list { margin: 0; padding: 0; list-style: none; }
-  .desc-list li { 
-    font-size: 13px; color: rgba(255,255,255,0.5); 
-    margin-bottom: 4px; display: flex; align-items: center; gap: 6px;
+  .neural-orb { width: 120px; height: 120px; position: relative; display: flex; align-items: center; justify-content: center; }
+  
+  .ai-ring { 
+    position: absolute; inset: -5px; border-radius: 50%; border: 2px solid transparent;
+    background: var(--ai-grad) border-box;
+    -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude; animation: spin 10s linear infinite; opacity: 0.6;
   }
-  .desc-list li::before { content: "•"; color: var(--theme); font-weight: bold; }
 
-  /* İkon Tasarımı */
-  .visual-engine { position: relative; width: 90px; height: 90px; display: flex; align-items: center; justify-content: center; }
-  .plasma-glow { position: absolute; width: 100%; height: 100%; background: var(--theme); filter: blur(25px); opacity: 0.2; animation: plasmaRotate 6s infinite linear; }
-  .icon-shape { width: 45px; height: 45px; position: relative; z-index: 15; filter: drop-shadow(0 0 10px var(--theme)); animation: float 4s infinite ease-in-out; }
+  .ai-core { 
+    width: 90px; height: 90px; background: #000; border-radius: 50%;
+    border: 1px solid var(--glass-border);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 30px rgba(99, 102, 241, 0.3);
+    z-index: 10; transition: 0.4s;
+  }
+  .f2f-portal:active .ai-core { transform: scale(0.9); box-shadow: 0 0 50px var(--blue); }
 
-  .shape-translate { border: 4px double var(--theme); border-radius: 50%; animation: spin 8s infinite linear; }
-  .shape-academy { background: var(--theme); clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); opacity: 0.8; }
-  .shape-teacher { background: var(--theme); border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; animation: morph 5s infinite alternate; }
+  .f2f-title { font-family: 'Plus Jakarta Sans'; font-size: 28px; font-weight: 800; color: #fff; margin: 15px 0 0; letter-spacing: -1px; }
+  .f2f-title span { background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
-  .blue-node { --theme: var(--accent-blue); }
-  .purple-node { --theme: var(--accent-purple); }
-  .green-node { --theme: var(--accent-green); }
-  .theme-text { color: var(--theme); filter: brightness(1.2); }
+  /* ===== 2. KART GRUBU ===== */
+  .hub-cards { flex: 1; display: flex; flex-direction: column; gap: 12px; }
 
-  @keyframes plasmaRotate { from { transform: rotate(0deg) scale(1); } to { transform: rotate(360deg) scale(1.2); } }
-  @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  @keyframes morph { 0% { border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; } 100% { border-radius: 50% 50% 20% 80% / 25% 80% 20% 75%; } }
+  .trans-card {
+    flex: 1; position: relative; border-radius: 28px;
+    border: 1px solid var(--glass-border);
+    background: var(--glass);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    display: flex; align-items: center; padding: 0 25px;
+    transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  .trans-card:active { transform: scale(0.96); border-color: var(--theme); }
+
+  /* Görsel Bölüm */
+  .visual-node {
+    width: 60px; height: 60px; margin-right: 20px;
+    position: relative; display: flex; align-items: center; justify-content: center;
+  }
+  .glow-dot { 
+    position: absolute; width: 100%; height: 100%; 
+    background: var(--theme); filter: blur(20px); opacity: 0.2; 
+  }
+
+  /* Kart İçeriği */
+  .card-content { flex: 1; }
+  .card-title { font-size: 20px; font-weight: 700; color: #fff; margin: 0; }
+  .card-desc { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 5px; line-height: 1.4; }
+
+  /* Renk Atamaları */
+  .text-card { --theme: var(--blue); }
+  .walkie-card { --theme: var(--green); }
+  .offline-card { --theme: var(--purple); }
+
+  /* Mikro Animasyonlar */
+  @keyframes spin { from { transform: rotate(0); } to { transform: rotate(360deg); } }
+  
+  /* Matrix ScanLine */
+  .scan-line {
+    position: absolute; left: 0; width: 100%; height: 2px;
+    background: var(--blue); box-shadow: 0 0 10px var(--blue);
+    opacity: 0.3; animation: scan 3s infinite linear;
+  }
+  @keyframes scan { 0% { top: 10%; } 100% { top: 90%; } }
+
 </style>
 </head>
 
 <body>
 <main id="pageContent">
   <div class="main-hub">
-    <div class="os-card blue-node" onclick="location.href='/pages/translate_home.html'">
-      <div class="card-info">
-        <h2>Translate <span class="theme-text">AI</span></h2>
-        <ul class="desc-list">
-          <li>Sesli ve yazılı anlık çeviri</li>
-          <li>Farklı dillerde kolay iletişim</li>
-          <li>Seyahat ve günlük kullanım için</li>
-        </ul>
+
+    <div class="f2f-portal" onclick="location.href='/pages/facetoface.html'">
+      <div class="neural-orb">
+        <div class="ai-ring"></div>
+        <div class="ai-core">
+          <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="url(#ai-g)" stroke-width="2.5">
+            <defs>
+              <linearGradient id="ai-g" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#a5b4fc" />
+                <stop offset="100%" style="stop-color:#ec4899" />
+              </linearGradient>
+            </defs>
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+            <path d="M19 11v1a7 7 0 0 1-14 0v-2"/>
+            <line x1="12" y1="19" x2="12" y2="23"/>
+          </svg>
+        </div>
       </div>
-      <div class="visual-engine">
-        <div class="plasma-glow"></div>
-        <div class="icon-shape shape-translate"></div>
-      </div>
+      <h1 class="f2f-title">FaceToFace <span>AI</span></h1>
     </div>
 
-    <div class="os-card purple-node" onclick="location.href='/pages/acedemy_home.html'">
-      <div class="card-info">
-        <h2>Academy <span class="theme-text">AI</span></h2>
-        <ul class="desc-list">
-          <li>Dil öğrenme ve pratik araçları</li>
-          <li>Oyunlar ve interaktif eğitim</li>
-          <li>Bilgini geliştir, kendini ilerlet</li>
-        </ul>
-      </div>
-      <div class="visual-engine">
-        <div class="plasma-glow"></div>
-        <div class="icon-shape shape-academy"></div>
-      </div>
-    </div>
+    <div class="hub-cards">
 
-    <div class="os-card green-node" onclick="location.href='/pages/helper_home.html'">
-      <div class="card-info">
-        <h2>Teacher <span class="theme-text">AI</span></h2>
-        <ul class="desc-list">
-          <li>Soruları anlayan AI öğretmen</li>
-          <li>Fotoğraf çekerek soru çözme</li>
-          <li>Adım adım anlatımlı çözümler</li>
-        </ul>
+      <div class="trans-card text-card" onclick="location.href='/pages/text_translate.html'">
+        <div class="scan-line"></div>
+        <div class="visual-node">
+          <div class="glow-dot"></div>
+          <span style="font-size: 32px; z-index: 5;">📄</span>
+        </div>
+        <div class="card-content">
+          <h2 class="card-title">Metin Çeviri</h2>
+          <p class="card-desc">Döküman ve kompleks metinleri kuantum hızıyla yerelleştirin.</p>
+        </div>
       </div>
-      <div class="visual-engine">
-        <div class="plasma-glow"></div>
-        <div class="icon-shape shape-teacher"></div>
+
+      <div class="trans-card walkie-card" onclick="location.href='/pages/f2f_connect.html'">
+        <div class="visual-node">
+          <div class="glow-dot"></div>
+          <span style="font-size: 32px; z-index: 5;">📻</span>
+        </div>
+        <div class="card-content">
+          <h2 class="card-title">Walkie-Talkie</h2>
+          <p class="card-desc">Uzak mesafeli anlık sesli iletişim ve frekans odaları.</p>
+        </div>
       </div>
+
+      <div class="trans-card offline-card" onclick="location.href='/pages/offline_languages.html'">
+        <div class="visual-node">
+          <div class="glow-dot"></div>
+          <span style="font-size: 32px; z-index: 5;">💾</span>
+        </div>
+        <div class="card-content">
+          <h2 class="card-title">Offline Çeviri</h2>
+          <p class="card-desc">İnternet olmadan tam gizlilik ve indirilebilir paketler.</p>
+        </div>
+      </div>
+
     </div>
   </div>
 </main>
 
 <script type="module">
   import { mountShell } from "/js/ui_shell.js";
-  
-  // ⚡ Shell yüklenince body'i görünür yap
   mountShell({ scroll:"none" });
-  document.body.classList.add('ui-ready');
 </script>
 </body>
 </html>
