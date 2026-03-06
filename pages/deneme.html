@@ -11,8 +11,8 @@
     --accent-blue: #00f2ff;
     --accent-purple: #bd00ff;
     --accent-green: #00ff88;
-    --glass-white: rgba(255, 255, 255, 0.05);
-    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-white: rgba(255, 255, 255, 0.04);
+    --glass-border: rgba(255, 255, 255, 0.08);
   }
 
   @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap');
@@ -30,68 +30,76 @@
     height: 100%; width: 100%;
     display: flex; flex-direction: column;
     position: relative;
-    background: radial-gradient(circle at 50% 0%, rgba(189, 0, 255, 0.1), transparent 50%),
-                radial-gradient(circle at 50% 100%, rgba(0, 242, 255, 0.1), transparent 50%);
+    background: radial-gradient(circle at 50% 10%, rgba(189, 0, 255, 0.08), transparent 40%),
+                radial-gradient(circle at 50% 90%, rgba(0, 242, 255, 0.08), transparent 40%);
   }
 
-  /* Butonları Alt ve Üst Bar Arasına Tam Eşit Yayma */
+  /* Ana Konteyner: Butonları tam ortalar ve aralıkları dengeler */
   .main-hub {
     flex: 1; 
     display: flex; 
     flex-direction: column;
-    padding: 20px; /* Kenar boşlukları */
-    gap: 20px;     /* Butonlar arası boşluk */
-    justify-content: space-around; /* Üst ve alt bar arasına eşit dağıtır */
+    padding: 15px 20px; 
+    gap: 12px; /* Ne çok uzak, ne çok yakın: İdeal boşluk */
+    justify-content: center; /* Sayfa ortasına odakla */
   }
 
-  /* ===== ULTRA-MODERN QUANTUM BUTON ===== */
+  /* ===== CANLI QUANTUM CARD ===== */
   .os-card {
     position: relative;
-    flex: 1; /* Her butonun eşit yükseklik almasını sağlar */
-    max-height: 28%; /* Çok uzamaması için limit */
+    height: 25%; /* Tam sığdırma için ideal oran */
+    min-height: 120px;
     background: var(--glass-white);
     border: 1px solid var(--glass-border);
-    border-radius: 35px;
+    border-radius: 30px;
     display: flex; align-items: center;
-    padding: 0 30px;
+    padding: 0 25px;
     overflow: hidden;
-    backdrop-filter: blur(30px);
-    -webkit-backdrop-filter: blur(30px);
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    transition: all 0.3s cubic-bezier(0.2, 0, 0.2, 1);
   }
 
-  .os-card:active { transform: scale(0.94); }
+  /* Tıklama Hissi */
+  .os-card:active { 
+    transform: scale(0.96); 
+    background: rgba(255,255,255,0.08);
+    border-color: var(--theme);
+  }
 
   .card-info { flex: 1; z-index: 5; }
   .card-info h2 { 
-    font-size: 26px; font-weight: 800; margin: 0; 
-    display: flex; align-items: center; gap: 8px;
+    font-size: 24px; font-weight: 800; margin: 0; 
+    letter-spacing: -0.5px;
   }
   .card-info p { 
-    font-size: 12px; margin: 6px 0 0; color: rgba(255,255,255,0.4); 
-    font-weight: 400; letter-spacing: 0.5px;
+    font-size: 13px; margin: 4px 0 0; color: rgba(255,255,255,0.5); 
+    font-weight: 400;
   }
 
+  /* Canlı İkon Sistemi */
   .visual-node {
     position: relative;
-    width: 80px; height: 80px;
+    width: 70px; height: 70px;
     display: flex; align-items: center; justify-content: center;
   }
 
+  /* Enerji Çekirdeği Animasyonu */
   .core-glow {
     position: absolute;
     width: 100%; height: 100%;
     border-radius: 50%;
-    filter: blur(20px); opacity: 0.3;
-    animation: pulseGlow 3s infinite alternate;
+    filter: blur(15px); opacity: 0.2;
+    animation: breathing 4s infinite ease-in-out;
   }
 
   .icon-main {
-    font-size: 38px; z-index: 10;
-    filter: drop-shadow(0 0 15px rgba(255,255,255,0.3));
+    font-size: 36px; z-index: 10;
+    filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));
+    animation: floatingIcon 3s infinite ease-in-out;
   }
 
+  /* Renk Temaları */
   .blue-node { --theme: var(--accent-blue); }
   .purple-node { --theme: var(--accent-purple); }
   .green-node { --theme: var(--accent-green); }
@@ -99,16 +107,18 @@
   .theme-text { color: var(--theme); }
   .core-glow { background: var(--theme); }
 
-  @keyframes pulseGlow {
-    0% { transform: scale(0.8); opacity: 0.2; }
-    100% { transform: scale(1.2); opacity: 0.5; }
+  /* --- Animasyonlar --- */
+  @keyframes breathing {
+    0%, 100% { transform: scale(0.8); opacity: 0.15; }
+    50% { transform: scale(1.3); opacity: 0.4; }
   }
 
-  .footer-decor {
-    position: absolute; bottom: -50px; left: 50%; transform: translateX(-50%);
-    width: 200px; height: 100px; background: var(--accent-blue);
-    filter: blur(80px); opacity: 0.15; pointer-events: none;
+  @keyframes floatingIcon {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    33% { transform: translateY(-4px) rotate(-3deg); }
+    66% { transform: translateY(2px) rotate(3deg); }
   }
+
 </style>
 </head>
 
@@ -120,7 +130,7 @@
     <div class="os-card blue-node" onclick="location.href='/pages/translate_home.html'">
       <div class="card-info">
         <h2>Translate <span class="theme-text">AI</span></h2>
-        <p>Evrensel Dil Senkronizasyonu</p>
+        <p>Anında konuş, anında çevir</p>
       </div>
       <div class="visual-node">
         <div class="core-glow"></div>
@@ -131,7 +141,7 @@
     <div class="os-card purple-node" onclick="location.href='/pages/acedemy_home.html'">
       <div class="card-info">
         <h2>Academy <span class="theme-text">AI</span></h2>
-        <p>Kuantum Veri Kütüphanesi</p>
+        <p>AI destekli öğrenme merkezi</p>
       </div>
       <div class="visual-node">
         <div class="core-glow"></div>
@@ -142,7 +152,7 @@
     <div class="os-card green-node" onclick="location.href='/pages/helper_home.html'">
       <div class="card-info">
         <h2>Teacher <span class="theme-text">AI</span></h2>
-        <p>İleri Düzey Analiz Motoru</p>
+        <p>Soruları çözen akıllı öğretmen</p>
       </div>
       <div class="visual-node">
         <div class="core-glow"></div>
@@ -152,7 +162,6 @@
 
   </div>
 
-  <div class="footer-decor"></div>
 </main>
 
 <script type="module">
