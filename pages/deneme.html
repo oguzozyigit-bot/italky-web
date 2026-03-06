@@ -6,6 +6,14 @@
 <title>italkyAI • Quantum OS V7</title>
 
 <style>
+  html { background: #020205 !important; } /* Tarayıcı henüz render yapmadan siyah kalsın */
+  body { opacity: 0; transition: opacity 0.3s ease; margin: 0; } /* Shell gelene kadar gizle */
+  body.ui-ready { opacity: 1; } /* Hazır olduğunda göster */
+</style>
+
+<link rel="modulepreload" href="/js/ui_shell.js">
+
+<style>
   :root {
     --bg-dark: #020205;
     --accent-blue: #00d2ff;
@@ -29,17 +37,16 @@
     background: radial-gradient(circle at 50% 50%, #0a0a20 0%, #020205 100%);
   }
 
-  /* Butonları Sayfaya Tam Yayan Konteyner */
   .main-hub {
     flex: 1; display: flex; flex-direction: column;
-    padding: 10px 15px; /* Kenarlara daha yakın */
-    gap: 10px; /* Butonlar arası minimal şık boşluk */
+    padding: 10px 15px; 
+    gap: 10px;
   }
 
-  /* ===== GENİŞLETİLMİŞ PREMIUM CARD ===== */
+  /* Genişletilmiş Premium Card */
   .os-card {
     position: relative;
-    flex: 1; /* Butonları dikeyde tam genişletir */
+    flex: 1;
     background: var(--glass);
     border: 1px solid var(--glass-border);
     border-radius: 24px;
@@ -53,13 +60,8 @@
 
   .os-card:active { transform: scale(0.97); background: rgba(255,255,255,0.06); }
 
-  /* İçerik Düzeni */
   .card-info { flex: 1; z-index: 10; display: flex; flex-direction: column; justify-content: center; }
-  
-  .card-info h2 { 
-    font-size: 26px; font-weight: 800; margin: 0 0 8px 0; 
-    letter-spacing: -0.5px; text-shadow: 0 0 20px rgba(255,255,255,0.2);
-  }
+  .card-info h2 { font-size: 26px; font-weight: 800; margin: 0 0 8px 0; letter-spacing: -0.5px; }
   
   .desc-list { margin: 0; padding: 0; list-style: none; }
   .desc-list li { 
@@ -68,55 +70,30 @@
   }
   .desc-list li::before { content: "•"; color: var(--theme); font-weight: bold; }
 
-  /* Yaratıcı ve Canlı İkon Tasarımı */
-  .visual-engine {
-    position: relative; width: 90px; height: 90px;
-    display: flex; align-items: center; justify-content: center;
-  }
+  /* İkon Tasarımı */
+  .visual-engine { position: relative; width: 90px; height: 90px; display: flex; align-items: center; justify-content: center; }
+  .plasma-glow { position: absolute; width: 100%; height: 100%; background: var(--theme); filter: blur(25px); opacity: 0.2; animation: plasmaRotate 6s infinite linear; }
+  .icon-shape { width: 45px; height: 45px; position: relative; z-index: 15; filter: drop-shadow(0 0 10px var(--theme)); animation: float 4s infinite ease-in-out; }
 
-  /* İkon Arkası Plazma Efekti */
-  .plasma-glow {
-    position: absolute; width: 100%; height: 100%;
-    background: var(--theme); filter: blur(25px);
-    opacity: 0.2; animation: plasmaRotate 6s infinite linear;
-  }
-
-  /* Özel Grafiksel İkonlar (CSS ile oluşturulan modern şekiller) */
-  .icon-shape {
-    width: 45px; height: 45px; position: relative; z-index: 15;
-    filter: drop-shadow(0 0 10px var(--theme));
-    animation: float 4s infinite ease-in-out;
-  }
-
-  /* Translate: Dinamik Halka */
   .shape-translate { border: 4px double var(--theme); border-radius: 50%; animation: spin 8s infinite linear; }
-  /* Academy: Elmas/Prizma */
   .shape-academy { background: var(--theme); clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); opacity: 0.8; }
-  /* Teacher: Nöral Çekirdek */
   .shape-teacher { background: var(--theme); border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; animation: morph 5s infinite alternate; }
 
-  /* Renk Tanımlamaları */
   .blue-node { --theme: var(--accent-blue); }
   .purple-node { --theme: var(--accent-purple); }
   .green-node { --theme: var(--accent-green); }
   .theme-text { color: var(--theme); filter: brightness(1.2); }
 
-  /* --- Animasyonlar --- */
   @keyframes plasmaRotate { from { transform: rotate(0deg) scale(1); } to { transform: rotate(360deg) scale(1.2); } }
   @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
   @keyframes spin { to { transform: rotate(360deg); } }
-  @keyframes morph {
-    0% { border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; }
-    100% { border-radius: 50% 50% 20% 80% / 25% 80% 20% 75%; }
-  }
+  @keyframes morph { 0% { border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; } 100% { border-radius: 50% 50% 20% 80% / 25% 80% 20% 75%; } }
 </style>
 </head>
 
 <body>
 <main id="pageContent">
-
   <div class="main-hub">
-
     <div class="os-card blue-node" onclick="location.href='/pages/translate_home.html'">
       <div class="card-info">
         <h2>Translate <span class="theme-text">AI</span></h2>
@@ -161,14 +138,15 @@
         <div class="icon-shape shape-teacher"></div>
       </div>
     </div>
-
   </div>
-
 </main>
 
 <script type="module">
   import { mountShell } from "/js/ui_shell.js";
+  
+  // ⚡ Shell yüklenince body'i görünür yap
   mountShell({ scroll:"none" });
+  document.body.classList.add('ui-ready');
 </script>
 </body>
 </html>
