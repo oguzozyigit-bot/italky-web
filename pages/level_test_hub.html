@@ -1,4 +1,3 @@
-<!-- FILE: /pages/level_test_hub.html -->
 <!doctype html>
 <html lang="tr">
 <head>
@@ -6,219 +5,108 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
   <title>italkyAI • Seviye Tespit</title>
 
-  <meta name="theme-color" content="#02000f">
-  <style>html,body{background:#02000f !important;}</style>
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
-
   <style>
-    :root{
-      --border: rgba(255,255,255,0.12);
-      --card: rgba(255,255,255,0.05);
-      --muted: rgba(255,255,255,0.70);
+    :root {
+      --ai: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
+      --glass-border: rgba(255, 255, 255, 0.1);
+      --bg-dark: #02000f;
     }
-    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; }
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Plus+Jakarta+Sans:wght@700&display=swap');
 
-    #pageContent{
-      height: 100%;
-      display:flex;
-      align-items:stretch;
-      justify-content:center;
-      padding: 10px 12px;
+    html, body { 
+      background: var(--bg-dark) !important; margin: 0; padding: 0; 
+      height: 100vh; width: 100vw; overflow: hidden; 
+      font-family: 'Plus Jakarta Sans', sans-serif;
     }
 
-    .wrap{
-      width: 100%;
-      max-width: 520px;
-      height: 100%;
-      display:flex;
-      flex-direction:column;
-      gap: 10px;
-      justify-content: space-between;
+    /* 🛡️ Shell içi tam sığdırma ve yumuşak açılış */
+    #pageContent {
+      height: 100%; width: 100%;
+      display: flex; flex-direction: column;
+      padding: 10px 15px;
+      box-sizing: border-box;
+      background: radial-gradient(circle at 50% 0%, rgba(165, 180, 252, 0.12), transparent 50%);
+      opacity: 0; transition: opacity 0.4s ease;
     }
+    #pageContent.ui-ready { opacity: 1; }
 
-    .hero{
-      border-radius: 22px;
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,0.04);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      padding: 12px 14px;
-    }
+    .wrap { height: 100%; display: flex; flex-direction: column; gap: 10px; }
 
-    .heroTop{
-      display:flex; align-items:center; justify-content:space-between; gap:10px;
-      margin-bottom: 6px;
-    }
-
-    .hTitle{
-      font-family:"Space Grotesk",system-ui,sans-serif;
-      font-weight: 1000;
-      font-size: 16px;
-      letter-spacing: -0.2px;
-      margin:0;
-      color:#fff;
-    }
-
-    .pill{
-      padding: 7px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(0,0,0,0.18);
-      font-weight: 1000;
-      font-size: 12px;
-      color: rgba(255,255,255,0.90);
-      white-space: nowrap;
-    }
-
-    .heroText{
-      margin:0;
-      font-size: 12px;
-      font-weight: 900;
-      line-height: 1.55;
-      color: rgba(255,255,255,0.72);
-    }
-    .heroText b{ color:#fff; }
-
-    .list{
-      flex: 1;
-      min-height: 0;
-      display:flex;
-      flex-direction:column;
-      gap: 10px;
-      justify-content: center;
-    }
-
-    button.langCard{
-      width: 100%;
-      border-radius: 22px;
-      border: 1px solid var(--border);
-      background: var(--card);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-
-      padding: 14px 14px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap: 12px;
-
-      color:#fff;
-      cursor:pointer;
-      user-select:none;
-      appearance:none;
-      -webkit-appearance:none;
-
-      transition: transform .16s ease, background .16s ease, border-color .16s ease;
-    }
-
-    button.langCard:active{
-      transform: scale(.988);
-      background: rgba(255,255,255,0.07);
-      border-color: rgba(165,180,252,0.30);
-    }
-    button.langCard:disabled{ opacity:.55; cursor:not-allowed; }
-
-    .left{ display:flex; align-items:center; gap: 12px; min-width: 0; }
-
-    .flagBox{
-      width: 42px; height: 42px;
-      border-radius: 16px;
-      display:flex; align-items:center; justify-content:center;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(0,0,0,0.18);
+    /* 💎 Hero Alanı: Disiplinli ve Dar */
+    .hero {
       flex: 0 0 auto;
-      overflow:hidden;
+      padding: 15px; border-radius: 22px; 
+      border: 1px solid var(--glass-border);
+      background: rgba(255, 255, 255, 0.03); 
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    }
+    .hero h1 { font-size: 18px; font-weight: 800; color: #fff; margin: 0; }
+    .hero h1 span { background: var(--ai); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .hero p { font-size: 11px; color: rgba(255, 255, 255, 0.4); margin: 6px 0 0; line-height: 1.4; }
+
+    /* 🚀 Sınav Kartları: Tam Sığdırma */
+    .list { 
+      flex: 1; 
+      display: flex; flex-direction: column; 
+      gap: 8px; 
+      justify-content: space-evenly; 
+      min-height: 0;
     }
 
-    .flag{
-      font-size: 22px;
-      line-height: 1;
-      animation: floatFlag 2.2s ease-in-out infinite;
-      filter: drop-shadow(0 8px 18px rgba(0,0,0,0.28));
-    }
-    @keyframes floatFlag{ 0%,100%{ transform: translateY(0);} 50%{ transform: translateY(-2px);} }
-    button.langCard:nth-child(2) .flag{ animation-duration: 2.5s; }
-    button.langCard:nth-child(3) .flag{ animation-duration: 2.1s; }
-    button.langCard:nth-child(4) .flag{ animation-duration: 2.7s; }
-    button.langCard:nth-child(5) .flag{ animation-duration: 2.3s; }
-    button.langCard:nth-child(6) .flag{ animation-duration: 2.6s; }
-
-    .txt{ min-width: 0; display:flex; flex-direction:column; gap: 2px; }
-    .name{ font-size: 15px; font-weight: 1000; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .sub{ font-size: 11px; font-weight: 900; color: rgba(255,255,255,0.62); line-height: 1.2; }
-    .sub.ok{ color: rgba(165,180,252,0.95); }
-
-    .right{ display:flex; align-items:center; gap: 10px; flex: 0 0 auto; }
-    .badge{
-      padding: 7px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(0,0,0,0.18);
-      font-size: 12px;
-      font-weight: 1000;
-      color: rgba(255,255,255,0.88);
-      white-space: nowrap;
-    }
-    .chev{
-      width: 34px; height: 34px;
-      border-radius: 14px;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(255,255,255,0.06);
-      display:flex; align-items:center; justify-content:center;
-      font-weight: 1000;
-      color: rgba(255,255,255,0.85);
+    button.langCard {
+      flex: 1; 
+      max-height: 75px; 
+      width: 100%; border-radius: 20px; 
+      border: 1px solid var(--glass-border);
+      background: rgba(255, 255, 255, 0.02); 
+      padding: 0 18px;
+      display: flex; align-items: center; justify-content: space-between;
+      cursor: pointer; transition: all 0.3s cubic-bezier(0.2, 1, 0.3, 1);
+      position: relative; overflow: hidden;
     }
 
-    .toast{
-      position: fixed;
-      left:50%;
-      top:18px;
-      transform: translateX(-50%) translateY(-120px);
-      background: rgba(10,10,18,0.95);
-      border: 1px solid rgba(165,180,252,0.35);
-      padding: 10px 14px;
-      border-radius: 999px;
-      color:#fff;
-      z-index: 999999;
-      font-weight: 1000;
-      font-size: 12px;
-      transition: .25s;
-      backdrop-filter: blur(12px);
-      pointer-events:none;
-      max-width: min(92vw, 520px);
-      text-align:center;
-    }
-    .toast.show{ transform: translateX(-50%) translateY(0); }
+    button.langCard:active { transform: scale(0.97) translateY(2px); background: rgba(255,255,255,0.06); }
+    button.langCard:disabled { opacity: 0.5; filter: grayscale(1); }
 
-    @media (max-height: 740px){
-      .hero{ padding: 10px 12px; }
-      button.langCard{ padding: 12px 12px; }
-      .flagBox{ width:40px; height:40px; }
-      .name{ font-size: 14px; }
+    .left { display: flex; align-items: center; gap: 12px; z-index: 5; }
+
+    /* Nöral Çekirdek: Sürekli Dönen Enerji Halkası */
+    .flagRing {
+      width: 42px; height: 42px; border-radius: 14px;
+      background: var(--ai); padding: 2px;
+      animation: rotateRing 12s linear infinite;
     }
+    .flagBox {
+      width: 100%; height: 100%; border-radius: 12px;
+      background: #000; display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+    }
+
+    .txt .name { font-size: 16px; font-weight: 800; color: #fff; display: block; }
+    .txt .sub { font-size: 10px; color: rgba(255, 255, 255, 0.4); font-weight: 600; text-transform: uppercase; }
+    .txt .sub.ok { color: #a5b4fc; filter: brightness(1.2); }
+
+    .right { display: flex; align-items: center; gap: 8px; }
+    .badge {
+      font-size: 10px; font-weight: 900; color: #fff;
+      padding: 4px 8px; border-radius: 8px;
+      background: rgba(255, 255, 255, 0.05); border: 1px solid var(--glass-border);
+    }
+    .chev { color: rgba(255, 255, 255, 0.2); font-size: 18px; }
+
+    @keyframes rotateRing { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
   </style>
 </head>
 
 <body>
   <main id="pageContent">
     <div class="wrap">
-
       <section class="hero">
-        <div class="heroTop">
-          <h1 class="hTitle">Seviye Tespit Sınavı</h1>
-          <div class="pill">Süre: 40 dk</div>
-        </div>
-        <p class="heroText">
-          Bu sınav, <b>gerçek seviye tespit</b> standardına göre hazırlanmıştır.<br/>
-          Lütfen <b>sessiz</b> ve dikkatinizin dağılmayacağı bir ortamda başlayın.
-        </p>
+        <h1>Seviye <span>Tespit</span> Hub</h1>
+        <p>Doğru müfredat için seviye analizi gerekir. Sessiz bir ortama geç ve dile dokun.</p>
       </section>
 
       <section class="list" id="list"></section>
-
     </div>
   </main>
 
@@ -229,142 +117,84 @@
     import { supabase } from "/js/supabase_client.js";
 
     mountShell({ scroll:"none" });
+    document.getElementById("pageContent").classList.add("ui-ready");
 
     const $ = (id)=>document.getElementById(id);
     const list = $("list");
 
-    function toast(msg){
-      const t = $("toast");
-      t.textContent = String(msg||"");
-      t.classList.add("show");
-      clearTimeout(window.__to);
-      window.__to = setTimeout(()=>t.classList.remove("show"), 1700);
-    }
-
     const LANGS = [
-      { code:"en", name:"English",   flag:"🇬🇧" },
-      { code:"de", name:"German",    flag:"🇩🇪" },
-      { code:"fr", name:"French",    flag:"🇫🇷" },
-      { code:"it", name:"Italian",   flag:"🇮🇹" },
-      { code:"ru", name:"Russian",   flag:"🇷🇺" },
-      { code:"es", name:"Spanish",   flag:"🇪🇸" },
+      { code:"en", name:"English", flag:"🇬🇧" },
+      { code:"de", name:"German",  flag:"🇩🇪" },
+      { code:"fr", name:"French",  flag:"🇫🇷" },
+      { code:"it", name:"Italian", flag:"🇮🇹" },
+      { code:"ru", name:"Russian", flag:"🇷🇺" },
+      { code:"es", name:"Spanish", flag:"🇪🇸" },
     ];
 
-    const { data:{ session } } = await supabase.auth.getSession();
-    const userId = session?.user?.id || null;
-    if(!userId){
-      location.replace("/pages/login.html");
-    }
+    async function init() {
+      const { data:{ session } } = await supabase.auth.getSession();
+      if(!session) { location.replace("/pages/login.html"); return; }
+      
+      const { data: prof } = await supabase.from("profiles").select("levels").eq("id", session.user.id).maybeSingle();
+      const levels = prof?.levels || {};
 
-    let levels = {};
-    try{
-      const { data: prof } = await supabase
-        .from("profiles")
-        .select("levels")
-        .eq("id", userId)
-        .maybeSingle();
-      levels = (prof?.levels && typeof prof.levels === "object") ? prof.levels : {};
-    }catch{}
-
-    function cardHtml(l){
-      const lv = (levels && typeof levels === "object") ? (levels[l.code] || "") : "";
-      const sub = lv ? `Seviyeniz: ${lv}` : "Henüz sınava katılmadınız";
-      const subCls = lv ? "sub ok" : "sub";
-
-      return `
-        <button class="langCard" type="button" data-code="${l.code}">
-          <div class="left">
-            <div class="flagBox"><div class="flag">${l.flag}</div></div>
-            <div class="txt">
-              <div class="name">${l.name}</div>
-              <div class="${subCls}">${sub}</div>
+      list.innerHTML = LANGS.map(l => {
+        const lv = levels[l.code] || "";
+        const subTxt = lv ? `Mevcut Seviye: ${lv}` : "Sınava Henüz Girilmedi";
+        return `
+          <button class="langCard" data-code="${l.code}">
+            <div class="left">
+              <div class="flagRing"><div class="flagBox">${l.flag}</div></div>
+              <div class="txt">
+                <span class="name">${l.name}</span>
+                <span class="sub ${lv ? 'ok' : ''}">${subTxt}</span>
+              </div>
             </div>
-          </div>
-          <div class="right">
-            <div class="badge">${l.code.toUpperCase()}</div>
-            <div class="chev">›</div>
-          </div>
-        </button>
-      `;
+            <div class="right">
+              <div class="badge">${l.code.toUpperCase()}</div>
+              <div class="chev">›</div>
+            </div>
+          </button>
+        `;
+      }).join("");
+
+      bindEvents();
     }
 
-    list.innerHTML = LANGS.map(cardHtml).join("");
-
-    function extractTestId(data){
-      // 1) scalar uuid
-      if(typeof data === "string" && data.length > 10) return data;
-
-      // 2) array/table
-      if(Array.isArray(data)){
-        const row = data[0] || null;
-        return row?.test_id || row?.id || null;
-      }
-
-      // 3) object
-      if(data && typeof data === "object"){
-        return data.test_id || data.id || null;
-      }
-
-      return null;
+    function bindEvents() {
+      list.querySelectorAll(".langCard").forEach(btn => {
+        btn.onclick = () => {
+          const code = btn.getAttribute("data-code");
+          startTest(code, btn);
+        };
+      });
     }
 
     let busy = false;
-    let lastTap = 0;
-
-    async function startTest(code, btn){
+    async function startTest(code, btn) {
       if(busy) return;
-      const now = Date.now();
-      if(now - lastTap < 650) return;
-      lastTap = now;
-
       busy = true;
       btn.disabled = true;
 
-      try{
-        toast("Sınav başlatılıyor…");
+      try {
+        const { data, error } = await supabase.rpc("start_level_test", { p_language_code: code });
+        if(error) throw error;
 
-        const { data, error } = await supabase.rpc("start_level_test", {
-          p_language_code: code
-        });
+        let testId = null;
+        if(typeof data === "string") testId = data;
+        else if(Array.isArray(data)) testId = data[0]?.test_id || data[0]?.id;
+        else testId = data?.test_id || data?.id;
 
-        if(error){
-          console.log("RPC ERROR:", error);
-          toast(error.message || "Başlatılamadı");
-          btn.disabled = false;
-          busy = false;
-          return;
-        }
-
-        const testId = extractTestId(data);
-        if(!testId){
-          console.log("RPC DATA (no test_id):", data);
-          toast("test_id gelmedi (rpc dönüşünü kontrol et)");
-          btn.disabled = false;
-          busy = false;
-          return;
-        }
-
-        location.href = `/pages/level_test.html?test_id=${encodeURIComponent(testId)}&lang=${encodeURIComponent(code)}`;
-      }catch(e){
-        console.log("RPC EX:", e);
-        toast("Başlatılamadı");
+        if(!testId) throw new Error("ID alınamadı.");
+        location.href = `/pages/level_test.html?test_id=${testId}&lang=${code}`;
+      } catch(e) {
+        alert("Sınav başlatılamadı: " + (e.message || e));
         btn.disabled = false;
-      }finally{
         busy = false;
       }
     }
 
-    list.querySelectorAll(".langCard").forEach(btn=>{
-      const handler = (ev)=>{
-        ev.preventDefault();
-        ev.stopPropagation();
-        const code = String(btn.getAttribute("data-code")||"").trim();
-        if(!code) return;
-        startTest(code, btn);
-      };
-      btn.addEventListener("click", handler, { passive:false });
-      btn.addEventListener("touchend", handler, { passive:false });
-    });
+    init();
   </script>
 </body>
 </html>
