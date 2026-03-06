@@ -4,7 +4,7 @@ import { supabase } from "/js/supabase_client.js";
 
 const $ = (id) => document.getElementById(id);
 
-// ---- UI SHELL & LIFT ----
+// UI SHELL Sığdırma
 mountShell({ scroll:"none" });
 try {
   const root = getComputedStyle(document.documentElement);
@@ -12,97 +12,65 @@ try {
   document.documentElement.style.setProperty("--shellLift", footerH ? `${footerH + 10}px` : "0px");
 } catch(e){}
 
-/* ===============================
-   GAME STATE (Senin Orijinal Mantığın)
-================================ */
+/* --- STATE --- */
 let state = {
-  lang: localStorage.getItem("italky_game_lang") || "en", // Academy'den gelen dil
-  level: localStorage.getItem("italky_game_level") || "A1", // Academy'den gelen seviye
-  pool: [],
-  target: null,
-  lives: 3,
-  MAX_LIVES: 9,
-  totalScore: 0,
-  roundScore: 100,
-  guessed: new Set(),
-  mistakes: 0,
-  flawless: true,
-  jokerUsed: false,
-  lock: false,
-  userId: "anon",
-  bestCache: null
+  lang: localStorage.getItem("italky_game_lang") || "en",
+  level: localStorage.getItem("italky_game_level") || "A1",
+  pool: [], target: null, lives: 3, MAX_LIVES: 9,
+  totalScore: 0, roundScore: 100, guessed: new Set(),
+  mistakes: 0, flawless: true, jokerUsed: false, lock: false,
+  userId: "anon"
 };
 
-/* ===============================
-   SUPABASE WORD POOL CONNECTION
-================================ */
-async function loadPoolFromSupabase() {
-  try {
-    // Havuzu Academy'den gelen lang ve level'a göre çekiyoruz
-    const { data, error } = await supabase
-      .from("hangman_pool") // Tablo adın hangman_pool ise
-      .select("w, tr")
-      .eq("lang", state.lang)
-      .eq("level", state.level);
-
-    if (error) throw error;
-    state.pool = data;
-
-    if (state.pool.length > 0) {
-      $("gateInfo").textContent = `${state.lang.toUpperCase()} • ${state.level} HAZIR`;
-    } else {
-      $("gateInfo").textContent = "Seviye verisi bulunamadı.";
-    }
-  } catch (err) {
-    $("gateInfo").textContent = "Bağlantı Hatası.";
-  }
-}
-
-/* ===============================
-   BEST SCORE LOGIC (Senin Map Yapın)
-================================ */
-async function ensureUser() {
+/* --- SUPABASE BAĞLANTISI --- */
+async function loadGameData() {
   const { data: { session } } = await supabase.auth.getSession();
   state.userId = session?.user?.id || "anon";
+
+  // Havuzu Çek
+  const { data: words, error } = await supabase
+    .from("hangman_pool") // Veritabanındaki tablo adın
+    .select("w, tr")
+    .eq("lang", state.lang)
+    .eq("level", state.level);
+
+  if (error) {
+    $("gateInfo").textContent = "Veritabanı Hatası!";
+    return;
+  }
+  
+  state.pool = words;
+
+  // Rekoru Çek
+  const { data: prof } = await supabase.from("profiles").select("hangman_best").eq("id", state.userId).maybeSingle();
+  const key = `${state.lang}::${state.level}`;
+  $("bestVal").textContent = prof?.hangman_best?.[key] || 0;
+
+  $("gateInfo").textContent = state.pool.length > 0 ? `${state.lang.toUpperCase()} • ${state.level} HAZIR` : "HAVUZ BOŞ!";
 }
 
 async function updateBestScore(newScore) {
   if (state.userId === "anon") return;
-  const key = `${state.lang}::${state.level}`; // Senin istediğin map key yapısı
-
-  const { data } = await supabase.from("profiles").select("hangman_best").eq("id", state.userId).maybeSingle();
-  let currentBestMap = data?.hangman_best || {};
-  let oldBest = currentBestMap[key] || 0;
-
-  if (newScore > oldBest) {
-    currentBestMap[key] = newScore;
-    await supabase.from("profiles").update({ hangman_best: currentBestMap }).eq("id", state.userId);
+  const key = `${state.lang}::${state.level}`;
+  const { data: prof } = await supabase.from("profiles").select("hangman_best").eq("id", state.userId).maybeSingle();
+  let map = prof?.hangman_best || {};
+  if (newScore > (map[key] || 0)) {
+    map[key] = newScore;
+    await supabase.from("profiles").update({ hangman_best: map }).eq("id", state.userId);
     $("bestVal").textContent = newScore;
   }
 }
 
-/* ===============================
-   GAME FLOW
-================================ */
+/* --- OYUN MANTIĞI --- */
 function startRound() {
-  state.lock = false;
-  state.guessed.clear();
-  state.mistakes = 0;
-  state.roundScore = 100;
-  state.flawless = true;
-  state.jokerUsed = false;
+  state.lock = false; state.guessed.clear(); state.mistakes = 0;
+  state.roundScore = 100; state.flawless = true; state.jokerUsed = false;
+  $("j0").classList.remove("spent"); $("j1").classList.remove("spent");
   
-  // Jokerleri sıfırla
-  $("j0").classList.remove("spent");
-  $("j1").classList.remove("spent");
-
-  // Havuzdan rastgele seç
   state.target = state.pool[Math.floor(Math.random() * state.pool.length)];
-  
-  renderWord();
-  renderKeyboard();
-  renderHearts();
-  updateMan(0);
+  if (!state.target) return;
+
+  renderWord(); renderKeyboard(); renderHearts(); resetMan();
   $("trText").textContent = (state.target.tr || "").toUpperCase();
   $("scoreVal").textContent = state.totalScore;
 }
@@ -118,27 +86,21 @@ function renderWord() {
 function renderKeyboard() {
   const abc = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
   $("kb").innerHTML = abc.map(l => `<button class="key" id="key-${l}" data-l="${l}">${l}</button>`).join("");
-  $("kb").querySelectorAll(".key").forEach(btn => {
-    btn.onclick = () => makeGuess(btn.dataset.l);
-  });
+  $("kb").querySelectorAll(".key").forEach(btn => btn.onclick = () => makeGuess(btn.dataset.l));
 }
 
 function makeGuess(l) {
   if (state.lock || state.guessed.has(l)) return;
   state.guessed.add(l);
   const btn = $(`key-${l}`);
-
   const w = state.target.w.toUpperCase();
+
   if (w.includes(l)) {
-    btn.classList.add("hit");
-    renderWord();
+    btn.classList.add("hit"); renderWord();
     if (w.split("").every(ch => state.guessed.has(ch))) endRound(true);
   } else {
-    btn.classList.add("miss");
-    state.mistakes++;
-    state.flawless = false;
-    state.roundScore = Math.max(0, state.roundScore - 15);
-    updateMan(state.mistakes);
+    btn.classList.add("miss"); state.mistakes++; state.flawless = false;
+    state.roundScore = Math.max(0, state.roundScore - 15); updateMan(state.mistakes);
     if (state.mistakes >= 6) endRound(false);
   }
 }
@@ -146,51 +108,27 @@ function makeGuess(l) {
 function updateMan(errs) {
   const seq = ["p_head", "p_body", "p_larm", "p_rarm", "p_lleg", "p_rleg"];
   seq.forEach((id, i) => $(id).classList.toggle("on", i < errs));
-  if (errs >= 6) $("man").classList.add("swing");
-  else $("man").classList.remove("swing");
+  $("man").classList.toggle("swing", errs >= 6);
+}
+
+function resetMan() {
+  ["p_head", "p_body", "p_larm", "p_rarm", "p_lleg", "p_rleg"].forEach(id => $(id).classList.remove("on"));
+  $("man").classList.remove("swing");
 }
 
 function renderHearts() {
-  let h = "";
-  for (let i = 0; i < state.lives; i++) h += `<span class="heart">❤️</span>`;
+  let h = ""; for (let i = 0; i < state.lives; i++) h += `<span class="heart">❤️</span>`;
   $("hearts").innerHTML = h;
 }
 
-// JOKER MANTIĞI (Senin Jokerlerin)
-window.useJoker = (idx) => {
-  if (state.lock) return;
-  const btn = $(`j${idx}`);
-  if (btn.classList.contains("spent")) return;
-
-  state.jokerUsed = true;
-  btn.classList.add("spent");
-  state.roundScore = Math.max(0, state.roundScore - 20);
-
-  const w = state.target.w.toUpperCase();
-  const hiddenLetters = w.split("").filter(l => !state.guessed.has(l));
-  if (hiddenLetters.length > 0) {
-    makeGuess(hiddenLetters[0]);
-  }
-};
-
 async function endRound(win) {
   state.lock = true;
-  
   if (win) {
     state.totalScore += state.roundScore;
-    // ✅ KUSURSUZ BONUSU (Senin istediğin can artışı)
-    if (state.flawless && !state.jokerUsed && state.lives < state.MAX_LIVES) {
-      state.lives++;
-    }
+    if (state.flawless && !state.jokerUsed && state.lives < state.MAX_LIVES) state.lives++;
     await updateBestScore(state.totalScore);
-  } else {
-    state.lives--;
-  }
+  } else { state.lives--; }
 
-  showModal(win);
-}
-
-function showModal(win) {
   $("mTitle").textContent = win ? "BAŞARILI!" : "MİSYON BAŞARISIZ";
   $("mTitle").style.color = win ? "var(--green)" : "var(--red)";
   $("mWord").textContent = state.target.w.toUpperCase();
@@ -198,34 +136,32 @@ function showModal(win) {
   $("modal").classList.add("on");
 }
 
+/* --- JOKERLER --- */
+window.useJ = (i) => {
+  if (state.lock) return;
+  const b = $(`j${i}`); if (b.classList.contains("spent")) return;
+  state.jokerUsed = true; b.classList.add("spent"); state.roundScore = Math.max(0, state.roundScore - 20);
+  const rem = state.target.w.toUpperCase().split("").filter(l => !state.guessed.has(l));
+  if (rem.length > 0) makeGuess(rem[0]);
+};
+$("j0").onclick = () => useJ(0); $("j1").onclick = () => useJ(1);
+
 $("mBtn").onclick = () => {
   $("modal").classList.remove("on");
-  if (state.lives > 0) {
-    startRound();
-  } else {
-    const want = confirm(`Oyun Bitti! Skor: ${state.totalScore}. Yeniden başlamak ister misin?`);
-    if (want) {
-      state.totalScore = 0;
-      state.lives = 3;
-      startRound();
-    } else {
-      location.href = "/pages/game_menu.html";
-    }
+  if (state.lives > 0) startRound();
+  else {
+    if(confirm(`Oyun Bitti! Skor: ${state.totalScore}. Yeniden başla?`)) {
+      state.totalScore = 0; state.lives = 3; startRound();
+    } else location.href = "/pages/game_menu.html";
   }
 };
 
 $("realStartBtn").onclick = () => {
-  if (state.pool.length === 0) return;
-  $("readyGate").style.display = "none";
-  startRound();
+  if (state.pool.length > 0) {
+    $("readyGate").style.display = "none";
+    startRound();
+  }
 };
 
-// BOOT
-(async () => {
-  await ensureUser();
-  await loadPoolFromSupabase();
-  // İlk rekoru bas
-  const key = `${state.lang}::${state.level}`;
-  const { data } = await supabase.from("profiles").select("hangman_best").eq("id", state.userId).maybeSingle();
-  $("bestVal").textContent = data?.hangman_best?.[key] || 0;
-})();
+/* BOOT */
+loadGameData();
