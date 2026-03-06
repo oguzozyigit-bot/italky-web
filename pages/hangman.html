@@ -1,4 +1,3 @@
-<!-- FILE: /pages/hangman.html -->
 <!doctype html>
 <html lang="tr">
 <head>
@@ -14,341 +13,151 @@
       --grad: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
       --red:#ff0033;
       --green:#00ff9d;
-
       --dockH: 220px;
-      --shellLift: 0px; /* ui_shell footer yüksekliğine göre JS set edecek */
+      --shellLift: 0px; 
       --safeB: env(safe-area-inset-bottom, 0px);
     }
 
     html,body{margin:0;height:100%;background:var(--bg);color:#fff;font-family:Outfit,system-ui;overflow:hidden}
-    /* ✅ shell içine girince 100% çalışsın diye 100dvh değil 100% */
     #pageContent{height:100%;padding:14px;box-sizing:border-box;position:relative}
 
-    /* ÜST BLOK */
+    /* ÜST BLOK (HUD & STAGE) */
     .top{
-      height: calc(100% - var(--dockH));
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-      position:relative;
+      height: calc(100% - var(--dockH) - 20px);
+      display:flex; flex-direction:column; gap:10px; position:relative;
     }
 
     .title{
-      font-family:"Space Grotesk";
-      letter-spacing:14px;
-      text-align:center;
-      font-size:26px;
-      opacity:.9;
-      margin:0;
-      padding-top:4px;
-      z-index:2;
+      font-family:"Space Grotesk"; letter-spacing:10px; text-align:center;
+      font-size:22px; opacity:.9; margin:0; padding-top:4px; z-index:2;
     }
 
     .hud{
-      position:absolute;
-      top:56px;
-      left:0;
-      right:0;
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-start;
-      gap:12px;
-      z-index:3;
-      pointer-events:auto;
+      position:absolute; top:45px; left:0; right:0;
+      display:flex; justify-content:space-between; align-items:flex-start;
+      gap:12px; z-index:3;
     }
 
-    /* SOL: kalpler */
-    .leftHud{
-      display:flex;
-      flex-direction:column;
-      align-items:flex-start;
-      gap:10px;
-    }
-    .hearts{
-      display:grid;
-      grid-template-columns: repeat(3, max-content);
-      column-gap: 6px;
-      row-gap: 6px;
-      align-items:center;
-      justify-items:start;
-      max-width:52vw;
-    }
-    .heart{font-size:22px;filter:drop-shadow(0 0 10px var(--red));}
+    .leftHud{ display:flex; flex-direction:column; gap:10px; }
+    .hearts{ display:grid; grid-template-columns: repeat(3, max-content); gap: 6px; }
+    .heart{font-size:22px;filter:drop-shadow(0 0 10px var(--red)); transition: 0.3s;}
+    .heart.lost{ opacity: 0.1; transform: scale(0.8); }
 
-    /* SAĞ: skor */
-    .rightHud{
-      display:flex;
-      flex-direction:column;
-      align-items:flex-end;
-      gap:10px;
-      min-width: 120px;
-    }
-    .score{text-align:right;line-height:1.08}
-    .score .best{font-size:9px;font-weight:900;opacity:.55;letter-spacing:1px}
-    .score .round{font-size:10px;font-weight:1000;opacity:.7;letter-spacing:.6px;margin-top:4px}
-    .score .val{
-      font-size:26px;
-      font-weight:900;
-      background:var(--grad);
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent
-    }
+    .rightHud{ display:flex; flex-direction:column; align-items:flex-end; gap:10px; min-width: 120px; }
+    .score .val{ font-size:26px; font-weight:900; background:var(--grad); -webkit-background-clip:text; -webkit-text-fill-color:transparent }
+    .score .best{font-size:9px;font-weight:900;opacity:.55;letter-spacing:1px; text-align:right;}
 
-    /* Joker (2) */
-    .jokerCol{display:flex;flex-direction:column;gap:10px;align-items:flex-end;}
+    .jokerCol{display:flex;flex-direction:column;gap:10px;align-items:flex-end; margin-top:10px;}
     .joker{
-      width:44px;height:56px;border-radius:14px;
-      border:1px solid rgba(99,102,241,.55);
-      background:rgba(99,102,241,.10);
+      width:44px;height:44px;border-radius:14px;
+      border:1px solid rgba(99,102,241,.55); background:rgba(99,102,241,.10);
       display:flex;align-items:center;justify-content:center;
-      font-size:22px;cursor:pointer;user-select:none;transition:.2s;
+      font-size:22px;cursor:pointer;transition:.2s;
     }
-    .joker:active{transform:scale(.96)}
-    .joker.spent{opacity:.14;filter:grayscale(1);pointer-events:none;transform:none}
+    .joker.spent{opacity:.14;filter:grayscale(1);pointer-events:none;}
 
-    /* Darağacı */
-    .stage{
-      flex:1;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:flex-start;
-      gap:10px;
-      padding-top:8px;
-      z-index:1;
-    }
-
-    .gallows{width:150px;height:170px;position:relative;border-bottom:4px solid #fff;}
+    /* DARAĞACI */
+    .stage{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:1; }
+    .gallows{width:140px;height:160px;position:relative;border-bottom:4px solid #fff;}
     .beam{position:absolute;background:#fff}
-    .v{width:4px;height:100%;left:30px}
-    .h{width:95px;height:4px;left:30px;top:0}
-    .rope{position:absolute;width:2px;height:35px;left:125px;top:0;background:#999}
-
-    .man{position:absolute;left:125px;top:35px;transform-origin:top center}
+    .v{width:4px;height:100%;left:25px}
+    .h{width:90px;height:4px;left:25px;top:0}
+    .rope{position:absolute;width:2px;height:35px;left:115px;top:0;background:#999}
+    .man{position:absolute;left:115px;top:35px;transform-origin:top center}
     .man.swing{animation:sway 1.2s infinite ease-in-out}
-    @keyframes sway{0%,100%{transform:rotate(-10deg)}50%{transform:rotate(10deg)}}
+    @keyframes sway{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}}
 
     .organ{position:absolute;background:#fff;box-shadow:0 0 10px #fff;display:none}
     .organ.on{display:block}
-    .head{width:24px;height:24px;border:3px solid #fff;border-radius:50%;left:-12px;top:0;background:transparent}
-    .body{width:3px;height:50px;left:-1.5px;top:24px}
-    .larm{width:20px;height:3px;left:-21px;top:35px;transform:rotate(-30deg)}
-    .rarm{width:20px;height:3px;left:1px;top:35px;transform:rotate(30deg)}
-    .lleg{width:20px;height:3px;left:-21px;top:70px;transform:rotate(-45deg)}
-    .rleg{width:20px;height:3px;left:1px;top:70px;transform:rotate(45deg)}
+    .head{width:22px;height:22px;border:3px solid #fff;border-radius:50%;left:-11px;top:0;}
+    .body{width:3px;height:45px;left:-1.5px;top:22px}
+    .larm{width:18px;height:3px;left:-19px;top:32px;transform:rotate(-30deg)}
+    .rarm{width:18px;height:3px;left:1px;top:32px;transform:rotate(30deg)}
+    .lleg{width:18px;height:3px;left:-19px;top:65px;transform:rotate(-45deg)}
+    .rleg{width:18px;height:3px;left:1px;top:65px;transform:rotate(45deg)}
 
     .trBox{
-      width:min(560px, 100%);
-      padding:10px 12px;
-      border:1px solid rgba(255,255,255,.10);
-      border-radius:16px;
-      background:rgba(255,255,255,.05);
-      text-align:center;
-      font-weight:900;
-      font-size:13px;
-      letter-spacing:1px;
-      text-transform:uppercase;
-      color:rgba(255,255,255,.72);
-      margin-top:-6px;
+      width:100%; padding:10px; border:1px solid rgba(255,255,255,.10);
+      border-radius:16px; background:rgba(255,255,255,.05);
+      text-align:center; font-weight:900; font-size:13px; color:rgba(255,255,255,.72);
     }
 
     /* ALT DOCK */
     .dock{
-      position:fixed;
-      left:14px; right:14px;
+      position:fixed; left:14px; right:14px;
       bottom: calc(var(--safeB) + 10px + var(--shellLift));
-      height: var(--dockH);
-      z-index: 9999;
-      border-radius:22px;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(3,0,20,.90);
-      backdrop-filter: blur(10px);
-      padding:12px;
-      box-sizing:border-box;
-      display:flex;
-      flex-direction:column;
-      gap:10px;
+      height: var(--dockH); z-index: 9999;
+      border-radius:22px; border:1px solid rgba(255,255,255,.10);
+      background: rgba(3,0,20,.90); backdrop-filter: blur(10px);
+      padding:12px; display:flex; flex-direction:column; gap:10px;
     }
 
-    .matrix{display:flex;justify-content:center;gap:6px;flex-wrap:wrap}
-    .slot{width:28px;height:40px;border-bottom:3px solid rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:900}
+    .matrix{display:flex;justify-content:center;gap:6px;flex-wrap:wrap; min-height: 45px;}
+    .slot{width:26px;height:40px;border-bottom:3px solid rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:900}
     .slot.found{border-bottom-color:var(--green);text-shadow:0 0 10px var(--green)}
 
     .kb{flex:1;display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
     .key{
       height:38px;border-radius:10px;border:1px solid rgba(255,255,255,.12);
       background:rgba(255,255,255,.06);color:#fff;font-weight:900;
-      transition:.12s;
-      cursor:pointer;
     }
-    .key:active{transform:scale(.98)}
     .key.hit{background:var(--green);color:#000;box-shadow:0 0 15px var(--green)}
-    .key.miss{background:var(--red);opacity:0.30}
+    .key.miss{background:var(--red);opacity:0.20}
 
-    /* MODAL */
+    /* MODALLAR */
     .modal{
-      position:fixed; inset:0;
-      background:rgba(1,0,8,.98);
-      z-index:30000;
-      display:none;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      padding:34px;
-      text-align:center;
+      position:fixed; inset:0; background:rgba(1,0,8,.98);
+      z-index:30000; display:none; flex-direction:column;
+      align-items:center; justify-content:center; padding:34px; text-align:center;
     }
     .modal.on{display:flex}
-    .mTitle{font-size:38px;font-weight:900;margin:0}
-    .mWord{font-size:32px;font-weight:900;color:#60a5fa;margin:14px 0}
-    .mTr{opacity:.65;font-style:italic;margin-bottom:12px}
-    .mBonus{
-      min-height: 22px;
-      font-weight:900;
-      color:var(--green);
-      margin-bottom:16px;
-      white-space:pre-wrap;
-      line-height:1.4;
-    }
-    .mBtn{
-      width:100%;
-      max-width:280px;
-      padding:18px;
-      border-radius:18px;
-      border:none;
-      background:var(--grad);
-      color:#fff;
-      font-weight:900;
-      font-size:18px;
-      cursor:pointer
-    }
+    .mBtn{ width:100%; max-width:280px; padding:18px; border-radius:18px; border:none; background:var(--grad); color:#fff; font-weight:900; font-size:18px;}
 
-    /* ✅ SETUP overlay: FIXED + buton her zaman görünür */
-    .setup{
-      position:fixed; /* ✅ absolute değil */
-      inset:0;
-      z-index:60000;
-      background:rgba(3,0,20,.98);
-      display:flex;
-      flex-direction:column;
-      padding: 18px 18px calc(18px + var(--safeB));
-      box-sizing:border-box;
-      overflow:hidden;
+    /* ÖZEL BAŞLATICI (DİL SEÇİMSİZ) */
+    .ready-gate{
+      position:fixed; inset:0; z-index:60000; background:rgba(3,0,20,.98);
+      display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px;
     }
-    .setupTitle{
-      font-family:"Space Grotesk";
-      font-size:34px;
-      font-weight:900;
-      text-align:center;
-      letter-spacing:2px;
-      margin:6px 0 12px;
-      opacity:.95;
-    }
-    .setupTag{
-      font-size:11px;
-      font-weight:900;
-      opacity:.6;
-      letter-spacing:2px;
-      margin:10px 0 8px;
-    }
-    .langGrid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
-    .diffGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:8px}
-    .pickCard{
-      border:1px solid rgba(255,255,255,.14);
-      background:rgba(255,255,255,.05);
-      border-radius:14px;
-      padding:12px 0;
-      text-align:center;
-      cursor:pointer;
-      user-select:none;
-      font-weight:900;
-    }
-    .pickCard.active{border-color:#6366f1;background:rgba(99,102,241,.18)}
-    .pickCard.diff.active{border-color:var(--green);background:rgba(0,255,157,.10)}
-
-    .startBtn{
-      position: sticky;      /* ✅ asla kaybolmaz */
-      bottom: 0;
-      margin-top: 14px;
-      width:100%;
-      padding:18px;
-      border-radius:18px;
-      border:none;
-      background:var(--grad);
-      color:#fff;
-      font-weight:900;
-      font-size:18px;
-      cursor:pointer;
-      z-index: 5;
-    }
-
-    .setupMsg{
-      margin-top:10px;
-      text-align:center;
-      font-weight:900;
-      font-size:12px;
-      opacity:.85;
-      min-height:18px;
-      white-space:pre-wrap;
-    }
+    .ready-gate.hidden{ display: none; }
+    .gate-title{ font-family:"Space Grotesk"; font-size:40px; font-weight:900; letter-spacing:8px; margin-bottom:10px; }
+    .gate-info{ opacity: 0.5; font-size: 14px; margin-bottom: 40px; font-weight: 700; letter-spacing: 1px;}
+    .big-start-btn{ width:100%; max-width:300px; padding:22px; border-radius:24px; border:none; background:var(--grad); color:#fff; font-weight:900; font-size:20px; box-shadow: 0 10px 30px rgba(99,102,241,0.4); }
   </style>
 </head>
 
 <body>
   <div id="pageContent">
 
-    <!-- Setup -->
-    <div class="setup" id="setup">
-      <div class="setupTitle">HANGMAN</div>
-
-      <div class="setupTag">DİL SEÇ</div>
-      <div class="langGrid" id="langGrid">
-        <div class="pickCard active" data-lang="en">🇬🇧<div style="font-size:10px;opacity:.75;margin-top:4px">EN</div></div>
-        <div class="pickCard" data-lang="de">🇩🇪<div style="font-size:10px;opacity:.75;margin-top:4px">DE</div></div>
-        <div class="pickCard" data-lang="fr">🇫🇷<div style="font-size:10px;opacity:.75;margin-top:4px">FR</div></div>
-        <div class="pickCard" data-lang="it">🇮🇹<div style="font-size:10px;opacity:.75;margin-top:4px">IT</div></div>
-        <div class="pickCard" data-lang="es">🇪🇸<div style="font-size:10px;opacity:.75;margin-top:4px">ES</div></div>
-      </div>
-
-      <div class="setupTag">ZORLUK</div>
-      <div class="diffGrid" id="diffGrid">
-        <div class="pickCard diff active" data-diff="3">KOLAY</div>
-        <div class="pickCard diff" data-diff="4">NORMAL</div>
-        <div class="pickCard diff" data-diff="5">ZOR</div>
-      </div>
-
-      <button class="startBtn" id="startBtn">OYUNA BAŞLA</button>
-      <div class="setupMsg" id="setupMsg"></div>
+    <div class="ready-gate" id="readyGate">
+      <div class="gate-title">HANGMAN</div>
+      <div class="gate-info" id="gateInfo">DİL YÜKLENİYOR...</div>
+      <button class="big-start-btn" id="realStartBtn">OYUNA BAŞLA</button>
     </div>
 
-    <!-- GAME -->
     <div class="top">
       <div class="title">HANGMAN</div>
 
       <div class="hud">
         <div class="leftHud">
-          <div class="hearts" id="hearts"></div>
+          <div class="hearts" id="hearts">
+            </div>
         </div>
 
         <div class="rightHud">
           <div class="score">
             <div class="best">REKOR: <span id="bestVal">0</span></div>
-            <div class="round">K.PUANI: <span id="roundVal">100</span></div>
             <div class="val" id="scoreVal">0</div>
           </div>
-
           <div class="jokerCol">
-            <div class="joker" id="j0">🃏</div>
-            <div class="joker" id="j1">🃏</div>
+            <div class="joker" id="j0" title="Harf Al">🃏</div>
+            <div class="joker" id="j1" title="Harf Al">🃏</div>
           </div>
         </div>
       </div>
 
       <div class="stage">
         <div class="gallows">
-          <div class="beam v"></div>
-          <div class="beam h"></div>
-          <div class="rope"></div>
-
+          <div class="beam v"></div><div class="beam h"></div><div class="rope"></div>
           <div class="man" id="man">
             <div class="organ head" id="p_head"></div>
             <div class="organ body" id="p_body"></div>
@@ -358,8 +167,7 @@
             <div class="organ rleg" id="p_rleg"></div>
           </div>
         </div>
-
-        <div class="trBox" id="trText">—</div>
+        <div class="trBox" id="trText">İPUCU: BEKLENİYOR</div>
       </div>
     </div>
 
@@ -369,15 +177,30 @@
     </div>
 
     <div class="modal" id="modal">
-      <h1 class="mTitle" id="mTitle">MİSYON</h1>
+      <h1 class="mTitle" id="mTitle">MİSYON TAMAM</h1>
       <div class="mWord" id="mWord">—</div>
       <div class="mTr" id="mTr">(—)</div>
-      <div class="mBonus" id="mBonus"></div>
-      <button class="mBtn" id="mBtn">DEVAM</button>
+      <button class="mBtn" id="mBtn">SONRAKİ KELİME</button>
     </div>
 
   </div>
 
-  <script type="module" src="/js/hangman_page.js?v=2"></script>
+  <script type="module">
+    import { mountShell } from "/js/ui_shell.js";
+    mountShell({ scroll:"none" });
+
+    // ✅ Sistemden dili ve seviyeyi yakala
+    const lang = localStorage.getItem("italky_game_lang") || "en";
+    const level = localStorage.getItem("italky_game_level") || "A1";
+    const flagMap = { "en":"🇬🇧", "tr":"🇹🇷", "de":"🇩🇪", "fr":"🇫🇷", "it":"🇮🇹", "es":"🇪🇸" };
+
+    document.getElementById("gateInfo").textContent = `${flagMap[lang] || "🌐"} ${lang.toUpperCase()} • ${level} SEVİYESİ HAZIR`;
+
+    document.getElementById("realStartBtn").onclick = () => {
+      document.getElementById("readyGate").classList.add("hidden");
+      // hangman_page.js içindeki oyunu başlatma tetiği burada çalışacak
+    };
+  </script>
+  <script type="module" src="/js/hangman_page.js"></script>
 </body>
 </html>
