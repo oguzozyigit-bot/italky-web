@@ -6,16 +6,16 @@ mountShell({ scroll: "auto" });
 
 const BUCKET = "offline";
 const PIVOT = "en";
+const USER_LANG_KEY = "italky_user_lang_v1";
+
+const PRIORITY_CODES = ["en", "de", "fr", "it", "es", "tr"];
 
 const $ = (id) => document.getElementById(id);
 
 const toastEl = $("toast");
 const sourceSelect = $("sourceSelect");
-const targetSelect = $("targetSelect");
-const packsPreview = $("packsPreview");
-const installBtn = $("installBtn");
-const removeBtn = $("removeBtn");
 const installedList = $("installedList");
+const availableList = $("availableList");
 const searchInput = $("searchInput");
 const countPill = $("countPill");
 const netPill = $("netPill");
@@ -73,7 +73,7 @@ function uninstallNative(pair) {
   return true;
 }
 
-// ✅ Şu an isimler Türkçe
+// İsimler şimdilik Türkçe
 const LANGS = [
   { code:"tr", flag:"🇹🇷", name:"Türkçe" },
   { code:"en", flag:"🇬🇧", name:"İngilizce" },
@@ -151,313 +151,311 @@ function langByCode(code) {
   return LANGS.find(x => norm(x.code) === norm(code));
 }
 
-function populateSelects() {
-  const options = LANGS.map(lang => {
-    const label = `${lang.flag} ${lang.name} (${lang.code})`;
-    return `<option value="${lang.code}">${label}</option>`;
+function compareLangs(a, b) {
+  const ai = PRIORITY_CODES.indexOf(norm(a.code));
+  const bi = PRIORITY_CODES.indexOf(norm(b.code));
+
+  if (ai !== -1 && bi !== -1) return ai - bi;
+  if (ai !== -1) return -1;
+  if (bi !== -1) return 1;
+
+  return a.name.localeCompare(b.name, "tr");
+}
+
+const SORTED_LANGS = [...LANGS].sort(compareLangs);
+
+function getUserLang() {
+  return norm(localStorage.getItem(USER_LANG_KEY) || "tr");
+}
+
+function setUserLang(code) {
+  localStorage.setItem(USER_LANG_KEY, norm(code));
+}
+
+function populateSourceSelect() {
+  sourceSelect.innerHTML = SORTED_LANGS.map(lang => {
+    return `<option value="${lang.code}">${lang.flag} ${lang.name}</option>`;
   }).join("");
 
-  sourceSelect.innerHTML = options;
-  targetSelect.innerHTML = options;
-
-  sourceSelect.value = "tr";
-  targetSelect.value = "en";
+  const current = getUserLang();
+  if (SUPPORTED_CODES.has(current)) sourceSelect.value = current;
 }
 
-function unique(arr) {
-  return [...new Set(arr)];
+function ensureBaseInstalled(userLang) {
+  // Kullanıcının dili EN değilse temel paketi sadece bir kez gerekir
+  if (userLang === PIVOT) return [];
+  return [`${userLang}-${PIVOT}`, `${PIVOT}-${userLang}`];
 }
 
-// ✅ Çift yön konuşma için gereken paket seti
-function packageSetForConversation(sourceCode, targetCode) {
-  const source = norm(sourceCode);
-  const target = norm(targetCode);
-
-  if (!SUPPORTED_CODES.has(source) || !SUPPORTED_CODES.has(target)) return [];
-  if (source === target) return [];
-
-  if (source === PIVOT) {
-    return unique([
-      `${PIVOT}-${target}`,
-      `${target}-${PIVOT}`
-    ]);
-  }
-
-  if (target === PIVOT) {
-    return unique([
-      `${source}-${PIVOT}`,
-      `${PIVOT}-${source}`
-    ]);
-  }
-
-  return unique([
-    `${source}-${PIVOT}`,
-    `${PIVOT}-${source}`,
-    `${target}-${PIVOT}`,
-    `${PIVOT}-${target}`
-  ]);
+function targetPackages(targetLang) {
+  if (targetLang === PIVOT) return [];
+  return [`${targetLang}-${PIVOT}`, `${PIVOT}-${targetLang}`];
 }
 
-function renderPacksPreview() {
-  const packs = packageSetForConversation(sourceSelect.value, targetSelect.value);
-  packsPreview.innerHTML = "";
+function isTargetInstalled(userLang, targetLang) {
+  const basePairs = ensureBaseInstalled(userLang);
+  const targetPairs = targetPackages(targetLang);
 
-  if (!packs.length) {
-    packsPreview.innerHTML = `<div class="packChip">Geçerli iki farklı dil seç.</div>`;
-    return packs;
-  }
+  const baseOk = basePairs.every(pair => isInstalledNative(pair));
+  const targetOk = targetPairs.every(pair => isInstalledNative(pair));
 
-  packs.forEach(pack => {
-    const chip = document.createElement("div");
-    chip.className = "packChip";
-    chip.textContent = pack;
-    packsPreview.appendChild(chip);
+  if (targetLang === PIVOT) return baseOk;
+  return baseOk && targetOk;
+}
+
+function installTargetLanguage(userLang, targetLang) {
+  const basePairs = ensureBaseInstalled(userLang);
+  const targetPairs = targetPackages(targetLang);
+
+  const needed = [];
+
+  basePairs.forEach(pair => {
+    if (!isInstalledNative(pair)) needed.push(pair);
   });
 
-  return packs;
+  targetPairs.forEach(pair => {
+    if (!isInstalledNative(pair)) needed.push(pair);
+  });
+
+  return [...new Set(needed)];
 }
 
-function allInstalled(packs) {
-  return packs.every(pair => isInstalledNative(pair));
+function removablePairsForTarget(userLang, targetLang) {
+  // Benim dilim asla silinmez
+  // EN hedefse bir şey silmeyelim, temel dil paketi kalmalı
+  if (targetLang === PIVOT) return [];
+  return targetPackages(targetLang);
 }
 
-function loadInstalledCombos() {
+function loadInstalledTargets() {
   try {
-    const raw = localStorage.getItem("italky_offline_conversations_v1");
-    const arr = JSON.parse(raw || "[]");
-    return Array.isArray(arr) ? arr : [];
+    const raw = localStorage.getItem("italky_installed_targets_v1");
+    const arr = JSON.parse(raw || "{}");
+    return arr && typeof arr === "object" ? arr : {};
   } catch {
-    return [];
+    return {};
   }
 }
 
-function saveInstalledCombos(items) {
-  localStorage.setItem("italky_offline_conversations_v1", JSON.stringify(items));
+function saveInstalledTargets(map) {
+  localStorage.setItem("italky_installed_targets_v1", JSON.stringify(map));
 }
 
-function comboKey(source, target) {
-  return `${norm(source)}__${norm(target)}`;
+function markTargetInstalled(userLang, targetLang) {
+  const all = loadInstalledTargets();
+  const key = norm(userLang);
+  const old = Array.isArray(all[key]) ? all[key] : [];
+  if (!old.includes(norm(targetLang))) old.push(norm(targetLang));
+  all[key] = old;
+  saveInstalledTargets(all);
 }
 
-function upsertInstalledCombo(source, target, packs) {
-  const items = loadInstalledCombos();
-  const key = comboKey(source, target);
-
-  const next = items.filter(x => x.key !== key);
-  next.unshift({
-    key,
-    source: norm(source),
-    target: norm(target),
-    packs: unique(packs),
-    updatedAt: Date.now()
-  });
-
-  saveInstalledCombos(next);
+function unmarkTargetInstalled(userLang, targetLang) {
+  const all = loadInstalledTargets();
+  const key = norm(userLang);
+  const old = Array.isArray(all[key]) ? all[key] : [];
+  all[key] = old.filter(x => x !== norm(targetLang));
+  saveInstalledTargets(all);
 }
 
-function removeInstalledCombo(source, target) {
-  const items = loadInstalledCombos();
-  const key = comboKey(source, target);
-  saveInstalledCombos(items.filter(x => x.key !== key));
+function installedTargetsForUser(userLang) {
+  const all = loadInstalledTargets();
+  return Array.isArray(all[norm(userLang)]) ? all[norm(userLang)] : [];
 }
 
-function renderInstalledList() {
-  const q = String(searchInput.value || "").trim().toLowerCase();
-  const items = loadInstalledCombos().filter(item => {
-    if (!q) return true;
-    const s = langByCode(item.source);
-    const t = langByCode(item.target);
-    const hay = `${s?.name || ""} ${t?.name || ""} ${item.source} ${item.target}`.toLowerCase();
-    return hay.includes(q);
-  });
+function renderCard(lang, installed, userLang) {
+  const card = document.createElement("div");
+  card.className = "card";
 
-  countPill.textContent = `Kurulu: ${items.length}`;
-  installedList.innerHTML = "";
+  const left = document.createElement("div");
+  left.className = "left";
+  left.innerHTML = `
+    <div class="flag">${lang.flag}</div>
+    <div class="meta">
+      <div class="name">${lang.name}</div>
+      <div class="sub">${installed ? "Kurulu" : "İndirilebilir"}</div>
+    </div>
+  `;
 
-  if (!items.length) {
-    installedList.innerHTML = `<div class="empty">Henüz kurulu konuşma paketi yok.</div>`;
-    return;
-  }
+  const actions = document.createElement("div");
+  actions.className = "actions";
 
-  items.forEach(item => {
-    const s = langByCode(item.source);
-    const t = langByCode(item.target);
+  const installBtn = document.createElement("button");
+  installBtn.className = "btn" + (installed ? " done" : "");
+  installBtn.type = "button";
+  installBtn.innerHTML = installed
+    ? `<span>✅</span><span>Kuruldu</span>`
+    : `<span>⬇️</span><span>İndir</span>`;
 
-    const card = document.createElement("div");
-    card.className = "card";
-
-    const left = document.createElement("div");
-    left.className = "left";
-    left.innerHTML = `
-      <div class="flag">${s?.flag || "🌐"}</div>
-      <div class="meta">
-        <div class="name">${s?.name || item.source} → ${t?.name || item.target}</div>
-        <div class="sub">${item.packs.join(" • ")}</div>
-      </div>
-    `;
-
-    const remove = document.createElement("button");
-    remove.className = "btn danger";
-    remove.type = "button";
-    remove.textContent = "Sil";
-
-    remove.onclick = async () => {
-      if (typeof window.Offline?.uninstall !== "function") {
-        toast("Silme özelliği native tarafta henüz ekli değil.");
-        return;
-      }
-
-      if (!confirm(`${s?.name || item.source} → ${t?.name || item.target} paketini silmek istiyor musun?`)) {
-        return;
-      }
-
-      item.packs.forEach((pair, i) => {
-        setTimeout(() => uninstallNative(pair), i * 350);
-      });
-
-      removeInstalledCombo(item.source, item.target);
-      toast("Silme başlatıldı ✅");
-      setTimeout(renderInstalledList, 1200);
-    };
-
-    card.appendChild(left);
-    card.appendChild(remove);
-    installedList.appendChild(card);
-  });
-}
-
-function refreshButtons() {
-  const packs = renderPacksPreview();
-  const valid = packs.length > 0;
-  const installed = valid && nativeReady() && allInstalled(packs);
-
-  installBtn.disabled = !valid;
-  removeBtn.disabled = !valid;
-
-  installBtn.classList.remove("done", "disabled");
-  removeBtn.classList.remove("disabled");
-
-  if (!valid) {
-    installBtn.classList.add("disabled");
-    removeBtn.classList.add("disabled");
-    installBtn.innerHTML = `<span>⬇️</span><span>Bu Paketi İndir</span>`;
-    return;
-  }
+  const removeBtn = document.createElement("button");
+  removeBtn.className = "btn danger";
+  removeBtn.type = "button";
+  removeBtn.textContent = "Sil";
 
   if (installed) {
-    installBtn.classList.add("done");
-    installBtn.innerHTML = `<span>✅</span><span>Kuruldu</span>`;
+    installBtn.disabled = true;
+    if (norm(lang.code) === PIVOT) {
+      removeBtn.style.display = "none";
+    }
   } else {
-    installBtn.innerHTML = `<span>⬇️</span><span>Bu Paketi İndir</span>`;
-  }
-}
-
-async function installCurrentSelection() {
-  const source = norm(sourceSelect.value);
-  const target = norm(targetSelect.value);
-  const packs = packageSetForConversation(source, target);
-
-  if (!packs.length) {
-    toast("Geçerli iki farklı dil seç.");
-    return;
+    removeBtn.style.display = "none";
   }
 
-  if (!navigator.onLine) {
-    toast("İndirmek için internet gerekir.");
-    return;
-  }
+  installBtn.onclick = async () => {
+    if (installed) return;
 
-  if (!nativeReady()) {
-    toast("Offline bridge hazır değil.");
-    return;
-  }
-
-  const urls = packs.map(pair => ({
-    pair,
-    url: publicUrl(pairPath(pair))
-  }));
-
-  const missing = urls.filter(x => !x.url);
-  if (missing.length) {
-    toast(`Eksik dosya: ${missing.map(x => x.pair).join(", ")}`);
-    return;
-  }
-
-  installBtn.classList.add("disabled");
-  installBtn.innerHTML = `<span>⏳</span><span>Kurulum başlıyor…</span>`;
-
-  urls.forEach((item, i) => {
-    setTimeout(() => installNative(item.pair, item.url), i * 700);
-  });
-
-  toast("İndirme + kurulum başladı ✅");
-
-  const started = Date.now();
-  const poll = setInterval(() => {
-    const ok = packs.every(pair => isInstalledNative(pair));
-
-    if (ok) {
-      clearInterval(poll);
-      upsertInstalledCombo(source, target, packs);
-      toast("Konuşma paketi kuruldu ✅");
-      refreshButtons();
-      renderInstalledList();
+    if (!navigator.onLine) {
+      toast("İndirmek için internet gerekir.");
       return;
     }
 
-    if (Date.now() - started > 60000) {
-      clearInterval(poll);
-      toast("Kurulum sürüyor… dosyalar büyük olabilir.");
-      refreshButtons();
-      renderInstalledList();
+    if (!nativeReady()) {
+      toast("Offline bridge hazır değil.");
       return;
     }
 
+    const neededPairs = installTargetLanguage(userLang, norm(lang.code));
+    if (!neededPairs.length) {
+      toast("Bu dil zaten hazır.");
+      markTargetInstalled(userLang, norm(lang.code));
+      renderAll();
+      return;
+    }
+
+    const urls = neededPairs.map(pair => ({
+      pair,
+      url: publicUrl(pairPath(pair))
+    }));
+
+    const missing = urls.filter(x => !x.url);
+    if (missing.length) {
+      toast(`Eksik dosya: ${missing.map(x => x.pair).join(", ")}`);
+      return;
+    }
+
+    installBtn.classList.add("disabled");
     installBtn.innerHTML = `<span>⏳</span><span>İndiriliyor…</span>`;
-  }, 2200);
+
+    urls.forEach((item, i) => {
+      setTimeout(() => installNative(item.pair, item.url), i * 650);
+    });
+
+    const started = Date.now();
+    const poll = setInterval(() => {
+      const ok = neededPairs.every(pair => isInstalledNative(pair));
+
+      if (ok) {
+        clearInterval(poll);
+        markTargetInstalled(userLang, norm(lang.code));
+        toast(`${lang.name} kuruldu ✅`);
+        renderAll();
+        return;
+      }
+
+      if (Date.now() - started > 60000) {
+        clearInterval(poll);
+        toast("Kurulum sürüyor… dosya büyük olabilir.");
+        renderAll();
+      }
+    }, 2200);
+  };
+
+  removeBtn.onclick = async () => {
+    if (typeof window.Offline?.uninstall !== "function") {
+      toast("Silme özelliği native tarafta henüz ekli değil.");
+      return;
+    }
+
+    const pairs = removablePairsForTarget(userLang, norm(lang.code));
+    if (!pairs.length) {
+      toast("Bu dil silinemez.");
+      return;
+    }
+
+    if (!confirm(`${lang.name} dilini silmek istiyor musun?`)) return;
+
+    pairs.forEach((pair, i) => {
+      setTimeout(() => uninstallNative(pair), i * 350);
+    });
+
+    unmarkTargetInstalled(userLang, norm(lang.code));
+    toast("Silme başlatıldı ✅");
+    setTimeout(renderAll, 1000);
+  };
+
+  actions.appendChild(installBtn);
+  actions.appendChild(removeBtn);
+
+  card.appendChild(left);
+  card.appendChild(actions);
+
+  return card;
 }
 
-function removeCurrentSelection() {
-  const source = norm(sourceSelect.value);
-  const target = norm(targetSelect.value);
-  const packs = packageSetForConversation(source, target);
+function renderInstalledList(userLang, q) {
+  installedList.innerHTML = "";
 
-  if (!packs.length) {
-    toast("Geçerli iki farklı dil seç.");
+  const installedTargets = installedTargetsForUser(userLang)
+    .filter(code => code !== norm(userLang))
+    .map(code => langByCode(code))
+    .filter(Boolean)
+    .filter(lang => {
+      if (!q) return true;
+      const hay = `${lang.name} ${lang.code}`.toLowerCase();
+      return hay.includes(q);
+    })
+    .sort(compareLangs);
+
+  countPill.textContent = `Kurulu: ${installedTargets.length}`;
+
+  if (!installedTargets.length) {
+    installedList.innerHTML = `<div class="empty">Henüz kurulu hedef dil yok.</div>`;
     return;
   }
 
-  if (typeof window.Offline?.uninstall !== "function") {
-    toast("Silme özelliği native tarafta henüz ekli değil.");
-    return;
-  }
-
-  const s = langByCode(source);
-  const t = langByCode(target);
-
-  if (!confirm(`${s?.name || source} → ${t?.name || target} konuşma paketini silmek istiyor musun?`)) {
-    return;
-  }
-
-  packs.forEach((pair, i) => {
-    setTimeout(() => uninstallNative(pair), i * 350);
+  installedTargets.forEach(lang => {
+    installedList.appendChild(renderCard(lang, true, userLang));
   });
-
-  removeInstalledCombo(source, target);
-  toast("Silme başlatıldı ✅");
-
-  setTimeout(() => {
-    refreshButtons();
-    renderInstalledList();
-  }, 1200);
 }
 
-sourceSelect.addEventListener("change", refreshButtons);
-targetSelect.addEventListener("change", refreshButtons);
-searchInput.addEventListener("input", renderInstalledList);
-installBtn.addEventListener("click", installCurrentSelection);
-removeBtn.addEventListener("click", removeCurrentSelection);
+function renderAvailableList(userLang, q) {
+  availableList.innerHTML = "";
 
-populateSelects();
-refreshButtons();
-renderInstalledList();
+  const installedSet = new Set(installedTargetsForUser(userLang).map(norm));
+
+  const available = SORTED_LANGS
+    .filter(lang => norm(lang.code) !== norm(userLang))
+    .filter(lang => !installedSet.has(norm(lang.code)))
+    .filter(lang => {
+      if (!q) return true;
+      const hay = `${lang.name} ${lang.code}`.toLowerCase();
+      return hay.includes(q);
+    });
+
+  if (!available.length) {
+    availableList.innerHTML = `<div class="empty">Başka dil bulunamadı.</div>`;
+    return;
+  }
+
+  available.forEach(lang => {
+    availableList.appendChild(renderCard(lang, false, userLang));
+  });
+}
+
+function renderAll() {
+  const userLang = norm(sourceSelect.value || getUserLang());
+  const q = String(searchInput.value || "").trim().toLowerCase();
+
+  renderInstalledList(userLang, q);
+  renderAvailableList(userLang, q);
+}
+
+sourceSelect.addEventListener("change", () => {
+  setUserLang(sourceSelect.value);
+  renderAll();
+});
+
+searchInput.addEventListener("input", renderAll);
+
+populateSourceSelect();
+renderAll();
