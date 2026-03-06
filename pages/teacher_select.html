@@ -15,73 +15,87 @@
 
     html, body { 
       background: var(--bg-dark) !important; margin: 0; padding: 0; 
-      height: 100vh; overflow: hidden; font-family: 'Plus Jakarta Sans', sans-serif;
+      height: 100vh; width: 100vw; overflow: hidden; 
+      font-family: 'Plus Jakarta Sans', sans-serif;
     }
 
+    /* 🛡️ Shell içi tam sığdırma */
     #pageContent {
-      height: 100%; display: flex; flex-direction: column;
-      background: radial-gradient(circle at 50% 10%, rgba(99, 102, 241, 0.15), transparent 40%);
-      opacity: 0; transform: translateY(20px);
-      transition: all 0.6s cubic-bezier(0.2, 1, 0.3, 1);
+      height: 100%; width: 100%;
+      display: flex; flex-direction: column;
+      /* Üst ve alt bar boşluklarını kompanse eder */
+      padding: 10px 15px;
+      box-sizing: border-box;
+      background: radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.12), transparent 50%);
+      opacity: 0; transition: opacity 0.4s ease;
     }
-    #pageContent.ui-ready { opacity: 1; transform: translateY(0); }
+    #pageContent.ui-ready { opacity: 1; }
 
-    .wrap { flex: 1; display: flex; flex-direction: column; padding: 20px; gap: 15px; }
+    .wrap { 
+      height: 100%; display: flex; flex-direction: column; 
+      gap: 12px; /* Elemanlar arası ideal boşluk */
+    }
 
-    /* 💎 Hero Alanı */
+    /* 💎 Hero Alanı: Daraltılmış ve Şık */
     .hero {
-      padding: 20px; border-radius: 28px; border: 1px solid var(--glass-border);
-      background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(25px);
-      position: relative; overflow: hidden;
+      flex: 0 0 auto;
+      padding: 15px; border-radius: 22px; 
+      border: 1px solid var(--glass-border);
+      background: rgba(255, 255, 255, 0.03); 
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
     }
-    .hero h1 { font-size: 24px; font-weight: 800; color: #fff; margin: 0; letter-spacing: -0.5px; }
+    .hero h1 { font-size: 18px; font-weight: 800; color: #fff; margin: 0; }
     .hero h1 span { background: var(--ai); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .hero p { font-size: 13px; color: rgba(255, 255, 255, 0.5); margin: 10px 0 0; line-height: 1.6; font-weight: 500; }
+    .hero p { font-size: 11px; color: rgba(255, 255, 255, 0.4); margin: 6px 0 0; line-height: 1.4; }
 
-    /* 🚀 Dil Kartları */
-    .list { flex: 1; display: flex; flex-direction: column; gap: 12px; justify-content: center; }
+    /* 🚀 Dil Kartları: Tam sığdırma için flex-grow */
+    .list { 
+      flex: 1; /* Kalan tüm alanı kaplar */
+      display: flex; flex-direction: column; 
+      gap: 8px; /* Butonlar arası sıkı ve düzenli boşluk */
+      justify-content: space-evenly; /* Butonları dikeyde eşit yayar */
+      min-height: 0; /* Overflow engelleme */
+    }
 
     .langCard {
-      width: 100%; border-radius: 24px; border: 1px solid var(--glass-border);
-      background: rgba(255, 255, 255, 0.02); padding: 16px 20px;
+      flex: 1; /* Her buton eşit yükseklik alsın */
+      max-height: 75px; /* Aşırı uzamayı engelle */
+      width: 100%; border-radius: 20px; 
+      border: 1px solid var(--glass-border);
+      background: rgba(255, 255, 255, 0.02); 
+      padding: 0 18px;
       display: flex; align-items: center; justify-content: space-between;
-      cursor: pointer; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      cursor: pointer; transition: all 0.3s cubic-bezier(0.2, 1, 0.3, 1);
       position: relative; overflow: hidden;
     }
 
-    .langCard:active { transform: scale(0.96) translateY(4px); }
+    .langCard:active { transform: scale(0.97) translateY(2px); background: rgba(255,255,255,0.06); }
 
-    /* Kartın arkasındaki renk sızıntısı (Aura) */
-    .langCard::after {
-      content: ""; position: absolute; left: 0; top: 0; width: 60px; height: 100%;
-      background: var(--ai); opacity: 0.05; filter: blur(30px);
-    }
+    .left { display: flex; align-items: center; gap: 12px; z-index: 5; }
 
-    .left { display: flex; align-items: center; gap: 15px; z-index: 5; }
-
-    /* Nöral Bayrak Çekirdeği */
+    /* Nöral Bayrak Çekirdeği: Boyut optimize edildi */
     .flagRing {
-      width: 50px; height: 50px; border-radius: 18px;
+      width: 42px; height: 42px; border-radius: 14px;
       background: var(--ai); padding: 2px;
-      animation: rotateRing 8s linear infinite;
+      animation: rotateRing 10s linear infinite;
     }
     .flagBox {
-      width: 100%; height: 100%; border-radius: 16px;
+      width: 100%; height: 100%; border-radius: 12px;
       background: #000; display: flex; align-items: center; justify-content: center;
-      font-size: 24px;
+      font-size: 20px;
     }
 
-    .txt .name { font-size: 18px; font-weight: 800; color: #fff; display: block; }
-    .txt .sub { font-size: 11px; color: rgba(255, 255, 255, 0.45); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-    .txt .sub.ok { color: #a5b4fc; }
+    .txt .name { font-size: 16px; font-weight: 800; color: #fff; display: block; }
+    .txt .sub { font-size: 10px; color: rgba(255, 255, 255, 0.4); font-weight: 600; text-transform: uppercase; }
+    .txt .sub.ok { color: #a5b4fc; filter: brightness(1.2); }
 
-    .right { display: flex; align-items: center; gap: 10px; z-index: 5; }
+    .right { display: flex; align-items: center; gap: 8px; }
     .badge {
-      font-size: 11px; font-weight: 900; color: #fff;
-      padding: 5px 10px; border-radius: 10px;
-      background: rgba(255, 255, 255, 0.08); border: 1px solid var(--glass-border);
+      font-size: 10px; font-weight: 900; color: #fff;
+      padding: 4px 8px; border-radius: 8px;
+      background: rgba(255, 255, 255, 0.05); border: 1px solid var(--glass-border);
     }
-    .chev { color: rgba(255, 255, 255, 0.3); font-size: 20px; font-weight: 300; }
+    .chev { color: rgba(255, 255, 255, 0.2); font-size: 18px; }
 
     @keyframes rotateRing { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
   </style>
@@ -92,10 +106,11 @@
     <div class="wrap">
       <section class="hero">
         <h1>italky <span>Academy</span></h1>
-        <p>Eğitim yolculuğun burada başlıyor. Seviyene göre özel ders planın saniyeler içinde hazırlanacak.</p>
+        <p>Seviyene özel ders planını başlatmak için bir dil seç.</p>
       </section>
 
-      <section class="list" id="list"></section>
+      <section class="list" id="list">
+        </section>
     </div>
   </main>
 
@@ -103,12 +118,11 @@
     import { mountShell } from "/js/ui_shell.js";
     import { supabase } from "/js/supabase_client.js";
 
+    // ⚡ Shell sığdırma ayarı
     mountShell({ scroll:"none" });
-    // Sayfa hazır olduğunda animasyonu tetikle
     document.getElementById("pageContent").classList.add("ui-ready");
 
-    const $ = (id)=>document.getElementById(id);
-    const list = $("list");
+    const list = document.getElementById("list");
 
     const LANGS = [
       { code:"en", name:"English",  flag:"🇬🇧", teacher:"dora"   },
@@ -121,14 +135,14 @@
 
     async function init() {
       const { data:{ session } } = await supabase.auth.getSession();
-      if(!session) { location.replace("/pages/login.html"); return; }
+      if(!session) return;
       
       const { data: prof } = await supabase.from("profiles").select("levels").eq("id", session.user.id).maybeSingle();
       const levels = prof?.levels || {};
 
       list.innerHTML = LANGS.map(l => {
         const lv = levels[l.code] || "";
-        const subTxt = lv ? `Seviye: ${lv} • Plana Geç` : "Sınava Yönlendir";
+        const subTxt = lv ? `Seviye: ${lv} • Hazır` : "Sınav Gerekli";
         return `
           <button class="langCard" onclick="window.goNext('${l.code}', '${l.teacher}', '${lv}')">
             <div class="left">
@@ -148,7 +162,6 @@
     }
 
     window.goNext = (code, teacher, lv) => {
-      localStorage.setItem("italky_teacher_pref", teacher);
       if(lv) {
         location.href = `/pages/plan_select.html?t=${teacher}&lang=${code}&level=${lv}`;
       } else {
