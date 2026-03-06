@@ -1,148 +1,379 @@
+<!-- FILE: /pages/teacher_select.html -->
 <!doctype html>
 <html lang="tr">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-<title>italkyAI • Quantum OS V7</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+  <title>italkyAI • Ders Seçimi</title>
 
-<style>
-  html,body{background:#000 !important; margin:0; padding:0; overflow:hidden; font-family:'Outfit', sans-serif;}
-  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=Space+Grotesk:wght@700&display=swap');
-</style>
+  <meta name="theme-color" content="#02000f">
+  <style>html,body{background:#02000f !important;}</style>
 
-<style>
-:root{
-  --ai-grad: linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
-  --blue: #00d2ff; --green: #39ff14; --pink: #ff007f;
-  --glass-border: rgba(255,255,255,0.12);
-}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none;}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
-#pageContent {
-  height: 100%;
-  display: flex; flex-direction: column;
-  background: radial-gradient(circle at 50% 50%, #0a0a25 0%, #000 100%);
-  position: relative;
-}
+  <style>
+    :root{
+      --border: rgba(255,255,255,0.12);
+      --card: rgba(255,255,255,0.05);
+      --muted: rgba(255,255,255,0.70);
+      --ai: linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
+    }
+    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; }
+    #pageContent{ height:100%; display:flex; justify-content:center; padding: 10px 10px; }
 
-.main-hub {
-  flex: 1; display: flex; flex-direction: column;
-  gap: 15px; padding: 15px; min-height: 0;
-}
+    .wrap{
+      width:100%;
+      max-width:520px;
+      height:100%;
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+    }
 
-/* ===== CYBER PANEL (BUTON) ===== */
-.os-panel {
-  flex: 1; position: relative; border-radius: 32px;
-  border: 1px solid var(--glass-border);
-  overflow: hidden; cursor: pointer; display: flex; align-items: center; justify-content: space-between;
-  padding: 0 25px;
-  background: var(--panel-bg);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 15px 35px -15px rgba(0,0,0,0.8);
-}
+    .hero{
+      border-radius: 24px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      padding: 12px 14px;
+      position:relative;
+      overflow:hidden;
+    }
+    .hero::before{
+      content:"";
+      position:absolute; inset:-35%;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(99,102,241,.22) 0%, transparent 45%),
+        radial-gradient(circle at 80% 30%, rgba(236,72,153,.16) 0%, transparent 45%),
+        radial-gradient(circle at 50% 90%, rgba(168,85,247,.14) 0%, transparent 45%);
+      filter: blur(36px);
+      animation: drift 9s ease-in-out infinite alternate;
+      pointer-events:none;
+    }
+    @keyframes drift{
+      from{ transform: translate3d(-10px,-6px,0) scale(1); }
+      to{ transform: translate3d(10px,8px,0) scale(1.06); }
+    }
 
-.os-panel:active { transform: scale(0.96) translateY(6px); border-color: var(--neon-color); }
+    .heroTop{
+      position:relative;
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      margin-bottom: 6px;
+      z-index:2;
+    }
+    .hTitle{
+      font-family:"Space Grotesk",system-ui,sans-serif;
+      font-weight: 1000;
+      font-size: 16px;
+      letter-spacing: -0.2px;
+      margin:0;
+      color:#fff;
+    }
+    .pill{
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.18);
+      font-weight: 1000;
+      font-size: 12px;
+      color: rgba(255,255,255,0.90);
+      white-space: nowrap;
+    }
+    .heroText{
+      position:relative;
+      margin:0;
+      font-size: 12px;
+      font-weight: 900;
+      line-height: 1.55;
+      color: rgba(255,255,255,0.72);
+      z-index:2;
+    }
+    .heroText b{ color:#fff; }
+    .heroText .hl{
+      background: var(--ai);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
 
-/* Renk Temaları */
-.tr-node { --neon-color: var(--blue); --panel-bg: linear-gradient(145deg, rgba(0, 210, 255, 0.12), rgba(0,0,0,0.7)); }
-.ac-node { --neon-color: var(--green); --panel-bg: linear-gradient(145deg, rgba(57, 255, 20, 0.08), rgba(0,0,0,0.7)); }
-.tc-node { --neon-color: var(--pink); --panel-bg: linear-gradient(145deg, rgba(255, 0, 127, 0.12), rgba(0,0,0,0.7)); }
+    .list{
+      flex: 1;
+      min-height: 0;
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+      justify-content: center; /* ✅ alt/üst bar arası eşit dolsun */
+    }
 
-/* ✅ CANLI VE RENKLİ İKONLAR (OS CORE) */
-.icon-container {
-  position: relative; width: 80px; height: 80px;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0; z-index: 5;
-}
+    button.langCard{
+      width: 100%;
+      border-radius: 22px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
 
-/* İkon Arkasındaki Enerji Halkası */
-.energy-ring {
-  position: absolute; inset: 0;
-  border: 2px solid var(--neon-color);
-  border-radius: 50%; opacity: 0.3;
-  animation: ringPulse 2s infinite alternate ease-in-out;
-}
-.energy-ring::after {
-  content: ""; position: absolute; inset: -8px;
-  border: 1px dashed var(--neon-color);
-  border-radius: 50%; animation: spin 10s linear infinite; opacity: 0.4;
-}
+      padding: 14px 14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
 
-.main-icon {
-  font-size: 38px; z-index: 10;
-  filter: drop-shadow(0 0 15px var(--neon-color));
-  animation: iconFloat 3s infinite alternate ease-in-out;
-}
+      color:#fff;
+      cursor:pointer;
+      user-select:none;
+      appearance:none;
+      -webkit-appearance:none;
 
-/* İçerik */
-.content-wrap { display: flex; flex-direction: column; gap: 4px; z-index: 10; }
-.btn-title { font-family: 'Space Grotesk'; font-size: 26px; font-weight: 800; color: #fff; margin: 0; }
-.btn-title span { background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-.btn-desc { font-size: 10px; color: rgba(255,255,255,0.6); font-weight: 900; letter-spacing: 2px; text-transform: uppercase; }
+      transition: transform .16s ease, background .16s ease, border-color .16s ease;
+    }
+    button.langCard:active{
+      transform: scale(.988);
+      background: rgba(255,255,255,0.07);
+      border-color: rgba(165,180,252,0.30);
+    }
 
-/* Durum Etiketi */
-.status-tag {
-  position: absolute; top: 12px; right: 20px;
-  font-family: monospace; font-size: 8px; color: var(--neon-color);
-  background: rgba(0,0,0,0.4); padding: 4px 8px; border-radius: 8px;
-  border: 1px solid var(--neon-color); opacity: 0.7;
-}
+    .left{
+      display:flex;
+      align-items:center;
+      gap: 12px;
+      min-width: 0;
+    }
 
-/* Animasyonlar */
-@keyframes ringPulse { from { transform: scale(0.9); opacity: 0.2; } to { transform: scale(1.1); opacity: 0.5; } }
-@keyframes spin { from { transform: rotate(0); } to { transform: rotate(360deg); } }
-@keyframes iconFloat { from { transform: translateY(-4px) rotate(-5deg); } to { transform: translateY(4px) rotate(5deg); } }
+    .flagRing{
+      width: 46px; height: 46px;
+      border-radius: 18px;
+      padding: 2px;
+      background: var(--ai);
+      flex:0 0 auto;
+      filter: drop-shadow(0 10px 18px rgba(0,0,0,0.28));
+      animation: hue 6.5s linear infinite;
+    }
+    @keyframes hue{
+      from{ filter: drop-shadow(0 10px 18px rgba(0,0,0,0.28)) hue-rotate(0deg); }
+      to{ filter: drop-shadow(0 10px 18px rgba(0,0,0,0.28)) hue-rotate(25deg); }
+    }
+    .flagBox{
+      width:100%; height:100%;
+      border-radius: 16px;
+      display:flex; align-items:center; justify-content:center;
+      background: rgba(0,0,0,0.22);
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+    .flag{
+      font-size: 22px;
+      line-height: 1;
+      animation: floatFlag 2.2s ease-in-out infinite;
+    }
+    @keyframes floatFlag{ 0%,100%{ transform: translateY(0);} 50%{ transform: translateY(-2px);} }
+    button.langCard:nth-child(2) .flag{ animation-duration: 2.5s; }
+    button.langCard:nth-child(3) .flag{ animation-duration: 2.1s; }
+    button.langCard:nth-child(4) .flag{ animation-duration: 2.7s; }
+    button.langCard:nth-child(5) .flag{ animation-duration: 2.3s; }
+    button.langCard:nth-child(6) .flag{ animation-duration: 2.6s; }
 
-</style>
+    .txt{
+      min-width: 0;
+      display:flex;
+      flex-direction:column;
+      gap: 2px;
+    }
+    .name{
+      font-size: 16px;
+      font-weight: 1000;
+      letter-spacing: -0.2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .sub{
+      font-size: 11px;
+      font-weight: 900;
+      color: rgba(255,255,255,0.62);
+      line-height: 1.2;
+    }
+    .sub.ok{ color: rgba(165,180,252,0.95); }
+
+    .right{
+      display:flex; align-items:center; gap: 10px; flex: 0 0 auto;
+    }
+    .badge{
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.18);
+      font-size: 12px;
+      font-weight: 1000;
+      color: rgba(255,255,255,0.88);
+      white-space: nowrap;
+    }
+    .chev{
+      width: 34px; height: 34px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06);
+      display:flex; align-items:center; justify-content:center;
+      font-weight: 1000;
+      color: rgba(255,255,255,0.85);
+    }
+
+    .toast{
+      position: fixed;
+      left:50%;
+      top:18px;
+      transform: translateX(-50%) translateY(-120px);
+      background: rgba(10,10,18,0.95);
+      border: 1px solid rgba(165,180,252,0.35);
+      padding: 10px 14px;
+      border-radius: 999px;
+      color:#fff;
+      z-index: 999999;
+      font-weight: 1000;
+      font-size: 12px;
+      transition: .25s;
+      backdrop-filter: blur(12px);
+      pointer-events:none;
+      max-width: min(92vw, 520px);
+      text-align:center;
+    }
+    .toast.show{ transform: translateX(-50%) translateY(0); }
+
+    @media (max-height: 740px){
+      .hero{ padding: 10px 12px; }
+      button.langCard{ padding: 12px 12px; }
+      .name{ font-size: 15px; }
+    }
+  </style>
 </head>
 
 <body>
-<main id="pageContent">
-  <div class="main-hub">
+  <main id="pageContent">
+    <div class="wrap">
+      <section class="hero">
+        <div class="heroTop">
+          <h1 class="hTitle">italky <span style="background:var(--ai);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Academy</span> • Ders Seçimi</h1>
+          <div class="pill">6 Dil</div>
+        </div>
+        <p class="heroText">
+          Ders planına geçmek için önce <b>seviye tespit</b> gerekir.<br/>
+          Seviyen varsa direkt <b class="hl">Ders Planı</b> ekranına geçersin.
+        </p>
+      </section>
 
-    <div class="os-panel tr-node" onclick="location.href='/pages/translate_home.html'">
-      <div class="status-tag">SİNYAL: AKTİF</div>
-      <div class="content-wrap">
-        <h2 class="btn-title">Translate <span>AI</span></h2>
-        <div class="btn-desc">Nöral Dil Akışı</div>
-      </div>
-      <div class="icon-container">
-        <div class="energy-ring"></div>
-        <div class="main-icon">📡</div>
-      </div>
+      <section class="list" id="list"></section>
     </div>
+  </main>
 
-    <div class="os-panel ac-node" onclick="location.href='/pages/academy_home.html'">
-      <div class="status-tag">MODÜL: HAZIR</div>
-      <div class="content-wrap">
-        <h2 class="btn-title">Academy <span>AI</span></h2>
-        <div class="btn-desc">Bilgelik ve Eğitim Yolu</div>
-      </div>
-      <div class="icon-container">
-        <div class="energy-ring"></div>
-        <div class="main-icon">💎</div> </div>
-    </div>
+  <div class="toast" id="toast"></div>
 
-    <div class="os-panel tc-node" onclick="location.href='/pages/helper_home.html'">
-      <div class="status-tag">SENKRON: AÇIK</div>
-      <div class="content-wrap">
-        <h2 class="btn-title">Teacher <span>AI</span></h2>
-        <div class="btn-desc">Mantıksal Çözüm Motoru</div>
-      </div>
-      <div class="icon-container">
-        <div class="energy-ring"></div>
-        <div class="main-icon">🧬</div>
-      </div>
-    </div>
+  <script type="module">
+    import { mountShell } from "/js/ui_shell.js";
+    import { supabase } from "/js/supabase_client.js";
 
-  </div>
-</main>
+    mountShell({ scroll:"none" });
 
-<script type="module">
-  import { mountShell } from "/js/ui_shell.js";
-  mountShell({ scroll:"none" });
-</script>
+    const $ = (id)=>document.getElementById(id);
+    const list = $("list");
+
+    function toast(msg){
+      const t = $("toast");
+      t.textContent = String(msg||"");
+      t.classList.add("show");
+      clearTimeout(window.__to);
+      window.__to = setTimeout(()=>t.classList.remove("show"), 1600);
+    }
+
+    // ✅ 6 dil + teacher_id map (akış bozulmasın)
+    const LANGS = [
+      { code:"en", name:"English",  flag:"🇬🇧", teacher:"dora"   },
+      { code:"de", name:"German",   flag:"🇩🇪", teacher:"ayda"   },
+      { code:"fr", name:"French",   flag:"🇫🇷", teacher:"jale"   },
+      { code:"it", name:"Italian",  flag:"🇮🇹", teacher:"sencer" },
+      { code:"ru", name:"Russian",  flag:"🇷🇺", teacher:"sungur" },
+      { code:"es", name:"Spanish",  flag:"🇪🇸", teacher:"ozan"   },
+    ];
+
+    const { data:{ session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id || null;
+    if(!userId){
+      location.replace("/pages/login.html");
+      throw new Error("no session");
+    }
+
+    // levels (profiles.levels jsonb)
+    let levels = {};
+    try{
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("levels")
+        .eq("id", userId)
+        .maybeSingle();
+      levels = (prof?.levels && typeof prof.levels === "object") ? prof.levels : {};
+    }catch{}
+
+    function cardHtml(l){
+      const lv = (levels && typeof levels === "object") ? (levels[l.code] || "") : "";
+      const sub = lv ? `Seviyeniz: ${lv} • Ders planına geç` : "Seviye yok • Sınava yönlendir";
+      const subCls = lv ? "sub ok" : "sub";
+      return `
+        <button class="langCard" type="button" data-code="${l.code}" data-teacher="${l.teacher}">
+          <div class="left">
+            <div class="flagRing"><div class="flagBox"><div class="flag">${l.flag}</div></div></div>
+            <div class="txt">
+              <div class="name">${l.name}</div>
+              <div class="${subCls}">${sub}</div>
+            </div>
+          </div>
+          <div class="right">
+            <div class="badge">${l.code.toUpperCase()}</div>
+            <div class="chev">›</div>
+          </div>
+        </button>
+      `;
+    }
+
+    list.innerHTML = LANGS.map(cardHtml).join("");
+
+    let busy = false;
+    let lastTap = 0;
+
+    async function goNext(code, teacher){
+      try{ localStorage.setItem("italky_teacher_pref", teacher); }catch{}
+
+      const lv = (levels && typeof levels === "object") ? (levels[code] || "") : "";
+      if(lv){
+        location.href = `/pages/plan_select.html?t=${encodeURIComponent(teacher)}&lang=${encodeURIComponent(code)}&level=${encodeURIComponent(lv)}`;
+        return;
+      }
+
+      // ✅ doğru sayfa: level_required.html
+      location.href = `/pages/level_required.html?lang=${encodeURIComponent(code)}&t=${encodeURIComponent(teacher)}&next=${encodeURIComponent("plan_select")}`;
+    }
+
+    list.querySelectorAll(".langCard").forEach(btn=>{
+      const handler = async (ev)=>{
+        ev.preventDefault(); ev.stopPropagation();
+        if(busy) return;
+        const now = Date.now();
+        if(now - lastTap < 650) return;
+        lastTap = now;
+        busy = true;
+
+        const code = String(btn.getAttribute("data-code")||"").trim();
+        const teacher = String(btn.getAttribute("data-teacher")||"").trim();
+
+        try{
+          toast("Kontrol ediliyor…");
+          await goNext(code, teacher);
+        }finally{
+          busy = false;
+        }
+      };
+      btn.addEventListener("click", handler, { passive:false });
+      btn.addEventListener("touchend", handler, { passive:false });
+    });
+  </script>
 </body>
 </html>
