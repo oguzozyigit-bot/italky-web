@@ -7,160 +7,171 @@
 
 <style>
   :root {
-    --ai-grad: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
-    --blue: #00d2ff; 
-    --green: #00ff88; 
-    --pink: #ff007f;
-    --glass: rgba(255, 255, 255, 0.03);
-    --glass-border: rgba(255, 255, 255, 0.08);
+    --bg-dark: #050508;
+    --accent-blue: #00f2ff;
+    --accent-purple: #bd00ff;
+    --accent-green: #00ff88;
+    --glass-white: rgba(255, 255, 255, 0.05);
+    --glass-border: rgba(255, 255, 255, 0.1);
   }
 
-  /* Temel Reset ve Font */
-  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;800&family=Plus+Jakarta+Sans:wght@400;700&display=swap');
-  
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap');
+
   html, body { 
-    background: #030305; 
+    background: var(--bg-dark); 
     margin: 0; padding: 0; 
-    height: 100vh; overflow: hidden; 
-    font-family: 'Plus Jakarta Sans', sans-serif;
+    height: 100vh; width: 100vw;
+    overflow: hidden; 
+    font-family: 'Outfit', sans-serif;
+    color: white;
   }
 
-  /* Dinamik Aura Arka Plan */
+  /* Arka Plan Hareketli Işıklar */
   #pageContent {
-    height: 100%;
+    height: 100%; width: 100%;
     display: flex; flex-direction: column;
     position: relative;
-    background: radial-gradient(circle at 0% 0%, rgba(99, 102, 241, 0.15) 0%, transparent 40%),
-                radial-gradient(circle at 100% 100%, rgba(236, 72, 153, 0.1) 0%, transparent 40%);
+    background: radial-gradient(circle at 50% -20%, rgba(189, 0, 255, 0.15), transparent 50%),
+                radial-gradient(circle at 50% 120%, rgba(0, 242, 255, 0.1), transparent 50%);
   }
 
-  /* Header Alanı (Hoşgeldin Mesajı) */
-  .header-area {
-    padding: 40px 25px 10px;
-    text-align: left;
+  /* Üst Header (Zarif ve Geniş) */
+  .top-header {
+    padding: 50px 30px 20px;
+    z-index: 10;
   }
-  .header-area h1 {
-    color: #fff; font-size: 28px; font-weight: 800; margin: 0;
-    letter-spacing: -0.5px;
+  .top-header h1 {
+    font-size: 34px; font-weight: 900; margin: 0; letter-spacing: -1px;
+    background: linear-gradient(to bottom, #fff, #888);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
   }
-  .header-area p {
-    color: rgba(255,255,255,0.4); font-size: 14px; margin-top: 5px;
-  }
+  .top-header span { font-weight: 400; font-size: 16px; opacity: 0.5; display: block; }
 
+  /* Sayfayı Tam Kaplayan Buton Alanı */
   .main-hub {
-    flex: 1; display: flex; flex-direction: column;
-    gap: 20px; padding: 20px; justify-content: center;
+    flex: 1; 
+    display: flex; flex-direction: column;
+    padding: 0 20px 40px;
+    gap: 15px;
+    justify-content: space-evenly; /* Butonları sayfaya tam yayar */
   }
 
-  /* ===== MODERN GLASS PANEL ===== */
-  .os-panel {
-    position: relative; border-radius: 28px;
+  /* ===== ULTRA-MODERN QUANTUM BUTON ===== */
+  .os-card {
+    position: relative;
+    height: 28%; /* Sayfa boyuna göre dinamik yükseklik */
+    min-height: 140px;
+    background: var(--glass-white);
     border: 1px solid var(--glass-border);
-    height: 120px;
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 0 25px;
-    background: var(--glass);
-    backdrop-filter: blur(25px);
-    -webkit-backdrop-filter: blur(25px);
-    transition: all 0.5s cubic-bezier(0.2, 1, 0.3, 1);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    border-radius: 35px;
+    display: flex; align-items: center;
+    padding: 0 30px;
+    overflow: hidden;
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
   }
 
-  /* Hover & Active Effects */
-  .os-panel:active {
-    transform: scale(0.97) translateY(2px);
-    background: rgba(255,255,255,0.07);
-    border-color: var(--neon-color);
+  .os-card:active { transform: scale(0.94); }
+
+  /* Buton İçeriği */
+  .card-info { flex: 1; z-index: 5; }
+  .card-info h2 { 
+    font-size: 26px; font-weight: 800; margin: 0; 
+    display: flex; align-items: center; gap: 8px;
+  }
+  .card-info p { 
+    font-size: 12px; margin: 6px 0 0; color: rgba(255,255,255,0.4); 
+    font-weight: 400; letter-spacing: 0.5px;
   }
 
-  /* Renk Temaları (Neon Soft) */
-  .tr-node { --neon-color: var(--blue); }
-  .ac-node { --neon-color: var(--green); }
-  .tc-node { --neon-color: var(--pink); }
-
-  /* Sol İçerik */
-  .content-wrap { display: flex; flex-direction: column; gap: 4px; z-index: 10; }
-  .btn-title { font-family: 'Outfit'; font-size: 24px; font-weight: 700; color: #fff; margin: 0; }
-  .btn-title span { background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: brightness(1.2); }
-  .btn-desc { font-size: 11px; color: rgba(255,255,255,0.5); font-weight: 500; text-transform: uppercase; letter-spacing: 1px; }
-
-  /* Sağ İkon Alanı */
-  .icon-container {
-    position: relative; width: 65px; height: 65px;
+  /* Yaratıcı İkon Alanı */
+  .visual-node {
+    position: relative;
+    width: 90px; height: 90px;
     display: flex; align-items: center; justify-content: center;
   }
 
-  .main-icon {
-    font-size: 32px; z-index: 10;
-    filter: drop-shadow(0 0 10px var(--neon-color));
+  /* İkon Arkası "Enerji Çekirdeği" */
+  .core-glow {
+    position: absolute;
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    filter: blur(20px); opacity: 0.3;
+    animation: pulseGlow 3s infinite alternate;
   }
 
-  /* İkon Arkası Glow (Parlama) */
-  .glow-orb {
-    position: absolute; width: 40px; height: 40px;
-    background: var(--neon-color);
-    filter: blur(30px); opacity: 0.4;
-    transition: all 0.4s;
-  }
-  .os-panel:hover .glow-orb { opacity: 0.8; width: 60px; height: 60px; }
-
-  /* Durum Çizgisi */
-  .status-line {
-    position: absolute; left: 0; top: 30%; bottom: 30%;
-    width: 4px; border-radius: 0 4px 4px 0;
-    background: var(--neon-color);
-    box-shadow: 0 0 15px var(--neon-color);
+  .icon-main {
+    font-size: 40px; z-index: 10;
+    filter: drop-shadow(0 0 15px rgba(255,255,255,0.5));
   }
 
+  /* Renk Varyasyonları */
+  .blue-node { --theme: var(--accent-blue); }
+  .purple-node { --theme: var(--accent-purple); }
+  .green-node { --theme: var(--accent-green); }
+
+  .theme-text { color: var(--theme); }
+  .core-glow { background: var(--theme); }
+
+  /* Animasyonlar */
+  @keyframes pulseGlow {
+    0% { transform: scale(0.8); opacity: 0.2; }
+    100% { transform: scale(1.2); opacity: 0.5; }
+  }
+
+  /* Sayfa Altı Dekorasyon */
+  .footer-decor {
+    position: absolute; bottom: -50px; left: 50%; transform: translateX(-50%);
+    width: 200px; height: 100px; background: var(--accent-blue);
+    filter: blur(80px); opacity: 0.2; pointer-events: none;
+  }
 </style>
 </head>
 
 <body>
 <main id="pageContent">
-  <div class="header-area">
-    <h1>Quantum <span style="color:var(--blue)">OS</span></h1>
-    <p>Gelecek şimdi parmaklarının ucunda.</p>
+  <div class="top-header">
+    <span>Sistem Çekirdeği V7</span>
+    <h1>italky<b>AI</b></h1>
   </div>
 
   <div class="main-hub">
 
-    <div class="os-panel tr-node" onclick="location.href='/pages/translate_home.html'">
-      <div class="status-line"></div>
-      <div class="content-wrap">
-        <h2 class="btn-title">Translate <span>AI</span></h2>
-        <div class="btn-desc">Sınırları Kaldıran Dil</div>
+    <div class="os-card blue-node" onclick="location.href='/pages/translate_home.html'">
+      <div class="card-info">
+        <h2>Translate <span class="theme-text">AI</span></h2>
+        <p>Evrensel Dil Senkronizasyonu</p>
       </div>
-      <div class="icon-container">
-        <div class="glow-orb"></div>
-        <div class="main-icon">🌐</div>
-      </div>
+      <div class="visual-node">
+        <div class="core-glow"></div>
+        <div class="icon-main">🌀</div> </div>
     </div>
 
-    <div class="os-panel ac-node" onclick="location.href='/pages/acedemy_home.html'">
-      <div class="status-line"></div>
-      <div class="content-wrap">
-        <h2 class="btn-title">Academy <span>AI</span></h2>
-        <div class="btn-desc">Zekanı Yeniden Programla</div>
+    <div class="os-card purple-node" onclick="location.href='/pages/acedemy_home.html'">
+      <div class="card-info">
+        <h2>Academy <span class="theme-text">AI</span></h2>
+        <p>Kuantum Veri Kütüphanesi</p>
       </div>
-      <div class="icon-container">
-        <div class="glow-orb"></div>
-        <div class="main-icon">✨</div>
-      </div>
+      <div class="visual-node">
+        <div class="core-glow"></div>
+        <div class="icon-main">🔮</div> </div>
     </div>
 
-    <div class="os-panel tc-node" onclick="location.href='/pages/helper_home.html'">
-      <div class="status-line"></div>
-      <div class="content-wrap">
-        <h2 class="btn-title">Teacher <span>AI</span></h2>
-        <div class="btn-desc">Kuantum Çözüm Rehberi</div>
+    <div class="os-card green-node" onclick="location.href='/pages/helper_home.html'">
+      <div class="card-info">
+        <h2>Teacher <span class="theme-text">AI</span></h2>
+        <p>İleri Düzey Analiz Motoru</p>
       </div>
-      <div class="icon-container">
-        <div class="glow-orb"></div>
-        <div class="main-icon">🧠</div>
-      </div>
+      <div class="visual-node">
+        <div class="core-glow"></div>
+        <div class="icon-main">⚡</div> </div>
     </div>
 
   </div>
+
+  <div class="footer-decor"></div>
 </main>
 
 <script type="module">
