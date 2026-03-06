@@ -7,7 +7,6 @@ mountShell({ scroll: "auto" });
 const BUCKET = "offline";
 const PIVOT = "en";
 const USER_LANG_KEY = "italky_user_lang_v1";
-
 const PRIORITY_CODES = ["en", "de", "fr", "it", "es", "tr"];
 
 const $ = (id) => document.getElementById(id);
@@ -24,11 +23,15 @@ function toast(msg) {
   toastEl.textContent = String(msg || "");
   toastEl.classList.add("show");
   clearTimeout(window.__toastTimer);
-  window.__toastTimer = setTimeout(() => toastEl.classList.remove("show"), 1900);
+  window.__toastTimer = setTimeout(() => toastEl.classList.remove("show"), 2000);
 }
 
 function norm(v) {
   return String(v || "").trim().toLowerCase().replaceAll("_", "-");
+}
+
+function pairPath(pair) {
+  return `langpacks/${pair}/model.zip`;
 }
 
 function publicUrl(path) {
@@ -36,8 +39,23 @@ function publicUrl(path) {
   return data?.publicUrl || "";
 }
 
-function pairPath(pair) {
-  return `langpacks/${pair}/model.zip`;
+async function fileExists(path) {
+  try {
+    const url = publicUrl(path);
+    if (!url) return false;
+
+    const res = await fetch(url, { method: "HEAD", cache: "no-store" });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+async function getCheckedPublicUrl(pair) {
+  const path = pairPath(pair);
+  const ok = await fileExists(path);
+  if (!ok) return "";
+  return publicUrl(path);
 }
 
 function netPaint() {
@@ -73,7 +91,6 @@ function uninstallNative(pair) {
   return true;
 }
 
-// İsimler şimdilik Türkçe
 const LANGS = [
   { code:"tr", flag:"🇹🇷", name:"Türkçe" },
   { code:"en", flag:"🇬🇧", name:"İngilizce" },
@@ -147,10 +164,6 @@ const LANGS = [
 
 const SUPPORTED_CODES = new Set(LANGS.map(x => norm(x.code)));
 
-function langByCode(code) {
-  return LANGS.find(x => norm(x.code) === norm(code));
-}
-
 function compareLangs(a, b) {
   const ai = PRIORITY_CODES.indexOf(norm(a.code));
   const bi = PRIORITY_CODES.indexOf(norm(b.code));
@@ -181,57 +194,39 @@ function populateSourceSelect() {
   if (SUPPORTED_CODES.has(current)) sourceSelect.value = current;
 }
 
-function ensureBaseInstalled(userLang) {
-  // Kullanıcının dili EN değilse temel paketi sadece bir kez gerekir
+function ensureBaseInstalledPairs(userLang) {
   if (userLang === PIVOT) return [];
   return [`${userLang}-${PIVOT}`, `${PIVOT}-${userLang}`];
 }
 
-function targetPackages(targetLang) {
+function targetPairs(targetLang) {
   if (targetLang === PIVOT) return [];
   return [`${targetLang}-${PIVOT}`, `${PIVOT}-${targetLang}`];
 }
 
-function isTargetInstalled(userLang, targetLang) {
-  const basePairs = ensureBaseInstalled(userLang);
-  const targetPairs = targetPackages(targetLang);
+function installPairsForTarget(userLang, targetLang) {
+  const need = [];
 
-  const baseOk = basePairs.every(pair => isInstalledNative(pair));
-  const targetOk = targetPairs.every(pair => isInstalledNative(pair));
+  for (const pair of ensureBaseInstalledPairs(userLang)) {
+    if (!isInstalledNative(pair)) need.push(pair);
+  }
+  for (const pair of targetPairs(targetLang)) {
+    if (!isInstalledNative(pair)) need.push(pair);
+  }
 
-  if (targetLang === PIVOT) return baseOk;
-  return baseOk && targetOk;
+  return [...new Set(need)];
 }
 
-function installTargetLanguage(userLang, targetLang) {
-  const basePairs = ensureBaseInstalled(userLang);
-  const targetPairs = targetPackages(targetLang);
-
-  const needed = [];
-
-  basePairs.forEach(pair => {
-    if (!isInstalledNative(pair)) needed.push(pair);
-  });
-
-  targetPairs.forEach(pair => {
-    if (!isInstalledNative(pair)) needed.push(pair);
-  });
-
-  return [...new Set(needed)];
-}
-
-function removablePairsForTarget(userLang, targetLang) {
-  // Benim dilim asla silinmez
-  // EN hedefse bir şey silmeyelim, temel dil paketi kalmalı
+function removablePairsForTarget(targetLang) {
   if (targetLang === PIVOT) return [];
-  return targetPackages(targetLang);
+  return targetPairs(targetLang);
 }
 
 function loadInstalledTargets() {
   try {
     const raw = localStorage.getItem("italky_installed_targets_v1");
-    const arr = JSON.parse(raw || "{}");
-    return arr && typeof arr === "object" ? arr : {};
+    const obj = JSON.parse(raw || "{}");
+    return obj && typeof obj === "object" ? obj : {};
   } catch {
     return {};
   }
@@ -244,17 +239,17 @@ function saveInstalledTargets(map) {
 function markTargetInstalled(userLang, targetLang) {
   const all = loadInstalledTargets();
   const key = norm(userLang);
-  const old = Array.isArray(all[key]) ? all[key] : [];
-  if (!old.includes(norm(targetLang))) old.push(norm(targetLang));
-  all[key] = old;
+  const arr = Array.isArray(all[key]) ? all[key] : [];
+  if (!arr.includes(norm(targetLang))) arr.push(norm(targetLang));
+  all[key] = arr;
   saveInstalledTargets(all);
 }
 
 function unmarkTargetInstalled(userLang, targetLang) {
   const all = loadInstalledTargets();
   const key = norm(userLang);
-  const old = Array.isArray(all[key]) ? all[key] : [];
-  all[key] = old.filter(x => x !== norm(targetLang));
+  const arr = Array.isArray(all[key]) ? all[key] : [];
+  all[key] = arr.filter(x => x !== norm(targetLang));
   saveInstalledTargets(all);
 }
 
@@ -314,30 +309,36 @@ function renderCard(lang, installed, userLang) {
       return;
     }
 
-    const neededPairs = installTargetLanguage(userLang, norm(lang.code));
+    const neededPairs = installPairsForTarget(userLang, norm(lang.code));
+
     if (!neededPairs.length) {
-      toast("Bu dil zaten hazır.");
       markTargetInstalled(userLang, norm(lang.code));
+      toast("Bu dil zaten hazır.");
       renderAll();
       return;
     }
 
-    const urls = neededPairs.map(pair => ({
-      pair,
-      url: publicUrl(pairPath(pair))
-    }));
+    installBtn.classList.add("disabled");
+    installBtn.innerHTML = `<span>⏳</span><span>Kontrol ediliyor…</span>`;
+
+    const urls = [];
+    for (const pair of neededPairs) {
+      const url = await getCheckedPublicUrl(pair);
+      urls.push({ pair, url });
+    }
 
     const missing = urls.filter(x => !x.url);
     if (missing.length) {
       toast(`Eksik dosya: ${missing.map(x => x.pair).join(", ")}`);
+      installBtn.classList.remove("disabled");
+      installBtn.innerHTML = `<span>⬇️</span><span>İndir</span>`;
       return;
     }
 
-    installBtn.classList.add("disabled");
     installBtn.innerHTML = `<span>⏳</span><span>İndiriliyor…</span>`;
 
     urls.forEach((item, i) => {
-      setTimeout(() => installNative(item.pair, item.url), i * 650);
+      setTimeout(() => installNative(item.pair, item.url), i * 700);
     });
 
     const started = Date.now();
@@ -352,9 +353,9 @@ function renderCard(lang, installed, userLang) {
         return;
       }
 
-      if (Date.now() - started > 60000) {
+      if (Date.now() - started > 70000) {
         clearInterval(poll);
-        toast("Kurulum sürüyor… dosya büyük olabilir.");
+        toast(`Kurulum tamamlanamadı: ${lang.name}`);
         renderAll();
       }
     }, 2200);
@@ -366,7 +367,7 @@ function renderCard(lang, installed, userLang) {
       return;
     }
 
-    const pairs = removablePairsForTarget(userLang, norm(lang.code));
+    const pairs = removablePairsForTarget(norm(lang.code));
     if (!pairs.length) {
       toast("Bu dil silinemez.");
       return;
@@ -388,14 +389,13 @@ function renderCard(lang, installed, userLang) {
 
   card.appendChild(left);
   card.appendChild(actions);
-
   return card;
 }
 
 function renderInstalledList(userLang, q) {
   installedList.innerHTML = "";
 
-  const installedTargets = installedTargetsForUser(userLang)
+  const items = installedTargetsForUser(userLang)
     .filter(code => code !== norm(userLang))
     .map(code => langByCode(code))
     .filter(Boolean)
@@ -406,16 +406,14 @@ function renderInstalledList(userLang, q) {
     })
     .sort(compareLangs);
 
-  countPill.textContent = `Kurulu: ${installedTargets.length}`;
+  countPill.textContent = `Kurulu: ${items.length}`;
 
-  if (!installedTargets.length) {
+  if (!items.length) {
     installedList.innerHTML = `<div class="empty">Henüz kurulu hedef dil yok.</div>`;
     return;
   }
 
-  installedTargets.forEach(lang => {
-    installedList.appendChild(renderCard(lang, true, userLang));
-  });
+  items.forEach(lang => installedList.appendChild(renderCard(lang, true, userLang)));
 }
 
 function renderAvailableList(userLang, q) {
@@ -423,7 +421,7 @@ function renderAvailableList(userLang, q) {
 
   const installedSet = new Set(installedTargetsForUser(userLang).map(norm));
 
-  const available = SORTED_LANGS
+  const items = SORTED_LANGS
     .filter(lang => norm(lang.code) !== norm(userLang))
     .filter(lang => !installedSet.has(norm(lang.code)))
     .filter(lang => {
@@ -432,14 +430,12 @@ function renderAvailableList(userLang, q) {
       return hay.includes(q);
     });
 
-  if (!available.length) {
+  if (!items.length) {
     availableList.innerHTML = `<div class="empty">Başka dil bulunamadı.</div>`;
     return;
   }
 
-  available.forEach(lang => {
-    availableList.appendChild(renderCard(lang, false, userLang));
-  });
+  items.forEach(lang => availableList.appendChild(renderCard(lang, false, userLang)));
 }
 
 function renderAll() {
