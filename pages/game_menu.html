@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+<title>italkyAI • Game Grand Terminal</title>
+
+<style>
+  /* 🛡️ SIFIR KIRPILMA + OYUN GİRİŞ EFEKTİ */
+  html { background: #000 !important; }
+  body { margin: 0; padding: 0; background: #000; font-family: 'Outfit', sans-serif; color: #fff; }
+  
+  #pageContent { 
+    opacity: 0; transform: scale(1.05); 
+    transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  #pageContent.ui-ready { opacity: 1; transform: scale(1); }
+
+  :root {
+    --ai-grad: linear-gradient(135deg, #f97316 0%, #ed64a6 50%, #6366f1 100%);
+    --neon-yellow: #facc15;
+    --neon-pink: #ff007f;
+    --neon-blue: #00d2ff;
+    --glass-border: rgba(255,255,255,0.15);
+  }
+
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Space+Grotesk:wght@700&display=swap');
+
+  #pageContent {
+    height: 100%; display: flex; flex-direction: column;
+    background: radial-gradient(circle at 50% 50%, #1a0a30 0%, #000 100%);
+  }
+
+  /* Kaydırılabilir Ana Alan */
+  .game-hub {
+    flex: 1; display: flex; flex-direction: column;
+    padding: 20px; gap: 15px;
+    overflow-y: auto; 
+    scrollbar-width: none; /* Firefox */
+  }
+  .game-hub::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+
+  /* 🎮 OYUN KARTI (ARCADE STİL) */
+  .game-card {
+    position: relative;
+    min-height: 110px; border-radius: 30px;
+    border: 1px solid var(--glass-border);
+    background: linear-gradient(145deg, rgba(255,255,255,0.03), rgba(0,0,0,0.8));
+    display: flex; align-items: center; padding: 0 25px;
+    overflow: hidden; cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+  }
+  .game-card:active { transform: scale(0.95); }
+
+  /* Kartın arkasındaki renk sızıntısı */
+  .game-card::before {
+    content: ""; position: absolute; inset: 0;
+    background: radial-gradient(circle at 0% 50%, var(--game-color), transparent 50%);
+    opacity: 0.15; pointer-events: none;
+  }
+
+  /* Oyun Renk Temaları */
+  .g-yellow { --game-color: var(--neon-yellow); }
+  .g-pink { --game-color: var(--neon-pink); }
+  .g-blue { --game-color: var(--neon-blue); }
+
+  /* İkon Alanı */
+  .game-icon-wrap {
+    width: 65px; height: 65px; position: relative;
+    display: flex; align-items: center; justify-content: center;
+    margin-right: 20px; z-index: 5;
+  }
+  .game-icon-bg {
+    position: absolute; inset: 0; background: var(--game-color);
+    filter: blur(20px); opacity: 0.2;
+  }
+  .game-emoji { font-size: 38px; filter: drop-shadow(0 0 10px var(--game-color)); }
+
+  /* Yazı Alanı */
+  .game-info { z-index: 10; }
+  .game-info h2 { font-family: 'Space Grotesk'; font-size: 22px; font-weight: 900; margin: 0; letter-spacing: -0.5px; }
+  .game-info p { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 5px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+
+  /* Sağ Taraf - Rozet */
+  .game-status {
+    margin-left: auto;
+    background: rgba(255,255,255,0.05);
+    padding: 6px 12px; border-radius: 12px;
+    border: 1px solid var(--glass-border);
+    font-size: 10px; font-weight: 900; color: var(--game-color);
+  }
+
+  /* Header Alanı */
+  .header-box { padding: 15px 5px; text-align: center; flex: 0 0 auto; }
+  .header-box h1 { font-size: 24px; font-weight: 900; margin: 0; font-family: 'Space Grotesk'; }
+  .header-box h1 span { background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+</style>
+</head>
+
+<body>
+<main id="pageContent">
+  <div class="header-box">
+    <h1>Game <span>Terminal</span></h1>
+  </div>
+
+  <div class="game-hub">
+    
+    <div class="game-card g-yellow" onclick="location.href='/pages/hangman.html'">
+      <div class="game-icon-wrap">
+        <div class="game-icon-bg"></div>
+        <div class="game-emoji">🪂</div>
+      </div>
+      <div class="game-info">
+        <h2>Hangman</h2>
+        <p>Kelimeyi tahmin et, kurtar!</p>
+      </div>
+      <div class="game-status">Oyna</div>
+    </div>
+
+    <div class="game-card g-pink" onclick="location.href='/pages/friend.html'">
+      <div class="game-icon-wrap">
+        <div class="game-icon-bg"></div>
+        <div class="game-emoji">🤝</div>
+      </div>
+      <div class="game-info">
+        <h2>AI Friend</h2>
+        <p>Yapay zeka ile sohbet et</p>
+      </div>
+      <div class="game-status">Canlı</div>
+    </div>
+
+    <div class="game-card g-blue" onclick="location.href='/pages/spy.html'">
+      <div class="game-icon-wrap">
+        <div class="game-icon-bg"></div>
+        <div class="game-emoji">🕵️</div>
+      </div>
+      <div class="game-info">
+        <h2>Spy Master</h2>
+        <p>Casusu bul ve dilini çöz</p>
+      </div>
+    </div>
+
+    <div class="game-card g-yellow" onclick="location.href='/pages/sentence.html'">
+      <div class="game-icon-wrap">
+        <div class="game-icon-bg"></div>
+        <div class="game-emoji">🧩</div>
+      </div>
+      <div class="game-info">
+        <h2>Sentence Builder</h2>
+        <p>Kelimeleri diz, cümleyi kur</p>
+      </div>
+    </div>
+
+    <div class="game-card g-pink" onclick="location.href='/pages/neural_box.html'">
+      <div class="game-icon-wrap">
+        <div class="game-icon-bg"></div>
+        <div class="game-emoji">📦</div>
+      </div>
+      <div class="game-info">
+        <h2>Neural Box</h2>
+        <p>Gizemli kutuları aç</p>
+      </div>
+    </div>
+
+    <div class="game-card g-blue" onclick="location.href='/pages/neural.html'">
+      <div class="game-icon-wrap">
+        <div class="game-icon-bg"></div>
+        <div class="game-emoji">🧠</div>
+      </div>
+      <div class="game-info">
+        <h2>Neural Path</h2>
+        <p>Zihin yollarını takip et</p>
+      </div>
+    </div>
+
+    <div class="game-card g-yellow" onclick="location.href='/pages/meteor.html'">
+      <div class="game-icon-wrap">
+        <div class="game-icon-bg"></div>
+        <div class="game-emoji">☄️</div>
+      </div>
+      <div class="game-info">
+        <h2>Meteor Strike</h2>
+        <p>Kelimeleri vur, dünyayı koru</p>
+      </div>
+    </div>
+
+    <div class="game-card g-pink" onclick="location.href='/pages/glitch.html'">
+      <div class="game-icon-wrap">
+        <div class="game-icon-bg"></div>
+        <div class="game-emoji">👾</div>
+      </div>
+      <div class="game-info">
+        <h2>Glitch Hunt</h2>
+        <p>Hatalı kodları temizle</p>
+      </div>
+    </div>
+
+    <div class="game-card g-blue" onclick="location.href='/pages/gap.html'">
+      <div class="game-icon-wrap">
+        <div class="game-icon-bg"></div>
+        <div class="game-emoji">📝</div>
+      </div>
+      <div class="game-info">
+        <h2>Fill the Gap</h2>
+        <p>Boşlukları zekanla doldur</p>
+      </div>
+    </div>
+
+    <div class="game-card g-yellow" onclick="location.href='/pages/duo.html'">
+      <div class="game-icon-wrap">
+        <div class="game-icon-bg"></div>
+        <div class="game-emoji">⚔️</div>
+      </div>
+      <div class="game-info">
+        <h2>Quantum Duo</h2>
+        <p>Karşılıklı dil düellosu</p>
+      </div>
+    </div>
+
+    <div class="game-card g-pink" onclick="location.href='/pages/cracker.html'">
+      <div class="game-icon-wrap">
+        <div class="game-icon-bg"></div>
+        <div class="game-emoji">🔐</div>
+      </div>
+      <div class="game-info">
+        <h2>Code Cracker</h2>
+        <p>Şifreleri kır, dile hükmet</p>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script type="module">
+  import { mountShell } from "/js/ui_shell.js";
+  
+  // Shell monte ediliyor (scroll açık bıraktık çünkü 11 oyun var)
+  mountShell({ scroll:"auto" });
+  
+  window.addEventListener("load", () => {
+    setTimeout(() => {
+      document.getElementById("pageContent").classList.add("ui-ready");
+    }, 150);
+  });
+</script>
+</body>
+</html>
