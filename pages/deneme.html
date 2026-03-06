@@ -3,173 +3,149 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-<title>italkyAI • Quantum Translate</title>
+<title>italkyAI • Teacher AI Terminal</title>
 
 <style>
   :root {
-    --ai-grad: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
-    --blue-glow: rgba(96, 165, 250, 0.15);
-    --pink-glow: rgba(236, 72, 153, 0.15);
+    --ai-grad: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
+    --purple: #a855f7;
     --glass-border: rgba(255, 255, 255, 0.1);
+    --bg-dark: #030308;
   }
 
   @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;800&family=Plus+Jakarta+Sans:wght@700&display=swap');
 
   html, body { 
-    background: #020205 !important; margin: 0; padding: 0; 
+    background: var(--bg-dark); margin: 0; padding: 0; 
     height: 100vh; width: 100vw; overflow: hidden; 
-    font-family: 'Outfit', sans-serif; color: white;
+    font-family: 'Plus Jakarta Sans', sans-serif; color: white;
   }
 
   #pageContent {
     height: 100%; width: 100%;
     display: flex; flex-direction: column;
-    background: radial-gradient(circle at 50% 50%, #0a0a20 0%, #020205 100%);
+    background: radial-gradient(circle at 50% 20%, #1a0a30 0%, #030308 100%);
     position: relative;
   }
 
-  .main-wrap {
+  .main-hub {
     flex: 1; display: flex; flex-direction: column;
-    padding: 15px; gap: 12px;
+    padding: 25px; z-index: 10;
   }
 
-  /* --- Lang Hub: Floating Glass --- */
-  .lang-hub {
-    display: flex; align-items: center; justify-content: space-between;
-    background: rgba(255,255,255,0.05);
+  /* --- Header --- */
+  .header-zone { text-align: center; margin-bottom: 30px; }
+  .header-zone h1 { 
+    font-size: 32px; font-weight: 800; margin: 0; letter-spacing: -1px;
+  }
+  .header-zone h1 span { 
+    background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
+  }
+  .header-zone p { 
+    font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 8px; 
+    font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+  }
+
+  /* --- Scanner Hero --- */
+  .scanner-hero {
+    flex: 1; position: relative; border-radius: 40px;
     border: 1px solid var(--glass-border);
-    border-radius: 24px; padding: 10px 20px;
-    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-  }
-
-  .select-box {
-    background: transparent; border: none; color: #fff;
-    font-family: 'Plus Jakarta Sans'; font-size: 14px; font-weight: 700;
-    cursor: pointer; appearance: none; text-align: center;
-  }
-
-  .swap-trigger {
-    width: 36px; height: 36px; border-radius: 50%;
-    background: var(--ai-grad); border: none;
-    color: #fff; display: flex; align-items: center; justify-content: center;
-    font-size: 18px; box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
-    transition: 0.3s;
-  }
-  .swap-trigger:active { transform: rotate(180deg) scale(0.9); }
-
-  /* --- Quantum Gates --- */
-  .quantum-gate { flex: 1; display: flex; flex-direction: column; gap: 10px; }
-
-  .gate-panel {
-    flex: 1; position: relative; border-radius: 32px;
-    border: 1px solid var(--glass-border);
-    background: rgba(255,255,255,0.02);
-    display: flex; flex-direction: column; padding: 25px;
-    transition: all 0.4s ease;
-  }
-
-  .panel-in { 
-    background: linear-gradient(145deg, var(--blue-glow), transparent);
-    box-shadow: inset 0 0 20px rgba(96, 165, 250, 0.05);
-  }
-
-  .panel-out { 
-    background: linear-gradient(145deg, var(--pink-glow), transparent);
-    border-color: rgba(236, 72, 153, 0.2);
-    box-shadow: inset 0 0 20px rgba(236, 72, 153, 0.05);
-  }
-
-  .panel-action {
-    position: absolute; top: 20px; right: 20px;
-    width: 44px; height: 44px; border-radius: 15px;
-    background: rgba(255,255,255,0.06);
-    border: 1px solid var(--glass-border);
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer; z-index: 30; font-size: 20px;
-  }
-
-  textarea {
-    flex: 1; background: transparent; border: none;
-    color: #fff; font-size: 19px; font-weight: 300;
-    line-height: 1.4; resize: none; width: 100%;
-    outline: none; font-family: 'Outfit';
-  }
-  textarea::placeholder { color: rgba(255,255,255,0.2); }
-
-  .output-area {
-    flex: 1; color: #fff; font-size: 19px;
-    font-weight: 600; line-height: 1.4; overflow-y: auto;
-    white-space: pre-wrap; padding-right: 10px;
-  }
-
-  /* --- Floating Command Bar --- */
-  .command-bar {
-    height: 64px; margin: -32px auto; width: 90%;
-    background: rgba(15,15,25,0.8);
+    background: rgba(255, 255, 255, 0.03);
     backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
-    border: 1px solid var(--glass-border);
-    border-radius: 32px; display: flex; align-items: center;
-    padding: 0 10px; z-index: 100;
-    box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    overflow: hidden; box-shadow: 0 30px 60px rgba(0,0,0,0.6);
+    transition: all 0.5s cubic-bezier(0.2, 1, 0.3, 1);
+  }
+  .scanner-hero:active { transform: scale(0.96) translateY(5px); }
+
+  /* Scan Line Effect */
+  .scan-line {
+    position: absolute; left: 0; width: 100%; height: 4px;
+    background: var(--purple); box-shadow: 0 0 30px var(--purple);
+    animation: scanMove 4s ease-in-out infinite;
+    z-index: 5; opacity: 0.6;
   }
 
-  .bar-btn {
-    flex: 1; border: none; background: transparent;
-    color: rgba(255,255,255,0.5); font-weight: 700; font-size: 11px;
-    display: flex; flex-direction: column; align-items: center; gap: 4px;
-    cursor: pointer;
+  /* Formula Layer */
+  .formula-node {
+    position: absolute; font-family: 'Outfit'; font-size: 14px;
+    color: var(--purple); opacity: 0; pointer-events: none;
+    animation: formulaFlow 5s infinite linear;
   }
 
-  .btn-3d {
-    width: 60px; height: 60px; border-radius: 50%;
-    border: none; background: var(--ai-grad);
-    color: #fff; font-size: 24px;
+  /* Orb Visual */
+  .orb-scanner {
+    width: 160px; height: 160px; position: relative;
     display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 0 20px rgba(168, 85, 247, 0.4);
-    cursor: pointer; transform: translateY(-5px);
-    transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    margin-bottom: 30px;
   }
-  .btn-3d:active { transform: translateY(0px) scale(0.9); }
+  .ring-outer {
+    position: absolute; inset: 0; border: 2px dashed rgba(168, 85, 247, 0.3);
+    border-radius: 50%; animation: rotateOrb 15s linear infinite;
+  }
+  .core-cam {
+    width: 100px; height: 100px; background: #000; border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.1);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 40px rgba(168, 85, 247, 0.2);
+    z-index: 10; animation: breathe 4s infinite ease-in-out;
+  }
 
-  .divider { width: 1px; background: rgba(255,255,255,0.1); height: 20px; }
+  /* Text CTA */
+  .cta-text { text-align: center; padding: 0 30px; z-index: 10; }
+  .cta-text h2 { font-size: 24px; font-weight: 800; color: #fff; margin: 0; }
+  .cta-text p { 
+    font-size: 14px; color: rgba(255,255,255,0.5); 
+    margin-top: 12px; line-height: 1.6; font-weight: 300;
+  }
+
+  /* --- Keyframes --- */
+  @keyframes scanMove { 0%, 100% { top: 10%; } 50% { top: 90%; } }
+  @keyframes rotateOrb { from { transform: rotate(0); } to { transform: rotate(360deg); } }
+  @keyframes breathe { 0%, 100% { transform: scale(1); box-shadow: 0 0 40px rgba(168, 85, 247, 0.2); } 50% { transform: scale(1.05); box-shadow: 0 0 60px rgba(168, 85, 247, 0.4); } }
+  @keyframes formulaFlow {
+    0% { transform: translateY(100px) scale(0.8); opacity: 0; }
+    20% { opacity: 0.4; }
+    80% { opacity: 0.2; }
+    100% { transform: translateY(-200px) scale(1.2); opacity: 0; }
+  }
 </style>
 </head>
 
 <body>
 <main id="pageContent">
-  <div class="main-wrap">
+  <div class="main-hub">
 
-    <section class="lang-hub">
-      <select class="select-box" id="fromSel"></select>
-      <button class="swap-trigger" id="btnSwap" type="button">⇄</button>
-      <select class="select-box" id="toSel"></select>
-    </section>
+    <header class="header-zone">
+      <h1>Teacher <span>AI</span></h1>
+      <p>Kuantum Çözüm Merkezi</p>
+    </header>
 
-    <section class="quantum-gate">
-      <div class="gate-panel panel-in">
-        <button class="panel-action" id="btnMic" type="button">🎙️</button>
-        <textarea id="srcTxt" placeholder="Çevirmek istediğin bir şeyler yaz..."></textarea>
+    <section class="scanner-hero" id="btnStartTerminal">
+      <div class="scan-line"></div>
+      <div class="formula-node" style="left:15%; animation-delay:0s">√x² + y²</div>
+      <div class="formula-node" style="left:75%; animation-delay:1.5s">sin(θ)</div>
+      <div class="formula-node" style="left:40%; animation-delay:3s">H₂SO₄</div>
+
+      <div class="orb-scanner">
+        <div class="ring-outer"></div>
+        <div class="core-cam">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="url(#ai-grad-icon)" stroke-width="2.5">
+            <defs>
+              <linearGradient id="ai-grad-icon" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#a5b4fc" />
+                <stop offset="100%" style="stop-color:#ec4899" />
+              </linearGradient>
+            </defs>
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+            <circle cx="12" cy="13" r="4"/>
+          </svg>
+        </div>
       </div>
 
-      <div class="command-bar">
-        <label class="bar-btn">
-          <input type="file" id="imgFile" accept="image/*" capture="environment" style="display:none">
-          <span style="font-size: 18px;">📷</span>
-          <span>TARAT</span>
-        </label>
-
-        <button class="btn-3d" id="btnTranslate">⚡</button>
-
-        <button class="bar-btn" onclick="document.getElementById('srcTxt').value=''">
-          <span style="font-size: 18px;">🗑️</span>
-          <span>TEMİZLE</span>
-        </button>
-      </div>
-
-      <div class="gate-panel panel-out">
-        <button class="panel-action" id="btnSpeak" type="button">🔊</button>
-        <div class="output-area" id="dstTxt">...</div>
+      <div class="cta-text">
+        <h2>FOTOĞRAF ÇEK VE ÇÖZ</h2>
+        <p>Herhangi bir soruyu saniyeler içinde analiz et ve adım adım mantığını kavra.</p>
       </div>
     </section>
 
@@ -177,12 +153,31 @@
 </main>
 
 <script type="module">
-  // [Mevcut API mantığın ve JS kodun burada devam edecek - Hiçbirini bozma]
   import { mountShell } from "/js/ui_shell.js";
   mountShell({ scroll:"none" });
-  
-  // Önceki kodundaki tüm const, async function ve event listener'ları buraya ekle.
-  // Sadece buton ID'leri aynı kalsın (btnTranslate, srcTxt, vb.)
+
+  const btn = document.getElementById("btnStartTerminal");
+  btn.onclick = () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+    input.capture = "environment";
+    input.style.display = "none";
+    document.body.appendChild(input);
+
+    input.onchange = () => {
+      const file = input.files && input.files[0];
+      if (!file) { input.remove(); return; }
+      const reader = new FileReader();
+      reader.onload = () => {
+        try { sessionStorage.setItem("exam_photo", String(reader.result || "")); } catch(e){}
+        input.remove();
+        location.href = "/pages/exam_crop.html";
+      };
+      reader.readAsDataURL(file);
+    };
+    input.click();
+  };
 </script>
 </body>
 </html>
