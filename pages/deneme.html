@@ -3,121 +3,99 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-<title>italkyAI • Academy Terminal</title>
+<title>italkyAI • Academy Grand Terminal</title>
 
 <style>
-  /* 🛡️ KRİTİK KORUMA */
+  /* 🛡️ KRİTİK SIFIR SARSINTI KORUMASI */
   html { background: #000 !important; }
-  body { margin: 0; padding: 0; overflow: hidden; background: #000; font-family: 'Outfit', sans-serif; }
+  body { margin: 0; padding: 0; overflow: hidden; background: #000; font-family: 'Outfit', sans-serif; color: #fff; }
   
   #pageContent { 
-    opacity: 0; transform: translateY(15px); 
-    transition: opacity 0.6s cubic-bezier(0.2, 1, 0.3, 1), transform 0.6s cubic-bezier(0.2, 1, 0.3, 1);
+    opacity: 0; transform: scale(1.1); filter: blur(10px);
+    transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
   }
-  #pageContent.shell-ready { opacity: 1; transform: translateY(0); }
+  #pageContent.shell-ready { opacity: 1; transform: scale(1); filter: blur(0); }
 
   :root {
     --ai-grad: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
-    --neon-blue: #00d2ff; --neon-green: #39ff14; --neon-orange: #ff9d00;
-    --glass-border: rgba(255,255,255,0.08);
+    --neon-blue: #00d2ff; --neon-green: #39ff14; --neon-orange: #ff007f;
+    --glass-border: rgba(255,255,255,0.15);
   }
 
   @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=Space+Grotesk:wght@700&display=swap');
 
   #pageContent {
     height: 100%; display: flex; flex-direction: column;
-    background: radial-gradient(circle at 50% 30%, #0f0f2d 0%, #000 100%);
+    background: radial-gradient(circle at 50% 50%, #1a0a30 0%, #000 100%);
   }
 
-  .main-hub { flex: 1; display: flex; flex-direction: column; gap: 12px; padding: 20px; }
+  .main-hub { flex: 1; display: flex; flex-direction: column; gap: 20px; padding: 25px; justify-content: space-evenly; }
 
-  /* 💎 1. SEVİYE PORTALI: HOLOGRAM EFEKTİ */
+  /* 💎 DEVASA SEVİYE TESPTİ PORTALI */
   .portal-top {
     flex: 0 0 auto; display: flex; flex-direction: column; align-items: center;
-    padding-bottom: 25px; cursor: pointer;
+    padding: 20px 0; cursor: pointer; position: relative;
   }
-  .hologram-box {
-    width: 140px; height: 140px; position: relative;
+  .neural-orb {
+    width: 160px; height: 160px; position: relative;
     display: flex; align-items: center; justify-content: center;
   }
-  .holo-ring {
-    position: absolute; inset: 0; border-radius: 50%;
-    border: 1px solid rgba(99, 102, 241, 0.2);
-    box-shadow: 0 0 20px rgba(99, 102, 241, 0.1);
-    animation: pulseScale 4s infinite ease-in-out;
+  .orb-ring {
+    position: absolute; inset: -10px; border-radius: 50%;
+    background: var(--ai-grad); padding: 3px;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude; animation: rotate3d 10s linear infinite;
   }
-  .holo-core {
-    width: 80px; height: 80px; background: rgba(255,255,255,0.03);
-    border-radius: 20% 70% 30% 70% / 30% 30% 70% 70%;
-    border: 1px solid rgba(255,255,255,0.1);
-    backdrop-filter: blur(10px);
-    animation: morphing 8s infinite alternate ease-in-out;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 30px; filter: drop-shadow(0 0 15px var(--neon-blue));
+  .orb-core {
+    width: 100px; height: 100px; background: #000; border-radius: 50%;
+    border: 1px solid var(--glass-border); display: flex; align-items: center; justify-content: center;
+    font-size: 40px; box-shadow: 0 0 50px rgba(99, 102, 241, 0.4);
+    animation: breathe 3s infinite ease-in-out;
   }
+  .portal-title { font-family: 'Space Grotesk'; font-size: 30px; font-weight: 900; margin: 20px 0 0; text-align: center; }
+  .portal-title span { background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
-  /* 📚 2. KREATİF İKONLAR (CSS ŞEKİLLERİ) */
+  /* 🚀 GRAND KARTLAR (EKRANI TİTRETEN TASARIM) */
   .os-card {
-    flex: 1; position: relative; border-radius: 30px;
+    flex: 1; position: relative; border-radius: 35px;
     border: 1px solid var(--glass-border);
-    display: flex; align-items: center; padding: 0 24px;
-    background: rgba(255,255,255,0.02); backdrop-filter: blur(25px);
-    transition: all 0.4s cubic-bezier(0.15, 1, 0.3, 1);
+    display: flex; align-items: center; padding: 0 30px;
+    background: linear-gradient(145deg, rgba(255,255,255,0.05), rgba(0,0,0,0.8));
+    backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.6);
   }
-  .os-card:active { transform: scale(0.96); background: rgba(255,255,255,0.05); }
+  .os-card:active { transform: scale(0.95) translateY(10px); }
 
-  /* İkon Konteyner */
+  /* Kart Yan Aydınlatma */
+  .os-card::after {
+    content: ""; position: absolute; inset: 0; border-radius: 35px;
+    background: radial-gradient(circle at 0% 50%, var(--card-glow), transparent 40%);
+    opacity: 0.3; pointer-events: none;
+  }
+
+  .lesson-node { --card-glow: var(--neon-blue); }
+  .practice-node { --card-glow: var(--neon-green); }
+  .game-node { --card-glow: var(--neon-orange); }
+
+  /* Yaratıcı Dev İkonlar */
   .creative-icon {
-    width: 65px; height: 65px; position: relative;
-    margin-right: 20px; display: flex; align-items: center; justify-content: center;
+    width: 80px; height: 80px; position: relative;
+    margin-right: 25px; display: flex; align-items: center; justify-content: center;
+    z-index: 5;
   }
+  .icon-bg { position: absolute; inset: 0; background: var(--card-glow); filter: blur(25px); opacity: 0.2; }
+  .main-emoji { font-size: 45px; filter: drop-shadow(0 0 10px var(--card-glow)); animation: float 3s infinite ease-in-out; }
 
-  /* DERS İKONU: Yüzen Küpler */
-  .icon-lessons {
-    width: 30px; height: 30px; background: var(--neon-blue);
-    box-shadow: 0 0 20px var(--neon-blue);
-    transform: rotateX(45deg) rotateZ(45deg);
-    animation: cubeFloat 3s infinite ease-in-out;
-  }
+  /* Metin Yapısı */
+  .card-info { z-index: 10; }
+  .card-info h2 { font-family: 'Space Grotesk'; font-size: 26px; font-weight: 900; margin: 0; letter-spacing: -0.5px; }
+  .card-info p { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 8px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
 
-  /* PRATİK İKONU: Dinamik Dalga */
-  .icon-practice {
-    width: 40px; height: 40px; border: 2px solid var(--neon-green);
-    border-radius: 50%; position: relative;
-  }
-  .icon-practice::after {
-    content: ""; position: absolute; inset: 5px;
-    border-radius: 50%; border: 2px solid var(--neon-green);
-    opacity: 0.5; animation: ping 1.5s infinite;
-  }
-
-  /* OYUN İKONU: Prizma */
-  .icon-games {
-    width: 0; height: 0;
-    border-left: 20px solid transparent;
-    border-right: 20px solid transparent;
-    border-bottom: 35px solid var(--neon-orange);
-    filter: drop-shadow(0 0 15px var(--neon-orange));
-    animation: rotate3d 4s infinite linear;
-  }
-
-  /* Kart Metinleri */
-  .card-info h2 { font-family: 'Space Grotesk'; font-size: 21px; font-weight: 800; margin: 0; color: #fff; }
-  .card-info p { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 6px; font-weight: 600; letter-spacing: 0.5px; }
-
-  /* --- ANİMASYONLAR --- */
-  @keyframes morphing {
-    0% { border-radius: 20% 70% 30% 70% / 30% 30% 70% 70%; }
-    100% { border-radius: 70% 30% 70% 30% / 70% 70% 30% 30%; }
-  }
-  @keyframes cubeFloat {
-    0%, 100% { transform: rotateX(45deg) rotateZ(45deg) translateY(0); }
-    50% { transform: rotateX(45deg) rotateZ(45deg) translateY(-10px); }
-  }
-  @keyframes ping { 0% { transform: scale(0.5); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
-  @keyframes rotate3d { from { transform: rotateY(0deg); } to { transform: rotateY(360deg); } }
-  @keyframes pulseScale { 0%, 100% { transform: scale(1); opacity: 0.3; } 50% { transform: scale(1.1); opacity: 0.6; } }
-
+  /* Animasyonlar */
+  @keyframes rotate3d { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  @keyframes breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+  @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 </style>
 </head>
 
@@ -126,54 +104,52 @@
   <div class="main-hub">
 
     <div class="portal-top" onclick="location.href='/pages/level_test_hub.html'">
-      <div class="hologram-box">
-        <div class="holo-ring"></div>
-        <div class="holo-ring" style="animation-delay: -2s; transform: scale(0.8);"></div>
-        <div class="holo-core">💎</div>
+      <div class="neural-orb">
+        <div class="orb-ring"></div>
+        <div class="orb-core">💎</div>
       </div>
-      <h1 style="font-family:'Space Grotesk'; font-size:24px; font-weight:800; color:#fff; margin:10px 0 0;">
-        Seviye <span>Analizi</span>
-      </h1>
-      <p style="font-size: 10px; font-weight: 900; color: rgba(255,255,255,0.3); letter-spacing: 2px;">NEURAL MAPPING • 2026</p>
+      <h1 class="portal-title">Seviye Tespit <span>Sınavı</span></h1>
+      <p style="font-size: 11px; font-weight: 900; color: rgba(255,255,255,0.4); letter-spacing: 3px; margin-top: 10px;">AKILLI ANALİZ • 2026</p>
     </div>
 
     <div class="hub-cards">
 
-      <div class="os-card" onclick="location.href='/pages/teacher_select.html'">
+      <div class="os-card lesson-node" onclick="location.href='/pages/teacher_select.html'">
         <div class="creative-icon">
-          <div class="icon-lessons"></div>
+          <div class="icon-bg"></div>
+          <div class="main-emoji">📚</div>
         </div>
         <div class="card-info">
-          <h2>Dil Dersi <span style="color:var(--neon-blue)">AI</span></h2>
-          <p>MODÜLER MÜFREDAT • 15 DK OTURUM</p>
+          <h2>Dil Dersi <span>AI</span></h2>
+          <p>Müfredat Odaklı • 15 Dakikalık Seanslar</p>
         </div>
       </div>
 
-      <div class="os-card" onclick="location.href='/pages/practice_ai.html'">
+      <div class="os-card practice-node" onclick="location.href='/pages/practice_ai.html'">
         <div class="creative-icon">
-          <div class="icon-practice"></div>
+          <div class="icon-bg"></div>
+          <div class="main-emoji">🎙️</div>
         </div>
         <div class="card-info">
-          <h2>Nöral <span style="color:var(--neon-green)">Pratik</span></h2>
-          <p>SES ANALİZİ • GERÇEK ZAMANLI GERİBİLDİRİM</p>
+          <h2>AI ile <span>Pratik</span></h2>
+          <p>Nöral Telaffuz • Anlık Geri Bildirim</p>
         </div>
       </div>
 
-      <div class="os-card" onclick="location.href='/pages/game_lang_select.html'">
+      <div class="os-card game-node" onclick="location.href='/pages/game_lang_select.html'">
         <div class="creative-icon">
-          <div class="icon-games"></div>
+          <div class="icon-bg"></div>
+          <div class="main-emoji">🎯</div>
         </div>
         <div class="card-info">
-          <h2>Refleks <span style="color:var(--neon-orange)">Oyunları</span></h2>
-          <p>GAMIFIED LEARNING • SKOR TABLOSU</p>
+          <h2>Eğlenerek <span>Öğren</span></h2>
+          <p>Refleks Oyunları • Kelime Haznesi</p>
         </div>
       </div>
 
     </div>
   </div>
 </main>
-
-
 
 <script type="module">
   import { mountShell } from "/js/ui_shell.js";
