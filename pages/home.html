@@ -1,4 +1,3 @@
-<!-- FILE: /pages/home.html -->
 <!doctype html>
 <html lang="tr">
 <head>
@@ -6,155 +5,148 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
 <title>italkyAI • Quantum OS V7</title>
 
-<!-- ✅ OFFLINE: internet yoksa direkt offline dillere -->
-<script>
-(function(){
-  try{
-    if(navigator.onLine === false){
-      location.replace("/pages/offline_languages.html");
-    }
-  }catch{}
-})();
-</script>
-
 <style>
-  html,body{background:#000 !important; margin:0; padding:0; overflow:hidden; font-family:'Outfit', sans-serif;}
-  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=Space+Grotesk:wght@700&display=swap');
+  html { background: #020205 !important; } /* Tarayıcı henüz render yapmadan siyah kalsın */
+  body { opacity: 0; transition: opacity 0.3s ease; margin: 0; } /* Shell gelene kadar gizle */
+  body.ui-ready { opacity: 1; } /* Hazır olduğunda göster */
 </style>
 
+<link rel="modulepreload" href="/js/ui_shell.js">
+
 <style>
-:root{
-  --ai-grad: linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
-  --blue: #00d2ff; --green: #39ff14; --pink: #ff007f;
-  --glass-border: rgba(255,255,255,0.12);
-}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none;}
+  :root {
+    --bg-dark: #020205;
+    --accent-blue: #00d2ff;
+    --accent-purple: #9d50bb;
+    --accent-green: #39ff14;
+    --glass: rgba(255, 255, 255, 0.03);
+    --glass-border: rgba(255, 255, 255, 0.1);
+  }
 
-#pageContent {
-  height: 100%;
-  display: flex; flex-direction: column;
-  background: radial-gradient(circle at 50% 50%, #0a0a25 0%, #000 100%);
-  position: relative;
-}
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap');
 
-.main-hub {
-  flex: 1; display: flex; flex-direction: column;
-  gap: 15px; padding: 15px; min-height: 0;
-}
+  html, body { 
+    background: var(--bg-dark); margin: 0; padding: 0; 
+    height: 100vh; width: 100vw; overflow: hidden; 
+    font-family: 'Outfit', sans-serif; color: white;
+  }
 
-/* ===== CYBER PANEL (BUTON) ===== */
-.os-panel {
-  flex: 1; position: relative; border-radius: 32px;
-  border: 1px solid var(--glass-border);
-  overflow: hidden; cursor: pointer; display: flex; align-items: center; justify-content: space-between;
-  padding: 0 25px;
-  background: var(--panel-bg);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 15px 35px -15px rgba(0,0,0,0.8);
-}
+  #pageContent {
+    height: 100%; width: 100%;
+    display: flex; flex-direction: column;
+    background: radial-gradient(circle at 50% 50%, #0a0a20 0%, #020205 100%);
+  }
 
-.os-panel:active { transform: scale(0.96) translateY(6px); border-color: var(--neon-color); }
+  .main-hub {
+    flex: 1; display: flex; flex-direction: column;
+    padding: 10px 15px; 
+    gap: 10px;
+  }
 
-/* Renk Temaları */
-.tr-node { --neon-color: var(--blue); --panel-bg: linear-gradient(145deg, rgba(0, 210, 255, 0.12), rgba(0,0,0,0.7)); }
-.ac-node { --neon-color: var(--green); --panel-bg: linear-gradient(145deg, rgba(57, 255, 20, 0.08), rgba(0,0,0,0.7)); }
-.tc-node { --neon-color: var(--pink); --panel-bg: linear-gradient(145deg, rgba(255, 0, 127, 0.12), rgba(0,0,0,0.7)); }
+  /* Genişletilmiş Premium Card */
+  .os-card {
+    position: relative;
+    flex: 1;
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+    display: flex; align-items: center;
+    padding: 20px 25px;
+    overflow: hidden;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    transition: all 0.4s cubic-bezier(0.15, 1, 0.3, 1);
+  }
 
-/* ✅ CANLI VE RENKLİ İKONLAR (OS CORE) */
-.icon-container {
-  position: relative; width: 80px; height: 80px;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0; z-index: 5;
-}
+  .os-card:active { transform: scale(0.97); background: rgba(255,255,255,0.06); }
 
-/* İkon Arkasındaki Enerji Halkası */
-.energy-ring {
-  position: absolute; inset: 0;
-  border: 2px solid var(--neon-color);
-  border-radius: 50%; opacity: 0.3;
-  animation: ringPulse 2s infinite alternate ease-in-out;
-}
-.energy-ring::after {
-  content: ""; position: absolute; inset: -8px;
-  border: 1px dashed var(--neon-color);
-  border-radius: 50%; animation: spin 10s linear infinite; opacity: 0.4;
-}
+  .card-info { flex: 1; z-index: 10; display: flex; flex-direction: column; justify-content: center; }
+  .card-info h2 { font-size: 26px; font-weight: 800; margin: 0 0 8px 0; letter-spacing: -0.5px; }
+  
+  .desc-list { margin: 0; padding: 0; list-style: none; }
+  .desc-list li { 
+    font-size: 13px; color: rgba(255,255,255,0.5); 
+    margin-bottom: 4px; display: flex; align-items: center; gap: 6px;
+  }
+  .desc-list li::before { content: "•"; color: var(--theme); font-weight: bold; }
 
-.main-icon {
-  font-size: 38px; z-index: 10;
-  filter: drop-shadow(0 0 15px var(--neon-color));
-  animation: iconFloat 3s infinite alternate ease-in-out;
-}
+  /* İkon Tasarımı */
+  .visual-engine { position: relative; width: 90px; height: 90px; display: flex; align-items: center; justify-content: center; }
+  .plasma-glow { position: absolute; width: 100%; height: 100%; background: var(--theme); filter: blur(25px); opacity: 0.2; animation: plasmaRotate 6s infinite linear; }
+  .icon-shape { width: 45px; height: 45px; position: relative; z-index: 15; filter: drop-shadow(0 0 10px var(--theme)); animation: float 4s infinite ease-in-out; }
 
-/* İçerik */
-.content-wrap { display: flex; flex-direction: column; gap: 4px; z-index: 10; }
-.btn-title { font-family: 'Space Grotesk'; font-size: 26px; font-weight: 800; color: #fff; margin: 0; }
-.btn-title span { background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-.btn-desc { font-size: 10px; color: rgba(255,255,255,0.6); font-weight: 900; letter-spacing: 2px; text-transform: uppercase; }
+  .shape-translate { border: 4px double var(--theme); border-radius: 50%; animation: spin 8s infinite linear; }
+  .shape-academy { background: var(--theme); clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); opacity: 0.8; }
+  .shape-teacher { background: var(--theme); border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; animation: morph 5s infinite alternate; }
 
-/* Durum Etiketi */
-.status-tag {
-  position: absolute; top: 12px; right: 20px;
-  font-family: monospace; font-size: 8px; color: var(--neon-color);
-  background: rgba(0,0,0,0.4); padding: 4px 8px; border-radius: 8px;
-  border: 1px solid var(--neon-color); opacity: 0.7;
-}
+  .blue-node { --theme: var(--accent-blue); }
+  .purple-node { --theme: var(--accent-purple); }
+  .green-node { --theme: var(--accent-green); }
+  .theme-text { color: var(--theme); filter: brightness(1.2); }
 
-/* Animasyonlar */
-@keyframes ringPulse { from { transform: scale(0.9); opacity: 0.2; } to { transform: scale(1.1); opacity: 0.5; } }
-@keyframes spin { from { transform: rotate(0); } to { transform: rotate(360deg); } }
-@keyframes iconFloat { from { transform: translateY(-4px) rotate(-5deg); } to { transform: translateY(4px) rotate(5deg); } }
+  @keyframes plasmaRotate { from { transform: rotate(0deg) scale(1); } to { transform: rotate(360deg) scale(1.2); } }
+  @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes morph { 0% { border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; } 100% { border-radius: 50% 50% 20% 80% / 25% 80% 20% 75%; } }
 </style>
 </head>
 
 <body>
 <main id="pageContent">
   <div class="main-hub">
-
-    <div class="os-panel tr-node" onclick="location.href='/pages/translate_home.html'">
-      <div class="status-tag">SİNYAL: AKTİF</div>
-      <div class="content-wrap">
-        <h2 class="btn-title">Translate <span>AI</span></h2>
-        <div class="btn-desc">Nöral Dil Akışı</div>
+    <div class="os-card blue-node" onclick="location.href='/pages/translate_home.html'">
+      <div class="card-info">
+        <h2>Translate <span class="theme-text">AI</span></h2>
+        <ul class="desc-list">
+          <li>Sesli ve yazılı anlık çeviri</li>
+          <li>Farklı dillerde kolay iletişim</li>
+          <li>Seyahat ve günlük kullanım için</li>
+        </ul>
       </div>
-      <div class="icon-container">
-        <div class="energy-ring"></div>
-        <div class="main-icon">📡</div>
-      </div>
-    </div>
-
-    <div class="os-panel ac-node" onclick="location.href='/pages/acedemy_home.html'">
-      <div class="status-tag">MODÜL: HAZIR</div>
-      <div class="content-wrap">
-        <h2 class="btn-title">Academy <span>AI</span></h2>
-        <div class="btn-desc">Bilgelik ve Eğitim Yolu</div>
-      </div>
-      <div class="icon-container">
-        <div class="energy-ring"></div>
-        <div class="main-icon">💎</div>
+      <div class="visual-engine">
+        <div class="plasma-glow"></div>
+        <div class="icon-shape shape-translate"></div>
       </div>
     </div>
 
-    <div class="os-panel tc-node" onclick="location.href='/pages/helper_home.html'">
-      <div class="status-tag">SENKRON: AÇIK</div>
-      <div class="content-wrap">
-        <h2 class="btn-title">Teacher <span>AI</span></h2>
-        <div class="btn-desc">Mantıksal Çözüm Motoru</div>
+    <div class="os-card purple-node" onclick="location.href='/pages/acedemy_home.html'">
+      <div class="card-info">
+        <h2>Academy <span class="theme-text">AI</span></h2>
+        <ul class="desc-list">
+          <li>Dil öğrenme ve pratik araçları</li>
+          <li>Oyunlar ve interaktif eğitim</li>
+          <li>Bilgini geliştir, kendini ilerlet</li>
+        </ul>
       </div>
-      <div class="icon-container">
-        <div class="energy-ring"></div>
-        <div class="main-icon">🧬</div>
+      <div class="visual-engine">
+        <div class="plasma-glow"></div>
+        <div class="icon-shape shape-academy"></div>
       </div>
     </div>
 
+    <div class="os-card green-node" onclick="location.href='/pages/helper_home.html'">
+      <div class="card-info">
+        <h2>Teacher <span class="theme-text">AI</span></h2>
+        <ul class="desc-list">
+          <li>Soruları anlayan AI öğretmen</li>
+          <li>Fotoğraf çekerek soru çözme</li>
+          <li>Adım adım anlatımlı çözümler</li>
+        </ul>
+      </div>
+      <div class="visual-engine">
+        <div class="plasma-glow"></div>
+        <div class="icon-shape shape-teacher"></div>
+      </div>
+    </div>
   </div>
 </main>
 
 <script type="module">
   import { mountShell } from "/js/ui_shell.js";
+  
+  // ⚡ Shell yüklenince body'i görünür yap
   mountShell({ scroll:"none" });
+  document.body.classList.add('ui-ready');
 </script>
 </body>
 </html>
