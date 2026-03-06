@@ -7,118 +7,108 @@
 
 <style>
   :root {
-    --bg-dark: #050508;
-    --accent-blue: #00f2ff;
-    --accent-purple: #bd00ff;
-    --accent-green: #00ff88;
-    --glass-white: rgba(255, 255, 255, 0.04);
-    --glass-border: rgba(255, 255, 255, 0.08);
+    --bg-dark: #020205;
+    --accent-blue: #00d2ff;
+    --accent-purple: #9d50bb;
+    --accent-green: #39ff14;
+    --glass: rgba(255, 255, 255, 0.03);
+    --glass-border: rgba(255, 255, 255, 0.1);
   }
 
-  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap');
 
   html, body { 
-    background: var(--bg-dark); 
-    margin: 0; padding: 0; 
-    height: 100vh; width: 100vw;
-    overflow: hidden; 
-    font-family: 'Outfit', sans-serif;
-    color: white;
+    background: var(--bg-dark); margin: 0; padding: 0; 
+    height: 100vh; width: 100vw; overflow: hidden; 
+    font-family: 'Outfit', sans-serif; color: white;
   }
 
   #pageContent {
     height: 100%; width: 100%;
     display: flex; flex-direction: column;
-    position: relative;
-    background: radial-gradient(circle at 50% 10%, rgba(189, 0, 255, 0.08), transparent 40%),
-                radial-gradient(circle at 50% 90%, rgba(0, 242, 255, 0.08), transparent 40%);
+    background: radial-gradient(circle at 50% 50%, #0a0a20 0%, #020205 100%);
   }
 
-  /* Ana Konteyner: Butonları tam ortalar ve aralıkları dengeler */
+  /* Butonları Sayfaya Tam Yayan Konteyner */
   .main-hub {
-    flex: 1; 
-    display: flex; 
-    flex-direction: column;
-    padding: 15px 20px; 
-    gap: 12px; /* Ne çok uzak, ne çok yakın: İdeal boşluk */
-    justify-content: center; /* Sayfa ortasına odakla */
+    flex: 1; display: flex; flex-direction: column;
+    padding: 10px 15px; /* Kenarlara daha yakın */
+    gap: 10px; /* Butonlar arası minimal şık boşluk */
   }
 
-  /* ===== CANLI QUANTUM CARD ===== */
+  /* ===== GENİŞLETİLMİŞ PREMIUM CARD ===== */
   .os-card {
     position: relative;
-    height: 25%; /* Tam sığdırma için ideal oran */
-    min-height: 120px;
-    background: var(--glass-white);
+    flex: 1; /* Butonları dikeyde tam genişletir */
+    background: var(--glass);
     border: 1px solid var(--glass-border);
-    border-radius: 30px;
+    border-radius: 24px;
     display: flex; align-items: center;
-    padding: 0 25px;
+    padding: 20px 25px;
     overflow: hidden;
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    transition: all 0.3s cubic-bezier(0.2, 0, 0.2, 1);
+    transition: all 0.4s cubic-bezier(0.15, 1, 0.3, 1);
   }
 
-  /* Tıklama Hissi */
-  .os-card:active { 
-    transform: scale(0.96); 
-    background: rgba(255,255,255,0.08);
-    border-color: var(--theme);
-  }
+  .os-card:active { transform: scale(0.97); background: rgba(255,255,255,0.06); }
 
-  .card-info { flex: 1; z-index: 5; }
+  /* İçerik Düzeni */
+  .card-info { flex: 1; z-index: 10; display: flex; flex-direction: column; justify-content: center; }
+  
   .card-info h2 { 
-    font-size: 24px; font-weight: 800; margin: 0; 
-    letter-spacing: -0.5px;
+    font-size: 26px; font-weight: 800; margin: 0 0 8px 0; 
+    letter-spacing: -0.5px; text-shadow: 0 0 20px rgba(255,255,255,0.2);
   }
-  .card-info p { 
-    font-size: 13px; margin: 4px 0 0; color: rgba(255,255,255,0.5); 
-    font-weight: 400;
+  
+  .desc-list { margin: 0; padding: 0; list-style: none; }
+  .desc-list li { 
+    font-size: 13px; color: rgba(255,255,255,0.5); 
+    margin-bottom: 4px; display: flex; align-items: center; gap: 6px;
   }
+  .desc-list li::before { content: "•"; color: var(--theme); font-weight: bold; }
 
-  /* Canlı İkon Sistemi */
-  .visual-node {
-    position: relative;
-    width: 70px; height: 70px;
+  /* Yaratıcı ve Canlı İkon Tasarımı */
+  .visual-engine {
+    position: relative; width: 90px; height: 90px;
     display: flex; align-items: center; justify-content: center;
   }
 
-  /* Enerji Çekirdeği Animasyonu */
-  .core-glow {
-    position: absolute;
-    width: 100%; height: 100%;
-    border-radius: 50%;
-    filter: blur(15px); opacity: 0.2;
-    animation: breathing 4s infinite ease-in-out;
+  /* İkon Arkası Plazma Efekti */
+  .plasma-glow {
+    position: absolute; width: 100%; height: 100%;
+    background: var(--theme); filter: blur(25px);
+    opacity: 0.2; animation: plasmaRotate 6s infinite linear;
   }
 
-  .icon-main {
-    font-size: 36px; z-index: 10;
-    filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));
-    animation: floatingIcon 3s infinite ease-in-out;
+  /* Özel Grafiksel İkonlar (CSS ile oluşturulan modern şekiller) */
+  .icon-shape {
+    width: 45px; height: 45px; position: relative; z-index: 15;
+    filter: drop-shadow(0 0 10px var(--theme));
+    animation: float 4s infinite ease-in-out;
   }
 
-  /* Renk Temaları */
+  /* Translate: Dinamik Halka */
+  .shape-translate { border: 4px double var(--theme); border-radius: 50%; animation: spin 8s infinite linear; }
+  /* Academy: Elmas/Prizma */
+  .shape-academy { background: var(--theme); clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); opacity: 0.8; }
+  /* Teacher: Nöral Çekirdek */
+  .shape-teacher { background: var(--theme); border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; animation: morph 5s infinite alternate; }
+
+  /* Renk Tanımlamaları */
   .blue-node { --theme: var(--accent-blue); }
   .purple-node { --theme: var(--accent-purple); }
   .green-node { --theme: var(--accent-green); }
-
-  .theme-text { color: var(--theme); }
-  .core-glow { background: var(--theme); }
+  .theme-text { color: var(--theme); filter: brightness(1.2); }
 
   /* --- Animasyonlar --- */
-  @keyframes breathing {
-    0%, 100% { transform: scale(0.8); opacity: 0.15; }
-    50% { transform: scale(1.3); opacity: 0.4; }
+  @keyframes plasmaRotate { from { transform: rotate(0deg) scale(1); } to { transform: rotate(360deg) scale(1.2); } }
+  @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes morph {
+    0% { border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; }
+    100% { border-radius: 50% 50% 20% 80% / 25% 80% 20% 75%; }
   }
-
-  @keyframes floatingIcon {
-    0%, 100% { transform: translateY(0) rotate(0deg); }
-    33% { transform: translateY(-4px) rotate(-3deg); }
-    66% { transform: translateY(2px) rotate(3deg); }
-  }
-
 </style>
 </head>
 
@@ -130,33 +120,45 @@
     <div class="os-card blue-node" onclick="location.href='/pages/translate_home.html'">
       <div class="card-info">
         <h2>Translate <span class="theme-text">AI</span></h2>
-        <p>Anında konuş, anında çevir</p>
+        <ul class="desc-list">
+          <li>Sesli ve yazılı anlık çeviri</li>
+          <li>Farklı dillerde kolay iletişim</li>
+          <li>Seyahat ve günlük kullanım için</li>
+        </ul>
       </div>
-      <div class="visual-node">
-        <div class="core-glow"></div>
-        <div class="icon-main">🌀</div>
+      <div class="visual-engine">
+        <div class="plasma-glow"></div>
+        <div class="icon-shape shape-translate"></div>
       </div>
     </div>
 
     <div class="os-card purple-node" onclick="location.href='/pages/acedemy_home.html'">
       <div class="card-info">
         <h2>Academy <span class="theme-text">AI</span></h2>
-        <p>AI destekli öğrenme merkezi</p>
+        <ul class="desc-list">
+          <li>Dil öğrenme ve pratik araçları</li>
+          <li>Oyunlar ve interaktif eğitim</li>
+          <li>Bilgini geliştir, kendini ilerlet</li>
+        </ul>
       </div>
-      <div class="visual-node">
-        <div class="core-glow"></div>
-        <div class="icon-main">🔮</div>
+      <div class="visual-engine">
+        <div class="plasma-glow"></div>
+        <div class="icon-shape shape-academy"></div>
       </div>
     </div>
 
     <div class="os-card green-node" onclick="location.href='/pages/helper_home.html'">
       <div class="card-info">
         <h2>Teacher <span class="theme-text">AI</span></h2>
-        <p>Soruları çözen akıllı öğretmen</p>
+        <ul class="desc-list">
+          <li>Soruları anlayan AI öğretmen</li>
+          <li>Fotoğraf çekerek soru çözme</li>
+          <li>Adım adım anlatımlı çözümler</li>
+        </ul>
       </div>
-      <div class="visual-node">
-        <div class="core-glow"></div>
-        <div class="icon-main">⚡</div>
+      <div class="visual-engine">
+        <div class="plasma-glow"></div>
+        <div class="icon-shape shape-teacher"></div>
       </div>
     </div>
 
