@@ -1,4 +1,3 @@
-<!-- FILE: /pages/teacher_select.html -->
 <!doctype html>
 <html lang="tr">
 <head>
@@ -6,245 +5,85 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
   <title>italkyAI • Ders Seçimi</title>
 
-  <meta name="theme-color" content="#02000f">
-  <style>html,body{background:#02000f !important;}</style>
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
-
   <style>
-    :root{
-      --border: rgba(255,255,255,0.12);
-      --card: rgba(255,255,255,0.05);
-      --muted: rgba(255,255,255,0.70);
-      --ai: linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
+    :root {
+      --ai: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
+      --glass-border: rgba(255, 255, 255, 0.1);
+      --bg-dark: #02000f;
     }
-    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; }
-    #pageContent{ height:100%; display:flex; justify-content:center; padding: 10px 10px; }
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Plus+Jakarta+Sans:wght@700&display=swap');
 
-    .wrap{
-      width:100%;
-      max-width:520px;
-      height:100%;
-      display:flex;
-      flex-direction:column;
-      gap: 10px;
+    html, body { 
+      background: var(--bg-dark) !important; margin: 0; padding: 0; 
+      height: 100vh; overflow: hidden; font-family: 'Plus Jakarta Sans', sans-serif;
     }
 
-    .hero{
-      border-radius: 24px;
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,0.04);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      padding: 12px 14px;
-      position:relative;
-      overflow:hidden;
+    #pageContent {
+      height: 100%; display: flex; flex-direction: column;
+      background: radial-gradient(circle at 50% 10%, rgba(99, 102, 241, 0.15), transparent 40%);
+      opacity: 0; transform: translateY(20px);
+      transition: all 0.6s cubic-bezier(0.2, 1, 0.3, 1);
     }
-    .hero::before{
-      content:"";
-      position:absolute; inset:-35%;
-      background:
-        radial-gradient(circle at 20% 20%, rgba(99,102,241,.22) 0%, transparent 45%),
-        radial-gradient(circle at 80% 30%, rgba(236,72,153,.16) 0%, transparent 45%),
-        radial-gradient(circle at 50% 90%, rgba(168,85,247,.14) 0%, transparent 45%);
-      filter: blur(36px);
-      animation: drift 9s ease-in-out infinite alternate;
-      pointer-events:none;
+    #pageContent.ui-ready { opacity: 1; transform: translateY(0); }
+
+    .wrap { flex: 1; display: flex; flex-direction: column; padding: 20px; gap: 15px; }
+
+    /* 💎 Hero Alanı */
+    .hero {
+      padding: 20px; border-radius: 28px; border: 1px solid var(--glass-border);
+      background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(25px);
+      position: relative; overflow: hidden;
     }
-    @keyframes drift{
-      from{ transform: translate3d(-10px,-6px,0) scale(1); }
-      to{ transform: translate3d(10px,8px,0) scale(1.06); }
+    .hero h1 { font-size: 24px; font-weight: 800; color: #fff; margin: 0; letter-spacing: -0.5px; }
+    .hero h1 span { background: var(--ai); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .hero p { font-size: 13px; color: rgba(255, 255, 255, 0.5); margin: 10px 0 0; line-height: 1.6; font-weight: 500; }
+
+    /* 🚀 Dil Kartları */
+    .list { flex: 1; display: flex; flex-direction: column; gap: 12px; justify-content: center; }
+
+    .langCard {
+      width: 100%; border-radius: 24px; border: 1px solid var(--glass-border);
+      background: rgba(255, 255, 255, 0.02); padding: 16px 20px;
+      display: flex; align-items: center; justify-content: space-between;
+      cursor: pointer; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      position: relative; overflow: hidden;
     }
 
-    .heroTop{
-      position:relative;
-      display:flex; align-items:center; justify-content:space-between; gap:10px;
-      margin-bottom: 6px;
-      z-index:2;
-    }
-    .hTitle{
-      font-family:"Space Grotesk",system-ui,sans-serif;
-      font-weight: 1000;
-      font-size: 16px;
-      letter-spacing: -0.2px;
-      margin:0;
-      color:#fff;
-    }
-    .pill{
-      padding: 7px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(0,0,0,0.18);
-      font-weight: 1000;
-      font-size: 12px;
-      color: rgba(255,255,255,0.90);
-      white-space: nowrap;
-    }
-    .heroText{
-      position:relative;
-      margin:0;
-      font-size: 12px;
-      font-weight: 900;
-      line-height: 1.55;
-      color: rgba(255,255,255,0.72);
-      z-index:2;
-    }
-    .heroText b{ color:#fff; }
-    .heroText .hl{
-      background: var(--ai);
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;
+    .langCard:active { transform: scale(0.96) translateY(4px); }
+
+    /* Kartın arkasındaki renk sızıntısı (Aura) */
+    .langCard::after {
+      content: ""; position: absolute; left: 0; top: 0; width: 60px; height: 100%;
+      background: var(--ai); opacity: 0.05; filter: blur(30px);
     }
 
-    .list{
-      flex: 1;
-      min-height: 0;
-      display:flex;
-      flex-direction:column;
-      gap: 10px;
-      justify-content: center; /* ✅ alt/üst bar arası eşit dolsun */
+    .left { display: flex; align-items: center; gap: 15px; z-index: 5; }
+
+    /* Nöral Bayrak Çekirdeği */
+    .flagRing {
+      width: 50px; height: 50px; border-radius: 18px;
+      background: var(--ai); padding: 2px;
+      animation: rotateRing 8s linear infinite;
+    }
+    .flagBox {
+      width: 100%; height: 100%; border-radius: 16px;
+      background: #000; display: flex; align-items: center; justify-content: center;
+      font-size: 24px;
     }
 
-    button.langCard{
-      width: 100%;
-      border-radius: 22px;
-      border: 1px solid var(--border);
-      background: var(--card);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
+    .txt .name { font-size: 18px; font-weight: 800; color: #fff; display: block; }
+    .txt .sub { font-size: 11px; color: rgba(255, 255, 255, 0.45); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .txt .sub.ok { color: #a5b4fc; }
 
-      padding: 14px 14px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap: 12px;
+    .right { display: flex; align-items: center; gap: 10px; z-index: 5; }
+    .badge {
+      font-size: 11px; font-weight: 900; color: #fff;
+      padding: 5px 10px; border-radius: 10px;
+      background: rgba(255, 255, 255, 0.08); border: 1px solid var(--glass-border);
+    }
+    .chev { color: rgba(255, 255, 255, 0.3); font-size: 20px; font-weight: 300; }
 
-      color:#fff;
-      cursor:pointer;
-      user-select:none;
-      appearance:none;
-      -webkit-appearance:none;
-
-      transition: transform .16s ease, background .16s ease, border-color .16s ease;
-    }
-    button.langCard:active{
-      transform: scale(.988);
-      background: rgba(255,255,255,0.07);
-      border-color: rgba(165,180,252,0.30);
-    }
-
-    .left{
-      display:flex;
-      align-items:center;
-      gap: 12px;
-      min-width: 0;
-    }
-
-    .flagRing{
-      width: 46px; height: 46px;
-      border-radius: 18px;
-      padding: 2px;
-      background: var(--ai);
-      flex:0 0 auto;
-      filter: drop-shadow(0 10px 18px rgba(0,0,0,0.28));
-      animation: hue 6.5s linear infinite;
-    }
-    @keyframes hue{
-      from{ filter: drop-shadow(0 10px 18px rgba(0,0,0,0.28)) hue-rotate(0deg); }
-      to{ filter: drop-shadow(0 10px 18px rgba(0,0,0,0.28)) hue-rotate(25deg); }
-    }
-    .flagBox{
-      width:100%; height:100%;
-      border-radius: 16px;
-      display:flex; align-items:center; justify-content:center;
-      background: rgba(0,0,0,0.22);
-      border: 1px solid rgba(255,255,255,0.12);
-    }
-    .flag{
-      font-size: 22px;
-      line-height: 1;
-      animation: floatFlag 2.2s ease-in-out infinite;
-    }
-    @keyframes floatFlag{ 0%,100%{ transform: translateY(0);} 50%{ transform: translateY(-2px);} }
-    button.langCard:nth-child(2) .flag{ animation-duration: 2.5s; }
-    button.langCard:nth-child(3) .flag{ animation-duration: 2.1s; }
-    button.langCard:nth-child(4) .flag{ animation-duration: 2.7s; }
-    button.langCard:nth-child(5) .flag{ animation-duration: 2.3s; }
-    button.langCard:nth-child(6) .flag{ animation-duration: 2.6s; }
-
-    .txt{
-      min-width: 0;
-      display:flex;
-      flex-direction:column;
-      gap: 2px;
-    }
-    .name{
-      font-size: 16px;
-      font-weight: 1000;
-      letter-spacing: -0.2px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .sub{
-      font-size: 11px;
-      font-weight: 900;
-      color: rgba(255,255,255,0.62);
-      line-height: 1.2;
-    }
-    .sub.ok{ color: rgba(165,180,252,0.95); }
-
-    .right{
-      display:flex; align-items:center; gap: 10px; flex: 0 0 auto;
-    }
-    .badge{
-      padding: 7px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(0,0,0,0.18);
-      font-size: 12px;
-      font-weight: 1000;
-      color: rgba(255,255,255,0.88);
-      white-space: nowrap;
-    }
-    .chev{
-      width: 34px; height: 34px;
-      border-radius: 14px;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(255,255,255,0.06);
-      display:flex; align-items:center; justify-content:center;
-      font-weight: 1000;
-      color: rgba(255,255,255,0.85);
-    }
-
-    .toast{
-      position: fixed;
-      left:50%;
-      top:18px;
-      transform: translateX(-50%) translateY(-120px);
-      background: rgba(10,10,18,0.95);
-      border: 1px solid rgba(165,180,252,0.35);
-      padding: 10px 14px;
-      border-radius: 999px;
-      color:#fff;
-      z-index: 999999;
-      font-weight: 1000;
-      font-size: 12px;
-      transition: .25s;
-      backdrop-filter: blur(12px);
-      pointer-events:none;
-      max-width: min(92vw, 520px);
-      text-align:center;
-    }
-    .toast.show{ transform: translateX(-50%) translateY(0); }
-
-    @media (max-height: 740px){
-      .hero{ padding: 10px 12px; }
-      button.langCard{ padding: 12px 12px; }
-      .name{ font-size: 15px; }
-    }
+    @keyframes rotateRing { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
   </style>
 </head>
 
@@ -252,40 +91,25 @@
   <main id="pageContent">
     <div class="wrap">
       <section class="hero">
-        <div class="heroTop">
-          <h1 class="hTitle">italky <span style="background:var(--ai);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Academy</span> • Ders Seçimi</h1>
-          <div class="pill">6 Dil</div>
-        </div>
-        <p class="heroText">
-          Ders planına geçmek için önce <b>seviye tespit</b> gerekir.<br/>
-          Seviyen varsa direkt <b class="hl">Ders Planı</b> ekranına geçersin.
-        </p>
+        <h1>italky <span>Academy</span></h1>
+        <p>Eğitim yolculuğun burada başlıyor. Seviyene göre özel ders planın saniyeler içinde hazırlanacak.</p>
       </section>
 
       <section class="list" id="list"></section>
     </div>
   </main>
 
-  <div class="toast" id="toast"></div>
-
   <script type="module">
     import { mountShell } from "/js/ui_shell.js";
     import { supabase } from "/js/supabase_client.js";
 
     mountShell({ scroll:"none" });
+    // Sayfa hazır olduğunda animasyonu tetikle
+    document.getElementById("pageContent").classList.add("ui-ready");
 
     const $ = (id)=>document.getElementById(id);
     const list = $("list");
 
-    function toast(msg){
-      const t = $("toast");
-      t.textContent = String(msg||"");
-      t.classList.add("show");
-      clearTimeout(window.__to);
-      window.__to = setTimeout(()=>t.classList.remove("show"), 1600);
-    }
-
-    // ✅ 6 dil + teacher_id map (akış bozulmasın)
     const LANGS = [
       { code:"en", name:"English",  flag:"🇬🇧", teacher:"dora"   },
       { code:"de", name:"German",   flag:"🇩🇪", teacher:"ayda"   },
@@ -295,85 +119,44 @@
       { code:"es", name:"Spanish",  flag:"🇪🇸", teacher:"ozan"   },
     ];
 
-    const { data:{ session } } = await supabase.auth.getSession();
-    const userId = session?.user?.id || null;
-    if(!userId){
-      location.replace("/pages/login.html");
-      throw new Error("no session");
-    }
+    async function init() {
+      const { data:{ session } } = await supabase.auth.getSession();
+      if(!session) { location.replace("/pages/login.html"); return; }
+      
+      const { data: prof } = await supabase.from("profiles").select("levels").eq("id", session.user.id).maybeSingle();
+      const levels = prof?.levels || {};
 
-    // levels (profiles.levels jsonb)
-    let levels = {};
-    try{
-      const { data: prof } = await supabase
-        .from("profiles")
-        .select("levels")
-        .eq("id", userId)
-        .maybeSingle();
-      levels = (prof?.levels && typeof prof.levels === "object") ? prof.levels : {};
-    }catch{}
-
-    function cardHtml(l){
-      const lv = (levels && typeof levels === "object") ? (levels[l.code] || "") : "";
-      const sub = lv ? `Seviyeniz: ${lv} • Ders planına geç` : "Seviye yok • Sınava yönlendir";
-      const subCls = lv ? "sub ok" : "sub";
-      return `
-        <button class="langCard" type="button" data-code="${l.code}" data-teacher="${l.teacher}">
-          <div class="left">
-            <div class="flagRing"><div class="flagBox"><div class="flag">${l.flag}</div></div></div>
-            <div class="txt">
-              <div class="name">${l.name}</div>
-              <div class="${subCls}">${sub}</div>
+      list.innerHTML = LANGS.map(l => {
+        const lv = levels[l.code] || "";
+        const subTxt = lv ? `Seviye: ${lv} • Plana Geç` : "Sınava Yönlendir";
+        return `
+          <button class="langCard" onclick="window.goNext('${l.code}', '${l.teacher}', '${lv}')">
+            <div class="left">
+              <div class="flagRing"><div class="flagBox">${l.flag}</div></div>
+              <div class="txt">
+                <span class="name">${l.name}</span>
+                <span class="sub ${lv ? 'ok' : ''}">${subTxt}</span>
+              </div>
             </div>
-          </div>
-          <div class="right">
-            <div class="badge">${l.code.toUpperCase()}</div>
-            <div class="chev">›</div>
-          </div>
-        </button>
-      `;
+            <div class="right">
+              <div class="badge">${l.code.toUpperCase()}</div>
+              <div class="chev">›</div>
+            </div>
+          </button>
+        `;
+      }).join("");
     }
 
-    list.innerHTML = LANGS.map(cardHtml).join("");
-
-    let busy = false;
-    let lastTap = 0;
-
-    async function goNext(code, teacher){
-      try{ localStorage.setItem("italky_teacher_pref", teacher); }catch{}
-
-      const lv = (levels && typeof levels === "object") ? (levels[code] || "") : "";
-      if(lv){
-        location.href = `/pages/plan_select.html?t=${encodeURIComponent(teacher)}&lang=${encodeURIComponent(code)}&level=${encodeURIComponent(lv)}`;
-        return;
+    window.goNext = (code, teacher, lv) => {
+      localStorage.setItem("italky_teacher_pref", teacher);
+      if(lv) {
+        location.href = `/pages/plan_select.html?t=${teacher}&lang=${code}&level=${lv}`;
+      } else {
+        location.href = `/pages/level_required.html?lang=${code}&t=${teacher}&next=plan_select`;
       }
+    };
 
-      // ✅ doğru sayfa: level_required.html
-      location.href = `/pages/level_required.html?lang=${encodeURIComponent(code)}&t=${encodeURIComponent(teacher)}&next=${encodeURIComponent("plan_select")}`;
-    }
-
-    list.querySelectorAll(".langCard").forEach(btn=>{
-      const handler = async (ev)=>{
-        ev.preventDefault(); ev.stopPropagation();
-        if(busy) return;
-        const now = Date.now();
-        if(now - lastTap < 650) return;
-        lastTap = now;
-        busy = true;
-
-        const code = String(btn.getAttribute("data-code")||"").trim();
-        const teacher = String(btn.getAttribute("data-teacher")||"").trim();
-
-        try{
-          toast("Kontrol ediliyor…");
-          await goNext(code, teacher);
-        }finally{
-          busy = false;
-        }
-      };
-      btn.addEventListener("click", handler, { passive:false });
-      btn.addEventListener("touchend", handler, { passive:false });
-    });
+    init();
   </script>
 </body>
 </html>
