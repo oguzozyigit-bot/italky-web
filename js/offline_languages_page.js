@@ -73,76 +73,76 @@ function uninstallNative(pair) {
   return true;
 }
 
-// ✅ Sadece gerçekten elinizde olan dil kodlarını burada tut
+// ✅ Şu an isimler Türkçe
 const LANGS = [
-  { code:"tr", flag:"🇹🇷", name:"Türkçe", alt:["Turkish","Türkce"] },
-  { code:"en", flag:"🇬🇧", name:"English", alt:["İngilizce","Ingilizce"] },
-  { code:"de", flag:"🇩🇪", name:"Deutsch", alt:["Almanca","German"] },
-  { code:"fr", flag:"🇫🇷", name:"Français", alt:["Fransızca","French"] },
-  { code:"it", flag:"🇮🇹", name:"Italiano", alt:["İtalyanca","Italian"] },
-  { code:"es", flag:"🇪🇸", name:"Español", alt:["İspanyolca","Spanish"] },
-  { code:"pt", flag:"🇵🇹", name:"Português", alt:["Portekizce","Portuguese"] },
-  { code:"ru", flag:"🇷🇺", name:"Русский", alt:["Rusça","Russian"] },
-  { code:"uk", flag:"🇺🇦", name:"Українська", alt:["Ukraynaca","Ukrainian"] },
-  { code:"pl", flag:"🇵🇱", name:"Polski", alt:["Lehçe","Polish"] },
-  { code:"nl", flag:"🇳🇱", name:"Nederlands", alt:["Dutch","Flemenkçe"] },
-  { code:"sv", flag:"🇸🇪", name:"Svenska", alt:["Swedish","İsveççe"] },
-  { code:"no", flag:"🇳🇴", name:"Norsk", alt:["Norwegian","Norveççe"] },
-  { code:"da", flag:"🇩🇰", name:"Dansk", alt:["Danish","Danca"] },
-  { code:"fi", flag:"🇫🇮", name:"Suomi", alt:["Finnish","Fince"] },
-  { code:"cs", flag:"🇨🇿", name:"Čeština", alt:["Czech","Çekçe"] },
-  { code:"sk", flag:"🇸🇰", name:"Slovenčina", alt:["Slovak"] },
-  { code:"hu", flag:"🇭🇺", name:"Magyar", alt:["Hungarian","Macarca"] },
-  { code:"ro", flag:"🇷🇴", name:"Română", alt:["Romanian","Romence"] },
-  { code:"bg", flag:"🇧🇬", name:"Български", alt:["Bulgarian","Bulgarca"] },
-  { code:"el", flag:"🇬🇷", name:"Ελληνικά", alt:["Greek","Yunanca"] },
-  { code:"sr", flag:"🇷🇸", name:"Srpski", alt:["Serbian","Sırpça"] },
-  { code:"hr", flag:"🇭🇷", name:"Hrvatski", alt:["Croatian","Hırvatça"] },
-  { code:"sl", flag:"🇸🇮", name:"Slovenščina", alt:["Slovenian"] },
-  { code:"bs", flag:"🇧🇦", name:"Bosanski", alt:["Bosnian","Boşnakça"] },
-  { code:"mk", flag:"🇲🇰", name:"Македонски", alt:["Macedonian"] },
-  { code:"sq", flag:"🇦🇱", name:"Shqip", alt:["Albanian","Arnavutça"] },
-  { code:"et", flag:"🇪🇪", name:"Eesti", alt:["Estonian","Estonca"] },
-  { code:"lv", flag:"🇱🇻", name:"Latviešu", alt:["Latvian","Letonca"] },
-  { code:"lt", flag:"🇱🇹", name:"Lietuvių", alt:["Lithuanian","Litvanca"] },
-  { code:"ar", flag:"🇸🇦", name:"العربية", alt:["Arabic","Arapça"] },
-  { code:"fa", flag:"🇮🇷", name:"فارسی", alt:["Persian","Farsça"] },
-  { code:"he", flag:"🇮🇱", name:"עברית", alt:["Hebrew","İbranice"] },
-  { code:"ur", flag:"🇵🇰", name:"اردو", alt:["Urdu"] },
-  { code:"hi", flag:"🇮🇳", name:"हिन्दी", alt:["Hindi"] },
-  { code:"bn", flag:"🇧🇩", name:"বাংলা", alt:["Bengali","Bangla"] },
-  { code:"ta", flag:"🇮🇳", name:"தமிழ்", alt:["Tamil"] },
-  { code:"te", flag:"🇮🇳", name:"తెలుగు", alt:["Telugu"] },
-  { code:"mr", flag:"🇮🇳", name:"मराठी", alt:["Marathi"] },
-  { code:"gu", flag:"🇮🇳", name:"ગુજરાતી", alt:["Gujarati"] },
-  { code:"ne", flag:"🇳🇵", name:"नेपाली", alt:["Nepali"] },
-  { code:"si", flag:"🇱🇰", name:"සිංහල", alt:["Sinhala"] },
-  { code:"zh", flag:"🇨🇳", name:"中文", alt:["Chinese","Çince","Mandarin"] },
-  { code:"ja", flag:"🇯🇵", name:"日本語", alt:["Japanese","Japonca"] },
-  { code:"ko", flag:"🇰🇷", name:"한국어", alt:["Korean","Korece"] },
-  { code:"th", flag:"🇹🇭", name:"ไทย", alt:["Thai","Tayca"] },
-  { code:"vi", flag:"🇻🇳", name:"Tiếng Việt", alt:["Vietnamese","Vietnamca"] },
-  { code:"id", flag:"🇮🇩", name:"Bahasa Indonesia", alt:["Indonesian","Endonezce"] },
-  { code:"ms", flag:"🇲🇾", name:"Bahasa Melayu", alt:["Malay","Malayca"] },
-  { code:"fil", flag:"🇵🇭", name:"Filipino", alt:["Tagalog"] },
-  { code:"mn", flag:"🇲🇳", name:"Монгол", alt:["Mongolian","Moğolca"] },
-  { code:"kk", flag:"🇰🇿", name:"Қазақша", alt:["Kazakh","Kazakça"] },
-  { code:"ky", flag:"🇰🇬", name:"Кыргызча", alt:["Kyrgyz","Kırgızca"] },
-  { code:"uz", flag:"🇺🇿", name:"Oʻzbek", alt:["Uzbek","Özbekçe"] },
-  { code:"tk", flag:"🇹🇲", name:"Türkmen", alt:["Turkmen","Türkmence"] },
-  { code:"tg", flag:"🇹🇯", name:"Тоҷикӣ", alt:["Tajik","Tacikçe"] },
-  { code:"az", flag:"🇦🇿", name:"Azərbaycanca", alt:["Azerbaijani","Azerice"] },
-  { code:"ka", flag:"🇬🇪", name:"ქართული", alt:["Georgian","Gürcüce"] },
-  { code:"hy", flag:"🇦🇲", name:"Հայերեն", alt:["Armenian","Ermenice"] },
-  { code:"sw", flag:"🇰🇪", name:"Kiswahili", alt:["Swahili"] },
-  { code:"am", flag:"🇪🇹", name:"አማርኛ", alt:["Amharic"] },
-  { code:"af", flag:"🇿🇦", name:"Afrikaans", alt:["Afrikanca"] },
-  { code:"ca", flag:"🇪🇸", name:"Català", alt:["Catalan","Katalanca"] },
-  { code:"eu", flag:"🇪🇸", name:"Euskara", alt:["Basque","Baskça"] },
-  { code:"gl", flag:"🇪🇸", name:"Galego", alt:["Galician"] },
-  { code:"is", flag:"🇮🇸", name:"Íslenska", alt:["Icelandic","İzlandaca"] },
-  { code:"ga", flag:"🇮🇪", name:"Gaeilge", alt:["Irish","İrlandaca"] },
-  { code:"cy", flag:"🇬🇧", name:"Cymraeg", alt:["Welsh","Galce"] }
+  { code:"tr", flag:"🇹🇷", name:"Türkçe" },
+  { code:"en", flag:"🇬🇧", name:"İngilizce" },
+  { code:"de", flag:"🇩🇪", name:"Almanca" },
+  { code:"fr", flag:"🇫🇷", name:"Fransızca" },
+  { code:"it", flag:"🇮🇹", name:"İtalyanca" },
+  { code:"es", flag:"🇪🇸", name:"İspanyolca" },
+  { code:"pt", flag:"🇵🇹", name:"Portekizce" },
+  { code:"ru", flag:"🇷🇺", name:"Rusça" },
+  { code:"uk", flag:"🇺🇦", name:"Ukraynaca" },
+  { code:"pl", flag:"🇵🇱", name:"Lehçe" },
+  { code:"nl", flag:"🇳🇱", name:"Flemenkçe" },
+  { code:"sv", flag:"🇸🇪", name:"İsveççe" },
+  { code:"no", flag:"🇳🇴", name:"Norveççe" },
+  { code:"da", flag:"🇩🇰", name:"Danca" },
+  { code:"fi", flag:"🇫🇮", name:"Fince" },
+  { code:"cs", flag:"🇨🇿", name:"Çekçe" },
+  { code:"sk", flag:"🇸🇰", name:"Slovakça" },
+  { code:"hu", flag:"🇭🇺", name:"Macarca" },
+  { code:"ro", flag:"🇷🇴", name:"Romence" },
+  { code:"bg", flag:"🇧🇬", name:"Bulgarca" },
+  { code:"el", flag:"🇬🇷", name:"Yunanca" },
+  { code:"sr", flag:"🇷🇸", name:"Sırpça" },
+  { code:"hr", flag:"🇭🇷", name:"Hırvatça" },
+  { code:"sl", flag:"🇸🇮", name:"Slovence" },
+  { code:"bs", flag:"🇧🇦", name:"Boşnakça" },
+  { code:"mk", flag:"🇲🇰", name:"Makedonca" },
+  { code:"sq", flag:"🇦🇱", name:"Arnavutça" },
+  { code:"et", flag:"🇪🇪", name:"Estonca" },
+  { code:"lv", flag:"🇱🇻", name:"Letonca" },
+  { code:"lt", flag:"🇱🇹", name:"Litvanca" },
+  { code:"ar", flag:"🇸🇦", name:"Arapça" },
+  { code:"fa", flag:"🇮🇷", name:"Farsça" },
+  { code:"he", flag:"🇮🇱", name:"İbranice" },
+  { code:"ur", flag:"🇵🇰", name:"Urduca" },
+  { code:"hi", flag:"🇮🇳", name:"Hintçe" },
+  { code:"bn", flag:"🇧🇩", name:"Bengalce" },
+  { code:"ta", flag:"🇮🇳", name:"Tamilce" },
+  { code:"te", flag:"🇮🇳", name:"Teluguca" },
+  { code:"mr", flag:"🇮🇳", name:"Marathice" },
+  { code:"gu", flag:"🇮🇳", name:"Guceratça" },
+  { code:"ne", flag:"🇳🇵", name:"Nepalce" },
+  { code:"si", flag:"🇱🇰", name:"Sinhalaca" },
+  { code:"zh", flag:"🇨🇳", name:"Çince" },
+  { code:"ja", flag:"🇯🇵", name:"Japonca" },
+  { code:"ko", flag:"🇰🇷", name:"Korece" },
+  { code:"th", flag:"🇹🇭", name:"Tayca" },
+  { code:"vi", flag:"🇻🇳", name:"Vietnamca" },
+  { code:"id", flag:"🇮🇩", name:"Endonezce" },
+  { code:"ms", flag:"🇲🇾", name:"Malayca" },
+  { code:"fil", flag:"🇵🇭", name:"Filipince" },
+  { code:"mn", flag:"🇲🇳", name:"Moğolca" },
+  { code:"kk", flag:"🇰🇿", name:"Kazakça" },
+  { code:"ky", flag:"🇰🇬", name:"Kırgızca" },
+  { code:"uz", flag:"🇺🇿", name:"Özbekçe" },
+  { code:"tk", flag:"🇹🇲", name:"Türkmence" },
+  { code:"tg", flag:"🇹🇯", name:"Tacikçe" },
+  { code:"az", flag:"🇦🇿", name:"Azerice" },
+  { code:"ka", flag:"🇬🇪", name:"Gürcüce" },
+  { code:"hy", flag:"🇦🇲", name:"Ermenice" },
+  { code:"sw", flag:"🇰🇪", name:"Svahili" },
+  { code:"am", flag:"🇪🇹", name:"Amharca" },
+  { code:"af", flag:"🇿🇦", name:"Afrikanca" },
+  { code:"ca", flag:"🇪🇸", name:"Katalanca" },
+  { code:"eu", flag:"🇪🇸", name:"Baskça" },
+  { code:"gl", flag:"🇪🇸", name:"Galiçyaca" },
+  { code:"is", flag:"🇮🇸", name:"İzlandaca" },
+  { code:"ga", flag:"🇮🇪", name:"İrlandaca" },
+  { code:"cy", flag:"🇬🇧", name:"Galce" }
 ];
 
 const SUPPORTED_CODES = new Set(LANGS.map(x => norm(x.code)));
@@ -168,7 +168,7 @@ function unique(arr) {
   return [...new Set(arr)];
 }
 
-// ✅ Gerçek paket mantığı
+// ✅ Çift yön konuşma için gereken paket seti
 function packageSetForConversation(sourceCode, targetCode) {
   const source = norm(sourceCode);
   const target = norm(targetCode);
@@ -176,7 +176,6 @@ function packageSetForConversation(sourceCode, targetCode) {
   if (!SUPPORTED_CODES.has(source) || !SUPPORTED_CODES.has(target)) return [];
   if (source === target) return [];
 
-  // source veya target English ise paket sayısı azalır
   if (source === PIVOT) {
     return unique([
       `${PIVOT}-${target}`,
@@ -222,23 +221,6 @@ function allInstalled(packs) {
   return packs.every(pair => isInstalledNative(pair));
 }
 
-function matchesInstalledSearch(group, q) {
-  if (!q) return true;
-  const source = langByCode(group.source);
-  const target = langByCode(group.target);
-
-  const hay = [
-    group.source,
-    group.target,
-    source?.name || "",
-    target?.name || "",
-    ...(source?.alt || []),
-    ...(target?.alt || [])
-  ].join(" ").toLowerCase();
-
-  return hay.includes(q.toLowerCase());
-}
-
 function loadInstalledCombos() {
   try {
     const raw = localStorage.getItem("italky_offline_conversations_v1");
@@ -280,8 +262,14 @@ function removeInstalledCombo(source, target) {
 }
 
 function renderInstalledList() {
-  const q = String(searchInput.value || "").trim();
-  const items = loadInstalledCombos().filter(x => matchesInstalledSearch(x, q));
+  const q = String(searchInput.value || "").trim().toLowerCase();
+  const items = loadInstalledCombos().filter(item => {
+    if (!q) return true;
+    const s = langByCode(item.source);
+    const t = langByCode(item.target);
+    const hay = `${s?.name || ""} ${t?.name || ""} ${item.source} ${item.target}`.toLowerCase();
+    return hay.includes(q);
+  });
 
   countPill.textContent = `Kurulu: ${items.length}`;
   installedList.innerHTML = "";
@@ -295,8 +283,6 @@ function renderInstalledList() {
     const s = langByCode(item.source);
     const t = langByCode(item.target);
 
-    const installed = item.packs.every(pair => isInstalledNative(pair));
-
     const card = document.createElement("div");
     card.className = "card";
 
@@ -306,7 +292,7 @@ function renderInstalledList() {
       <div class="flag">${s?.flag || "🌐"}</div>
       <div class="meta">
         <div class="name">${s?.name || item.source} → ${t?.name || item.target}</div>
-        <div class="sub">${item.packs.join(" • ")}${installed ? " • Kurulu" : " • Eksik dosya var"}</div>
+        <div class="sub">${item.packs.join(" • ")}</div>
       </div>
     `;
 
