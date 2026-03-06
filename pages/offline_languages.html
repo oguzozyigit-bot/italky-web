@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>italkyAI • Offline Paketler</title>
+  <title>italkyAI • Offline Diller</title>
 
   <meta name="theme-color" content="#02000f">
   <style>html,body{background:#02000f !important;}</style>
@@ -90,16 +90,20 @@
       -webkit-text-fill-color:transparent;
     }
 
-    .grid{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
+    .topBar{
+      display:flex;
       gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:space-between;
     }
 
     .field{
       display:flex;
       flex-direction:column;
       gap:8px;
+      flex:1;
+      min-width:220px;
     }
 
     .label{
@@ -108,7 +112,7 @@
       color:rgba(255,255,255,0.82);
     }
 
-    .select, .search{
+    .select{
       width:100%;
       height:46px;
       border-radius:14px;
@@ -120,9 +124,7 @@
       font-weight:900;
     }
 
-    .select option{
-      color:#000;
-    }
+    .select option{ color:#000; }
 
     .toolbar{
       display:flex;
@@ -130,11 +132,28 @@
       align-items:center;
       justify-content:space-between;
       flex-wrap:wrap;
+      margin-bottom:8px;
     }
 
     .searchWrap{
       flex:1;
       min-width:180px;
+    }
+
+    .search{
+      width:100%;
+      height:44px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,0.12);
+      background:rgba(0,0,0,0.18);
+      color:#fff;
+      padding:0 14px;
+      font-size:13px;
+      font-weight:900;
+    }
+
+    .search::placeholder{
+      color:rgba(255,255,255,0.45);
     }
 
     .countPill{
@@ -146,71 +165,6 @@
       font-weight:1000;
       color:#fff;
       white-space:nowrap;
-    }
-
-    .packs{
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-      margin-top:10px;
-    }
-
-    .packChip{
-      padding:8px 10px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,0.12);
-      background:rgba(0,0,0,0.16);
-      font-size:12px;
-      font-weight:1000;
-      color:#fff;
-    }
-
-    .actions{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-top:12px;
-    }
-
-    .btn{
-      height:46px;
-      min-width:160px;
-      padding:0 16px;
-      border-radius:18px;
-      border:1px solid var(--btnBorder);
-      background:var(--btnGrad);
-      color:#fff;
-      font-weight:1000;
-      cursor:pointer;
-      user-select:none;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:8px;
-      white-space:nowrap;
-      box-shadow:0 10px 22px rgba(0,0,0,0.25);
-    }
-
-    .btn:active{ transform:scale(.99); }
-
-    .btn.disabled{
-      opacity:.55;
-      cursor:not-allowed;
-      box-shadow:none;
-      pointer-events:none;
-    }
-
-    .btn.done{
-      background:var(--doneGrad);
-      border-color:var(--doneBorder);
-      color:rgba(255,255,255,0.88);
-    }
-
-    .btn.danger{
-      background:transparent;
-      border-color:var(--dangerBorder);
-      color:var(--dangerText);
-      min-width:120px;
     }
 
     .sectionTitle{
@@ -282,6 +236,55 @@
       text-overflow:ellipsis;
     }
 
+    .actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+      flex:0 0 auto;
+    }
+
+    .btn{
+      height:42px;
+      min-width:110px;
+      padding:0 14px;
+      border-radius:16px;
+      border:1px solid var(--btnBorder);
+      background:var(--btnGrad);
+      color:#fff;
+      font-weight:1000;
+      cursor:pointer;
+      user-select:none;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      white-space:nowrap;
+      box-shadow:0 10px 22px rgba(0,0,0,0.25);
+    }
+
+    .btn:active{ transform:scale(.99); }
+
+    .btn.disabled{
+      opacity:.55;
+      cursor:not-allowed;
+      box-shadow:none;
+      pointer-events:none;
+    }
+
+    .btn.done{
+      background:var(--doneGrad);
+      border-color:var(--doneBorder);
+      color:rgba(255,255,255,0.88);
+    }
+
+    .btn.danger{
+      background:transparent;
+      border-color:var(--dangerBorder);
+      color:var(--dangerText);
+      min-width:90px;
+    }
+
     .empty{
       border-radius:20px;
       border:1px solid rgba(255,255,255,0.10);
@@ -316,8 +319,16 @@
     .toast.show{ transform:translateX(-50%) translateY(0); }
 
     @media (max-width: 520px){
-      .grid{ grid-template-columns:1fr; }
-      .actions .btn{ width:100%; }
+      .card{
+        flex-direction:column;
+        align-items:stretch;
+      }
+      .actions{
+        justify-content:stretch;
+      }
+      .btn{
+        flex:1;
+      }
     }
   </style>
 </head>
@@ -327,52 +338,40 @@
   <div class="wrap">
 
     <section class="hero">
-      <div class="h1">Offline Konuşma Paketi</div>
+      <div class="h1">Offline Diller</div>
       <div class="p">
-        Kaynak dil ve hedef dil seçilir. Sistem arkada <b>İngilizce pivot</b> kullanır ve sadece gerekli paketleri indirir.
+        Benim dilini seç. Hedef dilleri indir. Kurulu olanlar üstte görünür.
       </div>
       <div class="pillRow">
         <div class="pill">Ücret: <b>Ücretsiz</b></div>
         <div class="pill" id="netPill">Ağ: <b>—</b></div>
-        <div class="pill">Pivot: <b>EN</b></div>
       </div>
     </section>
 
     <section class="panel">
-      <div class="grid">
+      <div class="topBar">
         <div class="field">
           <label class="label" for="sourceSelect">Benim Dilim</label>
           <select id="sourceSelect" class="select"></select>
         </div>
-        <div class="field">
-          <label class="label" for="targetSelect">Hedef Dil</label>
-          <select id="targetSelect" class="select"></select>
-        </div>
-      </div>
-
-      <div class="packs" id="packsPreview"></div>
-
-      <div class="actions">
-        <button id="installBtn" class="btn" type="button">
-          <span>⬇️</span><span>Bu Paketi İndir</span>
-        </button>
-
-        <button id="removeBtn" class="btn danger" type="button">
-          Seçili Paketi Sil
-        </button>
       </div>
     </section>
 
     <section class="panel">
       <div class="toolbar">
         <div class="searchWrap">
-          <input id="searchInput" class="search" type="text" placeholder="Kurulu paket ara...">
+          <input id="searchInput" class="search" type="text" placeholder="Dil ara...">
         </div>
         <div class="countPill" id="countPill">Kurulu: 0</div>
       </div>
 
-      <h3 class="sectionTitle">Kurulu Konuşma Paketleri</h3>
+      <h3 class="sectionTitle">Kurulu Diller</h3>
       <div class="list" id="installedList"></div>
+    </section>
+
+    <section class="panel">
+      <h3 class="sectionTitle">Diğer Diller</h3>
+      <div class="list" id="availableList"></div>
     </section>
 
   </div>
