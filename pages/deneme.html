@@ -3,112 +3,121 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-<title>italkyAI • Teacher AI Terminal</title>
+<title>italkyAI • Academy Terminal</title>
 
 <style>
-  :root {
-    --ai-grad: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
-    --purple: #a855f7;
-    --glass-border: rgba(255, 255, 255, 0.1);
-    --bg-dark: #030308;
+  /* 🛡️ KRİTİK KORUMA: Beyaz ekran ve kırpılmayı engeller */
+  html { background: #000 !important; }
+  body { margin: 0; padding: 0; overflow: hidden; background: #000; }
+  
+  #pageContent { 
+    opacity: 0; 
+    transform: translateY(10px); 
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
   }
+  #pageContent.shell-ready { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+</style>
 
-  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;800&family=Plus+Jakarta+Sans:wght@700&display=swap');
+<style>
+:root {
+  --ai-grad: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
+  --neon-blue: #00d2ff;
+  --neon-green: #39ff14;
+  --neon-orange: #f97316;
+  --glass-border: rgba(255,255,255,0.1);
+}
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=Space+Grotesk:wght@700&display=swap');
 
-  html, body { 
-    background: var(--bg-dark); margin: 0; padding: 0; 
-    height: 100vh; width: 100vw; overflow: hidden; 
-    font-family: 'Plus Jakarta Sans', sans-serif; color: white;
-  }
+*{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; }
 
-  #pageContent {
-    height: 100%; width: 100%;
-    display: flex; flex-direction: column;
-    background: radial-gradient(circle at 50% 20%, #1a0a30 0%, #030308 100%);
-    position: relative;
-  }
+#pageContent {
+  height: 100%; display: flex; flex-direction: column;
+  background: radial-gradient(circle at 50% 40%, #121235 0%, #000 100%);
+}
 
-  .main-hub {
-    flex: 1; display: flex; flex-direction: column;
-    padding: 25px; z-index: 10;
-  }
+.main-hub { flex: 1; display: flex; flex-direction: column; gap: 15px; padding: 15px; }
 
-  /* --- Header --- */
-  .header-zone { text-align: center; margin-bottom: 30px; }
-  .header-zone h1 { 
-    font-size: 32px; font-weight: 800; margin: 0; letter-spacing: -1px;
-  }
-  .header-zone h1 span { 
-    background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
-  }
-  .header-zone p { 
-    font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 8px; 
-    font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
-  }
+/* 💎 SEVİYE PORTALI */
+.portal-top {
+  flex: 0 0 auto; display: flex; flex-direction: column; align-items: center;
+  padding: 20px 0; cursor: pointer;
+}
 
-  /* --- Scanner Hero --- */
-  .scanner-hero {
-    flex: 1; position: relative; border-radius: 40px;
-    border: 1px solid var(--glass-border);
-    background: rgba(255, 255, 255, 0.03);
-    backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    overflow: hidden; box-shadow: 0 30px 60px rgba(0,0,0,0.6);
-    transition: all 0.5s cubic-bezier(0.2, 1, 0.3, 1);
-  }
-  .scanner-hero:active { transform: scale(0.96) translateY(5px); }
+.neural-scanner {
+  width: 130px; height: 130px; position: relative;
+  display: flex; align-items: center; justify-content: center;
+}
 
-  /* Scan Line Effect */
-  .scan-line {
-    position: absolute; left: 0; width: 100%; height: 4px;
-    background: var(--purple); box-shadow: 0 0 30px var(--purple);
-    animation: scanMove 4s ease-in-out infinite;
-    z-index: 5; opacity: 0.6;
-  }
+.scanner-ring { position: absolute; inset: 0; border-radius: 50%; }
+.scanner-ring.outer { 
+  border: 1px dashed rgba(165, 180, 252, 0.3);
+  animation: rotateAction 12s linear infinite; 
+}
+.scanner-ring.inner { 
+  inset: 12px; border: 2px solid transparent;
+  background: var(--ai-grad) border-box;
+  -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  animation: rotateAction 8s linear infinite reverse;
+}
 
-  /* Formula Layer */
-  .formula-node {
-    position: absolute; font-family: 'Outfit'; font-size: 14px;
-    color: var(--purple); opacity: 0; pointer-events: none;
-    animation: formulaFlow 5s infinite linear;
-  }
+.level-dot {
+  position: absolute; width: 22px; height: 22px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; font-weight: 900; color: #fff;
+  box-shadow: 0 0 15px currentColor; animation: float 3s infinite ease-in-out;
+}
+.dot-a1 { top: -5px; left: 15%; background: var(--neon-green); color: var(--neon-green); }
+.dot-c1 { bottom: -5px; right: 15%; background: var(--neon-blue); color: var(--neon-blue); animation-delay: 1.5s; }
 
-  /* Orb Visual */
-  .orb-scanner {
-    width: 160px; height: 160px; position: relative;
-    display: flex; align-items: center; justify-content: center;
-    margin-bottom: 30px;
-  }
-  .ring-outer {
-    position: absolute; inset: 0; border: 2px dashed rgba(168, 85, 247, 0.3);
-    border-radius: 50%; animation: rotateOrb 15s linear infinite;
-  }
-  .core-cam {
-    width: 100px; height: 100px; background: #000; border-radius: 50%;
-    border: 1px solid rgba(255,255,255,0.1);
-    display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 0 40px rgba(168, 85, 247, 0.2);
-    z-index: 10; animation: breathe 4s infinite ease-in-out;
-  }
+.core-button {
+  width: 80px; height: 80px; border-radius: 50%;
+  background: #000; border: 1px solid rgba(255,255,255,0.1);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 32px; z-index: 5; box-shadow: inset 0 0 20px rgba(99, 102, 241, 0.3);
+}
 
-  /* Text CTA */
-  .cta-text { text-align: center; padding: 0 30px; z-index: 10; }
-  .cta-text h2 { font-size: 24px; font-weight: 800; color: #fff; margin: 0; }
-  .cta-text p { 
-    font-size: 14px; color: rgba(255,255,255,0.5); 
-    margin-top: 12px; line-height: 1.6; font-weight: 300;
-  }
+.portal-title { font-family: 'Space Grotesk'; font-size: 24px; font-weight: 800; color: #fff; margin: 15px 0 0; }
+.portal-title span { background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
-  /* --- Keyframes --- */
-  @keyframes scanMove { 0%, 100% { top: 10%; } 50% { top: 90%; } }
-  @keyframes rotateOrb { from { transform: rotate(0); } to { transform: rotate(360deg); } }
-  @keyframes breathe { 0%, 100% { transform: scale(1); box-shadow: 0 0 40px rgba(168, 85, 247, 0.2); } 50% { transform: scale(1.05); box-shadow: 0 0 60px rgba(168, 85, 247, 0.4); } }
-  @keyframes formulaFlow {
-    0% { transform: translateY(100px) scale(0.8); opacity: 0; }
-    20% { opacity: 0.4; }
-    80% { opacity: 0.2; }
-    100% { transform: translateY(-200px) scale(1.2); opacity: 0; }
-  }
+/* 📚 AKADEMİ KARTLARI */
+.hub-cards { flex: 1; display: flex; flex-direction: column; gap: 12px; }
+
+.os-card {
+  flex: 1; position: relative; border-radius: 30px;
+  border: 1px solid var(--glass-border);
+  display: flex; align-items: center; padding: 0 22px;
+  background: rgba(255,255,255,0.03); backdrop-filter: blur(25px);
+  transition: all 0.4s cubic-bezier(0.15, 1, 0.3, 1);
+}
+.os-card:active { transform: scale(0.96) translateY(4px); }
+
+.lesson-node { --theme: var(--neon-blue); }
+.practice-node { --theme: var(--neon-green); }
+.game-node { --theme: var(--neon-orange); }
+
+.os-card::before {
+  content: ""; position: absolute; left: 0; top: 25%; bottom: 25%; width: 4px;
+  background: var(--theme); border-radius: 0 4px 4px 0; box-shadow: 0 0 15px var(--theme);
+}
+
+.icon-box {
+  width: 58px; height: 58px; border-radius: 20px;
+  background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.08);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; margin-right: 20px; filter: drop-shadow(0 0 8px var(--theme));
+}
+
+.card-info h2 { font-family: 'Space Grotesk'; font-size: 20px; font-weight: 800; margin: 0; color: #fff; }
+.card-info h2 span { background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.card-info p { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 6px; font-weight: 600; letter-spacing: 0.3px; }
+
+/* ANIMASYONLAR */
+@keyframes rotateAction { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
 </style>
 </head>
 
@@ -116,68 +125,61 @@
 <main id="pageContent">
   <div class="main-hub">
 
-    <header class="header-zone">
-      <h1>Teacher <span>AI</span></h1>
-      <p>Kuantum Çözüm Merkezi</p>
-    </header>
+    <div class="portal-top" onclick="location.href='/pages/level_test_hub.html'">
+      <div class="neural-scanner">
+        <div class="scanner-ring outer"></div>
+        <div class="scanner-ring inner"></div>
+        <div class="level-dot dot-a1">A1</div>
+        <div class="level-dot dot-c1">C1</div>
+        <div class="core-button">💎</div>
+      </div>
+      <h1 class="portal-title">Seviye Tespit <span>Sınavı</span></h1>
+      <p style="font-size: 10px; font-weight: 900; color: rgba(255,255,255,0.3); margin-top: 8px; letter-spacing: 2px;">6 DİL • 40 DK • AKILLI ANALİZ</p>
+    </div>
 
-    <section class="scanner-hero" id="btnStartTerminal">
-      <div class="scan-line"></div>
-      <div class="formula-node" style="left:15%; animation-delay:0s">√x² + y²</div>
-      <div class="formula-node" style="left:75%; animation-delay:1.5s">sin(θ)</div>
-      <div class="formula-node" style="left:40%; animation-delay:3s">H₂SO₄</div>
-
-      <div class="orb-scanner">
-        <div class="ring-outer"></div>
-        <div class="core-cam">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="url(#ai-grad-icon)" stroke-width="2.5">
-            <defs>
-              <linearGradient id="ai-grad-icon" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" style="stop-color:#a5b4fc" />
-                <stop offset="100%" style="stop-color:#ec4899" />
-              </linearGradient>
-            </defs>
-            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-            <circle cx="12" cy="13" r="4"/>
-          </svg>
+    <div class="hub-cards">
+      <div class="os-card lesson-node" onclick="location.href='/pages/teacher_select.html'">
+        <div class="icon-box">📚</div>
+        <div class="card-info">
+          <h2>Dil Dersi <span>AI</span></h2>
+          <p>Müfredat Odaklı • 15 Dakikalık Oturumlar</p>
         </div>
       </div>
 
-      <div class="cta-text">
-        <h2>FOTOĞRAF ÇEK VE ÇÖZ</h2>
-        <p>Herhangi bir soruyu saniyeler içinde analiz et ve adım adım mantığını kavra.</p>
+      <div class="os-card practice-node" onclick="location.href='/pages/practice_ai.html'">
+        <div class="icon-box">🎙️</div>
+        <div class="card-info">
+          <h2>AI ile <span>Pratik</span></h2>
+          <p>Konuş ve Dinle • Gerçek Zamanlı Analiz</p>
+        </div>
       </div>
-    </section>
+
+      <div class="os-card game-node" onclick="location.href='/pages/game_lang_select.html'">
+        <div class="icon-box">🎯</div>
+        <div class="card-info">
+          <h2>Eğlenerek <span>Öğren</span></h2>
+          <p>Dil Refleks Oyunları • Kelime Haznesi</p>
+        </div>
+      </div>
+    </div>
 
   </div>
 </main>
 
+
+
 <script type="module">
   import { mountShell } from "/js/ui_shell.js";
+  
+  // Shell'i monte et
   mountShell({ scroll:"none" });
-
-  const btn = document.getElementById("btnStartTerminal");
-  btn.onclick = () => {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = "image/*";
-    input.capture = "environment";
-    input.style.display = "none";
-    document.body.appendChild(input);
-
-    input.onchange = () => {
-      const file = input.files && input.files[0];
-      if (!file) { input.remove(); return; }
-      const reader = new FileReader();
-      reader.onload = () => {
-        try { sessionStorage.setItem("exam_photo", String(reader.result || "")); } catch(e){}
-        input.remove();
-        location.href = "/pages/exam_crop.html";
-      };
-      reader.readAsDataURL(file);
-    };
-    input.click();
-  };
+  
+  // İçeriği göstermeden önce kısa bir bekleme (Render stabilitesi için)
+  window.addEventListener("DOMContentLoaded", () => {
+    setTimeout(() => {
+      document.getElementById("pageContent").classList.add("shell-ready");
+    }, 100);
+  });
 </script>
 </body>
 </html>
