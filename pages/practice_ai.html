@@ -1,4 +1,3 @@
-<!-- FILE: /pages/practice_ai.html -->
 <!doctype html>
 <html lang="tr">
 <head>
@@ -6,266 +5,129 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
   <title>italkyAI • AI ile Pratik</title>
 
-  <meta name="theme-color" content="#02000f">
-  <style>html,body{background:#02000f !important;}</style>
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
-
   <style>
-    :root{
-      --border: rgba(255,255,255,0.12);
-      --card: rgba(255,255,255,0.05);
-      --muted: rgba(255,255,255,0.70);
-      --aiGrad: linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
+    :root {
+      --ai-grad: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
+      --glass-border: rgba(255, 255, 255, 0.1);
+      --bg-dark: #02000f;
     }
-    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; }
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Plus+Jakarta+Sans:wght@700&display=swap');
 
-    #pageContent{
-      height: 100%;
-      padding: 10px 12px;
-      display:flex;
-      align-items:stretch;
-      justify-content:center;
+    html, body { 
+      background: var(--bg-dark) !important; margin: 0; padding: 0; 
+      height: 100vh; width: 100vw; overflow: hidden; 
+      font-family: 'Plus Jakarta Sans', sans-serif;
     }
 
-    .wrap{
-      width:100%;
-      max-width: 520px;
-      height: 100%;
-      display:flex;
-      flex-direction:column;
-      gap: 10px;
+    #pageContent {
+      height: 100%; width: 100%;
+      display: flex; flex-direction: column;
+      padding: 10px 15px; /* Alt/Üst bar arası tam sığdırma */
+      box-sizing: border-box;
+      background: radial-gradient(circle at 50% 0%, rgba(57, 255, 20, 0.08), transparent 50%);
+      opacity: 0; transition: opacity 0.4s ease;
     }
+    #pageContent.ui-ready { opacity: 1; }
 
-    .hero{
-      border-radius: 22px;
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,0.04);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      padding: 12px 14px;
-    }
-    .heroTop{
-      display:flex; align-items:center; justify-content:space-between; gap:10px;
-      margin-bottom: 6px;
-    }
-    .hTitle{
-      font-family:"Space Grotesk",system-ui,sans-serif;
-      font-weight: 1000;
-      font-size: 16px;
-      margin:0;
-      color:#fff;
-      letter-spacing:-.2px;
-      display:flex;
-      gap:8px;
-      align-items:baseline;
-    }
-    .hTitle .ai{
-      background: var(--aiGrad);
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;
-      font-weight:1000;
-    }
-    .pill{
-      padding: 7px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(0,0,0,0.18);
-      font-weight: 1000;
-      font-size: 12px;
-      color: rgba(255,255,255,0.90);
-      white-space: nowrap;
-    }
-    .heroText{
-      margin:0;
-      font-size: 12px;
-      font-weight: 900;
-      line-height: 1.55;
-      color: rgba(255,255,255,0.72);
-    }
-    .heroText b{ color:#fff; }
+    .wrap { height: 100%; display: flex; flex-direction: column; gap: 12px; }
 
-    .list{
-      flex: 1;
+    /* 🎙️ Hero Alanı: Ses Odaklı & Kompakt */
+    .hero {
+      flex: 0 0 auto;
+      padding: 15px; border-radius: 22px; 
+      border: 1px solid var(--glass-border);
+      background: rgba(255, 255, 255, 0.03); 
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    }
+    .hero h1 { font-size: 18px; font-weight: 800; color: #fff; margin: 0; display: flex; gap: 8px; }
+    .hero h1 .ai { background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .hero p { font-size: 11px; color: rgba(255, 255, 255, 0.4); margin: 6px 0 0; line-height: 1.4; }
+
+    /* 🚀 Dil Listesi: Tam Sığdırma */
+    .list { 
+      flex: 1; 
+      display: flex; flex-direction: column; 
+      gap: 8px; 
+      justify-content: space-evenly; /* Butonları dikeyde eşit yayar */
       min-height: 0;
-      display:flex;
-      flex-direction:column;
-      gap: 10px;
-      justify-content:center;
     }
 
-    button.langCard{
-      width:100%;
-      border-radius: 22px;
-      border: 1px solid var(--border);
-      background: var(--card);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      padding: 14px 14px;
-
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-
-      color:#fff;
-      cursor:pointer;
-      user-select:none;
-      appearance:none;
-      -webkit-appearance:none;
-
-      transition: transform .16s ease, background .16s ease, border-color .16s ease;
+    .langCard {
+      flex: 1; 
+      max-height: 75px; 
+      width: 100%; border-radius: 20px; 
+      border: 1px solid var(--glass-border);
+      background: rgba(255, 255, 255, 0.02); 
+      padding: 0 18px;
+      display: flex; align-items: center; justify-content: space-between;
+      cursor: pointer; transition: all 0.3s cubic-bezier(0.2, 1, 0.3, 1);
+      position: relative; overflow: hidden;
     }
 
-    button.langCard:active{
-      transform: scale(.988);
-      background: rgba(255,255,255,0.07);
-      border-color: rgba(165,180,252,0.30);
+    .langCard:active { transform: scale(0.97) translateY(2px); background: rgba(255,255,255,0.06); }
+
+    /* Ses Dalgası Efekti (Arka Plan) */
+    .langCard::after {
+      content: ""; position: absolute; right: -20px; top: 0; width: 100px; height: 100%;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.08), transparent 70%);
+      filter: blur(20px);
     }
 
-    .left{
-      display:flex; align-items:center; gap:12px; min-width:0;
+    .left { display: flex; align-items: center; gap: 12px; z-index: 5; }
+
+    /* Nöral Çekirdek: Yeşil Enerji (Pratik Modu) */
+    .flagRing {
+      width: 42px; height: 42px; border-radius: 14px;
+      background: linear-gradient(135deg, #00d2ff, #39ff14); /* Pratik teması: Mavi-Yeşil */
+      padding: 2px;
+      animation: rotateRing 12s linear infinite;
+    }
+    .flagBox {
+      width: 100%; height: 100%; border-radius: 12px;
+      background: #000; display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
     }
 
-    .flagBox{
-      width: 42px; height: 42px;
-      border-radius: 16px;
-      display:flex; align-items:center; justify-content:center;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(0,0,0,0.18);
-      flex:0 0 auto;
-      overflow:hidden;
-      position:relative;
-    }
+    .txt .name { font-size: 16px; font-weight: 800; color: #fff; display: block; }
+    .txt .sub { font-size: 10px; color: rgba(255, 255, 255, 0.4); font-weight: 600; text-transform: uppercase; }
+    .txt .sub.ok { color: #39ff14; filter: drop-shadow(0 0 5px rgba(57, 255, 20, 0.3)); }
+    .txt .sub.warn { color: #f97316; }
 
-    .flag{
-      font-size: 22px;
-      line-height: 1;
-      animation: floatFlag 2.2s ease-in-out infinite;
-      filter: drop-shadow(0 8px 18px rgba(0,0,0,0.28));
+    .right { display: flex; align-items: center; gap: 8px; }
+    .badge {
+      font-size: 10px; font-weight: 900; color: #fff;
+      padding: 4px 8px; border-radius: 8px;
+      background: rgba(255, 255, 255, 0.05); border: 1px solid var(--glass-border);
     }
-    @keyframes floatFlag{ 0%,100%{ transform: translateY(0);} 50%{ transform: translateY(-2px);} }
-    button.langCard:nth-child(2) .flag{ animation-duration: 2.5s; }
-    button.langCard:nth-child(3) .flag{ animation-duration: 2.1s; }
-    button.langCard:nth-child(4) .flag{ animation-duration: 2.7s; }
-    button.langCard:nth-child(5) .flag{ animation-duration: 2.3s; }
-    button.langCard:nth-child(6) .flag{ animation-duration: 2.6s; }
+    .chev { color: rgba(255, 255, 255, 0.2); font-size: 18px; }
 
-    .txt{
-      min-width:0;
-      display:flex;
-      flex-direction:column;
-      gap:2px;
-    }
-    .name{
-      font-size: 15px;
-      font-weight: 1000;
-      letter-spacing:-.2px;
-      white-space: nowrap;
-      overflow:hidden;
-      text-overflow: ellipsis;
-    }
-    .sub{
-      font-size: 11px;
-      font-weight: 900;
-      color: rgba(255,255,255,0.62);
-      line-height: 1.2;
-    }
-    .sub.ok{ color: rgba(165,180,252,0.95); }
-    .sub.warn{ color: rgba(255,190,120,0.95); }
-
-    .right{
-      display:flex; align-items:center; gap:10px; flex:0 0 auto;
-    }
-    .badge{
-      padding: 7px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(0,0,0,0.18);
-      font-size: 12px;
-      font-weight: 1000;
-      color: rgba(255,255,255,0.88);
-      white-space: nowrap;
-    }
-    .chev{
-      width: 34px; height: 34px;
-      border-radius: 14px;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(255,255,255,0.06);
-      display:flex; align-items:center; justify-content:center;
-      font-weight: 1000;
-      color: rgba(255,255,255,0.85);
-    }
-
-    .toast{
-      position: fixed;
-      left:50%;
-      top:18px;
-      transform: translateX(-50%) translateY(-120px);
-      background: rgba(10,10,18,0.95);
-      border: 1px solid rgba(165,180,252,0.35);
-      padding: 10px 14px;
-      border-radius: 999px;
-      color:#fff;
-      z-index: 999999;
-      font-weight: 1000;
-      font-size: 12px;
-      transition: .25s;
-      backdrop-filter: blur(12px);
-      pointer-events:none;
-      max-width: min(92vw, 520px);
-      text-align:center;
-    }
-    .toast.show{ transform: translateX(-50%) translateY(0); }
-
-    @media (max-height: 740px){
-      .hero{ padding: 10px 12px; }
-      button.langCard{ padding: 12px 12px; }
-      .flagBox{ width:40px; height:40px; }
-      .name{ font-size: 14px; }
-    }
+    @keyframes rotateRing { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
   </style>
 </head>
 
 <body>
   <main id="pageContent">
     <div class="wrap">
-
       <section class="hero">
         <div class="heroTop">
-          <h1 class="hTitle">AI ile <span class="ai">Pratik Yap</span></h1>
-          <div class="pill">6 Dil</div>
+          <h1 class="hTitle">AI ile <span class="ai">Pratik</span></h1>
+          <div class="pill">Canlı Seans</div>
         </div>
-        <p class="heroText">
-          Bu modül <b>seviye odaklı</b> çalışır: önce dil seviyeni kontrol eder.<br/>
-          Seviyen yoksa seni <b>Seviye Tespit</b> sayfasına yönlendirir.
-        </p>
+        <p>Dil reflekslerini geliştirmek için bir konuşma odası seç.</p>
       </section>
 
       <section class="list" id="list"></section>
     </div>
   </main>
 
-  <div class="toast" id="toast"></div>
-
   <script type="module">
     import { mountShell } from "/js/ui_shell.js";
     import { supabase } from "/js/supabase_client.js";
 
     mountShell({ scroll:"none" });
+    document.getElementById("pageContent").classList.add("ui-ready");
 
-    const $ = (id)=>document.getElementById(id);
-    const list = $("list");
-
-    function toast(msg){
-      const t = $("toast");
-      t.textContent = String(msg||"");
-      t.classList.add("show");
-      clearTimeout(window.__to);
-      window.__to = setTimeout(()=>t.classList.remove("show"), 1600);
-    }
+    const list = document.getElementById("list");
 
     const LANGS = [
       { code:"en", name:"English",  flag:"🇬🇧", teacher:"dora"   },
@@ -276,89 +138,43 @@
       { code:"es", name:"Spanish",  flag:"🇪🇸", teacher:"ozan"   },
     ];
 
-    const { data:{ session } } = await supabase.auth.getSession();
-    const userId = session?.user?.id || null;
-    if(!userId){
-      location.replace("/pages/login.html");
-    }
+    async function init() {
+      const { data:{ session } } = await supabase.auth.getSession();
+      if(!session) return;
+      
+      const { data: prof } = await supabase.from("profiles").select("levels").eq("id", session.user.id).maybeSingle();
+      const levels = prof?.levels || {};
 
-    let levels = {};
-    let tokens = 0;
-    try{
-      const { data: prof } = await supabase
-        .from("profiles")
-        .select("levels, tokens")
-        .eq("id", userId)
-        .maybeSingle();
-      levels = (prof?.levels && typeof prof.levels === "object") ? prof.levels : {};
-      tokens = Number(prof?.tokens ?? 0);
-    }catch{}
-
-    function cardHtml(l){
-      const lv = (levels && typeof levels === "object") ? (levels[l.code] || "") : "";
-      const hasLevel = !!lv;
-
-      const sub = hasLevel ? `Seviyeniz: ${lv} • Pratiğe başla` : "Seviye yok • Sınava yönlendir";
-      const cls = hasLevel ? "sub ok" : "sub warn";
-
-      return `
-        <button class="langCard" type="button" data-code="${l.code}" data-teacher="${l.teacher}">
-          <div class="left">
-            <div class="flagBox"><div class="flag">${l.flag}</div></div>
-            <div class="txt">
-              <div class="name">${l.name}</div>
-              <div class="${cls}">${sub}</div>
+      list.innerHTML = LANGS.map(l => {
+        const lv = levels[l.code] || "";
+        const subTxt = lv ? `Seviye: ${lv} • Bağlan` : "Sınav Gerekli";
+        return `
+          <button class="langCard" onclick="window.goNext('${l.code}', '${l.teacher}', '${lv}')">
+            <div class="left">
+              <div class="flagRing"><div class="flagBox">${l.flag}</div></div>
+              <div class="txt">
+                <span class="name">${l.name}</span>
+                <span class="sub ${lv ? 'ok' : 'warn'}">${subTxt}</span>
+              </div>
             </div>
-          </div>
-          <div class="right">
-            <div class="badge">${l.code.toUpperCase()}</div>
-            <div class="chev">›</div>
-          </div>
-        </button>
-      `;
+            <div class="right">
+              <div class="badge">${l.code.toUpperCase()}</div>
+              <div class="chev">›</div>
+            </div>
+          </button>
+        `;
+      }).join("");
     }
 
-    list.innerHTML = LANGS.map(cardHtml).join("");
-
-    let busy = false;
-    let lastTap = 0;
-
-    async function goNext(code, teacher){
-      try{ localStorage.setItem("italky_teacher_pref", teacher); }catch{}
-
-      const lv = (levels && typeof levels === "object") ? (levels[code] || "") : "";
-
-      if(!lv){
-        location.href = `/pages/level_required.html?lang=${encodeURIComponent(code)}&t=${encodeURIComponent(teacher)}&next=${encodeURIComponent("practice_ai")}`;
-        return;
+    window.goNext = (code, teacher, lv) => {
+      if(!lv) {
+        location.href = `/pages/level_required.html?lang=${code}&t=${teacher}&next=practice_ai`;
+      } else {
+        location.href = `/pages/practice_ai_session.html?lang=${code}&t=${teacher}&level=${lv}`;
       }
+    };
 
-      // burada ücret yok (şimdilik). İstersen sonra 1 jeton yaparız.
-      location.href = `/pages/practice_ai_session.html?lang=${encodeURIComponent(code)}&t=${encodeURIComponent(teacher)}&level=${encodeURIComponent(lv)}`;
-    }
-
-    list.querySelectorAll(".langCard").forEach(btn=>{
-      const handler = async (ev)=>{
-        ev.preventDefault(); ev.stopPropagation();
-        if(busy) return;
-        const now = Date.now();
-        if(now - lastTap < 650) return;
-        lastTap = now;
-        busy = true;
-
-        const code = String(btn.getAttribute("data-code")||"").trim();
-        const teacher = String(btn.getAttribute("data-teacher")||"").trim();
-
-        try{
-          toast("Kontrol ediliyor…");
-          await goNext(code, teacher);
-        } finally {
-          busy = false;
-        }
-      };
-      btn.addEventListener("click", handler, { passive:false });
-      btn.addEventListener("touchend", handler, { passive:false });
-    });
+    init();
   </script>
 </body>
 </html>
