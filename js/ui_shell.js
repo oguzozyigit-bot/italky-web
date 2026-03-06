@@ -162,20 +162,23 @@ html,body{
 `;
 
 /* ===============================
-   PUBLIC API
+    PUBLIC API - OPTIMIZED
 ================================ */
 export function mountShell(options = {}) {
-  // Overlay
+  // 1. ADIM: Tarayıcıya anında koyu arka planı dikte et (Beyaz patlamayı önler)
+  document.documentElement.style.backgroundColor = "#020205";
+
+  // Overlay Kontrolü
   if(!document.getElementById("shellOverlay")){
     document.body.insertAdjacentHTML("afterbegin", LOADING_OVERLAY_HTML);
   }
 
-  // CSS inject
+  // CSS Inject - En üste alıyoruz ki stiller hemen uygulansın
   if(!document.getElementById("italkyShellStyle")){
     const st = document.createElement("style");
     st.id = "italkyShellStyle";
     st.textContent = SHELL_CSS;
-    document.head.appendChild(st);
+    document.head.prepend(st); // appendChild yerine prepend: daha önce işlenir
   }
 
   const content = document.getElementById("pageContent");
@@ -184,7 +187,7 @@ export function mountShell(options = {}) {
     return;
   }
 
-  // already mounted
+  // Zaten yüklü ise sadece içeriği güncelle ve çık
   if(document.getElementById("italkyAppShell")){
     const main = document.getElementById("shellMain");
     if(main){
@@ -192,28 +195,43 @@ export function mountShell(options = {}) {
     }
     hydrateFromCache();
     syncFooterHeight();
+    document.body.classList.add('ui-ready'); // Body'yi göster
     removeOverlaySoon();
     return;
   }
 
+  // 2. ADIM: Arka plan ve Shell yapısını oluştur
   const bg = document.createElement("div");
   bg.className = "italky-bg";
 
   const shell = document.createElement("div");
   shell.className = "app-viewport";
   shell.id = "italkyAppShell";
-  shell.innerHTML = HOME_HEADER_HTML + `<main class="shellMain" id="shellMain"></main>` + HOME_FOOTER_HTML;
+  
+  // HTML string yerine direkt yapı kurmak daha hızlıdır
+  shell.innerHTML = `
+    ${HOME_HEADER_HTML}
+    <main class="shellMain" id="shellMain" style="overflow: ${options?.scroll === "none" ? "hidden" : "auto"}"></main>
+    ${HOME_FOOTER_HTML}
+  `;
 
   const main = shell.querySelector("#shellMain");
-  main.appendChild(content);
+  
+  // İçeriği shell içine taşı
+  if(content) main.appendChild(content);
 
-  if(options?.scroll === "none"){
-    main.style.overflow = "hidden";
-  } else {
-    main.style.overflowY = "auto";
-  }
-
+  // 3. ADIM: DOM'a en hızlı şekilde ekle
+  // Prepend kullanarak mevcut body içeriğinin en üstüne, overlay'den sonrasına yerleştiriyoruz
   document.body.prepend(bg, shell);
+
+  // 4. ADIM: Görünürlüğü Aktif Et
+  // CSS dosyasında body { opacity: 0 } varsa, bu satır sayfayı yumuşakça açar
+  requestAnimationFrame(() => {
+    document.body.classList.add('ui-ready');
+    syncFooterHeight();
+    removeOverlaySoon();
+  });
+}
 
   // header bindings
   document.getElementById("brandHome")?.addEventListener("click", ()=>location.href="/pages/home.html");
