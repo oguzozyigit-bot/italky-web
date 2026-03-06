@@ -6,9 +6,18 @@
 <title>italkyAI • Quantum OS V7</title>
 
 <style>
-  html { background: #020205 !important; } /* Tarayıcı henüz render yapmadan siyah kalsın */
-  body { opacity: 0; transition: opacity 0.3s ease; margin: 0; } /* Shell gelene kadar gizle */
-  body.ui-ready { opacity: 1; } /* Hazır olduğunda göster */
+  /* ⚡ KRİTİK: Sayfa yüklenirken göz kırpmayı önleyen stil */
+  html { background: #020205 !important; } 
+  body { 
+    margin: 0; 
+    opacity: 0; 
+    background: #020205;
+    /* JS'de hata olursa 1 saniye sonra zorla gösterir */
+    animation: fadeInSafe 0.4s ease forwards;
+    animation-delay: 0.1s;
+  } 
+  @keyframes fadeInSafe { to { opacity: 1; } }
+  body.ui-ready { opacity: 1 !important; animation: none; }
 </style>
 
 <link rel="modulepreload" href="/js/ui_shell.js">
@@ -43,21 +52,16 @@
     gap: 10px;
   }
 
-  /* Genişletilmiş Premium Card */
   .os-card {
-    position: relative;
-    flex: 1;
+    position: relative; flex: 1;
     background: var(--glass);
     border: 1px solid var(--glass-border);
     border-radius: 24px;
     display: flex; align-items: center;
-    padding: 20px 25px;
-    overflow: hidden;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    padding: 20px 25px; overflow: hidden;
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
     transition: all 0.4s cubic-bezier(0.15, 1, 0.3, 1);
   }
-
   .os-card:active { transform: scale(0.97); background: rgba(255,255,255,0.06); }
 
   .card-info { flex: 1; z-index: 10; display: flex; flex-direction: column; justify-content: center; }
@@ -70,7 +74,6 @@
   }
   .desc-list li::before { content: "•"; color: var(--theme); font-weight: bold; }
 
-  /* İkon Tasarımı */
   .visual-engine { position: relative; width: 90px; height: 90px; display: flex; align-items: center; justify-content: center; }
   .plasma-glow { position: absolute; width: 100%; height: 100%; background: var(--theme); filter: blur(25px); opacity: 0.2; animation: plasmaRotate 6s infinite linear; }
   .icon-shape { width: 45px; height: 45px; position: relative; z-index: 15; filter: drop-shadow(0 0 10px var(--theme)); animation: float 4s infinite ease-in-out; }
@@ -143,10 +146,13 @@
 
 <script type="module">
   import { mountShell } from "/js/ui_shell.js";
-  
-  // ⚡ Shell yüklenince body'i görünür yap
-  mountShell({ scroll:"none" });
-  document.body.classList.add('ui-ready');
+  // ⚡ Hem shell yükle hem de görünürlüğü tetikle
+  try {
+    mountShell({ scroll:"none" });
+  } catch(e) {
+    console.error("Shell error:", e);
+    document.body.classList.add('ui-ready');
+  }
 </script>
 </body>
 </html>
