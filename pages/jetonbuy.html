@@ -261,7 +261,14 @@ console.log("Jeton satın alma:",id);
 // burada Android Billing veya ödeme sistemi bağlanacak
 // şimdilik sadece log
 
-alert("Satın alma sistemi yakında aktif olacak.");
+window.buy = function(id){
+  console.log("Jeton satın alma isteği:", id);
+
+  if (window.AndroidBilling && typeof window.AndroidBilling.buy === "function") {
+    window.AndroidBilling.buy(id);
+  } else {
+    alert("Billing sistemi hazır değil.");
+  }
 };
 
 </script>
