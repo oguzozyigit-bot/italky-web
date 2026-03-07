@@ -38,32 +38,92 @@ function labelChip(code){
   return `${o.flag} ${o.name}`;
 }
 
-const frameRoot = $("frameRoot");
+const UI_TEXT = {
+  tr: {
+    ready: "Konuşmak için mikrofona dokununuz.",
+    preparing: "Sistem Hazırlanıyor.",
+    repeat: "Konuşmanız Bitince Mikrofona Basınız.",
+    wait: "Lütfen Bekleyiniz..."
+  },
+  en: {
+    ready: "Tap the microphone to speak.",
+    preparing: "System is preparing.",
+    repeat: "Press the microphone again when you finish speaking.",
+    wait: "Please wait..."
+  },
+  de: {
+    ready: "Tippen Sie zum Sprechen auf das Mikrofon.",
+    preparing: "System wird vorbereitet.",
+    repeat: "Drücken Sie das Mikrofon erneut, wenn Sie fertig gesprochen haben.",
+    wait: "Bitte warten..."
+  },
+  fr: {
+    ready: "Touchez le micro pour parler.",
+    preparing: "Le système se prépare.",
+    repeat: "Appuyez de nouveau sur le micro quand vous avez fini de parler.",
+    wait: "Veuillez patienter..."
+  },
+  it: {
+    ready: "Tocca il microfono per parlare.",
+    preparing: "Sistema in preparazione.",
+    repeat: "Premi di nuovo il microfono quando hai finito di parlare.",
+    wait: "Attendere prego..."
+  },
+  es: {
+    ready: "Toque el micrófono para hablar.",
+    preparing: "El sistema se está preparando.",
+    repeat: "Pulse el micrófono otra vez cuando termine de hablar.",
+    wait: "Por favor espere..."
+  },
+  ru: {
+    ready: "Нажмите на микрофон, чтобы говорить.",
+    preparing: "Система подготавливается.",
+    repeat: "Нажмите микрофон снова, когда закончите говорить.",
+    wait: "Пожалуйста, подождите..."
+  },
+  el: {
+    ready: "Πατήστε το μικρόφωνο για να μιλήσετε.",
+    preparing: "Το σύστημα προετοιμάζεται.",
+    repeat: "Πατήστε ξανά το μικρόφωνο όταν τελειώσετε να μιλάτε.",
+    wait: "Παρακαλώ περιμένετε..."
+  },
+  az: {
+    ready: "Danışmaq üçün mikrofona toxunun.",
+    preparing: "Sistem hazırlanır.",
+    repeat: "Danışığınız bitəndə mikrofona yenidən basın.",
+    wait: "Zəhmət olmasa gözləyin..."
+  },
+  ka: {
+    ready: "სასაუბროდ დააჭირეთ მიკროფონს.",
+    preparing: "სისტემა მზადდება.",
+    repeat: "როცა საუბარს დაასრულებთ, მიკროფონს ისევ დააჭირეთ.",
+    wait: "გთხოვთ დაელოდოთ..."
+  }
+};
 
+function t(langCode, key){
+  const c = canonical(langCode);
+  const pack = UI_TEXT[c] || UI_TEXT.en;
+  return pack[key] || UI_TEXT.en[key] || "";
+}
+
+const frameRoot = $("frameRoot");
 const topBody = $("topBody");
 const botBody = $("botBody");
-
 const topMic = $("topMic");
 const botMic = $("botMic");
-
 const topHelper = $("topHelper");
 const botHelper = $("botHelper");
-
 const topLangBtn = $("topLangBtn");
 const botLangBtn = $("botLangBtn");
-
 const topLangTxt = $("topLangTxt");
 const botLangTxt = $("botLangTxt");
-
 const popTop = $("pop-top");
 const popBot = $("pop-bot");
-
 const listTop = $("list-top");
 const listBot = $("list-bot");
-
 const closeTop = $("close-top");
 const closeBot = $("close-bot");
-
 const clearBtn = $("clearBtn");
 const homeLink = $("homeLink");
 const homeBtn = $("homeBtn");
@@ -73,9 +133,7 @@ let botLang = "tr";
 let ttsDebounceAt = 0;
 let activeSide = null;
 
-/* ===============================
-   UI STATUS / HELPERS
-================================ */
+/* ===== UI ===== */
 
 function pointOrbTo(side){
   if(!frameRoot) return;
@@ -86,9 +144,7 @@ function pointOrbTo(side){
 function setMicState(side, state){
   const mic = side === "top" ? topMic : botMic;
   if(!mic) return;
-
   mic.classList.remove("listening", "recorded");
-
   if(state === "listening") mic.classList.add("listening");
   if(state === "recorded") mic.classList.add("recorded");
 }
@@ -100,15 +156,7 @@ function resetMics(){
 
 function setFrameVisual(state){
   if(!frameRoot) return;
-
-  frameRoot.classList.remove(
-    "is-idle",
-    "is-listening",
-    "is-translating",
-    "is-ready",
-    "is-error"
-  );
-
+  frameRoot.classList.remove("is-idle","is-listening","is-translating","is-ready","is-error");
   if(state === "idle") frameRoot.classList.add("is-idle");
   if(state === "listening") frameRoot.classList.add("is-listening");
   if(state === "translating") frameRoot.classList.add("is-translating");
@@ -127,18 +175,16 @@ function setSystemReadyUI(){
   activeSide = null;
   resetMics();
   setFrameVisual("ready");
-
-  setHelper(topHelper, "Konuşmak için mikrofona dokununuz.", "helper-ready");
-  setHelper(botHelper, "Konuşmak için mikrofona dokununuz.", "helper-ready");
+  setHelper(topHelper, t(topLang, "ready"), "helper-ready");
+  setHelper(botHelper, t(botLang, "ready"), "helper-ready");
 }
 
 function setSystemPreparingUI(){
   activeSide = null;
   resetMics();
   setFrameVisual("error");
-
-  setHelper(topHelper, "Sistem Hazırlanıyor.", "helper-wait");
-  setHelper(botHelper, "Sistem Hazırlanıyor.", "helper-wait");
+  setHelper(topHelper, t(topLang, "preparing"), "helper-wait");
+  setHelper(botHelper, t(botLang, "preparing"), "helper-wait");
 }
 
 function setListeningUI(side){
@@ -149,11 +195,11 @@ function setListeningUI(side){
   setFrameVisual("listening");
 
   if(side === "top"){
-    setHelper(topHelper, "Konuşmanız Bitince Mikrofona Basınız.", "helper-repeat");
-    setHelper(botHelper, "Lütfen Bekleyiniz...", "helper-wait");
+    setHelper(topHelper, t(topLang, "repeat"), "helper-repeat");
+    setHelper(botHelper, t(botLang, "wait"), "helper-wait");
   } else {
-    setHelper(topHelper, "Lütfen Bekleyiniz...", "helper-wait");
-    setHelper(botHelper, "Konuşmanız Bitince Mikrofona Basınız.", "helper-repeat");
+    setHelper(topHelper, t(topLang, "wait"), "helper-wait");
+    setHelper(botHelper, t(botLang, "repeat"), "helper-repeat");
   }
 }
 
@@ -164,11 +210,11 @@ function setTranslatingUI(side){
   setFrameVisual("translating");
 
   if(side === "top"){
-    setHelper(topHelper, "Konuşmanız Bitince Mikrofona Basınız.", "helper-repeat");
-    setHelper(botHelper, "Lütfen Bekleyiniz...", "helper-wait");
+    setHelper(topHelper, t(topLang, "repeat"), "helper-repeat");
+    setHelper(botHelper, t(botLang, "wait"), "helper-wait");
   } else {
-    setHelper(topHelper, "Lütfen Bekleyiniz...", "helper-wait");
-    setHelper(botHelper, "Konuşmanız Bitince Mikrofona Basınız.", "helper-repeat");
+    setHelper(topHelper, t(topLang, "wait"), "helper-wait");
+    setHelper(botHelper, t(botLang, "repeat"), "helper-repeat");
   }
 }
 
@@ -176,9 +222,8 @@ function setErrorUI(){
   activeSide = null;
   resetMics();
   setFrameVisual("error");
-
-  setHelper(topHelper, "Sistem Hazırlanıyor.", "helper-wait");
-  setHelper(botHelper, "Sistem Hazırlanıyor.", "helper-wait");
+  setHelper(topHelper, t(topLang, "preparing"), "helper-wait");
+  setHelper(botHelper, t(botLang, "preparing"), "helper-wait");
 }
 
 function bounceToReady(delay = 1800){
@@ -187,13 +232,18 @@ function bounceToReady(delay = 1800){
   }, delay);
 }
 
-/* ===============================
-   LANG UI
-================================ */
+/* ===== Language UI ===== */
 
 function refreshLangLabels(){
   if(topLangTxt) topLangTxt.textContent = labelChip(topLang);
   if(botLangTxt) botLangTxt.textContent = labelChip(botLang);
+}
+
+function refreshReadyTextsIfIdle(){
+  if(activeSide === null){
+    if(frameRoot?.classList.contains("is-ready")) setSystemReadyUI();
+    if(frameRoot?.classList.contains("is-error")) setSystemPreparingUI();
+  }
 }
 
 function closeAllPop(){
@@ -225,14 +275,13 @@ function renderPop(side){
       if(side === "top") topLang = code;
       else botLang = code;
       refreshLangLabels();
+      refreshReadyTextsIfIdle();
       closeAllPop();
     });
   });
 }
 
-/* ===============================
-   AUDIO / TTS
-================================ */
+/* ===== Audio ===== */
 
 function stopAudio(){
   try{ window.speechSynthesis?.cancel?.(); }catch{}
@@ -269,9 +318,7 @@ function speak(text, langCode){
   }, 60);
 }
 
-/* ===============================
-   CHAT UI
-================================ */
+/* ===== Bubbles ===== */
 
 function addBubble(side, kind, text, opts = {}){
   const wrap = side === "top" ? topBody : botBody;
@@ -312,9 +359,7 @@ function clearLatest(side){
   wrap?.querySelectorAll(".bubble.me.is-latest").forEach(x => x.classList.remove("is-latest"));
 }
 
-/* ===============================
-   BACKEND TRANSLATE
-================================ */
+/* ===== Backend ===== */
 
 async function translateText(text, from, to){
   const src = canonical(from);
@@ -345,9 +390,7 @@ async function translateText(text, from, to){
   }
 }
 
-/* ===============================
-   SPEECH RECOGNITION
-================================ */
+/* ===== Speech ===== */
 
 function getRecognizer(langCode){
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -376,8 +419,8 @@ async function speechToText(langCode){
     };
 
     rec.onresult = (e) => {
-      const t = e.results?.[0]?.[0]?.transcript || "";
-      finish(String(t || "").trim() || null);
+      const t0 = e.results?.[0]?.[0]?.transcript || "";
+      finish(String(t0 || "").trim() || null);
     };
 
     rec.onerror = () => finish(null);
@@ -392,9 +435,7 @@ async function speechToText(langCode){
   });
 }
 
-/* ===============================
-   MAIN FLOW
-================================ */
+/* ===== Main Flow ===== */
 
 async function handleInput(side){
   const src = side === "top" ? topLang : botLang;
@@ -441,9 +482,7 @@ async function handleInput(side){
   setSystemReadyUI();
 }
 
-/* ===============================
-   BIND
-================================ */
+/* ===== Bind ===== */
 
 function bind(){
   setSystemPreparingUI();
