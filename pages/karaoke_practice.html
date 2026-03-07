@@ -12,10 +12,6 @@
 
   <style>
     :root{
-      --bg-0:#050816;
-      --bg-1:#0b1023;
-      --bg-2:#121935;
-      --panel:rgba(255,255,255,.06);
       --line:rgba(255,255,255,.10);
       --text:#f7f8ff;
       --muted:rgba(247,248,255,.70);
@@ -24,17 +20,13 @@
       --cyan:#00d2ff;
       --good:#19c37d;
       --bad:#ff667e;
-      --warn:#ffb020;
       --footerH:92px;
       --topSafe:env(safe-area-inset-top,0px);
       --bottomSafe:env(safe-area-inset-bottom,0px);
-      --radius:24px;
       --shadow:0 18px 60px rgba(0,0,0,.35);
-      --shellLift:0px;
     }
 
     *{box-sizing:border-box}
-
     html,body{
       margin:0;
       padding:0;
@@ -46,39 +38,34 @@
     }
 
     body{
-      padding-bottom:calc(var(--footerH) + var(--bottomSafe) + 20px + var(--shellLift));
+      padding-bottom:calc(var(--footerH) + var(--bottomSafe) + 20px);
     }
 
-    button,input,audio{
+    button,input{
       font:inherit;
     }
 
     .page{
-      width:min(1180px,100%);
+      width:min(980px,100%);
       margin:0 auto;
-      padding:calc(16px + var(--topSafe)) 14px 20px;
+      padding:calc(16px + var(--topSafe)) 12px 20px;
+    }
+
+    .hero,.card{
+      border:1px solid var(--line);
+      border-radius:26px;
+      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      box-shadow:var(--shadow);
+      backdrop-filter:blur(14px);
     }
 
     .hero{
-      position:relative;
-      overflow:hidden;
-      border:1px solid var(--line);
-      border-radius:30px;
+      padding:16px;
+      margin-bottom:14px;
       background:
         radial-gradient(circle at 12% 18%, rgba(255,79,216,.20), transparent 24%),
         radial-gradient(circle at 88% 20%, rgba(0,210,255,.16), transparent 24%),
         linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.03));
-      box-shadow:var(--shadow);
-      padding:16px;
-      margin-bottom:14px;
-    }
-
-    .hero-top{
-      display:flex;
-      gap:12px;
-      justify-content:space-between;
-      align-items:flex-start;
-      flex-wrap:wrap;
     }
 
     .eyebrow{
@@ -93,7 +80,7 @@
       color:var(--muted);
     }
 
-    .hero h1{
+    h1{
       margin:10px 0 8px;
       font-family:'Space Grotesk',sans-serif;
       font-size:clamp(24px,4.8vw,42px);
@@ -105,235 +92,77 @@
       margin:0;
       color:var(--muted);
       font-size:13px;
-      max-width:70ch;
       line-height:1.45;
-    }
-
-    .hero-stats{
-      display:grid;
-      grid-template-columns:repeat(2,minmax(0,1fr));
-      gap:10px;
-      margin-top:14px;
-    }
-
-    .stat{
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.04);
-      border-radius:18px;
-      padding:14px 12px;
-    }
-
-    .stat .k{
-      font-size:12px;
-      color:var(--muted);
-    }
-
-    .stat .v{
-      font-size:20px;
-      font-weight:900;
-      margin-top:6px;
-    }
-
-    .layout{
-      display:grid;
-      grid-template-columns:360px 1fr;
-      gap:14px;
-      align-items:start;
-    }
-
-    .card{
-      border:1px solid var(--line);
-      border-radius:26px;
-      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
-      box-shadow:var(--shadow);
-      backdrop-filter:blur(14px);
-    }
-
-    .sidebar{
-      padding:14px;
-      position:sticky;
-      top:12px;
-    }
-
-    .lang-tabs{
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-    }
-
-    .chip{
-      border:none;
-      cursor:pointer;
-      border-radius:999px;
-      padding:10px 14px;
-      color:var(--text);
-      background:rgba(255,255,255,.05);
-      border:1px solid var(--line);
-      transition:.2s transform,.2s background,.2s border-color,.2s box-shadow;
-    }
-
-    .chip.active{
-      background:linear-gradient(90deg,var(--pink),var(--violet));
-      border-color:transparent;
-      box-shadow:0 8px 22px rgba(124,92,255,.35);
-    }
-
-    .search{
-      margin-top:12px;
-      display:flex;
-      align-items:center;
-      gap:10px;
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.04);
-      border-radius:18px;
-      padding:0 12px;
-    }
-
-    .search input{
-      width:100%;
-      height:46px;
-      border:none;
-      outline:none;
-      background:transparent;
-      color:var(--text);
-    }
-
-    .search input::placeholder{
-      color:rgba(247,248,255,.46);
-    }
-
-    .list{
-      display:grid;
-      gap:10px;
-      max-height:66vh;
-      overflow:auto;
-      padding-right:2px;
-      margin-top:12px;
-    }
-
-    .song{
-      padding:14px;
-      border-radius:20px;
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.035);
-      cursor:pointer;
-      transition:.18s transform,.18s border-color,.18s background,.18s box-shadow;
-    }
-
-    .song:hover{
-      transform:translateY(-1px);
-      border-color:rgba(255,79,216,.35);
-    }
-
-    .song.active{
-      background:linear-gradient(180deg, rgba(124,92,255,.16), rgba(255,255,255,.05));
-      border-color:rgba(124,92,255,.55);
-      box-shadow:0 10px 28px rgba(124,92,255,.18);
-    }
-
-    .song-title{
-      font-weight:800;
-      font-size:15px;
-    }
-
-    .song-meta{
-      font-size:13px;
-      color:var(--muted);
-      margin-top:4px;
-    }
-
-    .song-tags{
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-      margin-top:8px;
-    }
-
-    .tag{
-      font-size:11px;
-      border:1px solid var(--line);
-      padding:5px 8px;
-      border-radius:999px;
-      color:var(--muted);
-      background:rgba(255,255,255,.04);
     }
 
     .main{
       padding:16px;
     }
 
-    .topline{
-      display:flex;
-      justify-content:space-between;
-      gap:12px;
-      align-items:flex-start;
-      flex-wrap:wrap;
-    }
-
-    .now h2{
-      margin:0;
-      font-size:28px;
-      line-height:1.08;
-    }
-
-    .now .sub{
-      margin-top:6px;
-      color:var(--muted);
-      font-size:14px;
-    }
-
-    .mode-row{
-      display:flex;
+    .search-wrap{
+      display:grid;
+      grid-template-columns:1fr 1fr auto;
       gap:10px;
-      flex-wrap:wrap;
+      margin-bottom:14px;
     }
 
-    .mode-btn,.ghost-btn,.primary-btn{
+    .input{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.04);
+      border-radius:16px;
+      padding:0 14px;
+      height:48px;
+      color:var(--text);
+      outline:none;
+      width:100%;
+    }
+
+    .input::placeholder{
+      color:rgba(247,248,255,.46);
+    }
+
+    .btn{
       border:none;
       cursor:pointer;
       border-radius:16px;
       padding:12px 16px;
       font-weight:800;
-      transition:.18s transform,.18s opacity,.18s background,.18s box-shadow;
-    }
-
-    .mode-btn{
-      background:rgba(255,255,255,.05);
-      color:var(--text);
-      border:1px solid var(--line);
-    }
-
-    .mode-btn.active{
-      background:linear-gradient(90deg,var(--pink),var(--violet));
       color:#fff;
-      border-color:transparent;
-      box-shadow:0 8px 22px rgba(124,92,255,.35);
-    }
-
-    .ghost-btn{
-      background:rgba(255,255,255,.04);
-      color:var(--text);
-      border:1px solid var(--line);
-    }
-
-    .primary-btn{
       background:linear-gradient(90deg,var(--pink),var(--cyan));
-      color:#fff;
       box-shadow:0 10px 24px rgba(93,132,255,.24);
     }
 
-    .mode-btn:active,.ghost-btn:active,.primary-btn:active,.chip:active{
-      transform:scale(.98);
+    .btn.secondary{
+      background:rgba(255,255,255,.05);
+      border:1px solid var(--line);
+      color:var(--text);
+      box-shadow:none;
     }
 
-    .player{
-      margin-top:14px;
+    .status{
+      margin-bottom:12px;
+      color:var(--muted);
+      font-size:13px;
+      min-height:20px;
+    }
+
+    .song-meta{
       border:1px solid var(--line);
-      border-radius:24px;
-      padding:16px;
-      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
-      display:grid;
-      gap:14px;
+      border-radius:18px;
+      padding:14px;
+      background:rgba(255,255,255,.03);
+      margin-bottom:14px;
+    }
+
+    .song-meta .title{
+      font-size:22px;
+      font-weight:900;
+    }
+
+    .song-meta .sub{
+      margin-top:6px;
+      color:var(--muted);
+      font-size:14px;
     }
 
     .progress-meta{
@@ -342,6 +171,7 @@
       gap:10px;
       font-size:12px;
       color:var(--muted);
+      margin-bottom:8px;
     }
 
     .progress{
@@ -349,6 +179,7 @@
       background:rgba(255,255,255,.08);
       border-radius:999px;
       overflow:hidden;
+      margin-bottom:14px;
     }
 
     .bar{
@@ -359,127 +190,56 @@
     }
 
     .lyrics{
-      border-radius:26px;
+      border-radius:24px;
       border:1px solid var(--line);
       padding:20px;
       background:
         radial-gradient(circle at top, rgba(124,92,255,.16), transparent 50%),
         linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
-      min-height:320px;
+      min-height:280px;
       display:grid;
       align-content:center;
       justify-items:center;
       text-align:center;
-      gap:18px;
+      gap:16px;
     }
-
-    .turn-pill{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding:9px 13px;
-      border-radius:999px;
-      background:rgba(255,255,255,.06);
-      border:1px solid var(--line);
-      font-size:13px;
-    }
-
-    .turn-pill.ai{color:#b7dfff}
-    .turn-pill.user{color:#ffd29a}
 
     .line-current{
-      font-size:clamp(28px,5vw,48px);
+      font-size:clamp(28px,5vw,46px);
       font-weight:900;
       line-height:1.1;
       max-width:16ch;
     }
 
     .line-next{
-      font-size:clamp(18px,3vw,26px);
+      font-size:clamp(18px,3vw,24px);
       line-height:1.25;
       max-width:20ch;
       color:var(--muted);
     }
 
-    .mini-note{
-      font-size:12px;
-      color:var(--muted);
-    }
-
     .controls{
+      margin-top:14px;
       display:flex;
       gap:10px;
       flex-wrap:wrap;
     }
 
-    audio{
-      width:100%;
-    }
-
-    .panels{
+    .panel-grid{
       margin-top:14px;
       display:grid;
-      grid-template-columns:1.1fr .9fr;
+      grid-template-columns:1fr 1fr;
       gap:14px;
     }
 
     .panel{
       border:1px solid var(--line);
-      border-radius:22px;
-      padding:16px;
+      border-radius:20px;
+      padding:14px;
       background:rgba(255,255,255,.03);
     }
 
     .panel h3{
-      margin:0 0 10px;
-      font-size:15px;
-    }
-
-    .heard{
-      min-height:76px;
-      line-height:1.55;
-      color:var(--text);
-    }
-
-    .hint{
-      color:var(--muted);
-      font-size:12px;
-      line-height:1.5;
-    }
-
-    .score-grid{
-      display:grid;
-      grid-template-columns:repeat(2,1fr);
-      gap:10px;
-    }
-
-    .score-item{
-      padding:12px;
-      border-radius:16px;
-      background:rgba(255,255,255,.04);
-      border:1px solid var(--line);
-    }
-
-    .score-item .k{
-      font-size:11px;
-      color:var(--muted);
-    }
-
-    .score-item .v{
-      font-size:25px;
-      font-weight:900;
-      margin-top:6px;
-    }
-
-    .coach{
-      margin-top:14px;
-      border:1px solid var(--line);
-      border-radius:22px;
-      padding:16px;
-      background:rgba(255,255,255,.03);
-    }
-
-    .coach h3{
       margin:0 0 10px;
       font-size:15px;
     }
@@ -499,53 +259,17 @@
       border:1px solid var(--line);
     }
 
-    .coach-word.good strong{color:var(--good)}
-    .coach-word.bad strong{color:var(--bad)}
-
-    .foot{
-      font-size:12px;
-      color:var(--muted);
-      text-align:center;
-      padding-top:6px;
-    }
-
-    @media (max-width:1024px){
-      .layout{
-        display:flex;
-        flex-direction:column;
-      }
-
-      .main{
-        order:1;
-      }
-
-      .sidebar{
-        order:2;
-        position:relative;
-        top:auto;
-      }
-
-      .list{
-        max-height:none;
-      }
+    .hidden{
+      display:none !important;
     }
 
     @media (max-width:720px){
-      .hero{
-        padding:14px;
-        border-radius:24px;
-      }
-
-      .hero-stats{
-        grid-template-columns:repeat(2,minmax(0,1fr));
-      }
-
-      .panels{
+      .search-wrap{
         grid-template-columns:1fr;
       }
 
-      .now h2{
-        font-size:22px;
+      .panel-grid{
+        grid-template-columns:1fr;
       }
 
       .lyrics{
@@ -561,122 +285,321 @@
       .line-next{
         font-size:clamp(16px,5vw,22px);
       }
-
-      .page{
-        padding-left:10px;
-        padding-right:10px;
-      }
-
-      .song{
-        padding:12px;
-      }
-
-      .search input{
-        height:42px;
-      }
     }
   </style>
 </head>
 <body>
   <div class="page">
     <section class="hero">
-      <div class="hero-top">
-        <div>
-          <div class="eyebrow">🎤 Karaoke Practice • italkyAI modülü • mobil uyumlu</div>
-          <h1>Şarkı söyle.<br>Pratik yap.<br>Skorunu kap.</h1>
-          <p>Bu sürüm, italky içinde direkt çalıştırabileceğin başlangıç yapısıdır. Solo Karaoke ve AI Düet hazır. Sonraki adımda bunu gerçek şarkı verin, jeton sistemi ve kullanıcı oturumuna bağlayacağız.</p>
-        </div>
-      </div>
-
-      <div class="hero-stats">
-        <div class="stat"><div class="k">Dil sekmesi</div><div class="v">5</div></div>
-        <div class="stat"><div class="k">Mod</div><div class="v">Solo + AI</div></div>
-        <div class="stat"><div class="k">Hedef katalog</div><div class="v">50</div></div>
-        <div class="stat"><div class="k">Skor</div><div class="v">Canlı</div></div>
-      </div>
+      <div class="eyebrow">🎤 Karaoke Practice • LRCLIB ile canlı lyric</div>
+      <h1>Şarkıyı yaz.<br>Sözü çek.<br>Direkt başla.</h1>
+      <p>Manuel şarkı eklemiyoruz. Sanatçı ve şarkı adını gir, zamanlı lyric varsa karaoke otomatik hazır olsun.</p>
     </section>
 
-    <section class="layout">
-      <aside class="card sidebar">
-        <div class="lang-tabs" id="langTabs"></div>
+    <section class="card main">
+      <div class="search-wrap">
+        <input id="artistInput" class="input" type="text" placeholder="Sanatçı adı (ör. Ed Sheeran)" />
+        <input id="trackInput" class="input" type="text" placeholder="Şarkı adı (ör. Perfect)" />
+        <button id="loadBtn" class="btn">Yükle</button>
+      </div>
 
-        <div class="search">
-          <span>🔎</span>
-          <input id="searchInput" type="text" placeholder="Şarkı veya sanatçı ara" />
+      <div id="status" class="status">Hazır. Şarkı adı gir ve yükle.</div>
+
+      <div id="songMeta" class="song-meta hidden">
+        <div id="songTitle" class="title">—</div>
+        <div id="songSub" class="sub">—</div>
+      </div>
+
+      <div class="progress-meta">
+        <span id="timeNow">00:00</span>
+        <span id="lineCount">0 satır</span>
+        <span id="timeTotal">00:00</span>
+      </div>
+      <div class="progress"><div id="progressBar" class="bar"></div></div>
+
+      <div class="lyrics">
+        <div id="currentLine" class="line-current">Şarkı yüklenince sözler burada akacak.</div>
+        <div id="nextLine" class="line-next">Sonraki satır burada görünecek.</div>
+      </div>
+
+      <div class="controls">
+        <button id="playBtn" class="btn secondary">▶ Başlat</button>
+        <button id="pauseBtn" class="btn secondary">⏸ Duraklat</button>
+        <button id="resetBtn" class="btn secondary">↺ Sıfırla</button>
+      </div>
+
+      <div class="panel-grid">
+        <div class="panel">
+          <h3>Durum</h3>
+          <div id="infoBox">Henüz lyric yüklenmedi.</div>
         </div>
 
-        <div class="list" id="songList"></div>
-      </aside>
-
-      <main class="card main">
-        <div class="topline">
-          <div class="now">
-            <h2 id="songTitle">Şarkı seç</h2>
-            <div class="sub" id="songMeta">Katalogdan bir parça seçince karaoke alanı aktif olur.</div>
-          </div>
-
-          <div class="mode-row">
-            <button class="mode-btn active" id="soloBtn">Solo Karaoke</button>
-            <button class="mode-btn" id="duetBtn">AI Düet</button>
+        <div class="panel">
+          <h3>İlk satırlar</h3>
+          <div id="coachList" class="coach-list">
+            <div class="coach-word"><span>Bekleniyor</span><span>—</span></div>
           </div>
         </div>
-
-        <section class="player">
-          <div>
-            <div class="progress-meta">
-              <span id="timeNow">00:00</span>
-              <span id="turnInfo">Hazır</span>
-              <span id="timeTotal">00:00</span>
-            </div>
-            <div class="progress"><div class="bar" id="progressBar"></div></div>
-          </div>
-
-          <div class="lyrics">
-            <div class="turn-pill user" id="turnPill">🎙️ Sıra bekleniyor</div>
-            <div class="line-current" id="currentLine">Bir şarkı seç ve başlat.</div>
-            <div class="line-next" id="nextLine">Sonraki satır burada görünecek.</div>
-            <div class="mini-note">AI Düet modunda çift satırlarda sıra kullanıcıya geçer.</div>
-          </div>
-
-          <div class="controls">
-            <button class="primary-btn" id="playBtn">▶ Başlat</button>
-            <button class="ghost-btn" id="pauseBtn">⏸ Duraklat</button>
-            <button class="ghost-btn" id="micBtn">🎤 Mikrofonu Aç</button>
-            <button class="ghost-btn" id="resetBtn">↺ Sıfırla</button>
-          </div>
-
-          <audio id="audio" preload="metadata" controls></audio>
-        </section>
-
-        <section class="panels">
-          <div class="panel">
-            <h3>Duyulan sözlerin</h3>
-            <div class="heard" id="heardText">Mikrofon aktif olduğunda burada canlı algılanan sözler akacak.</div>
-            <div class="hint">SpeechRecognition destekliyse canlı deneme yapar. Destek yoksa bile ekran ve akış çalışır.</div>
-          </div>
-
-          <div class="panel">
-            <h3>Anlık skor</h3>
-            <div class="score-grid">
-              <div class="score-item"><div class="k">Pronunciation</div><div class="v" id="scorePron">0</div></div>
-              <div class="score-item"><div class="k">Timing</div><div class="v" id="scoreTiming">0</div></div>
-              <div class="score-item"><div class="k">Accuracy</div><div class="v" id="scoreAccuracy">0</div></div>
-              <div class="score-item"><div class="k">Total</div><div class="v" id="scoreTotal">0</div></div>
-            </div>
-          </div>
-        </section>
-
-        <section class="coach">
-          <h3>Kelimeler ve koç notları</h3>
-          <div class="coach-list" id="coachList">
-            <div class="coach-word"><span>Seçili satır yok</span><span>—</span></div>
-          </div>
-          <div class="foot">İlk sürümde skor, kelime eşleşmesi + zaman yaklaşımıyla hesaplanır.</div>
-        </section>
-      </main>
+      </div>
     </section>
   </div>
 
-  <script src="/js/karaoke_practice_page.js"></script>
+  <script>
+    const state = {
+      lyrics: [],
+      timer: null,
+      startedAt: 0,
+      elapsed: 0,
+      currentIndex: 0,
+      artist: "",
+      track: ""
+    };
+
+    const $ = (id) => document.getElementById(id);
+
+    const artistInput = $("artistInput");
+    const trackInput = $("trackInput");
+    const loadBtn = $("loadBtn");
+
+    const statusEl = $("status");
+    const songMeta = $("songMeta");
+    const songTitle = $("songTitle");
+    const songSub = $("songSub");
+
+    const currentLine = $("currentLine");
+    const nextLine = $("nextLine");
+
+    const playBtn = $("playBtn");
+    const pauseBtn = $("pauseBtn");
+    const resetBtn = $("resetBtn");
+
+    const timeNow = $("timeNow");
+    const timeTotal = $("timeTotal");
+    const lineCount = $("lineCount");
+    const progressBar = $("progressBar");
+
+    const infoBox = $("infoBox");
+    const coachList = $("coachList");
+
+    function init() {
+      loadBtn.addEventListener("click", handleLoad);
+      playBtn.addEventListener("click", startPlayback);
+      pauseBtn.addEventListener("click", pausePlayback);
+      resetBtn.addEventListener("click", resetPlayback);
+
+      trackInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") handleLoad();
+      });
+
+      artistInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") handleLoad();
+      });
+    }
+
+    async function handleLoad() {
+      const artist = String(artistInput.value || "").trim();
+      const track = String(trackInput.value || "").trim();
+
+      if (!artist || !track) {
+        setStatus("Sanatçı ve şarkı adını birlikte gir.");
+        return;
+      }
+
+      setStatus("Lyric aranıyor…");
+      resetStateOnly();
+
+      try {
+        const lyrics = await fetchLyrics(artist, track);
+
+        if (!lyrics.length) {
+          setStatus("Zamanlı lyric bulunamadı.");
+          infoBox.textContent = "Bu şarkı için synced lyric yok ya da servis cevap vermedi.";
+          return;
+        }
+
+        state.artist = artist;
+        state.track = track;
+        state.lyrics = lyrics;
+
+        songMeta.classList.remove("hidden");
+        songTitle.textContent = track;
+        songSub.textContent = artist + " • LRCLIB synced lyric";
+
+        currentLine.textContent = lyrics[0]?.text || "Söz bulunamadı.";
+        nextLine.textContent = lyrics[1]?.text || "Sonraki satır yok.";
+        timeTotal.textContent = formatTime(lyrics.at(-1)?.t || 0);
+        lineCount.textContent = lyrics.length + " satır";
+        infoBox.textContent = "Lyric başarıyla yüklendi. Başlat'a basabilirsin.";
+        paintPreview(lyrics);
+        setStatus("Hazır.");
+      } catch (err) {
+        console.error(err);
+        setStatus("Lyric alınamadı.");
+        infoBox.textContent = "API çağrısı başarısız oldu. Şarkı adını daha net yazmayı dene.";
+      }
+    }
+
+    async function fetchLyrics(artist, track) {
+      const url =
+        "https://lrclib.net/api/get?artist=" +
+        encodeURIComponent(artist) +
+        "&track=" +
+        encodeURIComponent(track);
+
+      const res = await fetch(url);
+      if (!res.ok) {
+        throw new Error("LRCLIB error: " + res.status);
+      }
+
+      const data = await res.json();
+      const synced = data && data.syncedLyrics ? data.syncedLyrics : "";
+
+      if (!synced) return [];
+      return parseLRC(synced);
+    }
+
+    function parseLRC(lrc) {
+      return String(lrc)
+        .split("\n")
+        .map((line) => {
+          const match = line.match(/\[(\d+):(\d+(?:\.\d+)?)\](.*)/);
+          if (!match) return null;
+
+          const min = parseInt(match[1], 10);
+          const sec = parseFloat(match[2]);
+          const text = String(match[3] || "").trim();
+
+          return {
+            t: min * 60 + sec,
+            text
+          };
+        })
+        .filter(Boolean)
+        .filter((x) => x.text);
+    }
+
+    function startPlayback() {
+      if (!state.lyrics.length) {
+        setStatus("Önce lyric yükle.");
+        return;
+      }
+
+      if (state.timer) return;
+
+      state.startedAt = Date.now() - state.elapsed * 1000;
+      state.timer = setInterval(tick, 120);
+      setStatus("Karaoke başladı.");
+    }
+
+    function pausePlayback() {
+      clearInterval(state.timer);
+      state.timer = null;
+      setStatus("Duraklatıldı.");
+    }
+
+    function resetPlayback() {
+      pausePlayback();
+      state.elapsed = 0;
+      state.currentIndex = 0;
+      progressBar.style.width = "0%";
+      timeNow.textContent = "00:00";
+
+      if (state.lyrics.length) {
+        currentLine.textContent = state.lyrics[0]?.text || "Söz bulunamadı.";
+        nextLine.textContent = state.lyrics[1]?.text || "Sonraki satır yok.";
+      } else {
+        currentLine.textContent = "Şarkı yüklenince sözler burada akacak.";
+        nextLine.textContent = "Sonraki satır burada görünecek.";
+      }
+
+      setStatus("Sıfırlandı.");
+    }
+
+    function resetStateOnly() {
+      pausePlayback();
+      state.lyrics = [];
+      state.elapsed = 0;
+      state.currentIndex = 0;
+      progressBar.style.width = "0%";
+      timeNow.textContent = "00:00";
+      timeTotal.textContent = "00:00";
+      lineCount.textContent = "0 satır";
+      songMeta.classList.add("hidden");
+      currentLine.textContent = "Şarkı yüklenince sözler burada akacak.";
+      nextLine.textContent = "Sonraki satır burada görünecek.";
+      coachList.innerHTML = '<div class="coach-word"><span>Bekleniyor</span><span>—</span></div>';
+    }
+
+    function tick() {
+      state.elapsed = (Date.now() - state.startedAt) / 1000;
+      updateLyricsByTime(state.elapsed);
+      updateProgress();
+    }
+
+    function updateLyricsByTime(sec) {
+      if (!state.lyrics.length) return;
+
+      let idx = 0;
+      for (let i = 0; i < state.lyrics.length; i++) {
+        if (sec >= state.lyrics[i].t) idx = i;
+      }
+
+      if (idx !== state.currentIndex) {
+        state.currentIndex = idx;
+        currentLine.textContent = state.lyrics[idx]?.text || "—";
+        nextLine.textContent = state.lyrics[idx + 1]?.text || "Şarkı bitiyor…";
+      }
+
+      timeNow.textContent = formatTime(sec);
+
+      const total = state.lyrics.at(-1)?.t || 1;
+      if (sec >= total) {
+        pausePlayback();
+        setStatus("Şarkı sonuna gelindi.");
+      }
+    }
+
+    function updateProgress() {
+      if (!state.lyrics.length) return;
+      const total = state.lyrics.at(-1)?.t || 1;
+      const pct = Math.max(0, Math.min(100, (state.elapsed / total) * 100));
+      progressBar.style.width = pct + "%";
+    }
+
+    function paintPreview(lyrics) {
+      coachList.innerHTML = "";
+      lyrics.slice(0, 5).forEach((row, i) => {
+        const div = document.createElement("div");
+        div.className = "coach-word";
+        div.innerHTML = "<strong>" + (i + 1) + ".</strong><span>" + escapeHtml(row.text) + "</span>";
+        coachList.appendChild(div);
+      });
+    }
+
+    function setStatus(text) {
+      statusEl.textContent = text;
+    }
+
+    function formatTime(sec) {
+      sec = Math.max(0, Math.floor(sec || 0));
+      const m = String(Math.floor(sec / 60)).padStart(2, "0");
+      const s = String(sec % 60).padStart(2, "0");
+      return m + ":" + s;
+    }
+
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, (m) => {
+        return {
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#39;"
+        }[m];
+      });
+    }
+
+    init();
+  </script>
 </body>
 </html>
