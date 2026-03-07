@@ -298,9 +298,11 @@ function speak(text, langCode){
 
   stopAudio();
 
+  const c = canonical(langCode);
+
   if(window.NativeTTS && typeof window.NativeTTS.speak === "function"){
     try{
-      window.NativeTTS.speak(t, canonical(langCode));
+      window.NativeTTS.speak(t, c);
       return;
     }catch{}
   }
@@ -308,13 +310,25 @@ function speak(text, langCode){
   if(!window.speechSynthesis) return;
 
   const u = new SpeechSynthesisUtterance(t);
-  u.lang = langObj(langCode).bcp;
-  u.rate = 1;
-  u.pitch = 1;
+  u.lang = langObj(c).bcp;
+
+  if(c === "en"){
+    u.rate = 0.82;
+    u.pitch = 1.0;
+  }else if(c === "de" || c === "fr" || c === "it" || c === "es"){
+    u.rate = 0.88;
+    u.pitch = 1.0;
+  }else{
+    u.rate = 0.92;
+    u.pitch = 1.0;
+  }
+
   u.volume = 1;
 
   setTimeout(() => {
-    try{ window.speechSynthesis.speak(u); }catch{}
+    try{
+      window.speechSynthesis.speak(u);
+    }catch{}
   }, 60);
 }
 
