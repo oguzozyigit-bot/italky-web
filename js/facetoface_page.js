@@ -29,13 +29,17 @@ function labelChip(code){
 }
 
 const frameRoot = $("frameRoot");
-const tapHint = $("tapHint");
 
 const topBody = $("topBody");
 const botBody = $("botBody");
 
 const topMic = $("topMic");
 const botMic = $("botMic");
+
+const topHelper = $("topHelper");
+const botHelper = $("botHelper");
+const topMicHelper = $("topMicHelper");
+const botMicHelper = $("botMicHelper");
 
 const topLangBtn = $("topLangBtn");
 const botLangBtn = $("botLangBtn");
@@ -60,6 +64,125 @@ const statusPill = $("statusPill");
 let topLang = "en";
 let botLang = "tr";
 let ttsDebounceAt = 0;
+let activeSide = null;
+
+function setHelperTexts(topText="", botText="", topType="", botType=""){
+  if(topHelper){
+    topHelper.className = "helper-text" + (topType ? ` ${topType}` : "");
+    topHelper.textContent = topText;
+  }
+  if(botHelper){
+    botHelper.className = "helper-text" + (botType ? ` ${botType}` : "");
+    botHelper.textContent = botText;
+  }
+}
+
+function setMicHelperTexts(topText="", botText="", topType="", botType=""){
+  if(topMicHelper){
+    topMicHelper.className = "mic-helper" + (topType ? ` ${topType}` : "");
+    topMicHelper.textContent = topText;
+  }
+  if(botMicHelper){
+    botMicHelper.className = "mic-helper" + (botType ? ` ${botType}` : "");
+    botMicHelper.textContent = botText;
+  }
+}
+
+function syncDirectionalHints(type){
+  if(type === "idle"){
+    setHelperTexts("", "", "", "");
+    setMicHelperTexts(
+      "Konuşmak için mikrofona dokun",
+      "Konuşmak için mikrofona dokun",
+      "ready",
+      "ready"
+    );
+    return;
+  }
+
+  if(type === "listening"){
+    if(activeSide === "top"){
+      setHelperTexts(
+        "Konuşma Bitene Kadar Bekleyin",
+        "",
+        "helper-wait",
+        ""
+      );
+      setMicHelperTexts(
+        "",
+        "Konuşma Bitene Kadar Bekleyin",
+        "",
+        "wait"
+      );
+    } else {
+      setHelperTexts(
+        "",
+        "Konuşma Bitene Kadar Bekleyin",
+        "",
+        "helper-wait"
+      );
+      setMicHelperTexts(
+        "Konuşma Bitene Kadar Bekleyin",
+        "",
+        "wait",
+        ""
+      );
+    }
+    return;
+  }
+
+  if(type === "translating"){
+    if(activeSide === "top"){
+      setHelperTexts(
+        "Konuşmanız bitince mikrofona tekrar basın",
+        "",
+        "helper-repeat",
+        ""
+      );
+      setMicHelperTexts(
+        "",
+        "Konuşmanız bitince mikrofona tekrar basın",
+        "",
+        "repeat"
+      );
+    } else {
+      setHelperTexts(
+        "",
+        "Konuşmanız bitince mikrofona tekrar basın",
+        "",
+        "helper-repeat"
+      );
+      setMicHelperTexts(
+        "Konuşmanız bitince mikrofona tekrar basın",
+        "",
+        "repeat",
+        ""
+      );
+    }
+    return;
+  }
+
+  if(type === "ready"){
+    setHelperTexts("", "", "", "");
+    setMicHelperTexts(
+      "Konuşmak için mikrofona dokun",
+      "Konuşmak için mikrofona dokun",
+      "ready",
+      "ready"
+    );
+    return;
+  }
+
+  if(type === "error"){
+    setHelperTexts("", "", "", "");
+    setMicHelperTexts(
+      "Tekrar denemek için mikrofona dokun",
+      "Tekrar denemek için mikrofona dokun",
+      "wait",
+      "wait"
+    );
+  }
+}
 
 function setStatus(type, text){
   if(statusPill){
@@ -69,7 +192,6 @@ function setStatus(type, text){
 
   if(frameRoot){
     frameRoot.classList.remove("is-idle","is-listening","is-translating","is-ready","is-error");
-
     if(type === "idle") frameRoot.classList.add("is-idle");
     if(type === "listening") frameRoot.classList.add("is-listening");
     if(type === "translating") frameRoot.classList.add("is-translating");
@@ -77,23 +199,14 @@ function setStatus(type, text){
     if(type === "error") frameRoot.classList.add("is-error");
   }
 
-  if(tapHint){
-    if(type === "listening"){
-      tapHint.textContent = "Dinleniyor...";
-    }else if(type === "translating"){
-      tapHint.textContent = "Çeviri hazırlanıyor";
-    }else if(type === "ready"){
-      tapHint.textContent = "Tekrar konuşmak için mikrofona dokun";
-    }else if(type === "error"){
-      tapHint.textContent = "Tekrar denemek için mikrofona dokun";
-    }else{
-      tapHint.textContent = "Konuşmak için mikrofona dokun";
-    }
-  }
+  syncDirectionalHints(type);
 }
 
 function bounceReady(delay = 1800){
-  setTimeout(()=> setStatus("idle","Hazır"), delay);
+  setTimeout(()=>{
+    activeSide = null;
+    setStatus("idle","Hazır");
+  }, delay);
 }
 
 function pointOrbTo(side){
@@ -105,9 +218,7 @@ function pointOrbTo(side){
 function setMicState(side, state){
   const mic = side === "top" ? topMic : botMic;
   if(!mic) return;
-
   mic.classList.remove("listening", "recorded");
-
   if(state === "listening") mic.classList.add("listening");
   if(state === "recorded") mic.classList.add("recorded");
 }
@@ -308,6 +419,7 @@ async function handleInput(side){
   const other = side === "top" ? "bot" : "top";
   const otherWrap = other === "top" ? topBody : botBody;
 
+  activeSide = side;
   pointOrbTo(side);
   resetMics();
   setMicState(side, "listening");
@@ -354,11 +466,13 @@ async function handleInput(side){
   setStatus("ready", "Hazır");
 
   setTimeout(()=>{
+    activeSide = null;
     setStatus("idle", "Hazır");
   }, 1800);
 }
 
 function bind(){
+  activeSide = null;
   setStatus("idle","Hazır");
   pointOrbTo("bot");
   resetMics();
@@ -402,6 +516,7 @@ function bind(){
     stopAudio();
     if(topBody) topBody.innerHTML = "";
     if(botBody) botBody.innerHTML = "";
+    activeSide = null;
     resetMics();
     setStatus("idle","Hazır");
   });
