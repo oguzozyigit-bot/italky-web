@@ -9,18 +9,28 @@ const BCP = {
 };
 
 function canonical(code){
-  return String(code||"").toLowerCase().split("-")[0].trim();
+  return String(code || "").toLowerCase().split("-")[0].trim();
 }
 
-const LANGS = (Array.isArray(LANG_POOL) ? LANG_POOL : []).map(l=>{
+const LANGS = (Array.isArray(LANG_POOL) ? LANG_POOL : []).map(l => {
   const code = canonical(l.code);
   if(!code) return null;
-  return { code, flag:l.flag||"🌐", name:l.name||code.toUpperCase(), bcp:BCP[code]||"en-US" };
+  return {
+    code,
+    flag: l.flag || "🌐",
+    name: l.name || code.toUpperCase(),
+    bcp: BCP[code] || "en-US"
+  };
 }).filter(Boolean);
 
 function langObj(code){
   const c = canonical(code);
-  return LANGS.find(x=>x.code===c) || { code:c, flag:"🌐", name:c.toUpperCase(), bcp:BCP[c]||"en-US" };
+  return LANGS.find(x => x.code === c) || {
+    code: c,
+    flag: "🌐",
+    name: c.toUpperCase(),
+    bcp: BCP[c] || "en-US"
+  };
 }
 
 function labelChip(code){
@@ -38,8 +48,6 @@ const botMic = $("botMic");
 
 const topHelper = $("topHelper");
 const botHelper = $("botHelper");
-const topMicHelper = $("topMicHelper");
-const botMicHelper = $("botMicHelper");
 
 const topLangBtn = $("topLangBtn");
 const botLangBtn = $("botLangBtn");
@@ -59,155 +67,15 @@ const closeBot = $("close-bot");
 const clearBtn = $("clearBtn");
 const homeLink = $("homeLink");
 const homeBtn = $("homeBtn");
-const statusPill = $("statusPill");
 
 let topLang = "en";
 let botLang = "tr";
 let ttsDebounceAt = 0;
 let activeSide = null;
 
-function setHelperTexts(topText="", botText="", topType="", botType=""){
-  if(topHelper){
-    topHelper.className = "helper-text" + (topType ? ` ${topType}` : "");
-    topHelper.textContent = topText;
-  }
-  if(botHelper){
-    botHelper.className = "helper-text" + (botType ? ` ${botType}` : "");
-    botHelper.textContent = botText;
-  }
-}
-
-function setMicHelperTexts(topText="", botText="", topType="", botType=""){
-  if(topMicHelper){
-    topMicHelper.className = "mic-helper" + (topType ? ` ${topType}` : "");
-    topMicHelper.textContent = topText;
-  }
-  if(botMicHelper){
-    botMicHelper.className = "mic-helper" + (botType ? ` ${botType}` : "");
-    botMicHelper.textContent = botText;
-  }
-}
-
-function syncDirectionalHints(type){
-  if(type === "idle"){
-    setHelperTexts("", "", "", "");
-    setMicHelperTexts(
-      "Konuşmak için mikrofona dokun",
-      "Konuşmak için mikrofona dokun",
-      "ready",
-      "ready"
-    );
-    return;
-  }
-
-  if(type === "listening"){
-    if(activeSide === "top"){
-      setHelperTexts(
-        "Konuşma Bitene Kadar Bekleyin",
-        "",
-        "helper-wait",
-        ""
-      );
-      setMicHelperTexts(
-        "",
-        "Konuşma Bitene Kadar Bekleyin",
-        "",
-        "wait"
-      );
-    } else {
-      setHelperTexts(
-        "",
-        "Konuşma Bitene Kadar Bekleyin",
-        "",
-        "helper-wait"
-      );
-      setMicHelperTexts(
-        "Konuşma Bitene Kadar Bekleyin",
-        "",
-        "wait",
-        ""
-      );
-    }
-    return;
-  }
-
-  if(type === "translating"){
-    if(activeSide === "top"){
-      setHelperTexts(
-        "Konuşmanız bitince mikrofona tekrar basın",
-        "",
-        "helper-repeat",
-        ""
-      );
-      setMicHelperTexts(
-        "",
-        "Konuşmanız bitince mikrofona tekrar basın",
-        "",
-        "repeat"
-      );
-    } else {
-      setHelperTexts(
-        "",
-        "Konuşmanız bitince mikrofona tekrar basın",
-        "",
-        "helper-repeat"
-      );
-      setMicHelperTexts(
-        "Konuşmanız bitince mikrofona tekrar basın",
-        "",
-        "repeat",
-        ""
-      );
-    }
-    return;
-  }
-
-  if(type === "ready"){
-    setHelperTexts("", "", "", "");
-    setMicHelperTexts(
-      "Konuşmak için mikrofona dokun",
-      "Konuşmak için mikrofona dokun",
-      "ready",
-      "ready"
-    );
-    return;
-  }
-
-  if(type === "error"){
-    setHelperTexts("", "", "", "");
-    setMicHelperTexts(
-      "Tekrar denemek için mikrofona dokun",
-      "Tekrar denemek için mikrofona dokun",
-      "wait",
-      "wait"
-    );
-  }
-}
-
-function setStatus(type, text){
-  if(statusPill){
-    statusPill.className = `status-pill ${type}`;
-    statusPill.textContent = text;
-  }
-
-  if(frameRoot){
-    frameRoot.classList.remove("is-idle","is-listening","is-translating","is-ready","is-error");
-    if(type === "idle") frameRoot.classList.add("is-idle");
-    if(type === "listening") frameRoot.classList.add("is-listening");
-    if(type === "translating") frameRoot.classList.add("is-translating");
-    if(type === "ready") frameRoot.classList.add("is-ready");
-    if(type === "error") frameRoot.classList.add("is-error");
-  }
-
-  syncDirectionalHints(type);
-}
-
-function bounceReady(delay = 1800){
-  setTimeout(()=>{
-    activeSide = null;
-    setStatus("idle","Hazır");
-  }, delay);
-}
+/* ===============================
+   UI STATUS / HELPERS
+================================ */
 
 function pointOrbTo(side){
   if(!frameRoot) return;
@@ -218,7 +86,9 @@ function pointOrbTo(side){
 function setMicState(side, state){
   const mic = side === "top" ? topMic : botMic;
   if(!mic) return;
+
   mic.classList.remove("listening", "recorded");
+
   if(state === "listening") mic.classList.add("listening");
   if(state === "recorded") mic.classList.add("recorded");
 }
@@ -227,6 +97,99 @@ function resetMics(){
   topMic?.classList.remove("listening", "recorded");
   botMic?.classList.remove("listening", "recorded");
 }
+
+function setFrameVisual(state){
+  if(!frameRoot) return;
+
+  frameRoot.classList.remove(
+    "is-idle",
+    "is-listening",
+    "is-translating",
+    "is-ready",
+    "is-error"
+  );
+
+  if(state === "idle") frameRoot.classList.add("is-idle");
+  if(state === "listening") frameRoot.classList.add("is-listening");
+  if(state === "translating") frameRoot.classList.add("is-translating");
+  if(state === "ready") frameRoot.classList.add("is-ready");
+  if(state === "error") frameRoot.classList.add("is-error");
+}
+
+function setHelper(el, text, tone){
+  if(!el) return;
+  el.className = "helper-text";
+  if(tone) el.classList.add(tone);
+  el.textContent = text || "";
+}
+
+function setSystemReadyUI(){
+  activeSide = null;
+  resetMics();
+  setFrameVisual("ready");
+
+  setHelper(topHelper, "Konuşmak için mikrofona dokununuz.", "helper-ready");
+  setHelper(botHelper, "Konuşmak için mikrofona dokununuz.", "helper-ready");
+}
+
+function setSystemPreparingUI(){
+  activeSide = null;
+  resetMics();
+  setFrameVisual("error");
+
+  setHelper(topHelper, "Sistem Hazırlanıyor.", "helper-wait");
+  setHelper(botHelper, "Sistem Hazırlanıyor.", "helper-wait");
+}
+
+function setListeningUI(side){
+  activeSide = side;
+  pointOrbTo(side);
+  resetMics();
+  setMicState(side, "listening");
+  setFrameVisual("listening");
+
+  if(side === "top"){
+    setHelper(topHelper, "Konuşmanız Bitince Mikrofona Basınız.", "helper-repeat");
+    setHelper(botHelper, "Lütfen Bekleyiniz...", "helper-wait");
+  } else {
+    setHelper(topHelper, "Lütfen Bekleyiniz...", "helper-wait");
+    setHelper(botHelper, "Konuşmanız Bitince Mikrofona Basınız.", "helper-repeat");
+  }
+}
+
+function setTranslatingUI(side){
+  activeSide = side;
+  pointOrbTo(side);
+  setMicState(side, "recorded");
+  setFrameVisual("translating");
+
+  if(side === "top"){
+    setHelper(topHelper, "Konuşmanız Bitince Mikrofona Basınız.", "helper-repeat");
+    setHelper(botHelper, "Lütfen Bekleyiniz...", "helper-wait");
+  } else {
+    setHelper(topHelper, "Lütfen Bekleyiniz...", "helper-wait");
+    setHelper(botHelper, "Konuşmanız Bitince Mikrofona Basınız.", "helper-repeat");
+  }
+}
+
+function setErrorUI(){
+  activeSide = null;
+  resetMics();
+  setFrameVisual("error");
+
+  setHelper(topHelper, "Sistem Hazırlanıyor.", "helper-wait");
+  setHelper(botHelper, "Sistem Hazırlanıyor.", "helper-wait");
+}
+
+function bounceToReady(delay = 1800){
+  setTimeout(() => {
+    setSystemReadyUI();
+  }, delay);
+}
+
+/* ===============================
+   LANG UI
+================================ */
 
 function refreshLangLabels(){
   if(topLangTxt) topLangTxt.textContent = labelChip(topLang);
@@ -239,12 +202,12 @@ function closeAllPop(){
 }
 
 function renderPop(side){
-  const list = side==="top" ? listTop : listBot;
-  const sel = side==="top" ? topLang : botLang;
+  const list = side === "top" ? listTop : listBot;
+  const sel = side === "top" ? topLang : botLang;
   if(!list) return;
 
-  list.innerHTML = LANGS.map(l=>{
-    const active = canonical(l.code)===canonical(sel) ? "active" : "";
+  list.innerHTML = LANGS.map(l => {
+    const active = canonical(l.code) === canonical(sel) ? "active" : "";
     return `
       <div class="pop-item ${active}" data-code="${l.code}">
         <div class="pop-left">
@@ -256,10 +219,10 @@ function renderPop(side){
     `;
   }).join("");
 
-  list.querySelectorAll(".pop-item").forEach(el=>{
-    el.addEventListener("click", ()=>{
+  list.querySelectorAll(".pop-item").forEach(el => {
+    el.addEventListener("click", () => {
       const code = el.dataset.code || "en";
-      if(side==="top") topLang = code;
+      if(side === "top") topLang = code;
       else botLang = code;
       refreshLangLabels();
       closeAllPop();
@@ -267,13 +230,17 @@ function renderPop(side){
   });
 }
 
+/* ===============================
+   AUDIO / TTS
+================================ */
+
 function stopAudio(){
   try{ window.speechSynthesis?.cancel?.(); }catch{}
   try{ window.NativeTTS?.stop?.(); }catch{}
 }
 
 function speak(text, langCode){
-  const t = String(text||"").trim();
+  const t = String(text || "").trim();
   if(!t) return;
 
   const now = Date.now();
@@ -297,13 +264,17 @@ function speak(text, langCode){
   u.pitch = 1;
   u.volume = 1;
 
-  setTimeout(()=>{
+  setTimeout(() => {
     try{ window.speechSynthesis.speak(u); }catch{}
   }, 60);
 }
 
-function addBubble(side, kind, text, opts={}){
-  const wrap = side==="top" ? topBody : botBody;
+/* ===============================
+   CHAT UI
+================================ */
+
+function addBubble(side, kind, text, opts = {}){
+  const wrap = side === "top" ? topBody : botBody;
   if(!wrap) return null;
 
   const row = document.createElement("div");
@@ -319,7 +290,7 @@ function addBubble(side, kind, text, opts={}){
         <path d="M19 5a8 8 0 0 1 0 14"></path>
       </svg>
     `;
-    spk.addEventListener("click", ()=>{
+    spk.addEventListener("click", () => {
       const txt = row.querySelector(".txt")?.textContent || "";
       speak(txt, opts.speakLang || "en");
     });
@@ -328,7 +299,7 @@ function addBubble(side, kind, text, opts={}){
 
   const txt = document.createElement("span");
   txt.className = "txt";
-  txt.textContent = String(text||"").trim();
+  txt.textContent = String(text || "").trim();
   row.appendChild(txt);
 
   wrap.appendChild(row);
@@ -337,38 +308,46 @@ function addBubble(side, kind, text, opts={}){
 }
 
 function clearLatest(side){
-  const wrap = side==="top" ? topBody : botBody;
-  wrap?.querySelectorAll(".bubble.me.is-latest").forEach(x=>x.classList.remove("is-latest"));
+  const wrap = side === "top" ? topBody : botBody;
+  wrap?.querySelectorAll(".bubble.me.is-latest").forEach(x => x.classList.remove("is-latest"));
 }
+
+/* ===============================
+   BACKEND TRANSLATE
+================================ */
 
 async function translateText(text, from, to){
   const src = canonical(from);
   const dst = canonical(to);
 
   try{
-    const r = await fetch(`${API_BASE}/api/translate_ai`,{
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
+    const r = await fetch(`${API_BASE}/api/translate_ai`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        text: String(text||"").trim(),
+        text: String(text || "").trim(),
         from_lang: src,
         to_lang: dst
       })
     });
 
     if(!r.ok){
-      const raw = await r.text().catch(()=> "");
+      const raw = await r.text().catch(() => "");
       console.error("translate_ai failed", r.status, raw);
       return null;
     }
 
-    const j = await r.json().catch(()=>null);
+    const j = await r.json().catch(() => null);
     return String(j?.translated || "").trim() || null;
   }catch(e){
     console.error("translate_ai error", e);
     return null;
   }
 }
+
+/* ===============================
+   SPEECH RECOGNITION
+================================ */
 
 function getRecognizer(langCode){
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -383,35 +362,39 @@ function getRecognizer(langCode){
 }
 
 async function speechToText(langCode){
-  return new Promise((resolve)=>{
+  return new Promise((resolve) => {
     const rec = getRecognizer(langCode);
     if(!rec) return resolve(null);
 
     let done = false;
 
-    const finish = (val)=>{
+    const finish = (val) => {
       if(done) return;
       done = true;
       try{ rec.stop?.(); }catch{}
       resolve(val);
     };
 
-    rec.onresult = (e)=>{
+    rec.onresult = (e) => {
       const t = e.results?.[0]?.[0]?.transcript || "";
-      finish(String(t||"").trim() || null);
+      finish(String(t || "").trim() || null);
     };
 
-    rec.onerror = ()=> finish(null);
-    rec.onend = ()=> { if(!done) finish(null); };
+    rec.onerror = () => finish(null);
+    rec.onend = () => { if(!done) finish(null); };
 
     try{
       rec.start();
-      setTimeout(()=>finish(null), 8000);
+      setTimeout(() => finish(null), 8000);
     }catch{
       finish(null);
     }
   });
 }
+
+/* ===============================
+   MAIN FLOW
+================================ */
 
 async function handleInput(side){
   const src = side === "top" ? topLang : botLang;
@@ -419,66 +402,59 @@ async function handleInput(side){
   const other = side === "top" ? "bot" : "top";
   const otherWrap = other === "top" ? topBody : botBody;
 
-  activeSide = side;
-  pointOrbTo(side);
-  resetMics();
-  setMicState(side, "listening");
-  setStatus("listening", "Dinleniyor");
+  setListeningUI(side);
 
-  let text = await speechToText(src);
+  const text = await speechToText(src);
 
   if(!text){
-    resetMics();
-    setStatus("error", "Ses alınamadı");
-    bounceReady(1800);
+    setErrorUI();
+    bounceToReady(1800);
     return;
   }
 
-  setMicState(side, "recorded");
   addBubble(side, "them", text);
-
   clearLatest(other);
-  setStatus("translating", "Çevriliyor");
 
-  addBubble(other, "me", "Çevriliyor...", { latest:true, speakLang: dst });
+  setTranslatingUI(side);
+
+  addBubble(other, "me", "Çevriliyor...", { latest: true, speakLang: dst });
   const latestTxt = otherWrap?.querySelector(".bubble.me.is-latest .txt");
 
   const tr = await translateText(text, src, dst);
 
   if(!tr){
-    resetMics();
-    setStatus("error", "Bağlantı hatası");
+    setErrorUI();
     if(latestTxt){
       latestTxt.textContent = "⚠️ Çeviri servisine ulaşılamadı";
     }
-    bounceReady(1800);
+    bounceToReady(1800);
     return;
   }
 
   if(latestTxt){
     latestTxt.textContent = tr;
   }else{
-    addBubble(other, "me", tr, { latest:true, speakLang: dst });
+    addBubble(other, "me", tr, { latest: true, speakLang: dst });
   }
 
   speak(tr, dst);
-  resetMics();
-  setStatus("ready", "Hazır");
-
-  setTimeout(()=>{
-    activeSide = null;
-    setStatus("idle", "Hazır");
-  }, 1800);
+  setSystemReadyUI();
 }
 
+/* ===============================
+   BIND
+================================ */
+
 function bind(){
-  activeSide = null;
-  setStatus("idle","Hazır");
+  setSystemPreparingUI();
   pointOrbTo("bot");
-  resetMics();
   refreshLangLabels();
 
-  topLangBtn?.addEventListener("click",(e)=>{
+  setTimeout(() => {
+    setSystemReadyUI();
+  }, 900);
+
+  topLangBtn?.addEventListener("click", (e) => {
     e.preventDefault();
     e.stopPropagation();
     closeAllPop();
@@ -486,7 +462,7 @@ function bind(){
     popTop?.classList.add("show");
   });
 
-  botLangBtn?.addEventListener("click",(e)=>{
+  botLangBtn?.addEventListener("click", (e) => {
     e.preventDefault();
     e.stopPropagation();
     closeAllPop();
@@ -494,43 +470,41 @@ function bind(){
     popBot?.classList.add("show");
   });
 
-  closeTop?.addEventListener("click",(e)=>{
+  closeTop?.addEventListener("click", (e) => {
     e.preventDefault();
     e.stopPropagation();
     closeAllPop();
   });
 
-  closeBot?.addEventListener("click",(e)=>{
+  closeBot?.addEventListener("click", (e) => {
     e.preventDefault();
     e.stopPropagation();
     closeAllPop();
   });
 
-  document.addEventListener("click",(e)=>{
+  document.addEventListener("click", (e) => {
     const inside = (popTop && popTop.contains(e.target)) || (popBot && popBot.contains(e.target));
     const isBtn = e.target?.closest?.("#topLangBtn,#botLangBtn");
     if(!inside && !isBtn) closeAllPop();
-  }, { capture:true });
+  }, { capture: true });
 
-  clearBtn?.addEventListener("click", ()=>{
+  clearBtn?.addEventListener("click", () => {
     stopAudio();
     if(topBody) topBody.innerHTML = "";
     if(botBody) botBody.innerHTML = "";
-    activeSide = null;
-    resetMics();
-    setStatus("idle","Hazır");
+    setSystemReadyUI();
   });
 
-  homeLink?.addEventListener("click", ()=> location.href="/pages/home.html");
-  homeBtn?.addEventListener("click", ()=> location.href="/pages/home.html");
+  homeLink?.addEventListener("click", () => location.href = "/pages/home.html");
+  homeBtn?.addEventListener("click", () => location.href = "/pages/home.html");
 
-  topMic?.addEventListener("click", async (e)=>{
+  topMic?.addEventListener("click", async (e) => {
     e.preventDefault();
     e.stopPropagation();
     await handleInput("top");
   });
 
-  botMic?.addEventListener("click", async (e)=>{
+  botMic?.addEventListener("click", async (e) => {
     e.preventDefault();
     e.stopPropagation();
     await handleInput("bot");
