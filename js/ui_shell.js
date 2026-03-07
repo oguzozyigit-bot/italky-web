@@ -89,3 +89,15 @@ function removeOverlaySoon(){
   const ov = document.getElementById("shellOverlay");
   if(ov) { ov.style.opacity = "0"; setTimeout(() => ov.remove(), 350); }
 }
+
+export function setHeaderTokens(val){
+  const el = document.getElementById("headerJeton");
+  if(el) el.textContent = String(val ?? "0");
+
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    const u = raw ? JSON.parse(raw) : {};
+    u.tokens = Number(val ?? 0);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(u));
+  }catch(e){}
+}
