@@ -327,6 +327,15 @@ function addBubble(side, kind, text, opts = {}){
   const row = document.createElement("div");
   row.className = `bubble ${kind}` + (opts.latest ? " is-latest" : "");
 
+  const inner = document.createElement("div");
+  inner.className = "bubble-row";
+
+  const txt = document.createElement("span");
+  txt.className = "txt";
+  txt.textContent = String(text || "").trim();
+
+  inner.appendChild(txt);
+
   if(kind === "me"){
     const spk = document.createElement("div");
     spk.className = "spk-icon";
@@ -338,25 +347,28 @@ function addBubble(side, kind, text, opts = {}){
       </svg>
     `;
     spk.addEventListener("click", () => {
-      const txt = row.querySelector(".txt")?.textContent || "";
-      speak(txt, opts.speakLang || "en");
+      const value = txt.textContent || "";
+      speak(value, opts.speakLang || "en");
     });
-    row.appendChild(spk);
+    inner.appendChild(spk);
   }
 
-  const txt = document.createElement("span");
-  txt.className = "txt";
-  txt.textContent = String(text || "").trim();
-  row.appendChild(txt);
-
+  row.appendChild(inner);
   wrap.appendChild(row);
-  try{ wrap.scrollTop = wrap.scrollHeight; }catch{}
+
+  try{
+    wrap.scrollTop = wrap.scrollHeight;
+  }catch{}
+
   return row;
 }
 
 function clearLatest(side){
   const wrap = side === "top" ? topBody : botBody;
-  wrap?.querySelectorAll(".bubble.me.is-latest").forEach(x => x.classList.remove("is-latest"));
+  if(!wrap) return;
+  wrap.querySelectorAll(".bubble.me.is-latest").forEach(el=>{
+    el.classList.remove("is-latest");
+  });
 }
 
 /* ===== Backend ===== */
