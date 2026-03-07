@@ -28,34 +28,24 @@ function labelChip(code){
   return `${o.flag} ${o.name}`;
 }
 
-/* UI */
 const topBody = $("topBody");
 const botBody = $("botBody");
-
 const topMic = $("topMic");
 const botMic = $("botMic");
-
 const topLangBtn = $("topLangBtn");
 const botLangBtn = $("botLangBtn");
-
 const topLangTxt = $("topLangTxt");
 const botLangTxt = $("botLangTxt");
-
 const popTop = $("pop-top");
 const popBot = $("pop-bot");
-
 const listTop = $("list-top");
 const listBot = $("list-bot");
-
 const closeTop = $("close-top");
 const closeBot = $("close-bot");
-
 const clearBtn = $("clearBtn");
 const homeLink = $("homeLink");
 const homeBtn = $("homeBtn");
-
 const statusPill = $("statusPill");
-
 const textModal = $("textModal");
 const textModalTitle = $("textModalTitle");
 const textModalInput = $("textModalInput");
@@ -66,224 +56,248 @@ let topLang = "en";
 let botLang = "tr";
 let ttsDebounceAt = 0;
 
-/* ===============================
-   STATUS
-================================ */
-
 function setStatus(type,text){
   if(!statusPill) return;
-  statusPill.className=`status-pill ${type}`;
-  statusPill.textContent=text;
+  statusPill.className = `status-pill ${type}`;
+  statusPill.textContent = text;
 }
 
-function bounceReady(){
-  setTimeout(()=>setStatus("idle","Hazır"),1400);
+function bounceReady(delay=1400){
+  setTimeout(()=>setStatus("idle","Hazır"), delay);
 }
 
-/* ===============================
-   POPUP TEXT INPUT
-================================ */
+function refreshLangLabels(){
+  if(topLangTxt) topLangTxt.textContent = labelChip(topLang);
+  if(botLangTxt) botLangTxt.textContent = labelChip(botLang);
+}
 
-function askTextInput(title){
-  return new Promise((resolve)=>{
-    if(!textModal){
-      const raw = prompt(title)||"";
-      return resolve(raw.trim()||null);
-    }
+function closeAllPop(){
+  popTop?.classList.remove("show");
+  popBot?.classList.remove("show");
+}
 
-    textModalTitle.textContent=title;
-    textModalInput.value="";
-    textModal.classList.add("show");
+function renderPop(side){
+  const list = side==="top" ? listTop : listBot;
+  const sel = side==="top" ? topLang : botLang;
+  if(!list) return;
 
-    const finish=(v)=>{
-      textModal.classList.remove("show");
-      resolve(v);
-    }
+  list.innerHTML = LANGS.map(l=>{
+    const active = canonical(l.code)===canonical(sel) ? "active" : "";
+    return `
+      <div class="pop-item ${active}" data-code="${l.code}">
+        <div class="pop-left">
+          <div class="pop-flag">${l.flag}</div>
+          <div class="pop-name">${l.name}</div>
+        </div>
+        <div class="pop-code">${l.code.toUpperCase()}</div>
+      </div>
+    `;
+  }).join("");
 
-    textModalOk.onclick=()=>{
-      finish(textModalInput.value.trim()||null);
-    }
-
-    textModalCancel.onclick=()=>finish(null);
-
-    textModalInput.onkeydown=(e)=>{
-      if(e.key==="Enter"){
-        e.preventDefault();
-        finish(textModalInput.value.trim()||null);
-      }
-      if(e.key==="Escape"){
-        finish(null);
-      }
-    }
-
-    setTimeout(()=>textModalInput.focus(),50);
+  list.querySelectorAll(".pop-item").forEach(el=>{
+    el.onclick = ()=>{
+      const code = el.dataset.code || "en";
+      if(side==="top") topLang = code;
+      else botLang = code;
+      refreshLangLabels();
+      closeAllPop();
+    };
   });
 }
 
-/* ===============================
-   AUDIO
-================================ */
+function askTextInput(title){
+  return new Promise((resolve)=>{
+    if(!textModal || !textModalInput){
+      const raw = prompt(title) || "";
+      return resolve(String(raw).trim() || null);
+    }
+
+    textModalTitle.textContent = title;
+    textModalInput.value = "";
+    textModal.classList.add("show");
+
+    const finish = (val)=>{
+      textModal.classList.remove("show");
+      textModalOk.onclick = null;
+      textModalCancel.onclick = null;
+      textModalInput.onkeydown = null;
+      resolve(val);
+    };
+
+    textModalOk.onclick = ()=>{
+      finish(String(textModalInput.value || "").trim() || null);
+    };
+
+    textModalCancel.onclick = ()=> finish(null);
+
+    textModalInput.onkeydown = (e)=>{
+      if(e.key === "Escape"){
+        e.preventDefault();
+        finish(null);
+      }
+      if(e.key === "Enter" && !e.shiftKey){
+        e.preventDefault();
+        finish(String(textModalInput.value || "").trim() || null);
+      }
+    };
+
+    setTimeout(()=>textModalInput.focus(), 50);
+  });
+}
 
 function stopAudio(){
-  try{window.speechSynthesis?.cancel()}catch{}
-  try{window.NativeTTS?.stop()}catch{}
+  try{ window.speechSynthesis?.cancel?.(); }catch{}
+  try{ window.NativeTTS?.stop?.(); }catch{}
 }
 
 function speak(text,langCode){
   const t = String(text||"").trim();
   if(!t) return;
 
-  const now=Date.now();
-  if(now-ttsDebounceAt<250) stopAudio();
-  ttsDebounceAt=now;
+  const now = Date.now();
+  if(now - ttsDebounceAt < 250) stopAudio();
+  ttsDebounceAt = now;
 
   stopAudio();
 
-  if(window.NativeTTS && typeof window.NativeTTS.speak==="function"){
+  if(window.NativeTTS && typeof window.NativeTTS.speak === "function"){
     try{
-      window.NativeTTS.speak(t,canonical(langCode));
+      window.NativeTTS.speak(t, canonical(langCode));
       return;
     }catch{}
   }
 
   if(!window.speechSynthesis) return;
 
-  const u=new SpeechSynthesisUtterance(t);
-  u.lang=langObj(langCode).bcp;
-  setTimeout(()=>window.speechSynthesis.speak(u),60);
+  const u = new SpeechSynthesisUtterance(t);
+  u.lang = langObj(langCode).bcp;
+  u.rate = 1;
+  u.pitch = 1;
+  u.volume = 1;
+
+  setTimeout(()=>{
+    try{ window.speechSynthesis.speak(u); }catch{}
+  }, 60);
 }
 
-/* ===============================
-   BUBBLE
-================================ */
-
 function addBubble(side,kind,text,opts={}){
-  const wrap=side==="top"?topBody:botBody;
-  if(!wrap) return;
+  const wrap = side==="top" ? topBody : botBody;
+  if(!wrap) return null;
 
-  const row=document.createElement("div");
-  row.className=`bubble ${kind}`+(opts.latest?" is-latest":"");
+  const row = document.createElement("div");
+  row.className = `bubble ${kind}` + (opts.latest ? " is-latest" : "");
 
-  if(kind==="me"){
-    const spk=document.createElement("div");
-    spk.className="spk-icon";
-    spk.innerHTML=`<svg viewBox="0 0 24 24"><path d="M3 10v4h4l5 4V6L7 10H3"/><path d="M16 8a4 4 0 0 1 0 8"/><path d="M19 5a8 8 0 0 1 0 14"/></svg>`;
-    spk.onclick=()=>{
-      const txt=row.querySelector(".txt")?.textContent||"";
-      speak(txt,opts.speakLang||"en");
+  if(kind === "me"){
+    const spk = document.createElement("div");
+    spk.className = "spk-icon";
+    spk.innerHTML = `
+      <svg viewBox="0 0 24 24">
+        <path d="M3 10v4h4l5 4V6L7 10H3"></path>
+        <path d="M16 8a4 4 0 0 1 0 8"></path>
+        <path d="M19 5a8 8 0 0 1 0 14"></path>
+      </svg>
+    `;
+    spk.onclick = ()=>{
+      const txt = row.querySelector(".txt")?.textContent || "";
+      speak(txt, opts.speakLang || "en");
     };
     row.appendChild(spk);
   }
 
-  const txt=document.createElement("span");
-  txt.className="txt";
-  txt.textContent=text;
+  const txt = document.createElement("span");
+  txt.className = "txt";
+  txt.textContent = String(text||"").trim();
   row.appendChild(txt);
 
   wrap.appendChild(row);
-  wrap.scrollTop=wrap.scrollHeight;
+  wrap.scrollTop = wrap.scrollHeight;
+  return row;
 }
 
 function clearLatest(side){
-  const wrap=side==="top"?topBody:botBody;
+  const wrap = side==="top" ? topBody : botBody;
   wrap?.querySelectorAll(".bubble.me.is-latest").forEach(x=>x.classList.remove("is-latest"));
 }
 
-/* ===============================
-   TRANSLATE
-================================ */
-
 async function translateText(text,from,to){
-
-  const src=canonical(from);
-  const dst=canonical(to);
+  const src = canonical(from);
+  const dst = canonical(to);
 
   try{
-    const r=await fetch(`${API_BASE}/api/translate_ai`,{
+    const r = await fetch(`${API_BASE}/api/translate_ai`,{
       method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({
-        text:text,
-        from_lang:src,
-        to_lang:dst
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({
+        text: String(text||"").trim(),
+        from_lang: src,
+        to_lang: dst
       })
     });
 
     if(!r.ok){
-      console.error("translate_ai failed",r.status);
+      const raw = await r.text().catch(()=> "");
+      console.error("translate_ai failed", r.status, raw);
       return null;
     }
 
-    const j=await r.json().catch(()=>null);
-    return String(j?.translated||"").trim()||null;
-
+    const j = await r.json().catch(()=>null);
+    return String(j?.translated || "").trim() || null;
   }catch(e){
-    console.error("translate_ai error",e);
+    console.error("translate_ai error", e);
     return null;
   }
 }
 
-/* ===============================
-   SPEECH
-================================ */
-
 function getRecognizer(langCode){
-  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if(!SR) return null;
 
-  const rec=new SR();
-  rec.lang=langObj(langCode).bcp;
-  rec.interimResults=false;
-  rec.continuous=false;
-  rec.maxAlternatives=1;
-
+  const rec = new SR();
+  rec.lang = langObj(langCode).bcp;
+  rec.interimResults = false;
+  rec.continuous = false;
+  rec.maxAlternatives = 1;
   return rec;
 }
 
 async function speechToText(langCode){
-  return new Promise(resolve=>{
-
-    const rec=getRecognizer(langCode);
+  return new Promise((resolve)=>{
+    const rec = getRecognizer(langCode);
     if(!rec) return resolve(null);
 
-    let done=false;
+    let done = false;
 
-    const finish=v=>{
+    const finish = (val)=>{
       if(done) return;
-      done=true;
-      try{rec.stop()}catch{}
-      resolve(v);
-    }
+      done = true;
+      try{ rec.stop?.(); }catch{}
+      resolve(val);
+    };
 
-    rec.onresult=e=>{
-      const t=e.results?.[0]?.[0]?.transcript||"";
-      finish(t.trim()||null);
-    }
+    rec.onresult = (e)=>{
+      const t = e.results?.[0]?.[0]?.transcript || "";
+      finish(String(t||"").trim() || null);
+    };
 
-    rec.onerror=()=>finish(null);
-    rec.onend=()=>{if(!done)finish(null)}
+    rec.onerror = ()=> finish(null);
+    rec.onend = ()=> { if(!done) finish(null); };
 
     try{
       rec.start();
-      setTimeout(()=>finish(null),8000);
+      setTimeout(()=>finish(null), 8000);
     }catch{
       finish(null);
     }
-
   });
 }
 
-/* ===============================
-   INPUT FLOW
-================================ */
-
 async function handleInput(side){
-  const src = side === "top" ? topLang : botLang;
-  const dst = side === "top" ? botLang : topLang;
-  const other = side === "top" ? "bot" : "top";
-  const otherWrap = other === "top" ? topBody : botBody;
+  const src = side==="top" ? topLang : botLang;
+  const dst = side==="top" ? botLang : topLang;
+  const other = side==="top" ? "bot" : "top";
+  const otherWrap = other==="top" ? topBody : botBody;
 
-  setStatus("listening", "Dinleniyor");
+  setStatus("listening","Dinleniyor");
 
   let text = await speechToText(src);
 
@@ -292,28 +306,26 @@ async function handleInput(side){
   }
 
   if(!text){
-    setStatus("idle", "Hazır");
+    setStatus("idle","Hazır");
     return;
   }
 
   addBubble(side, "them", text);
 
   clearLatest(other);
-  setStatus("translating", "Çevriliyor");
+  setStatus("translating","Çevriliyor");
 
-  // Geçici balon
   addBubble(other, "me", "Çevriliyor...", { latest:true, speakLang: dst });
-
   const latestTxt = otherWrap?.querySelector(".bubble.me.is-latest .txt");
 
   const tr = await translateText(text, src, dst);
 
   if(!tr){
-    setStatus("error", "Bağlantı hatası");
+    setStatus("error","Bağlantı hatası");
     if(latestTxt){
       latestTxt.textContent = "⚠️ Çeviri servisine ulaşılamadı";
     }
-    bounceReady();
+    bounceReady(1800);
     return;
   }
 
@@ -324,77 +336,69 @@ async function handleInput(side){
   }
 
   speak(tr, dst);
-  setStatus("ready", "Hazır");
-  bounceReady();
-}
-
-/* ===============================
-   UI BINDINGS
-================================ */
-
-function refreshLangLabels(){
-  topLangTxt.textContent=labelChip(topLang);
-  botLangTxt.textContent=labelChip(botLang);
-}
-
-function closeAllPop(){
-  popTop?.classList.remove("show");
-  popBot?.classList.remove("show");
-}
-
-function renderPop(side){
-
-  const list=side==="top"?listTop:listBot;
-  const sel=side==="top"?topLang:botLang;
-
-  list.innerHTML=LANGS.map(l=>{
-    const active=canonical(l.code)===canonical(sel)?"active":"";
-    return `<div class="pop-item ${active}" data-code="${l.code}">
-      <div class="pop-left">
-      <div class="pop-flag">${l.flag}</div>
-      <div class="pop-name">${l.name}</div>
-      </div>
-      <div class="pop-code">${l.code.toUpperCase()}</div>
-    </div>`
-  }).join("");
-
-  list.querySelectorAll(".pop-item").forEach(el=>{
-    el.onclick=()=>{
-      const code=el.dataset.code;
-      if(side==="top") topLang=code;
-      else botLang=code;
-      refreshLangLabels();
-      closeAllPop();
-    }
-  });
+  setStatus("ready","Hazır");
+  bounceReady(1500);
 }
 
 function bind(){
-
   setStatus("idle","Hazır");
   refreshLangLabels();
 
-  topLangBtn.onclick=()=>{renderPop("top");popTop.classList.add("show")}
-  botLangBtn.onclick=()=>{renderPop("bot");popBot.classList.add("show")}
-
-  closeTop.onclick=closeAllPop;
-  closeBot.onclick=closeAllPop;
-
-  document.addEventListener("click",(e)=>{
-    if(!e.target.closest(".popover")&&!e.target.closest(".lang-trigger")) closeAllPop();
+  topLangBtn?.addEventListener("click",(e)=>{
+    e.preventDefault();
+    e.stopPropagation();
+    closeAllPop();
+    renderPop("top");
+    popTop?.classList.add("show");
   });
 
-  clearBtn.onclick=()=>{
+  botLangBtn?.addEventListener("click",(e)=>{
+    e.preventDefault();
+    e.stopPropagation();
+    closeAllPop();
+    renderPop("bot");
+    popBot?.classList.add("show");
+  });
+
+  closeTop?.addEventListener("click",(e)=>{
+    e.preventDefault();
+    e.stopPropagation();
+    closeAllPop();
+  });
+
+  closeBot?.addEventListener("click",(e)=>{
+    e.preventDefault();
+    e.stopPropagation();
+    closeAllPop();
+  });
+
+  document.addEventListener("click",(e)=>{
+    const inside = (popTop && popTop.contains(e.target)) || (popBot && popBot.contains(e.target));
+    const isBtn = e.target?.closest?.("#topLangBtn,#botLangBtn");
+    if(!inside && !isBtn) closeAllPop();
+  }, { capture:true });
+
+  clearBtn?.addEventListener("click", ()=>{
     stopAudio();
-    topBody.innerHTML="";
-    botBody.innerHTML="";
-  }
+    if(topBody) topBody.innerHTML = "";
+    if(botBody) botBody.innerHTML = "";
+    setStatus("idle","Hazır");
+  });
 
-  homeLink.onclick=()=>location.href="/pages/home.html";
-  homeBtn.onclick=()=>location.href="/pages/home.html";
+  homeLink?.addEventListener("click", ()=> location.href="/pages/home.html");
+  homeBtn?.addEventListener("click", ()=> location.href="/pages/home.html");
 
-  topMic.onclick=()=>handleInput("top");
-  botMic.onclick=()=>handleInput("bot");
+  topMic?.addEventListener("click", async (e)=>{
+    e.preventDefault();
+    e.stopPropagation();
+    await handleInput("top");
+  });
+
+  botMic?.addEventListener("click", async (e)=>{
+    e.preventDefault();
+    e.stopPropagation();
+    await handleInput("bot");
+  });
 }
 
 bind();
