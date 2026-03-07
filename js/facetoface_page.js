@@ -278,43 +278,53 @@ async function speechToText(langCode){
 ================================ */
 
 async function handleInput(side){
+  const src = side === "top" ? topLang : botLang;
+  const dst = side === "top" ? botLang : topLang;
+  const other = side === "top" ? "bot" : "top";
+  const otherWrap = other === "top" ? topBody : botBody;
 
-  const src=side==="top"?topLang:botLang;
-  const dst=side==="top"?botLang:topLang;
-  const other=side==="top"?"bot":"top";
+  setStatus("listening", "Dinleniyor");
 
-  setStatus("listening","Dinleniyor");
-
-  let text=await speechToText(src);
+  let text = await speechToText(src);
 
   if(!text){
-    text=await askTextInput(`${langObj(src).name} yaz → ${langObj(dst).name} çevrilecek`);
+    text = await askTextInput(`${langObj(src).name} yaz → ${langObj(dst).name} çevrilecek`);
   }
 
   if(!text){
-    setStatus("idle","Hazır");
+    setStatus("idle", "Hazır");
     return;
   }
 
-  setStatus("translating","Çevriliyor");
-
-  addBubble(side,"them",text);
-
-  const tr=await translateText(text,src,dst);
+  addBubble(side, "them", text);
 
   clearLatest(other);
+  setStatus("translating", "Çevriliyor");
+
+  // Geçici balon
+  addBubble(other, "me", "Çevriliyor...", { latest:true, speakLang: dst });
+
+  const latestTxt = otherWrap?.querySelector(".bubble.me.is-latest .txt");
+
+  const tr = await translateText(text, src, dst);
 
   if(!tr){
-    setStatus("error","Bağlantı hatası");
-    addBubble(other,"me","⚠️ Çeviri servisine ulaşılamadı",{latest:true,speakLang:dst});
+    setStatus("error", "Bağlantı hatası");
+    if(latestTxt){
+      latestTxt.textContent = "⚠️ Çeviri servisine ulaşılamadı";
+    }
     bounceReady();
     return;
   }
 
-  addBubble(other,"me",tr,{latest:true,speakLang:dst});
-  speak(tr,dst);
+  if(latestTxt){
+    latestTxt.textContent = tr;
+  }else{
+    addBubble(other, "me", tr, { latest:true, speakLang: dst });
+  }
 
-  setStatus("ready","Hazır");
+  speak(tr, dst);
+  setStatus("ready", "Hazır");
   bounceReady();
 }
 
