@@ -18,8 +18,6 @@
       --pink:#ff4fd8;
       --violet:#7c5cff;
       --cyan:#00d2ff;
-      --good:#19c37d;
-      --bad:#ff667e;
       --footerH:92px;
       --topSafe:env(safe-area-inset-top,0px);
       --bottomSafe:env(safe-area-inset-bottom,0px);
@@ -41,9 +39,7 @@
       padding-bottom:calc(var(--footerH) + var(--bottomSafe) + 20px);
     }
 
-    button,input{
-      font:inherit;
-    }
+    button,input{font:inherit}
 
     .page{
       width:min(980px,100%);
@@ -95,9 +91,7 @@
       line-height:1.45;
     }
 
-    .main{
-      padding:16px;
-    }
+    .main{padding:16px}
 
     .search-wrap{
       display:grid;
@@ -117,9 +111,7 @@
       width:100%;
     }
 
-    .input::placeholder{
-      color:rgba(247,248,255,.46);
-    }
+    .input::placeholder{color:rgba(247,248,255,.46)}
 
     .btn{
       border:none;
@@ -259,51 +251,33 @@
       border:1px solid var(--line);
     }
 
-    .hidden{
-      display:none !important;
-    }
+    .hidden{display:none !important}
 
     @media (max-width:720px){
-      .search-wrap{
-        grid-template-columns:1fr;
-      }
-
-      .panel-grid{
-        grid-template-columns:1fr;
-      }
-
-      .lyrics{
-        min-height:240px;
-        padding:16px;
-      }
-
-      .line-current{
-        font-size:clamp(24px,8vw,36px);
-        max-width:14ch;
-      }
-
-      .line-next{
-        font-size:clamp(16px,5vw,22px);
-      }
+      .search-wrap{grid-template-columns:1fr}
+      .panel-grid{grid-template-columns:1fr}
+      .lyrics{min-height:240px;padding:16px}
+      .line-current{font-size:clamp(24px,8vw,36px);max-width:14ch}
+      .line-next{font-size:clamp(16px,5vw,22px)}
     }
   </style>
 </head>
 <body>
   <div class="page">
     <section class="hero">
-      <div class="eyebrow">🎤 Karaoke Practice • LRCLIB ile canlı lyric</div>
+      <div class="eyebrow">🎤 Karaoke Practice • LRCLIB canlı lyric</div>
       <h1>Şarkıyı yaz.<br>Sözü çek.<br>Direkt başla.</h1>
-      <p>Manuel şarkı eklemiyoruz. Sanatçı ve şarkı adını gir, zamanlı lyric varsa karaoke otomatik hazır olsun.</p>
+      <p>Sanatçı ve şarkı adını gir. Zamanlı lyric varsa karaoke otomatik hazır olsun.</p>
     </section>
 
     <section class="card main">
       <div class="search-wrap">
-        <input id="artistInput" class="input" type="text" placeholder="Sanatçı adı (ör. Ed Sheeran)" />
-        <input id="trackInput" class="input" type="text" placeholder="Şarkı adı (ör. Perfect)" />
+        <input id="artistInput" class="input" type="text" placeholder="Sanatçı adı" value="Ed Sheeran" />
+        <input id="trackInput" class="input" type="text" placeholder="Şarkı adı" value="Perfect" />
         <button id="loadBtn" class="btn">Yükle</button>
       </div>
 
-      <div id="status" class="status">Hazır. Şarkı adı gir ve yükle.</div>
+      <div id="status" class="status">Hazır. Yükle'ye bas.</div>
 
       <div id="songMeta" class="song-meta hidden">
         <div id="songTitle" class="title">—</div>
@@ -394,6 +368,8 @@
       artistInput.addEventListener("keydown", (e) => {
         if (e.key === "Enter") handleLoad();
       });
+
+      handleLoad();
     }
 
     async function handleLoad() {
@@ -441,12 +417,12 @@
 
     async function fetchLyrics(artist, track) {
       const url =
-        "https://lrclib.net/api/get?artist=" +
+        "https://lrclib.net/api/get?artist_name=" +
         encodeURIComponent(artist) +
-        "&track=" +
+        "&track_name=" +
         encodeURIComponent(track);
 
-      const res = await fetch(url);
+      const res = await fetch(url, { method: "GET" });
       if (!res.ok) {
         throw new Error("LRCLIB error: " + res.status);
       }
