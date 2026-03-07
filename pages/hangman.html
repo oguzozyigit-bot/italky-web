@@ -2,123 +2,528 @@
 <html lang="tr">
 <head>
   <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+  />
   <title>italkyAI • HANGMAN NITRO</title>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Space+Grotesk:wght@700&display=swap"
+    rel="stylesheet"
+  />
+
   <style>
-    :root {
-      --bg: #030014;
-      --grad: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
-      --red: #ff0033; --green: #00ff9d;
-      --dockH: 220px; --shellLift: 0px; 
-      --safeB: env(safe-area-inset-bottom, 0px);
+    :root{
+      --bg:#030014;
+      --grad:linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
+      --red:#ff0033;
+      --green:#00ff9d;
+      --dockH:220px;
+      --shellLift:0px;
+      --safeB:env(safe-area-inset-bottom, 0px);
     }
-    html,body { margin:0; height:100%; background:var(--bg); color:#fff; font-family:Outfit,sans-serif; overflow:hidden; }
-    #pageContent { height:100%; padding:14px; box-sizing:border-box; position:relative; }
 
-    .top { height: calc(100% - var(--dockH) - 20px); display:flex; flex-direction:column; gap:10px; position:relative; }
-    .title { font-family:"Space Grotesk"; letter-spacing:10px; text-align:center; font-size:22px; opacity:.9; margin:0; padding-top:4px; z-index:2; }
-    
-    .hud { position:absolute; top:45px; left:0; right:0; display:flex; justify-content:space-between; align-items:flex-start; gap:12px; z-index:10; }
-    .leftHud { display:flex; flex-direction:column; gap:10px; }
-    .hearts { display:grid; grid-template-columns: repeat(3, max-content); gap: 6px; }
-    .heart { font-size:22px; filter:drop-shadow(0 0 10px var(--red)); transition:0.3s; }
-    
-    .rightHud { display:flex; flex-direction:column; align-items:flex-end; gap:10px; min-width: 120px; }
-    .score .best { font-size:9px; font-weight:900; opacity:.5; letter-spacing:1px; text-align:right; }
-    .score .val { font-size:28px; font-weight:900; background:var(--grad); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-    
-    .jokerCol { display:flex; flex-direction:column; gap:10px; align-items:flex-end; margin-top:10px; }
-    .joker { 
-      width:44px; height:44px; border-radius:14px; border:1px solid rgba(99,102,241,.55); 
-      background:rgba(99,102,241,.1); display:flex; align-items:center; justify-content:center; 
-      font-size:22px; cursor:pointer; transition:.2s; 
+    *{ box-sizing:border-box; }
+
+    html,body{
+      margin:0;
+      height:100%;
+      background:var(--bg);
+      color:#fff;
+      font-family:Outfit,sans-serif;
+      overflow:hidden;
     }
-    .joker.spent { opacity:.14; filter:grayscale(1); pointer-events:none; }
 
-    .stage { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:1; }
-    .gallows { width:140px; height:160px; position:relative; border-bottom:4px solid #fff; }
-    .beam { position:absolute; background:#fff; }
-    .v { width:4px; height:100%; left:25px; }
-    .h { width:90px; height:4px; left:25px; top:0; }
-    .rope { position:absolute; width:2px; height:35px; left:115px; top:0; background:#999; }
-    .man { position:absolute; left:115px; top:35px; transform-origin:top center; }
-    .man.swing { animation:sway 1.2s infinite ease-in-out; }
-    @keyframes sway { 0%,100%{transform:rotate(-8deg)} 50%{transform:rotate(8deg)} }
+    body{
+      background:
+        radial-gradient(circle at top, rgba(99,102,241,.20), transparent 35%),
+        radial-gradient(circle at bottom, rgba(236,72,153,.14), transparent 30%),
+        var(--bg);
+    }
 
-    .organ { position:absolute; background:#fff; box-shadow:0 0 10px #fff; display:none; }
-    .organ.on { display:block; }
-    .head { width:22px; height:22px; border:3px solid #fff; border-radius:50%; left:-11px; top:0; }
-    .body { width:3px; height:45px; left:-1.5px; top:22px; }
-    .larm { width:18px; height:3px; left:-19px; top:32px; transform:rotate(-30deg); }
-    .rarm { width:18px; height:3px; left:1px; top:32px; transform:rotate(30deg); }
-    .lleg { width:18px; height:3px; left:-19px; top:65px; transform:rotate(-45deg); }
-    .rleg { width:18px; height:3px; left:1px; top:65px; transform:rotate(45deg); }
+    #pageContent{
+      height:100%;
+      padding:14px;
+      position:relative;
+    }
 
-    .trBox { width:100%; padding:10px; border:1px solid rgba(255,255,255,.1); border-radius:16px; background:rgba(255,255,255,.05); text-align:center; font-weight:900; font-size:13px; color:rgba(255,255,255,.7); }
+    .top{
+      height:calc(100% - var(--dockH) - 20px);
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      position:relative;
+    }
 
-    .dock { position:fixed; left:14px; right:14px; bottom: calc(var(--safeB) + 10px + var(--shellLift)); height: var(--dockH); border-radius:22px; border:1px solid rgba(255,255,255,.1); background: rgba(3,0,20,.9); backdrop-filter: blur(10px); padding:12px; display:flex; flex-direction:column; gap:10px; z-index:9999; }
-    .matrix { display:flex; justify-content:center; gap:6px; flex-wrap:wrap; min-height: 45px; }
-    .slot { width:26px; height:40px; border-bottom:3px solid rgba(255,255,255,.14); display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:900; }
-    .slot.found { border-bottom-color:var(--green); text-shadow:0 0 10px var(--green); }
-    .kb { flex:1; display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
-    .key { height:38px; border-radius:10px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.06); color:#fff; font-weight:900; cursor:pointer; }
-    .key.hit { background:var(--green); color:#000; box-shadow:0 0 15px var(--green); }
-    .key.miss { background:var(--red); opacity:0.2; }
+    .title{
+      margin:0;
+      padding-top:4px;
+      text-align:center;
+      font-family:"Space Grotesk",sans-serif;
+      font-size:22px;
+      letter-spacing:10px;
+      opacity:.92;
+      z-index:2;
+    }
 
-    .ready-gate { position:fixed; inset:0; z-index:60000; background:rgba(3,0,20,.98); display:flex; flex-direction:column; align-items:center; justify-content:center; }
-    .gate-title { font-family:"Space Grotesk"; font-size:40px; font-weight:900; letter-spacing:8px; margin-bottom:10px; }
-    .modal { position:fixed; inset:0; background:rgba(1,0,8,.98); z-index:30000; display:none; flex-direction:column; align-items:center; justify-content:center; padding:34px; text-align:center; }
-    .modal.on { display:flex; }
+    .hud{
+      position:absolute;
+      top:45px;
+      left:0;
+      right:0;
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      z-index:10;
+    }
+
+    .leftHud{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .hearts{
+      display:grid;
+      grid-template-columns:repeat(3, max-content);
+      gap:6px;
+    }
+
+    .heart{
+      font-size:22px;
+      filter:drop-shadow(0 0 10px var(--red));
+      transition:.3s;
+    }
+
+    .rightHud{
+      min-width:120px;
+      display:flex;
+      flex-direction:column;
+      align-items:flex-end;
+      gap:10px;
+    }
+
+    .score .best{
+      font-size:9px;
+      font-weight:900;
+      opacity:.55;
+      letter-spacing:1px;
+      text-align:right;
+    }
+
+    .score .val{
+      font-size:28px;
+      font-weight:900;
+      background:var(--grad);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      background-clip:text;
+      color:transparent;
+      text-align:right;
+    }
+
+    .jokerCol{
+      display:flex;
+      flex-direction:column;
+      align-items:flex-end;
+      gap:10px;
+      margin-top:10px;
+    }
+
+    .joker{
+      width:44px;
+      height:44px;
+      border:none;
+      border-radius:14px;
+      background:rgba(99,102,241,.12);
+      border:1px solid rgba(99,102,241,.55);
+      color:#fff;
+      font-size:22px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      transition:.2s ease;
+    }
+
+    .joker:active{
+      transform:scale(.96);
+    }
+
+    .joker.spent{
+      opacity:.14;
+      filter:grayscale(1);
+      pointer-events:none;
+    }
+
+    .stage{
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      z-index:1;
+      padding-top:40px;
+    }
+
+    .gallows{
+      width:140px;
+      height:160px;
+      position:relative;
+      border-bottom:4px solid #fff;
+    }
+
+    .beam{
+      position:absolute;
+      background:#fff;
+      box-shadow:0 0 10px rgba(255,255,255,.35);
+    }
+
+    .v{
+      left:25px;
+      width:4px;
+      height:100%;
+    }
+
+    .h{
+      left:25px;
+      top:0;
+      width:90px;
+      height:4px;
+    }
+
+    .rope{
+      position:absolute;
+      left:115px;
+      top:0;
+      width:2px;
+      height:35px;
+      background:#aaa;
+    }
+
+    .man{
+      position:absolute;
+      left:115px;
+      top:35px;
+      transform-origin:top center;
+    }
+
+    .man.swing{
+      animation:sway 1.2s infinite ease-in-out;
+    }
+
+    @keyframes sway{
+      0%,100%{ transform:rotate(-8deg); }
+      50%{ transform:rotate(8deg); }
+    }
+
+    .organ{
+      position:absolute;
+      display:none;
+      background:#fff;
+      box-shadow:0 0 10px #fff;
+    }
+
+    .organ.on{
+      display:block;
+    }
+
+    .head{
+      left:-11px;
+      top:0;
+      width:22px;
+      height:22px;
+      border:3px solid #fff;
+      border-radius:50%;
+      background:transparent;
+    }
+
+    .body{
+      left:-1.5px;
+      top:22px;
+      width:3px;
+      height:45px;
+    }
+
+    .larm{
+      left:-19px;
+      top:32px;
+      width:18px;
+      height:3px;
+      transform:rotate(-30deg);
+    }
+
+    .rarm{
+      left:1px;
+      top:32px;
+      width:18px;
+      height:3px;
+      transform:rotate(30deg);
+    }
+
+    .lleg{
+      left:-19px;
+      top:65px;
+      width:18px;
+      height:3px;
+      transform:rotate(-45deg);
+    }
+
+    .rleg{
+      left:1px;
+      top:65px;
+      width:18px;
+      height:3px;
+      transform:rotate(45deg);
+    }
+
+    .trBox{
+      width:100%;
+      margin-top:18px;
+      padding:12px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.05);
+      text-align:center;
+      font-size:13px;
+      font-weight:900;
+      color:rgba(255,255,255,.72);
+      letter-spacing:.4px;
+    }
+
+    .dock{
+      position:fixed;
+      left:14px;
+      right:14px;
+      bottom:calc(var(--safeB) + 10px + var(--shellLift));
+      height:var(--dockH);
+      padding:12px;
+      border-radius:22px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(3,0,20,.90);
+      backdrop-filter:blur(10px);
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      z-index:9999;
+    }
+
+    .matrix{
+      min-height:45px;
+      display:flex;
+      justify-content:center;
+      gap:6px;
+      flex-wrap:wrap;
+    }
+
+    .slot{
+      width:26px;
+      height:40px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border-bottom:3px solid rgba(255,255,255,.14);
+      font-size:24px;
+      font-weight:900;
+      text-transform:uppercase;
+    }
+
+    .slot.found{
+      border-bottom-color:var(--green);
+      text-shadow:0 0 10px var(--green);
+    }
+
+    .kb{
+      flex:1;
+      display:grid;
+      grid-template-columns:repeat(7,1fr);
+      gap:6px;
+    }
+
+    .key{
+      height:38px;
+      border:none;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.06);
+      color:#fff;
+      font-weight:900;
+      cursor:pointer;
+      transition:.2s ease;
+    }
+
+    .key:active{
+      transform:scale(.97);
+    }
+
+    .key.hit{
+      background:var(--green);
+      color:#000;
+      box-shadow:0 0 15px var(--green);
+    }
+
+    .key.miss{
+      background:var(--red);
+      opacity:.2;
+    }
+
+    .ready-gate{
+      position:fixed;
+      inset:0;
+      z-index:60000;
+      background:rgba(3,0,20,.98);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+      text-align:center;
+    }
+
+    .gate-title{
+      margin:0 0 10px;
+      font-family:"Space Grotesk",sans-serif;
+      font-size:40px;
+      font-weight:900;
+      letter-spacing:8px;
+    }
+
+    .gate-sub{
+      max-width:320px;
+      margin:0 0 34px;
+      line-height:1.45;
+      opacity:.75;
+      font-size:13px;
+      font-weight:700;
+    }
+
+    .start-btn{
+      width:220px;
+      height:60px;
+      border:none;
+      border-radius:20px;
+      background:var(--grad);
+      color:#fff;
+      font-size:18px;
+      font-weight:900;
+      cursor:pointer;
+      box-shadow:0 10px 35px rgba(99,102,241,.28);
+    }
+
+    .start-btn:disabled{
+      opacity:.55;
+      pointer-events:none;
+      filter:grayscale(.2);
+    }
+
+    .modal{
+      position:fixed;
+      inset:0;
+      z-index:30000;
+      display:none;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      padding:34px;
+      text-align:center;
+      background:rgba(1,0,8,.98);
+    }
+
+    .modal.on{
+      display:flex;
+    }
+
+    .modal h1{
+      margin:0;
+      font-size:32px;
+      font-weight:900;
+    }
+
+    .m-word{
+      margin:20px 0;
+      font-size:36px;
+      font-weight:900;
+      color:#60a5fa;
+      text-transform:uppercase;
+    }
+
+    .m-tr{
+      margin-bottom:24px;
+      opacity:.6;
+      font-style:italic;
+    }
   </style>
 </head>
 <body>
   <div id="pageContent">
+
+    <!-- READY GATE -->
     <div class="ready-gate" id="readyGate">
       <div class="gate-title">HANGMAN</div>
-      <div id="gateInfo" style="opacity:0.5; margin-bottom:40px; font-weight:700;">BAĞLANILIYOR...</div>
-      <button class="key" id="realStartBtn" style="width:200px; height:60px; background:var(--grad); border:none; border-radius:20px; color:#fff; font-size:18px;">BAŞLA</button>
+      <div class="gate-sub" id="gateInfo">BAĞLANILIYOR...</div>
+      <button class="start-btn" id="realStartBtn" type="button">BAŞLA</button>
     </div>
 
+    <!-- GAME AREA -->
     <div class="top">
-      <div class="title">HANGMAN</div>
+      <h1 class="title">HANGMAN</h1>
+
       <div class="hud">
-        <div class="leftHud"><div class="hearts" id="hearts"></div></div>
+        <div class="leftHud">
+          <div class="hearts" id="hearts"></div>
+        </div>
+
         <div class="rightHud">
           <div class="score">
             <div class="best">REKOR: <span id="bestVal">0</span></div>
             <div class="val" id="scoreVal">0</div>
           </div>
+
           <div class="jokerCol">
-            <div class="joker" id="j0">🃏</div><div class="joker" id="j1">🃏</div>
+            <button class="joker" id="j0" type="button" aria-label="Joker 1">🃏</button>
+            <button class="joker" id="j1" type="button" aria-label="Joker 2">🃏</button>
           </div>
         </div>
       </div>
+
       <div class="stage">
         <div class="gallows">
-          <div class="beam v"></div><div class="beam h"></div><div class="rope"></div>
+          <div class="beam v"></div>
+          <div class="beam h"></div>
+          <div class="rope"></div>
+
           <div class="man" id="man">
-            <div class="organ head" id="p_head"></div><div class="organ body" id="p_body"></div>
-            <div class="organ larm" id="p_larm"></div><div class="organ rarm" id="p_rarm"></div>
-            <div class="organ lleg" id="p_lleg"></div><div class="organ rleg" id="p_rleg"></div>
+            <div class="organ head" id="p_head"></div>
+            <div class="organ body" id="p_body"></div>
+            <div class="organ larm" id="p_larm"></div>
+            <div class="organ rarm" id="p_rarm"></div>
+            <div class="organ lleg" id="p_lleg"></div>
+            <div class="organ rleg" id="p_rleg"></div>
           </div>
         </div>
+
         <div class="trBox" id="trText">—</div>
       </div>
     </div>
 
+    <!-- KEYBOARD / WORD -->
     <div class="dock">
       <div class="matrix" id="matrix"></div>
       <div class="kb" id="kb"></div>
     </div>
 
+    <!-- RESULT MODAL -->
     <div class="modal" id="modal">
-      <h1 id="mTitle" style="font-size:32px; font-weight:900;">MİSYON</h1>
-      <div id="mWord" style="font-size:36px; font-weight:900; color:#60a5fa; margin:20px 0;">WORD</div>
-      <div id="mTr" style="opacity:0.6; font-style:italic;">(—)</div>
-      <button class="key" id="mBtn" style="width:200px; height:60px; background:var(--grad); border:none; border-radius:20px; color:#fff; font-size:18px;">DEVAM</button>
+      <h1 id="mTitle">MİSYON</h1>
+      <div class="m-word" id="mWord">WORD</div>
+      <div class="m-tr" id="mTr">(—)</div>
+      <button class="start-btn" id="mBtn" type="button">DEVAM</button>
     </div>
+
   </div>
+
   <script type="module" src="/js/hangman_page.js"></script>
 </body>
 </html>
