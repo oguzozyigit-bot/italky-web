@@ -7,13 +7,15 @@
 <title>italkyAI • Jeton Market</title>
 
 <meta name="theme-color" content="#02000f">
-<style>html,body{background:#02000f!important}</style>
+<style>html,body{background:#02000f!important;margin:0;padding:0}</style>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
 <style>
+
+/* PAGE */
 
 #pageContent{
 padding:16px 14px calc(var(--footerH,92px) + env(safe-area-inset-bottom) + 20px);
@@ -22,6 +24,8 @@ flex-direction:column;
 gap:12px;
 max-width:560px;
 margin:auto;
+font-family:'Outfit',sans-serif;
+color:#fff;
 }
 
 /* HEADER */
@@ -255,20 +259,18 @@ Dil pratiği, çeviri, oyunlar ve AI öğretmen derslerinde kullanılabilir.
 import { mountShell } from "/js/ui_shell.js";
 mountShell();
 
-window.buy = (id)=>{
-console.log("Jeton satın alma:",id);
-
-// burada Android Billing veya ödeme sistemi bağlanacak
-// şimdilik sadece log
-
 window.buy = function(id){
-  console.log("Jeton satın alma isteği:", id);
 
-  if (window.AndroidBilling && typeof window.AndroidBilling.buy === "function") {
+console.log("Jeton satın alma isteği:", id);
+
+/* Android uygulama içindeyse native billing çağır */
+
+if(window.AndroidBilling && typeof window.AndroidBilling.buy === "function"){
     window.AndroidBilling.buy(id);
-  } else {
-    alert("Billing sistemi hazır değil.");
-  }
+}else{
+    alert("Satın alma sistemi yakında aktif olacak.");
+}
+
 };
 
 </script>
