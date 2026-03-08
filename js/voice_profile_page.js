@@ -225,8 +225,8 @@ function renderProgress() {
 
   const allDone = doneCount === SAMPLE_COUNT;
 
-  if (redoBtn) redoBtn.disabled = !currentBlob;
-  if (nextBtn) nextBtn.disabled = !(currentBlob && currentIndex < SAMPLE_COUNT - 1);
+  if (redoBtn) redoBtn.disabled = !currentBlob || saving;
+  if (nextBtn) nextBtn.disabled = !(currentBlob && currentIndex < SAMPLE_COUNT - 1) || saving;
   if (finishBtn) finishBtn.disabled = !allDone || saving;
 }
 
@@ -382,9 +382,32 @@ function buildFilePath(userId, idx, ext = "webm") {
   return `${userId}/voice-sample-${idx + 1}-${Date.now()}.${ext}`;
 }
 
-async function deleteOldVoiceSamplesIfExist(paths) {
+function parseOldPaths(raw) {
+  if (!raw) return [];
+
+  if (Array.isArray(raw)) {
+    return raw.filter(Boolean).map(String);
+  }
+
+  const s = String(raw).trim();
+  if (!s) return [];
+
+  if (s.startsWith("[")) {
+    try {
+      const arr = JSON.parse(s);
+      return Array.isArray(arr) ? arr.filter(Boolean).map(String) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  return [s];
+}
+
+async function deletePathsIfExist(paths) {
   const list = (Array.isArray(paths) ? paths : []).filter(Boolean);
   if (!list.length) return;
+
   try {
     await supabase.storage.from(BUCKET).remove(list);
   } catch (e) {
@@ -445,10 +468,11 @@ async function createFirstSignedUrl(path) {
   return data?.signedUrl || "";
 }
 
-async function finishVoiceProfile(samples, uiLang) {
+async function finishVoiceProfile(uiLang) {
   const user = await getUserOrThrow();
   const profile = await loadCurrentProfile(user.id);
 
+  const oldPaths = parseOldPaths(profile?.voice_sample_path);
   const uploaded = await uploadAllSamples(user);
   const previewUrl = uploaded[0]?.path ? await createFirstSignedUrl(uploaded[0].path) : "";
   const totalSec = uploaded.reduce((sum, x) => sum + Number(x.seconds || 0), 0);
@@ -469,20 +493,11 @@ async function finishVoiceProfile(samples, uiLang) {
     .eq("id", user.id);
 
   if (updateErr) {
-    await deleteOldVoiceSamplesIfExist(uploaded.map(x => x.path));
+    await deletePathsIfExist(uploaded.map(x => x.path));
     throw updateErr;
   }
 
-  let oldPaths = [];
-  try {
-    const raw = profile?.voice_sample_path || "";
-    if (raw?.startsWith?.("[")) oldPaths = JSON.parse(raw);
-  } catch {}
-
-  if (oldPaths.length) {
-    await deleteOldVoiceSamplesIfExist(oldPaths);
-  }
-
+  await deletePathsIfExist(oldPaths);
   return uploaded;
 }
 
@@ -505,7 +520,6 @@ async function bootPage() {
 
   redoBtn?.addEventListener("click", () => {
     if (saving) return;
-
     if (isRecording) stopRecording();
 
     recordings[currentIndex] = { blob: null, seconds: 0, mime: "" };
@@ -546,7 +560,7 @@ async function bootPage() {
     if (statusText) statusText.textContent = "Ses profili oluşturuluyor...";
 
     try {
-      await finishVoiceProfile(samples, lang);
+      await finishVoiceProfile(lang);
       if (statusText) statusText.textContent = "Ses profili kaydedildi";
       toast("Ses profili kaydedildi");
 
@@ -567,19 +581,6 @@ async function bootPage() {
   backBtn?.addEventListener("click", () => {
     history.back();
   });
-}
-
-function getUserPreferredLang(user) {
-  const fromMeta =
-    user?.user_metadata?.language ||
-    user?.user_metadata?.lang ||
-    user?.user_metadata?.site_lang ||
-    user?.app_metadata?.language ||
-    "";
-
-  const raw = String(fromMeta || "tr").toLowerCase().trim();
-  const base = raw.split("-")[0];
-  return SAMPLE_TEXTS[base] ? base : "tr";
 }
 
 window.addEventListener("beforeunload", () => {
