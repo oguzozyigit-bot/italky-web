@@ -11,19 +11,21 @@
   @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=Space+Grotesk:wght@700&display=swap');
   
   #pageContent {
-    height: 100vh;
+    height: 100vh; /* Ekranın tamamını kapla */
     display: flex;
     flex-direction: column;
-    background: radial-gradient(circle at 50% 20%, #0a1030 0%, #000 100%);
-    padding-bottom: 5px; /* Alt bar boşluğunu daralttım */
+    background: radial-gradient(circle at 50% 15%, #0d123e 0%, #000 100%);
+    /* Son butonun alt barın altında kalmasını engeller */
+    padding-bottom: calc(env(safe-area-inset-bottom) + 10px);
   }
 
   .main-hub {
-    flex: 1;
+    flex: 1; /* Mevcut alanı doldur */
     display: flex;
     flex-direction: column;
-    gap: 8px; /* Kartlar arası boşluk optimize edildi */
+    gap: 8px; /* Kartlar arası boşluk */
     padding: 10px 14px;
+    overflow-y: auto; /* İçerik taşarsa kaydırılabilsin (garanti) */
   }
 
   /* ===== 1. ORB & ENERGY BALLS ===== */
@@ -47,7 +49,7 @@
     position: absolute;
     inset: -2px;
     border-radius: 50%;
-    padding: 2px;
+    padding: 2.5px;
     background: var(--ai-grad);
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     mask-composite: exclude;
@@ -66,7 +68,7 @@
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    filter: blur(1px);
+    filter: blur(1.2px);
   }
 
   .ball-1 { top: 0; left: 50%; background: #6366f1; box-shadow: 0 0 12px #6366f1; }
@@ -88,66 +90,98 @@
     z-index: 10;
   }
 
-  /* ===== 2. HUB CARDS ===== */
+  /* ===== 2. MILENYUM HUB CARDS ===== */
   :root {
+    /* Milenyum Neon Gradient */
     --ai-grad: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
-    --blue: #60a5fa; --green: #34d399; --purple: #a855f7; --amber: #f59e0b; --rose: #f43f5e;
+    
+    /* Neon Renkler */
+    --blue: #60a5fa; 
+    --green: #34d399; 
+    --purple: #a855f7; 
+    --amber: #f59e0b; 
+    --rose: #f43f5e;
+    
+    /* Milenyum Metal Kenarlık */
     --glass-border: rgba(255, 255, 255, 0.12);
+    
+    /* Kart Arka Planı */
+    --card-bg: linear-gradient(160deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.01) 100%);
   }
 
-  .hub-cards { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+  .hub-cards {
+    flex: 1; 
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
 
   .trans-card {
-    flex: 1;
+    flex: 1; /* Ekranı dolgun göster */
     position: relative;
-    border-radius: 22px;
+    border-radius: 20px;
     border: 1px solid var(--glass-border);
     overflow: hidden;
     cursor: pointer;
     display: flex;
     align-items: center;
     padding: 0 18px;
-    background: rgba(255, 255, 255, 0.04);
-    backdrop-filter: blur(20px);
+    background: var(--card-bg);
+    backdrop-filter: blur(25px); /* Daha premium cam efekti */
     transition: all 0.3s cubic-bezier(0.2, 1, 0.2, 1);
+    
+    /* Milenyum Glow */
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
   }
 
-  .trans-card:active { transform: scale(0.97); background: rgba(255, 255, 255, 0.1); }
+  /* Hover/Basılı Tutma Efekti: Krom Parlaması */
+  .trans-card:active {
+    transform: scale(0.97);
+    background: linear-gradient(160deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.03) 100%);
+    border-color: rgba(255,255,255,0.25);
+  }
 
-  /* Card Themes */
-  .f2f-card { background: linear-gradient(145deg, rgba(244, 63, 94, 0.12) 0%, rgba(0,0,0,0.6) 100%); }
-  .text-card { background: linear-gradient(145deg, rgba(96, 165, 250, 0.1) 0%, rgba(0,0,0,0.6) 100%); }
-  .inter-card { background: linear-gradient(145deg, rgba(245, 158, 11, 0.1) 0%, rgba(0,0,0,0.6) 100%); }
-  .walk-card { background: linear-gradient(145deg, rgba(52, 211, 153, 0.1) 0%, rgba(0,0,0,0.6) 100%); }
-  .off-card { background: linear-gradient(145deg, rgba(168, 85, 247, 0.1) 0%, rgba(0,0,0,0.6) 100%); }
+  /* Card Renk Temaları ve Neon Işımaları */
+  .f2f-card { box-shadow: 0 0 10px rgba(244, 63, 94, 0.15); border-color: rgba(244, 63, 94, 0.2); }
+  .text-card { box-shadow: 0 0 10px rgba(96, 165, 250, 0.15); border-color: rgba(96, 165, 250, 0.2); }
+  .inter-card { box-shadow: 0 0 10px rgba(245, 158, 11, 0.15); border-color: rgba(245, 158, 11, 0.2); }
+  .walk-card { box-shadow: 0 0 10px rgba(52, 211, 153, 0.15); border-color: rgba(52, 211, 153, 0.2); }
+  .off-card { box-shadow: 0 0 10px rgba(168, 85, 247, 0.15); border-color: rgba(168, 85, 247, 0.2); }
 
-  /* --- ADVANCED ANIMATIONS --- */
+  /* Kart Basıldığında Neon Işıma Artışı */
+  .f2f-card:active { box-shadow: 0 0 25px rgba(244, 63, 94, 0.4); }
+  .text-card:active { box-shadow: 0 0 25px rgba(96, 165, 250, 0.4); }
+  .inter-card:active { box-shadow: 0 0 25px rgba(245, 158, 11, 0.4); }
+  .walk-card:active { box-shadow: 0 0 25px rgba(52, 211, 153, 0.4); }
+  .off-card:active { box-shadow: 0 0 25px rgba(168, 85, 247, 0.4); }
 
-  /* 1. FaceToFace Vizör */
+  /* --- TÜM İKON ANİMASYONLARI (Konuya Göre Geliştirildi) --- */
+
+  /* 1. FaceToFace Scanner */
   .icon-f2f { width: 40px; height: 40px; margin-right: 15px; position: relative; border: 1.5px solid rgba(244, 63, 94, 0.3); border-radius: 8px; }
   .f2f-scanner { position: absolute; width: 100%; height: 2px; background: var(--rose); top: 0; animation: scanLine 2s infinite ease-in-out; box-shadow: 0 0 8px var(--rose); }
   .f2f-dot { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 6px; height: 6px; background: #fff; border-radius: 50%; animation: pulseCore 1s infinite alternate; }
 
   /* 2. Text Translate Flow */
   .icon-text { width: 40px; height: 30px; margin-right: 15px; display: flex; flex-direction: column; gap: 4px; }
-  .text-bar { height: 3px; background: var(--blue); border-radius: 2px; opacity: 0.3; width: 0; animation: fillText 2s infinite; }
+  .text-bar { height: 3px; background: var(--blue); border-radius: 2px; opacity: 0.3; width: 0; animation: fillText 2.2s infinite; }
 
-  /* 3. Interpreter Neural */
+  /* 3. Interpreter Neural Link */
   .icon-inter { width: 40px; height: 30px; margin-right: 15px; position: relative; }
   .inter-node { position: absolute; width: 10px; height: 10px; border: 2px solid var(--amber); border-radius: 50%; top: 50%; margin-top: -5px; }
   .node-l { left: 0; animation: nodeJump 1.5s infinite; }
   .node-r { right: 0; border-color: #fff; animation: nodeJump 1.5s infinite reverse; }
   .inter-link { position: absolute; height: 2px; background: var(--amber); top: 50%; left: 10px; right: 10px; transform: scaleX(0); animation: linkPulse 1.5s infinite; }
 
-  /* 4. Walkie EQ Waves */
+  /* 4. Walkie-Talkie Frekans Spektrumu */
   .icon-walkie { width: 40px; height: 30px; margin-right: 15px; display: flex; align-items: flex-end; gap: 3px; }
-  .eq-bar { flex: 1; background: var(--green); border-radius: 2px; animation: eqMove 0.6s infinite alternate; }
+  .eq-bar { flex: 1; background: var(--green); border-radius: 2px; animation: eqMove 0.7s infinite alternate; }
 
-  /* 5. Offline Data Box */
+  /* 5. Offline Data Box Dolum */
   .icon-off { width: 40px; height: 30px; margin-right: 15px; position: relative; border: 2px solid var(--purple); border-radius: 4px; overflow: hidden; }
-  .off-fill { position: absolute; bottom: 0; width: 100%; background: var(--purple); animation: boxFill 2.5s infinite; opacity: 0.6; }
+  .off-fill { position: absolute; bottom: 0; width: 100%; background: var(--purple); animation: boxFill 2.6s infinite; opacity: 0.7; }
 
-  /* --- KEYFRAMES --- */
+  /* KEYFRAMES */
   @keyframes rotateOrb { from { transform: rotate(0); } to { transform: rotate(360deg); } }
   @keyframes aiBreathe { 0%,100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.05); opacity: 1; } }
   @keyframes scanLine { 0% { top: 0%; } 100% { top: 100%; } }
@@ -158,11 +192,11 @@
   @keyframes eqMove { from { height: 10%; } to { height: 100%; } }
   @keyframes boxFill { 0% { height: 0; } 100% { height: 100%; } }
 
-  /* Text Styles */
+  /* Typography: Milenyum Stili */
   .card-content { flex: 1; }
-  .card-title { font-family: 'Space Grotesk'; font-size: 18px; font-weight: 700; color: #fff; margin: 0; }
-  .card-title .ai { background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-  .card-desc { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 2px; }
+  .card-title { font-family: 'Space Grotesk'; font-size: 18px; font-weight: 700; color: #fff; margin: 0; letter-spacing: -0.5px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+  .card-title .ai { background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900; }
+  .card-desc { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 3px; line-height: 1.3; }
 </style>
 </head>
 
@@ -190,7 +224,7 @@
         </div>
         <div class="card-content">
           <h2 class="card-title">FaceToFace <span class="ai">AI</span></h2>
-          <p class="card-desc">Anlık vizör taramalı karşılıklı çeviri.</p>
+          <p class="card-desc">Taramalı vizör ile anlık karşılıklı çeviri.</p>
         </div>
       </div>
 
@@ -202,7 +236,7 @@
         </div>
         <div class="card-content">
           <h2 class="card-title">Text Translate <span class="ai">AI</span></h2>
-          <p class="card-desc">Yazılı metinleri akıllı bağlamla yerelleştir.</p>
+          <p class="card-desc">Yazılı metinleri nöral akıllı bağlamla yerelleştir.</p>
         </div>
       </div>
 
@@ -214,7 +248,7 @@
         </div>
         <div class="card-content">
           <h2 class="card-title">Interpreter <span class="ai">AI</span></h2>
-          <p class="card-desc">Nöral ağlarla kesintisiz canlı tercüman.</p>
+          <p class="card-desc">Kesintisiz ve gerçek zamanlı canlı tercüman.</p>
         </div>
       </div>
 
@@ -227,7 +261,7 @@
         </div>
         <div class="card-content">
           <h2 class="card-title">Walkie-Talkie <span class="ai">AI</span></h2>
-          <p class="card-desc">Ses frekanslı uzak mesafe anlık odalar.</p>
+          <p class="card-desc">Frekans spektrumlu uzak mesafe anlık odalar.</p>
         </div>
       </div>
 
@@ -237,7 +271,7 @@
         </div>
         <div class="card-content">
           <h2 class="card-title">Offline Çeviri <span class="ai">AI</span></h2>
-          <p class="card-desc">Cihaza yerleşik veri paketleriyle özgür çeviri.</p>
+          <p class="card-desc">Veri paketleriyle internet olmadan özgür iletişim.</p>
         </div>
       </div>
     </div>
