@@ -1,4 +1,5 @@
 import { LANG_POOL } from "/js/lang_pool_full.js";
+import { supabase } from "/js/supabase_client.js";
 
 const API_BASE = "https://italky-api.onrender.com";
 const $ = (id) => document.getElementById(id);
@@ -166,6 +167,7 @@ let ttsDebounceAt = 0;
 let activeSide = null;
 let recognizer = null;
 let recordingSide = null;
+let currentAudio = null;
 
 /* ===== UI ===== */
 
@@ -315,22 +317,75 @@ function renderPop(side) {
   });
 }
 
-/* ===== Audio ===== */
+/* ===== Audio / Backend TTS ===== */
 
 function stopAudio() {
+  try {
+    currentAudio?.pause?.();
+    currentAudio = null;
+  } catch {}
   try { window.speechSynthesis?.cancel?.(); } catch {}
   try { window.NativeTTS?.stop?.(); } catch {}
 }
 
-function speak(text, langCode) {
+async function getCurrentUserId() {
+  try {
+    const { data } = await supabase.auth.getUser();
+    return data?.user?.id || null;
+  } catch {
+    return null;
+  }
+}
+
+function base64ToBlob(base64, mime = "audio/mpeg") {
+  const byteChars = atob(base64);
+  const byteNumbers = new Array(byteChars.length);
+  for (let i = 0; i < byteChars.length; i++) {
+    byteNumbers[i] = byteChars.charCodeAt(i);
+  }
+  const byteArray = new Uint8Array(byteNumbers);
+  return new Blob([byteArray], { type: mime });
+}
+
+async function speakViaApi(text, langCode) {
+  const userId = await getCurrentUserId();
+
+  const r = await fetch(`${API_BASE}/api/tts`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      text: String(text || "").trim(),
+      lang: canonical(langCode),
+      user_id: userId,
+    }),
+  });
+
+  const j = await r.json().catch(() => null);
+  if (!r.ok || !j?.ok || !j?.audio_base64) {
+    throw new Error(j?.error || j?.detail || "TTS API unavailable");
+  }
+
+  const blob = base64ToBlob(j.audio_base64, "audio/mpeg");
+  const url = URL.createObjectURL(blob);
+  const audio = new Audio(url);
+  currentAudio = audio;
+
+  audio.onended = () => {
+    URL.revokeObjectURL(url);
+    if (currentAudio === audio) currentAudio = null;
+  };
+
+  audio.onerror = () => {
+    URL.revokeObjectURL(url);
+    if (currentAudio === audio) currentAudio = null;
+  };
+
+  await audio.play();
+}
+
+function speakFallback(text, langCode) {
   const value = String(text || "").trim();
   if (!value) return;
-
-  const now = Date.now();
-  if (now - ttsDebounceAt < 250) stopAudio();
-  ttsDebounceAt = now;
-
-  stopAudio();
 
   const c = canonical(langCode);
 
@@ -364,6 +419,24 @@ function speak(text, langCode) {
       window.speechSynthesis.speak(u);
     } catch {}
   }, 60);
+}
+
+async function speak(text, langCode) {
+  const value = String(text || "").trim();
+  if (!value) return;
+
+  const now = Date.now();
+  if (now - ttsDebounceAt < 250) stopAudio();
+  ttsDebounceAt = now;
+
+  stopAudio();
+
+  try {
+    await speakViaApi(value, langCode);
+  } catch (e) {
+    console.warn("TTS API fallback", e);
+    speakFallback(value, langCode);
+  }
 }
 
 /* ===== Scroll ===== */
@@ -412,10 +485,10 @@ function addBubble(side, kind, text, opts = {}) {
         <path d="M19 5a8 8 0 0 1 0 14"></path>
       </svg>
     `;
-    spk.addEventListener("click", (e) => {
+    spk.addEventListener("click", async (e) => {
       e.preventDefault();
       e.stopPropagation();
-      speak(txt.textContent || "", opts.speakLang || "en");
+      await speak(txt.textContent || "", opts.speakLang || "en");
     });
     inner.appendChild(spk);
   }
@@ -531,7 +604,7 @@ async function finalizeRecognition(side, text) {
     addBubble(other, "me", tr, { latest: true, speakLang: dst });
   }
 
-  speak(tr, dst);
+  await speak(tr, dst);
   setSystemReadyUI();
 }
 
