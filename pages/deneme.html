@@ -1,755 +1,220 @@
-<!DOCTYPE html><html lang="tr">
+<!doctype html>
+<html lang="tr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>italkyAI • Karaoke Practice</title>
-  <link rel="icon" href="data:," />
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
-  <style>
-    :root{
-      --bg-0:#050816;
-      --bg-1:#0b1023;
-      --bg-2:#121935;
-      --panel:rgba(255,255,255,.06);
-      --line:rgba(255,255,255,.10);
-      --text:#f7f8ff;
-      --muted:rgba(247,248,255,.70);
-      --pink:#ff4fd8;
-      --violet:#7c5cff;
-      --cyan:#00d2ff;
-      --good:#19c37d;
-      --bad:#ff667e;
-      --warn:#ffb020;
-      --footerH:92px;
-      --topSafe:env(safe-area-inset-top,0px);
-      --bottomSafe:env(safe-area-inset-bottom,0px);
-      --radius:24px;
-      --shadow:0 18px 60px rgba(0,0,0,.35);
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+<title>italkyAI • Next-Gen Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --ai-grad: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+        --glass: rgba(255, 255, 255, 0.03);
+        --border: rgba(255, 255, 255, 0.08);
+        --bg: #03030a;
     }
-    *{box-sizing:border-box}
-    html,body{margin:0;padding:0;background:radial-gradient(circle at top,#18224d 0%,#0a1026 42%,#03050d 100%);color:var(--text);font-family:'Outfit',sans-serif;min-height:100%;overflow-x:hidden}
-    body{padding-bottom:calc(var(--footerH) + var(--bottomSafe) + 16px)}
-    button,input,audio{font:inherit}
-    a{text-decoration:none;color:inherit}.page{
-  width:min(1180px,100%);
-  margin:0 auto;
-  padding:calc(16px + var(--topSafe)) 14px 20px;
-}
 
-.hero{
-  position:relative;
-  overflow:hidden;
-  border:1px solid var(--line);
-  border-radius:30px;
-  background:
-    radial-gradient(circle at 12% 18%, rgba(255,79,216,.20), transparent 24%),
-    radial-gradient(circle at 88% 20%, rgba(0,210,255,.16), transparent 24%),
-    linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.03));
-  box-shadow:var(--shadow);
-  padding:18px;
-  margin-bottom:14px;
-}
-.hero-top{display:flex;gap:12px;justify-content:space-between;align-items:flex-start;flex-wrap:wrap}
-.eyebrow{
-  display:inline-flex;align-items:center;gap:8px;
-  border:1px solid var(--line);background:rgba(255,255,255,.05);
-  padding:9px 12px;border-radius:999px;font-size:12px;color:var(--muted)
-}
-.hero h1{
-  margin:12px 0 8px;
-  font-family:'Space Grotesk',sans-serif;
-  font-size:clamp(28px,5vw,48px);
-  line-height:1.02;
-  letter-spacing:-.02em;
-}
-.hero p{margin:0;color:var(--muted);font-size:14px;max-width:70ch;line-height:1.55}
-.hero-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:16px}
-.stat{
-  border:1px solid var(--line);background:rgba(255,255,255,.04);
-  border-radius:18px;padding:14px 12px
-}
-.stat .k{font-size:12px;color:var(--muted)}
-.stat .v{font-size:20px;font-weight:900;margin-top:6px}
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body, html { 
+        margin: 0; padding: 0; background: var(--bg); 
+        font-family: 'Outfit', sans-serif; color: white; overflow: hidden; height: 100%;
+    }
 
-.layout{display:grid;grid-template-columns:360px 1fr;gap:14px;align-items:start}
-.card{
-  border:1px solid var(--line);
-  border-radius:26px;
-  background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
-  box-shadow:var(--shadow);
-  backdrop-filter: blur(14px);
-}
+    #pageContent {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        background: radial-gradient(circle at 50% -20%, #1e1b4b 0%, #03030a 100%);
+        padding: 20px;
+    }
 
-.sidebar{padding:14px;position:sticky;top:12px}
-.lang-tabs{display:flex;flex-wrap:wrap;gap:8px}
-.chip{
-  border:none;cursor:pointer;border-radius:999px;padding:10px 14px;
-  color:var(--text);background:rgba(255,255,255,.05);border:1px solid var(--line);
-  transition:.2s transform,.2s background,.2s border-color
-}
-.chip.active{background:linear-gradient(90deg,var(--pink),var(--violet));border-color:transparent}
-.search{
-  margin-top:12px;display:flex;align-items:center;gap:10px;
-  border:1px solid var(--line);background:rgba(255,255,255,.04);
-  border-radius:18px;padding:0 12px
-}
-.search input{width:100%;height:46px;border:none;outline:none;background:transparent;color:var(--text)}
-.search input::placeholder{color:rgba(247,248,255,.46)}
-.list{display:grid;gap:10px;max-height:66vh;overflow:auto;padding-right:2px;margin-top:12px}
-.song{
-  padding:14px;border-radius:20px;border:1px solid var(--line);
-  background:rgba(255,255,255,.035);cursor:pointer;transition:.18s transform,.18s border-color,.18s background
-}
-.song:hover{transform:translateY(-1px);border-color:rgba(255,79,216,.35)}
-.song.active{background:linear-gradient(180deg, rgba(124,92,255,.16), rgba(255,255,255,.05));border-color:rgba(124,92,255,.55)}
-.song-title{font-weight:800;font-size:15px}
-.song-meta{font-size:13px;color:var(--muted);margin-top:4px}
-.song-tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
-.tag{font-size:11px;border:1px solid var(--line);padding:5px 8px;border-radius:999px;color:var(--muted);background:rgba(255,255,255,.04)}
+    /* 🧠 MERKEZİ ORB (FaceToFace) */
+    .f2f-section {
+        flex: 0 0 40%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
 
-.main{padding:16px}
-.topline{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
-.now h2{margin:0;font-size:28px;line-height:1.08}
-.now .sub{margin-top:6px;color:var(--muted);font-size:14px}
-.mode-row{display:flex;gap:10px;flex-wrap:wrap}
-.mode-btn,.ghost-btn,.primary-btn{
-  border:none;cursor:pointer;border-radius:16px;padding:12px 16px;
-  font-weight:800;transition:.18s transform,.18s opacity,.18s background
-}
-.mode-btn{background:rgba(255,255,255,.05);color:var(--text);border:1px solid var(--line)}
-.mode-btn.active{background:linear-gradient(90deg,var(--pink),var(--violet));color:#fff;border-color:transparent}
-.ghost-btn{background:rgba(255,255,255,.04);color:var(--text);border:1px solid var(--line)}
-.primary-btn{background:linear-gradient(90deg,var(--pink),var(--cyan));color:#fff;box-shadow:0 10px 24px rgba(93,132,255,.24)}
-.mode-btn:active,.ghost-btn:active,.primary-btn:active,.chip:active{transform:scale(.98)}
+    .orb-wrapper {
+        position: relative;
+        width: 160px;
+        height: 160px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
 
-.player{
-  margin-top:14px;border:1px solid var(--line);border-radius:24px;padding:16px;
-  background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
-  display:grid;gap:14px
-}
-.progress-meta{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--muted)}
-.progress{height:10px;background:rgba(255,255,255,.08);border-radius:999px;overflow:hidden}
-.bar{height:100%;width:0%;background:linear-gradient(90deg,var(--pink),var(--cyan));transition:width .12s linear}
+    .orb-glow {
+        position: absolute;
+        inset: -20px;
+        background: var(--ai-grad);
+        filter: blur(40px);
+        opacity: 0.2;
+        animation: pulseGlow 4s infinite alternate;
+    }
 
-.lyrics{
-  border-radius:26px;border:1px solid var(--line);padding:20px;
-  background:
-    radial-gradient(circle at top, rgba(124,92,255,.16), transparent 50%),
-    linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
-  min-height:320px;
-  display:grid;align-content:center;justify-items:center;text-align:center;gap:18px
-}
-.turn-pill{
-  display:inline-flex;align-items:center;gap:8px;padding:9px 13px;border-radius:999px;
-  background:rgba(255,255,255,.06);border:1px solid var(--line);font-size:13px
-}
-.turn-pill.ai{color:#b7dfff}
-.turn-pill.user{color:#ffd29a}
-.line-current{font-size:clamp(28px,5vw,48px);font-weight:900;line-height:1.1;max-width:16ch}
-.line-next{font-size:clamp(18px,3vw,26px);line-height:1.25;max-width:20ch;color:var(--muted)}
-.mini-note{font-size:12px;color:var(--muted)}
+    .outer-ring {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border: 2px solid var(--border);
+        border-radius: 50%;
+        border-top-color: #6366f1;
+        animation: rotate 10s linear infinite;
+    }
 
-.controls{display:flex;gap:10px;flex-wrap:wrap}
-.controls > *{flex:0 0 auto}
-audio{width:100%}
+    .inner-core {
+        width: 110px;
+        height: 110px;
+        background: rgba(0,0,0,0.8);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: inset 0 0 20px rgba(99, 102, 241, 0.3);
+        z-index: 2;
+        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
 
-.panels{margin-top:14px;display:grid;grid-template-columns:1.1fr .9fr;gap:14px}
-.panel{border:1px solid var(--line);border-radius:22px;padding:16px;background:rgba(255,255,255,.03)}
-.panel h3{margin:0 0 10px;font-size:15px}
-.heard{min-height:76px;line-height:1.55;color:var(--text)}
-.hint{color:var(--muted);font-size:12px;line-height:1.5}
-.score-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-.score-item{padding:12px;border-radius:16px;background:rgba(255,255,255,.04);border:1px solid var(--line)}
-.score-item .k{font-size:11px;color:var(--muted)}
-.score-item .v{font-size:25px;font-weight:900;margin-top:6px}
+    .inner-core:active { transform: scale(0.9); }
 
-.coach{margin-top:14px;border:1px solid var(--line);border-radius:22px;padding:16px;background:rgba(255,255,255,.03)}
-.coach h3{margin:0 0 10px;font-size:15px}
-.coach-list{display:grid;gap:8px}
-.coach-word{display:flex;justify-content:space-between;gap:8px;padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid var(--line)}
-.coach-word.good strong{color:var(--good)}
-.coach-word.bad strong{color:var(--bad)}
-.foot{font-size:12px;color:var(--muted);text-align:center;padding-top:6px}
+    .f2f-label {
+        margin-top: 20px;
+        font-family: 'Space Grotesk';
+        font-size: 28px;
+        letter-spacing: -1px;
+        text-align: center;
+    }
 
-@media (max-width:1024px){
-  .layout{grid-template-columns:1fr}
-  .sidebar{position:relative;top:auto}
-  .list{max-height:none}
-}
-@media (max-width:720px){
-  .hero-stats{grid-template-columns:repeat(2,1fr)}
-  .panels{grid-template-columns:1fr}
-  .now h2{font-size:24px}
-  .lyrics{min-height:280px;padding:18px}
-  .line-current{max-width:14ch}
-  .page{padding-left:10px;padding-right:10px}
-}
+    .f2f-label span {
+        background: var(--ai-grad);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
 
-  </style>
+    /* 🎴 MODERN KARTLAR (Grid Sistemi) */
+    .hub-grid {
+        flex: 1;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: 1fr 1fr;
+        gap: 12px;
+        padding-bottom: 20px;
+    }
+
+    .feature-card {
+        background: var(--glass);
+        border: 1px solid var(--border);
+        border-radius: 24px;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        position: relative;
+        overflow: hidden;
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+    }
+
+    .feature-card:active {
+        background: rgba(255,255,255,0.1);
+        border-color: rgba(255,255,255,0.3);
+    }
+
+    .card-icon {
+        position: absolute;
+        top: 16px;
+        left: 16px;
+        width: 32px;
+        height: 32px;
+        opacity: 0.8;
+    }
+
+    .card-title {
+        font-size: 15px;
+        font-weight: 600;
+        margin: 0;
+        color: rgba(255,255,255,0.9);
+    }
+
+    .card-sub {
+        font-size: 10px;
+        color: rgba(255,255,255,0.4);
+        margin-top: 4px;
+    }
+
+    /* ÖZEL KART IŞIKLARI */
+    .c-blue { border-bottom: 3px solid #60a5fa; }
+    .c-green { border-bottom: 3px solid #34d399; }
+    .c-amber { border-bottom: 3px solid #f59e0b; }
+    .c-purple { border-bottom: 3px solid #a855f7; }
+
+    /* ANİMASYONLAR */
+    @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    @keyframes pulseGlow { 0% { opacity: 0.1; transform: scale(0.9); } 100% { opacity: 0.3; transform: scale(1.1); } }
+
+</style>
 </head>
 <body>
-  <div class="page">
-    <section class="hero">
-      <div class="hero-top">
-        <div>
-          <div class="eyebrow">🎤 Karaoke Practice • italkyAI modülü • mobil uyumlu</div>
-          <h1>Şarkı söyle.<br>Pratik yap.<br>Skorunu kap.</h1>
-          <p>Bu sürüm, italky içinde direkt çalıştırabileceğin başlangıç yapısıdır. Solo Karaoke ve AI Düet hazır. Sonraki adımda bunu senin gerçek şarkı verin, jeton sistemi ve kullanıcı oturumuna bağlayacağız.</p>
+
+<main id="pageContent">
+    <section class="f2f-section" onclick="location.href='/facetoface.html'">
+        <div class="orb-wrapper">
+            <div class="orb-glow"></div>
+            <div class="outer-ring"></div>
+            <div class="inner-core">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5">
+                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                    <path d="M19 11v1a7 7 0 0 1-14 0v-2"/>
+                    <line x1="12" y1="19" x2="12" y2="23"/>
+                </svg>
+            </div>
         </div>
-      </div>
-      <div class="hero-stats">
-        <div class="stat"><div class="k">Dil sekmesi</div><div class="v">5</div></div>
-        <div class="stat"><div class="k">Mod</div><div class="v">Solo + AI</div></div>
-        <div class="stat"><div class="k">Hedef katalog</div><div class="v">50</div></div>
-        <div class="stat"><div class="k">Skor</div><div class="v">Canlı</div></div>
-      </div>
-    </section><section class="layout">
-  <aside class="card sidebar">
-    <div class="lang-tabs" id="langTabs"></div>
-    <div class="search">
-      <span>🔎</span>
-      <input id="searchInput" type="text" placeholder="Şarkı veya sanatçı ara" />
+        <h1 class="f2f-label">FaceToFace <span>AI</span></h1>
+    </section>
+
+    <div class="hub-grid">
+        <div class="feature-card c-blue" onclick="location.href='/pages/text_translate.html'">
+            <svg class="card-icon" fill="none" stroke="#60a5fa" viewBox="0 0 24 24" stroke-width="2">
+                <path d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 0 1 6.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5c1.382 3.307 3.416 6.315 5.952 8.5"/>
+            </svg>
+            <h2 class="card-title">Metin Çeviri</h2>
+            <span class="card-sub">Kuantum Hızı</span>
+        </div>
+
+        <div class="feature-card c-green" onclick="location.href='/pages/f2f_connect.html'">
+            <svg class="card-icon" fill="none" stroke="#34d399" viewBox="0 0 24 24" stroke-width="2">
+                <path d="M19 11a7 7 0 0 1-7 7m0 0a7 7 0 0 1-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 0 1-3-3V5a3 3 0 1 1 6 0v6a3 3 0 0 1-3 3z"/>
+            </svg>
+            <h2 class="card-title">Walkie-Talkie</h2>
+            <span class="card-sub">Anlık Sesli</span>
+        </div>
+
+        <div class="feature-card c-amber" onclick="location.href='/pages/interpreter.html'">
+            <svg class="card-icon" fill="none" stroke="#f59e0b" viewBox="0 0 24 24" stroke-width="2">
+                <path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+            </svg>
+            <h2 class="card-title">Interpreter</h2>
+            <span class="card-sub">Kulaklık Modu</span>
+        </div>
+
+        <div class="feature-card c-purple" onclick="location.href='/pages/offline_languages.html'">
+            <svg class="card-icon" fill="none" stroke="#a855f7" viewBox="0 0 24 24" stroke-width="2">
+                <path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"/>
+            </svg>
+            <h2 class="card-title">Offline</h2>
+            <span class="card-sub">Tam Gizlilik</span>
+        </div>
     </div>
-    <div class="list" id="songList"></div>
-  </aside>
+</main>
 
-  <main class="card main">
-    <div class="topline">
-      <div class="now">
-        <h2 id="songTitle">Şarkı seç</h2>
-        <div class="sub" id="songMeta">Katalogdan bir parça seçince karaoke alanı aktif olur.</div>
-      </div>
-      <div class="mode-row">
-        <button class="mode-btn active" id="soloBtn">Solo Karaoke</button>
-        <button class="mode-btn" id="duetBtn">AI Düet</button>
-      </div>
-    </div>
-
-    <section class="player">
-      <div>
-        <div class="progress-meta">
-          <span id="timeNow">00:00</span>
-          <span id="turnInfo">Hazır</span>
-          <span id="timeTotal">00:00</span>
-        </div>
-        <div class="progress"><div class="bar" id="progressBar"></div></div>
-      </div>
-
-      <div class="lyrics">
-        <div class="turn-pill user" id="turnPill">🎙️ Sıra bekleniyor</div>
-        <div class="line-current" id="currentLine">Bir şarkı seç ve başlat.</div>
-        <div class="line-next" id="nextLine">Sonraki satır burada görünecek.</div>
-        <div class="mini-note">AI Düet modunda çift satırlarda sıra kullanıcıya geçer.</div>
-      </div>
-
-      <div class="controls">
-        <button class="primary-btn" id="playBtn">▶ Başlat</button>
-        <button class="ghost-btn" id="pauseBtn">⏸ Duraklat</button>
-        <button class="ghost-btn" id="micBtn">🎤 Mikrofonu Aç</button>
-        <button class="ghost-btn" id="resetBtn">↺ Sıfırla</button>
-      </div>
-
-      <audio id="audio" preload="metadata" controls></audio>
-    </section>
-
-    <section class="panels">
-      <div class="panel">
-        <h3>Duyulan sözlerin</h3>
-        <div class="heard" id="heardText">Mikrofon aktif olduğunda burada canlı algılanan sözler akacak.</div>
-        <div class="hint">SpeechRecognition destekliyse canlı deneme yapar. Destek yoksa bile ekran ve akış çalışır. Yani sayfa küsmüyor, sadece mikrofon naz yapıyor.</div>
-      </div>
-
-      <div class="panel">
-        <h3>Anlık skor</h3>
-        <div class="score-grid">
-          <div class="score-item"><div class="k">Pronunciation</div><div class="v" id="scorePron">0</div></div>
-          <div class="score-item"><div class="k">Timing</div><div class="v" id="scoreTiming">0</div></div>
-          <div class="score-item"><div class="k">Accuracy</div><div class="v" id="scoreAccuracy">0</div></div>
-          <div class="score-item"><div class="k">Total</div><div class="v" id="scoreTotal">0</div></div>
-        </div>
-      </div>
-    </section>
-
-    <section class="coach">
-      <h3>Kelimeler ve koç notları</h3>
-      <div class="coach-list" id="coachList">
-        <div class="coach-word"><span>Seçili satır yok</span><span>—</span></div>
-      </div>
-      <div class="foot">İlk sürümde skor, kelime eşleşmesi + zaman yaklaşımıyla hesaplanır. Sonraki patchte fonetik puanlama ve jeton sistemi bağlanır.</div>
-    </section>
-  </main>
-</section>
-
-  </div>  <script>
-    const DB = {
-      en: [
-        { id:'en-1', title:'Perfect', artist:'Ed Sheeran', level:'A2-B1', mode:'romantic', audio:'', lyrics:[
-          { t:0, text:'I found a love for me' },
-          { t:4, text:'Darling just dive right in' },
-          { t:8, text:'And follow my lead' },
-          { t:12, text:'Well I found a girl beautiful and sweet' },
-          { t:18, text:'I never knew you were the someone waiting for me' },
-          { t:24, text:'Cause we were just kids when we fell in love' }
-        ]},
-        { id:'en-2', title:'Believer', artist:'Imagine Dragons', level:'B1', mode:'energetic', audio:'', lyrics:[
-          { t:0, text:'First things first' },
-          { t:3, text:'I am gonna say all the words inside my head' },
-          { t:8, text:'I am fired up and tired of the way that things have been' },
-          { t:14, text:'Oh ooh' },
-          { t:16, text:'Pain you made me a believer' },
-          { t:21, text:'Believer' }
-        ]}
-      ],
-      de: [
-        { id:'de-1', title:'99 Luftballons', artist:'Nena', level:'A2-B1', mode:'classic', audio:'', lyrics:[
-          { t:0, text:'Hast du etwas Zeit für mich' },
-          { t:4, text:'Dann singe ich ein Lied für dich' },
-          { t:9, text:'Von neunundneunzig Luftballons' },
-          { t:13, text:'Auf ihrem Weg zum Horizont' }
-        ]},
-        { id:'de-2', title:'Lieblingsmensch', artist:'Namika', level:'A2', mode:'soft', audio:'', lyrics:[
-          { t:0, text:'Manchmal fühl ich mich hier falsch' },
-          { t:4, text:'Wie ein Segel im All' },
-          { t:8, text:'Aber bist du bei mir' },
-          { t:12, text:'Bin ich bereit zu glauben' }
-        ]}
-      ],
-      fr: [
-        { id:'fr-1', title:'Dernière danse', artist:'Indila', level:'A2-B1', mode:'dramatic', audio:'', lyrics:[
-          { t:0, text:'Oh ma douce souffrance' },
-          { t:4, text:'Pourquoi sacharner tu recommences' },
-          { t:9, text:'Je ne suis quun être sans importance' },
-          { t:14, text:'Sans lui je suis un peu perdue' }
-        ]},
-        { id:'fr-2', title:'Je veux', artist:'Zaz', level:'A2', mode:'playful', audio:'', lyrics:[
-          { t:0, text:'Donnez moi une suite au Ritz' },
-          { t:4, text:'Je nen veux pas' },
-          { t:7, text:'Des bijoux de chez Chanel' },
-          { t:11, text:'Je nen veux pas' }
-        ]}
-      ],
-      it: [
-        { id:'it-1', title:'Volare', artist:'Domenico Modugno', level:'A1-A2', mode:'classic', audio:'', lyrics:[
-          { t:0, text:'Penso che un sogno così non ritorni mai più' },
-          { t:6, text:'Mi dipingevo le mani e la faccia di blu' },
-          { t:12, text:'Poi dimprovviso venivo dal vento rapito' },
-          { t:18, text:'E incominciavo a volare nel cielo infinito' }
-        ]},
-        { id:'it-2', title:'Bella Ciao', artist:'Traditional', level:'A1', mode:'folk', audio:'', lyrics:[
-          { t:0, text:'Una mattina mi son svegliato' },
-          { t:4, text:'O bella ciao bella ciao bella ciao ciao ciao' },
-          { t:10, text:'Una mattina mi son svegliato' },
-          { t:14, text:'E ho trovato linvasor' }
-        ]}
-      ],
-      es: [
-        { id:'es-1', title:'La Bamba', artist:'Traditional', level:'A1', mode:'festive', audio:'', lyrics:[
-          { t:0, text:'Para bailar la bamba' },
-          { t:3, text:'Para bailar la bamba se necesita una poca de gracia' },
-          { t:9, text:'Una poca de gracia pa mi pa ti y arriba y arriba' },
-          { t:15, text:'Y arriba y arriba por ti seré por ti seré por ti seré' }
-        ]},
-        { id:'es-2', title:'Vivir Mi Vida', artist:'Marc Anthony', level:'A2', mode:'uplifting', audio:'', lyrics:[
-          { t:0, text:'Voy a reír voy a bailar' },
-          { t:4, text:'Vivir mi vida la la la la' },
-          { t:8, text:'Voy a reír voy a gozar' },
-          { t:12, text:'Vivir mi vida la la la la' }
-        ]}
-      ]
-    };
-
-    const LANGS = [
-      { key:'en', label:'🇬🇧 English' },
-      { key:'de', label:'🇩🇪 German' },
-      { key:'fr', label:'🇫🇷 French' },
-      { key:'it', label:'🇮🇹 Italian' },
-      { key:'es', label:'🇪🇸 Spanish' }
-    ];
-
-    const state = {
-      lang:'en', query:'', song:null, mode:'solo', timer:null, startedAt:0, elapsed:0, currentIndex:0,
-      micOn:false, heard:'', recognition:null, lineResults:[], score:{ pronunciation:0, timing:0, accuracy:0, total:0 }
-    };
-
-    const $ = (id) => document.getElementById(id);
-    const langTabs = $('langTabs');
-    const songList = $('songList');
-    const searchInput = $('searchInput');
-    const songTitle = $('songTitle');
-    const songMeta = $('songMeta');
-    const currentLine = $('currentLine');
-    const nextLine = $('nextLine');
-    const turnPill = $('turnPill');
-    const turnInfo = $('turnInfo');
-    const timeNow = $('timeNow');
-    const timeTotal = $('timeTotal');
-    const progressBar = $('progressBar');
-    const heardText = $('heardText');
-    const coachList = $('coachList');
-    const audio = $('audio');
-    const playBtn = $('playBtn');
-    const pauseBtn = $('pauseBtn');
-    const micBtn = $('micBtn');
-    const resetBtn = $('resetBtn');
-    const soloBtn = $('soloBtn');
-    const duetBtn = $('duetBtn');
-
-    function init(){
-      renderLangTabs();
-      renderSongList();
-      bindEvents();
-      setupSpeechRecognition();
-      paintEmptyStage();
-    }
-
-    function bindEvents(){
-      searchInput.addEventListener('input', (e)=>{
-        state.query = String(e.target.value || '').toLowerCase().trim();
-        renderSongList();
-      });
-      playBtn.addEventListener('click', startPlayback);
-      pauseBtn.addEventListener('click', pausePlayback);
-      resetBtn.addEventListener('click', resetPlayback);
-      micBtn.addEventListener('click', toggleMic);
-      soloBtn.addEventListener('click', ()=> setMode('solo'));
-      duetBtn.addEventListener('click', ()=> setMode('duet'));
-      audio.addEventListener('timeupdate', syncFromAudio);
-      audio.addEventListener('ended', finishPlayback);
-    }
-
-    function renderLangTabs(){
-      langTabs.innerHTML = '';
-      LANGS.forEach(l => {
-        const btn = document.createElement('button');
-        btn.className = 'chip' + (state.lang === l.key ? ' active' : '');
-        btn.textContent = l.label;
-        btn.onclick = ()=>{
-          state.lang = l.key;
-          state.song = null;
-          state.query = '';
-          searchInput.value = '';
-          resetPlayback();
-          renderLangTabs();
-          renderSongList();
-          paintEmptyStage();
-        };
-        langTabs.appendChild(btn);
-      });
-    }
-
-    function getFilteredSongs(){
-      const rows = DB[state.lang] || [];
-      if(!state.query) return rows;
-      return rows.filter(s => (`${s.title} ${s.artist} ${s.level} ${s.mode}`).toLowerCase().includes(state.query));
-    }
-
-    function renderSongList(){
-      const rows = getFilteredSongs();
-      songList.innerHTML = '';
-      if(!rows.length){
-        songList.innerHTML = '<div class="song"><div class="song-title">Sonuç bulunamadı</div><div class="song-meta">Aramayı değiştir.</div></div>';
-        return;
-      }
-      rows.forEach(song => {
-        const el = document.createElement('div');
-        el.className = 'song' + (state.song?.id === song.id ? ' active' : '');
-        el.innerHTML = `
-          <div class="song-title">${song.title}</div>
-          <div class="song-meta">${song.artist}</div>
-          <div class="song-tags">
-            <span class="tag">${song.level}</span>
-            <span class="tag">${song.mode}</span>
-            <span class="tag">${song.lyrics.length} satır</span>
-          </div>`;
-        el.onclick = ()=> selectSong(song);
-        songList.appendChild(el);
-      });
-    }
-
-    function selectSong(song){
-      state.song = JSON.parse(JSON.stringify(song));
-      state.currentIndex = 0;
-      state.elapsed = 0;
-      state.heard = '';
-      state.lineResults = [];
-      heardText.textContent = 'Mikrofon aktif olduğunda burada canlı algılanan sözler akacak.';
-      setScore({ pronunciation:0, timing:0, accuracy:0, total:0 });
-      songTitle.textContent = song.title;
-      songMeta.textContent = `${song.artist} • ${song.level} • ${song.mode}`;
-      audio.src = song.audio || '';
-      currentLine.textContent = song.lyrics[0]?.text || 'Bu şarkıda satır yok.';
-      nextLine.textContent = song.lyrics[1]?.text || 'Sonraki satır yok.';
-      timeTotal.textContent = formatTime(song.lyrics.at(-1)?.t || 0);
-      paintCoach(song.lyrics[0]?.text || '');
-      renderSongList();
-      refreshTurnUI();
-    }
-
-    function paintEmptyStage(){
-      songTitle.textContent = 'Şarkı seç';
-      songMeta.textContent = 'Katalogdan bir parça seçince karaoke alanı aktif olur.';
-      currentLine.textContent = 'Bir şarkı seç ve başlat.';
-      nextLine.textContent = 'Sonraki satır burada görünecek.';
-      turnPill.textContent = '🎙️ Sıra bekleniyor';
-      turnPill.className = 'turn-pill user';
-      turnInfo.textContent = 'Hazır';
-      timeNow.textContent = '00:00';
-      timeTotal.textContent = '00:00';
-      progressBar.style.width = '0%';
-      coachList.innerHTML = '<div class="coach-word"><span>Seçili satır yok</span><span>—</span></div>';
-    }
-
-    function setMode(mode){
-      state.mode = mode;
-      soloBtn.classList.toggle('active', mode === 'solo');
-      duetBtn.classList.toggle('active', mode === 'duet');
-      refreshTurnUI();
-    }
-
-    function refreshTurnUI(){
-      if(!state.song){ return paintEmptyStage(); }
-      const isAITurn = state.mode === 'duet' && state.currentIndex % 2 === 0;
-      if(state.mode === 'solo'){
-        turnPill.textContent = '🎤 Sen söylüyorsun';
-        turnPill.className = 'turn-pill user';
-        turnInfo.textContent = 'Solo mod';
-      } else if(isAITurn){
-        turnPill.textContent = '🤖 AI singing';
-        turnPill.className = 'turn-pill ai';
-        turnInfo.textContent = 'AI sıra';
-      } else {
-        turnPill.textContent = '🎤 Your turn';
-        turnPill.className = 'turn-pill user';
-        turnInfo.textContent = 'Senin sıran';
-      }
-    }
-
-    function startPlayback(){
-      if(!state.song) return alert('Önce bir şarkı seç.');
-      if(audio.src){ audio.play().catch(()=>{}); }
-      if(state.timer) return;
-      state.startedAt = Date.now() - (state.elapsed * 1000);
-      state.timer = setInterval(tick, 120);
-    }
-
-    function pausePlayback(){
-      if(audio.src){ audio.pause(); }
-      clearInterval(state.timer);
-      state.timer = null;
-    }
-
-    function resetPlayback(){
-      pausePlayback();
-      state.elapsed = 0;
-      state.currentIndex = 0;
-      state.lineResults = [];
-      if(audio.src){ audio.currentTime = 0; }
-      progressBar.style.width = '0%';
-      timeNow.textContent = '00:00';
-      heardText.textContent = state.micOn ? 'Dinleniyor…' : 'Mikrofon aktif olduğunda burada canlı algılanan sözler akacak.';
-      setScore({ pronunciation:0, timing:0, accuracy:0, total:0 });
-      if(state.song){
-        currentLine.textContent = state.song.lyrics[0]?.text || 'Bu şarkıda satır yok.';
-        nextLine.textContent = state.song.lyrics[1]?.text || 'Sonraki satır yok.';
-        paintCoach(state.song.lyrics[0]?.text || '');
-      } else {
-        paintEmptyStage();
-      }
-      refreshTurnUI();
-    }
-
-    function tick(){
-      if(audio.src && !audio.paused){
-        state.elapsed = audio.currentTime;
-      } else {
-        state.elapsed = (Date.now() - state.startedAt) / 1000;
-      }
-      updateLyricsByTime(state.elapsed);
-      updateProgress();
-    }
-
-    function syncFromAudio(){
-      state.elapsed = audio.currentTime;
-      updateLyricsByTime(state.elapsed);
-      updateProgress();
-    }
-
-    function updateLyricsByTime(sec){
-      if(!state.song) return;
-      const lyrics = state.song.lyrics;
-      let idx = 0;
-      for(let i=0;i<lyrics.length;i++) if(sec >= lyrics[i].t) idx = i;
-      if(idx !== state.currentIndex){
-        finalizePreviousLine();
-        state.currentIndex = idx;
-        currentLine.textContent = lyrics[idx]?.text || '—';
-        nextLine.textContent = lyrics[idx+1]?.text || 'Şarkı bitiyor…';
-        paintCoach(lyrics[idx]?.text || '');
-        refreshTurnUI();
-      }
-      timeNow.textContent = formatTime(sec);
-    }
-
-    function updateProgress(){
-      if(!state.song) return;
-      const total = state.song.lyrics.at(-1)?.t || 1;
-      const pct = Math.max(0, Math.min(100, (state.elapsed / total) * 100));
-      progressBar.style.width = pct + '%';
-    }
-
-    function finalizePreviousLine(){
-      if(!state.song) return;
-      const prevIndex = state.currentIndex;
-      const line = state.song.lyrics[prevIndex];
-      if(!line) return;
-      const shouldScore = state.mode === 'solo' || (state.mode === 'duet' && prevIndex % 2 === 1);
-      if(!shouldScore) return;
-      const heard = normalizeText(state.heard);
-      const target = normalizeText(line.text);
-      const accuracy = similarityScore(target, heard);
-      const timing = Math.max(0, 100 - Math.min(100, Math.abs(state.elapsed - line.t) * 10));
-      const pronunciation = Math.round((accuracy * 0.7) + (timing * 0.3));
-      state.lineResults.push({ target: line.text, heard: state.heard || '', accuracy, timing, pronunciation });
-      recalcOverall();
-      state.heard = '';
-      heardText.textContent = state.micOn ? 'Dinleniyor…' : 'Mikrofon aktif olduğunda burada canlı algılanan sözler akacak.';
-    }
-
-    function finishPlayback(){
-      finalizePreviousLine();
-      pausePlayback();
-      refreshTurnUI();
-    }
-
-    function recalcOverall(){
-      if(!state.lineResults.length) return;
-      const sum = state.lineResults.reduce((acc, item)=>{
-        acc.pronunciation += item.pronunciation;
-        acc.timing += item.timing;
-        acc.accuracy += item.accuracy;
-        return acc;
-      }, { pronunciation:0, timing:0, accuracy:0 });
-      const n = state.lineResults.length;
-      const pronunciation = Math.round(sum.pronunciation / n);
-      const timing = Math.round(sum.timing / n);
-      const accuracy = Math.round(sum.accuracy / n);
-      const total = Math.round((pronunciation + timing + accuracy) / 3);
-      setScore({ pronunciation, timing, accuracy, total });
-    }
-
-    function setScore(score){
-      state.score = score;
-      $('scorePron').textContent = score.pronunciation;
-      $('scoreTiming').textContent = score.timing;
-      $('scoreAccuracy').textContent = score.accuracy;
-      $('scoreTotal').textContent = score.total;
-    }
-
-    function paintCoach(text){
-      const words = splitWords(text);
-      coachList.innerHTML = '';
-      if(!words.length){
-        coachList.innerHTML = '<div class="coach-word"><span>Satır yok</span><span>—</span></div>';
-        return;
-      }
-      const heardWords = new Set(splitWords(state.heard));
-      words.forEach(word => {
-        const good = heardWords.has(word.toLowerCase());
-        const row = document.createElement('div');
-        row.className = 'coach-word ' + (good ? 'good' : 'bad');
-        row.innerHTML = `<strong>${escapeHtml(word)}</strong><span>${good ? '✔ iyi' : '❌ tekrar et'}</span>`;
-        coachList.appendChild(row);
-      });
-    }
-
-    function setupSpeechRecognition(){
-      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if(!SR) {
-        micBtn.disabled = true;
-        micBtn.textContent = '🎤 Destek yok';
-        return;
-      }
-      const rec = new SR();
-      rec.continuous = true;
-      rec.interimResults = true;
-      rec.lang = langToSpeechLocale(state.lang);
-      rec.onresult = (event) => {
-        let interim = '';
-        for(let i = event.resultIndex; i < event.results.length; i++){
-          interim += (event.results[i][0].transcript || '') + ' ';
-        }
-        state.heard = interim.trim();
-        heardText.textContent = state.heard || 'Dinleniyor…';
-        if(state.song) paintCoach(state.song.lyrics[state.currentIndex]?.text || '');
-      };
-      rec.onend = () => {
-        if(state.micOn){
-          try { rec.lang = langToSpeechLocale(state.lang); rec.start(); } catch {}
-        }
-      };
-      state.recognition = rec;
-    }
-
-    function toggleMic(){
-      if(!state.recognition) return;
-      state.micOn = !state.micOn;
-      micBtn.textContent = state.micOn ? '🛑 Mikrofonu Kapat' : '🎤 Mikrofonu Aç';
-      try {
-        if(state.micOn){
-          state.recognition.lang = langToSpeechLocale(state.lang);
-          state.recognition.start();
-          heardText.textContent = 'Dinleniyor…';
-        } else {
-          state.recognition.stop();
-          heardText.textContent = 'Mikrofon aktif olduğunda burada canlı algılanan sözler akacak.';
-        }
-      } catch {}
-    }
-
-    function langToSpeechLocale(lang){
-      return ({ en:'en-US', de:'de-DE', fr:'fr-FR', it:'it-IT', es:'es-ES' })[lang] || 'en-US';
-    }
-
-    function formatTime(sec){
-      sec = Math.max(0, Math.floor(sec || 0));
-      const m = String(Math.floor(sec / 60)).padStart(2,'0');
-      const s = String(sec % 60).padStart(2,'0');
-      return `${m}:${s}`;
-    }
-
-    function normalizeText(str){
-      return String(str || '')
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^a-z0-9\s]/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim();
-    }
-
-    function splitWords(str){ return normalizeText(str).split(' ').filter(Boolean); }
-
-    function similarityScore(target, heard){
-      if(!target && !heard) return 100;
-      if(!target || !heard) return 0;
-      const a = splitWords(target);
-      const b = splitWords(heard);
-      if(!a.length) return 0;
-      let hits = 0;
-      const bag = [...b];
-      for(const word of a){
-        const idx = bag.indexOf(word);
-        if(idx >= 0){ hits++; bag.splice(idx, 1); }
-      }
-      return Math.round((hits / a.length) * 100);
-    }
-
-    function escapeHtml(str){
-      return String(str).replace(/[&<>"']/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[m]));
-    }
-
-    init();
-  </script></body>
+<script type="module">
+    import { mountShell } from "/js/ui_shell.js";
+    mountShell({ scroll:"none" });
+</script>
+</body>
 </html>
