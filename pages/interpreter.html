@@ -2,419 +2,159 @@
 <!doctype html>
 <html lang="tr">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-  <title>italkyAI • Interpreter Mode</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;400;600;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+<title>italkyAI • Interpreter Mode</title>
 
-  <style>
-    :root{
-      --ai-gradient: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
-      --bg: #050508;
-      --card: rgba(255,255,255,0.06);
-      --border: rgba(255,255,255,0.14);
-      --muted: rgba(255,255,255,0.58);
-      --safe-top: env(safe-area-inset-top, 0px);
-      --safe-bottom: env(safe-area-inset-bottom, 0px);
-      --r: 22px;
-    }
-    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none}
-    html,body{margin:0;width:100%;height:100%;background:var(--bg);color:#fff;font-family:Outfit,sans-serif;overflow:hidden}
-    .wrap{max-width:560px;margin:0 auto;min-height:100dvh;display:flex;flex-direction:column;padding:calc(16px + var(--safe-top)) 16px calc(16px + var(--safe-bottom));gap:14px}
-    .topbar{
-      display:flex;align-items:center;justify-content:space-between;gap:10px;
-      padding:12px 14px;border:1px solid var(--border);border-radius:18px;
-      background:linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
-      backdrop-filter: blur(12px);
-    }
-    .brand{font-family:"Space Grotesk",sans-serif;font-weight:700;letter-spacing:.4px}
-    .brand .ai{background:var(--ai-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-    .btn{
-      border:1px solid var(--border);
-      background:rgba(255,255,255,0.06);
-      color:#fff;
-      padding:10px 14px;border-radius:999px;
-      font-weight:900;font-size:12px;cursor:pointer;user-select:none;
-      backdrop-filter: blur(12px);
-    }
-    .hero{
-      padding:14px 14px 8px;
-      border:1px solid var(--border);
-      border-radius:var(--r);
-      background:rgba(255,255,255,0.04);
-    }
-    .h1{font-size:18px;font-weight:900;margin:0 0 6px;letter-spacing:.2px}
-    .p{margin:0;color:var(--muted);font-size:12.5px;line-height:1.35}
-    .grid{display:grid;grid-template-columns:1fr;gap:12px}
-    .card{
-      border:1px solid var(--border);
-      border-radius:var(--r);
-      background:var(--card);
-      padding:14px;
-      display:flex;flex-direction:column;gap:10px;
-      box-shadow: 0 16px 40px rgba(0,0,0,0.45);
-    }
-    .row{display:flex;align-items:center;justify-content:space-between;gap:10px}
-    .title{font-size:15px;font-weight:900}
-    .desc{color:var(--muted);font-size:12.5px;line-height:1.35}
-    .pill{
-      display:inline-flex;align-items:center;gap:8px;
-      padding:8px 12px;border-radius:999px;
-      border:1px solid rgba(255,255,255,0.12);
-      background:rgba(0,0,0,0.25);
-      font-size:11px;font-weight:900;color:rgba(255,255,255,0.86);
-    }
-    .cta{
-      margin-top:6px;
-      display:flex;gap:10px;flex-wrap:wrap;
-    }
-    .cta .primary{
-      flex:1;
-      border:none;
-      border-radius:16px;
-      padding:12px 14px;
-      font-weight:900;
-      cursor:pointer;
-      color:#0b0b12;
-      background:var(--ai-gradient);
-      box-shadow:0 16px 40px rgba(99,102,241,0.16);
-    }
-    .cta .ghost{
-      border:1px solid var(--border);
-      background:rgba(255,255,255,0.06);
-      color:#fff;
-      border-radius:16px;
-      padding:12px 14px;
-      font-weight:900;
-      cursor:pointer;
-    }
-    .footnote{
-      margin-top:auto;
-      border:1px solid rgba(255,255,255,0.10);
-      background:rgba(255,255,255,0.03);
-      border-radius:18px;
-      padding:12px 14px;
-      color:var(--muted);
-      font-size:12px;line-height:1.35;
-    }
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
-    /* Modal */
-    .modal-backdrop{
-      position:fixed;inset:0;
-      background:rgba(0,0,0,0.72);
-      display:none;align-items:center;justify-content:center;
-      padding:16px;
-      z-index:99999;
-    }
-    .modal-backdrop.show{display:flex}
-    .modal{
-      width:min(520px, 92vw);
-      border:1px solid var(--border);
-      border-radius:24px;
-      background:#0a0a10;
-      overflow:hidden;
-      box-shadow: 0 26px 80px rgba(0,0,0,0.92);
-    }
-    .modal-head{
-      display:flex;align-items:center;justify-content:space-between;
-      padding:14px 14px;
-      border-bottom:1px solid rgba(255,255,255,0.10);
-      font-weight:900;
-    }
-    .modal-body{padding:14px;display:flex;flex-direction:column;gap:12px}
-    .opt{
-      border:1px solid rgba(255,255,255,0.14);
-      background:rgba(255,255,255,0.06);
-      border-radius:18px;
-      padding:12px;
-      display:flex;flex-direction:column;gap:6px;
-      cursor:pointer;user-select:none;
-    }
-    .opt:hover{background:rgba(255,255,255,0.08)}
-    .opt .t{font-weight:900}
-    .opt .s{color:var(--muted);font-size:12.5px;line-height:1.35}
-    .closex{
-      cursor:pointer;
-      padding:8px 12px;border-radius:12px;
-      border:1px solid rgba(255,255,255,0.12);
-      background:rgba(255,255,255,0.06);
-      user-select:none;
-    }
+<style>
+html,body{
+margin:0;
+padding:0;
+height:100%;
+background:#000;
+font-family:'Outfit',sans-serif;
+overflow:hidden;
+}
 
-    /* QR sheet */
-    .qrbox{
-      border:1px solid rgba(255,255,255,0.12);
-      background:rgba(0,0,0,0.25);
-      border-radius:18px;
-      padding:12px;
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-    }
-    .code{
-      font-family: "Space Grotesk", monospace;
-      font-weight:700;
-      letter-spacing:2px;
-      font-size:16px;
-      opacity:.92;
-    }
-    .link{
-      word-break:break-all;
-      color:rgba(255,255,255,0.86);
-      font-size:12px;
-      opacity:.9;
-    }
-    .qrimg{
-      width:220px;height:220px;border-radius:16px;
-      border:1px solid rgba(255,255,255,0.12);
-      background:rgba(255,255,255,0.04);
-      display:flex;align-items:center;justify-content:center;
-      overflow:hidden;
-    }
-    .row2{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
-    .mini{
-      font-size:11.5px;color:var(--muted);line-height:1.35
-    }
-  </style>
+:root{
+--ai-grad:linear-gradient(135deg,#a5b4fc,#6366f1,#ec4899);
+}
+
+#pageContent{
+height:100%;
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+gap:24px;
+padding:20px;
+text-align:center;
+background:radial-gradient(circle at 50% 20%, #0a0a25 0%, #000 100%);
+}
+
+/* Title */
+
+.title{
+font-family:"Space Grotesk";
+font-size:30px;
+font-weight:900;
+color:#fff;
+}
+
+.title .ai{
+background:var(--ai-grad);
+-webkit-background-clip:text;
+-webkit-text-fill-color:transparent;
+}
+
+/* Card */
+
+.card{
+width:100%;
+max-width:420px;
+border-radius:28px;
+border:1px solid rgba(255,255,255,.15);
+background:rgba(255,255,255,.05);
+backdrop-filter:blur(25px);
+padding:28px;
+display:flex;
+flex-direction:column;
+gap:20px;
+}
+
+/* Buttons */
+
+.btn{
+height:56px;
+border-radius:16px;
+border:none;
+cursor:pointer;
+font-weight:800;
+font-size:15px;
+}
+
+.btn-main{
+background:var(--ai-grad);
+color:#000;
+}
+
+.btn-secondary{
+background:rgba(255,255,255,.08);
+color:#fff;
+border:1px solid rgba(255,255,255,.15);
+}
+
+/* Lang */
+
+.lang{
+height:52px;
+border-radius:14px;
+background:rgba(255,255,255,.08);
+border:1px solid rgba(255,255,255,.15);
+color:#fff;
+font-size:14px;
+padding:0 14px;
+}
+
+/* Description */
+
+.desc{
+font-size:12px;
+color:rgba(255,255,255,.5);
+line-height:1.4;
+}
+
+/* Icon */
+
+.icon{
+font-size:40px;
+}
+</style>
 </head>
 
 <body>
-  <div class="wrap">
-    <div class="topbar">
-      <div class="brand">italky<span class="ai">AI</span> • Interpreter</div>
-      <button class="btn" id="goHome">ANA SAYFA</button>
-    </div>
 
-    <div class="hero">
-      <p class="h1">Interpreter Mode</p>
-      <p class="p">Karşılıklı konuşun. italkyAI seçtiğiniz dillere göre çevirsin. Kulaklıkla en temiz deneyim.</p>
-    </div>
+<main id="pageContent">
 
-    <div class="grid">
-      <div class="card">
-        <div class="row">
-          <div class="title">📱 Tek Telefon</div>
-          <div class="pill">Paylaşarak konuş</div>
-        </div>
-        <div class="desc">Aynı cihazı elden ele vererek sırayla konuşun. Basit ve hızlı.</div>
-        <div class="cta">
-          <button class="primary" id="singleStart">Başlat</button>
-          <button class="ghost" id="singleInfo">Nasıl çalışır?</button>
-        </div>
-      </div>
+<div class="title">
+Interpreter <span class="ai">AI</span>
+</div>
 
-      <div class="card">
-        <div class="row">
-          <div class="title">📱↔️📱 İki Telefon (QR)</div>
-          <div class="pill">Kulaklık için ideal</div>
-        </div>
-        <div class="desc">Herkes kendi telefonundan konuşur. QR ile eşleşir. Jeton Host’tan düşer.</div>
-        <div class="cta">
-          <button class="primary" id="pairStart">Devam</button>
-          <button class="ghost" id="pairInfo">Host öder mi?</button>
-        </div>
-      </div>
-    </div>
+<div class="card">
 
-    <div class="footnote">
-      💡 İpucu: İki telefon modunda herkes kendi Bluetooth kulaklığını takarsa yankı azalır, çeviri daha net duyulur.
-    </div>
-  </div>
+<div class="icon">🎧</div>
 
-  <!-- Modal: Role Select / Host QR / Guest Scan -->
-  <div class="modal-backdrop" id="modal">
-    <div class="modal">
-      <div class="modal-head">
-        <div id="modalTitle">Rolünü Seç</div>
-        <div class="closex" id="modalClose">✕</div>
-      </div>
-      <div class="modal-body" id="modalBody"></div>
-    </div>
-  </div>
+<select id="myLang" class="lang">
+<option value="tr">🇹🇷 Türkçe</option>
+<option value="en">🇬🇧 English</option>
+<option value="de">🇩🇪 Deutsch</option>
+<option value="fr">🇫🇷 Français</option>
+<option value="it">🇮🇹 Italiano</option>
+<option value="es">🇪🇸 Español</option>
+</select>
 
-  <script type="module">
-    const HOME_PATH = "/pages/home.html";
-    const FACETOFACE_PATH = "/facetoface.html";
-    const JOIN_PATH = "/pages/join.html";
+<button class="btn btn-main" id="createRoom">
+Yeni Tercüman Oturumu Başlat
+</button>
 
-    // Senin backend base'in hazır:
-    const API_BASE = "https://italky-api.onrender.com";
+<button class="btn btn-secondary" id="joinRoom">
+QR ile Katıl
+</button>
 
-    const $ = (id)=>document.getElementById(id);
+<div class="desc">
+Kulaklık kullanmanız önerilir.  
+Konuşmalar anında çevrilerek karşı tarafın kulaklığına iletilir.
+</div>
 
-    const modal = $("modal");
-    const modalTitle = $("modalTitle");
-    const modalBody = $("modalBody");
+</div>
 
-    function openModal(title, html){
-      modalTitle.textContent = title;
-      modalBody.innerHTML = html;
-      modal.classList.add("show");
-    }
-    function closeModal(){ modal.classList.remove("show"); }
+</main>
 
-    $("modalClose").addEventListener("click", closeModal);
-    modal.addEventListener("click", (e)=>{ if(e.target === modal) closeModal(); });
+<script type="module" src="/js/interpreter_page.js"></script>
 
-    $("goHome").addEventListener("click", ()=> location.href = HOME_PATH);
-
-    $("singleInfo").addEventListener("click", ()=>{
-      openModal("Tek Telefon", `
-        <div class="mini">
-          • Aynı cihazı paylaşarak sırayla konuşursunuz.<br>
-          • Sistem half-duplex çalışır: biri konuşur → çeviri → diğeri konuşur.<br>
-          • Kulaklık takarsan daha net duyarsın.
-        </div>
-        <div class="cta" style="margin-top:12px">
-          <button class="primary" id="goSingle">Başlat</button>
-          <button class="ghost" id="close1">Kapat</button>
-        </div>
-      `);
-      document.getElementById("goSingle").onclick = () => location.href = FACETOFACE_PATH + "?mode=single";
-      document.getElementById("close1").onclick = closeModal;
-    });
-
-    $("singleStart").addEventListener("click", ()=>{
-      location.href = FACETOFACE_PATH + "?mode=single";
-    });
-
-    $("pairInfo").addEventListener("click", ()=>{
-      openModal("İki Telefon (Host Öder)", `
-        <div class="mini">
-          • Host oda açar ve QR üretir.<br>
-          • Guest QR okutup katılır.<br>
-          • Jeton sadece Host’tan düşer (tur başına).<br>
-          • Herkes kendi kulaklığından konuşur/dinler.
-        </div>
-        <div class="cta" style="margin-top:12px">
-          <button class="primary" id="goPair">Devam</button>
-          <button class="ghost" id="close2">Kapat</button>
-        </div>
-      `);
-      document.getElementById("goPair").onclick = () => showRoleSelect();
-      document.getElementById("close2").onclick = closeModal;
-    });
-
-    $("pairStart").addEventListener("click", ()=> showRoleSelect());
-
-    function showRoleSelect(){
-      openModal("Rolünü Seç", `
-        <div class="opt" id="asHost">
-          <div class="t">HOST (Odayı Aç / Öder)</div>
-          <div class="s">QR üretir. Jeton Host’tan düşer.</div>
-        </div>
-        <div class="opt" id="asGuest">
-          <div class="t">GUEST (QR ile Katıl / Ücretsiz)</div>
-          <div class="s">QR okutur, otomatik bağlanır.</div>
-        </div>
-        <div class="mini">Not: Uygulama yüklü değilse link sizi önce yüklemeye yönlendirir.</div>
-      `);
-
-      document.getElementById("asHost").onclick = () => showHostCreate();
-      document.getElementById("asGuest").onclick = () => showGuestScan();
-    }
-
-    // Basit QR üretimi için: ücretsiz bir görüntü endpoint'i kullanıyoruz (backend gerektirmez)
-    function makeQrImgData(url){
-      // NOT: Bu bir "QR servisi" kullanır. İstersen yarın backend'e alırız.
-      // Burada linki QR'a çevirmek için hızlı yol:
-      return "https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=" + encodeURIComponent(url);
-    }
-
-    function randomRoomId(){
-      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-      let out = "";
-      for(let i=0;i<5;i++) out += chars[Math.floor(Math.random()*chars.length)];
-      return out;
-    }
-
-    async function showHostCreate(){
-      // İdeal: backend'den room_id al.
-      // Eğer endpoint yoksa fallback: local room_id üret.
-      let room = "";
-      try{
-        const r = await fetch(API_BASE + "/api/f2f/room/create", { method:"POST" });
-        if(r.ok){
-          const j = await r.json().catch(()=>({}));
-          room = String(j.room_id || "").trim();
-        }
-      }catch{}
-
-      if(!room) room = randomRoomId();
-
-      const joinUrl = location.origin + JOIN_PATH + "?room=" + encodeURIComponent(room);
-      const qrImg = makeQrImgData(joinUrl);
-
-      openModal("Host • QR Göster", `
-        <div class="qrbox">
-          <div class="row2">
-            <div class="qrimg"><img src="${qrImg}" width="220" height="220" alt="QR"/></div>
-            <div style="flex:1;min-width:160px;display:flex;flex-direction:column;gap:10px">
-              <div class="mini">Partner bu QR’ı okutsun.</div>
-              <div class="code">${room}</div>
-              <div class="link">${joinUrl}</div>
-              <div class="cta" style="margin:0">
-                <button class="ghost" id="copyLink">Linki Kopyala</button>
-                <button class="ghost" id="copyCode">Kodu Kopyala</button>
-              </div>
-            </div>
-          </div>
-          <div class="mini">Partner bağlanınca otomatik Face-to-Face açılacak.</div>
-          <div class="cta" style="margin-top:2px">
-            <button class="primary" id="hostGo">Bekle & Başlat</button>
-            <button class="ghost" id="hostBack">Geri</button>
-          </div>
-        </div>
-      `);
-
-      document.getElementById("copyLink").onclick = async ()=> {
-        try{ await navigator.clipboard.writeText(joinUrl); }catch{}
-      };
-      document.getElementById("copyCode").onclick = async ()=> {
-        try{ await navigator.clipboard.writeText(room); }catch{}
-      };
-
-      // Host, bu butonla direkt face-to-face'e girer (room ve role parametresiyle)
-      document.getElementById("hostGo").onclick = () => {
-        location.href = FACETOFACE_PATH + "?mode=pair&role=host&room=" + encodeURIComponent(room);
-      };
-      document.getElementById("hostBack").onclick = showRoleSelect;
-    }
-
-    function showGuestScan(){
-      // Web üzerinde direkt kamera QR okuma için ek lib lazım; burada pratik çözüm:
-      // Guest’e "join.html" linkini açtırıyoruz. QR okutan zaten oraya düşer.
-      openModal("Guest • QR Okut", `
-        <div class="mini">
-          QR okutunca otomatik devam eder.<br><br>
-          Test için: elinde kod varsa buraya yazıp katılabilirsin.
-        </div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
-          <input id="roomInput" placeholder="Oda kodu (örn: R9K3X)" style="
-            flex:1;min-width:180px;padding:12px 12px;border-radius:16px;
-            border:1px solid rgba(255,255,255,0.14);
-            background:rgba(0,0,0,0.25);
-            color:#fff;font-weight:800;
-          "/>
-          <button class="primary" id="joinRoom">Katıl</button>
-        </div>
-        <div class="cta" style="margin-top:12px">
-          <button class="ghost" id="guestBack">Geri</button>
-          <button class="ghost" id="guestClose">Kapat</button>
-        </div>
-      `);
-
-      document.getElementById("joinRoom").onclick = () => {
-        const room = (document.getElementById("roomInput").value || "").trim().toUpperCase();
-        if(!room) return;
-        location.href = FACETOFACE_PATH + "?mode=pair&role=guest&room=" + encodeURIComponent(room);
-      };
-
-      document.getElementById("guestBack").onclick = showRoleSelect;
-      document.getElementById("guestClose").onclick = closeModal;
-    }
-  </script>
 </body>
 </html>
