@@ -176,7 +176,9 @@ function pointOrbTo(side) {
   frameRoot.classList.remove("to-top", "to-bot");
   frameRoot.classList.add(side === "top" ? "to-top" : "to-bot");
 }
-
+function getVoicePreference() {
+  return localStorage.getItem("tts_voice") || "auto";
+}
 function setMicState(side, state) {
   const mic = side === "top" ? topMic : botMic;
   if (!mic) return;
@@ -354,10 +356,11 @@ async function speakViaApi(text, langCode) {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      text: String(text || "").trim(),
-      lang: canonical(langCode),
-      user_id: userId,
-    }),
+  text: String(text || "").trim(),
+  lang: canonical(langCode),
+  user_id: userId,
+  voice: getVoicePreference(),
+}),
   });
 
   const j = await r.json().catch(() => null);
