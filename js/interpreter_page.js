@@ -6,17 +6,12 @@ mountShell({ scroll: "auto" });
 const $ = (id) => document.getElementById(id);
 
 const myLang = $("myLang");
-const peerLang = $("peerLang");
-const roomCode = $("roomCode");
-const createRoomBtn = $("createRoomBtn");
-const showQrBtn = $("showQrBtn");
-const joinCodeBtn = $("joinCodeBtn");
+const createQrBtn = $("createQrBtn");
 const scanQrBtn = $("scanQrBtn");
 const headsetDot = $("headsetDot");
 const headsetText = $("headsetText");
 
 const DEFAULT_MY = localStorage.getItem("italky_interpreter_my_lang") || "tr";
-const DEFAULT_PEER = localStorage.getItem("italky_interpreter_peer_lang") || "en";
 
 function canonical(code) {
   return String(code || "").toLowerCase().trim();
@@ -25,7 +20,7 @@ function canonical(code) {
 function buildLangOptions() {
   const langs = Array.isArray(LANG_POOL) ? LANG_POOL : [];
 
-  const html = langs
+  myLang.innerHTML = langs
     .map((l) => {
       const code = canonical(l.code);
       const flag = l.flag || "🌐";
@@ -34,34 +29,21 @@ function buildLangOptions() {
     })
     .join("");
 
-  myLang.innerHTML = html;
-  peerLang.innerHTML = html;
-
   myLang.value = DEFAULT_MY;
-  peerLang.value = DEFAULT_PEER;
-
   if (!myLang.value && langs[0]) myLang.value = canonical(langs[0].code);
-  if (!peerLang.value && langs[1]) peerLang.value = canonical(langs[1].code || langs[0].code);
 }
 
-function saveLangPrefs() {
+function saveLangPref() {
   try {
     localStorage.setItem("italky_interpreter_my_lang", myLang.value);
-    localStorage.setItem("italky_interpreter_peer_lang", peerLang.value);
   } catch {}
 }
 
-function randomRoomCode() {
+function randomToken() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let out = "";
-  for (let i = 0; i < 6; i++) {
-    out += chars[Math.floor(Math.random() * chars.length)];
-  }
+  for (let i = 0; i < 10; i++) out += chars[Math.floor(Math.random() * chars.length)];
   return out;
-}
-
-function setRoomCode(code) {
-  roomCode.textContent = code || "------";
 }
 
 function getHeadsetState() {
@@ -75,59 +57,41 @@ function getHeadsetState() {
 
 function paintHeadsetState() {
   const connected = getHeadsetState();
+  headsetDot.classList.remove("ok", "warn");
+
   if (connected) {
     headsetDot.classList.add("ok");
-    headsetText.textContent = "Kulaklık bağlı. Interpreter mod için uygun.";
+    headsetText.textContent = "Kulaklık bağlı. Interpreter Mode için uygun.";
   } else {
-    headsetDot.classList.remove("ok");
+    headsetDot.classList.add("warn");
     headsetText.textContent = "Kulaklık algılanmadı. Yine de devam edebilirsiniz.";
   }
 }
 
-function openRoom(code, mode = "host") {
+function goHost() {
+  saveLangPref();
+  const room = randomToken();
   const q = new URLSearchParams({
-    room: code,
+    room,
     my: myLang.value,
-    peer: peerLang.value,
-    mode,
+    mode: "host",
   });
-  location.href = `/pages/interpreter_room.html?${q.toString()}`;
+  location.href = `/pages/interpreter_qr_host.html?${q.toString()}`;
 }
 
-createRoomBtn?.addEventListener("click", () => {
-  saveLangPrefs();
-  const code = randomRoomCode();
-  setRoomCode(code);
-  openRoom(code, "host");
-});
+function goScan() {
+  saveLangPref();
+  const q = new URLSearchParams({
+    my: myLang.value,
+    mode: "guest",
+  });
+  location.href = `/pages/interpreter_qr_scan.html?${q.toString()}`;
+}
 
-showQrBtn?.addEventListener("click", () => {
-  saveLangPrefs();
-  const current = roomCode.textContent && roomCode.textContent !== "------"
-    ? roomCode.textContent.trim()
-    : randomRoomCode();
-  setRoomCode(current);
-  openRoom(current, "host");
-});
-
-joinCodeBtn?.addEventListener("click", () => {
-  saveLangPrefs();
-  const code = prompt("Oda kodunu giriniz:");
-  const clean = String(code || "").trim().toUpperCase();
-  if (!clean) return;
-  setRoomCode(clean);
-  openRoom(clean, "guest");
-});
-
-scanQrBtn?.addEventListener("click", () => {
-  saveLangPrefs();
-  alert("QR tarayıcı bir sonraki adımda bağlanacak.");
-});
-
-myLang?.addEventListener("change", saveLangPrefs);
-peerLang?.addEventListener("change", saveLangPrefs);
+createQrBtn?.addEventListener("click", goHost);
+scanQrBtn?.addEventListener("click", goScan);
+myLang?.addEventListener("change", saveLangPref);
 
 buildLangOptions();
 paintHeadsetState();
-setRoomCode("");
 setInterval(paintHeadsetState, 2500);
