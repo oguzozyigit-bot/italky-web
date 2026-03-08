@@ -15,7 +15,7 @@ async function boot() {
   }
 
   try {
-    await import("/js/voice_profile_page.js");
+    await import("/js/voice_profile_page.js?v=pro1");
   } catch (e) {
     console.error("[voice_profile_boot page import]", e);
   }
