@@ -8,18 +8,12 @@ const SAMPLE_COUNT = 6;
 const $ = (id) => document.getElementById(id);
 
 const recordBtn = $("recordBtn");
-const redoBtn = $("redoBtn");
 const nextBtn = $("nextBtn");
 const finishBtn = $("finishBtn");
 const backBtn = $("backBtn");
 
-const playPreviewBtn = $("playPreviewBtn");
-const deletePreviewBtn = $("deletePreviewBtn");
-
 const statusText = $("statusText");
 const timerText = $("timerText");
-const audioBox = $("audioBox");
-const audioPreview = $("audioPreview");
 const toastEl = $("toast");
 
 const sampleLabel = $("sampleLabel");
@@ -34,7 +28,6 @@ let audioChunks = [];
 let isRecording = false;
 let timerInt = null;
 let startedAt = 0;
-let currentObjectUrl = "";
 
 let currentIndex = 0;
 let currentBlob = null;
@@ -171,31 +164,6 @@ function stopTracks() {
   mediaStream = null;
 }
 
-function revokePreviewUrl() {
-  try {
-    if (currentObjectUrl) {
-      URL.revokeObjectURL(currentObjectUrl);
-      currentObjectUrl = "";
-    }
-  } catch {}
-}
-
-function clearPreview() {
-  currentBlob = null;
-  currentSeconds = 0;
-  currentMime = "";
-  revokePreviewUrl();
-
-  if (audioPreview) {
-    try { audioPreview.pause(); } catch {}
-    audioPreview.removeAttribute("src");
-    audioPreview.load();
-  }
-
-  audioBox?.classList.remove("show");
-  resetTimer();
-}
-
 function renderCompletedList() {
   if (!completedList) return;
 
@@ -226,11 +194,8 @@ function renderProgress() {
     progressFill.style.width = `${pct}%`;
   }
 
-  const allDone = doneCount === SAMPLE_COUNT;
-
-  if (redoBtn) redoBtn.disabled = !currentBlob || saving;
-  if (nextBtn) nextBtn.disabled = !(currentBlob && currentIndex < SAMPLE_COUNT - 1) || saving;
-  if (finishBtn) finishBtn.disabled = !allDone || saving;
+  if (nextBtn) nextBtn.disabled = !(recordings[currentIndex]?.blob && currentIndex < SAMPLE_COUNT - 1) || saving;
+  if (finishBtn) finishBtn.disabled = !(doneCount === SAMPLE_COUNT) || saving;
 }
 
 function applyCurrentSample(samples) {
@@ -239,22 +204,18 @@ function applyCurrentSample(samples) {
   if (sampleText) sampleText.textContent = text;
 
   const existing = recordings[currentIndex];
-  clearPreview();
+  resetTimer();
 
   if (existing?.blob) {
     currentBlob = existing.blob;
     currentSeconds = existing.seconds || 0;
     currentMime = existing.mime || "audio/webm";
-
-    try {
-      currentObjectUrl = URL.createObjectURL(currentBlob);
-      if (audioPreview) audioPreview.src = currentObjectUrl;
-      audioBox?.classList.add("show");
-    } catch {}
-
     if (timerText) timerText.textContent = fmtSec(currentSeconds);
-    if (statusText) statusText.textContent = "Kayıt tamamlandı • Dinle veya sonraki cümleye geç";
+    if (statusText) statusText.textContent = "Kayıt tamamlandı • Sonraki cümleye geç";
   } else {
+    currentBlob = null;
+    currentSeconds = 0;
+    currentMime = "";
     if (statusText) statusText.textContent = "Mikrofona dokun ve konuşmaya başla";
   }
 
@@ -277,7 +238,10 @@ async function startRecording() {
     });
 
     audioChunks = [];
-    clearPreview();
+    currentBlob = null;
+    currentSeconds = 0;
+    currentMime = "";
+    resetTimer();
 
     const mimeType = getSupportedMimeType();
     mediaRecorder = mimeType
@@ -322,16 +286,9 @@ async function startRecording() {
         mime: currentMime
       };
 
-      try {
-        revokePreviewUrl();
-        currentObjectUrl = URL.createObjectURL(currentBlob);
-        if (audioPreview) audioPreview.src = currentObjectUrl;
-        audioBox?.classList.add("show");
-      } catch {}
-
       isRecording = false;
       recordBtn?.classList.remove("listening");
-      if (statusText) statusText.textContent = "Kayıt tamamlandı • Dinle veya sonraki cümleye geç";
+      if (statusText) statusText.textContent = "Kayıt tamamlandı • Sonraki cümleye geç";
       stopTracks();
       clearInterval(timerInt);
 
@@ -510,7 +467,6 @@ async function bootPage() {
   const samples = SAMPLE_TEXTS[lang] || SAMPLE_TEXTS.tr;
 
   applyCurrentSample(samples);
-  if (statusText) statusText.textContent = "Mikrofona dokun ve konuşmaya başla";
 
   recordBtn?.addEventListener("click", async () => {
     if (saving) return;
@@ -519,45 +475,18 @@ async function bootPage() {
       stopRecording();
       return;
     }
+
     await startRecording();
-  });
-
-  redoBtn?.addEventListener("click", () => {
-    if (saving) return;
-    if (isRecording) stopRecording();
-
-    recordings[currentIndex] = { blob: null, seconds: 0, mime: "" };
-    clearPreview();
-    if (statusText) statusText.textContent = "Kayıt silindi • Mikrofona dokunarak yeniden başla";
-    renderProgress();
-    renderCompletedList();
-    toast("Bu cümle sıfırlandı");
-  });
-
-  deletePreviewBtn?.addEventListener("click", () => {
-    if (saving) return;
-    if (isRecording) stopRecording();
-
-    recordings[currentIndex] = { blob: null, seconds: 0, mime: "" };
-    clearPreview();
-    if (statusText) statusText.textContent = "Kayıt silindi • Mikrofona dokunarak yeniden başla";
-    renderProgress();
-    renderCompletedList();
-    toast("Kayıt silindi");
-  });
-
-  playPreviewBtn?.addEventListener("click", () => {
-    try{
-      audioPreview?.play?.();
-    }catch{}
   });
 
   nextBtn?.addEventListener("click", () => {
     if (saving) return;
-    if (!currentBlob) {
+
+    if (!recordings[currentIndex]?.blob) {
       toast("Önce bu cümleyi kaydet");
       return;
     }
+
     if (currentIndex >= SAMPLE_COUNT - 1) return;
 
     currentIndex += 1;
@@ -576,10 +505,9 @@ async function bootPage() {
     saving = true;
     finishBtn.disabled = true;
     nextBtn.disabled = true;
-    redoBtn.disabled = true;
     recordBtn.disabled = true;
 
-    if (statusText) statusText.textContent = "Ses profili oluşturuluyor...";
+    if (statusText) statusText.textContent = "Ses profili kaydediliyor...";
 
     try {
       await finishVoiceProfile(lang);
@@ -587,8 +515,8 @@ async function bootPage() {
       toast("Ses profili kaydedildi");
 
       setTimeout(() => {
-        location.href = "/pages/profile.html";
-      }, 900);
+        location.href = "/pages/home.html";
+      }, 700);
     } catch (e) {
       console.warn("[voice finish]", e);
       if (statusText) statusText.textContent = e?.message || "Profil oluşturulamadı";
@@ -613,7 +541,6 @@ window.addEventListener("beforeunload", () => {
   } catch {}
   stopTracks();
   clearInterval(timerInt);
-  revokePreviewUrl();
 });
 
 bootPage().catch((e) => {
