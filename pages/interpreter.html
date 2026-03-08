@@ -1,160 +1,414 @@
-<!-- FILE: /pages/interpreter.html -->
 <!doctype html>
 <html lang="tr">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+  <title>italkyAI • Interpreter AI</title>
 
-<title>italkyAI • Interpreter Mode</title>
+  <meta name="theme-color" content="#000000">
+  <style>
+    html,body{
+      background:#000 !important;
+      margin:0;
+      padding:0;
+      overflow:hidden;
+      font-family:'Outfit',sans-serif;
+    }
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=Space+Grotesk:wght@700&display=swap');
+  </style>
 
-<style>
-html,body{
-margin:0;
-padding:0;
-height:100%;
-background:#000;
-font-family:'Outfit',sans-serif;
-overflow:hidden;
-}
+  <style>
+    :root{
+      --ai-grad: linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
+      --glass-border: rgba(255,255,255,.12);
+      --glass-bg: rgba(255,255,255,.04);
+      --soft: rgba(255,255,255,.55);
+      --hard: rgba(255,255,255,.9);
+      --ok: #34d399;
+      --warn: #f59e0b;
+    }
 
-:root{
---ai-grad:linear-gradient(135deg,#a5b4fc,#6366f1,#ec4899);
-}
+    *{
+      box-sizing:border-box;
+      -webkit-tap-highlight-color:transparent;
+      outline:none;
+    }
 
-#pageContent{
-height:100%;
-display:flex;
-flex-direction:column;
-align-items:center;
-justify-content:center;
-gap:24px;
-padding:20px;
-text-align:center;
-background:radial-gradient(circle at 50% 20%, #0a0a25 0%, #000 100%);
-}
+    #pageContent{
+      min-height:100%;
+      display:flex;
+      flex-direction:column;
+      padding:16px 14px calc(var(--footerH,92px) + env(safe-area-inset-bottom) + 16px);
+      background:
+        radial-gradient(circle at 50% 18%, rgba(99,102,241,.18) 0%, rgba(0,0,0,0) 38%),
+        radial-gradient(circle at 50% 0%, rgba(236,72,153,.12) 0%, rgba(0,0,0,0) 28%),
+        #000;
+      gap:14px;
+      max-width:560px;
+      margin:0 auto;
+    }
 
-/* Title */
+    .hero{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      padding:8px 8px 2px;
+      gap:10px;
+    }
 
-.title{
-font-family:"Space Grotesk";
-font-size:30px;
-font-weight:900;
-color:#fff;
-}
+    .iconWrap{
+      width:104px;
+      height:104px;
+      position:relative;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
 
-.title .ai{
-background:var(--ai-grad);
--webkit-background-clip:text;
--webkit-text-fill-color:transparent;
-}
+    .ring{
+      position:absolute;
+      inset:-4px;
+      border-radius:50%;
+      padding:2px;
+      background:var(--ai-grad);
+      -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite:xor;
+              mask-composite:exclude;
+      animation:spin 14s linear infinite;
+      opacity:.95;
+    }
 
-/* Card */
+    .energy{
+      position:absolute;
+      inset:-12px;
+      border-radius:50%;
+      animation:spin 7s linear infinite;
+    }
 
-.card{
-width:100%;
-max-width:420px;
-border-radius:28px;
-border:1px solid rgba(255,255,255,.15);
-background:rgba(255,255,255,.05);
-backdrop-filter:blur(25px);
-padding:28px;
-display:flex;
-flex-direction:column;
-gap:20px;
-}
+    .dot{
+      position:absolute;
+      width:10px;
+      height:10px;
+      border-radius:50%;
+      filter:blur(1px);
+    }
 
-/* Buttons */
+    .dotA{
+      top:-4px;
+      left:50%;
+      transform:translateX(-50%);
+      background:#6366f1;
+      box-shadow:0 0 15px #6366f1;
+    }
 
-.btn{
-height:56px;
-border-radius:16px;
-border:none;
-cursor:pointer;
-font-weight:800;
-font-size:15px;
-}
+    .dotB{
+      bottom:-4px;
+      left:50%;
+      transform:translateX(-50%);
+      background:#ec4899;
+      box-shadow:0 0 15px #ec4899;
+    }
 
-.btn-main{
-background:var(--ai-grad);
-color:#000;
-}
+    .core{
+      width:78px;
+      height:78px;
+      border-radius:50%;
+      background:#000;
+      border:2px solid transparent;
+      background-image:linear-gradient(#000,#000),var(--ai-grad);
+      background-origin:border-box;
+      background-clip:content-box,border-box;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      z-index:2;
+      animation:breathe 4s ease-in-out infinite;
+    }
 
-.btn-secondary{
-background:rgba(255,255,255,.08);
-color:#fff;
-border:1px solid rgba(255,255,255,.15);
-}
+    .heroTitle{
+      font-family:'Space Grotesk',sans-serif;
+      font-size:28px;
+      font-weight:900;
+      color:#fff;
+      margin:0;
+      letter-spacing:-.8px;
+    }
 
-/* Lang */
+    .heroTitle .ai{
+      background:var(--ai-grad);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
 
-.lang{
-height:52px;
-border-radius:14px;
-background:rgba(255,255,255,.08);
-border:1px solid rgba(255,255,255,.15);
-color:#fff;
-font-size:14px;
-padding:0 14px;
-}
+    .heroDesc{
+      margin:0;
+      font-size:12px;
+      line-height:1.45;
+      color:rgba(255,255,255,.55);
+      max-width:420px;
+    }
 
-/* Description */
+    .panel{
+      background:var(--glass-bg);
+      border:1px solid var(--glass-border);
+      border-radius:28px;
+      backdrop-filter:blur(22px);
+      -webkit-backdrop-filter:blur(22px);
+      padding:14px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
 
-.desc{
-font-size:12px;
-color:rgba(255,255,255,.5);
-line-height:1.4;
-}
+    .panelTitle{
+      font-family:'Space Grotesk',sans-serif;
+      font-size:18px;
+      font-weight:800;
+      color:#fff;
+      margin:0;
+      letter-spacing:-.3px;
+    }
 
-/* Icon */
+    .row2{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
 
-.icon{
-font-size:40px;
-}
-</style>
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap:7px;
+    }
+
+    .label{
+      font-size:11px;
+      font-weight:900;
+      color:#a5b4fc;
+      letter-spacing:.4px;
+      text-transform:uppercase;
+    }
+
+    .select{
+      width:100%;
+      height:52px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.06);
+      color:#fff;
+      padding:0 14px;
+      font-size:14px;
+      font-weight:800;
+      appearance:none;
+    }
+
+    .select option{
+      color:#111;
+      font-weight:700;
+    }
+
+    .pairBox{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .roomCode{
+      height:54px;
+      border-radius:18px;
+      border:1px dashed rgba(255,255,255,.18);
+      background:rgba(255,255,255,.04);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:22px;
+      font-weight:1000;
+      letter-spacing:2px;
+      color:#fff;
+    }
+
+    .muted{
+      font-size:11px;
+      line-height:1.45;
+      color:rgba(255,255,255,.5);
+      margin:0;
+    }
+
+    .status{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding:10px 12px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.04);
+      font-size:12px;
+      font-weight:800;
+      color:#fff;
+    }
+
+    .statusDot{
+      width:10px;
+      height:10px;
+      border-radius:50%;
+      background:#ef4444;
+      box-shadow:0 0 10px rgba(239,68,68,.6);
+      flex:0 0 auto;
+    }
+
+    .statusDot.ok{
+      background:var(--ok);
+      box-shadow:0 0 10px rgba(52,211,153,.6);
+    }
+
+    .btnRow{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+
+    .btn{
+      min-height:54px;
+      border:none;
+      border-radius:18px;
+      cursor:pointer;
+      font-size:14px;
+      font-weight:1000;
+      letter-spacing:.2px;
+      transition:.18s ease;
+    }
+
+    .btn:active{
+      transform:scale(.985);
+    }
+
+    .btnMain{
+      background:var(--ai-grad);
+      color:#050510;
+    }
+
+    .btnGhost{
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.12);
+      color:#fff;
+    }
+
+    .warn{
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      padding:12px 14px;
+      border-radius:18px;
+      background:rgba(245,158,11,.08);
+      border:1px solid rgba(245,158,11,.18);
+      color:#fff;
+      font-size:12px;
+      line-height:1.4;
+    }
+
+    .warn b{
+      color:#fcd34d;
+    }
+
+    .hidden{
+      display:none !important;
+    }
+
+    @keyframes spin{
+      from{transform:rotate(0)}
+      to{transform:rotate(360deg)}
+    }
+
+    @keyframes breathe{
+      0%,100%{transform:scale(1)}
+      50%{transform:scale(1.05)}
+    }
+  </style>
 </head>
 
 <body>
-
 <main id="pageContent">
 
-<div class="title">
-Interpreter <span class="ai">AI</span>
-</div>
+  <section class="hero">
+    <div class="iconWrap">
+      <div class="ring"></div>
+      <div class="energy">
+        <div class="dot dotA"></div>
+        <div class="dot dotB"></div>
+      </div>
+      <div class="core">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M7 17a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3"/>
+          <path d="M9 14V7a3 3 0 0 1 6 0v7"/>
+          <path d="M4 11h3"/>
+          <path d="M17 11h3"/>
+        </svg>
+      </div>
+    </div>
 
-<div class="card">
+    <h1 class="heroTitle">Interpreter <span class="ai">AI</span></h1>
+    <p class="heroDesc">
+      Canlı tercüman kulaklık moduyla birebir anlık çeviri.
+      QR veya oda kodu ile eşleş, konuşma kulaklığa aksın.
+    </p>
+  </section>
 
-<div class="icon">🎧</div>
+  <section class="panel">
+    <h2 class="panelTitle">Dil Ayarları</h2>
 
-<select id="myLang" class="lang">
-<option value="tr">🇹🇷 Türkçe</option>
-<option value="en">🇬🇧 English</option>
-<option value="de">🇩🇪 Deutsch</option>
-<option value="fr">🇫🇷 Français</option>
-<option value="it">🇮🇹 Italiano</option>
-<option value="es">🇪🇸 Español</option>
-</select>
+    <div class="row2">
+      <div class="field">
+        <label class="label" for="myLang">Benim Dilim</label>
+        <select id="myLang" class="select"></select>
+      </div>
 
-<button class="btn btn-main" id="createRoom">
-Yeni Tercüman Oturumu Başlat
-</button>
+      <div class="field">
+        <label class="label" for="peerLang">Karşı Tarafın Dili</label>
+        <select id="peerLang" class="select"></select>
+      </div>
+    </div>
 
-<button class="btn btn-secondary" id="joinRoom">
-QR ile Katıl
-</button>
+    <div class="status" id="headsetStatus">
+      <span class="statusDot" id="headsetDot"></span>
+      <span id="headsetText">Kulaklık kontrol ediliyor...</span>
+    </div>
 
-<div class="desc">
-Kulaklık kullanmanız önerilir.  
-Konuşmalar anında çevrilerek karşı tarafın kulaklığına iletilir.
-</div>
+    <div class="warn">
+      <div>🎧</div>
+      <div>
+        <b>Öneri:</b> En iyi deneyim için kulaklık kullanın.
+        Kulaklık yoksa ses geri besleme riski oluşabilir.
+      </div>
+    </div>
+  </section>
 
-</div>
+  <section class="panel">
+    <h2 class="panelTitle">Eşleşme</h2>
+
+    <div class="pairBox">
+      <div class="roomCode" id="roomCode">------</div>
+      <p class="muted">
+        Yeni oturum başlatınca 6 karakterli bir oda kodu oluşur.
+        Karşı taraf bu kodla ya da QR ile bağlanır.
+      </p>
+    </div>
+
+    <div class="btnRow">
+      <button class="btn btnMain" id="createRoomBtn" type="button">Yeni Oturum Başlat</button>
+      <button class="btn btnGhost" id="showQrBtn" type="button">QR Göster</button>
+    </div>
+
+    <div class="btnRow">
+      <button class="btn btnGhost" id="joinCodeBtn" type="button">Kod ile Katıl</button>
+      <button class="btn btnGhost" id="scanQrBtn" type="button">QR ile Katıl</button>
+    </div>
+  </section>
 
 </main>
 
 <script type="module" src="/js/interpreter_page.js"></script>
-
 </body>
 </html>
