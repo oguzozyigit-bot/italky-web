@@ -169,16 +169,12 @@ let recognizer = null;
 let recordingSide = null;
 let currentAudio = null;
 
-/* ===== UI ===== */
-
 function pointOrbTo(side) {
   if (!frameRoot) return;
   frameRoot.classList.remove("to-top", "to-bot");
   frameRoot.classList.add(side === "top" ? "to-top" : "to-bot");
 }
-function getVoicePreference() {
-  return localStorage.getItem("tts_voice") || "auto";
-}
+
 function setMicState(side, state) {
   const mic = side === "top" ? topMic : botMic;
   if (!mic) return;
@@ -270,8 +266,6 @@ function bounceToReady(delay = 1800) {
   }, delay);
 }
 
-/* ===== Language UI ===== */
-
 function refreshLangLabels() {
   if (topLangTxt) topLangTxt.textContent = labelChip(topLang);
   if (botLangTxt) botLangTxt.textContent = labelChip(botLang);
@@ -319,8 +313,6 @@ function renderPop(side) {
   });
 }
 
-/* ===== Audio / Backend TTS ===== */
-
 function stopAudio() {
   try {
     currentAudio?.pause?.();
@@ -337,6 +329,10 @@ async function getCurrentUserId() {
   } catch {
     return null;
   }
+}
+
+function getVoicePreference() {
+  return localStorage.getItem("tts_voice") || "auto";
 }
 
 function base64ToBlob(base64, mime = "audio/mpeg") {
@@ -356,11 +352,12 @@ async function speakViaApi(text, langCode) {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-  text: String(text || "").trim(),
-  lang: canonical(langCode),
-  user_id: userId,
-  voice: getVoicePreference(),
-}),
+      text: String(text || "").trim(),
+      lang: canonical(langCode),
+      user_id: userId,
+      module: "facetoface",
+      voice: getVoicePreference(),
+    }),
   });
 
   const j = await r.json().catch(() => null);
@@ -442,8 +439,6 @@ async function speak(text, langCode) {
   }
 }
 
-/* ===== Scroll ===== */
-
 function keepLatestVisible(side) {
   const wrap = side === "top" ? topBody : botBody;
   if (!wrap) return;
@@ -459,8 +454,6 @@ function keepLatestVisible(side) {
   setTimeout(apply, 30);
   setTimeout(apply, 120);
 }
-
-/* ===== Bubbles ===== */
 
 function addBubble(side, kind, text, opts = {}) {
   const wrap = side === "top" ? topBody : botBody;
@@ -512,8 +505,6 @@ function clearLatest(side) {
   });
 }
 
-/* ===== Backend ===== */
-
 async function translateText(text, from, to) {
   const src = canonical(from);
   const dst = canonical(to);
@@ -542,8 +533,6 @@ async function translateText(text, from, to) {
     return null;
   }
 }
-
-/* ===== Speech ===== */
 
 function buildRecognizer(langCode) {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -667,8 +656,6 @@ function toggleRecording(side) {
   setListeningUI(side);
   startRecording(side);
 }
-
-/* ===== Bind ===== */
 
 function bind() {
   setFrameVisual("ready");
