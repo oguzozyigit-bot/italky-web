@@ -1,6 +1,8 @@
 import { LANG_POOL } from "/js/lang_pool_full.js";
 
 const API_BASE = "https://italky-api.onrender.com";
+const WS_BASE = "wss://italky-api.onrender.com/ws/interpreter";
+
 const $ = (id)=>document.getElementById(id);
 
 const chat = $("chat");
@@ -16,6 +18,7 @@ const liveText = $("liveText");
 let recognizer = null;
 let isListening = false;
 let ttsDebounceAt = 0;
+let socket = null;
 
 const BCP = {
   tr:"tr-TR",
@@ -40,7 +43,7 @@ function getParams(){
     room: (u.searchParams.get("room") || "").trim(),
     my: canonical(u.searchParams.get("my") || "tr"),
     peer: canonical(u.searchParams.get("peer") || "en"),
-    mode: (u.searchParams.get("mode") || "host").trim()
+    role: (u.searchParams.get("role") || "host").trim()
   };
 }
 
@@ -62,7 +65,7 @@ function setTopInfo(){
   const my = getLangMeta(p.my);
   const peer = getLangMeta(p.peer);
   langPair.textContent = `${my.flag} ${my.name} → ${peer.flag} ${peer.name}`;
-  setState("ready", "Bağlantı aktif. Yazabilir veya konuşabilirsiniz.");
+  setState("ready", "Bağlantı kuruluyor...");
 }
 
 function setState(type, text){
@@ -70,6 +73,7 @@ function setState(type, text){
     type === "ready" ? "Hazır" :
     type === "listening" ? "Dinleniyor" :
     type === "translating" ? "Çevriliyor" :
+    type === "offline" ? "Bağlantı Yok" :
     "Uyarı";
 
   helperText.textContent = text || "";
@@ -120,9 +124,7 @@ function speak(text, langCode){
 
 function keepLatestVisible(){
   const apply = ()=>{
-    try{
-      chat.scrollTop = chat.scrollHeight + 9999;
-    }catch{}
+    try{ chat.scrollTop = chat.scrollHeight + 9999; }catch{}
   };
   apply();
   requestAnimationFrame(apply);
@@ -164,10 +166,9 @@ function addUserBubble(text){
   row.appendChild(inner);
   chat.appendChild(row);
   keepLatestVisible();
-  return row;
 }
 
-function addBotBubble(originalText, translatedText, opts = {}){
+function addBotBubble(originalText, translatedText, speakLang){
   const row = document.createElement("div");
   row.className = "bubble bot latest-bot";
 
@@ -203,7 +204,7 @@ function addBotBubble(originalText, translatedText, opts = {}){
   spk.addEventListener("click", (e)=>{
     e.preventDefault();
     e.stopPropagation();
-    speak(translated.textContent || "", opts.speakLang || getParams().peer);
+    speak(translated.textContent || "", speakLang);
   });
 
   inner.appendChild(spk);
@@ -213,54 +214,6 @@ function addBotBubble(originalText, translatedText, opts = {}){
   keepLatestVisible();
 
   return { row, translated, original };
-}
-
-async function translateText(text, from, to){
-  try{
-    const r = await fetch(`${API_BASE}/api/translate_ai`, {
-      method: "POST",
-      headers: { "Content-Type":"application/json" },
-      body: JSON.stringify({
-        text: String(text || "").trim(),
-        from_lang: canonical(from),
-        to_lang: canonical(to)
-      })
-    });
-
-    if(!r.ok) return null;
-    const j = await r.json().catch(()=>null);
-    return String(j?.translated || "").trim() || null;
-  }catch{
-    return null;
-  }
-}
-
-async function processMessage(rawText){
-  const p = getParams();
-  const text = String(rawText || "").trim();
-  if(!text) return;
-
-  addUserBubble(text);
-  clearLatestBot();
-
-  setState("translating", "Mesaj çevriliyor...");
-
-  const placeholder = addBotBubble(text, "Çevriliyor...", { speakLang: p.peer });
-  const translated = await translateText(text, p.my, p.peer);
-
-  if(!translated){
-    placeholder.translated.textContent = "⚠️ Çeviri servisine ulaşılamadı";
-    setState("warn", "Çeviri başarısız oldu.");
-    setTimeout(()=>{
-      setState("ready", "Bağlantı aktif. Yazabilir veya konuşabilirsiniz.");
-    }, 1500);
-    return;
-  }
-
-  placeholder.translated.textContent = translated;
-  speak(translated, p.peer);
-
-  setState("ready", "Bağlantı aktif. Yazabilir veya konuşabilirsiniz.");
 }
 
 function buildRecognizer(langCode){
@@ -280,6 +233,107 @@ function stopRecognizer(){
     try{ recognizer.stop(); }catch{}
     recognizer = null;
   }
+}
+
+function connectSocket(){
+  const p = getParams();
+  socket = new WebSocket(`${WS_BASE}/${encodeURIComponent(p.room)}?role=${encodeURIComponent(p.role)}&lang=${encodeURIComponent(p.my)}`);
+
+  socket.onopen = ()=>{
+    setState("ready", "Bağlantı aktif. Yazabilir veya konuşabilirsiniz.");
+    addMeta("Interpreter odasına bağlandınız.");
+  };
+
+  socket.onclose = ()=>{
+    setState("offline", "Bağlantı koptu.");
+  };
+
+  socket.onerror = ()=>{
+    setState("offline", "Bağlantı hatası.");
+  };
+
+  socket.onmessage = (evt)=>{
+    try{
+      const data = JSON.parse(evt.data || "{}");
+
+      if(data.type === "presence"){
+        setState("ready", "Bağlantı aktif. Yazabilir veya konuşabilirsiniz.");
+        return;
+      }
+
+      if(data.type === "peer_joined"){
+        addMeta("Karşı taraf bağlandı.");
+        return;
+      }
+
+      if(data.type === "peer_left"){
+        addMeta("Karşı taraf odadan çıktı.");
+        return;
+      }
+
+      if(data.type === "typing"){
+        if(data.sender !== getParams().role){
+          setState("ready", "Karşı taraf yazıyor...");
+          setTimeout(()=>{
+            setState("ready", "Bağlantı aktif. Yazabilir veya konuşabilirsiniz.");
+          }, 900);
+        }
+        return;
+      }
+
+      if(data.type === "translated_message"){
+        const me = getParams().role;
+        if(data.sender === me) return;
+
+        clearLatestBot();
+        addBotBubble(data.original_text || "", data.translated_text || "", getParams().my);
+        speak(data.translated_text || "", getParams().my);
+        setState("ready", "Yeni çeviri geldi.");
+        return;
+      }
+
+      if(data.type === "error"){
+        addMeta(`Hata: ${data.message || "Bilinmeyen hata"}`);
+      }
+    }catch{}
+  };
+}
+
+function sendSocketText(text){
+  if(!socket || socket.readyState !== 1) return false;
+
+  const p = getParams();
+
+  socket.send(JSON.stringify({
+    type: "text_message",
+    text,
+    from_lang: p.my,
+    to_lang: p.peer
+  }));
+
+  return true;
+}
+
+function sendTyping(){
+  if(!socket || socket.readyState !== 1) return;
+  socket.send(JSON.stringify({ type: "typing" }));
+}
+
+async function processMessage(rawText){
+  const text = String(rawText || "").trim();
+  if(!text) return;
+
+  addUserBubble(text);
+  setState("translating", "Mesaj gönderiliyor ve çevriliyor...");
+
+  const ok = sendSocketText(text);
+  if(!ok){
+    addMeta("Mesaj gönderilemedi. Bağlantı yok.");
+    setState("offline", "Bağlantı koptu.");
+    return;
+  }
+
+  setState("ready", "Bağlantı aktif. Yazabilir veya konuşabilirsiniz.");
 }
 
 function startListening(){
@@ -364,7 +418,10 @@ micBtn?.addEventListener("click", (e)=>{
 
 sendBtn?.addEventListener("click", sendTypedMessage);
 
-msgInput?.addEventListener("input", autoGrowTextarea);
+msgInput?.addEventListener("input", ()=>{
+  autoGrowTextarea();
+  sendTyping();
+});
 
 msgInput?.addEventListener("keydown", async (e)=>{
   if(e.key === "Enter" && !e.shiftKey){
@@ -375,4 +432,4 @@ msgInput?.addEventListener("keydown", async (e)=>{
 
 setTopInfo();
 autoGrowTextarea();
-addMeta("Interpreter odasına bağlandınız.");
+connectSocket();
