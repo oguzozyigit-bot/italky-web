@@ -14,7 +14,6 @@
       overflow:hidden;
       font-family:'Outfit',sans-serif;
     }
-
     @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=Space+Grotesk:wght@700&display=swap');
   </style>
 
@@ -24,7 +23,6 @@
       --glass-border: rgba(255,255,255,.12);
       --glass-bg: rgba(255,255,255,.04);
       --soft: rgba(255,255,255,.55);
-      --hard: rgba(255,255,255,.9);
       --ok: #34d399;
       --warn: #f59e0b;
     }
@@ -172,12 +170,6 @@
       letter-spacing:-.3px;
     }
 
-    .row2{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:10px;
-    }
-
     .field{
       display:flex;
       flex-direction:column;
@@ -210,33 +202,6 @@
       font-weight:700;
     }
 
-    .pairBox{
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-    }
-
-    .roomCode{
-      height:54px;
-      border-radius:18px;
-      border:1px dashed rgba(255,255,255,.18);
-      background:rgba(255,255,255,.04);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:22px;
-      font-weight:1000;
-      letter-spacing:2px;
-      color:#fff;
-    }
-
-    .muted{
-      font-size:11px;
-      line-height:1.45;
-      color:rgba(255,255,255,.5);
-      margin:0;
-    }
-
     .status{
       display:flex;
       align-items:center;
@@ -262,6 +227,11 @@
     .statusDot.ok{
       background:var(--ok);
       box-shadow:0 0 10px rgba(52,211,153,.6);
+    }
+
+    .statusDot.warn{
+      background:var(--warn);
+      box-shadow:0 0 10px rgba(245,158,11,.6);
     }
 
     .btnRow{
@@ -313,10 +283,6 @@
       color:#fcd34d;
     }
 
-    .hidden{
-      display:none !important;
-    }
-
     @keyframes spin{
       from{transform:rotate(0)}
       to{transform:rotate(360deg)}
@@ -351,24 +317,17 @@
 
     <h1 class="heroTitle">Interpreter <span class="ai">AI</span></h1>
     <p class="heroDesc">
-      Canlı tercüman kulaklık moduyla birebir anlık çeviri.
-      QR veya oda kodu ile eşleş, konuşma kulaklığa aksın.
+      Kendi dilini seç, QR oluştur ya da QR okut.
+      Karşı taraf bağlanınca canlı tercüman odasına otomatik geçilir.
     </p>
   </section>
 
   <section class="panel">
-    <h2 class="panelTitle">Dil Ayarları</h2>
+    <h2 class="panelTitle">Benim Dilim</h2>
 
-    <div class="row2">
-      <div class="field">
-        <label class="label" for="myLang">Benim Dilim</label>
-        <select id="myLang" class="select"></select>
-      </div>
-
-      <div class="field">
-        <label class="label" for="peerLang">Karşı Tarafın Dili</label>
-        <select id="peerLang" class="select"></select>
-      </div>
+    <div class="field">
+      <label class="label" for="myLang">Dil Seçimi</label>
+      <select id="myLang" class="select"></select>
     </div>
 
     <div class="status" id="headsetStatus">
@@ -379,31 +338,18 @@
     <div class="warn">
       <div>🎧</div>
       <div>
-        <b>Öneri:</b> En iyi deneyim için kulaklık kullanın.
-        Kulaklık yoksa ses geri besleme riski oluşabilir.
+        <b>Öneri:</b> Ortam kalabalıksa kulaklıkla daha temiz sonuç alırsın.
+        İstersen mikrofonla konuş, istersen canlı odada yazarak anlaş.
       </div>
     </div>
   </section>
 
   <section class="panel">
-    <h2 class="panelTitle">Eşleşme</h2>
-
-    <div class="pairBox">
-      <div class="roomCode" id="roomCode">------</div>
-      <p class="muted">
-        Yeni oturum başlatınca 6 karakterli bir oda kodu oluşur.
-        Karşı taraf bu kodla ya da QR ile bağlanır.
-      </p>
-    </div>
+    <h2 class="panelTitle">Bağlantı</h2>
 
     <div class="btnRow">
-      <button class="btn btnMain" id="createRoomBtn" type="button">Yeni Oturum Başlat</button>
-      <button class="btn btnGhost" id="showQrBtn" type="button">QR Göster</button>
-    </div>
-
-    <div class="btnRow">
-      <button class="btn btnGhost" id="joinCodeBtn" type="button">Kod ile Katıl</button>
-      <button class="btn btnGhost" id="scanQrBtn" type="button">QR ile Katıl</button>
+      <button class="btn btnMain" id="createQrBtn" type="button">QR Oluştur</button>
+      <button class="btn btnGhost" id="scanQrBtn" type="button">QR Oku</button>
     </div>
   </section>
 
