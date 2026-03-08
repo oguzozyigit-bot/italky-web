@@ -2,37 +2,32 @@
 
 import { initProfilePage } from "/js/profile_page.js";
 
-async function boot(){
+async function boot() {
   let setHeaderTokensSafe = () => {};
 
-  // ui_shell opsiyonel
-  try{
+  try {
     const shell = await import("/js/ui_shell.js");
 
-    if(typeof shell.mountShell === "function"){
-      try{
+    if (typeof shell.mountShell === "function") {
+      try {
         shell.mountShell({ scroll: "auto" });
-      }catch(e){
-        console.error("[profile_boot mountShell call]", e);
+      } catch (e) {
+        console.warn("[profile_boot mountShell]", e);
       }
     }
 
-    if(typeof shell.setHeaderTokens === "function"){
+    if (typeof shell.setHeaderTokens === "function") {
       setHeaderTokensSafe = shell.setHeaderTokens;
     }
-  }catch(e){
-    console.warn("[profile_boot ui_shell optional load fail]", e);
+  } catch (e) {
+    console.warn("[profile_boot shell optional]", e);
   }
 
-  try{
+  try {
     await initProfilePage({ setHeaderTokens: setHeaderTokensSafe });
-  }catch(e){
+  } catch (e) {
     console.error("[profile_boot initProfilePage]", e);
   }
-
-  document.getElementById("buyTokensBtn")?.addEventListener("click", ()=>{
-    location.href = "/pages/jetonbuy.html";
-  });
 }
 
 boot();
