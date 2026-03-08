@@ -18,12 +18,12 @@
   --green: #34d399;
   --purple: #a855f7;
   --amber: #f59e0b;
+  --rose: #fb7185;
   --glass-border: rgba(255, 255, 255, 0.12);
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
 
-/* ✅ ui_shell ile uyum: 100vh + padding kaldır */
 #pageContent {
   height: 100%;
   display: flex;
@@ -39,21 +39,18 @@
   padding: 10px 14px;
 }
 
-/* ===== 1. FACETOFACE PORTAL ===== */
-.f2f-portal {
+/* ===== 1. ORB (SABİT GÖRSEL) ===== */
+.f2f-visual {
   flex: 0 0 auto;
   display: flex;
-  flex-direction: column;
-  align-items: center;
   justify-content: center;
   cursor: pointer;
-  padding: 10px 0;
-  margin-bottom: 5px;
+  padding: 15px 0 5px 0;
 }
 
 .neural-orb {
-  width: 110px;
-  height: 110px;
+  width: 100px;
+  height: 100px;
   position: relative;
   display: flex;
   align-items: center;
@@ -71,40 +68,9 @@
   animation: rotateOrb 15s linear infinite;
 }
 
-.orbit-energy {
-  position: absolute;
-  inset: -12px;
-  border-radius: 50%;
-  animation: rotateOrb 8s linear infinite;
-}
-
-.e-ball {
-  position: absolute;
-  width: 11px;
-  height: 11px;
-  border-radius: 50%;
-  filter: blur(1px);
-}
-
-.ball-l {
-  top: -5px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #1e3a8a;
-  box-shadow: 0 0 15px #1e3a8a;
-}
-
-.ball-b {
-  bottom: -5px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #801336;
-  box-shadow: 0 0 15px #801336;
-}
-
 .ai-core {
-  width: 82px;
-  height: 82px;
+  width: 75px;
+  height: 75px;
   background: #000;
   border-radius: 50%;
   background-image: linear-gradient(#000, #000), var(--ai-grad);
@@ -118,220 +84,89 @@
   z-index: 10;
 }
 
-.f2f-title {
-  font-family: 'Space Grotesk';
-  font-size: 24px;
-  font-weight: 900;
-  color: #fff;
-  margin-top: 10px;
-  letter-spacing: -1px;
-}
-
-.f2f-title .ai {
-  background: var(--ai-grad);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-/* ===== 2. DİĞER MODÜLLER ===== */
+/* ===== 2. HUB CARDS (YENİ F2F BUTONU DAHİL) ===== */
 .hub-cards {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .trans-card {
   flex: 1;
   position: relative;
-  border-radius: 30px;
+  border-radius: 24px;
   border: 1px solid var(--glass-border);
   overflow: hidden;
   cursor: pointer;
   display: flex;
   align-items: center;
-  padding: 0 24px;
+  padding: 0 20px;
   background: rgba(255, 255, 255, 0.03);
   backdrop-filter: blur(25px);
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.3s ease;
 }
 
 .trans-card:active {
-  transform: scale(0.98);
-  filter: brightness(1.2);
+  transform: scale(0.97);
+  background: rgba(255, 255, 255, 0.08);
 }
 
-/* Renkler */
+/* Özel Renkler */
+.f2f-card { background: linear-gradient(145deg, rgba(236, 72, 153, 0.15) 0%, rgba(0,0,0,0.6) 100%); border-color: rgba(236, 72, 153, 0.3); }
 .text-card { background: linear-gradient(145deg, rgba(96, 165, 250, 0.1) 0%, rgba(0,0,0,0.5) 100%); }
 .walkie-card { background: linear-gradient(145deg, rgba(52, 211, 153, 0.1) 0%, rgba(0,0,0,0.5) 100%); }
 .interpreter-card { background: linear-gradient(145deg, rgba(245, 158, 11, 0.12) 0%, rgba(0,0,0,0.5) 100%); }
 .offline-card { background: linear-gradient(145deg, rgba(192, 132, 252, 0.1) 0%, rgba(0,0,0,0.5) 100%); }
 
-/* ===== ANİMASYONLAR ===== */
+/* Animasyonlu İkonlar */
 
-/* 1. Metin Çeviri */
-.matrix-line {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 2px;
-  background: var(--blue);
-  box-shadow: 0 0 15px var(--blue);
-  animation: scanLine 3s linear infinite;
-  opacity: 0.5;
-}
-
-.text-blocks {
-  width: 60px;
+/* F2F Icon Animation */
+.f2f-icon {
+  width: 55px;
   height: 40px;
-  border: 1px solid var(--blue);
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 4px;
-  margin-right: 20px;
-  position: relative;
-}
-
-.line {
-  height: 3px;
-  background: rgba(255,255,255,0.2);
-  width: 100%;
-  border-radius: 1px;
-  animation: textTyping 2s infinite alternate;
-}
-
-/* 2. Walkie Talkie */
-.eq-container {
-  width: 60px;
-  height: 40px;
-  display: flex;
-  align-items: flex-end;
-  gap: 4px;
-  margin-right: 20px;
-}
-
-.eq-bar {
-  flex: 1;
-  background: var(--green);
-  border-radius: 2px 2px 0 0;
-  animation: eqPulse 0.5s infinite alternate;
-}
-
-/* 3. Interpreter */
-.interpreter-icon {
-  width: 62px;
-  height: 42px;
-  margin-right: 20px;
-  position: relative;
+  margin-right: 15px;
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 3px;
 }
-
-.ear-left, .ear-right {
-  position: absolute;
-  width: 18px;
-  height: 18px;
-  border: 2px solid var(--amber);
-  border-radius: 50%;
-  top: 11px;
-  box-shadow: 0 0 12px rgba(245,158,11,.28);
-}
-
-.ear-left { left: 2px; }
-.ear-right { right: 2px; }
-
-.link-wave {
-  position: absolute;
-  width: 26px;
-  height: 26px;
-  border-top: 2px solid rgba(245,158,11,.9);
-  border-radius: 50%;
-  top: 1px;
-  left: 50%;
-  transform: translateX(-50%);
-  animation: pulseBridge 1.8s infinite ease-in-out;
-}
-
-.mini-wave {
-  position: absolute;
-  width: 6px;
-  height: 16px;
-  background: var(--amber);
-  border-radius: 4px;
-  top: 13px;
-  animation: miniTalk 0.7s infinite ease-in-out alternate;
-}
-
-.mini-wave.left { left: 23px; }
-.mini-wave.right { right: 23px; animation-delay: .25s; }
-
-/* 4. Offline */
-.flow-container {
-  width: 60px;
-  height: 40px;
-  position: relative;
-  margin-right: 20px;
-  overflow: hidden;
-  border: 1px dashed var(--purple);
-  border-radius: 8px;
-}
-
-.flow-dot {
-  position: absolute;
+.f2f-pulse {
   width: 4px;
-  height: 4px;
-  background: var(--purple);
-  border-radius: 50%;
-  left: 50%;
-  transform: translateX(-50%);
-  animation: flowDown 1.5s infinite linear;
+  height: 15px;
+  background: var(--rose);
+  border-radius: 10px;
+  animation: f2fWave 1s infinite ease-in-out alternate;
 }
+
+/* Metin Çeviri */
+.text-blocks { width: 55px; height: 35px; border: 1px solid var(--blue); display: flex; flex-direction: column; gap: 4px; padding: 4px; margin-right: 15px; }
+.line { height: 2px; background: rgba(255,255,255,0.3); width: 100%; animation: textTyping 2s infinite alternate; }
+
+/* Walkie Talkie */
+.eq-container { width: 55px; height: 35px; display: flex; align-items: flex-end; gap: 3px; margin-right: 15px; }
+.eq-bar { flex: 1; background: var(--green); border-radius: 2px; animation: eqPulse 0.5s infinite alternate; }
+
+/* Interpreter */
+.interpreter-icon { width: 55px; height: 40px; margin-right: 15px; position: relative; display: flex; align-items: center; justify-content: center; }
+.ear-left, .ear-right { position: absolute; width: 14px; height: 14px; border: 2px solid var(--amber); border-radius: 50%; top: 10px; }
+.ear-left { left: 5px; } .ear-right { right: 5px; }
+.mini-wave { position: absolute; width: 4px; height: 12px; background: var(--amber); border-radius: 4px; animation: miniTalk 0.7s infinite alternate; }
+.mini-wave.left { left: 22px; } .mini-wave.right { right: 22px; animation-delay: .2s; }
 
 /* Keyframes */
 @keyframes rotateOrb { from { transform: rotate(0); } to { transform: rotate(360deg); } }
-@keyframes aiBreathe { 0%,100% { transform: scale(1); } 50% { transform: scale(1.06); } }
-@keyframes scanLine { 0% { top: 0; } 100% { top: 100%; } }
+@keyframes aiBreathe { 0%,100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.05); opacity: 1; } }
+@keyframes f2fWave { 0% { height: 10px; transform: scaleY(0.8); } 100% { height: 25px; transform: scaleY(1.2); } }
 @keyframes textTyping { 0% { width: 20%; } 100% { width: 100%; } }
-@keyframes eqPulse { from { height: 10%; } to { height: 100%; } }
-@keyframes flowDown { 0% { top: -10%; opacity: 0; } 50% { opacity: 1; } 100% { top: 110%; opacity: 0; } }
-@keyframes pulseBridge {
-  0%,100% { opacity: .45; transform: translateX(-50%) scale(1); }
-  50% { opacity: 1; transform: translateX(-50%) scale(1.08); }
-}
-@keyframes miniTalk {
-  0% { height: 8px; opacity: .55; }
-  100% { height: 18px; opacity: 1; }
-}
+@keyframes eqPulse { from { height: 20%; } to { height: 100%; } }
+@keyframes miniTalk { 0% { height: 5px; } 100% { height: 15px; } }
 
-/* Content */
-.card-content {
-  flex: 1;
-  z-index: 10;
-}
-
-.card-title {
-  font-family: 'Space Grotesk';
-  font-size: 20px;
-  font-weight: 700;
-  color: #fff;
-  margin: 0;
-}
-
-.card-title .ai {
-  background: var(--ai-grad);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.card-desc {
-  font-size: 11px;
-  color: rgba(255,255,255,0.4);
-  margin-top: 4px;
-  line-height: 1.3;
-}
+/* Content Text */
+.card-content { flex: 1; }
+.card-title { font-family: 'Space Grotesk'; font-size: 18px; font-weight: 700; color: #fff; margin: 0; }
+.card-title .ai { background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.card-desc { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 2px; }
 </style>
 </head>
 
@@ -339,49 +174,51 @@
 <main id="pageContent">
   <div class="main-hub">
 
-    <!-- FaceToFace -->
-    <div class="f2f-portal" onclick="location.href='/facetoface.html'">
+    <div class="f2f-visual" onclick="location.href='/facetoface.html'">
       <div class="neural-orb">
         <div class="ai-ring"></div>
-        <div class="orbit-energy">
-          <div class="e-ball ball-l"></div>
-          <div class="e-ball ball-b"></div>
-        </div>
         <div class="ai-core">
-          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">
             <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
             <path d="M19 11v1a7 7 0 0 1-14 0v-2"/>
             <line x1="12" y1="19" x2="12" y2="23"/>
           </svg>
         </div>
       </div>
-      <h1 class="f2f-title">FaceToFace <span class="ai">AI</span></h1>
     </div>
 
     <div class="hub-cards">
 
-      <!-- Metin Çeviri -->
+      <div class="trans-card f2f-card" onclick="location.href='/facetoface.html'">
+        <div class="f2f-icon">
+          <div class="f2f-pulse" style="animation-delay: 0s"></div>
+          <div class="f2f-pulse" style="animation-delay: 0.2s"></div>
+          <div class="f2f-pulse" style="animation-delay: 0.4s"></div>
+          <div class="f2f-pulse" style="animation-delay: 0.2s"></div>
+          <div class="f2f-pulse" style="animation-delay: 0s"></div>
+        </div>
+        <div class="card-content">
+          <h2 class="card-title">Yüzyüze Çeviri <span class="ai">AI</span></h2>
+          <p class="card-desc">Karşılıklı konuşmaları anlık ve tam ekran tercüme et.</p>
+        </div>
+      </div>
+
       <div class="trans-card text-card" onclick="location.href='/pages/text_translate.html'">
-        <div class="matrix-line"></div>
         <div class="text-blocks">
           <div class="line" style="animation-delay: 0s"></div>
           <div class="line" style="animation-delay: 0.2s"></div>
           <div class="line" style="animation-delay: 0.4s"></div>
-          <div class="line" style="animation-delay: 0.6s"></div>
         </div>
         <div class="card-content">
           <h2 class="card-title">Metin Çeviri <span class="ai">AI</span></h2>
-          <p class="card-desc">Karmaşık metinleri ve dökümanları kuantum hızıyla yerelleştir.</p>
+          <p class="card-desc">Metinleri ve dökümanları kuantum hızıyla yerelleştir.</p>
         </div>
       </div>
 
-      <!-- Walkie Talkie -->
       <div class="trans-card walkie-card" onclick="location.href='/pages/f2f_connect.html'">
         <div class="eq-container">
           <div class="eq-bar" style="animation-delay: 0.1s"></div>
           <div class="eq-bar" style="animation-delay: 0.3s"></div>
-          <div class="eq-bar" style="animation-delay: 0.2s"></div>
-          <div class="eq-bar" style="animation-delay: 0.4s"></div>
           <div class="eq-bar" style="animation-delay: 0.5s"></div>
         </div>
         <div class="card-content">
@@ -390,10 +227,8 @@
         </div>
       </div>
 
-      <!-- Interpreter -->
       <div class="trans-card interpreter-card" onclick="location.href='/pages/interpreter.html'">
         <div class="interpreter-icon">
-          <div class="link-wave"></div>
           <div class="ear-left"></div>
           <div class="ear-right"></div>
           <div class="mini-wave left"></div>
@@ -401,25 +236,18 @@
         </div>
         <div class="card-content">
           <h2 class="card-title">Interpreter <span class="ai">AI</span></h2>
-          <p class="card-desc">Canlı tercüman kulaklık moduyla birebir anlık çeviri.</p>
+          <p class="card-desc">Tercüman moduyla birebir kulaklık iletişimi.</p>
         </div>
       </div>
 
-      <!-- Offline Diller -->
       <div class="trans-card offline-card" onclick="location.href='/pages/offline_languages.html'">
-        <div class="flow-container">
-          <div class="flow-dot" style="animation-delay: 0s"></div>
-          <div class="flow-dot" style="animation-delay: 0.5s"></div>
-          <div class="flow-dot" style="animation-delay: 1s"></div>
-        </div>
-        <div class="card-content">
+        <div class="card-content" style="padding-left: 10px;">
           <h2 class="card-title">Offline Çeviri <span class="ai">AI</span></h2>
-          <p class="card-desc">İnternet olmadan, indirilen paketlerle tam gizlilik.</p>
+          <p class="card-desc">İnternet olmadan tam gizlilik ve hız.</p>
         </div>
       </div>
 
     </div>
-
   </div>
 </main>
 
