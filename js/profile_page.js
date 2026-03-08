@@ -185,7 +185,7 @@ async function tryLoadVoiceFields(userId){
   try{
     const { data, error } = await supabase
       .from("profiles")
-      .select("id,voice_sample_seconds,voice_profile_ready,voice_profile_updated_at")
+      .select("id,voice_sample_seconds,voice_profile_ready,voice_profile_updated_at,voice_profile_lang")
       .eq("id", userId)
       .maybeSingle();
 
@@ -235,20 +235,37 @@ async function touchLastLogin(userId){
   }
 }
 
+function langLabel(code){
+  const c = String(code || "").toLowerCase();
+  if(c === "tr") return "Türkçe";
+  if(c === "en") return "English";
+  if(c === "de") return "Deutsch";
+  if(c === "fr") return "Français";
+  if(c === "it") return "Italiano";
+  if(c === "es") return "Español";
+  return "—";
+}
+
 function paintVoiceProfile(profile, voiceExtra){
   const ready = !!(voiceExtra?.voice_profile_ready || profile?.voice_profile_ready);
   const secs = Number(voiceExtra?.voice_sample_seconds || profile?.voice_sample_seconds || 0);
   const updated = fmtDT(voiceExtra?.voice_profile_updated_at || profile?.voice_profile_updated_at);
+  const lang = langLabel(voiceExtra?.voice_profile_lang || profile?.voice_profile_lang);
 
-  safeText("voiceProfileStatus", ready ? "Hazır" : "Hazır değil");
+  safeText("voiceProfileStatus", ready ? "Ses profili hazır" : "Hazır değil");
 
   const metaEl = $("voiceProfileMeta");
-  if(!metaEl) return;
+  if(metaEl){
+    if(ready){
+      metaEl.textContent = `Kayıt süresi: ${fmtDuration(secs)} • Dil: ${lang} • Güncelleme: ${updated}`;
+    }else{
+      metaEl.textContent = "Henüz ses örneği kaydedilmedi.";
+    }
+  }
 
-  if(ready){
-    metaEl.textContent = `Kayıt süresi: ${fmtDuration(secs)} • Güncelleme: ${updated}`;
-  }else{
-    metaEl.textContent = "Henüz ses örneği kaydedilmedi.";
+  const btn = $("voiceProfileBtn");
+  if(btn){
+    btn.textContent = ready ? "Ses Profilini Güncelle" : "Sesini Tanıt";
   }
 }
 
@@ -273,6 +290,37 @@ async function hardDeleteAccount(){
   location.replace("/pages/login.html");
 }
 
+function loadSettings(){
+  const voice = localStorage.getItem("tts_voice") || "auto";
+  const detect = localStorage.getItem("lang_detect") || "auto";
+  const mode = localStorage.getItem("speech_mode") || "normal";
+
+  const ttsVoice = $("ttsVoice");
+  const langDetect = $("langDetect");
+  const speechMode = $("speechMode");
+
+  if(ttsVoice) ttsVoice.value = voice;
+  if(langDetect) langDetect.value = detect;
+  if(speechMode) speechMode.value = mode;
+}
+
+function bindSettings(){
+  $("ttsVoice")?.addEventListener("change", (e)=>{
+    localStorage.setItem("tts_voice", e.target.value);
+    toast("Çeviri sesi ayarı kaydedildi");
+  });
+
+  $("langDetect")?.addEventListener("change", (e)=>{
+    localStorage.setItem("lang_detect", e.target.value);
+    toast("Dil algılama ayarı kaydedildi");
+  });
+
+  $("speechMode")?.addEventListener("change", (e)=>{
+    localStorage.setItem("speech_mode", e.target.value);
+    toast("Konuşma modu kaydedildi");
+  });
+}
+
 export async function initProfilePage({ setHeaderTokens } = {}){
   $("logoutBtn")?.addEventListener("click", (e)=>{
     e.preventDefault();
@@ -286,6 +334,9 @@ export async function initProfilePage({ setHeaderTokens } = {}){
   $("voiceProfileBtn")?.addEventListener("click", ()=>{
     location.href = "/pages/voice_profile.html";
   });
+
+  loadSettings();
+  bindSettings();
 
   const user = await getUserSafe();
 
