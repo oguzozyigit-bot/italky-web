@@ -1,373 +1,368 @@
-// FILE: /js/profile_page.js
+// FILE: /js/voice_profile_page.js
 
 import { supabase } from "/js/supabase_client.js";
-import { STORAGE_KEY } from "/js/config.js";
 
-const API_BASE = "https://italky-api.onrender.com";
-const $ = (id)=>document.getElementById(id);
+const BUCKET = "voice-samples";
 
-function safeText(id, val){
-  const el = $(id);
-  if(el) el.textContent = (val ?? "—");
-}
+const $ = (id) => document.getElementById(id);
+
+const recordBtn = $("recordBtn");
+const saveBtn = $("saveBtn");
+const retryBtn = $("retryBtn");
+const backBtn = $("backBtn");
+const statusText = $("statusText");
+const timerText = $("timerText");
+const audioBox = $("audioBox");
+const audioPreview = $("audioPreview");
+const toastEl = $("toast");
+
+let mediaRecorder = null;
+let mediaStream = null;
+let audioChunks = [];
+let audioBlob = null;
+let isRecording = false;
+let timerInt = null;
+let startedAt = 0;
+let recordedSeconds = 0;
+let currentObjectUrl = "";
 
 function toast(msg){
-  const t = $("toast");
-  if(!t) return;
-  t.textContent = String(msg || "");
-  t.classList.add("show");
-  clearTimeout(window.__to);
-  window.__to = setTimeout(() => t.classList.remove("show"), 1800);
+  if(!toastEl) return;
+  toastEl.textContent = String(msg || "");
+  toastEl.classList.add("show");
+  clearTimeout(window.__voiceToast);
+  window.__voiceToast = setTimeout(() => toastEl.classList.remove("show"), 1800);
 }
 
-function fmtDT(iso){
-  if(!iso) return "—";
-  try{
-    const d = new Date(iso);
-    if(Number.isNaN(d.getTime())) return "—";
-    const dd = String(d.getDate()).padStart(2,"0");
-    const mm = String(d.getMonth()+1).padStart(2,"0");
-    const yy = d.getFullYear();
-    const hh = String(d.getHours()).padStart(2,"0");
-    const mi = String(d.getMinutes()).padStart(2,"0");
-    return `${dd}/${mm}/${yy} • ${hh}:${mi}`;
-  }catch{
-    return "—";
-  }
-}
-
-function fmtDuration(sec){
-  const s = Number(sec || 0);
-  if(!s || s < 1) return "—";
+function fmtSec(sec){
+  const s = Math.max(0, Math.floor(sec || 0));
   const mm = String(Math.floor(s / 60)).padStart(2, "0");
-  const ss = String(Math.floor(s % 60)).padStart(2, "0");
+  const ss = String(s % 60).padStart(2, "0");
   return `${mm}:${ss}`;
 }
 
-export function shortDisplayName(fullName){
-  const s = String(fullName || "").trim().replace(/\s+/g," ");
-  if(!s) return "Kullanıcı";
-  const parts = s.split(" ").filter(Boolean);
-  if(parts.length === 1) return parts[0];
-  if(parts.length === 2) return `${parts[0]} ${(parts[1][0]||"").toUpperCase()}.`;
-  const last = parts[parts.length - 1];
-  const firsts = parts.slice(0, -1).join(" ");
-  return `${firsts} ${(last[0]||"").toUpperCase()}.`;
+function resetTimer(){
+  clearInterval(timerInt);
+  timerInt = null;
+  startedAt = 0;
+  recordedSeconds = 0;
+  if(timerText) timerText.textContent = "00:00";
 }
 
-function nukeAuthStorage(){
+function startTimer(){
+  startedAt = Date.now();
+  if(timerText) timerText.textContent = "00:00";
+  clearInterval(timerInt);
+  timerInt = setInterval(() => {
+    const sec = (Date.now() - startedAt) / 1000;
+    recordedSeconds = Math.max(1, Math.floor(sec));
+    if(timerText) timerText.textContent = fmtSec(sec);
+  }, 200);
+}
+
+function stopTracks(){
   try{
-    const keys = [];
-    for(let i=0;i<localStorage.length;i++){
-      const k = localStorage.key(i);
-      if(!k) continue;
-      if(k.startsWith("sb-")) keys.push(k);
-    }
-    keys.forEach(k => localStorage.removeItem(k));
+    mediaStream?.getTracks?.().forEach(t => t.stop());
   }catch{}
+  mediaStream = null;
 }
 
-async function safeLogoutHard(){
-  try{ await supabase.auth.signOut(); }catch(e){ console.warn("[signOut]", e); }
-  try{ localStorage.removeItem(STORAGE_KEY); }catch{}
-  try{ localStorage.removeItem("NAC_ID"); }catch{}
-  nukeAuthStorage();
-  location.replace("/pages/login.html");
-}
-
-async function copyText(text){
+function revokePreviewUrl(){
   try{
-    await navigator.clipboard.writeText(text);
-    toast("Kopyalandı");
-  }catch{
-    toast("Kopyalanamadı");
-  }
-}
-
-function randLetter(){
-  const A = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  return A[Math.floor(Math.random() * A.length)];
-}
-
-function randDigits7(){
-  let s = "";
-  for(let i=0;i<7;i++) s += String(Math.floor(Math.random() * 10));
-  return s;
-}
-
-function digitsOk(d){
-  for(let i=0;i<=d.length-3;i++){
-    const a = +d[i], b = +d[i+1], c = +d[i+2];
-    if(a + 1 === b && b + 1 === c) return false;
-    if(a - 1 === b && b - 1 === c) return false;
-    if(a === b && b === c) return false;
-  }
-  return true;
-}
-
-function genMemberNo(){
-  for(let k=0;k<300;k++){
-    const L = randLetter();
-    const D = randDigits7();
-    if(digitsOk(D)) return `${L}${D}`;
-  }
-  return `${randLetter()}${randDigits7()}`;
-}
-
-function updateLocalUserCache({ full_name, email, tokens, avatar_url }){
-  try{
-    const raw = localStorage.getItem(STORAGE_KEY);
-    const u = raw ? JSON.parse(raw) : {};
-    if(full_name) u.name = full_name;
-    if(email) u.email = email;
-    if(tokens != null) u.tokens = tokens;
-    if(avatar_url) u.picture = avatar_url;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(u));
-  }catch{}
-}
-
-function paintFromSession(user){
-  const full = String(
-    user?.user_metadata?.full_name ||
-    user?.user_metadata?.name ||
-    user?.email ||
-    "Kullanıcı"
-  );
-
-  safeText("pName", full);
-  safeText("pEmail", user?.email || "—");
-
-  try{
-    const hn = document.getElementById("userName");
-    if(hn) hn.textContent = shortDisplayName(full || "Kullanıcı");
-
-    const pic = String(user?.user_metadata?.picture || user?.user_metadata?.avatar_url || "");
-    const hp = document.getElementById("userPic");
-    if(hp && pic){
-      hp.src = pic;
-      hp.referrerPolicy = "no-referrer";
+    if(currentObjectUrl){
+      URL.revokeObjectURL(currentObjectUrl);
+      currentObjectUrl = "";
     }
   }catch{}
 }
 
-async function tryLoadProfileBase(userId){
-  try{
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("id,email,full_name,avatar_url,tokens,member_no,created_at,last_login_at")
-      .eq("id", userId)
-      .maybeSingle();
+function clearAudio(){
+  audioBlob = null;
+  audioChunks = [];
+  revokePreviewUrl();
 
-    if(error) throw error;
-    return data || null;
-  }catch(e){
-    console.warn("[profiles.select base]", e);
-    return null;
+  if(audioPreview){
+    try{ audioPreview.pause(); }catch{}
+    audioPreview.removeAttribute("src");
+    audioPreview.load();
   }
+
+  audioBox?.classList.remove("show");
 }
 
-async function tryLoadVoiceFields(userId){
-  try{
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("id,voice_sample_seconds,voice_profile_ready,voice_profile_updated_at")
-      .eq("id", userId)
-      .maybeSingle();
+function getSupportedMimeType(){
+  const candidates = [
+    "audio/webm;codecs=opus",
+    "audio/webm",
+    "audio/mp4",
+    "audio/ogg;codecs=opus",
+    ""
+  ];
 
-    if(error) throw error;
-    return data || null;
-  }catch(e){
-    console.warn("[profiles.select voice optional]", e);
-    return null;
+  for(const type of candidates){
+    try{
+      if(!type) return "";
+      if(window.MediaRecorder && MediaRecorder.isTypeSupported(type)) return type;
+    }catch{}
   }
+  return "";
 }
 
-async function tryInsertProfile(user){
+async function startRecording(){
   try{
-    const metaName = String(user.user_metadata?.full_name || user.user_metadata?.name || "").trim();
-    const metaPic = String(user.user_metadata?.picture || user.user_metadata?.avatar_url || "").trim();
+    if(!navigator.mediaDevices?.getUserMedia){
+      throw new Error("Bu cihaz mikrofon kaydını desteklemiyor");
+    }
 
-    const insert = {
-      id: user.id,
-      email: user.email || null,
-      full_name: metaName || null,
-      avatar_url: metaPic || null,
-      tokens: 0
+    mediaStream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true
+      }
+    });
+
+    clearAudio();
+    resetTimer();
+    audioChunks = [];
+
+    const mimeType = getSupportedMimeType();
+
+    mediaRecorder = mimeType
+      ? new MediaRecorder(mediaStream, { mimeType })
+      : new MediaRecorder(mediaStream);
+
+    mediaRecorder.onstart = () => {
+      isRecording = true;
+      recordBtn?.classList.add("listening");
+      if(statusText) statusText.textContent = "Kayıt alınıyor...";
+      startTimer();
     };
 
-    const { data, error } = await supabase
-      .from("profiles")
-      .insert(insert)
-      .select()
-      .single();
+    mediaRecorder.ondataavailable = (e) => {
+      if(e.data && e.data.size > 0){
+        audioChunks.push(e.data);
+      }
+    };
 
-    if(error) throw error;
-    return data || null;
+    mediaRecorder.onerror = (e) => {
+      console.warn("[voice recorder error]", e);
+      isRecording = false;
+      recordBtn?.classList.remove("listening");
+      if(statusText) statusText.textContent = "Kayıt başlatılamadı";
+      stopTracks();
+      resetTimer();
+      toast("Kayıt başlatılamadı");
+    };
+
+    mediaRecorder.onstop = () => {
+      const finalType = mediaRecorder?.mimeType || "audio/webm";
+      audioBlob = new Blob(audioChunks, { type: finalType });
+
+      try{
+        revokePreviewUrl();
+        currentObjectUrl = URL.createObjectURL(audioBlob);
+        if(audioPreview) audioPreview.src = currentObjectUrl;
+        audioBox?.classList.add("show");
+      }catch(e){
+        console.warn("[voice preview url]", e);
+      }
+
+      isRecording = false;
+      recordBtn?.classList.remove("listening");
+      if(statusText) statusText.textContent = "Kayıt tamamlandı";
+      stopTracks();
+      clearInterval(timerInt);
+
+      if(!recordedSeconds || recordedSeconds < 1){
+        recordedSeconds = Math.max(1, Math.floor((Date.now() - startedAt) / 1000));
+      }
+    };
+
+    mediaRecorder.start(250);
   }catch(e){
-    console.warn("[profiles.insert]", e);
-    return null;
+    console.warn("[voice startRecording]", e);
+    isRecording = false;
+    recordBtn?.classList.remove("listening");
+    stopTracks();
+    resetTimer();
+    if(statusText) statusText.textContent = "Mikrofon izni alınamadı";
+    toast(e?.message || "Mikrofon izni gerekli");
   }
 }
 
-async function touchLastLogin(userId){
+function stopRecording(){
   try{
-    await supabase
-      .from("profiles")
-      .update({ last_login_at: new Date().toISOString() })
-      .eq("id", userId);
-  }catch(e){
-    console.warn("[last_login_at update]", e);
-  }
-}
-
-function paintVoiceProfile(profile, voiceExtra){
-  const ready = !!(voiceExtra?.voice_profile_ready || profile?.voice_profile_ready);
-  const secs = Number(voiceExtra?.voice_sample_seconds || profile?.voice_sample_seconds || 0);
-  const updated = fmtDT(voiceExtra?.voice_profile_updated_at || profile?.voice_profile_updated_at);
-
-  safeText("voiceProfileStatus", ready ? "Hazır" : "Hazır değil");
-
-  const metaEl = $("voiceProfileMeta");
-  if(!metaEl) return;
-
-  if(ready){
-    metaEl.textContent = `Kayıt süresi: ${fmtDuration(secs)} • Güncelleme: ${updated}`;
-  }else{
-    metaEl.textContent = "Henüz ses örneği kaydedilmedi.";
-  }
-}
-
-async function hardDeleteAccount(){
-  const { data:{ session } } = await supabase.auth.getSession();
-  const token = session?.access_token;
-  if(!token) throw new Error("Oturum bulunamadı.");
-
-  const r = await fetch(`${API_BASE}/api/account/delete`, {
-    method: "POST",
-    headers: { "Authorization": `Bearer ${token}` }
-  });
-
-  const j = await r.json().catch(() => ({}));
-  if(!r.ok) throw new Error(j.detail || j.error || "Hesap silme başarısız.");
-
-  try{ await supabase.auth.signOut(); }catch(e){ console.warn("[signOut after delete]", e); }
-  try{ localStorage.removeItem(STORAGE_KEY); }catch{}
-  try{ localStorage.removeItem("NAC_ID"); }catch{}
-  nukeAuthStorage();
-  try{ sessionStorage.clear(); }catch{}
-  location.replace("/pages/login.html");
-}
-
-export async function initProfilePage({ setHeaderTokens } = {}){
-  $("logoutBtn")?.addEventListener("click", (e)=>{
-    e.preventDefault();
-    safeLogoutHard();
-  });
-
-  $("buyTokensBtn")?.addEventListener("click", ()=>{
-    location.href = "/pages/jetonbuy.html";
-  });
-
-  $("voiceProfileBtn")?.addEventListener("click", ()=>{
-    location.href = "/pages/voice_profile.html";
-  });
-
-  const { data:{ session }, error: sessionErr } = await supabase.auth.getSession();
-
-  if(sessionErr){
-    console.warn("[getSession]", sessionErr);
-  }
-
-  if(!session?.user){
-    toast("Oturum bulunamadı");
-    location.replace("/pages/login.html");
-    return;
-  }
-
-  const user = session.user;
-  paintFromSession(user);
-
-  let profile = await tryLoadProfileBase(user.id);
-  if(!profile){
-    profile = await tryInsertProfile(user);
-    if(!profile) profile = await tryLoadProfileBase(user.id);
-  }
-
-  await touchLastLogin(user.id);
-
-  if(!profile){
-    safeText("memberNo", "—");
-    safeText("createdAt", "—");
-    safeText("lastLogin", "—");
-    safeText("tokenVal", "0");
-    safeText("voiceProfileStatus", "Hazır değil");
-    safeText("voiceProfileMeta", "Henüz ses örneği kaydedilmedi.");
-    if(typeof setHeaderTokens === "function") setHeaderTokens(0);
-    toast("Profil verisi alınamadı");
-    return;
-  }
-
-  const fullName =
-    profile.full_name ||
-    user.user_metadata?.full_name ||
-    user.user_metadata?.name ||
-    user.email ||
-    "—";
-
-  safeText("pEmail", profile.email || user.email || "—");
-  safeText("pName", fullName);
-
-  let memberNo = profile.member_no;
-  if(!memberNo){
-    memberNo = genMemberNo();
-    try{
-      await supabase.from("profiles").update({ member_no: memberNo }).eq("id", user.id);
-    }catch(e){
-      console.warn("[member_no update]", e);
+    if(mediaRecorder && mediaRecorder.state !== "inactive"){
+      mediaRecorder.stop();
     }
+  }catch(e){
+    console.warn("[voice stopRecording]", e);
+    if(statusText) statusText.textContent = "Kayıt durdurulamadı";
+    toast("Kayıt durdurulamadı");
+  }
+}
+
+async function getUserOrThrow(){
+  const { data, error } = await supabase.auth.getUser();
+  if(error) throw error;
+  const user = data?.user || null;
+  if(!user?.id) throw new Error("Oturum bulunamadı");
+  return user;
+}
+
+function getExtensionFromMime(mime){
+  const m = String(mime || "").toLowerCase();
+  if(m.includes("webm")) return "webm";
+  if(m.includes("mp4")) return "mp4";
+  if(m.includes("mpeg")) return "mp3";
+  if(m.includes("ogg")) return "ogg";
+  if(m.includes("wav")) return "wav";
+  return "webm";
+}
+
+function buildFilePath(userId, ext = "webm"){
+  return `${userId}/voice-sample-${Date.now()}.${ext}`;
+}
+
+async function deleteOldVoiceIfExists(oldPath){
+  const path = String(oldPath || "").trim();
+  if(!path) return;
+  try{
+    await supabase.storage.from(BUCKET).remove([path]);
+  }catch(e){
+    console.warn("[voice delete old]", e);
+  }
+}
+
+async function loadCurrentProfile(userId){
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, voice_sample_path")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if(error) throw error;
+  return data || null;
+}
+
+async function uploadVoiceSample(user, blob){
+  const mime = blob.type || "audio/webm";
+  const ext = getExtensionFromMime(mime);
+  const path = buildFilePath(user.id, ext);
+
+  const { error: uploadErr } = await supabase
+    .storage
+    .from(BUCKET)
+    .upload(path, blob, {
+      contentType: mime,
+      upsert: true
+    });
+
+  if(uploadErr) throw uploadErr;
+
+  const { data: signedData, error: signedErr } = await supabase
+    .storage
+    .from(BUCKET)
+    .createSignedUrl(path, 60 * 60 * 24 * 365);
+
+  if(signedErr) throw signedErr;
+
+  return {
+    path,
+    url: signedData?.signedUrl || "",
+    mime
+  };
+}
+
+async function saveVoiceProfile(){
+  if(!audioBlob) throw new Error("Önce kayıt alın");
+  if(recordedSeconds < 2) throw new Error("Kayıt çok kısa");
+
+  const user = await getUserOrThrow();
+  const profile = await loadCurrentProfile(user.id);
+  const uploaded = await uploadVoiceSample(user, audioBlob);
+
+  const payload = {
+    voice_sample_url: uploaded.url,
+    voice_sample_path: uploaded.path,
+    voice_sample_mime: uploaded.mime,
+    voice_sample_seconds: recordedSeconds,
+    voice_profile_ready: true,
+    voice_profile_updated_at: new Date().toISOString()
+  };
+
+  const { error: updateErr } = await supabase
+    .from("profiles")
+    .update(payload)
+    .eq("id", user.id);
+
+  if(updateErr){
+    await deleteOldVoiceIfExists(uploaded.path);
+    throw updateErr;
   }
 
-  safeText("memberNo", memberNo || "—");
-  safeText("createdAt", fmtDT(profile.created_at));
-  safeText("lastLogin", fmtDT(profile.last_login_at));
+  if(profile?.voice_sample_path && profile.voice_sample_path !== uploaded.path){
+    await deleteOldVoiceIfExists(profile.voice_sample_path);
+  }
 
-  const tokens = Number(profile.tokens ?? 0);
-  safeText("tokenVal", String(tokens));
-  if(typeof setHeaderTokens === "function") setHeaderTokens(tokens);
+  return uploaded;
+}
 
-  const voiceExtra = await tryLoadVoiceFields(user.id);
-  paintVoiceProfile(profile, voiceExtra);
+recordBtn?.addEventListener("click", async () => {
+  if(isRecording){
+    stopRecording();
+    return;
+  }
+  await startRecording();
+});
+
+retryBtn?.addEventListener("click", () => {
+  if(isRecording){
+    stopRecording();
+  }
+  clearAudio();
+  resetTimer();
+  if(statusText) statusText.textContent = "Kayda hazır";
+  toast("Kayıt temizlendi");
+});
+
+saveBtn?.addEventListener("click", async () => {
+  if(!audioBlob){
+    if(statusText) statusText.textContent = "Önce kayıt alın";
+    toast("Önce kayıt alın");
+    return;
+  }
+
+  saveBtn.disabled = true;
+  saveBtn.style.opacity = "0.7";
+  if(statusText) statusText.textContent = "Ses profili kaydediliyor...";
 
   try{
-    const hn = document.getElementById("userName");
-    if(hn) hn.textContent = shortDisplayName(fullName);
+    await saveVoiceProfile();
+    if(statusText) statusText.textContent = "Ses profili kaydedildi";
+    toast("Ses profili kaydedildi");
+  }catch(e){
+    console.warn("[voice save]", e);
+    if(statusText) statusText.textContent = e?.message || "Kayıt kaydedilemedi";
+    toast(e?.message || "Kayıt kaydedilemedi");
+  }finally{
+    saveBtn.disabled = false;
+    saveBtn.style.opacity = "1";
+  }
+});
 
-    const pic = String(profile.avatar_url || user.user_metadata?.picture || user.user_metadata?.avatar_url || "");
-    const hp = document.getElementById("userPic");
-    if(hp && pic){
-      hp.src = pic;
-      hp.referrerPolicy = "no-referrer";
+backBtn?.addEventListener("click", () => {
+  history.back();
+});
+
+window.addEventListener("beforeunload", () => {
+  try{
+    if(isRecording && mediaRecorder?.state !== "inactive"){
+      mediaRecorder.stop();
     }
   }catch{}
-
-  updateLocalUserCache({
-    full_name: fullName,
-    email: profile.email || user.email || "",
-    tokens,
-    avatar_url: profile.avatar_url || user.user_metadata?.picture || ""
-  });
-
-  $("copyMemberBtn")?.addEventListener("click", ()=>copyText(memberNo || ""));
-
-  $("deleteBtn")?.addEventListener("click", async ()=>{
-    const ok = confirm("Hesabınız kalıcı olarak silinecek. Bu işlem geri alınamaz. Devam edilsin mi?");
-    if(!ok) return;
-    toast("Hesap siliniyor...");
-    try{
-      await hardDeleteAccount();
-    }catch(e){
-      console.warn(e);
-      toast(String(e?.message || "Hesap silinemedi"));
-    }
-  });
-}
+  stopTracks();
+  clearInterval(timerInt);
+  revokePreviewUrl();
+});
