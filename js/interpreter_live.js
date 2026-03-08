@@ -6,24 +6,23 @@ mountShell({ scroll: "auto" });
 const API_BASE = "https://italky-api.onrender.com";
 const $ = (id) => document.getElementById(id);
 
-const roomCodeView = $("roomCodeView");
-const modeView = $("modeView");
 const myLangView = $("myLangView");
 const peerLangView = $("peerLangView");
-const pairDot = $("pairDot");
-const pairText = $("pairText");
 const headsetDot = $("headsetDot");
 const headsetText = $("headsetText");
 const liveHelper = $("liveHelper");
 const liveMic = $("liveMic");
 const conversation = $("conversation");
+const textInput = $("textInput");
+const sendBtn = $("sendBtn");
 const clearBtn = $("clearBtn");
 const leaveBtn = $("leaveBtn");
-const page = $("pageContent");
+const replayLastBtn = $("replayLastBtn");
 
 let recognizer = null;
 let isRecording = false;
 let ttsDebounceAt = 0;
+let lastTranslatedText = "";
 
 const BCP = {
   tr: "tr-TR",
@@ -63,7 +62,7 @@ function getLangLabel(code) {
 function getParams() {
   const u = new URL(location.href);
   return {
-    room: (u.searchParams.get("room") || "").trim().toUpperCase(),
+    room: (u.searchParams.get("room") || "").trim(),
     my: canonical(u.searchParams.get("my") || "tr"),
     peer: canonical(u.searchParams.get("peer") || "en"),
     mode: (u.searchParams.get("mode") || "host").trim(),
@@ -72,13 +71,8 @@ function getParams() {
 
 function paintHeader() {
   const p = getParams();
-  roomCodeView.textContent = p.room || "------";
-  modeView.textContent = p.mode === "host" ? "Host" : "Guest";
   myLangView.textContent = getLangLabel(p.my);
   peerLangView.textContent = getLangLabel(p.peer);
-
-  pairDot.classList.add("ok");
-  pairText.textContent = "Canlı tercüman modu hazır.";
 }
 
 function getHeadsetState() {
@@ -96,29 +90,16 @@ function paintHeadsetState() {
 
   if (connected) {
     headsetDot.classList.add("ok");
-    headsetText.textContent = "Kulaklık bağlı. Çeviri kulaklığa verilmeye hazır.";
+    headsetText.textContent = "Kulaklık bağlı. Ses doğrudan kulaklığa verilebilir.";
   } else {
     headsetDot.classList.add("warn");
-    headsetText.textContent = "Kulaklık algılanmadı. Devam edebilirsiniz ama kulaklık önerilir.";
+    headsetText.textContent = "Kulaklık algılanmadı. Ses telefon hoparlöründen verilebilir.";
   }
 }
 
 function setHelper(text, kind = "ready") {
   liveHelper.className = `helper ${kind}`;
   liveHelper.textContent = text;
-}
-
-function setPageState(state) {
-  page.classList.remove("is-listening", "is-translating");
-  liveMic.classList.remove("listening");
-
-  if (state === "listening") {
-    page.classList.add("is-listening");
-    liveMic.classList.add("listening");
-  }
-  if (state === "translating") {
-    page.classList.add("is-translating");
-  }
 }
 
 function keepLatestVisible() {
@@ -259,21 +240,14 @@ function stopRecognizer() {
   }
 }
 
-async function finalizeSpeech(text) {
+async function processInput(rawText) {
   const p = getParams();
-  const heard = String(text || "").trim();
+  const text = String(rawText || "").trim();
 
-  if (!heard) {
-    setPageState("");
-    setHelper("Ses algılanamadı. Tekrar deneyiniz.", "wait");
-    setTimeout(() => setHelper("Konuşmak için mikrofona dokununuz.", "ready"), 1400);
-    return;
-  }
+  if (!text) return;
 
-  addBubble("me", heard);
+  addBubble("me", text);
   clearLatestTranslated();
-
-  setPageState("translating");
   setHelper("Çevriliyor...", "live");
 
   const placeholder = addBubble("translated", "Çevriliyor...", {
@@ -282,22 +256,21 @@ async function finalizeSpeech(text) {
   });
 
   const txtEl = placeholder.querySelector(".txt");
-  const translated = await translateText(heard, p.my, p.peer);
+  const translated = await translateText(text, p.my, p.peer);
 
   if (!translated) {
     if (txtEl) txtEl.textContent = "⚠️ Çeviri servisine ulaşılamadı";
     keepLatestVisible();
-    setPageState("");
     setHelper("Çeviri başarısız. Tekrar deneyiniz.", "wait");
     setTimeout(() => setHelper("Konuşmak için mikrofona dokununuz.", "ready"), 1600);
     return;
   }
 
   if (txtEl) txtEl.textContent = translated;
+  lastTranslatedText = translated;
   keepLatestVisible();
 
   speak(translated, p.peer);
-  setPageState("");
   setHelper("Konuşmak için mikrofona dokununuz.", "ready");
 }
 
@@ -312,18 +285,18 @@ function startRecording() {
 
   recognizer = rec;
   isRecording = true;
-  setPageState("listening");
+  liveMic.classList.add("listening");
   setHelper("Konuşmanız bitince mikrofona tekrar basınız.", "live");
 
   rec.onresult = (e) => {
     const heard = e.results?.[0]?.[0]?.transcript || "";
-    Promise.resolve().then(() => finalizeSpeech(heard));
+    Promise.resolve().then(() => processInput(heard));
   };
 
   rec.onerror = () => {
     recognizer = null;
     isRecording = false;
-    setPageState("");
+    liveMic.classList.remove("listening");
     setHelper("Konuşma alınamadı. Tekrar deneyiniz.", "wait");
     setTimeout(() => setHelper("Konuşmak için mikrofona dokununuz.", "ready"), 1600);
   };
@@ -331,6 +304,7 @@ function startRecording() {
   rec.onend = () => {
     recognizer = null;
     isRecording = false;
+    liveMic.classList.remove("listening");
   };
 
   try {
@@ -338,7 +312,7 @@ function startRecording() {
   } catch {
     recognizer = null;
     isRecording = false;
-    setPageState("");
+    liveMic.classList.remove("listening");
     setHelper("Mikrofon başlatılamadı.", "wait");
     setTimeout(() => setHelper("Konuşmak için mikrofona dokununuz.", "ready"), 1600);
   }
@@ -348,7 +322,7 @@ function toggleRecording() {
   if (isRecording) {
     stopRecognizer();
     isRecording = false;
-    setPageState("");
+    liveMic.classList.remove("listening");
     setHelper("Ses işleniyor...", "live");
     return;
   }
@@ -359,20 +333,27 @@ function clearConversation() {
   stopAudio();
   stopRecognizer();
   isRecording = false;
+  liveMic.classList.remove("listening");
   conversation.innerHTML = "";
-  setPageState("");
+  lastTranslatedText = "";
   setHelper("Konuşmak için mikrofona dokununuz.", "ready");
 }
 
-function leaveRoom() {
+async function sendTypedMessage() {
+  const text = textInput.value.trim();
+  if (!text) return;
+  textInput.value = "";
+  await processInput(text);
+}
+
+function replayLast() {
   const p = getParams();
-  const q = new URLSearchParams({
-    room: p.room,
-    my: p.my,
-    peer: p.peer,
-    mode: p.mode,
-  });
-  location.href = `/pages/interpreter_room.html?${q.toString()}`;
+  if (!lastTranslatedText) return;
+  speak(lastTranslatedText, p.peer);
+}
+
+function leaveRoom() {
+  location.href = "/pages/interpreter.html";
 }
 
 liveMic?.addEventListener("click", (e) => {
@@ -381,8 +362,18 @@ liveMic?.addEventListener("click", (e) => {
   toggleRecording();
 });
 
+sendBtn?.addEventListener("click", sendTypedMessage);
+
+textInput?.addEventListener("keydown", async (e) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    await sendTypedMessage();
+  }
+});
+
 clearBtn?.addEventListener("click", clearConversation);
 leaveBtn?.addEventListener("click", leaveRoom);
+replayLastBtn?.addEventListener("click", replayLast);
 
 paintHeader();
 paintHeadsetState();
