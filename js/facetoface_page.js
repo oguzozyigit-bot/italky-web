@@ -166,7 +166,6 @@ let ttsDebounceAt = 0;
 let activeSide = null;
 let recognizer = null;
 let recordingSide = null;
-let pendingResultSide = null;
 
 /* ===== UI ===== */
 
@@ -367,6 +366,24 @@ function speak(text, langCode) {
   }, 60);
 }
 
+/* ===== Scroll ===== */
+
+function keepLatestVisible(side) {
+  const wrap = side === "top" ? topBody : botBody;
+  if (!wrap) return;
+
+  const apply = () => {
+    try {
+      wrap.scrollTop = wrap.scrollHeight + 9999;
+    } catch {}
+  };
+
+  apply();
+  requestAnimationFrame(apply);
+  setTimeout(apply, 30);
+  setTimeout(apply, 120);
+}
+
 /* ===== Bubbles ===== */
 
 function addBubble(side, kind, text, opts = {}) {
@@ -378,6 +395,10 @@ function addBubble(side, kind, text, opts = {}) {
 
   const inner = document.createElement("div");
   inner.className = "bubble-row";
+
+  const txt = document.createElement("span");
+  txt.className = "txt";
+  txt.textContent = String(text || "").trim();
 
   if (kind === "me") {
     const spk = document.createElement("button");
@@ -399,18 +420,11 @@ function addBubble(side, kind, text, opts = {}) {
     inner.appendChild(spk);
   }
 
-  const txt = document.createElement("span");
-  txt.className = "txt";
-  txt.textContent = String(text || "").trim();
   inner.appendChild(txt);
-
   row.appendChild(inner);
   wrap.appendChild(row);
 
-  try {
-    wrap.scrollTop = wrap.scrollHeight;
-  } catch {}
-
+  keepLatestVisible(side);
   return row;
 }
 
@@ -502,13 +516,17 @@ async function finalizeRecognition(side, text) {
 
   if (!tr) {
     setErrorUI();
-    if (latestTxt) latestTxt.textContent = t(dst, "translateError");
+    if (latestTxt) {
+      latestTxt.textContent = t(dst, "translateError");
+      keepLatestVisible(other);
+    }
     bounceToReady(1800);
     return;
   }
 
   if (latestTxt) {
     latestTxt.textContent = tr;
+    keepLatestVisible(other);
   } else {
     addBubble(other, "me", tr, { latest: true, speakLang: dst });
   }
@@ -528,11 +546,9 @@ function startRecording(side) {
 
   recognizer = rec;
   recordingSide = side;
-  pendingResultSide = side;
 
   rec.onresult = (e) => {
     const heard = e.results?.[0]?.[0]?.transcript || "";
-    pendingResultSide = side;
     Promise.resolve().then(() => finalizeRecognition(side, heard));
   };
 
@@ -630,7 +646,6 @@ function bind() {
     stopAudio();
     stopRecognizer();
     recordingSide = null;
-    pendingResultSide = null;
     if (topBody) topBody.innerHTML = "";
     if (botBody) botBody.innerHTML = "";
     setSystemReadyUI();
