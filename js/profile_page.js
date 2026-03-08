@@ -1,12 +1,4 @@
 // FILE: /js/profile_page.js
-// ✅ profiles.id = auth.users.id
-// ✅ RLS: auth.uid() = profiles.id
-// ✅ Tarih formatı: GG/AA/YYYY • SS:DD
-// ✅ Voice kolonları yoksa bile profil verileri gelmeye devam eder
-// ✅ Jeton Yükle -> /pages/jetonbuy.html
-// ✅ Güvenli çıkış %100
-// ✅ last_login_at günceller + shell cache tazeler
-// ✅ Account delete = HARD DELETE (Render API)
 
 import { supabase } from "/js/supabase_client.js";
 import { STORAGE_KEY } from "/js/config.js";
@@ -124,4 +116,258 @@ function genMemberNo(){
 
 function updateLocalUserCache({ full_name, email, tokens, avatar_url }){
   try{
-    const raw =
+    const raw = localStorage.getItem(STORAGE_KEY);
+    const u = raw ? JSON.parse(raw) : {};
+    if(full_name) u.name = full_name;
+    if(email) u.email = email;
+    if(tokens != null) u.tokens = tokens;
+    if(avatar_url) u.picture = avatar_url;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(u));
+  }catch{}
+}
+
+function paintFromSession(user){
+  const full = String(
+    user?.user_metadata?.full_name ||
+    user?.user_metadata?.name ||
+    user?.email ||
+    "Kullanıcı"
+  );
+
+  safeText("pName", full);
+  safeText("pEmail", user?.email || "—");
+
+  try{
+    const hn = document.getElementById("userName");
+    if(hn) hn.textContent = shortDisplayName(full || "Kullanıcı");
+
+    const pic = String(user?.user_metadata?.picture || user?.user_metadata?.avatar_url || "");
+    const hp = document.getElementById("userPic");
+    if(hp && pic){
+      hp.src = pic;
+      hp.referrerPolicy = "no-referrer";
+    }
+  }catch{}
+}
+
+async function tryLoadProfileBase(userId){
+  try{
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("id,email,full_name,avatar_url,tokens,member_no,created_at,last_login_at")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if(error) throw error;
+    return data || null;
+  }catch(e){
+    console.warn("[profiles.select base]", e);
+    return null;
+  }
+}
+
+async function tryLoadVoiceFields(userId){
+  try{
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("id,voice_sample_seconds,voice_profile_ready,voice_profile_updated_at")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if(error) throw error;
+    return data || null;
+  }catch(e){
+    console.warn("[profiles.select voice optional]", e);
+    return null;
+  }
+}
+
+async function tryInsertProfile(user){
+  try{
+    const metaName = String(user.user_metadata?.full_name || user.user_metadata?.name || "").trim();
+    const metaPic = String(user.user_metadata?.picture || user.user_metadata?.avatar_url || "").trim();
+
+    const insert = {
+      id: user.id,
+      email: user.email || null,
+      full_name: metaName || null,
+      avatar_url: metaPic || null,
+      tokens: 0
+    };
+
+    const { data, error } = await supabase
+      .from("profiles")
+      .insert(insert)
+      .select()
+      .single();
+
+    if(error) throw error;
+    return data || null;
+  }catch(e){
+    console.warn("[profiles.insert]", e);
+    return null;
+  }
+}
+
+async function touchLastLogin(userId){
+  try{
+    await supabase
+      .from("profiles")
+      .update({ last_login_at: new Date().toISOString() })
+      .eq("id", userId);
+  }catch(e){
+    console.warn("[last_login_at update]", e);
+  }
+}
+
+function paintVoiceProfile(profile, voiceExtra){
+  const ready = !!(voiceExtra?.voice_profile_ready || profile?.voice_profile_ready);
+  const secs = Number(voiceExtra?.voice_sample_seconds || profile?.voice_sample_seconds || 0);
+  const updated = fmtDT(voiceExtra?.voice_profile_updated_at || profile?.voice_profile_updated_at);
+
+  safeText("voiceProfileStatus", ready ? "Hazır" : "Hazır değil");
+
+  const metaEl = $("voiceProfileMeta");
+  if(!metaEl) return;
+
+  if(ready){
+    metaEl.textContent = `Kayıt süresi: ${fmtDuration(secs)} • Güncelleme: ${updated}`;
+  }else{
+    metaEl.textContent = "Henüz ses örneği kaydedilmedi.";
+  }
+}
+
+async function hardDeleteAccount(){
+  const { data:{ session } } = await supabase.auth.getSession();
+  const token = session?.access_token;
+  if(!token) throw new Error("Oturum bulunamadı.");
+
+  const r = await fetch(`${API_BASE}/api/account/delete`, {
+    method: "POST",
+    headers: { "Authorization": `Bearer ${token}` }
+  });
+
+  const j = await r.json().catch(() => ({}));
+  if(!r.ok) throw new Error(j.detail || j.error || "Hesap silme başarısız.");
+
+  try{ await supabase.auth.signOut(); }catch(e){ console.warn("[signOut after delete]", e); }
+  try{ localStorage.removeItem(STORAGE_KEY); }catch{}
+  try{ localStorage.removeItem("NAC_ID"); }catch{}
+  nukeAuthStorage();
+  try{ sessionStorage.clear(); }catch{}
+  location.replace("/pages/login.html");
+}
+
+export async function initProfilePage({ setHeaderTokens } = {}){
+  $("logoutBtn")?.addEventListener("click", (e)=>{
+    e.preventDefault();
+    safeLogoutHard();
+  });
+
+  $("buyTokensBtn")?.addEventListener("click", ()=>{
+    location.href = "/pages/jetonbuy.html";
+  });
+
+  $("voiceProfileBtn")?.addEventListener("click", ()=>{
+    location.href = "/pages/voice_profile.html";
+  });
+
+  const { data:{ session }, error: sessionErr } = await supabase.auth.getSession();
+
+  if(sessionErr){
+    console.warn("[getSession]", sessionErr);
+  }
+
+  if(!session?.user){
+    toast("Oturum bulunamadı");
+    location.replace("/pages/login.html");
+    return;
+  }
+
+  const user = session.user;
+  paintFromSession(user);
+
+  let profile = await tryLoadProfileBase(user.id);
+  if(!profile){
+    profile = await tryInsertProfile(user);
+    if(!profile) profile = await tryLoadProfileBase(user.id);
+  }
+
+  await touchLastLogin(user.id);
+
+  if(!profile){
+    safeText("memberNo", "—");
+    safeText("createdAt", "—");
+    safeText("lastLogin", "—");
+    safeText("tokenVal", "0");
+    safeText("voiceProfileStatus", "Hazır değil");
+    safeText("voiceProfileMeta", "Henüz ses örneği kaydedilmedi.");
+    if(typeof setHeaderTokens === "function") setHeaderTokens(0);
+    toast("Profil verisi alınamadı");
+    return;
+  }
+
+  const fullName =
+    profile.full_name ||
+    user.user_metadata?.full_name ||
+    user.user_metadata?.name ||
+    user.email ||
+    "—";
+
+  safeText("pEmail", profile.email || user.email || "—");
+  safeText("pName", fullName);
+
+  let memberNo = profile.member_no;
+  if(!memberNo){
+    memberNo = genMemberNo();
+    try{
+      await supabase.from("profiles").update({ member_no: memberNo }).eq("id", user.id);
+    }catch(e){
+      console.warn("[member_no update]", e);
+    }
+  }
+
+  safeText("memberNo", memberNo || "—");
+  safeText("createdAt", fmtDT(profile.created_at));
+  safeText("lastLogin", fmtDT(profile.last_login_at));
+
+  const tokens = Number(profile.tokens ?? 0);
+  safeText("tokenVal", String(tokens));
+  if(typeof setHeaderTokens === "function") setHeaderTokens(tokens);
+
+  const voiceExtra = await tryLoadVoiceFields(user.id);
+  paintVoiceProfile(profile, voiceExtra);
+
+  try{
+    const hn = document.getElementById("userName");
+    if(hn) hn.textContent = shortDisplayName(fullName);
+
+    const pic = String(profile.avatar_url || user.user_metadata?.picture || user.user_metadata?.avatar_url || "");
+    const hp = document.getElementById("userPic");
+    if(hp && pic){
+      hp.src = pic;
+      hp.referrerPolicy = "no-referrer";
+    }
+  }catch{}
+
+  updateLocalUserCache({
+    full_name: fullName,
+    email: profile.email || user.email || "",
+    tokens,
+    avatar_url: profile.avatar_url || user.user_metadata?.picture || ""
+  });
+
+  $("copyMemberBtn")?.addEventListener("click", ()=>copyText(memberNo || ""));
+
+  $("deleteBtn")?.addEventListener("click", async ()=>{
+    const ok = confirm("Hesabınız kalıcı olarak silinecek. Bu işlem geri alınamaz. Devam edilsin mi?");
+    if(!ok) return;
+    toast("Hesap siliniyor...");
+    try{
+      await hardDeleteAccount();
+    }catch(e){
+      console.warn(e);
+      toast(String(e?.message || "Hesap silinemedi"));
+    }
+  });
+}
