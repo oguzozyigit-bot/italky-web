@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+<title>italkyAI • Quantum OS V7</title>
+
+<style>
+  /* ⚡ KRİTİK: Sayfa yüklenirken göz kırpmayı önleyen stil */
+  html { background: #020205 !important; } 
+  body { 
+    margin: 0; 
+    opacity: 0; 
+    background: #020205;
+    /* JS'de hata olursa 1 saniye sonra zorla gösterir */
+    animation: fadeInSafe 0.4s ease forwards;
+    animation-delay: 0.1s;
+  } 
+  @keyframes fadeInSafe { to { opacity: 1; } }
+  body.ui-ready { opacity: 1 !important; animation: none; }
+</style>
+
+<link rel="modulepreload" href="/js/ui_shell.js">
+
+<style>
+  :root {
+    --bg-dark: #020205;
+    --accent-blue: #00d2ff;
+    --accent-purple: #9d50bb;
+    --accent-green: #39ff14;
+    --glass: rgba(255, 255, 255, 0.03);
+    --glass-border: rgba(255, 255, 255, 0.1);
+  }
+
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap');
+
+  html, body { 
+    background: var(--bg-dark); margin: 0; padding: 0; 
+    height: 100vh; width: 100vw; overflow: hidden; 
+    font-family: 'Outfit', sans-serif; color: white;
+  }
+
+  #pageContent {
+    height: 100%; width: 100%;
+    display: flex; flex-direction: column;
+    background: radial-gradient(circle at 50% 50%, #0a0a20 0%, #020205 100%);
+  }
+
+  .main-hub {
+    flex: 1; display: flex; flex-direction: column;
+    padding: 10px 15px; 
+    gap: 10px;
+  }
+
+  .os-card {
+    position: relative; flex: 1;
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+    display: flex; align-items: center;
+    padding: 20px 25px; overflow: hidden;
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    transition: all 0.4s cubic-bezier(0.15, 1, 0.3, 1);
+  }
+  .os-card:active { transform: scale(0.97); background: rgba(255,255,255,0.06); }
+
+  .card-info { flex: 1; z-index: 10; display: flex; flex-direction: column; justify-content: center; }
+  .card-info h2 { font-size: 26px; font-weight: 800; margin: 0 0 8px 0; letter-spacing: -0.5px; }
+  
+  .desc-list { margin: 0; padding: 0; list-style: none; }
+  .desc-list li { 
+    font-size: 13px; color: rgba(255,255,255,0.5); 
+    margin-bottom: 4px; display: flex; align-items: center; gap: 6px;
+  }
+  .desc-list li::before { content: "•"; color: var(--theme); font-weight: bold; }
+
+  .visual-engine { position: relative; width: 90px; height: 90px; display: flex; align-items: center; justify-content: center; }
+  .plasma-glow { position: absolute; width: 100%; height: 100%; background: var(--theme); filter: blur(25px); opacity: 0.2; animation: plasmaRotate 6s infinite linear; }
+  .icon-shape { width: 45px; height: 45px; position: relative; z-index: 15; filter: drop-shadow(0 0 10px var(--theme)); animation: float 4s infinite ease-in-out; }
+
+  .shape-translate { border: 4px double var(--theme); border-radius: 50%; animation: spin 8s infinite linear; }
+  .shape-academy { background: var(--theme); clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); opacity: 0.8; }
+  .shape-teacher { background: var(--theme); border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; animation: morph 5s infinite alternate; }
+
+  .blue-node { --theme: var(--accent-blue); }
+  .purple-node { --theme: var(--accent-purple); }
+  .green-node { --theme: var(--accent-green); }
+  .theme-text { color: var(--theme); filter: brightness(1.2); }
+
+  @keyframes plasmaRotate { from { transform: rotate(0deg) scale(1); } to { transform: rotate(360deg) scale(1.2); } }
+  @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes morph { 0% { border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; } 100% { border-radius: 50% 50% 20% 80% / 25% 80% 20% 75%; } }
+</style>
+</head>
+
+<body>
+<main id="pageContent">
+  <div class="main-hub">
+    <div class="os-card blue-node" onclick="location.href='/pages/translate_home.html'">
+      <div class="card-info">
+        <h2>Translate <span class="theme-text">AI</span></h2>
+        <ul class="desc-list">
+          <li>Sesli ve yazılı anlık çeviri</li>
+          <li>Farklı dillerde kolay iletişim</li>
+          <li>Seyahat ve günlük kullanım için</li>
+        </ul>
+      </div>
+      <div class="visual-engine">
+        <div class="plasma-glow"></div>
+        <div class="icon-shape shape-translate"></div>
+      </div>
+    </div>
+
+    <div class="os-card purple-node" onclick="location.href='/pages/acedemy_home.html'">
+      <div class="card-info">
+        <h2>Academy <span class="theme-text">AI</span></h2>
+        <ul class="desc-list">
+          <li>Dil öğrenme ve pratik araçları</li>
+          <li>Oyunlar ve interaktif eğitim</li>
+          <li>Bilgini geliştir, kendini ilerlet</li>
+        </ul>
+      </div>
+      <div class="visual-engine">
+        <div class="plasma-glow"></div>
+        <div class="icon-shape shape-academy"></div>
+      </div>
+    </div>
+
+    <div class="os-card green-node" onclick="location.href='/pages/helper_home.html'">
+      <div class="card-info">
+        <h2>Teacher <span class="theme-text">AI</span></h2>
+        <ul class="desc-list">
+          <li>Soruları anlayan AI öğretmen</li>
+          <li>Fotoğraf çekerek soru çözme</li>
+          <li>Adım adım anlatımlı çözümler</li>
+        </ul>
+      </div>
+      <div class="visual-engine">
+        <div class="plasma-glow"></div>
+        <div class="icon-shape shape-teacher"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script type="module">
+  import { mountShell } from "/js/ui_shell.js";
+  // ⚡ Hem shell yükle hem de görünürlüğü tetikle
+  try {
+    mountShell({ scroll:"none" });
+  } catch(e) {
+    console.error("Shell error:", e);
+    document.body.classList.add('ui-ready');
+  }
+</script>
+</body>
+</html>
