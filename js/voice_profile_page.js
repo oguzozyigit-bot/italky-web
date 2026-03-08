@@ -2,6 +2,7 @@
 
 import { supabase } from "/js/supabase_client.js";
 
+const API_BASE = "https://italky-api.onrender.com";
 const BUCKET = "voice-samples";
 const SAMPLE_COUNT = 6;
 
@@ -194,12 +195,18 @@ function renderProgress() {
     progressFill.style.width = `${pct}%`;
   }
 
-  if (nextBtn) nextBtn.disabled = !(recordings[currentIndex]?.blob && currentIndex < SAMPLE_COUNT - 1) || saving;
-  if (finishBtn) finishBtn.disabled = !(doneCount === SAMPLE_COUNT) || saving;
+  if (nextBtn) {
+    nextBtn.disabled = !(recordings[currentIndex]?.blob && currentIndex < SAMPLE_COUNT - 1) || saving;
+  }
+
+  if (finishBtn) {
+    finishBtn.disabled = !(doneCount === SAMPLE_COUNT) || saving;
+  }
 }
 
 function applyCurrentSample(samples) {
   const text = samples[currentIndex] || "—";
+
   if (sampleLabel) sampleLabel.textContent = `CÜMLE ${currentIndex + 1}`;
   if (sampleText) sampleText.textContent = text;
 
@@ -211,12 +218,22 @@ function applyCurrentSample(samples) {
     currentSeconds = existing.seconds || 0;
     currentMime = existing.mime || "audio/webm";
     if (timerText) timerText.textContent = fmtSec(currentSeconds);
-    if (statusText) statusText.textContent = "Kayıt tamamlandı • Sonraki cümleye geç";
+    if (statusText) statusText.textContent = currentIndex === SAMPLE_COUNT - 1
+      ? "Kayıt tamamlandı • Kaydet butonuna bas"
+      : "Kayıt tamamlandı • Sonraki cümleye geç";
   } else {
     currentBlob = null;
     currentSeconds = 0;
     currentMime = "";
     if (statusText) statusText.textContent = "Mikrofona dokun ve konuşmaya başla";
+  }
+
+  if (nextBtn) {
+    nextBtn.style.display = currentIndex === SAMPLE_COUNT - 1 ? "none" : "block";
+  }
+
+  if (finishBtn) {
+    finishBtn.style.display = currentIndex === SAMPLE_COUNT - 1 ? "block" : "none";
   }
 
   renderProgress();
@@ -288,7 +305,9 @@ async function startRecording() {
 
       isRecording = false;
       recordBtn?.classList.remove("listening");
-      if (statusText) statusText.textContent = "Kayıt tamamlandı • Sonraki cümleye geç";
+      if (statusText) statusText.textContent = currentIndex === SAMPLE_COUNT - 1
+        ? "Kayıt tamamlandı • Kaydet butonuna bas"
+        : "Kayıt tamamlandı • Sonraki cümleye geç";
       stopTracks();
       clearInterval(timerInt);
 
@@ -461,6 +480,30 @@ async function finishVoiceProfile(uiLang) {
   return uploaded;
 }
 
+async function enrollTTSVoice() {
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token;
+
+  if (!token) {
+    throw new Error("Oturum bulunamadı");
+  }
+
+  const r = await fetch(`${API_BASE}/api/voice/enroll`, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${token}`
+    }
+  });
+
+  const j = await r.json().catch(() => ({}));
+
+  if (!r.ok) {
+    throw new Error(j.detail || "Voice enroll başarısız");
+  }
+
+  return j;
+}
+
 async function bootPage() {
   const user = await getUserOrThrow();
   const lang = getUserPreferredLang(user);
@@ -512,7 +555,11 @@ async function bootPage() {
     try {
       await finishVoiceProfile(lang);
       if (statusText) statusText.textContent = "Ses profili kaydedildi";
-      toast("Ses profili kaydedildi");
+
+      await enrollTTSVoice();
+
+      if (statusText) statusText.textContent = "Ses profili hazır";
+      toast("Ses profili hazır");
 
       setTimeout(() => {
         location.href = "/pages/home.html";
