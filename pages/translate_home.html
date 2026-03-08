@@ -14,167 +14,155 @@
     height: 100vh;
     display: flex;
     flex-direction: column;
-    background: radial-gradient(circle at 50% 20%, #0a0a25 0%, #000 100%);
-    overflow-y: auto;
-    padding-bottom: env(safe-area-inset-bottom);
+    background: radial-gradient(circle at 50% 20%, #0a1030 0%, #000 100%);
+    padding-bottom: 5px; /* Alt bar boşluğunu daralttım */
   }
-</style>
 
-<style>
-:root {
-  --ai-grad: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
-  --blue: #60a5fa;
-  --green: #34d399;
-  --purple: #a855f7;
-  --amber: #f59e0b;
-  --rose: #f43f5e;
-  --glass-border: rgba(255, 255, 255, 0.12);
-}
+  .main-hub {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px; /* Kartlar arası boşluk optimize edildi */
+    padding: 10px 14px;
+  }
 
-* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+  /* ===== 1. ORB & ENERGY BALLS ===== */
+  .f2f-visual {
+    flex: 0 0 auto;
+    display: flex;
+    justify-content: center;
+    padding: 10px 0;
+  }
 
-.main-hub {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 10px 14px;
-}
+  .neural-orb {
+    width: 90px;
+    height: 90px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 
-/* ===== 1. ORB & ENERGY BALLS ===== */
-.f2f-visual {
-  flex: 0 0 auto;
-  display: flex;
-  justify-content: center;
-  padding: 20px 0 10px 0;
-}
+  .ai-ring {
+    position: absolute;
+    inset: -2px;
+    border-radius: 50%;
+    padding: 2px;
+    background: var(--ai-grad);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    animation: rotateOrb 12s linear infinite;
+  }
 
-.neural-orb {
-  width: 100px;
-  height: 100px;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+  .orbit-energy {
+    position: absolute;
+    inset: -12px;
+    border-radius: 50%;
+    animation: rotateOrb 6s linear infinite;
+  }
 
-.ai-ring {
-  position: absolute;
-  inset: -2px;
-  border-radius: 50%;
-  padding: 2px;
-  background: var(--ai-grad);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask-composite: exclude;
-  animation: rotateOrb 12s linear infinite;
-}
+  .e-ball {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    filter: blur(1px);
+  }
 
-.orbit-energy {
-  position: absolute;
-  inset: -15px;
-  border-radius: 50%;
-  animation: rotateOrb 6s linear infinite;
-}
+  .ball-1 { top: 0; left: 50%; background: #6366f1; box-shadow: 0 0 12px #6366f1; }
+  .ball-2 { bottom: 0; left: 50%; background: #ec4899; box-shadow: 0 0 12px #ec4899; }
 
-.e-ball {
-  position: absolute;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  filter: blur(1.5px);
-}
+  .ai-core {
+    width: 65px;
+    height: 65px;
+    background: #000;
+    border-radius: 50%;
+    background-image: linear-gradient(#000, #000), var(--ai-grad);
+    background-origin: border-box;
+    background-clip: content-box, border-box;
+    border: 2px solid transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: aiBreathe 4s infinite ease-in-out;
+    z-index: 10;
+  }
 
-.ball-1 { top: 0; left: 50%; transform: translateX(-50%); background: #6366f1; box-shadow: 0 0 15px #6366f1; }
-.ball-2 { bottom: 0; left: 50%; transform: translateX(-50%); background: #ec4899; box-shadow: 0 0 15px #ec4899; }
+  /* ===== 2. HUB CARDS ===== */
+  :root {
+    --ai-grad: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
+    --blue: #60a5fa; --green: #34d399; --purple: #a855f7; --amber: #f59e0b; --rose: #f43f5e;
+    --glass-border: rgba(255, 255, 255, 0.12);
+  }
 
-.ai-core {
-  width: 75px;
-  height: 75px;
-  background: #000;
-  border-radius: 50%;
-  background-image: linear-gradient(#000, #000), var(--ai-grad);
-  background-origin: border-box;
-  background-clip: content-box, border-box;
-  border: 2px solid transparent;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  animation: aiBreathe 4s infinite ease-in-out;
-  z-index: 10;
-}
+  .hub-cards { flex: 1; display: flex; flex-direction: column; gap: 8px; }
 
-/* ===== 2. HUB CARDS ===== */
-.hub-cards {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
+  .trans-card {
+    flex: 1;
+    position: relative;
+    border-radius: 22px;
+    border: 1px solid var(--glass-border);
+    overflow: hidden;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    padding: 0 18px;
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(20px);
+    transition: all 0.3s cubic-bezier(0.2, 1, 0.2, 1);
+  }
 
-.trans-card {
-  min-height: 85px;
-  position: relative;
-  border-radius: 26px;
-  border: 1px solid var(--glass-border);
-  overflow: hidden;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  padding: 0 20px;
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(20px);
-  transition: all 0.3s cubic-bezier(0.1, 0.7, 0.1, 1);
-}
+  .trans-card:active { transform: scale(0.97); background: rgba(255, 255, 255, 0.1); }
 
-.trans-card:active { transform: scale(0.96); filter: brightness(1.3); }
+  /* Card Themes */
+  .f2f-card { background: linear-gradient(145deg, rgba(244, 63, 94, 0.12) 0%, rgba(0,0,0,0.6) 100%); }
+  .text-card { background: linear-gradient(145deg, rgba(96, 165, 250, 0.1) 0%, rgba(0,0,0,0.6) 100%); }
+  .inter-card { background: linear-gradient(145deg, rgba(245, 158, 11, 0.1) 0%, rgba(0,0,0,0.6) 100%); }
+  .walk-card { background: linear-gradient(145deg, rgba(52, 211, 153, 0.1) 0%, rgba(0,0,0,0.6) 100%); }
+  .off-card { background: linear-gradient(145deg, rgba(168, 85, 247, 0.1) 0%, rgba(0,0,0,0.6) 100%); }
 
-/* Renk Temaları */
-.f2f-card { background: linear-gradient(145deg, rgba(244, 63, 94, 0.15) 0%, rgba(0,0,0,0.6) 100%); border-color: rgba(244, 63, 94, 0.3); }
-.text-card { background: linear-gradient(145deg, rgba(96, 165, 250, 0.1) 0%, rgba(0,0,0,0.5) 100%); }
-.interpreter-card { background: linear-gradient(145deg, rgba(245, 158, 11, 0.12) 0%, rgba(0,0,0,0.5) 100%); }
-.walkie-card { background: linear-gradient(145deg, rgba(52, 211, 153, 0.15) 0%, rgba(0,0,0,0.6) 100%); border-color: rgba(52, 211, 153, 0.3); }
-.offline-card { background: linear-gradient(145deg, rgba(168, 85, 247, 0.15) 0%, rgba(0,0,0,0.6) 100%); border-color: rgba(168, 85, 247, 0.3); }
+  /* --- ADVANCED ANIMATIONS --- */
 
-/* --- TÜM İKON ANİMASYONLARI --- */
+  /* 1. FaceToFace Vizör */
+  .icon-f2f { width: 40px; height: 40px; margin-right: 15px; position: relative; border: 1.5px solid rgba(244, 63, 94, 0.3); border-radius: 8px; }
+  .f2f-scanner { position: absolute; width: 100%; height: 2px; background: var(--rose); top: 0; animation: scanLine 2s infinite ease-in-out; box-shadow: 0 0 8px var(--rose); }
+  .f2f-dot { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 6px; height: 6px; background: #fff; border-radius: 50%; animation: pulseCore 1s infinite alternate; }
 
-/* 1. FaceToFace: Radar */
-.f2f-icon-wrap { width: 45px; height: 45px; position: relative; margin-right: 15px; display: flex; align-items: center; justify-content: center; }
-.radar-ring { position: absolute; border: 2px solid var(--rose); border-radius: 50%; animation: radarPing 2s infinite; }
-.radar-dot { width: 8px; height: 8px; background: #fff; border-radius: 50%; box-shadow: 0 0 10px var(--rose); }
+  /* 2. Text Translate Flow */
+  .icon-text { width: 40px; height: 30px; margin-right: 15px; display: flex; flex-direction: column; gap: 4px; }
+  .text-bar { height: 3px; background: var(--blue); border-radius: 2px; opacity: 0.3; width: 0; animation: fillText 2s infinite; }
 
-/* 2. Text Translate: Typing */
-.txt-icon { width: 45px; height: 30px; border-left: 2px solid var(--blue); margin-right: 15px; position: relative; }
-.txt-line { height: 2px; background: var(--blue); margin: 4px 0; animation: txtWidth 2s infinite alternate; }
+  /* 3. Interpreter Neural */
+  .icon-inter { width: 40px; height: 30px; margin-right: 15px; position: relative; }
+  .inter-node { position: absolute; width: 10px; height: 10px; border: 2px solid var(--amber); border-radius: 50%; top: 50%; margin-top: -5px; }
+  .node-l { left: 0; animation: nodeJump 1.5s infinite; }
+  .node-r { right: 0; border-color: #fff; animation: nodeJump 1.5s infinite reverse; }
+  .inter-link { position: absolute; height: 2px; background: var(--amber); top: 50%; left: 10px; right: 10px; transform: scaleX(0); animation: linkPulse 1.5s infinite; }
 
-/* 3. Interpreter: Orbiting Dots */
-.inter-icon { width: 45px; height: 30px; display: flex; gap: 5px; margin-right: 15px; align-items: center; justify-content: center; }
-.inter-circle { width: 12px; height: 12px; border: 2px solid var(--amber); border-radius: 50%; animation: interSwap 2s infinite ease-in-out; }
+  /* 4. Walkie EQ Waves */
+  .icon-walkie { width: 40px; height: 30px; margin-right: 15px; display: flex; align-items: flex-end; gap: 3px; }
+  .eq-bar { flex: 1; background: var(--green); border-radius: 2px; animation: eqMove 0.6s infinite alternate; }
 
-/* 4. Walkie-Talkie: Signal Waves (YENİ) */
-.walkie-icon { width: 45px; height: 30px; position: relative; margin-right: 15px; display: flex; align-items: center; justify-content: center; }
-.signal-dot { width: 6px; height: 6px; background: var(--green); border-radius: 50%; }
-.signal-wave { position: absolute; border: 1.5px solid var(--green); border-radius: 50%; animation: signalOut 1.5s infinite; }
+  /* 5. Offline Data Box */
+  .icon-off { width: 40px; height: 30px; margin-right: 15px; position: relative; border: 2px solid var(--purple); border-radius: 4px; overflow: hidden; }
+  .off-fill { position: absolute; bottom: 0; width: 100%; background: var(--purple); animation: boxFill 2.5s infinite; opacity: 0.6; }
 
-/* 5. Offline: Download Arrow */
-.dl-icon { width: 45px; height: 35px; position: relative; margin-right: 15px; display: flex; justify-content: center; align-items: center; }
-.dl-tray { width: 22px; height: 7px; border: 2px solid var(--purple); border-top: 0; position: absolute; bottom: 5px; border-radius: 0 0 4px 4px; }
-.dl-arrow { width: 2px; height: 12px; background: var(--purple); position: absolute; bottom: 10px; animation: dlSlide 1.5s infinite; }
-.dl-arrow::after { content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 5px solid var(--purple); }
+  /* --- KEYFRAMES --- */
+  @keyframes rotateOrb { from { transform: rotate(0); } to { transform: rotate(360deg); } }
+  @keyframes aiBreathe { 0%,100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.05); opacity: 1; } }
+  @keyframes scanLine { 0% { top: 0%; } 100% { top: 100%; } }
+  @keyframes pulseCore { from { transform: translate(-50%,-50%) scale(1); opacity: 1; } to { transform: translate(-50%,-50%) scale(1.8); opacity: 0.2; } }
+  @keyframes fillText { 0% { width: 0; opacity: 0; } 50% { width: 100%; opacity: 1; } 100% { width: 100%; opacity: 0; } }
+  @keyframes nodeJump { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+  @keyframes linkPulse { 0%, 100% { transform: scaleX(0); opacity: 0; } 50% { transform: scaleX(1); opacity: 1; } }
+  @keyframes eqMove { from { height: 10%; } to { height: 100%; } }
+  @keyframes boxFill { 0% { height: 0; } 100% { height: 100%; } }
 
-/* KEYFRAMES */
-@keyframes rotateOrb { from { transform: rotate(0); } to { transform: rotate(360deg); } }
-@keyframes aiBreathe { 0%,100% { transform: scale(1); opacity: 0.7; } 50% { transform: scale(1.06); opacity: 1; } }
-@keyframes radarPing { 0% { width: 8px; height: 8px; opacity: 1; } 100% { width: 40px; height: 40px; opacity: 0; } }
-@keyframes txtWidth { 0% { width: 20%; } 100% { width: 90%; } }
-@keyframes interSwap { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(12px); } }
-@keyframes signalOut { 0% { width: 6px; height: 6px; opacity: 1; } 100% { width: 35px; height: 35px; opacity: 0; } }
-@keyframes dlSlide { 0% { transform: translateY(-12px); opacity: 0; } 50% { opacity: 1; } 100% { transform: translateY(0); opacity: 0; } }
-
-/* Typography */
-.card-content { flex: 1; }
-.card-title { font-family: 'Space Grotesk'; font-size: 19px; font-weight: 700; color: #fff; margin: 0; letter-spacing: -0.5px; }
-.card-title .ai { background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-.card-desc { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 3px; }
+  /* Text Styles */
+  .card-content { flex: 1; }
+  .card-title { font-family: 'Space Grotesk'; font-size: 18px; font-weight: 700; color: #fff; margin: 0; }
+  .card-title .ai { background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .card-desc { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 2px; }
 </style>
 </head>
 
@@ -185,90 +173,80 @@
     <div class="f2f-visual">
       <div class="neural-orb">
         <div class="ai-ring"></div>
-        <div class="orbit-energy">
-          <div class="e-ball ball-1"></div>
-          <div class="e-ball ball-2"></div>
-        </div>
+        <div class="orbit-energy"><div class="e-ball ball-1"></div><div class="e-ball ball-2"></div></div>
         <div class="ai-core">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">
-            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
-            <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"/>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5">
+            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4"/>
           </svg>
         </div>
       </div>
     </div>
 
     <div class="hub-cards">
-
       <div class="trans-card f2f-card" onclick="location.href='/facetoface.html'">
-        <div class="f2f-icon-wrap">
-          <div class="radar-ring" style="animation-delay: 0s"></div>
-          <div class="radar-ring" style="animation-delay: 0.6s"></div>
-          <div class="radar-dot"></div>
+        <div class="icon-f2f">
+          <div class="f2f-scanner"></div>
+          <div class="f2f-dot"></div>
         </div>
         <div class="card-content">
           <h2 class="card-title">FaceToFace <span class="ai">AI</span></h2>
-          <p class="card-desc">Yüzyüze anlık çeviri ve tam ekran etkileşim.</p>
+          <p class="card-desc">Anlık vizör taramalı karşılıklı çeviri.</p>
         </div>
       </div>
 
       <div class="trans-card text-card" onclick="location.href='/pages/text_translate.html'">
-        <div class="txt-icon">
-          <div class="txt-line" style="animation-delay: 0s"></div>
-          <div class="txt-line" style="animation-delay: 0.3s"></div>
-          <div class="txt-line" style="animation-delay: 0.6s"></div>
+        <div class="icon-text">
+          <div class="text-bar" style="animation-delay: 0s"></div>
+          <div class="text-bar" style="animation-delay: 0.4s"></div>
+          <div class="text-bar" style="animation-delay: 0.8s"></div>
         </div>
         <div class="card-content">
           <h2 class="card-title">Text Translate <span class="ai">AI</span></h2>
-          <p class="card-desc">Metinleri ve belgeleri yapay zeka ile yerelleştir.</p>
+          <p class="card-desc">Yazılı metinleri akıllı bağlamla yerelleştir.</p>
         </div>
       </div>
 
-      <div class="trans-card interpreter-card" onclick="location.href='/pages/interpreter.html'">
-        <div class="inter-icon">
-          <div class="inter-circle"></div>
-          <div class="inter-circle" style="border-color: #fff; animation-delay: 1s;"></div>
+      <div class="trans-card inter-card" onclick="location.href='/pages/interpreter.html'">
+        <div class="icon-inter">
+          <div class="inter-node node-l"></div>
+          <div class="inter-link"></div>
+          <div class="inter-node node-r"></div>
         </div>
         <div class="card-content">
           <h2 class="card-title">Interpreter <span class="ai">AI</span></h2>
-          <p class="card-desc">Anlık tercüman moduyla kesintisiz kulaklık çevirisi.</p>
+          <p class="card-desc">Nöral ağlarla kesintisiz canlı tercüman.</p>
         </div>
       </div>
 
-      <div class="trans-card walkie-card" onclick="location.href='/pages/f2f_connect.html'">
-        <div class="walkie-icon">
-          <div class="signal-wave" style="animation-delay: 0s"></div>
-          <div class="signal-wave" style="animation-delay: 0.5s"></div>
-          <div class="signal-dot"></div>
+      <div class="trans-card walk-card" onclick="location.href='/pages/f2f_connect.html'">
+        <div class="icon-walkie">
+          <div class="eq-bar" style="animation-delay: 0.1s"></div>
+          <div class="eq-bar" style="animation-delay: 0.3s"></div>
+          <div class="eq-bar" style="animation-delay: 0.2s"></div>
+          <div class="eq-bar" style="animation-delay: 0.4s"></div>
         </div>
         <div class="card-content">
           <h2 class="card-title">Walkie-Talkie <span class="ai">AI</span></h2>
-          <p class="card-desc">Bas-konuş yöntemiyle uzak mesafe sesli odalar.</p>
+          <p class="card-desc">Ses frekanslı uzak mesafe anlık odalar.</p>
         </div>
       </div>
 
-      <div class="trans-card offline-card" onclick="location.href='/pages/offline_languages.html'">
-        <div class="dl-icon">
-          <div class="dl-tray"></div>
-          <div class="dl-arrow"></div>
+      <div class="trans-card off-card" onclick="location.href='/pages/offline_languages.html'">
+        <div class="icon-off">
+          <div class="off-fill"></div>
         </div>
         <div class="card-content">
           <h2 class="card-title">Offline Çeviri <span class="ai">AI</span></h2>
-          <p class="card-desc">İnternetsiz paketlerle her yerde iletişim.</p>
+          <p class="card-desc">Cihaza yerleşik veri paketleriyle özgür çeviri.</p>
         </div>
       </div>
-
     </div>
   </div>
 </main>
 
 <script type="module">
   import { mountShell } from "/js/ui_shell.js";
-  
-  // Shell'i anında yükle
-  (function init() {
-    mountShell({ scroll:"none" });
-  })();
+  mountShell({ scroll:"none" });
 </script>
 </body>
 </html>
