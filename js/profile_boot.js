@@ -1,38 +1,25 @@
-// FILE: /js/profile_boot.js
-
-import { initProfilePage } from "/js/profile_page.js";
+// FILE: /js/voice_profile_boot.js
 
 async function boot(){
-  let setHeaderTokensSafe = () => {};
-
   // ui_shell opsiyonel
   try{
     const shell = await import("/js/ui_shell.js");
-
     if(typeof shell.mountShell === "function"){
       try{
         shell.mountShell({ scroll: "auto" });
       }catch(e){
-        console.error("[profile_boot mountShell call]", e);
+        console.error("[voice_profile_boot mountShell call]", e);
       }
     }
-
-    if(typeof shell.setHeaderTokens === "function"){
-      setHeaderTokensSafe = shell.setHeaderTokens;
-    }
   }catch(e){
-    console.warn("[profile_boot ui_shell optional load fail]", e);
+    console.warn("[voice_profile_boot ui_shell optional load fail]", e);
   }
 
   try{
-    await initProfilePage({ setHeaderTokens: setHeaderTokensSafe });
+    await import("/js/voice_profile_page.js?v=fix1");
   }catch(e){
-    console.error("[profile_boot initProfilePage]", e);
+    console.error("[voice_profile_boot page import fail]", e);
   }
-
-  document.getElementById("buyTokensBtn")?.addEventListener("click", ()=>{
-    location.href = "/pages/jetonbuy.html";
-  });
 }
 
 boot();
