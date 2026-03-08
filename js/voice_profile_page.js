@@ -13,6 +13,9 @@ const nextBtn = $("nextBtn");
 const finishBtn = $("finishBtn");
 const backBtn = $("backBtn");
 
+const playPreviewBtn = $("playPreviewBtn");
+const deletePreviewBtn = $("deletePreviewBtn");
+
 const statusText = $("statusText");
 const timerText = $("timerText");
 const audioBox = $("audioBox");
@@ -250,9 +253,9 @@ function applyCurrentSample(samples) {
     } catch {}
 
     if (timerText) timerText.textContent = fmtSec(currentSeconds);
-    if (statusText) statusText.textContent = "Bu cümle kaydedildi";
+    if (statusText) statusText.textContent = "Kayıt tamamlandı • Dinle veya sonraki cümleye geç";
   } else {
-    if (statusText) statusText.textContent = "Kayda hazır";
+    if (statusText) statusText.textContent = "Mikrofona dokun ve konuşmaya başla";
   }
 
   renderProgress();
@@ -284,7 +287,7 @@ async function startRecording() {
     mediaRecorder.onstart = () => {
       isRecording = true;
       recordBtn?.classList.add("listening");
-      if (statusText) statusText.textContent = "Kayıt alınıyor...";
+      if (statusText) statusText.textContent = "Kayıt başladı • Bitirmek için mikrofona tekrar dokun";
       startTimer();
     };
 
@@ -328,7 +331,7 @@ async function startRecording() {
 
       isRecording = false;
       recordBtn?.classList.remove("listening");
-      if (statusText) statusText.textContent = "Kayıt tamamlandı";
+      if (statusText) statusText.textContent = "Kayıt tamamlandı • Dinle veya sonraki cümleye geç";
       stopTracks();
       clearInterval(timerInt);
 
@@ -507,6 +510,7 @@ async function bootPage() {
   const samples = SAMPLE_TEXTS[lang] || SAMPLE_TEXTS.tr;
 
   applyCurrentSample(samples);
+  if (statusText) statusText.textContent = "Mikrofona dokun ve konuşmaya başla";
 
   recordBtn?.addEventListener("click", async () => {
     if (saving) return;
@@ -524,10 +528,28 @@ async function bootPage() {
 
     recordings[currentIndex] = { blob: null, seconds: 0, mime: "" };
     clearPreview();
-    if (statusText) statusText.textContent = "Kayda hazır";
+    if (statusText) statusText.textContent = "Kayıt silindi • Mikrofona dokunarak yeniden başla";
     renderProgress();
     renderCompletedList();
     toast("Bu cümle sıfırlandı");
+  });
+
+  deletePreviewBtn?.addEventListener("click", () => {
+    if (saving) return;
+    if (isRecording) stopRecording();
+
+    recordings[currentIndex] = { blob: null, seconds: 0, mime: "" };
+    clearPreview();
+    if (statusText) statusText.textContent = "Kayıt silindi • Mikrofona dokunarak yeniden başla";
+    renderProgress();
+    renderCompletedList();
+    toast("Kayıt silindi");
+  });
+
+  playPreviewBtn?.addEventListener("click", () => {
+    try{
+      audioPreview?.play?.();
+    }catch{}
   });
 
   nextBtn?.addEventListener("click", () => {
