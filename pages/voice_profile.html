@@ -5,93 +5,88 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>italkyAI • Sesini Tanıt</title>
 
+  <meta name="theme-color" content="#02000f">
+  <style>html,body{background:#02000f !important;}</style>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
   <style>
-    html,body{
-      margin:0;
-      padding:0;
-      background:#000;
-      color:#fff;
-      font-family:'Outfit',sans-serif;
-      overflow:hidden;
-    }
-
-    :root{
-      --ai-grad: linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
-    }
-
-    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; }
-
     #pageContent{
-      min-height:100%;
+      padding: 16px 14px calc(var(--footerH, 92px) + env(safe-area-inset-bottom) + 8px);
       display:flex;
       flex-direction:column;
-      gap:14px;
-      padding:16px 14px calc(var(--footerH,92px) + env(safe-area-inset-bottom) + 16px);
+      gap:12px;
       max-width:560px;
       margin:0 auto;
-      background:
-        radial-gradient(circle at 50% 14%, rgba(99,102,241,.18) 0%, rgba(0,0,0,0) 36%),
-        radial-gradient(circle at 50% 0%, rgba(236,72,153,.11) 0%, rgba(0,0,0,0) 28%),
-        #000;
     }
 
     .panel{
       background: linear-gradient(145deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%);
       border: 1px solid rgba(255,255,255,0.12);
       border-radius: 26px;
-      padding: 16px 14px;
+      padding: 14px 14px;
       backdrop-filter: blur(18px);
       -webkit-backdrop-filter: blur(18px);
+    }
+
+    .head{
       display:flex;
-      flex-direction:column;
-      gap:14px;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:10px;
     }
 
     .title{
       font-family:"Space Grotesk", system-ui, sans-serif;
-      font-size: 22px;
-      font-weight: 900;
-      margin: 0;
-      letter-spacing: -0.4px;
-      color: rgba(255,255,255,0.95);
-      text-align:center;
+      font-size:18px;
+      font-weight:900;
+      margin:0;
+      letter-spacing:-0.3px;
+      color:rgba(255,255,255,0.92);
     }
 
     .desc{
-      font-size:13px;
+      font-size:12px;
       line-height:1.5;
-      color:rgba(255,255,255,.68);
-      text-align:center;
+      color:rgba(255,255,255,.62);
       margin:0;
     }
 
     .step{
       padding:14px;
       border-radius:18px;
-      background:rgba(255,255,255,.05);
-      border:1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,0.05);
+      border:1px solid rgba(255,255,255,0.08);
       font-size:13px;
-      font-weight:700;
-      color:rgba(255,255,255,.88);
+      font-weight:800;
+      color:rgba(255,255,255,.90);
       line-height:1.5;
+    }
+
+    .step .label{
+      display:block;
+      font-size:11px;
+      font-weight:900;
+      color: rgba(165,180,252,0.95);
+      letter-spacing:1px;
+      margin-bottom:8px;
     }
 
     .micWrap{
       display:flex;
       justify-content:center;
-      padding:6px 0 2px;
+      padding:8px 0 2px;
     }
 
     .micBtn{
-      width:92px;
-      height:92px;
+      width:96px;
+      height:96px;
       border-radius:50%;
       border:3px solid transparent;
-      background-image:linear-gradient(#000,#000), var(--ai-grad);
+      background-image: linear-gradient(#000,#000), linear-gradient(135deg,#a5b4fc 0%, #6366f1 55%, #ec4899 100%);
       background-origin:border-box;
       background-clip:content-box,border-box;
       background-color:#000;
@@ -100,11 +95,12 @@
       justify-content:center;
       cursor:pointer;
       position:relative;
+      box-shadow: 0 14px 34px rgba(0,0,0,.28);
     }
 
     .micBtn svg{
-      width:34px;
-      height:34px;
+      width:36px;
+      height:36px;
     }
 
     .micBtn.listening::after{
@@ -125,73 +121,163 @@
     .status{
       text-align:center;
       font-size:13px;
-      font-weight:800;
+      font-weight:900;
       color:#a5b4fc;
       min-height:20px;
     }
 
-    .btn{
-      min-height:52px;
-      border:none;
-      border-radius:18px;
-      cursor:pointer;
-      font-size:14px;
+    .timer{
+      text-align:center;
+      font-size:22px;
       font-weight:1000;
-      letter-spacing:.2px;
+      color:rgba(255,255,255,.94);
+      letter-spacing:.5px;
+      min-height:28px;
+    }
+
+    .audioBox{
+      display:none;
+      flex-direction:column;
+      gap:10px;
+      padding:12px;
+      border-radius:18px;
+      background: rgba(255,255,255,0.05);
+      border:1px solid rgba(255,255,255,0.08);
+    }
+
+    .audioBox.show{
+      display:flex;
+    }
+
+    audio{
+      width:100%;
+      border-radius:14px;
+    }
+
+    .list{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      margin-top:10px;
+    }
+
+    .btn{
+      height:46px;
+      padding:0 14px;
+      border-radius:16px;
+      border:none;
+      cursor:pointer;
+      font-weight:1000;
+      user-select:none;
+      white-space:nowrap;
+    }
+
+    .btn:active{
+      transform:scale(.98);
     }
 
     .btn-primary{
-      background:var(--ai-grad);
+      background: linear-gradient(135deg, #a5b4fc 0%, #6366f1 55%, #ec4899 100%);
       color:#050510;
     }
 
     .btn-ghost{
-      background:rgba(255,255,255,.06);
+      background: rgba(255,255,255,.06);
       color:#fff;
       border:1px solid rgba(255,255,255,.12);
     }
 
+    .btn-dangerText{
+      background: transparent;
+      border: 1px solid rgba(255, 0, 90, 0.30);
+      color: rgba(255, 90, 140, 0.95);
+    }
+
     .note{
       font-size:11px;
-      line-height:1.45;
-      color:rgba(255,255,255,.5);
+      font-weight:800;
+      color:rgba(255,255,255,0.55);
+      line-height:1.4;
+      margin-top:8px;
+    }
+
+    .toast{
+      position: fixed;
+      left:50%;
+      top:18px;
+      transform: translateX(-50%) translateY(-120px);
+      background: rgba(10,10,18,.92);
+      border:1px solid rgba(165,180,252,.35);
+      padding: 10px 14px;
+      border-radius: 999px;
+      color:#fff;
+      z-index:999999;
+      font-weight:900;
+      font-size:12px;
+      transition:.25s;
+      backdrop-filter: blur(12px);
+      pointer-events:none;
+      max-width:min(92vw, 520px);
       text-align:center;
+    }
+
+    .toast.show{
+      transform: translateX(-50%) translateY(0);
     }
   </style>
 </head>
 <body>
-  <main id="pageContent">
+  <div id="pageContent">
+
     <div class="panel">
-      <h1 class="title">Sesini Tanıt</h1>
+      <div class="head">
+        <h2 class="title">Sesini Tanıt</h2>
+      </div>
+
       <p class="desc">
-        Çeviri sesinin sana daha yakın olması için kısa bir ses örneği kaydet.
+        Çeviri sesinin sana daha yakın hale gelmesi için kısa bir örnek kayıt al.
+        Şimdilik tek örnek kayıtla başlıyoruz.
       </p>
 
-      <div class="step">
-        Örnek cümle: <br>
-        <b>“Merhaba, ben italkyAI kullanıyorum ve sesimi tanıtıyorum.”</b>
-      </div>
+      <div class="list">
+        <div class="step">
+          <span class="label">ÖRNEK CÜMLE</span>
+          Merhaba, ben italkyAI kullanıyorum ve sesimi tanıtıyorum.
+        </div>
 
-      <div class="micWrap">
-        <button class="micBtn" id="recordBtn" type="button" aria-label="Kayıt Başlat">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
-            <path d="M19 11v1a7 7 0 0 1-14 0v-1"/>
-            <path d="M12 19v3"/>
-          </svg>
-        </button>
-      </div>
+        <div class="micWrap">
+          <button class="micBtn" id="recordBtn" type="button" aria-label="Kayıt Başlat / Durdur">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
+              <path d="M19 11v1a7 7 0 0 1-14 0v-1"/>
+              <path d="M12 19v3"/>
+            </svg>
+          </button>
+        </div>
 
-      <div class="status" id="statusText">Kayda hazır</div>
+        <div class="status" id="statusText">Kayda hazır</div>
+        <div class="timer" id="timerText">00:00</div>
 
-      <button class="btn btn-primary" id="saveBtn" type="button">Ses Profilini Kaydet</button>
-      <button class="btn btn-ghost" id="retryBtn" type="button">Tekrar Kaydet</button>
-
-      <div class="note">
-        Şimdilik bu ekran kayıt altyapısının başlangıcıdır. Sonraki adımda ses dosyası backend’e gönderilip profile bağlanacaktır.
+        <div class="audioBox" id="audioBox">
+          <audio id="audioPreview" controls></audio>
+        </div>
       </div>
     </div>
-  </main>
+
+    <div class="panel">
+      <div class="list">
+        <button class="btn btn-primary" id="saveBtn" type="button">Ses Profilini Kaydet</button>
+        <button class="btn btn-ghost" id="retryBtn" type="button">Tekrar Kaydet</button>
+        <button class="btn btn-dangerText" id="backBtn" type="button">Vazgeç</button>
+      </div>
+
+      <div class="note">
+        Bu kayıt sonraki aşamada backend’e gönderilip kullanıcı profilinle eşleştirilecektir.
+      </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+  </div>
 
   <script type="module" src="/js/voice_profile_page.js"></script>
 </body>
