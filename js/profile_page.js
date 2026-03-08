@@ -290,35 +290,101 @@ async function hardDeleteAccount(){
   location.replace("/pages/login.html");
 }
 
-function loadSettings(){
-  const voice = localStorage.getItem("tts_voice") || "auto";
-  const detect = localStorage.getItem("lang_detect") || "auto";
-  const mode = localStorage.getItem("speech_mode") || "normal";
+/* settings labels */
+const SETTINGS_META = {
+  tts_voice: {
+    title: "Çeviri Sesi",
+    values: {
+      auto: "Otomatik",
+      male: "Erkek",
+      female: "Kadın"
+    }
+  },
+  lang_detect: {
+    title: "Dil Algılama",
+    values: {
+      auto: "Otomatik",
+      manual: "Manuel"
+    }
+  },
+  speech_mode: {
+    title: "Konuşma Modu",
+    values: {
+      normal: "Normal",
+      noise: "Gürültülü Ortam",
+      headset: "Kulaklık"
+    }
+  }
+};
 
-  const ttsVoice = $("ttsVoice");
-  const langDetect = $("langDetect");
-  const speechMode = $("speechMode");
+function settingLabel(key, value){
+  return SETTINGS_META[key]?.values?.[value] || "—";
+}
 
-  if(ttsVoice) ttsVoice.value = voice;
-  if(langDetect) langDetect.value = detect;
-  if(speechMode) speechMode.value = mode;
+function renderSettingValues(){
+  safeText("ttsVoiceValue", settingLabel("tts_voice", localStorage.getItem("tts_voice") || "auto"));
+  safeText("langDetectValue", settingLabel("lang_detect", localStorage.getItem("lang_detect") || "auto"));
+  safeText("speechModeValue", settingLabel("speech_mode", localStorage.getItem("speech_mode") || "normal"));
+}
+
+function openSheet(storageKey){
+  const backdrop = $("sheetBackdrop");
+  const sheet = $("optionSheet");
+  const title = $("sheetTitle");
+  const list = $("sheetList");
+
+  const meta = SETTINGS_META[storageKey];
+  if(!meta || !backdrop || !sheet || !title || !list) return;
+
+  const current = localStorage.getItem(storageKey) || Object.keys(meta.values)[0];
+  title.textContent = meta.title;
+
+  list.innerHTML = Object.entries(meta.values).map(([value, label]) => `
+    <div class="sheetItem ${value === current ? "active" : ""}" data-storage-key="${storageKey}" data-value="${value}">
+      <div class="sheetItemLabel">${label}</div>
+      <div class="sheetItemCheck"></div>
+    </div>
+  `).join("");
+
+  list.querySelectorAll(".sheetItem").forEach(el => {
+    el.addEventListener("click", () => {
+      const key = el.dataset.storageKey;
+      const value = el.dataset.value;
+      localStorage.setItem(key, value);
+      renderSettingValues();
+
+      if(key === "tts_voice") toast("Çeviri sesi ayarı kaydedildi");
+      if(key === "lang_detect") toast("Dil algılama ayarı kaydedildi");
+      if(key === "speech_mode") toast("Konuşma modu kaydedildi");
+
+      closeSheet();
+    });
+  });
+
+  backdrop.classList.add("show");
+  sheet.classList.add("show");
+  document.body.style.overflow = "hidden";
+}
+
+function closeSheet(){
+  $("sheetBackdrop")?.classList.remove("show");
+  $("optionSheet")?.classList.remove("show");
+  document.body.style.overflow = "";
 }
 
 function bindSettings(){
-  $("ttsVoice")?.addEventListener("change", (e)=>{
-    localStorage.setItem("tts_voice", e.target.value);
-    toast("Çeviri sesi ayarı kaydedildi");
-  });
+  $("ttsVoiceTrigger")?.addEventListener("click", ()=>openSheet("tts_voice"));
+  $("langDetectTrigger")?.addEventListener("click", ()=>openSheet("lang_detect"));
+  $("speechModeTrigger")?.addEventListener("click", ()=>openSheet("speech_mode"));
 
-  $("langDetect")?.addEventListener("change", (e)=>{
-    localStorage.setItem("lang_detect", e.target.value);
-    toast("Dil algılama ayarı kaydedildi");
-  });
+  $("sheetBackdrop")?.addEventListener("click", closeSheet);
+}
 
-  $("speechMode")?.addEventListener("change", (e)=>{
-    localStorage.setItem("speech_mode", e.target.value);
-    toast("Konuşma modu kaydedildi");
-  });
+function loadSettings(){
+  if(!localStorage.getItem("tts_voice")) localStorage.setItem("tts_voice", "auto");
+  if(!localStorage.getItem("lang_detect")) localStorage.setItem("lang_detect", "auto");
+  if(!localStorage.getItem("speech_mode")) localStorage.setItem("speech_mode", "normal");
+  renderSettingValues();
 }
 
 export async function initProfilePage({ setHeaderTokens } = {}){
