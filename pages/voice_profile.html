@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>italkyAI • Sesini Tanıt</title>
 
   <meta name="theme-color" content="#02000f">
@@ -50,29 +50,85 @@
 
     .desc{
       font-size:12px;
-      line-height:1.5;
-      color:rgba(255,255,255,.62);
+      line-height:1.55;
+      color:rgba(255,255,255,.66);
       margin:0;
     }
 
-    .step{
+    .progressWrap{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      margin-top:10px;
+    }
+
+    .progressTop{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+
+    .progressLabel{
+      font-size:12px;
+      font-weight:900;
+      color:rgba(165,180,252,0.95);
+      letter-spacing:.5px;
+    }
+
+    .progressCount{
+      font-size:12px;
+      font-weight:900;
+      color:rgba(255,255,255,.88);
+    }
+
+    .progressBar{
+      width:100%;
+      height:10px;
+      border-radius:999px;
+      background:rgba(255,255,255,.08);
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.06);
+    }
+
+    .progressFill{
+      height:100%;
+      width:0%;
+      border-radius:999px;
+      background: linear-gradient(135deg, #a5b4fc 0%, #6366f1 55%, #ec4899 100%);
+      transition:width .25s ease;
+    }
+
+    .sampleCard{
+      margin-top:12px;
       padding:14px;
       border-radius:18px;
       background: rgba(255,255,255,0.05);
       border:1px solid rgba(255,255,255,0.08);
-      font-size:13px;
-      font-weight:800;
-      color:rgba(255,255,255,.90);
-      line-height:1.5;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
     }
 
-    .step .label{
-      display:block;
+    .sampleLabel{
       font-size:11px;
       font-weight:900;
       color: rgba(165,180,252,0.95);
       letter-spacing:1px;
-      margin-bottom:8px;
+    }
+
+    .sampleText{
+      font-size:19px;
+      font-weight:900;
+      line-height:1.5;
+      color:rgba(255,255,255,.96);
+    }
+
+    .sampleHint{
+      font-size:11px;
+      font-weight:800;
+      color:rgba(255,255,255,.52);
+      line-height:1.45;
     }
 
     .micWrap{
@@ -82,8 +138,8 @@
     }
 
     .micBtn{
-      width:96px;
-      height:96px;
+      width:100px;
+      height:100px;
       border-radius:50%;
       border:3px solid transparent;
       background-image: linear-gradient(#000,#000), linear-gradient(135deg,#a5b4fc 0%, #6366f1 55%, #ec4899 100%);
@@ -99,8 +155,8 @@
     }
 
     .micBtn svg{
-      width:36px;
-      height:36px;
+      width:38px;
+      height:38px;
     }
 
     .micBtn.listening::after{
@@ -128,7 +184,7 @@
 
     .timer{
       text-align:center;
-      font-size:22px;
+      font-size:24px;
       font-weight:1000;
       color:rgba(255,255,255,.94);
       letter-spacing:.5px;
@@ -143,6 +199,7 @@
       border-radius:18px;
       background: rgba(255,255,255,0.05);
       border:1px solid rgba(255,255,255,0.08);
+      margin-top:10px;
     }
 
     .audioBox.show{
@@ -162,7 +219,7 @@
     }
 
     .btn{
-      height:46px;
+      min-height:46px;
       padding:0 14px;
       border-radius:16px;
       border:none;
@@ -170,6 +227,11 @@
       font-weight:1000;
       user-select:none;
       white-space:nowrap;
+    }
+
+    .btn:disabled{
+      opacity:.45;
+      cursor:not-allowed;
     }
 
     .btn:active{
@@ -191,6 +253,40 @@
       background: transparent;
       border: 1px solid rgba(255, 0, 90, 0.30);
       color: rgba(255, 90, 140, 0.95);
+    }
+
+    .completedList{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      margin-top:8px;
+    }
+
+    .completedItem{
+      padding:10px 12px;
+      border-radius:16px;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.07);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+
+    .completedText{
+      font-size:12px;
+      font-weight:900;
+      color:rgba(255,255,255,.88);
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+
+    .completedDur{
+      font-size:11px;
+      font-weight:900;
+      color:rgba(165,180,252,.95);
+      flex:0 0 auto;
     }
 
     .note{
@@ -235,50 +331,64 @@
       </div>
 
       <p class="desc">
-        Çeviri sesinin sana daha yakın hale gelmesi için kısa bir örnek kayıt al.
-        Şimdilik tek örnek kayıtla başlıyoruz.
+        Çeviri sesinin sana daha yakın hale gelmesi için aşağıdaki cümleleri sırayla oku.
+        Tüm örnekler tamamlanınca ses profili oluşturulacaktır.
       </p>
 
-      <div class="list">
-        <div class="step">
-          <span class="label">ÖRNEK CÜMLE</span>
-          Merhaba, ben italkyAI kullanıyorum ve sesimi tanıtıyorum.
+      <div class="progressWrap">
+        <div class="progressTop">
+          <div class="progressLabel">İLERLEME</div>
+          <div class="progressCount" id="progressCount">1 / 6</div>
         </div>
-
-        <div class="micWrap">
-          <button class="micBtn" id="recordBtn" type="button" aria-label="Kayıt Başlat / Durdur">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
-              <path d="M19 11v1a7 7 0 0 1-14 0v-1"/>
-              <path d="M12 19v3"/>
-            </svg>
-          </button>
+        <div class="progressBar">
+          <div class="progressFill" id="progressFill"></div>
         </div>
+      </div>
 
-        <div class="status" id="statusText">Kayda hazır</div>
-        <div class="timer" id="timerText">00:00</div>
-
-        <div class="audioBox" id="audioBox">
-          <audio id="audioPreview" controls playsinline></audio>
+      <div class="sampleCard">
+        <div class="sampleLabel" id="sampleLabel">CÜMLE 1</div>
+        <div class="sampleText" id="sampleText">—</div>
+        <div class="sampleHint">
+          Cümleyi doğal bir şekilde, net ve orta hızda oku. Kaydı bitirince tekrar mikrofona dokun.
         </div>
+      </div>
+
+      <div class="micWrap">
+        <button class="micBtn" id="recordBtn" type="button" aria-label="Kayıt Başlat / Durdur">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
+            <path d="M19 11v1a7 7 0 0 1-14 0v-1"/>
+            <path d="M12 19v3"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="status" id="statusText">Kayda hazır</div>
+      <div class="timer" id="timerText">00:00</div>
+
+      <div class="audioBox" id="audioBox">
+        <audio id="audioPreview" controls playsinline></audio>
       </div>
     </div>
 
     <div class="panel">
       <div class="list">
-        <button class="btn btn-primary" id="saveBtn" type="button">Ses Profilini Kaydet</button>
-        <button class="btn btn-ghost" id="retryBtn" type="button">Tekrar Kaydet</button>
+        <button class="btn btn-ghost" id="redoBtn" type="button" disabled>Bu Cümleyi Yeniden Kaydet</button>
+        <button class="btn btn-primary" id="nextBtn" type="button" disabled>Sonraki Cümle</button>
+        <button class="btn btn-primary" id="finishBtn" type="button" disabled>Ses Profilini Oluştur</button>
         <button class="btn btn-dangerText" id="backBtn" type="button">Vazgeç</button>
       </div>
 
+      <div class="completedList" id="completedList"></div>
+
       <div class="note">
-        Bu kayıt storage’a yüklenip profilinle eşleştirilecektir.
+        Her örnek ayrı ayrı kaydedilir. Tüm örnekler tamamlandıktan sonra profil oluşturulur.
       </div>
     </div>
 
     <div class="toast" id="toast"></div>
   </div>
 
-  <script type="module" src="/js/voice_profile_boot.js?v=stable1"></script>
+  <script type="module" src="/js/voice_profile_boot.js?v=pro1"></script>
 </body>
 </html>
