@@ -18,10 +18,12 @@ function safeText(id, val){
   const el = $(id);
   if(el) el.textContent = (val ?? "—");
 }
+
 function safeShow(id, on){
   const el = $(id);
   if(el) el.style.display = on ? "block" : "none";
 }
+
 function toast(msg){
   const t = $("toast");
   if(!t) return;
@@ -91,8 +93,17 @@ async function copyText(text){
 }
 
 /* member_no generator (fail-safe) */
-function randLetter(){ const A="ABCDEFGHIJKLMNOPQRSTUVWXYZ"; return A[Math.floor(Math.random()*A.length)]; }
-function randDigits7(){ let s=""; for(let i=0;i<7;i++) s += String(Math.floor(Math.random()*10)); return s; }
+function randLetter(){
+  const A="ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  return A[Math.floor(Math.random()*A.length)];
+}
+
+function randDigits7(){
+  let s="";
+  for(let i=0;i<7;i++) s += String(Math.floor(Math.random()*10));
+  return s;
+}
+
 function digitsOk(d){
   for(let i=0;i<=d.length-3;i++){
     const a=+d[i], b=+d[i+1], c=+d[i+2];
@@ -102,6 +113,7 @@ function digitsOk(d){
   }
   return true;
 }
+
 function genMemberNo(){
   for(let k=0;k<300;k++){
     const L=randLetter(), D=randDigits7();
@@ -129,7 +141,6 @@ function paintFromSession(user){
   safeText("pName", full);
   safeText("pEmail", user?.email || "—");
 
-  // header (ui_shell)
   try{
     const hn = document.getElementById("userName");
     if(hn) hn.textContent = shortDisplayName(full || "Kullanıcı");
@@ -171,9 +182,9 @@ async function tryInsertProfile(user){
       full_name: metaName || null,
       avatar_url: metaPic || null,
       tokens: 0,
-      levels: {},           // tablo bekliyorsa dursun
-      offline_langs: [],    // tablo bekliyorsa dursun
-      study_minutes: {}     // tablo bekliyorsa dursun
+      levels: {},
+      offline_langs: [],
+      study_minutes: {}
     };
 
     const { data, error } = await supabase
@@ -225,12 +236,18 @@ async function hardDeleteAccount(){
 }
 
 export async function initProfilePage({ setHeaderTokens } = {}){
-  // ✅ Butonlar (varsa bağla)
-  $("logoutBtn")?.addEventListener("click", (e)=>{ e.preventDefault(); safeLogoutHard(); });
+  // ✅ Butonlar
+  $("logoutBtn")?.addEventListener("click", (e)=>{
+    e.preventDefault();
+    safeLogoutHard();
+  });
 
-  // ✅ Jeton Yükle -> sayfaya git
   $("buyTokensBtn")?.addEventListener("click", ()=>{
     location.href = "/pages/jetonbuy.html";
+  });
+
+  $("voiceProfileBtn")?.addEventListener("click", ()=>{
+    location.href = "/pages/voice_profile.html";
   });
 
   // ✅ session
@@ -253,7 +270,7 @@ export async function initProfilePage({ setHeaderTokens } = {}){
   // ✅ last_login_at
   await touchLastLogin(user.id);
 
-  // DB yoksa: session ekranı kalsın
+  // ✅ DB yoksa session ekranı kalsın
   if(!profile){
     safeText("memberNo", "—");
     safeText("createdAt", "—");
@@ -272,13 +289,15 @@ export async function initProfilePage({ setHeaderTokens } = {}){
   safeText("pEmail", profile.email || user.email || "—");
   safeText("pName", fullName);
 
-  // member no yoksa üret
+  // ✅ member no yoksa üret
   let memberNo = profile.member_no;
   if(!memberNo){
     memberNo = genMemberNo();
     try{
       await supabase.from("profiles").update({ member_no: memberNo }).eq("id", user.id);
-    }catch(e){ console.warn("[member_no update]", e); }
+    }catch(e){
+      console.warn("[member_no update]", e);
+    }
   }
   safeText("memberNo", memberNo || "—");
 
@@ -303,7 +322,7 @@ export async function initProfilePage({ setHeaderTokens } = {}){
     }
   }catch{}
 
-  // ✅ cache update (shell tutarlı)
+  // ✅ cache update
   updateLocalUserCache({
     full_name: fullName,
     email: (profile.email || user.email || ""),
