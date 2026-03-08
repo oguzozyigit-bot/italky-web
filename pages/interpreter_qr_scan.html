@@ -4,28 +4,15 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
   <title>italkyAI • QR Oku</title>
-
-  <meta name="theme-color" content="#000000">
   <style>
-    html,body{
-      background:#000 !important;
-      margin:0;
-      padding:0;
-      overflow:hidden;
-      font-family:'Outfit',sans-serif;
-    }
+    html,body{background:#000 !important;margin:0;padding:0;overflow:hidden;font-family:'Outfit',sans-serif;}
     @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=Space+Grotesk:wght@700&display=swap');
-  </style>
-
-  <style>
     :root{
       --ai-grad: linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
       --glass-border: rgba(255,255,255,.12);
       --glass-bg: rgba(255,255,255,.04);
     }
-
-    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; }
-
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none;}
     #pageContent{
       min-height:100%;
       display:flex;
@@ -39,40 +26,10 @@
         radial-gradient(circle at 50% 0%, rgba(236,72,153,.11) 0%, rgba(0,0,0,0) 28%),
         #000;
     }
-
-    .hero{
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      text-align:center;
-      gap:10px;
-      padding:8px 8px 4px;
-    }
-
-    .heroTitle{
-      font-family:'Space Grotesk',sans-serif;
-      font-size:28px;
-      font-weight:900;
-      color:#fff;
-      margin:0;
-      letter-spacing:-.8px;
-    }
-
-    .heroTitle .ai{
-      background:var(--ai-grad);
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;
-    }
-
-    .heroDesc{
-      margin:0;
-      font-size:12px;
-      line-height:1.4;
-      color:rgba(255,255,255,.55);
-      max-width:420px;
-    }
-
+    .hero{text-align:center;padding-top:10px}
+    .title{font-family:'Space Grotesk';font-size:30px;font-weight:900;color:#fff}
+    .title .ai{background:var(--ai-grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .desc{font-size:12px;line-height:1.45;color:rgba(255,255,255,.55);max-width:420px;margin:8px auto 0}
     .panel{
       background:var(--glass-bg);
       border:1px solid var(--glass-border);
@@ -84,111 +41,37 @@
       flex-direction:column;
       gap:12px;
     }
-
     .cameraWrap{
-      min-height:320px;
-      border-radius:22px;
-      border:1px solid rgba(255,255,255,.12);
-      background:
-        linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02)),
-        #050510;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      flex-direction:column;
-      gap:14px;
-      text-align:center;
-      padding:18px;
-      position:relative;
-      overflow:hidden;
+      min-height:340px;border-radius:22px;border:1px solid rgba(255,255,255,.12);background:#050510;position:relative;overflow:hidden;
+      display:flex;align-items:center;justify-content:center;
     }
-
-    .cameraWrap::before{
-      content:"";
-      position:absolute;
-      width:220px;
-      height:220px;
-      border:2px solid rgba(255,255,255,.75);
-      border-radius:24px;
-      box-shadow:0 0 0 9999px rgba(0,0,0,.18);
+    video{width:100%;height:100%;object-fit:cover;display:block}
+    .scanFrame{
+      position:absolute;inset:50%;transform:translate(-50%,-50%);width:220px;height:220px;border:2px solid rgba(255,255,255,.86);border-radius:24px;
+      box-shadow:0 0 0 9999px rgba(0,0,0,.18);pointer-events:none;
     }
-
-    .cameraLabel{
-      position:relative;
-      z-index:2;
-      color:#fff;
-      font-size:14px;
-      font-weight:900;
-    }
-
-    .muted{
-      position:relative;
-      z-index:2;
-      margin:0;
-      font-size:11px;
-      line-height:1.45;
-      color:rgba(255,255,255,.6);
-      max-width:260px;
-    }
-
-    .btnRow{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:10px;
-    }
-
     .btn{
-      min-height:54px;
-      border:none;
-      border-radius:18px;
-      cursor:pointer;
-      font-size:14px;
-      font-weight:1000;
-      letter-spacing:.2px;
-      transition:.18s ease;
-    }
-
-    .btn:active{ transform:scale(.985); }
-
-    .btnMain{
-      background:var(--ai-grad);
-      color:#050510;
-    }
-
-    .btnGhost{
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.12);
-      color:#fff;
+      min-height:54px;border:none;border-radius:18px;cursor:pointer;font-size:14px;font-weight:1000;letter-spacing:.2px;
+      background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#fff
     }
   </style>
 </head>
-
 <body>
 <main id="pageContent">
-
   <section class="hero">
-    <h1 class="heroTitle">QR Oku <span class="ai">AI</span></h1>
-    <p class="heroDesc">
-      QR okut, sonra kendi dilinle canlı tercüman odasına bağlan.
-    </p>
+    <div class="title">QR Oku <span class="ai">AI</span></div>
+    <p class="desc">QR okutunca otomatik olarak canlı odaya geçilir.</p>
   </section>
 
   <section class="panel">
     <div class="cameraWrap">
-      <div class="cameraLabel">Kamera Önizleme Alanı</div>
-      <p class="muted">
-        Elle kod yazma yok. QR okutunca otomatik olarak canlı odaya geçilir.
-      </p>
+      <video id="camera" autoplay playsinline muted></video>
+      <div class="scanFrame"></div>
     </div>
-
-    <div class="btnRow">
-      <button class="btn btnGhost" id="cancelBtn" type="button">İptal</button>
-      <button class="btn btnMain" id="mockScanBtn" type="button">Test İçin QR Okundu</button>
-    </div>
+    <button class="btn" id="cancelBtn" type="button">İptal</button>
   </section>
-
 </main>
 
-<script type="module" src="/js/interpreter_qr_scan.js"></script>
+<script type="module" src="/js/interpreter_qr_scan.js?v=real_1"></script>
 </body>
 </html>
