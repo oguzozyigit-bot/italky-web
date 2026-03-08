@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>italkyAI • Sesini Tanıt</title>
 
   <meta name="theme-color" content="#02000f">
@@ -13,6 +13,14 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
   <style>
+    html, body{
+      scrollbar-width:none;
+    }
+    html::-webkit-scrollbar,
+    body::-webkit-scrollbar{
+      display:none;
+    }
+
     #pageContent{
       padding: 16px 14px calc(var(--footerH, 92px) + env(safe-area-inset-bottom) + 8px);
       display:flex;
@@ -20,7 +28,11 @@
       gap:12px;
       max-width:560px;
       margin:0 auto;
+      overflow-y:auto;
+      -webkit-overflow-scrolling:touch;
+      scrollbar-width:none;
     }
+    #pageContent::-webkit-scrollbar{ display:none; }
 
     .panel{
       background: linear-gradient(145deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%);
@@ -50,7 +62,7 @@
 
     .desc{
       font-size:12px;
-      line-height:1.55;
+      line-height:1.6;
       color:rgba(255,255,255,.66);
       margin:0;
     }
@@ -127,7 +139,7 @@
     .sampleHint{
       font-size:11px;
       font-weight:800;
-      color:rgba(255,255,255,.52);
+      color:rgba(255,255,255,.56);
       line-height:1.45;
     }
 
@@ -152,6 +164,11 @@
       cursor:pointer;
       position:relative;
       box-shadow: 0 14px 34px rgba(0,0,0,.28);
+    }
+
+    .micBtn:disabled{
+      opacity:.45;
+      cursor:not-allowed;
     }
 
     .micBtn svg{
@@ -180,6 +197,7 @@
       font-weight:900;
       color:#a5b4fc;
       min-height:20px;
+      line-height:1.45;
     }
 
     .timer{
@@ -206,9 +224,29 @@
       display:flex;
     }
 
-    audio{
-      width:100%;
+    .previewActions{
+      display:flex;
+      gap:10px;
+      justify-content:center;
+      flex-wrap:wrap;
+    }
+
+    .miniBtn{
+      min-height:42px;
+      padding:0 16px;
+      border:none;
       border-radius:14px;
+      font-weight:1000;
+      font-family:inherit;
+      cursor:pointer;
+      background: linear-gradient(135deg, #a5b4fc 0%, #6366f1 55%, #ec4899 100%);
+      color:#050510;
+    }
+
+    .miniBtnGhost{
+      background: rgba(255,255,255,.06);
+      color:#fff;
+      border:1px solid rgba(255,255,255,.12);
     }
 
     .list{
@@ -331,8 +369,9 @@
       </div>
 
       <p class="desc">
-        Çeviri sesinin sana daha yakın hale gelmesi için aşağıdaki cümleleri sırayla oku.
-        Tüm örnekler tamamlanınca ses profili oluşturulacaktır.
+        Aşağıdaki cümleyi yüksek sesle ve doğal şekilde oku.
+        <br>Kaydı başlatmak için mikrofona bir kez dokun.
+        <br>Kaydı bitirmek için mikrofona tekrar dokun.
       </p>
 
       <div class="progressWrap">
@@ -349,7 +388,7 @@
         <div class="sampleLabel" id="sampleLabel">CÜMLE 1</div>
         <div class="sampleText" id="sampleText">—</div>
         <div class="sampleHint">
-          Cümleyi doğal bir şekilde, net ve orta hızda oku. Kaydı bitirince tekrar mikrofona dokun.
+          1 kez dokun = kayıt başlar • 2. kez dokun = kayıt biter
         </div>
       </div>
 
@@ -363,11 +402,15 @@
         </button>
       </div>
 
-      <div class="status" id="statusText">Kayda hazır</div>
+      <div class="status" id="statusText">Mikrofona dokun ve konuşmaya başla</div>
       <div class="timer" id="timerText">00:00</div>
 
       <div class="audioBox" id="audioBox">
-        <audio id="audioPreview" controls playsinline></audio>
+        <div class="previewActions">
+          <button class="miniBtn" id="playPreviewBtn" type="button">Dinle</button>
+          <button class="miniBtn miniBtnGhost" id="deletePreviewBtn" type="button">Bu Kaydı Sil</button>
+        </div>
+        <audio id="audioPreview" playsinline style="display:none;"></audio>
       </div>
     </div>
 
@@ -389,6 +432,6 @@
     <div class="toast" id="toast"></div>
   </div>
 
-  <script type="module" src="/js/voice_profile_boot.js?v=pro1"></script>
+  <script type="module" src="/js/voice_profile_boot.js?v=final2"></script>
 </body>
 </html>
