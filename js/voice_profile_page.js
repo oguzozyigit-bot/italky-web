@@ -1,9 +1,6 @@
 // FILE: /js/voice_profile_page.js
 
-import { mountShell } from "/js/ui_shell.js";
 import { supabase } from "/js/supabase_client.js";
-
-mountShell({ scroll: "auto" });
 
 const BUCKET = "voice-samples";
 
@@ -49,17 +46,17 @@ function resetTimer(){
   timerInt = null;
   startedAt = 0;
   recordedSeconds = 0;
-  timerText.textContent = "00:00";
+  if(timerText) timerText.textContent = "00:00";
 }
 
 function startTimer(){
   startedAt = Date.now();
-  timerText.textContent = "00:00";
+  if(timerText) timerText.textContent = "00:00";
   clearInterval(timerInt);
   timerInt = setInterval(() => {
     const sec = (Date.now() - startedAt) / 1000;
     recordedSeconds = Math.max(1, Math.floor(sec));
-    timerText.textContent = fmtSec(sec);
+    if(timerText) timerText.textContent = fmtSec(sec);
   }, 200);
 }
 
@@ -93,65 +90,125 @@ function clearAudio(){
   audioBox?.classList.remove("show");
 }
 
+function getSupportedMimeType(){
+  const candidates = [
+    "audio/webm;codecs=opus",
+    "audio/webm",
+    "audio/mp4",
+    "audio/ogg;codecs=opus",
+    ""
+  ];
+
+  for(const type of candidates){
+    try{
+      if(!type) return "";
+      if(window.MediaRecorder && MediaRecorder.isTypeSupported(type)) return type;
+    }catch{}
+  }
+  return "";
+}
+
 async function startRecording(){
   try{
-    mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    audioChunks = [];
-    mediaRecorder = new MediaRecorder(mediaStream);
+    if(!navigator.mediaDevices?.getUserMedia){
+      throw new Error("Bu cihaz mikrofon kaydını desteklemiyor");
+    }
 
-    mediaRecorder.ondataavailable = (e) => {
-      if(e.data && e.data.size > 0) audioChunks.push(e.data);
+    mediaStream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true
+      }
+    });
+
+    clearAudio();
+    resetTimer();
+    audioChunks = [];
+
+    const mimeType = getSupportedMimeType();
+
+    mediaRecorder = mimeType
+      ? new MediaRecorder(mediaStream, { mimeType })
+      : new MediaRecorder(mediaStream);
+
+    mediaRecorder.onstart = () => {
+      isRecording = true;
+      recordBtn?.classList.add("listening");
+      if(statusText) statusText.textContent = "Kayıt alınıyor...";
+      startTimer();
     };
 
-    mediaRecorder.onstop = async () => {
-      audioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType || "audio/webm" });
+    mediaRecorder.ondataavailable = (e) => {
+      if(e.data && e.data.size > 0){
+        audioChunks.push(e.data);
+      }
+    };
+
+    mediaRecorder.onerror = (e) => {
+      console.warn("[voice recorder error]", e);
+      isRecording = false;
+      recordBtn?.classList.remove("listening");
+      if(statusText) statusText.textContent = "Kayıt başlatılamadı";
+      stopTracks();
+      resetTimer();
+      toast("Kayıt başlatılamadı");
+    };
+
+    mediaRecorder.onstop = () => {
+      const finalType = mediaRecorder?.mimeType || "audio/webm";
+      audioBlob = new Blob(audioChunks, { type: finalType });
 
       try{
         revokePreviewUrl();
         currentObjectUrl = URL.createObjectURL(audioBlob);
-        audioPreview.src = currentObjectUrl;
+        if(audioPreview) audioPreview.src = currentObjectUrl;
         audioBox?.classList.add("show");
-      }catch{}
+      }catch(e){
+        console.warn("[voice preview url]", e);
+      }
 
-      recordBtn.classList.remove("listening");
       isRecording = false;
-      statusText.textContent = "Kayıt tamamlandı";
+      recordBtn?.classList.remove("listening");
+      if(statusText) statusText.textContent = "Kayıt tamamlandı";
       stopTracks();
       clearInterval(timerInt);
+
+      if(!recordedSeconds || recordedSeconds < 1){
+        recordedSeconds = Math.max(1, Math.floor((Date.now() - startedAt) / 1000));
+      }
     };
 
-    mediaRecorder.start();
-    isRecording = true;
-    clearAudio();
-    recordBtn.classList.add("listening");
-    statusText.textContent = "Kayıt alınıyor...";
-    startTimer();
+    mediaRecorder.start(250);
   }catch(e){
     console.warn("[voice startRecording]", e);
-    statusText.textContent = "Mikrofon izni alınamadı";
-    toast("Mikrofon izni gerekli");
+    isRecording = false;
+    recordBtn?.classList.remove("listening");
+    stopTracks();
+    resetTimer();
+    if(statusText) statusText.textContent = "Mikrofon izni alınamadı";
+    toast(e?.message || "Mikrofon izni gerekli");
   }
 }
 
 function stopRecording(){
   try{
-    mediaRecorder?.stop?.();
+    if(mediaRecorder && mediaRecorder.state !== "inactive"){
+      mediaRecorder.stop();
+    }
   }catch(e){
     console.warn("[voice stopRecording]", e);
-    statusText.textContent = "Kayıt durdurulamadı";
+    if(statusText) statusText.textContent = "Kayıt durdurulamadı";
+    toast("Kayıt durdurulamadı");
   }
 }
 
 async function getUserOrThrow(){
-  const { data:{ session } } = await supabase.auth.getSession();
-  const user = session?.user || null;
+  const { data, error } = await supabase.auth.getUser();
+  if(error) throw error;
+  const user = data?.user || null;
   if(!user?.id) throw new Error("Oturum bulunamadı");
   return user;
-}
-
-function buildFilePath(userId, ext = "webm"){
-  const stamp = Date.now();
-  return `${userId}/voice-sample-${stamp}.${ext}`;
 }
 
 function getExtensionFromMime(mime){
@@ -162,6 +219,10 @@ function getExtensionFromMime(mime){
   if(m.includes("ogg")) return "ogg";
   if(m.includes("wav")) return "wav";
   return "webm";
+}
+
+function buildFilePath(userId, ext = "webm"){
+  return `${userId}/voice-sample-${Date.now()}.${ext}`;
 }
 
 async function deleteOldVoiceIfExists(oldPath){
@@ -216,14 +277,10 @@ async function uploadVoiceSample(user, blob){
 
 async function saveVoiceProfile(){
   if(!audioBlob) throw new Error("Önce kayıt alın");
-
-  if(recordedSeconds < 2){
-    throw new Error("Kayıt çok kısa");
-  }
+  if(recordedSeconds < 2) throw new Error("Kayıt çok kısa");
 
   const user = await getUserOrThrow();
   const profile = await loadCurrentProfile(user.id);
-
   const uploaded = await uploadVoiceSample(user, audioBlob);
 
   const payload = {
@@ -252,12 +309,12 @@ async function saveVoiceProfile(){
   return uploaded;
 }
 
-recordBtn?.addEventListener("click", () => {
+recordBtn?.addEventListener("click", async () => {
   if(isRecording){
     stopRecording();
     return;
   }
-  startRecording();
+  await startRecording();
 });
 
 retryBtn?.addEventListener("click", () => {
@@ -266,28 +323,28 @@ retryBtn?.addEventListener("click", () => {
   }
   clearAudio();
   resetTimer();
-  statusText.textContent = "Kayda hazır";
+  if(statusText) statusText.textContent = "Kayda hazır";
   toast("Kayıt temizlendi");
 });
 
 saveBtn?.addEventListener("click", async () => {
   if(!audioBlob){
-    statusText.textContent = "Önce kayıt alın";
+    if(statusText) statusText.textContent = "Önce kayıt alın";
     toast("Önce kayıt alın");
     return;
   }
 
   saveBtn.disabled = true;
   saveBtn.style.opacity = "0.7";
-  statusText.textContent = "Ses profili kaydediliyor...";
+  if(statusText) statusText.textContent = "Ses profili kaydediliyor...";
 
   try{
     await saveVoiceProfile();
-    statusText.textContent = "Ses profili kaydedildi";
+    if(statusText) statusText.textContent = "Ses profili kaydedildi";
     toast("Ses profili kaydedildi");
   }catch(e){
     console.warn("[voice save]", e);
-    statusText.textContent = e?.message || "Kayıt kaydedilemedi";
+    if(statusText) statusText.textContent = e?.message || "Kayıt kaydedilemedi";
     toast(e?.message || "Kayıt kaydedilemedi");
   }finally{
     saveBtn.disabled = false;
@@ -301,7 +358,9 @@ backBtn?.addEventListener("click", () => {
 
 window.addEventListener("beforeunload", () => {
   try{
-    if(isRecording) mediaRecorder?.stop?.();
+    if(isRecording && mediaRecorder?.state !== "inactive"){
+      mediaRecorder.stop();
+    }
   }catch{}
   stopTracks();
   clearInterval(timerInt);
