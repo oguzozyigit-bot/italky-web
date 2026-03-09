@@ -1,352 +1,278 @@
 <!doctype html>
 <html lang="tr">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-  <title>italkyAI • Interpreter Room</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+<title>italkyAI • Interpreter Room</title>
 
-  <meta name="theme-color" content="#000000">
-  <style>
-    html,body{
-      background:#000 !important;
-      margin:0;
-      padding:0;
-      overflow:hidden;
-      font-family:'Outfit',sans-serif;
-    }
+<meta name="theme-color" content="#050510"/>
 
-    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=Space+Grotesk:wght@700&display=swap');
-  </style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
-  <style>
-    :root{
-      --ai-grad: linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
-      --glass-border: rgba(255,255,255,.12);
-      --glass-bg: rgba(255,255,255,.04);
-      --ok: #34d399;
-      --warn: #f59e0b;
-      --bad: #ef4444;
-    }
+<style>
+:root{
+  --ai-grad:linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
+  --txt:rgba(255,255,255,.95);
+  --muted:rgba(255,255,255,.58);
+  --line:rgba(255,255,255,.10);
+  --glass:rgba(255,255,255,.05);
+  --glass2:rgba(255,255,255,.03);
+}
 
-    *{
-      box-sizing:border-box;
-      -webkit-tap-highlight-color:transparent;
-      outline:none;
-    }
+*{
+  box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
+  outline:none;
+}
 
-    #pageContent{
-      min-height:100%;
-      display:flex;
-      flex-direction:column;
-      gap:14px;
-      padding:16px 14px calc(var(--footerH,92px) + env(safe-area-inset-bottom) + 16px);
-      max-width:560px;
-      margin:0 auto;
-      background:
-        radial-gradient(circle at 50% 14%, rgba(99,102,241,.18) 0%, rgba(0,0,0,0) 36%),
-        radial-gradient(circle at 50% 0%, rgba(236,72,153,.11) 0%, rgba(0,0,0,0) 28%),
-        #000;
-    }
+html,body{
+  margin:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  font-family:'Outfit',sans-serif;
+  background:
+    radial-gradient(circle at 50% 16%, rgba(99,102,241,.18) 0%, rgba(0,0,0,0) 28%),
+    radial-gradient(circle at 50% 0%, rgba(236,72,153,.10) 0%, rgba(0,0,0,0) 18%),
+    linear-gradient(180deg,#090919 0%, #020207 100%);
+  color:var(--txt);
+}
 
-    .hero{
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      text-align:center;
-      gap:10px;
-      padding:8px 8px 4px;
-    }
+.page{
+  width:100%;
+  height:100%;
+  max-width:560px;
+  margin:0 auto;
+  padding:
+    calc(var(--headerH,72px) + env(safe-area-inset-top) + 10px)
+    14px
+    calc(var(--footerH,92px) + env(safe-area-inset-bottom) + 12px);
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  overflow-y:auto;
+  scrollbar-width:none;
+}
+.page::-webkit-scrollbar{ display:none; }
 
-    .heroTitle{
-      font-family:'Space Grotesk',sans-serif;
-      font-size:28px;
-      font-weight:900;
-      color:#fff;
-      margin:0;
-      letter-spacing:-.8px;
-    }
+.hero{
+  text-align:center;
+  padding-top:4px;
+}
 
-    .heroTitle .ai{
-      background:var(--ai-grad);
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;
-    }
+.brand{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:26px;
+  font-weight:700;
+  margin:0 0 8px;
+}
+.brand .ai{
+  background:var(--ai-grad);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
 
-    .heroDesc{
-      margin:0;
-      font-size:12px;
-      line-height:1.4;
-      color:rgba(255,255,255,.55);
-      max-width:420px;
-    }
+.title{
+  margin:0;
+  font-size:24px;
+  font-weight:900;
+  letter-spacing:-.4px;
+}
 
-    .panel{
-      background:var(--glass-bg);
-      border:1px solid var(--glass-border);
-      border-radius:28px;
-      backdrop-filter:blur(22px);
-      -webkit-backdrop-filter:blur(22px);
-      padding:14px;
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-    }
+.sub{
+  margin:10px auto 0;
+  max-width:360px;
+  font-size:13px;
+  line-height:1.5;
+  color:var(--muted);
+}
 
-    .panelTitle{
-      font-family:'Space Grotesk',sans-serif;
-      font-size:18px;
-      font-weight:800;
-      color:#fff;
-      margin:0;
-      letter-spacing:-.3px;
-    }
+.panel{
+  border-radius:28px;
+  border:1px solid var(--line);
+  background:var(--glass);
+  backdrop-filter:blur(24px);
+  -webkit-backdrop-filter:blur(24px);
+  box-shadow:0 20px 50px rgba(0,0,0,.22);
+  padding:16px;
+}
 
-    .roomCode{
-      height:58px;
-      border-radius:18px;
-      border:1px dashed rgba(255,255,255,.16);
-      background:rgba(255,255,255,.04);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:24px;
-      font-weight:1000;
-      letter-spacing:2px;
-      color:#fff;
-    }
+.roomMeta{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:10px;
+}
 
-    .qrWrap{
-      min-height:210px;
-      border-radius:22px;
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(255,255,255,.04);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      flex-direction:column;
-      gap:10px;
-      text-align:center;
-      padding:16px;
-    }
+.metaLine{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  min-height:52px;
+  padding:0 14px;
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,.08);
+  background:var(--glass2);
+}
 
-    .qrBox{
-      width:170px;
-      height:170px;
-      border-radius:18px;
-      background:#fff;
-      color:#111;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:14px;
-      font-weight:900;
-      text-align:center;
-      padding:14px;
-      line-height:1.3;
-    }
+.metaKey{
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:.5px;
+  color:#a5b4fc;
+  text-transform:uppercase;
+}
 
-    .muted{
-      margin:0;
-      font-size:11px;
-      line-height:1.45;
-      color:rgba(255,255,255,.5);
-    }
+.metaVal{
+  font-size:13px;
+  font-weight:900;
+  color:#fff;
+  text-align:right;
+  word-break:break-word;
+}
 
-    .grid2{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:10px;
-    }
+.card{
+  border-radius:24px;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.04);
+  padding:14px;
+}
 
-    .chip{
-      min-height:52px;
-      border-radius:16px;
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(255,255,255,.04);
-      display:flex;
-      flex-direction:column;
-      justify-content:center;
-      padding:10px 12px;
-      gap:3px;
-    }
+.cardTitle{
+  margin:0 0 10px;
+  font-size:18px;
+  font-weight:900;
+  letter-spacing:-.3px;
+}
 
-    .chipLabel{
-      font-size:11px;
-      font-weight:900;
-      color:#a5b4fc;
-      text-transform:uppercase;
-      letter-spacing:.35px;
-    }
+.cardDesc{
+  margin:0;
+  font-size:11px;
+  line-height:1.45;
+  color:var(--muted);
+}
 
-    .chipValue{
-      font-size:14px;
-      font-weight:900;
-      color:#fff;
-    }
+.select{
+  width:100%;
+  min-height:54px;
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(0,0,0,.22);
+  color:#fff;
+  font-family:inherit;
+  font-size:15px;
+  font-weight:900;
+  padding:0 14px;
+  appearance:none;
+}
 
-    .status{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      padding:11px 12px;
-      border-radius:16px;
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(255,255,255,.04);
-      font-size:12px;
-      font-weight:800;
-      color:#fff;
-    }
+.select option{
+  color:#111;
+}
 
-    .dot{
-      width:10px;
-      height:10px;
-      border-radius:50%;
-      background:var(--bad);
-      box-shadow:0 0 10px rgba(239,68,68,.6);
-      flex:0 0 auto;
-    }
+.note{
+  margin-top:10px;
+  font-size:11px;
+  line-height:1.45;
+  color:rgba(255,255,255,.55);
+}
 
-    .dot.ok{
-      background:var(--ok);
-      box-shadow:0 0 10px rgba(52,211,153,.6);
-    }
+.actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
 
-    .dot.warn{
-      background:var(--warn);
-      box-shadow:0 0 10px rgba(245,158,11,.6);
-    }
+.btn{
+  min-height:52px;
+  border:none;
+  border-radius:20px;
+  cursor:pointer;
+  font-family:inherit;
+  font-size:14px;
+  font-weight:1000;
+  letter-spacing:.15px;
+}
 
-    .btnRow{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:10px;
-    }
+.btnPrimary{
+  background:var(--ai-grad);
+  color:#050510;
+}
 
-    .btn{
-      min-height:54px;
-      border:none;
-      border-radius:18px;
-      cursor:pointer;
-      font-size:14px;
-      font-weight:1000;
-      letter-spacing:.2px;
-      transition:.18s ease;
-    }
+.btnGhost{
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.10);
+  color:#fff;
+}
 
-    .btn:active{
-      transform:scale(.985);
-    }
-
-    .btnMain{
-      background:var(--ai-grad);
-      color:#050510;
-    }
-
-    .btnGhost{
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.12);
-      color:#fff;
-    }
-
-    .warn{
-      display:flex;
-      gap:10px;
-      align-items:flex-start;
-      padding:12px 14px;
-      border-radius:18px;
-      background:rgba(245,158,11,.08);
-      border:1px solid rgba(245,158,11,.18);
-      color:#fff;
-      font-size:12px;
-      line-height:1.4;
-    }
-
-    .warn b{
-      color:#fcd34d;
-    }
-
-    .mono{
-      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
-    }
-  </style>
+.toast{
+  position:fixed;
+  top:16px;
+  left:50%;
+  transform:translateX(-50%) translateY(-120px);
+  background:rgba(12,12,22,.96);
+  border:1px solid rgba(165,180,252,.28);
+  color:#fff;
+  font-size:12px;
+  font-weight:900;
+  padding:10px 14px;
+  border-radius:999px;
+  z-index:9999;
+  transition:.24s ease;
+  pointer-events:none;
+  max-width:min(92vw,480px);
+  text-align:center;
+}
+.toast.show{
+  transform:translateX(-50%) translateY(0);
+}
+</style>
 </head>
 
 <body>
-<main id="pageContent">
+<div class="page">
 
   <section class="hero">
-    <h1 class="heroTitle">Interpreter Room <span class="ai">AI</span></h1>
-    <p class="heroDesc">
-      Oda oluşturulduktan sonra karşı taraf QR veya oda koduyla katılır.
-      Bir sonraki adımda canlı ses akışı ve simultane çeviri bağlanacak.
-    </p>
+    <div class="brand">italky<span class="ai">AI</span></div>
+    <h1 class="title">Interpreter Room</h1>
+    <p class="sub">Kendi dilini seç. Karşı taraf da kendi dilini kendi seçer. İstersen görüşme sırasında da değiştirebilirsin.</p>
   </section>
 
-  <section class="panel">
-    <h2 class="panelTitle">Oda Bilgisi</h2>
-
-    <div class="roomCode mono" id="roomCode">------</div>
-
-    <div class="grid2">
-      <div class="chip">
-        <div class="chipLabel">Benim Dilim</div>
-        <div class="chipValue" id="myLangView">—</div>
-      </div>
-
-      <div class="chip">
-        <div class="chipLabel">Karşı Taraf</div>
-        <div class="chipValue" id="peerLangView">—</div>
-      </div>
+  <section class="panel roomMeta">
+    <div class="metaLine">
+      <div class="metaKey">Host</div>
+      <div class="metaVal" id="hostCodeText">—</div>
     </div>
 
-    <div class="status">
-      <span class="dot" id="pairDot"></span>
-      <span id="pairText">Karşı taraf bekleniyor...</span>
-    </div>
-
-    <div class="status">
-      <span class="dot" id="headsetDot"></span>
-      <span id="headsetText">Kulaklık kontrol ediliyor...</span>
+    <div class="metaLine">
+      <div class="metaKey">Oda</div>
+      <div class="metaVal" id="roomIdText">—</div>
     </div>
   </section>
 
-  <section class="panel">
-    <h2 class="panelTitle">QR ile Katılım</h2>
-
-    <div class="qrWrap">
-      <div class="qrBox" id="qrBox">QR bu alanda üretilecek</div>
-      <p class="muted">
-        Şimdilik burada oda kodu ve paylaşım metni gösteriliyor.
-        Sonraki adımda gerçek QR üretimi eklenecek.
-      </p>
-    </div>
-
-    <div class="btnRow">
-      <button class="btn btnMain" id="copyCodeBtn" type="button">Kodu Kopyala</button>
-      <button class="btn btnGhost" id="shareBtn" type="button">Paylaş</button>
-    </div>
+  <section class="card">
+    <h2 class="cardTitle">Benim Dilim</h2>
+    <select class="select" id="myLang"></select>
+    <p class="note">Bu cihazda konuşacağın ana dil. Canlı görüşme sırasında da değiştirebilirsin.</p>
   </section>
 
-  <section class="panel">
-    <h2 class="panelTitle">Canlı Tercüme</h2>
-
-    <div class="warn">
-      <div>🎧</div>
-      <div>
-        <b>Not:</b> Kulaklık bağlıysa Interpreter Mode daha stabil çalışır.
-        Hoparlör kullanımı ses geri beslemesine neden olabilir.
-      </div>
-    </div>
-
-    <div class="btnRow">
-      <button class="btn btnGhost" id="scanAgainBtn" type="button">QR Tara / Katılımcı Ekle</button>
-      <button class="btn btnMain" id="startLiveBtn" type="button">Canlı Tercümeyi Başlat</button>
-    </div>
+  <section class="card">
+    <h2 class="cardTitle">Ses Ayarı</h2>
+    <p class="cardDesc" id="voiceInfoText">Profilde seçtiğin çeviri sesi kullanılacak.</p>
+    <p class="note">FaceToFace ve Interpreter profil sesini kullanır. TextToText standart sesi kullanır.</p>
   </section>
 
-</main>
+  <section class="actions">
+    <button class="btn btnGhost" id="cancelBtn" type="button">Vazgeç</button>
+    <button class="btn btnPrimary" id="startBtn" type="button">Görüşmeyi Başlat</button>
+  </section>
 
-<script type="module" src="/js/interpreter_room.js"></script>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module" src="/js/interpreter_room.js?v=room_final_2"></script>
 </body>
 </html>
