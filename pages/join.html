@@ -1,97 +1,62 @@
-<!-- FILE: /pages/join.html -->
 <!doctype html>
 <html lang="tr">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-  <title>italkyAI • Join</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>italkyAI</title>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;400;600;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+<style>
+body{
+background:#000;
+color:#fff;
+font-family:Outfit;
+display:flex;
+align-items:center;
+justify-content:center;
+height:100vh;
+flex-direction:column;
+gap:20px;
+text-align:center;
+}
+.btn{
+padding:14px 22px;
+border-radius:16px;
+background:linear-gradient(135deg,#6366f1,#ec4899);
+color:#000;
+font-weight:900;
+text-decoration:none;
+}
+</style>
 
-  <style>
-    :root{
-      --ai-gradient: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
-      --bg:#050508; --border:rgba(255,255,255,0.14); --muted:rgba(255,255,255,0.60);
-      --safe-top: env(safe-area-inset-top, 0px);
-      --safe-bottom: env(safe-area-inset-bottom, 0px);
-    }
-    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none}
-    html,body{margin:0;width:100%;height:100%;background:var(--bg);color:#fff;font-family:Outfit,sans-serif}
-    .wrap{max-width:520px;margin:0 auto;min-height:100dvh;display:flex;flex-direction:column;gap:12px;padding:calc(18px + var(--safe-top)) 16px calc(18px + var(--safe-bottom))}
-    .card{border:1px solid var(--border);border-radius:22px;background:rgba(255,255,255,0.06);padding:14px}
-    .brand{font-family:"Space Grotesk",sans-serif;font-weight:700;letter-spacing:.4px}
-    .brand .ai{background:var(--ai-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-    .h1{margin:0 0 6px;font-size:18px;font-weight:900}
-    .p{margin:0;color:var(--muted);font-size:12.5px;line-height:1.4}
-    .code{font-family:"Space Grotesk", monospace;font-weight:700;letter-spacing:2px;font-size:16px;opacity:.92}
-    .btn{
-      width:100%;
-      border:none;border-radius:16px;padding:12px 14px;font-weight:900;cursor:pointer;
-      background:var(--ai-gradient);color:#0b0b12;
-      margin-top:10px;
-    }
-    .ghost{
-      width:100%;
-      border:1px solid var(--border);
-      background:rgba(255,255,255,0.06);
-      color:#fff;border-radius:16px;padding:12px 14px;font-weight:900;cursor:pointer;
-      margin-top:10px;
-    }
-    .mini{font-size:11.5px;color:var(--muted);line-height:1.35;margin-top:8px}
-  </style>
+<script>
+
+const params = new URLSearchParams(location.search)
+const host = params.get("host")
+
+function openApp(){
+
+const appUrl = `italky://join?host=${host}`
+
+location.href = appUrl
+
+setTimeout(()=>{
+location.href="https://play.google.com/store/apps/details?id=ai.italky.app"
+},2000)
+
+}
+
+</script>
+
 </head>
-<body>
-  <div class="wrap">
-    <div class="card">
-      <div class="brand">italky<span class="ai">AI</span></div>
-      <p class="h1">Odaya Katıl</p>
-      <p class="p">Uygulama yüklüyse direkt açacağız. Yüklü değilse önce yükleyeceğiz, sonra aynı odaya devam edeceğiz.</p>
-      <div style="margin-top:10px">
-        <div class="mini">Oda Kodu</div>
-        <div class="code" id="roomCode">—</div>
-      </div>
 
-      <button class="btn" id="openApp">Uygulamayı Aç</button>
-      <button class="ghost" id="openWeb">Web’de Devam Et</button>
+<body onload="openApp()">
 
-      <div class="mini">
-        Not: Uygulama yoksa, “Uygulamayı Aç” denemesi sonrası Play Store’a yönlendirebilirsin (Android App Links/Intent ile).
-      </div>
-    </div>
-  </div>
+<h2>italkyAI sohbet açılıyor</h2>
 
-  <script>
-    const FACETOFACE_PATH = "/pages/facetoface.html";
+<a class="btn"
+href="https://play.google.com/store/apps/details?id=ai.italky.app">
+Uygulamayı indir
+</a>
 
-    const params = new URLSearchParams(location.search);
-    const room = (params.get("room") || "").trim().toUpperCase();
-
-    document.getElementById("roomCode").textContent = room || "—";
-
-    // Deep link denemesi (Android için en pratik):
-    // Uygulama varsa açılır, yoksa genelde hiçbir şey olmaz -> kullanıcı web'e devam edebilir.
-    function tryOpenApp(){
-      if(!room) return;
-      const deep = "italky://join?room=" + encodeURIComponent(room);
-      // bazı WebView’larda bu yöntem daha iyi:
-      location.href = deep;
-
-      // İstersen 900ms sonra web fallback:
-      setTimeout(() => {
-        // burada otomatik yönlendirme yapmıyorum; kullanıcı butonla web'e geçsin.
-      }, 900);
-    }
-
-    document.getElementById("openApp").addEventListener("click", tryOpenApp);
-
-    document.getElementById("openWeb").addEventListener("click", () => {
-      if(!room) return;
-      location.href = FACETOFACE_PATH + "?mode=pair&role=guest&room=" + encodeURIComponent(room);
-    });
-
-    // Sayfa açılır açılmaz dene (isteğe bağlı, ben açık bırakıyorum):
-    // tryOpenApp();
-  </script>
 </body>
 </html>
