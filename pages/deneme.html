@@ -1,159 +1,262 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>italkyAI • UI Shell</title>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700&display=swap" rel="stylesheet">
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+<title>italkyAI • Global Hub</title>
 
-  <style>
-    :root {
-      --bg: #050508;
-      --header-h: 60px;
-      --footer-h: 85px;
-      --accent: #6366f1;
-      --glass: rgba(255, 255, 255, 0.03);
-      --border: rgba(255, 255, 255, 0.08);
-    }
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;800&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    
-    body, html {
-      margin: 0; padding: 0;
-      height: 100%; width: 100%;
-      background: var(--bg);
-      color: white;
-      font-family: 'Outfit', sans-serif;
-      overflow: hidden; /* Dış scroll'u öldürdük */
-    }
+<style>
+:root {
+  --bg: #030308;
+  --panel: rgba(255, 255, 255, 0.03);
+  --accent: #6366f1;
+  --ai-grad: linear-gradient(135deg, #818cf8 0%, #c084fc 50%, #fb7185 100%);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --text: #f8fafc;
+}
 
-    /* Ana Taşıyıcı (Shell) */
-    .ui-shell {
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      max-width: 600px; /* Sayfanın devleşmesini önleyen sınır */
-      margin: 0 auto;
-      border-left: 1px solid var(--border);
-      border-right: 1px solid var(--border);
-      position: relative;
-    }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
-    /* Üst Bar */
-    .shell-header {
-      height: var(--header-h);
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 0 20px;
-      background: rgba(5, 5, 8, 0.8);
-      backdrop-filter: blur(10px);
-      border-bottom: 1px solid var(--border);
-      flex-shrink: 0;
-    }
+body, html {
+  margin: 0; padding: 0; width: 100%; height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Outfit', sans-serif;
+  overflow: hidden;
+}
 
-    /* Sohbet Alanı (Ölü Alanı Dirilten Bölüm) */
-    #chat {
-      flex: 1; /* Header ve Footer dışında kalan tüm alanı kapla */
-      overflow-y: auto;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      scrollbar-width: none;
-      background: linear-gradient(180deg, #050508 0%, #0a0a0f 100%);
-    }
-    #chat::-webkit-scrollbar { display: none; }
+/* Dinamik Arka Plan */
+.bg-mesh {
+  position: fixed; inset: 0; z-index: -1;
+  background: 
+    radial-gradient(circle at 10% 10%, rgba(99, 102, 241, 0.15) 0%, transparent 40%),
+    radial-gradient(circle at 90% 90%, rgba(244, 63, 94, 0.1) 0%, transparent 40%);
+}
 
-    /* Balonlar */
-    .bubble {
-      max-width: 85%;
-      padding: 12px 16px;
-      border-radius: 20px;
-      font-size: 15px;
-      line-height: 1.5;
-    }
-    .bubble.bot { align-self: flex-start; background: var(--glass); border: 1px solid var(--border); border-bottom-left-radius: 5px; }
-    .bubble.user { align-self: flex-end; background: var(--accent); border-bottom-right-radius: 5px; }
+#pageContent {
+  width: 100%; height: 100%;
+  max-width: 480px; margin: 0 auto;
+  padding: calc(72px + env(safe-area-inset-top)) 20px calc(92px + env(safe-area-inset-bottom));
+  display: flex; flex-direction: column;
+  gap: 24px;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+#pageContent::-webkit-scrollbar { display: none; }
 
-    /* Alt Yazışma Alanı (UI Shell Footer) */
-    .shell-footer {
-      min-height: var(--footer-h);
-      padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
-      background: var(--bg);
-      border-top: 1px solid var(--border);
-      flex-shrink: 0;
-    }
+/* QR CORE SECTION */
+.qr-master-container {
+  position: relative;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 20px 0;
+}
 
-    .input-wrapper {
-      display: flex;
-      align-items: flex-end;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid var(--border);
-      border-radius: 24px;
-      padding: 6px 12px;
-      gap: 8px;
-    }
+.qr-portal {
+  position: relative;
+  width: 220px; height: 220px;
+  display: flex; align-items: center; justify-content: center;
+}
 
-    #msgInput {
-      flex: 1;
-      background: transparent;
-      border: none;
-      color: white;
-      font-family: inherit;
-      font-size: 16px;
-      padding: 10px 0;
-      resize: none;
-      outline: none;
-      max-height: 120px;
-    }
+/* Dönem Parlama Efekti */
+.portal-glow {
+  position: absolute; inset: -20px;
+  background: var(--ai-grad);
+  filter: blur(40px); opacity: 0.15;
+  border-radius: 50%;
+  animation: pulseGlow 4s infinite alternate;
+}
 
-    /* Butonlar */
-    .icon-btn {
-      width: 40px; height: 40px;
-      display: flex; align-items: center; justify-content: center;
-      background: transparent;
-      border: none;
-      cursor: pointer;
-      flex-shrink: 0;
-    }
+.qr-frame {
+  position: relative;
+  width: 180px; height: 180px;
+  background: #fff;
+  padding: 10px;
+  border-radius: 24px;
+  z-index: 2;
+  box-shadow: 0 0 40px rgba(0,0,0,0.5);
+}
 
-    .icon-btn svg { width: 22px; height: 22px; stroke: #ccc; fill: none; stroke-width: 2; }
-    
-    #sendBtn svg { stroke: var(--accent); }
-    #micBtn.listening svg { stroke: #ff4757; filter: drop-shadow(0 0 5px #ff4757); }
+.qr-frame img { width: 100%; height: 100%; border-radius: 12px; }
 
-    .action-text { font-size: 11px; color: var(--accent); font-weight: 700; cursor: pointer; background: none; border: none; }
-  </style>
+/* Hareketli Çerçeve */
+.qr-border-anim {
+  position: absolute; inset: -4px;
+  padding: 3px;
+  background: var(--ai-grad);
+  border-radius: 28px;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  animation: rotateBorder 6s linear infinite;
+}
+
+.qr-label {
+  margin-top: 16px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px; letter-spacing: 2px;
+  text-transform: uppercase;
+  background: var(--ai-grad);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 700;
+}
+
+/* HUB CARDS GRID */
+.action-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.action-card {
+  position: relative;
+  background: var(--panel);
+  border: 1px solid var(--glass-border);
+  border-radius: 24px;
+  padding: 20px;
+  display: flex; flex-direction: column;
+  gap: 12px;
+  transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+  overflow: hidden;
+}
+
+.action-card:active { transform: scale(0.95); background: rgba(255,255,255,0.06); }
+
+.icon-wrap {
+  width: 44px; height: 44px;
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--glass-border);
+}
+
+.card-info h3 {
+  margin: 0; font-size: 15px; font-weight: 600;
+  color: #fff;
+}
+
+.card-info p {
+  margin: 4px 0 0; font-size: 11px; color: rgba(255,255,255,0.4);
+  line-height: 1.4;
+}
+
+/* Özel Renkler */
+.c-blue { --accent: #60a5fa; }
+.c-purple { --accent: #a855f7; }
+.c-orange { --accent: #fb923c; }
+.c-pink { --accent: #f472b6; }
+
+.action-card::before {
+  content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%;
+  background: var(--accent); opacity: 0.5;
+}
+
+/* Animasyonlar */
+@keyframes rotateBorder { to { transform: rotate(360deg); } }
+@keyframes pulseGlow { from { opacity: 0.1; transform: scale(0.9); } to { opacity: 0.25; transform: scale(1.1); } }
+
+/* Badge */
+.premium-badge {
+  position: absolute; top: 12px; right: 12px;
+  font-size: 8px; font-weight: 800; padding: 2px 6px;
+  background: var(--ai-grad); border-radius: 6px; color: #000;
+}
+</style>
 </head>
+
 <body>
+<div class="bg-mesh"></div>
 
-  <div class="ui-shell">
-    <header class="shell-header">
-      <div style="font-weight: 700; font-size: 18px;">italky<span style="color:var(--accent)">AI</span></div>
-      <div style="display: flex; gap: 15px;">
-        <button class="action-text" id="muteBtn">SES</button>
-        <button class="action-text" id="clearChat" style="color: #666;">TEMİZLE</button>
+<main id="pageContent">
+  
+  <section class="qr-master-container">
+    <div class="qr-portal">
+      <div class="portal-glow"></div>
+      <div class="qr-border-anim"></div>
+      <div class="qr-frame">
+        <img id="smallQrImg" src="" alt="italky QR">
       </div>
-    </header>
+    </div>
+    <div class="qr-label">Interpreter ID</div>
+    <p style="font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 8px;">Scan to connect instantly</p>
+  </section>
 
-    <main id="chat">
-      <div class="bubble bot">Selam! Senin için ne yapabilirim?</div>
-    </main>
-
-    <footer class="shell-footer">
-      <div class="input-wrapper">
-        <button class="icon-btn" id="micBtn">
-          <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path></svg>
-        </button>
-        
-        <textarea id="msgInput" placeholder="Mesajını yaz..." rows="1" spellcheck="false"></textarea>
-
-        <button class="icon-btn" id="sendBtn">
-          <svg viewBox="0 0 24 24"><path d="M22 2L11 13"></path><path d="M22 2L15 22L11 13L2 9L22 2Z"></path></svg>
-        </button>
+  <div class="action-grid">
+    
+    <div class="action-card c-blue" onclick="location.href='/facetoface.html'">
+      <span class="premium-badge">LIVE AI</span>
+      <div class="icon-wrap">🎙️</div>
+      <div class="card-info">
+        <h3>FaceToFace</h3>
+        <p>Karşılıklı canlı sesli çeviri.</p>
       </div>
-    </footer>
+    </div>
+
+    <div class="action-card c-purple" onclick="location.href='/pages/text_translate.html'">
+      <div class="icon-wrap">✍️</div>
+      <div class="card-info">
+        <h3>TextToText</h3>
+        <p>Doğal metin dönüştürücü.</p>
+      </div>
+    </div>
+
+    <div class="action-card c-orange" onclick="location.href='/pages/f2f_connect.html'">
+      <div class="icon-wrap">🌐</div>
+      <div class="card-info">
+        <h3>Meeting</h3>
+        <p>Çoklu katılım odaları.</p>
+      </div>
+    </div>
+
+    <div class="action-card c-pink" onclick="location.href='/pages/offline_languages.html'">
+      <div class="icon-wrap">📁</div>
+      <div class="card-info">
+        <h3>Offline</h3>
+        <p>Dil paketlerini yönetin.</p>
+      </div>
+    </div>
+
   </div>
 
-  <script type="module" src="/js/italky_chat_page.js?v=4"></script>
+</main>
+
+<script type="module">
+import { mountShell } from "/js/ui_shell.js";
+import { supabase } from "/js/supabase_client.js";
+
+// Shell entegrasyonu
+try { mountShell({ scroll:"none" }); } catch(e) { console.warn(e); }
+
+const smallQrImg = document.getElementById("smallQrImg");
+const HOST_CODE_KEY = "italky_interpreter_host_code";
+
+// Senin orijinal fonksiyonlarını korudum
+function slugify(v){ return String(v||"").trim().toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,12); }
+function randomCode(){ return Math.random().toString(36).slice(2, 10).toUpperCase(); }
+
+async function ensureStableHostCode(){
+  const existing = localStorage.getItem(HOST_CODE_KEY);
+  if(existing) return existing;
+  
+  const { data } = await supabase.auth.getUser();
+  const user = data?.user;
+  const base = slugify(user?.email?.split("@")[0]) || randomCode();
+  const code = `ITK-${base}`;
+  localStorage.setItem(HOST_CODE_KEY, code);
+  return code;
+}
+
+async function bootQr(){
+  const hostCode = await ensureStableHostCode();
+  const version = localStorage.getItem("italky_interpreter_qr_version") || "1";
+  const joinUrl = `https://italky.ai/open/interpreter?host=${hostCode}&v=${version}`;
+  smallQrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&margin=4&data=${encodeURIComponent(joinUrl)}`;
+}
+
+bootQr();
+</script>
 </body>
 </html>
