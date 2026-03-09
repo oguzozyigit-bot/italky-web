@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+<title>italkyAI • Interpreter Join</title>
+
+<meta name="theme-color" content="#050510"/>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --ai-grad:linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
+  --txt:rgba(255,255,255,.95);
+  --muted:rgba(255,255,255,.58);
+  --line:rgba(255,255,255,.10);
+  --glass:rgba(255,255,255,.05);
+}
+
+*{
+  box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
+  outline:none;
+}
+
+html,body{
+  margin:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  font-family:'Outfit',sans-serif;
+  background:
+    radial-gradient(circle at 50% 18%, rgba(99,102,241,.18) 0%, rgba(0,0,0,0) 28%),
+    radial-gradient(circle at 50% 0%, rgba(236,72,153,.10) 0%, rgba(0,0,0,0) 20%),
+    linear-gradient(180deg,#090919 0%, #020207 100%);
+  color:var(--txt);
+}
+
+.page{
+  width:100%;
+  height:100%;
+  max-width:560px;
+  margin:0 auto;
+  padding:24px 18px calc(24px + env(safe-area-inset-bottom));
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.card{
+  width:100%;
+  border-radius:32px;
+  border:1px solid var(--line);
+  background:var(--glass);
+  backdrop-filter:blur(24px);
+  -webkit-backdrop-filter:blur(24px);
+  box-shadow:0 24px 60px rgba(0,0,0,.30);
+  padding:28px 20px;
+  text-align:center;
+}
+
+.logo{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:28px;
+  font-weight:700;
+  margin:0 0 8px;
+}
+
+.logo .ai{
+  background:var(--ai-grad);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+
+.title{
+  margin:0;
+  font-size:24px;
+  font-weight:900;
+  letter-spacing:-.4px;
+}
+
+.desc{
+  margin:10px auto 0;
+  max-width:320px;
+  font-size:13px;
+  line-height:1.5;
+  color:var(--muted);
+}
+
+.loaderWrap{
+  margin:26px auto 18px;
+  width:110px;
+  height:110px;
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.ring{
+  position:absolute;
+  inset:0;
+  border-radius:50%;
+  padding:2px;
+  background:var(--ai-grad);
+  -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite:xor;
+  mask-composite:exclude;
+  animation:spin 2.2s linear infinite;
+}
+
+.core{
+  width:74px;
+  height:74px;
+  border-radius:50%;
+  background:#050510;
+  border:1px solid rgba(255,255,255,.10);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 0 24px rgba(99,102,241,.12);
+}
+
+.dots{
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+
+.dot{
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:#a5b4fc;
+  animation:bounce 1s infinite ease-in-out;
+}
+.dot:nth-child(2){ animation-delay:.15s; }
+.dot:nth-child(3){ animation-delay:.30s; }
+
+.state{
+  margin-top:8px;
+  font-size:14px;
+  font-weight:800;
+  color:#fff;
+}
+
+.host{
+  margin-top:12px;
+  padding:12px 14px;
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(255,255,255,.04);
+  font-size:12px;
+  color:rgba(255,255,255,.75);
+  word-break:break-all;
+}
+
+.actions{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:10px;
+  margin-top:18px;
+}
+
+.btn{
+  min-height:48px;
+  border:none;
+  border-radius:18px;
+  font-family:inherit;
+  font-weight:900;
+  cursor:pointer;
+}
+
+.btnPrimary{
+  background:var(--ai-grad);
+  color:#050510;
+}
+
+.btnGhost{
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.10);
+  color:#fff;
+}
+
+.hidden{
+  display:none !important;
+}
+
+@keyframes spin{
+  from{ transform:rotate(0); }
+  to{ transform:rotate(360deg); }
+}
+
+@keyframes bounce{
+  0%,100%{ transform:translateY(0); opacity:.55; }
+  50%{ transform:translateY(-5px); opacity:1; }
+}
+</style>
+</head>
+
+<body>
+<div class="page">
+  <div class="card">
+    <div class="logo">italky<span class="ai">AI</span></div>
+    <h1 class="title">Interpreter Bağlantısı</h1>
+    <p class="desc" id="descText">Görüşme hazırlanıyor. Birkaç saniye içinde tercüman odasına geçeceksin.</p>
+
+    <div class="loaderWrap">
+      <div class="ring"></div>
+      <div class="core">
+        <div class="dots">
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="state" id="stateText">Bağlanılıyor...</div>
+    <div class="host" id="hostText">Host hazırlanıyor...</div>
+
+    <div class="actions">
+      <button class="btn btnPrimary hidden" id="openRoomBtn" type="button">Odayı Aç</button>
+      <button class="btn btnGhost hidden" id="goHomeBtn" type="button">Ana Sayfaya Dön</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { supabase } from "/js/supabase_client.js";
+
+const $ = (id)=>document.getElementById(id);
+
+const stateText = $("stateText");
+const hostText = $("hostText");
+const descText = $("descText");
+const openRoomBtn = $("openRoomBtn");
+const goHomeBtn = $("goHomeBtn");
+
+function getParams(){
+  const p = new URLSearchParams(location.search);
+  return {
+    host: String(p.get("host") || "").trim(),
+    version: String(p.get("v") || "1").trim()
+  };
+}
+
+function buildRoomId(hostCode){
+  return `itr-${String(hostCode || "").toLowerCase().replace(/[^a-z0-9]/g,"")}`;
+}
+
+function buildRoomUrl(hostCode, version){
+  const roomId = buildRoomId(hostCode);
+  const url = new URL("/pages/interpreter_room.html", location.origin);
+  url.searchParams.set("room", roomId);
+  url.searchParams.set("host", hostCode);
+  url.searchParams.set("v", version || "1");
+  return url.toString();
+}
+
+async function ensureUserSession(){
+  try{
+    const { data } = await supabase.auth.getUser();
+    return !!data?.user;
+  }catch{
+    return false;
+  }
+}
+
+function showFallback(roomUrl){
+  stateText.textContent = "Bağlantı hazır";
+  descText.textContent = "Otomatik yönlendirme tamamlanamadı. Aşağıdaki butonla görüşmeye geçebilirsin.";
+  openRoomBtn.classList.remove("hidden");
+  goHomeBtn.classList.remove("hidden");
+
+  openRoomBtn.onclick = ()=> location.href = roomUrl;
+  goHomeBtn.onclick = ()=> location.href = "/pages/home.html";
+}
+
+async function init(){
+  const { host, version } = getParams();
+
+  if(!host){
+    stateText.textContent = "Geçersiz bağlantı";
+    descText.textContent = "Interpreter bağlantısı okunamadı.";
+    hostText.textContent = "Host bilgisi bulunamadı.";
+    goHomeBtn.classList.remove("hidden");
+    goHomeBtn.onclick = ()=> location.href = "/pages/home.html";
+    return;
+  }
+
+  hostText.textContent = `Host: ${host}`;
+
+  const roomUrl = buildRoomUrl(host, version);
+
+  const hasSession = await ensureUserSession();
+
+  if(!hasSession){
+    stateText.textContent = "Oturum kontrol ediliyor";
+    descText.textContent = "Gerekirse giriş yaptıktan sonra aynı görüşmeye yönlendirileceksin.";
+
+    const returnTo = encodeURIComponent(roomUrl);
+    setTimeout(()=>{
+      location.href = `/login.html?next=${returnTo}`;
+    }, 900);
+    return;
+  }
+
+  stateText.textContent = "Tercüman odası açılıyor";
+  descText.textContent = "Bağlantı kuruldu. Şimdi canlı tercüman odasına geçiliyor.";
+
+  setTimeout(()=>{
+    location.href = roomUrl;
+  }, 850);
+
+  setTimeout(()=>{
+    showFallback(roomUrl);
+  }, 2600);
+}
+
+init();
+</script>
+</body>
+</html>
