@@ -9,194 +9,347 @@
 <style>
   html,body{background:#000 !important; margin:0; padding:0; overflow:hidden; font-family:'Outfit', sans-serif;}
   @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=Space+Grotesk:wght@700&display=swap');
-  
-  #pageContent {
-    height: 100vh; /* Ekranın tamamını kapla */
-    display: flex;
-    flex-direction: column;
-    background: radial-gradient(circle at 50% 15%, #0d123e 0%, #000 100%);
-    /* Son butonun alt barın altında kalmasını engeller */
-    padding-bottom: calc(env(safe-area-inset-bottom) + 10px);
-  }
+</style>
 
-  .main-hub {
-    flex: 1; /* Mevcut alanı doldur */
-    display: flex;
-    flex-direction: column;
-    gap: 8px; /* Kartlar arası boşluk */
-    padding: 10px 14px;
-    overflow-y: auto; /* İçerik taşarsa kaydırılabilsin (garanti) */
-  }
+<style>
+:root {
+  --ai-grad: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
+  --blue: #60a5fa;
+  --green: #34d399;
+  --purple: #a855f7;
+  --orange: #fb923c;
+  --pink: #ec4899;
+  --glass-border: rgba(255, 255, 255, 0.12);
+}
 
-  /* ===== 1. ORB & ENERGY BALLS ===== */
-  .f2f-visual {
-    flex: 0 0 auto;
-    display: flex;
-    justify-content: center;
-    padding: 10px 0;
-  }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
 
-  .neural-orb {
-    width: 90px;
-    height: 90px;
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
+#pageContent {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: radial-gradient(circle at 50% 20%, #0a0a25 0%, #000 100%);
+}
 
-  .ai-ring {
-    position: absolute;
-    inset: -2px;
-    border-radius: 50%;
-    padding: 2.5px;
-    background: var(--ai-grad);
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    mask-composite: exclude;
-    animation: rotateOrb 12s linear infinite;
-  }
+.main-hub {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 14px calc(var(--footerH, 84px) + env(safe-area-inset-bottom) + 8px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.main-hub::-webkit-scrollbar { display:none; }
 
-  .orbit-energy {
-    position: absolute;
-    inset: -12px;
-    border-radius: 50%;
-    animation: rotateOrb 6s linear infinite;
-  }
+/* ===== ÜST ORB ===== */
+.f2f-portal {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 8px 0 2px;
+  margin-bottom: 2px;
+}
+.neural-orb {
+  width: 110px;
+  height: 110px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ai-ring {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  padding: 2.5px;
+  background: var(--ai-grad);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  animation: rotateOrb 15s linear infinite;
+}
+.orbit-energy {
+  position: absolute;
+  inset: -12px;
+  border-radius: 50%;
+  animation: rotateOrb 8s linear infinite;
+}
+.e-ball {
+  position: absolute;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  filter: blur(1px);
+}
+.ball-l {
+  top:-5px;
+  left:50%;
+  transform:translateX(-50%);
+  background:#1e3a8a;
+  box-shadow:0 0 15px #1e3a8a;
+}
+.ball-b {
+  bottom:-5px;
+  left:50%;
+  transform:translateX(-50%);
+  background:#801336;
+  box-shadow:0 0 15px #801336;
+}
+.ai-core {
+  width: 82px;
+  height: 82px;
+  background: #000;
+  border-radius: 50%;
+  background-image: linear-gradient(#000, #000), var(--ai-grad);
+  background-origin: border-box;
+  background-clip: content-box, border-box;
+  border: 2px solid transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: aiBreathe 4s infinite ease-in-out;
+  z-index: 10;
+}
+.f2f-title {
+  font-family: 'Space Grotesk';
+  font-size: 24px;
+  font-weight: 900;
+  color: #fff;
+  margin-top: 8px;
+  letter-spacing: -1px;
+}
+.f2f-title .ai {
+  background: var(--ai-grad);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.f2f-sub {
+  margin-top: 4px;
+  font-size: 11px;
+  font-weight: 800;
+  color: rgba(255,255,255,.45);
+  text-align: center;
+}
 
-  .e-ball {
-    position: absolute;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    filter: blur(1.2px);
-  }
+/* ===== KARTLAR ===== */
+.hub-cards {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
 
-  .ball-1 { top: 0; left: 50%; background: #6366f1; box-shadow: 0 0 12px #6366f1; }
-  .ball-2 { bottom: 0; left: 50%; background: #ec4899; box-shadow: 0 0 12px #ec4899; }
+.trans-card {
+  min-height: 92px;
+  position: relative;
+  border-radius: 28px;
+  border: 1px solid var(--glass-border);
+  overflow: hidden;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(25px);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.trans-card:active {
+  transform: scale(0.985);
+  filter: brightness(1.12);
+}
 
-  .ai-core {
-    width: 65px;
-    height: 65px;
-    background: #000;
-    border-radius: 50%;
-    background-image: linear-gradient(#000, #000), var(--ai-grad);
-    background-origin: border-box;
-    background-clip: content-box, border-box;
-    border: 2px solid transparent;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    animation: aiBreathe 4s infinite ease-in-out;
-    z-index: 10;
-  }
+/* kart renkleri */
+.face-card { background: linear-gradient(145deg, rgba(96, 165, 250, 0.11) 0%, rgba(0,0,0,0.52) 100%); }
+.friend-card { background: linear-gradient(145deg, rgba(236, 72, 153, 0.11) 0%, rgba(0,0,0,0.52) 100%); }
+.interpreter-card { background: linear-gradient(145deg, rgba(52, 211, 153, 0.11) 0%, rgba(0,0,0,0.52) 100%); }
+.meeting-card { background: linear-gradient(145deg, rgba(251, 146, 60, 0.11) 0%, rgba(0,0,0,0.52) 100%); }
+.offline-card { background: linear-gradient(145deg, rgba(168, 85, 247, 0.11) 0%, rgba(0,0,0,0.52) 100%); }
 
-  /* ===== 2. MILENYUM HUB CARDS ===== */
-  :root {
-    /* Milenyum Neon Gradient */
-    --ai-grad: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
-    
-    /* Neon Renkler */
-    --blue: #60a5fa; 
-    --green: #34d399; 
-    --purple: #a855f7; 
-    --amber: #f59e0b; 
-    --rose: #f43f5e;
-    
-    /* Milenyum Metal Kenarlık */
-    --glass-border: rgba(255, 255, 255, 0.12);
-    
-    /* Kart Arka Planı */
-    --card-bg: linear-gradient(160deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.01) 100%);
-  }
+/* ikon alanı */
+.ico-box {
+  width: 62px;
+  height: 42px;
+  margin-right: 18px;
+  position: relative;
+  flex: 0 0 auto;
+}
 
-  .hub-cards {
-    flex: 1; 
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
+/* FaceToFace icon */
+.face-bars {
+  width: 62px;
+  height: 42px;
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  gap:4px;
+}
+.face-bar {
+  width: 7px;
+  border-radius: 4px 4px 0 0;
+  background: var(--blue);
+  animation: eqPulse .7s infinite alternate;
+}
+.face-bar:nth-child(1){ height: 28%; animation-delay:.1s; }
+.face-bar:nth-child(2){ height: 76%; animation-delay:.25s; }
+.face-bar:nth-child(3){ height: 50%; animation-delay:.15s; }
+.face-bar:nth-child(4){ height: 88%; animation-delay:.3s; }
+.face-bar:nth-child(5){ height: 38%; animation-delay:.2s; }
 
-  .trans-card {
-    flex: 1; /* Ekranı dolgun göster */
-    position: relative;
-    border-radius: 20px;
-    border: 1px solid var(--glass-border);
-    overflow: hidden;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    padding: 0 18px;
-    background: var(--card-bg);
-    backdrop-filter: blur(25px); /* Daha premium cam efekti */
-    transition: all 0.3s cubic-bezier(0.2, 1, 0.2, 1);
-    
-    /* Milenyum Glow */
-    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-  }
+/* Friend AI icon */
+.friend-dots {
+  width:62px;
+  height:42px;
+  position:relative;
+}
+.friend-dot {
+  position:absolute;
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  background: var(--pink);
+  box-shadow: 0 0 14px rgba(236,72,153,.7);
+  animation: friendPulse 1.6s infinite ease-in-out;
+}
+.friend-dot:nth-child(1){ left:4px; top:16px; animation-delay:0s; }
+.friend-dot:nth-child(2){ left:22px; top:8px; animation-delay:.2s; }
+.friend-dot:nth-child(3){ left:22px; top:24px; animation-delay:.4s; }
+.friend-dot:nth-child(4){ right:4px; top:16px; animation-delay:.6s; }
+.friend-line {
+  position:absolute;
+  height:2px;
+  background: rgba(236,72,153,.6);
+  transform-origin:left center;
+}
+.friend-line.l1 { left:12px; top:20px; width:16px; transform: rotate(-20deg); }
+.friend-line.l2 { left:12px; top:22px; width:16px; transform: rotate(18deg); }
+.friend-line.l3 { left:32px; top:20px; width:18px; transform: rotate(-2deg); }
 
-  /* Hover/Basılı Tutma Efekti: Krom Parlaması */
-  .trans-card:active {
-    transform: scale(0.97);
-    background: linear-gradient(160deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.03) 100%);
-    border-color: rgba(255,255,255,0.25);
-  }
+/* Interpreter icon */
+.interpreter-grid {
+  width:62px;
+  height:42px;
+  position:relative;
+  border:1px solid rgba(52,211,153,.45);
+  border-radius:10px;
+  overflow:hidden;
+}
+.interpreter-cell {
+  position:absolute;
+  width:50%;
+  height:50%;
+  border:1px solid rgba(52,211,153,.18);
+}
+.interpreter-cell:nth-child(1){ left:0; top:0; }
+.interpreter-cell:nth-child(2){ right:0; top:0; }
+.interpreter-cell:nth-child(3){ left:0; bottom:0; }
+.interpreter-cell:nth-child(4){ right:0; bottom:0; }
+.interpreter-scan {
+  position:absolute;
+  left:0;
+  width:100%;
+  height:2px;
+  background: var(--green);
+  box-shadow:0 0 12px rgba(52,211,153,.8);
+  animation: scanLine 2.4s linear infinite;
+}
 
-  /* Card Renk Temaları ve Neon Işımaları */
-  .f2f-card { box-shadow: 0 0 10px rgba(244, 63, 94, 0.15); border-color: rgba(244, 63, 94, 0.2); }
-  .text-card { box-shadow: 0 0 10px rgba(96, 165, 250, 0.15); border-color: rgba(96, 165, 250, 0.2); }
-  .inter-card { box-shadow: 0 0 10px rgba(245, 158, 11, 0.15); border-color: rgba(245, 158, 11, 0.2); }
-  .walk-card { box-shadow: 0 0 10px rgba(52, 211, 153, 0.15); border-color: rgba(52, 211, 153, 0.2); }
-  .off-card { box-shadow: 0 0 10px rgba(168, 85, 247, 0.15); border-color: rgba(168, 85, 247, 0.2); }
+/* Meeting Room icon */
+.meeting-rings {
+  width:62px;
+  height:42px;
+  position:relative;
+}
+.meeting-ring {
+  position:absolute;
+  border:2px solid rgba(251,146,60,.8);
+  border-radius:999px;
+  animation: roomPulse 2s infinite ease-out;
+}
+.meeting-ring.r1{ inset:10px 18px; animation-delay:0s; }
+.meeting-ring.r2{ inset:5px 13px; animation-delay:.35s; }
+.meeting-ring.r3{ inset:0px 8px; animation-delay:.7s; }
+.meeting-core {
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:12px;
+  height:12px;
+  border-radius:50%;
+  transform:translate(-50%,-50%);
+  background: var(--orange);
+  box-shadow:0 0 16px rgba(251,146,60,.85);
+}
 
-  /* Kart Basıldığında Neon Işıma Artışı */
-  .f2f-card:active { box-shadow: 0 0 25px rgba(244, 63, 94, 0.4); }
-  .text-card:active { box-shadow: 0 0 25px rgba(96, 165, 250, 0.4); }
-  .inter-card:active { box-shadow: 0 0 25px rgba(245, 158, 11, 0.4); }
-  .walk-card:active { box-shadow: 0 0 25px rgba(52, 211, 153, 0.4); }
-  .off-card:active { box-shadow: 0 0 25px rgba(168, 85, 247, 0.4); }
+/* Offline icon */
+.file-stack {
+  width:62px;
+  height:42px;
+  position:relative;
+}
+.file-sheet {
+  position:absolute;
+  width:30px;
+  height:34px;
+  border-radius:8px;
+  border:1px solid rgba(168,85,247,.55);
+  background: rgba(168,85,247,.08);
+}
+.file-sheet.s1 { left:8px; top:4px; transform: rotate(-8deg); }
+.file-sheet.s2 { left:18px; top:2px; transform: rotate(6deg); }
+.file-line {
+  position:absolute;
+  left:7px;
+  right:7px;
+  height:2px;
+  background: rgba(168,85,247,.55);
+  border-radius:2px;
+}
+.file-line.l1 { top:10px; }
+.file-line.l2 { top:16px; }
+.file-line.l3 { top:22px; }
 
-  /* --- TÜM İKON ANİMASYONLARI (Konuya Göre Geliştirildi) --- */
+@keyframes rotateOrb { from { transform: rotate(0); } to { transform: rotate(360deg); } }
+@keyframes aiBreathe { 0%,100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+@keyframes eqPulse { from { height: 16%; opacity:.7; } to { height: 100%; opacity:1; } }
+@keyframes scanLine { 0% { top:0; } 100% { top:100%; } }
+@keyframes roomPulse {
+  0% { opacity:.95; transform:scale(.8); }
+  100% { opacity:0; transform:scale(1.18); }
+}
+@keyframes friendPulse {
+  0%,100% { transform:scale(.9); opacity:.7; }
+  50% { transform:scale(1.18); opacity:1; }
+}
 
-  /* 1. FaceToFace Scanner */
-  .icon-f2f { width: 40px; height: 40px; margin-right: 15px; position: relative; border: 1.5px solid rgba(244, 63, 94, 0.3); border-radius: 8px; }
-  .f2f-scanner { position: absolute; width: 100%; height: 2px; background: var(--rose); top: 0; animation: scanLine 2s infinite ease-in-out; box-shadow: 0 0 8px var(--rose); }
-  .f2f-dot { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 6px; height: 6px; background: #fff; border-radius: 50%; animation: pulseCore 1s infinite alternate; }
-
-  /* 2. Text Translate Flow */
-  .icon-text { width: 40px; height: 30px; margin-right: 15px; display: flex; flex-direction: column; gap: 4px; }
-  .text-bar { height: 3px; background: var(--blue); border-radius: 2px; opacity: 0.3; width: 0; animation: fillText 2.2s infinite; }
-
-  /* 3. Interpreter Neural Link */
-  .icon-inter { width: 40px; height: 30px; margin-right: 15px; position: relative; }
-  .inter-node { position: absolute; width: 10px; height: 10px; border: 2px solid var(--amber); border-radius: 50%; top: 50%; margin-top: -5px; }
-  .node-l { left: 0; animation: nodeJump 1.5s infinite; }
-  .node-r { right: 0; border-color: #fff; animation: nodeJump 1.5s infinite reverse; }
-  .inter-link { position: absolute; height: 2px; background: var(--amber); top: 50%; left: 10px; right: 10px; transform: scaleX(0); animation: linkPulse 1.5s infinite; }
-
-  /* 4. Walkie-Talkie Frekans Spektrumu */
-  .icon-walkie { width: 40px; height: 30px; margin-right: 15px; display: flex; align-items: flex-end; gap: 3px; }
-  .eq-bar { flex: 1; background: var(--green); border-radius: 2px; animation: eqMove 0.7s infinite alternate; }
-
-  /* 5. Offline Data Box Dolum */
-  .icon-off { width: 40px; height: 30px; margin-right: 15px; position: relative; border: 2px solid var(--purple); border-radius: 4px; overflow: hidden; }
-  .off-fill { position: absolute; bottom: 0; width: 100%; background: var(--purple); animation: boxFill 2.6s infinite; opacity: 0.7; }
-
-  /* KEYFRAMES */
-  @keyframes rotateOrb { from { transform: rotate(0); } to { transform: rotate(360deg); } }
-  @keyframes aiBreathe { 0%,100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.05); opacity: 1; } }
-  @keyframes scanLine { 0% { top: 0%; } 100% { top: 100%; } }
-  @keyframes pulseCore { from { transform: translate(-50%,-50%) scale(1); opacity: 1; } to { transform: translate(-50%,-50%) scale(1.8); opacity: 0.2; } }
-  @keyframes fillText { 0% { width: 0; opacity: 0; } 50% { width: 100%; opacity: 1; } 100% { width: 100%; opacity: 0; } }
-  @keyframes nodeJump { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-  @keyframes linkPulse { 0%, 100% { transform: scaleX(0); opacity: 0; } 50% { transform: scaleX(1); opacity: 1; } }
-  @keyframes eqMove { from { height: 10%; } to { height: 100%; } }
-  @keyframes boxFill { 0% { height: 0; } 100% { height: 100%; } }
-
-  /* Typography: Milenyum Stili */
-  .card-content { flex: 1; }
-  .card-title { font-family: 'Space Grotesk'; font-size: 18px; font-weight: 700; color: #fff; margin: 0; letter-spacing: -0.5px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
-  .card-title .ai { background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900; }
-  .card-desc { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 3px; line-height: 1.3; }
+/* kart yazıları */
+.card-content {
+  flex: 1;
+  z-index: 10;
+  min-width: 0;
+}
+.card-title {
+  font-family: 'Space Grotesk';
+  font-size: 19px;
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+  letter-spacing: -.4px;
+}
+.card-title .ai {
+  background: var(--ai-grad);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.card-desc {
+  font-size: 11px;
+  color: rgba(255,255,255,0.48);
+  margin-top: 4px;
+  line-height: 1.35;
+}
 </style>
 </head>
 
@@ -204,83 +357,127 @@
 <main id="pageContent">
   <div class="main-hub">
 
-    <div class="f2f-visual">
+    <!-- ÜST ORB AYNI KALIYOR -->
+    <div class="f2f-portal" onclick="location.href='/facetoface.html'">
       <div class="neural-orb">
         <div class="ai-ring"></div>
-        <div class="orbit-energy"><div class="e-ball ball-1"></div><div class="e-ball ball-2"></div></div>
+        <div class="orbit-energy">
+          <div class="e-ball ball-l"></div>
+          <div class="e-ball ball-b"></div>
+        </div>
         <div class="ai-core">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5">
-            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4"/>
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+            <path d="M19 11v1a7 7 0 0 1-14 0v-2"/>
+            <line x1="12" y1="19" x2="12" y2="23"/>
           </svg>
         </div>
       </div>
+      <h1 class="f2f-title">FaceToFace <span class="ai">AI</span></h1>
+      <div class="f2f-sub">Telefonu ortaya koy, konuşma başlasın.</div>
     </div>
 
     <div class="hub-cards">
-      <div class="trans-card f2f-card" onclick="location.href='/facetoface.html'">
-        <div class="icon-f2f">
-          <div class="f2f-scanner"></div>
-          <div class="f2f-dot"></div>
+
+      <!-- 1 FaceToFace AI -->
+      <div class="trans-card face-card" onclick="location.href='/facetoface.html'">
+        <div class="ico-box">
+          <div class="face-bars">
+            <div class="face-bar"></div>
+            <div class="face-bar"></div>
+            <div class="face-bar"></div>
+            <div class="face-bar"></div>
+            <div class="face-bar"></div>
+          </div>
         </div>
         <div class="card-content">
           <h2 class="card-title">FaceToFace <span class="ai">AI</span></h2>
-          <p class="card-desc">Taramalı vizör ile anlık karşılıklı çeviri.</p>
+          <p class="card-desc">Yüz yüze görüşmelerde iki kişilik anlık konuşma çevirisi.</p>
         </div>
       </div>
 
-      <div class="trans-card text-card" onclick="location.href='/pages/text_translate.html'">
-        <div class="icon-text">
-          <div class="text-bar" style="animation-delay: 0s"></div>
-          <div class="text-bar" style="animation-delay: 0.4s"></div>
-          <div class="text-bar" style="animation-delay: 0.8s"></div>
+      <!-- 2 Friend AI -->
+      <div class="trans-card friend-card" onclick="location.href='/pages/italky_chat.html'">
+        <div class="ico-box">
+          <div class="friend-dots">
+            <div class="friend-dot"></div>
+            <div class="friend-dot"></div>
+            <div class="friend-dot"></div>
+            <div class="friend-dot"></div>
+            <div class="friend-line l1"></div>
+            <div class="friend-line l2"></div>
+            <div class="friend-line l3"></div>
+          </div>
         </div>
         <div class="card-content">
-          <h2 class="card-title">Text Translate <span class="ai">AI</span></h2>
-          <p class="card-desc">Yazılı metinleri nöral akıllı bağlamla yerelleştir.</p>
+          <h2 class="card-title">Friend <span class="ai">AI</span></h2>
+          <p class="card-desc">Yaz, konuş, sor. Akıllı sohbet asistanın her an yanında.</p>
         </div>
       </div>
 
-      <div class="trans-card inter-card" onclick="location.href='/pages/interpreter.html'">
-        <div class="icon-inter">
-          <div class="inter-node node-l"></div>
-          <div class="inter-link"></div>
-          <div class="inter-node node-r"></div>
+      <!-- 3 Interpreter AI -->
+      <div class="trans-card interpreter-card" onclick="location.href='/interpreter_room.html'">
+        <div class="ico-box">
+          <div class="interpreter-grid">
+            <div class="interpreter-cell"></div>
+            <div class="interpreter-cell"></div>
+            <div class="interpreter-cell"></div>
+            <div class="interpreter-cell"></div>
+            <div class="interpreter-scan"></div>
+          </div>
         </div>
         <div class="card-content">
           <h2 class="card-title">Interpreter <span class="ai">AI</span></h2>
-          <p class="card-desc">Kesintisiz ve gerçek zamanlı canlı tercüman.</p>
+          <p class="card-desc">QR ile bağlan, karşılıklı özel tercüman odasında iletişim kur.</p>
         </div>
       </div>
 
-      <div class="trans-card walk-card" onclick="location.href='/pages/f2f_connect.html'">
-        <div class="icon-walkie">
-          <div class="eq-bar" style="animation-delay: 0.1s"></div>
-          <div class="eq-bar" style="animation-delay: 0.3s"></div>
-          <div class="eq-bar" style="animation-delay: 0.2s"></div>
-          <div class="eq-bar" style="animation-delay: 0.4s"></div>
+      <!-- 4 Meeting Room -->
+      <div class="trans-card meeting-card" onclick="location.href='/pages/f2f_connect.html'">
+        <div class="ico-box">
+          <div class="meeting-rings">
+            <div class="meeting-ring r1"></div>
+            <div class="meeting-ring r2"></div>
+            <div class="meeting-ring r3"></div>
+            <div class="meeting-core"></div>
+          </div>
         </div>
         <div class="card-content">
-          <h2 class="card-title">Walkie-Talkie <span class="ai">AI</span></h2>
-          <p class="card-desc">Frekans spektrumlu uzak mesafe anlık odalar.</p>
+          <h2 class="card-title">Meeting Room</h2>
+          <p class="card-desc">Uzak bağlantılarda çok yönlü görüşme ve toplantı odası deneyimi.</p>
         </div>
       </div>
 
-      <div class="trans-card off-card" onclick="location.href='/pages/offline_languages.html'">
-        <div class="icon-off">
-          <div class="off-fill"></div>
+      <!-- 5 Offline Files -->
+      <div class="trans-card offline-card" onclick="location.href='/pages/offline_languages.html'">
+        <div class="ico-box">
+          <div class="file-stack">
+            <div class="file-sheet s1">
+              <div class="file-line l1"></div>
+              <div class="file-line l2"></div>
+              <div class="file-line l3"></div>
+            </div>
+            <div class="file-sheet s2">
+              <div class="file-line l1"></div>
+              <div class="file-line l2"></div>
+              <div class="file-line l3"></div>
+            </div>
+          </div>
         </div>
         <div class="card-content">
-          <h2 class="card-title">Offline Çeviri <span class="ai">AI</span></h2>
-          <p class="card-desc">Veri paketleriyle internet olmadan özgür iletişim.</p>
+          <h2 class="card-title">Offline Files</h2>
+          <p class="card-desc">İnternet olmadan indirilen dil paketleri ve çevrimdışı dosya kullanımı.</p>
         </div>
       </div>
+
     </div>
+
   </div>
 </main>
 
 <script type="module">
   import { mountShell } from "/js/ui_shell.js";
-  mountShell({ scroll:"none" });
+  try { mountShell({ scroll:"none" }); } catch(e) { console.error(e); }
 </script>
 </body>
 </html>
