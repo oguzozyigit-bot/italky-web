@@ -306,11 +306,10 @@ function paintVoiceProfile(profile, voiceExtra){
 
   const currentTts = localStorage.getItem("tts_voice") || "auto";
   if(currentTts === "own" && !ready) localStorage.setItem("tts_voice", "auto");
-  if(currentTts === "ai" && !aiReady) localStorage.setItem("tts_voice", "auto");
 
-  const currentChatAi = localStorage.getItem("chat_ai_voice") || "female";
-  if(currentChatAi === "own" && !ready) localStorage.setItem("chat_ai_voice", "female");
-  if(currentChatAi === "ai_custom" && !aiReady) localStorage.setItem("chat_ai_voice", "female");
+  const currentChatAi = localStorage.getItem("chat_ai_voice") || "auto";
+  if(currentChatAi === "own" && !ready) localStorage.setItem("chat_ai_voice", "auto");
+  if(currentChatAi === "ai_custom" && !aiReady) localStorage.setItem("chat_ai_voice", "auto");
 
   renderSettingValues();
 }
@@ -341,15 +340,17 @@ const SETTINGS_META = {
     title: "Çeviri Sesi",
     values: {
       auto: "Otomatik",
-      own: "Kendi Sesim",
-      ai: "AI Sesi"
+      female: "Kadın Sesi",
+      male: "Erkek Sesi",
+      own: "Benim Sesim"
     }
   },
   chat_ai_voice: {
     title: "Sohbet AI Sesi",
     values: {
-      female: "Kadın",
-      male: "Erkek",
+      auto: "Otomatik",
+      female: "Kadın Sesi",
+      male: "Erkek Sesi",
       own: "Benim Sesim",
       ai_custom: "AI Özel Ses"
     }
@@ -362,15 +363,14 @@ function settingLabel(key, value){
 
 function renderSettingValues(){
   const tts = localStorage.getItem("tts_voice") || "auto";
-  const chatAi = localStorage.getItem("chat_ai_voice") || "female";
+  const chatAi = localStorage.getItem("chat_ai_voice") || "auto";
 
   let ttsLabel = settingLabel("tts_voice", tts);
   if(tts === "own" && !__voiceProfileReady) ttsLabel = "Otomatik";
-  if(tts === "ai" && !__aiVoiceProfileReady) ttsLabel = "Otomatik";
 
   let chatAiLabel = settingLabel("chat_ai_voice", chatAi);
-  if(chatAi === "own" && !__voiceProfileReady) chatAiLabel = "Kadın";
-  if(chatAi === "ai_custom" && !__aiVoiceProfileReady) chatAiLabel = "Kadın";
+  if(chatAi === "own" && !__voiceProfileReady) chatAiLabel = "Otomatik";
+  if(chatAi === "ai_custom" && !__aiVoiceProfileReady) chatAiLabel = "Otomatik";
 
   safeText("ttsVoiceValue", ttsLabel);
   safeText("chatAiVoiceValue", chatAiLabel);
@@ -398,8 +398,6 @@ function openSheet(storageKey){
     let disabled = false;
 
     if(storageKey === "tts_voice" && value === "own" && !__voiceProfileReady) disabled = true;
-    if(storageKey === "tts_voice" && value === "ai" && !__aiVoiceProfileReady) disabled = true;
-
     if(storageKey === "chat_ai_voice" && value === "own" && !__voiceProfileReady) disabled = true;
     if(storageKey === "chat_ai_voice" && value === "ai_custom" && !__aiVoiceProfileReady) disabled = true;
 
@@ -422,7 +420,6 @@ function openSheet(storageKey){
 
       if(disabled){
         if(value === "own") toast("Önce Ses Profilini Güncelle");
-        if(value === "ai") toast("Önce AI Özel Ses Oluştur");
         if(value === "ai_custom") toast("Önce AI Özel Ses Oluştur");
         return;
       }
@@ -444,7 +441,7 @@ function openSheet(storageKey){
 
 function loadSettings(){
   if(!localStorage.getItem("tts_voice")) localStorage.setItem("tts_voice", "auto");
-  if(!localStorage.getItem("chat_ai_voice")) localStorage.setItem("chat_ai_voice", "female");
+  if(!localStorage.getItem("chat_ai_voice")) localStorage.setItem("chat_ai_voice", "auto");
   renderSettingValues();
 }
 
