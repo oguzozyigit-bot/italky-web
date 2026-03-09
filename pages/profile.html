@@ -2,6 +2,7 @@
 <!doctype html>
 <html lang="tr">
 <head>
+
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
 <title>italkyAI • Profil</title>
@@ -12,22 +13,32 @@
 <style>
 
 html,body{
-margin:0;
 background:#02000f;
+margin:0;
 font-family:Outfit;
 overflow:hidden;
+scrollbar-width:none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar{
+display:none;
 }
 
 #pageContent{
-max-width:560px;
-margin:auto;
-padding:16px 14px calc(var(--footerH,92px) + env(safe-area-inset-bottom));
+padding:16px;
+padding-bottom:calc(var(--footerH,92px) + env(safe-area-inset-bottom) + 16px);
 display:flex;
 flex-direction:column;
-gap:12px;
+gap:14px;
+max-width:560px;
+margin:auto;
+height:100%;
 overflow-y:auto;
-height:100vh;
+scrollbar-width:none;
 }
+
+#pageContent::-webkit-scrollbar{display:none;}
 
 .panel{
 background:linear-gradient(145deg,rgba(255,255,255,.08),rgba(255,255,255,.02));
@@ -42,43 +53,57 @@ font-family:"Space Grotesk";
 font-size:18px;
 font-weight:900;
 color:#fff;
-margin:0 0 10px;
+margin:0;
+margin-bottom:10px;
 }
 
 .line{
 display:flex;
-justify-content:space-between;
 align-items:center;
+justify-content:space-between;
 padding:12px;
 border-radius:18px;
 background:rgba(255,255,255,.05);
 border:1px solid rgba(255,255,255,.08);
-gap:10px;
+margin-bottom:10px;
 }
 
 .k{
 font-size:12px;
 font-weight:900;
 color:#a5b4fc;
-letter-spacing:1px;
 }
 
 .v{
 font-size:13px;
 font-weight:900;
 color:#fff;
-text-align:right;
-max-width:65%;
-word-break:break-word;
+}
+
+.wallet{
+display:flex;
+justify-content:space-between;
+align-items:center;
+background:rgba(99,102,241,.15);
+padding:14px;
+border-radius:20px;
+border:1px solid rgba(99,102,241,.4);
+margin-top:10px;
+}
+
+.amt{
+font-size:20px;
+font-weight:900;
+color:#fff;
 }
 
 .btn{
-min-height:44px;
+height:44px;
 padding:0 14px;
 border-radius:16px;
 border:none;
-font-weight:1000;
 cursor:pointer;
+font-weight:900;
 }
 
 .btn-primary{
@@ -94,37 +119,73 @@ color:#fff;
 
 .btn-danger{
 background:transparent;
-border:1px solid rgba(255,0,90,.3);
-color:#ff5a8c;
+border:1px solid rgba(255,0,90,.4);
+color:#ff6b8a;
 }
 
-.setting{
+.settingBtn{
+min-width:140px;
+height:40px;
+border-radius:14px;
+border:1px solid rgba(255,255,255,.12);
+background:rgba(0,0,0,.2);
+color:#fff;
+font-weight:900;
 display:flex;
 align-items:center;
 justify-content:space-between;
-padding:12px;
-border-radius:18px;
-background:rgba(255,255,255,.05);
-border:1px solid rgba(255,255,255,.08);
+padding:0 10px;
+cursor:pointer;
 }
 
-.select{
-background:rgba(0,0,0,.25);
-border:1px solid rgba(255,255,255,.12);
-color:#fff;
-border-radius:14px;
-padding:8px 10px;
+.optionSheet{
+position:fixed;
+bottom:0;
+left:0;
+right:0;
+z-index:9999;
+background:rgba(15,15,30,.95);
+backdrop-filter:blur(25px);
+border-top-left-radius:28px;
+border-top-right-radius:28px;
+padding:18px;
+transform:translateY(110%);
+transition:.3s;
+}
+
+.optionSheet.show{
+transform:translateY(0);
+}
+
+.optionItem{
+height:56px;
+display:flex;
+align-items:center;
+justify-content:space-between;
+padding:0 16px;
+border-radius:16px;
+background:rgba(255,255,255,.05);
+border:1px solid rgba(255,255,255,.1);
+margin-bottom:10px;
+cursor:pointer;
 font-weight:800;
 }
 
-.note{
-font-size:11px;
-color:rgba(255,255,255,.55);
-margin-top:6px;
+.optionItem.active{
+border-color:#a5b4fc;
+background:rgba(99,102,241,.25);
 }
 
-.qrBtn{
-margin-top:8px;
+.optionRadio{
+width:20px;
+height:20px;
+border-radius:50%;
+border:2px solid rgba(255,255,255,.4);
+}
+
+.optionItem.active .optionRadio{
+background:#9fe7ea;
+border-color:#9fe7ea;
 }
 
 </style>
@@ -134,8 +195,8 @@ margin-top:8px;
 
 <div id="pageContent">
 
-<!-- PROFİL -->
 <div class="panel">
+
 <h2 class="title">Profil</h2>
 
 <div class="line">
@@ -153,96 +214,135 @@ margin-top:8px;
 <div class="v" id="memberNo">—</div>
 </div>
 
-<div class="line">
-<div class="k">Üyelik Tarihi</div>
-<div class="v" id="createdAt">—</div>
-</div>
-
-<div class="line">
-<div class="k">Son Giriş</div>
-<div class="v" id="lastLogin">—</div>
-</div>
-
-<div class="line">
+<div class="wallet">
+<div>
 <div class="k">Jeton</div>
-<div class="v"><span id="tokenVal">0</span></div>
+<div class="amt"><span id="tokenVal">0</span></div>
+</div>
+<button class="btn btn-primary">Jeton Yükle</button>
 </div>
 
 </div>
 
 
-<!-- SES PROFİL -->
 <div class="panel">
 
 <h2 class="title">Ses Profili</h2>
 
 <div class="line">
-<div class="k">Ses Durumu</div>
-<div class="v" id="voiceProfileStatus">Hazır değil</div>
+<div class="k">Durum</div>
+<div class="v" id="voiceStatus">Hazır değil</div>
 </div>
 
-<button class="btn btn-primary" id="voiceProfileBtn">Sesini Tanıt</button>
+<button class="btn btn-primary" onclick="location.href='/pages/voice_profile.html'">
+Ses Profilini Güncelle
+</button>
 
 </div>
 
 
-<!-- ÇEVİRİ SESİ -->
 <div class="panel">
 
 <h2 class="title">Çeviri Ayarları</h2>
 
-<div class="setting">
+<div class="line">
 <div class="k">Çeviri Sesi</div>
 
-<select class="select" id="ttsVoiceSelect">
-<option value="auto">Otomatik</option>
-<option value="female">Kadın</option>
-<option value="male">Erkek</option>
-<option value="clone">Benim Sesim</option>
-</select>
+<button class="settingBtn" id="voiceTrigger">
+<span id="voiceValue">Otomatik</span>
+<span>⌄</span>
+</button>
 
-</div>
-
-<div class="note">
-FaceToFace ve TextToText çevirilerinde kullanılacak ses.
 </div>
 
 </div>
 
 
-<!-- QR KOD -->
 <div class="panel">
 
 <h2 class="title">Interpreter QR</h2>
 
-<div class="note">
-Bu QR kodu okutulduğunda direkt tercüman sohbetine bağlanılır.
+<div class="line">
+<div class="k">Bağlantı QR</div>
+<button class="btn btn-primary" id="qrRenew">QR Kod Yenile</button>
 </div>
-
-<button class="btn btn-primary qrBtn" id="refreshQrBtn">
-QR Kod Yenile
-</button>
 
 </div>
 
 
-<!-- ÇIKIŞ -->
 <div class="panel">
 
-<button class="btn btn-safe" id="logoutBtn">
-Güvenli Çıkış
-</button>
+<button class="btn btn-safe" id="logoutBtn">Güvenli Çıkış</button>
 
-<button class="btn btn-danger" id="deleteBtn">
-Hesabımı Kalıcı Sil
-</button>
+<button class="btn btn-danger" id="deleteBtn">Hesabımı Kalıcı Sil</button>
 
 </div>
 
 </div>
 
 
-<script type="module" src="/js/profile_boot.js?v=clean2"></script>
+<div class="optionSheet" id="voiceSheet">
+
+<div class="optionItem active" data-val="auto">
+Otomatik
+<div class="optionRadio"></div>
+</div>
+
+<div class="optionItem" data-val="female">
+Kadın
+<div class="optionRadio"></div>
+</div>
+
+<div class="optionItem" data-val="male">
+Erkek
+<div class="optionRadio"></div>
+</div>
+
+<div class="optionItem" data-val="my">
+Benim Sesim
+<div class="optionRadio"></div>
+</div>
+
+</div>
+
+
+<script type="module">
+
+import { mountShell } from "/js/ui_shell.js";
+mountShell();
+
+const voiceSheet = document.getElementById("voiceSheet");
+const voiceTrigger = document.getElementById("voiceTrigger");
+const voiceValue = document.getElementById("voiceValue");
+
+voiceTrigger.onclick=()=>{
+voiceSheet.classList.add("show");
+};
+
+document.querySelectorAll(".optionItem").forEach(el=>{
+
+el.onclick=()=>{
+
+document.querySelectorAll(".optionItem").forEach(x=>x.classList.remove("active"));
+el.classList.add("active");
+
+const val = el.dataset.val;
+
+localStorage.setItem("tts_voice",val);
+
+voiceValue.textContent =
+val==="auto" ? "Otomatik"
+: val==="female" ? "Kadın"
+: val==="male" ? "Erkek"
+: "Benim Sesim";
+
+voiceSheet.classList.remove("show");
+
+};
+
+});
+
+</script>
 
 </body>
 </html>
