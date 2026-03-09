@@ -1,33 +1,40 @@
-// FILE: /js/profile_boot.js
+import { mountShell } from "/js/ui_shell.js";
+import { supabase } from "/js/supabase_client.js";
 
-import { initProfilePage } from "/js/profile_page.js";
+const $ = (id)=>document.getElementById(id);
 
-async function boot() {
-  let setHeaderTokensSafe = () => {};
+async function boot(){
 
-  try {
-    const shell = await import("/js/ui_shell.js");
-
-    if (typeof shell.mountShell === "function") {
-      try {
-        shell.mountShell({ scroll: "auto" });
-      } catch (e) {
-        console.warn("[profile_boot mountShell]", e);
-      }
-    }
-
-    if (typeof shell.setHeaderTokens === "function") {
-      setHeaderTokensSafe = shell.setHeaderTokens;
-    }
-  } catch (e) {
-    console.warn("[profile_boot shell optional]", e);
+  /* UI SHELL ÖNCE */
+  try{
+    mountShell({scroll:"auto"});
+  }catch(e){
+    console.warn("ui_shell error",e);
   }
 
-  try {
-    await initProfilePage({ setHeaderTokens: setHeaderTokensSafe });
-  } catch (e) {
-    console.error("[profile_boot initProfilePage]", e);
-  }
+  /* SONRA PROFİL VERİSİ */
+  await loadProfile();
+
+}
+
+async function loadProfile(){
+
+  const {data:{user}} = await supabase.auth.getUser();
+  if(!user) return;
+
+  const {data} = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id",user.id)
+    .single();
+
+  if(!data) return;
+
+  $("pName").textContent = data.name || "—";
+  $("pEmail").textContent = user.email || "—";
+  $("memberNo").textContent = data.member_no || "—";
+  $("tokenVal").textContent = data.tokens || 0;
+
 }
 
 boot();
