@@ -619,10 +619,12 @@ async function ensureStableHostCode(){
 }
 
 function buildJoinUrl(hostCode){
-  const version = getStoredQrVersion();
-  const url = new URL("/pages/interpreter_join.html", location.origin);
+  const version = localStorage.getItem("italky_interpreter_qr_version") || "1";
+
+  const url = new URL("https://italky.ai/open/interpreter");
   url.searchParams.set("host", hostCode);
   url.searchParams.set("v", version);
+
   return url.toString();
 }
 
