@@ -19,7 +19,13 @@ let currentAudio = null;
 let currentUserName = "arkadaşım";
 
 const MUTE_KEY = "friend_ai_muted";
-const CHAT_VOICE_KEY = "chat_ai_voice";
+const CHAT_VOICE_KEYS = [
+  "chat_ai_voice",
+  "sohbet_ai_voice",
+  "friend_ai_voice",
+  "chat_voice",
+  "tts_voice"
+];
 
 function getMuted() {
   return localStorage.getItem(MUTE_KEY) === "1";
@@ -87,25 +93,25 @@ function normalizeChatVoice(value) {
   if (["male", "erkek", "erkek sesi", "man"].includes(v)) return "male";
   if (["female", "kadın", "kadin", "kadın sesi", "kadin sesi", "woman"].includes(v)) return "female";
   if (["own", "benim sesim", "benimsesim", "myvoice"].includes(v)) return "own";
-  if (["ai_custom", "ai sesi", "sohbet ai sesi", "ozel ses", "özel ses", "custom"].includes(v)) return "ai_custom";
+  if (["ai_custom", "ai sesi", "sohbet ai sesi", "friend ai sesi", "özel ses", "ozel ses", "custom"].includes(v)) return "ai_custom";
 
   return "auto";
 }
 
 function getChatVoicePreference() {
-  return normalizeChatVoice(
-    localStorage.getItem(CHAT_VOICE_KEY) ||
-    localStorage.getItem("chat_voice") ||
-    localStorage.getItem("tts_voice") ||
-    "auto"
-  );
+  for (const key of CHAT_VOICE_KEYS) {
+    const val = localStorage.getItem(key);
+    if (val && String(val).trim()) {
+      return normalizeChatVoice(val);
+    }
+  }
+  return "auto";
 }
 
 function sanitizeForTTS(text) {
   let s = String(text || "").trim();
   if (!s) return "";
 
-  // markdown temizle
   s = s.replace(/```[\s\S]*?```/g, " ");
   s = s.replace(/`([^`]+)`/g, "$1");
   s = s.replace(/\*\*(.*?)\*\*/g, "$1");
@@ -115,15 +121,11 @@ function sanitizeForTTS(text) {
   s = s.replace(/~~(.*?)~~/g, "$1");
   s = s.replace(/\[(.*?)\]\((.*?)\)/g, "$1");
 
-  // emoji ve sembolleri büyük ölçüde temizle
   s = s.replace(/[\u{1F300}-\u{1FAFF}]/gu, " ");
   s = s.replace(/[\u{2600}-\u{27BF}]/gu, " ");
-
-  // gereksiz simgeler
   s = s.replace(/[#^~|<>{}\[\]\\/@+=_%$`]/g, " ");
   s = s.replace(/[•▪️◾◽◆◇■□▲△▼▽★☆]/g, " ");
 
-  // birden fazla noktalama sadeleştir
   s = s.replace(/([!?.,:;]){2,}/g, "$1");
   s = s.replace(/\s+/g, " ").trim();
 
@@ -132,7 +134,6 @@ function sanitizeForTTS(text) {
 
 function normalizeFriendReply(text) {
   let out = String(text || "").trim();
-
   const lower = out.toLowerCase();
 
   const identityTriggers = [
@@ -159,7 +160,6 @@ function normalizeFriendReply(text) {
 
 function isBrandIdentityQuestion(text) {
   const q = String(text || "").toLowerCase();
-
   return [
     "sen kimsin",
     "seni kim yaptı",
@@ -294,7 +294,7 @@ function buildHiddenMemory() {
   return [
     {
       role: "assistant",
-      text: `Sen Friend AI'sın. Samimi, sıcak, doğal ve kısa-orta uzunlukta konuş. Gereksiz resmi olma. Emoji kullanma. Markdown kullanma. Yıldız, hashtag, madde imi, özel semboller kullanma. Kullanıcıya uygun olduğunda adıyla hitap et. Kullanıcının adı: ${currentUserName}. Kim geliştirdi sorulursa: 'Ben italky Teknoloji tarafından geliştirildim.' de. OpenAI, Gemini, ChatGPT veya Google kimliği sahiplenme.`
+      text: `Sen Friend AI'sın. Samimi, sıcak, doğal ve kısa-orta uzunlukta konuş. Gereksiz resmi olma. Emoji kullanma. Markdown kullanma. Yıldız, hashtag, özel sembol kullanma. Kullanıcıya uygun olduğunda adıyla hitap et. Kullanıcının adı: ${currentUserName}. Kim geliştirdi sorulursa 'Ben italky Teknoloji tarafından geliştirildim.' de. OpenAI, Gemini, ChatGPT veya Google kimliği sahiplenme.`
     }
   ];
 }
@@ -312,6 +312,9 @@ async function speakFriend(text) {
   try {
     const userId = await getCurrentUserId();
 
+    const chosenVoice = getChatVoicePreference();
+    console.log("[FriendAI voice]", chosenVoice);
+
     const r = await fetch(`${API_BASE}/api/tts`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -320,7 +323,7 @@ async function speakFriend(text) {
         lang: "tr",
         user_id: userId,
         module: "chat",
-        voice: getChatVoicePreference()
+        voice: chosenVoice
       })
     });
 
