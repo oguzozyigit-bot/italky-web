@@ -6,6 +6,9 @@ import { STORAGE_KEY } from "/js/config.js";
 const API_BASE = "https://italky-api.onrender.com";
 const $ = (id)=>document.getElementById(id);
 
+let __voiceProfileReady = false;
+let __aiVoiceProfileReady = false;
+
 function safeText(id, val){
   const el = $(id);
   if(el) el.textContent = (val ?? "—");
@@ -185,7 +188,17 @@ async function tryLoadVoiceFields(userId){
   try{
     const { data, error } = await supabase
       .from("profiles")
-      .select("id,voice_sample_seconds,voice_profile_ready,voice_profile_updated_at,voice_profile_lang")
+      .select(`
+        id,
+        voice_sample_seconds,
+        voice_profile_ready,
+        voice_profile_updated_at,
+        voice_profile_lang,
+        ai_voice_sample_seconds,
+        ai_voice_profile_ready,
+        ai_voice_profile_updated_at,
+        ai_voice_profile_lang
+      `)
       .eq("id", userId)
       .maybeSingle();
 
@@ -252,7 +265,16 @@ function paintVoiceProfile(profile, voiceExtra){
   const updated = fmtDT(voiceExtra?.voice_profile_updated_at || profile?.voice_profile_updated_at);
   const lang = langLabel(voiceExtra?.voice_profile_lang || profile?.voice_profile_lang);
 
+  const aiReady = !!(voiceExtra?.ai_voice_profile_ready || profile?.ai_voice_profile_ready);
+  const aiSecs = Number(voiceExtra?.ai_voice_sample_seconds || profile?.ai_voice_sample_seconds || 0);
+  const aiUpdated = fmtDT(voiceExtra?.ai_voice_profile_updated_at || profile?.ai_voice_profile_updated_at);
+  const aiLang = langLabel(voiceExtra?.ai_voice_profile_lang || profile?.ai_voice_profile_lang);
+
+  __voiceProfileReady = ready;
+  __aiVoiceProfileReady = aiReady;
+
   safeText("voiceProfileStatus", ready ? "Ses profili hazır" : "Hazır değil");
+  safeText("aiVoiceProfileStatus", aiReady ? "AI özel ses hazır" : "Hazır değil");
 
   const metaEl = $("voiceProfileMeta");
   if(metaEl){
@@ -263,10 +285,34 @@ function paintVoiceProfile(profile, voiceExtra){
     }
   }
 
+  const aiMetaEl = $("aiVoiceProfileMeta");
+  if(aiMetaEl){
+    if(aiReady){
+      aiMetaEl.textContent = `Kayıt süresi: ${fmtDuration(aiSecs)} • Dil: ${aiLang} • Güncelleme: ${aiUpdated}`;
+    }else{
+      aiMetaEl.textContent = "Henüz AI özel ses kaydı oluşturulmadı.";
+    }
+  }
+
   const btn = $("voiceProfileBtn");
   if(btn){
     btn.textContent = ready ? "Ses Profilini Güncelle" : "Sesini Tanıt";
   }
+
+  const aiBtn = $("aiVoiceProfileBtn");
+  if(aiBtn){
+    aiBtn.textContent = aiReady ? "AI Özel Sesi Güncelle" : "AI Özel Ses Oluştur";
+  }
+
+  const currentTts = localStorage.getItem("tts_voice") || "auto";
+  if(currentTts === "own" && !ready) localStorage.setItem("tts_voice", "auto");
+  if(currentTts === "ai" && !aiReady) localStorage.setItem("tts_voice", "auto");
+
+  const currentChatAi = localStorage.getItem("chat_ai_voice") || "female";
+  if(currentChatAi === "own" && !ready) localStorage.setItem("chat_ai_voice", "female");
+  if(currentChatAi === "ai_custom" && !aiReady) localStorage.setItem("chat_ai_voice", "female");
+
+  renderSettingValues();
 }
 
 async function hardDeleteAccount(){
@@ -290,29 +336,22 @@ async function hardDeleteAccount(){
   location.replace("/pages/login.html");
 }
 
-/* settings labels */
 const SETTINGS_META = {
   tts_voice: {
     title: "Çeviri Sesi",
     values: {
       auto: "Otomatik",
+      own: "Kendi Sesim",
+      ai: "AI Sesi"
+    }
+  },
+  chat_ai_voice: {
+    title: "Sohbet AI Sesi",
+    values: {
+      female: "Kadın",
       male: "Erkek",
-      female: "Kadın"
-    }
-  },
-  lang_detect: {
-    title: "Dil Algılama",
-    values: {
-      auto: "Otomatik",
-      manual: "Manuel"
-    }
-  },
-  speech_mode: {
-    title: "Konuşma Modu",
-    values: {
-      normal: "Normal",
-      noise: "Gürültülü Ortam",
-      headset: "Kulaklık"
+      own: "Benim Sesim",
+      ai_custom: "AI Özel Ses"
     }
   }
 };
@@ -322,9 +361,25 @@ function settingLabel(key, value){
 }
 
 function renderSettingValues(){
-  safeText("ttsVoiceValue", settingLabel("tts_voice", localStorage.getItem("tts_voice") || "auto"));
-  safeText("langDetectValue", settingLabel("lang_detect", localStorage.getItem("lang_detect") || "auto"));
-  safeText("speechModeValue", settingLabel("speech_mode", localStorage.getItem("speech_mode") || "normal"));
+  const tts = localStorage.getItem("tts_voice") || "auto";
+  const chatAi = localStorage.getItem("chat_ai_voice") || "female";
+
+  let ttsLabel = settingLabel("tts_voice", tts);
+  if(tts === "own" && !__voiceProfileReady) ttsLabel = "Otomatik";
+  if(tts === "ai" && !__aiVoiceProfileReady) ttsLabel = "Otomatik";
+
+  let chatAiLabel = settingLabel("chat_ai_voice", chatAi);
+  if(chatAi === "own" && !__voiceProfileReady) chatAiLabel = "Kadın";
+  if(chatAi === "ai_custom" && !__aiVoiceProfileReady) chatAiLabel = "Kadın";
+
+  safeText("ttsVoiceValue", ttsLabel);
+  safeText("chatAiVoiceValue", chatAiLabel);
+}
+
+function closeSheet(){
+  $("sheetBackdrop")?.classList.remove("show");
+  $("optionSheet")?.classList.remove("show");
+  document.body.style.overflow = "";
 }
 
 function openSheet(storageKey){
@@ -339,23 +394,44 @@ function openSheet(storageKey){
   const current = localStorage.getItem(storageKey) || Object.keys(meta.values)[0];
   title.textContent = meta.title;
 
-  list.innerHTML = Object.entries(meta.values).map(([value, label]) => `
-    <div class="sheetItem ${value === current ? "active" : ""}" data-storage-key="${storageKey}" data-value="${value}">
-      <div class="sheetItemLabel">${label}</div>
-      <div class="sheetItemCheck"></div>
-    </div>
-  `).join("");
+  list.innerHTML = Object.entries(meta.values).map(([value, label]) => {
+    let disabled = false;
+
+    if(storageKey === "tts_voice" && value === "own" && !__voiceProfileReady) disabled = true;
+    if(storageKey === "tts_voice" && value === "ai" && !__aiVoiceProfileReady) disabled = true;
+
+    if(storageKey === "chat_ai_voice" && value === "own" && !__voiceProfileReady) disabled = true;
+    if(storageKey === "chat_ai_voice" && value === "ai_custom" && !__aiVoiceProfileReady) disabled = true;
+
+    return `
+      <div class="sheetItem ${value === current ? "active" : ""} ${disabled ? "disabled" : ""}"
+           data-storage-key="${storageKey}"
+           data-value="${value}"
+           data-disabled="${disabled ? "1" : "0"}">
+        <div class="sheetItemLabel">${label}</div>
+        <div class="sheetItemCheck"></div>
+      </div>
+    `;
+  }).join("");
 
   list.querySelectorAll(".sheetItem").forEach(el => {
     el.addEventListener("click", () => {
       const key = el.dataset.storageKey;
       const value = el.dataset.value;
+      const disabled = el.dataset.disabled === "1";
+
+      if(disabled){
+        if(value === "own") toast("Önce Ses Profilini Güncelle");
+        if(value === "ai") toast("Önce AI Özel Ses Oluştur");
+        if(value === "ai_custom") toast("Önce AI Özel Ses Oluştur");
+        return;
+      }
+
       localStorage.setItem(key, value);
       renderSettingValues();
 
       if(key === "tts_voice") toast("Çeviri sesi ayarı kaydedildi");
-      if(key === "lang_detect") toast("Dil algılama ayarı kaydedildi");
-      if(key === "speech_mode") toast("Konuşma modu kaydedildi");
+      if(key === "chat_ai_voice") toast("Sohbet AI sesi ayarı kaydedildi");
 
       closeSheet();
     });
@@ -366,25 +442,16 @@ function openSheet(storageKey){
   document.body.style.overflow = "hidden";
 }
 
-function closeSheet(){
-  $("sheetBackdrop")?.classList.remove("show");
-  $("optionSheet")?.classList.remove("show");
-  document.body.style.overflow = "";
+function loadSettings(){
+  if(!localStorage.getItem("tts_voice")) localStorage.setItem("tts_voice", "auto");
+  if(!localStorage.getItem("chat_ai_voice")) localStorage.setItem("chat_ai_voice", "female");
+  renderSettingValues();
 }
 
 function bindSettings(){
   $("ttsVoiceTrigger")?.addEventListener("click", ()=>openSheet("tts_voice"));
-  $("langDetectTrigger")?.addEventListener("click", ()=>openSheet("lang_detect"));
-  $("speechModeTrigger")?.addEventListener("click", ()=>openSheet("speech_mode"));
-
+  $("chatAiVoiceTrigger")?.addEventListener("click", ()=>openSheet("chat_ai_voice"));
   $("sheetBackdrop")?.addEventListener("click", closeSheet);
-}
-
-function loadSettings(){
-  if(!localStorage.getItem("tts_voice")) localStorage.setItem("tts_voice", "auto");
-  if(!localStorage.getItem("lang_detect")) localStorage.setItem("lang_detect", "auto");
-  if(!localStorage.getItem("speech_mode")) localStorage.setItem("speech_mode", "normal");
-  renderSettingValues();
 }
 
 export async function initProfilePage({ setHeaderTokens } = {}){
@@ -399,6 +466,10 @@ export async function initProfilePage({ setHeaderTokens } = {}){
 
   $("voiceProfileBtn")?.addEventListener("click", ()=>{
     location.href = "/pages/voice_profile.html";
+  });
+
+  $("aiVoiceProfileBtn")?.addEventListener("click", ()=>{
+    location.href = "/pages/ai_voice_profile.html";
   });
 
   loadSettings();
@@ -429,6 +500,8 @@ export async function initProfilePage({ setHeaderTokens } = {}){
     safeText("tokenVal", "0");
     safeText("voiceProfileStatus", "Hazır değil");
     safeText("voiceProfileMeta", "Henüz ses örneği kaydedilmedi.");
+    safeText("aiVoiceProfileStatus", "Hazır değil");
+    safeText("aiVoiceProfileMeta", "Henüz AI özel ses kaydı oluşturulmadı.");
     if(typeof setHeaderTokens === "function") setHeaderTokens(0);
     toast("Profil tablosuna erişilemedi");
     return;
