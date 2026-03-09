@@ -16,6 +16,7 @@ let isSending = false;
 let recognition = null;
 let isListening = false;
 let currentAudio = null;
+let currentUserName = "arkadaşım";
 
 const MUTE_KEY = "friend_ai_muted";
 const CHAT_VOICE_KEY = "chat_ai_voice";
@@ -60,6 +61,75 @@ function scrollBottom() {
   });
 }
 
+function stopCurrentAudio() {
+  try {
+    currentAudio?.pause?.();
+    currentAudio = null;
+  } catch {}
+  try {
+    window.speechSynthesis?.cancel?.();
+  } catch {}
+}
+
+function base64ToBlob(base64, mime = "audio/mpeg") {
+  const byteChars = atob(base64);
+  const byteNumbers = new Array(byteChars.length);
+  for (let i = 0; i < byteChars.length; i++) {
+    byteNumbers[i] = byteChars.charCodeAt(i);
+  }
+  return new Blob([new Uint8Array(byteNumbers)], { type: mime });
+}
+
+function normalizeChatVoice(value) {
+  const v = String(value || "").trim().toLowerCase();
+
+  if (["auto", "otomatik", "automatic"].includes(v)) return "auto";
+  if (["male", "erkek", "erkek sesi", "man"].includes(v)) return "male";
+  if (["female", "kadın", "kadin", "kadın sesi", "kadin sesi", "woman"].includes(v)) return "female";
+  if (["own", "benim sesim", "benimsesim", "myvoice"].includes(v)) return "own";
+  if (["ai_custom", "ai sesi", "sohbet ai sesi", "ozel ses", "özel ses", "custom"].includes(v)) return "ai_custom";
+
+  return "auto";
+}
+
+function getChatVoicePreference() {
+  return normalizeChatVoice(
+    localStorage.getItem(CHAT_VOICE_KEY) ||
+    localStorage.getItem("chat_voice") ||
+    localStorage.getItem("tts_voice") ||
+    "auto"
+  );
+}
+
+function sanitizeForTTS(text) {
+  let s = String(text || "").trim();
+  if (!s) return "";
+
+  // markdown temizle
+  s = s.replace(/```[\s\S]*?```/g, " ");
+  s = s.replace(/`([^`]+)`/g, "$1");
+  s = s.replace(/\*\*(.*?)\*\*/g, "$1");
+  s = s.replace(/\*(.*?)\*/g, "$1");
+  s = s.replace(/__(.*?)__/g, "$1");
+  s = s.replace(/_(.*?)_/g, "$1");
+  s = s.replace(/~~(.*?)~~/g, "$1");
+  s = s.replace(/\[(.*?)\]\((.*?)\)/g, "$1");
+
+  // emoji ve sembolleri büyük ölçüde temizle
+  s = s.replace(/[\u{1F300}-\u{1FAFF}]/gu, " ");
+  s = s.replace(/[\u{2600}-\u{27BF}]/gu, " ");
+
+  // gereksiz simgeler
+  s = s.replace(/[#^~|<>{}\[\]\\/@+=_%$`]/g, " ");
+  s = s.replace(/[•▪️◾◽◆◇■□▲△▼▽★☆]/g, " ");
+
+  // birden fazla noktalama sadeleştir
+  s = s.replace(/([!?.,:;]){2,}/g, "$1");
+  s = s.replace(/\s+/g, " ").trim();
+
+  return s;
+}
+
 function normalizeFriendReply(text) {
   let out = String(text || "").trim();
 
@@ -70,22 +140,18 @@ function normalizeFriendReply(text) {
     "gemini",
     "google tarafından",
     "google tarafından geliştirildim",
-    "i was created by google",
     "created by google",
     "created by openai",
-    "i was created by openai",
-    "ben gemini",
-    "ben openai",
     "i am gemini",
-    "i am chatgpt",
     "i'm gemini",
+    "i am chatgpt",
     "i'm chatgpt",
     "large language model",
     "language model"
   ];
 
   if (identityTriggers.some((x) => lower.includes(x))) {
-    return "Ben italky Teknoloji tarafından geliştirildim. Ben Friend AI, italkyAI ekosisteminin akıllı sohbet asistanıyım.";
+    return "Ben italky Teknoloji tarafından geliştirildim. Ben Friend AI, italkyAI ekosisteminin samimi sohbet asistanıyım.";
   }
 
   return out;
@@ -186,13 +252,6 @@ function setListening(on) {
   }
 }
 
-function getChatVoicePreference() {
-  return localStorage.getItem(CHAT_VOICE_KEY)
-    || localStorage.getItem("chat_voice")
-    || localStorage.getItem("tts_voice")
-    || "auto";
-}
-
 async function getCurrentUserId() {
   try {
     const supa = await import("/js/supabase_client.js");
@@ -203,28 +262,50 @@ async function getCurrentUserId() {
   }
 }
 
-function stopCurrentAudio() {
+async function loadFriendlyUserName() {
   try {
-    currentAudio?.pause?.();
-    currentAudio = null;
-  } catch {}
-  try {
-    window.speechSynthesis?.cancel?.();
+    const hitap =
+      localStorage.getItem("kaynana_hitap") ||
+      localStorage.getItem("user_hitap") ||
+      localStorage.getItem("profile_hitap");
+
+    if (hitap && String(hitap).trim()) {
+      currentUserName = String(hitap).trim();
+      return;
+    }
+
+    const supa = await import("/js/supabase_client.js");
+    const { data } = await supa.supabase.auth.getUser();
+    const user = data?.user;
+
+    const metaName =
+      user?.user_metadata?.hitap ||
+      user?.user_metadata?.name ||
+      user?.user_metadata?.full_name ||
+      user?.email?.split("@")?.[0];
+
+    if (metaName && String(metaName).trim()) {
+      currentUserName = String(metaName).trim().split(" ")[0];
+    }
   } catch {}
 }
 
-function base64ToBlob(base64, mime = "audio/mpeg") {
-  const byteChars = atob(base64);
-  const byteNumbers = new Array(byteChars.length);
-  for (let i = 0; i < byteChars.length; i++) {
-    byteNumbers[i] = byteChars.charCodeAt(i);
-  }
-  return new Blob([new Uint8Array(byteNumbers)], { type: mime });
+function buildHiddenMemory() {
+  return [
+    {
+      role: "assistant",
+      text: `Sen Friend AI'sın. Samimi, sıcak, doğal ve kısa-orta uzunlukta konuş. Gereksiz resmi olma. Emoji kullanma. Markdown kullanma. Yıldız, hashtag, madde imi, özel semboller kullanma. Kullanıcıya uygun olduğunda adıyla hitap et. Kullanıcının adı: ${currentUserName}. Kim geliştirdi sorulursa: 'Ben italky Teknoloji tarafından geliştirildim.' de. OpenAI, Gemini, ChatGPT veya Google kimliği sahiplenme.`
+    }
+  ];
+}
+
+function resetChatMemory() {
+  chatHistory = buildHiddenMemory();
 }
 
 async function speakFriend(text) {
-  const value = String(text || "").trim();
-  if (!value || getMuted()) return;
+  const clean = sanitizeForTTS(text);
+  if (!clean || getMuted()) return;
 
   stopCurrentAudio();
 
@@ -235,7 +316,7 @@ async function speakFriend(text) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        text: value,
+        text: clean,
         lang: "tr",
         user_id: userId,
         module: "chat",
@@ -267,7 +348,7 @@ async function speakFriend(text) {
   } catch (e) {
     console.warn("[friend tts fallback]", e);
     try {
-      const u = new SpeechSynthesisUtterance(value);
+      const u = new SpeechSynthesisUtterance(clean);
       u.lang = "tr-TR";
       u.rate = 0.95;
       u.pitch = 1.0;
@@ -278,12 +359,12 @@ async function speakFriend(text) {
 
 async function askFriendAI(message) {
   if (isBrandIdentityQuestion(message)) {
-    return "Ben italky Teknoloji tarafından geliştirildim. Ben Friend AI, italkyAI ekosisteminin akıllı sohbet asistanıyım.";
+    return "Ben italky Teknoloji tarafından geliştirildim. Ben Friend AI, italkyAI ekosisteminin samimi sohbet asistanıyım.";
   }
 
   const payload = {
     message,
-    history: chatHistory.slice(-12)
+    history: chatHistory.slice(-14)
   };
 
   const r = await fetch(`${API_BASE}/api/chat_ai`, {
@@ -369,13 +450,15 @@ async function bind() {
     console.warn("[friend shell]", e);
   }
 
+  await loadFriendlyUserName();
+  resetChatMemory();
   refreshMuteUI();
 
   clearChat?.addEventListener("click", () => {
     if (chat) chat.innerHTML = "";
-    chatHistory = [];
     stopCurrentAudio();
-    addMeta("Sohbet temizlendi.");
+    resetChatMemory();
+    addMeta(`${currentUserName}, sohbet temizlendi. Kaldığımız tonda devam edebiliriz.`);
   });
 
   muteBtn?.addEventListener("click", () => {
@@ -411,7 +494,7 @@ async function bind() {
   });
 
   autoResize();
-  addMeta("Friend AI hazır. Mesaj yazabilir veya mikrofonu kullanabilirsin.");
+  addMeta(`Merhaba ${currentUserName}. Friend AI hazır, yazabilir ya da konuşabilirsin.`);
 }
 
-bind();
+bind();v
