@@ -1,152 +1,64 @@
-import { mountShell } from "/js/ui_shell.js";
-
-mountShell({ scroll:"auto" });
-
-/* PROFIL SAYFASI CLICK FIX */
-setTimeout(()=>{
-  const shell = document.querySelector(".assistant-bar");
-  if(shell) shell.style.pointerEvents="none";
-
-  const footer = document.querySelector(".footer-container");
-  if(footer) footer.style.pointerEvents="auto";
-},200);
-import { mountShell } from "/js/ui_shell.js";
 import { supabase } from "/js/supabase_client.js";
+import { mountShell } from "/js/ui_shell.js";
 
 mountShell({scroll:"auto"});
 
-const $ = (id)=>document.getElementById(id);
+const $ = (id)=>document.getElementById(id)
 
-const sheet = $("optionSheet");
-const backdrop = $("sheetBackdrop");
-const list = $("sheetList");
-const title = $("sheetTitle");
+const backdrop = $("sheetBackdrop")
+const sheet = $("optionSheet")
 
-const ttsTrigger = $("ttsVoiceTrigger");
-const ttsValue = $("ttsVoiceValue");
+const trigger = $("ttsVoiceTrigger")
+const value = $("ttsVoiceValue")
 
-const toast = (msg)=>{
- const el = $("toast");
- el.textContent = msg;
- el.classList.add("show");
- setTimeout(()=>el.classList.remove("show"),2000);
-};
-
-function openSheet(){
- backdrop.classList.add("show");
- sheet.classList.add("show");
+trigger.onclick=()=>{
+backdrop.style.display="block"
+sheet.style.display="block"
 }
 
-function closeSheet(){
- backdrop.classList.remove("show");
- sheet.classList.remove("show");
+backdrop.onclick=()=>{
+backdrop.style.display="none"
+sheet.style.display="none"
 }
 
-backdrop.onclick = closeSheet;
+sheet.querySelectorAll(".sheetItem").forEach(i=>{
+i.onclick=()=>{
+value.innerText=i.innerText
+localStorage.setItem("tts_voice",i.dataset.v)
 
-function buildVoiceOptions(hasVoice){
-
- list.innerHTML = "";
-
- const options = [
-  {key:"auto",label:"Otomatik"},
-  {key:"female",label:"Kadın"},
-  {key:"male",label:"Erkek"},
-  {key:"my",label:"Benim Sesim"}
- ];
-
- const current = localStorage.getItem("tts_voice") || "auto";
-
- options.forEach(o=>{
-
-   const item = document.createElement("div");
-   item.className="sheetItem";
-
-   if(o.key==="my" && !hasVoice){
-     item.classList.add("disabled");
-   }
-
-   if(current===o.key){
-     item.classList.add("active");
-   }
-
-   item.innerHTML = `
-     <div class="sheetItemLabel">${o.label}</div>
-     <div class="sheetItemCheck"></div>
-   `;
-
-   item.onclick = ()=>{
-
-     if(o.key==="my" && !hasVoice){
-       toast("Önce Ses Profilini Oluştur");
-       return;
-     }
-
-     localStorage.setItem("tts_voice",o.key);
-     ttsValue.textContent = o.label;
-
-     closeSheet();
-   };
-
-   list.appendChild(item);
-
- });
-
+sheet.style.display="none"
+backdrop.style.display="none"
 }
-
-ttsTrigger.onclick = async ()=>{
-
- const {data:{user}} = await supabase.auth.getUser();
-
- const {data} = await supabase
- .from("profiles")
- .select("voice_ready")
- .eq("id",user.id)
- .single();
-
- buildVoiceOptions(data?.voice_ready);
-
- title.textContent="Çeviri Sesi";
-
- openSheet();
-
-};
+})
 
 async function loadProfile(){
 
- const {data:{user}} = await supabase.auth.getUser();
- if(!user) return;
+const {data:{user}}=await supabase.auth.getUser()
 
- $("pEmail").textContent = user.email;
+if(!user) return
 
- const {data} = await supabase
- .from("profiles")
- .select("*")
- .eq("id",user.id)
- .single();
+$("pName").innerText=user.user_metadata?.full_name||""
+$("pEmail").innerText=user.email||""
 
- if(!data) return;
+const {data}=await supabase
+.from("profiles")
+.select("*")
+.eq("id",user.id)
+.single()
 
- $("pName").textContent = data.name || "—";
- $("memberNo").textContent = data.member_no || "—";
- $("tokenVal").textContent = data.tokens || 0;
+if(data){
 
- if(data.created_at){
-   $("createdAt").textContent =
-   new Date(data.created_at).toLocaleString("tr-TR");
- }
+$("memberNo").innerText=data.member_no||"-"
+$("tokenVal").innerText=data.tokens||0
 
- if(data.voice_ready){
-   $("voiceProfileStatus").textContent="Ses profili hazır";
- }else{
-   $("voiceProfileStatus").textContent="Hazır değil";
- }
+if(data.voice_profile_ready){
+$("voiceProfileStatus").innerText="Hazır"
+}else{
+$("voiceProfileStatus").innerText="Hazır değil"
+}
 
 }
 
-$("logoutBtn").onclick = async ()=>{
- await supabase.auth.signOut();
- location.href="/login.html";
-};
+}
 
-loadProfile();
+loadProfile()
