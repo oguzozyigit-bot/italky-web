@@ -1,5 +1,7 @@
 // FILE: /js/italky_chat_page.js
 
+import { speakText } from "/js/tts_router.js";
+
 const API_BASE = "https://italky-api.onrender.com";
 const $ = (id) => document.getElementById(id);
 
@@ -8,42 +10,104 @@ const msgInput = $("msgInput");
 const sendBtn = $("sendBtn");
 const micBtn = $("micBtn");
 const clearChat = $("clearChat");
+const backBtn = $("backBtn");
+const logoHome = $("logoHome");
 
 let chatHistory = [];
 let isSending = false;
 let recognition = null;
 let isListening = false;
 
-function addBubble(type, text) {
-  if (!chat) return;
-
-  const el = document.createElement("div");
-  el.className = `bubble ${type}`;
-  el.textContent = String(text || "").trim();
-  chat.appendChild(el);
-
-  requestAnimationFrame(() => {
-    chat.scrollTop = chat.scrollHeight;
-  });
-}
-
-function addMeta(text) {
-  if (!chat) return;
-
-  const el = document.createElement("div");
-  el.className = "bubble meta";
-  el.textContent = String(text || "").trim();
-  chat.appendChild(el);
-
-  requestAnimationFrame(() => {
-    chat.scrollTop = chat.scrollHeight;
-  });
+async function mountShellSafe() {
+  try {
+    const shell = await import("/js/ui_shell.js");
+    if (typeof shell.mountShell === "function") {
+      try {
+        shell.mountShell({ scroll: "none" });
+      } catch (e) {
+        console.warn("[chat mountShell]", e);
+      }
+    }
+  } catch (e) {
+    console.warn("[chat ui_shell optional]", e);
+  }
 }
 
 function autoResize() {
   if (!msgInput) return;
   msgInput.style.height = "auto";
   msgInput.style.height = Math.min(msgInput.scrollHeight, 120) + "px";
+}
+
+function scrollBottom() {
+  if (!chat) return;
+  requestAnimationFrame(() => {
+    chat.scrollTop = chat.scrollHeight;
+  });
+}
+
+function createSpeakerButton(text) {
+  const spk = document.createElement("div");
+  spk.className = "spk-icon";
+  spk.innerHTML = `
+    <svg viewBox="0 0 24 24">
+      <path d="M3 10v4h4l5 4V6L7 10H3"></path>
+      <path d="M16 8a4 4 0 0 1 0 8"></path>
+      <path d="M19 5a8 8 0 0 1 0 14"></path>
+    </svg>
+  `;
+  spk.addEventListener("click", async () => {
+    try {
+      await speakText(text, "chat");
+    } catch (e) {
+      console.error("[speaker replay]", e);
+    }
+  });
+  return spk;
+}
+
+function addBubble(type, text, options = {}) {
+  if (!chat) return;
+
+  const bubble = document.createElement("div");
+  bubble.className = `bubble ${type}`;
+
+  if (type === "bot") {
+    const row = document.createElement("div");
+    row.className = "bubble-row";
+
+    const txt = document.createElement("div");
+    txt.className = "txt";
+    txt.textContent = String(text || "").trim();
+
+    row.appendChild(txt);
+    row.appendChild(createSpeakerButton(String(text || "").trim()));
+    bubble.appendChild(row);
+  } else {
+    bubble.textContent = String(text || "").trim();
+  }
+
+  chat.appendChild(bubble);
+  scrollBottom();
+
+  if (type === "bot" && options.autoplay) {
+    setTimeout(async () => {
+      try {
+        await speakText(String(text || "").trim(), "chat");
+      } catch (e) {
+        console.error("[autoplay chat tts]", e);
+      }
+    }, 120);
+  }
+}
+
+function addMeta(text) {
+  if (!chat) return;
+  const el = document.createElement("div");
+  el.className = "bubble meta";
+  el.textContent = String(text || "").trim();
+  chat.appendChild(el);
+  scrollBottom();
 }
 
 function setListening(on) {
@@ -97,15 +161,13 @@ async function sendMessage() {
 
   msgInput.value = "";
   autoResize();
+  setListening(false);
 
   try {
     const reply = await askGemini(text);
 
-    addBubble("bot", reply);
+    addBubble("bot", reply, { autoplay: true });
     chatHistory.push({ role: "assistant", text: reply });
-
-    // Sonra buraya ses bağlarız:
-    // import("/js/tts_router.js").then(({ speakText }) => speakText(reply, "chat"));
   } catch (e) {
     console.error(e);
     addMeta(e?.message || "Bir hata oluştu.");
@@ -140,8 +202,11 @@ function initSTT() {
   return rec;
 }
 
-function bind() {
-  addMeta("Sohbet AI hazır. Mesaj yazabilir veya mikrofonu kullanabilirsin.");
+async function bind() {
+  await mountShellSafe();
+
+  backBtn?.addEventListener("click", () => history.back());
+  logoHome?.addEventListener("click", () => location.href = "/pages/home.html");
 
   clearChat?.addEventListener("click", () => {
     if (chat) chat.innerHTML = "";
@@ -169,17 +234,15 @@ function bind() {
     }
 
     try {
-      if (isListening) {
-        recognition.stop();
-      } else {
-        recognition.start();
-      }
+      if (isListening) recognition.stop();
+      else recognition.start();
     } catch (e) {
       console.warn("[stt start/stop]", e);
     }
   });
 
   autoResize();
+  addMeta("Sohbet AI hazır. Mesaj yazabilir veya mikrofonu kullanabilirsin.");
 }
 
 bind();
