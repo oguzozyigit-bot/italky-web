@@ -1,6 +1,4 @@
-// FILE: /js/italky_chat_page.js
-
-import { speakText } from "/js/tts_router.js";
+import { mountShell } from "/js/ui_shell.js";
 
 const API_BASE = "https://italky-api.onrender.com";
 const $ = (id) => document.getElementById(id);
@@ -10,27 +8,43 @@ const msgInput = $("msgInput");
 const sendBtn = $("sendBtn");
 const micBtn = $("micBtn");
 const clearChat = $("clearChat");
-const backBtn = $("backBtn");
-const logoHome = $("logoHome");
+const muteBtn = $("muteBtn");
+const muteIcon = $("muteIcon");
 
 let chatHistory = [];
 let isSending = false;
 let recognition = null;
 let isListening = false;
+let currentAudio = null;
 
-async function mountShellSafe() {
-  try {
-    const shell = await import("/js/ui_shell.js");
-    if (typeof shell.mountShell === "function") {
-      try {
-        shell.mountShell({ scroll: "none" });
-      } catch (e) {
-        console.warn("[chat mountShell]", e);
-      }
-    }
-  } catch (e) {
-    console.warn("[chat ui_shell optional]", e);
-  }
+const MUTE_KEY = "friend_ai_muted";
+const CHAT_VOICE_KEY = "chat_ai_voice";
+
+function getMuted() {
+  return localStorage.getItem(MUTE_KEY) === "1";
+}
+
+function setMuted(value) {
+  localStorage.setItem(MUTE_KEY, value ? "1" : "0");
+  refreshMuteUI();
+}
+
+function refreshMuteUI() {
+  const muted = getMuted();
+  muteBtn?.classList.toggle("muted", muted);
+  if (!muteIcon) return;
+
+  muteIcon.innerHTML = muted
+    ? `
+      <path d="M11 5L6 9H3v6h3l5 4z"></path>
+      <line x1="23" y1="9" x2="17" y2="15"></line>
+      <line x1="17" y1="9" x2="23" y2="15"></line>
+    `
+    : `
+      <path d="M3 10v4h4l5 4V6L7 10H3"></path>
+      <path d="M16 8a4 4 0 0 1 0 8"></path>
+      <path d="M19 5a8 8 0 0 1 0 14"></path>
+    `;
 }
 
 function autoResize() {
@@ -46,9 +60,64 @@ function scrollBottom() {
   });
 }
 
+function normalizeFriendReply(text) {
+  let out = String(text || "").trim();
+
+  const lower = out.toLowerCase();
+
+  const identityTriggers = [
+    "openai",
+    "gemini",
+    "google tarafından",
+    "google tarafından geliştirildim",
+    "i was created by google",
+    "created by google",
+    "created by openai",
+    "i was created by openai",
+    "ben gemini",
+    "ben openai",
+    "i am gemini",
+    "i am chatgpt",
+    "i'm gemini",
+    "i'm chatgpt",
+    "large language model",
+    "language model"
+  ];
+
+  if (identityTriggers.some((x) => lower.includes(x))) {
+    return "Ben italky Teknoloji tarafından geliştirildim. Ben Friend AI, italkyAI ekosisteminin akıllı sohbet asistanıyım.";
+  }
+
+  return out;
+}
+
+function isBrandIdentityQuestion(text) {
+  const q = String(text || "").toLowerCase();
+
+  return [
+    "sen kimsin",
+    "seni kim yaptı",
+    "seni kim geliştirdi",
+    "seni kim oluşturdu",
+    "hangi firmasın",
+    "hangi şirket",
+    "sen gemini misin",
+    "sen openai misin",
+    "sen chatgpt misin",
+    "kimin yapay zekasısın",
+    "who made you",
+    "who created you",
+    "who developed you",
+    "are you gemini",
+    "are you openai",
+    "are you chatgpt"
+  ].some((x) => q.includes(x));
+}
+
 function createSpeakerButton(text) {
-  const spk = document.createElement("div");
-  spk.className = "spk-icon";
+  const spk = document.createElement("button");
+  spk.type = "button";
+  spk.className = "spkIcon";
   spk.innerHTML = `
     <svg viewBox="0 0 24 24">
       <path d="M3 10v4h4l5 4V6L7 10H3"></path>
@@ -57,11 +126,7 @@ function createSpeakerButton(text) {
     </svg>
   `;
   spk.addEventListener("click", async () => {
-    try {
-      await speakText(text, "chat");
-    } catch (e) {
-      console.error("[speaker replay]", e);
-    }
+    await speakFriend(text);
   });
   return spk;
 }
@@ -74,10 +139,10 @@ function addBubble(type, text, options = {}) {
 
   if (type === "bot") {
     const row = document.createElement("div");
-    row.className = "bubble-row";
+    row.className = "bubbleRow";
 
     const txt = document.createElement("div");
-    txt.className = "txt";
+    txt.className = "bubbleText";
     txt.textContent = String(text || "").trim();
 
     row.appendChild(txt);
@@ -91,12 +156,8 @@ function addBubble(type, text, options = {}) {
   scrollBottom();
 
   if (type === "bot" && options.autoplay) {
-    setTimeout(async () => {
-      try {
-        await speakText(String(text || "").trim(), "chat");
-      } catch (e) {
-        console.error("[autoplay chat tts]", e);
-      }
+    setTimeout(() => {
+      speakFriend(String(text || "").trim());
     }, 120);
   }
 }
@@ -118,14 +179,108 @@ function setListening(on) {
 
   if (isListening) {
     msgInput.dataset.__oldph = msgInput.getAttribute("placeholder") || "";
-    msgInput.setAttribute("placeholder", "Dinliyorum…");
+    msgInput.setAttribute("placeholder", "Dinliyorum...");
   } else {
-    const old = msgInput.dataset.__oldph || "Yaz ya da konuş…";
+    const old = msgInput.dataset.__oldph || "Yaz ya da konuş...";
     msgInput.setAttribute("placeholder", old);
   }
 }
 
-async function askGemini(message) {
+function getChatVoicePreference() {
+  return localStorage.getItem(CHAT_VOICE_KEY)
+    || localStorage.getItem("chat_voice")
+    || localStorage.getItem("tts_voice")
+    || "auto";
+}
+
+async function getCurrentUserId() {
+  try {
+    const supa = await import("/js/supabase_client.js");
+    const { data } = await supa.supabase.auth.getUser();
+    return data?.user?.id || null;
+  } catch {
+    return null;
+  }
+}
+
+function stopCurrentAudio() {
+  try {
+    currentAudio?.pause?.();
+    currentAudio = null;
+  } catch {}
+  try {
+    window.speechSynthesis?.cancel?.();
+  } catch {}
+}
+
+function base64ToBlob(base64, mime = "audio/mpeg") {
+  const byteChars = atob(base64);
+  const byteNumbers = new Array(byteChars.length);
+  for (let i = 0; i < byteChars.length; i++) {
+    byteNumbers[i] = byteChars.charCodeAt(i);
+  }
+  return new Blob([new Uint8Array(byteNumbers)], { type: mime });
+}
+
+async function speakFriend(text) {
+  const value = String(text || "").trim();
+  if (!value || getMuted()) return;
+
+  stopCurrentAudio();
+
+  try {
+    const userId = await getCurrentUserId();
+
+    const r = await fetch(`${API_BASE}/api/tts`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text: value,
+        lang: "tr",
+        user_id: userId,
+        module: "chat",
+        voice: getChatVoicePreference()
+      })
+    });
+
+    const j = await r.json().catch(() => null);
+    if (!r.ok || !j?.ok || !j?.audio_base64) {
+      throw new Error(j?.detail || j?.error || "TTS unavailable");
+    }
+
+    const blob = base64ToBlob(j.audio_base64, "audio/mpeg");
+    const url = URL.createObjectURL(blob);
+    const audio = new Audio(url);
+    currentAudio = audio;
+
+    audio.onended = () => {
+      URL.revokeObjectURL(url);
+      if (currentAudio === audio) currentAudio = null;
+    };
+
+    audio.onerror = () => {
+      URL.revokeObjectURL(url);
+      if (currentAudio === audio) currentAudio = null;
+    };
+
+    await audio.play();
+  } catch (e) {
+    console.warn("[friend tts fallback]", e);
+    try {
+      const u = new SpeechSynthesisUtterance(value);
+      u.lang = "tr-TR";
+      u.rate = 0.95;
+      u.pitch = 1.0;
+      window.speechSynthesis.speak(u);
+    } catch {}
+  }
+}
+
+async function askFriendAI(message) {
+  if (isBrandIdentityQuestion(message)) {
+    return "Ben italky Teknoloji tarafından geliştirildim. Ben Friend AI, italkyAI ekosisteminin akıllı sohbet asistanıyım.";
+  }
+
   const payload = {
     message,
     history: chatHistory.slice(-12)
@@ -142,10 +297,16 @@ async function askGemini(message) {
   try { data = JSON.parse(raw); } catch {}
 
   if (!r.ok) {
-    throw new Error(data?.detail || raw || "Sohbet AI hatası");
+    const msg = String(data?.detail || raw || "Friend AI hatası");
+
+    if (msg.toLowerCase().includes("404 models/")) {
+      throw new Error("Friend AI şu anda hazırlanıyor. Model ayarı güncelleniyor, birazdan tekrar deneyin.");
+    }
+
+    throw new Error(msg);
   }
 
-  return String(data?.reply || "").trim();
+  return normalizeFriendReply(String(data?.reply || "").trim());
 }
 
 async function sendMessage() {
@@ -164,8 +325,7 @@ async function sendMessage() {
   setListening(false);
 
   try {
-    const reply = await askGemini(text);
-
+    const reply = await askFriendAI(text);
     addBubble("bot", reply, { autoplay: true });
     chatHistory.push({ role: "assistant", text: reply });
   } catch (e) {
@@ -203,15 +363,24 @@ function initSTT() {
 }
 
 async function bind() {
-  await mountShellSafe();
+  try {
+    mountShell({ scroll: "none" });
+  } catch (e) {
+    console.warn("[friend shell]", e);
+  }
 
-  backBtn?.addEventListener("click", () => history.back());
-  logoHome?.addEventListener("click", () => location.href = "/pages/home.html");
+  refreshMuteUI();
 
   clearChat?.addEventListener("click", () => {
     if (chat) chat.innerHTML = "";
     chatHistory = [];
+    stopCurrentAudio();
     addMeta("Sohbet temizlendi.");
+  });
+
+  muteBtn?.addEventListener("click", () => {
+    setMuted(!getMuted());
+    if (getMuted()) stopCurrentAudio();
   });
 
   msgInput?.addEventListener("input", autoResize);
@@ -237,12 +406,12 @@ async function bind() {
       if (isListening) recognition.stop();
       else recognition.start();
     } catch (e) {
-      console.warn("[stt start/stop]", e);
+      console.warn("[stt]", e);
     }
   });
 
   autoResize();
-  addMeta("Sohbet AI hazır. Mesaj yazabilir veya mikrofonu kullanabilirsin.");
+  addMeta("Friend AI hazır. Mesaj yazabilir veya mikrofonu kullanabilirsin.");
 }
 
 bind();
