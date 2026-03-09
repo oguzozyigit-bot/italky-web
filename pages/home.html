@@ -5,29 +5,27 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
 <title>italkyAI • Translate AI Hub</title>
 
-<meta name="theme-color" content="#000000">
-<style>
-  html,body{
-    background:#000 !important;
-    margin:0;
-    padding:0;
-    width:100%;
-    height:100%;
-    overflow:hidden;
-    font-family:'Outfit', sans-serif;
-  }
-  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=Space+Grotesk:wght@700&display=swap');
-</style>
+<meta name="theme-color" content="#050510"/>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
 <style>
-:root {
-  --ai-grad: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
-  --blue: #60a5fa;
-  --green: #34d399;
-  --purple: #a855f7;
-  --orange: #fb923c;
-  --pink: #ec4899;
-  --glass-border: rgba(255, 255, 255, 0.12);
+:root{
+  --bg:#050510;
+  --bg2:#0a0a25;
+  --txt:rgba(255,255,255,.94);
+  --muted:rgba(255,255,255,.56);
+  --line:rgba(255,255,255,.10);
+  --glass:rgba(255,255,255,.045);
+  --glass2:rgba(255,255,255,.03);
+
+  --ai-grad:linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
+  --blue:#60a5fa;
+  --green:#34d399;
+  --orange:#fb923c;
+  --purple:#a855f7;
 }
 
 *{
@@ -36,39 +34,75 @@
   outline:none;
 }
 
-#pageContent{
-  height:100%;
+html,body{
+  margin:0;
   width:100%;
-  display:flex;
-  flex-direction:column;
+  height:100%;
   overflow:hidden;
-  background: radial-gradient(circle at 50% 20%, #0a0a25 0%, #000 100%);
+  background:#000;
+  color:var(--txt);
+  font-family:'Outfit',sans-serif;
+  scrollbar-width:none;
+}
+html::-webkit-scrollbar,
+body::-webkit-scrollbar{
+  display:none;
 }
 
-.main-hub{
-  flex:1;
-  min-height:0;
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-  padding:10px 14px 10px;
-  overflow:hidden;
+body{
+  background:
+    radial-gradient(circle at 50% 14%, rgba(99,102,241,.18) 0%, rgba(0,0,0,0) 26%),
+    radial-gradient(circle at 20% 20%, rgba(96,165,250,.08) 0%, rgba(0,0,0,0) 22%),
+    radial-gradient(circle at 80% 20%, rgba(236,72,153,.08) 0%, rgba(0,0,0,0) 18%),
+    linear-gradient(180deg, #090919 0%, #020207 100%);
 }
 
-/* ===== ÜST ORB ===== */
-.f2f-portal{
+#pageContent{
+  width:100%;
+  height:100%;
+  max-width:560px;
+  margin:0 auto;
+  padding:
+    calc(var(--headerH,72px) + env(safe-area-inset-top) + 8px)
+    14px
+    calc(var(--footerH,92px) + env(safe-area-inset-bottom) + 12px);
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  overflow-y:auto;
+  scrollbar-width:none;
+}
+#pageContent::-webkit-scrollbar{
+  display:none;
+}
+
+/* ===== HERO / QR ORB ===== */
+.hero{
   flex:0 0 auto;
+  padding:2px 0 4px;
+}
+
+.heroTop{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+}
+
+.orbTap{
+  background:transparent;
+  border:none;
+  padding:0;
+  cursor:pointer;
   display:flex;
   align-items:center;
   justify-content:center;
-  cursor:pointer;
-  padding:4px 0 2px;
-  margin-bottom:0;
 }
 
 .neural-orb{
-  width:112px;
-  height:112px;
+  width:134px;
+  height:134px;
   position:relative;
   display:flex;
   align-items:center;
@@ -77,20 +111,21 @@
 
 .ai-ring{
   position:absolute;
-  inset:-4px;
+  inset:-3px;
   border-radius:50%;
-  padding:2.5px;
+  padding:2px;
   background:var(--ai-grad);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask-composite: exclude;
-  animation: rotateOrb 15s linear infinite;
+  -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite:xor;
+  mask-composite:exclude;
+  animation:rotateOrb 18s linear infinite;
 }
 
 .orbit-energy{
   position:absolute;
-  inset:-12px;
+  inset:-14px;
   border-radius:50%;
-  animation: rotateOrb 8s linear infinite;
+  animation:rotateOrb 9s linear infinite;
 }
 
 .e-ball{
@@ -98,7 +133,7 @@
   width:11px;
   height:11px;
   border-radius:50%;
-  filter:blur(1px);
+  filter:blur(.6px);
 }
 
 .ball-l{
@@ -106,7 +141,7 @@
   left:50%;
   transform:translateX(-50%);
   background:#1e3a8a;
-  box-shadow:0 0 15px #1e3a8a;
+  box-shadow:0 0 16px #1e3a8a;
 }
 
 .ball-b{
@@ -114,122 +149,129 @@
   left:50%;
   transform:translateX(-50%);
   background:#801336;
-  box-shadow:0 0 15px #801336;
+  box-shadow:0 0 16px #801336;
 }
 
 .ai-core{
-  width:84px;
-  height:84px;
-  background:#000;
+  width:96px;
+  height:96px;
+  position:relative;
   border-radius:50%;
-  background-image: linear-gradient(#000, #000), var(--ai-grad);
-  background-origin:border-box;
-  background-clip:content-box, border-box;
+  background:#000;
   border:2px solid transparent;
+  background-image:linear-gradient(#000,#000), var(--ai-grad);
+  background-origin:border-box;
+  background-clip:content-box,border-box;
+  z-index:2;
+  box-shadow:
+    0 20px 44px rgba(0,0,0,.42),
+    0 0 28px rgba(99,102,241,.12);
+  overflow:hidden;
+  animation:orbBreath 4.2s ease-in-out infinite;
+}
+
+.qrFrame{
+  position:absolute;
+  inset:13px;
+  border-radius:18px;
+  overflow:hidden;
+  background:#fff;
   display:flex;
   align-items:center;
   justify-content:center;
-  animation: aiBreathe 4s infinite ease-in-out;
-  z-index:10;
-  position:relative;
-  overflow:hidden;
 }
 
-/* mini qr alanı */
-.qr-core{
-  width:54px;
-  height:54px;
-  border-radius:14px;
-  background:#fff;
-  display:grid;
-  grid-template-columns:repeat(7, 1fr);
-  grid-template-rows:repeat(7, 1fr);
-  gap:2px;
-  padding:4px;
-  box-shadow:
-    0 0 0 1px rgba(255,255,255,.12),
-    0 0 20px rgba(165,180,252,.18);
+.qrFrame img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
 }
 
-.qr-dot{
-  background:#0b0b12;
-  border-radius:2px;
-}
-
-.qr-dot.blank{
-  background:transparent;
-}
-
-.qr-corner{
-  background:#0b0b12;
-  border-radius:3px;
-}
-
-.qr-core::after{
-  content:"SCAN";
+.qrScan{
   position:absolute;
-  bottom:8px;
-  left:50%;
-  transform:translateX(-50%);
-  font-size:7px;
-  letter-spacing:1px;
-  font-weight:900;
-  color:rgba(255,255,255,.7);
-  background:linear-gradient(135deg,#a5b4fc,#ec4899);
+  left:8px;
+  right:8px;
+  top:10px;
+  height:2px;
+  border-radius:999px;
+  background:linear-gradient(90deg, rgba(255,255,255,0), #a5b4fc, rgba(255,255,255,0));
+  box-shadow:0 0 14px rgba(165,180,252,.7);
+  animation:scanBar 2.8s linear infinite;
+  z-index:4;
+}
+
+.heroTitle{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:22px;
+  font-weight:700;
+  letter-spacing:-.4px;
+  color:#fff;
+  margin:0;
+}
+
+.heroTitle .ai{
+  background:var(--ai-grad);
   -webkit-background-clip:text;
   -webkit-text-fill-color:transparent;
-  pointer-events:none;
 }
 
-.orb-caption{
+.heroSub{
+  margin:0;
+  font-size:11px;
+  color:var(--muted);
   text-align:center;
-  font-size:10px;
-  color:rgba(255,255,255,.56);
-  margin-top:2px;
-  line-height:1.2;
-  font-weight:700;
+  line-height:1.4;
+  max-width:320px;
 }
 
-/* ===== KARTLAR ===== */
+/* ===== CARDS ===== */
 .hub-cards{
-  flex:1;
+  flex:1 1 auto;
   min-height:0;
   display:flex;
   flex-direction:column;
-  gap:9px;
-  overflow:hidden;
+  gap:10px;
 }
 
 .trans-card{
   flex:1 1 0;
   min-height:0;
   position:relative;
-  border-radius:26px;
-  border:1px solid var(--glass-border);
+  border-radius:28px;
+  border:1px solid var(--line);
   overflow:hidden;
   cursor:pointer;
   display:flex;
   align-items:center;
+  gap:16px;
   padding:0 18px;
-  background:rgba(255,255,255,0.03);
-  backdrop-filter:blur(25px);
-  transition:all .35s cubic-bezier(0.16, 1, 0.3, 1);
+  background:var(--glass);
+  backdrop-filter:blur(24px);
+  transition:transform .22s ease, filter .22s ease, border-color .22s ease;
+  box-shadow:0 14px 28px rgba(0,0,0,.18);
 }
 .trans-card:active{
-  transform:scale(.985);
-  filter:brightness(1.12);
+  transform:scale(.986);
+  filter:brightness(1.08);
 }
 
-.face-card{ background: linear-gradient(145deg, rgba(96,165,250,.11) 0%, rgba(0,0,0,.52) 100%); }
-.text-card{ background: linear-gradient(145deg, rgba(165,180,252,.11) 0%, rgba(0,0,0,.52) 100%); }
-.interpreter-card{ background: linear-gradient(145deg, rgba(52,211,153,.11) 0%, rgba(0,0,0,.52) 100%); }
-.meeting-card{ background: linear-gradient(145deg, rgba(251,146,60,.11) 0%, rgba(0,0,0,.52) 100%); }
-.offline-card{ background: linear-gradient(145deg, rgba(168,85,247,.11) 0%, rgba(0,0,0,.52) 100%); }
+.face-card{
+  background:linear-gradient(145deg, rgba(96,165,250,.11) 0%, rgba(0,0,0,.50) 100%);
+}
+.text-card{
+  background:linear-gradient(145deg, rgba(165,180,252,.11) 0%, rgba(0,0,0,.50) 100%);
+}
+.meeting-card{
+  background:linear-gradient(145deg, rgba(251,146,60,.11) 0%, rgba(0,0,0,.50) 100%);
+}
+.offline-card{
+  background:linear-gradient(145deg, rgba(168,85,247,.11) 0%, rgba(0,0,0,.50) 100%);
+}
 
 .ico-box{
   width:58px;
   height:40px;
-  margin-right:16px;
   position:relative;
   flex:0 0 auto;
 }
@@ -247,7 +289,7 @@
   width:7px;
   border-radius:4px 4px 0 0;
   background:var(--blue);
-  animation:eqPulse .7s infinite alternate;
+  animation:eqPulse .72s infinite alternate;
 }
 .face-bar:nth-child(1){ height:28%; animation-delay:.1s; }
 .face-bar:nth-child(2){ height:76%; animation-delay:.25s; }
@@ -270,7 +312,7 @@
 }
 .text-line{
   height:3px;
-  background:rgba(255,255,255,.22);
+  background:rgba(255,255,255,.24);
   border-radius:2px;
   animation:textTyping 2s infinite alternate;
 }
@@ -289,35 +331,6 @@
   animation:scanLine 2.5s linear infinite;
 }
 
-/* Interpreter */
-.interpreter-grid{
-  width:58px;
-  height:40px;
-  position:relative;
-  border:1px solid rgba(52,211,153,.45);
-  border-radius:10px;
-  overflow:hidden;
-}
-.interpreter-cell{
-  position:absolute;
-  width:50%;
-  height:50%;
-  border:1px solid rgba(52,211,153,.18);
-}
-.interpreter-cell:nth-child(1){ left:0; top:0; }
-.interpreter-cell:nth-child(2){ right:0; top:0; }
-.interpreter-cell:nth-child(3){ left:0; bottom:0; }
-.interpreter-cell:nth-child(4){ right:0; bottom:0; }
-.interpreter-scan{
-  position:absolute;
-  left:0;
-  width:100%;
-  height:2px;
-  background:var(--green);
-  box-shadow:0 0 12px rgba(52,211,153,.8);
-  animation:scanLine 2.4s linear infinite;
-}
-
 /* Meeting */
 .meeting-rings{
   width:58px;
@@ -326,13 +339,13 @@
 }
 .meeting-ring{
   position:absolute;
-  border:2px solid rgba(251,146,60,.8);
+  border:2px solid rgba(251,146,60,.82);
   border-radius:999px;
   animation:roomPulse 2s infinite ease-out;
 }
 .meeting-ring.r1{ inset:10px 17px; animation-delay:0s; }
 .meeting-ring.r2{ inset:5px 12px; animation-delay:.35s; }
-.meeting-ring.r3{ inset:0px 7px; animation-delay:.7s; }
+.meeting-ring.r3{ inset:0 7px; animation-delay:.7s; }
 .meeting-core{
   position:absolute;
   left:50%;
@@ -376,15 +389,14 @@
 .card-content{
   flex:1;
   min-width:0;
-  z-index:10;
 }
 .card-title{
-  font-family:'Space Grotesk';
+  margin:0;
+  font-family:'Space Grotesk',sans-serif;
   font-size:18px;
   font-weight:700;
   color:#fff;
-  margin:0;
-  letter-spacing:-.4px;
+  letter-spacing:-.35px;
 }
 .card-title .ai{
   background:var(--ai-grad);
@@ -392,143 +404,404 @@
   -webkit-text-fill-color:transparent;
 }
 .card-desc{
-  font-size:10.5px;
-  color:rgba(255,255,255,.47);
   margin-top:4px;
-  line-height:1.32;
+  font-size:10.5px;
+  color:rgba(255,255,255,.48);
+  line-height:1.34;
 }
 
-@keyframes rotateOrb { from { transform: rotate(0); } to { transform: rotate(360deg); } }
-@keyframes aiBreathe { 0%,100% { transform: scale(1); } 50% { transform: scale(1.06); } }
-@keyframes eqPulse { from { height:16%; opacity:.7; } to { height:100%; opacity:1; } }
-@keyframes scanLine { 0% { top:0; } 100% { top:100%; } }
-@keyframes roomPulse { 0% { opacity:.95; transform:scale(.8); } 100% { opacity:0; transform:scale(1.18); } }
-@keyframes textTyping { 0% { width:25%; } 100% { width:100%; } }
+/* ===== MODAL ===== */
+.modalBack{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.58);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  z-index:9990;
+  opacity:0;
+  pointer-events:none;
+  transition:.24s ease;
+}
+.modalBack.show{
+  opacity:1;
+  pointer-events:auto;
+}
+
+.modal{
+  position:fixed;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%) scale(.94);
+  width:min(92vw,420px);
+  border-radius:30px;
+  border:1px solid rgba(255,255,255,.10);
+  background:linear-gradient(180deg, rgba(18,18,36,.96), rgba(8,8,18,.98));
+  box-shadow:0 24px 80px rgba(0,0,0,.45);
+  padding:16px;
+  z-index:9991;
+  opacity:0;
+  pointer-events:none;
+  transition:.24s ease;
+}
+.modal.show{
+  opacity:1;
+  pointer-events:auto;
+  transform:translate(-50%,-50%) scale(1);
+}
+
+.modalTitle{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:20px;
+  font-weight:700;
+  color:#fff;
+  text-align:center;
+  margin:6px 0 4px;
+}
+.modalSub{
+  margin:0 0 14px;
+  text-align:center;
+  font-size:12px;
+  line-height:1.45;
+  color:rgba(255,255,255,.56);
+}
+
+.bigQr{
+  width:min(72vw,280px);
+  height:min(72vw,280px);
+  margin:0 auto 14px;
+  border-radius:24px;
+  overflow:hidden;
+  background:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 20px 42px rgba(0,0,0,.25);
+}
+.bigQr img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+
+.joinLink{
+  padding:12px 14px;
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(255,255,255,.04);
+  font-size:11px;
+  line-height:1.4;
+  color:rgba(255,255,255,.78);
+  word-break:break-all;
+  user-select:text;
+}
+
+.modalBtns{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:14px;
+}
+.mBtn{
+  min-height:48px;
+  border:none;
+  border-radius:18px;
+  cursor:pointer;
+  font-weight:900;
+  font-family:inherit;
+}
+.mBtn.primary{
+  background:var(--ai-grad);
+  color:#050510;
+}
+.mBtn.ghost{
+  background:rgba(255,255,255,.06);
+  color:#fff;
+  border:1px solid rgba(255,255,255,.10);
+}
+
+@keyframes rotateOrb{
+  from{ transform:rotate(0); }
+  to{ transform:rotate(360deg); }
+}
+@keyframes orbBreath{
+  0%,100%{ transform:scale(1); }
+  50%{ transform:scale(1.05); }
+}
+@keyframes eqPulse{
+  from{ height:16%; opacity:.7; }
+  to{ height:100%; opacity:1; }
+}
+@keyframes scanBar{
+  0%{ transform:translateY(0); opacity:.8; }
+  50%{ opacity:1; }
+  100%{ transform:translateY(58px); opacity:.8; }
+}
+@keyframes scanLine{
+  0%{ top:0; }
+  100%{ top:100%; }
+}
+@keyframes roomPulse{
+  0%{ opacity:.95; transform:scale(.8); }
+  100%{ opacity:0; transform:scale(1.18); }
+}
+@keyframes textTyping{
+  0%{ width:25%; }
+  100%{ width:100%; }
+}
 </style>
 </head>
 
 <body>
 <main id="pageContent">
-  <div class="main-hub">
-
-    <div class="f2f-portal" onclick="location.href='/pages/interpreter.html'">
-      <div>
+  <section class="hero">
+    <div class="heroTop">
+      <button class="orbTap" id="openQrBtn" type="button" aria-label="Interpreter QR göster">
         <div class="neural-orb">
           <div class="ai-ring"></div>
           <div class="orbit-energy">
             <div class="e-ball ball-l"></div>
             <div class="e-ball ball-b"></div>
           </div>
-          <div class="ai-core" title="Interpreter QR ile başlat">
-            <div class="qr-core" aria-hidden="true">
-              <div class="qr-corner"></div><div class="qr-corner"></div><div class="qr-dot blank"></div><div class="qr-dot"></div><div class="qr-dot blank"></div><div class="qr-corner"></div><div class="qr-corner"></div>
-              <div class="qr-corner"></div><div class="qr-dot blank"></div><div class="qr-dot"></div><div class="qr-dot blank"></div><div class="qr-dot"></div><div class="qr-dot blank"></div><div class="qr-corner"></div>
-              <div class="qr-dot blank"></div><div class="qr-dot"></div><div class="qr-dot"></div><div class="qr-dot blank"></div><div class="qr-dot"></div><div class="qr-dot"></div><div class="qr-dot blank"></div>
-              <div class="qr-dot"></div><div class="qr-dot blank"></div><div class="qr-dot"></div><div class="qr-dot"></div><div class="qr-dot blank"></div><div class="qr-dot"></div><div class="qr-dot"></div>
-              <div class="qr-dot blank"></div><div class="qr-dot"></div><div class="qr-dot blank"></div><div class="qr-dot"></div><div class="qr-dot"></div><div class="qr-dot blank"></div><div class="qr-dot"></div>
-              <div class="qr-corner"></div><div class="qr-dot blank"></div><div class="qr-dot"></div><div class="qr-dot blank"></div><div class="qr-dot"></div><div class="qr-dot blank"></div><div class="qr-corner"></div>
-              <div class="qr-corner"></div><div class="qr-corner"></div><div class="qr-dot blank"></div><div class="qr-dot"></div><div class="qr-dot blank"></div><div class="qr-corner"></div><div class="qr-corner"></div>
+
+          <div class="ai-core">
+            <div class="qrFrame" id="smallQrFrame">
+              <img id="smallQrImg" alt="Interpreter QR">
             </div>
+            <div class="qrScan"></div>
           </div>
         </div>
-        <div class="orb-caption">QR ile Interpreter başlat</div>
+      </button>
+
+      <h1 class="heroTitle">Interpreter <span class="ai">QR</span></h1>
+      <p class="heroSub">Okut, bağlan, konuş. Güvenlik için QR kodunu profilden yenileyebilirsin.</p>
+    </div>
+  </section>
+
+  <section class="hub-cards">
+
+    <div class="trans-card face-card" onclick="location.href='/facetoface.html'">
+      <div class="ico-box">
+        <div class="face-bars">
+          <div class="face-bar"></div>
+          <div class="face-bar"></div>
+          <div class="face-bar"></div>
+          <div class="face-bar"></div>
+          <div class="face-bar"></div>
+        </div>
+      </div>
+      <div class="card-content">
+        <h2 class="card-title">FaceToFace <span class="ai">AI</span></h2>
+        <p class="card-desc">Yüz yüze konuşmalarda iki kişilik anlık canlı çeviri deneyimi.</p>
       </div>
     </div>
 
-    <div class="hub-cards">
-
-      <div class="trans-card face-card" onclick="location.href='/facetoface.html'">
-        <div class="ico-box">
-          <div class="face-bars">
-            <div class="face-bar"></div>
-            <div class="face-bar"></div>
-            <div class="face-bar"></div>
-            <div class="face-bar"></div>
-            <div class="face-bar"></div>
-          </div>
-        </div>
-        <div class="card-content">
-          <h2 class="card-title">FaceToFace <span class="ai">AI</span></h2>
-          <p class="card-desc">Yüz yüze konuşmalarda iki kişilik anlık canlı çeviri deneyimi.</p>
+    <div class="trans-card text-card" onclick="location.href='/pages/text_translate.html'">
+      <div class="ico-box">
+        <div class="text-blocks">
+          <div class="text-scan"></div>
+          <div class="text-line"></div>
+          <div class="text-line"></div>
+          <div class="text-line"></div>
+          <div class="text-line"></div>
         </div>
       </div>
-
-      <div class="trans-card text-card" onclick="location.href='/pages/text_translate.html'">
-        <div class="ico-box">
-          <div class="text-blocks">
-            <div class="text-scan"></div>
-            <div class="text-line"></div>
-            <div class="text-line"></div>
-            <div class="text-line"></div>
-            <div class="text-line"></div>
-          </div>
-        </div>
-        <div class="card-content">
-          <h2 class="card-title">TextToText <span class="ai">AI</span></h2>
-          <p class="card-desc">Metinleri hızlı, net ve doğal biçimde dilden dile dönüştür.</p>
-        </div>
+      <div class="card-content">
+        <h2 class="card-title">TextToText <span class="ai">AI</span></h2>
+        <p class="card-desc">Metinleri hızlı, net ve doğal biçimde dilden dile dönüştür.</p>
       </div>
-
-      <div class="trans-card interpreter-card" onclick="location.href='/pages/interpreter.html'">
-        <div class="ico-box">
-          <div class="interpreter-grid">
-            <div class="interpreter-cell"></div>
-            <div class="interpreter-cell"></div>
-            <div class="interpreter-cell"></div>
-            <div class="interpreter-cell"></div>
-            <div class="interpreter-scan"></div>
-          </div>
-        </div>
-        <div class="card-content">
-          <h2 class="card-title">Interpreter <span class="ai">AI</span></h2>
-          <p class="card-desc">QR ile bağlan, iki tarafın kendi dilinde ilerleyen özel tercüman odası.</p>
-        </div>
-      </div>
-
-      <div class="trans-card meeting-card" onclick="location.href='/pages/f2f_connect.html'">
-        <div class="ico-box">
-          <div class="meeting-rings">
-            <div class="meeting-ring r1"></div>
-            <div class="meeting-ring r2"></div>
-            <div class="meeting-ring r3"></div>
-            <div class="meeting-core"></div>
-          </div>
-        </div>
-        <div class="card-content">
-          <h2 class="card-title">Meeting Room</h2>
-          <p class="card-desc">Bağlantılı görüşmeler ve çok katılımcıya uygun toplantı odası akışı.</p>
-        </div>
-      </div>
-
-      <div class="trans-card offline-card" onclick="location.href='/pages/offline_languages.html'">
-        <div class="ico-box">
-          <div class="file-stack">
-            <div class="file-sheet s1">
-              <div class="file-line l1"></div>
-              <div class="file-line l2"></div>
-              <div class="file-line l3"></div>
-            </div>
-            <div class="file-sheet s2">
-              <div class="file-line l1"></div>
-              <div class="file-line l2"></div>
-              <div class="file-line l3"></div>
-            </div>
-          </div>
-        </div>
-        <div class="card-content">
-          <h2 class="card-title">Offline Files</h2>
-          <p class="card-desc">İndirilen dil paketleri ve çevrimdışı kullanım dosyalarını yönet.</p>
-        </div>
-      </div>
-
     </div>
 
-  </div>
+    <div class="trans-card meeting-card" onclick="location.href='/pages/f2f_connect.html'">
+      <div class="ico-box">
+        <div class="meeting-rings">
+          <div class="meeting-ring r1"></div>
+          <div class="meeting-ring r2"></div>
+          <div class="meeting-ring r3"></div>
+          <div class="meeting-core"></div>
+        </div>
+      </div>
+      <div class="card-content">
+        <h2 class="card-title">Meeting Room</h2>
+        <p class="card-desc">Bağlantılı görüşmeler ve çok katılımcıya uygun toplantı odası akışı.</p>
+      </div>
+    </div>
+
+    <div class="trans-card offline-card" onclick="location.href='/pages/offline_languages.html'">
+      <div class="ico-box">
+        <div class="file-stack">
+          <div class="file-sheet s1">
+            <div class="file-line l1"></div>
+            <div class="file-line l2"></div>
+            <div class="file-line l3"></div>
+          </div>
+          <div class="file-sheet s2">
+            <div class="file-line l1"></div>
+            <div class="file-line l2"></div>
+            <div class="file-line l3"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card-content">
+        <h2 class="card-title">Offline Files</h2>
+        <p class="card-desc">İndirilen dil paketleri ve çevrimdışı kullanım dosyalarını yönet.</p>
+      </div>
+    </div>
+
+  </section>
 </main>
 
+<div class="modalBack" id="qrModalBack"></div>
+
+<div class="modal" id="qrModal">
+  <div class="modalTitle">Interpreter QR</div>
+  <p class="modalSub">Karşı taraf bu kodu okuttuğunda doğrudan Interpreter bağlantısına gider.</p>
+
+  <div class="bigQr">
+    <img id="bigQrImg" alt="Büyük Interpreter QR">
+  </div>
+
+  <div class="joinLink" id="joinLinkText">Hazırlanıyor...</div>
+
+  <div class="modalBtns">
+    <button class="mBtn ghost" id="copyJoinBtn" type="button">Linki Kopyala</button>
+    <button class="mBtn primary" id="closeQrBtn" type="button">Tamam</button>
+  </div>
+</div>
+
 <script type="module">
-  import { mountShell } from "/js/ui_shell.js";
-  try { mountShell({ scroll:"none" }); } catch(e) { console.error(e); }
+import { mountShell } from "/js/ui_shell.js";
+import { supabase } from "/js/supabase_client.js";
+
+try{
+  mountShell({ scroll:"none" });
+}catch(e){
+  console.warn("[home shell]", e);
+}
+
+const $ = (id)=>document.getElementById(id);
+
+const smallQrImg = $("smallQrImg");
+const bigQrImg = $("bigQrImg");
+const joinLinkText = $("joinLinkText");
+const qrModal = $("qrModal");
+const qrModalBack = $("qrModalBack");
+const openQrBtn = $("openQrBtn");
+const closeQrBtn = $("closeQrBtn");
+const copyJoinBtn = $("copyJoinBtn");
+
+const HOST_CODE_KEY = "italky_interpreter_host_code";
+const QR_VERSION_KEY = "italky_interpreter_qr_version";
+
+let finalJoinUrl = "";
+
+function slugify(value){
+  return String(value || "")
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "")
+    .slice(0, 12);
+}
+
+function randomCode(){
+  return Math.random().toString(36).slice(2, 10).toUpperCase();
+}
+
+async function getCurrentUser(){
+  try{
+    const { data } = await supabase.auth.getUser();
+    return data?.user || null;
+  }catch{
+    return null;
+  }
+}
+
+function getStoredQrVersion(){
+  return localStorage.getItem(QR_VERSION_KEY) || "1";
+}
+
+async function ensureStableHostCode(){
+  const existing = localStorage.getItem(HOST_CODE_KEY);
+  if(existing && String(existing).trim()) return String(existing).trim();
+
+  const user = await getCurrentUser();
+
+  const candidates = [
+    localStorage.getItem("membership_no"),
+    localStorage.getItem("uyelik_no"),
+    localStorage.getItem("member_no"),
+    user?.user_metadata?.membership_no,
+    user?.user_metadata?.member_no,
+    user?.user_metadata?.user_no,
+    user?.id,
+    user?.email?.split("@")?.[0]
+  ];
+
+  let base = "";
+  for(const c of candidates){
+    const s = slugify(c);
+    if(s && s.length >= 6){
+      base = s.slice(0, 10);
+      break;
+    }
+  }
+
+  if(!base) base = randomCode();
+
+  const hostCode = `ITK-${base}`;
+  localStorage.setItem(HOST_CODE_KEY, hostCode);
+  return hostCode;
+}
+
+function buildJoinUrl(hostCode){
+  const version = getStoredQrVersion();
+  const url = new URL("/pages/interpreter_join.html", location.origin);
+  url.searchParams.set("host", hostCode);
+  url.searchParams.set("v", version);
+  return url.toString();
+}
+
+function buildQrImageUrl(targetUrl){
+  return `https://api.qrserver.com/v1/create-qr-code/?size=480x480&margin=8&data=${encodeURIComponent(targetUrl)}`;
+}
+
+function openModal(){
+  qrModalBack.classList.add("show");
+  qrModal.classList.add("show");
+}
+
+function closeModal(){
+  qrModalBack.classList.remove("show");
+  qrModal.classList.remove("show");
+}
+
+async function bootQr(){
+  const hostCode = await ensureStableHostCode();
+  finalJoinUrl = buildJoinUrl(hostCode);
+
+  const qrUrl = buildQrImageUrl(finalJoinUrl);
+
+  if(smallQrImg) smallQrImg.src = qrUrl;
+  if(bigQrImg) bigQrImg.src = qrUrl;
+  if(joinLinkText) joinLinkText.textContent = finalJoinUrl;
+}
+
+openQrBtn?.addEventListener("click", openModal);
+closeQrBtn?.addEventListener("click", closeModal);
+qrModalBack?.addEventListener("click", closeModal);
+
+copyJoinBtn?.addEventListener("click", async ()=>{
+  try{
+    await navigator.clipboard.writeText(finalJoinUrl);
+    copyJoinBtn.textContent = "Kopyalandı";
+    setTimeout(()=> copyJoinBtn.textContent = "Linki Kopyala", 1400);
+  }catch{
+    copyJoinBtn.textContent = "Kopyalanamadı";
+    setTimeout(()=> copyJoinBtn.textContent = "Linki Kopyala", 1400);
+  }
+});
+
+bootQr();
 </script>
 </body>
 </html>
