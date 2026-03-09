@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>italkyAI • Sohbet AI</title>
   <link rel="icon" href="data:," />
 
@@ -305,6 +305,41 @@
       text-align:center;
     }
 
+    .bubble-row{
+      display:flex;
+      align-items:flex-end;
+      gap:8px;
+    }
+
+    .bubble-row .txt{
+      flex:1 1 auto;
+      min-width:0;
+    }
+
+    .spk-icon{
+      width:28px;
+      height:28px;
+      min-width:28px;
+      border-radius:10px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.06);
+      cursor:pointer;
+      flex:0 0 auto;
+    }
+
+    .spk-icon svg{
+      width:15px;
+      height:15px;
+      stroke:rgba(255,255,255,.88);
+      fill:none;
+      stroke-width:2;
+      stroke-linecap:round;
+      stroke-linejoin:round;
+    }
+
     .input-dock{
       position: fixed;
       left: 50%;
@@ -520,88 +555,6 @@
 
   </div>
 
-  <script type="module">
-    const $ = (id)=>document.getElementById(id);
-
-    const msgInput = $("msgInput");
-    const micBtn = $("micBtn");
-    const sendBtn = $("sendBtn");
-    const backBtn = $("backBtn");
-    const logoHome = $("logoHome");
-    const clearChat = $("clearChat");
-    const chat = $("chat");
-
-    backBtn?.addEventListener("click", ()=> history.back());
-    logoHome?.addEventListener("click", ()=> location.href = "/pages/home.html");
-
-    function addBubble(type, text){
-      const el = document.createElement("div");
-      el.className = `bubble ${type}`;
-      el.textContent = text;
-      chat.appendChild(el);
-      requestAnimationFrame(() => {
-        chat.scrollTop = chat.scrollHeight;
-      });
-    }
-
-    clearChat?.addEventListener("click", ()=>{
-      chat.innerHTML = "";
-    });
-
-    let listenTimer = null;
-
-    function setListening(on){
-      if(!micBtn || !msgInput) return;
-      micBtn.classList.toggle("listening", !!on);
-      if(on){
-        msgInput.dataset.__oldph = msgInput.getAttribute("placeholder") || "";
-        msgInput.setAttribute("placeholder", "Dinliyorum…");
-      }else{
-        const old = msgInput.dataset.__oldph || "Yaz ya da konuş…";
-        msgInput.setAttribute("placeholder", old);
-      }
-    }
-
-    micBtn?.addEventListener("click", ()=>{
-      setListening(true);
-      clearTimeout(listenTimer);
-      listenTimer = setTimeout(()=> setListening(false), 12000);
-    });
-
-    msgInput?.addEventListener("input", ()=>{
-      if((msgInput.value || "").trim().length){
-        setListening(false);
-        clearTimeout(listenTimer);
-      }
-      msgInput.style.height = "auto";
-      msgInput.style.height = Math.min(msgInput.scrollHeight, 120) + "px";
-    });
-
-    sendBtn?.addEventListener("click", ()=>{
-      const text = (msgInput.value || "").trim();
-      if(!text) return;
-
-      addBubble("user", text);
-      msgInput.value = "";
-      msgInput.style.height = "auto";
-      setListening(false);
-      clearTimeout(listenTimer);
-
-      // Geçici bot cevabı — Gemini bağlanınca burası değişecek
-      setTimeout(()=>{
-        addBubble("bot", "Mesaj alındı. Gemini bağlantısı eklendiğinde cevap burada görünecek.");
-      }, 500);
-    });
-
-    msgInput?.addEventListener("keydown", (e)=>{
-      if(e.key === "Enter" && !e.shiftKey){
-        e.preventDefault();
-        sendBtn?.click();
-      }
-    });
-
-    addBubble("meta", "Sohbet AI hazır. Mesaj yazabilir veya mikrofonu kullanabilirsin.");
-  <script type="module" src="/js/italky_chat_page.js?v=1"></script>
-  </script>
+  <script type="module" src="/js/italky_chat_page.js?v=2"></script>
 </body>
 </html>
