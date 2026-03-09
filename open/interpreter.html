@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>italkyAI</title>
+<style>
+body{
+  margin:0;
+  background:#050510;
+  color:#fff;
+  font-family:Outfit,sans-serif;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:24px;
+}
+.wrap{max-width:420px}
+.btn{
+  display:inline-block;
+  margin-top:18px;
+  padding:14px 20px;
+  border-radius:16px;
+  background:linear-gradient(135deg,#a5b4fc,#6366f1,#ec4899);
+  color:#000;
+  font-weight:900;
+  text-decoration:none;
+}
+.sub{
+  color:rgba(255,255,255,.65);
+  font-size:14px;
+  line-height:1.45;
+}
+</style>
+<script>
+function openApp(){
+  const p = new URLSearchParams(location.search);
+  const host = p.get("host") || "";
+  const v = p.get("v") || "1";
+
+  const appUrl = `italky://join?host=${encodeURIComponent(host)}&v=${encodeURIComponent(v)}`;
+  const fallbackUrl = `/pages/get-app.html?host=${encodeURIComponent(host)}&v=${encodeURIComponent(v)}`;
+
+  const start = Date.now();
+  window.location.href = appUrl;
+
+  setTimeout(() => {
+    const elapsed = Date.now() - start;
+    if (elapsed < 2200) {
+      window.location.href = fallbackUrl;
+    }
+  }, 1600);
+}
+</script>
+</head>
+<body onload="openApp()">
+  <div class="wrap">
+    <h2>italkyAI açılıyor</h2>
+    <div class="sub">Uygulama yüklüyse görüşme ekranı açılacak. Yüklü değilse indirme sayfasına yönlendirileceksin.</div>
+    <a class="btn" href="/pages/get-app.html">Uygulamayı indir</a>
+  </div>
+</body>
+</html>
