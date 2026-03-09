@@ -67,8 +67,8 @@
 }
 
 .neural-orb{
-  width:102px;
-  height:102px;
+  width:112px;
+  height:112px;
   position:relative;
   display:flex;
   align-items:center;
@@ -118,8 +118,8 @@
 }
 
 .ai-core{
-  width:76px;
-  height:76px;
+  width:84px;
+  height:84px;
   background:#000;
   border-radius:50%;
   background-image: linear-gradient(#000, #000), var(--ai-grad);
@@ -131,6 +131,63 @@
   justify-content:center;
   animation: aiBreathe 4s infinite ease-in-out;
   z-index:10;
+  position:relative;
+  overflow:hidden;
+}
+
+/* mini qr alanı */
+.qr-core{
+  width:54px;
+  height:54px;
+  border-radius:14px;
+  background:#fff;
+  display:grid;
+  grid-template-columns:repeat(7, 1fr);
+  grid-template-rows:repeat(7, 1fr);
+  gap:2px;
+  padding:4px;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.12),
+    0 0 20px rgba(165,180,252,.18);
+}
+
+.qr-dot{
+  background:#0b0b12;
+  border-radius:2px;
+}
+
+.qr-dot.blank{
+  background:transparent;
+}
+
+.qr-corner{
+  background:#0b0b12;
+  border-radius:3px;
+}
+
+.qr-core::after{
+  content:"SCAN";
+  position:absolute;
+  bottom:8px;
+  left:50%;
+  transform:translateX(-50%);
+  font-size:7px;
+  letter-spacing:1px;
+  font-weight:900;
+  color:rgba(255,255,255,.7);
+  background:linear-gradient(135deg,#a5b4fc,#ec4899);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  pointer-events:none;
+}
+
+.orb-caption{
+  text-align:center;
+  font-size:10px;
+  color:rgba(255,255,255,.56);
+  margin-top:2px;
+  line-height:1.2;
+  font-weight:700;
 }
 
 /* ===== KARTLAR ===== */
@@ -165,7 +222,6 @@
 
 .face-card{ background: linear-gradient(145deg, rgba(96,165,250,.11) 0%, rgba(0,0,0,.52) 100%); }
 .text-card{ background: linear-gradient(145deg, rgba(165,180,252,.11) 0%, rgba(0,0,0,.52) 100%); }
-.friend-card{ background: linear-gradient(145deg, rgba(236,72,153,.11) 0%, rgba(0,0,0,.52) 100%); }
 .interpreter-card{ background: linear-gradient(145deg, rgba(52,211,153,.11) 0%, rgba(0,0,0,.52) 100%); }
 .meeting-card{ background: linear-gradient(145deg, rgba(251,146,60,.11) 0%, rgba(0,0,0,.52) 100%); }
 .offline-card{ background: linear-gradient(145deg, rgba(168,85,247,.11) 0%, rgba(0,0,0,.52) 100%); }
@@ -232,35 +288,6 @@
   box-shadow:0 0 12px rgba(165,180,252,.85);
   animation:scanLine 2.5s linear infinite;
 }
-
-/* Friend */
-.friend-dots{
-  width:58px;
-  height:40px;
-  position:relative;
-}
-.friend-dot{
-  position:absolute;
-  width:10px;
-  height:10px;
-  border-radius:50%;
-  background:var(--pink);
-  box-shadow:0 0 14px rgba(236,72,153,.7);
-  animation:friendPulse 1.6s infinite ease-in-out;
-}
-.friend-dot:nth-child(1){ left:4px; top:15px; animation-delay:0s; }
-.friend-dot:nth-child(2){ left:20px; top:7px; animation-delay:.2s; }
-.friend-dot:nth-child(3){ left:20px; top:23px; animation-delay:.4s; }
-.friend-dot:nth-child(4){ right:4px; top:15px; animation-delay:.6s; }
-.friend-line{
-  position:absolute;
-  height:2px;
-  background:rgba(236,72,153,.6);
-  transform-origin:left center;
-}
-.friend-line.l1{ left:12px; top:19px; width:15px; transform:rotate(-20deg); }
-.friend-line.l2{ left:12px; top:21px; width:15px; transform:rotate(18deg); }
-.friend-line.l3{ left:30px; top:20px; width:16px; transform:rotate(-2deg); }
 
 /* Interpreter */
 .interpreter-grid{
@@ -376,7 +403,6 @@
 @keyframes eqPulse { from { height:16%; opacity:.7; } to { height:100%; opacity:1; } }
 @keyframes scanLine { 0% { top:0; } 100% { top:100%; } }
 @keyframes roomPulse { 0% { opacity:.95; transform:scale(.8); } 100% { opacity:0; transform:scale(1.18); } }
-@keyframes friendPulse { 0%,100% { transform:scale(.9); opacity:.7; } 50% { transform:scale(1.18); opacity:1; } }
 @keyframes textTyping { 0% { width:25%; } 100% { width:100%; } }
 </style>
 </head>
@@ -385,21 +411,27 @@
 <main id="pageContent">
   <div class="main-hub">
 
-    <!-- sadece daire kalıyor -->
-    <div class="f2f-portal" onclick="location.href='/facetoface.html'">
-      <div class="neural-orb">
-        <div class="ai-ring"></div>
-        <div class="orbit-energy">
-          <div class="e-ball ball-l"></div>
-          <div class="e-ball ball-b"></div>
+    <div class="f2f-portal" onclick="location.href='/pages/interpreter.html'">
+      <div>
+        <div class="neural-orb">
+          <div class="ai-ring"></div>
+          <div class="orbit-energy">
+            <div class="e-ball ball-l"></div>
+            <div class="e-ball ball-b"></div>
+          </div>
+          <div class="ai-core" title="Interpreter QR ile başlat">
+            <div class="qr-core" aria-hidden="true">
+              <div class="qr-corner"></div><div class="qr-corner"></div><div class="qr-dot blank"></div><div class="qr-dot"></div><div class="qr-dot blank"></div><div class="qr-corner"></div><div class="qr-corner"></div>
+              <div class="qr-corner"></div><div class="qr-dot blank"></div><div class="qr-dot"></div><div class="qr-dot blank"></div><div class="qr-dot"></div><div class="qr-dot blank"></div><div class="qr-corner"></div>
+              <div class="qr-dot blank"></div><div class="qr-dot"></div><div class="qr-dot"></div><div class="qr-dot blank"></div><div class="qr-dot"></div><div class="qr-dot"></div><div class="qr-dot blank"></div>
+              <div class="qr-dot"></div><div class="qr-dot blank"></div><div class="qr-dot"></div><div class="qr-dot"></div><div class="qr-dot blank"></div><div class="qr-dot"></div><div class="qr-dot"></div>
+              <div class="qr-dot blank"></div><div class="qr-dot"></div><div class="qr-dot blank"></div><div class="qr-dot"></div><div class="qr-dot"></div><div class="qr-dot blank"></div><div class="qr-dot"></div>
+              <div class="qr-corner"></div><div class="qr-dot blank"></div><div class="qr-dot"></div><div class="qr-dot blank"></div><div class="qr-dot"></div><div class="qr-dot blank"></div><div class="qr-corner"></div>
+              <div class="qr-corner"></div><div class="qr-corner"></div><div class="qr-dot blank"></div><div class="qr-dot"></div><div class="qr-dot blank"></div><div class="qr-corner"></div><div class="qr-corner"></div>
+            </div>
+          </div>
         </div>
-        <div class="ai-core">
-          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2">
-            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
-            <path d="M19 11v1a7 7 0 0 1-14 0v-2"/>
-            <line x1="12" y1="19" x2="12" y2="23"/>
-          </svg>
-        </div>
+        <div class="orb-caption">QR ile Interpreter başlat</div>
       </div>
     </div>
 
@@ -437,25 +469,7 @@
         </div>
       </div>
 
-      <div class="trans-card friend-card" onclick="location.href='/pages/italky_chat.html'">
-        <div class="ico-box">
-          <div class="friend-dots">
-            <div class="friend-dot"></div>
-            <div class="friend-dot"></div>
-            <div class="friend-dot"></div>
-            <div class="friend-dot"></div>
-            <div class="friend-line l1"></div>
-            <div class="friend-line l2"></div>
-            <div class="friend-line l3"></div>
-          </div>
-        </div>
-        <div class="card-content">
-          <h2 class="card-title">Friend <span class="ai">AI</span></h2>
-          <p class="card-desc">Sor, yaz, konuş. Akıllı arkadaş gibi sohbet eden yardımcı modül.</p>
-        </div>
-      </div>
-
-      <div class="trans-card interpreter-card" onclick="location.href='/interpreter_room.html'">
+      <div class="trans-card interpreter-card" onclick="location.href='/pages/interpreter.html'">
         <div class="ico-box">
           <div class="interpreter-grid">
             <div class="interpreter-cell"></div>
