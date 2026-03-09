@@ -1,220 +1,200 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="tr">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-<title>italkyAI • Next-Gen Hub</title>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
-<style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>italkyAI • Friend AI</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+
+  <style>
     :root {
-        --ai-grad: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
-        --glass: rgba(255, 255, 255, 0.03);
-        --border: rgba(255, 255, 255, 0.08);
-        --bg: #03030a;
+      --bg: #07070a;
+      --surface: rgba(255, 255, 255, 0.03);
+      --border: rgba(255, 255, 255, 0.08);
+      --accent-primary: #6366f1;
+      --accent-secondary: #ec4899;
+      --text-main: #ffffff;
+      --text-dim: rgba(255, 255, 255, 0.6);
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    body, html { 
-        margin: 0; padding: 0; background: var(--bg); 
-        font-family: 'Outfit', sans-serif; color: white; overflow: hidden; height: 100%;
+    
+    body, html {
+      margin: 0; padding: 0;
+      width: 100%; height: 100%;
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: 'Outfit', sans-serif;
+      overflow: hidden;
+    }
+
+    /* Dinamik Arka Plan */
+    .bg-glow {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: 
+        radial-gradient(circle at 10% 10%, rgba(99, 102, 241, 0.15), transparent 35%),
+        radial-gradient(circle at 90% 90%, rgba(236, 72, 153, 0.1), transparent 35%);
+      z-index: -1;
     }
 
     #pageContent {
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        background: radial-gradient(circle at 50% -20%, #1e1b4b 0%, #03030a 100%);
-        padding: 20px;
+      display: flex; flex-direction: column;
+      height: 100vh;
+      max-width: 800px; /* Desktop'ta çok yayılmaması için */
+      margin: 0 auto;
+      position: relative;
     }
 
-    /* 🧠 MERKEZİ ORB (FaceToFace) */
-    .f2f-section {
-        flex: 0 0 40%;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        position: relative;
+    /* Header: Daha ince ve şık */
+    .header {
+      padding: 16px 20px;
+      display: flex; align-items: center; justify-content: space-between;
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      z-index: 10;
     }
 
-    .orb-wrapper {
-        position: relative;
-        width: 160px;
-        height: 160px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-orb {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+    }
+    .brand-name { font-family: 'Space Grotesk'; font-size: 18px; font-weight: 700; }
+
+    /* Chat Alanı: "Ölü alanı" canlandıran kısım */
+    #chat {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex; flex-direction: column;
+      gap: 16px;
+      scrollbar-width: none;
+    }
+    #chat::-webkit-scrollbar { display: none; }
+
+    /* Mesaj Balonları: Daha modern ve geniş */
+    .bubble {
+      max-width: 85%;
+      padding: 14px 18px;
+      border-radius: 22px;
+      font-size: 15px;
+      line-height: 1.5;
+      position: relative;
+      animation: fadeIn 0.3s ease;
     }
 
-    .orb-glow {
-        position: absolute;
-        inset: -20px;
-        background: var(--ai-grad);
-        filter: blur(40px);
-        opacity: 0.2;
-        animation: pulseGlow 4s infinite alternate;
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .bubble.bot {
+      align-self: flex-start;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-bottom-left-radius: 4px;
+      color: var(--text-main);
     }
 
-    .outer-ring {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        border: 2px solid var(--border);
-        border-radius: 50%;
-        border-top-color: #6366f1;
-        animation: rotate 10s linear infinite;
+    .bubble.user {
+      align-self: flex-end;
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      color: white;
+      border-bottom-right-radius: 4px;
+      box-shadow: 0 4px 15px rgba(79, 70, 229, 0.2);
     }
 
-    .inner-core {
-        width: 110px;
-        height: 110px;
-        background: rgba(0,0,0,0.8);
-        border: 1px solid rgba(255,255,255,0.1);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: inset 0 0 20px rgba(99, 102, 241, 0.3);
-        z-index: 2;
-        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    /* Dock / Giriş Alanı: Havada asılı gibi duran kompakt yapı */
+    .input-container {
+      padding: 20px;
+      padding-bottom: calc(20px + env(safe-area-inset-bottom));
     }
 
-    .inner-core:active { transform: scale(0.9); }
-
-    .f2f-label {
-        margin-top: 20px;
-        font-family: 'Space Grotesk';
-        font-size: 28px;
-        letter-spacing: -1px;
-        text-align: center;
+    .input-wrapper {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      display: flex; align-items: flex-end;
+      padding: 8px 12px;
+      gap: 8px;
+      transition: all 0.3s ease;
     }
 
-    .f2f-label span {
-        background: var(--ai-grad);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+    .input-wrapper:focus-within {
+      border-color: var(--accent-primary);
+      background: rgba(255, 255, 255, 0.08);
+      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
     }
 
-    /* 🎴 MODERN KARTLAR (Grid Sistemi) */
-    .hub-grid {
-        flex: 1;
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        grid-template-rows: 1fr 1fr;
-        gap: 12px;
-        padding-bottom: 20px;
+    #msgInput {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: white;
+      font-family: inherit;
+      font-size: 15px;
+      padding: 10px 4px;
+      max-height: 150px;
+      resize: none;
     }
 
-    .feature-card {
-        background: var(--glass);
-        border: 1px solid var(--border);
-        border-radius: 24px;
-        padding: 16px;
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-end;
-        position: relative;
-        overflow: hidden;
-        backdrop-filter: blur(10px);
-        transition: all 0.3s ease;
+    .action-btn {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      border: none;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: transparent;
     }
 
-    .feature-card:active {
-        background: rgba(255,255,255,0.1);
-        border-color: rgba(255,255,255,0.3);
-    }
+    .action-btn svg { width: 20px; height: 20px; stroke: white; fill: none; stroke-width: 2; }
 
-    .card-icon {
-        position: absolute;
-        top: 16px;
-        left: 16px;
-        width: 32px;
-        height: 32px;
-        opacity: 0.8;
-    }
+    .btn-send { background: var(--accent-primary); color: white; }
+    .btn-send:hover { transform: scale(1.05); background: var(--accent-secondary); }
 
-    .card-title {
-        font-size: 15px;
-        font-weight: 600;
-        margin: 0;
-        color: rgba(255,255,255,0.9);
-    }
+    .btn-clear { font-size: 12px; color: var(--text-dim); background: transparent; border: 1px solid var(--border); padding: 6px 12px; border-radius: 12px; height: auto; width: auto; font-weight: 600; }
 
-    .card-sub {
-        font-size: 10px;
-        color: rgba(255,255,255,0.4);
-        margin-top: 4px;
-    }
-
-    /* ÖZEL KART IŞIKLARI */
-    .c-blue { border-bottom: 3px solid #60a5fa; }
-    .c-green { border-bottom: 3px solid #34d399; }
-    .c-amber { border-bottom: 3px solid #f59e0b; }
-    .c-purple { border-bottom: 3px solid #a855f7; }
-
-    /* ANİMASYONLAR */
-    @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-    @keyframes pulseGlow { 0% { opacity: 0.1; transform: scale(0.9); } 100% { opacity: 0.3; transform: scale(1.1); } }
-
-</style>
+  </style>
 </head>
+
 <body>
+  <div class="bg-glow"></div>
 
-<main id="pageContent">
-    <section class="f2f-section" onclick="location.href='/facetoface.html'">
-        <div class="orb-wrapper">
-            <div class="orb-glow"></div>
-            <div class="outer-ring"></div>
-            <div class="inner-core">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5">
-                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
-                    <path d="M19 11v1a7 7 0 0 1-14 0v-2"/>
-                    <line x1="12" y1="19" x2="12" y2="23"/>
-                </svg>
-            </div>
-        </div>
-        <h1 class="f2f-label">FaceToFace <span>AI</span></h1>
-    </section>
+  <div id="pageContent">
+    <header class="header">
+      <div class="brand">
+        <div class="brand-orb"></div>
+        <div class="brand-name">italky<span style="color:var(--accent-primary)">AI</span></div>
+      </div>
+      <div style="display: flex; gap: 8px;">
+         <button class="btn-clear" id="muteBtn">SES</button>
+         <button class="btn-clear" id="clearChat">TEMİZLE</button>
+      </div>
+    </header>
 
-    <div class="hub-grid">
-        <div class="feature-card c-blue" onclick="location.href='/pages/text_translate.html'">
-            <svg class="card-icon" fill="none" stroke="#60a5fa" viewBox="0 0 24 24" stroke-width="2">
-                <path d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 0 1 6.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5c1.382 3.307 3.416 6.315 5.952 8.5"/>
-            </svg>
-            <h2 class="card-title">Metin Çeviri</h2>
-            <span class="card-sub">Kuantum Hızı</span>
-        </div>
+    <main id="chat">
+      <div class="bubble bot">Selam! Ben italky. Bugün sana nasıl yardımcı olabilirim? ✨</div>
+      <div class="bubble user">Merhaba, bana yeni tasarım hakkında ne düşündüğünü söyle.</div>
+    </main>
 
-        <div class="feature-card c-green" onclick="location.href='/pages/f2f_connect.html'">
-            <svg class="card-icon" fill="none" stroke="#34d399" viewBox="0 0 24 24" stroke-width="2">
-                <path d="M19 11a7 7 0 0 1-7 7m0 0a7 7 0 0 1-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 0 1-3-3V5a3 3 0 1 1 6 0v6a3 3 0 0 1-3 3z"/>
-            </svg>
-            <h2 class="card-title">Walkie-Talkie</h2>
-            <span class="card-sub">Anlık Sesli</span>
-        </div>
+    <div class="input-container">
+      <div class="input-wrapper">
+        <button class="action-btn" id="micBtn">
+          <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path></svg>
+        </button>
+        
+        <textarea id="msgInput" rows="1" placeholder="Mesajını buraya yaz..." spellcheck="false"></textarea>
 
-        <div class="feature-card c-amber" onclick="location.href='/pages/interpreter.html'">
-            <svg class="card-icon" fill="none" stroke="#f59e0b" viewBox="0 0 24 24" stroke-width="2">
-                <path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-            </svg>
-            <h2 class="card-title">Interpreter</h2>
-            <span class="card-sub">Kulaklık Modu</span>
-        </div>
-
-        <div class="feature-card c-purple" onclick="location.href='/pages/offline_languages.html'">
-            <svg class="card-icon" fill="none" stroke="#a855f7" viewBox="0 0 24 24" stroke-width="2">
-                <path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"/>
-            </svg>
-            <h2 class="card-title">Offline</h2>
-            <span class="card-sub">Tam Gizlilik</span>
-        </div>
+        <button class="action-btn btn-send" id="sendBtn">
+          <svg viewBox="0 0 24 24"><path d="M22 2L11 13"></path><path d="M22 2L15 22L11 13L2 9L22 2Z"></path></svg>
+        </button>
+      </div>
     </div>
-</main>
+  </div>
 
-<script type="module">
-    import { mountShell } from "/js/ui_shell.js";
-    mountShell({ scroll:"none" });
-</script>
+  <script type="module" src="/js/italky_chat_page.js?v=4"></script>
 </body>
 </html>
