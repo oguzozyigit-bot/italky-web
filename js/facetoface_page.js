@@ -168,6 +168,9 @@ let activeSide = null;
 let recognizer = null;
 let recordingSide = null;
 let currentAudio = null;
+let micWarmStream = null;
+let audioCtx = null;
+let bootReady = false;
 
 function pointOrbTo(side) {
   if (!frameRoot) return;
@@ -260,7 +263,7 @@ function setErrorUI() {
   setHelper(botHelper, t(botLang, "preparing"), "helper-wait");
 }
 
-function bounceToReady(delay = 1800) {
+function bounceToReady(delay = 1400) {
   setTimeout(() => {
     setSystemReadyUI();
   }, delay);
@@ -445,14 +448,14 @@ function keepLatestVisible(side) {
 
   const apply = () => {
     try {
-      wrap.scrollTop = wrap.scrollHeight + 9999;
+      wrap.scrollTop = wrap.scrollHeight;
     } catch {}
   };
 
   apply();
   requestAnimationFrame(apply);
   setTimeout(apply, 30);
-  setTimeout(apply, 120);
+  setTimeout(apply, 100);
 }
 
 function addBubble(side, kind, text, opts = {}) {
@@ -562,7 +565,7 @@ async function finalizeRecognition(side, text) {
   const cleaned = String(text || "").trim();
   if (!cleaned) {
     setErrorUI();
-    bounceToReady(1800);
+    bounceToReady(1200);
     return;
   }
 
@@ -585,7 +588,7 @@ async function finalizeRecognition(side, text) {
       latestTxt.textContent = t(dst, "translateError");
       keepLatestVisible(other);
     }
-    bounceToReady(1800);
+    bounceToReady(1400);
     return;
   }
 
@@ -596,7 +599,7 @@ async function finalizeRecognition(side, text) {
     addBubble(other, "me", tr, { latest: true, speakLang: dst });
   }
 
-  await speak(tr, dst);
+  speak(tr, dst);
   setSystemReadyUI();
 }
 
@@ -605,7 +608,7 @@ function startRecording(side) {
   const rec = buildRecognizer(lang);
   if (!rec) {
     setErrorUI();
-    bounceToReady(1800);
+    bounceToReady(1200);
     return;
   }
 
@@ -622,7 +625,7 @@ function startRecording(side) {
       recordingSide = null;
       recognizer = null;
       setErrorUI();
-      bounceToReady(1800);
+      bounceToReady(1200);
     }
   };
 
@@ -637,11 +640,13 @@ function startRecording(side) {
     recognizer = null;
     recordingSide = null;
     setErrorUI();
-    bounceToReady(1800);
+    bounceToReady(1200);
   }
 }
 
 function toggleRecording(side) {
+  if (!bootReady) return;
+
   if (recordingSide === side) {
     stopRecognizer();
     recordingSide = null;
@@ -657,13 +662,73 @@ function toggleRecording(side) {
   startRecording(side);
 }
 
-function bind() {
-  setFrameVisual("ready");
-  setSystemReadyUI();
-  pointOrbTo("bot");
-  refreshLangLabels();
+async function warmAudio() {
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return;
+    if (!audioCtx) audioCtx = new Ctx();
+    if (audioCtx.state === "suspended") {
+      await audioCtx.resume();
+    }
+  } catch (e) {
+    console.warn("warmAudio", e);
+  }
+}
 
-  fetch(`${API_BASE}/api/translate_ai/health`).catch(() => {});
+async function warmMicrophone() {
+  try {
+    if (!navigator.mediaDevices?.getUserMedia) return;
+    micWarmStream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
+      },
+    });
+  } catch (e) {
+    console.warn("warmMicrophone", e);
+  }
+}
+
+async function warmApis() {
+  await Promise.allSettled([
+    fetch(`${API_BASE}/healthz`).catch(() => {}),
+    fetch(`${API_BASE}/api/translate_ai/health`).catch(() => {}),
+  ]);
+}
+
+function unlockOnFirstTouch() {
+  const once = async () => {
+    try { await warmAudio(); } catch {}
+    window.removeEventListener("touchstart", once);
+    window.removeEventListener("pointerdown", once);
+    window.removeEventListener("click", once);
+  };
+
+  window.addEventListener("touchstart", once, { passive: true });
+  window.addEventListener("pointerdown", once, { passive: true });
+  window.addEventListener("click", once, { passive: true });
+}
+
+async function bootFast() {
+  setSystemPreparingUI();
+  refreshLangLabels();
+  pointOrbTo("bot");
+
+  await Promise.allSettled([
+    warmApis(),
+    warmMicrophone(),
+    warmAudio(),
+  ]);
+
+  bootReady = true;
+  setSystemReadyUI();
+}
+
+function bind() {
+  refreshLangLabels();
+  unlockOnFirstTouch();
+  bootFast();
 
   topLangBtn?.addEventListener("click", (e) => {
     e.preventDefault();
