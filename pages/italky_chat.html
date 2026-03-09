@@ -13,14 +13,15 @@
   <style>
     :root{
       --bg:#030014;
-      --text: rgba(255,255,255,.92);
-      --muted: rgba(255,255,255,.60);
-      --border: rgba(255,255,255,.10);
+      --text:rgba(255,255,255,.94);
+      --muted:rgba(255,255,255,.62);
+      --border:rgba(255,255,255,.10);
+      --glass:rgba(255,255,255,.04);
+      --card:rgba(255,255,255,.04);
+
       --ai1:#A5B4FC;
       --ai2:#4F46E5;
       --ai3:#EC4899;
-      --glass: rgba(255,255,255,.04);
-      --card: rgba(0,0,0,.18);
     }
 
     *{
@@ -37,7 +38,7 @@
       overflow:hidden;
       background:var(--bg);
       color:var(--text);
-      font-family:'Outfit', sans-serif;
+      font-family:'Outfit',sans-serif;
       scrollbar-width:none;
     }
 
@@ -48,8 +49,8 @@
 
     body{
       background:
-        radial-gradient(circle at 20% 15%, rgba(79,70,229,.28), transparent 24%),
-        radial-gradient(circle at 80% 78%, rgba(236,72,153,.18), transparent 22%),
+        radial-gradient(circle at 16% 12%, rgba(79,70,229,.22), transparent 28%),
+        radial-gradient(circle at 82% 78%, rgba(236,72,153,.14), transparent 24%),
         linear-gradient(180deg, #050217 0%, #030014 100%);
     }
 
@@ -57,12 +58,12 @@
       height:100%;
       display:flex;
       flex-direction:column;
+      gap:12px;
+      overflow:hidden;
       padding:
         calc(var(--headerH, 72px) + env(safe-area-inset-top) + 10px)
         12px
-        calc(var(--footerH, 88px) + env(safe-area-inset-bottom) + 10px);
-      overflow:hidden;
-      gap:10px;
+        calc(var(--footerH, 90px) + env(safe-area-inset-bottom) + 10px);
     }
 
     .hero{
@@ -70,48 +71,49 @@
       display:flex;
       align-items:center;
       justify-content:space-between;
-      gap:10px;
-      min-height:58px;
+      gap:12px;
+      min-height:78px;
+      border-radius:26px;
+      padding:14px;
       border:1px solid rgba(255,255,255,.08);
-      background:rgba(255,255,255,.04);
-      border-radius:22px;
-      padding:10px 12px;
-      backdrop-filter:blur(16px);
+      background:linear-gradient(145deg, rgba(255,255,255,.05) 0%, rgba(255,255,255,.02) 100%);
+      backdrop-filter:blur(18px);
+      box-shadow:0 20px 45px rgba(0,0,0,.18);
     }
 
     .heroLeft{
       display:flex;
       align-items:center;
-      gap:10px;
+      gap:12px;
       min-width:0;
     }
 
     .heroOrb{
-      width:42px;
-      height:42px;
+      width:50px;
+      height:50px;
       border-radius:50%;
       position:relative;
       background:#000;
       border:2px solid transparent;
-      background-image: linear-gradient(#000,#000), linear-gradient(135deg, var(--ai1) 0%, var(--ai2) 55%, var(--ai3) 100%);
+      background-image:linear-gradient(#000,#000), linear-gradient(135deg, var(--ai1) 0%, var(--ai2) 55%, var(--ai3) 100%);
       background-origin:border-box;
       background-clip:content-box,border-box;
-      box-shadow:0 0 22px rgba(99,102,241,.20);
       flex:0 0 auto;
+      box-shadow:0 0 24px rgba(99,102,241,.22);
     }
 
     .heroOrb::after{
       content:"";
       position:absolute;
-      inset:-7px;
+      inset:-8px;
       border-radius:50%;
-      border:1px solid rgba(165,180,252,.22);
-      animation: orbPulse 2.4s infinite ease-in-out;
+      border:1px solid rgba(165,180,252,.24);
+      animation:orbPulse 2.4s infinite ease-in-out;
     }
 
     @keyframes orbPulse{
-      0%,100%{ transform:scale(.96); opacity:.55; }
-      50%{ transform:scale(1.06); opacity:.18; }
+      0%,100%{ transform:scale(.95); opacity:.58; }
+      50%{ transform:scale(1.08); opacity:.18; }
     }
 
     .heroText{
@@ -120,25 +122,25 @@
 
     .heroTitle{
       margin:0;
-      font-family:'Space Grotesk', sans-serif;
-      font-size:18px;
-      letter-spacing:-.4px;
-      line-height:1.05;
+      font-family:'Space Grotesk',sans-serif;
+      font-size:21px;
+      line-height:1;
+      letter-spacing:-.5px;
       color:#fff;
     }
 
     .heroTitle .ai{
-      background: linear-gradient(135deg, var(--ai1) 0%, var(--ai2) 55%, var(--ai3) 100%);
+      background:linear-gradient(135deg, var(--ai1) 0%, var(--ai2) 55%, var(--ai3) 100%);
       -webkit-background-clip:text;
       -webkit-text-fill-color:transparent;
     }
 
     .heroSub{
-      margin-top:4px;
-      font-size:11px;
-      color:rgba(255,255,255,.58);
+      margin-top:5px;
+      font-size:12px;
+      line-height:1.35;
+      color:rgba(255,255,255,.60);
       font-weight:800;
-      line-height:1.3;
     }
 
     .heroRight{
@@ -148,26 +150,29 @@
       flex:0 0 auto;
     }
 
-    .ghostBtn{
-      height:38px;
-      min-width:38px;
-      border-radius:14px;
+    .toolBtn{
+      height:42px;
+      min-width:42px;
+      padding:0 12px;
+      border-radius:16px;
       border:1px solid rgba(255,255,255,.10);
       background:rgba(255,255,255,.05);
       color:#fff;
       display:flex;
       align-items:center;
       justify-content:center;
+      gap:8px;
       cursor:pointer;
       user-select:none;
-      padding:0 12px;
       font-size:12px;
       font-weight:900;
     }
 
-    .ghostBtn:active{ transform:scale(.97); }
+    .toolBtn:active{
+      transform:scale(.97);
+    }
 
-    .ghostBtn svg{
+    .toolBtn svg{
       width:18px;
       height:18px;
       stroke:rgba(255,255,255,.88);
@@ -177,22 +182,23 @@
       stroke-linejoin:round;
     }
 
-    .ghostBtn.muted{
-      border-color:rgba(236,72,153,.28);
+    .toolBtn.muted{
+      border-color:rgba(236,72,153,.25);
       background:rgba(236,72,153,.10);
     }
 
-    .chatWrap{
+    .chatCard{
       flex:1 1 auto;
       min-height:0;
+      border-radius:28px;
       border:1px solid rgba(255,255,255,.08);
-      background:rgba(255,255,255,.03);
-      border-radius:24px;
+      background:linear-gradient(180deg, rgba(255,255,255,.04) 0%, rgba(255,255,255,.025) 100%);
+      backdrop-filter:blur(18px);
       overflow:hidden;
-      backdrop-filter:blur(16px);
+      box-shadow:0 24px 50px rgba(0,0,0,.16);
     }
 
-    #chat.chat-area{
+    #chat{
       height:100%;
       overflow-y:auto;
       -webkit-overflow-scrolling:touch;
@@ -202,47 +208,45 @@
       display:flex;
       flex-direction:column;
       gap:10px;
-      padding:14px 12px;
+      padding:16px 12px;
     }
 
-    #chat.chat-area::-webkit-scrollbar{ display:none; }
-    #chat.chat-area::before{ content:""; flex:1 0 auto; }
+    #chat::-webkit-scrollbar{ display:none; }
+    #chat::before{ content:""; flex:1 0 auto; }
 
     .bubble{
       max-width:86%;
       padding:11px 14px;
-      border-radius:16px;
-      font-size:14px;
-      line-height:1.48;
+      border-radius:18px;
       border:1px solid rgba(255,255,255,.10);
-      box-shadow:0 12px 28px rgba(0,0,0,.20);
       backdrop-filter:blur(8px);
+      box-shadow:0 12px 26px rgba(0,0,0,.18);
       white-space:pre-wrap;
       word-break:break-word;
+      font-size:14px;
+      line-height:1.5;
     }
 
     .bubble.bot{
       align-self:flex-start;
-      border-left:4px solid var(--ai2);
       background:rgba(79,70,229,.12);
+      border-left:4px solid var(--ai2);
     }
 
     .bubble.user{
       align-self:flex-end;
-      border-right:4px solid var(--ai3);
       background:rgba(236,72,153,.12);
+      border-right:4px solid var(--ai3);
       text-align:right;
     }
 
     .bubble.meta{
       align-self:center;
       max-width:92%;
-      opacity:.94;
       background:rgba(255,255,255,.04);
-      border-color:rgba(255,255,255,.08);
+      color:rgba(255,255,255,.70);
       font-size:12px;
       font-weight:800;
-      color:rgba(255,255,255,.68);
       text-align:center;
     }
 
@@ -258,9 +262,9 @@
     }
 
     .spkIcon{
-      width:28px;
-      height:28px;
-      min-width:28px;
+      width:29px;
+      height:29px;
+      min-width:29px;
       border-radius:10px;
       display:flex;
       align-items:center;
@@ -283,20 +287,21 @@
 
     .dock{
       flex:0 0 auto;
+      border-radius:26px;
       border:1px solid rgba(255,255,255,.08);
-      background:rgba(0,0,0,.28);
-      border-radius:24px;
+      background:rgba(0,0,0,.26);
       padding:8px;
-      backdrop-filter:blur(16px);
+      backdrop-filter:blur(18px);
+      box-shadow:0 18px 38px rgba(0,0,0,.16);
     }
 
     .dockInner{
       display:flex;
       align-items:flex-end;
       gap:8px;
-      border:1px solid rgba(255,255,255,.10);
-      background:var(--glass);
       border-radius:22px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.04);
       padding:8px;
     }
 
@@ -320,12 +325,12 @@
       color:rgba(255,255,255,.42);
     }
 
-    .iconBtn, .sendBtn{
-      width:42px;
-      height:42px;
+    .iconBtn,.sendBtn{
+      width:44px;
+      height:44px;
       border-radius:16px;
       border:1px solid rgba(255,255,255,.10);
-      background:rgba(0,0,0,.22);
+      background:rgba(0,0,0,.24);
       display:flex;
       align-items:center;
       justify-content:center;
@@ -334,7 +339,7 @@
       flex-shrink:0;
     }
 
-    .iconBtn svg, .sendBtn svg{
+    .iconBtn svg,.sendBtn svg{
       width:21px;
       height:21px;
       stroke:rgba(255,255,255,.88);
@@ -357,7 +362,7 @@
       inset:-7px;
       border-radius:18px;
       border:2px solid rgba(165,180,252,.55);
-      animation: micPulse 1.15s ease-in-out infinite;
+      animation:micPulse 1.15s ease-in-out infinite;
     }
 
     @keyframes micPulse{
@@ -369,7 +374,7 @@
     .sendBtn{
       border-color:rgba(107,114,128,.28);
       background:rgba(107,114,128,.16);
-      box-shadow:0 10px 18px rgba(0,0,0,.30);
+      box-shadow:0 10px 18px rgba(0,0,0,.26);
     }
 
     .sendBtn svg{
@@ -391,7 +396,7 @@
       </div>
 
       <div class="heroRight">
-        <button class="ghostBtn" id="muteBtn" type="button" aria-label="Sesi Aç/Kapat" title="Sesi Aç/Kapat">
+        <button class="toolBtn" id="muteBtn" type="button" aria-label="Sesi Aç/Kapat" title="Sesi Aç/Kapat">
           <svg id="muteIcon" viewBox="0 0 24 24">
             <path d="M3 10v4h4l5 4V6L7 10H3"></path>
             <path d="M16 8a4 4 0 0 1 0 8"></path>
@@ -399,17 +404,17 @@
           </svg>
         </button>
 
-        <button class="ghostBtn" id="clearChat" type="button">Temizle</button>
+        <button class="toolBtn" id="clearChat" type="button">Temizle</button>
       </div>
     </div>
 
-    <div class="chatWrap">
-      <div class="chat-area" id="chat"></div>
+    <div class="chatCard">
+      <div id="chat"></div>
     </div>
 
     <div class="dock">
       <div class="dockInner">
-        <textarea id="msgInput" rows="1" placeholder="Yaz ya da konuş…" spellcheck="false"></textarea>
+        <textarea id="msgInput" rows="1" placeholder="Yaz ya da konuş..." spellcheck="false"></textarea>
 
         <button class="iconBtn" id="micBtn" aria-label="Mikrofon">
           <svg viewBox="0 0 24 24">
@@ -431,257 +436,6 @@
 
   </div>
 
-  <script type="module" src="/js/italky_chat_page.js?v=3"></script>
+  <script type="module" src="/js/italky_chat_page.js?v=4"></script>
 </body>
 </html>
-
-
-
-// FILE: /js/italky_chat_page.js
-
-import { speakText } from "/js/tts_router.js";
-
-const API_BASE = "https://italky-api.onrender.com";
-const $ = (id) => document.getElementById(id);
-
-const chat = $("chat");
-const msgInput = $("msgInput");
-const sendBtn = $("sendBtn");
-const micBtn = $("micBtn");
-const clearChat = $("clearChat");
-const backBtn = $("backBtn");
-const logoHome = $("logoHome");
-
-let chatHistory = [];
-let isSending = false;
-let recognition = null;
-let isListening = false;
-
-async function mountShellSafe() {
-  try {
-    const shell = await import("/js/ui_shell.js");
-    if (typeof shell.mountShell === "function") {
-      try {
-        shell.mountShell({ scroll: "none" });
-      } catch (e) {
-        console.warn("[chat mountShell]", e);
-      }
-    }
-  } catch (e) {
-    console.warn("[chat ui_shell optional]", e);
-  }
-}
-
-function autoResize() {
-  if (!msgInput) return;
-  msgInput.style.height = "auto";
-  msgInput.style.height = Math.min(msgInput.scrollHeight, 120) + "px";
-}
-
-function scrollBottom() {
-  if (!chat) return;
-  requestAnimationFrame(() => {
-    chat.scrollTop = chat.scrollHeight;
-  });
-}
-
-function createSpeakerButton(text) {
-  const spk = document.createElement("div");
-  spk.className = "spk-icon";
-  spk.innerHTML = `
-    <svg viewBox="0 0 24 24">
-      <path d="M3 10v4h4l5 4V6L7 10H3"></path>
-      <path d="M16 8a4 4 0 0 1 0 8"></path>
-      <path d="M19 5a8 8 0 0 1 0 14"></path>
-    </svg>
-  `;
-  spk.addEventListener("click", async () => {
-    try {
-      await speakText(text, "chat");
-    } catch (e) {
-      console.error("[speaker replay]", e);
-    }
-  });
-  return spk;
-}
-
-function addBubble(type, text, options = {}) {
-  if (!chat) return;
-
-  const bubble = document.createElement("div");
-  bubble.className = `bubble ${type}`;
-
-  if (type === "bot") {
-    const row = document.createElement("div");
-    row.className = "bubble-row";
-
-    const txt = document.createElement("div");
-    txt.className = "txt";
-    txt.textContent = String(text || "").trim();
-
-    row.appendChild(txt);
-    row.appendChild(createSpeakerButton(String(text || "").trim()));
-    bubble.appendChild(row);
-  } else {
-    bubble.textContent = String(text || "").trim();
-  }
-
-  chat.appendChild(bubble);
-  scrollBottom();
-
-  if (type === "bot" && options.autoplay) {
-    setTimeout(async () => {
-      try {
-        await speakText(String(text || "").trim(), "chat");
-      } catch (e) {
-        console.error("[autoplay chat tts]", e);
-      }
-    }, 120);
-  }
-}
-
-function addMeta(text) {
-  if (!chat) return;
-  const el = document.createElement("div");
-  el.className = "bubble meta";
-  el.textContent = String(text || "").trim();
-  chat.appendChild(el);
-  scrollBottom();
-}
-
-function setListening(on) {
-  if (!micBtn || !msgInput) return;
-
-  isListening = !!on;
-  micBtn.classList.toggle("listening", isListening);
-
-  if (isListening) {
-    msgInput.dataset.__oldph = msgInput.getAttribute("placeholder") || "";
-    msgInput.setAttribute("placeholder", "Dinliyorum…");
-  } else {
-    const old = msgInput.dataset.__oldph || "Yaz ya da konuş…";
-    msgInput.setAttribute("placeholder", old);
-  }
-}
-
-async function askGemini(message) {
-  const payload = {
-    message,
-    history: chatHistory.slice(-12)
-  };
-
-  const r = await fetch(`${API_BASE}/api/chat_ai`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
-  });
-
-  const raw = await r.text();
-  let data = {};
-  try { data = JSON.parse(raw); } catch {}
-
-  if (!r.ok) {
-    throw new Error(data?.detail || raw || "Sohbet AI hatası");
-  }
-
-  return String(data?.reply || "").trim();
-}
-
-async function sendMessage() {
-  if (isSending) return;
-
-  const text = String(msgInput?.value || "").trim();
-  if (!text) return;
-
-  isSending = true;
-
-  addBubble("user", text);
-  chatHistory.push({ role: "user", text });
-
-  msgInput.value = "";
-  autoResize();
-  setListening(false);
-
-  try {
-    const reply = await askGemini(text);
-
-    addBubble("bot", reply, { autoplay: true });
-    chatHistory.push({ role: "assistant", text: reply });
-  } catch (e) {
-    console.error(e);
-    addMeta(e?.message || "Bir hata oluştu.");
-  } finally {
-    isSending = false;
-  }
-}
-
-function initSTT() {
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) return null;
-
-  const rec = new SR();
-  rec.lang = "tr-TR";
-  rec.interimResults = false;
-  rec.continuous = false;
-  rec.maxAlternatives = 1;
-
-  rec.onstart = () => setListening(true);
-
-  rec.onresult = (e) => {
-    const text = e.results?.[0]?.[0]?.transcript || "";
-    if (msgInput) {
-      msgInput.value = text;
-      autoResize();
-    }
-  };
-
-  rec.onerror = () => setListening(false);
-  rec.onend = () => setListening(false);
-
-  return rec;
-}
-
-async function bind() {
-  await mountShellSafe();
-
-  backBtn?.addEventListener("click", () => history.back());
-  logoHome?.addEventListener("click", () => location.href = "/pages/home.html");
-
-  clearChat?.addEventListener("click", () => {
-    if (chat) chat.innerHTML = "";
-    chatHistory = [];
-    addMeta("Sohbet temizlendi.");
-  });
-
-  msgInput?.addEventListener("input", autoResize);
-
-  msgInput?.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
-  });
-
-  sendBtn?.addEventListener("click", sendMessage);
-
-  recognition = initSTT();
-
-  micBtn?.addEventListener("click", () => {
-    if (!recognition) {
-      addMeta("Bu cihazda sesli yazma desteklenmiyor.");
-      return;
-    }
-
-    try {
-      if (isListening) recognition.stop();
-      else recognition.start();
-    } catch (e) {
-      console.warn("[stt start/stop]", e);
-    }
-  });
-
-  autoResize();
-  addMeta("Sohbet AI hazır. Mesaj yazabilir veya mikrofonu kullanabilirsin.");
-}
-
-bind();
