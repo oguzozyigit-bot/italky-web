@@ -497,4 +497,4 @@ async function bind() {
   addMeta(`Merhaba ${currentUserName}. Friend AI hazır, yazabilir ya da konuşabilirsin.`);
 }
 
-bind();v
+bind();
