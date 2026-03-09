@@ -1,4 +1,16 @@
 import { mountShell } from "/js/ui_shell.js";
+
+mountShell({ scroll:"auto" });
+
+/* PROFIL SAYFASI CLICK FIX */
+setTimeout(()=>{
+  const shell = document.querySelector(".assistant-bar");
+  if(shell) shell.style.pointerEvents="none";
+
+  const footer = document.querySelector(".footer-container");
+  if(footer) footer.style.pointerEvents="auto";
+},200);
+import { mountShell } from "/js/ui_shell.js";
 import { supabase } from "/js/supabase_client.js";
 
 mountShell({scroll:"auto"});
