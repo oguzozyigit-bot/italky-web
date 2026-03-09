@@ -1,17 +1,35 @@
 import { mountShell } from "/js/ui_shell.js";
 import { LANG_POOL } from "/js/lang_pool_full.js";
-
-const API_BASE = "https://italky-api.onrender.com";
+import { supabase } from "/js/supabase_client.js";
 
 mountShell({ scroll: "auto" });
 
 const $ = (id) => document.getElementById(id);
+
 const myLang = $("myLang");
 const createQrBtn = $("createQrBtn");
 const scanQrBtn = $("scanQrBtn");
+const hostCodeText = $("hostCodeText");
+
+const HOST_CODE_KEY = "italky_interpreter_host_code";
+const MY_LANG_KEY = "italky_interpreter_my_lang";
+
+let stableHostCode = "";
 
 function canonical(code){
   return String(code || "").toLowerCase().trim();
+}
+
+function slugify(value){
+  return String(value || "")
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "")
+    .slice(0, 12);
+}
+
+function randomCode(){
+  return "ITK" + Math.random().toString(36).slice(2, 10).toUpperCase();
 }
 
 function buildLangOptions(){
@@ -21,48 +39,121 @@ function buildLangOptions(){
     return `<option value="${code}">${l.flag || "🌐"} ${l.name || code.toUpperCase()}</option>`;
   }).join("");
 
-  myLang.value = localStorage.getItem("italky_interpreter_my_lang") || "tr";
+  myLang.value = localStorage.getItem(MY_LANG_KEY) || "tr";
 }
 
 function saveLang(){
-  try{ localStorage.setItem("italky_interpreter_my_lang", myLang.value); }catch{}
+  try { localStorage.setItem(MY_LANG_KEY, myLang.value); } catch {}
 }
 
-async function createRoom(){
-  saveLang();
+async function getCurrentUser(){
+  try {
+    const { data } = await supabase.auth.getUser();
+    return data?.user || null;
+  } catch {
+    return null;
+  }
+}
 
-  const r = await fetch(`${API_BASE}/api/interpreter/create-room`, {
-    method: "POST",
-    headers: { "Content-Type":"application/json" },
-    body: JSON.stringify({ my_lang: myLang.value })
-  });
+function deriveCodeFromUser(user){
+  const meta = user?.user_metadata || {};
 
-  const j = await r.json().catch(()=>null);
-  if(!r.ok || !j?.room_id){
-    alert("QR odası oluşturulamadı.");
-    return;
+  const candidates = [
+    localStorage.getItem("membership_no"),
+    localStorage.getItem("uyelik_no"),
+    localStorage.getItem("member_no"),
+    meta.membership_no,
+    meta.uyelik_no,
+    meta.member_no,
+    meta.user_no,
+    user?.id,
+    user?.email?.split("@")?.[0]
+  ];
+
+  for (const raw of candidates) {
+    const code = slugify(raw);
+    if (code && code.length >= 6) {
+      return "ITK-" + code.slice(0, 10);
+    }
   }
 
+  return "";
+}
+
+async function ensureStableHostCode(){
+  try {
+    const existing = localStorage.getItem(HOST_CODE_KEY);
+    if (existing && String(existing).trim()) {
+      stableHostCode = String(existing).trim();
+      return stableHostCode;
+    }
+  } catch {}
+
+  const user = await getCurrentUser();
+  const derived = deriveCodeFromUser(user) || ("ITK-" + randomCode().replace("ITK", "").slice(0, 10));
+
+  stableHostCode = derived;
+
+  try {
+    localStorage.setItem(HOST_CODE_KEY, stableHostCode);
+  } catch {}
+
+  return stableHostCode;
+}
+
+function buildStableRoomId(hostCode){
+  return `itr-${String(hostCode || "").toLowerCase().replace(/[^a-z0-9]/g, "")}`;
+}
+
+function buildJoinUrl(hostCode, lang){
+  const roomId = buildStableRoomId(hostCode);
+  const url = new URL("/pages/interpreter_room.html", location.origin);
+  url.searchParams.set("room", roomId);
+  url.searchParams.set("host", hostCode);
+  url.searchParams.set("host_lang", lang);
+  return url.toString();
+}
+
+async function createQr(){
+  saveLang();
+
+  const hostCode = await ensureStableHostCode();
+  const roomId = buildStableRoomId(hostCode);
+  const joinUrl = buildJoinUrl(hostCode, myLang.value);
+
   const q = new URLSearchParams({
-    room: j.room_id,
+    room: roomId,
     my: myLang.value,
-    join_url: j.join_url || ""
+    host: hostCode,
+    join_url: joinUrl
   });
 
   location.href = `/pages/interpreter_qr_host.html?${q.toString()}`;
 }
 
-function goScan(){
+async function goScan(){
   saveLang();
+
+  const hostCode = await ensureStableHostCode();
+
   const q = new URLSearchParams({
-    my: myLang.value
+    my: myLang.value,
+    self_host: hostCode
   });
+
   location.href = `/pages/interpreter_qr_scan.html?${q.toString()}`;
 }
 
-createQrBtn?.addEventListener("click", createRoom);
-scanQrBtn?.addEventListener("click", goScan);
+async function init(){
+  buildLangOptions();
+  saveLang();
 
-myLang?.addEventListener("change", saveLang);
+  const hostCode = await ensureStableHostCode();
+  if (hostCodeText) hostCodeText.textContent = hostCode;
 
-buildLangOptions();
+  createQrBtn?.addEventListener("click", createQr);
+  scanQrBtn?.addEventListener("click", goScan);
+  myLang?.addEventListener("change", saveLang);
+}
+
+init();
