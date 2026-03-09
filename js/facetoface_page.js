@@ -54,83 +54,63 @@ function labelChip(code) {
 const UI_TEXT = {
   tr: {
     ready: "Konuşmak için mikrofona dokununuz.",
-    preparing: "Sistem Hazırlanıyor.",
-    repeat: "Konuşmanız Bitince Mikrofona Basınız.",
-    wait: "Lütfen Bekleyiniz...",
+    preparing: "Sistem hazırlanıyor...",
+    repeat: "Konuşmanız bitince mikrofona tekrar basınız.",
+    wait: "Lütfen bekleyiniz...",
     translating: "Çevriliyor...",
     translateError: "⚠️ Çeviri servisine ulaşılamadı",
+    micBlocked: "⚠️ Mikrofon izni gerekli",
+    speechUnsupported: "⚠️ Bu cihazda konuşma algılama desteklenmiyor",
   },
   en: {
     ready: "Tap the microphone to speak.",
-    preparing: "System is preparing.",
+    preparing: "System is preparing...",
     repeat: "Press the microphone again when you finish speaking.",
     wait: "Please wait...",
     translating: "Translating...",
     translateError: "⚠️ Translation service unavailable",
+    micBlocked: "⚠️ Microphone permission required",
+    speechUnsupported: "⚠️ Speech recognition is not supported on this device",
   },
   de: {
     ready: "Tippen Sie zum Sprechen auf das Mikrofon.",
-    preparing: "System wird vorbereitet.",
+    preparing: "System wird vorbereitet...",
     repeat: "Drücken Sie das Mikrofon erneut, wenn Sie fertig gesprochen haben.",
     wait: "Bitte warten...",
     translating: "Wird übersetzt...",
     translateError: "⚠️ Übersetzungsdienst nicht erreichbar",
+    micBlocked: "⚠️ Mikrofonberechtigung erforderlich",
+    speechUnsupported: "⚠️ Spracherkennung wird auf diesem Gerät nicht unterstützt",
   },
   fr: {
     ready: "Touchez le micro pour parler.",
-    preparing: "Le système se prépare.",
+    preparing: "Le système se prépare...",
     repeat: "Appuyez de nouveau sur le micro quand vous avez fini de parler.",
     wait: "Veuillez patienter...",
     translating: "Traduction en cours...",
     translateError: "⚠️ Service de traduction indisponible",
+    micBlocked: "⚠️ Autorisation micro requise",
+    speechUnsupported: "⚠️ La reconnaissance vocale n'est pas prise en charge sur cet appareil",
   },
   it: {
     ready: "Tocca il microfono per parlare.",
-    preparing: "Sistema in preparazione.",
+    preparing: "Sistema in preparazione...",
     repeat: "Premi di nuovo il microfono quando hai finito di parlare.",
     wait: "Attendere prego...",
     translating: "Traduzione in corso...",
     translateError: "⚠️ Servizio di traduzione non disponibile",
+    micBlocked: "⚠️ Autorizzazione microfono richiesta",
+    speechUnsupported: "⚠️ Il riconoscimento vocale non è supportato su questo dispositivo",
   },
   es: {
     ready: "Toque el micrófono para hablar.",
-    preparing: "El sistema se está preparando.",
+    preparing: "El sistema se está preparando...",
     repeat: "Pulse el micrófono otra vez cuando termine de hablar.",
     wait: "Por favor espere...",
     translating: "Traduciendo...",
     translateError: "⚠️ Servicio de traducción no disponible",
-  },
-  ru: {
-    ready: "Нажмите на микрофон, чтобы говорить.",
-    preparing: "Система подготавливается.",
-    repeat: "Нажмите микрофон снова, когда закончите говорить.",
-    wait: "Пожалуйста, подождите...",
-    translating: "Перевод...",
-    translateError: "⚠️ Сервис перевода недоступен",
-  },
-  el: {
-    ready: "Πατήστε το μικρόφωνο για να μιλήσετε.",
-    preparing: "Το σύστημα προετοιμάζεται.",
-    repeat: "Πατήστε ξανά το μικρόφωνο όταν τελειώσετε να μιλάτε.",
-    wait: "Παρακαλώ περιμένετε...",
-    translating: "Μετάφραση...",
-    translateError: "⚠️ Η υπηρεσία μετάφρασης δεν είναι διαθέσιμη",
-  },
-  az: {
-    ready: "Danışmaq üçün mikrofona toxunun.",
-    preparing: "Sistem hazırlanır.",
-    repeat: "Danışığınız bitəndə mikrofona yenidən basın.",
-    wait: "Zəhmət olmasa gözləyin...",
-    translating: "Tərcümə olunur...",
-    translateError: "⚠️ Tərcümə xidməti əlçatan deyil",
-  },
-  ka: {
-    ready: "სასაუბროდ დააჭირეთ მიკროფონს.",
-    preparing: "სისტემა მზადდება.",
-    repeat: "როცა საუბარს დაასრულებთ, მიკროფონს ისევ დააჭირეთ.",
-    wait: "გთხოვთ დაელოდოთ...",
-    translating: "ითარგმნება...",
-    translateError: "⚠️ თარგმნის სერვისი მიუწვდომელია",
+    micBlocked: "⚠️ Se requiere permiso de micrófono",
+    speechUnsupported: "⚠️ El reconocimiento de voz no es compatible con este dispositivo",
   },
 };
 
@@ -168,9 +148,10 @@ let activeSide = null;
 let recognizer = null;
 let recordingSide = null;
 let currentAudio = null;
-let micWarmStream = null;
 let audioCtx = null;
 let bootReady = false;
+let bootStarted = false;
+let bootPromise = null;
 
 function pointOrbTo(side) {
   if (!frameRoot) return;
@@ -263,10 +244,8 @@ function setErrorUI() {
   setHelper(botHelper, t(botLang, "preparing"), "helper-wait");
 }
 
-function bounceToReady(delay = 1400) {
-  setTimeout(() => {
-    setSystemReadyUI();
-  }, delay);
+function bounceToReady(delay = 1200) {
+  setTimeout(() => setSystemReadyUI(), delay);
 }
 
 function refreshLangLabels() {
@@ -341,11 +320,8 @@ function getVoicePreference() {
 function base64ToBlob(base64, mime = "audio/mpeg") {
   const byteChars = atob(base64);
   const byteNumbers = new Array(byteChars.length);
-  for (let i = 0; i < byteChars.length; i++) {
-    byteNumbers[i] = byteChars.charCodeAt(i);
-  }
-  const byteArray = new Uint8Array(byteNumbers);
-  return new Blob([byteArray], { type: mime });
+  for (let i = 0; i < byteChars.length; i++) byteNumbers[i] = byteChars.charCodeAt(i);
+  return new Blob([new Uint8Array(byteNumbers)], { type: mime });
 }
 
 async function speakViaApi(text, langCode) {
@@ -377,7 +353,6 @@ async function speakViaApi(text, langCode) {
     URL.revokeObjectURL(url);
     if (currentAudio === audio) currentAudio = null;
   };
-
   audio.onerror = () => {
     URL.revokeObjectURL(url);
     if (currentAudio === audio) currentAudio = null;
@@ -403,25 +378,13 @@ function speakFallback(text, langCode) {
 
   const u = new SpeechSynthesisUtterance(value);
   u.lang = langObj(c).bcp;
-
-  if (c === "en") {
-    u.rate = 0.82;
-    u.pitch = 1.0;
-  } else if (c === "de" || c === "fr" || c === "it" || c === "es") {
-    u.rate = 0.88;
-    u.pitch = 1.0;
-  } else {
-    u.rate = 0.92;
-    u.pitch = 1.0;
-  }
-
+  u.rate = c === "en" ? 0.82 : ["de", "fr", "it", "es"].includes(c) ? 0.88 : 0.92;
+  u.pitch = 1.0;
   u.volume = 1;
 
   setTimeout(() => {
-    try {
-      window.speechSynthesis.speak(u);
-    } catch {}
-  }, 60);
+    try { window.speechSynthesis.speak(u); } catch {}
+  }, 50);
 }
 
 async function speak(text, langCode) {
@@ -431,7 +394,6 @@ async function speak(text, langCode) {
   const now = Date.now();
   if (now - ttsDebounceAt < 250) stopAudio();
   ttsDebounceAt = now;
-
   stopAudio();
 
   try {
@@ -447,9 +409,7 @@ function keepLatestVisible(side) {
   if (!wrap) return;
 
   const apply = () => {
-    try {
-      wrap.scrollTop = wrap.scrollHeight;
-    } catch {}
+    try { wrap.scrollTop = wrap.scrollHeight; } catch {}
   };
 
   apply();
@@ -495,7 +455,6 @@ function addBubble(side, kind, text, opts = {}) {
   inner.appendChild(txt);
   row.appendChild(inner);
   wrap.appendChild(row);
-
   keepLatestVisible(side);
   return row;
 }
@@ -503,9 +462,7 @@ function addBubble(side, kind, text, opts = {}) {
 function clearLatest(side) {
   const wrap = side === "top" ? topBody : botBody;
   if (!wrap) return;
-  wrap.querySelectorAll(".bubble.me.is-latest").forEach((el) => {
-    el.classList.remove("is-latest");
-  });
+  wrap.querySelectorAll(".bubble.me.is-latest").forEach((el) => el.classList.remove("is-latest"));
 }
 
 async function translateText(text, from, to) {
@@ -565,7 +522,7 @@ async function finalizeRecognition(side, text) {
   const cleaned = String(text || "").trim();
   if (!cleaned) {
     setErrorUI();
-    bounceToReady(1200);
+    bounceToReady(1000);
     return;
   }
 
@@ -588,7 +545,7 @@ async function finalizeRecognition(side, text) {
       latestTxt.textContent = t(dst, "translateError");
       keepLatestVisible(other);
     }
-    bounceToReady(1400);
+    bounceToReady(1200);
     return;
   }
 
@@ -603,30 +560,49 @@ async function finalizeRecognition(side, text) {
   setSystemReadyUI();
 }
 
+async function ensureReady() {
+  if (bootReady) return true;
+  if (!bootStarted) startBoot();
+  try { await bootPromise; } catch {}
+  return true;
+}
+
 function startRecording(side) {
   const lang = side === "top" ? topLang : botLang;
   const rec = buildRecognizer(lang);
+
   if (!rec) {
     setErrorUI();
-    bounceToReady(1200);
+    const helper = side === "top" ? topHelper : botHelper;
+    setHelper(helper, t(lang, "speechUnsupported"), "helper-wait");
+    bounceToReady(1800);
     return;
   }
 
   recognizer = rec;
   recordingSide = side;
 
+  rec.onstart = () => {
+    setListeningUI(side);
+  };
+
   rec.onresult = (e) => {
     const heard = e.results?.[0]?.[0]?.transcript || "";
     Promise.resolve().then(() => finalizeRecognition(side, heard));
   };
 
-  rec.onerror = () => {
-    if (recordingSide) {
-      recordingSide = null;
-      recognizer = null;
-      setErrorUI();
-      bounceToReady(1200);
+  rec.onerror = (e) => {
+    console.warn("speech error", e);
+    const helper = side === "top" ? topHelper : botHelper;
+    if (String(e?.error || "").includes("not-allowed")) {
+      setHelper(helper, t(lang, "micBlocked"), "helper-wait");
+    } else {
+      setHelper(helper, t(lang, "preparing"), "helper-wait");
     }
+    recordingSide = null;
+    recognizer = null;
+    setErrorUI();
+    bounceToReady(1600);
   };
 
   rec.onend = () => {
@@ -636,7 +612,8 @@ function startRecording(side) {
 
   try {
     rec.start();
-  } catch {
+  } catch (e) {
+    console.warn("rec.start error", e);
     recognizer = null;
     recordingSide = null;
     setErrorUI();
@@ -644,12 +621,13 @@ function startRecording(side) {
   }
 }
 
-function toggleRecording(side) {
-  if (!bootReady) return;
+async function toggleRecording(side) {
+  await ensureReady();
 
   if (recordingSide === side) {
     stopRecognizer();
     recordingSide = null;
+    setTranslatingUI(side);
     return;
   }
 
@@ -658,7 +636,6 @@ function toggleRecording(side) {
     recordingSide = null;
   }
 
-  setListeningUI(side);
   startRecording(side);
 }
 
@@ -667,26 +644,9 @@ async function warmAudio() {
     const Ctx = window.AudioContext || window.webkitAudioContext;
     if (!Ctx) return;
     if (!audioCtx) audioCtx = new Ctx();
-    if (audioCtx.state === "suspended") {
-      await audioCtx.resume();
-    }
+    if (audioCtx.state === "suspended") await audioCtx.resume();
   } catch (e) {
     console.warn("warmAudio", e);
-  }
-}
-
-async function warmMicrophone() {
-  try {
-    if (!navigator.mediaDevices?.getUserMedia) return;
-    micWarmStream = await navigator.mediaDevices.getUserMedia({
-      audio: {
-        echoCancellation: true,
-        noiseSuppression: true,
-        autoGainControl: true,
-      },
-    });
-  } catch (e) {
-    console.warn("warmMicrophone", e);
   }
 }
 
@@ -710,25 +670,36 @@ function unlockOnFirstTouch() {
   window.addEventListener("click", once, { passive: true });
 }
 
-async function bootFast() {
-  setSystemPreparingUI();
-  refreshLangLabels();
-  pointOrbTo("bot");
+function startBoot() {
+  if (bootStarted) return bootPromise;
+  bootStarted = true;
 
-  await Promise.allSettled([
-    warmApis(),
-    warmMicrophone(),
-    warmAudio(),
-  ]);
+  bootPromise = (async () => {
+    setSystemPreparingUI();
+    refreshLangLabels();
+    pointOrbTo("bot");
 
-  bootReady = true;
-  setSystemReadyUI();
+    await Promise.allSettled([
+      warmApis(),
+      warmAudio(),
+    ]);
+
+    bootReady = true;
+    setSystemReadyUI();
+  })();
+
+  return bootPromise;
+}
+
+function safeHomeHref() {
+  if (location.pathname === "/facetoface.html") return "/pages/home.html";
+  return "/pages/home.html";
 }
 
 function bind() {
   refreshLangLabels();
   unlockOnFirstTouch();
-  bootFast();
+  startBoot();
 
   topLangBtn?.addEventListener("click", (e) => {
     e.preventDefault();
@@ -758,17 +729,13 @@ function bind() {
     closeAllPop();
   });
 
-  document.addEventListener(
-    "click",
-    (e) => {
-      const inside =
-        (popTop && popTop.contains(e.target)) ||
-        (popBot && popBot.contains(e.target));
-      const isBtn = e.target?.closest?.("#topLangBtn,#botLangBtn");
-      if (!inside && !isBtn) closeAllPop();
-    },
-    { capture: true }
-  );
+  document.addEventListener("click", (e) => {
+    const inside =
+      (popTop && popTop.contains(e.target)) ||
+      (popBot && popBot.contains(e.target));
+    const isBtn = e.target?.closest?.("#topLangBtn,#botLangBtn");
+    if (!inside && !isBtn) closeAllPop();
+  }, { capture: true });
 
   clearBtn?.addEventListener("click", () => {
     stopAudio();
@@ -780,23 +747,23 @@ function bind() {
   });
 
   homeLink?.addEventListener("click", () => {
-    location.href = "/pages/home.html";
+    location.href = safeHomeHref();
   });
 
   homeBtn?.addEventListener("click", () => {
-    location.href = "/pages/home.html";
+    location.href = safeHomeHref();
   });
 
-  topMic?.addEventListener("click", (e) => {
+  topMic?.addEventListener("click", async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    toggleRecording("top");
+    await toggleRecording("top");
   });
 
-  botMic?.addEventListener("click", (e) => {
+  botMic?.addEventListener("click", async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    toggleRecording("bot");
+    await toggleRecording("bot");
   });
 }
 
