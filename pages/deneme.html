@@ -3,87 +3,94 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>italkyAI • Arkadaşın</title>
-  
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600&display=swap" rel="stylesheet">
+  <title>italkyAI • UI Shell</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700&display=swap" rel="stylesheet">
 
   <style>
     :root {
-      --bg: #0a0a0c;
-      --card-bg: #16161a;
+      --bg: #050508;
+      --header-h: 60px;
+      --footer-h: 85px;
       --accent: #6366f1;
-      --text: #ffffff;
-      --dim: rgba(255, 255, 255, 0.5);
-      --border: rgba(255, 255, 255, 0.1);
+      --glass: rgba(255, 255, 255, 0.03);
+      --border: rgba(255, 255, 255, 0.08);
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     
-    body {
-      background-color: var(--bg);
-      color: var(--text);
+    body, html {
+      margin: 0; padding: 0;
+      height: 100%; width: 100%;
+      background: var(--bg);
+      color: white;
       font-family: 'Outfit', sans-serif;
-      height: 100vh;
+      overflow: hidden; /* Dış scroll'u öldürdük */
+    }
+
+    /* Ana Taşıyıcı (Shell) */
+    .ui-shell {
       display: flex;
       flex-direction: column;
-      overflow: hidden;
+      height: 100vh;
+      max-width: 600px; /* Sayfanın devleşmesini önleyen sınır */
+      margin: 0 auto;
+      border-left: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+      position: relative;
     }
 
     /* Üst Bar */
-    header {
-      padding: 15px 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid var(--border);
-      background: rgba(10, 10, 12, 0.8);
+    .shell-header {
+      height: var(--header-h);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 20px;
+      background: rgba(5, 5, 8, 0.8);
       backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
     }
 
-    .logo { font-weight: 600; font-size: 1.2rem; letter-spacing: -0.5px; }
-    .logo span { color: var(--accent); }
-
-    /* Mesajlaşma Alanı - Tüm Boşluğu Doldurur */
+    /* Sohbet Alanı (Ölü Alanı Dirilten Bölüm) */
     #chat {
-      flex: 1;
+      flex: 1; /* Header ve Footer dışında kalan tüm alanı kapla */
       overflow-y: auto;
       padding: 20px;
       display: flex;
       flex-direction: column;
-      gap: 15px;
-      background: radial-gradient(circle at top right, #111, #0a0a0c);
+      gap: 12px;
+      scrollbar-width: none;
+      background: linear-gradient(180deg, #050508 0%, #0a0a0f 100%);
     }
+    #chat::-webkit-scrollbar { display: none; }
 
+    /* Balonlar */
     .bubble {
       max-width: 85%;
       padding: 12px 16px;
-      border-radius: 18px;
+      border-radius: 20px;
       font-size: 15px;
-      line-height: 1.4;
-      animation: slideUp 0.3s ease;
+      line-height: 1.5;
     }
+    .bubble.bot { align-self: flex-start; background: var(--glass); border: 1px solid var(--border); border-bottom-left-radius: 5px; }
+    .bubble.user { align-self: flex-end; background: var(--accent); border-bottom-right-radius: 5px; }
 
-    @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-    .bubble.bot { align-self: flex-start; background: var(--card-bg); border: 1px solid var(--border); }
-    .bubble.user { align-self: flex-end; background: var(--accent); color: white; }
-
-    /* Alt Yazışma Alanı - Görünür ve Net */
-    .input-area {
-      padding: 15px;
+    /* Alt Yazışma Alanı (UI Shell Footer) */
+    .shell-footer {
+      min-height: var(--footer-h);
+      padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
       background: var(--bg);
       border-top: 1px solid var(--border);
-      padding-bottom: calc(15px + env(safe-area-inset-bottom));
+      flex-shrink: 0;
     }
 
-    .input-box {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 30px;
+    .input-wrapper {
       display: flex;
-      align-items: center;
-      padding: 5px 15px;
-      gap: 10px;
+      align-items: flex-end;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 6px 12px;
+      gap: 8px;
     }
 
     #msgInput {
@@ -93,74 +100,60 @@
       color: white;
       font-family: inherit;
       font-size: 16px;
-      padding: 12px 0;
-      outline: none;
-      min-height: 44px;
-      max-height: 120px;
+      padding: 10px 0;
       resize: none;
+      outline: none;
+      max-height: 120px;
     }
 
     /* Butonlar */
-    .btn {
+    .icon-btn {
+      width: 40px; height: 40px;
+      display: flex; align-items: center; justify-content: center;
       background: transparent;
       border: none;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: 0.2s;
-      width: 40px;
-      height: 40px;
+      flex-shrink: 0;
     }
 
-    .btn svg { width: 22px; height: 22px; stroke: var(--dim); fill: none; stroke-width: 2; }
-
-    #sendBtn svg { stroke: var(--accent); }
+    .icon-btn svg { width: 22px; height: 22px; stroke: #ccc; fill: none; stroke-width: 2; }
     
-    #micBtn.listening { background: rgba(239, 68, 68, 0.2); border-radius: 50%; }
-    #micBtn.listening svg { stroke: #ef4444; }
+    #sendBtn svg { stroke: var(--accent); }
+    #micBtn.listening svg { stroke: #ff4757; filter: drop-shadow(0 0 5px #ff4757); }
 
-    .top-btn {
-      font-size: 12px;
-      color: var(--dim);
-      border: 1px solid var(--border);
-      padding: 5px 12px;
-      border-radius: 8px;
-      background: transparent;
-      cursor: pointer;
-    }
+    .action-text { font-size: 11px; color: var(--accent); font-weight: 700; cursor: pointer; background: none; border: none; }
   </style>
 </head>
-
 <body>
 
-  <header>
-    <div class="logo">italky<span>AI</span></div>
-    <div style="display: flex; gap: 10px;">
-      <button class="top-btn" id="muteBtn">SES</button>
-      <button class="top-btn" id="clearChat">TEMİZLE</button>
-    </div>
-  </header>
+  <div class="ui-shell">
+    <header class="shell-header">
+      <div style="font-weight: 700; font-size: 18px;">italky<span style="color:var(--accent)">AI</span></div>
+      <div style="display: flex; gap: 15px;">
+        <button class="action-text" id="muteBtn">SES</button>
+        <button class="action-text" id="clearChat" style="color: #666;">TEMİZLE</button>
+      </div>
+    </header>
 
-  <main id="chat">
-    <div class="bubble bot">Selam! Ben buradayım. İstediğin her şeyi sorabilirsin.</div>
-  </main>
+    <main id="chat">
+      <div class="bubble bot">Selam! Senin için ne yapabilirim?</div>
+    </main>
 
-  <div class="input-area">
-    <div class="input-box">
-      <button class="btn" id="micBtn" title="Konuş">
-        <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line></svg>
-      </button>
+    <footer class="shell-footer">
+      <div class="input-wrapper">
+        <button class="icon-btn" id="micBtn">
+          <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path></svg>
+        </button>
+        
+        <textarea id="msgInput" placeholder="Mesajını yaz..." rows="1" spellcheck="false"></textarea>
 
-      <textarea id="msgInput" placeholder="Mesajını yaz..." rows="1"></textarea>
-
-      <button class="btn" id="sendBtn">
-        <svg viewBox="0 0 24 24"><path d="M22 2L11 13"></path><path d="M22 2L15 22L11 13L2 9L22 2Z"></path></svg>
-      </button>
-    </div>
+        <button class="icon-btn" id="sendBtn">
+          <svg viewBox="0 0 24 24"><path d="M22 2L11 13"></path><path d="M22 2L15 22L11 13L2 9L22 2Z"></path></svg>
+        </button>
+      </div>
+    </footer>
   </div>
 
   <script type="module" src="/js/italky_chat_page.js?v=4"></script>
-
 </body>
 </html>
