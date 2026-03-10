@@ -380,6 +380,22 @@ function createRecognition() {
 }
 
 async function startListening(side) {
+  const sameSideRunning = state.listening && state.activeSide === side;
+
+  if (sameSideRunning) {
+    stopListening();
+    setHelper(side, "Durduruldu", "wait");
+    return;
+  }
+
+  if (state.listening) {
+    try {
+      state.recognition?.abort?.();
+    } catch {}
+    state.listening = false;
+    await new Promise((r) => setTimeout(r, 250));
+  }
+
   try {
     await ensureMic();
   } catch (e) {
@@ -396,10 +412,6 @@ async function startListening(side) {
     return;
   }
 
-  if (state.listening && state.recognition) {
-    try { state.recognition.stop(); } catch {}
-  }
-
   state.activeSide = side;
   state.finalText = "";
   state.interimText = "";
@@ -408,17 +420,38 @@ async function startListening(side) {
     state.recognition = createRecognition();
   }
 
-  state.recognition.lang = getLang(side === "top" ? state.topLang : state.botLang).bcp;
+  state.recognition.lang = getLang(
+    side === "top" ? state.topLang : state.botLang
+  ).bcp;
 
   try {
     state.recognition.start();
   } catch (e) {
     console.error("recognition start:", e);
+
+    if (String(e?.name || "").includes("InvalidStateError")) {
+      try {
+        state.recognition.abort?.();
+      } catch {}
+      setTimeout(() => {
+        try {
+          state.recognition.lang = getLang(
+            side === "top" ? state.topLang : state.botLang
+          ).bcp;
+          state.recognition.start();
+        } catch (err2) {
+          console.error("recognition restart failed:", err2);
+          setRootMode("is-error");
+          setHelper(side, "Mikrofon yeniden başlatılamadı", "wait");
+        }
+      }, 300);
+      return;
+    }
+
     setRootMode("is-error");
     setHelper(side, "Başlatılamadı", "wait");
   }
 }
-
 function stopListening() {
   try {
     state.recognition?.stop?.();
