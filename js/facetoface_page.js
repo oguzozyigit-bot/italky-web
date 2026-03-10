@@ -17,11 +17,6 @@ const BCP = {
   ka: "ka-GE",
 };
 
-const STORAGE = {
-  TOP_LANG: "italky_f2f_top_lang",
-  BOT_LANG: "italky_f2f_bot_lang",
-};
-
 function canonical(code) {
   return String(code || "").toLowerCase().split("-")[0].trim();
 }
@@ -56,771 +51,777 @@ function labelChip(code) {
   return `${o.flag} ${o.name}`;
 }
 
-function escapeHtml(str) {
-  return String(str || "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
+function normalizeVoiceStorage(value) {
+  const v = String(value || "auto").toLowerCase().trim();
+  if (v === "own" || v === "my") return "clone";
+  if (v === "female" || v === "male" || v === "clone") return v;
+  return "auto";
 }
 
-const dom = {
-  root: $("frameRoot"),
-
-  topBody: $("topBody"),
-  botBody: $("botBody"),
-
-  topMic: $("topMic"),
-  botMic: $("botMic"),
-
-  topHelper: $("topHelper"),
-  botHelper: $("botHelper"),
-
-  clearBtn: $("clearBtn"),
-  homeLink: $("homeLink"),
-  homeBtn: $("homeBtn"),
-  statusPill: $("statusPill"),
-
-  topLangBtn: $("topLangBtn"),
-  botLangBtn: $("botLangBtn"),
-  topLangTxt: $("topLangTxt"),
-  botLangTxt: $("botLangTxt"),
-
-  popTop: $("pop-top"),
-  popBot: $("pop-bot"),
-  listTop: $("list-top"),
-  listBot: $("list-bot"),
-  closeTop: $("close-top"),
-  closeBot: $("close-bot"),
+const UI_TEXT = {
+  tr: {
+    ready: "Konuşmak için mikrofona dokununuz.",
+    preparing: "Sistem hazırlanıyor...",
+    repeat: "Konuşmanız bitince mikrofona tekrar basınız.",
+    wait: "Lütfen bekleyiniz...",
+    translating: "Çevriliyor...",
+    translateError: "⚠️ Çeviri servisine ulaşılamadı",
+    micBlocked: "⚠️ Mikrofon izni gerekli",
+    speechUnsupported: "⚠️ Bu cihazda konuşma algılama desteklenmiyor",
+  },
+  en: {
+    ready: "Tap the microphone to speak.",
+    preparing: "System is preparing...",
+    repeat: "Press the microphone again when you finish speaking.",
+    wait: "Please wait...",
+    translating: "Translating...",
+    translateError: "⚠️ Translation service unavailable",
+    micBlocked: "⚠️ Microphone permission required",
+    speechUnsupported: "⚠️ Speech recognition is not supported on this device",
+  },
+  de: {
+    ready: "Tippen Sie zum Sprechen auf das Mikrofon.",
+    preparing: "System wird vorbereitet...",
+    repeat: "Drücken Sie das Mikrofon erneut, wenn Sie fertig gesprochen haben.",
+    wait: "Bitte warten...",
+    translating: "Wird übersetzt...",
+    translateError: "⚠️ Übersetzungsdienst nicht erreichbar",
+    micBlocked: "⚠️ Mikrofonberechtigung erforderlich",
+    speechUnsupported: "⚠️ Spracherkennung wird auf diesem Gerät nicht unterstützt",
+  },
+  fr: {
+    ready: "Touchez le micro pour parler.",
+    preparing: "Le système se prépare...",
+    repeat: "Appuyez de nouveau sur le micro quand vous avez fini de parler.",
+    wait: "Veuillez patienter...",
+    translating: "Traduction en cours...",
+    translateError: "⚠️ Service de traduction indisponible",
+    micBlocked: "⚠️ Autorisation micro requise",
+    speechUnsupported: "⚠️ La reconnaissance vocale n'est pas prise en charge sur cet appareil",
+  },
+  it: {
+    ready: "Tocca il microfono per parlare.",
+    preparing: "Sistema in preparazione...",
+    repeat: "Premi di nuovo il microfono quando hai finito di parlare.",
+    wait: "Attendere prego...",
+    translating: "Traduzione in corso...",
+    translateError: "⚠️ Servizio di traduzione non disponibile",
+    micBlocked: "⚠️ Autorizzazione microfono richiesta",
+    speechUnsupported: "⚠️ Il riconoscimento vocale non è supportato su questo dispositivo",
+  },
+  es: {
+    ready: "Toque el micrófono para hablar.",
+    preparing: "El sistema se está preparando...",
+    repeat: "Pulse el micrófono otra vez cuando termine de hablar.",
+    wait: "Por favor espere...",
+    translating: "Traduciendo...",
+    translateError: "⚠️ Servicio de traducción no disponible",
+    micBlocked: "⚠️ Se requiere permiso de micrófono",
+    speechUnsupported: "⚠️ El reconocimiento de voz no es compatible con este dispositivo",
+  },
 };
 
-const state = {
-  recognition: null,
-  listening: false,
-  starting: false,
-  activeSide: null,
-  finalText: "",
-  interimText: "",
-  topLang: localStorage.getItem(STORAGE.TOP_LANG) || "en",
-  botLang: localStorage.getItem(STORAGE.BOT_LANG) || "tr",
-  voicesReady: false,
-  audioUnlocked: false,
-  voiceProfile: null,
-  voiceReady: false,
-};
-
-function setRootMode(mode) {
-  if (!dom.root) return;
-  dom.root.classList.remove(
-    "is-idle",
-    "is-ready",
-    "is-listening",
-    "is-translating",
-    "is-error"
-  );
-  dom.root.classList.add(mode);
+function t(langCode, key) {
+  const c = canonical(langCode);
+  const pack = UI_TEXT[c] || UI_TEXT.en;
+  return pack[key] || UI_TEXT.en[key] || "";
 }
 
-function setStatus(text = "") {
-  if (dom.statusPill) dom.statusPill.textContent = text;
+const frameRoot = $("frameRoot");
+const topBody = $("topBody");
+const botBody = $("botBody");
+const topMic = $("topMic");
+const botMic = $("botMic");
+const topHelper = $("topHelper");
+const botHelper = $("botHelper");
+const topLangBtn = $("topLangBtn");
+const botLangBtn = $("botLangBtn");
+const topLangTxt = $("topLangTxt");
+const botLangTxt = $("botLangTxt");
+const popTop = $("pop-top");
+const popBot = $("pop-bot");
+const listTop = $("list-top");
+const listBot = $("list-bot");
+const closeTop = $("close-top");
+const closeBot = $("close-bot");
+const clearBtn = $("clearBtn");
+const homeLink = $("homeLink");
+const homeBtn = $("homeBtn");
+
+let topLang = "en";
+let botLang = "tr";
+let ttsDebounceAt = 0;
+let activeSide = null;
+let recognizer = null;
+let recordingSide = null;
+let currentAudio = null;
+let audioCtx = null;
+let bootReady = false;
+let bootStarted = false;
+let bootPromise = null;
+
+function pointOrbTo(side) {
+  if (!frameRoot) return;
+  frameRoot.classList.remove("to-top", "to-bot");
+  frameRoot.classList.add(side === "top" ? "to-top" : "to-bot");
 }
 
-function setHelper(side, text, type = "ready") {
-  const el = side === "top" ? dom.topHelper : dom.botHelper;
+function setMicState(side, state) {
+  const mic = side === "top" ? topMic : botMic;
+  if (!mic) return;
+  mic.classList.remove("listening", "recorded");
+  if (state === "listening") mic.classList.add("listening");
+  if (state === "recorded") mic.classList.add("recorded");
+}
+
+function resetMics() {
+  topMic?.classList.remove("listening", "recorded");
+  botMic?.classList.remove("listening", "recorded");
+}
+
+function setFrameVisual(state) {
+  if (!frameRoot) return;
+  frameRoot.classList.remove("is-idle", "is-listening", "is-translating", "is-ready", "is-error");
+  if (state === "idle") frameRoot.classList.add("is-idle");
+  if (state === "listening") frameRoot.classList.add("is-listening");
+  if (state === "translating") frameRoot.classList.add("is-translating");
+  if (state === "ready") frameRoot.classList.add("is-ready");
+  if (state === "error") frameRoot.classList.add("is-error");
+}
+
+function setHelper(el, text, tone) {
   if (!el) return;
+  el.className = "helper-text";
+  if (tone) el.classList.add(tone);
   el.textContent = text || "";
-  el.classList.remove("helper-ready", "helper-wait", "helper-repeat");
-  if (type === "ready") el.classList.add("helper-ready");
-  if (type === "wait") el.classList.add("helper-wait");
-  if (type === "repeat") el.classList.add("helper-repeat");
 }
 
-function setBothHelpers(topText, topType, botText, botType) {
-  setHelper("top", topText, topType);
-  setHelper("bot", botText, botType);
+function setSystemReadyUI() {
+  activeSide = null;
+  resetMics();
+  setFrameVisual("ready");
+  setHelper(topHelper, t(topLang, "ready"), "helper-ready");
+  setHelper(botHelper, t(botLang, "ready"), "helper-ready");
 }
 
-function renderLangLabels() {
-  if (dom.topLangTxt) dom.topLangTxt.textContent = labelChip(state.topLang);
-  if (dom.botLangTxt) dom.botLangTxt.textContent = labelChip(state.botLang);
+function setSystemPreparingUI() {
+  activeSide = null;
+  resetMics();
+  setFrameVisual("error");
+  setHelper(topHelper, t(topLang, "preparing"), "helper-wait");
+  setHelper(botHelper, t(botLang, "preparing"), "helper-wait");
 }
 
-function persistLangs() {
-  localStorage.setItem(STORAGE.TOP_LANG, canonical(state.topLang));
-  localStorage.setItem(STORAGE.BOT_LANG, canonical(state.botLang));
-  renderLangLabels();
-}
+function setListeningUI(side) {
+  activeSide = side;
+  pointOrbTo(side);
+  resetMics();
+  setMicState(side, "listening");
+  setFrameVisual("listening");
 
-function speakerSvg() {
-  return `
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M11 5L6 9H3v6h3l5 4V5Z"></path>
-      <path d="M15.5 8.5a5 5 0 0 1 0 7"></path>
-      <path d="M17.5 6a8 8 0 0 1 0 12"></path>
-    </svg>
-  `;
-}
-
-function createBubble(text, type, langCode, latest = false) {
-  const bubble = document.createElement("div");
-  bubble.className = `bubble ${type}${latest ? " is-latest" : ""}`;
-
-  const row = document.createElement("div");
-  row.className = "bubble-row";
-
-  const txt = document.createElement("span");
-  txt.className = "txt";
-  txt.innerHTML = escapeHtml(text);
-
-  const spk = document.createElement("button");
-  spk.className = "spk-icon";
-  spk.type = "button";
-  spk.innerHTML = speakerSvg();
-  spk.addEventListener("click", () => speakText(text, langCode));
-
-  row.appendChild(txt);
-  row.appendChild(spk);
-  bubble.appendChild(row);
-  return bubble;
-}
-
-function clearBodies() {
-  if (dom.topBody) dom.topBody.innerHTML = "";
-  if (dom.botBody) dom.botBody.innerHTML = "";
-}
-
-function setBodies(sourceSide, sourceText, translatedText) {
-  clearBodies();
-
-  if (sourceSide === "top") {
-    if (dom.topBody) dom.topBody.appendChild(createBubble(sourceText, "me", state.topLang, true));
-    if (dom.botBody) dom.botBody.appendChild(createBubble(translatedText, "me", state.botLang, true));
+  if (side === "top") {
+    setHelper(topHelper, t(topLang, "repeat"), "helper-repeat");
+    setHelper(botHelper, t(botLang, "wait"), "helper-wait");
   } else {
-    if (dom.botBody) dom.botBody.appendChild(createBubble(sourceText, "me", state.botLang, true));
-    if (dom.topBody) dom.topBody.appendChild(createBubble(translatedText, "me", state.topLang, true));
+    setHelper(topHelper, t(topLang, "wait"), "helper-wait");
+    setHelper(botHelper, t(botLang, "repeat"), "helper-repeat");
   }
 }
 
-function showInterim(side, text) {
-  const clean = String(text || "").trim();
-  if (!clean) return;
+function setTranslatingUI(side) {
+  activeSide = side;
+  pointOrbTo(side);
+  setMicState(side, "recorded");
+  setFrameVisual("translating");
 
-  const body = side === "top" ? dom.topBody : dom.botBody;
-  const lang = side === "top" ? state.topLang : state.botLang;
-  if (!body) return;
-
-  body.innerHTML = "";
-  body.appendChild(createBubble(clean, "me", lang, true));
-}
-
-async function ensureMic() {
-  if (!navigator.mediaDevices?.getUserMedia) {
-    throw new Error("Mikrofon desteği yok");
+  if (side === "top") {
+    setHelper(topHelper, t(topLang, "repeat"), "helper-repeat");
+    setHelper(botHelper, t(botLang, "wait"), "helper-wait");
+  } else {
+    setHelper(topHelper, t(topLang, "wait"), "helper-wait");
+    setHelper(botHelper, t(botLang, "repeat"), "helper-repeat");
   }
-  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-  try {
-    stream.getTracks().forEach((t) => t.stop());
-  } catch {}
 }
 
-async function translateText(text, sourceLang, targetLang) {
-  const payload = {
-    text: String(text || "").trim(),
-    source: canonical(sourceLang),
-    target: canonical(targetLang),
-    mime_type: "text/plain",
-  };
+function setErrorUI() {
+  activeSide = null;
+  resetMics();
+  setFrameVisual("error");
+  setHelper(topHelper, t(topLang, "preparing"), "helper-wait");
+  setHelper(botHelper, t(botLang, "preparing"), "helper-wait");
+}
 
-  const res = await fetch(`${API_BASE}/api/translate`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+function bounceToReady(delay = 1200) {
+  setTimeout(() => setSystemReadyUI(), delay);
+}
+
+function refreshLangLabels() {
+  if (topLangTxt) topLangTxt.textContent = labelChip(topLang);
+  if (botLangTxt) botLangTxt.textContent = labelChip(botLang);
+}
+
+function refreshReadyTextsIfIdle() {
+  if (activeSide === null) {
+    if (frameRoot?.classList.contains("is-ready")) setSystemReadyUI();
+    if (frameRoot?.classList.contains("is-error")) setSystemPreparingUI();
+  }
+}
+
+function closeAllPop() {
+  popTop?.classList.remove("show");
+  popBot?.classList.remove("show");
+}
+
+function renderPop(side) {
+  const list = side === "top" ? listTop : listBot;
+  const sel = side === "top" ? topLang : botLang;
+  if (!list) return;
+
+  list.innerHTML = LANGS.map((l) => {
+    const active = canonical(l.code) === canonical(sel) ? "active" : "";
+    return `
+      <div class="pop-item ${active}" data-code="${l.code}">
+        <div class="pop-left">
+          <div class="pop-flag">${l.flag}</div>
+          <div class="pop-name">${l.name}</div>
+        </div>
+        <div class="pop-code">${l.code.toUpperCase()}</div>
+      </div>
+    `;
+  }).join("");
+
+  list.querySelectorAll(".pop-item").forEach((el) => {
+    el.addEventListener("click", () => {
+      const code = el.dataset.code || "en";
+      if (side === "top") topLang = code;
+      else botLang = code;
+      refreshLangLabels();
+      refreshReadyTextsIfIdle();
+      closeAllPop();
+    });
   });
-
-  if (!res.ok) {
-    const err = await res.text().catch(() => "");
-    throw new Error(`Translate HTTP ${res.status} ${err}`);
-  }
-
-  const data = await res.json().catch(() => ({}));
-  return (
-    data?.translated_text ||
-    data?.translation ||
-    data?.translated ||
-    data?.target_text ||
-    data?.result ||
-    data?.text ||
-    ""
-  );
 }
 
-async function loadVoiceProfile() {
+function stopAudio() {
   try {
-    const { data: authData } = await supabase.auth.getUser();
-    const user = authData?.user;
-    if (!user?.id) {
-      state.voiceProfile = null;
-      state.voiceReady = true;
-      return null;
-    }
+    currentAudio?.pause?.();
+    currentAudio = null;
+  } catch {}
+  try { window.speechSynthesis?.cancel?.(); } catch {}
+  try { window.NativeTTS?.stop?.(); } catch {}
+}
 
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", user.id)
-      .single();
-
-    if (error) {
-      console.warn("voice profile alınamadı:", error);
-      state.voiceProfile = null;
-      state.voiceReady = true;
-      return null;
-    }
-
-    state.voiceProfile = data || null;
-    state.voiceReady = true;
-    console.log("voiceProfile:", state.voiceProfile);
-    return data || null;
-  } catch (e) {
-    console.warn("loadVoiceProfile hatası:", e);
-    state.voiceProfile = null;
-    state.voiceReady = true;
+async function getCurrentUserId() {
+  try {
+    const { data } = await supabase.auth.getUser();
+    return data?.user?.id || null;
+  } catch {
     return null;
   }
 }
 
-function resolveVoiceMode() {
-  const vp = state.voiceProfile || {};
-
-  const selectedVoice = String(
-    vp.tts_voice || vp.voice_name || vp.voice_type || vp.voice || "free"
-  ).trim().toLowerCase();
-
-  const gender = String(
-    vp.tts_gender || vp.voice_gender || vp.gender || "female"
-  ).trim().toLowerCase();
-
-  const plan = String(
-    vp.tts_plan || vp.voice_plan || vp.plan || "free"
-  ).trim().toLowerCase();
-
-  const isPremium = !!(vp.is_premium || vp.premium || vp.pro_user);
-
-  if (plan !== "free" && !isPremium) {
-    return {
-      mode: "free",
-      gender: gender || "female",
-      voice: "free",
-    };
-  }
-
-  return {
-    mode: plan || "free",
-    gender: gender || "female",
-    voice: selectedVoice || "free",
-  };
+function getVoicePreference() {
+  return normalizeVoiceStorage(localStorage.getItem("tts_voice") || "auto");
 }
 
-function chooseBrowserVoiceByPreference(langCode, preferredGender = "female") {
-  if (!window.speechSynthesis) return null;
+async function speakViaApi(text, langCode) {
+  const userId = await getCurrentUserId();
+  const voice = getVoicePreference();
 
-  const voices = window.speechSynthesis.getVoices() || [];
-  if (!voices.length) return null;
-
-  const wanted = langObj(langCode).bcp.toLowerCase();
-  const shortCode = canonical(langCode);
-
-  const filtered = voices.filter((v) => {
-    const lang = String(v.lang || "").toLowerCase();
-    return lang === wanted || lang.startsWith(shortCode);
+  const r = await fetch(`${API_BASE}/tts`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      text: String(text || "").trim(),
+      lang: canonical(langCode),
+      user_id: userId,
+      module: "facetoface",
+      voice,
+      speaking_rate: 1.0,
+      pitch: 0.0
+    }),
   });
 
-  const pool = filtered.length ? filtered : voices;
+  const j = await r.json().catch(() => null);
 
-  if (preferredGender === "female") {
-    return (
-      pool.find((v) =>
-        /female|woman|zira|hazel|aria|seda|leyla|helena|salli/i.test(String(v.name || ""))
-      ) ||
-      pool[0] ||
-      null
-    );
+  if (!r.ok || !j?.ok || !j?.audio_base64) {
+    throw new Error(j?.error || j?.detail || "TTS API unavailable");
   }
 
-  if (preferredGender === "male") {
-    return (
-      pool.find((v) =>
-        /male|man|matthew|joey|brian|david|ali|mert/i.test(String(v.name || ""))
-      ) ||
-      pool[0] ||
-      null
-    );
-  }
+  const audio = new Audio(`data:audio/mp3;base64,${j.audio_base64}`);
+  currentAudio = audio;
 
-  return pool[0] || null;
-}
-
-function unlockAudio() {
-  if (state.audioUnlocked) return;
-  if (!("speechSynthesis" in window) || !window.SpeechSynthesisUtterance) return;
-
-  try {
-    const u = new SpeechSynthesisUtterance(" ");
-    u.volume = 0;
-    window.speechSynthesis.speak(u);
-    window.speechSynthesis.cancel();
-    state.audioUnlocked = true;
-  } catch (e) {
-    console.warn("TTS unlock başarısız:", e);
-  }
-}
-
-function speakText(text, langCode) {
-  const clean = String(text || "").trim();
-  if (!clean) return;
-
-  const voiceMode = resolveVoiceMode();
-
-  if (!("speechSynthesis" in window) || !window.SpeechSynthesisUtterance) {
-    console.warn("TTS desteklenmiyor");
-    return;
-  }
-
-  try {
-    window.speechSynthesis.cancel();
-  } catch {}
-
-  const utter = new SpeechSynthesisUtterance(clean);
-  utter.lang = langObj(langCode).bcp;
-
-  const voice = chooseBrowserVoiceByPreference(langCode, voiceMode.gender);
-  if (voice) utter.voice = voice;
-
-  utter.rate = 0.96;
-  utter.pitch = voiceMode.gender === "female" ? 1.05 : 0.95;
-  utter.volume = 1;
-
-  utter.onstart = () => {
-    console.log("TTS başladı:", {
-      lang: utter.lang,
-      selectedMode: voiceMode,
-      browserVoice: voice?.name || "fallback",
-    });
+  audio.onended = () => {
+    if (currentAudio === audio) currentAudio = null;
+  };
+  audio.onerror = () => {
+    if (currentAudio === audio) currentAudio = null;
   };
 
-  utter.onerror = (e) => {
-    console.error("TTS hatası:", e);
-  };
+  await audio.play();
+}
 
-  const run = () => {
+function speakFallback(text, langCode) {
+  const value = String(text || "").trim();
+  if (!value) return;
+
+  const c = canonical(langCode);
+
+  if (window.NativeTTS && typeof window.NativeTTS.speak === "function") {
     try {
-      window.speechSynthesis.speak(utter);
-    } catch (err) {
-      console.error("speech speak error:", err);
-    }
-  };
-
-  if (!state.voicesReady) {
-    setTimeout(run, 250);
-    setTimeout(run, 800);
-    return;
+      window.NativeTTS.speak(value, c);
+      return;
+    } catch {}
   }
 
-  setTimeout(run, 180);
+  if (!window.speechSynthesis) return;
+
+  const u = new SpeechSynthesisUtterance(value);
+  u.lang = langObj(c).bcp;
+  u.rate = c === "en" ? 0.82 : ["de", "fr", "it", "es"].includes(c) ? 0.88 : 0.92;
+  u.pitch = 1.0;
+  u.volume = 1;
+
+  setTimeout(() => {
+    try { window.speechSynthesis.cancel(); } catch {}
+    try { window.speechSynthesis.speak(u); } catch {}
+  }, 50);
 }
 
-function bootVoices() {
-  if (!("speechSynthesis" in window)) return;
+async function speak(text, langCode) {
+  const value = String(text || "").trim();
+  if (!value) return;
 
-  const synth = window.speechSynthesis;
-
-  const markReady = () => {
-    const voices = synth.getVoices() || [];
-    if (voices.length) {
-      state.voicesReady = true;
-      console.log("TTS voice sayısı:", voices.length);
-    }
-  };
+  const now = Date.now();
+  if (now - ttsDebounceAt < 250) stopAudio();
+  ttsDebounceAt = now;
+  stopAudio();
 
   try {
-    markReady();
-    setTimeout(markReady, 200);
-    setTimeout(markReady, 800);
-    setTimeout(markReady, 1500);
-    synth.onvoiceschanged = () => markReady();
+    await speakViaApi(value, langCode);
   } catch (e) {
-    console.warn("bootVoices uyarı:", e);
+    console.warn("TTS API fallback", e);
+    speakFallback(value, langCode);
   }
 }
 
-function hardResetMicUi() {
-  dom.topMic?.classList.remove("listening", "recorded");
-  dom.botMic?.classList.remove("listening", "recorded");
+async function spendFaceUsage(usedChars) {
+  const safeChars = Number(usedChars || 0);
+  if (safeChars <= 0) return;
+
+  const userId = await getCurrentUserId();
+  if (!userId) return;
+
+  const r = await fetch(`${API_BASE}/api/billing/usage`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      user_id: userId,
+      module: "facetoface",
+      characters: safeChars
+    })
+  });
+
+  const j = await r.json().catch(() => ({}));
+
+  if (!r.ok) {
+    if (r.status === 402) {
+      alert("Kontörünüz yetersiz. Jeton Market'e yönlendiriliyorsunuz.");
+      location.href = "/pages/jetonbuy.html";
+      throw new Error("insufficient_tokens");
+    }
+    throw new Error(j.detail || "facetoface_usage_failed");
+  }
+
+  return j;
 }
 
-function stopListening({ keepHelpers = false } = {}) {
-  try {
-    state.recognition?.abort?.();
-  } catch {}
+function keepLatestVisible(side) {
+  const wrap = side === "top" ? topBody : botBody;
+  if (!wrap) return;
+
+  const apply = () => {
+    try { wrap.scrollTop = wrap.scrollHeight; } catch {}
+  };
+
+  apply();
+  requestAnimationFrame(apply);
+  setTimeout(apply, 30);
+  setTimeout(apply, 100);
+}
+
+function createSpeakerButton(text, langCode) {
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "spk-icon";
+  btn.setAttribute("aria-label", "Tekrar dinle");
+  btn.innerHTML = `
+    <svg viewBox="0 0 24 24">
+      <path d="M3 10v4h4l5 4V6L7 10H3"></path>
+      <path d="M16 8a4 4 0 0 1 0 8"></path>
+      <path d="M19 5a8 8 0 0 1 0 14"></path>
+    </svg>
+  `;
+  btn.addEventListener("click", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    await speak(text, langCode);
+  });
+  return btn;
+}
+
+function addBubble(side, kind, text, opts = {}) {
+  const wrap = side === "top" ? topBody : botBody;
+  if (!wrap) return null;
+
+  const row = document.createElement("div");
+  row.className = `bubble ${kind}` + (opts.latest ? " is-latest" : "");
+
+  const inner = document.createElement("div");
+  inner.className = "bubble-row";
+
+  const txt = document.createElement("span");
+  txt.className = "txt";
+  txt.textContent = String(text || "").trim();
+
+  if (kind === "me") {
+    const spk = createSpeakerButton(txt.textContent || "", opts.speakLang || "en");
+    inner.appendChild(spk);
+  }
+
+  inner.appendChild(txt);
+  row.appendChild(inner);
+  wrap.appendChild(row);
+  keepLatestVisible(side);
+  return row;
+}
+
+function clearLatest(side) {
+  const wrap = side === "top" ? topBody : botBody;
+  if (!wrap) return;
+  wrap.querySelectorAll(".bubble.me.is-latest").forEach((el) => el.classList.remove("is-latest"));
+}
+
+async function translateText(text, from, to) {
+  const src = canonical(from);
+  const dst = canonical(to);
 
   try {
-    state.recognition?.stop?.();
-  } catch {}
+    const r = await fetch(`${API_BASE}/api/translate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text: String(text || "").trim(),
+        source: src,
+        target: dst,
+        mime_type: "text/plain",
+        from_lang: src,
+        to_lang: dst,
+      }),
+    });
 
-  state.listening = false;
-  state.starting = false;
-  state.activeSide = null;
-  state.finalText = "";
-  state.interimText = "";
+    if (!r.ok) {
+      const raw = await r.text().catch(() => "");
+      console.error("translate failed", r.status, raw);
+      return null;
+    }
 
-  hardResetMicUi();
-  setRootMode("is-ready");
-
-  if (!keepHelpers) {
-    setBothHelpers("Hazır", "ready", "Hazır", "ready");
+    const j = await r.json().catch(() => null);
+    return String(
+      j?.translated_text ||
+      j?.translated ||
+      j?.translation ||
+      j?.text ||
+      ""
+    ).trim() || null;
+  } catch (e) {
+    console.error("translate error", e);
+    return null;
   }
 }
 
-function createRecognition() {
+function buildRecognizer(langCode) {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) return null;
 
   const rec = new SR();
+  rec.lang = langObj(langCode).bcp;
+  rec.interimResults = false;
   rec.continuous = false;
-  rec.interimResults = true;
   rec.maxAlternatives = 1;
-
-  rec.onstart = () => {
-    state.starting = false;
-    state.listening = true;
-
-    hardResetMicUi();
-    setRootMode("is-listening");
-
-    if (state.activeSide === "top") {
-      dom.topMic?.classList.add("listening");
-      setHelper("top", "Dinliyorum...", "ready");
-      setHelper("bot", "Çeviri bekleniyor...", "wait");
-    } else if (state.activeSide === "bot") {
-      dom.botMic?.classList.add("listening");
-      setHelper("bot", "Dinliyorum...", "ready");
-      setHelper("top", "Çeviri bekleniyor...", "wait");
-    }
-  };
-
-  rec.onerror = (e) => {
-    console.error("speech error:", e);
-
-    state.listening = false;
-    state.starting = false;
-
-    hardResetMicUi();
-    setRootMode("is-error");
-
-    const code = String(e?.error || "");
-
-    if (state.activeSide === "top") {
-      setHelper("top", code === "not-allowed" ? "Mikrofon izni verilmedi" : "Konuşma algılanamadı", "wait");
-      setHelper("bot", "Beklemede", "wait");
-    } else if (state.activeSide === "bot") {
-      setHelper("bot", code === "not-allowed" ? "Mikrofon izni verilmedi" : "Konuşma algılanamadı", "wait");
-      setHelper("top", "Beklemede", "wait");
-    }
-  };
-
-  rec.onend = async () => {
-    state.listening = false;
-    state.starting = false;
-
-    hardResetMicUi();
-
-    const finalText = String(state.finalText || "").trim();
-    const side = state.activeSide;
-
-    if (!finalText || !side) {
-      setRootMode("is-ready");
-      setBothHelpers("Hazır", "ready", "Hazır", "ready");
-      return;
-    }
-
-    setRootMode("is-translating");
-
-    try {
-      const sourceLang = side === "top" ? state.topLang : state.botLang;
-      const targetLang = side === "top" ? state.botLang : state.topLang;
-
-      if (side === "top") {
-        setHelper("top", "Algılandı", "repeat");
-        setHelper("bot", "Çeviri yapılıyor...", "wait");
-      } else {
-        setHelper("bot", "Algılandı", "repeat");
-        setHelper("top", "Çeviri yapılıyor...", "wait");
-      }
-
-      const translated = await translateText(finalText, sourceLang, targetLang);
-      setBodies(side, finalText, translated);
-
-      if (side === "top") {
-        dom.topMic?.classList.add("recorded");
-        setHelper("top", "Tekrar konuşabilirsiniz", "repeat");
-        setHelper("bot", "Çeviri hazır", "ready");
-      } else {
-        dom.botMic?.classList.add("recorded");
-        setHelper("bot", "Tekrar konuşabilirsiniz", "repeat");
-        setHelper("top", "Çeviri hazır", "ready");
-      }
-
-      setTimeout(() => speakText(translated, targetLang), 180);
-      setRootMode("is-ready");
-    } catch (err) {
-      console.error("translate error:", err);
-      setRootMode("is-error");
-
-      if (side === "top") {
-        setHelper("top", "Metin alındı", "repeat");
-        setHelper("bot", "Çeviri oluşmadı", "wait");
-      } else {
-        setHelper("bot", "Metin alındı", "repeat");
-        setHelper("top", "Çeviri oluşmadı", "wait");
-      }
-    } finally {
-      state.finalText = "";
-      state.interimText = "";
-      state.activeSide = null;
-    }
-  };
-
-  rec.onresult = (event) => {
-    let interim = "";
-    let finalTxt = state.finalText || "";
-
-    for (let i = event.resultIndex; i < event.results.length; i++) {
-      const r = event.results[i];
-      const t = String(r?.[0]?.transcript || "").trim();
-      if (!t) continue;
-
-      if (r.isFinal) finalTxt = `${finalTxt} ${t}`.trim();
-      else interim = `${interim} ${t}`.trim();
-    }
-
-    state.finalText = finalTxt;
-    state.interimText = interim;
-
-    const live = [state.finalText, state.interimText].filter(Boolean).join(" ").trim();
-    if (live && state.activeSide) showInterim(state.activeSide, live);
-  };
-
   return rec;
 }
 
-async function startListening(side) {
-  if (state.starting) return;
+function stopRecognizer() {
+  if (recognizer) {
+    try { recognizer.stop(); } catch {}
+    recognizer = null;
+  }
+}
 
-  const sameSideRunning = state.listening && state.activeSide === side;
-  if (sameSideRunning) {
-    stopListening({ keepHelpers: true });
-    setHelper(side, "Durduruldu", "wait");
+async function finalizeRecognition(side, text) {
+  const src = side === "top" ? topLang : botLang;
+  const dst = side === "top" ? botLang : topLang;
+  const other = side === "top" ? "bot" : "top";
+  const otherWrap = other === "top" ? topBody : botBody;
+
+  const cleaned = String(text || "").trim();
+  if (!cleaned) {
+    setErrorUI();
+    bounceToReady(1000);
     return;
   }
 
-  if (state.listening || state.starting) {
-    stopListening({ keepHelpers: true });
-    await new Promise((r) => setTimeout(r, 250));
-  }
+  addBubble(side, "them", cleaned);
+  clearLatest(other);
 
-  state.starting = true;
+  setTranslatingUI(side);
+
+  addBubble(other, "me", t(dst, "translating"), {
+    latest: true,
+    speakLang: dst,
+  });
+
+  const latestTxt = otherWrap?.querySelector(".bubble.me.is-latest .txt");
+  const tr = await translateText(cleaned, src, dst);
+
+  if (!tr) {
+    setErrorUI();
+    if (latestTxt) {
+      latestTxt.textContent = t(dst, "translateError");
+      keepLatestVisible(other);
+    }
+    bounceToReady(1200);
+    return;
+  }
 
   try {
-    await ensureMic();
+    await spendFaceUsage(tr.length);
   } catch (e) {
-    console.error("mic error:", e);
-    state.starting = false;
-    setRootMode("is-error");
-    setHelper(side, "Mikrofon izni gerekli", "wait");
+    console.warn("[facetoface usage]", e);
+    if (String(e?.message || "") === "insufficient_tokens") return;
+  }
+
+  if (latestTxt) {
+    latestTxt.textContent = tr;
+    keepLatestVisible(other);
+  } else {
+    addBubble(other, "me", tr, { latest: true, speakLang: dst });
+  }
+
+  await speak(tr, dst);
+  setSystemReadyUI();
+}
+
+function startRecording(side) {
+  const lang = side === "top" ? topLang : botLang;
+  const rec = buildRecognizer(lang);
+
+  if (!rec) {
+    setErrorUI();
+    const helper = side === "top" ? topHelper : botHelper;
+    setHelper(helper, t(lang, "speechUnsupported"), "helper-wait");
+    bounceToReady(1800);
     return;
   }
 
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) {
-    state.starting = false;
-    setRootMode("is-error");
-    setHelper(side, "Bu cihazda canlı konuşma yok", "wait");
-    return;
-  }
+  recognizer = rec;
+  recordingSide = side;
 
-  if (!state.recognition) {
-    state.recognition = createRecognition();
-  }
+  rec.onstart = () => {
+    setListeningUI(side);
+  };
 
-  state.activeSide = side;
-  state.finalText = "";
-  state.interimText = "";
+  rec.onresult = (e) => {
+    const heard = e.results?.[0]?.[0]?.transcript || "";
+    Promise.resolve().then(() => finalizeRecognition(side, heard));
+  };
 
-  state.recognition.lang = langObj(side === "top" ? state.topLang : state.botLang).bcp;
+  rec.onerror = (e) => {
+    console.warn("speech error", e);
+    const helper = side === "top" ? topHelper : botHelper;
+    if (String(e?.error || "").includes("not-allowed")) {
+      setHelper(helper, t(lang, "micBlocked"), "helper-wait");
+    } else {
+      setHelper(helper, t(lang, "preparing"), "helper-wait");
+    }
+    recordingSide = null;
+    recognizer = null;
+    setErrorUI();
+    bounceToReady(1600);
+  };
+
+  rec.onend = () => {
+    recognizer = null;
+    recordingSide = null;
+  };
 
   try {
-    state.recognition.start();
+    rec.start();
   } catch (e) {
-    console.error("recognition start:", e);
-
-    if (String(e?.name || "").includes("InvalidStateError")) {
-      try {
-        state.recognition.abort?.();
-      } catch {}
-
-      setTimeout(() => {
-        try {
-          state.recognition.lang = langObj(side === "top" ? state.topLang : state.botLang).bcp;
-          state.recognition.start();
-        } catch (err2) {
-          console.error("recognition restart failed:", err2);
-          state.starting = false;
-          setRootMode("is-error");
-          setHelper(side, "Mikrofon yeniden başlatılamadı", "wait");
-        }
-      }, 300);
-      return;
-    }
-
-    state.starting = false;
-    setRootMode("is-error");
-    setHelper(side, "Başlatılamadı", "wait");
+    console.warn("rec.start error", e);
+    recognizer = null;
+    recordingSide = null;
+    setErrorUI();
+    bounceToReady(1200);
   }
 }
 
-function clearAll() {
-  stopListening();
-  clearBodies();
-  setBothHelpers("Hazır", "ready", "Hazır", "ready");
+async function toggleRecording(side) {
+  await ensureReady();
+
+  if (recordingSide === side) {
+    stopRecognizer();
+    recordingSide = null;
+    setTranslatingUI(side);
+    return;
+  }
+
+  if (recordingSide && recordingSide !== side) {
+    stopRecognizer();
+    recordingSide = null;
+  }
+
+  startRecording(side);
 }
 
-function openPop(which) {
-  if (which === "top") dom.popTop?.classList.add("show");
-  if (which === "bot") dom.popBot?.classList.add("show");
+async function warmAudio() {
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return;
+    if (!audioCtx) audioCtx = new Ctx();
+    if (audioCtx.state === "suspended") await audioCtx.resume();
+  } catch (e) {
+    console.warn("warmAudio", e);
+  }
 }
 
-function closePop(which) {
-  if (which === "top") dom.popTop?.classList.remove("show");
-  if (which === "bot") dom.popBot?.classList.remove("show");
+async function warmApis() {
+  await Promise.allSettled([
+    fetch(`${API_BASE}/healthz`).catch(() => {}),
+    fetch(`${API_BASE}/tts`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: " ", lang: "tr", module: "facetoface", voice: "auto" })
+    }).catch(() => {}),
+    fetch(`${API_BASE}/api/translate/_ping`).catch(() => {}),
+  ]);
 }
 
-function renderPopList(which) {
-  const list = which === "top" ? dom.listTop : dom.listBot;
-  const current = which === "top" ? state.topLang : state.botLang;
-  if (!list) return;
+function unlockOnFirstTouch() {
+  const once = async () => {
+    try { await warmAudio(); } catch {}
+    window.removeEventListener("touchstart", once);
+    window.removeEventListener("pointerdown", once);
+    window.removeEventListener("click", once);
+  };
 
-  list.innerHTML = "";
-
-  LANGS.forEach((l) => {
-    const row = document.createElement("div");
-    row.className = `pop-item${canonical(current) === l.code ? " active" : ""}`;
-
-    row.innerHTML = `
-      <div class="pop-left">
-        <div class="pop-flag">${l.flag}</div>
-        <div class="pop-name">${escapeHtml(l.name)}</div>
-      </div>
-      <div class="pop-code">${escapeHtml(l.code.toUpperCase())}</div>
-    `;
-
-    row.addEventListener("click", () => {
-      if (which === "top") state.topLang = l.code;
-      else state.botLang = l.code;
-      persistLangs();
-      renderPopList(which);
-      closePop(which);
-    });
-
-    list.appendChild(row);
-  });
+  window.addEventListener("touchstart", once, { passive: true });
+  window.addEventListener("pointerdown", once, { passive: true });
+  window.addEventListener("click", once, { passive: true });
 }
 
-function bindEvents() {
-  dom.topMic?.addEventListener("click", () => {
-    unlockAudio();
-    startListening("top");
+function startBoot() {
+  if (bootStarted) return bootPromise;
+  bootStarted = true;
+
+  bootPromise = (async () => {
+    setSystemPreparingUI();
+    refreshLangLabels();
+    pointOrbTo("bot");
+
+    await Promise.allSettled([
+      warmApis(),
+      warmAudio(),
+    ]);
+
+    bootReady = true;
+    setSystemReadyUI();
+  })();
+
+  return bootPromise;
+}
+
+async function ensureReady() {
+  if (bootReady) return true;
+  if (!bootStarted) startBoot();
+  try { await bootPromise; } catch {}
+  return true;
+}
+
+function safeHomeHref() {
+  return "/pages/home.html";
+}
+
+function bind() {
+  refreshLangLabels();
+  unlockOnFirstTouch();
+  startBoot();
+
+  topLangBtn?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    closeAllPop();
+    renderPop("top");
+    popTop?.classList.add("show");
   });
 
-  dom.botMic?.addEventListener("click", () => {
-    unlockAudio();
-    startListening("bot");
+  botLangBtn?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    closeAllPop();
+    renderPop("bot");
+    popBot?.classList.add("show");
   });
 
-  dom.topMic?.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      unlockAudio();
-      startListening("top");
-    }
+  closeTop?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    closeAllPop();
   });
 
-  dom.botMic?.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      unlockAudio();
-      startListening("bot");
-    }
+  closeBot?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    closeAllPop();
   });
-
-  dom.clearBtn?.addEventListener("click", clearAll);
-
-  dom.homeLink?.addEventListener("click", () => {
-    window.location.href = "/";
-  });
-
-  dom.homeBtn?.addEventListener("click", () => {
-    window.location.href = "/";
-  });
-
-  dom.topLangBtn?.addEventListener("click", () => {
-    renderPopList("top");
-    openPop("top");
-  });
-
-  dom.botLangBtn?.addEventListener("click", () => {
-    renderPopList("bot");
-    openPop("bot");
-  });
-
-  dom.closeTop?.addEventListener("click", () => closePop("top"));
-  dom.closeBot?.addEventListener("click", () => closePop("bot"));
 
   document.addEventListener("click", (e) => {
-    const t = e.target;
-    if (!(t instanceof Element)) return;
+    const inside =
+      (popTop && popTop.contains(e.target)) ||
+      (popBot && popBot.contains(e.target));
+    const isBtn = e.target?.closest?.("#topLangBtn,#botLangBtn");
+    if (!inside && !isBtn) closeAllPop();
+  }, { capture: true });
 
-    if (dom.popTop?.classList.contains("show") && !dom.popTop.contains(t) && !dom.topLangBtn?.contains(t)) {
-      closePop("top");
-    }
-
-    if (dom.popBot?.classList.contains("show") && !dom.popBot.contains(t) && !dom.botLangBtn?.contains(t)) {
-      closePop("bot");
-    }
+  clearBtn?.addEventListener("click", () => {
+    stopAudio();
+    stopRecognizer();
+    recordingSide = null;
+    if (topBody) topBody.innerHTML = "";
+    if (botBody) botBody.innerHTML = "";
+    setSystemReadyUI();
   });
 
-  document.addEventListener("visibilitychange", () => {
-    if (document.hidden) stopListening();
+  homeLink?.addEventListener("click", () => {
+    location.href = safeHomeHref();
   });
 
-  window.addEventListener("beforeunload", () => stopListening());
+  homeBtn?.addEventListener("click", () => {
+    location.href = safeHomeHref();
+  });
+
+  topMic?.addEventListener("click", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    await toggleRecording("top");
+  });
+
+  botMic?.addEventListener("click", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    await toggleRecording("bot");
+  });
 }
 
-async function init() {
-  renderLangLabels();
-  renderPopList("top");
-  renderPopList("bot");
-  bindEvents();
-  bootVoices();
-  await loadVoiceProfile();
-
-  setRootMode("is-ready");
-  setBothHelpers("Hazır", "ready", "Hazır", "ready");
-  setStatus("Hazır");
-}
-
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", init, { once: true });
-} else {
-  init();
-}
+bind();
