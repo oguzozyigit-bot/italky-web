@@ -1,7 +1,9 @@
 // FILE: /js/f2f_call.js
-// ✅ WalkieTalkie FINAL: OpenAI YOK
+// ✅ WalkieTalkie FINAL
+// ✅ Ücretsiz ses: sadece native/browser TTS
+// ✅ Her mesajın yanında hoparlör var
 // ✅ Floor control + Push-to-talk
-// ✅ HATA KORUMASI: f2f_call.html ID'leri eksikse siyah ekranda kalmaz, uyarı basar.
+// ✅ HATA KORUMASI
 
 import { LANG_POOL } from "/js/lang_pool_full.js";
 import { STORAGE_KEY } from "/js/config.js";
@@ -17,11 +19,6 @@ const role = String(params.get("role") || "").trim().toLowerCase();
 let myLang = String(params.get("me_lang") || localStorage.getItem("f2f_my_lang") || "tr").trim().toLowerCase();
 localStorage.setItem("f2f_my_lang", myLang);
 
-let autoTTS = (localStorage.getItem("wt_auto_tts") ?? "1") === "1";
-
-/* ===============================
-   ✅ SAFE UI ERROR OVERLAY
-================================ */
 function showFatal(msg){
   try{
     const box = document.createElement("div");
@@ -65,9 +62,6 @@ window.addEventListener("unhandledrejection",(e)=>{
   console.warn("[WT REJECTION]", e?.reason || e);
 });
 
-/* ===============================
-   BOOT (DOM hazır olmadan çalışmasın)
-================================ */
 document.addEventListener("DOMContentLoaded", ()=>{
   try{
     boot();
@@ -84,7 +78,6 @@ function boot(){
     return;
   }
 
-  // ✅ Required UI IDs (yoksa siyah ekran olurdu)
   const chat = requireEl("chat");
   const msgInput = requireEl("msgInput");
   const sendBtn = requireEl("sendBtn");
@@ -95,7 +88,6 @@ function boot(){
   const exitBtn = requireEl("exitBtn");
   const backBtn = requireEl("backBtn");
 
-  // profile from cache
   function getProfileFromCache(){
     try{
       const raw = localStorage.getItem(STORAGE_KEY);
@@ -111,7 +103,6 @@ function boot(){
   }
   const MY = getProfileFromCache();
 
-  // language list
   const LANGS = Array.isArray(LANG_POOL) && LANG_POOL.length
     ? LANG_POOL
     : [
@@ -125,7 +116,6 @@ function boot(){
 
   const norm = (c)=>String(c||"").toLowerCase().trim();
 
-  // Dil select doldur
   langSelect.innerHTML = LANGS.map(l=>{
     const c = norm(l.code);
     const label = `${l.flag||"🌐"} ${l.name||c.toUpperCase()}`;
@@ -137,7 +127,6 @@ function boot(){
     localStorage.setItem("f2f_my_lang", myLang);
   });
 
-  // Exit confirm
   function askExit(){
     const ok = confirm("Sohbetten çıkmak istiyor musunuz?");
     if(ok) location.href = "/pages/home.html";
@@ -145,7 +134,6 @@ function boot(){
   exitBtn.addEventListener("click", askExit);
   backBtn.addEventListener("click", askExit);
 
-  // textarea grow + Enter send
   function growTA(){
     try{
       msgInput.style.height = "0px";
@@ -164,7 +152,6 @@ function boot(){
     }
   });
 
-  // participants strip
   const participants = new Map();
   function renderParticipants(){
     peopleScroll.innerHTML = "";
@@ -203,12 +190,10 @@ function boot(){
     renderParticipants();
   }
 
-  // self
   const clientId = (crypto?.randomUUID?.() || ("c_" + Math.random().toString(16).slice(2))).slice(0,18);
   upsertParticipant(clientId, MY.name, MY.picture);
   peopleCount.textContent = "1";
 
-  // local clean
   function localCleanText(text){
     let s = String(text||"").trim();
     if(!s) return s;
@@ -217,8 +202,84 @@ function boot(){
     return s;
   }
 
-  // bubble
-  function addMessage(side, name, text){
+  /* ✅ ücretsiz ses */
+  let currentUtterance = null;
+
+  function stopSpeak(){
+    try{
+      if(window.NativeTTS?.stop) window.NativeTTS.stop();
+    }catch{}
+    try{
+      window.speechSynthesis?.cancel?.();
+    }catch{}
+    currentUtterance = null;
+  }
+
+  function speakFree(text, lang){
+    const t = String(text || "").trim();
+    if(!t) return;
+
+    stopSpeak();
+
+    const c = norm(lang || "en");
+
+    if(window.NativeTTS && typeof window.NativeTTS.speak === "function"){
+      try{
+        window.NativeTTS.speak(t, c);
+        return;
+      }catch(e){
+        console.warn("[NativeTTS]", e);
+      }
+    }
+
+    if(!window.speechSynthesis) return;
+
+    const BCP = {
+      tr: "tr-TR",
+      en: "en-US",
+      de: "de-DE",
+      fr: "fr-FR",
+      it: "it-IT",
+      es: "es-ES",
+      ru: "ru-RU",
+      el: "el-GR",
+      az: "az-AZ",
+      ka: "ka-GE"
+    };
+
+    const u = new SpeechSynthesisUtterance(t);
+    u.lang = BCP[c] || "en-US";
+    u.rate = c === "en" ? 0.9 : 0.95;
+    u.pitch = 1.0;
+    u.volume = 1;
+    currentUtterance = u;
+
+    setTimeout(()=>{
+      try{ window.speechSynthesis.speak(u); }catch{}
+    }, 40);
+  }
+
+  function createSpeakerButton(text, lang){
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "spk-icon";
+    btn.setAttribute("aria-label", "Tekrar dinle");
+    btn.innerHTML = `
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 10v4h4l5 4V6L7 10H3"></path>
+        <path d="M16 8a4 4 0 0 1 0 8"></path>
+        <path d="M19 5a8 8 0 0 1 0 14"></path>
+      </svg>
+    `;
+    btn.addEventListener("click", (e)=>{
+      e.preventDefault();
+      e.stopPropagation();
+      speakFree(text, lang);
+    });
+    return btn;
+  }
+
+  function addMessage(side, name, text, speakLang){
     const row = document.createElement("div");
     row.className = "msg-row " + (side === "right" ? "right" : "left");
 
@@ -228,7 +289,20 @@ function boot(){
 
     const bubble = document.createElement("div");
     bubble.className = "msg-bubble";
-    bubble.textContent = text;
+
+    const inner = document.createElement("div");
+    inner.style.display = "flex";
+    inner.style.alignItems = "center";
+    inner.style.gap = "8px";
+
+    const txt = document.createElement("span");
+    txt.textContent = text;
+
+    const spk = createSpeakerButton(text, speakLang || myLang);
+
+    inner.appendChild(txt);
+    inner.appendChild(spk);
+    bubble.appendChild(inner);
 
     row.appendChild(nm);
     row.appendChild(bubble);
@@ -237,7 +311,6 @@ function boot(){
     chat.scrollTop = chat.scrollHeight;
   }
 
-  // echo killer
   const sentLog = [];
   function rememberSent(text){
     sentLog.push({ text:String(text||"").trim().toLowerCase(), t:Date.now() });
@@ -265,7 +338,6 @@ function boot(){
     return false;
   }
 
-  // translate display
   async function translateAI(text, from, to){
     const t = String(text||"").trim();
     if(!t) return t;
@@ -287,7 +359,6 @@ function boot(){
     }
   }
 
-  // STT backend
   function pickMime(){
     const cands = ["audio/webm;codecs=opus","audio/webm","audio/ogg;codecs=opus","audio/ogg"];
     for(const m of cands){
@@ -295,6 +366,7 @@ function boot(){
     }
     return "";
   }
+
   async function sttBlob(blob, lang){
     const fd = new FormData();
     fd.append("file", blob, "speech.webm");
@@ -305,57 +377,6 @@ function boot(){
     return String(j.text||"").trim();
   }
 
-  // AUTO TTS incoming (anti-overlap)
-  let ttsAudio = null;
-  let ttsCtl = null;
-  let ttsToken = 0;
-
-  function stopTTS(){
-    try{ ttsCtl?.abort?.(); }catch{}
-    ttsCtl = null;
-    try{
-      if(ttsAudio){
-        ttsAudio.pause();
-        ttsAudio.currentTime = 0;
-      }
-    }catch{}
-    ttsAudio = null;
-  }
-
-  async function speakText(text, lang){
-    if(!autoTTS) return;
-    const t = String(text||"").trim();
-    if(!t) return;
-
-    stopTTS();
-    const my = ++ttsToken;
-
-    try{
-      ttsCtl = new AbortController();
-      const r = await fetch(`${API_BASE}/api/tts`,{
-        method:"POST",
-        headers:{ "Content-Type":"application/json" },
-        body: JSON.stringify({ text: t, lang: norm(lang) }),
-        signal: ttsCtl.signal
-      });
-
-      if(my !== ttsToken) return;
-      if(!r.ok) return;
-
-      const j = await r.json().catch(()=>null);
-      if(my !== ttsToken) return;
-
-      const b64 = j?.audio_base64;
-      if(!b64) return;
-
-      ttsAudio = new Audio("data:audio/mpeg;base64," + b64);
-      ttsAudio.playsInline = true;
-      if(my !== ttsToken) return;
-      await ttsAudio.play();
-    }catch{}
-  }
-
-  // FLOOR UI + mic lock
   let floorActive = false;
   let floorHolderId = "";
   let floorHolderName = "";
@@ -372,10 +393,10 @@ function boot(){
     floorBanner.style.zIndex = "999999";
     floorBanner.style.padding = "10px 14px";
     floorBanner.style.borderRadius = "999px";
-    floorBanner.style.border = "1px solid rgba(255,255,255,0.14)";
-    floorBanner.style.background = "rgba(0,0,0,0.65)";
+    floorBanner.style.border = "1px solid rgba(255,255,255,.2)";
+    floorBanner.style.background = "rgba(0,0,0,.65)";
     floorBanner.style.backdropFilter = "blur(12px)";
-    floorBanner.style.color = "rgba(255,255,255,0.92)";
+    floorBanner.style.color = "#fff";
     floorBanner.style.fontFamily = "Outfit,system-ui,sans-serif";
     floorBanner.style.fontWeight = "900";
     floorBanner.style.fontSize = "12px";
@@ -399,7 +420,6 @@ function boot(){
     micBtn.style.opacity = locked ? "0.45" : "1";
   }
 
-  // WS + FLOOR
   let ws = null;
   let presenceKnown = false;
   let presenceCount = 1;
@@ -454,7 +474,6 @@ function boot(){
         return;
       }
 
-      // floor state
       if(msg.type === "floor_state"){
         floorActive = !!msg.active;
         floorHolderId = String(msg.holder_id || "");
@@ -518,14 +537,12 @@ function boot(){
         shown = localCleanText(shown);
         if(!shown) return;
 
-        addMessage("left", fromName, shown);
-        speakText(shown, myLang);
+        addMessage("left", fromName, shown, myLang);
       }
     };
   }
   connect();
 
-  // SEND typed
   async function sendTyped(){
     const raw = String(msgInput.value || "").trim();
     if(!raw) return;
@@ -536,7 +553,7 @@ function boot(){
     const cleaned = localCleanText(raw);
     if(!cleaned) return;
 
-    addMessage("right", MY.name, cleaned);
+    addMessage("right", MY.name, cleaned, myLang);
     rememberSent(cleaned);
 
     upsertParticipant(clientId, MY.name, MY.picture);
@@ -554,7 +571,6 @@ function boot(){
   }
   sendBtn.addEventListener("click", sendTyped);
 
-  // Push-to-talk + floor
   let recJob=null, isBusy=false;
   let pressActive = false;
 
@@ -601,7 +617,7 @@ function boot(){
       const cleaned = localCleanText(raw);
       if(!cleaned) return;
 
-      addMessage("right", MY.name, cleaned);
+      addMessage("right", MY.name, cleaned, myLang);
       rememberSent(cleaned);
 
       if(ws && ws.readyState === 1){
@@ -625,7 +641,6 @@ function boot(){
       if(pressActive) return;
       pressActive = true;
 
-      // someone else talking
       if(floorActive && !myHasFloor){
         showBanner(`🎙️ ${floorHolderName || "Birisi"} konuşuyor…`);
         setMicLocked(true);
