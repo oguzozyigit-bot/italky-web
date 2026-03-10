@@ -1,4 +1,5 @@
 import { LANG_POOL } from "/js/lang_pool_full.js";
+import { supabase } from "/js/supabase_client.js";
 
 const API_BASE = "https://italky-api.onrender.com";
 const $ = (id) => document.getElementById(id);
@@ -31,23 +32,28 @@ const LANGS = (Array.isArray(LANG_POOL) ? LANG_POOL : [])
     if (!code) return null;
     return {
       code,
-      name: l.name || code.toUpperCase(),
       flag: l.flag || "🌐",
+      name: l.name || code.toUpperCase(),
       bcp: BCP[code] || "en-US",
     };
   })
   .filter(Boolean);
 
-function getLang(code) {
+function langObj(code) {
   const c = canonical(code);
   return (
     LANGS.find((x) => x.code === c) || {
       code: c || "en",
-      name: (c || "en").toUpperCase(),
       flag: "🌐",
+      name: (c || "en").toUpperCase(),
       bcp: BCP[c] || "en-US",
     }
   );
+}
+
+function labelChip(code) {
+  const o = langObj(code);
+  return `${o.flag} ${o.name}`;
 }
 
 function escapeHtml(str) {
@@ -93,11 +99,15 @@ const state = {
   recognition: null,
   listening: false,
   starting: false,
-  activeSide: null, // "top" | "bot"
+  activeSide: null,
   finalText: "",
   interimText: "",
   topLang: localStorage.getItem(STORAGE.TOP_LANG) || "en",
   botLang: localStorage.getItem(STORAGE.BOT_LANG) || "tr",
+  voicesReady: false,
+  audioUnlocked: false,
+  voiceProfile: null,
+  voiceReady: false,
 };
 
 function setRootMode(mode) {
@@ -132,11 +142,8 @@ function setBothHelpers(topText, topType, botText, botType) {
 }
 
 function renderLangLabels() {
-  const top = getLang(state.topLang);
-  const bot = getLang(state.botLang);
-
-  if (dom.topLangTxt) dom.topLangTxt.textContent = `${top.flag} ${top.name}`;
-  if (dom.botLangTxt) dom.botLangTxt.textContent = `${bot.flag} ${bot.name}`;
+  if (dom.topLangTxt) dom.topLangTxt.textContent = labelChip(state.topLang);
+  if (dom.botLangTxt) dom.botLangTxt.textContent = labelChip(state.botLang);
 }
 
 function persistLangs() {
@@ -153,42 +160,6 @@ function speakerSvg() {
       <path d="M17.5 6a8 8 0 0 1 0 12"></path>
     </svg>
   `;
-}
-
-function chooseVoice(langCode) {
-  if (!window.speechSynthesis) return null;
-  const voices = window.speechSynthesis.getVoices() || [];
-  const wanted = getLang(langCode).bcp.toLowerCase();
-
-  return (
-    voices.find((v) => String(v.lang || "").toLowerCase() === wanted) ||
-    voices.find((v) =>
-      String(v.lang || "").toLowerCase().startsWith(canonical(langCode))
-    ) ||
-    voices[0] ||
-    null
-  );
-}
-
-function speakText(text, langCode) {
-  const clean = String(text || "").trim();
-  if (!clean || !window.speechSynthesis) return;
-
-  try {
-    window.speechSynthesis.cancel();
-  } catch {}
-
-  const u = new SpeechSynthesisUtterance(clean);
-  u.lang = getLang(langCode).bcp;
-
-  const voice = chooseVoice(langCode);
-  if (voice) u.voice = voice;
-
-  u.rate = 1;
-  u.pitch = 1;
-  u.volume = 1;
-
-  window.speechSynthesis.speak(u);
 }
 
 function createBubble(text, type, langCode, latest = false) {
@@ -211,7 +182,6 @@ function createBubble(text, type, langCode, latest = false) {
   row.appendChild(txt);
   row.appendChild(spk);
   bubble.appendChild(row);
-
   return bubble;
 }
 
@@ -224,19 +194,11 @@ function setBodies(sourceSide, sourceText, translatedText) {
   clearBodies();
 
   if (sourceSide === "top") {
-    if (dom.topBody) {
-      dom.topBody.appendChild(createBubble(sourceText, "me", state.topLang, true));
-    }
-    if (dom.botBody) {
-      dom.botBody.appendChild(createBubble(translatedText, "me", state.botLang, true));
-    }
+    if (dom.topBody) dom.topBody.appendChild(createBubble(sourceText, "me", state.topLang, true));
+    if (dom.botBody) dom.botBody.appendChild(createBubble(translatedText, "me", state.botLang, true));
   } else {
-    if (dom.botBody) {
-      dom.botBody.appendChild(createBubble(sourceText, "me", state.botLang, true));
-    }
-    if (dom.topBody) {
-      dom.topBody.appendChild(createBubble(translatedText, "me", state.topLang, true));
-    }
+    if (dom.botBody) dom.botBody.appendChild(createBubble(sourceText, "me", state.botLang, true));
+    if (dom.topBody) dom.topBody.appendChild(createBubble(translatedText, "me", state.topLang, true));
   }
 }
 
@@ -256,9 +218,7 @@ async function ensureMic() {
   if (!navigator.mediaDevices?.getUserMedia) {
     throw new Error("Mikrofon desteği yok");
   }
-
   const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
   try {
     stream.getTracks().forEach((t) => t.stop());
   } catch {}
@@ -274,9 +234,7 @@ async function translateText(text, sourceLang, targetLang) {
 
   const res = await fetch(`${API_BASE}/api/translate`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
 
@@ -286,7 +244,6 @@ async function translateText(text, sourceLang, targetLang) {
   }
 
   const data = await res.json().catch(() => ({}));
-
   return (
     data?.translated_text ||
     data?.translation ||
@@ -296,6 +253,205 @@ async function translateText(text, sourceLang, targetLang) {
     data?.text ||
     ""
   );
+}
+
+async function loadVoiceProfile() {
+  try {
+    const { data: authData } = await supabase.auth.getUser();
+    const user = authData?.user;
+    if (!user?.id) {
+      state.voiceProfile = null;
+      state.voiceReady = true;
+      return null;
+    }
+
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .single();
+
+    if (error) {
+      console.warn("voice profile alınamadı:", error);
+      state.voiceProfile = null;
+      state.voiceReady = true;
+      return null;
+    }
+
+    state.voiceProfile = data || null;
+    state.voiceReady = true;
+    console.log("voiceProfile:", state.voiceProfile);
+    return data || null;
+  } catch (e) {
+    console.warn("loadVoiceProfile hatası:", e);
+    state.voiceProfile = null;
+    state.voiceReady = true;
+    return null;
+  }
+}
+
+function resolveVoiceMode() {
+  const vp = state.voiceProfile || {};
+
+  const selectedVoice = String(
+    vp.tts_voice || vp.voice_name || vp.voice_type || vp.voice || "free"
+  ).trim().toLowerCase();
+
+  const gender = String(
+    vp.tts_gender || vp.voice_gender || vp.gender || "female"
+  ).trim().toLowerCase();
+
+  const plan = String(
+    vp.tts_plan || vp.voice_plan || vp.plan || "free"
+  ).trim().toLowerCase();
+
+  const isPremium = !!(vp.is_premium || vp.premium || vp.pro_user);
+
+  if (plan !== "free" && !isPremium) {
+    return {
+      mode: "free",
+      gender: gender || "female",
+      voice: "free",
+    };
+  }
+
+  return {
+    mode: plan || "free",
+    gender: gender || "female",
+    voice: selectedVoice || "free",
+  };
+}
+
+function chooseBrowserVoiceByPreference(langCode, preferredGender = "female") {
+  if (!window.speechSynthesis) return null;
+
+  const voices = window.speechSynthesis.getVoices() || [];
+  if (!voices.length) return null;
+
+  const wanted = langObj(langCode).bcp.toLowerCase();
+  const shortCode = canonical(langCode);
+
+  const filtered = voices.filter((v) => {
+    const lang = String(v.lang || "").toLowerCase();
+    return lang === wanted || lang.startsWith(shortCode);
+  });
+
+  const pool = filtered.length ? filtered : voices;
+
+  if (preferredGender === "female") {
+    return (
+      pool.find((v) =>
+        /female|woman|zira|hazel|aria|seda|leyla|helena|salli/i.test(String(v.name || ""))
+      ) ||
+      pool[0] ||
+      null
+    );
+  }
+
+  if (preferredGender === "male") {
+    return (
+      pool.find((v) =>
+        /male|man|matthew|joey|brian|david|ali|mert/i.test(String(v.name || ""))
+      ) ||
+      pool[0] ||
+      null
+    );
+  }
+
+  return pool[0] || null;
+}
+
+function unlockAudio() {
+  if (state.audioUnlocked) return;
+  if (!("speechSynthesis" in window) || !window.SpeechSynthesisUtterance) return;
+
+  try {
+    const u = new SpeechSynthesisUtterance(" ");
+    u.volume = 0;
+    window.speechSynthesis.speak(u);
+    window.speechSynthesis.cancel();
+    state.audioUnlocked = true;
+  } catch (e) {
+    console.warn("TTS unlock başarısız:", e);
+  }
+}
+
+function speakText(text, langCode) {
+  const clean = String(text || "").trim();
+  if (!clean) return;
+
+  const voiceMode = resolveVoiceMode();
+
+  if (!("speechSynthesis" in window) || !window.SpeechSynthesisUtterance) {
+    console.warn("TTS desteklenmiyor");
+    return;
+  }
+
+  try {
+    window.speechSynthesis.cancel();
+  } catch {}
+
+  const utter = new SpeechSynthesisUtterance(clean);
+  utter.lang = langObj(langCode).bcp;
+
+  const voice = chooseBrowserVoiceByPreference(langCode, voiceMode.gender);
+  if (voice) utter.voice = voice;
+
+  utter.rate = 0.96;
+  utter.pitch = voiceMode.gender === "female" ? 1.05 : 0.95;
+  utter.volume = 1;
+
+  utter.onstart = () => {
+    console.log("TTS başladı:", {
+      lang: utter.lang,
+      selectedMode: voiceMode,
+      browserVoice: voice?.name || "fallback",
+    });
+  };
+
+  utter.onerror = (e) => {
+    console.error("TTS hatası:", e);
+  };
+
+  const run = () => {
+    try {
+      window.speechSynthesis.speak(utter);
+    } catch (err) {
+      console.error("speech speak error:", err);
+    }
+  };
+
+  if (!state.voicesReady) {
+    setTimeout(run, 250);
+    setTimeout(run, 800);
+    return;
+  }
+
+  setTimeout(run, 180);
+}
+
+function bootVoices() {
+  if (!("speechSynthesis" in window)) return;
+
+  const synth = window.speechSynthesis;
+
+  const markReady = () => {
+    const voices = synth.getVoices() || [];
+    if (voices.length) {
+      state.voicesReady = true;
+      console.log("TTS voice sayısı:", voices.length);
+    }
+  };
+
+  try {
+    markReady();
+    setTimeout(markReady, 200);
+    setTimeout(markReady, 800);
+    setTimeout(markReady, 1500);
+    synth.onvoiceschanged = () => markReady();
+  } catch (e) {
+    console.warn("bootVoices uyarı:", e);
+  }
 }
 
 function hardResetMicUi() {
@@ -365,18 +521,10 @@ function createRecognition() {
     const code = String(e?.error || "");
 
     if (state.activeSide === "top") {
-      setHelper(
-        "top",
-        code === "not-allowed" ? "Mikrofon izni verilmedi" : "Konuşma algılanamadı",
-        "wait"
-      );
+      setHelper("top", code === "not-allowed" ? "Mikrofon izni verilmedi" : "Konuşma algılanamadı", "wait");
       setHelper("bot", "Beklemede", "wait");
     } else if (state.activeSide === "bot") {
-      setHelper(
-        "bot",
-        code === "not-allowed" ? "Mikrofon izni verilmedi" : "Konuşma algılanamadı",
-        "wait"
-      );
+      setHelper("bot", code === "not-allowed" ? "Mikrofon izni verilmedi" : "Konuşma algılanamadı", "wait");
       setHelper("top", "Beklemede", "wait");
     }
   };
@@ -423,7 +571,7 @@ function createRecognition() {
         setHelper("top", "Çeviri hazır", "ready");
       }
 
-      speakText(translated, targetLang);
+      setTimeout(() => speakText(translated, targetLang), 180);
       setRootMode("is-ready");
     } catch (err) {
       console.error("translate error:", err);
@@ -452,20 +600,15 @@ function createRecognition() {
       const t = String(r?.[0]?.transcript || "").trim();
       if (!t) continue;
 
-      if (r.isFinal) {
-        finalTxt = `${finalTxt} ${t}`.trim();
-      } else {
-        interim = `${interim} ${t}`.trim();
-      }
+      if (r.isFinal) finalTxt = `${finalTxt} ${t}`.trim();
+      else interim = `${interim} ${t}`.trim();
     }
 
     state.finalText = finalTxt;
     state.interimText = interim;
 
     const live = [state.finalText, state.interimText].filter(Boolean).join(" ").trim();
-    if (live && state.activeSide) {
-      showInterim(state.activeSide, live);
-    }
+    if (live && state.activeSide) showInterim(state.activeSide, live);
   };
 
   return rec;
@@ -514,7 +657,7 @@ async function startListening(side) {
   state.finalText = "";
   state.interimText = "";
 
-  state.recognition.lang = getLang(side === "top" ? state.topLang : state.botLang).bcp;
+  state.recognition.lang = langObj(side === "top" ? state.topLang : state.botLang).bcp;
 
   try {
     state.recognition.start();
@@ -528,9 +671,7 @@ async function startListening(side) {
 
       setTimeout(() => {
         try {
-          state.recognition.lang = getLang(
-            side === "top" ? state.topLang : state.botLang
-          ).bcp;
+          state.recognition.lang = langObj(side === "top" ? state.topLang : state.botLang).bcp;
           state.recognition.start();
         } catch (err2) {
           console.error("recognition restart failed:", err2);
@@ -586,7 +727,6 @@ function renderPopList(which) {
     row.addEventListener("click", () => {
       if (which === "top") state.topLang = l.code;
       else state.botLang = l.code;
-
       persistLangs();
       renderPopList(which);
       closePop(which);
@@ -597,12 +737,20 @@ function renderPopList(which) {
 }
 
 function bindEvents() {
-  dom.topMic?.addEventListener("click", () => startListening("top"));
-  dom.botMic?.addEventListener("click", () => startListening("bot"));
+  dom.topMic?.addEventListener("click", () => {
+    unlockAudio();
+    startListening("top");
+  });
+
+  dom.botMic?.addEventListener("click", () => {
+    unlockAudio();
+    startListening("bot");
+  });
 
   dom.topMic?.addEventListener("keydown", (e) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
+      unlockAudio();
       startListening("top");
     }
   });
@@ -610,6 +758,7 @@ function bindEvents() {
   dom.botMic?.addEventListener("keydown", (e) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
+      unlockAudio();
       startListening("bot");
     }
   });
@@ -641,19 +790,11 @@ function bindEvents() {
     const t = e.target;
     if (!(t instanceof Element)) return;
 
-    if (
-      dom.popTop?.classList.contains("show") &&
-      !dom.popTop.contains(t) &&
-      !dom.topLangBtn?.contains(t)
-    ) {
+    if (dom.popTop?.classList.contains("show") && !dom.popTop.contains(t) && !dom.topLangBtn?.contains(t)) {
       closePop("top");
     }
 
-    if (
-      dom.popBot?.classList.contains("show") &&
-      !dom.popBot.contains(t) &&
-      !dom.botLangBtn?.contains(t)
-    ) {
+    if (dom.popBot?.classList.contains("show") && !dom.popBot.contains(t) && !dom.botLangBtn?.contains(t)) {
       closePop("bot");
     }
   });
@@ -665,25 +806,13 @@ function bindEvents() {
   window.addEventListener("beforeunload", () => stopListening());
 }
 
-function bootVoices() {
-  if (!window.speechSynthesis) return;
-
-  try {
-    window.speechSynthesis.getVoices();
-    window.speechSynthesis.onvoiceschanged = () => {
-      try {
-        window.speechSynthesis.getVoices();
-      } catch {}
-    };
-  } catch {}
-}
-
-function init() {
+async function init() {
   renderLangLabels();
   renderPopList("top");
   renderPopList("bot");
   bindEvents();
   bootVoices();
+  await loadVoiceProfile();
 
   setRootMode("is-ready");
   setBothHelpers("Hazır", "ready", "Hazır", "ready");
