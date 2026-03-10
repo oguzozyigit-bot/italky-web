@@ -404,6 +404,37 @@ async function speak(text, langCode) {
   }
 }
 
+async function spendFaceUsage(usedChars) {
+  const safeChars = Number(usedChars || 0);
+  if (safeChars <= 0) return;
+
+  const userId = await getCurrentUserId();
+  if (!userId) return;
+
+  const r = await fetch(`${API_BASE}/api/billing/usage`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      user_id: userId,
+      module: "facetoface",
+      characters: safeChars
+    })
+  });
+
+  const j = await r.json().catch(() => ({}));
+
+  if (!r.ok) {
+    if (r.status === 402) {
+      alert("Kontörünüz yetersiz. Jeton Market'e yönlendiriliyorsunuz.");
+      location.href = "/pages/jetonbuy.html";
+      throw new Error("insufficient_tokens");
+    }
+    throw new Error(j.detail || "facetoface_usage_failed");
+  }
+
+  return j;
+}
+
 function keepLatestVisible(side) {
   const wrap = side === "top" ? topBody : botBody;
   if (!wrap) return;
@@ -549,6 +580,13 @@ async function finalizeRecognition(side, text) {
     return;
   }
 
+  try {
+    await spendFaceUsage(tr.length);
+  } catch (e) {
+    console.warn("[facetoface usage]", e);
+    if (String(e?.message || "") === "insufficient_tokens") return;
+  }
+
   if (latestTxt) {
     latestTxt.textContent = tr;
     keepLatestVisible(other);
@@ -558,13 +596,6 @@ async function finalizeRecognition(side, text) {
 
   speak(tr, dst);
   setSystemReadyUI();
-}
-
-async function ensureReady() {
-  if (bootReady) return true;
-  if (!bootStarted) startBoot();
-  try { await bootPromise; } catch {}
-  return true;
 }
 
 function startRecording(side) {
