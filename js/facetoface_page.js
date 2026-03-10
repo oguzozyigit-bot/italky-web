@@ -50,14 +50,27 @@ function getLang(code) {
   );
 }
 
+function escapeHtml(str) {
+  return String(str || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
 const dom = {
   root: $("frameRoot"),
+
   topBody: $("topBody"),
   botBody: $("botBody"),
+
   topMic: $("topMic"),
   botMic: $("botMic"),
+
   topHelper: $("topHelper"),
   botHelper: $("botHelper"),
+
   clearBtn: $("clearBtn"),
   homeLink: $("homeLink"),
   homeBtn: $("homeBtn"),
@@ -79,6 +92,7 @@ const dom = {
 const state = {
   recognition: null,
   listening: false,
+  starting: false,
   activeSide: null, // "top" | "bot"
   finalText: "",
   interimText: "",
@@ -88,8 +102,18 @@ const state = {
 
 function setRootMode(mode) {
   if (!dom.root) return;
-  dom.root.classList.remove("is-idle", "is-ready", "is-listening", "is-translating", "is-error");
+  dom.root.classList.remove(
+    "is-idle",
+    "is-ready",
+    "is-listening",
+    "is-translating",
+    "is-error"
+  );
   dom.root.classList.add(mode);
+}
+
+function setStatus(text = "") {
+  if (dom.statusPill) dom.statusPill.textContent = text;
 }
 
 function setHelper(side, text, type = "ready") {
@@ -102,18 +126,15 @@ function setHelper(side, text, type = "ready") {
   if (type === "repeat") el.classList.add("helper-repeat");
 }
 
-function clearHelpers() {
-  setHelper("top", "");
-  setHelper("bot", "");
-}
-
-function setStatus(text = "") {
-  if (dom.statusPill) dom.statusPill.textContent = text;
+function setBothHelpers(topText, topType, botText, botType) {
+  setHelper("top", topText, topType);
+  setHelper("bot", botText, botType);
 }
 
 function renderLangLabels() {
   const top = getLang(state.topLang);
   const bot = getLang(state.botLang);
+
   if (dom.topLangTxt) dom.topLangTxt.textContent = `${top.flag} ${top.name}`;
   if (dom.botLangTxt) dom.botLangTxt.textContent = `${bot.flag} ${bot.name}`;
 }
@@ -124,15 +145,6 @@ function persistLangs() {
   renderLangLabels();
 }
 
-function escapeHtml(s) {
-  return String(s || "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
-}
-
 function speakerSvg() {
   return `
     <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -141,6 +153,42 @@ function speakerSvg() {
       <path d="M17.5 6a8 8 0 0 1 0 12"></path>
     </svg>
   `;
+}
+
+function chooseVoice(langCode) {
+  if (!window.speechSynthesis) return null;
+  const voices = window.speechSynthesis.getVoices() || [];
+  const wanted = getLang(langCode).bcp.toLowerCase();
+
+  return (
+    voices.find((v) => String(v.lang || "").toLowerCase() === wanted) ||
+    voices.find((v) =>
+      String(v.lang || "").toLowerCase().startsWith(canonical(langCode))
+    ) ||
+    voices[0] ||
+    null
+  );
+}
+
+function speakText(text, langCode) {
+  const clean = String(text || "").trim();
+  if (!clean || !window.speechSynthesis) return;
+
+  try {
+    window.speechSynthesis.cancel();
+  } catch {}
+
+  const u = new SpeechSynthesisUtterance(clean);
+  u.lang = getLang(langCode).bcp;
+
+  const voice = chooseVoice(langCode);
+  if (voice) u.voice = voice;
+
+  u.rate = 1;
+  u.pitch = 1;
+  u.volume = 1;
+
+  window.speechSynthesis.speak(u);
 }
 
 function createBubble(text, type, langCode, latest = false) {
@@ -163,124 +211,119 @@ function createBubble(text, type, langCode, latest = false) {
   row.appendChild(txt);
   row.appendChild(spk);
   bubble.appendChild(row);
+
   return bubble;
 }
 
+function clearBodies() {
+  if (dom.topBody) dom.topBody.innerHTML = "";
+  if (dom.botBody) dom.botBody.innerHTML = "";
+}
+
 function setBodies(sourceSide, sourceText, translatedText) {
+  clearBodies();
+
   if (sourceSide === "top") {
     if (dom.topBody) {
-      dom.topBody.innerHTML = "";
       dom.topBody.appendChild(createBubble(sourceText, "me", state.topLang, true));
     }
     if (dom.botBody) {
-      dom.botBody.innerHTML = "";
       dom.botBody.appendChild(createBubble(translatedText, "me", state.botLang, true));
     }
   } else {
     if (dom.botBody) {
-      dom.botBody.innerHTML = "";
       dom.botBody.appendChild(createBubble(sourceText, "me", state.botLang, true));
     }
     if (dom.topBody) {
-      dom.topBody.innerHTML = "";
       dom.topBody.appendChild(createBubble(translatedText, "me", state.topLang, true));
     }
   }
 }
 
 function showInterim(side, text) {
-  if (!text) return;
-  const body = side === "top" ? dom.topBody : dom.botBody;
-  if (!body) return;
-  body.innerHTML = "";
-  body.appendChild(createBubble(text, "me", side === "top" ? state.topLang : state.botLang, true));
-}
-
-function chooseVoice(langCode) {
-  if (!window.speechSynthesis) return null;
-  const voices = window.speechSynthesis.getVoices() || [];
-  const wanted = getLang(langCode).bcp.toLowerCase();
-
-  return (
-    voices.find((v) => String(v.lang || "").toLowerCase() === wanted) ||
-    voices.find((v) => String(v.lang || "").toLowerCase().startsWith(canonical(langCode))) ||
-    voices[0] ||
-    null
-  );
-}
-
-function speakText(text, langCode) {
   const clean = String(text || "").trim();
-  if (!clean || !window.speechSynthesis) return;
+  if (!clean) return;
 
-  try {
-    window.speechSynthesis.cancel();
-  } catch {}
+  const body = side === "top" ? dom.topBody : dom.botBody;
+  const lang = side === "top" ? state.topLang : state.botLang;
+  if (!body) return;
 
-  const u = new SpeechSynthesisUtterance(clean);
-  u.lang = getLang(langCode).bcp;
-  const voice = chooseVoice(langCode);
-  if (voice) u.voice = voice;
-  u.rate = 1;
-  u.pitch = 1;
-  window.speechSynthesis.speak(u);
-}
-
-async function translateText(text, sourceLang, targetLang) {
-
-  const payload = {
-    text: String(text || "").trim(),
-    source: canonical(sourceLang),
-    target: canonical(targetLang),
-    mime_type: "text/plain"
-  };
-
-  const res = await fetch(`${API_BASE}/api/translate`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(payload)
-  });
-
-  if (!res.ok) {
-    const err = await res.text().catch(()=> "");
-    throw new Error(`Translate HTTP ${res.status} ${err}`);
-  }
-
-  const data = await res.json();
-
-  return (
-    data?.translated_text ||
-    data?.translation ||
-    data?.translated ||
-    data?.text ||
-    ""
-  );
-}
-
-      if (translated) {
-        console.log("Çeviri başarılı endpoint:", url);
-        return translated;
-      }
-
-      lastErr = new Error(`${url} -> başarılı cevap ama çeviri alanı boş`);
-    } catch (err) {
-      lastErr = err;
-    }
-  }
-
-  throw lastErr || new Error("Hiçbir translate endpointi çalışmadı.");
+  body.innerHTML = "";
+  body.appendChild(createBubble(clean, "me", lang, true));
 }
 
 async function ensureMic() {
   if (!navigator.mediaDevices?.getUserMedia) {
     throw new Error("Mikrofon desteği yok");
   }
+
   const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
   try {
     stream.getTracks().forEach((t) => t.stop());
   } catch {}
+}
+
+async function translateText(text, sourceLang, targetLang) {
+  const payload = {
+    text: String(text || "").trim(),
+    source: canonical(sourceLang),
+    target: canonical(targetLang),
+    mime_type: "text/plain",
+  };
+
+  const res = await fetch(`${API_BASE}/api/translate`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    const err = await res.text().catch(() => "");
+    throw new Error(`Translate HTTP ${res.status} ${err}`);
+  }
+
+  const data = await res.json().catch(() => ({}));
+
+  return (
+    data?.translated_text ||
+    data?.translation ||
+    data?.translated ||
+    data?.target_text ||
+    data?.result ||
+    data?.text ||
+    ""
+  );
+}
+
+function hardResetMicUi() {
+  dom.topMic?.classList.remove("listening", "recorded");
+  dom.botMic?.classList.remove("listening", "recorded");
+}
+
+function stopListening({ keepHelpers = false } = {}) {
+  try {
+    state.recognition?.abort?.();
+  } catch {}
+
+  try {
+    state.recognition?.stop?.();
+  } catch {}
+
+  state.listening = false;
+  state.starting = false;
+  state.activeSide = null;
+  state.finalText = "";
+  state.interimText = "";
+
+  hardResetMicUi();
+  setRootMode("is-ready");
+
+  if (!keepHelpers) {
+    setBothHelpers("Hazır", "ready", "Hazır", "ready");
+  }
 }
 
 function createRecognition() {
@@ -288,61 +331,78 @@ function createRecognition() {
   if (!SR) return null;
 
   const rec = new SR();
-  rec.continuous = true;
+  rec.continuous = false;
   rec.interimResults = true;
   rec.maxAlternatives = 1;
 
   rec.onstart = () => {
-  state.listening = true;
-  setRootMode("is-listening");
+    state.starting = false;
+    state.listening = true;
 
-  dom.topMic?.classList.remove("listening");
-  dom.botMic?.classList.remove("listening");
+    hardResetMicUi();
+    setRootMode("is-listening");
 
-  if (state.activeSide === "top") {
-    dom.topMic?.classList.add("listening");
-    setHelper("top", "Dinliyorum...", "ready");
-    setHelper("bot", "Çeviri bekleniyor...", "wait");
-  } else if (state.activeSide === "bot") {
-    dom.botMic?.classList.add("listening");
-    setHelper("bot", "Dinliyorum...", "ready");
-    setHelper("top", "Çeviri bekleniyor...", "wait");
-  }
-};
+    if (state.activeSide === "top") {
+      dom.topMic?.classList.add("listening");
+      setHelper("top", "Dinliyorum...", "ready");
+      setHelper("bot", "Çeviri bekleniyor...", "wait");
+    } else if (state.activeSide === "bot") {
+      dom.botMic?.classList.add("listening");
+      setHelper("bot", "Dinliyorum...", "ready");
+      setHelper("top", "Çeviri bekleniyor...", "wait");
+    }
+  };
 
   rec.onerror = (e) => {
     console.error("speech error:", e);
+
     state.listening = false;
-    dom.topMic?.classList.remove("listening");
-    dom.botMic?.classList.remove("listening");
+    state.starting = false;
+
+    hardResetMicUi();
     setRootMode("is-error");
-    clearHelpers();
-    if (state.activeSide) {
-      setHelper(state.activeSide, "Mikrofon veya konuşma hatası", "wait");
+
+    const code = String(e?.error || "");
+
+    if (state.activeSide === "top") {
+      setHelper(
+        "top",
+        code === "not-allowed" ? "Mikrofon izni verilmedi" : "Konuşma algılanamadı",
+        "wait"
+      );
+      setHelper("bot", "Beklemede", "wait");
+    } else if (state.activeSide === "bot") {
+      setHelper(
+        "bot",
+        code === "not-allowed" ? "Mikrofon izni verilmedi" : "Konuşma algılanamadı",
+        "wait"
+      );
+      setHelper("top", "Beklemede", "wait");
     }
   };
 
   rec.onend = async () => {
     state.listening = false;
-    dom.topMic?.classList.remove("listening");
-    dom.botMic?.classList.remove("listening");
+    state.starting = false;
+
+    hardResetMicUi();
 
     const finalText = String(state.finalText || "").trim();
-    if (!finalText || !state.activeSide) {
+    const side = state.activeSide;
+
+    if (!finalText || !side) {
       setRootMode("is-ready");
-      clearHelpers();
-      setHelper("top", "Hazır", "ready");
-      setHelper("bot", "Hazır", "ready");
+      setBothHelpers("Hazır", "ready", "Hazır", "ready");
       return;
     }
 
     setRootMode("is-translating");
 
     try {
-      const sourceLang = state.activeSide === "top" ? state.topLang : state.botLang;
-      const targetLang = state.activeSide === "top" ? state.botLang : state.topLang;
+      const sourceLang = side === "top" ? state.topLang : state.botLang;
+      const targetLang = side === "top" ? state.botLang : state.topLang;
 
-      if (state.activeSide === "top") {
+      if (side === "top") {
         setHelper("top", "Algılandı", "repeat");
         setHelper("bot", "Çeviri yapılıyor...", "wait");
       } else {
@@ -351,12 +411,14 @@ function createRecognition() {
       }
 
       const translated = await translateText(finalText, sourceLang, targetLang);
-      setBodies(state.activeSide, finalText, translated);
+      setBodies(side, finalText, translated);
 
-      if (state.activeSide === "top") {
+      if (side === "top") {
+        dom.topMic?.classList.add("recorded");
         setHelper("top", "Tekrar konuşabilirsiniz", "repeat");
         setHelper("bot", "Çeviri hazır", "ready");
       } else {
+        dom.botMic?.classList.add("recorded");
         setHelper("bot", "Tekrar konuşabilirsiniz", "repeat");
         setHelper("top", "Çeviri hazır", "ready");
       }
@@ -366,14 +428,18 @@ function createRecognition() {
     } catch (err) {
       console.error("translate error:", err);
       setRootMode("is-error");
-      if (state.activeSide === "top") {
+
+      if (side === "top") {
+        setHelper("top", "Metin alındı", "repeat");
         setHelper("bot", "Çeviri oluşmadı", "wait");
       } else {
+        setHelper("bot", "Metin alındı", "repeat");
         setHelper("top", "Çeviri oluşmadı", "wait");
       }
     } finally {
       state.finalText = "";
       state.interimText = "";
+      state.activeSide = null;
     }
   };
 
@@ -385,41 +451,48 @@ function createRecognition() {
       const r = event.results[i];
       const t = String(r?.[0]?.transcript || "").trim();
       if (!t) continue;
-      if (r.isFinal) finalTxt = `${finalTxt} ${t}`.trim();
-      else interim = `${interim} ${t}`.trim();
+
+      if (r.isFinal) {
+        finalTxt = `${finalTxt} ${t}`.trim();
+      } else {
+        interim = `${interim} ${t}`.trim();
+      }
     }
 
     state.finalText = finalTxt;
     state.interimText = interim;
 
     const live = [state.finalText, state.interimText].filter(Boolean).join(" ").trim();
-    if (live) showInterim(state.activeSide, live);
+    if (live && state.activeSide) {
+      showInterim(state.activeSide, live);
+    }
   };
 
   return rec;
 }
 
 async function startListening(side) {
-  const sameSideRunning = state.listening && state.activeSide === side;
+  if (state.starting) return;
 
+  const sameSideRunning = state.listening && state.activeSide === side;
   if (sameSideRunning) {
-    stopListening();
+    stopListening({ keepHelpers: true });
     setHelper(side, "Durduruldu", "wait");
     return;
   }
 
-  if (state.listening) {
-    try {
-      state.recognition?.abort?.();
-    } catch {}
-    state.listening = false;
+  if (state.listening || state.starting) {
+    stopListening({ keepHelpers: true });
     await new Promise((r) => setTimeout(r, 250));
   }
+
+  state.starting = true;
 
   try {
     await ensureMic();
   } catch (e) {
-    console.error(e);
+    console.error("mic error:", e);
+    state.starting = false;
     setRootMode("is-error");
     setHelper(side, "Mikrofon izni gerekli", "wait");
     return;
@@ -427,22 +500,21 @@ async function startListening(side) {
 
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) {
+    state.starting = false;
     setRootMode("is-error");
     setHelper(side, "Bu cihazda canlı konuşma yok", "wait");
     return;
+  }
+
+  if (!state.recognition) {
+    state.recognition = createRecognition();
   }
 
   state.activeSide = side;
   state.finalText = "";
   state.interimText = "";
 
-  if (!state.recognition) {
-    state.recognition = createRecognition();
-  }
-
-  state.recognition.lang = getLang(
-    side === "top" ? state.topLang : state.botLang
-  ).bcp;
+  state.recognition.lang = getLang(side === "top" ? state.topLang : state.botLang).bcp;
 
   try {
     state.recognition.start();
@@ -453,6 +525,7 @@ async function startListening(side) {
       try {
         state.recognition.abort?.();
       } catch {}
+
       setTimeout(() => {
         try {
           state.recognition.lang = getLang(
@@ -461,6 +534,7 @@ async function startListening(side) {
           state.recognition.start();
         } catch (err2) {
           console.error("recognition restart failed:", err2);
+          state.starting = false;
           setRootMode("is-error");
           setHelper(side, "Mikrofon yeniden başlatılamadı", "wait");
         }
@@ -468,27 +542,16 @@ async function startListening(side) {
       return;
     }
 
+    state.starting = false;
     setRootMode("is-error");
     setHelper(side, "Başlatılamadı", "wait");
   }
 }
-function stopListening() {
-  try {
-    state.recognition?.stop?.();
-  } catch {}
-  state.listening = false;
-  dom.topMic?.classList.remove("listening");
-  dom.botMic?.classList.remove("listening");
-  setRootMode("is-ready");
-}
 
 function clearAll() {
   stopListening();
-  if (dom.topBody) dom.topBody.innerHTML = "";
-  if (dom.botBody) dom.botBody.innerHTML = "";
-  clearHelpers();
-  setHelper("top", "Hazır", "ready");
-  setHelper("bot", "Hazır", "ready");
+  clearBodies();
+  setBothHelpers("Hazır", "ready", "Hazır", "ready");
 }
 
 function openPop(which) {
@@ -523,6 +586,7 @@ function renderPopList(which) {
     row.addEventListener("click", () => {
       if (which === "top") state.topLang = l.code;
       else state.botLang = l.code;
+
       persistLangs();
       renderPopList(which);
       closePop(which);
@@ -537,11 +601,17 @@ function bindEvents() {
   dom.botMic?.addEventListener("click", () => startListening("bot"));
 
   dom.topMic?.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" || e.key === " ") startListening("top");
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      startListening("top");
+    }
   });
 
   dom.botMic?.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" || e.key === " ") startListening("bot");
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      startListening("bot");
+    }
   });
 
   dom.clearBtn?.addEventListener("click", clearAll);
@@ -592,15 +662,18 @@ function bindEvents() {
     if (document.hidden) stopListening();
   });
 
-  window.addEventListener("beforeunload", stopListening);
+  window.addEventListener("beforeunload", () => stopListening());
 }
 
 function bootVoices() {
   if (!window.speechSynthesis) return;
+
   try {
     window.speechSynthesis.getVoices();
     window.speechSynthesis.onvoiceschanged = () => {
-      try { window.speechSynthesis.getVoices(); } catch {}
+      try {
+        window.speechSynthesis.getVoices();
+      } catch {}
     };
   } catch {}
 }
@@ -613,8 +686,7 @@ function init() {
   bootVoices();
 
   setRootMode("is-ready");
-  setHelper("top", "Hazır", "ready");
-  setHelper("bot", "Hazır", "ready");
+  setBothHelpers("Hazır", "ready", "Hazır", "ready");
   setStatus("Hazır");
 }
 
