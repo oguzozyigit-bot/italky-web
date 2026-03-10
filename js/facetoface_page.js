@@ -227,31 +227,63 @@ function speakText(text, langCode) {
 }
 
 async function translateText(text, sourceLang, targetLang) {
+  const cleanText = String(text || "").trim();
+  if (!cleanText) return "";
+
   const payload = {
-    text: String(text || "").trim(),
+    text: cleanText,
     source_lang: canonical(sourceLang),
     target_lang: canonical(targetLang),
   };
 
-  const res = await fetch(`${API_BASE}/translate`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
+  const candidates = [
+    `${API_BASE}/translate`,
+    `${API_BASE}/api/translate`,
+    `${API_BASE}/translate-text`,
+    `${API_BASE}/api/translate-text`,
+    `${API_BASE}/translator/translate`,
+    `${API_BASE}/api/translator/translate`,
+  ];
 
-  if (!res.ok) {
-    const err = await res.text().catch(() => "");
-    throw new Error(`Translate HTTP ${res.status} ${err}`);
+  let lastErr = null;
+
+  for (const url of candidates) {
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const errTxt = await res.text().catch(() => "");
+        lastErr = new Error(`${url} -> HTTP ${res.status} ${errTxt}`);
+        continue;
+      }
+
+      const data = await res.json().catch(() => ({}));
+
+      const translated =
+        data?.translated_text ||
+        data?.translation ||
+        data?.translated ||
+        data?.target_text ||
+        data?.result ||
+        data?.text ||
+        "";
+
+      if (translated) {
+        console.log("Çeviri başarılı endpoint:", url);
+        return translated;
+      }
+
+      lastErr = new Error(`${url} -> başarılı cevap ama çeviri alanı boş`);
+    } catch (err) {
+      lastErr = err;
+    }
   }
 
-  const data = await res.json().catch(() => ({}));
-  return (
-    data?.translated_text ||
-    data?.translation ||
-    data?.translated ||
-    data?.text ||
-    ""
-  );
+  throw lastErr || new Error("Hiçbir translate endpointi çalışmadı.");
 }
 
 async function ensureMic() {
