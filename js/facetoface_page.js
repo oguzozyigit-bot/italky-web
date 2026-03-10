@@ -227,50 +227,37 @@ function speakText(text, langCode) {
 }
 
 async function translateText(text, sourceLang, targetLang) {
-  const cleanText = String(text || "").trim();
-  if (!cleanText) return "";
 
   const payload = {
-    text: cleanText,
-    source_lang: canonical(sourceLang),
-    target_lang: canonical(targetLang),
+    text: String(text || "").trim(),
+    source: canonical(sourceLang),
+    target: canonical(targetLang),
+    mime_type: "text/plain"
   };
 
-  const candidates = [
-    `${API_BASE}/translate`,
-    `${API_BASE}/api/translate`,
-    `${API_BASE}/translate-text`,
-    `${API_BASE}/api/translate-text`,
-    `${API_BASE}/translator/translate`,
-    `${API_BASE}/api/translator/translate`,
-  ];
+  const res = await fetch(`${API_BASE}/api/translate`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(payload)
+  });
 
-  let lastErr = null;
+  if (!res.ok) {
+    const err = await res.text().catch(()=> "");
+    throw new Error(`Translate HTTP ${res.status} ${err}`);
+  }
 
-  for (const url of candidates) {
-    try {
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+  const data = await res.json();
 
-      if (!res.ok) {
-        const errTxt = await res.text().catch(() => "");
-        lastErr = new Error(`${url} -> HTTP ${res.status} ${errTxt}`);
-        continue;
-      }
-
-      const data = await res.json().catch(() => ({}));
-
-      const translated =
-        data?.translated_text ||
-        data?.translation ||
-        data?.translated ||
-        data?.target_text ||
-        data?.result ||
-        data?.text ||
-        "";
+  return (
+    data?.translated_text ||
+    data?.translation ||
+    data?.translated ||
+    data?.text ||
+    ""
+  );
+}
 
       if (translated) {
         console.log("Çeviri başarılı endpoint:", url);
