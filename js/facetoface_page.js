@@ -38,9 +38,9 @@ function langObj(code) {
   const c = canonical(code);
   return (
     LANGS.find((x) => x.code === c) || {
-      code: c || "en",
+      code: c,
       flag: "🌐",
-      name: (c || "en").toUpperCase(),
+      name: c.toUpperCase(),
       bcp: BCP[c] || "en-US",
     }
   );
@@ -49,13 +49,6 @@ function langObj(code) {
 function labelChip(code) {
   const o = langObj(code);
   return `${o.flag} ${o.name}`;
-}
-
-function normalizeVoiceStorage(value) {
-  const v = String(value || "auto").toLowerCase().trim();
-  if (v === "own" || v === "my") return "clone";
-  if (v === "female" || v === "male" || v === "clone") return v;
-  return "auto";
 }
 
 const UI_TEXT = {
@@ -321,14 +314,21 @@ async function getCurrentUserId() {
 }
 
 function getVoicePreference() {
-  return normalizeVoiceStorage(localStorage.getItem("tts_voice") || "auto");
+  return String(localStorage.getItem("tts_voice") || "auto").toLowerCase().trim();
+}
+
+function base64ToBlob(base64, mime = "audio/mpeg") {
+  const byteChars = atob(base64);
+  const byteNumbers = new Array(byteChars.length);
+  for (let i = 0; i < byteChars.length; i++) byteNumbers[i] = byteChars.charCodeAt(i);
+  return new Blob([new Uint8Array(byteNumbers)], { type: mime });
 }
 
 async function speakViaApi(text, langCode) {
   const userId = await getCurrentUserId();
   const voice = getVoicePreference();
 
-  const r = await fetch(`${API_BASE}/tts`, {
+  const r = await fetch(`${API_BASE}/api/tts`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -336,9 +336,7 @@ async function speakViaApi(text, langCode) {
       lang: canonical(langCode),
       user_id: userId,
       module: "facetoface",
-      voice,
-      speaking_rate: 1.0,
-      pitch: 0.0
+      voice
     }),
   });
 
@@ -348,7 +346,7 @@ async function speakViaApi(text, langCode) {
     throw new Error(j?.error || j?.detail || "TTS API unavailable");
   }
 
-  const audio = new Audio(`data:audio/mp3;base64,${j.audio_base64}`);
+  const audio = new Audio("data:audio/mp3;base64," + j.audio_base64);
   currentAudio = audio;
 
   audio.onended = () => {
@@ -383,7 +381,6 @@ function speakFallback(text, langCode) {
   u.volume = 1;
 
   setTimeout(() => {
-    try { window.speechSynthesis.cancel(); } catch {}
     try { window.speechSynthesis.speak(u); } catch {}
   }, 50);
 }
@@ -396,6 +393,14 @@ async function speak(text, langCode) {
   if (now - ttsDebounceAt < 250) stopAudio();
   ttsDebounceAt = now;
   stopAudio();
+
+  const voice = getVoicePreference();
+
+  // auto = ücretsiz ses
+  if (voice === "auto") {
+    speakFallback(value, langCode);
+    return;
+  }
 
   try {
     await speakViaApi(value, langCode);
@@ -507,14 +512,11 @@ async function translateText(text, from, to) {
   const dst = canonical(to);
 
   try {
-    const r = await fetch(`${API_BASE}/api/translate`, {
+    const r = await fetch(`${API_BASE}/api/translate_ai`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         text: String(text || "").trim(),
-        source: src,
-        target: dst,
-        mime_type: "text/plain",
         from_lang: src,
         to_lang: dst,
       }),
@@ -522,20 +524,14 @@ async function translateText(text, from, to) {
 
     if (!r.ok) {
       const raw = await r.text().catch(() => "");
-      console.error("translate failed", r.status, raw);
+      console.error("translate_ai failed", r.status, raw);
       return null;
     }
 
     const j = await r.json().catch(() => null);
-    return String(
-      j?.translated_text ||
-      j?.translated ||
-      j?.translation ||
-      j?.text ||
-      ""
-    ).trim() || null;
+    return String(j?.translated || "").trim() || null;
   } catch (e) {
-    console.error("translate error", e);
+    console.error("translate_ai error", e);
     return null;
   }
 }
@@ -699,12 +695,7 @@ async function warmAudio() {
 async function warmApis() {
   await Promise.allSettled([
     fetch(`${API_BASE}/healthz`).catch(() => {}),
-    fetch(`${API_BASE}/tts`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text: " ", lang: "tr", module: "facetoface", voice: "auto" })
-    }).catch(() => {}),
-    fetch(`${API_BASE}/api/translate/_ping`).catch(() => {}),
+    fetch(`${API_BASE}/api/translate_ai/health`).catch(() => {}),
   ]);
 }
 
@@ -750,6 +741,7 @@ async function ensureReady() {
 }
 
 function safeHomeHref() {
+  if (location.pathname === "/facetoface.html") return "/pages/home.html";
   return "/pages/home.html";
 }
 
