@@ -153,7 +153,7 @@ function resolveDom() {
     pick("targetText", "toText", "outputText", "translatedText", "resultText");
 
   dom.recordBtn =
-    pick("recordBtn", "toggleRecording", "micBtn", "startBtn", "talkBtn");
+  pick("recordBtn", "toggleRecording", "micBtn", "startBtn", "talkBtn", "botMic", "topMic");
   dom.stopBtn = pick("stopBtn", "endBtn", "pauseBtn");
   dom.swapBtn = pick("swapBtn", "switchBtn", "flipBtn");
   dom.clearBtn = pick("clearBtn", "resetBtn");
