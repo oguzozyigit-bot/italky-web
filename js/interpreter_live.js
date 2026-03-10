@@ -43,6 +43,10 @@ let isMuted = false;
 let recognition = null;
 let isListening = false;
 
+/* ✅ QR'ı okutan ödeyecek */
+let payerMode = false;
+let payerUserId = "";
+
 function toast(msg) {
   if (!toastEl) return;
   toastEl.textContent = String(msg || "");
@@ -63,21 +67,20 @@ function getParams() {
     room: String(p.get("room") || "").trim(),
     host: String(p.get("host") || "").trim(),
     version: String(p.get("v") || "1").trim(),
-    my: String(p.get("my") || "").trim()
+    my: String(p.get("my") || "").trim(),
+    payer: String(p.get("payer") || "0").trim()
   };
 }
 
 function buildLangOptions() {
   const langs = Array.isArray(LANG_POOL) ? LANG_POOL : [];
-  const selected = canonical(localStorage.getItem(MY_LANG_KEY) || myLangCode || "tr");
-
   myLang.innerHTML = langs.map((l) => {
     const code = canonical(l.code);
     return `<option value="${code}">${l.flag || "🌐"} ${l.name || code.toUpperCase()}</option>`;
   }).join("");
 
-  const hasSelected = [...myLang.options].some(o => o.value === selected);
-  myLang.value = hasSelected ? selected : "tr";
+  const hasSelected = [...myLang.options].some(o => o.value === myLangCode);
+  myLang.value = hasSelected ? myLangCode : "tr";
   myLangCode = myLang.value;
 }
 
@@ -206,6 +209,7 @@ function base64ToBlob(base64, mime = "audio/mpeg") {
   return new Blob([new Uint8Array(byteNumbers)], { type: mime });
 }
 
+/* ✅ Ücretsiz ses = sadece çeviri, seslendirme yok */
 async function speak(text, langCode, autoplay = true) {
   const cleaned = normalizeForTTS(text);
   if (!cleaned) return;
@@ -213,6 +217,9 @@ async function speak(text, langCode, autoplay = true) {
 
   try {
     const voice = localStorage.getItem(TTS_VOICE_KEY) || "auto";
+
+    // ücretsiz ses: sadece çeviri, ses yok
+    if (voice === "auto") return;
 
     const r = await fetch(`${API_BASE}/api/tts`, {
       method: "POST",
@@ -264,6 +271,36 @@ function updatePeerState({ online, langCode = "" }) {
   peerLangText.textContent = peerLangCode ? `Onun dili: ${peerLangCode.toUpperCase()}` : "—";
 }
 
+/* ✅ QR'ı okutan kişiden kontör düş */
+async function spendInterpreterUsage(usedChars) {
+  const safeChars = Number(usedChars || 0);
+  if (!payerMode || !payerUserId || safeChars <= 0) return;
+
+  const r = await fetch(`${API_BASE}/api/interpreter/spend`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      payer_user_id: payerUserId,
+      used_chars: safeChars
+    })
+  });
+
+  const j = await r.json().catch(() => ({}));
+
+  if (!r.ok) {
+    if (r.status === 402) {
+      alert("Kontörünüz yetersiz. Jeton Market'e yönlendiriliyorsunuz.");
+      location.href = "/pages/jetonbuy.html";
+      throw new Error("insufficient_tokens");
+    }
+    throw new Error(j.detail || "interpreter_spend_failed");
+  }
+
+  return j;
+}
+
 async function handleIncomingMessage(payload) {
   const srcText = String(payload?.text || "").trim();
   const srcLang = canonical(payload?.lang || "");
@@ -276,6 +313,14 @@ async function handleIncomingMessage(payload) {
 
   const translated = await translateText(srcText, srcLang, myLangCode);
   const finalText = translated || srcText;
+
+  /* ✅ Sadece QR'ı okutan kullanıcı öder */
+  try {
+    await spendInterpreterUsage(String(finalText || "").length);
+  } catch (e) {
+    console.warn("[interpreter spend]", e);
+    if (String(e?.message || "") === "insufficient_tokens") return;
+  }
 
   addBubble({
     side: "them",
@@ -421,6 +466,11 @@ async function init() {
   myUserId = myUser?.id || `guest-${Math.random().toString(36).slice(2, 10)}`;
 
   myLangCode = canonical(params.my || localStorage.getItem(MY_LANG_KEY) || "tr");
+
+  /* ✅ QR okutan kullanıcı = payer */
+  payerMode = String(params.payer || "0") === "1";
+  payerUserId = payerMode ? myUserId : "";
+
   buildLangOptions();
   initSTT();
 
@@ -496,18 +546,6 @@ async function init() {
 
   await joinChannel();
   autoResize();
-}
-
-function buildLangOptions() {
-  const langs = Array.isArray(LANG_POOL) ? LANG_POOL : [];
-  myLang.innerHTML = langs.map((l) => {
-    const code = canonical(l.code);
-    return `<option value="${code}">${l.flag || "🌐"} ${l.name || code.toUpperCase()}</option>`;
-  }).join("");
-
-  const hasSelected = [...myLang.options].some(o => o.value === myLangCode);
-  myLang.value = hasSelected ? myLangCode : "tr";
-  myLangCode = myLang.value;
 }
 
 init();
