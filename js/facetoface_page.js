@@ -274,21 +274,22 @@ function createRecognition() {
   rec.maxAlternatives = 1;
 
   rec.onstart = () => {
-    state.listening = true;
-    setRootMode("is-listening");
+  state.listening = true;
+  setRootMode("is-listening");
 
-    if (state.activeSide === "top") {
-      dom.topMic?.classList.add("listening");
-      dom.botMic?.classList.remove("listening");
-      setHelper("top", "Dinliyorum...", "ready");
-      setHelper("bot", "Çeviri bekleniyor...", "wait");
-    } else {
-      dom.botMic?.classList.add("listening");
-      dom.topMic?.classList.remove("listening");
-      setHelper("bot", "Dinliyorum...", "ready");
-      setHelper("top", "Çeviri bekleniyor...", "wait");
-    }
-  };
+  dom.topMic?.classList.remove("listening");
+  dom.botMic?.classList.remove("listening");
+
+  if (state.activeSide === "top") {
+    dom.topMic?.classList.add("listening");
+    setHelper("top", "Dinliyorum...", "ready");
+    setHelper("bot", "Çeviri bekleniyor...", "wait");
+  } else if (state.activeSide === "bot") {
+    dom.botMic?.classList.add("listening");
+    setHelper("bot", "Dinliyorum...", "ready");
+    setHelper("top", "Çeviri bekleniyor...", "wait");
+  }
+};
 
   rec.onerror = (e) => {
     console.error("speech error:", e);
