@@ -68,6 +68,14 @@ function buildLiveUrl({ room, host, version, my }) {
   url.searchParams.set("host", host);
   url.searchParams.set("v", version || "1");
   url.searchParams.set("my", my);
+  url.searchParams.set("payer", "1"); // QR'ı okutan öder
+  return url.toString();
+}
+  const url = new URL("/pages/interpreter_live.html", location.origin);
+  url.searchParams.set("room", room);
+  url.searchParams.set("host", host);
+  url.searchParams.set("v", version || "1");
+  url.searchParams.set("my", my);
   return url.toString();
 }
 
