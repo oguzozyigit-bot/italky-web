@@ -1,13 +1,9 @@
 // FILE: /js/f2f_call.js
-// ✅ WalkieTalkie FINAL
-// ✅ Ücretsiz ses: sadece native/browser TTS
-// ✅ Her mesajın yanında hoparlör var
-// ✅ Floor control + Push-to-talk
-// ✅ HATA KORUMASI
 
 import { LANG_POOL } from "/js/lang_pool_full.js";
 import { STORAGE_KEY } from "/js/config.js";
 import { shortDisplayName } from "/js/ui_shell.js";
+import { supabase } from "/js/supabase_client.js";
 
 const API_BASE = "https://italky-api.onrender.com";
 const $ = (id)=>document.getElementById(id);
@@ -19,6 +15,9 @@ const role = String(params.get("role") || "").trim().toLowerCase();
 let myLang = String(params.get("me_lang") || localStorage.getItem("f2f_my_lang") || "tr").trim().toLowerCase();
 localStorage.setItem("f2f_my_lang", myLang);
 
+/* ===============================
+   SAFE UI ERROR OVERLAY
+================================ */
 function showFatal(msg){
   try{
     const box = document.createElement("div");
@@ -62,6 +61,9 @@ window.addEventListener("unhandledrejection",(e)=>{
   console.warn("[WT REJECTION]", e?.reason || e);
 });
 
+/* ===============================
+   BOOT
+================================ */
 document.addEventListener("DOMContentLoaded", ()=>{
   try{
     boot();
@@ -202,7 +204,9 @@ function boot(){
     return s;
   }
 
-  /* ✅ ücretsiz ses */
+  /* ===============================
+     ÜCRETSİZ SES
+  ============================== */
   let currentUtterance = null;
 
   function stopSpeak(){
@@ -309,6 +313,40 @@ function boot(){
 
     chat.appendChild(row);
     chat.scrollTop = chat.scrollHeight;
+  }
+
+  /* ===============================
+     KONTÖR DÜŞME
+  ============================== */
+  async function spendMeetingUsage(usedChars){
+    const safeChars = Number(usedChars || 0);
+    if (safeChars <= 0) return;
+
+    const { data } = await supabase.auth.getUser();
+    const userId = data?.user?.id || "";
+    if (!userId) return;
+
+    const r = await fetch(`${API_BASE}/api/meeting/spend`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        user_id: userId,
+        used_chars: safeChars
+      })
+    });
+
+    const j = await r.json().catch(() => ({}));
+
+    if (!r.ok) {
+      if (r.status === 402) {
+        alert("Kontörünüz yetersiz. Jeton Market'e yönlendiriliyorsunuz.");
+        location.href = "/pages/jetonbuy.html";
+        throw new Error("insufficient_tokens");
+      }
+      throw new Error(j.detail || "meeting_spend_failed");
+    }
+
+    return j;
   }
 
   const sentLog = [];
@@ -537,6 +575,13 @@ function boot(){
         shown = localCleanText(shown);
         if(!shown) return;
 
+        try{
+          await spendMeetingUsage(String(shown || "").length);
+        }catch(e){
+          console.warn("[meeting spend]", e);
+          if(String(e?.message || "") === "insufficient_tokens") return;
+        }
+
         addMessage("left", fromName, shown, myLang);
       }
     };
@@ -555,8 +600,6 @@ function boot(){
 
     addMessage("right", MY.name, cleaned, myLang);
     rememberSent(cleaned);
-
-    upsertParticipant(clientId, MY.name, MY.picture);
 
     if(ws && ws.readyState === 1){
       ws.send(JSON.stringify({
