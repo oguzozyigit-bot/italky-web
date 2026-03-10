@@ -33,19 +33,17 @@ const sheetQuery = $("sheetQuery");
 /* -------------------------
    CONFIG
 -------------------------- */
-const API_BASE = "https://italky-api.onrender.com"; // italky-api
+const API_BASE = "https://italky-api.onrender.com";
 const LANGS_ENDPOINT = `${API_BASE}/api/translate/languages`;
-
-// Backend /api/translate:
 const TRANSLATE_ENDPOINT = `${API_BASE}/api/translate`;
+const USAGE_SPEND_ENDPOINT = `${API_BASE}/api/usage/spend`;
 
 /* -------------------------
    STATE
 -------------------------- */
-let LANGS = []; // [{code, name, flag?}]
-let activePick = "from"; // from/to
+let LANGS = [];
+let activePick = "from";
 
-// ✅ DEFAULT: TR -> EN (dil algılama yok)
 let fromLang = "tr";
 let toLang = "en";
 
@@ -53,7 +51,6 @@ function canonical(code){
   return String(code || "").toLowerCase().trim();
 }
 
-// basit bayrak: en sık olanlar + fallback 🌐
 const FLAG = {
   tr:"🇹🇷", en:"🇬🇧", de:"🇩🇪", fr:"🇫🇷", it:"🇮🇹", es:"🇪🇸",
   pt:"🇵🇹", ru:"🇷🇺", ar:"🇸🇦", fa:"🇮🇷", hi:"🇮🇳", ur:"🇵🇰",
@@ -83,7 +80,7 @@ function refreshHeader(){
 }
 
 /* -------------------------
-   AUTH (sayfa koruma)
+   AUTH
 -------------------------- */
 async function requireLogin(){
   const { data:{ session } } = await supabase.auth.getSession();
@@ -93,6 +90,50 @@ async function requireLogin(){
   }
   try{ await ensureAuthAndCacheUser(); }catch{}
   return true;
+}
+
+/* -------------------------
+   USAGE BILLING
+-------------------------- */
+async function spendUsage(moduleKey, usedChars){
+  const safeChars = Number(usedChars || 0);
+
+  if(safeChars <= 0){
+    return { ok:true, charged_tokens:0, remaining_chars:0 };
+  }
+
+  const { data } = await supabase.auth.getUser();
+  const userId = data?.user?.id || "";
+
+  if(!userId){
+    alert("Önce giriş yapın.");
+    throw new Error("no_user");
+  }
+
+  const r = await fetch(USAGE_SPEND_ENDPOINT, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      user_id: userId,
+      module_key: moduleKey,
+      used_chars: safeChars
+    })
+  });
+
+  const j = await r.json().catch(() => ({}));
+
+  if(!r.ok){
+    if(r.status === 402){
+      alert("Kontörünüz yetersiz. Jeton Market'e yönlendiriliyorsunuz.");
+      location.href = "/pages/jetonbuy.html";
+      throw new Error("insufficient_tokens");
+    }
+    throw new Error(j.detail || "usage_spend_failed");
+  }
+
+  return j;
 }
 
 /* -------------------------
@@ -143,7 +184,6 @@ function speak(text, langCode){
   const t = String(text || "").trim();
   if(!t) return;
 
-  // ✅ APK NativeTTS öncelikli
   if(window.NativeTTS && typeof window.NativeTTS.speak === "function"){
     try{ window.NativeTTS.stop?.(); }catch{}
     setTimeout(()=>{
@@ -152,12 +192,13 @@ function speak(text, langCode){
     return;
   }
 
-  // web fallback
   if(!window.speechSynthesis) return;
   try{ window.speechSynthesis.cancel(); }catch{}
   const u = new SpeechSynthesisUtterance(t);
   u.lang = (langCode||"en").toString();
-  u.rate = 1; u.pitch = 1; u.volume = 1;
+  u.rate = 1;
+  u.pitch = 1;
+  u.volume = 1;
   setTimeout(()=>{ try{ window.speechSynthesis.speak(u); }catch{} }, 60);
 }
 
@@ -217,7 +258,6 @@ async function startMic(){
 
 /* -------------------------
    TRANSLATE
-   ✅ Dil algılama yok: from_lang/source her zaman seçili dil.
 -------------------------- */
 async function translate(){
   const t = String(inText.value || "").trim();
@@ -255,14 +295,23 @@ async function translate(){
     try{ data = JSON.parse(raw); }catch{ data = {}; }
 
     const out = String(data?.translated || data?.translation || data?.text || "").trim();
-    outText.textContent = out || "⚠️ Çeviri şu an yapılamadı.";
 
-    // ✅ otomatik ses
-    if(out) setTimeout(()=> speak(out, canonical(toLang)), 160);
+    if(!out){
+      outText.textContent = "⚠️ Çeviri şu an yapılamadı.";
+      return;
+    }
+
+    await spendUsage("text", out.length);
+
+    outText.textContent = out;
+
+    setTimeout(()=> speak(out, canonical(toLang)), 160);
 
   }catch(e){
     console.warn(e);
-    outText.textContent = "⚠️ Çeviri şu an yapılamadı.";
+    if(String(e?.message || "") !== "insufficient_tokens"){
+      outText.textContent = "⚠️ Çeviri şu an yapılamadı.";
+    }
   }finally{
     translateBtn.disabled = false;
     translateBtn.textContent = "NEURAL ENGINE";
@@ -271,7 +320,6 @@ async function translate(){
 
 /* -------------------------
    LOAD LANGS
-   ✅ auto/detect seçenekleri varsa listeye sokma
 -------------------------- */
 async function loadLangs(){
   const fallback = [
@@ -292,7 +340,7 @@ async function loadLangs(){
     if(Array.isArray(data) && data.length){
       LANGS = data
         .map(x => ({ code: canonical(x.code), name: x.name || String(x.code||"") }))
-        .filter(x => x.code && x.code !== "auto" && x.code !== "detect"); // ✅ detect yok
+        .filter(x => x.code && x.code !== "auto" && x.code !== "detect");
       return;
     }
   }catch(e){
@@ -359,7 +407,6 @@ document.addEventListener("DOMContentLoaded", async ()=>{
 
   await loadLangs();
 
-  // ✅ İlk açılış TR->EN
   fromLang = "tr";
   toLang = "en";
 
