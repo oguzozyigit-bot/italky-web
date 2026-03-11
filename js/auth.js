@@ -1,14 +1,12 @@
-// FILE: /js/auth.js
 import { supabase } from "/js/supabase_client.js";
 import { STORAGE_KEY } from "/js/config.js";
 
 /* =========================================================
-   🔐 DOMAIN SABİT (redirect hatası bitirildi)
+   🔐 DOMAIN SABİT
 ========================================================= */
 const CANONICAL_ORIGIN = "https://italky.ai";
 const HOME_REL   = "/pages/home.html";
 const LOGIN_REL  = "/pages/login.html";
-const CALLBACK_ABS = `${CANONICAL_ORIGIN}/pages/auth_callback.html`;
 
 /* =========================================================
    🔐 SINGLE SESSION KEY
@@ -17,7 +15,7 @@ const ACTIVE_SESSION_LOCAL_KEY = "ITALKY_ACTIVE_SESSION_KEY";
 let __singleWatcherStarted = false;
 
 /* =========================================================
-   📱 NAC ID (Cihaz kilidi)
+   📱 NAC ID
 ========================================================= */
 function getOrCreateNacId(){
   const key = "NAC_ID";
@@ -183,14 +181,21 @@ export async function ensureAuthAndCacheUser(){
 }
 
 /* =========================================================
-   🚀 GOOGLE LOGIN (STABLE)
+   🚀 GOOGLE LOGIN
 ========================================================= */
-export async function loginWithGoogle(){
+export async function loginWithGoogle(nextTarget = ""){
+
+  let redirectTo = `${CANONICAL_ORIGIN}/pages/auth_callback.html`;
+
+  const cleanNext = String(nextTarget || "").trim();
+  if(cleanNext){
+    redirectTo += `?next=${encodeURIComponent(cleanNext)}`;
+  }
 
   const { error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: CALLBACK_ABS,
+      redirectTo,
       queryParams: {
         access_type: "offline",
         prompt: "consent"
