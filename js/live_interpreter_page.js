@@ -39,9 +39,16 @@ const botHelper = $("botHelper");
 ========================= */
 const query = new URLSearchParams(location.search);
 
-const roomId = String(query.get("room") || "").trim();
-const role = String(query.get("role") || "guest").trim().toLowerCase(); // host | guest
+const role = String(query.get("role") || "guest").trim().toLowerCase();
 const hostCode = String(query.get("host") || "").trim();
+
+function buildRoomIdFromHost(host) {
+  return `itr-${String(host || "").toLowerCase().replace(/[^a-z0-9]/g, "")}`;
+}
+
+const roomId = String(
+  query.get("room") || buildRoomIdFromHost(hostCode) || ""
+).trim();
 
 let myLang = String(query.get("my") || localStorage.getItem("live_interpreter_lang") || "tr").trim();
 let peerLang = String(query.get("peer") || localStorage.getItem("live_interpreter_peer_lang") || "en").trim();
