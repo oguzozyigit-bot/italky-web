@@ -19,13 +19,15 @@ function getParams() {
   };
 }
 
-function buildJoinUrl({ room, my, host, joinUrl }) {
+function buildJoinUrl({ host, joinUrl }) {
   if (joinUrl) return joinUrl;
 
-  const url = new URL("/pages/interpreter_room.html", location.origin);
-  if (room) url.searchParams.set("room", room);
-  if (my) url.searchParams.set("host_lang", my);
-  if (host) url.searchParams.set("host", host);
+  const cleanHost = String(host || "").trim();
+  if (!cleanHost) return "";
+
+  const url = new URL("/live-interpreter", location.origin);
+  url.searchParams.set("host", cleanHost);
+  url.searchParams.set("v", "1");
   return url.toString();
 }
 
@@ -36,7 +38,7 @@ function setWaitingUI() {
 
 function setPairedUI() {
   pairDot?.classList.add("ok");
-  if (pairText) pairText.textContent = "Bağlantı kuruldu. Odaya geçiliyor...";
+  if (pairText) pairText.textContent = "Bağlantı kuruldu. Canlı çeviriye geçiliyor...";
 }
 
 async function loadQrLibrary() {
@@ -80,7 +82,7 @@ async function renderQr(text) {
         padding:14px;
         text-align:center;
         color:#111;
-        font: 700 12px Outfit, sans-serif;
+        font:700 12px Outfit, sans-serif;
         word-break:break-all;
       ">
         QR oluşturulamadı.<br><br>${text}
@@ -89,11 +91,8 @@ async function renderQr(text) {
   }
 }
 
-function watchPairing({ room, my, host, joinUrl }) {
-  const roomUrl = buildJoinUrl({ room, my, host, joinUrl });
-
-  // Geçici basit akış:
-  // scan sayfası bağlandığında localStorage ile işaret bırakabilir
+function watchPairing({ room, host, joinUrl }) {
+  const liveUrl = buildJoinUrl({ host, joinUrl });
   const pairKey = `italky_interpreter_pair_${room || host || "default"}`;
 
   const check = () => {
@@ -102,7 +101,7 @@ function watchPairing({ room, my, host, joinUrl }) {
       if (paired) {
         setPairedUI();
         setTimeout(() => {
-          location.href = roomUrl;
+          location.href = liveUrl;
         }, 700);
         return true;
       }
@@ -123,7 +122,7 @@ async function init() {
   const params = getParams();
   const finalJoinUrl = buildJoinUrl(params);
 
-  if (!params.room && !params.host && !params.joinUrl) {
+  if (!params.host && !params.joinUrl) {
     qrBox.innerHTML = `
       <div style="
         width:100%;
@@ -133,10 +132,10 @@ async function init() {
         justify-content:center;
         text-align:center;
         color:#111;
-        font: 800 13px Outfit, sans-serif;
+        font:800 13px Outfit, sans-serif;
         padding:18px;
       ">
-        Geçerli Interpreter bilgisi bulunamadı.
+        Geçerli bağlantı bilgisi bulunamadı.
       </div>
     `;
     if (pairText) pairText.textContent = "QR hazırlanamadı.";
