@@ -1,6 +1,6 @@
-import { mountShell } from "/js/ui_shell.js";
+// FILE: /js/interpreter_qr_scan.js
 
-const API_BASE = "https://italky-api.onrender.com";
+import { mountShell } from "/js/ui_shell.js";
 
 mountShell({ scroll: "auto" });
 
@@ -12,13 +12,16 @@ let stream = null;
 let detector = null;
 let busy = false;
 
-function getParams() {
-  const u = new URL(location.href);
-  return {
-    my: (u.searchParams.get("my") || "tr").trim(),
-    room: (u.searchParams.get("room") || "").trim(),
-    selfHost: (u.searchParams.get("self_host") || "").trim()
-  };
+function extractRoomFromValue(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+
+  try {
+    const u = new URL(raw);
+    return String(u.searchParams.get("room") || "").trim();
+  } catch {
+    return "";
+  }
 }
 
 async function startCamera() {
@@ -35,87 +38,18 @@ function stopCamera() {
   } catch {}
 }
 
-function extractPayloadFromValue(value) {
-  const raw = String(value || "").trim();
-  if (!raw) return { roomId: "", hostCode: "" };
-
-  try {
-    const u = new URL(raw);
-
-    const hostCode = (u.searchParams.get("host") || "").trim();
-    const roomId = (u.searchParams.get("room") || "").trim();
-
-    return { roomId, hostCode };
-  } catch {
-    return { roomId: "", hostCode: "" };
-  }
-}
-
-async function joinRoom(roomId, hostCode) {
+async function goJoin(roomId) {
   if (busy) return;
   busy = true;
 
-  const p = getParams();
+  stopCamera();
 
-  try {
-    // Yeni sistem: host kod varsa direkt live_interpreter'a git
-    if (hostCode) {
-      stopCamera();
+  const q = new URLSearchParams({
+    room: roomId,
+    v: "1"
+  });
 
-      const q = new URLSearchParams({
-        host: hostCode,
-        my: p.my,
-        role: "guest"
-      });
-
-      location.href = `/pages/live_interpreter.html?${q.toString()}`;
-      return;
-    }
-
-    // Eski sistem fallback: room ile join-room
-    if (!roomId) {
-      busy = false;
-      return;
-    }
-
-    const r = await fetch(`${API_BASE}/api/interpreter/join-room`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        room_id: roomId,
-        my_lang: p.my
-      })
-    });
-
-    const j = await r.json().catch(() => null);
-
-    if (!r.ok || !j?.ok) {
-      busy = false;
-      return;
-    }
-
-    stopCamera();
-
-    const roomInfo = await fetch(`${API_BASE}/api/interpreter/room/${encodeURIComponent(roomId)}`)
-      .then((x) => x.json())
-      .catch(() => null);
-
-    const peer = roomInfo?.host_lang || "tr";
-    const host = roomInfo?.host_code || "";
-
-    const q = new URLSearchParams({
-      room: roomId,
-      my: p.my,
-      peer,
-      role: "guest",
-      host
-    });
-
-    location.href = `/pages/live_interpreter.html?${q.toString()}`;
-  } catch (e) {
-    console.error("[joinRoom]", e);
-    busy = false;
-  }
+  location.href = `/pages/interpreter_join.html?${q.toString()}`;
 }
 
 async function scanLoop() {
@@ -132,10 +66,10 @@ async function scanLoop() {
 
       if (codes?.length) {
         const raw = String(codes[0].rawValue || "").trim();
-        const payload = extractPayloadFromValue(raw);
+        const roomId = extractRoomFromValue(raw);
 
-        if (payload.hostCode || payload.roomId) {
-          await joinRoom(payload.roomId, payload.hostCode);
+        if (roomId) {
+          await goJoin(roomId);
           return;
         }
       }
