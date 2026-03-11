@@ -37,7 +37,6 @@ function randomCode() {
 
 function buildLangOptions() {
   const langs = Array.isArray(LANG_POOL) ? LANG_POOL : [];
-
   if (!myLang) return;
 
   myLang.innerHTML = langs.map((l) => {
@@ -53,7 +52,7 @@ function buildLangOptions() {
 function saveLang() {
   try {
     if (myLang) {
-      localStorage.setItem(MY_LANG_KEY, myLang.value);
+      localStorage.setItem(MY_LANG_KEY, canonical(myLang.value || "tr"));
     }
   } catch {}
 }
@@ -95,7 +94,6 @@ function deriveCodeFromUser(user) {
 async function ensureStableHostCode() {
   try {
     const existing = localStorage.getItem(HOST_CODE_KEY);
-
     if (existing && String(existing).trim()) {
       stableHostCode = String(existing).trim();
       return stableHostCode;
@@ -117,48 +115,36 @@ async function ensureStableHostCode() {
   return stableHostCode;
 }
 
-function buildStableRoomId(hostCode) {
-  return `itr-${String(hostCode || "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g, "")}`;
-}
-
-/* QR / NFC artık live-interpreter deep link üretir */
-function buildJoinUrl(hostCode) {
-  const cleanHost = String(hostCode || "").trim();
-  if (!cleanHost) return "";
-
-  const url = new URL("/live-interpreter", location.origin);
-  url.searchParams.set("host", cleanHost);
-  url.searchParams.set("v", "1");
-
-  return url.toString();
-}
-
+/* ===============================
+   QR HOST FLOW
+   Host tarafı gerçek room'u
+   interpreter_qr_host.js içinde create-room ile oluşturur.
+================================ */
 async function createQr() {
   saveLang();
 
   const hostCode = await ensureStableHostCode();
-  const roomId = String(query.get("room") || "").trim();
-  const joinUrl = buildJoinUrl(hostCode);
+  const selectedLang = canonical(myLang?.value || "tr");
 
   const q = new URLSearchParams({
-    room: roomId,
-    my: myLang?.value || "tr",
-    host: hostCode,
-    join_url: joinUrl
+    my: selectedLang,
+    host: hostCode
   });
 
   location.href = `/pages/interpreter_qr_host.html?${q.toString()}`;
 }
 
+/* ===============================
+   QR SCAN FLOW
+================================ */
 async function goScan() {
   saveLang();
 
+  const selectedLang = canonical(myLang?.value || "tr");
   const hostCode = await ensureStableHostCode();
 
   const q = new URLSearchParams({
-    my: myLang?.value || "tr",
+    my: selectedLang,
     self_host: hostCode
   });
 
@@ -166,25 +152,44 @@ async function goScan() {
 }
 
 /* ===============================
-   NFC ile direct live interpreter
+   NFC FLOW
+   1) tam URL gelirse direkt aç
+   2) room id gelirse interpreter_join
+   3) host code gelirse open/interpreter köprüsü
 ================================ */
-
 function joinWithNfcToken(token) {
-  const hostCode = String(token || "").trim();
-  if (!hostCode) return;
+  const raw = String(token || "").trim();
+  if (!raw) return;
 
+  // Tam link geldiyse direkt aç
+  if (/^https?:\/\//i.test(raw)) {
+    location.href = raw;
+    return;
+  }
+
+  // Gerçek room id geldiyse join sayfasına git
+  if (/^[A-Za-z0-9\-_]{8,20}$/.test(raw) && !raw.startsWith("ITK-")) {
+    const q = new URLSearchParams({
+      room: raw,
+      v: "1"
+    });
+    location.href = `/pages/interpreter_join.html?${q.toString()}`;
+    return;
+  }
+
+  // Host code geldiyse deep-link köprüsüne git
+  const hostCode = raw;
   const q = new URLSearchParams({
     host: hostCode,
-    my: myLang?.value || "tr"
+    v: "1"
   });
 
-  location.href = `/pages/live_interpreter.html?${q.toString()}`;
+  location.href = `/open/interpreter?${q.toString()}`;
 }
 
 /* ===============================
    INIT
 ================================ */
-
 async function init() {
   buildLangOptions();
   saveLang();
@@ -199,11 +204,14 @@ async function init() {
   scanQrBtn?.addEventListener("click", goScan);
   myLang?.addEventListener("change", saveLang);
 
-  // NFC dinleme
-  await startNFCJoin((token) => {
-    console.log("NFC session:", token);
-    joinWithNfcToken(token);
-  });
+  try {
+    await startNFCJoin((token) => {
+      console.log("NFC session:", token);
+      joinWithNfcToken(token);
+    });
+  } catch (e) {
+    console.warn("[NFC init]", e);
+  }
 }
 
 init();
