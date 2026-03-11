@@ -1,4 +1,7 @@
+// FILE: /js/interpreter_qr_host.js
 import { mountShell } from "/js/ui_shell.js";
+
+const API_BASE = "https://italky-api.onrender.com";
 
 mountShell({ scroll: "auto" });
 
@@ -19,15 +22,14 @@ function getParams() {
   };
 }
 
-function buildJoinUrl({ host, joinUrl }) {
+function buildJoinUrl({ room, my, host, joinUrl }) {
   if (joinUrl) return joinUrl;
 
-  const cleanHost = String(host || "").trim();
-  if (!cleanHost) return "";
-
-  const url = new URL("/live-interpreter", location.origin);
-  url.searchParams.set("host", cleanHost);
-  url.searchParams.set("v", "1");
+  const url = new URL("/pages/interpreter_live.html", location.origin);
+  if (room) url.searchParams.set("room", room);
+  if (my) url.searchParams.set("my", my);
+  if (host) url.searchParams.set("host", host);
+  url.searchParams.set("role", "host");
   return url.toString();
 }
 
@@ -38,7 +40,7 @@ function setWaitingUI() {
 
 function setPairedUI() {
   pairDot?.classList.add("ok");
-  if (pairText) pairText.textContent = "Bağlantı kuruldu. Canlı çeviriye geçiliyor...";
+  if (pairText) pairText.textContent = "Bağlantı kuruldu. Odaya geçiliyor...";
 }
 
 async function loadQrLibrary() {
@@ -91,38 +93,75 @@ async function renderQr(text) {
   }
 }
 
-function watchPairing({ room, host, joinUrl }) {
-  const liveUrl = buildJoinUrl({ host, joinUrl });
-  const pairKey = `italky_interpreter_pair_${room || host || "default"}`;
+async function fetchRoomInfo(roomId) {
+  const r = await fetch(`${API_BASE}/api/interpreter/room/${encodeURIComponent(roomId)}`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" }
+  });
 
-  const check = () => {
+  const j = await r.json().catch(() => null);
+
+  if (!r.ok || !j) {
+    throw new Error(j?.error || "room_fetch_failed");
+  }
+
+  return j;
+}
+
+async function watchPairing({ room, my, host, joinUrl }) {
+  const roomId = String(room || "").trim();
+  const roomUrl = buildJoinUrl({ room, my, host, joinUrl });
+
+  if (!roomId) return;
+
+  let stopped = false;
+  let moved = false;
+
+  async function checkRoom() {
+    if (stopped || moved) return false;
+
     try {
-      const paired = localStorage.getItem(pairKey) === "1";
-      if (paired) {
+      const info = await fetchRoomInfo(roomId);
+
+      // guest_lang geldiyse karşı taraf bağlandı kabul ediyoruz
+      if (info?.guest_lang) {
         setPairedUI();
+        moved = true;
+
         setTimeout(() => {
-          location.href = liveUrl;
+          location.href = roomUrl;
         }, 700);
+
         return true;
       }
-    } catch {}
+    } catch (e) {
+      console.warn("[pair check]", e);
+    }
+
     return false;
-  };
+  }
 
-  if (check()) return;
+  if (await checkRoom()) return;
 
-  const timer = setInterval(() => {
-    if (check()) clearInterval(timer);
-  }, 900);
+  const timer = setInterval(async () => {
+    const done = await checkRoom();
+    if (done) {
+      clearInterval(timer);
+      stopped = true;
+    }
+  }, 1200);
 
-  window.addEventListener("beforeunload", () => clearInterval(timer));
+  window.addEventListener("beforeunload", () => {
+    stopped = true;
+    clearInterval(timer);
+  });
 }
 
 async function init() {
   const params = getParams();
   const finalJoinUrl = buildJoinUrl(params);
 
-  if (!params.host && !params.joinUrl) {
+  if (!params.room && !params.host && !params.joinUrl) {
     qrBox.innerHTML = `
       <div style="
         width:100%;
@@ -135,7 +174,7 @@ async function init() {
         font:800 13px Outfit, sans-serif;
         padding:18px;
       ">
-        Geçerli bağlantı bilgisi bulunamadı.
+        Geçerli Interpreter bilgisi bulunamadı.
       </div>
     `;
     if (pairText) pairText.textContent = "QR hazırlanamadı.";
@@ -144,7 +183,7 @@ async function init() {
 
   setWaitingUI();
   await renderQr(finalJoinUrl);
-  watchPairing(params);
+  await watchPairing(params);
 
   cancelBtn?.addEventListener("click", () => {
     location.href = "/pages/interpreter.html";
