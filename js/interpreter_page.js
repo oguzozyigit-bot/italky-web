@@ -41,9 +41,7 @@ function buildLangOptions() {
 
   myLang.innerHTML = langs.map((l) => {
     const code = canonical(l.code);
-    return `<option value="${code}">
-      ${l.flag || "🌐"} ${l.name || code.toUpperCase()}
-    </option>`;
+    return `<option value="${code}">${l.flag || "🌐"} ${l.name || code.toUpperCase()}</option>`;
   }).join("");
 
   myLang.value = localStorage.getItem(MY_LANG_KEY) || "tr";
@@ -51,9 +49,7 @@ function buildLangOptions() {
 
 function saveLang() {
   try {
-    if (myLang) {
-      localStorage.setItem(MY_LANG_KEY, canonical(myLang.value || "tr"));
-    }
+    if (myLang) localStorage.setItem(MY_LANG_KEY, canonical(myLang.value || "tr"));
   } catch {}
 }
 
@@ -68,7 +64,6 @@ async function getCurrentUser() {
 
 function deriveCodeFromUser(user) {
   const meta = user?.user_metadata || {};
-
   const candidates = [
     localStorage.getItem("membership_no"),
     localStorage.getItem("uyelik_no"),
@@ -83,11 +78,8 @@ function deriveCodeFromUser(user) {
 
   for (const raw of candidates) {
     const code = slugify(raw);
-    if (code && code.length >= 6) {
-      return "ITK-" + code.slice(0, 10);
-    }
+    if (code && code.length >= 6) return "ITK-" + code.slice(0, 10);
   }
-
   return "";
 }
 
@@ -101,7 +93,6 @@ async function ensureStableHostCode() {
   } catch {}
 
   const user = await getCurrentUser();
-
   const derived =
     deriveCodeFromUser(user) ||
     ("ITK-" + randomCode().replace("ITK", "").slice(0, 10));
@@ -115,11 +106,6 @@ async function ensureStableHostCode() {
   return stableHostCode;
 }
 
-/* ===============================
-   QR HOST FLOW
-   Host tarafı gerçek room'u
-   interpreter_qr_host.js içinde create-room ile oluşturur.
-================================ */
 async function createQr() {
   saveLang();
 
@@ -134,9 +120,6 @@ async function createQr() {
   location.href = `/pages/interpreter_qr_host.html?${q.toString()}`;
 }
 
-/* ===============================
-   QR SCAN FLOW
-================================ */
 async function goScan() {
   saveLang();
 
@@ -151,54 +134,30 @@ async function goScan() {
   location.href = `/pages/interpreter_qr_scan.html?${q.toString()}`;
 }
 
-/* ===============================
-   NFC FLOW
-   1) tam URL gelirse direkt aç
-   2) room id gelirse interpreter_join
-   3) host code gelirse open/interpreter köprüsü
-================================ */
 function joinWithNfcToken(token) {
   const raw = String(token || "").trim();
   if (!raw) return;
 
-  // Tam link geldiyse direkt aç
   if (/^https?:\/\//i.test(raw)) {
     location.href = raw;
     return;
   }
 
-  // Gerçek room id geldiyse join sayfasına git
   if (/^[A-Za-z0-9\-_]{8,20}$/.test(raw) && !raw.startsWith("ITK-")) {
-    const q = new URLSearchParams({
-      room: raw,
-      v: "1"
-    });
+    const q = new URLSearchParams({ room: raw, v: "1" });
     location.href = `/pages/interpreter_join.html?${q.toString()}`;
     return;
   }
 
-  // Host code geldiyse deep-link köprüsüne git
-  const hostCode = raw;
-  const q = new URLSearchParams({
-    host: hostCode,
-    v: "1"
-  });
-
-  location.href = `/open/interpreter?${q.toString()}`;
+  alert("Şimdilik NFC için room id içeren etiket kullan.");
 }
 
-/* ===============================
-   INIT
-================================ */
 async function init() {
   buildLangOptions();
   saveLang();
 
   const hostCode = await ensureStableHostCode();
-
-  if (hostCodeText) {
-    hostCodeText.textContent = hostCode;
-  }
+  if (hostCodeText) hostCodeText.textContent = hostCode;
 
   createQrBtn?.addEventListener("click", createQr);
   scanQrBtn?.addEventListener("click", goScan);
