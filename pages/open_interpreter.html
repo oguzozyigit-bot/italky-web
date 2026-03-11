@@ -1,10 +1,10 @@
-<!-- FILE: /pages/open_interpreter.html -->
+<!-- FILE: /open/interpreter/index.html -->
 <!doctype html>
 <html lang="tr">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>italkyAI • Yönlendiriliyor</title>
+  <title>italkyAI • Açılıyor</title>
   <style>
     html,body{
       margin:0;
@@ -24,18 +24,59 @@
       border-radius:22px;
       background:rgba(255,255,255,.05);
       border:1px solid rgba(255,255,255,.12);
+      line-height:1.5;
+    }
+    .btn{
+      display:inline-block;
+      margin-top:16px;
+      padding:12px 18px;
+      border-radius:12px;
+      background:#fff;
+      color:#000;
+      text-decoration:none;
+      font-weight:700;
     }
   </style>
 </head>
 <body>
-  <div class="box">Google Play’e yönlendiriliyor…</div>
+  <div class="box">
+    <div>italkyAI açılıyor…</div>
+    <div style="margin-top:10px;font-size:14px;opacity:.8;">
+      Uygulama yüklüyse açılır. Yüklü değilse Google Play’e yönlendirilirsin.
+    </div>
+    <a class="btn" id="storeBtn" href="#">Google Play’de Aç</a>
+  </div>
 
   <script>
     (function () {
-      const storeUrl = "https://play.google.com/store/apps/details?id=com.ozyigits.italkyai";
+      const p = new URLSearchParams(location.search);
+      const host = (p.get("host") || "").trim();
+      const v = (p.get("v") || "1").trim();
 
-      // Tarayıcıya düştüyse direkt store
-      location.replace(storeUrl);
+      const playUrl = "https://play.google.com/store/apps/details?id=com.ozyigits.italkyai";
+      const appUrl = `italky://join?host=${encodeURIComponent(host)}&v=${encodeURIComponent(v)}`;
+
+      const storeBtn = document.getElementById("storeBtn");
+      if (storeBtn) storeBtn.href = playUrl;
+
+      if (!host) {
+        location.replace(playUrl);
+        return;
+      }
+
+      let appOpened = false;
+
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden) appOpened = true;
+      });
+
+      window.location.href = appUrl;
+
+      setTimeout(() => {
+        if (!appOpened) {
+          location.replace(playUrl);
+        }
+      }, 1800);
     })();
   </script>
 </body>
