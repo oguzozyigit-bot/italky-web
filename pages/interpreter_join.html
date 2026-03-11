@@ -316,70 +316,74 @@ async function fetchRoom(roomId){
 }
 
 async function init(){
+
   const { host, version } = getParams();
 
   if(!host){
     stateText.textContent = "Geçersiz bağlantı";
-    descText.textContent = "Interpreter bağlantısı okunamadı.";
-    hostText.textContent = "Host bilgisi bulunamadı.";
-    goHomeBtn.classList.remove("hidden");
-    goHomeBtn.onclick = ()=> location.href = "/pages/home.html";
     return;
   }
 
   hostText.textContent = `Host: ${host}`;
 
-  const roomId = buildRoomId(host);
-  const myLang = detectMyLang();
-
   const hasSession = await ensureUserSession();
 
   if(!hasSession){
-    stateText.textContent = "Oturum kontrol ediliyor";
-    descText.textContent = "Giriş yaptıktan sonra aynı görüşmeye otomatik yönlendirileceksin.";
-
-    const returnTo = encodeURIComponent(location.pathname + location.search);
-    setTimeout(()=>{
-      location.href = `/pages/login.html?next=${returnTo}`;
-    }, 900);
+    const returnTo = encodeURIComponent(location.href);
+    location.href = `/pages/login.html?next=${returnTo}`;
     return;
   }
 
   try{
-    stateText.textContent = "Odaya katılınıyor";
-    descText.textContent = "Host ile bağlantı kuruluyor. Lütfen bekle.";
 
-    await joinRoom(roomId, myLang);
+    stateText.textContent = "Oda hazırlanıyor";
 
-    try{
-      localStorage.setItem(`italky_interpreter_pair_${roomId}`, "1");
-    }catch{}
+    const create = await fetch(`${API_BASE}/interpreter/create-room`,{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body: JSON.stringify({
+        my_lang: "tr"
+      })
+    });
 
-    const roomInfo = await fetchRoom(roomId);
-    const peerLang = canonical(roomInfo?.host_lang || "tr");
+    const room = await create.json();
 
-    const roomUrl = buildRoomUrl(host, version, myLang, peerLang);
+    if(!room?.room_id){
+      throw new Error("room oluşturulamadı");
+    }
 
-    stateText.textContent = "Bağlantı kuruldu";
-    descText.textContent = "Tercüman odası hazır. Şimdi görüşmeye geçiliyor.";
+    const roomId = room.room_id;
+
+    stateText.textContent = "Odaya katılıyor";
+
+    await fetch(`${API_BASE}/interpreter/join-room`,{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body: JSON.stringify({
+        room_id: roomId,
+        my_lang: "tr"
+      })
+    });
+
+    const url = `/pages/live_interpreter.html?room=${roomId}&host=${host}&role=guest`;
 
     setTimeout(()=>{
-      location.href = roomUrl;
-    }, 700);
-
-    setTimeout(()=>{
-      showFallback(roomUrl);
-    }, 2600);
+      location.href = url;
+    },600);
 
   }catch(e){
-    console.error("[interpreter join]", e);
+
+    console.error(e);
 
     stateText.textContent = "Bağlantı kurulamadı";
-    descText.textContent = "Host bağlantısı şu an tamamlanamadı. Tekrar deneyebilir veya ana sayfaya dönebilirsin.";
-    openRoomBtn.classList.add("hidden");
-    goHomeBtn.classList.remove("hidden");
-    goHomeBtn.onclick = ()=> location.href = "/pages/home.html";
+    descText.textContent = "Tekrar deneyebilirsin.";
+
   }
+
 }
 
 init();
