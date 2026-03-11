@@ -33,9 +33,9 @@ function buildJoinUrl({ room, my, host, joinUrl }) {
   return url.toString();
 }
 
-function setWaitingUI() {
+function setWaitingUI(text = "Karşı taraf bekleniyor...") {
   pairDot?.classList.remove("ok");
-  if (pairText) pairText.textContent = "Karşı taraf bekleniyor...";
+  if (pairText) pairText.textContent = text;
 }
 
 function setPairedUI() {
@@ -108,6 +108,34 @@ async function fetchRoomInfo(roomId) {
   return j;
 }
 
+function isGuestConnected(info) {
+  if (!info || typeof info !== "object") return false;
+
+  // olabildiğince geniş kontrol
+  return !!(
+    info.guest_lang ||
+    info.peer_lang ||
+    info.guest_connected === true ||
+    info.joined === true ||
+    info.guest === true ||
+    info.guest_joined_at ||
+    info.peer_joined_at ||
+    info.guest_user_id ||
+    info.peer_user_id ||
+    info.member_count >= 2 ||
+    info.participant_count >= 2 ||
+    (Array.isArray(info.members) && info.members.length >= 2) ||
+    (Array.isArray(info.participants) && info.participants.length >= 2) ||
+    (info.room && (
+      info.room.guest_lang ||
+      info.room.peer_lang ||
+      info.room.guest_connected === true ||
+      info.room.member_count >= 2 ||
+      info.room.participant_count >= 2
+    ))
+  );
+}
+
 async function watchPairing({ room, my, host, joinUrl }) {
   const roomId = String(room || "").trim();
   const roomUrl = buildJoinUrl({ room, my, host, joinUrl });
@@ -116,15 +144,16 @@ async function watchPairing({ room, my, host, joinUrl }) {
 
   let stopped = false;
   let moved = false;
+  let tries = 0;
 
   async function checkRoom() {
     if (stopped || moved) return false;
 
     try {
       const info = await fetchRoomInfo(roomId);
+      console.log("[HOST ROOM INFO]", info);
 
-      // guest_lang geldiyse karşı taraf bağlandı kabul ediyoruz
-      if (info?.guest_lang) {
+      if (isGuestConnected(info)) {
         setPairedUI();
         moved = true;
 
@@ -133,6 +162,11 @@ async function watchPairing({ room, my, host, joinUrl }) {
         }, 700);
 
         return true;
+      }
+
+      tries += 1;
+      if (tries % 3 === 0) {
+        setWaitingUI("Karşı taraf bağlanıyor...");
       }
     } catch (e) {
       console.warn("[pair check]", e);
