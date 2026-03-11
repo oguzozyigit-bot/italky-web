@@ -15,22 +15,9 @@ const cancelBtn = $("cancelBtn");
 function getParams() {
   const p = new URLSearchParams(location.search);
   return {
-    room: String(p.get("room") || "").trim(),
     my: String(p.get("my") || "tr").trim(),
-    host: String(p.get("host") || "").trim(),
-    joinUrl: String(p.get("join_url") || "").trim(),
+    host: String(p.get("host") || "").trim()
   };
-}
-
-function buildJoinUrl({ room, my, host, joinUrl }) {
-  if (joinUrl) return joinUrl;
-
-  const url = new URL("/pages/interpreter_live.html", location.origin);
-  if (room) url.searchParams.set("room", room);
-  if (my) url.searchParams.set("my", my);
-  if (host) url.searchParams.set("host", host);
-  url.searchParams.set("role", "host");
-  return url.toString();
 }
 
 function setWaitingUI(text = "Karşı taraf bekleniyor...") {
@@ -93,58 +80,58 @@ async function renderQr(text) {
   }
 }
 
+async function createRoom(myLang) {
+  const r = await fetch(`${API_BASE}/interpreter/create-room`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      my_lang: myLang || "tr"
+    })
+  });
+
+  const j = await r.json().catch(() => null);
+
+  if (!r.ok || !j?.ok || !j?.room_id) {
+    throw new Error(j?.detail || j?.error || "room_create_failed");
+  }
+
+  return j;
+}
+
 async function fetchRoomInfo(roomId) {
-  const r = await fetch(`${API_BASE}/api/interpreter/room/${encodeURIComponent(roomId)}`, {
+  const r = await fetch(`${API_BASE}/interpreter/room/${encodeURIComponent(roomId)}`, {
     method: "GET",
     headers: { "Content-Type": "application/json" }
   });
 
   const j = await r.json().catch(() => null);
 
-  if (!r.ok || !j) {
-    throw new Error(j?.error || "room_fetch_failed");
+  if (!r.ok || !j?.ok) {
+    throw new Error(j?.detail || j?.error || "room_fetch_failed");
   }
 
   return j;
 }
 
-function isGuestConnected(info) {
-  if (!info || typeof info !== "object") return false;
-
-  // olabildiğince geniş kontrol
-  return !!(
-    info.guest_lang ||
-    info.peer_lang ||
-    info.guest_connected === true ||
-    info.joined === true ||
-    info.guest === true ||
-    info.guest_joined_at ||
-    info.peer_joined_at ||
-    info.guest_user_id ||
-    info.peer_user_id ||
-    info.member_count >= 2 ||
-    info.participant_count >= 2 ||
-    (Array.isArray(info.members) && info.members.length >= 2) ||
-    (Array.isArray(info.participants) && info.participants.length >= 2) ||
-    (info.room && (
-      info.room.guest_lang ||
-      info.room.peer_lang ||
-      info.room.guest_connected === true ||
-      info.room.member_count >= 2 ||
-      info.room.participant_count >= 2
-    ))
-  );
+function buildGuestJoinUrl(roomId) {
+  const url = new URL("/pages/interpreter_join.html", location.origin);
+  url.searchParams.set("room", roomId);
+  return url.toString();
 }
 
-async function watchPairing({ room, my, host, joinUrl }) {
-  const roomId = String(room || "").trim();
-  const roomUrl = buildJoinUrl({ room, my, host, joinUrl });
+function buildHostLiveUrl(roomId, hostCode, myLang, guestLang) {
+  const url = new URL("/pages/live_interpreter.html", location.origin);
+  url.searchParams.set("room", roomId);
+  if (hostCode) url.searchParams.set("host", hostCode);
+  url.searchParams.set("role", "host");
+  url.searchParams.set("my", myLang || "tr");
+  url.searchParams.set("peer", guestLang || "en");
+  return url.toString();
+}
 
-  if (!roomId) return;
-
+async function watchPairing(roomId, hostCode, myLang) {
   let stopped = false;
   let moved = false;
-  let tries = 0;
 
   async function checkRoom() {
     if (stopped || moved) return false;
@@ -153,20 +140,22 @@ async function watchPairing({ room, my, host, joinUrl }) {
       const info = await fetchRoomInfo(roomId);
       console.log("[HOST ROOM INFO]", info);
 
-      if (isGuestConnected(info)) {
+      if (info?.status === "active" && info?.guest_lang) {
         setPairedUI();
         moved = true;
 
+        const liveUrl = buildHostLiveUrl(
+          roomId,
+          hostCode,
+          myLang,
+          String(info.guest_lang || "en").trim().toLowerCase()
+        );
+
         setTimeout(() => {
-          location.href = roomUrl;
+          location.href = liveUrl;
         }, 700);
 
         return true;
-      }
-
-      tries += 1;
-      if (tries % 3 === 0) {
-        setWaitingUI("Karşı taraf bağlanıyor...");
       }
     } catch (e) {
       console.warn("[pair check]", e);
@@ -192,32 +181,46 @@ async function watchPairing({ room, my, host, joinUrl }) {
 }
 
 async function init() {
-  const params = getParams();
-  const finalJoinUrl = buildJoinUrl(params);
+  const { my, host } = getParams();
 
-  if (!params.room && !params.host && !params.joinUrl) {
-    qrBox.innerHTML = `
-      <div style="
-        width:100%;
-        height:100%;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        text-align:center;
-        color:#111;
-        font:800 13px Outfit, sans-serif;
-        padding:18px;
-      ">
-        Geçerli Interpreter bilgisi bulunamadı.
-      </div>
-    `;
-    if (pairText) pairText.textContent = "QR hazırlanamadı.";
-    return;
+  try {
+    setWaitingUI("Oda hazırlanıyor...");
+
+    const room = await createRoom(my);
+    const roomId = String(room.room_id || "").trim();
+
+    if (!roomId) throw new Error("room_id_missing");
+
+    const qrTarget = buildGuestJoinUrl(roomId);
+
+    await renderQr(qrTarget);
+
+    setWaitingUI("Karşı taraf bekleniyor...");
+
+    await watchPairing(roomId, host, my);
+  } catch (e) {
+    console.error("[interpreter_qr_host]", e);
+
+    if (qrBox) {
+      qrBox.innerHTML = `
+        <div style="
+          width:100%;
+          height:100%;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          text-align:center;
+          color:#111;
+          font:800 13px Outfit, sans-serif;
+          padding:18px;
+        ">
+          Oda oluşturulamadı.
+        </div>
+      `;
+    }
+
+    if (pairText) pairText.textContent = "Bağlantı hazırlanamadı.";
   }
-
-  setWaitingUI();
-  await renderQr(finalJoinUrl);
-  await watchPairing(params);
 
   cancelBtn?.addEventListener("click", () => {
     location.href = "/pages/interpreter.html";
