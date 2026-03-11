@@ -1,7 +1,7 @@
 // FILE: /js/interpreter_qr_host.js
 import { mountShell } from "/js/ui_shell.js";
 
-const API_BASE = "https://italky-api.onrender.com/api";
+const API_BASE = "https://italky-api.onrender.com";
 
 mountShell({ scroll: "auto" });
 
@@ -15,7 +15,7 @@ const cancelBtn = $("cancelBtn");
 function getParams() {
   const p = new URLSearchParams(location.search);
   return {
-    my: String(p.get("my") || "tr").trim(),
+    my: String(p.get("my") || "tr").trim().toLowerCase(),
     host: String(p.get("host") || "").trim()
   };
 }
@@ -50,7 +50,6 @@ async function renderQr(text) {
 
   try {
     const QRCode = await loadQrLibrary();
-
     new QRCode(qrBox, {
       text,
       width: 220,
@@ -61,22 +60,7 @@ async function renderQr(text) {
     });
   } catch (e) {
     console.error("[qr render]", e);
-    qrBox.innerHTML = `
-      <div style="
-        width:100%;
-        height:100%;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        padding:14px;
-        text-align:center;
-        color:#111;
-        font:700 12px Outfit, sans-serif;
-        word-break:break-all;
-      ">
-        QR oluşturulamadı.<br><br>${text}
-      </div>
-    `;
+    qrBox.innerHTML = `<div style="padding:14px;color:#111;text-align:center;font:700 12px Outfit,sans-serif;word-break:break-all;">QR oluşturulamadı.<br><br>${text}</div>`;
   }
 }
 
@@ -84,38 +68,30 @@ async function createRoom(myLang) {
   const r = await fetch(`${API_BASE}/interpreter/create-room`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      my_lang: myLang || "tr"
-    })
+    body: JSON.stringify({ my_lang: myLang || "tr" })
   });
 
   const j = await r.json().catch(() => null);
-
   if (!r.ok || !j?.ok || !j?.room_id) {
     throw new Error(j?.detail || j?.error || "room_create_failed");
   }
-
   return j;
 }
 
 async function fetchRoomInfo(roomId) {
-  const r = await fetch(`${API_BASE}/interpreter/room/${encodeURIComponent(roomId)}`, {
-    method: "GET",
-    headers: { "Content-Type": "application/json" }
-  });
-
+  const r = await fetch(`${API_BASE}/interpreter/room/${encodeURIComponent(roomId)}`);
   const j = await r.json().catch(() => null);
 
   if (!r.ok || !j?.ok) {
     throw new Error(j?.detail || j?.error || "room_fetch_failed");
   }
-
   return j;
 }
 
 function buildGuestJoinUrl(roomId) {
-  const url = new URL("/pages/interpreter_live.html", location.origin);
+  const url = new URL("/pages/interpreter_join.html", location.origin);
   url.searchParams.set("room", roomId);
+  url.searchParams.set("v", "1");
   return url.toString();
 }
 
@@ -160,7 +136,6 @@ async function watchPairing(roomId, hostCode, myLang) {
     } catch (e) {
       console.warn("[pair check]", e);
     }
-
     return false;
   }
 
@@ -188,37 +163,19 @@ async function init() {
 
     const room = await createRoom(my);
     const roomId = String(room.room_id || "").trim();
-
     if (!roomId) throw new Error("room_id_missing");
 
     const qrTarget = buildGuestJoinUrl(roomId);
-
     await renderQr(qrTarget);
 
     setWaitingUI("Karşı taraf bekleniyor...");
-
     await watchPairing(roomId, host, my);
   } catch (e) {
     console.error("[interpreter_qr_host]", e);
 
     if (qrBox) {
-      qrBox.innerHTML = `
-        <div style="
-          width:100%;
-          height:100%;
-          display:flex;
-          align-items:center;
-          justify-content:center;
-          text-align:center;
-          color:#111;
-          font:800 13px Outfit, sans-serif;
-          padding:18px;
-        ">
-          Oda oluşturulamadı.
-        </div>
-      `;
+      qrBox.innerHTML = `<div style="padding:18px;color:#111;text-align:center;font:800 13px Outfit,sans-serif;">Oda oluşturulamadı.</div>`;
     }
-
     if (pairText) pairText.textContent = "Bağlantı hazırlanamadı.";
   }
 
