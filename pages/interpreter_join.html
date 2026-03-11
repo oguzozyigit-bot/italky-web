@@ -1,3 +1,4 @@
+<!-- FILE: /pages/interpreter_join.html -->
 <!doctype html>
 <html lang="tr">
 <head>
@@ -19,13 +20,11 @@
   --line:rgba(255,255,255,.10);
   --glass:rgba(255,255,255,.05);
 }
-
 *{
   box-sizing:border-box;
   -webkit-tap-highlight-color:transparent;
   outline:none;
 }
-
 html,body{
   margin:0;
   width:100%;
@@ -38,7 +37,6 @@ html,body{
     linear-gradient(180deg,#090919 0%, #020207 100%);
   color:var(--txt);
 }
-
 .page{
   width:100%;
   height:100%;
@@ -49,7 +47,6 @@ html,body{
   align-items:center;
   justify-content:center;
 }
-
 .card{
   width:100%;
   border-radius:32px;
@@ -61,27 +58,23 @@ html,body{
   padding:28px 20px;
   text-align:center;
 }
-
 .logo{
   font-family:'Space Grotesk',sans-serif;
   font-size:28px;
   font-weight:700;
   margin:0 0 8px;
 }
-
 .logo .ai{
   background:var(--ai-grad);
   -webkit-background-clip:text;
   -webkit-text-fill-color:transparent;
 }
-
 .title{
   margin:0;
   font-size:24px;
   font-weight:900;
   letter-spacing:-.4px;
 }
-
 .desc{
   margin:10px auto 0;
   max-width:320px;
@@ -89,7 +82,6 @@ html,body{
   line-height:1.5;
   color:var(--muted);
 }
-
 .loaderWrap{
   margin:26px auto 18px;
   width:110px;
@@ -99,7 +91,6 @@ html,body{
   align-items:center;
   justify-content:center;
 }
-
 .ring{
   position:absolute;
   inset:0;
@@ -111,7 +102,6 @@ html,body{
   mask-composite:exclude;
   animation:spin 2.2s linear infinite;
 }
-
 .core{
   width:74px;
   height:74px;
@@ -123,13 +113,11 @@ html,body{
   justify-content:center;
   box-shadow:0 0 24px rgba(99,102,241,.12);
 }
-
 .dots{
   display:flex;
   align-items:center;
   gap:6px;
 }
-
 .dot{
   width:8px;
   height:8px;
@@ -139,14 +127,12 @@ html,body{
 }
 .dot:nth-child(2){ animation-delay:.15s; }
 .dot:nth-child(3){ animation-delay:.30s; }
-
 .state{
   margin-top:8px;
   font-size:14px;
   font-weight:800;
   color:#fff;
 }
-
 .host{
   margin-top:12px;
   padding:12px 14px;
@@ -157,14 +143,12 @@ html,body{
   color:rgba(255,255,255,.75);
   word-break:break-all;
 }
-
 .actions{
   display:grid;
   grid-template-columns:1fr;
   gap:10px;
   margin-top:18px;
 }
-
 .btn{
   min-height:48px;
   border:none;
@@ -173,27 +157,22 @@ html,body{
   font-weight:900;
   cursor:pointer;
 }
-
 .btnPrimary{
   background:var(--ai-grad);
   color:#050510;
 }
-
 .btnGhost{
   background:rgba(255,255,255,.06);
   border:1px solid rgba(255,255,255,.10);
   color:#fff;
 }
-
 .hidden{
   display:none !important;
 }
-
 @keyframes spin{
   from{ transform:rotate(0); }
   to{ transform:rotate(360deg); }
 }
-
 @keyframes bounce{
   0%,100%{ transform:translateY(0); opacity:.55; }
   50%{ transform:translateY(-5px); opacity:1; }
@@ -231,6 +210,9 @@ html,body{
 
 <script type="module">
 import { supabase } from "/js/supabase_client.js";
+import { LANG_POOL } from "/js/lang_pool_full.js";
+
+const API_BASE = "https://italky-api.onrender.com";
 
 const $ = (id)=>document.getElementById(id);
 
@@ -248,16 +230,39 @@ function getParams(){
   };
 }
 
+function canonical(code){
+  return String(code || "").toLowerCase().trim();
+}
+
+function detectMyLang(){
+  try{
+    const saved =
+      localStorage.getItem("italky_interpreter_my_lang") ||
+      localStorage.getItem("italky_user_lang_v1") ||
+      localStorage.getItem("italky_lang") ||
+      "tr";
+
+    const code = canonical(saved);
+    const exists = Array.isArray(LANG_POOL) && LANG_POOL.some(x => canonical(x.code) === code);
+    return exists ? code : "tr";
+  }catch{
+    return "tr";
+  }
+}
+
 function buildRoomId(hostCode){
   return `itr-${String(hostCode || "").toLowerCase().replace(/[^a-z0-9]/g,"")}`;
 }
 
-function buildRoomUrl(hostCode, version){
+function buildRoomUrl(hostCode, version, myLang, peerLang){
   const roomId = buildRoomId(hostCode);
-  const url = new URL("/pages/interpreter_room.html", location.origin);
+  const url = new URL("/pages/interpreter_live.html", location.origin);
   url.searchParams.set("room", roomId);
   url.searchParams.set("host", hostCode);
   url.searchParams.set("v", version || "1");
+  url.searchParams.set("my", myLang || "tr");
+  url.searchParams.set("peer", peerLang || "tr");
+  url.searchParams.set("role", "guest");
   return url.toString();
 }
 
@@ -280,6 +285,36 @@ function showFallback(roomUrl){
   goHomeBtn.onclick = ()=> location.href = "/pages/home.html";
 }
 
+async function joinRoom(roomId, myLang){
+  const r = await fetch(`${API_BASE}/api/interpreter/join-room`, {
+    method: "POST",
+    headers: { "Content-Type":"application/json" },
+    body: JSON.stringify({
+      room_id: roomId,
+      my_lang: myLang
+    })
+  });
+
+  const j = await r.json().catch(()=>null);
+
+  if(!r.ok || !j?.ok){
+    throw new Error(j?.error || "join_failed");
+  }
+
+  return j;
+}
+
+async function fetchRoom(roomId){
+  const r = await fetch(`${API_BASE}/api/interpreter/room/${encodeURIComponent(roomId)}`);
+  const j = await r.json().catch(()=>null);
+
+  if(!r.ok || !j?.ok){
+    throw new Error(j?.error || "room_fetch_failed");
+  }
+
+  return j;
+}
+
 async function init(){
   const { host, version } = getParams();
 
@@ -294,31 +329,57 @@ async function init(){
 
   hostText.textContent = `Host: ${host}`;
 
-  const roomUrl = buildRoomUrl(host, version);
+  const roomId = buildRoomId(host);
+  const myLang = detectMyLang();
 
   const hasSession = await ensureUserSession();
 
   if(!hasSession){
     stateText.textContent = "Oturum kontrol ediliyor";
-    descText.textContent = "Gerekirse giriş yaptıktan sonra aynı görüşmeye yönlendirileceksin.";
+    descText.textContent = "Giriş yaptıktan sonra aynı görüşmeye otomatik yönlendirileceksin.";
 
-    const returnTo = encodeURIComponent(roomUrl);
+    const returnTo = encodeURIComponent(location.pathname + location.search);
     setTimeout(()=>{
-      location.href = `/login.html?next=${returnTo}`;
+      location.href = `/pages/login.html?next=${returnTo}`;
     }, 900);
     return;
   }
 
-  stateText.textContent = "Tercüman odası açılıyor";
-  descText.textContent = "Bağlantı kuruldu. Şimdi canlı tercüman odasına geçiliyor.";
+  try{
+    stateText.textContent = "Odaya katılınıyor";
+    descText.textContent = "Host ile bağlantı kuruluyor. Lütfen bekle.";
 
-  setTimeout(()=>{
-    location.href = roomUrl;
-  }, 850);
+    await joinRoom(roomId, myLang);
 
-  setTimeout(()=>{
-    showFallback(roomUrl);
-  }, 2600);
+    try{
+      localStorage.setItem(`italky_interpreter_pair_${roomId}`, "1");
+    }catch{}
+
+    const roomInfo = await fetchRoom(roomId);
+    const peerLang = canonical(roomInfo?.host_lang || "tr");
+
+    const roomUrl = buildRoomUrl(host, version, myLang, peerLang);
+
+    stateText.textContent = "Bağlantı kuruldu";
+    descText.textContent = "Tercüman odası hazır. Şimdi görüşmeye geçiliyor.";
+
+    setTimeout(()=>{
+      location.href = roomUrl;
+    }, 700);
+
+    setTimeout(()=>{
+      showFallback(roomUrl);
+    }, 2600);
+
+  }catch(e){
+    console.error("[interpreter join]", e);
+
+    stateText.textContent = "Bağlantı kurulamadı";
+    descText.textContent = "Host bağlantısı şu an tamamlanamadı. Tekrar deneyebilir veya ana sayfaya dönebilirsin.";
+    openRoomBtn.classList.add("hidden");
+    goHomeBtn.classList.remove("hidden");
+    goHomeBtn.onclick = ()=> location.href = "/pages/home.html";
+  }
 }
 
 init();
