@@ -6,7 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>italkyAI • Giriş</title>
 
-  <!-- ✅ OFFLINE: login göstermeden offline sayfaya -->
   <script>
   (function(){
     try{
@@ -34,6 +33,7 @@
 
     *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; margin:0; padding:0; }
     html,body{ height:100%; }
+
     body{
       background:var(--bg-void);
       color:#fff;
@@ -68,17 +68,20 @@
     }
 
     .brand-section{ text-align:center; margin-bottom: 8px; }
+
     .brand-section h1{
       font-size: 66px;
       font-weight: 1000;
       letter-spacing: -4px;
       line-height: 1;
     }
+
     .brand-section h1 span.ai{
       background:var(--brand-grad);
       -webkit-background-clip:text;
       -webkit-text-fill-color:transparent;
     }
+
     .brand-sub{
       margin-top: 8px;
       font-size: 10px;
@@ -110,6 +113,7 @@
       z-index: 0;
       animation: glowBreath 4.8s ease-in-out infinite alternate;
     }
+
     @keyframes glowBreath{
       from{ transform: scale(0.98); opacity: .65; }
       to{ transform: scale(1.05); opacity: 1; }
@@ -169,11 +173,13 @@
       backface-visibility: hidden;
       -webkit-backface-visibility: hidden;
     }
+
     .ai-front{
       font-size: 46px;
       transform: translateZ(1px);
       z-index: 4;
     }
+
     .ai-back{
       font-size: 52px;
       letter-spacing: 1px;
@@ -191,6 +197,7 @@
       width: 100%;
       max-width: 520px;
     }
+
     .typewriter{
       font-family: 'JetBrains Mono', monospace;
       font-size: 16px;
@@ -201,6 +208,7 @@
       width: 0;
       animation: typing 5.6s steps(46, end) infinite, blink .85s step-end infinite;
     }
+
     @keyframes typing { 0%,10%{ width:0 } 62%,86%{ width:100% } 100%{ width:0 } }
     @keyframes blink { from,to{ border-color:transparent } 50%{ border-color:var(--accent) } }
 
@@ -229,6 +237,7 @@
       transition: .18s;
       user-select:none;
     }
+
     .google-btn:active{ transform: scale(.97); }
     .g-icon{ width:24px; height:24px; pointer-events:none; }
 
@@ -239,6 +248,7 @@
       padding-bottom: calc(18px + var(--safeB) + 18px);
       margin-top: -6px;
     }
+
     .footer-nav{
       display:flex;
       justify-content:center;
@@ -246,6 +256,7 @@
       flex-wrap:wrap;
       margin-bottom: 10px;
     }
+
     .footer-nav a{
       text-decoration:none;
       color: rgba(255,255,255,0.40);
@@ -254,6 +265,7 @@
       text-transform: uppercase;
       letter-spacing: .5px;
     }
+
     .academy-title{
       font-size: 20px;
       font-weight: 1000;
@@ -261,13 +273,16 @@
       margin-bottom: 6px;
       line-height:1;
     }
+
     .academy-title b{ font-weight:1000; text-transform: lowercase; color:#fff; }
+
     .academy-title span{
       background:var(--brand-grad);
       -webkit-background-clip:text;
       -webkit-text-fill-color:transparent;
       text-transform: uppercase;
     }
+
     .prestige-signature{
       font-size: 12px;
       font-weight: 900;
@@ -297,6 +312,7 @@
       max-width: min(92vw, 520px);
       text-align:center;
     }
+
     #toast.show{ transform:translateX(-50%) translateY(0); }
   </style>
 </head>
@@ -357,13 +373,11 @@
     const HOME = "/pages/home.html";
     const CALLBACK = "/pages/auth_callback.html";
     const SETUP_OFFLINE = "/pages/setup_offline.html";
-
-    // ✅ first boot flag (setup tamamlandı mı)
     const FIRST_BOOT_KEY = "italky_first_boot_done_v1";
 
     function toast(msg){
       if(!toastEl) return;
-      toastEl.textContent = String(msg||"");
+      toastEl.textContent = String(msg || "");
       toastEl.classList.add("show");
       clearTimeout(window.__to);
       window.__to = setTimeout(()=>toastEl.classList.remove("show"), 2200);
@@ -373,10 +387,24 @@
       return !!(window.Native && typeof window.Native.startGoogleLogin === "function");
     }
 
-    // ✅ Post-login routing (tek merkez)
+    function getNextTarget(){
+      try{
+        const u = new URL(location.href);
+        return String(u.searchParams.get("next") || "").trim();
+      }catch{
+        return "";
+      }
+    }
+
     async function routeAfterLogin(session){
       try{
         await ensureAuthAndCacheUser();
+
+        const next = getNextTarget();
+        if(next){
+          location.replace(next);
+          return;
+        }
 
         if(localStorage.getItem(FIRST_BOOT_KEY) === "1"){
           location.replace(HOME);
@@ -390,6 +418,7 @@
           .maybeSingle();
 
         const base = String(prof?.base_lang || "").trim().toLowerCase();
+
         if(base){
           localStorage.setItem(FIRST_BOOT_KEY, "1");
           location.replace(HOME);
@@ -400,11 +429,17 @@
 
       }catch(e){
         console.error(e);
+
+        const next = getNextTarget();
+        if(next){
+          location.replace(next);
+          return;
+        }
+
         location.replace(SETUP_OFFLINE);
       }
     }
 
-    // ✅ Web OAuth dönüşü login’e geldiyse: callback sayfasına TEK SEFERDE geçir
     (function bounceToCallbackIfNeeded(){
       const hasCode = new URLSearchParams(location.search).has("code");
       const hasToken = location.hash.includes("access_token=");
@@ -413,11 +448,11 @@
       }
     })();
 
-    // ✅ Native login (APK) -> id_token ile Supabase session aç
     window.onNativeLoginSuccess = async function(payload){
       try{
         const data = (typeof payload === "string") ? JSON.parse(payload) : payload;
         const idToken = String(data?.id_token || data?.idToken || "").trim();
+
         if(!idToken){
           toast("Token yok, giriş tamamlanamadı.");
           return;
@@ -451,23 +486,24 @@
       }
     };
 
-    // Google button
     document.getElementById("googleBtn")?.addEventListener("click", async ()=>{
       try{
+        const next = getNextTarget();
+
         if(isNative()){
           toast("Güvenli giriş başlatılıyor…");
           window.Native.startGoogleLogin();
           return;
         }
+
         toast("Google yönlendiriliyor…");
-        await loginWithGoogle();
+        await loginWithGoogle(next);
       }catch(e){
         console.error(e);
         toast(e?.message || "Giriş başlatılamadı");
       }
     });
 
-    // Daktilo
     const phrases = [
       "Dil bariyerlerini görünmez yapıyoruz…",
       "italky Academy ile seviyeni netleştir…",
@@ -477,8 +513,10 @@
       "Dünya artık senin dilinde…",
       "Başlamak için sadece bir hesap seç…"
     ];
+
     let pi = 0;
     const typeEl = document.getElementById("typewriter");
+
     setInterval(()=>{
       pi = (pi + 1) % phrases.length;
       if(typeEl){
@@ -489,7 +527,6 @@
       }
     }, 5600);
 
-    // ✅ Session varsa direkt post-login akışı
     (async function boot(){
       try{
         const { data:{ session } } = await supabase.auth.getSession();
@@ -497,175 +534,6 @@
         await routeAfterLogin(session);
       }catch(_e){}
     })();
-  <script type="module">
-  import { supabase } from "/js/supabase_client.js";
-  import { ensureAuthAndCacheUser, loginWithGoogle } from "/js/auth.js";
-
-  const toastEl = document.getElementById("toast");
-
-  const HOME = "/pages/home.html";
-  const CALLBACK = "/pages/auth_callback.html";
-  const SETUP_OFFLINE = "/pages/setup_offline.html";
-
-  const FIRST_BOOT_KEY = "italky_first_boot_done_v1";
-
-  function toast(msg){
-    if(!toastEl) return;
-    toastEl.textContent = String(msg||"");
-    toastEl.classList.add("show");
-    clearTimeout(window.__to);
-    window.__to = setTimeout(()=>toastEl.classList.remove("show"), 2200);
-  }
-
-  function isNative(){
-    return !!(window.Native && typeof window.Native.startGoogleLogin === "function");
-  }
-
-  function getNextTarget(){
-    try{
-      const u = new URL(location.href);
-      return String(u.searchParams.get("next") || "").trim();
-    }catch{
-      return "";
-    }
-  }
-
-  async function routeAfterLogin(session){
-    try{
-      await ensureAuthAndCacheUser();
-
-      const next = getNextTarget();
-      if(next){
-        location.replace(next);
-        return;
-      }
-
-      if(localStorage.getItem(FIRST_BOOT_KEY) === "1"){
-        location.replace(HOME);
-        return;
-      }
-
-      const { data: prof } = await supabase
-        .from("profiles")
-        .select("base_lang")
-        .eq("id", session.user.id)
-        .maybeSingle();
-
-      const base = String(prof?.base_lang || "").trim().toLowerCase();
-      if(base){
-        localStorage.setItem(FIRST_BOOT_KEY, "1");
-        location.replace(HOME);
-        return;
-      }
-
-      location.replace(SETUP_OFFLINE);
-
-    }catch(e){
-      console.error(e);
-
-      const next = getNextTarget();
-      if(next){
-        location.replace(next);
-        return;
-      }
-
-      location.replace(SETUP_OFFLINE);
-    }
-  }
-
-  (function bounceToCallbackIfNeeded(){
-    const hasCode = new URLSearchParams(location.search).has("code");
-    const hasToken = location.hash.includes("access_token=");
-    if((hasCode || hasToken) && !location.pathname.endsWith("/pages/auth_callback.html")){
-      location.replace(CALLBACK + location.search + location.hash);
-    }
-  })();
-
-  window.onNativeLoginSuccess = async function(payload){
-    try{
-      const data = (typeof payload === "string") ? JSON.parse(payload) : payload;
-      const idToken = String(data?.id_token || data?.idToken || "").trim();
-      if(!idToken){
-        toast("Token yok, giriş tamamlanamadı.");
-        return;
-      }
-
-      toast("Oturum açılıyor...");
-
-      const { error } = await supabase.auth.signInWithIdToken({
-        provider: "google",
-        token: idToken
-      });
-
-      if(error){
-        console.error(error);
-        toast("Oturum açılamadı.");
-        return;
-      }
-
-      const { data:{ session } } = await supabase.auth.getSession();
-      if(!session){
-        toast("Oturum bulunamadı.");
-        return;
-      }
-
-      toast("Hoş geldin!");
-      setTimeout(()=>routeAfterLogin(session), 350);
-
-    }catch(e){
-      console.error(e);
-      toast("Giriş hatası");
-    }
-  };
-
-  document.getElementById("googleBtn")?.addEventListener("click", async ()=>{
-    try{
-      const next = getNextTarget();
-
-      if(isNative()){
-        toast("Güvenli giriş başlatılıyor…");
-        window.Native.startGoogleLogin();
-        return;
-      }
-
-      toast("Google yönlendiriliyor…");
-      await loginWithGoogle(next);
-    }catch(e){
-      console.error(e);
-      toast(e?.message || "Giriş başlatılamadı");
-    }
-  });
-
-  const phrases = [
-    "Dil bariyerlerini görünmez yapıyoruz…",
-    "italky Academy ile seviyeni netleştir…",
-    "Yüz yüze çeviri, anında ve doğal…",
-    "Offline paketlerin hazır olduğunda internet şart değil…",
-    "Akıllı ders planı: adım adım ilerle…",
-    "Dünya artık senin dilinde…",
-    "Başlamak için sadece bir hesap seç…"
-  ];
-
-  let pi = 0;
-  const typeEl = document.getElementById("typewriter");
-
-  setInterval(()=>{
-    pi = (pi + 1) % phrases.length;
-    if(typeEl){
-      typeEl.style.animation = "none";
-      typeEl.offsetHeight;
-      typeEl.textContent = phrases[pi];
-      typeEl.style.animation = null;
-    }
-  }, 5600);
-
-  (async function boot(){
-    try{
-      const { data:{ session } } = await supabase.auth.getSession();
-      if(!session) return;
-      await routeAfterLogin(session);
-    }catch(_e){}
-  })();
-</script>
+  </script>
 </body>
 </html>
