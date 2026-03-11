@@ -1,65 +1,76 @@
 <!doctype html>
-<html lang="tr">
+<html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>italkyAI</title>
+<title>italkyAI açılıyor...</title>
+
+<script>
+
+const params = new URLSearchParams(location.search)
+const host = params.get("host") || ""
+
+const APP_URL = "italky://join?host=" + host
+const PLAY = "https://play.google.com/store/apps/details?id=com.ozyigits.italkyai"
+
+function openApp(){
+
+  location.href = APP_URL
+
+  setTimeout(()=>{
+    location.href = PLAY
+  },2000)
+
+}
+
+</script>
+
 <style>
 body{
-  margin:0;
-  background:#050510;
-  color:#fff;
-  font-family:Outfit,sans-serif;
-  min-height:100vh;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  text-align:center;
-  padding:24px;
+background:#02000f;
+color:white;
+font-family:Outfit, sans-serif;
+display:flex;
+align-items:center;
+justify-content:center;
+height:100vh;
+text-align:center
 }
-.wrap{max-width:420px}
-.btn{
-  display:inline-block;
-  margin-top:18px;
-  padding:14px 20px;
-  border-radius:16px;
-  background:linear-gradient(135deg,#a5b4fc,#6366f1,#ec4899);
-  color:#000;
-  font-weight:900;
-  text-decoration:none;
+
+.box{
+background:rgba(255,255,255,.05);
+padding:30px;
+border-radius:20px;
+border:1px solid rgba(255,255,255,.15)
 }
-.sub{
-  color:rgba(255,255,255,.65);
-  font-size:14px;
-  line-height:1.45;
+
+button{
+margin-top:15px;
+padding:12px 20px;
+border-radius:10px;
+border:none;
+font-weight:700;
+cursor:pointer
 }
 </style>
-<script>
-function openApp(){
-  const p = new URLSearchParams(location.search);
-  const host = p.get("host") || "";
-  const v = p.get("v") || "1";
-
-  const appUrl = `italky://join?host=${encodeURIComponent(host)}&v=${encodeURIComponent(v)}`;
-  const fallbackUrl = `/pages/get-app.html?host=${encodeURIComponent(host)}&v=${encodeURIComponent(v)}`;
-
-  const start = Date.now();
-  window.location.href = appUrl;
-
-  setTimeout(() => {
-    const elapsed = Date.now() - start;
-    if (elapsed < 2200) {
-      window.location.href = fallbackUrl;
-    }
-  }, 1600);
-}
-</script>
 </head>
+
 <body onload="openApp()">
-  <div class="wrap">
-    <h2>italkyAI açılıyor</h2>
-    <div class="sub">Uygulama yüklüyse görüşme ekranı açılacak. Yüklü değilse indirme sayfasına yönlendirileceksin.</div>
-    <a class="btn" href="/pages/get-app.html">Uygulamayı indir</a>
-  </div>
+
+<div class="box">
+
+<h2>italkyAI açılıyor...</h2>
+
+<p>
+Uygulama yüklüyse açılır.<br>
+Yüklü değilse Google Play'e yönlendirilirsin.
+</p>
+
+<button onclick="location.href='https://play.google.com/store/apps/details?id=com.ozyigits.italkyai'">
+Google Play'de Aç
+</button>
+
+</div>
+
 </body>
 </html>
