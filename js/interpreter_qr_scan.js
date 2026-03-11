@@ -12,15 +12,16 @@ let stream = null;
 let detector = null;
 let busy = false;
 
-function getParams(){
+function getParams() {
   const u = new URL(location.href);
   return {
     my: (u.searchParams.get("my") || "tr").trim(),
-    room: (u.searchParams.get("room") || "").trim()
+    room: (u.searchParams.get("room") || "").trim(),
+    selfHost: (u.searchParams.get("self_host") || "").trim()
   };
 }
 
-async function startCamera(){
+async function startCamera() {
   stream = await navigator.mediaDevices.getUserMedia({
     video: { facingMode: "environment" },
     audio: false
@@ -28,93 +29,131 @@ async function startCamera(){
   camera.srcObject = stream;
 }
 
-function stopCamera(){
-  try{
-    stream?.getTracks?.().forEach(t => t.stop());
-  }catch{}
+function stopCamera() {
+  try {
+    stream?.getTracks?.().forEach((t) => t.stop());
+  } catch {}
 }
 
-function extractRoomFromValue(value){
-  try{
-    const u = new URL(value);
-    return (u.searchParams.get("room") || "").trim();
-  }catch{
-    return "";
+function extractPayloadFromValue(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return { roomId: "", hostCode: "" };
+
+  try {
+    const u = new URL(raw);
+
+    const hostCode = (u.searchParams.get("host") || "").trim();
+    const roomId = (u.searchParams.get("room") || "").trim();
+
+    return { roomId, hostCode };
+  } catch {
+    return { roomId: "", hostCode: "" };
   }
 }
 
-async function joinRoom(roomId){
-  if(busy) return;
+async function joinRoom(roomId, hostCode) {
+  if (busy) return;
   busy = true;
 
   const p = getParams();
 
-  const r = await fetch(`${API_BASE}/api/interpreter/join-room`, {
-    method: "POST",
-    headers: { "Content-Type":"application/json" },
-    body: JSON.stringify({
-      room_id: roomId,
-      my_lang: p.my
-    })
-  });
+  try {
+    // Yeni sistem: host kod varsa direkt live_interpreter'a git
+    if (hostCode) {
+      stopCamera();
 
-  const j = await r.json().catch(()=>null);
+      const q = new URLSearchParams({
+        host: hostCode,
+        my: p.my,
+        role: "guest"
+      });
 
-  if(!r.ok || !j?.ok){
+      location.href = `/pages/live_interpreter.html?${q.toString()}`;
+      return;
+    }
+
+    // Eski sistem fallback: room ile join-room
+    if (!roomId) {
+      busy = false;
+      return;
+    }
+
+    const r = await fetch(`${API_BASE}/api/interpreter/join-room`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        room_id: roomId,
+        my_lang: p.my
+      })
+    });
+
+    const j = await r.json().catch(() => null);
+
+    if (!r.ok || !j?.ok) {
+      busy = false;
+      return;
+    }
+
+    stopCamera();
+
+    const roomInfo = await fetch(`${API_BASE}/api/interpreter/room/${encodeURIComponent(roomId)}`)
+      .then((x) => x.json())
+      .catch(() => null);
+
+    const peer = roomInfo?.host_lang || "tr";
+    const host = roomInfo?.host_code || "";
+
+    const q = new URLSearchParams({
+      room: roomId,
+      my: p.my,
+      peer,
+      role: "guest",
+      host
+    });
+
+    location.href = `/pages/live_interpreter.html?${q.toString()}`;
+  } catch (e) {
+    console.error("[joinRoom]", e);
     busy = false;
-    return;
   }
-
-  stopCamera();
-
-  const roomInfo = await fetch(`${API_BASE}/api/interpreter/room/${encodeURIComponent(roomId)}`)
-    .then(x => x.json())
-    .catch(()=>null);
-
-  const peer = roomInfo?.host_lang || "tr";
-
-  const q = new URLSearchParams({
-    room: roomId,
-    my: p.my,
-    peer,
-    role: "guest"
-  });
-
-  location.href = `/pages/interpreter_live.html?${q.toString()}`;
 }
 
-async function scanLoop(){
-  if(!("BarcodeDetector" in window)){
+async function scanLoop() {
+  if (!("BarcodeDetector" in window)) {
     alert("Bu cihazda QR tarama desteklenmiyor.");
     return;
   }
 
   detector = new BarcodeDetector({ formats: ["qr_code"] });
 
-  async function tick(){
-    try{
+  async function tick() {
+    try {
       const codes = await detector.detect(camera);
-      if(codes?.length){
+
+      if (codes?.length) {
         const raw = String(codes[0].rawValue || "").trim();
-        const roomId = extractRoomFromValue(raw);
-        if(roomId){
-          await joinRoom(roomId);
+        const payload = extractPayloadFromValue(raw);
+
+        if (payload.hostCode || payload.roomId) {
+          await joinRoom(payload.roomId, payload.hostCode);
           return;
         }
       }
-    }catch{}
+    } catch {}
 
-    if(!busy) requestAnimationFrame(tick);
+    if (!busy) requestAnimationFrame(tick);
   }
 
   requestAnimationFrame(tick);
 }
 
-cancelBtn?.addEventListener("click", ()=>{
+cancelBtn?.addEventListener("click", () => {
   stopCamera();
   location.href = "/pages/interpreter.html";
 });
 
-startCamera().then(scanLoop).catch(()=>{
-  alert("Kamera açılamadı.");
-});
+startCamera()
+  .then(scanLoop)
+  .catch(() => {
+    alert("Kamera açılamadı.");
+  });
