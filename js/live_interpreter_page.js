@@ -3,42 +3,28 @@
 import { LANG_POOL } from "/js/lang_pool_full.js";
 
 const $ = (id) => document.getElementById(id);
-
 const WS_BASE = "wss://italky-api.onrender.com";
 
-/* =========================
-   DOM
-========================= */
 const frameRoot = $("frameRoot");
-
 const topBody = $("topBody");
 const botBody = $("botBody");
-
 const topLangBtn = $("topLangBtn");
 const topLangTxt = $("topLangTxt");
 const popTop = $("pop-top");
 const listTop = $("list-top");
 const closeTop = $("close-top");
-
 const topVoiceBtn = $("topVoiceBtn");
 const voicePopTop = $("voice-pop-top");
 const voiceListTop = $("voice-list-top");
 const closeVoiceTop = $("close-voice-top");
-
 const topMuteBtn = $("topMuteBtn");
-
 const homeLink = $("homeLink");
 const homeBtn = $("homeBtn");
 const clearBtn = $("clearBtn");
-
 const botMic = $("botMic");
 const botHelper = $("botHelper");
 
-/* =========================
-   QUERY
-========================= */
 const query = new URLSearchParams(location.search);
-
 const roomId = String(query.get("room") || "").trim();
 const role = String(query.get("role") || "guest").trim().toLowerCase();
 const hostCode = String(query.get("host") || "").trim();
@@ -55,26 +41,10 @@ let ws = null;
 let wsReady = false;
 let pingTimer = null;
 
-/* =========================
-   LANGS
-========================= */
 const BCP = {
-  tr: "tr-TR",
-  en: "en-US",
-  de: "de-DE",
-  fr: "fr-FR",
-  it: "it-IT",
-  es: "es-ES",
-  ru: "ru-RU",
-  el: "el-GR",
-  az: "az-AZ",
-  ka: "ka-GE",
-  pt: "pt-PT",
-  nl: "nl-NL",
-  ar: "ar-SA",
-  zh: "zh-CN",
-  ja: "ja-JP",
-  ko: "ko-KR"
+  tr: "tr-TR", en: "en-US", de: "de-DE", fr: "fr-FR", it: "it-IT",
+  es: "es-ES", ru: "ru-RU", el: "el-GR", az: "az-AZ", ka: "ka-GE",
+  pt: "pt-PT", nl: "nl-NL", ar: "ar-SA", zh: "zh-CN", ja: "ja-JP", ko: "ko-KR"
 };
 
 function canonical(code) {
@@ -99,14 +69,12 @@ const LANGS = (Array.isArray(LANG_POOL) ? LANG_POOL : [])
 
 function langObj(code) {
   const c = canonical(code);
-  return (
-    LANGS.find((x) => x.code === c) || {
-      code: c,
-      flag: "🌐",
-      name: c.toUpperCase(),
-      bcp: BCP[c] || "en-US"
-    }
-  );
+  return LANGS.find((x) => x.code === c) || {
+    code: c,
+    flag: "🌐",
+    name: c.toUpperCase(),
+    bcp: BCP[c] || "en-US"
+  };
 }
 
 function labelChip(code) {
@@ -114,9 +82,6 @@ function labelChip(code) {
   return `${o.flag} ${o.name}`;
 }
 
-/* =========================
-   VOICE
-========================= */
 const VOICE_OPTIONS = [
   { id: "female", label: "Kadın Ses" },
   { id: "male", label: "Erkek Ses" },
@@ -128,9 +93,6 @@ function refreshVoiceLabel() {
   if (topVoiceBtn) topVoiceBtn.textContent = `${item.label} ⌵`;
 }
 
-/* =========================
-   UI
-========================= */
 function setHelper(mode, text) {
   if (!botHelper) return;
   botHelper.className = "helper-text";
@@ -174,9 +136,6 @@ function demoteOld(container) {
   });
 }
 
-/* =========================
-   POPUPS
-========================= */
 function renderLangPopup() {
   if (!listTop) return;
 
@@ -195,8 +154,7 @@ function renderLangPopup() {
 
   listTop.querySelectorAll(".pop-item").forEach((el) => {
     el.addEventListener("click", () => {
-      const code = canonical(el.getAttribute("data-code") || "tr");
-      myLang = code;
+      myLang = canonical(el.getAttribute("data-code") || "tr");
       localStorage.setItem("live_interpreter_lang", myLang);
       if (topLangTxt) topLangTxt.textContent = labelChip(myLang);
       rebuildRecognition();
@@ -212,9 +170,7 @@ function renderVoicePopup() {
     const active = v.id === myVoicePref ? "active" : "";
     return `
       <div class="pop-item ${active}" data-voice="${v.id}">
-        <div class="pop-left">
-          <div class="pop-name">${v.label}</div>
-        </div>
+        <div class="pop-left"><div class="pop-name">${v.label}</div></div>
         <div class="pop-code">${v.id.toUpperCase()}</div>
       </div>
     `;
@@ -230,20 +186,11 @@ function renderVoicePopup() {
   });
 }
 
-/* =========================
-   BUBBLES
-========================= */
 function makeSpeakerButton(text, langCode) {
   const btn = document.createElement("button");
   btn.className = "spk-icon";
   btn.type = "button";
-  btn.innerHTML = `
-    <svg viewBox="0 0 24 24">
-      <path d="M3 10v4h4l5 4V6L7 10H3"></path>
-      <path d="M16 9a4 4 0 0 1 0 6"></path>
-      <path d="M19 5a8 8 0 0 1 0 14"></path>
-    </svg>
-  `;
+  btn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M3 10v4h4l5 4V6L7 10H3"></path><path d="M16 9a4 4 0 0 1 0 6"></path><path d="M19 5a8 8 0 0 1 0 14"></path></svg>`;
   btn.addEventListener("click", (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -254,7 +201,6 @@ function makeSpeakerButton(text, langCode) {
 
 function addTopBubble(text) {
   if (!topBody) return;
-
   const row = document.createElement("div");
   row.className = "bubble me is-latest";
 
@@ -277,7 +223,6 @@ function addTopBubble(text) {
 
 function addBottomBubble(text) {
   if (!botBody) return;
-
   const row = document.createElement("div");
   row.className = "bubble me is-latest";
 
@@ -297,9 +242,6 @@ function addBottomBubble(text) {
   demoteOld(botBody);
 }
 
-/* =========================
-   TTS
-========================= */
 function stopSpeech() {
   try { window.speechSynthesis?.cancel?.(); } catch {}
   try { window.NativeTTS?.stop?.(); } catch {}
@@ -315,12 +257,8 @@ function chooseWebVoice(langCode) {
   if (!pool.length) pool = voices;
   if (!pool.length) return null;
 
-  if (myVoicePref === "female") {
-    return pool.find((v) => /female|woman|zira|aria|seda|helena|jenny|susan/i.test(v.name)) || pool[0];
-  }
-  if (myVoicePref === "male") {
-    return pool.find((v) => /male|man|david|mark|george|james|alex|tom/i.test(v.name)) || pool[0];
-  }
+  if (myVoicePref === "female") return pool.find((v) => /female|woman|zira|aria|seda|helena|jenny|susan/i.test(v.name)) || pool[0];
+  if (myVoicePref === "male") return pool.find((v) => /male|man|david|mark|george|james|alex|tom/i.test(v.name)) || pool[0];
   return pool[0];
 }
 
@@ -349,19 +287,13 @@ function speak(text, langCode) {
   u.rate = 1;
   u.pitch = 1;
   u.volume = 1;
-
   const voice = chooseWebVoice(langCode);
   if (voice) u.voice = voice;
-
   u.onend = () => setRootState("is-ready");
   u.onerror = () => setRootState("is-ready");
-
   window.speechSynthesis.speak(u);
 }
 
-/* =========================
-   STT
-========================= */
 function createRecognizer() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) return null;
@@ -383,9 +315,6 @@ async function speechToTextFallback() {
   return String(txt).trim() || null;
 }
 
-/* =========================
-   SOCKET
-========================= */
 function wsUrl() {
   const url = new URL(`${WS_BASE}/ws/interpreter/${encodeURIComponent(roomId)}`);
   url.searchParams.set("role", role);
@@ -397,11 +326,8 @@ function stopSocket() {
   try { ws?.close?.(); } catch {}
   ws = null;
   wsReady = false;
-
-  if (pingTimer) {
-    clearInterval(pingTimer);
-    pingTimer = null;
-  }
+  if (pingTimer) clearInterval(pingTimer);
+  pingTimer = null;
 }
 
 function handleSocketMessage(payload) {
@@ -506,18 +432,13 @@ function startSocket() {
 
   ws.onclose = () => {
     wsReady = false;
-    if (pingTimer) {
-      clearInterval(pingTimer);
-      pingTimer = null;
-    }
+    if (pingTimer) clearInterval(pingTimer);
+    pingTimer = null;
     setHelper("wait", "Bağlantı kapandı");
     setRootState("is-idle");
   };
 }
 
-/* =========================
-   TALK FLOW
-========================= */
 async function startListeningFlow() {
   if (isListening) return;
 
@@ -538,7 +459,6 @@ async function startListeningFlow() {
     if (window.Native && typeof window.Native.startSpeechRecognition === "function") {
       spoken = await new Promise((resolve) => {
         let finished = false;
-
         const done = (val) => {
           if (finished) return;
           finished = true;
@@ -549,8 +469,7 @@ async function startListeningFlow() {
 
         window.onNativeSpeechResult = (payload) => {
           try {
-            const txt = String(payload?.text || "").trim();
-            done(txt || null);
+            done(String(payload?.text || "").trim() || null);
           } catch {
             done(null);
           }
@@ -568,7 +487,6 @@ async function startListeningFlow() {
     } else if (recognition) {
       spoken = await new Promise((resolve) => {
         let finished = false;
-
         const finish = (val) => {
           if (finished) return;
           finished = true;
@@ -576,11 +494,7 @@ async function startListeningFlow() {
           resolve(val);
         };
 
-        recognition.onresult = (e) => {
-          const txt = e.results?.[0]?.[0]?.transcript || "";
-          finish(String(txt || "").trim() || null);
-        };
-
+        recognition.onresult = (e) => finish(String(e.results?.[0]?.[0]?.transcript || "").trim() || null);
         recognition.onerror = () => finish(null);
         recognition.onend = () => finish(null);
 
@@ -593,9 +507,7 @@ async function startListeningFlow() {
       });
     }
 
-    if (!spoken) {
-      spoken = await speechToTextFallback();
-    }
+    if (!spoken) spoken = await speechToTextFallback();
 
     if (!spoken) {
       setHelper("ready", "Konuşma alınamadı");
@@ -629,9 +541,6 @@ async function startListeningFlow() {
   }
 }
 
-/* =========================
-   EVENTS
-========================= */
 topLangBtn?.addEventListener("click", (e) => {
   e.preventDefault();
   e.stopPropagation();
@@ -696,17 +605,10 @@ botMic?.addEventListener("keydown", async (e) => {
   }
 });
 
-/* =========================
-   INIT
-========================= */
 function bootInfo() {
-  if (hostCode) {
-    addTopBubble(`Bağlantı hazır • ${hostCode}`);
-  } else if (roomId) {
-    addTopBubble(`Oda hazır • ${roomId}`);
-  } else {
-    addTopBubble("Canlı çeviri bağlantısı hazır.");
-  }
+  if (hostCode) addTopBubble(`Bağlantı hazır • ${hostCode}`);
+  else if (roomId) addTopBubble(`Oda hazır • ${roomId}`);
+  else addTopBubble("Canlı çeviri bağlantısı hazır.");
 }
 
 function init() {
