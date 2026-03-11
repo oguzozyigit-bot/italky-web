@@ -139,7 +139,7 @@ async function createQr() {
   saveLang();
 
   const hostCode = await ensureStableHostCode();
-  const roomId = buildStableRoomId(hostCode);
+  const roomId = String(query.get("room") || "").trim();
   const joinUrl = buildJoinUrl(hostCode);
 
   const q = new URLSearchParams({
