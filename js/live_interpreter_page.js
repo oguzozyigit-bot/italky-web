@@ -34,18 +34,27 @@ const botMic = $("botMic");
 const botHelper = $("botHelper");
 
 /* =========================
-   STATE
+   QUERY / ROOM STATE
 ========================= */
 const query = new URLSearchParams(location.search);
-const hostCode = (query.get("host") || "").trim();
 
-let myLang = localStorage.getItem("live_interpreter_lang") || "tr";
+const roomId = String(query.get("room") || "").trim();
+const role = String(query.get("role") || "guest").trim(); // guest | host
+const hostCode = String(query.get("host") || "").trim();
+
+let myLang = String(query.get("my") || localStorage.getItem("live_interpreter_lang") || "tr").trim();
+let peerLang = String(query.get("peer") || localStorage.getItem("live_interpreter_peer_lang") || "en").trim();
+
 let myVoicePref = localStorage.getItem("live_interpreter_voice") || "female";
 let isMuted = localStorage.getItem("live_interpreter_muted") === "1";
 
 let recognition = null;
 let isListening = false;
 let activeUtterance = null;
+
+let pollTimer = null;
+let lastSeenMessageId = "";
+let localMessageKeys = new Set();
 
 /* =========================
    LANGS
@@ -72,6 +81,9 @@ const BCP = {
 function canonical(code) {
   return String(code || "").toLowerCase().split("-")[0].trim();
 }
+
+myLang = canonical(myLang || "tr");
+peerLang = canonical(peerLang || "en");
 
 const LANGS = (Array.isArray(LANG_POOL) ? LANG_POOL : [])
   .map((l) => {
@@ -292,12 +304,8 @@ function demoteOld(container) {
    TTS
 ========================= */
 function stopSpeech() {
-  try {
-    window.speechSynthesis?.cancel?.();
-  } catch {}
-  try {
-    window.NativeTTS?.stop?.();
-  } catch {}
+  try { window.speechSynthesis?.cancel?.(); } catch {}
+  try { window.NativeTTS?.stop?.(); } catch {}
   activeUtterance = null;
 }
 
@@ -373,7 +381,7 @@ function createRecognizer() {
   if (!SR) return null;
 
   const rec = new SR();
-  rec.lang = langObj(myLang).bcp;
+  rec.lang = langObj(peerLang).bcp;
   rec.interimResults = false;
   rec.continuous = false;
   rec.maxAlternatives = 1;
@@ -385,8 +393,136 @@ function rebuildRecognition() {
 }
 
 async function speechToTextFallback() {
-  const txt = prompt(`${langObj(myLang).name} olarak konuşmanı yaz:`) || "";
+  const txt = prompt(`${langObj(peerLang).name} olarak konuşmanı yaz:`) || "";
   return String(txt).trim() || null;
+}
+
+/* =========================
+   API
+========================= */
+async function translateText(text, from, to) {
+  const t = String(text || "").trim();
+  if (!t) return null;
+
+  try {
+    const r = await fetch(`${API_BASE}/api/translate_ai`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text: t,
+        from_lang: from || "auto",
+        to_lang: canonical(to)
+      })
+    });
+
+    if (!r.ok) return null;
+    const j = await r.json().catch(() => null);
+    return String(j?.translated || "").trim() || null;
+  } catch {
+    return null;
+  }
+}
+
+async function sendRoomMessage(payload) {
+  try {
+    const r = await fetch(`${API_BASE}/api/interpreter/send-message`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    const j = await r.json().catch(() => null);
+    if (!r.ok || !j?.ok) return null;
+    return j;
+  } catch {
+    return null;
+  }
+}
+
+async function fetchRoomMessages() {
+  if (!roomId) return [];
+
+  try {
+    const r = await fetch(`${API_BASE}/api/interpreter/messages/${encodeURIComponent(roomId)}`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" }
+    });
+
+    const j = await r.json().catch(() => null);
+
+    if (!r.ok || !j) return [];
+    if (Array.isArray(j?.messages)) return j.messages;
+    if (Array.isArray(j)) return j;
+    return [];
+  } catch {
+    return [];
+  }
+}
+
+/* =========================
+   LIVE FLOW
+========================= */
+function messageKey(msg) {
+  return String(
+    msg?.id ||
+    msg?.message_id ||
+    msg?.created_at ||
+    `${msg?.role || ""}-${msg?.original_text || ""}-${msg?.translated_text || ""}`
+  );
+}
+
+function isRemoteMessage(msg) {
+  const msgRole = String(msg?.role || "").trim().toLowerCase();
+  if (!msgRole) return true;
+  return msgRole !== String(role || "").trim().toLowerCase();
+}
+
+function resolveDisplayText(msg) {
+  return String(
+    msg?.translated_text ||
+    msg?.translated ||
+    msg?.text ||
+    msg?.message ||
+    ""
+  ).trim();
+}
+
+async function pollMessages() {
+  const list = await fetchRoomMessages();
+  if (!Array.isArray(list) || !list.length) return;
+
+  for (const msg of list) {
+    const key = messageKey(msg);
+    if (!key || localMessageKeys.has(key) || key === lastSeenMessageId) continue;
+
+    if (!isRemoteMessage(msg)) {
+      localMessageKeys.add(key);
+      lastSeenMessageId = key;
+      continue;
+    }
+
+    const text = resolveDisplayText(msg);
+    if (!text) continue;
+
+    addTopBubble(text);
+    speak(text, myLang);
+
+    localMessageKeys.add(key);
+    lastSeenMessageId = key;
+  }
+}
+
+function startPolling() {
+  stopPolling();
+  pollMessages();
+  pollTimer = setInterval(pollMessages, 1200);
+}
+
+function stopPolling() {
+  if (pollTimer) {
+    clearInterval(pollTimer);
+    pollTimer = null;
+  }
 }
 
 async function startListeningFlow() {
@@ -424,7 +560,7 @@ async function startListeningFlow() {
         window.onNativeSpeechError = () => done(null);
 
         try {
-          window.Native.startSpeechRecognition(langObj(myLang).bcp, "bottom");
+          window.Native.startSpeechRecognition(langObj(peerLang).bcp, "bottom");
           setTimeout(() => done(null), 9000);
         } catch {
           done(null);
@@ -472,48 +608,40 @@ async function startListeningFlow() {
     setRootState("is-translating");
     setHelper("repeat", "Çevriliyor...");
 
-    const translated = await translateText(spoken, "auto", myLang);
+    const translated = await translateText(spoken, peerLang, myLang);
 
     if (!translated) {
-      addTopBubble("Çeviri alınamadı.");
-      setHelper("ready", "Tekrar deneyebilirsin");
+      setHelper("ready", "Çeviri alınamadı");
       setRootState("is-error");
       return;
     }
 
-    addTopBubble(translated);
+    const payload = {
+      room_id: roomId,
+      role,
+      host: hostCode,
+      source_lang: peerLang,
+      target_lang: myLang,
+      original_text: spoken,
+      translated_text: translated
+    };
+
+    const sendResult = await sendRoomMessage(payload);
+
+    if (!sendResult) {
+      setHelper("ready", "Mesaj gönderilemedi");
+      setRootState("is-error");
+      return;
+    }
+
+    const sendKey = messageKey(sendResult?.message || payload);
+    if (sendKey) localMessageKeys.add(sendKey);
+
     setHelper("ready", "Konuşmaya hazır");
     setRootState("is-ready");
-    speak(translated, myLang);
   } finally {
     isListening = false;
     botMic?.classList.remove("listening");
-  }
-}
-
-/* =========================
-   TRANSLATE
-========================= */
-async function translateText(text, from, to) {
-  const t = String(text || "").trim();
-  if (!t) return null;
-
-  try {
-    const r = await fetch(`${API_BASE}/api/translate_ai`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        text: t,
-        from_lang: from || "auto",
-        to_lang: canonical(to)
-      })
-    });
-
-    if (!r.ok) return null;
-    const j = await r.json().catch(() => null);
-    return String(j?.translated || "").trim() || null;
-  } catch {
-    return null;
   }
 }
 
@@ -557,15 +685,19 @@ clearBtn?.addEventListener("click", () => {
   stopSpeech();
   if (topBody) topBody.innerHTML = "";
   if (botBody) botBody.innerHTML = "";
+  localMessageKeys.clear();
+  lastSeenMessageId = "";
   setHelper("ready", "Temizlendi");
   setRootState("is-ready");
 });
 
 homeLink?.addEventListener("click", () => {
+  stopPolling();
   location.href = "/pages/home.html";
 });
 
 homeBtn?.addEventListener("click", () => {
+  stopPolling();
   location.href = "/pages/home.html";
 });
 
@@ -583,7 +715,7 @@ botMic?.addEventListener("keydown", async (e) => {
 });
 
 /* =========================
-   DEMO / SESSION
+   INIT INFO
 ========================= */
 function bootInfo() {
   if (hostCode) {
@@ -609,7 +741,12 @@ function init() {
     window.speechSynthesis.onvoiceschanged = () => {};
   } catch {}
 
+  localStorage.setItem("live_interpreter_lang", myLang);
+  localStorage.setItem("live_interpreter_peer_lang", peerLang);
+
   bootInfo();
+  startPolling();
 }
 
 init();
+window.addEventListener("beforeunload", stopPolling);
