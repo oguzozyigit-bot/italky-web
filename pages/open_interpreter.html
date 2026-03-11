@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>italkyAI • Açılıyor</title>
+  <title>italkyAI • Yönlendiriliyor</title>
   <style>
     html,body{
       margin:0;
@@ -25,60 +25,17 @@
       background:rgba(255,255,255,.05);
       border:1px solid rgba(255,255,255,.12);
     }
-    .title{font-size:22px;font-weight:800;margin-bottom:10px;}
-    .sub{font-size:14px;color:rgba(255,255,255,.72);line-height:1.45;margin-bottom:18px;}
-    .btn{
-      display:inline-block;
-      padding:14px 18px;
-      border-radius:14px;
-      background:#fff;
-      color:#000;
-      text-decoration:none;
-      font-weight:800;
-    }
   </style>
 </head>
 <body>
-  <div class="box">
-    <div class="title">italkyAI açılıyor…</div>
-    <div class="sub">Uygulama yüklüyse açılır. Yüklü değilse Google Play sayfasına yönlendirilirsin.</div>
-    <a class="btn" id="storeBtn" href="https://play.google.com/store/apps/details?id=com.ozyigits.italkyai">
-      Google Play’de Aç
-    </a>
-  </div>
+  <div class="box">Google Play’e yönlendiriliyor…</div>
 
   <script>
     (function () {
-      const u = new URL(location.href);
-      const host = String(u.searchParams.get("host") || "").trim();
-      const v = String(u.searchParams.get("v") || "1").trim();
-
       const storeUrl = "https://play.google.com/store/apps/details?id=com.ozyigits.italkyai";
-      const appUrl = `italky://join?host=${encodeURIComponent(host)}&v=${encodeURIComponent(v)}`;
 
-      const btn = document.getElementById("storeBtn");
-      if (btn) btn.href = storeUrl;
-
-      if (!host) {
-        location.replace(storeUrl);
-        return;
-      }
-
-      let pageHidden = false;
-
-      document.addEventListener("visibilitychange", () => {
-        if (document.hidden) pageHidden = true;
-      });
-
-      // Önce uygulamayı açmayı dene
-      window.location.href = appUrl;
-
-      // Açılmazsa store'a git
-      setTimeout(() => {
-        if (!pageHidden) {
-          location.replace(storeUrl);
-        }
-      }, 1800);
+      // Tarayıcıya düştüyse direkt store
+      location.replace(storeUrl);
     })();
   </script>
 </body>
