@@ -7,10 +7,15 @@
   <title>italkyAI • Açılıyor</title>
   <style>
     html,body{
-      margin:0;width:100%;height:100%;
-      background:#02000f;color:#fff;
+      margin:0;
+      width:100%;
+      height:100%;
+      background:#02000f;
+      color:#fff;
       font-family:Arial,sans-serif;
-      display:flex;align-items:center;justify-content:center;
+      display:flex;
+      align-items:center;
+      justify-content:center;
       text-align:center;
     }
     .box{
@@ -20,28 +25,60 @@
       background:rgba(255,255,255,.05);
       border:1px solid rgba(255,255,255,.12);
     }
+    .title{font-size:22px;font-weight:800;margin-bottom:10px;}
+    .sub{font-size:14px;color:rgba(255,255,255,.72);line-height:1.45;margin-bottom:18px;}
+    .btn{
+      display:inline-block;
+      padding:14px 18px;
+      border-radius:14px;
+      background:#fff;
+      color:#000;
+      text-decoration:none;
+      font-weight:800;
+    }
   </style>
 </head>
 <body>
   <div class="box">
-    italkyAI açılıyor…
+    <div class="title">italkyAI açılıyor…</div>
+    <div class="sub">Uygulama yüklüyse açılır. Yüklü değilse Google Play sayfasına yönlendirilirsin.</div>
+    <a class="btn" id="storeBtn" href="https://play.google.com/store/apps/details?id=com.ozyigits.italkyai">
+      Google Play’de Aç
+    </a>
   </div>
 
   <script>
-    (function(){
+    (function () {
       const u = new URL(location.href);
       const host = String(u.searchParams.get("host") || "").trim();
       const v = String(u.searchParams.get("v") || "1").trim();
-      const storeUrl = "https://play.google.com/store/apps/details?id=com.ozyigits.italkyai";
 
-      if(!host){
+      const storeUrl = "https://play.google.com/store/apps/details?id=com.ozyigits.italkyai";
+      const appUrl = `italky://join?host=${encodeURIComponent(host)}&v=${encodeURIComponent(v)}`;
+
+      const btn = document.getElementById("storeBtn");
+      if (btn) btn.href = storeUrl;
+
+      if (!host) {
         location.replace(storeUrl);
         return;
       }
 
-      setTimeout(()=>{
-        location.replace(storeUrl);
-      }, 1200);
+      let pageHidden = false;
+
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden) pageHidden = true;
+      });
+
+      // Önce uygulamayı açmayı dene
+      window.location.href = appUrl;
+
+      // Açılmazsa store'a git
+      setTimeout(() => {
+        if (!pageHidden) {
+          location.replace(storeUrl);
+        }
+      }, 1800);
     })();
   </script>
 </body>
