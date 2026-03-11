@@ -1,489 +1,431 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8" />
-  <meta
-    name="viewport"
-    content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"
-  />
-  <title>italkyAI • Interpreter Live</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+  <title>italkyAI • Live Interpreter</title>
 
-  <meta name="theme-color" content="#050816" />
+  <meta name="theme-color" content="#050508">
+  <style>html,body{background:#050508!important;margin:0;padding:0}</style>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Space+Grotesk:wght@700&display=swap"
-    rel="stylesheet"
-  >
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
   <style>
     :root{
-      --bg:#050816;
-      --panel:#0d1326;
-      --panel2:#121b34;
-      --stroke:rgba(255,255,255,.10);
-      --soft:rgba(255,255,255,.08);
-      --text:#ffffff;
-      --muted:rgba(255,255,255,.62);
-      --accent:#7c8cff;
-      --accent2:#35d4ff;
-      --danger:#ff5f7a;
-      --ok:#2fe38a;
-      --shadow:0 12px 40px rgba(0,0,0,.35);
-      --safeTop:env(safe-area-inset-top,0px);
-      --safeBottom:env(safe-area-inset-bottom,0px);
+      --ai-gradient: linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
+      --bg-dark:#050508;
+      --panel:rgba(255,255,255,0.06);
+      --border:rgba(255,255,255,0.12);
+      --muted:rgba(255,255,255,0.55);
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
     }
 
-    *{box-sizing:border-box}
+    *{
+      box-sizing:border-box;
+      -webkit-tap-highlight-color:transparent;
+      outline:none;
+    }
+
     html,body{
-      margin:0;
-      padding:0;
       width:100%;
       height:100%;
-      background:
-        radial-gradient(circle at top, rgba(124,140,255,.18), transparent 30%),
-        radial-gradient(circle at bottom, rgba(53,212,255,.10), transparent 22%),
-        var(--bg);
-      color:var(--text);
-      font-family:"Outfit",system-ui,sans-serif;
       overflow:hidden;
+      font-family:'Outfit',sans-serif;
+      color:#fff;
+      background:
+        radial-gradient(circle at 50% 20%, rgba(99,102,241,.18) 0%, transparent 35%),
+        radial-gradient(circle at 50% 80%, rgba(236,72,153,.18) 0%, transparent 35%),
+        #050508;
+    }
+
+    body{
+      min-height:100dvh;
     }
 
     .app{
-      height:100%;
+      width:100%;
+      height:100dvh;
       display:flex;
       flex-direction:column;
-      padding-top:calc(var(--safeTop) + 8px);
-      padding-bottom:calc(var(--safeBottom) + 8px);
-    }
-
-    .topbar{
-      display:grid;
-      grid-template-columns:1fr auto auto auto;
-      gap:10px;
-      align-items:center;
-      padding:10px 12px 12px;
-    }
-
-    .brand{
-      min-width:0;
-    }
-
-    .brandTitle{
-      font-family:"Space Grotesk",sans-serif;
-      font-size:16px;
-      font-weight:700;
-      letter-spacing:.2px;
-      white-space:nowrap;
+      position:relative;
       overflow:hidden;
-      text-overflow:ellipsis;
     }
 
-    .brandSub{
-      font-size:11px;
-      font-weight:800;
-      color:var(--muted);
-      margin-top:2px;
+    .half{
+      flex:1;
+      min-height:0;
+      display:flex;
+      flex-direction:column;
+      position:relative;
+      overflow:hidden;
+      padding:12px 14px;
     }
 
-    .tb-btn{
-      height:40px;
-      min-width:40px;
-      padding:0 12px;
-      border:none;
-      border-radius:14px;
-      background:rgba(255,255,255,.08);
+    .half.top{
+      padding-top:calc(12px + var(--safe-top));
+      background:linear-gradient(180deg, rgba(236,72,153,.12) 0%, rgba(5,5,8,0) 100%);
+    }
+
+    .half.bottom{
+      padding-bottom:calc(12px + var(--safe-bottom));
+      background:linear-gradient(180deg, rgba(99,102,241,.12) 0%, rgba(5,5,8,0) 100%);
+    }
+
+    .controls{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      flex-wrap:wrap;
+      z-index:30;
+    }
+
+    .chip{
+      min-height:42px;
+      padding:0 14px;
+      border-radius:999px;
+      background:rgba(255,255,255,.06);
+      border:1px solid var(--border);
       color:#fff;
+      font-size:13px;
       font-weight:900;
-      font-size:12px;
-      box-shadow:var(--shadow);
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      backdrop-filter:blur(12px);
+      -webkit-backdrop-filter:blur(12px);
+    }
+
+    select.chip{
+      appearance:none;
+      -webkit-appearance:none;
       cursor:pointer;
     }
 
-    .tb-btn:active{transform:scale(.98)}
-    .tb-btn.muted-on{background:rgba(255,95,122,.18)}
+    .speakBtn{
+      cursor:pointer;
+      user-select:none;
+    }
 
-    .main{
+    .speakBtn:active{
+      transform:scale(.98);
+    }
+
+    .speakBtn.listening{
+      box-shadow:0 0 0 3px rgba(99,102,241,.18), 0 0 24px rgba(99,102,241,.22);
+      border-color:rgba(165,180,252,.5);
+    }
+
+    .transcript{
       flex:1;
       min-height:0;
-      display:grid;
-      grid-template-rows:1fr 1fr;
-      gap:10px;
-      padding:0 12px;
-    }
-
-    .side{
-      min-height:0;
-      display:flex;
-      flex-direction:column;
-      border:1px solid var(--stroke);
-      border-radius:26px;
-      overflow:hidden;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02)),
-        var(--panel);
-      box-shadow:var(--shadow);
-    }
-
-    .side.top{
-      background:
-        linear-gradient(180deg, rgba(124,140,255,.10), rgba(255,255,255,.02)),
-        var(--panel);
-    }
-
-    .side.bottom{
-      background:
-        linear-gradient(180deg, rgba(53,212,255,.08), rgba(255,255,255,.02)),
-        var(--panel2);
-    }
-
-    .sideHead{
       display:flex;
       align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      padding:12px 14px;
-      border-bottom:1px solid var(--stroke);
-      background:rgba(255,255,255,.03);
-    }
-
-    .sideTitle{
-      font-size:13px;
-      font-weight:900;
-      letter-spacing:.2px;
-    }
-
-    .sideStatus{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      font-size:11px;
-      font-weight:900;
-      color:var(--muted);
-    }
-
-    .dot{
-      width:8px;
-      height:8px;
-      border-radius:999px;
-      background:rgba(255,255,255,.3);
-    }
-
-    .dot.ok{background:var(--ok)}
-
-    .sideControls{
-      display:flex;
-      gap:8px;
-      padding:10px 12px;
-      border-bottom:1px solid var(--stroke);
-      flex-wrap:wrap;
-    }
-
-    .sel{
-      flex:1 1 140px;
-      height:42px;
-      border-radius:14px;
-      border:1px solid var(--stroke);
-      background:rgba(255,255,255,.06);
-      color:#fff;
-      padding:0 12px;
-      font-weight:800;
-      outline:none;
-    }
-
-    .chatBody{
-      flex:1;
-      min-height:0;
-      overflow:auto;
-      padding:12px;
-      display:flex;
-      flex-direction:column;
-      gap:10px;
+      justify-content:center;
+      padding:16px 4px;
     }
 
     .bubble{
-      max-width:88%;
-      padding:12px 14px;
-      border-radius:18px;
-      border:1px solid rgba(255,255,255,.08);
-      font-size:14px;
-      line-height:1.4;
-      box-shadow:0 10px 24px rgba(0,0,0,.18);
-      word-wrap:break-word;
-    }
-
-    .bubble.them{
-      align-self:flex-start;
-      background:rgba(255,255,255,.07);
-    }
-
-    .bubble.me{
-      align-self:flex-end;
-      background:linear-gradient(135deg, rgba(124,140,255,.30), rgba(53,212,255,.16));
-    }
-
-    .bubbleRow{
-      display:flex;
-      align-items:flex-start;
-      gap:10px;
-    }
-
-    .bubbleText{
-      flex:1;
-      min-width:0;
-    }
-
-    .spkBtn{
-      flex:0 0 auto;
-      width:34px;
-      height:34px;
-      border:none;
-      border-radius:12px;
-      background:rgba(255,255,255,.10);
-      color:#fff;
-      display:grid;
-      place-items:center;
-      cursor:pointer;
-    }
-
-    .spkBtn svg{
-      width:18px;
-      height:18px;
-      stroke:currentColor;
-      fill:none;
-      stroke-width:1.8;
-      stroke-linecap:round;
-      stroke-linejoin:round;
-    }
-
-    .inputArea{
-      border-top:1px solid var(--stroke);
-      padding:12px;
-      display:grid;
-      grid-template-columns:1fr auto;
-      gap:10px;
-      align-items:end;
-      background:rgba(255,255,255,.03);
-    }
-
-    .composer{
+      width:100%;
+      max-width:880px;
+      text-align:center;
       display:flex;
       flex-direction:column;
-      gap:10px;
-    }
-
-    .msgInput{
-      width:100%;
-      min-height:54px;
-      max-height:110px;
-      resize:none;
-      border-radius:18px;
-      border:1px solid var(--stroke);
-      background:rgba(255,255,255,.06);
-      color:#fff;
-      padding:14px 14px;
-      font-size:14px;
-      font-weight:700;
-      outline:none;
-    }
-
-    .msgInput::placeholder{color:rgba(255,255,255,.40)}
-
-    .sendRow{
-      display:flex;
-      gap:10px;
-      align-items:center;
-    }
-
-    .sendBtn{
-      height:42px;
-      padding:0 16px;
-      border:none;
-      border-radius:14px;
-      background:linear-gradient(135deg, var(--accent), var(--accent2));
-      color:#fff;
-      font-weight:900;
-      cursor:pointer;
-    }
-
-    .micWrap{
-      display:flex;
+      gap:12px;
       align-items:center;
       justify-content:center;
     }
 
-    .micBig{
-      width:84px;
-      height:84px;
-      border:none;
-      border-radius:999px;
-      background:
-        radial-gradient(circle at 30% 20%, rgba(255,255,255,.28), transparent 30%),
-        linear-gradient(135deg, var(--accent), var(--accent2));
-      color:#fff;
-      box-shadow:
-        0 0 0 10px rgba(124,140,255,.08),
-        0 16px 40px rgba(0,0,0,.35);
-      cursor:pointer;
-      display:grid;
-      place-items:center;
-    }
-
-    .micBig.listening{
-      animation:pulse 1s infinite;
-    }
-
-    .micBig svg{
-      width:34px;
-      height:34px;
-      fill:none;
-      stroke:currentColor;
-      stroke-width:1.8;
-      stroke-linecap:round;
-      stroke-linejoin:round;
-    }
-
-    @keyframes pulse{
-      0%{transform:scale(1)}
-      50%{transform:scale(1.06)}
-      100%{transform:scale(1)}
-    }
-
-    .meta{
-      align-self:center;
+    .label{
       font-size:11px;
       font-weight:900;
+      letter-spacing:1.2px;
       color:var(--muted);
-      padding:6px 10px;
+      text-transform:uppercase;
+    }
+
+    .mainText{
+      font-size:clamp(28px, 4.6vw, 54px);
+      line-height:1.04;
+      font-weight:900;
+      letter-spacing:-0.6px;
+      color:rgba(255,255,255,.96);
+      max-width:92%;
+      word-break:break-word;
+    }
+
+    .subText{
+      font-size:clamp(14px, 2vw, 22px);
+      line-height:1.2;
+      font-weight:600;
+      color:rgba(255,255,255,.62);
+      max-width:88%;
+      word-break:break-word;
+    }
+
+    .speakIcon{
+      width:46px;
+      height:46px;
+      border-radius:50%;
+      background:rgba(255,255,255,.08);
+      border:1px solid var(--border);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      user-select:none;
+    }
+
+    .speakIcon:active{
+      transform:scale(.97);
+    }
+
+    .speakIcon svg{
+      width:20px;
+      height:20px;
+      fill:#fff;
+      opacity:.95;
+    }
+
+    .centerHub{
+      position:relative;
+      height:112px;
+      flex:0 0 auto;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      z-index:50;
+      background:rgba(0,0,0,.44);
+      backdrop-filter:blur(18px);
+      -webkit-backdrop-filter:blur(18px);
+      border-top:1px solid rgba(255,255,255,.05);
+      border-bottom:1px solid rgba(255,255,255,.05);
+    }
+
+    .hubBtn{
+      position:absolute;
+      top:50%;
+      transform:translateY(-50%);
+      min-height:42px;
+      padding:0 16px;
       border-radius:999px;
-      background:rgba(255,255,255,.05);
+      background:rgba(255,255,255,.06);
+      border:1px solid var(--border);
+      color:#fff;
+      font-size:11px;
+      font-weight:900;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      user-select:none;
+      backdrop-filter:blur(10px);
+    }
+
+    .hubBtn:active{
+      transform:translateY(-50%) scale(.98);
+    }
+
+    .hubBtn.home{ left:14px; }
+    .hubBtn.clear{ right:14px; }
+
+    .orb{
+      width:96px;
+      height:96px;
+      border-radius:50%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      position:relative;
+      cursor:pointer;
+      user-select:none;
+    }
+
+    .orbit{
+      position:absolute;
+      inset:0;
+      border-radius:50%;
+      border:3px solid transparent;
+      background:
+        linear-gradient(#050508,#050508) padding-box,
+        var(--ai-gradient) border-box;
+      animation:spin 7s linear infinite;
+    }
+
+    .orbCore{
+      width:78px;
+      height:78px;
+      border-radius:50%;
+      background:#090910;
+      border:1px solid rgba(255,255,255,.12);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      z-index:2;
+      overflow:hidden;
+      position:relative;
+    }
+
+    .logo{
+      font-family:'Space Grotesk',sans-serif;
+      font-size:17px;
+      font-weight:700;
+      color:#fff;
+      letter-spacing:.2px;
+    }
+
+    .logo .ai{
+      background:var(--ai-gradient);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+
+    .eq{
+      display:none;
+      align-items:center;
+      gap:3px;
+      position:absolute;
+      z-index:3;
+    }
+
+    .eq span{
+      width:3px;
+      border-radius:10px;
+      background:var(--ai-gradient);
+      animation:eq .8s infinite ease-in-out;
+    }
+
+    .eq span:nth-child(1){ animation-delay:0s; }
+    .eq span:nth-child(2){ animation-delay:.15s; }
+    .eq span:nth-child(3){ animation-delay:.3s; }
+
+    body.listening-top .top .speakBtn,
+    body.listening-bottom .bottom .speakBtn{
+      box-shadow:0 0 0 3px rgba(99,102,241,.18), 0 0 24px rgba(99,102,241,.22);
+      border-color:rgba(165,180,252,.5);
+    }
+
+    body.listening-top .eq,
+    body.listening-bottom .eq,
+    body.speaking .eq{
+      display:flex;
+    }
+
+    body.listening-top .logo,
+    body.listening-bottom .logo,
+    body.speaking .logo{
+      opacity:0;
     }
 
     .toast{
       position:fixed;
       left:50%;
-      bottom:calc(var(--safeBottom) + 18px);
-      transform:translateX(-50%) translateY(20px);
-      background:rgba(0,0,0,.82);
+      top:18px;
+      transform:translateX(-50%) translateY(-120px);
+      background:rgba(10,10,18,.94);
+      border:1px solid rgba(165,180,252,.35);
       color:#fff;
-      padding:12px 16px;
-      border-radius:14px;
+      padding:10px 14px;
+      border-radius:999px;
+      z-index:99999;
       font-size:12px;
       font-weight:900;
-      opacity:0;
-      pointer-events:none;
-      transition:.18s ease;
-      z-index:999999;
-      border:1px solid rgba(255,255,255,.10);
-      max-width:min(92vw,420px);
+      transition:.25s;
+      backdrop-filter:blur(12px);
       text-align:center;
+      max-width:min(92vw,520px);
+      pointer-events:none;
     }
 
     .toast.show{
-      opacity:1;
       transform:translateX(-50%) translateY(0);
     }
 
-    @media (max-width: 480px){
-      .topbar{grid-template-columns:1fr auto auto}
-      .brandSub{display:none}
-      .tb-btn.homeText{padding:0 10px}
-      .sideControls{padding:8px 10px}
-      .chatBody{padding:10px}
-      .inputArea{padding:10px}
-      .micBig{width:74px;height:74px}
+    @keyframes spin{
+      from{ transform:rotate(0deg); }
+      to{ transform:rotate(360deg); }
+    }
+
+    @keyframes eq{
+      0%,100%{ height:6px; opacity:.6; }
+      50%{ height:24px; opacity:1; }
     }
   </style>
 </head>
-<body>
+
+<body id="liveRoot">
   <div class="app">
-    <header class="topbar">
-      <div class="brand">
-        <div class="brandTitle">Interpreter Live</div>
-        <div class="brandSub">QR okut, bağlan, konuş</div>
+
+    <!-- ÜST: KARŞI TARAFIN ÇEVİRİSİ -->
+    <section class="half top">
+      <div class="controls">
+        <select class="chip" id="topLang"></select>
+        <button class="chip speakBtn" id="topSpeakBtn" type="button">Konuşmayı Başlat</button>
       </div>
 
-      <button id="homeBtn" class="tb-btn homeText">Ana Sayfa</button>
-      <button id="clearBtn" class="tb-btn">Temizle</button>
-      <button id="muteBtn" class="tb-btn">🔇</button>
-    </header>
+      <div class="transcript">
+        <div class="bubble">
+          <div class="label">Karşı Tarafın Çevirisi</div>
+          <div class="mainText" id="topMainText">Çeviri burada görünecek.</div>
+          <div class="subText" id="topSubText">Karşı taraf konuştuğunda canlı çeviri üst bölümde akacak.</div>
+          <button class="speakIcon" id="topReplayBtn" type="button" aria-label="Tekrar dinlet">
+            <svg viewBox="0 0 24 24">
+              <path d="M3 10v4h4l5 4V6L7 10H3z"></path>
+              <path d="M16 8a4 4 0 0 1 0 8"></path>
+              <path d="M19 5a8 8 0 0 1 0 14"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </section>
 
-    <main class="main">
-      <!-- KARŞI TARAF -->
-      <section class="side top">
-        <div class="sideHead">
-          <div class="sideTitle">Karşı Taraf</div>
-          <div class="sideStatus">
-            <span id="peerDot" class="dot"></span>
-            <span id="statusText">Karşı taraf bekleniyor...</span>
+    <!-- ORTA HUB -->
+    <div class="centerHub">
+      <button class="hubBtn home" id="goHomeBtn" type="button">ANA SAYFA</button>
+
+      <div class="orb" id="centerOrb">
+        <div class="orbit"></div>
+        <div class="orbCore">
+          <div class="eq" aria-hidden="true">
+            <span></span><span></span><span></span>
           </div>
+          <div class="logo">italky<span class="ai">AI</span></div>
         </div>
+      </div>
 
-        <div class="sideControls">
-          <select id="peerLang" class="sel" disabled>
-            <option>Karşı taraf dili</option>
-          </select>
+      <button class="hubBtn clear" id="clearBtn" type="button">TEMİZLE</button>
+    </div>
+
+    <!-- ALT: BENİM TARAFIM -->
+    <section class="half bottom">
+      <div class="controls">
+        <select class="chip" id="bottomLang"></select>
+        <button class="chip speakBtn" id="bottomSpeakBtn" type="button">Konuşmayı Başlat</button>
+      </div>
+
+      <div class="transcript">
+        <div class="bubble">
+          <div class="label">Benim Konuşmam</div>
+          <div class="mainText" id="bottomMainText">Senin konuşman burada görünecek.</div>
+          <div class="subText" id="bottomSubText">Sen konuştuğunda algılanan metin ve çeviri akışı burada gösterilecek.</div>
+          <button class="speakIcon" id="bottomReplayBtn" type="button" aria-label="Tekrar dinlet">
+            <svg viewBox="0 0 24 24">
+              <path d="M3 10v4h4l5 4V6L7 10H3z"></path>
+              <path d="M16 8a4 4 0 0 1 0 8"></path>
+              <path d="M19 5a8 8 0 0 1 0 14"></path>
+            </svg>
+          </button>
         </div>
+      </div>
+    </section>
 
-        <div id="topChat" class="chatBody">
-          <div class="meta">Karşı taraftan gelen çeviriler burada görünecek.</div>
-        </div>
-      </section>
-
-      <!-- BEN -->
-      <section class="side bottom">
-        <div class="sideHead">
-          <div class="sideTitle">Ben</div>
-          <div class="sideStatus">
-            <span>Oda aktif</span>
-          </div>
-        </div>
-
-        <div class="sideControls">
-          <select id="myLang" class="sel"></select>
-          <select id="myVoice" class="sel">
-            <option value="auto">Otomatik Ses</option>
-            <option value="female">Kadın Sesi</option>
-            <option value="male">Erkek Sesi</option>
-            <option value="clone">Benim Sesim</option>
-          </select>
-        </div>
-
-        <div id="botChat" class="chatBody">
-          <div class="meta">Senin mesajların ve çevirilerin burada görünecek.</div>
-        </div>
-
-        <div class="inputArea">
-          <div class="composer">
-            <textarea
-              id="msgInput"
-              class="msgInput"
-              placeholder="Mesaj yaz veya mikrofona bas..."
-            ></textarea>
-
-            <div class="sendRow">
-              <button id="sendBtn" class="sendBtn">Gönder</button>
-            </div>
-          </div>
-
-          <div class="micWrap">
-            <button id="micBtn" class="micBig" aria-label="Mikrofon">
-              <svg viewBox="0 0 24 24">
-                <path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3z"></path>
-                <path d="M19 10a7 7 0 0 1-14 0"></path>
-                <path d="M12 17v4"></path>
-                <path d="M8 21h8"></path>
-              </svg>
-            </button>
-          </div>
-        </div>
-      </section>
-    </main>
   </div>
 
-  <div id="toast" class="toast"></div>
+  <div class="toast" id="toast"></div>
 
-  <script type="module" src="/js/interpreter_live.js"></script>
+  <script type="module" src="/js/live_interpreter_page.js?v=1"></script>
 </body>
 </html>
