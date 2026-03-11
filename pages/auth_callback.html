@@ -1,4 +1,3 @@
-<!-- FILE: /pages/auth_callback.html -->
 <!doctype html>
 <html lang="tr">
 <head>
@@ -54,11 +53,20 @@
       errBox.textContent = String(msg || "");
     }
 
-    // ✅ Bu sayfada loop olmasın: aynı tab içinde 1 kez çalışır
-    if (sessionStorage.getItem("italky_cb_lock_v2") === "1") {
-      location.replace(LOGIN);
+    function getNextTarget(){
+      try{
+        const url = new URL(location.href);
+        return String(url.searchParams.get("next") || "").trim();
+      }catch{
+        return "";
+      }
     }
-    sessionStorage.setItem("italky_cb_lock_v2", "1");
+
+    if (sessionStorage.getItem("italky_cb_lock_v3") === "1") {
+      const next = getNextTarget();
+      location.replace(next ? `${LOGIN}?next=${encodeURIComponent(next)}` : LOGIN);
+    }
+    sessionStorage.setItem("italky_cb_lock_v3", "1");
 
     async function waitForSession(maxMs=9000){
       const start = Date.now();
@@ -73,42 +81,43 @@
     try{
       const url = new URL(location.href);
       const code = url.searchParams.get("code");
+      const next = getNextTarget();
 
-      // ✅ 1) Web OAuth dönüşü: code varsa exchange şart
       if(code){
         const { error } = await supabase.auth.exchangeCodeForSession(code);
         if(error){
           console.error("exchangeCodeForSession error:", error);
           showErr("OAuth exchange hatası: " + (error.message || "unknown"));
-          setTimeout(()=>location.replace(LOGIN), 900);
+          setTimeout(()=>{
+            location.replace(next ? `${LOGIN}?next=${encodeURIComponent(next)}` : LOGIN);
+          }, 900);
           throw error;
         }
       }
 
-      // ✅ 2) Session bekle
       const s = await waitForSession();
       if(!s){
         showErr("Oturum bulunamadı. Tekrar giriş sayfasına yönlendiriliyor…");
-        setTimeout(()=>location.replace(LOGIN), 900);
+        setTimeout(()=>{
+          location.replace(next ? `${LOGIN}?next=${encodeURIComponent(next)}` : LOGIN);
+        }, 900);
         throw new Error("session_not_found");
       }
 
-      // ✅ 3) Cache + profile
       await ensureAuthAndCacheUser();
 
-      // ✅ 4) URL temizle + HOME
-      history.replaceState({}, "", HOME);
-      location.replace(HOME);
+      const target = next || HOME;
+      history.replaceState({}, "", target);
+      location.replace(target);
 
     }catch(e){
       console.error("auth_callback fatal:", e);
-      // burada global signOut yapmıyoruz (loop üretmesin)
-      // sadece login’e dön
-      setTimeout(()=>location.replace(LOGIN + "?e=auth"), 700);
+      const next = getNextTarget();
+      setTimeout(()=>{
+        location.replace(next ? `${LOGIN}?next=${encodeURIComponent(next)}&e=auth` : `${LOGIN}?e=auth`);
+      }, 700);
     } finally {
-      // Lock burada kalsın; tab yenilenirse tekrar çalışması zaten sorun değil.
-      // İstersen 10 sn sonra aç:
-      setTimeout(()=>{ try{ sessionStorage.removeItem("italky_cb_lock_v2"); }catch{} }, 10000);
+      setTimeout(()=>{ try{ sessionStorage.removeItem("italky_cb_lock_v3"); }catch{} }, 10000);
     }
   </script>
 </body>
