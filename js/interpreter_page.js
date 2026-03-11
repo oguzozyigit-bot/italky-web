@@ -1,6 +1,7 @@
 import { mountShell } from "/js/ui_shell.js";
 import { LANG_POOL } from "/js/lang_pool_full.js";
 import { supabase } from "/js/supabase_client.js";
+import { startNFCJoin } from "/js/nfc_pair.js";
 
 mountShell({ scroll: "auto" });
 
@@ -34,28 +35,34 @@ function randomCode(){
 
 function buildLangOptions(){
   const langs = Array.isArray(LANG_POOL) ? LANG_POOL : [];
+
   myLang.innerHTML = langs.map((l)=>{
     const code = canonical(l.code);
-    return `<option value="${code}">${l.flag || "🌐"} ${l.name || code.toUpperCase()}</option>`;
+    return `<option value="${code}">
+      ${l.flag || "🌐"} ${l.name || code.toUpperCase()}
+    </option>`;
   }).join("");
 
   myLang.value = localStorage.getItem(MY_LANG_KEY) || "tr";
 }
 
 function saveLang(){
-  try { localStorage.setItem(MY_LANG_KEY, myLang.value); } catch {}
+  try{
+    localStorage.setItem(MY_LANG_KEY, myLang.value);
+  }catch{}
 }
 
 async function getCurrentUser(){
-  try {
+  try{
     const { data } = await supabase.auth.getUser();
     return data?.user || null;
-  } catch {
+  }catch{
     return null;
   }
 }
 
 function deriveCodeFromUser(user){
+
   const meta = user?.user_metadata || {};
 
   const candidates = [
@@ -70,10 +77,11 @@ function deriveCodeFromUser(user){
     user?.email?.split("@")?.[0]
   ];
 
-  for (const raw of candidates) {
+  for(const raw of candidates){
     const code = slugify(raw);
-    if (code && code.length >= 6) {
-      return "ITK-" + code.slice(0, 10);
+
+    if(code && code.length >= 6){
+      return "ITK-" + code.slice(0,10);
     }
   }
 
@@ -81,44 +89,58 @@ function deriveCodeFromUser(user){
 }
 
 async function ensureStableHostCode(){
-  try {
+
+  try{
     const existing = localStorage.getItem(HOST_CODE_KEY);
-    if (existing && String(existing).trim()) {
+
+    if(existing && String(existing).trim()){
       stableHostCode = String(existing).trim();
       return stableHostCode;
     }
-  } catch {}
+
+  }catch{}
 
   const user = await getCurrentUser();
-  const derived = deriveCodeFromUser(user) || ("ITK-" + randomCode().replace("ITK", "").slice(0, 10));
+
+  const derived =
+    deriveCodeFromUser(user)
+    || ("ITK-" + randomCode().replace("ITK","").slice(0,10));
 
   stableHostCode = derived;
 
-  try {
+  try{
     localStorage.setItem(HOST_CODE_KEY, stableHostCode);
-  } catch {}
+  }catch{}
 
   return stableHostCode;
 }
 
 function buildStableRoomId(hostCode){
-  return `itr-${String(hostCode || "").toLowerCase().replace(/[^a-z0-9]/g, "")}`;
+  return `itr-${String(hostCode || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g,"")}`;
 }
 
 function buildJoinUrl(hostCode, lang){
+
   const roomId = buildStableRoomId(hostCode);
+
   const url = new URL("/pages/interpreter_room.html", location.origin);
+
   url.searchParams.set("room", roomId);
   url.searchParams.set("host", hostCode);
   url.searchParams.set("host_lang", lang);
+
   return url.toString();
 }
 
 async function createQr(){
+
   saveLang();
 
   const hostCode = await ensureStableHostCode();
   const roomId = buildStableRoomId(hostCode);
+
   const joinUrl = buildJoinUrl(hostCode, myLang.value);
 
   const q = new URLSearchParams({
@@ -132,6 +154,7 @@ async function createQr(){
 }
 
 async function goScan(){
+
   saveLang();
 
   const hostCode = await ensureStableHostCode();
@@ -144,16 +167,56 @@ async function goScan(){
   location.href = `/pages/interpreter_qr_scan.html?${q.toString()}`;
 }
 
+
+/* ===============================
+   NFC ile interpreter katılma
+================================ */
+
+function joinWithNfcToken(token){
+
+  const hostCode = String(token || "").trim();
+
+  if(!hostCode) return;
+
+  const roomId = buildStableRoomId(hostCode);
+
+  const q = new URLSearchParams({
+    room: roomId,
+    my: myLang?.value || "tr",
+    host: hostCode
+  });
+
+  location.href =
+    `/pages/interpreter_room.html?${q.toString()}`;
+}
+
+
+/* ===============================
+   INIT
+================================ */
+
 async function init(){
+
   buildLangOptions();
   saveLang();
 
   const hostCode = await ensureStableHostCode();
-  if (hostCodeText) hostCodeText.textContent = hostCode;
+
+  if(hostCodeText){
+    hostCodeText.textContent = hostCode;
+  }
 
   createQrBtn?.addEventListener("click", createQr);
   scanQrBtn?.addEventListener("click", goScan);
+
   myLang?.addEventListener("change", saveLang);
+
+
+  /* NFC başlat */
+  await startNFCJoin((token)=>{
+    console.log("NFC session:", token);
+    joinWithNfcToken(token);
+  });
 }
 
 init();
