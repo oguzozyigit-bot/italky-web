@@ -3,6 +3,7 @@
 import { LANG_POOL } from "/js/lang_pool_full.js";
 
 const API_BASE = "https://italky-api.onrender.com";
+const WS_BASE = "wss://italky-api.onrender.com";
 const $ = (id) => document.getElementById(id);
 
 /* =========================
@@ -39,7 +40,7 @@ const botHelper = $("botHelper");
 const query = new URLSearchParams(location.search);
 
 const roomId = String(query.get("room") || "").trim();
-const role = String(query.get("role") || "guest").trim(); // guest | host
+const role = String(query.get("role") || "guest").trim().toLowerCase(); // host | guest
 const hostCode = String(query.get("host") || "").trim();
 
 let myLang = String(query.get("my") || localStorage.getItem("live_interpreter_lang") || "tr").trim();
@@ -52,9 +53,9 @@ let recognition = null;
 let isListening = false;
 let activeUtterance = null;
 
-let pollTimer = null;
-let lastSeenMessageId = "";
-let localMessageKeys = new Set();
+let ws = null;
+let wsReady = false;
+let pingTimer = null;
 
 /* =========================
    LANGS
@@ -189,7 +190,6 @@ function renderLangPopup() {
       localStorage.setItem("live_interpreter_lang", myLang);
       if (topLangTxt) topLangTxt.textContent = labelChip(myLang);
       closeAllPop();
-      rebuildRecognition();
     });
   });
 }
@@ -317,19 +317,18 @@ function chooseWebVoice(langCode) {
   let pool = voices.filter((v) => String(v.lang || "").toLowerCase().startsWith(langBase));
   if (!pool.length) pool = voices.filter((v) => String(v.lang || "").toLowerCase() === bcp);
   if (!pool.length) pool = voices;
-
   if (!pool.length) return null;
 
   if (myVoicePref === "female") {
     return (
-      pool.find((v) => /female|woman|zira|aria|seda|helena|jenny|susan|zira/i.test(v.name)) ||
+      pool.find((v) => /female|woman|zira|aria|seda|helena|jenny|susan/i.test(v.name)) ||
       pool[0]
     );
   }
 
   if (myVoicePref === "male") {
     return (
-      pool.find((v) => /male|man|david|mark|george|james|alex|tom|microsoft david/i.test(v.name)) ||
+      pool.find((v) => /male|man|david|mark|george|james|alex|tom/i.test(v.name)) ||
       pool[0]
     );
   }
@@ -381,7 +380,7 @@ function createRecognizer() {
   if (!SR) return null;
 
   const rec = new SR();
-  rec.lang = langObj(peerLang).bcp;
+  rec.lang = langObj(peerLang).bcp; // benim konuşacağım dil
   rec.interimResults = false;
   rec.continuous = false;
   rec.maxAlternatives = 1;
@@ -398,137 +397,144 @@ async function speechToTextFallback() {
 }
 
 /* =========================
-   API
+   WEBSOCKET
 ========================= */
-async function translateText(text, from, to) {
-  const t = String(text || "").trim();
-  if (!t) return null;
+function wsUrl() {
+  const url = new URL(`${WS_BASE}/ws/interpreter/${encodeURIComponent(roomId)}`);
+  url.searchParams.set("role", role);
+  url.searchParams.set("lang", peerLang);
+  return url.toString();
+}
 
-  try {
-    const r = await fetch(`${API_BASE}/api/translate_ai`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        text: t,
-        from_lang: from || "auto",
-        to_lang: canonical(to)
-      })
-    });
+function stopSocket() {
+  try { ws?.close?.(); } catch {}
+  ws = null;
+  wsReady = false;
+  if (pingTimer) clearInterval(pingTimer);
+  pingTimer = null;
+}
 
-    if (!r.ok) return null;
-    const j = await r.json().catch(() => null);
-    return String(j?.translated || "").trim() || null;
-  } catch {
-    return null;
+function handleSocketMessage(payload) {
+  const type = String(payload?.type || "").trim();
+
+  if (type === "presence") {
+    if (payload?.host_lang) myLang = canonical(payload.host_lang);
+    if (role === "host" && payload?.guest_lang) peerLang = canonical(payload.guest_lang);
+    if (role === "guest" && payload?.host_lang) peerLang = canonical(payload.host_lang);
+    localStorage.setItem("live_interpreter_lang", myLang);
+    localStorage.setItem("live_interpreter_peer_lang", peerLang);
+    if (topLangTxt) topLangTxt.textContent = labelChip(myLang);
+    rebuildRecognition();
+    return;
+  }
+
+  if (type === "peer_joined") {
+    setHelper("ready", "Karşı taraf bağlandı");
+    setRootState("is-ready");
+    if (payload?.guest_lang && role === "host") {
+      peerLang = canonical(payload.guest_lang);
+      localStorage.setItem("live_interpreter_peer_lang", peerLang);
+      rebuildRecognition();
+    }
+    return;
+  }
+
+  if (type === "translated_message") {
+    const sender = String(payload?.sender || "").trim().toLowerCase();
+    if (!sender || sender === role) return;
+
+    const translated = String(payload?.translated_text || "").trim();
+    if (!translated) return;
+
+    addTopBubble(translated);
+    speak(translated, myLang);
+    setHelper("ready", "Mesaj geldi");
+    setRootState("is-ready");
+    return;
+  }
+
+  if (type === "peer_left") {
+    setHelper("wait", "Karşı taraf ayrıldı");
+    setRootState("is-idle");
+    return;
+  }
+
+  if (type === "error") {
+    console.warn("[ws error]", payload);
+    setHelper("wait", payload?.message || "Bağlantı hatası");
+    setRootState("is-error");
   }
 }
 
-async function sendRoomMessage(payload) {
-  try {
-    const r = await fetch(`${API_BASE}/api/interpreter/send-message`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
-
-    const j = await r.json().catch(() => null);
-    if (!r.ok || !j?.ok) return null;
-    return j;
-  } catch {
-    return null;
+function startSocket() {
+  if (!roomId) {
+    setHelper("wait", "Room ID bulunamadı");
+    setRootState("is-error");
+    return;
   }
-}
 
-async function fetchRoomMessages() {
-  if (!roomId) return [];
+  stopSocket();
 
   try {
-    const r = await fetch(`${API_BASE}/api/interpreter/messages/${encodeURIComponent(roomId)}`, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" }
-    });
-
-    const j = await r.json().catch(() => null);
-
-    if (!r.ok || !j) return [];
-    if (Array.isArray(j?.messages)) return j.messages;
-    if (Array.isArray(j)) return j;
-    return [];
-  } catch {
-    return [];
+    ws = new WebSocket(wsUrl());
+  } catch (e) {
+    console.error("[ws create]", e);
+    setHelper("wait", "WebSocket açılamadı");
+    setRootState("is-error");
+    return;
   }
+
+  ws.onopen = () => {
+    wsReady = true;
+    setRootState("is-ready");
+    setHelper("ready", "Konuşmaya hazır");
+
+    pingTimer = setInterval(() => {
+      try {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: "ping" }));
+        }
+      } catch {}
+    }, 15000);
+  };
+
+  ws.onmessage = (event) => {
+    try {
+      const payload = JSON.parse(event.data);
+      handleSocketMessage(payload);
+    } catch (e) {
+      console.warn("[ws parse]", e, event.data);
+    }
+  };
+
+  ws.onerror = (e) => {
+    console.warn("[ws onerror]", e);
+    wsReady = false;
+    setHelper("wait", "Bağlantı sorunu");
+    setRootState("is-error");
+  };
+
+  ws.onclose = () => {
+    wsReady = false;
+    if (pingTimer) clearInterval(pingTimer);
+    pingTimer = null;
+    setHelper("wait", "Bağlantı kapandı");
+    setRootState("is-idle");
+  };
 }
 
 /* =========================
-   LIVE FLOW
+   SEND FLOW
 ========================= */
-function messageKey(msg) {
-  return String(
-    msg?.id ||
-    msg?.message_id ||
-    msg?.created_at ||
-    `${msg?.role || ""}-${msg?.original_text || ""}-${msg?.translated_text || ""}`
-  );
-}
-
-function isRemoteMessage(msg) {
-  const msgRole = String(msg?.role || "").trim().toLowerCase();
-  if (!msgRole) return true;
-  return msgRole !== String(role || "").trim().toLowerCase();
-}
-
-function resolveDisplayText(msg) {
-  return String(
-    msg?.translated_text ||
-    msg?.translated ||
-    msg?.text ||
-    msg?.message ||
-    ""
-  ).trim();
-}
-
-async function pollMessages() {
-  const list = await fetchRoomMessages();
-  if (!Array.isArray(list) || !list.length) return;
-
-  for (const msg of list) {
-    const key = messageKey(msg);
-    if (!key || localMessageKeys.has(key) || key === lastSeenMessageId) continue;
-
-    if (!isRemoteMessage(msg)) {
-      localMessageKeys.add(key);
-      lastSeenMessageId = key;
-      continue;
-    }
-
-    const text = resolveDisplayText(msg);
-    if (!text) continue;
-
-    addTopBubble(text);
-    speak(text, myLang);
-
-    localMessageKeys.add(key);
-    lastSeenMessageId = key;
-  }
-}
-
-function startPolling() {
-  stopPolling();
-  pollMessages();
-  pollTimer = setInterval(pollMessages, 1200);
-}
-
-function stopPolling() {
-  if (pollTimer) {
-    clearInterval(pollTimer);
-    pollTimer = null;
-  }
-}
-
 async function startListeningFlow() {
   if (isListening) return;
-  isListening = true;
+  if (!wsReady || !ws || ws.readyState !== WebSocket.OPEN) {
+    setHelper("wait", "Bağlantı hazır değil");
+    setRootState("is-error");
+    return;
+  }
 
+  isListening = true;
   botMic?.classList.add("listening");
   setRootState("is-listening");
   setHelper("wait", "Dinleniyor... konuş");
@@ -606,38 +612,23 @@ async function startListeningFlow() {
 
     addBottomBubble(spoken);
     setRootState("is-translating");
-    setHelper("repeat", "Çevriliyor...");
+    setHelper("repeat", "Gönderiliyor...");
 
-    const translated = await translateText(spoken, peerLang, myLang);
-
-    if (!translated) {
-      setHelper("ready", "Çeviri alınamadı");
+    try {
+      ws.send(JSON.stringify({
+        type: "text_message",
+        text: spoken,
+        from_lang: canonical(peerLang),
+        to_lang: canonical(myLang)
+      }));
+    } catch (e) {
+      console.error("[ws send]", e);
+      setHelper("wait", "Mesaj gönderilemedi");
       setRootState("is-error");
       return;
     }
 
-    const payload = {
-      room_id: roomId,
-      role,
-      host: hostCode,
-      source_lang: peerLang,
-      target_lang: myLang,
-      original_text: spoken,
-      translated_text: translated
-    };
-
-    const sendResult = await sendRoomMessage(payload);
-
-    if (!sendResult) {
-      setHelper("ready", "Mesaj gönderilemedi");
-      setRootState("is-error");
-      return;
-    }
-
-    const sendKey = messageKey(sendResult?.message || payload);
-    if (sendKey) localMessageKeys.add(sendKey);
-
-    setHelper("ready", "Konuşmaya hazır");
+    setHelper("ready", "Karşı taraf bekleniyor...");
     setRootState("is-ready");
   } finally {
     isListening = false;
@@ -685,19 +676,17 @@ clearBtn?.addEventListener("click", () => {
   stopSpeech();
   if (topBody) topBody.innerHTML = "";
   if (botBody) botBody.innerHTML = "";
-  localMessageKeys.clear();
-  lastSeenMessageId = "";
   setHelper("ready", "Temizlendi");
   setRootState("is-ready");
 });
 
 homeLink?.addEventListener("click", () => {
-  stopPolling();
+  stopSocket();
   location.href = "/pages/home.html";
 });
 
 homeBtn?.addEventListener("click", () => {
-  stopPolling();
+  stopSocket();
   location.href = "/pages/home.html";
 });
 
@@ -715,7 +704,7 @@ botMic?.addEventListener("keydown", async (e) => {
 });
 
 /* =========================
-   INIT INFO
+   INIT
 ========================= */
 function bootInfo() {
   if (hostCode) {
@@ -725,16 +714,13 @@ function bootInfo() {
   }
 }
 
-/* =========================
-   INIT
-========================= */
 function init() {
   if (topLangTxt) topLangTxt.textContent = labelChip(myLang);
   refreshVoiceLabel();
   updateMuteButton();
   rebuildRecognition();
   setRootState("is-ready");
-  setHelper("ready", "Konuşmaya hazır");
+  setHelper("ready", "Bağlantı kuruluyor...");
 
   try {
     window.speechSynthesis?.getVoices?.();
@@ -745,8 +731,8 @@ function init() {
   localStorage.setItem("live_interpreter_peer_lang", peerLang);
 
   bootInfo();
-  startPolling();
+  startSocket();
 }
 
 init();
-window.addEventListener("beforeunload", stopPolling);
+window.addEventListener("beforeunload", stopSocket);
