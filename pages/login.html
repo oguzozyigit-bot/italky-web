@@ -524,8 +524,7 @@
   function getNextTarget(){
     try{
       const u = new URL(location.href);
-      const next = String(u.searchParams.get("next") || "").trim();
-      return next || "";
+      return String(u.searchParams.get("next") || "").trim();
     }catch{
       return "";
     }
@@ -553,7 +552,6 @@
         .maybeSingle();
 
       const base = String(prof?.base_lang || "").trim().toLowerCase();
-
       if(base){
         localStorage.setItem(FIRST_BOOT_KEY, "1");
         location.replace(HOME);
@@ -587,7 +585,6 @@
     try{
       const data = (typeof payload === "string") ? JSON.parse(payload) : payload;
       const idToken = String(data?.id_token || data?.idToken || "").trim();
-
       if(!idToken){
         toast("Token yok, giriş tamamlanamadı.");
         return;
@@ -623,6 +620,8 @@
 
   document.getElementById("googleBtn")?.addEventListener("click", async ()=>{
     try{
+      const next = getNextTarget();
+
       if(isNative()){
         toast("Güvenli giriş başlatılıyor…");
         window.Native.startGoogleLogin();
@@ -630,7 +629,7 @@
       }
 
       toast("Google yönlendiriliyor…");
-      await loginWithGoogle();
+      await loginWithGoogle(next);
     }catch(e){
       console.error(e);
       toast(e?.message || "Giriş başlatılamadı");
