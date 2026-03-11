@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>italkyAI açılıyor...</title>
+  <script>
+    (function () {
+      const p = new URLSearchParams(location.search);
+      const host = p.get("host") || "";
+      const v = p.get("v") || "1";
+
+      const appUrl = `italky://join?host=${encodeURIComponent(host)}&v=${encodeURIComponent(v)}`;
+      const playUrl = "https://play.google.com/store/apps/details?id=com.ozyigits.italkyai";
+
+      if (!host) {
+        location.replace(playUrl);
+        return;
+      }
+
+      let hidden = false;
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden) hidden = true;
+      });
+
+      location.href = appUrl;
+
+      setTimeout(() => {
+        if (!hidden) location.replace(playUrl);
+      }, 1800);
+    })();
+  </script>
+</head>
+<body style="background:#02000f;color:#fff;font-family:Arial,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;text-align:center;">
+  italkyAI açılıyor...
+</body>
+</html>
