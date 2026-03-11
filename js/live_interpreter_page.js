@@ -114,7 +114,7 @@ const VOICE_OPTIONS = [
 
 function refreshVoiceLabel() {
   const item = VOICE_OPTIONS.find((v) => v.id === myVoicePref) || VOICE_OPTIONS[0];
-  topVoiceBtn.textContent = `${item.label} ⌵`;
+  if (topVoiceBtn) topVoiceBtn.textContent = `${item.label} ⌵`;
 }
 
 /* =========================
@@ -175,7 +175,7 @@ function renderLangPopup() {
       const code = el.getAttribute("data-code") || "tr";
       myLang = canonical(code);
       localStorage.setItem("live_interpreter_lang", myLang);
-      topLangTxt.textContent = labelChip(myLang);
+      if (topLangTxt) topLangTxt.textContent = labelChip(myLang);
       closeAllPop();
       rebuildRecognition();
     });
@@ -402,7 +402,11 @@ async function startListeningFlow() {
 
     if (window.Native && typeof window.Native.startSpeechRecognition === "function") {
       spoken = await new Promise((resolve) => {
+        let finished = false;
+
         const done = (val) => {
+          if (finished) return;
+          finished = true;
           window.onNativeSpeechResult = null;
           window.onNativeSpeechError = null;
           resolve(val);
@@ -429,6 +433,7 @@ async function startListeningFlow() {
     } else if (recognition) {
       spoken = await new Promise((resolve) => {
         let finished = false;
+
         const finish = (val) => {
           if (finished) return;
           finished = true;
@@ -459,7 +464,7 @@ async function startListeningFlow() {
 
     if (!spoken) {
       setHelper("ready", "Konuşma alınamadı");
-      setRootState("ready");
+      setRootState("is-ready");
       return;
     }
 
@@ -592,7 +597,7 @@ function bootInfo() {
    INIT
 ========================= */
 function init() {
-  topLangTxt.textContent = labelChip(myLang);
+  if (topLangTxt) topLangTxt.textContent = labelChip(myLang);
   refreshVoiceLabel();
   updateMuteButton();
   rebuildRecognition();
