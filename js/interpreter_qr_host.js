@@ -1,7 +1,7 @@
 // FILE: /js/interpreter_qr_host.js
 import { mountShell } from "/js/ui_shell.js";
 
-const API_BASE = "https://italky-api.onrender.com";
+const API_BASE = "https://italky-api.onrender.com/api";
 
 mountShell({ scroll: "auto" });
 
@@ -114,7 +114,7 @@ async function fetchRoomInfo(roomId) {
 }
 
 function buildGuestJoinUrl(roomId) {
-  const url = new URL("/pages/interpreter_join.html", location.origin);
+  const url = new URL("/pages/interpreter_live.html", location.origin);
   url.searchParams.set("room", roomId);
   return url.toString();
 }
