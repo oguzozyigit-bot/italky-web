@@ -355,6 +355,30 @@
       color:#fff;
     }
 
+    .toast{
+      position: fixed;
+      left:50%;
+      top:18px;
+      transform: translateX(-50%) translateY(-120px);
+      background: rgba(10,10,18,.92);
+      border:1px solid rgba(165,180,252,.35);
+      padding: 10px 14px;
+      border-radius: 999px;
+      color:#fff;
+      z-index:999999;
+      font-weight:900;
+      font-size:12px;
+      transition:.25s;
+      backdrop-filter: blur(12px);
+      pointer-events:none;
+      max-width:min(92vw, 520px);
+      text-align:center;
+    }
+
+    .toast.show{
+      transform: translateX(-50%) translateY(0);
+    }
+
     @media (max-width:390px){
       #pageContent{ padding:12px 14px 20px; }
       .title{ font-size:25px; }
@@ -367,7 +391,7 @@
 <div id="pageContent">
 
   <div class="topRow">
-    <button class="backBtn" type="button" onclick="history.back()" aria-label="Geri dön">
+    <button class="backBtn" id="backBtn" type="button" aria-label="Geri dön">
       <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
     </button>
 
@@ -418,15 +442,7 @@
 
 </div>
 
-<script type="module">
-  import { mountShell } from "/js/ui_shell.js";
-
-  try{
-    mountShell({ scroll: "auto" });
-  }catch(e){
-    console.warn("[voice shell]", e);
-  }
-</script>
+<div class="toast" id="toast"></div>
 
 <script type="module" src="/js/voice_profile_boot.js?v=final_updated"></script>
 
