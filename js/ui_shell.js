@@ -42,26 +42,45 @@ const HOME_HEADER_HTML = `
 
   <div class="menu-panel">
     <div class="menu-top">
-      <div class="menu-title">
-        <div class="menu-brand">
-          <span class="menu-brand-main">italky</span>
-          <span class="menu-brand-ai">AI</span>
+      <div class="menu-user-card" id="menuProfileTop">
+        <div class="menu-avatar-wrap">
+          <div class="menu-avatar">
+            <img src="" id="menuUserPic" alt="Avatar">
+          </div>
         </div>
-        <div class="menu-sub">Modüller</div>
+
+        <div class="menu-user-meta">
+          <div class="menu-brandline">
+            <span class="menu-brand-main">italky</span>
+            <span class="menu-brand-ai">AI</span>
+          </div>
+
+          <div class="menu-username" id="menuUserName">Kullanıcı</div>
+
+          <div class="menu-token-pill">
+            <span>Jeton</span>
+            <strong id="menuHeaderJeton">0</strong>
+          </div>
+        </div>
       </div>
 
       <button class="menu-close" id="menuClose" aria-label="Kapat" type="button">✕</button>
     </div>
 
     <nav class="menu-nav">
-      <a href="/pages/home.html">Ana Sayfa</a>
-      <a href="/pages/offline_languages.html">Offline Diller</a>
-      <a href="/pages/academy.html">Academy</a>
-      <a href="/pages/games.html">Oyunlar</a>
       <a href="/pages/profile.html">Profil</a>
-      <a href="/pages/settings.html">Ayarlar</a>
+      <a href="/pages/jeton-market.html">Jeton Market</a>
+      <a href="/pages/create-voice.html">Kendi Sesini Oluştur</a>
+      <a href="/pages/translation_settings.html">Çeviri Ayarları</a>
+      <a href="/pages/text_translate.html">TextToText</a>
+      <a href="/pages/qr-change.html">QR Değiştir</a>
+      <a href="/pages/about.html">Hakkımızda</a>
+      <a href="/pages/jeton-nedir.html">Jeton Nedir</a>
+      <a href="/pages/faq.html">SSS</a>
       <a href="/pages/privacy.html">Gizlilik</a>
       <a href="/pages/contact.html">İletişim</a>
+      <button class="menu-action danger-lite" id="logoutBtn" type="button">Güvenli Çıkış</button>
+      <button class="menu-action danger" id="deleteAccountBtn" type="button">Hesabımı Sil</button>
     </nav>
 
     <div class="menu-sign">italkyAI By Ozyigit's • 2026</div>
@@ -83,8 +102,6 @@ const SHELL_CSS = `
   --shell-soft:rgba(255,255,255,.05);
   --shell-text:#f5f7ff;
   --shell-muted:rgba(255,255,255,.56);
-  --shell-blue:rgba(86,170,255,.24);
-  --shell-pink:rgba(255,102,196,.16);
 }
 
 *{
@@ -124,14 +141,14 @@ body.ui-menu-open{
   position:absolute;
   inset:0;
   background:
-    linear-gradient(to bottom, transparent, rgba(255,255,255,.015)),
+    linear-gradient(to bottom, transparent, rgba(255,255,255,.012)),
     repeating-linear-gradient(
       to bottom,
       transparent 0px,
       transparent 36px,
-      rgba(255,255,255,.015) 37px
+      rgba(255,255,255,.012) 37px
     );
-  opacity:.35;
+  opacity:.34;
 }
 
 .app-viewport{
@@ -143,15 +160,12 @@ body.ui-menu-open{
   margin:0 auto;
   display:flex;
   flex-direction:column;
-  background:
-    linear-gradient(180deg, rgba(13,17,31,.90) 0%, rgba(8,11,22,.82) 100%);
+  background:linear-gradient(180deg, rgba(13,17,31,.92) 0%, rgba(8,11,22,.84) 100%);
   backdrop-filter:blur(18px);
   border-left:1px solid rgba(255,255,255,.06);
   border-right:1px solid rgba(255,255,255,.06);
   overflow:hidden;
-  box-shadow:
-    0 0 0 1px rgba(255,255,255,.02),
-    0 18px 50px rgba(0,0,0,.36);
+  box-shadow:0 18px 50px rgba(0,0,0,.36);
 }
 
 .premium-header{
@@ -160,9 +174,8 @@ body.ui-menu-open{
   display:flex;
   align-items:center;
   justify-content:space-between;
-  border-bottom:1px solid var(--shell-line);
-  background:
-    linear-gradient(180deg, rgba(10,13,24,.88) 0%, rgba(10,13,24,.52) 100%);
+  border-bottom:1px solid rgba(255,255,255,.06);
+  background:linear-gradient(180deg, rgba(10,13,24,.88) 0%, rgba(10,13,24,.52) 100%);
   flex:0 0 auto;
 }
 
@@ -173,7 +186,7 @@ body.ui-menu-open{
   right:18px;
   bottom:-1px;
   height:1px;
-  background:linear-gradient(90deg, transparent, rgba(139,211,255,.22), transparent);
+  background:linear-gradient(90deg, transparent, rgba(139,211,255,.18), transparent);
 }
 
 .brand-group{
@@ -187,7 +200,6 @@ body.ui-menu-open{
   display:flex;
   gap:2px;
   align-items:center;
-  font-family:'Outfit',sans-serif;
   font-size:26px;
   line-height:1;
   font-weight:800;
@@ -215,12 +227,9 @@ body.ui-menu-open{
   height:44px;
   border:none;
   border-radius:14px;
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.03));
+  background:linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.03));
   border:1px solid rgba(255,255,255,.08);
-  box-shadow:
-    0 8px 18px rgba(0,0,0,.24),
-    inset 0 1px 0 rgba(255,255,255,.05);
+  box-shadow:0 8px 18px rgba(0,0,0,.24);
   display:flex;
   flex-direction:column;
   align-items:center;
@@ -268,7 +277,6 @@ body.ui-menu-open{
 }
 
 /* SIDE MENU */
-
 .side-menu{
   position:fixed;
   inset:0;
@@ -297,20 +305,17 @@ body.ui-menu-open{
   position:absolute;
   top:0;
   right:0;
-  width:min(84vw, 320px);
+  width:min(86vw, 340px);
   height:100%;
   transform:translateX(104%);
   transition:transform .28s ease;
-  background:
-    linear-gradient(180deg, rgba(12,16,29,.98) 0%, rgba(8,11,21,.98) 100%);
+  background:linear-gradient(180deg, rgba(12,16,29,.98) 0%, rgba(8,11,21,.98) 100%);
   border-left:1px solid rgba(255,255,255,.07);
   box-shadow:-18px 0 44px rgba(0,0,0,.38);
-  padding:
-    calc(18px + env(safe-area-inset-top))
-    16px
-    calc(18px + env(safe-area-inset-bottom));
+  padding:calc(18px + env(safe-area-inset-top)) 14px calc(18px + env(safe-area-inset-bottom));
   display:flex;
   flex-direction:column;
+  gap:14px;
 }
 
 .side-menu.open .menu-panel{
@@ -322,22 +327,55 @@ body.ui-menu-open{
   align-items:flex-start;
   justify-content:space-between;
   gap:10px;
-  margin-bottom:20px;
 }
 
-.menu-title{
+.menu-user-card{
+  flex:1;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:12px;
+  border-radius:20px;
+  background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+  border:1px solid rgba(255,255,255,.07);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.03);
+  cursor:pointer;
+}
+
+.menu-avatar-wrap{
+  flex:0 0 auto;
+}
+
+.menu-avatar{
+  width:56px;
+  height:56px;
+  border-radius:18px;
+  overflow:hidden;
+  background:linear-gradient(135deg, rgba(139,211,255,.18), rgba(255,102,196,.14));
+  border:1px solid rgba(255,255,255,.10);
+}
+
+.menu-avatar img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+
+.menu-user-meta{
+  min-width:0;
   display:flex;
   flex-direction:column;
-  gap:4px;
+  gap:5px;
 }
 
-.menu-brand{
+.menu-brandline{
   display:flex;
   align-items:center;
   gap:2px;
-  font-size:25px;
-  font-weight:800;
+  font-size:19px;
   line-height:1;
+  font-weight:800;
 }
 
 .menu-brand-main{
@@ -350,10 +388,33 @@ body.ui-menu-open{
   -webkit-text-fill-color:transparent;
 }
 
-.menu-sub{
+.menu-username{
+  font-size:14px;
+  font-weight:800;
+  color:#ffffff;
+  line-height:1.2;
+  word-break:break-word;
+}
+
+.menu-token-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  width:max-content;
+  max-width:100%;
+  padding:6px 10px;
+  border-radius:999px;
+  background:rgba(139,211,255,.10);
+  border:1px solid rgba(139,211,255,.14);
+  color:#d9e9ff;
+  font-size:11px;
+  font-weight:700;
+}
+
+.menu-token-pill strong{
   font-size:12px;
-  color:rgba(255,255,255,.44);
-  letter-spacing:.3px;
+  font-weight:900;
+  color:#fff;
 }
 
 .menu-close{
@@ -365,36 +426,57 @@ body.ui-menu-open{
   color:#fff;
   font-size:18px;
   cursor:pointer;
+  flex:0 0 auto;
 }
 
 .menu-nav{
   display:flex;
   flex-direction:column;
-  gap:10px;
+  gap:9px;
+  overflow:auto;
+  padding-right:2px;
 }
 
-.menu-nav a{
+.menu-nav a,
+.menu-action{
+  width:100%;
+  text-align:left;
   text-decoration:none;
   color:#f3f6ff;
   padding:14px 14px;
   border-radius:16px;
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.025));
+  background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.025));
   border:1px solid rgba(255,255,255,.06);
-  font-size:15px;
+  font-size:14px;
   font-weight:700;
   letter-spacing:.1px;
+  cursor:pointer;
+  font-family:'Outfit',sans-serif;
 }
 
 .menu-nav a:hover,
-.menu-nav a:active{
-  background:
-    linear-gradient(180deg, rgba(139,211,255,.12), rgba(124,92,255,.10));
+.menu-nav a:active,
+.menu-action:hover,
+.menu-action:active{
+  background:linear-gradient(180deg, rgba(139,211,255,.12), rgba(124,92,255,.10));
+}
+
+.menu-action{
+  background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.025));
+}
+
+.menu-action.danger-lite{
+  border-color:rgba(255,180,180,.10);
+}
+
+.menu-action.danger{
+  border-color:rgba(255,120,120,.18);
+  color:#ffd6d6;
 }
 
 .menu-sign{
   margin-top:auto;
-  padding-top:18px;
+  padding-top:10px;
   font-size:11px;
   color:rgba(255,255,255,.32);
   text-align:center;
@@ -465,6 +547,9 @@ function bindMenu() {
   const sideMenu = document.getElementById("sideMenu");
   const menuBackdrop = document.getElementById("menuBackdrop");
   const menuClose = document.getElementById("menuClose");
+  const logoutBtn = document.getElementById("logoutBtn");
+  const deleteAccountBtn = document.getElementById("deleteAccountBtn");
+  const menuProfileTop = document.getElementById("menuProfileTop");
 
   if (!menuBtn || !sideMenu) return;
 
@@ -484,6 +569,25 @@ function bindMenu() {
   menuBackdrop?.addEventListener("click", closeMenu);
   menuClose?.addEventListener("click", closeMenu);
 
+  menuProfileTop?.addEventListener("click", () => {
+    closeMenu();
+    location.href = "/pages/profile.html";
+  });
+
+  logoutBtn?.addEventListener("click", async () => {
+    try {
+      closeMenu();
+      const { supabase } = await import("/js/supabase_client.js");
+      await supabase.auth.signOut();
+    } catch (e) {}
+    location.href = "/pages/login.html";
+  });
+
+  deleteAccountBtn?.addEventListener("click", () => {
+    closeMenu();
+    location.href = "/pages/delete-account.html";
+  });
+
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") closeMenu();
   });
@@ -493,7 +597,23 @@ export function hydrateFromCache() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return;
-    JSON.parse(raw);
+
+    const u = JSON.parse(raw);
+
+    const nm = u?.display_name || u?.name || u?.full_name || u?.email || "Kullanıcı";
+    const pic = u?.picture || u?.avatar || "";
+    const tokens = Number(u?.tokens ?? 0);
+
+    const nameEl = document.getElementById("menuUserName");
+    if (nameEl) nameEl.textContent = nm;
+
+    const picEl = document.getElementById("menuUserPic");
+    if (picEl && pic) {
+      picEl.src = pic;
+    }
+
+    const jetonEl = document.getElementById("menuHeaderJeton");
+    if (jetonEl) jetonEl.textContent = String(tokens);
   } catch (e) {}
 }
 
@@ -511,6 +631,9 @@ function removeOverlaySoon() {
 }
 
 export function setHeaderTokens(val) {
+  const jetonEl = document.getElementById("menuHeaderJeton");
+  if (jetonEl) jetonEl.textContent = String(val ?? "0");
+
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     const u = raw ? JSON.parse(raw) : {};
