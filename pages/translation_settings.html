@@ -337,24 +337,24 @@ body{
 <div id="pageContent">
 
   <div class="topRow">
-    <button class="backBtn" id="backBtn" type="button" aria-label="Geri dön" data-i18n-title="back">
+    <button class="backBtn" id="backBtn" type="button" aria-label="Geri dön">
       <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
     </button>
 
     <div class="pageHead">
       <div class="pageKicker">Translation</div>
-      <h1 class="pageTitle" data-i18n="translation_settings">Çeviri <span class="ai">Ayarları</span></h1>
-      <p class="pageSub" data-i18n="translation_settings_desc">Ses ayarlarını ve sistem dilini buradan yönet.</p>
+      <h1 class="pageTitle">Çeviri <span class="ai">Ayarları</span></h1>
+      <p class="pageSub">Ses ayarlarını ve sistem dilini buradan yönet.</p>
     </div>
   </div>
 
   <div class="panel">
-    <h2 class="panelTitle" data-i18n="preferences">Tercihler</h2>
+    <h2 class="panelTitle">Tercihler</h2>
 
     <div class="settingCard" id="voiceSettingBtn" role="button" tabindex="0">
       <div class="settingLeft">
-        <div class="settingLabel" data-i18n="voice_settings">Ses Ayarları</div>
-        <div class="settingDesc" data-i18n="voice_settings_desc_scope">Bu ayar FaceToFace ve SideToSide modüllerinde kullanılacak.</div>
+        <div class="settingLabel">Ses Ayarları</div>
+        <div class="settingDesc">Bu ayar FaceToFace ve SideToSide modüllerinde kullanılacak.</div>
       </div>
       <div class="settingValue" id="voiceValue">Otomatik</div>
       <div class="chev">⌄</div>
@@ -362,8 +362,8 @@ body{
 
     <div class="settingCard" id="langSettingBtn" role="button" tabindex="0">
       <div class="settingLeft">
-        <div class="settingLabel" data-i18n="system_language">Sistem Dili</div>
-        <div class="settingDesc" data-i18n="system_language_desc_auto">Türkçe arayüz metinlerini seçtiğin dile otomatik çevirir.</div>
+        <div class="settingLabel">Sistem Dili</div>
+        <div class="settingDesc">Türkçe arayüz metinlerini seçtiğin dile otomatik çevirir.</div>
       </div>
       <div class="settingValue" id="langValue">Türkçe</div>
       <div class="chev">⌄</div>
@@ -371,7 +371,7 @@ body{
   </div>
 
   <div class="panel">
-    <div class="note" data-i18n="settings_note_1">
+    <div class="note">
       Ses ayarı eski çalışan sistemle uyumlu olarak tts_voice anahtarına yazılır. Sistem dili ise uygulama metinlerinin hangi dilde gösterileceğini belirler.
     </div>
   </div>
@@ -391,7 +391,6 @@ body{
 <script type="module">
 import { mountShell } from "/js/ui_shell.js";
 import { supabase } from "/js/supabase_client.js";
-import { applySystemTranslations } from "/js/system_lang.js";
 
 try{
   mountShell({ scroll:"auto" });
@@ -418,113 +417,11 @@ const STORAGE_KEYS = {
   lang: "system_lang"
 };
 
-const I18N = {
-  tr: {
-    voice_settings: "Ses Ayarları",
-    system_language: "Sistem Dili",
-    automatic: "Otomatik",
-    female: "Kadın",
-    male: "Erkek",
-    own_voice: "Kendi Sesim",
-    free_tts_default: "TTS ücretsiz ve varsayılan seçenek",
-    female_voice_desc: "Kadın ses tonuna yakın okuma",
-    male_voice_desc: "Erkek ses tonuna yakın okuma",
-    clone_voice_desc: "Daha önce oluşturduğun ses profili",
-    updated_voice_setting: "Ses ayarı güncellendi",
-    updated_system_lang: "Sistem dili güncellendi"
-  },
-  en: {
-    voice_settings: "Voice Settings",
-    system_language: "System Language",
-    automatic: "Automatic",
-    female: "Female",
-    male: "Male",
-    own_voice: "My Voice",
-    free_tts_default: "Free TTS and default option",
-    female_voice_desc: "Speech closer to a female tone",
-    male_voice_desc: "Speech closer to a male tone",
-    clone_voice_desc: "Your previously created voice profile",
-    updated_voice_setting: "Voice setting updated",
-    updated_system_lang: "System language updated"
-  },
-  de: {
-    voice_settings: "Stimmeinstellungen",
-    system_language: "Systemsprache",
-    automatic: "Automatisch",
-    female: "Weiblich",
-    male: "Männlich",
-    own_voice: "Meine Stimme",
-    free_tts_default: "Kostenlose TTS und Standardoption",
-    female_voice_desc: "Ausgabe näher an weiblicher Stimme",
-    male_voice_desc: "Ausgabe näher an männlicher Stimme",
-    clone_voice_desc: "Dein zuvor erstelltes Sprachprofil",
-    updated_voice_setting: "Stimmeinstellung aktualisiert",
-    updated_system_lang: "Systemsprache aktualisiert"
-  },
-  fr: {
-    voice_settings: "Paramètres vocaux",
-    system_language: "Langue du système",
-    automatic: "Automatique",
-    female: "Femme",
-    male: "Homme",
-    own_voice: "Ma voix",
-    free_tts_default: "TTS gratuit et option par défaut",
-    female_voice_desc: "Voix plus proche d’un ton féminin",
-    male_voice_desc: "Voix plus proche d’un ton masculin",
-    clone_voice_desc: "Votre profil vocal créé précédemment",
-    updated_voice_setting: "Paramètre vocal mis à jour",
-    updated_system_lang: "Langue du système mise à jour"
-  },
-  it: {
-    voice_settings: "Impostazioni voce",
-    system_language: "Lingua di sistema",
-    automatic: "Automatico",
-    female: "Donna",
-    male: "Uomo",
-    own_voice: "La mia voce",
-    free_tts_default: "TTS gratuito e opzione predefinita",
-    female_voice_desc: "Lettura vicina a una voce femminile",
-    male_voice_desc: "Lettura vicina a una voce maschile",
-    clone_voice_desc: "Il tuo profilo vocale creato in precedenza",
-    updated_voice_setting: "Impostazione voce aggiornata",
-    updated_system_lang: "Lingua di sistema aggiornata"
-  },
-  es: {
-    voice_settings: "Ajustes de voz",
-    system_language: "Idioma del sistema",
-    automatic: "Automático",
-    female: "Mujer",
-    male: "Hombre",
-    own_voice: "Mi voz",
-    free_tts_default: "TTS gratis y opción predeterminada",
-    female_voice_desc: "Lectura cercana a una voz femenina",
-    male_voice_desc: "Lectura cercana a una voz masculina",
-    clone_voice_desc: "Tu perfil de voz creado anteriormente",
-    updated_voice_setting: "Ajuste de voz actualizado",
-    updated_system_lang: "Idioma del sistema actualizado"
-  }
-};
-
-function getLang(){
-  try{
-    const raw = String(localStorage.getItem(STORAGE_KEYS.lang) || "tr").toLowerCase().trim();
-    const base = raw.split("-")[0];
-    return I18N[base] ? base : "tr";
-  }catch{
-    return "tr";
-  }
-}
-
-function tr(key, fallback = ""){
-  const lang = getLang();
-  return I18N[lang]?.[key] || I18N.tr?.[key] || fallback || key;
-}
-
 const VOICE_OPTIONS = [
-  { value: "auto", labelKey: "automatic", subKey: "free_tts_default" },
-  { value: "female", labelKey: "female", subKey: "female_voice_desc" },
-  { value: "male", labelKey: "male", subKey: "male_voice_desc" },
-  { value: "clone", labelKey: "own_voice", subKey: "clone_voice_desc" }
+  { value: "auto", label: "Otomatik", sub: "TTS ücretsiz ve varsayılan seçenek" },
+  { value: "female", label: "Kadın", sub: "Kadın ses tonuna yakın okuma" },
+  { value: "male", label: "Erkek", sub: "Erkek ses tonuna yakın okuma" },
+  { value: "clone", label: "Kendi Sesim", sub: "Daha önce oluşturduğun ses profili" }
 ];
 
 const LANGUAGE_OPTIONS = [
@@ -599,8 +496,7 @@ function setStoredValue(key, value){
 }
 
 function voiceLabelOf(value){
-  const item = VOICE_OPTIONS.find(x => x.value === value);
-  return item ? tr(item.labelKey, "Otomatik") : tr("automatic", "Otomatik");
+  return VOICE_OPTIONS.find(x => x.value === value)?.label || "Otomatik";
 }
 
 function langLabelOf(value){
@@ -611,8 +507,8 @@ function syncUI(){
   const voicePref = normalizeVoiceStorage(getStoredValue(STORAGE_KEYS.voice, "auto"));
   const langPref = getStoredValue(STORAGE_KEYS.lang, "tr");
 
-  if (voiceValue) voiceValue.textContent = voiceLabelOf(voicePref);
-  if (langValue) langValue.textContent = langLabelOf(langPref);
+  if(voiceValue) voiceValue.textContent = voiceLabelOf(voicePref);
+  if(langValue) langValue.textContent = langLabelOf(langPref);
 }
 
 function openSheet(type){
@@ -622,18 +518,18 @@ function openSheet(type){
     ? normalizeVoiceStorage(getStoredValue(STORAGE_KEYS.voice, "auto"))
     : getStoredValue(STORAGE_KEYS.lang, "tr");
 
-  if (sheetTitle) {
-    sheetTitle.textContent = isVoice ? tr("voice_settings", "Ses Ayarları") : tr("system_language", "Sistem Dili");
+  if(sheetTitle){
+    sheetTitle.textContent = isVoice ? "Ses Ayarları" : "Sistem Dili";
   }
 
-  if (!sheetList || !optionSheet || !sheetBackdrop) return;
+  if(!sheetList || !optionSheet || !sheetBackdrop) return;
 
   sheetList.innerHTML = isVoice
     ? options.map(opt => `
       <div class="sheetItem ${String(opt.value) === String(currentVal) ? "active" : ""}" data-value="${opt.value}">
         <div class="sheetItemMeta">
-          <div class="sheetItemTitle">${tr(opt.labelKey, opt.value)}</div>
-          <div class="sheetItemSub">${tr(opt.subKey, "")}</div>
+          <div class="sheetItemTitle">${opt.label}</div>
+          <div class="sheetItemSub">${opt.sub}</div>
         </div>
         <div class="sheetItemCheck"></div>
       </div>
@@ -693,17 +589,14 @@ async function saveSetting(type, value){
     console.warn("[translation settings user save]", e);
   }
 
-  applySystemTranslations(document);
   syncUI();
-
-  toast(isVoice ? tr("updated_voice_setting", "Ses ayarı güncellendi") : tr("updated_system_lang", "Sistem dili güncellendi"));
+  toast(isVoice ? "Ses ayarı güncellendi" : "Sistem dili güncellendi");
 }
 
 async function hydrateFromProfile(){
   try{
     const { data: { user } } = await supabase.auth.getUser();
     if(!user?.id){
-      applySystemTranslations(document);
       syncUI();
       return;
     }
@@ -716,7 +609,6 @@ async function hydrateFromProfile(){
 
     if(error){
       console.warn("[translation settings profile read]", error);
-      applySystemTranslations(document);
       syncUI();
       return;
     }
@@ -729,11 +621,9 @@ async function hydrateFromProfile(){
       setStoredValue(STORAGE_KEYS.lang, data.system_lang);
     }
 
-    applySystemTranslations(document);
     syncUI();
   }catch(e){
     console.warn("[translation settings hydrate]", e);
-    applySystemTranslations(document);
     syncUI();
   }
 }
