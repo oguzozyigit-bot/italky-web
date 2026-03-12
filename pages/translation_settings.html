@@ -344,7 +344,7 @@ body{
     <div class="pageHead">
       <div class="pageKicker">Translation</div>
       <h1 class="pageTitle">Çeviri <span class="ai">Ayarları</span></h1>
-      <p class="pageSub">Ses ve sistem dili tercihlerini buradan yönet.</p>
+      <p class="pageSub">Ses ayarlarını ve sistem dilini buradan yönet.</p>
     </div>
   </div>
 
@@ -363,7 +363,7 @@ body{
     <div class="settingCard" id="langSettingBtn" role="button" tabindex="0">
       <div class="settingLeft">
         <div class="settingLabel">Sistem Dili</div>
-        <div class="settingDesc">Uygulama metinlerini seçilen dile göre göster.</div>
+        <div class="settingDesc">Uygulama metinlerini seçtiğin dile göre göster.</div>
       </div>
       <div class="settingValue" id="langValue">Türkçe</div>
       <div class="chev">⌄</div>
@@ -372,8 +372,8 @@ body{
 
   <div class="panel">
     <div class="note">
-      Ses ayarı eski sistemle uyumlu şekilde <strong>tts_voice</strong> anahtarına yazılır.
-      “Kendi Sesim” seçeneği içerde <strong>clone</strong> olarak kaydedilir.
+      Ses ayarı eski çalışan sistemle uyumlu olarak <strong>tts_voice</strong> anahtarına yazılır.
+      “Kendi Sesim” seçilince içeride <strong>clone</strong> kaydolur.
     </div>
   </div>
 
@@ -475,6 +475,13 @@ function toast(msg){
   }, 1800);
 }
 
+function normalizeVoiceStorage(value){
+  const v = String(value || "auto").toLowerCase().trim();
+  if(v === "own" || v === "my") return "clone";
+  if(v === "female" || v === "male" || v === "clone") return v;
+  return "auto";
+}
+
 function getStoredValue(key, fallback){
   try{
     return localStorage.getItem(key) || fallback;
@@ -498,7 +505,7 @@ function langLabelOf(value){
 }
 
 function syncUI(){
-  const voicePref = getStoredValue(STORAGE_KEYS.voice, "auto");
+  const voicePref = normalizeVoiceStorage(getStoredValue(STORAGE_KEYS.voice, "auto"));
   const langPref = getStoredValue(STORAGE_KEYS.lang, "tr");
 
   voiceValue.textContent = voiceLabelOf(voicePref);
@@ -508,7 +515,9 @@ function syncUI(){
 function openSheet(type){
   const isVoice = type === "voice";
   const options = isVoice ? VOICE_OPTIONS : LANGUAGE_OPTIONS;
-  const currentVal = getStoredValue(isVoice ? STORAGE_KEYS.voice : STORAGE_KEYS.lang, isVoice ? "auto" : "tr");
+  const currentVal = isVoice
+    ? normalizeVoiceStorage(getStoredValue(STORAGE_KEYS.voice, "auto"))
+    : getStoredValue(STORAGE_KEYS.lang, "tr");
 
   sheetTitle.textContent = isVoice ? "Ses Ayarları" : "Sistem Dili";
 
@@ -544,16 +553,17 @@ function closeSheet(){
 async function saveSetting(type, value){
   const isVoice = type === "voice";
   const storageKey = isVoice ? STORAGE_KEYS.voice : STORAGE_KEYS.lang;
+  const finalValue = isVoice ? normalizeVoiceStorage(value) : value;
 
-  setStoredValue(storageKey, value);
+  setStoredValue(storageKey, finalValue);
   syncUI();
 
   try{
     const { data: { user } } = await supabase.auth.getUser();
     if(user?.id){
       const payload = isVoice
-        ? { tts_voice_preference: value, updated_at: new Date().toISOString() }
-        : { system_lang: value, updated_at: new Date().toISOString() };
+        ? { tts_voice_preference: finalValue, updated_at: new Date().toISOString() }
+        : { system_lang: finalValue, updated_at: new Date().toISOString() };
 
       const { error } = await supabase
         .from("profiles")
@@ -592,7 +602,7 @@ async function hydrateFromProfile(){
     }
 
     if(data?.tts_voice_preference){
-      setStoredValue(STORAGE_KEYS.voice, data.tts_voice_preference);
+      setStoredValue(STORAGE_KEYS.voice, normalizeVoiceStorage(data.tts_voice_preference));
     }
 
     if(data?.system_lang){
