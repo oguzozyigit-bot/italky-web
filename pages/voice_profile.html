@@ -55,10 +55,42 @@
       gap:20px;
     }
 
+    .topRow{
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+
+    .backBtn{
+      width:42px;
+      height:42px;
+      border-radius:14px;
+      border:1px solid var(--panel-border);
+      background:rgba(255,255,255,.05);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      flex:0 0 auto;
+    }
+
+    .backBtn:active{
+      transform:scale(.96);
+    }
+
+    .backBtn svg{
+      width:20px;
+      height:20px;
+      stroke:#fff;
+      fill:none;
+      stroke-width:2.5;
+    }
+
     .page-head{
       display:flex;
       flex-direction:column;
       gap:8px;
+      min-width:0;
     }
 
     .page-kicker{
@@ -334,11 +366,17 @@
 
 <div id="pageContent">
 
-  <section class="page-head">
-    <div class="page-kicker">Voice Profile</div>
-    <h1 class="title">Sesini <span class="ai">Tanıt</span></h1>
-    <p class="page-sub">Kısa cümleleri okuyarak kendine özel ses profilini oluştur.</p>
-  </section>
+  <div class="topRow">
+    <button class="backBtn" type="button" onclick="history.back()" aria-label="Geri dön">
+      <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+
+    <section class="page-head">
+      <div class="page-kicker">Voice Profile</div>
+      <h1 class="title">Sesini <span class="ai">Tanıt</span></h1>
+      <p class="page-sub">Kısa cümleleri okuyarak kendine özel ses profilini oluştur.</p>
+    </section>
+  </div>
 
   <section class="progress-container">
     <div class="progress-info">
@@ -388,15 +426,6 @@
   }catch(e){
     console.warn("[voice shell]", e);
   }
-
-  // voice_profile_boot.js içinde:
-  // kayıt başlarken:
-  // document.getElementById('micWrapper')?.classList.add('listening');
-  // document.getElementById('recordBtn')?.classList.add('listening');
-  //
-  // kayıt biterken:
-  // document.getElementById('micWrapper')?.classList.remove('listening');
-  // document.getElementById('recordBtn')?.classList.remove('listening');
 </script>
 
 <script type="module" src="/js/voice_profile_boot.js?v=final_updated"></script>
