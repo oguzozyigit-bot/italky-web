@@ -1,176 +1,61 @@
 // FILE: /js/interpreter_page.js
 
-import { mountShell } from "/js/ui_shell.js";
-import { LANG_POOL } from "/js/lang_pool_full.js";
-import { supabase } from "/js/supabase_client.js";
-import { startNFCJoin } from "/js/nfc_pair.js";
+const API = "https://italky-api.onrender.com/api";
 
-mountShell({ scroll: "auto" });
+const createBtn = document.getElementById("createRoom");
+const qrBox = document.getElementById("qr");
 
-const $ = (id) => document.getElementById(id);
+async function createRoom(){
 
-const myLang = $("myLang");
-const createQrBtn = $("createQrBtn");
-const scanQrBtn = $("scanQrBtn");
-const hostCodeText = $("hostCodeText");
+const r = await fetch(`${API}/interpreter/create-room`,{
+method:"POST",
+headers:{ "Content-Type":"application/json" },
+body:JSON.stringify({ my_lang:"tr" })
+});
 
-const HOST_CODE_KEY = "italky_interpreter_host_code";
-const MY_LANG_KEY = "italky_interpreter_my_lang";
+const j = await r.json();
 
-let stableHostCode = "";
-
-function canonical(code) {
-  return String(code || "").toLowerCase().trim();
+if(!j.room_id){
+alert("Room oluşturulamadı");
+return;
 }
 
-function slugify(value) {
-  return String(value || "")
-    .trim()
-    .toUpperCase()
-    .replace(/[^A-Z0-9]/g, "")
-    .slice(0, 12);
+const roomId = j.room_id;
+
+const url = `${location.origin}/pages/interpreter_join.html?room=${roomId}`;
+
+generateQR(url);
+
+watchRoom(roomId);
+
 }
 
-function randomCode() {
-  return "ITK" + Math.random().toString(36).slice(2, 10).toUpperCase();
+function generateQR(text){
+
+qrBox.innerHTML="";
+
+const img=document.createElement("img");
+
+img.src=`https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=${encodeURIComponent(text)}`;
+
+qrBox.appendChild(img);
+
 }
 
-function buildLangOptions() {
-  const langs = Array.isArray(LANG_POOL) ? LANG_POOL : [];
-  if (!myLang) return;
+async function watchRoom(room){
 
-  myLang.innerHTML = langs.map((l) => {
-    const code = canonical(l.code);
-    return `<option value="${code}">${l.flag || "🌐"} ${l.name || code.toUpperCase()}</option>`;
-  }).join("");
+setInterval(async()=>{
 
-  myLang.value = localStorage.getItem(MY_LANG_KEY) || "tr";
+const r = await fetch(`${API}/interpreter/room/${room}`);
+
+const j = await r.json();
+
+if(j.status==="active"){
+location.href=`/pages/live_interpreter.html?room=${room}&role=host`;
 }
 
-function saveLang() {
-  try {
-    if (myLang) localStorage.setItem(MY_LANG_KEY, canonical(myLang.value || "tr"));
-  } catch {}
+},1500);
+
 }
 
-async function getCurrentUser() {
-  try {
-    const { data } = await supabase.auth.getUser();
-    return data?.user || null;
-  } catch {
-    return null;
-  }
-}
-
-function deriveCodeFromUser(user) {
-  const meta = user?.user_metadata || {};
-  const candidates = [
-    localStorage.getItem("membership_no"),
-    localStorage.getItem("uyelik_no"),
-    localStorage.getItem("member_no"),
-    meta.membership_no,
-    meta.uyelik_no,
-    meta.member_no,
-    meta.user_no,
-    user?.id,
-    user?.email?.split("@")?.[0]
-  ];
-
-  for (const raw of candidates) {
-    const code = slugify(raw);
-    if (code && code.length >= 6) return "ITK-" + code.slice(0, 10);
-  }
-  return "";
-}
-
-async function ensureStableHostCode() {
-  try {
-    const existing = localStorage.getItem(HOST_CODE_KEY);
-    if (existing && String(existing).trim()) {
-      stableHostCode = String(existing).trim();
-      return stableHostCode;
-    }
-  } catch {}
-
-  const user = await getCurrentUser();
-  const derived =
-    deriveCodeFromUser(user) ||
-    ("ITK-" + randomCode().replace("ITK", "").slice(0, 10));
-
-  stableHostCode = derived;
-
-  try {
-    localStorage.setItem(HOST_CODE_KEY, stableHostCode);
-  } catch {}
-
-  return stableHostCode;
-}
-
-async function createQr() {
-  saveLang();
-
-  const hostCode = await ensureStableHostCode();
-  const selectedLang = canonical(myLang?.value || "tr");
-
-  const q = new URLSearchParams({
-    my: selectedLang,
-    host: hostCode
-  });
-
-  location.href = `/pages/interpreter_qr_host.html?${q.toString()}`;
-}
-
-async function goScan() {
-  saveLang();
-
-  const selectedLang = canonical(myLang?.value || "tr");
-  const hostCode = await ensureStableHostCode();
-
-  const q = new URLSearchParams({
-    my: selectedLang,
-    self_host: hostCode
-  });
-
-  location.href = `/pages/interpreter_qr_scan.html?${q.toString()}`;
-}
-
-function joinWithNfcToken(token) {
-  const raw = String(token || "").trim();
-  if (!raw) return;
-
-  if (/^https?:\/\//i.test(raw)) {
-    location.href = raw;
-    return;
-  }
-
-  if (/^[A-Za-z0-9\-_]{8,20}$/.test(raw) && !raw.startsWith("ITK-")) {
-    const q = new URLSearchParams({ room: raw, v: "1" });
-    location.href = `/pages/interpreter_join.html?${q.toString()}`;
-    return;
-  }
-
-  alert("Şimdilik NFC için room id içeren etiket kullan.");
-}
-
-async function init() {
-  buildLangOptions();
-  saveLang();
-
-  const hostCode = await ensureStableHostCode();
-  if (hostCodeText) hostCodeText.textContent = hostCode;
-
-  createQrBtn?.addEventListener("click", createQr);
-  scanQrBtn?.addEventListener("click", goScan);
-  myLang?.addEventListener("change", saveLang);
-
-  try {
-    await startNFCJoin((token) => {
-      console.log("NFC session:", token);
-      joinWithNfcToken(token);
-    });
-  } catch (e) {
-    console.warn("[NFC init]", e);
-  }
-}
-
-init();
+createBtn.onclick=createRoom;
