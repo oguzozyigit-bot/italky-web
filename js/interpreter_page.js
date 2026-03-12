@@ -1,175 +1,256 @@
-// FILE: /js/interpreter_page.js
-
-/**
- * italkyAI - Interpreter Page Logic (Host)
- * Room_id bazlı temiz akış
- */
+// FILE: /js/live_interpreter_page.js
 
 const API_BASE = "https://italky-api.onrender.com/api";
-const JOIN_PAGE_BASE = "https://italky.ai/pages/interpreter_join.html";
+const WS_BASE = "wss://italky-api.onrender.com/api";
 
-const btnGenerate = document.getElementById("btn-generate");
-const myLangSelect = document.getElementById("my-lang");
-const setupArea = document.getElementById("setup-area");
-const qrContainer = document.getElementById("qr-container");
-const qrCodeDiv = document.getElementById("qr-code");
-const statusText = document.getElementById("status-text");
+const params = new URLSearchParams(window.location.search);
+const roomId = String(params.get("room") || "").trim();
+const role = String(params.get("role") || "guest").trim().toLowerCase();
+const myLang = String(params.get("my") || "tr").trim().toLowerCase();
+const peerLang = String(params.get("peer") || "").trim().toLowerCase();
 
+const roomTitle = document.getElementById("room-title");
+const roleBadge = document.getElementById("role-badge");
+const roomMetaText = document.getElementById("room-meta-text");
+const chatLog = document.getElementById("chat-log");
+const wsStatus = document.getElementById("ws-status");
 const statusDot = document.getElementById("status-dot");
-const roomIdText = document.getElementById("room-id-text");
-const roomStateText = document.getElementById("room-state-text");
+const emptyState = document.getElementById("empty-state");
 
-let pollingInterval = null;
-let currentRoomId = "";
+let socket = null;
+let pingTimer = null;
 
 function setStatus(text, mode = "waiting") {
-  if (statusText) statusText.innerText = text;
+  if (wsStatus) wsStatus.innerText = text;
 
   if (statusDot) {
     statusDot.classList.remove("ok", "err");
     if (mode === "ok") statusDot.classList.add("ok");
     if (mode === "err") statusDot.classList.add("err");
   }
+}
 
-  if (roomStateText) {
-    roomStateText.textContent = mode === "ok"
-      ? "active"
-      : mode === "err"
-        ? "error"
-        : "waiting";
+function hideEmptyState() {
+  if (emptyState) emptyState.style.display = "none";
+}
+
+function showSystemMessage(text) {
+  hideEmptyState();
+
+  const msgDiv = document.createElement("div");
+  msgDiv.className = "sys-msg";
+  msgDiv.innerText = text;
+
+  chatLog?.appendChild(msgDiv);
+  chatLog.scrollTop = chatLog.scrollHeight;
+}
+
+function showChatMessage(text, senderRole) {
+  hideEmptyState();
+
+  const msgDiv = document.createElement("div");
+  msgDiv.className = `msg ${senderRole === "host" ? "host-msg" : "guest-msg"}`;
+  msgDiv.innerText = text;
+
+  chatLog?.appendChild(msgDiv);
+  chatLog.scrollTop = chatLog.scrollHeight;
+}
+
+function stopSocket() {
+  try {
+    socket?.close?.();
+  } catch {}
+
+  socket = null;
+
+  if (pingTimer) {
+    clearInterval(pingTimer);
+    pingTimer = null;
   }
 }
 
-function clearPolling() {
-  if (pollingInterval) {
-    clearInterval(pollingInterval);
-    pollingInterval = null;
-  }
-}
+async function fetchRoomInfo() {
+  const res = await fetch(`${API_BASE}/interpreter/room/${encodeURIComponent(roomId)}`);
+  const data = await res.json().catch(() => null);
 
-function getSelectedLang() {
-  return String(myLangSelect?.value || "tr").trim().toLowerCase();
-}
-
-function buildJoinUrl(roomId) {
-  return `${JOIN_PAGE_BASE}?room=${encodeURIComponent(roomId)}&v=1`;
-}
-
-function buildQrUrl(joinUrl) {
-  return `https://api.qrserver.com/v1/create-qr-code/?size=420x420&margin=10&data=${encodeURIComponent(joinUrl)}`;
-}
-
-async function createRoom(myLang) {
-  const response = await fetch(`${API_BASE}/interpreter/create-room`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      my_lang: myLang
-    })
-  });
-
-  const data = await response.json().catch(() => null);
-
-  if (!response.ok || !data?.ok || !data?.room_id) {
-    throw new Error(data?.detail || data?.error || "room_create_failed");
+  if (!res.ok || !data?.ok) {
+    throw new Error(data?.detail || data?.error || "room_fetch_failed");
   }
 
   return data;
 }
 
-function displayQR(roomId) {
-  const joinUrl = buildJoinUrl(roomId);
-  const qrApiUrl = buildQrUrl(joinUrl);
-
-  currentRoomId = roomId;
-
-  if (setupArea) setupArea.classList.add("hidden");
-  if (qrContainer) qrContainer.classList.add("show");
-
-  if (qrCodeDiv) {
-    qrCodeDiv.innerHTML = `<img src="${qrApiUrl}" alt="Interpreter QR Code">`;
+function updateHeader(info) {
+  if (roomTitle) {
+    roomTitle.innerText = `Room • ${roomId}`;
   }
 
-  if (roomIdText) roomIdText.textContent = roomId;
+  if (roleBadge) {
+    roleBadge.innerText = `${role.toUpperCase()} • ${myLang.toUpperCase()}`;
+  }
 
-  setStatus("Oda hazır. Guest bağlantısı bekleniyor...", "waiting");
-
-  console.log("Interpreter Room ID:", roomId);
-  console.log("Interpreter Join URL:", joinUrl);
+  if (roomMetaText) {
+    const parts = [
+      `Status: ${info?.status || "waiting"}`,
+      `Host: ${(info?.host_lang || "-").toUpperCase()}`,
+      `Guest: ${((info?.guest_lang || peerLang || "-") || "-").toUpperCase()}`
+    ];
+    roomMetaText.innerText = parts.join(" • ");
+  }
 }
 
-function redirectHostToLive(roomId, hostLang, guestLang) {
-  const url = new URL("/pages/live_interpreter.html", location.origin);
-  url.searchParams.set("room", roomId);
-  url.searchParams.set("role", "host");
-  url.searchParams.set("my", hostLang);
-  url.searchParams.set("peer", guestLang || "en");
-
-  window.location.href = url.toString();
+function buildWsUrl() {
+  const url = new URL(`${WS_BASE}/ws/interpreter/${encodeURIComponent(roomId)}`);
+  url.searchParams.set("role", role);
+  url.searchParams.set("lang", myLang);
+  return url.toString();
 }
 
-function startPolling(roomId, hostLang) {
-  clearPolling();
+function handleSocketMessage(data) {
+  if (!data || typeof data !== "object") return;
 
-  pollingInterval = setInterval(async () => {
-    try {
-      const res = await fetch(`${API_BASE}/interpreter/room/${encodeURIComponent(roomId)}`);
-      const roomData = await res.json().catch(() => null);
+  if (data.type === "translated_message") {
+    const sender = String(data.sender || "").trim().toLowerCase();
+    const translatedText = String(data.translated_text || "").trim();
+    const originalText = String(data.original_text || "").trim();
+    const fromLang = String(data.from_lang || "").trim().toLowerCase();
+    const toLang = String(data.to_lang || "").trim().toLowerCase();
 
-      if (!res.ok || !roomData?.ok) {
-        return;
-      }
-
-      if (roomStateText) {
-        roomStateText.textContent = String(roomData.status || "waiting");
-      }
-
-      if (roomData.status === "active" && roomData.guest_lang) {
-        clearPolling();
-        setStatus("Bağlantı başarılı. Canlı tercüman ekranı açılıyor...", "ok");
-
-        setTimeout(() => {
-          redirectHostToLive(
-            roomId,
-            String(hostLang || "tr").trim().toLowerCase(),
-            String(roomData.guest_lang || "en").trim().toLowerCase()
-          );
-        }, 900);
-      }
-    } catch (e) {
-      console.error("Polling hatası:", e);
+    if (translatedText) {
+      showChatMessage(
+        `${translatedText}${toLang ? ` (${toLang.toUpperCase()})` : ""}`,
+        sender || "guest"
+      );
     }
-  }, 1500);
+
+    if (originalText) {
+      showSystemMessage(
+        `Orijinal: ${originalText}${fromLang ? ` (${fromLang.toUpperCase()})` : ""}`
+      );
+    }
+
+    return;
+  }
+
+  if (data.type === "peer_joined") {
+    showSystemMessage(`Karşı taraf bağlandı • ${String(data.guest_lang || "").toUpperCase() || "-"}`);
+    return;
+  }
+
+  if (data.type === "peer_left") {
+    showSystemMessage("Karşı taraf odadan ayrıldı.");
+    return;
+  }
+
+  if (data.type === "presence") {
+    if (roomMetaText) {
+      const parts = [
+        `Status: ${data.status || "waiting"}`,
+        `Host: ${String(data.host_lang || "-").toUpperCase()}`,
+        `Guest: ${String(data.guest_lang || "-").toUpperCase()}`
+      ];
+      roomMetaText.innerText = parts.join(" • ");
+    }
+    return;
+  }
+
+  if (data.type === "pong") {
+    return;
+  }
+
+  if (data.type === "error") {
+    showSystemMessage(`Hata: ${data.message || "Bilinmeyen hata"}`);
+    setStatus("Bağlantı hatası", "err");
+    return;
+  }
+
+  showSystemMessage(`Sistem olayı: ${data.type || "bilinmeyen"}`);
 }
 
-async function handleCreateClick() {
-  const selectedLang = getSelectedLang();
+function startSocket() {
+  stopSocket();
 
-  if (!btnGenerate) return;
-
-  btnGenerate.disabled = true;
-  setStatus("Oda oluşturuluyor...", "waiting");
+  const wsUrl = buildWsUrl();
 
   try {
-    const data = await createRoom(selectedLang);
-    const roomId = String(data.room_id || "").trim();
+    socket = new WebSocket(wsUrl);
+  } catch (err) {
+    console.error("WS başlatılamadı:", err);
+    setStatus("WebSocket açılamadı", "err");
+    showSystemMessage("WebSocket başlatılamadı.");
+    return;
+  }
 
-    if (!roomId) {
-      throw new Error("room_id_missing");
+  socket.onopen = () => {
+    setStatus("Bağlantı aktif", "ok");
+    showSystemMessage("WebSocket bağlantısı kuruldu.");
+
+    pingTimer = setInterval(() => {
+      try {
+        if (socket && socket.readyState === WebSocket.OPEN) {
+          socket.send(JSON.stringify({ type: "ping" }));
+        }
+      } catch {}
+    }, 15000);
+  };
+
+  socket.onmessage = (event) => {
+    try {
+      const data = JSON.parse(event.data);
+      handleSocketMessage(data);
+    } catch (e) {
+      console.error("WS mesaj parse hatası:", e);
+      showSystemMessage("Mesaj okunamadı.");
     }
+  };
 
-    displayQR(roomId);
-    startPolling(roomId, selectedLang);
+  socket.onclose = () => {
+    setStatus("Bağlantı kesildi", "err");
+    showSystemMessage("WebSocket bağlantısı kapandı.");
+
+    if (pingTimer) {
+      clearInterval(pingTimer);
+      pingTimer = null;
+    }
+  };
+
+  socket.onerror = (err) => {
+    console.error("WS hatası:", err);
+    setStatus("Bağlantı hatası", "err");
+    showSystemMessage("WebSocket bağlantısında hata oluştu.");
+  };
+}
+
+async function initLiveSession() {
+  if (!roomId) {
+    if (roomTitle) roomTitle.innerText = "Room bulunamadı";
+    if (roleBadge) roleBadge.innerText = "Interpreter";
+    if (roomMetaText) roomMetaText.innerText = "Room ID eksik";
+    setStatus("Room ID bulunamadı", "err");
+    showSystemMessage("Live Interpreter ekranı room parametresi olmadan açılamaz.");
+    return;
+  }
+
+  if (roomTitle) roomTitle.innerText = `Room • ${roomId}`;
+  if (roleBadge) roleBadge.innerText = `${role.toUpperCase()} • ${myLang.toUpperCase()}`;
+
+  setStatus("Room bilgisi alınıyor...");
+  showSystemMessage("Room doğrulanıyor...");
+
+  try {
+    const info = await fetchRoomInfo();
+    updateHeader(info);
+    setStatus("WebSocket bağlanıyor...");
+    startSocket();
   } catch (error) {
-    console.error("Interpreter create error:", error);
-    setStatus("Oda oluşturulamadı. Lütfen tekrar deneyin.", "err");
-    alert("Oda oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.");
-    btnGenerate.disabled = false;
+    console.error("Room info error:", error);
+    setStatus("Room bilgisi alınamadı", "err");
+    showSystemMessage("Room bilgisi alınamadı. Oda kapanmış veya geçersiz olabilir.");
   }
 }
 
-btnGenerate?.addEventListener("click", handleCreateClick);
+initLiveSession();
 
 window.addEventListener("beforeunload", () => {
-  clearPolling();
+  stopSocket();
 });
