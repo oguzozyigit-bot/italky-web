@@ -1,9 +1,9 @@
 <!doctype html>
 <html lang="tr">
 <head>
-<meta charset="utf-8"/>
+<meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-<title>italkyAI • Profil</title>
+<title>italkyAI • Jeton Market</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,195 +12,184 @@
 <style>
 :root {
   --txt: rgba(255,255,255,.96);
-  --muted: rgba(255,255,255,.60);
+  --muted: rgba(255,255,255,.50);
   --ai-grad: linear-gradient(135deg, #67e8f9 0%, #818cf8 46%, #f472b6 100%);
-  --panel-bg: rgba(255, 255, 255, 0.03);
+  --panel-bg: rgba(255, 255, 255, 0.04);
   --panel-border: rgba(255, 255, 255, 0.08);
-  --accent: #818cf8;
 }
 
 html, body {
   margin: 0; padding: 0;
-  background: #0a0a0f;
+  background: #02000f;
   color: var(--txt);
   font-family: 'Outfit', sans-serif;
   height: 100%;
-  overflow: hidden;
+  overflow-x: hidden;
 }
 
-/* Arka Plan Efektleri */
+/* Arka Plan Işıltıları */
 body::before {
   content: "";
   position: fixed;
   inset: 0;
   background: 
-    radial-gradient(circle at 80% 10%, rgba(244, 114, 182, 0.1) 0%, transparent 40%),
-    radial-gradient(circle at 20% 80%, rgba(99, 102, 241, 0.1) 0%, transparent 40%);
+    radial-gradient(circle at 50% -10%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 0% 100%, rgba(236, 72, 153, 0.1) 0%, transparent 40%);
   z-index: -1;
 }
 
 #pageContent {
-  height: 100vh;
-  overflow-y: auto;
-  padding: calc(var(--headerH, 70px) + 20px) 16px calc(var(--footerH, 80px) + 20px);
-  scrollbar-width: none;
   max-width: 500px;
   margin: 0 auto;
+  padding: calc(var(--headerH, 70px) + 15px) 16px calc(var(--footerH, 90px) + 30px);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
-#pageContent::-webkit-scrollbar { display: none; }
-
-/* Geri Dön Tuşu */
-.back-header {
+/* Üst Bar & Geri Dön */
+.top-nav {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 24px;
+  justify-content: space-between;
+  margin-bottom: 10px;
 }
 
 .back-btn {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
+  width: 42px; height: 42px;
+  border-radius: 14px;
   background: var(--panel-bg);
   border: 1px solid var(--panel-border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: flex; align-items: center; justify-content: center;
   cursor: pointer;
-  transition: all 0.2s;
 }
 
-.back-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.1); }
+.back-btn svg { width: 22px; height: 22px; stroke: #fff; fill: none; stroke-width: 2.5; }
 
-.back-btn svg { width: 20px; height: 20px; stroke: #fff; fill: none; stroke-width: 2.5; }
-
-.page-title {
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 24px;
-  font-weight: 700;
-  margin: 0;
-}
-
-/* Profil Avatar / Kart */
-.profile-hero {
-  text-align: center;
-  margin-bottom: 30px;
-}
-
-.avatar-wrapper {
-  width: 90px;
-  height: 90px;
-  margin: 0 auto 15px;
-  position: relative;
-  padding: 3px;
+/* Mevcut Bakiye Kartı */
+.balance-card {
   background: var(--ai-grad);
-  border-radius: 30px;
-  box-shadow: 0 10px 30px rgba(129, 140, 248, 0.3);
-}
-
-.avatar-inner {
-  width: 100%;
-  height: 100%;
-  background: #12121a;
-  border-radius: 27px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 32px;
-  font-weight: 800;
-  color: #fff;
-}
-
-/* Bilgi Paneli */
-.info-panel {
-  background: var(--panel-bg);
-  border: 1px solid var(--panel-border);
   border-radius: 28px;
-  padding: 8px;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-}
-
-.info-row {
+  padding: 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 14px;
-  border-bottom: 1px solid rgba(255,255,255,0.04);
+  box-shadow: 0 15px 35px rgba(129, 140, 248, 0.25);
+  margin-bottom: 10px;
 }
 
-.info-row:last-child { border-bottom: none; }
+.balance-info h3 { margin: 0; font-size: 13px; opacity: 0.8; text-transform: uppercase; font-weight: 800; }
+.balance-info .val { font-size: 32px; font-weight: 900; font-family: 'Space Grotesk'; }
 
-.info-label {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--muted);
+.balance-card .ico {
+  width: 50px; height: 50px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px;
+  backdrop-filter: blur(10px);
+}
+
+/* Paket Kartları */
+.pkg-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pkg {
+  position: relative;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 24px;
+  padding: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.pkg:active { transform: scale(0.97); background: rgba(255,255,255,0.08); }
+
+/* Popüler/VIP Işıltısı */
+.pkg.best {
+  border-color: rgba(129, 140, 248, 0.4);
+  background: linear-gradient(145deg, rgba(255,255,255,0.06), rgba(129, 140, 248, 0.05));
+}
+
+.best-badge {
+  position: absolute;
+  top: 0; right: 0;
+  background: var(--ai-grad);
+  padding: 4px 12px;
+  border-bottom-left-radius: 14px;
+  font-size: 10px;
+  font-weight: 900;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
 }
 
-.info-value {
-  font-size: 15px;
-  font-weight: 700;
-  color: #fff;
+.pkg-main { display: flex; align-items: center; gap: 15px; }
+
+.pkg-icon {
+  width: 48px; height: 48px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--panel-border);
+  border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+}
+
+.pkg-info h2 { margin: 0; font-size: 18px; font-weight: 800; }
+.pkg-info span { font-size: 11px; color: var(--muted); font-weight: 700; }
+
+.pkg-price {
   text-align: right;
 }
 
-.info-value.token {
-  background: var(--ai-grad);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  font-size: 20px;
+.pkg-price .price-tag {
+  display: block;
+  font-size: 18px;
   font-weight: 900;
-}
-
-.mono { font-family: 'Space Grotesk', monospace; letter-spacing: 1px; }
-
-/* Alt Butonlar */
-.action-area {
-  margin-top: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.btn {
-  height: 56px;
-  border-radius: 18px;
-  font-family: inherit;
-  font-weight: 800;
-  font-size: 15px;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-}
-
-.btn-logout {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--panel-border);
   color: #fff;
 }
 
-.btn-delete {
-  background: transparent;
-  color: #ff5a8c;
-  font-size: 13px;
-  opacity: 0.6;
+.pkg-price .discount {
+  font-size: 11px;
+  color: #67e8f9;
+  font-weight: 800;
 }
 
-.btn:active { transform: scale(0.98); }
+/* Alt Bilgiler */
+.footer-notes {
+  text-align: center;
+  margin-top: 10px;
+}
 
-/* Animasyon */
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(20px); }
+.info-link {
+  display: inline-block;
+  padding: 10px 20px;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.legal-note {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.5;
+  padding: 0 20px;
+}
+
+/* Animasyonlar */
+@keyframes reveal {
+  from { opacity: 0; transform: translateY(15px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-.animate { animation: slideUp 0.5s ease forwards; }
+.animate { animation: reveal 0.4s ease forwards; opacity: 0; }
 
 </style>
 </head>
@@ -208,100 +197,130 @@ body::before {
 
 <div id="pageContent">
 
-  <div class="back-header animate">
+  <div class="top-nav animate" style="animation-delay: 0.1s;">
     <button class="back-btn" onclick="history.back()">
       <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
     </button>
-    <h1 class="page-title">Profil</h1>
-  </div>
+    <div style="font-family:'Space Grotesk'; font-weight: 800; font-size: 20px;">Market</div>
+    <div style="width:42px;"></div> </div>
 
-  <div class="profile-hero animate" style="animation-delay: 0.1s;">
-    <div class="avatar-wrapper">
-      <div class="avatar-inner" id="avatarInitial">A</div>
+  <div class="balance-card animate" style="animation-delay: 0.2s;">
+    <div class="balance-info">
+      <h3>Mevcut Bakiyen</h3>
+      <div class="val" id="currentTokens">0</div>
     </div>
-    <div id="pNameTop" style="font-weight: 800; font-size: 20px;">Ad Soyad</div>
-    <div id="pEmailTop" style="color: var(--muted); font-size: 14px; margin-top: 4px;">mail@example.com</div>
+    <div class="ico">💎</div>
   </div>
 
-  <div class="info-panel animate" style="animation-delay: 0.2s;">
+  <div class="pkg-grid">
     
-    <div class="info-row">
-      <div class="info-label">Jeton Sayısı</div>
-      <div class="info-value token" id="tokenVal">0</div>
+    <div class="pkg animate" style="animation-delay: 0.3s;" onclick="buy('jeton_10')">
+      <div class="pkg-main">
+        <div class="pkg-icon">⚡</div>
+        <div class="pkg-info">
+          <h2>10 Jeton</h2>
+          <span>Başlangıç Paketi</span>
+        </div>
+      </div>
+      <div class="pkg-price">
+        <span class="price-tag">29 TL</span>
+      </div>
     </div>
 
-    <div class="info-row">
-      <div class="info-label">Üyelik No</div>
-      <div class="info-value mono" id="memberNo">—</div>
+    <div class="pkg animate" style="animation-delay: 0.4s;" onclick="buy('jeton_50')">
+      <div class="pkg-main">
+        <div class="pkg-icon">🔥</div>
+        <div class="pkg-info">
+          <h2>50 Jeton</h2>
+          <span>Popüler Seçim</span>
+        </div>
+      </div>
+      <div class="pkg-price">
+        <span class="price-tag">119 TL</span>
+        <span class="discount">%18 Avantaj</span>
+      </div>
     </div>
 
-    <div class="info-row">
-      <div class="info-label">Üyelik Tarihi</div>
-      <div class="info-value" id="createdAt">—</div>
+    <div class="pkg best animate" style="animation-delay: 0.5s;" onclick="buy('jeton_100')">
+      <div class="best-badge">En İyi Değer</div>
+      <div class="pkg-main">
+        <div class="pkg-icon">💎</div>
+        <div class="pkg-info">
+          <h2>100 Jeton</h2>
+          <span>Profesyonel Kullanım</span>
+        </div>
+      </div>
+      <div class="pkg-price">
+        <span class="price-tag">199 TL</span>
+        <span class="discount">%31 Avantaj</span>
+      </div>
     </div>
 
-    <div class="info-row">
-      <div class="info-label">Son Giriş</div>
-      <div class="info-value" id="lastLogin">—</div>
+    <div class="pkg best animate" style="animation-delay: 0.6s;" onclick="buy('jeton_500')">
+      <div class="best-badge">VIP Paketi</div>
+      <div class="pkg-main">
+        <div class="pkg-icon">👑</div>
+        <div class="pkg-info">
+          <h2>500 Jeton</h2>
+          <span>Sınırsız Deneyim</span>
+        </div>
+      </div>
+      <div class="pkg-price">
+        <span class="price-tag">849 TL</span>
+        <span class="discount">%42 Avantaj</span>
+      </div>
     </div>
 
   </div>
 
-  <div class="action-area animate" style="animation-delay: 0.3s;">
-    <button class="btn btn-logout" id="logoutBtn">Güvenli Çıkış Yap</button>
-    <button class="btn btn-delete" id="deleteBtn">Hesabı Kalıcı Olarak Sil</button>
+  <div class="footer-notes animate" style="animation-delay: 0.7s;">
+    <a href="/pages/jeton-nedir.html" class="info-link">Jetonlar ne işe yarar?</a>
+    <p class="legal-note">
+      Satın alınan jetonlar hesabınıza anında tanımlanır. <br>
+      Dil pratiği, AI öğretmen ve özel özelliklerde kullanılır.
+    </p>
   </div>
 
 </div>
 
 <script type="module">
-  import { mountShell } from "/js/ui_shell.js";
-  import { supabase } from "/js/supabase_client.js";
+import { mountShell } from "/js/ui_shell.js";
+import { supabase } from "/js/supabase_client.js";
 
-  // UI Shell Montajı
-  mountShell({ scroll: "none" });
+// Shell Montajı
+mountShell({ scroll:"auto" });
 
-  // Verileri Doldurma Fonksiyonu
-  async function loadProfile() {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+let __billingUserId = "";
 
-      const meta = user.user_metadata;
-      const name = meta.full_name || meta.display_name || "italky Kullanıcısı";
-      
-      // DOM Güncelleme
-      document.getElementById("pNameTop").textContent = name;
-      document.getElementById("pEmailTop").textContent = user.email;
-      document.getElementById("avatarInitial").textContent = name.charAt(0).toUpperCase();
-      document.getElementById("memberNo").textContent = meta.membership_no || user.id.slice(0,8).toUpperCase();
-      
-      // Tarih Formatlama
-      const formatDate = (dateStr) => {
-        if(!dateStr) return "—";
-        return new Date(dateStr).toLocaleDateString('tr-TR', {
-          day: 'numeric', month: 'long', year: 'numeric'
-        });
-      };
-
-      document.getElementById("createdAt").textContent = formatDate(user.created_at);
-      document.getElementById("lastLogin").textContent = formatDate(user.last_sign_in_at);
-
-      // Jeton verisi için (Varsayalım user_metadata içinde tutuyorsun)
-      document.getElementById("tokenVal").textContent = meta.tokens || 0;
-
-    } catch (e) {
-      console.error("Profil yüklenemedi:", e);
+// Mevcut Jeton Bakiyesini Getir
+async function updateCurrentBalance() {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) {
+    __billingUserId = user.id;
+    document.getElementById('currentTokens').textContent = user.user_metadata.tokens || 0;
+    
+    // Android Billing Sync
+    if(window.AndroidBilling?.setUserId) {
+      window.AndroidBilling.setUserId(user.id);
     }
   }
+}
 
-  // Çıkış İşlemi
-  document.getElementById("logoutBtn").onclick = async () => {
-    await supabase.auth.signOut();
-    location.href = "/login.html";
-  };
+// Satın Alma Fonksiyonu
+window.buy = async function(productId) {
+  if(!__billingUserId) {
+    alert("Lütfen önce giriş yapın.");
+    return;
+  }
 
-  loadProfile();
+  if(window.AndroidBilling?.buy) {
+    window.AndroidBilling.buy(productId);
+  } else {
+    alert("Google Play ödeme sistemi şu an hazır değil.");
+  }
+};
+
+updateCurrentBalance();
 </script>
 
 </body>
