@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-<title>italkyAI • Home</title>
+<title>italkyAI • Future Home</title>
 
-<meta name="theme-color" content="#1a1020"/>
+<meta name="theme-color" content="#120d16"/>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,7 +17,7 @@
   --muted:rgba(255,255,255,.64);
   --line:rgba(255,255,255,.10);
   --cardLine:rgba(255,255,255,.12);
-  --ai-grad:linear-gradient(135deg,#7dd3fc 0%, #818cf8 46%, #f472b6 100%);
+  --ai-grad:linear-gradient(135deg,#67e8f9 0%, #818cf8 46%, #f472b6 100%);
   --bgTop:#2c151e;
   --bgMid:#1b1221;
   --bgBot:#120d16;
@@ -53,9 +53,9 @@ body::-webkit-scrollbar{
 body{
   background:
     radial-gradient(circle at 50% 0%, rgba(251,146,60,.18) 0%, transparent 28%),
-    radial-gradient(circle at 20% 18%, rgba(244,114,182,.10) 0%, transparent 22%),
-    radial-gradient(circle at 82% 18%, rgba(96,165,250,.08) 0%, transparent 18%),
-    linear-gradient(180deg, #26151c 0%, #1b1221 34%, #120d16 100%);
+    radial-gradient(circle at 20% 18%, rgba(244,114,182,.12) 0%, transparent 25%),
+    radial-gradient(circle at 82% 18%, rgba(96,165,250,.10) 0%, transparent 20%),
+    linear-gradient(180deg, #1d1016 0%, #150e19 34%, #120d16 100%);
 }
 
 #pageContent{
@@ -73,9 +73,10 @@ body{
   overflow:hidden;
 }
 
-/* HERO */
+/* --- YENİ HERO ALANI --- */
 .hero{
   flex:0 0 auto;
+  perspective: 1000px; /* 3D efekt için */
 }
 
 .heroTop{
@@ -83,137 +84,138 @@ body{
   flex-direction:column;
   align-items:center;
   justify-content:center;
-  gap:6px;
+  gap:8px;
 }
 
-.neural-orb{
-  width:178px;
-  height:178px;
-  position:relative;
-  display:flex;
-  align-items:center;
-  justify-content:center;
+/* Dönen Holografik Yapı */
+.holo-container {
+  width: 190px;
+  height: 190px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform-style: preserve-3d;
+  margin-bottom: 20px;
 }
 
-.ai-ring{
-  position:absolute;
-  inset:-3px;
-  border-radius:50%;
-  padding:2px;
-  background:var(--ai-grad);
-  -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite:xor;
-  mask-composite:exclude;
-  animation:rotateOrb 18s linear infinite;
+/* 3D Dönen Kristal Kafes */
+.crystal-cage {
+  position: absolute;
+  width: 130px;
+  height: 130px;
+  transform-style: preserve-3d;
+  animation: rotateCrystal 15s linear infinite;
 }
 
-.orbit-energy{
-  position:absolute;
-  inset:-13px;
-  border-radius:50%;
-  animation:rotateOrb 9s linear infinite reverse;
+.crystal-side {
+  position: absolute;
+  inset: 0;
+  border: 1.5px solid rgba(103, 232, 249, 0.4);
+  background: radial-gradient(circle, rgba(129, 140, 248, 0.1), transparent);
+  box-shadow: 0 0 15px rgba(103, 232, 249, 0.2);
 }
 
-.e-ball{
-  position:absolute;
-  width:12px;
-  height:12px;
-  border-radius:50%;
-  filter:blur(.3px);
-}
-.ball-l{
-  top:-5px;
-  left:50%;
-  transform:translateX(-50%);
-  background:#60a5fa;
-  box-shadow:0 0 20px #60a5fa;
-}
-.ball-b{
-  bottom:-5px;
-  left:50%;
-  transform:translateX(-50%);
-  background:#f472b6;
-  box-shadow:0 0 20px #f472b6;
+/* Her bir yüzey */
+.side1 { transform: rotateY(0deg) translateZ(65px); }
+.side2 { transform: rotateY(90deg) translateZ(65px); }
+.side3 { transform: rotateY(180deg) translateZ(65px); }
+.side4 { transform: rotateY(270deg) translateZ(65px); }
+.side5 { transform: rotateX(90deg) translateZ(65px); }
+.side6 { transform: rotateX(-90deg) translateZ(65px); }
+
+
+/* Holografik QR (İçeride yüzen) */
+.holo-qr {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 6px;
+  box-shadow: 0 0 30px rgba(103, 232, 249, 0.8), inset 0 0 10px rgba(103, 232, 249, 0.5);
+  animation: floatQR 4s ease-in-out infinite, glitchQR 5s infinite;
+  z-index: 2;
+  overflow: hidden;
 }
 
-.ai-core{
-  width:128px;
-  height:128px;
-  position:relative;
-  border-radius:50%;
-  background:#120d16;
-  border:2px solid transparent;
-  background-image:
-    linear-gradient(#120d16,#120d16),
-    var(--ai-grad);
-  background-origin:border-box;
-  background-clip:content-box,border-box;
-  z-index:2;
-  box-shadow:
-    0 18px 42px rgba(0,0,0,.34),
-    0 0 38px rgba(129,140,248,.16),
-    inset 0 0 22px rgba(255,255,255,.03);
-  overflow:hidden;
-  animation:orbBreath 4.1s ease-in-out infinite;
+.holo-qr img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: hue-rotate(180deg) brightness(1.2); /* QR rengini fütüristik yap */
 }
 
-.qrFrame{
-  position:absolute;
-  inset:16px;
-  border-radius:18px;
-  overflow:hidden;
-  background:#fff;
-  display:flex;
-  align-items:center;
-  justify-content:center;
+/* Hologram Işınları */
+.holo-beams {
+  position: absolute;
+  inset: -20px;
+  background: 
+    repeating-linear-gradient(to bottom, transparent, transparent 4px, rgba(103, 232, 249, 0.1) 4px, rgba(103, 232, 249, 0.1) 6px);
+  mask-image: radial-gradient(circle, #fff, transparent 70%);
+  -webkit-mask-image: radial-gradient(circle, #fff, transparent 70%);
+  animation: beamFlow 2s linear infinite;
+  pointer-events: none;
 }
 
-.qrFrame img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  display:block;
+/* YENİ: Dönen Yapının Altındaki Zemin (Energy Platform) */
+.energy-platform {
+  position: absolute;
+  bottom: -30px;
+  left: 50%;
+  transform: translateX(-50%) rotateX(75deg);
+  width: 160px;
+  height: 160px;
+  background: 
+    radial-gradient(circle, var(--cyan) 0%, transparent 70%),
+    radial-gradient(circle, rgba(244,114,182,0.3) 10%, transparent 60%);
+  border-radius: 50%;
+  filter: blur(5px);
+  box-shadow: 0 0 40px var(--cyan), 0 0 80px var(--pink);
+  animation: platformPulse 3s ease-in-out infinite;
+  opacity: 0.6;
+  z-index: -1;
 }
 
-.qrScan{
-  position:absolute;
-  left:10px;
-  right:10px;
-  top:12px;
-  height:2px;
-  border-radius:999px;
-  background:linear-gradient(90deg, rgba(255,255,255,0), #93c5fd, rgba(255,255,255,0));
-  box-shadow:0 0 14px rgba(147,197,253,.75);
-  animation:scanBar 2.8s linear infinite;
-  z-index:4;
-}
 
 .heroTitle{
   font-family:'Space Grotesk',sans-serif;
-  font-size:21px;
+  font-size:23px;
   font-weight:700;
-  letter-spacing:-.35px;
+  letter-spacing:-.5px;
   color:#fff;
   margin:0;
-  line-height:1.05;
+  line-height:1.1;
+  text-shadow: 0 0 15px rgba(255,255,255,0.4);
 }
 
 .heroTitle .ai{
   background:var(--ai-grad);
   -webkit-background-clip:text;
   -webkit-text-fill-color:transparent;
+  position: relative;
+}
+.heroTitle .ai::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: var(--ai-grad);
+    box-shadow: 0 2px 10px var(--cyan);
 }
 
 .heroSub{
   margin:0;
-  font-size:10.8px;
+  font-size:11px;
   color:var(--muted);
   text-align:center;
-  line-height:1.34;
-  max-width:322px;
+  line-height:1.4;
+  max-width:330px;
 }
 
-/* GRID */
+/* --- GRID VE KARTLAR (MEVCUT AMA RENKLER AYARLANDI) --- */
 .home-grid{
   flex:1;
   min-height:0;
@@ -229,83 +231,85 @@ body{
   overflow:hidden;
   border:1px solid var(--cardLine);
   box-shadow:
-    0 18px 32px rgba(0,0,0,.20),
-    inset 0 1px 0 rgba(255,255,255,.04);
-  padding:16px 15px 14px;
+    0 15px 30px rgba(0,0,0,0.3),
+    inset 0 1px 0 rgba(255,255,255,.05);
+  padding:18px 16px 14px;
   text-decoration:none;
   color:#fff;
-  min-height:214px;
+  min-height:220px;
   transition:transform .22s ease, filter .22s ease, box-shadow .22s ease;
 }
 .mod-card:active{
-  transform:scale(.985);
-  filter:brightness(1.05);
+  transform:scale(.98);
+  filter:brightness(1.1);
 }
 .mod-card:hover{
   box-shadow:
-    0 22px 36px rgba(0,0,0,.22),
-    0 0 18px rgba(255,255,255,.06);
+    0 25px 40px rgba(0,0,0,0.4),
+    0 0 20px rgba(103, 232, 249, 0.15);
 }
 
 .face-card{
   background:
-    radial-gradient(circle at 24% 18%, rgba(125,211,252,.30) 0%, transparent 30%),
-    linear-gradient(180deg, #3f1d7a 0%, #3b2ea8 50%, #2b4bcf 100%);
+    radial-gradient(circle at 20% 15%, rgba(103, 232, 249, .35) 0%, transparent 35%),
+    linear-gradient(180deg, #301661 0%, #2b2185 50%, #1e36a3 100%);
 }
 
 .all-card{
   background:
-    radial-gradient(circle at 76% 18%, rgba(253,186,116,.28) 0%, transparent 28%),
-    linear-gradient(180deg, #ff4fa3 0%, #7c3aed 52%, #4f46e5 100%);
+    radial-gradient(circle at 80% 15%, rgba(251, 146, 60, .3) 0%, transparent 30%),
+    linear-gradient(180deg, #d43685 0%, #632bbd 52%, #3c35b5 100%);
 }
 
 .offline-card{
   grid-column:1 / 3;
-  min-height:122px;
+  min-height:130px;
   display:flex;
   align-items:center;
-  gap:14px;
+  gap:16px;
   background:
-    radial-gradient(circle at 15% 50%, rgba(253,186,116,.20) 0%, transparent 22%),
-    radial-gradient(circle at 85% 24%, rgba(125,211,252,.12) 0%, transparent 18%),
-    linear-gradient(90deg, #7c2d12 0%, #ea580c 36%, #f97316 68%, #fb7185 100%);
+    radial-gradient(circle at 12% 50%, rgba(251, 146, 60, .25) 0%, transparent 25%),
+    radial-gradient(circle at 88% 20%, rgba(103, 232, 249, .15) 0%, transparent 20%),
+    linear-gradient(90deg, #61220e 0%, #c2410a 36%, #ea580c 68%, #e11d48 100%);
 }
 
 .card-topline{
   font-size:11px;
   font-weight:700;
-  letter-spacing:.3px;
-  color:rgba(255,255,255,.76);
-  margin-bottom:8px;
+  letter-spacing:.5px;
+  color:rgba(255,255,255,.8);
+  margin-bottom:6px;
+  text-transform: uppercase;
 }
 
 .card-title{
   margin:0;
   font-family:'Space Grotesk',sans-serif;
-  font-size:28px;
-  line-height:.96;
-  letter-spacing:-1px;
+  font-size:29px;
+  line-height:.95;
+  letter-spacing:-1.2px;
   color:#fff;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
 
 .card-desc{
   margin-top:8px;
   font-size:11px;
-  line-height:1.36;
-  color:rgba(255,255,255,.82);
-  max-width:92%;
+  line-height:1.4;
+  color:rgba(255,255,255,.85);
+  max-width:95%;
 }
 
-/* ART AREA */
+/* ART AREA (MEVCUT, RENKLER AYARLANDI) */
 .card-art{
   position:absolute;
   left:14px;
   right:14px;
   bottom:14px;
-  height:82px;
+  height:85px;
   border-radius:22px;
-  background:rgba(255,255,255,.08);
-  border:1px solid rgba(255,255,255,.10);
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.08);
   overflow:hidden;
 }
 
@@ -314,46 +318,46 @@ body{
   display:flex;
   align-items:center;
   justify-content:center;
-  gap:16px;
+  gap:18px;
 }
 .face-person{
   position:relative;
-  width:34px;
-  height:46px;
+  width:36px;
+  height:48px;
   border-radius:18px 18px 12px 12px;
-  background:linear-gradient(180deg, rgba(255,255,255,.86), rgba(255,255,255,.34));
+  background:linear-gradient(180deg, rgba(255,255,255,.9), rgba(255,255,255,.4));
   margin-top:16px;
 }
 .face-person::before{
   content:"";
   position:absolute;
-  width:18px;
-  height:18px;
+  width:20px;
+  height:20px;
   border-radius:50%;
   left:50%;
-  top:-14px;
+  top:-15px;
   transform:translateX(-50%);
-  background:rgba(255,255,255,.82);
+  background:rgba(255,255,255,.85);
 }
 .face-link{
   position:absolute;
   left:50%;
   top:50%;
-  width:58px;
-  height:2px;
+  width:60px;
+  height:2.5px;
   transform:translate(-50%,-50%);
-  background:linear-gradient(90deg, rgba(255,255,255,.12), rgba(103,232,249,.96), rgba(255,255,255,.12));
-  box-shadow:0 0 14px rgba(103,232,249,.62);
+  background:linear-gradient(90deg, rgba(255,255,255,.1), rgba(103,232,249,.98), rgba(255,255,255,.1));
+  box-shadow:0 0 15px rgba(103,232,249,0.7);
 }
 .face-pulse{
   position:absolute;
   left:50%;
   top:50%;
-  width:70px;
-  height:70px;
+  width:75px;
+  height:75px;
   transform:translate(-50%,-50%);
   border-radius:50%;
-  border:1px solid rgba(103,232,249,.24);
+  border:1.5px solid rgba(103,232,249,0.3);
   animation:hudPulse 1.8s infinite ease-out;
 }
 
@@ -367,35 +371,35 @@ body{
   position:absolute;
   left:50%;
   top:50%;
-  width:18px;
-  height:18px;
+  width:20px;
+  height:20px;
   border-radius:50%;
   transform:translate(-50%,-50%);
-  background:#fff3;
+  background:#fff4;
   box-shadow:
-    0 0 0 7px rgba(255,255,255,.10),
-    0 0 18px rgba(253,186,116,.65);
+    0 0 0 8px rgba(255,255,255,.12),
+    0 0 20px rgba(251, 146, 60, 0.7);
 }
 .all-node{
   position:absolute;
-  width:16px;
-  height:16px;
+  width:17px;
+  height:17px;
   border-radius:50%;
-  background:rgba(255,255,255,.84);
-  box-shadow:0 0 14px rgba(255,255,255,.34);
+  background:rgba(255,255,255,.88);
+  box-shadow:0 0 15px rgba(255,255,255,.4);
 }
 .n1{ top:12px; left:50%; transform:translateX(-50%); }
-.n2{ left:22px; bottom:16px; }
-.n3{ right:22px; bottom:16px; }
+.n2{ left:24px; bottom:18px; }
+.n3{ right:24px; bottom:18px; }
 .all-ray{
   position:absolute;
   left:50%;
   top:50%;
-  width:2px;
-  height:36px;
+  width:2.5px;
+  height:38px;
   transform-origin:center bottom;
-  background:linear-gradient(180deg, rgba(255,255,255,.16), rgba(253,186,116,.96));
-  box-shadow:0 0 12px rgba(253,186,116,.45);
+  background:linear-gradient(180deg, rgba(255,255,255,.2), rgba(251, 146, 60, .98));
+  box-shadow:0 0 15px rgba(251, 146, 60, 0.5);
 }
 .r1{ transform:translate(-50%,-50%) rotate(0deg); }
 .r2{ transform:translate(-50%,-50%) rotate(120deg); }
@@ -403,36 +407,36 @@ body{
 
 /* offline art */
 .offline-ico{
-  width:78px;
-  height:78px;
+  width:82px;
+  height:82px;
   flex:0 0 auto;
   position:relative;
-  border-radius:22px;
+  border-radius:24px;
   background:rgba(255,255,255,.12);
-  border:1px solid rgba(255,255,255,.14);
-  box-shadow:inset 0 0 20px rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.15);
+  box-shadow:inset 0 0 25px rgba(255,255,255,.05);
 }
 .sheet{
   position:absolute;
-  width:28px;
-  height:38px;
-  border-radius:9px;
-  border:1.2px solid rgba(255,255,255,.58);
-  background:rgba(255,255,255,.10);
+  width:30px;
+  height:40px;
+  border-radius:10px;
+  border:1.5px solid rgba(255,255,255,.6);
+  background:rgba(255,255,255,.12);
 }
-.sheet.s1{ left:16px; top:20px; transform:rotate(-8deg); }
-.sheet.s2{ left:34px; top:16px; transform:rotate(7deg); }
+.sheet.s1{ left:18px; top:22px; transform:rotate(-8deg); }
+.sheet.s2{ left:36px; top:18px; transform:rotate(7deg); }
 .line{
   position:absolute;
-  left:6px;
-  right:6px;
-  height:2px;
+  left:7px;
+  right:7px;
+  height:2.5px;
   border-radius:3px;
-  background:rgba(255,255,255,.52);
+  background:rgba(255,255,255,.55);
 }
-.l1{ top:10px; }
-.l2{ top:16px; }
-.l3{ top:22px; }
+.l1{ top:11px; }
+.l2{ top:18px; }
+.l3{ top:25px; }
 
 .offline-body{
   flex:1;
@@ -441,62 +445,101 @@ body{
 .offline-title{
   margin:0;
   font-family:'Space Grotesk',sans-serif;
-  font-size:28px;
-  line-height:.96;
-  letter-spacing:-1px;
+  font-size:29px;
+  line-height:.95;
+  letter-spacing:-1.2px;
 }
 .offline-desc{
   margin-top:8px;
   font-size:12px;
-  line-height:1.38;
-  color:rgba(255,255,255,.84);
-  max-width:88%;
+  line-height:1.4;
+  color:rgba(255,255,255,.88);
+  max-width:90%;
 }
 
 .arrow-chip{
   position:absolute;
   right:16px;
   bottom:16px;
-  width:42px;
-  height:42px;
+  width:45px;
+  height:45px;
   border-radius:50%;
-  background:rgba(255,255,255,.14);
-  border:1px solid rgba(255,255,255,.16);
+  background:rgba(255,255,255,.15);
+  border:1px solid rgba(255,255,255,.18);
+  transition: background 0.2s;
+}
+.offline-card:hover .arrow-chip {
+    background: rgba(255,255,255, 0.25);
 }
 .arrow-chip::before{
   content:"";
   position:absolute;
-  left:13px;
+  left:14px;
   top:50%;
-  width:12px;
-  height:12px;
-  border-top:2px solid rgba(255,255,255,.86);
-  border-right:2px solid rgba(255,255,255,.86);
+  width:14px;
+  height:14px;
+  border-top:2.5px solid rgba(255,255,255,.9);
+  border-right:2.5px solid rgba(255,255,255,.9);
   transform:translateY(-50%) rotate(45deg);
 }
 
-@keyframes rotateOrb{
-  from{ transform:rotate(0); }
-  to{ transform:rotate(360deg); }
-}
-@keyframes orbBreath{
-  0%,100%{ transform:scale(1); }
-  50%{ transform:scale(1.05); }
-}
-@keyframes scanBar{
-  0%{ transform:translateY(0); opacity:.82; }
-  50%{ opacity:1; }
-  100%{ transform:translateY(82px); opacity:.82; }
-}
-@keyframes hudPulse{
-  0%{ transform:translate(-50%,-50%) scale(.78); opacity:.7; }
-  100%{ transform:translate(-50%,-50%) scale(1.45); opacity:0; }
+/* --- YENİ ANİMASYONLAR --- */
+
+/* 3D Kristal Dönüşü */
+@keyframes rotateCrystal {
+  from { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
+  to { transform: rotateX(360deg) rotateY(720deg) rotateZ(360deg); }
 }
 
+/* QR Kod Yüzme Efekti */
+@keyframes floatQR {
+  0%, 100% { transform: translateY(0) rotateX(0deg); }
+  50% { transform: translateY(-10px) rotateX(5deg); }
+}
+
+/* QR Kod Hafif Glitch (Şaşırtıcı Efekt) */
+@keyframes glitchQR {
+  0%, 90%, 100% { opacity: 1; transform: scale(1); filter: hue-rotate(180deg); }
+  92% { opacity: 0.8; transform: scale(1.03) skewX(2deg); filter: hue-rotate(220deg); }
+  94% { opacity: 1; transform: scale(1) skewX(-2deg); }
+}
+
+/* Hologram Işın Akışı */
+@keyframes beamFlow {
+  from { background-position: 0 0; }
+  to { background-position: 0 50px; }
+}
+
+/* Zemin Enerji Nabzı */
+@keyframes platformPulse {
+  0%, 100% { transform: translateX(-50%) rotateX(75deg) scale(1); opacity: 0.6; }
+  50% { transform: translateX(-50%) rotateX(75deg) scale(1.1); opacity: 0.8; }
+}
+
+/* Mevcut HUD Nabız */
+@keyframes hudPulse{
+  0%{ transform:translate(-50%,-50%) scale(.75); opacity:.8; }
+  100%{ transform:translate(-50%,-50%) scale(1.5); opacity:0; }
+}
+
+/* MEDIA QUERIES */
 @media (max-width:390px){
+  .holo-container { width: 160px; height: 160px; margin-bottom: 10px; }
+  .crystal-cage { width: 110px; height: 110px; }
+  .side1 { transform: rotateY(0deg) translateZ(55px); }
+  .side2 { transform: rotateY(90deg) translateZ(55px); }
+  .side3 { transform: rotateY(180deg) translateZ(55px); }
+  .side4 { transform: rotateY(270deg) translateZ(55px); }
+  .side5 { transform: rotateX(90deg) translateZ(55px); }
+  .side6 { transform: rotateX(-90deg) translateZ(55px); }
+  .holo-qr { width: 70px; height: 70px; }
+  .energy-platform { width: 130px; height: 130px; bottom: -20px;}
+
+  .heroTitle{ font-size:20px; }
   .card-title{ font-size:25px; }
   .offline-title{ font-size:25px; }
-  .mod-card{ min-height:198px; }
+  .mod-card{ min-height:200px; padding: 16px 14px 12px;}
+  .card-art { height: 75px; }
 }
 </style>
 </head>
@@ -505,32 +548,38 @@ body{
 <main id="pageContent">
   <section class="hero">
     <div class="heroTop">
-      <div class="neural-orb">
-        <div class="ai-ring"></div>
-        <div class="orbit-energy">
-          <div class="e-ball ball-l"></div>
-          <div class="e-ball ball-b"></div>
+      
+      <div class="holo-container">
+        
+        <div class="crystal-cage">
+          <div class="crystal-side side1"></div>
+          <div class="crystal-side side2"></div>
+          <div class="crystal-side side3"></div>
+          <div class="crystal-side side4"></div>
+          <div class="crystal-side side5"></div>
+          <div class="crystal-side side6"></div>
         </div>
 
-        <div class="ai-core">
-          <div class="qrFrame">
-            <img id="smallQrImg" alt="italkyAI QR">
-          </div>
-          <div class="qrScan"></div>
+        <div class="holo-qr">
+          <img id="smallQrImg" alt="italkyAI QR Hologram">
         </div>
+
+        <div class="holo-beams"></div>
+
+        <div class="energy-platform"></div>
       </div>
 
-      <h1 class="heroTitle">SideToSide <span class="ai">QR</span></h1>
-      <p class="heroSub">Okut, bağlan, konuş. İki cihaz arasında hızlı ve güvenli çeviri akışı.</p>
+      <h1 class="heroTitle">SideToSide <span class="ai">Future QR</span></h1>
+      <p class="heroSub">Hologramı tarat, anında bağlan. Cihazlar arası fütüristik çeviri akışı.</p>
     </div>
   </section>
 
   <section class="home-grid">
 
     <a class="mod-card face-card" href="/facetoface.html">
-      <div class="card-topline">Tek Telefon</div>
+      <div class="card-topline">Tek Telefon / Bölünmüş Ekran</div>
       <h2 class="card-title">FaceToFace</h2>
-      <p class="card-desc">Yüz yüze konuşmalarda ekran bölünür ve akış anında başlar.</p>
+      <p class="card-desc">Yüz yüze iletişimde ekran bölünür, çeviri akışı anında başlar.</p>
 
       <div class="card-art face-art">
         <div class="face-link"></div>
@@ -541,9 +590,9 @@ body{
     </a>
 
     <a class="mod-card all-card" href="/pages/f2f_connect.html">
-      <div class="card-topline">Toplu Akış</div>
+      <div class="card-topline">Toplu Akış / Meeting</div>
       <h2 class="card-title">AllToAll</h2>
-      <p class="card-desc">Çok kişili konuşmalarda ortak çeviri ve meeting düzeni.</p>
+      <p class="card-desc">Çok kişili toplantılarda ortak çeviri ve dinamik meeting düzeni.</p>
 
       <div class="card-art all-art">
         <div class="all-ray r1"></div>
@@ -571,9 +620,9 @@ body{
       </div>
 
       <div class="offline-body">
-        <div class="card-topline">Çevrimdışı Paketler</div>
+        <div class="card-topline">Yerel Paketler</div>
         <h2 class="offline-title">Offline Hub</h2>
-        <p class="offline-desc">Dil paketlerini indir, yönet ve internet olmadan kullan.</p>
+        <p class="offline-desc">Dil paketlerini yönet, indir ve internet olmadan kullan.</p>
       </div>
 
       <div class="arrow-chip"></div>
@@ -583,6 +632,7 @@ body{
 </main>
 
 <script type="module">
+// Shell ve Supabase JS kısımları aynı kalıyor.
 import { mountShell } from "/js/ui_shell.js";
 import { supabase } from "/js/supabase_client.js";
 
@@ -660,6 +710,7 @@ function buildJoinUrl(hostCode){
 }
 
 function buildQrImageUrl(targetUrl){
+  // QR kodunun kendisi API'den gelmeye devam ediyor ama biz CSS ile onu fütüristik gösteriyoruz.
   return `https://api.qrserver.com/v1/create-qr-code/?size=520x520&margin=6&data=${encodeURIComponent(targetUrl)}`;
 }
 
