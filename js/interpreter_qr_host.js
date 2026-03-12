@@ -1,7 +1,7 @@
 // FILE: /js/interpreter_qr_host.js
 import { mountShell } from "/js/ui_shell.js";
 
-const API_BASE = "https://italky-api.onrender.com";
+const API_BASE = "https://italky-api.onrender.com/api";
 
 mountShell({ scroll: "auto" });
 
@@ -75,6 +75,7 @@ async function createRoom(myLang) {
   if (!r.ok || !j?.ok || !j?.room_id) {
     throw new Error(j?.detail || j?.error || "room_create_failed");
   }
+
   return j;
 }
 
@@ -85,13 +86,14 @@ async function fetchRoomInfo(roomId) {
   if (!r.ok || !j?.ok) {
     throw new Error(j?.detail || j?.error || "room_fetch_failed");
   }
+
   return j;
 }
 
 function buildGuestJoinUrl(roomId) {
   const url = new URL("/pages/interpreter_join.html", location.origin);
   url.searchParams.set("room", roomId);
-  url.searchParams.set("v","1");
+  url.searchParams.set("v", "1");
   return url.toString();
 }
 
@@ -114,7 +116,6 @@ async function watchPairing(roomId, hostCode, myLang) {
 
     try {
       const info = await fetchRoomInfo(roomId);
-      console.log("[HOST ROOM INFO]", info);
 
       if (info?.status === "active" && info?.guest_lang) {
         setPairedUI();
@@ -136,6 +137,7 @@ async function watchPairing(roomId, hostCode, myLang) {
     } catch (e) {
       console.warn("[pair check]", e);
     }
+
     return false;
   }
 
@@ -176,6 +178,7 @@ async function init() {
     if (qrBox) {
       qrBox.innerHTML = `<div style="padding:18px;color:#111;text-align:center;font:800 13px Outfit,sans-serif;">Oda oluşturulamadı.</div>`;
     }
+
     if (pairText) pairText.textContent = "Bağlantı hazırlanamadı.";
   }
 
