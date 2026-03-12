@@ -1,3 +1,4 @@
+import { installAutoTranslate } from "/js/system_lang.js";
 import { STORAGE_KEY } from "/js/config.js";
 
 const LOADING_OVERLAY_HTML = `
@@ -24,12 +25,12 @@ const LOADING_OVERLAY_HTML = `
 
 const HOME_HEADER_HTML = `
 <header class="premium-header" id="italkyHeader">
-  <div class="brand-group" id="brandHome" style="cursor:pointer;">
+  <div class="brand-group" id="brandHome" style="cursor:pointer;" data-no-translate="1">
     <h1>
       <span>italky</span>
       <span class="ai">AI</span>
     </h1>
-    <div class="brand-slogan">BE FREE</div>
+    <div class="brand-slogan" data-no-translate="1">BE FREE</div>
   </div>
 
   <button class="menu-btn" id="menuBtn" aria-label="Menü" type="button">
@@ -50,7 +51,7 @@ const HOME_HEADER_HTML = `
         </div>
 
         <div class="menu-user-meta">
-          <div class="menu-brandline">
+          <div class="menu-brandline" data-no-translate="1">
             <span class="menu-brand-main">italky</span>
             <span class="menu-brand-ai">AI</span>
           </div>
@@ -85,13 +86,13 @@ const HOME_HEADER_HTML = `
       <button class="menu-action danger" id="deleteAccountBtn" type="button">Hesabımı Sil</button>
     </nav>
 
-    <div class="menu-sign">italkyAI By Ozyigit's • 2026</div>
+    <div class="menu-sign" data-no-translate="1">italkyAI By Ozyigit's • 2026</div>
   </div>
 </aside>`;
 
 const HOME_FOOTER_HTML = `
 <footer class="premium-footer" id="italkyFooter">
-  <div class="signature">italkyAI By Ozyigit's • 2026</div>
+  <div class="signature" data-no-translate="1">italkyAI By Ozyigit's • 2026</div>
 </footer>`;
 
 const SHELL_CSS = `
@@ -490,6 +491,8 @@ body.ui-menu-open{
 }
 `;
 
+let __shellAutoTranslateInstalled = false;
+
 export function mountShell(options = {}) {
   document.documentElement.style.backgroundColor = "#05070f";
 
@@ -545,6 +548,16 @@ function finishMount(options) {
     document.body.classList.add("ui-ready");
     hydrateFromCache();
     syncFooterHeight();
+
+    try {
+      if (!__shellAutoTranslateInstalled) {
+        installAutoTranslate(document.body);
+        __shellAutoTranslateInstalled = true;
+      }
+    } catch (e) {
+      console.warn("[system lang install]", e);
+    }
+
     setTimeout(removeOverlaySoon, 100);
   });
 }
@@ -587,6 +600,12 @@ function bindMenu() {
     location.href = "/pages/jeton-nedir.html";
   });
 
+  sideMenu.querySelectorAll(".menu-nav a").forEach((link) => {
+    link.addEventListener("click", () => {
+      closeMenu();
+    });
+  });
+
   logoutBtn?.addEventListener("click", async () => {
     try {
       closeMenu();
@@ -623,6 +642,7 @@ export function hydrateFromCache() {
     const picEl = document.getElementById("menuUserPic");
     if (picEl && pic) {
       picEl.src = pic;
+      picEl.referrerPolicy = "no-referrer";
     }
 
     const jetonEl = document.getElementById("menuHeaderJeton");
