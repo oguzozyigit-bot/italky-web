@@ -3,156 +3,642 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-<title>italkyAI • Quantum OS V7</title>
+<title>italkyAI • Translate AI Hub</title>
+
+<meta name="theme-color" content="#050510"/>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
 <style>
-  /* ⚡ KRİTİK: Sayfa yüklenirken göz kırpmayı önleyen stil */
-  html { background: #020205 !important; } 
-  body { 
-    margin: 0; 
-    opacity: 0; 
-    background: #020205;
-    /* JS'de hata olursa 1 saniye sonra zorla gösterir */
-    animation: fadeInSafe 0.4s ease forwards;
-    animation-delay: 0.1s;
-  } 
-  @keyframes fadeInSafe { to { opacity: 1; } }
-  body.ui-ready { opacity: 1 !important; animation: none; }
-</style>
+:root{
+  --txt:rgba(255,255,255,.96);
+  --muted:rgba(255,255,255,.58);
+  --line:rgba(255,255,255,.10);
+  --glass:rgba(255,255,255,.05);
+  --glass-strong:rgba(255,255,255,.07);
+  --ai-grad:linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
+  --blue:#60a5fa;
+  --orange:#fb923c;
+  --purple:#a855f7;
+}
 
-<link rel="modulepreload" href="/js/ui_shell.js">
+*{
+  box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
+  outline:none;
+}
 
-<style>
-  :root {
-    --bg-dark: #020205;
-    --accent-blue: #00d2ff;
-    --accent-purple: #9d50bb;
-    --accent-green: #39ff14;
-    --glass: rgba(255, 255, 255, 0.03);
-    --glass-border: rgba(255, 255, 255, 0.1);
-  }
+html,body{
+  margin:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  background:#000;
+  color:var(--txt);
+  font-family:'Outfit',sans-serif;
+  scrollbar-width:none;
+}
+html::-webkit-scrollbar,
+body::-webkit-scrollbar{
+  display:none;
+}
 
-  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap');
+body{
+  background:
+    radial-gradient(circle at 50% 10%, rgba(99,102,241,.20) 0%, rgba(0,0,0,0) 24%),
+    radial-gradient(circle at 20% 16%, rgba(96,165,250,.08) 0%, rgba(0,0,0,0) 20%),
+    radial-gradient(circle at 80% 16%, rgba(236,72,153,.08) 0%, rgba(0,0,0,0) 16%),
+    linear-gradient(180deg, #090919 0%, #020207 100%);
+}
 
-  html, body { 
-    background: var(--bg-dark); margin: 0; padding: 0; 
-    height: 100vh; width: 100vw; overflow: hidden; 
-    font-family: 'Outfit', sans-serif; color: white;
-  }
+#pageContent{
+  width:100%;
+  height:100%;
+  max-width:560px;
+  margin:0 auto;
+  padding:
+    calc(var(--headerH,72px) + env(safe-area-inset-top) + 2px)
+    14px
+    calc(var(--footerH,92px) + env(safe-area-inset-bottom) + 6px);
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  overflow:hidden;
+}
 
-  #pageContent {
-    height: 100%; width: 100%;
-    display: flex; flex-direction: column;
-    background: radial-gradient(circle at 50% 50%, #0a0a20 0%, #020205 100%);
-  }
+/* HERO */
+.hero{
+  flex:0 0 auto;
+  padding-top:0;
+  padding-bottom:0;
+}
 
-  .main-hub {
-    flex: 1; display: flex; flex-direction: column;
-    padding: 10px 15px; 
-    gap: 10px;
-  }
+.heroTop{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+}
 
-  .os-card {
-    position: relative; flex: 1;
-    background: var(--glass);
-    border: 1px solid var(--glass-border);
-    border-radius: 24px;
-    display: flex; align-items: center;
-    padding: 20px 25px; overflow: hidden;
-    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-    transition: all 0.4s cubic-bezier(0.15, 1, 0.3, 1);
-  }
-  .os-card:active { transform: scale(0.97); background: rgba(255,255,255,0.06); }
+.neural-orb{
+  width:176px;
+  height:176px;
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
 
-  .card-info { flex: 1; z-index: 10; display: flex; flex-direction: column; justify-content: center; }
-  .card-info h2 { font-size: 26px; font-weight: 800; margin: 0 0 8px 0; letter-spacing: -0.5px; }
-  
-  .desc-list { margin: 0; padding: 0; list-style: none; }
-  .desc-list li { 
-    font-size: 13px; color: rgba(255,255,255,0.5); 
-    margin-bottom: 4px; display: flex; align-items: center; gap: 6px;
-  }
-  .desc-list li::before { content: "•"; color: var(--theme); font-weight: bold; }
+.ai-ring{
+  position:absolute;
+  inset:-3px;
+  border-radius:50%;
+  padding:2px;
+  background:var(--ai-grad);
+  -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite:xor;
+  mask-composite:exclude;
+  animation:rotateOrb 18s linear infinite;
+}
 
-  .visual-engine { position: relative; width: 90px; height: 90px; display: flex; align-items: center; justify-content: center; }
-  .plasma-glow { position: absolute; width: 100%; height: 100%; background: var(--theme); filter: blur(25px); opacity: 0.2; animation: plasmaRotate 6s infinite linear; }
-  .icon-shape { width: 45px; height: 45px; position: relative; z-index: 15; filter: drop-shadow(0 0 10px var(--theme)); animation: float 4s infinite ease-in-out; }
+.orbit-energy{
+  position:absolute;
+  inset:-15px;
+  border-radius:50%;
+  animation:rotateOrb 9s linear infinite reverse;
+}
 
-  .shape-translate { border: 4px double var(--theme); border-radius: 50%; animation: spin 8s infinite linear; }
-  .shape-academy { background: var(--theme); clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); opacity: 0.8; }
-  .shape-teacher { background: var(--theme); border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; animation: morph 5s infinite alternate; }
+.e-ball{
+  position:absolute;
+  width:12px;
+  height:12px;
+  border-radius:50%;
+  filter:blur(.4px);
+}
 
-  .blue-node { --theme: var(--accent-blue); }
-  .purple-node { --theme: var(--accent-purple); }
-  .green-node { --theme: var(--accent-green); }
-  .theme-text { color: var(--theme); filter: brightness(1.2); }
+.ball-l{
+  top:-5px;
+  left:50%;
+  transform:translateX(-50%);
+  background:#3b82f6;
+  box-shadow:0 0 18px #3b82f6;
+}
 
-  @keyframes plasmaRotate { from { transform: rotate(0deg) scale(1); } to { transform: rotate(360deg) scale(1.2); } }
-  @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  @keyframes morph { 0% { border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; } 100% { border-radius: 50% 50% 20% 80% / 25% 80% 20% 75%; } }
+.ball-b{
+  bottom:-5px;
+  left:50%;
+  transform:translateX(-50%);
+  background:#ec4899;
+  box-shadow:0 0 18px #ec4899;
+}
+
+.ai-core{
+  width:128px;
+  height:128px;
+  position:relative;
+  border-radius:50%;
+  background:#000;
+  border:2px solid transparent;
+  background-image:linear-gradient(#000,#000), var(--ai-grad);
+  background-origin:border-box;
+  background-clip:content-box,border-box;
+  z-index:2;
+  box-shadow:
+    0 18px 42px rgba(0,0,0,.42),
+    0 0 34px rgba(99,102,241,.14);
+  overflow:hidden;
+  animation:orbBreath 4.2s ease-in-out infinite;
+}
+
+.qrFrame{
+  position:absolute;
+  inset:16px;
+  border-radius:18px;
+  overflow:hidden;
+  background:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.qrFrame img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+
+.qrScan{
+  position:absolute;
+  left:10px;
+  right:10px;
+  top:12px;
+  height:2px;
+  border-radius:999px;
+  background:linear-gradient(90deg, rgba(255,255,255,0), #a5b4fc, rgba(255,255,255,0));
+  box-shadow:0 0 14px rgba(165,180,252,.7);
+  animation:scanBar 2.8s linear infinite;
+  z-index:4;
+}
+
+.heroTitle{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:21px;
+  font-weight:700;
+  letter-spacing:-.35px;
+  color:#fff;
+  margin:0;
+  line-height:1.05;
+}
+
+.heroTitle .ai{
+  background:var(--ai-grad);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+
+.heroSub{
+  margin:0;
+  font-size:10.6px;
+  color:var(--muted);
+  text-align:center;
+  line-height:1.32;
+  max-width:316px;
+}
+
+/* KARTLAR */
+.hub-cards{
+  flex:1;
+  min-height:0;
+  display:flex;
+  flex-direction:column;
+  justify-content:flex-start;
+  gap:8px;
+  margin-top:2px;
+}
+
+.trans-card{
+  flex:0 0 auto;
+  height:68px;
+  position:relative;
+  border-radius:22px;
+  border:1px solid var(--line);
+  overflow:hidden;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  gap:14px;
+  padding:0 15px;
+  background:var(--glass);
+  backdrop-filter:blur(24px);
+  -webkit-backdrop-filter:blur(24px);
+  transition:transform .22s ease, filter .22s ease, border-color .22s ease;
+  box-shadow:0 12px 24px rgba(0,0,0,.18);
+}
+
+.trans-card:active{
+  transform:scale(.986);
+  filter:brightness(1.08);
+}
+
+.trans-card:hover{
+  border-color:rgba(255,255,255,.15);
+}
+
+.face-card{
+  background:linear-gradient(145deg, rgba(96,165,250,.13) 0%, rgba(0,0,0,.52) 100%);
+}
+.text-card{
+  background:linear-gradient(145deg, rgba(165,180,252,.13) 0%, rgba(0,0,0,.52) 100%);
+}
+.meeting-card{
+  background:linear-gradient(145deg, rgba(251,146,60,.13) 0%, rgba(0,0,0,.52) 100%);
+}
+.offline-card{
+  background:linear-gradient(145deg, rgba(168,85,247,.13) 0%, rgba(0,0,0,.52) 100%);
+}
+
+.ico-box{
+  width:48px;
+  height:48px;
+  position:relative;
+  flex:0 0 auto;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:16px;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.06);
+  box-shadow:inset 0 0 18px rgba(255,255,255,.02);
+}
+
+/* FaceToFace premium bars */
+.face-bars{
+  width:30px;
+  height:28px;
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  gap:3px;
+}
+.face-bar{
+  width:5px;
+  border-radius:8px;
+  background:linear-gradient(180deg, rgba(147,197,253,1), rgba(59,130,246,.95));
+  box-shadow:0 0 10px rgba(96,165,250,.35);
+  animation:eqPulse .72s infinite alternate;
+}
+.face-bar:nth-child(1){ height:32%; animation-delay:.08s; }
+.face-bar:nth-child(2){ height:68%; animation-delay:.18s; }
+.face-bar:nth-child(3){ height:92%; animation-delay:.28s; }
+.face-bar:nth-child(4){ height:58%; animation-delay:.12s; }
+.face-bar:nth-child(5){ height:80%; animation-delay:.22s; }
+
+/* TextToText premium */
+.text-blocks{
+  width:30px;
+  height:24px;
+  border:1px solid rgba(165,180,252,.48);
+  border-radius:8px;
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+  padding:4px;
+  position:relative;
+  overflow:hidden;
+  background:rgba(255,255,255,.02);
+}
+.text-line{
+  height:2px;
+  background:rgba(255,255,255,.26);
+  border-radius:2px;
+  animation:textTyping 2s infinite alternate;
+}
+.text-line:nth-child(1){ animation-delay:0s; }
+.text-line:nth-child(2){ animation-delay:.2s; }
+.text-line:nth-child(3){ animation-delay:.4s; }
+.text-line:nth-child(4){ animation-delay:.6s; }
+.text-scan{
+  position:absolute;
+  top:0;
+  left:0;
+  width:100%;
+  height:2px;
+  background:#a5b4fc;
+  box-shadow:0 0 12px rgba(165,180,252,.85);
+  animation:scanLine 2.5s linear infinite;
+}
+
+/* Meeting premium */
+.meeting-rings{
+  width:30px;
+  height:30px;
+  position:relative;
+}
+.meeting-ring{
+  position:absolute;
+  border:2px solid rgba(251,146,60,.88);
+  border-radius:999px;
+  animation:roomPulse 2s infinite ease-out;
+}
+.meeting-ring.r1{ inset:8px; animation-delay:0s; }
+.meeting-ring.r2{ inset:4px; animation-delay:.35s; }
+.meeting-ring.r3{ inset:0; animation-delay:.7s; }
+.meeting-core{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  transform:translate(-50%,-50%);
+  background:var(--orange);
+  box-shadow:0 0 16px rgba(251,146,60,.85);
+}
+
+/* Offline premium */
+.file-stack{
+  width:30px;
+  height:30px;
+  position:relative;
+}
+.file-sheet{
+  position:absolute;
+  width:16px;
+  height:22px;
+  border-radius:6px;
+  border:1px solid rgba(168,85,247,.55);
+  background:rgba(168,85,247,.08);
+  box-shadow:0 0 10px rgba(168,85,247,.16);
+}
+.file-sheet.s1{ left:4px; top:5px; transform:rotate(-8deg); }
+.file-sheet.s2{ left:12px; top:3px; transform:rotate(6deg); }
+.file-line{
+  position:absolute;
+  left:4px;
+  right:4px;
+  height:2px;
+  background:rgba(168,85,247,.55);
+  border-radius:2px;
+}
+.file-line.l1{ top:7px; }
+.file-line.l2{ top:11px; }
+.file-line.l3{ top:15px; }
+
+.card-content{
+  flex:1;
+  min-width:0;
+}
+
+.card-title{
+  margin:0;
+  font-family:'Space Grotesk',sans-serif;
+  font-size:15px;
+  font-weight:700;
+  color:#fff;
+  letter-spacing:-.25px;
+  line-height:1.08;
+}
+
+.card-title .ai{
+  background:var(--ai-grad);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+
+.card-desc{
+  margin-top:2px;
+  font-size:9.2px;
+  color:rgba(255,255,255,.50);
+  line-height:1.26;
+}
+
+@keyframes rotateOrb{
+  from{ transform:rotate(0); }
+  to{ transform:rotate(360deg); }
+}
+@keyframes orbBreath{
+  0%,100%{ transform:scale(1); }
+  50%{ transform:scale(1.05); }
+}
+@keyframes eqPulse{
+  from{ height:16%; opacity:.7; }
+  to{ height:100%; opacity:1; }
+}
+@keyframes scanBar{
+  0%{ transform:translateY(0); opacity:.8; }
+  50%{ opacity:1; }
+  100%{ transform:translateY(82px); opacity:.8; }
+}
+@keyframes scanLine{
+  0%{ top:0; }
+  100%{ top:100%; }
+}
+@keyframes roomPulse{
+  0%{ opacity:.95; transform:scale(.8); }
+  100%{ opacity:0; transform:scale(1.18); }
+}
+@keyframes textTyping{
+  0%{ width:25%; }
+  100%{ width:100%; }
+}
 </style>
 </head>
 
 <body>
 <main id="pageContent">
-  <div class="main-hub">
-    <div class="os-card blue-node" onclick="location.href='/pages/translate_home.html'">
-      <div class="card-info">
-        <h2>Translate <span class="theme-text">AI</span></h2>
-        <ul class="desc-list">
-          <li>Sesli ve yazılı anlık çeviri</li>
-          <li>Farklı dillerde kolay iletişim</li>
-          <li>Seyahat ve günlük kullanım için</li>
-        </ul>
+  <section class="hero">
+    <div class="heroTop">
+      <div class="neural-orb">
+        <div class="ai-ring"></div>
+        <div class="orbit-energy">
+          <div class="e-ball ball-l"></div>
+          <div class="e-ball ball-b"></div>
+        </div>
+
+        <div class="ai-core">
+          <div class="qrFrame">
+            <img id="smallQrImg" alt="Interpreter QR">
+          </div>
+          <div class="qrScan"></div>
+        </div>
       </div>
-      <div class="visual-engine">
-        <div class="plasma-glow"></div>
-        <div class="icon-shape shape-translate"></div>
+
+      <h1 class="heroTitle">Interpreter <span class="ai">QR</span></h1>
+      <p class="heroSub">Okut, bağlan, konuş. Güvenlik için QR kodunu profilden yenileyebilirsin.</p>
+    </div>
+  </section>
+
+  <section class="hub-cards">
+
+    <div class="trans-card face-card" onclick="location.href='/facetoface.html'">
+      <div class="ico-box">
+        <div class="face-bars">
+          <div class="face-bar"></div>
+          <div class="face-bar"></div>
+          <div class="face-bar"></div>
+          <div class="face-bar"></div>
+          <div class="face-bar"></div>
+        </div>
+      </div>
+      <div class="card-content">
+        <h2 class="card-title">FaceToFace <span class="ai">AI</span></h2>
+        <p class="card-desc">Yüz yüze konuşmalarda iki kişilik anlık canlı çeviri deneyimi.</p>
       </div>
     </div>
 
-    <div class="os-card purple-node" onclick="location.href='/pages/acedemy_home.html'">
-      <div class="card-info">
-        <h2>Academy <span class="theme-text">AI</span></h2>
-        <ul class="desc-list">
-          <li>Dil öğrenme ve pratik araçları</li>
-          <li>Oyunlar ve interaktif eğitim</li>
-          <li>Bilgini geliştir, kendini ilerlet</li>
-        </ul>
+    <div class="trans-card text-card" onclick="location.href='/pages/text_translate.html'">
+      <div class="ico-box">
+        <div class="text-blocks">
+          <div class="text-scan"></div>
+          <div class="text-line"></div>
+          <div class="text-line"></div>
+          <div class="text-line"></div>
+          <div class="text-line"></div>
+        </div>
       </div>
-      <div class="visual-engine">
-        <div class="plasma-glow"></div>
-        <div class="icon-shape shape-academy"></div>
+      <div class="card-content">
+        <h2 class="card-title">TextToText <span class="ai">AI</span></h2>
+        <p class="card-desc">Metinleri hızlı, net ve doğal biçimde dilden dile dönüştür.</p>
       </div>
     </div>
 
-    <div class="os-card green-node" onclick="location.href='/pages/helper_home.html'">
-      <div class="card-info">
-        <h2>Teacher <span class="theme-text">AI</span></h2>
-        <ul class="desc-list">
-          <li>Soruları anlayan AI öğretmen</li>
-          <li>Fotoğraf çekerek soru çözme</li>
-          <li>Adım adım anlatımlı çözümler</li>
-        </ul>
+    <div class="trans-card meeting-card" onclick="location.href='/pages/f2f_connect.html'">
+      <div class="ico-box">
+        <div class="meeting-rings">
+          <div class="meeting-ring r1"></div>
+          <div class="meeting-ring r2"></div>
+          <div class="meeting-ring r3"></div>
+          <div class="meeting-core"></div>
+        </div>
       </div>
-      <div class="visual-engine">
-        <div class="plasma-glow"></div>
-        <div class="icon-shape shape-teacher"></div>
+      <div class="card-content">
+        <h2 class="card-title">Meeting Room</h2>
+        <p class="card-desc">Bağlantılı görüşmeler ve çok katılımcıya uygun toplantı odası akışı.</p>
       </div>
     </div>
-  </div>
+
+    <div class="trans-card offline-card" onclick="location.href='/pages/offline_languages.html'">
+      <div class="ico-box">
+        <div class="file-stack">
+          <div class="file-sheet s1">
+            <div class="file-line l1"></div>
+            <div class="file-line l2"></div>
+            <div class="file-line l3"></div>
+          </div>
+          <div class="file-sheet s2">
+            <div class="file-line l1"></div>
+            <div class="file-line l2"></div>
+            <div class="file-line l3"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card-content">
+        <h2 class="card-title">Offline Files</h2>
+        <p class="card-desc">İndirilen dil paketleri ve çevrimdışı kullanım dosyalarını yönet.</p>
+      </div>
+    </div>
+
+  </section>
 </main>
 
 <script type="module">
-  import { mountShell } from "/js/ui_shell.js";
-  // ⚡ Hem shell yükle hem de görünürlüğü tetikle
-  try {
-    mountShell({ scroll:"none" });
-  } catch(e) {
-    console.error("Shell error:", e);
-    document.body.classList.add('ui-ready');
+import { mountShell } from "/js/ui_shell.js";
+import { supabase } from "/js/supabase_client.js";
+
+try{
+  mountShell({ scroll:"none" });
+}catch(e){
+  console.warn("[home shell]", e);
+}
+
+const smallQrImg = document.getElementById("smallQrImg");
+
+const HOST_CODE_KEY = "italky_interpreter_host_code";
+const QR_VERSION_KEY = "italky_interpreter_qr_version";
+
+function slugify(value){
+  return String(value || "")
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "")
+    .slice(0, 12);
+}
+
+function randomCode(){
+  return Math.random().toString(36).slice(2, 10).toUpperCase();
+}
+
+async function getCurrentUser(){
+  try{
+    const { data } = await supabase.auth.getUser();
+    return data?.user || null;
+  }catch{
+    return null;
   }
+}
+
+function getStoredQrVersion(){
+  return localStorage.getItem(QR_VERSION_KEY) || "1";
+}
+
+async function ensureStableHostCode(){
+  const existing = localStorage.getItem(HOST_CODE_KEY);
+  if(existing && String(existing).trim()) return String(existing).trim();
+
+  const user = await getCurrentUser();
+
+  const candidates = [
+    localStorage.getItem("membership_no"),
+    localStorage.getItem("uyelik_no"),
+    localStorage.getItem("member_no"),
+    user?.user_metadata?.membership_no,
+    user?.user_metadata?.member_no,
+    user?.user_metadata?.user_no,
+    user?.id,
+    user?.email?.split("@")?.[0]
+  ];
+
+  let base = "";
+  for(const c of candidates){
+    const s = slugify(c);
+    if(s && s.length >= 6){
+      base = s.slice(0, 10);
+      break;
+    }
+  }
+
+  if(!base) base = randomCode();
+
+  const hostCode = `ITK-${base}`;
+  localStorage.setItem(HOST_CODE_KEY, hostCode);
+  return hostCode;
+}
+
+// FILE: /pages/home.html
+function buildJoinUrl(hostCode){
+  const version = localStorage.getItem("italky_interpreter_qr_version") || "1";
+  const url = new URL("https://italky.ai/open/interpreter");
+url.searchParams.set("host", hostCode);
+url.searchParams.set("v", version);
+return url.toString();
+}
+
+function buildQrImageUrl(targetUrl){
+  return `https://api.qrserver.com/v1/create-qr-code/?size=520x520&margin=6&data=${encodeURIComponent(targetUrl)}`;
+}
+
+async function bootQr(){
+  const hostCode = await ensureStableHostCode();
+  const joinUrl = buildJoinUrl(hostCode);
+  const qrUrl = buildQrImageUrl(joinUrl);
+  if(smallQrImg) smallQrImg.src = qrUrl;
+}
+
+bootQr();
 </script>
 </body>
 </html>
