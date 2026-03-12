@@ -1,238 +1,519 @@
 <!doctype html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>italkyAI • Sesini Tanıt</title>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+<title>italkyAI • Jeton Market</title>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
-  <style>
-    :root {
-      --txt: rgba(255,255,255,.96);
-      --muted: rgba(255,255,255,.50);
-      --ai-grad: linear-gradient(135deg, #67e8f9 0%, #818cf8 46%, #f472b6 100%);
-      --panel-bg: rgba(255, 255, 255, 0.03);
-      --panel-border: rgba(255, 255, 255, 0.08);
-      --accent: #818cf8;
-    }
+<style>
+:root{
+  --txt: rgba(255,255,255,.96);
+  --muted: rgba(255,255,255,.52);
+  --ai-grad: linear-gradient(135deg, #67e8f9 0%, #818cf8 46%, #f472b6 100%);
+  --panel-bg: rgba(255,255,255,.04);
+  --panel-bg-strong: rgba(255,255,255,.06);
+  --panel-border: rgba(255,255,255,.08);
+  --accent: #67e8f9;
+  --success: #67e8f9;
+}
 
-    html, body {
-      margin: 0; padding: 0;
-      background: #02000f;
-      color: var(--txt);
-      font-family: 'Outfit', sans-serif;
-      height: 100%;
-      overflow: hidden;
-    }
+*{
+  box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
+  outline:none;
+}
 
-    /* Arka Plan Efekti */
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      background: radial-gradient(circle at 50% 0%, rgba(129, 140, 248, 0.12) 0%, transparent 50%);
-      z-index: -1;
-    }
+html,body{
+  margin:0;
+  width:100%;
+  height:100%;
+  font-family:'Outfit',sans-serif;
+  color:var(--txt);
+  background:#02000f;
+}
 
-    #pageContent {
-      height: 100vh;
-      overflow-y: auto;
-      padding: calc(var(--headerH, 70px) + 15px) 16px calc(var(--footerH, 80px) + 20px);
-      max-width: 500px;
-      margin: 0 auto;
-      scrollbar-width: none;
-    }
-    #pageContent::-webkit-scrollbar { display: none; }
+body{
+  background:
+    radial-gradient(circle at 50% -10%, rgba(99,102,241,.15) 0%, transparent 50%),
+    radial-gradient(circle at 0% 100%, rgba(236,72,153,.10) 0%, transparent 40%),
+    linear-gradient(180deg, #040312 0%, #09061a 100%);
+}
 
-    /* Üst Bar */
-    .top-nav {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-      margin-bottom: 20px;
-    }
+#pageContent{
+  max-width:500px;
+  margin:0 auto;
+  padding:14px 16px 22px;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
 
-    .back-btn {
-      width: 40px; height: 40px;
-      border-radius: 12px;
-      background: var(--panel-bg);
-      border: 1px solid var(--panel-border);
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer;
-    }
-    .back-btn svg { width: 20px; height: 20px; stroke: #fff; fill: none; stroke-width: 2.5; }
+.market-head{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
 
-    .title { font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 700; margin: 0; }
+.page-kicker{
+  display:inline-flex;
+  width:max-content;
+  align-items:center;
+  gap:8px;
+  padding:8px 12px;
+  border-radius:999px;
+  background:rgba(255,255,255,.05);
+  border:1px solid var(--panel-border);
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:.4px;
+  color:rgba(255,255,255,.82);
+}
 
-    /* İlerleme Çubuğu */
-    .progress-container { margin-bottom: 20px; }
-    .progress-info { display: flex; justify-content: space-between; font-size: 11px; font-weight: 800; margin-bottom: 6px; color: var(--muted); letter-spacing: 1px; }
-    .progress-bar { height: 4px; background: rgba(255,255,255,0.05); border-radius: 10px; overflow: hidden; }
-    .progress-fill { height: 100%; background: var(--ai-grad); width: 16.6%; transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 10px var(--accent); }
+.page-title{
+  margin:0;
+  font-family:'Space Grotesk',sans-serif;
+  font-size:28px;
+  line-height:1;
+  letter-spacing:-1px;
+  font-weight:700;
+}
 
-    /* Cümle Kartı (Hologram Efekti) */
-    .sample-card {
-      background: linear-gradient(145deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01));
-      border: 1px solid var(--panel-border);
-      border-radius: 28px;
-      padding: 30px 20px;
-      text-align: center;
-      position: relative;
-      margin-bottom: 30px;
-      backdrop-filter: blur(15px);
-    }
-    .sample-label { font-size: 10px; font-weight: 900; color: var(--accent); letter-spacing: 2px; margin-bottom: 15px; display: block; }
-    .sample-text { font-size: 22px; font-weight: 800; line-height: 1.4; color: #fff; min-height: 80px; display: flex; align-items: center; justify-content: center; }
+.page-title .ai{
+  background:var(--ai-grad);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
 
-    /* Mikrofon ve Dalga Animasyonu */
-    .mic-section {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 15px;
-      margin-bottom: 30px;
-    }
+.page-sub{
+  margin:0;
+  font-size:12px;
+  line-height:1.45;
+  color:var(--muted);
+}
 
-    .mic-btn-wrapper {
-      position: relative;
-      width: 100px; height: 100px;
-    }
+.balance-card{
+  background:var(--ai-grad);
+  border-radius:28px;
+  padding:20px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  box-shadow:0 15px 35px rgba(129,140,248,.22);
+  position:relative;
+  overflow:hidden;
+}
 
-    .mic-btn {
-      width: 100%; height: 100%;
-      border-radius: 50%;
-      background: #12121a;
-      border: 2px solid var(--panel-border);
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer;
-      z-index: 10; position: relative;
-      transition: all 0.3s;
-    }
+.balance-card::after{
+  content:"";
+  position:absolute;
+  inset:auto -30px -40px auto;
+  width:120px;
+  height:120px;
+  border-radius:50%;
+  background:rgba(255,255,255,.12);
+  filter:blur(10px);
+}
 
-    .mic-btn svg { width: 35px; height: 35px; stroke: #fff; fill: none; transition: all 0.3s; }
+.balance-info{
+  position:relative;
+  z-index:2;
+}
 
-    /* Kayıt Sırasındaki Efektler */
-    .mic-btn.listening { border-color: #f472b6; box-shadow: 0 0 20px rgba(244, 114, 182, 0.3); }
-    .mic-btn.listening svg { stroke: #f472b6; transform: scale(1.1); }
+.balance-info h3{
+  margin:0;
+  font-size:12px;
+  opacity:.86;
+  text-transform:uppercase;
+  font-weight:800;
+  letter-spacing:.5px;
+}
 
-    .wave {
-      position: absolute;
-      inset: 0;
-      border: 2px solid #818cf8;
-      border-radius: 50%;
-      opacity: 0;
-      pointer-events: none;
-    }
+.balance-info .val{
+  margin-top:6px;
+  font-size:34px;
+  font-weight:900;
+  font-family:'Space Grotesk',sans-serif;
+  line-height:1;
+}
 
-    .listening .wave { animation: voiceWave 1.5s infinite; }
-    .listening .wave:nth-child(2) { animation-delay: 0.5s; }
+.balance-info .sub{
+  margin-top:6px;
+  font-size:11px;
+  color:rgba(255,255,255,.86);
+  font-weight:700;
+}
 
-    @keyframes voiceWave {
-      0% { transform: scale(1); opacity: 0.5; }
-      100% { transform: scale(1.8); opacity: 0; }
-    }
+.balance-card .ico{
+  position:relative;
+  z-index:2;
+  width:54px;
+  height:54px;
+  background:rgba(255,255,255,.20);
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:24px;
+  backdrop-filter:blur(10px);
+  border:1px solid rgba(255,255,255,.18);
+}
 
-    .timer { font-family: 'Space Grotesk'; font-size: 20px; font-weight: 700; color: var(--muted); }
-    .status-msg { font-size: 13px; font-weight: 600; color: var(--accent); }
+.pkg-grid{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
 
-    /* Alt Butonlar */
-    .action-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 12px;
-    }
+.pkg{
+  position:relative;
+  background:var(--panel-bg);
+  border:1px solid var(--panel-border);
+  border-radius:24px;
+  padding:18px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  cursor:pointer;
+  transition:transform .18s ease, background .18s ease, border-color .18s ease;
+  overflow:hidden;
+  backdrop-filter:blur(16px);
+}
 
-    .btn {
-      height: 54px;
-      border-radius: 18px;
-      font-family: inherit;
-      font-weight: 800;
-      font-size: 15px;
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      border: none;
-      transition: all 0.2s;
-    }
+.pkg:active{
+  transform:scale(.98);
+  background:rgba(255,255,255,.08);
+}
 
-    .btn-primary { background: var(--ai-grad); color: #000; }
-    .btn-primary:disabled { opacity: 0.2; grayscale: 1; }
+.pkg:hover{
+  border-color:rgba(255,255,255,.12);
+}
 
-    .btn-secondary { background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--panel-border); }
+.pkg.best{
+  border-color:rgba(129,140,248,.34);
+  background:linear-gradient(145deg, rgba(255,255,255,.06), rgba(129,140,248,.05));
+}
 
-    .btn:active { transform: scale(0.98); }
+.best-badge{
+  position:absolute;
+  top:0;
+  right:0;
+  background:var(--ai-grad);
+  padding:5px 12px;
+  border-bottom-left-radius:14px;
+  font-size:10px;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.4px;
+}
 
-    .completed-list { margin-top: 20px; display: flex; flex-direction: column; gap: 8px; }
-    .completed-item {
-      background: rgba(255,255,255,0.02);
-      border: 1px solid var(--panel-border);
-      padding: 12px 16px;
-      border-radius: 14px;
-      display: flex; justify-content: space-between;
-      font-size: 12px; font-weight: 700;
-    }
-  </style>
+.pkg-main{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  min-width:0;
+}
+
+.pkg-icon{
+  width:50px;
+  height:50px;
+  background:rgba(255,255,255,.035);
+  border:1px solid var(--panel-border);
+  border-radius:16px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:21px;
+  flex:0 0 auto;
+}
+
+.pkg-info{
+  min-width:0;
+}
+
+.pkg-info h2{
+  margin:0;
+  font-size:18px;
+  font-weight:800;
+  line-height:1.1;
+}
+
+.pkg-info span{
+  display:block;
+  margin-top:4px;
+  font-size:11px;
+  color:var(--muted);
+  font-weight:700;
+  line-height:1.35;
+}
+
+.pkg-price{
+  text-align:right;
+  flex:0 0 auto;
+}
+
+.pkg-price .price-tag{
+  display:block;
+  font-size:18px;
+  font-weight:900;
+  color:#fff;
+  line-height:1;
+}
+
+.pkg-price .discount{
+  margin-top:5px;
+  display:block;
+  font-size:11px;
+  color:var(--success);
+  font-weight:800;
+}
+
+.footer-notes{
+  text-align:center;
+  margin-top:2px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  align-items:center;
+}
+
+.info-link{
+  display:inline-block;
+  padding:10px 18px;
+  font-size:13px;
+  font-weight:800;
+  color:var(--accent);
+  text-decoration:none;
+  border-radius:999px;
+  background:rgba(255,255,255,.04);
+  border:1px solid var(--panel-border);
+}
+
+.legal-note{
+  margin:0;
+  font-size:11px;
+  color:var(--muted);
+  line-height:1.55;
+  padding:0 10px;
+}
+
+.toast{
+  position:fixed;
+  left:50%;
+  bottom:calc(18px + env(safe-area-inset-bottom));
+  transform:translateX(-50%) translateY(20px);
+  min-width:220px;
+  max-width:90vw;
+  padding:12px 16px;
+  border-radius:14px;
+  background:rgba(12,14,28,.92);
+  color:#fff;
+  border:1px solid rgba(255,255,255,.08);
+  box-shadow:0 12px 30px rgba(0,0,0,.35);
+  text-align:center;
+  font-size:13px;
+  font-weight:700;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .25s ease, transform .25s ease;
+  z-index:999;
+}
+
+.toast.show{
+  opacity:1;
+  transform:translateX(-50%) translateY(0);
+}
+
+@keyframes reveal{
+  from{ opacity:0; transform:translateY(14px); }
+  to{ opacity:1; transform:translateY(0); }
+}
+
+.animate{
+  animation:reveal .42s ease forwards;
+  opacity:0;
+}
+
+@media (max-width:390px){
+  #pageContent{ padding:12px 14px 20px; }
+  .page-title{ font-size:25px; }
+  .balance-info .val{ font-size:30px; }
+  .pkg{ padding:16px; }
+  .pkg-info h2{ font-size:17px; }
+  .pkg-price .price-tag{ font-size:17px; }
+}
+</style>
 </head>
 <body>
 
 <div id="pageContent">
 
-  <div class="top-nav">
-    <button class="back-btn" onclick="history.back()">
-      <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
-    </button>
-    <h1 class="title">Sesini Tanıt</h1>
-  </div>
+  <section class="market-head animate" style="animation-delay:.05s;">
+    <div class="page-kicker">Jeton Market</div>
+    <h1 class="page-title">Jeton <span class="ai">Market</span></h1>
+    <p class="page-sub">Jeton satın al, bakiyeni büyüt ve italkyAI özelliklerini daha güçlü kullan.</p>
+  </section>
 
-  <div class="progress-container">
-    <div class="progress-info">
-      <span>İLERLEME</span>
-      <span id="progressCount">1 / 6</span>
+  <section class="balance-card animate" style="animation-delay:.12s;">
+    <div class="balance-info">
+      <h3>Mevcut Bakiyen</h3>
+      <div class="val" id="currentTokens">0</div>
+      <div class="sub">Hesabındaki kullanılabilir jeton</div>
     </div>
-    <div class="progress-bar">
-      <div class="progress-fill" id="progressFill"></div>
+    <div class="ico">💎</div>
+  </section>
+
+  <section class="pkg-grid">
+
+    <div class="pkg animate" style="animation-delay:.18s;" onclick="buy('jeton_10')">
+      <div class="pkg-main">
+        <div class="pkg-icon">⚡</div>
+        <div class="pkg-info">
+          <h2>10 Jeton</h2>
+          <span>Başlangıç Paketi</span>
+        </div>
+      </div>
+      <div class="pkg-price">
+        <span class="price-tag">29 TL</span>
+      </div>
     </div>
-  </div>
 
-  <div class="sample-card">
-    <span class="sample-label" id="sampleLabel">CÜMLE 1</span>
-    <div class="sample-text" id="sampleText">Yükleniyor...</div>
-  </div>
-
-  <div class="mic-section">
-    <div class="mic-btn-wrapper" id="micWrapper">
-      <div class="wave"></div>
-      <div class="wave"></div>
-      <button class="mic-btn" id="recordBtn">
-        <svg viewBox="0 0 24 24" stroke-width="2.5"><path d="M12 1v10m-7-4a7 7 0 0014 0M12 18v5"/></svg>
-      </button>
+    <div class="pkg animate" style="animation-delay:.24s;" onclick="buy('jeton_50')">
+      <div class="pkg-main">
+        <div class="pkg-icon">🔥</div>
+        <div class="pkg-info">
+          <h2>50 Jeton</h2>
+          <span>Popüler seçim</span>
+        </div>
+      </div>
+      <div class="pkg-price">
+        <span class="price-tag">119 TL</span>
+        <span class="discount">%18 Avantaj</span>
+      </div>
     </div>
-    <div class="timer" id="timerText">00:00</div>
-    <div class="status-msg" id="statusText">Mikrofona dokun ve başla</div>
-  </div>
 
-  <div class="action-grid">
-    <button class="btn btn-primary" id="nextBtn" disabled>Sonraki Cümle</button>
-    <button class="btn btn-primary" id="finishBtn" style="display:none;">Kaydet ve Tamamla</button>
-    <button class="btn btn-secondary" onclick="history.back()">Vazgeç</button>
-  </div>
+    <div class="pkg best animate" style="animation-delay:.30s;" onclick="buy('jeton_100')">
+      <div class="best-badge">En İyi Değer</div>
+      <div class="pkg-main">
+        <div class="pkg-icon">💎</div>
+        <div class="pkg-info">
+          <h2>100 Jeton</h2>
+          <span>Profesyonel kullanım</span>
+        </div>
+      </div>
+      <div class="pkg-price">
+        <span class="price-tag">199 TL</span>
+        <span class="discount">%31 Avantaj</span>
+      </div>
+    </div>
 
-  <div class="completed-list" id="completedList"></div>
+    <div class="pkg best animate" style="animation-delay:.36s;" onclick="buy('jeton_500')">
+      <div class="best-badge">VIP Paket</div>
+      <div class="pkg-main">
+        <div class="pkg-icon">👑</div>
+        <div class="pkg-info">
+          <h2>500 Jeton</h2>
+          <span>Sık kullanım ve premium akışlar</span>
+        </div>
+      </div>
+      <div class="pkg-price">
+        <span class="price-tag">849 TL</span>
+        <span class="discount">%42 Avantaj</span>
+      </div>
+    </div>
+
+  </section>
+
+  <section class="footer-notes animate" style="animation-delay:.42s;">
+    <a href="/pages/jeton-nedir.html" class="info-link">Jetonlar ne işe yarar?</a>
+    <p class="legal-note">
+      Satın alınan jetonlar hesabına tanımlanır. Dil pratiği, AI öğretmen ve özel özelliklerde kullanılır.
+    </p>
+  </section>
 
 </div>
 
+<div id="toast" class="toast"></div>
+
 <script type="module">
-  import { mountShell } from "/js/ui_shell.js";
-  mountShell({ scroll: "none" });
+import { mountShell, setHeaderTokens } from "/js/ui_shell.js";
+import { supabase } from "/js/supabase_client.js";
 
-  // Mevcut boot dosyanızdaki logic ile micBtn class'ını tetikleyin:
-  // Kayıt başlarken: document.getElementById('micWrapper').classList.add('listening');
-  // Kayıt biterken: document.getElementById('micWrapper').classList.remove('listening');
+try{
+  mountShell({ scroll:"auto" });
+}catch(e){
+  console.warn("[market shell]", e);
+}
+
+let __billingUserId = "";
+
+const toastEl = document.getElementById("toast");
+const currentTokensEl = document.getElementById("currentTokens");
+
+function toast(msg){
+  if(!toastEl) return;
+  toastEl.textContent = String(msg || "");
+  toastEl.classList.add("show");
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(() => {
+    toastEl.classList.remove("show");
+  }, 2200);
+}
+
+async function updateCurrentBalance(){
+  try{
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if(!user){
+      __billingUserId = "";
+      if(currentTokensEl) currentTokensEl.textContent = "0";
+      return;
+    }
+
+    __billingUserId = user.id;
+
+    const tokenVal = Number(user?.user_metadata?.tokens ?? 0);
+    if(currentTokensEl) currentTokensEl.textContent = String(tokenVal);
+
+    try{
+      setHeaderTokens(tokenVal);
+    }catch{}
+
+    if(window.AndroidBilling?.setUserId){
+      try{
+        window.AndroidBilling.setUserId(user.id);
+      }catch{}
+    }
+  }catch(err){
+    console.warn("Bakiye okunamadı:", err);
+    if(currentTokensEl) currentTokensEl.textContent = "0";
+  }
+}
+
+window.buy = async function(productId){
+  if(!__billingUserId){
+    toast("Lütfen önce giriş yapın.");
+    return;
+  }
+
+  if(window.AndroidBilling?.buy){
+    try{
+      window.AndroidBilling.buy(productId);
+    }catch(err){
+      console.warn("AndroidBilling buy hata:", err);
+      toast("Ödeme sistemi şu an yanıt vermiyor.");
+    }
+  }else{
+    toast("Google Play ödeme sistemi şu an hazır değil.");
+  }
+};
+
+updateCurrentBalance();
 </script>
-
-<script type="module" src="/js/voice_profile_boot.js?v=final_updated"></script>
 
 </body>
 </html>
