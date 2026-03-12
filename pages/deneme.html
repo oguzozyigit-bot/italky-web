@@ -1,19 +1,149 @@
-<!-- FILE: /pages/live_interpreter.html -->
 <!doctype html>
 <html lang="tr">
 <head>
 <meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Live Interpreter</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+<title>italkyAI • Neural Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+
+<style>
+:root {
+    --bg: #030308;
+    --accent: #6366f1;
+    --glass: rgba(255, 255, 255, 0.03);
+    --border: rgba(255, 255, 255, 0.1);
+}
+
+body {
+    margin: 0; background: var(--bg); color: #fff;
+    font-family: 'Outfit', sans-serif; overflow: hidden;
+    height: 100vh; display: flex; align-items: center; justify-content: center;
+}
+
+/* Hareketli Arka Plan Işıkları */
+.blur-bg {
+    position: absolute; width: 100%; height: 100%; overflow: hidden; z-index: -1;
+}
+.blob {
+    position: absolute; width: 300px; height: 300px; background: var(--accent);
+    filter: blur(120px); border-radius: 50%; opacity: 0.15; animation: move 20s infinite alternate;
+}
+
+#main {
+    width: 92%; max-width: 440px; display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: auto auto auto;
+    gap: 12px;
+}
+
+/* MERKEZİ QR ÜNİTESİ (Büyük Alan) */
+.hero-unit {
+    grid-column: span 2;
+    background: radial-gradient(circle at top right, rgba(99,102,241,0.15), transparent);
+    border: 1px solid var(--border);
+    border-radius: 40px; padding: 30px;
+    text-align: center; position: relative;
+    backdrop-filter: blur(10px);
+}
+
+.core-scanner {
+    width: 140px; height: 140px; margin: 0 auto 20px;
+    position: relative; padding: 10px;
+    border-radius: 35px; background: #000;
+    box-shadow: 0 0 30px rgba(99, 102, 241, 0.3);
+}
+
+#smallQrImg { width: 100%; height: 100%; border-radius: 25px; filter: invert(1); mix-blend-mode: screen; }
+
+.scan-line {
+    position: absolute; inset: 0; border: 2px solid var(--accent);
+    border-radius: 35px; animation: pulse 2s infinite; pointer-events: none;
+}
+
+/* BENTO KARTLARI */
+.bento {
+    background: var(--glass); border: 1px solid var(--border);
+    border-radius: 30px; padding: 20px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    transition: 0.3s; cursor: pointer; position: relative; overflow: hidden;
+}
+
+.bento:active { transform: scale(0.95); background: rgba(255,255,255,0.08); }
+
+.bento.tall { grid-row: span 2; background: linear-gradient(180deg, var(--glass), rgba(99,102,241,0.1)); }
+
+.bento i { font-size: 24px; margin-bottom: 10px; display: block; }
+
+.bento h3 {
+    margin: 0; font-family: 'Space Grotesk', sans-serif;
+    font-size: 15px; letter-spacing: -0.5px;
+}
+
+.bento p { margin: 5px 0 0; font-size: 10px; opacity: 0.5; line-height: 1.3; }
+
+/* İkon Yerine CSS Şekilleri */
+.circle-deco {
+    position: absolute; right: -10px; top: -10px; width: 60px; height: 60px;
+    border-radius: 50%; border: 1px solid var(--border); opacity: 0.2;
+}
+
+/* Animasyonlar */
+@keyframes move { from { transform: translate(-20%, -20%); } to { transform: translate(20%, 20%); } }
+@keyframes pulse { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(1.1); opacity: 0; } }
+
+</style>
 </head>
+<body>
 
-<body style="background:#000;color:#fff;font-family:Arial">
+<div class="blur-bg"><div class="blob"></div></div>
 
-<h2>Live Interpreter</h2>
+<main id="main">
+    <section class="hero-unit">
+        <div class="core-scanner">
+            <img id="smallQrImg" src="" alt="AI Core">
+            <div class="scan-line"></div>
+        </div>
+        <h1 style="font-family:'Space Grotesk'; font-size: 22px; margin:0;">NEURAL <span>HUB</span></h1>
+        <p style="font-size: 11px; opacity: 0.6; margin-top: 8px;">Scan to initiate secure uplink</p>
+    </section>
 
-<div id="log"></div>
+    <div class="bento tall" onclick="location.href='/facetoface.html'">
+        <div class="circle-deco"></div>
+        <div style="color: #60a5fa; font-weight: bold; font-size: 28px;">∞</div>
+        <div>
+            <h3>FaceToFace</h3>
+            <p>Live neural translation between two humans.</p>
+        </div>
+    </div>
 
-<script type="module" src="/js/live_interpreter_page.js"></script>
+    <div class="bento" onclick="location.href='/pages/text_translate.html'">
+        <div style="color: #a855f7;">[T]</div>
+        <div>
+            <h3>Text AI</h3>
+            <p>Deep context processing.</p>
+        </div>
+    </div>
+
+    <div class="bento" onclick="location.href='/pages/f2f_connect.html'">
+        <div style="color: #fb923c;">•••</div>
+        <div>
+            <h3>Meeting</h3>
+            <p>Multi-agent sync.</p>
+        </div>
+    </div>
+
+    <div class="bento" style="grid-column: span 2; flex-direction: row; align-items: center; padding: 15px 25px;" onclick="location.href='/pages/offline_languages.html'">
+        <h3 style="flex: 1;">Offline Neural Packs</h3>
+        <span style="opacity: 0.4; font-size: 12px;">Manage ➔</span>
+    </div>
+</main>
+
+<script>
+    // QR Generator (Minimal & Fast)
+    const hostCode = "ITK-" + Math.random().toString(36).substring(2, 9).toUpperCase();
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=https://italky.ai/join/${hostCode}`;
+    document.getElementById('smallQrImg').src = qrUrl;
+</script>
 
 </body>
 </html>
