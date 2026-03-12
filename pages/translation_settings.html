@@ -354,7 +354,7 @@ body{
     <div class="settingCard" id="voiceSettingBtn" role="button" tabindex="0">
       <div class="settingLeft">
         <div class="settingLabel">Ses Ayarları</div>
-        <div class="settingDesc">Çeviri sesinin nasıl okunacağını seç.</div>
+        <div class="settingDesc">FaceToFace ve Interpreter için kullanılacak ses.</div>
       </div>
       <div class="settingValue" id="voiceValue">Otomatik</div>
       <div class="chev">⌄</div>
@@ -363,7 +363,7 @@ body{
     <div class="settingCard" id="langSettingBtn" role="button" tabindex="0">
       <div class="settingLeft">
         <div class="settingLabel">Sistem Dili</div>
-        <div class="settingDesc">Arayüzü ve metinleri otomatik bu dile çevir.</div>
+        <div class="settingDesc">Uygulama metinlerini seçilen dile göre göster.</div>
       </div>
       <div class="settingValue" id="langValue">Türkçe</div>
       <div class="chev">⌄</div>
@@ -372,7 +372,8 @@ body{
 
   <div class="panel">
     <div class="note">
-      Otomatik seçildiğinde sistem uygun ücretsiz sesi kullanır. “Kendi Sesim” seçeneği için daha önce ses profili oluşturmuş olman gerekir.
+      Ses ayarı eski sistemle uyumlu şekilde <strong>tts_voice</strong> anahtarına yazılır.
+      “Kendi Sesim” seçeneği içerde <strong>clone</strong> olarak kaydedilir.
     </div>
   </div>
 
@@ -413,15 +414,15 @@ const sheetList = $("sheetList");
 const toastEl = $("toast");
 
 const STORAGE_KEYS = {
-  voice: "italky_tts_voice_pref",
-  lang: "italky_system_lang_pref"
+  voice: "tts_voice",
+  lang: "system_lang"
 };
 
 const VOICE_OPTIONS = [
   { value: "auto", label: "Otomatik", sub: "TTS ücretsiz ve varsayılan seçenek" },
   { value: "female", label: "Kadın", sub: "Kadın ses tonuna yakın okuma" },
   { value: "male", label: "Erkek", sub: "Erkek ses tonuna yakın okuma" },
-  { value: "custom", label: "Kendi Sesim", sub: "Kendi ses profilin kullanılır" }
+  { value: "clone", label: "Kendi Sesim", sub: "Daha önce oluşturduğun ses profili" }
 ];
 
 const LANGUAGE_OPTIONS = [
@@ -464,8 +465,6 @@ const LANGUAGE_OPTIONS = [
   { value: "ka", label: "ქართული" }
 ];
 
-let currentSheetType = null;
-
 function toast(msg){
   if(!toastEl) return;
   toastEl.textContent = String(msg || "");
@@ -507,7 +506,6 @@ function syncUI(){
 }
 
 function openSheet(type){
-  currentSheetType = type;
   const isVoice = type === "voice";
   const options = isVoice ? VOICE_OPTIONS : LANGUAGE_OPTIONS;
   const currentVal = getStoredValue(isVoice ? STORAGE_KEYS.voice : STORAGE_KEYS.lang, isVoice ? "auto" : "tr");
@@ -541,12 +539,12 @@ function closeSheet(){
   optionSheet.classList.remove("show");
   sheetBackdrop.classList.remove("show");
   optionSheet.setAttribute("aria-hidden", "true");
-  currentSheetType = null;
 }
 
 async function saveSetting(type, value){
   const isVoice = type === "voice";
   const storageKey = isVoice ? STORAGE_KEYS.voice : STORAGE_KEYS.lang;
+
   setStoredValue(storageKey, value);
   syncUI();
 
