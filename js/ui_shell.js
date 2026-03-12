@@ -274,7 +274,6 @@ body.ui-menu-open{
   color:rgba(255,255,255,.34);
 }
 
-/* SIDE MENU */
 .side-menu{
   position:fixed;
   inset:0;
@@ -492,6 +491,8 @@ body.ui-menu-open{
 `;
 
 let __shellAutoTranslateInstalled = false;
+let __shellResizeBound = false;
+let __shellEscapeBound = false;
 
 export function mountShell(options = {}) {
   document.documentElement.style.backgroundColor = "#05070f";
@@ -537,12 +538,18 @@ export function mountShell(options = {}) {
 
   bindMenu();
   finishMount(options);
-  window.addEventListener("resize", syncFooterHeight, { passive: true });
+
+  if (!__shellResizeBound) {
+    window.addEventListener("resize", syncFooterHeight, { passive: true });
+    __shellResizeBound = true;
+  }
 }
 
 function finishMount(options) {
   const main = document.getElementById("shellMain");
-  if (main) main.style.overflow = (options?.scroll === "none") ? "hidden" : "auto";
+  if (main) {
+    main.style.overflow = (options?.scroll === "none") ? "hidden" : "auto";
+  }
 
   requestAnimationFrame(() => {
     document.body.classList.add("ui-ready");
@@ -572,6 +579,7 @@ function bindMenu() {
   const menuJetonInfoLink = document.getElementById("menuJetonInfoLink");
 
   if (!menuBtn || !sideMenu) return;
+  if (menuBtn.dataset.bound === "1") return;
 
   const openMenu = () => {
     sideMenu.classList.add("open");
@@ -611,7 +619,7 @@ function bindMenu() {
       closeMenu();
       const { supabase } = await import("/js/supabase_client.js");
       await supabase.auth.signOut();
-    } catch (e) {}
+    } catch {}
     location.href = "/pages/login.html";
   });
 
@@ -620,9 +628,16 @@ function bindMenu() {
     location.href = "/pages/delete-account.html";
   });
 
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closeMenu();
-  });
+  if (!__shellEscapeBound) {
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        closeMenu();
+      }
+    });
+    __shellEscapeBound = true;
+  }
+
+  menuBtn.dataset.bound = "1";
 }
 
 export function hydrateFromCache() {
@@ -647,12 +662,14 @@ export function hydrateFromCache() {
 
     const jetonEl = document.getElementById("menuHeaderJeton");
     if (jetonEl) jetonEl.textContent = String(tokens);
-  } catch (e) {}
+  } catch {}
 }
 
 function syncFooterHeight() {
   const f = document.getElementById("italkyFooter");
-  if (f) document.documentElement.style.setProperty("--footerH", f.offsetHeight + "px");
+  if (f) {
+    document.documentElement.style.setProperty("--footerH", `${f.offsetHeight}px`);
+  }
 }
 
 function removeOverlaySoon() {
@@ -672,5 +689,5 @@ export function setHeaderTokens(val) {
     const u = raw ? JSON.parse(raw) : {};
     u.tokens = Number(val ?? 0);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(u));
-  } catch (e) {}
+  } catch {}
 }
