@@ -1,10 +1,5 @@
 // FILE: /js/interpreter_page.js
 
-/**
- * italkyAI - Interpreter Page Logic (Host)
- * Room_id bazlı temiz akış
- */
-
 const API_BASE = "https://italky-api.onrender.com/api";
 const JOIN_PAGE_BASE = "https://italky.ai/pages/interpreter_join.html";
 
@@ -20,7 +15,6 @@ const roomIdText = document.getElementById("room-id-text");
 const roomStateText = document.getElementById("room-state-text");
 
 let pollingInterval = null;
-let currentRoomId = "";
 
 function setStatus(text, mode = "waiting") {
   if (statusText) statusText.innerText = text;
@@ -59,18 +53,29 @@ function buildQrUrl(joinUrl) {
 }
 
 async function createRoom(myLang) {
+  const payload = { my_lang: myLang };
+
+  console.log("CREATE ROOM REQUEST:", payload);
+  setStatus(`API çağrılıyor... dil: ${myLang}`, "waiting");
+
   const response = await fetch(`${API_BASE}/interpreter/create-room`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      my_lang: myLang
-    })
+    body: JSON.stringify(payload)
   });
 
-  const data = await response.json().catch(() => null);
+  const rawText = await response.text();
+  console.log("CREATE ROOM RAW RESPONSE:", rawText);
+
+  let data = null;
+  try {
+    data = JSON.parse(rawText);
+  } catch {
+    throw new Error(`JSON parse edilemedi: ${rawText}`);
+  }
 
   if (!response.ok || !data?.ok || !data?.room_id) {
-    throw new Error(data?.detail || data?.error || "room_create_failed");
+    throw new Error(data?.detail || data?.error || rawText || "room_create_failed");
   }
 
   return data;
@@ -80,8 +85,6 @@ function displayQR(roomId) {
   const joinUrl = buildJoinUrl(roomId);
   const qrApiUrl = buildQrUrl(joinUrl);
 
-  currentRoomId = roomId;
-
   if (setupArea) setupArea.classList.add("hidden");
   if (qrContainer) qrContainer.classList.add("show");
 
@@ -90,11 +93,12 @@ function displayQR(roomId) {
   }
 
   if (roomIdText) roomIdText.textContent = roomId;
+  if (roomStateText) roomStateText.textContent = "waiting";
 
-  setStatus("Oda hazır. Guest bağlantısı bekleniyor...", "waiting");
+  setStatus(`Room oluştu: ${roomId}`, "ok");
 
-  console.log("Interpreter Room ID:", roomId);
-  console.log("Interpreter Join URL:", joinUrl);
+  console.log("ROOM ID:", roomId);
+  console.log("JOIN URL:", joinUrl);
 }
 
 function redirectHostToLive(roomId, hostLang, guestLang) {
@@ -103,7 +107,6 @@ function redirectHostToLive(roomId, hostLang, guestLang) {
   url.searchParams.set("role", "host");
   url.searchParams.set("my", hostLang);
   url.searchParams.set("peer", guestLang || "en");
-
   window.location.href = url.toString();
 }
 
@@ -113,7 +116,15 @@ function startPolling(roomId, hostLang) {
   pollingInterval = setInterval(async () => {
     try {
       const res = await fetch(`${API_BASE}/interpreter/room/${encodeURIComponent(roomId)}`);
-      const roomData = await res.json().catch(() => null);
+      const raw = await res.text();
+      console.log("ROOM POLL RAW:", raw);
+
+      let roomData = null;
+      try {
+        roomData = JSON.parse(raw);
+      } catch {
+        return;
+      }
 
       if (!res.ok || !roomData?.ok) {
         return;
@@ -125,7 +136,7 @@ function startPolling(roomId, hostLang) {
 
       if (roomData.status === "active" && roomData.guest_lang) {
         clearPolling();
-        setStatus("Bağlantı başarılı. Canlı tercüman ekranı açılıyor...", "ok");
+        setStatus("Guest bağlandı. Live ekrana geçiliyor...", "ok");
 
         setTimeout(() => {
           redirectHostToLive(
@@ -161,8 +172,8 @@ async function handleCreateClick() {
     startPolling(roomId, selectedLang);
   } catch (error) {
     console.error("Interpreter create error:", error);
-    setStatus("Oda oluşturulamadı. Lütfen tekrar deneyin.", "err");
-    alert("Oda oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.");
+    setStatus(`Oda oluşmadı: ${error.message || error}`, "err");
+    if (roomIdText) roomIdText.textContent = "yok";
     btnGenerate.disabled = false;
   }
 }
