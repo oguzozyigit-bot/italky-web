@@ -123,6 +123,9 @@ body{
   animation:floatQR 4s ease-in-out infinite, glitchQR 5s infinite;
   z-index:2;
   overflow:hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
 }
 
 .holo-qr img{
@@ -130,6 +133,37 @@ body{
   height:100%;
   object-fit:cover;
   display:block;
+}
+
+.qr-fallback{
+  width:100%;
+  height:100%;
+  border-radius:10px;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  gap:6px;
+  text-align:center;
+  color:#111827;
+  font-size:10px;
+  font-weight:800;
+  line-height:1.2;
+  padding:8px;
+  background:
+    linear-gradient(135deg,#ffffff 0%, #eef2ff 100%);
+}
+
+.qr-fallback.show{
+  display:flex;
+}
+
+.qr-fallback-code{
+  font-size:12px;
+  font-weight:900;
+  letter-spacing:.8px;
+  color:#4f46e5;
+  word-break:break-all;
 }
 
 .holo-beams{
@@ -555,6 +589,10 @@ body{
 
           <div class="holo-qr">
             <img id="smallQrImg" alt="italkyAI QR Hologram">
+            <div id="qrFallback" class="qr-fallback">
+              <div>QR hazır değil</div>
+              <div id="qrFallbackCode" class="qr-fallback-code">ITK-XXXXXX</div>
+            </div>
           </div>
 
           <div class="holo-beams"></div>
@@ -635,17 +673,26 @@ body{
   </div>
 </main>
 
+<!-- SHELL AYRI -->
 <script type="module">
 import { mountShell } from "/js/ui_shell.js";
+
+try {
+  mountShell({ scroll: "auto" });
+  console.log("ui_shell OK");
+} catch (e) {
+  console.error("ui_shell HATASI:", e);
+}
+</script>
+
+<!-- QR AYRI -->
+<script type="module">
 import { supabase } from "/js/supabase_client.js";
 
-try{
-  mountShell({ scroll:"auto" });
-}catch(e){
-  console.warn("[home shell]", e);
-}
-
 const smallQrImg = document.getElementById("smallQrImg");
+const qrFallback = document.getElementById("qrFallback");
+const qrFallbackCode = document.getElementById("qrFallbackCode");
+
 const HOST_CODE_KEY = "italky_interpreter_host_code";
 const QR_VERSION_KEY = "italky_interpreter_qr_version";
 
@@ -698,7 +745,7 @@ async function ensureStableHostCode(){
 
   if(!base) base = randomCode();
 
-  const hostCode = \`ITK-\${base}\`;
+  const hostCode = `ITK-${base}`;
   localStorage.setItem(HOST_CODE_KEY, hostCode);
   return hostCode;
 }
@@ -711,18 +758,61 @@ function buildJoinUrl(hostCode){
   return url.toString();
 }
 
-function buildQrImageUrl(targetUrl){
-  return \`https://api.qrserver.com/v1/create-qr-code/?size=520x520&margin=6&data=\${encodeURIComponent(targetUrl)}\`;
+function qrUrlPrimary(targetUrl){
+  return `https://api.qrserver.com/v1/create-qr-code/?size=520x520&margin=6&data=${encodeURIComponent(targetUrl)}`;
+}
+
+function qrUrlFallback(targetUrl){
+  return `https://quickchart.io/qr?size=520&text=${encodeURIComponent(targetUrl)}`;
+}
+
+function showFallback(hostCode){
+  if(qrFallbackCode) qrFallbackCode.textContent = hostCode;
+  if(qrFallback) qrFallback.classList.add("show");
+  if(smallQrImg) smallQrImg.style.display = "none";
+}
+
+function loadImage(url){
+  return new Promise((resolve, reject) => {
+    const test = new Image();
+    test.onload = () => resolve(url);
+    test.onerror = reject;
+    test.referrerPolicy = "no-referrer";
+    test.src = url;
+  });
 }
 
 async function bootQr(){
   try{
     const hostCode = await ensureStableHostCode();
     const joinUrl = buildJoinUrl(hostCode);
-    const qrUrl = buildQrImageUrl(joinUrl);
-    if(smallQrImg) smallQrImg.src = qrUrl;
+
+    if(qrFallbackCode) qrFallbackCode.textContent = hostCode;
+
+    let finalUrl = null;
+
+    try{
+      finalUrl = await loadImage(qrUrlPrimary(joinUrl));
+    }catch{
+      try{
+        finalUrl = await loadImage(qrUrlFallback(joinUrl));
+      }catch{
+        finalUrl = null;
+      }
+    }
+
+    if(finalUrl && smallQrImg){
+      smallQrImg.style.display = "block";
+      smallQrImg.src = finalUrl;
+      qrFallback?.classList.remove("show");
+      console.log("QR OK:", finalUrl);
+    } else {
+      showFallback(hostCode);
+      console.warn("QR servisleri yanıt vermedi, fallback gösterildi.");
+    }
   }catch(e){
-    console.warn("QR yüklenemedi:", e);
+    console.error("QR HATASI:", e);
+    showFallback("ITK-ERROR");
   }
 }
 
