@@ -1,24 +1,31 @@
 // FILE: /js/voice_profile_boot.js
 
-async function boot() {
-  try {
-    const shell = await import("/js/ui_shell.js");
-    if (typeof shell.mountShell === "function") {
-      try {
-        shell.mountShell({ scroll: "auto" });
-      } catch (e) {
-        console.warn("[voice_profile_boot mountShell]", e);
-      }
+async function boot(){
+
+  try{
+
+    const shell = await import("/js/ui_shell.js")
+
+    if(typeof shell.mountShell === "function"){
+      shell.mountShell({scroll:"auto"})
     }
-  } catch (e) {
-    console.warn("[voice_profile_boot shell optional]", e);
+
+  }catch(e){
+    console.warn("[voice_profile_boot shell]", e)
   }
 
-  try {
-    await import("/js/voice_profile_page.js?v=pro1");
-  } catch (e) {
-    console.error("[voice_profile_boot page import]", e);
+  try{
+
+    const page = await import("/js/voice_profile_page.js?v=pro2")
+
+    if(page.initVoiceProfile){
+      page.initVoiceProfile()
+    }
+
+  }catch(e){
+    console.error("[voice_profile_boot page]", e)
   }
+
 }
 
-boot();
+boot()
