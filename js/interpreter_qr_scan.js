@@ -1,5 +1,4 @@
 // FILE: /js/interpreter_qr_scan.js
-
 import { mountShell } from "/js/ui_shell.js";
 
 mountShell({ scroll: "auto" });
