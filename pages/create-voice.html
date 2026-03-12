@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>italkyAI • Sesini Tanıt</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --txt: rgba(255,255,255,.96);
+      --muted: rgba(255,255,255,.50);
+      --ai-grad: linear-gradient(135deg, #67e8f9 0%, #818cf8 46%, #f472b6 100%);
+      --panel-bg: rgba(255, 255, 255, 0.03);
+      --panel-border: rgba(255, 255, 255, 0.08);
+      --accent: #818cf8;
+    }
+
+    html, body {
+      margin: 0; padding: 0;
+      background: #02000f;
+      color: var(--txt);
+      font-family: 'Outfit', sans-serif;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    /* Arka Plan Efekti */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at 50% 0%, rgba(129, 140, 248, 0.12) 0%, transparent 50%);
+      z-index: -1;
+    }
+
+    #pageContent {
+      height: 100vh;
+      overflow-y: auto;
+      padding: calc(var(--headerH, 70px) + 15px) 16px calc(var(--footerH, 80px) + 20px);
+      max-width: 500px;
+      margin: 0 auto;
+      scrollbar-width: none;
+    }
+    #pageContent::-webkit-scrollbar { display: none; }
+
+    /* Üst Bar */
+    .top-nav {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .back-btn {
+      width: 40px; height: 40px;
+      border-radius: 12px;
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+    }
+    .back-btn svg { width: 20px; height: 20px; stroke: #fff; fill: none; stroke-width: 2.5; }
+
+    .title { font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 700; margin: 0; }
+
+    /* İlerleme Çubuğu */
+    .progress-container { margin-bottom: 20px; }
+    .progress-info { display: flex; justify-content: space-between; font-size: 11px; font-weight: 800; margin-bottom: 6px; color: var(--muted); letter-spacing: 1px; }
+    .progress-bar { height: 4px; background: rgba(255,255,255,0.05); border-radius: 10px; overflow: hidden; }
+    .progress-fill { height: 100%; background: var(--ai-grad); width: 16.6%; transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 10px var(--accent); }
+
+    /* Cümle Kartı (Hologram Efekti) */
+    .sample-card {
+      background: linear-gradient(145deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01));
+      border: 1px solid var(--panel-border);
+      border-radius: 28px;
+      padding: 30px 20px;
+      text-align: center;
+      position: relative;
+      margin-bottom: 30px;
+      backdrop-filter: blur(15px);
+    }
+    .sample-label { font-size: 10px; font-weight: 900; color: var(--accent); letter-spacing: 2px; margin-bottom: 15px; display: block; }
+    .sample-text { font-size: 22px; font-weight: 800; line-height: 1.4; color: #fff; min-height: 80px; display: flex; align-items: center; justify-content: center; }
+
+    /* Mikrofon ve Dalga Animasyonu */
+    .mic-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .mic-btn-wrapper {
+      position: relative;
+      width: 100px; height: 100px;
+    }
+
+    .mic-btn {
+      width: 100%; height: 100%;
+      border-radius: 50%;
+      background: #12121a;
+      border: 2px solid var(--panel-border);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      z-index: 10; position: relative;
+      transition: all 0.3s;
+    }
+
+    .mic-btn svg { width: 35px; height: 35px; stroke: #fff; fill: none; transition: all 0.3s; }
+
+    /* Kayıt Sırasındaki Efektler */
+    .mic-btn.listening { border-color: #f472b6; box-shadow: 0 0 20px rgba(244, 114, 182, 0.3); }
+    .mic-btn.listening svg { stroke: #f472b6; transform: scale(1.1); }
+
+    .wave {
+      position: absolute;
+      inset: 0;
+      border: 2px solid #818cf8;
+      border-radius: 50%;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .listening .wave { animation: voiceWave 1.5s infinite; }
+    .listening .wave:nth-child(2) { animation-delay: 0.5s; }
+
+    @keyframes voiceWave {
+      0% { transform: scale(1); opacity: 0.5; }
+      100% { transform: scale(1.8); opacity: 0; }
+    }
+
+    .timer { font-family: 'Space Grotesk'; font-size: 20px; font-weight: 700; color: var(--muted); }
+    .status-msg { font-size: 13px; font-weight: 600; color: var(--accent); }
+
+    /* Alt Butonlar */
+    .action-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .btn {
+      height: 54px;
+      border-radius: 18px;
+      font-family: inherit;
+      font-weight: 800;
+      font-size: 15px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      border: none;
+      transition: all 0.2s;
+    }
+
+    .btn-primary { background: var(--ai-grad); color: #000; }
+    .btn-primary:disabled { opacity: 0.2; grayscale: 1; }
+
+    .btn-secondary { background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--panel-border); }
+
+    .btn:active { transform: scale(0.98); }
+
+    .completed-list { margin-top: 20px; display: flex; flex-direction: column; gap: 8px; }
+    .completed-item {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--panel-border);
+      padding: 12px 16px;
+      border-radius: 14px;
+      display: flex; justify-content: space-between;
+      font-size: 12px; font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+
+<div id="pageContent">
+
+  <div class="top-nav">
+    <button class="back-btn" onclick="history.back()">
+      <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <h1 class="title">Sesini Tanıt</h1>
+  </div>
+
+  <div class="progress-container">
+    <div class="progress-info">
+      <span>İLERLEME</span>
+      <span id="progressCount">1 / 6</span>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+  </div>
+
+  <div class="sample-card">
+    <span class="sample-label" id="sampleLabel">CÜMLE 1</span>
+    <div class="sample-text" id="sampleText">Yükleniyor...</div>
+  </div>
+
+  <div class="mic-section">
+    <div class="mic-btn-wrapper" id="micWrapper">
+      <div class="wave"></div>
+      <div class="wave"></div>
+      <button class="mic-btn" id="recordBtn">
+        <svg viewBox="0 0 24 24" stroke-width="2.5"><path d="M12 1v10m-7-4a7 7 0 0014 0M12 18v5"/></svg>
+      </button>
+    </div>
+    <div class="timer" id="timerText">00:00</div>
+    <div class="status-msg" id="statusText">Mikrofona dokun ve başla</div>
+  </div>
+
+  <div class="action-grid">
+    <button class="btn btn-primary" id="nextBtn" disabled>Sonraki Cümle</button>
+    <button class="btn btn-primary" id="finishBtn" style="display:none;">Kaydet ve Tamamla</button>
+    <button class="btn btn-secondary" onclick="history.back()">Vazgeç</button>
+  </div>
+
+  <div class="completed-list" id="completedList"></div>
+
+</div>
+
+<script type="module">
+  import { mountShell } from "/js/ui_shell.js";
+  mountShell({ scroll: "none" });
+
+  // Mevcut boot dosyanızdaki logic ile micBtn class'ını tetikleyin:
+  // Kayıt başlarken: document.getElementById('micWrapper').classList.add('listening');
+  // Kayıt biterken: document.getElementById('micWrapper').classList.remove('listening');
+</script>
+
+<script type="module" src="/js/voice_profile_boot.js?v=final_updated"></script>
+
+</body>
+</html>
