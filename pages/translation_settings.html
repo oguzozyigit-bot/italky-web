@@ -337,24 +337,24 @@ body{
 <div id="pageContent">
 
   <div class="topRow">
-    <button class="backBtn" id="backBtn" type="button" aria-label="Geri dön">
+    <button class="backBtn" id="backBtn" type="button" aria-label="Geri dön" data-i18n-title="back">
       <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
     </button>
 
     <div class="pageHead">
       <div class="pageKicker">Translation</div>
-      <h1 class="pageTitle">Çeviri <span class="ai">Ayarları</span></h1>
-      <p class="pageSub">Ses ayarlarını ve sistem dilini buradan yönet.</p>
+      <h1 class="pageTitle" data-i18n="translation_settings">Çeviri <span class="ai">Ayarları</span></h1>
+      <p class="pageSub" data-i18n="translation_settings_desc">Ses ayarlarını ve sistem dilini buradan yönet.</p>
     </div>
   </div>
 
   <div class="panel">
-    <h2 class="panelTitle">Tercihler</h2>
+    <h2 class="panelTitle" data-i18n="preferences">Tercihler</h2>
 
     <div class="settingCard" id="voiceSettingBtn" role="button" tabindex="0">
       <div class="settingLeft">
-        <div class="settingLabel">Ses Ayarları</div>
-        <div class="settingDesc">Bu ayar FaceToFace ve SideToSide modüllerinde kullanılacak.</div>
+        <div class="settingLabel" data-i18n="voice_settings">Ses Ayarları</div>
+        <div class="settingDesc" data-i18n="voice_settings_desc_scope">Bu ayar FaceToFace ve SideToSide modüllerinde kullanılacak.</div>
       </div>
       <div class="settingValue" id="voiceValue">Otomatik</div>
       <div class="chev">⌄</div>
@@ -362,8 +362,8 @@ body{
 
     <div class="settingCard" id="langSettingBtn" role="button" tabindex="0">
       <div class="settingLeft">
-        <div class="settingLabel">Sistem Dili</div>
-        <div class="settingDesc">Türkçe arayüz metinlerini seçtiğin dile otomatik çevirir.</div>
+        <div class="settingLabel" data-i18n="system_language">Sistem Dili</div>
+        <div class="settingDesc" data-i18n="system_language_desc_auto">Türkçe arayüz metinlerini seçtiğin dile otomatik çevirir.</div>
       </div>
       <div class="settingValue" id="langValue">Türkçe</div>
       <div class="chev">⌄</div>
@@ -371,9 +371,8 @@ body{
   </div>
 
   <div class="panel">
-    <div class="note">
-      Ses ayarı eski çalışan sistemle uyumlu olarak <strong>tts_voice</strong> anahtarına yazılır.
-      Sistem dili ise uygulama metinlerinin hangi dilde gösterileceğini belirler.
+    <div class="note" data-i18n="settings_note_1">
+      Ses ayarı eski çalışan sistemle uyumlu olarak tts_voice anahtarına yazılır. Sistem dili ise uygulama metinlerinin hangi dilde gösterileceğini belirler.
     </div>
   </div>
 
@@ -392,6 +391,7 @@ body{
 <script type="module">
 import { mountShell } from "/js/ui_shell.js";
 import { supabase } from "/js/supabase_client.js";
+import { applySystemTranslations, t, getSystemLang } from "/js/system_lang.js";
 
 try{
   mountShell({ scroll:"auto" });
@@ -419,10 +419,10 @@ const STORAGE_KEYS = {
 };
 
 const VOICE_OPTIONS = [
-  { value: "auto", label: "Otomatik", sub: "TTS ücretsiz ve varsayılan seçenek" },
-  { value: "female", label: "Kadın", sub: "Kadın ses tonuna yakın okuma" },
-  { value: "male", label: "Erkek", sub: "Erkek ses tonuna yakın okuma" },
-  { value: "clone", label: "Kendi Sesim", sub: "Daha önce oluşturduğun ses profili" }
+  { value: "auto", labelKey: "automatic", subKey: "free_tts_default" },
+  { value: "female", labelKey: "female", subKey: "female_voice_desc" },
+  { value: "male", labelKey: "male", subKey: "male_voice_desc" },
+  { value: "clone", labelKey: "own_voice", subKey: "clone_voice_desc" }
 ];
 
 const LANGUAGE_OPTIONS = [
@@ -497,7 +497,8 @@ function setStoredValue(key, value){
 }
 
 function voiceLabelOf(value){
-  return VOICE_OPTIONS.find(x => x.value === value)?.label || "Otomatik";
+  const item = VOICE_OPTIONS.find(x => x.value === value);
+  return item ? t(item.labelKey, "Otomatik") : t("automatic", "Otomatik");
 }
 
 function langLabelOf(value){
@@ -519,17 +520,26 @@ function openSheet(type){
     ? normalizeVoiceStorage(getStoredValue(STORAGE_KEYS.voice, "auto"))
     : getStoredValue(STORAGE_KEYS.lang, "tr");
 
-  sheetTitle.textContent = isVoice ? "Ses Ayarları" : "Sistem Dili";
+  sheetTitle.textContent = isVoice ? t("voice_settings", "Ses Ayarları") : t("system_language", "Sistem Dili");
 
-  sheetList.innerHTML = options.map(opt => `
-    <div class="sheetItem ${String(opt.value) === String(currentVal) ? "active" : ""}" data-value="${opt.value}">
-      <div class="sheetItemMeta">
-        <div class="sheetItemTitle">${opt.label}</div>
-        ${opt.sub ? `<div class="sheetItemSub">${opt.sub}</div>` : ""}
+  sheetList.innerHTML = isVoice
+    ? options.map(opt => `
+      <div class="sheetItem ${String(opt.value) === String(currentVal) ? "active" : ""}" data-value="${opt.value}">
+        <div class="sheetItemMeta">
+          <div class="sheetItemTitle">${t(opt.labelKey, opt.value)}</div>
+          <div class="sheetItemSub">${t(opt.subKey, "")}</div>
+        </div>
+        <div class="sheetItemCheck"></div>
       </div>
-      <div class="sheetItemCheck"></div>
-    </div>
-  `).join("");
+    `).join("")
+    : options.map(opt => `
+      <div class="sheetItem ${String(opt.value) === String(currentVal) ? "active" : ""}" data-value="${opt.value}">
+        <div class="sheetItemMeta">
+          <div class="sheetItemTitle">${opt.label}</div>
+        </div>
+        <div class="sheetItemCheck"></div>
+      </div>
+    `).join("");
 
   optionSheet.classList.add("show");
   sheetBackdrop.classList.add("show");
@@ -556,7 +566,6 @@ async function saveSetting(type, value){
   const finalValue = isVoice ? normalizeVoiceStorage(value) : value;
 
   setStoredValue(storageKey, finalValue);
-  syncUI();
 
   try{
     const { data: { user } } = await supabase.auth.getUser();
@@ -578,13 +587,17 @@ async function saveSetting(type, value){
     console.warn("[translation settings user save]", e);
   }
 
-  toast(isVoice ? "Ses ayarı güncellendi" : "Sistem dili güncellendi");
+  applySystemTranslations();
+  syncUI();
+
+  toast(isVoice ? t("updated_voice_setting", "Ses ayarı güncellendi") : t("updated_system_lang", "Sistem dili güncellendi"));
 }
 
 async function hydrateFromProfile(){
   try{
     const { data: { user } } = await supabase.auth.getUser();
     if(!user?.id){
+      applySystemTranslations();
       syncUI();
       return;
     }
@@ -597,6 +610,7 @@ async function hydrateFromProfile(){
 
     if(error){
       console.warn("[translation settings profile read]", error);
+      applySystemTranslations();
       syncUI();
       return;
     }
@@ -609,9 +623,11 @@ async function hydrateFromProfile(){
       setStoredValue(STORAGE_KEYS.lang, data.system_lang);
     }
 
+    applySystemTranslations();
     syncUI();
   }catch(e){
     console.warn("[translation settings hydrate]", e);
+    applySystemTranslations();
     syncUI();
   }
 }
