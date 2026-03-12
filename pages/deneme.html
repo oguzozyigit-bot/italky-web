@@ -3,214 +3,750 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-<title>italkyAI • Home</title>
+<title>italkyAI • Future Home</title>
+
+<meta name="theme-color" content="#120d16"/>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
 <style>
 :root{
   --txt:rgba(255,255,255,.96);
-  --muted:rgba(255,255,255,.60);
-  --ai-grad:linear-gradient(135deg,#67e8f9 0%, #818cf8 46%, #f472b6 100%);
+  --muted:rgba(255,255,255,.64);
+  --line:rgba(255,255,255,.10);
   --cardLine:rgba(255,255,255,.12);
-  --cyan:#67e8f9;
+  --ai-grad:linear-gradient(135deg,#67e8f9 0%, #818cf8 46%, #f472b6 100%);
   --pink:#f472b6;
+  --violet:#8b5cf6;
+  --blue:#60a5fa;
+  --cyan:#67e8f9;
+  --orange:#fb923c;
+  --peach:#fdba74;
 }
 
-*{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+*{
+  box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
+  outline:none;
+}
 
 html,body{
-  margin:0; width:100%; height:100%; overflow:hidden;
-  color:var(--txt); font-family:'Outfit',sans-serif;
+  margin:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  color:var(--txt);
+  font-family:'Outfit',sans-serif;
   background:#120d16;
+  scrollbar-width:none;
+}
+html::-webkit-scrollbar,
+body::-webkit-scrollbar{
+  display:none;
 }
 
 body{
-  background: 
-    radial-gradient(circle at 50% 0%, rgba(251,146,60,.15) 0%, transparent 40%),
-    linear-gradient(180deg, #1d1016 0%, #120d16 100%);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(251,146,60,.18) 0%, transparent 28%),
+    radial-gradient(circle at 20% 18%, rgba(244,114,182,.12) 0%, transparent 25%),
+    radial-gradient(circle at 82% 18%, rgba(96,165,250,.10) 0%, transparent 20%),
+    linear-gradient(180deg, #1d1016 0%, #150e19 34%, #120d16 100%);
 }
 
-/* ANA KONTEYNER: Header ve Footer arasına hapseder */
 #pageContent{
-  width:100%; height:100vh;
-  max-width:500px; margin:0 auto;
-  padding: 
-    calc(var(--headerH, 70px) + 10px) 
-    16px 
-    calc(var(--footerH, 75px) + 10px);
-  display:flex; flex-direction:column;
-  justify-content: space-between; /* İçeriği yayar */
+  width:100%;
+  height:100%;
+  max-width:560px;
+  margin:0 auto;
+  padding:8px 14px 8px;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
 }
 
-/* BAŞLIK ÜSTE GELİYOR */
-.hero-header {
-  text-align: center;
-  margin-bottom: 10px;
+.page-shell-fit{
+  height:100%;
+  min-height:0;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  overflow:hidden;
 }
+
+/* --- HERO ALANI --- */
+.hero{
+  flex:0 0 auto;
+  perspective:1000px;
+}
+
+.heroTop{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+}
+
+.holo-container{
+  width:210px;
+  height:210px;
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transform-style:preserve-3d;
+  margin-bottom:12px;
+}
+
+.crystal-cage{
+  position:absolute;
+  width:150px;
+  height:150px;
+  transform-style:preserve-3d;
+  animation:rotateCrystal 18s linear infinite;
+}
+
+.crystal-side{
+  position:absolute;
+  inset:0;
+  border:2px solid rgba(103,232,249,.42);
+  background:radial-gradient(circle, rgba(129,140,248,.12), transparent);
+  box-shadow:0 0 18px rgba(103,232,249,.22);
+}
+
+.side1{ transform:rotateY(0deg) translateZ(75px); }
+.side2{ transform:rotateY(90deg) translateZ(75px); }
+.side3{ transform:rotateY(180deg) translateZ(75px); }
+.side4{ transform:rotateY(270deg) translateZ(75px); }
+.side5{ transform:rotateX(90deg) translateZ(75px); }
+.side6{ transform:rotateX(-90deg) translateZ(75px); }
+
+.holo-qr{
+  position:absolute;
+  width:108px;
+  height:108px;
+  background:#fff;
+  border-radius:15px;
+  padding:8px;
+  box-shadow:
+    0 0 34px rgba(103,232,249,.68),
+    inset 0 0 10px rgba(103,232,249,.28);
+  animation:floatQR 4s ease-in-out infinite, glitchQR 5s infinite;
+  z-index:2;
+  overflow:hidden;
+}
+
+.holo-qr img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  filter:hue-rotate(180deg) brightness(1.15);
+}
+
+.holo-beams{
+  position:absolute;
+  inset:-22px;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      transparent,
+      transparent 4px,
+      rgba(103,232,249,.08) 4px,
+      rgba(103,232,249,.08) 6px
+    );
+  mask-image:radial-gradient(circle, #fff, transparent 75%);
+  -webkit-mask-image:radial-gradient(circle, #fff, transparent 75%);
+  animation:beamFlow 2s linear infinite;
+  pointer-events:none;
+}
+
+.energy-platform{
+  position:absolute;
+  bottom:-28px;
+  left:50%;
+  transform:translateX(-50%) rotateX(75deg);
+  width:176px;
+  height:176px;
+  background:
+    radial-gradient(circle, var(--cyan) 0%, transparent 70%),
+    radial-gradient(circle, rgba(244,114,182,.25) 10%, transparent 60%);
+  border-radius:50%;
+  filter:blur(5px);
+  box-shadow:0 0 44px var(--cyan), 0 0 84px var(--pink);
+  animation:platformPulse 3s ease-in-out infinite;
+  opacity:.68;
+  z-index:-1;
+}
+
 .heroTitle{
   font-family:'Space Grotesk',sans-serif;
-  font-size: clamp(20px, 6vw, 26px);
-  font-weight:700; margin:0;
-}
-.heroTitle span { background:var(--ai-grad); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-
-/* KÜP ALANI */
-.holo-zone {
-  flex: 0 0 auto;
-  height: 180px; /* Sabitlendi taşmaması için */
-  display: flex; align-items: center; justify-content: center;
-  position: relative;
+  font-size:22px;
+  font-weight:700;
+  letter-spacing:-.4px;
+  color:#fff;
+  margin:0;
+  line-height:1.08;
+  text-align:center;
+  text-shadow:0 0 12px rgba(255,255,255,.18);
 }
 
-.holo-qr {
-  width: 100px; height: 100px;
-  background: #fff; border-radius: 12px; padding: 6px;
-  box-shadow: 0 0 30px rgba(103, 232, 249, 0.6);
-  z-index: 5; animation: float 4s ease-in-out infinite;
-}
-.holo-qr img { width: 100%; height: 100%; object-fit: cover; }
-
-.energy-base {
-  position: absolute; bottom: 20px; width: 140px; height: 40px;
-  background: radial-gradient(ellipse, var(--cyan), transparent 70%);
-  filter: blur(10px); opacity: 0.4; transform: rotateX(70deg);
+.heroTitle .to,
+.heroTitle .qr{
+  background:var(--ai-grad);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
 }
 
-/* KART GRID */
+.heroTitle .qr{
+  position:relative;
+}
+.heroTitle .qr::after{
+  content:'';
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:-2px;
+  height:2px;
+  background:var(--ai-grad);
+  box-shadow:0 2px 8px rgba(103,232,249,.35);
+}
+
+.heroSub{
+  margin:0;
+  font-size:10.8px;
+  color:var(--muted);
+  text-align:center;
+  line-height:1.36;
+  max-width:310px;
+}
+
+/* --- GRID VE KARTLAR --- */
 .home-grid{
-  flex: 1; min-height: 0;
-  display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1.2fr 0.8fr;
-  gap: 12px; padding-bottom: 5px;
+  flex:1;
+  min-height:0;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  grid-template-rows:minmax(0,1fr) minmax(116px,126px);
+  gap:12px;
+  overflow:hidden;
 }
 
 .mod-card{
-  position:relative; border-radius:24px; overflow:hidden;
+  position:relative;
+  border-radius:28px;
+  overflow:hidden;
   border:1px solid var(--cardLine);
-  background: rgba(255,255,255,.03);
-  display: flex; flex-direction: column;
-  padding: 16px; text-decoration: none; color: #fff;
+  box-shadow:
+    0 15px 30px rgba(0,0,0,.28),
+    inset 0 1px 0 rgba(255,255,255,.05);
+  padding:16px 15px 12px;
+  text-decoration:none;
+  color:#fff;
+  min-height:0;
+  transition:transform .22s ease, filter .22s ease, box-shadow .22s ease;
+}
+.mod-card:active{
+  transform:scale(.985);
+  filter:brightness(1.08);
+}
+.mod-card:hover{
+  box-shadow:
+    0 22px 36px rgba(0,0,0,.32),
+    0 0 18px rgba(103,232,249,.08);
 }
 
-.face-card{ background: linear-gradient(180deg, #2b1a4a 0%, #150e19 100%); }
-.all-card { background: linear-gradient(180deg, #4a1a3a 0%, #150e19 100%); }
-.offline-card { 
-  grid-column: 1 / 3; flex-direction: row; align-items: center; 
-  background: linear-gradient(90deg, #4a271a 0%, #150e19 100%);
+.face-card{
+  background:
+    radial-gradient(circle at 20% 15%, rgba(103,232,249,.35) 0%, transparent 35%),
+    linear-gradient(180deg, #301661 0%, #2b2185 50%, #1e36a3 100%);
+}
+
+.all-card{
+  background:
+    radial-gradient(circle at 80% 15%, rgba(251,146,60,.3) 0%, transparent 30%),
+    linear-gradient(180deg, #d43685 0%, #632bbd 52%, #3c35b5 100%);
+}
+
+.offline-card{
+  grid-column:1 / 3;
+  min-height:0;
+  display:flex;
+  align-items:center;
+  gap:16px;
+  background:
+    radial-gradient(circle at 12% 50%, rgba(251,146,60,.25) 0%, transparent 25%),
+    radial-gradient(circle at 88% 20%, rgba(103,232,249,.15) 0%, transparent 20%),
+    linear-gradient(90deg, #61220e 0%, #c2410a 36%, #ea580c 68%, #e11d48 100%);
+}
+
+.card-topline{
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:.5px;
+  color:rgba(255,255,255,.8);
+  margin-bottom:6px;
+  text-transform:uppercase;
 }
 
 .card-title{
+  margin:0;
   font-family:'Space Grotesk',sans-serif;
-  font-size: clamp(18px, 5vw, 24px);
-  line-height: 1; margin: 0 0 6px 0;
-}
-.card-title b { background:var(--ai-grad); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-
-.card-desc{ font-size: 11px; color: var(--muted); line-height: 1.3; margin: 0; }
-
-/* YENİ İKONLAR: Modern Geometrik */
-.icon-box {
-  margin-top: auto; height: 60px; position: relative;
-  display: flex; align-items: center; justify-content: center;
+  font-size:24px;
+  line-height:1;
+  letter-spacing:-.8px;
+  color:#fff;
+  word-break:break-word;
 }
 
-/* FaceToFace İkon: İki iç içe kare/portal */
-.icon-face::before, .icon-face::after {
-  content: ''; position: absolute; width: 30px; height: 30px;
-  border: 2px solid var(--cyan); border-radius: 8px;
-}
-.icon-face::before { transform: translateX(-10px) rotate(-10deg); opacity: 0.5; }
-.icon-face::after { transform: translateX(10px) rotate(10deg); box-shadow: 0 0 15px var(--cyan); }
-
-/* AllToAll İkon: Yayılım efekti */
-.icon-all .dot {
-  width: 10px; height: 10px; background: var(--pink); border-radius: 50%;
-  box-shadow: 0 0 15px var(--pink);
-}
-.icon-all .ring {
-  position: absolute; border: 1px solid var(--pink); border-radius: 50%;
-  animation: pulseRing 2s infinite;
+.card-title .ai-suffix{
+  background:var(--ai-grad);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  font-weight:800;
+  margin-left:-2px;
 }
 
-/* Offline İkon: Dalga/Download */
-.icon-off {
-  width: 40px; height: 40px; border-radius: 50%;
-  border: 2px dashed var(--muted); display: flex; align-items: center; justify-content: center;
+.card-desc{
+  margin-top:7px;
+  font-size:10.4px;
+  line-height:1.34;
+  color:rgba(255,255,255,.84);
+  max-width:100%;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
 }
 
-/* ANİMASYONLAR */
-@keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
-@keyframes pulseRing { 0%{width:10px; height:10px; opacity:1} 100%{width:50px; height:50px; opacity:0} }
+/* ART AREA */
+.card-art{
+  position:absolute;
+  left:12px;
+  right:12px;
+  bottom:12px;
+  height:76px;
+  border-radius:20px;
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.10);
+  overflow:hidden;
+}
 
-@media (max-height: 650px) {
-  .holo-zone { height: 140px; }
-  .card-title { font-size: 18px; }
-  .icon-box { height: 40px; }
+/* Face art - daha pro */
+.face-art{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:16px;
+}
+.face-headset{
+  position:relative;
+  width:28px;
+  height:38px;
+  margin-top:14px;
+}
+.face-headset::before{
+  content:"";
+  position:absolute;
+  left:50%;
+  top:-2px;
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  transform:translateX(-50%);
+  background:rgba(255,255,255,.88);
+  box-shadow:0 0 10px rgba(255,255,255,.16);
+}
+.face-headset::after{
+  content:"";
+  position:absolute;
+  left:50%;
+  bottom:0;
+  width:28px;
+  height:18px;
+  border-radius:14px 14px 10px 10px;
+  transform:translateX(-50%);
+  background:linear-gradient(180deg, rgba(255,255,255,.9), rgba(255,255,255,.32));
+}
+.face-wave{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:62px;
+  height:28px;
+  transform:translate(-50%,-50%);
+}
+.face-wave::before,
+.face-wave::after{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  border-radius:999px;
+  background:linear-gradient(90deg, rgba(255,255,255,.08), rgba(103,232,249,.98), rgba(255,255,255,.08));
+  box-shadow:0 0 14px rgba(103,232,249,.46);
+}
+.face-wave::before{
+  top:9px;
+  height:2px;
+}
+.face-wave::after{
+  top:16px;
+  height:2px;
+  opacity:.68;
+}
+
+/* AllToAll art - daha pro */
+.all-art{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.all-center{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:16px;
+  height:16px;
+  border-radius:50%;
+  transform:translate(-50%,-50%);
+  background:rgba(255,255,255,.92);
+  box-shadow:
+    0 0 0 6px rgba(255,255,255,.12),
+    0 0 18px rgba(251,146,60,.52);
+}
+.all-dot{
+  position:absolute;
+  width:12px;
+  height:12px;
+  border-radius:50%;
+  background:rgba(255,255,255,.84);
+  box-shadow:0 0 10px rgba(255,255,255,.22);
+}
+.n1{ top:10px; left:50%; transform:translateX(-50%); }
+.n2{ left:24px; bottom:14px; }
+.n3{ right:24px; bottom:14px; }
+.all-line{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:2px;
+  height:34px;
+  transform-origin:center bottom;
+  background:linear-gradient(180deg, rgba(255,255,255,.16), rgba(251,146,60,.95));
+  box-shadow:0 0 10px rgba(251,146,60,.34);
+}
+.r1{ transform:translate(-50%,-50%) rotate(0deg); }
+.r2{ transform:translate(-50%,-50%) rotate(120deg); }
+.r3{ transform:translate(-50%,-50%) rotate(240deg); }
+
+/* offline art */
+.offline-ico{
+  width:76px;
+  height:76px;
+  flex:0 0 auto;
+  position:relative;
+  border-radius:22px;
+  background:rgba(255,255,255,.12);
+  border:1.5px solid rgba(255,255,255,.15);
+  box-shadow:inset 0 0 22px rgba(255,255,255,.05);
+}
+.sheet{
+  position:absolute;
+  width:28px;
+  height:38px;
+  border-radius:9px;
+  border:1.4px solid rgba(255,255,255,.6);
+  background:rgba(255,255,255,.12);
+}
+.sheet.s1{ left:16px; top:21px; transform:rotate(-8deg); }
+.sheet.s2{ left:34px; top:17px; transform:rotate(7deg); }
+.line{
+  position:absolute;
+  left:6px;
+  right:6px;
+  height:2px;
+  border-radius:3px;
+  background:rgba(255,255,255,.55);
+}
+.l1{ top:10px; }
+.l2{ top:16px; }
+.l3{ top:22px; }
+
+.offline-body{
+  flex:1;
+  min-width:0;
+}
+
+.offline-title{
+  margin:0;
+  font-family:'Space Grotesk',sans-serif;
+  font-size:24px;
+  line-height:1;
+  letter-spacing:-.8px;
+  word-break:break-word;
+}
+
+.offline-desc{
+  margin-top:7px;
+  font-size:10.8px;
+  line-height:1.34;
+  color:rgba(255,255,255,.88);
+  max-width:84%;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+
+.arrow-chip{
+  flex:0 0 auto;
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  position:relative;
+  background:rgba(255,255,255,.15);
+  border:1px solid rgba(255,255,255,.18);
+  transition:background .2s ease;
+}
+.offline-card:hover .arrow-chip{
+  background:rgba(255,255,255,.24);
+}
+.arrow-chip::before{
+  content:"";
+  position:absolute;
+  left:13px;
+  top:50%;
+  width:12px;
+  height:12px;
+  border-top:2px solid rgba(255,255,255,.9);
+  border-right:2px solid rgba(255,255,255,.9);
+  transform:translateY(-50%) rotate(45deg);
+}
+
+/* --- ANİMASYONLAR --- */
+@keyframes rotateCrystal{
+  from{ transform:rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
+  to{ transform:rotateX(360deg) rotateY(720deg) rotateZ(360deg); }
+}
+
+@keyframes floatQR{
+  0%,100%{ transform:translateY(0) rotateX(0deg); }
+  50%{ transform:translateY(-8px) rotateX(5deg); }
+}
+
+@keyframes glitchQR{
+  0%,90%,100%{ opacity:1; transform:scale(1); filter:hue-rotate(180deg); }
+  92%{ opacity:.82; transform:scale(1.03) skewX(2deg); filter:hue-rotate(220deg); }
+  94%{ opacity:1; transform:scale(1) skewX(-2deg); }
+}
+
+@keyframes beamFlow{
+  from{ background-position:0 0; }
+  to{ background-position:0 50px; }
+}
+
+@keyframes platformPulse{
+  0%,100%{ transform:translateX(-50%) rotateX(75deg) scale(1); opacity:.7; }
+  50%{ transform:translateX(-50%) rotateX(75deg) scale(1.08); opacity:.88; }
+}
+
+@media (max-width:390px){
+  .holo-container{ width:190px; height:190px; margin-bottom:8px; }
+  .crystal-cage{ width:136px; height:136px; }
+  .side1{ transform:rotateY(0deg) translateZ(68px); }
+  .side2{ transform:rotateY(90deg) translateZ(68px); }
+  .side3{ transform:rotateY(180deg) translateZ(68px); }
+  .side4{ transform:rotateY(270deg) translateZ(68px); }
+  .side5{ transform:rotateX(90deg) translateZ(68px); }
+  .side6{ transform:rotateX(-90deg) translateZ(68px); }
+  .holo-qr{ width:98px; height:98px; }
+  .energy-platform{ width:154px; height:154px; bottom:-24px; }
+  .heroTitle{ font-size:20px; }
+  .card-title{ font-size:22px; }
+  .offline-title{ font-size:22px; }
+  .card-art{ height:70px; }
 }
 </style>
 </head>
 
 <body>
 <main id="pageContent">
-  
-  <header class="hero-header">
-    <h1 class="heroTitle">Side<span>To</span>Side <span>QR</span></h1>
-  </header>
+  <div class="page-shell-fit">
 
-  <section class="holo-zone">
-    <div class="holo-qr">
-      <img id="smallQrImg" alt="QR">
-    </div>
-    <div class="energy-base"></div>
-  </section>
+    <section class="hero">
+      <div class="heroTop">
+        <div class="holo-container">
+          <div class="crystal-cage">
+            <div class="crystal-side side1"></div>
+            <div class="crystal-side side2"></div>
+            <div class="crystal-side side3"></div>
+            <div class="crystal-side side4"></div>
+            <div class="crystal-side side5"></div>
+            <div class="crystal-side side6"></div>
+          </div>
 
-  <section class="home-grid">
-    <a class="mod-card face-card" href="/facetoface.html">
-      <h2 class="card-title">FaceToFace<b>AI</b></h2>
-      <p class="card-desc">Bölünmüş ekranda yüz yüze anlık çeviri.</p>
-      <div class="icon-box icon-face"></div>
-    </a>
+          <div class="holo-qr">
+            <img id="smallQrImg" alt="italkyAI QR Hologram">
+          </div>
 
-    <a class="mod-card all-card" href="/pages/f2f_connect.html">
-      <h2 class="card-title">AllToAll<b>AI</b></h2>
-      <p class="card-desc">Çoklu cihazlarla ortak toplantı akışı.</p>
-      <div class="icon-box icon-all">
-        <div class="dot"></div>
-        <div class="ring"></div>
+          <div class="holo-beams"></div>
+          <div class="energy-platform"></div>
+        </div>
+
+        <h1 class="heroTitle">Side<span class="to">To</span>Side <span class="qr">QR</span></h1>
+        <p class="heroSub">Hologramı tarat, anında bağlan. Cihazlar arası fütüristik çeviri akışı.</p>
       </div>
-    </a>
+    </section>
 
-    <a class="mod-card offline-card" href="/pages/offline_languages.html">
-      <div class="icon-box" style="margin:0; width:60px;">
-        <div class="icon-off">↓</div>
-      </div>
-      <div style="flex:1">
-        <h2 class="card-title">Offline Hub</h2>
-        <p class="card-desc">İnternetsiz çeviri için dil paketlerini yönet.</p>
-      </div>
-    </a>
-  </section>
+    <section class="home-grid">
 
+      <a class="mod-card face-card" href="/facetoface.html">
+        <div class="card-topline">Tek Telefon / Bölünmüş Ekran</div>
+        <h2 class="card-title">FaceToFace<span class="ai-suffix">AI</span></h2>
+        <p class="card-desc">Yüz yüze iletişimde ekran bölünür, çeviri akışı anında başlar.</p>
+
+        <div class="card-art face-art">
+          <div class="face-wave"></div>
+          <div class="face-headset"></div>
+          <div class="face-headset"></div>
+        </div>
+      </a>
+
+      <a class="mod-card all-card" href="/pages/f2f_connect.html">
+        <div class="card-topline">Toplu Akış / Meeting</div>
+        <h2 class="card-title">AllToAll<span class="ai-suffix">AI</span></h2>
+        <p class="card-desc">Çok kişili toplantılarda ortak çeviri ve dinamik meeting düzeni.</p>
+
+        <div class="card-art all-art">
+          <div class="all-line r1"></div>
+          <div class="all-line r2"></div>
+          <div class="all-line r3"></div>
+          <div class="all-center"></div>
+          <div class="all-dot n1"></div>
+          <div class="all-dot n2"></div>
+          <div class="all-dot n3"></div>
+        </div>
+      </a>
+
+      <a class="mod-card offline-card" href="/pages/offline_languages.html">
+        <div class="offline-ico">
+          <div class="sheet s1">
+            <div class="line l1"></div>
+            <div class="line l2"></div>
+            <div class="line l3"></div>
+          </div>
+          <div class="sheet s2">
+            <div class="line l1"></div>
+            <div class="line l2"></div>
+            <div class="line l3"></div>
+          </div>
+        </div>
+
+        <div class="offline-body">
+          <div class="card-topline">Yerel Paketler</div>
+          <h2 class="offline-title">Offline Hub</h2>
+          <p class="offline-desc">Dil paketlerini yönet, indir ve internet olmadan kullan.</p>
+        </div>
+
+        <div class="arrow-chip"></div>
+      </a>
+
+    </section>
+
+  </div>
 </main>
 
 <script type="module">
 import { mountShell } from "/js/ui_shell.js";
 import { supabase } from "/js/supabase_client.js";
 
-// Shell ayarı: Scroll istemiyoruz, ekran tam otursun.
-mountShell({ scroll:"none" });
+try{
+  mountShell({ scroll:"none" });
+}catch(e){
+  console.warn("[home shell]", e);
+}
 
 const smallQrImg = document.getElementById("smallQrImg");
-const HOST_CODE_KEY = "italky_interpreter_host_code";
 
-async function boot() {
-  let code = localStorage.getItem(HOST_CODE_KEY);
-  if(!code) {
-    code = "ITK-" + Math.random().toString(36).slice(2, 8).toUpperCase();
-    localStorage.setItem(HOST_CODE_KEY, code);
-  }
-  const url = `https://italky.ai/open/interpreter?host=${code}&v=1`;
-  smallQrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(url)}`;
+const HOST_CODE_KEY = "italky_interpreter_host_code";
+const QR_VERSION_KEY = "italky_interpreter_qr_version";
+
+function slugify(value){
+  return String(value || "")
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "")
+    .slice(0, 12);
 }
-boot();
+
+function randomCode(){
+  return Math.random().toString(36).slice(2, 10).toUpperCase();
+}
+
+async function getCurrentUser(){
+  try{
+    const { data } = await supabase.auth.getUser();
+    return data?.user || null;
+  }catch{
+    return null;
+  }
+}
+
+async function ensureStableHostCode(){
+  const existing = localStorage.getItem(HOST_CODE_KEY);
+  if(existing && String(existing).trim()) return String(existing).trim();
+
+  const user = await getCurrentUser();
+
+  const candidates = [
+    localStorage.getItem("membership_no"),
+    localStorage.getItem("uyelik_no"),
+    localStorage.getItem("member_no"),
+    user?.user_metadata?.membership_no,
+    user?.user_metadata?.member_no,
+    user?.user_metadata?.user_no,
+    user?.id,
+    user?.email?.split("@")?.[0]
+  ];
+
+  let base = "";
+  for(const c of candidates){
+    const s = slugify(c);
+    if(s && s.length >= 6){
+      base = s.slice(0, 10);
+      break;
+    }
+  }
+
+  if(!base) base = randomCode();
+
+  const hostCode = `ITK-${base}`;
+  localStorage.setItem(HOST_CODE_KEY, hostCode);
+  return hostCode;
+}
+
+function buildJoinUrl(hostCode){
+  const version = localStorage.getItem(QR_VERSION_KEY) || "1";
+  const url = new URL("https://italky.ai/open/interpreter");
+  url.searchParams.set("host", hostCode);
+  url.searchParams.set("v", version);
+  return url.toString();
+}
+
+function buildQrImageUrl(targetUrl){
+  return `https://api.qrserver.com/v1/create-qr-code/?size=520x520&margin=6&data=${encodeURIComponent(targetUrl)}`;
+}
+
+async function bootQr(){
+  const hostCode = await ensureStableHostCode();
+  const joinUrl = buildJoinUrl(hostCode);
+  const qrUrl = buildQrImageUrl(joinUrl);
+  if(smallQrImg) smallQrImg.src = qrUrl;
+}
+
+bootQr();
 </script>
 </body>
 </html>
