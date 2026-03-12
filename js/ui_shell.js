@@ -71,7 +71,7 @@ const HOME_HEADER_HTML = `
 
     <nav class="menu-nav">
       <a href="/pages/profile.html">Profil</a>
-      <a href="/pages/jeton-market.html">Jeton Market</a>
+      <a href="/pages/jetonbuy.html">Jeton Market</a>
       <a href="/pages/create-voice.html">Kendi Sesini Oluştur</a>
       <a href="/pages/translation_settings.html">Çeviri Ayarları</a>
       <a href="/pages/text_translate.html">TextToText</a>
