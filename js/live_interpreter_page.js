@@ -3,7 +3,7 @@
 import { LANG_POOL } from "/js/lang_pool_full.js";
 
 const $ = (id) => document.getElementById(id);
-const WS_BASE = "wss://italky-api.onrender.com/api";
+const WS_BASE = "wss://italky-api.onrender.com";
 
 const frameRoot = $("frameRoot");
 const topBody = $("topBody");
