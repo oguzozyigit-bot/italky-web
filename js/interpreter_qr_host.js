@@ -60,7 +60,22 @@ async function renderQr(text) {
     });
   } catch (e) {
     console.error("[qr render]", e);
-    qrBox.innerHTML = `<div style="padding:14px;color:#111;text-align:center;font:700 12px Outfit,sans-serif;word-break:break-all;">QR oluşturulamadı.<br><br>${text}</div>`;
+    qrBox.innerHTML = `
+      <div style="
+        width:100%;
+        height:100%;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        padding:14px;
+        text-align:center;
+        color:#111;
+        font:700 12px Outfit, sans-serif;
+        word-break:break-all;
+      ">
+        QR oluşturulamadı.<br><br>${text}
+      </div>
+    `;
   }
 }
 
@@ -68,10 +83,13 @@ async function createRoom(myLang) {
   const r = await fetch(`${API_BASE}/interpreter/create-room`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ my_lang: myLang || "tr" })
+    body: JSON.stringify({
+      my_lang: myLang || "tr"
+    })
   });
 
   const j = await r.json().catch(() => null);
+
   if (!r.ok || !j?.ok || !j?.room_id) {
     throw new Error(j?.detail || j?.error || "room_create_failed");
   }
@@ -100,10 +118,10 @@ function buildGuestJoinUrl(roomId) {
 function buildHostLiveUrl(roomId, hostCode, myLang, guestLang) {
   const url = new URL("/pages/live_interpreter.html", location.origin);
   url.searchParams.set("room", roomId);
-  if (hostCode) url.searchParams.set("host", hostCode);
   url.searchParams.set("role", "host");
   url.searchParams.set("my", myLang || "tr");
   url.searchParams.set("peer", guestLang || "en");
+  if (hostCode) url.searchParams.set("host", hostCode);
   return url.toString();
 }
 
@@ -165,6 +183,7 @@ async function init() {
 
     const room = await createRoom(my);
     const roomId = String(room.room_id || "").trim();
+
     if (!roomId) throw new Error("room_id_missing");
 
     const qrTarget = buildGuestJoinUrl(roomId);
@@ -176,7 +195,21 @@ async function init() {
     console.error("[interpreter_qr_host]", e);
 
     if (qrBox) {
-      qrBox.innerHTML = `<div style="padding:18px;color:#111;text-align:center;font:800 13px Outfit,sans-serif;">Oda oluşturulamadı.</div>`;
+      qrBox.innerHTML = `
+        <div style="
+          width:100%;
+          height:100%;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          text-align:center;
+          color:#111;
+          font:800 13px Outfit, sans-serif;
+          padding:18px;
+        ">
+          Oda oluşturulamadı.
+        </div>
+      `;
     }
 
     if (pairText) pairText.textContent = "Bağlantı hazırlanamadı.";
