@@ -57,14 +57,16 @@ const HOME_HEADER_HTML = `
 
           <div class="menu-username" id="menuUserName">Kullanıcı</div>
 
-          <div class="menu-token-pill">
-            <span>Jeton</span>
-            <strong id="menuHeaderJeton">0</strong>
+          <div class="menu-token-row">
+            <div class="menu-token-pill">
+              <span>Jeton</span>
+              <strong id="menuHeaderJeton">0</strong>
+            </div>
+
+            <a class="menu-token-link" id="menuJetonInfoLink" href="/pages/jeton-nedir.html">Jeton Nedir?</a>
           </div>
         </div>
       </div>
-
-      <button class="menu-close" id="menuClose" aria-label="Kapat" type="button">✕</button>
     </div>
 
     <nav class="menu-nav">
@@ -96,12 +98,7 @@ const SHELL_CSS = `
 :root{
   --ai-gradient: linear-gradient(135deg,#8bd3ff 0%,#7c5cff 45%,#ff66c4 100%);
   --footerH:0px;
-  --shell-bg-1:#060814;
-  --shell-bg-2:#0b1020;
-  --shell-line:rgba(255,255,255,.08);
-  --shell-soft:rgba(255,255,255,.05);
   --shell-text:#f5f7ff;
-  --shell-muted:rgba(255,255,255,.56);
 }
 
 *{
@@ -312,10 +309,10 @@ body.ui-menu-open{
   background:linear-gradient(180deg, rgba(12,16,29,.98) 0%, rgba(8,11,21,.98) 100%);
   border-left:1px solid rgba(255,255,255,.07);
   box-shadow:-18px 0 44px rgba(0,0,0,.38);
-  padding:calc(18px + env(safe-area-inset-top)) 14px calc(18px + env(safe-area-inset-bottom));
+  padding:calc(14px + env(safe-area-inset-top)) 12px calc(14px + env(safe-area-inset-bottom));
   display:flex;
   flex-direction:column;
-  gap:14px;
+  gap:10px;
 }
 
 .side-menu.open .menu-panel{
@@ -323,23 +320,21 @@ body.ui-menu-open{
 }
 
 .menu-top{
-  display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
-  gap:10px;
+  display:block;
 }
 
 .menu-user-card{
-  flex:1;
+  width:100%;
   display:flex;
   align-items:center;
-  gap:12px;
-  padding:12px;
-  border-radius:20px;
-  background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+  gap:14px;
+  padding:14px;
+  border-radius:22px;
+  background:linear-gradient(180deg, rgba(255,255,255,.065), rgba(255,255,255,.03));
   border:1px solid rgba(255,255,255,.07);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.03);
   cursor:pointer;
+  min-height:92px;
 }
 
 .menu-avatar-wrap{
@@ -347,9 +342,9 @@ body.ui-menu-open{
 }
 
 .menu-avatar{
-  width:56px;
-  height:56px;
-  border-radius:18px;
+  width:62px;
+  height:62px;
+  border-radius:20px;
   overflow:hidden;
   background:linear-gradient(135deg, rgba(139,211,255,.18), rgba(255,102,196,.14));
   border:1px solid rgba(255,255,255,.10);
@@ -366,14 +361,14 @@ body.ui-menu-open{
   min-width:0;
   display:flex;
   flex-direction:column;
-  gap:5px;
+  gap:6px;
 }
 
 .menu-brandline{
   display:flex;
   align-items:center;
   gap:2px;
-  font-size:19px;
+  font-size:20px;
   line-height:1;
   font-weight:800;
 }
@@ -394,6 +389,13 @@ body.ui-menu-open{
   color:#ffffff;
   line-height:1.2;
   word-break:break-word;
+}
+
+.menu-token-row{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
 }
 
 .menu-token-pill{
@@ -417,24 +419,28 @@ body.ui-menu-open{
   color:#fff;
 }
 
-.menu-close{
-  width:38px;
-  height:38px;
-  border-radius:12px;
-  border:1px solid rgba(255,255,255,.08);
-  background:rgba(255,255,255,.04);
-  color:#fff;
-  font-size:18px;
-  cursor:pointer;
-  flex:0 0 auto;
+.menu-token-link{
+  font-size:11px;
+  font-weight:800;
+  color:#f4d8ff;
+  text-decoration:none;
+  padding:6px 0;
 }
 
 .menu-nav{
   display:flex;
   flex-direction:column;
-  gap:9px;
+  gap:7px;
   overflow:auto;
   padding-right:2px;
+  scrollbar-width:none;
+  -ms-overflow-style:none;
+}
+
+.menu-nav::-webkit-scrollbar{
+  width:0;
+  height:0;
+  display:none;
 }
 
 .menu-nav a,
@@ -443,15 +449,16 @@ body.ui-menu-open{
   text-align:left;
   text-decoration:none;
   color:#f3f6ff;
-  padding:14px 14px;
-  border-radius:16px;
+  padding:12px 13px;
+  border-radius:14px;
   background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.025));
   border:1px solid rgba(255,255,255,.06);
-  font-size:14px;
+  font-size:13px;
   font-weight:700;
   letter-spacing:.1px;
   cursor:pointer;
   font-family:'Outfit',sans-serif;
+  line-height:1.15;
 }
 
 .menu-nav a:hover,
@@ -476,9 +483,9 @@ body.ui-menu-open{
 
 .menu-sign{
   margin-top:auto;
-  padding-top:10px;
-  font-size:11px;
-  color:rgba(255,255,255,.32);
+  padding-top:6px;
+  font-size:10px;
+  color:rgba(255,255,255,.30);
   text-align:center;
 }
 `;
@@ -546,10 +553,10 @@ function bindMenu() {
   const menuBtn = document.getElementById("menuBtn");
   const sideMenu = document.getElementById("sideMenu");
   const menuBackdrop = document.getElementById("menuBackdrop");
-  const menuClose = document.getElementById("menuClose");
   const logoutBtn = document.getElementById("logoutBtn");
   const deleteAccountBtn = document.getElementById("deleteAccountBtn");
   const menuProfileTop = document.getElementById("menuProfileTop");
+  const menuJetonInfoLink = document.getElementById("menuJetonInfoLink");
 
   if (!menuBtn || !sideMenu) return;
 
@@ -567,11 +574,17 @@ function bindMenu() {
 
   menuBtn.addEventListener("click", openMenu);
   menuBackdrop?.addEventListener("click", closeMenu);
-  menuClose?.addEventListener("click", closeMenu);
 
   menuProfileTop?.addEventListener("click", () => {
     closeMenu();
     location.href = "/pages/profile.html";
+  });
+
+  menuJetonInfoLink?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    closeMenu();
+    location.href = "/pages/jeton-nedir.html";
   });
 
   logoutBtn?.addEventListener("click", async () => {
