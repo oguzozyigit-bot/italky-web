@@ -14,6 +14,38 @@
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
 <style>
+:root{
+  --txt:rgba(255,255,255,.96);
+  --muted:rgba(255,255,255,.56);
+  --ai-grad:linear-gradient(135deg,#a5b4fc,#6366f1,#ec4899);
+  --panel-bg:rgba(255,255,255,0.04);
+  --panel-border:rgba(255,255,255,0.10);
+  --cyan:#a5b4fc;
+}
+
+*{
+  box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
+  outline:none;
+}
+
+html,body{
+  margin:0;
+  padding:0;
+  width:100%;
+  height:100%;
+  background:#02000f!important;
+  color:var(--txt);
+  font-family:'Outfit',sans-serif;
+}
+
+body{
+  background:
+    radial-gradient(circle at 50% -10%, rgba(99,102,241,0.16) 0%, transparent 50%),
+    radial-gradient(circle at 0% 100%, rgba(236,72,153,0.10) 0%, transparent 40%),
+    linear-gradient(180deg, #040312 0%, #09061a 100%);
+}
+
 #pageContent{
   padding:16px 14px calc(var(--footerH,92px) + env(safe-area-inset-bottom) + 20px);
   display:flex;
@@ -21,30 +53,100 @@
   gap:12px;
   max-width:560px;
   margin:auto;
-  font-family:'Outfit',sans-serif;
   color:#fff;
 }
 
 .head{
   text-align:center;
-  margin-bottom:8px;
+  margin-bottom:6px;
 }
 
 .head h1{
-  font-family:"Space Grotesk";
-  font-size:26px;
-  font-weight:1000;
+  font-family:"Space Grotesk", sans-serif;
+  font-size:28px;
+  font-weight:900;
   margin:0;
-  background:linear-gradient(135deg,#a5b4fc,#6366f1,#ec4899);
+  background:var(--ai-grad);
   -webkit-background-clip:text;
   -webkit-text-fill-color:transparent;
+  letter-spacing:-0.8px;
 }
 
 .head p{
   margin:6px 0 0;
   font-size:12px;
   font-weight:800;
-  color:rgba(255,255,255,0.6);
+  color:rgba(255,255,255,0.62);
+  line-height:1.45;
+}
+
+.balanceCard{
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:18px 18px;
+  border-radius:28px;
+  background:linear-gradient(135deg, rgba(99,102,241,.85), rgba(236,72,153,.72));
+  box-shadow:0 16px 36px rgba(99,102,241,.24);
+  overflow:hidden;
+}
+
+.balanceCard::after{
+  content:"";
+  position:absolute;
+  right:-28px;
+  bottom:-34px;
+  width:120px;
+  height:120px;
+  border-radius:50%;
+  background:rgba(255,255,255,.12);
+  filter:blur(8px);
+}
+
+.balanceLeft{
+  position:relative;
+  z-index:2;
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+
+.balanceLabel{
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:.7px;
+  text-transform:uppercase;
+  color:rgba(255,255,255,.82);
+}
+
+.balanceVal{
+  font-family:"Space Grotesk", sans-serif;
+  font-size:34px;
+  font-weight:900;
+  line-height:1;
+}
+
+.balanceSub{
+  font-size:11px;
+  font-weight:800;
+  color:rgba(255,255,255,.84);
+}
+
+.balanceIco{
+  position:relative;
+  z-index:2;
+  width:54px;
+  height:54px;
+  border-radius:50%;
+  background:rgba(255,255,255,.18);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:24px;
+  backdrop-filter:blur(10px);
+  border:1px solid rgba(255,255,255,.16);
 }
 
 .pkg{
@@ -88,6 +190,7 @@
   display:flex;
   flex-direction:column;
   gap:4px;
+  min-width:0;
 }
 
 .amt{
@@ -99,7 +202,7 @@
 .price{
   font-size:14px;
   font-weight:900;
-  color:#a5b4fc;
+  color:#c7d2fe;
 }
 
 .bonus{
@@ -110,6 +213,7 @@
 
 .ico{
   font-size:24px;
+  flex:0 0 auto;
 }
 
 .note{
@@ -129,6 +233,33 @@
   text-align:center;
   cursor:pointer;
 }
+
+.toast{
+  position:fixed;
+  left:50%;
+  bottom:calc(18px + env(safe-area-inset-bottom));
+  transform:translateX(-50%) translateY(20px);
+  min-width:220px;
+  max-width:90vw;
+  padding:12px 16px;
+  border-radius:14px;
+  background:rgba(12,14,28,.92);
+  color:#fff;
+  border:1px solid rgba(255,255,255,.08);
+  box-shadow:0 12px 30px rgba(0,0,0,.35);
+  text-align:center;
+  font-size:13px;
+  font-weight:700;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .25s ease, transform .25s ease;
+  z-index:999;
+}
+
+.toast.show{
+  opacity:1;
+  transform:translateX(-50%) translateY(0);
+}
 </style>
 </head>
 
@@ -139,6 +270,15 @@
   <div class="head">
     <h1>Jeton Market</h1>
     <p>italkyAI özelliklerini kullanmak için jeton paketini seç</p>
+  </div>
+
+  <div class="balanceCard">
+    <div class="balanceLeft">
+      <div class="balanceLabel">Mevcut Bakiye</div>
+      <div class="balanceVal" id="currentTokens">0</div>
+      <div class="balanceSub">Hesabındaki kullanılabilir jeton</div>
+    </div>
+    <div class="balanceIco">💎</div>
   </div>
 
   <div class="pkg" onclick="buy('jeton_10')">
@@ -178,15 +318,6 @@
     <div class="ico">💎</div>
   </div>
 
-  <div class="pkg" onclick="buy('jeton_250')">
-    <div class="pkgLeft">
-      <div class="amt">250 Jeton</div>
-      <div class="price">449 TL</div>
-      <div class="bonus">%38 avantaj</div>
-    </div>
-    <div class="ico">🚀</div>
-  </div>
-
   <div class="pkg best" onclick="buy('jeton_500')">
     <div class="bestBadge">VIP</div>
     <div class="pkgLeft">
@@ -208,9 +339,12 @@
 
 </div>
 
+<div id="toast" class="toast"></div>
+
 <script type="module">
-import { mountShell } from "/js/ui_shell.js";
+import { mountShell, setHeaderTokens } from "/js/ui_shell.js";
 import { supabase } from "/js/supabase_client.js";
+import { STORAGE_KEY } from "/js/config.js";
 
 try{
   mountShell({ scroll:"auto" });
@@ -219,14 +353,62 @@ try{
 }
 
 let __billingUserId = "";
+const currentTokensEl = document.getElementById("currentTokens");
+const toastEl = document.getElementById("toast");
+
+function toast(msg){
+  if(!toastEl) return;
+  toastEl.textContent = String(msg || "");
+  toastEl.classList.add("show");
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(() => {
+    toastEl.classList.remove("show");
+  }, 2200);
+}
+
+function getCachedUser(){
+  try{
+    const raw =
+      localStorage.getItem(STORAGE_KEY) ||
+      localStorage.getItem("italky_user") ||
+      localStorage.getItem("user") ||
+      localStorage.getItem("auth_user") ||
+      localStorage.getItem("italky_auth_user");
+    return raw ? JSON.parse(raw) : {};
+  }catch{
+    return {};
+  }
+}
+
+function resolveTokenValue(user, cached){
+  return Number(
+    user?.user_metadata?.tokens ??
+    user?.user_metadata?.jetons ??
+    cached?.tokens ??
+    cached?.jetons ??
+    cached?.user_metadata?.tokens ??
+    cached?.user_metadata?.jetons ??
+    0
+  );
+}
 
 async function syncBillingUserId(){
   try{
+    const cached = getCachedUser();
+
     const { data, error } = await supabase.auth.getUser();
     if(error) throw error;
 
-    const userId = data?.user?.id || "";
+    const user = data?.user || null;
+    const userId = user?.id || "";
     __billingUserId = userId;
+
+    const tokenVal = resolveTokenValue(user, cached);
+    if(currentTokensEl) currentTokensEl.textContent = String(tokenVal);
+
+    try{
+      setHeaderTokens(tokenVal);
+    }catch{}
 
     if(!userId){
       console.warn("[jetonbuy] user id bulunamadı");
@@ -241,6 +423,7 @@ async function syncBillingUserId(){
     }
   }catch(e){
     console.warn("[jetonbuy] syncBillingUserId hata:", e);
+    if(currentTokensEl) currentTokensEl.textContent = "0";
   }
 }
 
@@ -249,9 +432,15 @@ window.buy = async function(productId){
 
   try{
     if(!__billingUserId){
+      const cached = getCachedUser();
+
       const { data } = await supabase.auth.getUser();
-      const userId = data?.user?.id || "";
+      const user = data?.user || null;
+      const userId = user?.id || "";
       __billingUserId = userId;
+
+      const tokenVal = resolveTokenValue(user, cached);
+      if(currentTokensEl) currentTokensEl.textContent = String(tokenVal);
 
       if(userId && window.AndroidBilling && typeof window.AndroidBilling.setUserId === "function"){
         window.AndroidBilling.setUserId(userId);
@@ -259,7 +448,7 @@ window.buy = async function(productId){
     }
 
     if(!__billingUserId){
-      alert("Önce giriş yapmanız gerekiyor.");
+      toast("Önce giriş yapmanız gerekiyor.");
       return;
     }
 
@@ -268,14 +457,15 @@ window.buy = async function(productId){
       return;
     }
 
-    alert("Google Play satın alma sistemi şu an kullanılamıyor.");
+    toast("Google Play satın alma sistemi şu an kullanılamıyor.");
   }catch(e){
     console.warn("[jetonbuy] buy hata:", e);
-    alert("Satın alma başlatılamadı.");
+    toast("Satın alma başlatılamadı.");
   }
 };
 
 syncBillingUserId();
+setTimeout(syncBillingUserId, 600);
 </script>
 
 </body>
