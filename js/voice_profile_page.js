@@ -22,6 +22,7 @@ const sampleText = $("sampleText");
 const progressCount = $("progressCount");
 const progressFill = $("progressFill");
 const completedList = $("completedList");
+const micWrapper = $("micWrapper");
 
 let mediaRecorder = null;
 let mediaStream = null;
@@ -158,6 +159,16 @@ function startTimer() {
   }, 200);
 }
 
+function setListening(on) {
+  if (on) {
+    recordBtn?.classList.add("listening");
+    micWrapper?.classList.add("listening");
+  } else {
+    recordBtn?.classList.remove("listening");
+    micWrapper?.classList.remove("listening");
+  }
+}
+
 function stopTracks() {
   try {
     mediaStream?.getTracks?.().forEach((t) => t.stop());
@@ -174,9 +185,9 @@ function renderCompletedList() {
 
   completedList.innerHTML = items.length
     ? items.map((item) => `
-        <div class="completedItem">
-          <div class="completedText">Cümle ${item.idx + 1} tamamlandı</div>
-          <div class="completedDur">${fmtSec(item.seconds)}</div>
+        <div class="completed-item">
+          <div>Cümle ${item.idx + 1} tamamlandı</div>
+          <div>${fmtSec(item.seconds)}</div>
         </div>
       `).join("")
     : "";
@@ -218,9 +229,11 @@ function applyCurrentSample(samples) {
     currentSeconds = existing.seconds || 0;
     currentMime = existing.mime || "audio/webm";
     if (timerText) timerText.textContent = fmtSec(currentSeconds);
-    if (statusText) statusText.textContent = currentIndex === SAMPLE_COUNT - 1
-      ? "Kayıt tamamlandı • Kaydet butonuna bas"
-      : "Kayıt tamamlandı • Sonraki cümleye geç";
+    if (statusText) {
+      statusText.textContent = currentIndex === SAMPLE_COUNT - 1
+        ? "Kayıt tamamlandı • Kaydet butonuna bas"
+        : "Kayıt tamamlandı • Sonraki cümleye geç";
+    }
   } else {
     currentBlob = null;
     currentSeconds = 0;
@@ -228,13 +241,8 @@ function applyCurrentSample(samples) {
     if (statusText) statusText.textContent = "Mikrofona dokun ve konuşmaya başla";
   }
 
-  if (nextBtn) {
-    nextBtn.style.display = currentIndex === SAMPLE_COUNT - 1 ? "none" : "block";
-  }
-
-  if (finishBtn) {
-    finishBtn.style.display = currentIndex === SAMPLE_COUNT - 1 ? "block" : "none";
-  }
+  if (nextBtn) nextBtn.style.display = currentIndex === SAMPLE_COUNT - 1 ? "none" : "block";
+  if (finishBtn) finishBtn.style.display = currentIndex === SAMPLE_COUNT - 1 ? "block" : "none";
 
   renderProgress();
   renderCompletedList();
@@ -267,21 +275,19 @@ async function startRecording() {
 
     mediaRecorder.onstart = () => {
       isRecording = true;
-      recordBtn?.classList.add("listening");
+      setListening(true);
       if (statusText) statusText.textContent = "Kayıt başladı • Bitirmek için mikrofona tekrar dokun";
       startTimer();
     };
 
     mediaRecorder.ondataavailable = (e) => {
-      if (e.data && e.data.size > 0) {
-        audioChunks.push(e.data);
-      }
+      if (e.data && e.data.size > 0) audioChunks.push(e.data);
     };
 
     mediaRecorder.onerror = (e) => {
       console.warn("[voice recorder error]", e);
       isRecording = false;
-      recordBtn?.classList.remove("listening");
+      setListening(false);
       if (statusText) statusText.textContent = "Kayıt başlatılamadı";
       stopTracks();
       resetTimer();
@@ -304,10 +310,12 @@ async function startRecording() {
       };
 
       isRecording = false;
-      recordBtn?.classList.remove("listening");
-      if (statusText) statusText.textContent = currentIndex === SAMPLE_COUNT - 1
-        ? "Kayıt tamamlandı • Kaydet butonuna bas"
-        : "Kayıt tamamlandı • Sonraki cümleye geç";
+      setListening(false);
+      if (statusText) {
+        statusText.textContent = currentIndex === SAMPLE_COUNT - 1
+          ? "Kayıt tamamlandı • Kaydet butonuna bas"
+          : "Kayıt tamamlandı • Sonraki cümleye geç";
+      }
       stopTracks();
       clearInterval(timerInt);
 
@@ -319,7 +327,7 @@ async function startRecording() {
   } catch (e) {
     console.warn("[voice startRecording]", e);
     isRecording = false;
-    recordBtn?.classList.remove("listening");
+    setListening(false);
     stopTracks();
     resetTimer();
     if (statusText) statusText.textContent = "Mikrofon izni alınamadı";
@@ -364,9 +372,7 @@ function buildFilePath(userId, idx, ext = "webm") {
 function parseOldPaths(raw) {
   if (!raw) return [];
 
-  if (Array.isArray(raw)) {
-    return raw.filter(Boolean).map(String);
-  }
+  if (Array.isArray(raw)) return raw.filter(Boolean).map(String);
 
   const s = String(raw).trim();
   if (!s) return [];
@@ -484,9 +490,7 @@ async function enrollTTSVoice() {
   const { data: { session } } = await supabase.auth.getSession();
   const token = session?.access_token;
 
-  if (!token) {
-    throw new Error("Oturum bulunamadı");
-  }
+  if (!token) throw new Error("Oturum bulunamadı");
 
   const r = await fetch(`${API_BASE}/api/voice/enroll`, {
     method: "POST",
@@ -513,12 +517,10 @@ async function bootPage() {
 
   recordBtn?.addEventListener("click", async () => {
     if (saving) return;
-
     if (isRecording) {
       stopRecording();
       return;
     }
-
     await startRecording();
   });
 
@@ -562,8 +564,8 @@ async function bootPage() {
       toast("Ses profili hazır");
 
       setTimeout(() => {
-  location.href = "/pages/profile.html";
-   }, 700);
+        location.href = "/pages/profile.html";
+      }, 900);
     } catch (e) {
       console.warn("[voice finish]", e);
       if (statusText) statusText.textContent = e?.message || "Profil oluşturulamadı";
@@ -594,3 +596,8 @@ bootPage().catch((e) => {
   console.error("[voice_profile_page boot]", e);
   toast("Sayfa başlatılamadı");
 });
+
+// İsteğe bağlı export
+export function initVoiceProfile() {
+  // boot zaten otomatik çalışıyor; boş bırakıldı
+}
