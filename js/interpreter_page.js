@@ -168,9 +168,18 @@ function handleSocketMessage(data) {
 }
 
 function startSocket() {
+  if (!roomId) {
+    setStatus("Room ID bulunamadı", "err");
+    showSystemMessage("Live Interpreter ekranı room parametresi olmadan açılamaz.");
+    return;
+  }
+
   stopSocket();
 
   const wsUrl = buildWsUrl();
+
+  console.log("WS URL:", wsUrl);
+  showSystemMessage(`WS URL: ${wsUrl}`);
 
   try {
     socket = new WebSocket(wsUrl);
@@ -204,9 +213,10 @@ function startSocket() {
     }
   };
 
-  socket.onclose = () => {
+  socket.onclose = (event) => {
+    console.error("WS kapandı:", event.code, event.reason, event.wasClean);
     setStatus("Bağlantı kesildi", "err");
-    showSystemMessage("WebSocket bağlantısı kapandı.");
+    showSystemMessage(`WebSocket kapandı • Kod: ${event.code || "-"} • Sebep: ${event.reason || "yok"}`);
 
     if (pingTimer) {
       clearInterval(pingTimer);
@@ -215,7 +225,7 @@ function startSocket() {
   };
 
   socket.onerror = (err) => {
-    console.error("WS hatası:", err);
+    console.error("WS hatası:", err, "URL:", wsUrl);
     setStatus("Bağlantı hatası", "err");
     showSystemMessage("WebSocket bağlantısında hata oluştu.");
   };
