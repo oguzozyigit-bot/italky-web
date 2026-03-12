@@ -7,301 +7,322 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
 <style>
-:root {
-  --txt: rgba(255,255,255,.96);
-  --muted: rgba(255,255,255,.60);
-  --ai-grad: linear-gradient(135deg, #67e8f9 0%, #818cf8 46%, #f472b6 100%);
-  --panel-bg: rgba(255, 255, 255, 0.03);
-  --panel-border: rgba(255, 255, 255, 0.08);
-  --accent: #818cf8;
+
+:root{
+--txt:rgba(255,255,255,.96);
+--muted:rgba(255,255,255,.55);
+--panel-bg:rgba(255,255,255,.04);
+--panel-border:rgba(255,255,255,.10);
+--ai-grad:linear-gradient(135deg,#67e8f9,#818cf8,#f472b6);
 }
 
-html, body {
-  margin: 0; padding: 0;
-  background: #0a0a0f;
-  color: var(--txt);
-  font-family: 'Outfit', sans-serif;
-  height: 100%;
-  overflow: hidden;
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none;}
+
+html,body{
+margin:0;
+padding:0;
+width:100%;
+height:100%;
+background:#070710;
+color:var(--txt);
+font-family:Outfit,sans-serif;
 }
 
-/* Arka Plan Efektleri */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  background: 
-    radial-gradient(circle at 80% 10%, rgba(244, 114, 182, 0.1) 0%, transparent 40%),
-    radial-gradient(circle at 20% 80%, rgba(99, 102, 241, 0.1) 0%, transparent 40%);
-  z-index: -1;
+body{
+background:
+radial-gradient(circle at 80% 10%, rgba(244,114,182,.10), transparent 40%),
+radial-gradient(circle at 20% 80%, rgba(99,102,241,.10), transparent 40%),
+linear-gradient(180deg,#080812 0%,#0e0e18 100%);
 }
 
-#pageContent {
-  height: 100vh;
-  overflow-y: auto;
-  padding: calc(var(--headerH, 70px) + 20px) 16px calc(var(--footerH, 80px) + 20px);
-  scrollbar-width: none;
-  max-width: 500px;
-  margin: 0 auto;
+#pageContent{
+max-width:520px;
+margin:auto;
+padding:16px;
+display:flex;
+flex-direction:column;
+gap:18px;
 }
 
-#pageContent::-webkit-scrollbar { display: none; }
+/* geri */
 
-/* Geri Dön Tuşu */
-.back-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 24px;
+.back-row{
+display:flex;
+align-items:center;
+gap:12px;
 }
 
-.back-btn {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  background: var(--panel-bg);
-  border: 1px solid var(--panel-border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
+.back-btn{
+width:42px;
+height:42px;
+border-radius:14px;
+background:var(--panel-bg);
+border:1px solid var(--panel-border);
+display:flex;
+align-items:center;
+justify-content:center;
+cursor:pointer;
 }
 
-.back-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.1); }
-
-.back-btn svg { width: 20px; height: 20px; stroke: #fff; fill: none; stroke-width: 2.5; }
-
-.page-title {
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 24px;
-  font-weight: 700;
-  margin: 0;
+.back-btn:active{
+transform:scale(.95);
 }
 
-/* Profil Avatar / Kart */
-.profile-hero {
-  text-align: center;
-  margin-bottom: 30px;
+.back-btn svg{
+width:20px;
+height:20px;
+stroke:#fff;
+fill:none;
+stroke-width:2.5;
 }
 
-.avatar-wrapper {
-  width: 90px;
-  height: 90px;
-  margin: 0 auto 15px;
-  position: relative;
-  padding: 3px;
-  background: var(--ai-grad);
-  border-radius: 30px;
-  box-shadow: 0 10px 30px rgba(129, 140, 248, 0.3);
+.page-title{
+font-family:"Space Grotesk";
+font-size:26px;
+font-weight:700;
 }
 
-.avatar-inner {
-  width: 100%;
-  height: 100%;
-  background: #12121a;
-  border-radius: 27px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 32px;
-  font-weight: 800;
-  color: #fff;
+/* avatar */
+
+.profile-card{
+background:var(--panel-bg);
+border:1px solid var(--panel-border);
+border-radius:30px;
+padding:22px;
+text-align:center;
+backdrop-filter:blur(20px);
+position:relative;
+overflow:hidden;
 }
 
-/* Bilgi Paneli */
-.info-panel {
-  background: var(--panel-bg);
-  border: 1px solid var(--panel-border);
-  border-radius: 28px;
-  padding: 8px;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+.avatar{
+width:92px;
+height:92px;
+border-radius:28px;
+margin:auto;
+padding:3px;
+background:var(--ai-grad);
+animation:aura 5s linear infinite;
 }
 
-.info-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 14px;
-  border-bottom: 1px solid rgba(255,255,255,0.04);
+@keyframes aura{
+0%{filter:hue-rotate(0deg)}
+100%{filter:hue-rotate(360deg)}
 }
 
-.info-row:last-child { border-bottom: none; }
-
-.info-label {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+.avatar-inner{
+width:100%;
+height:100%;
+background:#12121a;
+border-radius:25px;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:34px;
+font-weight:900;
 }
 
-.info-value {
-  font-size: 15px;
-  font-weight: 700;
-  color: #fff;
-  text-align: right;
+.name{
+font-size:20px;
+font-weight:800;
+margin-top:14px;
 }
 
-.info-value.token {
-  background: var(--ai-grad);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  font-size: 20px;
-  font-weight: 900;
+.email{
+font-size:14px;
+color:var(--muted);
+margin-top:4px;
 }
 
-.mono { font-family: 'Space Grotesk', monospace; letter-spacing: 1px; }
+/* info panel */
 
-/* Alt Butonlar */
-.action-area {
-  margin-top: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+.info-panel{
+background:var(--panel-bg);
+border:1px solid var(--panel-border);
+border-radius:28px;
+padding:8px;
+backdrop-filter:blur(20px);
 }
 
-.btn {
-  height: 56px;
-  border-radius: 18px;
-  font-family: inherit;
-  font-weight: 800;
-  font-size: 15px;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
+.row{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:16px 14px;
+border-bottom:1px solid rgba(255,255,255,.05);
 }
 
-.btn-logout {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--panel-border);
-  color: #fff;
+.row:last-child{
+border-bottom:none;
 }
 
-.btn-delete {
-  background: transparent;
-  color: #ff5a8c;
-  font-size: 13px;
-  opacity: 0.6;
+.label{
+font-size:13px;
+font-weight:600;
+color:var(--muted);
+text-transform:uppercase;
 }
 
-.btn:active { transform: scale(0.98); }
-
-/* Animasyon */
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+.value{
+font-size:15px;
+font-weight:700;
 }
 
-.animate { animation: slideUp 0.5s ease forwards; }
+.token{
+font-size:22px;
+font-weight:900;
+background:var(--ai-grad);
+-webkit-background-clip:text;
+-webkit-text-fill-color:transparent;
+}
+
+.coin{
+margin-left:6px;
+animation:coin 2s ease-in-out infinite;
+}
+
+@keyframes coin{
+0%{transform:scale(1)}
+50%{transform:scale(1.2)}
+100%{transform:scale(1)}
+}
+
+.mono{
+font-family:"Space Grotesk", monospace;
+letter-spacing:1px;
+cursor:pointer;
+}
+
+/* toast */
+
+.toast{
+position:fixed;
+left:50%;
+top:20px;
+transform:translateX(-50%) translateY(-120px);
+background:#11111b;
+border:1px solid rgba(165,180,252,.35);
+padding:10px 14px;
+border-radius:999px;
+font-size:12px;
+font-weight:900;
+transition:.25s;
+}
+
+.toast.show{
+transform:translateX(-50%) translateY(0);
+}
 
 </style>
 </head>
+
 <body>
 
 <div id="pageContent">
 
-  <div class="back-header animate">
-    <button class="back-btn" onclick="history.back()">
-      <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
-    </button>
-    <h1 class="page-title">Profil</h1>
-  </div>
+<div class="back-row">
+<button class="back-btn" onclick="history.back()">
+<svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+</button>
+<div class="page-title">Profil</div>
+</div>
 
-  <div class="profile-hero animate" style="animation-delay: 0.1s;">
-    <div class="avatar-wrapper">
-      <div class="avatar-inner" id="avatarInitial">A</div>
-    </div>
-    <div id="pNameTop" style="font-weight: 800; font-size: 20px;">Ad Soyad</div>
-    <div id="pEmailTop" style="color: var(--muted); font-size: 14px; margin-top: 4px;">mail@example.com</div>
-  </div>
+<div class="profile-card">
 
-  <div class="info-panel animate" style="animation-delay: 0.2s;">
-    
-    <div class="info-row">
-      <div class="info-label">Jeton Sayısı</div>
-      <div class="info-value token" id="tokenVal">0</div>
-    </div>
+<div class="avatar">
+<div class="avatar-inner" id="avatarInitial">A</div>
+</div>
 
-    <div class="info-row">
-      <div class="info-label">Üyelik No</div>
-      <div class="info-value mono" id="memberNo">—</div>
-    </div>
-
-    <div class="info-row">
-      <div class="info-label">Üyelik Tarihi</div>
-      <div class="info-value" id="createdAt">—</div>
-    </div>
-
-    <div class="info-row">
-      <div class="info-label">Son Giriş</div>
-      <div class="info-value" id="lastLogin">—</div>
-    </div>
-
-  </div>
-
-  <div class="action-area animate" style="animation-delay: 0.3s;">
-    <button class="btn btn-logout" id="logoutBtn">Güvenli Çıkış Yap</button>
-    <button class="btn btn-delete" id="deleteBtn">Hesabı Kalıcı Olarak Sil</button>
-  </div>
+<div class="name" id="pName">Ad Soyad</div>
+<div class="email" id="pEmail">mail@example.com</div>
 
 </div>
 
+<div class="info-panel">
+
+<div class="row">
+<div class="label">Jeton Sayısı</div>
+<div class="value token">
+<span id="tokenVal">0</span>
+<span class="coin">💎</span>
+</div>
+</div>
+
+<div class="row">
+<div class="label">Üyelik No</div>
+<div class="value mono" id="memberNo">—</div>
+</div>
+
+<div class="row">
+<div class="label">Üyelik Tarihi</div>
+<div class="value" id="createdAt">—</div>
+</div>
+
+<div class="row">
+<div class="label">Son Giriş</div>
+<div class="value" id="lastLogin">—</div>
+</div>
+
+</div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
 <script type="module">
-  import { mountShell } from "/js/ui_shell.js";
-  import { supabase } from "/js/supabase_client.js";
 
-  // UI Shell Montajı
-  mountShell({ scroll: "none" });
+import { mountShell } from "/js/ui_shell.js";
+import { supabase } from "/js/supabase_client.js";
 
-  // Verileri Doldurma Fonksiyonu
-  async function loadProfile() {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+mountShell({scroll:"auto"});
 
-      const meta = user.user_metadata;
-      const name = meta.full_name || meta.display_name || "italky Kullanıcısı";
-      
-      // DOM Güncelleme
-      document.getElementById("pNameTop").textContent = name;
-      document.getElementById("pEmailTop").textContent = user.email;
-      document.getElementById("avatarInitial").textContent = name.charAt(0).toUpperCase();
-      document.getElementById("memberNo").textContent = meta.membership_no || user.id.slice(0,8).toUpperCase();
-      
-      // Tarih Formatlama
-      const formatDate = (dateStr) => {
-        if(!dateStr) return "—";
-        return new Date(dateStr).toLocaleDateString('tr-TR', {
-          day: 'numeric', month: 'long', year: 'numeric'
-        });
-      };
+const toast=document.getElementById("toast")
 
-      document.getElementById("createdAt").textContent = formatDate(user.created_at);
-      document.getElementById("lastLogin").textContent = formatDate(user.last_sign_in_at);
+function showToast(msg){
+toast.textContent=msg
+toast.classList.add("show")
+setTimeout(()=>toast.classList.remove("show"),2000)
+}
 
-      // Jeton verisi için (Varsayalım user_metadata içinde tutuyorsun)
-      document.getElementById("tokenVal").textContent = meta.tokens || 0;
+async function loadProfile(){
 
-    } catch (e) {
-      console.error("Profil yüklenemedi:", e);
-    }
-  }
+const {data:{user}}=await supabase.auth.getUser()
+if(!user) return
 
-  // Çıkış İşlemi
-  document.getElementById("logoutBtn").onclick = async () => {
-    await supabase.auth.signOut();
-    location.href = "/login.html";
-  };
+const meta=user.user_metadata||{}
+const name=meta.full_name||meta.display_name||"italky Kullanıcısı"
 
-  loadProfile();
+document.getElementById("pName").textContent=name
+document.getElementById("pEmail").textContent=user.email
+
+document.getElementById("avatarInitial").textContent=name.charAt(0).toUpperCase()
+
+document.getElementById("memberNo").textContent=
+meta.membership_no||user.id.slice(0,8).toUpperCase()
+
+document.getElementById("tokenVal").textContent=meta.tokens||0
+
+function formatDate(d){
+if(!d) return "—"
+return new Date(d).toLocaleDateString("tr-TR",{year:"numeric",month:"long",day:"numeric"})
+}
+
+document.getElementById("createdAt").textContent=formatDate(user.created_at)
+document.getElementById("lastLogin").textContent=formatDate(user.last_sign_in_at)
+
+}
+
+document.getElementById("memberNo").onclick=()=>{
+navigator.clipboard.writeText(document.getElementById("memberNo").textContent)
+showToast("Üyelik numarası kopyalandı")
+}
+
+loadProfile()
+
 </script>
 
 </body>
