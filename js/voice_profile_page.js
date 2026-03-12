@@ -562,8 +562,8 @@ async function bootPage() {
       toast("Ses profili hazır");
 
       setTimeout(() => {
-        location.href = "/pages/home.html";
-      }, 700);
+  location.href = "/pages/profile.html";
+   }, 700);
     } catch (e) {
       console.warn("[voice finish]", e);
       if (statusText) statusText.textContent = e?.message || "Profil oluşturulamadı";
