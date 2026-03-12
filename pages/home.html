@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-<title>italkyAI • Translate AI Hub</title>
+<title>italkyAI • Future Home</title>
 
-<meta name="theme-color" content="#050510"/>
+<meta name="theme-color" content="#120d16"/>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,14 +14,16 @@
 <style>
 :root{
   --txt:rgba(255,255,255,.96);
-  --muted:rgba(255,255,255,.58);
+  --muted:rgba(255,255,255,.64);
   --line:rgba(255,255,255,.10);
-  --glass:rgba(255,255,255,.05);
-  --glass-strong:rgba(255,255,255,.07);
-  --ai-grad:linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
+  --cardLine:rgba(255,255,255,.12);
+  --ai-grad:linear-gradient(135deg,#67e8f9 0%, #818cf8 46%, #f472b6 100%);
+  --pink:#f472b6;
+  --violet:#8b5cf6;
   --blue:#60a5fa;
+  --cyan:#67e8f9;
   --orange:#fb923c;
-  --purple:#a855f7;
+  --peach:#fdba74;
 }
 
 *{
@@ -35,9 +37,9 @@ html,body{
   width:100%;
   height:100%;
   overflow:hidden;
-  background:#000;
   color:var(--txt);
   font-family:'Outfit',sans-serif;
+  background:#120d16;
   scrollbar-width:none;
 }
 html::-webkit-scrollbar,
@@ -47,10 +49,10 @@ body::-webkit-scrollbar{
 
 body{
   background:
-    radial-gradient(circle at 50% 10%, rgba(99,102,241,.20) 0%, rgba(0,0,0,0) 24%),
-    radial-gradient(circle at 20% 16%, rgba(96,165,250,.08) 0%, rgba(0,0,0,0) 20%),
-    radial-gradient(circle at 80% 16%, rgba(236,72,153,.08) 0%, rgba(0,0,0,0) 16%),
-    linear-gradient(180deg, #090919 0%, #020207 100%);
+    radial-gradient(circle at 50% 0%, rgba(251,146,60,.18) 0%, transparent 28%),
+    radial-gradient(circle at 20% 18%, rgba(244,114,182,.12) 0%, transparent 25%),
+    radial-gradient(circle at 82% 18%, rgba(96,165,250,.10) 0%, transparent 20%),
+    linear-gradient(180deg, #1d1016 0%, #150e19 34%, #120d16 100%);
 }
 
 #pageContent{
@@ -58,21 +60,25 @@ body{
   height:100%;
   max-width:560px;
   margin:0 auto;
-  padding:
-    calc(var(--headerH,72px) + env(safe-area-inset-top) + 2px)
-    14px
-    calc(var(--footerH,92px) + env(safe-area-inset-bottom) + 6px);
+  padding:8px 14px 8px;
   display:flex;
   flex-direction:column;
-  gap:6px;
   overflow:hidden;
 }
 
-/* HERO */
+.page-shell-fit{
+  height:100%;
+  min-height:0;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  overflow:hidden;
+}
+
+/* --- HERO ALANI --- */
 .hero{
   flex:0 0 auto;
-  padding-top:0;
-  padding-bottom:0;
+  perspective:1000px;
 }
 
 .heroTop{
@@ -80,469 +86,576 @@ body{
   flex-direction:column;
   align-items:center;
   justify-content:center;
-  gap:4px;
+  gap:8px;
 }
 
-.neural-orb{
-  width:176px;
-  height:176px;
+.holo-container{
+  width:210px;
+  height:210px;
   position:relative;
   display:flex;
   align-items:center;
   justify-content:center;
+  transform-style:preserve-3d;
+  margin-bottom:12px;
 }
 
-.ai-ring{
+.crystal-cage{
   position:absolute;
-  inset:-3px;
-  border-radius:50%;
-  padding:2px;
-  background:var(--ai-grad);
-  -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite:xor;
-  mask-composite:exclude;
-  animation:rotateOrb 18s linear infinite;
+  width:150px;
+  height:150px;
+  transform-style:preserve-3d;
+  animation:rotateCrystal 18s linear infinite;
 }
 
-.orbit-energy{
+.crystal-side{
   position:absolute;
-  inset:-15px;
-  border-radius:50%;
-  animation:rotateOrb 9s linear infinite reverse;
+  inset:0;
+  border:2px solid rgba(103,232,249,.42);
+  background:radial-gradient(circle, rgba(129,140,248,.12), transparent);
+  box-shadow:0 0 18px rgba(103,232,249,.22);
 }
 
-.e-ball{
+.side1{ transform:rotateY(0deg) translateZ(75px); }
+.side2{ transform:rotateY(90deg) translateZ(75px); }
+.side3{ transform:rotateY(180deg) translateZ(75px); }
+.side4{ transform:rotateY(270deg) translateZ(75px); }
+.side5{ transform:rotateX(90deg) translateZ(75px); }
+.side6{ transform:rotateX(-90deg) translateZ(75px); }
+
+.holo-qr{
   position:absolute;
-  width:12px;
-  height:12px;
-  border-radius:50%;
-  filter:blur(.4px);
-}
-
-.ball-l{
-  top:-5px;
-  left:50%;
-  transform:translateX(-50%);
-  background:#3b82f6;
-  box-shadow:0 0 18px #3b82f6;
-}
-
-.ball-b{
-  bottom:-5px;
-  left:50%;
-  transform:translateX(-50%);
-  background:#ec4899;
-  box-shadow:0 0 18px #ec4899;
-}
-
-.ai-core{
-  width:128px;
-  height:128px;
-  position:relative;
-  border-radius:50%;
-  background:#000;
-  border:2px solid transparent;
-  background-image:linear-gradient(#000,#000), var(--ai-grad);
-  background-origin:border-box;
-  background-clip:content-box,border-box;
-  z-index:2;
-  box-shadow:
-    0 18px 42px rgba(0,0,0,.42),
-    0 0 34px rgba(99,102,241,.14);
-  overflow:hidden;
-  animation:orbBreath 4.2s ease-in-out infinite;
-}
-
-.qrFrame{
-  position:absolute;
-  inset:16px;
-  border-radius:18px;
-  overflow:hidden;
+  width:108px;
+  height:108px;
   background:#fff;
-  display:flex;
-  align-items:center;
-  justify-content:center;
+  border-radius:15px;
+  padding:8px;
+  box-shadow:
+    0 0 34px rgba(103,232,249,.68),
+    inset 0 0 10px rgba(103,232,249,.28);
+  animation:floatQR 4s ease-in-out infinite, glitchQR 5s infinite;
+  z-index:2;
+  overflow:hidden;
 }
 
-.qrFrame img{
+.holo-qr img{
   width:100%;
   height:100%;
   object-fit:cover;
-  display:block;
+  filter:hue-rotate(180deg) brightness(1.15);
 }
 
-.qrScan{
+.holo-beams{
   position:absolute;
-  left:10px;
-  right:10px;
-  top:12px;
-  height:2px;
-  border-radius:999px;
-  background:linear-gradient(90deg, rgba(255,255,255,0), #a5b4fc, rgba(255,255,255,0));
-  box-shadow:0 0 14px rgba(165,180,252,.7);
-  animation:scanBar 2.8s linear infinite;
-  z-index:4;
+  inset:-22px;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      transparent,
+      transparent 4px,
+      rgba(103,232,249,.08) 4px,
+      rgba(103,232,249,.08) 6px
+    );
+  mask-image:radial-gradient(circle, #fff, transparent 75%);
+  -webkit-mask-image:radial-gradient(circle, #fff, transparent 75%);
+  animation:beamFlow 2s linear infinite;
+  pointer-events:none;
+}
+
+.energy-platform{
+  position:absolute;
+  bottom:-28px;
+  left:50%;
+  transform:translateX(-50%) rotateX(75deg);
+  width:176px;
+  height:176px;
+  background:
+    radial-gradient(circle, var(--cyan) 0%, transparent 70%),
+    radial-gradient(circle, rgba(244,114,182,.25) 10%, transparent 60%);
+  border-radius:50%;
+  filter:blur(5px);
+  box-shadow:0 0 44px var(--cyan), 0 0 84px var(--pink);
+  animation:platformPulse 3s ease-in-out infinite;
+  opacity:.68;
+  z-index:-1;
 }
 
 .heroTitle{
   font-family:'Space Grotesk',sans-serif;
-  font-size:21px;
+  font-size:22px;
   font-weight:700;
-  letter-spacing:-.35px;
+  letter-spacing:-.4px;
   color:#fff;
   margin:0;
-  line-height:1.05;
+  line-height:1.08;
+  text-align:center;
+  text-shadow:0 0 12px rgba(255,255,255,.18);
 }
 
-.heroTitle .ai{
+.heroTitle .to,
+.heroTitle .qr{
   background:var(--ai-grad);
   -webkit-background-clip:text;
   -webkit-text-fill-color:transparent;
 }
 
+.heroTitle .qr{
+  position:relative;
+}
+.heroTitle .qr::after{
+  content:'';
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:-2px;
+  height:2px;
+  background:var(--ai-grad);
+  box-shadow:0 2px 8px rgba(103,232,249,.35);
+}
+
 .heroSub{
   margin:0;
-  font-size:10.6px;
+  font-size:10.8px;
   color:var(--muted);
   text-align:center;
-  line-height:1.32;
-  max-width:316px;
+  line-height:1.36;
+  max-width:310px;
 }
 
-/* KARTLAR */
-.hub-cards{
+/* --- GRID VE KARTLAR --- */
+.home-grid{
   flex:1;
   min-height:0;
-  display:flex;
-  flex-direction:column;
-  justify-content:flex-start;
-  gap:8px;
-  margin-top:2px;
-}
-
-.trans-card{
-  flex:0 0 auto;
-  height:68px;
-  position:relative;
-  border-radius:22px;
-  border:1px solid var(--line);
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  grid-template-rows:minmax(0,1fr) minmax(116px,126px);
+  gap:12px;
   overflow:hidden;
-  cursor:pointer;
-  display:flex;
-  align-items:center;
-  gap:14px;
-  padding:0 15px;
-  background:var(--glass);
-  backdrop-filter:blur(24px);
-  -webkit-backdrop-filter:blur(24px);
-  transition:transform .22s ease, filter .22s ease, border-color .22s ease;
-  box-shadow:0 12px 24px rgba(0,0,0,.18);
 }
 
-.trans-card:active{
-  transform:scale(.986);
+.mod-card{
+  position:relative;
+  border-radius:28px;
+  overflow:hidden;
+  border:1px solid var(--cardLine);
+  box-shadow:
+    0 15px 30px rgba(0,0,0,.28),
+    inset 0 1px 0 rgba(255,255,255,.05);
+  padding:16px 15px 12px;
+  text-decoration:none;
+  color:#fff;
+  min-height:0;
+  transition:transform .22s ease, filter .22s ease, box-shadow .22s ease;
+}
+.mod-card:active{
+  transform:scale(.985);
   filter:brightness(1.08);
 }
-
-.trans-card:hover{
-  border-color:rgba(255,255,255,.15);
+.mod-card:hover{
+  box-shadow:
+    0 22px 36px rgba(0,0,0,.32),
+    0 0 18px rgba(103,232,249,.08);
 }
 
 .face-card{
-  background:linear-gradient(145deg, rgba(96,165,250,.13) 0%, rgba(0,0,0,.52) 100%);
-}
-.text-card{
-  background:linear-gradient(145deg, rgba(165,180,252,.13) 0%, rgba(0,0,0,.52) 100%);
-}
-.meeting-card{
-  background:linear-gradient(145deg, rgba(251,146,60,.13) 0%, rgba(0,0,0,.52) 100%);
-}
-.offline-card{
-  background:linear-gradient(145deg, rgba(168,85,247,.13) 0%, rgba(0,0,0,.52) 100%);
+  background:
+    radial-gradient(circle at 20% 15%, rgba(103,232,249,.35) 0%, transparent 35%),
+    linear-gradient(180deg, #301661 0%, #2b2185 50%, #1e36a3 100%);
 }
 
-.ico-box{
-  width:48px;
-  height:48px;
-  position:relative;
-  flex:0 0 auto;
+.all-card{
+  background:
+    radial-gradient(circle at 80% 15%, rgba(251,146,60,.3) 0%, transparent 30%),
+    linear-gradient(180deg, #d43685 0%, #632bbd 52%, #3c35b5 100%);
+}
+
+.offline-card{
+  grid-column:1 / 3;
+  min-height:0;
   display:flex;
   align-items:center;
-  justify-content:center;
-  border-radius:16px;
-  background:rgba(255,255,255,.04);
-  border:1px solid rgba(255,255,255,.06);
-  box-shadow:inset 0 0 18px rgba(255,255,255,.02);
+  gap:16px;
+  background:
+    radial-gradient(circle at 12% 50%, rgba(251,146,60,.25) 0%, transparent 25%),
+    radial-gradient(circle at 88% 20%, rgba(103,232,249,.15) 0%, transparent 20%),
+    linear-gradient(90deg, #61220e 0%, #c2410a 36%, #ea580c 68%, #e11d48 100%);
 }
 
-/* FaceToFace premium bars */
-.face-bars{
-  width:30px;
-  height:28px;
-  display:flex;
-  align-items:flex-end;
-  justify-content:center;
-  gap:3px;
-}
-.face-bar{
-  width:5px;
-  border-radius:8px;
-  background:linear-gradient(180deg, rgba(147,197,253,1), rgba(59,130,246,.95));
-  box-shadow:0 0 10px rgba(96,165,250,.35);
-  animation:eqPulse .72s infinite alternate;
-}
-.face-bar:nth-child(1){ height:32%; animation-delay:.08s; }
-.face-bar:nth-child(2){ height:68%; animation-delay:.18s; }
-.face-bar:nth-child(3){ height:92%; animation-delay:.28s; }
-.face-bar:nth-child(4){ height:58%; animation-delay:.12s; }
-.face-bar:nth-child(5){ height:80%; animation-delay:.22s; }
-
-/* TextToText premium */
-.text-blocks{
-  width:30px;
-  height:24px;
-  border:1px solid rgba(165,180,252,.48);
-  border-radius:8px;
-  display:flex;
-  flex-direction:column;
-  gap:3px;
-  padding:4px;
-  position:relative;
-  overflow:hidden;
-  background:rgba(255,255,255,.02);
-}
-.text-line{
-  height:2px;
-  background:rgba(255,255,255,.26);
-  border-radius:2px;
-  animation:textTyping 2s infinite alternate;
-}
-.text-line:nth-child(1){ animation-delay:0s; }
-.text-line:nth-child(2){ animation-delay:.2s; }
-.text-line:nth-child(3){ animation-delay:.4s; }
-.text-line:nth-child(4){ animation-delay:.6s; }
-.text-scan{
-  position:absolute;
-  top:0;
-  left:0;
-  width:100%;
-  height:2px;
-  background:#a5b4fc;
-  box-shadow:0 0 12px rgba(165,180,252,.85);
-  animation:scanLine 2.5s linear infinite;
-}
-
-/* Meeting premium */
-.meeting-rings{
-  width:30px;
-  height:30px;
-  position:relative;
-}
-.meeting-ring{
-  position:absolute;
-  border:2px solid rgba(251,146,60,.88);
-  border-radius:999px;
-  animation:roomPulse 2s infinite ease-out;
-}
-.meeting-ring.r1{ inset:8px; animation-delay:0s; }
-.meeting-ring.r2{ inset:4px; animation-delay:.35s; }
-.meeting-ring.r3{ inset:0; animation-delay:.7s; }
-.meeting-core{
-  position:absolute;
-  left:50%;
-  top:50%;
-  width:10px;
-  height:10px;
-  border-radius:50%;
-  transform:translate(-50%,-50%);
-  background:var(--orange);
-  box-shadow:0 0 16px rgba(251,146,60,.85);
-}
-
-/* Offline premium */
-.file-stack{
-  width:30px;
-  height:30px;
-  position:relative;
-}
-.file-sheet{
-  position:absolute;
-  width:16px;
-  height:22px;
-  border-radius:6px;
-  border:1px solid rgba(168,85,247,.55);
-  background:rgba(168,85,247,.08);
-  box-shadow:0 0 10px rgba(168,85,247,.16);
-}
-.file-sheet.s1{ left:4px; top:5px; transform:rotate(-8deg); }
-.file-sheet.s2{ left:12px; top:3px; transform:rotate(6deg); }
-.file-line{
-  position:absolute;
-  left:4px;
-  right:4px;
-  height:2px;
-  background:rgba(168,85,247,.55);
-  border-radius:2px;
-}
-.file-line.l1{ top:7px; }
-.file-line.l2{ top:11px; }
-.file-line.l3{ top:15px; }
-
-.card-content{
-  flex:1;
-  min-width:0;
+.card-topline{
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:.5px;
+  color:rgba(255,255,255,.8);
+  margin-bottom:6px;
+  text-transform:uppercase;
 }
 
 .card-title{
   margin:0;
   font-family:'Space Grotesk',sans-serif;
-  font-size:15px;
-  font-weight:700;
+  font-size:24px;
+  line-height:1;
+  letter-spacing:-.8px;
   color:#fff;
-  letter-spacing:-.25px;
-  line-height:1.08;
+  word-break:break-word;
 }
 
-.card-title .ai{
+.card-title .ai-suffix{
   background:var(--ai-grad);
   -webkit-background-clip:text;
   -webkit-text-fill-color:transparent;
+  font-weight:800;
+  margin-left:-2px;
 }
 
 .card-desc{
-  margin-top:2px;
-  font-size:9.2px;
-  color:rgba(255,255,255,.50);
-  line-height:1.26;
+  margin-top:7px;
+  font-size:10.4px;
+  line-height:1.34;
+  color:rgba(255,255,255,.84);
+  max-width:100%;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
 }
 
-@keyframes rotateOrb{
-  from{ transform:rotate(0); }
-  to{ transform:rotate(360deg); }
+/* ART AREA */
+.card-art{
+  position:absolute;
+  left:12px;
+  right:12px;
+  bottom:12px;
+  height:76px;
+  border-radius:20px;
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.10);
+  overflow:hidden;
 }
-@keyframes orbBreath{
-  0%,100%{ transform:scale(1); }
-  50%{ transform:scale(1.05); }
+
+/* Face art - daha pro */
+.face-art{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:16px;
 }
-@keyframes eqPulse{
-  from{ height:16%; opacity:.7; }
-  to{ height:100%; opacity:1; }
+.face-headset{
+  position:relative;
+  width:28px;
+  height:38px;
+  margin-top:14px;
 }
-@keyframes scanBar{
-  0%{ transform:translateY(0); opacity:.8; }
-  50%{ opacity:1; }
-  100%{ transform:translateY(82px); opacity:.8; }
+.face-headset::before{
+  content:"";
+  position:absolute;
+  left:50%;
+  top:-2px;
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  transform:translateX(-50%);
+  background:rgba(255,255,255,.88);
+  box-shadow:0 0 10px rgba(255,255,255,.16);
 }
-@keyframes scanLine{
-  0%{ top:0; }
-  100%{ top:100%; }
+.face-headset::after{
+  content:"";
+  position:absolute;
+  left:50%;
+  bottom:0;
+  width:28px;
+  height:18px;
+  border-radius:14px 14px 10px 10px;
+  transform:translateX(-50%);
+  background:linear-gradient(180deg, rgba(255,255,255,.9), rgba(255,255,255,.32));
 }
-@keyframes roomPulse{
-  0%{ opacity:.95; transform:scale(.8); }
-  100%{ opacity:0; transform:scale(1.18); }
+.face-wave{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:62px;
+  height:28px;
+  transform:translate(-50%,-50%);
 }
-@keyframes textTyping{
-  0%{ width:25%; }
-  100%{ width:100%; }
+.face-wave::before,
+.face-wave::after{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  border-radius:999px;
+  background:linear-gradient(90deg, rgba(255,255,255,.08), rgba(103,232,249,.98), rgba(255,255,255,.08));
+  box-shadow:0 0 14px rgba(103,232,249,.46);
+}
+.face-wave::before{
+  top:9px;
+  height:2px;
+}
+.face-wave::after{
+  top:16px;
+  height:2px;
+  opacity:.68;
+}
+
+/* AllToAll art - daha pro */
+.all-art{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.all-center{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:16px;
+  height:16px;
+  border-radius:50%;
+  transform:translate(-50%,-50%);
+  background:rgba(255,255,255,.92);
+  box-shadow:
+    0 0 0 6px rgba(255,255,255,.12),
+    0 0 18px rgba(251,146,60,.52);
+}
+.all-dot{
+  position:absolute;
+  width:12px;
+  height:12px;
+  border-radius:50%;
+  background:rgba(255,255,255,.84);
+  box-shadow:0 0 10px rgba(255,255,255,.22);
+}
+.n1{ top:10px; left:50%; transform:translateX(-50%); }
+.n2{ left:24px; bottom:14px; }
+.n3{ right:24px; bottom:14px; }
+.all-line{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:2px;
+  height:34px;
+  transform-origin:center bottom;
+  background:linear-gradient(180deg, rgba(255,255,255,.16), rgba(251,146,60,.95));
+  box-shadow:0 0 10px rgba(251,146,60,.34);
+}
+.r1{ transform:translate(-50%,-50%) rotate(0deg); }
+.r2{ transform:translate(-50%,-50%) rotate(120deg); }
+.r3{ transform:translate(-50%,-50%) rotate(240deg); }
+
+/* offline art */
+.offline-ico{
+  width:76px;
+  height:76px;
+  flex:0 0 auto;
+  position:relative;
+  border-radius:22px;
+  background:rgba(255,255,255,.12);
+  border:1.5px solid rgba(255,255,255,.15);
+  box-shadow:inset 0 0 22px rgba(255,255,255,.05);
+}
+.sheet{
+  position:absolute;
+  width:28px;
+  height:38px;
+  border-radius:9px;
+  border:1.4px solid rgba(255,255,255,.6);
+  background:rgba(255,255,255,.12);
+}
+.sheet.s1{ left:16px; top:21px; transform:rotate(-8deg); }
+.sheet.s2{ left:34px; top:17px; transform:rotate(7deg); }
+.line{
+  position:absolute;
+  left:6px;
+  right:6px;
+  height:2px;
+  border-radius:3px;
+  background:rgba(255,255,255,.55);
+}
+.l1{ top:10px; }
+.l2{ top:16px; }
+.l3{ top:22px; }
+
+.offline-body{
+  flex:1;
+  min-width:0;
+}
+
+.offline-title{
+  margin:0;
+  font-family:'Space Grotesk',sans-serif;
+  font-size:24px;
+  line-height:1;
+  letter-spacing:-.8px;
+  word-break:break-word;
+}
+
+.offline-desc{
+  margin-top:7px;
+  font-size:10.8px;
+  line-height:1.34;
+  color:rgba(255,255,255,.88);
+  max-width:84%;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+
+.arrow-chip{
+  flex:0 0 auto;
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  position:relative;
+  background:rgba(255,255,255,.15);
+  border:1px solid rgba(255,255,255,.18);
+  transition:background .2s ease;
+}
+.offline-card:hover .arrow-chip{
+  background:rgba(255,255,255,.24);
+}
+.arrow-chip::before{
+  content:"";
+  position:absolute;
+  left:13px;
+  top:50%;
+  width:12px;
+  height:12px;
+  border-top:2px solid rgba(255,255,255,.9);
+  border-right:2px solid rgba(255,255,255,.9);
+  transform:translateY(-50%) rotate(45deg);
+}
+
+/* --- ANİMASYONLAR --- */
+@keyframes rotateCrystal{
+  from{ transform:rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
+  to{ transform:rotateX(360deg) rotateY(720deg) rotateZ(360deg); }
+}
+
+@keyframes floatQR{
+  0%,100%{ transform:translateY(0) rotateX(0deg); }
+  50%{ transform:translateY(-8px) rotateX(5deg); }
+}
+
+@keyframes glitchQR{
+  0%,90%,100%{ opacity:1; transform:scale(1); filter:hue-rotate(180deg); }
+  92%{ opacity:.82; transform:scale(1.03) skewX(2deg); filter:hue-rotate(220deg); }
+  94%{ opacity:1; transform:scale(1) skewX(-2deg); }
+}
+
+@keyframes beamFlow{
+  from{ background-position:0 0; }
+  to{ background-position:0 50px; }
+}
+
+@keyframes platformPulse{
+  0%,100%{ transform:translateX(-50%) rotateX(75deg) scale(1); opacity:.7; }
+  50%{ transform:translateX(-50%) rotateX(75deg) scale(1.08); opacity:.88; }
+}
+
+@media (max-width:390px){
+  .holo-container{ width:190px; height:190px; margin-bottom:8px; }
+  .crystal-cage{ width:136px; height:136px; }
+  .side1{ transform:rotateY(0deg) translateZ(68px); }
+  .side2{ transform:rotateY(90deg) translateZ(68px); }
+  .side3{ transform:rotateY(180deg) translateZ(68px); }
+  .side4{ transform:rotateY(270deg) translateZ(68px); }
+  .side5{ transform:rotateX(90deg) translateZ(68px); }
+  .side6{ transform:rotateX(-90deg) translateZ(68px); }
+  .holo-qr{ width:98px; height:98px; }
+  .energy-platform{ width:154px; height:154px; bottom:-24px; }
+  .heroTitle{ font-size:20px; }
+  .card-title{ font-size:22px; }
+  .offline-title{ font-size:22px; }
+  .card-art{ height:70px; }
 }
 </style>
 </head>
 
 <body>
 <main id="pageContent">
-  <section class="hero">
-    <div class="heroTop">
-      <div class="neural-orb">
-        <div class="ai-ring"></div>
-        <div class="orbit-energy">
-          <div class="e-ball ball-l"></div>
-          <div class="e-ball ball-b"></div>
-        </div>
+  <div class="page-shell-fit">
 
-        <div class="ai-core">
-          <div class="qrFrame">
-            <img id="smallQrImg" alt="Interpreter QR">
+    <section class="hero">
+      <div class="heroTop">
+        <div class="holo-container">
+          <div class="crystal-cage">
+            <div class="crystal-side side1"></div>
+            <div class="crystal-side side2"></div>
+            <div class="crystal-side side3"></div>
+            <div class="crystal-side side4"></div>
+            <div class="crystal-side side5"></div>
+            <div class="crystal-side side6"></div>
           </div>
-          <div class="qrScan"></div>
-        </div>
-      </div>
 
-      <h1 class="heroTitle">Interpreter <span class="ai">QR</span></h1>
-      <p class="heroSub">Okut, bağlan, konuş. Güvenlik için QR kodunu profilden yenileyebilirsin.</p>
-    </div>
-  </section>
-
-  <section class="hub-cards">
-
-    <div class="trans-card face-card" onclick="location.href='/facetoface.html'">
-      <div class="ico-box">
-        <div class="face-bars">
-          <div class="face-bar"></div>
-          <div class="face-bar"></div>
-          <div class="face-bar"></div>
-          <div class="face-bar"></div>
-          <div class="face-bar"></div>
-        </div>
-      </div>
-      <div class="card-content">
-        <h2 class="card-title">FaceToFace <span class="ai">AI</span></h2>
-        <p class="card-desc">Yüz yüze konuşmalarda iki kişilik anlık canlı çeviri deneyimi.</p>
-      </div>
-    </div>
-
-    <div class="trans-card text-card" onclick="location.href='/pages/text_translate.html'">
-      <div class="ico-box">
-        <div class="text-blocks">
-          <div class="text-scan"></div>
-          <div class="text-line"></div>
-          <div class="text-line"></div>
-          <div class="text-line"></div>
-          <div class="text-line"></div>
-        </div>
-      </div>
-      <div class="card-content">
-        <h2 class="card-title">TextToText <span class="ai">AI</span></h2>
-        <p class="card-desc">Metinleri hızlı, net ve doğal biçimde dilden dile dönüştür.</p>
-      </div>
-    </div>
-
-    <div class="trans-card meeting-card" onclick="location.href='/pages/f2f_connect.html'">
-      <div class="ico-box">
-        <div class="meeting-rings">
-          <div class="meeting-ring r1"></div>
-          <div class="meeting-ring r2"></div>
-          <div class="meeting-ring r3"></div>
-          <div class="meeting-core"></div>
-        </div>
-      </div>
-      <div class="card-content">
-        <h2 class="card-title">Meeting Room</h2>
-        <p class="card-desc">Bağlantılı görüşmeler ve çok katılımcıya uygun toplantı odası akışı.</p>
-      </div>
-    </div>
-
-    <div class="trans-card offline-card" onclick="location.href='/pages/offline_languages.html'">
-      <div class="ico-box">
-        <div class="file-stack">
-          <div class="file-sheet s1">
-            <div class="file-line l1"></div>
-            <div class="file-line l2"></div>
-            <div class="file-line l3"></div>
+          <div class="holo-qr">
+            <img id="smallQrImg" alt="italkyAI QR Hologram">
           </div>
-          <div class="file-sheet s2">
-            <div class="file-line l1"></div>
-            <div class="file-line l2"></div>
-            <div class="file-line l3"></div>
+
+          <div class="holo-beams"></div>
+          <div class="energy-platform"></div>
+        </div>
+
+        <h1 class="heroTitle">Side<span class="to">To</span>Side <span class="qr">QR</span></h1>
+        <p class="heroSub">Hologramı tarat, anında bağlan. Cihazlar arası fütüristik çeviri akışı.</p>
+      </div>
+    </section>
+
+    <section class="home-grid">
+
+      <a class="mod-card face-card" href="/facetoface.html">
+        <div class="card-topline">Tek Telefon / Bölünmüş Ekran</div>
+        <h2 class="card-title">FaceToFace<span class="ai-suffix">AI</span></h2>
+        <p class="card-desc">Yüz yüze iletişimde ekran bölünür, çeviri akışı anında başlar.</p>
+
+        <div class="card-art face-art">
+          <div class="face-wave"></div>
+          <div class="face-headset"></div>
+          <div class="face-headset"></div>
+        </div>
+      </a>
+
+      <a class="mod-card all-card" href="/pages/f2f_connect.html">
+        <div class="card-topline">Toplu Akış / Meeting</div>
+        <h2 class="card-title">AllToAll<span class="ai-suffix">AI</span></h2>
+        <p class="card-desc">Çok kişili toplantılarda ortak çeviri ve dinamik meeting düzeni.</p>
+
+        <div class="card-art all-art">
+          <div class="all-line r1"></div>
+          <div class="all-line r2"></div>
+          <div class="all-line r3"></div>
+          <div class="all-center"></div>
+          <div class="all-dot n1"></div>
+          <div class="all-dot n2"></div>
+          <div class="all-dot n3"></div>
+        </div>
+      </a>
+
+      <a class="mod-card offline-card" href="/pages/offline_languages.html">
+        <div class="offline-ico">
+          <div class="sheet s1">
+            <div class="line l1"></div>
+            <div class="line l2"></div>
+            <div class="line l3"></div>
+          </div>
+          <div class="sheet s2">
+            <div class="line l1"></div>
+            <div class="line l2"></div>
+            <div class="line l3"></div>
           </div>
         </div>
-      </div>
-      <div class="card-content">
-        <h2 class="card-title">Offline Files</h2>
-        <p class="card-desc">İndirilen dil paketleri ve çevrimdışı kullanım dosyalarını yönet.</p>
-      </div>
-    </div>
 
-  </section>
+        <div class="offline-body">
+          <div class="card-topline">Yerel Paketler</div>
+          <h2 class="offline-title">Offline Hub</h2>
+          <p class="offline-desc">Dil paketlerini yönet, indir ve internet olmadan kullan.</p>
+        </div>
+
+        <div class="arrow-chip"></div>
+      </a>
+
+    </section>
+
+  </div>
 </main>
 
 <script type="module">
@@ -581,10 +694,6 @@ async function getCurrentUser(){
   }
 }
 
-function getStoredQrVersion(){
-  return localStorage.getItem(QR_VERSION_KEY) || "1";
-}
-
 async function ensureStableHostCode(){
   const existing = localStorage.getItem(HOST_CODE_KEY);
   if(existing && String(existing).trim()) return String(existing).trim();
@@ -618,13 +727,12 @@ async function ensureStableHostCode(){
   return hostCode;
 }
 
-// FILE: /pages/home.html
 function buildJoinUrl(hostCode){
-  const version = localStorage.getItem("italky_interpreter_qr_version") || "1";
+  const version = localStorage.getItem(QR_VERSION_KEY) || "1";
   const url = new URL("https://italky.ai/open/interpreter");
-url.searchParams.set("host", hostCode);
-url.searchParams.set("v", version);
-return url.toString();
+  url.searchParams.set("host", hostCode);
+  url.searchParams.set("v", version);
+  return url.toString();
 }
 
 function buildQrImageUrl(targetUrl){
