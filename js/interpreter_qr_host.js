@@ -91,7 +91,7 @@ async function fetchRoomInfo(roomId) {
 function buildGuestJoinUrl(roomId) {
   const url = new URL("/pages/interpreter_join.html", location.origin);
   url.searchParams.set("room", roomId);
-  url.searchParams.set("v", "1");
+  url.searchParams.set("v","1");
   return url.toString();
 }
 
