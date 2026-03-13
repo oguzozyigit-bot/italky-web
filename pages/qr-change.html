@@ -35,12 +35,14 @@ html,body{
   background:#070710;
   color:var(--txt);
   font-family:'Outfit',sans-serif;
-  overflow:hidden;
+  overflow:hidden !important;
   scrollbar-width:none;
 }
 html::-webkit-scrollbar,
 body::-webkit-scrollbar{
-  display:none;
+  display:none !important;
+  width:0;
+  height:0;
 }
 
 body{
@@ -52,17 +54,19 @@ body{
 
 #pageContent{
   max-width:560px;
-  height:100dvh;
+  height:100%;
   margin:0 auto;
-  padding:14px 14px calc(10px + env(safe-area-inset-bottom));
+  padding:12px 12px calc(8px + env(safe-area-inset-bottom));
   display:flex;
   flex-direction:column;
-  gap:12px;
-  overflow:auto;
+  gap:10px;
+  overflow:hidden !important;
   scrollbar-width:none;
 }
 #pageContent::-webkit-scrollbar{
-  display:none;
+  display:none !important;
+  width:0;
+  height:0;
 }
 
 .topRow{
@@ -144,15 +148,16 @@ body{
   flex:1;
   min-height:0;
   display:grid;
-  grid-template-rows:auto auto auto;
-  gap:12px;
+  grid-template-rows:auto auto auto auto;
+  gap:10px;
+  overflow:hidden;
 }
 
 .panel{
   background:linear-gradient(145deg, rgba(255,255,255,.065), rgba(255,255,255,.02));
   border:1px solid var(--panel-border);
-  border-radius:26px;
-  padding:14px;
+  border-radius:24px;
+  padding:12px;
   backdrop-filter:blur(16px);
   -webkit-backdrop-filter:blur(16px);
   box-shadow:0 14px 28px rgba(0,0,0,.14);
@@ -160,16 +165,16 @@ body{
 
 .qrPanel{
   display:grid;
-  grid-template-columns:176px 1fr;
-  gap:14px;
+  grid-template-columns:164px 1fr;
+  gap:12px;
   align-items:center;
   min-height:0;
 }
 
 .qrWrap{
-  width:176px;
-  height:176px;
-  border-radius:24px;
+  width:164px;
+  height:164px;
+  border-radius:22px;
   background:rgba(255,255,255,.06);
   border:1px solid rgba(255,255,255,.10);
   display:flex;
@@ -221,11 +226,11 @@ body{
   min-width:0;
   display:flex;
   flex-direction:column;
-  gap:10px;
+  gap:8px;
 }
 
 .infoRow{
-  padding:12px 13px;
+  padding:11px 12px;
   border-radius:18px;
   background:rgba(255,255,255,.035);
   border:1px solid rgba(255,255,255,.07);
@@ -255,11 +260,11 @@ body{
 }
 
 .btn{
-  min-height:50px;
-  border-radius:18px;
+  min-height:48px;
+  border-radius:16px;
   font-family:inherit;
   font-weight:900;
-  font-size:14px;
+  font-size:13px;
   cursor:pointer;
   border:1px solid transparent;
   display:flex;
@@ -267,6 +272,7 @@ body{
   justify-content:center;
   transition:all .2s;
   padding:0 14px;
+  text-align:center;
 }
 
 .btn:active{
@@ -294,7 +300,7 @@ body{
 .nfcPanel{
   display:grid;
   grid-template-columns:1fr auto;
-  gap:14px;
+  gap:12px;
   align-items:center;
 }
 
@@ -305,14 +311,14 @@ body{
 .nfcTitle{
   margin:0 0 6px;
   font-family:'Space Grotesk',sans-serif;
-  font-size:18px;
+  font-size:17px;
   font-weight:900;
   color:#fff;
 }
 
 .nfcDesc{
   margin:0;
-  font-size:12px;
+  font-size:11.5px;
   line-height:1.5;
   color:var(--muted);
 }
@@ -339,7 +345,7 @@ body{
   font-size:11px;
   font-weight:800;
   color:rgba(255,255,255,.55);
-  line-height:1.5;
+  line-height:1.45;
 }
 
 .toast{
@@ -366,39 +372,22 @@ body{
 }
 
 @media (max-width:430px){
-  #pageContent{
-    padding:12px 12px calc(8px + env(safe-area-inset-bottom));
-    gap:10px;
-  }
-
-  .contentGrid{
-    gap:10px;
-  }
-
   .qrPanel{
-    grid-template-columns:1fr;
-    justify-items:center;
-    text-align:center;
+    grid-template-columns:150px 1fr;
+    gap:10px;
   }
 
-  .qrMeta{
-    width:100%;
-  }
-
-  .actionsPanel{
-    grid-template-columns:1fr;
-  }
-
-  .nfcPanel{
-    grid-template-columns:1fr;
-  }
-
-  .nfcBadge{
-    width:100%;
+  .qrWrap{
+    width:150px;
+    height:150px;
   }
 
   .pageTitle{
     font-size:23px;
+  }
+
+  .actionsPanel{
+    grid-template-columns:1fr 1fr;
   }
 }
 </style>
@@ -415,7 +404,7 @@ body{
     <div class="pageHead">
       <div class="pageKicker">Interpreter QR & NFC</div>
       <h1 class="pageTitle">QR <span class="ai">Değiştir</span></h1>
-      <p class="pageSub">Yeni QR ya da NFC bağlantısı oluşturduğunda eski bağlantı geçersiz olur.</p>
+      <p class="pageSub">Yeni bağlantı oluşturduğunda host kodu, QR ve NFC birlikte yenilenir.</p>
     </div>
   </div>
 
@@ -449,17 +438,15 @@ body{
     </div>
 
     <div class="panel actionsPanel">
-      <button class="btn btnPrimary" id="renewBtn" type="button">Yeni QR Oluştur</button>
-      <button class="btn btnSoft" id="resetHostBtn" type="button">Host Kodunu Sıfırla</button>
-      <button class="btn btnGhost" id="writeNfcBtn" type="button">NFC’ye Yaz</button>
-      <button class="btn btnGhost" id="readNfcBtn" type="button">NFC’den Oku</button>
+      <button class="btn btnPrimary" id="renewBtn" type="button">Yeni QR + NFC Oluştur</button>
+      <button class="btn btnSoft" id="readNfcBtn" type="button">NFC’den Oku</button>
     </div>
 
     <div class="panel nfcPanel">
       <div class="nfcLeft">
         <h2 class="nfcTitle">NFC Paylaşımı</h2>
         <p class="nfcDesc">
-          Aynı bağlantı QR ile de NFC ile de paylaşılır. Telefon destekliyorsa etikete yazabilir veya etiketten okuyabilirsin.
+          Yeni bağlantı oluşturulduğunda aynı link destek varsa NFC etikete de otomatik yazılır.
         </p>
       </div>
       <div class="nfcBadge" id="nfcStatusBadge">Kontrol ediliyor…</div>
@@ -467,10 +454,10 @@ body{
 
     <div class="panel notePanel">
       <div class="note">
-        Yeni QR oluşturduğunda eski QR kodları artık geçersiz olur.
+        Yeni QR oluşturulduğunda eski QR ve eski NFC bağlantısı geçersiz olur.
       </div>
       <div class="note">
-        Host kodunu sıfırlarsan bağlantı kimliği tamamen değişir.
+        Ana sayfadaki QR, bu değişikliklerden sonra yeniden açıldığında güncel haliyle görünür.
       </div>
       <div class="note">
         NFC desteği cihaz ve tarayıcıya göre değişebilir.
@@ -488,7 +475,7 @@ import { mountShell } from "/js/ui_shell.js";
 import { supabase } from "/js/supabase_client.js";
 
 try{
-  mountShell({ scroll:"auto" });
+  mountShell({ scroll:"none" });
 }catch(e){
   console.warn("[qr-change shell]", e);
 }
@@ -497,8 +484,6 @@ const $ = (id) => document.getElementById(id);
 
 const backBtn = $("backBtn");
 const renewBtn = $("renewBtn");
-const resetHostBtn = $("resetHostBtn");
-const writeNfcBtn = $("writeNfcBtn");
 const readNfcBtn = $("readNfcBtn");
 
 const qrImage = $("qrImage");
@@ -513,6 +498,7 @@ const toastEl = $("toast");
 
 const HOST_CODE_KEY = "italky_interpreter_host_code";
 const QR_VERSION_KEY = "italky_interpreter_qr_version";
+const QR_LAST_UPDATED_KEY = "italky_interpreter_qr_last_updated";
 
 function toast(msg){
   if(!toastEl) return;
@@ -521,66 +507,20 @@ function toast(msg){
   clearTimeout(window.__qrToast);
   window.__qrToast = setTimeout(() => {
     toastEl.classList.remove("show");
-  }, 1900);
-}
-
-function slugify(value){
-  return String(value || "")
-    .trim()
-    .toUpperCase()
-    .replace(/[^A-Z0-9]/g, "")
-    .slice(0, 12);
+  }, 2000);
 }
 
 function randomCode(){
   return Math.random().toString(36).slice(2, 10).toUpperCase();
 }
 
-async function getCurrentUser(){
-  try{
-    const { data } = await supabase.auth.getUser();
-    return data?.user || null;
-  }catch{
-    return null;
-  }
-}
-
-async function ensureStableHostCode(){
-  const existing = localStorage.getItem(HOST_CODE_KEY);
-  if(existing && String(existing).trim()) return String(existing).trim();
-
-  const user = await getCurrentUser();
-
-  const candidates = [
-    localStorage.getItem("membership_no"),
-    localStorage.getItem("uyelik_no"),
-    localStorage.getItem("member_no"),
-    user?.user_metadata?.membership_no,
-    user?.user_metadata?.member_no,
-    user?.user_metadata?.user_no,
-    user?.id,
-    user?.email?.split("@")?.[0]
-  ];
-
-  let base = "";
-  for(const c of candidates){
-    const s = slugify(c);
-    if(s && s.length >= 6){
-      base = s.slice(0, 10);
-      break;
-    }
-  }
-
-  if(!base) base = randomCode();
-
-  const hostCode = `ITK-${base}`;
-  localStorage.setItem(HOST_CODE_KEY, hostCode);
-  return hostCode;
-}
-
 function getQrVersion(){
   const v = localStorage.getItem(QR_VERSION_KEY) || "1";
   return String(v).trim() || "1";
+}
+
+function setQrTouched(){
+  localStorage.setItem(QR_LAST_UPDATED_KEY, String(Date.now()));
 }
 
 function buildJoinUrl(hostCode){
@@ -622,11 +562,28 @@ function showFallback(hostCode){
   qrFallbackCode.textContent = hostCode || "ITK-XXXXXX";
 }
 
+function hasNfcSupport(){
+  return "NDEFReader" in window;
+}
+
+function paintNfcSupport(){
+  if(hasNfcSupport()){
+    nfcStatusBadge.textContent = "NFC destekleniyor";
+  }else{
+    nfcStatusBadge.textContent = "NFC desteklenmiyor";
+  }
+}
+
 async function renderQr(){
-  const hostCode = await ensureStableHostCode();
-  const joinUrl = buildJoinUrl(hostCode);
+  const hostCode = localStorage.getItem(HOST_CODE_KEY) || "";
+  const joinUrl = hostCode ? buildJoinUrl(hostCode) : "";
 
   paintInfo(hostCode, joinUrl);
+
+  if(!hostCode || !joinUrl){
+    showFallback("ITK-ERROR");
+    return;
+  }
 
   let finalUrl = null;
 
@@ -649,40 +606,25 @@ async function renderQr(){
   }
 }
 
-function renewQrCode(){
-  const nextVersion = String(Date.now());
-  localStorage.setItem(QR_VERSION_KEY, nextVersion);
+function regenerateHostAndQr(){
+  const freshHost = `ITK-${randomCode()}`;
+  const freshVersion = String(Date.now());
+
+  localStorage.setItem(HOST_CODE_KEY, freshHost);
+  localStorage.setItem(QR_VERSION_KEY, freshVersion);
+  setQrTouched();
+
+  return {
+    hostCode: freshHost,
+    joinUrl: buildJoinUrl(freshHost)
+  };
 }
 
-function resetHostCode(){
-  const fresh = `ITK-${randomCode()}`;
-  localStorage.setItem(HOST_CODE_KEY, fresh);
-  localStorage.setItem(QR_VERSION_KEY, String(Date.now()));
-}
-
-function hasNfcSupport(){
-  return "NDEFReader" in window;
-}
-
-function paintNfcSupport(){
-  if(hasNfcSupport()){
-    nfcStatusBadge.textContent = "NFC destekleniyor";
-  }else{
-    nfcStatusBadge.textContent = "NFC desteklenmiyor";
-  }
-}
-
-async function writeNfc(){
-  if(!hasNfcSupport()){
-    toast("Bu cihazda NFC yazma desteklenmiyor");
-    return;
-  }
+async function writeNfc(joinUrl){
+  if(!hasNfcSupport()) return { ok:false, reason:"unsupported" };
 
   try{
-    const hostCode = await ensureStableHostCode();
-    const joinUrl = buildJoinUrl(hostCode);
     const ndef = new NDEFReader();
-
     await ndef.write({
       records: [
         {
@@ -691,11 +633,10 @@ async function writeNfc(){
         }
       ]
     });
-
-    toast("NFC etikete yazıldı");
+    return { ok:true };
   }catch(e){
     console.warn("[nfc write]", e);
-    toast("NFC yazma başarısız");
+    return { ok:false, reason:"write_failed" };
   }
 }
 
@@ -732,7 +673,6 @@ async function readNfc(){
         toast("NFC etiketi okunamadı");
       }
     };
-
   }catch(e){
     console.warn("[nfc read]", e);
     toast("NFC okuma başlatılamadı");
@@ -744,33 +684,28 @@ backBtn?.addEventListener("click", () => history.back());
 renewBtn?.addEventListener("click", async () => {
   try{
     renewBtn.disabled = true;
-    renewQrCode();
+
+    const { hostCode, joinUrl } = regenerateHostAndQr();
     await renderQr();
-    toast("Yeni QR oluşturuldu");
+
+    const nfcResult = await writeNfc(joinUrl);
+
+    if(nfcResult.ok){
+      toast("Yeni QR oluşturuldu ve NFC’ye yazıldı");
+    }else if(nfcResult.reason === "unsupported"){
+      toast("Yeni QR oluşturuldu");
+    }else{
+      toast("Yeni QR oluşturuldu, NFC yazılamadı");
+    }
+
+    console.log("[qr-change] updated host:", hostCode);
+    console.log("[qr-change] updated link:", joinUrl);
   }catch(e){
     console.warn("[qr renew]", e);
-    toast("QR oluşturulamadı");
+    toast("Yeni bağlantı oluşturulamadı");
   }finally{
     renewBtn.disabled = false;
   }
-});
-
-resetHostBtn?.addEventListener("click", async () => {
-  try{
-    resetHostBtn.disabled = true;
-    resetHostCode();
-    await renderQr();
-    toast("Host kodu sıfırlandı");
-  }catch(e){
-    console.warn("[host reset]", e);
-    toast("Host kodu sıfırlanamadı");
-  }finally{
-    resetHostBtn.disabled = false;
-  }
-});
-
-writeNfcBtn?.addEventListener("click", async () => {
-  await writeNfc();
 });
 
 readNfcBtn?.addEventListener("click", async () => {
@@ -778,7 +713,6 @@ readNfcBtn?.addEventListener("click", async () => {
 });
 
 paintNfcSupport();
-
 renderQr().catch((e) => {
   console.warn("[qr initial render]", e);
   showFallback("ITK-ERROR");
