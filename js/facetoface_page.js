@@ -68,7 +68,7 @@ const UI_TEXT = {
     peerJoined: "Karşı taraf bağlandı",
     peerLeft: "Karşı taraf ayrıldı",
     wsFailed: "Bağlantı kurulamadı",
-    peerGoneHome: "Oğuz ayrıldı. Lütfen bekleyiniz...",
+    peerGoneHome: "Karşı taraf ayrıldı. Lütfen bekleyiniz...",
   },
   en: {
     ready: "Tap the microphone to speak.",
@@ -83,7 +83,7 @@ const UI_TEXT = {
     peerJoined: "The other side connected",
     peerLeft: "The other side left",
     wsFailed: "Connection failed",
-    peerGoneHome: "Oğuz left. Please wait...",
+    peerGoneHome: "The other side left. Please wait...",
   },
   de: {
     ready: "Tippen Sie zum Sprechen auf das Mikrofon.",
@@ -98,7 +98,7 @@ const UI_TEXT = {
     peerJoined: "Gegenseite verbunden",
     peerLeft: "Gegenseite getrennt",
     wsFailed: "Verbindung fehlgeschlagen",
-    peerGoneHome: "Oğuz hat den Raum verlassen. Bitte warten...",
+    peerGoneHome: "Die andere Seite hat den Raum verlassen. Bitte warten...",
   },
   fr: {
     ready: "Touchez le micro pour parler.",
@@ -113,7 +113,7 @@ const UI_TEXT = {
     peerJoined: "L'autre côté est connecté",
     peerLeft: "L'autre côté s'est déconnecté",
     wsFailed: "Connexion impossible",
-    peerGoneHome: "Oğuz a quitté. Veuillez patienter...",
+    peerGoneHome: "L'autre côté a quitté. Veuillez patienter...",
   },
   it: {
     ready: "Tocca il microfono per parlare.",
@@ -128,7 +128,7 @@ const UI_TEXT = {
     peerJoined: "L'altra parte si è collegata",
     peerLeft: "L'altra parte si è scollegata",
     wsFailed: "Connessione non riuscita",
-    peerGoneHome: "Oğuz è uscito. Attendere prego...",
+    peerGoneHome: "L'altra parte è uscita. Attendere prego...",
   },
   es: {
     ready: "Toque el micrófono para hablar.",
@@ -143,7 +143,7 @@ const UI_TEXT = {
     peerJoined: "La otra parte se conectó",
     peerLeft: "La otra parte salió",
     wsFailed: "No se pudo conectar",
-    peerGoneHome: "Oğuz salió. Por favor espere...",
+    peerGoneHome: "La otra parte salió. Por favor espere...",
   },
 };
 
@@ -212,6 +212,7 @@ let ws = null;
 let wsReady = false;
 let pingTimer = null;
 let leavingTimer = null;
+
 let lastLocalSentText = "";
 let lastLocalSentAt = 0;
 
@@ -313,9 +314,6 @@ function updateRoomMeta() {
 
 function updatePeerBadge() {
   if (!peerBadge) return;
-
-  // Gerçek ad/soyad için backend profile gerekir.
-  // Şimdilik iki kişilik senaryoda sade gösteriyoruz.
   peerBadge.textContent = "👤 Karşı Taraf";
 }
 
@@ -351,8 +349,9 @@ function renderPop() {
   }).join("");
 
   listBot.querySelectorAll(".pop-item").forEach((el) => {
-    el.addEventListener("click", () => {
-      el.addEventListener("click", async () => {
+    el.addEventListener("click", async () => {
+      await applyMyLanguageChange(el.dataset.code || "tr");
+      closeAllPop();
     });
   });
 }
@@ -514,6 +513,26 @@ async function joinRoomIfNeeded() {
   }
 }
 
+async function applyMyLanguageChange(nextLang) {
+  myLang = canonical(nextLang || "tr");
+  localStorage.setItem("live_interpreter_lang", myLang);
+  refreshLangLabels();
+  refreshReadyTextsIfIdle();
+  rebuildRecognizer();
+
+  stopSocket();
+
+  try {
+    if (role === "guest" && roomId) {
+      await joinRoomIfNeeded();
+    }
+  } catch (e) {
+    console.warn("[lang change join]", e);
+  }
+
+  startSocket();
+}
+
 /* =========================
    BUBBLES
 ========================= */
@@ -556,16 +575,41 @@ function demoteOldMessages(side) {
   if (!wrap) return;
 
   const items = [...wrap.querySelectorAll(".bubble.me")];
-  items.forEach((el) => el.classList.remove("is-latest"));
+  items.forEach((el) => {
+    el.classList.remove("is-latest");
+  });
 
-  if (items.length <= 1) return;
+  if (!items.length) return;
 
-  items.forEach((el, idx) => {
-    if (idx < items.length - 1) {
-      el.style.opacity = idx < items.length - 3 ? ".42" : ".72";
-      el.style.fontSize = idx < items.length - 2 ? "18px" : "22px";
-      el.style.fontWeight = idx < items.length - 2 ? "650" : "800";
+  const reversed = [...items].reverse();
+
+  reversed.forEach((el, idx) => {
+    el.style.opacity = "1";
+    el.style.fontSize = "";
+    el.style.fontWeight = "";
+
+    if (idx === 0) {
+      el.classList.add("is-latest");
+      return;
     }
+
+    if (idx === 1) {
+      el.style.opacity = ".76";
+      el.style.fontSize = "24px";
+      el.style.fontWeight = "800";
+      return;
+    }
+
+    if (idx === 2) {
+      el.style.opacity = ".58";
+      el.style.fontSize = "20px";
+      el.style.fontWeight = "700";
+      return;
+    }
+
+    el.style.opacity = ".38";
+      el.style.fontSize = "18px";
+      el.style.fontWeight = "650";
   });
 }
 
@@ -713,7 +757,7 @@ function startSocket() {
 
         if (!translated && !original) return;
 
-        // BEN GÖNDERDİYSEM üstte tekrar yazma
+        // Kendi gönderdiğim mesajı üstte tekrar yazma
         if (sender === role) return;
 
         const text = translated || original;
@@ -757,18 +801,26 @@ function startSocket() {
   };
 
   ws.onclose = () => {
-  wsReady = false;
+    wsReady = false;
 
-  if (pingTimer) {
-    clearInterval(pingTimer);
-    pingTimer = null;
-  }
+    if (pingTimer) {
+      clearInterval(pingTimer);
+      pingTimer = null;
+    }
 
-  setErrorUI();
-  setHelper(botHelper, t(myLang, "peerGoneHome"), "helper-wait");
-  goHomeDelayed();
-};
+    setErrorUI();
+    setHelper(botHelper, t(myLang, "peerGoneHome"), "helper-wait");
+    goHomeDelayed();
+  };
 }
+
+/* =========================
+   SEND
+========================= */
+function canSend() {
+  return !!(wsReady && ws && ws.readyState === WebSocket.OPEN && roomId);
+}
+
 function shouldIgnoreDuplicateLocal(text) {
   const value = String(text || "").trim();
   const now = Date.now();
@@ -783,12 +835,6 @@ function shouldIgnoreDuplicateLocal(text) {
   lastLocalSentAt = now;
   return false;
 }
-/* =========================
-   SEND
-========================= */
-function canSend() {
-  return !!(wsReady && ws && ws.readyState === WebSocket.OPEN && roomId);
-}
 
 function sendTextMessage(rawText) {
   const text = String(rawText || "").trim();
@@ -802,7 +848,6 @@ function sendTextMessage(rawText) {
   }
 
   try {
-    // ÖNEMLİ: to_lang göndermiyoruz. Backend role'a göre hedef dili seçsin.
     ws.send(JSON.stringify({
       type: "text_message",
       text,
@@ -858,25 +903,6 @@ async function finalizeRecognition(text) {
   if (shouldIgnoreDuplicateLocal(cleaned)) {
     return;
   }
-async function applyMyLanguageChange(nextLang) {
-  myLang = canonical(nextLang || "tr");
-  localStorage.setItem("live_interpreter_lang", myLang);
-  refreshLangLabels();
-  refreshReadyTextsIfIdle();
-  rebuildRecognizer();
-
-  stopSocket();
-
-  try {
-    if (role === "guest" && roomId) {
-      await joinRoomIfNeeded();
-    }
-  } catch (e) {
-    console.warn("[lang change join]", e);
-  }
-
-  startSocket();
-}
 
   clearLatest("bottom");
   addBubble("bottom", "me", cleaned, {
@@ -1064,6 +1090,8 @@ function bind() {
     stopAudio();
     stopRecognizer();
     recordingSide = null;
+    lastLocalSentText = "";
+    lastLocalSentAt = 0;
     if (topBody) topBody.innerHTML = "";
     if (botBody) botBody.innerHTML = "";
     setSystemReadyUI();
