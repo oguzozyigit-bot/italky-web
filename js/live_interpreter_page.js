@@ -357,7 +357,13 @@ function stopAudio() {
 }
 
 function getVoicePreference() {
-  return String(localStorage.getItem("tts_voice") || "auto").toLowerCase().trim();
+
+  const v =
+    localStorage.getItem("tts_voice") ||
+    localStorage.getItem("live_interpreter_voice") ||
+    "female";
+
+  return String(v).toLowerCase().trim();
 }
 
 function chooseWebVoice(langCode) {
