@@ -698,27 +698,30 @@ function startSocket() {
       }
 
       if (type === "translated_message") {
-        const sender = String(payload?.sender || "").trim().toLowerCase();
-        const translated = String(payload?.translated_text || "").trim();
-        const original = String(payload?.original_text || "").trim();
 
-        if (!translated && !original) return;
-        if (sender === role) return;
+  const sender = String(payload?.sender || "").trim().toLowerCase();
+  const translated = String(payload?.translated_text || "").trim();
+  const original = String(payload?.original_text || "").trim();
 
-        addBubble("top", "me", translated || original, {
-          latest: true,
-          withSpeaker: true,
-          speakLang: myLang,
-          sender: sender === "host" ? "HOST" : "GUEST"
-        });
+  if (!translated && !original) return;
 
-        if (translated) {
-          await speak(translated, myLang);
-        }
+  // BEN GÖNDERDİYSEM tekrar yazma
+  if (sender === role) return;
 
-        setSystemReadyUI();
-        return;
-      }
+  const text = translated || original;
+
+  addBubble("top","me",text,{
+      latest:true,
+      withSpeaker:true,
+      speakLang:myLang,
+      sender: sender === "host" ? "HOST" : "GUEST"
+  });
+
+  speak(text,myLang);
+
+  setSystemReadyUI();
+  return;
+}
 
       if (type === "peer_left") {
         setHelper(topHelper, t(myLang, "peerLeft"), "helper-wait");
