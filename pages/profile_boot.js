@@ -11,7 +11,7 @@ async function boot(){
   }
 
   try{
-    await initProfilePage({ setHeaderTokens });
+    await import("/js/voice_profile_page.js?v=final_free_all_2");
   }catch(e){
     console.error("[profile_boot initProfilePage]", e);
   }
