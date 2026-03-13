@@ -1,0 +1,557 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+<title>italkyAI • QR Değiştir</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --txt:rgba(255,255,255,.96);
+  --muted:rgba(255,255,255,.56);
+  --panel-bg:rgba(255,255,255,.04);
+  --panel-border:rgba(255,255,255,.10);
+  --ai-grad:linear-gradient(135deg,#67e8f9 0%, #818cf8 46%, #f472b6 100%);
+  --accent:#a5b4fc;
+}
+
+*{
+  box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
+  outline:none;
+}
+
+html,body{
+  margin:0;
+  padding:0;
+  width:100%;
+  height:100%;
+  background:#070710;
+  color:var(--txt);
+  font-family:'Outfit',sans-serif;
+}
+
+body{
+  background:
+    radial-gradient(circle at 80% 10%, rgba(244,114,182,.10), transparent 40%),
+    radial-gradient(circle at 20% 80%, rgba(99,102,241,.10), transparent 40%),
+    linear-gradient(180deg,#080812 0%,#0e0e18 100%);
+}
+
+#pageContent{
+  max-width:560px;
+  margin:0 auto;
+  padding:16px 14px 20px;
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+}
+
+.topRow{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.backBtn{
+  width:42px;
+  height:42px;
+  border-radius:14px;
+  border:1px solid var(--panel-border);
+  background:rgba(255,255,255,.05);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  flex:0 0 auto;
+}
+
+.backBtn:active{ transform:scale(.96); }
+
+.backBtn svg{
+  width:20px;
+  height:20px;
+  stroke:#fff;
+  fill:none;
+  stroke-width:2.5;
+}
+
+.pageHead{ min-width:0; }
+
+.pageKicker{
+  display:inline-flex;
+  width:max-content;
+  align-items:center;
+  gap:8px;
+  padding:8px 12px;
+  border-radius:999px;
+  background:rgba(255,255,255,.05);
+  border:1px solid var(--panel-border);
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:.5px;
+  color:rgba(255,255,255,.82);
+  margin-bottom:8px;
+}
+
+.pageTitle{
+  margin:0;
+  font-family:'Space Grotesk',sans-serif;
+  font-size:27px;
+  line-height:1;
+  letter-spacing:-1px;
+  font-weight:700;
+}
+
+.pageTitle .ai{
+  background:var(--ai-grad);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+
+.pageSub{
+  margin:8px 0 0;
+  font-size:12px;
+  line-height:1.45;
+  color:var(--muted);
+}
+
+.panel{
+  background:linear-gradient(145deg, rgba(255,255,255,.07), rgba(255,255,255,.02));
+  border:1px solid var(--panel-border);
+  border-radius:28px;
+  padding:14px;
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+}
+
+.qrHero{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:14px;
+}
+
+.qrWrap{
+  width:220px;
+  height:220px;
+  border-radius:28px;
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.10);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  box-shadow:0 16px 30px rgba(0,0,0,.24);
+}
+
+.qrWrap img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:none;
+  background:#fff;
+}
+
+.qrFallback{
+  width:100%;
+  height:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  gap:10px;
+  padding:16px;
+  text-align:center;
+  color:#fff;
+}
+
+.qrFallbackTitle{
+  font-size:14px;
+  font-weight:900;
+}
+
+.qrFallbackCode{
+  padding:10px 14px;
+  border-radius:14px;
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.10);
+  font-size:13px;
+  font-weight:900;
+  color:#c7d2fe;
+  word-break:break-all;
+}
+
+.infoGrid{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.infoRow{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:14px;
+  border-radius:20px;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.08);
+}
+
+.infoLabel{
+  font-size:12px;
+  font-weight:900;
+  color:rgba(255,255,255,.62);
+}
+
+.infoValue{
+  font-size:13px;
+  font-weight:900;
+  color:#fff;
+  text-align:right;
+  word-break:break-all;
+}
+
+.btnRow{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+
+.btn{
+  min-height:54px;
+  border-radius:18px;
+  font-family:inherit;
+  font-weight:900;
+  font-size:14px;
+  cursor:pointer;
+  border:none;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:all .2s;
+}
+
+.btn:active{ transform:scale(.98); }
+
+.btnPrimary{
+  background:var(--ai-grad);
+  color:#05060d;
+  box-shadow:0 12px 26px rgba(129,140,248,.18);
+}
+
+.btnGhost{
+  background:rgba(255,255,255,.05);
+  color:#fff;
+  border:1px solid rgba(255,255,255,.10);
+}
+
+.note{
+  font-size:11px;
+  font-weight:800;
+  color:rgba(255,255,255,.55);
+  line-height:1.5;
+}
+
+.toast{
+  position:fixed;
+  left:50%;
+  top:18px;
+  transform:translateX(-50%) translateY(-120px);
+  background:rgba(10,10,18,.94);
+  border:1px solid rgba(165,180,252,.32);
+  padding:10px 14px;
+  border-radius:999px;
+  color:#fff;
+  z-index:9999;
+  font-weight:900;
+  font-size:12px;
+  transition:.25s;
+  backdrop-filter:blur(12px);
+  pointer-events:none;
+  max-width:min(92vw,520px);
+  text-align:center;
+}
+.toast.show{ transform:translateX(-50%) translateY(0); }
+
+@media (max-width:390px){
+  #pageContent{ padding:12px 12px 18px; }
+  .pageTitle{ font-size:24px; }
+  .qrWrap{ width:198px; height:198px; }
+}
+</style>
+</head>
+<body>
+
+<div id="pageContent">
+
+  <div class="topRow">
+    <button class="backBtn" id="backBtn" type="button" aria-label="Geri dön">
+      <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+
+    <div class="pageHead">
+      <div class="pageKicker">Interpreter QR</div>
+      <h1 class="pageTitle">QR <span class="ai">Değiştir</span></h1>
+      <p class="pageSub">Yeni QR oluşturduğunda eski bağlantı geçersiz olur.</p>
+    </div>
+  </div>
+
+  <div class="panel qrHero">
+    <div class="qrWrap">
+      <img id="qrImage" alt="Interpreter QR">
+      <div class="qrFallback" id="qrFallback">
+        <div class="qrFallbackTitle">QR görseli hazır değil</div>
+        <div class="qrFallbackCode" id="qrFallbackCode">ITK-XXXXXX</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="infoGrid">
+      <div class="infoRow">
+        <div class="infoLabel">Host Kodu</div>
+        <div class="infoValue" id="hostCodeText">—</div>
+      </div>
+
+      <div class="infoRow">
+        <div class="infoLabel">QR Versiyonu</div>
+        <div class="infoValue" id="qrVersionText">—</div>
+      </div>
+
+      <div class="infoRow">
+        <div class="infoLabel">Bağlantı</div>
+        <div class="infoValue" id="joinUrlText">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="btnRow">
+      <button class="btn btnPrimary" id="renewBtn" type="button">Yeni QR Oluştur</button>
+      <button class="btn btnGhost" id="copyBtn" type="button">Linki Kopyala</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="note">
+      Yeni QR oluşturduğunda eski QR kodları artık geçersiz olur. Bu sayede yalnızca son oluşturulan bağlantı ile eşleşme yapılır.
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { mountShell } from "/js/ui_shell.js";
+import { supabase } from "/js/supabase_client.js";
+
+try{
+  mountShell({ scroll:"auto" });
+}catch(e){
+  console.warn("[qr-change shell]", e);
+}
+
+const $ = (id) => document.getElementById(id);
+
+const backBtn = $("backBtn");
+const renewBtn = $("renewBtn");
+const copyBtn = $("copyBtn");
+
+const qrImage = $("qrImage");
+const qrFallback = $("qrFallback");
+const qrFallbackCode = $("qrFallbackCode");
+
+const hostCodeText = $("hostCodeText");
+const qrVersionText = $("qrVersionText");
+const joinUrlText = $("joinUrlText");
+const toastEl = $("toast");
+
+const HOST_CODE_KEY = "italky_interpreter_host_code";
+const QR_VERSION_KEY = "italky_interpreter_qr_version";
+
+function toast(msg){
+  if(!toastEl) return;
+  toastEl.textContent = String(msg || "");
+  toastEl.classList.add("show");
+  clearTimeout(window.__qrToast);
+  window.__qrToast = setTimeout(() => {
+    toastEl.classList.remove("show");
+  }, 1800);
+}
+
+function slugify(value){
+  return String(value || "")
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "")
+    .slice(0, 12);
+}
+
+function randomCode(){
+  return Math.random().toString(36).slice(2, 10).toUpperCase();
+}
+
+async function getCurrentUser(){
+  try{
+    const { data } = await supabase.auth.getUser();
+    return data?.user || null;
+  }catch{
+    return null;
+  }
+}
+
+async function ensureStableHostCode(){
+  const existing = localStorage.getItem(HOST_CODE_KEY);
+  if(existing && String(existing).trim()) return String(existing).trim();
+
+  const user = await getCurrentUser();
+
+  const candidates = [
+    localStorage.getItem("membership_no"),
+    localStorage.getItem("uyelik_no"),
+    localStorage.getItem("member_no"),
+    user?.user_metadata?.membership_no,
+    user?.user_metadata?.member_no,
+    user?.user_metadata?.user_no,
+    user?.id,
+    user?.email?.split("@")?.[0]
+  ];
+
+  let base = "";
+  for(const c of candidates){
+    const s = slugify(c);
+    if(s && s.length >= 6){
+      base = s.slice(0, 10);
+      break;
+    }
+  }
+
+  if(!base) base = randomCode();
+
+  const hostCode = `ITK-${base}`;
+  localStorage.setItem(HOST_CODE_KEY, hostCode);
+  return hostCode;
+}
+
+function getQrVersion(){
+  const v = localStorage.getItem(QR_VERSION_KEY) || "1";
+  return String(v).trim() || "1";
+}
+
+function buildJoinUrl(hostCode){
+  const version = getQrVersion();
+  const url = new URL("https://italky.ai/open/interpreter");
+  url.searchParams.set("host", hostCode);
+  url.searchParams.set("v", version);
+  return url.toString();
+}
+
+function qrUrlPrimary(targetUrl){
+  return `https://api.qrserver.com/v1/create-qr-code/?size=520x520&margin=6&data=${encodeURIComponent(targetUrl)}`;
+}
+
+function qrUrlFallback(targetUrl){
+  return `https://quickchart.io/qr?size=520&text=${encodeURIComponent(targetUrl)}`;
+}
+
+function loadImage(url){
+  return new Promise((resolve, reject) => {
+    const test = new Image();
+    test.onload = () => resolve(url);
+    test.onerror = reject;
+    test.referrerPolicy = "no-referrer";
+    test.src = url;
+  });
+}
+
+function paintInfo(hostCode, joinUrl){
+  hostCodeText.textContent = hostCode || "—";
+  qrVersionText.textContent = getQrVersion();
+  joinUrlText.textContent = joinUrl || "—";
+  qrFallbackCode.textContent = hostCode || "ITK-XXXXXX";
+}
+
+function showFallback(hostCode){
+  qrImage.style.display = "none";
+  qrFallback.style.display = "flex";
+  qrFallbackCode.textContent = hostCode || "ITK-XXXXXX";
+}
+
+async function renderQr(){
+  const hostCode = await ensureStableHostCode();
+  const joinUrl = buildJoinUrl(hostCode);
+
+  paintInfo(hostCode, joinUrl);
+
+  let finalUrl = null;
+
+  try{
+    finalUrl = await loadImage(qrUrlPrimary(joinUrl));
+  }catch{
+    try{
+      finalUrl = await loadImage(qrUrlFallback(joinUrl));
+    }catch{
+      finalUrl = null;
+    }
+  }
+
+  if(finalUrl){
+    qrImage.src = finalUrl;
+    qrImage.style.display = "block";
+    qrFallback.style.display = "none";
+  }else{
+    showFallback(hostCode);
+  }
+}
+
+function renewQrCode(){
+  const nextVersion = String(Date.now());
+  localStorage.setItem(QR_VERSION_KEY, nextVersion);
+}
+
+async function copyJoinUrl(){
+  try{
+    const hostCode = await ensureStableHostCode();
+    const joinUrl = buildJoinUrl(hostCode);
+    await navigator.clipboard.writeText(joinUrl);
+    toast("Bağlantı kopyalandı");
+  }catch{
+    toast("Bağlantı kopyalanamadı");
+  }
+}
+
+backBtn?.addEventListener("click", () => history.back());
+
+renewBtn?.addEventListener("click", async () => {
+  try{
+    renewBtn.disabled = true;
+    renewQrCode();
+    await renderQr();
+    toast("Yeni QR oluşturuldu");
+  }catch(e){
+    console.warn("[qr renew]", e);
+    toast("QR oluşturulamadı");
+  }finally{
+    renewBtn.disabled = false;
+  }
+});
+
+copyBtn?.addEventListener("click", async () => {
+  await copyJoinUrl();
+});
+
+renderQr().catch((e) => {
+  console.warn("[qr initial render]", e);
+  showFallback("ITK-ERROR");
+});
+</script>
+
+</body>
+</html>
