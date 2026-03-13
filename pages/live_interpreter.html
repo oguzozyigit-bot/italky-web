@@ -65,6 +65,79 @@
       background:linear-gradient(180deg, rgba(30,58,138,0.18), var(--bg));
     }
 
+    .top-head{
+      width:100%;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:10px;
+      z-index:50;
+    }
+
+    .peer-card{
+      width:min(92%, 420px);
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:10px 14px;
+      border-radius:20px;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,0.06);
+      backdrop-filter:blur(12px);
+    }
+
+    .peer-avatar{
+      width:42px;
+      height:42px;
+      min-width:42px;
+      border-radius:50%;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.18);
+      background:rgba(255,255,255,.08);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:18px;
+      font-weight:900;
+    }
+
+    .peer-avatar img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+
+    .peer-meta{
+      min-width:0;
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+    }
+
+    .peer-name{
+      font-size:14px;
+      font-weight:900;
+      line-height:1.15;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .peer-sub{
+      font-size:11px;
+      font-weight:800;
+      opacity:.72;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .room-badge{
+      display:none;
+    }
+
     .lang-trigger{
       background:rgba(255,255,255,0.06);
       border:1px solid var(--border);
@@ -84,26 +157,6 @@
       pointer-events:auto;
       min-height:44px;
       max-width:92%;
-    }
-
-    .room-badge{
-      background:rgba(255,255,255,0.06);
-      border:1px solid var(--border);
-      padding:10px 18px;
-      border-radius:999px;
-      color:#fff;
-      font-size:12px;
-      font-weight:900;
-      letter-spacing:.2px;
-      user-select:none;
-      display:inline-flex;
-      align-items:center;
-      gap:10px;
-      z-index:50;
-      backdrop-filter:blur(12px);
-      min-height:44px;
-      max-width:92%;
-      opacity:.92;
     }
 
     .popover{
@@ -220,6 +273,7 @@
       max-width:84%;
       line-height:1.25;
       word-break:break-word;
+      transition:.18s ease;
     }
 
     .bubble.them{
@@ -239,16 +293,6 @@
       font-weight:900;
       opacity:1;
       line-height:1.08;
-    }
-
-    .sender-label{
-      display:block;
-      font-size:11px;
-      font-weight:900;
-      letter-spacing:.3px;
-      opacity:.72;
-      margin-bottom:5px;
-      text-transform:uppercase;
     }
 
     .bubble-row{
@@ -563,9 +607,20 @@
   <div class="container">
 
     <div class="half-screen top" id="topSection">
-      <div class="room-badge" id="roomMetaText">Room hazırlanıyor...</div>
-      <div class="room-badge" id="peerBadge" style="margin-top:10px;">👤 Karşı Taraf</div>
+      <div class="top-head">
+        <div class="room-badge" id="roomMetaText">Room hazırlanıyor...</div>
+
+        <div class="peer-card" id="peerCard">
+          <div class="peer-avatar" id="peerAvatar">👤</div>
+          <div class="peer-meta">
+            <div class="peer-name" id="peerName">Karşı Taraf</div>
+            <div class="peer-sub" id="peerSub">Bağlantı bekleniyor...</div>
+          </div>
+        </div>
+      </div>
+
       <div class="chat-body" id="topBody"></div>
+
       <div class="mic-wrap">
         <div class="helper-text" id="topHelper" style="display:none"></div>
       </div>
@@ -622,6 +677,6 @@
 
   </div>
 
-  <script type="module" src="/js/live_interpreter_page.js?v=LIVE_INTERPRETER_F2F_STYLE_V1"></script>
+  <script type="module" src="/js/live_interpreter_page.js?v=LIVE_INTERPRETER_F2F_STYLE_V2"></script>
 </body>
 </html>
