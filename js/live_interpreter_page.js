@@ -1,6 +1,7 @@
 // FILE: /js/live_interpreter_page.js
 
 import { LANG_POOL } from "/js/lang_pool_full.js";
+import { supabase } from "/js/supabase_client.js";
 
 const API_BASE = "https://italky-api.onrender.com/api";
 const WS_BASE = "wss://italky-api.onrender.com";
@@ -240,11 +241,6 @@ function bounceToReady(delay = 1200) {
   setTimeout(() => setSystemReadyUI(), delay);
 }
 
-function updateRoomMeta() {
-  if (!roomMetaText) return;
-  roomMetaText.textContent = roomId ? `Room • ${roomId}` : "";
-}
-
 function refreshLangLabels() {
   if (botLangTxt) botLangTxt.textContent = labelChip(myLang);
 }
@@ -296,6 +292,15 @@ function stopAudio() {
   try { window.NativeTTS?.stop?.(); } catch {}
 }
 
+async function getCurrentUserId() {
+  try {
+    const { data } = await supabase.auth.getUser();
+    return data?.user?.id || null;
+  } catch {
+    return null;
+  }
+}
+
 function getVoicePreference() {
   const v =
     localStorage.getItem("live_interpreter_voice") ||
@@ -331,6 +336,41 @@ function chooseWebVoice(langCode) {
   }
 
   return pool[0];
+}
+
+async function speakViaApi(text, langCode) {
+  const userId = await getCurrentUserId();
+  const voice = getVoicePreference();
+
+  const r = await fetch(`${API_BASE}/tts`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      text: String(text || "").trim(),
+      lang: canonical(langCode),
+      user_id: userId,
+      module: "interpreter",
+      voice
+    }),
+  });
+
+  const j = await r.json().catch(() => null);
+
+  if (!r.ok || !j?.ok || !j?.audio_base64) {
+    throw new Error(j?.error || j?.detail || "TTS API unavailable");
+  }
+
+  const audio = new Audio("data:audio/mp3;base64," + j.audio_base64);
+  currentAudio = audio;
+
+  audio.onended = () => {
+    if (currentAudio === audio) currentAudio = null;
+  };
+  audio.onerror = () => {
+    if (currentAudio === audio) currentAudio = null;
+  };
+
+  await audio.play();
 }
 
 function speakFallback(text, langCode) {
@@ -371,7 +411,12 @@ async function speak(text, langCode) {
   ttsDebounceAt = now;
   stopAudio();
 
-  speakFallback(value, langCode);
+  try {
+    await speakViaApi(value, langCode);
+  } catch (e) {
+    console.warn("[interpreter tts fallback]", e);
+    speakFallback(value, langCode);
+  }
 }
 
 /* =========================
@@ -686,7 +731,6 @@ function startSocket() {
       if (type === "presence") {
         if (payload?.room_id && !roomId) {
           roomId = String(payload.room_id).trim();
-          updateRoomMeta();
         }
 
         if (payload?.guest_lang && role === "host") {
@@ -720,7 +764,6 @@ function startSocket() {
         const original = String(payload?.original_text || "").trim();
 
         if (!translated && !original) return;
-
         if (sender === role) return;
 
         const text = translated || original;
@@ -977,7 +1020,6 @@ async function warmAudio() {
 async function warmApis() {
   await Promise.allSettled([
     fetch(`${API_BASE}/healthz`).catch(() => {}),
-    fetch(`${API_BASE}/translate_ai/health`).catch(() => {}),
   ]);
 }
 
@@ -1088,7 +1130,7 @@ function bind() {
 async function bootRoom() {
   try {
     if (roomId) {
-      // OK
+      // hazır
     } else if (hostCode) {
       if (role === "host") {
         const created = await createRoomIfHost();
