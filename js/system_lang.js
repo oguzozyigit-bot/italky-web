@@ -2,196 +2,346 @@
 
 const SYSTEM_LANG_KEY = "system_lang";
 
+/* =========================
+   Desteklenen diller
+========================= */
+const SUPPORTED = ["tr","en","de","fr","it","es"];
+
+/* =========================
+   italky sözlüğü (çekirdek)
+========================= */
 const DICT = {
-  tr: {
-    back: "Geri dön",
-    translation_settings: "Çeviri Ayarları",
-    translation_settings_desc: "Ses ayarlarını ve sistem dilini buradan yönet.",
-    preferences: "Tercihler",
-    voice_settings: "Ses Ayarları",
-    voice_settings_desc_scope: "Bu ayar FaceToFace ve SideToSide modüllerinde kullanılacak.",
-    system_language: "Sistem Dili",
-    system_language_desc_auto: "Türkçe arayüz metinlerini seçtiğin dile otomatik çevirir.",
-    automatic: "Otomatik",
-    female: "Kadın",
-    male: "Erkek",
-    own_voice: "Kendi Sesim",
-    free_tts_default: "TTS ücretsiz ve varsayılan seçenek",
-    female_voice_desc: "Kadın ses tonuna yakın okuma",
-    male_voice_desc: "Erkek ses tonuna yakın okuma",
-    clone_voice_desc: "Daha önce oluşturduğun ses profili",
-    updated_voice_setting: "Ses ayarı güncellendi",
-    updated_system_lang: "Sistem dili güncellendi",
-    settings_note_1: "Ses ayarı eski çalışan sistemle uyumlu olarak tts_voice anahtarına yazılır. Sistem dili ise uygulama metinlerinin hangi dilde gösterileceğini belirler."
-  },
 
-  en: {
-    back: "Back",
-    translation_settings: "Translation Settings",
-    translation_settings_desc: "Manage voice settings and system language here.",
-    preferences: "Preferences",
-    voice_settings: "Voice Settings",
-    voice_settings_desc_scope: "This setting will be used in FaceToFace and SideToSide modules.",
-    system_language: "System Language",
-    system_language_desc_auto: "Automatically translates Turkish interface texts into your selected language.",
-    automatic: "Automatic",
-    female: "Female",
-    male: "Male",
-    own_voice: "My Voice",
-    free_tts_default: "Free TTS and default option",
-    female_voice_desc: "Speech closer to a female tone",
-    male_voice_desc: "Speech closer to a male tone",
-    clone_voice_desc: "Your previously created voice profile",
-    updated_voice_setting: "Voice setting updated",
-    updated_system_lang: "System language updated",
-    settings_note_1: "Voice setting is saved with the old working system using the tts_voice key. System language determines which language the app texts are shown in."
-  },
+"Profil":{
+  en:"Profile",
+  de:"Profil",
+  fr:"Profil",
+  it:"Profilo",
+  es:"Perfil"
+},
 
-  de: {
-    back: "Zurück",
-    translation_settings: "Übersetzungseinstellungen",
-    translation_settings_desc: "Verwalte hier Stimmeinstellungen und Systemsprache.",
-    preferences: "Einstellungen",
-    voice_settings: "Stimmeinstellungen",
-    voice_settings_desc_scope: "Diese Einstellung wird in FaceToFace- und SideToSide-Modulen verwendet.",
-    system_language: "Systemsprache",
-    system_language_desc_auto: "Übersetzt türkische Oberflächentexte automatisch in die gewählte Sprache.",
-    automatic: "Automatisch",
-    female: "Weiblich",
-    male: "Männlich",
-    own_voice: "Meine Stimme",
-    free_tts_default: "Kostenlose TTS und Standardoption",
-    female_voice_desc: "Ausgabe näher an weiblicher Stimme",
-    male_voice_desc: "Ausgabe näher an männlicher Stimme",
-    clone_voice_desc: "Dein zuvor erstelltes Sprachprofil",
-    updated_voice_setting: "Stimmeinstellung aktualisiert",
-    updated_system_lang: "Systemsprache aktualisiert",
-    settings_note_1: "Die Stimmeinstellung wird mit dem alten funktionierenden System über den Schlüssel tts_voice gespeichert. Die Systemsprache bestimmt, in welcher Sprache die App-Texte angezeigt werden."
-  },
+"Jeton":{
+  en:"Token",
+  de:"Token",
+  fr:"Jeton",
+  it:"Token",
+  es:"Token"
+},
 
-  fr: {
-    back: "Retour",
-    translation_settings: "Paramètres de traduction",
-    translation_settings_desc: "Gérez ici les paramètres vocaux et la langue du système.",
-    preferences: "Préférences",
-    voice_settings: "Paramètres vocaux",
-    voice_settings_desc_scope: "Ce réglage sera utilisé dans les modules FaceToFace et SideToSide.",
-    system_language: "Langue du système",
-    system_language_desc_auto: "Traduit automatiquement les textes turcs de l’interface dans la langue choisie.",
-    automatic: "Automatique",
-    female: "Femme",
-    male: "Homme",
-    own_voice: "Ma voix",
-    free_tts_default: "TTS gratuit et option par défaut",
-    female_voice_desc: "Voix plus proche d’un ton féminin",
-    male_voice_desc: "Voix plus proche d’un ton masculin",
-    clone_voice_desc: "Votre profil vocal créé précédemment",
-    updated_voice_setting: "Paramètre vocal mis à jour",
-    updated_system_lang: "Langue du système mise à jour",
-    settings_note_1: "Le réglage vocal est enregistré avec l’ancien système fonctionnel via la clé tts_voice. La langue du système détermine dans quelle langue les textes de l’application sont affichés."
-  },
+"Jeton Market":{
+  en:"Token Market",
+  de:"Token Markt",
+  fr:"Marché des jetons",
+  it:"Mercato Token",
+  es:"Mercado de tokens"
+},
 
-  it: {
-    back: "Indietro",
-    translation_settings: "Impostazioni traduzione",
-    translation_settings_desc: "Gestisci qui le impostazioni vocali e la lingua del sistema.",
-    preferences: "Preferenze",
-    voice_settings: "Impostazioni voce",
-    voice_settings_desc_scope: "Questa impostazione sarà usata nei moduli FaceToFace e SideToSide.",
-    system_language: "Lingua di sistema",
-    system_language_desc_auto: "Traduce automaticamente i testi turchi dell’interfaccia nella lingua scelta.",
-    automatic: "Automatico",
-    female: "Donna",
-    male: "Uomo",
-    own_voice: "La mia voce",
-    free_tts_default: "TTS gratuito e opzione predefinita",
-    female_voice_desc: "Lettura vicina a una voce femminile",
-    male_voice_desc: "Lettura vicina a una voce maschile",
-    clone_voice_desc: "Il tuo profilo vocale creato in precedenza",
-    updated_voice_setting: "Impostazione voce aggiornata",
-    updated_system_lang: "Lingua di sistema aggiornata",
-    settings_note_1: "L’impostazione voce viene salvata con il vecchio sistema funzionante tramite la chiave tts_voice. La lingua di sistema determina in quale lingua vengono mostrati i testi dell’app."
-  },
+"Jeton Nedir":{
+  en:"What is Token",
+  de:"Was ist Token",
+  fr:"Qu'est-ce qu'un jeton",
+  it:"Cos'è un token",
+  es:"Qué es un token"
+},
 
-  es: {
-    back: "Volver",
-    translation_settings: "Ajustes de traducción",
-    translation_settings_desc: "Administra aquí la voz y el idioma del sistema.",
-    preferences: "Preferencias",
-    voice_settings: "Ajustes de voz",
-    voice_settings_desc_scope: "Esta configuración se usará en los módulos FaceToFace y SideToSide.",
-    system_language: "Idioma del sistema",
-    system_language_desc_auto: "Traduce automáticamente los textos turcos de la interfaz al idioma elegido.",
-    automatic: "Automático",
-    female: "Mujer",
-    male: "Hombre",
-    own_voice: "Mi voz",
-    free_tts_default: "TTS gratis y opción predeterminada",
-    female_voice_desc: "Lectura cercana a una voz femenina",
-    male_voice_desc: "Lectura cercana a una voz masculina",
-    clone_voice_desc: "Tu perfil de voz creado anteriormente",
-    updated_voice_setting: "Ajuste de voz actualizado",
-    updated_system_lang: "Idioma del sistema actualizado",
-    settings_note_1: "La configuración de voz se guarda con el sistema antiguo funcional usando la clave tts_voice. El idioma del sistema determina en qué idioma se muestran los textos de la app."
-  }
-};
+"Sesini Tanıt":{
+  en:"Create Voice Profile",
+  de:"Stimmprofil erstellen",
+  fr:"Créer profil vocal",
+  it:"Crea profilo vocale",
+  es:"Crear perfil de voz"
+},
 
-function normalizeLang(lang) {
-  const raw = String(lang || "tr").toLowerCase().trim();
-  const base = raw.split("-")[0];
-  return DICT[base] ? base : "tr";
+"Kendi Sesini Oluştur":{
+  en:"Create Your Voice",
+  de:"Eigene Stimme erstellen",
+  fr:"Créer ta voix",
+  it:"Crea la tua voce",
+  es:"Crea tu voz"
+},
+
+"Çeviri Ayarları":{
+  en:"Translation Settings",
+  de:"Übersetzungseinstellungen",
+  fr:"Paramètres de traduction",
+  it:"Impostazioni traduzione",
+  es:"Configuración de traducción"
+},
+
+"Sistem Dili":{
+  en:"System Language",
+  de:"Systemsprache",
+  fr:"Langue système",
+  it:"Lingua di sistema",
+  es:"Idioma del sistema"
+},
+
+"Ses Ayarları":{
+  en:"Voice Settings",
+  de:"Stimmeinstellungen",
+  fr:"Paramètres vocaux",
+  it:"Impostazioni voce",
+  es:"Configuración de voz"
+},
+
+"Otomatik":{
+  en:"Automatic",
+  de:"Automatisch",
+  fr:"Automatique",
+  it:"Automatico",
+  es:"Automático"
+},
+
+"Kadın":{
+  en:"Female",
+  de:"Weiblich",
+  fr:"Femme",
+  it:"Donna",
+  es:"Mujer"
+},
+
+"Erkek":{
+  en:"Male",
+  de:"Männlich",
+  fr:"Homme",
+  it:"Uomo",
+  es:"Hombre"
+},
+
+"Kendi Sesim":{
+  en:"My Voice",
+  de:"Meine Stimme",
+  fr:"Ma voix",
+  it:"La mia voce",
+  es:"Mi voz"
+},
+
+"Güvenli Çıkış":{
+  en:"Secure Logout",
+  de:"Sicher abmelden",
+  fr:"Déconnexion sécurisée",
+  it:"Uscita sicura",
+  es:"Cerrar sesión segura"
+},
+
+"Hesabımı Sil":{
+  en:"Delete Account",
+  de:"Konto löschen",
+  fr:"Supprimer le compte",
+  it:"Elimina account",
+  es:"Eliminar cuenta"
+},
+
+"Hakkımızda":{
+  en:"About Us",
+  de:"Über uns",
+  fr:"À propos",
+  it:"Chi siamo",
+  es:"Sobre nosotros"
+},
+
+"Gizlilik":{
+  en:"Privacy",
+  de:"Datenschutz",
+  fr:"Confidentialité",
+  it:"Privacy",
+  es:"Privacidad"
+},
+
+"İletişim":{
+  en:"Contact",
+  de:"Kontakt",
+  fr:"Contact",
+  it:"Contatto",
+  es:"Contacto"
+},
+
+"SSS":{
+  en:"FAQ",
+  de:"FAQ",
+  fr:"FAQ",
+  it:"FAQ",
+  es:"FAQ"
+},
+
+"FaceToFace":{
+  en:"FaceToFace",
+  de:"FaceToFace",
+  fr:"FaceToFace",
+  it:"FaceToFace",
+  es:"FaceToFace"
+},
+
+"SideToSide":{
+  en:"SideToSide",
+  de:"SideToSide",
+  fr:"SideToSide",
+  it:"SideToSide",
+  es:"SideToSide"
+},
+
+"AllToAll":{
+  en:"AllToAll",
+  de:"AllToAll",
+  fr:"AllToAll",
+  it:"AllToAll",
+  es:"AllToAll"
+},
+
+"Offline Hub":{
+  en:"Offline Hub",
+  de:"Offline Hub",
+  fr:"Offline Hub",
+  it:"Offline Hub",
+  es:"Offline Hub"
+},
+
+"Offline Translate":{
+  en:"Offline Translate",
+  de:"Offline Übersetzung",
+  fr:"Traduction hors ligne",
+  it:"Traduzione offline",
+  es:"Traducción offline"
+},
+
+"Geri dön":{
+  en:"Back",
+  de:"Zurück",
+  fr:"Retour",
+  it:"Indietro",
+  es:"Volver"
+},
+
+"Kaydet":{
+  en:"Save",
+  de:"Speichern",
+  fr:"Enregistrer",
+  it:"Salva",
+  es:"Guardar"
+},
+
+"Vazgeç":{
+  en:"Cancel",
+  de:"Abbrechen",
+  fr:"Annuler",
+  it:"Annulla",
+  es:"Cancelar"
+},
+
+"Sonraki":{
+  en:"Next",
+  de:"Weiter",
+  fr:"Suivant",
+  it:"Avanti",
+  es:"Siguiente"
+},
+
+"Tamamla":{
+  en:"Finish",
+  de:"Fertig",
+  fr:"Terminer",
+  it:"Completa",
+  es:"Finalizar"
 }
 
-export function getSystemLang() {
-  try {
-    return normalizeLang(localStorage.getItem(SYSTEM_LANG_KEY) || "tr");
-  } catch {
+};
+
+/* =========================
+   Dil okuma
+========================= */
+
+export function getSystemLang(){
+  try{
+    const raw = localStorage.getItem(SYSTEM_LANG_KEY) || "tr";
+    const base = raw.toLowerCase().split("-")[0];
+    return SUPPORTED.includes(base) ? base : "tr";
+  }catch{
     return "tr";
   }
 }
 
-export function setSystemLang(lang) {
-  try {
-    localStorage.setItem(SYSTEM_LANG_KEY, normalizeLang(lang));
-  } catch {}
+/* =========================
+   Dil kaydetme
+========================= */
+
+export function setSystemLang(lang){
+  try{
+    const base = String(lang).toLowerCase().split("-")[0];
+    localStorage.setItem(SYSTEM_LANG_KEY, SUPPORTED.includes(base) ? base : "tr");
+  }catch{}
 }
 
-export function t(key, fallback = "") {
+/* =========================
+   Çeviri
+========================= */
+
+function translate(text,lang){
+  if(lang==="tr") return text;
+  const t = DICT[text];
+  if(!t) return text;
+  return t[lang] || text;
+}
+
+/* =========================
+   DOM çeviri
+========================= */
+
+export function applySystemTranslations(root=document.body){
+
   const lang = getSystemLang();
-  return DICT[lang]?.[key] || DICT.tr?.[key] || fallback || key;
-}
 
-export function applySystemTranslations(root = document) {
-  if (!root) return;
+  const nodes = root.querySelectorAll("*");
 
-  root.querySelectorAll("[data-i18n]").forEach((el) => {
-    const key = el.getAttribute("data-i18n");
-    if (!key) return;
-    el.textContent = t(key, el.textContent || "");
+  nodes.forEach(el=>{
+
+    if(
+      el.tagName==="SCRIPT" ||
+      el.tagName==="STYLE" ||
+      el.tagName==="INPUT" ||
+      el.tagName==="TEXTAREA"
+    ) return;
+
+    const children = Array.from(el.childNodes).filter(n=>n.nodeType===3);
+
+    children.forEach(node=>{
+      const txt = node.nodeValue.trim();
+      if(!txt) return;
+
+      if(!el.dataset.orig){
+        el.dataset.orig = txt;
+      }
+
+      const translated = translate(el.dataset.orig,lang);
+
+      if(translated!==txt){
+        node.nodeValue = node.nodeValue.replace(txt,translated);
+      }
+
+    });
+
   });
 
-  root.querySelectorAll("[data-i18n-title]").forEach((el) => {
-    const key = el.getAttribute("data-i18n-title");
-    if (!key) return;
-    el.setAttribute("title", t(key, el.getAttribute("title") || ""));
-    el.setAttribute("aria-label", t(key, el.getAttribute("aria-label") || ""));
-  });
 }
 
-let __observerInstalled = false;
+/* =========================
+   Otomatik çeviri observer
+========================= */
 
-export function installAutoTranslate(root = document.body) {
+let observer=null;
+
+export function installAutoTranslate(root=document.body){
+
   applySystemTranslations(root);
 
-  if (__observerInstalled || !root) return;
-  __observerInstalled = true;
+  if(observer) return;
 
-  const obs = new MutationObserver(() => {
+  observer = new MutationObserver(()=>{
     applySystemTranslations(root);
   });
 
-  obs.observe(root, {
-    childList: true,
-    subtree: true
+  observer.observe(root,{
+    childList:true,
+    subtree:true
   });
+
 }
