@@ -313,8 +313,40 @@ async function getCurrentUserId() {
   }
 }
 
+async function getCurrentUser() {
+  try {
+    const { data } = await supabase.auth.getUser();
+    return data?.user || null;
+  } catch {
+    return null;
+  }
+}
+
 function getVoicePreference() {
   return String(localStorage.getItem("tts_voice") || "auto").toLowerCase().trim();
+}
+
+async function hasReadyVoiceProfile() {
+  try {
+    const user = await getCurrentUser();
+    if (!user?.id) return false;
+
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("voice_profile_ready")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (error) {
+      console.warn("[facetoface] voice profile read error", error);
+      return false;
+    }
+
+    return !!data?.voice_profile_ready;
+  } catch (e) {
+    console.warn("[facetoface] voice profile check error", e);
+    return false;
+  }
 }
 
 function base64ToBlob(base64, mime = "audio/mpeg") {
@@ -344,6 +376,40 @@ async function speakViaApi(text, langCode) {
 
   if (!r.ok || !j?.ok || !j?.audio_base64) {
     throw new Error(j?.error || j?.detail || "TTS API unavailable");
+  }
+
+  const audio = new Audio("data:audio/mp3;base64," + j.audio_base64);
+  currentAudio = audio;
+
+  audio.onended = () => {
+    if (currentAudio === audio) currentAudio = null;
+  };
+  audio.onerror = () => {
+    if (currentAudio === audio) currentAudio = null;
+  };
+
+  await audio.play();
+}
+
+async function speakViaCloneApi(text, langCode) {
+  const user = await getCurrentUser();
+  if (!user?.id) throw new Error("no_user_for_clone");
+
+  const r = await fetch(`${API_BASE}/api/voice/speak`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      text: String(text || "").trim(),
+      lang: canonical(langCode),
+      user_id: user.id,
+      module: "facetoface"
+    }),
+  });
+
+  const j = await r.json().catch(() => null);
+
+  if (!r.ok || !j?.ok || !j?.audio_base64) {
+    throw new Error(j?.error || j?.detail || "CLONE_TTS_UNAVAILABLE");
   }
 
   const audio = new Audio("data:audio/mp3;base64," + j.audio_base64);
@@ -396,12 +462,32 @@ async function speak(text, langCode) {
 
   const voice = getVoicePreference();
 
-  // auto = ücretsiz ses
+  // auto = ücretsiz sistem sesi
   if (voice === "auto") {
     speakFallback(value, langCode);
     return;
   }
 
+  // Kendi Sesim
+  if (voice === "clone") {
+    try {
+      const ready = await hasReadyVoiceProfile();
+      if (!ready) {
+        console.warn("[facetoface] voice profile hazır değil, sistem sesine düşülüyor");
+        speakFallback(value, langCode);
+        return;
+      }
+
+      await speakViaCloneApi(value, langCode);
+      return;
+    } catch (e) {
+      console.warn("[facetoface] clone tts fallback", e);
+      speakFallback(value, langCode);
+      return;
+    }
+  }
+
+  // female / male
   try {
     await speakViaApi(value, langCode);
   } catch (e) {
