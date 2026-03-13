@@ -212,6 +212,8 @@ let ws = null;
 let wsReady = false;
 let pingTimer = null;
 let leavingTimer = null;
+let lastLocalSentText = "";
+let lastLocalSentAt = 0;
 
 /* =========================
    VISUAL STATE
@@ -350,12 +352,7 @@ function renderPop() {
 
   listBot.querySelectorAll(".pop-item").forEach((el) => {
     el.addEventListener("click", () => {
-      myLang = canonical(el.dataset.code || "tr");
-      localStorage.setItem("live_interpreter_lang", myLang);
-      refreshLangLabels();
-      refreshReadyTextsIfIdle();
-      rebuildRecognizer();
-      closeAllPop();
+      el.addEventListener("click", async () => {
     });
   });
 }
@@ -760,14 +757,32 @@ function startSocket() {
   };
 
   ws.onclose = () => {
-    wsReady = false;
-    if (pingTimer) {
-      clearInterval(pingTimer);
-      pingTimer = null;
-    }
-  };
-}
+  wsReady = false;
 
+  if (pingTimer) {
+    clearInterval(pingTimer);
+    pingTimer = null;
+  }
+
+  setErrorUI();
+  setHelper(botHelper, t(myLang, "peerGoneHome"), "helper-wait");
+  goHomeDelayed();
+};
+}
+function shouldIgnoreDuplicateLocal(text) {
+  const value = String(text || "").trim();
+  const now = Date.now();
+
+  if (!value) return true;
+
+  if (value === lastLocalSentText && (now - lastLocalSentAt) < 2500) {
+    return true;
+  }
+
+  lastLocalSentText = value;
+  lastLocalSentAt = now;
+  return false;
+}
 /* =========================
    SEND
 ========================= */
@@ -839,6 +854,29 @@ async function finalizeRecognition(text) {
     bounceToReady(1000);
     return;
   }
+
+  if (shouldIgnoreDuplicateLocal(cleaned)) {
+    return;
+  }
+async function applyMyLanguageChange(nextLang) {
+  myLang = canonical(nextLang || "tr");
+  localStorage.setItem("live_interpreter_lang", myLang);
+  refreshLangLabels();
+  refreshReadyTextsIfIdle();
+  rebuildRecognizer();
+
+  stopSocket();
+
+  try {
+    if (role === "guest" && roomId) {
+      await joinRoomIfNeeded();
+    }
+  } catch (e) {
+    console.warn("[lang change join]", e);
+  }
+
+  startSocket();
+}
 
   clearLatest("bottom");
   addBubble("bottom", "me", cleaned, {
