@@ -756,6 +756,11 @@ async function ensureStableHostCode(){
 
   const hostCode = `ITK-${base}`;
   localStorage.setItem(HOST_CODE_KEY, hostCode);
+
+  if(!localStorage.getItem(QR_VERSION_KEY)){
+    localStorage.setItem(QR_VERSION_KEY, "1");
+  }
+
   return hostCode;
 }
 
@@ -776,9 +781,12 @@ function qrUrlFallback(targetUrl){
 }
 
 function showFallback(hostCode){
-  if(qrFallbackCode) qrFallbackCode.textContent = hostCode;
+  if(qrFallbackCode) qrFallbackCode.textContent = hostCode || "ITK-XXXXXX";
   if(qrFallback) qrFallback.classList.add("show");
-  if(smallQrImg) smallQrImg.style.display = "none";
+  if(smallQrImg){
+    smallQrImg.style.display = "none";
+    smallQrImg.removeAttribute("src");
+  }
 }
 
 function loadImage(url){
@@ -811,22 +819,22 @@ async function bootQr(){
     }
 
     if(finalUrl && smallQrImg){
+      const safeUrl = finalUrl + (finalUrl.includes("?") ? "&" : "?") + "t=" + Date.now();
       smallQrImg.style.display = "block";
-      smallQrImg.src = finalUrl + `&t=${Date.now()}`;
+      smallQrImg.src = safeUrl;
       qrFallback?.classList.remove("show");
-      console.log("QR OK:", finalUrl);
+      console.log("[home qr] OK:", joinUrl);
     }else{
-      if(smallQrImg) smallQrImg.style.display = "none";
-      qrFallback?.classList.add("show");
-      console.warn("QR servisleri yanıt vermedi, fallback gösterildi.");
+      showFallback(hostCode);
+      console.warn("[home qr] QR servisleri yanıt vermedi, fallback gösterildi.");
     }
   }catch(e){
-    console.error("QR HATASI:", e);
-    if(smallQrImg) smallQrImg.style.display = "none";
-    if(qrFallbackCode) qrFallbackCode.textContent = "ITK-ERROR";
-    qrFallback?.classList.add("show");
+    console.error("[home qr] HATA:", e);
+    showFallback("ITK-ERROR");
   }
 }
+
+bootQr();
 
 document.addEventListener("visibilitychange", () => {
   if(document.visibilityState === "visible"){
@@ -837,23 +845,6 @@ document.addEventListener("visibilitychange", () => {
 window.addEventListener("focus", () => {
   bootQr();
 });
-
-    if(finalUrl && smallQrImg){
-      smallQrImg.style.display = "block";
-      smallQrImg.src = finalUrl;
-      qrFallback?.classList.remove("show");
-      console.log("QR OK:", finalUrl);
-    } else {
-      showFallback(hostCode);
-      console.warn("QR servisleri yanıt vermedi, fallback gösterildi.");
-    }
-  }catch(e){
-    console.error("QR HATASI:", e);
-    showFallback("ITK-ERROR");
-  }
-}
-
-bootQr();
 </script>
 </body>
 </html>
