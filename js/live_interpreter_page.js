@@ -499,14 +499,19 @@ async function applyMyLanguageChange(nextLang) {
 
   try {
     if (ws && ws.readyState === WebSocket.OPEN) {
-      manuallyClosed = false;
-      ws.close();
-    } else {
-      startSocket();
+      ws.send(JSON.stringify({
+        type: "set_lang",
+        lang: myLang
+      }));
+      setHelper(botHelper, "Dil güncellendi", "helper-ready");
+      bounceToReady(800);
+      return;
     }
-  } catch {
-    startSocket();
+  } catch (e) {
+    console.warn("[set_lang send]", e);
   }
+
+  startSocket();
 }
 
 /* =========================
