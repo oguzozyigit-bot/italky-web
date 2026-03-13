@@ -812,6 +812,34 @@ async function bootQr(){
 
     if(finalUrl && smallQrImg){
       smallQrImg.style.display = "block";
+      smallQrImg.src = finalUrl + `&t=${Date.now()}`;
+      qrFallback?.classList.remove("show");
+      console.log("QR OK:", finalUrl);
+    }else{
+      if(smallQrImg) smallQrImg.style.display = "none";
+      qrFallback?.classList.add("show");
+      console.warn("QR servisleri yanıt vermedi, fallback gösterildi.");
+    }
+  }catch(e){
+    console.error("QR HATASI:", e);
+    if(smallQrImg) smallQrImg.style.display = "none";
+    if(qrFallbackCode) qrFallbackCode.textContent = "ITK-ERROR";
+    qrFallback?.classList.add("show");
+  }
+}
+
+document.addEventListener("visibilitychange", () => {
+  if(document.visibilityState === "visible"){
+    bootQr();
+  }
+});
+
+window.addEventListener("focus", () => {
+  bootQr();
+});
+
+    if(finalUrl && smallQrImg){
+      smallQrImg.style.display = "block";
       smallQrImg.src = finalUrl;
       qrFallback?.classList.remove("show");
       console.log("QR OK:", finalUrl);
