@@ -33,8 +33,13 @@ let roomId = String(query.get("room") || "").trim();
 const hostCode = String(query.get("host") || "").trim().toUpperCase();
 const role = String(query.get("role") || "guest").trim().toLowerCase();
 
-let myLang = String(query.get("my") || localStorage.getItem("live_interpreter_lang") || "tr").trim().toLowerCase();
-let peerLang = String(query.get("peer") || localStorage.getItem("live_interpreter_peer_lang") || "en").trim().toLowerCase();
+let myLang = String(
+  query.get("my") || localStorage.getItem("live_interpreter_lang") || "tr"
+).trim().toLowerCase();
+
+let peerLang = String(
+  query.get("peer") || localStorage.getItem("live_interpreter_peer_lang") || "en"
+).trim().toLowerCase();
 
 /* =========================
    LANG
@@ -95,23 +100,23 @@ let pingTimer = null;
    UI
 ========================= */
 
-function setStatus(state, text){
-  if(!statusDot || !wsStatus) return;
+function setStatus(state, text) {
+  if (!statusDot || !wsStatus) return;
 
-  statusDot.classList.remove("ok","err");
+  statusDot.classList.remove("ok", "err");
 
-  if(state === "ok") statusDot.classList.add("ok");
-  if(state === "err") statusDot.classList.add("err");
+  if (state === "ok") statusDot.classList.add("ok");
+  if (state === "err") statusDot.classList.add("err");
 
   wsStatus.textContent = text || "";
 }
 
-function hideEmpty(){
-  if(emptyState) emptyState.style.display = "none";
+function hideEmpty() {
+  if (emptyState) emptyState.style.display = "none";
 }
 
-function addSystem(text){
-  if(!chatLog) return;
+function addSystem(text) {
+  if (!chatLog) return;
 
   hideEmpty();
 
@@ -123,8 +128,8 @@ function addSystem(text){
   chatLog.scrollTop = chatLog.scrollHeight;
 }
 
-function addMessage(text, side){
-  if(!chatLog) return;
+function addMessage(text, side) {
+  if (!chatLog) return;
 
   hideEmpty();
 
@@ -136,35 +141,27 @@ function addMessage(text, side){
   chatLog.scrollTop = chatLog.scrollHeight;
 }
 
-function renderHeader(){
-  if(roleBadge){
+function renderHeader() {
+  if (roleBadge) {
     roleBadge.textContent = role === "host" ? "HOST" : "GUEST";
   }
 
-  if(roomTitle){
+  if (roomTitle) {
     roomTitle.textContent = "Canlı Tercüme";
   }
 
-  if(roomMetaText){
-    if(roomId){
-      roomMetaText.textContent = `Room: ${roomId}`;
-    }else if(hostCode){
-      roomMetaText.textContent = `Host: ${hostCode}`;
-    }else{
-      roomMetaText.textContent = "Room hazırlanıyor...";
-    }
-  }
+  updateRoomMeta();
 }
 
-function updateRoomMeta(){
-  if(roomMetaText){
-    if(roomId){
-      roomMetaText.textContent = `Room: ${roomId}`;
-    }else if(hostCode){
-      roomMetaText.textContent = `Host: ${hostCode}`;
-    }else{
-      roomMetaText.textContent = "Room bulunamadı";
-    }
+function updateRoomMeta() {
+  if (!roomMetaText) return;
+
+  if (roomId) {
+    roomMetaText.textContent = `Room: ${roomId}`;
+  } else if (hostCode) {
+    roomMetaText.textContent = `Host: ${hostCode}`;
+  } else {
+    roomMetaText.textContent = "Room hazırlanıyor...";
   }
 }
 
@@ -172,8 +169,37 @@ function updateRoomMeta(){
    API
 ========================= */
 
-async function resolveRoomByHost(){
-  if(!hostCode) return null;
+async function createRoomIfHost() {
+  if (role !== "host") return null;
+  if (roomId) return { room_id: roomId };
+
+  if (!hostCode) {
+    throw new Error("host_code bulunamadı");
+  }
+
+  const r = await fetch(`${API_BASE}/interpreter/create-room`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      host_code: hostCode,
+      my_lang: myLang,
+      mode: "interpreter"
+    })
+  });
+
+  const j = await r.json().catch(() => ({}));
+
+  if (!r.ok || !j?.room_id) {
+    throw new Error(j?.detail || j?.error || "room create başarısız");
+  }
+
+  return j;
+}
+
+async function resolveRoomByHost() {
+  if (!hostCode) return null;
 
   const r = await fetch(`${API_BASE}/interpreter/resolve-room`, {
     method: "POST",
@@ -189,18 +215,18 @@ async function resolveRoomByHost(){
 
   const j = await r.json().catch(() => ({}));
 
-  if(!r.ok || !j?.room_id){
+  if (!r.ok || !j?.room_id) {
     throw new Error(j?.detail || j?.error || "room resolve başarısız");
   }
 
   return j;
 }
 
-async function joinRoomIfNeeded(){
-  if(!roomId) return;
-  if(role !== "guest") return;
+async function joinRoomIfNeeded() {
+  if (!roomId) return;
+  if (role !== "guest") return;
 
-  try{
+  try {
     const r = await fetch(`${API_BASE}/interpreter/join-room`, {
       method: "POST",
       headers: {
@@ -214,12 +240,12 @@ async function joinRoomIfNeeded(){
 
     const j = await r.json().catch(() => ({}));
 
-    if(!r.ok){
+    if (!r.ok) {
       throw new Error(j?.detail || "join-room başarısız");
     }
 
     addSystem("Odaya katılım bildirildi");
-  }catch(e){
+  } catch (e) {
     console.warn("[join room]", e);
     addSystem("Join-room çağrısı başarısız");
   }
@@ -229,8 +255,9 @@ async function joinRoomIfNeeded(){
    WS URL
 ========================= */
 
-function wsUrl(){
-  if(!roomId) return null;
+function wsUrl() {
+  if (!roomId) return null;
+
   return `${WS_BASE}/ws/interpreter/${encodeURIComponent(roomId)}?role=${encodeURIComponent(role)}&lang=${encodeURIComponent(myLang)}`;
 }
 
@@ -238,70 +265,70 @@ function wsUrl(){
    SOCKET
 ========================= */
 
-function stopSocket(){
-  try{ ws?.close?.(); }catch{}
+function stopSocket() {
+  try { ws?.close?.(); } catch {}
   ws = null;
   wsReady = false;
 
-  if(pingTimer){
+  if (pingTimer) {
     clearInterval(pingTimer);
     pingTimer = null;
   }
 }
 
-function startPing(){
-  if(pingTimer) clearInterval(pingTimer);
+function startPing() {
+  if (pingTimer) clearInterval(pingTimer);
 
   pingTimer = setInterval(() => {
-    try{
-      if(ws && ws.readyState === WebSocket.OPEN){
+    try {
+      if (ws && ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({ type: "ping" }));
       }
-    }catch{}
+    } catch {}
   }, 15000);
 }
 
-function startSocket(){
+function startSocket() {
   const url = wsUrl();
 
-  if(!url){
-    setStatus("err","Room bilgisi yok");
+  if (!url) {
+    setStatus("err", "Room bilgisi yok");
     addSystem("WebSocket için room bilgisi bulunamadı");
     return;
   }
 
   stopSocket();
 
-  try{
+  try {
     ws = new WebSocket(url);
-  }catch(e){
+  } catch (e) {
     console.error("[ws create]", e);
-    setStatus("err","WebSocket açılamadı");
+    setStatus("err", "WebSocket açılamadı");
     addSystem("WebSocket açılamadı");
     return;
   }
 
-  setStatus("","WebSocket bağlanıyor...");
+  setStatus("", "WebSocket bağlanıyor...");
 
   ws.onopen = () => {
     wsReady = true;
-    setStatus("ok","Bağlantı kuruldu");
+    setStatus("ok", "Bağlantı kuruldu");
     addSystem("Bağlantı hazır");
     startPing();
   };
 
   ws.onmessage = (event) => {
-    try{
+    try {
       const payload = JSON.parse(event.data);
       const type = String(payload?.type || "").trim();
 
-      if(type === "presence"){
-        if(payload?.room_id && !roomId){
+      if (type === "presence") {
+        if (payload?.room_id && !roomId) {
           roomId = String(payload.room_id).trim();
           updateRoomMeta();
         }
 
-        if(payload?.guest_lang){
+        if (payload?.guest_lang) {
           peerLang = canonical(payload.guest_lang);
           localStorage.setItem("live_interpreter_peer_lang", peerLang);
         }
@@ -310,8 +337,8 @@ function startSocket(){
         return;
       }
 
-      if(type === "peer_joined"){
-        if(payload?.guest_lang){
+      if (type === "peer_joined") {
+        if (payload?.guest_lang) {
           peerLang = canonical(payload.guest_lang);
           localStorage.setItem("live_interpreter_peer_lang", peerLang);
         }
@@ -320,51 +347,52 @@ function startSocket(){
         return;
       }
 
-      if(type === "translated_message"){
+      if (type === "translated_message") {
         const sender = String(payload?.sender || "").trim().toLowerCase();
         const translated = String(payload?.translated_text || "").trim();
         const original = String(payload?.original_text || "").trim();
 
         const text = translated || original;
-        if(!text) return;
+        if (!text) return;
 
         addMessage(text, sender === "host" ? "host" : "guest");
         return;
       }
 
-      if(type === "peer_left"){
+      if (type === "peer_left") {
         addSystem("Karşı taraf ayrıldı");
         return;
       }
 
-      if(type === "pong"){
+      if (type === "pong") {
         return;
       }
 
-      if(type === "error"){
+      if (type === "error") {
         console.warn("[ws error payload]", payload);
         setStatus("err", payload.message || "Sunucu hatası");
         addSystem(payload.message || "Sunucu hatası");
       }
-
-    }catch(e){
+    } catch (e) {
       console.warn("[ws parse error]", e);
     }
   };
 
   ws.onerror = () => {
     wsReady = false;
-    setStatus("err","WebSocket hata verdi");
+    setStatus("err", "WebSocket hata verdi");
     addSystem("WebSocket hata verdi");
   };
 
   ws.onclose = () => {
     wsReady = false;
-    if(pingTimer){
+
+    if (pingTimer) {
       clearInterval(pingTimer);
       pingTimer = null;
     }
-    setStatus("err","Bağlantı kapandı");
+
+    setStatus("err", "Bağlantı kapandı");
     addSystem("Bağlantı kapandı");
   };
 }
@@ -373,36 +401,50 @@ function startSocket(){
    BOOT
 ========================= */
 
-async function boot(){
-
+async function boot() {
   renderHeader();
   localStorage.setItem("live_interpreter_lang", myLang);
 
-  if(roomId){
-    addSystem("Room hazır • " + roomId);
-  }else if(hostCode){
-    addSystem("Host hazır • " + hostCode);
-    setStatus("", "Oda çözülüyor...");
+  try {
+    if (roomId) {
+      addSystem("Room hazır • " + roomId);
+    } else if (hostCode) {
+      addSystem("Host hazır • " + hostCode);
 
-    try{
-      const resolved = await resolveRoomByHost();
-      roomId = String(resolved.room_id || "").trim();
+      if (role === "host") {
+        setStatus("", "Oda oluşturuluyor...");
 
-      if(!roomId){
-        throw new Error("room_id boş geldi");
+        const created = await createRoomIfHost();
+        roomId = String(created?.room_id || "").trim();
+
+        if (!roomId) {
+          throw new Error("Host room oluşturulamadı");
+        }
+
+        updateRoomMeta();
+        addSystem("Host room açıldı • " + roomId);
+      } else {
+        setStatus("", "Oda çözülüyor...");
+
+        const resolved = await resolveRoomByHost();
+        roomId = String(resolved?.room_id || "").trim();
+
+        if (!roomId) {
+          throw new Error("room_id boş geldi");
+        }
+
+        updateRoomMeta();
+        addSystem("Room çözüldü • " + roomId);
       }
-
-      updateRoomMeta();
-      addSystem("Room çözüldü • " + roomId);
-    }catch(e){
-      console.error("[resolve room]", e);
-      setStatus("err", e?.message || "Room çözülemedi");
-      addSystem(e?.message || "Room çözülemedi");
+    } else {
+      addSystem("Bağlantı hazırlanıyor...");
+      setStatus("err", "Host veya room bilgisi yok");
       return;
     }
-  }else{
-    addSystem("Bağlantı hazırlanıyor...");
-    setStatus("err","Host veya room bilgisi yok");
+  } catch (e) {
+    console.error("[boot room error]", e);
+    setStatus("err", e?.message || "Room işlemi başarısız");
+    addSystem(e?.message || "Room işlemi başarısız");
     return;
   }
 
