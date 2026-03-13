@@ -12,6 +12,7 @@ const recordBtn = $("recordBtn");
 const nextBtn = $("nextBtn");
 const finishBtn = $("finishBtn");
 const backBtn = $("backBtn");
+const cancelBtn = $("cancelBtn");
 
 const statusText = $("statusText");
 const timerText = $("timerText");
@@ -556,15 +557,15 @@ async function bootPage() {
 
     try {
       await finishVoiceProfile(lang);
-      if (statusText) statusText.textContent = "Ses profili kaydedildi";
 
+      if (statusText) statusText.textContent = "Ses profili işleniyor...";
       await enrollTTSVoice();
 
       if (statusText) statusText.textContent = "Ses profili hazır";
       toast("Ses profili hazır");
 
       setTimeout(() => {
-        location.href = "/pages/profile.html";
+        location.href = "/pages/translation_settings.html";
       }, 900);
     } catch (e) {
       console.warn("[voice finish]", e);
@@ -578,6 +579,10 @@ async function bootPage() {
   });
 
   backBtn?.addEventListener("click", () => {
+    history.back();
+  });
+
+  cancelBtn?.addEventListener("click", () => {
     history.back();
   });
 }
@@ -597,7 +602,6 @@ bootPage().catch((e) => {
   toast("Sayfa başlatılamadı");
 });
 
-// İsteğe bağlı export
 export function initVoiceProfile() {
-  // boot zaten otomatik çalışıyor; boş bırakıldı
+  // Bilerek boş. Otomatik boot ediliyor.
 }
