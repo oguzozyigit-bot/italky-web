@@ -1,5 +1,3 @@
-// FILE: /js/system_lang_ai.js
-
 const API_BASE = "https://italky-api.onrender.com";
 const CACHE_KEY = "italky_ui_translate_cache_v2";
 const SUPPORTED = ["en", "de", "fr", "it", "es"];
