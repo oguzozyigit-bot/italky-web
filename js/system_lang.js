@@ -8,8 +8,17 @@ const SUPPORTED = ["tr", "en", "de", "fr", "it", "es"];
 const DICT = {
   "Profil": { en: "Profile", de: "Profil", fr: "Profil", it: "Profilo", es: "Perfil" },
   "Jeton Market": { en: "Token Market", de: "Token Markt", fr: "Marché des jetons", it: "Mercato Token", es: "Mercado de tokens" },
+  "Kendi Sesini Oluştur": { en: "Create Your Voice", de: "Erstelle deine Stimme", fr: "Crée ta voix", it: "Crea la tua voce", es: "Crea tu voz" },
   "Çeviri Ayarları": { en: "Translation Settings", de: "Übersetzungseinstellungen", fr: "Paramètres de traduction", it: "Impostazioni traduzione", es: "Configuración de traducción" },
-  "Geri dön": { en: "Back", de: "Zurück", fr: "Retour", it: "Indietro", es: "Volver" }
+  "TextToText": { en: "TextToText", de: "TextToText", fr: "TextToText", it: "TextToText", es: "TextToText" },
+  "QR Değiştir": { en: "Change QR", de: "QR ändern", fr: "Changer le QR", it: "Cambia QR", es: "Cambiar QR" },
+  "Hakkımızda": { en: "About Us", de: "Über uns", fr: "À propos", it: "Chi siamo", es: "Sobre nosotros" },
+  "Jeton Nedir": { en: "What is Token?", de: "Was ist ein Token?", fr: "Qu'est-ce qu'un jeton ?", it: "Cos'è un token?", es: "¿Qué es un token?" },
+  "SSS": { en: "FAQ", de: "FAQ", fr: "FAQ", it: "FAQ", es: "FAQ" },
+  "Gizlilik": { en: "Privacy", de: "Datenschutz", fr: "Confidentialité", it: "Privacy", es: "Privacidad" },
+  "İletişim": { en: "Contact", de: "Kontakt", fr: "Contact", it: "Contatti", es: "Contacto" },
+  "Güvenli Çıkış": { en: "Secure Logout", de: "Sicher abmelden", fr: "Déconnexion sécurisée", it: "Uscita sicura", es: "Cerrar sesión segura" },
+  "Hesabımı Sil": { en: "Delete My Account", de: "Mein Konto löschen", fr: "Supprimer mon compte", it: "Elimina il mio account", es: "Eliminar mi cuenta" }
 };
 
 function normalizeLang(lang) {
