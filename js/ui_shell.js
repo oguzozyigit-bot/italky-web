@@ -71,20 +71,20 @@ const HOME_HEADER_HTML = `
     </div>
 
     <nav class="menu-nav">
-      <a href="/pages/profile.html">Profil</a>
-      <a href="/pages/jetonbuy.html">Jeton Market</a>
-      <a href="/pages/voice_profile.html">Kendi Sesini Oluştur</a>
-      <a href="/pages/translation_settings.html">Çeviri Ayarları</a>
-      <a href="/pages/text_translate.html">TextToText</a>
-      <a href="/pages/qr-change.html">QR Değiştir</a>
-      <a href="/pages/about.html">Hakkımızda</a>
-      <a href="/pages/jeton-nedir.html">Jeton Nedir</a>
-      <a href="/pages/faq.html">SSS</a>
-      <a href="/pages/privacy.html">Gizlilik</a>
-      <a href="/pages/contact.html">İletişim</a>
-      <button class="menu-action danger-lite" id="logoutBtn" type="button">Güvenli Çıkış</button>
-      <button class="menu-action danger" id="deleteAccountBtn" type="button">Hesabımı Sil</button>
-    </nav>
+  <a href="/pages/profile.html" data-i18n="menu_profile">Profil</a>
+  <a href="/pages/jetonbuy.html" data-i18n="menu_token_market">Jeton Market</a>
+  <a href="/pages/voice_profile.html" data-i18n="menu_create_voice">Kendi Sesini Oluştur</a>
+  <a href="/pages/translation_settings.html" data-i18n="menu_translation_settings">Çeviri Ayarları</a>
+  <a href="/pages/text_translate.html" data-i18n="menu_text_to_text">TextToText</a>
+  <a href="/pages/qr-change.html" data-i18n="menu_change_qr">QR Değiştir</a>
+  <a href="/pages/about.html" data-i18n="menu_about">Hakkımızda</a>
+  <a href="/pages/jeton-nedir.html" data-i18n="menu_what_is_token">Jeton Nedir</a>
+  <a href="/pages/faq.html" data-i18n="menu_faq">SSS</a>
+  <a href="/pages/privacy.html" data-i18n="menu_privacy">Gizlilik</a>
+  <a href="/pages/contact.html" data-i18n="menu_contact">İletişim</a>
+  <button class="menu-action danger-lite" id="logoutBtn" type="button" data-i18n="menu_logout">Güvenli Çıkış</button>
+  <button class="menu-action danger" id="deleteAccountBtn" type="button" data-i18n="menu_delete_account">Hesabımı Sil</button>
+</nav>
 
     <div class="menu-sign" data-no-translate="1">italkyAI By Ozyigit's • 2026</div>
   </div>
