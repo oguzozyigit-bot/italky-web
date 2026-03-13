@@ -1,7 +1,10 @@
-import { LANG_POOL } from "/js/lang_pool_full.js";
-import { supabase } from "/js/supabase_client.js";
+// FILE: /js/live_interpreter_page.js
 
-const API_BASE = "https://italky-api.onrender.com";
+import { LANG_POOL } from "/js/lang_pool_full.js";
+
+const API_BASE = "https://italky-api.onrender.com/api";
+const WS_BASE = "wss://italky-api.onrender.com";
+
 const $ = (id) => document.getElementById(id);
 
 const BCP = {
@@ -61,6 +64,11 @@ const UI_TEXT = {
     translateError: "⚠️ Çeviri servisine ulaşılamadı",
     micBlocked: "⚠️ Mikrofon izni gerekli",
     speechUnsupported: "⚠️ Bu cihazda konuşma algılama desteklenmiyor",
+    connectionReady: "Bağlantı hazır",
+    peerJoined: "Karşı taraf bağlandı",
+    peerLeft: "Karşı taraf ayrıldı",
+    wsFailed: "Bağlantı kurulamadı",
+    peerGoneHome: "Oğuz ayrıldı. Lütfen bekleyiniz...",
   },
   en: {
     ready: "Tap the microphone to speak.",
@@ -71,6 +79,11 @@ const UI_TEXT = {
     translateError: "⚠️ Translation service unavailable",
     micBlocked: "⚠️ Microphone permission required",
     speechUnsupported: "⚠️ Speech recognition is not supported on this device",
+    connectionReady: "Connection ready",
+    peerJoined: "The other side connected",
+    peerLeft: "The other side left",
+    wsFailed: "Connection failed",
+    peerGoneHome: "Oğuz left. Please wait...",
   },
   de: {
     ready: "Tippen Sie zum Sprechen auf das Mikrofon.",
@@ -81,6 +94,11 @@ const UI_TEXT = {
     translateError: "⚠️ Übersetzungsdienst nicht erreichbar",
     micBlocked: "⚠️ Mikrofonberechtigung erforderlich",
     speechUnsupported: "⚠️ Spracherkennung wird auf diesem Gerät nicht unterstützt",
+    connectionReady: "Verbindung bereit",
+    peerJoined: "Gegenseite verbunden",
+    peerLeft: "Gegenseite getrennt",
+    wsFailed: "Verbindung fehlgeschlagen",
+    peerGoneHome: "Oğuz hat den Raum verlassen. Bitte warten...",
   },
   fr: {
     ready: "Touchez le micro pour parler.",
@@ -91,6 +109,11 @@ const UI_TEXT = {
     translateError: "⚠️ Service de traduction indisponible",
     micBlocked: "⚠️ Autorisation micro requise",
     speechUnsupported: "⚠️ La reconnaissance vocale n'est pas prise en charge sur cet appareil",
+    connectionReady: "Connexion prête",
+    peerJoined: "L'autre côté est connecté",
+    peerLeft: "L'autre côté s'est déconnecté",
+    wsFailed: "Connexion impossible",
+    peerGoneHome: "Oğuz a quitté. Veuillez patienter...",
   },
   it: {
     ready: "Tocca il microfono per parlare.",
@@ -101,6 +124,11 @@ const UI_TEXT = {
     translateError: "⚠️ Servizio di traduzione non disponibile",
     micBlocked: "⚠️ Autorizzazione microfono richiesta",
     speechUnsupported: "⚠️ Il riconoscimento vocale non è supportato su questo dispositivo",
+    connectionReady: "Connessione pronta",
+    peerJoined: "L'altra parte si è collegata",
+    peerLeft: "L'altra parte si è scollegata",
+    wsFailed: "Connessione non riuscita",
+    peerGoneHome: "Oğuz è uscito. Attendere prego...",
   },
   es: {
     ready: "Toque el micrófono para hablar.",
@@ -111,6 +139,11 @@ const UI_TEXT = {
     translateError: "⚠️ Servicio de traducción no disponible",
     micBlocked: "⚠️ Se requiere permiso de micrófono",
     speechUnsupported: "⚠️ El reconocimiento de voz no es compatible con este dispositivo",
+    connectionReady: "Conexión lista",
+    peerJoined: "La otra parte se conectó",
+    peerLeft: "La otra parte salió",
+    wsFailed: "No se pudo conectar",
+    peerGoneHome: "Oğuz salió. Por favor espere...",
   },
 };
 
@@ -120,29 +153,51 @@ function t(langCode, key) {
   return pack[key] || UI_TEXT.en[key] || "";
 }
 
+/* =========================
+   DOM
+========================= */
 const frameRoot = $("frameRoot");
 const topBody = $("topBody");
 const botBody = $("botBody");
-const topMic = $("topMic");
 const botMic = $("botMic");
 const topHelper = $("topHelper");
 const botHelper = $("botHelper");
-const topLangBtn = $("topLangBtn");
+const roomMetaText = $("roomMetaText");
+const peerBadge = $("peerBadge");
+
 const botLangBtn = $("botLangBtn");
-const topLangTxt = $("topLangTxt");
 const botLangTxt = $("botLangTxt");
-const popTop = $("pop-top");
 const popBot = $("pop-bot");
-const listTop = $("list-top");
 const listBot = $("list-bot");
-const closeTop = $("close-top");
 const closeBot = $("close-bot");
+
 const clearBtn = $("clearBtn");
 const homeLink = $("homeLink");
 const homeBtn = $("homeBtn");
 
-let topLang = "en";
-let botLang = "tr";
+/* =========================
+   URL PARAMS
+========================= */
+const query = new URLSearchParams(location.search);
+
+let roomId = String(query.get("room") || "").trim();
+const hostCode = String(query.get("host") || "").trim().toUpperCase();
+const role = String(query.get("role") || "guest").trim().toLowerCase();
+
+let myLang = String(
+  query.get("my") || localStorage.getItem("live_interpreter_lang") || "tr"
+).trim().toLowerCase();
+
+let peerLang = String(
+  query.get("peer") || localStorage.getItem("live_interpreter_peer_lang") || "en"
+).trim().toLowerCase();
+
+myLang = canonical(myLang || "tr");
+peerLang = canonical(peerLang || "en");
+
+/* =========================
+   STATE
+========================= */
 let ttsDebounceAt = 0;
 let activeSide = null;
 let recognizer = null;
@@ -153,22 +208,28 @@ let bootReady = false;
 let bootStarted = false;
 let bootPromise = null;
 
+let ws = null;
+let wsReady = false;
+let pingTimer = null;
+let leavingTimer = null;
+
+/* =========================
+   VISUAL STATE
+========================= */
 function pointOrbTo(side) {
   if (!frameRoot) return;
   frameRoot.classList.remove("to-top", "to-bot");
   frameRoot.classList.add(side === "top" ? "to-top" : "to-bot");
 }
 
-function setMicState(side, state) {
-  const mic = side === "top" ? topMic : botMic;
-  if (!mic) return;
-  mic.classList.remove("listening", "recorded");
-  if (state === "listening") mic.classList.add("listening");
-  if (state === "recorded") mic.classList.add("recorded");
+function setMicState(state) {
+  if (!botMic) return;
+  botMic.classList.remove("listening", "recorded");
+  if (state === "listening") botMic.classList.add("listening");
+  if (state === "recorded") botMic.classList.add("recorded");
 }
 
 function resetMics() {
-  topMic?.classList.remove("listening", "recorded");
   botMic?.classList.remove("listening", "recorded");
 }
 
@@ -193,64 +254,71 @@ function setSystemReadyUI() {
   activeSide = null;
   resetMics();
   setFrameVisual("ready");
-  setHelper(topHelper, t(topLang, "ready"), "helper-ready");
-  setHelper(botHelper, t(botLang, "ready"), "helper-ready");
+  if (topHelper) topHelper.style.display = "none";
+  setHelper(botHelper, t(myLang, "ready"), "helper-ready");
 }
 
 function setSystemPreparingUI() {
   activeSide = null;
   resetMics();
   setFrameVisual("error");
-  setHelper(topHelper, t(topLang, "preparing"), "helper-wait");
-  setHelper(botHelper, t(botLang, "preparing"), "helper-wait");
+  if (topHelper) topHelper.style.display = "none";
+  setHelper(botHelper, t(myLang, "preparing"), "helper-wait");
 }
 
-function setListeningUI(side) {
-  activeSide = side;
-  pointOrbTo(side);
+function setListeningUI() {
+  activeSide = "bot";
+  pointOrbTo("bot");
   resetMics();
-  setMicState(side, "listening");
+  setMicState("listening");
   setFrameVisual("listening");
-
-  if (side === "top") {
-    setHelper(topHelper, t(topLang, "repeat"), "helper-repeat");
-    setHelper(botHelper, t(botLang, "wait"), "helper-wait");
-  } else {
-    setHelper(topHelper, t(topLang, "wait"), "helper-wait");
-    setHelper(botHelper, t(botLang, "repeat"), "helper-repeat");
-  }
+  if (topHelper) topHelper.style.display = "none";
+  setHelper(botHelper, t(myLang, "repeat"), "helper-repeat");
 }
 
-function setTranslatingUI(side) {
-  activeSide = side;
-  pointOrbTo(side);
-  setMicState(side, "recorded");
+function setTranslatingUI() {
+  activeSide = "bot";
+  pointOrbTo("bot");
+  setMicState("recorded");
   setFrameVisual("translating");
-
-  if (side === "top") {
-    setHelper(topHelper, t(topLang, "repeat"), "helper-repeat");
-    setHelper(botHelper, t(botLang, "wait"), "helper-wait");
-  } else {
-    setHelper(topHelper, t(topLang, "wait"), "helper-wait");
-    setHelper(botHelper, t(botLang, "repeat"), "helper-repeat");
-  }
+  if (topHelper) topHelper.style.display = "none";
+  setHelper(botHelper, t(myLang, "translating"), "helper-repeat");
 }
 
 function setErrorUI() {
   activeSide = null;
   resetMics();
   setFrameVisual("error");
-  setHelper(topHelper, t(topLang, "preparing"), "helper-wait");
-  setHelper(botHelper, t(botLang, "preparing"), "helper-wait");
+  if (topHelper) topHelper.style.display = "none";
+  setHelper(botHelper, t(myLang, "preparing"), "helper-wait");
 }
 
 function bounceToReady(delay = 1200) {
   setTimeout(() => setSystemReadyUI(), delay);
 }
 
+function updateRoomMeta() {
+  if (!roomMetaText) return;
+
+  if (roomId) {
+    roomMetaText.textContent = `Room • ${roomId}`;
+  } else if (hostCode) {
+    roomMetaText.textContent = `Host • ${hostCode}`;
+  } else {
+    roomMetaText.textContent = "Room hazırlanıyor...";
+  }
+}
+
+function updatePeerBadge() {
+  if (!peerBadge) return;
+
+  // Gerçek ad/soyad için backend profile gerekir.
+  // Şimdilik iki kişilik senaryoda sade gösteriyoruz.
+  peerBadge.textContent = "👤 Karşı Taraf";
+}
+
 function refreshLangLabels() {
-  if (topLangTxt) topLangTxt.textContent = labelChip(topLang);
-  if (botLangTxt) botLangTxt.textContent = labelChip(botLang);
+  if (botLangTxt) botLangTxt.textContent = labelChip(myLang);
 }
 
 function refreshReadyTextsIfIdle() {
@@ -261,17 +329,14 @@ function refreshReadyTextsIfIdle() {
 }
 
 function closeAllPop() {
-  popTop?.classList.remove("show");
   popBot?.classList.remove("show");
 }
 
-function renderPop(side) {
-  const list = side === "top" ? listTop : listBot;
-  const sel = side === "top" ? topLang : botLang;
-  if (!list) return;
+function renderPop() {
+  if (!listBot) return;
 
-  list.innerHTML = LANGS.map((l) => {
-    const active = canonical(l.code) === canonical(sel) ? "active" : "";
+  listBot.innerHTML = LANGS.map((l) => {
+    const active = canonical(l.code) === canonical(myLang) ? "active" : "";
     return `
       <div class="pop-item ${active}" data-code="${l.code}">
         <div class="pop-left">
@@ -283,18 +348,21 @@ function renderPop(side) {
     `;
   }).join("");
 
-  list.querySelectorAll(".pop-item").forEach((el) => {
+  listBot.querySelectorAll(".pop-item").forEach((el) => {
     el.addEventListener("click", () => {
-      const code = el.dataset.code || "en";
-      if (side === "top") topLang = code;
-      else botLang = code;
+      myLang = canonical(el.dataset.code || "tr");
+      localStorage.setItem("live_interpreter_lang", myLang);
       refreshLangLabels();
       refreshReadyTextsIfIdle();
+      rebuildRecognizer();
       closeAllPop();
     });
   });
 }
 
+/* =========================
+   AUDIO / TTS
+========================= */
 function stopAudio() {
   try {
     currentAudio?.pause?.();
@@ -304,91 +372,34 @@ function stopAudio() {
   try { window.NativeTTS?.stop?.(); } catch {}
 }
 
-async function getCurrentUserId() {
-  try {
-    const { data } = await supabase.auth.getUser();
-    return data?.user?.id || null;
-  } catch {
-    return null;
-  }
-}
-
-async function getCurrentUser() {
-  try {
-    const { data } = await supabase.auth.getUser();
-    return data?.user || null;
-  } catch {
-    return null;
-  }
-}
-
 function getVoicePreference() {
-  return String(localStorage.getItem("tts_voice") || "auto").toLowerCase().trim();
+  const v =
+    localStorage.getItem("tts_voice") ||
+    localStorage.getItem("live_interpreter_voice") ||
+    "female";
+
+  return String(v).toLowerCase().trim();
 }
 
-async function hasReadyVoiceProfile() {
-  try {
-    const user = await getCurrentUser();
-    if (!user?.id) return false;
+function chooseWebVoice(langCode) {
+  const voices = window.speechSynthesis?.getVoices?.() || [];
+  const bcp = langObj(langCode).bcp.toLowerCase();
+  const langBase = canonical(langCode);
 
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("tts_voice_ready,tts_voice_id")
-      .eq("id", user.id)
-      .maybeSingle();
+  let pool = voices.filter((v) => String(v.lang || "").toLowerCase().startsWith(langBase));
+  if (!pool.length) pool = voices.filter((v) => String(v.lang || "").toLowerCase() === bcp);
+  if (!pool.length) pool = voices;
+  if (!pool.length) return null;
 
-    if (error) {
-      console.warn("[facetoface] tts voice profile read error", error);
-      return false;
-    }
+  const pref = getVoicePreference();
 
-    return !!data?.tts_voice_ready && !!String(data?.tts_voice_id || "").trim();
-  } catch (e) {
-    console.warn("[facetoface] tts voice profile check error", e);
-    return false;
+  if (pref === "female") {
+    return pool.find((v) => /female|woman|zira|aria|seda|helena|jenny|susan/i.test(v.name)) || pool[0];
   }
-}
-
-function base64ToBlob(base64, mime = "audio/mpeg") {
-  const byteChars = atob(base64);
-  const byteNumbers = new Array(byteChars.length);
-  for (let i = 0; i < byteChars.length; i++) byteNumbers[i] = byteChars.charCodeAt(i);
-  return new Blob([new Uint8Array(byteNumbers)], { type: mime });
-}
-
-async function speakViaApi(text, langCode) {
-  const userId = await getCurrentUserId();
-  const voice = getVoicePreference();
-
-  const r = await fetch(`${API_BASE}/api/tts`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      text: String(text || "").trim(),
-      lang: canonical(langCode),
-      user_id: userId,
-      module: "facetoface",
-      voice
-    }),
-  });
-
-  const j = await r.json().catch(() => null);
-
-  if (!r.ok || !j?.ok || !j?.audio_base64) {
-    throw new Error(j?.error || j?.detail || "TTS API unavailable");
+  if (pref === "male") {
+    return pool.find((v) => /male|man|david|mark|george|james|alex|tom/i.test(v.name)) || pool[0];
   }
-
-  const audio = new Audio("data:audio/mp3;base64," + j.audio_base64);
-  currentAudio = audio;
-
-  audio.onended = () => {
-    if (currentAudio === audio) currentAudio = null;
-  };
-  audio.onerror = () => {
-    if (currentAudio === audio) currentAudio = null;
-  };
-
-  await audio.play();
+  return pool[0];
 }
 
 function speakFallback(text, langCode) {
@@ -412,6 +423,9 @@ function speakFallback(text, langCode) {
   u.pitch = 1.0;
   u.volume = 1;
 
+  const voice = chooseWebVoice(c);
+  if (voice) u.voice = voice;
+
   setTimeout(() => {
     try { window.speechSynthesis.speak(u); } catch {}
   }, 50);
@@ -426,73 +440,86 @@ async function speak(text, langCode) {
   ttsDebounceAt = now;
   stopAudio();
 
-  const voice = getVoicePreference();
-
-  // auto = ücretsiz sistem sesi
-  if (voice === "auto") {
-    speakFallback(value, langCode);
-    return;
-  }
-
-  // clone seçildiyse backend zaten /api/tts içinde custom sesi önceliyor
-  if (voice === "clone") {
-    try {
-      const ready = await hasReadyVoiceProfile();
-      if (!ready) {
-        console.warn("[facetoface] tts voice hazır değil, sistem sesine düşülüyor");
-        speakFallback(value, langCode);
-        return;
-      }
-
-      await speakViaApi(value, langCode);
-      return;
-    } catch (e) {
-      console.warn("[facetoface] clone tts fallback", e);
-      speakFallback(value, langCode);
-      return;
-    }
-  }
-
-  // female / male
-  try {
-    await speakViaApi(value, langCode);
-  } catch (e) {
-    console.warn("TTS API fallback", e);
-    speakFallback(value, langCode);
-  }
+  speakFallback(value, langCode);
 }
 
-async function spendFaceUsage(usedChars) {
-  const safeChars = Number(usedChars || 0);
-  if (safeChars <= 0) return;
+/* =========================
+   API
+========================= */
+async function createRoomIfHost() {
+  if (role !== "host") return null;
+  if (roomId) return { room_id: roomId };
 
-  const userId = await getCurrentUserId();
-  if (!userId) return;
-
-  const r = await fetch(`${API_BASE}/api/billing/usage`, {
+  const r = await fetch(`${API_BASE}/interpreter/create-room`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json"
+    },
     body: JSON.stringify({
-      user_id: userId,
-      module: "facetoface",
-      characters: safeChars
+      host_code: hostCode || "LIVE-HOST",
+      my_lang: myLang,
+      mode: "interpreter"
+    })
+  });
+
+  const j = await r.json().catch(() => ({}));
+
+  if (!r.ok || !j?.room_id) {
+    throw new Error(j?.detail || j?.error || "room create başarısız");
+  }
+
+  return j;
+}
+
+async function resolveRoomByHost() {
+  if (!hostCode) return null;
+
+  const r = await fetch(`${API_BASE}/interpreter/resolve-room`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      host_code: hostCode,
+      my_lang: myLang,
+      mode: "interpreter"
+    })
+  });
+
+  const j = await r.json().catch(() => ({}));
+
+  if (!r.ok || !j?.room_id) {
+    throw new Error(j?.detail || j?.error || "room resolve başarısız");
+  }
+
+  return j;
+}
+
+async function joinRoomIfNeeded() {
+  if (!roomId) return;
+  if (role !== "guest") return;
+
+  const r = await fetch(`${API_BASE}/interpreter/join-room`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      room_id: roomId,
+      my_lang: myLang
     })
   });
 
   const j = await r.json().catch(() => ({}));
 
   if (!r.ok) {
-    if (r.status === 402) {
-      alert("Kontörünüz yetersiz. Jeton Market'e yönlendiriliyorsunuz.");
-      location.href = "/pages/jetonbuy.html";
-      throw new Error("insufficient_tokens");
-    }
-    throw new Error(j.detail || "facetoface_usage_failed");
+    throw new Error(j?.detail || "join-room başarısız");
   }
-
-  return j;
 }
 
+/* =========================
+   BUBBLES
+========================= */
 function keepLatestVisible(side) {
   const wrap = side === "top" ? topBody : botBody;
   if (!wrap) return;
@@ -527,6 +554,30 @@ function createSpeakerButton(text, langCode) {
   return btn;
 }
 
+function demoteOldMessages(side) {
+  const wrap = side === "top" ? topBody : botBody;
+  if (!wrap) return;
+
+  const items = [...wrap.querySelectorAll(".bubble.me")];
+  items.forEach((el) => el.classList.remove("is-latest"));
+
+  if (items.length <= 1) return;
+
+  items.forEach((el, idx) => {
+    if (idx < items.length - 1) {
+      el.style.opacity = idx < items.length - 3 ? ".42" : ".72";
+      el.style.fontSize = idx < items.length - 2 ? "18px" : "22px";
+      el.style.fontWeight = idx < items.length - 2 ? "650" : "800";
+    }
+  });
+}
+
+function clearLatest(side) {
+  const wrap = side === "top" ? topBody : botBody;
+  if (!wrap) return;
+  wrap.querySelectorAll(".bubble.me.is-latest").forEach((el) => el.classList.remove("is-latest"));
+}
+
 function addBubble(side, kind, text, opts = {}) {
   const wrap = side === "top" ? topBody : botBody;
   if (!wrap) return null;
@@ -541,53 +592,218 @@ function addBubble(side, kind, text, opts = {}) {
   txt.className = "txt";
   txt.textContent = String(text || "").trim();
 
-  if (kind === "me") {
-    const spk = createSpeakerButton(txt.textContent || "", opts.speakLang || "en");
+  if (opts.withSpeaker) {
+    const spk = createSpeakerButton(txt.textContent || "", opts.speakLang || myLang);
     inner.appendChild(spk);
   }
 
   inner.appendChild(txt);
   row.appendChild(inner);
   wrap.appendChild(row);
+
+  if (opts.latest) {
+    demoteOldMessages(side);
+  }
+
   keepLatestVisible(side);
   return row;
 }
 
-function clearLatest(side) {
-  const wrap = side === "top" ? topBody : botBody;
-  if (!wrap) return;
-  wrap.querySelectorAll(".bubble.me.is-latest").forEach((el) => el.classList.remove("is-latest"));
+/* =========================
+   WS
+========================= */
+function wsUrl() {
+  if (!roomId) return null;
+  return `${WS_BASE}/api/ws/interpreter/${encodeURIComponent(roomId)}?role=${encodeURIComponent(role)}&lang=${encodeURIComponent(myLang)}`;
 }
 
-async function translateText(text, from, to) {
-  const src = canonical(from);
-  const dst = canonical(to);
+function stopSocket() {
+  try { ws?.close?.(); } catch {}
+  ws = null;
+  wsReady = false;
 
-  try {
-    const r = await fetch(`${API_BASE}/api/translate_ai`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        text: String(text || "").trim(),
-        from_lang: src,
-        to_lang: dst,
-      }),
-    });
-
-    if (!r.ok) {
-      const raw = await r.text().catch(() => "");
-      console.error("translate_ai failed", r.status, raw);
-      return null;
-    }
-
-    const j = await r.json().catch(() => null);
-    return String(j?.translated || "").trim() || null;
-  } catch (e) {
-    console.error("translate_ai error", e);
-    return null;
+  if (pingTimer) {
+    clearInterval(pingTimer);
+    pingTimer = null;
   }
 }
 
+function goHomeDelayed() {
+  if (leavingTimer) clearTimeout(leavingTimer);
+  leavingTimer = setTimeout(() => {
+    location.href = "/pages/home.html";
+  }, 5000);
+}
+
+function startPing() {
+  if (pingTimer) clearInterval(pingTimer);
+
+  pingTimer = setInterval(() => {
+    try {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: "ping" }));
+      }
+    } catch {}
+  }, 15000);
+}
+
+function startSocket() {
+  const url = wsUrl();
+
+  if (!url) {
+    setErrorUI();
+    setHelper(botHelper, t(myLang, "wsFailed"), "helper-wait");
+    return;
+  }
+
+  stopSocket();
+
+  try {
+    ws = new WebSocket(url);
+  } catch (e) {
+    console.error("[ws create]", e);
+    setErrorUI();
+    setHelper(botHelper, t(myLang, "wsFailed"), "helper-wait");
+    return;
+  }
+
+  ws.onopen = () => {
+    wsReady = true;
+    startPing();
+    setSystemReadyUI();
+  };
+
+  ws.onmessage = async (event) => {
+    try {
+      const payload = JSON.parse(event.data);
+      const type = String(payload?.type || "").trim();
+
+      if (type === "presence") {
+        if (payload?.room_id && !roomId) {
+          roomId = String(payload.room_id).trim();
+          updateRoomMeta();
+        }
+
+        if (payload?.guest_lang && role === "host") {
+          peerLang = canonical(payload.guest_lang);
+          localStorage.setItem("live_interpreter_peer_lang", peerLang);
+        }
+
+        if (payload?.host_lang && role === "guest") {
+          peerLang = canonical(payload.host_lang);
+          localStorage.setItem("live_interpreter_peer_lang", peerLang);
+        }
+
+        setSystemReadyUI();
+        return;
+      }
+
+      if (type === "peer_joined") {
+        if (payload?.guest_lang && role === "host") {
+          peerLang = canonical(payload.guest_lang);
+          localStorage.setItem("live_interpreter_peer_lang", peerLang);
+        }
+
+        setHelper(botHelper, t(myLang, "peerJoined"), "helper-ready");
+        bounceToReady(1200);
+        return;
+      }
+
+      if (type === "translated_message") {
+        const sender = String(payload?.sender || "").trim().toLowerCase();
+        const translated = String(payload?.translated_text || "").trim();
+        const original = String(payload?.original_text || "").trim();
+
+        if (!translated && !original) return;
+
+        // BEN GÖNDERDİYSEM üstte tekrar yazma
+        if (sender === role) return;
+
+        const text = translated || original;
+
+        clearLatest("top");
+        addBubble("top", "me", text, {
+          latest: true,
+          withSpeaker: true,
+          speakLang: myLang
+        });
+
+        await speak(text, myLang);
+        setSystemReadyUI();
+        return;
+      }
+
+      if (type === "peer_left") {
+        setHelper(botHelper, t(myLang, "peerGoneHome"), "helper-wait");
+        goHomeDelayed();
+        return;
+      }
+
+      if (type === "pong") {
+        return;
+      }
+
+      if (type === "error") {
+        console.warn("[ws error payload]", payload);
+        setErrorUI();
+        setHelper(botHelper, payload.message || t(myLang, "wsFailed"), "helper-wait");
+      }
+    } catch (e) {
+      console.warn("[ws parse error]", e);
+    }
+  };
+
+  ws.onerror = () => {
+    wsReady = false;
+    setErrorUI();
+    setHelper(botHelper, t(myLang, "wsFailed"), "helper-wait");
+  };
+
+  ws.onclose = () => {
+    wsReady = false;
+    if (pingTimer) {
+      clearInterval(pingTimer);
+      pingTimer = null;
+    }
+  };
+}
+
+/* =========================
+   SEND
+========================= */
+function canSend() {
+  return !!(wsReady && ws && ws.readyState === WebSocket.OPEN && roomId);
+}
+
+function sendTextMessage(rawText) {
+  const text = String(rawText || "").trim();
+  if (!text) return;
+
+  if (!canSend()) {
+    setErrorUI();
+    setHelper(botHelper, t(myLang, "wsFailed"), "helper-wait");
+    bounceToReady(1200);
+    return;
+  }
+
+  try {
+    // ÖNEMLİ: to_lang göndermiyoruz. Backend role'a göre hedef dili seçsin.
+    ws.send(JSON.stringify({
+      type: "text_message",
+      text,
+      from_lang: canonical(myLang)
+    }));
+  } catch (e) {
+    console.error("[ws send]", e);
+    setErrorUI();
+    setHelper(botHelper, t(myLang, "wsFailed"), "helper-wait");
+    bounceToReady(1200);
+  }
+}
+
+/* =========================
+   RECOGNIZER
+========================= */
 function buildRecognizer(langCode) {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) return null;
@@ -600,6 +816,10 @@ function buildRecognizer(langCode) {
   return rec;
 }
 
+function rebuildRecognizer() {
+  recognizer = buildRecognizer(myLang);
+}
+
 function stopRecognizer() {
   if (recognizer) {
     try { recognizer.stop(); } catch {}
@@ -607,12 +827,12 @@ function stopRecognizer() {
   }
 }
 
-async function finalizeRecognition(side, text) {
-  const src = side === "top" ? topLang : botLang;
-  const dst = side === "top" ? botLang : topLang;
-  const other = side === "top" ? "bot" : "top";
-  const otherWrap = other === "top" ? topBody : botBody;
+async function speechToTextFallback() {
+  const txt = prompt(`${langObj(myLang).name} olarak konuşmanı yaz:`) || "";
+  return String(txt).trim() || null;
+}
 
+async function finalizeRecognition(text) {
   const cleaned = String(text || "").trim();
   if (!cleaned) {
     setErrorUI();
@@ -620,83 +840,56 @@ async function finalizeRecognition(side, text) {
     return;
   }
 
-  addBubble(side, "them", cleaned);
-  clearLatest(other);
-
-  setTranslatingUI(side);
-
-  addBubble(other, "me", t(dst, "translating"), {
+  clearLatest("bottom");
+  addBubble("bottom", "me", cleaned, {
     latest: true,
-    speakLang: dst,
+    withSpeaker: false
   });
 
-  const latestTxt = otherWrap?.querySelector(".bubble.me.is-latest .txt");
-  const tr = await translateText(cleaned, src, dst);
-
-  if (!tr) {
-    setErrorUI();
-    if (latestTxt) {
-      latestTxt.textContent = t(dst, "translateError");
-      keepLatestVisible(other);
-    }
-    bounceToReady(1200);
-    return;
-  }
-
-  try {
-    await spendFaceUsage(tr.length);
-  } catch (e) {
-    console.warn("[facetoface usage]", e);
-    if (String(e?.message || "") === "insufficient_tokens") return;
-  }
-
-  if (latestTxt) {
-    latestTxt.textContent = tr;
-    keepLatestVisible(other);
-  } else {
-    addBubble(other, "me", tr, { latest: true, speakLang: dst });
-  }
-
-  await speak(tr, dst);
-  setSystemReadyUI();
+  setTranslatingUI();
+  sendTextMessage(cleaned);
+  bounceToReady(1000);
 }
 
-function startRecording(side) {
-  const lang = side === "top" ? topLang : botLang;
-  const rec = buildRecognizer(lang);
+function startRecording() {
+  const rec = buildRecognizer(myLang);
 
   if (!rec) {
     setErrorUI();
-    const helper = side === "top" ? topHelper : botHelper;
-    setHelper(helper, t(lang, "speechUnsupported"), "helper-wait");
+    setHelper(botHelper, t(myLang, "speechUnsupported"), "helper-wait");
     bounceToReady(1800);
     return;
   }
 
   recognizer = rec;
-  recordingSide = side;
+  recordingSide = "bot";
 
   rec.onstart = () => {
-    setListeningUI(side);
+    setListeningUI();
   };
 
   rec.onresult = (e) => {
     const heard = e.results?.[0]?.[0]?.transcript || "";
-    Promise.resolve().then(() => finalizeRecognition(side, heard));
+    Promise.resolve().then(() => finalizeRecognition(heard));
   };
 
-  rec.onerror = (e) => {
+  rec.onerror = async (e) => {
     console.warn("speech error", e);
-    const helper = side === "top" ? topHelper : botHelper;
+
     if (String(e?.error || "").includes("not-allowed")) {
-      setHelper(helper, t(lang, "micBlocked"), "helper-wait");
-    } else {
-      setHelper(helper, t(lang, "preparing"), "helper-wait");
+      setHelper(botHelper, t(myLang, "micBlocked"), "helper-wait");
+      setErrorUI();
+      bounceToReady(1600);
+      return;
     }
-    recordingSide = null;
-    recognizer = null;
-    setErrorUI();
-    bounceToReady(1600);
+
+    const fallback = await speechToTextFallback();
+    if (fallback) {
+      await finalizeRecognition(fallback);
+    } else {
+      setErrorUI();
+      bounceToReady(1200);
+    }
   };
 
   rec.onend = () => {
@@ -715,24 +908,27 @@ function startRecording(side) {
   }
 }
 
-async function toggleRecording(side) {
+async function toggleRecording() {
   await ensureReady();
 
-  if (recordingSide === side) {
+  if (recordingSide === "bot") {
     stopRecognizer();
     recordingSide = null;
-    setTranslatingUI(side);
+    setTranslatingUI();
     return;
   }
 
-  if (recordingSide && recordingSide !== side) {
+  if (recordingSide) {
     stopRecognizer();
     recordingSide = null;
   }
 
-  startRecording(side);
+  startRecording();
 }
 
+/* =========================
+   BOOT / WARM
+========================= */
 async function warmAudio() {
   try {
     const Ctx = window.AudioContext || window.webkitAudioContext;
@@ -747,7 +943,7 @@ async function warmAudio() {
 async function warmApis() {
   await Promise.allSettled([
     fetch(`${API_BASE}/healthz`).catch(() => {}),
-    fetch(`${API_BASE}/api/translate_ai/health`).catch(() => {}),
+    fetch(`${API_BASE}/translate_ai/health`).catch(() => {}),
   ]);
 }
 
@@ -772,6 +968,8 @@ function startBoot() {
     setSystemPreparingUI();
     refreshLangLabels();
     pointOrbTo("bot");
+    updateRoomMeta();
+    updatePeerBadge();
 
     await Promise.allSettled([
       warmApis(),
@@ -793,35 +991,23 @@ async function ensureReady() {
 }
 
 function safeHomeHref() {
-  if (location.pathname === "/facetoface.html") return "/pages/home.html";
   return "/pages/home.html";
 }
 
+/* =========================
+   EVENTS
+========================= */
 function bind() {
   refreshLangLabels();
   unlockOnFirstTouch();
   startBoot();
 
-  topLangBtn?.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    closeAllPop();
-    renderPop("top");
-    popTop?.classList.add("show");
-  });
-
   botLangBtn?.addEventListener("click", (e) => {
     e.preventDefault();
     e.stopPropagation();
     closeAllPop();
-    renderPop("bot");
+    renderPop();
     popBot?.classList.add("show");
-  });
-
-  closeTop?.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    closeAllPop();
   });
 
   closeBot?.addEventListener("click", (e) => {
@@ -831,10 +1017,8 @@ function bind() {
   });
 
   document.addEventListener("click", (e) => {
-    const inside =
-      (popTop && popTop.contains(e.target)) ||
-      (popBot && popBot.contains(e.target));
-    const isBtn = e.target?.closest?.("#topLangBtn,#botLangBtn");
+    const inside = popBot && popBot.contains(e.target);
+    const isBtn = e.target?.closest?.("#botLangBtn");
     if (!inside && !isBtn) closeAllPop();
   }, { capture: true });
 
@@ -848,24 +1032,56 @@ function bind() {
   });
 
   homeLink?.addEventListener("click", () => {
+    stopSocket();
     location.href = safeHomeHref();
   });
 
   homeBtn?.addEventListener("click", () => {
+    stopSocket();
     location.href = safeHomeHref();
-  });
-
-  topMic?.addEventListener("click", async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    await toggleRecording("top");
   });
 
   botMic?.addEventListener("click", async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    await toggleRecording("bot");
+    await toggleRecording();
   });
+
+  updateRoomMeta();
+  updatePeerBadge();
+}
+
+/* =========================
+   MAIN BOOT
+========================= */
+async function bootRoom() {
+  try {
+    if (roomId) {
+      updateRoomMeta();
+    } else if (hostCode) {
+      if (role === "host") {
+        const created = await createRoomIfHost();
+        roomId = String(created?.room_id || "").trim();
+        if (!roomId) throw new Error("Host room oluşturulamadı");
+      } else {
+        const resolved = await resolveRoomByHost();
+        roomId = String(resolved?.room_id || "").trim();
+        if (!roomId) throw new Error("Room çözülemedi");
+      }
+      updateRoomMeta();
+    } else {
+      throw new Error("Host veya room bilgisi yok");
+    }
+
+    await joinRoomIfNeeded();
+    startSocket();
+  } catch (e) {
+    console.error("[live interpreter bootRoom]", e);
+    setErrorUI();
+    setHelper(botHelper, e?.message || t(myLang, "wsFailed"), "helper-wait");
+  }
 }
 
 bind();
+bootRoom();
+window.addEventListener("beforeunload", stopSocket);
