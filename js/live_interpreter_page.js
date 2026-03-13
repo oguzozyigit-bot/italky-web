@@ -68,7 +68,7 @@ const UI_TEXT = {
     peerJoined: "Karşı taraf bağlandı",
     peerLeft: "Karşı taraf ayrıldı",
     wsFailed: "Bağlantı kurulamadı",
-    peerGoneHome: "Oğuz ayrıldı. Lütfen bekleyiniz...",
+    peerGoneHome: "Karşı taraf ayrıldı. Lütfen bekleyiniz...",
   },
   en: {
     ready: "Tap the microphone to speak.",
@@ -83,7 +83,7 @@ const UI_TEXT = {
     peerJoined: "The other side connected",
     peerLeft: "The other side left",
     wsFailed: "Connection failed",
-    peerGoneHome: "Oğuz left. Please wait...",
+    peerGoneHome: "The other side left. Please wait...",
   },
   de: {
     ready: "Tippen Sie zum Sprechen auf das Mikrofon.",
@@ -98,7 +98,7 @@ const UI_TEXT = {
     peerJoined: "Gegenseite verbunden",
     peerLeft: "Gegenseite getrennt",
     wsFailed: "Verbindung fehlgeschlagen",
-    peerGoneHome: "Oğuz hat den Raum verlassen. Bitte warten...",
+    peerGoneHome: "Die andere Seite hat den Raum verlassen. Bitte warten...",
   },
   fr: {
     ready: "Touchez le micro pour parler.",
@@ -113,7 +113,7 @@ const UI_TEXT = {
     peerJoined: "L'autre côté est connecté",
     peerLeft: "L'autre côté s'est déconnecté",
     wsFailed: "Connexion impossible",
-    peerGoneHome: "Oğuz a quitté. Veuillez patienter...",
+    peerGoneHome: "L'autre côté a quitté. Veuillez patienter...",
   },
   it: {
     ready: "Tocca il microfono per parlare.",
@@ -128,7 +128,7 @@ const UI_TEXT = {
     peerJoined: "L'altra parte si è collegata",
     peerLeft: "L'altra parte si è scollegata",
     wsFailed: "Connessione non riuscita",
-    peerGoneHome: "Oğuz è uscito. Attendere prego...",
+    peerGoneHome: "L'altra parte è uscita. Attendere prego...",
   },
   es: {
     ready: "Toque el micrófono para hablar.",
@@ -143,7 +143,7 @@ const UI_TEXT = {
     peerJoined: "La otra parte se conectó",
     peerLeft: "La otra parte salió",
     wsFailed: "No se pudo conectar",
-    peerGoneHome: "Oğuz salió. Por favor espere...",
+    peerGoneHome: "La otra parte salió. Por favor espere...",
   },
 };
 
@@ -182,18 +182,7 @@ const query = new URLSearchParams(location.search);
 
 let roomId = String(query.get("room") || "").trim();
 const hostCode = String(query.get("host") || "").trim().toUpperCase();
-
-const rawRole = String(query.get("role") || "guest").trim().toLowerCase();
-
-function normalizeRole(value) {
-  const v = String(value || "").trim().toLowerCase();
-  if (v === "host-preview") return "host";
-  if (v === "guest-preview") return "guest";
-  if (v === "host") return "host";
-  return "guest";
-}
-
-const role = normalizeRole(rawRole);
+const role = String(query.get("role") || "guest").trim().toLowerCase();
 
 let myLang = String(
   query.get("my") || localStorage.getItem("live_interpreter_lang") || "tr"
@@ -223,6 +212,9 @@ let ws = null;
 let wsReady = false;
 let pingTimer = null;
 let leavingTimer = null;
+
+let lastLocalSentText = "";
+let lastLocalSentAt = 0;
 
 /* =========================
    VISUAL STATE
@@ -357,12 +349,8 @@ function renderPop() {
   }).join("");
 
   listBot.querySelectorAll(".pop-item").forEach((el) => {
-    el.addEventListener("click", () => {
-      myLang = canonical(el.dataset.code || "tr");
-      localStorage.setItem("live_interpreter_lang", myLang);
-      refreshLangLabels();
-      refreshReadyTextsIfIdle();
-      rebuildRecognizer();
+    el.addEventListener("click", async () => {
+      await applyMyLanguageChange(el.dataset.code || "tr");
       closeAllPop();
     });
   });
@@ -455,7 +443,7 @@ async function speak(text, langCode) {
    API
 ========================= */
 async function createRoomIfHost() {
-  if (normalizeRole(role) !== "host") return null;
+  if (role !== "host") return null;
   if (roomId) return { room_id: roomId };
 
   const r = await fetch(`${API_BASE}/interpreter/create-room`, {
@@ -505,7 +493,7 @@ async function resolveRoomByHost() {
 
 async function joinRoomIfNeeded() {
   if (!roomId) return;
-  if (normalizeRole(role) !== "guest") return;
+  if (role !== "guest") return;
 
   const r = await fetch(`${API_BASE}/interpreter/join-room`, {
     method: "POST",
@@ -523,6 +511,26 @@ async function joinRoomIfNeeded() {
   if (!r.ok) {
     throw new Error(j?.detail || "join-room başarısız");
   }
+}
+
+async function applyMyLanguageChange(nextLang) {
+  myLang = canonical(nextLang || "tr");
+  localStorage.setItem("live_interpreter_lang", myLang);
+  refreshLangLabels();
+  refreshReadyTextsIfIdle();
+  rebuildRecognizer();
+
+  stopSocket();
+
+  try {
+    if (role === "guest" && roomId) {
+      await joinRoomIfNeeded();
+    }
+  } catch (e) {
+    console.warn("[lang change join]", e);
+  }
+
+  startSocket();
 }
 
 /* =========================
@@ -567,16 +575,41 @@ function demoteOldMessages(side) {
   if (!wrap) return;
 
   const items = [...wrap.querySelectorAll(".bubble.me")];
-  items.forEach((el) => el.classList.remove("is-latest"));
+  items.forEach((el) => {
+    el.classList.remove("is-latest");
+  });
 
-  if (items.length <= 1) return;
+  if (!items.length) return;
 
-  items.forEach((el, idx) => {
-    if (idx < items.length - 1) {
-      el.style.opacity = idx < items.length - 3 ? ".42" : ".72";
-      el.style.fontSize = idx < items.length - 2 ? "18px" : "22px";
-      el.style.fontWeight = idx < items.length - 2 ? "650" : "800";
+  const reversed = [...items].reverse();
+
+  reversed.forEach((el, idx) => {
+    el.style.opacity = "1";
+    el.style.fontSize = "";
+    el.style.fontWeight = "";
+
+    if (idx === 0) {
+      el.classList.add("is-latest");
+      return;
     }
+
+    if (idx === 1) {
+      el.style.opacity = ".76";
+      el.style.fontSize = "24px";
+      el.style.fontWeight = "800";
+      return;
+    }
+
+    if (idx === 2) {
+      el.style.opacity = ".58";
+      el.style.fontSize = "20px";
+      el.style.fontWeight = "700";
+      return;
+    }
+
+    el.style.opacity = ".38";
+      el.style.fontSize = "18px";
+      el.style.fontWeight = "650";
   });
 }
 
@@ -622,9 +655,7 @@ function addBubble(side, kind, text, opts = {}) {
 ========================= */
 function wsUrl() {
   if (!roomId) return null;
-  const finalUrl = `${WS_BASE}/api/ws/interpreter/${encodeURIComponent(roomId)}?role=${encodeURIComponent(normalizeRole(role))}&lang=${encodeURIComponent(myLang)}`;
-  console.log("[live wsUrl]", finalUrl);
-  return finalUrl;
+  return `${WS_BASE}/api/ws/interpreter/${encodeURIComponent(roomId)}?role=${encodeURIComponent(role)}&lang=${encodeURIComponent(myLang)}`;
 }
 
 function stopSocket() {
@@ -726,6 +757,7 @@ function startSocket() {
 
         if (!translated && !original) return;
 
+        // Kendi gönderdiğim mesajı üstte tekrar yazma
         if (sender === role) return;
 
         const text = translated || original;
@@ -770,10 +802,15 @@ function startSocket() {
 
   ws.onclose = () => {
     wsReady = false;
+
     if (pingTimer) {
       clearInterval(pingTimer);
       pingTimer = null;
     }
+
+    setErrorUI();
+    setHelper(botHelper, t(myLang, "peerGoneHome"), "helper-wait");
+    goHomeDelayed();
   };
 }
 
@@ -782,6 +819,21 @@ function startSocket() {
 ========================= */
 function canSend() {
   return !!(wsReady && ws && ws.readyState === WebSocket.OPEN && roomId);
+}
+
+function shouldIgnoreDuplicateLocal(text) {
+  const value = String(text || "").trim();
+  const now = Date.now();
+
+  if (!value) return true;
+
+  if (value === lastLocalSentText && (now - lastLocalSentAt) < 2500) {
+    return true;
+  }
+
+  lastLocalSentText = value;
+  lastLocalSentAt = now;
+  return false;
 }
 
 function sendTextMessage(rawText) {
@@ -845,6 +897,10 @@ async function finalizeRecognition(text) {
   if (!cleaned) {
     setErrorUI();
     bounceToReady(1000);
+    return;
+  }
+
+  if (shouldIgnoreDuplicateLocal(cleaned)) {
     return;
   }
 
@@ -1034,6 +1090,8 @@ function bind() {
     stopAudio();
     stopRecognizer();
     recordingSide = null;
+    lastLocalSentText = "";
+    lastLocalSentAt = 0;
     if (topBody) topBody.innerHTML = "";
     if (botBody) botBody.innerHTML = "";
     setSystemReadyUI();
@@ -1067,7 +1125,7 @@ async function bootRoom() {
     if (roomId) {
       updateRoomMeta();
     } else if (hostCode) {
-      if (normalizeRole(role) === "host") {
+      if (role === "host") {
         const created = await createRoomIfHost();
         roomId = String(created?.room_id || "").trim();
         if (!roomId) throw new Error("Host room oluşturulamadı");
