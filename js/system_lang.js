@@ -18,7 +18,20 @@ const DICT = {
   "Gizlilik": { en: "Privacy", de: "Datenschutz", fr: "Confidentialité", it: "Privacy", es: "Privacidad" },
   "İletişim": { en: "Contact", de: "Kontakt", fr: "Contact", it: "Contatti", es: "Contacto" },
   "Güvenli Çıkış": { en: "Secure Logout", de: "Sicher abmelden", fr: "Déconnexion sécurisée", it: "Uscita sicura", es: "Cerrar sesión segura" },
-  "Hesabımı Sil": { en: "Delete My Account", de: "Mein Konto löschen", fr: "Supprimer mon compte", it: "Elimina il mio account", es: "Eliminar mi cuenta" }
+  "Hesabımı Sil": { en: "Delete My Account", de: "Mein Konto löschen", fr: "Supprimer mon compte", it: "Elimina il mio account", es: "Eliminar mi cuenta" },
+
+  "Translation": { en: "Translation", de: "Übersetzung", fr: "Traduction", it: "Traduzione", es: "Traducción" },
+  "Tercihler": { en: "Preferences", de: "Einstellungen", fr: "Préférences", it: "Preferenze", es: "Preferencias" },
+  "Ses Ayarları": { en: "Voice Settings", de: "Stimmeinstellungen", fr: "Paramètres vocaux", it: "Impostazioni voce", es: "Configuración de voz" },
+  "Sistem Dili": { en: "System Language", de: "Systemsprache", fr: "Langue du système", it: "Lingua di sistema", es: "Idioma del sistema" },
+  "Otomatik": { en: "Automatic", de: "Automatisch", fr: "Automatique", it: "Automatico", es: "Automático" },
+  "Kadın": { en: "Female", de: "Weiblich", fr: "Femme", it: "Donna", es: "Mujer" },
+  "Erkek": { en: "Male", de: "Männlich", fr: "Homme", it: "Uomo", es: "Hombre" },
+  "Kendi Sesim": { en: "My Voice", de: "Meine Stimme", fr: "Ma voix", it: "La mia voce", es: "Mi voz" },
+
+  "Market": { en: "Market", de: "Markt", fr: "Marché", it: "Mercato", es: "Mercado" },
+  "Sesini Tanıt": { en: "Create Voice Profile", de: "Sprachprofil erstellen", fr: "Créer un profil vocal", it: "Crea profilo vocale", es: "Crear perfil de voz" },
+  "Geri dön": { en: "Back", de: "Zurück", fr: "Retour", it: "Indietro", es: "Volver" }
 };
 
 function normalizeLang(lang) {
@@ -54,8 +67,53 @@ function shouldSkipElement(el) {
   return false;
 }
 
+function restoreOriginalIfNeeded(root) {
+  const all = [root, ...root.querySelectorAll?.("*") || []];
+  all.forEach((el) => {
+    if (el?.dataset?.italkyOrig && el.dataset.italkyTranslatedLang) {
+      const textNodes = Array.from(el.childNodes || []).filter((n) => n.nodeType === Node.TEXT_NODE);
+      if (textNodes.length) {
+        textNodes[0].nodeValue = el.dataset.italkyOrig;
+        for (let i = 1; i < textNodes.length; i++) {
+          textNodes[i].nodeValue = "";
+        }
+      } else if (el.hasAttribute?.("data-i18n")) {
+        el.textContent = el.dataset.italkyOrig;
+      }
+      el.dataset.italkyTranslatedLang = "";
+    }
+  });
+}
+
+function translateMarkedElements(root, lang) {
+  const elements = root.querySelectorAll("[data-i18n]");
+
+  elements.forEach((el) => {
+    const original = (el.dataset.italkyOrig || el.textContent || "").trim();
+    if (!original) return;
+
+    if (!el.dataset.italkyOrig) {
+      el.dataset.italkyOrig = original;
+    }
+
+    if (el.dataset.italkyTranslatedLang === lang) return;
+
+    const base = el.dataset.italkyOrig;
+    const translated = dictTranslate(base, lang);
+
+    if (translated && translated !== base) {
+      el.textContent = translated;
+    } else if (lang === "tr") {
+      el.textContent = base;
+    }
+
+    el.dataset.italkyTranslatedLang = lang;
+  });
+}
+
 async function translateElement(el, lang) {
   if (!el || shouldSkipElement(el)) return;
+  if (el.hasAttribute?.("data-i18n")) return;
 
   const children = Array.from(el.childNodes || []);
   const textNodes = children.filter((n) => n.nodeType === Node.TEXT_NODE);
@@ -65,10 +123,8 @@ async function translateElement(el, lang) {
   const trimmed = joined.trim();
   if (!trimmed) return;
 
-  // çok uzun metinleri veya tek karakterleri zorlama
   if (trimmed.length < 3 || trimmed.length > 120) return;
 
-  // daha önce işlendiyse tekrar uğraşma
   if (!el.dataset.italkyOrig) {
     el.dataset.italkyOrig = trimmed;
   }
@@ -81,7 +137,6 @@ async function translateElement(el, lang) {
 
   let translated = dictTranslate(original, lang);
 
-  // sadece sözlükte yoksa ve 2+ kelimeyse AI'ya git
   if (!translated && original.split(/\s+/).length >= 2) {
     translated = await aiTranslateText(original, lang);
   }
@@ -102,11 +157,24 @@ async function translateElement(el, lang) {
   el.dataset.italkyTranslatedLang = lang;
 }
 
+export function t(text, fallback = "") {
+  const lang = getSystemLang();
+  const key = String(text || "").trim();
+  if (!key) return fallback || "";
+  return dictTranslate(key, lang) || fallback || key;
+}
+
 export async function applySystemTranslations(root = document.body) {
   if (!root) return;
 
   const lang = getSystemLang();
-  if (lang === "tr") return;
+
+  if (lang === "tr") {
+    restoreOriginalIfNeeded(root);
+    return;
+  }
+
+  translateMarkedElements(root, lang);
 
   const all = [root, ...root.querySelectorAll("*")];
   for (const el of all) {
