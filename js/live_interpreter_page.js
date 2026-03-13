@@ -61,13 +61,12 @@ const UI_TEXT = {
     repeat: "Konuşmanız bitince mikrofona tekrar basınız.",
     wait: "Lütfen bekleyiniz...",
     translating: "Çevriliyor...",
-    translateError: "⚠️ Çeviri servisine ulaşılamadı",
     micBlocked: "⚠️ Mikrofon izni gerekli",
     speechUnsupported: "⚠️ Bu cihazda konuşma algılama desteklenmiyor",
-    connectionReady: "Bağlantı hazır",
     peerJoined: "Karşı taraf bağlandı",
-    peerLeft: "Karşı taraf ayrıldı",
     wsFailed: "Bağlantı kurulamadı",
+    peerGoneHome: "Karşı taraf ayrıldı. Lütfen bekleyiniz...",
+    peerWaiting: "Bağlantı bekleniyor...",
   },
   en: {
     ready: "Tap the microphone to speak.",
@@ -75,69 +74,12 @@ const UI_TEXT = {
     repeat: "Press the microphone again when you finish speaking.",
     wait: "Please wait...",
     translating: "Translating...",
-    translateError: "⚠️ Translation service unavailable",
     micBlocked: "⚠️ Microphone permission required",
     speechUnsupported: "⚠️ Speech recognition is not supported on this device",
-    connectionReady: "Connection ready",
     peerJoined: "The other side connected",
-    peerLeft: "The other side left",
     wsFailed: "Connection failed",
-  },
-  de: {
-    ready: "Tippen Sie zum Sprechen auf das Mikrofon.",
-    preparing: "System wird vorbereitet...",
-    repeat: "Drücken Sie das Mikrofon erneut, wenn Sie fertig gesprochen haben.",
-    wait: "Bitte warten...",
-    translating: "Wird übersetzt...",
-    translateError: "⚠️ Übersetzungsdienst nicht erreichbar",
-    micBlocked: "⚠️ Mikrofonberechtigung erforderlich",
-    speechUnsupported: "⚠️ Spracherkennung wird auf diesem Gerät nicht unterstützt",
-    connectionReady: "Verbindung bereit",
-    peerJoined: "Gegenseite verbunden",
-    peerLeft: "Gegenseite getrennt",
-    wsFailed: "Verbindung fehlgeschlagen",
-  },
-  fr: {
-    ready: "Touchez le micro pour parler.",
-    preparing: "Le système se prépare...",
-    repeat: "Appuyez de nouveau sur le micro quand vous avez fini de parler.",
-    wait: "Veuillez patienter...",
-    translating: "Traduction en cours...",
-    translateError: "⚠️ Service de traduction indisponible",
-    micBlocked: "⚠️ Autorisation micro requise",
-    speechUnsupported: "⚠️ La reconnaissance vocale n'est pas prise en charge sur cet appareil",
-    connectionReady: "Connexion prête",
-    peerJoined: "L'autre côté est connecté",
-    peerLeft: "L'autre côté s'est déconnecté",
-    wsFailed: "Connexion impossible",
-  },
-  it: {
-    ready: "Tocca il microfono per parlare.",
-    preparing: "Sistema in preparazione...",
-    repeat: "Premi di nuovo il microfono quando hai finito di parlare.",
-    wait: "Attendere prego...",
-    translating: "Traduzione in corso...",
-    translateError: "⚠️ Servizio di traduzione non disponibile",
-    micBlocked: "⚠️ Autorizzazione microfono richiesta",
-    speechUnsupported: "⚠️ Il riconoscimento vocale non è supportato su questo dispositivo",
-    connectionReady: "Connessione pronta",
-    peerJoined: "L'altra parte si è collegata",
-    peerLeft: "L'altra parte si è scollegata",
-    wsFailed: "Connessione non riuscita",
-  },
-  es: {
-    ready: "Toque el micrófono para hablar.",
-    preparing: "El sistema se está preparando...",
-    repeat: "Pulse el micrófono otra vez cuando termine de hablar.",
-    wait: "Por favor espere...",
-    translating: "Traduciendo...",
-    translateError: "⚠️ Servicio de traducción no disponible",
-    micBlocked: "⚠️ Se requiere permiso de micrófono",
-    speechUnsupported: "⚠️ El reconocimiento de voz no es compatible con este dispositivo",
-    connectionReady: "Conexión lista",
-    peerJoined: "La otra parte se conectó",
-    peerLeft: "La otra parte salió",
-    wsFailed: "No se pudo conectar",
+    peerGoneHome: "The other side left. Please wait...",
+    peerWaiting: "Waiting for connection...",
   },
 };
 
@@ -157,6 +99,11 @@ const botMic = $("botMic");
 const topHelper = $("topHelper");
 const botHelper = $("botHelper");
 const roomMetaText = $("roomMetaText");
+
+const peerCard = $("peerCard");
+const peerAvatar = $("peerAvatar");
+const peerName = $("peerName");
+const peerSub = $("peerSub");
 
 const botLangBtn = $("botLangBtn");
 const botLangTxt = $("botLangTxt");
@@ -185,6 +132,10 @@ let peerLang = String(
   query.get("peer") || localStorage.getItem("live_interpreter_peer_lang") || "en"
 ).trim().toLowerCase();
 
+let userId = String(
+  query.get("user_id") || localStorage.getItem("user_id") || ""
+).trim();
+
 myLang = canonical(myLang || "tr");
 peerLang = canonical(peerLang || "en");
 
@@ -195,7 +146,6 @@ let ttsDebounceAt = 0;
 let activeSide = null;
 let recognizer = null;
 let recordingSide = null;
-let currentAudio = null;
 let audioCtx = null;
 let bootReady = false;
 let bootStarted = false;
@@ -204,6 +154,16 @@ let bootPromise = null;
 let ws = null;
 let wsReady = false;
 let pingTimer = null;
+let leavingTimer = null;
+
+let lastLocalSentText = "";
+let lastLocalSentAt = 0;
+
+let peerProfile = {
+  full_name: "Karşı Taraf",
+  avatar_url: "",
+  voice: "",
+};
 
 /* =========================
    VISUAL STATE
@@ -246,7 +206,7 @@ function setSystemReadyUI() {
   activeSide = null;
   resetMics();
   setFrameVisual("ready");
-  setHelper(topHelper, t(myLang, "ready"), "helper-ready");
+  if (topHelper) topHelper.style.display = "none";
   setHelper(botHelper, t(myLang, "ready"), "helper-ready");
 }
 
@@ -254,7 +214,7 @@ function setSystemPreparingUI() {
   activeSide = null;
   resetMics();
   setFrameVisual("error");
-  setHelper(topHelper, t(myLang, "preparing"), "helper-wait");
+  if (topHelper) topHelper.style.display = "none";
   setHelper(botHelper, t(myLang, "preparing"), "helper-wait");
 }
 
@@ -264,7 +224,7 @@ function setListeningUI() {
   resetMics();
   setMicState("listening");
   setFrameVisual("listening");
-  setHelper(topHelper, t(myLang, "wait"), "helper-wait");
+  if (topHelper) topHelper.style.display = "none";
   setHelper(botHelper, t(myLang, "repeat"), "helper-repeat");
 }
 
@@ -273,7 +233,7 @@ function setTranslatingUI() {
   pointOrbTo("bot");
   setMicState("recorded");
   setFrameVisual("translating");
-  setHelper(topHelper, t(myLang, "wait"), "helper-wait");
+  if (topHelper) topHelper.style.display = "none";
   setHelper(botHelper, t(myLang, "translating"), "helper-repeat");
 }
 
@@ -281,7 +241,7 @@ function setErrorUI() {
   activeSide = null;
   resetMics();
   setFrameVisual("error");
-  setHelper(topHelper, t(myLang, "preparing"), "helper-wait");
+  if (topHelper) topHelper.style.display = "none";
   setHelper(botHelper, t(myLang, "preparing"), "helper-wait");
 }
 
@@ -291,14 +251,36 @@ function bounceToReady(delay = 1200) {
 
 function updateRoomMeta() {
   if (!roomMetaText) return;
+  roomMetaText.textContent = roomId ? `Room • ${roomId}` : "";
+}
 
-  if (roomId) {
-    roomMetaText.textContent = `Room • ${roomId}`;
-  } else if (hostCode) {
-    roomMetaText.textContent = `Host • ${hostCode}`;
+function initials(name) {
+  const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return "👤";
+  return parts.slice(0, 2).map((x) => x[0]?.toUpperCase() || "").join("");
+}
+
+function updatePeerCard() {
+  if (peerName) peerName.textContent = peerProfile.full_name || "Karşı Taraf";
+  if (peerSub) peerSub.textContent = t(myLang, "peerWaiting");
+
+  if (!peerAvatar) return;
+
+  const avatarUrl = String(peerProfile.avatar_url || "").trim();
+
+  if (avatarUrl) {
+    peerAvatar.innerHTML = `<img src="${avatarUrl}" alt="avatar">`;
   } else {
-    roomMetaText.textContent = "Room hazırlanıyor...";
+    peerAvatar.textContent = initials(peerProfile.full_name);
   }
+}
+
+function setPeerConnectedSubtext() {
+  if (peerSub) peerSub.textContent = t(myLang, "peerJoined");
+}
+
+function setPeerLeftSubtext() {
+  if (peerSub) peerSub.textContent = t(myLang, "peerGoneHome");
 }
 
 function refreshLangLabels() {
@@ -333,12 +315,8 @@ function renderPop() {
   }).join("");
 
   listBot.querySelectorAll(".pop-item").forEach((el) => {
-    el.addEventListener("click", () => {
-      myLang = canonical(el.dataset.code || "tr");
-      localStorage.setItem("live_interpreter_lang", myLang);
-      refreshLangLabels();
-      refreshReadyTextsIfIdle();
-      rebuildRecognizer();
+    el.addEventListener("click", async () => {
+      await applyMyLanguageChange(el.dataset.code || "tr");
       closeAllPop();
     });
   });
@@ -348,17 +326,13 @@ function renderPop() {
    AUDIO / TTS
 ========================= */
 function stopAudio() {
-  try {
-    currentAudio?.pause?.();
-    currentAudio = null;
-  } catch {}
   try { window.speechSynthesis?.cancel?.(); } catch {}
   try { window.NativeTTS?.stop?.(); } catch {}
 }
 
 function getVoicePreference() {
-
   const v =
+    peerProfile.voice ||
     localStorage.getItem("tts_voice") ||
     localStorage.getItem("live_interpreter_voice") ||
     "female";
@@ -437,22 +411,19 @@ async function createRoomIfHost() {
 
   const r = await fetch(`${API_BASE}/interpreter/create-room`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       host_code: hostCode || "LIVE-HOST",
       my_lang: myLang,
+      user_id: userId,
       mode: "interpreter"
     })
   });
 
   const j = await r.json().catch(() => ({}));
-
   if (!r.ok || !j?.room_id) {
     throw new Error(j?.detail || j?.error || "room create başarısız");
   }
-
   return j;
 }
 
@@ -461,22 +432,18 @@ async function resolveRoomByHost() {
 
   const r = await fetch(`${API_BASE}/interpreter/resolve-room`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       host_code: hostCode,
       my_lang: myLang,
-      mode: "interpreter"
+      user_id: userId
     })
   });
 
   const j = await r.json().catch(() => ({}));
-
   if (!r.ok || !j?.room_id) {
     throw new Error(j?.detail || j?.error || "room resolve başarısız");
   }
-
   return j;
 }
 
@@ -486,9 +453,7 @@ async function joinRoomIfNeeded() {
 
   const r = await fetch(`${API_BASE}/interpreter/join-room`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       room_id: roomId,
       my_lang: myLang
@@ -496,39 +461,29 @@ async function joinRoomIfNeeded() {
   });
 
   const j = await r.json().catch(() => ({}));
-
   if (!r.ok) {
     throw new Error(j?.detail || "join-room başarısız");
   }
 }
 
-async function translateText(text, from, to) {
-  const src = canonical(from);
-  const dst = canonical(to);
+async function applyMyLanguageChange(nextLang) {
+  myLang = canonical(nextLang || "tr");
+  localStorage.setItem("live_interpreter_lang", myLang);
+  refreshLangLabels();
+  refreshReadyTextsIfIdle();
+  rebuildRecognizer();
+
+  stopSocket();
 
   try {
-    const r = await fetch(`${API_BASE}/translate_ai`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        text: String(text || "").trim(),
-        from_lang: src,
-        to_lang: dst,
-      }),
-    });
-
-    if (!r.ok) {
-      const raw = await r.text().catch(() => "");
-      console.error("translate_ai failed", r.status, raw);
-      return null;
+    if (role === "guest" && roomId) {
+      await joinRoomIfNeeded();
     }
-
-    const j = await r.json().catch(() => null);
-    return String(j?.translated || "").trim() || null;
   } catch (e) {
-    console.error("translate_ai error", e);
-    return null;
+    console.warn("[lang change join]", e);
   }
+
+  startSocket();
 }
 
 /* =========================
@@ -568,6 +523,47 @@ function createSpeakerButton(text, langCode) {
   return btn;
 }
 
+function demoteOldMessages(side) {
+  const wrap = side === "top" ? topBody : botBody;
+  if (!wrap) return;
+
+  const items = [...wrap.querySelectorAll(".bubble.me")];
+  items.forEach((el) => {
+    el.classList.remove("is-latest");
+  });
+
+  if (!items.length) return;
+
+  const reversed = [...items].reverse();
+
+  reversed.forEach((el, idx) => {
+    el.style.opacity = "1";
+    el.style.fontSize = "";
+    el.style.fontWeight = "";
+
+    if (idx === 0) {
+      el.classList.add("is-latest");
+      return;
+    }
+    if (idx === 1) {
+      el.style.opacity = ".76";
+      el.style.fontSize = "24px";
+      el.style.fontWeight = "800";
+      return;
+    }
+    if (idx === 2) {
+      el.style.opacity = ".58";
+      el.style.fontSize = "20px";
+      el.style.fontWeight = "700";
+      return;
+    }
+
+    el.style.opacity = ".38";
+    el.style.fontSize = "18px";
+    el.style.fontWeight = "650";
+  });
+}
+
 function clearLatest(side) {
   const wrap = side === "top" ? topBody : botBody;
   if (!wrap) return;
@@ -580,13 +576,6 @@ function addBubble(side, kind, text, opts = {}) {
 
   const row = document.createElement("div");
   row.className = `bubble ${kind}` + (opts.latest ? " is-latest" : "");
-
-  if (opts.sender) {
-    const sender = document.createElement("span");
-    sender.className = "sender-label";
-    sender.textContent = opts.sender;
-    row.appendChild(sender);
-  }
 
   const inner = document.createElement("div");
   inner.className = "bubble-row";
@@ -603,6 +592,9 @@ function addBubble(side, kind, text, opts = {}) {
   inner.appendChild(txt);
   row.appendChild(inner);
   wrap.appendChild(row);
+
+  if (opts.latest) demoteOldMessages(side);
+
   keepLatestVisible(side);
   return row;
 }
@@ -612,7 +604,15 @@ function addBubble(side, kind, text, opts = {}) {
 ========================= */
 function wsUrl() {
   if (!roomId) return null;
-  return `${WS_BASE}/api/ws/interpreter/${encodeURIComponent(roomId)}?role=${encodeURIComponent(role)}&lang=${encodeURIComponent(myLang)}`;
+
+  const params = new URLSearchParams({
+    role,
+    lang: myLang
+  });
+
+  if (userId) params.set("user_id", userId);
+
+  return `${WS_BASE}/api/ws/interpreter/${encodeURIComponent(roomId)}?${params.toString()}`;
 }
 
 function stopSocket() {
@@ -624,6 +624,13 @@ function stopSocket() {
     clearInterval(pingTimer);
     pingTimer = null;
   }
+}
+
+function goHomeDelayed() {
+  if (leavingTimer) clearTimeout(leavingTimer);
+  leavingTimer = setTimeout(() => {
+    location.href = "/pages/home.html";
+  }, 5000);
 }
 
 function startPing() {
@@ -638,12 +645,39 @@ function startPing() {
   }, 15000);
 }
 
+function syncPeerProfileFromPayload(payload) {
+  const name =
+    payload?.sender_name ||
+    payload?.peer_name ||
+    peerProfile.full_name ||
+    "Karşı Taraf";
+
+  const avatar =
+    payload?.sender_avatar ||
+    payload?.peer_avatar ||
+    peerProfile.avatar_url ||
+    "";
+
+  const voice =
+    payload?.sender_voice ||
+    payload?.peer_voice ||
+    peerProfile.voice ||
+    "";
+
+  peerProfile = {
+    full_name: String(name || "Karşı Taraf"),
+    avatar_url: String(avatar || ""),
+    voice: String(voice || ""),
+  };
+
+  updatePeerCard();
+}
+
 function startSocket() {
   const url = wsUrl();
 
   if (!url) {
     setErrorUI();
-    setHelper(topHelper, t(myLang, "wsFailed"), "helper-wait");
     setHelper(botHelper, t(myLang, "wsFailed"), "helper-wait");
     return;
   }
@@ -655,7 +689,6 @@ function startSocket() {
   } catch (e) {
     console.error("[ws create]", e);
     setErrorUI();
-    setHelper(topHelper, t(myLang, "wsFailed"), "helper-wait");
     setHelper(botHelper, t(myLang, "wsFailed"), "helper-wait");
     return;
   }
@@ -687,52 +720,48 @@ function startSocket() {
           localStorage.setItem("live_interpreter_peer_lang", peerLang);
         }
 
+        syncPeerProfileFromPayload(payload);
         setSystemReadyUI();
         return;
       }
 
       if (type === "peer_joined") {
-        if (payload?.guest_lang && role === "host") {
-          peerLang = canonical(payload.guest_lang);
-          localStorage.setItem("live_interpreter_peer_lang", peerLang);
-        }
-
-        setHelper(topHelper, t(myLang, "peerJoined"), "helper-ready");
+        syncPeerProfileFromPayload(payload);
+        setPeerConnectedSubtext();
         setHelper(botHelper, t(myLang, "peerJoined"), "helper-ready");
         bounceToReady(1200);
         return;
       }
 
       if (type === "translated_message") {
+        const sender = String(payload?.sender || "").trim().toLowerCase();
+        const translated = String(payload?.translated_text || "").trim();
+        const original = String(payload?.original_text || "").trim();
 
-  const sender = String(payload?.sender || "").trim().toLowerCase();
-  const translated = String(payload?.translated_text || "").trim();
-  const original = String(payload?.original_text || "").trim();
+        if (!translated && !original) return;
+        if (sender === role) return;
 
-  if (!translated && !original) return;
+        syncPeerProfileFromPayload(payload);
 
-  // BEN GÖNDERDİYSEM tekrar yazma
-  if (sender === role) return;
+        const text = translated || original;
 
-  const text = translated || original;
+        clearLatest("top");
+        addBubble("top", "me", text, {
+          latest: true,
+          withSpeaker: true,
+          speakLang: myLang
+        });
 
-  addBubble("top","me",text,{
-      latest:true,
-      withSpeaker:true,
-      speakLang:myLang,
-      sender: sender === "host" ? "HOST" : "GUEST"
-  });
-
-  speak(text,myLang);
-
-  setSystemReadyUI();
-  return;
-}
+        await speak(text, myLang);
+        setSystemReadyUI();
+        return;
+      }
 
       if (type === "peer_left") {
-        setHelper(topHelper, t(myLang, "peerLeft"), "helper-wait");
-        setHelper(botHelper, t(myLang, "peerLeft"), "helper-wait");
-        bounceToReady(1600);
+        syncPeerProfileFromPayload(payload);
+        setPeerLeftSubtext();
+        setHelper(botHelper, t(myLang, "peerGoneHome"), "helper-wait");
+        goHomeDelayed();
         return;
       }
 
@@ -743,7 +772,6 @@ function startSocket() {
       if (type === "error") {
         console.warn("[ws error payload]", payload);
         setErrorUI();
-        setHelper(topHelper, payload.message || t(myLang, "wsFailed"), "helper-wait");
         setHelper(botHelper, payload.message || t(myLang, "wsFailed"), "helper-wait");
       }
     } catch (e) {
@@ -754,19 +782,20 @@ function startSocket() {
   ws.onerror = () => {
     wsReady = false;
     setErrorUI();
-    setHelper(topHelper, t(myLang, "wsFailed"), "helper-wait");
     setHelper(botHelper, t(myLang, "wsFailed"), "helper-wait");
   };
 
   ws.onclose = () => {
     wsReady = false;
+
     if (pingTimer) {
       clearInterval(pingTimer);
       pingTimer = null;
     }
+
     setErrorUI();
-    setHelper(topHelper, t(myLang, "wsFailed"), "helper-wait");
-    setHelper(botHelper, t(myLang, "wsFailed"), "helper-wait");
+    setHelper(botHelper, t(myLang, "peerGoneHome"), "helper-wait");
+    goHomeDelayed();
   };
 }
 
@@ -775,6 +804,21 @@ function startSocket() {
 ========================= */
 function canSend() {
   return !!(wsReady && ws && ws.readyState === WebSocket.OPEN && roomId);
+}
+
+function shouldIgnoreDuplicateLocal(text) {
+  const value = String(text || "").trim();
+  const now = Date.now();
+
+  if (!value) return true;
+
+  if (value === lastLocalSentText && (now - lastLocalSentAt) < 2500) {
+    return true;
+  }
+
+  lastLocalSentText = value;
+  lastLocalSentAt = now;
+  return false;
 }
 
 function sendTextMessage(rawText) {
@@ -788,17 +832,11 @@ function sendTextMessage(rawText) {
     return;
   }
 
-  addBubble("bottom", "me", text, {
-    latest: true,
-    withSpeaker: false
-  });
-
   try {
     ws.send(JSON.stringify({
       type: "text_message",
       text,
-      from_lang: canonical(myLang),
-      to_lang: canonical(peerLang)
+      from_lang: canonical(myLang)
     }));
   } catch (e) {
     console.error("[ws send]", e);
@@ -844,6 +882,10 @@ async function finalizeRecognition(text) {
   if (!cleaned) {
     setErrorUI();
     bounceToReady(1000);
+    return;
+  }
+
+  if (shouldIgnoreDuplicateLocal(cleaned)) {
     return;
   }
 
@@ -950,7 +992,6 @@ async function warmAudio() {
 async function warmApis() {
   await Promise.allSettled([
     fetch(`${API_BASE}/healthz`).catch(() => {}),
-    fetch(`${API_BASE}/translate_ai/health`).catch(() => {}),
   ]);
 }
 
@@ -976,6 +1017,7 @@ function startBoot() {
     refreshLangLabels();
     pointOrbTo("bot");
     updateRoomMeta();
+    updatePeerCard();
 
     await Promise.allSettled([
       warmApis(),
@@ -1032,6 +1074,8 @@ function bind() {
     stopAudio();
     stopRecognizer();
     recordingSide = null;
+    lastLocalSentText = "";
+    lastLocalSentAt = 0;
     if (topBody) topBody.innerHTML = "";
     if (botBody) botBody.innerHTML = "";
     setSystemReadyUI();
@@ -1054,6 +1098,7 @@ function bind() {
   });
 
   updateRoomMeta();
+  updatePeerCard();
 }
 
 /* =========================
@@ -1083,7 +1128,6 @@ async function bootRoom() {
   } catch (e) {
     console.error("[live interpreter bootRoom]", e);
     setErrorUI();
-    setHelper(topHelper, e?.message || t(myLang, "wsFailed"), "helper-wait");
     setHelper(botHelper, e?.message || t(myLang, "wsFailed"), "helper-wait");
   }
 }
