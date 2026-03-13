@@ -48,36 +48,45 @@
   </div>
 
   <script>
-    (function () {
-      const p = new URLSearchParams(location.search);
-      const host = (p.get("host") || "").trim();
-      const v = (p.get("v") || "1").trim();
+(function () {
 
-      const playUrl = "https://play.google.com/store/apps/details?id=com.ozyigits.italkyai";
-      const appUrl = `italky://join?host=${encodeURIComponent(host)}&v=${encodeURIComponent(v)}`;
+  const p = new URLSearchParams(location.search);
+  const host = (p.get("host") || "").trim();
+  const v = (p.get("v") || "1").trim();
 
-      const storeBtn = document.getElementById("storeBtn");
-      if (storeBtn) storeBtn.href = playUrl;
+  const playUrl = "https://play.google.com/store/apps/details?id=com.ozyigits.italkyai";
+  const appUrl = `italky://join?host=${encodeURIComponent(host)}&v=${encodeURIComponent(v)}`;
 
-      if (!host) {
-        location.replace(playUrl);
-        return;
-      }
+  const storeBtn = document.getElementById("storeBtn");
+  if (storeBtn) storeBtn.href = playUrl;
 
-      let appOpened = false;
+  if (!host) {
+    location.replace(playUrl);
+    return;
+  }
 
-      document.addEventListener("visibilitychange", () => {
-        if (document.hidden) appOpened = true;
-      });
+  let appOpened = false;
 
-      window.location.href = appUrl;
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) appOpened = true;
+  });
 
-      setTimeout(() => {
-        if (!appOpened) {
-          location.replace(playUrl);
-        }
-      }, 1800);
-    })();
-  </script>
+  console.log("Interpreter OPEN host:", host);
+  console.log("Interpreter OPEN appUrl:", appUrl);
+
+  try{
+    window.location.href = appUrl;
+  }catch(e){
+    console.warn("Deep link error", e);
+  }
+
+  setTimeout(() => {
+    if (!appOpened) {
+      location.replace(playUrl);
+    }
+  }, 1800);
+
+})();
+</script>
 </body>
 </html>
