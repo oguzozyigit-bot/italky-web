@@ -12,10 +12,12 @@
 <style>
 :root{
   --txt:rgba(255,255,255,.96);
-  --muted:rgba(255,255,255,.56);
+  --muted:rgba(255,255,255,.58);
   --panel-bg:rgba(255,255,255,.04);
   --panel-border:rgba(255,255,255,.10);
+  --soft-border:rgba(255,255,255,.08);
   --ai-grad:linear-gradient(135deg,#67e8f9 0%, #818cf8 46%, #f472b6 100%);
+  --soft-grad:linear-gradient(135deg,rgba(103,232,249,.16),rgba(129,140,248,.15),rgba(244,114,182,.14));
   --accent:#a5b4fc;
 }
 
@@ -33,41 +35,55 @@ html,body{
   background:#070710;
   color:var(--txt);
   font-family:'Outfit',sans-serif;
+  overflow:hidden;
+  scrollbar-width:none;
+}
+html::-webkit-scrollbar,
+body::-webkit-scrollbar{
+  display:none;
 }
 
 body{
   background:
-    radial-gradient(circle at 80% 10%, rgba(244,114,182,.10), transparent 40%),
-    radial-gradient(circle at 20% 80%, rgba(99,102,241,.10), transparent 40%),
+    radial-gradient(circle at 82% 8%, rgba(244,114,182,.10), transparent 38%),
+    radial-gradient(circle at 18% 82%, rgba(99,102,241,.11), transparent 38%),
     linear-gradient(180deg,#080812 0%,#0e0e18 100%);
 }
 
 #pageContent{
   max-width:560px;
+  height:100dvh;
   margin:0 auto;
-  padding:16px 14px 20px;
+  padding:14px 14px calc(10px + env(safe-area-inset-bottom));
   display:flex;
   flex-direction:column;
-  gap:16px;
+  gap:12px;
+  overflow:auto;
+  scrollbar-width:none;
+}
+#pageContent::-webkit-scrollbar{
+  display:none;
 }
 
 .topRow{
   display:flex;
   align-items:center;
   gap:12px;
+  flex:0 0 auto;
 }
 
 .backBtn{
   width:42px;
   height:42px;
   border-radius:14px;
-  border:1px solid var(--panel-border);
+  border:1px solid var(--soft-border);
   background:rgba(255,255,255,.05);
   display:flex;
   align-items:center;
   justify-content:center;
   cursor:pointer;
   flex:0 0 auto;
+  box-shadow:0 8px 20px rgba(0,0,0,.12);
 }
 
 .backBtn:active{ transform:scale(.96); }
@@ -80,28 +96,31 @@ body{
   stroke-width:2.5;
 }
 
-.pageHead{ min-width:0; }
+.pageHead{
+  min-width:0;
+}
 
 .pageKicker{
   display:inline-flex;
   width:max-content;
   align-items:center;
   gap:8px;
-  padding:8px 12px;
+  padding:7px 11px;
   border-radius:999px;
   background:rgba(255,255,255,.05);
-  border:1px solid var(--panel-border);
-  font-size:11px;
+  border:1px solid var(--soft-border);
+  font-size:10px;
   font-weight:800;
-  letter-spacing:.5px;
+  letter-spacing:.7px;
   color:rgba(255,255,255,.82);
-  margin-bottom:8px;
+  margin-bottom:7px;
+  text-transform:uppercase;
 }
 
 .pageTitle{
   margin:0;
   font-family:'Space Grotesk',sans-serif;
-  font-size:27px;
+  font-size:25px;
   line-height:1;
   letter-spacing:-1px;
   font-weight:700;
@@ -114,39 +133,51 @@ body{
 }
 
 .pageSub{
-  margin:8px 0 0;
+  margin:7px 0 0;
   font-size:12px;
-  line-height:1.45;
+  line-height:1.4;
   color:var(--muted);
+  max-width:340px;
+}
+
+.contentGrid{
+  flex:1;
+  min-height:0;
+  display:grid;
+  grid-template-rows:auto auto auto;
+  gap:12px;
 }
 
 .panel{
-  background:linear-gradient(145deg, rgba(255,255,255,.07), rgba(255,255,255,.02));
+  background:linear-gradient(145deg, rgba(255,255,255,.065), rgba(255,255,255,.02));
   border:1px solid var(--panel-border);
-  border-radius:28px;
+  border-radius:26px;
   padding:14px;
   backdrop-filter:blur(16px);
   -webkit-backdrop-filter:blur(16px);
+  box-shadow:0 14px 28px rgba(0,0,0,.14);
 }
 
-.qrHero{
-  display:flex;
-  flex-direction:column;
-  align-items:center;
+.qrPanel{
+  display:grid;
+  grid-template-columns:176px 1fr;
   gap:14px;
+  align-items:center;
+  min-height:0;
 }
 
 .qrWrap{
-  width:220px;
-  height:220px;
-  border-radius:28px;
+  width:176px;
+  height:176px;
+  border-radius:24px;
   background:rgba(255,255,255,.06);
   border:1px solid rgba(255,255,255,.10);
   display:flex;
   align-items:center;
   justify-content:center;
   overflow:hidden;
-  box-shadow:0 16px 30px rgba(0,0,0,.24);
+  box-shadow:0 12px 22px rgba(0,0,0,.20);
+  flex:0 0 auto;
 }
 
 .qrWrap img{
@@ -165,90 +196,143 @@ body{
   justify-content:center;
   flex-direction:column;
   gap:10px;
-  padding:16px;
+  padding:14px;
   text-align:center;
   color:#fff;
 }
 
 .qrFallbackTitle{
-  font-size:14px;
+  font-size:13px;
   font-weight:900;
 }
 
 .qrFallbackCode{
-  padding:10px 14px;
+  padding:10px 12px;
   border-radius:14px;
   background:rgba(255,255,255,.08);
   border:1px solid rgba(255,255,255,.10);
-  font-size:13px;
+  font-size:12px;
   font-weight:900;
   color:#c7d2fe;
   word-break:break-all;
 }
 
-.infoGrid{
+.qrMeta{
+  min-width:0;
   display:flex;
   flex-direction:column;
   gap:10px;
 }
 
 .infoRow{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-  padding:14px;
-  border-radius:20px;
-  background:rgba(255,255,255,.04);
-  border:1px solid rgba(255,255,255,.08);
+  padding:12px 13px;
+  border-radius:18px;
+  background:rgba(255,255,255,.035);
+  border:1px solid rgba(255,255,255,.07);
 }
 
 .infoLabel{
-  font-size:12px;
+  font-size:10px;
   font-weight:900;
-  color:rgba(255,255,255,.62);
+  color:rgba(255,255,255,.60);
+  text-transform:uppercase;
+  letter-spacing:.8px;
+  margin-bottom:5px;
 }
 
 .infoValue{
   font-size:13px;
   font-weight:900;
   color:#fff;
-  text-align:right;
   word-break:break-all;
+  line-height:1.35;
 }
 
-.btnRow{
+.actionsPanel{
   display:grid;
   grid-template-columns:1fr 1fr;
   gap:10px;
 }
 
 .btn{
-  min-height:54px;
+  min-height:50px;
   border-radius:18px;
   font-family:inherit;
   font-weight:900;
   font-size:14px;
   cursor:pointer;
-  border:none;
+  border:1px solid transparent;
   display:flex;
   align-items:center;
   justify-content:center;
   transition:all .2s;
+  padding:0 14px;
 }
 
-.btn:active{ transform:scale(.98); }
+.btn:active{
+  transform:scale(.98);
+}
+
+.btnSoft{
+  background:rgba(255,255,255,.05);
+  border-color:rgba(255,255,255,.08);
+  color:#fff;
+}
 
 .btnPrimary{
-  background:var(--ai-grad);
-  color:#05060d;
-  box-shadow:0 12px 26px rgba(129,140,248,.18);
+  background:var(--soft-grad);
+  border-color:rgba(165,180,252,.16);
+  color:#fff;
 }
 
 .btnGhost{
-  background:rgba(255,255,255,.05);
+  background:rgba(255,255,255,.035);
+  border-color:rgba(255,255,255,.07);
+  color:#dbe4ff;
+}
+
+.nfcPanel{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:14px;
+  align-items:center;
+}
+
+.nfcLeft{
+  min-width:0;
+}
+
+.nfcTitle{
+  margin:0 0 6px;
+  font-family:'Space Grotesk',sans-serif;
+  font-size:18px;
+  font-weight:900;
   color:#fff;
-  border:1px solid rgba(255,255,255,.10);
+}
+
+.nfcDesc{
+  margin:0;
+  font-size:12px;
+  line-height:1.5;
+  color:var(--muted);
+}
+
+.nfcBadge{
+  padding:10px 12px;
+  border-radius:16px;
+  background:rgba(103,232,249,.08);
+  border:1px solid rgba(103,232,249,.14);
+  color:#dffaff;
+  font-size:11px;
+  font-weight:900;
+  text-align:center;
+  min-width:112px;
+}
+
+.notePanel{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
 }
 
 .note{
@@ -277,12 +361,45 @@ body{
   max-width:min(92vw,520px);
   text-align:center;
 }
-.toast.show{ transform:translateX(-50%) translateY(0); }
+.toast.show{
+  transform:translateX(-50%) translateY(0);
+}
 
-@media (max-width:390px){
-  #pageContent{ padding:12px 12px 18px; }
-  .pageTitle{ font-size:24px; }
-  .qrWrap{ width:198px; height:198px; }
+@media (max-width:430px){
+  #pageContent{
+    padding:12px 12px calc(8px + env(safe-area-inset-bottom));
+    gap:10px;
+  }
+
+  .contentGrid{
+    gap:10px;
+  }
+
+  .qrPanel{
+    grid-template-columns:1fr;
+    justify-items:center;
+    text-align:center;
+  }
+
+  .qrMeta{
+    width:100%;
+  }
+
+  .actionsPanel{
+    grid-template-columns:1fr;
+  }
+
+  .nfcPanel{
+    grid-template-columns:1fr;
+  }
+
+  .nfcBadge{
+    width:100%;
+  }
+
+  .pageTitle{
+    font-size:23px;
+  }
 }
 </style>
 </head>
@@ -296,52 +413,70 @@ body{
     </button>
 
     <div class="pageHead">
-      <div class="pageKicker">Interpreter QR</div>
+      <div class="pageKicker">Interpreter QR & NFC</div>
       <h1 class="pageTitle">QR <span class="ai">Değiştir</span></h1>
-      <p class="pageSub">Yeni QR oluşturduğunda eski bağlantı geçersiz olur.</p>
+      <p class="pageSub">Yeni QR ya da NFC bağlantısı oluşturduğunda eski bağlantı geçersiz olur.</p>
     </div>
   </div>
 
-  <div class="panel qrHero">
-    <div class="qrWrap">
-      <img id="qrImage" alt="Interpreter QR">
-      <div class="qrFallback" id="qrFallback">
-        <div class="qrFallbackTitle">QR görseli hazır değil</div>
-        <div class="qrFallbackCode" id="qrFallbackCode">ITK-XXXXXX</div>
+  <div class="contentGrid">
+
+    <div class="panel qrPanel">
+      <div class="qrWrap">
+        <img id="qrImage" alt="Interpreter QR">
+        <div class="qrFallback" id="qrFallback">
+          <div class="qrFallbackTitle">QR görseli hazır değil</div>
+          <div class="qrFallbackCode" id="qrFallbackCode">ITK-XXXXXX</div>
+        </div>
+      </div>
+
+      <div class="qrMeta">
+        <div class="infoRow">
+          <div class="infoLabel">Host Kodu</div>
+          <div class="infoValue" id="hostCodeText">—</div>
+        </div>
+
+        <div class="infoRow">
+          <div class="infoLabel">QR Versiyonu</div>
+          <div class="infoValue" id="qrVersionText">—</div>
+        </div>
+
+        <div class="infoRow">
+          <div class="infoLabel">Bağlantı Durumu</div>
+          <div class="infoValue" id="joinUrlText">Hazır</div>
+        </div>
       </div>
     </div>
-  </div>
 
-  <div class="panel">
-    <div class="infoGrid">
-      <div class="infoRow">
-        <div class="infoLabel">Host Kodu</div>
-        <div class="infoValue" id="hostCodeText">—</div>
-      </div>
-
-      <div class="infoRow">
-        <div class="infoLabel">QR Versiyonu</div>
-        <div class="infoValue" id="qrVersionText">—</div>
-      </div>
-
-      <div class="infoRow">
-        <div class="infoLabel">Bağlantı</div>
-        <div class="infoValue" id="joinUrlText">—</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="panel">
-    <div class="btnRow">
+    <div class="panel actionsPanel">
       <button class="btn btnPrimary" id="renewBtn" type="button">Yeni QR Oluştur</button>
-      <button class="btn btnGhost" id="copyBtn" type="button">Linki Kopyala</button>
+      <button class="btn btnSoft" id="resetHostBtn" type="button">Host Kodunu Sıfırla</button>
+      <button class="btn btnGhost" id="writeNfcBtn" type="button">NFC’ye Yaz</button>
+      <button class="btn btnGhost" id="readNfcBtn" type="button">NFC’den Oku</button>
     </div>
-  </div>
 
-  <div class="panel">
-    <div class="note">
-      Yeni QR oluşturduğunda eski QR kodları artık geçersiz olur. Bu sayede yalnızca son oluşturulan bağlantı ile eşleşme yapılır.
+    <div class="panel nfcPanel">
+      <div class="nfcLeft">
+        <h2 class="nfcTitle">NFC Paylaşımı</h2>
+        <p class="nfcDesc">
+          Aynı bağlantı QR ile de NFC ile de paylaşılır. Telefon destekliyorsa etikete yazabilir veya etiketten okuyabilirsin.
+        </p>
+      </div>
+      <div class="nfcBadge" id="nfcStatusBadge">Kontrol ediliyor…</div>
     </div>
+
+    <div class="panel notePanel">
+      <div class="note">
+        Yeni QR oluşturduğunda eski QR kodları artık geçersiz olur.
+      </div>
+      <div class="note">
+        Host kodunu sıfırlarsan bağlantı kimliği tamamen değişir.
+      </div>
+      <div class="note">
+        NFC desteği cihaz ve tarayıcıya göre değişebilir.
+      </div>
+    </div>
+
   </div>
 
 </div>
@@ -362,7 +497,9 @@ const $ = (id) => document.getElementById(id);
 
 const backBtn = $("backBtn");
 const renewBtn = $("renewBtn");
-const copyBtn = $("copyBtn");
+const resetHostBtn = $("resetHostBtn");
+const writeNfcBtn = $("writeNfcBtn");
+const readNfcBtn = $("readNfcBtn");
 
 const qrImage = $("qrImage");
 const qrFallback = $("qrFallback");
@@ -371,6 +508,7 @@ const qrFallbackCode = $("qrFallbackCode");
 const hostCodeText = $("hostCodeText");
 const qrVersionText = $("qrVersionText");
 const joinUrlText = $("joinUrlText");
+const nfcStatusBadge = $("nfcStatusBadge");
 const toastEl = $("toast");
 
 const HOST_CODE_KEY = "italky_interpreter_host_code";
@@ -383,7 +521,7 @@ function toast(msg){
   clearTimeout(window.__qrToast);
   window.__qrToast = setTimeout(() => {
     toastEl.classList.remove("show");
-  }, 1800);
+  }, 1900);
 }
 
 function slugify(value){
@@ -474,7 +612,7 @@ function loadImage(url){
 function paintInfo(hostCode, joinUrl){
   hostCodeText.textContent = hostCode || "—";
   qrVersionText.textContent = getQrVersion();
-  joinUrlText.textContent = joinUrl || "—";
+  joinUrlText.textContent = joinUrl ? "Aktif" : "Hazır değil";
   qrFallbackCode.textContent = hostCode || "ITK-XXXXXX";
 }
 
@@ -516,14 +654,88 @@ function renewQrCode(){
   localStorage.setItem(QR_VERSION_KEY, nextVersion);
 }
 
-async function copyJoinUrl(){
+function resetHostCode(){
+  const fresh = `ITK-${randomCode()}`;
+  localStorage.setItem(HOST_CODE_KEY, fresh);
+  localStorage.setItem(QR_VERSION_KEY, String(Date.now()));
+}
+
+function hasNfcSupport(){
+  return "NDEFReader" in window;
+}
+
+function paintNfcSupport(){
+  if(hasNfcSupport()){
+    nfcStatusBadge.textContent = "NFC destekleniyor";
+  }else{
+    nfcStatusBadge.textContent = "NFC desteklenmiyor";
+  }
+}
+
+async function writeNfc(){
+  if(!hasNfcSupport()){
+    toast("Bu cihazda NFC yazma desteklenmiyor");
+    return;
+  }
+
   try{
     const hostCode = await ensureStableHostCode();
     const joinUrl = buildJoinUrl(hostCode);
-    await navigator.clipboard.writeText(joinUrl);
-    toast("Bağlantı kopyalandı");
-  }catch{
-    toast("Bağlantı kopyalanamadı");
+    const ndef = new NDEFReader();
+
+    await ndef.write({
+      records: [
+        {
+          recordType: "url",
+          data: joinUrl
+        }
+      ]
+    });
+
+    toast("NFC etikete yazıldı");
+  }catch(e){
+    console.warn("[nfc write]", e);
+    toast("NFC yazma başarısız");
+  }
+}
+
+async function readNfc(){
+  if(!hasNfcSupport()){
+    toast("Bu cihazda NFC okuma desteklenmiyor");
+    return;
+  }
+
+  try{
+    const ndef = new NDEFReader();
+    await ndef.scan();
+
+    toast("NFC etiketi bekleniyor...");
+
+    ndef.onreading = ({ message }) => {
+      try{
+        for(const record of message.records){
+          if(record.recordType === "url"){
+            const decoder = new TextDecoder();
+            const url = decoder.decode(record.data);
+            if(url){
+              toast("NFC etiketi okundu");
+              setTimeout(() => {
+                location.href = url;
+              }, 250);
+              return;
+            }
+          }
+        }
+        toast("Uygun bağlantı bulunamadı");
+      }catch(e){
+        console.warn("[nfc parse]", e);
+        toast("NFC etiketi okunamadı");
+      }
+    };
+
+  }catch(e){
+    console.warn("[nfc read]", e);
+    toast("NFC okuma başlatılamadı");
   }
 }
 
@@ -543,9 +755,29 @@ renewBtn?.addEventListener("click", async () => {
   }
 });
 
-copyBtn?.addEventListener("click", async () => {
-  await copyJoinUrl();
+resetHostBtn?.addEventListener("click", async () => {
+  try{
+    resetHostBtn.disabled = true;
+    resetHostCode();
+    await renderQr();
+    toast("Host kodu sıfırlandı");
+  }catch(e){
+    console.warn("[host reset]", e);
+    toast("Host kodu sıfırlanamadı");
+  }finally{
+    resetHostBtn.disabled = false;
+  }
 });
+
+writeNfcBtn?.addEventListener("click", async () => {
+  await writeNfc();
+});
+
+readNfcBtn?.addEventListener("click", async () => {
+  await readNfc();
+});
+
+paintNfcSupport();
 
 renderQr().catch((e) => {
   console.warn("[qr initial render]", e);
