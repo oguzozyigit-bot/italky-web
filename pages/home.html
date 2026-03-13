@@ -62,7 +62,6 @@ body{
   gap:10px;
 }
 
-/* HERO */
 .hero{
   flex:0 0 auto;
   perspective:1000px;
@@ -150,8 +149,7 @@ body{
   font-weight:800;
   line-height:1.2;
   padding:8px;
-  background:
-    linear-gradient(135deg,#ffffff 0%, #eef2ff 100%);
+  background:linear-gradient(135deg,#ffffff 0%, #eef2ff 100%);
 }
 
 .qr-fallback.show{
@@ -228,7 +226,14 @@ body{
   max-width:310px;
 }
 
-/* GRID */
+.heroStatus{
+  min-height:20px;
+  font-size:11px;
+  font-weight:800;
+  color:rgba(255,255,255,.78);
+  text-align:center;
+}
+
 .home-grid{
   flex:1;
   display:grid;
@@ -590,7 +595,7 @@ body{
             <img id="smallQrImg" alt="italkyAI QR Hologram">
             <div id="qrFallback" class="qr-fallback">
               <div>QR hazır değil</div>
-              <div id="qrFallbackCode" class="qr-fallback-code">ITK-XXXXXX</div>
+              <div id="qrFallbackCode" class="qr-fallback-code">ROOM-XXXXXX</div>
             </div>
           </div>
 
@@ -599,7 +604,8 @@ body{
         </div>
 
         <h1 class="heroTitle">Side<span class="to">To</span>Side</h1>
-        <p class="heroSub">QR Kodu tarat, anında bağlan. Mesafe tanımadan anlaş...</p>
+        <p class="heroSub">QR kodu tarat, anında bağlan. Karşı taraf girince sen de otomatik odaya geç.</p>
+        <div class="heroStatus" id="heroStatus">Oda hazırlanıyor...</div>
       </div>
     </section>
 
@@ -677,87 +683,29 @@ import { mountShell } from "/js/ui_shell.js";
 
 try {
   mountShell({ scroll: "auto" });
-  console.log("ui_shell OK");
 } catch (e) {
   console.error("ui_shell HATASI:", e);
 }
 </script>
 
 <script type="module">
-import { supabase } from "/js/supabase_client.js";
+const API_BASE = "https://italky-api.onrender.com/api";
+const WS_BASE = "wss://italky-api.onrender.com/api";
 
 const smallQrImg = document.getElementById("smallQrImg");
 const qrFallback = document.getElementById("qrFallback");
 const qrFallbackCode = document.getElementById("qrFallbackCode");
+const heroStatus = document.getElementById("heroStatus");
 
-const HOST_CODE_KEY = "italky_interpreter_host_code";
-const QR_VERSION_KEY = "italky_interpreter_qr_version";
+const ROOM_KEY = "italky_active_interpreter_room_id";
+const ROOM_LANG_KEY = "italky_active_interpreter_lang";
 
-function slugify(value){
-  return String(value || "")
-    .trim()
-    .toUpperCase()
-    .replace(/[^A-Z0-9]/g, "")
-    .slice(0, 12);
-}
+let activeRoomId = "";
+let previewSocket = null;
+let redirected = false;
 
-function randomCode(){
-  return Math.random().toString(36).slice(2, 10).toUpperCase();
-}
-
-async function getCurrentUser(){
-  try{
-    const { data } = await supabase.auth.getUser();
-    return data?.user || null;
-  }catch{
-    return null;
-  }
-}
-
-async function ensureStableHostCode(){
-  const existing = localStorage.getItem(HOST_CODE_KEY);
-  if(existing && String(existing).trim()) return String(existing).trim();
-
-  const user = await getCurrentUser();
-
-  const candidates = [
-    localStorage.getItem("membership_no"),
-    localStorage.getItem("uyelik_no"),
-    localStorage.getItem("member_no"),
-    user?.user_metadata?.membership_no,
-    user?.user_metadata?.member_no,
-    user?.user_metadata?.user_no,
-    user?.id,
-    user?.email?.split("@")?.[0]
-  ];
-
-  let base = "";
-  for(const c of candidates){
-    const s = slugify(c);
-    if(s && s.length >= 6){
-      base = s.slice(0, 10);
-      break;
-    }
-  }
-
-  if(!base) base = randomCode();
-
-  const hostCode = `ITK-${base}`;
-  localStorage.setItem(HOST_CODE_KEY, hostCode);
-
-  if(!localStorage.getItem(QR_VERSION_KEY)){
-    localStorage.setItem(QR_VERSION_KEY, "1");
-  }
-
-  return hostCode;
-}
-
-function buildJoinUrl(hostCode){
-  const version = localStorage.getItem(QR_VERSION_KEY) || "1";
-  const url = new URL("https://italky.ai/open/interpreter");
-  url.searchParams.set("host", hostCode);
-  url.searchParams.set("v", version);
-  return url.toString();
+function setHeroStatus(text){
+  if(heroStatus) heroStatus.textContent = text || "";
 }
 
 function qrUrlPrimary(targetUrl){
@@ -768,8 +716,8 @@ function qrUrlFallback(targetUrl){
   return `https://quickchart.io/qr?size=520&text=${encodeURIComponent(targetUrl)}`;
 }
 
-function showFallback(hostCode){
-  if(qrFallbackCode) qrFallbackCode.textContent = hostCode || "ITK-XXXXXX";
+function showFallback(code){
+  if(qrFallbackCode) qrFallbackCode.textContent = code || "ROOM-XXXXXX";
   if(qrFallback) qrFallback.classList.add("show");
   if(smallQrImg){
     smallQrImg.style.display = "none";
@@ -795,17 +743,116 @@ function loadImage(url){
   });
 }
 
-async function bootQr(){
+async function createRoom(myLang = "tr"){
+  const r = await fetch(`${API_BASE}/interpreter/create-room`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      host_code: "HOME-HOST",
+      my_lang: myLang,
+      mode: "interpreter"
+    })
+  });
+
+  const j = await r.json().catch(() => ({}));
+
+  if(!r.ok || !j?.room_id){
+    throw new Error(j?.detail || j?.error || "Room oluşturulamadı");
+  }
+
+  return j;
+}
+
+function buildJoinUrl(roomId){
+  const url = new URL("https://italky.ai/open/interpreter");
+  url.searchParams.set("room", roomId);
+  url.searchParams.set("v", "1");
+  return url.toString();
+}
+
+function stopPreviewSocket(){
+  try{ previewSocket?.close?.(); }catch{}
+  previewSocket = null;
+}
+
+function launchHostRoom(roomId){
+  if(!roomId || redirected) return;
+  redirected = true;
+  location.href = `/pages/live_interpreter.html?room=${encodeURIComponent(roomId)}&role=host&my=tr`;
+}
+
+function startPreviewSocket(roomId, myLang = "tr"){
+  if(!roomId) return;
+
+  stopPreviewSocket();
+
+  const url = `${WS_BASE}/ws/interpreter/${encodeURIComponent(roomId)}?role=host-preview&lang=${encodeURIComponent(myLang)}`;
+
   try{
-    console.log("[home qr] boot başladı");
+    previewSocket = new WebSocket(url);
+  }catch(e){
+    console.warn("[home preview ws create]", e);
+    return;
+  }
 
-    const hostCode = await ensureStableHostCode();
-    const joinUrl = buildJoinUrl(hostCode);
+  previewSocket.onopen = () => {
+    setHeroStatus("QR hazır. Karşı taraf bağlanınca otomatik geçilecek.");
+  };
 
-    console.log("[home qr] hostCode:", hostCode);
-    console.log("[home qr] joinUrl:", joinUrl);
+  previewSocket.onmessage = (event) => {
+    try{
+      const payload = JSON.parse(event.data);
+      const type = String(payload?.type || "").trim();
 
-    if(qrFallbackCode) qrFallbackCode.textContent = hostCode;
+      if(type === "presence"){
+        return;
+      }
+
+      if(type === "peer_joined"){
+        setHeroStatus("Karşı taraf bağlandı. Oda açılıyor...");
+        launchHostRoom(roomId);
+        return;
+      }
+
+      if(type === "error"){
+        console.warn("[home preview ws error payload]", payload);
+      }
+    }catch(e){
+      console.warn("[home preview ws parse]", e);
+    }
+  };
+
+  previewSocket.onerror = () => {
+    setHeroStatus("Bağlantı önizleme hatası");
+  };
+
+  previewSocket.onclose = () => {
+    if(!redirected){
+      setHeroStatus("QR hazır. Karşı taraf bekleniyor...");
+    }
+  };
+}
+
+async function renderRoomQr(){
+  redirected = false;
+  setHeroStatus("Oda hazırlanıyor...");
+
+  try{
+    const created = await createRoom("tr");
+    activeRoomId = String(created.room_id || "").trim();
+
+    if(!activeRoomId){
+      throw new Error("room_id boş geldi");
+    }
+
+    localStorage.setItem(ROOM_KEY, activeRoomId);
+    localStorage.setItem(ROOM_LANG_KEY, "tr");
+
+    if(qrFallbackCode) qrFallbackCode.textContent = activeRoomId;
+
+    const joinUrl = buildJoinUrl(activeRoomId);
 
     let finalUrl = null;
 
@@ -822,28 +869,35 @@ async function bootQr(){
     if(finalUrl){
       const safeUrl = finalUrl + (finalUrl.includes("?") ? "&" : "?") + "t=" + Date.now();
       showQr(safeUrl);
-      console.log("[home qr] OK");
+      setHeroStatus("QR hazır. Karşı taraf bekleniyor...");
     }else{
-      showFallback(hostCode);
-      console.warn("[home qr] servislerden görsel alınamadı");
+      showFallback(activeRoomId);
+      setHeroStatus("QR servisi yanıt vermedi");
     }
+
+    startPreviewSocket(activeRoomId, "tr");
   }catch(e){
-    console.error("[home qr] HATA:", e);
-    showFallback("ITK-ERROR");
+    console.error("[home room qr]", e);
+    showFallback("ROOM-ERROR");
+    setHeroStatus(e?.message || "Oda hazırlanamadı");
   }
 }
 
-bootQr();
+renderRoomQr();
 
 document.addEventListener("visibilitychange", () => {
-  if(document.visibilityState === "visible"){
-    bootQr();
+  if(document.visibilityState === "visible" && !redirected){
+    renderRoomQr();
   }
 });
 
 window.addEventListener("focus", () => {
-  bootQr();
+  if(!redirected){
+    renderRoomQr();
+  }
 });
+
+window.addEventListener("beforeunload", stopPreviewSocket);
 </script>
 </body>
 </html>
