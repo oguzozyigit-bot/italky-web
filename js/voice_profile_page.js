@@ -239,6 +239,7 @@ function applyCurrentSample(samples) {
     currentBlob = null;
     currentSeconds = 0;
     currentMime = "";
+    if (timerText) timerText.textContent = "00:00";
     if (statusText) statusText.textContent = "Mikrofona dokun ve konuşmaya başla";
   }
 
@@ -465,12 +466,14 @@ async function finishVoiceProfile(uiLang) {
 
   const payload = {
     voice_sample_url: previewUrl,
-    voice_sample_path: JSON.stringify(uploaded.map(x => x.path)),
+    voice_sample_path: JSON.stringify(uploaded.map((x) => x.path)),
     voice_sample_mime: "multi",
     voice_sample_seconds: totalSec,
     voice_profile_ready: true,
     voice_profile_updated_at: new Date().toISOString(),
-    voice_profile_lang: uiLang || "tr"
+    voice_profile_lang: uiLang || "tr",
+    tts_voice_preference: "clone",
+    tts_voice: "clone"
   };
 
   const { error: updateErr } = await supabase
@@ -479,7 +482,7 @@ async function finishVoiceProfile(uiLang) {
     .eq("id", user.id);
 
   if (updateErr) {
-    await deletePathsIfExist(uploaded.map(x => x.path));
+    await deletePathsIfExist(uploaded.map((x) => x.path));
     throw updateErr;
   }
 
@@ -503,10 +506,52 @@ async function enrollTTSVoice() {
   const j = await r.json().catch(() => ({}));
 
   if (!r.ok) {
-    throw new Error(j.detail || "Voice enroll başarısız");
+    throw new Error(j.detail || j.error || "Voice enroll başarısız");
   }
 
-  return j;
+  return j || {};
+}
+
+async function markCloneAsSelected(enrollResp = {}) {
+  const user = await getUserOrThrow();
+
+  const provider = String(
+    enrollResp?.provider ||
+    enrollResp?.tts_voice_provider ||
+    enrollResp?.voice_provider ||
+    "cartesia"
+  ).trim();
+
+  const voiceId = String(
+    enrollResp?.voice_id ||
+    enrollResp?.tts_voice_id ||
+    enrollResp?.model_voice_id ||
+    ""
+  ).trim();
+
+  const payload = {
+    tts_voice_preference: "clone",
+    tts_voice: "clone",
+    tts_voice_provider: provider,
+    updated_at: new Date().toISOString()
+  };
+
+  if (voiceId) {
+    payload.tts_voice_id = voiceId;
+    payload.tts_voice_ready = true;
+  }
+
+  const { error } = await supabase
+    .from("profiles")
+    .update(payload)
+    .eq("id", user.id);
+
+  if (error) throw error;
+
+  try {
+    localStorage.setItem("tts_voice", "clone");
+    localStorage.setItem("live_interpreter_voice", "clone");
+  } catch {}
 }
 
 async function bootPage() {
@@ -542,7 +587,7 @@ async function bootPage() {
   finishBtn?.addEventListener("click", async () => {
     if (saving) return;
 
-    const doneCount = recordings.filter(x => !!x.blob).length;
+    const doneCount = recordings.filter((x) => !!x.blob).length;
     if (doneCount !== SAMPLE_COUNT) {
       toast("Tüm cümleleri tamamla");
       return;
@@ -559,9 +604,11 @@ async function bootPage() {
       await finishVoiceProfile(lang);
 
       if (statusText) statusText.textContent = "Ses profili işleniyor...";
-      await enrollTTSVoice();
+      const enrollResp = await enrollTTSVoice();
 
-      if (statusText) statusText.textContent = "Ses profili hazır";
+      await markCloneAsSelected(enrollResp);
+
+      if (statusText) statusText.textContent = "Ses profili hazır • Kendi Sesim seçildi";
       toast("Ses profili hazır");
 
       setTimeout(() => {
