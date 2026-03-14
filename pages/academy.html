@@ -3,200 +3,177 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-<title>italkyACADEMY • Neural Learning</title>
+<title>italkyACADEMY • Neural Core</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;700;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
 <style>
-:root{
-  --bg: #120d16;
-  --txt: rgba(255,255,255,.96);
+:root {
+  --txt: #ffffff;
   --ai-grad: linear-gradient(135deg, #67e8f9 0%, #818cf8 46%, #f472b6 100%);
-  --pink: #f472b6;
-  --cyan: #67e8f9;
-  --purple: #818cf8;
-  --orange: #fb923c;
+  --panel-border: rgba(255, 255, 255, 0.1);
 }
 
-*{ box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
 body, html {
-  margin: 0; width: 100%; height: 100%;
-  background: #120d16;
-  color: var(--txt);
-  font-family: 'Outfit', sans-serif;
-  overflow: hidden;
+  margin: 0; padding: 0; width: 100%; height: 100%;
+  background: #0a0a0f; color: var(--txt);
+  font-family: 'Outfit', sans-serif; overflow: hidden;
 }
 
-/* Arka Plan (Home.html ile aynı derinlik) */
-body {
-  background:
-    radial-gradient(circle at 50% 0%, rgba(251,146,60,.12) 0%, transparent 30%),
-    radial-gradient(circle at 50% 100%, rgba(103,232,249,.10) 0%, transparent 30%),
-    linear-gradient(180deg, #1d1016 0%, #120d16 100%);
-}
-
-#pageContent {
-  width: 100%; height: 100%;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  padding: 20px;
-}
-
-/* ACADEMY GRID YAPISI (Boşluksuz) */
-.academy-container {
-  position: relative;
+/* ACADEMY GRID - EKRANI TAM KAPLAR */
+.academy-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-template-rows: 1fr 1fr;
-  width: 100%;
-  max-width: 400px;
-  aspect-ratio: 1/1;
-  gap: 0; /* Boşluk yok */
-  border-radius: 40px;
-  overflow: hidden;
-  border: 1px solid rgba(255,255,255,0.1);
-  box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+  width: 100vw;
+  height: 100vh;
+  gap: 0;
+  position: relative;
 }
 
-/* MERKEZİ DAİRE (Hologram Efekti) */
-.center-core {
+/* BUTONLAR - DİKDÖRTGEN VE KESKİN */
+.aca-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  border: 0.5px solid var(--panel-border);
+  overflow: hidden;
+}
+
+/* Hover/Active Efektleri */
+.aca-panel:active { filter: brightness(1.5); transform: scale(0.98); z-index: 2; }
+
+/* Panel Renkleri (Home.html'den) */
+.p-1 { background: linear-gradient(180deg, #301661 0%, #150e19 100%); } /* Dil Dersi */
+.p-2 { background: linear-gradient(180deg, #61220e 0%, #120d16 100%); } /* Pratik */
+.p-3 { background: linear-gradient(180deg, #d43685 0%, #1d1016 100%); } /* Oyunlar */
+.p-4 { background: linear-gradient(180deg, #1e36a3 0%, #0a0a0f 100%); } /* Tarat */
+
+/* MERKEZİ REAKTÖR (Seviye Tespit) */
+.neural-core {
   position: absolute;
   top: 50%; left: 50%;
   transform: translate(-50%, -50%);
-  width: 140px; height: 140px;
-  background: #120d16;
-  border-radius: 50%;
+  width: 160px; height: 160px;
   z-index: 10;
   display: flex; align-items: center; justify-content: center;
-  border: 1px solid rgba(255,255,255,0.2);
-  box-shadow: 0 0 30px rgba(103,232,249,0.3);
+  pointer-events: none; /* Tıklamayı alt butona geçirmemesi için ayarlanabilir */
 }
 
-.core-trigger {
-  width: 120px; height: 120px;
+.core-ring {
+  position: absolute;
+  inset: 0;
   border-radius: 50%;
-  background: var(--ai-grad);
+  border: 2px dashed var(--ai-grad);
+  animation: rotateCore 10s linear infinite;
+  opacity: 0.6;
+}
+
+.core-button {
+  width: 110px; height: 110px;
+  background: #000;
+  border-radius: 50%;
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
   text-align: center;
   cursor: pointer;
-  transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  box-shadow: inset 0 0 20px rgba(255,255,255,0.4);
+  pointer-events: auto;
+  border: 2px solid #fff;
+  box-shadow: 0 0 30px var(--ai-grad);
+  animation: pulseCore 2s ease-in-out infinite;
+  transition: 0.3s;
 }
 
-.core-trigger:active { transform: scale(0.92); }
-.core-trigger h2 { 
-  font-family: 'Space Grotesk'; font-size: 14px; margin: 0; 
-  color: #fff; line-height: 1.1; text-transform: uppercase;
+.core-button:hover { transform: scale(1.1); box-shadow: 0 0 50px var(--ai-grad); }
+
+.core-button h2 {
+  font-family: 'Space Grotesk'; font-size: 13px; margin: 0;
+  color: #fff; line-height: 1.1;
 }
 
-/* BUTONLAR (İç Bükey Kesimli) */
-.aca-btn {
-  position: relative;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  padding: 20px;
-  text-decoration: none;
-  transition: filter 0.3s;
-  overflow: hidden;
+/* İÇERİK STİLLERİ */
+.panel-content { text-align: center; pointer-events: none; }
+.panel-icon { font-size: 40px; margin-bottom: 10px; display: block; }
+.panel-title { font-family: 'Space Grotesk'; font-size: 20px; font-weight: 700; letter-spacing: 1px; }
+.panel-desc { font-size: 10px; opacity: 0.6; margin-top: 5px; text-transform: uppercase; }
+
+/* Tarama Efekti (Overlay) */
+.scan-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+              linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+  background-size: 100% 4px, 3px 100%;
+  pointer-events: none;
 }
 
-.aca-btn:active { filter: brightness(1.3); }
-
-/* Renkler ve İç Bükey Radius Ayarları */
-/* 1. Dil Dersi (Üst Sol) */
-.btn-lesson {
-  background: linear-gradient(135deg, #301661 0%, #2b2185 100%);
-  border-radius: 0 0 100px 0; /* Merkeze bakan köşe iç bükey efekti için */
-  border-right: 1px solid rgba(255,255,255,0.05);
-  border-bottom: 1px solid rgba(255,255,255,0.05);
-}
-
-/* 2. Pratik Yap (Üst Sağ) */
-.btn-practice {
-  background: linear-gradient(225deg, #61220e 0%, #ea580c 100%);
-  border-radius: 0 0 0 100px;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
-}
-
-/* 3. Oyunlar (Alt Sol) */
-.btn-games {
-  background: linear-gradient(45deg, #d43685 0%, #632bbd 100%);
-  border-radius: 0 100px 0 0;
-  border-right: 1px solid rgba(255,255,255,0.05);
-}
-
-/* 4. Soru Tarat (Alt Sağ) */
-.btn-scan {
-  background: linear-gradient(315deg, #1e36a3 0%, #67e8f9 100%);
-  border-radius: 100px 0 0 0;
-}
-
-/* İkon ve Metin Stilleri */
-.aca-btn i { font-size: 32px; margin-bottom: 10px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.3)); }
-.aca-btn span { font-family: 'Space Grotesk'; font-size: 18px; font-weight: 700; text-align: center; line-height: 1; }
-.aca-btn small { font-size: 10px; opacity: 0.7; margin-top: 5px; text-transform: uppercase; letter-spacing: 1px; }
-
-/* Üst Başlık */
-.academy-header {
-  margin-bottom: 30px; text-align: center;
-}
-.academy-header h1 { 
-  font-family: 'Space Grotesk'; font-size: 28px; margin: 0; 
-  background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-}
+/* ANIMASYONLAR */
+@keyframes rotateCore { from { transform: rotate(0); } to { transform: rotate(360deg); } }
+@keyframes pulseCore { 0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(103,232,249,0.4); } 50% { transform: scale(1.05); box-shadow: 0 0 40px rgba(244,114,182,0.6); } }
 
 </style>
 </head>
-
 <body>
 
-<main id="pageContent">
-  <header class="academy-header">
-    <h1>italkyACADEMY</h1>
-    <p style="font-size: 11px; color: var(--muted); margin-top: 5px;">AI-Powered Language Evolution</p>
-  </header>
+<div class="scan-overlay"></div>
 
-  <div class="academy-container">
-    
-    <div class="center-core">
-      <div class="core-trigger">
-        <span style="font-size: 24px; margin-bottom: 4px;">🎯</span>
-        <h2>SEVİYENİ<br>TESPİT ET</h2>
-      </div>
+<main class="academy-grid">
+  
+  <a href="#" class="aca-panel p-1">
+    <div class="panel-content">
+      <span class="panel-icon">🧪</span>
+      <div class="panel-title">AI LECTURE</div>
+      <div class="panel-desc">Akıllı Müfredat</div>
     </div>
+  </a>
 
-    <a href="#" class="aca-btn btn-lesson">
-      <i>🧠</i>
-      <span>AI LECTURE</span>
-      <small>Kişisel Dersler</small>
-    </a>
+  <a href="#" class="aca-panel p-2">
+    <div class="panel-content">
+      <span class="panel-icon">🎙️</span>
+      <div class="panel-title">VOICE LAB</div>
+      <div class="panel-desc">Sonsuz Pratik</div>
+    </div>
+  </a>
 
-    <a href="#" class="aca-btn btn-practice">
-      <i>🗣️</i>
-      <span>VOICE LAB</span>
-      <small>Akıcı Konuşma</small>
-    </a>
+  <a href="#" class="aca-panel p-3">
+    <div class="panel-content">
+      <span class="panel-icon">⚡</span>
+      <div class="panel-title">NEURAL GAME</div>
+      <div class="panel-desc">Eğlence & Skor</div>
+    </div>
+  </a>
 
-    <a href="#" class="aca-btn btn-games">
-      <i>🎮</i>
-      <span>MIND GAMES</span>
-      <small>Eğlenceli Görevler</small>
-    </a>
+  <a href="#" class="aca-panel p-4">
+    <div class="panel-content">
+      <span class="panel-icon">👁️</span>
+      <div class="panel-title">SCAN SOLVE</div>
+      <div class="panel-desc">Görsel Çözüm</div>
+    </div>
+  </a>
 
-    <a href="#" class="aca-btn btn-scan">
-      <i>📸</i>
-      <span>NEURO SCAN</span>
-      <small>Görsel Analiz</small>
-    </a>
-
+  <div class="neural-core">
+    <div class="core-ring"></div>
+    <div class="core-button" onclick="alert('Seviye tespiti başlatılıyor...')">
+      <span style="font-size: 20px; margin-bottom: 5px;">🎯</span>
+      <h2>LEVEL<br>SCAN</h2>
+    </div>
   </div>
 
-  <p style="margin-top: 30px; font-size: 10px; color: var(--muted); text-align: center; max-width: 250px;">
-    Yapay zeka asistanın öğrenme hızına göre müfredatı anlık olarak günceller.
-  </p>
 </main>
+
+<script type="module">
+import { mountShell } from "/js/ui_shell.js";
+try {
+  mountShell({ scroll: "none" }); // Kaydırmayı kapat, tam ekran OS hissi ver
+} catch (e) {
+  console.warn("Shell hatası:", e);
+}
+</script>
 
 </body>
 </html>
