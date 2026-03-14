@@ -3,160 +3,199 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-<title>italkyACADEMY • Future of Learning</title>
+<title>italkyACADEMY • Neural Learning</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
 <style>
-:root {
-    --bg: #050510;
-    --academy-grad: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
-    --pink: #ec4899;
-    --blue: #3b82f6;
-    --orange: #f59e0b;
-    --green: #10b981;
-    --glass: rgba(255, 255, 255, 0.05);
+:root{
+  --bg: #120d16;
+  --txt: rgba(255,255,255,.96);
+  --ai-grad: linear-gradient(135deg, #67e8f9 0%, #818cf8 46%, #f472b6 100%);
+  --pink: #f472b6;
+  --cyan: #67e8f9;
+  --purple: #818cf8;
+  --orange: #fb923c;
 }
 
+*{ box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+
+body, html {
+  margin: 0; width: 100%; height: 100%;
+  background: #120d16;
+  color: var(--txt);
+  font-family: 'Outfit', sans-serif;
+  overflow: hidden;
+}
+
+/* Arka Plan (Home.html ile aynı derinlik) */
 body {
-    margin: 0; background: var(--bg); color: #fff;
-    font-family: 'Outfit', sans-serif; overflow: hidden;
-    height: 100vh; display: flex; align-items: center; justify-content: center;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(251,146,60,.12) 0%, transparent 30%),
+    radial-gradient(circle at 50% 100%, rgba(103,232,249,.10) 0%, transparent 30%),
+    linear-gradient(180deg, #1d1016 0%, #120d16 100%);
 }
 
-/* Dinamik Arka Plan */
-.bg-glow {
-    position: absolute; width: 100%; height: 100%;
-    background: radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
-    z-index: -1;
+#pageContent {
+  width: 100%; height: 100%;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 20px;
 }
 
-/* ANA KONTEYNER */
-.academy-hub {
-    position: relative;
-    width: 360px; height: 360px;
-    display: flex; align-items: center; justify-content: center;
+/* ACADEMY GRID YAPISI (Boşluksuz) */
+.academy-container {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  width: 100%;
+  max-width: 400px;
+  aspect-ratio: 1/1;
+  gap: 0; /* Boşluk yok */
+  border-radius: 40px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.5);
 }
 
-/* MERKEZİ DAİRE: Seviye Tespiti */
-.center-orbit {
-    width: 130px; height: 130px;
-    background: var(--academy-grad);
-    border-radius: 50%;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    text-align: center; padding: 15px;
-    box-shadow: 0 0 40px rgba(99, 102, 241, 0.5), inset 0 0 20px rgba(255,255,255,0.3);
-    z-index: 10; cursor: pointer;
-    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    border: 4px solid rgba(255,255,255,0.1);
+/* MERKEZİ DAİRE (Hologram Efekti) */
+.center-core {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 140px; height: 140px;
+  background: #120d16;
+  border-radius: 50%;
+  z-index: 10;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid rgba(255,255,255,0.2);
+  box-shadow: 0 0 30px rgba(103,232,249,0.3);
 }
 
-.center-orbit:active { transform: scale(0.9); }
-
-.center-orbit h2 {
-    font-size: 14px; font-family: 'Space Grotesk'; margin: 0;
-    line-height: 1.2; text-transform: uppercase;
+.core-trigger {
+  width: 120px; height: 120px;
+  border-radius: 50%;
+  background: var(--ai-grad);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  text-align: center;
+  cursor: pointer;
+  transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: inset 0 0 20px rgba(255,255,255,0.4);
 }
 
-/* 4 ANA BUTON (İç Bükey Kenarlı) */
-.btn-orbit {
-    position: absolute;
-    width: 150px; height: 120px;
-    background: var(--glass);
-    backdrop-filter: blur(15px);
-    border: 1px solid rgba(255,255,255,0.1);
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    padding: 15px; cursor: pointer;
-    transition: all 0.3s ease;
-    z-index: 5;
+.core-trigger:active { transform: scale(0.92); }
+.core-trigger h2 { 
+  font-family: 'Space Grotesk'; font-size: 14px; margin: 0; 
+  color: #fff; line-height: 1.1; text-transform: uppercase;
 }
 
-/* İç bükey kesim simülasyonu ve yerleşim */
-/* Üst Sol */
-.btn-1 {
-    top: -10px; left: -10px;
-    border-radius: 40px 10px 80px 10px; /* İç bükey görünüm için asimetrik radius */
-    border-left: 4px solid var(--blue);
-}
-/* Üst Sağ */
-.btn-2 {
-    top: -10px; right: -10px;
-    border-radius: 10px 40px 10px 80px;
-    border-right: 4px solid var(--orange);
-}
-/* Alt Sol */
-.btn-3 {
-    bottom: -10px; left: -10px;
-    border-radius: 80px 10px 10px 40px;
-    border-left: 4px solid var(--pink);
-}
-/* Alt Sağ */
-.btn-4 {
-    bottom: -10px; right: -10px;
-    border-radius: 10px 80px 40px 10px;
-    border-right: 4px solid var(--green);
+/* BUTONLAR (İç Bükey Kesimli) */
+.aca-btn {
+  position: relative;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 20px;
+  text-decoration: none;
+  transition: filter 0.3s;
+  overflow: hidden;
 }
 
-.btn-orbit:active { background: rgba(255,255,255,0.15); transform: translateY(3px); }
+.aca-btn:active { filter: brightness(1.3); }
 
-.btn-orbit i { font-size: 24px; margin-bottom: 8px; }
-.btn-orbit span { font-size: 13px; font-weight: 700; font-family: 'Space Grotesk'; text-align: center;}
-.btn-orbit small { font-size: 9px; opacity: 0.6; margin-top: 4px; text-align: center;}
-
-/* Renkli İkon Parlamaları */
-.icon-glow {
-    filter: drop-shadow(0 0 8px currentColor);
+/* Renkler ve İç Bükey Radius Ayarları */
+/* 1. Dil Dersi (Üst Sol) */
+.btn-lesson {
+  background: linear-gradient(135deg, #301661 0%, #2b2185 100%);
+  border-radius: 0 0 100px 0; /* Merkeze bakan köşe iç bükey efekti için */
+  border-right: 1px solid rgba(255,255,255,0.05);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
 }
 
-/* Başlık */
-.header-title {
-    position: absolute; top: 40px; text-align: center; width: 100%;
+/* 2. Pratik Yap (Üst Sağ) */
+.btn-practice {
+  background: linear-gradient(225deg, #61220e 0%, #ea580c 100%);
+  border-radius: 0 0 0 100px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
 }
-.header-title h1 { font-family: 'Space Grotesk'; font-size: 28px; margin: 0; letter-spacing: -1px; }
-.header-title h1 span { color: var(--pink); }
+
+/* 3. Oyunlar (Alt Sol) */
+.btn-games {
+  background: linear-gradient(45deg, #d43685 0%, #632bbd 100%);
+  border-radius: 0 100px 0 0;
+  border-right: 1px solid rgba(255,255,255,0.05);
+}
+
+/* 4. Soru Tarat (Alt Sağ) */
+.btn-scan {
+  background: linear-gradient(315deg, #1e36a3 0%, #67e8f9 100%);
+  border-radius: 100px 0 0 0;
+}
+
+/* İkon ve Metin Stilleri */
+.aca-btn i { font-size: 32px; margin-bottom: 10px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.3)); }
+.aca-btn span { font-family: 'Space Grotesk'; font-size: 18px; font-weight: 700; text-align: center; line-height: 1; }
+.aca-btn small { font-size: 10px; opacity: 0.7; margin-top: 5px; text-transform: uppercase; letter-spacing: 1px; }
+
+/* Üst Başlık */
+.academy-header {
+  margin-bottom: 30px; text-align: center;
+}
+.academy-header h1 { 
+  font-family: 'Space Grotesk'; font-size: 28px; margin: 0; 
+  background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
 
 </style>
 </head>
+
 <body>
 
-<div class="bg-glow"></div>
+<main id="pageContent">
+  <header class="academy-header">
+    <h1>italkyACADEMY</h1>
+    <p style="font-size: 11px; color: var(--muted); margin-top: 5px;">AI-Powered Language Evolution</p>
+  </header>
 
-<div class="header-title">
-    <h1>italky<span>ACADEMY</span></h1>
-    <p style="font-size: 12px; opacity: 0.5;">Master any language with AI power</p>
-</div>
-
-<main class="academy-hub">
+  <div class="academy-container">
     
-    <div class="center-orbit">
-        <div style="font-size: 20px; margin-bottom: 5px;">🎯</div>
-        <h2>Seviyeni<br>Tespit Et</h2>
+    <div class="center-core">
+      <div class="core-trigger">
+        <span style="font-size: 24px; margin-bottom: 4px;">🎯</span>
+        <h2>SEVİYENİ<br>TESPİT ET</h2>
+      </div>
     </div>
 
-    <div class="btn-orbit btn-1">
-        <span class="icon-glow" style="color: var(--blue); font-size: 22px;">🧠</span>
-        <span>AI Mentor</span>
-        <small>Kişisel Dil Koçun</small>
-    </div>
+    <a href="#" class="aca-btn btn-lesson">
+      <i>🧠</i>
+      <span>AI LECTURE</span>
+      <small>Kişisel Dersler</small>
+    </a>
 
-    <div class="btn-orbit btn-2">
-        <span class="icon-glow" style="color: var(--orange); font-size: 22px;">🗣️</span>
-        <span>Voice Flow</span>
-        <small>Sınırsız Konuşma</small>
-    </div>
+    <a href="#" class="aca-btn btn-practice">
+      <i>🗣️</i>
+      <span>VOICE LAB</span>
+      <small>Akıcı Konuşma</small>
+    </a>
 
-    <div class="btn-orbit btn-3">
-        <span class="icon-glow" style="color: var(--pink); font-size: 22px;">🎮</span>
-        <span>Game Zone</span>
-        <small>Yarış ve Öğren</small>
-    </div>
+    <a href="#" class="aca-btn btn-games">
+      <i>🎮</i>
+      <span>MIND GAMES</span>
+      <small>Eğlenceli Görevler</small>
+    </a>
 
-    <div class="btn-orbit btn-4">
-        <span class="icon-glow" style="color: var(--green); font-size: 22px;">📸</span>
-        <span>Scan Brain</span>
-        <small>Görsel Çözümler</small>
-    </div>
+    <a href="#" class="aca-btn btn-scan">
+      <i>📸</i>
+      <span>NEURO SCAN</span>
+      <small>Görsel Analiz</small>
+    </a>
 
+  </div>
+
+  <p style="margin-top: 30px; font-size: 10px; color: var(--muted); text-align: center; max-width: 250px;">
+    Yapay zeka asistanın öğrenme hızına göre müfredatı anlık olarak günceller.
+  </p>
 </main>
 
 </body>
