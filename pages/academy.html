@@ -3,43 +3,30 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-<title>italkyACADEMY • Neural Core</title>
+<title>italkyACADEMY • Neural Prism</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
 <style>
 :root {
-  --txt: rgba(255,255,255,.96);
-  --muted: rgba(255,255,255,.64);
   --ai-grad: linear-gradient(135deg, #67e8f9 0%, #818cf8 46%, #f472b6 100%);
-  --panel-line: rgba(255,255,255,.12);
-  /* Home.html Renk Paleti */
-  --p1-grad: linear-gradient(180deg, #301661 0%, #1e36a3 100%);
-  --p2-grad: linear-gradient(180deg, #61220e 0%, #ea580c 100%);
-  --p3-grad: linear-gradient(180deg, #d43685 0%, #632bbd 100%);
-  --p4-grad: linear-gradient(180deg, #1e36a3 0%, #0a0a0f 100%);
+  --p1: #301661; --p2: #61220e; --p3: #d43685; --p4: #1e36a3;
 }
 
-* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
 body, html {
   margin: 0; width: 100%; height: 100%;
-  background: #120d16; color: var(--txt);
+  background: #020205; color: #fff;
   font-family: 'Outfit', sans-serif; overflow: hidden;
 }
 
-/* UI_SHELL İÇİN ANA KONTEYNER */
 #pageContent {
-  width: 100%;
-  height: 100%;
-  /* Header ve Footer paylarını CSS değişkeni olarak varsayıyoruz */
-  padding-top: env(safe-area-inset-top);
-  padding-bottom: env(safe-area-inset-bottom);
-  display: flex;
-  flex-direction: column;
+  width: 100%; height: 100vh;
+  display: flex; flex-direction: column;
 }
 
-/* 4 ANA PANEL (DİKDÖRTGEN GRID) */
+/* ACADEMY GRID - BOŞLUKSUZ VE DERİNLİKLİ */
 .academy-grid {
   flex: 1;
   display: grid;
@@ -47,91 +34,105 @@ body, html {
   grid-template-rows: 1fr 1fr;
   gap: 0;
   position: relative;
-  overflow: hidden;
 }
 
 .aca-panel {
   position: relative;
-  border: 0.5px solid var(--panel-line);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-decoration: none;
-  transition: all 0.3s ease;
   overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Panel Arka Planları */
-.p-lesson { background: var(--p1-grad); }
-.p-voice { background: var(--p2-grad); }
-.p-games { background: var(--p3-grad); }
-.p-scan { background: var(--p4-grad); }
-
-/* Cam Parlaması (Glass Overlay) */
-.aca-panel::after {
+/* İç Bükey Derinlik Efekti (Shadow Inset) */
+.aca-panel::before {
   content: ""; position: absolute; inset: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, transparent 50%);
-  pointer-events: none;
+  box-shadow: inset 0 0 80px rgba(0,0,0,0.6);
+  z-index: 1;
 }
 
-.aca-panel:active { filter: brightness(1.2); transform: scale(0.99); }
+/* Panellerin Işık Kırılmaları */
+.p-1 { background: linear-gradient(145deg, var(--p1), #150e19); }
+.p-2 { background: linear-gradient(225deg, var(--p2), #120d16); }
+.p-3 { background: linear-gradient(45deg, var(--p3), #1d1016); }
+.p-4 { background: linear-gradient(315deg, var(--p4), #0a0a0f); }
 
-/* MERKEZİ ÜNİTE (Vay Bee Dedirten Kısım) */
-.neural-center {
+/* MERKEZİ KRİSTAL (Hologram Core) */
+.central-station {
   position: absolute;
   top: 50%; left: 50%;
   transform: translate(-50%, -50%);
   width: 180px; height: 180px;
-  z-index: 20;
+  z-index: 100;
   display: flex; align-items: center; justify-content: center;
 }
 
-/* Kristal Kafes (Home.html'deki gibi) */
-.crystal-aura {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(103,232,249,0.2) 0%, transparent 70%);
-  animation: auraPulse 3s ease-in-out infinite;
+/* Home.html'deki gibi dönen kristal kafes */
+.orbit-shield {
+  position: absolute; inset: 0;
+  border: 1px solid rgba(103,232,249,0.3);
+  border-radius: 38% 62% 63% 37% / 41% 44% 56% 59%;
+  background: radial-gradient(circle, rgba(103,232,249,0.1), transparent);
+  animation: liquidOrbit 8s linear infinite;
 }
 
-.core-unit {
-  width: 120px; height: 120px;
-  background: #000;
-  border-radius: 30px; /* Modern kare-daire hibrit */
-  border: 2px solid #fff;
+.core-btn {
+  width: 110px; height: 110px;
+  background: #fff;
+  border-radius: 24px;
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
-  box-shadow: 0 0 30px rgba(103,232,249,0.5), inset 0 0 15px rgba(255,255,255,0.2);
+  box-shadow: 0 0 40px rgba(103,232,249,0.6), inset 0 0 15px rgba(0,0,0,0.2);
   cursor: pointer;
-  z-index: 21;
-  animation: coreRotate 15s linear infinite;
+  z-index: 101;
+  transition: 0.3s;
+  animation: coreFloat 4s ease-in-out infinite;
 }
 
-.core-content {
-  animation: coreCounterRotate 15s linear infinite; /* Yazıların dönmemesi için */
-  text-align: center;
+.core-btn h2 {
+  font-family: 'Space Grotesk'; font-size: 13px; margin: 0;
+  color: #111; line-height: 1.1; text-align: center;
 }
 
-.core-content h2 {
-  font-family: 'Space Grotesk'; font-size: 14px; margin: 0;
-  background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  line-height: 1.1;
+/* ÖZEL İSİMLER VE İÇERİK */
+.content-box {
+  z-index: 2; text-align: center;
+  transition: transform 0.3s ease;
 }
 
-/* PANEL İÇERİKLERİ */
-.panel-icon {
-  font-size: 36px; margin-bottom: 8px;
-  filter: drop-shadow(0 0 10px rgba(255,255,255,0.4));
-}
-.panel-title { font-family: 'Space Grotesk'; font-size: 22px; font-weight: 700; color: #fff; }
-.panel-sub { font-size: 10px; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 1px; }
+.aca-panel:active .content-box { transform: scale(0.9); }
 
-/* ANIMASYONLAR */
-@keyframes auraPulse { 0%, 100% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(1.3); opacity: 0.8; } }
-@keyframes coreRotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-@keyframes coreCounterRotate { from { transform: rotate(0deg); } to { transform: rotate(-360deg); } }
+.label-main {
+  display: block; font-family: 'Space Grotesk';
+  font-size: 24px; font-weight: 700; letter-spacing: -1px;
+  background: linear-gradient(to bottom, #fff, rgba(255,255,255,0.7));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+
+.label-sub {
+  display: block; font-size: 10px; font-weight: 600;
+  color: var(--ai-grad); text-transform: uppercase;
+  letter-spacing: 2px; margin-top: 4px;
+}
+
+/* Işık Süzmesi Animasyonu */
+.beam {
+  position: absolute; width: 200%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+  transform: rotate(-45deg);
+  animation: beamSlide 6s infinite;
+}
+
+@keyframes liquidOrbit {
+  0% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(1.1); border-radius: 60% 40% 30% 70% / 50% 30% 70% 50%; }
+  100% { transform: rotate(360deg) scale(1); }
+}
+@keyframes coreFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+@keyframes beamSlide { 0% { left: -200%; } 100% { left: 200%; } }
 
 </style>
 </head>
@@ -141,37 +142,43 @@ body, html {
 <main id="pageContent">
   <div class="academy-grid">
     
-    <a href="#" class="aca-panel p-lesson">
-      <span class="panel-icon">🧪</span>
-      <span class="panel-title">AI LECTURE</span>
-      <span class="panel-sub">Kişisel Müfredat</span>
+    <a href="#" class="aca-panel p-1">
+      <div class="beam"></div>
+      <div class="content-box">
+        <span class="label-main">Dil Dersi</span>
+        <span class="label-sub">Neural Mentor</span>
+      </div>
     </a>
 
-    <a href="#" class="aca-panel p-voice">
-      <span class="panel-icon">🎙️</span>
-      <span class="panel-title">VOICE LAB</span>
-      <span class="panel-sub">Konuşma Odaklı</span>
+    <a href="#" class="aca-panel p-2">
+      <div class="beam" style="animation-delay: 1.5s"></div>
+      <div class="content-box">
+        <span class="label-main">Pratik Yap</span>
+        <span class="label-sub">Vocal Sync</span>
+      </div>
     </a>
 
-    <a href="#" class="aca-panel p-games">
-      <span class="panel-icon">⚡</span>
-      <span class="panel-title">MIND ZONE</span>
-      <span class="panel-sub">Eğlence & Skor</span>
+    <a href="#" class="aca-panel p-3">
+      <div class="beam" style="animation-delay: 3s"></div>
+      <div class="content-box">
+        <span class="label-main">Eğlenerek Öğren</span>
+        <span class="label-sub">Mind Games</span>
+      </div>
     </a>
 
-    <a href="#" class="aca-panel p-scan">
-      <span class="panel-icon">👁️</span>
-      <span class="panel-title">SCAN BRAIN</span>
-      <span class="panel-sub">Görsel Çözüm</span>
+    <a href="#" class="aca-panel p-4">
+      <div class="beam" style="animation-delay: 4.5s"></div>
+      <div class="content-box">
+        <span class="label-main">Sorunu Tarat</span>
+        <span class="label-sub">Vision Solver</span>
+      </div>
     </a>
 
-    <div class="neural-center">
-      <div class="crystal-aura"></div>
-      <div class="core-unit" onclick="alert('Neural Scan Başlatılıyor...')">
-        <div class="core-content">
-          <div style="font-size: 24px; margin-bottom: 5px;">🎯</div>
-          <h2>LEVEL<br>SCAN</h2>
-        </div>
+    <div class="central-station">
+      <div class="orbit-shield"></div>
+      <div class="core-btn" onclick="alert('Neural Syncing...')">
+        <span style="font-size: 22px;">🎯</span>
+        <h2>SEVİYENİ<br>TESPİT ET</h2>
       </div>
     </div>
 
@@ -181,7 +188,6 @@ body, html {
 <script type="module">
 import { mountShell } from "/js/ui_shell.js";
 try {
-  // ui_shell burada header ve footer'ı otomatik basacak
   mountShell({ scroll: "none" }); 
 } catch (e) {
   console.warn("Shell hatası:", e);
