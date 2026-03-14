@@ -154,6 +154,7 @@ let audioCtx = null;
 let bootReady = false;
 let bootStarted = false;
 let bootPromise = null;
+let voicesReady = false;
 
 function pointOrbTo(side) {
   if (!frameRoot) return;
@@ -288,8 +289,8 @@ function renderPop(side) {
   list.querySelectorAll(".pop-item").forEach((el) => {
     el.addEventListener("click", () => {
       const code = el.dataset.code || "en";
-      if (side === "top") topLang = code;
-      else botLang = code;
+      if (side === "top") topLang = canonical(code);
+      else botLang = canonical(code);
       refreshLangLabels();
       refreshReadyTextsIfIdle();
       closeAllPop();
@@ -302,8 +303,12 @@ function stopAudio() {
     currentAudio?.pause?.();
     currentAudio = null;
   } catch {}
-  try { window.speechSynthesis?.cancel?.(); } catch {}
-  try { window.NativeTTS?.stop?.(); } catch {}
+  try {
+    window.speechSynthesis?.cancel?.();
+  } catch {}
+  try {
+    window.NativeTTS?.stop?.();
+  } catch {}
 }
 
 async function getCurrentUserId() {
@@ -355,6 +360,29 @@ async function hasReadyVoiceProfile() {
   }
 }
 
+async function warmAudio() {
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (Ctx) {
+      if (!audioCtx) audioCtx = new Ctx();
+      if (audioCtx.state === "suspended") {
+        await audioCtx.resume();
+      }
+    }
+  } catch (e) {
+    console.warn("warmAudio", e);
+  }
+
+  try {
+    if (window.speechSynthesis) {
+      window.speechSynthesis.getVoices();
+      voicesReady = true;
+    }
+  } catch (e) {
+    console.warn("speech voices warm", e);
+  }
+}
+
 async function speakViaApi(text, langCode) {
   const userId = await getCurrentUserId();
   const voice = getVoicePreference();
@@ -377,17 +405,36 @@ async function speakViaApi(text, langCode) {
     throw new Error(j?.error || j?.detail || "TTS API unavailable");
   }
 
-  const audio = new Audio("data:audio/mp3;base64," + j.audio_base64);
+  const audio = new Audio(`data:audio/mp3;base64,${j.audio_base64}`);
+  audio.preload = "auto";
+  audio.playsInline = true;
   currentAudio = audio;
 
   audio.onended = () => {
     if (currentAudio === audio) currentAudio = null;
   };
+
   audio.onerror = () => {
     if (currentAudio === audio) currentAudio = null;
   };
 
-  await audio.play();
+  try {
+    await warmAudio();
+  } catch {}
+
+  const playPromise = audio.play();
+
+  if (playPromise && typeof playPromise.then === "function") {
+    try {
+      await playPromise;
+      return true;
+    } catch (e) {
+      if (currentAudio === audio) currentAudio = null;
+      throw e;
+    }
+  }
+
+  return true;
 }
 
 function chooseWebVoice(langCode) {
@@ -425,14 +472,29 @@ function speakFallback(text, langCode) {
   const c = canonical(langCode);
   const pref = getVoicePreference();
 
+  try {
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+  } catch {}
+
   if (pref === "auto" && window.NativeTTS && typeof window.NativeTTS.speak === "function") {
     try {
       window.NativeTTS.speak(value, c);
       return;
-    } catch {}
+    } catch (e) {
+      console.warn("[facetoface] NativeTTS fallback failed", e);
+    }
   }
 
   if (!window.speechSynthesis) return;
+
+  try {
+    if (!voicesReady) {
+      window.speechSynthesis.getVoices();
+      voicesReady = true;
+    }
+  } catch {}
 
   const u = new SpeechSynthesisUtterance(value);
   u.lang = langObj(c).bcp;
@@ -444,8 +506,13 @@ function speakFallback(text, langCode) {
   if (voice) u.voice = voice;
 
   setTimeout(() => {
-    try { window.speechSynthesis.speak(u); } catch {}
-  }, 50);
+    try {
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(u);
+    } catch (e) {
+      console.warn("[facetoface] speechSynthesis failed", e);
+    }
+  }, 80);
 }
 
 async function speak(text, langCode) {
@@ -468,7 +535,7 @@ async function speak(text, langCode) {
     try {
       const ready = await hasReadyVoiceProfile();
       if (!ready) {
-        console.warn("[facetoface] tts voice hazır değil, sistem sesine düşülüyor");
+        console.warn("[facetoface] clone hazır değil, fallback");
         speakFallback(value, langCode);
         return;
       }
@@ -476,7 +543,7 @@ async function speak(text, langCode) {
       await speakViaApi(value, langCode);
       return;
     } catch (e) {
-      console.warn("[facetoface] clone tts fallback", e);
+      console.warn("[facetoface] clone api failed, fallback", e);
       speakFallback(value, langCode);
       return;
     }
@@ -485,7 +552,7 @@ async function speak(text, langCode) {
   try {
     await speakViaApi(value, langCode);
   } catch (e) {
-    console.warn("[facetoface] TTS API fallback", e);
+    console.warn("[facetoface] TTS API failed, fallback", e);
     speakFallback(value, langCode);
   }
 }
@@ -526,7 +593,9 @@ function keepLatestVisible(side) {
   if (!wrap) return;
 
   const apply = () => {
-    try { wrap.scrollTop = wrap.scrollHeight; } catch {}
+    try {
+      wrap.scrollTop = wrap.scrollHeight;
+    } catch {}
   };
 
   apply();
@@ -630,7 +699,9 @@ function buildRecognizer(langCode) {
 
 function stopRecognizer() {
   if (recognizer) {
-    try { recognizer.stop(); } catch {}
+    try {
+      recognizer.stop();
+    } catch {}
     recognizer = null;
   }
 }
@@ -761,17 +832,6 @@ async function toggleRecording(side) {
   startRecording(side);
 }
 
-async function warmAudio() {
-  try {
-    const Ctx = window.AudioContext || window.webkitAudioContext;
-    if (!Ctx) return;
-    if (!audioCtx) audioCtx = new Ctx();
-    if (audioCtx.state === "suspended") await audioCtx.resume();
-  } catch (e) {
-    console.warn("warmAudio", e);
-  }
-}
-
 async function warmApis() {
   await Promise.allSettled([
     fetch(`${API_BASE}/healthz`).catch(() => {}),
@@ -781,7 +841,9 @@ async function warmApis() {
 
 function unlockOnFirstTouch() {
   const once = async () => {
-    try { await warmAudio(); } catch {}
+    try {
+      await warmAudio();
+    } catch {}
     window.removeEventListener("touchstart", once);
     window.removeEventListener("pointerdown", once);
     window.removeEventListener("click", once);
@@ -816,7 +878,9 @@ function startBoot() {
 async function ensureReady() {
   if (bootReady) return true;
   if (!bootStarted) startBoot();
-  try { await bootPromise; } catch {}
+  try {
+    await bootPromise;
+  } catch {}
   return true;
 }
 
@@ -894,6 +958,15 @@ function bind() {
     e.stopPropagation();
     await toggleRecording("bot");
   });
+
+  try {
+    if (window.speechSynthesis) {
+      window.speechSynthesis.onvoiceschanged = () => {
+        voicesReady = true;
+      };
+      window.speechSynthesis.getVoices();
+    }
+  } catch {}
 }
 
 bind();
