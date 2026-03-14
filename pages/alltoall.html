@@ -19,7 +19,6 @@
       --ai-grad:linear-gradient(135deg,#67e8f9 0%, #818cf8 46%, #f472b6 100%);
       --host-grad:linear-gradient(135deg,#2563eb 0%, #4f46e5 55%, #7c3aed 100%);
       --join-grad:linear-gradient(135deg,#f97316 0%, #ec4899 55%, #a855f7 100%);
-      --glass:rgba(255,255,255,.05);
       --footerSafe:var(--footerH, 0px);
     }
 
@@ -56,7 +55,7 @@
     #pageContent{
       width:100%;
       height:calc(100dvh - var(--footerSafe));
-      padding:8px 12px 0;
+      padding:8px 12px 8px;
       display:block;
       overflow:hidden;
     }
@@ -91,6 +90,7 @@
       text-align:center;
       position:relative;
       overflow:hidden;
+      flex:0 0 auto;
     }
 
     .hero-box::after{
@@ -159,6 +159,7 @@
       flex-direction:column;
       gap:10px;
       overflow:hidden;
+      padding-bottom:2px;
     }
 
     .home-cards{
@@ -167,6 +168,7 @@
       display:flex;
       flex-direction:column;
       gap:10px;
+      overflow:hidden;
     }
 
     .cyber-card{
@@ -181,12 +183,12 @@
         inset 0 1px 0 rgba(255,255,255,.05);
       text-decoration:none;
       color:#fff;
-      padding:18px 18px 18px 18px;
+      padding:18px;
       display:flex;
       align-items:center;
       gap:14px;
       cursor:pointer;
-      transition:transform .18s ease, filter .18s ease, box-shadow .18s ease;
+      transition:transform .18s ease, filter .18s ease;
       user-select:none;
     }
 
@@ -226,7 +228,7 @@
       font-size:12px;
       line-height:1.42;
       color:rgba(255,255,255,.88);
-      max-width:210px;
+      max-width:220px;
     }
 
     .card-mini{
@@ -346,58 +348,95 @@
       box-shadow:
         0 16px 30px rgba(0,0,0,.24),
         inset 0 1px 0 rgba(255,255,255,.05);
+      overflow:hidden;
     }
 
-    .qr-zone{
+    .host-zone{
       flex:1;
       min-height:0;
       display:flex;
       flex-direction:column;
       align-items:center;
       justify-content:center;
-      padding:18px;
+      padding:22px 18px;
       text-align:center;
+      gap:14px;
     }
 
-    .qr-img-box{
-      width:190px;
-      height:190px;
-      border-radius:22px;
-      background:#fff;
-      padding:10px;
+    .host-code-kicker{
+      font-size:11px;
+      font-weight:900;
+      letter-spacing:.5px;
+      color:rgba(255,255,255,.62);
+    }
+
+    .code-orb{
+      width:112px;
+      height:112px;
+      border-radius:32px;
+      background:
+        radial-gradient(circle at 50% 50%, rgba(255,255,255,.2) 0%, rgba(255,255,255,.05) 55%, transparent 100%),
+        linear-gradient(135deg, rgba(103,232,249,.18), rgba(236,72,153,.18));
+      border:1px solid rgba(255,255,255,.12);
+      position:relative;
       display:flex;
       align-items:center;
       justify-content:center;
-      overflow:hidden;
-      box-shadow:0 0 24px rgba(255,255,255,.1);
+      box-shadow:
+        0 0 28px rgba(129,140,248,.14),
+        inset 0 0 20px rgba(255,255,255,.04);
     }
 
-    .qr-img-box img{
-      width:100%;
-      height:100%;
-      object-fit:contain;
-      display:block;
+    .code-orb::before,
+    .code-orb::after{
+      content:"";
+      position:absolute;
+      border-radius:50%;
+      border:2px solid rgba(255,255,255,.7);
+    }
+
+    .code-orb::before{
+      width:54px;
+      height:54px;
+    }
+
+    .code-orb::after{
+      width:74px;
+      height:74px;
+      border-color:rgba(103,232,249,.9);
+    }
+
+    .code-dot{
+      width:14px;
+      height:14px;
+      border-radius:50%;
+      background:#fff;
+      box-shadow:0 0 14px #fff;
+      position:relative;
+      z-index:2;
     }
 
     .room-code-display{
-      margin-top:14px;
+      margin-top:2px;
       font-family:'Space Grotesk',sans-serif;
-      font-size:28px;
+      font-size:32px;
       font-weight:900;
-      letter-spacing:4px;
+      letter-spacing:6px;
       color:#fff;
       word-break:break-word;
+      line-height:1;
     }
 
     .host-status{
-      margin-top:10px;
       font-size:11px;
       font-weight:800;
       color:#8ec5ff;
+      line-height:1.35;
+      max-width:260px;
     }
 
     .join-zone{
-      padding:18px;
+      padding:22px 18px;
       display:flex;
       flex-direction:column;
       gap:14px;
@@ -456,6 +495,7 @@
       color:#fff;
       box-shadow:0 10px 26px rgba(99,102,241,.28), inset 0 2px 4px rgba(255,255,255,.24);
       font-size:15px;
+      flex:0 0 auto;
     }
 
     .btn-ghost{
@@ -464,11 +504,13 @@
       color:#fff;
       border:1px solid rgba(255,255,255,.12);
       font-size:13px;
+      flex:0 0 auto;
     }
 
     .row{
       display:flex;
       gap:10px;
+      flex:0 0 auto;
     }
 
     .row > *{
@@ -492,7 +534,7 @@
 
     @media (max-width:390px){
       #pageContent{
-        padding:6px 10px 0;
+        padding:6px 10px 8px;
       }
 
       .hero-box{
@@ -520,13 +562,14 @@
         height:72px;
       }
 
-      .qr-img-box{
-        width:172px;
-        height:172px;
+      .room-code-display{
+        font-size:27px;
+        letter-spacing:4px;
       }
 
-      .room-code-display{
-        font-size:24px;
+      .code-orb{
+        width:100px;
+        height:100px;
       }
     }
   </style>
@@ -555,7 +598,7 @@
           <div class="cyber-card host-card" id="goHost">
             <div class="card-left">
               <h2 class="card-title">Kanal Oluştur</h2>
-              <div class="card-desc">Kod üret, paylaş ve çok kişili canlı çeviri odasını başlat.</div>
+              <div class="card-desc">Kısa kod üret, paylaş ve çok kişili canlı çeviri odasını başlat.</div>
               <div class="card-mini">HOST MODE</div>
             </div>
 
@@ -572,7 +615,7 @@
           <div class="cyber-card join-card" id="goGuest">
             <div class="card-left">
               <h2 class="card-title">Kanala Katıl</h2>
-              <div class="card-desc">Sana gönderilen oda kodunu yaz ve anında bağlan.</div>
+              <div class="card-desc">Sana gönderilen kısa oda kodunu yaz ve anında bağlan.</div>
               <div class="card-mini">JOIN MODE</div>
             </div>
 
@@ -585,12 +628,15 @@
         </div>
 
         <div class="panel-view hide" id="hostPanel">
-          <div class="panel-card qr-zone">
-            <div class="qr-img-box">
-              <img id="qrImg" src="" alt="QR">
+          <div class="panel-card host-zone">
+            <div class="host-code-kicker">ODA KODU</div>
+
+            <div class="code-orb">
+              <div class="code-dot"></div>
             </div>
+
             <div class="room-code-display" id="roomCode">------</div>
-            <div class="host-status" id="hostStatus">QR hazır olduğunda burada görünecek</div>
+            <div class="host-status" id="hostStatus">Kısa kod hazır olduğunda burada görünecek</div>
           </div>
 
           <button class="btn-3d" id="btnGoCall">KANALI AÇ</button>
@@ -604,7 +650,7 @@
         <div class="panel-view hide" id="joinPanel">
           <div class="panel-card join-zone">
             <div class="join-kicker">ODA KODU</div>
-            <input class="input-field" id="roomInput" placeholder="KODU YAZ" maxlength="12"/>
+            <input class="input-field" id="roomInput" placeholder="KODU YAZ" maxlength="6"/>
           </div>
 
           <button class="btn-3d" id="btnJoin">KANALA KATIL</button>
@@ -615,6 +661,6 @@
     </div>
   </main>
 
-  <script type="module" src="/js/alltoall_lobby.js?v=2"></script>
+  <script type="module" src="/js/alltoall_lobby.js?v=3"></script>
 </body>
 </html>
