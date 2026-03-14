@@ -1,3 +1,4 @@
+<!-- FILE: /pages/academy.html -->
 <!doctype html>
 <html lang="tr">
 <head>
@@ -18,11 +19,31 @@
       --ai-grad:linear-gradient(135deg,#67e8f9 0%, #818cf8 46%, #f472b6 100%);
       --pink:#f472b6;
       --cyan:#67e8f9;
+      --footerSafe: var(--footerH, 0px);
     }
 
-    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; }
-    html,body{ margin:0; width:100%; height:100%; color:var(--txt); font-family:'Outfit',sans-serif; background:#120d16; overflow:hidden; scrollbar-width:none; }
-    
+    *{
+      box-sizing:border-box;
+      -webkit-tap-highlight-color:transparent;
+      outline:none;
+    }
+
+    html,body{
+      margin:0;
+      width:100%;
+      height:100%;
+      color:var(--txt);
+      font-family:'Outfit',sans-serif;
+      background:#120d16;
+      overflow:hidden;
+      scrollbar-width:none;
+    }
+
+    html::-webkit-scrollbar,
+    body::-webkit-scrollbar{
+      display:none;
+    }
+
     body{
       background:
         radial-gradient(circle at 50% 0%, rgba(251,146,60,.16) 0%, transparent 26%),
@@ -31,110 +52,531 @@
         linear-gradient(180deg, #1d1016 0%, #150e19 34%, #120d16 100%);
     }
 
-    #pageContent{ width:100%; height:100dvh; padding:6px 10px 0; display:block; overflow:hidden; }
-    .page-shell-fit{ height:100%; display:flex; flex-direction:column; gap:6px; overflow:hidden; }
+    #pageContent{
+      width:100%;
+      height:calc(100dvh - var(--footerSafe));
+      padding:6px 10px 2px;
+      display:block;
+      overflow:hidden;
+    }
 
-    /* --- ÜST KISIM: SADECE BURAYI GÜNCELLEDİK --- */
-    .academy-hero{ flex:0 0 auto; perspective:1000px; }
-    .heroTop{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; }
+    .page-shell-fit{
+      height:100%;
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      overflow:hidden;
+    }
+
+    /* HERO */
+    .academy-hero{
+      flex:0 0 auto;
+      min-height:0;
+      perspective:1000px;
+    }
+
+    .heroTop{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:3px;
+    }
 
     .holo-container{
-      width:180px;
-      height:180px;
+      width:158px;
+      height:158px;
       position:relative;
       display:flex;
       align-items:center;
       justify-content:center;
       transform-style:preserve-3d;
-      margin:0 auto 4px;
+      margin:0 auto 2px;
     }
 
-    /* Cyber Square Animasyonu */
-    .cyber-box-system {
-      position: absolute;
-      width: 140px;
-      height: 140px;
-      transform-style: preserve-3d;
-      animation: masterRotate 15s linear infinite;
+    .cyber-box-system{
+      position:absolute;
+      width:124px;
+      height:124px;
+      transform-style:preserve-3d;
+      animation:masterRotate 15s linear infinite;
     }
 
-    .cyber-frame {
-      position: absolute;
-      inset: 0;
-      border: 2px solid rgba(103, 232, 249, 0.3);
-      background: radial-gradient(circle, rgba(103,232,249,0.05), transparent);
-      box-shadow: 0 0 20px rgba(103,232,249,0.1);
+    .cyber-frame{
+      position:absolute;
+      inset:0;
+      border:2px solid rgba(103,232,249,0.3);
+      background:radial-gradient(circle, rgba(103,232,249,0.05), transparent);
+      box-shadow:0 0 20px rgba(103,232,249,0.1);
     }
 
-    .f1 { transform: rotateY(0deg) rotateX(45deg); border-color: var(--cyan); }
-    .f2 { transform: rotateY(90deg) rotateZ(45deg); border-color: var(--pink); }
-    .f3 { transform: rotateX(90deg) rotateY(45deg); border-color: #fff; }
+    .f1{ transform:rotateY(0deg) rotateX(45deg); border-color:var(--cyan); }
+    .f2{ transform:rotateY(90deg) rotateZ(45deg); border-color:var(--pink); }
+    .f3{ transform:rotateX(90deg) rotateY(45deg); border-color:#fff; }
 
-    @keyframes masterRotate {
-      from { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
-      to { transform: rotateX(360deg) rotateY(720deg) rotateZ(360deg); }
+    @keyframes masterRotate{
+      from{ transform:rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
+      to{ transform:rotateX(360deg) rotateY(720deg) rotateZ(360deg); }
     }
 
     .academy-core{
       position:absolute;
-      width:92px;
-      height:92px;
-      border-radius:24px;
-      background: #fff;
-      box-shadow: 0 0 40px rgba(103, 232, 249, 0.6);
+      width:86px;
+      height:86px;
+      border-radius:22px;
+      background:#fff;
+      box-shadow:0 0 40px rgba(103,232,249,0.6);
       z-index:10;
       display:flex;
       align-items:center;
       justify-content:center;
       text-decoration:none;
-      animation: floatCore 4s ease-in-out infinite;
+      animation:floatCore 4s ease-in-out infinite;
     }
 
-    .core-scanner {
-      width: 32px;
-      height: 32px;
-      border: 2.5px solid #151827;
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      animation: coreRotate 3s linear infinite;
+    .academy-core-inner{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:5px;
     }
 
-    @keyframes coreRotate {
-        0% { transform: rotate(0deg); border-radius: 4px; }
-        50% { border-radius: 50%; }
-        100% { transform: rotate(360deg); border-radius: 4px; }
+    .core-scanner{
+      width:30px;
+      height:30px;
+      border:2.5px solid #151827;
+      position:relative;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      animation:coreRotate 3s linear infinite;
+    }
+
+    .core-scanner::before,
+    .core-scanner::after{
+      content:"";
+      position:absolute;
+      background:#151827;
+      border-radius:999px;
+      opacity:.9;
+    }
+
+    .core-scanner::before{
+      width:18px;
+      height:2px;
+    }
+
+    .core-scanner::after{
+      width:2px;
+      height:18px;
+    }
+
+    .core-dot{
+      width:6px;
+      height:6px;
+      background:#151827;
+      border-radius:50%;
+    }
+
+    @keyframes coreRotate{
+      0%{ transform:rotate(0deg); border-radius:4px; }
+      50%{ border-radius:50%; }
+      100%{ transform:rotate(360deg); border-radius:4px; }
     }
 
     .academy-core-title{
       font-family:'Space Grotesk',sans-serif;
-      font-size:11px;
+      font-size:10.5px;
       font-weight:800;
       color:#111827;
       text-align:center;
-      line-height:1.05;
-      margin-top: 4px;
+      line-height:1.02;
+      margin-top:1px;
     }
 
-    /* --- ALT KISIM: ORIJINAL TASARIMIN (DOKUNULMADI) --- */
-    .heroTitle{ font-family:'Space Grotesk',sans-serif; font-size:18px; font-weight:700; color:#fff; text-align:center; }
-    .heroTitle .to{ background:var(--ai-grad); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-    .heroSub{ margin:0; font-size:9.5px; color:var(--muted); text-align:center; max-width:290px; }
-    .heroStatus{ min-height:14px; font-size:9.5px; font-weight:800; color:rgba(255,255,255,.78); text-align:center; }
-    .academy-grid{ flex:1; display:grid; grid-template-columns:1fr 1fr; grid-template-rows:minmax(0,1fr) minmax(0,.72fr) minmax(0,.72fr); gap:8px; }
-    .academy-card{ position:relative; border-radius:22px; overflow:hidden; border:1px solid var(--cardLine); padding:12px 12px 74px; text-decoration:none; color:#fff; }
-    .lesson-card{ background: radial-gradient(circle at 18% 14%, rgba(103,232,249,.28) 0%, transparent 32%), linear-gradient(180deg, #301661 0%, #1e36a3 100%); }
-    .practice-card{ background: radial-gradient(circle at 82% 15%, rgba(251,146,60,.24) 0%, transparent 30%), linear-gradient(180deg, #d43685 0%, #3c35b5 100%); }
-    .games-card{ grid-column:1 / 3; display:flex; align-items:center; gap:12px; padding:12px; background: linear-gradient(90deg, #10311e 0%, #0f766e 100%); }
-    .vision-card{ grid-column:1 / 3; display:flex; align-items:center; gap:12px; padding:12px; background: linear-gradient(90deg, #5b2208 0%, #db2777 100%); }
-    .card-title{ margin:0; font-family:'Space Grotesk',sans-serif; font-size:20px; line-height:1; }
-    .card-desc{ margin:0; font-size:8.9px; line-height:1.18; color:rgba(255,255,255,.86); }
-    .card-art{ position:absolute; left:10px; right:10px; bottom:10px; height:52px; border-radius:16px; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.10); }
-    .arrow-chip{ flex:0 0 auto; width:34px; height:34px; border-radius:50%; position:absolute; right:10px; top:50%; transform:translateY(-50%); background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.18); }
-    .arrow-chip::before{ content:""; position:absolute; left:10px; top:50%; width:10px; height:10px; border-top:2px solid #fff; border-right:2px solid #fff; transform:translateY(-50%) rotate(45deg); }
+    .heroTitle{
+      font-family:'Space Grotesk',sans-serif;
+      font-size:18px;
+      font-weight:700;
+      color:#fff;
+      text-align:center;
+      margin:0;
+      line-height:1.02;
+    }
 
-    @keyframes floatCore{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-8px); } }
+    .heroTitle .to{
+      background:var(--ai-grad);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+
+    .heroSub{
+      margin:0;
+      font-size:9.3px;
+      color:var(--muted);
+      text-align:center;
+      line-height:1.18;
+      max-width:286px;
+    }
+
+    /* GRID */
+    .academy-grid{
+      flex:1;
+      min-height:0;
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      grid-template-rows:minmax(0,1fr) minmax(0,.68fr) minmax(0,.68fr);
+      gap:8px;
+      overflow:hidden;
+    }
+
+    .academy-card{
+      position:relative;
+      border-radius:22px;
+      overflow:hidden;
+      border:1px solid var(--cardLine);
+      padding:12px 12px 72px;
+      text-decoration:none;
+      color:#fff;
+      min-height:0;
+      box-shadow:
+        0 15px 30px rgba(0,0,0,.28),
+        inset 0 1px 0 rgba(255,255,255,.05);
+    }
+
+    .lesson-card{
+      background:
+        radial-gradient(circle at 18% 14%, rgba(103,232,249,.28) 0%, transparent 32%),
+        linear-gradient(180deg, #301661 0%, #1e36a3 100%);
+    }
+
+    .practice-card{
+      background:
+        radial-gradient(circle at 82% 15%, rgba(251,146,60,.24) 0%, transparent 30%),
+        linear-gradient(180deg, #d43685 0%, #3c35b5 100%);
+    }
+
+    .games-card{
+      grid-column:1 / 3;
+      min-height:0;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:12px 46px 12px 12px;
+      background:linear-gradient(90deg, #10311e 0%, #0f766e 100%);
+    }
+
+    .vision-card{
+      grid-column:1 / 3;
+      min-height:0;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:12px 46px 12px 12px;
+      background:linear-gradient(90deg, #5b2208 0%, #db2777 100%);
+    }
+
+    .card-title{
+      margin:0;
+      font-family:'Space Grotesk',sans-serif;
+      font-size:20px;
+      line-height:1;
+    }
+
+    .card-desc-list{
+      margin-top:6px;
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+    }
+
+    .card-desc{
+      margin:0;
+      font-size:8.9px;
+      line-height:1.18;
+      color:rgba(255,255,255,.86);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .card-art{
+      position:absolute;
+      left:10px;
+      right:10px;
+      bottom:10px;
+      height:52px;
+      border-radius:16px;
+      background:rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.10);
+      overflow:hidden;
+    }
+
+    /* DİL DERSİ İKONU */
+    .lesson-icon{
+      position:relative;
+      width:100%;
+      height:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:18px;
+    }
+
+    .lesson-node{
+      position:relative;
+      width:14px;
+      height:14px;
+      border-radius:50%;
+      background:rgba(255,255,255,.95);
+      box-shadow:0 0 12px rgba(255,255,255,.22);
+    }
+
+    .lesson-node::after{
+      content:"";
+      position:absolute;
+      left:50%;
+      top:50%;
+      width:34px;
+      height:2px;
+      transform:translate(-50%,-50%);
+      background:linear-gradient(90deg, rgba(103,232,249,0), rgba(103,232,249,.95), rgba(103,232,249,0));
+      box-shadow:0 0 10px rgba(103,232,249,.35);
+    }
+
+    .lesson-arc{
+      position:absolute;
+      left:50%;
+      top:50%;
+      width:58px;
+      height:22px;
+      transform:translate(-50%,-50%);
+      border-top:2px solid rgba(255,255,255,.55);
+      border-radius:999px 999px 0 0;
+      opacity:.82;
+    }
+
+    .lesson-spark{
+      position:absolute;
+      width:6px;
+      height:6px;
+      border-radius:50%;
+      background:var(--cyan);
+      box-shadow:0 0 12px var(--cyan);
+      top:16px;
+      left:50%;
+      transform:translateX(-50%);
+    }
+
+    /* PRATİK İKONU */
+    .practice-icon{
+      position:relative;
+      width:100%;
+      height:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .practice-center{
+      position:absolute;
+      left:50%;
+      top:50%;
+      width:12px;
+      height:12px;
+      border-radius:50%;
+      transform:translate(-50%,-50%);
+      background:rgba(255,255,255,.95);
+      box-shadow:
+        0 0 0 5px rgba(255,255,255,.12),
+        0 0 18px rgba(251,146,60,.48);
+    }
+
+    .practice-dot{
+      position:absolute;
+      width:8px;
+      height:8px;
+      border-radius:50%;
+      background:rgba(255,255,255,.88);
+      box-shadow:0 0 8px rgba(255,255,255,.2);
+    }
+
+    .pd1{ top:8px; left:50%; transform:translateX(-50%); }
+    .pd2{ left:22px; bottom:11px; }
+    .pd3{ right:22px; bottom:11px; }
+
+    .practice-line{
+      position:absolute;
+      left:50%;
+      top:50%;
+      width:2px;
+      height:24px;
+      transform-origin:center bottom;
+      background:linear-gradient(180deg, rgba(255,255,255,.16), rgba(251,146,60,.95));
+      box-shadow:0 0 10px rgba(251,146,60,.28);
+    }
+
+    .pl1{ transform:translate(-50%,-50%) rotate(0deg); }
+    .pl2{ transform:translate(-50%,-50%) rotate(120deg); }
+    .pl3{ transform:translate(-50%,-50%) rotate(240deg); }
+
+    /* YATAY KART İKON KUTUSU */
+    .wide-ico{
+      width:62px;
+      height:62px;
+      flex:0 0 auto;
+      position:relative;
+      border-radius:18px;
+      background:rgba(255,255,255,.12);
+      border:1.5px solid rgba(255,255,255,.15);
+      box-shadow:inset 0 0 22px rgba(255,255,255,.05);
+      overflow:hidden;
+    }
+
+    /* GAMES İKONU */
+    .games-icon{
+      position:absolute;
+      inset:11px;
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      grid-template-rows:repeat(3,1fr);
+      gap:4px;
+    }
+
+    .games-icon span{
+      border-radius:6px;
+      background:linear-gradient(135deg, rgba(255,255,255,.78), rgba(255,255,255,.24));
+      box-shadow:0 0 8px rgba(255,255,255,.10);
+    }
+
+    .games-icon span:nth-child(2),
+    .games-icon span:nth-child(4),
+    .games-icon span:nth-child(6),
+    .games-icon span:nth-child(8){
+      opacity:.55;
+    }
+
+    .games-icon span:nth-child(5){
+      background:linear-gradient(135deg, rgba(103,232,249,.98), rgba(255,255,255,.65));
+      box-shadow:0 0 14px rgba(103,232,249,.34);
+    }
+
+    /* VISION İKONU */
+    .vision-icon{
+      position:absolute;
+      inset:11px;
+      border-radius:12px;
+      border:1.5px solid rgba(255,255,255,.46);
+      background:rgba(255,255,255,.06);
+      overflow:hidden;
+    }
+
+    .vision-icon::before,
+    .vision-icon::after{
+      content:"";
+      position:absolute;
+      border:2px solid rgba(255,255,255,.9);
+      width:10px;
+      height:10px;
+    }
+
+    .vision-icon::before{
+      left:4px;
+      top:4px;
+      border-right:none;
+      border-bottom:none;
+    }
+
+    .vision-icon::after{
+      right:4px;
+      bottom:4px;
+      border-left:none;
+      border-top:none;
+    }
+
+    .vision-grid{
+      position:absolute;
+      inset:8px;
+      border:1px dashed rgba(255,255,255,.20);
+      border-radius:8px;
+    }
+
+    .vision-line{
+      position:absolute;
+      left:6px;
+      right:6px;
+      top:50%;
+      height:3px;
+      border-radius:999px;
+      background:linear-gradient(90deg, transparent, rgba(255,255,255,.96), transparent);
+      box-shadow:0 0 14px rgba(255,255,255,.24);
+      animation:scanMove 2s ease-in-out infinite;
+    }
+
+    .wide-body{
+      flex:1;
+      min-width:0;
+    }
+
+    .card-topline{
+      font-size:9px;
+      font-weight:700;
+      letter-spacing:.5px;
+      color:rgba(255,255,255,.8);
+      margin-bottom:4px;
+      text-transform:uppercase;
+    }
+
+    .wide-title{
+      margin:0;
+      font-family:'Space Grotesk',sans-serif;
+      font-size:20px;
+      line-height:1;
+    }
+
+    .wide-desc{
+      margin-top:5px;
+      font-size:9.5px;
+      line-height:1.18;
+      color:rgba(255,255,255,.88);
+      max-width:88%;
+    }
+
+    .arrow-chip{
+      flex:0 0 auto;
+      width:34px;
+      height:34px;
+      border-radius:50%;
+      position:absolute;
+      right:10px;
+      top:50%;
+      transform:translateY(-50%);
+      background:rgba(255,255,255,.15);
+      border:1px solid rgba(255,255,255,.18);
+    }
+
+    .arrow-chip::before{
+      content:"";
+      position:absolute;
+      left:10px;
+      top:50%;
+      width:10px;
+      height:10px;
+      border-top:2px solid #fff;
+      border-right:2px solid #fff;
+      transform:translateY(-50%) rotate(45deg);
+    }
+
+    @keyframes floatCore{
+      0%,100%{ transform:translateY(0); }
+      50%{ transform:translateY(-8px); }
+    }
+
+    @keyframes scanMove{
+      0%,100%{ transform:translateY(-14px); opacity:.7; }
+      50%{ transform:translateY(14px); opacity:1; }
+    }
   </style>
 </head>
 
@@ -153,7 +595,9 @@
 
             <a href="/pages/academy_level.html" class="academy-core">
               <div class="academy-core-inner">
-                <div class="core-scanner"></div>
+                <div class="core-scanner">
+                  <div class="core-dot"></div>
+                </div>
                 <div class="academy-core-title">SEVİYENİ<br>TESPİT ET</div>
               </div>
             </a>
@@ -165,13 +609,21 @@
       </section>
 
       <section class="academy-grid">
+
         <a class="academy-card lesson-card" href="/pages/academy_lessons.html">
           <h2 class="card-title">Dil Dersi</h2>
           <div class="card-desc-list">
             <p class="card-desc">Seviyene uygun yapılandırılmış dersler.</p>
             <p class="card-desc">72 dil desteği.</p>
           </div>
-          <div class="card-art"></div>
+          <div class="card-art">
+            <div class="lesson-icon">
+              <div class="lesson-arc"></div>
+              <div class="lesson-spark"></div>
+              <div class="lesson-node"></div>
+              <div class="lesson-node"></div>
+            </div>
+          </div>
         </a>
 
         <a class="academy-card practice-card" href="/pages/academy_practice.html">
@@ -180,24 +632,50 @@
             <p class="card-desc">Konuşma odaklı akıllı tekrar.</p>
             <p class="card-desc">Sesli geri bildirim.</p>
           </div>
-          <div class="card-art"></div>
+          <div class="card-art">
+            <div class="practice-icon">
+              <div class="practice-line pl1"></div>
+              <div class="practice-line pl2"></div>
+              <div class="practice-line pl3"></div>
+              <div class="practice-center"></div>
+              <div class="practice-dot pd1"></div>
+              <div class="practice-dot pd2"></div>
+              <div class="practice-dot pd3"></div>
+            </div>
+          </div>
         </a>
 
         <a class="academy-card games-card" href="/pages/academy_games.html">
+          <div class="wide-ico">
+            <div class="games-icon">
+              <span></span><span></span><span></span>
+              <span></span><span></span><span></span>
+              <span></span><span></span><span></span>
+            </div>
+          </div>
           <div class="wide-body">
-            <h2 class="card-title">Mind Games</h2>
-            <p class="card-desc">Kelime ve refleks oyunlarıyla dili sıkılmadan öğren.</p>
+            <div class="card-topline">Eğlenerek Öğren</div>
+            <h2 class="wide-title">Mind Games</h2>
+            <p class="wide-desc">Kelime ve refleks oyunlarıyla dili sıkılmadan öğren.</p>
           </div>
           <div class="arrow-chip"></div>
         </a>
 
         <a class="academy-card vision-card" href="/pages/academy_scan.html">
+          <div class="wide-ico">
+            <div class="vision-icon">
+              <div class="vision-grid"></div>
+              <div class="vision-line"></div>
+            </div>
+          </div>
           <div class="wide-body">
-            <h2 class="card-title">Vision Solver</h2>
-            <p class="card-desc">Soru, metin veya görseli okut; çözüm al.</p>
+            <div class="card-topline">Sorunu Tarat</div>
+            <h2 class="wide-title">Vision Solver</h2>
+            <p class="wide-desc">Soru, metin veya görseli okut; çözüm al.</p>
           </div>
           <div class="arrow-chip"></div>
         </a>
+
       </section>
 
     </div>
