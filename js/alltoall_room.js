@@ -1,5 +1,7 @@
 // FILE: /js/alltoall_room.js
 
+import { supabase } from "/js/supabase_client.js";
+
 const API_BASE = "https://italky-api.onrender.com/api";
 const WS_BASE = "wss://italky-api.onrender.com/api";
 
@@ -22,14 +24,14 @@ const role = String(params.get("role") || "guest").trim().toLowerCase();
 
 let roomId = "";
 let ws = null;
-let myLang = "tr";
+let myLang = localStorage.getItem("alltoall_lang") || "tr";
 let recognizing = false;
 let recognizer = null;
 let joinedPeople = new Map();
 let myName = role === "host" ? "Host" : "Guest";
 
 /* ==============================
-   LANGUAGES
+   LANG
 ================================*/
 const LANGS = ["tr", "en", "de", "fr", "it", "es", "ru", "el", "az", "ka"];
 
@@ -49,17 +51,13 @@ function buildLangSelect() {
 
   langSelect.onchange = () => {
     myLang = langSelect.value;
+    localStorage.setItem("alltoall_lang", myLang);
 
-    if (recognizer) {
-      recognizer.lang = toBCP(myLang);
-    }
+    if (recognizer) recognizer.lang = toBCP(myLang);
 
     if (ws && ws.readyState === WebSocket.OPEN) {
       try {
-        ws.send(JSON.stringify({
-          type: "set_lang",
-          lang: myLang
-        }));
+        ws.send(JSON.stringify({ type: "set_lang", lang: myLang }));
       } catch {}
     }
   };
@@ -76,14 +74,54 @@ function toBCP(code) {
     ru: "ru-RU",
     el: "el-GR",
     az: "az-AZ",
-    ka: "ka-GE"
+    ka: "ka-GE",
   };
-
-  return map[String(code || "tr").toLowerCase()] || "en-US";
+  return map[String(code || "tr").toLowerCase()] || "tr-TR";
 }
 
 /* ==============================
-   MESSAGE UI
+   NAME / INITIALS
+================================*/
+function getDisplayNameFromUser(user) {
+  const meta = user?.user_metadata || {};
+  return (
+    meta.display_name ||
+    meta.full_name ||
+    meta.name ||
+    user?.email?.split("@")[0] ||
+    (role === "host" ? "Host" : "Guest")
+  );
+}
+
+function getInitials(name) {
+  const parts = String(name || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+
+  if (!parts.length) return "?";
+
+  if (parts.length === 1) {
+    return parts[0].slice(0, 1).toUpperCase();
+  }
+
+  return (parts[0][0] + parts[1][0]).toUpperCase();
+}
+
+async function hydrateMyName() {
+  try {
+    const { data } = await supabase.auth.getUser();
+    const user = data?.user || null;
+    if (!user) return;
+
+    myName = getDisplayNameFromUser(user);
+  } catch (e) {
+    console.warn("[alltoall hydrateMyName]", e);
+  }
+}
+
+/* ==============================
+   CHAT UI
 ================================*/
 function addMessage(text, side = "left", sender = "") {
   if (!chat) return;
@@ -96,7 +134,7 @@ function addMessage(text, side = "left", sender = "") {
 
   const name = document.createElement("div");
   name.className = "sender-name";
-  name.textContent = sender || (side === "right" ? "Ben" : "Katılımcı");
+  name.textContent = sender || (side === "right" ? myName : "Katılımcı");
 
   const bubble = document.createElement("div");
   bubble.className = "msg-bubble";
@@ -121,8 +159,7 @@ function addSystemMessage(text) {
 
   const bubble = document.createElement("div");
   bubble.className = "msg-bubble";
-  bubble.style.opacity = ".86";
-  bubble.textContent = text;
+  bubble.textContent = String(text || "").trim();
 
   row.appendChild(name);
   row.appendChild(bubble);
@@ -132,7 +169,7 @@ function addSystemMessage(text) {
 }
 
 /* ==============================
-   PEOPLE BAR
+   PEOPLE
 ================================*/
 function renderPeople() {
   if (!peopleScroll) return;
@@ -145,24 +182,18 @@ function renderPeople() {
 
     const avatar = document.createElement("div");
     avatar.className = "pAvatar";
-    avatar.textContent = String(person.name || "?").charAt(0).toUpperCase();
+    avatar.textContent = getInitials(person.name);
 
     const label = document.createElement("div");
     label.className = "pName";
-    label.textContent = person.name || "user";
+    label.textContent = person.name || "Katılımcı";
 
     wrap.appendChild(avatar);
     wrap.appendChild(label);
     peopleScroll.appendChild(wrap);
   });
 
-  updatePeopleCount();
-}
-
-function updatePeopleCount() {
-  if (peopleCount) {
-    peopleCount.textContent = String(joinedPeople.size || 0);
-  }
+  if (peopleCount) peopleCount.textContent = String(joinedPeople.size || 0);
 }
 
 function ensureSelfInPeople() {
@@ -170,7 +201,7 @@ function ensureSelfInPeople() {
     joinedPeople.set(role, {
       key: role,
       name: myName,
-      lang: myLang
+      lang: myLang,
     });
     renderPeople();
   }
@@ -192,8 +223,8 @@ async function resolveRoom() {
       body: JSON.stringify({
         host_code: hostCode,
         my_lang: myLang,
-        mode: "interpreter"
-      })
+        mode: "interpreter",
+      }),
     });
 
     const j = await r.json().catch(() => ({}));
@@ -221,8 +252,8 @@ async function joinRoomIfNeeded() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         room_id: roomId,
-        my_lang: myLang
-      })
+        my_lang: myLang,
+      }),
     });
 
     const j = await r.json().catch(() => ({}));
@@ -237,7 +268,7 @@ async function joinRoomIfNeeded() {
 }
 
 /* ==============================
-   WEBSOCKET
+   WS
 ================================*/
 function connectSocket() {
   if (!roomId) {
@@ -270,16 +301,16 @@ function connectSocket() {
         if (data.host_lang) {
           joinedPeople.set("host", {
             key: "host",
-            name: "Host",
-            lang: data.host_lang
+            name: role === "host" ? myName : "Host",
+            lang: data.host_lang,
           });
         }
 
         if (data.guest_lang) {
           joinedPeople.set("guest", {
             key: "guest",
-            name: "Guest",
-            lang: data.guest_lang
+            name: role === "guest" ? myName : "Guest",
+            lang: data.guest_lang,
           });
         } else if (joinedPeople.has("guest") && !data.guest_lang) {
           joinedPeople.delete("guest");
@@ -292,8 +323,8 @@ function connectSocket() {
       if (type === "peer_joined") {
         joinedPeople.set("guest", {
           key: "guest",
-          name: "Guest",
-          lang: data.guest_lang || "en"
+          name: role === "guest" ? myName : "Guest",
+          lang: data.guest_lang || "en",
         });
         renderPeople();
         addSystemMessage("Yeni katılımcı bağlandı");
@@ -316,7 +347,11 @@ function connectSocket() {
 
         if (sender === role) return;
 
-        addMessage(translated || original, "left", sender === "host" ? "Host" : "Guest");
+        addMessage(
+          translated || original,
+          "left",
+          sender === "host" ? "Host" : "Guest"
+        );
         return;
       }
 
@@ -341,21 +376,22 @@ function sendMessage() {
   const text = String(msgInput?.value || "").trim();
   if (!text) return;
 
-  addMessage(text, "right", "Ben");
+  addMessage(text, "right", myName);
 
   if (ws && ws.readyState === 1) {
     ws.send(JSON.stringify({
       type: "text_message",
       text,
-      from_lang: myLang
+      from_lang: myLang,
     }));
   }
 
   msgInput.value = "";
+  autoGrowTextarea();
 }
 
 /* ==============================
-   SPEECH RECOGNITION
+   SPEECH
 ================================*/
 function initSpeech() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -400,6 +436,15 @@ function toggleMic() {
 }
 
 /* ==============================
+   INPUT
+================================*/
+function autoGrowTextarea() {
+  if (!msgInput) return;
+  msgInput.style.height = "26px";
+  msgInput.style.height = Math.min(msgInput.scrollHeight, 120) + "px";
+}
+
+/* ==============================
    EVENTS
 ================================*/
 function bindEvents() {
@@ -412,6 +457,8 @@ function bindEvents() {
     }
   });
 
+  msgInput?.addEventListener("input", autoGrowTextarea);
+
   micBtn && (micBtn.onclick = toggleMic);
 
   roomPill?.addEventListener("click", async () => {
@@ -422,10 +469,7 @@ function bindEvents() {
     } catch {}
   });
 
-  backBtn?.addEventListener("click", () => {
-    history.back();
-  });
-
+  backBtn?.addEventListener("click", () => history.back());
   exitBtn?.addEventListener("click", () => {
     location.href = "/pages/alltoall.html";
   });
@@ -437,6 +481,7 @@ function bindEvents() {
 async function init() {
   if (roomPill) roomPill.textContent = hostCode || "---";
 
+  await hydrateMyName();
   buildLangSelect();
   initSpeech();
   bindEvents();
@@ -446,6 +491,7 @@ async function init() {
   if (!ok) return;
 
   connectSocket();
+  autoGrowTextarea();
 }
 
 init();
