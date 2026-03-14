@@ -5,7 +5,6 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
   <title>italkyAI • AllToAll Room</title>
-
   <meta name="theme-color" content="#030014">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,7 +17,6 @@
       --glass: rgba(255,255,255,.05);
       --glass-border: rgba(255,255,255,.12);
       --muted: rgba(255,255,255,.58);
-      --panel: rgba(255,255,255,.04);
       --safe-bottom: env(safe-area-inset-bottom, 0px);
       --footerSafe: var(--footerH, 0px);
     }
@@ -54,33 +52,33 @@
       flex-direction:column;
       min-height:0;
       overflow:hidden;
+      padding:8px 10px 6px;
     }
 
     .room-shell{
-      flex:1;
-      display:flex;
-      flex-direction:column;
+      flex:1 1 auto;
       min-height:0;
       width:100%;
-      max-width:520px;
-      margin:0 auto;
-      backdrop-filter:blur(18px);
-      -webkit-backdrop-filter:blur(18px);
-      background:rgba(8,8,20,.34);
-      border-left:1px solid rgba(255,255,255,.06);
-      border-right:1px solid rgba(255,255,255,.06);
+      display:flex;
+      flex-direction:column;
+      border-radius:24px;
       overflow:hidden;
+      background:rgba(8,8,20,.28);
+      border:1px solid rgba(255,255,255,.08);
+      backdrop-filter:blur(16px);
+      -webkit-backdrop-filter:blur(16px);
+      box-shadow:0 18px 40px rgba(0,0,0,.28);
     }
 
-    .topbar{
-      height:70px;
+    .room-head{
       flex:0 0 auto;
       display:flex;
       align-items:center;
       justify-content:space-between;
-      padding:0 14px;
+      gap:12px;
+      padding:12px 12px;
       border-bottom:1px solid var(--glass-border);
-      background:rgba(0,0,0,.26);
+      background:rgba(0,0,0,.22);
     }
 
     .nav-btn{
@@ -96,13 +94,16 @@
       align-items:center;
       justify-content:center;
       font-size:18px;
+      flex:0 0 auto;
     }
 
     .nav-btn:active{ transform:scale(.96); }
 
     .brand{
+      flex:1;
       text-align:center;
       line-height:1.05;
+      min-width:0;
     }
 
     .brand-name{
@@ -127,13 +128,13 @@
     }
 
     .roombar{
-      height:46px;
+      height:48px;
       flex:0 0 auto;
       display:flex;
       align-items:center;
       justify-content:space-between;
       gap:10px;
-      padding:0 14px;
+      padding:0 12px;
       border-bottom:1px solid var(--glass-border);
       background:rgba(255,255,255,.02);
     }
@@ -149,7 +150,7 @@
     }
 
     .room-pill{
-      max-width:160px;
+      max-width:150px;
       overflow:hidden;
       text-overflow:ellipsis;
       white-space:nowrap;
@@ -167,15 +168,16 @@
     }
 
     .lang-select{
-      height:30px;
-      max-width:152px;
-      border-radius:10px;
+      height:32px;
+      max-width:148px;
+      border-radius:12px;
       border:1px solid var(--glass-border);
       background:rgba(0,0,0,.26);
       color:#c7d2fe;
       font-size:11px;
       font-weight:900;
       padding:0 8px;
+      flex:0 0 auto;
     }
 
     .peoplebar{
@@ -184,7 +186,7 @@
       display:flex;
       align-items:center;
       gap:10px;
-      padding:0 14px;
+      padding:0 12px;
       border-bottom:1px solid var(--glass-border);
       background:rgba(255,255,255,.015);
     }
@@ -195,6 +197,7 @@
       font-size:12px;
       font-weight:1000;
       color:#818cf8;
+      flex:0 0 auto;
     }
 
     .people-scroll{
@@ -203,6 +206,7 @@
       gap:10px;
       overflow-x:auto;
       scrollbar-width:none;
+      min-width:0;
     }
 
     .people-scroll::-webkit-scrollbar{ display:none; }
@@ -248,15 +252,17 @@
     }
 
     .chat-area{
-      flex:1;
+      flex:1 1 auto;
       min-height:0;
       overflow-y:auto;
-      padding:16px;
+      padding:14px 12px;
       display:flex;
       flex-direction:column;
-      gap:16px;
+      gap:14px;
       scrollbar-width:none;
       -webkit-overflow-scrolling:touch;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.01), rgba(255,255,255,0));
     }
 
     .chat-area::-webkit-scrollbar{ display:none; }
@@ -313,7 +319,7 @@
 
     .dock{
       flex:0 0 auto;
-      padding:10px 14px calc(10px + var(--safe-bottom));
+      padding:10px 12px calc(10px + var(--safe-bottom));
       border-top:1px solid var(--glass-border);
       background:rgba(0,0,0,.45);
       backdrop-filter:blur(22px);
@@ -333,6 +339,7 @@
 
     #msgInput{
       flex:1;
+      min-width:0;
       border:none;
       background:transparent;
       color:#fff;
@@ -391,9 +398,14 @@
     }
 
     @media (max-width:390px){
+      #pageContent{
+        padding:6px 8px 6px;
+      }
+
       .msg-bubble{ font-size:14px; }
-      .room-pill{ max-width:126px; }
-      .lang-select{ max-width:128px; }
+      .room-pill{ max-width:120px; }
+      .lang-select{ max-width:118px; }
+      .brand-name{ font-size:17px; }
     }
   </style>
 </head>
@@ -402,7 +414,7 @@
   <main id="pageContent">
     <div class="room-shell">
 
-      <header class="topbar">
+      <header class="room-head">
         <button class="nav-btn" id="backBtn" type="button">←</button>
 
         <div class="brand">
@@ -461,6 +473,6 @@
     try { mountShell({ scroll:"none" }); } catch(e) { console.warn("[alltoall room shell]", e); }
   </script>
 
-  <script type="module" src="/js/alltoall_room.js?v=2"></script>
+  <script type="module" src="/js/alltoall_room.js?v=3"></script>
 </body>
 </html>
