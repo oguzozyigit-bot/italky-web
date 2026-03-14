@@ -14,11 +14,13 @@
   <style>
     :root{
       --txt:rgba(255,255,255,.96);
-      --muted:rgba(255,255,255,.64);
-      --cardLine:rgba(255,255,255,.12);
+      --muted:rgba(255,255,255,.66);
+      --cardLine:rgba(255,255,255,.11);
+      --glass:rgba(255,255,255,.05);
       --ai-grad:linear-gradient(135deg,#67e8f9 0%, #818cf8 46%, #f472b6 100%);
       --pink:#f472b6;
       --cyan:#67e8f9;
+      --vio:#818cf8;
       --footerSafe:var(--footerH, 0px);
     }
 
@@ -46,8 +48,8 @@
 
     body{
       background:
-        radial-gradient(circle at 50% 0%, rgba(251,146,60,.16) 0%, transparent 26%),
-        radial-gradient(circle at 16% 16%, rgba(244,114,182,.12) 0%, transparent 24%),
+        radial-gradient(circle at 50% 0%, rgba(251,146,60,.14) 0%, transparent 24%),
+        radial-gradient(circle at 18% 16%, rgba(244,114,182,.12) 0%, transparent 24%),
         radial-gradient(circle at 84% 18%, rgba(96,165,250,.12) 0%, transparent 22%),
         linear-gradient(180deg, #1d1016 0%, #150e19 34%, #120d16 100%);
     }
@@ -56,7 +58,6 @@
       width:100%;
       height:calc(100dvh - var(--footerSafe));
       padding:4px 10px 0;
-      display:block;
       overflow:hidden;
     }
 
@@ -70,11 +71,12 @@
 
     .academy-hero{
       flex:0 0 auto;
-      height:186px;
+      height:190px;
       display:flex;
       align-items:center;
       justify-content:center;
       perspective:1000px;
+      position:relative;
     }
 
     .heroTop{
@@ -84,6 +86,22 @@
       justify-content:center;
       gap:4px;
       width:100%;
+      position:relative;
+    }
+
+    .heroGlow{
+      position:absolute;
+      top:18px;
+      left:50%;
+      transform:translateX(-50%);
+      width:240px;
+      height:110px;
+      background:
+        radial-gradient(circle, rgba(103,232,249,.18) 0%, transparent 58%),
+        radial-gradient(circle, rgba(244,114,182,.12) 18%, transparent 62%);
+      filter:blur(18px);
+      pointer-events:none;
+      z-index:0;
     }
 
     .holo-container{
@@ -96,9 +114,10 @@
       transform-style:preserve-3d;
       margin:0 auto 2px;
       flex:0 0 auto;
+      z-index:1;
     }
 
-    /* ÜST ANİMASYON AYNEN KORUNDU */
+    /* ÜST ANİMASYON KORUNDU */
     .cyber-box-system{
       position:absolute;
       width:140px;
@@ -121,17 +140,24 @@
 
     .academy-core{
       position:absolute;
-      width:92px;
-      height:92px;
+      width:94px;
+      height:94px;
       border-radius:24px;
       background:#fff;
-      box-shadow:0 0 40px rgba(103,232,249,0.6);
+      box-shadow:
+        0 0 42px rgba(103,232,249,.48),
+        0 0 70px rgba(244,114,182,.12);
       z-index:10;
       display:flex;
       align-items:center;
       justify-content:center;
       text-decoration:none;
       animation:floatCore 4s ease-in-out infinite;
+      transition:transform .2s ease, box-shadow .2s ease;
+    }
+
+    .academy-core:active{
+      transform:scale(.97);
     }
 
     .academy-core-inner{
@@ -143,14 +169,38 @@
     }
 
     .core-scanner{
-      width:32px;
-      height:32px;
+      width:34px;
+      height:34px;
       border:2.5px solid #151827;
       position:relative;
       display:flex;
       align-items:center;
       justify-content:center;
       animation:coreRotate 3s linear infinite;
+    }
+
+    .core-scanner::before{
+      content:"";
+      position:absolute;
+      left:50%;
+      top:50%;
+      width:12px;
+      height:2px;
+      transform:translate(-50%,-50%) rotate(45deg);
+      background:#151827;
+      border-radius:999px;
+    }
+
+    .core-scanner::after{
+      content:"";
+      position:absolute;
+      left:50%;
+      top:50%;
+      width:2px;
+      height:12px;
+      transform:translate(-50%,-50%) rotate(45deg);
+      background:#151827;
+      border-radius:999px;
     }
 
     .academy-core-title{
@@ -165,28 +215,32 @@
 
     .heroTitle{
       font-family:'Space Grotesk',sans-serif;
-      font-size:17px;
+      font-size:19px;
       font-weight:700;
       color:#fff;
       text-align:center;
       margin:0;
       line-height:1;
+      letter-spacing:-.4px;
+      z-index:1;
     }
 
     .heroTitle .to{
       background:var(--ai-grad);
       -webkit-background-clip:text;
       -webkit-text-fill-color:transparent;
+      filter:drop-shadow(0 0 10px rgba(129,140,248,.2));
     }
 
     .heroSub{
       margin:0;
-      font-size:9px;
+      font-size:9.3px;
       color:var(--muted);
       text-align:center;
-      max-width:292px;
-      line-height:1.15;
+      max-width:300px;
+      line-height:1.18;
       padding:0 8px;
+      z-index:1;
     }
 
     .academy-grid{
@@ -194,24 +248,48 @@
       min-height:0;
       display:grid;
       grid-template-columns:1fr 1fr;
-      grid-template-rows:minmax(0,1fr) minmax(0,.82fr);
+      grid-template-rows:minmax(0,1fr) minmax(0,.78fr);
       gap:8px;
       overflow:hidden;
-      padding-bottom:2px;
+      padding-bottom:4px;
     }
 
     .academy-card{
       position:relative;
-      border-radius:22px;
+      border-radius:24px;
       overflow:hidden;
       border:1px solid var(--cardLine);
       text-decoration:none;
       color:#fff;
       min-height:0;
       box-shadow:
-        0 12px 24px rgba(0,0,0,.24),
-        inset 0 1px 0 rgba(255,255,255,.05);
+        0 14px 28px rgba(0,0,0,.24),
+        inset 0 1px 0 rgba(255,255,255,.04);
       transition:transform .18s ease, filter .18s ease, box-shadow .18s ease;
+      isolation:isolate;
+    }
+
+    .academy-card::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:linear-gradient(180deg, rgba(255,255,255,.06), transparent 28%);
+      opacity:.6;
+      pointer-events:none;
+      z-index:0;
+    }
+
+    .academy-card::after{
+      content:"";
+      position:absolute;
+      inset:auto -35% -45% auto;
+      width:160px;
+      height:160px;
+      border-radius:50%;
+      background:radial-gradient(circle, rgba(255,255,255,.10), transparent 62%);
+      filter:blur(8px);
+      pointer-events:none;
+      z-index:0;
     }
 
     .academy-card:active{
@@ -221,7 +299,7 @@
 
     .lesson-card,
     .practice-card{
-      padding:12px 12px 60px;
+      padding:13px 13px 62px;
       display:flex;
       flex-direction:column;
       justify-content:flex-start;
@@ -229,14 +307,14 @@
 
     .lesson-card{
       background:
-        radial-gradient(circle at 18% 14%, rgba(103,232,249,.28) 0%, transparent 32%),
-        linear-gradient(180deg, #301661 0%, #1e36a3 100%);
+        radial-gradient(circle at 18% 14%, rgba(103,232,249,.26) 0%, transparent 30%),
+        linear-gradient(180deg, #311764 0%, #26298b 54%, #1d3cb0 100%);
     }
 
     .practice-card{
       background:
-        radial-gradient(circle at 82% 15%, rgba(251,146,60,.24) 0%, transparent 30%),
-        linear-gradient(180deg, #d43685 0%, #3c35b5 100%);
+        radial-gradient(circle at 82% 15%, rgba(251,146,60,.22) 0%, transparent 28%),
+        linear-gradient(180deg, #dc468f 0%, #8b35c3 52%, #4a39bd 100%);
     }
 
     .games-card{
@@ -244,32 +322,43 @@
       display:flex;
       align-items:center;
       gap:12px;
-      padding:12px 46px 12px 12px;
-      background:linear-gradient(90deg, #0d301e 0%, #0f766e 100%);
+      padding:13px 48px 13px 13px;
+      background:
+        radial-gradient(circle at 14% 50%, rgba(103,232,249,.10) 0%, transparent 26%),
+        linear-gradient(90deg, #0c2f1d 0%, #12695f 100%);
       min-height:0;
+    }
+
+    .card-head,
+    .wide-body,
+    .card-art,
+    .wide-ico,
+    .arrow-chip{
+      position:relative;
+      z-index:1;
     }
 
     .card-title{
       margin:0;
       font-family:'Space Grotesk',sans-serif;
-      font-size:18px;
+      font-size:19px;
       line-height:1;
       letter-spacing:-.5px;
     }
 
     .card-desc-list{
-      margin-top:6px;
+      margin-top:7px;
       display:flex;
       flex-direction:column;
-      gap:2px;
+      gap:3px;
       padding-right:2px;
     }
 
     .card-desc{
       margin:0;
-      font-size:8.4px;
-      line-height:1.15;
-      color:rgba(255,255,255,.86);
+      font-size:8.8px;
+      line-height:1.16;
+      color:rgba(255,255,255,.88);
       white-space:nowrap;
       overflow:hidden;
       text-overflow:ellipsis;
@@ -280,14 +369,15 @@
       left:9px;
       right:9px;
       bottom:9px;
-      height:44px;
+      height:46px;
       border-radius:16px;
-      background:rgba(255,255,255,.08);
+      background:rgba(255,255,255,.07);
       border:1px solid rgba(255,255,255,.10);
       overflow:hidden;
+      box-shadow:inset 0 0 18px rgba(255,255,255,.04);
     }
 
-    /* DİL DERSİ İKONU */
+    /* DİL DERSİ */
     .lesson-icon{
       position:relative;
       width:100%;
@@ -308,8 +398,8 @@
       animation:lessonPulse 2.4s ease-in-out infinite;
     }
 
-    .lesson-node:nth-child(3){
-      animation-delay:.5s;
+    .lesson-node:nth-child(4){
+      animation-delay:.45s;
     }
 
     .lesson-node::after{
@@ -328,10 +418,10 @@
       position:absolute;
       left:50%;
       top:50%;
-      width:56px;
+      width:58px;
       height:18px;
       transform:translate(-50%,-50%);
-      border-top:2px solid rgba(255,255,255,.5);
+      border-top:2px solid rgba(255,255,255,.52);
       border-radius:999px 999px 0 0;
       opacity:.8;
       animation:arcGlow 2.8s ease-in-out infinite;
@@ -344,13 +434,13 @@
       border-radius:50%;
       background:var(--cyan);
       box-shadow:0 0 12px var(--cyan);
-      top:10px;
+      top:9px;
       left:50%;
       transform:translateX(-50%);
       animation:sparkMove 2.2s ease-in-out infinite;
     }
 
-    /* PRATİK YAP İKONU */
+    /* PRATİK YAP */
     .practice-icon{
       position:relative;
       width:100%;
@@ -406,13 +496,13 @@
 
     /* MIND GAMES */
     .wide-ico{
-      width:54px;
-      height:54px;
+      width:56px;
+      height:56px;
       flex:0 0 auto;
       position:relative;
-      border-radius:17px;
+      border-radius:18px;
       background:rgba(255,255,255,.12);
-      border:1.5px solid rgba(255,255,255,.15);
+      border:1.5px solid rgba(255,255,255,.16);
       box-shadow:inset 0 0 18px rgba(255,255,255,.05);
       overflow:hidden;
     }
@@ -428,7 +518,7 @@
 
     .games-icon span{
       border-radius:6px;
-      background:linear-gradient(135deg, rgba(255,255,255,.78), rgba(255,255,255,.24));
+      background:linear-gradient(135deg, rgba(255,255,255,.80), rgba(255,255,255,.22));
       box-shadow:0 0 8px rgba(255,255,255,.10);
       animation:gridBlink 2.8s ease-in-out infinite;
     }
@@ -455,25 +545,25 @@
     .card-topline{
       font-size:8px;
       font-weight:700;
-      letter-spacing:.45px;
-      color:rgba(255,255,255,.8);
-      margin-bottom:3px;
+      letter-spacing:.5px;
+      color:rgba(255,255,255,.82);
+      margin-bottom:4px;
       text-transform:uppercase;
     }
 
     .wide-title{
       margin:0;
       font-family:'Space Grotesk',sans-serif;
-      font-size:17px;
+      font-size:18px;
       line-height:1;
       letter-spacing:-.4px;
     }
 
     .wide-desc{
       margin-top:4px;
-      font-size:8.9px;
-      line-height:1.14;
-      color:rgba(255,255,255,.88);
+      font-size:9px;
+      line-height:1.16;
+      color:rgba(255,255,255,.90);
       max-width:86%;
       display:-webkit-box;
       -webkit-line-clamp:2;
@@ -483,8 +573,8 @@
 
     .arrow-chip{
       flex:0 0 auto;
-      width:32px;
-      height:32px;
+      width:34px;
+      height:34px;
       border-radius:50%;
       position:absolute;
       right:9px;
@@ -492,6 +582,7 @@
       transform:translateY(-50%);
       background:rgba(255,255,255,.15);
       border:1px solid rgba(255,255,255,.18);
+      box-shadow:0 0 12px rgba(255,255,255,.06);
     }
 
     .arrow-chip::before{
@@ -533,7 +624,7 @@
     }
 
     @keyframes sparkMove{
-      0%,100%{ transform:translateX(-50%) scale(.9); opacity:.7; }
+      0%,100%{ transform:translateX(-50%) scale(.9); opacity:.72; }
       50%{ transform:translateX(-50%) scale(1.18); opacity:1; }
     }
 
@@ -553,141 +644,75 @@
     }
 
     @media (max-width:390px){
-      #pageContent{
-        padding:4px 8px 0;
-      }
+      #pageContent{ padding:4px 8px 0; }
 
-      .page-shell-fit{
-        gap:7px;
-      }
+      .academy-hero{ height:180px; }
+      .holo-container{ width:170px; height:170px; }
+      .cyber-box-system{ width:132px; height:132px; }
+      .academy-core{ width:88px; height:88px; }
 
-      .academy-hero{
-        height:176px;
-      }
+      .heroTitle{ font-size:17px; }
+      .heroSub{ font-size:8.7px; max-width:280px; }
 
-      .holo-container{
-        width:168px;
-        height:168px;
-      }
+      .academy-grid{ gap:7px; }
 
-      .cyber-box-system{
-        width:132px;
-        height:132px;
-      }
+      .lesson-card,.practice-card{ padding:11px 11px 56px; }
+      .games-card{ padding:11px 42px 11px 11px; }
 
-      .academy-core{
-        width:88px;
-        height:88px;
-      }
+      .card-title{ font-size:17px; }
+      .wide-title{ font-size:16px; }
 
-      .heroTitle{
-        font-size:16px;
-      }
+      .card-desc{ font-size:8px; }
+      .wide-desc{ font-size:8.5px; }
 
-      .heroSub{
-        font-size:8.5px;
-        max-width:272px;
-      }
-
-      .academy-grid{
-        gap:7px;
-      }
-
-      .lesson-card,
-      .practice-card{
-        padding:11px 11px 57px;
-      }
-
-      .games-card{
-        padding:11px 42px 11px 11px;
-      }
-
-      .card-title{
-        font-size:17px;
-      }
-
-      .wide-title{
-        font-size:16px;
-      }
-
-      .card-desc{
-        font-size:8px;
-      }
-
-      .wide-desc{
-        font-size:8.4px;
-      }
-
-      .card-art{
-        height:42px;
-      }
-
-      .wide-ico{
-        width:50px;
-        height:50px;
-      }
+      .card-art{ height:42px; }
+      .wide-ico{ width:52px; height:52px; }
     }
 
     @media (max-height:820px){
-      .academy-hero{
-        height:170px;
-      }
+      .academy-hero{ height:174px; }
+      .holo-container{ width:166px; height:166px; }
+      .cyber-box-system{ width:130px; height:130px; }
+      .academy-core{ width:86px; height:86px; }
 
-      .holo-container{
-        width:164px;
-        height:164px;
-      }
+      .heroTitle{ font-size:17px; }
+      .heroSub{ font-size:8.5px; }
 
-      .cyber-box-system{
-        width:128px;
-        height:128px;
-      }
+      .lesson-card,.practice-card{ padding:11px 11px 54px; }
+      .games-card{ padding:11px 42px 11px 11px; }
 
-      .academy-core{
-        width:84px;
-        height:84px;
-      }
+      .card-art{ height:40px; }
+      .card-title{ font-size:17px; }
+      .wide-title{ font-size:16px; }
+      .card-desc{ font-size:8px; }
+      .wide-desc{ font-size:8.4px; }
+    }
 
-      .heroTitle{
-        font-size:16px;
-      }
+    @media (max-height:740px){
+      .academy-hero{ height:162px; }
+      .holo-container{ width:154px; height:154px; }
+      .cyber-box-system{ width:120px; height:120px; }
+      .academy-core{ width:80px; height:80px; border-radius:22px; }
 
-      .heroSub{
-        font-size:8.4px;
-      }
+      .academy-core-title{ font-size:10px; }
+      .heroTitle{ font-size:16px; }
+      .heroSub{ font-size:8.1px; max-width:270px; }
 
       .academy-grid{
-        gap:7px;
+        grid-template-rows:minmax(0,1fr) minmax(0,.72fr);
+        gap:6px;
       }
 
-      .lesson-card,
-      .practice-card{
-        padding:10px 10px 54px;
-      }
+      .lesson-card,.practice-card{ padding:10px 10px 50px; }
+      .games-card{ padding:10px 40px 10px 10px; }
 
-      .games-card{
-        padding:10px 40px 10px 10px;
-      }
+      .card-title{ font-size:16px; }
+      .wide-title{ font-size:15px; }
+      .card-desc{ font-size:7.7px; }
+      .wide-desc{ font-size:8px; }
 
-      .card-art{
-        height:40px;
-      }
-
-      .card-title{
-        font-size:16px;
-      }
-
-      .wide-title{
-        font-size:15px;
-      }
-
-      .card-desc{
-        font-size:7.8px;
-      }
-
-      .wide-desc{
-        font-size:8.2px;
-      }
+      .card-art{ height:38px; }
+      .wide-ico{ width:48px; height:48px; }
     }
   </style>
 </head>
@@ -698,6 +723,8 @@
 
       <section class="academy-hero">
         <div class="heroTop">
+          <div class="heroGlow"></div>
+
           <div class="holo-container">
             <div class="cyber-box-system">
               <div class="cyber-frame f1"></div>
@@ -720,11 +747,14 @@
 
       <section class="academy-grid">
         <a class="academy-card lesson-card" href="/pages/academy_lessons.html">
-          <h2 class="card-title">Dil Dersi</h2>
-          <div class="card-desc-list">
-            <p class="card-desc">Seviyene uygun yapılandırılmış dersler.</p>
-            <p class="card-desc">72 dil desteği.</p>
+          <div class="card-head">
+            <h2 class="card-title">Dil Dersi</h2>
+            <div class="card-desc-list">
+              <p class="card-desc">Seviyene uygun yapılandırılmış dersler.</p>
+              <p class="card-desc">72 dil desteği.</p>
+            </div>
           </div>
+
           <div class="card-art">
             <div class="lesson-icon">
               <div class="lesson-arc"></div>
@@ -736,11 +766,14 @@
         </a>
 
         <a class="academy-card practice-card" href="/pages/academy_practice.html">
-          <h2 class="card-title">Pratik Yap</h2>
-          <div class="card-desc-list">
-            <p class="card-desc">Konuşma odaklı akıllı tekrar.</p>
-            <p class="card-desc">Sesli geri bildirim.</p>
+          <div class="card-head">
+            <h2 class="card-title">Pratik Yap</h2>
+            <div class="card-desc-list">
+              <p class="card-desc">Konuşma odaklı akıllı tekrar.</p>
+              <p class="card-desc">Sesli geri bildirim.</p>
+            </div>
           </div>
+
           <div class="card-art">
             <div class="practice-icon">
               <div class="practice-line pl1"></div>
@@ -762,11 +795,13 @@
               <span></span><span></span><span></span>
             </div>
           </div>
+
           <div class="wide-body">
             <div class="card-topline">Eğlenerek Öğren</div>
             <h2 class="wide-title">Mind Games</h2>
             <p class="wide-desc">Kelime ve refleks oyunlarıyla dili sıkılmadan öğren.</p>
           </div>
+
           <div class="arrow-chip"></div>
         </a>
       </section>
