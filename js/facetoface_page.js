@@ -325,7 +325,11 @@ async function getCurrentUser() {
 }
 
 function getVoicePreference() {
-  return String(localStorage.getItem("tts_voice") || "auto").toLowerCase().trim();
+  return String(
+    localStorage.getItem("tts_voice") ||
+    localStorage.getItem("live_interpreter_voice") ||
+    "auto"
+  ).toLowerCase().trim();
 }
 
 async function hasReadyVoiceProfile() {
@@ -386,13 +390,43 @@ async function speakViaApi(text, langCode) {
   await audio.play();
 }
 
+function chooseWebVoice(langCode) {
+  const voices = window.speechSynthesis?.getVoices?.() || [];
+  const bcp = langObj(langCode).bcp.toLowerCase();
+  const langBase = canonical(langCode);
+  const pref = getVoicePreference();
+
+  let pool = voices.filter((v) => String(v.lang || "").toLowerCase().startsWith(langBase));
+  if (!pool.length) pool = voices.filter((v) => String(v.lang || "").toLowerCase() === bcp);
+  if (!pool.length) pool = voices;
+  if (!pool.length) return null;
+
+  if (pref === "female") {
+    return (
+      pool.find((v) => /female|woman|zira|aria|seda|helena|jenny|susan|eva|anna|emma/i.test(v.name)) ||
+      pool[0]
+    );
+  }
+
+  if (pref === "male") {
+    return (
+      pool.find((v) => /male|man|david|mark|george|james|alex|tom|jon|paul/i.test(v.name)) ||
+      pool[0]
+    );
+  }
+
+  return pool[0];
+}
+
 function speakFallback(text, langCode) {
   const value = String(text || "").trim();
   if (!value) return;
 
   const c = canonical(langCode);
+  const pref = getVoicePreference();
 
-  if (window.NativeTTS && typeof window.NativeTTS.speak === "function") {
+  // Sadece auto modunda NativeTTS kullan
+  if (pref === "auto" && window.NativeTTS && typeof window.NativeTTS.speak === "function") {
     try {
       window.NativeTTS.speak(value, c);
       return;
@@ -407,51 +441,12 @@ function speakFallback(text, langCode) {
   u.pitch = 1.0;
   u.volume = 1;
 
+  const voice = chooseWebVoice(c);
+  if (voice) u.voice = voice;
+
   setTimeout(() => {
     try { window.speechSynthesis.speak(u); } catch {}
   }, 50);
-}
-
-async function speak(text, langCode) {
-  const value = String(text || "").trim();
-  if (!value) return;
-
-  const now = Date.now();
-  if (now - ttsDebounceAt < 250) stopAudio();
-  ttsDebounceAt = now;
-  stopAudio();
-
-  const voice = getVoicePreference();
-
-  if (voice === "auto") {
-    speakFallback(value, langCode);
-    return;
-  }
-
-  if (voice === "clone") {
-    try {
-      const ready = await hasReadyVoiceProfile();
-      if (!ready) {
-        console.warn("[facetoface] tts voice hazır değil, sistem sesine düşülüyor");
-        speakFallback(value, langCode);
-        return;
-      }
-
-      await speakViaApi(value, langCode);
-      return;
-    } catch (e) {
-      console.warn("[facetoface] clone tts fallback", e);
-      speakFallback(value, langCode);
-      return;
-    }
-  }
-
-  try {
-    await speakViaApi(value, langCode);
-  } catch (e) {
-    console.warn("TTS API fallback", e);
-    speakFallback(value, langCode);
-  }
 }
 
 async function spendFaceUsage(usedChars) {
@@ -533,7 +528,7 @@ function addBubble(side, kind, text, opts = {}) {
   txt.className = "txt";
   txt.textContent = String(text || "").trim();
 
-  if (kind === "me") {
+  if (opts.withSpeaker || kind === "me") {
     const spk = createSpeakerButton(txt.textContent || "", opts.speakLang || "en");
     inner.appendChild(spk);
   }
