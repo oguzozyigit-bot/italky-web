@@ -5,7 +5,7 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
   <title>italkyAI • AllToAll Room</title>
-  <meta name="theme-color" content="#030014">
+  <meta name="theme-color" content="#05030d"/>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,13 +18,11 @@
       --glass-border: rgba(255,255,255,.10);
       --muted: rgba(255,255,255,.58);
       --safe-bottom: env(safe-area-inset-bottom, 0px);
-      --footerSafe: var(--footerH, 0px);
-      --frameW: min(480px, calc(100vw - 14px));
-      --roomTop: 74px;
-      --roomMeta: 50px;
+      --frameW: min(480px, calc(100vw - 12px));
+      --topH: 74px;
+      --metaH: 50px;
       --peopleH: 72px;
-      --dockH: 78px;
-      --gapBottom: 8px;
+      --dockH: 82px;
     }
 
     *{
@@ -49,40 +47,35 @@
         radial-gradient(circle at 82% 18%, rgba(236,72,153,.10), transparent 22%),
         radial-gradient(circle at 18% 75%, rgba(96,165,250,.10), transparent 28%),
         linear-gradient(180deg,#05030d 0%, #090514 48%, #04020a 100%);
-    }
-
-    #pageContent{
-      position:relative;
-      width:100%;
-      height:calc(100dvh - var(--footerSafe));
-      overflow:hidden;
-      padding:8px 0 0;
+      display:flex;
+      justify-content:center;
+      align-items:flex-start;
     }
 
     .room-frame{
       position:relative;
       width:var(--frameW);
-      height:100%;
-      margin:0 auto;
+      height:100dvh;
+      overflow:hidden;
       border-left:1px solid rgba(255,255,255,.06);
       border-right:1px solid rgba(255,255,255,.06);
       background:rgba(8,8,20,.28);
       backdrop-filter:blur(18px);
       -webkit-backdrop-filter:blur(18px);
-      overflow:hidden;
     }
 
-    .room-topbar{
+    .topbar{
       position:absolute;
-      left:0; right:0; top:0;
-      height:var(--roomTop);
-      z-index:2300;
+      top:0; left:0; right:0;
+      height:var(--topH);
       display:flex;
       align-items:center;
       justify-content:space-between;
+      gap:12px;
       padding:0 12px;
       border-bottom:1px solid var(--glass-border);
       background:rgba(5,7,14,.92);
+      z-index:20;
     }
 
     .nav-btn{
@@ -100,12 +93,11 @@
       font-size:20px;
       flex:0 0 auto;
     }
-    .nav-btn:active{ transform:scale(.96); }
 
     .brand{
-      min-width:0;
       flex:1;
       text-align:center;
+      min-width:0;
       line-height:1.05;
     }
 
@@ -133,10 +125,8 @@
 
     .meta-bar{
       position:absolute;
-      left:0; right:0;
-      top:var(--roomTop);
-      height:var(--roomMeta);
-      z-index:2200;
+      top:var(--topH); left:0; right:0;
+      height:var(--metaH);
       display:flex;
       align-items:center;
       justify-content:space-between;
@@ -144,6 +134,7 @@
       padding:0 12px;
       border-bottom:1px solid var(--glass-border);
       background:rgba(8,10,20,.88);
+      z-index:19;
     }
 
     .room-left{
@@ -189,16 +180,15 @@
 
     .people-bar{
       position:absolute;
-      left:0; right:0;
-      top:calc(var(--roomTop) + var(--roomMeta));
+      top:calc(var(--topH) + var(--metaH)); left:0; right:0;
       height:var(--peopleH);
-      z-index:2100;
       display:flex;
       align-items:center;
       gap:10px;
       padding:0 12px;
       border-bottom:1px solid var(--glass-border);
       background:rgba(255,255,255,.015);
+      z-index:18;
     }
 
     .people-count{
@@ -218,6 +208,7 @@
       overflow-x:auto;
       scrollbar-width:none;
     }
+
     .people-scroll::-webkit-scrollbar{ display:none; }
 
     .pItem{
@@ -241,7 +232,6 @@
       font-size:11px;
       font-weight:1000;
       color:#fff;
-      box-shadow:0 0 14px rgba(124,92,255,.10);
     }
 
     .pAvatar img{
@@ -261,11 +251,11 @@
       color:rgba(255,255,255,.56);
     }
 
-    #chat.chat-area{
+    .chat-area{
       position:absolute;
+      top:calc(var(--topH) + var(--metaH) + var(--peopleH));
       left:0; right:0;
-      top:calc(var(--roomTop) + var(--roomMeta) + var(--peopleH));
-      bottom:calc(var(--dockH) + var(--gapBottom));
+      bottom:var(--dockH);
       padding:14px 12px;
       overflow-y:auto;
       -webkit-overflow-scrolling:touch;
@@ -277,8 +267,9 @@
       gap:10px;
       min-height:0;
     }
-    #chat.chat-area::-webkit-scrollbar{ display:none; }
-    #chat.chat-area::before{ content:""; flex:1 0 auto; }
+
+    .chat-area::-webkit-scrollbar{ display:none; }
+    .chat-area::before{ content:""; flex:1 0 auto; }
 
     .sys-note{
       align-self:center;
@@ -299,14 +290,8 @@
       max-width:86%;
     }
 
-    .msg-row.left{
-      align-self:flex-start;
-    }
-
-    .msg-row.right{
-      align-self:flex-end;
-      align-items:flex-end;
-    }
+    .msg-row.left{ align-self:flex-start; }
+    .msg-row.right{ align-self:flex-end; align-items:flex-end; }
 
     .sender-name{
       font-size:10px;
@@ -327,7 +312,6 @@
       border:1px solid var(--glass-border);
       backdrop-filter:blur(8px);
       -webkit-backdrop-filter:blur(8px);
-      position:relative;
       box-shadow:0 10px 24px rgba(0,0,0,.18);
     }
 
@@ -343,7 +327,6 @@
       border-right:3px solid rgba(236,72,153,.45);
       border-bottom-right-radius:8px;
       color:#ffe4f3;
-      text-align:left;
     }
 
     .msg-actions{
@@ -376,14 +359,14 @@
 
     .input-dock{
       position:absolute;
-      left:0; right:0;
-      bottom:0;
-      z-index:2400;
-      padding:0 10px calc(8px + var(--safe-bottom));
+      left:0; right:0; bottom:0;
+      height:var(--dockH);
+      padding:8px 10px calc(8px + var(--safe-bottom));
       background:rgba(0,0,0,.34);
       border-top:1px solid rgba(255,255,255,.06);
       backdrop-filter:blur(20px);
       -webkit-backdrop-filter:blur(20px);
+      z-index:21;
     }
 
     .dock-inner{
@@ -396,7 +379,6 @@
       border:1px solid rgba(255,255,255,.10);
       border-radius:26px;
       padding:7px 8px 7px 14px;
-      margin-top:8px;
     }
 
     #msgInput{
@@ -441,8 +423,6 @@
       flex:0 0 auto;
     }
 
-    .circle-btn:active{ transform:scale(.96); }
-
     .circle-btn svg{
       width:20px;
       height:20px;
@@ -461,25 +441,7 @@
       position:relative;
     }
 
-    #micBtn.listening::after{
-      content:"";
-      position:absolute;
-      inset:-5px;
-      border-radius:18px;
-      border:1px solid rgba(190,242,100,.20);
-      animation:micPulse 1s ease-in-out infinite;
-    }
-
-    @keyframes micPulse{
-      0%{ transform:scale(1); opacity:.55; }
-      50%{ transform:scale(1.08); opacity:.20; }
-      100%{ transform:scale(1); opacity:.55; }
-    }
-
     @media (max-width:390px){
-      :root{
-        --frameW: min(480px, calc(100vw - 10px));
-      }
       .room-pill{ max-width:118px; }
       .lang-select{ max-width:110px; }
       .brand-name{ font-size:17px; }
@@ -487,72 +449,570 @@
     }
   </style>
 </head>
-
 <body>
-  <main id="pageContent">
-    <div class="room-frame">
 
-      <header class="room-topbar">
-        <button class="nav-btn" id="backBtn" type="button">←</button>
+  <div class="room-frame">
+    <header class="topbar">
+      <button class="nav-btn" id="backBtn" type="button">←</button>
 
-        <div class="brand">
-          <div class="brand-name">All<span>To</span>All</div>
-          <div class="brand-sub">LIVE CHANNEL</div>
-        </div>
-
-        <button class="nav-btn" id="exitBtn" type="button">✕</button>
-      </header>
-
-      <div class="meta-bar">
-        <div class="room-left">
-          ODA:
-          <div class="room-pill" id="roomPill">------</div>
-        </div>
-
-        <select class="lang-select" id="langSelect"></select>
+      <div class="brand">
+        <div class="brand-name">All<span>To</span>All</div>
+        <div class="brand-sub">LIVE CHANNEL</div>
       </div>
 
-      <div class="people-bar">
-        <div class="people-count" id="peopleCount">1</div>
-        <div class="people-scroll" id="peopleScroll"></div>
+      <button class="nav-btn" id="exitBtn" type="button">✕</button>
+    </header>
+
+    <div class="meta-bar">
+      <div class="room-left">
+        ODA:
+        <div class="room-pill" id="roomPill">------</div>
       </div>
 
-      <div class="chat-area" id="chat">
-        <div class="sys-note">Kanal hazır. Mesaj yazabilir veya konuşabilirsin.</div>
-      </div>
-
-      <div class="input-dock">
-        <div class="dock-inner">
-          <textarea id="msgInput" rows="1" placeholder="Yaz ya da konuş…"></textarea>
-
-          <div class="dock-btns">
-            <button class="circle-btn" id="micBtn" type="button" aria-label="Mikrofon">
-              <svg viewBox="0 0 24 24">
-                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
-                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-                <line x1="12" y1="19" x2="12" y2="23"></line>
-                <line x1="8" y1="23" x2="16" y2="23"></line>
-              </svg>
-            </button>
-
-            <button class="circle-btn" id="sendBtn" type="button" aria-label="Gönder">
-              <svg viewBox="0 0 24 24">
-                <path d="M22 2L11 13"></path>
-                <path d="M22 2L15 22L11 13L2 9L22 2Z"></path>
-              </svg>
-            </button>
-          </div>
-        </div>
-      </div>
-
+      <select class="lang-select" id="langSelect"></select>
     </div>
-  </main>
 
-  <script type="module">
-    import { mountShell } from "/js/ui_shell.js";
-    try { mountShell({ scroll:"none" }); } catch(e) { console.warn("[alltoall room shell]", e); }
-  </script>
+    <div class="people-bar">
+      <div class="people-count" id="peopleCount">1</div>
+      <div class="people-scroll" id="peopleScroll"></div>
+    </div>
 
-  <script type="module" src="/js/alltoall_room.js?v=10"></script>
+    <div class="chat-area" id="chat">
+      <div class="sys-note">Kanal hazır. Mesaj yazabilir veya konuşabilirsin.</div>
+    </div>
+
+    <div class="input-dock">
+      <div class="dock-inner">
+        <textarea id="msgInput" rows="1" placeholder="Yaz ya da konuş…"></textarea>
+
+        <div class="dock-btns">
+          <button class="circle-btn" id="micBtn" type="button" aria-label="Mikrofon">
+            <svg viewBox="0 0 24 24">
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+              <line x1="12" y1="19" x2="12" y2="23"></line>
+              <line x1="8" y1="23" x2="16" y2="23"></line>
+            </svg>
+          </button>
+
+          <button class="circle-btn" id="sendBtn" type="button" aria-label="Gönder">
+            <svg viewBox="0 0 24 24">
+              <path d="M22 2L11 13"></path>
+              <path d="M22 2L15 22L11 13L2 9L22 2Z"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script type="module">
+import { supabase } from "/js/supabase_client.js";
+
+const API_BASE = "https://italky-api.onrender.com/api";
+const WS_BASE = "wss://italky-api.onrender.com/api";
+
+const $ = (id) => document.getElementById(id);
+
+const chat = $("chat");
+const msgInput = $("msgInput");
+const sendBtn = $("sendBtn");
+const micBtn = $("micBtn");
+const peopleScroll = $("peopleScroll");
+const peopleCount = $("peopleCount");
+const langSelect = $("langSelect");
+const roomPill = $("roomPill");
+const backBtn = $("backBtn");
+const exitBtn = $("exitBtn");
+
+const params = new URLSearchParams(location.search);
+const hostCode = String(params.get("host") || "").trim().toUpperCase();
+const role = String(params.get("role") || "guest").trim().toLowerCase();
+
+let roomId = "";
+let ws = null;
+let myLang = localStorage.getItem("alltoall_lang") || "tr";
+let recognizer = null;
+let recognizing = false;
+
+let myProfile = {
+  name: role === "host" ? "Host" : "Guest",
+  avatar: ""
+};
+
+const participants = new Map();
+
+const LANGS = ["tr","en","de","fr","it","es","ru","el","az","ka"];
+
+function toBCP(code){
+  const map = {
+    tr:"tr-TR", en:"en-US", de:"de-DE", fr:"fr-FR", it:"it-IT",
+    es:"es-ES", ru:"ru-RU", el:"el-GR", az:"az-AZ", ka:"ka-GE"
+  };
+  return map[String(code || "tr").toLowerCase()] || "tr-TR";
+}
+
+function getDisplayNameFromUser(user){
+  const meta = user?.user_metadata || {};
+  return (
+    meta.display_name ||
+    meta.full_name ||
+    meta.name ||
+    user?.email?.split("@")[0] ||
+    (role === "host" ? "Host" : "Guest")
+  );
+}
+
+function getAvatarFromUser(user){
+  const meta = user?.user_metadata || {};
+  return meta.picture || meta.avatar_url || meta.avatar || "";
+}
+
+function getInitials(name){
+  const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return "?";
+  if (parts.length === 1) return parts[0].slice(0,1).toUpperCase();
+  return (parts[0][0] + parts[1][0]).toUpperCase();
+}
+
+async function hydrateMyProfile(){
+  try{
+    const { data } = await supabase.auth.getUser();
+    const user = data?.user || null;
+    if (!user) return;
+    myProfile.name = getDisplayNameFromUser(user);
+    myProfile.avatar = getAvatarFromUser(user);
+  }catch(e){
+    console.warn("[alltoall hydrateMyProfile]", e);
+  }
+}
+
+function buildLangSelect(){
+  langSelect.innerHTML = "";
+  LANGS.forEach(code=>{
+    const opt = document.createElement("option");
+    opt.value = code;
+    opt.textContent = code.toUpperCase();
+    langSelect.appendChild(opt);
+  });
+  langSelect.value = myLang;
+}
+
+function renderParticipants(){
+  peopleScroll.innerHTML = "";
+
+  const list = [...participants.values()];
+  if (!list.length){
+    peopleCount.textContent = "1";
+    return;
+  }
+
+  list.forEach((p)=>{
+    const wrap = document.createElement("div");
+    wrap.className = "pItem";
+
+    const avatar = document.createElement("div");
+    avatar.className = "pAvatar";
+
+    if (p.avatar){
+      avatar.innerHTML = `<img src="${p.avatar}" alt="">`;
+    } else {
+      avatar.textContent = getInitials(p.name);
+    }
+
+    const label = document.createElement("div");
+    label.className = "pName";
+    label.textContent = p.name || "Katılımcı";
+
+    wrap.appendChild(avatar);
+    wrap.appendChild(label);
+    peopleScroll.appendChild(wrap);
+  });
+
+  peopleCount.textContent = String(list.length);
+}
+
+function setSelfParticipant(){
+  participants.set(role, {
+    role,
+    name: myProfile.name,
+    avatar: myProfile.avatar,
+    lang: myLang
+  });
+  renderParticipants();
+}
+
+function scrollBottom(){
+  requestAnimationFrame(()=>{
+    try{ chat.scrollTop = chat.scrollHeight; }catch{}
+  });
+}
+
+function addSystemNote(text){
+  const div = document.createElement("div");
+  div.className = "sys-note";
+  div.textContent = String(text || "").trim();
+  chat.appendChild(div);
+  scrollBottom();
+}
+
+function addMessage({ side="left", sender="", text="", withSpeaker=false, speakLang="tr" }){
+  const safeText = String(text || "").trim();
+  if (!safeText) return;
+
+  const row = document.createElement("div");
+  row.className = `msg-row ${side}`;
+
+  const label = document.createElement("div");
+  label.className = "sender-name";
+  label.textContent = sender || (side === "right" ? myProfile.name : "Katılımcı");
+
+  const bubble = document.createElement("div");
+  bubble.className = "msg-bubble";
+  bubble.textContent = safeText;
+
+  row.appendChild(label);
+  row.appendChild(bubble);
+
+  if (withSpeaker){
+    const actions = document.createElement("div");
+    actions.className = "msg-actions";
+
+    const btn = document.createElement("button");
+    btn.className = "mini-btn";
+    btn.type = "button";
+    btn.innerHTML = `
+      <svg viewBox="0 0 24 24">
+        <path d="M3 10v4h4l5 4V6L7 10H3"></path>
+        <path d="M16 8a4 4 0 0 1 0 8"></path>
+        <path d="M19 5a8 8 0 0 1 0 14"></path>
+      </svg>
+    `;
+    btn.addEventListener("click", ()=>speakFallback(safeText, speakLang));
+    actions.appendChild(btn);
+    row.appendChild(actions);
+  }
+
+  chat.appendChild(row);
+  scrollBottom();
+}
+
+function speakFallback(text, langCode){
+  const value = String(text || "").trim();
+  if (!value) return;
+
+  try{ window.speechSynthesis?.cancel?.(); }catch{}
+  if (!window.speechSynthesis) return;
+
+  const u = new SpeechSynthesisUtterance(value);
+  u.lang = toBCP(langCode);
+
+  setTimeout(()=>{
+    try{ window.speechSynthesis.speak(u); }catch{}
+  }, 50);
+}
+
+function autoGrowTextarea(){
+  msgInput.style.height = "26px";
+  msgInput.style.height = Math.min(msgInput.scrollHeight, 120) + "px";
+}
+
+async function resolveRoom(){
+  if (!hostCode){
+    alert("Kod bulunamadı");
+    return false;
+  }
+
+  try{
+    const r = await fetch(`${API_BASE}/interpreter/resolve-room`, {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body:JSON.stringify({
+        host_code: hostCode,
+        my_lang: myLang,
+        mode: "interpreter"
+      })
+    });
+
+    const j = await r.json().catch(()=>({}));
+
+    if (!r.ok || !j?.room_id){
+      throw new Error(j?.detail || j?.error || "Room resolve başarısız");
+    }
+
+    roomId = String(j.room_id || "").trim();
+    return true;
+  }catch(e){
+    console.error("[alltoall resolveRoom]", e);
+    alert(e?.message || "Oda bulunamadı");
+    return false;
+  }
+}
+
+async function joinRoomIfNeeded(){
+  if (!roomId || role !== "guest") return;
+
+  try{
+    const r = await fetch(`${API_BASE}/interpreter/join-room`, {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body:JSON.stringify({
+        room_id: roomId,
+        my_lang: myLang
+      })
+    });
+
+    const j = await r.json().catch(()=>({}));
+    if (!r.ok) throw new Error(j?.detail || "join-room başarısız");
+  }catch(e){
+    console.error("[alltoall joinRoom]", e);
+    alert(e?.message || "Odaya katılım başarısız");
+  }
+}
+
+function sendWs(payload){
+  try{
+    if (ws && ws.readyState === WebSocket.OPEN){
+      ws.send(JSON.stringify(payload));
+    }
+  }catch(e){
+    console.warn("[alltoall sendWs]", e);
+  }
+}
+
+function connectSocket(){
+  if (!roomId){
+    addSystemNote("Oda bilgisi bulunamadı.");
+    return;
+  }
+
+  const url = `${WS_BASE}/ws/interpreter/${encodeURIComponent(roomId)}?role=${encodeURIComponent(role)}&lang=${encodeURIComponent(myLang)}`;
+
+  try{
+    ws = new WebSocket(url);
+  }catch(e){
+    addSystemNote("Bağlantı kurulamadı.");
+    return;
+  }
+
+  ws.onopen = async ()=>{
+    setSelfParticipant();
+
+    if (role === "guest"){
+      await joinRoomIfNeeded();
+    }
+
+    addSystemNote("Bağlantı kuruldu");
+  };
+
+  ws.onmessage = (event)=>{
+    try{
+      const data = JSON.parse(event.data);
+      const type = String(data?.type || "").trim();
+
+      if (type === "presence"){
+        if (!participants.has(role)) setSelfParticipant();
+
+        if (data?.host_lang){
+          const old = participants.get("host") || {};
+          participants.set("host", {
+            role:"host",
+            name: old.name || (role === "host" ? myProfile.name : "Host"),
+            avatar: old.avatar || "",
+            lang: data.host_lang
+          });
+        }
+
+        if (data?.guest_lang){
+          const old = participants.get("guest") || {};
+          participants.set("guest", {
+            role:"guest",
+            name: old.name || (role === "guest" ? myProfile.name : "Guest"),
+            avatar: old.avatar || "",
+            lang: data.guest_lang
+          });
+        }
+
+        renderParticipants();
+        return;
+      }
+
+      if (type === "peer_joined"){
+        const old = participants.get("guest") || {};
+        participants.set("guest", {
+          role:"guest",
+          name: old.name || (role === "guest" ? myProfile.name : "Guest"),
+          avatar: old.avatar || "",
+          lang: data?.guest_lang || "en"
+        });
+        renderParticipants();
+        addSystemNote("Yeni katılımcı bağlandı");
+        return;
+      }
+
+      if (type === "peer_left"){
+        const sender = String(data?.sender || "").trim().toLowerCase();
+        if (sender && participants.has(sender)){
+          participants.delete(sender);
+        } else if (role === "host"){
+          participants.delete("guest");
+        } else {
+          participants.delete("host");
+        }
+        renderParticipants();
+        addSystemNote(data?.message || "Bir katılımcı ayrıldı");
+        return;
+      }
+
+      if (type === "translated_message"){
+        const sender = String(data?.sender || "").trim().toLowerCase();
+        const translated = String(data?.translated_text || "").trim();
+        const original = String(data?.original_text || "").trim();
+        const text = translated || original;
+
+        if (!text) return;
+        if (sender === role) return;
+
+        const senderProfile = participants.get(sender) || {};
+        addMessage({
+          side:"left",
+          sender: senderProfile.name || (sender === "host" ? "Host" : "Guest"),
+          text,
+          withSpeaker:true,
+          speakLang: myLang
+        });
+        return;
+      }
+
+      if (type === "error"){
+        addSystemNote(data?.message || "Sunucu hatası.");
+      }
+    }catch(e){
+      console.warn("[alltoall ws parse]", e);
+    }
+  };
+
+  ws.onerror = ()=>{
+    addSystemNote("Bağlantı hatası oluştu.");
+  };
+
+  ws.onclose = ()=>{
+    addSystemNote("Bağlantı kapandı.");
+  };
+}
+
+function sendMessage(){
+  const text = String(msgInput.value || "").trim();
+  if (!text) return;
+
+  addMessage({
+    side:"right",
+    sender: myProfile.name,
+    text,
+    withSpeaker:false,
+    speakLang: myLang
+  });
+
+  sendWs({
+    type:"text_message",
+    text,
+    from_lang: myLang
+  });
+
+  msgInput.value = "";
+  autoGrowTextarea();
+}
+
+function initSpeech(){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR){
+    micBtn.style.display = "none";
+    return;
+  }
+
+  recognizer = new SR();
+  recognizer.lang = toBCP(myLang);
+  recognizer.interimResults = false;
+  recognizer.continuous = false;
+  recognizer.maxAlternatives = 1;
+
+  recognizer.onresult = (e)=>{
+    const text = e.results?.[0]?.[0]?.transcript || "";
+    msgInput.value = text;
+    sendMessage();
+  };
+
+  recognizer.onend = ()=>{
+    recognizing = false;
+    micBtn.classList.remove("listening");
+  };
+}
+
+function toggleMic(){
+  if (!recognizer) return;
+
+  if (recognizing){
+    recognizer.stop();
+    recognizing = false;
+    micBtn.classList.remove("listening");
+    return;
+  }
+
+  recognizing = true;
+  micBtn.classList.add("listening");
+  recognizer.lang = toBCP(myLang);
+  recognizer.start();
+}
+
+function bindEvents(){
+  sendBtn.addEventListener("click", sendMessage);
+
+  msgInput.addEventListener("keydown", (e)=>{
+    if (e.key === "Enter" && !e.shiftKey){
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+
+  msgInput.addEventListener("input", autoGrowTextarea);
+  micBtn.addEventListener("click", toggleMic);
+
+  roomPill.addEventListener("click", async ()=>{
+    if (!hostCode) return;
+    try{
+      await navigator.clipboard.writeText(hostCode);
+      addSystemNote(`Oda kodu kopyalandı: ${hostCode}`);
+    }catch{}
+  });
+
+  langSelect.addEventListener("change", ()=>{
+    myLang = langSelect.value;
+    localStorage.setItem("alltoall_lang", myLang);
+    addSystemNote(`Dil güncellendi: ${myLang.toUpperCase()}`);
+  });
+
+  backBtn.addEventListener("click", ()=>history.back());
+  exitBtn.addEventListener("click", ()=>location.href = "/pages/alltoall.html");
+}
+
+async function init(){
+  roomPill.textContent = hostCode || "------";
+
+  await hydrateMyProfile();
+  buildLangSelect();
+  initSpeech();
+  bindEvents();
+  setSelfParticipant();
+
+  const ok = await resolveRoom();
+  if (!ok) return;
+
+  connectSocket();
+  autoGrowTextarea();
+  scrollBottom();
+}
+
+init();
+</script>
 </body>
 </html>
