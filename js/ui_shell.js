@@ -1,3 +1,5 @@
+// FILE: /js/ui_shell.js
+
 import { installAutoTranslate } from "/js/system_lang.js";
 import { STORAGE_KEY } from "/js/config.js";
 
@@ -45,7 +47,7 @@ const HOME_HEADER_HTML = `
     <div class="menu-top">
       <div class="menu-user-card" id="menuProfileTop">
         <div class="menu-avatar-wrap">
-          <div class="menu-avatar">
+          <div class="menu-avatar" id="menuAvatarClick">
             <img src="" id="menuUserPic" alt="Avatar">
           </div>
         </div>
@@ -71,20 +73,23 @@ const HOME_HEADER_HTML = `
     </div>
 
     <nav class="menu-nav">
-  <a href="/pages/profile.html" data-i18n="menu_profile">Profil</a>
-  <a href="/pages/jetonbuy.html" data-i18n="menu_token_market">Jeton Market</a>
-  <a href="/pages/voice_profile.html" data-i18n="menu_create_voice">Kendi Sesini Oluştur</a>
-  <a href="/pages/translation_settings.html" data-i18n="menu_translation_settings">Çeviri Ayarları</a>
-  <a href="/pages/text_translate.html" data-i18n="menu_text_to_text">TextToText</a>
-  <a href="/pages/qr-change.html" data-i18n="menu_change_qr">QR Değiştir</a>
-  <a href="/pages/about.html" data-i18n="menu_about">Hakkımızda</a>
-  <a href="/pages/jeton-nedir.html" data-i18n="menu_what_is_token">Jeton Nedir</a>
-  <a href="/pages/faq.html" data-i18n="menu_faq">SSS</a>
-  <a href="/pages/privacy.html" data-i18n="menu_privacy">Gizlilik</a>
-  <a href="/pages/contact.html" data-i18n="menu_contact">İletişim</a>
-  <button class="menu-action danger-lite" id="logoutBtn" type="button" data-i18n="menu_logout">Güvenli Çıkış</button>
-  <button class="menu-action danger" id="deleteAccountBtn" type="button" data-i18n="menu_delete_account">Hesabımı Sil</button>
-</nav>
+      <a href="/pages/academy.html" class="menu-link-academy" data-i18n="menu_academy">italkyACADEMY</a>
+      <a href="/pages/text_translate.html" class="menu-link-text" data-i18n="menu_text_to_text">TextToText</a>
+      <a href="/pages/jetonbuy.html" class="menu-link-jeton" data-i18n="menu_token_market">Jeton Market</a>
+
+      <a href="/pages/profile.html" data-i18n="menu_profile">Profil</a>
+      <a href="/pages/voice_profile.html" data-i18n="menu_create_voice">Kendi Sesini Oluştur</a>
+      <a href="/pages/translation_settings.html" data-i18n="menu_translation_settings">Çeviri Ayarları</a>
+      <a href="/pages/qr-change.html" data-i18n="menu_change_qr">QR Değiştir</a>
+      <a href="/pages/about.html" data-i18n="menu_about">Hakkımızda</a>
+      <a href="/pages/jeton-nedir.html" data-i18n="menu_what_is_token">Jeton Nedir</a>
+      <a href="/pages/faq.html" data-i18n="menu_faq">SSS</a>
+      <a href="/pages/privacy.html" data-i18n="menu_privacy">Gizlilik</a>
+      <a href="/pages/contact.html" data-i18n="menu_contact">İletişim</a>
+
+      <button class="menu-action danger-lite" id="logoutBtn" type="button" data-i18n="menu_logout">Güvenli Çıkış</button>
+      <button class="menu-action danger" id="deleteAccountBtn" type="button" data-i18n="menu_delete_account">Hesabımı Sil</button>
+    </nav>
 
     <div class="menu-sign" data-no-translate="1">italkyAI By Ozyigit's • 2026</div>
   </div>
@@ -348,6 +353,16 @@ body.ui-menu-open{
   overflow:hidden;
   background:linear-gradient(135deg, rgba(139,211,255,.18), rgba(255,102,196,.14));
   border:1px solid rgba(255,255,255,.10);
+  cursor:pointer;
+  transition:transform .18s ease, box-shadow .18s ease;
+}
+
+.menu-avatar:active{
+  transform:scale(.97);
+}
+
+.menu-avatar:hover{
+  box-shadow:0 0 0 3px rgba(139,211,255,.10);
 }
 
 .menu-avatar img{
@@ -459,6 +474,7 @@ body.ui-menu-open{
   cursor:pointer;
   font-family:'Outfit',sans-serif;
   line-height:1.15;
+  transition:transform .18s ease, filter .18s ease, border-color .18s ease, box-shadow .18s ease;
 }
 
 .menu-nav a:hover,
@@ -466,6 +482,47 @@ body.ui-menu-open{
 .menu-action:hover,
 .menu-action:active{
   background:linear-gradient(180deg, rgba(139,211,255,.12), rgba(124,92,255,.10));
+}
+
+.menu-link-academy{
+  padding:14px 14px !important;
+  font-size:14px !important;
+  font-weight:900 !important;
+  letter-spacing:.25px !important;
+  border-radius:16px !important;
+  color:#ffffff !important;
+  background:
+    linear-gradient(135deg, rgba(103,232,249,.22) 0%, rgba(124,92,255,.28) 45%, rgba(255,102,196,.20) 100%) !important;
+  border:1px solid rgba(139,211,255,.28) !important;
+  box-shadow:0 10px 24px rgba(124,92,255,.18), inset 0 1px 0 rgba(255,255,255,.06);
+}
+
+.menu-link-academy:hover,
+.menu-link-academy:active{
+  filter:brightness(1.08);
+  transform:translateY(-1px);
+}
+
+.menu-link-text{
+  color:#f8fbff !important;
+  background:linear-gradient(135deg, rgba(34,197,94,.18) 0%, rgba(6,182,212,.16) 100%) !important;
+  border:1px solid rgba(52,211,153,.22) !important;
+}
+
+.menu-link-text:hover,
+.menu-link-text:active{
+  filter:brightness(1.06);
+}
+
+.menu-link-jeton{
+  color:#fffaf2 !important;
+  background:linear-gradient(135deg, rgba(251,146,60,.28) 0%, rgba(249,115,22,.22) 100%) !important;
+  border:1px solid rgba(251,146,60,.30) !important;
+}
+
+.menu-link-jeton:hover,
+.menu-link-jeton:active{
+  filter:brightness(1.06);
 }
 
 .menu-action{
@@ -576,6 +633,7 @@ function bindMenu() {
   const logoutBtn = document.getElementById("logoutBtn");
   const deleteAccountBtn = document.getElementById("deleteAccountBtn");
   const menuProfileTop = document.getElementById("menuProfileTop");
+  const menuAvatarClick = document.getElementById("menuAvatarClick");
   const menuJetonInfoLink = document.getElementById("menuJetonInfoLink");
 
   if (!menuBtn || !sideMenu) return;
@@ -593,12 +651,19 @@ function bindMenu() {
     document.body.classList.remove("ui-menu-open");
   };
 
+  const goProfile = () => {
+    closeMenu();
+    location.href = "/pages/profile.html";
+  };
+
   menuBtn.addEventListener("click", openMenu);
   menuBackdrop?.addEventListener("click", closeMenu);
 
-  menuProfileTop?.addEventListener("click", () => {
-    closeMenu();
-    location.href = "/pages/profile.html";
+  menuProfileTop?.addEventListener("click", goProfile);
+  menuAvatarClick?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    goProfile();
   });
 
   menuJetonInfoLink?.addEventListener("click", (e) => {
