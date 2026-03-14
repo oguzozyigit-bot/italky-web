@@ -1,198 +1,721 @@
+<!-- FILE: /pages/academy.html -->
 <!doctype html>
 <html lang="tr">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-<title>italkyACADEMY • Neural Prism</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+  <title>italkyACADEMY • Future Learning</title>
+  <meta name="theme-color" content="#120d16"/>
 
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
-<style>
-:root {
-  --ai-grad: linear-gradient(135deg, #67e8f9 0%, #818cf8 46%, #f472b6 100%);
-  --p1: #301661; --p2: #61220e; --p3: #d43685; --p4: #1e36a3;
-}
+  <style>
+    :root{
+      --txt:rgba(255,255,255,.96);
+      --muted:rgba(255,255,255,.64);
+      --cardLine:rgba(255,255,255,.12);
+      --ai-grad:linear-gradient(135deg,#67e8f9 0%, #818cf8 46%, #f472b6 100%);
+      --pink:#f472b6;
+      --cyan:#67e8f9;
+      --violet:#818cf8;
+      --gold:#f59e0b;
+      --emerald:#22c55e;
+    }
 
-* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    *{
+      box-sizing:border-box;
+      -webkit-tap-highlight-color:transparent;
+      outline:none;
+    }
 
-body, html {
-  margin: 0; width: 100%; height: 100%;
-  background: #020205; color: #fff;
-  font-family: 'Outfit', sans-serif; overflow: hidden;
-}
+    html,body{
+      margin:0;
+      width:100%;
+      height:100%;
+      color:var(--txt);
+      font-family:'Outfit',sans-serif;
+      background:#120d16;
+      scrollbar-width:none;
+    }
+    html::-webkit-scrollbar,
+    body::-webkit-scrollbar{
+      display:none;
+    }
 
-#pageContent {
-  width: 100%; height: 100vh;
-  display: flex; flex-direction: column;
-}
+    body{
+      background:
+        radial-gradient(circle at 50% 0%, rgba(251,146,60,.16) 0%, transparent 26%),
+        radial-gradient(circle at 16% 16%, rgba(244,114,182,.12) 0%, transparent 24%),
+        radial-gradient(circle at 84% 18%, rgba(96,165,250,.12) 0%, transparent 22%),
+        linear-gradient(180deg, #1d1016 0%, #150e19 34%, #120d16 100%);
+    }
 
-/* ACADEMY GRID - BOŞLUKSUZ VE DERİNLİKLİ */
-.academy-grid {
-  flex: 1;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr;
-  gap: 0;
-  position: relative;
-}
+    #pageContent{
+      width:100%;
+      min-height:100%;
+      padding:10px 14px 4px;
+      display:block;
+    }
 
-.aca-panel {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-decoration: none;
-  overflow: hidden;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
+    .page-shell-fit{
+      min-height:100%;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
 
-/* İç Bükey Derinlik Efekti (Shadow Inset) */
-.aca-panel::before {
-  content: ""; position: absolute; inset: 0;
-  box-shadow: inset 0 0 80px rgba(0,0,0,0.6);
-  z-index: 1;
-}
+    .academy-hero{
+      flex:0 0 auto;
+      perspective:1000px;
+    }
 
-/* Panellerin Işık Kırılmaları */
-.p-1 { background: linear-gradient(145deg, var(--p1), #150e19); }
-.p-2 { background: linear-gradient(225deg, var(--p2), #120d16); }
-.p-3 { background: linear-gradient(45deg, var(--p3), #1d1016); }
-.p-4 { background: linear-gradient(315deg, var(--p4), #0a0a0f); }
+    .heroTop{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+    }
 
-/* MERKEZİ KRİSTAL (Hologram Core) */
-.central-station {
-  position: absolute;
-  top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
-  width: 180px; height: 180px;
-  z-index: 100;
-  display: flex; align-items: center; justify-content: center;
-}
+    .holo-container{
+      width:210px;
+      height:210px;
+      position:relative;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      transform-style:preserve-3d;
+      margin:2px auto 12px;
+    }
 
-/* Home.html'deki gibi dönen kristal kafes */
-.orbit-shield {
-  position: absolute; inset: 0;
-  border: 1px solid rgba(103,232,249,0.3);
-  border-radius: 38% 62% 63% 37% / 41% 44% 56% 59%;
-  background: radial-gradient(circle, rgba(103,232,249,0.1), transparent);
-  animation: liquidOrbit 8s linear infinite;
-}
+    .crystal-cage{
+      position:absolute;
+      width:150px;
+      height:150px;
+      transform-style:preserve-3d;
+      animation:rotateCrystal 18s linear infinite;
+    }
 
-.core-btn {
-  width: 110px; height: 110px;
-  background: #fff;
-  border-radius: 24px;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  box-shadow: 0 0 40px rgba(103,232,249,0.6), inset 0 0 15px rgba(0,0,0,0.2);
-  cursor: pointer;
-  z-index: 101;
-  transition: 0.3s;
-  animation: coreFloat 4s ease-in-out infinite;
-}
+    .crystal-side{
+      position:absolute;
+      inset:0;
+      border:2px solid rgba(103,232,249,.32);
+      background:radial-gradient(circle, rgba(129,140,248,.10), transparent);
+      box-shadow:0 0 18px rgba(103,232,249,.18);
+    }
 
-.core-btn h2 {
-  font-family: 'Space Grotesk'; font-size: 13px; margin: 0;
-  color: #111; line-height: 1.1; text-align: center;
-}
+    .side1{ transform:rotateY(0deg) translateZ(75px); }
+    .side2{ transform:rotateY(90deg) translateZ(75px); }
+    .side3{ transform:rotateY(180deg) translateZ(75px); }
+    .side4{ transform:rotateY(270deg) translateZ(75px); }
+    .side5{ transform:rotateX(90deg) translateZ(75px); }
+    .side6{ transform:rotateX(-90deg) translateZ(75px); }
 
-/* ÖZEL İSİMLER VE İÇERİK */
-.content-box {
-  z-index: 2; text-align: center;
-  transition: transform 0.3s ease;
-}
+    .academy-core{
+      position:absolute;
+      width:112px;
+      height:112px;
+      border-radius:26px;
+      background:linear-gradient(135deg,#ffffff 0%, #eef2ff 100%);
+      box-shadow:
+        0 0 34px rgba(103,232,249,.58),
+        0 0 70px rgba(124,92,255,.22),
+        inset 0 0 12px rgba(0,0,0,.08);
+      animation:floatCore 4s ease-in-out infinite;
+      z-index:2;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      padding:10px;
+      cursor:pointer;
+      text-decoration:none;
+    }
 
-.aca-panel:active .content-box { transform: scale(0.9); }
+    .academy-core-inner{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:6px;
+    }
 
-.label-main {
-  display: block; font-family: 'Space Grotesk';
-  font-size: 24px; font-weight: 700; letter-spacing: -1px;
-  background: linear-gradient(to bottom, #fff, rgba(255,255,255,0.7));
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-}
+    .academy-core-emoji{
+      font-size:24px;
+      line-height:1;
+    }
 
-.label-sub {
-  display: block; font-size: 10px; font-weight: 600;
-  color: var(--ai-grad); text-transform: uppercase;
-  letter-spacing: 2px; margin-top: 4px;
-}
+    .academy-core-title{
+      font-family:'Space Grotesk',sans-serif;
+      font-size:13px;
+      line-height:1.08;
+      font-weight:700;
+      color:#111827;
+      letter-spacing:-.2px;
+    }
 
-/* Işık Süzmesi Animasyonu */
-.beam {
-  position: absolute; width: 200%; height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
-  transform: rotate(-45deg);
-  animation: beamSlide 6s infinite;
-}
+    .holo-beams{
+      position:absolute;
+      inset:-22px;
+      background:
+        repeating-linear-gradient(
+          to bottom,
+          transparent,
+          transparent 4px,
+          rgba(103,232,249,.07) 4px,
+          rgba(103,232,249,.07) 6px
+        );
+      mask-image:radial-gradient(circle, #fff, transparent 75%);
+      -webkit-mask-image:radial-gradient(circle, #fff, transparent 75%);
+      animation:beamFlow 2s linear infinite;
+      pointer-events:none;
+    }
 
-@keyframes liquidOrbit {
-  0% { transform: rotate(0deg) scale(1); }
-  50% { transform: rotate(180deg) scale(1.1); border-radius: 60% 40% 30% 70% / 50% 30% 70% 50%; }
-  100% { transform: rotate(360deg) scale(1); }
-}
-@keyframes coreFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-@keyframes beamSlide { 0% { left: -200%; } 100% { left: 200%; } }
+    .energy-platform{
+      position:absolute;
+      bottom:-28px;
+      left:50%;
+      transform:translateX(-50%) rotateX(75deg);
+      width:176px;
+      height:176px;
+      background:
+        radial-gradient(circle, var(--cyan) 0%, transparent 70%),
+        radial-gradient(circle, rgba(244,114,182,.22) 10%, transparent 60%);
+      border-radius:50%;
+      filter:blur(5px);
+      box-shadow:0 0 44px var(--cyan), 0 0 84px var(--pink);
+      animation:platformPulse 3s ease-in-out infinite;
+      opacity:.64;
+      z-index:-1;
+    }
 
-</style>
+    .heroTitle{
+      font-family:'Space Grotesk',sans-serif;
+      font-size:22px;
+      font-weight:700;
+      letter-spacing:-.4px;
+      color:#fff;
+      margin:0;
+      line-height:1.08;
+      text-align:center;
+      text-shadow:0 0 12px rgba(255,255,255,.18);
+    }
+
+    .heroTitle .to{
+      background:var(--ai-grad);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+
+    .heroSub{
+      margin:0;
+      font-size:10.8px;
+      color:var(--muted);
+      text-align:center;
+      line-height:1.36;
+      max-width:312px;
+    }
+
+    .heroStatus{
+      min-height:20px;
+      font-size:11px;
+      font-weight:800;
+      color:rgba(255,255,255,.78);
+      text-align:center;
+    }
+
+    .academy-grid{
+      flex:1;
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      grid-template-rows:auto auto;
+      gap:12px;
+    }
+
+    .academy-card{
+      position:relative;
+      border-radius:28px;
+      overflow:hidden;
+      border:1px solid var(--cardLine);
+      box-shadow:
+        0 15px 30px rgba(0,0,0,.28),
+        inset 0 1px 0 rgba(255,255,255,.05);
+      padding:16px 15px 108px;
+      text-decoration:none;
+      color:#fff;
+      min-height:300px;
+      transition:transform .22s ease, filter .22s ease, box-shadow .22s ease;
+    }
+
+    .academy-card:active{
+      transform:scale(.985);
+      filter:brightness(1.08);
+    }
+
+    .academy-card:hover{
+      box-shadow:
+        0 22px 36px rgba(0,0,0,.32),
+        0 0 18px rgba(103,232,249,.08);
+    }
+
+    .lesson-card{
+      background:
+        radial-gradient(circle at 18% 14%, rgba(103,232,249,.28) 0%, transparent 32%),
+        linear-gradient(180deg, #301661 0%, #2b2185 50%, #1e36a3 100%);
+    }
+
+    .practice-card{
+      background:
+        radial-gradient(circle at 82% 15%, rgba(251,146,60,.24) 0%, transparent 30%),
+        linear-gradient(180deg, #d43685 0%, #632bbd 52%, #3c35b5 100%);
+    }
+
+    .games-card{
+      grid-column:1 / 3;
+      min-height:126px;
+      display:flex;
+      align-items:center;
+      gap:16px;
+      padding:16px 52px 16px 16px;
+      background:
+        radial-gradient(circle at 12% 50%, rgba(34,197,94,.20) 0%, transparent 25%),
+        radial-gradient(circle at 88% 20%, rgba(103,232,249,.12) 0%, transparent 20%),
+        linear-gradient(90deg, #10311e 0%, #166534 34%, #15803d 64%, #0f766e 100%);
+    }
+
+    .vision-card{
+      grid-column:1 / 3;
+      min-height:126px;
+      display:flex;
+      align-items:center;
+      gap:16px;
+      padding:16px 52px 16px 16px;
+      background:
+        radial-gradient(circle at 12% 50%, rgba(251,146,60,.22) 0%, transparent 25%),
+        radial-gradient(circle at 88% 20%, rgba(244,114,182,.14) 0%, transparent 20%),
+        linear-gradient(90deg, #5b2208 0%, #b45309 34%, #ea580c 64%, #db2777 100%);
+    }
+
+    .card-title{
+      margin:0;
+      font-family:'Space Grotesk',sans-serif;
+      font-size:24px;
+      line-height:1;
+      letter-spacing:-.8px;
+      color:#fff;
+      word-break:break-word;
+    }
+
+    .card-desc-list{
+      margin-top:8px;
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+      max-width:100%;
+      padding-right:2px;
+    }
+
+    .card-desc{
+      margin:0;
+      font-size:10.2px;
+      line-height:1.26;
+      color:rgba(255,255,255,.86);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .card-art{
+      position:absolute;
+      left:12px;
+      right:12px;
+      bottom:12px;
+      height:76px;
+      border-radius:20px;
+      background:rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.10);
+      overflow:hidden;
+    }
+
+    .lesson-art{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:18px;
+    }
+
+    .lesson-head{
+      width:28px;
+      height:28px;
+      border-radius:50%;
+      background:rgba(255,255,255,.88);
+      box-shadow:0 0 14px rgba(255,255,255,.14);
+      position:relative;
+    }
+
+    .lesson-head::after{
+      content:"";
+      position:absolute;
+      left:50%;
+      top:34px;
+      transform:translateX(-50%);
+      width:34px;
+      height:20px;
+      border-radius:16px 16px 10px 10px;
+      background:linear-gradient(180deg, rgba(255,255,255,.9), rgba(255,255,255,.32));
+    }
+
+    .lesson-wave{
+      position:absolute;
+      left:50%;
+      top:50%;
+      width:66px;
+      height:28px;
+      transform:translate(-50%,-50%);
+    }
+
+    .lesson-wave::before,
+    .lesson-wave::after{
+      content:"";
+      position:absolute;
+      left:0;
+      right:0;
+      border-radius:999px;
+      background:linear-gradient(90deg, rgba(255,255,255,.08), rgba(103,232,249,.98), rgba(255,255,255,.08));
+      box-shadow:0 0 14px rgba(103,232,249,.46);
+    }
+
+    .lesson-wave::before{ top:9px;height:2px; }
+    .lesson-wave::after{ top:16px;height:2px;opacity:.68; }
+
+    .practice-art{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .practice-center{
+      position:absolute;
+      left:50%;
+      top:50%;
+      width:16px;
+      height:16px;
+      border-radius:50%;
+      transform:translate(-50%,-50%);
+      background:rgba(255,255,255,.92);
+      box-shadow:
+        0 0 0 6px rgba(255,255,255,.12),
+        0 0 18px rgba(251,146,60,.52);
+    }
+
+    .practice-dot{
+      position:absolute;
+      width:12px;
+      height:12px;
+      border-radius:50%;
+      background:rgba(255,255,255,.84);
+      box-shadow:0 0 10px rgba(255,255,255,.22);
+    }
+
+    .n1{ top:10px; left:50%; transform:translateX(-50%); }
+    .n2{ left:24px; bottom:14px; }
+    .n3{ right:24px; bottom:14px; }
+
+    .practice-line{
+      position:absolute;
+      left:50%;
+      top:50%;
+      width:2px;
+      height:34px;
+      transform-origin:center bottom;
+      background:linear-gradient(180deg, rgba(255,255,255,.16), rgba(251,146,60,.95));
+      box-shadow:0 0 10px rgba(251,146,60,.34);
+    }
+
+    .r1{ transform:translate(-50%,-50%) rotate(0deg); }
+    .r2{ transform:translate(-50%,-50%) rotate(120deg); }
+    .r3{ transform:translate(-50%,-50%) rotate(240deg); }
+
+    .wide-ico{
+      width:76px;
+      height:76px;
+      flex:0 0 auto;
+      position:relative;
+      border-radius:22px;
+      background:rgba(255,255,255,.12);
+      border:1.5px solid rgba(255,255,255,.15);
+      box-shadow:inset 0 0 22px rgba(255,255,255,.05);
+    }
+
+    .game-pad{
+      position:absolute;
+      inset:18px;
+      border-radius:18px;
+      border:1.5px solid rgba(255,255,255,.52);
+      background:rgba(255,255,255,.10);
+    }
+
+    .game-dot{
+      position:absolute;
+      width:10px;
+      height:10px;
+      border-radius:50%;
+      background:rgba(255,255,255,.82);
+      box-shadow:0 0 10px rgba(255,255,255,.16);
+    }
+
+    .g1{ left:16px; top:32px; }
+    .g2{ left:28px; top:22px; }
+    .g3{ left:28px; top:42px; }
+    .g4{ left:40px; top:32px; }
+    .g5{ right:18px; top:24px; }
+    .g6{ right:30px; top:38px; }
+
+    .scan-box{
+      position:absolute;
+      inset:15px;
+      border-radius:16px;
+      border:1.5px solid rgba(255,255,255,.44);
+      background:rgba(255,255,255,.08);
+      overflow:hidden;
+    }
+
+    .scan-line{
+      position:absolute;
+      left:10px;
+      right:10px;
+      top:50%;
+      height:3px;
+      border-radius:999px;
+      background:linear-gradient(90deg, transparent, rgba(255,255,255,.95), transparent);
+      box-shadow:0 0 16px rgba(255,255,255,.24);
+      animation:scanMove 2s ease-in-out infinite;
+    }
+
+    .wide-body{
+      flex:1;
+      min-width:0;
+    }
+
+    .card-topline{
+      font-size:10px;
+      font-weight:700;
+      letter-spacing:.5px;
+      color:rgba(255,255,255,.8);
+      margin-bottom:6px;
+      text-transform:uppercase;
+    }
+
+    .wide-title{
+      margin:0;
+      font-family:'Space Grotesk',sans-serif;
+      font-size:24px;
+      line-height:1;
+      letter-spacing:-.8px;
+      word-break:break-word;
+    }
+
+    .wide-desc{
+      margin-top:7px;
+      font-size:10.8px;
+      line-height:1.34;
+      color:rgba(255,255,255,.88);
+      max-width:84%;
+    }
+
+    .arrow-chip{
+      flex:0 0 auto;
+      width:40px;
+      height:40px;
+      border-radius:50%;
+      position:absolute;
+      right:12px;
+      top:50%;
+      transform:translateY(-50%);
+      background:rgba(255,255,255,.15);
+      border:1px solid rgba(255,255,255,.18);
+    }
+
+    .arrow-chip::before{
+      content:"";
+      position:absolute;
+      left:13px;
+      top:50%;
+      width:12px;
+      height:12px;
+      border-top:2px solid rgba(255,255,255,.9);
+      border-right:2px solid rgba(255,255,255,.9);
+      transform:translateY(-50%) rotate(45deg);
+    }
+
+    @keyframes rotateCrystal{
+      from{ transform:rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
+      to{ transform:rotateX(360deg) rotateY(720deg) rotateZ(360deg); }
+    }
+
+    @keyframes floatCore{
+      0%,100%{ transform:translateY(0); }
+      50%{ transform:translateY(-8px); }
+    }
+
+    @keyframes beamFlow{
+      from{ background-position:0 0; }
+      to{ background-position:0 50px; }
+    }
+
+    @keyframes platformPulse{
+      0%,100%{ transform:translateX(-50%) rotateX(75deg) scale(1); opacity:.7; }
+      50%{ transform:translateX(-50%) rotateX(75deg) scale(1.08); opacity:.88; }
+    }
+
+    @keyframes scanMove{
+      0%,100%{ transform:translateY(-18px); opacity:.7; }
+      50%{ transform:translateY(18px); opacity:1; }
+    }
+
+    @media (max-width:390px){
+      .holo-container{ width:190px; height:190px; margin-bottom:8px; }
+      .crystal-cage{ width:136px; height:136px; }
+      .side1{ transform:rotateY(0deg) translateZ(68px); }
+      .side2{ transform:rotateY(90deg) translateZ(68px); }
+      .side3{ transform:rotateY(180deg) translateZ(68px); }
+      .side4{ transform:rotateY(270deg) translateZ(68px); }
+      .side5{ transform:rotateX(90deg) translateZ(68px); }
+      .side6{ transform:rotateX(-90deg) translateZ(68px); }
+      .academy-core{ width:100px; height:100px; }
+      .energy-platform{ width:154px; height:154px; bottom:-24px; }
+      .heroTitle{ font-size:20px; }
+      .card-title{ font-size:22px; }
+      .wide-title{ font-size:22px; }
+      .card-art{ height:70px; }
+      .card-desc{ font-size:9.6px; }
+    }
+  </style>
 </head>
 
 <body>
+  <main id="pageContent">
+    <div class="page-shell-fit">
 
-<main id="pageContent">
-  <div class="academy-grid">
-    
-    <a href="#" class="aca-panel p-1">
-      <div class="beam"></div>
-      <div class="content-box">
-        <span class="label-main">Dil Dersi</span>
-        <span class="label-sub">Neural Mentor</span>
-      </div>
-    </a>
+      <section class="academy-hero">
+        <div class="heroTop">
+          <div class="holo-container">
+            <div class="crystal-cage">
+              <div class="crystal-side side1"></div>
+              <div class="crystal-side side2"></div>
+              <div class="crystal-side side3"></div>
+              <div class="crystal-side side4"></div>
+              <div class="crystal-side side5"></div>
+              <div class="crystal-side side6"></div>
+            </div>
 
-    <a href="#" class="aca-panel p-2">
-      <div class="beam" style="animation-delay: 1.5s"></div>
-      <div class="content-box">
-        <span class="label-main">Pratik Yap</span>
-        <span class="label-sub">Vocal Sync</span>
-      </div>
-    </a>
+            <a href="/pages/academy_level.html" class="academy-core">
+              <div class="academy-core-inner">
+                <div class="academy-core-emoji">🎯</div>
+                <div class="academy-core-title">SEVİYENİ<br>TESPİT ET</div>
+              </div>
+            </a>
 
-    <a href="#" class="aca-panel p-3">
-      <div class="beam" style="animation-delay: 3s"></div>
-      <div class="content-box">
-        <span class="label-main">Eğlenerek Öğren</span>
-        <span class="label-sub">Mind Games</span>
-      </div>
-    </a>
+            <div class="holo-beams"></div>
+            <div class="energy-platform"></div>
+          </div>
 
-    <a href="#" class="aca-panel p-4">
-      <div class="beam" style="animation-delay: 4.5s"></div>
-      <div class="content-box">
-        <span class="label-main">Sorunu Tarat</span>
-        <span class="label-sub">Vision Solver</span>
-      </div>
-    </a>
+          <h1 class="heroTitle">italky<span class="to">ACADEMY</span></h1>
+          <p class="heroSub">Ders al, pratik yap, oyunla öğren, sorunu tarat. Hepsi aynı akademi içinde tek ekranda.</p>
+          <div class="heroStatus">Akademi modülleri hazır</div>
+        </div>
+      </section>
 
-    <div class="central-station">
-      <div class="orbit-shield"></div>
-      <div class="core-btn" onclick="alert('Neural Syncing...')">
-        <span style="font-size: 22px;">🎯</span>
-        <h2>SEVİYENİ<br>TESPİT ET</h2>
-      </div>
+      <section class="academy-grid">
+        <a class="academy-card lesson-card" href="/pages/academy_lessons.html">
+          <h2 class="card-title">Dil Dersi</h2>
+
+          <div class="card-desc-list">
+            <p class="card-desc">Seviyene uygun yapılandırılmış dersler.</p>
+            <p class="card-desc">Kelime, cümle ve konu bazlı eğitim.</p>
+            <p class="card-desc">Yapay zeka destekli anlatım.</p>
+            <p class="card-desc">Adım adım öğrenme akışı.</p>
+            <p class="card-desc">72 dil desteği.</p>
+          </div>
+
+          <div class="card-art lesson-art">
+            <div class="lesson-wave"></div>
+            <div class="lesson-head"></div>
+            <div class="lesson-head"></div>
+          </div>
+        </a>
+
+        <a class="academy-card practice-card" href="/pages/academy_practice.html">
+          <h2 class="card-title">Pratik Yap</h2>
+
+          <div class="card-desc-list">
+            <p class="card-desc">Konuşma odaklı akıllı tekrar.</p>
+            <p class="card-desc">Gerçek diyaloğa yakın senaryolar.</p>
+            <p class="card-desc">Telaffuz ve akıcılık desteği.</p>
+            <p class="card-desc">Sesli geri bildirim.</p>
+            <p class="card-desc">Anlık düzeltme mantığı.</p>
+          </div>
+
+          <div class="card-art practice-art">
+            <div class="practice-line r1"></div>
+            <div class="practice-line r2"></div>
+            <div class="practice-line r3"></div>
+            <div class="practice-center"></div>
+            <div class="practice-dot n1"></div>
+            <div class="practice-dot n2"></div>
+            <div class="practice-dot n3"></div>
+          </div>
+        </a>
+
+        <a class="academy-card games-card" href="/pages/academy_games.html">
+          <div class="wide-ico">
+            <div class="game-pad"></div>
+            <div class="game-dot g1"></div>
+            <div class="game-dot g2"></div>
+            <div class="game-dot g3"></div>
+            <div class="game-dot g4"></div>
+            <div class="game-dot g5"></div>
+            <div class="game-dot g6"></div>
+          </div>
+
+          <div class="wide-body">
+            <div class="card-topline">Eğlenerek Öğren</div>
+            <h2 class="wide-title">Mind Games</h2>
+            <p class="wide-desc">Kelime, cümle ve refleks oyunlarıyla dili sıkılmadan öğren.</p>
+          </div>
+
+          <div class="arrow-chip"></div>
+        </a>
+
+        <a class="academy-card vision-card" href="/pages/academy_scan.html">
+          <div class="wide-ico">
+            <div class="scan-box">
+              <div class="scan-line"></div>
+            </div>
+          </div>
+
+          <div class="wide-body">
+            <div class="card-topline">Sorunu Tarat</div>
+            <h2 class="wide-title">Vision Solver</h2>
+            <p class="wide-desc">Soru, metin veya görseli okut; açıklamalı çözüm ve destek al.</p>
+          </div>
+
+          <div class="arrow-chip"></div>
+        </a>
+      </section>
+
     </div>
+  </main>
 
-  </div>
-</main>
-
-<script type="module">
-import { mountShell } from "/js/ui_shell.js";
-try {
-  mountShell({ scroll: "none" }); 
-} catch (e) {
-  console.warn("Shell hatası:", e);
-}
-</script>
-
+  <script type="module">
+    import { mountShell } from "/js/ui_shell.js";
+    try {
+      mountShell({ scroll: "auto" });
+    } catch (e) {
+      console.warn("Shell hatası:", e);
+    }
+  </script>
 </body>
 </html>
