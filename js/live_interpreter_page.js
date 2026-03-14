@@ -378,8 +378,10 @@ function speakFallback(text, langCode) {
   if (!value) return;
 
   const c = canonical(langCode);
+  const pref = getVoicePreference();
 
-  if (window.NativeTTS && typeof window.NativeTTS.speak === "function") {
+  // Sadece auto modunda NativeTTS kullan
+  if (pref === "auto" && window.NativeTTS && typeof window.NativeTTS.speak === "function") {
     try {
       window.NativeTTS.speak(value, c);
       return;
@@ -401,24 +403,6 @@ function speakFallback(text, langCode) {
     try { window.speechSynthesis.speak(u); } catch {}
   }, 50);
 }
-
-async function speak(text, langCode) {
-  const value = String(text || "").trim();
-  if (!value) return;
-
-  const now = Date.now();
-  if (now - ttsDebounceAt < 250) stopAudio();
-  ttsDebounceAt = now;
-  stopAudio();
-
-  try {
-    await speakViaApi(value, langCode);
-  } catch (e) {
-    console.warn("[interpreter tts fallback]", e);
-    speakFallback(value, langCode);
-  }
-}
-
 /* =========================
    API
 ========================= */
@@ -510,6 +494,17 @@ async function applyMyLanguageChange(nextLang) {
   } catch (e) {
     console.warn("[set_lang send]", e);
   }
+
+  try {
+    if (ws) {
+      manuallyClosed = true;
+      ws.close();
+    }
+  } catch {}
+
+  ws = null;
+  wsReady = false;
+  manuallyClosed = false;
 
   startSocket();
 }
