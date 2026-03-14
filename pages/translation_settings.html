@@ -1,3 +1,4 @@
+<!-- FILE: /pages/translation_settings.html -->
 <!doctype html>
 <html lang="tr">
 <head>
@@ -372,7 +373,7 @@ body{
 
   <div class="panel">
     <div class="note">
-      Ses ayarı eski çalışan sistemle uyumlu olarak tts_voice anahtarına yazılır. Sistem dili ise uygulama metinlerinin hangi dilde gösterileceğini belirler.
+      Ses ayarı eski çalışan sistemle uyumlu olarak hem tts_voice hem de live_interpreter_voice anahtarına yazılır. Sistem dili ise uygulama metinlerinin hangi dilde gösterileceğini belirler.
     </div>
   </div>
 
@@ -387,149 +388,6 @@ body{
 </div>
 
 <div class="toast" id="toast"></div>
-
-<script type="module">
-import { mountShell } from "/js/ui_shell.js";
-import { supabase } from "/js/supabase_client.js";
-
-try{
-  mountShell({ scroll:"auto" });
-}catch(e){
-  console.warn("[translation settings shell]", e);
-}
-
-const $ = (id) => document.getElementById(id);
-
-const backBtn = $("backBtn");
-const voiceSettingBtn = $("voiceSettingBtn");
-const langSettingBtn = $("langSettingBtn");
-const voiceValue = $("voiceValue");
-const langValue = $("langValue");
-
-const sheetBackdrop = $("sheetBackdrop");
-const optionSheet = $("optionSheet");
-const sheetTitle = $("sheetTitle");
-const sheetList = $("sheetList");
-const toastEl = $("toast");
-
-const STORAGE_KEYS = {
-  voice: "tts_voice",
-  lang: "system_lang"
-};
-
-const VOICE_OPTIONS = [
-  { value: "auto", label: "Otomatik", sub: "TTS ücretsiz ve varsayılan seçenek" },
-  { value: "female", label: "Kadın", sub: "Kadın ses tonuna yakın okuma" },
-  { value: "male", label: "Erkek", sub: "Erkek ses tonuna yakın okuma" },
-  { value: "clone", label: "Kendi Sesim", sub: "Daha önce oluşturduğun ses profili" }
-];
-
-const LANGUAGE_OPTIONS = [
-  { value: "tr", label: "Türkçe" },
-  { value: "en", label: "English" },
-  { value: "de", label: "Deutsch" },
-  { value: "fr", label: "Français" },
-  { value: "it", label: "Italiano" },
-  { value: "es", label: "Español" }
-];
-
-function toast(msg){
-  if(!toastEl) return;
-  toastEl.textContent = String(msg || "");
-  toastEl.classList.add("show");
-  clearTimeout(window.__settingsToast);
-  window.__settingsToast = setTimeout(() => {
-    toastEl.classList.remove("show");
-  }, 1800);
-}
-
-function normalizeVoiceStorage(value){
-  const v = String(value || "auto").toLowerCase().trim();
-  if(v === "own" || v === "my") return "clone";
-  if(v === "female" || v === "male" || v === "clone") return v;
-  return "auto";
-}
-
-function getStoredValue(key, fallback){
-  try{
-    return localStorage.getItem(key) || fallback;
-  }catch{
-    return fallback;
-  }
-}
-
-function setStoredValue(key, value){
-  try{
-    localStorage.setItem(key, value);
-  }catch{}
-}
-
-function voiceLabelOf(value){
-  return VOICE_OPTIONS.find(x => x.value === value)?.label || "Otomatik";
-}
-
-function langLabelOf(value){
-  return LANGUAGE_OPTIONS.find(x => x.value === value)?.label || "Türkçe";
-}
-
-function syncUI(){
-  const voicePref = normalizeVoiceStorage(getStoredValue(STORAGE_KEYS.voice, "auto"));
-  const langPref = getStoredValue(STORAGE_KEYS.lang, "tr");
-
-  if(voiceValue) voiceValue.textContent = voiceLabelOf(voicePref);
-  if(langValue) langValue.textContent = langLabelOf(langPref);
-}
-
-function openSheet(type){
-  const isVoice = type === "voice";
-  const options = isVoice ? VOICE_OPTIONS : LANGUAGE_OPTIONS;
-  const currentVal = isVoice
-    ? normalizeVoiceStorage(getStoredValue(STORAGE_KEYS.voice, "auto"))
-    : getStoredValue(STORAGE_KEYS.lang, "tr");
-
-  if(sheetTitle){
-    sheetTitle.textContent = isVoice ? "Ses Ayarları" : "Sistem Dili";
-  }
-
-  if(!sheetList || !optionSheet || !sheetBackdrop) return;
-
-  sheetList.innerHTML = isVoice
-    ? options.map(opt => `
-      <div class="sheetItem ${String(opt.value) === String(currentVal) ? "active" : ""}" data-value="${opt.value}">
-        <div class="sheetItemMeta">
-          <div class="sheetItemTitle">${opt.label}</div>
-          <div class="sheetItemSub">${opt.sub}</div>
-        </div>
-        <div class="sheetItemCheck"></div>
-      </div>
-    `).join("")
-    : options.map(opt => `
-      <div class="sheetItem ${String(opt.value) === String(currentVal) ? "active" : ""}" data-value="${opt.value}">
-        <div class="sheetItemMeta">
-          <div class="sheetItemTitle">${opt.label}</div>
-        </div>
-        <div class="sheetItemCheck"></div>
-      </div>
-    `).join("");
-
-  optionSheet.classList.add("show");
-  sheetBackdrop.classList.add("show");
-  optionSheet.setAttribute("aria-hidden", "false");
-
-  sheetList.querySelectorAll(".sheetItem").forEach(item => {
-    item.addEventListener("click", () => {
-      const value = item.dataset.value;
-      saveSetting(type, value);
-      closeSheet();
-    });
-  });
-}
-
-function closeSheet(){
-  optionSheet?.classList.remove("show");
-  sheetBackdrop?.classList.remove("show");
-  optionSheet?.setAttribute("aria-hidden", "true");
-}
 
 <script type="module">
 import { mountShell } from "/js/ui_shell.js";
@@ -680,10 +538,10 @@ async function saveSetting(type, value){
   const finalValue = isVoice ? normalizeVoiceStorage(value) : value;
 
   if(isVoice){
-    setStoredValue("tts_voice", finalValue);
-    setStoredValue("live_interpreter_voice", finalValue);
+    setStoredValue(STORAGE_KEYS.voice, finalValue);
+    setStoredValue(STORAGE_KEYS.voiceLegacy, finalValue);
   } else {
-    setStoredValue("system_lang", finalValue);
+    setStoredValue(STORAGE_KEYS.lang, finalValue);
   }
 
   try{
@@ -742,12 +600,12 @@ async function hydrateFromProfile(){
 
     if(profileVoice){
       const norm = normalizeVoiceStorage(profileVoice);
-      setStoredValue("tts_voice", norm);
-      setStoredValue("live_interpreter_voice", norm);
+      setStoredValue(STORAGE_KEYS.voice, norm);
+      setStoredValue(STORAGE_KEYS.voiceLegacy, norm);
     }
 
     if(data?.system_lang){
-      setStoredValue("system_lang", data.system_lang);
+      setStoredValue(STORAGE_KEYS.lang, data.system_lang);
     }
 
     syncUI();
@@ -768,5 +626,6 @@ document.addEventListener("keydown", (e) => {
 
 hydrateFromProfile();
 </script>
+
 </body>
 </html>
