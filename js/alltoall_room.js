@@ -1,451 +1,466 @@
-// FILE: /js/alltoall_room.js
+<!-- FILE: /pages/alltoall_room.html -->
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+  <title>italkyAI • AllToAll Room</title>
 
-const API_BASE = "https://italky-api.onrender.com/api";
-const WS_BASE = "wss://italky-api.onrender.com/api";
+  <meta name="theme-color" content="#030014">
 
-const $ = (id) => document.getElementById(id);
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
-const chat = $("chat");
-const msgInput = $("msgInput");
-const sendBtn = $("sendBtn");
-const micBtn = $("micBtn");
-const peopleScroll = $("peopleScroll");
-const peopleCount = $("peopleCount");
-const langSelect = $("langSelect");
-const roomPill = $("roomPill");
-const backBtn = $("backBtn");
-const exitBtn = $("exitBtn");
-
-const params = new URLSearchParams(location.search);
-const hostCode = String(params.get("host") || "").trim().toUpperCase();
-const role = String(params.get("role") || "guest").trim().toLowerCase();
-
-let roomId = "";
-let ws = null;
-let myLang = "tr";
-let recognizing = false;
-let recognizer = null;
-let joinedPeople = new Map();
-let myName = role === "host" ? "Host" : "Guest";
-
-/* ==============================
-   LANGUAGES
-================================*/
-const LANGS = ["tr", "en", "de", "fr", "it", "es", "ru", "el", "az", "ka"];
-
-function buildLangSelect() {
-  if (!langSelect) return;
-
-  langSelect.innerHTML = "";
-
-  LANGS.forEach((code) => {
-    const opt = document.createElement("option");
-    opt.value = code;
-    opt.textContent = code.toUpperCase();
-    langSelect.appendChild(opt);
-  });
-
-  langSelect.value = myLang;
-
-  langSelect.onchange = () => {
-    myLang = langSelect.value;
-
-    if (recognizer) {
-      recognizer.lang = toBCP(myLang);
+  <style>
+    :root{
+      --ai-grad: linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
+      --glass: rgba(255,255,255,.05);
+      --glass-border: rgba(255,255,255,.12);
+      --muted: rgba(255,255,255,.58);
+      --panel: rgba(255,255,255,.04);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --footerSafe: var(--footerH, 0px);
     }
 
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      try {
-        ws.send(JSON.stringify({
-          type: "set_lang",
-          lang: myLang
-        }));
-      } catch {}
-    }
-  };
-}
-
-function toBCP(code) {
-  const map = {
-    tr: "tr-TR",
-    en: "en-US",
-    de: "de-DE",
-    fr: "fr-FR",
-    it: "it-IT",
-    es: "es-ES",
-    ru: "ru-RU",
-    el: "el-GR",
-    az: "az-AZ",
-    ka: "ka-GE"
-  };
-
-  return map[String(code || "tr").toLowerCase()] || "en-US";
-}
-
-/* ==============================
-   MESSAGE UI
-================================*/
-function addMessage(text, side = "left", sender = "") {
-  if (!chat) return;
-
-  const safe = String(text || "").trim();
-  if (!safe) return;
-
-  const row = document.createElement("div");
-  row.className = "msg-row " + side;
-
-  const name = document.createElement("div");
-  name.className = "sender-name";
-  name.textContent = sender || (side === "right" ? "Ben" : "Katılımcı");
-
-  const bubble = document.createElement("div");
-  bubble.className = "msg-bubble";
-  bubble.textContent = safe;
-
-  row.appendChild(name);
-  row.appendChild(bubble);
-
-  chat.appendChild(row);
-  chat.scrollTop = chat.scrollHeight;
-}
-
-function addSystemMessage(text) {
-  if (!chat) return;
-
-  const row = document.createElement("div");
-  row.className = "msg-row left";
-
-  const name = document.createElement("div");
-  name.className = "sender-name";
-  name.textContent = "Sistem";
-
-  const bubble = document.createElement("div");
-  bubble.className = "msg-bubble";
-  bubble.style.opacity = ".86";
-  bubble.textContent = text;
-
-  row.appendChild(name);
-  row.appendChild(bubble);
-
-  chat.appendChild(row);
-  chat.scrollTop = chat.scrollHeight;
-}
-
-/* ==============================
-   PEOPLE BAR
-================================*/
-function renderPeople() {
-  if (!peopleScroll) return;
-
-  peopleScroll.innerHTML = "";
-
-  [...joinedPeople.values()].forEach((person) => {
-    const wrap = document.createElement("div");
-    wrap.className = "pItem";
-
-    const avatar = document.createElement("div");
-    avatar.className = "pAvatar";
-    avatar.textContent = String(person.name || "?").charAt(0).toUpperCase();
-
-    const label = document.createElement("div");
-    label.className = "pName";
-    label.textContent = person.name || "user";
-
-    wrap.appendChild(avatar);
-    wrap.appendChild(label);
-    peopleScroll.appendChild(wrap);
-  });
-
-  updatePeopleCount();
-}
-
-function updatePeopleCount() {
-  if (peopleCount) {
-    peopleCount.textContent = String(joinedPeople.size || 0);
-  }
-}
-
-function ensureSelfInPeople() {
-  if (!joinedPeople.has(role)) {
-    joinedPeople.set(role, {
-      key: role,
-      name: myName,
-      lang: myLang
-    });
-    renderPeople();
-  }
-}
-
-/* ==============================
-   API
-================================*/
-async function resolveRoom() {
-  if (!hostCode) {
-    alert("Kod bulunamadı");
-    return false;
-  }
-
-  try {
-    const r = await fetch(`${API_BASE}/interpreter/resolve-room`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        host_code: hostCode,
-        my_lang: myLang,
-        mode: "interpreter"
-      })
-    });
-
-    const j = await r.json().catch(() => ({}));
-
-    if (!r.ok || !j?.room_id) {
-      throw new Error(j?.detail || j?.error || "Room resolve başarısız");
+    *{
+      box-sizing:border-box;
+      -webkit-tap-highlight-color:transparent;
+      outline:none;
     }
 
-    roomId = String(j.room_id || "").trim();
-    return true;
-  } catch (e) {
-    console.error("[alltoall resolveRoom]", e);
-    alert(e?.message || "Oda bulunamadı");
-    return false;
-  }
-}
-
-async function joinRoomIfNeeded() {
-  if (!roomId) return;
-  if (role !== "guest") return;
-
-  try {
-    const r = await fetch(`${API_BASE}/interpreter/join-room`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        room_id: roomId,
-        my_lang: myLang
-      })
-    });
-
-    const j = await r.json().catch(() => ({}));
-
-    if (!r.ok) {
-      throw new Error(j?.detail || "join-room başarısız");
-    }
-  } catch (e) {
-    console.error("[alltoall joinRoom]", e);
-    alert(e?.message || "Odaya katılım başarısız");
-  }
-}
-
-/* ==============================
-   WEBSOCKET
-================================*/
-function connectSocket() {
-  if (!roomId) {
-    alert("Room bulunamadı");
-    return;
-  }
-
-  ws = new WebSocket(
-    `${WS_BASE}/ws/interpreter/${encodeURIComponent(roomId)}?role=${encodeURIComponent(role)}&lang=${encodeURIComponent(myLang)}`
-  );
-
-  ws.onopen = async () => {
-    ensureSelfInPeople();
-
-    if (role === "guest") {
-      await joinRoomIfNeeded();
+    html,body{
+      margin:0;
+      width:100%;
+      height:100%;
+      overflow:hidden;
+      background:#000;
+      color:#fff;
+      font-family:'Outfit',sans-serif;
     }
 
-    addSystemMessage("Bağlantı kuruldu");
-  };
-
-  ws.onmessage = (e) => {
-    try {
-      const data = JSON.parse(e.data);
-      const type = String(data.type || "").trim();
-
-      if (type === "presence") {
-        ensureSelfInPeople();
-
-        if (data.host_lang) {
-          joinedPeople.set("host", {
-            key: "host",
-            name: "Host",
-            lang: data.host_lang
-          });
-        }
-
-        if (data.guest_lang) {
-          joinedPeople.set("guest", {
-            key: "guest",
-            name: "Guest",
-            lang: data.guest_lang
-          });
-        } else if (joinedPeople.has("guest") && !data.guest_lang) {
-          joinedPeople.delete("guest");
-        }
-
-        renderPeople();
-        return;
-      }
-
-      if (type === "peer_joined") {
-        joinedPeople.set("guest", {
-          key: "guest",
-          name: "Guest",
-          lang: data.guest_lang || "en"
-        });
-        renderPeople();
-        addSystemMessage("Yeni katılımcı bağlandı");
-        return;
-      }
-
-      if (type === "peer_left") {
-        if (data.sender) {
-          joinedPeople.delete(String(data.sender));
-          renderPeople();
-        }
-        addSystemMessage(data.message || "Bir katılımcı ayrıldı");
-        return;
-      }
-
-      if (type === "translated_message") {
-        const sender = String(data.sender || "").trim().toLowerCase();
-        const translated = String(data.translated_text || "").trim();
-        const original = String(data.original_text || "").trim();
-
-        if (sender === role) return;
-
-        addMessage(translated || original, "left", sender === "host" ? "Host" : "Guest");
-        return;
-      }
-
-      if (type === "error") {
-        addSystemMessage(data.message || "Bağlantı hatası");
-        return;
-      }
-    } catch (err) {
-      console.warn("[alltoall ws parse]", err);
+    body{
+      background:
+        radial-gradient(circle at 50% 14%, rgba(99,102,241,.20), transparent 34%),
+        radial-gradient(circle at 80% 18%, rgba(236,72,153,.12), transparent 24%),
+        radial-gradient(circle at 20% 75%, rgba(96,165,250,.10), transparent 28%),
+        linear-gradient(180deg,#05030d 0%, #090514 48%, #04020a 100%);
     }
-  };
 
-  ws.onclose = () => {
-    addSystemMessage("Bağlantı kapandı");
-  };
-}
-
-/* ==============================
-   SEND
-================================*/
-function sendMessage() {
-  const text = String(msgInput?.value || "").trim();
-  if (!text) return;
-
-  addMessage(text, "right", "Ben");
-
-  if (ws && ws.readyState === 1) {
-    ws.send(JSON.stringify({
-      type: "text_message",
-      text,
-      from_lang: myLang
-    }));
-  }
-
-  msgInput.value = "";
-}
-
-/* ==============================
-   SPEECH RECOGNITION
-================================*/
-function initSpeech() {
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-  if (!SR) {
-    if (micBtn) micBtn.style.display = "none";
-    return;
-  }
-
-  recognizer = new SR();
-  recognizer.lang = toBCP(myLang);
-  recognizer.interimResults = false;
-  recognizer.continuous = false;
-  recognizer.maxAlternatives = 1;
-
-  recognizer.onresult = (e) => {
-    const text = e.results?.[0]?.[0]?.transcript || "";
-    msgInput.value = text;
-    sendMessage();
-  };
-
-  recognizer.onend = () => {
-    recognizing = false;
-    micBtn?.classList.remove("listening");
-  };
-}
-
-function toggleMic() {
-  if (!recognizer) return;
-
-  if (recognizing) {
-    recognizer.stop();
-    recognizing = false;
-    micBtn?.classList.remove("listening");
-    return;
-  }
-
-  recognizing = true;
-  micBtn?.classList.add("listening");
-  recognizer.lang = toBCP(myLang);
-  recognizer.start();
-}
-
-/* ==============================
-   EVENTS
-================================*/
-function bindEvents() {
-  sendBtn && (sendBtn.onclick = sendMessage);
-
-  msgInput?.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
+    #pageContent{
+      width:100%;
+      height:calc(100dvh - var(--footerSafe));
+      display:flex;
+      flex-direction:column;
+      min-height:0;
+      overflow:hidden;
     }
-  });
 
-  micBtn && (micBtn.onclick = toggleMic);
+    .room-shell{
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      min-height:0;
+      width:100%;
+      max-width:520px;
+      margin:0 auto;
+      backdrop-filter:blur(18px);
+      -webkit-backdrop-filter:blur(18px);
+      background:rgba(8,8,20,.34);
+      border-left:1px solid rgba(255,255,255,.06);
+      border-right:1px solid rgba(255,255,255,.06);
+      overflow:hidden;
+    }
 
-  roomPill?.addEventListener("click", async () => {
-    if (!hostCode) return;
-    try {
-      await navigator.clipboard.writeText(hostCode);
-      addSystemMessage(`Kod kopyalandı: ${hostCode}`);
-    } catch {}
-  });
+    .topbar{
+      height:70px;
+      flex:0 0 auto;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:0 14px;
+      border-bottom:1px solid var(--glass-border);
+      background:rgba(0,0,0,.26);
+    }
 
-  backBtn?.addEventListener("click", () => {
-    history.back();
-  });
+    .nav-btn{
+      width:42px;
+      height:42px;
+      border-radius:14px;
+      border:1px solid var(--glass-border);
+      background:var(--glass);
+      color:#fff;
+      font-weight:1000;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:18px;
+    }
 
-  exitBtn?.addEventListener("click", () => {
-    location.href = "/pages/alltoall.html";
-  });
-}
+    .nav-btn:active{ transform:scale(.96); }
 
-/* ==============================
-   INIT
-================================*/
-async function init() {
-  if (roomPill) roomPill.textContent = hostCode || "---";
+    .brand{
+      text-align:center;
+      line-height:1.05;
+    }
 
-  buildLangSelect();
-  initSpeech();
-  bindEvents();
-  ensureSelfInPeople();
+    .brand-name{
+      font-family:'Space Grotesk',sans-serif;
+      font-size:18px;
+      font-weight:700;
+      color:#fff;
+    }
 
-  const ok = await resolveRoom();
-  if (!ok) return;
+    .brand-name span{
+      background:var(--ai-grad);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
 
-  connectSocket();
-}
+    .brand-sub{
+      font-size:8px;
+      color:rgba(255,255,255,.34);
+      font-weight:900;
+      letter-spacing:2px;
+      margin-top:4px;
+    }
 
-init();
+    .roombar{
+      height:46px;
+      flex:0 0 auto;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:0 14px;
+      border-bottom:1px solid var(--glass-border);
+      background:rgba(255,255,255,.02);
+    }
+
+    .room-left{
+      min-width:0;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      font-size:11px;
+      font-weight:900;
+      color:var(--muted);
+    }
+
+    .room-pill{
+      max-width:160px;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+      border-radius:12px;
+      border:1px solid var(--glass-border);
+      background:rgba(0,0,0,.22);
+      padding:5px 10px;
+      color:#fff;
+      font-family:ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size:11px;
+      letter-spacing:1.2px;
+      font-weight:1000;
+      cursor:pointer;
+      user-select:none;
+    }
+
+    .lang-select{
+      height:30px;
+      max-width:152px;
+      border-radius:10px;
+      border:1px solid var(--glass-border);
+      background:rgba(0,0,0,.26);
+      color:#c7d2fe;
+      font-size:11px;
+      font-weight:900;
+      padding:0 8px;
+    }
+
+    .peoplebar{
+      height:62px;
+      flex:0 0 auto;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:0 14px;
+      border-bottom:1px solid var(--glass-border);
+      background:rgba(255,255,255,.015);
+    }
+
+    .people-count{
+      min-width:20px;
+      text-align:center;
+      font-size:12px;
+      font-weight:1000;
+      color:#818cf8;
+    }
+
+    .people-scroll{
+      flex:1;
+      display:flex;
+      gap:10px;
+      overflow-x:auto;
+      scrollbar-width:none;
+    }
+
+    .people-scroll::-webkit-scrollbar{ display:none; }
+
+    .pItem{
+      flex:0 0 auto;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:4px;
+    }
+
+    .pAvatar{
+      width:34px;
+      height:34px;
+      border-radius:50%;
+      border:1.5px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.06);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:10px;
+      font-weight:1000;
+      color:#fff;
+      overflow:hidden;
+    }
+
+    .pAvatar img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+
+    .pName{
+      max-width:48px;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+      font-size:9px;
+      font-weight:800;
+      color:rgba(255,255,255,.46);
+    }
+
+    .chat-area{
+      flex:1;
+      min-height:0;
+      overflow-y:auto;
+      padding:16px;
+      display:flex;
+      flex-direction:column;
+      gap:16px;
+      scrollbar-width:none;
+      -webkit-overflow-scrolling:touch;
+    }
+
+    .chat-area::-webkit-scrollbar{ display:none; }
+
+    .msg-row{
+      display:flex;
+      flex-direction:column;
+      max-width:86%;
+    }
+
+    .msg-row.left{
+      align-self:flex-start;
+    }
+
+    .msg-row.right{
+      align-self:flex-end;
+      align-items:flex-end;
+    }
+
+    .sender-name{
+      font-size:10px;
+      font-weight:900;
+      color:rgba(255,255,255,.44);
+      margin-bottom:4px;
+      text-transform:uppercase;
+      letter-spacing:.5px;
+    }
+
+    .msg-bubble{
+      padding:10px 15px;
+      border-radius:20px;
+      font-size:15px;
+      line-height:1.45;
+      white-space:pre-wrap;
+      word-break:break-word;
+      border:1px solid var(--glass-border);
+      backdrop-filter:blur(8px);
+      -webkit-backdrop-filter:blur(8px);
+      position:relative;
+    }
+
+    .msg-row.left .msg-bubble{
+      background:rgba(255,255,255,.05);
+      border-bottom-left-radius:6px;
+      border-left:3px solid rgba(99,102,241,.45);
+    }
+
+    .msg-row.right .msg-bubble{
+      background:linear-gradient(135deg, rgba(86,17,79,.58) 0%, rgba(45,7,28,.74) 100%);
+      border-bottom-right-radius:6px;
+      border-right:3px solid rgba(236,72,153,.45);
+      color:#ffe4f3;
+    }
+
+    .dock{
+      flex:0 0 auto;
+      padding:10px 14px calc(10px + var(--safe-bottom));
+      border-top:1px solid var(--glass-border);
+      background:rgba(0,0,0,.45);
+      backdrop-filter:blur(22px);
+      -webkit-backdrop-filter:blur(22px);
+    }
+
+    .dock-inner{
+      min-height:58px;
+      border-radius:28px;
+      border:1px solid var(--glass-border);
+      background:rgba(255,255,255,.05);
+      display:flex;
+      align-items:flex-end;
+      gap:10px;
+      padding:7px 8px 7px 14px;
+    }
+
+    #msgInput{
+      flex:1;
+      border:none;
+      background:transparent;
+      color:#fff;
+      resize:none;
+      font-size:15px;
+      line-height:18px;
+      max-height:120px;
+      min-height:26px;
+      padding:9px 0;
+      font-family:inherit;
+      overflow:auto;
+    }
+
+    #msgInput::placeholder{
+      color:rgba(255,255,255,.36);
+    }
+
+    .dock-btns{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      flex:0 0 auto;
+    }
+
+    .circle-btn{
+      width:44px;
+      height:44px;
+      border-radius:16px;
+      border:1px solid var(--glass-border);
+      background:rgba(0,0,0,.18);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      padding:0;
+      flex:0 0 auto;
+    }
+
+    .circle-btn:active{ transform:scale(.96); }
+
+    .circle-btn svg{
+      width:22px;
+      height:22px;
+      stroke:#fff;
+      fill:none;
+      stroke-width:2;
+      stroke-linecap:round;
+      stroke-linejoin:round;
+      opacity:.92;
+    }
+
+    #micBtn.listening{
+      background:rgba(239,68,68,.20);
+      border-color:rgba(239,68,68,.38);
+      box-shadow:0 0 18px rgba(239,68,68,.22);
+    }
+
+    @media (max-width:390px){
+      .msg-bubble{ font-size:14px; }
+      .room-pill{ max-width:126px; }
+      .lang-select{ max-width:128px; }
+    }
+  </style>
+</head>
+
+<body>
+  <main id="pageContent">
+    <div class="room-shell">
+
+      <header class="topbar">
+        <button class="nav-btn" id="backBtn" type="button">←</button>
+
+        <div class="brand">
+          <div class="brand-name">All<span>To</span>All</div>
+          <div class="brand-sub">LIVE CHANNEL</div>
+        </div>
+
+        <button class="nav-btn" id="exitBtn" type="button">✕</button>
+      </header>
+
+      <div class="roombar">
+        <div class="room-left">
+          ODA:
+          <div class="room-pill" id="roomPill">------</div>
+        </div>
+
+        <select class="lang-select" id="langSelect"></select>
+      </div>
+
+      <div class="peoplebar">
+        <div class="people-count" id="peopleCount">1</div>
+        <div class="people-scroll" id="peopleScroll"></div>
+      </div>
+
+      <div class="chat-area" id="chat"></div>
+
+      <footer class="dock">
+        <div class="dock-inner">
+          <textarea id="msgInput" rows="1" placeholder="Yaz ya da konuş…"></textarea>
+
+          <div class="dock-btns">
+            <button class="circle-btn" id="micBtn" type="button" aria-label="Mikrofon">
+              <svg viewBox="0 0 24 24">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                <line x1="12" y1="19" x2="12" y2="23"></line>
+                <line x1="8" y1="23" x2="16" y2="23"></line>
+              </svg>
+            </button>
+
+            <button class="circle-btn" id="sendBtn" type="button" aria-label="Gönder">
+              <svg viewBox="0 0 24 24">
+                <path d="M22 2L11 13"></path>
+                <path d="M22 2L15 22L11 13L2 9L22 2Z"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </footer>
+
+    </div>
+  </main>
+
+  <script type="module">
+    import { mountShell } from "/js/ui_shell.js";
+    try { mountShell({ scroll:"none" }); } catch(e) { console.warn("[alltoall room shell]", e); }
+  </script>
+
+  <script type="module" src="/js/alltoall_room.js?v=2"></script>
+</body>
+</html>
