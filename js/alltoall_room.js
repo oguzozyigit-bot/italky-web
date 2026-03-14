@@ -2,7 +2,6 @@
 
 import { supabase } from "/js/supabase_client.js";
 
-const API_BASE = "https://italky-api.onrender.com/api";
 const WS_BASE = "wss://italky-api.onrender.com/api";
 
 const $ = (id) => document.getElementById(id);
@@ -22,13 +21,22 @@ const params = new URLSearchParams(location.search);
 const hostCode = String(params.get("host") || "").trim().toUpperCase();
 const role = String(params.get("role") || "guest").trim().toLowerCase();
 
-let roomId = "";
+let roomId = hostCode || "";
 let ws = null;
 let myLang = localStorage.getItem("alltoall_lang") || "tr";
 let recognizing = false;
 let recognizer = null;
+
+let myProfile = {
+  from: "",
+  from_name: role === "host" ? "Host" : "Guest",
+  from_pic: "",
+  me_lang: myLang,
+  role,
+  user_id: "",
+};
+
 let joinedPeople = new Map();
-let myName = role === "host" ? "Host" : "Guest";
 
 /* ==============================
    LANG
@@ -55,9 +63,17 @@ function buildLangSelect() {
 
     if (recognizer) recognizer.lang = toBCP(myLang);
 
+    myProfile.me_lang = myLang;
+
     if (ws && ws.readyState === WebSocket.OPEN) {
       try {
-        ws.send(JSON.stringify({ type: "set_lang", lang: myLang }));
+        ws.send(JSON.stringify({
+          type: "profile_sync",
+          from_name: myProfile.from_name,
+          from_pic: myProfile.from_pic,
+          me_lang: myLang,
+          user_id: myProfile.user_id
+        }));
       } catch {}
     }
   };
@@ -80,7 +96,7 @@ function toBCP(code) {
 }
 
 /* ==============================
-   NAME / INITIALS
+   PROFILE
 ================================*/
 function getDisplayNameFromUser(user) {
   const meta = user?.user_metadata || {};
@@ -93,6 +109,19 @@ function getDisplayNameFromUser(user) {
   );
 }
 
+function getAvatarFromUser(user) {
+  const meta = user?.user_metadata || {};
+  return meta.picture || meta.avatar_url || meta.avatar || "";
+}
+
+function getStableFromId(user) {
+  return (
+    user?.id ||
+    user?.email ||
+    `${role}-${Math.random().toString(36).slice(2, 10)}`
+  );
+}
+
 function getInitials(name) {
   const parts = String(name || "")
     .trim()
@@ -101,29 +130,41 @@ function getInitials(name) {
 
   if (!parts.length) return "?";
 
-  if (parts.length === 1) {
-    return parts[0].slice(0, 1).toUpperCase();
-  }
+  if (parts.length === 1) return parts[0].slice(0, 1).toUpperCase();
 
   return (parts[0][0] + parts[1][0]).toUpperCase();
 }
 
-async function hydrateMyName() {
+async function hydrateMyProfile() {
   try {
     const { data } = await supabase.auth.getUser();
     const user = data?.user || null;
     if (!user) return;
 
-    myName = getDisplayNameFromUser(user);
+    myProfile = {
+      from: getStableFromId(user),
+      from_name: getDisplayNameFromUser(user),
+      from_pic: getAvatarFromUser(user),
+      me_lang: myLang,
+      role,
+      user_id: user?.id || "",
+    };
   } catch (e) {
-    console.warn("[alltoall hydrateMyName]", e);
+    console.warn("[alltoall hydrateMyProfile]", e);
   }
 }
 
 /* ==============================
    CHAT UI
 ================================*/
-function addMessage(text, side = "left", sender = "") {
+function scrollChatBottom() {
+  if (!chat) return;
+  requestAnimationFrame(() => {
+    try { chat.scrollTop = chat.scrollHeight; } catch {}
+  });
+}
+
+function addMessage(text, side = "left", sender = "", withSpeaker = false, speakLang = "tr") {
   if (!chat) return;
 
   const safe = String(text || "").trim();
@@ -134,7 +175,7 @@ function addMessage(text, side = "left", sender = "") {
 
   const name = document.createElement("div");
   name.className = "sender-name";
-  name.textContent = sender || (side === "right" ? myName : "Katılımcı");
+  name.textContent = sender || (side === "right" ? myProfile.from_name : "Katılımcı");
 
   const bubble = document.createElement("div");
   bubble.className = "msg-bubble";
@@ -143,128 +184,168 @@ function addMessage(text, side = "left", sender = "") {
   row.appendChild(name);
   row.appendChild(bubble);
 
+  if (withSpeaker) {
+    const actions = document.createElement("div");
+    actions.className = "msg-actions";
+
+    const btn = document.createElement("button");
+    btn.className = "mini-btn";
+    btn.type = "button";
+    btn.innerHTML = `
+      <svg viewBox="0 0 24 24">
+        <path d="M3 10v4h4l5 4V6L7 10H3"></path>
+        <path d="M16 8a4 4 0 0 1 0 8"></path>
+        <path d="M19 5a8 8 0 0 1 0 14"></path>
+      </svg>
+    `;
+    btn.addEventListener("click", () => speakFallback(safe, speakLang));
+    actions.appendChild(btn);
+    row.appendChild(actions);
+  }
+
   chat.appendChild(row);
-  chat.scrollTop = chat.scrollHeight;
+  scrollChatBottom();
 }
 
 function addSystemMessage(text) {
   if (!chat) return;
 
-  const row = document.createElement("div");
-  row.className = "msg-row left";
+  const note = document.createElement("div");
+  note.className = "sys-note";
+  note.textContent = String(text || "").trim();
 
-  const name = document.createElement("div");
-  name.className = "sender-name";
-  name.textContent = "Sistem";
+  chat.appendChild(note);
+  scrollChatBottom();
+}
 
-  const bubble = document.createElement("div");
-  bubble.className = "msg-bubble";
-  bubble.textContent = String(text || "").trim();
+function speakFallback(text, langCode) {
+  const value = String(text || "").trim();
+  if (!value) return;
 
-  row.appendChild(name);
-  row.appendChild(bubble);
+  try { window.speechSynthesis?.cancel?.(); } catch {}
+  if (!window.speechSynthesis) return;
 
-  chat.appendChild(row);
-  chat.scrollTop = chat.scrollHeight;
+  const u = new SpeechSynthesisUtterance(value);
+  u.lang = toBCP(langCode);
+
+  setTimeout(() => {
+    try { window.speechSynthesis.speak(u); } catch {}
+  }, 50);
 }
 
 /* ==============================
    PEOPLE
 ================================*/
+function personKey(person) {
+  return String(
+    person?.from ||
+    person?.user_id ||
+    person?.role ||
+    person?.from_name ||
+    Math.random().toString(36).slice(2)
+  );
+}
+
 function renderPeople() {
   if (!peopleScroll) return;
 
   peopleScroll.innerHTML = "";
 
-  [...joinedPeople.values()].forEach((person) => {
+  const arr = [...joinedPeople.values()];
+
+  arr.forEach((person) => {
     const wrap = document.createElement("div");
     wrap.className = "pItem";
 
     const avatar = document.createElement("div");
     avatar.className = "pAvatar";
-    avatar.textContent = getInitials(person.name);
+
+    if (person.from_pic) {
+      const img = document.createElement("img");
+      img.src = person.from_pic;
+      img.alt = person.from_name || "Avatar";
+      img.referrerPolicy = "no-referrer";
+      avatar.appendChild(img);
+    } else {
+      avatar.textContent = getInitials(person.from_name);
+    }
 
     const label = document.createElement("div");
     label.className = "pName";
-    label.textContent = person.name || "Katılımcı";
+    label.textContent = person.from_name || "Katılımcı";
 
     wrap.appendChild(avatar);
     wrap.appendChild(label);
     peopleScroll.appendChild(wrap);
   });
 
-  if (peopleCount) peopleCount.textContent = String(joinedPeople.size || 0);
+  if (peopleCount) peopleCount.textContent = String(arr.length || 0);
 }
 
 function ensureSelfInPeople() {
-  if (!joinedPeople.has(role)) {
-    joinedPeople.set(role, {
-      key: role,
-      name: myName,
-      lang: myLang,
+  const key = personKey(myProfile);
+  joinedPeople.set(key, { ...myProfile });
+  renderPeople();
+}
+
+function applyRoster(roster = []) {
+  joinedPeople.clear();
+
+  if (Array.isArray(roster)) {
+    roster.forEach((person) => {
+      const key = personKey(person);
+      joinedPeople.set(key, {
+        from: person?.from || "",
+        from_name: person?.from_name || "Katılımcı",
+        from_pic: person?.from_pic || "",
+        me_lang: person?.me_lang || "tr",
+        role: person?.role || "guest",
+        user_id: person?.user_id || "",
+      });
     });
+  }
+
+  if (![...joinedPeople.values()].some(p => p.from === myProfile.from || p.user_id === myProfile.user_id || p.role === myProfile.role && p.from_name === myProfile.from_name)) {
+    ensureSelfInPeople();
+  } else {
     renderPeople();
   }
 }
 
-/* ==============================
-   API
-================================*/
-async function resolveRoom() {
-  if (!hostCode) {
-    alert("Kod bulunamadı");
-    return false;
-  }
-
-  try {
-    const r = await fetch(`${API_BASE}/interpreter/resolve-room`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        host_code: hostCode,
-        my_lang: myLang,
-        mode: "interpreter",
-      }),
-    });
-
-    const j = await r.json().catch(() => ({}));
-
-    if (!r.ok || !j?.room_id) {
-      throw new Error(j?.detail || j?.error || "Room resolve başarısız");
-    }
-
-    roomId = String(j.room_id || "").trim();
-    return true;
-  } catch (e) {
-    console.error("[alltoall resolveRoom]", e);
-    alert(e?.message || "Oda bulunamadı");
-    return false;
-  }
+function upsertPerson(person) {
+  if (!person) return;
+  const key = personKey(person);
+  joinedPeople.set(key, {
+    from: person?.from || "",
+    from_name: person?.from_name || "Katılımcı",
+    from_pic: person?.from_pic || "",
+    me_lang: person?.me_lang || "tr",
+    role: person?.role || "guest",
+    user_id: person?.user_id || "",
+  });
+  renderPeople();
 }
 
-async function joinRoomIfNeeded() {
-  if (!roomId) return;
-  if (role !== "guest") return;
+function removePerson(person) {
+  if (!person) return;
 
-  try {
-    const r = await fetch(`${API_BASE}/interpreter/join-room`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        room_id: roomId,
-        my_lang: myLang,
-      }),
-    });
+  const key = personKey(person);
 
-    const j = await r.json().catch(() => ({}));
-
-    if (!r.ok) {
-      throw new Error(j?.detail || "join-room başarısız");
+  if (joinedPeople.has(key)) {
+    joinedPeople.delete(key);
+  } else {
+    for (const [k, v] of joinedPeople.entries()) {
+      if (
+        (person.from && v.from === person.from) ||
+        (person.user_id && v.user_id === person.user_id) ||
+        (person.role && person.from_name && v.role === person.role && v.from_name === person.from_name)
+      ) {
+        joinedPeople.delete(k);
+      }
     }
-  } catch (e) {
-    console.error("[alltoall joinRoom]", e);
-    alert(e?.message || "Odaya katılım başarısız");
   }
+
+  renderPeople();
 }
 
 /* ==============================
@@ -276,18 +357,24 @@ function connectSocket() {
     return;
   }
 
-  ws = new WebSocket(
-    `${WS_BASE}/ws/interpreter/${encodeURIComponent(roomId)}?role=${encodeURIComponent(role)}&lang=${encodeURIComponent(myLang)}`
-  );
+  ws = new WebSocket(`${WS_BASE}/alltoall/ws/${encodeURIComponent(roomId)}`);
 
-  ws.onopen = async () => {
-    ensureSelfInPeople();
+  ws.onopen = () => {
+    const joinPayload = {
+      type: role === "host" ? "create" : "join",
+      from: myProfile.from,
+      from_name: myProfile.from_name,
+      from_pic: myProfile.from_pic,
+      me_lang: myLang,
+      role,
+      user_id: myProfile.user_id,
+    };
 
-    if (role === "guest") {
-      await joinRoomIfNeeded();
+    try {
+      ws.send(JSON.stringify(joinPayload));
+    } catch (e) {
+      console.warn("[alltoall create/join send]", e);
     }
-
-    addSystemMessage("Bağlantı kuruldu");
   };
 
   ws.onmessage = (e) => {
@@ -295,68 +382,93 @@ function connectSocket() {
       const data = JSON.parse(e.data);
       const type = String(data.type || "").trim();
 
-      if (type === "presence") {
+      if (type === "room_created" || type === "room_joined") {
+        if (data.self) {
+          myProfile = {
+            ...myProfile,
+            ...data.self,
+            me_lang: myLang
+          };
+        }
         ensureSelfInPeople();
+        addSystemMessage("Bağlantı kuruldu");
+        return;
+      }
 
-        if (data.host_lang) {
-          joinedPeople.set("host", {
-            key: "host",
-            name: role === "host" ? myName : "Host",
-            lang: data.host_lang,
-          });
-        }
-
-        if (data.guest_lang) {
-          joinedPeople.set("guest", {
-            key: "guest",
-            name: role === "guest" ? myName : "Guest",
-            lang: data.guest_lang,
-          });
-        } else if (joinedPeople.has("guest") && !data.guest_lang) {
-          joinedPeople.delete("guest");
-        }
-
-        renderPeople();
+      if (type === "presence") {
+        applyRoster(data.roster || []);
         return;
       }
 
       if (type === "peer_joined") {
-        joinedPeople.set("guest", {
-          key: "guest",
-          name: role === "guest" ? myName : "Guest",
-          lang: data.guest_lang || "en",
-        });
-        renderPeople();
+        if (data.peer) upsertPerson(data.peer);
+        if (Array.isArray(data.roster)) applyRoster(data.roster);
         addSystemMessage("Yeni katılımcı bağlandı");
         return;
       }
 
+      if (type === "profile_updated") {
+        if (data.peer) upsertPerson(data.peer);
+        if (Array.isArray(data.roster)) applyRoster(data.roster);
+        return;
+      }
+
       if (type === "peer_left") {
-        if (data.sender) {
-          joinedPeople.delete(String(data.sender));
-          renderPeople();
-        }
-        addSystemMessage(data.message || "Bir katılımcı ayrıldı");
+        if (data.peer) removePerson(data.peer);
+        if (Array.isArray(data.roster)) applyRoster(data.roster);
+        addSystemMessage("Bir katılımcı ayrıldı");
         return;
       }
 
       if (type === "translated_message") {
-        const sender = String(data.sender || "").trim().toLowerCase();
+        const fromId = String(data.from || "").trim();
+        const senderName = String(data.from_name || "Katılımcı").trim();
         const translated = String(data.translated_text || "").trim();
         const original = String(data.original_text || "").trim();
 
-        if (sender === role) return;
+        if (fromId && myProfile.from && fromId === myProfile.from) return;
 
         addMessage(
           translated || original,
           "left",
-          sender === "host" ? "Host" : "Guest"
+          senderName,
+          true,
+          myLang
         );
+
+        if (data.from || data.from_name || data.from_pic) {
+          upsertPerson({
+            from: data.from || "",
+            from_name: data.from_name || senderName,
+            from_pic: data.from_pic || "",
+            me_lang: data.from_lang || "tr",
+            role: data.role || "guest",
+            user_id: data.from_user_id || "",
+          });
+        }
+        return;
+      }
+
+      if (type === "message_sent") {
+        return;
+      }
+
+      if (type === "typing") {
         return;
       }
 
       if (type === "error") {
-        addSystemMessage(data.message || "Bağlantı hatası");
+        const msg = String(data.message || "Bağlantı hatası");
+        if (msg === "ROOM_FULL") {
+          addSystemMessage("Oda dolu");
+          return;
+        }
+        addSystemMessage(msg);
+        return;
+      }
+
+      if (type === "room_not_found") {
+        addSystemMessage(data.message || "Oda bulunamadı");
         return;
       }
     } catch (err) {
@@ -367,6 +479,10 @@ function connectSocket() {
   ws.onclose = () => {
     addSystemMessage("Bağlantı kapandı");
   };
+
+  ws.onerror = () => {
+    addSystemMessage("Bağlantı hatası oluştu");
+  };
 }
 
 /* ==============================
@@ -376,7 +492,7 @@ function sendMessage() {
   const text = String(msgInput?.value || "").trim();
   if (!text) return;
 
-  addMessage(text, "right", myName);
+  addMessage(text, "right", myProfile.from_name);
 
   if (ws && ws.readyState === 1) {
     ws.send(JSON.stringify({
@@ -414,6 +530,11 @@ function initSpeech() {
   };
 
   recognizer.onend = () => {
+    recognizing = false;
+    micBtn?.classList.remove("listening");
+  };
+
+  recognizer.onerror = () => {
     recognizing = false;
     micBtn?.classList.remove("listening");
   };
@@ -481,15 +602,11 @@ function bindEvents() {
 async function init() {
   if (roomPill) roomPill.textContent = hostCode || "---";
 
-  await hydrateMyName();
+  await hydrateMyProfile();
   buildLangSelect();
   initSpeech();
   bindEvents();
   ensureSelfInPeople();
-
-  const ok = await resolveRoom();
-  if (!ok) return;
-
   connectSocket();
   autoGrowTextarea();
 }
