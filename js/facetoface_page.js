@@ -425,7 +425,6 @@ function speakFallback(text, langCode) {
   const c = canonical(langCode);
   const pref = getVoicePreference();
 
-  // Sadece auto modunda NativeTTS kullan
   if (pref === "auto" && window.NativeTTS && typeof window.NativeTTS.speak === "function") {
     try {
       window.NativeTTS.speak(value, c);
@@ -447,6 +446,48 @@ function speakFallback(text, langCode) {
   setTimeout(() => {
     try { window.speechSynthesis.speak(u); } catch {}
   }, 50);
+}
+
+async function speak(text, langCode) {
+  const value = String(text || "").trim();
+  if (!value) return;
+
+  const now = Date.now();
+  if (now - ttsDebounceAt < 250) stopAudio();
+  ttsDebounceAt = now;
+  stopAudio();
+
+  const voice = getVoicePreference();
+
+  if (voice === "auto") {
+    speakFallback(value, langCode);
+    return;
+  }
+
+  if (voice === "clone") {
+    try {
+      const ready = await hasReadyVoiceProfile();
+      if (!ready) {
+        console.warn("[facetoface] tts voice hazır değil, sistem sesine düşülüyor");
+        speakFallback(value, langCode);
+        return;
+      }
+
+      await speakViaApi(value, langCode);
+      return;
+    } catch (e) {
+      console.warn("[facetoface] clone tts fallback", e);
+      speakFallback(value, langCode);
+      return;
+    }
+  }
+
+  try {
+    await speakViaApi(value, langCode);
+  } catch (e) {
+    console.warn("[facetoface] TTS API fallback", e);
+    speakFallback(value, langCode);
+  }
 }
 
 async function spendFaceUsage(usedChars) {
