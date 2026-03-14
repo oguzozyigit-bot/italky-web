@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+<title>italkyAI • AllToAll</title>
+
+<meta name="theme-color" content="#000000">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+
+<style>
+
+:root{
+  --ai-grad: linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
+  --glass: rgba(255,255,255,0.05);
+  --glass-border: rgba(255,255,255,0.14);
+}
+
+*{
+  box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
+}
+
+body{
+  margin:0;
+  background:#000;
+  font-family:'Outfit',sans-serif;
+  color:#fff;
+}
+
+#pageContent{
+  height:100%;
+  display:flex;
+  flex-direction:column;
+}
+
+.main{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  padding:12px;
+}
+
+.header{
+  text-align:center;
+}
+
+.header h1{
+  margin:0;
+  font-family:'Space Grotesk';
+  font-size:24px;
+}
+
+.header span{
+  background:var(--ai-grad);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+
+.card{
+  flex:1;
+  border-radius:28px;
+  border:1px solid var(--glass-border);
+  background:var(--glass);
+  padding:22px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  gap:10px;
+}
+
+.card-title{
+  font-family:'Space Grotesk';
+  font-size:20px;
+}
+
+.card-desc{
+  font-size:12px;
+  color:rgba(255,255,255,.6);
+}
+
+.btn{
+  border:none;
+  border-radius:20px;
+  padding:16px;
+  font-weight:900;
+  font-size:14px;
+  cursor:pointer;
+}
+
+.btn-main{
+  background:var(--ai-grad);
+  color:#000;
+}
+
+.btn-ghost{
+  background:rgba(255,255,255,.08);
+  color:#fff;
+  border:1px solid var(--glass-border);
+}
+
+.qr-area{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:10px;
+}
+
+.qr-img{
+  width:200px;
+  height:200px;
+  border-radius:16px;
+  background:#fff;
+  padding:8px;
+}
+
+.code{
+  font-family:'Space Grotesk';
+  font-size:28px;
+  letter-spacing:4px;
+  font-weight:900;
+}
+
+.hide{
+  display:none;
+}
+
+.input{
+  height:60px;
+  border-radius:18px;
+  border:1px solid var(--glass-border);
+  background:rgba(0,0,0,0.4);
+  color:#fff;
+  text-align:center;
+  font-size:20px;
+  letter-spacing:3px;
+  font-weight:900;
+}
+
+</style>
+</head>
+
+<body>
+
+<main id="pageContent">
+
+<div class="main">
+
+<div class="header">
+<h1>All<span>To</span>All</h1>
+</div>
+
+<div id="homeCards">
+
+<div class="card" id="btnHost">
+<div class="card-title">Kanal Oluştur</div>
+<div class="card-desc">Sınırsız katılımcı. QR veya kod ile paylaş.</div>
+</div>
+
+<div class="card" id="btnJoin">
+<div class="card-title">Kanala Bağlan</div>
+<div class="card-desc">QR okut veya frekans kodunu yaz.</div>
+</div>
+
+</div>
+
+
+<div class="card hide" id="hostPanel">
+
+<div class="qr-area">
+<div class="qr-img">
+<img id="qrImg" width="100%" />
+</div>
+
+<div class="code" id="roomCode">------</div>
+
+<button class="btn btn-main" id="btnStart">
+SOHBETİ BAŞLAT
+</button>
+
+<button class="btn btn-ghost" id="btnBackHost">
+GERİ
+</button>
+
+</div>
+
+</div>
+
+
+<div class="card hide" id="joinPanel">
+
+<input class="input" id="roomInput" placeholder="KODU GİR"/>
+
+<button class="btn btn-main" id="btnJoinRoom">
+BAĞLAN
+</button>
+
+<button class="btn btn-ghost" id="btnBackJoin">
+GERİ
+</button>
+
+</div>
+
+
+</div>
+
+</main>
+
+
+<script type="module">
+
+import { mountShell } from "/js/ui_shell.js";
+
+mountShell({scroll:"none"});
+
+const $ = (id)=>document.getElementById(id);
+
+const homeCards=$("homeCards");
+const hostPanel=$("hostPanel");
+const joinPanel=$("joinPanel");
+
+$("btnHost").onclick=()=>{
+homeCards.classList.add("hide");
+hostPanel.classList.remove("hide");
+createRoom();
+};
+
+$("btnJoin").onclick=()=>{
+homeCards.classList.add("hide");
+joinPanel.classList.remove("hide");
+};
+
+$("btnBackHost").onclick=()=>{
+hostPanel.classList.add("hide");
+homeCards.classList.remove("hide");
+};
+
+$("btnBackJoin").onclick=()=>{
+joinPanel.classList.add("hide");
+homeCards.classList.remove("hide");
+};
+
+$("btnJoinRoom").onclick=()=>{
+const code=$("roomInput").value.trim().toUpperCase();
+if(!code)return;
+location.href="/pages/alltoall_room.html?room="+code;
+};
+
+async function createRoom(){
+
+const r=await fetch("https://italky-api.onrender.com/api/interpreter/create-room",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+host_code:"ALLTOALL",
+my_lang:"tr"
+})
+});
+
+const j=await r.json();
+
+$("roomCode").textContent=j.room_id;
+
+$("qrImg").src=
+"https://api.qrserver.com/v1/create-qr-code/?size=400x400&data="+
+encodeURIComponent("https://italky.ai/pages/alltoall.html?join="+j.room_id);
+
+$("btnStart").onclick=()=>{
+location.href="/pages/alltoall_room.html?room="+j.room_id+"&role=host";
+};
+
+}
+
+</script>
+
+</body>
+</html>
