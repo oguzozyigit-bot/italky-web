@@ -10,12 +10,9 @@
     :root {
       --topH: 70px;
       --metaH: 60px;
-      --peopleH: 96px; /* Eski haline sadık kalındı */
-      --dockH: 85px;
+      --peopleH: 96px;
+      --dockH: 80px;
       --accent: #00f2fe;
-      --pink: #ff00c1;
-      --purple: #7000ff;
-      --frameW: min(500px, 100vw);
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
@@ -27,122 +24,136 @@
       color: #fff;
       font-family: 'Outfit', sans-serif;
       overflow: hidden;
-      position: fixed; /* Klavye itmesini engellemek için */
+      position: fixed; /* Kaymayı engellemek için */
     }
 
     .room {
       position: relative;
-      width: var(--frameW);
+      width: min(500px, 100vw);
       height: 100dvh;
       margin: 0 auto;
       display: flex;
       flex-direction: column;
-      background: rgba(10, 5, 15, 0.9);
-      backdrop-filter: blur(20px);
+      background: #050208;
     }
 
+    /* Üst Alanlar */
     .topbar { height: var(--topH); display: flex; align-items: center; padding: 0 16px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-    .brand { flex:1; text-align: center; font-family: 'Space Grotesk'; font-size: 20px; font-weight: 700; }
-    .brand span { color: var(--accent); }
-    .top-btn { width: 40px; height: 40px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: #fff; cursor: pointer; }
-
     .meta { height: var(--metaH); display: flex; align-items: center; justify-content: space-between; padding: 0 16px; background: rgba(255,255,255,0.02); }
-    .room-pill { background: #7000ff; padding: 6px 16px; border-radius: 12px; font-family: 'Space Grotesk'; font-weight: 700; letter-spacing: 2px; font-size: 18px; }
-    .lang-select { background: rgba(255,255,255,0.1); border: none; color: #fff; padding: 8px; border-radius: 10px; font-weight: 600; font-size: 13px; }
-
-    /* Katılımcılar - Küçük ve Düzenli Alan */
     .people { height: var(--peopleH); padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
-    .people-head { padding: 0 16px; display: flex; justify-content: space-between; margin-bottom: 4px; }
-    .people-title { font-size: 10px; font-weight: 900; color: var(--accent); }
-    .people-count { font-size: 10px; opacity: 0.6; }
     .people-scroll { display: flex; gap: 12px; overflow-x: auto; padding: 0 16px; scrollbar-width: none; }
-    .pItem { display: flex; flex-direction: column; align-items: center; min-width: 58px; }
-    .pAvatar { width: 42px; height: 42px; border-radius: 50%; background: #1a1d31; border: 1px solid rgba(255,255,255,0.1); padding: 2px; }
+    .pAvatar { width: 42px; height: 42px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1); }
     .pAvatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
-    .pName { font-size: 9px; font-weight: 700; margin-top: 4px; text-align: center; color: rgba(255,255,255,0.8); }
 
-    .chat { flex: 1; overflow-y: auto; padding: 15px 16px; display: flex; flex-direction: column; gap: 10px; }
-    .msg-bubble { padding: 10px 14px; border-radius: 18px; font-size: 14px; line-height: 1.4; max-width: 85%; }
-    .msg-row.right { align-self: flex-end; }
-    .msg-row.right .msg-bubble { background: linear-gradient(135deg, var(--purple), var(--pink)); color: #fff; }
-    .msg-row.left .msg-bubble { background: rgba(255,255,255,0.08); color: #fff; }
+    /* Chat Alanı - Yeni Tasarım */
+    .chat { flex: 1; overflow-y: auto; padding: 15px 16px; display: flex; flex-direction: column; gap: 16px; }
 
-    /* Giriş Alanı - Klasik Mic ve Klavye Çözümü */
+    .msg-row { max-width: 90%; display: flex; flex-direction: column; position: relative; }
+    .msg-row.left { align-self: flex-start; padding-left: 12px; }
+    .msg-row.right { align-self: flex-end; padding-right: 12px; align-items: flex-end; }
+
+    /* KATILIMCIYA ÖZEL RENKLİ ÇİZGİ */
+    .msg-line {
+      position: absolute;
+      top: 4px; bottom: 4px;
+      width: 4px;
+      border-radius: 10px; /* Kavisli uçlar */
+    }
+    .msg-row.left .msg-line { left: 0; }
+    .msg-row.right .msg-line { right: 0; }
+
+    .sender-name { 
+      font-size: 11px; 
+      font-weight: 900; 
+      margin-bottom: 4px; 
+      opacity: 0.9;
+    }
+
+    .msg-bubble {
+      font-size: 14px;
+      line-height: 1.5;
+      color: rgba(255,255,255,0.95);
+      word-break: break-word;
+    }
+
+    /* Giriş Alanı - Klavye Sabitleme */
     .input { 
-      min-height: var(--dockH); 
-      background: #0a050f; 
+      height: var(--dockH); 
+      background: #0d0915; 
       border-top: 1px solid rgba(255,255,255,0.1); 
       display: flex; align-items: center; gap: 8px; 
-      padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); 
-      z-index: 100;
+      padding: 0 12px calc(10px + env(safe-area-inset-bottom)); 
+      z-index: 999;
     }
-    textarea { flex: 1; height: 46px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; color: #fff; padding: 12px 16px; font-size: 14px; resize: none; }
-    .dock-btn { width: 46px; height: 46px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #fff; }
-    .mic-btn { background: #1a1d33; font-size: 20px; border: 1px solid rgba(255,255,255,0.05); } /* Klasik Mic */
-    .mic-btn.listening { background: var(--pink); box-shadow: 0 0 15px var(--pink); }
-    .send-btn { background: var(--accent); color: #000; font-size: 18px; }
-
-    .sys-note { align-self: center; font-size: 11px; opacity: 0.5; background: rgba(255,255,255,0.05); padding: 5px 12px; border-radius: 20px; }
+    textarea { flex: 1; height: 44px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; color: #fff; padding: 12px 16px; font-size: 15px; resize: none; }
+    .dock-btn { width: 44px; height: 44px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #fff; }
+    .mic-btn { background: #1a1d33; font-size: 20px; }
+    .send-btn { background: #00f2fe; color: #000; font-size: 18px; }
   </style>
 </head>
 
 <body>
 <div class="room" id="roomContainer">
   <div class="topbar">
-    <button id="backBtn" class="top-btn">←</button>
-    <div class="brand">All<span>To</span>All</div>
-    <button id="exitBtn" class="top-btn">✕</button>
+    <button id="backBtn" style="background:none; border:none; color:#fff; font-size:20px;">←</button>
+    <div style="flex:1; text-align:center; font-family:'Space Grotesk'; font-weight:700;">All<span style="color:var(--accent)">To</span>All</div>
+    <button id="exitBtn" style="background:none; border:none; color:#fff; font-size:20px;">✕</button>
   </div>
 
   <div class="meta">
-    <div id="roomPill" class="room-pill">------</div>
-    <select id="langSelect" class="lang-select">
-      <option value="tr">🇹🇷 TR</option>
-      <option value="en">🇬🇧 EN</option>
-    </select>
+    <div id="roomPill" style="background:#7000ff; padding:6px 16px; border-radius:12px; font-weight:700;">------</div>
+    <select id="langSelect" class="lang-select"><option value="tr">🇹🇷 TR</option></select>
   </div>
 
   <div class="people">
-    <div class="people-head">
-      <div class="people-title">KATILIMCILAR</div>
-      <div class="people-count"><span id="peopleCount">0</span> online</div>
-    </div>
     <div class="people-scroll" id="peopleScroll"></div>
   </div>
 
   <div class="chat" id="chat">
-    <div class="sys-note">Bağlantı kuruldu</div>
-  </div>
+    </div>
 
   <div class="input" id="inputDock">
     <button id="micBtn" class="dock-btn mic-btn">🎙️</button>
-    <textarea id="msgInput" rows="1" placeholder="Yazmaya başla..."></textarea>
+    <textarea id="msgInput" rows="1" placeholder="Mesaj yaz..."></textarea>
     <button id="sendBtn" class="dock-btn send-btn">➤</button>
   </div>
 </div>
 
 <script>
-  // KLAVYE HATASI DÜZELTME
+  const room = document.getElementById('roomContainer');
+  const chat = document.getElementById('chat');
+  const msgInput = document.getElementById('msgInput');
+
+  // KLAVYE ÇÖZÜMÜ - viewport değişince boyutu zorla ayarla
+  const updateLayout = () => {
+    if (window.visualViewport) {
+      const vh = window.visualViewport.height;
+      room.style.height = `${vh}px`;
+      chat.scrollTop = chat.scrollHeight;
+    }
+  };
+
   if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', () => {
-      const room = document.getElementById('roomContainer');
-      const viewport = window.visualViewport;
-      const offset = window.innerHeight - viewport.height;
-      if (offset > 100) {
-        room.style.height = `${viewport.height}px`;
-        const chat = document.getElementById('chat');
-        chat.scrollTop = chat.scrollHeight;
-      } else {
-        room.style.height = '100dvh';
-      }
-    });
+    window.visualViewport.addEventListener('resize', updateLayout);
+    window.visualViewport.addEventListener('scroll', updateLayout);
   }
+
+  // Fokus olunca ekranı yukarı it
+  msgInput.addEventListener('focus', () => {
+    setTimeout(updateLayout, 300);
+  });
+
   // Textarea otomatik uzama
-  const tx = document.getElementById('msgInput');
-  tx.addEventListener("input", function() {
-    this.style.height = '46px';
+  msgInput.addEventListener("input", function() {
+    this.style.height = '44px';
     this.style.height = (this.scrollHeight) + 'px';
   });
+
+  /* NOT: 50 katılımcıya kadar renk ayarı alltoall_room.js içinde 
+     mesaj oluşturulurken şu şekilde yapılmalı:
+     const colors = ['#4ade80', '#fb923c', '#60a5fa', '#f472b6', '#a78bfa', ...];
+     const userColor = colors[userId % colors.length];
+  */
 </script>
 <script type="module" src="/js/alltoall_room.js?v=fix_host_open_1"></script>
 </body>
