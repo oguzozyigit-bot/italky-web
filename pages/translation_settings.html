@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-<title>italkyAI • Çeviri Ayarları</title>
+<title>italkyAI • Site Dili</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -149,12 +149,7 @@ body{
   border-radius:20px;
   background:rgba(255,255,255,.04);
   border:1px solid rgba(255,255,255,.08);
-  margin-bottom:10px;
   cursor:pointer;
-}
-
-.settingCard:last-child{
-  margin-bottom:0;
 }
 
 .settingLeft{
@@ -343,28 +338,19 @@ body{
     </button>
 
     <div class="pageHead">
-      <div class="pageKicker">Translation</div>
-      <h1 class="pageTitle">Çeviri <span class="ai">Ayarları</span></h1>
-      <p class="pageSub">Ses ayarlarını ve sistem dilini buradan yönet.</p>
+      <div class="pageKicker">Language</div>
+      <h1 class="pageTitle">Site <span class="ai">Dili</span></h1>
+      <p class="pageSub">Uygulama arayüzünün hangi dilde gösterileceğini seç.</p>
     </div>
   </div>
 
   <div class="panel">
-    <h2 class="panelTitle">Tercihler</h2>
-
-    <div class="settingCard" id="voiceSettingBtn" role="button" tabindex="0">
-      <div class="settingLeft">
-        <div class="settingLabel">Ses Ayarları</div>
-        <div class="settingDesc">Bu ayar FaceToFace ve SideToSide modüllerinde kullanılacak.</div>
-      </div>
-      <div class="settingValue" id="voiceValue">Otomatik</div>
-      <div class="chev">⌄</div>
-    </div>
+    <h2 class="panelTitle">Arayüz Dili</h2>
 
     <div class="settingCard" id="langSettingBtn" role="button" tabindex="0">
       <div class="settingLeft">
-        <div class="settingLabel">Sistem Dili</div>
-        <div class="settingDesc">Türkçe arayüz metinlerini seçtiğin dile otomatik çevirir.</div>
+        <div class="settingLabel">Site Dili</div>
+        <div class="settingDesc">Menüler, sistem metinleri ve uygulama içi arayüz dili.</div>
       </div>
       <div class="settingValue" id="langValue">Türkçe</div>
       <div class="chev">⌄</div>
@@ -373,7 +359,7 @@ body{
 
   <div class="panel">
     <div class="note">
-      Ses ayarı eski çalışan sistemle uyumlu olarak hem tts_voice hem de live_interpreter_voice anahtarına yazılır. Sistem dili ise uygulama metinlerinin hangi dilde gösterileceğini belirler.
+      Buradaki seçim uygulamanın arayüz dilini belirler. Ses seçimi artık ayrı olarak “Sesini Oluştur” sayfasından yönetilir.
     </div>
   </div>
 
@@ -383,7 +369,7 @@ body{
 
 <div class="sheet" id="optionSheet" aria-hidden="true">
   <div class="sheetHandle"></div>
-  <div class="sheetTitle" id="sheetTitle">Seçim</div>
+  <div class="sheetTitle" id="sheetTitle">Site Dili</div>
   <div class="sheetList" id="sheetList"></div>
 </div>
 
@@ -396,15 +382,13 @@ import { supabase } from "/js/supabase_client.js";
 try{
   mountShell({ scroll:"auto" });
 }catch(e){
-  console.warn("[translation settings shell]", e);
+  console.warn("[site language shell]", e);
 }
 
 const $ = (id) => document.getElementById(id);
 
 const backBtn = $("backBtn");
-const voiceSettingBtn = $("voiceSettingBtn");
 const langSettingBtn = $("langSettingBtn");
-const voiceValue = $("voiceValue");
 const langValue = $("langValue");
 
 const sheetBackdrop = $("sheetBackdrop");
@@ -413,43 +397,25 @@ const sheetTitle = $("sheetTitle");
 const sheetList = $("sheetList");
 const toastEl = $("toast");
 
-const STORAGE_KEYS = {
-  voice: "tts_voice",
-  voiceLegacy: "live_interpreter_voice",
-  lang: "system_lang"
-};
-
-const VOICE_OPTIONS = [
-  { value: "auto", label: "Otomatik", sub: "TTS ücretsiz ve varsayılan seçenek" },
-  { value: "female", label: "Kadın", sub: "Kadın ses tonuna yakın okuma" },
-  { value: "male", label: "Erkek", sub: "Erkek ses tonuna yakın okuma" },
-  { value: "clone", label: "Kendi Sesim", sub: "Daha önce oluşturduğun ses profili" }
-];
+const STORAGE_KEY = "system_lang";
 
 const LANGUAGE_OPTIONS = [
-  { value: "tr", label: "Türkçe" },
-  { value: "en", label: "English" },
-  { value: "de", label: "Deutsch" },
-  { value: "fr", label: "Français" },
-  { value: "it", label: "Italiano" },
-  { value: "es", label: "Español" }
+  { value: "tr", label: "Türkçe", sub: "Türkçe arayüz" },
+  { value: "en", label: "English", sub: "English interface" },
+  { value: "de", label: "Deutsch", sub: "Deutsche Oberfläche" },
+  { value: "fr", label: "Français", sub: "Interface française" },
+  { value: "it", label: "Italiano", sub: "Interfaccia italiana" },
+  { value: "es", label: "Español", sub: "Interfaz en español" }
 ];
 
 function toast(msg){
   if(!toastEl) return;
   toastEl.textContent = String(msg || "");
   toastEl.classList.add("show");
-  clearTimeout(window.__settingsToast);
-  window.__settingsToast = setTimeout(() => {
+  clearTimeout(window.__langToast);
+  window.__langToast = setTimeout(() => {
     toastEl.classList.remove("show");
   }, 1800);
-}
-
-function normalizeVoiceStorage(value){
-  const v = String(value || "auto").toLowerCase().trim();
-  if(v === "own" || v === "my") return "clone";
-  if(v === "female" || v === "male" || v === "clone") return v;
-  return "auto";
 }
 
 function getStoredValue(key, fallback){
@@ -466,53 +432,33 @@ function setStoredValue(key, value){
   }catch{}
 }
 
-function voiceLabelOf(value){
-  return VOICE_OPTIONS.find(x => x.value === value)?.label || "Otomatik";
-}
-
 function langLabelOf(value){
   return LANGUAGE_OPTIONS.find(x => x.value === value)?.label || "Türkçe";
 }
 
 function syncUI(){
-  const voicePref = normalizeVoiceStorage(getStoredValue(STORAGE_KEYS.voice, "auto"));
-  const langPref = getStoredValue(STORAGE_KEYS.lang, "tr");
-
-  if(voiceValue) voiceValue.textContent = voiceLabelOf(voicePref);
+  const langPref = getStoredValue(STORAGE_KEY, "tr");
   if(langValue) langValue.textContent = langLabelOf(langPref);
 }
 
-function openSheet(type){
-  const isVoice = type === "voice";
-  const options = isVoice ? VOICE_OPTIONS : LANGUAGE_OPTIONS;
-  const currentVal = isVoice
-    ? normalizeVoiceStorage(getStoredValue(STORAGE_KEYS.voice, "auto"))
-    : getStoredValue(STORAGE_KEYS.lang, "tr");
+function openSheet(){
+  const currentVal = getStoredValue(STORAGE_KEY, "tr");
 
   if(sheetTitle){
-    sheetTitle.textContent = isVoice ? "Ses Ayarları" : "Sistem Dili";
+    sheetTitle.textContent = "Site Dili";
   }
 
   if(!sheetList || !optionSheet || !sheetBackdrop) return;
 
-  sheetList.innerHTML = isVoice
-    ? options.map(opt => `
-      <div class="sheetItem ${String(opt.value) === String(currentVal) ? "active" : ""}" data-value="${opt.value}">
-        <div class="sheetItemMeta">
-          <div class="sheetItemTitle">${opt.label}</div>
-          <div class="sheetItemSub">${opt.sub}</div>
-        </div>
-        <div class="sheetItemCheck"></div>
+  sheetList.innerHTML = LANGUAGE_OPTIONS.map(opt => `
+    <div class="sheetItem ${String(opt.value) === String(currentVal) ? "active" : ""}" data-value="${opt.value}">
+      <div class="sheetItemMeta">
+        <div class="sheetItemTitle">${opt.label}</div>
+        <div class="sheetItemSub">${opt.sub}</div>
       </div>
-    `).join("")
-    : options.map(opt => `
-      <div class="sheetItem ${String(opt.value) === String(currentVal) ? "active" : ""}" data-value="${opt.value}">
-        <div class="sheetItemMeta">
-          <div class="sheetItemTitle">${opt.label}</div>
-        </div>
-        <div class="sheetItemCheck"></div>
-      </div>
-    `).join("");
+      <div class="sheetItemCheck"></div>
+    </div>
+  `).join("");
 
   optionSheet.classList.add("show");
   sheetBackdrop.classList.add("show");
@@ -521,7 +467,7 @@ function openSheet(type){
   sheetList.querySelectorAll(".sheetItem").forEach(item => {
     item.addEventListener("click", () => {
       const value = item.dataset.value;
-      saveSetting(type, value);
+      saveSetting(value);
       closeSheet();
     });
   });
@@ -533,47 +479,33 @@ function closeSheet(){
   optionSheet?.setAttribute("aria-hidden", "true");
 }
 
-async function saveSetting(type, value){
-  const isVoice = type === "voice";
-  const finalValue = isVoice ? normalizeVoiceStorage(value) : value;
+async function saveSetting(value){
+  const finalValue = String(value || "tr").trim().toLowerCase();
 
-  if(isVoice){
-    setStoredValue(STORAGE_KEYS.voice, finalValue);
-    setStoredValue(STORAGE_KEYS.voiceLegacy, finalValue);
-  } else {
-    setStoredValue(STORAGE_KEYS.lang, finalValue);
-  }
+  setStoredValue(STORAGE_KEY, finalValue);
 
   try{
     const { data: { user } } = await supabase.auth.getUser();
 
     if(user?.id){
-      const payload = isVoice
-        ? {
-            tts_voice_preference: finalValue,
-            tts_voice: finalValue,
-            updated_at: new Date().toISOString()
-          }
-        : {
-            system_lang: finalValue,
-            updated_at: new Date().toISOString()
-          };
-
       const { error } = await supabase
         .from("profiles")
-        .update(payload)
+        .update({
+          system_lang: finalValue,
+          updated_at: new Date().toISOString()
+        })
         .eq("id", user.id);
 
       if(error){
-        console.warn("[translation settings save]", error);
+        console.warn("[site language save]", error);
       }
     }
   }catch(e){
-    console.warn("[translation settings user save]", e);
+    console.warn("[site language user save]", e);
   }
 
   syncUI();
-  toast(isVoice ? "Ses ayarı güncellendi" : "Sistem dili güncellendi");
+  toast("Site dili güncellendi");
 }
 
 async function hydrateFromProfile(){
@@ -586,38 +518,29 @@ async function hydrateFromProfile(){
 
     const { data, error } = await supabase
       .from("profiles")
-      .select("tts_voice_preference, tts_voice, system_lang")
+      .select("system_lang")
       .eq("id", user.id)
       .maybeSingle();
 
     if(error){
-      console.warn("[translation settings profile read]", error);
+      console.warn("[site language profile read]", error);
       syncUI();
       return;
     }
 
-    const profileVoice = data?.tts_voice_preference || data?.tts_voice || "auto";
-
-    if(profileVoice){
-      const norm = normalizeVoiceStorage(profileVoice);
-      setStoredValue(STORAGE_KEYS.voice, norm);
-      setStoredValue(STORAGE_KEYS.voiceLegacy, norm);
-    }
-
     if(data?.system_lang){
-      setStoredValue(STORAGE_KEYS.lang, data.system_lang);
+      setStoredValue(STORAGE_KEY, data.system_lang);
     }
 
     syncUI();
   }catch(e){
-    console.warn("[translation settings hydrate]", e);
+    console.warn("[site language hydrate]", e);
     syncUI();
   }
 }
 
 backBtn?.addEventListener("click", () => history.back());
-voiceSettingBtn?.addEventListener("click", () => openSheet("voice"));
-langSettingBtn?.addEventListener("click", () => openSheet("lang"));
+langSettingBtn?.addEventListener("click", openSheet);
 sheetBackdrop?.addEventListener("click", closeSheet);
 
 document.addEventListener("keydown", (e) => {
