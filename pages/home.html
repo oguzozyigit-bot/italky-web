@@ -1,903 +1,970 @@
+<!-- FILE: /pages/home.html -->
 <!doctype html>
 <html lang="tr">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-<title>italkyAI • Future Home</title>
-<meta name="theme-color" content="#120d16"/>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+  <title>italkyAI • Translate Device</title>
+  <meta name="theme-color" content="#120d16"/>
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
-<style>
-:root{
-  --txt:rgba(255,255,255,.96);
-  --muted:rgba(255,255,255,.64);
-  --cardLine:rgba(255,255,255,.12);
-  --ai-grad:linear-gradient(135deg,#67e8f9 0%, #818cf8 46%, #f472b6 100%);
-  --pink:#f472b6;
-  --cyan:#67e8f9;
-}
+  <style>
+    :root{
+      --txt:rgba(255,255,255,.96);
+      --muted:rgba(255,255,255,.62);
+      --cardLine:rgba(255,255,255,.12);
 
-*{
-  box-sizing:border-box;
-  -webkit-tap-highlight-color:transparent;
-  outline:none;
-}
+      /* mevcut renkler korunuyor */
+      --ai-grad:linear-gradient(135deg,#67e8f9 0%, #818cf8 46%, #f472b6 100%);
+      --host-grad:linear-gradient(135deg,#2563eb 0%, #4f46e5 55%, #7c3aed 100%);
+      --join-grad:linear-gradient(135deg,#f97316 0%, #ec4899 55%, #a855f7 100%);
 
-html,body{
-  margin:0;
-  width:100%;
-  height:100%;
-  color:var(--txt);
-  font-family:'Outfit',sans-serif;
-  background:#120d16;
-  scrollbar-width:none;
-}
-html::-webkit-scrollbar,
-body::-webkit-scrollbar{
-  display:none;
-}
+      /* yeni kartlar için mevcut renklerden türetilmiş canlı tonlar */
+      --side-grad:linear-gradient(135deg,#2563eb 0%, #7c3aed 52%, #f472b6 100%);
+      --text-grad:linear-gradient(135deg,#f472b6 0%, #a855f7 48%, #67e8f9 100%);
+      --offline-grad:linear-gradient(135deg,#0f766e 0%, #14b8a6 46%, #60a5fa 100%);
 
-body{
-  background:
-    radial-gradient(circle at 50% 0%, rgba(251,146,60,.18) 0%, transparent 28%),
-    radial-gradient(circle at 20% 18%, rgba(244,114,182,.12) 0%, transparent 25%),
-    radial-gradient(circle at 82% 18%, rgba(96,165,250,.10) 0%, transparent 20%),
-    linear-gradient(180deg, #1d1016 0%, #150e19 34%, #120d16 100%);
-}
+      --glass:rgba(255,255,255,.05);
+      --footerSafe:var(--footerH, 0px);
+    }
 
-#pageContent{
-  width:100%;
-  min-height:100%;
-  padding:10px 14px 4px;
-  display:block;
-}
+    *{
+      box-sizing:border-box;
+      -webkit-tap-highlight-color:transparent;
+      outline:none;
+    }
 
-.page-shell-fit{
-  min-height:100%;
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-}
+    html,body{
+      margin:0;
+      width:100%;
+      height:100%;
+      color:var(--txt);
+      font-family:'Outfit',sans-serif;
+      background:#120d16;
+      overflow:hidden;
+      scrollbar-width:none;
+    }
 
-.hero{
-  flex:0 0 auto;
-  perspective:1000px;
-}
+    html::-webkit-scrollbar,
+    body::-webkit-scrollbar{
+      display:none;
+    }
 
-.heroTop{
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  gap:8px;
-}
+    body{
+      background:
+        radial-gradient(circle at 50% 0%, rgba(251,146,60,.18) 0%, transparent 26%),
+        radial-gradient(circle at 18% 18%, rgba(244,114,182,.12) 0%, transparent 22%),
+        radial-gradient(circle at 82% 18%, rgba(96,165,250,.12) 0%, transparent 20%),
+        linear-gradient(180deg, #1d1016 0%, #150e19 34%, #120d16 100%);
+    }
 
-.holo-container{
-  width:210px;
-  height:210px;
-  position:relative;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  transform-style:preserve-3d;
-  margin:2px auto 12px;
-}
+    #pageContent{
+      width:100%;
+      height:calc(100dvh - var(--footerSafe));
+      overflow-y:auto;
+      overflow-x:hidden;
+      padding:6px 12px 18px;
+      scrollbar-width:none;
+      -webkit-overflow-scrolling:touch;
+      overscroll-behavior:contain;
+    }
 
-.crystal-cage{
-  position:absolute;
-  width:150px;
-  height:150px;
-  transform-style:preserve-3d;
-  animation:rotateCrystal 18s linear infinite;
-}
+    #pageContent::-webkit-scrollbar{
+      display:none;
+    }
 
-.crystal-side{
-  position:absolute;
-  inset:0;
-  border:2px solid rgba(103,232,249,.42);
-  background:radial-gradient(circle, rgba(129,140,248,.12), transparent);
-  box-shadow:0 0 18px rgba(103,232,249,.22);
-}
+    .page-shell{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      min-height:100%;
+      padding-bottom:10px;
+    }
 
-.side1{ transform:rotateY(0deg) translateZ(75px); }
-.side2{ transform:rotateY(90deg) translateZ(75px); }
-.side3{ transform:rotateY(180deg) translateZ(75px); }
-.side4{ transform:rotateY(270deg) translateZ(75px); }
-.side5{ transform:rotateX(90deg) translateZ(75px); }
-.side6{ transform:rotateX(-90deg) translateZ(75px); }
+    .hero{
+      flex:0 0 auto;
+      min-height:232px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
 
-.holo-qr{
-  position:absolute;
-  width:108px;
-  height:108px;
-  background:#fff;
-  border-radius:15px;
-  padding:8px;
-  box-shadow:
-    0 0 34px rgba(103,232,249,.68),
-    inset 0 0 10px rgba(103,232,249,.28);
-  animation:floatQR 4s ease-in-out infinite, glitchQR 5s infinite;
-  z-index:2;
-  overflow:hidden;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
+    .hero-box{
+      width:100%;
+      border-radius:30px;
+      border:1px solid var(--cardLine);
+      background:
+        radial-gradient(circle at 50% 10%, rgba(103,232,249,.12) 0%, transparent 26%),
+        linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      box-shadow:
+        0 18px 32px rgba(0,0,0,.24),
+        inset 0 1px 0 rgba(255,255,255,.04);
+      padding:18px 16px 16px;
+      text-align:center;
+      position:relative;
+      overflow:hidden;
+    }
 
-.holo-qr img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  display:none;
-}
+    .hero-box::after{
+      content:"";
+      position:absolute;
+      left:-20%;
+      top:-30%;
+      width:140%;
+      height:120%;
+      background:linear-gradient(90deg, transparent, rgba(255,255,255,.05), transparent);
+      transform:rotate(-8deg);
+      pointer-events:none;
+    }
 
-.qr-fallback{
-  width:100%;
-  height:100%;
-  border-radius:10px;
-  display:none;
-  align-items:center;
-  justify-content:center;
-  flex-direction:column;
-  gap:6px;
-  text-align:center;
-  color:#111827;
-  font-size:10px;
-  font-weight:800;
-  line-height:1.2;
-  padding:8px;
-  background:linear-gradient(135deg,#ffffff 0%, #eef2ff 100%);
-}
+    .wave-row{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:4px;
+      margin-bottom:10px;
+      height:24px;
+    }
 
-.qr-fallback.show{
-  display:flex;
-}
+    .wave-bar{
+      width:4px;
+      height:10px;
+      border-radius:999px;
+      background:var(--ai-grad);
+      animation:waveGlow 1.2s infinite ease-in-out;
+      box-shadow:0 0 10px rgba(129,140,248,.22);
+    }
 
-.qr-fallback-code{
-  font-size:12px;
-  font-weight:900;
-  letter-spacing:.8px;
-  color:#4f46e5;
-  word-break:break-all;
-}
+    .wave-bar:nth-child(2){ animation-delay:.12s; }
+    .wave-bar:nth-child(3){ animation-delay:.24s; }
+    .wave-bar:nth-child(4){ animation-delay:.36s; }
+    .wave-bar:nth-child(5){ animation-delay:.48s; }
 
-.holo-beams{
-  position:absolute;
-  inset:-22px;
-  background:
-    repeating-linear-gradient(
-      to bottom,
-      transparent,
-      transparent 4px,
-      rgba(103,232,249,.08) 4px,
-      rgba(103,232,249,.08) 6px
-    );
-  mask-image:radial-gradient(circle, #fff, transparent 75%);
-  -webkit-mask-image:radial-gradient(circle, #fff, transparent 75%);
-  animation:beamFlow 2s linear infinite;
-  pointer-events:none;
-}
+    .hero-stage{
+      width:100%;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+    }
 
-.energy-platform{
-  position:absolute;
-  bottom:-28px;
-  left:50%;
-  transform:translateX(-50%) rotateX(75deg);
-  width:176px;
-  height:176px;
-  background:
-    radial-gradient(circle, var(--cyan) 0%, transparent 70%),
-    radial-gradient(circle, rgba(244,114,182,.25) 10%, transparent 60%);
-  border-radius:50%;
-  filter:blur(5px);
-  box-shadow:0 0 44px var(--cyan), 0 0 84px var(--pink);
-  animation:platformPulse 3s ease-in-out infinite;
-  opacity:.68;
-  z-index:-1;
-}
+    .holo-wrap{
+      position:relative;
+      width:182px;
+      height:182px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      margin:2px auto 0;
+      perspective:1000px;
+      flex:0 0 auto;
+    }
 
-.heroTitle{
-  font-family:'Space Grotesk',sans-serif;
-  font-size:22px;
-  font-weight:700;
-  letter-spacing:-.4px;
-  color:#fff;
-  margin:0;
-  line-height:1.08;
-  text-align:center;
-  text-shadow:0 0 12px rgba(255,255,255,.18);
-}
+    .cyber-box-system{
+      position:absolute;
+      width:146px;
+      height:146px;
+      transform-style:preserve-3d;
+      animation:masterRotate 15s linear infinite;
+    }
 
-.heroTitle .to{
-  background:var(--ai-grad);
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
-}
+    .cyber-frame{
+      position:absolute;
+      inset:0;
+      border:2px solid rgba(103,232,249,0.3);
+      background:radial-gradient(circle, rgba(103,232,249,0.05), transparent);
+      box-shadow:0 0 20px rgba(103,232,249,0.1);
+    }
 
-.heroSub{
-  margin:0;
-  font-size:10.8px;
-  color:var(--muted);
-  text-align:center;
-  line-height:1.36;
-  max-width:310px;
-}
+    .f1{ transform:rotateY(0deg) rotateX(45deg); border-color:#67e8f9; }
+    .f2{ transform:rotateY(90deg) rotateZ(45deg); border-color:#f472b6; }
+    .f3{ transform:rotateX(90deg) rotateY(45deg); border-color:#fff; }
 
-.heroStatus{
-  min-height:20px;
-  font-size:11px;
-  font-weight:800;
-  color:rgba(255,255,255,.78);
-  text-align:center;
-}
+    .hero-core{
+      position:absolute;
+      width:98px;
+      height:98px;
+      border-radius:28px;
+      background:#fff;
+      box-shadow:0 0 40px rgba(103,232,249,0.55);
+      z-index:10;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-decoration:none;
+      animation:floatCore 4s ease-in-out infinite;
+      overflow:hidden;
+    }
 
-.home-grid{
-  flex:1;
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  grid-template-rows:auto auto;
-  gap:12px;
-}
+    .hero-core-inner{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:4px;
+    }
 
-.mod-card{
-  position:relative;
-  border-radius:28px;
-  overflow:hidden;
-  border:1px solid var(--cardLine);
-  box-shadow:
-    0 15px 30px rgba(0,0,0,.28),
-    inset 0 1px 0 rgba(255,255,255,.05);
-  padding:16px 15px 108px;
-  text-decoration:none;
-  color:#fff;
-  min-height:300px;
-  transition:transform .22s ease, filter .22s ease, box-shadow .22s ease;
-}
+    .qr-shell{
+      width:40px;
+      height:40px;
+      border-radius:10px;
+      background:#111827;
+      padding:4px;
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      grid-template-rows:repeat(3,1fr);
+      gap:2px;
+      box-shadow:inset 0 0 0 2px rgba(255,255,255,.08);
+    }
 
-.mod-card:active{
-  transform:scale(.985);
-  filter:brightness(1.08);
-}
+    .qr-shell span{
+      background:#fff;
+      border-radius:2px;
+      animation:qrBlink 2.4s ease-in-out infinite;
+    }
+    .qr-shell span:nth-child(2){ animation-delay:.15s; }
+    .qr-shell span:nth-child(3){ animation-delay:.3s; }
+    .qr-shell span:nth-child(4){ animation-delay:.45s; }
+    .qr-shell span:nth-child(5){ background:#67e8f9; animation-delay:.6s; }
+    .qr-shell span:nth-child(6){ animation-delay:.75s; }
+    .qr-shell span:nth-child(7){ animation-delay:.9s; }
+    .qr-shell span:nth-child(8){ animation-delay:1.05s; }
+    .qr-shell span:nth-child(9){ animation-delay:1.2s; }
 
-.mod-card:hover{
-  box-shadow:
-    0 22px 36px rgba(0,0,0,.32),
-    0 0 18px rgba(103,232,249,.08);
-}
+    .hero-core-title{
+      font-family:'Space Grotesk',sans-serif;
+      font-size:10px;
+      font-weight:800;
+      color:#111827;
+      text-align:center;
+      line-height:1.05;
+      margin-top:2px;
+    }
 
-.face-card{
-  background:
-    radial-gradient(circle at 20% 15%, rgba(103,232,249,.35) 0%, transparent 35%),
-    linear-gradient(180deg, #301661 0%, #2b2185 50%, #1e36a3 100%);
-}
+    .hero-title{
+      margin:0;
+      font-family:'Space Grotesk',sans-serif;
+      font-size:26px;
+      line-height:1;
+      letter-spacing:-.8px;
+      color:#fff;
+      text-shadow:0 0 12px rgba(255,255,255,.08);
+    }
 
-.all-card{
-  background:
-    radial-gradient(circle at 80% 15%, rgba(251,146,60,.3) 0%, transparent 30%),
-    linear-gradient(180deg, #d43685 0%, #632bbd 52%, #3c35b5 100%);
-}
+    .hero-title span{
+      background:var(--ai-grad);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
 
-.offline-card{
-  grid-column:1 / 3;
-  min-height:126px;
-  display:flex;
-  align-items:center;
-  gap:16px;
-  padding:16px 52px 16px 16px;
-  background:
-    radial-gradient(circle at 12% 50%, rgba(251,146,60,.25) 0%, transparent 25%),
-    radial-gradient(circle at 88% 20%, rgba(103,232,249,.15) 0%, transparent 20%),
-    linear-gradient(90deg, #61220e 0%, #c2410a 36%, #ea580c 68%, #e11d48 100%);
-}
+    .hero-sub{
+      margin:0 auto;
+      max-width:294px;
+      font-size:11px;
+      line-height:1.38;
+      color:var(--muted);
+    }
 
-.card-title{
-  margin:0;
-  font-family:'Space Grotesk',sans-serif;
-  font-size:24px;
-  line-height:1;
-  letter-spacing:-.8px;
-  color:#fff;
-  word-break:break-word;
-}
+    .hero-hint{
+      margin:0;
+      font-size:10px;
+      line-height:1.2;
+      color:rgba(255,255,255,.78);
+      font-weight:800;
+      letter-spacing:.35px;
+    }
 
-.card-desc-list{
-  margin-top:8px;
-  display:flex;
-  flex-direction:column;
-  gap:4px;
-  max-width:100%;
-  padding-right:2px;
-}
+    .stack{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
 
-.card-desc{
-  margin:0;
-  font-size:10.2px;
-  line-height:1.26;
-  color:rgba(255,255,255,.86);
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
+    .v-card{
+      position:relative;
+      border-radius:30px;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.12);
+      box-shadow:
+        0 18px 30px rgba(0,0,0,.28),
+        inset 0 1px 0 rgba(255,255,255,.05);
+      color:#fff;
+      text-decoration:none;
+      padding:18px;
+      min-height:180px;
+      display:flex;
+      align-items:center;
+      gap:14px;
+      user-select:none;
+      transition:transform .18s ease, filter .18s ease, box-shadow .18s ease;
+    }
 
-.card-art{
-  position:absolute;
-  left:12px;
-  right:12px;
-  bottom:12px;
-  height:76px;
-  border-radius:20px;
-  background:rgba(255,255,255,.08);
-  border:1px solid rgba(255,255,255,.10);
-  overflow:hidden;
-}
+    .v-card:active{
+      transform:scale(.985);
+      filter:brightness(1.04);
+    }
 
-.face-art{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:16px;
-}
+    .facetoface-card{
+      background:
+        radial-gradient(circle at 18% 16%, rgba(103,232,249,.24) 0%, transparent 24%),
+        var(--host-grad);
+    }
 
-.face-headset{
-  position:relative;
-  width:28px;
-  height:38px;
-  margin-top:14px;
-}
+    .alltoall-card{
+      background:
+        radial-gradient(circle at 82% 16%, rgba(255,255,255,.16) 0%, transparent 20%),
+        var(--join-grad);
+    }
 
-.face-headset::before{
-  content:"";
-  position:absolute;
-  left:50%;
-  top:-2px;
-  width:18px;
-  height:18px;
-  border-radius:50%;
-  transform:translateX(-50%);
-  background:rgba(255,255,255,.88);
-  box-shadow:0 0 10px rgba(255,255,255,.16);
-}
+    .v-left{
+      flex:1;
+      min-width:0;
+    }
 
-.face-headset::after{
-  content:"";
-  position:absolute;
-  left:50%;
-  bottom:0;
-  width:28px;
-  height:18px;
-  border-radius:14px 14px 10px 10px;
-  transform:translateX(-50%);
-  background:linear-gradient(180deg, rgba(255,255,255,.9), rgba(255,255,255,.32));
-}
+    .v-title{
+      margin:0;
+      font-family:'Space Grotesk',sans-serif;
+      font-size:29px;
+      line-height:1;
+      letter-spacing:-1px;
+      color:#fff;
+    }
 
-.face-wave{
-  position:absolute;
-  left:50%;
-  top:50%;
-  width:62px;
-  height:28px;
-  transform:translate(-50%,-50%);
-}
+    .v-desc{
+      margin-top:10px;
+      font-size:12px;
+      line-height:1.42;
+      color:rgba(255,255,255,.88);
+      max-width:220px;
+    }
 
-.face-wave::before,
-.face-wave::after{
-  content:"";
-  position:absolute;
-  left:0;
-  right:0;
-  border-radius:999px;
-  background:linear-gradient(90deg, rgba(255,255,255,.08), rgba(103,232,249,.98), rgba(255,255,255,.08));
-  box-shadow:0 0 14px rgba(103,232,249,.46);
-}
+    .v-mini{
+      margin-top:10px;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:7px 10px;
+      border-radius:999px;
+      background:rgba(255,255,255,.12);
+      border:1px solid rgba(255,255,255,.14);
+      font-size:10px;
+      font-weight:900;
+      letter-spacing:.35px;
+      color:#fff;
+    }
 
-.face-wave::before{ top:9px;height:2px; }
-.face-wave::after{ top:16px;height:2px;opacity:.68; }
+    .v-icon{
+      width:82px;
+      height:82px;
+      flex:0 0 auto;
+      border-radius:24px;
+      background:rgba(255,255,255,.12);
+      border:1px solid rgba(255,255,255,.16);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      position:relative;
+      overflow:hidden;
+      box-shadow:inset 0 0 18px rgba(255,255,255,.05);
+    }
 
-.all-art{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
+    .facetoface-icon{
+      position:relative;
+      width:46px;
+      height:46px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
 
-.all-center{
-  position:absolute;
-  left:50%;
-  top:50%;
-  width:16px;
-  height:16px;
-  border-radius:50%;
-  transform:translate(-50%,-50%);
-  background:rgba(255,255,255,.92);
-  box-shadow:
-    0 0 0 6px rgba(255,255,255,.12),
-    0 0 18px rgba(251,146,60,.52);
-}
+    .facetoface-top,
+    .facetoface-bottom{
+      position:absolute;
+      left:50%;
+      width:30px;
+      height:11px;
+      transform:translateX(-50%);
+      border-radius:999px;
+      background:rgba(255,255,255,.95);
+      box-shadow:0 0 12px rgba(255,255,255,.22);
+    }
 
-.all-dot{
-  position:absolute;
-  width:12px;
-  height:12px;
-  border-radius:50%;
-  background:rgba(255,255,255,.84);
-  box-shadow:0 0 10px rgba(255,255,255,.22);
-}
+    .facetoface-top{ top:2px; }
+    .facetoface-bottom{ bottom:2px; }
 
-.n1{ top:10px; left:50%; transform:translateX(-50%); }
-.n2{ left:24px; bottom:14px; }
-.n3{ right:24px; bottom:14px; }
+    .facetoface-core{
+      position:absolute;
+      left:50%;
+      top:50%;
+      transform:translate(-50%,-50%);
+      width:12px;
+      height:12px;
+      border-radius:50%;
+      background:#67e8f9;
+      box-shadow:0 0 18px #67e8f9;
+    }
 
-.all-line{
-  position:absolute;
-  left:50%;
-  top:50%;
-  width:2px;
-  height:34px;
-  transform-origin:center bottom;
-  background:linear-gradient(180deg, rgba(255,255,255,.16), rgba(251,146,60,.95));
-  box-shadow:0 0 10px rgba(251,146,60,.34);
-}
+    .facetoface-beam{
+      position:absolute;
+      left:50%;
+      top:50%;
+      width:2px;
+      height:34px;
+      transform:translate(-50%,-50%);
+      background:linear-gradient(180deg, rgba(255,255,255,.20), rgba(103,232,249,.98), rgba(255,255,255,.20));
+      box-shadow:0 0 12px rgba(103,232,249,.35);
+      animation:beamPulse 2s ease-in-out infinite;
+    }
 
-.r1{ transform:translate(-50%,-50%) rotate(0deg); }
-.r2{ transform:translate(-50%,-50%) rotate(120deg); }
-.r3{ transform:translate(-50%,-50%) rotate(240deg); }
+    .alltoall-icon{
+      position:relative;
+      width:46px;
+      height:46px;
+    }
 
-.offline-ico{
-  width:76px;
-  height:76px;
-  flex:0 0 auto;
-  position:relative;
-  border-radius:22px;
-  background:rgba(255,255,255,.12);
-  border:1.5px solid rgba(255,255,255,.15);
-  box-shadow:inset 0 0 22px rgba(255,255,255,.05);
-}
+    .alltoall-core{
+      position:absolute;
+      left:50%;
+      top:50%;
+      width:12px;
+      height:12px;
+      border-radius:50%;
+      transform:translate(-50%,-50%);
+      background:#fff;
+      box-shadow:0 0 12px #fff;
+      z-index:2;
+    }
 
-.sheet{
-  position:absolute;
-  width:28px;
-  height:38px;
-  border-radius:9px;
-  border:1.4px solid rgba(255,255,255,.6);
-  background:rgba(255,255,255,.12);
-}
+    .alltoall-ring{
+      position:absolute;
+      inset:0;
+      border-radius:50%;
+      border:2px solid rgba(255,255,255,.92);
+      opacity:.9;
+      animation:spin 3.2s linear infinite;
+    }
 
-.sheet.s1{ left:16px; top:21px; transform:rotate(-8deg); }
-.sheet.s2{ left:34px; top:17px; transform:rotate(7deg); }
+    .alltoall-ring.r2{
+      inset:7px;
+      border-color:#f472b6;
+      animation-direction:reverse;
+      animation-duration:2.6s;
+    }
 
-.line{
-  position:absolute;
-  left:6px;
-  right:6px;
-  height:2px;
-  border-radius:3px;
-  background:rgba(255,255,255,.55);
-}
+    .alltoall-dot{
+      position:absolute;
+      width:8px;
+      height:8px;
+      border-radius:50%;
+      background:#67e8f9;
+      box-shadow:0 0 12px #67e8f9;
+      top:-2px;
+      left:50%;
+      transform:translateX(-50%);
+    }
 
-.l1{ top:10px; }
-.l2{ top:16px; }
-.l3{ top:22px; }
+    .section-kicker{
+      margin:2px 2px 0;
+      font-size:10px;
+      font-weight:900;
+      letter-spacing:.75px;
+      text-transform:uppercase;
+      color:rgba(255,255,255,.76);
+    }
 
-.offline-body{ flex:1; min-width:0; }
+    .h-list{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
 
-.card-topline{
-  font-size:10px;
-  font-weight:700;
-  letter-spacing:.5px;
-  color:rgba(255,255,255,.8);
-  margin-bottom:6px;
-  text-transform:uppercase;
-}
+    .h-card{
+      position:relative;
+      border-radius:28px;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.12);
+      box-shadow:
+        0 16px 28px rgba(0,0,0,.26),
+        inset 0 1px 0 rgba(255,255,255,.05);
+      color:#fff;
+      text-decoration:none;
+      padding:16px 16px 16px 14px;
+      min-height:126px;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      user-select:none;
+      transition:transform .18s ease, filter .18s ease;
+    }
 
-.offline-title{
-  margin:0;
-  font-family:'Space Grotesk',sans-serif;
-  font-size:24px;
-  line-height:1;
-  letter-spacing:-.8px;
-  word-break:break-word;
-}
+    .h-card:active{
+      transform:scale(.985);
+      filter:brightness(1.04);
+    }
 
-.offline-desc{
-  margin-top:7px;
-  font-size:10.8px;
-  line-height:1.34;
-  color:rgba(255,255,255,.88);
-  max-width:84%;
-}
+    .sidetoside-card{
+      background:
+        radial-gradient(circle at 18% 18%, rgba(255,255,255,.12) 0%, transparent 24%),
+        var(--side-grad);
+    }
 
-.arrow-chip{
-  flex:0 0 auto;
-  width:40px;
-  height:40px;
-  border-radius:50%;
-  position:absolute;
-  right:12px;
-  top:50%;
-  transform:translateY(-50%);
-  background:rgba(255,255,255,.15);
-  border:1px solid rgba(255,255,255,.18);
-}
+    .texttotext-card{
+      background:
+        radial-gradient(circle at 84% 18%, rgba(255,255,255,.15) 0%, transparent 22%),
+        var(--text-grad);
+    }
 
-.arrow-chip::before{
-  content:"";
-  position:absolute;
-  left:13px;
-  top:50%;
-  width:12px;
-  height:12px;
-  border-top:2px solid rgba(255,255,255,.9);
-  border-right:2px solid rgba(255,255,255,.9);
-  transform:translateY(-50%) rotate(45deg);
-}
+    .offline-card{
+      background:
+        radial-gradient(circle at 18% 16%, rgba(255,255,255,.14) 0%, transparent 24%),
+        var(--offline-grad);
+    }
 
-@keyframes rotateCrystal{
-  from{ transform:rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
-  to{ transform:rotateX(360deg) rotateY(720deg) rotateZ(360deg); }
-}
-@keyframes floatQR{
-  0%,100%{ transform:translateY(0) rotateX(0deg); }
-  50%{ transform:translateY(-8px) rotateX(5deg); }
-}
-@keyframes glitchQR{
-  0%,90%,100%{ opacity:1; transform:scale(1); }
-  92%{ opacity:.82; transform:scale(1.03) skewX(2deg); }
-  94%{ opacity:1; transform:scale(1) skewX(-2deg); }
-}
-@keyframes beamFlow{
-  from{ background-position:0 0; }
-  to{ background-position:0 50px; }
-}
-@keyframes platformPulse{
-  0%,100%{ transform:translateX(-50%) rotateX(75deg) scale(1); opacity:.7; }
-  50%{ transform:translateX(-50%) rotateX(75deg) scale(1.08); opacity:.88; }
-}
+    .h-icon{
+      width:70px;
+      height:70px;
+      border-radius:22px;
+      background:rgba(255,255,255,.12);
+      border:1px solid rgba(255,255,255,.16);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      flex:0 0 auto;
+      position:relative;
+      overflow:hidden;
+      box-shadow:inset 0 0 18px rgba(255,255,255,.05);
+    }
 
-@media (max-width:390px){
-  .holo-container{ width:190px; height:190px; margin-bottom:8px; }
-  .crystal-cage{ width:136px; height:136px; }
-  .side1{ transform:rotateY(0deg) translateZ(68px); }
-  .side2{ transform:rotateY(90deg) translateZ(68px); }
-  .side3{ transform:rotateY(180deg) translateZ(68px); }
-  .side4{ transform:rotateY(270deg) translateZ(68px); }
-  .side5{ transform:rotateX(90deg) translateZ(68px); }
-  .side6{ transform:rotateX(-90deg) translateZ(68px); }
-  .holo-qr{ width:98px; height:98px; }
-  .energy-platform{ width:154px; height:154px; bottom:-24px; }
-  .heroTitle{ font-size:20px; }
-  .card-title{ font-size:22px; }
-  .offline-title{ font-size:22px; }
-  .card-art{ height:70px; }
-  .card-desc{ font-size:9.6px; }
-}
-</style>
+    .h-body{
+      flex:1;
+      min-width:0;
+    }
+
+    .h-title{
+      margin:0;
+      font-family:'Space Grotesk',sans-serif;
+      font-size:22px;
+      line-height:1;
+      letter-spacing:-.6px;
+      color:#fff;
+    }
+
+    .h-desc{
+      margin-top:8px;
+      font-size:11px;
+      line-height:1.38;
+      color:rgba(255,255,255,.88);
+      max-width:238px;
+    }
+
+    .h-tag{
+      margin-top:8px;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:9px;
+      font-weight:900;
+      letter-spacing:.45px;
+      background:rgba(255,255,255,.12);
+      border:1px solid rgba(255,255,255,.14);
+      color:#fff;
+      text-transform:uppercase;
+    }
+
+    .h-arrow{
+      width:32px;
+      height:32px;
+      flex:0 0 auto;
+      border-radius:50%;
+      background:rgba(255,255,255,.15);
+      border:1px solid rgba(255,255,255,.18);
+      position:relative;
+    }
+
+    .h-arrow::before{
+      content:"";
+      position:absolute;
+      left:10px;
+      top:50%;
+      width:9px;
+      height:9px;
+      border-top:2px solid #fff;
+      border-right:2px solid #fff;
+      transform:translateY(-50%) rotate(45deg);
+    }
+
+    .side-icon{
+      position:relative;
+      width:44px;
+      height:44px;
+    }
+
+    .side-phone{
+      position:absolute;
+      top:7px;
+      width:16px;
+      height:28px;
+      border-radius:6px;
+      border:2px solid rgba(255,255,255,.92);
+      background:rgba(255,255,255,.08);
+      box-shadow:0 0 10px rgba(255,255,255,.12);
+    }
+
+    .side-phone.left{ left:2px; transform:rotate(-8deg); }
+    .side-phone.right{ right:2px; transform:rotate(8deg); }
+
+    .side-link{
+      position:absolute;
+      left:50%;
+      top:50%;
+      width:18px;
+      height:2px;
+      transform:translate(-50%,-50%);
+      background:linear-gradient(90deg, rgba(255,255,255,.18), rgba(103,232,249,.98), rgba(255,255,255,.18));
+      box-shadow:0 0 10px rgba(103,232,249,.35);
+      animation:beamPulse 1.8s ease-in-out infinite;
+    }
+
+    .text-icon{
+      position:relative;
+      width:44px;
+      height:44px;
+    }
+
+    .text-bubble{
+      position:absolute;
+      left:3px;
+      top:6px;
+      width:24px;
+      height:18px;
+      border-radius:8px;
+      background:rgba(255,255,255,.94);
+      box-shadow:0 0 12px rgba(255,255,255,.15);
+    }
+
+    .text-bubble::after{
+      content:"";
+      position:absolute;
+      left:4px;
+      bottom:-4px;
+      width:8px;
+      height:8px;
+      background:rgba(255,255,255,.94);
+      clip-path:polygon(0 0, 100% 0, 0 100%);
+    }
+
+    .text-line{
+      position:absolute;
+      left:7px;
+      width:11px;
+      height:2px;
+      border-radius:999px;
+      background:#111827;
+    }
+    .text-line.l1{ top:11px; }
+    .text-line.l2{ top:16px; width:8px; }
+
+    .text-doc{
+      position:absolute;
+      right:4px;
+      bottom:4px;
+      width:18px;
+      height:24px;
+      border-radius:5px;
+      border:2px solid rgba(103,232,249,.96);
+      background:rgba(103,232,249,.08);
+      box-shadow:0 0 12px rgba(103,232,249,.20);
+    }
+
+    .text-doc::before{
+      content:"";
+      position:absolute;
+      left:50%;
+      top:50%;
+      width:8px;
+      height:2px;
+      border-radius:999px;
+      background:#67e8f9;
+      transform:translate(-50%,-50%);
+      box-shadow:0 -5px 0 #67e8f9, 0 5px 0 #67e8f9;
+    }
+
+    .offline-icon{
+      position:relative;
+      width:44px;
+      height:44px;
+    }
+
+    .offline-ring{
+      position:absolute;
+      inset:4px;
+      border-radius:50%;
+      border:2px solid rgba(255,255,255,.92);
+      opacity:.85;
+    }
+
+    .offline-arrow{
+      position:absolute;
+      left:50%;
+      top:10px;
+      width:2px;
+      height:16px;
+      background:#fff;
+      transform:translateX(-50%);
+      border-radius:999px;
+      box-shadow:0 0 12px rgba(255,255,255,.18);
+    }
+
+    .offline-arrow::after{
+      content:"";
+      position:absolute;
+      left:50%;
+      bottom:-2px;
+      width:8px;
+      height:8px;
+      border-right:2px solid #fff;
+      border-bottom:2px solid #fff;
+      transform:translateX(-50%) rotate(45deg);
+    }
+
+    .offline-base{
+      position:absolute;
+      left:50%;
+      bottom:8px;
+      width:20px;
+      height:4px;
+      border-radius:999px;
+      background:#fff;
+      transform:translateX(-50%);
+    }
+
+    @keyframes waveGlow{
+      0%,100%{ height:10px; opacity:.34; }
+      50%{ height:24px; opacity:1; }
+    }
+
+    @keyframes masterRotate{
+      from{ transform:rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
+      to{ transform:rotateX(360deg) rotateY(720deg) rotateZ(360deg); }
+    }
+
+    @keyframes floatCore{
+      0%,100%{ transform:translateY(0); }
+      50%{ transform:translateY(-8px); }
+    }
+
+    @keyframes qrBlink{
+      0%,100%{ opacity:.72; transform:scale(1); }
+      50%{ opacity:1; transform:scale(1.08); }
+    }
+
+    @keyframes spin{
+      from{ transform:rotate(0deg); }
+      to{ transform:rotate(360deg); }
+    }
+
+    @keyframes beamPulse{
+      0%,100%{ opacity:.42; }
+      50%{ opacity:1; }
+    }
+
+    @media (max-width:390px){
+      #pageContent{
+        padding:6px 10px 18px;
+      }
+
+      .hero-box{
+        padding:16px 14px 14px;
+      }
+
+      .hero-title{
+        font-size:24px;
+      }
+
+      .hero-sub{
+        font-size:10px;
+        max-width:276px;
+      }
+
+      .holo-wrap{
+        width:172px;
+        height:172px;
+      }
+
+      .cyber-box-system{
+        width:138px;
+        height:138px;
+      }
+
+      .hero-core{
+        width:92px;
+        height:92px;
+      }
+
+      .v-title{
+        font-size:27px;
+      }
+
+      .v-desc,
+      .h-desc{
+        font-size:10.8px;
+      }
+
+      .h-title{
+        font-size:20px;
+      }
+    }
+  </style>
 </head>
 
 <body>
-<main id="pageContent">
-  <div class="page-shell-fit">
+  <main id="pageContent">
+    <div class="page-shell">
 
-    <section class="hero">
-      <div class="heroTop">
-        <div class="holo-container">
-          <div class="crystal-cage">
-            <div class="crystal-side side1"></div>
-            <div class="crystal-side side2"></div>
-            <div class="crystal-side side3"></div>
-            <div class="crystal-side side4"></div>
-            <div class="crystal-side side5"></div>
-            <div class="crystal-side side6"></div>
+      <section class="hero">
+        <div class="hero-box">
+          <div class="wave-row">
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
           </div>
 
-          <div class="holo-qr">
-            <img id="smallQrImg" alt="italkyAI QR Hologram">
-            <div id="qrFallback" class="qr-fallback">
-              <div>QR hazır değil</div>
-              <div id="qrFallbackCode" class="qr-fallback-code">ROOM-XXXXXX</div>
+          <div class="hero-stage">
+            <div class="holo-wrap">
+              <div class="cyber-box-system">
+                <div class="cyber-frame f1"></div>
+                <div class="cyber-frame f2"></div>
+                <div class="cyber-frame f3"></div>
+              </div>
+
+              <a href="/pages/sidetoside.html" class="hero-core">
+                <div class="hero-core-inner">
+                  <div class="qr-shell" aria-hidden="true">
+                    <span></span><span></span><span></span>
+                    <span></span><span></span><span></span>
+                    <span></span><span></span><span></span>
+                  </div>
+                  <div class="hero-core-title">QR / KOD<br>İLE GİR</div>
+                </div>
+              </a>
+            </div>
+
+            <h1 class="hero-title">italky<span>AI</span></h1>
+            <p class="hero-sub">Sadece çeviri. Hızlı aç, konuş, anla. Aynı cihazda, iki cihazda veya kalabalık odada tek merkez.</p>
+            <p class="hero-hint">QR anlamayan için kartların altındaki girişler de hazır.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="stack">
+        <a class="v-card facetoface-card" href="/pages/facetoface.html">
+          <div class="v-left">
+            <h2 class="v-title">FaceToFace</h2>
+            <div class="v-desc">Aynı cihazda 180° ikiye bölünmüş ekran. Karşılıklı konuş, anında çeviri dinle.</div>
+            <div class="v-mini">AYNI CİHAZ • SES SEÇİMİ</div>
+          </div>
+
+          <div class="v-icon">
+            <div class="facetoface-icon">
+              <div class="facetoface-top"></div>
+              <div class="facetoface-beam"></div>
+              <div class="facetoface-core"></div>
+              <div class="facetoface-bottom"></div>
+            </div>
+          </div>
+        </a>
+
+        <a class="v-card alltoall-card" href="/pages/alltoall.html">
+          <div class="v-left">
+            <h2 class="v-title">AllToAll</h2>
+            <div class="v-desc">50 kişiye kadar canlı çeviri kanalı. Herkes kendi dilinde konuşsun, kendi dilinde anlasın.</div>
+            <div class="v-mini">MAX 50 KİŞİ • OTOMATİK SES</div>
+          </div>
+
+          <div class="v-icon">
+            <div class="alltoall-icon">
+              <div class="alltoall-ring"></div>
+              <div class="alltoall-ring r2"></div>
+              <div class="alltoall-core"></div>
+              <div class="alltoall-dot"></div>
+            </div>
+          </div>
+        </a>
+      </section>
+
+      <div class="section-kicker">Hızlı giriş modülleri</div>
+
+      <section class="h-list">
+        <a class="h-card sidetoside-card" href="/pages/sidetoside.html">
+          <div class="h-icon">
+            <div class="side-icon">
+              <div class="side-phone left"></div>
+              <div class="side-phone right"></div>
+              <div class="side-link"></div>
             </div>
           </div>
 
-          <div class="holo-beams"></div>
-          <div class="energy-platform"></div>
-        </div>
-
-        <h1 class="heroTitle">Side<span class="to">To</span>Side</h1>
-        <p class="heroSub">QR kodu tarat, anında bağlan. Karşı taraf girince sen de otomatik odaya geç.</p>
-        <div class="heroStatus" id="heroStatus">Oda hazırlanıyor...</div>
-      </div>
-    </section>
-
-    <section class="home-grid">
-      <a class="mod-card face-card" href="/facetoface.html">
-        <h2 class="card-title">FaceToFace</h2>
-
-        <div class="card-desc-list">
-          <p class="card-desc">Yüz yüze iletişimde ekran bölünür.</p>
-          <p class="card-desc">Yapay zeka sayesinde çeviri.</p>
-          <p class="card-desc">72 Dil çevirisi.</p>
-          <p class="card-desc">Tek telefon.</p>
-          <p class="card-desc">Özel ses seçimi.</p>
-          <p class="card-desc">Bölünmüş ekran.</p>
-        </div>
-
-        <div class="card-art face-art">
-          <div class="face-wave"></div>
-          <div class="face-headset"></div>
-          <div class="face-headset"></div>
-        </div>
-      </a>
-
-      <a class="mod-card all-card" href="/pages/alltoall.html"
-        <h2 class="card-title">AllToAll</h2>
-
-        <div class="card-desc-list">
-          <p class="card-desc">Çok sayıda katılımlı ortak çeviri.</p>
-          <p class="card-desc">Dünyanın her ülkesinden katılım.</p>
-          <p class="card-desc">Aynı anda birden fazla dile çeviri.</p>
-          <p class="card-desc">72 Dil çevirisi.</p>
-          <p class="card-desc">Yapay zeka sayesinde kültürel çeviri.</p>
-        </div>
-
-        <div class="card-art all-art">
-          <div class="all-line r1"></div>
-          <div class="all-line r2"></div>
-          <div class="all-line r3"></div>
-          <div class="all-center"></div>
-          <div class="all-dot n1"></div>
-          <div class="all-dot n2"></div>
-          <div class="all-dot n3"></div>
-        </div>
-      </a>
-
-      <a class="mod-card offline-card" href="/pages/offline_languages.html">
-        <div class="offline-ico">
-          <div class="sheet s1">
-            <div class="line l1"></div>
-            <div class="line l2"></div>
-            <div class="line l3"></div>
+          <div class="h-body">
+            <h3 class="h-title">SideToSide</h3>
+            <div class="h-desc">İki kişi kendi telefonundan bağlanır. QR, kod veya klasik giriş butonuyla anında bağlan.</div>
+            <div class="h-tag">2 CİHAZ • SES SEÇİMİ</div>
           </div>
-          <div class="sheet s2">
-            <div class="line l1"></div>
-            <div class="line l2"></div>
-            <div class="line l3"></div>
+
+          <div class="h-arrow"></div>
+        </a>
+
+        <a class="h-card texttotext-card" href="/pages/translate.html">
+          <div class="h-icon">
+            <div class="text-icon">
+              <div class="text-bubble"></div>
+              <div class="text-line l1"></div>
+              <div class="text-line l2"></div>
+              <div class="text-doc"></div>
+            </div>
           </div>
-        </div>
 
-        <div class="offline-body">
-          <div class="card-topline">60 Offline Dil Paketi</div>
-          <h2 class="offline-title">Offline Translate</h2>
-          <p class="offline-desc">İndir, internetsiz çevir.</p>
-        </div>
+          <div class="h-body">
+            <h3 class="h-title">TextToText</h3>
+            <div class="h-desc">Yazıdan veya fotoğraftan çeviri. Hızlı, temiz ve tek ekranda otomatik sesli okuma.</div>
+            <div class="h-tag">METİN • OCR • OTOMATİK SES</div>
+          </div>
 
-        <div class="arrow-chip"></div>
-      </a>
-    </section>
+          <div class="h-arrow"></div>
+        </a>
 
-  </div>
-</main>
+        <a class="h-card offline-card" href="/pages/offline_languages.html">
+          <div class="h-icon">
+            <div class="offline-icon">
+              <div class="offline-ring"></div>
+              <div class="offline-arrow"></div>
+              <div class="offline-base"></div>
+            </div>
+          </div>
 
-<script type="module">
-import { mountShell } from "/js/ui_shell.js";
+          <div class="h-body">
+            <h3 class="h-title">Offline Translate</h3>
+            <div class="h-desc">İndirilen dil paketleriyle internetsiz çeviri. Paketler 30 gün aktif kalır.</div>
+            <div class="h-tag">PAKET İNDİR • 30 GÜN</div>
+          </div>
 
-try {
-  mountShell({ scroll: "auto" });
-} catch (e) {
-  console.error("ui_shell HATASI:", e);
-}
-</script>
+          <div class="h-arrow"></div>
+        </a>
+      </section>
 
-<script type="module">
-const API_BASE = "https://italky-api.onrender.com/api";
-const WS_BASE = "wss://italky-api.onrender.com/api";
+    </div>
+  </main>
 
-const smallQrImg = document.getElementById("smallQrImg");
-const qrFallback = document.getElementById("qrFallback");
-const qrFallbackCode = document.getElementById("qrFallbackCode");
-const heroStatus = document.getElementById("heroStatus");
-
-const ROOM_KEY = "italky_active_interpreter_room_id";
-const ROOM_LANG_KEY = "italky_active_interpreter_lang";
-
-let activeRoomId = "";
-let previewSocket = null;
-let redirected = false;
-
-function setHeroStatus(text){
-  if(heroStatus) heroStatus.textContent = text || "";
-}
-
-function qrUrlPrimary(targetUrl){
-  return `https://api.qrserver.com/v1/create-qr-code/?size=520x520&margin=6&data=${encodeURIComponent(targetUrl)}`;
-}
-
-function qrUrlFallback(targetUrl){
-  return `https://quickchart.io/qr?size=520&text=${encodeURIComponent(targetUrl)}`;
-}
-
-function showFallback(code){
-  if(qrFallbackCode) qrFallbackCode.textContent = code || "ROOM-XXXXXX";
-  if(qrFallback) qrFallback.classList.add("show");
-  if(smallQrImg){
-    smallQrImg.style.display = "none";
-    smallQrImg.removeAttribute("src");
-  }
-}
-
-function showQr(url){
-  if(smallQrImg){
-    smallQrImg.style.display = "block";
-    smallQrImg.src = url;
-  }
-  qrFallback?.classList.remove("show");
-}
-
-function loadImage(url){
-  return new Promise((resolve, reject) => {
-    const test = new Image();
-    test.onload = () => resolve(url);
-    test.onerror = reject;
-    test.referrerPolicy = "no-referrer";
-    test.src = url;
-  });
-}
-
-async function createRoom(myLang = "tr"){
-  const r = await fetch(`${API_BASE}/interpreter/create-room`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      host_code: "HOME-HOST",
-      my_lang: myLang,
-      mode: "interpreter"
-    })
-  });
-
-  const j = await r.json().catch(() => ({}));
-
-  if(!r.ok || !j?.room_id){
-    throw new Error(j?.detail || j?.error || "Room oluşturulamadı");
-  }
-
-  return j;
-}
-
-function buildJoinUrl(roomId){
-  const url = new URL("https://italky.ai/open/interpreter");
-  url.searchParams.set("room", roomId);
-  url.searchParams.set("v", "1");
-  return url.toString();
-}
-
-function stopPreviewSocket(){
-  try{ previewSocket?.close?.(); }catch{}
-  previewSocket = null;
-}
-
-function launchHostRoom(roomId){
-  if(!roomId || redirected) return;
-  redirected = true;
-  location.href = `/pages/live_interpreter.html?room=${encodeURIComponent(roomId)}&role=host&my=tr`;
-}
-
-function startPreviewSocket(roomId, myLang = "tr"){
-  if(!roomId) return;
-
-  stopPreviewSocket();
-
-  const url = `${WS_BASE}/ws/interpreter/${encodeURIComponent(roomId)}?role=host-preview&lang=${encodeURIComponent(myLang)}`;
-
-  try{
-    previewSocket = new WebSocket(url);
-  }catch(e){
-    console.warn("[home preview ws create]", e);
-    return;
-  }
-
-  previewSocket.onopen = () => {
-    setHeroStatus("QR hazır. Karşı taraf bağlanınca otomatik geçilecek.");
-  };
-
-  previewSocket.onmessage = (event) => {
-    try{
-      const payload = JSON.parse(event.data);
-      const type = String(payload?.type || "").trim();
-
-      if(type === "presence"){
-        return;
-      }
-
-      if(type === "peer_joined"){
-        setHeroStatus("Karşı taraf bağlandı. Oda açılıyor...");
-        launchHostRoom(roomId);
-        return;
-      }
-
-      if(type === "error"){
-        console.warn("[home preview ws error payload]", payload);
-      }
-    }catch(e){
-      console.warn("[home preview ws parse]", e);
-    }
-  };
-
-  previewSocket.onerror = () => {
-    setHeroStatus("Bağlantı önizleme hatası");
-  };
-
-  previewSocket.onclose = () => {
-    if(!redirected){
-      setHeroStatus("QR hazır. Karşı taraf bekleniyor...");
-    }
-  };
-}
-
-async function renderRoomQr(){
-  redirected = false;
-  setHeroStatus("Oda hazırlanıyor...");
-
-  try{
-    const created = await createRoom("tr");
-    activeRoomId = String(created.room_id || "").trim();
-
-    if(!activeRoomId){
-      throw new Error("room_id boş geldi");
-    }
-
-    localStorage.setItem(ROOM_KEY, activeRoomId);
-    localStorage.setItem(ROOM_LANG_KEY, "tr");
-
-    if(qrFallbackCode) qrFallbackCode.textContent = activeRoomId;
-
-    const joinUrl = buildJoinUrl(activeRoomId);
-
-    let finalUrl = null;
-
-    try{
-      finalUrl = await loadImage(qrUrlPrimary(joinUrl));
-    }catch{
-      try{
-        finalUrl = await loadImage(qrUrlFallback(joinUrl));
-      }catch{
-        finalUrl = null;
-      }
-    }
-
-    if(finalUrl){
-      const safeUrl = finalUrl + (finalUrl.includes("?") ? "&" : "?") + "t=" + Date.now();
-      showQr(safeUrl);
-      setHeroStatus("QR hazır. Karşı taraf bekleniyor...");
-    }else{
-      showFallback(activeRoomId);
-      setHeroStatus("QR servisi yanıt vermedi");
-    }
-
-    startPreviewSocket(activeRoomId, "tr");
-  }catch(e){
-    console.error("[home room qr]", e);
-    showFallback("ROOM-ERROR");
-    setHeroStatus(e?.message || "Oda hazırlanamadı");
-  }
-}
-
-renderRoomQr();
-
-document.addEventListener("visibilitychange", () => {
-  if(document.visibilityState === "visible" && !redirected){
-    renderRoomQr();
-  }
-});
-
-window.addEventListener("focus", () => {
-  if(!redirected){
-    renderRoomQr();
-  }
-});
-
-window.addEventListener("beforeunload", stopPreviewSocket);
-</script>
+  <script type="module">
+    import { mountShell } from "/js/ui_shell.js";
+    try { mountShell({ scroll: "auto" }); } catch (e) {}
+  </script>
 </body>
 </html>
