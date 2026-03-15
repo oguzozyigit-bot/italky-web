@@ -76,8 +76,8 @@ const HOME_HEADER_HTML = `
       <a href="/pages/jetonbuy.html" class="menu-link-jeton" data-i18n="menu_token_load">Jeton Yükle</a>
 
       <a href="/pages/profile.html" data-i18n="menu_profile">Profil</a>
-      <a href="/pages/voice_settings.html" data-i18n="menu_voice_settings">Sesini Oluştur ve Seç</a>
-      <a href="/pages/voice_settings.html#site-language" data-i18n="menu_site_language">Site Dili</a>
+      <a href="/pages/voice_profile.html" data-i18n="menu_create_voice">Sesini Oluştur</a>
+      <a href="/pages/translation_settings.html" data-i18n="menu_site_language">Site Dili</a>
       <a href="/pages/qr-change.html" data-i18n="menu_change_qr">QR Değiştir</a>
       <a href="/pages/about.html" data-i18n="menu_about">Hakkımızda</a>
       <a href="/pages/jeton-nedir.html" data-i18n="menu_what_is_token">Jeton Nedir</a>
@@ -104,7 +104,7 @@ const SHELL_CSS = `
   --footerH:0px;
   --shell-text:#f5f7ff;
   --trendyol-orange:#f27a1a;
-  --trendyol-orange-dark:#e86d0a;
+  --trendyol-orange-dark:#e46f17;
 }
 
 *{
@@ -486,9 +486,9 @@ body.ui-menu-open{
 
 .menu-link-jeton{
   color:#fffaf2 !important;
-  background:linear-gradient(135deg, rgba(242,122,26,.95) 0%, rgba(232,109,10,.92) 100%) !important;
-  border:1px solid rgba(255,170,96,.28) !important;
-  box-shadow:0 10px 24px rgba(242,122,26,.20), inset 0 1px 0 rgba(255,255,255,.08);
+  background:linear-gradient(135deg, var(--trendyol-orange) 0%, var(--trendyol-orange-dark) 100%) !important;
+  border:1px solid rgba(255,173,96,.34) !important;
+  box-shadow:0 10px 24px rgba(242,122,26,.22), inset 0 1px 0 rgba(255,255,255,.08);
 }
 
 .menu-link-jeton:hover,
