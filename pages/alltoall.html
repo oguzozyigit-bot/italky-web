@@ -35,7 +35,9 @@
       color:var(--txt);
       font-family:'Outfit',sans-serif;
       background:#120d16;
-      overflow:hidden;
+      overflow-x:hidden;
+      overflow-y:auto;
+      -webkit-overflow-scrolling:touch;
       scrollbar-width:none;
     }
 
@@ -54,18 +56,16 @@
 
     #pageContent{
       width:100%;
-      height:calc(100dvh - var(--footerSafe));
-      padding:8px 12px 8px;
+      min-height:calc(100dvh - var(--footerSafe));
+      padding:8px 12px calc(120px + env(safe-area-inset-bottom));
       display:block;
-      overflow:hidden;
     }
 
     .page-shell-fit{
-      height:100%;
+      min-height:calc(100dvh - var(--footerSafe) - 16px);
       display:flex;
       flex-direction:column;
       gap:10px;
-      overflow:hidden;
     }
 
     .hero{
@@ -158,7 +158,6 @@
       display:flex;
       flex-direction:column;
       gap:10px;
-      overflow:hidden;
       padding-bottom:2px;
     }
 
@@ -168,12 +167,11 @@
       display:flex;
       flex-direction:column;
       gap:10px;
-      overflow:hidden;
     }
 
     .cyber-card{
       flex:1;
-      min-height:0;
+      min-height:220px;
       position:relative;
       border-radius:30px;
       overflow:hidden;
@@ -334,7 +332,6 @@
       display:flex;
       flex-direction:column;
       gap:10px;
-      overflow:hidden;
     }
 
     .hide{
@@ -353,7 +350,7 @@
 
     .host-zone{
       flex:1;
-      min-height:0;
+      min-height:300px;
       display:flex;
       flex-direction:column;
       align-items:center;
@@ -441,7 +438,7 @@
       flex-direction:column;
       gap:14px;
       justify-content:center;
-      min-height:0;
+      min-height:220px;
       flex:1;
     }
 
@@ -466,6 +463,7 @@
       letter-spacing:4px;
       text-transform:uppercase;
       padding:0 14px;
+      scroll-margin-bottom:160px;
     }
 
     .input-field::placeholder{
@@ -534,7 +532,7 @@
 
     @media (max-width:390px){
       #pageContent{
-        padding:6px 10px 8px;
+        padding:6px 10px calc(120px + env(safe-area-inset-bottom));
       }
 
       .hero-box{
@@ -650,7 +648,17 @@
         <div class="panel-view hide" id="joinPanel">
           <div class="panel-card join-zone">
             <div class="join-kicker">ODA KODU</div>
-            <input class="input-field" id="roomInput" placeholder="KODU YAZ" maxlength="6"/>
+            <input
+              class="input-field"
+              id="roomInput"
+              placeholder="KODU YAZ"
+              maxlength="6"
+              autocapitalize="characters"
+              autocomplete="off"
+              autocorrect="off"
+              spellcheck="false"
+              inputmode="text"
+            />
           </div>
 
           <button class="btn-3d" id="btnJoin">KANALA KATIL</button>
@@ -661,6 +669,51 @@
     </div>
   </main>
 
-  <script type="module" src="/js/alltoall_lobby.js?v=3"></script>
+  <script>
+    (function(){
+      const input = document.getElementById("roomInput");
+      const btnJoin = document.getElementById("btnJoin");
+
+      if(!input) return;
+
+      function normalizeCode(value){
+        return String(value || "")
+          .toUpperCase()
+          .replace(/[^A-Z0-9]/g, "")
+          .slice(0, 6);
+      }
+
+      function bringIntoView(){
+        setTimeout(() => {
+          try{
+            input.scrollIntoView({
+              behavior:"smooth",
+              block:"center"
+            });
+          }catch(e){}
+        }, 260);
+      }
+
+      input.addEventListener("focus", bringIntoView);
+      input.addEventListener("click", bringIntoView);
+
+      input.addEventListener("input", () => {
+        const normalized = normalizeCode(input.value);
+        if (input.value !== normalized) {
+          input.value = normalized;
+        }
+
+        if (normalized.length === 6) {
+          setTimeout(() => {
+            try{
+              btnJoin?.click();
+            }catch(e){}
+          }, 120);
+        }
+      });
+    })();
+  </script>
+
+  <script type="module" src="/js/alltoall_lobby.js?v=4"></script>
 </body>
 </html>
