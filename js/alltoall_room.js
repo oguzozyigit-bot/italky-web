@@ -1,821 +1,1261 @@
-<!-- FILE: /pages/alltoall_room.html -->
-<!doctype html>
-<html lang="tr">
-<head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-  <title>italkyAI • AllToAll Room</title>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
-
-  <style>
-    :root{
-      --topH:70px;
-      --metaH:108px;
-      --peopleH:112px;
-      --dockH:108px;
-      --accent:#00f2fe;
-      --pink:#f472b6;
-      --violet:#7c5cff;
-      --line:rgba(255,255,255,.08);
-      --panel:rgba(255,255,255,.06);
-    }
-
-    *{
-      box-sizing:border-box;
-      -webkit-tap-highlight-color:transparent;
-      outline:none;
-    }
-
-    html,body{
-      margin:0;
-      padding:0;
-      width:100%;
-      height:100%;
-      background:#050208;
-      color:#fff;
-      font-family:'Outfit',sans-serif;
-      overflow:hidden;
-      position:fixed;
-    }
-
-    body{
-      background:
-        radial-gradient(circle at 50% 0%, rgba(0,242,254,.12) 0%, transparent 24%),
-        radial-gradient(circle at 15% 18%, rgba(244,114,182,.10) 0%, transparent 20%),
-        radial-gradient(circle at 85% 14%, rgba(124,92,255,.12) 0%, transparent 18%),
-        linear-gradient(180deg,#050208 0%,#090411 100%);
-    }
-
-    .room{
-      position:relative;
-      width:min(500px,100vw);
-      height:100dvh;
-      margin:0 auto;
-      display:flex;
-      flex-direction:column;
-      background:transparent;
-      overflow:hidden;
-    }
-
-    .topbar{
-      height:var(--topH);
-      display:flex;
-      align-items:center;
-      padding:0 16px;
-      border-bottom:1px solid rgba(255,255,255,.05);
-      backdrop-filter:blur(10px);
-      flex:0 0 auto;
-    }
-
-    .topBtn{
-      background:none;
-      border:none;
-      color:#fff;
-      font-size:20px;
-      width:42px;
-      height:42px;
-      border-radius:50%;
-      cursor:pointer;
-      flex:0 0 auto;
-    }
-
-    .brand{
-      flex:1;
-      text-align:center;
-      font-family:'Space Grotesk',sans-serif;
-      font-weight:700;
-      font-size:22px;
-      letter-spacing:-.4px;
-    }
-
-    .brand .accent{ color:var(--accent); }
-
-    .meta{
-      min-height:var(--metaH);
-      display:flex;
-      flex-direction:column;
-      justify-content:center;
-      gap:12px;
-      padding:12px 16px 14px;
-      background:rgba(255,255,255,.02);
-      border-bottom:1px solid rgba(255,255,255,.05);
-      flex:0 0 auto;
-    }
-
-    .metaTop{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:10px;
-    }
-
-    #roomPill{
-      background:linear-gradient(135deg,#7000ff,#9b5cff);
-      padding:8px 18px;
-      border-radius:14px;
-      font-weight:900;
-      font-size:22px;
-      letter-spacing:1.5px;
-      min-width:124px;
-      text-align:center;
-      cursor:pointer;
-      box-shadow:0 0 18px rgba(112,0,255,.26);
-      flex:0 0 auto;
-      border:1px solid rgba(255,255,255,.10);
-    }
-
-    .metaRight{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      min-width:0;
-    }
-
-    #langSelect{
-      position:absolute;
-      opacity:0;
-      pointer-events:none;
-      width:1px;
-      height:1px;
-    }
-
-    .lang-picker-btn{
-      height:40px;
-      min-width:152px;
-      max-width:190px;
-      background:rgba(255,255,255,.08);
-      border:1px solid rgba(255,255,255,.10);
-      border-radius:12px;
-      color:#fff;
-      font-size:13px;
-      font-weight:800;
-      padding:0 12px;
-      cursor:pointer;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-    }
-
-    .lang-picker-text{
-      min-width:0;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      white-space:nowrap;
-    }
-
-    .lang-picker-arrow{
-      opacity:.8;
-      flex:0 0 auto;
-    }
-
-    #soundToggleBtn{
-      width:40px;
-      height:40px;
-      border-radius:12px;
-      border:1px solid rgba(255,255,255,.10);
-      background:rgba(255,255,255,.08);
-      color:#fff;
-      font-size:16px;
-      cursor:pointer;
-      flex:0 0 auto;
-    }
-
-    .roomInfoRow{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-    }
-
-    .room-info{
-      font-size:11px;
-      color:var(--accent);
-      font-weight:800;
-      line-height:1.35;
-      opacity:.95;
-    }
-
-    .peopleCountWrap{
-      font-size:11px;
-      color:rgba(255,255,255,.72);
-      font-weight:800;
-      white-space:nowrap;
-      flex:0 0 auto;
-    }
-
-    .people{
-      height:var(--peopleH);
-      padding:10px 0;
-      border-bottom:1px solid rgba(255,255,255,.05);
-      flex:0 0 auto;
-      overflow:hidden;
-    }
-
-    .people-scroll{
-      display:flex;
-      gap:15px;
-      overflow-x:auto;
-      overflow-y:hidden;
-      padding:0 16px;
-      scrollbar-width:none;
-      align-items:flex-start;
-    }
-
-    .people-scroll::-webkit-scrollbar{ display:none; }
-
-    .pItem{
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      min-width:68px;
-      max-width:82px;
-      flex:0 0 auto;
-    }
-
-    .pAvatar{
-      width:48px;
-      height:48px;
-      border-radius:50%;
-      border:2px solid rgba(255,255,255,.10);
-      overflow:hidden;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      background:rgba(255,255,255,.06);
-      font-size:14px;
-      font-weight:900;
-      flex:0 0 auto;
-    }
-
-    .pAvatar img{
-      width:100%;
-      height:100%;
-      object-fit:cover;
-    }
-
-    .pName{
-      font-size:10px;
-      font-weight:800;
-      margin-top:6px;
-      text-align:center;
-      line-height:1.15;
-      white-space:normal;
-      word-break:break-word;
-      max-width:100%;
-      color:rgba(255,255,255,.92);
-    }
-
-    .chat{
-      flex:1;
-      overflow-y:auto;
-      padding:15px 16px;
-      display:flex;
-      flex-direction:column;
-      gap:18px;
-      scrollbar-width:none;
-      min-height:0;
-    }
-
-    .chat::-webkit-scrollbar{ display:none; }
-
-    .sys-note{
-      align-self:center;
-      max-width:88%;
-      padding:8px 12px;
-      border-radius:999px;
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.06);
-      color:rgba(255,255,255,.78);
-      font-size:11px;
-      font-weight:800;
-      text-align:center;
-    }
-
-    .msg-row{
-      max-width:90%;
-      display:flex;
-      flex-direction:column;
-      position:relative;
-    }
-
-    .msg-row.left{
-      align-self:flex-start;
-      padding-left:14px;
-    }
-
-    .msg-row.right{
-      align-self:flex-end;
-      padding-right:14px;
-      align-items:flex-end;
-    }
-
-    .sender-name{
-      font-size:12px;
-      font-weight:900;
-      margin-bottom:4px;
-      letter-spacing:.3px;
-      color:rgba(255,255,255,.74);
-    }
-
-    .msg-bubble{
-      font-size:14.5px;
-      line-height:1.5;
-      color:rgba(255,255,255,.95);
-      background:rgba(255,255,255,.04);
-      padding:10px 14px;
-      border-radius:16px;
-      border:1px solid rgba(255,255,255,.06);
-      word-break:break-word;
-    }
-
-    .msg-row.right .msg-bubble{
-      background:linear-gradient(135deg,rgba(0,242,254,.16),rgba(124,92,255,.18));
-    }
-
-    .msg-actions{
-      display:flex;
-      justify-content:flex-start;
-      padding-left:2px;
-      margin-top:6px;
-    }
-
-    .mini-btn{
-      width:32px;
-      height:32px;
-      border:none;
-      border-radius:50%;
-      background:rgba(255,255,255,.08);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      cursor:pointer;
-    }
-
-    .mini-btn svg{
-      width:16px;
-      height:16px;
-      stroke:#fff;
-      fill:none;
-      stroke-width:2;
-    }
-
-    .input{
-      min-height:var(--dockH);
-      background:#0a0510;
-      border-top:1px solid rgba(255,255,255,.10);
-      display:flex;
-      flex-direction:column;
-      justify-content:center;
-      gap:10px;
-      padding:10px 12px calc(10px + env(safe-area-inset-bottom));
-      z-index:1000;
-      flex:0 0 auto;
-    }
-
-    .mic-only-row{
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:12px;
-    }
-
-    .mic-side-btn{
-      width:42px;
-      height:42px;
-      border:none;
-      border-radius:14px;
-      background:rgba(255,255,255,.07);
-      color:#fff;
-      font-size:18px;
-      cursor:pointer;
-      flex:0 0 auto;
-    }
-
-    .main-mic{
-      width:72px;
-      height:72px;
-      border:none;
-      border-radius:50%;
-      background:linear-gradient(135deg,var(--accent),var(--violet),var(--pink));
-      color:#050208;
-      font-size:28px;
-      font-weight:900;
-      cursor:pointer;
-      box-shadow:0 10px 30px rgba(0,242,254,.24);
-      flex:0 0 auto;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      transition:transform .16s ease, box-shadow .16s ease;
-    }
-
-    .main-mic.listening{
-      box-shadow:0 0 0 8px rgba(244,114,182,.16), 0 0 28px rgba(244,114,182,.28);
-      transform:scale(1.04);
-    }
-
-    .mic-hint{
-      text-align:center;
-      font-size:11px;
-      font-weight:800;
-      color:rgba(255,255,255,.72);
-      line-height:1.3;
-      min-height:28px;
-    }
-
-    .text-entry{
-      display:none;
-      align-items:center;
-      gap:8px;
-    }
-
-    .text-entry.show{
-      display:flex;
-    }
-
-    textarea{
-      flex:1;
-      min-height:44px;
-      max-height:140px;
-      background:rgba(255,255,255,.05);
-      border:1px solid rgba(255,255,255,.10);
-      border-radius:20px;
-      color:#fff;
-      padding:12px 16px;
-      font-size:15px;
-      resize:none;
-      font-family:'Outfit',sans-serif;
-      overflow:auto;
-    }
-
-    textarea::placeholder{
-      color:rgba(255,255,255,.42);
-    }
-
-    .sheet-backdrop{
-      position:fixed;
-      inset:0;
-      background:rgba(0,0,0,.52);
-      backdrop-filter:blur(8px);
-      -webkit-backdrop-filter:blur(8px);
-      opacity:0;
-      pointer-events:none;
-      transition:.22s ease;
-      z-index:9998;
-    }
-
-    .sheet-backdrop.show{
-      opacity:1;
-      pointer-events:auto;
-    }
-
-    .lang-sheet{
-      position:fixed;
-      left:50%;
-      bottom:0;
-      transform:translateX(-50%) translateY(110%);
-      width:min(500px,100vw);
-      background:linear-gradient(180deg,rgba(20,18,30,.98),rgba(10,8,18,.98));
-      border:1px solid rgba(255,255,255,.10);
-      border-bottom:none;
-      border-radius:28px 28px 0 0;
-      box-shadow:0 -20px 60px rgba(0,0,0,.42);
-      transition:.24s ease;
-      z-index:9999;
-      padding:10px 14px calc(18px + env(safe-area-inset-bottom));
-      max-height:72dvh;
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-    }
-
-    .lang-sheet.show{
-      transform:translateX(-50%) translateY(0);
-    }
-
-    .sheet-handle{
-      width:52px;
-      height:5px;
-      border-radius:999px;
-      background:rgba(255,255,255,.18);
-      margin:2px auto 2px;
-    }
-
-    .sheet-head{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-    }
-
-    .sheet-title{
-      font-family:'Space Grotesk',sans-serif;
-      font-size:18px;
-      font-weight:700;
-      letter-spacing:-.4px;
-    }
-
-    .sheet-close{
-      width:38px;
-      height:38px;
-      border:none;
-      border-radius:12px;
-      background:rgba(255,255,255,.08);
-      color:#fff;
-      font-size:18px;
-      cursor:pointer;
-    }
-
-    .sheet-list{
-      overflow:auto;
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-      scrollbar-width:none;
-    }
-
-    .sheet-list::-webkit-scrollbar{ display:none; }
-
-    .sheet-item{
-      min-height:58px;
-      border-radius:18px;
-      border:1px solid rgba(255,255,255,.08);
-      background:rgba(255,255,255,.04);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      padding:0 14px;
-      cursor:pointer;
-      color:#fff;
-      transition:.16s ease;
-    }
-
-    .sheet-item.active{
-      border-color:rgba(0,242,254,.34);
-      background:linear-gradient(135deg,rgba(0,242,254,.12),rgba(124,92,255,.12));
-      box-shadow:0 0 0 1px rgba(0,242,254,.08) inset;
-    }
-
-    .sheet-item-left{
-      min-width:0;
-      display:flex;
-      align-items:center;
-      gap:12px;
-    }
-
-    .sheet-flag{
-      width:32px;
-      text-align:center;
-      font-size:22px;
-      flex:0 0 auto;
-    }
-
-    .sheet-text{
-      min-width:0;
-    }
-
-    .sheet-name{
-      font-size:14px;
-      font-weight:900;
-      color:#fff;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-
-    .sheet-code{
-      font-size:11px;
-      font-weight:800;
-      color:rgba(255,255,255,.56);
-      margin-top:3px;
-      letter-spacing:.5px;
-    }
-
-    .sheet-check{
-      width:24px;
-      height:24px;
-      border-radius:999px;
-      border:2px solid rgba(255,255,255,.26);
-      flex:0 0 auto;
-    }
-
-    .sheet-item.active .sheet-check{
-      border-color:var(--accent);
-      box-shadow:inset 0 0 0 5px var(--accent);
-    }
-  </style>
-</head>
-
-<body>
-<div class="room" id="roomContainer">
-
-  <div class="topbar">
-    <button id="backBtn" class="topBtn" type="button">←</button>
-    <div class="brand">All<span class="accent">To</span>All</div>
-    <button id="exitBtn" class="topBtn" type="button">✕</button>
-  </div>
-
-  <div class="meta">
-    <div class="metaTop">
-      <div id="roomPill">------</div>
-
-      <div class="metaRight">
-        <select id="langSelect" aria-label="Dil seç"></select>
-
-        <button id="langPickerBtn" class="lang-picker-btn" type="button" aria-label="Dil seç">
-          <span class="lang-picker-text" id="langPickerText">🌐 Dil</span>
-          <span class="lang-picker-arrow">⌄</span>
-        </button>
-
-        <button id="soundToggleBtn" type="button" aria-label="Ses">🔊</button>
-      </div>
-    </div>
-
-    <div class="roomInfoRow">
-      <div class="room-info">Bu kodu sohbete katılmak isteyenlere veriniz.</div>
-      <div class="peopleCountWrap"><span id="peopleCount">0</span> kişi</div>
-    </div>
-  </div>
-
-  <div class="people">
-    <div class="people-scroll" id="peopleScroll"></div>
-  </div>
-
-  <div class="chat" id="chat"></div>
-
-  <div class="input" id="inputDock">
-    <div class="mic-only-row">
-      <button id="textToggleBtn" class="mic-side-btn" type="button" aria-label="Yazı aç">⌨️</button>
-      <button id="micBtn" class="main-mic" type="button" aria-label="Konuş">🎙️</button>
-      <button id="sendBtn" class="mic-side-btn" type="button" aria-label="Gönder">➤</button>
-    </div>
-
-    <div class="mic-hint" id="micHint">Konuşmak için mikrofona dokun. Yazmak istersen klavye simgesine bas.</div>
-
-    <div class="text-entry" id="textEntry">
-      <textarea id="msgInput" rows="1" placeholder="Yazmaya başla..."></textarea>
-    </div>
-  </div>
-</div>
-
-<div class="sheet-backdrop" id="langSheetBackdrop"></div>
-
-<div class="lang-sheet" id="langSheet" aria-hidden="true">
-  <div class="sheet-handle"></div>
-
-  <div class="sheet-head">
-    <div class="sheet-title">Dil Seç</div>
-    <button id="langSheetClose" class="sheet-close" type="button">✕</button>
-  </div>
-
-  <div class="sheet-list" id="langSheetList"></div>
-</div>
-
-<script>
-  const room = document.getElementById("roomContainer");
-  const chat = document.getElementById("chat");
-  const msgInput = document.getElementById("msgInput");
-  const textToggleBtn = document.getElementById("textToggleBtn");
-  const textEntry = document.getElementById("textEntry");
-
-  const langSelect = document.getElementById("langSelect");
-  const langPickerBtn = document.getElementById("langPickerBtn");
-  const langPickerText = document.getElementById("langPickerText");
-  const langSheet = document.getElementById("langSheet");
-  const langSheetList = document.getElementById("langSheetList");
-  const langSheetBackdrop = document.getElementById("langSheetBackdrop");
-  const langSheetClose = document.getElementById("langSheetClose");
-
-  function fixLayout() {
-    try {
-      if (window.visualViewport) {
-        const vh = window.visualViewport.height;
-        room.style.height = `${vh}px`;
-        setTimeout(() => {
-          try { chat.scrollTop = chat.scrollHeight; } catch {}
-        }, 100);
+// FILE: /js/alltoall_room.js
+
+import { supabase } from "/js/supabase_client.js";
+import { getLangPoolForSite, getSiteLang } from "/js/lang_pool_full.js";
+
+const API_BASE = "https://italky-api.onrender.com/api";
+const WS_BASE = "wss://italky-api.onrender.com/api/alltoall/ws";
+
+const $ = (id) => document.getElementById(id);
+const rootStyle = document.documentElement;
+
+const chat = $("chat");
+const msgInput = $("msgInput");
+const sendBtn = $("sendBtn");
+const micBtn = $("micBtn");
+const peopleScroll = $("peopleScroll");
+const peopleCount = $("peopleCount");
+const langSelect = $("langSelect");
+const roomPill = $("roomPill");
+const backBtn = $("backBtn");
+const exitBtn = $("exitBtn");
+const soundToggleBtn = $("soundToggleBtn");
+const textToggleBtn = $("textToggleBtn");
+const textEntry = $("textEntry");
+const micHint = $("micHint");
+
+const params = new URLSearchParams(location.search);
+const hostCode = String(params.get("host") || "").trim().toUpperCase();
+const role = String(params.get("role") || "guest").trim().toLowerCase();
+const incomingRoomId = String(params.get("room") || "").trim().toUpperCase();
+
+let roomId = incomingRoomId || hostCode || "";
+let ws = null;
+let myLang = localStorage.getItem("alltoall_lang") || "tr";
+let autoSpeak = localStorage.getItem("alltoall_auto_speak") !== "0";
+let recognizing = false;
+let recognizer = null;
+let currentAudio = null;
+let voicesReady = false;
+let audioCtx = null;
+let preparedStream = null;
+let siteLang = getSiteLang();
+let LANGS = getLangPoolForSite(siteLang);
+
+let myProfile = {
+  from: "",
+  from_name: role === "host" ? "Host" : "Guest",
+  from_pic: "",
+  me_lang: myLang,
+  role,
+  user_id: "",
+};
+
+let joinedPeople = new Map();
+
+const SITE_TEXT = {
+  tr: {
+    soundOn: "Sesli okuma açıldı",
+    soundOff: "Sesli okuma kapatıldı",
+    socketNotReady: "Socket hazır değil.",
+    roomMissing: "Oda bilgisi bulunamadı.",
+    connected: "Bağlantı kuruldu",
+    newParticipant: "Yeni katılımcı bağlandı",
+    leftParticipant: "Bir katılımcı ayrıldı",
+    roomNotFound: "Kanal bulunamadı.",
+    hostNotReady: "Host henüz odaya giriş yapmadı.",
+    connectionError: "Bağlantı hatası oluştu.",
+    connectionClosed: "Bağlantı kapandı.",
+    roomCopied: "Oda kodu kopyalandı",
+    roomNotCreated: "Bu oda henüz oluşturulmamış.",
+    participant: "Katılımcı",
+    host: "Host",
+    guest: "Guest",
+    typingPlaceholder: "Yazmaya başla...",
+    micHint: "Konuşmak için mikrofona dokun. Yazmak istersen klavye simgesine bas.",
+    micListening: "Dinleniyor... Bitince tekrar dokun.",
+    micUnsupported: "Bu cihazda konuşma algılama desteklenmiyor.",
+    micDenied: "Mikrofon izni gerekli.",
+    voiceAuto: "Ses: Otomatik",
+    voiceFemale: "Ses: Kadın",
+    voiceMale: "Ses: Erkek",
+    voiceClone: "Ses: Kendi Sesim",
+    textOpen: "Yazı alanı açıldı",
+    textClosed: "Yazı alanı kapatıldı"
+  },
+  en: {
+    soundOn: "Voice playback enabled",
+    soundOff: "Voice playback disabled",
+    socketNotReady: "Socket is not ready.",
+    roomMissing: "Room information not found.",
+    connected: "Connected",
+    newParticipant: "A new participant joined",
+    leftParticipant: "A participant left",
+    roomNotFound: "Channel not found.",
+    hostNotReady: "Host has not entered the room yet.",
+    connectionError: "A connection error occurred.",
+    connectionClosed: "Connection closed.",
+    roomCopied: "Room code copied",
+    roomNotCreated: "This room has not been created yet.",
+    participant: "Participant",
+    host: "Host",
+    guest: "Guest",
+    typingPlaceholder: "Start typing...",
+    micHint: "Tap the microphone to speak. Tap keyboard if you want to type.",
+    micListening: "Listening... Tap again when finished.",
+    micUnsupported: "Speech recognition is not supported on this device.",
+    micDenied: "Microphone permission required.",
+    voiceAuto: "Voice: Auto",
+    voiceFemale: "Voice: Female",
+    voiceMale: "Voice: Male",
+    voiceClone: "Voice: My Voice",
+    textOpen: "Text input opened",
+    textClosed: "Text input closed"
+  },
+  de: {
+    soundOn: "Sprachausgabe aktiviert",
+    soundOff: "Sprachausgabe deaktiviert",
+    socketNotReady: "Socket ist nicht bereit.",
+    roomMissing: "Rauminformation nicht gefunden.",
+    connected: "Verbunden",
+    newParticipant: "Ein neuer Teilnehmer ist beigetreten",
+    leftParticipant: "Ein Teilnehmer hat den Raum verlassen",
+    roomNotFound: "Kanal nicht gefunden.",
+    hostNotReady: "Der Host hat den Raum noch nicht betreten.",
+    connectionError: "Verbindungsfehler aufgetreten.",
+    connectionClosed: "Verbindung geschlossen.",
+    roomCopied: "Raumcode kopiert",
+    roomNotCreated: "Dieser Raum wurde noch nicht erstellt.",
+    participant: "Teilnehmer",
+    host: "Host",
+    guest: "Gast",
+    typingPlaceholder: "Schreiben...",
+    micHint: "Zum Sprechen auf das Mikrofon tippen. Für Text auf das Tastatursymbol tippen.",
+    micListening: "Hört zu... Zum Beenden erneut tippen.",
+    micUnsupported: "Spracherkennung wird auf diesem Gerät nicht unterstützt.",
+    micDenied: "Mikrofonberechtigung erforderlich.",
+    voiceAuto: "Stimme: Auto",
+    voiceFemale: "Stimme: Weiblich",
+    voiceMale: "Stimme: Männlich",
+    voiceClone: "Stimme: Meine Stimme",
+    textOpen: "Texteingabe geöffnet",
+    textClosed: "Texteingabe geschlossen"
+  },
+  fr: {
+    soundOn: "Lecture vocale activée",
+    soundOff: "Lecture vocale désactivée",
+    socketNotReady: "Socket non prêt.",
+    roomMissing: "Informations de salle introuvables.",
+    connected: "Connecté",
+    newParticipant: "Un nouveau participant a rejoint",
+    leftParticipant: "Un participant a quitté",
+    roomNotFound: "Canal introuvable.",
+    hostNotReady: "L’hôte n’est pas encore entré dans la salle.",
+    connectionError: "Erreur de connexion.",
+    connectionClosed: "Connexion fermée.",
+    roomCopied: "Code de salle copié",
+    roomNotCreated: "Cette salle n’a pas encore été créée.",
+    participant: "Participant",
+    host: "Hôte",
+    guest: "Invité",
+    typingPlaceholder: "Commencez à écrire...",
+    micHint: "Touchez le micro pour parler. Touchez le clavier si vous voulez écrire.",
+    micListening: "Écoute... Touchez encore une fois quand c’est terminé.",
+    micUnsupported: "La reconnaissance vocale n’est pas prise en charge sur cet appareil.",
+    micDenied: "Autorisation micro requise.",
+    voiceAuto: "Voix : Auto",
+    voiceFemale: "Voix : Femme",
+    voiceMale: "Voix : Homme",
+    voiceClone: "Voix : Ma voix",
+    textOpen: "Saisie texte ouverte",
+    textClosed: "Saisie texte fermée"
+  },
+  it: {
+    soundOn: "Lettura vocale attivata",
+    soundOff: "Lettura vocale disattivata",
+    socketNotReady: "Socket non pronto.",
+    roomMissing: "Informazioni stanza non trovate.",
+    connected: "Connesso",
+    newParticipant: "Un nuovo partecipante è entrato",
+    leftParticipant: "Un partecipante è uscito",
+    roomNotFound: "Canale non trovato.",
+    hostNotReady: "L'host non è ancora entrato nella stanza.",
+    connectionError: "Errore di connessione.",
+    connectionClosed: "Connessione chiusa.",
+    roomCopied: "Codice stanza copiato",
+    roomNotCreated: "Questa stanza non è stata ancora creata.",
+    participant: "Partecipante",
+    host: "Host",
+    guest: "Ospite",
+    typingPlaceholder: "Inizia a scrivere...",
+    micHint: "Tocca il microfono per parlare. Tocca la tastiera se vuoi scrivere.",
+    micListening: "In ascolto... Tocca di nuovo quando hai finito.",
+    micUnsupported: "Il riconoscimento vocale non è supportato su questo dispositivo.",
+    micDenied: "Autorizzazione microfono richiesta.",
+    voiceAuto: "Voce: Auto",
+    voiceFemale: "Voce: Donna",
+    voiceMale: "Voce: Uomo",
+    voiceClone: "Voce: La mia voce",
+    textOpen: "Input testo aperto",
+    textClosed: "Input testo chiuso"
+  },
+  es: {
+    soundOn: "Lectura de voz activada",
+    soundOff: "Lectura de voz desactivada",
+    socketNotReady: "Socket no está listo.",
+    roomMissing: "No se encontró información de la sala.",
+    connected: "Conectado",
+    newParticipant: "Se unió un nuevo participante",
+    leftParticipant: "Un participante salió",
+    roomNotFound: "Canal no encontrado.",
+    hostNotReady: "El host todavía no ha entrado en la sala.",
+    connectionError: "Se produjo un error de conexión.",
+    connectionClosed: "Conexión cerrada.",
+    roomCopied: "Código de sala copiado",
+    roomNotCreated: "Esta sala todavía no ha sido creada.",
+    participant: "Participante",
+    host: "Host",
+    guest: "Invitado",
+    typingPlaceholder: "Empieza a escribir...",
+    micHint: "Toca el micrófono para hablar. Toca el teclado si quieres escribir.",
+    micListening: "Escuchando... Toca otra vez al terminar.",
+    micUnsupported: "El reconocimiento de voz no es compatible con este dispositivo.",
+    micDenied: "Se requiere permiso de micrófono.",
+    voiceAuto: "Voz: Auto",
+    voiceFemale: "Voz: Mujer",
+    voiceMale: "Voz: Hombre",
+    voiceClone: "Voz: Mi voz",
+    textOpen: "Entrada de texto abierta",
+    textClosed: "Entrada de texto cerrada"
+  }
+};
+
+function st(key) {
+  const pack = SITE_TEXT[siteLang] || SITE_TEXT.tr;
+  return pack[key] || SITE_TEXT.tr[key] || key;
+}
+
+function refreshSiteLangState() {
+  siteLang = getSiteLang();
+  LANGS = getLangPoolForSite(siteLang);
+}
+
+function toBCP(code) {
+  const map = {
+    tr: "tr-TR",
+    en: "en-US",
+    de: "de-DE",
+    fr: "fr-FR",
+    it: "it-IT",
+    es: "es-ES",
+    ru: "ru-RU",
+    el: "el-GR",
+    az: "az-AZ",
+    ka: "ka-GE",
+    pt: "pt-PT",
+    "pt-br": "pt-BR",
+    nl: "nl-NL",
+    sv: "sv-SE",
+    no: "no-NO",
+    da: "da-DK",
+    fi: "fi-FI",
+    pl: "pl-PL",
+    cs: "cs-CZ",
+    sk: "sk-SK",
+    hu: "hu-HU",
+    ro: "ro-RO",
+    bg: "bg-BG",
+    uk: "uk-UA",
+    ar: "ar-SA",
+    he: "he-IL",
+    fa: "fa-IR",
+    ur: "ur-PK",
+    hi: "hi-IN",
+    bn: "bn-BD",
+    id: "id-ID",
+    ms: "ms-MY",
+    vi: "vi-VN",
+    th: "th-TH",
+    zh: "zh-CN",
+    ja: "ja-JP",
+    ko: "ko-KR"
+  };
+  return map[String(code || "tr").toLowerCase()] || "tr-TR";
+}
+
+function canonical(code) {
+  return String(code || "tr").toLowerCase().trim();
+}
+
+function getVoicePreference() {
+  const v = String(
+    localStorage.getItem("tts_voice") ||
+    localStorage.getItem("live_interpreter_voice") ||
+    "auto"
+  ).toLowerCase().trim();
+
+  if (["auto", "female", "male", "clone"].includes(v)) return v;
+  return "auto";
+}
+
+function getVoiceLabel() {
+  const v = getVoicePreference();
+  if (v === "female") return st("voiceFemale");
+  if (v === "male") return st("voiceMale");
+  if (v === "clone") return st("voiceClone");
+  return st("voiceAuto");
+}
+
+function getDisplayNameFromUser(user) {
+  const meta = user?.user_metadata || {};
+  return (
+    meta.display_name ||
+    meta.full_name ||
+    meta.name ||
+    user?.email?.split("@")[0] ||
+    (role === "host" ? st("host") : st("guest"))
+  );
+}
+
+function getAvatarFromUser(user) {
+  const meta = user?.user_metadata || {};
+  return meta.picture || meta.avatar_url || meta.avatar || "";
+}
+
+function getStableFromId(user) {
+  return (
+    user?.id ||
+    user?.email ||
+    `${role}-${Math.random().toString(36).slice(2, 10)}`
+  );
+}
+
+function getInitials(name) {
+  const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return "?";
+  if (parts.length === 1) return parts[0].slice(0, 1).toUpperCase();
+  return (parts[0][0] + parts[1][0]).toUpperCase();
+}
+
+async function getCurrentUser() {
+  try {
+    const { data } = await supabase.auth.getUser();
+    return data?.user || null;
+  } catch {
+    return null;
+  }
+}
+
+async function getCurrentUserId() {
+  const u = await getCurrentUser();
+  return u?.id || null;
+}
+
+async function hydrateMyProfile() {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return;
+
+    myProfile = {
+      from: getStableFromId(user),
+      from_name: getDisplayNameFromUser(user),
+      from_pic: getAvatarFromUser(user),
+      me_lang: myLang,
+      role,
+      user_id: user?.id || "",
+    };
+  } catch (e) {
+    console.warn("[alltoall hydrateMyProfile]", e);
+  }
+}
+
+function applyStaticSiteTexts() {
+  try {
+    document.documentElement.setAttribute("lang", siteLang);
+  } catch {}
+
+  if (msgInput) msgInput.placeholder = st("typingPlaceholder");
+  if (micHint) micHint.textContent = `${st("micHint")} • ${getVoiceLabel()}`;
+}
+
+function buildLangSelect() {
+  if (!langSelect) return;
+
+  langSelect.innerHTML = "";
+  LANGS.forEach((l) => {
+    const opt = document.createElement("option");
+    opt.value = l.code;
+    opt.textContent = `${l.flag} ${l.name}`;
+    langSelect.appendChild(opt);
+  });
+
+  langSelect.value = myLang;
+
+  langSelect.addEventListener("change", () => {
+    myLang = canonical(langSelect.value);
+    localStorage.setItem("alltoall_lang", myLang);
+    myProfile.me_lang = myLang;
+
+    if (recognizer) recognizer.lang = toBCP(myLang);
+
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      sendWs({
+        type: "profile_sync",
+        from_name: myProfile.from_name,
+        from_pic: myProfile.from_pic,
+        me_lang: myLang,
+        user_id: myProfile.user_id,
+      });
+    }
+
+    addSystemMessage(`${langSelect.options[langSelect.selectedIndex]?.textContent || myLang.toUpperCase()}`);
+  });
+}
+
+function updateSoundButton() {
+  if (!soundToggleBtn) return;
+  soundToggleBtn.textContent = autoSpeak ? "🔊" : "🔇";
+  soundToggleBtn.title = autoSpeak ? st("soundOn") : st("soundOff");
+}
+
+function updateMicUI() {
+  if (!micHint) return;
+  micHint.textContent = recognizing
+    ? `${st("micListening")} • ${getVoiceLabel()}`
+    : `${st("micHint")} • ${getVoiceLabel()}`;
+}
+
+function stopAudio() {
+  try {
+    currentAudio?.pause?.();
+    currentAudio = null;
+  } catch {}
+  try { window.speechSynthesis?.cancel?.(); } catch {}
+  try { window.NativeTTS?.stop?.(); } catch {}
+}
+
+async function hasReadyVoiceProfile() {
+  try {
+    const user = await getCurrentUser();
+    if (!user?.id) return false;
+
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("tts_voice_ready,tts_voice_id")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (error) return false;
+    return !!data?.tts_voice_ready && !!String(data?.tts_voice_id || "").trim();
+  } catch {
+    return false;
+  }
+}
+
+async function warmAudio() {
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (Ctx) {
+      if (!audioCtx) audioCtx = new Ctx();
+      if (audioCtx.state === "suspended") {
+        await audioCtx.resume();
       }
-    } catch {}
+    }
+  } catch (e) {
+    console.warn("[alltoall warmAudio]", e);
   }
 
-  function toggleTextEntry() {
-    if (!textEntry) return;
-    textEntry.classList.toggle("show");
-    if (textEntry.classList.contains("show")) {
-      setTimeout(() => {
-        try { msgInput.focus(); } catch {}
-        fixLayout();
-      }, 80);
-    } else {
-      try { msgInput.blur(); } catch {}
-      fixLayout();
+  try {
+    if (window.speechSynthesis) {
+      window.speechSynthesis.getVoices();
+      voicesReady = true;
+    }
+  } catch {}
+}
+
+async function prepareEnhancedMic() {
+  try {
+    if (!navigator.mediaDevices?.getUserMedia) return;
+    if (preparedStream) return;
+
+    preparedStream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
+        channelCount: 1
+      },
+      video: false
+    });
+  } catch (e) {
+    console.warn("[alltoall enhanced mic]", e);
+  }
+}
+
+async function speakViaApi(text, langCode) {
+  const userId = await getCurrentUserId();
+  const voice = getVoicePreference();
+
+  const r = await fetch(`${API_BASE}/tts`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      text: String(text || "").trim(),
+      lang: canonical(langCode),
+      user_id: userId,
+      module: "alltoall",
+      voice
+    }),
+  });
+
+  const j = await r.json().catch(() => null);
+
+  if (!r.ok || !j?.ok || !j?.audio_base64) {
+    throw new Error(j?.error || j?.detail || "TTS API unavailable");
+  }
+
+  const audio = new Audio(`data:audio/mp3;base64,${j.audio_base64}`);
+  audio.preload = "auto";
+  audio.playsInline = true;
+  currentAudio = audio;
+
+  audio.onended = () => {
+    if (currentAudio === audio) currentAudio = null;
+  };
+
+  audio.onerror = () => {
+    if (currentAudio === audio) currentAudio = null;
+  };
+
+  await warmAudio();
+
+  const playPromise = audio.play();
+  if (playPromise && typeof playPromise.then === "function") {
+    await playPromise;
+  }
+}
+
+function chooseWebVoice(langCode) {
+  const voices = window.speechSynthesis?.getVoices?.() || [];
+  if (!voices.length) return null;
+
+  const base = canonical(langCode);
+  const bcp = toBCP(langCode).toLowerCase();
+  const pref = getVoicePreference();
+
+  let pool = voices.filter((v) => String(v.lang || "").toLowerCase().startsWith(base));
+  if (!pool.length) pool = voices.filter((v) => String(v.lang || "").toLowerCase() === bcp);
+  if (!pool.length) pool = voices;
+
+  if (pref === "female") {
+    return (
+      pool.find((v) => /female|woman|zira|aria|seda|helena|jenny|susan|eva|anna|emma/i.test(v.name)) ||
+      pool[0]
+    );
+  }
+
+  if (pref === "male") {
+    return (
+      pool.find((v) => /male|man|david|mark|george|james|alex|tom|jon|paul/i.test(v.name)) ||
+      pool[0]
+    );
+  }
+
+  return pool[0] || null;
+}
+
+function speakFallback(text, langCode) {
+  const value = String(text || "").trim();
+  if (!value) return;
+
+  stopAudio();
+
+  const pref = getVoicePreference();
+  const c = canonical(langCode);
+
+  if (pref === "auto" && window.NativeTTS && typeof window.NativeTTS.speak === "function") {
+    try {
+      window.NativeTTS.speak(value, c);
+      return;
+    } catch (e) {
+      console.warn("[alltoall native tts]", e);
     }
   }
 
-  function syncLangPickerLabel() {
+  if (!window.speechSynthesis) return;
+
+  try {
+    if (!voicesReady) {
+      window.speechSynthesis.getVoices();
+      voicesReady = true;
+    }
+  } catch {}
+
+  const u = new SpeechSynthesisUtterance(value);
+  u.lang = toBCP(langCode);
+  u.rate = c === "en" ? 0.82 : ["de", "fr", "it", "es"].includes(c) ? 0.88 : 0.92;
+  u.pitch = 1.0;
+  u.volume = 1;
+
+  const voice = chooseWebVoice(langCode);
+  if (voice) u.voice = voice;
+
+  setTimeout(() => {
     try {
-      const opt = langSelect?.options?.[langSelect.selectedIndex];
-      if (!opt || !langPickerText) return;
-      langPickerText.textContent = opt.textContent || "🌐 Dil";
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(u);
     } catch {}
+  }, 60);
+}
+
+async function speakText(text, langCode) {
+  const value = String(text || "").trim();
+  if (!value || !autoSpeak) return;
+
+  const voice = getVoicePreference();
+
+  if (voice === "auto") {
+    speakFallback(value, langCode);
+    return;
   }
 
-  function renderLangSheet() {
-    if (!langSheetList || !langSelect) return;
+  if (voice === "clone") {
+    try {
+      const ready = await hasReadyVoiceProfile();
+      if (!ready) {
+        speakFallback(value, langCode);
+        return;
+      }
+      await speakViaApi(value, langCode);
+      return;
+    } catch (e) {
+      console.warn("[alltoall clone fail]", e);
+      speakFallback(value, langCode);
+      return;
+    }
+  }
 
-    const options = [...langSelect.options];
-    langSheetList.innerHTML = options.map((opt) => `
-      <button class="sheet-item ${opt.selected ? "active" : ""}" type="button" data-value="${opt.value}">
-        <div class="sheet-item-left">
-          <div class="sheet-flag">${(opt.textContent || "").trim().split(" ")[0] || "🌐"}</div>
-          <div class="sheet-text">
-            <div class="sheet-name">${(opt.textContent || "").trim().replace(/^(\S+)\s*/, "")}</div>
-            <div class="sheet-code">${String(opt.value || "").toUpperCase()}</div>
-          </div>
-        </div>
-        <div class="sheet-check"></div>
-      </button>
-    `).join("");
+  try {
+    await speakViaApi(value, langCode);
+  } catch (e) {
+    console.warn("[alltoall api tts fail]", e);
+    speakFallback(value, langCode);
+  }
+}
 
-    langSheetList.querySelectorAll(".sheet-item").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const value = btn.dataset.value || "";
-        langSelect.value = value;
-        langSelect.dispatchEvent(new Event("change", { bubbles: true }));
-        syncLangPickerLabel();
-        closeLangSheet();
+function toggleSound() {
+  autoSpeak = !autoSpeak;
+  localStorage.setItem("alltoall_auto_speak", autoSpeak ? "1" : "0");
+  updateSoundButton();
+  addSystemMessage(autoSpeak ? st("soundOn") : st("soundOff"));
+}
+
+function personKey(person) {
+  return String(
+    person?.from ||
+    person?.user_id ||
+    person?.role ||
+    person?.from_name ||
+    Math.random().toString(36).slice(2)
+  );
+}
+
+function renderPeople() {
+  if (!peopleScroll) return;
+
+  peopleScroll.innerHTML = "";
+  const arr = [...joinedPeople.values()];
+
+  arr.forEach((person) => {
+    const wrap = document.createElement("div");
+    wrap.className = "pItem";
+
+    const avatar = document.createElement("div");
+    avatar.className = "pAvatar";
+
+    if (person.from_pic) {
+      const img = document.createElement("img");
+      img.src = person.from_pic;
+      img.alt = person.from_name || st("participant");
+      img.referrerPolicy = "no-referrer";
+      avatar.appendChild(img);
+    } else {
+      avatar.textContent = getInitials(person.from_name);
+    }
+
+    const label = document.createElement("div");
+    label.className = "pName";
+    label.textContent = person.from_name || st("participant");
+
+    wrap.appendChild(avatar);
+    wrap.appendChild(label);
+    peopleScroll.appendChild(wrap);
+  });
+
+  if (peopleCount) peopleCount.textContent = String(arr.length || 0);
+}
+
+function ensureSelfInPeople() {
+  const key = personKey(myProfile);
+  joinedPeople.set(key, { ...myProfile });
+  renderPeople();
+}
+
+function applyRoster(roster = []) {
+  joinedPeople.clear();
+
+  if (Array.isArray(roster)) {
+    roster.forEach((person) => {
+      const key = personKey(person);
+      joinedPeople.set(key, {
+        from: person?.from || "",
+        from_name: person?.from_name || st("participant"),
+        from_pic: person?.from_pic || "",
+        me_lang: person?.me_lang || "tr",
+        role: person?.role || "guest",
+        user_id: person?.user_id || "",
       });
     });
   }
 
-  function openLangSheet() {
-    renderLangSheet();
-    langSheet?.classList.add("show");
-    langSheetBackdrop?.classList.add("show");
-    langSheet?.setAttribute("aria-hidden", "false");
-  }
+  const existsSelf = [...joinedPeople.values()].some((p) =>
+    (p.from && p.from === myProfile.from) ||
+    (p.user_id && p.user_id === myProfile.user_id)
+  );
 
-  function closeLangSheet() {
-    langSheet?.classList.remove("show");
-    langSheetBackdrop?.classList.remove("show");
-    langSheet?.setAttribute("aria-hidden", "true");
-  }
+  if (!existsSelf) ensureSelfInPeople();
+  else renderPeople();
+}
 
-  function waitLangOptions() {
-    let tries = 0;
-    const timer = setInterval(() => {
-      tries += 1;
-      if (langSelect && langSelect.options.length > 0) {
-        syncLangPickerLabel();
-        clearInterval(timer);
+function upsertPerson(person) {
+  if (!person) return;
+  const key = personKey(person);
+  joinedPeople.set(key, {
+    from: person?.from || "",
+    from_name: person?.from_name || st("participant"),
+    from_pic: person?.from_pic || "",
+    me_lang: person?.me_lang || "tr",
+    role: person?.role || "guest",
+    user_id: person?.user_id || "",
+  });
+  renderPeople();
+}
+
+function removePerson(person) {
+  if (!person) return;
+  const key = personKey(person);
+
+  if (joinedPeople.has(key)) {
+    joinedPeople.delete(key);
+  } else {
+    for (const [k, v] of joinedPeople.entries()) {
+      if (
+        (person.from && v.from === person.from) ||
+        (person.user_id && v.user_id === person.user_id)
+      ) {
+        joinedPeople.delete(k);
       }
-      if (tries > 30) clearInterval(timer);
-    }, 200);
+    }
   }
 
-  if (window.visualViewport) {
-    window.visualViewport.addEventListener("resize", fixLayout);
-    window.visualViewport.addEventListener("scroll", fixLayout);
+  renderPeople();
+}
+
+function scrollChatBottom() {
+  if (!chat) return;
+  requestAnimationFrame(() => {
+    try { chat.scrollTop = chat.scrollHeight; } catch {}
+  });
+}
+
+function addSystemMessage(text) {
+  if (!chat) return;
+
+  const div = document.createElement("div");
+  div.className = "sys-note";
+  div.textContent = String(text || "").trim();
+  chat.appendChild(div);
+  scrollChatBottom();
+}
+
+function addMessage({ side = "left", sender = "", text = "", withSpeaker = false, speakLang = "tr" }) {
+  const safeText = String(text || "").trim();
+  if (!safeText || !chat) return;
+
+  const row = document.createElement("div");
+  row.className = `msg-row ${side}`;
+
+  const label = document.createElement("div");
+  label.className = "sender-name";
+  label.textContent = sender || (side === "right" ? myProfile.from_name : st("participant"));
+
+  const bubble = document.createElement("div");
+  bubble.className = "msg-bubble";
+  bubble.textContent = safeText;
+
+  row.appendChild(label);
+  row.appendChild(bubble);
+
+  if (withSpeaker) {
+    const actions = document.createElement("div");
+    actions.className = "msg-actions";
+
+    const btn = document.createElement("button");
+    btn.className = "mini-btn";
+    btn.type = "button";
+    btn.innerHTML = `
+      <svg viewBox="0 0 24 24">
+        <path d="M3 10v4h4l5 4V6L7 10H3"></path>
+        <path d="M16 8a4 4 0 0 1 0 8"></path>
+        <path d="M19 5a8 8 0 0 1 0 14"></path>
+      </svg>
+    `;
+    btn.addEventListener("click", () => speakText(safeText, speakLang));
+    actions.appendChild(btn);
+    row.appendChild(actions);
   }
 
-  window.addEventListener("resize", fixLayout);
-  window.addEventListener("orientationchange", fixLayout);
+  chat.appendChild(row);
+  scrollChatBottom();
+}
 
-  textToggleBtn?.addEventListener("click", toggleTextEntry);
-  langPickerBtn?.addEventListener("click", openLangSheet);
-  langSheetBackdrop?.addEventListener("click", closeLangSheet);
-  langSheetClose?.addEventListener("click", closeLangSheet);
+function autoGrowTextarea() {
+  if (!msgInput) return;
+  msgInput.style.height = "44px";
+  msgInput.style.height = Math.min(msgInput.scrollHeight, 140) + "px";
+}
 
-  langSelect?.addEventListener("change", () => {
-    syncLangPickerLabel();
-    setTimeout(renderLangSheet, 50);
+function sendWs(payload) {
+  try {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify(payload));
+    } else {
+      addSystemMessage(st("socketNotReady"));
+    }
+  } catch (e) {
+    console.warn("[alltoall sendWs]", e);
+  }
+}
+
+async function resolveRoomForGuestByHost() {
+  if (!hostCode || role !== "guest") return;
+
+  const r = await fetch(`${API_BASE}/interpreter/resolve-room`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      host_code: hostCode,
+      my_lang: myLang,
+      mode: "alltoall"
+    })
   });
 
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closeLangSheet();
+  const j = await r.json().catch(() => ({}));
+
+  if (!r.ok || !j?.room_id) {
+    throw new Error(j?.detail || j?.error || "Room çözülemedi");
+  }
+
+  roomId = String(j.room_id || "").trim().toUpperCase();
+}
+
+function connectSocket() {
+  if (!roomId) {
+    addSystemMessage(st("roomMissing"));
+    return;
+  }
+
+  const wsUrl = `${WS_BASE}/${encodeURIComponent(roomId)}`;
+  ws = new WebSocket(wsUrl);
+
+  ws.onopen = () => {
+    sendWs({
+      type: role === "host" ? "create" : "join",
+      from: myProfile.from,
+      from_name: myProfile.from_name,
+      from_pic: myProfile.from_pic,
+      me_lang: myLang,
+      role,
+      user_id: myProfile.user_id,
+      host_code: hostCode || roomId
+    });
+  };
+
+  ws.onmessage = (event) => {
+    try {
+      const data = JSON.parse(event.data);
+      const type = String(data?.type || "").trim();
+
+      if (type === "room_created" || type === "room_joined") {
+        if (data.self) {
+          myProfile = {
+            ...myProfile,
+            ...data.self,
+            me_lang: myLang,
+          };
+        }
+
+        roomId = String(data.room || roomId || "").trim().toUpperCase();
+        if (roomPill) roomPill.textContent = hostCode || roomId || "------";
+        ensureSelfInPeople();
+        addSystemMessage(st("connected"));
+        return;
+      }
+
+      if (type === "presence") {
+        applyRoster(data.roster || []);
+        return;
+      }
+
+      if (type === "peer_joined") {
+        if (data.peer) upsertPerson(data.peer);
+        if (Array.isArray(data.roster)) applyRoster(data.roster);
+        addSystemMessage(st("newParticipant"));
+        return;
+      }
+
+      if (type === "profile_updated") {
+        if (data.peer) upsertPerson(data.peer);
+        if (Array.isArray(data.roster)) applyRoster(data.roster);
+        return;
+      }
+
+      if (type === "peer_left") {
+        if (data.peer) removePerson(data.peer);
+        if (Array.isArray(data.roster)) applyRoster(data.roster);
+        addSystemMessage(st("leftParticipant"));
+        return;
+      }
+
+      if (type === "translated_message") {
+        const fromId = String(data.from || "").trim();
+        const senderName = String(data.from_name || st("participant")).trim();
+        const translated = String(data.translated_text || "").trim();
+        const original = String(data.original_text || "").trim();
+        const finalText = translated || original;
+
+        if (!finalText) return;
+        if (fromId && myProfile.from && fromId === myProfile.from) return;
+
+        addMessage({
+          side: "left",
+          sender: senderName,
+          text: finalText,
+          withSpeaker: true,
+          speakLang: myLang
+        });
+
+        if (data.from || data.from_name || data.from_pic) {
+          upsertPerson({
+            from: data.from || "",
+            from_name: data.from_name || senderName,
+            from_pic: data.from_pic || "",
+            me_lang: data.from_lang || "tr",
+            role: data.role || "guest",
+            user_id: data.from_user_id || "",
+          });
+        }
+
+        if (autoSpeak) {
+          speakText(finalText, myLang);
+        }
+        return;
+      }
+
+      if (type === "room_not_found") {
+        addSystemMessage(data.message || st("roomNotFound"));
+        return;
+      }
+
+      if (type === "error") {
+        const msg = String(data.message || "Bağlantı hatası");
+        addSystemMessage(msg === "HOST_NOT_READY" ? st("hostNotReady") : msg);
+      }
+    } catch (e) {
+      console.warn("[alltoall ws parse]", e);
+    }
+  };
+
+  ws.onerror = () => {
+    addSystemMessage(st("connectionError"));
+  };
+
+  ws.onclose = () => {
+    addSystemMessage(st("connectionClosed"));
+  };
+}
+
+function sendMessage() {
+  const text = String(msgInput?.value || "").trim();
+  if (!text) return;
+
+  addMessage({
+    side: "right",
+    sender: myProfile.from_name,
+    text,
+    withSpeaker: false,
+    speakLang: myLang
   });
+
+  sendWs({
+    type: "message",
+    text,
+    lang: myLang
+  });
+
+  msgInput.value = "";
+  autoGrowTextarea();
+  scrollChatBottom();
+}
+
+function initSpeech() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if (!SR) {
+    if (micBtn) micBtn.style.display = "none";
+    addSystemMessage(st("micUnsupported"));
+    return;
+  }
+
+  recognizer = new SR();
+  recognizer.lang = toBCP(myLang);
+  recognizer.interimResults = false;
+  recognizer.continuous = false;
+  recognizer.maxAlternatives = 1;
+
+  recognizer.onresult = (e) => {
+    const text = e.results?.[0]?.[0]?.transcript || "";
+    msgInput.value = text;
+    sendMessage();
+  };
+
+  recognizer.onend = () => {
+    recognizing = false;
+    micBtn?.classList.remove("listening");
+    updateMicUI();
+  };
+
+  recognizer.onerror = (e) => {
+    recognizing = false;
+    micBtn?.classList.remove("listening");
+    updateMicUI();
+
+    if (String(e?.error || "").includes("not-allowed")) {
+      addSystemMessage(st("micDenied"));
+    }
+  };
+}
+
+async function toggleMic() {
+  if (!recognizer) return;
+
+  try {
+    await warmAudio();
+    await prepareEnhancedMic();
+  } catch {}
+
+  if (recognizing) {
+    recognizer.stop();
+    recognizing = false;
+    micBtn?.classList.remove("listening");
+    updateMicUI();
+    return;
+  }
+
+  try {
+    recognizing = true;
+    micBtn?.classList.add("listening");
+    recognizer.lang = toBCP(myLang);
+    recognizer.start();
+    updateMicUI();
+  } catch (e) {
+    recognizing = false;
+    micBtn?.classList.remove("listening");
+    updateMicUI();
+    console.warn("[alltoall mic start]", e);
+  }
+}
+
+function installKeyboardLift() {
+  const vv = window.visualViewport;
+  if (!vv) return;
+
+  const apply = () => {
+    try {
+      const winH = window.innerHeight || document.documentElement.clientHeight || 0;
+      const vvH = vv.height || 0;
+      const vvTop = vv.offsetTop || 0;
+
+      let keyboardHeight = Math.max(0, winH - vvH - vvTop);
+
+      const active = document.activeElement;
+      const isTyping =
+        active === msgInput ||
+        active?.tagName === "TEXTAREA" ||
+        active?.tagName === "INPUT";
+
+      if (!isTyping) keyboardHeight = 0;
+
+      const lift = keyboardHeight > 80 ? keyboardHeight : 0;
+      rootStyle.style.setProperty("--kb-offset", `${lift}px`);
+
+      setTimeout(() => {
+        try {
+          msgInput?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+          scrollChatBottom();
+        } catch {}
+      }, 40);
+    } catch (e) {
+      console.warn("[alltoall keyboard]", e);
+    }
+  };
+
+  vv.addEventListener("resize", apply);
+  vv.addEventListener("scroll", apply);
+  window.addEventListener("resize", apply);
+  window.addEventListener("orientationchange", apply);
 
   msgInput?.addEventListener("focus", () => {
-    setTimeout(fixLayout, 120);
-    setTimeout(fixLayout, 260);
-    setTimeout(fixLayout, 420);
+    setTimeout(apply, 80);
+    setTimeout(apply, 180);
+    setTimeout(apply, 320);
+    setTimeout(apply, 520);
   });
 
   msgInput?.addEventListener("blur", () => {
-    setTimeout(fixLayout, 120);
+    setTimeout(() => {
+      rootStyle.style.setProperty("--kb-offset", "0px");
+    }, 150);
   });
 
-  msgInput?.addEventListener("input", function () {
-    this.style.height = "44px";
-    this.style.height = Math.min(this.scrollHeight, 140) + "px";
+  apply();
+}
+
+function toggleTextEntry() {
+  if (!textEntry) return;
+  const willShow = !textEntry.classList.contains("show");
+  textEntry.classList.toggle("show", willShow);
+
+  if (willShow) {
+    addSystemMessage(st("textOpen"));
+    setTimeout(() => {
+      try { msgInput?.focus(); } catch {}
+    }, 80);
+  } else {
+    addSystemMessage(st("textClosed"));
+    try { msgInput?.blur(); } catch {}
+  }
+}
+
+function bindEvents() {
+  sendBtn?.addEventListener("click", () => {
+    const hasTextBox = !!textEntry?.classList.contains("show");
+    const hasText = !!String(msgInput?.value || "").trim();
+
+    if (hasTextBox && hasText) {
+      sendMessage();
+      return;
+    }
+
+    toggleTextEntry();
   });
 
-  waitLangOptions();
-  fixLayout();
-</script>
+  msgInput?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
 
-<script type="module" src="/js/alltoall_room.js?v=mic_first_2"></script>
-</body>
-</html>
+  msgInput?.addEventListener("input", () => {
+    autoGrowTextarea();
+    scrollChatBottom();
+  });
+
+  micBtn?.addEventListener("click", toggleMic);
+  soundToggleBtn?.addEventListener("click", toggleSound);
+  textToggleBtn?.addEventListener("click", toggleTextEntry);
+
+  roomPill?.addEventListener("click", async () => {
+    const codeToCopy = hostCode || roomId;
+    if (!codeToCopy) return;
+    try {
+      await navigator.clipboard.writeText(codeToCopy);
+      addSystemMessage(`${st("roomCopied")}: ${codeToCopy}`);
+    } catch {}
+  });
+
+  backBtn?.addEventListener("click", () => history.back());
+
+  exitBtn?.addEventListener("click", () => {
+    stopAudio();
+    try { ws?.close?.(); } catch {}
+    location.href = "/pages/alltoall.html";
+  });
+
+  try {
+    if (window.speechSynthesis) {
+      window.speechSynthesis.getVoices();
+      window.speechSynthesis.onvoiceschanged = () => {
+        try { window.speechSynthesis.getVoices(); } catch {}
+        voicesReady = true;
+      };
+    }
+  } catch {}
+
+  window.addEventListener("focus", () => {
+    const next = getSiteLang();
+    if (next !== siteLang) {
+      refreshSiteLangState();
+      applyStaticSiteTexts();
+      buildLangSelect();
+      updateSoundButton();
+      updateMicUI();
+    } else {
+      updateMicUI();
+    }
+  });
+}
+
+async function init() {
+  refreshSiteLangState();
+  applyStaticSiteTexts();
+
+  if (roomPill) roomPill.textContent = hostCode || roomId || "------";
+
+  await hydrateMyProfile();
+  buildLangSelect();
+  updateSoundButton();
+  initSpeech();
+  bindEvents();
+  installKeyboardLift();
+  ensureSelfInPeople();
+  autoGrowTextarea();
+  scrollChatBottom();
+  updateMicUI();
+
+  try {
+    await warmAudio();
+    await prepareEnhancedMic();
+  } catch {}
+
+  try {
+    if (role === "guest" && !incomingRoomId && hostCode) {
+      await resolveRoomForGuestByHost();
+    }
+  } catch (e) {
+    console.error("[alltoall resolve guest room]", e);
+    addSystemMessage(st("roomNotCreated"));
+    return;
+  }
+
+  connectSocket();
+}
+
+init();
+
+window.addEventListener("beforeunload", () => {
+  stopAudio();
+  try { ws?.close?.(); } catch {}
+  try { preparedStream?.getTracks?.().forEach((t) => t.stop()); } catch {}
+});
