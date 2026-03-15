@@ -5,18 +5,28 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
   <title>italkyAI • AllToAll Room</title>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
   <style>
     :root{
-      --topH:70px;
-      --metaH:92px;
-      --peopleH:112px;
-      --dockH:108px;
-      --accent:#00f2fe;
-      --pink:#f472b6;
-      --violet:#7c5cff;
+      --topH:64px;
+      --whoH:76px;
+      --langH:70px;
+      --dockH:124px;
+
+      --bg:#07040d;
+      --panel:rgba(255,255,255,.05);
       --line:rgba(255,255,255,.08);
+      --txt:rgba(255,255,255,.96);
+      --muted:rgba(255,255,255,.58);
+
+      --cyan:#67e8f9;
+      --violet:#7c5cff;
+      --pink:#f472b6;
+      --accentGrad:linear-gradient(135deg,#67e8f9 0%,#7c5cff 48%,#f472b6 100%);
+      --bracketGrad:linear-gradient(180deg,#67e8f9 0%,#7c5cff 55%,#f472b6 100%);
     }
 
     *{
@@ -30,29 +40,33 @@
       padding:0;
       width:100%;
       height:100%;
-      background:#050208;
-      color:#fff;
-      font-family:'Outfit',sans-serif;
       overflow:hidden;
-      position:fixed;
+      background:var(--bg);
+      color:var(--txt);
+      font-family:'Outfit',sans-serif;
     }
 
     body{
       background:
-        radial-gradient(circle at 50% 0%, rgba(0,242,254,.12) 0%, transparent 24%),
-        radial-gradient(circle at 15% 18%, rgba(244,114,182,.10) 0%, transparent 20%),
-        radial-gradient(circle at 85% 14%, rgba(124,92,255,.12) 0%, transparent 18%),
-        linear-gradient(180deg,#050208 0%,#090411 100%);
+        radial-gradient(circle at 50% 0%, rgba(103,232,249,.10) 0%, transparent 24%),
+        radial-gradient(circle at 14% 18%, rgba(244,114,182,.10) 0%, transparent 20%),
+        radial-gradient(circle at 86% 15%, rgba(124,92,255,.14) 0%, transparent 18%),
+        linear-gradient(180deg,#06030b 0%,#0b0712 100%);
+    }
+
+    #pageContent{
+      width:100%;
+      height:100dvh;
+      overflow:hidden;
     }
 
     .room{
       position:relative;
       width:min(500px,100vw);
-      height:100dvh;
+      height:100%;
       margin:0 auto;
       display:flex;
       flex-direction:column;
-      background:transparent;
       overflow:hidden;
     }
 
@@ -60,20 +74,21 @@
       height:var(--topH);
       display:flex;
       align-items:center;
-      padding:0 16px;
+      gap:10px;
+      padding:0 14px;
       border-bottom:1px solid rgba(255,255,255,.05);
       backdrop-filter:blur(10px);
       flex:0 0 auto;
     }
 
     .topBtn{
-      background:none;
+      width:40px;
+      height:40px;
       border:none;
+      background:rgba(255,255,255,.06);
       color:#fff;
-      font-size:20px;
-      width:42px;
-      height:42px;
-      border-radius:50%;
+      border-radius:14px;
+      font-size:18px;
       cursor:pointer;
       flex:0 0 auto;
     }
@@ -83,177 +98,173 @@
       text-align:center;
       font-family:'Space Grotesk',sans-serif;
       font-weight:700;
-      font-size:22px;
+      font-size:21px;
       letter-spacing:-.4px;
     }
 
-    .brand .accent{ color:var(--accent); }
+    .brand .accent{
+      color:var(--cyan);
+    }
 
-    .meta{
-      min-height:var(--metaH);
-      display:flex;
-      flex-direction:column;
-      justify-content:center;
-      gap:10px;
-      padding:10px 16px 12px;
-      background:rgba(255,255,255,.02);
-      border-bottom:1px solid rgba(255,255,255,.05);
+    .roomPill{
       flex:0 0 auto;
-    }
-
-    .metaTop{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:10px;
-    }
-
-    #roomPill{
-      background:linear-gradient(135deg,#7000ff,#9b5cff);
-      padding:6px 16px;
-      border-radius:12px;
+      padding:7px 14px;
+      border-radius:14px;
+      background:linear-gradient(135deg,#5b21b6,#7c3aed,#a855f7);
+      border:1px solid rgba(255,255,255,.10);
+      box-shadow:0 0 18px rgba(124,92,255,.20);
+      font-size:15px;
       font-weight:900;
-      font-size:20px;
       letter-spacing:1px;
-      min-width:110px;
+      color:#fff;
+      cursor:pointer;
+      min-width:94px;
       text-align:center;
-      cursor:pointer;
-      box-shadow:0 0 16px rgba(112,0,255,.24);
-      flex:0 0 auto;
     }
 
-    .metaRight{
+    .who{
+      height:var(--whoH);
+      padding:10px 16px;
       display:flex;
       align-items:center;
-      gap:8px;
-      min-width:0;
-    }
-
-    #langSelect{
-      height:38px;
-      min-width:136px;
-      max-width:180px;
-      background:rgba(255,255,255,.08);
-      border:1px solid rgba(255,255,255,.10);
-      border-radius:10px;
-      color:#fff;
-      font-size:13px;
-      font-weight:700;
-      padding:0 10px;
-      cursor:pointer;
-    }
-
-    #langSelect option{ color:#000; }
-
-    #soundToggleBtn{
-      width:38px;
-      height:38px;
-      border-radius:10px;
-      border:1px solid rgba(255,255,255,.10);
-      background:rgba(255,255,255,.08);
-      color:#fff;
-      font-size:16px;
-      cursor:pointer;
-      flex:0 0 auto;
-    }
-
-    .roomInfoRow{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-    }
-
-    .room-info{
-      font-size:11px;
-      color:var(--accent);
-      font-weight:800;
-      line-height:1.35;
-      opacity:.95;
-    }
-
-    .peopleCountWrap{
-      font-size:11px;
-      color:rgba(255,255,255,.72);
-      font-weight:800;
-      white-space:nowrap;
-      flex:0 0 auto;
-    }
-
-    .people{
-      height:var(--peopleH);
-      padding:10px 0;
+      gap:12px;
       border-bottom:1px solid rgba(255,255,255,.05);
       flex:0 0 auto;
-      overflow:hidden;
     }
 
-    .people-scroll{
-      display:flex;
-      gap:15px;
-      overflow-x:auto;
-      overflow-y:hidden;
-      padding:0 16px;
-      scrollbar-width:none;
-      align-items:flex-start;
-    }
-
-    .people-scroll::-webkit-scrollbar{ display:none; }
-
-    .pItem{
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      min-width:68px;
-      max-width:78px;
-      flex:0 0 auto;
-    }
-
-    .pAvatar{
-      width:48px;
-      height:48px;
+    .who-avatar{
+      width:52px;
+      height:52px;
       border-radius:50%;
-      border:2px solid rgba(255,255,255,.10);
       overflow:hidden;
+      background:rgba(255,255,255,.08);
+      border:2px solid rgba(255,255,255,.10);
       display:flex;
       align-items:center;
       justify-content:center;
-      background:rgba(255,255,255,.06);
-      font-size:14px;
       font-weight:900;
+      font-size:15px;
       flex:0 0 auto;
     }
 
-    .pAvatar img{
+    .who-avatar img{
       width:100%;
       height:100%;
       object-fit:cover;
     }
 
-    .pName{
+    .who-meta{
+      min-width:0;
+      flex:1;
+    }
+
+    .who-kicker{
       font-size:10px;
+      font-weight:900;
+      letter-spacing:.5px;
+      color:var(--muted);
+      text-transform:uppercase;
+      margin-bottom:4px;
+    }
+
+    .who-name{
+      font-size:18px;
+      font-weight:900;
+      line-height:1.1;
+      color:#fff;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .who-note{
+      margin-top:5px;
+      font-size:11px;
+      color:rgba(255,255,255,.62);
+      line-height:1.2;
+    }
+
+    .langbar{
+      height:var(--langH);
+      padding:10px 16px 12px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      border-bottom:1px solid rgba(255,255,255,.05);
+      flex:0 0 auto;
+    }
+
+    #langSelect{
+      position:absolute;
+      opacity:0;
+      pointer-events:none;
+      width:1px;
+      height:1px;
+    }
+
+    .langBtn{
+      min-width:180px;
+      max-width:240px;
+      height:42px;
+      border:none;
+      border-radius:16px;
+      padding:0 14px;
+      background:rgba(255,255,255,.07);
+      border:1px solid rgba(255,255,255,.10);
+      color:#fff;
+      font-size:14px;
       font-weight:800;
-      margin-top:6px;
-      text-align:center;
-      line-height:1.15;
-      white-space:normal;
-      word-break:break-word;
-      max-width:100%;
-      color:rgba(255,255,255,.92);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      cursor:pointer;
+    }
+
+    .langBtnText{
+      min-width:0;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+
+    #soundToggleBtn{
+      width:42px;
+      height:42px;
+      border:none;
+      border-radius:16px;
+      background:rgba(255,255,255,.07);
+      border:1px solid rgba(255,255,255,.10);
+      color:#fff;
+      font-size:17px;
+      cursor:pointer;
+      flex:0 0 auto;
+    }
+
+    .chatWrap{
+      flex:1;
+      min-height:0;
+      padding:14px 14px 6px;
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
     }
 
     .chat{
       flex:1;
-      overflow-y:auto;
-      padding:15px 16px;
-      display:flex;
-      flex-direction:column;
-      gap:18px;
-      scrollbar-width:none;
       min-height:0;
+      overflow-y:auto;
+      display:flex;
+      flex-direction:column-reverse;
+      gap:14px;
+      padding-bottom:8px;
+      scrollbar-width:none;
     }
 
-    .chat::-webkit-scrollbar{ display:none; }
+    .chat::-webkit-scrollbar{
+      display:none;
+    }
 
     .sys-note{
       align-self:center;
@@ -262,39 +273,113 @@
       border-radius:999px;
       background:rgba(255,255,255,.06);
       border:1px solid rgba(255,255,255,.06);
-      color:rgba(255,255,255,.78);
+      color:rgba(255,255,255,.74);
       font-size:11px;
       font-weight:800;
       text-align:center;
     }
 
     .msg-row{
-      max-width:90%;
+      width:100%;
       display:flex;
-      flex-direction:column;
-      position:relative;
     }
 
     .msg-row.left{
-      align-self:flex-start;
-      padding-left:14px;
+      justify-content:flex-start;
     }
 
     .msg-row.right{
-      align-self:flex-end;
-      padding-right:14px;
-      align-items:flex-end;
+      justify-content:flex-end;
     }
 
-    .sender-name{
+    .msg-card{
+      position:relative;
+      max-width:92%;
+      min-width:120px;
+      padding-left:18px;
+    }
+
+    .msg-bracket{
+      position:absolute;
+      left:0;
+      top:2px;
+      bottom:2px;
+      width:8px;
+      pointer-events:none;
+    }
+
+    .msg-bracket::before,
+    .msg-bracket::after,
+    .msg-bracket .mid{
+      content:"";
+      position:absolute;
+      left:0;
+      width:8px;
+      background:var(--bracketGrad);
+      border-radius:999px;
+      box-shadow:0 0 10px rgba(124,92,255,.22);
+    }
+
+    .msg-bracket::before{
+      top:0;
+      height:12px;
+    }
+
+    .msg-bracket .mid{
+      top:10px;
+      bottom:10px;
+      width:3px;
+      left:2px;
+      border-radius:999px;
+    }
+
+    .msg-bracket::after{
+      bottom:0;
+      height:12px;
+    }
+
+    .msg-head{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      margin-bottom:4px;
+      min-width:0;
+    }
+
+    .msg-name{
       font-size:12px;
       font-weight:900;
-      margin-bottom:4px;
-      letter-spacing:.3px;
-      color:rgba(255,255,255,.74);
+      color:rgba(255,255,255,.80);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .msg-spk{
+      width:24px;
+      height:24px;
+      border:none;
+      border-radius:50%;
+      background:rgba(255,255,255,.08);
+      color:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      flex:0 0 auto;
+      padding:0;
+    }
+
+    .msg-spk svg{
+      width:13px;
+      height:13px;
+      stroke:#fff;
+      fill:none;
+      stroke-width:2;
     }
 
     .msg-bubble{
+      display:inline-block;
       font-size:14.5px;
       line-height:1.5;
       color:rgba(255,255,255,.95);
@@ -306,83 +391,44 @@
     }
 
     .msg-row.right .msg-bubble{
-      background:linear-gradient(135deg,rgba(0,242,254,.16),rgba(124,92,255,.18));
+      background:linear-gradient(135deg,rgba(103,232,249,.14),rgba(124,92,255,.16));
     }
 
-    .msg-actions{
-      display:flex;
-      justify-content:flex-start;
-      padding-left:2px;
-      margin-top:6px;
-    }
-
-    .mini-btn{
-      width:32px;
-      height:32px;
-      border:none;
-      border-radius:50%;
-      background:rgba(255,255,255,.08);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      cursor:pointer;
-    }
-
-    .mini-btn svg{
-      width:16px;
-      height:16px;
-      stroke:#fff;
-      fill:none;
-      stroke-width:2;
-    }
-
-    .input{
-      min-height:var(--dockH);
-      background:#0a0510;
-      border-top:1px solid rgba(255,255,255,.10);
+    .dock{
+      height:var(--dockH);
+      border-top:1px solid rgba(255,255,255,.08);
+      background:rgba(10,6,16,.92);
+      backdrop-filter:blur(10px);
       display:flex;
       flex-direction:column;
+      align-items:center;
       justify-content:center;
       gap:10px;
-      padding:10px 12px calc(10px + env(safe-area-inset-bottom));
-      z-index:1000;
+      padding:10px 14px calc(12px + env(safe-area-inset-bottom));
       flex:0 0 auto;
     }
 
-    .mic-only-row{
+    .micWrap{
       display:flex;
       align-items:center;
       justify-content:center;
-      gap:12px;
-    }
-
-    .mic-side-btn{
-      width:42px;
-      height:42px;
-      border:none;
-      border-radius:14px;
-      background:rgba(255,255,255,.07);
-      color:#fff;
-      font-size:18px;
-      cursor:pointer;
-      flex:0 0 auto;
     }
 
     .main-mic{
-      width:72px;
-      height:72px;
+      width:74px;
+      height:74px;
       border:none;
       border-radius:50%;
-      background:linear-gradient(135deg,var(--accent),var(--violet),var(--pink));
+      background:var(--accentGrad);
       color:#050208;
       font-size:28px;
       font-weight:900;
-      cursor:pointer;
-      box-shadow:0 10px 30px rgba(0,242,254,.24);
-      flex:0 0 auto;
       display:flex;
       align-items:center;
       justify-content:center;
+      cursor:pointer;
+      box-shadow:0 10px 30px rgba(103,232,249,.20);
+      transition:transform .16s ease, box-shadow .16s ease;
     }
 
     .main-mic.listening{
@@ -390,180 +436,349 @@
       transform:scale(1.04);
     }
 
-    .mic-hint{
+    .micHint{
       text-align:center;
       font-size:11px;
       font-weight:800;
       color:rgba(255,255,255,.72);
       line-height:1.3;
+      min-height:28px;
+      max-width:280px;
     }
 
-    .text-entry{
-      display:none;
-      align-items:center;
-      gap:8px;
+    .sheet-backdrop{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.52);
+      backdrop-filter:blur(8px);
+      -webkit-backdrop-filter:blur(8px);
+      opacity:0;
+      pointer-events:none;
+      transition:.22s ease;
+      z-index:9998;
     }
 
-    .text-entry.show{
-      display:flex;
+    .sheet-backdrop.show{
+      opacity:1;
+      pointer-events:auto;
     }
 
-    textarea{
-      flex:1;
-      min-height:44px;
-      max-height:140px;
-      background:rgba(255,255,255,.05);
+    .lang-sheet{
+      position:fixed;
+      left:50%;
+      bottom:0;
+      transform:translateX(-50%) translateY(110%);
+      width:min(500px,100vw);
+      background:linear-gradient(180deg,rgba(20,18,30,.98),rgba(10,8,18,.98));
       border:1px solid rgba(255,255,255,.10);
-      border-radius:20px;
-      color:#fff;
-      padding:12px 16px;
-      font-size:15px;
-      resize:none;
-      font-family:'Outfit',sans-serif;
-      overflow:auto;
+      border-bottom:none;
+      border-radius:28px 28px 0 0;
+      box-shadow:0 -20px 60px rgba(0,0,0,.42);
+      transition:.24s ease;
+      z-index:9999;
+      padding:10px 14px calc(18px + env(safe-area-inset-bottom));
+      max-height:72dvh;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
     }
 
-    textarea::placeholder{
-      color:rgba(255,255,255,.42);
+    .lang-sheet.show{
+      transform:translateX(-50%) translateY(0);
     }
 
-    .dock-btn{
-      width:44px;
-      height:44px;
-      border-radius:50%;
-      border:none;
+    .sheet-handle{
+      width:52px;
+      height:5px;
+      border-radius:999px;
+      background:rgba(255,255,255,.18);
+      margin:2px auto 2px;
+    }
+
+    .sheet-head{
       display:flex;
       align-items:center;
-      justify-content:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+
+    .sheet-title{
+      font-family:'Space Grotesk',sans-serif;
+      font-size:18px;
+      font-weight:700;
+      letter-spacing:-.4px;
+    }
+
+    .sheet-close{
+      width:38px;
+      height:38px;
+      border:none;
+      border-radius:12px;
+      background:rgba(255,255,255,.08);
+      color:#fff;
+      font-size:18px;
+      cursor:pointer;
+    }
+
+    .sheet-list{
+      overflow:auto;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      scrollbar-width:none;
+    }
+
+    .sheet-list::-webkit-scrollbar{
+      display:none;
+    }
+
+    .sheet-item{
+      min-height:58px;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.04);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:0 14px;
       cursor:pointer;
       color:#fff;
+      transition:.16s ease;
+    }
+
+    .sheet-item.active{
+      border-color:rgba(0,242,254,.34);
+      background:linear-gradient(135deg,rgba(0,242,254,.12),rgba(124,92,255,.12));
+      box-shadow:0 0 0 1px rgba(0,242,254,.08) inset;
+    }
+
+    .sheet-item-left{
+      min-width:0;
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+
+    .sheet-flag{
+      width:32px;
+      text-align:center;
+      font-size:22px;
       flex:0 0 auto;
     }
 
-    .send-btn{
-      background:var(--accent);
-      color:#000;
-      font-size:18px;
+    .sheet-text{
+      min-width:0;
+    }
+
+    .sheet-name{
+      font-size:14px;
       font-weight:900;
+      color:#fff;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .sheet-code{
+      font-size:11px;
+      font-weight:800;
+      color:rgba(255,255,255,.56);
+      margin-top:3px;
+      letter-spacing:.5px;
+    }
+
+    .sheet-check{
+      width:24px;
+      height:24px;
+      border-radius:999px;
+      border:2px solid rgba(255,255,255,.26);
+      flex:0 0 auto;
+    }
+
+    .sheet-item.active .sheet-check{
+      border-color:var(--accent);
+      box-shadow:inset 0 0 0 5px var(--accent);
     }
   </style>
 </head>
 
 <body>
-<div class="room" id="roomContainer">
+  <div id="pageContent">
+    <div class="room" id="roomContainer">
 
-  <div class="topbar">
-    <button id="backBtn" class="topBtn" type="button">←</button>
-    <div class="brand">All<span class="accent">To</span>All</div>
-    <button id="exitBtn" class="topBtn" type="button">✕</button>
-  </div>
-
-  <div class="meta">
-    <div class="metaTop">
-      <div id="roomPill">------</div>
-
-      <div class="metaRight">
-        <select id="langSelect" aria-label="Dil seç">
-          <option value="tr">🇹🇷 Türkçe</option>
-          <option value="en">🇬🇧 English</option>
-          <option value="de">🇩🇪 Deutsch</option>
-          <option value="fr">🇫🇷 Français</option>
-          <option value="it">🇮🇹 Italiano</option>
-          <option value="es">🇪🇸 Español</option>
-        </select>
-
-        <button id="soundToggleBtn" type="button" aria-label="Ses">🔊</button>
+      <div class="topbar">
+        <button id="backBtn" class="topBtn" type="button">←</button>
+        <div class="brand">All<span class="accent">To</span>All</div>
+        <div id="roomPill" class="roomPill">------</div>
       </div>
-    </div>
 
-    <div class="roomInfoRow">
-      <div class="room-info">Bu kodu sohbete katılmak isteyenlere veriniz.</div>
-      <div class="peopleCountWrap"><span id="peopleCount">0</span> kişi</div>
+      <div class="who">
+        <div class="who-avatar" id="myAvatar">A</div>
+        <div class="who-meta">
+          <div class="who-kicker">Aktif Profil</div>
+          <div class="who-name" id="myName">Katılımcı</div>
+          <div class="who-note" id="myNote">Canlı çeviri odasına bağlı</div>
+        </div>
+        <button id="exitBtn" class="topBtn" type="button">✕</button>
+      </div>
+
+      <div class="langbar">
+        <select id="langSelect" aria-label="Dil seç"></select>
+
+        <button id="langPickerBtn" class="langBtn" type="button" aria-label="Dil seç">
+          <span class="langBtnText" id="langPickerText">🌐 Dil</span>
+          <span>⌄</span>
+        </button>
+
+        <button id="soundToggleBtn" type="button" aria-label="Sessiz">🔊</button>
+      </div>
+
+      <div class="chatWrap">
+        <div class="chat" id="chat"></div>
+      </div>
+
+      <div class="dock">
+        <div class="micWrap">
+          <button id="micBtn" class="main-mic" type="button" aria-label="Konuş">🎙️</button>
+        </div>
+        <div class="micHint" id="micHint">Konuşmak için mikrofona dokun.</div>
+      </div>
+
     </div>
   </div>
 
-  <div class="people">
-    <div class="people-scroll" id="peopleScroll"></div>
-  </div>
+  <div class="sheet-backdrop" id="langSheetBackdrop"></div>
 
-  <div class="chat" id="chat"></div>
+  <div class="lang-sheet" id="langSheet" aria-hidden="true">
+    <div class="sheet-handle"></div>
 
-  <div class="input" id="inputDock">
-    <div class="mic-only-row">
-      <button id="textToggleBtn" class="mic-side-btn" type="button" aria-label="Yazı aç">⌨️</button>
-      <button id="micBtn" class="main-mic" type="button" aria-label="Konuş">🎙️</button>
-      <button id="sendBtn" class="mic-side-btn" type="button" aria-label="Gönder">➤</button>
+    <div class="sheet-head">
+      <div class="sheet-title">Dil Seç</div>
+      <button id="langSheetClose" class="sheet-close" type="button">✕</button>
     </div>
 
-    <div class="mic-hint" id="micHint">Konuşmak için mikrofona dokun. Yazmak istersen klavye simgesine bas.</div>
-
-    <div class="text-entry" id="textEntry">
-      <textarea id="msgInput" rows="1" placeholder="Yazmaya başla..."></textarea>
-    </div>
+    <div class="sheet-list" id="langSheetList"></div>
   </div>
-</div>
 
-<script>
-  const room = document.getElementById("roomContainer");
-  const chat = document.getElementById("chat");
-  const msgInput = document.getElementById("msgInput");
-  const textToggleBtn = document.getElementById("textToggleBtn");
-  const textEntry = document.getElementById("textEntry");
+  <script type="module">
+    import { mountShell } from "/js/ui_shell.js";
 
-  function fixLayout() {
-    try {
-      if (window.visualViewport) {
-        const vh = window.visualViewport.height;
-        room.style.height = `${vh}px`;
-        setTimeout(() => {
-          try { chat.scrollTop = chat.scrollHeight; } catch {}
-        }, 100);
-      }
-    } catch {}
-  }
-
-  function toggleTextEntry() {
-    if (!textEntry) return;
-    textEntry.classList.toggle("show");
-    if (textEntry.classList.contains("show")) {
-      setTimeout(() => {
-        try { msgInput.focus(); } catch {}
-        fixLayout();
-      }, 80);
-    } else {
-      try { msgInput.blur(); } catch {}
-      fixLayout();
+    try{
+      mountShell({ scroll:"none" });
+    }catch(e){
+      console.warn("[alltoall room shell]", e);
     }
-  }
 
-  if (window.visualViewport) {
-    window.visualViewport.addEventListener("resize", fixLayout);
-    window.visualViewport.addEventListener("scroll", fixLayout);
-  }
+    const room = document.getElementById("roomContainer");
+    const chat = document.getElementById("chat");
 
-  window.addEventListener("resize", fixLayout);
-  window.addEventListener("orientationchange", fixLayout);
+    const langSelect = document.getElementById("langSelect");
+    const langPickerBtn = document.getElementById("langPickerBtn");
+    const langPickerText = document.getElementById("langPickerText");
+    const langSheet = document.getElementById("langSheet");
+    const langSheetList = document.getElementById("langSheetList");
+    const langSheetBackdrop = document.getElementById("langSheetBackdrop");
+    const langSheetClose = document.getElementById("langSheetClose");
 
-  textToggleBtn?.addEventListener("click", toggleTextEntry);
+    function fixLayout() {
+      try {
+        if (window.visualViewport) {
+          const vh = window.visualViewport.height;
+          room.style.height = `${vh}px`;
+          setTimeout(() => {
+            try { chat.scrollTop = 0; } catch {}
+          }, 80);
+        }
+      } catch {}
+    }
 
-  msgInput?.addEventListener("focus", () => {
-    setTimeout(fixLayout, 120);
-    setTimeout(fixLayout, 260);
-    setTimeout(fixLayout, 420);
-  });
+    function syncLangPickerLabel() {
+      try {
+        const opt = langSelect?.options?.[langSelect.selectedIndex];
+        if (!opt || !langPickerText) return;
+        langPickerText.textContent = opt.textContent || "🌐 Dil";
+      } catch {}
+    }
 
-  msgInput?.addEventListener("blur", () => {
-    setTimeout(fixLayout, 120);
-  });
+    function renderLangSheet() {
+      if (!langSheetList || !langSelect) return;
 
-  msgInput?.addEventListener("input", function () {
-    this.style.height = "44px";
-    this.style.height = Math.min(this.scrollHeight, 140) + "px";
-  });
+      const options = [...langSelect.options];
+      langSheetList.innerHTML = options.map((opt) => `
+        <button class="sheet-item ${opt.selected ? "active" : ""}" type="button" data-value="${opt.value}">
+          <div class="sheet-item-left">
+            <div class="sheet-flag">${(opt.textContent || "").trim().split(" ")[0] || "🌐"}</div>
+            <div class="sheet-text">
+              <div class="sheet-name">${(opt.textContent || "").trim().replace(/^(\S+)\s*/, "")}</div>
+              <div class="sheet-code">${String(opt.value || "").toUpperCase()}</div>
+            </div>
+          </div>
+          <div class="sheet-check"></div>
+        </button>
+      `).join("");
 
-  fixLayout();
-</script>
+      langSheetList.querySelectorAll(".sheet-item").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const value = btn.dataset.value || "";
+          langSelect.value = value;
+          langSelect.dispatchEvent(new Event("change", { bubbles: true }));
+          syncLangPickerLabel();
+          closeLangSheet();
+        });
+      });
+    }
 
-<script type="module" src="/js/alltoall_room.js?v=mic_first_1"></script>
+    function openLangSheet() {
+      renderLangSheet();
+      langSheet?.classList.add("show");
+      langSheetBackdrop?.classList.add("show");
+      langSheet?.setAttribute("aria-hidden", "false");
+    }
+
+    function closeLangSheet() {
+      langSheet?.classList.remove("show");
+      langSheetBackdrop?.classList.remove("show");
+      langSheet?.setAttribute("aria-hidden", "true");
+    }
+
+    function waitLangOptions() {
+      let tries = 0;
+      const timer = setInterval(() => {
+        tries += 1;
+        if (langSelect && langSelect.options.length > 0) {
+          syncLangPickerLabel();
+          clearInterval(timer);
+        }
+        if (tries > 40) clearInterval(timer);
+      }, 180);
+    }
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", fixLayout);
+      window.visualViewport.addEventListener("scroll", fixLayout);
+    }
+
+    window.addEventListener("resize", fixLayout);
+    window.addEventListener("orientationchange", fixLayout);
+
+    langPickerBtn?.addEventListener("click", openLangSheet);
+    langSheetBackdrop?.addEventListener("click", closeLangSheet);
+    langSheetClose?.addEventListener("click", closeLangSheet);
+
+    langSelect?.addEventListener("change", () => {
+      syncLangPickerLabel();
+      setTimeout(renderLangSheet, 50);
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeLangSheet();
+    });
+
+    waitLangOptions();
+    fixLayout();
+  </script>
+
+  <script type="module" src="/js/alltoall_room.js?v=ui_shell_mic_only_1"></script>
 </body>
 </html>
