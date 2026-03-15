@@ -12,19 +12,19 @@
   <style>
     :root{
       --actionH:58px;
-      --whoH:72px;
+      --profileH:74px;
       --controlsH:70px;
-      --dockH:128px;
+      --peopleH:84px;
+      --dockH:134px;
 
-      --bg:#07040d;
       --txt:rgba(255,255,255,.96);
       --muted:rgba(255,255,255,.58);
+      --line:rgba(255,255,255,.07);
 
       --cyan:#67e8f9;
       --violet:#7c5cff;
       --pink:#f472b6;
 
-      --line:rgba(255,255,255,.07);
       --panel:rgba(255,255,255,.05);
       --accentGrad:linear-gradient(135deg,#67e8f9 0%,#7c5cff 48%,#f472b6 100%);
       --bracketGrad:linear-gradient(180deg,#67e8f9 0%,#7c5cff 55%,#f472b6 100%);
@@ -42,9 +42,9 @@
       width:100%;
       height:100%;
       overflow:hidden;
-      background:var(--bg);
       color:var(--txt);
       font-family:'Outfit',sans-serif;
+      background:#07040d;
     }
 
     body{
@@ -57,12 +57,11 @@
 
     #pageContent{
       width:100%;
-      height:100dvh;
+      height:calc(100dvh - var(--footerH, 0px));
       overflow:hidden;
     }
 
     .room{
-      position:relative;
       width:min(500px,100vw);
       height:100%;
       margin:0 auto;
@@ -94,12 +93,8 @@
       flex:0 0 auto;
     }
 
-    .actionSpacer{
-      flex:1;
-    }
-
-    .who{
-      min-height:var(--whoH);
+    .profile{
+      min-height:var(--profileH);
       padding:10px 14px;
       display:flex;
       align-items:center;
@@ -108,7 +103,7 @@
       flex:0 0 auto;
     }
 
-    .who-avatar{
+    .profile-avatar{
       width:48px;
       height:48px;
       border-radius:50%;
@@ -123,18 +118,18 @@
       flex:0 0 auto;
     }
 
-    .who-avatar img{
+    .profile-avatar img{
       width:100%;
       height:100%;
       object-fit:cover;
     }
 
-    .who-meta{
+    .profile-meta{
       min-width:0;
       flex:1;
     }
 
-    .who-kicker{
+    .profile-kicker{
       font-size:10px;
       font-weight:900;
       letter-spacing:.5px;
@@ -143,21 +138,19 @@
       margin-bottom:4px;
     }
 
-    .who-name{
+    .profile-name{
       font-size:18px;
       font-weight:900;
       line-height:1.1;
-      color:#fff;
       white-space:nowrap;
       overflow:hidden;
       text-overflow:ellipsis;
     }
 
-    .who-note{
-      margin-top:5px;
+    .profile-note{
+      margin-top:4px;
       font-size:11px;
       color:rgba(255,255,255,.62);
-      line-height:1.2;
       white-space:nowrap;
       overflow:hidden;
       text-overflow:ellipsis;
@@ -183,7 +176,7 @@
     }
 
     #roomPill{
-      min-width:96px;
+      min-width:98px;
       max-width:118px;
       height:42px;
       padding:0 14px;
@@ -206,8 +199,8 @@
     }
 
     .langBtn{
-      min-width:168px;
-      max-width:230px;
+      min-width:170px;
+      max-width:240px;
       height:42px;
       border:none;
       border-radius:16px;
@@ -228,6 +221,87 @@
       min-width:0;
       overflow:hidden;
       text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+
+    .peopleBar{
+      min-height:var(--peopleH);
+      padding:10px 14px 12px;
+      border-bottom:1px solid var(--line);
+      flex:0 0 auto;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      overflow:hidden;
+    }
+
+    .peopleHead{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+
+    .peopleTitle{
+      font-size:11px;
+      font-weight:900;
+      letter-spacing:.5px;
+      color:var(--muted);
+      text-transform:uppercase;
+    }
+
+    .peopleCount{
+      font-size:11px;
+      font-weight:800;
+      color:rgba(255,255,255,.72);
+      white-space:nowrap;
+    }
+
+    .peopleScroll{
+      display:flex;
+      gap:14px;
+      overflow-x:auto;
+      overflow-y:hidden;
+      scrollbar-width:none;
+      min-height:0;
+    }
+
+    .peopleScroll::-webkit-scrollbar{ display:none; }
+
+    .pItem{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      min-width:max-content;
+      flex:0 0 auto;
+      padding:4px 0;
+    }
+
+    .pAvatar{
+      width:36px;
+      height:36px;
+      border-radius:50%;
+      overflow:hidden;
+      background:rgba(255,255,255,.08);
+      border:2px solid rgba(255,255,255,.10);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:900;
+      font-size:12px;
+      flex:0 0 auto;
+    }
+
+    .pAvatar img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+    }
+
+    .pName{
+      font-size:12px;
+      font-weight:800;
+      color:rgba(255,255,255,.90);
       white-space:nowrap;
     }
 
@@ -252,9 +326,7 @@
       scroll-behavior:smooth;
     }
 
-    .chat::-webkit-scrollbar{
-      display:none;
-    }
+    .chat::-webkit-scrollbar{ display:none; }
 
     .sys-note{
       align-self:center;
@@ -274,13 +346,8 @@
       display:flex;
     }
 
-    .msg-row.left{
-      justify-content:flex-start;
-    }
-
-    .msg-row.right{
-      justify-content:flex-end;
-    }
+    .msg-row.left{ justify-content:flex-start; }
+    .msg-row.right{ justify-content:flex-end; }
 
     .msg-card{
       position:relative;
@@ -339,10 +406,21 @@
     .msg-name{
       font-size:12px;
       font-weight:900;
-      color:rgba(255,255,255,.80);
+      color:rgba(255,255,255,.84);
       white-space:nowrap;
       overflow:hidden;
       text-overflow:ellipsis;
+      max-width:140px;
+    }
+
+    .msg-lang{
+      font-size:11px;
+      font-weight:800;
+      color:rgba(255,255,255,.58);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      min-width:0;
     }
 
     .msg-spk{
@@ -358,6 +436,7 @@
       cursor:pointer;
       flex:0 0 auto;
       padding:0;
+      margin-left:auto;
     }
 
     .msg-spk svg{
@@ -512,9 +591,7 @@
       scrollbar-width:none;
     }
 
-    .sheet-list::-webkit-scrollbar{
-      display:none;
-    }
+    .sheet-list::-webkit-scrollbar{ display:none; }
 
     .sheet-item{
       min-height:58px;
@@ -593,16 +670,15 @@
 
       <div class="actionbar">
         <button id="backBtn" class="iconBtn" type="button">←</button>
-        <div class="actionSpacer"></div>
         <button id="exitBtn" class="iconBtn" type="button">✕</button>
       </div>
 
-      <div class="who">
-        <div class="who-avatar" id="myAvatar">A</div>
-        <div class="who-meta">
-          <div class="who-kicker">Aktif Profil</div>
-          <div class="who-name" id="myName">Katılımcı</div>
-          <div class="who-note" id="myNote">Canlı çeviri odasına bağlı</div>
+      <div class="profile">
+        <div class="profile-avatar" id="myAvatar">A</div>
+        <div class="profile-meta">
+          <div class="profile-kicker" id="profileKicker">Aktif Profil</div>
+          <div class="profile-name" id="myName">Katılımcı</div>
+          <div class="profile-note" id="myNote">Canlı çeviri odasına bağlı</div>
         </div>
       </div>
 
@@ -615,6 +691,14 @@
           <span class="langBtnText" id="langPickerText">🌐 Dil</span>
           <span>⌄</span>
         </button>
+      </div>
+
+      <div class="peopleBar">
+        <div class="peopleHead">
+          <div class="peopleTitle" id="peopleTitle">Katılımcılar</div>
+          <div class="peopleCount"><span id="peopleCount">0</span> <span id="peopleCountText">kişi</span></div>
+        </div>
+        <div class="peopleScroll" id="peopleScroll"></div>
       </div>
 
       <div class="chatWrap">
@@ -635,170 +719,13 @@
     <div class="sheet-handle"></div>
 
     <div class="sheet-head">
-      <div class="sheet-title">Dil Seç</div>
+      <div class="sheet-title" id="langSheetTitle">Dil Seç</div>
       <button id="langSheetClose" class="sheet-close" type="button">✕</button>
     </div>
 
     <div class="sheet-list" id="langSheetList"></div>
   </div>
 
-  <script type="module">
-    import { mountShell } from "/js/ui_shell.js";
-
-    try{
-      mountShell({ scroll:"none" });
-    }catch(e){
-      console.warn("[alltoall room shell]", e);
-    }
-
-    const room = document.getElementById("roomContainer");
-    const chat = document.getElementById("chat");
-
-    const langSelect = document.getElementById("langSelect");
-    const langPickerBtn = document.getElementById("langPickerBtn");
-    const langPickerText = document.getElementById("langPickerText");
-    const langSheet = document.getElementById("langSheet");
-    const langSheetList = document.getElementById("langSheetList");
-    const langSheetBackdrop = document.getElementById("langSheetBackdrop");
-    const langSheetClose = document.getElementById("langSheetClose");
-
-    function compactDisplayName(fullName){
-      const clean = String(fullName || "").trim().replace(/\s+/g, " ");
-      if(!clean) return "";
-      const parts = clean.split(" ").filter(Boolean);
-      if(parts.length === 1) return parts[0];
-      const first = parts[0];
-      const rest = parts.slice(1).map(p => `${p.charAt(0).toUpperCase()}.`).join("");
-      return `${first} ${rest}`;
-    }
-
-    function applyCompactNames(){
-      const myName = document.getElementById("myName");
-      if(myName){
-        const raw = myName.dataset.rawName || myName.textContent || "";
-        myName.dataset.rawName = raw;
-        myName.textContent = compactDisplayName(raw);
-      }
-
-      document.querySelectorAll(".pName").forEach((el) => {
-        const raw = el.dataset.rawName || el.textContent || "";
-        el.dataset.rawName = raw;
-        el.textContent = compactDisplayName(raw);
-      });
-
-      document.querySelectorAll(".msg-name").forEach((el) => {
-        const raw = el.dataset.rawName || el.textContent || "";
-        el.dataset.rawName = raw;
-        el.textContent = compactDisplayName(raw);
-      });
-    }
-
-    function fixLayout() {
-      try {
-        if (window.visualViewport) {
-          const vh = window.visualViewport.height;
-          room.style.height = `${vh}px`;
-        }
-      } catch {}
-    }
-
-    function syncLangPickerLabel() {
-      try {
-        const opt = langSelect?.options?.[langSelect.selectedIndex];
-        if (!opt || !langPickerText) return;
-        langPickerText.textContent = opt.textContent || "🌐 Dil";
-      } catch {}
-    }
-
-    function renderLangSheet() {
-      if (!langSheetList || !langSelect) return;
-
-      const options = [...langSelect.options];
-      langSheetList.innerHTML = options.map((opt) => `
-        <button class="sheet-item ${opt.selected ? "active" : ""}" type="button" data-value="${opt.value}">
-          <div class="sheet-item-left">
-            <div class="sheet-flag">${(opt.textContent || "").trim().split(" ")[0] || "🌐"}</div>
-            <div class="sheet-text">
-              <div class="sheet-name">${(opt.textContent || "").trim().replace(/^(\S+)\s*/, "")}</div>
-              <div class="sheet-code">${String(opt.value || "").toUpperCase()}</div>
-            </div>
-          </div>
-          <div class="sheet-check"></div>
-        </button>
-      `).join("");
-
-      langSheetList.querySelectorAll(".sheet-item").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const value = btn.dataset.value || "";
-          langSelect.value = value;
-          langSelect.dispatchEvent(new Event("change", { bubbles: true }));
-          syncLangPickerLabel();
-          closeLangSheet();
-        });
-      });
-    }
-
-    function openLangSheet() {
-      renderLangSheet();
-      langSheet?.classList.add("show");
-      langSheetBackdrop?.classList.add("show");
-      langSheet?.setAttribute("aria-hidden", "false");
-    }
-
-    function closeLangSheet() {
-      langSheet?.classList.remove("show");
-      langSheetBackdrop?.classList.remove("show");
-      langSheet?.setAttribute("aria-hidden", "true");
-    }
-
-    function waitLangOptions() {
-      let tries = 0;
-      const timer = setInterval(() => {
-        tries += 1;
-        if (langSelect && langSelect.options.length > 0) {
-          syncLangPickerLabel();
-          clearInterval(timer);
-        }
-        if (tries > 40) clearInterval(timer);
-      }, 180);
-    }
-
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener("resize", fixLayout);
-      window.visualViewport.addEventListener("scroll", fixLayout);
-    }
-
-    window.addEventListener("resize", fixLayout);
-    window.addEventListener("orientationchange", fixLayout);
-
-    langPickerBtn?.addEventListener("click", openLangSheet);
-    langSheetBackdrop?.addEventListener("click", closeLangSheet);
-    langSheetClose?.addEventListener("click", closeLangSheet);
-
-    langSelect?.addEventListener("change", () => {
-      syncLangPickerLabel();
-      setTimeout(renderLangSheet, 50);
-    });
-
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") closeLangSheet();
-    });
-
-    const obs = new MutationObserver(() => {
-      applyCompactNames();
-    });
-
-    obs.observe(document.body, {
-      childList:true,
-      subtree:true,
-      characterData:true
-    });
-
-    waitLangOptions();
-    applyCompactNames();
-    fixLayout();
-  </script>
-
-  <script type="module" src="/js/alltoall_room.js?v=ui_shell_mic_only_2"></script>
+  <script type="module" src="/js/alltoall_room.js?v=final_ui_1"></script>
 </body>
 </html>
