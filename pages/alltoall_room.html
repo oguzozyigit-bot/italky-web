@@ -4,243 +4,183 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
   <title>italkyAI • AllToAll Room</title>
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
   <style>
     :root {
       --topH: 70px;
       --metaH: 60px;
-      --peopleH: 100px; /* Katılımcılar için daha geniş alan */
-      --dockH: 85px;
+      --peopleH: 100px;
+      --dockH: 80px;
       --accent: #00f2fe;
-      --pink: #ff00c1;
-      --purple: #7000ff;
-      --frameW: min(500px, 100vw);
-      --keyboard-height: 0px;
     }
 
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
-
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    
     html, body {
       margin: 0; padding: 0;
       width: 100%; height: 100%;
-      background: #050208;
+      background: #09050f;
       color: #fff;
       font-family: 'Outfit', sans-serif;
-      overflow: hidden; /* Sayfa kaymasın, biz yönetelim */
-    }
-
-    /* Arka Plan Efekti */
-    body::before {
-      content: ""; position: fixed; inset: 0;
-      background: radial-gradient(circle at 50% -20%, rgba(0, 242, 254, 0.15), transparent 50%);
-      z-index: -1;
+      overflow: hidden;
+      /* Klavyenin sayfayı itmesini engellemek için */
+      position: fixed; 
     }
 
     .room {
-      position: relative;
-      width: var(--frameW);
-      height: 100dvh;
-      margin: 0 auto;
       display: flex;
       flex-direction: column;
-      background: rgba(10, 5, 15, 0.8);
-      backdrop-filter: blur(20px);
-      transition: transform 0.3s cubic-bezier(0.2, 0, 0.2, 1);
+      width: min(500px, 100vw);
+      height: 100dvh;
+      margin: 0 auto;
+      background: #09050f;
+      position: relative;
     }
 
-    /* Header & Meta */
-    .topbar {
-      height: var(--topH);
-      display: flex; align-items: center; padding: 0 16px;
-      border-bottom: 1px solid rgba(255,255,255,0.05);
-      background: rgba(0,0,0,0.4);
-    }
+    /* Üst Alanlar Sabit */
+    .topbar { height: var(--topH); display: flex; align-items: center; padding: 0 16px; border-bottom: 1px solid rgba(255,255,255,0.05); flex-shrink: 0; }
+    .meta { height: var(--metaH); display: flex; align-items: center; justify-content: space-between; padding: 0 16px; flex-shrink: 0; }
+    .people { height: var(--peopleH); border-bottom: 1px solid rgba(255,255,255,0.05); flex-shrink: 0; }
 
-    .brand { flex:1; text-align: center; font-family: 'Space Grotesk'; font-size: 20px; font-weight: 700; }
-    .brand span { color: var(--accent); text-shadow: 0 0 10px rgba(0,242,254,0.5); }
-
-    .top-btn {
-      width: 40px; height: 40px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);
-      background: rgba(255,255,255,0.05); color: #fff; cursor: pointer;
-    }
-
-    .meta {
-      height: var(--metaH);
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 0 16px; background: rgba(255,255,255,0.02);
-    }
-
-    .room-pill {
-      background: linear-gradient(90deg, var(--purple), #4a00e0);
-      padding: 6px 16px; border-radius: 12px; font-family: 'Space Grotesk';
-      font-weight: 700; letter-spacing: 2px; font-size: 18px;
-      box-shadow: 0 4px 15px rgba(112, 0, 255, 0.3);
-    }
-
-    .lang-select {
-      background: rgba(255,255,255,0.1); border: none; color: #fff;
-      padding: 8px; border-radius: 10px; font-weight: 600; font-size: 13px;
-    }
-
-    /* Katılımcılar - TAM GÖRÜNÜR AVATARLAR */
-    .people {
-      height: var(--peopleH);
-      padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
-    }
-    .people-head { padding: 0 16px; display: flex; justify-content: space-between; margin-bottom: 8px; }
-    .people-title { font-size: 10px; font-weight: 900; letter-spacing: 1px; color: var(--accent); }
-    .people-count { font-size: 10px; opacity: 0.6; }
-
-    .people-scroll {
-      display: flex; gap: 15px; overflow-x: auto; padding: 0 16px;
-      scrollbar-width: none;
-    }
-    .people-scroll::-webkit-scrollbar { display: none; }
-
-    .pItem { display: flex; flex-direction: column; align-items: center; min-width: 60px; }
-    .pAvatar {
-      width: 44px; height: 44px; border-radius: 50%;
-      background: linear-gradient(45deg, var(--purple), var(--accent));
-      padding: 2px; margin-bottom: 4px;
-    }
-    .pAvatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid #000; }
-    .pName { font-size: 10px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60px; }
-
-    /* Chat Alanı */
+    /* Sohbet Alanı - Esnek */
     .chat {
-      flex: 1; overflow-y: auto; padding: 20px 16px;
-      display: flex; flex-direction: column; gap: 12px;
-      scrollbar-width: none;
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      -webkit-overflow-scrolling: touch;
     }
-    .chat::-webkit-scrollbar { display: none; }
 
-    .msg-row { max-width: 85%; display: flex; flex-direction: column; }
-    .msg-row.left { align-self: flex-start; }
-    .msg-row.right { align-self: flex-end; align-items: flex-end; }
-
-    .sender-name { font-size: 10px; font-weight: 800; opacity: 0.5; margin: 0 6px 4px; }
-    
-    .msg-bubble {
-      padding: 12px 16px; border-radius: 20px; font-size: 14px; line-height: 1.5;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    /* MESAJ BALONLARI (Görsele göre optimize edildi) */
+    .msg-row { max-width: 85%; margin-bottom: 4px; }
+    .msg-row.right { align-self: flex-end; }
+    .msg-bubble { 
+      padding: 10px 16px; border-radius: 18px; font-size: 15px; 
+      background: linear-gradient(135deg, #7000ff, #ff00c1); 
     }
-    .msg-row.left .msg-bubble { background: rgba(255,255,255,0.08); border-bottom-left-radius: 4px; }
-    .msg-row.right .msg-bubble { background: linear-gradient(135deg, var(--purple), var(--pink)); border-bottom-right-radius: 4px; }
 
-    /* Giriş Alanı - KLAVYE DOSTU */
+    /* GİRİŞ ALANI - KLAVYE ÜSTÜNE ÇIKACAK OLAN */
     .input {
-      min-height: var(--dockH);
-      background: #0a050f;
+      height: var(--dockH);
+      background: #120c1d;
       border-top: 1px solid rgba(255,255,255,0.1);
-      display: flex; align-items: center; gap: 10px;
-      padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
-      z-index: 100;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 12px env(safe-area-inset-bottom);
+      flex-shrink: 0;
+      transition: transform 0.1s ease-out; /* Klavye ile senkron hareket */
     }
 
     textarea {
-      flex: 1; min-height: 44px; max-height: 120px;
-      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 18px; color: #fff; padding: 12px 15px;
-      font-family: inherit; font-size: 14px; resize: none;
+      flex: 1;
+      height: 48px;
+      background: #1d1529;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 24px;
+      color: #fff;
+      padding: 13px 18px;
+      font-size: 15px;
+      resize: none;
+      outline: none;
     }
 
     .dock-btn {
-      width: 46px; height: 46px; border-radius: 15px; border: none;
+      width: 48px; height: 48px; border-radius: 50%; border: none;
       display: flex; align-items: center; justify-content: center;
-      cursor: pointer; color: #fff; transition: 0.2s;
-    }
-    .mic-btn { background: rgba(255,255,255,0.08); font-size: 18px; }
-    .mic-btn.listening { background: var(--pink); animation: pulse 1.5s infinite; }
-    .send-btn { background: var(--accent); font-size: 18px; color: #000; font-weight: 900; }
-
-    @keyframes pulse {
-      0% { box-shadow: 0 0 0 0 rgba(255, 0, 193, 0.4); }
-      70% { box-shadow: 0 0 0 15px rgba(255, 0, 193, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(255, 0, 193, 0); }
+      cursor: pointer; flex-shrink: 0;
     }
 
+    /* KLASİK MİKROFON STİLİ */
+    .mic-btn {
+      background: #251b36;
+      color: #a5b4fc;
+      border: 1px solid rgba(255,255,255,0.05);
+      font-size: 20px;
+    }
+    
+    .mic-btn.listening {
+      background: #ff0055;
+      color: #fff;
+      box-shadow: 0 0 15px rgba(255, 0, 85, 0.4);
+    }
+
+    .send-btn { background: #00f2fe; color: #000; font-size: 20px; }
+
+    .hide { display: none !important; }
   </style>
 </head>
 
 <body>
 
-<div class="room" id="roomContainer">
-
+<div class="room" id="roomWrapper">
   <div class="topbar">
-    <button id="backBtn" class="top-btn" type="button">←</button>
-    <div class="brand">All<span>To</span>All</div>
-    <button id="exitBtn" class="top-btn" type="button">✕</button>
+    <button id="backBtn" style="background:none; border:none; color:white; font-size:20px;">←</button>
+    <div style="flex:1; text-align:center; font-weight:900;">All<span style="color:var(--accent)">To</span>All</div>
+    <button id="exitBtn" style="background:none; border:none; color:white; font-size:20px;">✕</button>
   </div>
 
   <div class="meta">
-    <div id="roomPill" class="room-pill">------</div>
-    <div style="display: flex; gap: 8px;">
-      <select id="langSelect" class="lang-select">
-        <option value="tr">🇹🇷 TR</option>
-        <option value="en">🇬🇧 EN</option>
-        <option value="de">🇩🇪 DE</option>
-        <option value="fr">🇫🇷 FR</option>
-        <option value="it">🇮🇹 IT</option>
-        <option value="es">🇪🇸 ES</option>
-      </select>
-      <button id="soundToggleBtn" class="top-btn" style="width: 38px; height: 38px;">🔊</button>
-    </div>
+    <div id="roomPill" style="background:#7000ff; padding:6px 14px; border-radius:12px; font-weight:700;">UX7ABV</div>
+    <select id="langSelect" style="background:#1d1529; color:white; border:none; padding:6px; border-radius:8px;">
+        <option value="tr">🇹🇷 Türkçe</option>
+    </select>
   </div>
 
   <div class="people">
-    <div class="people-head">
-      <div class="people-title">KATILIMCILAR</div>
-      <div class="people-count"><span id="peopleCount">0</span> online</div>
-    </div>
-    <div class="people-scroll" id="peopleScroll">
-      </div>
+    <div style="padding:8px 16px; font-size:10px; font-weight:900; color:var(--accent);">KATILIMCILAR</div>
+    <div class="people-scroll" id="peopleScroll" style="display:flex; gap:12px; padding:0 16px;">
+        </div>
   </div>
 
-  <div class="chat" id="chat">
-    <div class="sys-note">italkyAI Çeviri Odasına Hoş Geldiniz</div>
-  </div>
+  <div class="chat" id="chatArea">
+    </div>
 
   <div class="input" id="inputDock">
-    <button id="micBtn" class="dock-btn mic-btn" type="button">🎤</button>
-    <textarea id="msgInput" rows="1" placeholder="Konuş veya yaz..."></textarea>
+    <button id="micBtn" class="dock-btn mic-btn" type="button">🎙️</button>
+    <textarea id="msgInput" rows="1" placeholder="Nasilsin"></textarea>
     <button id="sendBtn" class="dock-btn send-btn" type="button">➤</button>
   </div>
-
 </div>
 
 <script>
-  // Mobil klavye açıldığında sayfanın altta kalmasını önleyen sihirli kod
+  /**
+   * KLAVYE SORUNU İÇİN KESİN ÇÖZÜM
+   */
+  const inputDock = document.getElementById('inputDock');
+  const chatArea = document.getElementById('chatArea');
+  const roomWrapper = document.getElementById('roomWrapper');
+
   if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', () => {
-      const room = document.getElementById('roomContainer');
-      const inputDock = document.getElementById('inputDock');
-      const viewport = window.visualViewport;
-      
-      // Klavye açıldığında viewport yüksekliği düşer
-      const offset = window.innerHeight - viewport.height;
-      
-      if (offset > 100) { // Klavye açıldı
-        room.style.height = `${viewport.height}px`;
-        window.scrollTo(0, 0); // Sayfayı yukarı it
-        // Son mesajı gör
-        const chat = document.getElementById('chat');
-        chat.scrollTop = chat.scrollHeight;
-      } else { // Klavye kapandı
-        room.style.height = '100dvh';
+      const vh = window.visualViewport.height;
+      const winH = window.innerHeight;
+      const keyboardHeight = winH - vh;
+
+      if (keyboardHeight > 100) {
+        // Klavye açıldı: Ana kapsayıcıyı viewport boyuna sabitle
+        roomWrapper.style.height = vh + 'px';
+        // Mesaj alanını en alta kaydır ki son mesaj görünsün
+        setTimeout(() => {
+          chatArea.scrollTop = chatArea.scrollHeight;
+        }, 100);
+      } else {
+        // Klavye kapandı: Eski boyuta dön
+        roomWrapper.style.height = '100dvh';
       }
     });
+    
+    // Odaklanınca otomatik kaydır (Bazı Android sürümleri için garanti)
+    document.getElementById('msgInput').addEventListener('focus', () => {
+        setTimeout(() => {
+            window.scrollTo(0, 0);
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }, 300);
+    });
   }
-
-  // Textarea otomatik uzama
-  const tx = document.getElementById('msgInput');
-  tx.addEventListener("input", function() {
-    this.style.height = 'auto';
-    this.style.height = (this.scrollHeight) + 'px';
-  });
 </script>
 
 <script type="module" src="/js/alltoall_room.js?v=fix_host_open_1"></script>
