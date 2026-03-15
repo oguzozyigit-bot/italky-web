@@ -161,6 +161,35 @@ let lastLocalSentText = "";
 let lastLocalSentAt = 0;
 
 /* =========================
+   NFC
+========================= */
+function startNativeNfcHost(codeValue) {
+  try {
+    const code = String(codeValue || "").trim().toUpperCase();
+    if (!code) return;
+    if (role !== "host") return;
+
+    if (window.Native && typeof window.Native.startNfcHost === "function") {
+      window.Native.startNfcHost(code);
+      console.log("[NFC] host started:", code);
+    }
+  } catch (e) {
+    console.warn("[NFC] startNativeNfcHost error", e);
+  }
+}
+
+function stopNativeNfcHost() {
+  try {
+    if (window.Native && typeof window.Native.stopNfcHost === "function") {
+      window.Native.stopNfcHost();
+      console.log("[NFC] host stopped");
+    }
+  } catch (e) {
+    console.warn("[NFC] stopNativeNfcHost error", e);
+  }
+}
+
+/* =========================
    VISUAL STATE
 ========================= */
 function pointOrbTo(side) {
@@ -550,7 +579,7 @@ async function speak(text, langCode) {
 ========================= */
 async function createRoomIfHost() {
   if (role !== "host") return null;
-  if (roomId) return { room_id: roomId };
+  if (roomId) return { room_id: roomId, host_code: hostCode || roomId };
 
   const r = await fetch(`${API_BASE}/interpreter/create-room`, {
     method: "POST",
@@ -568,6 +597,9 @@ async function createRoomIfHost() {
   if (!r.ok || !j?.room_id) {
     throw new Error(j?.detail || j?.error || "room create başarısız");
   }
+
+  const nfcCode = String(j.host_code || j.room_id || "").trim().toUpperCase();
+  startNativeNfcHost(nfcCode);
 
   return j;
 }
@@ -1250,11 +1282,13 @@ function bind() {
   });
 
   homeLink?.addEventListener("click", () => {
+    stopNativeNfcHost();
     stopSocket();
     location.href = safeHomeHref();
   });
 
   homeBtn?.addEventListener("click", () => {
+    stopNativeNfcHost();
     stopSocket();
     location.href = safeHomeHref();
   });
@@ -1272,7 +1306,9 @@ function bind() {
 async function bootRoom() {
   try {
     if (roomId) {
-      // hazır
+      if (role === "host") {
+        startNativeNfcHost(hostCode || roomId);
+      }
     } else if (hostCode) {
       if (role === "host") {
         const created = await createRoomIfHost();
@@ -1287,6 +1323,10 @@ async function bootRoom() {
       throw new Error("Host veya room bilgisi yok");
     }
 
+    if (roomMetaText) {
+      roomMetaText.textContent = roomId || hostCode || "";
+    }
+
     startSocket();
   } catch (e) {
     console.error("[live interpreter bootRoom]", e);
@@ -1297,4 +1337,14 @@ async function bootRoom() {
 
 bind();
 bootRoom();
-window.addEventListener("beforeunload", stopSocket);
+
+window.addEventListener("beforeunload", () => {
+  stopNativeNfcHost();
+  stopSocket();
+});
+
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden") {
+    stopNativeNfcHost();
+  }
+});
