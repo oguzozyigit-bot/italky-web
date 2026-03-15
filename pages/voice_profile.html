@@ -214,6 +214,7 @@
       opacity:.65;
       margin-top:4px;
       line-height:1.35;
+      word-break:break-word;
     }
 
     .sample-card {
@@ -481,7 +482,7 @@
 
       <div class="voice-card" data-voice="clone">
         <div class="voice-name">Kendi Sesim</div>
-        <div class="voice-desc">Oluşturduğun ses profili</div>
+        <div class="voice-desc" id="cloneVoiceDesc">Henüz ses dosyası oluşturmadınız</div>
       </div>
     </div>
   </section>
@@ -529,12 +530,26 @@
 <div class="toast" id="toast"></div>
 
 <script type="module">
+import { supabase } from "/js/supabase_client.js";
+
 const voiceCards = document.querySelectorAll(".voice-card");
+const cloneVoiceDesc = document.getElementById("cloneVoiceDesc");
 
 const VOICE_KEY = "tts_voice";
 const LEGACY_KEY = "live_interpreter_voice";
 
 let currentVoice = localStorage.getItem(VOICE_KEY) || localStorage.getItem(LEGACY_KEY) || "auto";
+
+function showToast(msg){
+  const toast = document.getElementById("toast");
+  if(!toast) return;
+  toast.textContent = String(msg || "");
+  toast.classList.add("show");
+  clearTimeout(window.__voiceToast);
+  window.__voiceToast = setTimeout(() => {
+    toast.classList.remove("show");
+  }, 1600);
+}
 
 function renderVoice(){
   voiceCards.forEach(v => {
@@ -542,27 +557,51 @@ function renderVoice(){
   });
 }
 
+async function checkVoiceProfile(){
+  try{
+    const { data: { user } } = await supabase.auth.getUser();
+    if(!user){
+      if(cloneVoiceDesc) cloneVoiceDesc.textContent = "Henüz ses dosyası oluşturmadınız";
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("voice_sample_path")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if(error){
+      console.warn("[voice profile check]", error);
+      if(cloneVoiceDesc) cloneVoiceDesc.textContent = "Henüz ses dosyası oluşturmadınız";
+      return;
+    }
+
+    if(!data?.voice_sample_path){
+      if(cloneVoiceDesc) cloneVoiceDesc.textContent = "Henüz ses dosyası oluşturmadınız";
+    }else{
+      if(cloneVoiceDesc) cloneVoiceDesc.textContent = data.voice_sample_path;
+    }
+  }catch(e){
+    console.warn("[voice profile check]", e);
+    if(cloneVoiceDesc) cloneVoiceDesc.textContent = "Henüz ses dosyası oluşturmadınız";
+  }
+}
+
 voiceCards.forEach(card => {
   card.addEventListener("click", () => {
     currentVoice = card.dataset.voice || "auto";
     localStorage.setItem(VOICE_KEY, currentVoice);
     localStorage.setItem(LEGACY_KEY, currentVoice);
-
     renderVoice();
-
-    const toast = document.getElementById("toast");
-    if(toast){
-      toast.textContent = "Ses seçimi güncellendi";
-      toast.classList.add("show");
-      clearTimeout(window.__voiceToast);
-      window.__voiceToast = setTimeout(() => {
-        toast.classList.remove("show");
-      }, 1600);
-    }
+    showToast("Ses seçimi güncellendi");
   });
 });
 
+document.getElementById("backBtn")?.addEventListener("click", () => history.back());
+
 renderVoice();
+checkVoiceProfile();
 </script>
 
 <script type="module" src="/js/voice_profile_boot.js?v=final_free_all_2"></script>
