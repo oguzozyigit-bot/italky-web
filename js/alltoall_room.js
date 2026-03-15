@@ -10,13 +10,14 @@
   <style>
     :root{
       --topH:70px;
-      --metaH:92px;
+      --metaH:108px;
       --peopleH:112px;
       --dockH:108px;
       --accent:#00f2fe;
       --pink:#f472b6;
       --violet:#7c5cff;
       --line:rgba(255,255,255,.08);
+      --panel:rgba(255,255,255,.06);
     }
 
     *{
@@ -94,8 +95,8 @@
       display:flex;
       flex-direction:column;
       justify-content:center;
-      gap:10px;
-      padding:10px 16px 12px;
+      gap:12px;
+      padding:12px 16px 14px;
       background:rgba(255,255,255,.02);
       border-bottom:1px solid rgba(255,255,255,.05);
       flex:0 0 auto;
@@ -110,16 +111,17 @@
 
     #roomPill{
       background:linear-gradient(135deg,#7000ff,#9b5cff);
-      padding:6px 16px;
-      border-radius:12px;
+      padding:8px 18px;
+      border-radius:14px;
       font-weight:900;
-      font-size:20px;
-      letter-spacing:1px;
-      min-width:110px;
+      font-size:22px;
+      letter-spacing:1.5px;
+      min-width:124px;
       text-align:center;
       cursor:pointer;
-      box-shadow:0 0 16px rgba(112,0,255,.24);
+      box-shadow:0 0 18px rgba(112,0,255,.26);
       flex:0 0 auto;
+      border:1px solid rgba(255,255,255,.10);
     }
 
     .metaRight{
@@ -130,25 +132,47 @@
     }
 
     #langSelect{
-      height:38px;
-      min-width:136px;
-      max-width:180px;
-      background:rgba(255,255,255,.08);
-      border:1px solid rgba(255,255,255,.10);
-      border-radius:10px;
-      color:#fff;
-      font-size:13px;
-      font-weight:700;
-      padding:0 10px;
-      cursor:pointer;
+      position:absolute;
+      opacity:0;
+      pointer-events:none;
+      width:1px;
+      height:1px;
     }
 
-    #langSelect option{ color:#000; }
+    .lang-picker-btn{
+      height:40px;
+      min-width:152px;
+      max-width:190px;
+      background:rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:12px;
+      color:#fff;
+      font-size:13px;
+      font-weight:800;
+      padding:0 12px;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+
+    .lang-picker-text{
+      min-width:0;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+
+    .lang-picker-arrow{
+      opacity:.8;
+      flex:0 0 auto;
+    }
 
     #soundToggleBtn{
-      width:38px;
-      height:38px;
-      border-radius:10px;
+      width:40px;
+      height:40px;
+      border-radius:12px;
       border:1px solid rgba(255,255,255,.10);
       background:rgba(255,255,255,.08);
       color:#fff;
@@ -205,7 +229,7 @@
       flex-direction:column;
       align-items:center;
       min-width:68px;
-      max-width:78px;
+      max-width:82px;
       flex:0 0 auto;
     }
 
@@ -383,6 +407,7 @@
       display:flex;
       align-items:center;
       justify-content:center;
+      transition:transform .16s ease, box-shadow .16s ease;
     }
 
     .main-mic.listening{
@@ -396,6 +421,7 @@
       font-weight:800;
       color:rgba(255,255,255,.72);
       line-height:1.3;
+      min-height:28px;
     }
 
     .text-entry{
@@ -427,24 +453,157 @@
       color:rgba(255,255,255,.42);
     }
 
-    .dock-btn{
-      width:44px;
-      height:44px;
-      border-radius:50%;
-      border:none;
+    .sheet-backdrop{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.52);
+      backdrop-filter:blur(8px);
+      -webkit-backdrop-filter:blur(8px);
+      opacity:0;
+      pointer-events:none;
+      transition:.22s ease;
+      z-index:9998;
+    }
+
+    .sheet-backdrop.show{
+      opacity:1;
+      pointer-events:auto;
+    }
+
+    .lang-sheet{
+      position:fixed;
+      left:50%;
+      bottom:0;
+      transform:translateX(-50%) translateY(110%);
+      width:min(500px,100vw);
+      background:linear-gradient(180deg,rgba(20,18,30,.98),rgba(10,8,18,.98));
+      border:1px solid rgba(255,255,255,.10);
+      border-bottom:none;
+      border-radius:28px 28px 0 0;
+      box-shadow:0 -20px 60px rgba(0,0,0,.42);
+      transition:.24s ease;
+      z-index:9999;
+      padding:10px 14px calc(18px + env(safe-area-inset-bottom));
+      max-height:72dvh;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .lang-sheet.show{
+      transform:translateX(-50%) translateY(0);
+    }
+
+    .sheet-handle{
+      width:52px;
+      height:5px;
+      border-radius:999px;
+      background:rgba(255,255,255,.18);
+      margin:2px auto 2px;
+    }
+
+    .sheet-head{
       display:flex;
       align-items:center;
-      justify-content:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+
+    .sheet-title{
+      font-family:'Space Grotesk',sans-serif;
+      font-size:18px;
+      font-weight:700;
+      letter-spacing:-.4px;
+    }
+
+    .sheet-close{
+      width:38px;
+      height:38px;
+      border:none;
+      border-radius:12px;
+      background:rgba(255,255,255,.08);
+      color:#fff;
+      font-size:18px;
+      cursor:pointer;
+    }
+
+    .sheet-list{
+      overflow:auto;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      scrollbar-width:none;
+    }
+
+    .sheet-list::-webkit-scrollbar{ display:none; }
+
+    .sheet-item{
+      min-height:58px;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.04);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:0 14px;
       cursor:pointer;
       color:#fff;
+      transition:.16s ease;
+    }
+
+    .sheet-item.active{
+      border-color:rgba(0,242,254,.34);
+      background:linear-gradient(135deg,rgba(0,242,254,.12),rgba(124,92,255,.12));
+      box-shadow:0 0 0 1px rgba(0,242,254,.08) inset;
+    }
+
+    .sheet-item-left{
+      min-width:0;
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+
+    .sheet-flag{
+      width:32px;
+      text-align:center;
+      font-size:22px;
       flex:0 0 auto;
     }
 
-    .send-btn{
-      background:var(--accent);
-      color:#000;
-      font-size:18px;
+    .sheet-text{
+      min-width:0;
+    }
+
+    .sheet-name{
+      font-size:14px;
       font-weight:900;
+      color:#fff;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .sheet-code{
+      font-size:11px;
+      font-weight:800;
+      color:rgba(255,255,255,.56);
+      margin-top:3px;
+      letter-spacing:.5px;
+    }
+
+    .sheet-check{
+      width:24px;
+      height:24px;
+      border-radius:999px;
+      border:2px solid rgba(255,255,255,.26);
+      flex:0 0 auto;
+    }
+
+    .sheet-item.active .sheet-check{
+      border-color:var(--accent);
+      box-shadow:inset 0 0 0 5px var(--accent);
     }
   </style>
 </head>
@@ -463,14 +622,12 @@
       <div id="roomPill">------</div>
 
       <div class="metaRight">
-        <select id="langSelect" aria-label="Dil seç">
-          <option value="tr">🇹🇷 Türkçe</option>
-          <option value="en">🇬🇧 English</option>
-          <option value="de">🇩🇪 Deutsch</option>
-          <option value="fr">🇫🇷 Français</option>
-          <option value="it">🇮🇹 Italiano</option>
-          <option value="es">🇪🇸 Español</option>
-        </select>
+        <select id="langSelect" aria-label="Dil seç"></select>
+
+        <button id="langPickerBtn" class="lang-picker-btn" type="button" aria-label="Dil seç">
+          <span class="lang-picker-text" id="langPickerText">🌐 Dil</span>
+          <span class="lang-picker-arrow">⌄</span>
+        </button>
 
         <button id="soundToggleBtn" type="button" aria-label="Ses">🔊</button>
       </div>
@@ -503,12 +660,33 @@
   </div>
 </div>
 
+<div class="sheet-backdrop" id="langSheetBackdrop"></div>
+
+<div class="lang-sheet" id="langSheet" aria-hidden="true">
+  <div class="sheet-handle"></div>
+
+  <div class="sheet-head">
+    <div class="sheet-title">Dil Seç</div>
+    <button id="langSheetClose" class="sheet-close" type="button">✕</button>
+  </div>
+
+  <div class="sheet-list" id="langSheetList"></div>
+</div>
+
 <script>
   const room = document.getElementById("roomContainer");
   const chat = document.getElementById("chat");
   const msgInput = document.getElementById("msgInput");
   const textToggleBtn = document.getElementById("textToggleBtn");
   const textEntry = document.getElementById("textEntry");
+
+  const langSelect = document.getElementById("langSelect");
+  const langPickerBtn = document.getElementById("langPickerBtn");
+  const langPickerText = document.getElementById("langPickerText");
+  const langSheet = document.getElementById("langSheet");
+  const langSheetList = document.getElementById("langSheetList");
+  const langSheetBackdrop = document.getElementById("langSheetBackdrop");
+  const langSheetClose = document.getElementById("langSheetClose");
 
   function fixLayout() {
     try {
@@ -536,6 +714,67 @@
     }
   }
 
+  function syncLangPickerLabel() {
+    try {
+      const opt = langSelect?.options?.[langSelect.selectedIndex];
+      if (!opt || !langPickerText) return;
+      langPickerText.textContent = opt.textContent || "🌐 Dil";
+    } catch {}
+  }
+
+  function renderLangSheet() {
+    if (!langSheetList || !langSelect) return;
+
+    const options = [...langSelect.options];
+    langSheetList.innerHTML = options.map((opt) => `
+      <button class="sheet-item ${opt.selected ? "active" : ""}" type="button" data-value="${opt.value}">
+        <div class="sheet-item-left">
+          <div class="sheet-flag">${(opt.textContent || "").trim().split(" ")[0] || "🌐"}</div>
+          <div class="sheet-text">
+            <div class="sheet-name">${(opt.textContent || "").trim().replace(/^(\S+)\s*/, "")}</div>
+            <div class="sheet-code">${String(opt.value || "").toUpperCase()}</div>
+          </div>
+        </div>
+        <div class="sheet-check"></div>
+      </button>
+    `).join("");
+
+    langSheetList.querySelectorAll(".sheet-item").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const value = btn.dataset.value || "";
+        langSelect.value = value;
+        langSelect.dispatchEvent(new Event("change", { bubbles: true }));
+        syncLangPickerLabel();
+        closeLangSheet();
+      });
+    });
+  }
+
+  function openLangSheet() {
+    renderLangSheet();
+    langSheet?.classList.add("show");
+    langSheetBackdrop?.classList.add("show");
+    langSheet?.setAttribute("aria-hidden", "false");
+  }
+
+  function closeLangSheet() {
+    langSheet?.classList.remove("show");
+    langSheetBackdrop?.classList.remove("show");
+    langSheet?.setAttribute("aria-hidden", "true");
+  }
+
+  function waitLangOptions() {
+    let tries = 0;
+    const timer = setInterval(() => {
+      tries += 1;
+      if (langSelect && langSelect.options.length > 0) {
+        syncLangPickerLabel();
+        clearInterval(timer);
+      }
+      if (tries > 30) clearInterval(timer);
+    }, 200);
+  }
+
   if (window.visualViewport) {
     window.visualViewport.addEventListener("resize", fixLayout);
     window.visualViewport.addEventListener("scroll", fixLayout);
@@ -545,6 +784,18 @@
   window.addEventListener("orientationchange", fixLayout);
 
   textToggleBtn?.addEventListener("click", toggleTextEntry);
+  langPickerBtn?.addEventListener("click", openLangSheet);
+  langSheetBackdrop?.addEventListener("click", closeLangSheet);
+  langSheetClose?.addEventListener("click", closeLangSheet);
+
+  langSelect?.addEventListener("change", () => {
+    syncLangPickerLabel();
+    setTimeout(renderLangSheet, 50);
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeLangSheet();
+  });
 
   msgInput?.addEventListener("focus", () => {
     setTimeout(fixLayout, 120);
@@ -561,9 +812,10 @@
     this.style.height = Math.min(this.scrollHeight, 140) + "px";
   });
 
+  waitLangOptions();
   fixLayout();
 </script>
 
-<script type="module" src="/js/alltoall_room.js?v=mic_first_1"></script>
+<script type="module" src="/js/alltoall_room.js?v=mic_first_2"></script>
 </body>
 </html>
