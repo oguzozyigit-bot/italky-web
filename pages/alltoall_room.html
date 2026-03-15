@@ -12,17 +12,15 @@
 
 <style>
 :root{
-  --dockH:86px;
-  --topH:72px;
-  --metaH:54px;
-  --peopleH:82px;
+  --dockH:92px;
+  --topH:74px;
+  --metaH:62px;
+  --peopleH:96px;
   --kb-offset:0px;
   --frameW:min(480px,100vw);
-
   --txt:rgba(255,255,255,.96);
   --muted:rgba(255,255,255,.62);
   --line:rgba(255,255,255,.08);
-  --card:rgba(255,255,255,.04);
   --grad:linear-gradient(135deg,#67e8f9 0%, #818cf8 46%, #f472b6 100%);
 }
 
@@ -142,18 +140,19 @@ body{
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  min-width:88px;
-  min-height:34px;
-  padding:0 12px;
-  border-radius:12px;
+  min-width:118px;
+  min-height:40px;
+  padding:0 14px;
+  border-radius:14px;
   background:#111326;
-  border:1px solid rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.1);
   color:#fff;
-  font-family:monospace;
-  font-size:15px;
+  font-family:'Space Grotesk',sans-serif;
+  font-size:22px;
   font-weight:900;
-  letter-spacing:1.2px;
+  letter-spacing:2px;
   cursor:pointer;
+  box-shadow:0 0 18px rgba(129,140,248,.12);
 }
 
 .meta-right{
@@ -164,8 +163,8 @@ body{
 }
 
 .lang-select{
-  height:36px;
-  min-width:118px;
+  height:38px;
+  min-width:126px;
   border:none;
   border-radius:12px;
   padding:0 10px;
@@ -177,8 +176,8 @@ body{
 }
 
 .icon-btn{
-  width:36px;
-  height:36px;
+  width:38px;
+  height:38px;
   border:none;
   border-radius:12px;
   background:#111326;
@@ -226,11 +225,12 @@ body{
 
 .people-scroll{
   display:flex;
-  align-items:center;
-  gap:10px;
+  align-items:flex-start;
+  gap:12px;
   overflow-x:auto;
   overflow-y:hidden;
   scrollbar-width:none;
+  padding-bottom:2px;
 }
 
 .people-scroll::-webkit-scrollbar{
@@ -242,13 +242,14 @@ body{
   flex-direction:column;
   align-items:center;
   gap:6px;
-  min-width:54px;
+  min-width:68px;
+  max-width:74px;
   flex:0 0 auto;
 }
 
 .pAvatar{
-  width:42px;
-  height:42px;
+  width:48px;
+  height:48px;
   border-radius:50%;
   overflow:hidden;
   background:#1a1d31;
@@ -257,8 +258,9 @@ body{
   align-items:center;
   justify-content:center;
   font-weight:900;
-  font-size:13px;
+  font-size:15px;
   color:#fff;
+  flex:0 0 auto;
 }
 
 .pAvatar img{
@@ -268,14 +270,15 @@ body{
 }
 
 .pName{
-  max-width:62px;
+  width:100%;
   font-size:10px;
   font-weight:800;
   color:rgba(255,255,255,.78);
   text-align:center;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
+  line-height:1.15;
+  white-space:normal;
+  word-break:break-word;
+  overflow:visible;
 }
 
 .chat{
@@ -317,13 +320,8 @@ body{
   max-width:84%;
 }
 
-.msg-row.left{
-  align-self:flex-start;
-}
-
-.msg-row.right{
-  align-self:flex-end;
-}
+.msg-row.left{ align-self:flex-start; }
+.msg-row.right{ align-self:flex-end; }
 
 .sender-name{
   font-size:11px;
@@ -382,7 +380,7 @@ body{
   left:50%;
   transform:translateX(-50%);
   width:var(--frameW);
-  bottom:var(--kb-offset);
+  bottom:max(var(--kb-offset), 0px);
   min-height:var(--dockH);
   background:rgba(12,13,24,.96);
   display:flex;
@@ -426,10 +424,7 @@ textarea::placeholder{
   flex:0 0 auto;
 }
 
-.mic-btn{
-  background:#1a1d33;
-}
-
+.mic-btn{ background:#1a1d33; }
 .mic-btn.listening{
   background:linear-gradient(135deg,#ec4899,#7c3aed);
   box-shadow:0 0 0 4px rgba(236,72,153,.18);
@@ -441,29 +436,22 @@ textarea::placeholder{
 
 @media (max-width:390px){
   :root{
-    --dockH:84px;
+    --dockH:88px;
     --topH:68px;
-    --metaH:52px;
-    --peopleH:78px;
+    --metaH:58px;
+    --peopleH:92px;
   }
 
-  .brand{
+  .brand{ font-size:20px; }
+  .room-pill{
+    min-width:106px;
     font-size:20px;
   }
-
-  .room-pill{
-    min-width:76px;
-    font-size:14px;
-  }
-
   .lang-select{
     min-width:100px;
     font-size:12px;
   }
-
-  .msg-bubble{
-    font-size:13px;
-  }
+  .msg-bubble{ font-size:13px; }
 }
 </style>
 </head>
@@ -508,7 +496,7 @@ textarea::placeholder{
 
   <div class="chat" id="chat"></div>
 
-  <div class="input">
+  <div class="input" id="inputDock">
     <textarea id="msgInput" rows="1" placeholder="Mesajını yaz..."></textarea>
     <button id="micBtn" class="dock-btn mic-btn" type="button">🎤</button>
     <button id="sendBtn" class="dock-btn send-btn" type="button">➤</button>
@@ -516,7 +504,7 @@ textarea::placeholder{
 
 </div>
 
-<script type="module" src="/js/alltoall_room.js"></script>
+<script type="module" src="/js/alltoall_room.js?v=fix_host_open_1"></script>
 
 </body>
 </html>
