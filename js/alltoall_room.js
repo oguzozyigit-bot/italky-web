@@ -3,6 +3,7 @@ import { supabase } from "/js/supabase_client.js";
 const WS_BASE = "wss://italky-api.onrender.com/api/alltoall/ws";
 
 const $ = (id) => document.getElementById(id);
+const rootStyle = document.documentElement;
 
 const chat = $("chat");
 const msgInput = $("msgInput");
@@ -138,15 +139,13 @@ function buildLangSelect() {
     if (recognizer) recognizer.lang = toBCP(myLang);
 
     if (ws && ws.readyState === WebSocket.OPEN) {
-      try {
-        ws.send(JSON.stringify({
-          type: "profile_sync",
-          from_name: myProfile.from_name,
-          from_pic: myProfile.from_pic,
-          me_lang: myLang,
-          user_id: myProfile.user_id,
-        }));
-      } catch {}
+      sendWs({
+        type: "profile_sync",
+        from_name: myProfile.from_name,
+        from_pic: myProfile.from_pic,
+        me_lang: myLang,
+        user_id: myProfile.user_id,
+      });
     }
 
     addSystemMessage(`Dil güncellendi: ${myLang.toUpperCase()}`);
@@ -354,13 +353,16 @@ function addMessage({ side = "left", sender = "", text = "", withSpeaker = false
 function autoGrowTextarea() {
   if (!msgInput) return;
   msgInput.style.height = "26px";
-  msgInput.style.height = Math.min(msgInput.scrollHeight, 120) + "px";
+  msgInput.style.height = Math.min(msgInput.scrollHeight, 140) + "px";
 }
 
 function sendWs(payload) {
   try {
     if (ws && ws.readyState === WebSocket.OPEN) {
+      console.log("[alltoall send]", payload);
       ws.send(JSON.stringify(payload));
+    } else {
+      addSystemMessage("Socket hazır değil.");
     }
   } catch (e) {
     console.warn("[alltoall sendWs]", e);
@@ -373,7 +375,10 @@ function connectSocket() {
     return;
   }
 
-  ws = new WebSocket(`${WS_BASE}/${encodeURIComponent(roomId)}`);
+  const wsUrl = `${WS_BASE}/${encodeURIComponent(roomId)}`;
+  console.log("[alltoall ws url]", wsUrl);
+
+  ws = new WebSocket(wsUrl);
 
   ws.onopen = () => {
     sendWs({
@@ -471,15 +476,20 @@ function connectSocket() {
         return;
       }
 
-      if (type === "error") {
-        const msg = String(data.message || "Bağlantı hatası");
-        if (msg === "ROOM_FULL") addSystemMessage("Oda dolu");
-        else addSystemMessage(msg);
+      if (type === "room_not_found") {
+        addSystemMessage(data.message || "Kanal bulunamadı.");
         return;
       }
 
-      if (type === "room_not_found") {
-        addSystemMessage(data.message || "Oda bulunamadı");
+      if (type === "error") {
+        const msg = String(data.message || "Bağlantı hatası");
+        if (msg === "HOST_NOT_READY") {
+          addSystemMessage("Host henüz kanalı açmadı. Önce host içeri girmeli.");
+        } else if (msg === "ROOM_FULL") {
+          addSystemMessage("Oda dolu.");
+        } else {
+          addSystemMessage(msg);
+        }
         return;
       }
     } catch (e) {
@@ -516,6 +526,7 @@ function sendMessage() {
 
   msgInput.value = "";
   autoGrowTextarea();
+  scrollChatBottom();
 }
 
 function initSpeech() {
@@ -565,6 +576,47 @@ function toggleMic() {
   recognizer.start();
 }
 
+function installKeyboardLift() {
+  const vv = window.visualViewport;
+  if (!vv) return;
+
+  const apply = () => {
+    try {
+      const fullH = window.innerHeight || document.documentElement.clientHeight || 0;
+      const visibleH = vv.height || fullH;
+      const offsetTop = vv.offsetTop || 0;
+      const keyboardHeight = Math.max(0, fullH - visibleH - offsetTop);
+
+      const lift = Math.max(0, keyboardHeight - 10);
+      rootStyle.style.setProperty("--kb-offset", `${lift}px`);
+
+      autoGrowTextarea();
+      scrollChatBottom();
+    } catch (e) {
+      console.warn("[alltoall keyboard]", e);
+    }
+  };
+
+  vv.addEventListener("resize", apply);
+  vv.addEventListener("scroll", apply);
+  window.addEventListener("orientationchange", apply);
+  window.addEventListener("resize", apply);
+
+  msgInput?.addEventListener("focus", () => {
+    setTimeout(apply, 50);
+    setTimeout(apply, 150);
+    setTimeout(apply, 300);
+  });
+
+  msgInput?.addEventListener("blur", () => {
+    setTimeout(() => {
+      rootStyle.style.setProperty("--kb-offset", "0px");
+    }, 120);
+  });
+
+  apply();
+}
+
 function bindEvents() {
   sendBtn?.addEventListener("click", sendMessage);
 
@@ -575,7 +627,11 @@ function bindEvents() {
     }
   });
 
-  msgInput?.addEventListener("input", autoGrowTextarea);
+  msgInput?.addEventListener("input", () => {
+    autoGrowTextarea();
+    scrollChatBottom();
+  });
+
   micBtn?.addEventListener("click", toggleMic);
   soundToggleBtn?.addEventListener("click", toggleSound);
 
@@ -588,6 +644,7 @@ function bindEvents() {
   });
 
   backBtn?.addEventListener("click", () => history.back());
+
   exitBtn?.addEventListener("click", () => {
     try { ws?.close?.(); } catch {}
     location.href = "/pages/alltoall.html";
@@ -602,9 +659,11 @@ async function init() {
   updateSoundButton();
   initSpeech();
   bindEvents();
+  installKeyboardLift();
   ensureSelfInPeople();
   connectSocket();
   autoGrowTextarea();
+  scrollChatBottom();
 }
 
 init();
