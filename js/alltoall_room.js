@@ -582,16 +582,24 @@ function installKeyboardLift() {
 
   const apply = () => {
     try {
-      const fullH = window.innerHeight || document.documentElement.clientHeight || 0;
-      const visibleH = vv.height || fullH;
-      const offsetTop = vv.offsetTop || 0;
-      const keyboardHeight = Math.max(0, fullH - visibleH - offsetTop);
+      const winH = window.innerHeight || document.documentElement.clientHeight || 0;
+      const vvH = vv.height || 0;
+      const vvTop = vv.offsetTop || 0;
 
-      const lift = Math.max(0, keyboardHeight - 10);
+      let keyboardHeight = Math.max(0, winH - vvH - vvTop);
+
+      const active = document.activeElement;
+      const isTyping =
+        active === msgInput ||
+        active?.tagName === "TEXTAREA" ||
+        active?.tagName === "INPUT";
+
+      if (!isTyping) keyboardHeight = 0;
+
+      const lift = keyboardHeight > 80 ? keyboardHeight : 0;
       rootStyle.style.setProperty("--kb-offset", `${lift}px`);
 
-      autoGrowTextarea();
-      scrollChatBottom();
+      setTimeout(scrollChatBottom, 30);
     } catch (e) {
       console.warn("[alltoall keyboard]", e);
     }
@@ -599,13 +607,14 @@ function installKeyboardLift() {
 
   vv.addEventListener("resize", apply);
   vv.addEventListener("scroll", apply);
-  window.addEventListener("orientationchange", apply);
   window.addEventListener("resize", apply);
+  window.addEventListener("orientationchange", apply);
 
   msgInput?.addEventListener("focus", () => {
-    setTimeout(apply, 50);
-    setTimeout(apply, 150);
-    setTimeout(apply, 300);
+    setTimeout(apply, 80);
+    setTimeout(apply, 180);
+    setTimeout(apply, 320);
+    setTimeout(apply, 500);
   });
 
   msgInput?.addEventListener("blur", () => {
@@ -616,7 +625,6 @@ function installKeyboardLift() {
 
   apply();
 }
-
 function bindEvents() {
   sendBtn?.addEventListener("click", sendMessage);
 
