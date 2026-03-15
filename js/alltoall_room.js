@@ -1,6 +1,7 @@
 // FILE: /js/alltoall_room.js
 
 import { supabase } from "/js/supabase_client.js";
+import { getLangPoolForSite, getSiteLang } from "/js/lang_pool_full.js";
 
 const API_BASE = "https://italky-api.onrender.com/api";
 const WS_BASE = "wss://italky-api.onrender.com/api/alltoall/ws";
@@ -33,6 +34,8 @@ let recognizing = false;
 let recognizer = null;
 let currentAudio = null;
 let voicesReady = false;
+let siteLang = getSiteLang();
+let LANGS = getLangPoolForSite(siteLang);
 
 let myProfile = {
   from: "",
@@ -45,14 +48,132 @@ let myProfile = {
 
 let joinedPeople = new Map();
 
-const LANGS = [
-  { code: "tr", flag: "🇹🇷", name: "Türkçe" },
-  { code: "en", flag: "🇬🇧", name: "English" },
-  { code: "de", flag: "🇩🇪", name: "Deutsch" },
-  { code: "fr", flag: "🇫🇷", name: "Français" },
-  { code: "it", flag: "🇮🇹", name: "Italiano" },
-  { code: "es", flag: "🇪🇸", name: "Español" },
-];
+const SITE_TEXT = {
+  tr: {
+    soundOn: "Sesli okuma açıldı",
+    soundOff: "Sesli okuma kapatıldı",
+    socketNotReady: "Socket hazır değil.",
+    roomMissing: "Oda bilgisi bulunamadı.",
+    connected: "Bağlantı kuruldu",
+    newParticipant: "Yeni katılımcı bağlandı",
+    leftParticipant: "Bir katılımcı ayrıldı",
+    roomNotFound: "Kanal bulunamadı.",
+    hostNotReady: "Host henüz odaya giriş yapmadı.",
+    connectionError: "Bağlantı hatası oluştu.",
+    connectionClosed: "Bağlantı kapandı.",
+    roomCopied: "Oda kodu kopyalandı",
+    roomNotCreated: "Bu oda henüz oluşturulmamış.",
+    participant: "Katılımcı",
+    host: "Host",
+    guest: "Guest",
+    typingPlaceholder: "Mesajını yaz..."
+  },
+  en: {
+    soundOn: "Voice playback enabled",
+    soundOff: "Voice playback disabled",
+    socketNotReady: "Socket is not ready.",
+    roomMissing: "Room information not found.",
+    connected: "Connected",
+    newParticipant: "A new participant joined",
+    leftParticipant: "A participant left",
+    roomNotFound: "Channel not found.",
+    hostNotReady: "Host has not entered the room yet.",
+    connectionError: "A connection error occurred.",
+    connectionClosed: "Connection closed.",
+    roomCopied: "Room code copied",
+    roomNotCreated: "This room has not been created yet.",
+    participant: "Participant",
+    host: "Host",
+    guest: "Guest",
+    typingPlaceholder: "Write your message..."
+  },
+  de: {
+    soundOn: "Sprachausgabe aktiviert",
+    soundOff: "Sprachausgabe deaktiviert",
+    socketNotReady: "Socket ist nicht bereit.",
+    roomMissing: "Rauminformation nicht gefunden.",
+    connected: "Verbunden",
+    newParticipant: "Ein neuer Teilnehmer ist beigetreten",
+    leftParticipant: "Ein Teilnehmer hat den Raum verlassen",
+    roomNotFound: "Kanal nicht gefunden.",
+    hostNotReady: "Der Host hat den Raum noch nicht betreten.",
+    connectionError: "Verbindungsfehler aufgetreten.",
+    connectionClosed: "Verbindung geschlossen.",
+    roomCopied: "Raumcode kopiert",
+    roomNotCreated: "Dieser Raum wurde noch nicht erstellt.",
+    participant: "Teilnehmer",
+    host: "Host",
+    guest: "Gast",
+    typingPlaceholder: "Nachricht schreiben..."
+  },
+  fr: {
+    soundOn: "Lecture vocale activée",
+    soundOff: "Lecture vocale désactivée",
+    socketNotReady: "Socket non prêt.",
+    roomMissing: "Informations de salle introuvables.",
+    connected: "Connecté",
+    newParticipant: "Un nouveau participant a rejoint",
+    leftParticipant: "Un participant a quitté",
+    roomNotFound: "Canal introuvable.",
+    hostNotReady: "L’hôte n’est pas encore entré dans la salle.",
+    connectionError: "Erreur de connexion.",
+    connectionClosed: "Connexion fermée.",
+    roomCopied: "Code de salle copié",
+    roomNotCreated: "Cette salle n’a pas encore été créée.",
+    participant: "Participant",
+    host: "Hôte",
+    guest: "Invité",
+    typingPlaceholder: "Écrivez votre message..."
+  },
+  it: {
+    soundOn: "Lettura vocale attivata",
+    soundOff: "Lettura vocale disattivata",
+    socketNotReady: "Socket non pronto.",
+    roomMissing: "Informazioni stanza non trovate.",
+    connected: "Connesso",
+    newParticipant: "Un nuovo partecipante è entrato",
+    leftParticipant: "Un partecipante è uscito",
+    roomNotFound: "Canale non trovato.",
+    hostNotReady: "L'host non è ancora entrato nella stanza.",
+    connectionError: "Errore di connessione.",
+    connectionClosed: "Connessione chiusa.",
+    roomCopied: "Codice stanza copiato",
+    roomNotCreated: "Questa stanza non è stata ancora creata.",
+    participant: "Partecipante",
+    host: "Host",
+    guest: "Ospite",
+    typingPlaceholder: "Scrivi il tuo messaggio..."
+  },
+  es: {
+    soundOn: "Lectura de voz activada",
+    soundOff: "Lectura de voz desactivada",
+    socketNotReady: "Socket no está listo.",
+    roomMissing: "No se encontró información de la sala.",
+    connected: "Conectado",
+    newParticipant: "Se unió un nuevo participante",
+    leftParticipant: "Un participante salió",
+    roomNotFound: "Canal no encontrado.",
+    hostNotReady: "El host todavía no ha entrado en la sala.",
+    connectionError: "Se produjo un error de conexión.",
+    connectionClosed: "Conexión cerrada.",
+    roomCopied: "Código de sala copiado",
+    roomNotCreated: "Esta sala todavía no ha sido creada.",
+    participant: "Participante",
+    host: "Host",
+    guest: "Invitado",
+    typingPlaceholder: "Escribe tu mensaje..."
+  }
+};
+
+function st(key) {
+  const pack = SITE_TEXT[siteLang] || SITE_TEXT.tr;
+  return pack[key] || SITE_TEXT.tr[key] || key;
+}
+
+function refreshSiteLangState() {
+  siteLang = getSiteLang();
+  LANGS = getLangPoolForSite(siteLang);
+}
 
 function toBCP(code) {
   const map = {
@@ -62,6 +183,37 @@ function toBCP(code) {
     fr: "fr-FR",
     it: "it-IT",
     es: "es-ES",
+    ru: "ru-RU",
+    el: "el-GR",
+    az: "az-AZ",
+    ka: "ka-GE",
+    pt: "pt-PT",
+    "pt-br": "pt-BR",
+    nl: "nl-NL",
+    sv: "sv-SE",
+    no: "no-NO",
+    da: "da-DK",
+    fi: "fi-FI",
+    pl: "pl-PL",
+    cs: "cs-CZ",
+    sk: "sk-SK",
+    hu: "hu-HU",
+    ro: "ro-RO",
+    bg: "bg-BG",
+    uk: "uk-UA",
+    ar: "ar-SA",
+    he: "he-IL",
+    fa: "fa-IR",
+    ur: "ur-PK",
+    hi: "hi-IN",
+    bn: "bn-BD",
+    id: "id-ID",
+    ms: "ms-MY",
+    vi: "vi-VN",
+    th: "th-TH",
+    zh: "zh-CN",
+    ja: "ja-JP",
+    ko: "ko-KR"
   };
   return map[String(code || "tr").toLowerCase()] || "tr-TR";
 }
@@ -77,7 +229,7 @@ function getDisplayNameFromUser(user) {
     meta.full_name ||
     meta.name ||
     user?.email?.split("@")[0] ||
-    (role === "host" ? "Host" : "Guest")
+    (role === "host" ? st("host") : st("guest"))
   );
 }
 
@@ -120,6 +272,16 @@ async function hydrateMyProfile() {
   }
 }
 
+function applyStaticSiteTexts() {
+  try {
+    document.documentElement.setAttribute("lang", siteLang);
+  } catch {}
+
+  if (msgInput) {
+    msgInput.placeholder = st("typingPlaceholder");
+  }
+}
+
 function buildLangSelect() {
   if (!langSelect) return;
 
@@ -150,14 +312,14 @@ function buildLangSelect() {
       });
     }
 
-    addSystemMessage(`Dil güncellendi: ${myLang.toUpperCase()}`);
+    addSystemMessage(`${langSelect.options[langSelect.selectedIndex]?.textContent || myLang.toUpperCase()}`);
   });
 }
 
 function updateSoundButton() {
   if (!soundToggleBtn) return;
   soundToggleBtn.textContent = autoSpeak ? "🔊" : "🔇";
-  soundToggleBtn.title = autoSpeak ? "Ses açık" : "Ses kapalı";
+  soundToggleBtn.title = autoSpeak ? st("soundOn") : st("soundOff");
 }
 
 function stopAudio() {
@@ -228,7 +390,7 @@ function toggleSound() {
   autoSpeak = !autoSpeak;
   localStorage.setItem("alltoall_auto_speak", autoSpeak ? "1" : "0");
   updateSoundButton();
-  addSystemMessage(autoSpeak ? "Sesli okuma açıldı" : "Sesli okuma kapatıldı");
+  addSystemMessage(autoSpeak ? st("soundOn") : st("soundOff"));
 }
 
 function personKey(person) {
@@ -257,7 +419,7 @@ function renderPeople() {
     if (person.from_pic) {
       const img = document.createElement("img");
       img.src = person.from_pic;
-      img.alt = person.from_name || "Avatar";
+      img.alt = person.from_name || st("participant");
       img.referrerPolicy = "no-referrer";
       avatar.appendChild(img);
     } else {
@@ -266,7 +428,7 @@ function renderPeople() {
 
     const label = document.createElement("div");
     label.className = "pName";
-    label.textContent = person.from_name || "Katılımcı";
+    label.textContent = person.from_name || st("participant");
 
     wrap.appendChild(avatar);
     wrap.appendChild(label);
@@ -290,7 +452,7 @@ function applyRoster(roster = []) {
       const key = personKey(person);
       joinedPeople.set(key, {
         from: person?.from || "",
-        from_name: person?.from_name || "Katılımcı",
+        from_name: person?.from_name || st("participant"),
         from_pic: person?.from_pic || "",
         me_lang: person?.me_lang || "tr",
         role: person?.role || "guest",
@@ -313,7 +475,7 @@ function upsertPerson(person) {
   const key = personKey(person);
   joinedPeople.set(key, {
     from: person?.from || "",
-    from_name: person?.from_name || "Katılımcı",
+    from_name: person?.from_name || st("participant"),
     from_pic: person?.from_pic || "",
     me_lang: person?.me_lang || "tr",
     role: person?.role || "guest",
@@ -368,7 +530,7 @@ function addMessage({ side = "left", sender = "", text = "", withSpeaker = false
 
   const label = document.createElement("div");
   label.className = "sender-name";
-  label.textContent = sender || (side === "right" ? myProfile.from_name : "Katılımcı");
+  label.textContent = sender || (side === "right" ? myProfile.from_name : st("participant"));
 
   const bubble = document.createElement("div");
   bubble.className = "msg-bubble";
@@ -411,7 +573,7 @@ function sendWs(payload) {
     if (ws && ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify(payload));
     } else {
-      addSystemMessage("Socket hazır değil.");
+      addSystemMessage(st("socketNotReady"));
     }
   } catch (e) {
     console.warn("[alltoall sendWs]", e);
@@ -442,7 +604,7 @@ async function resolveRoomForGuestByHost() {
 
 function connectSocket() {
   if (!roomId) {
-    addSystemMessage("Oda bilgisi bulunamadı.");
+    addSystemMessage(st("roomMissing"));
     return;
   }
 
@@ -479,7 +641,7 @@ function connectSocket() {
         roomId = String(data.room || roomId || "").trim().toUpperCase();
         if (roomPill) roomPill.textContent = hostCode || roomId || "------";
         ensureSelfInPeople();
-        addSystemMessage("Bağlantı kuruldu");
+        addSystemMessage(st("connected"));
         return;
       }
 
@@ -491,7 +653,7 @@ function connectSocket() {
       if (type === "peer_joined") {
         if (data.peer) upsertPerson(data.peer);
         if (Array.isArray(data.roster)) applyRoster(data.roster);
-        addSystemMessage("Yeni katılımcı bağlandı");
+        addSystemMessage(st("newParticipant"));
         return;
       }
 
@@ -504,13 +666,13 @@ function connectSocket() {
       if (type === "peer_left") {
         if (data.peer) removePerson(data.peer);
         if (Array.isArray(data.roster)) applyRoster(data.roster);
-        addSystemMessage("Bir katılımcı ayrıldı");
+        addSystemMessage(st("leftParticipant"));
         return;
       }
 
       if (type === "translated_message") {
         const fromId = String(data.from || "").trim();
-        const senderName = String(data.from_name || "Katılımcı").trim();
+        const senderName = String(data.from_name || st("participant")).trim();
         const translated = String(data.translated_text || "").trim();
         const original = String(data.original_text || "").trim();
         const finalText = translated || original;
@@ -544,13 +706,13 @@ function connectSocket() {
       }
 
       if (type === "room_not_found") {
-        addSystemMessage(data.message || "Kanal bulunamadı.");
+        addSystemMessage(data.message || st("roomNotFound"));
         return;
       }
 
       if (type === "error") {
         const msg = String(data.message || "Bağlantı hatası");
-        addSystemMessage(msg === "HOST_NOT_READY" ? "Host henüz odaya giriş yapmadı." : msg);
+        addSystemMessage(msg === "HOST_NOT_READY" ? st("hostNotReady") : msg);
         return;
       }
     } catch (e) {
@@ -559,11 +721,11 @@ function connectSocket() {
   };
 
   ws.onerror = () => {
-    addSystemMessage("Bağlantı hatası oluştu.");
+    addSystemMessage(st("connectionError"));
   };
 
   ws.onclose = () => {
-    addSystemMessage("Bağlantı kapandı.");
+    addSystemMessage(st("connectionClosed"));
   };
 }
 
@@ -715,7 +877,7 @@ function bindEvents() {
     if (!codeToCopy) return;
     try {
       await navigator.clipboard.writeText(codeToCopy);
-      addSystemMessage(`Oda kodu kopyalandı: ${codeToCopy}`);
+      addSystemMessage(`${st("roomCopied")}: ${codeToCopy}`);
     } catch {}
   });
 
@@ -739,6 +901,9 @@ function bindEvents() {
 }
 
 async function init() {
+  refreshSiteLangState();
+  applyStaticSiteTexts();
+
   if (roomPill) roomPill.textContent = hostCode || roomId || "------";
 
   await hydrateMyProfile();
@@ -757,7 +922,7 @@ async function init() {
     }
   } catch (e) {
     console.error("[alltoall resolve guest room]", e);
-    addSystemMessage("Bu oda henüz oluşturulmamış.");
+    addSystemMessage(st("roomNotCreated"));
     return;
   }
 
