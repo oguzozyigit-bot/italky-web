@@ -1,8 +1,6 @@
-// FILE: /js/alltoall_room.js
-
 import { supabase } from "/js/supabase_client.js";
 
-const WS_BASE = "wss://italky-api.onrender.com/api";
+const WS_BASE = "wss://italky-api.onrender.com/api/alltoall/ws";
 
 const $ = (id) => document.getElementById(id);
 
@@ -16,6 +14,7 @@ const langSelect = $("langSelect");
 const roomPill = $("roomPill");
 const backBtn = $("backBtn");
 const exitBtn = $("exitBtn");
+const soundToggleBtn = $("soundToggleBtn");
 
 const params = new URLSearchParams(location.search);
 const hostCode = String(params.get("host") || "").trim().toUpperCase();
@@ -24,6 +23,7 @@ const role = String(params.get("role") || "guest").trim().toLowerCase();
 let roomId = hostCode || "";
 let ws = null;
 let myLang = localStorage.getItem("alltoall_lang") || "tr";
+let autoSpeak = localStorage.getItem("alltoall_auto_speak") !== "0";
 let recognizing = false;
 let recognizer = null;
 
@@ -38,46 +38,18 @@ let myProfile = {
 
 let joinedPeople = new Map();
 
-/* ==============================
-   LANG
-================================*/
-const LANGS = ["tr", "en", "de", "fr", "it", "es", "ru", "el", "az", "ka"];
-
-function buildLangSelect() {
-  if (!langSelect) return;
-
-  langSelect.innerHTML = "";
-
-  LANGS.forEach((code) => {
-    const opt = document.createElement("option");
-    opt.value = code;
-    opt.textContent = code.toUpperCase();
-    langSelect.appendChild(opt);
-  });
-
-  langSelect.value = myLang;
-
-  langSelect.onchange = () => {
-    myLang = langSelect.value;
-    localStorage.setItem("alltoall_lang", myLang);
-
-    if (recognizer) recognizer.lang = toBCP(myLang);
-
-    myProfile.me_lang = myLang;
-
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      try {
-        ws.send(JSON.stringify({
-          type: "profile_sync",
-          from_name: myProfile.from_name,
-          from_pic: myProfile.from_pic,
-          me_lang: myLang,
-          user_id: myProfile.user_id
-        }));
-      } catch {}
-    }
-  };
-}
+const LANGS = [
+  { code: "tr", flag: "🇹🇷", name: "Türkçe" },
+  { code: "en", flag: "🇬🇧", name: "English" },
+  { code: "de", flag: "🇩🇪", name: "Deutsch" },
+  { code: "fr", flag: "🇫🇷", name: "Français" },
+  { code: "it", flag: "🇮🇹", name: "Italiano" },
+  { code: "es", flag: "🇪🇸", name: "Español" },
+  { code: "ru", flag: "🇷🇺", name: "Русский" },
+  { code: "el", flag: "🇬🇷", name: "Ελληνικά" },
+  { code: "az", flag: "🇦🇿", name: "Azərbaycan" },
+  { code: "ka", flag: "🇬🇪", name: "ქართული" },
+];
 
 function toBCP(code) {
   const map = {
@@ -95,9 +67,6 @@ function toBCP(code) {
   return map[String(code || "tr").toLowerCase()] || "tr-TR";
 }
 
-/* ==============================
-   PROFILE
-================================*/
 function getDisplayNameFromUser(user) {
   const meta = user?.user_metadata || {};
   return (
@@ -123,15 +92,9 @@ function getStableFromId(user) {
 }
 
 function getInitials(name) {
-  const parts = String(name || "")
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean);
-
+  const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
   if (!parts.length) return "?";
-
   if (parts.length === 1) return parts[0].slice(0, 1).toUpperCase();
-
   return (parts[0][0] + parts[1][0]).toUpperCase();
 }
 
@@ -154,88 +117,55 @@ async function hydrateMyProfile() {
   }
 }
 
-/* ==============================
-   CHAT UI
-================================*/
-function scrollChatBottom() {
-  if (!chat) return;
-  requestAnimationFrame(() => {
-    try { chat.scrollTop = chat.scrollHeight; } catch {}
+function buildLangSelect() {
+  if (!langSelect) return;
+
+  langSelect.innerHTML = "";
+  LANGS.forEach((l) => {
+    const opt = document.createElement("option");
+    opt.value = l.code;
+    opt.textContent = `${l.flag} ${l.name}`;
+    langSelect.appendChild(opt);
+  });
+
+  langSelect.value = myLang;
+
+  langSelect.addEventListener("change", () => {
+    myLang = langSelect.value;
+    localStorage.setItem("alltoall_lang", myLang);
+    myProfile.me_lang = myLang;
+
+    if (recognizer) recognizer.lang = toBCP(myLang);
+
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      try {
+        ws.send(JSON.stringify({
+          type: "profile_sync",
+          from_name: myProfile.from_name,
+          from_pic: myProfile.from_pic,
+          me_lang: myLang,
+          user_id: myProfile.user_id,
+        }));
+      } catch {}
+    }
+
+    addSystemMessage(`Dil güncellendi: ${myLang.toUpperCase()}`);
   });
 }
 
-function addMessage(text, side = "left", sender = "", withSpeaker = false, speakLang = "tr") {
-  if (!chat) return;
-
-  const safe = String(text || "").trim();
-  if (!safe) return;
-
-  const row = document.createElement("div");
-  row.className = "msg-row " + side;
-
-  const name = document.createElement("div");
-  name.className = "sender-name";
-  name.textContent = sender || (side === "right" ? myProfile.from_name : "Katılımcı");
-
-  const bubble = document.createElement("div");
-  bubble.className = "msg-bubble";
-  bubble.textContent = safe;
-
-  row.appendChild(name);
-  row.appendChild(bubble);
-
-  if (withSpeaker) {
-    const actions = document.createElement("div");
-    actions.className = "msg-actions";
-
-    const btn = document.createElement("button");
-    btn.className = "mini-btn";
-    btn.type = "button";
-    btn.innerHTML = `
-      <svg viewBox="0 0 24 24">
-        <path d="M3 10v4h4l5 4V6L7 10H3"></path>
-        <path d="M16 8a4 4 0 0 1 0 8"></path>
-        <path d="M19 5a8 8 0 0 1 0 14"></path>
-      </svg>
-    `;
-    btn.addEventListener("click", () => speakFallback(safe, speakLang));
-    actions.appendChild(btn);
-    row.appendChild(actions);
-  }
-
-  chat.appendChild(row);
-  scrollChatBottom();
+function updateSoundButton() {
+  if (!soundToggleBtn) return;
+  soundToggleBtn.textContent = autoSpeak ? "🔊" : "🔇";
+  soundToggleBtn.title = autoSpeak ? "Ses açık" : "Ses kapalı";
 }
 
-function addSystemMessage(text) {
-  if (!chat) return;
-
-  const note = document.createElement("div");
-  note.className = "sys-note";
-  note.textContent = String(text || "").trim();
-
-  chat.appendChild(note);
-  scrollChatBottom();
+function toggleSound() {
+  autoSpeak = !autoSpeak;
+  localStorage.setItem("alltoall_auto_speak", autoSpeak ? "1" : "0");
+  updateSoundButton();
+  addSystemMessage(autoSpeak ? "Sesli okuma açıldı" : "Sesli okuma kapatıldı");
 }
 
-function speakFallback(text, langCode) {
-  const value = String(text || "").trim();
-  if (!value) return;
-
-  try { window.speechSynthesis?.cancel?.(); } catch {}
-  if (!window.speechSynthesis) return;
-
-  const u = new SpeechSynthesisUtterance(value);
-  u.lang = toBCP(langCode);
-
-  setTimeout(() => {
-    try { window.speechSynthesis.speak(u); } catch {}
-  }, 50);
-}
-
-/* ==============================
-   PEOPLE
-================================*/
 function personKey(person) {
   return String(
     person?.from ||
@@ -250,7 +180,6 @@ function renderPeople() {
   if (!peopleScroll) return;
 
   peopleScroll.innerHTML = "";
-
   const arr = [...joinedPeople.values()];
 
   arr.forEach((person) => {
@@ -305,11 +234,13 @@ function applyRoster(roster = []) {
     });
   }
 
-  if (![...joinedPeople.values()].some(p => p.from === myProfile.from || p.user_id === myProfile.user_id || p.role === myProfile.role && p.from_name === myProfile.from_name)) {
-    ensureSelfInPeople();
-  } else {
-    renderPeople();
-  }
+  const existsSelf = [...joinedPeople.values()].some((p) =>
+    (p.from && p.from === myProfile.from) ||
+    (p.user_id && p.user_id === myProfile.user_id)
+  );
+
+  if (!existsSelf) ensureSelfInPeople();
+  else renderPeople();
 }
 
 function upsertPerson(person) {
@@ -328,7 +259,6 @@ function upsertPerson(person) {
 
 function removePerson(person) {
   if (!person) return;
-
   const key = personKey(person);
 
   if (joinedPeople.has(key)) {
@@ -348,19 +278,105 @@ function removePerson(person) {
   renderPeople();
 }
 
-/* ==============================
-   WS
-================================*/
+function scrollChatBottom() {
+  if (!chat) return;
+  requestAnimationFrame(() => {
+    try { chat.scrollTop = chat.scrollHeight; } catch {}
+  });
+}
+
+function addSystemMessage(text) {
+  if (!chat) return;
+
+  const div = document.createElement("div");
+  div.className = "sys-note";
+  div.textContent = String(text || "").trim();
+  chat.appendChild(div);
+  scrollChatBottom();
+}
+
+function speakText(text, langCode) {
+  const value = String(text || "").trim();
+  if (!value) return;
+
+  try { window.speechSynthesis?.cancel?.(); } catch {}
+  if (!window.speechSynthesis) return;
+
+  const u = new SpeechSynthesisUtterance(value);
+  u.lang = toBCP(langCode);
+
+  setTimeout(() => {
+    try { window.speechSynthesis.speak(u); } catch {}
+  }, 50);
+}
+
+function addMessage({ side = "left", sender = "", text = "", withSpeaker = false, speakLang = "tr" }) {
+  const safeText = String(text || "").trim();
+  if (!safeText || !chat) return;
+
+  const row = document.createElement("div");
+  row.className = `msg-row ${side}`;
+
+  const label = document.createElement("div");
+  label.className = "sender-name";
+  label.textContent = sender || (side === "right" ? myProfile.from_name : "Katılımcı");
+
+  const bubble = document.createElement("div");
+  bubble.className = "msg-bubble";
+  bubble.textContent = safeText;
+
+  row.appendChild(label);
+  row.appendChild(bubble);
+
+  if (withSpeaker) {
+    const actions = document.createElement("div");
+    actions.className = "msg-actions";
+
+    const btn = document.createElement("button");
+    btn.className = "mini-btn";
+    btn.type = "button";
+    btn.innerHTML = `
+      <svg viewBox="0 0 24 24">
+        <path d="M3 10v4h4l5 4V6L7 10H3"></path>
+        <path d="M16 8a4 4 0 0 1 0 8"></path>
+        <path d="M19 5a8 8 0 0 1 0 14"></path>
+      </svg>
+    `;
+    btn.addEventListener("click", () => speakText(safeText, speakLang));
+    actions.appendChild(btn);
+    row.appendChild(actions);
+  }
+
+  chat.appendChild(row);
+  scrollChatBottom();
+}
+
+function autoGrowTextarea() {
+  if (!msgInput) return;
+  msgInput.style.height = "26px";
+  msgInput.style.height = Math.min(msgInput.scrollHeight, 120) + "px";
+}
+
+function sendWs(payload) {
+  try {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify(payload));
+    }
+  } catch (e) {
+    console.warn("[alltoall sendWs]", e);
+  }
+}
+
 function connectSocket() {
   if (!roomId) {
-    alert("Room bulunamadı");
+    addSystemMessage("Oda bilgisi bulunamadı.");
     return;
   }
 
-  ws = new WebSocket(`${WS_BASE}/alltoall/ws/${encodeURIComponent(roomId)}`);
+  ws = new WebSocket(`${WS_BASE}/${encodeURIComponent(roomId)}`);
 
   ws.onopen = () => {
-    const joinPayload = {
+    sendWs({
       type: role === "host" ? "create" : "join",
       from: myProfile.from,
       from_name: myProfile.from_name,
@@ -368,28 +384,24 @@ function connectSocket() {
       me_lang: myLang,
       role,
       user_id: myProfile.user_id,
-    };
-
-    try {
-      ws.send(JSON.stringify(joinPayload));
-    } catch (e) {
-      console.warn("[alltoall create/join send]", e);
-    }
+    });
   };
 
-  ws.onmessage = (e) => {
+  ws.onmessage = (event) => {
     try {
-      const data = JSON.parse(e.data);
-      const type = String(data.type || "").trim();
+      const data = JSON.parse(event.data);
+      const type = String(data?.type || "").trim();
 
       if (type === "room_created" || type === "room_joined") {
         if (data.self) {
           myProfile = {
             ...myProfile,
             ...data.self,
-            me_lang: myLang
+            me_lang: myLang,
           };
         }
+        roomId = String(data.room || roomId || "").trim().toUpperCase();
+        if (roomPill) roomPill.textContent = roomId || "------";
         ensureSelfInPeople();
         addSystemMessage("Bağlantı kuruldu");
         return;
@@ -425,16 +437,18 @@ function connectSocket() {
         const senderName = String(data.from_name || "Katılımcı").trim();
         const translated = String(data.translated_text || "").trim();
         const original = String(data.original_text || "").trim();
+        const finalText = translated || original;
 
+        if (!finalText) return;
         if (fromId && myProfile.from && fromId === myProfile.from) return;
 
-        addMessage(
-          translated || original,
-          "left",
-          senderName,
-          true,
-          myLang
-        );
+        addMessage({
+          side: "left",
+          sender: senderName,
+          text: finalText,
+          withSpeaker: true,
+          speakLang: myLang
+        });
 
         if (data.from || data.from_name || data.from_pic) {
           upsertPerson({
@@ -446,6 +460,10 @@ function connectSocket() {
             user_id: data.from_user_id || "",
           });
         }
+
+        if (autoSpeak) {
+          speakText(finalText, myLang);
+        }
         return;
       }
 
@@ -453,17 +471,10 @@ function connectSocket() {
         return;
       }
 
-      if (type === "typing") {
-        return;
-      }
-
       if (type === "error") {
         const msg = String(data.message || "Bağlantı hatası");
-        if (msg === "ROOM_FULL") {
-          addSystemMessage("Oda dolu");
-          return;
-        }
-        addSystemMessage(msg);
+        if (msg === "ROOM_FULL") addSystemMessage("Oda dolu");
+        else addSystemMessage(msg);
         return;
       }
 
@@ -471,44 +482,42 @@ function connectSocket() {
         addSystemMessage(data.message || "Oda bulunamadı");
         return;
       }
-    } catch (err) {
-      console.warn("[alltoall ws parse]", err);
+    } catch (e) {
+      console.warn("[alltoall ws parse]", e);
     }
   };
 
-  ws.onclose = () => {
-    addSystemMessage("Bağlantı kapandı");
+  ws.onerror = () => {
+    addSystemMessage("Bağlantı hatası oluştu.");
   };
 
-  ws.onerror = () => {
-    addSystemMessage("Bağlantı hatası oluştu");
+  ws.onclose = () => {
+    addSystemMessage("Bağlantı kapandı.");
   };
 }
 
-/* ==============================
-   SEND
-================================*/
 function sendMessage() {
   const text = String(msgInput?.value || "").trim();
   if (!text) return;
 
-  addMessage(text, "right", myProfile.from_name);
+  addMessage({
+    side: "right",
+    sender: myProfile.from_name,
+    text,
+    withSpeaker: false,
+    speakLang: myLang
+  });
 
-  if (ws && ws.readyState === 1) {
-    ws.send(JSON.stringify({
-      type: "text_message",
-      text,
-      from_lang: myLang,
-    }));
-  }
+  sendWs({
+    type: "message",
+    text,
+    lang: myLang
+  });
 
   msgInput.value = "";
   autoGrowTextarea();
 }
 
-/* ==============================
-   SPEECH
-================================*/
 function initSpeech() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 
@@ -556,20 +565,8 @@ function toggleMic() {
   recognizer.start();
 }
 
-/* ==============================
-   INPUT
-================================*/
-function autoGrowTextarea() {
-  if (!msgInput) return;
-  msgInput.style.height = "26px";
-  msgInput.style.height = Math.min(msgInput.scrollHeight, 120) + "px";
-}
-
-/* ==============================
-   EVENTS
-================================*/
 function bindEvents() {
-  sendBtn && (sendBtn.onclick = sendMessage);
+  sendBtn?.addEventListener("click", sendMessage);
 
   msgInput?.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -579,31 +576,30 @@ function bindEvents() {
   });
 
   msgInput?.addEventListener("input", autoGrowTextarea);
-
-  micBtn && (micBtn.onclick = toggleMic);
+  micBtn?.addEventListener("click", toggleMic);
+  soundToggleBtn?.addEventListener("click", toggleSound);
 
   roomPill?.addEventListener("click", async () => {
-    if (!hostCode) return;
+    if (!roomId) return;
     try {
-      await navigator.clipboard.writeText(hostCode);
-      addSystemMessage(`Kod kopyalandı: ${hostCode}`);
+      await navigator.clipboard.writeText(roomId);
+      addSystemMessage(`Oda kodu kopyalandı: ${roomId}`);
     } catch {}
   });
 
   backBtn?.addEventListener("click", () => history.back());
   exitBtn?.addEventListener("click", () => {
+    try { ws?.close?.(); } catch {}
     location.href = "/pages/alltoall.html";
   });
 }
 
-/* ==============================
-   INIT
-================================*/
 async function init() {
-  if (roomPill) roomPill.textContent = hostCode || "---";
+  roomPill.textContent = hostCode || "------";
 
   await hydrateMyProfile();
   buildLangSelect();
+  updateSoundButton();
   initSpeech();
   bindEvents();
   ensureSelfInPeople();
