@@ -9,8 +9,8 @@
   <style>
     :root {
       --topH: 70px;
-      --metaH: 80px; /* Bilgi metni için biraz genişlettik */
-      --peopleH: 90px;
+      --metaH: 80px;
+      --peopleH: 110px; /* Avatar ve isim için ideal alan */
       --dockH: 80px;
       --accent: #00f2fe;
     }
@@ -37,129 +37,96 @@
       background: #050208;
     }
 
-    /* Üst Bar */
+    /* Üst Alanlar */
     .topbar { height: var(--topH); display: flex; align-items: center; padding: 0 16px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-    .top-btn { width: 40px; height: 40px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: #fff; cursor: pointer; }
+    .meta { height: var(--metaH); display: flex; flex-direction: column; justify-content: center; padding: 0 16px; background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .room-info { font-size: 10px; color: var(--accent); font-weight: 700; margin-top: 5px; }
 
-    /* Meta Alanı (Oda Kodu & Bilgi) */
-    .meta { 
-      height: var(--metaH); 
-      display: flex; flex-direction: column; justify-content: center;
-      padding: 0 16px; background: rgba(255,255,255,0.02);
-      border-bottom: 1px solid rgba(255,255,255,0.05);
+    /* KATILIMCILAR - Tam Ortalanmış Avatarlar */
+    .people { height: var(--peopleH); padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .people-scroll { display: flex; gap: 15px; overflow-x: auto; padding: 0 16px; scrollbar-width: none; }
+    .pItem { display: flex; flex-direction: column; align-items: center; min-width: 65px; }
+    .pAvatar { 
+      width: 48px; height: 48px; border-radius: 50%; 
+      border: 2px solid rgba(255,255,255,0.1); 
+      overflow: hidden; display: flex; align-items: center; justify-content: center;
     }
-    .meta-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
-    .room-pill { background: #7000ff; padding: 4px 14px; border-radius: 10px; font-family: 'Space Grotesk'; font-weight: 700; font-size: 18px; letter-spacing: 1px; }
-    .room-info { font-size: 10px; color: var(--accent); font-weight: 700; opacity: 0.8; }
-
-    /* PRO DİL SEÇİCİ (Custom Dropdown) */
-    .lang-container { position: relative; }
-    .lang-trigger {
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.1);
-      padding: 6px 12px;
-      border-radius: 10px;
-      font-size: 13px;
-      font-weight: 700;
-      display: flex; align-items: center; gap: 6px;
-      cursor: pointer;
-    }
-    
-    /* Katılımcılar Listesi */
-    .people { height: var(--peopleH); padding: 10px 0; display: flex; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); }
-    .people-scroll { display: flex; gap: 10px; overflow-x: auto; padding: 0 16px; scrollbar-width: none; }
-    .pAvatar { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--accent); overflow: hidden; }
     .pAvatar img { width: 100%; height: 100%; object-fit: cover; }
+    .pName { font-size: 10px; font-weight: 800; margin-top: 6px; text-align: center; white-space: nowrap; }
 
-    /* Chat Alanı */
-    .chat { flex: 1; overflow-y: auto; padding: 15px 16px; display: flex; flex-direction: column; gap: 14px; }
+    /* CHAT - Kavisli Renkli Çizgi Tasarımı */
+    .chat { flex: 1; overflow-y: auto; padding: 15px 16px; display: flex; flex-direction: column; gap: 18px; }
     
-    .msg-row { max-width: 90%; display: flex; flex-direction: column; position: relative; padding: 2px 0; }
-    .msg-row.left { align-self: flex-start; padding-left: 12px; }
-    .msg-row.right { align-self: flex-end; padding-right: 12px; align-items: flex-end; }
+    .msg-row { max-width: 90%; display: flex; flex-direction: column; position: relative; }
+    .msg-row.left { align-self: flex-start; padding-left: 14px; }
+    .msg-row.right { align-self: flex-end; padding-right: 14px; align-items: flex-end; }
 
-    .msg-line { position: absolute; top: 0; bottom: 0; width: 3px; border-radius: 4px; }
+    /* Parenteze benzeyen kavisli çizgi */
+    .msg-line { 
+      position: absolute; top: 2px; bottom: 2px; width: 4px; 
+      border-radius: 10px; /* Kavisli uçlar */
+    }
     .msg-row.left .msg-line { left: 0; }
     .msg-row.right .msg-line { right: 0; }
 
-    .sender-name { font-size: 11px; font-weight: 900; margin-bottom: 3px; }
-    .msg-bubble { font-size: 14px; line-height: 1.5; color: rgba(255,255,255,0.9); }
+    .sender-name { font-size: 12px; font-weight: 900; margin-bottom: 4px; letter-spacing: 0.3px; }
+    .msg-bubble { font-size: 14.5px; line-height: 1.5; color: rgba(255,255,255,0.95); }
 
     /* Giriş Alanı - Klavye Sabitli */
     .input { 
-      height: var(--dockH); 
-      background: #0a0510; 
-      border-top: 1px solid rgba(255,255,255,0.1); 
-      display: flex; align-items: center; gap: 8px; 
-      padding: 0 12px calc(10px + env(safe-area-inset-bottom)); 
+      height: var(--dockH); background: #0a0510; border-top: 1px solid rgba(255,255,255,0.1); 
+      display: flex; align-items: center; gap: 8px; padding: 0 12px calc(10px + env(safe-area-inset-bottom)); 
       z-index: 1000;
     }
-    textarea { 
-      flex: 1; height: 44px; 
-      background: rgba(255,255,255,0.05); 
-      border: 1px solid rgba(255,255,255,0.1); 
-      border-radius: 20px; color: #fff; padding: 12px 16px; 
-      font-size: 15px; resize: none; overflow: hidden;
-    }
+    textarea { flex: 1; height: 44px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; color: #fff; padding: 12px 16px; font-size: 15px; resize: none; }
     .dock-btn { width: 44px; height: 44px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #fff; }
     .mic-btn { background: #1a1d33; font-size: 20px; }
     .send-btn { background: var(--accent); color: #000; font-size: 18px; }
-
-    /* Gizli Select (JS uyumu için) */
-    #langSelect { position: absolute; opacity: 0; pointer-events: none; }
   </style>
 </head>
 
 <body>
 <div class="room" id="roomContainer">
-  
   <div class="topbar">
-    <button id="backBtn" class="top-btn">←</button>
+    <button id="backBtn" style="background:none; border:none; color:#fff; font-size:20px;">←</button>
     <div style="flex:1; text-align:center; font-family:'Space Grotesk'; font-weight:700; font-size:22px;">All<span style="color:var(--accent)">To</span>All</div>
-    <button id="exitBtn" class="top-btn">✕</button>
+    <button id="exitBtn" style="background:none; border:none; color:#fff; font-size:20px;">✕</button>
   </div>
 
   <div class="meta">
-    <div class="meta-top">
-      <div id="roomPill" class="room-pill">------</div>
-      
-      <div class="lang-container">
-        <div class="lang-trigger" onclick="document.getElementById('langSelect').showPicker?.() || document.getElementById('langSelect').focus()">
-          <span id="currentLangFlag">🇹🇷</span>
-          <span id="currentLangName">Türkçe</span>
-          <small>▼</small>
-        </div>
-        <select id="langSelect">
-          <option value="tr" data-flag="🇹🇷">Türkçe</option>
-          <option value="en" data-flag="🇬🇧">English</option>
-          <option value="de" data-flag="🇩🇪">Deutsch</option>
-          <option value="fr" data-flag="🇫🇷">Français</option>
-          <option value="es" data-flag="🇪🇸">Español</option>
-          <option value="it" data-flag="🇮🇹">Italiano</option>
-          <option value="ar" data-flag="🇸🇦">العربية</option>
-          <option value="ru" data-flag="🇷🇺">Pусский</option>
-        </select>
-      </div>
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <div id="roomPill" style="background:#7000ff; padding:4px 14px; border-radius:10px; font-weight:700; font-size:18px;">------</div>
+      <div style="background:rgba(255,255,255,0.08); padding:6px 12px; border-radius:10px; font-size:13px; font-weight:700;">🇹🇷 Türkçe ▼</div>
     </div>
     <div class="room-info">Bu Kodu Sohbete Katılmak İsteyenlere Veriniz.</div>
   </div>
 
   <div class="people">
-    <div class="people-scroll" id="peopleScroll"></div>
+    <div class="people-scroll" id="peopleScroll">
+      </div>
   </div>
 
-  <div class="chat" id="chat">
-    <div style="align-self:center; font-size:11px; opacity:0.4; margin:10px 0;">Oda hazır, çeviri başlıyor...</div>
-  </div>
+  <div class="chat" id="chat"></div>
 
   <div class="input" id="inputDock">
     <button id="micBtn" class="dock-btn mic-btn">🎙️</button>
-    <textarea id="msgInput" rows="1" placeholder="Mesajınızı yazın..."></textarea>
+    <textarea id="msgInput" rows="1" placeholder="Yazmaya başla..."></textarea>
     <button id="sendBtn" class="dock-btn send-btn">➤</button>
   </div>
 </div>
 
 <script>
+  // İSİM FORMATLAMA FONKSİYONU
+  function formatName(fullName) {
+    if (!fullName) return "";
+    const parts = fullName.trim().split(/\s+/);
+    if (parts.length === 1) return parts[0];
+    
+    const first = parts[0];
+    const rest = parts.slice(1).map(p => p[0].toUpperCase() + ".").join("");
+    return `${first} ${rest}`;
+  }
+
   // KLAVYE HATASI KESİN ÇÖZÜM
   const room = document.getElementById('roomContainer');
   const chat = document.getElementById('chat');
@@ -169,7 +136,6 @@
     if (window.visualViewport) {
       const vh = window.visualViewport.height;
       room.style.height = `${vh}px`;
-      // Mesajlar klavyenin üstünde kalsın
       setTimeout(() => { chat.scrollTop = chat.scrollHeight; }, 100);
     }
   };
@@ -177,21 +143,7 @@
   if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', fixLayout);
   }
-
-  msgInput.addEventListener('focus', () => {
-    setTimeout(fixLayout, 300); // Klavye animasyonu bitişini bekle
-  });
-
-  // DİL SEÇİMİ GÖRSEL GÜNCELLEME
-  const langSelect = document.getElementById('langSelect');
-  const flagSpan = document.getElementById('currentLangFlag');
-  const nameSpan = document.getElementById('currentLangName');
-
-  langSelect.addEventListener('change', () => {
-    const selected = langSelect.options[langSelect.selectedIndex];
-    flagSpan.innerText = selected.getAttribute('data-flag');
-    nameSpan.innerText = selected.text;
-  });
+  msgInput.addEventListener('focus', () => { setTimeout(fixLayout, 400); });
 
   // Textarea otomatik uzama
   msgInput.addEventListener("input", function() {
