@@ -8,10 +8,10 @@
 
   <style>
     :root {
-      --topH: 64px;
+      --topH: 70px;
       --metaH: 80px;
-      --peopleH: 90px; /* Daraltıldı, yazım alanı arttı */
-      --dockH: 110px;
+      --peopleH: 92px;
+      --dockH: 100px;
       --accent: #00f2fe;
       --pink: #f472b6;
       --violet: #7c5cff;
@@ -26,13 +26,7 @@
       color: #fff;
       font-family: 'Outfit', sans-serif;
       overflow: hidden;
-      position: fixed;
-    }
-
-    body {
-      background: 
-        radial-gradient(circle at 50% 0%, rgba(0,242,254,0.08) 0%, transparent 24%),
-        linear-gradient(180deg, #050208 0%, #090411 100%);
+      position: fixed; /* Mobilde body kaymasını önler */
     }
 
     .room {
@@ -42,131 +36,119 @@
       margin: 0 auto;
       display: flex;
       flex-direction: column;
+      background: #050208;
     }
 
     /* Üst Bar */
     .topbar { height: var(--topH); display: flex; align-items: center; padding: 0 16px; border-bottom: 1px solid rgba(255,255,255,0.05); flex-shrink: 0; }
-    .brand { flex: 1; text-align: center; font-family: 'Space Grotesk'; font-weight: 700; font-size: 20px; }
-    .brand .accent { color: var(--accent); }
+    .brand { flex: 1; text-align: center; font-family: 'Space Grotesk'; font-size: 20px; font-weight: 700; }
+    .brand span { color: var(--accent); }
 
-    /* Meta & Oda Bilgisi */
-    .meta { 
-      min-height: var(--metaH); 
-      display: flex; flex-direction: column; justify-content: center;
-      padding: 8px 16px; background: rgba(255,255,255,0.02);
-      border-bottom: 1px solid rgba(255,255,255,0.05); flex-shrink: 0;
-    }
-    .metaTop { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-    #roomPill { background: #7000ff; padding: 4px 14px; border-radius: 10px; font-weight: 900; font-size: 18px; letter-spacing: 1px; }
-    #langSelect { height: 34px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #fff; font-size: 12px; font-weight: 700; padding: 0 8px; }
-    .room-info { font-size: 10px; color: var(--accent); font-weight: 800; opacity: 0.8; }
+    /* Meta & Oda */
+    .meta { height: var(--metaH); display: flex; flex-direction: column; justify-content: center; padding: 0 16px; background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.05); flex-shrink: 0; }
+    .room-info { font-size: 10px; color: var(--accent); font-weight: 800; margin-top: 4px; }
 
-    /* Katılımcılar - ALT BOŞLUK SIFIRLANDI */
-    .people { height: var(--peopleH); padding: 5px 0 0 0; border-bottom: 1px solid rgba(255,255,255,0.05); flex-shrink: 0; }
-    .people-scroll { display: flex; gap: 12px; overflow-x: auto; padding: 0 16px; scrollbar-width: none; }
-    .pItem { display: flex; flex-direction: column; align-items: center; min-width: 58px; }
+    /* Katılımcılar */
+    .people { height: var(--peopleH); padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.05); flex-shrink: 0; }
+    .people-scroll { display: flex; gap: 15px; overflow-x: auto; padding: 0 16px; scrollbar-width: none; align-items: center; }
+    .pItem { display: flex; flex-direction: column; align-items: center; min-width: 60px; }
     .pAvatar { width: 44px; height: 44px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.1); overflow: hidden; background: rgba(255,255,255,0.05); }
     .pAvatar img { width: 100%; height: 100%; object-fit: cover; }
-    .pName { font-size: 9px; font-weight: 800; margin-top: 4px; text-align: center; color: rgba(255,255,255,0.8); max-width: 60px; overflow: hidden; }
+    .pName { font-size: 9px; font-weight: 800; margin-top: 4px; color: rgba(255,255,255,0.8); }
 
-    /* Chat Alanı */
-    .chat { flex: 1; overflow-y: auto; padding: 12px 16px; display: flex; flex-direction: column; gap: 14px; scrollbar-width: none; }
+    /* Chat */
+    .chat { flex: 1; overflow-y: auto; padding: 15px 16px; display: flex; flex-direction: column; gap: 14px; scrollbar-width: none; }
     .msg-row { max-width: 90%; display: flex; flex-direction: column; position: relative; }
     .msg-row.left { align-self: flex-start; padding-left: 12px; }
     .msg-row.right { align-self: flex-end; padding-right: 12px; align-items: flex-end; }
-    
-    /* Kavisli Çizgi Mantığı */
-    .msg-line { position: absolute; top: 2px; bottom: 2px; width: 3px; border-radius: 10px; }
+    .msg-line { position: absolute; top: 0; bottom: 0; width: 3.5px; border-radius: 10px; }
     .msg-row.left .msg-line { left: 0; }
     .msg-row.right .msg-line { right: 0; }
-    .sender-name { font-size: 11px; font-weight: 900; margin-bottom: 2px; }
-    .msg-bubble { font-size: 14px; line-height: 1.5; color: rgba(255,255,255,0.9); }
 
-    /* YENİ NESİL MİC-DOCK */
-    .input {
-      min-height: var(--dockH);
-      background: linear-gradient(0deg, #0a0510 0%, #0d0915 100%);
-      border-top: 1px solid rgba(255,255,255,0.08);
-      display: flex; flex-direction: column; justify-content: center;
+    /* DOCK - TAM ORTALI MİC VE GİZLİ YAZI ALANI */
+    .input-dock {
+      background: #0a0510;
+      border-top: 1px solid rgba(255,255,255,0.1);
       padding: 10px 16px calc(12px + env(safe-area-inset-bottom));
-      z-index: 1000; flex-shrink: 0;
+      flex-shrink: 0;
+      z-index: 1000;
     }
 
-    .mic-only-row { display: flex; align-items: center; justify-content: space-between; gap: 15px; }
+    .dock-main-row {
+      display: flex;
+      align-items: center;
+      justify-content: center; /* Merkeze Alındı */
+      gap: 30px;
+    }
 
-    .mic-side-btn {
-      width: 46px; height: 46px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1);
+    .side-btn {
+      width: 48px; height: 48px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1);
       background: rgba(255,255,255,0.05); color: #fff; font-size: 20px; cursor: pointer;
     }
 
-    /* İkonik Pro Mic */
+    /* Pro Mikrofon Tasarımı */
     .main-mic {
       width: 76px; height: 76px; border-radius: 50%; border: none;
-      background: #120d16;
+      background: radial-gradient(circle at 30% 30%, #1e1e2e, #050208);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.6), inset 0 2px 2px rgba(255,255,255,0.1);
       display: flex; align-items: center; justify-content: center;
-      position: relative; cursor: pointer;
-      box-shadow: 0 0 0 1px rgba(255,255,255,0.1);
+      cursor: pointer; position: relative;
     }
 
-    .main-mic::before {
-      content: ""; position: absolute; inset: 4px; border-radius: 50%;
-      background: linear-gradient(135deg, var(--accent), var(--violet));
-      opacity: 0.9; z-index: 1;
+    .main-mic::after {
+      content: "🎙️"; font-size: 32px; filter: drop-shadow(0 0 10px var(--accent));
     }
 
-    .main-mic .mic-icon { position: relative; z-index: 2; font-size: 32px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
-
-    .main-mic.listening::after {
-      content: ""; position: absolute; inset: -4px; border-radius: 50%;
-      border: 2px solid var(--pink);
-      animation: micPulse 1.5s infinite;
+    .main-mic.listening {
+      background: radial-gradient(circle at 30% 30%, var(--pink), var(--violet));
+      animation: micGlow 1.5s infinite alternate;
     }
 
-    @keyframes micPulse {
-      0% { transform: scale(1); opacity: 1; }
-      100% { transform: scale(1.3); opacity: 0; }
+    @keyframes micGlow {
+      from { box-shadow: 0 0 10px var(--pink); transform: scale(1); }
+      to { box-shadow: 0 0 25px var(--pink); transform: scale(1.05); }
     }
 
-    .mic-hint { text-align: center; font-size: 10px; font-weight: 700; color: var(--accent); margin-top: 8px; opacity: 0.7; }
-
-    /* Text Entry Alanı */
-    .text-entry { display: none; margin-top: 10px; animation: slideUp 0.3s ease-out; }
-    .text-entry.show { display: flex; }
-    @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    /* Yazı Giriş Alanı - Pop-up Gibi Açılacak */
+    .text-entry-overlay {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      margin-top: 12px;
+      animation: fadeIn 0.2s ease;
+    }
+    .text-entry-overlay.show { display: flex; }
 
     textarea {
-      flex: 1; height: 46px; max-height: 120px;
-      background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15);
-      border-radius: 20px; color: #fff; padding: 12px 16px; font-size: 15px; resize: none;
+      flex: 1; height: 48px; max-height: 120px;
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 20px; color: #fff; padding: 12px 18px; font-size: 15px; resize: none;
     }
 
-    .send-btn-dock { background: var(--accent); color: #000; font-weight: 900; border-radius: 50%; width: 46px; height: 46px; border: none; margin-left: 8px; }
+    .send-btn {
+      width: 48px; height: 48px; border-radius: 50%; border: none;
+      background: var(--accent); color: #000; font-weight: 900; cursor: pointer;
+    }
 
-    .hide { display: none !important; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
   </style>
 </head>
 
 <body>
 <div class="room" id="roomContainer">
-
+  
   <div class="topbar">
-    <button id="backBtn" class="topBtn">←</button>
-    <div class="brand">All<span class="accent">To</span>All</div>
-    <button id="exitBtn" class="topBtn">✕</button>
+    <button id="backBtn" class="side-btn" style="border:none; background:none;">←</button>
+    <div class="brand">All<span>To</span>All</div>
+    <button id="exitBtn" class="side-btn" style="border:none; background:none;">✕</button>
   </div>
 
   <div class="meta">
-    <div class="metaTop">
-      <div id="roomPill">------</div>
-      <div style="display: flex; gap: 8px;">
-        <select id="langSelect">
-          <option value="tr">🇹🇷 TR</option>
-          <option value="en">🇬🇧 EN</option>
-        </select>
-        <button id="soundToggleBtn" style="background:none; border:none; font-size:18px;">🔊</button>
-      </div>
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <div id="roomPill" style="background:var(--violet); padding:6px 14px; border-radius:10px; font-weight:900; font-size:18px;">------</div>
+      <div style="background:rgba(255,255,255,0.08); padding:6px 12px; border-radius:10px; font-size:13px; font-weight:700;">🇹🇷 Türkçe ▼</div>
     </div>
-    <div class="room-info">Bu kodu sohbete katılmak isteyenlere veriniz.</div>
+    <div class="room-info">Bu Kodu Sohbete Katılmak İsteyenlere Veriniz.</div>
   </div>
 
   <div class="people">
@@ -175,58 +157,293 @@
 
   <div class="chat" id="chat"></div>
 
-  <div class="input" id="inputDock">
-    <div class="mic-only-row">
-      <button id="textToggleBtn" class="mic-side-btn">⌨️</button>
-      <button id="micBtn" class="main-mic">
-        <span class="mic-icon">🎙️</span>
-      </button>
-      <div id="textSendArea" class="text-entry">
-         <textarea id="msgInput" placeholder="Yazmaya başla..."></textarea>
-         <button id="sendBtn" class="send-btn-dock">➤</button>
-      </div>
+  <div class="input-dock" id="inputDock">
+    <div class="dock-main-row">
+      <button id="textToggleBtn" class="side-btn">⌨️</button>
+      <button id="micBtn" class="main-mic"></button>
+      <div style="width: 48px;"></div> </div>
+
+    <div class="text-entry-overlay" id="textEntry">
+      <textarea id="msgInput" rows="1" placeholder="Mesajınızı yazın..."></textarea>
+      <button id="sendBtn" class="send-btn">➤</button>
     </div>
-    <div class="mic-hint" id="micHint">Konuşmak için dokun, yazmak için klavyeye bas.</div>
   </div>
+
 </div>
 
 <script>
-  const room = document.getElementById("roomContainer");
-  const chat = document.getElementById("chat");
-  const msgInput = document.getElementById("msgInput");
-  const textToggleBtn = document.getElementById("textToggleBtn");
-  const textSendArea = document.getElementById("textSendArea");
+  const room = document.getElementById('roomContainer');
+  const chat = document.getElementById('chat');
+  const textEntry = document.getElementById('textEntry');
+  const msgInput = document.getElementById('msgInput');
+  const textToggleBtn = document.getElementById('textToggleBtn');
 
-  function fixLayout() {
+  // KLAVYE HATASINI KÖKTEN ÇÖZEN SİHİRLİ FONKSİYON
+  function syncLayout() {
     if (window.visualViewport) {
       const vh = window.visualViewport.height;
       room.style.height = `${vh}px`;
-      setTimeout(() => { chat.scrollTop = chat.scrollHeight; }, 100);
+      // Chat'i en alta kaydır
+      setTimeout(() => { chat.scrollTop = chat.scrollHeight; }, 50);
     }
   }
 
-  textToggleBtn?.addEventListener("click", () => {
-    textSendArea.classList.toggle("show");
-    if(textSendArea.classList.contains("show")) {
-      setTimeout(() => { msgInput.focus(); fixLayout(); }, 100);
+  // Klavye simgesine basınca alanı aç/kapat
+  textToggleBtn.addEventListener('click', () => {
+    textEntry.classList.toggle('show');
+    if(textEntry.classList.contains('show')) {
+      setTimeout(() => { 
+        msgInput.focus(); 
+        syncLayout(); 
+      }, 100);
     } else {
-      fixLayout();
+      syncLayout();
     }
   });
 
+  // Viewport değişimlerini dinle (Klavye açılma anı)
   if (window.visualViewport) {
-    window.visualViewport.addEventListener("resize", fixLayout);
+    window.visualViewport.addEventListener('resize', syncLayout);
+    window.visualViewport.addEventListener('scroll', syncLayout);
   }
 
-  msgInput?.addEventListener("focus", () => { setTimeout(fixLayout, 300); });
-  msgInput?.addEventListener("input", function() {
-    this.style.height = "46px";
-    this.style.height = (this.scrollHeight) + "px";
+  msgInput.addEventListener('focus', () => {
+    setTimeout(syncLayout, 300); // Klavye animasyonu bitişi
   });
 
-  fixLayout();
+  msgInput.addEventListener('input', function() {
+    this.style.height = '48px';
+    this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+  });
+
+  // İlk yüklemede boyutu ayarla
+  syncLayout();
 </script>
 
-<script type="module" src="/js/alltoall_room.js?v=mic_first_1"></script>
+<script type="module" src="/js/alltoall_room.js?v=fix_final_1"></script>
+</body>
+</html><!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+  <title>italkyAI • AllToAll Room</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --topH: 70px;
+      --metaH: 80px;
+      --peopleH: 92px;
+      --dockH: 100px;
+      --accent: #00f2fe;
+      --pink: #f472b6;
+      --violet: #7c5cff;
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+
+    html, body {
+      margin: 0; padding: 0;
+      width: 100%; height: 100%;
+      background: #050208;
+      color: #fff;
+      font-family: 'Outfit', sans-serif;
+      overflow: hidden;
+      position: fixed; /* Mobilde body kaymasını önler */
+    }
+
+    .room {
+      position: relative;
+      width: min(500px, 100vw);
+      height: 100dvh;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      background: #050208;
+    }
+
+    /* Üst Bar */
+    .topbar { height: var(--topH); display: flex; align-items: center; padding: 0 16px; border-bottom: 1px solid rgba(255,255,255,0.05); flex-shrink: 0; }
+    .brand { flex: 1; text-align: center; font-family: 'Space Grotesk'; font-size: 20px; font-weight: 700; }
+    .brand span { color: var(--accent); }
+
+    /* Meta & Oda */
+    .meta { height: var(--metaH); display: flex; flex-direction: column; justify-content: center; padding: 0 16px; background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.05); flex-shrink: 0; }
+    .room-info { font-size: 10px; color: var(--accent); font-weight: 800; margin-top: 4px; }
+
+    /* Katılımcılar */
+    .people { height: var(--peopleH); padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.05); flex-shrink: 0; }
+    .people-scroll { display: flex; gap: 15px; overflow-x: auto; padding: 0 16px; scrollbar-width: none; align-items: center; }
+    .pItem { display: flex; flex-direction: column; align-items: center; min-width: 60px; }
+    .pAvatar { width: 44px; height: 44px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.1); overflow: hidden; background: rgba(255,255,255,0.05); }
+    .pAvatar img { width: 100%; height: 100%; object-fit: cover; }
+    .pName { font-size: 9px; font-weight: 800; margin-top: 4px; color: rgba(255,255,255,0.8); }
+
+    /* Chat */
+    .chat { flex: 1; overflow-y: auto; padding: 15px 16px; display: flex; flex-direction: column; gap: 14px; scrollbar-width: none; }
+    .msg-row { max-width: 90%; display: flex; flex-direction: column; position: relative; }
+    .msg-row.left { align-self: flex-start; padding-left: 12px; }
+    .msg-row.right { align-self: flex-end; padding-right: 12px; align-items: flex-end; }
+    .msg-line { position: absolute; top: 0; bottom: 0; width: 3.5px; border-radius: 10px; }
+    .msg-row.left .msg-line { left: 0; }
+    .msg-row.right .msg-line { right: 0; }
+
+    /* DOCK - TAM ORTALI MİC VE GİZLİ YAZI ALANI */
+    .input-dock {
+      background: #0a0510;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      padding: 10px 16px calc(12px + env(safe-area-inset-bottom));
+      flex-shrink: 0;
+      z-index: 1000;
+    }
+
+    .dock-main-row {
+      display: flex;
+      align-items: center;
+      justify-content: center; /* Merkeze Alındı */
+      gap: 30px;
+    }
+
+    .side-btn {
+      width: 48px; height: 48px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.05); color: #fff; font-size: 20px; cursor: pointer;
+    }
+
+    /* Pro Mikrofon Tasarımı */
+    .main-mic {
+      width: 76px; height: 76px; border-radius: 50%; border: none;
+      background: radial-gradient(circle at 30% 30%, #1e1e2e, #050208);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.6), inset 0 2px 2px rgba(255,255,255,0.1);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; position: relative;
+    }
+
+    .main-mic::after {
+      content: "🎙️"; font-size: 32px; filter: drop-shadow(0 0 10px var(--accent));
+    }
+
+    .main-mic.listening {
+      background: radial-gradient(circle at 30% 30%, var(--pink), var(--violet));
+      animation: micGlow 1.5s infinite alternate;
+    }
+
+    @keyframes micGlow {
+      from { box-shadow: 0 0 10px var(--pink); transform: scale(1); }
+      to { box-shadow: 0 0 25px var(--pink); transform: scale(1.05); }
+    }
+
+    /* Yazı Giriş Alanı - Pop-up Gibi Açılacak */
+    .text-entry-overlay {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      margin-top: 12px;
+      animation: fadeIn 0.2s ease;
+    }
+    .text-entry-overlay.show { display: flex; }
+
+    textarea {
+      flex: 1; height: 48px; max-height: 120px;
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 20px; color: #fff; padding: 12px 18px; font-size: 15px; resize: none;
+    }
+
+    .send-btn {
+      width: 48px; height: 48px; border-radius: 50%; border: none;
+      background: var(--accent); color: #000; font-weight: 900; cursor: pointer;
+    }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+
+<body>
+<div class="room" id="roomContainer">
+  
+  <div class="topbar">
+    <button id="backBtn" class="side-btn" style="border:none; background:none;">←</button>
+    <div class="brand">All<span>To</span>All</div>
+    <button id="exitBtn" class="side-btn" style="border:none; background:none;">✕</button>
+  </div>
+
+  <div class="meta">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <div id="roomPill" style="background:var(--violet); padding:6px 14px; border-radius:10px; font-weight:900; font-size:18px;">------</div>
+      <div style="background:rgba(255,255,255,0.08); padding:6px 12px; border-radius:10px; font-size:13px; font-weight:700;">🇹🇷 Türkçe ▼</div>
+    </div>
+    <div class="room-info">Bu Kodu Sohbete Katılmak İsteyenlere Veriniz.</div>
+  </div>
+
+  <div class="people">
+    <div class="people-scroll" id="peopleScroll"></div>
+  </div>
+
+  <div class="chat" id="chat"></div>
+
+  <div class="input-dock" id="inputDock">
+    <div class="dock-main-row">
+      <button id="textToggleBtn" class="side-btn">⌨️</button>
+      <button id="micBtn" class="main-mic"></button>
+      <div style="width: 48px;"></div> </div>
+
+    <div class="text-entry-overlay" id="textEntry">
+      <textarea id="msgInput" rows="1" placeholder="Mesajınızı yazın..."></textarea>
+      <button id="sendBtn" class="send-btn">➤</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const room = document.getElementById('roomContainer');
+  const chat = document.getElementById('chat');
+  const textEntry = document.getElementById('textEntry');
+  const msgInput = document.getElementById('msgInput');
+  const textToggleBtn = document.getElementById('textToggleBtn');
+
+  // KLAVYE HATASINI KÖKTEN ÇÖZEN SİHİRLİ FONKSİYON
+  function syncLayout() {
+    if (window.visualViewport) {
+      const vh = window.visualViewport.height;
+      room.style.height = `${vh}px`;
+      // Chat'i en alta kaydır
+      setTimeout(() => { chat.scrollTop = chat.scrollHeight; }, 50);
+    }
+  }
+
+  // Klavye simgesine basınca alanı aç/kapat
+  textToggleBtn.addEventListener('click', () => {
+    textEntry.classList.toggle('show');
+    if(textEntry.classList.contains('show')) {
+      setTimeout(() => { 
+        msgInput.focus(); 
+        syncLayout(); 
+      }, 100);
+    } else {
+      syncLayout();
+    }
+  });
+
+  // Viewport değişimlerini dinle (Klavye açılma anı)
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', syncLayout);
+    window.visualViewport.addEventListener('scroll', syncLayout);
+  }
+
+  msgInput.addEventListener('focus', () => {
+    setTimeout(syncLayout, 300); // Klavye animasyonu bitişi
+  });
+
+  msgInput.addEventListener('input', function() {
+    this.style.height = '48px';
+    this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+  });
+
+  // İlk yüklemede boyutu ayarla
+  syncLayout();
+</script>
+
+<script type="module" src="/js/alltoall_room.js?v=fix_final_1"></script>
 </body>
 </html>
