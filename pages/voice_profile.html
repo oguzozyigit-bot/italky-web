@@ -577,10 +577,16 @@ async function checkVoiceProfile(){
       return;
     }
 
-    if(!data?.voice_sample_path){
+    const hasVoice =
+      !!data?.voice_sample_path &&
+      String(data.voice_sample_path).trim() !== "" &&
+      String(data.voice_sample_path).trim() !== "[]" &&
+      String(data.voice_sample_path).trim() !== 'null';
+
+    if(!hasVoice){
       if(cloneVoiceDesc) cloneVoiceDesc.textContent = "Henüz ses dosyası oluşturmadınız";
     }else{
-      if(cloneVoiceDesc) cloneVoiceDesc.textContent = data.voice_sample_path;
+      if(cloneVoiceDesc) cloneVoiceDesc.textContent = "Ses kaydınız bulunmaktadır. Dilerseniz ses kaydınızı yenileyebilirsiniz.";
     }
   }catch(e){
     console.warn("[voice profile check]", e);
