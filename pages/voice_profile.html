@@ -1,3 +1,4 @@
+<!-- FILE: /pages/voice_profile.html -->
 <!doctype html>
 <html lang="tr">
 <head>
@@ -158,6 +159,61 @@
       width: 16.6%;
       transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
       box-shadow: 0 0 10px var(--accent);
+    }
+
+    .voice-settings-panel{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      background: linear-gradient(145deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01));
+      border: 1px solid var(--panel-border);
+      border-radius: 22px;
+      padding: 16px;
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      box-shadow: 0 14px 30px rgba(0,0,0,.14);
+    }
+
+    .panel-title{
+      margin:0;
+      font-family:'Space Grotesk',sans-serif;
+      font-size:16px;
+      font-weight:900;
+      color:#fff;
+    }
+
+    .voice-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+
+    .voice-card{
+      padding:14px;
+      border-radius:16px;
+      background:rgba(255,255,255,.03);
+      border:1px solid rgba(255,255,255,.08);
+      cursor:pointer;
+      transition:.2s;
+    }
+
+    .voice-card.active{
+      border-color:#818cf8;
+      background:rgba(129,140,248,.15);
+      box-shadow:0 0 0 1px rgba(129,140,248,.15) inset;
+    }
+
+    .voice-name{
+      font-size:13px;
+      font-weight:900;
+      color:#fff;
+    }
+
+    .voice-desc{
+      font-size:11px;
+      opacity:.65;
+      margin-top:4px;
+      line-height:1.35;
     }
 
     .sample-card {
@@ -384,6 +440,7 @@
       #pageContent{ padding:12px 14px 20px; }
       .title{ font-size:25px; }
       .sample-text{ font-size:20px; min-height:74px; }
+      .voice-grid{ grid-template-columns:1fr; }
     }
   </style>
 </head>
@@ -399,9 +456,35 @@
     <section class="page-head">
       <div class="page-kicker">Voice Profile</div>
       <h1 class="title">Sesini <span class="ai">Tanıt</span></h1>
-      <p class="page-sub">Kısa cümleleri okuyarak kendine özel ses profilini oluştur.</p>
+      <p class="page-sub">Kısa cümleleri okuyarak kendine özel ses profilini oluştur ve çeviri sesini seç.</p>
     </section>
   </div>
+
+  <section class="voice-settings-panel">
+    <h2 class="panel-title">Ses Seçimi</h2>
+
+    <div class="voice-grid">
+      <div class="voice-card" data-voice="auto">
+        <div class="voice-name">Otomatik</div>
+        <div class="voice-desc">Varsayılan sistem sesi</div>
+      </div>
+
+      <div class="voice-card" data-voice="female">
+        <div class="voice-name">Kadın Ses</div>
+        <div class="voice-desc">Kadın tonlu çeviri</div>
+      </div>
+
+      <div class="voice-card" data-voice="male">
+        <div class="voice-name">Erkek Ses</div>
+        <div class="voice-desc">Erkek tonlu çeviri</div>
+      </div>
+
+      <div class="voice-card" data-voice="clone">
+        <div class="voice-name">Kendi Sesim</div>
+        <div class="voice-desc">Oluşturduğun ses profili</div>
+      </div>
+    </div>
+  </section>
 
   <section class="progress-container">
     <div class="progress-info">
@@ -436,35 +519,51 @@
     <button class="btn btn-secondary" id="cancelBtn" type="button">Vazgeç</button>
   </section>
 
-  <section class="voice-select">
-  <h2 class="completed-title">Ses Seçimi</h2>
+  <section class="completed-wrap">
+    <h2 class="completed-title">Tamamlananlar</h2>
+    <div class="completed-list" id="completedList"></div>
+  </section>
 
-  <div class="voice-grid">
-
-    <div class="voice-card" data-voice="auto">
-      <div class="voice-name">Otomatik</div>
-      <div class="voice-desc">Varsayılan sistem sesi</div>
-    </div>
-
-    <div class="voice-card" data-voice="female">
-      <div class="voice-name">Kadın Ses</div>
-      <div class="voice-desc">Kadın tonlu çeviri</div>
-    </div>
-
-    <div class="voice-card" data-voice="male">
-      <div class="voice-name">Erkek Ses</div>
-      <div class="voice-desc">Erkek tonlu çeviri</div>
-    </div>
-
-    <div class="voice-card" data-voice="clone">
-      <div class="voice-name">Kendi Sesim</div>
-      <div class="voice-desc">Oluşturduğun ses</div>
-    </div>
-
-  </div>
-</section>
+</div>
 
 <div class="toast" id="toast"></div>
+
+<script type="module">
+const voiceCards = document.querySelectorAll(".voice-card");
+
+const VOICE_KEY = "tts_voice";
+const LEGACY_KEY = "live_interpreter_voice";
+
+let currentVoice = localStorage.getItem(VOICE_KEY) || localStorage.getItem(LEGACY_KEY) || "auto";
+
+function renderVoice(){
+  voiceCards.forEach(v => {
+    v.classList.toggle("active", v.dataset.voice === currentVoice);
+  });
+}
+
+voiceCards.forEach(card => {
+  card.addEventListener("click", () => {
+    currentVoice = card.dataset.voice || "auto";
+    localStorage.setItem(VOICE_KEY, currentVoice);
+    localStorage.setItem(LEGACY_KEY, currentVoice);
+
+    renderVoice();
+
+    const toast = document.getElementById("toast");
+    if(toast){
+      toast.textContent = "Ses seçimi güncellendi";
+      toast.classList.add("show");
+      clearTimeout(window.__voiceToast);
+      window.__voiceToast = setTimeout(() => {
+        toast.classList.remove("show");
+      }, 1600);
+    }
+  });
+});
+
+renderVoice();
+</script>
 
 <script type="module" src="/js/voice_profile_boot.js?v=final_free_all_2"></script>
 
