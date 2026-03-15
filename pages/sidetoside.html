@@ -14,7 +14,7 @@
   <style>
     :root{
       --txt:rgba(255,255,255,.96);
-      --muted:rgba(255,255,255,.64);
+      --muted:rgba(255,255,255,.66);
       --cardLine:rgba(255,255,255,.12);
       --ai-grad:linear-gradient(135deg,#67e8f9 0%, #818cf8 46%, #f472b6 100%);
       --cyan:#67e8f9;
@@ -34,54 +34,44 @@
       height:100%;
       color:var(--txt);
       font-family:'Outfit',sans-serif;
-      background:#120d16;
       overflow:hidden;
-      scrollbar-width:none;
-    }
-
-    html::-webkit-scrollbar,
-    body::-webkit-scrollbar{
-      display:none;
+      background:#120d16;
     }
 
     body{
       background:
         radial-gradient(circle at 50% 0%, rgba(251,146,60,.18) 0%, transparent 28%),
-        radial-gradient(circle at 20% 18%, rgba(244,114,182,.12) 0%, transparent 25%),
-        radial-gradient(circle at 82% 18%, rgba(96,165,250,.10) 0%, transparent 20%),
-        linear-gradient(180deg, #1d1016 0%, #150e19 34%, #120d16 100%);
+        radial-gradient(circle at 18% 16%, rgba(244,114,182,.12) 0%, transparent 25%),
+        radial-gradient(circle at 82% 18%, rgba(96,165,250,.12) 0%, transparent 20%),
+        linear-gradient(180deg, #61220e 0%, #2c1020 30%, #17101a 62%, #120d16 100%);
     }
 
     #pageContent{
       width:100%;
       height:calc(100dvh - var(--footerSafe));
-      overflow-y:auto;
-      padding:12px 14px 20px;
-      scrollbar-width:none;
-      -webkit-overflow-scrolling:touch;
-    }
-
-    #pageContent::-webkit-scrollbar{
-      display:none;
+      overflow:hidden;
+      padding:10px 14px 16px;
     }
 
     .page{
-      min-height:100%;
+      width:100%;
+      height:100%;
       display:flex;
       flex-direction:column;
       gap:12px;
     }
 
     .hero{
+      flex:0 0 auto;
       border-radius:30px;
       border:1px solid var(--cardLine);
       background:
-        radial-gradient(circle at 50% 10%, rgba(103,232,249,.12) 0%, transparent 26%),
+        radial-gradient(circle at 50% 8%, rgba(103,232,249,.12) 0%, transparent 26%),
         linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
       box-shadow:
         0 18px 32px rgba(0,0,0,.24),
         inset 0 1px 0 rgba(255,255,255,.04);
-      padding:18px 16px 16px;
+      padding:16px 14px 14px;
       text-align:center;
       position:relative;
       overflow:hidden;
@@ -104,8 +94,8 @@
       align-items:center;
       justify-content:center;
       gap:4px;
-      margin-bottom:10px;
-      height:24px;
+      margin-bottom:8px;
+      height:20px;
     }
 
     .wave-bar{
@@ -122,115 +112,290 @@
     .wave-bar:nth-child(4){ animation-delay:.36s; }
     .wave-bar:nth-child(5){ animation-delay:.48s; }
 
-    .title{
+    .hero-stage{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+    }
+
+    .holo-wrap{
+      position:relative;
+      width:170px;
+      height:170px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      margin:2px auto 2px;
+      perspective:1000px;
+      flex:0 0 auto;
+    }
+
+    .crystal-box{
+      position:absolute;
+      width:132px;
+      height:132px;
+      transform-style:preserve-3d;
+      animation:masterRotate 15s linear infinite;
+    }
+
+    .crystal-side{
+      position:absolute;
+      inset:0;
+      border:2px solid rgba(103,232,249,.34);
+      background:radial-gradient(circle, rgba(103,232,249,.06), transparent);
+      box-shadow:0 0 18px rgba(103,232,249,.12);
+    }
+
+    .f1{ transform:rotateY(0deg) rotateX(45deg); border-color:#67e8f9; }
+    .f2{ transform:rotateY(90deg) rotateZ(45deg); border-color:#f472b6; }
+    .f3{ transform:rotateX(90deg) rotateY(45deg); border-color:#fff; }
+
+    .qr-shell{
+      width:102px;
+      height:102px;
+      background:#fff;
+      border-radius:18px;
+      padding:8px;
+      box-shadow:
+        0 0 28px rgba(103,232,249,.32),
+        0 0 38px rgba(244,114,182,.14);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      animation:floatCore 4s ease-in-out infinite;
+      z-index:2;
+      overflow:hidden;
+    }
+
+    .qr-shell img{
+      width:100%;
+      height:100%;
+      object-fit:contain;
+      display:block;
+      border-radius:10px;
+    }
+
+    .hero-title{
       margin:0;
       font-family:'Space Grotesk',sans-serif;
-      font-size:28px;
+      font-size:30px;
       line-height:1;
       letter-spacing:-.8px;
       color:#fff;
       text-shadow:0 0 12px rgba(255,255,255,.08);
     }
 
-    .title span{
+    .hero-title span{
       background:var(--ai-grad);
       -webkit-background-clip:text;
       -webkit-text-fill-color:transparent;
     }
 
-    .sub{
-      margin:10px auto 0;
-      max-width:300px;
+    .hero-sub{
+      margin:0 auto;
+      max-width:305px;
       font-size:11px;
-      line-height:1.4;
+      line-height:1.42;
       color:var(--muted);
     }
 
-    .qr-card{
-      flex:1;
-      min-height:0;
-      border-radius:30px;
-      border:1px solid var(--cardLine);
-      background:
-        radial-gradient(circle at 18% 16%, rgba(103,232,249,.16) 0%, transparent 24%),
-        linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.025));
-      box-shadow:
-        0 18px 30px rgba(0,0,0,.24),
-        inset 0 1px 0 rgba(255,255,255,.05);
-      padding:18px 16px;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      gap:16px;
-      text-align:center;
-    }
-
-    .qr-wrap{
-      width:220px;
-      height:220px;
-      border-radius:24px;
-      background:#fff;
-      padding:10px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      overflow:hidden;
-      box-shadow:
-        0 0 24px rgba(255,255,255,.10),
-        0 0 30px rgba(103,232,249,.10);
-      flex:0 0 auto;
-    }
-
-    .qr-wrap img{
-      width:100%;
-      height:100%;
-      object-fit:contain;
-      display:block;
-    }
-
-    .code{
-      margin:0;
-      font-family:'Space Grotesk',sans-serif;
-      font-size:28px;
-      font-weight:900;
-      letter-spacing:4px;
-      color:#fff;
-      word-break:break-word;
-    }
-
-    .mini{
-      margin:0;
-      font-size:11px;
-      line-height:1.35;
-      color:rgba(255,255,255,.84);
-      max-width:290px;
-    }
-
     .status{
-      min-height:18px;
+      min-height:16px;
       margin:0;
       font-size:11px;
       font-weight:800;
       color:rgba(255,255,255,.78);
     }
 
+    .info-card{
+      flex:1 1 auto;
+      min-height:0;
+      border-radius:30px;
+      border:1px solid var(--cardLine);
+      background:
+        radial-gradient(circle at 12% 50%, rgba(251,146,60,.16) 0%, transparent 24%),
+        radial-gradient(circle at 88% 16%, rgba(103,232,249,.10) 0%, transparent 18%),
+        linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.025));
+      box-shadow:
+        0 18px 30px rgba(0,0,0,.24),
+        inset 0 1px 0 rgba(255,255,255,.05);
+      padding:16px;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      gap:14px;
+      overflow:hidden;
+    }
+
+    .feature{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:12px 12px;
+      border-radius:20px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.08);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
+    }
+
+    .feature-ico{
+      width:54px;
+      height:54px;
+      flex:0 0 auto;
+      border-radius:18px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:rgba(255,255,255,.10);
+      border:1px solid rgba(255,255,255,.14);
+      box-shadow:inset 0 0 18px rgba(255,255,255,.04);
+      position:relative;
+      overflow:hidden;
+    }
+
+    .feature-body{
+      flex:1;
+      min-width:0;
+    }
+
+    .feature-title{
+      margin:0;
+      font-family:'Space Grotesk',sans-serif;
+      font-size:18px;
+      line-height:1;
+      letter-spacing:-.4px;
+      color:#fff;
+    }
+
+    .feature-desc{
+      margin:6px 0 0;
+      font-size:11px;
+      line-height:1.35;
+      color:rgba(255,255,255,.86);
+    }
+
+    .ico-voice::before{
+      content:"";
+      width:14px;
+      height:24px;
+      border-radius:10px;
+      background:rgba(255,255,255,.92);
+      box-shadow:0 0 12px rgba(255,255,255,.14);
+      position:absolute;
+      top:10px;
+      left:50%;
+      transform:translateX(-50%);
+    }
+
+    .ico-voice::after{
+      content:"";
+      position:absolute;
+      left:50%;
+      bottom:11px;
+      width:22px;
+      height:12px;
+      border:2px solid rgba(255,255,255,.88);
+      border-top:none;
+      border-radius:0 0 12px 12px;
+      transform:translateX(-50%);
+    }
+
+    .ico-headset::before,
+    .ico-headset::after{
+      content:"";
+      position:absolute;
+      background:rgba(255,255,255,.9);
+    }
+
+    .ico-headset::before{
+      width:22px;
+      height:12px;
+      border-radius:12px 12px 0 0;
+      border:2px solid rgba(255,255,255,.9);
+      border-bottom:none;
+      top:11px;
+      left:50%;
+      transform:translateX(-50%);
+      background:transparent;
+    }
+
+    .ico-headset::after{
+      width:26px;
+      height:20px;
+      bottom:10px;
+      left:50%;
+      transform:translateX(-50%);
+      border-radius:8px;
+      background:linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.35));
+    }
+
+    .ico-distance::before{
+      content:"";
+      position:absolute;
+      width:10px;
+      height:10px;
+      border-radius:50%;
+      background:#fff;
+      left:12px;
+      top:22px;
+      box-shadow:20px 0 0 #fff;
+    }
+
+    .ico-distance::after{
+      content:"";
+      position:absolute;
+      left:17px;
+      top:26px;
+      width:20px;
+      height:2px;
+      background:linear-gradient(90deg, rgba(255,255,255,.15), rgba(103,232,249,.98), rgba(255,255,255,.15));
+      box-shadow:0 0 10px rgba(103,232,249,.35);
+    }
+
+    .footer-note{
+      margin:0;
+      text-align:center;
+      font-size:11px;
+      font-weight:800;
+      color:rgba(255,255,255,.74);
+      line-height:1.35;
+      padding-top:2px;
+    }
+
     @keyframes waveGlow{
       0%,100%{ height:10px; opacity:.34; }
-      50%{ height:24px; opacity:1; }
+      50%{ height:22px; opacity:1; }
+    }
+
+    @keyframes masterRotate{
+      from{ transform:rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
+      to{ transform:rotateX(360deg) rotateY(720deg) rotateZ(360deg); }
+    }
+
+    @keyframes floatCore{
+      0%,100%{ transform:translateY(0); }
+      50%{ transform:translateY(-8px); }
     }
 
     @media (max-width:390px){
-      .title{ font-size:24px; }
-      .sub{ font-size:10px; }
-      .qr-wrap{
-        width:196px;
-        height:196px;
+      .hero-title{ font-size:26px; }
+      .hero-sub{ font-size:10px; max-width:282px; }
+      .holo-wrap{
+        width:156px;
+        height:156px;
       }
-      .code{
-        font-size:24px;
-        letter-spacing:3px;
+      .crystal-box{
+        width:122px;
+        height:122px;
       }
+      .qr-shell{
+        width:94px;
+        height:94px;
+      }
+      .feature-title{ font-size:16px; }
+      .feature-desc{ font-size:10.5px; }
     }
   </style>
 </head>
@@ -248,18 +413,51 @@
           <div class="wave-bar"></div>
         </div>
 
-        <h1 class="title">Side<span>To</span>Side</h1>
-        <p class="sub">Diğer telefondan QR kodu okut. Bağlantı kurulunca oda otomatik açılacak.</p>
+        <div class="hero-stage">
+          <div class="holo-wrap">
+            <div class="crystal-box">
+              <div class="crystal-side f1"></div>
+              <div class="crystal-side f2"></div>
+              <div class="crystal-side f3"></div>
+            </div>
+
+            <div class="qr-shell">
+              <img id="qrImg" alt="SideToSide QR Kod">
+            </div>
+          </div>
+
+          <h1 class="hero-title">Side<span>To</span>Side</h1>
+          <p class="hero-sub">Diğer telefondan QR kodu okut. Eşleşme tamamlanınca görüşme ekranı otomatik açılır.</p>
+          <p class="status" id="statusText">Oda hazırlanıyor...</p>
+        </div>
       </section>
 
-      <section class="qr-card">
-        <div class="qr-wrap">
-          <img id="qrImg" alt="SideToSide QR Kod">
+      <section class="info-card">
+        <div class="feature">
+          <div class="feature-ico ico-voice"></div>
+          <div class="feature-body">
+            <h3 class="feature-title">Kendi Sesini Seç</h3>
+            <p class="feature-desc">Kadın, erkek veya kendi ses profilinle konuşma deneyimini kişiselleştir.</p>
+          </div>
         </div>
 
-        <p class="code" id="roomCode">------</p>
-        <p class="mini">QR çalışmazsa bu oda kodunu diğer cihazda kullanabilirsin.</p>
-        <p class="status" id="statusText">Oda hazırlanıyor...</p>
+        <div class="feature">
+          <div class="feature-ico ico-headset"></div>
+          <div class="feature-body">
+            <h3 class="feature-title">Kulaklıkla Daha Net</h3>
+            <p class="feature-desc">Kulaklık kullanımı arka plan sesini azaltır ve çeviri kalitesini daha stabil hale getirir.</p>
+          </div>
+        </div>
+
+        <div class="feature">
+          <div class="feature-ico ico-distance"></div>
+          <div class="feature-body">
+            <h3 class="feature-title">Mesafe Tanıma Desteği</h3>
+            <p class="feature-desc">Yakın konuşmalarda daha hızlı tepki verir, iki kişi arasında doğal kullanım için optimize edilmiştir.</p>
+          </div>
+        </div>
+
+        <p class="footer-note">Dilerseniz ana sayfadan da aynı eşleşme sistemini kullanabilirsiniz.</p>
       </section>
 
     </div>
@@ -269,7 +467,7 @@
     import { mountShell } from "/js/ui_shell.js";
 
     try {
-      mountShell({ scroll: "auto" });
+      mountShell({ scroll: "none" });
     } catch (e) {
       console.warn("[sidetoside shell]", e);
     }
@@ -283,7 +481,6 @@
     const ROOM_LANG_KEY = "italky_active_interpreter_lang";
 
     const qrImg = document.getElementById("qrImg");
-    const roomCode = document.getElementById("roomCode");
     const statusText = document.getElementById("statusText");
 
     let activeRoomId = "";
@@ -409,12 +606,10 @@
           throw new Error("room_id boş geldi");
         }
 
-        roomCode.textContent = activeRoomId;
         qrImg.src = qrUrlPrimary(buildJoinUrl(activeRoomId));
         startPreviewSocket(activeRoomId, cachedLang);
       }catch(e){
         console.error("[sidetoside room]", e);
-        roomCode.textContent = "ROOM-ERR";
         setStatus(e?.message || "Oda hazırlanamadı");
       }
     }
