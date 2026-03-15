@@ -3,7 +3,7 @@
 import { mountShell } from "/js/ui_shell.js";
 
 try {
-  mountShell({ scroll: "none" });
+  mountShell({ scroll: "auto" });
 } catch (e) {
   console.warn("[alltoall shell]", e);
 }
@@ -31,6 +31,7 @@ const btnBackHost = $("btnBackHost");
 const btnBackJoin = $("btnBackJoin");
 
 let activeCode = "";
+let activeRoomId = "";
 
 function setMode(mode) {
   homeCards?.classList.toggle("hide", mode !== "home");
@@ -40,6 +41,13 @@ function setMode(mode) {
 
 function setHostStatus(text) {
   if (hostStatus) hostStatus.textContent = text || "";
+}
+
+function resetHostState() {
+  activeCode = "";
+  activeRoomId = "";
+  if (roomCode) roomCode.textContent = "------";
+  setHostStatus("Kısa kod hazır olduğunda burada görünecek");
 }
 
 function makeShortCode(len = 6) {
@@ -61,6 +69,7 @@ function cleanCode(value) {
 async function createRoom() {
   const shortCode = makeShortCode(6);
 
+  resetHostState();
   setHostStatus("Kanal hazırlanıyor...");
 
   try {
@@ -70,7 +79,7 @@ async function createRoom() {
       body: JSON.stringify({
         host_code: shortCode,
         my_lang: "tr",
-        mode: "interpreter"
+        mode: "alltoall"
       })
     });
 
@@ -80,38 +89,50 @@ async function createRoom() {
       throw new Error(j?.detail || j?.error || "Oda oluşturulamadı");
     }
 
-    activeCode = shortCode;
+    activeRoomId = String(j.room_id || "").trim();
+    activeCode = cleanCode(j.host_code || shortCode);
+
+    if (!activeRoomId) {
+      throw new Error("room_id boş geldi");
+    }
+
+    if (!activeCode) {
+      throw new Error("host_code boş geldi");
+    }
 
     if (roomCode) roomCode.textContent = activeCode;
     setHostStatus("Kod hazır. Kopyalayabilir veya kanalı açabilirsin.");
   } catch (e) {
     console.error("[alltoall createRoom]", e);
-    activeCode = "";
-    if (roomCode) roomCode.textContent = "------";
+    resetHostState();
     setHostStatus("Kanal oluşturulamadı");
     alert(e?.message || "Oda oluşturulamadı");
   }
 }
 
 async function copyCode() {
-  if (!activeCode) return;
-
-  try {
-    await navigator.clipboard.writeText(activeCode);
-    setHostStatus("Kod kopyalandı");
-  } catch {
-    alert("Kod kopyalanamadı");
-  }
-}
-
-function goHostRoom() {
   if (!activeCode) {
     alert("Önce kanal oluştur");
     return;
   }
 
+  try {
+    await navigator.clipboard.writeText(activeCode);
+    setHostStatus("Kod kopyalandı");
+  } catch (e) {
+    console.warn("[alltoall copyCode]", e);
+    alert("Kod kopyalanamadı");
+  }
+}
+
+function goHostRoom() {
+  if (!activeCode || !activeRoomId) {
+    alert("Önce kanal oluştur");
+    return;
+  }
+
   location.href =
-    `/pages/alltoall_room.html?host=${encodeURIComponent(activeCode)}&role=host`;
+    `/pages/alltoall_room.html?room=${encodeURIComponent(activeRoomId)}&host=${encodeURIComponent(activeCode)}&role=host`;
 }
 
 function joinRoom() {
@@ -129,6 +150,7 @@ function joinRoom() {
 
 function bind() {
   setMode("home");
+  resetHostState();
 
   goHost?.addEventListener("click", async () => {
     setMode("host");
@@ -137,11 +159,17 @@ function bind() {
 
   goGuest?.addEventListener("click", () => {
     setMode("join");
-    setTimeout(() => roomInput?.focus(), 80);
+    setTimeout(() => roomInput?.focus(), 120);
   });
 
-  btnBackHost?.addEventListener("click", () => setMode("home"));
-  btnBackJoin?.addEventListener("click", () => setMode("home"));
+  btnBackHost?.addEventListener("click", () => {
+    resetHostState();
+    setMode("home");
+  });
+
+  btnBackJoin?.addEventListener("click", () => {
+    setMode("home");
+  });
 
   btnGoCall?.addEventListener("click", goHostRoom);
   btnCopy?.addEventListener("click", copyCode);
@@ -149,6 +177,25 @@ function bind() {
 
   roomInput?.addEventListener("input", () => {
     roomInput.value = cleanCode(roomInput.value);
+
+    if (roomInput.value.length === 6) {
+      setTimeout(() => {
+        if (document.activeElement === roomInput) {
+          joinRoom();
+        }
+      }, 120);
+    }
+  });
+
+  roomInput?.addEventListener("focus", () => {
+    setTimeout(() => {
+      try {
+        roomInput.scrollIntoView({
+          behavior: "smooth",
+          block: "center"
+        });
+      } catch {}
+    }, 260);
   });
 
   roomInput?.addEventListener("keydown", (e) => {
