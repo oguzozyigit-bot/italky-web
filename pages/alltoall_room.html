@@ -11,20 +11,21 @@
 
   <style>
     :root{
-      --topH:64px;
-      --whoH:76px;
-      --langH:70px;
-      --dockH:124px;
+      --actionH:58px;
+      --whoH:72px;
+      --controlsH:70px;
+      --dockH:128px;
 
       --bg:#07040d;
-      --panel:rgba(255,255,255,.05);
-      --line:rgba(255,255,255,.08);
       --txt:rgba(255,255,255,.96);
       --muted:rgba(255,255,255,.58);
 
       --cyan:#67e8f9;
       --violet:#7c5cff;
       --pink:#f472b6;
+
+      --line:rgba(255,255,255,.07);
+      --panel:rgba(255,255,255,.05);
       --accentGrad:linear-gradient(135deg,#67e8f9 0%,#7c5cff 48%,#f472b6 100%);
       --bracketGrad:linear-gradient(180deg,#67e8f9 0%,#7c5cff 55%,#f472b6 100%);
     }
@@ -70,18 +71,18 @@
       overflow:hidden;
     }
 
-    .topbar{
-      height:var(--topH);
+    .actionbar{
+      height:var(--actionH);
       display:flex;
       align-items:center;
+      justify-content:space-between;
       gap:10px;
       padding:0 14px;
-      border-bottom:1px solid rgba(255,255,255,.05);
-      backdrop-filter:blur(10px);
+      border-bottom:1px solid var(--line);
       flex:0 0 auto;
     }
 
-    .topBtn{
+    .iconBtn{
       width:40px;
       height:40px;
       border:none;
@@ -93,48 +94,23 @@
       flex:0 0 auto;
     }
 
-    .brand{
+    .actionSpacer{
       flex:1;
-      text-align:center;
-      font-family:'Space Grotesk',sans-serif;
-      font-weight:700;
-      font-size:21px;
-      letter-spacing:-.4px;
-    }
-
-    .brand .accent{
-      color:var(--cyan);
-    }
-
-    .roomPill{
-      flex:0 0 auto;
-      padding:7px 14px;
-      border-radius:14px;
-      background:linear-gradient(135deg,#5b21b6,#7c3aed,#a855f7);
-      border:1px solid rgba(255,255,255,.10);
-      box-shadow:0 0 18px rgba(124,92,255,.20);
-      font-size:15px;
-      font-weight:900;
-      letter-spacing:1px;
-      color:#fff;
-      cursor:pointer;
-      min-width:94px;
-      text-align:center;
     }
 
     .who{
-      height:var(--whoH);
-      padding:10px 16px;
+      min-height:var(--whoH);
+      padding:10px 14px;
       display:flex;
       align-items:center;
       gap:12px;
-      border-bottom:1px solid rgba(255,255,255,.05);
+      border-bottom:1px solid var(--line);
       flex:0 0 auto;
     }
 
     .who-avatar{
-      width:52px;
-      height:52px;
+      width:48px;
+      height:48px;
       border-radius:50%;
       overflow:hidden;
       background:rgba(255,255,255,.08);
@@ -182,16 +158,19 @@
       font-size:11px;
       color:rgba(255,255,255,.62);
       line-height:1.2;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
     }
 
-    .langbar{
-      height:var(--langH);
-      padding:10px 16px 12px;
+    .controls{
+      min-height:var(--controlsH);
+      padding:12px 14px;
       display:flex;
       align-items:center;
       justify-content:center;
       gap:10px;
-      border-bottom:1px solid rgba(255,255,255,.05);
+      border-bottom:1px solid var(--line);
       flex:0 0 auto;
     }
 
@@ -203,9 +182,32 @@
       height:1px;
     }
 
+    #roomPill{
+      min-width:96px;
+      max-width:118px;
+      height:42px;
+      padding:0 14px;
+      border-radius:14px;
+      background:linear-gradient(135deg,#5b21b6,#7c3aed,#a855f7);
+      border:1px solid rgba(255,255,255,.10);
+      box-shadow:0 0 18px rgba(124,92,255,.20);
+      color:#fff;
+      font-size:15px;
+      font-weight:900;
+      letter-spacing:1px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      flex:0 0 auto;
+    }
+
     .langBtn{
-      min-width:180px;
-      max-width:240px;
+      min-width:168px;
+      max-width:230px;
       height:42px;
       border:none;
       border-radius:16px;
@@ -229,23 +231,10 @@
       white-space:nowrap;
     }
 
-    #soundToggleBtn{
-      width:42px;
-      height:42px;
-      border:none;
-      border-radius:16px;
-      background:rgba(255,255,255,.07);
-      border:1px solid rgba(255,255,255,.10);
-      color:#fff;
-      font-size:17px;
-      cursor:pointer;
-      flex:0 0 auto;
-    }
-
     .chatWrap{
       flex:1;
       min-height:0;
-      padding:14px 14px 6px;
+      padding:12px 14px 8px;
       overflow:hidden;
       display:flex;
       flex-direction:column;
@@ -256,10 +245,11 @@
       min-height:0;
       overflow-y:auto;
       display:flex;
-      flex-direction:column-reverse;
+      flex-direction:column;
       gap:14px;
       padding-bottom:8px;
       scrollbar-width:none;
+      scroll-behavior:smooth;
     }
 
     .chat::-webkit-scrollbar{
@@ -395,7 +385,7 @@
     }
 
     .dock{
-      height:var(--dockH);
+      min-height:var(--dockH);
       border-top:1px solid rgba(255,255,255,.08);
       background:rgba(10,6,16,.92);
       backdrop-filter:blur(10px);
@@ -404,24 +394,18 @@
       align-items:center;
       justify-content:center;
       gap:10px;
-      padding:10px 14px calc(12px + env(safe-area-inset-bottom));
+      padding:10px 14px calc(18px + env(safe-area-inset-bottom) + var(--footerH, 0px));
       flex:0 0 auto;
     }
 
-    .micWrap{
-      display:flex;
-      align-items:center;
-      justify-content:center;
-    }
-
     .main-mic{
-      width:74px;
-      height:74px;
+      width:78px;
+      height:78px;
       border:none;
       border-radius:50%;
       background:var(--accentGrad);
       color:#050208;
-      font-size:28px;
+      font-size:30px;
       font-weight:900;
       display:flex;
       align-items:center;
@@ -597,8 +581,8 @@
     }
 
     .sheet-item.active .sheet-check{
-      border-color:var(--accent);
-      box-shadow:inset 0 0 0 5px var(--accent);
+      border-color:var(--cyan);
+      box-shadow:inset 0 0 0 5px var(--cyan);
     }
   </style>
 </head>
@@ -607,10 +591,10 @@
   <div id="pageContent">
     <div class="room" id="roomContainer">
 
-      <div class="topbar">
-        <button id="backBtn" class="topBtn" type="button">←</button>
-        <div class="brand">All<span class="accent">To</span>All</div>
-        <div id="roomPill" class="roomPill">------</div>
+      <div class="actionbar">
+        <button id="backBtn" class="iconBtn" type="button">←</button>
+        <div class="actionSpacer"></div>
+        <button id="exitBtn" class="iconBtn" type="button">✕</button>
       </div>
 
       <div class="who">
@@ -620,18 +604,17 @@
           <div class="who-name" id="myName">Katılımcı</div>
           <div class="who-note" id="myNote">Canlı çeviri odasına bağlı</div>
         </div>
-        <button id="exitBtn" class="topBtn" type="button">✕</button>
       </div>
 
-      <div class="langbar">
+      <div class="controls">
         <select id="langSelect" aria-label="Dil seç"></select>
+
+        <div id="roomPill">------</div>
 
         <button id="langPickerBtn" class="langBtn" type="button" aria-label="Dil seç">
           <span class="langBtnText" id="langPickerText">🌐 Dil</span>
           <span>⌄</span>
         </button>
-
-        <button id="soundToggleBtn" type="button" aria-label="Sessiz">🔊</button>
       </div>
 
       <div class="chatWrap">
@@ -639,9 +622,7 @@
       </div>
 
       <div class="dock">
-        <div class="micWrap">
-          <button id="micBtn" class="main-mic" type="button" aria-label="Konuş">🎙️</button>
-        </div>
+        <button id="micBtn" class="main-mic" type="button" aria-label="Konuş">🎙️</button>
         <div class="micHint" id="micHint">Konuşmak için mikrofona dokun.</div>
       </div>
 
@@ -681,14 +662,42 @@
     const langSheetBackdrop = document.getElementById("langSheetBackdrop");
     const langSheetClose = document.getElementById("langSheetClose");
 
+    function compactDisplayName(fullName){
+      const clean = String(fullName || "").trim().replace(/\s+/g, " ");
+      if(!clean) return "";
+      const parts = clean.split(" ").filter(Boolean);
+      if(parts.length === 1) return parts[0];
+      const first = parts[0];
+      const rest = parts.slice(1).map(p => `${p.charAt(0).toUpperCase()}.`).join("");
+      return `${first} ${rest}`;
+    }
+
+    function applyCompactNames(){
+      const myName = document.getElementById("myName");
+      if(myName){
+        const raw = myName.dataset.rawName || myName.textContent || "";
+        myName.dataset.rawName = raw;
+        myName.textContent = compactDisplayName(raw);
+      }
+
+      document.querySelectorAll(".pName").forEach((el) => {
+        const raw = el.dataset.rawName || el.textContent || "";
+        el.dataset.rawName = raw;
+        el.textContent = compactDisplayName(raw);
+      });
+
+      document.querySelectorAll(".msg-name").forEach((el) => {
+        const raw = el.dataset.rawName || el.textContent || "";
+        el.dataset.rawName = raw;
+        el.textContent = compactDisplayName(raw);
+      });
+    }
+
     function fixLayout() {
       try {
         if (window.visualViewport) {
           const vh = window.visualViewport.height;
           room.style.height = `${vh}px`;
-          setTimeout(() => {
-            try { chat.scrollTop = 0; } catch {}
-          }, 80);
         }
       } catch {}
     }
@@ -775,10 +784,21 @@
       if (e.key === "Escape") closeLangSheet();
     });
 
+    const obs = new MutationObserver(() => {
+      applyCompactNames();
+    });
+
+    obs.observe(document.body, {
+      childList:true,
+      subtree:true,
+      characterData:true
+    });
+
     waitLangOptions();
+    applyCompactNames();
     fixLayout();
   </script>
 
-  <script type="module" src="/js/alltoall_room.js?v=ui_shell_mic_only_1"></script>
+  <script type="module" src="/js/alltoall_room.js?v=ui_shell_mic_only_2"></script>
 </body>
 </html>
