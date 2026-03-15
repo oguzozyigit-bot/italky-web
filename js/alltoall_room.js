@@ -2,6 +2,7 @@
 
 import { supabase } from "/js/supabase_client.js";
 
+const API_BASE = "https://italky-api.onrender.com/api";
 const WS_BASE = "wss://italky-api.onrender.com/api/alltoall/ws";
 
 const $ = (id) => document.getElementById(id);
@@ -22,13 +23,16 @@ const soundToggleBtn = $("soundToggleBtn");
 const params = new URLSearchParams(location.search);
 const hostCode = String(params.get("host") || "").trim().toUpperCase();
 const role = String(params.get("role") || "guest").trim().toLowerCase();
+const incomingRoomId = String(params.get("room") || "").trim().toUpperCase();
 
-let roomId = hostCode || "";
+let roomId = incomingRoomId || hostCode || "";
 let ws = null;
 let myLang = localStorage.getItem("alltoall_lang") || "tr";
 let autoSpeak = localStorage.getItem("alltoall_auto_speak") !== "0";
 let recognizing = false;
 let recognizer = null;
+let currentAudio = null;
+let voicesReady = false;
 
 let myProfile = {
   from: "",
@@ -48,10 +52,6 @@ const LANGS = [
   { code: "fr", flag: "🇫🇷", name: "Français" },
   { code: "it", flag: "🇮🇹", name: "Italiano" },
   { code: "es", flag: "🇪🇸", name: "Español" },
-  { code: "ru", flag: "🇷🇺", name: "Русский" },
-  { code: "el", flag: "🇬🇷", name: "Ελληνικά" },
-  { code: "az", flag: "🇦🇿", name: "Azərbaycan" },
-  { code: "ka", flag: "🇬🇪", name: "ქართული" },
 ];
 
 function toBCP(code) {
@@ -62,12 +62,12 @@ function toBCP(code) {
     fr: "fr-FR",
     it: "it-IT",
     es: "es-ES",
-    ru: "ru-RU",
-    el: "el-GR",
-    az: "az-AZ",
-    ka: "ka-GE",
   };
   return map[String(code || "tr").toLowerCase()] || "tr-TR";
+}
+
+function canonical(code) {
+  return String(code || "tr").toLowerCase().trim();
 }
 
 function getDisplayNameFromUser(user) {
@@ -134,7 +134,7 @@ function buildLangSelect() {
   langSelect.value = myLang;
 
   langSelect.addEventListener("change", () => {
-    myLang = langSelect.value;
+    myLang = canonical(langSelect.value);
     localStorage.setItem("alltoall_lang", myLang);
     myProfile.me_lang = myLang;
 
@@ -158,6 +158,70 @@ function updateSoundButton() {
   if (!soundToggleBtn) return;
   soundToggleBtn.textContent = autoSpeak ? "🔊" : "🔇";
   soundToggleBtn.title = autoSpeak ? "Ses açık" : "Ses kapalı";
+}
+
+function stopAudio() {
+  try {
+    currentAudio?.pause?.();
+    currentAudio = null;
+  } catch {}
+  try { window.speechSynthesis?.cancel?.(); } catch {}
+  try { window.NativeTTS?.stop?.(); } catch {}
+}
+
+function chooseWebVoice(langCode) {
+  const voices = window.speechSynthesis?.getVoices?.() || [];
+  if (!voices.length) return null;
+
+  const base = canonical(langCode);
+  const bcp = toBCP(langCode).toLowerCase();
+
+  let pool = voices.filter((v) => String(v.lang || "").toLowerCase().startsWith(base));
+  if (!pool.length) pool = voices.filter((v) => String(v.lang || "").toLowerCase() === bcp);
+  if (!pool.length) pool = voices;
+
+  return pool[0] || null;
+}
+
+function speakText(text, langCode) {
+  const value = String(text || "").trim();
+  if (!value || !autoSpeak) return;
+
+  stopAudio();
+
+  if (window.NativeTTS && typeof window.NativeTTS.speak === "function") {
+    try {
+      window.NativeTTS.speak(value, canonical(langCode));
+      return;
+    } catch (e) {
+      console.warn("[alltoall native tts]", e);
+    }
+  }
+
+  if (!window.speechSynthesis) return;
+
+  try {
+    if (!voicesReady) {
+      window.speechSynthesis.getVoices();
+      voicesReady = true;
+    }
+  } catch {}
+
+  const u = new SpeechSynthesisUtterance(value);
+  u.lang = toBCP(langCode);
+  u.rate = canonical(langCode) === "en" ? 0.82 : 0.92;
+  u.pitch = 1.0;
+  u.volume = 1;
+
+  const voice = chooseWebVoice(langCode);
+  if (voice) u.voice = voice;
+
+  setTimeout(() => {
+    try {
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(u);
+    } catch {}
+  }, 60);
 }
 
 function toggleSound() {
@@ -268,8 +332,7 @@ function removePerson(person) {
     for (const [k, v] of joinedPeople.entries()) {
       if (
         (person.from && v.from === person.from) ||
-        (person.user_id && v.user_id === person.user_id) ||
-        (person.role && person.from_name && v.role === person.role && v.from_name === person.from_name)
+        (person.user_id && v.user_id === person.user_id)
       ) {
         joinedPeople.delete(k);
       }
@@ -294,21 +357,6 @@ function addSystemMessage(text) {
   div.textContent = String(text || "").trim();
   chat.appendChild(div);
   scrollChatBottom();
-}
-
-function speakText(text, langCode) {
-  const value = String(text || "").trim();
-  if (!value) return;
-
-  try { window.speechSynthesis?.cancel?.(); } catch {}
-  if (!window.speechSynthesis) return;
-
-  const u = new SpeechSynthesisUtterance(value);
-  u.lang = toBCP(langCode);
-
-  setTimeout(() => {
-    try { window.speechSynthesis.speak(u); } catch {}
-  }, 50);
 }
 
 function addMessage({ side = "left", sender = "", text = "", withSpeaker = false, speakLang = "tr" }) {
@@ -354,14 +402,13 @@ function addMessage({ side = "left", sender = "", text = "", withSpeaker = false
 
 function autoGrowTextarea() {
   if (!msgInput) return;
-  msgInput.style.height = "26px";
+  msgInput.style.height = "48px";
   msgInput.style.height = Math.min(msgInput.scrollHeight, 140) + "px";
 }
 
 function sendWs(payload) {
   try {
     if (ws && ws.readyState === WebSocket.OPEN) {
-      console.log("[alltoall send]", payload);
       ws.send(JSON.stringify(payload));
     } else {
       addSystemMessage("Socket hazır değil.");
@@ -371,67 +418,26 @@ function sendWs(payload) {
   }
 }
 
-function socketPrecheck() {
-  return new Promise((resolve) => {
-    if (!roomId) {
-      resolve({ ok: false, reason: "no_room" });
-      return;
-    }
+async function resolveRoomForGuestByHost() {
+  if (!hostCode || role !== "guest") return;
 
-    const testWs = new WebSocket(`${WS_BASE}/${encodeURIComponent(roomId)}`);
-
-    let settled = false;
-
-    const done = (payload) => {
-      if (settled) return;
-      settled = true;
-      try { testWs.close(); } catch {}
-      resolve(payload);
-    };
-
-    testWs.onopen = () => {
-      try {
-        testWs.send(JSON.stringify({ type: "join_check" }));
-      } catch {
-        done({ ok: false, reason: "send_fail" });
-      }
-    };
-
-    testWs.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data || "{}");
-        const type = String(data.type || "").trim();
-
-        if (type === "room_ok") {
-          done({ ok: true });
-          return;
-        }
-
-        if (type === "host_not_ready") {
-          done({ ok: false, reason: "host_not_ready", message: data.message || "" });
-          return;
-        }
-
-        if (type === "room_not_found") {
-          done({ ok: false, reason: "room_not_found", message: data.message || "" });
-          return;
-        }
-
-        done({ ok: false, reason: "unknown" });
-      } catch {
-        done({ ok: false, reason: "parse_fail" });
-      }
-    };
-
-    testWs.onerror = () => done({ ok: false, reason: "ws_error" });
-    testWs.onclose = () => {
-      if (!settled) done({ ok: false, reason: "closed_early" });
-    };
-
-    setTimeout(() => {
-      done({ ok: false, reason: "timeout" });
-    }, 2500);
+  const r = await fetch(`${API_BASE}/interpreter/resolve-room`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      host_code: hostCode,
+      my_lang: myLang,
+      mode: "alltoall"
+    })
   });
+
+  const j = await r.json().catch(() => ({}));
+
+  if (!r.ok || !j?.room_id) {
+    throw new Error(j?.detail || j?.error || "Room çözülemedi");
+  }
+
+  roomId = String(j.room_id || "").trim().toUpperCase();
 }
 
 function connectSocket() {
@@ -441,8 +447,6 @@ function connectSocket() {
   }
 
   const wsUrl = `${WS_BASE}/${encodeURIComponent(roomId)}`;
-  console.log("[alltoall ws url]", wsUrl);
-
   ws = new WebSocket(wsUrl);
 
   ws.onopen = () => {
@@ -454,6 +458,7 @@ function connectSocket() {
       me_lang: myLang,
       role,
       user_id: myProfile.user_id,
+      host_code: hostCode || roomId
     });
   };
 
@@ -470,8 +475,9 @@ function connectSocket() {
             me_lang: myLang,
           };
         }
+
         roomId = String(data.room || roomId || "").trim().toUpperCase();
-        if (roomPill) roomPill.textContent = roomId || "------";
+        if (roomPill) roomPill.textContent = hostCode || roomId || "------";
         ensureSelfInPeople();
         addSystemMessage("Bağlantı kuruldu");
         return;
@@ -537,10 +543,6 @@ function connectSocket() {
         return;
       }
 
-      if (type === "message_sent") {
-        return;
-      }
-
       if (type === "room_not_found") {
         addSystemMessage(data.message || "Kanal bulunamadı.");
         return;
@@ -548,13 +550,7 @@ function connectSocket() {
 
       if (type === "error") {
         const msg = String(data.message || "Bağlantı hatası");
-        if (msg === "HOST_NOT_READY") {
-          addSystemMessage("Host henüz kanalı açmadı. Önce host içeri girmeli.");
-        } else if (msg === "ROOM_FULL") {
-          addSystemMessage("Oda dolu.");
-        } else {
-          addSystemMessage(msg);
-        }
+        addSystemMessage(msg === "HOST_NOT_READY" ? "Host henüz odaya giriş yapmadı." : msg);
         return;
       }
     } catch (e) {
@@ -664,7 +660,12 @@ function installKeyboardLift() {
       const lift = keyboardHeight > 80 ? keyboardHeight : 0;
       rootStyle.style.setProperty("--kb-offset", `${lift}px`);
 
-      setTimeout(scrollChatBottom, 30);
+      setTimeout(() => {
+        try {
+          msgInput?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+          scrollChatBottom();
+        } catch {}
+      }, 40);
     } catch (e) {
       console.warn("[alltoall keyboard]", e);
     }
@@ -679,13 +680,13 @@ function installKeyboardLift() {
     setTimeout(apply, 80);
     setTimeout(apply, 180);
     setTimeout(apply, 320);
-    setTimeout(apply, 500);
+    setTimeout(apply, 520);
   });
 
   msgInput?.addEventListener("blur", () => {
     setTimeout(() => {
       rootStyle.style.setProperty("--kb-offset", "0px");
-    }, 120);
+    }, 150);
   });
 
   apply();
@@ -710,23 +711,35 @@ function bindEvents() {
   soundToggleBtn?.addEventListener("click", toggleSound);
 
   roomPill?.addEventListener("click", async () => {
-    if (!roomId) return;
+    const codeToCopy = hostCode || roomId;
+    if (!codeToCopy) return;
     try {
-      await navigator.clipboard.writeText(roomId);
-      addSystemMessage(`Oda kodu kopyalandı: ${roomId}`);
+      await navigator.clipboard.writeText(codeToCopy);
+      addSystemMessage(`Oda kodu kopyalandı: ${codeToCopy}`);
     } catch {}
   });
 
   backBtn?.addEventListener("click", () => history.back());
 
   exitBtn?.addEventListener("click", () => {
+    stopAudio();
     try { ws?.close?.(); } catch {}
     location.href = "/pages/alltoall.html";
   });
+
+  try {
+    if (window.speechSynthesis) {
+      window.speechSynthesis.getVoices();
+      window.speechSynthesis.onvoiceschanged = () => {
+        try { window.speechSynthesis.getVoices(); } catch {}
+        voicesReady = true;
+      };
+    }
+  } catch {}
 }
 
 async function init() {
-  if (roomPill) roomPill.textContent = hostCode || "------";
+  if (roomPill) roomPill.textContent = hostCode || roomId || "------";
 
   await hydrateMyProfile();
   buildLangSelect();
@@ -738,19 +751,14 @@ async function init() {
   autoGrowTextarea();
   scrollChatBottom();
 
-  if (role === "guest") {
-    const pre = await socketPrecheck();
-
-    if (!pre.ok) {
-      if (pre.reason === "host_not_ready") {
-        addSystemMessage("Host henüz odaya giriş yapmadı.");
-      } else if (pre.reason === "room_not_found") {
-        addSystemMessage("Bu oda henüz oluşturulmamış.");
-      } else {
-        addSystemMessage("Oda şu an hazır değil.");
-      }
-      return;
+  try {
+    if (role === "guest" && !incomingRoomId && hostCode) {
+      await resolveRoomForGuestByHost();
     }
+  } catch (e) {
+    console.error("[alltoall resolve guest room]", e);
+    addSystemMessage("Bu oda henüz oluşturulmamış.");
+    return;
   }
 
   connectSocket();
@@ -759,5 +767,6 @@ async function init() {
 init();
 
 window.addEventListener("beforeunload", () => {
+  stopAudio();
   try { ws?.close?.(); } catch {}
 });
