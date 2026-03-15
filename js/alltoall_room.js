@@ -368,7 +368,68 @@ function sendWs(payload) {
     console.warn("[alltoall sendWs]", e);
   }
 }
+function socketPrecheck() {
+  return new Promise((resolve) => {
+    if (!roomId) {
+      resolve({ ok: false, reason: "no_room" });
+      return;
+    }
 
+    const testWs = new WebSocket(`${WS_BASE}/${encodeURIComponent(roomId)}`);
+
+    let settled = false;
+
+    const done = (payload) => {
+      if (settled) return;
+      settled = true;
+      try { testWs.close(); } catch {}
+      resolve(payload);
+    };
+
+    testWs.onopen = () => {
+      try {
+        testWs.send(JSON.stringify({ type: "join_check" }));
+      } catch {
+        done({ ok: false, reason: "send_fail" });
+      }
+    };
+
+    testWs.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data || "{}");
+        const type = String(data.type || "").trim();
+
+        if (type === "room_ok") {
+          done({ ok: true });
+          return;
+        }
+
+        if (type === "host_not_ready") {
+          done({ ok: false, reason: "host_not_ready", message: data.message || "" });
+          return;
+        }
+
+        if (type === "room_not_found") {
+          done({ ok: false, reason: "room_not_found", message: data.message || "" });
+          return;
+        }
+
+        done({ ok: false, reason: "unknown" });
+      } catch {
+        done({ ok: false, reason: "parse_fail" });
+      }
+    };
+
+    testWs.onerror = () => done({ ok: false, reason: "ws_error" });
+    testWs.onclose = () => {
+      if (!settled) done({ ok: false, reason: "closed_early" });
+    };
+
+    setTimeout(() => {
+      done({ ok: false, reason: "timeout" });
+    }, 2500);
+  });
+}
 function connectSocket() {
   if (!roomId) {
     addSystemMessage("Oda bilgisi bulunamadı.");
@@ -669,9 +730,23 @@ async function init() {
   bindEvents();
   installKeyboardLift();
   ensureSelfInPeople();
-  connectSocket();
   autoGrowTextarea();
   scrollChatBottom();
-}
 
-init();
+  if (role === "guest") {
+    const pre = await socketPrecheck();
+
+    if (!pre.ok) {
+      if (pre.reason === "host_not_ready") {
+        addSystemMessage("Host henüz odaya giriş yapmadı.");
+      } else if (pre.reason === "room_not_found") {
+        addSystemMessage("Bu oda henüz oluşturulmamış.");
+      } else {
+        addSystemMessage("Oda şu an hazır değil.");
+      }
+      return;
+    }
+  }
+
+  connectSocket();
+}
