@@ -18,13 +18,11 @@
       --glass-border: rgba(255,255,255,.10);
       --muted: rgba(255,255,255,.58);
       --safe-bottom: env(safe-area-inset-bottom, 0px);
-
       --frameW: min(480px, calc(100vw - 12px));
       --topH: 74px;
-      --metaH: 54px;
-      --peopleH: 78px;
+      --metaH: 56px;
+      --peopleH: 74px;
       --dockH: 88px;
-
       --kb-offset: 0px;
     }
 
@@ -97,7 +95,9 @@
       flex:0 0 auto;
     }
 
-    .nav-btn:active{ transform:scale(.96); }
+    .nav-btn:active{
+      transform:scale(.96);
+    }
 
     .brand{
       flex:1;
@@ -153,7 +153,7 @@
     }
 
     .room-pill{
-      max-width:160px;
+      max-width:150px;
       overflow:hidden;
       text-overflow:ellipsis;
       white-space:nowrap;
@@ -170,9 +170,16 @@
       user-select:none;
     }
 
+    .meta-right{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex:0 0 auto;
+    }
+
     .lang-select{
       height:36px;
-      max-width:145px;
+      max-width:160px;
       border-radius:12px;
       border:1px solid var(--glass-border);
       background:rgba(255,255,255,.04);
@@ -197,7 +204,7 @@
     }
 
     .people-count{
-      min-width:22px;
+      min-width:20px;
       text-align:center;
       font-size:12px;
       font-weight:1000;
@@ -212,10 +219,12 @@
       gap:10px;
       overflow-x:auto;
       scrollbar-width:none;
-      scroll-behavior:smooth;
+      padding-bottom:2px;
     }
 
-    .people-scroll::-webkit-scrollbar{ display:none; }
+    .people-scroll::-webkit-scrollbar{
+      display:none;
+    }
 
     .pItem{
       flex:0 0 auto;
@@ -223,12 +232,12 @@
       flex-direction:column;
       align-items:center;
       gap:4px;
-      width:54px;
+      min-width:52px;
     }
 
     .pAvatar{
-      width:40px;
-      height:40px;
+      width:38px;
+      height:38px;
       border-radius:50%;
       overflow:hidden;
       border:1.5px solid rgba(255,255,255,.12);
@@ -239,7 +248,6 @@
       font-size:11px;
       font-weight:1000;
       color:#fff;
-      flex:0 0 auto;
     }
 
     .pAvatar img{
@@ -250,49 +258,42 @@
     }
 
     .pName{
-      width:54px;
+      max-width:60px;
       overflow:hidden;
       text-overflow:ellipsis;
       white-space:nowrap;
-      text-align:center;
       font-size:10px;
       font-weight:800;
       color:rgba(255,255,255,.56);
+      text-align:center;
     }
 
     .chat-area{
-  position:absolute;
-  top:calc(var(--topH) + var(--metaH) + var(--peopleH));
-  left:0; right:0;
-  bottom:calc(var(--dockH) + var(--kb-offset));
-  padding:14px 12px;
-  overflow-y:auto;
-  -webkit-overflow-scrolling:touch;
-  overscroll-behavior:contain;
-  touch-action:pan-y;
-  scrollbar-width:none;
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-  min-height:0;
-  transition: bottom .18s ease;
-}
+      position:absolute;
+      top:calc(var(--topH) + var(--metaH) + var(--peopleH));
+      left:0; right:0;
+      bottom:calc(var(--dockH) + var(--kb-offset));
+      padding:14px 12px;
+      overflow-y:auto;
+      -webkit-overflow-scrolling:touch;
+      overscroll-behavior:contain;
+      touch-action:pan-y;
+      scrollbar-width:none;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      min-height:0;
+      transition:bottom .18s ease;
+    }
 
-.input-dock{
-  position:absolute;
-  left:0; right:0; bottom:var(--kb-offset);
-  height:var(--dockH);
-  padding:8px 10px calc(8px + var(--safe-bottom));
-  background:rgba(0,0,0,.34);
-  border-top:1px solid rgba(255,255,255,.06);
-  backdrop-filter:blur(20px);
-  -webkit-backdrop-filter:blur(20px);
-  z-index:21;
-  transition: bottom .18s ease;
-}
+    .chat-area::-webkit-scrollbar{
+      display:none;
+    }
 
-    .chat-area::-webkit-scrollbar{ display:none; }
-    .chat-area::before{ content:""; flex:1 0 auto; }
+    .chat-area::before{
+      content:"";
+      flex:1 0 auto;
+    }
 
     .sys-note{
       align-self:center;
@@ -313,8 +314,14 @@
       max-width:86%;
     }
 
-    .msg-row.left{ align-self:flex-start; }
-    .msg-row.right{ align-self:flex-end; align-items:flex-end; }
+    .msg-row.left{
+      align-self:flex-start;
+    }
+
+    .msg-row.right{
+      align-self:flex-end;
+      align-items:flex-end;
+    }
 
     .sender-name{
       font-size:10px;
@@ -391,6 +398,7 @@
       backdrop-filter:blur(20px);
       -webkit-backdrop-filter:blur(20px);
       z-index:21;
+      transition:bottom .18s ease;
     }
 
     .dock-inner{
@@ -419,7 +427,7 @@
       resize:none;
       white-space:normal;
       overflow:hidden;
-      max-height:120px;
+      max-height:140px;
     }
 
     #msgInput::placeholder{
@@ -447,7 +455,9 @@
       flex:0 0 auto;
     }
 
-    .circle-btn:active{ transform:scale(.96); }
+    .circle-btn:active{
+      transform:scale(.96);
+    }
 
     .circle-btn svg{
       width:20px;
@@ -469,11 +479,9 @@
 
     @media (max-width:390px){
       .room-pill{ max-width:118px; }
-      .lang-select{ max-width:110px; }
+      .lang-select{ max-width:118px; }
       .brand-name{ font-size:17px; }
       .msg-bubble{ font-size:13px; }
-      .pItem{ width:50px; }
-      .pName{ width:50px; }
     }
   </style>
 </head>
@@ -492,18 +500,15 @@
     </header>
 
     <div class="meta-bar">
-  <div class="room-left">
-    ODA:
-    <div class="room-pill" id="roomPill">------</div>
-  </div>
+      <div class="room-left">
+        ODA:
+        <div class="room-pill" id="roomPill">------</div>
+      </div>
 
-  <div style="display:flex; align-items:center; gap:8px;">
-    <button class="nav-btn" id="soundToggleBtn" type="button" title="Ses">🔊</button>
-    <select class="lang-select" id="langSelect"></select>
-  </div>
-</div>
-
-      <select class="lang-select" id="langSelect"></select>
+      <div class="meta-right">
+        <button class="nav-btn" id="soundToggleBtn" type="button" title="Ses">🔊</button>
+        <select class="lang-select" id="langSelect"></select>
+      </div>
     </div>
 
     <div class="people-bar">
@@ -539,26 +544,6 @@
       </div>
     </div>
   </div>
-
-  <script>
-    (function(){
-      const vv = window.visualViewport;
-      if(!vv) return;
-
-      function applyKeyboardFix(){
-        try{
-          const diff = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
-          document.documentElement.style.setProperty("--kb-offset", diff + "px");
-        }catch(e){}
-      }
-
-      vv.addEventListener("resize", applyKeyboardFix);
-      vv.addEventListener("scroll", applyKeyboardFix);
-      window.addEventListener("orientationchange", ()=>setTimeout(applyKeyboardFix, 250));
-
-      applyKeyboardFix();
-    })();
-  </script>
 
   <script type="module" src="/js/alltoall_room.js?v=53"></script>
 </body>
