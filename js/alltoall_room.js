@@ -1,3 +1,5 @@
+// FILE: /js/alltoall_room.js
+
 import { supabase } from "/js/supabase_client.js";
 
 const WS_BASE = "wss://italky-api.onrender.com/api/alltoall/ws";
@@ -368,6 +370,7 @@ function sendWs(payload) {
     console.warn("[alltoall sendWs]", e);
   }
 }
+
 function socketPrecheck() {
   return new Promise((resolve) => {
     if (!roomId) {
@@ -430,6 +433,7 @@ function socketPrecheck() {
     }, 2500);
   });
 }
+
 function connectSocket() {
   if (!roomId) {
     addSystemMessage("Oda bilgisi bulunamadı.");
@@ -686,6 +690,7 @@ function installKeyboardLift() {
 
   apply();
 }
+
 function bindEvents() {
   sendBtn?.addEventListener("click", sendMessage);
 
@@ -721,7 +726,7 @@ function bindEvents() {
 }
 
 async function init() {
-  roomPill.textContent = hostCode || "------";
+  if (roomPill) roomPill.textContent = hostCode || "------";
 
   await hydrateMyProfile();
   buildLangSelect();
@@ -750,3 +755,9 @@ async function init() {
 
   connectSocket();
 }
+
+init();
+
+window.addEventListener("beforeunload", () => {
+  try { ws?.close?.(); } catch {}
+});
