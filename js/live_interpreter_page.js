@@ -1282,16 +1282,20 @@ function bind() {
   });
 
   homeLink?.addEventListener("click", () => {
+  if (role === "host") {
     stopNativeNfcHost();
-    stopSocket();
-    location.href = safeHomeHref();
-  });
+  }
+  stopSocket();
+  location.href = safeHomeHref();
+});
 
-  homeBtn?.addEventListener("click", () => {
+homeBtn?.addEventListener("click", () => {
+  if (role === "host") {
     stopNativeNfcHost();
-    stopSocket();
-    location.href = safeHomeHref();
-  });
+  }
+  stopSocket();
+  location.href = safeHomeHref();
+});
 
   botMic?.addEventListener("click", async (e) => {
     e.preventDefault();
@@ -1306,8 +1310,8 @@ function bind() {
 async function bootRoom() {
   try {
     if (roomId) {
-      if (role === "host") {
-        startNativeNfcHost(hostCode || roomId);
+      if (role === "host" && hostCode) {
+        startNativeNfcHost(hostCode);
       }
     } else if (hostCode) {
       if (role === "host") {
@@ -1339,12 +1343,8 @@ bind();
 bootRoom();
 
 window.addEventListener("beforeunload", () => {
-  stopNativeNfcHost();
-  stopSocket();
-});
-
-document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "hidden") {
+  if (role === "host") {
     stopNativeNfcHost();
   }
+  stopSocket();
 });
