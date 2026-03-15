@@ -73,13 +73,11 @@ const HOME_HEADER_HTML = `
     </div>
 
     <nav class="menu-nav">
-      <a href="/pages/academy.html" class="menu-link-academy" data-i18n="menu_academy">italkyACADEMY</a>
-      <a href="/pages/text_translate.html" class="menu-link-text" data-i18n="menu_text_to_text">TextToText</a>
-      <a href="/pages/jetonbuy.html" class="menu-link-jeton" data-i18n="menu_token_market">Jeton Market</a>
+      <a href="/pages/jetonbuy.html" class="menu-link-jeton" data-i18n="menu_token_load">Jeton Yükle</a>
 
       <a href="/pages/profile.html" data-i18n="menu_profile">Profil</a>
-      <a href="/pages/voice_profile.html" data-i18n="menu_create_voice">Kendi Sesini Oluştur</a>
-      <a href="/pages/translation_settings.html" data-i18n="menu_translation_settings">Çeviri Ayarları</a>
+      <a href="/pages/voice_settings.html" data-i18n="menu_voice_settings">Sesini Oluştur ve Seç</a>
+      <a href="/pages/voice_settings.html#site-language" data-i18n="menu_site_language">Site Dili</a>
       <a href="/pages/qr-change.html" data-i18n="menu_change_qr">QR Değiştir</a>
       <a href="/pages/about.html" data-i18n="menu_about">Hakkımızda</a>
       <a href="/pages/jeton-nedir.html" data-i18n="menu_what_is_token">Jeton Nedir</a>
@@ -105,6 +103,8 @@ const SHELL_CSS = `
   --ai-gradient: linear-gradient(135deg,#8bd3ff 0%,#7c5cff 45%,#ff66c4 100%);
   --footerH:0px;
   --shell-text:#f5f7ff;
+  --trendyol-orange:#f27a1a;
+  --trendyol-orange-dark:#e86d0a;
 }
 
 *{
@@ -484,40 +484,11 @@ body.ui-menu-open{
   background:linear-gradient(180deg, rgba(139,211,255,.12), rgba(124,92,255,.10));
 }
 
-.menu-link-academy{
-  padding:14px 14px !important;
-  font-size:14px !important;
-  font-weight:900 !important;
-  letter-spacing:.25px !important;
-  border-radius:16px !important;
-  color:#ffffff !important;
-  background:
-    linear-gradient(135deg, rgba(103,232,249,.22) 0%, rgba(124,92,255,.28) 45%, rgba(255,102,196,.20) 100%) !important;
-  border:1px solid rgba(139,211,255,.28) !important;
-  box-shadow:0 10px 24px rgba(124,92,255,.18), inset 0 1px 0 rgba(255,255,255,.06);
-}
-
-.menu-link-academy:hover,
-.menu-link-academy:active{
-  filter:brightness(1.08);
-  transform:translateY(-1px);
-}
-
-.menu-link-text{
-  color:#f8fbff !important;
-  background:linear-gradient(135deg, rgba(34,197,94,.18) 0%, rgba(6,182,212,.16) 100%) !important;
-  border:1px solid rgba(52,211,153,.22) !important;
-}
-
-.menu-link-text:hover,
-.menu-link-text:active{
-  filter:brightness(1.06);
-}
-
 .menu-link-jeton{
   color:#fffaf2 !important;
-  background:linear-gradient(135deg, rgba(251,146,60,.28) 0%, rgba(249,115,22,.22) 100%) !important;
-  border:1px solid rgba(251,146,60,.30) !important;
+  background:linear-gradient(135deg, rgba(242,122,26,.95) 0%, rgba(232,109,10,.92) 100%) !important;
+  border:1px solid rgba(255,170,96,.28) !important;
+  box-shadow:0 10px 24px rgba(242,122,26,.20), inset 0 1px 0 rgba(255,255,255,.08);
 }
 
 .menu-link-jeton:hover,
