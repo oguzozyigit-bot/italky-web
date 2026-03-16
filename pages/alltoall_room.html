@@ -11,11 +11,10 @@
 
   <style>
     :root{
-      --actionH:58px;
-      --profileH:74px;
-      --controlsH:70px;
-      --peopleH:84px;
-      --dockH:134px;
+      --topH:64px;
+      --profileH:78px;
+      --langH:68px;
+      --dockH:140px;
 
       --txt:rgba(255,255,255,.96);
       --muted:rgba(255,255,255,.58);
@@ -25,7 +24,6 @@
       --violet:#7c5cff;
       --pink:#f472b6;
 
-      --panel:rgba(255,255,255,.05);
       --accentGrad:linear-gradient(135deg,#67e8f9 0%,#7c5cff 48%,#f472b6 100%);
       --bracketGrad:linear-gradient(180deg,#67e8f9 0%,#7c5cff 55%,#f472b6 100%);
     }
@@ -44,15 +42,15 @@
       overflow:hidden;
       color:var(--txt);
       font-family:'Outfit',sans-serif;
-      background:#07040d;
+      background:#06030b;
     }
 
     body{
       background:
-        radial-gradient(circle at 50% 0%, rgba(103,232,249,.10) 0%, transparent 24%),
-        radial-gradient(circle at 14% 18%, rgba(244,114,182,.10) 0%, transparent 20%),
-        radial-gradient(circle at 86% 15%, rgba(124,92,255,.14) 0%, transparent 18%),
-        linear-gradient(180deg,#06030b 0%,#0b0712 100%);
+        radial-gradient(circle at 50% 0%, rgba(103,232,249,.10) 0%, transparent 22%),
+        radial-gradient(circle at 20% 18%, rgba(244,114,182,.10) 0%, transparent 20%),
+        radial-gradient(circle at 80% 18%, rgba(124,92,255,.14) 0%, transparent 18%),
+        linear-gradient(180deg,#05030a 0%,#0a0712 100%);
     }
 
     #pageContent{
@@ -68,20 +66,22 @@
       display:flex;
       flex-direction:column;
       overflow:hidden;
+      position:relative;
     }
 
-    .actionbar{
-      height:var(--actionH);
+    .topbar{
+      height:var(--topH);
       display:flex;
       align-items:center;
       justify-content:space-between;
-      gap:10px;
       padding:0 14px;
       border-bottom:1px solid var(--line);
       flex:0 0 auto;
+      background:rgba(8,8,20,.45);
+      backdrop-filter:blur(10px);
     }
 
-    .iconBtn{
+    .topBtn{
       width:40px;
       height:40px;
       border:none;
@@ -93,6 +93,23 @@
       flex:0 0 auto;
     }
 
+    .title{
+      font-family:'Space Grotesk',sans-serif;
+      font-weight:700;
+      font-size:22px;
+      letter-spacing:-.4px;
+      text-align:center;
+      flex:1;
+    }
+
+    .title .accent{ color:var(--cyan); }
+
+    .topSlot{
+      width:40px;
+      height:40px;
+      flex:0 0 auto;
+    }
+
     .profile{
       min-height:var(--profileH);
       padding:10px 14px;
@@ -101,11 +118,12 @@
       gap:12px;
       border-bottom:1px solid var(--line);
       flex:0 0 auto;
+      background:rgba(255,255,255,.015);
     }
 
     .profile-avatar{
-      width:48px;
-      height:48px;
+      width:50px;
+      height:50px;
       border-radius:50%;
       overflow:hidden;
       background:rgba(255,255,255,.08);
@@ -156,8 +174,8 @@
       text-overflow:ellipsis;
     }
 
-    .controls{
-      min-height:var(--controlsH);
+    .langbar{
+      min-height:var(--langH);
       padding:12px 14px;
       display:flex;
       align-items:center;
@@ -165,6 +183,7 @@
       gap:10px;
       border-bottom:1px solid var(--line);
       flex:0 0 auto;
+      background:rgba(255,255,255,.015);
     }
 
     #langSelect{
@@ -176,8 +195,8 @@
     }
 
     #roomPill{
-      min-width:98px;
-      max-width:118px;
+      min-width:104px;
+      max-width:124px;
       height:42px;
       padding:0 14px;
       border-radius:14px;
@@ -224,15 +243,45 @@
       white-space:nowrap;
     }
 
+    .splitStage{
+      flex:1;
+      min-height:0;
+      display:flex;
+      flex-direction:column;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .upperPane,
+    .lowerPane{
+      flex:1;
+      min-height:0;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .upperPane{
+      border-bottom:1px solid rgba(255,255,255,.05);
+      background:
+        radial-gradient(circle at 50% 0%, rgba(103,232,249,.06), transparent 32%),
+        linear-gradient(180deg, rgba(9,14,40,.22), rgba(8,10,22,.08));
+    }
+
+    .lowerPane{
+      background:
+        radial-gradient(circle at 50% 100%, rgba(244,114,182,.06), transparent 32%),
+        linear-gradient(180deg, rgba(16,8,28,.08), rgba(18,10,22,.20));
+    }
+
     .peopleBar{
-      min-height:var(--peopleH);
-      padding:10px 14px 12px;
-      border-bottom:1px solid var(--line);
-      flex:0 0 auto;
+      position:absolute;
+      top:10px;
+      left:14px;
+      right:14px;
       display:flex;
       flex-direction:column;
       gap:8px;
-      overflow:hidden;
+      z-index:2;
     }
 
     .peopleHead{
@@ -259,11 +308,12 @@
 
     .peopleScroll{
       display:flex;
-      gap:14px;
+      gap:12px;
       overflow-x:auto;
       overflow-y:hidden;
       scrollbar-width:none;
-      min-height:0;
+      min-height:48px;
+      padding-bottom:2px;
     }
 
     .peopleScroll::-webkit-scrollbar{ display:none; }
@@ -306,9 +356,12 @@
     }
 
     .chatWrap{
-      flex:1;
-      min-height:0;
-      padding:12px 14px 8px;
+      position:absolute;
+      left:0;
+      right:0;
+      top:74px;
+      bottom:0;
+      padding:0 14px 12px;
       overflow:hidden;
       display:flex;
       flex-direction:column;
@@ -321,7 +374,7 @@
       display:flex;
       flex-direction:column;
       gap:14px;
-      padding-bottom:8px;
+      padding:6px 0 8px;
       scrollbar-width:none;
       scroll-behavior:smooth;
     }
@@ -410,7 +463,7 @@
       white-space:nowrap;
       overflow:hidden;
       text-overflow:ellipsis;
-      max-width:140px;
+      max-width:132px;
     }
 
     .msg-lang{
@@ -463,23 +516,23 @@
       background:linear-gradient(135deg,rgba(103,232,249,.14),rgba(124,92,255,.16));
     }
 
-    .dock{
-      min-height:var(--dockH);
-      border-top:1px solid rgba(255,255,255,.08);
-      background:rgba(10,6,16,.92);
-      backdrop-filter:blur(10px);
+    .micStage{
+      position:absolute;
+      left:50%;
+      top:50%;
+      transform:translate(-50%,-50%);
       display:flex;
       flex-direction:column;
       align-items:center;
       justify-content:center;
-      gap:10px;
-      padding:10px 14px calc(18px + env(safe-area-inset-bottom) + var(--footerH, 0px));
-      flex:0 0 auto;
+      gap:12px;
+      z-index:3;
+      pointer-events:none;
     }
 
     .main-mic{
-      width:78px;
-      height:78px;
+      width:88px;
+      height:88px;
       border:none;
       border-radius:50%;
       background:var(--accentGrad);
@@ -489,9 +542,10 @@
       display:flex;
       align-items:center;
       justify-content:center;
-      cursor:pointer;
       box-shadow:0 10px 30px rgba(103,232,249,.20);
       transition:transform .16s ease, box-shadow .16s ease;
+      pointer-events:auto;
+      cursor:pointer;
     }
 
     .main-mic.listening{
@@ -507,6 +561,14 @@
       line-height:1.3;
       min-height:28px;
       max-width:280px;
+      pointer-events:none;
+    }
+
+    .footerPad{
+      height:calc(26px + env(safe-area-inset-bottom) + var(--footerH, 0px));
+      flex:0 0 auto;
+      border-top:1px solid rgba(255,255,255,.05);
+      background:rgba(8,6,14,.88);
     }
 
     .sheet-backdrop{
@@ -668,9 +730,10 @@
   <div id="pageContent">
     <div class="room" id="roomContainer">
 
-      <div class="actionbar">
-        <button id="backBtn" class="iconBtn" type="button">←</button>
-        <button id="exitBtn" class="iconBtn" type="button">✕</button>
+      <div class="topbar">
+        <button id="backBtn" class="topBtn" type="button">←</button>
+        <div class="title">All<span class="accent">To</span>All</div>
+        <div class="topSlot"></div>
       </div>
 
       <div class="profile">
@@ -682,7 +745,7 @@
         </div>
       </div>
 
-      <div class="controls">
+      <div class="langbar">
         <select id="langSelect" aria-label="Dil seç"></select>
 
         <div id="roomPill">------</div>
@@ -691,25 +754,34 @@
           <span class="langBtnText" id="langPickerText">🌐 Dil</span>
           <span>⌄</span>
         </button>
+
+        <button id="exitBtn" class="topBtn" type="button">✕</button>
       </div>
 
-      <div class="peopleBar">
-        <div class="peopleHead">
-          <div class="peopleTitle" id="peopleTitle">Katılımcılar</div>
-          <div class="peopleCount"><span id="peopleCount">0</span> <span id="peopleCountText">kişi</span></div>
+      <div class="splitStage">
+        <div class="upperPane">
+          <div class="peopleBar">
+            <div class="peopleHead">
+              <div class="peopleTitle" id="peopleTitle">Katılımcılar</div>
+              <div class="peopleCount"><span id="peopleCount">0</span> <span id="peopleCountText">kişi</span></div>
+            </div>
+            <div class="peopleScroll" id="peopleScroll"></div>
+          </div>
         </div>
-        <div class="peopleScroll" id="peopleScroll"></div>
+
+        <div class="lowerPane">
+          <div class="chatWrap">
+            <div class="chat" id="chat"></div>
+          </div>
+        </div>
+
+        <div class="micStage">
+          <button id="micBtn" class="main-mic" type="button" aria-label="Konuş">🎙️</button>
+          <div class="micHint" id="micHint">Konuşmak için mikrofona dokun.</div>
+        </div>
       </div>
 
-      <div class="chatWrap">
-        <div class="chat" id="chat"></div>
-      </div>
-
-      <div class="dock">
-        <button id="micBtn" class="main-mic" type="button" aria-label="Konuş">🎙️</button>
-        <div class="micHint" id="micHint">Konuşmak için mikrofona dokun.</div>
-      </div>
-
+      <div class="footerPad"></div>
     </div>
   </div>
 
@@ -726,6 +798,6 @@
     <div class="sheet-list" id="langSheetList"></div>
   </div>
 
-  <script type="module" src="/js/alltoall_room.js?v=final_ui_1"></script>
+  <script type="module" src="/js/alltoall_room.js?v=split_face_style_1"></script>
 </body>
 </html>
