@@ -1,714 +1,218 @@
-<!-- FILE: /pages/alltoall.html -->
 <!doctype html>
 <html lang="tr">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-  <title>italkyAI • AllToAll</title>
-  <meta name="theme-color" content="#120d16"/>
-
+  <title>italkyAI • AllToAll Live</title>
+  
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
   <style>
-    :root{
-      --txt:rgba(255,255,255,.96);
-      --muted:rgba(255,255,255,.62);
-      --cardLine:rgba(255,255,255,.12);
-      --ai-grad:linear-gradient(135deg,#67e8f9 0%, #818cf8 46%, #f472b6 100%);
-      --host-grad:linear-gradient(135deg,#2563eb 0%, #4f46e5 55%, #7c3aed 100%);
-      --join-grad:linear-gradient(135deg,#f97316 0%, #ec4899 55%, #a855f7 100%);
-      --footerSafe:var(--footerH, 0px);
+    :root {
+      --bg: #050208;
+      --accent: #00f2fe;
+      --pink: #ff00c1;
+      --purple: #7000ff;
+      --card-bg: rgba(255, 255, 255, 0.05);
     }
 
-    *{
-      box-sizing:border-box;
-      -webkit-tap-highlight-color:transparent;
-      outline:none;
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    
+    html, body {
+      margin: 0; padding: 0;
+      width: 100%; height: 100dvh;
+      overflow: hidden; /* Scroll tamamen kapandı */
+      background: var(--bg);
+      font-family: 'Outfit', sans-serif;
+      color: white;
     }
 
-    html,body{
-      margin:0;
-      width:100%;
-      height:100%;
-      color:var(--txt);
-      font-family:'Outfit',sans-serif;
-      background:#120d16;
-      overflow-x:hidden;
-      overflow-y:auto;
-      -webkit-overflow-scrolling:touch;
-      scrollbar-width:none;
+    /* Hareketli Arka Plan Katmanı */
+    .nebula {
+      position: fixed; inset: 0;
+      background: 
+        radial-gradient(circle at 20% 30%, rgba(112, 0, 255, 0.2) 0%, transparent 40%),
+        radial-gradient(circle at 80% 70%, rgba(0, 242, 254, 0.15) 0%, transparent 40%);
+      filter: blur(80px);
+      z-index: 0;
+      animation: nebulaMove 10s infinite alternate ease-in-out;
     }
 
-    html::-webkit-scrollbar,
-    body::-webkit-scrollbar{
-      display:none;
+    @keyframes nebulaMove {
+      from { transform: scale(1) rotate(0deg); }
+      to { transform: scale(1.2) rotate(5deg); }
     }
 
-    body{
-      background:
-        radial-gradient(circle at 50% 0%, rgba(251,146,60,.18) 0%, transparent 26%),
-        radial-gradient(circle at 18% 18%, rgba(244,114,182,.12) 0%, transparent 22%),
-        radial-gradient(circle at 82% 18%, rgba(96,165,250,.12) 0%, transparent 20%),
-        linear-gradient(180deg, #1d1016 0%, #150e19 34%, #120d16 100%);
+    /* Ana Konteyner - Tam Ekran Orta */
+    #pageContent {
+      position: relative; z-index: 10;
+      height: 100%;
+      display: flex; flex-direction: column;
+      padding: env(safe-area-inset-top) 20px env(safe-area-inset-bottom);
+      justify-content: center;
+      max-width: 500px; margin: 0 auto;
     }
 
-    #pageContent{
-      width:100%;
-      min-height:calc(100dvh - var(--footerSafe));
-      padding:8px 12px calc(120px + env(safe-area-inset-bottom));
-      display:block;
+    /* Hero Alanı */
+    .hero { text-align: center; margin-bottom: 30px; }
+    
+    .hero-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 42px; margin: 0;
+      background: linear-gradient(to right, #fff, var(--accent), var(--pink));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 15px rgba(0, 242, 254, 0.4));
     }
 
-    .page-shell-fit{
-      min-height:calc(100dvh - var(--footerSafe) - 16px);
-      display:flex;
-      flex-direction:column;
-      gap:10px;
+    /* Canlı Ses Dalgaları */
+    .audio-visualizer {
+      display: flex; justify-content: center; align-items: flex-end;
+      gap: 4px; height: 40px; margin-bottom: 10px;
+    }
+    .bar {
+      width: 4px; background: var(--accent); border-radius: 2px;
+      animation: barJump 0.6s infinite alternate ease-in-out;
+    }
+    .bar:nth-child(even) { background: var(--pink); animation-duration: 0.8s; }
+    @keyframes barJump { 
+      0% { height: 10px; } 
+      100% { height: 35px; filter: brightness(1.5) drop-shadow(0 0 5px var(--accent)); } 
     }
 
-    .hero{
-      flex:0 0 auto;
-      min-height:112px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
+    /* Kartlar ve Animasyonlu Kenarlar */
+    .cyber-card {
+      position: relative;
+      background: rgba(15, 10, 20, 0.6);
+      border-radius: 24px;
+      padding: 24px;
+      margin-bottom: 16px;
+      border: 1px solid rgba(255,255,255,0.1);
+      display: flex; align-items: center; justify-content: space-between;
+      transition: 0.3s;
+      overflow: hidden;
     }
 
-    .hero-box{
-      width:100%;
-      border-radius:28px;
-      border:1px solid var(--cardLine);
-      background:
-        radial-gradient(circle at 50% 10%, rgba(103,232,249,.12) 0%, transparent 26%),
-        linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
-      box-shadow:
-        0 18px 32px rgba(0,0,0,.24),
-        inset 0 1px 0 rgba(255,255,255,.04);
-      padding:16px 16px 14px;
-      text-align:center;
-      position:relative;
-      overflow:hidden;
-      flex:0 0 auto;
+    /* Kenar Işığı Animasyonu */
+    .cyber-card::after {
+      content: ""; position: absolute; inset: -2px;
+      background: linear-gradient(90deg, transparent, var(--accent), var(--pink), transparent);
+      z-index: -1; animation: borderRotate 4s linear infinite;
+      opacity: 0.3;
+    }
+    @keyframes borderRotate {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
     }
 
-    .hero-box::after{
-      content:"";
-      position:absolute;
-      left:-20%;
-      top:-30%;
-      width:140%;
-      height:120%;
-      background:linear-gradient(90deg, transparent, rgba(255,255,255,.05), transparent);
-      transform:rotate(-8deg);
-      pointer-events:none;
+    .card-title { font-size: 22px; font-weight: 900; margin: 0; }
+    .card-desc { font-size: 12px; opacity: 0.6; margin-top: 5px; }
+
+    /* Input ve Butonlar */
+    .panel-view { display: flex; flex-direction: column; gap: 15px; }
+    
+    .input-field {
+      width: 100%; height: 70px;
+      background: rgba(255,255,255,0.05);
+      border: 2px solid var(--accent);
+      border-radius: 20px;
+      color: #fff; text-align: center;
+      font-size: 32px; font-family: 'Space Grotesk';
+      letter-spacing: 10px;
+      box-shadow: inset 0 0 15px rgba(0, 242, 254, 0.2);
     }
 
-    .hero-title{
-      margin:0;
-      font-family:'Space Grotesk',sans-serif;
-      font-size:26px;
-      line-height:1;
-      letter-spacing:-.8px;
-      color:#fff;
-      text-shadow:0 0 12px rgba(255,255,255,.08);
+    .btn-3d {
+      height: 60px; border-radius: 20px; border: none;
+      background: linear-gradient(45deg, var(--purple), var(--pink));
+      color: white; font-weight: 900; font-size: 16px;
+      text-transform: uppercase; letter-spacing: 1px;
+      box-shadow: 0 10px 20px rgba(255, 0, 193, 0.3);
+      cursor: pointer;
     }
 
-    .hero-title span{
-      background:var(--ai-grad);
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;
+    .btn-ghost {
+      height: 50px; background: transparent; border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 18px; color: white; cursor: pointer;
     }
 
-    .hero-sub{
-      margin:8px auto 0;
-      max-width:290px;
-      font-size:11px;
-      line-height:1.4;
-      color:var(--muted);
+    .room-code-display {
+      font-size: 48px; text-align: center; font-family: 'Space Grotesk';
+      background: linear-gradient(to bottom, #fff, var(--accent));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      margin: 20px 0;
     }
 
-    .wave-row{
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:4px;
-      margin-bottom:10px;
-      height:24px;
-    }
-
-    .wave-bar{
-      width:4px;
-      height:10px;
-      border-radius:999px;
-      background:var(--ai-grad);
-      animation:waveGlow 1.2s infinite ease-in-out;
-      box-shadow:0 0 10px rgba(129,140,248,.22);
-    }
-
-    .wave-bar:nth-child(2){ animation-delay:.12s; }
-    .wave-bar:nth-child(3){ animation-delay:.24s; }
-    .wave-bar:nth-child(4){ animation-delay:.36s; }
-    .wave-bar:nth-child(5){ animation-delay:.48s; }
-
-    .main-area{
-      flex:1 1 auto;
-      min-height:0;
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-      padding-bottom:2px;
-    }
-
-    .home-cards{
-      flex:1;
-      min-height:0;
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-    }
-
-    .cyber-card{
-      flex:1;
-      min-height:220px;
-      position:relative;
-      border-radius:30px;
-      overflow:hidden;
-      border:1px solid rgba(255,255,255,.12);
-      box-shadow:
-        0 18px 30px rgba(0,0,0,.28),
-        inset 0 1px 0 rgba(255,255,255,.05);
-      text-decoration:none;
-      color:#fff;
-      padding:18px;
-      display:flex;
-      align-items:center;
-      gap:14px;
-      cursor:pointer;
-      transition:transform .18s ease, filter .18s ease;
-      user-select:none;
-    }
-
-    .cyber-card:active{
-      transform:scale(.985);
-      filter:brightness(1.04);
-    }
-
-    .host-card{
-      background:
-        radial-gradient(circle at 18% 16%, rgba(103,232,249,.24) 0%, transparent 24%),
-        var(--host-grad);
-    }
-
-    .join-card{
-      background:
-        radial-gradient(circle at 82% 16%, rgba(255,255,255,.16) 0%, transparent 20%),
-        var(--join-grad);
-    }
-
-    .card-left{
-      flex:1;
-      min-width:0;
-    }
-
-    .card-title{
-      margin:0;
-      font-family:'Space Grotesk',sans-serif;
-      font-size:28px;
-      line-height:1;
-      letter-spacing:-1px;
-      color:#fff;
-    }
-
-    .card-desc{
-      margin-top:10px;
-      font-size:12px;
-      line-height:1.42;
-      color:rgba(255,255,255,.88);
-      max-width:220px;
-    }
-
-    .card-mini{
-      margin-top:10px;
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding:7px 10px;
-      border-radius:999px;
-      background:rgba(255,255,255,.12);
-      border:1px solid rgba(255,255,255,.14);
-      font-size:10px;
-      font-weight:900;
-      letter-spacing:.35px;
-      color:#fff;
-    }
-
-    .card-icon{
-      width:80px;
-      height:80px;
-      flex:0 0 auto;
-      border-radius:24px;
-      background:rgba(255,255,255,.12);
-      border:1px solid rgba(255,255,255,.16);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      position:relative;
-      overflow:hidden;
-      box-shadow:inset 0 0 18px rgba(255,255,255,.05);
-    }
-
-    .host-icon{
-      position:relative;
-      width:42px;
-      height:42px;
-    }
-
-    .host-core{
-      position:absolute;
-      left:50%;
-      top:50%;
-      width:12px;
-      height:12px;
-      border-radius:50%;
-      transform:translate(-50%,-50%);
-      background:#fff;
-      box-shadow:0 0 12px #fff;
-      z-index:2;
-    }
-
-    .host-ring{
-      position:absolute;
-      inset:0;
-      border-radius:50%;
-      border:2px solid rgba(255,255,255,.92);
-      opacity:.9;
-      animation:spin 3.2s linear infinite;
-    }
-
-    .host-ring.r2{
-      inset:7px;
-      border-color:rgba(103,232,249,.95);
-      animation-direction:reverse;
-      animation-duration:2.6s;
-    }
-
-    .host-dot{
-      position:absolute;
-      width:8px;
-      height:8px;
-      border-radius:50%;
-      background:#67e8f9;
-      box-shadow:0 0 12px #67e8f9;
-      top:-2px;
-      left:50%;
-      transform:translateX(-50%);
-    }
-
-    .join-grid{
-      width:42px;
-      height:42px;
-      display:grid;
-      grid-template-columns:repeat(2,1fr);
-      grid-template-rows:repeat(2,1fr);
-      gap:6px;
-    }
-
-    .join-grid span{
-      border-radius:8px;
-      background:linear-gradient(135deg, rgba(255,255,255,.95), rgba(255,255,255,.38));
-      box-shadow:0 0 10px rgba(255,255,255,.14);
-      animation:gridPulse 1.8s ease-in-out infinite;
-    }
-
-    .join-grid span:nth-child(2){ animation-delay:.15s; }
-    .join-grid span:nth-child(3){ animation-delay:.3s; }
-    .join-grid span:nth-child(4){ animation-delay:.45s; }
-
-    .panel-view{
-      flex:1;
-      min-height:0;
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-    }
-
-    .hide{
-      display:none !important;
-    }
-
-    .panel-card{
-      border-radius:28px;
-      border:1px solid var(--cardLine);
-      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.025));
-      box-shadow:
-        0 16px 30px rgba(0,0,0,.24),
-        inset 0 1px 0 rgba(255,255,255,.05);
-      overflow:hidden;
-    }
-
-    .host-zone{
-      flex:1;
-      min-height:300px;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      padding:22px 18px;
-      text-align:center;
-      gap:14px;
-    }
-
-    .host-code-kicker{
-      font-size:11px;
-      font-weight:900;
-      letter-spacing:.5px;
-      color:rgba(255,255,255,.62);
-    }
-
-    .code-orb{
-      width:112px;
-      height:112px;
-      border-radius:32px;
-      background:
-        radial-gradient(circle at 50% 50%, rgba(255,255,255,.2) 0%, rgba(255,255,255,.05) 55%, transparent 100%),
-        linear-gradient(135deg, rgba(103,232,249,.18), rgba(236,72,153,.18));
-      border:1px solid rgba(255,255,255,.12);
-      position:relative;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      box-shadow:
-        0 0 28px rgba(129,140,248,.14),
-        inset 0 0 20px rgba(255,255,255,.04);
-    }
-
-    .code-orb::before,
-    .code-orb::after{
-      content:"";
-      position:absolute;
-      border-radius:50%;
-      border:2px solid rgba(255,255,255,.7);
-    }
-
-    .code-orb::before{
-      width:54px;
-      height:54px;
-    }
-
-    .code-orb::after{
-      width:74px;
-      height:74px;
-      border-color:rgba(103,232,249,.9);
-    }
-
-    .code-dot{
-      width:14px;
-      height:14px;
-      border-radius:50%;
-      background:#fff;
-      box-shadow:0 0 14px #fff;
-      position:relative;
-      z-index:2;
-    }
-
-    .room-code-display{
-      margin-top:2px;
-      font-family:'Space Grotesk',sans-serif;
-      font-size:32px;
-      font-weight:900;
-      letter-spacing:6px;
-      color:#fff;
-      word-break:break-word;
-      line-height:1;
-    }
-
-    .host-status{
-      font-size:11px;
-      font-weight:800;
-      color:#8ec5ff;
-      line-height:1.35;
-      max-width:260px;
-    }
-
-    .join-zone{
-      padding:22px 18px;
-      display:flex;
-      flex-direction:column;
-      gap:14px;
-      justify-content:center;
-      min-height:220px;
-      flex:1;
-    }
-
-    .join-kicker{
-      text-align:center;
-      font-size:11px;
-      font-weight:900;
-      color:rgba(255,255,255,.72);
-      letter-spacing:.45px;
-    }
-
-    .input-field{
-      width:100%;
-      height:62px;
-      background:rgba(0,0,0,.32);
-      border:1px solid rgba(255,255,255,.14);
-      border-radius:20px;
-      color:#fff;
-      text-align:center;
-      font-size:22px;
-      font-weight:900;
-      letter-spacing:4px;
-      text-transform:uppercase;
-      padding:0 14px;
-      scroll-margin-bottom:160px;
-    }
-
-    .input-field::placeholder{
-      color:rgba(255,255,255,.32);
-      letter-spacing:2px;
-    }
-
-    .btn-3d,
-    .btn-ghost{
-      width:100%;
-      border:none;
-      border-radius:20px;
-      cursor:pointer;
-      font-weight:900;
-      font-family:'Outfit',sans-serif;
-      transition:transform .16s ease, filter .16s ease;
-    }
-
-    .btn-3d:active,
-    .btn-ghost:active{
-      transform:scale(.985);
-    }
-
-    .btn-3d{
-      height:58px;
-      background:var(--ai-grad);
-      color:#fff;
-      box-shadow:0 10px 26px rgba(99,102,241,.28), inset 0 2px 4px rgba(255,255,255,.24);
-      font-size:15px;
-      flex:0 0 auto;
-    }
-
-    .btn-ghost{
-      height:52px;
-      background:rgba(255,255,255,.06);
-      color:#fff;
-      border:1px solid rgba(255,255,255,.12);
-      font-size:13px;
-      flex:0 0 auto;
-    }
-
-    .row{
-      display:flex;
-      gap:10px;
-      flex:0 0 auto;
-    }
-
-    .row > *{
-      flex:1;
-    }
-
-    @keyframes waveGlow{
-      0%,100%{ height:10px; opacity:.34; }
-      50%{ height:24px; opacity:1; }
-    }
-
-    @keyframes spin{
-      from{ transform:rotate(0deg); }
-      to{ transform:rotate(360deg); }
-    }
-
-    @keyframes gridPulse{
-      0%,100%{ transform:scale(1); opacity:.6; }
-      50%{ transform:scale(1.12); opacity:1; }
-    }
-
-    @media (max-width:390px){
-      #pageContent{
-        padding:6px 10px calc(120px + env(safe-area-inset-bottom));
-      }
-
-      .hero-box{
-        padding:14px 14px 12px;
-      }
-
-      .hero-title{
-        font-size:24px;
-      }
-
-      .hero-sub{
-        font-size:10px;
-      }
-
-      .card-title{
-        font-size:25px;
-      }
-
-      .card-desc{
-        font-size:11px;
-      }
-
-      .card-icon{
-        width:72px;
-        height:72px;
-      }
-
-      .room-code-display{
-        font-size:27px;
-        letter-spacing:4px;
-      }
-
-      .code-orb{
-        width:100px;
-        height:100px;
-      }
-    }
+    .hide { display: none !important; }
+    
   </style>
 </head>
 
 <body>
+  <div class="nebula"></div>
+
   <main id="pageContent">
-    <div class="page-shell-fit">
+    
+    <header class="hero">
+      <div class="audio-visualizer">
+        <div class="bar" style="animation-delay: 0.1s"></div>
+        <div class="bar" style="animation-delay: 0.3s"></div>
+        <div class="bar" style="animation-delay: 0.2s"></div>
+        <div class="bar" style="animation-delay: 0.5s"></div>
+        <div class="bar" style="animation-delay: 0.4s"></div>
+        <div class="bar" style="animation-delay: 0.2s"></div>
+      </div>
+      <h1 class="hero-title">AllToAll</h1>
+      <p style="font-size: 12px; opacity: 0.5;">Sınırları Kaldıran Canlı Çeviri</p>
+    </header>
 
-      <section class="hero">
-        <div class="hero-box">
-          <div class="wave-row">
-            <div class="wave-bar"></div>
-            <div class="wave-bar"></div>
-            <div class="wave-bar"></div>
-            <div class="wave-bar"></div>
-            <div class="wave-bar"></div>
-          </div>
-          <h1 class="hero-title">All<span>To</span>All</h1>
-          <p class="hero-sub">Çok katılımcılı canlı çeviri kanalı. Herkes kendi dilinde konuşsun, herkes kendi dilinde anlasın.</p>
+    <div id="homeCards">
+      <div class="cyber-card" id="goHost" style="cursor: pointer;">
+        <div>
+          <div class="card-title">KANAL OLUŞTUR</div>
+          <div class="card-desc">Lider ol, kısa kodunu paylaş.</div>
         </div>
-      </section>
+        <div style="font-size: 30px;">🛰️</div>
+      </div>
 
-      <section class="main-area">
-        <div class="home-cards" id="homeCards">
-          <div class="cyber-card host-card" id="goHost">
-            <div class="card-left">
-              <h2 class="card-title">Kanal Oluştur</h2>
-              <div class="card-desc">Kısa kod üret, paylaş ve çok kişili canlı çeviri odasını başlat.</div>
-              <div class="card-mini">HOST MODE</div>
-            </div>
-
-            <div class="card-icon">
-              <div class="host-icon">
-                <div class="host-ring"></div>
-                <div class="host-ring r2"></div>
-                <div class="host-core"></div>
-                <div class="host-dot"></div>
-              </div>
-            </div>
-          </div>
-
-          <div class="cyber-card join-card" id="goGuest">
-            <div class="card-left">
-              <h2 class="card-title">Kanala Katıl</h2>
-              <div class="card-desc">Sana gönderilen kısa oda kodunu yaz ve anında bağlan.</div>
-              <div class="card-mini">JOIN MODE</div>
-            </div>
-
-            <div class="card-icon">
-              <div class="join-grid">
-                <span></span><span></span><span></span><span></span>
-              </div>
-            </div>
-          </div>
+      <div class="cyber-card" id="goGuest" style="cursor: pointer;">
+        <div>
+          <div class="card-title">KATIL</div>
+          <div class="card-desc">Davet kodunla odaya gir.</div>
         </div>
-
-        <div class="panel-view hide" id="hostPanel">
-          <div class="panel-card host-zone">
-            <div class="host-code-kicker">ODA KODU</div>
-
-            <div class="code-orb">
-              <div class="code-dot"></div>
-            </div>
-
-            <div class="room-code-display" id="roomCode">------</div>
-            <div class="host-status" id="hostStatus">Kısa kod hazır olduğunda burada görünecek</div>
-          </div>
-
-          <button class="btn-3d" id="btnGoCall">KANALI AÇ</button>
-
-          <div class="row">
-            <button class="btn-ghost" id="btnCopy">KODU KOPYALA</button>
-            <button class="btn-ghost" id="btnBackHost">GERİ</button>
-          </div>
-        </div>
-
-        <div class="panel-view hide" id="joinPanel">
-          <div class="panel-card join-zone">
-            <div class="join-kicker">ODA KODU</div>
-            <input
-              class="input-field"
-              id="roomInput"
-              placeholder="KODU YAZ"
-              maxlength="6"
-              autocapitalize="characters"
-              autocomplete="off"
-              autocorrect="off"
-              spellcheck="false"
-              inputmode="text"
-            />
-          </div>
-
-          <button class="btn-3d" id="btnJoin">KANALA KATIL</button>
-          <button class="btn-ghost" id="btnBackJoin">ANA MENÜYE DÖN</button>
-        </div>
-      </section>
-
+        <div style="font-size: 30px;">⚡</div>
+      </div>
     </div>
+
+    <div class="panel-view hide" id="hostPanel">
+      <div class="room-code-display" id="roomCode">------</div>
+      <button class="btn-3d" id="btnGoCall">ODAYI BAŞLAT</button>
+      <div style="display: flex; gap: 10px;">
+        <button class="btn-ghost" style="flex:1" id="btnCopy">KOPYALA</button>
+        <button class="btn-ghost" style="flex:1" id="btnBackHost">GERİ</button>
+      </div>
+      <p id="hostStatus" style="text-align: center; font-size: 11px; color: var(--accent);">Bağlantı Hazırlanıyor...</p>
+    </div>
+
+    <div class="panel-view hide" id="joinPanel">
+      <input class="input-field" id="roomInput" placeholder="KODU YAZ" maxlength="6" />
+      <button class="btn-3d" id="btnJoin">BAĞLAN</button>
+      <button class="btn-ghost" id="btnBackJoin">İPTAL</button>
+    </div>
+
   </main>
 
   <script>
+    // Giriş kodunu otomatik tetikleme
     (function(){
       const input = document.getElementById("roomInput");
       const btnJoin = document.getElementById("btnJoin");
-
       if(!input) return;
-
-      function normalizeCode(value){
-        return String(value || "")
-          .toUpperCase()
-          .replace(/[^A-Z0-9]/g, "")
-          .slice(0, 6);
-      }
-
-      function bringIntoView(){
-        setTimeout(() => {
-          try{
-            input.scrollIntoView({
-              behavior:"smooth",
-              block:"center"
-            });
-          }catch(e){}
-        }, 260);
-      }
-
-      input.addEventListener("focus", bringIntoView);
-      input.addEventListener("click", bringIntoView);
-
       input.addEventListener("input", () => {
-        const normalized = normalizeCode(input.value);
-        if (input.value !== normalized) {
-          input.value = normalized;
-        }
-
-        if (normalized.length === 6) {
-          setTimeout(() => {
-            try{
-              btnJoin?.click();
-            }catch(e){}
-          }, 120);
+        input.value = input.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+        if (input.value.length === 6) {
+          setTimeout(() => { btnJoin?.click(); }, 150);
         }
       });
     })();
