@@ -980,6 +980,15 @@ function sendSpeechMessage(text) {
 }
 
 async function toggleMic() {
+
+  if (document.visibilityState === "hidden") return;
+
+  try {
+    recognizer?.abort?.();
+  } catch {}
+
+  recognizer = null;
+
   await warmAudio();
 
   const granted = await requestMicPermission();
