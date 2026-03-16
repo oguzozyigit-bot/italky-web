@@ -87,7 +87,7 @@ const SITE_TEXT = {
     hostNotReady: "Host henüz odaya giriş yapmadı.",
     roomNotCreated: "Bu oda henüz oluşturulmamış.",
     connectionError: "Bağlantı hatası oluştu.",
-    connectionClosed: "Bağlantı kapandı. Yeniden bağlanılıyor...",
+    connectionClosed: "Bağlantı koptu. Yeniden bağlanıyor...",
     micUnsupported: "Bu cihazda konuşma algılama desteklenmiyor.",
     micDenied: "Mikrofon izni gerekli.",
     micNoSpeech: "Konuşma algılanamadı. Tekrar deneyin.",
@@ -108,7 +108,7 @@ const SITE_TEXT = {
     hostNotReady: "Host has not entered the room yet.",
     roomNotCreated: "This room has not been created yet.",
     connectionError: "A connection error occurred.",
-    connectionClosed: "Connection closed. Reconnecting...",
+    connectionClosed: "Connection dropped. Reconnecting...",
     micUnsupported: "Speech recognition is not supported on this device.",
     micDenied: "Microphone permission required.",
     micNoSpeech: "Speech was not detected. Please try again.",
@@ -129,7 +129,7 @@ const SITE_TEXT = {
     hostNotReady: "Der Host hat den Raum noch nicht betreten.",
     roomNotCreated: "Dieser Raum wurde noch nicht erstellt.",
     connectionError: "Verbindungsfehler aufgetreten.",
-    connectionClosed: "Verbindung geschlossen. Erneuter Verbindungsaufbau...",
+    connectionClosed: "Verbindung unterbrochen. Neuverbindung...",
     micUnsupported: "Spracherkennung wird auf diesem Gerät nicht unterstützt.",
     micDenied: "Mikrofonberechtigung erforderlich.",
     micNoSpeech: "Keine Sprache erkannt. Bitte erneut versuchen.",
@@ -150,7 +150,7 @@ const SITE_TEXT = {
     hostNotReady: "L’hôte n’est pas encore entré dans la salle.",
     roomNotCreated: "Cette salle n’a pas encore été créée.",
     connectionError: "Erreur de connexion.",
-    connectionClosed: "Connexion fermée. Reconnexion...",
+    connectionClosed: "Connexion perdue. Reconnexion...",
     micUnsupported: "La reconnaissance vocale n’est pas prise en charge sur cet appareil.",
     micDenied: "Autorisation micro requise.",
     micNoSpeech: "Aucune parole détectée. Réessayez.",
@@ -171,7 +171,7 @@ const SITE_TEXT = {
     hostNotReady: "L'host non è ancora entrato nella stanza.",
     roomNotCreated: "Questa stanza non è stata ancora creata.",
     connectionError: "Errore di connessione.",
-    connectionClosed: "Connessione chiusa. Riconnessione...",
+    connectionClosed: "Connessione persa. Riconnessione...",
     micUnsupported: "Il riconoscimento vocale non è supportato su questo dispositivo.",
     micDenied: "Autorizzazione microfono richiesta.",
     micNoSpeech: "Voce non rilevata. Riprova.",
@@ -192,7 +192,7 @@ const SITE_TEXT = {
     hostNotReady: "El host todavía no ha entrado en la sala.",
     roomNotCreated: "Esta sala todavía no ha sido creada.",
     connectionError: "Se produjo un error de conexión.",
-    connectionClosed: "Conexión cerrada. Reconectando...",
+    connectionClosed: "Conexión perdida. Reconectando...",
     micUnsupported: "El reconocimiento de voz no es compatible con este dispositivo.",
     micDenied: "Se requiere permiso de micrófono.",
     micNoSpeech: "No se detectó voz. Inténtalo de nuevo.",
@@ -704,18 +704,6 @@ async function warmAudio() {
   } catch {}
 }
 
-async function requestMicPermission() {
-  if (!navigator.mediaDevices?.getUserMedia) return true;
-  try {
-    const temp = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-    temp.getTracks().forEach((t) => t.stop());
-    return true;
-  } catch (e) {
-    console.warn("[alltoall mic permission]", e);
-    return false;
-  }
-}
-
 async function prepareEnhancedMic() {
   try {
     if (!navigator.mediaDevices?.getUserMedia) return;
@@ -732,6 +720,18 @@ async function prepareEnhancedMic() {
     });
   } catch (e) {
     console.warn("[alltoall enhanced mic]", e);
+  }
+}
+
+async function requestMicPermission() {
+  if (!navigator.mediaDevices?.getUserMedia) return true;
+  try {
+    const temp = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    temp.getTracks().forEach((t) => t.stop());
+    return true;
+  } catch (e) {
+    console.warn("[alltoall mic permission]", e);
+    return false;
   }
 }
 
@@ -903,35 +903,21 @@ async function speakText(text, langCode) {
 /* =========================
    SPEECH
 ========================= */
-function destroyRecognizer() {
-  if (!recognizer) return;
-  try {
-    recognizer.onstart = null;
-    recognizer.onresult = null;
-    recognizer.onerror = null;
-    recognizer.onend = null;
-    recognizer.stop?.();
-  } catch {}
-  recognizer = null;
-}
-
-function createRecognizer() {
+function initSpeech() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) return null;
 
-  const rec = new SR();
-  rec.lang = toBCP(myLang);
-  rec.interimResults = false;
-  rec.continuous = false;
-  rec.maxAlternatives = 1;
+  if (!SR) {
+    recognizer = null;
+    return;
+  }
 
-  rec.onstart = () => {
-    recognizing = true;
-    micBtn?.classList.add("listening");
-    updateMicUI();
-  };
+  recognizer = new SR();
+  recognizer.lang = toBCP(myLang);
+  recognizer.interimResults = false;
+  recognizer.continuous = false;
+  recognizer.maxAlternatives = 1;
 
-  rec.onresult = (e) => {
+  recognizer.onresult = (e) => {
     const text = e.results?.[0]?.[0]?.transcript || "";
     recognizing = false;
     micBtn?.classList.remove("listening");
@@ -946,32 +932,31 @@ function createRecognizer() {
     }
   };
 
-  rec.onerror = (e) => {
+  recognizer.onend = () => {
+    recognizing = false;
+    micBtn?.classList.remove("listening");
+    updateMicUI();
+  };
+
+  recognizer.onerror = (e) => {
     recognizing = false;
     micBtn?.classList.remove("listening");
     updateMicUI();
 
     const err = String(e?.error || "").toLowerCase();
-    console.warn("[alltoall speech error]", err, e);
-
     if (err.includes("not-allowed") || err.includes("denied")) {
       addSystemMessage(st("micDenied"));
-    } else if (err.includes("no-speech") || err.includes("no-match") || err.includes("audio-capture")) {
-      addSystemMessage(st("micNoSpeech"));
-    } else {
-      addSystemMessage(st("micFailed"));
+      return;
     }
 
-    destroyRecognizer();
-  };
+    if (err.includes("no-speech") || err.includes("no-match") || err.includes("audio-capture")) {
+      addSystemMessage(st("micNoSpeech"));
+      return;
+    }
 
-  rec.onend = () => {
-    recognizing = false;
-    micBtn?.classList.remove("listening");
-    updateMicUI();
+    console.warn("[alltoall browser speech]", e);
+    addSystemMessage(st("micFailed"));
   };
-
-  return rec;
 }
 
 function sendSpeechMessage(text) {
@@ -995,14 +980,6 @@ function sendSpeechMessage(text) {
 }
 
 async function toggleMic() {
-  if (document.visibilityState === "hidden") return;
-
-  try {
-    recognizer?.abort?.();
-  } catch {}
-  destroyRecognizer();
-  recognizer = null;
-
   await warmAudio();
 
   const granted = await requestMicPermission();
@@ -1019,13 +996,16 @@ async function toggleMic() {
     try {
       recognizer?.stop?.();
     } catch {}
+
     recognizing = false;
     micBtn?.classList.remove("listening");
     updateMicUI();
     return;
   }
 
-  recognizer = createRecognizer();
+  if (!recognizer) {
+    initSpeech();
+  }
 
   if (!recognizer) {
     addSystemMessage(st("micUnsupported"));
@@ -1034,13 +1014,15 @@ async function toggleMic() {
 
   try {
     recognizer.lang = toBCP(myLang);
+    recognizing = true;
+    micBtn?.classList.add("listening");
+    updateMicUI();
     recognizer.start();
   } catch (e) {
-    console.warn("[alltoall mic start]", e);
     recognizing = false;
     micBtn?.classList.remove("listening");
     updateMicUI();
-    destroyRecognizer();
+    console.warn("[alltoall mic start]", e);
     addSystemMessage(st("micFailed"));
   }
 }
@@ -1087,7 +1069,7 @@ function scheduleReconnect() {
   if (manualClose || reconnectTimer) return;
   reconnectTimer = setTimeout(() => {
     reconnectTimer = null;
-    if (!manualClose && document.visibilityState !== "hidden") {
+    if (!manualClose) {
       connectSocket();
     }
   }, 1500);
@@ -1098,8 +1080,6 @@ function connectSocket() {
     addSystemMessage(st("roomMissing"));
     return;
   }
-
-  try { ws?.close?.(); } catch {}
 
   const wsUrl = `${WS_BASE}/${encodeURIComponent(roomId)}`;
   ws = new WebSocket(wsUrl);
@@ -1360,6 +1340,7 @@ async function init() {
   await hydrateMyProfile();
   ensureSelfInPeople();
 
+  initSpeech();
   bindEvents();
 
   try {
@@ -1385,7 +1366,7 @@ init();
 window.addEventListener("beforeunload", () => {
   manualClose = true;
   stopAudio();
-  destroyRecognizer();
+  try { recognizer?.stop?.(); } catch {}
   try { ws?.close?.(); } catch {}
   try { preparedStream?.getTracks?.().forEach((t) => t.stop()); } catch {}
 });
