@@ -1,801 +1,212 @@
-<!-- FILE: /pages/alltoall_room.html -->
 <!doctype html>
 <html lang="tr">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
   <title>italkyAI • AllToAll Room</title>
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
   <style>
     :root{
-      --topH:64px;
-      --profileH:78px;
-      --langH:68px;
-      --dockH:140px;
-
-      --txt:rgba(255,255,255,.96);
-      --muted:rgba(255,255,255,.58);
-      --line:rgba(255,255,255,.07);
-
-      --cyan:#67e8f9;
-      --violet:#7c5cff;
-      --pink:#f472b6;
-
+      --topH:70px; /* Tek ve güçlü bir bar */
+      --dockH:90px;
       --accentGrad:linear-gradient(135deg,#67e8f9 0%,#7c5cff 48%,#f472b6 100%);
-      --bracketGrad:linear-gradient(180deg,#67e8f9 0%,#7c5cff 55%,#f472b6 100%);
+      --cyan:#67e8f9;
     }
 
-    *{
-      box-sizing:border-box;
-      -webkit-tap-highlight-color:transparent;
-      outline:none;
-    }
+    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; }
 
     html,body{
-      margin:0;
-      padding:0;
-      width:100%;
-      height:100%;
-      overflow:hidden;
-      color:var(--txt);
-      font-family:'Outfit',sans-serif;
-      background:#06030b;
+      margin:0; padding:0; width:100%; height:100%;
+      overflow:hidden; background:#06030b; color:#fff; font-family:'Outfit',sans-serif;
     }
 
     body{
-      background:
-        radial-gradient(circle at 50% 0%, rgba(103,232,249,.10) 0%, transparent 22%),
-        radial-gradient(circle at 20% 18%, rgba(244,114,182,.10) 0%, transparent 20%),
-        radial-gradient(circle at 80% 18%, rgba(124,92,255,.14) 0%, transparent 18%),
+      background: 
+        radial-gradient(circle at 50% 0%, rgba(103,232,249,.10) 0%, transparent 30%),
         linear-gradient(180deg,#05030a 0%,#0a0712 100%);
-    }
-
-    #pageContent{
-      width:100%;
-      height:calc(100dvh - var(--footerH, 0px));
-      overflow:hidden;
     }
 
     .room{
       width:min(500px,100vw);
-      height:100%;
+      height:100dvh;
       margin:0 auto;
       display:flex;
       flex-direction:column;
-      overflow:hidden;
       position:relative;
     }
 
+    /* ÜST BAR - TEK VE NET */
     .topbar{
       height:var(--topH);
       display:flex;
       align-items:center;
       justify-content:space-between;
-      padding:0 14px;
-      border-bottom:1px solid var(--line);
-      flex:0 0 auto;
-      background:rgba(8,8,20,.45);
-      backdrop-filter:blur(10px);
+      padding:0 16px;
+      background:rgba(255,255,255,0.02);
+      backdrop-filter:blur(20px);
+      border-bottom:1px solid rgba(255,255,255,0.08);
+      z-index:100;
     }
 
-    .topBtn{
-      width:40px;
-      height:40px;
-      border:none;
-      background:rgba(255,255,255,.06);
-      color:#fff;
-      border-radius:14px;
-      font-size:18px;
-      cursor:pointer;
-      flex:0 0 auto;
+    .brand{ font-family:'Space Grotesk',sans-serif; font-size:22px; font-weight:700; }
+    .brand span{ color:var(--cyan); }
+
+    .top-action-btn{
+      width:42px; height:42px; border:none; border-radius:14px;
+      background:rgba(255,255,255,0.06); color:#fff; font-size:18px; cursor:pointer;
     }
 
-    .title{
-      font-family:'Space Grotesk',sans-serif;
-      font-weight:700;
-      font-size:22px;
-      letter-spacing:-.4px;
-      text-align:center;
-      flex:1;
-    }
-
-    .title .accent{ color:var(--cyan); }
-
-    .topSlot{
-      width:40px;
-      height:40px;
-      flex:0 0 auto;
-    }
-
-    .profile{
-      min-height:var(--profileH);
-      padding:10px 14px;
+    /* KATILIMCILAR VE DİL SEÇİMİ (TEK SATIR) */
+    .meta-row{
+      padding:12px 16px;
       display:flex;
       align-items:center;
-      gap:12px;
-      border-bottom:1px solid var(--line);
-      flex:0 0 auto;
-      background:rgba(255,255,255,.015);
-    }
-
-    .profile-avatar{
-      width:50px;
-      height:50px;
-      border-radius:50%;
-      overflow:hidden;
-      background:rgba(255,255,255,.08);
-      border:2px solid rgba(255,255,255,.10);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-weight:900;
-      font-size:15px;
-      flex:0 0 auto;
-    }
-
-    .profile-avatar img{
-      width:100%;
-      height:100%;
-      object-fit:cover;
-    }
-
-    .profile-meta{
-      min-width:0;
-      flex:1;
-    }
-
-    .profile-kicker{
-      font-size:10px;
-      font-weight:900;
-      letter-spacing:.5px;
-      color:var(--muted);
-      text-transform:uppercase;
-      margin-bottom:4px;
-    }
-
-    .profile-name{
-      font-size:18px;
-      font-weight:900;
-      line-height:1.1;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-
-    .profile-note{
-      margin-top:4px;
-      font-size:11px;
-      color:rgba(255,255,255,.62);
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-
-    .langbar{
-      min-height:var(--langH);
-      padding:12px 14px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
       gap:10px;
-      border-bottom:1px solid var(--line);
-      flex:0 0 auto;
-      background:rgba(255,255,255,.015);
-    }
-
-    #langSelect{
-      position:absolute;
-      opacity:0;
-      pointer-events:none;
-      width:1px;
-      height:1px;
+      background:rgba(255,255,255,0.01);
+      border-bottom:1px solid rgba(255,255,255,0.05);
     }
 
     #roomPill{
-      min-width:104px;
-      max-width:124px;
-      height:42px;
-      padding:0 14px;
-      border-radius:14px;
-      background:linear-gradient(135deg,#5b21b6,#7c3aed,#a855f7);
-      border:1px solid rgba(255,255,255,.10);
-      box-shadow:0 0 18px rgba(124,92,255,.20);
-      color:#fff;
-      font-size:15px;
-      font-weight:900;
-      letter-spacing:1px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      cursor:pointer;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      flex:0 0 auto;
+      background:linear-gradient(135deg,#5b21b6,#7c3aed);
+      padding:6px 14px; border-radius:12px; font-weight:900; font-size:16px;
+      letter-spacing:1px; box-shadow:0 0 15px rgba(112,0,255,0.3);
     }
 
     .langBtn{
-      min-width:170px;
-      max-width:240px;
-      height:42px;
-      border:none;
-      border-radius:16px;
-      padding:0 14px;
-      background:rgba(255,255,255,.07);
-      border:1px solid rgba(255,255,255,.10);
-      color:#fff;
-      font-size:14px;
-      font-weight:800;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      cursor:pointer;
+      flex:1; height:40px; border-radius:12px; border:1px solid rgba(255,255,255,0.1);
+      background:rgba(255,255,255,0.05); color:#fff; display:flex; 
+      align-items:center; justify-content:space-between; padding:0 12px; font-weight:700; cursor:pointer;
     }
 
-    .langBtnText{
-      min-width:0;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      white-space:nowrap;
-    }
-
-    .splitStage{
+    /* CHAT ALANI */
+    .chat-stage{
       flex:1;
+      display:flex;
+      flex-direction:column;
       min-height:0;
-      display:flex;
-      flex-direction:column;
-      position:relative;
-      overflow:hidden;
-    }
-
-    .upperPane,
-    .lowerPane{
-      flex:1;
-      min-height:0;
-      position:relative;
-      overflow:hidden;
-    }
-
-    .upperPane{
-      border-bottom:1px solid rgba(255,255,255,.05);
-      background:
-        radial-gradient(circle at 50% 0%, rgba(103,232,249,.06), transparent 32%),
-        linear-gradient(180deg, rgba(9,14,40,.22), rgba(8,10,22,.08));
-    }
-
-    .lowerPane{
-      background:
-        radial-gradient(circle at 50% 100%, rgba(244,114,182,.06), transparent 32%),
-        linear-gradient(180deg, rgba(16,8,28,.08), rgba(18,10,22,.20));
-    }
-
-    .peopleBar{
-      position:absolute;
-      top:10px;
-      left:14px;
-      right:14px;
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-      z-index:2;
-    }
-
-    .peopleHead{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-    }
-
-    .peopleTitle{
-      font-size:11px;
-      font-weight:900;
-      letter-spacing:.5px;
-      color:var(--muted);
-      text-transform:uppercase;
-    }
-
-    .peopleCount{
-      font-size:11px;
-      font-weight:800;
-      color:rgba(255,255,255,.72);
-      white-space:nowrap;
-    }
-
-    .peopleScroll{
-      display:flex;
-      gap:12px;
-      overflow-x:auto;
-      overflow-y:hidden;
-      scrollbar-width:none;
-      min-height:48px;
-      padding-bottom:2px;
-    }
-
-    .peopleScroll::-webkit-scrollbar{ display:none; }
-
-    .pItem{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      min-width:max-content;
-      flex:0 0 auto;
-      padding:4px 0;
-    }
-
-    .pAvatar{
-      width:36px;
-      height:36px;
-      border-radius:50%;
-      overflow:hidden;
-      background:rgba(255,255,255,.08);
-      border:2px solid rgba(255,255,255,.10);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-weight:900;
-      font-size:12px;
-      flex:0 0 auto;
-    }
-
-    .pAvatar img{
-      width:100%;
-      height:100%;
-      object-fit:cover;
-    }
-
-    .pName{
-      font-size:12px;
-      font-weight:800;
-      color:rgba(255,255,255,.90);
-      white-space:nowrap;
-    }
-
-    .chatWrap{
-      position:absolute;
-      left:0;
-      right:0;
-      top:74px;
-      bottom:0;
-      padding:0 14px 12px;
-      overflow:hidden;
-      display:flex;
-      flex-direction:column;
+      padding:10px 0;
     }
 
     .chat{
-      flex:1;
-      min-height:0;
-      overflow-y:auto;
-      display:flex;
-      flex-direction:column;
-      gap:14px;
-      padding:6px 0 8px;
+      flex:1; overflow-y:auto; padding:0 16px;
+      display:flex; flex-direction:column; gap:16px;
       scrollbar-width:none;
-      scroll-behavior:smooth;
     }
-
     .chat::-webkit-scrollbar{ display:none; }
 
-    .sys-note{
-      align-self:center;
-      max-width:88%;
-      padding:8px 12px;
-      border-radius:999px;
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.06);
-      color:rgba(255,255,255,.74);
-      font-size:11px;
-      font-weight:800;
-      text-align:center;
+    /* MESAJ TASARIMI (Hafif ve Pro) */
+    .msg-row{ display:flex; flex-direction:column; max-width:85%; }
+    .msg-row.right{ align-self:flex-end; align-items:flex-end; }
+    .msg-bubble{
+      padding:12px 16px; border-radius:18px; background:rgba(255,255,255,0.05);
+      border:1px solid rgba(255,255,255,0.08); font-size:14.5px; line-height:1.5;
     }
+    .msg-row.right .msg-bubble{ background:linear-gradient(135deg,rgba(103,232,249,0.1),rgba(124,92,255,0.1)); border-color:rgba(103,232,249,0.2); }
 
-    .msg-row{
-      width:100%;
-      display:flex;
-    }
-
-    .msg-row.left{ justify-content:flex-start; }
-    .msg-row.right{ justify-content:flex-end; }
-
-    .msg-card{
+    /* ALT DOCK VE MİC (DOCK ÜSTÜNDE ORTALANMIŞ) */
+    .footer-dock{
       position:relative;
-      max-width:92%;
-      min-width:120px;
-      padding-left:18px;
-    }
-
-    .msg-bracket{
-      position:absolute;
-      left:0;
-      top:2px;
-      bottom:2px;
-      width:8px;
-      pointer-events:none;
-    }
-
-    .msg-bracket::before,
-    .msg-bracket::after,
-    .msg-bracket .mid{
-      content:"";
-      position:absolute;
-      left:0;
-      width:8px;
-      background:var(--bracketGrad);
-      border-radius:999px;
-      box-shadow:0 0 10px rgba(124,92,255,.22);
-    }
-
-    .msg-bracket::before{
-      top:0;
-      height:12px;
-    }
-
-    .msg-bracket .mid{
-      top:10px;
-      bottom:10px;
-      width:3px;
-      left:2px;
-      border-radius:999px;
-    }
-
-    .msg-bracket::after{
-      bottom:0;
-      height:12px;
-    }
-
-    .msg-head{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      margin-bottom:4px;
-      min-width:0;
-    }
-
-    .msg-name{
-      font-size:12px;
-      font-weight:900;
-      color:rgba(255,255,255,.84);
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      max-width:132px;
-    }
-
-    .msg-lang{
-      font-size:11px;
-      font-weight:800;
-      color:rgba(255,255,255,.58);
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      min-width:0;
-    }
-
-    .msg-spk{
-      width:24px;
-      height:24px;
-      border:none;
-      border-radius:50%;
-      background:rgba(255,255,255,.08);
-      color:#fff;
+      height:calc(var(--dockH) + env(safe-area-inset-bottom));
+      background:rgba(10,8,18,0.95);
+      backdrop-filter:blur(20px);
+      border-top:1px solid rgba(255,255,255,0.1);
       display:flex;
       align-items:center;
       justify-content:center;
-      cursor:pointer;
-      flex:0 0 auto;
-      padding:0;
-      margin-left:auto;
+      padding-bottom:env(safe-area-inset-bottom);
     }
 
-    .msg-spk svg{
-      width:13px;
-      height:13px;
-      stroke:#fff;
-      fill:none;
-      stroke-width:2;
-    }
-
-    .msg-bubble{
-      display:inline-block;
-      font-size:14.5px;
-      line-height:1.5;
-      color:rgba(255,255,255,.95);
-      background:rgba(255,255,255,.04);
-      padding:10px 14px;
-      border-radius:16px;
-      border:1px solid rgba(255,255,255,.06);
-      word-break:break-word;
-    }
-
-    .msg-row.right .msg-bubble{
-      background:linear-gradient(135deg,rgba(103,232,249,.14),rgba(124,92,255,.16));
-    }
-
-    .micStage{
+    /* MİC: DOCK'UN ÜSTÜNDE YARI DIŞARIDA */
+    .mic-wrap{
       position:absolute;
+      top:-40px; /* Dock'un üzerine biniyor */
       left:50%;
-      top:50%;
-      transform:translate(-50%,-50%);
+      transform:translateX(-50%);
       display:flex;
       flex-direction:column;
       align-items:center;
-      justify-content:center;
-      gap:12px;
-      z-index:3;
-      pointer-events:none;
+      gap:8px;
     }
 
     .main-mic{
-      width:88px;
-      height:88px;
-      border:none;
-      border-radius:50%;
-      background:var(--accentGrad);
-      color:#050208;
-      font-size:30px;
-      font-weight:900;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      box-shadow:0 10px 30px rgba(103,232,249,.20);
-      transition:transform .16s ease, box-shadow .16s ease;
-      pointer-events:auto;
-      cursor:pointer;
+      width:80px; height:80px; border:none; border-radius:50%;
+      background:var(--accentGrad); color:#000; font-size:32px;
+      display:flex; align-items:center; justify-content:center;
+      box-shadow:0 10px 30px rgba(0,242,254,0.3);
+      cursor:pointer; z-index:10; transition:0.2s;
     }
 
     .main-mic.listening{
-      box-shadow:0 0 0 8px rgba(244,114,182,.16), 0 0 28px rgba(244,114,182,.28);
-      transform:scale(1.04);
+      animation: micPulse 1.5s infinite;
+      transform:translateX(-50%) scale(1.05);
     }
 
-    .micHint{
-      text-align:center;
-      font-size:11px;
-      font-weight:800;
-      color:rgba(255,255,255,.72);
-      line-height:1.3;
-      min-height:28px;
-      max-width:280px;
-      pointer-events:none;
+    @keyframes micPulse {
+      0% { box-shadow: 0 0 0 0 rgba(103,232,249,0.5); }
+      70% { box-shadow: 0 0 0 20px rgba(103,232,249,0); }
+      100% { box-shadow: 0 0 0 0 rgba(103,232,249,0); }
     }
 
-    .footerPad{
-      height:calc(26px + env(safe-area-inset-bottom) + var(--footerH, 0px));
-      flex:0 0 auto;
-      border-top:1px solid rgba(255,255,255,.05);
-      background:rgba(8,6,14,.88);
-    }
+    .mic-hint{ font-size:11px; font-weight:800; color:var(--cyan); text-transform:uppercase; letter-spacing:1px; }
 
-    .sheet-backdrop{
-      position:fixed;
-      inset:0;
-      background:rgba(0,0,0,.52);
-      backdrop-filter:blur(8px);
-      -webkit-backdrop-filter:blur(8px);
-      opacity:0;
-      pointer-events:none;
-      transition:.22s ease;
-      z-index:9998;
+    /* Gizli Öğeler (JS Uyumu İçin) */
+    .hide, #langSelect{ display:none; }
+    
+    /* Sheet Stilleri (Kısaltılmış, Orijinal Mantık) */
+    .sheet-backdrop{ position:fixed; inset:0; background:rgba(0,0,0,0.6); opacity:0; pointer-events:none; z-index:999; transition:0.3s; }
+    .sheet-backdrop.show{ opacity:1; pointer-events:auto; }
+    .lang-sheet{ 
+      position:fixed; bottom:0; left:50%; transform:translateX(-50%) translateY(100%);
+      width:min(500px,100vw); background:#121018; border-radius:24px 24px 0 0;
+      padding:20px; z-index:1000; transition:0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
     }
-
-    .sheet-backdrop.show{
-      opacity:1;
-      pointer-events:auto;
-    }
-
-    .lang-sheet{
-      position:fixed;
-      left:50%;
-      bottom:0;
-      transform:translateX(-50%) translateY(110%);
-      width:min(500px,100vw);
-      background:linear-gradient(180deg,rgba(20,18,30,.98),rgba(10,8,18,.98));
-      border:1px solid rgba(255,255,255,.10);
-      border-bottom:none;
-      border-radius:28px 28px 0 0;
-      box-shadow:0 -20px 60px rgba(0,0,0,.42);
-      transition:.24s ease;
-      z-index:9999;
-      padding:10px 14px calc(18px + env(safe-area-inset-bottom));
-      max-height:72dvh;
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-    }
-
-    .lang-sheet.show{
-      transform:translateX(-50%) translateY(0);
-    }
-
-    .sheet-handle{
-      width:52px;
-      height:5px;
-      border-radius:999px;
-      background:rgba(255,255,255,.18);
-      margin:2px auto 2px;
-    }
-
-    .sheet-head{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-    }
-
-    .sheet-title{
-      font-family:'Space Grotesk',sans-serif;
-      font-size:18px;
-      font-weight:700;
-      letter-spacing:-.4px;
-    }
-
-    .sheet-close{
-      width:38px;
-      height:38px;
-      border:none;
-      border-radius:12px;
-      background:rgba(255,255,255,.08);
-      color:#fff;
-      font-size:18px;
-      cursor:pointer;
-    }
-
-    .sheet-list{
-      overflow:auto;
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-      scrollbar-width:none;
-    }
-
-    .sheet-list::-webkit-scrollbar{ display:none; }
-
-    .sheet-item{
-      min-height:58px;
-      border-radius:18px;
-      border:1px solid rgba(255,255,255,.08);
-      background:rgba(255,255,255,.04);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      padding:0 14px;
-      cursor:pointer;
-      color:#fff;
-      transition:.16s ease;
-    }
-
-    .sheet-item.active{
-      border-color:rgba(0,242,254,.34);
-      background:linear-gradient(135deg,rgba(0,242,254,.12),rgba(124,92,255,.12));
-      box-shadow:0 0 0 1px rgba(0,242,254,.08) inset;
-    }
-
-    .sheet-item-left{
-      min-width:0;
-      display:flex;
-      align-items:center;
-      gap:12px;
-    }
-
-    .sheet-flag{
-      width:32px;
-      text-align:center;
-      font-size:22px;
-      flex:0 0 auto;
-    }
-
-    .sheet-text{
-      min-width:0;
-    }
-
-    .sheet-name{
-      font-size:14px;
-      font-weight:900;
-      color:#fff;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-
-    .sheet-code{
-      font-size:11px;
-      font-weight:800;
-      color:rgba(255,255,255,.56);
-      margin-top:3px;
-      letter-spacing:.5px;
-    }
-
-    .sheet-check{
-      width:24px;
-      height:24px;
-      border-radius:999px;
-      border:2px solid rgba(255,255,255,.26);
-      flex:0 0 auto;
-    }
-
-    .sheet-item.active .sheet-check{
-      border-color:var(--cyan);
-      box-shadow:inset 0 0 0 5px var(--cyan);
-    }
+    .lang-sheet.show{ transform:translateX(-50%) translateY(0); }
   </style>
 </head>
 
 <body>
-  <div id="pageContent">
-    <div class="room" id="roomContainer">
+  <div class="room" id="roomContainer">
+    
+    <header class="topbar">
+      <button id="backBtn" class="top-action-btn">←</button>
+      <div class="brand">All<span>To</span>All</div>
+      <button id="exitBtn" class="top-action-btn">✕</button>
+    </header>
 
-      <div class="topbar">
-        <button id="backBtn" class="topBtn" type="button">←</button>
-        <div class="title">All<span class="accent">To</span>All</div>
-        <div class="topSlot"></div>
-      </div>
-
-      <div class="profile">
-        <div class="profile-avatar" id="myAvatar">A</div>
-        <div class="profile-meta">
-          <div class="profile-kicker" id="profileKicker">Aktif Profil</div>
-          <div class="profile-name" id="myName">Katılımcı</div>
-          <div class="profile-note" id="myNote">Canlı çeviri odasına bağlı</div>
-        </div>
-      </div>
-
-      <div class="langbar">
-        <select id="langSelect" aria-label="Dil seç"></select>
-
-        <div id="roomPill">------</div>
-
-        <button id="langPickerBtn" class="langBtn" type="button" aria-label="Dil seç">
-          <span class="langBtnText" id="langPickerText">🌐 Dil</span>
-          <span>⌄</span>
-        </button>
-
-        <button id="exitBtn" class="topBtn" type="button">✕</button>
-      </div>
-
-      <div class="splitStage">
-        <div class="upperPane">
-          <div class="peopleBar">
-            <div class="peopleHead">
-              <div class="peopleTitle" id="peopleTitle">Katılımcılar</div>
-              <div class="peopleCount"><span id="peopleCount">0</span> <span id="peopleCountText">kişi</span></div>
-            </div>
-            <div class="peopleScroll" id="peopleScroll"></div>
-          </div>
-        </div>
-
-        <div class="lowerPane">
-          <div class="chatWrap">
-            <div class="chat" id="chat"></div>
-          </div>
-        </div>
-
-        <div class="micStage">
-          <button id="micBtn" class="main-mic" type="button" aria-label="Konuş">🎙️</button>
-          <div class="micHint" id="micHint">Konuşmak için mikrofona dokun.</div>
-        </div>
-      </div>
-
-      <div class="footerPad"></div>
+    <div class="meta-row">
+      <div id="roomPill">------</div>
+      <button id="langPickerBtn" class="langBtn">
+        <span id="langPickerText">🌐 Dil Seçin</span>
+        <span>⌄</span>
+      </button>
+      <button id="soundToggleBtn" class="top-action-btn" style="width:40px; height:40px; border-radius:12px;">🔊</button>
     </div>
+
+    <main class="chat-stage">
+      <div class="chat" id="chat">
+        <div class="sys-note">italkyAI odası hazır. Mikrofonla konuşmaya başlayın.</div>
+      </div>
+    </main>
+
+    <footer class="footer-dock">
+      <div class="mic-wrap">
+        <button id="micBtn" class="main-mic">🎙️</button>
+        <div class="mic-hint" id="micHint">KONUŞ</div>
+      </div>
+      
+      <div style="font-size:11px; opacity:0.6; position:absolute; right:20px;">
+        <span id="peopleCount">0</span> KATILIMCI
+      </div>
+    </div>
+
   </div>
 
+  <select id="langSelect"></select>
   <div class="sheet-backdrop" id="langSheetBackdrop"></div>
-
-  <div class="lang-sheet" id="langSheet" aria-hidden="true">
-    <div class="sheet-handle"></div>
-
-    <div class="sheet-head">
-      <div class="sheet-title" id="langSheetTitle">Dil Seç</div>
-      <button id="langSheetClose" class="sheet-close" type="button">✕</button>
-    </div>
-
-    <div class="sheet-list" id="langSheetList"></div>
+  <div class="lang-sheet" id="langSheet">
+    <div style="width:40px; height:4px; background:rgba(255,255,255,0.2); margin:0 auto 20px; border-radius:2px;"></div>
+    <div id="langSheetList" style="max-height:60dvh; overflow-y:auto;"></div>
   </div>
 
   <script type="module" src="/js/alltoall_room.js?v=split_face_style_1"></script>
