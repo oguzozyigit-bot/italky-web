@@ -43,6 +43,8 @@ const incomingRoomId = String(params.get("room") || "").trim().toUpperCase();
 
 let roomId = incomingRoomId || hostCode || "";
 let ws = null;
+let reconnectTimer = null;
+let manualClose = false;
 
 let recognizing = false;
 let recognizer = null;
@@ -51,7 +53,6 @@ let voicesReady = false;
 let audioCtx = null;
 let preparedStream = null;
 let autoSpeak = true;
-let speechMode = "browser";
 
 let siteLang = getSiteLang();
 let LANGS = buildLangPoolForSite(siteLang);
@@ -73,7 +74,6 @@ let joinedPeople = new Map();
 ========================= */
 const SITE_TEXT = {
   tr: {
-    connected: "Bağlantı kuruldu",
     speakHint: "Konuşmak için mikrofona dokun.",
     listeningHint: "Dinleniyor... bitince tekrar dokun.",
     roomCopied: "Oda kodu kopyalandı",
@@ -86,16 +86,15 @@ const SITE_TEXT = {
     hostNotReady: "Host henüz odaya giriş yapmadı.",
     roomNotCreated: "Bu oda henüz oluşturulmamış.",
     connectionError: "Bağlantı hatası oluştu.",
-    connectionClosed: "Bağlantı kapandı.",
+    connectionClosed: "Bağlantı kapandı. Yeniden bağlanılıyor...",
     micUnsupported: "Bu cihazda konuşma algılama desteklenmiyor.",
     micDenied: "Mikrofon izni gerekli.",
-    micNoSpeech: "Ses algılanmadı. Mikrofona biraz daha yakın konuşun.",
-    micFailed: "Konuşma algılanamadı. Tekrar deneyin.",
+    micNoSpeech: "Konuşma algılanamadı. Tekrar deneyin.",
+    micFailed: "Mikrofon başlatılamadı. Tekrar deneyin.",
     selectLanguage: "Dil Seç",
     participant: "Katılımcı"
   },
   en: {
-    connected: "Connected",
     speakHint: "Tap the microphone to speak.",
     listeningHint: "Listening... tap again when finished.",
     roomCopied: "Room code copied",
@@ -108,16 +107,15 @@ const SITE_TEXT = {
     hostNotReady: "Host has not entered the room yet.",
     roomNotCreated: "This room has not been created yet.",
     connectionError: "A connection error occurred.",
-    connectionClosed: "Connection closed.",
+    connectionClosed: "Connection closed. Reconnecting...",
     micUnsupported: "Speech recognition is not supported on this device.",
     micDenied: "Microphone permission required.",
-    micNoSpeech: "No speech detected. Please speak closer to the microphone.",
-    micFailed: "Speech could not be detected. Please try again.",
+    micNoSpeech: "Speech was not detected. Please try again.",
+    micFailed: "Microphone could not be started. Please try again.",
     selectLanguage: "Select Language",
     participant: "Participant"
   },
   de: {
-    connected: "Verbunden",
     speakHint: "Zum Sprechen auf das Mikrofon tippen.",
     listeningHint: "Hört zu... zum Beenden erneut tippen.",
     roomCopied: "Raumcode kopiert",
@@ -130,16 +128,15 @@ const SITE_TEXT = {
     hostNotReady: "Der Host hat den Raum noch nicht betreten.",
     roomNotCreated: "Dieser Raum wurde noch nicht erstellt.",
     connectionError: "Verbindungsfehler aufgetreten.",
-    connectionClosed: "Verbindung geschlossen.",
+    connectionClosed: "Verbindung geschlossen. Erneuter Verbindungsaufbau...",
     micUnsupported: "Spracherkennung wird auf diesem Gerät nicht unterstützt.",
     micDenied: "Mikrofonberechtigung erforderlich.",
-    micNoSpeech: "Keine Sprache erkannt. Bitte näher ins Mikrofon sprechen.",
-    micFailed: "Sprache konnte nicht erkannt werden. Bitte erneut versuchen.",
+    micNoSpeech: "Keine Sprache erkannt. Bitte erneut versuchen.",
+    micFailed: "Mikrofon konnte nicht gestartet werden. Bitte erneut versuchen.",
     selectLanguage: "Sprache wählen",
     participant: "Teilnehmer"
   },
   fr: {
-    connected: "Connecté",
     speakHint: "Touchez le micro pour parler.",
     listeningHint: "Écoute... touchez encore une fois quand c’est terminé.",
     roomCopied: "Code de salle copié",
@@ -152,16 +149,15 @@ const SITE_TEXT = {
     hostNotReady: "L’hôte n’est pas encore entré dans la salle.",
     roomNotCreated: "Cette salle n’a pas encore été créée.",
     connectionError: "Erreur de connexion.",
-    connectionClosed: "Connexion fermée.",
+    connectionClosed: "Connexion fermée. Reconnexion...",
     micUnsupported: "La reconnaissance vocale n’est pas prise en charge sur cet appareil.",
     micDenied: "Autorisation micro requise.",
-    micNoSpeech: "Aucune voix détectée. Parlez plus près du micro.",
-    micFailed: "La voix n’a pas pu être détectée. Réessayez.",
+    micNoSpeech: "Aucune parole détectée. Réessayez.",
+    micFailed: "Le micro n’a pas pu démarrer. Réessayez.",
     selectLanguage: "Choisir la langue",
     participant: "Participant"
   },
   it: {
-    connected: "Connesso",
     speakHint: "Tocca il microfono per parlare.",
     listeningHint: "In ascolto... tocca di nuovo quando hai finito.",
     roomCopied: "Codice stanza copiato",
@@ -174,16 +170,15 @@ const SITE_TEXT = {
     hostNotReady: "L'host non è ancora entrato nella stanza.",
     roomNotCreated: "Questa stanza non è stata ancora creata.",
     connectionError: "Errore di connessione.",
-    connectionClosed: "Connessione chiusa.",
+    connectionClosed: "Connessione chiusa. Riconnessione...",
     micUnsupported: "Il riconoscimento vocale non è supportato su questo dispositivo.",
     micDenied: "Autorizzazione microfono richiesta.",
-    micNoSpeech: "Nessuna voce rilevata. Parla più vicino al microfono.",
-    micFailed: "La voce non è stata rilevata. Riprova.",
+    micNoSpeech: "Voce non rilevata. Riprova.",
+    micFailed: "Impossibile avviare il microfono. Riprova.",
     selectLanguage: "Scegli lingua",
     participant: "Partecipante"
   },
   es: {
-    connected: "Conectado",
     speakHint: "Toca el micrófono para hablar.",
     listeningHint: "Escuchando... toca otra vez al terminar.",
     roomCopied: "Código de sala copiado",
@@ -196,11 +191,11 @@ const SITE_TEXT = {
     hostNotReady: "El host todavía no ha entrado en la sala.",
     roomNotCreated: "Esta sala todavía no ha sido creada.",
     connectionError: "Se produjo un error de conexión.",
-    connectionClosed: "Conexión cerrada.",
+    connectionClosed: "Conexión cerrada. Reconectando...",
     micUnsupported: "El reconocimiento de voz no es compatible con este dispositivo.",
     micDenied: "Se requiere permiso de micrófono.",
-    micNoSpeech: "No se detectó voz. Habla más cerca del micrófono.",
-    micFailed: "No se pudo detectar la voz. Inténtalo de nuevo.",
+    micNoSpeech: "No se detectó voz. Inténtalo de nuevo.",
+    micFailed: "No se pudo iniciar el micrófono. Inténtalo de nuevo.",
     selectLanguage: "Elegir idioma",
     participant: "Participante"
   }
@@ -617,8 +612,6 @@ function renderLangSheet() {
       localStorage.setItem("alltoall_lang", myLang);
       myProfile.me_lang = myLang;
 
-      if (recognizer) recognizer.lang = toBCP(myLang);
-
       syncLangPickerLabel();
       closeLangSheet();
 
@@ -700,6 +693,18 @@ async function warmAudio() {
       voicesReady = true;
     }
   } catch {}
+}
+
+async function requestMicPermission() {
+  if (!navigator.mediaDevices?.getUserMedia) return true;
+  try {
+    const temp = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    temp.getTracks().forEach((t) => t.stop());
+    return true;
+  } catch (e) {
+    console.warn("[alltoall mic permission]", e);
+    return false;
+  }
 }
 
 async function prepareEnhancedMic() {
@@ -796,599 +801,4 @@ function chooseWebVoice(langCode) {
 
   if (pref === "female") {
     return (
-      pool.find((v) => /female|woman|zira|aria|jenny|eva|emma|anna|helena/i.test(v.name)) ||
-      pool[0]
-    );
-  }
-
-  if (pref === "male") {
-    return (
-      pool.find((v) => /male|man|david|mark|alex|tom|jon|paul/i.test(v.name)) ||
-      pool[0]
-    );
-  }
-
-  return pool[0] || null;
-}
-
-function speakFallback(text, langCode) {
-  const value = String(text || "").trim();
-  if (!value) return;
-
-  stopAudio();
-
-  const pref = getVoicePreference();
-  const c = canonical(langCode);
-
-  if (pref === "auto" && window.NativeTTS && typeof window.NativeTTS.speak === "function") {
-    try {
-      window.NativeTTS.speak(value, c);
-      return;
-    } catch {}
-  }
-
-  if (!window.speechSynthesis) return;
-
-  try {
-    if (!voicesReady) {
-      window.speechSynthesis.getVoices();
-      voicesReady = true;
-    }
-  } catch {}
-
-  const u = new SpeechSynthesisUtterance(value);
-  u.lang = toBCP(langCode);
-  u.rate = c === "en" ? 0.82 : ["de", "fr", "it", "es"].includes(c) ? 0.88 : 0.92;
-  u.pitch = 1.0;
-  u.volume = 1;
-
-  const voice = chooseWebVoice(langCode);
-  if (voice) u.voice = voice;
-
-  setTimeout(() => {
-    try {
-      window.speechSynthesis.cancel();
-      window.speechSynthesis.speak(u);
-    } catch {}
-  }, 60);
-}
-
-async function speakText(text, langCode) {
-  const value = String(text || "").trim();
-  if (!value || !autoSpeak) return;
-
-  const voice = getVoicePreference();
-
-  if (voice === "auto") {
-    speakFallback(value, langCode);
-    return;
-  }
-
-  if (voice === "clone") {
-    try {
-      const ready = await hasReadyVoiceProfile();
-      if (!ready) {
-        speakFallback(value, langCode);
-        return;
-      }
-      await speakViaApi(value, langCode);
-      return;
-    } catch {
-      speakFallback(value, langCode);
-      return;
-    }
-  }
-
-  try {
-    await speakViaApi(value, langCode);
-  } catch {
-    speakFallback(value, langCode);
-  }
-}
-
-/* =========================
-   SPEECH
-========================= */
-function hasNativeSpeech() {
-  return !!(window.Native && typeof window.Native.startSpeechRecognition === "function");
-}
-
-function installNativeSpeechCallbacks() {
-  window.onNativeSpeechResult = function (payload) {
-    try {
-      const text = String(payload?.text || "").trim();
-
-      recognizing = false;
-      micBtn?.classList.remove("listening", "recorded");
-      updateMicUI();
-
-      if (!text) {
-        addSystemMessage(st("micNoSpeech"));
-        return;
-      }
-
-      micBtn?.classList.add("recorded");
-      setTimeout(() => micBtn?.classList.remove("recorded"), 700);
-      sendSpeechMessage(text);
-    } catch (e) {
-      console.warn("[alltoall native speech result]", e);
-    }
-  };
-
-  window.onNativeSpeechError = function (reason) {
-    console.warn("[alltoall native speech error]", reason);
-
-    recognizing = false;
-    micBtn?.classList.remove("listening");
-    updateMicUI();
-
-    const msg = String(reason || "").toLowerCase();
-    if (msg.includes("not-allowed") || msg.includes("denied")) {
-      addSystemMessage(st("micDenied"));
-      return;
-    }
-
-    if (msg.includes("no-match") || msg.includes("no speech") || msg.includes("speech timeout")) {
-      addSystemMessage(st("micNoSpeech"));
-      return;
-    }
-
-    addSystemMessage(st("micFailed"));
-  };
-}
-
-function initSpeech() {
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-  if (!SR) {
-    recognizer = null;
-    speechMode = hasNativeSpeech() ? "native" : "none";
-    return;
-  }
-
-  speechMode = "browser";
-  recognizer = new SR();
-  recognizer.lang = toBCP(myLang);
-  recognizer.interimResults = false;
-  recognizer.continuous = false;
-  recognizer.maxAlternatives = 1;
-
-  recognizer.onresult = (e) => {
-    const text = e.results?.[0]?.[0]?.transcript || "";
-    recognizing = false;
-    micBtn?.classList.remove("listening");
-    micBtn?.classList.add("recorded");
-    setTimeout(() => micBtn?.classList.remove("recorded"), 700);
-    updateMicUI();
-
-    if (text) {
-      sendSpeechMessage(text);
-    } else {
-      addSystemMessage(st("micNoSpeech"));
-    }
-  };
-
-  recognizer.onend = () => {
-    recognizing = false;
-    micBtn?.classList.remove("listening");
-    updateMicUI();
-  };
-
-  recognizer.onerror = (e) => {
-    recognizing = false;
-    micBtn?.classList.remove("listening");
-    updateMicUI();
-
-    const err = String(e?.error || "").toLowerCase();
-    if (err.includes("not-allowed") || err.includes("denied")) {
-      addSystemMessage(st("micDenied"));
-      return;
-    }
-
-    if (err.includes("no-speech") || err.includes("no-match") || err.includes("audio-capture")) {
-      addSystemMessage(st("micNoSpeech"));
-      return;
-    }
-
-    console.warn("[alltoall browser speech]", e);
-    addSystemMessage(st("micFailed"));
-  };
-}
-
-function sendSpeechMessage(text) {
-  const value = String(text || "").trim();
-  if (!value) return;
-
-  addMessage({
-    side: "right",
-    sender: myProfile.from_name,
-    text: value,
-    withSpeaker: false,
-    speakLang: myLang,
-    fromLang: myLang
-  });
-
-  sendWs({
-    type: "message",
-    text: value,
-    lang: myLang
-  });
-}
-
-async function toggleMic() {
-  try {
-    await warmAudio();
-    await prepareEnhancedMic();
-  } catch {}
-
-  if (recognizing) {
-    try {
-      if (hasNativeSpeech() && window.Native?.stopSpeechRecognition) {
-        window.Native.stopSpeechRecognition();
-      } else {
-        recognizer?.stop?.();
-      }
-    } catch {}
-
-    recognizing = false;
-    micBtn?.classList.remove("listening");
-    updateMicUI();
-    return;
-  }
-
-  if (hasNativeSpeech()) {
-    try {
-      speechMode = "native";
-      recognizing = true;
-      micBtn?.classList.add("listening");
-      updateMicUI();
-
-      window.Native.startSpeechRecognition(toBCP(myLang), "bottom");
-      return;
-    } catch (e) {
-      console.warn("[alltoall native speech start]", e);
-    }
-  }
-
-  if (!recognizer) {
-    addSystemMessage(st("micUnsupported"));
-    return;
-  }
-
-  try {
-    speechMode = "browser";
-    recognizing = true;
-    micBtn?.classList.add("listening");
-    recognizer.lang = toBCP(myLang);
-    recognizer.start();
-    updateMicUI();
-  } catch (e) {
-    recognizing = false;
-    micBtn?.classList.remove("listening");
-    updateMicUI();
-    console.warn("[alltoall mic start]", e);
-    addSystemMessage(st("micFailed"));
-  }
-}
-
-/* =========================
-   SOCKET
-========================= */
-function sendWs(payload) {
-  try {
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify(payload));
-    } else {
-      addSystemMessage(st("socketNotReady"));
-    }
-  } catch (e) {
-    console.warn("[alltoall sendWs]", e);
-  }
-}
-
-async function resolveRoomForGuestByHost() {
-  if (!hostCode || role !== "guest") return;
-
-  const r = await fetch(`${API_BASE}/interpreter/resolve-room`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      host_code: hostCode,
-      my_lang: myLang,
-      mode: "alltoall"
-    })
-  });
-
-  const j = await r.json().catch(() => ({}));
-
-  if (!r.ok || !j?.room_id) {
-    throw new Error(j?.detail || j?.error || "Room resolve failed");
-  }
-
-  roomId = String(j.room_id || "").trim().toUpperCase();
-  syncRoomPill();
-}
-
-function connectSocket() {
-  if (!roomId) {
-    addSystemMessage(st("roomMissing"));
-    return;
-  }
-
-  const wsUrl = `${WS_BASE}/${encodeURIComponent(roomId)}`;
-  ws = new WebSocket(wsUrl);
-
-  ws.onopen = () => {
-    sendWs({
-      type: role === "host" ? "create" : "join",
-      from: myProfile.from,
-      from_name: myProfile.from_name,
-      from_pic: myProfile.from_pic,
-      me_lang: myLang,
-      role,
-      user_id: myProfile.user_id,
-      host_code: hostCode || roomId
-    });
-  };
-
-  ws.onmessage = async (event) => {
-    try {
-      const data = JSON.parse(event.data || "{}");
-      const type = String(data?.type || "").trim();
-
-      if (type === "room_created" || type === "room_joined") {
-        if (data.self) {
-          myProfile = {
-            ...myProfile,
-            ...data.self,
-            me_lang: myLang,
-          };
-        }
-
-        roomId = String(data.room || roomId || "").trim().toUpperCase();
-        syncRoomPill();
-        ensureSelfInPeople();
-        addSystemMessage(st("roomCreated"));
-        return;
-      }
-
-      if (type === "presence") {
-        applyRoster(data.roster || []);
-        return;
-      }
-
-      if (type === "peer_joined") {
-        if (data.peer) upsertPerson(data.peer);
-        if (Array.isArray(data.roster)) applyRoster(data.roster);
-        addSystemMessage(st("peerJoined"));
-        return;
-      }
-
-      if (type === "profile_updated") {
-        if (data.peer) upsertPerson(data.peer);
-        if (Array.isArray(data.roster)) applyRoster(data.roster);
-        return;
-      }
-
-      if (type === "peer_left") {
-        if (data.peer) removePerson(data.peer);
-        if (Array.isArray(data.roster)) applyRoster(data.roster);
-        addSystemMessage(st("peerLeft"));
-        return;
-      }
-
-      if (type === "translated_message") {
-        const fromId = String(data.from || "").trim();
-        const senderName = String(data.from_name || st("participant")).trim();
-        const translated = String(data.translated_text || "").trim();
-        const original = String(data.original_text || "").trim();
-        const finalText = translated || original;
-        const fromLang = canonical(data.from_lang || data.lang || "tr");
-
-        if (!finalText) return;
-        if (fromId && myProfile.from && fromId === myProfile.from) return;
-
-        addMessage({
-          side: "left",
-          sender: senderName,
-          text: finalText,
-          withSpeaker: true,
-          speakLang: myLang,
-          fromLang
-        });
-
-        if (data.from || data.from_name || data.from_pic) {
-          upsertPerson({
-            from: data.from || "",
-            from_name: data.from_name || senderName,
-            from_pic: data.from_pic || "",
-            me_lang: fromLang,
-            role: data.role || "guest",
-            user_id: data.from_user_id || "",
-          });
-        }
-
-        await speakText(finalText, myLang);
-        return;
-      }
-
-      if (type === "room_not_found") {
-        addSystemMessage(data.message || st("roomNotFound"));
-        return;
-      }
-
-      if (type === "error") {
-        const msg = String(data.message || "");
-        if (msg === "HOST_NOT_READY") {
-          addSystemMessage(st("hostNotReady"));
-        } else {
-          addSystemMessage(msg || st("connectionError"));
-        }
-      }
-    } catch (e) {
-      console.warn("[alltoall ws parse]", e);
-    }
-  };
-
-  ws.onerror = () => {
-    addSystemMessage(st("connectionError"));
-  };
-
-  ws.onclose = () => {
-    addSystemMessage(st("connectionClosed"));
-  };
-}
-
-/* =========================
-   PROFILE
-========================= */
-async function hydrateMyProfile() {
-  try {
-    const user = await getCurrentUser();
-    if (!user) return;
-
-    myProfile = {
-      from: getStableFromId(user),
-      from_name: getDisplayNameFromUser(user),
-      from_pic: getAvatarFromUser(user),
-      me_lang: myLang,
-      role,
-      user_id: user?.id || "",
-    };
-  } catch (e) {
-    console.warn("[alltoall hydrateMyProfile]", e);
-  }
-}
-
-/* =========================
-   LAYOUT
-========================= */
-function applyFooterLift() {
-  try {
-    const root = getComputedStyle(document.documentElement);
-    const footerH = parseFloat(root.getPropertyValue("--footerH")) || 0;
-    document.documentElement.style.setProperty("--footerSafe", `${footerH}px`);
-  } catch {}
-}
-
-function fixLayout() {
-  applyFooterLift();
-
-  try {
-    if (window.visualViewport && pageContent) {
-      pageContent.style.height = `${Math.round(window.visualViewport.height)}px`;
-      pageContent.style.minHeight = `${Math.round(window.visualViewport.height)}px`;
-    }
-  } catch {}
-}
-
-/* =========================
-   EVENTS
-========================= */
-function bindEvents() {
-  roomPill?.addEventListener("click", async () => {
-    const code = visibleCode();
-    if (!code || code === "------") return;
-    try {
-      await navigator.clipboard.writeText(code);
-      addSystemMessage(`${st("roomCopied")}: ${code}`);
-    } catch {}
-  });
-
-  langPickerBtn?.addEventListener("click", openLangSheet);
-  langSheetBackdrop?.addEventListener("click", closeLangSheet);
-  langSheetClose?.addEventListener("click", closeLangSheet);
-
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closeLangSheet();
-
-    if ((e.key === "Enter" || e.key === " ") && document.activeElement === micBtn) {
-      e.preventDefault();
-      toggleMic();
-    }
-  });
-
-  micBtn?.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    toggleMic();
-  });
-
-  if (window.visualViewport) {
-    window.visualViewport.addEventListener("resize", fixLayout);
-    window.visualViewport.addEventListener("scroll", fixLayout);
-  }
-
-  window.addEventListener("resize", fixLayout);
-  window.addEventListener("orientationchange", fixLayout);
-
-  window.addEventListener("focus", () => {
-    const nextSiteLang = getSiteLang();
-    if (nextSiteLang !== siteLang) {
-      siteLang = nextSiteLang;
-      LANGS = buildLangPoolForSite(siteLang);
-      refreshStaticTexts();
-      buildLanguageSelect();
-      renderLangSheet();
-      renderPeople();
-      syncRoomPill();
-    }
-    fixLayout();
-  });
-
-  try {
-    if (window.speechSynthesis) {
-      window.speechSynthesis.getVoices();
-      window.speechSynthesis.onvoiceschanged = () => {
-        try { window.speechSynthesis.getVoices(); } catch {}
-        voicesReady = true;
-      };
-    }
-  } catch {}
-}
-
-/* =========================
-   INIT
-========================= */
-async function init() {
-  siteLang = getSiteLang();
-  LANGS = buildLangPoolForSite(siteLang);
-
-  refreshStaticTexts();
-  buildLanguageSelect();
-  syncRoomPill();
-  updateMicUI();
-  fixLayout();
-
-  await hydrateMyProfile();
-  ensureSelfInPeople();
-
-  initSpeech();
-  installNativeSpeechCallbacks();
-  bindEvents();
-
-  try {
-    await warmAudio();
-    await prepareEnhancedMic();
-  } catch {}
-
-  try {
-    if (role === "guest" && !incomingRoomId && hostCode) {
-      await resolveRoomForGuestByHost();
-    }
-  } catch (e) {
-    console.error("[alltoall resolve guest room]", e);
-    addSystemMessage(st("roomNotCreated"));
-    return;
-  }
-
-  connectSocket();
-}
-
-init();
-
-window.addEventListener("beforeunload", () => {
-  stopAudio();
-  try { ws?.close?.(); } catch {}
-  try { preparedStream?.getTracks?.().forEach((t) => t.stop()); } catch {}
-});
+      pool.find((v) => /female
