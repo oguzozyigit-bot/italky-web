@@ -1,4 +1,3 @@
-<!-- FILE: /pages/alltoall_room.html -->
 <!doctype html>
 <html lang="tr">
 <head>
@@ -13,7 +12,7 @@
     :root{
       --participantsH:74px;
       --metaH:60px;
-      --micH:132px;
+      --micH:156px;
       --footerSafe:var(--footerH, 0px);
 
       --ai-gradient: linear-gradient(135deg,#a5b4fc,#6366f1,#ec4899);
@@ -22,8 +21,14 @@
       --safe-top:env(safe-area-inset-top, 0px);
       --safe-bottom:env(safe-area-inset-bottom, 0px);
 
-      --chat-bordo:#2a0815;
-      --chat-bubble:#160612;
+      /* BORDO yerine daha şık koyu gece tonu */
+      --chat-bg:
+        radial-gradient(circle at 50% 0%, rgba(165,180,252,.06) 0%, transparent 26%),
+        radial-gradient(circle at 15% 20%, rgba(236,72,153,.05) 0%, transparent 24%),
+        radial-gradient(circle at 85% 10%, rgba(99,102,241,.08) 0%, transparent 18%),
+        linear-gradient(180deg, #0a0b16 0%, #0d1020 48%, #090b14 100%);
+      --chat-bubble:#121522;
+      --chat-bubble-self:linear-gradient(135deg, rgba(99,102,241,.22), rgba(236,72,153,.16));
     }
 
     *{
@@ -54,12 +59,13 @@
     #pageContent{
       width:100%;
       height:calc(100dvh - var(--footerSafe));
+      min-height:calc(100dvh - var(--footerSafe));
       display:flex;
       flex-direction:column;
       overflow:hidden;
+      position:relative;
     }
 
-    /* PARTICIPANTS */
     .participants{
       height:var(--participantsH);
       display:flex;
@@ -109,7 +115,6 @@
       white-space:nowrap;
     }
 
-    /* META */
     .meta{
       height:var(--metaH);
       display:flex;
@@ -120,6 +125,8 @@
       flex:0 0 auto;
       background:rgba(255,255,255,.015);
       padding:0 12px;
+      position:relative;
+      z-index:3;
     }
 
     #langSelect{
@@ -150,6 +157,7 @@
       gap:10px;
       backdrop-filter:blur(12px);
       padding:0 16px;
+      touch-action:manipulation;
     }
 
     .langBtnText{
@@ -179,14 +187,14 @@
       overflow:hidden;
       text-overflow:ellipsis;
       box-shadow:0 0 16px rgba(124,92,255,.24);
+      touch-action:manipulation;
     }
 
-    /* CHAT */
     .chat{
       flex:1;
       overflow-y:auto;
-      padding:14px;
-      background:var(--chat-bordo);
+      padding:14px 14px 10px;
+      background:var(--chat-bg);
       display:flex;
       flex-direction:column;
       gap:16px;
@@ -306,6 +314,7 @@
       flex:0 0 auto;
       padding:0;
       margin-left:auto;
+      touch-action:manipulation;
     }
 
     .msg-spk svg{
@@ -325,29 +334,36 @@
       color:rgba(255,255,255,.96);
       border:1px solid rgba(255,255,255,.06);
       word-break:break-word;
+      box-shadow:0 8px 24px rgba(0,0,0,.16);
     }
 
     .msg-row.right .msg-bubble{
-      background:linear-gradient(135deg, rgba(99,102,241,.22), rgba(236,72,153,.16));
+      background:var(--chat-bubble-self);
     }
 
-    /* MIC AREA - FACETOFACE STYLE */
     .micDock{
-      height:var(--micH);
+      min-height:var(--micH);
       display:flex;
       flex-direction:column;
       align-items:center;
       justify-content:center;
-      gap:10px;
+      gap:12px;
       border-top:1px solid rgba(255,255,255,.06);
-      background:var(--chat-bordo);
-      padding:12px 14px calc(14px + var(--safe-bottom) + var(--footerSafe));
+      background:
+        linear-gradient(180deg, rgba(10,11,22,.96), rgba(9,11,20,.98));
+      padding:
+        14px
+        14px
+        calc(24px + var(--safe-bottom) + var(--footerSafe))
+        14px;
       flex:0 0 auto;
+      position:relative;
+      z-index:4;
     }
 
     .btn-mic{
-      width:78px;
-      height:78px;
+      width:82px;
+      height:82px;
       border-radius:50%;
       background:#000;
       display:flex;
@@ -362,6 +378,9 @@
       position:relative;
       overflow:visible;
       flex:0 0 auto;
+      touch-action:manipulation;
+      margin-bottom:2px;
+      box-shadow:0 8px 30px rgba(0,0,0,.22);
     }
 
     .btn-mic svg{
@@ -400,13 +419,14 @@
       font-size:11px;
       font-weight:1000;
       text-align:center;
-      line-height:1.3;
+      line-height:1.35;
       letter-spacing:.12px;
       min-height:18px;
       user-select:none;
-      max-width:270px;
+      max-width:280px;
       width:100%;
       display:block;
+      padding:0 8px;
     }
 
     .helper-ready{
@@ -437,7 +457,6 @@
       100%{ transform:scale(1.18); opacity:0; }
     }
 
-    /* LANG SHEET */
     .sheet-backdrop{
       position:fixed;
       inset:0;
@@ -510,6 +529,7 @@
       color:#fff;
       font-size:18px;
       cursor:pointer;
+      touch-action:manipulation;
     }
 
     .sheet-list{
@@ -535,6 +555,7 @@
       cursor:pointer;
       color:#fff;
       transition:.16s ease;
+      touch-action:manipulation;
     }
 
     .sheet-item.active{
@@ -637,6 +658,6 @@
     <div class="sheet-list" id="langSheetList"></div>
   </div>
 
-  <script type="module" src="/js/alltoall_room.js?v=single_bar_face_mic_1"></script>
+  <script type="module" src="/js/alltoall_room.js?v=single_bar_face_mic_2"></script>
 </body>
 </html>
