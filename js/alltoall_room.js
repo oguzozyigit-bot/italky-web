@@ -54,6 +54,7 @@ let voicesReady = false;
 let audioCtx = null;
 let preparedStream = null;
 let autoSpeak = true;
+let nativeSpeechTimer = null;
 
 let siteLang = getSiteLang();
 let LANGS = buildLangPoolForSite(siteLang);
@@ -497,7 +498,9 @@ function removePerson(person) {
 function scrollChatBottom() {
   if (!chat) return;
   requestAnimationFrame(() => {
-    try { chat.scrollTop = chat.scrollHeight; } catch {}
+    try {
+      chat.scrollTop = chat.scrollHeight;
+    } catch {}
   });
 }
 
@@ -670,8 +673,12 @@ function stopAudio() {
     currentAudio?.pause?.();
     currentAudio = null;
   } catch {}
-  try { window.speechSynthesis?.cancel?.(); } catch {}
-  try { window.NativeTTS?.stop?.(); } catch {}
+  try {
+    window.speechSynthesis?.cancel?.();
+  } catch {}
+  try {
+    window.NativeTTS?.stop?.();
+  } catch {}
 }
 
 function getVoicePreference() {
@@ -907,49 +914,90 @@ function hasNativeSpeech() {
   return !!(window.Native && typeof window.Native.startSpeechRecognition === "function");
 }
 
+function clearNativeSpeechTimer() {
+  if (nativeSpeechTimer) {
+    clearTimeout(nativeSpeechTimer);
+    nativeSpeechTimer = null;
+  }
+}
+
+function handleSpeechResultText(rawText) {
+  clearNativeSpeechTimer();
+
+  const text = String(rawText || "").trim();
+
+  recognizing = false;
+  micBtn?.classList.remove("listening");
+  micBtn?.classList.add("recorded");
+  setTimeout(() => micBtn?.classList.remove("recorded"), 700);
+  updateMicUI();
+
+  if (!text) {
+    addSystemMessage(st("micNoSpeech"));
+    return;
+  }
+
+  sendSpeechMessage(text);
+}
+
+function handleSpeechError(reason) {
+  clearNativeSpeechTimer();
+
+  console.warn("[alltoall speech error]", reason);
+
+  recognizing = false;
+  micBtn?.classList.remove("listening");
+  updateMicUI();
+
+  const msg = String(reason || "").toLowerCase();
+
+  if (msg.includes("not-allowed") || msg.includes("denied")) {
+    addSystemMessage(st("micDenied"));
+    return;
+  }
+
+  if (msg.includes("no-speech") || msg.includes("no-match") || msg.includes("audio")) {
+    addSystemMessage(st("micNoSpeech"));
+    return;
+  }
+
+  addSystemMessage(st("micFailed"));
+}
+
 function installNativeSpeechCallbacks() {
-  window.onNativeSpeechResult = function (payload) {
+  const onResult = (payload) => {
     try {
-      const text = String(payload?.text || "").trim();
+      let text = "";
 
-      recognizing = false;
-      micBtn?.classList.remove("listening");
-      micBtn?.classList.add("recorded");
-      setTimeout(() => micBtn?.classList.remove("recorded"), 700);
-      updateMicUI();
-
-      if (!text) {
-        addSystemMessage(st("micNoSpeech"));
-        return;
+      if (typeof payload === "string") {
+        text = payload;
+      } else if (payload && typeof payload === "object") {
+        text =
+          payload.text ||
+          payload.transcript ||
+          payload.result ||
+          payload.message ||
+          "";
       }
 
-      sendSpeechMessage(text);
+      handleSpeechResultText(text);
     } catch (e) {
-      console.warn("[alltoall native speech result]", e);
-      addSystemMessage(st("micFailed"));
+      console.warn("[alltoall native speech result parse]", e);
+      handleSpeechError("parse-error");
     }
   };
 
-  window.onNativeSpeechError = function (reason) {
-    console.warn("[alltoall native speech error]", reason);
-
-    recognizing = false;
-    micBtn?.classList.remove("listening");
-    updateMicUI();
-
-    const msg = String(reason || "").toLowerCase();
-    if (msg.includes("not-allowed") || msg.includes("denied")) {
-      addSystemMessage(st("micDenied"));
-      return;
-    }
-
-    if (msg.includes("no-speech") || msg.includes("no-match") || msg.includes("audio")) {
-      addSystemMessage(st("micNoSpeech"));
-      return;
-    }
-
-    addSystemMessage(st("micFailed"));
+  const onError = (reason) => {
+    handleSpeechError(reason);
   };
+
+  window.onNativeSpeechResult = onResult;
+  window.onSpeechResult = onResult;
+  window.handleSpeechResult = onResult;
+
+  window.onNativeSpeechError = onError;
+  window.onSpeechError = onError;
+  window.handleSpeechError = onError;
 }
 
 function initSpeech() {
@@ -974,44 +1022,18 @@ function initSpeech() {
 
   recognizer.onresult = (e) => {
     const text = e.results?.[0]?.[0]?.transcript || "";
-
-    recognizing = false;
-    micBtn?.classList.remove("listening");
-    micBtn?.classList.add("recorded");
-    setTimeout(() => micBtn?.classList.remove("recorded"), 700);
-    updateMicUI();
-
-    if (text) {
-      sendSpeechMessage(text);
-    } else {
-      addSystemMessage(st("micNoSpeech"));
-    }
+    handleSpeechResultText(text);
   };
 
   recognizer.onend = () => {
+    if (!recognizing) return;
     recognizing = false;
     micBtn?.classList.remove("listening");
     updateMicUI();
   };
 
   recognizer.onerror = (e) => {
-    recognizing = false;
-    micBtn?.classList.remove("listening");
-    updateMicUI();
-
-    const err = String(e?.error || "").toLowerCase();
-    if (err.includes("not-allowed") || err.includes("denied")) {
-      addSystemMessage(st("micDenied"));
-      return;
-    }
-
-    if (err.includes("no-speech") || err.includes("no-match") || err.includes("audio-capture")) {
-      addSystemMessage(st("micNoSpeech"));
-      return;
-    }
-
-    console.warn("[alltoall browser speech]", e);
-    addSystemMessage(st("micFailed"));
+    handleSpeechError(e?.error || "browser-speech-error");
   };
 }
 
@@ -1052,6 +1074,8 @@ async function toggleMic() {
 
   if (recognizing) {
     try {
+      clearNativeSpeechTimer();
+
       if (hasNativeSpeech() && window.Native?.stopSpeechRecognition) {
         window.Native.stopSpeechRecognition();
       } else {
@@ -1067,14 +1091,21 @@ async function toggleMic() {
 
   if (hasNativeSpeech()) {
     try {
+      clearNativeSpeechTimer();
+
       recognizing = true;
       micBtn?.classList.add("listening");
       updateMicUI();
+
+      nativeSpeechTimer = setTimeout(() => {
+        handleSpeechError("timeout");
+      }, 12000);
 
       window.Native.startSpeechRecognition(toBCP(myLang), "bottom");
       return;
     } catch (e) {
       console.warn("[alltoall native speech start]", e);
+      clearNativeSpeechTimer();
       recognizing = false;
       micBtn?.classList.remove("listening");
       updateMicUI();
@@ -1395,7 +1426,9 @@ function bindEvents() {
     if (window.speechSynthesis) {
       window.speechSynthesis.getVoices();
       window.speechSynthesis.onvoiceschanged = () => {
-        try { window.speechSynthesis.getVoices(); } catch {}
+        try {
+          window.speechSynthesis.getVoices();
+        } catch {}
         voicesReady = true;
       };
     }
@@ -1444,13 +1477,24 @@ init();
 
 window.addEventListener("beforeunload", () => {
   manualClose = true;
+  clearNativeSpeechTimer();
   stopAudio();
+
   try {
     if (hasNativeSpeech() && window.Native?.stopSpeechRecognition) {
       window.Native.stopSpeechRecognition();
     }
   } catch {}
-  try { recognizer?.stop?.(); } catch {}
-  try { ws?.close?.(); } catch {}
-  try { preparedStream?.getTracks?.().forEach((t) => t.stop()); } catch {}
+
+  try {
+    recognizer?.stop?.();
+  } catch {}
+
+  try {
+    ws?.close?.();
+  } catch {}
+
+  try {
+    preparedStream?.getTracks?.().forEach((t) => t.stop());
+  } catch {}
 });
