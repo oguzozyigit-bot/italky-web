@@ -1,14 +1,12 @@
 // FILE: /js/alltoall_room.js
 
-import { mountShell } from "/js/ui_shell.js";
+// mountShell bilinçli olarak kapalı bırakıldı.
+// Çünkü bu sayfada alt bar / overlay / tıklama yutma sorunu çıkarıyordu.
+// Gerekirse sonra sadece bu modüle özel güvenli sürüm ekleriz.
+
+// import { mountShell } from "/js/ui_shell.js";
 import { supabase } from "/js/supabase_client.js";
 import { LANG_POOL } from "/js/lang_pool_full.js";
-
-try {
-  mountShell({ scroll: "none" });
-} catch (e) {
-  console.warn("[alltoall room shell]", e);
-}
 
 const API_BASE = "https://italky-api.onrender.com/api";
 const WS_BASE = "wss://italky-api.onrender.com/api/alltoall/ws";
@@ -367,6 +365,16 @@ function visibleCode() {
   return hostCode || roomId || "------";
 }
 
+function compactDisplayName(fullName) {
+  const clean = String(fullName || "").trim().replace(/\s+/g, " ");
+  if (!clean) return "";
+  const parts = clean.split(" ").filter(Boolean);
+  if (parts.length === 1) return parts[0];
+  const first = parts[0];
+  const rest = parts.slice(1).map((p) => `${p.charAt(0).toUpperCase()}.`).join("");
+  return `${first} ${rest}`;
+}
+
 /* =========================
    UI / VISUAL STATE
 ========================= */
@@ -465,16 +473,6 @@ function renderPeople() {
   if (participantsCount) {
     participantsCount.textContent = `${joinedPeople.size} / 50`;
   }
-}
-
-function compactDisplayName(fullName) {
-  const clean = String(fullName || "").trim().replace(/\s+/g, " ");
-  if (!clean) return "";
-  const parts = clean.split(" ").filter(Boolean);
-  if (parts.length === 1) return parts[0];
-  const first = parts[0];
-  const rest = parts.slice(1).map((p) => `${p.charAt(0).toUpperCase()}.`).join("");
-  return `${first} ${rest}`;
 }
 
 function ensureSelfInPeople() {
@@ -672,25 +670,41 @@ function renderLangSheet() {
   `).join("");
 
   langSheetList.querySelectorAll(".sheet-item").forEach((btn) => {
-    btn.addEventListener("click", async () => {
+    const choose = async () => {
       const value = canonical(btn.dataset.value || "tr");
       await applyMyLanguageChange(value);
       closeLangSheet();
+    };
+
+    ["click", "touchend", "pointerup"].forEach((evt) => {
+      btn.addEventListener(evt, async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        await choose();
+      }, { passive:false });
     });
   });
 }
 
 function openLangSheet() {
-  renderLangSheet();
-  langSheet?.classList.add("show");
-  langSheetBackdrop?.classList.add("show");
-  langSheet?.setAttribute("aria-hidden", "false");
+  try {
+    renderLangSheet();
+    langSheet?.classList.add("show");
+    langSheetBackdrop?.classList.add("show");
+    langSheet?.setAttribute("aria-hidden", "false");
+  } catch (e) {
+    console.warn("[alltoall openLangSheet]", e);
+  }
 }
 
 function closeLangSheet() {
-  langSheet?.classList.remove("show");
-  langSheetBackdrop?.classList.remove("show");
-  langSheet?.setAttribute("aria-hidden", "true");
+  try {
+    langSheet?.classList.remove("show");
+    langSheetBackdrop?.classList.remove("show");
+    langSheet?.setAttribute("aria-hidden", "true");
+  } catch (e) {
+    console.warn("[alltoall closeLangSheet]", e);
+  }
 }
 
 async function applyMyLanguageChange(nextLang) {
@@ -722,12 +736,8 @@ function stopAudio() {
     currentAudio?.pause?.();
     currentAudio = null;
   } catch {}
-  try {
-    window.speechSynthesis?.cancel?.();
-  } catch {}
-  try {
-    window.NativeTTS?.stop?.();
-  } catch {}
+  try { window.speechSynthesis?.cancel?.(); } catch {}
+  try { window.NativeTTS?.stop?.(); } catch {}
 }
 
 function getVoicePreference() {
@@ -858,7 +868,7 @@ function chooseWebVoice(langCode) {
 
   const pref = getVoicePreference();
   const base = canonical(langCode);
-  const bcp = toBCP(langCode).toLowerCase();
+  const bcp = BCP[canonical(langCode)]?.toLowerCase() || "en-us";
 
   let pool = voices.filter((v) => String(v.lang || "").toLowerCase().startsWith(base));
   if (!pool.length) pool = voices.filter((v) => String(v.lang || "").toLowerCase() === bcp);
@@ -907,7 +917,7 @@ function speakFallback(text, langCode) {
   } catch {}
 
   const u = new SpeechSynthesisUtterance(value);
-  u.lang = toBCP(langCode);
+  u.lang = BCP[c] || "en-US";
   u.rate = c === "en" ? 0.82 : ["de", "fr", "it", "es"].includes(c) ? 0.88 : 0.92;
   u.pitch = 1.0;
   u.volume = 1;
@@ -992,14 +1002,14 @@ function sendSpeechMessage(text) {
 }
 
 /* =========================
-   SPEECH - FIXED FLOW
+   SPEECH
 ========================= */
 function buildRecognizer(langCode) {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) return null;
 
   const rec = new SR();
-  rec.lang = langObj(langCode).bcp || toBCP(langCode);
+  rec.lang = langObj(langCode).bcp || "tr-TR";
   rec.interimResults = false;
   rec.continuous = false;
   rec.maxAlternatives = 1;
@@ -1337,23 +1347,10 @@ async function hydrateMyProfile() {
 /* =========================
    LAYOUT
 ========================= */
-function applyFooterLift() {
-  try {
-    const root = getComputedStyle(document.documentElement);
-    const footerH = parseFloat(root.getPropertyValue("--footerH")) || 0;
-    document.documentElement.style.setProperty("--footerSafe", `${footerH}px`);
-  } catch {}
-}
-
 function fixLayout() {
-  applyFooterLift();
-
   try {
-    const root = getComputedStyle(document.documentElement);
-    const footerH = parseFloat(root.getPropertyValue("--footerH")) || 0;
-
     if (window.visualViewport && pageContent) {
-      const h = Math.max(320, Math.round(window.visualViewport.height - footerH));
+      const h = Math.max(320, Math.round(window.visualViewport.height));
       pageContent.style.height = `${h}px`;
       pageContent.style.minHeight = `${h}px`;
     }
@@ -1415,20 +1412,31 @@ async function ensureReady() {
 function bindEvents() {
   syncLangPickerLabel();
   unlockOnFirstTouch();
-  startBoot();
 
-  roomPill?.addEventListener("click", async () => {
-    const code = visibleCode();
-    if (!code || code === "------") return;
+  const openSheetHandler = (e) => {
     try {
-      await navigator.clipboard.writeText(code);
-      addSystemMessage(`${st("roomCopied")}: ${code}`);
+      e.preventDefault();
+      e.stopPropagation();
     } catch {}
+    openLangSheet();
+  };
+
+  ["click", "touchend", "pointerup"].forEach((evt) => {
+    langPickerBtn?.addEventListener(evt, openSheetHandler, { passive: false });
   });
 
-  langPickerBtn?.addEventListener("click", openLangSheet);
-  langSheetBackdrop?.addEventListener("click", closeLangSheet);
-  langSheetClose?.addEventListener("click", closeLangSheet);
+  const closeSheetHandler = (e) => {
+    try {
+      e.preventDefault();
+      e.stopPropagation();
+    } catch {}
+    closeLangSheet();
+  };
+
+  ["click", "touchend", "pointerup"].forEach((evt) => {
+    langSheetClose?.addEventListener(evt, closeSheetHandler, { passive: false });
+    langSheetBackdrop?.addEventListener(evt, closeSheetHandler, { passive: false });
+  });
 
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") closeLangSheet();
@@ -1439,10 +1447,25 @@ function bindEvents() {
     }
   });
 
-  micBtn?.addEventListener("click", async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const micHandler = async (e) => {
+    try {
+      e.preventDefault();
+      e.stopPropagation();
+    } catch {}
     await toggleMic();
+  };
+
+  ["click", "touchend", "pointerup"].forEach((evt) => {
+    micBtn?.addEventListener(evt, micHandler, { passive: false });
+  });
+
+  roomPill?.addEventListener("click", async () => {
+    const code = visibleCode();
+    if (!code || code === "------") return;
+    try {
+      await navigator.clipboard.writeText(code);
+      addSystemMessage(`${st("roomCopied")}: ${code}`);
+    } catch {}
   });
 
   if (window.visualViewport) {
@@ -1482,25 +1505,36 @@ function bindEvents() {
    INIT
 ========================= */
 async function init() {
-  siteLang = getSiteLang();
-  LANGS = buildLangPoolForSite(siteLang);
+  try {
+    siteLang = getSiteLang();
+    LANGS = buildLangPoolForSite(siteLang);
 
-  refreshStaticTexts();
-  buildLanguageSelect();
-  syncRoomPill();
-  setSystemReadyUI();
-  fixLayout();
+    buildLanguageSelect();
+    refreshStaticTexts();
+    syncRoomPill();
+    setSystemReadyUI();
+    fixLayout();
 
-  await hydrateMyProfile();
-  ensureSelfInPeople();
+    rebuildRecognizer();
+    bindEvents();
+    startBoot();
+  } catch (e) {
+    console.error("[alltoall init ui]", e);
+  }
 
-  rebuildRecognizer();
-  bindEvents();
+  try {
+    await hydrateMyProfile();
+    ensureSelfInPeople();
+  } catch (e) {
+    console.warn("[alltoall hydrate profile]", e);
+  }
 
   try {
     await warmAudio();
     await prepareEnhancedMic();
-  } catch {}
+  } catch (e) {
+    console.warn("[alltoall warm]", e);
+  }
 
   try {
     if (role === "guest" && !incomingRoomId && hostCode) {
@@ -1512,7 +1546,12 @@ async function init() {
     return;
   }
 
-  connectSocket();
+  try {
+    connectSocket();
+  } catch (e) {
+    console.error("[alltoall connectSocket]", e);
+    addSystemMessage(st("connectionError"));
+  }
 }
 
 init();
