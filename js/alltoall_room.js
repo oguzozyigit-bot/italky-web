@@ -48,9 +48,7 @@ let reconnectTimer = null;
 let manuallyClosed = false;
 let wsReady = false;
 
-let recognizing = false;
 let recognizer = null;
-let recordingSide = null;
 let currentAudio = null;
 let voicesReady = false;
 let audioCtx = null;
@@ -78,19 +76,27 @@ let joinedPeople = new Map();
 let lastLocalSentText = "";
 let lastLocalSentAt = 0;
 
-let micManualStop = false;
-let micAutoStopTimer = null;
-let liveTranscript = "";
-let sessionFinalParts = [];
-let speakingSeq = 0;
+/* =========================
+   HOLD TO TALK STATE
+========================= */
+let micHoldActive = false;
+let micPressStartedAt = 0;
+let micMaxTimer = null;
+let isRecognizing = false;
+let recognitionFinished = false;
+let pendingTranscript = "";
+let speechLockUntil = 0;
+
+const HOLD_MIN_MS = 350;
+const HOLD_MAX_MS = 10000;
 
 /* =========================
    SITE TEXT
 ========================= */
 const SITE_TEXT = {
   tr: {
-    speakHint: "Konuşmak için mikrofona dokun.",
-    listeningHint: "Konuşmanız bitince mikrofona tekrar basınız.",
+    speakHint: "Basılı tut konuş, bırakınca gönder.",
+    listeningHint: "Dinleniyor... bırakınca gönderilecek.",
     translatingHint: "Gönderiliyor...",
     roomCopied: "Oda kodu kopyalandı",
     socketNotReady: "Bağlantı henüz hazır değil.",
@@ -109,11 +115,12 @@ const SITE_TEXT = {
     micFailed: "Mikrofon başlatılamadı. Tekrar deneyin.",
     selectLanguage: "Dil Seç",
     participant: "Katılımcı",
-    languageUpdated: "Dil güncellendi"
+    languageUpdated: "Dil güncellendi",
+    maxReached: "10 saniye doldu, gönderiliyor..."
   },
   en: {
-    speakHint: "Tap the microphone to speak.",
-    listeningHint: "Press the microphone again when you finish speaking.",
+    speakHint: "Hold to talk, release to send.",
+    listeningHint: "Listening... release to send.",
     translatingHint: "Sending...",
     roomCopied: "Room code copied",
     socketNotReady: "Connection is not ready yet.",
@@ -132,7 +139,8 @@ const SITE_TEXT = {
     micFailed: "Microphone could not be started. Please try again.",
     selectLanguage: "Select Language",
     participant: "Participant",
-    languageUpdated: "Language updated"
+    languageUpdated: "Language updated",
+    maxReached: "10 seconds reached, sending..."
   }
 };
 
@@ -302,44 +310,11 @@ function shouldIgnoreDuplicateLocal(text) {
   return false;
 }
 
-function normalizeSpeechChunk(text) {
-  return String(text || "").replace(/\s+/g, " ").trim();
-}
-
-function appendUniqueFinalPart(text) {
-  const clean = normalizeSpeechChunk(text);
-  if (!clean) return;
-
-  const last = sessionFinalParts[sessionFinalParts.length - 1] || "";
-  if (clean === last) return;
-
-  if (last && (clean.startsWith(last) || last.startsWith(clean))) {
-    sessionFinalParts[sessionFinalParts.length - 1] =
-      clean.length > last.length ? clean : last;
-  } else {
-    sessionFinalParts.push(clean);
+function clearMicTimers() {
+  if (micMaxTimer) {
+    clearTimeout(micMaxTimer);
+    micMaxTimer = null;
   }
-
-  liveTranscript = sessionFinalParts.join(" ").replace(/\s+/g, " ").trim();
-}
-
-function clearMicAutoStopTimer() {
-  if (micAutoStopTimer) {
-    clearTimeout(micAutoStopTimer);
-    micAutoStopTimer = null;
-  }
-}
-
-function scheduleMicAutoStop() {
-  clearMicAutoStopTimer();
-  micAutoStopTimer = setTimeout(() => {
-    if (recordingSide === "bot" && recognizer) {
-      try {
-        micManualStop = false;
-        recognizer.stop();
-      } catch {}
-    }
-  }, 4200);
 }
 
 /* =========================
@@ -639,24 +614,23 @@ function updateMicUI(mode = null) {
     return;
   }
 
-  if (recognizing) {
+  if (isRecognizing || micHoldActive) {
     micHint.classList.add("helper-repeat");
     micHint.textContent = st("listeningHint");
-  } else {
-    micHint.classList.add("helper-ready");
-    micHint.textContent = st("speakHint");
+    return;
   }
+
+  micHint.classList.add("helper-ready");
+  micHint.textContent = st("speakHint");
 }
 
 function setListeningUI() {
-  recognizing = true;
   micBtn?.classList.add("listening");
   micBtn?.classList.remove("recorded");
   updateMicUI();
 }
 
 function setTranslatingUI() {
-  recognizing = false;
   micBtn?.classList.remove("listening");
   micBtn?.classList.add("recorded");
   updateMicUI("translating");
@@ -664,14 +638,12 @@ function setTranslatingUI() {
 }
 
 function setReadyUI() {
-  recognizing = false;
   micBtn?.classList.remove("listening");
   micBtn?.classList.remove("recorded");
   updateMicUI();
 }
 
 function setErrorUI() {
-  recognizing = false;
   micBtn?.classList.remove("listening");
   micBtn?.classList.remove("recorded");
   updateMicUI();
@@ -681,17 +653,10 @@ function setErrorUI() {
    AUDIO / TTS
 ========================= */
 function stopAudio() {
-  speakingSeq += 1;
-
   try {
-    if (currentAudio) {
-      currentAudio.pause();
-      currentAudio.currentTime = 0;
-      currentAudio.src = "";
-      currentAudio = null;
-    }
+    currentAudio?.pause?.();
+    currentAudio = null;
   } catch {}
-
   try { window.speechSynthesis?.cancel?.(); } catch {}
   try { window.NativeTTS?.stop?.(); } catch {}
 }
@@ -802,7 +767,6 @@ async function hasReadyVoiceProfile() {
 }
 
 async function speakViaApi(text, langCode) {
-  const mySeq = ++speakingSeq;
   const userId = await getCurrentUserId();
   const voice = getVoicePreference();
 
@@ -824,8 +788,6 @@ async function speakViaApi(text, langCode) {
     throw new Error(j?.error || j?.detail || "TTS API unavailable");
   }
 
-  if (mySeq !== speakingSeq) return;
-
   const audio = new Audio(`data:audio/mp3;base64,${j.audio_base64}`);
   audio.preload = "auto";
   audio.playsInline = true;
@@ -840,11 +802,6 @@ async function speakViaApi(text, langCode) {
   };
 
   await warmAudio();
-
-  if (mySeq !== speakingSeq) {
-    try { audio.pause(); } catch {}
-    return;
-  }
 
   const playPromise = audio.play();
   if (playPromise && typeof playPromise.then === "function") {
@@ -927,8 +884,6 @@ async function speakText(text, langCode) {
   const value = String(text || "").trim();
   if (!value || !autoSpeak) return;
 
-  stopAudio();
-
   const voice = getVoicePreference();
 
   if (voice === "auto") {
@@ -995,7 +950,7 @@ async function speechToTextFallback() {
 }
 
 async function finalizeRecognition(text) {
-  const cleaned = normalizeSpeechChunk(text);
+  const cleaned = String(text || "").trim();
 
   if (!cleaned) {
     addSystemMessage(st("micNoSpeech"));
@@ -1025,7 +980,47 @@ async function finalizeRecognition(text) {
   }, 900);
 }
 
+async function finishHeldRecording(trigger = "release") {
+  if (!micHoldActive && !isRecognizing && !pendingTranscript) {
+    setReadyUI();
+    return;
+  }
+
+  micHoldActive = false;
+  clearMicTimers();
+
+  const heldFor = Date.now() - micPressStartedAt;
+  const transcript = String(pendingTranscript || "").trim();
+
+  try { recognizer?.stop?.(); } catch {}
+
+  if (heldFor < HOLD_MIN_MS && !transcript) {
+    pendingTranscript = "";
+    recognitionFinished = true;
+    setReadyUI();
+    return;
+  }
+
+  if (trigger === "max") {
+    addSystemMessage(st("maxReached"));
+  }
+
+  if (!transcript) {
+    const fallback = await speechToTextFallback();
+    pendingTranscript = String(fallback || "").trim();
+  }
+
+  const finalText = String(pendingTranscript || "").trim();
+  pendingTranscript = "";
+  recognitionFinished = true;
+
+  await finalizeRecognition(finalText);
+}
+
 function startRecording() {
+  const now = Date.now();
+  if (now < speechLockUntil) return;
+
   const rec = buildRecognizer(myLang);
 
   if (!rec) {
@@ -1035,41 +1030,31 @@ function startRecording() {
   }
 
   recognizer = rec;
-  recordingSide = "bot";
-  micManualStop = false;
-  liveTranscript = "";
-  sessionFinalParts = [];
-  clearMicAutoStopTimer();
+  recognitionFinished = false;
+  pendingTranscript = "";
 
   rec.onstart = () => {
+    isRecognizing = true;
     setListeningUI();
-    scheduleMicAutoStop();
   };
 
   rec.onresult = (e) => {
-    let heardSomething = false;
-
-    for (let i = e.resultIndex; i < e.results.length; i += 1) {
-      const piece = normalizeSpeechChunk(e.results[i][0]?.transcript || "");
-      if (!piece) continue;
-
-      heardSomething = true;
-
-      if (e.results[i].isFinal) {
-        appendUniqueFinalPart(piece);
+    let full = "";
+    try {
+      for (let i = e.resultIndex; i < e.results.length; i += 1) {
+        const chunk = String(e.results[i]?.[0]?.transcript || "").trim();
+        if (chunk) full += `${chunk} `;
       }
-    }
-
-    if (heardSomething) {
-      scheduleMicAutoStop();
-    }
+    } catch {}
+    pendingTranscript = String(full || pendingTranscript || "").trim();
   };
 
   rec.onerror = async (e) => {
     console.warn("[alltoall speech error]", e);
-    clearMicAutoStopTimer();
 
     const err = String(e?.error || "").toLowerCase();
+    isRecognizing = false;
+    speechLockUntil = Date.now() + 900;
 
     if (err.includes("aborted")) {
       setReadyUI();
@@ -1077,20 +1062,24 @@ function startRecording() {
     }
 
     if (err.includes("not-allowed") || err.includes("service-not-allowed")) {
+      micHoldActive = false;
+      clearMicTimers();
       addSystemMessage(st("micBlocked"));
       setErrorUI();
       return;
     }
 
     if (err.includes("audio-capture")) {
+      micHoldActive = false;
+      clearMicTimers();
       addSystemMessage(st("micFailed"));
       setErrorUI();
       return;
     }
 
     if (err.includes("no-speech")) {
-      if (liveTranscript.trim()) {
-        await finalizeRecognition(liveTranscript.trim());
+      if (!micHoldActive) {
+        await finishHeldRecording("release");
       } else {
         addSystemMessage(st("micNoSpeech"));
         setReadyUI();
@@ -1099,33 +1088,21 @@ function startRecording() {
     }
 
     const fallback = await speechToTextFallback();
-    if (fallback) {
-      await finalizeRecognition(fallback);
-    } else {
-      setErrorUI();
-    }
+    micHoldActive = false;
+    clearMicTimers();
+    pendingTranscript = String(fallback || "").trim();
+    await finishHeldRecording("release");
   };
 
   rec.onend = async () => {
-    clearMicAutoStopTimer();
+    isRecognizing = false;
 
-    const finalPayload = normalizeSpeechChunk(liveTranscript);
-
-    recognizer = null;
-    recordingSide = null;
-    micBtn?.classList.remove("listening");
-
-    if (micManualStop) {
-      if (finalPayload) await finalizeRecognition(finalPayload);
-      else setReadyUI();
-      micManualStop = false;
+    if (micHoldActive) {
       return;
     }
 
-    if (finalPayload) {
-      await finalizeRecognition(finalPayload);
-    } else {
-      setReadyUI();
+    if (!recognitionFinished) {
+      await finishHeldRecording("release");
     }
   };
 
@@ -1134,24 +1111,16 @@ function startRecording() {
   } catch (e) {
     console.warn("[alltoall rec.start error]", e);
     recognizer = null;
-    recordingSide = null;
-    clearMicAutoStopTimer();
+    isRecognizing = false;
+    micHoldActive = false;
+    clearMicTimers();
     addSystemMessage(st("micFailed"));
     setErrorUI();
   }
 }
 
-async function toggleRecording() {
+async function beginHoldToTalk() {
   await ensureReady();
-
-  if (recordingSide === "bot") {
-    micManualStop = true;
-    clearMicAutoStopTimer();
-
-    try { recognizer?.stop(); } catch {}
-    setTranslatingUI();
-    return;
-  }
 
   const granted = await requestMicPermission();
   if (!granted) {
@@ -1160,12 +1129,31 @@ async function toggleRecording() {
     return;
   }
 
-  try {
-    await warmAudio();
-    await prepareEnhancedMic();
-  } catch {}
+  await warmAudio();
+  await prepareEnhancedMic();
+
+  const now = Date.now();
+  if (now < speechLockUntil) return;
+  if (micHoldActive || isRecognizing) return;
+
+  stopAudio();
+
+  micHoldActive = true;
+  micPressStartedAt = Date.now();
+  pendingTranscript = "";
+  recognitionFinished = false;
+
+  clearMicTimers();
+  micMaxTimer = setTimeout(() => {
+    finishHeldRecording("max").catch((e) => console.warn("[alltoall max finish]", e));
+  }, HOLD_MAX_MS);
 
   startRecording();
+}
+
+async function endHoldToTalk() {
+  if (!micHoldActive && !isRecognizing) return;
+  await finishHeldRecording("release");
 }
 
 /* =========================
@@ -1530,6 +1518,38 @@ async function ensureReady() {
 /* =========================
    EVENTS
 ========================= */
+function bindHoldMicEvents() {
+  if (!micBtn) return;
+
+  const start = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    await beginHoldToTalk();
+  };
+
+  const end = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    await endHoldToTalk();
+  };
+
+  micBtn.addEventListener("pointerdown", start);
+  micBtn.addEventListener("pointerup", end);
+  micBtn.addEventListener("pointercancel", end);
+  micBtn.addEventListener("lostpointercapture", end);
+  micBtn.addEventListener("contextmenu", (e) => e.preventDefault());
+
+  micBtn.addEventListener("touchstart", start, { passive: false });
+  micBtn.addEventListener("touchend", end, { passive: false });
+  micBtn.addEventListener("touchcancel", end, { passive: false });
+
+  micBtn.addEventListener("mousedown", start);
+  micBtn.addEventListener("mouseup", end);
+  micBtn.addEventListener("mouseleave", async () => {
+    if (micHoldActive) await endHoldToTalk();
+  });
+}
+
 function bindEvents() {
   unlockOnFirstTouch();
   startBoot();
@@ -1552,20 +1572,23 @@ function bindEvents() {
   langSheetBackdrop?.addEventListener("click", closeLangSheet);
   langSheetClose?.addEventListener("click", closeLangSheet);
 
-  document.addEventListener("keydown", (e) => {
+  document.addEventListener("keydown", async (e) => {
     if (e.key === "Escape") closeLangSheet();
 
     if ((e.key === "Enter" || e.key === " ") && document.activeElement === micBtn) {
       e.preventDefault();
-      toggleRecording();
+      await beginHoldToTalk();
     }
   });
 
-  micBtn?.addEventListener("click", async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    await toggleRecording();
+  document.addEventListener("keyup", async (e) => {
+    if ((e.key === "Enter" || e.key === " ") && document.activeElement === micBtn) {
+      e.preventDefault();
+      await endHoldToTalk();
+    }
   });
+
+  bindHoldMicEvents();
 
   if (window.visualViewport) {
     window.visualViewport.addEventListener("resize", fixLayout);
@@ -1648,9 +1671,10 @@ init();
 
 window.addEventListener("beforeunload", () => {
   manuallyClosed = true;
+  micHoldActive = false;
+  clearMicTimers();
   stopAudio();
   stopRecognizer();
-  clearMicAutoStopTimer();
   try { ws?.close?.(); } catch {}
   try { preparedStream?.getTracks?.().forEach((t) => t.stop()); } catch {}
 });
