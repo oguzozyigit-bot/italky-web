@@ -284,7 +284,7 @@ function personKey(person) {
 }
 
 function visibleCode() {
-  return roomId || hostCode || "------";
+  return hostCode || roomId || "------";
 }
 
 function shouldIgnoreDuplicateLocal(text) {
@@ -295,6 +295,10 @@ function shouldIgnoreDuplicateLocal(text) {
   lastLocalSentText = value;
   lastLocalSentAt = now;
   return false;
+}
+
+function hasNativeSpeech() {
+  return !!(window.Native && typeof window.Native.startSpeechRecognition === "function");
 }
 
 /* =========================
@@ -927,6 +931,48 @@ function stopRecognizer() {
   }
 }
 
+function installNativeSpeechCallbacks() {
+  window.onNativeSpeechResult = async function (payload) {
+    try {
+      const heard = String(payload?.text || "").trim();
+
+      recognizing = false;
+      recordingSide = null;
+      micBtn?.classList.remove("listening");
+
+      await finalizeRecognition(heard);
+    } catch (e) {
+      console.warn("[alltoall native speech result]", e);
+      setErrorUI();
+    }
+  };
+
+  window.onNativeSpeechError = function (reason) {
+    console.warn("[alltoall native speech error]", reason);
+
+    recognizing = false;
+    recordingSide = null;
+    micBtn?.classList.remove("listening");
+
+    const msg = String(reason || "").toLowerCase();
+
+    if (msg.includes("not-allowed") || msg.includes("denied")) {
+      addSystemMessage(st("micBlocked"));
+      setErrorUI();
+      return;
+    }
+
+    if (msg.includes("no-speech")) {
+      addSystemMessage(st("micNoSpeech"));
+      setReadyUI();
+      return;
+    }
+
+    addSystemMessage(st("micFailed"));
+    setErrorUI();
+  };
+}
+
 async function speechToTextFallback() {
   const txt = prompt(`${getLangMeta(myLang).name} olarak konuşmanı yaz:`) || "";
   return String(txt).trim() || null;
@@ -966,6 +1012,18 @@ async function finalizeRecognition(text) {
 function startRecording() {
   const now = Date.now();
   if (now < speechLockUntil) return;
+
+  if (hasNativeSpeech()) {
+    try {
+      recordingSide = "bot";
+      speechLockUntil = Date.now() + 1200;
+      setListeningUI();
+      window.Native.startSpeechRecognition(toBCP(myLang), "bottom");
+      return;
+    } catch (e) {
+      console.warn("[alltoall native speech start]", e);
+    }
+  }
 
   const rec = buildRecognizer(myLang);
 
@@ -1050,6 +1108,12 @@ async function toggleRecording() {
   await ensureReady();
 
   if (recordingSide === "bot") {
+    try {
+      if (hasNativeSpeech() && window.Native?.stopSpeechRecognition) {
+        window.Native.stopSpeechRecognition();
+      }
+    } catch {}
+
     try { recognizer?.stop?.(); } catch {}
     recordingSide = null;
     setTranslatingUI();
@@ -1444,6 +1508,7 @@ async function ensureReady() {
 function bindEvents() {
   unlockOnFirstTouch();
   startBoot();
+  installNativeSpeechCallbacks();
 
   roomPill?.addEventListener("click", async () => {
     const code = visibleCode();
@@ -1561,6 +1626,11 @@ window.addEventListener("beforeunload", () => {
   manuallyClosed = true;
   stopAudio();
   stopRecognizer();
+  try {
+    if (hasNativeSpeech() && window.Native?.stopSpeechRecognition) {
+      window.Native.stopSpeechRecognition();
+    }
+  } catch {}
   try { ws?.close?.(); } catch {}
   try { preparedStream?.getTracks?.().forEach((t) => t.stop()); } catch {}
 });
