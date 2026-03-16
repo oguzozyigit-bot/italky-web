@@ -4,540 +4,196 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
   <title>italkyAI • OneToAll Live</title>
-  <meta name="theme-color" content="#08111f"/>
+  <meta name="theme-color" content="#02040a"/>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;800;900&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
 
   <style>
-    :root{
-      --bg:#060b14;
-      --bg2:#0a1120;
-      --card:rgba(255,255,255,.06);
-      --card2:rgba(255,255,255,.04);
-      --line:rgba(255,255,255,.10);
-      --txt:rgba(255,255,255,.96);
-      --muted:rgba(255,255,255,.62);
-      --cyan:#6ee7ff;
-      --blue:#5b8cff;
-      --violet:#8b5cf6;
-      --pink:#ff4fd8;
-      --green:#22c55e;
-      --warn:#f59e0b;
-      --danger:#fb7185;
-      --grad:linear-gradient(135deg,var(--cyan) 0%, var(--blue) 45%, var(--pink) 100%);
-      --hero:linear-gradient(135deg,#08111f 0%, #122342 35%, #1d3a7a 62%, #392176 100%);
+    :root {
+      --bg: #02040a;
+      --panel: rgba(10, 18, 32, 0.5);
+      --line: rgba(255, 255, 255, 0.08);
+      --txt: #ffffff;
+      --muted: rgba(255, 255, 255, 0.5);
+      --cyan: #6ee7ff;
+      --cyan-glow: rgba(110, 231, 255, 0.3);
+      --blue: #5b8cff;
+      --pink: #ff4fd8;
+      --pink-glow: rgba(255, 79, 216, 0.3);
+      --green: #22c55e;
+      --grad: linear-gradient(135deg, var(--cyan) 0%, var(--blue) 50%, var(--pink) 100%);
+      --radius-lg: 34px;
+      --radius-md: 24px;
     }
 
-    *{
-      box-sizing:border-box;
-      -webkit-tap-highlight-color:transparent;
-      outline:none;
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+
+    html, body {
+      margin: 0; width: 100%; min-height: 100%;
+      background-color: var(--bg);
+      color: var(--txt);
+      font-family: 'Outfit', sans-serif;
+      overflow-x: hidden;
     }
 
-    html,body{
-      margin:0;
-      width:100%;
-      min-height:100%;
-      background:
-        radial-gradient(circle at 15% 18%, rgba(110,231,255,.11) 0%, transparent 22%),
-        radial-gradient(circle at 82% 20%, rgba(255,79,216,.11) 0%, transparent 22%),
-        radial-gradient(circle at 50% 100%, rgba(91,140,255,.10) 0%, transparent 28%),
-        linear-gradient(180deg,#050911 0%, #08101c 42%, #091224 100%);
-      color:var(--txt);
-      font-family:'Outfit',sans-serif;
-      scrollbar-width:none;
+    /* PLAZMA ARKA PLAN */
+    body::before {
+      content: ""; position: fixed; width: 200vmax; height: 200vmax; top: -50vmax; left: -50vmax; z-index: -1;
+      background: radial-gradient(circle at center, var(--pink) 0%, transparent 40%),
+                  radial-gradient(circle at center, var(--blue) 0%, transparent 60%);
+      animation: plasma 30s linear infinite; opacity: 0.12;
     }
 
-    html::-webkit-scrollbar,
-    body::-webkit-scrollbar{
-      display:none;
+    #pageContent { padding: 16px; max-width: 800px; margin: 0 auto; position: relative; z-index: 10; }
+
+    .wrap { display: flex; flex-direction: column; gap: 16px; }
+
+    /* HERO - CANLI OTURUM KARTI */
+    .hero {
+      position: relative;
+      background: linear-gradient(160deg, #0b1220 0%, #16264d 100%);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      overflow: hidden;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.5);
     }
 
-    #pageContent{
-      width:100%;
-      min-height:100dvh;
-      padding:14px 14px 26px;
-      overflow-x:hidden;
-      overflow-y:auto;
-      scrollbar-width:none;
-      -webkit-overflow-scrolling:touch;
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 6px 14px; border-radius: 100px;
+      font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;
     }
 
-    #pageContent::-webkit-scrollbar{
-      display:none;
+    .eyebrow-dot {
+      width: 7px; height: 7px; background: var(--green); border-radius: 50%;
+      box-shadow: 0 0 10px var(--green); animation: pulse 1.6s infinite;
     }
 
-    .wrap{
-      width:100%;
-      max-width:720px;
-      margin:0 auto;
-      display:flex;
-      flex-direction:column;
-      gap:14px;
+    .hero-title {
+      font-family: 'Space Grotesk', sans-serif; font-size: 32px; margin: 16px 0 8px; line-height: 1;
     }
 
-    .hero{
-      position:relative;
-      overflow:hidden;
-      border-radius:34px;
-      border:1px solid rgba(255,255,255,.10);
-      background:var(--hero);
-      padding:16px;
-      box-shadow:
-        0 20px 40px rgba(0,0,0,.30),
-        inset 0 1px 0 rgba(255,255,255,.05);
+    .hero-title .accent {
+      background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 800;
     }
 
-    .hero::before{
-      content:"";
-      position:absolute;
-      right:-40px;
-      bottom:-40px;
-      width:180px;
-      height:180px;
-      background:radial-gradient(circle, rgba(255,79,216,.22), transparent 70%);
-      filter:blur(10px);
-      pointer-events:none;
+    .hero-sub { font-size: 13px; color: var(--muted); line-height: 1.5; max-width: 450px; }
+
+    .hero-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+
+    .pill {
+      background: rgba(255, 255, 255, 0.05); border: 1px solid var(--line);
+      padding: 6px 12px; border-radius: 100px; font-size: 11px; font-weight: 700;
     }
 
-    .hero-top{
-      display:flex;
-      align-items:flex-start;
-      justify-content:space-between;
-      gap:14px;
+    /* GRID & CARDS */
+    .grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 16px; }
+
+    .card {
+      background: var(--panel); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--line); border-radius: var(--radius-md); padding: 20px;
     }
 
-    .hero-copy{
-      min-width:0;
-      flex:1;
+    .section-title { font-family: 'Space Grotesk', sans-serif; font-size: 22px; margin: 0 0 4px; }
+    .section-sub { font-size: 12px; color: var(--muted); margin-bottom: 20px; }
+
+    /* META BOXES */
+    .meta { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+    .meta-box {
+      background: rgba(0,0,0,0.2); border: 1px solid var(--line);
+      padding: 12px; border-radius: 16px;
+    }
+    .meta-k { font-size: 10px; font-weight: 800; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+    .meta-v { font-size: 16px; font-weight: 800; color: #fff; }
+    .code { color: var(--cyan); letter-spacing: 2px; }
+
+    /* VISUAL STAGE */
+    .visual-stage {
+      background: rgba(0,0,0,0.3); border-radius: 20px; height: 160px;
+      display: grid; place-items: center; border: 1px solid var(--line); margin: 16px 0;
+      position: relative; overflow: hidden;
     }
 
-    .eyebrow{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      min-height:30px;
-      padding:0 12px;
-      border-radius:999px;
-      background:rgba(255,255,255,.10);
-      border:1px solid rgba(255,255,255,.10);
-      font-size:11px;
-      font-weight:800;
-      letter-spacing:.4px;
-      text-transform:uppercase;
-      color:#fff;
+    .mic-visual { display: flex; align-items: flex-end; gap: 6px; height: 80px; }
+    .bar {
+      width: 8px; height: 15px; border-radius: 10px;
+      background: var(--grad); opacity: 0.3;
+      animation: idleBars 1.5s infinite ease-in-out;
     }
 
-    .eyebrow-dot{
-      width:8px;
-      height:8px;
-      border-radius:50%;
-      background:var(--green);
-      box-shadow:0 0 12px var(--green);
-      animation:pulseDot 1.6s infinite ease-in-out;
+    .visual-stage.live .bar { opacity: 1; animation: liveBars 0.6s infinite alternate ease-in-out; }
+
+    /* TEXT BOXES */
+    .text-box {
+      background: rgba(255,255,255,0.03); border: 1px solid var(--line);
+      border-radius: 20px; padding: 16px; margin-bottom: 12px; min-height: 120px;
+    }
+    .text-kicker { font-size: 10px; font-weight: 800; color: var(--cyan); text-transform: uppercase; margin-bottom: 10px; }
+    .text-main { font-size: 16px; line-height: 1.6; font-weight: 500; }
+    .text-sub { font-size: 14px; line-height: 1.6; color: var(--muted); }
+
+    /* STATUS PILLS */
+    .status-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .status-pill {
+      padding: 6px 12px; border-radius: 100px; font-size: 10px; font-weight: 800;
+      border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2);
+    }
+    .status-pill.ok { color: #4ade80; border-color: rgba(74, 222, 128, 0.2); }
+    .status-pill.warn { color: #fbbf24; border-color: rgba(251, 191, 36, 0.2); }
+
+    /* BUTTONS */
+    .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .btn {
+      height: 56px; border-radius: 16px; border: none; font-weight: 800; font-size: 14px;
+      cursor: pointer; transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    .btn:active { transform: scale(0.96); }
+    .btn-primary { background: var(--grad); color: #000; box-shadow: 0 10px 20px rgba(91, 140, 255, 0.2); }
+    .btn-secondary { background: rgba(255,255,255,0.08); color: #fff; border: 1px solid var(--line); }
+    .btn-danger { background: rgba(251, 113, 133, 0.1); color: #fb7185; border: 1px solid rgba(251,113,133,0.2); }
+
+    .log {
+      background: rgba(0,0,0,0.4); border-radius: 16px; padding: 12px;
+      font-family: monospace; font-size: 11px; color: #888;
+      height: 180px; overflow-y: auto; border: 1px solid var(--line);
     }
 
-    .hero-title{
-      margin:12px 0 8px;
-      font-family:'Space Grotesk',sans-serif;
-      font-size:30px;
-      line-height:1;
-      letter-spacing:-1px;
+    /* ANIMATIONS */
+    @keyframes plasma {
+      0% { transform: translate(0,0) rotate(0deg); }
+      50% { transform: translate(10%, 10%) rotate(180deg); }
+      100% { transform: translate(0,0) rotate(360deg); }
     }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+    @keyframes idleBars { 0%, 100% { height: 10px; } 50% { height: 25px; } }
+    @keyframes liveBars { 0% { height: 10px; } 100% { height: 70px; } }
 
-    .hero-title .accent{
-      background:var(--grad);
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;
-    }
+    .hide { display: none !important; }
 
-    .hero-sub{
-      margin:0;
-      font-size:12px;
-      line-height:1.5;
-      color:rgba(255,255,255,.80);
-      max-width:420px;
-    }
-
-    .hero-orb{
-      flex:0 0 auto;
-      width:104px;
-      height:104px;
-      border-radius:26px;
-      position:relative;
-      background:rgba(255,255,255,.08);
-      border:1px solid rgba(255,255,255,.10);
-      overflow:hidden;
-      display:grid;
-      place-items:center;
-    }
-
-    .orb-core{
-      width:28px;
-      height:28px;
-      border-radius:50%;
-      background:#fff;
-      box-shadow:
-        0 0 20px rgba(255,255,255,.25),
-        0 0 40px rgba(110,231,255,.25);
-      position:relative;
-      z-index:2;
-    }
-
-    .orb-ring{
-      position:absolute;
-      border-radius:50%;
-      border:2px solid rgba(110,231,255,.72);
-      opacity:.7;
-      animation:spinRing 6s linear infinite;
-    }
-
-    .r1{ width:44px; height:44px; }
-    .r2{ width:66px; height:66px; opacity:.45; animation-duration:8s; }
-    .r3{ width:88px; height:88px; opacity:.25; animation-duration:10s; }
-
-    .hero-pills{
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-      margin-top:14px;
-    }
-
-    .pill{
-      min-height:32px;
-      display:inline-flex;
-      align-items:center;
-      padding:0 12px;
-      border-radius:999px;
-      background:rgba(255,255,255,.08);
-      border:1px solid rgba(255,255,255,.10);
-      color:#fff;
-      font-size:11px;
-      font-weight:800;
-      letter-spacing:.25px;
-    }
-
-    .grid{
-      display:grid;
-      grid-template-columns:1.05fr .95fr;
-      gap:14px;
-    }
-
-    .card{
-      border-radius:28px;
-      border:1px solid var(--line);
-      background:var(--card);
-      box-shadow:
-        0 18px 30px rgba(0,0,0,.22),
-        inset 0 1px 0 rgba(255,255,255,.04);
-      overflow:hidden;
-      backdrop-filter:blur(10px);
-    }
-
-    .card-pad{
-      padding:16px;
-    }
-
-    .section-title{
-      margin:0;
-      font-family:'Space Grotesk',sans-serif;
-      font-size:24px;
-      letter-spacing:-.5px;
-    }
-
-    .section-sub{
-      margin:6px 0 0;
-      font-size:12px;
-      line-height:1.45;
-      color:var(--muted);
-    }
-
-    .meta{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:10px;
-      margin-top:14px;
-    }
-
-    .meta-box{
-      min-height:72px;
-      border-radius:20px;
-      background:var(--card2);
-      border:1px solid rgba(255,255,255,.08);
-      padding:12px;
-      display:flex;
-      flex-direction:column;
-      justify-content:center;
-      gap:4px;
-    }
-
-    .meta-k{
-      font-size:10px;
-      font-weight:800;
-      text-transform:uppercase;
-      letter-spacing:.35px;
-      color:rgba(255,255,255,.58);
-    }
-
-    .meta-v{
-      font-size:18px;
-      font-weight:900;
-      line-height:1.1;
-      word-break:break-word;
-    }
-
-    .code{
-      font-family:'Space Grotesk',sans-serif;
-      letter-spacing:4px;
-    }
-
-    .status-row{
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-      margin-top:14px;
-    }
-
-    .status-pill{
-      min-height:34px;
-      display:inline-flex;
-      align-items:center;
-      padding:0 12px;
-      border-radius:999px;
-      font-size:11px;
-      font-weight:900;
-      border:1px solid rgba(255,255,255,.10);
-      background:rgba(255,255,255,.06);
-    }
-
-    .ok{ color:#9af7b1; }
-    .warn{ color:#ffd18a; }
-    .danger{ color:#ffb4c1; }
-
-    .visual-stage{
-      margin-top:14px;
-      min-height:150px;
-      border-radius:24px;
-      border:1px solid rgba(255,255,255,.08);
-      background:
-        radial-gradient(circle at 50% 50%, rgba(110,231,255,.08), transparent 32%),
-        rgba(255,255,255,.04);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:16px;
-      position:relative;
-      overflow:hidden;
-    }
-
-    .mic-visual{
-      width:150px;
-      height:88px;
-      display:flex;
-      align-items:flex-end;
-      justify-content:center;
-      gap:6px;
-    }
-
-    .bar{
-      width:8px;
-      min-height:12px;
-      border-radius:999px;
-      background:linear-gradient(180deg, var(--cyan), var(--pink));
-      box-shadow:0 0 12px rgba(110,231,255,.18);
-      transform-origin:center bottom;
-      animation:idleBars 1.2s ease-in-out infinite;
-      opacity:.35;
-    }
-
-    .live .bar{
-      opacity:1;
-      animation:liveBars .65s ease-in-out infinite alternate;
-    }
-
-    .bar:nth-child(1){ animation-delay:.10s; }
-    .bar:nth-child(2){ animation-delay:.20s; }
-    .bar:nth-child(3){ animation-delay:.28s; }
-    .bar:nth-child(4){ animation-delay:.14s; }
-    .bar:nth-child(5){ animation-delay:.26s; }
-    .bar:nth-child(6){ animation-delay:.08s; }
-    .bar:nth-child(7){ animation-delay:.18s; }
-
-    .text-box{
-      min-height:164px;
-      border-radius:24px;
-      border:1px solid rgba(255,255,255,.08);
-      background:rgba(255,255,255,.04);
-      padding:16px;
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-    }
-
-    .text-kicker{
-      font-size:10px;
-      font-weight:800;
-      text-transform:uppercase;
-      letter-spacing:.35px;
-      color:rgba(255,255,255,.58);
-    }
-
-    .text-main{
-      font-size:18px;
-      line-height:1.55;
-      color:#fff;
-      white-space:pre-wrap;
-      word-break:break-word;
-    }
-
-    .text-sub{
-      font-size:12px;
-      line-height:1.5;
-      color:var(--muted);
-      white-space:pre-wrap;
-      word-break:break-word;
-    }
-
-    .actions{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:10px;
-      margin-top:14px;
-    }
-
-    .btn{
-      min-height:56px;
-      border:none;
-      border-radius:18px;
-      font:inherit;
-      font-weight:900;
-      letter-spacing:.35px;
-      cursor:pointer;
-      transition:transform .18s ease, filter .18s ease;
-    }
-
-    .btn:active{
-      transform:scale(.985);
-    }
-
-    .btn-primary{
-      color:#081018;
-      background:var(--grad);
-      box-shadow:0 12px 22px rgba(91,140,255,.18);
-    }
-
-    .btn-secondary{
-      color:#fff;
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.10);
-    }
-
-    .btn-danger{
-      color:#fff;
-      background:rgba(251,113,133,.10);
-      border:1px solid rgba(251,113,133,.24);
-    }
-
-    .stack{
-      display:flex;
-      flex-direction:column;
-      gap:14px;
-    }
-
-    .log{
-      min-height:180px;
-      max-height:280px;
-      overflow:auto;
-      border-radius:24px;
-      border:1px solid rgba(255,255,255,.08);
-      background:rgba(0,0,0,.18);
-      padding:14px;
-      font-size:12px;
-      line-height:1.5;
-      color:rgba(255,255,255,.76);
-      white-space:pre-wrap;
-      word-break:break-word;
-    }
-
-    .log::-webkit-scrollbar{ width:8px; }
-    .log::-webkit-scrollbar-thumb{
-      background:rgba(255,255,255,.16);
-      border-radius:999px;
-    }
-
-    .helper{
-      text-align:center;
-      font-size:11px;
-      color:rgba(255,255,255,.56);
-      line-height:1.45;
-      margin-top:2px;
-    }
-
-    .hide{
-      display:none !important;
-    }
-
-    @keyframes pulseDot{
-      0%,100%{ transform:scale(1); opacity:1; }
-      50%{ transform:scale(1.18); opacity:.78; }
-    }
-
-    @keyframes spinRing{
-      from{ transform:rotate(0deg); }
-      to{ transform:rotate(360deg); }
-    }
-
-    @keyframes idleBars{
-      0%,100%{ height:16px; }
-      50%{ height:34px; }
-    }
-
-    @keyframes liveBars{
-      0%{ height:16px; }
-      100%{ height:78px; }
-    }
-
-    @media (max-width:760px){
-      .grid{
-        grid-template-columns:1fr;
-      }
-    }
-
-    @media (max-width:430px){
-      .hero-title{ font-size:26px; }
-      .meta-v{ font-size:16px; }
-      .text-main{ font-size:16px; }
-      .actions{ grid-template-columns:1fr; }
+    @media (max-width: 768px) {
+      .grid { grid-template-columns: 1fr; }
+      .hero-title { font-size: 26px; }
     }
   </style>
 </head>
 <body>
+
   <main id="pageContent">
     <div class="wrap">
 
       <section class="hero">
-        <div class="hero-top">
-          <div class="hero-copy">
-            <div class="eyebrow">
-              <span class="eyebrow-dot"></span>
-              OneToAll Live Session
-            </div>
-            <h1 class="hero-title"><span id="heroRoleText">Speaker</span> <span class="accent">Live</span></h1>
-            <p class="hero-sub" id="heroSubText">
-              Yayın oturumu hazır. Konuşmacı sesi gönderir, dinleyiciler kendi dilinde takip eder.
-            </p>
-          </div>
-
-          <div class="hero-orb" aria-hidden="true">
-            <div class="orb-ring r3"></div>
-            <div class="orb-ring r2"></div>
-            <div class="orb-ring r1"></div>
-            <div class="orb-core"></div>
-          </div>
+        <div class="eyebrow">
+          <span class="eyebrow-dot"></span>
+          Live Session Active
         </div>
-
+        <h1 class="hero-title"><span id="heroRoleText">Speaker</span> <span class="accent">Live</span></h1>
+        <p class="hero-sub" id="heroSubText">
+          Yayın oturumu aktif. Sesiniz gerçek zamanlı olarak işleniyor ve dinleyicilere ulaştırılıyor.
+        </p>
         <div class="hero-pills">
           <div class="pill" id="pillRole">Role</div>
           <div class="pill" id="pillRoom">Room</div>
@@ -546,29 +202,18 @@
       </section>
 
       <section class="grid">
-        <section class="card card-pad">
+        <section class="card">
           <h2 class="section-title">Oturum Paneli</h2>
-          <p class="section-sub">Canlı yayın durumu, ses modu ve oda bilgisi burada görünür.</p>
+          <p class="section-sub">Bağlantı ve donanım durumu.</p>
 
           <div class="meta">
             <div class="meta-box">
               <div class="meta-k">Oda Kodu</div>
               <div class="meta-v code" id="roomCodeText">------</div>
             </div>
-
             <div class="meta-box">
-              <div class="meta-k">Aktif Rol</div>
-              <div class="meta-v" id="roleText">Speaker</div>
-            </div>
-
-            <div class="meta-box">
-              <div class="meta-k">Dil</div>
+              <div class="meta-k">Aktif Dil</div>
               <div class="meta-v" id="langText">Türkçe</div>
-            </div>
-
-            <div class="meta-box">
-              <div class="meta-k">Ses / Mod</div>
-              <div class="meta-v" id="modeText">Voice</div>
             </div>
           </div>
 
@@ -578,12 +223,12 @@
             <div class="status-pill ok" id="flowStatus">Akış: Hazır</div>
           </div>
 
-          <div class="visual-stage">
+          <div class="visual-stage" id="micVisualWrapper">
             <div class="mic-visual" id="micVisual">
               <div class="bar"></div>
               <div class="bar"></div>
               <div class="bar"></div>
-              <div class="bar"></div>
+              <div class="bar" style="height: 40px; opacity:0.5;"></div>
               <div class="bar"></div>
               <div class="bar"></div>
               <div class="bar"></div>
@@ -591,48 +236,54 @@
           </div>
 
           <div class="actions" id="speakerActions">
-            <button class="btn btn-primary" id="btnStartMic" type="button">Mikrofonu başlat</button>
-            <button class="btn btn-danger hide" id="btnStopMic" type="button">Mikrofonu durdur</button>
-            <button class="btn btn-secondary" id="btnSendDemo" type="button">Demo yayın gönder</button>
-            <button class="btn btn-secondary" id="btnBackLobby" type="button">Lobiye dön</button>
+            <button class="btn btn-primary" id="btnStartMic">Mikrofonu Başlat</button>
+            <button class="btn btn-danger hide" id="btnStopMic">Durdur</button>
+            <button class="btn btn-secondary" id="btnBackLobby">Lobiye Dön</button>
           </div>
 
           <div class="actions hide" id="listenerActions">
-            <button class="btn btn-secondary" id="btnReplay" type="button">Tekrar oku</button>
-            <button class="btn btn-secondary" id="btnBackLobby2" type="button">Lobiye dön</button>
+            <button class="btn btn-primary" id="btnReplay">Tekrar Dinle</button>
+            <button class="btn btn-secondary" id="btnBackLobby2">Çıkış Yap</button>
           </div>
         </section>
 
-        <section class="stack">
-          <div class="card card-pad">
-            <h2 class="section-title" id="streamTitle">Canlı Metin</h2>
-            <p class="section-sub" id="streamSub">Konuşma burada canlı akar.</p>
-
-            <div class="text-box" style="margin-top:14px;">
-              <div class="text-kicker" id="mainKicker">Kaynak Konuşma</div>
-              <div class="text-main" id="mainText">Henüz akış başlamadı.</div>
+        <section class="wrap" style="gap: 16px;">
+          <div class="card">
+            <h2 class="section-title">Canlı Akış</h2>
+            <div class="text-box" style="margin-top: 20px;">
+              <div class="text-kicker" id="mainKicker">Kaynak</div>
+              <div class="text-main" id="mainText">Bağlantı bekleniyor...</div>
             </div>
-
-            <div class="text-box" style="margin-top:14px;">
-              <div class="text-kicker" id="subKicker">İşlenmiş Çıkış</div>
-              <div class="text-sub" id="subText">Çeviri veya yayın durumu burada görünür.</div>
+            <div class="text-box">
+              <div class="text-kicker" id="subKicker" style="color:var(--pink);">Çeviri / Çıkış</div>
+              <div class="text-sub" id="subText">İşlenmiş metin burada belirecek.</div>
             </div>
           </div>
 
-          <div class="card card-pad">
-            <h2 class="section-title">Log</h2>
-            <p class="section-sub">Bağlantı ve yayın olayları burada görünür.</p>
-            <div class="log" id="debugLog" style="margin-top:14px;">Hazır.</div>
+          <div class="card">
+            <h2 class="section-title">Sistem Logları</h2>
+            <div class="log" id="debugLog" style="margin-top: 10px;">[Sistem] Başlatıldı...</div>
           </div>
         </section>
       </section>
 
-      <div class="helper">
-        Konuşmacı önce lobi ekranında ayarlarını yapar. Dinleyici yalnızca kod ve kendi diliyle bağlanır.
-      </div>
+      <p class="helper">italkyAI OneToAll Engine v2.0 Live Terminal</p>
     </div>
   </main>
 
   <script type="module" src="/js/onetoall_live.js?v=1"></script>
+  
+  <script>
+    // Küçük bir görsel tetikleyici: Mikrofon açıldığında animasyonu başlatmak için
+    // Bu mantık aslında onetoall_live.js içinde micVisual'a .live class'ı ekleyerek tetiklenmeli.
+    const startBtn = document.getElementById('btnStartMic');
+    const visualWrapper = document.getElementById('micVisualWrapper');
+    
+    if(startBtn) {
+      startBtn.addEventListener('click', () => {
+        visualWrapper.classList.add('live');
+      });
+    }
+  </script>
 </body>
 </html>
