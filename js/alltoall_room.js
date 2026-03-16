@@ -299,26 +299,6 @@ function langObj(code) {
   };
 }
 
-function labelChip(code) {
-  const o = langObj(code);
-  return `${o.flag} ${o.name}`;
-}
-
-function toBCP(code) {
-  const c = canonical(code);
-  return BCP[c] || "en-US";
-}
-
-function compactDisplayName(fullName) {
-  const clean = String(fullName || "").trim().replace(/\s+/g, " ");
-  if (!clean) return "";
-  const parts = clean.split(" ").filter(Boolean);
-  if (parts.length === 1) return parts[0];
-  const first = parts[0];
-  const rest = parts.slice(1).map((p) => `${p.charAt(0).toUpperCase()}.`).join("");
-  return `${first} ${rest}`;
-}
-
 function getLangMeta(code) {
   const c = canonical(code);
   return LANGS.find((l) => l.code === c) || {
@@ -397,6 +377,17 @@ function setHelper(el, text, tone) {
   el.textContent = text || "";
 }
 
+function setMicState(state) {
+  if (!micBtn) return;
+  micBtn.classList.remove("listening", "recorded");
+  if (state === "listening") micBtn.classList.add("listening");
+  if (state === "recorded") micBtn.classList.add("recorded");
+}
+
+function resetMic() {
+  micBtn?.classList.remove("listening", "recorded");
+}
+
 function setSystemReadyUI() {
   resetMic();
   setHelper(micHint, st("speakHint"), "helper-ready");
@@ -424,17 +415,6 @@ function setErrorUI(messageKey = "micFailed") {
 
 function bounceToReady(delay = 1200) {
   setTimeout(() => setSystemReadyUI(), delay);
-}
-
-function setMicState(state) {
-  if (!micBtn) return;
-  micBtn.classList.remove("listening", "recorded");
-  if (state === "listening") micBtn.classList.add("listening");
-  if (state === "recorded") micBtn.classList.add("recorded");
-}
-
-function resetMic() {
-  micBtn?.classList.remove("listening", "recorded");
 }
 
 function refreshStaticTexts() {
@@ -485,6 +465,16 @@ function renderPeople() {
   if (participantsCount) {
     participantsCount.textContent = `${joinedPeople.size} / 50`;
   }
+}
+
+function compactDisplayName(fullName) {
+  const clean = String(fullName || "").trim().replace(/\s+/g, " ");
+  if (!clean) return "";
+  const parts = clean.split(" ").filter(Boolean);
+  if (parts.length === 1) return parts[0];
+  const first = parts[0];
+  const rest = parts.slice(1).map((p) => `${p.charAt(0).toUpperCase()}.`).join("");
+  return `${first} ${rest}`;
 }
 
 function ensureSelfInPeople() {
@@ -562,9 +552,7 @@ function removePerson(person) {
 function scrollChatBottom() {
   if (!chat) return;
   requestAnimationFrame(() => {
-    try {
-      chat.scrollTop = chat.scrollHeight;
-    } catch {}
+    try { chat.scrollTop = chat.scrollHeight; } catch {}
   });
 }
 
@@ -1004,7 +992,7 @@ function sendSpeechMessage(text) {
 }
 
 /* =========================
-   SPEECH - LIVE_INTERPRETER STYLE
+   SPEECH - FIXED FLOW
 ========================= */
 function buildRecognizer(langCode) {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -1025,7 +1013,6 @@ function rebuildRecognizer() {
 function stopRecognizer() {
   if (recognizer) {
     try { recognizer.stop(); } catch {}
-    recognizer = null;
   }
 }
 
@@ -1093,8 +1080,12 @@ function startRecording() {
 
   rec.onend = () => {
     recognizing = false;
-    recognizer = null;
     recordingSide = null;
+    recognizer = null;
+
+    if (!micBtn?.classList.contains("recorded")) {
+      setSystemReadyUI();
+    }
   };
 
   try {
@@ -1124,17 +1115,20 @@ async function toggleMic() {
     await prepareEnhancedMic();
   } catch {}
 
-  if (recordingSide === "bot") {
-    stopRecognizer();
-    recordingSide = null;
-    recognizing = false;
-    setTranslatingUI();
-    bounceToReady(1000);
+  if (recordingSide === "bot" && recognizer) {
+    try {
+      setHelper(micHint, st("translating"), "helper-repeat");
+      recognizer.stop();
+    } catch (e) {
+      console.warn("[alltoall recognizer stop error]", e);
+      setErrorUI("micFailed");
+      bounceToReady(1200);
+    }
     return;
   }
 
   if (recordingSide) {
-    stopRecognizer();
+    try { stopRecognizer(); } catch {}
     recordingSide = null;
     recognizing = false;
   }
@@ -1377,9 +1371,7 @@ async function warmApis() {
 
 function unlockOnFirstTouch() {
   const once = async () => {
-    try {
-      await warmAudio();
-    } catch {}
+    try { await warmAudio(); } catch {}
     window.removeEventListener("touchstart", once);
     window.removeEventListener("pointerdown", once);
     window.removeEventListener("click", once);
@@ -1479,9 +1471,7 @@ function bindEvents() {
     if (window.speechSynthesis) {
       window.speechSynthesis.getVoices();
       window.speechSynthesis.onvoiceschanged = () => {
-        try {
-          window.speechSynthesis.getVoices();
-        } catch {}
+        try { window.speechSynthesis.getVoices(); } catch {}
         voicesReady = true;
       };
     }
