@@ -945,8 +945,7 @@ function stopRecognizer() {
 }
 
 async function speechToTextFallback() {
-  const txt = prompt(`${getLangMeta(myLang).name} olarak konuşmanı yaz:`) || "";
-  return String(txt).trim() || null;
+  return null;
 }
 
 async function finalizeRecognition(text) {
@@ -1006,8 +1005,7 @@ async function finishHeldRecording(trigger = "release") {
   }
 
   if (!transcript) {
-    const fallback = await speechToTextFallback();
-    pendingTranscript = String(fallback || "").trim();
+    pendingTranscript = "";
   }
 
   const finalText = String(pendingTranscript || "").trim();
@@ -1050,72 +1048,46 @@ function startRecording() {
   };
 
   rec.onerror = async (e) => {
-    console.warn("[alltoall speech error]", e);
+  console.warn("[alltoall speech error]", e);
 
-    const err = String(e?.error || "").toLowerCase();
-    isRecognizing = false;
-    speechLockUntil = Date.now() + 900;
+  const err = String(e?.error || "").toLowerCase();
+  isRecognizing = false;
+  speechLockUntil = Date.now() + 900;
 
-    if (err.includes("aborted")) {
-      setReadyUI();
-      return;
-    }
+  if (err.includes("aborted")) {
+    setReadyUI();
+    return;
+  }
 
-    if (err.includes("not-allowed") || err.includes("service-not-allowed")) {
-      micHoldActive = false;
-      clearMicTimers();
-      addSystemMessage(st("micBlocked"));
-      setErrorUI();
-      return;
-    }
-
-    if (err.includes("audio-capture")) {
-      micHoldActive = false;
-      clearMicTimers();
-      addSystemMessage(st("micFailed"));
-      setErrorUI();
-      return;
-    }
-
-    if (err.includes("no-speech")) {
-      if (!micHoldActive) {
-        await finishHeldRecording("release");
-      } else {
-        addSystemMessage(st("micNoSpeech"));
-        setReadyUI();
-      }
-      return;
-    }
-
-    const fallback = await speechToTextFallback();
+  if (err.includes("not-allowed") || err.includes("service-not-allowed")) {
     micHoldActive = false;
     clearMicTimers();
-    pendingTranscript = String(fallback || "").trim();
-    await finishHeldRecording("release");
-  };
+    addSystemMessage(st("micBlocked"));
+    setErrorUI();
+    return;
+  }
 
-  rec.onend = async () => {
-    isRecognizing = false;
-
-    if (micHoldActive) {
-      return;
-    }
-
-    if (!recognitionFinished) {
-      await finishHeldRecording("release");
-    }
-  };
-
-  try {
-    rec.start();
-  } catch (e) {
-    console.warn("[alltoall rec.start error]", e);
-    recognizer = null;
-    isRecognizing = false;
+  if (err.includes("audio-capture")) {
     micHoldActive = false;
     clearMicTimers();
     addSystemMessage(st("micFailed"));
     setErrorUI();
+    return;
+  }
+
+  if (err.includes("no-speech")) {
+    micHoldActive = false;
+    clearMicTimers();
+    addSystemMessage(st("micNoSpeech"));
+    setReadyUI();
+    return;
+  }
+
+  micHoldActive = false;
+  clearMicTimers();
+  addSystemMessage(st("micFailed"));
+  setErrorUI();
+};
   }
 }
 
