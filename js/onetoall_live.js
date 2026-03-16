@@ -32,6 +32,29 @@ function canonical(code) {
   return String(code || "").toLowerCase().split("-")[0].trim();
 }
 
+function getSiteLang() {
+  const v = canonical(localStorage.getItem("system_lang") || "tr");
+  return ["tr", "en", "de", "fr", "it", "es"].includes(v) ? v : "tr";
+}
+
+const siteLang = getSiteLang();
+
+function toDisplayCode(code) {
+  const parts = String(code || "").split("-");
+  if (parts.length === 2) return `${parts[0].toLowerCase()}-${parts[1].toUpperCase()}`;
+  return String(code || "").toLowerCase();
+}
+
+function getLocalizedLanguageName(code, locale) {
+  const normalized = toDisplayCode(code);
+  try {
+    const dn = new Intl.DisplayNames([locale], { type: "language" });
+    const out = dn.of(normalized) || dn.of(normalized.split("-")[0]);
+    if (out) return out.charAt(0).toUpperCase() + out.slice(1);
+  } catch {}
+  return String(code || "").toUpperCase();
+}
+
 const LANGS = (Array.isArray(LANG_POOL) ? LANG_POOL : [])
   .map((l) => {
     const code = canonical(l.code);
@@ -39,7 +62,8 @@ const LANGS = (Array.isArray(LANG_POOL) ? LANG_POOL : [])
     return {
       code,
       flag: l.flag || "🌐",
-      name: l.name || code.toUpperCase(),
+      name: getLocalizedLanguageName(code, siteLang),
+      native: l.name || code.toUpperCase(),
       bcp: BCP[code] || "en-US",
     };
   })
@@ -51,7 +75,8 @@ function langObj(code) {
     LANGS.find((x) => x.code === c) || {
       code: c,
       flag: "🌐",
-      name: c.toUpperCase(),
+      name: getLocalizedLanguageName(c, siteLang),
+      native: c.toUpperCase(),
       bcp: BCP[c] || "en-US",
     }
   );
@@ -170,6 +195,7 @@ function setRoleUI() {
   if (role === "speaker") {
     els.speakerActions?.classList.remove("hide");
     els.listenerActions?.classList.add("hide");
+
     if (els.mainKicker) els.mainKicker.textContent = "Canlı Mikrofon";
     if (els.subKicker) els.subKicker.textContent = "İşlenmiş Çıkış";
     if (els.mainText) els.mainText.textContent = "Mikrofon kapalı. Başlatınca canlı konuşma burada akacak.";
@@ -177,6 +203,7 @@ function setRoleUI() {
   } else {
     els.speakerActions?.classList.add("hide");
     els.listenerActions?.classList.remove("hide");
+
     if (els.mainKicker) els.mainKicker.textContent = "Konuşmacı";
     if (els.subKicker) els.subKicker.textContent = "Sizin Diliniz";
     if (els.mainText) els.mainText.textContent = "Konuşmacıdan canlı akış bekleniyor...";
@@ -203,7 +230,9 @@ async function warmAudio() {
 
 function unlockOnFirstTouch() {
   const once = async () => {
-    try { await warmAudio(); } catch {}
+    try {
+      await warmAudio();
+    } catch {}
     window.removeEventListener("touchstart", once);
     window.removeEventListener("pointerdown", once);
     window.removeEventListener("click", once);
@@ -219,8 +248,12 @@ function stopAudio() {
     currentAudio?.pause?.();
     currentAudio = null;
   } catch {}
-  try { window.speechSynthesis?.cancel?.(); } catch {}
-  try { window.NativeTTS?.stop?.(); } catch {}
+  try {
+    window.speechSynthesis?.cancel?.();
+  } catch {}
+  try {
+    window.NativeTTS?.stop?.();
+  } catch {}
 }
 
 async function getCurrentUser() {
@@ -431,7 +464,9 @@ async function prepareEnhancedMic() {
     if (!navigator.mediaDevices?.getUserMedia) return;
 
     if (preparedStream) {
-      try { preparedStream.getTracks().forEach((t) => t.stop()); } catch {}
+      try {
+        preparedStream.getTracks().forEach((t) => t.stop());
+      } catch {}
       preparedStream = null;
     }
 
@@ -640,7 +675,9 @@ function connectSocket() {
 
 function stopSocket() {
   manuallyClosed = true;
-  try { ws?.close?.(); } catch {}
+  try {
+    ws?.close?.();
+  } catch {}
   ws = null;
   wsReady = false;
   if (reconnectTimer) {
@@ -816,13 +853,9 @@ async function startMic() {
       clearTimeout(speechRestartTimer);
       speechRestartTimer = setTimeout(() => {
         if (!micShouldRun) return;
-        try {
-          recognizer = buildRecognizer(lang);
-          if (!recognizer) return;
-          startMic();
-        } catch (e) {
+        startMic().catch((e) => {
           logLine(`Mic yeniden başlatılamadı: ${e?.message || e}`);
-        }
+        });
       }, 250);
       return;
     }
@@ -847,8 +880,12 @@ async function startMic() {
 function stopMic() {
   micShouldRun = false;
   clearTimeout(speechRestartTimer);
-  try { recognizer?.stop?.(); } catch {}
-  try { preparedStream?.getTracks?.().forEach((t) => t.stop()); } catch {}
+  try {
+    recognizer?.stop?.();
+  } catch {}
+  try {
+    preparedStream?.getTracks?.().forEach((t) => t.stop());
+  } catch {}
   preparedStream = null;
   isMicRunning = false;
   prepareMicVisual(false);
@@ -914,9 +951,11 @@ async function init() {
   setWsStatus("WS: Bağlanıyor", false);
   setMicStatus(role === "speaker" ? "Mic: Kapalı" : "Mic: Dinleyici", role !== "speaker");
   setFlowStatus("Akış: Hazır", true);
+
   logLine(`Rol: ${role}`);
   logLine(`Oda: ${room}`);
   logLine(`Dil: ${lang}`);
+  logLine(`Site dili: ${siteLang}`);
 }
 
 init();
