@@ -24,6 +24,7 @@ const langSelect = $("langSelect");
 const langPickerBtn = $("langPickerBtn");
 const langPickerText = $("langPickerText");
 const peopleScroll = $("peopleScroll");
+const participantsCount = $("participantsCount");
 const chat = $("chat");
 const micBtn = $("micBtn");
 const micHint = $("micHint");
@@ -81,7 +82,7 @@ const SITE_TEXT = {
     roomMissing: "Oda bilgisi bulunamadı.",
     roomCreated: "Bağlantı kuruldu",
     peerJoined: "Yeni katılımcı bağlandı",
-    peerLeft: "Bir katılımcı ayrıldı",
+    peerLeftNamed: "{name} ayrıldı",
     roomNotFound: "Kanal bulunamadı.",
     hostNotReady: "Host henüz odaya giriş yapmadı.",
     roomNotCreated: "Bu oda henüz oluşturulmamış.",
@@ -102,7 +103,7 @@ const SITE_TEXT = {
     roomMissing: "Room information not found.",
     roomCreated: "Connected",
     peerJoined: "A new participant joined",
-    peerLeft: "A participant left",
+    peerLeftNamed: "{name} left",
     roomNotFound: "Channel not found.",
     hostNotReady: "Host has not entered the room yet.",
     roomNotCreated: "This room has not been created yet.",
@@ -123,7 +124,7 @@ const SITE_TEXT = {
     roomMissing: "Rauminformation nicht gefunden.",
     roomCreated: "Verbunden",
     peerJoined: "Ein neuer Teilnehmer ist beigetreten",
-    peerLeft: "Ein Teilnehmer hat den Raum verlassen",
+    peerLeftNamed: "{name} hat den Raum verlassen",
     roomNotFound: "Kanal nicht gefunden.",
     hostNotReady: "Der Host hat den Raum noch nicht betreten.",
     roomNotCreated: "Dieser Raum wurde noch nicht erstellt.",
@@ -144,7 +145,7 @@ const SITE_TEXT = {
     roomMissing: "Informations de salle introuvables.",
     roomCreated: "Connecté",
     peerJoined: "Un nouveau participant a rejoint",
-    peerLeft: "Un participant a quitté",
+    peerLeftNamed: "{name} a quitté la salle",
     roomNotFound: "Canal introuvable.",
     hostNotReady: "L’hôte n’est pas encore entré dans la salle.",
     roomNotCreated: "Cette salle n’a pas encore été créée.",
@@ -165,7 +166,7 @@ const SITE_TEXT = {
     roomMissing: "Informazioni stanza non trovate.",
     roomCreated: "Connesso",
     peerJoined: "Un nuovo partecipante è entrato",
-    peerLeft: "Un partecipante è uscito",
+    peerLeftNamed: "{name} è uscito",
     roomNotFound: "Canale non trovato.",
     hostNotReady: "L'host non è ancora entrato nella stanza.",
     roomNotCreated: "Questa stanza non è stata ancora creata.",
@@ -186,7 +187,7 @@ const SITE_TEXT = {
     roomMissing: "No se encontró información de la sala.",
     roomCreated: "Conectado",
     peerJoined: "Se unió un nuevo participante",
-    peerLeft: "Un participante salió",
+    peerLeftNamed: "{name} salió",
     roomNotFound: "Canal no encontrado.",
     hostNotReady: "El host todavía no ha entrado en la sala.",
     roomNotCreated: "Esta sala todavía no ha sido creada.",
@@ -204,6 +205,14 @@ const SITE_TEXT = {
 function st(key) {
   const pack = SITE_TEXT[siteLang] || SITE_TEXT.tr;
   return pack[key] || SITE_TEXT.tr[key] || key;
+}
+
+function stf(key, vars = {}) {
+  let text = st(key);
+  Object.entries(vars).forEach(([k, v]) => {
+    text = text.replaceAll(`{${k}}`, String(v ?? ""));
+  });
+  return text;
 }
 
 /* =========================
@@ -383,7 +392,7 @@ function renderPeople() {
   if (!peopleScroll) return;
 
   peopleScroll.innerHTML = "";
-  const arr = [...joinedPeople.values()];
+  const arr = [...joinedPeople.values()].slice(0, 50);
 
   arr.forEach((person) => {
     const wrap = document.createElement("div");
@@ -410,6 +419,10 @@ function renderPeople() {
     wrap.appendChild(label);
     peopleScroll.appendChild(wrap);
   });
+
+  if (participantsCount) {
+    participantsCount.textContent = `${joinedPeople.size} / 50`;
+  }
 }
 
 function ensureSelfInPeople() {
@@ -460,22 +473,25 @@ function upsertPerson(person) {
 
 function removePerson(person) {
   if (!person) return;
-  const key = personKey(person);
 
-  if (joinedPeople.has(key)) {
-    joinedPeople.delete(key);
-  } else {
-    for (const [k, v] of joinedPeople.entries()) {
-      if (
-        (person.from && v.from === person.from) ||
-        (person.user_id && v.user_id === person.user_id)
-      ) {
-        joinedPeople.delete(k);
-      }
+  let removedName = "";
+
+  for (const [k, v] of joinedPeople.entries()) {
+    if (
+      (person.from && v.from === person.from) ||
+      (person.user_id && v.user_id === person.user_id) ||
+      (person.from_name && v.from_name === person.from_name)
+    ) {
+      removedName = compactDisplayName(v.from_name || person.from_name || st("participant"));
+      joinedPeople.delete(k);
     }
   }
 
   renderPeople();
+
+  if (removedName) {
+    addSystemMessage(stf("peerLeftNamed", { name: removedName }));
+  }
 }
 
 function scrollChatBottom() {
@@ -526,12 +542,6 @@ function addMessage({ side = "left", sender = "", text = "", withSpeaker = false
   const card = document.createElement("div");
   card.className = "msg-card";
 
-  const bracket = document.createElement("div");
-  bracket.className = "msg-bracket";
-  const mid = document.createElement("span");
-  mid.className = "mid";
-  bracket.appendChild(mid);
-
   const head = document.createElement("div");
   head.className = "msg-head";
 
@@ -554,7 +564,6 @@ function addMessage({ side = "left", sender = "", text = "", withSpeaker = false
   bubble.className = "msg-bubble";
   bubble.textContent = safeText;
 
-  card.appendChild(bracket);
   card.appendChild(head);
   card.appendChild(bubble);
   row.appendChild(card);
@@ -986,6 +995,14 @@ function sendSpeechMessage(text) {
 }
 
 async function toggleMic() {
+  if (document.visibilityState === "hidden") return;
+
+  try {
+    recognizer?.abort?.();
+  } catch {}
+  destroyRecognizer();
+  recognizer = null;
+
   await warmAudio();
 
   const granted = await requestMicPermission();
@@ -1008,7 +1025,6 @@ async function toggleMic() {
     return;
   }
 
-  destroyRecognizer();
   recognizer = createRecognizer();
 
   if (!recognizer) {
@@ -1148,7 +1164,6 @@ function connectSocket() {
       if (type === "peer_left") {
         if (data.peer) removePerson(data.peer);
         if (Array.isArray(data.roster)) applyRoster(data.roster);
-        addSystemMessage(st("peerLeft"));
         return;
       }
 
@@ -1253,9 +1268,13 @@ function fixLayout() {
   applyFooterLift();
 
   try {
+    const root = getComputedStyle(document.documentElement);
+    const footerH = parseFloat(root.getPropertyValue("--footerH")) || 0;
+
     if (window.visualViewport && pageContent) {
-      pageContent.style.height = `${Math.round(window.visualViewport.height)}px`;
-      pageContent.style.minHeight = `${Math.round(window.visualViewport.height)}px`;
+      const h = Math.max(320, Math.round(window.visualViewport.height - footerH));
+      pageContent.style.height = `${h}px`;
+      pageContent.style.minHeight = `${h}px`;
     }
   } catch {}
 }
