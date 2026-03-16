@@ -9,6 +9,7 @@ try {
 }
 
 const API_BASE = "https://italky-api.onrender.com/api";
+
 const $ = (id) => document.getElementById(id);
 
 const goHost = $("goHost");
@@ -31,7 +32,7 @@ const btnBackJoin = $("btnBackJoin");
 
 let activeCode = "";
 let activeRoomId = "";
-let busy = false;
+let hostBusy = false;
 
 function setMode(mode) {
   homeCards?.classList.toggle("hide", mode !== "home");
@@ -39,10 +40,8 @@ function setMode(mode) {
   joinPanel?.classList.toggle("hide", mode !== "join");
 }
 
-function setHostStatus(text, isError = false) {
-  if (!hostStatus) return;
-  hostStatus.textContent = String(text || "").trim();
-  hostStatus.style.color = isError ? "#ff8ca8" : "var(--accent)";
+function setHostStatus(text) {
+  if (hostStatus) hostStatus.textContent = text || "";
 }
 
 function resetHostState() {
@@ -69,53 +68,43 @@ function cleanCode(value) {
 }
 
 async function createRoom() {
-  if (busy) return;
-  busy = true;
+  const shortCode = makeShortCode(6);
 
-  try {
-    const shortCode = makeShortCode(6);
+  activeCode = "";
+  activeRoomId = "";
+  setHostStatus("Kanal hazırlanıyor...");
 
-    setMode("host");
-    resetHostState();
-    setHostStatus("Kanal hazırlanıyor...");
+  const r = await fetch(`${API_BASE}/interpreter/create-room`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      host_code: shortCode,
+      my_lang: "tr",
+      mode: "alltoall"
+    })
+  });
 
-    const r = await fetch(`${API_BASE}/interpreter/create-room`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        host_code: shortCode,
-        my_lang: "tr",
-        mode: "alltoall"
-      })
-    });
+  const j = await r.json().catch(() => ({}));
 
-    const j = await r.json().catch(() => ({}));
-
-    if (!r.ok || !j?.room_id) {
-      throw new Error(j?.detail || j?.error || "Oda oluşturulamadı");
-    }
-
-    activeRoomId = String(j.room_id || "").trim().toUpperCase();
-    activeCode = cleanCode(j.host_code || shortCode);
-
-    if (!activeRoomId) {
-      throw new Error("room_id boş geldi");
-    }
-
-    if (!activeCode) {
-      throw new Error("host_code boş geldi");
-    }
-
-    if (roomCode) roomCode.textContent = activeCode;
-    setHostStatus("Kanal hazır. Odaya geçiliyor...");
-
-    localStorage.setItem("alltoall_last_room_id", activeRoomId);
-    localStorage.setItem("alltoall_last_host_code", activeCode);
-
-    return { roomId: activeRoomId, code: activeCode };
-  } finally {
-    busy = false;
+  if (!r.ok || !j?.room_id) {
+    throw new Error(j?.detail || j?.error || "Oda oluşturulamadı");
   }
+
+  activeRoomId = String(j.room_id || "").trim().toUpperCase();
+  activeCode = cleanCode(j.host_code || shortCode);
+
+  if (!activeRoomId) {
+    throw new Error("room_id boş geldi");
+  }
+
+  if (!activeCode) {
+    throw new Error("host_code boş geldi");
+  }
+
+  return {
+    roomId: activeRoomId,
+    code: activeCode
+  };
 }
 
 async function copyCode() {
@@ -139,21 +128,28 @@ function goHostRoom() {
     return;
   }
 
-  location.href =
-    `/pages/alltoall_room.html?room=${encodeURIComponent(activeRoomId)}&host=${encodeURIComponent(activeCode)}&role=host`;
+  location.replace(
+    `/pages/alltoall_room.html?room=${encodeURIComponent(activeRoomId)}&host=${encodeURIComponent(activeCode)}&role=host`
+  );
 }
 
 function joinRoom() {
   const code = cleanCode(roomInput?.value || "");
 
-  if (code.length !== 6) {
-    alert("6 haneli kod gir");
+  if (!code) {
+    alert("Kod gir");
     roomInput?.focus();
     return;
   }
 
-  location.href =
-    `/pages/alltoall_room.html?host=${encodeURIComponent(code)}&role=guest`;
+  location.href = `/pages/alltoall_room.html?host=${encodeURIComponent(code)}&role=guest`;
+}
+
+function setHostButtonsDisabled(disabled) {
+  if (goHost) goHost.style.pointerEvents = disabled ? "none" : "auto";
+  if (btnGoCall) btnGoCall.disabled = !!disabled;
+  if (btnCopy) btnCopy.disabled = !!disabled;
+  if (btnBackHost) btnBackHost.disabled = !!disabled;
 }
 
 function bind() {
@@ -161,21 +157,28 @@ function bind() {
   resetHostState();
 
   goHost?.addEventListener("click", async () => {
-    if (busy) return;
+    if (hostBusy) return;
+    hostBusy = true;
+    setHostButtonsDisabled(true);
 
     try {
       const created = await createRoom();
-      if (created?.roomId && created?.code) {
-        goHostRoom();
-      } else {
-        throw new Error("Oda bilgisi eksik geldi");
-      }
+
+      activeRoomId = created.roomId;
+      activeCode = created.code;
+
+      // Kodu lobby’de gösterip bekletmiyoruz.
+      // Direkt room sayfasına atlıyoruz.
+      location.replace(
+        `/pages/alltoall_room.html?room=${encodeURIComponent(activeRoomId)}&host=${encodeURIComponent(activeCode)}&role=host`
+      );
     } catch (e) {
       console.error("[alltoall createRoom]", e);
       resetHostState();
-      setMode("home");
-      setHostStatus("Kanal oluşturulamadı", true);
+      setHostStatus("Kanal oluşturulamadı");
       alert(e?.message || "Oda oluşturulamadı");
+      hostBusy = false;
+      setHostButtonsDisabled(false);
     }
   });
 
