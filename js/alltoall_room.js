@@ -825,8 +825,74 @@ async function speakText(text, langCode) {
 }
 
 /* =========================
-   ROOM / SOCKET
+   ROOM DISCOVERY
 ========================= */
+async function postJsonTry(url, body) {
+  try {
+    const r = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body || {})
+    });
+
+    const raw = await r.text().catch(() => "");
+    let json = {};
+    try {
+      json = raw ? JSON.parse(raw) : {};
+    } catch {
+      json = {};
+    }
+
+    return {
+      ok: r.ok,
+      status: r.status,
+      raw,
+      json,
+      url
+    };
+  } catch (e) {
+    return {
+      ok: false,
+      status: 0,
+      raw: String(e?.message || e || ""),
+      json: {},
+      url
+    };
+  }
+}
+
+async function tryCreateRoom(payload) {
+  const candidates = [
+    `${API_BASE}/interpreter/create-room`,
+    `${API_BASE}/alltoall/create-room`,
+    `${API_BASE}/alltoall/room/create`
+  ];
+
+  for (const url of candidates) {
+    const res = await postJsonTry(url, payload);
+    if (res.ok && res.json?.room_id) return res;
+    console.warn("[alltoall create try failed]", res);
+  }
+
+  return null;
+}
+
+async function tryResolveRoom(payload) {
+  const candidates = [
+    `${API_BASE}/interpreter/resolve-room`,
+    `${API_BASE}/alltoall/resolve-room`,
+    `${API_BASE}/alltoall/room/resolve`
+  ];
+
+  for (const url of candidates) {
+    const res = await postJsonTry(url, payload);
+    if (res.ok && res.json?.room_id) return res;
+    console.warn("[alltoall resolve try failed]", res);
+  }
+
+  return null;
+}
+
 async function createRoomIfHost() {
   if (role !== "host") return null;
 
@@ -836,79 +902,86 @@ async function createRoomIfHost() {
 
   const generatedHostCode =
     hostCode ||
-    `A${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
+    `A${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
 
-  const r = await fetch(`${API_BASE}/interpreter/create-room`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
+  const payloads = [
+    {
       host_code: generatedHostCode,
       my_lang: myLang,
       mode: "alltoall"
-    })
-  });
+    },
+    {
+      host_code: generatedHostCode,
+      my_lang: myLang
+    },
+    {
+      code: generatedHostCode,
+      lang: myLang,
+      mode: "alltoall"
+    }
+  ];
 
-  const raw = await r.text().catch(() => "");
-  let j = {};
-  try {
-    j = raw ? JSON.parse(raw) : {};
-  } catch {
-    j = {};
+  for (const payload of payloads) {
+    const res = await tryCreateRoom(payload);
+    if (res?.json?.room_id) {
+      roomId = String(res.json.room_id || "").trim().toUpperCase();
+      inviteCode = String(
+        res.json.host_code ||
+        res.json.code ||
+        generatedHostCode
+      ).trim().toUpperCase();
+
+      syncRoomPill();
+      console.log("[alltoall create success]", res.url, res.json);
+      return res.json;
+    }
   }
 
-  if (!r.ok || !j?.room_id) {
-    console.error("[alltoall createRoomIfHost] failed", {
-      status: r.status,
-      raw,
-      parsed: j
-    });
-    throw new Error(j?.detail || j?.error || raw || "room create başarısız");
-  }
-
-  roomId = String(j.room_id || "").trim().toUpperCase();
-  inviteCode = String(j.host_code || generatedHostCode || "").trim().toUpperCase();
-
-  syncRoomPill();
-  return j;
+  throw new Error("Oda kodu bulunamadı");
 }
 
 async function resolveRoomForGuestByHost() {
   if (!hostCode || role !== "guest") return null;
 
-  const r = await fetch(`${API_BASE}/interpreter/resolve-room`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
+  const payloads = [
+    {
       host_code: hostCode,
       my_lang: myLang,
       mode: "alltoall"
-    })
-  });
+    },
+    {
+      host_code: hostCode,
+      my_lang: myLang
+    },
+    {
+      code: hostCode,
+      lang: myLang,
+      mode: "alltoall"
+    }
+  ];
 
-  const raw = await r.text().catch(() => "");
-  let j = {};
-  try {
-    j = raw ? JSON.parse(raw) : {};
-  } catch {
-    j = {};
+  for (const payload of payloads) {
+    const res = await tryResolveRoom(payload);
+    if (res?.json?.room_id) {
+      roomId = String(res.json.room_id || "").trim().toUpperCase();
+      inviteCode = String(
+        res.json.host_code ||
+        res.json.code ||
+        hostCode
+      ).trim().toUpperCase();
+
+      syncRoomPill();
+      console.log("[alltoall resolve success]", res.url, res.json);
+      return res.json;
+    }
   }
 
-  if (!r.ok || !j?.room_id) {
-    console.error("[alltoall resolveRoomForGuestByHost] failed", {
-      status: r.status,
-      raw,
-      parsed: j
-    });
-    throw new Error(j?.detail || j?.error || raw || "Room resolve failed");
-  }
-
-  roomId = String(j.room_id || "").trim().toUpperCase();
-  inviteCode = String(j.host_code || hostCode || "").trim().toUpperCase();
-
-  syncRoomPill();
-  return j;
+  throw new Error("Oda kodu bulunamadı");
 }
 
+/* =========================
+   SOCKET
+========================= */
 function sendWs(payload) {
   try {
     if (ws && ws.readyState === WebSocket.OPEN) {
