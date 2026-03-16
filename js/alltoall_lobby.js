@@ -9,7 +9,6 @@ try {
 }
 
 const API_BASE = "https://italky-api.onrender.com/api";
-
 const $ = (id) => document.getElementById(id);
 
 const goHost = $("goHost");
@@ -32,6 +31,7 @@ const btnBackJoin = $("btnBackJoin");
 
 let activeCode = "";
 let activeRoomId = "";
+let busy = false;
 
 function setMode(mode) {
   homeCards?.classList.toggle("hide", mode !== "home");
@@ -39,8 +39,10 @@ function setMode(mode) {
   joinPanel?.classList.toggle("hide", mode !== "join");
 }
 
-function setHostStatus(text) {
-  if (hostStatus) hostStatus.textContent = text || "";
+function setHostStatus(text, isError = false) {
+  if (!hostStatus) return;
+  hostStatus.textContent = String(text || "").trim();
+  hostStatus.style.color = isError ? "#ff8ca8" : "var(--accent)";
 }
 
 function resetHostState() {
@@ -67,40 +69,53 @@ function cleanCode(value) {
 }
 
 async function createRoom() {
-  const shortCode = makeShortCode(6);
+  if (busy) return;
+  busy = true;
 
-  resetHostState();
-  setHostStatus("Kanal hazırlanıyor...");
+  try {
+    const shortCode = makeShortCode(6);
 
-  const r = await fetch(`${API_BASE}/interpreter/create-room`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      host_code: shortCode,
-      my_lang: "tr",
-      mode: "alltoall"
-    })
-  });
+    setMode("host");
+    resetHostState();
+    setHostStatus("Kanal hazırlanıyor...");
 
-  const j = await r.json().catch(() => ({}));
+    const r = await fetch(`${API_BASE}/interpreter/create-room`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        host_code: shortCode,
+        my_lang: "tr",
+        mode: "alltoall"
+      })
+    });
 
-  if (!r.ok || !j?.room_id) {
-    throw new Error(j?.detail || j?.error || "Oda oluşturulamadı");
+    const j = await r.json().catch(() => ({}));
+
+    if (!r.ok || !j?.room_id) {
+      throw new Error(j?.detail || j?.error || "Oda oluşturulamadı");
+    }
+
+    activeRoomId = String(j.room_id || "").trim().toUpperCase();
+    activeCode = cleanCode(j.host_code || shortCode);
+
+    if (!activeRoomId) {
+      throw new Error("room_id boş geldi");
+    }
+
+    if (!activeCode) {
+      throw new Error("host_code boş geldi");
+    }
+
+    if (roomCode) roomCode.textContent = activeCode;
+    setHostStatus("Kanal hazır. Odaya geçiliyor...");
+
+    localStorage.setItem("alltoall_last_room_id", activeRoomId);
+    localStorage.setItem("alltoall_last_host_code", activeCode);
+
+    return { roomId: activeRoomId, code: activeCode };
+  } finally {
+    busy = false;
   }
-
-  activeRoomId = String(j.room_id || "").trim();
-  activeCode = cleanCode(j.host_code || shortCode);
-
-  if (!activeRoomId) {
-    throw new Error("room_id boş geldi");
-  }
-
-  if (!activeCode) {
-    throw new Error("host_code boş geldi");
-  }
-
-  if (roomCode) roomCode.textContent = activeCode;
-  setHostStatus("Kanal açılıyor...");
 }
 
 async function copyCode() {
@@ -131,8 +146,8 @@ function goHostRoom() {
 function joinRoom() {
   const code = cleanCode(roomInput?.value || "");
 
-  if (!code) {
-    alert("Kod gir");
+  if (code.length !== 6) {
+    alert("6 haneli kod gir");
     roomInput?.focus();
     return;
   }
@@ -146,13 +161,20 @@ function bind() {
   resetHostState();
 
   goHost?.addEventListener("click", async () => {
+    if (busy) return;
+
     try {
-      await createRoom();
-      goHostRoom();
+      const created = await createRoom();
+      if (created?.roomId && created?.code) {
+        goHostRoom();
+      } else {
+        throw new Error("Oda bilgisi eksik geldi");
+      }
     } catch (e) {
       console.error("[alltoall createRoom]", e);
       resetHostState();
-      setHostStatus("Kanal oluşturulamadı");
+      setMode("home");
+      setHostStatus("Kanal oluşturulamadı", true);
       alert(e?.message || "Oda oluşturulamadı");
     }
   });
