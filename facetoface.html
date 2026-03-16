@@ -1,29 +1,21 @@
-<!-- FILE: /pages/alltoall_room.html -->
+<!-- FILE: /pages/facetoface.html -->
 <!doctype html>
 <html lang="tr">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-  <title>italkyAI • AllToAll</title>
+  <title>italkyAI • Face to Face</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
   <style>
     :root{
-      --participantsH:74px;
-      --metaH:60px;
-      --micH:132px;
-      --footerSafe:var(--footerH, 0px);
-
       --ai-gradient: linear-gradient(135deg,#a5b4fc,#6366f1,#ec4899);
       --bg:#050508;
       --border:rgba(255,255,255,0.15);
       --safe-top:env(safe-area-inset-top, 0px);
       --safe-bottom:env(safe-area-inset-bottom, 0px);
-
-      --chat-bordo:#2a0815;
-      --chat-bubble:#160612;
     }
 
     *{
@@ -44,100 +36,41 @@
 
     body{
       min-height:100dvh;
-      background:
-        radial-gradient(circle at 50% 0%, rgba(165,180,252,.10) 0%, transparent 22%),
-        radial-gradient(circle at 18% 16%, rgba(236,72,153,.08) 0%, transparent 20%),
-        radial-gradient(circle at 82% 14%, rgba(99,102,241,.12) 0%, transparent 18%),
-        linear-gradient(180deg,#050508 0%,#090611 100%);
     }
 
-    #pageContent{
-      width:100%;
-      height:calc(100dvh - var(--footerSafe));
+    .container{
       display:flex;
       flex-direction:column;
-      overflow:hidden;
+      width:100%;
+      height:100dvh;
+      position:relative;
     }
 
-    /* PARTICIPANTS */
-    .participants{
-      height:var(--participantsH);
-      display:flex;
-      align-items:center;
-      overflow-x:auto;
-      gap:12px;
-      padding:10px 14px;
-      border-bottom:1px solid rgba(255,255,255,.06);
-      scrollbar-width:none;
-      background:rgba(255,255,255,.015);
-      flex:0 0 auto;
-    }
-
-    .participants::-webkit-scrollbar{ display:none; }
-
-    .pItem{
+    .half-screen{
+      flex:1;
+      position:relative;
       display:flex;
       flex-direction:column;
       align-items:center;
-      min-width:54px;
-      flex:0 0 auto;
-    }
-
-    .pAvatar{
-      width:40px;
-      height:40px;
-      border-radius:50%;
+      justify-content:space-between;
+      padding:calc(14px + var(--safe-top)) 16px calc(14px + var(--safe-bottom));
       overflow:hidden;
-      background:#222;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-weight:900;
-      border:2px solid rgba(255,255,255,.10);
     }
 
-    .pAvatar img{
-      width:100%;
-      height:100%;
-      object-fit:cover;
+    .half-screen.top{
+      transform:rotate(180deg);
+      background:linear-gradient(180deg, rgba(128,19,54,0.18), var(--bg));
     }
 
-    .pName{
-      font-size:10px;
-      margin-top:4px;
-      font-weight:800;
-      white-space:nowrap;
+    .half-screen.bottom{
+      background:linear-gradient(180deg, rgba(30,58,138,0.18), var(--bg));
     }
 
-    /* META */
-    .meta{
-      height:var(--metaH);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:12px;
-      border-bottom:1px solid rgba(255,255,255,.06);
-      flex:0 0 auto;
-      background:rgba(255,255,255,.015);
-      padding:0 12px;
-    }
-
-    #langSelect{
-      position:absolute;
-      opacity:0;
-      pointer-events:none;
-      width:1px;
-      height:1px;
-    }
-
-    .langBtn{
-      min-width:170px;
-      max-width:240px;
-      height:40px;
-      border:none;
-      border-radius:999px;
+    .lang-trigger{
       background:rgba(255,255,255,0.06);
       border:1px solid var(--border);
+      padding:10px 18px;
+      border-radius:999px;
       color:#fff;
       font-size:12px;
       font-weight:900;
@@ -146,203 +79,193 @@
       user-select:none;
       display:inline-flex;
       align-items:center;
-      justify-content:space-between;
       gap:10px;
+      z-index:50;
       backdrop-filter:blur(12px);
-      padding:0 16px;
+      pointer-events:auto;
+      min-height:44px;
+      max-width:92%;
     }
 
-    .langBtnText{
-      min-width:0;
-      white-space:nowrap;
+    .popover{
+      position:absolute;
+      left:50%;
+      transform:translateX(-50%);
+      width:min(92vw,360px);
+      height:360px;
+      background:#0a0a0f;
+      border:1px solid var(--border);
+      border-radius:24px;
+      display:none;
+      flex-direction:column;
+      z-index:5000;
       overflow:hidden;
-      text-overflow:ellipsis;
+      box-shadow:0 22px 60px rgba(0,0,0,.92);
+      pointer-events:auto;
     }
 
-    #roomPill{
-      min-width:104px;
-      max-width:124px;
-      height:40px;
-      padding:0 14px;
-      border-radius:999px;
-      background:linear-gradient(135deg,#7c5cff,#ec4899);
-      border:1px solid rgba(255,255,255,.10);
-      color:#fff;
-      font-size:13px;
-      font-weight:900;
-      letter-spacing:1px;
+    .popover.show{ display:flex; }
+    .half-screen.top .popover{ top:64px; }
+    .half-screen.bottom .popover{ bottom:64px; }
+
+    .pop-head{
+      padding:14px;
+      border-bottom:1px solid rgba(255,255,255,.10);
       display:flex;
+      justify-content:space-between;
       align-items:center;
-      justify-content:center;
-      cursor:pointer;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      box-shadow:0 0 16px rgba(124,92,255,.24);
+      font-weight:900;
+      letter-spacing:.3px;
     }
 
-    /* CHAT */
-    .chat{
+    .pop-close{
+      cursor:pointer;
+      padding:8px 12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.06);
+      user-select:none;
+    }
+
+    .pop-list{
       flex:1;
       overflow-y:auto;
-      padding:14px;
-      background:var(--chat-bordo);
+      padding:10px;
+      scrollbar-width:none;
+      pointer-events:auto;
+    }
+
+    .pop-list::-webkit-scrollbar{ display:none; }
+
+    .pop-item{
+      padding:12px;
+      border-radius:16px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      cursor:pointer;
+      border:1px solid transparent;
+      user-select:none;
+      pointer-events:auto;
+    }
+
+    .pop-item:hover{ background:rgba(255,255,255,.06); }
+
+    .pop-item.active{
+      background:rgba(99,102,241,.14);
+      border-color:rgba(99,102,241,.25);
+    }
+
+    .pop-left{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:0;
+    }
+
+    .pop-flag{ font-size:18px; }
+
+    .pop-name{
+      font-weight:900;
+      font-size:13px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width:220px;
+    }
+
+    .pop-code{
+      font-weight:900;
+      font-size:12px;
+      opacity:.7;
+    }
+
+    .chat-body{
+      flex:1;
+      width:100%;
+      overflow-y:auto;
       display:flex;
       flex-direction:column;
-      gap:16px;
+      align-items:center;
+      gap:14px;
+      padding:18px 0;
+      mask-image:linear-gradient(to bottom, transparent, black 14%, black 86%, transparent);
       scrollbar-width:none;
-      min-height:0;
-      scroll-behavior:smooth;
     }
 
-    .chat::-webkit-scrollbar{ display:none; }
+    .chat-body::-webkit-scrollbar{ display:none; }
 
-    .sys-note{
-      align-self:center;
-      max-width:88%;
-      padding:8px 12px;
-      border-radius:999px;
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.06);
-      color:rgba(255,255,255,.74);
-      font-size:11px;
-      font-weight:800;
+    .bubble{
       text-align:center;
-    }
-
-    .msg-row{
-      width:100%;
-      display:flex;
-    }
-
-    .msg-row.left{ justify-content:flex-start; }
-    .msg-row.right{ justify-content:flex-end; }
-
-    .msg-card{
-      position:relative;
-      max-width:88%;
-      min-width:120px;
-      padding-left:18px;
-    }
-
-    .msg-bracket{
-      position:absolute;
-      left:0;
-      top:2px;
-      bottom:2px;
-      width:8px;
-      pointer-events:none;
-    }
-
-    .msg-bracket::before,
-    .msg-bracket::after,
-    .msg-bracket .mid{
-      content:"";
-      position:absolute;
-      left:0;
-      width:8px;
-      background:var(--ai-gradient);
-      border-radius:999px;
-      box-shadow:0 0 10px rgba(99,102,241,.22);
-    }
-
-    .msg-bracket::before{
-      top:0;
-      height:12px;
-    }
-
-    .msg-bracket .mid{
-      top:10px;
-      bottom:10px;
-      width:3px;
-      left:2px;
-      border-radius:999px;
-    }
-
-    .msg-bracket::after{
-      bottom:0;
-      height:12px;
-    }
-
-    .msg-head{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      margin-bottom:4px;
-      min-width:0;
-    }
-
-    .msg-name{
-      font-size:12px;
-      font-weight:900;
-      color:rgba(255,255,255,.84);
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      max-width:132px;
-    }
-
-    .msg-lang{
-      font-size:11px;
-      font-weight:800;
-      color:rgba(255,255,255,.58);
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      min-width:0;
-    }
-
-    .msg-spk{
-      width:24px;
-      height:24px;
-      border:none;
-      border-radius:50%;
-      background:rgba(255,255,255,.08);
-      color:#fff;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      cursor:pointer;
-      flex:0 0 auto;
-      padding:0;
-      margin-left:auto;
-    }
-
-    .msg-spk svg{
-      width:13px;
-      height:13px;
-      stroke:#fff;
-      fill:none;
-      stroke-width:2;
-    }
-
-    .msg-bubble{
-      background:var(--chat-bubble);
-      padding:10px 14px;
-      border-radius:14px;
-      font-size:14px;
-      line-height:1.45;
-      color:rgba(255,255,255,.96);
-      border:1px solid rgba(255,255,255,.06);
+      max-width:84%;
+      line-height:1.25;
       word-break:break-word;
     }
 
-    .msg-row.right .msg-bubble{
-      background:linear-gradient(135deg, rgba(99,102,241,.22), rgba(236,72,153,.16));
+    .bubble.them{
+      opacity:.55;
+      font-size:18px;
+      font-weight:500;
     }
 
-    /* MIC AREA - FACETOFACE STYLE */
-    .micDock{
-      height:var(--micH);
+    .bubble.me{
+      font-size:18px;
+      font-weight:650;
+      opacity:.82;
+    }
+
+    .bubble.me.is-latest{
+      font-size:30px;
+      font-weight:900;
+      opacity:1;
+      line-height:1.08;
+    }
+
+    .bubble-row{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    .bubble-row .txt{
+      display:inline-block;
+    }
+
+    .spk-icon{
+      width:28px;
+      height:28px;
+      min-width:28px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.08);
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      padding:0;
+    }
+
+    .spk-icon svg{
+      width:14px;
+      height:14px;
+      fill:none;
+      stroke:#fff;
+      stroke-width:2.1;
+      opacity:.95;
+    }
+
+    .mic-wrap{
       display:flex;
       flex-direction:column;
       align-items:center;
       justify-content:center;
       gap:10px;
-      border-top:1px solid rgba(255,255,255,.06);
-      background:var(--chat-bordo);
-      padding:12px 14px calc(14px + var(--safe-bottom) + var(--footerSafe));
-      flex:0 0 auto;
+      width:100%;
+      padding-bottom:10px;
+      z-index:30;
     }
 
     .btn-mic{
@@ -428,7 +351,7 @@
 
     @keyframes breathe{
       0%,100%{ transform:scale(1); }
-      50%{ transform:scale(1.08); box-shadow:0 0 28px rgba(99,102,241,.35); }
+      50%{ transform:scale(1.08); }
     }
 
     @keyframes micPulse{
@@ -436,207 +359,68 @@
       70%{ transform:scale(1.14); opacity:.15; }
       100%{ transform:scale(1.18); opacity:0; }
     }
-
-    /* LANG SHEET */
-    .sheet-backdrop{
-      position:fixed;
-      inset:0;
-      background:rgba(0,0,0,.52);
-      backdrop-filter:blur(8px);
-      -webkit-backdrop-filter:blur(8px);
-      opacity:0;
-      pointer-events:none;
-      transition:.22s ease;
-      z-index:9998;
-    }
-
-    .sheet-backdrop.show{
-      opacity:1;
-      pointer-events:auto;
-    }
-
-    .lang-sheet{
-      position:fixed;
-      left:50%;
-      bottom:0;
-      transform:translateX(-50%) translateY(110%);
-      width:min(500px,100vw);
-      background:linear-gradient(180deg,rgba(20,18,30,.98),rgba(10,8,18,.98));
-      border:1px solid rgba(255,255,255,.10);
-      border-bottom:none;
-      border-radius:28px 28px 0 0;
-      box-shadow:0 -20px 60px rgba(0,0,0,.42);
-      transition:.24s ease;
-      z-index:9999;
-      padding:10px 14px calc(18px + env(safe-area-inset-bottom));
-      max-height:72dvh;
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-    }
-
-    .lang-sheet.show{
-      transform:translateX(-50%) translateY(0);
-    }
-
-    .sheet-handle{
-      width:52px;
-      height:5px;
-      border-radius:999px;
-      background:rgba(255,255,255,.18);
-      margin:2px auto 2px;
-    }
-
-    .sheet-head{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-    }
-
-    .sheet-title{
-      font-family:'Space Grotesk',sans-serif;
-      font-size:18px;
-      font-weight:700;
-      letter-spacing:-.4px;
-    }
-
-    .sheet-close{
-      width:38px;
-      height:38px;
-      border:none;
-      border-radius:12px;
-      background:rgba(255,255,255,.08);
-      color:#fff;
-      font-size:18px;
-      cursor:pointer;
-    }
-
-    .sheet-list{
-      overflow:auto;
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-      scrollbar-width:none;
-    }
-
-    .sheet-list::-webkit-scrollbar{ display:none; }
-
-    .sheet-item{
-      min-height:58px;
-      border-radius:18px;
-      border:1px solid rgba(255,255,255,.08);
-      background:rgba(255,255,255,.04);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      padding:0 14px;
-      cursor:pointer;
-      color:#fff;
-      transition:.16s ease;
-    }
-
-    .sheet-item.active{
-      border-color:rgba(99,102,241,.34);
-      background:linear-gradient(135deg,rgba(99,102,241,.12),rgba(236,72,153,.10));
-      box-shadow:0 0 0 1px rgba(99,102,241,.08) inset;
-    }
-
-    .sheet-item-left{
-      min-width:0;
-      display:flex;
-      align-items:center;
-      gap:12px;
-    }
-
-    .sheet-flag{
-      width:32px;
-      text-align:center;
-      font-size:22px;
-      flex:0 0 auto;
-    }
-
-    .sheet-text{
-      min-width:0;
-    }
-
-    .sheet-name{
-      font-size:14px;
-      font-weight:900;
-      color:#fff;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-
-    .sheet-code{
-      font-size:11px;
-      font-weight:800;
-      color:rgba(255,255,255,.56);
-      margin-top:3px;
-      letter-spacing:.5px;
-    }
-
-    .sheet-check{
-      width:24px;
-      height:24px;
-      border-radius:999px;
-      border:2px solid rgba(255,255,255,.26);
-      flex:0 0 auto;
-    }
-
-    .sheet-item.active .sheet-check{
-      border-color:#a5b4fc;
-      box-shadow:inset 0 0 0 5px #a5b4fc;
-    }
   </style>
 </head>
 
-<body>
-  <div id="pageContent">
+<body id="frameRoot" class="to-bot">
+  <div class="container">
 
-    <div class="participants" id="peopleScroll"></div>
-
-    <div class="meta">
-      <select id="langSelect" aria-label="Dil seç"></select>
-
-      <button id="langPickerBtn" class="langBtn" type="button" aria-label="Dil seç">
-        <span class="langBtnText" id="langPickerText">🌐 Dil</span>
-        <span>⌄</span>
+    <div class="half-screen top" id="topSection">
+      <button class="lang-trigger" id="topLangBtn" type="button">
+        <span id="topLangTxt">🇬🇧 English</span> ⌵
       </button>
 
-      <div id="roomPill">------</div>
-    </div>
-
-    <div class="chat" id="chat"></div>
-
-    <div class="micDock">
-      <div class="btn-mic" id="micBtn" aria-label="Mikrofon" role="button" tabindex="0">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
-          <path d="M19 11v1a7 7 0 0 1-14 0v-1"/>
-          <path d="M12 19v3"/>
-        </svg>
+      <div class="popover" id="pop-top">
+        <div class="pop-head">
+          <div>ÜST DİL</div>
+          <div class="pop-close" id="close-top">✕</div>
+        </div>
+        <div class="pop-list" id="list-top"></div>
       </div>
-      <div class="helper-text helper-repeat" id="micHint">Konuşmak için mikrofona dokun.</div>
+
+      <div class="chat-body" id="topBody"></div>
+
+      <div class="mic-wrap">
+        <div class="btn-mic" id="topMic">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
+            <path d="M19 11v1a7 7 0 0 1-14 0v-1"/>
+            <path d="M12 19v3"/>
+          </svg>
+        </div>
+        <div class="helper-text" id="topHelper"></div>
+      </div>
+    </div>
+
+    <div class="half-screen bottom" id="botSection">
+      <button class="lang-trigger" id="botLangBtn" type="button">
+        <span id="botLangTxt">🇹🇷 Türkçe</span> ⌵
+      </button>
+
+      <div class="popover" id="pop-bot">
+        <div class="pop-head">
+          <div>ALT DİL</div>
+          <div class="pop-close" id="close-bot">✕</div>
+        </div>
+        <div class="pop-list" id="list-bot"></div>
+      </div>
+
+      <div class="chat-body" id="botBody"></div>
+
+      <div class="mic-wrap">
+        <div class="btn-mic" id="botMic">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
+            <path d="M19 11v1a7 7 0 0 1-14 0v-1"/>
+            <path d="M12 19v3"/>
+          </svg>
+        </div>
+        <div class="helper-text" id="botHelper"></div>
+      </div>
     </div>
 
   </div>
 
-  <div class="sheet-backdrop" id="langSheetBackdrop"></div>
-
-  <div class="lang-sheet" id="langSheet" aria-hidden="true">
-    <div class="sheet-handle"></div>
-
-    <div class="sheet-head">
-      <div class="sheet-title" id="langSheetTitle">Dil Seç</div>
-      <button id="langSheetClose" class="sheet-close" type="button">✕</button>
-    </div>
-
-    <div class="sheet-list" id="langSheetList"></div>
-  </div>
-
-  <script type="module" src="/js/alltoall_room.js?v=single_bar_face_mic_1"></script>
+  <script type="module" src="/js/facetoface_page.js?v=FACE2FACE_FINAL_LOCKED_V7"></script>
 </body>
 </html>
