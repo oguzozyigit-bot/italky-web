@@ -1,474 +1,638 @@
-import { mountShell } from "/js/ui_shell.js";
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+  <title>italkyAI • OneToAll Live</title>
+  <meta name="theme-color" content="#08111f"/>
 
-try {
-  mountShell({ scroll: "auto" });
-} catch (e) {
-  console.error("ui_shell HATASI:", e);
-}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
-const API_BASE = "https://italky-api.onrender.com/api";
-const WS_BASE = "wss://italky-api.onrender.com";
-
-const $ = (id) => document.getElementById(id);
-
-const els = {
-  heroRoleText: $("heroRoleText"),
-  heroSubText: $("heroSubText"),
-
-  pillRole: $("pillRole"),
-  pillRoom: $("pillRoom"),
-  pillLang: $("pillLang"),
-
-  roomCodeText: $("roomCodeText"),
-  roleText: $("roleText"),
-  langText: $("langText"),
-  modeText: $("modeText"),
-
-  wsStatus: $("wsStatus"),
-  micStatus: $("micStatus"),
-  flowStatus: $("flowStatus"),
-
-  micVisual: $("micVisual"),
-
-  speakerActions: $("speakerActions"),
-  listenerActions: $("listenerActions"),
-
-  btnStartMic: $("btnStartMic"),
-  btnStopMic: $("btnStopMic"),
-  btnSendDemo: $("btnSendDemo"),
-  btnBackLobby: $("btnBackLobby"),
-  btnReplay: $("btnReplay"),
-  btnBackLobby2: $("btnBackLobby2"),
-
-  streamTitle: $("streamTitle"),
-  streamSub: $("streamSub"),
-  mainKicker: $("mainKicker"),
-  mainText: $("mainText"),
-  subKicker: $("subKicker"),
-  subText: $("subText"),
-
-  debugLog: $("debugLog"),
-};
-
-const params = new URLSearchParams(location.search);
-
-const state = {
-  role: String(params.get("role") || "speaker").trim().toLowerCase(),
-  room: String(params.get("room") || "").trim().toUpperCase(),
-  lang: String(params.get("lang") || "tr").trim().toLowerCase(),
-  voice: String(params.get("voice") || "default_female").trim(),
-  output: String(params.get("output") || "voice").trim().toLowerCase(),
-  listenMode: String(params.get("mode") || "audio").trim().toLowerCase(),
-  ws: null,
-  recognition: null,
-  micActive: false,
-  lastSpokenText: "",
-  demoTimer: null,
-};
-
-function log(message) {
-  const t = new Date().toLocaleTimeString("tr-TR");
-  els.debugLog.textContent = `[${t}] ${message}\n` + els.debugLog.textContent;
-}
-
-function trLangName(code) {
-  const map = {
-    tr: "Türkçe",
-    en: "English",
-    de: "Deutsch",
-    fr: "Français",
-    it: "Italiano",
-    es: "Español",
-  };
-  return map[code] || String(code || "").toUpperCase();
-}
-
-function setPill(el, text, type) {
-  if (!el) return;
-  el.textContent = text;
-  el.className = "status-pill";
-  if (type) el.classList.add(type);
-}
-
-function setLiveVisual(isLive) {
-  els.micVisual?.classList.toggle("live", !!isLive);
-}
-
-function bcp(code) {
-  const map = {
-    tr: "tr-TR",
-    en: "en-US",
-    de: "de-DE",
-    fr: "fr-FR",
-    it: "it-IT",
-    es: "es-ES",
-  };
-  return map[code] || "en-US";
-}
-
-function fakeTranslate(text, targetLang) {
-  const prefix = {
-    tr: "TR",
-    en: "EN",
-    de: "DE",
-    fr: "FR",
-    it: "IT",
-    es: "ES",
-  }[targetLang] || String(targetLang || "").toUpperCase();
-
-  return `${prefix}: ${text}`;
-}
-
-function maybeSpeak(text) {
-  if (state.role !== "listener") return;
-  if (state.listenMode === "text") return;
-  if (!("speechSynthesis" in window)) return;
-  if (!text) return;
-
-  try {
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = bcp(state.lang);
-    window.speechSynthesis.speak(utterance);
-  } catch (e) {
-    log("Tarayıcı sesli oynatma başlatamadı.");
-  }
-}
-
-function closeWs() {
-  try {
-    state.ws?.close?.();
-  } catch {}
-  state.ws = null;
-  setPill(els.wsStatus, "WS: Kapalı", "warn");
-}
-
-function handleIncoming(payload) {
-  const type = String(payload?.type || "").trim();
-
-  if (type === "translation") {
-    const txt = String(payload?.translated_text || "").trim();
-    if (txt) {
-      els.mainText.textContent = txt;
-      els.subText.textContent =
-        state.listenMode === "text"
-          ? "Dinleyici modu: sadece yazı."
-          : "Dinleyici modu: sesli dinleme aktif.";
-      state.lastSpokenText = txt;
-      maybeSpeak(txt);
-      log("Dinleyiciye çeviri düştü.");
+  <style>
+    :root{
+      --bg:#060b14;
+      --bg2:#0a1120;
+      --card:rgba(255,255,255,.06);
+      --card2:rgba(255,255,255,.04);
+      --line:rgba(255,255,255,.10);
+      --txt:rgba(255,255,255,.96);
+      --muted:rgba(255,255,255,.62);
+      --cyan:#6ee7ff;
+      --blue:#5b8cff;
+      --violet:#8b5cf6;
+      --pink:#ff4fd8;
+      --green:#22c55e;
+      --warn:#f59e0b;
+      --danger:#fb7185;
+      --grad:linear-gradient(135deg,var(--cyan) 0%, var(--blue) 45%, var(--pink) 100%);
+      --hero:linear-gradient(135deg,#08111f 0%, #122342 35%, #1d3a7a 62%, #392176 100%);
     }
-    return;
-  }
 
-  if (type === "transcript") {
-    const txt = String(payload?.text || "").trim();
-    if (txt) {
-      els.mainText.textContent = txt;
-      log("Transcript alındı.");
+    *{
+      box-sizing:border-box;
+      -webkit-tap-highlight-color:transparent;
+      outline:none;
     }
-    return;
-  }
 
-  if (type === "presence") {
-    log("Katılım bilgisi geldi.");
-    return;
-  }
-
-  if (type === "error") {
-    log(`Sunucu hata: ${payload?.detail || "bilinmiyor"}`);
-  }
-}
-
-function openWs() {
-  if (!state.room) return;
-
-  closeWs();
-  setPill(els.wsStatus, "WS: Bağlanıyor", "warn");
-
-  const wsRole = state.role === "speaker" ? "speaker" : "listener";
-  const url = `${WS_BASE}/ws/onetoall/${encodeURIComponent(state.room)}?role=${encodeURIComponent(wsRole)}&lang=${encodeURIComponent(state.lang)}`;
-
-  try {
-    state.ws = new WebSocket(url);
-  } catch (e) {
-    log("WebSocket oluşturulamadı. Demo modda devam.");
-    setPill(els.wsStatus, "WS: Demo", "warn");
-    return;
-  }
-
-  state.ws.onopen = () => {
-    setPill(els.wsStatus, "WS: Açık", "ok");
-    log(`WebSocket bağlandı: ${wsRole}`);
-  };
-
-  state.ws.onmessage = (event) => {
-    try {
-      const payload = JSON.parse(event.data);
-      handleIncoming(payload);
-    } catch {
-      log("WS mesajı parse edilemedi.");
+    html,body{
+      margin:0;
+      width:100%;
+      min-height:100%;
+      background:
+        radial-gradient(circle at 15% 18%, rgba(110,231,255,.11) 0%, transparent 22%),
+        radial-gradient(circle at 82% 20%, rgba(255,79,216,.11) 0%, transparent 22%),
+        radial-gradient(circle at 50% 100%, rgba(91,140,255,.10) 0%, transparent 28%),
+        linear-gradient(180deg,#050911 0%, #08101c 42%, #091224 100%);
+      color:var(--txt);
+      font-family:'Outfit',sans-serif;
+      scrollbar-width:none;
     }
-  };
 
-  state.ws.onerror = () => {
-    log("WebSocket hata verdi.");
-  };
-
-  state.ws.onclose = () => {
-    setPill(els.wsStatus, "WS: Kapalı", "warn");
-    log("WebSocket kapandı.");
-  };
-}
-
-function broadcastText(text) {
-  const clean = String(text || "").trim();
-  if (!clean) return;
-
-  els.mainText.textContent = clean;
-
-  const translated = fakeTranslate(clean, "en");
-  els.subText.textContent =
-    state.output === "text"
-      ? `Yayın modu: sadece yazı • ${translated}`
-      : `Yayın modu: ses + yazı • ${translated}`;
-
-  const payload = {
-    type: "translation",
-    room_id: state.room,
-    source_lang: state.lang,
-    translated_text: translated,
-    voice_id: state.voice,
-    output_mode: state.output,
-  };
-
-  if (state.ws && state.ws.readyState === 1) {
-    try {
-      state.ws.send(JSON.stringify(payload));
-      log("Yayın metni WS ile gönderildi.");
-    } catch {
-      log("WS gönderimi başarısız. Demo metin gösterildi.");
+    html::-webkit-scrollbar,
+    body::-webkit-scrollbar{
+      display:none;
     }
-  } else {
-    log("Demo yayın işlendi.");
-  }
-}
 
-function createRecognition() {
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) return null;
+    #pageContent{
+      width:100%;
+      min-height:100dvh;
+      padding:14px 14px 26px;
+      overflow-x:hidden;
+      overflow-y:auto;
+      scrollbar-width:none;
+      -webkit-overflow-scrolling:touch;
+    }
 
-  const rec = new SR();
-  rec.lang = bcp(state.lang);
-  rec.continuous = true;
-  rec.interimResults = true;
+    #pageContent::-webkit-scrollbar{
+      display:none;
+    }
 
-  let finalBuffer = "";
+    .wrap{
+      width:100%;
+      max-width:720px;
+      margin:0 auto;
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+    }
 
-  rec.onresult = (event) => {
-    let interim = "";
+    .hero{
+      position:relative;
+      overflow:hidden;
+      border-radius:34px;
+      border:1px solid rgba(255,255,255,.10);
+      background:var(--hero);
+      padding:16px;
+      box-shadow:
+        0 20px 40px rgba(0,0,0,.30),
+        inset 0 1px 0 rgba(255,255,255,.05);
+    }
 
-    for (let i = event.resultIndex; i < event.results.length; i++) {
-      const transcript = event.results[i][0]?.transcript || "";
-      if (event.results[i].isFinal) {
-        finalBuffer += transcript.trim() + " ";
-      } else {
-        interim += transcript;
+    .hero::before{
+      content:"";
+      position:absolute;
+      right:-40px;
+      bottom:-40px;
+      width:180px;
+      height:180px;
+      background:radial-gradient(circle, rgba(255,79,216,.22), transparent 70%);
+      filter:blur(10px);
+      pointer-events:none;
+    }
+
+    .hero-top{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:14px;
+    }
+
+    .hero-copy{
+      min-width:0;
+      flex:1;
+    }
+
+    .eyebrow{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      min-height:30px;
+      padding:0 12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.10);
+      border:1px solid rgba(255,255,255,.10);
+      font-size:11px;
+      font-weight:800;
+      letter-spacing:.4px;
+      text-transform:uppercase;
+      color:#fff;
+    }
+
+    .eyebrow-dot{
+      width:8px;
+      height:8px;
+      border-radius:50%;
+      background:var(--green);
+      box-shadow:0 0 12px var(--green);
+      animation:pulseDot 1.6s infinite ease-in-out;
+    }
+
+    .hero-title{
+      margin:12px 0 8px;
+      font-family:'Space Grotesk',sans-serif;
+      font-size:30px;
+      line-height:1;
+      letter-spacing:-1px;
+    }
+
+    .hero-title .accent{
+      background:var(--grad);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+
+    .hero-sub{
+      margin:0;
+      font-size:12px;
+      line-height:1.5;
+      color:rgba(255,255,255,.80);
+      max-width:420px;
+    }
+
+    .hero-orb{
+      flex:0 0 auto;
+      width:104px;
+      height:104px;
+      border-radius:26px;
+      position:relative;
+      background:rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.10);
+      overflow:hidden;
+      display:grid;
+      place-items:center;
+    }
+
+    .orb-core{
+      width:28px;
+      height:28px;
+      border-radius:50%;
+      background:#fff;
+      box-shadow:
+        0 0 20px rgba(255,255,255,.25),
+        0 0 40px rgba(110,231,255,.25);
+      position:relative;
+      z-index:2;
+    }
+
+    .orb-ring{
+      position:absolute;
+      border-radius:50%;
+      border:2px solid rgba(110,231,255,.72);
+      opacity:.7;
+      animation:spinRing 6s linear infinite;
+    }
+
+    .r1{ width:44px; height:44px; }
+    .r2{ width:66px; height:66px; opacity:.45; animation-duration:8s; }
+    .r3{ width:88px; height:88px; opacity:.25; animation-duration:10s; }
+
+    .hero-pills{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:14px;
+    }
+
+    .pill{
+      min-height:32px;
+      display:inline-flex;
+      align-items:center;
+      padding:0 12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.10);
+      color:#fff;
+      font-size:11px;
+      font-weight:800;
+      letter-spacing:.25px;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:1.05fr .95fr;
+      gap:14px;
+    }
+
+    .card{
+      border-radius:28px;
+      border:1px solid var(--line);
+      background:var(--card);
+      box-shadow:
+        0 18px 30px rgba(0,0,0,.22),
+        inset 0 1px 0 rgba(255,255,255,.04);
+      overflow:hidden;
+      backdrop-filter:blur(10px);
+    }
+
+    .card-pad{
+      padding:16px;
+    }
+
+    .section-title{
+      margin:0;
+      font-family:'Space Grotesk',sans-serif;
+      font-size:24px;
+      letter-spacing:-.5px;
+    }
+
+    .section-sub{
+      margin:6px 0 0;
+      font-size:12px;
+      line-height:1.45;
+      color:var(--muted);
+    }
+
+    .meta{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      margin-top:14px;
+    }
+
+    .meta-box{
+      min-height:72px;
+      border-radius:20px;
+      background:var(--card2);
+      border:1px solid rgba(255,255,255,.08);
+      padding:12px;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      gap:4px;
+    }
+
+    .meta-k{
+      font-size:10px;
+      font-weight:800;
+      text-transform:uppercase;
+      letter-spacing:.35px;
+      color:rgba(255,255,255,.58);
+    }
+
+    .meta-v{
+      font-size:18px;
+      font-weight:900;
+      line-height:1.1;
+      word-break:break-word;
+    }
+
+    .code{
+      font-family:'Space Grotesk',sans-serif;
+      letter-spacing:4px;
+    }
+
+    .status-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:14px;
+    }
+
+    .status-pill{
+      min-height:34px;
+      display:inline-flex;
+      align-items:center;
+      padding:0 12px;
+      border-radius:999px;
+      font-size:11px;
+      font-weight:900;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.06);
+    }
+
+    .ok{ color:#9af7b1; }
+    .warn{ color:#ffd18a; }
+    .danger{ color:#ffb4c1; }
+
+    .visual-stage{
+      margin-top:14px;
+      min-height:150px;
+      border-radius:24px;
+      border:1px solid rgba(255,255,255,.08);
+      background:
+        radial-gradient(circle at 50% 50%, rgba(110,231,255,.08), transparent 32%),
+        rgba(255,255,255,.04);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:16px;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .mic-visual{
+      width:150px;
+      height:88px;
+      display:flex;
+      align-items:flex-end;
+      justify-content:center;
+      gap:6px;
+    }
+
+    .bar{
+      width:8px;
+      min-height:12px;
+      border-radius:999px;
+      background:linear-gradient(180deg, var(--cyan), var(--pink));
+      box-shadow:0 0 12px rgba(110,231,255,.18);
+      transform-origin:center bottom;
+      animation:idleBars 1.2s ease-in-out infinite;
+      opacity:.35;
+    }
+
+    .live .bar{
+      opacity:1;
+      animation:liveBars .65s ease-in-out infinite alternate;
+    }
+
+    .bar:nth-child(1){ animation-delay:.10s; }
+    .bar:nth-child(2){ animation-delay:.20s; }
+    .bar:nth-child(3){ animation-delay:.28s; }
+    .bar:nth-child(4){ animation-delay:.14s; }
+    .bar:nth-child(5){ animation-delay:.26s; }
+    .bar:nth-child(6){ animation-delay:.08s; }
+    .bar:nth-child(7){ animation-delay:.18s; }
+
+    .text-box{
+      min-height:164px;
+      border-radius:24px;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.04);
+      padding:16px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .text-kicker{
+      font-size:10px;
+      font-weight:800;
+      text-transform:uppercase;
+      letter-spacing:.35px;
+      color:rgba(255,255,255,.58);
+    }
+
+    .text-main{
+      font-size:18px;
+      line-height:1.55;
+      color:#fff;
+      white-space:pre-wrap;
+      word-break:break-word;
+    }
+
+    .text-sub{
+      font-size:12px;
+      line-height:1.5;
+      color:var(--muted);
+      white-space:pre-wrap;
+      word-break:break-word;
+    }
+
+    .actions{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      margin-top:14px;
+    }
+
+    .btn{
+      min-height:56px;
+      border:none;
+      border-radius:18px;
+      font:inherit;
+      font-weight:900;
+      letter-spacing:.35px;
+      cursor:pointer;
+      transition:transform .18s ease, filter .18s ease;
+    }
+
+    .btn:active{
+      transform:scale(.985);
+    }
+
+    .btn-primary{
+      color:#081018;
+      background:var(--grad);
+      box-shadow:0 12px 22px rgba(91,140,255,.18);
+    }
+
+    .btn-secondary{
+      color:#fff;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.10);
+    }
+
+    .btn-danger{
+      color:#fff;
+      background:rgba(251,113,133,.10);
+      border:1px solid rgba(251,113,133,.24);
+    }
+
+    .stack{
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+    }
+
+    .log{
+      min-height:180px;
+      max-height:280px;
+      overflow:auto;
+      border-radius:24px;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(0,0,0,.18);
+      padding:14px;
+      font-size:12px;
+      line-height:1.5;
+      color:rgba(255,255,255,.76);
+      white-space:pre-wrap;
+      word-break:break-word;
+    }
+
+    .log::-webkit-scrollbar{ width:8px; }
+    .log::-webkit-scrollbar-thumb{
+      background:rgba(255,255,255,.16);
+      border-radius:999px;
+    }
+
+    .helper{
+      text-align:center;
+      font-size:11px;
+      color:rgba(255,255,255,.56);
+      line-height:1.45;
+      margin-top:2px;
+    }
+
+    .hide{
+      display:none !important;
+    }
+
+    @keyframes pulseDot{
+      0%,100%{ transform:scale(1); opacity:1; }
+      50%{ transform:scale(1.18); opacity:.78; }
+    }
+
+    @keyframes spinRing{
+      from{ transform:rotate(0deg); }
+      to{ transform:rotate(360deg); }
+    }
+
+    @keyframes idleBars{
+      0%,100%{ height:16px; }
+      50%{ height:34px; }
+    }
+
+    @keyframes liveBars{
+      0%{ height:16px; }
+      100%{ height:78px; }
+    }
+
+    @media (max-width:760px){
+      .grid{
+        grid-template-columns:1fr;
       }
     }
 
-    const merged = (finalBuffer + interim).trim();
-    if (merged) {
-      els.mainText.textContent = merged;
+    @media (max-width:430px){
+      .hero-title{ font-size:26px; }
+      .meta-v{ font-size:16px; }
+      .text-main{ font-size:16px; }
+      .actions{ grid-template-columns:1fr; }
     }
+  </style>
+</head>
+<body>
+  <main id="pageContent">
+    <div class="wrap">
 
-    if (finalBuffer.trim()) {
-      broadcastText(finalBuffer.trim());
-      finalBuffer = "";
-    }
-  };
+      <section class="hero">
+        <div class="hero-top">
+          <div class="hero-copy">
+            <div class="eyebrow">
+              <span class="eyebrow-dot"></span>
+              OneToAll Live Session
+            </div>
+            <h1 class="hero-title"><span id="heroRoleText">Speaker</span> <span class="accent">Live</span></h1>
+            <p class="hero-sub" id="heroSubText">
+              Yayın oturumu hazır. Konuşmacı sesi gönderir, dinleyiciler kendi dilinde takip eder.
+            </p>
+          </div>
 
-  rec.onerror = (e) => {
-    log(`SpeechRecognition hata: ${e?.error || "bilinmiyor"}`);
-  };
+          <div class="hero-orb" aria-hidden="true">
+            <div class="orb-ring r3"></div>
+            <div class="orb-ring r2"></div>
+            <div class="orb-ring r1"></div>
+            <div class="orb-core"></div>
+          </div>
+        </div>
 
-  rec.onend = () => {
-    if (state.micActive) {
-      try {
-        state.recognition?.start?.();
-      } catch {}
-    }
-  };
+        <div class="hero-pills">
+          <div class="pill" id="pillRole">Role</div>
+          <div class="pill" id="pillRoom">Room</div>
+          <div class="pill" id="pillLang">Lang</div>
+        </div>
+      </section>
 
-  return rec;
-}
+      <section class="grid">
+        <section class="card card-pad">
+          <h2 class="section-title">Oturum Paneli</h2>
+          <p class="section-sub">Canlı yayın durumu, ses modu ve oda bilgisi burada görünür.</p>
 
-function stopDemo() {
-  if (state.demoTimer) {
-    clearInterval(state.demoTimer);
-    state.demoTimer = null;
-  }
-}
+          <div class="meta">
+            <div class="meta-box">
+              <div class="meta-k">Oda Kodu</div>
+              <div class="meta-v code" id="roomCodeText">------</div>
+            </div>
 
-function startDemo() {
-  stopDemo();
+            <div class="meta-box">
+              <div class="meta-k">Aktif Rol</div>
+              <div class="meta-v" id="roleText">Speaker</div>
+            </div>
 
-  const samples = [
-    "Merhaba, OneToAll yayını başladı. Lütfen gruptan ayrılmayın.",
-    "Birazdan sağ taraftaki tarihi yapıyı anlatacağım.",
-    "Sorularınızı turun sonunda alacağım.",
-    "Dinleyiciler kendi dillerinde anlık takip etmeye devam ediyor.",
-  ];
+            <div class="meta-box">
+              <div class="meta-k">Dil</div>
+              <div class="meta-v" id="langText">Türkçe</div>
+            </div>
 
-  let i = 0;
-  state.demoTimer = setInterval(() => {
-    if (!state.micActive) return;
-    broadcastText(samples[i % samples.length]);
-    i++;
-  }, 4200);
-}
+            <div class="meta-box">
+              <div class="meta-k">Ses / Mod</div>
+              <div class="meta-v" id="modeText">Voice</div>
+            </div>
+          </div>
 
-async function startMic() {
-  if (state.role !== "speaker" || state.micActive) return;
+          <div class="status-row">
+            <div class="status-pill warn" id="wsStatus">WS: Kapalı</div>
+            <div class="status-pill warn" id="micStatus">Mic: Kapalı</div>
+            <div class="status-pill ok" id="flowStatus">Akış: Hazır</div>
+          </div>
 
-  state.micActive = true;
-  setPill(els.micStatus, "Mic: Açık", "ok");
-  setLiveVisual(true);
-  els.btnStartMic?.classList.add("hide");
-  els.btnStopMic?.classList.remove("hide");
+          <div class="visual-stage">
+            <div class="mic-visual" id="micVisual">
+              <div class="bar"></div>
+              <div class="bar"></div>
+              <div class="bar"></div>
+              <div class="bar"></div>
+              <div class="bar"></div>
+              <div class="bar"></div>
+              <div class="bar"></div>
+            </div>
+          </div>
 
-  try {
-    await navigator.mediaDevices.getUserMedia({ audio: true });
-    log("Mikrofon izni alındı.");
-  } catch {
-    log("Mikrofon izni alınamadı. Demo akış devam edecek.");
-  }
+          <div class="actions" id="speakerActions">
+            <button class="btn btn-primary" id="btnStartMic" type="button">Mikrofonu başlat</button>
+            <button class="btn btn-danger hide" id="btnStopMic" type="button">Mikrofonu durdur</button>
+            <button class="btn btn-secondary" id="btnSendDemo" type="button">Demo yayın gönder</button>
+            <button class="btn btn-secondary" id="btnBackLobby" type="button">Lobiye dön</button>
+          </div>
 
-  state.recognition = createRecognition();
+          <div class="actions hide" id="listenerActions">
+            <button class="btn btn-secondary" id="btnReplay" type="button">Tekrar oku</button>
+            <button class="btn btn-secondary" id="btnBackLobby2" type="button">Lobiye dön</button>
+          </div>
+        </section>
 
-  if (state.recognition) {
-    try {
-      state.recognition.start();
-      log("SpeechRecognition başlatıldı.");
-    } catch {
-      log("SpeechRecognition başlatılamadı. Demo akış çalışacak.");
-    }
-  } else {
-    log("Tarayıcı SpeechRecognition desteklemiyor. Demo akış açıldı.");
-  }
+        <section class="stack">
+          <div class="card card-pad">
+            <h2 class="section-title" id="streamTitle">Canlı Metin</h2>
+            <p class="section-sub" id="streamSub">Konuşma burada canlı akar.</p>
 
-  startDemo();
-}
+            <div class="text-box" style="margin-top:14px;">
+              <div class="text-kicker" id="mainKicker">Kaynak Konuşma</div>
+              <div class="text-main" id="mainText">Henüz akış başlamadı.</div>
+            </div>
 
-function stopMic() {
-  if (state.role !== "speaker") return;
+            <div class="text-box" style="margin-top:14px;">
+              <div class="text-kicker" id="subKicker">İşlenmiş Çıkış</div>
+              <div class="text-sub" id="subText">Çeviri veya yayın durumu burada görünür.</div>
+            </div>
+          </div>
 
-  state.micActive = false;
-  setPill(els.micStatus, "Mic: Kapalı", "warn");
-  setLiveVisual(false);
-  els.btnStartMic?.classList.remove("hide");
-  els.btnStopMic?.classList.add("hide");
+          <div class="card card-pad">
+            <h2 class="section-title">Log</h2>
+            <p class="section-sub">Bağlantı ve yayın olayları burada görünür.</p>
+            <div class="log" id="debugLog" style="margin-top:14px;">Hazır.</div>
+          </div>
+        </section>
+      </section>
 
-  stopDemo();
+      <div class="helper">
+        Konuşmacı önce lobi ekranında ayarlarını yapar. Dinleyici yalnızca kod ve kendi diliyle bağlanır.
+      </div>
+    </div>
+  </main>
 
-  try {
-    state.recognition?.stop?.();
-  } catch {}
-  state.recognition = null;
-
-  log("Mikrofon durduruldu.");
-}
-
-function goLobby() {
-  location.href = "/pages/onetoall.html";
-}
-
-function bootUi() {
-  const roleLabel = state.role === "speaker" ? "Speaker" : "Listener";
-  const roleTR = state.role === "speaker" ? "Konuşmacı" : "Dinleyici";
-
-  els.heroRoleText.textContent = roleLabel;
-  els.roleText.textContent = roleTR;
-  els.roomCodeText.textContent = state.room || "------";
-  els.langText.textContent = trLangName(state.lang);
-
-  els.pillRole.textContent = roleTR;
-  els.pillRoom.textContent = state.room ? `Oda ${state.room}` : "Oda yok";
-  els.pillLang.textContent = trLangName(state.lang);
-
-  if (state.role === "speaker") {
-    els.heroSubText.textContent = "Konuşmacı canlı yayını başlatır. Dinleyiciler kendi dilinde takip eder.";
-    els.modeText.textContent = state.output === "text" ? "Sadece Yazı" : "Ses + Yazı";
-    els.streamTitle.textContent = "Konuşmacı Akışı";
-    els.streamSub.textContent = "Mikrofon ve canlı yayın metni burada akar.";
-    els.mainKicker.textContent = "Canlı Konuşma";
-    els.subKicker.textContent = "Yayın Çıkışı";
-    els.mainText.textContent = "Mikrofon başlatıldığında canlı konuşma burada görünür.";
-    els.subText.textContent =
-      state.output === "text"
-        ? `Yayın modu: sadece yazı • Ses kimliği: ${state.voice}`
-        : `Yayın modu: ses + yazı • Ses kimliği: ${state.voice}`;
-
-    els.speakerActions.classList.remove("hide");
-    els.listenerActions.classList.add("hide");
-  } else {
-    els.heroSubText.textContent = "Dinleyici yalnızca kendi dilini seçer ve konuşmacı akışını takip eder.";
-    els.modeText.textContent = state.listenMode === "text" ? "Sadece Yazı" : "Sesli Dinleme";
-    els.streamTitle.textContent = "Dinleyici Akışı";
-    els.streamSub.textContent = "Konuşmacıdan gelen içerik burada görünür.";
-    els.mainKicker.textContent = "Gelen Çeviri";
-    els.subKicker.textContent = "Dinleme Modu";
-    els.mainText.textContent = "Konuşmacı yayını bekleniyor.";
-    els.subText.textContent =
-      state.listenMode === "text"
-        ? "Dinleyici modu: sadece yazı."
-        : "Dinleyici modu: sesli dinleme.";
-
-    els.speakerActions.classList.add("hide");
-    els.listenerActions.classList.remove("hide");
-    setPill(els.micStatus, "Mic: Dinleyici", "ok");
-  }
-
-  if (!state.room) {
-    setPill(els.flowStatus, "Akış: Oda yok", "danger");
-    log("Oda kodu gelmedi.");
-  } else {
-    setPill(els.flowStatus, "Akış: Hazır", "ok");
-  }
-}
-
-function bindEvents() {
-  els.btnStartMic?.addEventListener("click", startMic);
-  els.btnStopMic?.addEventListener("click", stopMic);
-
-  els.btnSendDemo?.addEventListener("click", () => {
-    broadcastText("Merhaba, bu bir demo yayın metnidir. Dinleyiciler kendi dillerinde takip ediyor.");
-  });
-
-  els.btnBackLobby?.addEventListener("click", goLobby);
-  els.btnBackLobby2?.addEventListener("click", goLobby);
-
-  els.btnReplay?.addEventListener("click", () => {
-    if (state.lastSpokenText) {
-      maybeSpeak(state.lastSpokenText);
-      log("Son metin tekrar okundu.");
-    } else {
-      log("Tekrar okunacak metin yok.");
-    }
-  });
-
-  window.addEventListener("beforeunload", () => {
-    stopMic();
-    closeWs();
-    stopDemo();
-  });
-}
-
-function init() {
-  bootUi();
-  bindEvents();
-  openWs();
-  log("OneToAll live ekranı hazır.");
-}
-
-init();
+  <script type="module" src="/js/onetoall_live.js?v=1"></script>
+</body>
+</html>
