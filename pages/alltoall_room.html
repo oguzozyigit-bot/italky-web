@@ -10,9 +10,9 @@
 
   <style>
     :root{
-      --participantsH:74px;
-      --metaH:60px;
-      --micH:122px;
+      --participantsH:90px;
+      --metaH:68px;
+      --micH:112px;
       --footerSafe:var(--footerH, 0px);
 
       --ai-gradient: linear-gradient(135deg,#a5b4fc,#6366f1,#ec4899);
@@ -68,17 +68,48 @@
     .participants{
       height:var(--participantsH);
       display:flex;
+      flex-direction:column;
+      justify-content:center;
+      gap:8px;
+      padding:8px 14px;
+      border-bottom:1px solid rgba(255,255,255,.06);
+      background:rgba(255,255,255,.015);
+      flex:0 0 auto;
+      overflow:hidden;
+    }
+
+    .participants-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      min-height:18px;
+    }
+
+    .participants-title{
+      font-size:11px;
+      font-weight:1000;
+      letter-spacing:.4px;
+      color:rgba(255,255,255,.76);
+    }
+
+    .participants-count{
+      font-size:11px;
+      font-weight:1000;
+      color:rgba(255,255,255,.58);
+      white-space:nowrap;
+    }
+
+    .participants-scroll{
+      display:flex;
       align-items:center;
       overflow-x:auto;
       gap:12px;
-      padding:10px 14px;
-      border-bottom:1px solid rgba(255,255,255,.06);
       scrollbar-width:none;
-      background:rgba(255,255,255,.015);
-      flex:0 0 auto;
+      min-height:48px;
     }
 
-    .participants::-webkit-scrollbar{ display:none; }
+    .participants-scroll::-webkit-scrollbar{ display:none; }
 
     .pItem{
       display:flex;
@@ -112,6 +143,9 @@
       margin-top:4px;
       font-weight:800;
       white-space:nowrap;
+      max-width:62px;
+      overflow:hidden;
+      text-overflow:ellipsis;
     }
 
     .meta{
@@ -166,9 +200,29 @@
       text-overflow:ellipsis;
     }
 
+    .inviteWrap{
+      display:flex;
+      flex-direction:column;
+      align-items:flex-start;
+      justify-content:center;
+      gap:4px;
+      min-width:104px;
+      max-width:132px;
+    }
+
+    .inviteLabel{
+      font-size:10px;
+      font-weight:1000;
+      letter-spacing:.4px;
+      color:rgba(255,255,255,.58);
+      line-height:1;
+      padding-left:4px;
+    }
+
     #roomPill{
       min-width:104px;
-      max-width:124px;
+      max-width:132px;
+      width:100%;
       height:40px;
       padding:0 14px;
       border-radius:999px;
@@ -196,7 +250,8 @@
       background:var(--chat-bg);
       display:flex;
       flex-direction:column;
-      gap:16px;
+      justify-content:flex-end;
+      gap:14px;
       scrollbar-width:none;
       min-height:0;
       scroll-behavior:smooth;
@@ -229,46 +284,6 @@
       position:relative;
       max-width:88%;
       min-width:120px;
-      padding-left:18px;
-    }
-
-    .msg-bracket{
-      position:absolute;
-      left:0;
-      top:2px;
-      bottom:2px;
-      width:8px;
-      pointer-events:none;
-    }
-
-    .msg-bracket::before,
-    .msg-bracket::after,
-    .msg-bracket .mid{
-      content:"";
-      position:absolute;
-      left:0;
-      width:8px;
-      background:var(--ai-gradient);
-      border-radius:999px;
-      box-shadow:0 0 10px rgba(99,102,241,.22);
-    }
-
-    .msg-bracket::before{
-      top:0;
-      height:12px;
-    }
-
-    .msg-bracket .mid{
-      top:10px;
-      bottom:10px;
-      width:3px;
-      left:2px;
-      border-radius:999px;
-    }
-
-    .msg-bracket::after{
-      bottom:0;
-      height:12px;
     }
 
     .msg-head{
@@ -300,8 +315,8 @@
     }
 
     .msg-spk{
-      width:24px;
-      height:24px;
+      width:22px;
+      height:22px;
       border:none;
       border-radius:50%;
       background:rgba(255,255,255,.08);
@@ -317,8 +332,8 @@
     }
 
     .msg-spk svg{
-      width:13px;
-      height:13px;
+      width:12px;
+      height:12px;
       stroke:#fff;
       fill:none;
       stroke-width:2;
@@ -347,13 +362,14 @@
       flex-direction:column;
       align-items:center;
       justify-content:center;
-      gap:10px;
+      gap:8px;
       border-top:1px solid rgba(255,255,255,.06);
       background:linear-gradient(180deg, rgba(10,11,22,.96), rgba(9,11,20,.98));
-      padding:8px 14px calc(10px + var(--safe-bottom)) 14px;
+      padding:8px 14px calc(8px + var(--safe-bottom)) 14px;
       flex:0 0 auto;
       position:relative;
       z-index:4;
+      overflow:visible;
     }
 
     .btn-mic{
@@ -416,7 +432,7 @@
       text-align:center;
       line-height:1.35;
       letter-spacing:.12px;
-      min-height:18px;
+      min-height:16px;
       user-select:none;
       max-width:280px;
       width:100%;
@@ -612,7 +628,13 @@
 <body>
   <div id="pageContent">
 
-    <div class="participants" id="peopleScroll"></div>
+    <div class="participants">
+      <div class="participants-head">
+        <div class="participants-title">KATILIMCILAR</div>
+        <div class="participants-count" id="participantsCount">0 / 50</div>
+      </div>
+      <div class="participants-scroll" id="peopleScroll"></div>
+    </div>
 
     <div class="meta">
       <select id="langSelect" aria-label="Dil seç"></select>
@@ -622,7 +644,10 @@
         <span>⌄</span>
       </button>
 
-      <div id="roomPill">------</div>
+      <div class="inviteWrap">
+        <div class="inviteLabel">Davet Kodu</div>
+        <div id="roomPill">------</div>
+      </div>
     </div>
 
     <div class="chat" id="chat"></div>
@@ -653,6 +678,6 @@
     <div class="sheet-list" id="langSheetList"></div>
   </div>
 
-  <script type="module" src="/js/alltoall_room.js?v=single_bar_face_mic_3"></script>
+  <script type="module" src="/js/alltoall_room.js?v=single_bar_face_mic_4"></script>
 </body>
 </html>
