@@ -13,7 +13,7 @@
       --participantsH:74px;
       --metaH:78px;
       --micH:150px;
-      --footerSafe:0px;
+      --footerSafe:var(--footerH, 0px);
 
       --ai-gradient: linear-gradient(135deg,#a5b4fc,#6366f1,#ec4899);
       --bg:#050508;
@@ -57,8 +57,8 @@
 
     #pageContent{
       width:100%;
-      height:100dvh;
-      min-height:100dvh;
+      height:calc(100dvh - var(--footerSafe));
+      min-height:calc(100dvh - var(--footerSafe));
       display:flex;
       flex-direction:column;
       overflow:hidden;
@@ -87,7 +87,7 @@
       align-items:center;
       justify-content:flex-end;
       gap:12px;
-      min-height:14px;
+      min-height:12px;
     }
 
     .participants-title{
@@ -102,22 +102,24 @@
     }
 
     .participants-scroll{
-  display:flex;
-  align-items:flex-start;
-  gap:14px;
-  min-height:62px;
-  overflow-x:auto;
-  overflow-y:hidden;
-  white-space:nowrap;
-  scrollbar-width:none;
-  -ms-overflow-style:none;
-  scroll-behavior:smooth;
-  -webkit-overflow-scrolling:touch;
-  padding-bottom:2px;
-}
-.participants-scroll::-webkit-scrollbar{
-  display:none;
-}
+      display:flex;
+      align-items:flex-start;
+      gap:14px;
+      min-height:52px;
+      overflow-x:auto;
+      overflow-y:hidden;
+      white-space:nowrap;
+      scrollbar-width:none;
+      -ms-overflow-style:none;
+      scroll-behavior:smooth;
+      -webkit-overflow-scrolling:touch;
+      padding-bottom:2px;
+    }
+
+    .participants-scroll::-webkit-scrollbar{
+      display:none;
+    }
+
     .pItem{
       display:flex;
       flex-direction:column;
@@ -271,17 +273,26 @@
     }
 
     .chat{
-  flex:1 1 auto;
-  min-height:0;
-  overflow-y:auto;
-  overflow-x:hidden;
-  padding:14px 14px 110px;
-  scrollbar-width:none;
-  -ms-overflow-style:none;
-}
-.chat::-webkit-scrollbar{
-  display:none;
-}
+      flex:1 1 auto;
+      min-height:0;
+      overflow-y:auto;
+      overflow-x:hidden;
+      padding:14px 14px 110px;
+      background:var(--chat-bg);
+      display:flex;
+      flex-direction:column;
+      justify-content:flex-end;
+      gap:14px;
+      scrollbar-width:none;
+      -ms-overflow-style:none;
+      scroll-behavior:smooth;
+      position:relative;
+      z-index:1;
+    }
+
+    .chat::-webkit-scrollbar{
+      display:none;
+    }
 
     .sys-note{
       align-self:center;
@@ -706,6 +717,6 @@
     <div class="sheet-list" id="langSheetList"></div>
   </div>
 
-  <script type="module" src="/js/alltoall_room.js?v=alltoall_final_real_fix_3"></script>
+  <script type="module" src="/js/alltoall_room.js?v=alltoall_final_real_fix_4"></script>
 </body>
 </html>
