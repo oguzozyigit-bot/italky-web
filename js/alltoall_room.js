@@ -801,4 +801,572 @@ function chooseWebVoice(langCode) {
 
   if (pref === "female") {
     return (
-      pool.find((v) => /female
+      pool.find((v) => /female|woman|zira|aria|jenny|eva|emma|anna|helena/i.test(v.name)) ||
+      pool[0]
+    );
+  }
+
+  if (pref === "male") {
+    return (
+      pool.find((v) => /male|man|david|mark|alex|tom|jon|paul/i.test(v.name)) ||
+      pool[0]
+    );
+  }
+
+  return pool[0] || null;
+}
+
+function speakFallback(text, langCode) {
+  const value = String(text || "").trim();
+  if (!value) return;
+
+  stopAudio();
+
+  const pref = getVoicePreference();
+  const c = canonical(langCode);
+
+  if (pref === "auto" && window.NativeTTS && typeof window.NativeTTS.speak === "function") {
+    try {
+      window.NativeTTS.speak(value, c);
+      return;
+    } catch {}
+  }
+
+  if (!window.speechSynthesis) return;
+
+  try {
+    if (!voicesReady) {
+      window.speechSynthesis.getVoices();
+      voicesReady = true;
+    }
+  } catch {}
+
+  const u = new SpeechSynthesisUtterance(value);
+  u.lang = toBCP(langCode);
+  u.rate = c === "en" ? 0.82 : ["de", "fr", "it", "es"].includes(c) ? 0.88 : 0.92;
+  u.pitch = 1.0;
+  u.volume = 1;
+
+  const voice = chooseWebVoice(langCode);
+  if (voice) u.voice = voice;
+
+  setTimeout(() => {
+    try {
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(u);
+    } catch {}
+  }, 60);
+}
+
+async function speakText(text, langCode) {
+  const value = String(text || "").trim();
+  if (!value || !autoSpeak) return;
+
+  const voice = getVoicePreference();
+
+  if (voice === "auto") {
+    speakFallback(value, langCode);
+    return;
+  }
+
+  if (voice === "clone") {
+    try {
+      const ready = await hasReadyVoiceProfile();
+      if (!ready) {
+        speakFallback(value, langCode);
+        return;
+      }
+      await speakViaApi(value, langCode);
+      return;
+    } catch {
+      speakFallback(value, langCode);
+      return;
+    }
+  }
+
+  try {
+    await speakViaApi(value, langCode);
+  } catch {
+    speakFallback(value, langCode);
+  }
+}
+
+/* =========================
+   SPEECH
+========================= */
+function destroyRecognizer() {
+  if (!recognizer) return;
+  try {
+    recognizer.onstart = null;
+    recognizer.onresult = null;
+    recognizer.onerror = null;
+    recognizer.onend = null;
+    recognizer.stop?.();
+  } catch {}
+  recognizer = null;
+}
+
+function createRecognizer() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return null;
+
+  const rec = new SR();
+  rec.lang = toBCP(myLang);
+  rec.interimResults = false;
+  rec.continuous = false;
+  rec.maxAlternatives = 1;
+
+  rec.onstart = () => {
+    recognizing = true;
+    micBtn?.classList.add("listening");
+    updateMicUI();
+  };
+
+  rec.onresult = (e) => {
+    const text = e.results?.[0]?.[0]?.transcript || "";
+    recognizing = false;
+    micBtn?.classList.remove("listening");
+    micBtn?.classList.add("recorded");
+    setTimeout(() => micBtn?.classList.remove("recorded"), 700);
+    updateMicUI();
+
+    if (text) {
+      sendSpeechMessage(text);
+    } else {
+      addSystemMessage(st("micNoSpeech"));
+    }
+  };
+
+  rec.onerror = (e) => {
+    recognizing = false;
+    micBtn?.classList.remove("listening");
+    updateMicUI();
+
+    const err = String(e?.error || "").toLowerCase();
+    console.warn("[alltoall speech error]", err, e);
+
+    if (err.includes("not-allowed") || err.includes("denied")) {
+      addSystemMessage(st("micDenied"));
+    } else if (err.includes("no-speech") || err.includes("no-match") || err.includes("audio-capture")) {
+      addSystemMessage(st("micNoSpeech"));
+    } else {
+      addSystemMessage(st("micFailed"));
+    }
+
+    destroyRecognizer();
+  };
+
+  rec.onend = () => {
+    recognizing = false;
+    micBtn?.classList.remove("listening");
+    updateMicUI();
+  };
+
+  return rec;
+}
+
+function sendSpeechMessage(text) {
+  const value = String(text || "").trim();
+  if (!value) return;
+
+  addMessage({
+    side: "right",
+    sender: myProfile.from_name,
+    text: value,
+    withSpeaker: false,
+    speakLang: myLang,
+    fromLang: myLang
+  });
+
+  sendWs({
+    type: "message",
+    text: value,
+    lang: myLang
+  });
+}
+
+async function toggleMic() {
+  await warmAudio();
+
+  const granted = await requestMicPermission();
+  if (!granted) {
+    addSystemMessage(st("micDenied"));
+    return;
+  }
+
+  try {
+    await prepareEnhancedMic();
+  } catch {}
+
+  if (recognizing) {
+    try {
+      recognizer?.stop?.();
+    } catch {}
+    recognizing = false;
+    micBtn?.classList.remove("listening");
+    updateMicUI();
+    return;
+  }
+
+  destroyRecognizer();
+  recognizer = createRecognizer();
+
+  if (!recognizer) {
+    addSystemMessage(st("micUnsupported"));
+    return;
+  }
+
+  try {
+    recognizer.lang = toBCP(myLang);
+    recognizer.start();
+  } catch (e) {
+    console.warn("[alltoall mic start]", e);
+    recognizing = false;
+    micBtn?.classList.remove("listening");
+    updateMicUI();
+    destroyRecognizer();
+    addSystemMessage(st("micFailed"));
+  }
+}
+
+/* =========================
+   SOCKET
+========================= */
+function sendWs(payload) {
+  try {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify(payload));
+    } else {
+      addSystemMessage(st("socketNotReady"));
+    }
+  } catch (e) {
+    console.warn("[alltoall sendWs]", e);
+  }
+}
+
+async function resolveRoomForGuestByHost() {
+  if (!hostCode || role !== "guest") return;
+
+  const r = await fetch(`${API_BASE}/interpreter/resolve-room`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      host_code: hostCode,
+      my_lang: myLang,
+      mode: "alltoall"
+    })
+  });
+
+  const j = await r.json().catch(() => ({}));
+
+  if (!r.ok || !j?.room_id) {
+    throw new Error(j?.detail || j?.error || "Room resolve failed");
+  }
+
+  roomId = String(j.room_id || "").trim().toUpperCase();
+  syncRoomPill();
+}
+
+function scheduleReconnect() {
+  if (manualClose || reconnectTimer) return;
+  reconnectTimer = setTimeout(() => {
+    reconnectTimer = null;
+    if (!manualClose && document.visibilityState !== "hidden") {
+      connectSocket();
+    }
+  }, 1500);
+}
+
+function connectSocket() {
+  if (!roomId) {
+    addSystemMessage(st("roomMissing"));
+    return;
+  }
+
+  try { ws?.close?.(); } catch {}
+
+  const wsUrl = `${WS_BASE}/${encodeURIComponent(roomId)}`;
+  ws = new WebSocket(wsUrl);
+
+  ws.onopen = () => {
+    if (reconnectTimer) {
+      clearTimeout(reconnectTimer);
+      reconnectTimer = null;
+    }
+
+    sendWs({
+      type: role === "host" ? "create" : "join",
+      from: myProfile.from,
+      from_name: myProfile.from_name,
+      from_pic: myProfile.from_pic,
+      me_lang: myLang,
+      role,
+      user_id: myProfile.user_id,
+      host_code: hostCode || roomId
+    });
+  };
+
+  ws.onmessage = async (event) => {
+    try {
+      const data = JSON.parse(event.data || "{}");
+      const type = String(data?.type || "").trim();
+
+      if (type === "room_created" || type === "room_joined") {
+        if (data.self) {
+          myProfile = {
+            ...myProfile,
+            ...data.self,
+            me_lang: myLang,
+          };
+        }
+
+        roomId = String(data.room || roomId || "").trim().toUpperCase();
+        syncRoomPill();
+        ensureSelfInPeople();
+        addSystemMessage(st("roomCreated"));
+        return;
+      }
+
+      if (type === "presence") {
+        applyRoster(data.roster || []);
+        return;
+      }
+
+      if (type === "peer_joined") {
+        if (data.peer) upsertPerson(data.peer);
+        if (Array.isArray(data.roster)) applyRoster(data.roster);
+        addSystemMessage(st("peerJoined"));
+        return;
+      }
+
+      if (type === "profile_updated") {
+        if (data.peer) upsertPerson(data.peer);
+        if (Array.isArray(data.roster)) applyRoster(data.roster);
+        return;
+      }
+
+      if (type === "peer_left") {
+        if (data.peer) removePerson(data.peer);
+        if (Array.isArray(data.roster)) applyRoster(data.roster);
+        addSystemMessage(st("peerLeft"));
+        return;
+      }
+
+      if (type === "translated_message") {
+        const fromId = String(data.from || "").trim();
+        const senderName = String(data.from_name || st("participant")).trim();
+        const translated = String(data.translated_text || "").trim();
+        const original = String(data.original_text || "").trim();
+        const finalText = translated || original;
+        const fromLang = canonical(data.from_lang || data.lang || "tr");
+
+        if (!finalText) return;
+        if (fromId && myProfile.from && fromId === myProfile.from) return;
+
+        addMessage({
+          side: "left",
+          sender: senderName,
+          text: finalText,
+          withSpeaker: true,
+          speakLang: myLang,
+          fromLang
+        });
+
+        if (data.from || data.from_name || data.from_pic) {
+          upsertPerson({
+            from: data.from || "",
+            from_name: data.from_name || senderName,
+            from_pic: data.from_pic || "",
+            me_lang: fromLang,
+            role: data.role || "guest",
+            user_id: data.from_user_id || "",
+          });
+        }
+
+        await speakText(finalText, myLang);
+        return;
+      }
+
+      if (type === "room_not_found") {
+        addSystemMessage(data.message || st("roomNotFound"));
+        return;
+      }
+
+      if (type === "error") {
+        const msg = String(data.message || "");
+        if (msg === "HOST_NOT_READY") {
+          addSystemMessage(st("hostNotReady"));
+        } else {
+          addSystemMessage(msg || st("connectionError"));
+        }
+      }
+    } catch (e) {
+      console.warn("[alltoall ws parse]", e);
+    }
+  };
+
+  ws.onerror = () => {
+    addSystemMessage(st("connectionError"));
+  };
+
+  ws.onclose = () => {
+    if (!manualClose) {
+      addSystemMessage(st("connectionClosed"));
+      scheduleReconnect();
+    }
+  };
+}
+
+/* =========================
+   PROFILE
+========================= */
+async function hydrateMyProfile() {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return;
+
+    myProfile = {
+      from: getStableFromId(user),
+      from_name: getDisplayNameFromUser(user),
+      from_pic: getAvatarFromUser(user),
+      me_lang: myLang,
+      role,
+      user_id: user?.id || "",
+    };
+  } catch (e) {
+    console.warn("[alltoall hydrateMyProfile]", e);
+  }
+}
+
+/* =========================
+   LAYOUT
+========================= */
+function applyFooterLift() {
+  try {
+    const root = getComputedStyle(document.documentElement);
+    const footerH = parseFloat(root.getPropertyValue("--footerH")) || 0;
+    document.documentElement.style.setProperty("--footerSafe", `${footerH}px`);
+  } catch {}
+}
+
+function fixLayout() {
+  applyFooterLift();
+
+  try {
+    if (window.visualViewport && pageContent) {
+      pageContent.style.height = `${Math.round(window.visualViewport.height)}px`;
+      pageContent.style.minHeight = `${Math.round(window.visualViewport.height)}px`;
+    }
+  } catch {}
+}
+
+/* =========================
+   EVENTS
+========================= */
+function bindEvents() {
+  roomPill?.addEventListener("click", async () => {
+    const code = visibleCode();
+    if (!code || code === "------") return;
+    try {
+      await navigator.clipboard.writeText(code);
+      addSystemMessage(`${st("roomCopied")}: ${code}`);
+    } catch {}
+  });
+
+  langPickerBtn?.addEventListener("click", openLangSheet);
+  langSheetBackdrop?.addEventListener("click", closeLangSheet);
+  langSheetClose?.addEventListener("click", closeLangSheet);
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeLangSheet();
+
+    if ((e.key === "Enter" || e.key === " ") && document.activeElement === micBtn) {
+      e.preventDefault();
+      toggleMic();
+    }
+  });
+
+  micBtn?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleMic();
+  });
+
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", fixLayout);
+    window.visualViewport.addEventListener("scroll", fixLayout);
+  }
+
+  window.addEventListener("resize", fixLayout);
+  window.addEventListener("orientationchange", fixLayout);
+
+  window.addEventListener("focus", () => {
+    const nextSiteLang = getSiteLang();
+    if (nextSiteLang !== siteLang) {
+      siteLang = nextSiteLang;
+      LANGS = buildLangPoolForSite(siteLang);
+      refreshStaticTexts();
+      buildLanguageSelect();
+      renderLangSheet();
+      renderPeople();
+      syncRoomPill();
+    }
+    fixLayout();
+  });
+
+  try {
+    if (window.speechSynthesis) {
+      window.speechSynthesis.getVoices();
+      window.speechSynthesis.onvoiceschanged = () => {
+        try { window.speechSynthesis.getVoices(); } catch {}
+        voicesReady = true;
+      };
+    }
+  } catch {}
+}
+
+/* =========================
+   INIT
+========================= */
+async function init() {
+  siteLang = getSiteLang();
+  LANGS = buildLangPoolForSite(siteLang);
+
+  refreshStaticTexts();
+  buildLanguageSelect();
+  syncRoomPill();
+  updateMicUI();
+  fixLayout();
+
+  await hydrateMyProfile();
+  ensureSelfInPeople();
+
+  bindEvents();
+
+  try {
+    await warmAudio();
+    await prepareEnhancedMic();
+  } catch {}
+
+  try {
+    if (role === "guest" && !incomingRoomId && hostCode) {
+      await resolveRoomForGuestByHost();
+    }
+  } catch (e) {
+    console.error("[alltoall resolve guest room]", e);
+    addSystemMessage(st("roomNotCreated"));
+    return;
+  }
+
+  connectSocket();
+}
+
+init();
+
+window.addEventListener("beforeunload", () => {
+  manualClose = true;
+  stopAudio();
+  destroyRecognizer();
+  try { ws?.close?.(); } catch {}
+  try { preparedStream?.getTracks?.().forEach((t) => t.stop()); } catch {}
+});
