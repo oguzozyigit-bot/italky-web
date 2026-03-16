@@ -83,7 +83,6 @@ let micHoldActive = false;
 let micPressStartedAt = 0;
 let micMaxTimer = null;
 let isRecognizing = false;
-let recognitionFinished = false;
 let pendingTranscript = "";
 let speechLockUntil = 0;
 
@@ -944,10 +943,6 @@ function stopRecognizer() {
   }
 }
 
-async function speechToTextFallback() {
-  return null;
-}
-
 async function finalizeRecognition(text) {
   const cleaned = String(text || "").trim();
 
@@ -995,7 +990,6 @@ async function finishHeldRecording(trigger = "release") {
 
   if (heldFor < HOLD_MIN_MS && !transcript) {
     pendingTranscript = "";
-    recognitionFinished = true;
     setReadyUI();
     return;
   }
@@ -1004,13 +998,8 @@ async function finishHeldRecording(trigger = "release") {
     addSystemMessage(st("maxReached"));
   }
 
-  if (!transcript) {
-    pendingTranscript = "";
-  }
-
   const finalText = String(pendingTranscript || "").trim();
   pendingTranscript = "";
-  recognitionFinished = true;
 
   await finalizeRecognition(finalText);
 }
@@ -1028,7 +1017,6 @@ function startRecording() {
   }
 
   recognizer = rec;
-  recognitionFinished = false;
   pendingTranscript = "";
 
   rec.onstart = () => {
@@ -1039,7 +1027,7 @@ function startRecording() {
   rec.onresult = (e) => {
     let full = "";
     try {
-      for (let i = e.resultIndex; i < e.results.length; i += 1) {
+      for (let i = 0; i < e.results.length; i += 1) {
         const chunk = String(e.results[i]?.[0]?.transcript || "").trim();
         if (chunk) full += `${chunk} `;
       }
@@ -1047,47 +1035,67 @@ function startRecording() {
     pendingTranscript = String(full || pendingTranscript || "").trim();
   };
 
-  rec.onerror = async (e) => {
-  console.warn("[alltoall speech error]", e);
+  rec.onerror = (e) => {
+    console.warn("[alltoall speech error]", e);
 
-  const err = String(e?.error || "").toLowerCase();
-  isRecognizing = false;
-  speechLockUntil = Date.now() + 900;
+    const err = String(e?.error || "").toLowerCase();
+    isRecognizing = false;
+    speechLockUntil = Date.now() + 900;
 
-  if (err.includes("aborted")) {
-    setReadyUI();
-    return;
-  }
+    if (err.includes("aborted")) {
+      setReadyUI();
+      return;
+    }
 
-  if (err.includes("not-allowed") || err.includes("service-not-allowed")) {
-    micHoldActive = false;
-    clearMicTimers();
-    addSystemMessage(st("micBlocked"));
-    setErrorUI();
-    return;
-  }
+    if (err.includes("not-allowed") || err.includes("service-not-allowed")) {
+      micHoldActive = false;
+      clearMicTimers();
+      addSystemMessage(st("micBlocked"));
+      setErrorUI();
+      return;
+    }
 
-  if (err.includes("audio-capture")) {
+    if (err.includes("audio-capture")) {
+      micHoldActive = false;
+      clearMicTimers();
+      addSystemMessage(st("micFailed"));
+      setErrorUI();
+      return;
+    }
+
+    if (err.includes("no-speech")) {
+      micHoldActive = false;
+      clearMicTimers();
+      addSystemMessage(st("micNoSpeech"));
+      setReadyUI();
+      return;
+    }
+
     micHoldActive = false;
     clearMicTimers();
     addSystemMessage(st("micFailed"));
     setErrorUI();
-    return;
-  }
+  };
 
-  if (err.includes("no-speech")) {
+  rec.onend = () => {
+    isRecognizing = false;
+    recognizer = null;
+    micBtn?.classList.remove("listening");
+
+    if (!micHoldActive) {
+      updateMicUI();
+    }
+  };
+
+  try {
+    rec.start();
+  } catch (e) {
+    console.warn("[alltoall rec.start error]", e);
+    recognizer = null;
+    isRecognizing = false;
     micHoldActive = false;
-    clearMicTimers();
-    addSystemMessage(st("micNoSpeech"));
-    setReadyUI();
-    return;
-  }
-
-  micHoldActive = false;
-  clearMicTimers();
-  addSystemMessage(st("micFailed"));
-  setErrorUI();
-};
+    addSystemMessage(st("micFailed"));
+    setErrorUI();
   }
 }
 
@@ -1113,7 +1121,6 @@ async function beginHoldToTalk() {
   micHoldActive = true;
   micPressStartedAt = Date.now();
   pendingTranscript = "";
-  recognitionFinished = false;
 
   clearMicTimers();
   micMaxTimer = setTimeout(() => {
