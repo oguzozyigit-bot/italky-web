@@ -11,7 +11,7 @@ try {
 }
 
 const API_BASE = "https://italky-api.onrender.com/api";
-const WS_BASE = "wss://italky-api.onrender.com/api/onetoall/ws";
+const WS_ORIGIN = "wss://italky-api.onrender.com";
 
 const $ = (id) => document.getElementById(id);
 
@@ -105,9 +105,11 @@ let wsReady = false;
 let reconnectTimer = null;
 let reconnectCount = 0;
 let manuallyClosed = false;
+let activeWsUrlIndex = 0;
 
 let recognizer = null;
 let isMicRunning = false;
+let micShouldRun = false;
 let currentAudio = null;
 let audioCtx = null;
 let voicesReady = false;
@@ -117,7 +119,8 @@ let lastSpeakerSentText = "";
 let lastSpeakerSentAt = 0;
 let lastReplayText = "";
 let lastReplayLang = lang;
-let lastPartialText = "";
+let lastInterimText = "";
+let speechRestartTimer = null;
 
 function logLine(text) {
   if (!els.debugLog) return;
@@ -446,18 +449,46 @@ async function prepareEnhancedMic() {
   }
 }
 
-function wsUrl() {
-  if (!room) return null;
-  return `${WS_BASE}/${encodeURIComponent(room)}`;
+function getWsCandidates() {
+  const encoded = encodeURIComponent(room);
+  return [
+    `${WS_ORIGIN}/api/onetoall/ws/${encoded}`,
+    `${WS_ORIGIN}/api/ws/onetoall/${encoded}`,
+    `${WS_ORIGIN}/api/ws/onetoall/${encoded}?role=${encodeURIComponent(role)}&lang=${encodeURIComponent(lang)}`,
+  ];
 }
 
 function sendWs(payload) {
   try {
     if (ws && ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify(payload));
+      return true;
     }
   } catch (e) {
     logLine(`WS gönderim hatası: ${e?.message || e}`);
+  }
+  return false;
+}
+
+function sendHandshake() {
+  const base = {
+    room,
+    room_id: room,
+    host_code: room,
+    role,
+    lang,
+    voice,
+    output,
+    mode: listenMode,
+    module: "onetoall"
+  };
+
+  if (role === "speaker") {
+    sendWs({ type: "create", ...base });
+    setTimeout(() => sendWs({ type: "speaker_join", ...base }), 120);
+  } else {
+    sendWs({ type: "join", ...base });
+    setTimeout(() => sendWs({ type: "listener_join", ...base }), 120);
   }
 }
 
@@ -474,9 +505,10 @@ function scheduleReconnect() {
 }
 
 function connectSocket() {
-  const url = wsUrl();
+  const urls = getWsCandidates();
+  const url = urls[activeWsUrlIndex] || urls[0];
 
-  if (!url) {
+  if (!room) {
     setWsStatus("WS: Oda yok", false);
     setFlowStatus("Akış: Oda kodu eksik", false);
     return;
@@ -488,9 +520,11 @@ function connectSocket() {
 
   try {
     ws = new WebSocket(url);
+    logLine(`WS deneniyor: ${url}`);
   } catch (e) {
     setWsStatus("WS: Hata", false);
     logLine(`WebSocket oluşturulamadı: ${e?.message || e}`);
+    activeWsUrlIndex = (activeWsUrlIndex + 1) % urls.length;
     scheduleReconnect();
     return;
   }
@@ -501,16 +535,7 @@ function connectSocket() {
     setWsStatus("WS: Açık", true);
     setFlowStatus("Akış: Hazır", true);
     logLine("WebSocket bağlandı.");
-
-    sendWs({
-      type: role === "speaker" ? "speaker_join" : "listener_join",
-      room,
-      role,
-      lang,
-      voice,
-      output,
-      mode: listenMode
-    });
+    sendHandshake();
   };
 
   ws.onmessage = async (event) => {
@@ -518,8 +543,10 @@ function connectSocket() {
       const payload = JSON.parse(event.data || "{}");
       const type = String(payload?.type || "").trim();
 
-      if (type === "joined" || type === "presence") {
-        logLine("Odaya giriş onayı alındı.");
+      if (type === "room_created" || type === "room_joined" || type === "joined" || type === "presence") {
+        setWsStatus("WS: Açık", true);
+        setFlowStatus("Akış: Bağlı", true);
+        logLine(`Odaya giriş onayı: ${type}`);
         return;
       }
 
@@ -528,18 +555,34 @@ function connectSocket() {
         return;
       }
 
-      if (type === "speaker_chunk" || type === "speaker_text") {
-        const rawText = String(payload?.text || "").trim();
-        if (rawText && role === "listener") {
-          if (els.mainText) els.mainText.textContent = rawText;
-          lastPartialText = rawText;
+      if (type === "speaker_chunk" || type === "speaker_text" || type === "text_message") {
+        const rawText = String(payload?.text || payload?.original_text || "").trim();
+        if (rawText && role === "listener" && els.mainText) {
+          els.mainText.textContent = rawText;
+          lastInterimText = rawText;
         }
         return;
       }
 
-      if (type === "translated_message" || type === "broadcast_translation" || type === "listener_translation") {
-        const sourceText = String(payload?.source_text || payload?.original_text || payload?.text || "").trim();
-        const translatedText = String(payload?.translated_text || payload?.translation || "").trim();
+      if (
+        type === "translated_message" ||
+        type === "broadcast_translation" ||
+        type === "listener_translation" ||
+        type === "message"
+      ) {
+        const sourceText = String(
+          payload?.source_text ||
+          payload?.original_text ||
+          payload?.text ||
+          ""
+        ).trim();
+
+        const translatedText = String(
+          payload?.translated_text ||
+          payload?.translation ||
+          ""
+        ).trim();
+
         const finalText = translatedText || sourceText;
         const outLang = canonical(payload?.target_lang || payload?.lang || lang);
 
@@ -585,9 +628,11 @@ function connectSocket() {
   ws.onclose = () => {
     wsReady = false;
     setWsStatus("WS: Kapalı", false);
+
     if (!manuallyClosed) {
       setFlowStatus("Akış: Yeniden bağlanıyor", false);
       logLine("WebSocket kapandı.");
+      activeWsUrlIndex = (activeWsUrlIndex + 1) % getWsCandidates().length;
       scheduleReconnect();
     }
   };
@@ -611,7 +656,7 @@ function buildRecognizer(langCode) {
   const rec = new SR();
   rec.lang = langObj(langCode).bcp;
   rec.interimResults = true;
-  rec.continuous = !!micAlways;
+  rec.continuous = true;
   rec.maxAlternatives = 1;
   return rec;
 }
@@ -628,17 +673,39 @@ function shouldIgnoreDuplicate(text) {
   return false;
 }
 
-function sendSpeakerText(text, isFinal = false) {
+function sendSpeakerFinal(text) {
   const value = String(text || "").trim();
   if (!value || !wsReady || !ws || ws.readyState !== WebSocket.OPEN) return;
 
   sendWs({
-    type: isFinal ? "speaker_final" : "speaker_text",
+    type: "message",
     room,
+    room_id: room,
+    role: "speaker",
+    text: value,
+    original_text: value,
+    lang,
+    from_lang: lang,
+    source_lang: lang,
+    target_mode: output,
+    module: "onetoall"
+  });
+}
+
+function sendSpeakerInterim(text) {
+  const value = String(text || "").trim();
+  if (!value || !wsReady || !ws || ws.readyState !== WebSocket.OPEN) return;
+
+  sendWs({
+    type: "speaker_text",
+    room,
+    room_id: room,
     role: "speaker",
     text: value,
     lang,
-    target_mode: output
+    source_lang: lang,
+    partial: true,
+    module: "onetoall"
   });
 }
 
@@ -665,6 +732,7 @@ async function startMic() {
     return;
   }
 
+  micShouldRun = true;
   let finalBuffer = "";
 
   recognizer.onstart = () => {
@@ -694,28 +762,71 @@ async function startMic() {
 
     if (finalPart) {
       finalBuffer = `${finalBuffer} ${finalPart}`.trim();
+
       if (!shouldIgnoreDuplicate(finalPart)) {
-        sendSpeakerText(finalPart, true);
+        sendSpeakerFinal(finalPart);
       }
     }
 
     const liveText = finalBuffer || interim || "";
     if (liveText && els.mainText) els.mainText.textContent = liveText;
-    if (interim) sendSpeakerText(interim, false);
+
+    if (interim && interim !== lastInterimText) {
+      lastInterimText = interim;
+      sendSpeakerInterim(interim);
+    }
   };
 
   recognizer.onerror = (e) => {
     const err = String(e?.error || "").toLowerCase();
+    logLine(`Mic hata: ${err || "unknown"}`);
+
     isMicRunning = false;
     prepareMicVisual(false);
+
+    if (err.includes("not-allowed") || err.includes("service-not-allowed")) {
+      micShouldRun = false;
+      setMicStatus("Mic: İzin yok", false);
+      setFlowStatus("Akış: Mikrofon izni gerekli", false);
+      return;
+    }
+
+    if (err.includes("audio-capture")) {
+      micShouldRun = false;
+      setMicStatus("Mic: Yok", false);
+      setFlowStatus("Akış: Mikrofon bulunamadı", false);
+      return;
+    }
+
+    if (err.includes("no-speech")) {
+      setMicStatus("Mic: Açık", true);
+      setFlowStatus("Akış: Dinliyor", true);
+      return;
+    }
+
     setMicStatus("Mic: Hata", false);
-    setFlowStatus(`Akış: ${err || "mic hatası"}`, false);
-    logLine(`Mic hata: ${err || "unknown"}`);
+    setFlowStatus("Akış: Mic sorunu", false);
   };
 
   recognizer.onend = () => {
     isMicRunning = false;
     prepareMicVisual(false);
+
+    if (micShouldRun && micAlways) {
+      clearTimeout(speechRestartTimer);
+      speechRestartTimer = setTimeout(() => {
+        if (!micShouldRun) return;
+        try {
+          recognizer = buildRecognizer(lang);
+          if (!recognizer) return;
+          startMic();
+        } catch (e) {
+          logLine(`Mic yeniden başlatılamadı: ${e?.message || e}`);
+        }
+      }, 250);
+      return;
+    }
+
     setMicStatus("Mic: Kapalı", false);
     setFlowStatus("Akış: Hazır", true);
     if (els.btnStartMic) els.btnStartMic.classList.remove("hide");
@@ -726,6 +837,7 @@ async function startMic() {
   try {
     recognizer.start();
   } catch (e) {
+    micShouldRun = false;
     setMicStatus("Mic: Başlatılamadı", false);
     setFlowStatus("Akış: Mic başlatılamadı", false);
     logLine(`Mic start error: ${e?.message || e}`);
@@ -733,6 +845,8 @@ async function startMic() {
 }
 
 function stopMic() {
+  micShouldRun = false;
+  clearTimeout(speechRestartTimer);
   try { recognizer?.stop?.(); } catch {}
   try { preparedStream?.getTracks?.().forEach((t) => t.stop()); } catch {}
   preparedStream = null;
