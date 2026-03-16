@@ -18,31 +18,15 @@ const $ = (id) => document.getElementById(id);
 /* =========================
    DOM
 ========================= */
-const roomContainer = $("roomContainer");
-
-const backBtn = $("backBtn");
-const exitBtn = $("exitBtn");
-
-const myAvatar = $("myAvatar");
-const myName = $("myName");
-const myNote = $("myNote");
-const profileKicker = $("profileKicker");
-
+const pageContent = $("pageContent");
 const roomPill = $("roomPill");
 const langSelect = $("langSelect");
 const langPickerBtn = $("langPickerBtn");
 const langPickerText = $("langPickerText");
-
-const peopleTitle = $("peopleTitle");
-const peopleCount = $("peopleCount");
-const peopleCountText = $("peopleCountText");
 const peopleScroll = $("peopleScroll");
-
 const chat = $("chat");
-
 const micBtn = $("micBtn");
 const micHint = $("micHint");
-
 const langSheet = $("langSheet");
 const langSheetList = $("langSheetList");
 const langSheetBackdrop = $("langSheetBackdrop");
@@ -67,6 +51,7 @@ let voicesReady = false;
 let audioCtx = null;
 let preparedStream = null;
 let autoSpeak = true;
+let speechMode = "browser";
 
 let siteLang = getSiteLang();
 let LANGS = buildLangPoolForSite(siteLang);
@@ -88,10 +73,7 @@ let joinedPeople = new Map();
 ========================= */
 const SITE_TEXT = {
   tr: {
-    profile: "Aktif Profil",
-    connected: "Canlı çeviri odasına bağlı",
-    participants: "Katılımcılar",
-    person: "kişi",
+    connected: "Bağlantı kuruldu",
     speakHint: "Konuşmak için mikrofona dokun.",
     listeningHint: "Dinleniyor... bitince tekrar dokun.",
     roomCopied: "Oda kodu kopyalandı",
@@ -107,14 +89,13 @@ const SITE_TEXT = {
     connectionClosed: "Bağlantı kapandı.",
     micUnsupported: "Bu cihazda konuşma algılama desteklenmiyor.",
     micDenied: "Mikrofon izni gerekli.",
+    micNoSpeech: "Ses algılanmadı. Mikrofona biraz daha yakın konuşun.",
+    micFailed: "Konuşma algılanamadı. Tekrar deneyin.",
     selectLanguage: "Dil Seç",
     participant: "Katılımcı"
   },
   en: {
-    profile: "Active Profile",
-    connected: "Connected to live translation room",
-    participants: "Participants",
-    person: "people",
+    connected: "Connected",
     speakHint: "Tap the microphone to speak.",
     listeningHint: "Listening... tap again when finished.",
     roomCopied: "Room code copied",
@@ -130,14 +111,13 @@ const SITE_TEXT = {
     connectionClosed: "Connection closed.",
     micUnsupported: "Speech recognition is not supported on this device.",
     micDenied: "Microphone permission required.",
+    micNoSpeech: "No speech detected. Please speak closer to the microphone.",
+    micFailed: "Speech could not be detected. Please try again.",
     selectLanguage: "Select Language",
     participant: "Participant"
   },
   de: {
-    profile: "Aktives Profil",
-    connected: "Mit Live-Übersetzungsraum verbunden",
-    participants: "Teilnehmer",
-    person: "Personen",
+    connected: "Verbunden",
     speakHint: "Zum Sprechen auf das Mikrofon tippen.",
     listeningHint: "Hört zu... zum Beenden erneut tippen.",
     roomCopied: "Raumcode kopiert",
@@ -153,14 +133,13 @@ const SITE_TEXT = {
     connectionClosed: "Verbindung geschlossen.",
     micUnsupported: "Spracherkennung wird auf diesem Gerät nicht unterstützt.",
     micDenied: "Mikrofonberechtigung erforderlich.",
+    micNoSpeech: "Keine Sprache erkannt. Bitte näher ins Mikrofon sprechen.",
+    micFailed: "Sprache konnte nicht erkannt werden. Bitte erneut versuchen.",
     selectLanguage: "Sprache wählen",
     participant: "Teilnehmer"
   },
   fr: {
-    profile: "Profil Actif",
-    connected: "Connecté à la salle de traduction en direct",
-    participants: "Participants",
-    person: "personnes",
+    connected: "Connecté",
     speakHint: "Touchez le micro pour parler.",
     listeningHint: "Écoute... touchez encore une fois quand c’est terminé.",
     roomCopied: "Code de salle copié",
@@ -176,14 +155,13 @@ const SITE_TEXT = {
     connectionClosed: "Connexion fermée.",
     micUnsupported: "La reconnaissance vocale n’est pas prise en charge sur cet appareil.",
     micDenied: "Autorisation micro requise.",
+    micNoSpeech: "Aucune voix détectée. Parlez plus près du micro.",
+    micFailed: "La voix n’a pas pu être détectée. Réessayez.",
     selectLanguage: "Choisir la langue",
     participant: "Participant"
   },
   it: {
-    profile: "Profilo Attivo",
-    connected: "Connesso alla stanza di traduzione live",
-    participants: "Partecipanti",
-    person: "persone",
+    connected: "Connesso",
     speakHint: "Tocca il microfono per parlare.",
     listeningHint: "In ascolto... tocca di nuovo quando hai finito.",
     roomCopied: "Codice stanza copiato",
@@ -199,14 +177,13 @@ const SITE_TEXT = {
     connectionClosed: "Connessione chiusa.",
     micUnsupported: "Il riconoscimento vocale non è supportato su questo dispositivo.",
     micDenied: "Autorizzazione microfono richiesta.",
+    micNoSpeech: "Nessuna voce rilevata. Parla più vicino al microfono.",
+    micFailed: "La voce non è stata rilevata. Riprova.",
     selectLanguage: "Scegli lingua",
     participant: "Partecipante"
   },
   es: {
-    profile: "Perfil Activo",
-    connected: "Conectado a la sala de traducción en vivo",
-    participants: "Participantes",
-    person: "personas",
+    connected: "Conectado",
     speakHint: "Toca el micrófono para hablar.",
     listeningHint: "Escuchando... toca otra vez al terminar.",
     roomCopied: "Código de sala copiado",
@@ -222,6 +199,8 @@ const SITE_TEXT = {
     connectionClosed: "Conexión cerrada.",
     micUnsupported: "El reconocimiento de voz no es compatible con este dispositivo.",
     micDenied: "Se requiere permiso de micrófono.",
+    micNoSpeech: "No se detectó voz. Habla más cerca del micrófono.",
+    micFailed: "No se pudo detectar la voz. Inténtalo de nuevo.",
     selectLanguage: "Elegir idioma",
     participant: "Participante"
   }
@@ -397,30 +376,8 @@ function refreshStaticTexts() {
   try {
     document.documentElement.setAttribute("lang", siteLang);
   } catch {}
-
-  if (profileKicker) profileKicker.textContent = st("profile");
-  if (myNote) myNote.textContent = st("connected");
-  if (peopleTitle) peopleTitle.textContent = st("participants");
-  if (peopleCountText) peopleCountText.textContent = st("person");
   if (langSheetTitle) langSheetTitle.textContent = st("selectLanguage");
   updateMicUI();
-}
-
-function updateProfileUI() {
-  if (myName) myName.textContent = compactDisplayName(myProfile.from_name || st("participant"));
-
-  if (myAvatar) {
-    myAvatar.innerHTML = "";
-    if (myProfile.from_pic) {
-      const img = document.createElement("img");
-      img.src = myProfile.from_pic;
-      img.alt = myProfile.from_name || st("participant");
-      img.referrerPolicy = "no-referrer";
-      myAvatar.appendChild(img);
-    } else {
-      myAvatar.textContent = getInitials(myProfile.from_name || st("participant"));
-    }
-  }
 }
 
 function syncRoomPill() {
@@ -458,8 +415,6 @@ function renderPeople() {
     wrap.appendChild(label);
     peopleScroll.appendChild(wrap);
   });
-
-  if (peopleCount) peopleCount.textContent = String(arr.length || 0);
 }
 
 function ensureSelfInPeople() {
@@ -694,8 +649,14 @@ function closeLangSheet() {
 }
 
 function updateMicUI() {
-  if (micHint) {
-    micHint.textContent = recognizing ? st("listeningHint") : st("speakHint");
+  if (!micHint) return;
+  micHint.className = "helper-text";
+  if (recognizing) {
+    micHint.classList.add("helper-repeat");
+    micHint.textContent = st("listeningHint");
+  } else {
+    micHint.classList.add("helper-ready");
+    micHint.textContent = st("speakHint");
   }
 }
 
@@ -938,10 +899,16 @@ function installNativeSpeechCallbacks() {
       const text = String(payload?.text || "").trim();
 
       recognizing = false;
-      micBtn?.classList.remove("listening");
+      micBtn?.classList.remove("listening", "recorded");
       updateMicUI();
 
-      if (!text) return;
+      if (!text) {
+        addSystemMessage(st("micNoSpeech"));
+        return;
+      }
+
+      micBtn?.classList.add("recorded");
+      setTimeout(() => micBtn?.classList.remove("recorded"), 700);
       sendSpeechMessage(text);
     } catch (e) {
       console.warn("[alltoall native speech result]", e);
@@ -958,7 +925,15 @@ function installNativeSpeechCallbacks() {
     const msg = String(reason || "").toLowerCase();
     if (msg.includes("not-allowed") || msg.includes("denied")) {
       addSystemMessage(st("micDenied"));
+      return;
     }
+
+    if (msg.includes("no-match") || msg.includes("no speech") || msg.includes("speech timeout")) {
+      addSystemMessage(st("micNoSpeech"));
+      return;
+    }
+
+    addSystemMessage(st("micFailed"));
   };
 }
 
@@ -967,9 +942,11 @@ function initSpeech() {
 
   if (!SR) {
     recognizer = null;
+    speechMode = hasNativeSpeech() ? "native" : "none";
     return;
   }
 
+  speechMode = "browser";
   recognizer = new SR();
   recognizer.lang = toBCP(myLang);
   recognizer.interimResults = false;
@@ -980,10 +957,14 @@ function initSpeech() {
     const text = e.results?.[0]?.[0]?.transcript || "";
     recognizing = false;
     micBtn?.classList.remove("listening");
+    micBtn?.classList.add("recorded");
+    setTimeout(() => micBtn?.classList.remove("recorded"), 700);
     updateMicUI();
 
     if (text) {
       sendSpeechMessage(text);
+    } else {
+      addSystemMessage(st("micNoSpeech"));
     }
   };
 
@@ -1004,7 +985,13 @@ function initSpeech() {
       return;
     }
 
+    if (err.includes("no-speech") || err.includes("no-match") || err.includes("audio-capture")) {
+      addSystemMessage(st("micNoSpeech"));
+      return;
+    }
+
     console.warn("[alltoall browser speech]", e);
+    addSystemMessage(st("micFailed"));
   };
 }
 
@@ -1036,7 +1023,9 @@ async function toggleMic() {
 
   if (recognizing) {
     try {
-      if (!hasNativeSpeech()) {
+      if (hasNativeSpeech() && window.Native?.stopSpeechRecognition) {
+        window.Native.stopSpeechRecognition();
+      } else {
         recognizer?.stop?.();
       }
     } catch {}
@@ -1049,6 +1038,7 @@ async function toggleMic() {
 
   if (hasNativeSpeech()) {
     try {
+      speechMode = "native";
       recognizing = true;
       micBtn?.classList.add("listening");
       updateMicUI();
@@ -1066,6 +1056,7 @@ async function toggleMic() {
   }
 
   try {
+    speechMode = "browser";
     recognizing = true;
     micBtn?.classList.add("listening");
     recognizer.lang = toBCP(myLang);
@@ -1076,6 +1067,7 @@ async function toggleMic() {
     micBtn?.classList.remove("listening");
     updateMicUI();
     console.warn("[alltoall mic start]", e);
+    addSystemMessage(st("micFailed"));
   }
 }
 
@@ -1151,7 +1143,6 @@ function connectSocket() {
             ...data.self,
             me_lang: myLang,
           };
-          updateProfileUI();
         }
 
         roomId = String(data.room || roomId || "").trim().toUpperCase();
@@ -1254,10 +1245,7 @@ function connectSocket() {
 async function hydrateMyProfile() {
   try {
     const user = await getCurrentUser();
-    if (!user) {
-      updateProfileUI();
-      return;
-    }
+    if (!user) return;
 
     myProfile = {
       from: getStableFromId(user),
@@ -1267,21 +1255,29 @@ async function hydrateMyProfile() {
       role,
       user_id: user?.id || "",
     };
-
-    updateProfileUI();
   } catch (e) {
     console.warn("[alltoall hydrateMyProfile]", e);
-    updateProfileUI();
   }
 }
 
 /* =========================
    LAYOUT
 ========================= */
-function fixLayout() {
+function applyFooterLift() {
   try {
-    if (window.visualViewport && roomContainer) {
-      roomContainer.style.height = `${window.visualViewport.height}px`;
+    const root = getComputedStyle(document.documentElement);
+    const footerH = parseFloat(root.getPropertyValue("--footerH")) || 0;
+    document.documentElement.style.setProperty("--footerSafe", `${footerH}px`);
+  } catch {}
+}
+
+function fixLayout() {
+  applyFooterLift();
+
+  try {
+    if (window.visualViewport && pageContent) {
+      pageContent.style.height = `${Math.round(window.visualViewport.height)}px`;
+      pageContent.style.minHeight = `${Math.round(window.visualViewport.height)}px`;
     }
   } catch {}
 }
@@ -1290,14 +1286,6 @@ function fixLayout() {
    EVENTS
 ========================= */
 function bindEvents() {
-  backBtn?.addEventListener("click", () => history.back());
-
-  exitBtn?.addEventListener("click", () => {
-    stopAudio();
-    try { ws?.close?.(); } catch {}
-    location.href = "/pages/alltoall.html";
-  });
-
   roomPill?.addEventListener("click", async () => {
     const code = visibleCode();
     if (!code || code === "------") return;
@@ -1313,9 +1301,18 @@ function bindEvents() {
 
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") closeLangSheet();
+
+    if ((e.key === "Enter" || e.key === " ") && document.activeElement === micBtn) {
+      e.preventDefault();
+      toggleMic();
+    }
   });
 
-  micBtn?.addEventListener("click", toggleMic);
+  micBtn?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleMic();
+  });
 
   if (window.visualViewport) {
     window.visualViewport.addEventListener("resize", fixLayout);
@@ -1336,6 +1333,7 @@ function bindEvents() {
       renderPeople();
       syncRoomPill();
     }
+    fixLayout();
   });
 
   try {
@@ -1355,6 +1353,7 @@ function bindEvents() {
 async function init() {
   siteLang = getSiteLang();
   LANGS = buildLangPoolForSite(siteLang);
+
   refreshStaticTexts();
   buildLanguageSelect();
   syncRoomPill();
