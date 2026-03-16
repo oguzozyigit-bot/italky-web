@@ -35,15 +35,29 @@ const langSheetClose = $("langSheetClose");
 const langSheetTitle = $("langSheetTitle");
 
 /* =========================
-   URL / STATE
+   URL / ROLE
 ========================= */
 const params = new URLSearchParams(location.search);
-const hostCode = String(params.get("host") || "").trim().toUpperCase();
-const role = String(params.get("role") || "guest").trim().toLowerCase();
+const rawHostCode = String(params.get("host") || "").trim().toUpperCase();
+const rawRole = String(params.get("role") || "guest").trim().toLowerCase();
 const incomingRoomId = String(params.get("room") || "").trim().toUpperCase();
 
+/*
+  Eğer sayfa hiçbir parametre olmadan açıldıysa kendini HOST kabul et.
+  Böylece oda kodu otomatik oluşur.
+*/
+const role =
+  (!rawHostCode && !incomingRoomId)
+    ? "host"
+    : (rawRole === "host" ? "host" : "guest");
+
+let hostCode = rawHostCode || "";
 let roomId = incomingRoomId || "";
 let inviteCode = hostCode || "";
+
+/* =========================
+   STATE
+========================= */
 let ws = null;
 let wsReady = false;
 let reconnectTimer = null;
@@ -77,6 +91,10 @@ let myProfile = {
 let joinedPeople = new Map();
 let lastLocalSentText = "";
 let lastLocalSentAt = 0;
+
+let recognitionLock = false;
+let lastRecognitionText = "";
+let lastRecognitionAt = 0;
 
 /* =========================
    TEXT
@@ -285,7 +303,7 @@ function personKey(person) {
 }
 
 function visibleCode() {
-  return inviteCode || roomId || "------";
+  return inviteCode || hostCode || roomId || "------";
 }
 
 /* =========================
@@ -300,7 +318,9 @@ function refreshStaticTexts() {
 }
 
 function syncRoomPill() {
-  if (roomPill) roomPill.textContent = visibleCode();
+  if (roomPill) {
+    roomPill.textContent = visibleCode();
+  }
 }
 
 function renderPeople() {
@@ -412,7 +432,9 @@ function removePerson(person) {
 function scrollChatBottom() {
   if (!chat) return;
   requestAnimationFrame(() => {
-    try { chat.scrollTop = chat.scrollHeight; } catch {}
+    try {
+      chat.scrollTop = chat.scrollHeight;
+    } catch {}
   });
 }
 
@@ -661,6 +683,25 @@ async function warmAudio() {
   } catch {}
 }
 
+async function prepareEnhancedMic() {
+  try {
+    if (!navigator.mediaDevices?.getUserMedia) return;
+    if (preparedStream) return;
+
+    preparedStream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
+        channelCount: 1
+      },
+      video: false
+    });
+  } catch (e) {
+    console.warn("[alltoall enhanced mic]", e);
+  }
+}
+
 async function speakViaApi(text, langCode) {
   const userId = await getCurrentUserId();
   const voice = getVoicePreference();
@@ -825,17 +866,25 @@ async function speakText(text, langCode) {
 ========================= */
 async function createRoomIfHost() {
   if (role !== "host") return null;
-  if (roomId) return { room_id: roomId, host_code: inviteCode || hostCode || roomId };
 
-  const finalHostCode =
-    hostCode ||
-    `A${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+  if (!inviteCode) {
+    inviteCode = `A${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+    hostCode = inviteCode;
+    syncRoomPill();
+  }
+
+  if (roomId) {
+    syncRoomPill();
+    return { room_id: roomId, host_code: inviteCode };
+  }
 
   const r = await fetch(`${API_BASE}/interpreter/create-room`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json"
+    },
     body: JSON.stringify({
-      host_code: finalHostCode,
+      host_code: inviteCode,
       my_lang: myLang,
       mode: "alltoall"
     })
@@ -853,7 +902,8 @@ async function createRoomIfHost() {
   }
 
   roomId = String(j.room_id || "").trim().toUpperCase();
-  inviteCode = String(j.host_code || finalHostCode || roomId).trim().toUpperCase();
+  inviteCode = String(j.host_code || inviteCode || roomId).trim().toUpperCase();
+  hostCode = inviteCode;
   syncRoomPill();
   return j;
 }
@@ -1051,12 +1101,8 @@ function connectSocket() {
 }
 
 /* =========================
-   SEND
+   SPEECH DEDUPE
 ========================= */
-function canSend() {
-  return !!(wsReady && ws && ws.readyState === WebSocket.OPEN && roomId);
-}
-
 function shouldIgnoreDuplicateLocal(text) {
   const value = String(text || "").trim();
   const now = Date.now();
@@ -1072,30 +1118,70 @@ function shouldIgnoreDuplicateLocal(text) {
   return false;
 }
 
-function sendSpeechMessage(text) {
+function shouldIgnoreRecognition(text) {
   const value = String(text || "").trim();
-  if (!value) return;
-  if (shouldIgnoreDuplicateLocal(value)) return;
+  const now = Date.now();
+
+  if (!value) return true;
+
+  if (recognitionLock) return true;
+
+  if (value === lastRecognitionText && (now - lastRecognitionAt) < 3000) {
+    return true;
+  }
+
+  lastRecognitionText = value;
+  lastRecognitionAt = now;
+  return false;
+}
+
+/* =========================
+   SEND
+========================= */
+async function finalizeRecognition(text) {
+  const cleaned = String(text || "").trim();
+
+  recognitionLock = true;
+  setTimeout(() => {
+    recognitionLock = false;
+  }, 1200);
+
+  if (!cleaned) {
+    setErrorUI();
+    return;
+  }
+
+  if (shouldIgnoreRecognition(cleaned)) {
+    setErrorUI();
+    return;
+  }
+
+  if (shouldIgnoreDuplicateLocal(cleaned)) {
+    setErrorUI();
+    return;
+  }
 
   addMessage({
     side: "right",
     sender: myProfile.from_name,
-    text: value,
+    text: cleaned,
     withSpeaker: false,
-    speakLang: myLang,
     fromLang: myLang
   });
 
-  if (!canSend()) {
+  if (!wsReady || !ws || ws.readyState !== WebSocket.OPEN || !roomId) {
     addSystemMessage(st("socketNotReady"));
+    setErrorUI();
     return;
   }
 
   sendWs({
     type: "message",
-    text: value,
+    text: cleaned,
     lang: myLang
   });
+
+  setErrorUI();
 }
 
 /* =========================
@@ -1127,42 +1213,6 @@ function stopRecognizer() {
 async function speechToTextFallback() {
   const txt = prompt(`${getLangMeta(myLang).name} olarak konuşmanı yaz:`) || "";
   return String(txt).trim() || null;
-}
-
-async function finalizeRecognition(text) {
-  const cleaned = String(text || "").trim();
-  if (!cleaned) {
-    setErrorUI();
-    updateMicUI();
-    return;
-  }
-
-  if (shouldIgnoreDuplicateLocal(cleaned)) {
-    updateMicUI();
-    return;
-  }
-
-  addMessage({
-    side: "right",
-    sender: myProfile.from_name,
-    text: cleaned,
-    withSpeaker: false,
-    fromLang: myLang
-  });
-
-  if (!canSend()) {
-    addSystemMessage(st("socketNotReady"));
-    updateMicUI();
-    return;
-  }
-
-  sendWs({
-    type: "message",
-    text: cleaned,
-    lang: myLang
-  });
-
-  updateMicUI();
 }
 
 function setListeningUI() {
@@ -1202,10 +1252,13 @@ function startRecording() {
     setListeningUI();
   };
 
-  rec.onresult = (e) => {
-    const heard = e.results?.[0]?.[0]?.transcript || "";
+  rec.onresult = async (e) => {
+    const heard = String(e.results?.[0]?.[0]?.transcript || "").trim();
+
+    try { rec.stop(); } catch {}
+
     setTranslatingUI();
-    Promise.resolve().then(() => finalizeRecognition(heard));
+    await finalizeRecognition(heard);
   };
 
   rec.onerror = async (e) => {
@@ -1264,6 +1317,27 @@ async function toggleRecording() {
 }
 
 /* =========================
+   PROFILE
+========================= */
+async function hydrateMyProfile() {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return;
+
+    myProfile = {
+      from: getStableFromId(user),
+      from_name: getDisplayNameFromUser(user),
+      from_pic: getAvatarFromUser(user),
+      me_lang: myLang,
+      role,
+      user_id: user?.id || "",
+    };
+  } catch (e) {
+    console.warn("[alltoall hydrateMyProfile]", e);
+  }
+}
+
+/* =========================
    BOOT
 ========================= */
 async function warmApis() {
@@ -1316,27 +1390,6 @@ async function ensureReady() {
     await bootPromise;
   } catch {}
   return true;
-}
-
-/* =========================
-   PROFILE
-========================= */
-async function hydrateMyProfile() {
-  try {
-    const user = await getCurrentUser();
-    if (!user) return;
-
-    myProfile = {
-      from: getStableFromId(user),
-      from_name: getDisplayNameFromUser(user),
-      from_pic: getAvatarFromUser(user),
-      me_lang: myLang,
-      role,
-      user_id: user?.id || "",
-    };
-  } catch (e) {
-    console.warn("[alltoall hydrateMyProfile]", e);
-  }
 }
 
 /* =========================
