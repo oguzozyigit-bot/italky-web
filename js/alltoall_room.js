@@ -49,12 +49,15 @@ let manualClose = false;
 
 let recognizing = false;
 let recognizer = null;
+let recordingSide = null;
 let currentAudio = null;
 let voicesReady = false;
 let audioCtx = null;
 let preparedStream = null;
 let autoSpeak = true;
-let nativeSpeechTimer = null;
+let bootReady = false;
+let bootStarted = false;
+let bootPromise = null;
 
 let siteLang = getSiteLang();
 let LANGS = buildLangPoolForSite(siteLang);
@@ -77,7 +80,9 @@ let joinedPeople = new Map();
 const SITE_TEXT = {
   tr: {
     speakHint: "Konuşmak için mikrofona dokun.",
-    listeningHint: "Dinleniyor... bitince tekrar dokun.",
+    listeningHint: "Konuşmanız bitince mikrofona tekrar basınız.",
+    preparing: "Sistem hazırlanıyor...",
+    translating: "Gönderiliyor...",
     roomCopied: "Oda kodu kopyalandı",
     socketNotReady: "Bağlantı henüz hazır değil.",
     roomMissing: "Oda bilgisi bulunamadı.",
@@ -94,11 +99,14 @@ const SITE_TEXT = {
     micNoSpeech: "Konuşma algılanamadı. Tekrar deneyin.",
     micFailed: "Mikrofon başlatılamadı. Tekrar deneyin.",
     selectLanguage: "Dil Seç",
-    participant: "Katılımcı"
+    participant: "Katılımcı",
+    langUpdated: "Dil güncellendi"
   },
   en: {
     speakHint: "Tap the microphone to speak.",
-    listeningHint: "Listening... tap again when finished.",
+    listeningHint: "Press the microphone again when you finish speaking.",
+    preparing: "System is preparing...",
+    translating: "Sending...",
     roomCopied: "Room code copied",
     socketNotReady: "Connection is not ready yet.",
     roomMissing: "Room information not found.",
@@ -115,11 +123,14 @@ const SITE_TEXT = {
     micNoSpeech: "Speech was not detected. Please try again.",
     micFailed: "Microphone could not be started. Please try again.",
     selectLanguage: "Select Language",
-    participant: "Participant"
+    participant: "Participant",
+    langUpdated: "Language updated"
   },
   de: {
     speakHint: "Zum Sprechen auf das Mikrofon tippen.",
-    listeningHint: "Hört zu... zum Beenden erneut tippen.",
+    listeningHint: "Drücken Sie das Mikrofon erneut, wenn Sie fertig gesprochen haben.",
+    preparing: "System wird vorbereitet...",
+    translating: "Wird gesendet...",
     roomCopied: "Raumcode kopiert",
     socketNotReady: "Verbindung ist noch nicht bereit.",
     roomMissing: "Rauminformation nicht gefunden.",
@@ -136,11 +147,14 @@ const SITE_TEXT = {
     micNoSpeech: "Keine Sprache erkannt. Bitte erneut versuchen.",
     micFailed: "Mikrofon konnte nicht gestartet werden. Bitte erneut versuchen.",
     selectLanguage: "Sprache wählen",
-    participant: "Teilnehmer"
+    participant: "Teilnehmer",
+    langUpdated: "Sprache aktualisiert"
   },
   fr: {
     speakHint: "Touchez le micro pour parler.",
-    listeningHint: "Écoute... touchez encore une fois quand c’est terminé.",
+    listeningHint: "Appuyez de nouveau sur le micro quand vous avez fini de parler.",
+    preparing: "Le système se prépare...",
+    translating: "Envoi...",
     roomCopied: "Code de salle copié",
     socketNotReady: "La connexion n'est pas encore prête.",
     roomMissing: "Informations de salle introuvables.",
@@ -157,11 +171,14 @@ const SITE_TEXT = {
     micNoSpeech: "Aucune parole détectée. Réessayez.",
     micFailed: "Le micro n’a pas pu démarrer. Réessayez.",
     selectLanguage: "Choisir la langue",
-    participant: "Participant"
+    participant: "Participant",
+    langUpdated: "Langue mise à jour"
   },
   it: {
     speakHint: "Tocca il microfono per parlare.",
-    listeningHint: "In ascolto... tocca di nuovo quando hai finito.",
+    listeningHint: "Premi di nuovo il microfono quando hai finito di parlare.",
+    preparing: "Sistema in preparazione...",
+    translating: "Invio...",
     roomCopied: "Codice stanza copiato",
     socketNotReady: "La connessione non è ancora pronta.",
     roomMissing: "Informazioni stanza non trovate.",
@@ -178,11 +195,14 @@ const SITE_TEXT = {
     micNoSpeech: "Voce non rilevata. Riprova.",
     micFailed: "Impossibile avviare il microfono. Riprova.",
     selectLanguage: "Scegli lingua",
-    participant: "Partecipante"
+    participant: "Partecipante",
+    langUpdated: "Lingua aggiornata"
   },
   es: {
     speakHint: "Toca el micrófono para hablar.",
-    listeningHint: "Escuchando... toca otra vez al terminar.",
+    listeningHint: "Pulse el micrófono otra vez cuando termine de hablar.",
+    preparing: "El sistema se está preparando...",
+    translating: "Enviando...",
     roomCopied: "Código de sala copiado",
     socketNotReady: "La conexión todavía no está lista.",
     roomMissing: "No se encontró información de la sala.",
@@ -199,7 +219,8 @@ const SITE_TEXT = {
     micNoSpeech: "No se detectó voz. Inténtalo de nuevo.",
     micFailed: "No se pudo iniciar el micrófono. Inténtalo de nuevo.",
     selectLanguage: "Elegir idioma",
-    participant: "Participante"
+    participant: "Participante",
+    langUpdated: "Idioma actualizado"
   }
 };
 
@@ -220,7 +241,7 @@ function stf(key, vars = {}) {
    HELPERS
 ========================= */
 function canonical(code) {
-  return String(code || "").toLowerCase().trim();
+  return String(code || "").toLowerCase().split("-")[0].trim();
 }
 
 function getSiteLang() {
@@ -253,47 +274,39 @@ function buildLangPoolForSite(locale) {
   }));
 }
 
-function toBCP(code) {
-  const map = {
-    tr: "tr-TR",
-    en: "en-US",
-    de: "de-DE",
-    fr: "fr-FR",
-    it: "it-IT",
-    es: "es-ES",
-    ru: "ru-RU",
-    el: "el-GR",
-    az: "az-AZ",
-    ka: "ka-GE",
-    pt: "pt-PT",
-    "pt-br": "pt-BR",
-    nl: "nl-NL",
-    sv: "sv-SE",
-    no: "no-NO",
-    da: "da-DK",
-    fi: "fi-FI",
-    pl: "pl-PL",
-    cs: "cs-CZ",
-    sk: "sk-SK",
-    hu: "hu-HU",
-    ro: "ro-RO",
-    bg: "bg-BG",
-    uk: "uk-UA",
-    ar: "ar-SA",
-    he: "he-IL",
-    fa: "fa-IR",
-    ur: "ur-PK",
-    hi: "hi-IN",
-    bn: "bn-BD",
-    id: "id-ID",
-    ms: "ms-MY",
-    vi: "vi-VN",
-    th: "th-TH",
-    zh: "zh-CN",
-    ja: "ja-JP",
-    ko: "ko-KR"
+const BCP = {
+  tr: "tr-TR",
+  en: "en-US",
+  de: "de-DE",
+  fr: "fr-FR",
+  it: "it-IT",
+  es: "es-ES",
+  ru: "ru-RU",
+  el: "el-GR",
+  az: "az-AZ",
+  ka: "ka-GE",
+};
+
+function langObj(code) {
+  const c = canonical(code);
+  const found = LANGS.find((x) => x.code === c);
+  return found || {
+    code: c,
+    flag: "🌐",
+    name: c.toUpperCase(),
+    native: c.toUpperCase(),
+    bcp: BCP[c] || "en-US",
   };
-  return map[canonical(code)] || "tr-TR";
+}
+
+function labelChip(code) {
+  const o = langObj(code);
+  return `${o.flag} ${o.name}`;
+}
+
+function toBCP(code) {
+  const c = canonical(code);
+  return BCP[c] || "en-US";
 }
 
 function compactDisplayName(fullName) {
@@ -375,14 +388,62 @@ function visibleCode() {
 }
 
 /* =========================
-   UI
+   UI / VISUAL STATE
 ========================= */
+function setHelper(el, text, tone) {
+  if (!el) return;
+  el.className = "helper-text";
+  if (tone) el.classList.add(tone);
+  el.textContent = text || "";
+}
+
+function setSystemReadyUI() {
+  resetMic();
+  setHelper(micHint, st("speakHint"), "helper-ready");
+}
+
+function setSystemPreparingUI() {
+  resetMic();
+  setHelper(micHint, st("preparing"), "helper-wait");
+}
+
+function setListeningUI() {
+  setMicState("listening");
+  setHelper(micHint, st("listeningHint"), "helper-repeat");
+}
+
+function setTranslatingUI() {
+  setMicState("recorded");
+  setHelper(micHint, st("translating"), "helper-repeat");
+}
+
+function setErrorUI(messageKey = "micFailed") {
+  resetMic();
+  setHelper(micHint, st(messageKey), "helper-wait");
+}
+
+function bounceToReady(delay = 1200) {
+  setTimeout(() => setSystemReadyUI(), delay);
+}
+
+function setMicState(state) {
+  if (!micBtn) return;
+  micBtn.classList.remove("listening", "recorded");
+  if (state === "listening") micBtn.classList.add("listening");
+  if (state === "recorded") micBtn.classList.add("recorded");
+}
+
+function resetMic() {
+  micBtn?.classList.remove("listening", "recorded");
+}
+
 function refreshStaticTexts() {
   try {
     document.documentElement.setAttribute("lang", siteLang);
   } catch {}
   if (langSheetTitle) langSheetTitle.textContent = st("selectLanguage");
-  updateMicUI();
+  syncLangPickerLabel();
+  if (!recognizing) setSystemReadyUI();
 }
 
 function syncRoomPill() {
@@ -495,6 +556,9 @@ function removePerson(person) {
   }
 }
 
+/* =========================
+   BUBBLES
+========================= */
 function scrollChatBottom() {
   if (!chat) return;
   requestAnimationFrame(() => {
@@ -575,6 +639,9 @@ function addMessage({ side = "left", sender = "", text = "", withSpeaker = false
   scrollChatBottom();
 }
 
+/* =========================
+   LANG PICKER
+========================= */
 function buildLanguageSelect() {
   if (!langSelect) return;
 
@@ -617,25 +684,10 @@ function renderLangSheet() {
   `).join("");
 
   langSheetList.querySelectorAll(".sheet-item").forEach((btn) => {
-    btn.addEventListener("click", () => {
+    btn.addEventListener("click", async () => {
       const value = canonical(btn.dataset.value || "tr");
-      langSelect.value = value;
-      myLang = value;
-      localStorage.setItem("alltoall_lang", myLang);
-      myProfile.me_lang = myLang;
-
-      syncLangPickerLabel();
+      await applyMyLanguageChange(value);
       closeLangSheet();
-
-      if (ws && ws.readyState === WebSocket.OPEN) {
-        sendWs({
-          type: "profile_sync",
-          from_name: myProfile.from_name,
-          from_pic: myProfile.from_pic,
-          me_lang: myLang,
-          user_id: myProfile.user_id,
-        });
-      }
     });
   });
 }
@@ -653,15 +705,24 @@ function closeLangSheet() {
   langSheet?.setAttribute("aria-hidden", "true");
 }
 
-function updateMicUI() {
-  if (!micHint) return;
-  micHint.className = "helper-text";
-  if (recognizing) {
-    micHint.classList.add("helper-repeat");
-    micHint.textContent = st("listeningHint");
-  } else {
-    micHint.classList.add("helper-ready");
-    micHint.textContent = st("speakHint");
+async function applyMyLanguageChange(nextLang) {
+  myLang = canonical(nextLang || "tr");
+  localStorage.setItem("alltoall_lang", myLang);
+  myProfile.me_lang = myLang;
+
+  syncLangPickerLabel();
+  setHelper(micHint, st("langUpdated"), "helper-ready");
+  bounceToReady(800);
+  rebuildRecognizer();
+
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    sendWs({
+      type: "profile_sync",
+      from_name: myProfile.from_name,
+      from_pic: myProfile.from_pic,
+      me_lang: myLang,
+      user_id: myProfile.user_id,
+    });
   }
 }
 
@@ -908,133 +969,18 @@ async function speakText(text, langCode) {
 }
 
 /* =========================
-   SPEECH
+   SEND
 ========================= */
-function hasNativeSpeech() {
-  return !!(window.Native && typeof window.Native.startSpeechRecognition === "function");
-}
-
-function clearNativeSpeechTimer() {
-  if (nativeSpeechTimer) {
-    clearTimeout(nativeSpeechTimer);
-    nativeSpeechTimer = null;
-  }
-}
-
-function handleSpeechResultText(rawText) {
-  clearNativeSpeechTimer();
-
-  const text = String(rawText || "").trim();
-
-  recognizing = false;
-  micBtn?.classList.remove("listening");
-  micBtn?.classList.add("recorded");
-  setTimeout(() => micBtn?.classList.remove("recorded"), 700);
-  updateMicUI();
-
-  if (!text) {
-    addSystemMessage(st("micNoSpeech"));
-    return;
-  }
-
-  sendSpeechMessage(text);
-}
-
-function handleSpeechError(reason) {
-  clearNativeSpeechTimer();
-
-  console.warn("[alltoall speech error]", reason);
-
-  recognizing = false;
-  micBtn?.classList.remove("listening");
-  updateMicUI();
-
-  const msg = String(reason || "").toLowerCase();
-
-  if (msg.includes("not-allowed") || msg.includes("denied")) {
-    addSystemMessage(st("micDenied"));
-    return;
-  }
-
-  if (msg.includes("no-speech") || msg.includes("no-match") || msg.includes("audio")) {
-    addSystemMessage(st("micNoSpeech"));
-    return;
-  }
-
-  addSystemMessage(st("micFailed"));
-}
-
-function installNativeSpeechCallbacks() {
-  const onResult = (payload) => {
-    try {
-      let text = "";
-
-      if (typeof payload === "string") {
-        text = payload;
-      } else if (payload && typeof payload === "object") {
-        text =
-          payload.text ||
-          payload.transcript ||
-          payload.result ||
-          payload.message ||
-          "";
-      }
-
-      handleSpeechResultText(text);
-    } catch (e) {
-      console.warn("[alltoall native speech result parse]", e);
-      handleSpeechError("parse-error");
+function sendWs(payload) {
+  try {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify(payload));
+    } else {
+      addSystemMessage(st("socketNotReady"));
     }
-  };
-
-  const onError = (reason) => {
-    handleSpeechError(reason);
-  };
-
-  window.onNativeSpeechResult = onResult;
-  window.onSpeechResult = onResult;
-  window.handleSpeechResult = onResult;
-
-  window.onNativeSpeechError = onError;
-  window.onSpeechError = onError;
-  window.handleSpeechError = onError;
-}
-
-function initSpeech() {
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-  if (!SR) {
-    recognizer = null;
-    return;
+  } catch (e) {
+    console.warn("[alltoall sendWs]", e);
   }
-
-  recognizer = new SR();
-  recognizer.lang = toBCP(myLang);
-  recognizer.interimResults = false;
-  recognizer.continuous = false;
-  recognizer.maxAlternatives = 1;
-
-  recognizer.onstart = () => {
-    recognizing = true;
-    micBtn?.classList.add("listening");
-    updateMicUI();
-  };
-
-  recognizer.onresult = (e) => {
-    const text = e.results?.[0]?.[0]?.transcript || "";
-    handleSpeechResultText(text);
-  };
-
-  recognizer.onend = () => {
-    if (!recognizing) return;
-    recognizing = false;
-    micBtn?.classList.remove("listening");
-    updateMicUI();
-  };
-
-  recognizer.onerror = (e) => {
-    handleSpeechError(e?.error || "browser-speech-error");
-  };
 }
 
 function sendSpeechMessage(text) {
@@ -1057,100 +1003,148 @@ function sendSpeechMessage(text) {
   });
 }
 
-async function toggleMic() {
-  if (document.visibilityState === "hidden") return;
+/* =========================
+   SPEECH - LIVE_INTERPRETER STYLE
+========================= */
+function buildRecognizer(langCode) {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return null;
 
-  await warmAudio();
+  const rec = new SR();
+  rec.lang = langObj(langCode).bcp || toBCP(langCode);
+  rec.interimResults = false;
+  rec.continuous = false;
+  rec.maxAlternatives = 1;
+  return rec;
+}
+
+function rebuildRecognizer() {
+  recognizer = buildRecognizer(myLang);
+}
+
+function stopRecognizer() {
+  if (recognizer) {
+    try { recognizer.stop(); } catch {}
+    recognizer = null;
+  }
+}
+
+async function speechToTextFallback() {
+  const txt = prompt(`${langObj(myLang).name} olarak konuşmanı yaz:`) || "";
+  return String(txt).trim() || null;
+}
+
+async function finalizeRecognition(text) {
+  const cleaned = String(text || "").trim();
+  if (!cleaned) {
+    setErrorUI("micNoSpeech");
+    bounceToReady(1000);
+    return;
+  }
+
+  sendSpeechMessage(cleaned);
+  setTranslatingUI();
+  bounceToReady(1000);
+}
+
+function startRecording() {
+  const rec = buildRecognizer(myLang);
+
+  if (!rec) {
+    setErrorUI("micUnsupported");
+    bounceToReady(1800);
+    return;
+  }
+
+  recognizer = rec;
+  recordingSide = "bot";
+
+  rec.onstart = () => {
+    recognizing = true;
+    setListeningUI();
+  };
+
+  rec.onresult = (e) => {
+    const heard = e.results?.[0]?.[0]?.transcript || "";
+    Promise.resolve().then(() => finalizeRecognition(heard));
+  };
+
+  rec.onerror = async (e) => {
+    console.warn("[alltoall speech error]", e);
+
+    recognizing = false;
+    recordingSide = null;
+    recognizer = null;
+
+    if (String(e?.error || "").includes("not-allowed")) {
+      setErrorUI("micDenied");
+      bounceToReady(1600);
+      return;
+    }
+
+    const fallback = await speechToTextFallback();
+    if (fallback) {
+      await finalizeRecognition(fallback);
+    } else {
+      setErrorUI("micFailed");
+      bounceToReady(1200);
+    }
+  };
+
+  rec.onend = () => {
+    recognizing = false;
+    recognizer = null;
+    recordingSide = null;
+  };
+
+  try {
+    rec.start();
+  } catch (e) {
+    console.warn("[alltoall rec.start error]", e);
+    recognizing = false;
+    recognizer = null;
+    recordingSide = null;
+    setErrorUI("micFailed");
+    bounceToReady(1200);
+  }
+}
+
+async function toggleMic() {
+  await ensureReady();
 
   const granted = await requestMicPermission();
   if (!granted) {
-    addSystemMessage(st("micDenied"));
+    setErrorUI("micDenied");
+    bounceToReady(1500);
     return;
   }
 
   try {
+    await warmAudio();
     await prepareEnhancedMic();
   } catch {}
 
-  if (recognizing) {
-    try {
-      clearNativeSpeechTimer();
-
-      if (hasNativeSpeech() && window.Native?.stopSpeechRecognition) {
-        window.Native.stopSpeechRecognition();
-      } else {
-        recognizer?.stop?.();
-      }
-    } catch {}
-
+  if (recordingSide === "bot") {
+    stopRecognizer();
+    recordingSide = null;
     recognizing = false;
-    micBtn?.classList.remove("listening");
-    updateMicUI();
+    setTranslatingUI();
+    bounceToReady(1000);
     return;
   }
 
-  if (hasNativeSpeech()) {
-    try {
-      clearNativeSpeechTimer();
-
-      recognizing = true;
-      micBtn?.classList.add("listening");
-      updateMicUI();
-
-      nativeSpeechTimer = setTimeout(() => {
-        handleSpeechError("timeout");
-      }, 12000);
-
-      window.Native.startSpeechRecognition(toBCP(myLang), "bottom");
-      return;
-    } catch (e) {
-      console.warn("[alltoall native speech start]", e);
-      clearNativeSpeechTimer();
-      recognizing = false;
-      micBtn?.classList.remove("listening");
-      updateMicUI();
-    }
-  }
-
-  try {
-    recognizer?.abort?.();
-  } catch {}
-
-  recognizer = null;
-  initSpeech();
-
-  if (!recognizer) {
-    addSystemMessage(st("micUnsupported"));
-    return;
-  }
-
-  try {
-    recognizer.lang = toBCP(myLang);
-    recognizer.start();
-  } catch (e) {
+  if (recordingSide) {
+    stopRecognizer();
+    recordingSide = null;
     recognizing = false;
-    micBtn?.classList.remove("listening");
-    updateMicUI();
-    console.warn("[alltoall mic start]", e);
-    addSystemMessage(st("micFailed"));
   }
+
+  startRecording();
 }
 
 /* =========================
    SOCKET
 ========================= */
-function sendWs(payload) {
-  try {
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify(payload));
-    } else {
-      addSystemMessage(st("socketNotReady"));
-    }
-  } catch (e) {
-    console.warn("[alltoall sendWs]", e);
-  }
-}
-
 async function resolveRoomForGuestByHost() {
   if (!hostCode || role !== "guest") return;
 
@@ -1209,6 +1203,8 @@ function connectSocket() {
       user_id: myProfile.user_id,
       host_code: hostCode || roomId
     });
+
+    setSystemReadyUI();
   };
 
   ws.onmessage = async (event) => {
@@ -1229,6 +1225,7 @@ function connectSocket() {
         syncRoomPill();
         ensureSelfInPeople();
         addSystemMessage(st("roomCreated"));
+        setSystemReadyUI();
         return;
       }
 
@@ -1288,6 +1285,7 @@ function connectSocket() {
         }
 
         await speakText(finalText, myLang);
+        setSystemReadyUI();
         return;
       }
 
@@ -1369,9 +1367,64 @@ function fixLayout() {
 }
 
 /* =========================
+   BOOT / READY
+========================= */
+async function warmApis() {
+  await Promise.allSettled([
+    fetch(`${API_BASE}/healthz`).catch(() => {}),
+  ]);
+}
+
+function unlockOnFirstTouch() {
+  const once = async () => {
+    try {
+      await warmAudio();
+    } catch {}
+    window.removeEventListener("touchstart", once);
+    window.removeEventListener("pointerdown", once);
+    window.removeEventListener("click", once);
+  };
+
+  window.addEventListener("touchstart", once, { passive: true });
+  window.addEventListener("pointerdown", once, { passive: true });
+  window.addEventListener("click", once, { passive: true });
+}
+
+function startBoot() {
+  if (bootStarted) return bootPromise;
+  bootStarted = true;
+
+  bootPromise = (async () => {
+    setSystemPreparingUI();
+    syncLangPickerLabel();
+
+    await Promise.allSettled([
+      warmApis(),
+      warmAudio(),
+    ]);
+
+    bootReady = true;
+    setSystemReadyUI();
+  })();
+
+  return bootPromise;
+}
+
+async function ensureReady() {
+  if (bootReady) return true;
+  if (!bootStarted) startBoot();
+  try { await bootPromise; } catch {}
+  return true;
+}
+
+/* =========================
    EVENTS
 ========================= */
 function bindEvents() {
+  syncLangPickerLabel();
+  unlockOnFirstTouch();
+  startBoot();
+
   roomPill?.addEventListener("click", async () => {
     const code = visibleCode();
     if (!code || code === "------") return;
@@ -1394,10 +1447,10 @@ function bindEvents() {
     }
   });
 
-  micBtn?.addEventListener("click", (e) => {
+  micBtn?.addEventListener("click", async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    toggleMic();
+    await toggleMic();
   });
 
   if (window.visualViewport) {
@@ -1445,14 +1498,13 @@ async function init() {
   refreshStaticTexts();
   buildLanguageSelect();
   syncRoomPill();
-  updateMicUI();
+  setSystemReadyUI();
   fixLayout();
 
   await hydrateMyProfile();
   ensureSelfInPeople();
 
-  initSpeech();
-  installNativeSpeechCallbacks();
+  rebuildRecognizer();
   bindEvents();
 
   try {
@@ -1477,24 +1529,8 @@ init();
 
 window.addEventListener("beforeunload", () => {
   manualClose = true;
-  clearNativeSpeechTimer();
   stopAudio();
-
-  try {
-    if (hasNativeSpeech() && window.Native?.stopSpeechRecognition) {
-      window.Native.stopSpeechRecognition();
-    }
-  } catch {}
-
-  try {
-    recognizer?.stop?.();
-  } catch {}
-
-  try {
-    ws?.close?.();
-  } catch {}
-
-  try {
-    preparedStream?.getTracks?.().forEach((t) => t.stop());
-  } catch {}
+  try { stopRecognizer(); } catch {}
+  try { ws?.close?.(); } catch {}
+  try { preparedStream?.getTracks?.().forEach((t) => t.stop()); } catch {}
 });
