@@ -61,12 +61,6 @@ let bootReady = false;
 let bootStarted = false;
 let bootPromise = null;
 
-let micManualStop = false;
-let micAutoStopTimer = null;
-let liveTranscript = "";
-let lastLocalSentText = "";
-let lastLocalSentAt = 0;
-
 let siteLang = getSiteLang();
 let LANGS = buildLangPoolForSite(siteLang);
 let myLang = canonical(localStorage.getItem("alltoall_lang") || "tr");
@@ -81,6 +75,14 @@ let myProfile = {
 };
 
 let joinedPeople = new Map();
+let lastLocalSentText = "";
+let lastLocalSentAt = 0;
+
+let micManualStop = false;
+let micAutoStopTimer = null;
+let liveTranscript = "";
+let sessionFinalParts = [];
+let speakingSeq = 0;
 
 /* =========================
    SITE TEXT
@@ -300,6 +302,27 @@ function shouldIgnoreDuplicateLocal(text) {
   return false;
 }
 
+function normalizeSpeechChunk(text) {
+  return String(text || "").replace(/\s+/g, " ").trim();
+}
+
+function appendUniqueFinalPart(text) {
+  const clean = normalizeSpeechChunk(text);
+  if (!clean) return;
+
+  const last = sessionFinalParts[sessionFinalParts.length - 1] || "";
+  if (clean === last) return;
+
+  if (last && (clean.startsWith(last) || last.startsWith(clean))) {
+    sessionFinalParts[sessionFinalParts.length - 1] =
+      clean.length > last.length ? clean : last;
+  } else {
+    sessionFinalParts.push(clean);
+  }
+
+  liveTranscript = sessionFinalParts.join(" ").replace(/\s+/g, " ").trim();
+}
+
 function clearMicAutoStopTimer() {
   if (micAutoStopTimer) {
     clearTimeout(micAutoStopTimer);
@@ -316,7 +339,7 @@ function scheduleMicAutoStop() {
         recognizer.stop();
       } catch {}
     }
-  }, 2600);
+  }, 4200);
 }
 
 /* =========================
@@ -658,10 +681,17 @@ function setErrorUI() {
    AUDIO / TTS
 ========================= */
 function stopAudio() {
+  speakingSeq += 1;
+
   try {
-    currentAudio?.pause?.();
-    currentAudio = null;
+    if (currentAudio) {
+      currentAudio.pause();
+      currentAudio.currentTime = 0;
+      currentAudio.src = "";
+      currentAudio = null;
+    }
   } catch {}
+
   try { window.speechSynthesis?.cancel?.(); } catch {}
   try { window.NativeTTS?.stop?.(); } catch {}
 }
@@ -772,6 +802,7 @@ async function hasReadyVoiceProfile() {
 }
 
 async function speakViaApi(text, langCode) {
+  const mySeq = ++speakingSeq;
   const userId = await getCurrentUserId();
   const voice = getVoicePreference();
 
@@ -793,6 +824,8 @@ async function speakViaApi(text, langCode) {
     throw new Error(j?.error || j?.detail || "TTS API unavailable");
   }
 
+  if (mySeq !== speakingSeq) return;
+
   const audio = new Audio(`data:audio/mp3;base64,${j.audio_base64}`);
   audio.preload = "auto";
   audio.playsInline = true;
@@ -807,6 +840,11 @@ async function speakViaApi(text, langCode) {
   };
 
   await warmAudio();
+
+  if (mySeq !== speakingSeq) {
+    try { audio.pause(); } catch {}
+    return;
+  }
 
   const playPromise = audio.play();
   if (playPromise && typeof playPromise.then === "function") {
@@ -889,6 +927,8 @@ async function speakText(text, langCode) {
   const value = String(text || "").trim();
   if (!value || !autoSpeak) return;
 
+  stopAudio();
+
   const voice = getVoicePreference();
 
   if (voice === "auto") {
@@ -930,6 +970,11 @@ function buildRecognizer(langCode) {
   rec.interimResults = true;
   rec.continuous = true;
   rec.maxAlternatives = 1;
+
+  try {
+    rec.serviceURI = "";
+  } catch {}
+
   return rec;
 }
 
@@ -950,7 +995,7 @@ async function speechToTextFallback() {
 }
 
 async function finalizeRecognition(text) {
-  const cleaned = String(text || "").trim();
+  const cleaned = normalizeSpeechChunk(text);
 
   if (!cleaned) {
     addSystemMessage(st("micNoSpeech"));
@@ -993,6 +1038,7 @@ function startRecording() {
   recordingSide = "bot";
   micManualStop = false;
   liveTranscript = "";
+  sessionFinalParts = [];
   clearMicAutoStopTimer();
 
   rec.onstart = () => {
@@ -1001,22 +1047,20 @@ function startRecording() {
   };
 
   rec.onresult = (e) => {
-    let finalText = "";
-    let interimText = "";
+    let heardSomething = false;
 
     for (let i = e.resultIndex; i < e.results.length; i += 1) {
-      const piece = String(e.results[i][0]?.transcript || "").trim();
+      const piece = normalizeSpeechChunk(e.results[i][0]?.transcript || "");
       if (!piece) continue;
 
-      if (e.results[i].isFinal) finalText += `${piece} `;
-      else interimText += `${piece} `;
+      heardSomething = true;
+
+      if (e.results[i].isFinal) {
+        appendUniqueFinalPart(piece);
+      }
     }
 
-    if (finalText.trim()) {
-      liveTranscript = `${liveTranscript} ${finalText}`.replace(/\s+/g, " ").trim();
-    }
-
-    if (interimText.trim() || finalText.trim()) {
+    if (heardSomething) {
       scheduleMicAutoStop();
     }
   };
@@ -1065,7 +1109,7 @@ function startRecording() {
   rec.onend = async () => {
     clearMicAutoStopTimer();
 
-    const finalPayload = liveTranscript.trim();
+    const finalPayload = normalizeSpeechChunk(liveTranscript);
 
     recognizer = null;
     recordingSide = null;
