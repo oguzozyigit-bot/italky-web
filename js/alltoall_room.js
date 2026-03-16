@@ -77,25 +77,22 @@ let lastLocalSentText = "";
 let lastLocalSentAt = 0;
 
 /* =========================
-   HOLD TO TALK STATE
+   TAP TO TALK STATE
 ========================= */
-let micHoldActive = false;
-let micPressStartedAt = 0;
-let micMaxTimer = null;
 let isRecognizing = false;
 let pendingTranscript = "";
 let speechLockUntil = 0;
+let recognitionAutoStopTimer = null;
 
-const HOLD_MIN_MS = 350;
-const HOLD_MAX_MS = 10000;
+const MAX_RECORD_MS = 10000;
 
 /* =========================
    SITE TEXT
 ========================= */
 const SITE_TEXT = {
   tr: {
-    speakHint: "Basılı tut konuş, bırakınca gönder.",
-    listeningHint: "Dinleniyor... bırakınca gönderilecek.",
+    speakHint: "Konuşmak için mikrofona dokun.",
+    listeningHint: "Dinleniyor... tekrar dokununca gönderilecek.",
     translatingHint: "Gönderiliyor...",
     roomCopied: "Oda kodu kopyalandı",
     socketNotReady: "Bağlantı henüz hazır değil.",
@@ -118,8 +115,8 @@ const SITE_TEXT = {
     maxReached: "10 saniye doldu, gönderiliyor..."
   },
   en: {
-    speakHint: "Hold to talk, release to send.",
-    listeningHint: "Listening... release to send.",
+    speakHint: "Tap the microphone to speak.",
+    listeningHint: "Listening... tap again to send.",
     translatingHint: "Sending...",
     roomCopied: "Room code copied",
     socketNotReady: "Connection is not ready yet.",
@@ -309,10 +306,10 @@ function shouldIgnoreDuplicateLocal(text) {
   return false;
 }
 
-function clearMicTimers() {
-  if (micMaxTimer) {
-    clearTimeout(micMaxTimer);
-    micMaxTimer = null;
+function clearRecognitionTimer() {
+  if (recognitionAutoStopTimer) {
+    clearTimeout(recognitionAutoStopTimer);
+    recognitionAutoStopTimer = null;
   }
 }
 
@@ -613,7 +610,7 @@ function updateMicUI(mode = null) {
     return;
   }
 
-  if (isRecognizing || micHoldActive) {
+  if (isRecognizing) {
     micHint.classList.add("helper-repeat");
     micHint.textContent = st("listeningHint");
     return;
@@ -974,32 +971,23 @@ async function finalizeRecognition(text) {
   }, 900);
 }
 
-async function finishHeldRecording(trigger = "release") {
-  if (!micHoldActive && !isRecognizing && !pendingTranscript) {
+async function finishRecording(trigger = "manual") {
+  if (!isRecognizing && !pendingTranscript) {
     setReadyUI();
     return;
   }
 
-  micHoldActive = false;
-  clearMicTimers();
+  clearRecognitionTimer();
 
-  const heldFor = Date.now() - micPressStartedAt;
-  const transcript = String(pendingTranscript || "").trim();
+  const finalText = String(pendingTranscript || "").trim();
+  pendingTranscript = "";
+  isRecognizing = false;
 
   try { recognizer?.stop?.(); } catch {}
-
-  if (heldFor < HOLD_MIN_MS && !transcript) {
-    pendingTranscript = "";
-    setReadyUI();
-    return;
-  }
 
   if (trigger === "max") {
     addSystemMessage(st("maxReached"));
   }
-
-  const finalText = String(pendingTranscript || "").trim();
-  pendingTranscript = "";
 
   await finalizeRecognition(finalText);
 }
@@ -1022,6 +1010,11 @@ function startRecording() {
   rec.onstart = () => {
     isRecognizing = true;
     setListeningUI();
+
+    clearRecognitionTimer();
+    recognitionAutoStopTimer = setTimeout(() => {
+      finishRecording("max").catch((e) => console.warn("[alltoall auto stop]", e));
+    }, MAX_RECORD_MS);
   };
 
   rec.onresult = (e) => {
@@ -1039,6 +1032,7 @@ function startRecording() {
     console.warn("[alltoall speech error]", e);
 
     const err = String(e?.error || "").toLowerCase();
+    clearRecognitionTimer();
     isRecognizing = false;
     speechLockUntil = Date.now() + 900;
 
@@ -1048,43 +1042,31 @@ function startRecording() {
     }
 
     if (err.includes("not-allowed") || err.includes("service-not-allowed")) {
-      micHoldActive = false;
-      clearMicTimers();
       addSystemMessage(st("micBlocked"));
       setErrorUI();
       return;
     }
 
     if (err.includes("audio-capture")) {
-      micHoldActive = false;
-      clearMicTimers();
       addSystemMessage(st("micFailed"));
       setErrorUI();
       return;
     }
 
     if (err.includes("no-speech")) {
-      micHoldActive = false;
-      clearMicTimers();
       addSystemMessage(st("micNoSpeech"));
       setReadyUI();
       return;
     }
 
-    micHoldActive = false;
-    clearMicTimers();
     addSystemMessage(st("micFailed"));
     setErrorUI();
   };
 
   rec.onend = () => {
-    isRecognizing = false;
     recognizer = null;
     micBtn?.classList.remove("listening");
-
-    if (!micHoldActive) {
-      updateMicUI();
-    }
+    if (!currentAudio) updateMicUI();
   };
 
   try {
@@ -1093,14 +1075,18 @@ function startRecording() {
     console.warn("[alltoall rec.start error]", e);
     recognizer = null;
     isRecognizing = false;
-    micHoldActive = false;
     addSystemMessage(st("micFailed"));
     setErrorUI();
   }
 }
 
-async function beginHoldToTalk() {
+async function toggleRecording() {
   await ensureReady();
+
+  if (isRecognizing) {
+    await finishRecording("manual");
+    return;
+  }
 
   const granted = await requestMicPermission();
   if (!granted) {
@@ -1111,28 +1097,8 @@ async function beginHoldToTalk() {
 
   await warmAudio();
   await prepareEnhancedMic();
-
-  const now = Date.now();
-  if (now < speechLockUntil) return;
-  if (micHoldActive || isRecognizing) return;
-
   stopAudio();
-
-  micHoldActive = true;
-  micPressStartedAt = Date.now();
-  pendingTranscript = "";
-
-  clearMicTimers();
-  micMaxTimer = setTimeout(() => {
-    finishHeldRecording("max").catch((e) => console.warn("[alltoall max finish]", e));
-  }, HOLD_MAX_MS);
-
   startRecording();
-}
-
-async function endHoldToTalk() {
-  if (!micHoldActive && !isRecognizing) return;
-  await finishHeldRecording("release");
 }
 
 /* =========================
@@ -1497,38 +1463,6 @@ async function ensureReady() {
 /* =========================
    EVENTS
 ========================= */
-function bindHoldMicEvents() {
-  if (!micBtn) return;
-
-  const start = async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    await beginHoldToTalk();
-  };
-
-  const end = async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    await endHoldToTalk();
-  };
-
-  micBtn.addEventListener("pointerdown", start);
-  micBtn.addEventListener("pointerup", end);
-  micBtn.addEventListener("pointercancel", end);
-  micBtn.addEventListener("lostpointercapture", end);
-  micBtn.addEventListener("contextmenu", (e) => e.preventDefault());
-
-  micBtn.addEventListener("touchstart", start, { passive: false });
-  micBtn.addEventListener("touchend", end, { passive: false });
-  micBtn.addEventListener("touchcancel", end, { passive: false });
-
-  micBtn.addEventListener("mousedown", start);
-  micBtn.addEventListener("mouseup", end);
-  micBtn.addEventListener("mouseleave", async () => {
-    if (micHoldActive) await endHoldToTalk();
-  });
-}
-
 function bindEvents() {
   unlockOnFirstTouch();
   startBoot();
@@ -1556,18 +1490,15 @@ function bindEvents() {
 
     if ((e.key === "Enter" || e.key === " ") && document.activeElement === micBtn) {
       e.preventDefault();
-      await beginHoldToTalk();
+      await toggleRecording();
     }
   });
 
-  document.addEventListener("keyup", async (e) => {
-    if ((e.key === "Enter" || e.key === " ") && document.activeElement === micBtn) {
-      e.preventDefault();
-      await endHoldToTalk();
-    }
+  micBtn?.addEventListener("click", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    await toggleRecording();
   });
-
-  bindHoldMicEvents();
 
   if (window.visualViewport) {
     window.visualViewport.addEventListener("resize", fixLayout);
@@ -1650,8 +1581,7 @@ init();
 
 window.addEventListener("beforeunload", () => {
   manuallyClosed = true;
-  micHoldActive = false;
-  clearMicTimers();
+  clearRecognitionTimer();
   stopAudio();
   stopRecognizer();
   try { ws?.close?.(); } catch {}
