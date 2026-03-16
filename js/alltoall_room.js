@@ -43,6 +43,7 @@ const role = String(params.get("role") || "guest").trim().toLowerCase();
 const incomingRoomId = String(params.get("room") || "").trim().toUpperCase();
 
 let roomId = incomingRoomId || "";
+let inviteCode = hostCode || "";
 let ws = null;
 let wsReady = false;
 let reconnectTimer = null;
@@ -283,7 +284,7 @@ function personKey(person) {
 }
 
 function visibleCode() {
-  return roomId || hostCode || "------";
+  return inviteCode || roomId || "------";
 }
 
 /* =========================
@@ -293,7 +294,6 @@ function refreshStaticTexts() {
   try {
     document.documentElement.setAttribute("lang", siteLang);
   } catch {}
-
   if (langSheetTitle) langSheetTitle.textContent = st("selectLanguage");
   updateMicUI();
 }
@@ -829,25 +829,45 @@ async function speakText(text, langCode) {
 ========================= */
 async function createRoomIfHost() {
   if (role !== "host") return null;
-  if (roomId) return { room_id: roomId, host_code: hostCode || roomId };
+
+  if (roomId && inviteCode) {
+    return { room_id: roomId, host_code: inviteCode };
+  }
+
+  const generatedHostCode =
+    hostCode ||
+    `A${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
 
   const r = await fetch(`${API_BASE}/interpreter/create-room`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      host_code: hostCode || "ALLTOALL-HOST",
+      host_code: generatedHostCode,
       my_lang: myLang,
       mode: "alltoall"
     })
   });
 
-  const j = await r.json().catch(() => ({}));
+  const raw = await r.text().catch(() => "");
+  let j = {};
+  try {
+    j = raw ? JSON.parse(raw) : {};
+  } catch {
+    j = {};
+  }
 
   if (!r.ok || !j?.room_id) {
-    throw new Error(j?.detail || j?.error || "room create başarısız");
+    console.error("[alltoall createRoomIfHost] failed", {
+      status: r.status,
+      raw,
+      parsed: j
+    });
+    throw new Error(j?.detail || j?.error || raw || "room create başarısız");
   }
 
   roomId = String(j.room_id || "").trim().toUpperCase();
+  inviteCode = String(j.host_code || generatedHostCode || "").trim().toUpperCase();
+
   syncRoomPill();
   return j;
 }
@@ -865,13 +885,26 @@ async function resolveRoomForGuestByHost() {
     })
   });
 
-  const j = await r.json().catch(() => ({}));
+  const raw = await r.text().catch(() => "");
+  let j = {};
+  try {
+    j = raw ? JSON.parse(raw) : {};
+  } catch {
+    j = {};
+  }
 
   if (!r.ok || !j?.room_id) {
-    throw new Error(j?.detail || j?.error || "Room resolve failed");
+    console.error("[alltoall resolveRoomForGuestByHost] failed", {
+      status: r.status,
+      raw,
+      parsed: j
+    });
+    throw new Error(j?.detail || j?.error || raw || "Room resolve failed");
   }
 
   roomId = String(j.room_id || "").trim().toUpperCase();
+  inviteCode = String(j.host_code || hostCode || "").trim().toUpperCase();
+
   syncRoomPill();
   return j;
 }
@@ -921,7 +954,7 @@ function connectSocket() {
       me_lang: myLang,
       role,
       user_id: myProfile.user_id,
-      host_code: hostCode || roomId
+      host_code: inviteCode || hostCode || roomId
     });
   };
 
@@ -940,6 +973,7 @@ function connectSocket() {
         }
 
         roomId = String(data.room || roomId || "").trim().toUpperCase();
+        inviteCode = String(data.host_code || inviteCode || hostCode || "").trim().toUpperCase();
         syncRoomPill();
         ensureSelfInPeople();
         addSystemMessage(st("roomCreated"));
@@ -1113,13 +1147,8 @@ async function speechToTextFallback() {
   return String(typed).trim() || null;
 }
 
-function initSpeech() {
-  rebuildRecognizer();
-
-  if (!recognizer) {
-    addSystemMessage(st("micUnsupported"));
-    return;
-  }
+function initSpeechHandlers() {
+  if (!recognizer) return;
 
   recognizer.onstart = () => {
     recordingSide = "bot";
@@ -1185,7 +1214,7 @@ async function toggleMic() {
   } catch {}
 
   if (recordingSide === "bot") {
-    stopRecognizer();
+    try { recognizer?.stop?.(); } catch {}
     recordingSide = null;
     micBtn?.classList.remove("listening");
     updateMicUI();
@@ -1198,6 +1227,8 @@ async function toggleMic() {
     addSystemMessage(st("micUnsupported"));
     return;
   }
+
+  initSpeechHandlers();
 
   try {
     recognizer.lang = toBCP(myLang);
@@ -1260,6 +1291,27 @@ function fixLayout() {
       pageContent.style.minHeight = `${window.visualViewport.height}px`;
     }
   } catch {}
+}
+
+/* =========================
+   PROFILE
+========================= */
+async function hydrateMyProfile() {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return;
+
+    myProfile = {
+      from: getStableFromId(user),
+      from_name: getDisplayNameFromUser(user),
+      from_pic: getAvatarFromUser(user),
+      me_lang: myLang,
+      role,
+      user_id: user?.id || "",
+    };
+  } catch (e) {
+    console.warn("[alltoall hydrateMyProfile]", e);
+  }
 }
 
 /* =========================
@@ -1333,27 +1385,6 @@ function bindEvents() {
 }
 
 /* =========================
-   PROFILE
-========================= */
-async function hydrateMyProfile() {
-  try {
-    const user = await getCurrentUser();
-    if (!user) return;
-
-    myProfile = {
-      from: getStableFromId(user),
-      from_name: getDisplayNameFromUser(user),
-      from_pic: getAvatarFromUser(user),
-      me_lang: myLang,
-      role,
-      user_id: user?.id || "",
-    };
-  } catch (e) {
-    console.warn("[alltoall hydrateMyProfile]", e);
-  }
-}
-
-/* =========================
    INIT
 ========================= */
 async function init() {
@@ -1369,7 +1400,6 @@ async function init() {
   await hydrateMyProfile();
   ensureSelfInPeople();
 
-  initSpeech();
   bindEvents();
 
   try {
@@ -1381,10 +1411,13 @@ async function init() {
       await createRoomIfHost();
     } else if (role === "guest" && !incomingRoomId && hostCode) {
       await resolveRoomForGuestByHost();
+    } else if (incomingRoomId) {
+      roomId = incomingRoomId;
+      syncRoomPill();
     }
   } catch (e) {
     console.error("[alltoall room init]", e);
-    addSystemMessage(st("roomNotCreated"));
+    addSystemMessage(e?.message || st("roomNotCreated"));
     return;
   }
 
@@ -1397,6 +1430,7 @@ init();
 window.addEventListener("beforeunload", () => {
   manuallyClosed = true;
   stopAudio();
+  try { recognizer?.stop?.(); } catch {}
   try { ws?.close?.(); } catch {}
   try { preparedStream?.getTracks?.().forEach((t) => t.stop()); } catch {}
 });
