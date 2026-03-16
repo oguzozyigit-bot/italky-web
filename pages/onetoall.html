@@ -3,1539 +3,601 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-  <title>italkyAI • OneToAll</title>
-  <meta name="theme-color" content="#0f172a"/>
+  <title>italkyAI • OneToAll Lobby</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
   <style>
-    :root{
-      --bg:#0b0e17;
-      --panel:#121827;
-      --panel2:#11192b;
-      --line:rgba(255,255,255,.10);
-      --text:rgba(255,255,255,.96);
-      --muted:rgba(255,255,255,.66);
-      --cyan:#67e8f9;
-      --pink:#f472b6;
-      --violet:#818cf8;
-      --green:#22c55e;
-      --danger:#fb7185;
-      --warn:#f59e0b;
-      --grad:linear-gradient(135deg,#67e8f9 0%,#818cf8 48%,#f472b6 100%);
+    :root {
+      --bg: #050208;
+      --accent: #00f2fe;
+      --pink: #ff00c1;
+      --purple: #7000ff;
+      --card-bg: rgba(255, 255, 255, 0.05);
+      --ok: #29ff87;
+      --warn: #ffc14d;
+      --danger: #ff6b8a;
     }
 
-    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
-    html,body{
-      margin:0;
-      width:100%;
-      min-height:100%;
-      font-family:'Outfit',sans-serif;
-      color:var(--text);
+    html, body {
+      margin: 0; padding: 0;
+      width: 100%; height: 100dvh;
+      overflow: hidden;
+      background: var(--bg);
+      font-family: 'Outfit', sans-serif;
+      color: white;
+    }
+
+    .nebula {
+      position: fixed; inset: 0;
       background:
-        radial-gradient(circle at 50% 0%, rgba(103,232,249,.08) 0%, transparent 26%),
-        radial-gradient(circle at 16% 18%, rgba(244,114,182,.10) 0%, transparent 24%),
-        radial-gradient(circle at 84% 14%, rgba(129,140,248,.12) 0%, transparent 26%),
-        linear-gradient(180deg,#090c14 0%, #0d111a 40%, #101522 100%);
-      scrollbar-width:none;
+        radial-gradient(circle at 20% 30%, rgba(112, 0, 255, 0.2) 0%, transparent 40%),
+        radial-gradient(circle at 80% 70%, rgba(0, 242, 254, 0.15) 0%, transparent 40%);
+      filter: blur(80px);
+      z-index: 0;
+      animation: nebulaMove 10s infinite alternate ease-in-out;
     }
 
-    html::-webkit-scrollbar, body::-webkit-scrollbar{ display:none; }
-
-    #page{
-      width:100%;
-      min-height:100dvh;
-      padding:14px 14px 24px;
-      overflow-x:hidden;
-      overflow-y:auto;
-      scrollbar-width:none;
-      -webkit-overflow-scrolling:touch;
-    }
-
-    #page::-webkit-scrollbar{ display:none; }
-
-    .wrap{
-      width:100%;
-      max-width:980px;
-      margin:0 auto;
-      display:flex;
-      flex-direction:column;
-      gap:14px;
-    }
-
-    .hero{
-      position:relative;
-      overflow:hidden;
-      border:1px solid var(--line);
-      border-radius:30px;
-      padding:18px 16px 18px;
-      background:
-        radial-gradient(circle at 15% 20%, rgba(103,232,249,.14) 0%, transparent 28%),
-        radial-gradient(circle at 84% 18%, rgba(244,114,182,.12) 0%, transparent 24%),
-        linear-gradient(135deg,#0f172a 0%, #0f3b5f 38%, #155e75 68%, #0ea5a4 100%);
-      box-shadow:0 18px 34px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.05);
-    }
-
-    .hero-top{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:14px;
-      flex-wrap:wrap;
-    }
-
-    .hero-copy{ flex:1 1 360px; min-width:0; }
-
-    .eyebrow{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding:7px 11px;
-      border-radius:999px;
-      background:rgba(255,255,255,.12);
-      border:1px solid rgba(255,255,255,.15);
-      color:rgba(255,255,255,.92);
-      font-size:11px;
-      font-weight:800;
-      letter-spacing:.45px;
-      text-transform:uppercase;
-    }
-
-    .eyebrow-dot{
-      width:8px;
-      height:8px;
-      border-radius:50%;
-      background:#7ef9a9;
-      box-shadow:0 0 10px #7ef9a9;
-      animation:pulseDot 1.6s infinite ease-in-out;
-    }
-
-    .hero h1{
-      margin:12px 0 8px;
-      font-family:'Space Grotesk',sans-serif;
-      font-size:32px;
-      line-height:1;
-      letter-spacing:-1px;
-    }
-
-    .hero h1 .to{
-      background:var(--grad);
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;
-    }
-
-    .hero p{
-      margin:0;
-      max-width:650px;
-      color:rgba(255,255,255,.84);
-      font-size:13px;
-      line-height:1.48;
-    }
-
-    .hero-visual{
-      flex:0 0 auto;
-      width:118px;
-      height:118px;
-      border-radius:28px;
-      position:relative;
-      background:rgba(255,255,255,.10);
-      border:1px solid rgba(255,255,255,.16);
-      box-shadow:inset 0 0 22px rgba(255,255,255,.05);
-    }
-
-    .speaker-head{
-      position:absolute;
-      width:22px;
-      height:22px;
-      left:18px;
-      top:20px;
-      border-radius:50%;
-      background:rgba(255,255,255,.95);
-    }
-
-    .speaker-head::after{
-      content:"";
-      position:absolute;
-      left:50%;
-      top:18px;
-      width:24px;
-      height:26px;
-      transform:translateX(-50%);
-      border-radius:14px 14px 10px 10px;
-      background:linear-gradient(180deg, rgba(255,255,255,.95), rgba(255,255,255,.45));
-    }
-
-    .wave{
-      position:absolute;
-      border:2px solid rgba(103,232,249,.92);
-      border-left-color:transparent;
-      border-bottom-color:transparent;
-      border-radius:50%;
-      transform:rotate(45deg);
-    }
-
-    .wave.w1{ width:22px; height:22px; left:42px; top:23px; }
-    .wave.w2{ width:34px; height:34px; left:40px; top:17px; opacity:.72; }
-    .wave.w3{ width:46px; height:46px; left:38px; top:11px; opacity:.4; }
-
-    .aud{
-      position:absolute;
-      width:11px;
-      height:11px;
-      border-radius:50%;
-      background:rgba(255,255,255,.90);
-    }
-
-    .aud::after{
-      content:"";
-      position:absolute;
-      left:50%;
-      top:10px;
-      width:15px;
-      height:10px;
-      transform:translateX(-50%);
-      border-radius:8px 8px 6px 6px;
-      background:rgba(255,255,255,.34);
-    }
-
-    .a1{ right:18px; top:20px; }
-    .a2{ right:28px; bottom:18px; }
-    .a3{ right:8px; bottom:24px; }
-
-    .grid{
-      display:grid;
-      grid-template-columns:1.15fr .85fr;
-      gap:14px;
-    }
-
-    .card, .mini-card{
-      border-radius:28px;
-      border:1px solid var(--line);
-      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
-      box-shadow:0 18px 30px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.04);
-      overflow:hidden;
-    }
-
-    .section-head{ padding:16px 16px 0; }
-
-    .section-kicker{
-      font-size:11px;
-      font-weight:800;
-      letter-spacing:.45px;
-      text-transform:uppercase;
-      color:rgba(255,255,255,.66);
-      margin-bottom:6px;
-    }
-
-    .section-title{
-      margin:0;
-      font-family:'Space Grotesk',sans-serif;
-      font-size:24px;
-      line-height:1;
-      letter-spacing:-.8px;
-    }
-
-    .section-sub{
-      margin:8px 0 0;
-      color:var(--muted);
-      font-size:12px;
-      line-height:1.45;
-    }
-
-    .body{ padding:16px; }
-
-    .role-switch{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:10px;
-      margin-bottom:14px;
-    }
-
-    .role-btn{
-      border:1px solid rgba(255,255,255,.12);
-      border-radius:20px;
-      background:rgba(255,255,255,.05);
-      color:#fff;
-      padding:14px 12px;
-      text-align:left;
-      cursor:pointer;
-      transition:.22s ease;
-      min-height:86px;
-    }
-
-    .role-btn.active{
-      background:linear-gradient(135deg, rgba(103,232,249,.14), rgba(129,140,248,.16), rgba(244,114,182,.16));
-      border-color:rgba(103,232,249,.34);
-      box-shadow:0 0 0 1px rgba(103,232,249,.10), 0 12px 22px rgba(0,0,0,.16);
-    }
-
-    .role-btn .t{
-      display:block;
-      font-weight:800;
-      font-size:15px;
-      margin-bottom:5px;
-    }
-
-    .role-btn .d{
-      display:block;
-      font-size:11px;
-      color:rgba(255,255,255,.74);
-      line-height:1.4;
-    }
-
-    .form-grid{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:12px;
-    }
-
-    .field{
-      display:flex;
-      flex-direction:column;
-      gap:7px;
-    }
-
-    .field.full{ grid-column:1 / -1; }
-
-    .label{
-      font-size:11px;
-      font-weight:800;
-      letter-spacing:.35px;
-      text-transform:uppercase;
-      color:rgba(255,255,255,.72);
-    }
-
-    .input, .select, .textarea{
-      width:100%;
-      border-radius:16px;
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(255,255,255,.06);
-      color:#fff;
-      padding:0 14px;
-      font:inherit;
-    }
-
-    .input, .select{ height:48px; }
-    .textarea{
-      min-height:92px;
-      padding:12px 14px;
-      resize:vertical;
-    }
-
-    .select option{ color:#111; }
-
-    .chips{
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-    }
-
-    .chip{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      min-height:42px;
-      padding:10px 14px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(255,255,255,.05);
-      color:#fff;
-      cursor:pointer;
-      user-select:none;
-      transition:.22s ease;
-      font-size:13px;
-      font-weight:700;
-    }
-
-    .chip.active{
-      border-color:rgba(103,232,249,.38);
-      background:rgba(103,232,249,.12);
-      box-shadow:0 0 0 1px rgba(103,232,249,.08);
-    }
-
-    .switch-row{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:10px;
-    }
-
-    .toggle{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      min-height:54px;
-      padding:12px 14px;
-      border-radius:18px;
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(255,255,255,.05);
-      cursor:pointer;
-      transition:.22s ease;
-    }
-
-    .toggle.active{
-      border-color:rgba(103,232,249,.36);
-      background:rgba(103,232,249,.12);
-    }
-
-    .toggle-knob{
-      width:18px;
-      height:18px;
-      border-radius:50%;
-      background:rgba(255,255,255,.26);
-      box-shadow:inset 0 0 0 2px rgba(255,255,255,.14);
-      transition:.22s ease;
-      flex:0 0 auto;
-    }
-
-    .toggle.active .toggle-knob{
-      background:linear-gradient(135deg,#67e8f9,#818cf8);
-      box-shadow:0 0 14px rgba(103,232,249,.34);
-    }
-
-    .toggle-copy{ min-width:0; }
-    .toggle-title{ font-size:13px; font-weight:800; margin-bottom:2px; }
-    .toggle-desc{ font-size:11px; color:rgba(255,255,255,.68); line-height:1.35; }
-
-    .actions{
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-      margin-top:16px;
-    }
-
-    .btn{
-      min-height:50px;
-      padding:0 18px;
-      border:none;
-      border-radius:18px;
-      font:inherit;
-      font-weight:800;
-      letter-spacing:.2px;
-      cursor:pointer;
-      transition:transform .18s ease, filter .18s ease, opacity .18s ease;
-    }
-
-    .btn:active{ transform:scale(.985); }
-
-    .btn-primary{
-      color:#081018;
-      background:var(--grad);
-      box-shadow:0 12px 20px rgba(0,0,0,.18);
-    }
-
-    .btn-secondary{
-      color:#fff;
-      background:rgba(255,255,255,.08);
-      border:1px solid rgba(255,255,255,.12);
-    }
-
-    .btn-ghost{
-      color:#fff;
-      background:transparent;
-      border:1px dashed rgba(255,255,255,.18);
-    }
-
-    .btn-danger{
-      color:#fff;
-      background:rgba(251,113,133,.16);
-      border:1px solid rgba(251,113,133,.30);
-    }
-
-    .side-col{
-      display:flex;
-      flex-direction:column;
-      gap:14px;
-    }
-
-    .qr-box{
-      margin:14px 16px 16px;
-      border-radius:24px;
-      min-height:240px;
-      border:1px solid rgba(255,255,255,.10);
-      background:radial-gradient(circle at 50% 0%, rgba(103,232,249,.10), transparent 30%), rgba(255,255,255,.04);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      flex-direction:column;
-      gap:10px;
-      padding:18px;
-      text-align:center;
-    }
-
-    .qr-img{
-      width:170px;
-      height:170px;
-      border-radius:22px;
-      background:#fff;
-      padding:10px;
-      box-shadow:0 0 30px rgba(103,232,249,.18);
-      display:none;
-      object-fit:cover;
-    }
-
-    .qr-fallback{
-      width:142px;
-      height:142px;
-      border-radius:22px;
-      background:
-        linear-gradient(90deg,#fff 10%,#000 10% 20%,#fff 20% 30%,#000 30% 40%,#fff 40% 50%,#000 50% 60%,#fff 60% 70%,#000 70% 80%,#fff 80% 90%,#000 90%),
-        linear-gradient(#fff 10%,#000 10% 20%,#fff 20% 30%,#000 30% 40%,#fff 40% 50%,#000 50% 60%,#fff 60% 70%,#000 70% 80%,#fff 80% 90%,#000 90%);
-      background-blend-mode:multiply;
-      box-shadow:0 0 30px rgba(103,232,249,.18), inset 0 0 0 10px #fff;
-      position:relative;
-      overflow:hidden;
-    }
-
-    .qr-fallback::before,
-    .qr-fallback::after{
-      content:"";
-      position:absolute;
-      width:28px;
-      height:28px;
-      background:#fff;
-      border:7px solid #000;
-      border-radius:8px;
-    }
-
-    .qr-fallback::before{ left:8px; top:8px; }
-    .qr-fallback::after{ right:8px; bottom:8px; }
-
-    .room-code{
-      font-family:'Space Grotesk',sans-serif;
-      font-size:22px;
-      font-weight:700;
-      letter-spacing:1px;
-      word-break:break-word;
+    @keyframes nebulaMove {
+      from { transform: scale(1) rotate(0deg); }
+      to { transform: scale(1.2) rotate(5deg); }
     }
 
-    .room-help{
-      font-size:12px;
-      color:var(--muted);
-      line-height:1.45;
-      max-width:250px;
+    #pageContent {
+      position: relative; z-index: 10;
+      height: 100%;
+      display: flex; flex-direction: column;
+      padding: env(safe-area-inset-top) 20px env(safe-area-inset-bottom);
+      justify-content: center;
+      max-width: 520px; margin: 0 auto;
     }
 
-    .status-list{
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-      padding:16px;
-    }
+    .hero { text-align: center; margin-bottom: 26px; }
 
-    .status-item{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      min-height:50px;
-      border-radius:18px;
-      padding:10px 12px;
-      background:rgba(255,255,255,.05);
-      border:1px solid rgba(255,255,255,.08);
+    .hero-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 42px; margin: 0;
+      background: linear-gradient(to right, #fff, var(--accent), var(--pink));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 15px rgba(0, 242, 254, 0.4));
     }
 
-    .status-dot{
-      width:12px;
-      height:12px;
-      border-radius:50%;
-      flex:0 0 auto;
-      background:rgba(255,255,255,.28);
+    .audio-visualizer {
+      display: flex; justify-content: center; align-items: flex-end;
+      gap: 4px; height: 40px; margin-bottom: 10px;
     }
-
-    .status-dot.live{ background:#22c55e; box-shadow:0 0 12px rgba(34,197,94,.45); }
-    .status-dot.warn{ background:#f59e0b; box-shadow:0 0 12px rgba(245,158,11,.38); }
-    .status-dot.mute{ background:#fb7185; box-shadow:0 0 12px rgba(251,113,133,.35); }
-
-    .status-copy{ min-width:0; }
-    .status-title{ font-size:13px; font-weight:800; margin-bottom:2px; }
-    .status-desc{ font-size:11px; color:rgba(255,255,255,.68); line-height:1.35; }
 
-    .stream-card{
-      padding:16px;
-      display:flex;
-      flex-direction:column;
-      gap:12px;
+    .bar {
+      width: 4px; background: var(--accent); border-radius: 2px;
+      animation: barJump 0.6s infinite alternate ease-in-out;
     }
 
-    .stream-box{
-      border-radius:20px;
-      border:1px solid rgba(255,255,255,.10);
-      background:rgba(255,255,255,.04);
-      padding:14px;
-      min-height:108px;
+    .bar:nth-child(even) {
+      background: var(--pink);
+      animation-duration: 0.8s;
     }
 
-    .stream-kicker{
-      font-size:10px;
-      font-weight:800;
-      letter-spacing:.35px;
-      color:rgba(255,255,255,.62);
-      text-transform:uppercase;
-      margin-bottom:8px;
+    @keyframes barJump {
+      0% { height: 10px; }
+      100% { height: 35px; filter: brightness(1.5) drop-shadow(0 0 5px var(--accent)); }
     }
 
-    .stream-text{
-      font-size:14px;
-      line-height:1.55;
-      color:rgba(255,255,255,.94);
-      white-space:pre-wrap;
-      word-break:break-word;
+    .cyber-card {
+      position: relative;
+      background: rgba(15, 10, 20, 0.6);
+      border-radius: 24px;
+      padding: 24px;
+      margin-bottom: 16px;
+      border: 1px solid rgba(255,255,255,0.1);
+      display: flex; align-items: center; justify-content: space-between;
+      transition: 0.3s;
+      overflow: hidden;
+      backdrop-filter: blur(8px);
     }
 
-    .log{
-      max-height:220px;
-      overflow:auto;
-      border-radius:18px;
-      border:1px solid rgba(255,255,255,.08);
-      background:rgba(0,0,0,.18);
-      padding:12px;
-      font-size:12px;
-      line-height:1.45;
-      color:rgba(255,255,255,.78);
+    .cyber-card::after {
+      content: ""; position: absolute; inset: -2px;
+      background: linear-gradient(90deg, transparent, var(--accent), var(--pink), transparent);
+      z-index: -1; animation: borderRotate 4s linear infinite;
+      opacity: 0.3;
     }
 
-    .log::-webkit-scrollbar{ width:8px; }
-    .log::-webkit-scrollbar-thumb{
-      background:rgba(255,255,255,.16);
-      border-radius:999px;
+    @keyframes borderRotate {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
     }
 
-    .pill-row{
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-    }
+    .card-title { font-size: 22px; font-weight: 900; margin: 0; }
+    .card-desc { font-size: 12px; opacity: 0.66; margin-top: 5px; line-height: 1.45; }
 
-    .pill{
-      display:inline-flex;
-      align-items:center;
-      min-height:34px;
-      padding:7px 10px;
-      border-radius:999px;
-      font-size:12px;
-      font-weight:800;
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.10);
+    .panel-view {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
     }
-
-    .pill.ok{ color:#9af7b1; }
-    .pill.warn{ color:#ffd28a; }
-    .pill.err{ color:#ffb4c1; }
 
-    .hidden{ display:none !important; }
-
-    @keyframes pulseDot{
-      0%,100%{ transform:scale(1); opacity:1; }
-      50%{ transform:scale(1.22); opacity:.78; }
+    .panel-title {
+      text-align: center;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 22px;
+      margin: 0 0 6px;
     }
 
-    @media (max-width:860px){
-      .grid{ grid-template-columns:1fr; }
+    .mini-note {
+      text-align: center;
+      font-size: 11px;
+      opacity: .64;
+      line-height: 1.4;
+      margin-top: -4px;
+      margin-bottom: 4px;
     }
 
-    @media (max-width:560px){
-      .hero h1{ font-size:28px; }
-      .form-grid{ grid-template-columns:1fr; }
-      .switch-row{ grid-template-columns:1fr; }
-      .role-switch{ grid-template-columns:1fr; }
-      .hero-visual{ width:100px; height:100px; }
-    }
+    .input-field,
+    .select-field {
+      width: 100%;
+      height: 62px;
+      background: rgba(255,255,255,0.05);
+      border: 2px solid rgba(0, 242, 254, 0.55);
+      border-radius: 20px;
+      color: #fff;
+      text-align: center;
+      font-size: 18px;
+      font-family: 'Outfit', sans-serif;
+      box-shadow: inset 0 0 15px rgba(0, 242, 254, 0.12);
+    }
+
+    .input-field.code-input {
+      font-size: 30px;
+      font-family: 'Space Grotesk', sans-serif;
+      letter-spacing: 8px;
+      text-transform: uppercase;
+    }
+
+    .select-field {
+      appearance: none;
+      -webkit-appearance: none;
+      padding: 0 14px;
+      text-align: center;
+    }
+
+    .select-field option {
+      color: #111;
+    }
+
+    .btn-3d {
+      height: 60px; border-radius: 20px; border: none;
+      background: linear-gradient(45deg, var(--purple), var(--pink));
+      color: white; font-weight: 900; font-size: 16px;
+      text-transform: uppercase; letter-spacing: 1px;
+      box-shadow: 0 10px 20px rgba(255, 0, 193, 0.3);
+      cursor: pointer;
+    }
+
+    .btn-ghost {
+      height: 52px;
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 18px;
+      color: white;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .btn-danger {
+      height: 52px;
+      background: rgba(255, 107, 138, 0.12);
+      border: 1px solid rgba(255, 107, 138, 0.35);
+      border-radius: 18px;
+      color: white;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .room-code-display {
+      font-size: 42px;
+      text-align: center;
+      font-family: 'Space Grotesk', sans-serif;
+      background: linear-gradient(to bottom, #fff, var(--accent));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      margin: 10px 0 12px;
+      letter-spacing: 6px;
+    }
+
+    .toggle-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .toggle-chip {
+      min-height: 58px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.05);
+      color: white;
+      font-weight: 800;
+      font-size: 13px;
+      cursor: pointer;
+      padding: 10px 12px;
+      text-align: center;
+      line-height: 1.25;
+    }
+
+    .toggle-chip.active {
+      border-color: rgba(0,242,254,.6);
+      box-shadow: inset 0 0 18px rgba(0,242,254,.12), 0 0 16px rgba(0,242,254,.12);
+      background: rgba(0,242,254,.08);
+    }
+
+    .status-pill {
+      text-align: center;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.05);
+    }
+
+    .status-pill.ok { color: var(--ok); }
+    .status-pill.warn { color: var(--warn); }
+    .status-pill.danger { color: var(--danger); }
+
+    .row-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .hide { display: none !important; }
   </style>
 </head>
+
 <body>
-  <main id="page">
-    <div class="wrap">
+  <div class="nebula"></div>
 
-      <section class="hero">
-        <div class="hero-top">
-          <div class="hero-copy">
-            <div class="eyebrow">
-              <span class="eyebrow-dot"></span>
-              Tek Konuşmacı • Sınırsız Dinleyici
-            </div>
-            <h1>One<span class="to">To</span>All</h1>
-            <p>
-              Bir kişi konuşur, dinleyiciler kendi dilinde anlık takip eder. Turist rehberliği,
-              sahne anlatımı, seminer, sunum ve kalabalık dinleyici akışı için tasarlandı.
-            </p>
-          </div>
+  <main id="pageContent">
 
-          <div class="hero-visual">
-            <div class="speaker-head"></div>
-            <div class="wave w1"></div>
-            <div class="wave w2"></div>
-            <div class="wave w3"></div>
-            <div class="aud a1"></div>
-            <div class="aud a2"></div>
-            <div class="aud a3"></div>
-          </div>
+    <header class="hero">
+      <div class="audio-visualizer">
+        <div class="bar" style="animation-delay: 0.1s"></div>
+        <div class="bar" style="animation-delay: 0.3s"></div>
+        <div class="bar" style="animation-delay: 0.2s"></div>
+        <div class="bar" style="animation-delay: 0.5s"></div>
+        <div class="bar" style="animation-delay: 0.4s"></div>
+        <div class="bar" style="animation-delay: 0.2s"></div>
+      </div>
+      <h1 class="hero-title">OneToAll</h1>
+      <p style="font-size: 12px; opacity: 0.5;">Tek Konuşmacı • Sınırsız Dinleyici</p>
+    </header>
+
+    <!-- ANA SEÇİM -->
+    <div id="homeCards">
+      <div class="cyber-card" id="goSpeaker" style="cursor:pointer;">
+        <div>
+          <div class="card-title">KONUŞMACI</div>
+          <div class="card-desc">Önce ayarlarını yap, sonra kısa oda kodunla yayını başlat.</div>
         </div>
-      </section>
+        <div style="font-size:30px;">🎙️</div>
+      </div>
 
-      <section class="grid">
-        <section class="card">
-          <div class="section-head">
-            <div class="section-kicker">Oturum Ayarı</div>
-            <h2 class="section-title">Rolünü seç</h2>
-            <p class="section-sub">
-              Konuşmacıysan sesi yayınlarsın. Dinleyiciysen sadece kendi dilini seçip takip edersin.
-            </p>
-          </div>
-
-          <div class="body">
-            <div class="role-switch">
-              <button class="role-btn active" id="speakerRoleBtn" type="button">
-                <span class="t">Konuşmacı</span>
-                <span class="d">Mikrofon açık, anlık çeviri, özel ses veya sadece yazı modu.</span>
-              </button>
-
-              <button class="role-btn" id="listenerRoleBtn" type="button">
-                <span class="t">Dinleyici</span>
-                <span class="d">Mesaj yok, mikrofon yok. Sadece kendi dilinde dinleme veya okuma.</span>
-              </button>
-            </div>
-
-            <div id="speakerPanel">
-              <div class="form-grid">
-                <div class="field">
-                  <label class="label" for="speakerLang">Konuşmacı dili</label>
-                  <select id="speakerLang" class="select">
-                    <option value="tr" selected>Türkçe</option>
-                    <option value="en">English</option>
-                    <option value="de">Deutsch</option>
-                    <option value="fr">Français</option>
-                    <option value="it">Italiano</option>
-                    <option value="es">Español</option>
-                  </select>
-                </div>
-
-                <div class="field">
-                  <label class="label" for="voiceSelect">Özel ses</label>
-                  <select id="voiceSelect" class="select">
-                    <option value="default_female">Varsayılan Kadın Ses</option>
-                    <option value="default_male">Varsayılan Erkek Ses</option>
-                    <option value="my_voice">Kendi Sesim</option>
-                    <option value="center_voice_1">Merkez Ses 1</option>
-                    <option value="center_voice_2">Merkez Ses 2</option>
-                  </select>
-                </div>
-
-                <div class="field full">
-                  <label class="label">Yayın şekli</label>
-                  <div class="switch-row">
-                    <div class="toggle active" id="speakerAudioToggle">
-                      <div class="toggle-knob"></div>
-                      <div class="toggle-copy">
-                        <div class="toggle-title">Karşı tarafa sesi ver</div>
-                        <div class="toggle-desc">Çeviri ses olarak oynatılsın.</div>
-                      </div>
-                    </div>
-
-                    <div class="toggle" id="speakerTextOnlyToggle">
-                      <div class="toggle-knob"></div>
-                      <div class="toggle-copy">
-                        <div class="toggle-title">Sadece yazı gönder</div>
-                        <div class="toggle-desc">Ses kapalı, dinleyici yalnızca metni görsün/okusun.</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="field full">
-                  <label class="label">Mikrofon durumu</label>
-                  <div class="chips">
-                    <div class="chip active" id="micAlwaysOnChip">Aralıksız mikrofon açık</div>
-                    <div class="chip" id="noiseFilterChip">Gürültü azaltma</div>
-                    <div class="chip" id="autoDetectChip">Otomatik dil kontrolü</div>
-                  </div>
-                </div>
-
-                <div class="field full">
-                  <label class="label" for="speakerRoomCode">Oda kodu</label>
-                  <input id="speakerRoomCode" class="input" type="text" placeholder="Örn: OTA-482913">
-                </div>
-
-                <div class="field full">
-                  <label class="label" for="speakerNotes">Canlı test cümlesi</label>
-                  <textarea id="speakerNotes" class="textarea" placeholder="Buraya deneme metni girersen, demo akışında dinleyiciye canlı çeviri gibi düşer.">Merhaba, turumuz birazdan başlıyor. Lütfen gruptan ayrılmayın.</textarea>
-                </div>
-              </div>
-
-              <div class="actions">
-                <button class="btn btn-primary" type="button" id="startSpeakerBtn">Konuşmacı yayını başlat</button>
-                <button class="btn btn-secondary" type="button" id="startMicBtn">Mikrofonu başlat</button>
-                <button class="btn btn-danger hidden" type="button" id="stopMicBtn">Mikrofonu durdur</button>
-                <button class="btn btn-secondary" type="button" id="createQrBtn">QR oluştur</button>
-                <button class="btn btn-ghost" type="button" id="shareLinkBtn">Link paylaş</button>
-              </div>
-            </div>
-
-            <div id="listenerPanel" class="hidden">
-              <div class="form-grid">
-                <div class="field">
-                  <label class="label" for="listenerLang">Senin dilin</label>
-                  <select id="listenerLang" class="select">
-                    <option value="tr">Türkçe</option>
-                    <option value="en" selected>English</option>
-                    <option value="de">Deutsch</option>
-                    <option value="fr">Français</option>
-                    <option value="it">Italiano</option>
-                    <option value="es">Español</option>
-                  </select>
-                </div>
-
-                <div class="field">
-                  <label class="label" for="listenerRoomCode">Oda kodu</label>
-                  <input id="listenerRoomCode" class="input" type="text" placeholder="Konuşmacının verdiği oda kodu">
-                </div>
-
-                <div class="field full">
-                  <label class="label">Dinleme modu</label>
-                  <div class="switch-row">
-                    <div class="toggle active" id="listenAudioToggle">
-                      <div class="toggle-knob"></div>
-                      <div class="toggle-copy">
-                        <div class="toggle-title">Sesli dinle</div>
-                        <div class="toggle-desc">Çeviri ses olarak oynatılsın.</div>
-                      </div>
-                    </div>
-
-                    <div class="toggle" id="readOnlyToggle">
-                      <div class="toggle-knob"></div>
-                      <div class="toggle-copy">
-                        <div class="toggle-title">Sadece yazıyı oku</div>
-                        <div class="toggle-desc">Ses oynatma kapalı olsun.</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="actions">
-                <button class="btn btn-primary" type="button" id="joinListenerBtn">Dinleyici olarak katıl</button>
-                <button class="btn btn-secondary" type="button" id="scanQrBtn">QR ile katıl</button>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <aside class="side-col">
-          <section class="mini-card">
-            <div class="section-head">
-              <div class="section-kicker">Paylaşım</div>
-              <h2 class="section-title">QR ve kod</h2>
-              <p class="section-sub">Konuşmacı QR oluşturur, dinleyici tarar ya da oda kodu ile katılır.</p>
-            </div>
-
-            <div class="qr-box">
-              <img id="qrImg" class="qr-img" alt="OneToAll QR">
-              <div id="qrFallback" class="qr-fallback" aria-hidden="true"></div>
-              <div class="room-code" id="roomCodeText">OTA-XXXXXX</div>
-              <div class="room-help">Dinleyiciler sadece kendi dilini seçer. Yazamaz, konuşamaz, müdahale edemez.</div>
-            </div>
-          </section>
-
-          <section class="mini-card">
-            <div class="section-head">
-              <div class="section-kicker">Canlı durum</div>
-              <h2 class="section-title">Yayın mantığı</h2>
-            </div>
-
-            <div class="status-list">
-              <div class="status-item">
-                <div class="status-dot live"></div>
-                <div class="status-copy">
-                  <div class="status-title">Tek aktif konuşmacı</div>
-                  <div class="status-desc">Sadece konuşmacı ses gönderir. Kalabalık karmaşası sıfır.</div>
-                </div>
-              </div>
-
-              <div class="status-item">
-                <div class="status-dot warn"></div>
-                <div class="status-copy">
-                  <div class="status-title">Sınırsız dinleyici</div>
-                  <div class="status-desc">Rehber turları, sahne anlatımları, eğitim ve sunumlar için uygun.</div>
-                </div>
-              </div>
-
-              <div class="status-item">
-                <div class="status-dot mute"></div>
-                <div class="status-copy">
-                  <div class="status-title">Ses veya sadece yazı</div>
-                  <div class="status-desc">Konuşmacı ister özel ses kullanır, ister sesi kapatır, ister yalnızca metin gönderir.</div>
-                </div>
-              </div>
-            </div>
-          </section>
-        </aside>
-      </section>
-
-      <section class="grid">
-        <section class="mini-card">
-          <div class="section-head">
-            <div class="section-kicker">Canlı Akış</div>
-            <h2 class="section-title">Konuşmacı akışı</h2>
-            <p class="section-sub">Mikrofon ve demo metin burada canlı görünür.</p>
-          </div>
-
-          <div class="stream-card">
-            <div class="pill-row">
-              <div class="pill ok" id="pillRole">Rol: Speaker</div>
-              <div class="pill warn" id="pillWs">WS: Kapalı</div>
-              <div class="pill warn" id="pillMic">Mic: Kapalı</div>
-            </div>
-
-            <div class="stream-box">
-              <div class="stream-kicker">Kaynak metin</div>
-              <div class="stream-text" id="sourceText">Henüz yayın başlamadı.</div>
-            </div>
-
-            <div class="stream-box">
-              <div class="stream-kicker">Hedefe giden çıktı</div>
-              <div class="stream-text" id="outgoingText">Çeviri akışı henüz yok.</div>
-            </div>
-          </div>
-        </section>
-
-        <section class="mini-card">
-          <div class="section-head">
-            <div class="section-kicker">Dinleyici Akışı</div>
-            <h2 class="section-title">Karşıya düşen içerik</h2>
-            <p class="section-sub">Dinleyiciye gidecek metin veya ses modu burada izlenir.</p>
-          </div>
-
-          <div class="stream-card">
-            <div class="stream-box">
-              <div class="stream-kicker">Dinleyici metni</div>
-              <div class="stream-text" id="listenerText">Dinleyici bekleniyor.</div>
-            </div>
-
-            <div class="stream-box">
-              <div class="stream-kicker">Log</div>
-              <div class="log" id="debugLog">Hazır.</div>
-            </div>
-          </div>
-        </section>
-      </section>
-
+      <div class="cyber-card" id="goListener" style="cursor:pointer;">
+        <div>
+          <div class="card-title">DİNLEYİCİ</div>
+          <div class="card-desc">Konuşmacı odayı açtıktan sonra kodla içeri gir ve kendi dilinde dinle.</div>
+        </div>
+        <div style="font-size:30px;">🎧</div>
+      </div>
     </div>
+
+    <!-- KONUŞMACI AYAR PANELİ -->
+    <div class="panel-view hide" id="speakerSetupPanel">
+      <h2 class="panel-title">Konuşmacı Ayarları</h2>
+      <div class="mini-note">Önce burada ayarları yap, sonra oda oluştur ve yayına geç.</div>
+
+      <select class="select-field" id="speakerLang">
+        <option value="tr" selected>Konuşma Dili • Türkçe</option>
+        <option value="en">Konuşma Dili • English</option>
+        <option value="de">Konuşma Dili • Deutsch</option>
+        <option value="fr">Konuşma Dili • Français</option>
+        <option value="it">Konuşma Dili • Italiano</option>
+        <option value="es">Konuşma Dili • Español</option>
+      </select>
+
+      <select class="select-field" id="speakerVoice">
+        <option value="default_female" selected>Özel Ses • Varsayılan Kadın</option>
+        <option value="default_male">Özel Ses • Varsayılan Erkek</option>
+        <option value="my_voice">Özel Ses • Kendi Sesim</option>
+        <option value="center_voice_1">Özel Ses • Merkez Ses 1</option>
+        <option value="center_voice_2">Özel Ses • Merkez Ses 2</option>
+      </select>
+
+      <div class="toggle-row">
+        <button class="toggle-chip active" id="modeVoiceBtn" type="button">KARŞIYA SES VER</button>
+        <button class="toggle-chip" id="modeTextBtn" type="button">SADECE YAZI</button>
+      </div>
+
+      <div class="toggle-row">
+        <button class="toggle-chip active" id="micAlwaysBtn" type="button">MİKROFON SÜREKLİ AÇIK</button>
+        <button class="toggle-chip" id="noiseReduceBtn" type="button">GÜRÜLTÜ AZALT</button>
+      </div>
+
+      <button class="btn-3d" id="btnCreateRoom">ODA OLUŞTUR</button>
+
+      <div class="row-2">
+        <button class="btn-ghost" id="btnBackSpeakerSetup">GERİ</button>
+        <button class="btn-ghost" id="btnResetSpeakerSetup">SIFIRLA</button>
+      </div>
+    </div>
+
+    <!-- KONUŞMACI ODA PANELİ -->
+    <div class="panel-view hide" id="speakerRoomPanel">
+      <h2 class="panel-title">Yayın Hazır</h2>
+      <div class="room-code-display" id="roomCode">------</div>
+
+      <div class="status-pill ok" id="speakerStatus">
+        Oda hazır. Şimdi yayına başlayabilirsin.
+      </div>
+
+      <button class="btn-3d" id="btnStartRoom">ODAYA GİR</button>
+
+      <div class="row-2">
+        <button class="btn-ghost" id="btnCopy">KODU KOPYALA</button>
+        <button class="btn-ghost" id="btnShareLink">LİNK PAYLAŞ</button>
+      </div>
+
+      <div class="row-2">
+        <button class="btn-ghost" id="btnBackSpeakerRoom">GERİ</button>
+        <button class="btn-danger" id="btnRecreateRoom">YENİ KOD</button>
+      </div>
+    </div>
+
+    <!-- DİNLEYİCİ PANELİ -->
+    <div class="panel-view hide" id="listenerPanel">
+      <h2 class="panel-title">Dinleyici Girişi</h2>
+      <div class="mini-note">Konuşmacı önce odayı açmış olmalı. Sonra kodla sen giriş yaparsın.</div>
+
+      <input class="input-field code-input" id="roomInput" placeholder="ODA KODU" maxlength="6" />
+
+      <select class="select-field" id="listenerLang">
+        <option value="tr">Dinleme Dili • Türkçe</option>
+        <option value="en" selected>Dinleme Dili • English</option>
+        <option value="de">Dinleme Dili • Deutsch</option>
+        <option value="fr">Dinleme Dili • Français</option>
+        <option value="it">Dinleme Dili • Italiano</option>
+        <option value="es">Dinleme Dili • Español</option>
+      </select>
+
+      <div class="toggle-row">
+        <button class="toggle-chip active" id="listenAudioBtn" type="button">SESİ DİNLE</button>
+        <button class="toggle-chip" id="listenTextBtn" type="button">SADECE YAZI OKU</button>
+      </div>
+
+      <div class="status-pill warn" id="listenerStatus">
+        Oda kodunu gir. Konuşmacı henüz odayı açmadıysa sistem içeri almaz.
+      </div>
+
+      <button class="btn-3d" id="btnJoin">BAĞLAN</button>
+      <button class="btn-ghost" id="btnBackListener">İPTAL</button>
+    </div>
+
   </main>
 
-  <script type="module">
-    import { mountShell } from "/js/ui_shell.js";
-
-    try{
-      mountShell({ scroll: "auto" });
-    }catch(e){
-      console.error("ui_shell HATASI:", e);
-    }
-
-    const API_BASE = "https://italky-api.onrender.com/api";
-    const WS_BASE = "wss://italky-api.onrender.com";
-
-    const speakerRoleBtn = document.getElementById("speakerRoleBtn");
-    const listenerRoleBtn = document.getElementById("listenerRoleBtn");
-    const speakerPanel = document.getElementById("speakerPanel");
+  <script>
+    const homeCards = document.getElementById("homeCards");
+    const speakerSetupPanel = document.getElementById("speakerSetupPanel");
+    const speakerRoomPanel = document.getElementById("speakerRoomPanel");
     const listenerPanel = document.getElementById("listenerPanel");
 
-    const speakerAudioToggle = document.getElementById("speakerAudioToggle");
-    const speakerTextOnlyToggle = document.getElementById("speakerTextOnlyToggle");
-    const listenAudioToggle = document.getElementById("listenAudioToggle");
-    const readOnlyToggle = document.getElementById("readOnlyToggle");
-
-    const micAlwaysOnChip = document.getElementById("micAlwaysOnChip");
-    const noiseFilterChip = document.getElementById("noiseFilterChip");
-    const autoDetectChip = document.getElementById("autoDetectChip");
+    const goSpeaker = document.getElementById("goSpeaker");
+    const goListener = document.getElementById("goListener");
 
     const speakerLang = document.getElementById("speakerLang");
+    const speakerVoice = document.getElementById("speakerVoice");
+
+    const modeVoiceBtn = document.getElementById("modeVoiceBtn");
+    const modeTextBtn = document.getElementById("modeTextBtn");
+
+    const micAlwaysBtn = document.getElementById("micAlwaysBtn");
+    const noiseReduceBtn = document.getElementById("noiseReduceBtn");
+
+    const btnCreateRoom = document.getElementById("btnCreateRoom");
+    const btnBackSpeakerSetup = document.getElementById("btnBackSpeakerSetup");
+    const btnResetSpeakerSetup = document.getElementById("btnResetSpeakerSetup");
+
+    const roomCode = document.getElementById("roomCode");
+    const speakerStatus = document.getElementById("speakerStatus");
+    const btnStartRoom = document.getElementById("btnStartRoom");
+    const btnCopy = document.getElementById("btnCopy");
+    const btnShareLink = document.getElementById("btnShareLink");
+    const btnBackSpeakerRoom = document.getElementById("btnBackSpeakerRoom");
+    const btnRecreateRoom = document.getElementById("btnRecreateRoom");
+
+    const roomInput = document.getElementById("roomInput");
     const listenerLang = document.getElementById("listenerLang");
-    const voiceSelect = document.getElementById("voiceSelect");
-    const speakerRoomCode = document.getElementById("speakerRoomCode");
-    const listenerRoomCode = document.getElementById("listenerRoomCode");
-    const speakerNotes = document.getElementById("speakerNotes");
+    const listenAudioBtn = document.getElementById("listenAudioBtn");
+    const listenTextBtn = document.getElementById("listenTextBtn");
+    const listenerStatus = document.getElementById("listenerStatus");
+    const btnJoin = document.getElementById("btnJoin");
+    const btnBackListener = document.getElementById("btnBackListener");
 
-    const roomCodeText = document.getElementById("roomCodeText");
-    const qrImg = document.getElementById("qrImg");
-    const qrFallback = document.getElementById("qrFallback");
-
-    const createQrBtn = document.getElementById("createQrBtn");
-    const shareLinkBtn = document.getElementById("shareLinkBtn");
-    const startSpeakerBtn = document.getElementById("startSpeakerBtn");
-    const joinListenerBtn = document.getElementById("joinListenerBtn");
-    const scanQrBtn = document.getElementById("scanQrBtn");
-    const startMicBtn = document.getElementById("startMicBtn");
-    const stopMicBtn = document.getElementById("stopMicBtn");
-
-    const sourceText = document.getElementById("sourceText");
-    const outgoingText = document.getElementById("outgoingText");
-    const listenerText = document.getElementById("listenerText");
-    const debugLog = document.getElementById("debugLog");
-
-    const pillRole = document.getElementById("pillRole");
-    const pillWs = document.getElementById("pillWs");
-    const pillMic = document.getElementById("pillMic");
-
-    let currentRole = "speaker";
-    let ws = null;
-    let recognition = null;
-    let micActive = false;
-    let roomId = "";
-    let joinedAsListener = false;
-    let demoTimer = null;
-
-    function log(msg){
-      const t = new Date().toLocaleTimeString("tr-TR");
-      debugLog.textContent = `[${t}] ${msg}\n` + debugLog.textContent;
+    function show(panel){
+      homeCards.classList.add("hide");
+      speakerSetupPanel.classList.add("hide");
+      speakerRoomPanel.classList.add("hide");
+      listenerPanel.classList.add("hide");
+      panel.classList.remove("hide");
     }
 
-    function setRole(role){
-      currentRole = role === "listener" ? "listener" : "speaker";
-      const isSpeaker = currentRole === "speaker";
-      speakerRoleBtn.classList.toggle("active", isSpeaker);
-      listenerRoleBtn.classList.toggle("active", !isSpeaker);
-      speakerPanel.classList.toggle("hidden", !isSpeaker);
-      listenerPanel.classList.toggle("hidden", isSpeaker);
-      pillRole.textContent = `Rol: ${isSpeaker ? "Speaker" : "Listener"}`;
+    function showHome(){
+      homeCards.classList.remove("hide");
+      speakerSetupPanel.classList.add("hide");
+      speakerRoomPanel.classList.add("hide");
+      listenerPanel.classList.add("hide");
     }
 
-    function activatePair(onEl, offEl){
-      onEl.classList.add("active");
-      offEl.classList.remove("active");
-    }
-
-    function randomRoomCode(){
-      return "OTA-" + Math.floor(100000 + Math.random() * 900000);
-    }
-
-    function syncRoomCode(value){
-      const v = String(value || "").trim() || randomRoomCode();
-      speakerRoomCode.value = v;
-      roomCodeText.textContent = v;
-      roomId = v;
-      return v;
-    }
-
-    function updateWsPill(state){
-      pillWs.className = "pill";
-      if(state === "open"){
-        pillWs.classList.add("ok");
-        pillWs.textContent = "WS: Açık";
-      }else if(state === "connecting"){
-        pillWs.classList.add("warn");
-        pillWs.textContent = "WS: Bağlanıyor";
-      }else{
-        pillWs.classList.add("err");
-        pillWs.textContent = "WS: Kapalı";
+    function makeShortCode(){
+      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+      let out = "";
+      for(let i = 0; i < 6; i++){
+        out += chars[Math.floor(Math.random() * chars.length)];
       }
+      return out;
     }
 
-    function updateMicPill(active){
-      pillMic.className = "pill";
-      if(active){
-        pillMic.classList.add("ok");
-        pillMic.textContent = "Mic: Açık";
-      }else{
-        pillMic.classList.add("warn");
-        pillMic.textContent = "Mic: Kapalı";
-      }
+    function setExclusive(a, b){
+      a.classList.add("active");
+      b.classList.remove("active");
     }
 
-    function qrUrlPrimary(targetUrl){
-      return `https://api.qrserver.com/v1/create-qr-code/?size=520x520&margin=6&data=${encodeURIComponent(targetUrl)}`;
+    function setStatus(el, text, type){
+      el.textContent = text;
+      el.className = "status-pill";
+      if(type) el.classList.add(type);
     }
 
-    function qrUrlFallback(targetUrl){
-      return `https://quickchart.io/qr?size=520&text=${encodeURIComponent(targetUrl)}`;
-    }
-
-    async function loadImage(url){
-      return await new Promise((resolve, reject) => {
-        const img = new Image();
-        img.referrerPolicy = "no-referrer";
-        img.onload = () => resolve(url);
-        img.onerror = reject;
-        img.src = url;
-      });
-    }
-
-    async function renderQrForRoom(code){
-      const target = `${location.origin}/pages/onetoall.html?role=listener&room=${encodeURIComponent(code)}`;
-      qrImg.style.display = "none";
-      qrFallback.style.display = "block";
-
-      try{
-        let finalUrl = null;
-        try{
-          finalUrl = await loadImage(qrUrlPrimary(target));
-        }catch{
-          finalUrl = await loadImage(qrUrlFallback(target));
-        }
-
-        qrImg.src = finalUrl + (finalUrl.includes("?") ? "&" : "?") + "t=" + Date.now();
-        qrImg.style.display = "block";
-        qrFallback.style.display = "none";
-        log("QR üretildi.");
-      }catch(e){
-        log("QR servisinden görsel alınamadı, fallback görünüm bırakıldı.");
-      }
-    }
-
-    async function createRoomOnServer(code){
-      try{
-        const r = await fetch(`${API_BASE}/onetoall/create-room`, {
-          method:"POST",
-          headers:{ "Content-Type":"application/json" },
-          body: JSON.stringify({
-            room_id: code,
-            speaker_lang: speakerLang.value,
-            voice: voiceSelect.value,
-            mode: "onetoall"
-          })
-        });
-
-        const j = await r.json().catch(()=> ({}));
-        if(!r.ok) throw new Error(j?.detail || j?.error || "create-room failed");
-        log(`Sunucuda oda hazırlandı: ${code}`);
-        return j;
-      }catch(e){
-        log(`Sunucu create-room yok ya da cevap vermedi. Demo modunda devam.`);
-        return null;
-      }
-    }
-
-    async function joinRoomOnServer(code){
-      try{
-        const r = await fetch(`${API_BASE}/onetoall/join-room`, {
-          method:"POST",
-          headers:{ "Content-Type":"application/json" },
-          body: JSON.stringify({
-            room_id: code,
-            listener_lang: listenerLang.value,
-            mode: "onetoall"
-          })
-        });
-
-        const j = await r.json().catch(()=> ({}));
-        if(!r.ok) throw new Error(j?.detail || j?.error || "join-room failed");
-        log(`Dinleyici sunucuya katıldı: ${code}`);
-        return j;
-      }catch(e){
-        log(`Sunucu join-room yok ya da cevap vermedi. Demo dinleyici modunda devam.`);
-        return null;
-      }
-    }
-
-    function closeWs(){
-      try{ ws?.close?.(); }catch{}
-      ws = null;
-      updateWsPill("closed");
-    }
-
-    function openWs(role, code, lang){
-      closeWs();
-      updateWsPill("connecting");
-
-      const url = `${WS_BASE}/ws/onetoall/${encodeURIComponent(code)}?role=${encodeURIComponent(role)}&lang=${encodeURIComponent(lang)}`;
-
-      try{
-        ws = new WebSocket(url);
-      }catch(e){
-        log("WS oluşturulamadı. Demo mod açık.");
-        updateWsPill("closed");
-        return;
-      }
-
-      ws.onopen = () => {
-        updateWsPill("open");
-        log(`WS bağlandı: ${role}`);
-      };
-
-      ws.onmessage = (event) => {
-        try{
-          const payload = JSON.parse(event.data);
-          handleIncoming(payload);
-        }catch{
-          log("WS mesajı parse edilemedi.");
-        }
-      };
-
-      ws.onerror = () => {
-        log("WS hata verdi.");
-      };
-
-      ws.onclose = () => {
-        updateWsPill("closed");
-        log("WS kapandı.");
-      };
-    }
-
-    function handleIncoming(payload){
-      const type = String(payload?.type || "").trim();
-
-      if(type === "translation"){
-        const txt = String(payload?.translated_text || "").trim();
-        if(txt){
-          listenerText.textContent = txt;
-          log("Çeviri dinleyiciye düştü.");
-          maybeSpeak(txt);
-        }
-        return;
-      }
-
-      if(type === "transcript"){
-        const txt = String(payload?.text || "").trim();
-        if(txt){
-          sourceText.textContent = txt;
-          outgoingText.textContent = txt;
-          log("Transcript alındı.");
-        }
-        return;
-      }
-
-      if(type === "presence"){
-        log("Presence bilgisi geldi.");
-        return;
-      }
-
-      if(type === "error"){
-        log(`WS hata payload: ${payload?.detail || "bilinmiyor"}`);
-      }
-    }
-
-    function speakerTextOnlyMode(){
-      return speakerTextOnlyToggle.classList.contains("active");
-    }
-
-    function listenerReadOnlyMode(){
-      return readOnlyToggle.classList.contains("active");
-    }
-
-    function fakeTranslate(text, targetLang){
-      const dict = {
-        en: `EN: ${text}`,
-        de: `DE: ${text}`,
-        fr: `FR: ${text}`,
-        it: `IT: ${text}`,
-        es: `ES: ${text}`,
-        tr: `TR: ${text}`
-      };
-      return dict[targetLang] || text;
-    }
-
-    function sendTranslation(text){
-      const clean = String(text || "").trim();
-      if(!clean) return;
-
-      sourceText.textContent = clean;
-
-      const targetLang = currentRole === "speaker" ? listenerLang.value : listenerLang.value;
-      const translated = fakeTranslate(clean, targetLang);
-
-      outgoingText.textContent = translated;
-
-      const payload = {
-        type: "translation",
-        room_id: roomId,
-        source_lang: speakerLang.value,
-        target_lang: listenerLang.value,
-        translated_text: translated,
-        tts_mode: speakerTextOnlyMode() ? "text_only" : "voice",
-        voice_id: voiceSelect.value
-      };
-
-      if(ws && ws.readyState === 1){
-        try{
-          ws.send(JSON.stringify(payload));
-          log("WS ile çeviri gönderildi.");
-        }catch{
-          log("WS gönderimi başarısız.");
-        }
-      }else{
-        log("Demo yayın: çeviri yerelde işlendi.");
-      }
-
-      if(joinedAsListener || currentRole === "listener"){
-        listenerText.textContent = translated;
-        maybeSpeak(translated);
-      }
-    }
-
-    function maybeSpeak(text){
-      if(listenerReadOnlyMode()) return;
-      if(speakerTextOnlyMode() && currentRole === "speaker") return;
-      if(!("speechSynthesis" in window)) return;
-
-      try{
-        window.speechSynthesis.cancel();
-        const u = new SpeechSynthesisUtterance(text);
-        const langMap = {
-          tr:"tr-TR",
-          en:"en-US",
-          de:"de-DE",
-          fr:"fr-FR",
-          it:"it-IT",
-          es:"es-ES"
-        };
-        u.lang = langMap[listenerLang.value] || "en-US";
-        window.speechSynthesis.speak(u);
-      }catch{}
-    }
-
-    function stopDemoTimer(){
-      if(demoTimer){
-        clearInterval(demoTimer);
-        demoTimer = null;
-      }
-    }
-
-    function startDemoStream(){
-      stopDemoTimer();
-      const samples = [
-        speakerNotes.value.trim() || "Merhaba, tur başlıyor.",
-        "Lütfen soldaki tarihi yapıya dikkat edin.",
-        "Birazdan beş dakikalık kısa mola vereceğiz.",
-        "Sorularınızı turun sonunda alacağım."
-      ];
-      let i = 0;
-      demoTimer = setInterval(() => {
-        if(!micActive) return;
-        sendTranslation(samples[i % samples.length]);
-        i++;
-      }, 4500);
-    }
-
-    function createRecognition(){
-      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if(!SR) return null;
-
-      const rec = new SR();
-      rec.lang = ({
-        tr:"tr-TR",
-        en:"en-US",
-        de:"de-DE",
-        fr:"fr-FR",
-        it:"it-IT",
-        es:"es-ES"
-      })[speakerLang.value] || "tr-TR";
-      rec.continuous = true;
-      rec.interimResults = true;
-
-      let finalBuffer = "";
-
-      rec.onresult = (event) => {
-        let interim = "";
-        for(let i = event.resultIndex; i < event.results.length; i++){
-          const transcript = event.results[i][0]?.transcript || "";
-          if(event.results[i].isFinal){
-            finalBuffer += transcript.trim() + " ";
-          }else{
-            interim += transcript;
-          }
-        }
-        const merged = (finalBuffer + interim).trim();
-        if(merged){
-          sourceText.textContent = merged;
-        }
-        if(finalBuffer.trim()){
-          sendTranslation(finalBuffer.trim());
-          finalBuffer = "";
-        }
-      };
-
-      rec.onerror = (e) => {
-        log(`SpeechRecognition hata: ${e?.error || "bilinmiyor"}`);
-      };
-
-      rec.onend = () => {
-        if(micActive){
-          try{
-            recognition && recognition.start();
-          }catch{}
-        }
-      };
-
-      return rec;
-    }
-
-    async function startMic(){
-      if(micActive) return;
-      micActive = true;
-      updateMicPill(true);
-      startMicBtn.classList.add("hidden");
-      stopMicBtn.classList.remove("hidden");
-
-      try{
-        await navigator.mediaDevices.getUserMedia({ audio:true });
-        log("Mikrofon izni alındı.");
-      }catch(e){
-        log("Mikrofon izni alınamadı. Demo mod devam ediyor.");
-      }
-
-      recognition = createRecognition();
-
-      if(recognition){
-        try{
-          recognition.start();
-          log("SpeechRecognition başladı.");
-        }catch(e){
-          log("SpeechRecognition başlatılamadı, demo mod devam.");
-        }
-      }else{
-        log("Tarayıcı SpeechRecognition desteklemiyor, demo metin akışı çalışacak.");
-      }
-
-      startDemoStream();
-    }
-
-    function stopMic(){
-      micActive = false;
-      updateMicPill(false);
-      startMicBtn.classList.remove("hidden");
-      stopMicBtn.classList.add("hidden");
-
-      stopDemoTimer();
-
-      try{ recognition?.stop?.(); }catch{}
-      recognition = null;
-      log("Mikrofon durduruldu.");
-    }
-
-    async function setupSpeakerSession(){
-      const code = syncRoomCode(speakerRoomCode.value);
-      await createRoomOnServer(code);
-      await renderQrForRoom(code);
-      openWs("speaker", code, speakerLang.value);
-      log(`Konuşmacı oturumu hazır: ${code}`);
-      sourceText.textContent = "Yayın hazır. Mikrofon başlatılabilir.";
-      outgoingText.textContent = speakerTextOnlyMode()
-        ? "Çıkış modu: sadece yazı"
-        : `Çıkış modu: ses + metin (${voiceSelect.value})`;
-    }
-
-    async function setupListenerSession(){
-      const code = String(listenerRoomCode.value || "").trim();
-      if(!code){
-        alert("Lütfen oda kodu gir.");
-        return false;
-      }
-
-      roomId = code;
-      roomCodeText.textContent = code;
-      await joinRoomOnServer(code);
-      openWs("listener", code, listenerLang.value);
-      joinedAsListener = true;
-      listenerText.textContent = "Dinleyici bağlı. Çeviri bekleniyor...";
-      log(`Dinleyici oturumu hazır: ${code}`);
-      return true;
-    }
-
-    speakerRoleBtn.addEventListener("click", ()=> setRole("speaker"));
-    listenerRoleBtn.addEventListener("click", ()=> setRole("listener"));
-
-    speakerAudioToggle.addEventListener("click", ()=>{
-      activatePair(speakerAudioToggle, speakerTextOnlyToggle);
-      outgoingText.textContent = `Çıkış modu: ses + metin (${voiceSelect.value})`;
+    goSpeaker.addEventListener("click", () => {
+      show(speakerSetupPanel);
     });
 
-    speakerTextOnlyToggle.addEventListener("click", ()=>{
-      activatePair(speakerTextOnlyToggle, speakerAudioToggle);
-      outgoingText.textContent = "Çıkış modu: sadece yazı";
+    goListener.addEventListener("click", () => {
+      show(listenerPanel);
+      roomInput.focus();
     });
 
-    listenAudioToggle.addEventListener("click", ()=> activatePair(listenAudioToggle, readOnlyToggle));
-    readOnlyToggle.addEventListener("click", ()=> activatePair(readOnlyToggle, listenAudioToggle));
+    modeVoiceBtn.addEventListener("click", () => setExclusive(modeVoiceBtn, modeTextBtn));
+    modeTextBtn.addEventListener("click", () => setExclusive(modeTextBtn, modeVoiceBtn));
 
-    [micAlwaysOnChip, noiseFilterChip, autoDetectChip].forEach(el=>{
-      el.addEventListener("click", ()=> el.classList.toggle("active"));
+    micAlwaysBtn.addEventListener("click", () => {
+      micAlwaysBtn.classList.toggle("active");
     });
 
-    speakerRoomCode.addEventListener("input", ()=>{
-      roomCodeText.textContent = speakerRoomCode.value.trim() || "OTA-XXXXXX";
+    noiseReduceBtn.addEventListener("click", () => {
+      noiseReduceBtn.classList.toggle("active");
     });
 
-    createQrBtn.addEventListener("click", async ()=>{
-      const code = syncRoomCode(speakerRoomCode.value);
-      await renderQrForRoom(code);
+    btnCreateRoom.addEventListener("click", () => {
+      const code = makeShortCode();
+      roomCode.textContent = code;
+      localStorage.setItem("italky_onetoall_room", code);
+      localStorage.setItem("italky_onetoall_speaker_lang", speakerLang.value);
+      localStorage.setItem("italky_onetoall_speaker_voice", speakerVoice.value);
+      localStorage.setItem("italky_onetoall_output_mode", modeTextBtn.classList.contains("active") ? "text" : "voice");
+      localStorage.setItem("italky_onetoall_mic_always", micAlwaysBtn.classList.contains("active") ? "1" : "0");
+      localStorage.setItem("italky_onetoall_noise_reduce", noiseReduceBtn.classList.contains("active") ? "1" : "0");
+
+      setStatus(speakerStatus, "Oda oluşturuldu. Dinleyici artık bu kodla giriş yapabilir.", "ok");
+      show(speakerRoomPanel);
     });
 
-    shareLinkBtn.addEventListener("click", async ()=>{
-      const code = syncRoomCode(speakerRoomCode.value);
+    btnBackSpeakerSetup.addEventListener("click", showHome);
+
+    btnResetSpeakerSetup.addEventListener("click", () => {
+      speakerLang.value = "tr";
+      speakerVoice.value = "default_female";
+      setExclusive(modeVoiceBtn, modeTextBtn);
+      micAlwaysBtn.classList.add("active");
+      noiseReduceBtn.classList.remove("active");
+    });
+
+    btnBackSpeakerRoom.addEventListener("click", () => {
+      show(speakerSetupPanel);
+    });
+
+    btnRecreateRoom.addEventListener("click", () => {
+      const code = makeShortCode();
+      roomCode.textContent = code;
+      localStorage.setItem("italky_onetoall_room", code);
+      setStatus(speakerStatus, "Yeni oda kodu oluşturuldu.", "warn");
+    });
+
+    btnCopy.addEventListener("click", async () => {
+      try{
+        await navigator.clipboard.writeText(roomCode.textContent.trim());
+        setStatus(speakerStatus, "Oda kodu panoya kopyalandı.", "ok");
+      }catch{
+        setStatus(speakerStatus, "Kopyalama başarısız oldu.", "danger");
+      }
+    });
+
+    btnShareLink.addEventListener("click", async () => {
+      const code = roomCode.textContent.trim();
       const shareUrl = `${location.origin}/pages/onetoall.html?role=listener&room=${encodeURIComponent(code)}`;
 
       try{
         if(navigator.share){
           await navigator.share({
-            title:"italkyAI OneToAll",
-            text:"OneToAll yayınına katıl",
-            url:shareUrl
+            title: "italkyAI OneToAll",
+            text: "Bu yayın odasına katıl",
+            url: shareUrl
           });
+          setStatus(speakerStatus, "Katılım linki paylaşıldı.", "ok");
         }else{
           await navigator.clipboard.writeText(shareUrl);
-          alert("Katılım linki panoya kopyalandı.");
+          setStatus(speakerStatus, "Katılım linki panoya kopyalandı.", "ok");
         }
-      }catch(e){
-        log("Link paylaşımı iptal edildi ya da desteklenmiyor.");
+      }catch{
+        setStatus(speakerStatus, "Link paylaşımı iptal edildi.", "warn");
       }
     });
 
-    startSpeakerBtn.addEventListener("click", async ()=>{
-      await setupSpeakerSession();
+    btnStartRoom.addEventListener("click", () => {
+      const code = roomCode.textContent.trim();
+      const lang = speakerLang.value || "tr";
+      location.href = `/pages/onetoall_live.html?role=speaker&room=${encodeURIComponent(code)}&lang=${encodeURIComponent(lang)}`;
     });
 
-    joinListenerBtn.addEventListener("click", async ()=>{
-      await setupListenerSession();
-    });
+    listenAudioBtn.addEventListener("click", () => setExclusive(listenAudioBtn, listenTextBtn));
+    listenTextBtn.addEventListener("click", () => setExclusive(listenTextBtn, listenAudioBtn));
 
-    scanQrBtn.addEventListener("click", ()=>{
-      alert("Bir sonraki adımda kamera ile gerçek QR tarama bağlanacak.");
-    });
-
-    startMicBtn.addEventListener("click", async ()=>{
-      if(!roomId){
-        await setupSpeakerSession();
+    roomInput.addEventListener("input", () => {
+      roomInput.value = roomInput.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
+      if(roomInput.value.length === 6){
+        setStatus(listenerStatus, "Kod tamamlandı. Bağlanabilirsin.", "ok");
+      }else{
+        setStatus(listenerStatus, "6 karakterlik kısa oda kodunu gir.", "warn");
       }
-      await startMic();
     });
 
-    stopMicBtn.addEventListener("click", ()=>{
-      stopMic();
-    });
+    btnJoin.addEventListener("click", () => {
+      const code = roomInput.value.trim().toUpperCase();
 
-    const params = new URLSearchParams(location.search);
-    const room = String(params.get("room") || "").trim();
-    const role = String(params.get("role") || "").trim().toLowerCase();
-
-    syncRoomCode(speakerRoomCode.value || randomRoomCode());
-    updateWsPill("closed");
-    updateMicPill(false);
-
-    if(room){
-      speakerRoomCode.value = room;
-      listenerRoomCode.value = room;
-      roomCodeText.textContent = room;
-      roomId = room;
-    }
-
-    if(role === "listener"){
-      setRole("listener");
-      if(room){
-        setTimeout(() => { setupListenerSession(); }, 250);
+      if(code.length !== 6){
+        setStatus(listenerStatus, "Oda kodu 6 karakter olmalı.", "danger");
+        return;
       }
-    }else{
-      setRole("speaker");
-      if(room){
-        setTimeout(() => { setupSpeakerSession(); }, 250);
-      }
-    }
 
-    window.addEventListener("beforeunload", () => {
-      stopMic();
-      closeWs();
+      const existingRoom = localStorage.getItem("italky_onetoall_room");
+
+      if(existingRoom && existingRoom !== code){
+        setStatus(listenerStatus, "Bu cihazda farklı bir oda kayıtlı. Yine de deneme yapılacak.", "warn");
+      }
+
+      const lang = listenerLang.value || "en";
+      const mode = listenTextBtn.classList.contains("active") ? "text" : "audio";
+      location.href = `/pages/onetoall_live.html?role=listener&room=${encodeURIComponent(code)}&lang=${encodeURIComponent(lang)}&mode=${encodeURIComponent(mode)}`;
     });
 
-    log("OneToAll v2 hazır.");
+    btnBackListener.addEventListener("click", showHome);
+
+    // URL ile listener direkt açılırsa
+    (function bootFromQuery(){
+      const params = new URLSearchParams(location.search);
+      const role = String(params.get("role") || "").trim().toLowerCase();
+      const room = String(params.get("room") || "").trim().toUpperCase();
+
+      if(role === "listener"){
+        show(listenerPanel);
+        if(room){
+          roomInput.value = room.replace(/[^A-Z0-9]/g, "").slice(0, 6);
+          setStatus(listenerStatus, "Bağlantı kodu hazır. Şimdi giriş yap.", "ok");
+        }
+      }
+    })();
   </script>
 </body>
 </html>
