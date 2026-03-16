@@ -1,0 +1,936 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+  <title>italkyAI • OneToAll</title>
+  <meta name="theme-color" content="#0b0f1a"/>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#070b14;
+      --bg2:#0b1220;
+      --panel:rgba(255,255,255,.06);
+      --panel-2:rgba(255,255,255,.04);
+      --line:rgba(255,255,255,.10);
+      --txt:rgba(255,255,255,.96);
+      --muted:rgba(255,255,255,.64);
+      --cyan:#6ee7ff;
+      --blue:#5b8cff;
+      --violet:#8b5cf6;
+      --pink:#ff4fd8;
+      --green:#22c55e;
+      --orange:#fb923c;
+      --danger:#fb7185;
+      --hero:linear-gradient(135deg,#0b1220 0%, #10203d 35%, #182d63 62%, #2a1d66 100%);
+      --grad:linear-gradient(135deg,var(--cyan) 0%, var(--blue) 42%, var(--pink) 100%);
+      --radius:28px;
+    }
+
+    *{
+      box-sizing:border-box;
+      -webkit-tap-highlight-color:transparent;
+      outline:none;
+    }
+
+    html,body{
+      margin:0;
+      width:100%;
+      min-height:100%;
+      background:
+        radial-gradient(circle at 15% 18%, rgba(110,231,255,.10) 0%, transparent 22%),
+        radial-gradient(circle at 82% 20%, rgba(255,79,216,.10) 0%, transparent 24%),
+        radial-gradient(circle at 50% 100%, rgba(91,140,255,.10) 0%, transparent 30%),
+        linear-gradient(180deg,#060910 0%, #0a0f19 45%, #0b1020 100%);
+      color:var(--txt);
+      font-family:'Outfit',sans-serif;
+      scrollbar-width:none;
+    }
+
+    html::-webkit-scrollbar,
+    body::-webkit-scrollbar{
+      display:none;
+    }
+
+    #pageContent{
+      position:relative;
+      width:100%;
+      min-height:100dvh;
+      padding:16px 14px 24px;
+      overflow-x:hidden;
+      overflow-y:auto;
+      scrollbar-width:none;
+      -webkit-overflow-scrolling:touch;
+    }
+
+    #pageContent::-webkit-scrollbar{
+      display:none;
+    }
+
+    .wrap{
+      width:100%;
+      max-width:560px;
+      margin:0 auto;
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+    }
+
+    .hero{
+      position:relative;
+      overflow:hidden;
+      border-radius:34px;
+      padding:18px 16px 16px;
+      border:1px solid rgba(255,255,255,.10);
+      background:var(--hero);
+      box-shadow:
+        0 20px 40px rgba(0,0,0,.30),
+        inset 0 1px 0 rgba(255,255,255,.05);
+    }
+
+    .hero::before{
+      content:"";
+      position:absolute;
+      inset:auto -40px -50px auto;
+      width:180px;
+      height:180px;
+      background:radial-gradient(circle, rgba(255,79,216,.22), transparent 65%);
+      filter:blur(12px);
+      pointer-events:none;
+    }
+
+    .hero-top{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:14px;
+    }
+
+    .hero-copy{
+      min-width:0;
+      flex:1;
+    }
+
+    .eyebrow{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      min-height:30px;
+      padding:0 12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.10);
+      border:1px solid rgba(255,255,255,.10);
+      font-size:11px;
+      font-weight:800;
+      letter-spacing:.4px;
+      text-transform:uppercase;
+      color:#fff;
+    }
+
+    .eyebrow-dot{
+      width:8px;
+      height:8px;
+      border-radius:50%;
+      background:var(--green);
+      box-shadow:0 0 12px var(--green);
+      animation:pulseDot 1.6s infinite ease-in-out;
+    }
+
+    .hero-title{
+      margin:12px 0 8px;
+      font-family:'Space Grotesk',sans-serif;
+      font-size:34px;
+      line-height:1;
+      letter-spacing:-1px;
+    }
+
+    .hero-title .accent{
+      background:var(--grad);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+
+    .hero-sub{
+      margin:0;
+      font-size:12px;
+      line-height:1.5;
+      color:rgba(255,255,255,.78);
+      max-width:320px;
+    }
+
+    .hero-art{
+      flex:0 0 auto;
+      width:96px;
+      height:96px;
+      border-radius:24px;
+      position:relative;
+      background:rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.10);
+      overflow:hidden;
+    }
+
+    .node-center{
+      position:absolute;
+      left:18px;
+      top:38px;
+      width:18px;
+      height:18px;
+      border-radius:50%;
+      background:#fff;
+      box-shadow:0 0 20px rgba(255,255,255,.25);
+    }
+
+    .wave{
+      position:absolute;
+      left:36px;
+      border:2px solid rgba(110,231,255,.88);
+      border-left-color:transparent;
+      border-bottom-color:transparent;
+      border-radius:50%;
+      transform:rotate(45deg);
+    }
+
+    .wave.w1{ top:30px; width:18px; height:18px; }
+    .wave.w2{ top:24px; width:30px; height:30px; opacity:.7; }
+    .wave.w3{ top:17px; width:42px; height:42px; opacity:.4; }
+
+    .node{
+      position:absolute;
+      width:10px;
+      height:10px;
+      border-radius:50%;
+      background:rgba(255,255,255,.92);
+      box-shadow:0 0 14px rgba(255,255,255,.18);
+    }
+
+    .n1{ right:18px; top:18px; }
+    .n2{ right:12px; bottom:20px; }
+    .n3{ right:34px; bottom:14px; }
+
+    .hero-pills{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:14px;
+    }
+
+    .pill{
+      min-height:32px;
+      display:inline-flex;
+      align-items:center;
+      padding:0 12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.10);
+      color:#fff;
+      font-size:11px;
+      font-weight:800;
+      letter-spacing:.25px;
+    }
+
+    .card{
+      position:relative;
+      border-radius:var(--radius);
+      border:1px solid var(--line);
+      background:var(--panel);
+      box-shadow:
+        0 18px 30px rgba(0,0,0,.22),
+        inset 0 1px 0 rgba(255,255,255,.04);
+      overflow:hidden;
+      backdrop-filter:blur(10px);
+    }
+
+    .card-pad{
+      padding:16px;
+    }
+
+    .entry{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .entry-btn{
+      width:100%;
+      min-height:94px;
+      border:none;
+      border-radius:24px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border:1px solid rgba(255,255,255,.10);
+      color:#fff;
+      padding:16px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      text-align:left;
+      cursor:pointer;
+      transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    }
+
+    .entry-btn:active{
+      transform:scale(.985);
+    }
+
+    .entry-btn:hover{
+      border-color:rgba(110,231,255,.28);
+      box-shadow:0 0 0 1px rgba(110,231,255,.06);
+    }
+
+    .entry-copy{
+      min-width:0;
+      flex:1;
+    }
+
+    .entry-title{
+      font-size:22px;
+      font-weight:900;
+      letter-spacing:-.4px;
+      margin:0 0 5px;
+    }
+
+    .entry-desc{
+      margin:0;
+      font-size:12px;
+      line-height:1.45;
+      color:var(--muted);
+    }
+
+    .entry-icon{
+      flex:0 0 auto;
+      width:52px;
+      height:52px;
+      border-radius:18px;
+      display:grid;
+      place-items:center;
+      font-size:24px;
+      background:rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.10);
+    }
+
+    .panel{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .panel-head{
+      text-align:center;
+      padding:2px 4px 0;
+    }
+
+    .panel-title{
+      margin:0;
+      font-family:'Space Grotesk',sans-serif;
+      font-size:24px;
+      letter-spacing:-.5px;
+    }
+
+    .panel-sub{
+      margin:6px 0 0;
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.45;
+    }
+
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap:7px;
+    }
+
+    .label{
+      font-size:11px;
+      font-weight:800;
+      text-transform:uppercase;
+      letter-spacing:.35px;
+      color:rgba(255,255,255,.70);
+    }
+
+    .input,
+    .select{
+      width:100%;
+      height:58px;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.05);
+      color:#fff;
+      padding:0 16px;
+      font:inherit;
+      text-align:center;
+    }
+
+    .select{
+      appearance:none;
+      -webkit-appearance:none;
+    }
+
+    .select option{
+      color:#111;
+    }
+
+    .code-input{
+      font-family:'Space Grotesk',sans-serif;
+      font-size:28px;
+      letter-spacing:8px;
+      text-transform:uppercase;
+    }
+
+    .toggle-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+
+    .toggle{
+      min-height:62px;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.05);
+      color:#fff;
+      padding:12px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      font-size:12px;
+      font-weight:800;
+      line-height:1.35;
+      cursor:pointer;
+      transition:.18s ease;
+    }
+
+    .toggle.active{
+      border-color:rgba(110,231,255,.34);
+      background:rgba(110,231,255,.10);
+      box-shadow:0 0 0 1px rgba(110,231,255,.06);
+    }
+
+    .status{
+      min-height:42px;
+      border-radius:999px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      padding:8px 14px;
+      font-size:11px;
+      font-weight:800;
+      line-height:1.35;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.05);
+    }
+
+    .status.ok{ color:#99f6b4; }
+    .status.warn{ color:#ffd18a; }
+    .status.danger{ color:#ffb4c1; }
+
+    .room-code-box{
+      padding:14px 14px 4px;
+      text-align:center;
+    }
+
+    .room-code-kicker{
+      font-size:11px;
+      text-transform:uppercase;
+      font-weight:800;
+      color:rgba(255,255,255,.58);
+      letter-spacing:.35px;
+      margin-bottom:6px;
+    }
+
+    .room-code{
+      margin:0;
+      font-family:'Space Grotesk',sans-serif;
+      font-size:42px;
+      letter-spacing:6px;
+      background:linear-gradient(180deg,#fff 0%, var(--cyan) 100%);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+
+    .actions{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:10px;
+    }
+
+    .actions.two{
+      grid-template-columns:1fr 1fr;
+    }
+
+    .btn{
+      min-height:56px;
+      border:none;
+      border-radius:18px;
+      font:inherit;
+      font-weight:900;
+      letter-spacing:.4px;
+      cursor:pointer;
+      transition:transform .18s ease, opacity .18s ease, filter .18s ease;
+    }
+
+    .btn:active{
+      transform:scale(.985);
+    }
+
+    .btn-primary{
+      color:#081018;
+      background:var(--grad);
+      box-shadow:0 12px 22px rgba(91,140,255,.18);
+    }
+
+    .btn-secondary{
+      color:#fff;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.10);
+    }
+
+    .btn-danger{
+      color:#fff;
+      background:rgba(251,113,133,.10);
+      border:1px solid rgba(251,113,133,.25);
+    }
+
+    .helper{
+      text-align:center;
+      font-size:11px;
+      line-height:1.45;
+      color:rgba(255,255,255,.56);
+    }
+
+    .hide{
+      display:none !important;
+    }
+
+    @keyframes pulseDot{
+      0%,100%{ transform:scale(1); opacity:1; }
+      50%{ transform:scale(1.18); opacity:.78; }
+    }
+
+    @media (max-width:420px){
+      .hero-title{ font-size:30px; }
+      .room-code{ font-size:36px; letter-spacing:5px; }
+      .entry-title{ font-size:20px; }
+      .code-input{ font-size:24px; letter-spacing:6px; }
+    }
+  </style>
+</head>
+<body>
+  <main id="pageContent">
+    <div class="wrap">
+
+      <section class="hero">
+        <div class="hero-top">
+          <div class="hero-copy">
+            <div class="eyebrow">
+              <span class="eyebrow-dot"></span>
+              Live Broadcast Translation
+            </div>
+            <h1 class="hero-title">One<span class="accent">To</span>All</h1>
+            <p class="hero-sub">
+              Bir kişi konuşur. Dinleyiciler kendi dilini seçer ve yayını anlık takip eder.
+              Rehberlik, sunum, sahne ve toplu anlatım için tasarlandı.
+            </p>
+          </div>
+
+          <div class="hero-art" aria-hidden="true">
+            <div class="node-center"></div>
+            <div class="wave w1"></div>
+            <div class="wave w2"></div>
+            <div class="wave w3"></div>
+            <div class="node n1"></div>
+            <div class="node n2"></div>
+            <div class="node n3"></div>
+          </div>
+        </div>
+
+        <div class="hero-pills">
+          <div class="pill">Tek Konuşmacı</div>
+          <div class="pill">Sınırsız Dinleyici</div>
+          <div class="pill">Canlı Çeviri</div>
+        </div>
+      </section>
+
+      <!-- ANA EKRAN -->
+      <section id="homeCards" class="card card-pad">
+        <div class="entry">
+          <button class="entry-btn" id="goSpeaker" type="button">
+            <div class="entry-copy">
+              <h2 class="entry-title">Konuşmacı</h2>
+              <p class="entry-desc">Dilini, ses tipini ve yayın modunu ayarla. Sonra kısa oda kodunu oluşturup yayına geç.</p>
+            </div>
+            <div class="entry-icon">🎙️</div>
+          </button>
+
+          <button class="entry-btn" id="goListener" type="button">
+            <div class="entry-copy">
+              <h2 class="entry-title">Dinleyici</h2>
+              <p class="entry-desc">Konuşmacı odayı açtıktan sonra kodunu gir, kendi dilini seç ve doğrudan katıl.</p>
+            </div>
+            <div class="entry-icon">🎧</div>
+          </button>
+        </div>
+      </section>
+
+      <!-- KONUŞMACI AYAR -->
+      <section id="speakerSetupPanel" class="card card-pad panel hide">
+        <div class="panel-head">
+          <h2 class="panel-title">Konuşmacı Ayarları</h2>
+          <p class="panel-sub">Önce ayarları yap. Sonra sistem kısa oda kodunu oluştursun.</p>
+        </div>
+
+        <div class="field">
+          <label class="label" for="speakerLang">Konuşma Dili</label>
+          <select class="select" id="speakerLang">
+            <option value="tr" selected>Türkçe</option>
+            <option value="en">English</option>
+            <option value="de">Deutsch</option>
+            <option value="fr">Français</option>
+            <option value="it">Italiano</option>
+            <option value="es">Español</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label class="label" for="speakerVoice">Ses Seçimi</label>
+          <select class="select" id="speakerVoice">
+            <option value="default_female" selected>Varsayılan Kadın Ses</option>
+            <option value="default_male">Varsayılan Erkek Ses</option>
+            <option value="my_voice">Kendi Sesim</option>
+            <option value="center_voice_1">Merkez Ses 1</option>
+            <option value="center_voice_2">Merkez Ses 2</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label class="label">Yayın Modu</label>
+          <div class="toggle-grid">
+            <button class="toggle active" id="modeVoiceBtn" type="button">Karşıya sesi ver</button>
+            <button class="toggle" id="modeTextBtn" type="button">Sadece yazı gönder</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Mikrofon Tercihi</label>
+          <div class="toggle-grid">
+            <button class="toggle active" id="micAlwaysBtn" type="button">Mikrofon sürekli açık</button>
+            <button class="toggle" id="noiseReduceBtn" type="button">Gürültü azalt</button>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn btn-primary" id="btnCreateRoom" type="button">Oda oluştur</button>
+        </div>
+
+        <div class="actions two">
+          <button class="btn btn-secondary" id="btnBackSpeakerSetup" type="button">Geri</button>
+          <button class="btn btn-secondary" id="btnResetSpeakerSetup" type="button">Sıfırla</button>
+        </div>
+      </section>
+
+      <!-- KONUŞMACI ODA -->
+      <section id="speakerRoomPanel" class="card hide">
+        <div class="room-code-box">
+          <div class="room-code-kicker">Oda Kodu</div>
+          <h2 class="room-code" id="roomCode">------</h2>
+        </div>
+
+        <div class="card-pad panel" style="padding-top:10px;">
+          <div class="status ok" id="speakerStatus">Oda hazır. Dinleyiciler artık bu kısa kodla katılabilir.</div>
+
+          <div class="actions">
+            <button class="btn btn-primary" id="btnStartRoom" type="button">Yayına gir</button>
+          </div>
+
+          <div class="actions two">
+            <button class="btn btn-secondary" id="btnCopy" type="button">Kodu kopyala</button>
+            <button class="btn btn-secondary" id="btnShareLink" type="button">Link paylaş</button>
+          </div>
+
+          <div class="actions two">
+            <button class="btn btn-secondary" id="btnBackSpeakerRoom" type="button">Geri</button>
+            <button class="btn btn-danger" id="btnRecreateRoom" type="button">Yeni kod</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- DİNLEYİCİ -->
+      <section id="listenerPanel" class="card card-pad panel hide">
+        <div class="panel-head">
+          <h2 class="panel-title">Dinleyici Girişi</h2>
+          <p class="panel-sub">Konuşmacı önce odayı açmış olmalı. Sonra sen kendi dilinle katılırsın.</p>
+        </div>
+
+        <div class="field">
+          <label class="label" for="roomInput">Oda Kodu</label>
+          <input class="input code-input" id="roomInput" placeholder="KOD" maxlength="6"/>
+        </div>
+
+        <div class="field">
+          <label class="label" for="listenerLang">Dinleme Dili</label>
+          <select class="select" id="listenerLang">
+            <option value="tr">Türkçe</option>
+            <option value="en" selected>English</option>
+            <option value="de">Deutsch</option>
+            <option value="fr">Français</option>
+            <option value="it">Italiano</option>
+            <option value="es">Español</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label class="label">Takip Şekli</label>
+          <div class="toggle-grid">
+            <button class="toggle active" id="listenAudioBtn" type="button">Sesli dinle</button>
+            <button class="toggle" id="listenTextBtn" type="button">Sadece yazı oku</button>
+          </div>
+        </div>
+
+        <div class="status warn" id="listenerStatus">
+          6 karakterlik kısa oda kodunu gir. Konuşmacı henüz odayı açmadıysa sistem içeri almaz.
+        </div>
+
+        <div class="actions">
+          <button class="btn btn-primary" id="btnJoin" type="button">Bağlan</button>
+        </div>
+
+        <div class="actions">
+          <button class="btn btn-secondary" id="btnBackListener" type="button">İptal</button>
+        </div>
+      </section>
+
+      <div class="helper">
+        OneToAll mantığı: konuşmacı önce ayar yapar ve odayı açar. Dinleyici yalnızca kodla giriş yapar.
+      </div>
+    </div>
+  </main>
+
+  <script type="module">
+    import { mountShell } from "/js/ui_shell.js";
+
+    try{
+      mountShell({ scroll: "auto" });
+    }catch(e){
+      console.error("ui_shell HATASI:", e);
+    }
+
+    const homeCards = document.getElementById("homeCards");
+    const speakerSetupPanel = document.getElementById("speakerSetupPanel");
+    const speakerRoomPanel = document.getElementById("speakerRoomPanel");
+    const listenerPanel = document.getElementById("listenerPanel");
+
+    const goSpeaker = document.getElementById("goSpeaker");
+    const goListener = document.getElementById("goListener");
+
+    const speakerLang = document.getElementById("speakerLang");
+    const speakerVoice = document.getElementById("speakerVoice");
+
+    const modeVoiceBtn = document.getElementById("modeVoiceBtn");
+    const modeTextBtn = document.getElementById("modeTextBtn");
+
+    const micAlwaysBtn = document.getElementById("micAlwaysBtn");
+    const noiseReduceBtn = document.getElementById("noiseReduceBtn");
+
+    const btnCreateRoom = document.getElementById("btnCreateRoom");
+    const btnBackSpeakerSetup = document.getElementById("btnBackSpeakerSetup");
+    const btnResetSpeakerSetup = document.getElementById("btnResetSpeakerSetup");
+
+    const roomCode = document.getElementById("roomCode");
+    const speakerStatus = document.getElementById("speakerStatus");
+    const btnStartRoom = document.getElementById("btnStartRoom");
+    const btnCopy = document.getElementById("btnCopy");
+    const btnShareLink = document.getElementById("btnShareLink");
+    const btnBackSpeakerRoom = document.getElementById("btnBackSpeakerRoom");
+    const btnRecreateRoom = document.getElementById("btnRecreateRoom");
+
+    const roomInput = document.getElementById("roomInput");
+    const listenerLang = document.getElementById("listenerLang");
+    const listenAudioBtn = document.getElementById("listenAudioBtn");
+    const listenTextBtn = document.getElementById("listenTextBtn");
+    const listenerStatus = document.getElementById("listenerStatus");
+    const btnJoin = document.getElementById("btnJoin");
+    const btnBackListener = document.getElementById("btnBackListener");
+
+    function show(panel){
+      homeCards.classList.add("hide");
+      speakerSetupPanel.classList.add("hide");
+      speakerRoomPanel.classList.add("hide");
+      listenerPanel.classList.add("hide");
+      panel.classList.remove("hide");
+    }
+
+    function showHome(){
+      homeCards.classList.remove("hide");
+      speakerSetupPanel.classList.add("hide");
+      speakerRoomPanel.classList.add("hide");
+      listenerPanel.classList.add("hide");
+    }
+
+    function makeShortCode(){
+      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+      let out = "";
+      for(let i = 0; i < 6; i++){
+        out += chars[Math.floor(Math.random() * chars.length)];
+      }
+      return out;
+    }
+
+    function setExclusive(a, b){
+      a.classList.add("active");
+      b.classList.remove("active");
+    }
+
+    function setStatus(el, text, type){
+      el.textContent = text;
+      el.className = "status";
+      if(type) el.classList.add(type);
+    }
+
+    function saveSpeakerRoom(code){
+      localStorage.setItem("italky_onetoall_room", code);
+      localStorage.setItem("italky_onetoall_speaker_lang", speakerLang.value);
+      localStorage.setItem("italky_onetoall_speaker_voice", speakerVoice.value);
+      localStorage.setItem("italky_onetoall_output_mode", modeTextBtn.classList.contains("active") ? "text" : "voice");
+      localStorage.setItem("italky_onetoall_mic_always", micAlwaysBtn.classList.contains("active") ? "1" : "0");
+      localStorage.setItem("italky_onetoall_noise_reduce", noiseReduceBtn.classList.contains("active") ? "1" : "0");
+    }
+
+    goSpeaker.addEventListener("click", () => {
+      show(speakerSetupPanel);
+    });
+
+    goListener.addEventListener("click", () => {
+      show(listenerPanel);
+      roomInput.focus();
+    });
+
+    modeVoiceBtn.addEventListener("click", () => setExclusive(modeVoiceBtn, modeTextBtn));
+    modeTextBtn.addEventListener("click", () => setExclusive(modeTextBtn, modeVoiceBtn));
+
+    micAlwaysBtn.addEventListener("click", () => {
+      micAlwaysBtn.classList.toggle("active");
+    });
+
+    noiseReduceBtn.addEventListener("click", () => {
+      noiseReduceBtn.classList.toggle("active");
+    });
+
+    btnCreateRoom.addEventListener("click", () => {
+      const code = makeShortCode();
+      roomCode.textContent = code;
+      saveSpeakerRoom(code);
+      setStatus(speakerStatus, "Oda oluşturuldu. Dinleyiciler artık bu kodla giriş yapabilir.", "ok");
+      show(speakerRoomPanel);
+    });
+
+    btnBackSpeakerSetup.addEventListener("click", showHome);
+
+    btnResetSpeakerSetup.addEventListener("click", () => {
+      speakerLang.value = "tr";
+      speakerVoice.value = "default_female";
+      setExclusive(modeVoiceBtn, modeTextBtn);
+      micAlwaysBtn.classList.add("active");
+      noiseReduceBtn.classList.remove("active");
+    });
+
+    btnBackSpeakerRoom.addEventListener("click", () => {
+      show(speakerSetupPanel);
+    });
+
+    btnRecreateRoom.addEventListener("click", () => {
+      const code = makeShortCode();
+      roomCode.textContent = code;
+      saveSpeakerRoom(code);
+      setStatus(speakerStatus, "Yeni oda kodu oluşturuldu.", "warn");
+    });
+
+    btnCopy.addEventListener("click", async () => {
+      try{
+        await navigator.clipboard.writeText(roomCode.textContent.trim());
+        setStatus(speakerStatus, "Oda kodu panoya kopyalandı.", "ok");
+      }catch{
+        setStatus(speakerStatus, "Kopyalama başarısız oldu.", "danger");
+      }
+    });
+
+    btnShareLink.addEventListener("click", async () => {
+      const code = roomCode.textContent.trim();
+      const shareUrl = `${location.origin}/pages/onetoall.html?role=listener&room=${encodeURIComponent(code)}`;
+
+      try{
+        if(navigator.share){
+          await navigator.share({
+            title: "italkyAI OneToAll",
+            text: "Bu yayın odasına katıl",
+            url: shareUrl
+          });
+          setStatus(speakerStatus, "Katılım linki paylaşıldı.", "ok");
+        }else{
+          await navigator.clipboard.writeText(shareUrl);
+          setStatus(speakerStatus, "Katılım linki panoya kopyalandı.", "ok");
+        }
+      }catch{
+        setStatus(speakerStatus, "Link paylaşımı iptal edildi.", "warn");
+      }
+    });
+
+    btnStartRoom.addEventListener("click", () => {
+      const code = roomCode.textContent.trim();
+      const lang = speakerLang.value || "tr";
+      const voice = speakerVoice.value || "default_female";
+      const output = modeTextBtn.classList.contains("active") ? "text" : "voice";
+
+      location.href = `/pages/onetoall_live.html?role=speaker&room=${encodeURIComponent(code)}&lang=${encodeURIComponent(lang)}&voice=${encodeURIComponent(voice)}&output=${encodeURIComponent(output)}`;
+    });
+
+    listenAudioBtn.addEventListener("click", () => setExclusive(listenAudioBtn, listenTextBtn));
+    listenTextBtn.addEventListener("click", () => setExclusive(listenTextBtn, listenAudioBtn));
+
+    roomInput.addEventListener("input", () => {
+      roomInput.value = roomInput.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
+
+      if(roomInput.value.length === 6){
+        setStatus(listenerStatus, "Kod tamamlandı. Bağlanabilirsin.", "ok");
+      }else{
+        setStatus(listenerStatus, "6 karakterlik kısa oda kodunu gir.", "warn");
+      }
+    });
+
+    btnJoin.addEventListener("click", () => {
+      const code = roomInput.value.trim().toUpperCase();
+
+      if(code.length !== 6){
+        setStatus(listenerStatus, "Oda kodu 6 karakter olmalı.", "danger");
+        return;
+      }
+
+      const lang = listenerLang.value || "en";
+      const mode = listenTextBtn.classList.contains("active") ? "text" : "audio";
+
+      location.href = `/pages/onetoall_live.html?role=listener&room=${encodeURIComponent(code)}&lang=${encodeURIComponent(lang)}&mode=${encodeURIComponent(mode)}`;
+    });
+
+    btnBackListener.addEventListener("click", showHome);
+
+    (function bootFromQuery(){
+      const params = new URLSearchParams(location.search);
+      const role = String(params.get("role") || "").trim().toLowerCase();
+      const room = String(params.get("room") || "").trim().toUpperCase();
+
+      if(role === "listener"){
+        show(listenerPanel);
+        if(room){
+          roomInput.value = room.replace(/[^A-Z0-9]/g, "").slice(0, 6);
+          setStatus(listenerStatus, "Bağlantı kodu hazır. Şimdi giriş yap.", "ok");
+        }
+      }
+    })();
+  </script>
+</body>
+</html>
