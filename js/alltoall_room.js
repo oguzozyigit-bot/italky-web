@@ -903,6 +903,55 @@ async function speakText(text, langCode) {
 /* =========================
    SPEECH
 ========================= */
+function hasNativeSpeech() {
+  return !!(window.Native && typeof window.Native.startSpeechRecognition === "function");
+}
+
+function installNativeSpeechCallbacks() {
+  window.onNativeSpeechResult = function (payload) {
+    try {
+      const text = String(payload?.text || "").trim();
+
+      recognizing = false;
+      micBtn?.classList.remove("listening");
+      micBtn?.classList.add("recorded");
+      setTimeout(() => micBtn?.classList.remove("recorded"), 700);
+      updateMicUI();
+
+      if (!text) {
+        addSystemMessage(st("micNoSpeech"));
+        return;
+      }
+
+      sendSpeechMessage(text);
+    } catch (e) {
+      console.warn("[alltoall native speech result]", e);
+      addSystemMessage(st("micFailed"));
+    }
+  };
+
+  window.onNativeSpeechError = function (reason) {
+    console.warn("[alltoall native speech error]", reason);
+
+    recognizing = false;
+    micBtn?.classList.remove("listening");
+    updateMicUI();
+
+    const msg = String(reason || "").toLowerCase();
+    if (msg.includes("not-allowed") || msg.includes("denied")) {
+      addSystemMessage(st("micDenied"));
+      return;
+    }
+
+    if (msg.includes("no-speech") || msg.includes("no-match") || msg.includes("audio")) {
+      addSystemMessage(st("micNoSpeech"));
+      return;
+    }
+
+    addSystemMessage(st("micFailed"));
+  };
+}
+
 function initSpeech() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 
@@ -917,8 +966,15 @@ function initSpeech() {
   recognizer.continuous = false;
   recognizer.maxAlternatives = 1;
 
+  recognizer.onstart = () => {
+    recognizing = true;
+    micBtn?.classList.add("listening");
+    updateMicUI();
+  };
+
   recognizer.onresult = (e) => {
     const text = e.results?.[0]?.[0]?.transcript || "";
+
     recognizing = false;
     micBtn?.classList.remove("listening");
     micBtn?.classList.add("recorded");
@@ -980,14 +1036,7 @@ function sendSpeechMessage(text) {
 }
 
 async function toggleMic() {
-
   if (document.visibilityState === "hidden") return;
-
-  try {
-    recognizer?.abort?.();
-  } catch {}
-
-  recognizer = null;
 
   await warmAudio();
 
@@ -1003,7 +1052,11 @@ async function toggleMic() {
 
   if (recognizing) {
     try {
-      recognizer?.stop?.();
+      if (hasNativeSpeech() && window.Native?.stopSpeechRecognition) {
+        window.Native.stopSpeechRecognition();
+      } else {
+        recognizer?.stop?.();
+      }
     } catch {}
 
     recognizing = false;
@@ -1012,9 +1065,28 @@ async function toggleMic() {
     return;
   }
 
-  if (!recognizer) {
-    initSpeech();
+  if (hasNativeSpeech()) {
+    try {
+      recognizing = true;
+      micBtn?.classList.add("listening");
+      updateMicUI();
+
+      window.Native.startSpeechRecognition(toBCP(myLang), "bottom");
+      return;
+    } catch (e) {
+      console.warn("[alltoall native speech start]", e);
+      recognizing = false;
+      micBtn?.classList.remove("listening");
+      updateMicUI();
+    }
   }
+
+  try {
+    recognizer?.abort?.();
+  } catch {}
+
+  recognizer = null;
+  initSpeech();
 
   if (!recognizer) {
     addSystemMessage(st("micUnsupported"));
@@ -1023,9 +1095,6 @@ async function toggleMic() {
 
   try {
     recognizer.lang = toBCP(myLang);
-    recognizing = true;
-    micBtn?.classList.add("listening");
-    updateMicUI();
     recognizer.start();
   } catch (e) {
     recognizing = false;
@@ -1350,6 +1419,7 @@ async function init() {
   ensureSelfInPeople();
 
   initSpeech();
+  installNativeSpeechCallbacks();
   bindEvents();
 
   try {
@@ -1375,6 +1445,11 @@ init();
 window.addEventListener("beforeunload", () => {
   manualClose = true;
   stopAudio();
+  try {
+    if (hasNativeSpeech() && window.Native?.stopSpeechRecognition) {
+      window.Native.stopSpeechRecognition();
+    }
+  } catch {}
   try { recognizer?.stop?.(); } catch {}
   try { ws?.close?.(); } catch {}
   try { preparedStream?.getTracks?.().forEach((t) => t.stop()); } catch {}
