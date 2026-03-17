@@ -159,6 +159,7 @@ let peerHasExplicitlyLeft = false;
 
 let lastLocalSentText = "";
 let lastLocalSentAt = 0;
+let myUserId = "";
 
 /* =========================
    NFC
@@ -290,6 +291,15 @@ function closeAllPop() {
 
 function renderPop() {
   if (!listBot) return;
+
+async function initMyIdentity() {
+  try {
+    const { data } = await supabase.auth.getUser();
+    myUserId = String(data?.user?.id || "").trim();
+  } catch {
+    myUserId = "";
+  }
+}
 
   listBot.innerHTML = LANGS.map((l) => {
     const active = canonical(l.code) === canonical(myLang) ? "active" : "";
@@ -933,26 +943,32 @@ function startSocket() {
       }
 
       if (type === "translated_message") {
-        const sender = String(payload?.sender || "").trim().toLowerCase();
-        const translated = String(payload?.translated_text || "").trim();
-        const original = String(payload?.original_text || "").trim();
+  const sender = String(payload?.sender || "").trim().toLowerCase();
+  const senderUserId = String(payload?.user_id || "").trim();
+  const translated = String(payload?.translated_text || "").trim();
+  const original = String(payload?.original_text || "").trim();
 
-        if (!translated && !original) return;
-        if (sender === role) return;
+  if (!translated && !original) return;
 
-        const text = translated || original;
+  // Mesajı ben gönderdiysem kendi cihazımda sesi çalma
+  if (senderUserId && myUserId && senderUserId === myUserId) return;
 
-        clearLatest("top");
-        addBubble("top", "me", text, {
-          latest: true,
-          withSpeaker: true,
-          speakLang: myLang
-        });
+  // Eski güvenlik kontrolü
+  if (!senderUserId && sender === role) return;
 
-        await speak(text, myLang);
-        setSystemReadyUI();
-        return;
-      }
+  const text = translated || original;
+
+  clearLatest("top");
+  addBubble("top", "me", text, {
+    latest: true,
+    withSpeaker: true,
+    speakLang: myLang
+  });
+
+  await speak(text, myLang);
+  setSystemReadyUI();
+  return;
+}
 
       if (type === "peer_left") {
         peerHasExplicitlyLeft = true;
@@ -1038,7 +1054,8 @@ function sendTextMessage(rawText) {
     ws.send(JSON.stringify({
       type: "text_message",
       text,
-      from_lang: canonical(myLang)
+      from_lang: canonical(myLang),
+      user_id: myUserId
     }));
   } catch (e) {
     console.error("[ws send]", e);
@@ -1047,7 +1064,6 @@ function sendTextMessage(rawText) {
     bounceToReady(1200);
   }
 }
-
 /* =========================
    RECOGNIZER
 ========================= */
@@ -1309,6 +1325,7 @@ homeBtn?.addEventListener("click", () => {
 ========================= */
 async function bootRoom() {
   try {
+    await initMyIdentity();
     if (roomId) {
       if (role === "host" && hostCode) {
         startNativeNfcHost(hostCode);
