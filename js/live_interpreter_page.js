@@ -159,6 +159,7 @@ let peerHasExplicitlyLeft = false;
 
 let lastLocalSentText = "";
 let lastLocalSentAt = 0;
+let suppressIncomingUntil = 0;
 
 /* =========================
    NFC
@@ -933,24 +934,28 @@ function startSocket() {
       }
 
       if (type === "translated_message") {
-        const translated = String(payload?.translated_text || "").trim();
-        const original = String(payload?.original_text || "").trim();
+  const translated = String(payload?.translated_text || "").trim();
+  const original = String(payload?.original_text || "").trim();
 
-        if (!translated && !original) return;
+  if (!translated && !original) return;
 
-        const text = translated || original;
+  if (Date.now() < suppressIncomingUntil) {
+    return;
+  }
 
-        clearLatest("top");
-        addBubble("top", "me", text, {
-          latest: true,
-          withSpeaker: true,
-          speakLang: myLang
-        });
+  const text = translated || original;
 
-        await speak(text, myLang);
-        setSystemReadyUI();
-        return;
-      }
+  clearLatest("top");
+  addBubble("top", "me", text, {
+    latest: true,
+    withSpeaker: true,
+    speakLang: myLang
+  });
+
+  await speak(text, myLang);
+  setSystemReadyUI();
+  return;
+}
 
       if (type === "peer_left") {
         peerHasExplicitlyLeft = true;
@@ -1024,6 +1029,7 @@ function shouldIgnoreDuplicateLocal(text) {
 function sendTextMessage(rawText) {
   const text = String(rawText || "").trim();
   if (!text) return;
+  suppressIncomingUntil = Date.now() + 4000;
 
   if (!canSend()) {
     setErrorUI();
