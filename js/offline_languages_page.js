@@ -1,13 +1,15 @@
-// FILE: /js/offline_languages_page.js
 import { mountShell } from "/js/ui_shell.js";
 import { supabase } from "/js/supabase_client.js";
 
 mountShell({ scroll: "auto" });
 
+const API_BASE = "https://italky-api.onrender.com";
 const BUCKET = "offline";
 const PIVOT = "en";
 const USER_LANG_KEY = "italky_user_lang_v1";
 const PRIORITY_CODES = ["en", "de", "fr", "it", "es", "tr"];
+const OFFLINE_PRICE = 5;
+const OFFLINE_DURATION_LABEL = "12 Ay";
 
 const $ = (id) => document.getElementById(id);
 
@@ -25,7 +27,7 @@ function toast(msg) {
   clearTimeout(window.__toastTimer);
   window.__toastTimer = setTimeout(() => {
     toastEl.classList.remove("show");
-  }, 2000);
+  }, 2200);
 }
 
 function norm(v) {
@@ -97,6 +99,48 @@ function uninstallNative(pair) {
   if (typeof window.Offline?.uninstall !== "function") return false;
   window.Offline.uninstall(norm(pair));
   return true;
+}
+
+async function getCurrentUser() {
+  try {
+    const { data } = await supabase.auth.getUser();
+    return data?.user || null;
+  } catch {
+    return null;
+  }
+}
+
+async function getCurrentUserId() {
+  const user = await getCurrentUser();
+  return user?.id || "";
+}
+
+async function activateOfflineLicense(fileName) {
+  const userId = await getCurrentUserId();
+
+  if (!userId) {
+    throw new Error("Giriş yapmanız gerekiyor.");
+  }
+
+  const r = await fetch(`${API_BASE}/api/offline/files/activate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      user_id: userId,
+      file_name: String(fileName || "").trim()
+    })
+  });
+
+  const j = await r.json().catch(() => ({}));
+
+  if (!r.ok) {
+    if (r.status === 402) {
+      throw new Error("Bu dil için 5 jeton gerekir. Jetonunuz yetersiz.");
+    }
+    throw new Error(j?.detail || j?.error || "Offline lisans alınamadı.");
+  }
+
+  return j;
 }
 
 // İsimler şimdilik Türkçe
@@ -172,10 +216,6 @@ const LANGS = [
 ];
 
 const SUPPORTED_CODES = new Set(LANGS.map((x) => norm(x.code)));
-
-function langByCode(code) {
-  return LANGS.find((x) => norm(x.code) === norm(code));
-}
 
 function compareLangs(a, b) {
   const ai = PRIORITY_CODES.indexOf(norm(a.code));
@@ -261,7 +301,7 @@ function renderCard(lang, installed, userLang) {
     <div class="flag">${lang.flag}</div>
     <div class="meta">
       <div class="name">${lang.name}</div>
-      <div class="sub">${installed ? "Kurulu" : "İndirilebilir"}</div>
+      <div class="sub">${installed ? "Kurulu • Lisans aktif" : `5 Jeton • ${OFFLINE_DURATION_LABEL}`}</div>
     </div>
   `;
 
@@ -283,7 +323,6 @@ function renderCard(lang, installed, userLang) {
   if (installed) {
     installBtn.disabled = true;
 
-    // EN hedef silinmesin; bu benim dilimin temel paketi olabilir
     if (norm(lang.code) === PIVOT) {
       removeBtn.style.display = "none";
     }
@@ -304,16 +343,33 @@ function renderCard(lang, installed, userLang) {
       return;
     }
 
+    installBtn.classList.add("disabled");
+    installBtn.innerHTML = `<span>⏳</span><span>Lisans kontrol…</span>`;
+
+    try {
+      const license = await activateOfflineLicense(norm(lang.code));
+
+      if (license?.already_active) {
+        toast(`${lang.name} zaten aktif. İndirme hazırlanıyor…`);
+      } else {
+        toast(`${lang.name} için 5 jeton düşüldü • 12 ay aktif ✅`);
+      }
+    } catch (e) {
+      installBtn.classList.remove("disabled");
+      installBtn.innerHTML = `<span>⬇️</span><span>İndir</span>`;
+      toast(e?.message || "Lisans alınamadı.");
+      return;
+    }
+
     const neededPairs = installPairsForTarget(userLang, norm(lang.code));
 
     if (!neededPairs.length) {
-      toast("Bu dil zaten hazır.");
+      toast("Bu dil zaten cihazda hazır.");
       renderAll();
       return;
     }
 
-    installBtn.classList.add("disabled");
-    installBtn.innerHTML = `<span>⏳</span><span>Kontrol ediliyor…</span>`;
+    installBtn.innerHTML = `<span>⏳</span><span>Dosyalar kontrol…</span>`;
 
     const urls = [];
     for (const pair of neededPairs) {
@@ -323,9 +379,9 @@ function renderCard(lang, installed, userLang) {
 
     const missing = urls.filter((x) => !x.url);
     if (missing.length) {
-      toast(`Eksik dosya: ${missing.map((x) => x.pair).join(", ")}`);
       installBtn.classList.remove("disabled");
       installBtn.innerHTML = `<span>⬇️</span><span>İndir</span>`;
+      toast(`Eksik dosya: ${missing.map((x) => x.pair).join(", ")}`);
       return;
     }
 
