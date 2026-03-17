@@ -24,6 +24,8 @@
       --doneBorder: rgba(34,197,94,0.20);
       --dangerBorder: rgba(255,0,90,0.30);
       --dangerText: rgba(255,90,140,0.95);
+      --baseGrad: linear-gradient(135deg, rgba(34,197,94,0.12) 0%, rgba(99,102,241,0.16) 100%);
+      --baseBorder: rgba(165,180,252,0.22);
     }
 
     *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; }
@@ -44,6 +46,22 @@
       border-radius:22px;
       border:1px solid var(--border);
       background:var(--glass);
+      backdrop-filter:blur(16px);
+      -webkit-backdrop-filter:blur(16px);
+      padding:12px;
+    }
+
+    .hero{
+      background:
+        radial-gradient(circle at top right, rgba(99,102,241,0.16), transparent 40%),
+        radial-gradient(circle at bottom left, rgba(236,72,153,0.12), transparent 35%),
+        var(--glass);
+    }
+
+    .base-panel{
+      border-radius:22px;
+      border:1px solid var(--baseBorder);
+      background:var(--baseGrad);
       backdrop-filter:blur(16px);
       -webkit-backdrop-filter:blur(16px);
       padding:12px;
@@ -278,6 +296,10 @@
       color:rgba(255,255,255,0.88);
     }
 
+    .btn.primary{
+      min-width:180px;
+    }
+
     .btn.danger{
       background:transparent;
       border-color:var(--dangerBorder);
@@ -294,6 +316,22 @@
       color:rgba(255,255,255,0.72);
       font-size:13px;
       font-weight:900;
+    }
+
+    .successBox{
+      margin-top:10px;
+      border-radius:18px;
+      border:1px solid rgba(34,197,94,0.18);
+      background:rgba(34,197,94,0.08);
+      padding:12px;
+      font-size:12px;
+      font-weight:900;
+      color:rgba(255,255,255,0.9);
+      line-height:1.5;
+    }
+
+    .hide{
+      display:none !important;
     }
 
     .toast{
@@ -340,25 +378,39 @@
     <section class="hero">
       <div class="h1">Offline Diller</div>
       <div class="p">
-        Benim dilini seç. Hedef dilleri indir. Kurulu olanlar üstte görünür.
+        Önce benim dilini seç. Temel offline İngilizce köprüsü ücretsiz kurulur. Sonra diğer dilleri indirebilirsin.
       </div>
       <div class="pillRow">
-        <div class="pill">Ücret: <b>5 Jeton</b></div>
+        <div class="pill">Temel Kurulum: <b>Ücretsiz</b></div>
+        <div class="pill">Ek Diller: <b>5 Jeton</b></div>
         <div class="pill">Süre: <b>12 Ay</b></div>
         <div class="pill" id="netPill">Ağ: <b>—</b></div>
       </div>
     </section>
 
-    <section class="panel">
-      <div class="topBar">
+    <section class="base-panel" id="baseSetupPanel">
+      <div class="h1">İlk Kurulum</div>
+      <div class="p">
+        Benim dilini seç. Sistem senin dilin ile İngilizce arasında temel offline köprüyü ücretsiz yüklesin.
+      </div>
+
+      <div class="topBar" style="margin-top:12px;">
         <div class="field">
           <label class="label" for="sourceSelect">Benim Dilim</label>
           <select id="sourceSelect" class="select"></select>
         </div>
       </div>
+
+      <div class="actions" style="margin-top:12px;">
+        <button class="btn primary" id="installBaseBtn" type="button">Temel Kurulumu Başlat</button>
+      </div>
+
+      <div class="successBox hide" id="baseSuccessBox">
+        Temel offline çeviri yüklendi. İngilizce köprü hazır. Şimdi diğer dilleri indirebilirsiniz.
+      </div>
     </section>
 
-    <section class="panel">
+    <section class="panel" id="extraLanguagesPanel">
       <div class="toolbar">
         <div class="searchWrap">
           <input id="searchInput" class="search" type="text" placeholder="Dil ara...">
@@ -370,7 +422,7 @@
       <div class="list" id="installedList"></div>
     </section>
 
-    <section class="panel">
+    <section class="panel" id="otherLanguagesPanel">
       <h3 class="sectionTitle">Diğer Diller</h3>
       <div class="list" id="availableList"></div>
     </section>
