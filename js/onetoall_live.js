@@ -90,7 +90,7 @@ const lang = canonical(query.get("lang") || (role === "speaker" ? "tr" : "en"));
 const voice = String(query.get("voice") || "default_female").trim();
 const output = String(query.get("output") || "voice").trim().toLowerCase();
 const listenMode = String(query.get("mode") || "audio").trim().toLowerCase();
-const micAlways = String(query.get("mic_always") || "1").trim() === "1";
+const micAlways = false;
 const noiseReduce = String(query.get("noise_reduce") || "0").trim() === "1";
 
 const els = {
@@ -147,6 +147,14 @@ let lastReplayLang = lang;
 let lastInterimText = "";
 let speechRestartTimer = null;
 
+let myUserId = "";
+let myDisplayName = "";
+let micGranted = role === "speaker";
+let activeSpeakerId = role === "speaker" ? "speaker-main" : "";
+let handRaised = false;
+let pendingSpeakers = [];
+let participants = {};
+
 function logLine(text) {
   if (!els.debugLog) return;
   const now = new Date();
@@ -173,16 +181,107 @@ function setFlowStatus(text, ok = true) {
   els.flowStatus.className = `status-pill ${ok ? "ok" : "warn"}`;
 }
 
+function escapeHtml(v) {
+  return String(v || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function ensureControlPanels() {
+  if (role === "speaker") {
+    if (!$("moderatorPanel") && els.speakerActions?.parentElement) {
+      const box = document.createElement("div");
+      box.id = "moderatorPanel";
+      box.style.marginTop = "14px";
+      box.style.padding = "14px";
+      box.style.border = "1px solid rgba(255,255,255,.12)";
+      box.style.borderRadius = "18px";
+      box.style.background = "rgba(255,255,255,.04)";
+      box.innerHTML = `
+        <div style="font-weight:800;margin-bottom:10px;">Söz İstekleri</div>
+        <div id="speakerQueue" style="display:flex;flex-direction:column;gap:8px;"></div>
+      `;
+      els.speakerActions.parentElement.appendChild(box);
+    }
+  } else {
+    if (!$("listenerRequestWrap") && els.listenerActions?.parentElement) {
+      const box = document.createElement("div");
+      box.id = "listenerRequestWrap";
+      box.style.marginTop = "14px";
+      box.style.display = "flex";
+      box.style.flexDirection = "column";
+      box.style.gap = "10px";
+      box.innerHTML = `
+        <button id="btnRaiseHand" class="cta-btn" type="button">Söz İste</button>
+        <div id="raiseStatus" class="status-pill warn">Durum: Dinleyici</div>
+      `;
+      els.listenerActions.parentElement.appendChild(box);
+    }
+  }
+}
+
+function updateRaiseStatus(text, ok = false) {
+  const el = $("raiseStatus");
+  if (!el) return;
+  el.textContent = text;
+  el.className = `status-pill ${ok ? "ok" : "warn"}`;
+}
+
+function renderSpeakerQueue() {
+  const wrap = $("speakerQueue");
+  if (!wrap) return;
+
+  if (!pendingSpeakers.length) {
+    wrap.innerHTML = `<div style="opacity:.7">Bekleyen söz isteği yok.</div>`;
+    return;
+  }
+
+  wrap.innerHTML = pendingSpeakers.map((item) => {
+    const isActive = item.user_id === activeSpeakerId;
+    return `
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid rgba(255,255,255,.10);border-radius:14px;background:rgba(255,255,255,.03);">
+        <div>
+          <div style="font-weight:700">${escapeHtml(item.name || "Katılımcı")}</div>
+          <div style="font-size:12px;opacity:.72">${escapeHtml(item.lang || "")}${isActive ? " • aktif" : ""}</div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="mini-grant" data-user="${escapeHtml(item.user_id)}" type="button" style="padding:8px 12px;border:none;border-radius:12px;font-weight:700;">Onayla</button>
+          <button class="mini-close" data-user="${escapeHtml(item.user_id)}" type="button" style="padding:8px 12px;border:none;border-radius:12px;font-weight:700;">Kapat</button>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  wrap.querySelectorAll(".mini-grant").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const userId = String(btn.dataset.user || "").trim();
+      if (!userId) return;
+      grantMicTo(userId);
+    });
+  });
+
+  wrap.querySelectorAll(".mini-close").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const userId = String(btn.dataset.user || "").trim();
+      if (!userId) return;
+      revokeMicFrom(userId);
+    });
+  });
+}
+
 function setRoleUI() {
   if (els.heroRoleText) {
-    els.heroRoleText.textContent = role === "speaker" ? "Speaker" : "Listener";
+    els.heroRoleText.textContent = role === "speaker" ? "Moderator" : "Participant";
   }
 
   if (els.heroSubText) {
     els.heroSubText.textContent =
       role === "speaker"
-        ? "Yayın oturumu aktif. Sesiniz gerçek zamanlı olarak işlenip dinleyicilere ulaştırılır."
-        : "Dinleyici modundasınız. Konuşmacının yayını kendi dilinizde anlık işlenir.";
+        ? "Söz isteyen katılımcıları onaylar, mikrofonu kontrollü açarsınız."
+        : "Dinleyici modundasınız. Söz istemek için butona basınız. Onay gelince mikrofon açılır.";
   }
 
   if (els.pillRole) els.pillRole.textContent = `Role: ${role}`;
@@ -196,9 +295,9 @@ function setRoleUI() {
     els.speakerActions?.classList.remove("hide");
     els.listenerActions?.classList.add("hide");
 
-    if (els.mainKicker) els.mainKicker.textContent = "Canlı Mikrofon";
+    if (els.mainKicker) els.mainKicker.textContent = "Aktif Konuşmacı";
     if (els.subKicker) els.subKicker.textContent = "İşlenmiş Çıkış";
-    if (els.mainText) els.mainText.textContent = "Mikrofon kapalı. Başlatınca canlı konuşma burada akacak.";
+    if (els.mainText) els.mainText.textContent = "Mikrofon kapalı. Söz verilen kişi konuştuğunda akış burada görünür.";
     if (els.subText) els.subText.textContent = "Çeviri / dağıtım çıktısı burada görünecek.";
   } else {
     els.speakerActions?.classList.add("hide");
@@ -206,7 +305,7 @@ function setRoleUI() {
 
     if (els.mainKicker) els.mainKicker.textContent = "Konuşmacı";
     if (els.subKicker) els.subKicker.textContent = "Sizin Diliniz";
-    if (els.mainText) els.mainText.textContent = "Konuşmacıdan canlı akış bekleniyor...";
+    if (els.mainText) els.mainText.textContent = "Canlı akış bekleniyor...";
     if (els.subText) els.subText.textContent = "Çevrilmiş metin burada görünecek.";
   }
 }
@@ -515,7 +614,9 @@ function sendHandshake() {
     voice,
     output,
     mode: listenMode,
-    module: "onetoall"
+    module: "onetoall",
+    user_id: myUserId,
+    display_name: myDisplayName,
   };
 
   if (role === "speaker") {
@@ -590,9 +691,67 @@ function connectSocket() {
         return;
       }
 
+      if (type === "hand_raised") {
+        if (role === "speaker") {
+          const req = {
+            user_id: String(payload?.user_id || ""),
+            name: String(payload?.display_name || "Katılımcı"),
+            lang: String(payload?.lang || "")
+          };
+          if (req.user_id && !pendingSpeakers.some((x) => x.user_id === req.user_id)) {
+            pendingSpeakers.push(req);
+            renderSpeakerQueue();
+            setFlowStatus("Akış: Yeni söz isteği var", true);
+            logLine(`Söz isteyen: ${req.name}`);
+          }
+        }
+        return;
+      }
+
+      if (type === "mic_granted") {
+        const target = String(payload?.user_id || "");
+        activeSpeakerId = target;
+
+        if (target === myUserId) {
+          micGranted = true;
+          handRaised = false;
+          updateRaiseStatus("Durum: Söz verildi", true);
+          setMicStatus("Mic: Açık izni verildi", true);
+          if (role === "listener") {
+            await startMic();
+          }
+        }
+
+        if (role === "speaker") {
+          pendingSpeakers = pendingSpeakers.filter((x) => x.user_id !== target);
+          renderSpeakerQueue();
+        }
+        return;
+      }
+
+      if (type === "mic_revoked") {
+        const target = String(payload?.user_id || "");
+
+        if (target === myUserId) {
+          micGranted = false;
+          handRaised = false;
+          updateRaiseStatus("Durum: Mikrofon kapatıldı", false);
+          if (role === "listener") {
+            stopMic();
+          }
+        }
+
+        if (activeSpeakerId === target) activeSpeakerId = "";
+        if (role === "speaker") {
+          pendingSpeakers = pendingSpeakers.filter((x) => x.user_id !== target);
+          renderSpeakerQueue();
+        }
+        return;
+      }
+
       if (type === "speaker_chunk" || type === "speaker_text" || type === "text_message") {
         const rawText = String(payload?.text || payload?.original_text || "").trim();
-        if (rawText && role === "listener" && els.mainText) {
+        if (rawText && els.mainText) {
           els.mainText.textContent = rawText;
           lastInterimText = rawText;
         }
@@ -718,7 +877,8 @@ function sendSpeakerFinal(text) {
     type: "message",
     room,
     room_id: room,
-    role: "speaker",
+    role,
+    user_id: myUserId,
     text: value,
     original_text: value,
     lang,
@@ -737,7 +897,8 @@ function sendSpeakerInterim(text) {
     type: "speaker_text",
     room,
     room_id: room,
-    role: "speaker",
+    role,
+    user_id: myUserId,
     text: value,
     lang,
     source_lang: lang,
@@ -747,7 +908,10 @@ function sendSpeakerInterim(text) {
 }
 
 async function startMic() {
-  if (role !== "speaker") return;
+  if (role !== "speaker" && !micGranted) {
+    setMicStatus("Mic: İzin bekleniyor", false);
+    return;
+  }
 
   const granted = await requestMicPermission();
   if (!granted) {
@@ -849,7 +1013,7 @@ async function startMic() {
     isMicRunning = false;
     prepareMicVisual(false);
 
-    if (micShouldRun && micAlways) {
+    if (micShouldRun && role === "speaker") {
       clearTimeout(speechRestartTimer);
       speechRestartTimer = setTimeout(() => {
         if (!micShouldRun) return;
@@ -893,9 +1057,54 @@ function stopMic() {
   setFlowStatus("Akış: Hazır", true);
 }
 
+function requestHandRaise() {
+  if (role !== "listener" || !myUserId) return;
+  handRaised = true;
+  updateRaiseStatus("Durum: Söz istendi, onay bekleniyor", false);
+  sendWs({
+    type: "hand_raise",
+    room,
+    room_id: room,
+    role,
+    user_id: myUserId,
+    display_name: myDisplayName,
+    lang,
+    module: "onetoall"
+  });
+  logLine("Söz isteği gönderildi.");
+}
+
+function grantMicTo(userId) {
+  activeSpeakerId = userId;
+  sendWs({
+    type: "grant_mic",
+    room,
+    room_id: room,
+    role: "speaker",
+    user_id,
+    module: "onetoall"
+  });
+  logLine(`Mic izni verildi: ${userId}`);
+}
+
+function revokeMicFrom(userId) {
+  if (activeSpeakerId === userId) activeSpeakerId = "";
+  sendWs({
+    type: "revoke_mic",
+    room,
+    room_id: room,
+    role: "speaker",
+    user_id,
+    module: "onetoall"
+  });
+  logLine(`Mic kapatıldı: ${userId}`);
+}
+
 function bindEvents() {
   unlockOnFirstTouch();
   setRoleUI();
+  ensureControlPanels();
+  renderSpeakerQueue();
 
   els.btnStartMic?.addEventListener("click", async (e) => {
     e.preventDefault();
@@ -907,6 +1116,12 @@ function bindEvents() {
     e.preventDefault();
     e.stopPropagation();
     stopMic();
+  });
+
+  $("btnRaiseHand")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    requestHandRaise();
   });
 
   els.btnReplay?.addEventListener("click", async () => {
@@ -937,6 +1152,18 @@ function bindEvents() {
   } catch {}
 }
 
+async function initIdentity() {
+  const user = await getCurrentUser();
+  myUserId = String(user?.id || "").trim();
+  myDisplayName =
+    String(user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email || "")
+      .trim() || (role === "speaker" ? "Moderator" : "Katılımcı");
+
+  if (!myUserId) {
+    myUserId = `anon_${Math.random().toString(36).slice(2, 10)}`;
+  }
+}
+
 async function init() {
   if (!room) {
     setFlowStatus("Akış: Oda kodu eksik", false);
@@ -944,18 +1171,24 @@ async function init() {
     return;
   }
 
+  await initIdentity();
   bindEvents();
   await warmAudio().catch(() => {});
   connectSocket();
 
   setWsStatus("WS: Bağlanıyor", false);
-  setMicStatus(role === "speaker" ? "Mic: Kapalı" : "Mic: Dinleyici", role !== "speaker");
+  setMicStatus(role === "speaker" ? "Mic: Moderatör" : "Mic: İzin bekleniyor", role === "speaker");
   setFlowStatus("Akış: Hazır", true);
+
+  if (role !== "speaker") {
+    updateRaiseStatus("Durum: Dinleyici", false);
+  }
 
   logLine(`Rol: ${role}`);
   logLine(`Oda: ${room}`);
   logLine(`Dil: ${lang}`);
   logLine(`Site dili: ${siteLang}`);
+  logLine(`User: ${myDisplayName}`);
 }
 
 init();
