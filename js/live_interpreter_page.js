@@ -372,29 +372,6 @@ function getVoicePreference() {
   ).toLowerCase().trim();
 }
 
-async function hasReadyVoiceProfileForUser(userId) {
-  try {
-    const uid = String(userId || "").trim();
-    if (!uid) return false;
-
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("tts_voice_ready,tts_voice_id")
-      .eq("id", uid)
-      .maybeSingle();
-
-    if (error) {
-      console.warn("[interpreter] tts voice profile read error", error);
-      return false;
-    }
-
-    return !!data?.tts_voice_ready && !!String(data?.tts_voice_id || "").trim();
-  } catch (e) {
-    console.warn("[interpreter] tts voice profile check error", e);
-    return false;
-  }
-}
-
 async function warmAudio() {
   try {
     const Ctx = window.AudioContext || window.webkitAudioContext;
@@ -561,34 +538,28 @@ async function speak(text, langCode, sourceUserId = "", sourceVoice = "auto") {
   stopAudio();
 
   const voice = String(sourceVoice || getVoicePreference() || "auto").trim().toLowerCase();
+  const hasRemoteOwner = !!String(sourceUserId || "").trim();
+
+  if (hasRemoteOwner) {
+    try {
+      await speakViaApi(value, langCode, sourceUserId, voice);
+      return;
+    } catch (e) {
+      console.warn("[interpreter] remote TTS failed, fallback", e);
+      speakFallback(value, langCode);
+      return;
+    }
+  }
 
   if (voice === "auto") {
     speakFallback(value, langCode);
     return;
   }
 
-  if (voice === "clone") {
-    try {
-      const ready = await hasReadyVoiceProfileForUser(sourceUserId);
-      if (!ready) {
-        console.warn("[interpreter] source clone hazır değil, fallback");
-        speakFallback(value, langCode);
-        return;
-      }
-
-      await speakViaApi(value, langCode, sourceUserId, "clone");
-      return;
-    } catch (e) {
-      console.warn("[interpreter] clone api failed, fallback", e);
-      speakFallback(value, langCode);
-      return;
-    }
-  }
-
   try {
-    await speakViaApi(value, langCode, sourceUserId, voice);
+    await speakViaApi(value, langCode, "", voice);
   } catch (e) {
-    console.warn("[interpreter] TTS API failed, fallback", e);
+    console.warn("[interpreter] local TTS failed, fallback", e);
     speakFallback(value, langCode);
   }
 }
@@ -971,6 +942,12 @@ function startSocket() {
           latest: true,
           withSpeaker: true,
           speakLang: myLang
+        });
+
+        console.log("[incoming voice]", {
+          senderUserId,
+          senderVoice,
+          text
         });
 
         await speak(text, myLang, senderUserId, senderVoice);
