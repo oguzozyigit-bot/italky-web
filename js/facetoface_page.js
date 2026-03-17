@@ -156,6 +156,32 @@ let bootStarted = false;
 let bootPromise = null;
 let voicesReady = false;
 
+function canonTone(value) {
+  const v = String(value || "neutral").trim().toLowerCase();
+  return ["neutral", "happy", "angry", "sad", "excited"].includes(v) ? v : "neutral";
+}
+
+function getToneKey(side) {
+  return side === "top" ? "facetoface_top_tone" : "facetoface_bot_tone";
+}
+
+function getSideTone(side) {
+  try {
+    return canonTone(localStorage.getItem(getToneKey(side)) || "neutral");
+  } catch {
+    return "neutral";
+  }
+}
+
+function setSideTone(side, tone) {
+  try {
+    localStorage.setItem(getToneKey(side), canonTone(tone));
+  } catch {}
+}
+
+let topTone = getSideTone("top");
+let botTone = getSideTone("bot");
+
 function pointOrbTo(side) {
   if (!frameRoot) return;
   frameRoot.classList.remove("to-top", "to-bot");
@@ -386,7 +412,7 @@ async function warmAudio() {
   }
 }
 
-async function speakViaApi(text, langCode) {
+async function speakViaApi(text, langCode, tone = "neutral") {
   const userId = await getCurrentUserId();
   const voice = getVoicePreference();
 
@@ -399,6 +425,7 @@ async function speakViaApi(text, langCode) {
       user_id: userId,
       module: "facetoface",
       voice,
+      tone: canonTone(tone),
     }),
   });
 
@@ -468,12 +495,23 @@ function chooseWebVoice(langCode) {
   return pool[0];
 }
 
-function speakFallback(text, langCode) {
+function toneToFallbackSpeechParams(tone) {
+  const t = canonTone(tone);
+
+  if (t === "happy") return { rate: 1.03, pitch: 1.15 };
+  if (t === "angry") return { rate: 1.08, pitch: 1.0 };
+  if (t === "sad") return { rate: 0.88, pitch: 0.9 };
+  if (t === "excited") return { rate: 1.12, pitch: 1.2 };
+  return { rate: 1.0, pitch: 1.0 };
+}
+
+function speakFallback(text, langCode, tone = "neutral") {
   const value = String(text || "").trim();
   if (!value) return;
 
   const c = canonical(langCode);
   const pref = getVoicePreference();
+  const toneCfg = toneToFallbackSpeechParams(tone);
 
   try {
     if (window.speechSynthesis) {
@@ -501,8 +539,10 @@ function speakFallback(text, langCode) {
 
   const u = new SpeechSynthesisUtterance(value);
   u.lang = langObj(c).bcp;
-  u.rate = c === "en" ? 0.82 : ["de", "fr", "it", "es"].includes(c) ? 0.88 : 0.92;
-  u.pitch = 1.0;
+
+  const baseRate = c === "en" ? 0.82 : ["de", "fr", "it", "es"].includes(c) ? 0.88 : 0.92;
+  u.rate = Math.max(0.7, Math.min(1.35, baseRate * toneCfg.rate));
+  u.pitch = Math.max(0.7, Math.min(1.4, toneCfg.pitch));
   u.volume = 1;
 
   const voice = chooseWebVoice(c);
@@ -518,7 +558,7 @@ function speakFallback(text, langCode) {
   }, 80);
 }
 
-async function speak(text, langCode) {
+async function speak(text, langCode, tone = "neutral") {
   const value = String(text || "").trim();
   if (!value) return;
 
@@ -530,7 +570,7 @@ async function speak(text, langCode) {
   const voice = getVoicePreference();
 
   if (voice === "auto") {
-    speakFallback(value, langCode);
+    speakFallback(value, langCode, tone);
     return;
   }
 
@@ -539,24 +579,24 @@ async function speak(text, langCode) {
       const ready = await hasReadyVoiceProfile();
       if (!ready) {
         console.warn("[facetoface] clone hazır değil, fallback");
-        speakFallback(value, langCode);
+        speakFallback(value, langCode, tone);
         return;
       }
 
-      await speakViaApi(value, langCode);
+      await speakViaApi(value, langCode, tone);
       return;
     } catch (e) {
       console.warn("[facetoface] clone api failed, fallback", e);
-      speakFallback(value, langCode);
+      speakFallback(value, langCode, tone);
       return;
     }
   }
 
   try {
-    await speakViaApi(value, langCode);
+    await speakViaApi(value, langCode, tone);
   } catch (e) {
     console.warn("[facetoface] TTS API failed, fallback", e);
-    speakFallback(value, langCode);
+    speakFallback(value, langCode, tone);
   }
 }
 
@@ -607,7 +647,7 @@ function keepLatestVisible(side) {
   setTimeout(apply, 100);
 }
 
-function createSpeakerButton(text, langCode) {
+function createSpeakerButton(text, langCode, tone = "neutral") {
   const btn = document.createElement("button");
   btn.type = "button";
   btn.className = "spk-icon";
@@ -622,7 +662,7 @@ function createSpeakerButton(text, langCode) {
   btn.addEventListener("click", async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    await speak(text, langCode);
+    await speak(text, langCode, tone);
   });
   return btn;
 }
@@ -642,7 +682,11 @@ function addBubble(side, kind, text, opts = {}) {
   txt.textContent = String(text || "").trim();
 
   if (opts.withSpeaker || kind === "me") {
-    const spk = createSpeakerButton(txt.textContent || "", opts.speakLang || "en");
+    const spk = createSpeakerButton(
+      txt.textContent || "",
+      opts.speakLang || "en",
+      opts.speakTone || "neutral"
+    );
     inner.appendChild(spk);
   }
 
@@ -712,6 +756,8 @@ function stopRecognizer() {
 async function finalizeRecognition(side, text) {
   const src = side === "top" ? topLang : botLang;
   const dst = side === "top" ? botLang : topLang;
+  const srcTone = side === "top" ? topTone : botTone;
+  const dstTone = side === "top" ? botTone : topTone;
   const other = side === "top" ? "bot" : "top";
   const otherWrap = other === "top" ? topBody : botBody;
 
@@ -730,6 +776,7 @@ async function finalizeRecognition(side, text) {
   addBubble(other, "me", t(dst, "translating"), {
     latest: true,
     speakLang: dst,
+    speakTone: dstTone,
   });
 
   const latestTxt = otherWrap?.querySelector(".bubble.me.is-latest .txt");
@@ -756,10 +803,14 @@ async function finalizeRecognition(side, text) {
     latestTxt.textContent = tr;
     keepLatestVisible(other);
   } else {
-    addBubble(other, "me", tr, { latest: true, speakLang: dst });
+    addBubble(other, "me", tr, {
+      latest: true,
+      speakLang: dst,
+      speakTone: dstTone,
+    });
   }
 
-  await speak(tr, dst);
+  await speak(tr, dst, dstTone || srcTone || "neutral");
   setSystemReadyUI();
 }
 
@@ -902,6 +953,24 @@ function bindKeyboardButton(el, handler) {
   });
 }
 
+function cycleTone(side) {
+  const tones = ["neutral", "happy", "angry", "sad", "excited"];
+  if (side === "top") {
+    const idx = tones.indexOf(topTone);
+    topTone = tones[(idx + 1) % tones.length];
+    setSideTone("top", topTone);
+    setHelper(topHelper, `Tone: ${topTone}`, "helper-ready");
+    bounceToReady(800);
+    return;
+  }
+
+  const idx = tones.indexOf(botTone);
+  botTone = tones[(idx + 1) % tones.length];
+  setSideTone("bot", botTone);
+  setHelper(botHelper, `Tone: ${botTone}`, "helper-ready");
+  bounceToReady(800);
+}
+
 function bind() {
   refreshLangLabels();
   unlockOnFirstTouch();
@@ -970,6 +1039,16 @@ function bind() {
     e.preventDefault();
     e.stopPropagation();
     await toggleRecording("bot");
+  });
+
+  topMic?.addEventListener("contextmenu", (e) => {
+    e.preventDefault();
+    cycleTone("top");
+  });
+
+  botMic?.addEventListener("contextmenu", (e) => {
+    e.preventDefault();
+    cycleTone("bot");
   });
 
   bindKeyboardButton(topMic, async (e) => {
