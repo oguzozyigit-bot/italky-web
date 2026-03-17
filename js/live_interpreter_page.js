@@ -159,7 +159,24 @@ let peerHasExplicitlyLeft = false;
 
 let lastLocalSentText = "";
 let lastLocalSentAt = 0;
-let suppressIncomingUntil = 0;
+let myClientId = "";
+
+/* =========================
+   CLIENT ID
+========================= */
+function getOrCreateClientId() {
+  const key = "live_interpreter_client_id";
+  try {
+    let v = localStorage.getItem(key);
+    if (v) return v;
+
+    v = `cli_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+    localStorage.setItem(key, v);
+    return v;
+  } catch {
+    return `cli_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+  }
+}
 
 /* =========================
    NFC
@@ -934,28 +951,29 @@ function startSocket() {
       }
 
       if (type === "translated_message") {
-  const translated = String(payload?.translated_text || "").trim();
-  const original = String(payload?.original_text || "").trim();
+        const senderId = String(payload?.sender_id || "").trim();
+        const translated = String(payload?.translated_text || "").trim();
+        const original = String(payload?.original_text || "").trim();
 
-  if (!translated && !original) return;
+        if (!translated && !original) return;
 
-  if (Date.now() < suppressIncomingUntil) {
-    return;
-  }
+        if (senderId && myClientId && senderId === myClientId) {
+          return;
+        }
 
-  const text = translated || original;
+        const text = translated || original;
 
-  clearLatest("top");
-  addBubble("top", "me", text, {
-    latest: true,
-    withSpeaker: true,
-    speakLang: myLang
-  });
+        clearLatest("top");
+        addBubble("top", "me", text, {
+          latest: true,
+          withSpeaker: true,
+          speakLang: myLang
+        });
 
-  await speak(text, myLang);
-  setSystemReadyUI();
-  return;
-}
+        await speak(text, myLang);
+        setSystemReadyUI();
+        return;
+      }
 
       if (type === "peer_left") {
         peerHasExplicitlyLeft = true;
@@ -1029,7 +1047,6 @@ function shouldIgnoreDuplicateLocal(text) {
 function sendTextMessage(rawText) {
   const text = String(rawText || "").trim();
   if (!text) return;
-  suppressIncomingUntil = Date.now() + 4000;
 
   if (!canSend()) {
     setErrorUI();
@@ -1042,7 +1059,8 @@ function sendTextMessage(rawText) {
     ws.send(JSON.stringify({
       type: "text_message",
       text,
-      from_lang: canonical(myLang)
+      from_lang: canonical(myLang),
+      sender_id: myClientId
     }));
   } catch (e) {
     console.error("[ws send]", e);
@@ -1313,6 +1331,8 @@ function bind() {
 ========================= */
 async function bootRoom() {
   try {
+    myClientId = getOrCreateClientId();
+
     if (roomId) {
       if (role === "host" && hostCode) {
         startNativeNfcHost(hostCode);
