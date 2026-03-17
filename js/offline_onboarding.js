@@ -74,5 +74,6 @@ function wait(ms){
 }
 
 window.goNext = ()=>{
+  localStorage.setItem("offline_boot_done","1");
   location.href = "/pages/offline_languages.html";
 };
