@@ -159,36 +159,6 @@ let peerHasExplicitlyLeft = false;
 
 let lastLocalSentText = "";
 let lastLocalSentAt = 0;
-let myUserId = "";
-let clientSessionId = "";
-
-/* =========================
-   USER
-========================= */
-function getOrCreateClientSessionId() {
-  const key = "live_interpreter_client_session_id";
-  try {
-    let v = sessionStorage.getItem(key);
-    if (v) return v;
-
-    v = `sess_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
-    sessionStorage.setItem(key, v);
-    return v;
-  } catch {
-    return `sess_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
-  }
-}
-
-async function initMyIdentity() {
-  try {
-    const { data } = await supabase.auth.getUser();
-    myUserId = String(data?.user?.id || "").trim();
-  } catch {
-    myUserId = "";
-  }
-
-  clientSessionId = getOrCreateClientSessionId();
-}
 
 /* =========================
    NFC
@@ -963,25 +933,10 @@ function startSocket() {
       }
 
       if (type === "translated_message") {
-        const sender = String(payload?.sender || "").trim().toLowerCase();
-        const senderUserId = String(payload?.user_id || "").trim();
-        const senderClientSessionId = String(payload?.client_session_id || "").trim();
         const translated = String(payload?.translated_text || "").trim();
         const original = String(payload?.original_text || "").trim();
 
         if (!translated && !original) return;
-
-        if (senderClientSessionId && clientSessionId && senderClientSessionId === clientSessionId) {
-          return;
-        }
-
-        if (!senderClientSessionId && senderUserId && myUserId && senderUserId === myUserId) {
-          return;
-        }
-
-        if (!senderClientSessionId && !senderUserId && sender === role) {
-          return;
-        }
 
         const text = translated || original;
 
@@ -1081,9 +1036,7 @@ function sendTextMessage(rawText) {
     ws.send(JSON.stringify({
       type: "text_message",
       text,
-      from_lang: canonical(myLang),
-      user_id: myUserId,
-      client_session_id: clientSessionId
+      from_lang: canonical(myLang)
     }));
   } catch (e) {
     console.error("[ws send]", e);
@@ -1354,8 +1307,6 @@ function bind() {
 ========================= */
 async function bootRoom() {
   try {
-    await initMyIdentity();
-
     if (roomId) {
       if (role === "host" && hostCode) {
         startNativeNfcHost(hostCode);
