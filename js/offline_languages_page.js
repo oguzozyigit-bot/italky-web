@@ -10,6 +10,7 @@ const USER_LANG_KEY = "italky_user_lang_v1";
 const PRIORITY_CODES = ["en", "de", "fr", "it", "es", "tr"];
 const OFFLINE_PRICE = 5;
 const OFFLINE_DURATION_LABEL = "12 Ay";
+const BASE_READY_PREFIX = "offline_base_ready_";
 
 const $ = (id) => document.getElementById(id);
 
@@ -20,6 +21,11 @@ const availableList = $("availableList");
 const searchInput = $("searchInput");
 const countPill = $("countPill");
 const netPill = $("netPill");
+const installBaseBtn = $("installBaseBtn");
+const baseSetupPanel = $("baseSetupPanel");
+const extraLanguagesPanel = $("extraLanguagesPanel");
+const otherLanguagesPanel = $("otherLanguagesPanel");
+const baseSuccessBox = $("baseSuccessBox");
 
 function toast(msg) {
   toastEl.textContent = String(msg || "");
@@ -27,7 +33,7 @@ function toast(msg) {
   clearTimeout(window.__toastTimer);
   window.__toastTimer = setTimeout(() => {
     toastEl.classList.remove("show");
-  }, 2200);
+  }, 2300);
 }
 
 function norm(v) {
@@ -238,6 +244,24 @@ function setUserLang(code) {
   localStorage.setItem(USER_LANG_KEY, norm(code));
 }
 
+function baseReadyKey(userLang) {
+  return `${BASE_READY_PREFIX}${norm(userLang)}`;
+}
+
+function isBaseReady(userLang) {
+  try {
+    return localStorage.getItem(baseReadyKey(userLang)) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function setBaseReady(userLang, ready = true) {
+  try {
+    localStorage.setItem(baseReadyKey(userLang), ready ? "1" : "0");
+  } catch {}
+}
+
 function populateSourceSelect() {
   sourceSelect.innerHTML = SORTED_LANGS.map((lang) => {
     return `<option value="${lang.code}">${lang.flag} ${lang.name}</option>`;
@@ -259,36 +283,113 @@ function targetPairs(targetLang) {
   return [`${targetLang}-${PIVOT}`, `${PIVOT}-${targetLang}`];
 }
 
-function installPairsForTarget(userLang, targetLang) {
-  const needed = [];
-
-  for (const pair of basePairs(userLang)) {
-    if (!isInstalledNative(pair)) needed.push(pair);
-  }
-
-  for (const pair of targetPairs(targetLang)) {
-    if (!isInstalledNative(pair)) needed.push(pair);
-  }
-
-  return [...new Set(needed)];
+function installPairsForTarget(targetLang) {
+  return [...new Set(targetPairs(targetLang))];
 }
 
 function isLanguageInstalledForUser(userLang, targetLang) {
   if (targetLang === userLang) return false;
-
-  const baseOk = basePairs(userLang).every((pair) => isInstalledNative(pair));
+  if (!isBaseReady(userLang)) return false;
 
   if (targetLang === PIVOT) {
-    return baseOk;
+    return basePairs(userLang).every((pair) => isInstalledNative(pair));
   }
 
   const targetOk = targetPairs(targetLang).every((pair) => isInstalledNative(pair));
-  return baseOk && targetOk;
+  return targetOk;
 }
 
 function removablePairsForTarget(targetLang) {
   if (targetLang === PIVOT) return [];
   return targetPairs(targetLang);
+}
+
+async function installPairsWithPolling(pairs, label) {
+  if (!pairs.length) return true;
+
+  const urls = [];
+  for (const pair of pairs) {
+    const url = await getCheckedPublicUrl(pair);
+    urls.push({ pair, url });
+  }
+
+  const missing = urls.filter((x) => !x.url);
+  if (missing.length) {
+    toast(`Eksik dosya: ${missing.map((x) => x.pair).join(", ")}`);
+    return false;
+  }
+
+  urls.forEach((item, i) => {
+    setTimeout(() => {
+      installNative(item.pair, item.url);
+    }, i * 700);
+  });
+
+  return await new Promise((resolve) => {
+    const started = Date.now();
+    const poll = setInterval(() => {
+      const ok = pairs.every((pair) => isInstalledNative(pair));
+
+      if (ok) {
+        clearInterval(poll);
+        toast(`${label} kuruldu ✅`);
+        resolve(true);
+        return;
+      }
+
+      if (Date.now() - started > 70000) {
+        clearInterval(poll);
+        toast(`Kurulum tamamlanamadı: ${label}`);
+        resolve(false);
+      }
+    }, 2200);
+  });
+}
+
+async function installBaseLanguage(userLang) {
+  const pairs = basePairs(userLang);
+
+  if (!pairs.length) {
+    setBaseReady(userLang, true);
+    return true;
+  }
+
+  const needed = pairs.filter((pair) => !isInstalledNative(pair));
+  if (!needed.length) {
+    setBaseReady(userLang, true);
+    return true;
+  }
+
+  toast("Temel offline kurulum başlatıldı…");
+  const ok = await installPairsWithPolling(needed, "Temel offline köprü");
+
+  if (ok) {
+    setBaseReady(userLang, true);
+    return true;
+  }
+
+  return false;
+}
+
+function updatePanels() {
+  const userLang = norm(sourceSelect.value || getUserLang());
+  const ready = isBaseReady(userLang);
+
+  if (ready) {
+    baseSuccessBox?.classList.remove("hide");
+    extraLanguagesPanel?.classList.remove("hide");
+    otherLanguagesPanel?.classList.remove("hide");
+    installBaseBtn.textContent = "Temel Kurulum Hazır";
+    installBaseBtn.classList.add("done");
+    installBaseBtn.disabled = true;
+  } else {
+    baseSuccessBox?.classList.add("hide");
+    extraLanguagesPanel?.classList.add("hide");
+    otherLanguagesPanel?.classList.add("hide");
+    installBaseBtn.textContent = "Temel Kurulumu Başlat";
+    installBaseBtn.classList.remove("done");
+    installBaseBtn.disabled = false;
+  }
 }
 
 function renderCard(lang, installed, userLang) {
@@ -322,7 +423,6 @@ function renderCard(lang, installed, userLang) {
 
   if (installed) {
     installBtn.disabled = true;
-
     if (norm(lang.code) === PIVOT) {
       removeBtn.style.display = "none";
     }
@@ -340,6 +440,11 @@ function renderCard(lang, installed, userLang) {
 
     if (!nativeReady()) {
       toast("Offline bridge hazır değil.");
+      return;
+    }
+
+    if (!isBaseReady(userLang)) {
+      toast("Önce temel offline kurulumu tamamlayın.");
       return;
     }
 
@@ -361,7 +466,7 @@ function renderCard(lang, installed, userLang) {
       return;
     }
 
-    const neededPairs = installPairsForTarget(userLang, norm(lang.code));
+    const neededPairs = installPairsForTarget(norm(lang.code)).filter((pair) => !isInstalledNative(pair));
 
     if (!neededPairs.length) {
       toast("Bu dil zaten cihazda hazır.");
@@ -369,47 +474,15 @@ function renderCard(lang, installed, userLang) {
       return;
     }
 
-    installBtn.innerHTML = `<span>⏳</span><span>Dosyalar kontrol…</span>`;
+    installBtn.innerHTML = `<span>⏳</span><span>İndiriliyor…</span>`;
+    const ok = await installPairsWithPolling(neededPairs, lang.name);
 
-    const urls = [];
-    for (const pair of neededPairs) {
-      const url = await getCheckedPublicUrl(pair);
-      urls.push({ pair, url });
-    }
-
-    const missing = urls.filter((x) => !x.url);
-    if (missing.length) {
+    if (!ok) {
       installBtn.classList.remove("disabled");
       installBtn.innerHTML = `<span>⬇️</span><span>İndir</span>`;
-      toast(`Eksik dosya: ${missing.map((x) => x.pair).join(", ")}`);
-      return;
     }
 
-    installBtn.innerHTML = `<span>⏳</span><span>İndiriliyor…</span>`;
-
-    urls.forEach((item, i) => {
-      setTimeout(() => {
-        installNative(item.pair, item.url);
-      }, i * 700);
-    });
-
-    const started = Date.now();
-    const poll = setInterval(() => {
-      const ok = neededPairs.every((pair) => isInstalledNative(pair));
-
-      if (ok) {
-        clearInterval(poll);
-        toast(`${lang.name} kuruldu ✅`);
-        renderAll();
-        return;
-      }
-
-      if (Date.now() - started > 70000) {
-        clearInterval(poll);
-        toast(`Kurulum tamamlanamadı: ${lang.name}`);
-        renderAll();
-      }
-    }, 2200);
+    renderAll();
   };
 
   removeBtn.onclick = async () => {
@@ -497,16 +570,57 @@ function renderAll() {
   const userLang = norm(sourceSelect.value || getUserLang());
   const q = String(searchInput.value || "").trim().toLowerCase();
 
+  updatePanels();
+
+  if (!isBaseReady(userLang)) {
+    installedList.innerHTML = `<div class="empty">Önce temel offline kurulum yapılmalı.</div>`;
+    availableList.innerHTML = `<div class="empty">Temel kurulumdan sonra ek diller açılır.</div>`;
+    countPill.textContent = `Kurulu: 0`;
+    return;
+  }
+
   renderInstalledList(userLang, q);
   renderAvailableList(userLang, q);
 }
 
 sourceSelect.addEventListener("change", () => {
   setUserLang(sourceSelect.value);
+  updatePanels();
   renderAll();
 });
 
 searchInput.addEventListener("input", renderAll);
 
+installBaseBtn?.addEventListener("click", async () => {
+  const userLang = norm(sourceSelect.value || getUserLang());
+
+  if (!navigator.onLine) {
+    toast("Temel kurulum için internet gerekir.");
+    return;
+  }
+
+  if (!nativeReady()) {
+    toast("Offline bridge hazır değil.");
+    return;
+  }
+
+  installBaseBtn.classList.add("disabled");
+  installBaseBtn.textContent = "Kuruluyor…";
+
+  const ok = await installBaseLanguage(userLang);
+
+  if (ok) {
+    baseSuccessBox?.classList.remove("hide");
+    baseSuccessBox.textContent = "Offline İngilizce köprü çevirisi yüklendi. Diğer dilleri indirebilirsiniz.";
+    toast("Temel offline kurulum tamamlandı ✅");
+  } else {
+    installBaseBtn.classList.remove("disabled");
+    installBaseBtn.textContent = "Temel Kurulumu Başlat";
+  }
+
+  renderAll();
+});
+
 populateSourceSelect();
+updatePanels();
 renderAll();
