@@ -161,26 +161,51 @@ function canonTone(value) {
   return ["neutral", "happy", "angry", "sad", "excited"].includes(v) ? v : "neutral";
 }
 
-function getToneKey(side) {
-  return side === "top" ? "facetoface_top_tone" : "facetoface_bot_tone";
-}
+function detectToneFromText(text, lang = "tr") {
+  const raw = String(text || "").trim();
+  if (!raw) return "neutral";
 
-function getSideTone(side) {
-  try {
-    return canonTone(localStorage.getItem(getToneKey(side)) || "neutral");
-  } catch {
-    return "neutral";
-  }
-}
+  const s = raw.toLowerCase();
+  const exclamations = (raw.match(/!/g) || []).length;
+  const upperRatio = (() => {
+    const letters = raw.replace(/[^A-Za-zÇĞİÖŞÜçğıöşü]/g, "");
+    if (!letters.length) return 0;
+    const upper = letters.replace(/[^A-ZÇĞİÖŞÜ]/g, "").length;
+    return upper / letters.length;
+  })();
 
-function setSideTone(side, tone) {
-  try {
-    localStorage.setItem(getToneKey(side), canonTone(tone));
-  } catch {}
-}
+  const angryWords = [
+    "saçma", "yeter", "sinir", "sinirim", "delirdim", "bıktım", "biktim", "rezalet",
+    "anamı ağlattı", "anami aglatti", "ensemde boza", "kafa ütülüyor", "kafa utuluyor",
+    "berbat", "nefret", "uyuz", "çıldırdım", "cildirdim", "kan beynime", "zıvanadan"
+  ];
 
-let topTone = getSideTone("top");
-let botTone = getSideTone("bot");
+  const sadWords = [
+    "üzgün", "uzgun", "kötüyüm", "kotuyum", "moralim bozuk", "canım sıkkın", "canim sikkin",
+    "yoruldum", "tükendim", "tukendim", "bittim", "içim dışıma çıktı", "icim disima cikti"
+  ];
+
+  const happyWords = [
+    "harika", "süper", "super", "müthiş", "muthis", "bayıldım", "bayildim",
+    "çok iyi", "cok iyi", "güzel olmuş", "guzel olmus", "sevindim", "mutlu oldum"
+  ];
+
+  const excitedWords = [
+    "inanamıyorum", "inanamiyorum", "şahane", "sahane", "hadi ya", "vaaay",
+    "wow", "muhteşem", "mukemmel", "efsane", "çok heyecanlıyım", "cok heyecanliyim"
+  ];
+
+  const hasAny = (arr) => arr.some((w) => s.includes(w));
+
+  if (hasAny(angryWords) || exclamations >= 2 || upperRatio > 0.55) return "angry";
+  if (hasAny(sadWords)) return "sad";
+  if (hasAny(excitedWords)) return "excited";
+  if (hasAny(happyWords)) return "happy";
+
+  if (exclamations === 1) return "excited";
+
+  return "neutral";
+}
 
 function pointOrbTo(side) {
   if (!frameRoot) return;
@@ -756,8 +781,7 @@ function stopRecognizer() {
 async function finalizeRecognition(side, text) {
   const src = side === "top" ? topLang : botLang;
   const dst = side === "top" ? botLang : topLang;
-  const srcTone = side === "top" ? topTone : botTone;
-  const dstTone = side === "top" ? botTone : topTone;
+  const sourceTone = detectToneFromText(text, src);
   const other = side === "top" ? "bot" : "top";
   const otherWrap = other === "top" ? topBody : botBody;
 
@@ -776,7 +800,7 @@ async function finalizeRecognition(side, text) {
   addBubble(other, "me", t(dst, "translating"), {
     latest: true,
     speakLang: dst,
-    speakTone: dstTone,
+    speakTone: sourceTone,
   });
 
   const latestTxt = otherWrap?.querySelector(".bubble.me.is-latest .txt");
@@ -806,11 +830,11 @@ async function finalizeRecognition(side, text) {
     addBubble(other, "me", tr, {
       latest: true,
       speakLang: dst,
-      speakTone: dstTone,
+      speakTone: sourceTone,
     });
   }
 
-  await speak(tr, dst, dstTone || srcTone || "neutral");
+  await speak(tr, dst, sourceTone);
   setSystemReadyUI();
 }
 
@@ -953,24 +977,6 @@ function bindKeyboardButton(el, handler) {
   });
 }
 
-function cycleTone(side) {
-  const tones = ["neutral", "happy", "angry", "sad", "excited"];
-  if (side === "top") {
-    const idx = tones.indexOf(topTone);
-    topTone = tones[(idx + 1) % tones.length];
-    setSideTone("top", topTone);
-    setHelper(topHelper, `Tone: ${topTone}`, "helper-ready");
-    bounceToReady(800);
-    return;
-  }
-
-  const idx = tones.indexOf(botTone);
-  botTone = tones[(idx + 1) % tones.length];
-  setSideTone("bot", botTone);
-  setHelper(botHelper, `Tone: ${botTone}`, "helper-ready");
-  bounceToReady(800);
-}
-
 function bind() {
   refreshLangLabels();
   unlockOnFirstTouch();
@@ -1039,16 +1045,6 @@ function bind() {
     e.preventDefault();
     e.stopPropagation();
     await toggleRecording("bot");
-  });
-
-  topMic?.addEventListener("contextmenu", (e) => {
-    e.preventDefault();
-    cycleTone("top");
-  });
-
-  botMic?.addEventListener("contextmenu", (e) => {
-    e.preventDefault();
-    cycleTone("bot");
   });
 
   bindKeyboardButton(topMic, async (e) => {
