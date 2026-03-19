@@ -1,26 +1,58 @@
-<!-- FILE: /pages/index.html -->
 <!doctype html>
 <html lang="tr">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="utf-8"/>
+
+  <!-- Mobil uyum -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+
+  <!-- Cache kır (çok önemli) -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+  <meta http-equiv="Pragma" content="no-cache"/>
+  <meta http-equiv="Expires" content="0"/>
+
   <title>italkyAI</title>
 </head>
+
 <body>
 
 <script>
 (function(){
 
-  const isApp = location.href.includes("appassets.androidplatform.net");
+  const LOGIN = "/pages/login.html";
 
-  // ✅ APP içindeysek → APP ENTRY
-  if(isApp){
-    location.replace("/pages/offline_entry.html");
-    return;
+  try {
+    // 🔥 App içinde mi?
+    const isApp = location.href.includes("appassets.androidplatform.net");
+
+    // 🔥 Offline kontrol
+    const isOffline = navigator.onLine === false;
+
+    // 🔥 Login kontrol (senin key)
+    const isLogged = localStorage.getItem("italky_auth") === "1";
+
+    // =========================
+    // SENARYOLAR
+    // =========================
+
+    // ❌ OFFLINE + LOGIN YOK → login'a gönderme (loop olur)
+    if (isOffline && !isLogged) {
+      location.replace("/pages/offline_languages.html");
+      return;
+    }
+
+    // ❌ LOGIN YOK → LOGIN
+    if (!isLogged) {
+      location.replace(LOGIN);
+      return;
+    }
+
+    // ✅ LOGIN VAR → HOME
+    location.replace("/pages/home.html");
+
+  } catch(e){
+    location.replace("/pages/login.html");
   }
-
-  // 🌐 WEB fallback (tarayıcıdan açılırsa)
-  location.replace("/pages/login.html");
 
 })();
 </script>
