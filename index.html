@@ -2,17 +2,23 @@
 <html lang="tr">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
 
   <script>
     (function(){
       try{
-        const isApp = location.href.includes("appassets.androidplatform.net");
+        const href = location.href || "";
+        const isApp = href.includes("appassets.androidplatform.net");
 
+        // ✅ APP
         if(isApp){
-          location.replace("/assets/pages/login.html");
-        }else{
-          location.replace("/pages/login.html");
+          location.replace("https://appassets.androidplatform.net/assets/pages/login.html");
+          return;
         }
+
+        // ✅ WEB
+        location.replace("/pages/login.html");
+
       }catch(e){
         location.replace("/pages/login.html");
       }
