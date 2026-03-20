@@ -183,3 +183,68 @@ btnGenerate?.addEventListener("click", handleCreateClick);
 window.addEventListener("beforeunload", () => {
   clearPolling();
 });
+// --- SALLA-BAĞLAN YAMASI BAŞLANGIÇ ---
+import { apiShakeMatch } from "/js/api.js"; // Az önce güncellediğimiz api.js'den çekiyoruz
+
+let isShaking = false;
+const SHAKE_THRESHOLD = 15;
+let lastShakeTime = 0;
+
+// 1. Hareket Sensörünü Başlat
+if (window.DeviceMotionEvent) {
+    window.addEventListener('devicemotion', (event) => {
+        const acc = event.accelerationIncludingGravity;
+        if (!acc) return;
+
+        const curTime = Date.now();
+        if ((curTime - lastShakeTime) > 100) {
+            const diffTime = curTime - lastShakeTime;
+            lastShakeTime = curTime;
+
+            const speed = Math.abs(acc.x + acc.y + acc.z) / diffTime * 10000;
+
+            if (speed > SHAKE_THRESHOLD && !isShaking) {
+                isShaking = true;
+                handleShakeLogic();
+                // 3 saniye koruma (üst üste tetiklenmesin)
+                setTimeout(() => { isShaking = false; }, 3000);
+            }
+        }
+    });
+}
+
+// 2. Sallama Mantığı
+async function handleShakeLogic() {
+    setStatus("Sallama algılandı! Yakınlarda cihaz aranıyor...", "waiting");
+    
+    // Titreşimle geri bildirim ver (Hissiyat önemli)
+    if (navigator.vibrate) navigator.vibrate(200);
+
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+        try {
+            // Backend'deki Radara sor: "Kimse var mı?"
+            const data = await apiShakeMatch(
+                "user_" + Math.floor(Math.random() * 1000), // Geçici ID veya gerçek UserID
+                pos.coords.latitude,
+                pos.coords.longitude
+            );
+
+            if (data.status === 'matched') {
+                setStatus("Eşleşme Sağlandı! Bağlanılıyor...", "ok");
+                // Eğer bir eşleşme varsa, doğrudan o odaya yönlendir veya oda kur
+                // Not: Burada peer_id ile doğrudan live ekrana geçiş tetiklenebilir
+            } else {
+                // KİMSE YOKSA: Otomatik QR Oluştur (Senin mevcut fonksiyonun)
+                setStatus("Yakınlarda kimse yok. QR kod oluşturuluyor...", "waiting");
+                handleCreateClick(); 
+            }
+        } catch (err) {
+            console.error("Shake Match Fail:", err);
+            handleCreateClick(); // Hata olursa normal sürece dön
+        }
+    }, () => {
+        // Konum kapalıysa normal QR sürecine dön
+        handleCreateClick();
+    });
+}
+// --- SALLA-BAĞLAN YAMASI BİTİŞ ---
