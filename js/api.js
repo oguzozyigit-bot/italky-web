@@ -93,33 +93,52 @@ export async function apiPOST(path, body = {}, { headers = {}, raw = false, time
   return data;
 }
 
-// PUT/DELETE gerekirse (override)
-export async function apiPUT(path, body = {}, opts = {}) {
-  return apiPOST(path, body, { ...opts, headers: { ...(opts.headers || {}), "X-HTTP-Method-Override": "PUT" } });
-}
 // ===============================
-// ITALKY PROXIMITY & SHAKE MATCH (YENİ)
+// ITALKY PROXIMITY & SHAKE MATCH
 // ===============================
 
 /**
  * Telefon sallandığında yakınlardaki cihazla eşleşme başlatır.
- * @param {string} userId - Mevcut kullanıcı ID
- * @param {number} lat - Enlem
- * @param {number} lon - Boylam
+ * @param {string} userId
+ * @param {number} lat
+ * @param {number} lon
+ * @param {string} myLang
+ * @param {number|null} accuracyM
  */
-export async function apiShakeMatch(userId, lat, lon) {
-  // Prefix /api zaten backend router'da tanımlı
+export async function apiShakeMatch(userId, lat, lon, myLang = "tr", accuracyM = null) {
   return await apiPOST("/api/italky/shake-match", {
-    user_id: userId,
+    user_id: String(userId || "").trim(),
     lat: parseFloat(lat),
-    lon: parseFloat(lon)
+    lon: parseFloat(lon),
+    my_lang: String(myLang || "tr").trim().toLowerCase(),
+    accuracy_m: accuracyM == null ? null : Number(accuracyM)
   });
 }
 
 /**
- * Uygulaması olmayan misafirler için hızlı oda linki oluşturur.
- * @param {string} userId - Mevcut kullanıcı ID
+ * İlk sallayan kullanıcı eşleşti mi diye polling yapar.
+ * @param {string} searchId
+ * @param {string} userId
  */
-export async function apiCreateGuestLink(userId) {
-  return await apiGET(`/api/italky/create-guest-link?user_id=${encodeURIComponent(userId)}`);
+export async function apiShakeStatus(searchId, userId) {
+  return await apiGET(
+    `/api/italky/shake-status/${encodeURIComponent(searchId)}?user_id=${encodeURIComponent(userId)}`
+  );
+}
+
+/**
+ * Uygulaması olmayan misafirler için hızlı oda linki oluşturur.
+ * @param {string} userId
+ * @param {string} myLang
+ * @param {string} roomId
+ */
+export async function apiCreateGuestLink(userId, myLang = "tr", roomId = "") {
+  const qs = new URLSearchParams();
+  qs.set("user_id", String(userId || "").trim());
+  qs.set("my_lang", String(myLang || "tr").trim().toLowerCase());
+  if (String(roomId || "").trim()) {
+    qs.set("room_id", String(roomId).trim());
+  }
+
+  return await apiGET(`/api/italky/create-guest-link?${qs.toString()}`);
 }
