@@ -170,6 +170,7 @@ body{
   color:#4f46e5;
   word-break:break-all;
 }
+
 .qr-fallback-title{
   font-size:11px;
   font-weight:900;
@@ -284,6 +285,7 @@ body{
     opacity:.08;
   }
 }
+
 .holo-beams{
   position:absolute;
   inset:-22px;
@@ -803,19 +805,23 @@ body{
   from{ transform:rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
   to{ transform:rotateX(360deg) rotateY(720deg) rotateZ(360deg); }
 }
+
 @keyframes floatQR{
   0%,100%{ transform:translateY(0) rotateX(0deg); }
   50%{ transform:translateY(-8px) rotateX(5deg); }
 }
+
 @keyframes glitchQR{
   0%,90%,100%{ opacity:1; transform:scale(1); }
   92%{ opacity:.82; transform:scale(1.03) skewX(2deg); }
   94%{ opacity:1; transform:scale(1) skewX(-2deg); }
 }
+
 @keyframes beamFlow{
   from{ background-position:0 0; }
   to{ background-position:0 50px; }
 }
+
 @keyframes platformPulse{
   0%,100%{ transform:translateX(-50%) rotateX(75deg) scale(1); opacity:.7; }
   50%{ transform:translateX(-50%) rotateX(75deg) scale(1.08); opacity:.88; }
@@ -860,24 +866,24 @@ body{
           <div class="holo-qr">
             <img id="smallQrImg" alt="italkyAI QR Hologram">
             <div id="qrFallback" class="qr-fallback show">
-  <div class="guest-placeholder">
-    <div class="gp-phone left">
-      <span></span>
-    </div>
+              <div class="guest-placeholder">
+                <div class="gp-phone left">
+                  <span></span>
+                </div>
 
-    <div class="gp-signal">
-      <i></i><i></i><i></i>
-    </div>
+                <div class="gp-signal">
+                  <i></i><i></i><i></i>
+                </div>
 
-    <div class="gp-phone right">
-      <span></span>
-    </div>
-  </div>
+                <div class="gp-phone right">
+                  <span></span>
+                </div>
+              </div>
 
-  <div class="qr-fallback-title">Bağlantı Hazırlanıyor</div>
-  <div class="qr-fallback-sub">Önce salla, eşleşme olmazsa misafir QR burada oluşur.</div>
-  <div id="qrFallbackCode" class="qr-fallback-code">WAITING</div>
-</div>
+              <div class="qr-fallback-title">Bağlantı Hazırlanıyor</div>
+              <div class="qr-fallback-sub">Önce salla. Gerekirse misafir QR otomatik oluşur.</div>
+              <div id="qrFallbackCode" class="qr-fallback-code">WAITING</div>
+            </div>
           </div>
 
           <div class="holo-beams"></div>
@@ -886,7 +892,7 @@ body{
 
         <h1 class="heroTitle">Side<span class="to">To</span>Side</h1>
         <p class="heroSub">Yakındaki cihazla anında bağlan. Eşleşme olmazsa üstteki QR otomatik misafir girişine dönüşür.</p>
-        <div class="heroStatus" id="heroStatus">Hazır.</div>
+        <div class="heroStatus" id="heroStatus">Salla-Bağlan ile başlayabilirsin.</div>
 
         <div class="heroActions">
           <button id="btn-shake" class="heroBtn heroBtnPrimary" type="button">📱 Salla-Bağlan</button>
@@ -1075,12 +1081,12 @@ function stopShakeMode() {
 }
 
 function showFallback(code = "WAITING") {
-  if (qrFallbackCode) qrFallbackCode.textContent = code;
-  if (qrFallback) qrFallback.classList.add("show");
   if (smallQrImg) {
     smallQrImg.style.display = "none";
     smallQrImg.removeAttribute("src");
   }
+  if (qrFallbackCode) qrFallbackCode.textContent = code;
+  if (qrFallback) qrFallback.classList.add("show");
 }
 
 function showQr(url) {
