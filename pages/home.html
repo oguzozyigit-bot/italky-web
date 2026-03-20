@@ -134,12 +134,41 @@ body{
   justify-content:center;
 }
 
-.holo-qr::before{
-  content:"⇄";
-  font-size:42px;
+.holo-qr img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:none;
+}
+
+.qr-fallback{
+  width:100%;
+  height:100%;
+  border-radius:10px;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  gap:6px;
+  text-align:center;
+  color:#111827;
+  font-size:10px;
+  font-weight:800;
+  line-height:1.2;
+  padding:8px;
+  background:linear-gradient(135deg,#ffffff 0%, #eef2ff 100%);
+}
+
+.qr-fallback.show{
+  display:flex;
+}
+
+.qr-fallback-code{
+  font-size:12px;
   font-weight:900;
+  letter-spacing:.8px;
   color:#4f46e5;
-  opacity:.92;
+  word-break:break-all;
 }
 
 .holo-beams{
@@ -240,12 +269,6 @@ body{
   background:var(--ai-grad);
   color:#0b1020;
   box-shadow:0 14px 28px rgba(99,102,241,.24);
-}
-
-.heroBtnGhost{
-  background:rgba(255,255,255,.08);
-  color:#fff;
-  border:1px solid rgba(255,255,255,.12);
 }
 
 .home-grid{
@@ -721,19 +744,24 @@ body{
             <div class="crystal-side side6"></div>
           </div>
 
-          <div class="holo-qr"></div>
+          <div class="holo-qr">
+            <img id="smallQrImg" alt="italkyAI QR Hologram">
+            <div id="qrFallback" class="qr-fallback show">
+              <div>Önce salla</div>
+              <div id="qrFallbackCode" class="qr-fallback-code">GUEST QR</div>
+            </div>
+          </div>
 
           <div class="holo-beams"></div>
           <div class="energy-platform"></div>
         </div>
 
         <h1 class="heroTitle">Side<span class="to">To</span>Side</h1>
-        <p class="heroSub">Yakındaki cihazla anında bağlan. Eşleşme olmazsa QR ile devam edebilirsin.</p>
+        <p class="heroSub">Yakındaki cihazla anında bağlan. Eşleşme olmazsa üstteki QR otomatik misafir girişine dönüşür.</p>
         <div class="heroStatus" id="heroStatus">Hazır.</div>
 
         <div class="heroActions">
           <button id="btn-shake" class="heroBtn heroBtnPrimary" type="button">📱 Salla-Bağlan</button>
-          <button id="btn-qr" class="heroBtn heroBtnGhost" type="button">QR ile Devam Et</button>
         </div>
       </div>
     </section>
@@ -851,11 +879,13 @@ try {
 </script>
 
 <script type="module">
-import { apiShakeMatch, apiShakeStatus } from "/js/api.js";
+import { apiShakeMatch, apiShakeStatus, apiCreateGuestLink } from "/js/api.js";
 
 const heroStatus = document.getElementById("heroStatus");
 const btnShake = document.getElementById("btn-shake");
-const btnQr = document.getElementById("btn-qr");
+const smallQrImg = document.getElementById("smallQrImg");
+const qrFallback = document.getElementById("qrFallback");
+const qrFallbackCode = document.getElementById("qrFallbackCode");
 
 const USER_ID_KEY = "italky_shake_user_id_v1";
 
@@ -916,6 +946,52 @@ function stopShakeMode() {
   }
 }
 
+function showFallback(code = "GUEST QR") {
+  if (qrFallbackCode) qrFallbackCode.textContent = code;
+  if (qrFallback) qrFallback.classList.add("show");
+  if (smallQrImg) {
+    smallQrImg.style.display = "none";
+    smallQrImg.removeAttribute("src");
+  }
+}
+
+function showQr(url) {
+  if (smallQrImg) {
+    smallQrImg.style.display = "block";
+    smallQrImg.src = url;
+  }
+  qrFallback?.classList.remove("show");
+}
+
+function qrUrlPrimary(targetUrl) {
+  return `https://api.qrserver.com/v1/create-qr-code/?size=520x520&margin=6&data=${encodeURIComponent(targetUrl)}`;
+}
+
+async function createGuestQrFallback() {
+  try {
+    setHeroStatus("Yakında uygulama yüklü cihaz yok. Misafir QR hazırlanıyor...");
+
+    const data = await apiCreateGuestLink(STABLE_USER_ID, "tr");
+
+    if (!data?.join_url) {
+      throw new Error("guest_link_missing");
+    }
+
+    const qrUrl = qrUrlPrimary(data.join_url);
+    showQr(qrUrl);
+
+    if (qrFallbackCode) {
+      qrFallbackCode.textContent = String(data.room_id || "GUEST");
+    }
+
+    setHeroStatus("Misafir QR hazır. Karşı taraf kamerayla okutup webden bağlanabilir.");
+  } catch (e) {
+    console.error("guest qr fallback error", e);
+    showFallback("QR HAZIR DEĞİL");
+    setHeroStatus("Misafir QR oluşturulamadı.");
+  }
+}
+
 async function armShakeMode() {
   try {
     if (window.Native && typeof window.Native.requestF2FPermissions === "function") {
@@ -936,6 +1012,7 @@ async function armShakeMode() {
     }
 
     setHeroStatus("Salla-Bağlan aktif. Telefonu sallayabilirsin.");
+    showFallback("BEKLENİYOR");
     if (navigator.vibrate) navigator.vibrate(80);
   } catch (e) {
     console.error("Motion permission error:", e);
@@ -982,7 +1059,7 @@ async function pollShakeMatch(searchId, myLang = "tr") {
     }
   }
 
-  setHeroStatus("Yakında cihaz bulunamadı. QR ile devam edebilirsin.");
+  await createGuestQrFallback();
 }
 
 async function handleShakeLogic(strength) {
@@ -1031,10 +1108,11 @@ async function handleShakeLogic(strength) {
       return;
     }
 
-    setHeroStatus("Yakında cihaz bulunamadı. QR ile devam edebilirsin.");
+    await createGuestQrFallback();
   } catch (e) {
     console.error("shake match fail", e);
     setHeroStatus("Salla-Bağlan başlatılamadı.");
+    showFallback("SHAKE HATASI");
   } finally {
     isShakeBusy = false;
   }
@@ -1071,9 +1149,6 @@ function handleNativeShakeEvent(event) {
 }
 
 btnShake?.addEventListener("click", armShakeMode);
-btnQr?.addEventListener("click", () => {
-  location.href = "/pages/interpreter.html";
-});
 
 window.addEventListener("devicemotion", handleMotionEvent, { passive: true });
 window.addEventListener("italky:native-shake", handleNativeShakeEvent);
