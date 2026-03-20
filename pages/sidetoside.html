@@ -538,7 +538,7 @@
 
       stopPreviewSocket();
 
-      const url = `${WS_BASE}/ws/interpreter/${encodeURIComponent(roomId)}?role=host-preview&lang=${encodeURIComponent(myLang)}`;
+      const url = `${WS_BASE}/ws/interpreter/${encodeURIComponent(roomId)}?role=host&lang=${encodeURIComponent(myLang)}`;
 
       try{
         previewSocket = new WebSocket(url);
@@ -586,33 +586,29 @@
     }
 
     async function ensureRoom(){
-      redirected = false;
-      setStatus("Oda hazırlanıyor...");
+  redirected = false;
+  setStatus("Oda hazırlanıyor...");
 
-      const cachedRoom = localStorage.getItem(ROOM_KEY) || "";
-      const cachedLang = localStorage.getItem(ROOM_LANG_KEY) || "tr";
+  const myLang = localStorage.getItem(ROOM_LANG_KEY) || "tr";
 
-      try{
-        if(cachedRoom){
-          activeRoomId = String(cachedRoom).trim();
-        }else{
-          const created = await createRoom(cachedLang);
-          activeRoomId = String(created.room_id || "").trim();
-          localStorage.setItem(ROOM_KEY, activeRoomId);
-          localStorage.setItem(ROOM_LANG_KEY, cachedLang);
-        }
+  try{
+    const created = await createRoom(myLang);
+    activeRoomId = String(created.room_id || "").trim();
 
-        if(!activeRoomId){
-          throw new Error("room_id boş geldi");
-        }
-
-        qrImg.src = qrUrlPrimary(buildJoinUrl(activeRoomId));
-        startPreviewSocket(activeRoomId, cachedLang);
-      }catch(e){
-        console.error("[sidetoside room]", e);
-        setStatus(e?.message || "Oda hazırlanamadı");
-      }
+    if(!activeRoomId){
+      throw new Error("room_id boş geldi");
     }
+
+    localStorage.setItem(ROOM_KEY, activeRoomId);
+    localStorage.setItem(ROOM_LANG_KEY, myLang);
+
+    qrImg.src = qrUrlPrimary(buildJoinUrl(activeRoomId));
+    startPreviewSocket(activeRoomId, myLang);
+  }catch(e){
+    console.error("[sidetoside room]", e);
+    setStatus(e?.message || "Oda hazırlanamadı");
+  }
+}
 
     ensureRoom();
 
