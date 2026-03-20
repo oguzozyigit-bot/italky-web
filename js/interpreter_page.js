@@ -1,9 +1,10 @@
-// FILE: /js/interpreter_page.js
-
 const API_BASE = "https://italky-api.onrender.com/api";
 const JOIN_PAGE_BASE = "https://italky.ai/pages/interpreter_join.html";
 
 const btnGenerate = document.getElementById("btn-generate");
+const btnShake = document.getElementById("btn-shake");
+const btnGuest = document.getElementById("btn-guest-link");
+
 const myLangSelect = document.getElementById("my-lang");
 const setupArea = document.getElementById("setup-area");
 const qrContainer = document.getElementById("qr-container");
@@ -15,6 +16,30 @@ const roomIdText = document.getElementById("room-id-text");
 const roomStateText = document.getElementById("room-state-text");
 
 let pollingInterval = null;
+let shakePollingTimer = null;
+let isShakeArmed = false;
+let isShakingBusy = false;
+let lastShakeAt = 0;
+let lastMagnitude = 0;
+let lastMotionSampleAt = 0;
+let currentShakeSearchId = null;
+
+const SHAKE_THRESHOLD = 15;
+const SHAKE_COOLDOWN_MS = 2500;
+const SHAKE_POLL_TIMEOUT_MS = 6500;
+
+const USER_ID_KEY = "italky_shake_user_id_v1";
+
+function getStableUserId() {
+  let value = localStorage.getItem(USER_ID_KEY);
+  if (!value) {
+    value = "u_" + Math.random().toString(36).slice(2, 12);
+    localStorage.setItem(USER_ID_KEY, value);
+  }
+  return value;
+}
+
+const STABLE_USER_ID = getStableUserId();
 
 function setStatus(text, mode = "waiting") {
   if (statusText) statusText.innerText = text;
@@ -37,6 +62,13 @@ function clearPolling() {
   if (pollingInterval) {
     clearInterval(pollingInterval);
     pollingInterval = null;
+  }
+}
+
+function clearShakePolling() {
+  if (shakePollingTimer) {
+    clearTimeout(shakePollingTimer);
+    shakePollingTimer = null;
   }
 }
 
@@ -110,6 +142,17 @@ function redirectHostToLive(roomId, hostLang, guestLang) {
   window.location.href = url.toString();
 }
 
+function redirectShakeMatchedToLive(roomId, myLang, peerLang, role) {
+  const finalRole = String(role || "guest").trim().toLowerCase();
+  const url = new URL("/pages/live_interpreter.html", location.origin);
+  url.searchParams.set("room", roomId);
+  url.searchParams.set("role", finalRole);
+  url.searchParams.set("my", String(myLang || "tr").trim().toLowerCase());
+  url.searchParams.set("peer", String(peerLang || "en").trim().toLowerCase());
+  url.searchParams.set("auto", "1");
+  window.location.href = url.toString();
+}
+
 function startPolling(roomId, hostLang) {
   clearPolling();
 
@@ -178,73 +221,280 @@ async function handleCreateClick() {
   }
 }
 
+// ===============================
+// SHAKE API
+// ===============================
+
+async function apiShakeMatch(userId, lat, lon, myLang) {
+  const response = await fetch(`${API_BASE}/italky/shake-match`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      user_id: userId,
+      lat,
+      lon,
+      my_lang: myLang
+    })
+  });
+
+  const raw = await response.text();
+  let data;
+  try {
+    data = JSON.parse(raw);
+  } catch {
+    throw new Error(`shake-match JSON parse hatası: ${raw}`);
+  }
+
+  if (!response.ok) {
+    throw new Error(data?.detail || data?.message || "shake_match_failed");
+  }
+
+  return data;
+}
+
+async function apiShakeStatus(searchId, userId) {
+  const response = await fetch(
+    `${API_BASE}/italky/shake-status/${encodeURIComponent(searchId)}?user_id=${encodeURIComponent(userId)}`
+  );
+
+  const raw = await response.text();
+  let data;
+  try {
+    data = JSON.parse(raw);
+  } catch {
+    throw new Error(`shake-status JSON parse hatası: ${raw}`);
+  }
+
+  if (!response.ok) {
+    throw new Error(data?.detail || data?.message || "shake_status_failed");
+  }
+
+  return data;
+}
+
+async function apiCreateGuestLink(userId, myLang) {
+  const response = await fetch(
+    `${API_BASE}/italky/create-guest-link?user_id=${encodeURIComponent(userId)}&my_lang=${encodeURIComponent(myLang)}`
+  );
+
+  const raw = await response.text();
+  let data;
+  try {
+    data = JSON.parse(raw);
+  } catch {
+    throw new Error(`guest-link JSON parse hatası: ${raw}`);
+  }
+
+  if (!response.ok) {
+    throw new Error(data?.detail || data?.message || "guest_link_failed");
+  }
+
+  return data;
+}
+
+// ===============================
+// SHAKE FLOW
+// ===============================
+
+function ensureMotionPermissionIfNeeded() {
+  if (
+    typeof DeviceMotionEvent !== "undefined" &&
+    typeof DeviceMotionEvent.requestPermission === "function"
+  ) {
+    return DeviceMotionEvent.requestPermission();
+  }
+  return Promise.resolve("granted");
+}
+
+function getCurrentLocation() {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error("geolocation_not_supported"));
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => resolve(pos.coords),
+      (err) => reject(err),
+      {
+        enableHighAccuracy: true,
+        timeout: 8000,
+        maximumAge: 0
+      }
+    );
+  });
+}
+
+async function armShakeMode() {
+  try {
+    const permission = await ensureMotionPermissionIfNeeded();
+    if (permission !== "granted") {
+      setStatus("Hareket sensörü izni verilmedi.", "err");
+      return;
+    }
+
+    isShakeArmed = true;
+    setStatus("Salla-Bağlan aktif. Telefonu sallayabilirsin.", "ok");
+
+    if (navigator.vibrate) navigator.vibrate(80);
+  } catch (e) {
+    console.error("Motion permission error:", e);
+    setStatus("Hareket sensörü başlatılamadı.", "err");
+  }
+}
+
+async function handleShakeLogic(strength) {
+  const now = Date.now();
+
+  if (!isShakeArmed) return;
+  if (isShakingBusy) return;
+  if (now - lastShakeAt < SHAKE_COOLDOWN_MS) return;
+
+  lastShakeAt = now;
+  isShakingBusy = true;
+  matched = false;
+  clearShakePolling();
+
+  const myLang = getSelectedLang();
+
+  try {
+    setStatus("Sallama algılandı. Konum alınıyor...", "waiting");
+    if (navigator.vibrate) navigator.vibrate(120);
+
+    const coords = await getCurrentLocation();
+
+    setStatus("Yakındaki cihaz aranıyor...", "waiting");
+
+    const data = await apiShakeMatch(
+      STABLE_USER_ID,
+      coords.latitude,
+      coords.longitude,
+      myLang
+    );
+
+    console.log("SHAKE MATCH RESPONSE:", data);
+
+    if (data.status === "matched" && data.room_id) {
+      setStatus("Eşleşme bulundu. Odaya geçiliyor...", "ok");
+      setTimeout(() => {
+        redirectShakeMatchedToLive(
+          String(data.room_id),
+          myLang,
+          myLang === "tr" ? "en" : "tr",
+          String(data.client_role || "guest")
+        );
+      }, 500);
+      return;
+    }
+
+    if (data.status === "searching" && data.search_id) {
+      currentShakeSearchId = String(data.search_id);
+      setStatus("Yakınlarda cihaz aranıyor...", "waiting");
+      await pollShakeMatch(currentShakeSearchId, myLang);
+      return;
+    }
+
+    setStatus("Yakında kimse bulunamadı. QR oda oluşturabilirsin.", "waiting");
+  } catch (err) {
+    console.error("Shake Match Fail:", err);
+    setStatus(`Salla-Bağlan hatası: ${err.message || err}`, "err");
+  } finally {
+    isShakingBusy = false;
+  }
+}
+
+async function pollShakeMatch(searchId, myLang) {
+  const startedAt = Date.now();
+
+  while (Date.now() - startedAt < SHAKE_POLL_TIMEOUT_MS) {
+    await new Promise((resolve) => {
+      shakePollingTimer = setTimeout(resolve, 1000);
+    });
+
+    try {
+      const data = await apiShakeStatus(searchId, STABLE_USER_ID);
+      console.log("SHAKE STATUS:", data);
+
+      if (data.status === "matched" && data.room_id) {
+        setStatus("Eşleşme bulundu. Odaya geçiliyor...", "ok");
+        clearShakePolling();
+
+        setTimeout(() => {
+          redirectShakeMatchedToLive(
+            String(data.room_id),
+            myLang,
+            myLang === "tr" ? "en" : "tr",
+            String(data.client_role || "guest")
+          );
+        }, 500);
+        return;
+      }
+
+      if (data.status === "not_found") {
+        break;
+      }
+    } catch (e) {
+      console.error("SHAKE POLL ERROR:", e);
+      break;
+    }
+  }
+
+  setStatus("Eşleşme bulunamadı. QR ile devam edebilirsin.", "waiting");
+}
+
+function handleMotionEvent(event) {
+  if (!isShakeArmed) return;
+
+  const acc = event.accelerationIncludingGravity || event.acceleration;
+  if (!acc) return;
+
+  const magnitude = Math.sqrt(
+    (acc.x || 0) * (acc.x || 0) +
+    (acc.y || 0) * (acc.y || 0) +
+    (acc.z || 0) * (acc.z || 0)
+  );
+
+  const delta = Math.abs(magnitude - lastMagnitude);
+  lastMagnitude = magnitude;
+
+  const now = Date.now();
+  if (now - lastMotionSampleAt < 120) return;
+  lastMotionSampleAt = now;
+
+  if (delta > SHAKE_THRESHOLD) {
+    handleShakeLogic(delta);
+  }
+}
+
+async function handleGuestLinkClick() {
+  try {
+    const myLang = getSelectedLang();
+    const data = await apiCreateGuestLink(STABLE_USER_ID, myLang);
+
+    if (data?.join_url) {
+      await navigator.clipboard.writeText(data.join_url);
+      setStatus("Misafir linki panoya kopyalandı.", "ok");
+      alert("Misafir linki kopyalandı:\n" + data.join_url);
+    }
+  } catch (e) {
+    console.error("Guest link error:", e);
+    setStatus("Misafir linki üretilemedi.", "err");
+  }
+}
+
+// ===============================
+// INIT
+// ===============================
+
 btnGenerate?.addEventListener("click", handleCreateClick);
+btnShake?.addEventListener("click", armShakeMode);
+btnGuest?.addEventListener("click", handleGuestLinkClick);
+
+window.addEventListener("devicemotion", handleMotionEvent, { passive: true });
 
 window.addEventListener("beforeunload", () => {
   clearPolling();
+  clearShakePolling();
 });
-// --- SALLA-BAĞLAN YAMASI BAŞLANGIÇ ---
-import { apiShakeMatch } from "/js/api.js"; // Az önce güncellediğimiz api.js'den çekiyoruz
-
-let isShaking = false;
-const SHAKE_THRESHOLD = 15;
-let lastShakeTime = 0;
-
-// 1. Hareket Sensörünü Başlat
-if (window.DeviceMotionEvent) {
-    window.addEventListener('devicemotion', (event) => {
-        const acc = event.accelerationIncludingGravity;
-        if (!acc) return;
-
-        const curTime = Date.now();
-        if ((curTime - lastShakeTime) > 100) {
-            const diffTime = curTime - lastShakeTime;
-            lastShakeTime = curTime;
-
-            const speed = Math.abs(acc.x + acc.y + acc.z) / diffTime * 10000;
-
-            if (speed > SHAKE_THRESHOLD && !isShaking) {
-                isShaking = true;
-                handleShakeLogic();
-                // 3 saniye koruma (üst üste tetiklenmesin)
-                setTimeout(() => { isShaking = false; }, 3000);
-            }
-        }
-    });
-}
-
-// 2. Sallama Mantığı
-async function handleShakeLogic() {
-    setStatus("Sallama algılandı! Yakınlarda cihaz aranıyor...", "waiting");
-    
-    // Titreşimle geri bildirim ver (Hissiyat önemli)
-    if (navigator.vibrate) navigator.vibrate(200);
-
-    navigator.geolocation.getCurrentPosition(async (pos) => {
-        try {
-            // Backend'deki Radara sor: "Kimse var mı?"
-            const data = await apiShakeMatch(
-                "user_" + Math.floor(Math.random() * 1000), // Geçici ID veya gerçek UserID
-                pos.coords.latitude,
-                pos.coords.longitude
-            );
-
-            if (data.status === 'matched') {
-                setStatus("Eşleşme Sağlandı! Bağlanılıyor...", "ok");
-                // Eğer bir eşleşme varsa, doğrudan o odaya yönlendir veya oda kur
-                // Not: Burada peer_id ile doğrudan live ekrana geçiş tetiklenebilir
-            } else {
-                // KİMSE YOKSA: Otomatik QR Oluştur (Senin mevcut fonksiyonun)
-                setStatus("Yakınlarda kimse yok. QR kod oluşturuluyor...", "waiting");
-                handleCreateClick(); 
-            }
-        } catch (err) {
-            console.error("Shake Match Fail:", err);
-            handleCreateClick(); // Hata olursa normal sürece dön
-        }
-    }, () => {
-        // Konum kapalıysa normal QR sürecine dön
-        handleCreateClick();
-    });
-}
-// --- SALLA-BAĞLAN YAMASI BİTİŞ ---
