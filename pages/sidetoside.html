@@ -464,167 +464,177 @@
   </main>
 
   <script type="module">
-    import { mountShell } from "/js/ui_shell.js";
+  const API_BASE = "https://italky-api.onrender.com/api";
+  const WS_BASE = "wss://italky-api.onrender.com/api";
 
-    try {
-      mountShell({ scroll: "none" });
-    } catch (e) {
-      console.warn("[sidetoside shell]", e);
+  const ROOM_KEY = "italky_active_interpreter_room_id";
+  const ROOM_LANG_KEY = "italky_active_interpreter_lang";
+
+  const qrImg = document.getElementById("qrImg");
+  const statusText = document.getElementById("statusText");
+
+  let activeRoomId = "";
+  let activeRoomLang = "tr";
+  let previewSocket = null;
+  let redirected = false;
+  let ensureRoomPromise = null;
+
+  function setStatus(text){
+    if(statusText) statusText.textContent = text || "";
+  }
+
+  function buildJoinUrl(roomId){
+    const url = new URL("https://italky.ai/open/interpreter");
+    url.searchParams.set("room", roomId);
+    url.searchParams.set("v", "1");
+    return url.toString();
+  }
+
+  function qrUrlPrimary(targetUrl){
+    return `https://api.qrserver.com/v1/create-qr-code/?size=520x520&margin=6&data=${encodeURIComponent(targetUrl)}`;
+  }
+
+  async function createRoom(myLang = "tr"){
+    const r = await fetch(`${API_BASE}/interpreter/create-room`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        host_code: "HOME-HOST",
+        my_lang: myLang,
+        mode: "interpreter"
+      })
+    });
+
+    const j = await r.json().catch(() => ({}));
+
+    if(!r.ok || !j?.room_id){
+      throw new Error(j?.detail || j?.error || "Oda oluşturulamadı");
     }
-  </script>
 
-  <script type="module">
-    const API_BASE = "https://italky-api.onrender.com/api";
-    const WS_BASE = "wss://italky-api.onrender.com/api";
+    return j;
+  }
 
-    const ROOM_KEY = "italky_active_interpreter_room_id";
-    const ROOM_LANG_KEY = "italky_active_interpreter_lang";
+  function stopPreviewSocket(){
+    try { previewSocket?.close?.(); } catch {}
+    previewSocket = null;
+  }
 
-    const qrImg = document.getElementById("qrImg");
-    const statusText = document.getElementById("statusText");
+  function launchHostRoom(roomId, myLang = "tr"){
+    if(!roomId || redirected) return;
+    redirected = true;
 
-    let activeRoomId = "";
-    let previewSocket = null;
-    let redirected = false;
+    const url = new URL("/pages/live_interpreter.html", location.origin);
+    url.searchParams.set("room", roomId);
+    url.searchParams.set("role", "host");
+    url.searchParams.set("my", String(myLang || "tr").trim().toLowerCase());
 
-    function setStatus(text){
-      if(statusText) statusText.textContent = text || "";
+    location.href = url.toString();
+  }
+
+  function startPreviewSocket(roomId, myLang = "tr"){
+    if(!roomId) return;
+
+    stopPreviewSocket();
+
+    const url = `${WS_BASE}/ws/interpreter/${encodeURIComponent(roomId)}?role=host&lang=${encodeURIComponent(myLang)}`;
+
+    try{
+      previewSocket = new WebSocket(url);
+    }catch(e){
+      console.warn("[sidetoside preview ws create]", e);
+      setStatus("Bağlantı önizleme başlatılamadı");
+      return;
     }
 
-    function buildJoinUrl(roomId){
-      const url = new URL("https://italky.ai/open/interpreter");
-      url.searchParams.set("room", roomId);
-      url.searchParams.set("v", "1");
-      return url.toString();
-    }
+    previewSocket.onopen = () => {
+      setStatus("QR hazır. Karşı taraf bekleniyor...");
+    };
 
-    function qrUrlPrimary(targetUrl){
-      return `https://api.qrserver.com/v1/create-qr-code/?size=520x520&margin=6&data=${encodeURIComponent(targetUrl)}`;
-    }
+    previewSocket.onmessage = (event) => {
+      try{
+        const payload = JSON.parse(event.data);
+        const type = String(payload?.type || "").trim();
 
-    async function createRoom(myLang = "tr"){
-      const r = await fetch(`${API_BASE}/interpreter/create-room`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          host_code: "HOME-HOST",
-          my_lang: myLang,
-          mode: "interpreter"
-        })
-      });
+        if(type === "presence"){
+          return;
+        }
 
-      const j = await r.json().catch(() => ({}));
+        if(type === "peer_joined"){
+          setStatus("Karşı taraf bağlandı. Oda açılıyor...");
+          launchHostRoom(roomId, myLang);
+          return;
+        }
 
-      if(!r.ok || !j?.room_id){
-        throw new Error(j?.detail || j?.error || "Oda oluşturulamadı");
+        if(type === "error"){
+          console.warn("[sidetoside preview ws payload]", payload);
+        }
+      }catch(e){
+        console.warn("[sidetoside preview ws parse]", e);
       }
+    };
 
-      return j;
-    }
+    previewSocket.onerror = () => {
+      setStatus("Bağlantı önizleme hatası");
+    };
 
-    function stopPreviewSocket(){
-      try{ previewSocket?.close?.(); }catch{}
-      previewSocket = null;
-    }
+    previewSocket.onclose = () => {
+      if(!redirected){
+        setStatus("QR hazır. Karşı taraf bekleniyor...");
+      }
+    };
+  }
 
-    function launchHostRoom(roomId){
-      if(!roomId || redirected) return;
-      redirected = true;
-      location.href = `/pages/live_interpreter.html?room=${encodeURIComponent(roomId)}&role=host&my=tr`;
-    }
+  async function ensureRoom(forceNew = false){
+    if(ensureRoomPromise) return ensureRoomPromise;
 
-    function startPreviewSocket(roomId, myLang = "tr"){
-      if(!roomId) return;
+    ensureRoomPromise = (async () => {
+      redirected = false;
+      setStatus("Oda hazırlanıyor...");
 
-      stopPreviewSocket();
-
-      const url = `${WS_BASE}/ws/interpreter/${encodeURIComponent(roomId)}?role=host&lang=${encodeURIComponent(myLang)}`;
+      const myLang = (localStorage.getItem(ROOM_LANG_KEY) || "tr").trim().toLowerCase() || "tr";
+      activeRoomLang = myLang;
 
       try{
-        previewSocket = new WebSocket(url);
+        if (forceNew || !activeRoomId) {
+          const created = await createRoom(myLang);
+          activeRoomId = String(created.room_id || "").trim();
+
+          if(!activeRoomId){
+            throw new Error("room_id boş geldi");
+          }
+
+          localStorage.setItem(ROOM_KEY, activeRoomId);
+          localStorage.setItem(ROOM_LANG_KEY, myLang);
+        }
+
+        qrImg.src = qrUrlPrimary(buildJoinUrl(activeRoomId));
+        startPreviewSocket(activeRoomId, myLang);
       }catch(e){
-        console.warn("[sidetoside preview ws create]", e);
-        return;
+        console.error("[sidetoside room]", e);
+        setStatus(e?.message || "Oda hazırlanamadı");
+      } finally {
+        ensureRoomPromise = null;
       }
+    })();
 
-      previewSocket.onopen = () => {
-        setStatus("QR hazır. Karşı taraf bekleniyor...");
-      };
-
-      previewSocket.onmessage = (event) => {
-        try{
-          const payload = JSON.parse(event.data);
-          const type = String(payload?.type || "").trim();
-
-          if(type === "presence"){
-            return;
-          }
-
-          if(type === "peer_joined"){
-            setStatus("Karşı taraf bağlandı. Oda açılıyor...");
-            launchHostRoom(roomId);
-            return;
-          }
-
-          if(type === "error"){
-            console.warn("[sidetoside preview ws payload]", payload);
-          }
-        }catch(e){
-          console.warn("[sidetoside preview ws parse]", e);
-        }
-      };
-
-      previewSocket.onerror = () => {
-        setStatus("Bağlantı önizleme hatası");
-      };
-
-      previewSocket.onclose = () => {
-        if(!redirected){
-          setStatus("QR hazır. Karşı taraf bekleniyor...");
-        }
-      };
-    }
-
-    async function ensureRoom(){
-  redirected = false;
-  setStatus("Oda hazırlanıyor...");
-
-  const myLang = localStorage.getItem(ROOM_LANG_KEY) || "tr";
-
-  try{
-    const created = await createRoom(myLang);
-    activeRoomId = String(created.room_id || "").trim();
-
-    if(!activeRoomId){
-      throw new Error("room_id boş geldi");
-    }
-
-    localStorage.setItem(ROOM_KEY, activeRoomId);
-    localStorage.setItem(ROOM_LANG_KEY, myLang);
-
-    qrImg.src = qrUrlPrimary(buildJoinUrl(activeRoomId));
-    startPreviewSocket(activeRoomId, myLang);
-  }catch(e){
-    console.error("[sidetoside room]", e);
-    setStatus(e?.message || "Oda hazırlanamadı");
+    return ensureRoomPromise;
   }
-}
 
-    ensureRoom();
+  ensureRoom(true);
 
-    document.addEventListener("visibilitychange", () => {
-      if(document.visibilityState === "visible" && !redirected){
-        ensureRoom();
-      }
-    });
+  document.addEventListener("visibilitychange", () => {
+    if(document.visibilityState === "visible" && !redirected && activeRoomId && !previewSocket){
+      startPreviewSocket(activeRoomId, activeRoomLang);
+    }
+  });
 
-    window.addEventListener("focus", () => {
-      if(!redirected){
-        ensureRoom();
-      }
-    });
+  window.addEventListener("focus", () => {
+    if(!redirected && activeRoomId && !previewSocket){
+      startPreviewSocket(activeRoomId, activeRoomLang);
+    }
+  });
 
-    window.addEventListener("beforeunload", stopPreviewSocket);
-  </script>
+  window.addEventListener("beforeunload", stopPreviewSocket);
+</script>
 </body>
 </html>
