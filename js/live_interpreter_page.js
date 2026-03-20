@@ -121,6 +121,7 @@ const query = new URLSearchParams(location.search);
 let roomId = String(query.get("room") || "").trim();
 const hostCode = String(query.get("host") || "").trim().toUpperCase();
 const role = String(query.get("role") || "guest").trim().toLowerCase();
+const autoJoin = String(query.get("auto") || "0").trim() === "1";
 
 let myLang = String(
   query.get("my") || localStorage.getItem("live_interpreter_lang") || "tr"
@@ -893,23 +894,35 @@ function startSocket() {
       const type = String(payload?.type || "").trim();
 
       if (type === "presence") {
-        if (payload?.room_id && !roomId) {
-          roomId = String(payload.room_id).trim();
-        }
+  if (payload?.room_id && !roomId) {
+    roomId = String(payload.room_id).trim();
+  }
 
-        if (payload?.guest_lang && role === "host") {
-          peerLang = canonical(payload.guest_lang);
-          localStorage.setItem("live_interpreter_peer_lang", peerLang);
-        }
+  if (payload?.guest_lang && role === "host") {
+    peerLang = canonical(payload.guest_lang);
+    localStorage.setItem("live_interpreter_peer_lang", peerLang);
+  }
 
-        if (payload?.host_lang && role === "guest") {
-          peerLang = canonical(payload.host_lang);
-          localStorage.setItem("live_interpreter_peer_lang", peerLang);
-        }
+  if (payload?.host_lang && role === "guest") {
+    peerLang = canonical(payload.host_lang);
+    localStorage.setItem("live_interpreter_peer_lang", peerLang);
+  }
 
-        setSystemReadyUI();
-        return;
-      }
+  if (payload?.host_lang && role === "host") {
+    myLang = canonical(payload.host_lang);
+    localStorage.setItem("live_interpreter_lang", myLang);
+    refreshLangLabels();
+  }
+
+  if (payload?.guest_lang && role === "guest") {
+    myLang = canonical(payload.guest_lang);
+    localStorage.setItem("live_interpreter_lang", myLang);
+    refreshLangLabels();
+  }
+
+  setSystemReadyUI();
+  return;
+}
 
       if (type === "peer_joined") {
         if (payload?.guest_lang && role === "host") {
@@ -1319,9 +1332,10 @@ async function bootRoom() {
     myClientId = getOrCreateClientId();
 
     if (roomId) {
-      if (role === "host" && hostCode) {
-        startNativeNfcHost(hostCode);
-      }
+  if (role === "host") {
+    startNativeNfcHost(hostCode || roomId);
+  }
+}
     } else if (hostCode) {
       if (role === "host") {
         const created = await createRoomIfHost();
@@ -1339,7 +1353,14 @@ async function bootRoom() {
     if (roomMetaText) {
       roomMetaText.textContent = roomId || hostCode || "";
     }
-
+    if (autoJoin) {
+  console.log("[live interpreter] auto join mode active", {
+    roomId,
+    role,
+    myLang,
+    peerLang
+  });
+}
     startSocket();
   } catch (e) {
     console.error("[live interpreter bootRoom]", e);
