@@ -97,3 +97,29 @@ export async function apiPOST(path, body = {}, { headers = {}, raw = false, time
 export async function apiPUT(path, body = {}, opts = {}) {
   return apiPOST(path, body, { ...opts, headers: { ...(opts.headers || {}), "X-HTTP-Method-Override": "PUT" } });
 }
+// ===============================
+// ITALKY PROXIMITY & SHAKE MATCH (YENİ)
+// ===============================
+
+/**
+ * Telefon sallandığında yakınlardaki cihazla eşleşme başlatır.
+ * @param {string} userId - Mevcut kullanıcı ID
+ * @param {number} lat - Enlem
+ * @param {number} lon - Boylam
+ */
+export async function apiShakeMatch(userId, lat, lon) {
+  // Prefix /api zaten backend router'da tanımlı
+  return await apiPOST("/api/italky/shake-match", {
+    user_id: userId,
+    lat: parseFloat(lat),
+    lon: parseFloat(lon)
+  });
+}
+
+/**
+ * Uygulaması olmayan misafirler için hızlı oda linki oluşturur.
+ * @param {string} userId - Mevcut kullanıcı ID
+ */
+export async function apiCreateGuestLink(userId) {
+  return await apiGET(`/api/italky/create-guest-link?user_id=${encodeURIComponent(userId)}`);
+}
