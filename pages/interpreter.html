@@ -1,4 +1,3 @@
-<!-- FILE: /pages/interpreter.html -->
 <!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -240,10 +239,9 @@
       justify-content:center;
     }
 
-    #qr-code img,
-    #qr-code canvas{
-      width:100% !important;
-      height:100% !important;
+    #qr-code img{
+      width:100%;
+      height:100%;
       object-fit:contain;
       display:block;
       border-radius:18px;
@@ -330,10 +328,6 @@
       text-align:right;
       word-break:break-all;
     }
-
-    .hidden{
-      display:none !important;
-    }
   </style>
 </head>
 
@@ -399,40 +393,6 @@
     </section>
   </main>
 
-  <script type="module">
-  const API_BASE = "https://italky-api.onrender.com/api";
-
-  async function setupQR() {
-    try {
-      const r = await fetch(`${API_BASE}/interpreter/create-room`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ my_lang: "tr" })
-      });
-
-      const j = await r.json().catch(() => null);
-
-      if (!r.ok || !j?.ok || !j?.room_id) {
-        throw new Error(j?.detail || j?.error || "room_create_failed");
-      }
-
-      const roomId = String(j.room_id || "").trim();
-      const joinUrl = `https://italky.ai/pages/interpreter_join.html?room=${encodeURIComponent(roomId)}&v=1`;
-      const finalQr = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&margin=10&data=${encodeURIComponent(joinUrl)}`;
-
-      const img = document.getElementById("smallQrImg");
-      if (img) img.src = finalQr;
-
-      console.log("INTERPRETER ROOM:", roomId);
-      console.log("INTERPRETER JOIN URL:", joinUrl);
-    } catch (e) {
-      console.error("Interpreter QR setup error:", e);
-      const img = document.getElementById("smallQrImg");
-      if (img) img.alt = "QR oluşturulamadı";
-    }
-  }
-
-  setupQR();
-</script>
+  <script type="module" src="/js/interpreter_page.js"></script>
 </body>
 </html>
