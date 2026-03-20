@@ -170,7 +170,120 @@ body{
   color:#4f46e5;
   word-break:break-all;
 }
+.qr-fallback-title{
+  font-size:11px;
+  font-weight:900;
+  color:#111827;
+  margin-top:2px;
+}
 
+.qr-fallback-sub{
+  font-size:9px;
+  line-height:1.25;
+  color:#4b5563;
+  max-width:74px;
+}
+
+.guest-placeholder{
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  margin-bottom:4px;
+}
+
+.gp-phone{
+  width:18px;
+  height:30px;
+  border-radius:6px;
+  border:1.6px solid #4f46e5;
+  background:linear-gradient(180deg,#eef2ff 0%, #dbeafe 100%);
+  position:relative;
+  box-shadow:0 0 10px rgba(79,70,229,.12);
+}
+
+.gp-phone span{
+  position:absolute;
+  left:50%;
+  top:4px;
+  transform:translateX(-50%);
+  width:8px;
+  height:14px;
+  border-radius:3px;
+  background:rgba(79,70,229,.12);
+}
+
+.gp-phone::after{
+  content:"";
+  position:absolute;
+  left:50%;
+  bottom:3px;
+  transform:translateX(-50%);
+  width:4px;
+  height:4px;
+  border-radius:50%;
+  background:#6366f1;
+  opacity:.75;
+}
+
+.gp-phone.left{
+  transform:rotate(-8deg);
+}
+
+.gp-phone.right{
+  transform:rotate(8deg);
+}
+
+.gp-signal{
+  position:relative;
+  width:24px;
+  height:24px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.gp-signal i{
+  position:absolute;
+  display:block;
+  border-radius:999px;
+  border:1.6px solid rgba(103,232,249,.95);
+  animation:gpPulse 1.8s infinite ease-out;
+}
+
+.gp-signal i:nth-child(1){
+  width:8px;
+  height:8px;
+  animation-delay:0s;
+}
+
+.gp-signal i:nth-child(2){
+  width:14px;
+  height:14px;
+  animation-delay:.3s;
+}
+
+.gp-signal i:nth-child(3){
+  width:20px;
+  height:20px;
+  animation-delay:.6s;
+}
+
+@keyframes gpPulse{
+  0%{
+    transform:scale(.72);
+    opacity:.95;
+  }
+  70%{
+    transform:scale(1.08);
+    opacity:.28;
+  }
+  100%{
+    transform:scale(1.2);
+    opacity:.08;
+  }
+}
 .holo-beams{
   position:absolute;
   inset:-22px;
@@ -747,9 +860,24 @@ body{
           <div class="holo-qr">
             <img id="smallQrImg" alt="italkyAI QR Hologram">
             <div id="qrFallback" class="qr-fallback show">
-              <div>Önce salla</div>
-              <div id="qrFallbackCode" class="qr-fallback-code">GUEST QR</div>
-            </div>
+  <div class="guest-placeholder">
+    <div class="gp-phone left">
+      <span></span>
+    </div>
+
+    <div class="gp-signal">
+      <i></i><i></i><i></i>
+    </div>
+
+    <div class="gp-phone right">
+      <span></span>
+    </div>
+  </div>
+
+  <div class="qr-fallback-title">Bağlantı Hazırlanıyor</div>
+  <div class="qr-fallback-sub">Önce salla, eşleşme olmazsa misafir QR burada oluşur.</div>
+  <div id="qrFallbackCode" class="qr-fallback-code">WAITING</div>
+</div>
           </div>
 
           <div class="holo-beams"></div>
@@ -946,7 +1074,7 @@ function stopShakeMode() {
   }
 }
 
-function showFallback(code = "GUEST QR") {
+function showFallback(code = "WAITING") {
   if (qrFallbackCode) qrFallbackCode.textContent = code;
   if (qrFallback) qrFallback.classList.add("show");
   if (smallQrImg) {
@@ -1012,7 +1140,7 @@ async function armShakeMode() {
     }
 
     setHeroStatus("Salla-Bağlan aktif. Telefonu sallayabilirsin.");
-    showFallback("BEKLENİYOR");
+    showFallback("SEARCHING");
     if (navigator.vibrate) navigator.vibrate(80);
   } catch (e) {
     console.error("Motion permission error:", e);
