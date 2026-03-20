@@ -134,41 +134,12 @@ body{
   justify-content:center;
 }
 
-.holo-qr img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  display:none;
-}
-
-.qr-fallback{
-  width:100%;
-  height:100%;
-  border-radius:10px;
-  display:none;
-  align-items:center;
-  justify-content:center;
-  flex-direction:column;
-  gap:6px;
-  text-align:center;
-  color:#111827;
-  font-size:10px;
-  font-weight:800;
-  line-height:1.2;
-  padding:8px;
-  background:linear-gradient(135deg,#ffffff 0%, #eef2ff 100%);
-}
-
-.qr-fallback.show{
-  display:flex;
-}
-
-.qr-fallback-code{
-  font-size:12px;
+.holo-qr::before{
+  content:"⇄";
+  font-size:42px;
   font-weight:900;
-  letter-spacing:.8px;
   color:#4f46e5;
-  word-break:break-all;
+  opacity:.92;
 }
 
 .holo-beams{
@@ -239,6 +210,42 @@ body{
   font-weight:800;
   color:rgba(255,255,255,.78);
   text-align:center;
+}
+
+.heroActions{
+  width:100%;
+  max-width:320px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  margin-top:8px;
+}
+
+.heroBtn{
+  min-height:52px;
+  border:none;
+  border-radius:18px;
+  font-family:'Outfit',sans-serif;
+  font-size:15px;
+  font-weight:900;
+  cursor:pointer;
+  transition:transform .18s ease, opacity .18s ease, box-shadow .18s ease;
+}
+
+.heroBtn:active{
+  transform:scale(.985);
+}
+
+.heroBtnPrimary{
+  background:var(--ai-grad);
+  color:#0b1020;
+  box-shadow:0 14px 28px rgba(99,102,241,.24);
+}
+
+.heroBtnGhost{
+  background:rgba(255,255,255,.08);
+  color:#fff;
+  border:1px solid rgba(255,255,255,.12);
 }
 
 .home-grid{
@@ -714,21 +721,20 @@ body{
             <div class="crystal-side side6"></div>
           </div>
 
-          <div class="holo-qr">
-            <img id="smallQrImg" alt="italkyAI QR Hologram">
-            <div id="qrFallback" class="qr-fallback">
-              <div>QR hazır değil</div>
-              <div id="qrFallbackCode" class="qr-fallback-code">ROOM-XXXXXX</div>
-            </div>
-          </div>
+          <div class="holo-qr"></div>
 
           <div class="holo-beams"></div>
           <div class="energy-platform"></div>
         </div>
 
         <h1 class="heroTitle">Side<span class="to">To</span>Side</h1>
-        <p class="heroSub">QR kodu tarat, anında bağlan. Karşı taraf girince sen de otomatik odaya geç.</p>
-        <div class="heroStatus" id="heroStatus">Oda hazırlanıyor...</div>
+        <p class="heroSub">Yakındaki cihazla anında bağlan. Eşleşme olmazsa QR ile devam edebilirsin.</p>
+        <div class="heroStatus" id="heroStatus">Hazır.</div>
+
+        <div class="heroActions">
+          <button id="btn-shake" class="heroBtn heroBtnPrimary" type="button">📱 Salla-Bağlan</button>
+          <button id="btn-qr" class="heroBtn heroBtnGhost" type="button">QR ile Devam Et</button>
+        </div>
       </div>
     </section>
 
@@ -845,233 +851,237 @@ try {
 </script>
 
 <script type="module">
-const API_BASE = "https://italky-api.onrender.com/api";
-const WS_BASE = "wss://italky-api.onrender.com/api";
+import { apiShakeMatch, apiShakeStatus } from "/js/api.js";
 
-const smallQrImg = document.getElementById("smallQrImg");
-const qrFallback = document.getElementById("qrFallback");
-const qrFallbackCode = document.getElementById("qrFallbackCode");
 const heroStatus = document.getElementById("heroStatus");
+const btnShake = document.getElementById("btn-shake");
+const btnQr = document.getElementById("btn-qr");
 
-const ROOM_KEY = "italky_active_interpreter_room_id";
-const ROOM_LANG_KEY = "italky_active_interpreter_lang";
+const USER_ID_KEY = "italky_shake_user_id_v1";
 
-let activeRoomId = "";
-let previewSocket = null;
-let redirected = false;
-let renderBusy = false;
-let lastRenderAt = 0;
+let isShakeArmed = false;
+let isShakeBusy = false;
+let lastShakeAt = 0;
+let lastMagnitude = 0;
+let lastMotionSampleAt = 0;
+let currentSearchId = null;
+
+const SHAKE_THRESHOLD = 15;
+const SHAKE_COOLDOWN_MS = 2500;
+const SHAKE_POLL_TIMEOUT_MS = 6500;
 
 function setHeroStatus(text){
   if(heroStatus) heroStatus.textContent = text || "";
 }
 
-function qrUrlPrimary(targetUrl){
-  return `https://api.qrserver.com/v1/create-qr-code/?size=520x520&margin=6&data=${encodeURIComponent(targetUrl)}`;
-}
-
-function qrUrlFallback(targetUrl){
-  return `https://quickchart.io/qr?size=520&text=${encodeURIComponent(targetUrl)}`;
-}
-
-function showFallback(code){
-  if(qrFallbackCode) qrFallbackCode.textContent = code || "ROOM-XXXXXX";
-  if(qrFallback) qrFallback.classList.add("show");
-  if(smallQrImg){
-    smallQrImg.style.display = "none";
-    smallQrImg.removeAttribute("src");
+function getStableUserId() {
+  let value = localStorage.getItem(USER_ID_KEY);
+  if (!value) {
+    value = "u_" + Math.random().toString(36).slice(2, 12);
+    localStorage.setItem(USER_ID_KEY, value);
   }
+  return value;
 }
 
-function showQr(url){
-  if(smallQrImg){
-    smallQrImg.style.display = "block";
-    smallQrImg.src = url;
-  }
-  qrFallback?.classList.remove("show");
-}
+const STABLE_USER_ID = getStableUserId();
 
-function loadImage(url){
+function getCurrentLocation() {
   return new Promise((resolve, reject) => {
-    const test = new Image();
-    test.onload = () => resolve(url);
-    test.onerror = reject;
-    test.referrerPolicy = "no-referrer";
-    test.src = url;
+    if (!navigator.geolocation) {
+      reject(new Error("geolocation_not_supported"));
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => resolve(pos.coords),
+      (err) => reject(err),
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+    );
   });
 }
 
-async function createRoom(myLang = "tr"){
-  const r = await fetch(`${API_BASE}/interpreter/create-room`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      host_code: "HOME-HOST",
-      my_lang: myLang,
-      mode: "interpreter"
-    })
-  });
-
-  const j = await r.json().catch(() => ({}));
-
-  if(!r.ok || !j?.room_id){
-    throw new Error(j?.detail || j?.error || "Room oluşturulamadı");
+function ensureMotionPermissionIfNeeded() {
+  if (
+    typeof DeviceMotionEvent !== "undefined" &&
+    typeof DeviceMotionEvent.requestPermission === "function"
+  ) {
+    return DeviceMotionEvent.requestPermission();
   }
-
-  return j;
+  return Promise.resolve("granted");
 }
 
-function buildJoinUrl(roomId){
-  const url = new URL("https://italky.ai/open/interpreter");
+function stopShakeMode() {
+  isShakeArmed = false;
+  if (window.Native && typeof window.Native.stopShakeDetection === "function") {
+    window.Native.stopShakeDetection();
+  }
+}
+
+async function armShakeMode() {
+  try {
+    if (window.Native && typeof window.Native.requestF2FPermissions === "function") {
+      window.Native.requestF2FPermissions();
+    }
+
+    const permission = await ensureMotionPermissionIfNeeded().catch(() => "granted");
+
+    if (permission !== "granted" && permission !== "available") {
+      setHeroStatus("Hareket sensörü izni verilmedi.");
+      return;
+    }
+
+    isShakeArmed = true;
+
+    if (window.Native && typeof window.Native.startShakeDetection === "function") {
+      window.Native.startShakeDetection(Number(SHAKE_THRESHOLD || 15));
+    }
+
+    setHeroStatus("Salla-Bağlan aktif. Telefonu sallayabilirsin.");
+    if (navigator.vibrate) navigator.vibrate(80);
+  } catch (e) {
+    console.error("Motion permission error:", e);
+    setHeroStatus("Hareket sensörü başlatılamadı.");
+  }
+}
+
+function redirectToLive(roomId, role = "guest", myLang = "tr", peerLang = "en") {
+  const url = new URL("/pages/live_interpreter.html", location.origin);
   url.searchParams.set("room", roomId);
-  url.searchParams.set("v", "1");
-  return url.toString();
+  url.searchParams.set("role", role);
+  url.searchParams.set("my", myLang);
+  url.searchParams.set("peer", peerLang);
+  url.searchParams.set("auto", "1");
+  location.href = url.toString();
 }
 
-function stopPreviewSocket(){
-  try{
-    previewSocket?.close?.();
-  }catch{}
-  previewSocket = null;
-}
+async function pollShakeMatch(searchId, myLang = "tr") {
+  const startedAt = Date.now();
 
-function launchHostRoom(roomId){
-  if(!roomId || redirected) return;
-  redirected = true;
-  location.href = `/pages/live_interpreter.html?room=${encodeURIComponent(roomId)}&role=host&my=tr`;
-}
+  while (Date.now() - startedAt < SHAKE_POLL_TIMEOUT_MS) {
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
-function startPreviewSocket(roomId, myLang = "tr"){
-  if(!roomId) return;
+    try {
+      const data = await apiShakeStatus(searchId, STABLE_USER_ID);
 
-  stopPreviewSocket();
+      if (data.status === "matched" && data.room_id) {
+        setHeroStatus("Eşleşme bulundu. Oda açılıyor...");
+        redirectToLive(
+          String(data.room_id),
+          String(data.client_role || "guest"),
+          myLang,
+          myLang === "tr" ? "en" : "tr"
+        );
+        return;
+      }
 
-  const url = `${WS_BASE}/ws/interpreter/${encodeURIComponent(roomId)}?role=host-preview&lang=${encodeURIComponent(myLang)}`;
-
-  try{
-    previewSocket = new WebSocket(url);
-  }catch(e){
-    console.warn("[home preview ws create]", e);
-    setHeroStatus("Bağlantı önizleme başlatılamadı");
-    return;
+      if (data.status === "not_found") {
+        break;
+      }
+    } catch (e) {
+      console.error("shake poll error", e);
+      break;
+    }
   }
 
-  previewSocket.onopen = () => {
-    setHeroStatus("QR hazır. Karşı taraf bağlanınca otomatik geçilecek.");
-  };
-
-  previewSocket.onmessage = (event) => {
-    try{
-      const payload = JSON.parse(event.data || "{}");
-      const type = String(payload?.type || "").trim();
-
-      if(type === "presence"){
-        return;
-      }
-
-      if(type === "peer_joined"){
-        setHeroStatus("Karşı taraf bağlandı. Oda açılıyor...");
-        launchHostRoom(roomId);
-        return;
-      }
-
-      if(type === "error"){
-        console.warn("[home preview ws error payload]", payload);
-      }
-    }catch(e){
-      console.warn("[home preview ws parse]", e);
-    }
-  };
-
-  previewSocket.onerror = () => {
-    setHeroStatus("Bağlantı önizleme hatası");
-  };
-
-  previewSocket.onclose = () => {
-    if(!redirected){
-      setHeroStatus("QR hazır. Karşı taraf bekleniyor...");
-    }
-  };
+  setHeroStatus("Yakında cihaz bulunamadı. QR ile devam edebilirsin.");
 }
 
-async function renderRoomQr(force = false){
+async function handleShakeLogic(strength) {
   const now = Date.now();
 
-  if(renderBusy) return;
-  if(!force && now - lastRenderAt < 2500) return;
+  if (!isShakeArmed) return;
+  if (isShakeBusy) return;
+  if (now - lastShakeAt < SHAKE_COOLDOWN_MS) return;
 
-  renderBusy = true;
-  lastRenderAt = now;
-  redirected = false;
-  setHeroStatus("Oda hazırlanıyor...");
+  lastShakeAt = now;
+  isShakeBusy = true;
 
-  try{
-    stopPreviewSocket();
+  try {
+    setHeroStatus("Sallama algılandı. Konum alınıyor...");
+    if (navigator.vibrate) navigator.vibrate(120);
 
-    const created = await createRoom("tr");
-    activeRoomId = String(created?.room_id || "").trim();
+    const coords = await getCurrentLocation();
 
-    if(!activeRoomId){
-      throw new Error("room_id boş geldi");
+    setHeroStatus("Yakındaki cihaz aranıyor...");
+
+    const data = await apiShakeMatch(
+      STABLE_USER_ID,
+      coords.latitude,
+      coords.longitude,
+      "tr",
+      coords.accuracy
+    );
+
+    console.log("SHAKE MATCH RESPONSE:", data);
+
+    if (data.status === "matched" && data.room_id) {
+      setHeroStatus("Eşleşme bulundu. Oda açılıyor...");
+      redirectToLive(
+        String(data.room_id),
+        String(data.client_role || "guest"),
+        "tr",
+        "en"
+      );
+      return;
     }
 
-    localStorage.setItem(ROOM_KEY, activeRoomId);
-    localStorage.setItem(ROOM_LANG_KEY, "tr");
-
-    if(qrFallbackCode) qrFallbackCode.textContent = activeRoomId;
-
-    const joinUrl = buildJoinUrl(activeRoomId);
-
-    let finalUrl = null;
-
-    try{
-      finalUrl = await loadImage(qrUrlPrimary(joinUrl));
-    }catch{
-      try{
-        finalUrl = await loadImage(qrUrlFallback(joinUrl));
-      }catch{
-        finalUrl = null;
-      }
+    if (data.status === "searching" && data.search_id) {
+      currentSearchId = String(data.search_id);
+      setHeroStatus("Yakınlarda cihaz aranıyor...");
+      await pollShakeMatch(currentSearchId, "tr");
+      return;
     }
 
-    if(finalUrl){
-      const safeUrl = finalUrl + (finalUrl.includes("?") ? "&" : "?") + "t=" + Date.now();
-      showQr(safeUrl);
-      setHeroStatus("QR hazır. Karşı taraf bekleniyor...");
-    }else{
-      showFallback(activeRoomId);
-      setHeroStatus("QR servisi yanıt vermedi");
-    }
-
-    startPreviewSocket(activeRoomId, "tr");
-  }catch(e){
-    console.error("[home room qr]", e);
-    showFallback("ROOM-ERROR");
-    setHeroStatus(e?.message || "Oda hazırlanamadı");
-  }finally{
-    renderBusy = false;
+    setHeroStatus("Yakında cihaz bulunamadı. QR ile devam edebilirsin.");
+  } catch (e) {
+    console.error("shake match fail", e);
+    setHeroStatus("Salla-Bağlan başlatılamadı.");
+  } finally {
+    isShakeBusy = false;
   }
 }
 
-if (localStorage.getItem("offline_boot_done")) {
-  renderRoomQr(true);
+function handleMotionEvent(event) {
+  if (!isShakeArmed) return;
+
+  const acc = event.accelerationIncludingGravity || event.acceleration;
+  if (!acc) return;
+
+  const magnitude = Math.sqrt(
+    (acc.x || 0) * (acc.x || 0) +
+    (acc.y || 0) * (acc.y || 0) +
+    (acc.z || 0) * (acc.z || 0)
+  );
+
+  const delta = Math.abs(magnitude - lastMagnitude);
+  lastMagnitude = magnitude;
+
+  const now = Date.now();
+  if (now - lastMotionSampleAt < 120) return;
+  lastMotionSampleAt = now;
+
+  if (delta > SHAKE_THRESHOLD) {
+    handleShakeLogic(delta);
+  }
 }
 
-document.addEventListener("visibilitychange", () => {
-  if(document.visibilityState === "visible" && !redirected){
-    renderRoomQr(false);
-  }
+function handleNativeShakeEvent(event) {
+  const strength = Number(event?.detail?.strength || 0);
+  if (!isShakeArmed) return;
+  handleShakeLogic(strength);
+}
+
+btnShake?.addEventListener("click", armShakeMode);
+btnQr?.addEventListener("click", () => {
+  location.href = "/pages/interpreter.html";
 });
 
-window.addEventListener("focus", () => {
-  if(!redirected){
-    renderRoomQr(false);
-  }
-});
+window.addEventListener("devicemotion", handleMotionEvent, { passive: true });
+window.addEventListener("italky:native-shake", handleNativeShakeEvent);
 
-window.addEventListener("beforeunload", stopPreviewSocket);
+window.addEventListener("beforeunload", () => {
+  stopShakeMode();
+  window.removeEventListener("italky:native-shake", handleNativeShakeEvent);
+});
 </script>
 </body>
 </html>
