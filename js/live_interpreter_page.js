@@ -1,5 +1,3 @@
-// FILE: /js/live_interpreter_page.js
-
 import { LANG_POOL } from "/js/lang_pool_full.js";
 import { supabase } from "/js/supabase_client.js";
 
@@ -345,15 +343,6 @@ function stopAudio() {
   try {
     window.NativeTTS?.stop?.();
   } catch {}
-}
-
-async function getCurrentUser() {
-  try {
-    const { data } = await supabase.auth.getUser();
-    return data?.user || null;
-  } catch {
-    return null;
-  }
 }
 
 async function getCurrentUserId() {
@@ -876,7 +865,7 @@ function startSocket() {
     return;
   }
 
-  ws.onopen = () => {
+  ws.onopen = async () => {
     wsReady = true;
     reconnectCount = 0;
     peerHasExplicitlyLeft = false;
@@ -884,7 +873,11 @@ function startSocket() {
     setSystemReadyUI();
 
     if (role === "guest" && roomId) {
-      joinRoomIfNeeded().catch((e) => console.warn("[rejoin after open]", e));
+      try {
+        await joinRoomIfNeeded();
+      } catch (e) {
+        console.warn("[join after open]", e);
+      }
     }
   };
 
@@ -894,35 +887,23 @@ function startSocket() {
       const type = String(payload?.type || "").trim();
 
       if (type === "presence") {
-  if (payload?.room_id && !roomId) {
-    roomId = String(payload.room_id).trim();
-  }
+        if (payload?.room_id && !roomId) {
+          roomId = String(payload.room_id).trim();
+        }
 
-  if (payload?.guest_lang && role === "host") {
-    peerLang = canonical(payload.guest_lang);
-    localStorage.setItem("live_interpreter_peer_lang", peerLang);
-  }
+        if (payload?.guest_lang && role === "host") {
+          peerLang = canonical(payload.guest_lang);
+          localStorage.setItem("live_interpreter_peer_lang", peerLang);
+        }
 
-  if (payload?.host_lang && role === "guest") {
-    peerLang = canonical(payload.host_lang);
-    localStorage.setItem("live_interpreter_peer_lang", peerLang);
-  }
+        if (payload?.host_lang && role === "guest") {
+          peerLang = canonical(payload.host_lang);
+          localStorage.setItem("live_interpreter_peer_lang", peerLang);
+        }
 
-  if (payload?.host_lang && role === "host") {
-    myLang = canonical(payload.host_lang);
-    localStorage.setItem("live_interpreter_lang", myLang);
-    refreshLangLabels();
-  }
-
-  if (payload?.guest_lang && role === "guest") {
-    myLang = canonical(payload.guest_lang);
-    localStorage.setItem("live_interpreter_lang", myLang);
-    refreshLangLabels();
-  }
-
-  setSystemReadyUI();
-  return;
-}
+        setSystemReadyUI();
+        return;
+      }
 
       if (type === "peer_joined") {
         if (payload?.guest_lang && role === "host") {
@@ -957,12 +938,6 @@ function startSocket() {
           speakLang: myLang
         });
 
-        console.log("[incoming voice]", {
-          senderUserId,
-          senderVoice,
-          text
-        });
-
         await speak(text, myLang, senderUserId, senderVoice);
         setSystemReadyUI();
         return;
@@ -976,9 +951,7 @@ function startSocket() {
         return;
       }
 
-      if (type === "pong") {
-        return;
-      }
+      if (type === "pong") return;
 
       if (type === "error") {
         console.warn("[ws error payload]", payload);
@@ -1332,10 +1305,9 @@ async function bootRoom() {
     myClientId = getOrCreateClientId();
 
     if (roomId) {
-  if (role === "host") {
-    startNativeNfcHost(hostCode || roomId);
-  }
-}
+      if (role === "host") {
+        startNativeNfcHost(hostCode || roomId);
+      }
     } else if (hostCode) {
       if (role === "host") {
         const created = await createRoomIfHost();
@@ -1353,14 +1325,16 @@ async function bootRoom() {
     if (roomMetaText) {
       roomMetaText.textContent = roomId || hostCode || "";
     }
+
     if (autoJoin) {
-  console.log("[live interpreter] auto join mode active", {
-    roomId,
-    role,
-    myLang,
-    peerLang
-  });
-}
+      console.log("[live interpreter] auto join mode active", {
+        roomId,
+        role,
+        myLang,
+        peerLang
+      });
+    }
+
     startSocket();
   } catch (e) {
     console.error("[live interpreter bootRoom]", e);
