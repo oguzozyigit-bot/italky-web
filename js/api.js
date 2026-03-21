@@ -1,6 +1,4 @@
 // /js/api.js
-// ITALKY API helper (single source of truth) — FINAL
-
 import { BASE_DOMAIN } from "/js/config.js";
 
 const API_TOKEN_KEY = "italky_api_token";
@@ -93,18 +91,6 @@ export async function apiPOST(path, body = {}, { headers = {}, raw = false, time
   return data;
 }
 
-// ===============================
-// ITALKY PROXIMITY & SHAKE MATCH
-// ===============================
-
-/**
- * Telefon sallandığında yakınlardaki cihazla eşleşme başlatır.
- * @param {string} userId
- * @param {number} lat
- * @param {number} lon
- * @param {string} myLang
- * @param {number|null} accuracyM
- */
 export async function apiShakeMatch(userId, lat, lon, myLang = "tr", accuracyM = null) {
   return await apiPOST("/api/italky/shake-match", {
     user_id: String(userId || "").trim(),
@@ -115,23 +101,12 @@ export async function apiShakeMatch(userId, lat, lon, myLang = "tr", accuracyM =
   });
 }
 
-/**
- * İlk sallayan kullanıcı eşleşti mi diye polling yapar.
- * @param {string} searchId
- * @param {string} userId
- */
 export async function apiShakeStatus(searchId, userId) {
   return await apiGET(
     `/api/italky/shake-status/${encodeURIComponent(searchId)}?user_id=${encodeURIComponent(userId)}`
   );
 }
 
-/**
- * Uygulaması olmayan misafirler için hızlı oda linki oluşturur.
- * @param {string} userId
- * @param {string} myLang
- * @param {string} roomId
- */
 export async function apiCreateGuestLink(userId, myLang = "tr", roomId = "") {
   const qs = new URLSearchParams();
   qs.set("user_id", String(userId || "").trim());
