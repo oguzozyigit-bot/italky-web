@@ -58,37 +58,33 @@ function buildLangOptions(selectEl, selected) {
     return `<option value="${code}">${l.flag || "🌐"} ${l.name || code.toUpperCase()}</option>`;
   }).join("");
 
-  const hasSelected = [...selectEl.options].some(o => o.value === selected);
+  const hasSelected = [...selectEl.options].some((o) => o.value === selected);
   selectEl.value = hasSelected ? selected : "tr";
 }
 
 function buildLiveUrl({ room, host, version, my }) {
-  const url = new URL("/pages/interpreter_live.html", location.origin);
+  const url = new URL("/pages/live_interpreter.html", location.origin);
   url.searchParams.set("room", room);
-  url.searchParams.set("host", host);
+  if (host) url.searchParams.set("host", host);
   url.searchParams.set("v", version || "1");
   url.searchParams.set("my", my);
-  url.searchParams.set("payer", "1"); // QR'ı okutan öder
-  return url.toString();
-}
-  const url = new URL("/pages/interpreter_live.html", location.origin);
-  url.searchParams.set("room", room);
-  url.searchParams.set("host", host);
-  url.searchParams.set("v", version || "1");
-  url.searchParams.set("my", my);
+  url.searchParams.set("role", "guest");
+  url.searchParams.set("payer", "1");
   return url.toString();
 }
 
 function init() {
   const params = getParams();
 
-  if (!params.room || !params.host) {
+  if (!params.room) {
     toast("Geçersiz oda bilgisi.");
-    setTimeout(() => location.href = "/pages/home.html", 900);
+    setTimeout(() => {
+      location.href = "/pages/home.html";
+    }, 900);
     return;
   }
 
-  hostCodeText.textContent = params.host;
+  hostCodeText.textContent = params.host || "—";
   roomIdText.textContent = params.room;
 
   const savedMy = localStorage.getItem(MY_LANG_KEY) || "tr";
@@ -102,7 +98,11 @@ function init() {
   });
 
   cancelBtn?.addEventListener("click", () => {
-    history.length > 1 ? history.back() : location.href = "/pages/home.html";
+    if (history.length > 1) {
+      history.back();
+    } else {
+      location.href = "/pages/home.html";
+    }
   });
 
   startBtn?.addEventListener("click", () => {
