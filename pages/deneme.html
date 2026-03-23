@@ -4,128 +4,484 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
 <title>italkyAI • Future Home</title>
+<meta name="theme-color" content="#120d16"/>
 
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
 <style>
-body{
+:root{
+  --txt:rgba(255,255,255,.96);
+  --muted:rgba(255,255,255,.64);
+  --cardLine:rgba(255,255,255,.12);
+  --ai-grad:linear-gradient(135deg,#67e8f9 0%, #818cf8 46%, #f472b6 100%);
+  --pink:#f472b6;
+  --cyan:#67e8f9;
+}
+*{
+  box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
+  outline:none;
+}
+html,body{
   margin:0;
-  background:#120d16;
-  color:#fff;
-  font-family:'Outfit',sans-serif;
-}
-
-.container{
-  padding:16px;
-}
-
-.hero{
-  text-align:center;
-  margin-bottom:20px;
-}
-
-.hero h1{
-  font-family:'Space Grotesk';
-}
-
-.btn{
-  padding:14px;
-  border-radius:16px;
-  border:none;
-  margin-top:10px;
   width:100%;
+  height:100%;
+  color:var(--txt);
+  font-family:'Outfit',sans-serif;
+  background:#120d16;
+  scrollbar-width:none;
+}
+html::-webkit-scrollbar, body::-webkit-scrollbar{ display:none; }
+body{
+  background:
+    radial-gradient(circle at 50% 0%, rgba(251,146,60,.18) 0%, transparent 28%),
+    radial-gradient(circle at 20% 18%, rgba(244,114,182,.12) 0%, transparent 25%),
+    radial-gradient(circle at 82% 18%, rgba(96,165,250,.10) 0%, transparent 20%),
+    linear-gradient(180deg, #1d1016 0%, #150e19 34%, #120d16 100%);
+}
+#pageContent{
+  width:100%;
+  min-height:100%;
+  padding:10px 14px 18px;
+  display:block;
+  overflow-y:auto;
+  overflow-x:hidden;
+  scrollbar-width:none;
+  -webkit-overflow-scrolling:touch;
+}
+#pageContent::-webkit-scrollbar{ display:none; }
+.page-shell-fit{
+  min-height:100%;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.hero{ flex:0 0 auto; perspective:1000px; }
+.heroTop{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+}
+.holo-container{
+  width:210px;
+  height:210px;
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transform-style:preserve-3d;
+  margin:2px auto 12px;
+}
+.crystal-cage{
+  position:absolute;
+  width:150px;
+  height:150px;
+  transform-style:preserve-3d;
+  animation:rotateCrystal 18s linear infinite;
+}
+.crystal-side{
+  position:absolute;
+  inset:0;
+  border:2px solid rgba(103,232,249,.42);
+  background:radial-gradient(circle, rgba(129,140,248,.12), transparent);
+  box-shadow:0 0 18px rgba(103,232,249,.22);
+}
+.side1{ transform:rotateY(0deg) translateZ(75px); }
+.side2{ transform:rotateY(90deg) translateZ(75px); }
+.side3{ transform:rotateY(180deg) translateZ(75px); }
+.side4{ transform:rotateY(270deg) translateZ(75px); }
+.side5{ transform:rotateX(90deg) translateZ(75px); }
+.side6{ transform:rotateX(-90deg) translateZ(75px); }
+
+.holo-qr{
+  position:absolute;
+  width:108px;
+  height:108px;
+  background:#fff;
+  border-radius:15px;
+  padding:8px;
+  box-shadow:
+    0 0 34px rgba(103,232,249,.68),
+    inset 0 0 10px rgba(103,232,249,.28);
+  animation:floatQR 4s ease-in-out infinite, glitchQR 5s infinite;
+  z-index:2;
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.qr-fallback{
+  width:100%;
+  height:100%;
+  border-radius:10px;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  gap:6px;
+  text-align:center;
+  color:#111827;
+  font-size:10px;
   font-weight:800;
+  line-height:1.2;
+  padding:8px;
+  background:linear-gradient(135deg,#ffffff 0%, #eef2ff 100%);
+}
+.qr-fallback.show{ display:flex; }
+.qr-fallback-title{
+  font-size:11px;
+  font-weight:900;
+  color:#111827;
+  margin-top:2px;
+}
+.qr-fallback-sub{
+  font-size:9px;
+  line-height:1.25;
+  color:#4b5563;
+  max-width:74px;
+}
+.guest-placeholder{
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  margin-bottom:4px;
+}
+.gp-phone{
+  width:18px;
+  height:30px;
+  border-radius:6px;
+  border:1.6px solid #4f46e5;
+  background:linear-gradient(180deg,#eef2ff 0%, #dbeafe 100%);
+  position:relative;
+  box-shadow:0 0 10px rgba(79,70,229,.12);
+}
+.gp-signal{
+  position:relative;
+  width:24px;
+  height:24px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.gp-signal i{
+  position:absolute;
+  display:block;
+  border-radius:999px;
+  border:1.6px solid rgba(103,232,249,.95);
+  animation:gpPulse 1.8s infinite ease-out;
+}
+.gp-signal i:nth-child(1){ width:8px; height:8px; animation-delay:0s; }
+.gp-signal i:nth-child(2){ width:14px; height:14px; animation-delay:.3s; }
+.gp-signal i:nth-child(3){ width:20px; height:20px; animation-delay:.6s; }
+
+.holo-beams{
+  position:absolute;
+  inset:-22px;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      transparent,
+      transparent 4px,
+      rgba(103,232,249,.08) 4px,
+      rgba(103,232,249,.08) 6px
+    );
+  mask-image:radial-gradient(circle, #fff, transparent 75%);
+  -webkit-mask-image:radial-gradient(circle, #fff, transparent 75%);
+  animation:beamFlow 2s linear infinite;
+  pointer-events:none;
+}
+.energy-platform{
+  position:absolute;
+  bottom:-28px;
+  left:50%;
+  transform:translateX(-50%) rotateX(75deg);
+  width:176px;
+  height:176px;
+  background:
+    radial-gradient(circle, var(--cyan) 0%, transparent 70%),
+    radial-gradient(circle, rgba(244,114,182,.25) 10%, transparent 60%);
+  border-radius:50%;
+  filter:blur(5px);
+  box-shadow:0 0 44px var(--cyan), 0 0 84px var(--pink);
+  animation:platformPulse 3s ease-in-out infinite;
+  opacity:.68;
+  z-index:-1;
+}
+.heroTitle{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:22px;
+  font-weight:700;
+  letter-spacing:-.4px;
+  color:#fff;
+  margin:0;
+  line-height:1.08;
+  text-align:center;
+}
+.heroTitle .to{
+  background:var(--ai-grad);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+.heroSub{
+  margin:0;
+  font-size:10.8px;
+  color:var(--muted);
+  text-align:center;
+  line-height:1.36;
+  max-width:310px;
+}
+.heroStatus{
+  min-height:20px;
+  font-size:11px;
+  font-weight:800;
+  color:rgba(255,255,255,.78);
+  text-align:center;
+}
+.heroActions{
+  width:100%;
+  max-width:320px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  margin-top:8px;
+}
+.heroBtn{
+  min-height:52px;
+  border:none;
+  border-radius:18px;
+  font-family:'Outfit',sans-serif;
+  font-size:15px;
+  font-weight:900;
+  cursor:pointer;
+  transition:transform .18s ease;
+  color: #fff;
+}
+.heroBtn:active{ transform:scale(.985); }
+.heroBtnPrimary{
+  background:var(--ai-grad);
+  color:#0b1020;
+  box-shadow:0 14px 28px rgba(99,102,241,.24);
 }
 
-.grid{
+.home-grid{
+  flex:0 0 auto;
   display:grid;
   grid-template-columns:1fr 1fr;
   gap:12px;
-  margin-top:20px;
+}
+.mod-card{
+  position:relative;
+  border-radius:28px;
+  overflow:hidden;
+  border:1px solid var(--cardLine);
+  box-shadow: 0 15px 30px rgba(0,0,0,.28);
+  padding:16px 15px 108px;
+  text-decoration:none;
+  color:#fff;
+  min-height:180px; /* Grid kartları için uygun yükseklik */
+  transition:transform .22s ease;
+}
+.face-card{
+  background:
+    radial-gradient(circle at 20% 15%, rgba(103,232,249,.35) 0%, transparent 35%),
+    linear-gradient(180deg, #301661 0%, #2b2185 50%, #1e36a3 100%);
+}
+.card-title{
+  margin:0;
+  font-family:'Space Grotesk',sans-serif;
+  font-size:24px;
+  line-height:1;
+  letter-spacing:-.8px;
+}
+.card-desc-list{
+  margin-top:8px;
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+.card-desc{
+  margin:0;
+  font-size:10.2px;
+  color:rgba(255,255,255,.86);
+}
+.card-art{
+  position:absolute;
+  left:12px;
+  right:12px;
+  bottom:12px;
+  height:76px;
+  border-radius:20px;
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.10);
+}
+.face-art{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:16px;
+}
+.face-wave{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:62px;
+  height:2px;
+  transform:translate(-50%,-50%);
+  background:linear-gradient(90deg, transparent, var(--cyan), transparent);
 }
 
-.card{
-  padding:18px;
-  border-radius:20px;
+.wide-stack{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+.wide-card{
+  position:relative;
+  width:100%;
+  min-height:126px;
+  border-radius:28px;
+  overflow:hidden;
+  border:1px solid var(--cardLine);
+  display:flex;
+  align-items:center;
+  gap:16px;
+  padding:16px;
   text-decoration:none;
   color:#fff;
 }
+.texttotext-card{
+  background: linear-gradient(90deg, #d43685 0%, #a855f7 42%, #632bbd 72%, #3c35b5 100%);
+}
+.sidetoside-card{
+  background: linear-gradient(90deg, #61220e 0%, #c2410a 36%, #ea580c 68%, #e11d48 100%);
+}
+.offline-card{
+  background: linear-gradient(90deg, #4b1118 0%, #7f1d1d 35%, #991b1b 65%, #b91c1c 100%);
+}
+.wide-body{ flex:1; }
+.card-topline{ font-size:10px; font-weight:700; opacity: 0.8; margin-bottom:4px; }
+.wide-title{ font-family:'Space Grotesk',sans-serif; font-size:24px; margin:0; }
+.wide-desc{ font-size:10.8px; margin-top:4px; opacity: 0.9; }
 
-.learn{background:linear-gradient(135deg,#ec4899,#7c3aed);}
-.level{background:linear-gradient(135deg,#22c55e,#16a34a);}
-.practice{background:linear-gradient(135deg,#0ea5e9,#6366f1);}
-.ai{background:linear-gradient(135deg,#f59e0b,#ef4444);}
+@keyframes rotateCrystal{ from{transform:rotate(0deg);} to{transform:rotate(360deg);} }
+@keyframes floatQR{ 0%,100%{transform:translateY(0);} 50%{transform:translateY(-8px);} }
 </style>
 </head>
 
 <body>
+<main id="pageContent">
+  <div class="page-shell-fit">
 
-<div class="container">
+    <section class="hero">
+      <div class="heroTop">
+        <div class="holo-container">
+          <div class="crystal-cage">
+            <div class="crystal-side side1"></div>
+            <div class="crystal-side side2"></div>
+            <div class="crystal-side side3"></div>
+            <div class="crystal-side side4"></div>
+            <div class="crystal-side side5"></div>
+            <div class="crystal-side side6"></div>
+          </div>
 
-  <div class="hero">
-    <h1>SideToSide</h1>
-    <p>QR veya kod ile anında bağlan</p>
+          <div class="holo-qr">
+            <div id="qrFallback" class="qr-fallback show">
+              <div class="guest-placeholder">
+                <div class="gp-phone"></div>
+                <div class="gp-signal"><i></i><i></i><i></i></div>
+                <div class="gp-phone"></div>
+              </div>
+              <div class="qr-fallback-title">QR ile Bağlan</div>
+              <div class="qr-fallback-sub">QR okut veya kod gir</div>
+            </div>
+          </div>
 
-    <button class="btn" style="background:#6366f1;" onclick="goSide()">
-      🔗 Bağlantı Başlat
-    </button>
+          <div class="holo-beams"></div>
+          <div class="energy-platform"></div>
+        </div>
 
-    <div style="display:flex; gap:10px;">
-      <button class="btn" style="background:#1f2937;" onclick="openQR()">
-        📷 QR Oku
-      </button>
-      <button class="btn" style="background:#312e81;" onclick="openCode()">
-        🔢 Kod Gir
-      </button>
-    </div>
+        <h1 class="heroTitle">Side<span class="to">To</span>Side</h1>
+        <p class="heroSub">Yakındaki cihazla anında bağlan. Eşleşme için butonu veya kod girişini kullan.</p>
+        <div class="heroStatus" id="heroStatus">QR veya kod ile bağlan.</div>
+
+        <div class="heroActions">
+          <button class="heroBtn heroBtnPrimary" onclick="goSide()">
+            🔗 Bağlantı Başlat
+          </button>
+          <div style="display:flex; gap:10px;">
+            <button class="heroBtn" style="flex:1; background:#1f2937;" onclick="openQR()">
+              📷 QR Oku
+            </button>
+            <button class="heroBtn" style="flex:1; background:#312e81;" onclick="openCode()">
+              🔢 Kod Gir
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="home-grid">
+      <a class="mod-card face-card" href="/facetoface.html">
+        <h2 class="card-title">FaceToFace</h2>
+        <div class="card-desc-list">
+          <p class="card-desc">72 Dil çevirisi.</p>
+          <p class="card-desc">Tek telefon, bölünmüş ekran.</p>
+        </div>
+        <div class="card-art face-art">
+          <div class="face-wave"></div>
+        </div>
+      </a>
+      </section>
+
+    <section class="wide-stack">
+      <a class="wide-card texttotext-card" href="/pages/text_translate.html">
+        <div class="wide-body">
+          <div class="card-topline">Metin ve Fotoğraf</div>
+          <h2 class="wide-title">TextToText</h2>
+          <p class="wide-desc">Yazıdan veya fotoğraftan çeviri yap.</p>
+        </div>
+      </a>
+
+      <a class="wide-card sidetoside-card" href="/pages/sidetoside.html">
+        <div class="wide-body">
+          <div class="card-topline">İki Cihaz Arası</div>
+          <h2 class="wide-title">SideToSide</h2>
+          <p class="wide-desc">İki kişi kendi telefonundan bağlanır.</p>
+        </div>
+      </a>
+
+      <a class="wide-card offline-card" href="/pages/offline_languages.html">
+        <div class="wide-body">
+          <div class="card-topline">60 Offline Dil Paketi</div>
+          <h2 class="wide-title">OffToOff</h2>
+          <p class="wide-desc">İndir, internetsiz çevir.</p>
+        </div>
+      </a>
+    </section>
+
+    <section class="home-grid" style="margin-top:12px;">
+      <a class="mod-card" style="background:linear-gradient(135deg,#ec4899,#7c3aed);">
+        <h2 class="card-title">Eğlenerek Öğren</h2>
+      </a>
+      <a class="mod-card" style="background:linear-gradient(135deg,#22c55e,#16a34a);">
+        <h2 class="card-title">Seviye Tespit</h2>
+      </a>
+      <a class="mod-card" style="background:linear-gradient(135deg,#0ea5e9,#6366f1);">
+        <h2 class="card-title">Pratik Yap</h2>
+      </a>
+      <a class="mod-card" style="background:linear-gradient(135deg,#f59e0b,#ef4444);">
+        <h2 class="card-title">AI Öğretmen</h2>
+      </a>
+    </section>
 
   </div>
-
-  <!-- ANA MODÜLLER -->
-  <div class="grid">
-
-    <a class="card" style="background:#4c1d95;" href="/facetoface.html">
-      <h3>FaceToFace</h3>
-      <p>Tek cihazla konuş</p>
-    </a>
-
-    <a class="card" style="background:#7c2d12;" href="/pages/text_translate.html">
-      <h3>TextToText</h3>
-      <p>Metin çeviri</p>
-    </a>
-
-  </div>
-
-  <!-- OFFLINE -->
-  <div class="grid">
-    <a class="card" style="background:#991b1b;" href="/pages/offline_languages.html">
-      <h3>Offline</h3>
-      <p>Dil paketleri indir</p>
-    </a>
-  </div>
-
-  <!-- ÖĞRENME -->
-  <div class="grid">
-
-    <a class="card learn">
-      <h3>Eğlenerek Öğren</h3>
-    </a>
-
-    <a class="card level">
-      <h3>Seviye Tespit</h3>
-    </a>
-
-    <a class="card practice">
-      <h3>Pratik Yap</h3>
-    </a>
-
-    <a class="card ai">
-      <h3>AI Öğretmen</h3>
-    </a>
-
-  </div>
-
-</div>
+</main>
 
 <script>
 function goSide(){
@@ -141,6 +497,11 @@ function openCode(){
   if(code){
     location.href="/pages/live_interpreter.html?code="+code;
   }
+}
+
+// Shell ve Onboarding Kontrolü
+if (!localStorage.getItem("offline_boot_done")) {
+  location.href = "/pages/offline_onboarding.html";
 }
 </script>
 
