@@ -2,28 +2,76 @@
 <html lang="tr">
 <head>
 <meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>İlk Giriş</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+<title>italkyAI • Aramıza Hoş Geldin</title>
+<meta name="theme-color" content="#120d16"/>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
 <style>
-body{background:#120d16;color:#fff;font-family:sans-serif;margin:0}
-.container{padding:20px}
-input{
-  width:100%;
-  padding:14px;
-  margin-top:10px;
-  border-radius:10px;
-  border:none;
+:root{
+  --txt:rgba(255,255,255,.96);
+  --muted:rgba(255,255,255,.64);
+  --ai-grad:linear-gradient(135deg,#67e8f9 0%, #818cf8 46%, #f472b6 100%);
 }
+*{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; }
+html,body{
+  margin:0; width:100%; height:100%;
+  color:var(--txt); font-family:'Outfit',sans-serif;
+  background:#120d16; overflow:hidden;
+}
+body{
+  background:
+    radial-gradient(circle at 50% 0%, rgba(251,146,60,.15) 0%, transparent 40%),
+    linear-gradient(180deg, #1d1016 0%, #120d16 100%);
+  display:flex; align-items:center; justify-content:center;
+}
+.container{
+  width:100%; max-width:400px; padding:30px;
+  text-align:center;
+}
+.logo-area{
+  margin-bottom:30px;
+}
+.logo-title{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:32px; font-weight:800; margin:0;
+  background:var(--ai-grad);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+}
+.logo-sub{ font-size:14px; color:var(--muted); margin-top:5px; }
+
+.input-group{ margin-top:15px; text-align:left; }
+.input-label{ font-size:12px; font-weight:700; color:var(--muted); margin-left:12px; margin-bottom:6px; display:block; text-transform:uppercase; }
+
+input{
+  width:100%; padding:16px 20px;
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:18px; color:#fff;
+  font-family:'Outfit',sans-serif; font-size:16px;
+  transition: all 0.3s ease;
+}
+input:focus{
+  background:rgba(255,255,255,0.08);
+  border-color:#818cf8;
+  box-shadow: 0 0 15px rgba(129,140,248,0.2);
+}
+
 button{
-  margin-top:15px;
-  padding:14px;
-  width:100%;
-  border:none;
-  border-radius:12px;
-  background:#6366f1;
-  color:#fff;
-  font-weight:bold;
+  margin-top:30px; width:100%; min-height:56px;
+  border:none; border-radius:20px;
+  background:var(--ai-grad); color:#0b1020;
+  font-family:'Outfit',sans-serif; font-size:17px; font-weight:900;
+  cursor:pointer; box-shadow:0 10px 25px rgba(99,102,241,0.3);
+  transition:transform 0.2s ease;
+}
+button:active{ transform:scale(0.97); }
+
+.footer-note{
+  margin-top:25px; font-size:11px; color:var(--muted); line-height:1.5;
 }
 </style>
 </head>
@@ -31,40 +79,63 @@ button{
 <body>
 
 <div class="container">
-  <h2>Kayıt Ol</h2>
+  <div class="logo-area">
+    <h1 class="logo-title">italkyAI</h1>
+    <p class="logo-sub">Dil asistanına hoş geldin.</p>
+  </div>
 
-  <input id="name" placeholder="Ad Soyad *">
-  <input id="email" placeholder="Email *">
-  <input id="phone" placeholder="Telefon (opsiyonel)">
+  <div class="input-group">
+    <span class="input-label">Ad Soyad</span>
+    <input id="name" type="text" placeholder="Örn: Oğuz Özyiğit">
+  </div>
 
-  <button onclick="saveUser()">Devam</button>
+  <div class="input-group">
+    <span class="input-label">E-Posta Adresi</span>
+    <input id="email" type="email" placeholder="isim@mail.com">
+  </div>
+
+  <div class="input-group">
+    <span class="input-label">Cep Telefonu</span>
+    <input id="phone" type="tel" placeholder="+90 5XX ...">
+  </div>
+
+  <button onclick="saveUser()">Hesabımı Oluştur</button>
+
+  <p class="footer-note">
+    Devam ederek kullanım koşullarını ve <br> gizlilik politikasını kabul etmiş olursun.
+  </p>
 </div>
 
 <script>
 async function saveUser(){
-
   const name = document.getElementById("name").value.trim();
   const email = document.getElementById("email").value.trim();
   const phone = document.getElementById("phone").value.trim();
 
   if(!name || !email){
-    alert("Ad Soyad ve Email zorunlu");
+    alert("Ad Soyad ve Email kısımlarını doldurarak kaydınızı tamamlayınız.");
     return;
   }
 
-  const res = await fetch("/api/auth/register", {
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify({ name, email, phone })
-  });
+  try {
+    const res = await fetch("/api/auth/register", {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ name, email, phone, lang: "tr" })
+    });
 
-  const data = await res.json();
+    const data = await res.json();
 
-  if(data.ok){
-    localStorage.setItem("user_id", data.user_id);
-    location.href = "/";
-  }else{
-    alert("Hata");
+    if(data.ok && data.user_id){
+      localStorage.setItem("user_id", data.user_id);
+      // Kayıt başarılıysa direkt ana sayfaya
+      location.href = "/";
+    } else {
+      alert("Kayıt sırasında bir hata oluştu: " + (data.error || "Bilinmiyor"));
+    }
+  } catch (e) {
+    console.error("Auth Hatası:", e);
+    alert("Sunucu bağlantısında sorun var.");
   }
 }
 </script>
