@@ -3,70 +3,98 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-<title>italkyAI • The Origin</title>
+<title>italkyAI • Genesis Connect</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;800&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100;900&display=swap');
+:root {
+  --neon: #67e8f9;
+  --pink: #f472b6;
+  --bg: #0a060e;
+}
 
 * { box-sizing: border-box; margin: 0; padding: 0; outline: none; -webkit-tap-highlight-color: transparent; }
-body, html { width: 100%; height: 100%; background: #000; overflow: hidden; font-family: 'Outfit', sans-serif; color: #fff; }
+body, html { width: 100%; height: 100%; background: var(--bg); overflow: hidden; font-family: 'Outfit', sans-serif; color: #fff; }
 
-/* --- THE VOID (BOŞLUK) --- */
-canvas { position: fixed; inset: 0; z-index: 1; cursor: crosshair; }
+/* --- 3D PARTICLE BACKGROUND --- */
+canvas { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
 
-.over-ui {
+.main-stage {
     position: relative; z-index: 10;
     height: 100%; width: 100%;
-    display: flex; flex-direction: column; align-items: center; justify-content: space-between;
-    padding: 60px 30px;
-    pointer-events: none;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.6) 100%);
+    transition: background 1.5s ease;
 }
 
-.over-ui > * { pointer-events: auto; }
-
-/* Dev Tipografi (Nefes Alan) */
-.origin-title {
-    font-size: clamp(40px, 15vw, 120px);
-    font-weight: 900;
-    letter-spacing: -10px;
-    opacity: 0.1;
-    transition: 1s cubic-bezier(0.16, 1, 0.3, 1);
-    user-select: none;
+/* İlk Karşılama */
+.welcome-trigger {
+    text-align: center; cursor: pointer;
+    transition: 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.origin-title.active { opacity: 1; letter-spacing: -2px; filter: blur(0); }
+.welcome-trigger h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(50px, 15vw, 100px); font-weight: 800;
+    letter-spacing: -4px; background: linear-gradient(to bottom, #fff, #67e8f9);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.welcome-trigger p { letter-spacing: 8px; font-size: 12px; opacity: 0.4; margin-top: 10px; }
 
-/* Veri Girişi (Sadece bir çizgi) */
-.flow-field {
+/* --- HOLOGRAM FORM (GİZLİ BAŞLAR) --- */
+.hologram-card {
     width: 100%; max-width: 400px;
-    text-align: center;
-    opacity: 0;
-    transform: translateY(50px);
-    transition: 1.5s all ease;
+    padding: 40px 30px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(103, 232, 249, 0.2);
+    border-radius: 40px;
+    backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+    box-shadow: 0 0 50px rgba(103, 232, 249, 0.1);
+    display: none; /* Başta kapalı */
+    flex-direction: column; gap: 20px;
+    animation: holoReveal 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
-.flow-field.show { opacity: 1; transform: translateY(0); }
+
+@keyframes holoReveal {
+    from { opacity: 0; transform: scale(0.8) rotateX(20deg); }
+    to { opacity: 1; transform: scale(1) rotateX(0); }
+}
+
+.input-group { position: relative; width: 100%; }
+.input-group label { font-size: 10px; color: var(--neon); letter-spacing: 2px; margin-left: 15px; margin-bottom: 5px; display: block; }
 
 input {
-    width: 100%; background: transparent; border: none;
-    border-bottom: 1px solid rgba(255,255,255,0.2);
-    color: #fff; font-size: 28px; font-weight: 100;
-    text-align: center; padding: 20px 0;
-    margin-bottom: 20px; transition: 0.5s;
+    width: 100%; padding: 18px 25px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 20px; color: #fff;
+    font-size: 17px; font-family: inherit;
+    transition: 0.4s;
 }
-input:focus { border-bottom-color: #fff; transform: scale(1.05); }
+input:focus {
+    background: rgba(255,255,255,0.08);
+    border-color: var(--neon);
+    box-shadow: 0 0 20px rgba(103,232,249,0.2);
+}
 
-.pulse-circle {
-    width: 80px; height: 80px;
-    border: 1px solid #fff; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    margin: 40px auto; cursor: pointer;
-    position: relative; transition: 0.5s;
+.glow-btn {
+    width: 100%; padding: 20px;
+    background: var(--neon); color: #000;
+    border: none; border-radius: 20px;
+    font-size: 18px; font-weight: 900;
+    cursor: pointer; transition: 0.3s;
+    box-shadow: 0 10px 30px rgba(103,232,249,0.3);
+    margin-top: 10px;
 }
-.pulse-circle::after {
-    content: ''; position: absolute; inset: -10px;
-    border: 1px solid rgba(255,255,255,0.2); border-radius: 50%;
-    animation: pulseOut 2s infinite;
+.glow-btn:active { transform: scale(0.96); }
+
+/* Arka planda süzülen enerji halkaları */
+.ring {
+    position: absolute; border: 1px solid var(--neon); border-radius: 50%;
+    opacity: 0; pointer-events: none;
 }
-@keyframes pulseOut { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(2); opacity: 0; } }
 
 </style>
 </head>
@@ -74,31 +102,39 @@ input:focus { border-bottom-color: #fff; transform: scale(1.05); }
 
 <canvas id="canvas"></canvas>
 
-<div class="over-ui">
+<div class="main-stage" id="stage" onclick="initGenesis(event)">
     
-    <h1 class="origin-title" id="mainTitle">italkyAI</h1>
-
-    <div id="setup" class="flow-field">
-        <div id="step1">
-            <input type="text" id="userName" placeholder="İSİM" autocomplete="off">
-            <div class="pulse-circle" onclick="toStep2()"><span>→</span></div>
-        </div>
-        
-        <div id="step2" style="display: none;">
-            <input type="email" id="userEmail" placeholder="E-POSTA" autocomplete="off">
-            <div class="pulse-circle" onclick="finalGenesis()"><span>✦</span></div>
-        </div>
+    <div class="welcome-trigger" id="trigger">
+        <h1>italkyAI</h1>
+        <p>DOKUN VE BAĞLAN</p>
     </div>
 
-    <p id="hint" style="opacity: 0.3; font-size: 10px; letter-spacing: 5px;">EKRANA DOKUN VE DÜNYANI YARAT</p>
+    <div class="hologram-card" id="formCard" onclick="event.stopPropagation()">
+        <div style="text-align: center; margin-bottom: 10px;">
+            <h2 style="font-size: 24px; font-weight: 800;">Sisteme Kayıt</h2>
+            <p style="font-size: 13px; opacity: 0.5;">italkyAI evrenine giriş yapın.</p>
+        </div>
+
+        <div class="input-group">
+            <label>AD SOYAD</label>
+            <input type="text" id="name" placeholder="Adınız ve Soyadınız" autocomplete="off">
+        </div>
+
+        <div class="input-group">
+            <label>E-POSTA</label>
+            <input type="email" id="email" placeholder="isim@mail.com" autocomplete="off">
+        </div>
+
+        <button class="glow-btn" id="finishBtn" onclick="saveData()">Sistemi Başlat ✨</button>
+    </div>
 
 </div>
 
 <script>
+// --- ARKA PLAN MOTORU ---
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 let particles = [];
-let mouse = { x: -100, y: -100 };
 
 function resize() {
     canvas.width = window.innerWidth;
@@ -107,98 +143,66 @@ function resize() {
 window.addEventListener('resize', resize);
 resize();
 
-window.addEventListener('mousemove', e => {
-    mouse.x = e.clientX;
-    mouse.y = e.clientY;
-    spawnParticles(e.clientX, e.clientY);
-});
-
-window.addEventListener('touchstart', e => {
-    const touch = e.touches[0];
-    mouse.x = touch.clientX;
-    mouse.y = touch.clientY;
-    spawnParticles(touch.clientX, touch.clientY);
-    
-    // İlk dokunuşta başlığı uyandır
-    document.getElementById('mainTitle').classList.add('active');
-    document.getElementById('setup').classList.add('show');
-    document.getElementById('hint').style.opacity = '0';
-});
-
 class Particle {
     constructor(x, y) {
-        this.x = x;
-        this.y = y;
-        this.size = Math.random() * 5 + 1;
-        this.vx = (Math.random() - 0.5) * 10;
-        this.vy = (Math.random() - 0.5) * 10;
-        this.color = `hsl(${Math.random() * 60 + 200}, 100%, 70%)`;
+        this.x = x; this.y = y;
+        this.size = Math.random() * 3 + 1;
+        this.vx = (Math.random() - 0.5) * 6;
+        this.vy = (Math.random() - 0.5) * 6;
         this.life = 1;
     }
-    update() {
-        this.x += this.vx;
-        this.y += this.vy;
-        this.life -= 0.01;
-    }
+    update() { this.x += this.vx; this.y += this.vy; this.life -= 0.015; }
     draw() {
-        ctx.shadowBlur = 15;
-        ctx.shadowColor = this.color;
-        ctx.fillStyle = this.color;
-        ctx.globalAlpha = this.life;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.fillStyle = `rgba(103, 232, 249, ${this.life})`;
+        ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
     }
-}
-
-function spawnParticles(x, y) {
-    for(let i=0; i<5; i++) particles.push(new Particle(x, y));
 }
 
 function animate() {
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+    ctx.fillStyle = 'rgba(10, 6, 14, 0.2)';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
     particles = particles.filter(p => p.life > 0);
-    particles.forEach(p => {
-        p.update();
-        p.draw();
-    });
-    
-    // Parçacıkları birbirine bağlayan ışık köprüleri
-    ctx.beginPath();
-    ctx.strokeStyle = 'rgba(255,255,255,0.05)';
-    for(let i=0; i<particles.length; i++) {
-        for(let j=i; j<particles.length; j++) {
-            let dx = particles[i].x - particles[j].x;
-            let dy = particles[i].y - particles[j].y;
-            let dist = Math.sqrt(dx*dx + dy*dy);
-            if(dist < 100) {
-                ctx.moveTo(particles[i].x, particles[i].y);
-                ctx.lineTo(particles[j].x, particles[j].y);
-            }
-        }
-    }
-    ctx.stroke();
-    
+    particles.forEach(p => { p.update(); p.draw(); });
     requestAnimationFrame(animate);
 }
 animate();
 
-function toStep2() {
-    if(!document.getElementById('userName').value) return;
-    document.getElementById('step1').style.display = 'none';
-    document.getElementById('step2').style.display = 'block';
+// --- ETKİLEŞİM ---
+function initGenesis(e) {
+    // Patlama Efekti
+    for(let i=0; i<40; i++) particles.push(new Particle(e.clientX, e.clientY));
+
+    // UI Değişimi
+    document.getElementById('trigger').style.display = 'none';
+    const form = document.getElementById('formCard');
+    form.style.display = 'flex';
+    
+    // Arka planı canlandır
+    document.getElementById('stage').style.background = "radial-gradient(circle at center, #1a0f2e 0%, #0a060e 100%)";
 }
 
-function finalGenesis() {
-    // Büyük patlama
-    for(let i=0; i<500; i++) particles.push(new Particle(canvas.width/2, canvas.height/2));
+async function saveData() {
+    const name = document.getElementById('name').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const btn = document.getElementById('finishBtn');
+
+    if(!name || !email) {
+        alert("Başkanım, tüm alanları dolduralım.");
+        return;
+    }
+
+    btn.innerText = "Bağlantı Kuruluyor...";
+    btn.style.opacity = "0.7";
+
+    // Simüle edilmiş kayıt
     setTimeout(() => {
-        localStorage.setItem("user_id", "gen_" + Date.now());
-        location.href = "/";
-    }, 1000);
+        localStorage.setItem("user_id", "italky_" + Date.now());
+        // Patlama animasyonu ile geçiş
+        for(let i=0; i<100; i++) particles.push(new Particle(window.innerWidth/2, window.innerHeight/2));
+        setTimeout(() => location.href = "/", 1000);
+    }, 1500);
 }
 </script>
+
 </body>
 </html>
