@@ -28,6 +28,7 @@ body, html { width: 100%; height: 100%; background: var(--bg); color: #fff; font
     linear-gradient(180deg, #160d1a 0%, #0c0810 100%);
 }
 
+/* Kristal Kafes (Home Sayfasıyla Aynı Ruh) */
 .crystal-wrap {
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
   perspective: 1200px; pointer-events: none; z-index: 2;
@@ -65,6 +66,68 @@ body, html { width: 100%; height: 100%; background: var(--bg); color: #fff; font
 }
 .logo-sub { font-size: 13px; font-weight: 600; color: #fff; letter-spacing: 6px; opacity: 0.9; }
 
+/* --- DİNAMİK YÖRÜNGE ANİMASYONU --- */
+.orbit-anim-area {
+  width: 100%; height: 180px;
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+  overflow: hidden;
+  margin: 10px 0;
+}
+
+/* Ortadaki Çekirdek (Dünya) */
+.core-sphere {
+  width: 60px; height: 60px;
+  background: 
+    radial-gradient(circle at 30% 30%, rgba(103,232,249,0.9), transparent 70%),
+    rgba(255,255,255,0.05);
+  border-radius: 50%;
+  position: absolute;
+  z-index: 5;
+  box-shadow: 0 0 30px rgba(103,232,249,0.5), inset 0 0 15px rgba(103,232,249,0.3);
+  animation: corePulse 4s infinite ease-in-out;
+}
+@keyframes corePulse { 0%, 100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.05); opacity: 1; } }
+
+/* Yörünge Halkaları */
+.orbit-ring {
+  border: 1px solid rgba(103,232,249,0.15);
+  border-radius: 50%;
+  position: absolute;
+  transform-style: preserve-3d;
+  opacity: 0.6;
+}
+.r1 { width: 120px; height: 120px; animation: orbitRotate1 8s linear infinite; }
+.r2 { width: 170px; height: 170px; animation: orbitRotate2 12s linear infinite reverse; }
+.r3 { width: 220px; height: 220px; animation: orbitRotate3 16s linear infinite; }
+
+/* Uydular */
+.satellite {
+  width: 10px; height: 10px;
+  background: var(--neon);
+  border-radius: 50%;
+  position: absolute;
+  top: -5px; left: 50%;
+  transform: translateX(-50%);
+  box-shadow: 0 0 10px var(--neon);
+}
+.s2 { background: var(--pink); box-shadow: 0 0 10px var(--pink); }
+
+/* Yörünge Animasyonları */
+@keyframes orbitRotate1 { 
+    from { transform: rotateX(75deg) rotateY(10deg) rotateZ(0deg); } 
+    to { transform: rotateX(75deg) rotateY(10deg) rotateZ(360deg); } 
+}
+@keyframes orbitRotate2 { 
+    from { transform: rotateX(70deg) rotateY(-15deg) rotateZ(0deg); } 
+    to { transform: rotateX(70deg) rotateY(-15deg) rotateZ(360deg); } 
+}
+@keyframes orbitRotate3 { 
+    from { transform: rotateX(80deg) rotateY(5deg) rotateZ(0deg); } 
+    to { transform: rotateX(80deg) rotateY(5deg) rotateZ(360deg); } 
+}
+
+/* --- ANA KART (YAŞAYAN HOLOGRAM) --- */
 .auth-card {
   width: 100%; max-width: 380px;
   background: rgba(255, 255, 255, 0.03);
@@ -80,6 +143,7 @@ body, html { width: 100%; height: 100%; background: var(--bg); color: #fff; font
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
+/* --- INPUTLAR --- */
 .input-box { margin-bottom: 18px; text-align: left; }
 .input-box label { font-size: 10px; font-weight: 900; color: var(--neon); letter-spacing: 2px; margin-left: 15px; margin-bottom: 8px; display: block; opacity: 0.8; }
 
@@ -108,9 +172,11 @@ input:focus {
 }
 .submit-btn:active { transform: scale(0.96); }
 
+/* --- FOOTER --- */
 .footer-brand {
   text-align: center; font-size: 11px; color: rgba(255,255,255,0.3);
   letter-spacing: 1.5px; font-weight: 500;
+  margin-top: 10px;
 }
 .footer-brand b { color: rgba(255,255,255,0.5); }
 
@@ -133,6 +199,13 @@ input:focus {
     <div class="logo-sub">BE FREE</div>
   </header>
 
+  <div class="orbit-anim-area">
+    <div class="core-sphere"></div>
+    <div class="orbit-ring r1"><div class="satellite s1"></div></div>
+    <div class="orbit-ring r2"><div class="satellite s2"></div></div>
+    <div class="orbit-ring r3"><div class="satellite s1"></div></div>
+  </div>
+
   <main class="auth-card">
     <div style="margin-bottom: 25px;">
       <h2 style="font-size: 22px; font-weight: 800; margin-bottom: 6px;">Erişim Tanımla</h2>
@@ -141,12 +214,12 @@ input:focus {
 
     <div class="input-box">
       <label>AD SOYAD</label>
-      <input type="text" id="name" placeholder="Örn: Ahmet Karanlı" autocomplete="off">
+      <input type="text" id="name" placeholder="Örn: Oğuz Özyiğit" autocomplete="off">
     </div>
 
     <div class="input-box">
       <label>E-POSTA</label>
-      <input type="email" id="email" placeholder="ahmetkar@mail.com" autocomplete="off">
+      <input type="email" id="email" placeholder="isim@mail.com" autocomplete="off">
     </div>
 
     <div class="input-box">
