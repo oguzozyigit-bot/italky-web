@@ -19,6 +19,7 @@
   --pink:#f472b6;
   --cyan:#67e8f9;
 }
+
 *{
   box-sizing:border-box;
   -webkit-tap-highlight-color:transparent;
@@ -34,7 +35,12 @@ html,body{
   background:#120d16;
   scrollbar-width:none;
 }
-html::-webkit-scrollbar, body::-webkit-scrollbar{ display:none; }
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+#pageContent::-webkit-scrollbar{
+  display:none;
+}
 
 body{
   background:
@@ -42,10 +48,12 @@ body{
     radial-gradient(circle at 20% 18%, rgba(244,114,182,.12) 0%, transparent 25%),
     radial-gradient(circle at 82% 18%, rgba(96,165,250,.10) 0%, transparent 20%),
     linear-gradient(180deg, #1d1016 0%, #150e19 34%, #120d16 100%);
+  overflow:hidden;
 }
 
 #pageContent{
   width:100%;
+  height:100%;
   min-height:100%;
   padding:10px 14px 18px;
   display:block;
@@ -54,7 +62,6 @@ body{
   scrollbar-width:none;
   -webkit-overflow-scrolling:touch;
 }
-#pageContent::-webkit-scrollbar{ display:none; }
 
 .page-shell-fit{
   min-height:100%;
@@ -67,6 +74,7 @@ body{
   flex:0 0 auto;
   perspective:1000px;
 }
+
 .heroTop{
   display:flex;
   flex-direction:column;
@@ -151,6 +159,7 @@ body{
   padding:8px;
   background:linear-gradient(135deg,#ffffff 0%, #eef2ff 100%);
 }
+
 .qr-fallback.show{ display:flex; }
 
 .qr-fallback-code{
@@ -207,6 +216,7 @@ body{
   text-align:center;
   text-shadow:0 0 12px rgba(255,255,255,.18);
 }
+
 .heroTitle .to{
   background:var(--ai-grad);
   -webkit-background-clip:text;
@@ -255,13 +265,8 @@ body{
   cursor:pointer;
   transition:transform .18s ease, opacity .18s ease, box-shadow .18s ease;
 }
-.heroBtn:active{ transform:scale(.985); }
 
-.heroBtnPrimary{
-  background:var(--ai-grad);
-  color:#0b1020;
-  box-shadow:0 14px 28px rgba(99,102,241,.24);
-}
+.heroBtn:active{ transform:scale(.985); }
 
 .heroBtnDark{
   flex:1;
@@ -300,10 +305,12 @@ body{
   min-height:300px;
   transition:transform .22s ease, filter .22s ease, box-shadow .22s ease;
 }
+
 .mod-card:active{
   transform:scale(.985);
   filter:brightness(1.08);
 }
+
 .mod-card:hover{
   box-shadow:
     0 22px 36px rgba(0,0,0,.32),
@@ -316,10 +323,10 @@ body{
     linear-gradient(180deg, #301661 0%, #2b2185 50%, #1e36a3 100%);
 }
 
-.offtooff-grid-card{
+.offline-grid-card{
   background:
-    radial-gradient(circle at 80% 15%, rgba(255,255,255,.10) 0%, transparent 28%),
-    linear-gradient(180deg, #6b1118 0%, #8f1d24 45%, #b91c1c 100%);
+    radial-gradient(circle at 80% 15%, rgba(255,255,255,.12) 0%, transparent 30%),
+    linear-gradient(180deg, #4b1118 0%, #7f1d1d 48%, #b91c1c 100%);
 }
 
 .card-title{
@@ -336,19 +343,20 @@ body{
   margin-top:8px;
   display:flex;
   flex-direction:column;
-  gap:4px;
+  gap:5px;
   max-width:100%;
   padding-right:2px;
 }
 
 .card-desc{
   margin:0;
-  font-size:10.2px;
-  line-height:1.26;
-  color:rgba(255,255,255,.86);
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
+  font-size:11.2px;
+  line-height:1.34;
+  color:rgba(255,255,255,.88);
+  white-space:normal;
+  overflow:visible;
+  text-overflow:unset;
+  word-break:break-word;
 }
 
 .card-art{
@@ -376,6 +384,7 @@ body{
   height:38px;
   margin-top:14px;
 }
+
 .face-headset::before{
   content:"";
   position:absolute;
@@ -388,6 +397,7 @@ body{
   background:rgba(255,255,255,.88);
   box-shadow:0 0 10px rgba(255,255,255,.16);
 }
+
 .face-headset::after{
   content:"";
   position:absolute;
@@ -408,6 +418,7 @@ body{
   height:28px;
   transform:translate(-50%,-50%);
 }
+
 .face-wave::before,
 .face-wave::after{
   content:"";
@@ -418,8 +429,38 @@ body{
   background:linear-gradient(90deg, rgba(255,255,255,.08), rgba(103,232,249,.98), rgba(255,255,255,.08));
   box-shadow:0 0 14px rgba(103,232,249,.46);
 }
+
 .face-wave::before{ top:9px;height:2px; }
 .face-wave::after{ top:16px;height:2px;opacity:.68; }
+
+.offline-art{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+}
+
+.offline-sheet{
+  width:22px;
+  height:34px;
+  border-radius:8px;
+  background:rgba(255,255,255,.16);
+  border:1.4px solid rgba(255,255,255,.46);
+  position:relative;
+}
+
+.offline-sheet::before,
+.offline-sheet::after{
+  content:"";
+  position:absolute;
+  left:4px;
+  right:4px;
+  height:2px;
+  border-radius:2px;
+  background:rgba(255,255,255,.72);
+}
+.offline-sheet::before{ top:10px; }
+.offline-sheet::after{ top:17px; }
 
 .wide-stack{
   display:flex;
@@ -445,21 +486,16 @@ body{
   color:#fff;
   transition:transform .22s ease, filter .22s ease, box-shadow .22s ease;
 }
+
 .wide-card:active{
   transform:scale(.985);
   filter:brightness(1.08);
 }
+
 .wide-card:hover{
   box-shadow:
     0 22px 36px rgba(0,0,0,.32),
     0 0 18px rgba(103,232,249,.08);
-}
-
-.texttotext-card{
-  background:
-    radial-gradient(circle at 14% 50%, rgba(251,146,60,.22) 0%, transparent 24%),
-    radial-gradient(circle at 86% 16%, rgba(103,232,249,.14) 0%, transparent 20%),
-    linear-gradient(90deg, #7e114f 0%, #db2777 34%, #a855f7 68%, #6366f1 100%);
 }
 
 .sidetoside-card{
@@ -467,6 +503,13 @@ body{
     radial-gradient(circle at 12% 50%, rgba(251,146,60,.25) 0%, transparent 25%),
     radial-gradient(circle at 88% 20%, rgba(103,232,249,.15) 0%, transparent 20%),
     linear-gradient(90deg, #61220e 0%, #c2410a 36%, #ea580c 68%, #e11d48 100%);
+}
+
+.texttotext-card{
+  background:
+    radial-gradient(circle at 14% 50%, rgba(251,146,60,.22) 0%, transparent 24%),
+    radial-gradient(circle at 86% 16%, rgba(103,232,249,.14) 0%, transparent 20%),
+    linear-gradient(90deg, #7e114f 0%, #db2777 34%, #a855f7 68%, #6366f1 100%);
 }
 
 .fun-card{
@@ -510,6 +553,7 @@ body{
   background:rgba(255,255,255,.10);
   top:20px;
 }
+
 .side-phone.left{ left:14px; transform:rotate(-8deg); }
 .side-phone.right{ right:14px; transform:rotate(8deg); }
 
@@ -533,6 +577,7 @@ body{
   border-radius:8px;
   background:rgba(255,255,255,.92);
 }
+
 .text-bubble::after{
   content:"";
   position:absolute;
@@ -554,6 +599,7 @@ body{
   border:1.6px solid rgba(103,232,249,.96);
   background:rgba(103,232,249,.08);
 }
+
 .text-doc-line{
   position:absolute;
   left:5px;
@@ -680,6 +726,7 @@ body{
   background:rgba(255,255,255,.15);
   border:1px solid rgba(255,255,255,.18);
 }
+
 .arrow-chip::before{
   content:"";
   position:absolute;
@@ -729,7 +776,10 @@ body{
   .card-title{ font-size:22px; }
   .wide-title{ font-size:22px; }
   .card-art{ height:70px; }
-  .card-desc{ font-size:9.6px; }
+  .card-desc{
+    font-size:10.8px;
+    line-height:1.32;
+  }
 }
 </style>
 </head>
@@ -780,12 +830,12 @@ body{
         <h2 class="card-title">FaceToFace</h2>
 
         <div class="card-desc-list">
-          <p class="card-desc">Yüz yüze iletişim...</p>
+          <p class="card-desc">Yüz yüze iletişim.</p>
           <p class="card-desc">Yapay zeka sayesinde çeviri.</p>
-          <p class="card-desc">72 Dil çevirisi.</p>
-          <p class="card-desc">Tek telefon.</p>
+          <p class="card-desc">72 dil çevirisi.</p>
+          <p class="card-desc">Tek telefon ile kullanım.</p>
           <p class="card-desc">Özel ses seçimi.</p>
-          <p class="card-desc">Bölünmüş ekran.</p>
+          <p class="card-desc">Bölünmüş ekran desteği.</p>
         </div>
 
         <div class="card-art face-art">
@@ -795,14 +845,20 @@ body{
         </div>
       </a>
 
-      <a class="mod-card offtooff-grid-card" href="/pages/offline_languages.html">
-        <h2 class="card-title">OffToOff</h2>
+      <a class="mod-card offline-grid-card" href="/pages/offline_languages.html">
+        <h2 class="card-title">Offline Translate</h2>
 
         <div class="card-desc-list">
-          <p class="card-desc">Offline dil paketleri.</p>
-          <p class="card-desc">İnternetsiz çeviri.</p>
-          <p class="card-desc">Cihazda hazır kullanım.</p>
-          <p class="card-desc">Paket indir, hemen başla.</p>
+          <p class="card-desc">67 Offline Dil Seçeneği.</p>
+          <p class="card-desc">İnternetsiz çeviri deneyimi.</p>
+          <p class="card-desc">Dil paketlerini indir, hemen kullan.</p>
+          <p class="card-desc">Bağlantı olmadan hızlı çeviri.</p>
+        </div>
+
+        <div class="card-art offline-art">
+          <div class="offline-sheet"></div>
+          <div class="offline-sheet"></div>
+          <div class="offline-sheet"></div>
         </div>
       </a>
     </section>
@@ -844,36 +900,36 @@ body{
       </a>
 
       <a class="wide-card fun-card" href="/pages/game_menu.html">
-  <div class="fun-ico">
-    <div class="fun-dice"></div>
-  </div>
+        <div class="fun-ico">
+          <div class="fun-dice"></div>
+        </div>
 
-  <div class="wide-body">
-    <div class="card-topline">Oyunlu Eğitim</div>
-    <h2 class="wide-title">Eğlenerek Öğren</h2>
-    <p class="wide-desc">Kelime, konuşma ve mini oyunlarla öğrenmeyi daha akıcı ve keyifli hale getir.</p>
-  </div>
+        <div class="wide-body">
+          <div class="card-topline">Oyunlu Eğitim</div>
+          <h2 class="wide-title">Eğlenerek Öğren</h2>
+          <p class="wide-desc">Kelime, konuşma ve mini oyunlarla öğrenmeyi daha akıcı ve keyifli hale getir.</p>
+        </div>
 
-  <div class="arrow-chip"></div>
-</a>
+        <div class="arrow-chip"></div>
+      </a>
 
-      <a class="wide-card level-card" href="/pages/teacher_select.html">
-  <div class="level-ico">
-    <div class="level-bars">
-      <span></span><span></span><span></span>
-    </div>
-  </div>
+      <a class="wide-card level-card" href="/pages/level_required.html">
+        <div class="level-ico">
+          <div class="level-bars">
+            <span></span><span></span><span></span>
+          </div>
+        </div>
 
-  <div class="wide-body">
-    <div class="card-topline">Ölç & Başla</div>
-    <h2 class="wide-title">Seviye Tespit Sınavı</h2>
-    <p class="wide-desc">Mevcut dil seviyeni ölç, sana uygun başlangıç noktasını sistem otomatik belirlesin.</p>
-  </div>
+        <div class="wide-body">
+          <div class="card-topline">Ölç & Başla</div>
+          <h2 class="wide-title">Seviye Tespit Sınavı</h2>
+          <p class="wide-desc">Mevcut dil seviyeni ölç, sana uygun başlangıç noktasını sistem otomatik belirlesin.</p>
+        </div>
 
-  <div class="arrow-chip"></div>
-</a>
+        <div class="arrow-chip"></div>
+      </a>
 
-      <a class="wide-card practice-card" href="/pages/practice.html">
+      <a class="wide-card practice-card" href="/pages/teacher_select.html">
         <div class="practice-ico">
           <div class="practice-chat"></div>
           <div class="practice-chat right"></div>
@@ -882,7 +938,7 @@ body{
         <div class="wide-body">
           <div class="card-topline">Canlı Gelişim</div>
           <h2 class="wide-title">Pratik Yap</h2>
-          <p class="wide-desc">Günlük konuşmalar, hızlı tekrarlar ve konuşma senaryolarıyla akıcılığını güçlendir.</p>
+          <p class="wide-desc">Öğretmen destekli konuşma ve tekrar akışlarıyla pratik yap, akıcılığını güçlendir.</p>
         </div>
 
         <div class="arrow-chip"></div>
