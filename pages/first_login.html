@@ -3,242 +3,169 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-<title>italkyAI • The Core</title>
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;800&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+<title>italkyAI • The Awakening</title>
 
 <style>
-:root {
-  --core-bg: #030005;
-  --ai-cyan: #67e8f9;
-  --ai-purple: #a855f7;
-  --ai-pink: #f472b6;
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;700&display=swap');
+
+:root { --c1: #67e8f9; --c2: #f472b6; --bg: #000; }
+
+* { box-sizing: border-box; margin: 0; padding: 0; outline: none; }
+body, html { width: 100%; height: 100%; background: var(--bg); overflow: hidden; font-family: 'Space Grotesk', sans-serif; color: #fff; }
+
+/* --- THE LIQUID CORE --- */
+canvas { position: fixed; inset: 0; z-index: 1; filter: url("#goo") blur(2px); opacity: 0.8; }
+
+.ui-layer {
+    position: relative; z-index: 10;
+    height: 100%; width: 100%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.4) 100%);
 }
 
-* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
-body, html { 
-  margin: 0; padding: 0; width: 100%; height: 100%; 
-  background: var(--core-bg); color: #fff; font-family: 'Outfit', sans-serif;
-  overflow: hidden; touch-action: none;
+/* Nefes Alan Yazı */
+.glitch-text {
+    font-size: clamp(40px, 12vw, 100px);
+    font-weight: 700;
+    letter-spacing: -5px;
+    text-transform: uppercase;
+    position: relative;
+    cursor: pointer;
+    transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
+.glitch-text:hover { letter-spacing: 10px; color: var(--c1); }
 
-/* --- THE NEURAL CORE (CANLI PARÇACIKLAR) --- */
-#canvas {
-  position: fixed; inset: 0; z-index: 1;
-  filter: blur(2px) contrast(1.2);
+/* Giriş Alanı (Görünmez ama orada) */
+.flow-input {
+    background: transparent; border: none;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    width: 280px; text-align: center;
+    font-size: 24px; color: #fff; font-family: inherit;
+    margin-top: 40px; padding: 10px;
+    opacity: 0; transform: scale(0.8);
+    transition: 0.8s all cubic-bezier(0.19, 1, 0.22, 1);
+    pointer-events: none;
 }
+.flow-input.active { opacity: 1; transform: scale(1); pointer-events: auto; }
 
-.interface {
-  position: relative; z-index: 10;
-  height: 100%; width: 100%;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  padding: 30px; text-align: center;
-  pointer-events: none;
+/* Devam Butonu (Enerji Halkası) */
+.pulse-trigger {
+    margin-top: 60px;
+    width: 80px; height: 80px;
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: 0.4s;
 }
+.pulse-trigger:hover { border-color: var(--c1); box-shadow: 0 0 30px var(--c1); transform: scale(1.1); }
+.pulse-trigger span { font-size: 24px; animation: arrowFlow 2s infinite; }
 
-.interface > * { pointer-events: auto; }
+@keyframes arrowFlow { 0%, 100% { transform: translateX(0); opacity: 0.2; } 50% { transform: translateX(5px); opacity: 1; } }
 
-/* Akışkan Tipografi */
-.fluid-title {
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: clamp(40px, 10vw, 70px); font-weight: 800;
-  letter-spacing: -3px; line-height: 0.9;
-  background: linear-gradient(to bottom, #fff, rgba(255,255,255,0.2));
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  margin-bottom: 20px;
-  animation: titlePulse 4s ease-in-out infinite;
-}
-
-@keyframes titlePulse {
-  0%, 100% { transform: scale(1); opacity: 0.8; }
-  50% { transform: scale(1.05); opacity: 1; filter: blur(0); }
-}
-
-/* --- MINIMALIST DATA INPUTS --- */
-.data-gate {
-  width: 100%; max-width: 400px;
-  opacity: 0; transform: translateY(30px);
-  transition: all 1s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.data-gate.active { opacity: 1; transform: translateY(0); }
-
-.quantum-input {
-  width: 100%; background: transparent; border: none;
-  border-bottom: 2px solid rgba(255,255,255,0.1);
-  padding: 20px 0; color: #fff; font-size: 24px;
-  font-weight: 200; text-align: center;
-  letter-spacing: 1px; transition: 0.5s;
-}
-.quantum-input:focus {
-  border-bottom-color: var(--ai-cyan);
-  box-shadow: 0 15px 30px -15px rgba(103,232,249,0.3);
-}
-
-.next-trigger {
-  margin-top: 50px; background: transparent; border: 1px solid rgba(255,255,255,0.2);
-  color: #fff; padding: 15px 40px; border-radius: 100px;
-  font-size: 14px; text-transform: uppercase; letter-spacing: 4px;
-  cursor: pointer; transition: 0.4s;
-  backdrop-filter: blur(10px);
-}
-.next-trigger:hover {
-  background: #fff; color: #000; border-color: #fff;
-  transform: translateY(-5px);
-}
-
-/* Enerji Halkası */
-.ring-container {
-  position: absolute; top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
-  width: 300px; height: 300px;
-  pointer-events: none;
-}
-.ring {
-  position: absolute; inset: 0;
-  border: 1px solid var(--ai-cyan);
-  border-radius: 50%; opacity: 0.1;
-  animation: ringExpand 3s infinite;
-}
-@keyframes ringExpand {
-  0% { transform: scale(0.5); opacity: 0.5; }
-  100% { transform: scale(2); opacity: 0; }
-}
+/* SVG Gooey Filter */
+svg { position: absolute; width: 0; height: 0; }
 
 </style>
 </head>
 <body>
 
+<svg><defs><filter id="goo"><feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur" /><feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -10" result="goo" /><feComposite in="SourceGraphic" in2="goo" operator="atop"/></filter></defs></svg>
+
 <canvas id="canvas"></canvas>
 
-<div class="interface">
-  
-  <div class="ring-container">
-    <div class="ring"></div>
-    <div class="ring" style="animation-delay: 1s"></div>
-    <div class="ring" style="animation-delay: 2s"></div>
-  </div>
+<div class="ui-layer">
+    
+    <div id="step1" class="step">
+        <h1 class="glitch-text" onclick="startSystem()">italkyAI</h1>
+        <p style="opacity: 0.4; letter-spacing: 5px; margin-top: 10px;">DOKUN VE UYANDIR</p>
+    </div>
 
-  <div class="data-gate active" id="g1">
-    <h1 class="fluid-title">italkyAI<br>CORE</h1>
-    <p style="color:rgba(255,255,255,0.4); letter-spacing: 2px;">SİSTEM BAŞLATILIYOR</p>
-    <button class="next-trigger" onclick="go(2)">BAĞLAN</button>
-  </div>
+    <div id="step2" class="step" style="display: none; text-align: center;">
+        <p style="color: var(--c1); letter-spacing: 3px;">KİMLİK TANIMLA</p>
+        <input type="text" id="userName" class="flow-input" placeholder="İsim Soyisim">
+        <div class="pulse-trigger" onclick="toStep3()"><span>→</span></div>
+    </div>
 
-  <div class="data-gate" id="g2">
-    <h1 class="fluid-title">KİMLİK?</h1>
-    <input type="text" id="name" class="quantum-input" placeholder="İSİM SOYİSİM" autocomplete="off">
-    <button class="next-trigger" onclick="go(3)">ONAYLA</button>
-  </div>
-
-  <div class="data-gate" id="g3">
-    <h1 class="fluid-title">SENKRON.</h1>
-    <input type="email" id="email" class="quantum-input" placeholder="E-POSTA" autocomplete="off">
-    <br><br>
-    <input type="tel" id="phone" class="quantum-input" placeholder="TELEFON" autocomplete="off">
-    <button class="next-trigger" id="finBtn" onclick="finalize()">EVRENE KATIL</button>
-  </div>
+    <div id="step3" class="step" style="display: none; text-align: center;">
+        <p style="color: var(--c2); letter-spacing: 3px;">BAĞLANTI KUR</p>
+        <input type="email" id="userEmail" class="flow-input active" placeholder="E-posta">
+        <input type="tel" id="userPhone" class="flow-input active" placeholder="Telefon (Opsiyonel)" style="margin-top: 15px;">
+        <div class="pulse-trigger" onclick="finalLaunch()"><span>✓</span></div>
+    </div>
 
 </div>
 
 <script>
-/* --- NEURAL BACKGROUND ENGINE --- */
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
-let particles = [];
+let w, h, balls = [];
 
 function resize() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
 }
 window.addEventListener('resize', resize);
 resize();
 
-class Particle {
-  constructor() {
-    this.x = Math.random() * canvas.width;
-    this.y = Math.random() * canvas.height;
-    this.size = Math.random() * 2 + 1;
-    this.speedX = Math.random() * 1 - 0.5;
-    this.speedY = Math.random() * 1 - 0.5;
-    this.color = Math.random() > 0.5 ? '#67e8f9' : '#f472b6';
-  }
-  update() {
-    this.x += this.speedX;
-    this.y += this.speedY;
-    if (this.x > canvas.width) this.x = 0;
-    if (this.x < 0) this.x = canvas.width;
-    if (this.y > canvas.height) this.y = 0;
-    if (this.y < 0) this.y = canvas.height;
-  }
-  draw() {
-    ctx.fillStyle = this.color;
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-    ctx.fill();
-  }
+class Ball {
+    constructor() {
+        this.x = Math.random() * w;
+        this.y = Math.random() * h;
+        this.vx = (Math.random() - 0.5) * 4;
+        this.vy = (Math.random() - 0.5) * 4;
+        this.r = Math.random() * 40 + 20;
+    }
+    update() {
+        this.x += this.vx; this.y += this.vy;
+        if (this.x < 0 || this.x > w) this.vx *= -1;
+        if (this.y < 0 || this.y > h) this.vy *= -1;
+    }
+    draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(103, 232, 249, ${Math.random() * 0.5})`;
+        ctx.fill();
+    }
 }
 
-function init() {
-  particles = [];
-  for (let i = 0; i < 100; i++) {
-    particles.push(new Particle());
-  }
-}
+for(let i=0; i<15; i++) balls.push(new Ball());
 
 function animate() {
-  ctx.fillStyle = 'rgba(3, 0, 5, 0.1)';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  particles.forEach(p => {
-    p.update();
-    p.draw();
-  });
-  
-  // Parçacıkları birbirine bağlayan sinirsel çizgiler
-  for(let i=0; i<particles.length; i++){
-    for(let j=i; j<particles.length; j++){
-      let dx = particles[i].x - particles[j].x;
-      let dy = particles[i].y - particles[j].y;
-      let dist = Math.sqrt(dx*dx + dy*dy);
-      if(dist < 100){
-        ctx.strokeStyle = particles[i].color;
-        ctx.globalAlpha = 1 - (dist/100);
-        ctx.lineWidth = 0.5;
-        ctx.beginPath();
-        ctx.moveTo(particles[i].x, particles[i].y);
-        ctx.lineTo(particles[j].x, particles[j].y);
-        ctx.stroke();
-      }
-    }
-  }
-  ctx.globalAlpha = 1;
-  requestAnimationFrame(animate);
+    ctx.clearRect(0,0,w,h);
+    balls.forEach(b => { b.update(); b.draw(); });
+    requestAnimationFrame(animate);
 }
-
-init();
 animate();
 
-/* --- INTERFACE LOGIC --- */
-function go(s) {
-  if(s === 3 && !document.getElementById('name').value.trim()) return;
-  document.querySelectorAll('.data-gate').forEach(g => g.classList.remove('active'));
-  setTimeout(() => {
-    document.getElementById('g' + s).classList.add('active');
-  }, 500);
+function startSystem() {
+    document.getElementById('step1').style.opacity = '0';
+    setTimeout(() => {
+        document.getElementById('step1').style.display = 'none';
+        document.getElementById('step2').style.display = 'block';
+        setTimeout(() => document.getElementById('userName').classList.add('active'), 100);
+    }, 500);
 }
 
-async function finalize() {
-  const btn = document.getElementById('finBtn');
-  btn.innerText = "SİSTEME İŞLENİYOR...";
-  
-  // Buraya senin fetch/register logic'in gelecek
-  setTimeout(() => {
-    localStorage.setItem("user_id", "core_" + Math.random());
-    location.href = "/";
-  }, 2000);
+function toStep3() {
+    if(!document.getElementById('userName').value) return;
+    document.getElementById('step2').style.opacity = '0';
+    setTimeout(() => {
+        document.getElementById('step2').style.display = 'none';
+        document.getElementById('step3').style.display = 'block';
+    }, 500);
+}
+
+function finalLaunch() {
+    // Patlama efekti
+    for(let i=0; i<50; i++) balls.push(new Ball());
+    document.body.style.transition = "2s";
+    document.body.style.background = "#fff";
+    setTimeout(() => {
+        localStorage.setItem("user_id", "italky_" + Date.now());
+        location.href = "/";
+    }, 1500);
 }
 </script>
-
 </body>
 </html>
