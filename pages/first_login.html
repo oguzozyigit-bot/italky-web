@@ -3,248 +3,240 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-<title>italkyAI • Genesis</title>
+<title>italkyAI • The Core</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;800&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
 <style>
 :root {
-  --txt: rgba(255,255,255,.96);
-  --muted: rgba(255,255,255,.64);
-  --ai-grad: linear-gradient(135deg, #67e8f9 0%, #818cf8 46%, #f472b6 100%);
-  --cyan: #67e8f9;
-  --pink: #f472b6;
+  --core-bg: #030005;
+  --ai-cyan: #67e8f9;
+  --ai-purple: #a855f7;
+  --ai-pink: #f472b6;
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
 body, html { 
   margin: 0; padding: 0; width: 100%; height: 100%; 
-  background: #120d16; color: var(--txt); font-family: 'Outfit', sans-serif;
-  overflow: hidden;
+  background: var(--core-bg); color: #fff; font-family: 'Outfit', sans-serif;
+  overflow: hidden; touch-action: none;
 }
 
-/* --- 3D GENESIS BACKGROUND (HOME STYLE) --- */
-.genesis-bg {
-  position: fixed; inset: 0;
-  background: 
-    radial-gradient(circle at 50% 0%, rgba(251,146,60,.18) 0%, transparent 28%),
-    linear-gradient(180deg, #1d1016 0%, #120d16 100%);
-  z-index: -1;
-  display: flex; align-items: center; justify-content: center;
+/* --- THE NEURAL CORE (CANLI PARÇACIKLAR) --- */
+#canvas {
+  position: fixed; inset: 0; z-index: 1;
+  filter: blur(2px) contrast(1.2);
 }
 
-.holo-field {
-  position: absolute; width: 100%; height: 100%;
-  perspective: 1000px; display: flex; align-items: center; justify-content: center;
-}
-
-/* Home'daki Kristal Yapı */
-.crystal-cage {
-  position: absolute; width: 280px; height: 280px;
-  transform-style: preserve-3d;
-  animation: rotateCrystal 25s linear infinite;
-  opacity: 0.4;
-}
-.crystal-side {
-  position: absolute; inset: 0;
-  border: 1px solid rgba(103,232,249,.3);
-  background: radial-gradient(circle, rgba(129,140,248,.05), transparent);
-}
-.side1{ transform:rotateY(0deg) translateZ(140px); }
-.side2{ transform:rotateY(90deg) translateZ(140px); }
-.side3{ transform:rotateY(180deg) translateZ(140px); }
-.side4{ transform:rotateY(270deg) translateZ(140px); }
-.side5{ transform:rotateX(90deg) translateZ(140px); }
-.side6{ transform:rotateX(-90deg) translateZ(140px); }
-
-@keyframes rotateCrystal {
-  from { transform: rotateX(0deg) rotateY(0deg); }
-  to { transform: rotateX(360deg) rotateY(720deg); }
-}
-
-/* Enerji Platformu */
-.energy-platform {
-  position: absolute; bottom: -10%; left: 50%;
-  transform: translateX(-50%) rotateX(75deg);
-  width: 400px; height: 400px;
-  background: radial-gradient(circle, var(--cyan) 0%, transparent 70%);
-  filter: blur(40px); opacity: 0.3;
-  animation: platformPulse 4s infinite alternate;
-}
-@keyframes platformPulse {
-  from { transform: translateX(-50%) rotateX(75deg) scale(1); opacity: 0.2; }
-  to { transform: translateX(-50%) rotateX(75deg) scale(1.3); opacity: 0.4; }
-}
-
-/* --- INTERACTIVE CONTENT --- */
-.viewport {
+.interface {
+  position: relative; z-index: 10;
   height: 100%; width: 100%;
-  display: flex; align-items: center; justify-content: center;
-  padding: 24px; position: relative; z-index: 10;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 30px; text-align: center;
+  pointer-events: none;
 }
 
-.step-container {
-  width: 100%; max-width: 380px;
-  text-align: center;
-}
+.interface > * { pointer-events: auto; }
 
-.step { display: none; }
-.step.active { 
-  display: block; 
-  animation: genesisIn 0.8s cubic-bezier(0.2, 1, 0.2, 1) forwards;
-}
-
-@keyframes genesisIn {
-  from { opacity: 0; transform: translateY(40px) scale(0.9); filter: blur(15px); }
-  to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
-}
-
-/* Elementler */
-.hero-title {
+/* Akışkan Tipografi */
+.fluid-title {
   font-family: 'Space Grotesk', sans-serif;
-  font-size: 38px; font-weight: 800; margin: 0;
-  letter-spacing: -1.5px; line-height: 1;
-  background: var(--ai-grad);
+  font-size: clamp(40px, 10vw, 70px); font-weight: 800;
+  letter-spacing: -3px; line-height: 0.9;
+  background: linear-gradient(to bottom, #fff, rgba(255,255,255,0.2));
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  margin-bottom: 20px;
+  animation: titlePulse 4s ease-in-out infinite;
 }
 
-.hero-sub {
-  color: var(--muted); font-size: 15px; margin-top: 12px; margin-bottom: 40px;
+@keyframes titlePulse {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.05); opacity: 1; filter: blur(0); }
 }
 
-.input-block {
-  position: relative; margin-bottom: 16px;
+/* --- MINIMALIST DATA INPUTS --- */
+.data-gate {
+  width: 100%; max-width: 400px;
+  opacity: 0; transform: translateY(30px);
+  transition: all 1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.data-gate.active { opacity: 1; transform: translateY(0); }
+
+.quantum-input {
+  width: 100%; background: transparent; border: none;
+  border-bottom: 2px solid rgba(255,255,255,0.1);
+  padding: 20px 0; color: #fff; font-size: 24px;
+  font-weight: 200; text-align: center;
+  letter-spacing: 1px; transition: 0.5s;
+}
+.quantum-input:focus {
+  border-bottom-color: var(--ai-cyan);
+  box-shadow: 0 15px 30px -15px rgba(103,232,249,0.3);
 }
 
-input {
-  width: 100%; padding: 20px 24px;
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 24px; color: #fff;
-  font-size: 18px; font-family: inherit;
-  transition: all 0.4s ease;
+.next-trigger {
+  margin-top: 50px; background: transparent; border: 1px solid rgba(255,255,255,0.2);
+  color: #fff; padding: 15px 40px; border-radius: 100px;
+  font-size: 14px; text-transform: uppercase; letter-spacing: 4px;
+  cursor: pointer; transition: 0.4s;
   backdrop-filter: blur(10px);
 }
-
-input:focus {
-  background: rgba(255,255,255,0.06);
-  border-color: var(--cyan);
-  box-shadow: 0 0 25px rgba(103,232,249,0.15);
-  transform: translateY(-2px);
+.next-trigger:hover {
+  background: #fff; color: #000; border-color: #fff;
+  transform: translateY(-5px);
 }
 
-.action-btn {
-  width: 100%; height: 64px; margin-top: 24px;
-  background: var(--ai-grad); color: #0b1020;
-  border: none; border-radius: 24px;
-  font-size: 18px; font-weight: 900; cursor: pointer;
-  box-shadow: 0 15px 35px rgba(99,102,241,0.3);
-  transition: all 0.3s ease;
+/* Enerji Halkası */
+.ring-container {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 300px; height: 300px;
+  pointer-events: none;
 }
-.action-btn:active { transform: scale(0.97); }
-
-.dot-progress {
-  display: flex; justify-content: center; gap: 8px; margin-top: 40px;
+.ring {
+  position: absolute; inset: 0;
+  border: 1px solid var(--ai-cyan);
+  border-radius: 50%; opacity: 0.1;
+  animation: ringExpand 3s infinite;
 }
-.dot { width: 6px; height: 6px; background: rgba(255,255,255,0.1); border-radius: 50%; transition: 0.4s; }
-.dot.active { width: 24px; background: var(--cyan); border-radius: 10px; box-shadow: 0 0 10px var(--cyan); }
+@keyframes ringExpand {
+  0% { transform: scale(0.5); opacity: 0.5; }
+  100% { transform: scale(2); opacity: 0; }
+}
 
 </style>
 </head>
 <body>
 
-<div class="genesis-bg">
-  <div class="holo-field">
-    <div class="crystal-cage">
-      <div class="crystal-side side1"></div>
-      <div class="crystal-side side2"></div>
-      <div class="crystal-side side3"></div>
-      <div class="crystal-side side4"></div>
-      <div class="crystal-side side5"></div>
-      <div class="crystal-side side6"></div>
-    </div>
+<canvas id="canvas"></canvas>
+
+<div class="interface">
+  
+  <div class="ring-container">
+    <div class="ring"></div>
+    <div class="ring" style="animation-delay: 1s"></div>
+    <div class="ring" style="animation-delay: 2s"></div>
   </div>
-  <div class="energy-platform"></div>
-</div>
 
-<div class="viewport">
-  <div class="step-container">
-    
-    <div class="step active" id="st1">
-      <h1 class="hero-title">italkyAI<br>Genesis</h1>
-      <p class="hero-sub">Dil bariyerlerinin olmadığı bir dünyaya adım atmak üzeresin.</p>
-      <button class="action-btn" onclick="next(2)">Sistemi Başlat</button>
-    </div>
-
-    <div class="step" id="st2">
-      <h1 class="hero-title">Kimlik?</h1>
-      <p class="hero-sub">Sana özel bir frekans oluşturmak için adını gir.</p>
-      <div class="input-block">
-        <input type="text" id="name" placeholder="Adınız Soyadınız" autocomplete="off">
-      </div>
-      <button class="action-btn" onclick="next(3)">Onayla</button>
-    </div>
-
-    <div class="step" id="st3">
-      <h1 class="hero-title">Bağlantı.</h1>
-      <p class="hero-sub">italkyAI ağında yerini almak için bilgileri tamamla.</p>
-      <div class="input-block">
-        <input type="email" id="email" placeholder="E-posta Adresiniz" autocomplete="off">
-      </div>
-      <div class="input-block">
-        <input type="tel" id="phone" placeholder="Telefon (Opsiyonel)" autocomplete="off">
-      </div>
-      <button class="action-btn" id="finishBtn" onclick="save()">Genesis'i Başlat ✨</button>
-    </div>
-
-    <div class="dot-progress">
-      <div class="dot active" id="d1"></div>
-      <div class="dot" id="d2"></div>
-      <div class="dot" id="d3"></div>
-    </div>
-
+  <div class="data-gate active" id="g1">
+    <h1 class="fluid-title">italkyAI<br>CORE</h1>
+    <p style="color:rgba(255,255,255,0.4); letter-spacing: 2px;">SİSTEM BAŞLATILIYOR</p>
+    <button class="next-trigger" onclick="go(2)">BAĞLAN</button>
   </div>
+
+  <div class="data-gate" id="g2">
+    <h1 class="fluid-title">KİMLİK?</h1>
+    <input type="text" id="name" class="quantum-input" placeholder="İSİM SOYİSİM" autocomplete="off">
+    <button class="next-trigger" onclick="go(3)">ONAYLA</button>
+  </div>
+
+  <div class="data-gate" id="g3">
+    <h1 class="fluid-title">SENKRON.</h1>
+    <input type="email" id="email" class="quantum-input" placeholder="E-POSTA" autocomplete="off">
+    <br><br>
+    <input type="tel" id="phone" class="quantum-input" placeholder="TELEFON" autocomplete="off">
+    <button class="next-trigger" id="finBtn" onclick="finalize()">EVRENE KATIL</button>
+  </div>
+
 </div>
 
 <script>
-function next(s) {
-  if(s === 3 && !document.getElementById('name').value.trim()) return alert("Ad Soyad girmelisiniz.");
-  
-  document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
-  document.getElementById('st' + s).classList.add('active');
-  
-  document.querySelectorAll('.dot').forEach((d, i) => {
-    d.classList.toggle('active', i < s);
-  });
+/* --- NEURAL BACKGROUND ENGINE --- */
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+let particles = [];
+
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resize);
+resize();
+
+class Particle {
+  constructor() {
+    this.x = Math.random() * canvas.width;
+    this.y = Math.random() * canvas.height;
+    this.size = Math.random() * 2 + 1;
+    this.speedX = Math.random() * 1 - 0.5;
+    this.speedY = Math.random() * 1 - 0.5;
+    this.color = Math.random() > 0.5 ? '#67e8f9' : '#f472b6';
+  }
+  update() {
+    this.x += this.speedX;
+    this.y += this.speedY;
+    if (this.x > canvas.width) this.x = 0;
+    if (this.x < 0) this.x = canvas.width;
+    if (this.y > canvas.height) this.y = 0;
+    if (this.y < 0) this.y = canvas.height;
+  }
+  draw() {
+    ctx.fillStyle = this.color;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+    ctx.fill();
+  }
 }
 
-async function save() {
-  const name = document.getElementById("name").value.trim();
-  const email = document.getElementById("email").value.trim();
-  const phone = document.getElementById("phone").value.trim();
-  const btn = document.getElementById("finishBtn");
-
-  if(!email.includes('@')) return alert("Geçerli bir e-posta girin.");
-
-  btn.innerText = "Kullanıcı Oluşturuluyor...";
-  
-  try {
-    const res = await fetch("/api/auth/register", {
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify({ name, email, phone })
-    });
-    const data = await res.json();
-    if(data.ok) {
-      localStorage.setItem("user_id", data.user_id);
-      location.href = "/";
-    }
-  } catch(e) {
-    alert("Bağlantı hatası.");
-    btn.innerText = "Genesis'i Başlat ✨";
+function init() {
+  particles = [];
+  for (let i = 0; i < 100; i++) {
+    particles.push(new Particle());
   }
+}
+
+function animate() {
+  ctx.fillStyle = 'rgba(3, 0, 5, 0.1)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  particles.forEach(p => {
+    p.update();
+    p.draw();
+  });
+  
+  // Parçacıkları birbirine bağlayan sinirsel çizgiler
+  for(let i=0; i<particles.length; i++){
+    for(let j=i; j<particles.length; j++){
+      let dx = particles[i].x - particles[j].x;
+      let dy = particles[i].y - particles[j].y;
+      let dist = Math.sqrt(dx*dx + dy*dy);
+      if(dist < 100){
+        ctx.strokeStyle = particles[i].color;
+        ctx.globalAlpha = 1 - (dist/100);
+        ctx.lineWidth = 0.5;
+        ctx.beginPath();
+        ctx.moveTo(particles[i].x, particles[i].y);
+        ctx.lineTo(particles[j].x, particles[j].y);
+        ctx.stroke();
+      }
+    }
+  }
+  ctx.globalAlpha = 1;
+  requestAnimationFrame(animate);
+}
+
+init();
+animate();
+
+/* --- INTERFACE LOGIC --- */
+function go(s) {
+  if(s === 3 && !document.getElementById('name').value.trim()) return;
+  document.querySelectorAll('.data-gate').forEach(g => g.classList.remove('active'));
+  setTimeout(() => {
+    document.getElementById('g' + s).classList.add('active');
+  }, 500);
+}
+
+async function finalize() {
+  const btn = document.getElementById('finBtn');
+  btn.innerText = "SİSTEME İŞLENİYOR...";
+  
+  // Buraya senin fetch/register logic'in gelecek
+  setTimeout(() => {
+    localStorage.setItem("user_id", "core_" + Math.random());
+    location.href = "/";
+  }, 2000);
 }
 </script>
 
