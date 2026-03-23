@@ -2,608 +2,206 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>italkyAI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>italkyAI • Gizlilik</title>
   <link rel="icon" href="data:," />
-
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
   <style>
     :root {
-      --bg-deep: #020205;
-      --text-main: #ffffff;
-      --text-muted: rgba(255, 255, 255, 0.65);
-
-      --c-indigo: #6366f1;
-      --c-purple: #a855f7;
-      --ai-grad: linear-gradient(135deg, #a5b4fc 0%, #6366f1 100%);
-
-      --glass-border: rgba(255, 255, 255, 0.1);
-      --ease-elastic: cubic-bezier(0.34, 1.56, 0.64, 1);
+      --neon: #00f2ff;
+      --pink: #ff007a;
+      --ai-grad: linear-gradient(135deg, #00f2ff 0%, #7000ff 50%, #ff007a 100%);
+      --bg: #060408;
+      --glass: rgba(255, 255, 255, 0.04);
+      --border: rgba(255, 255, 255, 0.1);
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+    html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: #fff; font-family: 'Outfit', sans-serif; }
 
-    html, body {
-      margin: 0; padding: 0; width: 100%; height: 100%;
-      overflow: hidden; position: fixed;
-      font-family: 'Outfit', sans-serif;
-      background-color: var(--bg-deep); color: var(--text-main);
-      display: flex; align-items: center; justify-content: center;
+    /* --- CANLI ARKA PLAN (italkyAI DNA) --- */
+    .bg-layer {
+      position: fixed; inset: 0; z-index: 1;
+      background:
+        radial-gradient(circle at 50% -10%, rgba(0, 242, 255, 0.18) 0%, transparent 40%),
+        linear-gradient(180deg, #0f0816 0%, #060408 100%);
     }
 
-    .cosmos-bg { position: absolute; inset: -50%; width: 200%; height: 200%; background: var(--bg-deep); z-index: 0; pointer-events: none; }
-    .orb { position: absolute; border-radius: 50%; filter: blur(100px); opacity: 0.3; animation: floatOrbit 30s infinite alternate ease-in-out; }
-    .orb-1 { top: 10%; left: 10%; width: 60vw; height: 60vw; background: radial-gradient(circle, var(--c-indigo), transparent 70%); }
-    .orb-2 { bottom: 10%; right: 10%; width: 50vw; height: 50vw; background: radial-gradient(circle, var(--c-purple), transparent 70%); animation-delay: -5s; }
-    @keyframes floatOrbit { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(10%, -10%) scale(1.1); } }
-    .noise { position: absolute; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E"); pointer-events: none; mix-blend-mode: overlay; z-index: 1; }
+    .crystal-wrap {
+      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      perspective: 1200px; pointer-events: none; z-index: 2;
+    }
 
+    .crystal-cage {
+      width: 320px; height: 320px; transform-style: preserve-3d;
+      animation: rotateCrystal 22s linear infinite; opacity: 0.18;
+    }
+
+    .side {
+      position: absolute; inset: 0; border: 1.5px solid var(--neon);
+      background: radial-gradient(circle, rgba(0, 242, 255, 0.08), transparent);
+    }
+    .s1{ transform:rotateY(0deg) translateZ(160px); }
+    .s2{ transform:rotateY(90deg) translateZ(160px); }
+    .s3{ transform:rotateX(90deg) translateZ(160px); }
+
+    @keyframes rotateCrystal {
+      from { transform: rotateX(0deg) rotateY(0deg); }
+      to { transform: rotateX(360deg) rotateY(720deg); }
+    }
+
+    /* --- MOBILE FRAME & CONTENT --- */
     .mobile-frame {
-      width: 100%; max-width: 480px; height: 100%; position: relative; z-index: 10;
-      display: flex; flex-direction: column;
-      background: rgba(8, 8, 12, 0.5); backdrop-filter: blur(30px);
-    }
-    @media (min-width: 520px) {
-      .mobile-frame { height: 92vh; border-radius: 40px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 40px 100px -20px rgba(0,0,0,0.9); overflow: hidden; }
+      width: 100%; max-width: 480px; height: 100dvh; margin: 0 auto;
+      position: relative; z-index: 10; display: flex; flex-direction: column;
     }
 
-    .topbar { flex: 0 0 90px; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; position: relative; z-index: 20; }
-    .back-btn { width: 44px; height: 44px; border-radius: 14px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.05); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
-    .back-btn:active { transform: scale(0.95); background: rgba(255,255,255,0.1); }
-    .back-btn svg { width: 22px; height: 22px; stroke-width: 2.5; }
+    .top-nav {
+      display: flex; align-items: center; gap: 15px; padding: 20px;
+      position: sticky; top: 0; z-index: 30; background: transparent;
+    }
 
-    .mini-brand { display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1; margin-top: 4px; }
-    .logo-container { font-family: 'Space Grotesk', sans-serif; font-size: 26px; letter-spacing: -1px; }
-    .logo-main { font-weight: 700; color: #fff; }
-    .logo-ai { font-weight: 700; background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .mini-slogan { font-family: 'Outfit', sans-serif; font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.5); letter-spacing: 4px; text-transform: uppercase; margin-top: 4px; margin-left: 2px; }
+    .btn-back {
+      background: transparent; border: none; color: #fff; font-size: 26px;
+      font-weight: 900; cursor: pointer; display: flex; align-items: center;
+    }
+    .btn-back:hover { color: var(--neon); text-shadow: 0 0 10px var(--neon); }
+
+    .brand {
+      font-family: 'Space Grotesk', sans-serif; font-size: 24px; font-weight: 800;
+      background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      letter-spacing: -1px;
+    }
 
     .page-content {
-      flex: 1; height: 100%; min-height: 0;
-      overflow-y: auto; -webkit-overflow-scrolling: touch;
-      padding: 10px 20px 160px; display: flex; flex-direction: column; gap: 20px;
-      position: relative; z-index: 5;
+      flex: 1; overflow-y: auto; padding: 0 20px 140px;
+      scrollbar-width: none; -webkit-overflow-scrolling: touch;
     }
     .page-content::-webkit-scrollbar { display: none; }
 
+    /* --- PRIVACY COMPONENTS --- */
     .privacy-card {
-      background: linear-gradient(160deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.005) 100%);
-      border: 1px solid var(--glass-border); border-radius: 32px; padding: 32px 24px;
-      position: relative; overflow: hidden; animation: fadeInUp 0.8s var(--ease-elastic); flex-shrink: 0;
+      background: var(--glass); border: 1px solid var(--border);
+      border-radius: 32px; padding: 35px 25px; backdrop-filter: blur(25px);
+      box-shadow: 0 30px 60px rgba(0,0,0,0.4);
+      animation: cardIn 0.8s cubic-bezier(0.19, 1, 0.22, 1) forwards;
     }
 
-    h1 { font-family: 'Space Grotesk', sans-serif; font-size: 32px; margin: 0 0 12px; color: #fff; font-weight: 700; letter-spacing: -1.5px; }
+    @keyframes cardIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    h1 { font-family: 'Space Grotesk', sans-serif; font-size: 32px; font-weight: 800; margin: 0 0 15px; letter-spacing: -1.5px; }
     h1 span { background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
-    .intro {
-      font-size: 15px; color: rgba(255,255,255,0.6); font-style: italic;
-      padding-bottom: 20px; margin-bottom: 24px; border-bottom: 1px solid rgba(255,255,255,0.1); line-height: 1.6;
-    }
+    .intro { font-size: 15px; color: rgba(255,255,255,0.7); line-height: 1.6; margin-bottom: 30px; border-left: 2px solid var(--neon); padding-left: 15px; font-style: italic; }
 
-    .section { margin-bottom: 28px; }
-    h3 {
-      font-family: 'Space Grotesk', sans-serif; color: #fff; opacity: 0.9;
-      font-size: 17px; margin: 0 0 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
-      display: flex; align-items: center; gap: 10px;
-    }
-    h3::before { content: ''; width: 6px; height: 6px; background: var(--c-indigo); border-radius: 50%; box-shadow: 0 0 10px var(--c-indigo); }
+    .section { margin-bottom: 30px; }
+    h3 { font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 900; color: var(--neon); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+    h3::before { content: ""; width: 8px; height: 8px; background: var(--pink); border-radius: 50%; box-shadow: 0 0 10px var(--pink); }
 
-    p { font-size: 15px; line-height: 1.7; color: var(--text-muted); margin: 0 0 10px; }
+    p { font-size: 14px; color: rgba(255,255,255,0.8); line-height: 1.7; margin-bottom: 12px; }
+    ul { padding: 0; list-style: none; margin-bottom: 15px; }
+    li { position: relative; padding-left: 20px; font-size: 14px; color: rgba(255,255,255,0.7); margin-bottom: 10px; line-height: 1.5; }
+    li::before { content: "›"; position: absolute; left: 0; color: var(--neon); font-weight: 900; font-size: 18px; top: -2px; }
 
-    ul { padding: 0; list-style: none; margin: 0 0 10px; }
-    li { position: relative; padding-left: 20px; margin-bottom: 10px; font-size: 14px; color: rgba(255,255,255,0.75); line-height: 1.5; }
-    li::after { content: ''; position: absolute; left: 0; top: 8px; width: 10px; height: 2px; background: var(--c-indigo); border-radius: 2px; }
+    .highlight { color: #fff; font-weight: 700; text-shadow: 0 0 10px rgba(255,255,255,0.2); }
 
-    .highlight { color: #fff; font-weight: 600; text-shadow: 0 0 15px rgba(99, 102, 241, 0.4); }
-
-    .footerbar { position: absolute; bottom: 0; width: 100%; padding: 24px; background: linear-gradient(to top, #000 20%, transparent 100%); display: flex; flex-direction: column; align-items: center; gap: 16px; z-index: 30; pointer-events: none; }
-    .links { display: flex; gap: 20px; pointer-events: auto; }
-    .links a { color: rgba(255,255,255,0.5); text-decoration: none; font-size: 11px; font-weight: 700; text-transform: uppercase; transition: 0.2s; }
-    .links a:hover { color: #fff; }
-    .footerBrand { font-size: 10px; color: rgba(255,255,255,0.2); letter-spacing: 1.5px; text-transform: uppercase; font-weight: 700; }
-    @keyframes fadeInUp { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    /* --- FOOTER --- */
+    .footer-bar { position: absolute; bottom: 0; width: 100%; padding: 25px; background: linear-gradient(to top, var(--bg) 60%, transparent); display: flex; flex-direction: column; align-items: center; gap: 15px; z-index: 40; }
+    .footer-links { display: flex; gap: 20px; }
+    .footer-links a { color: rgba(255,255,255,0.5); text-decoration: none; font-size: 11px; font-weight: 700; text-transform: uppercase; transition: 0.3s; }
+    .footer-links a.active { color: var(--neon); text-shadow: 0 0 8px var(--neon); }
+    .footer-copy { font-size: 10px; color: rgba(255,255,255,0.3); font-weight: 700; }
   </style>
 </head>
-
 <body>
-  <div class="cosmos-bg"><div class="orb orb-1"></div><div class="orb orb-2"></div></div>
-  <div class="noise"></div>
 
-  <div class="mobile-frame">
-    <div class="topbar">
-      <button class="back-btn" onclick="window.history.length > 1 ? window.history.back() : window.location.href='/pages/home.html'">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-      </button>
-
-      <div class="mini-brand">
-        <div class="logo-container">
-          <span class="logo-main">italky</span><span class="logo-ai">AI</span>
-        </div>
-        <div class="mini-slogan">BE FREE</div>
-      </div>
-    </div>
-
-    <!-- ✅ host -->
-    <div class="page-content" id="contentHost"></div>
-
-    <div class="footerbar">
-      <div class="links">
-        <a href="/pages/about.html" id="lnkAbout">About</a>
-        <a href="/pages/faq.html" id="lnkFaq">FAQ</a>
-        <a href="/pages/privacy.html" id="lnkPrivacy" style="color:#fff">Privacy</a>
-        <a href="/pages/contact.html" id="lnkContact">Contact</a>
-      </div>
-      <div class="footerBrand">italkyAI By Ozyigit's 2026</div>
+  <div class="bg-layer"></div>
+  <div class="crystal-wrap">
+    <div class="crystal-cage">
+      <div class="side s1"></div>
+      <div class="side s2"></div>
+      <div class="side s3"></div>
     </div>
   </div>
 
-  <!-- ====== TR ====== -->
+  <div class="mobile-frame">
+    <div class="top-nav">
+      <button class="btn-back" onclick="window.history.length > 1 ? window.history.back() : window.location.href='/pages/home.html'">←</button>
+      <div class="brand">italkyAI</div>
+    </div>
+
+    <div class="page-content" id="contentHost"></div>
+
+    <div class="footer-bar">
+      <div class="footer-links">
+        <a href="/pages/about.html">Hakkımızda</a>
+        <a href="/pages/faq.html">SSS</a>
+        <a href="/pages/privacy.html" class="active">Gizlilik</a>
+      </div>
+      <div class="footer-copy">italkyAI By <b>Ozyigit's</b> • 2026</div>
+    </div>
+  </div>
+
   <template id="privacy_tr">
     <div class="privacy-card">
       <h1>Gizlilik <span>Politikası</span></h1>
+      <div class="intro">italkyAI olarak kişisel verilerinize saygı duyar ve verilerinizi global güvenlik standartlarına uygun şekilde koruruz.</div>
 
-      <div class="intro">
-        italkyAI olarak kişisel verilerinize saygı duyar ve verilerinizi güvenlik standartlarına uygun şekilde koruruz.
-      </div>
-
-      <!-- ✅ NEW: DATA CONTROLLER (PERSON) -->
       <div class="section">
         <h3>0. VERİ SORUMLUSU</h3>
-        <p>
-          Bu gizlilik politikası <span class="highlight">italkyAI</span> uygulaması için geçerlidir.
-          Veri sorumlusu: <span class="highlight">Oğuz Özyiğit</span>
-        </p>
-        <p>
-          Adres: Şerefiye Mah. Uzunzade Sk. B Blok No: 11/1 İç Kapı No: 10
-          Merkez / Düzce – Türkiye
-        </p>
-        <p>
-          Gizlilikle ilgili talepleriniz için: <span class="highlight">privacy@italky.ai</span>
-        </p>
+        <p>Veri sorumlusu: <span class="highlight">Oğuz Özyiğit</span></p>
+        <p>Adres: Şerefiye Mah. Uzunzade Sk. B Blok No: 11/1 İç Kapı No: 10 Merkez / Düzce – Türkiye</p>
+        <p>İletişim: <span class="highlight">privacy@italky.ai</span></p>
       </div>
 
       <div class="section">
         <h3>1. TOPLANAN VERİLER</h3>
-        <p>Hizmeti sunmak ve geliştirmek için şu verileri işleyebiliriz:</p>
         <ul>
-          <li><strong>Hesap Bilgileri:</strong> Google ile giriş yaptığınızda alınan temel hesap bilgileri (ör. e-posta).</li>
-          <li><strong>Kullanım Verileri:</strong> Uygulama içi tercihleriniz ve kullanım akışları.</li>
-          <li><strong>Ses Verileri:</strong> Canlı pratik sırasında anlık işlenebilir; <span class="highlight">kalıcı olarak depolanmaz</span>.</li>
+          <li><strong>Hesap Bilgileri:</strong> Google ile giriş yapıldığında alınan e-posta ve temel profil.</li>
+          <li><strong>Kullanım Verileri:</strong> Uygulama içi tercihler ve kullanım akışı.</li>
+          <li><strong>Ses Verileri:</strong> Canlı pratik sırasında anlık işlenir; <span class="highlight">asla kalıcı depolanmaz</span>.</li>
         </ul>
       </div>
 
       <div class="section">
         <h3>2. KAMERA VE MİKROFON</h3>
-        <ul>
-          <li>Kamera ve mikrofon, yalnızca siz ilgili özelliği açtığınızda kullanılır.</li>
-          <li>Siz kapattığınız anda erişim kesilir.</li>
-          <li>Görüntüleriniz ve ses kayıtlarınız uygulama tarafından <span class="highlight">kalıcı olarak kaydedilmez</span>.</li>
-        </ul>
+        <p>Kamera ve mikrofon, yalnızca siz ilgili özelliği açtığınızda kullanılır ve kapattığınız anda erişim kesilir. Görüntüleriniz <span class="highlight">asla kaydedilmez</span>.</p>
       </div>
 
       <div class="section">
-        <h3>3. VERİ GÜVENLİĞİ</h3>
-        <p>
-          Verileriniz SSL/TLS ile şifrelenmiş bağlantılar üzerinden iletilir. Veriler, hizmetin sunulması amacıyla güvenli altyapılarda işlenir ve saklanır.
-        </p>
+        <h3>3. ÜÇÜNCÜ TARAF SERVİSLER</h3>
+        <p>Hizmetin sunulması için Google Auth, OpenAI (dil işleme), Supabase (veri saklama) ve Render altyapıları kullanılmaktadır.</p>
       </div>
 
       <div class="section">
-        <h3>4. YAPAY ZEKA VE İŞLEME</h3>
-        <p>
-          Metin ve ses girdileriniz, çeviri ve konuşma özelliklerini sağlamak amacıyla işlenebilir. Ses verileri, canlı kullanım sırasında anlık olarak işlenir ve sunucularımızda <span class="highlight">kalıcı olarak depolanmaz</span>.
-        </p>
+        <h3>4. KULLANICI HAKLARI</h3>
+        <p>Verilerinize erişebilir ve hesabınızı <strong>Profil > Hesabı Sil</strong> adımıyla her an kalıcı olarak silebilirsiniz.</p>
       </div>
-
-      <!-- ✅ NEW: THIRD PARTIES -->
-      <div class="section">
-        <h3>5. ÜÇÜNCÜ TARAF HİZMETLER</h3>
-        <p>Uygulama, hizmetin sunulması için aşağıdaki üçüncü taraf hizmetlerini kullanabilir:</p>
-        <ul>
-          <li><strong>Google Giriş:</strong> Kimlik doğrulama.</li>
-          <li><strong>Google hizmetleri / ses işleme:</strong> Ses verileri canlı kullanım sırasında işlenebilir.</li>
-          <li><strong>OpenAI:</strong> Metin/ses girdileri çeviri ve dil işleme için kullanılabilir.</li>
-          <li><strong>Supabase:</strong> Kullanıcı hesabı ve temel verilerin saklanması/işlenmesi.</li>
-        </ul>
-      </div>
-
-      <div class="section">
-        <h3>6. KULLANICI HAKLARI</h3>
-        <ul>
-          <li>Verilerinize erişebilir, kopyasını talep edebilirsiniz.</li>
-          <li>Hesabınızı uygulama içinden <strong>Profil &gt; Hesabı Sil</strong> adımıyla kalıcı olarak silebilirsiniz.</li>
-        </ul>
-      </div>
-
-      <div class="section">
-        <h3>7. İLETİŞİM</h3>
-        <p>
-          Gizlilikle ilgili sorularınız için <span class="highlight">privacy@italky.ai</span> adresinden bize ulaşabilirsiniz.
-        </p>
-      </div>
-      <br>
-    </div>
-  </template>
-
-  <!-- ====== EN ====== -->
-  <template id="privacy_en">
-    <div class="privacy-card">
-      <h1>Privacy <span>Policy</span></h1>
-
-      <div class="intro">
-        At italkyAI, we respect your personal data and protect it in line with applicable security standards.
-      </div>
-
-      <!-- ✅ NEW -->
-      <div class="section">
-        <h3>0. DATA CONTROLLER</h3>
-        <p>
-          This Privacy Policy applies to the <span class="highlight">italkyAI</span> application.
-          Data Controller: <span class="highlight">Oguz Ozyigit</span>
-        </p>
-        <p>
-          Address: Serefiye Mah. Uzunzade Sk. B Block No: 11/1 Door No: 10
-          Merkez / Duzce – Turkey
-        </p>
-        <p>
-          For privacy-related requests: <span class="highlight">privacy@italky.ai</span>
-        </p>
-      </div>
-
-      <div class="section">
-        <h3>1. DATA WE COLLECT</h3>
-        <p>We may process the following data to provide and improve the service:</p>
-        <ul>
-          <li><strong>Account Information:</strong> Basic account info received when you sign in with Google (e.g., email).</li>
-          <li><strong>Usage Data:</strong> In-app preferences and usage flows.</li>
-          <li><strong>Voice Data:</strong> May be processed in real time during live practice and <span class="highlight">not stored permanently</span>.</li>
-        </ul>
-      </div>
-
-      <div class="section">
-        <h3>2. CAMERA AND MICROPHONE</h3>
-        <ul>
-          <li>Camera and microphone are used only when you enable related features.</li>
-          <li>Access stops when you disable them.</li>
-          <li>Your images and audio are <span class="highlight">not stored permanently</span> by the app.</li>
-        </ul>
-      </div>
-
-      <div class="section">
-        <h3>3. DATA SECURITY</h3>
-        <p>
-          Data is transmitted via SSL/TLS-encrypted connections. Data is processed and stored on secure infrastructure for service delivery purposes.
-        </p>
-      </div>
-
-      <div class="section">
-        <h3>4. AI AND PROCESSING</h3>
-        <p>
-          Your text and voice inputs may be processed to provide translation and speaking features. Voice data is processed during live use and <span class="highlight">not stored permanently</span> on our servers.
-        </p>
-      </div>
-
-      <!-- ✅ NEW -->
-      <div class="section">
-        <h3>5. THIRD-PARTY SERVICES</h3>
-        <p>The app may use the following third-party services to provide core functionality:</p>
-        <ul>
-          <li><strong>Google Sign-In:</strong> Authentication.</li>
-          <li><strong>Google services / speech processing:</strong> Voice data may be processed during live use.</li>
-          <li><strong>OpenAI:</strong> Text/voice inputs may be used for translation and language processing.</li>
-          <li><strong>Supabase:</strong> Account management and basic data storage/processing.</li>
-        </ul>
-      </div>
-
-      <div class="section">
-        <h3>6. USER RIGHTS</h3>
-        <ul>
-          <li>You can access your data and request a copy.</li>
-          <li>You can permanently delete your account from <strong>Profile &gt; Delete Account</strong> within the app.</li>
-        </ul>
-      </div>
-
-      <div class="section">
-        <h3>7. CONTACT</h3>
-        <p>
-          For any privacy-related questions, contact <span class="highlight">privacy@italky.ai</span>.
-        </p>
-      </div>
-      <br>
-    </div>
-  </template>
-
-  <!-- ====== DE ====== -->
-  <template id="privacy_de">
-    <div class="privacy-card">
-      <h1>Datenschutz<span>richtlinie</span></h1>
-
-      <div class="intro">
-        Bei italkyAI respektieren wir Ihre personenbezogenen Daten und schützen sie gemäß geltenden Sicherheitsstandards.
-      </div>
-
-      <div class="section">
-        <h3>0. VERANTWORTLICHE STELLE</h3>
-        <p>
-          Diese Datenschutzerklärung gilt für die <span class="highlight">italkyAI</span>-App.
-          Verantwortliche Stelle: <span class="highlight">Oguz Ozyigit</span>
-        </p>
-        <p>
-          Adresse: Serefiye Mah. Uzunzade Sk. B Block Nr: 11/1 Tür Nr: 10
-          Merkez / Duzce – Türkei
-        </p>
-        <p>
-          Kontakt: <span class="highlight">privacy@italky.ai</span>
-        </p>
-      </div>
-
-      <div class="section">
-        <h3>1. ERHOBENE DATEN</h3>
-        <p>Zur Bereitstellung und Verbesserung des Dienstes können wir folgende Daten verarbeiten:</p>
-        <ul>
-          <li><strong>Kontoinformationen:</strong> Basisdaten bei Google-Login (z. B. E-Mail).</li>
-          <li><strong>Nutzungsdaten:</strong> In-App-Einstellungen und Nutzung.</li>
-          <li><strong>Sprachdaten:</strong> Verarbeitung in Echtzeit während Live-Nutzung; <span class="highlight">keine dauerhafte Speicherung</span>.</li>
-        </ul>
-      </div>
-
-      <div class="section">
-        <h3>2. KAMERA UND MIKROFON</h3>
-        <ul>
-          <li>Kamera und Mikrofon werden nur verwendet, wenn Sie Funktionen aktivieren.</li>
-          <li>Der Zugriff endet, sobald Sie sie deaktivieren.</li>
-          <li>Keine dauerhafte Speicherung von Bildern/Audio durch die App.</li>
-        </ul>
-      </div>
-
-      <div class="section">
-        <h3>3. DATENSICHERHEIT</h3>
-        <p>
-          Datenübertragung erfolgt über SSL/TLS. Daten werden zur Leistungserbringung auf sicherer Infrastruktur verarbeitet und gespeichert.
-        </p>
-      </div>
-
-      <div class="section">
-        <h3>4. KI UND VERARBEITUNG</h3>
-        <p>
-          Text- und Spracheingaben können zur Übersetzung und Sprachfunktionen verarbeitet werden. Sprachdaten werden während der Live-Nutzung verarbeitet und <span class="highlight">nicht dauerhaft gespeichert</span>.
-        </p>
-      </div>
-
-      <div class="section">
-        <h3>5. DIENSTE DRITTER</h3>
-        <p>Zur Bereitstellung der Kernfunktionen können wir Dienste Dritter nutzen:</p>
-        <ul>
-          <li><strong>Google Sign-In:</strong> Authentifizierung.</li>
-          <li><strong>Google-Dienste / Sprachverarbeitung:</strong> Sprachdaten können während Live-Nutzung verarbeitet werden.</li>
-          <li><strong>OpenAI:</strong> Text-/Sprachdaten können zur Sprachverarbeitung genutzt werden.</li>
-          <li><strong>Supabase:</strong> Kontoverwaltung und Basisspeicherung.</li>
-        </ul>
-      </div>
-
-      <div class="section">
-        <h3>6. NUTZERRECHTE</h3>
-        <ul>
-          <li>Zugriff auf Daten und Kopie anfordern.</li>
-          <li>Konto löschen über <strong>Profil &gt; Konto löschen</strong> in der App.</li>
-        </ul>
-      </div>
-
-      <div class="section">
-        <h3>7. KONTAKT</h3>
-        <p>Kontakt: <span class="highlight">privacy@italky.ai</span></p>
-      </div>
-      <br>
-    </div>
-  </template>
-
-  <!-- ====== IT ====== -->
-  <template id="privacy_it">
-    <div class="privacy-card">
-      <h1>Informativa <span>sulla privacy</span></h1>
-
-      <div class="intro">
-        In italkyAI rispettiamo i tuoi dati personali e li proteggiamo secondo gli standard di sicurezza applicabili.
-      </div>
-
-      <div class="section">
-        <h3>0. TITOLARE DEL TRATTAMENTO</h3>
-        <p>
-          Questa informativa si applica all’app <span class="highlight">italkyAI</span>.
-          Titolare: <span class="highlight">Oguz Ozyigit</span>
-        </p>
-        <p>
-          Indirizzo: Serefiye Mah. Uzunzade Sk. B Block No: 11/1 Door No: 10
-          Merkez / Duzce – Turkey
-        </p>
-        <p>
-          Contatto: <span class="highlight">privacy@italky.ai</span>
-        </p>
-      </div>
-
-      <div class="section">
-        <h3>1. DATI RACCOLTI</h3>
-        <p>Possiamo trattare i seguenti dati per fornire e migliorare il servizio:</p>
-        <ul>
-          <li><strong>Informazioni account:</strong> dati base al login Google (es. email).</li>
-          <li><strong>Dati d’uso:</strong> preferenze e utilizzo nell’app.</li>
-          <li><strong>Dati vocali:</strong> elaborati in tempo reale durante l’uso; <span class="highlight">non archiviati in modo permanente</span>.</li>
-        </ul>
-      </div>
-
-      <div class="section">
-        <h3>2. FOTOCAMERA E MICROFONO</h3>
-        <ul>
-          <li>Usati solo quando attivi le funzioni.</li>
-          <li>L’accesso termina quando li disattivi.</li>
-          <li>Nessuna archiviazione permanente di immagini/audio da parte dell’app.</li>
-        </ul>
-      </div>
-
-      <div class="section">
-        <h3>3. SICUREZZA</h3>
-        <p>Dati trasmessi via SSL/TLS e trattati su infrastruttura sicura per l’erogazione del servizio.</p>
-      </div>
-
-      <div class="section">
-        <h3>4. IA E TRATTAMENTO</h3>
-        <p>Input di testo/voce possono essere trattati per traduzione e funzioni vocali; i dati vocali non sono archiviati in modo permanente.</p>
-      </div>
-
-      <div class="section">
-        <h3>5. SERVIZI DI TERZE PARTI</h3>
-        <ul>
-          <li><strong>Google Sign-In:</strong> autenticazione.</li>
-          <li><strong>Google / elaborazione voce:</strong> elaborazione durante uso live.</li>
-          <li><strong>OpenAI:</strong> elaborazione linguistica.</li>
-          <li><strong>Supabase:</strong> gestione account e dati base.</li>
-        </ul>
-      </div>
-
-      <div class="section">
-        <h3>6. DIRITTI</h3>
-        <ul>
-          <li>Puoi accedere ai tuoi dati e richiederne una copia.</li>
-          <li>Puoi eliminare l’account da <strong>Profilo &gt; Elimina account</strong> nell’app.</li>
-        </ul>
-      </div>
-
-      <div class="section">
-        <h3>7. CONTATTI</h3>
-        <p>Contatto: <span class="highlight">privacy@italky.ai</span></p>
-      </div>
-      <br>
-    </div>
-  </template>
-
-  <!-- ====== FR ====== -->
-  <template id="privacy_fr">
-    <div class="privacy-card">
-      <h1>Politique de <span>confidentialité</span></h1>
-
-      <div class="intro">
-        Chez italkyAI, nous respectons vos données personnelles et les protégeons conformément aux standards de sécurité applicables.
-      </div>
-
-      <div class="section">
-        <h3>0. RESPONSABLE DU TRAITEMENT</h3>
-        <p>
-          Cette politique s’applique à l’application <span class="highlight">italkyAI</span>.
-          Responsable : <span class="highlight">Oguz Ozyigit</span>
-        </p>
-        <p>
-          Adresse : Serefiye Mah. Uzunzade Sk. B Block No: 11/1 Door No: 10
-          Merkez / Duzce – Turquie
-        </p>
-        <p>
-          Contact : <span class="highlight">privacy@italky.ai</span>
-        </p>
-      </div>
-
-      <div class="section">
-        <h3>1. DONNÉES COLLECTÉES</h3>
-        <p>Nous pouvons traiter les données suivantes pour fournir et améliorer le service :</p>
-        <ul>
-          <li><strong>Informations de compte :</strong> données de base lors de la connexion Google (ex. e-mail).</li>
-          <li><strong>Données d’utilisation :</strong> préférences et utilisation dans l’app.</li>
-          <li><strong>Données vocales :</strong> traitées en temps réel ; <span class="highlight">non stockées de manière permanente</span>.</li>
-        </ul>
-      </div>
-
-      <div class="section">
-        <h3>2. CAMÉRA ET MICROPHONE</h3>
-        <ul>
-          <li>Utilisés uniquement lorsque vous activez les fonctionnalités.</li>
-          <li>L’accès cesse lorsque vous les désactivez.</li>
-          <li>Aucun stockage permanent d’images/audio par l’app.</li>
-        </ul>
-      </div>
-
-      <div class="section">
-        <h3>3. SÉCURITÉ</h3>
-        <p>Données transmises via SSL/TLS et traitées sur une infrastructure sécurisée pour fournir le service.</p>
-      </div>
-
-      <div class="section">
-        <h3>4. IA ET TRAITEMENT</h3>
-        <p>Les entrées texte/voix peuvent être traitées pour la traduction et les fonctions vocales ; les données vocales ne sont pas stockées de façon permanente.</p>
-      </div>
-
-      <div class="section">
-        <h3>5. SERVICES TIERS</h3>
-        <ul>
-          <li><strong>Google Sign-In :</strong> authentification.</li>
-          <li><strong>Google / traitement vocal :</strong> traitement pendant l’usage en direct.</li>
-          <li><strong>OpenAI :</strong> traitement linguistique.</li>
-          <li><strong>Supabase :</strong> gestion du compte et données de base.</li>
-        </ul>
-      </div>
-
-      <div class="section">
-        <h3>6. DROITS</h3>
-        <ul>
-          <li>Accéder à vos données et demander une copie.</li>
-          <li>Supprimer votre compte via <strong>Profil &gt; Supprimer le compte</strong> dans l’app.</li>
-        </ul>
-      </div>
-
-      <div class="section">
-        <h3>7. CONTACT</h3>
-        <p>Contact : <span class="highlight">privacy@italky.ai</span></p>
-      </div>
-      <br>
     </div>
   </template>
 
   <script type="module">
-    import { getSiteLang, t } from "/js/i18n.js";
-
-    function pickId(){
-      const lang = getSiteLang();
-      const map = { tr:"privacy_tr", en:"privacy_en", de:"privacy_de", it:"privacy_it", fr:"privacy_fr" };
-      return map[lang] || "privacy_en";
-    }
-
-    function setFooterLang(){
-      const a = document.getElementById("lnkAbout");
-      const f = document.getElementById("lnkFaq");
-      const p = document.getElementById("lnkPrivacy");
-      const c = document.getElementById("lnkContact");
-      if(a) a.textContent = t("nav_about");
-      if(f) f.textContent = t("nav_faq");
-      if(p) p.textContent = t("nav_privacy");
-      if(c) c.textContent = t("nav_contact");
-      document.documentElement.lang = getSiteLang();
-    }
+    import { getSiteLang } from "/js/i18n.js";
 
     function render(){
+      const lang = (getSiteLang?.() || "tr").toLowerCase();
       const host = document.getElementById("contentHost");
+      let tpl = document.getElementById(`privacy_${lang}`);
+      if(!tpl) tpl = document.getElementById("privacy_tr");
+
       host.innerHTML = "";
-      const tpl = document.getElementById(pickId());
-      if(tpl) host.appendChild(tpl.content.cloneNode(true));
-
-      const lang = getSiteLang();
-      const titles = {
-        tr: "italkyAI • Gizlilik",
-        en: "italkyAI • Privacy",
-        de: "italkyAI • Datenschutz",
-        it: "italkyAI • Privacy",
-        fr: "italkyAI • Confidentialité"
-      };
+      host.appendChild(tpl.content.cloneNode(true));
+      
+      const titles = { tr: "italkyAI • Gizlilik", en: "italkyAI • Privacy" };
       document.title = titles[lang] || "italkyAI";
-
-      setFooterLang();
     }
 
     render();
-
-    window.addEventListener("storage",(e)=>{
-      if(e.key==="italky_site_lang_v1" || e.key==="italky_lang_ping"){
-        render();
-      }
+    window.addEventListener("storage", (e) => {
+      if(e.key === "italky_site_lang_v1") render();
     });
   </script>
 </body>
