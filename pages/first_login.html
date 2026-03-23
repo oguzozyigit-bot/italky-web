@@ -34,7 +34,6 @@ body, html {
   overflow: hidden;
 }
 
-/* --- ARKA PLAN (Daha Derin ve Aydınlık Gradyan) --- */
 .bg-layer {
   position: fixed;
   inset: 0;
@@ -80,7 +79,6 @@ body, html {
   to { transform: rotateX(360deg) rotateY(720deg); }
 }
 
-/* --- ANA PANEL --- */
 .viewport {
   position: relative;
   z-index: 10;
@@ -371,14 +369,6 @@ const helperText = document.getElementById("helperText");
 
 let authUserId = "";
 let loginType = "google";
-let pendingUid = "";
-
-function getPendingUid() {
-  const url = new URL(window.location.href);
-  const qUid = String(url.searchParams.get("uid") || "").trim();
-  const lsUid = String(localStorage.getItem("pending_nfc_uid") || "").trim();
-  return qUid || lsUid || "";
-}
 
 function deriveFullName(user) {
   const meta = user?.user_metadata || {};
@@ -401,8 +391,6 @@ async function bootstrap() {
       return;
     }
 
-    pendingUid = getPendingUid();
-
     const { data, error } = await supabase.auth.getUser();
 
     if (!error && data?.user) {
@@ -420,8 +408,6 @@ async function bootstrap() {
       return;
     }
 
-    loginType = pendingUid ? "nfc" : "google";
-
     let tempId = localStorage.getItem("pending_profile_id");
     if (!tempId) {
       tempId = crypto.randomUUID();
@@ -429,11 +415,7 @@ async function bootstrap() {
     }
     authUserId = tempId;
 
-    if (pendingUid) {
-      helperText.textContent = "NFC kart algılandı. Profili tamamlayıp devam et.";
-    } else {
-      helperText.textContent = "Google oturumu bulunamadı. Bilgileri girip devam et.";
-    }
+    helperText.textContent = "Google oturumu bulunamadı. Bilgileri girip devam et.";
   } catch (e) {
     console.error("BOOTSTRAP ERROR:", e);
     let tempId = localStorage.getItem("pending_profile_id");
@@ -473,7 +455,6 @@ window.saveUser = async function saveUser() {
         full_name,
         email,
         phone: phone || null,
-        uid: pendingUid || null,
         login_type: loginType
       })
     });
@@ -484,22 +465,11 @@ window.saveUser = async function saveUser() {
     if (data.ok && data.user_id) {
       localStorage.setItem("user_id", data.user_id);
 
-      // 🔥 ANDROID NATIVE KÖPRÜSÜ
       if (window.Native && window.Native.setUserId) {
         window.Native.setUserId(data.user_id);
       }
 
-      if (loginType === "nfc") {
-        localStorage.setItem("mode", "pro");
-      } else {
-        localStorage.setItem("mode", "free");
-      }
-
-      if (pendingUid) {
-        localStorage.setItem("linked_nfc_uid", pendingUid);
-        localStorage.removeItem("pending_nfc_uid");
-      }
-
+      localStorage.setItem("mode", "free");
       localStorage.removeItem("pending_profile_id");
 
       window.location.href = "/pages/home.html";
