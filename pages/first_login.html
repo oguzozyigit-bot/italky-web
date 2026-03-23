@@ -3,276 +3,227 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-<title>italkyAI • Aramıza Hoş Geldin</title>
-<meta name="theme-color" content="#120d16"/>
+<title>italkyAI • Deneyim Başlıyor</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
 <style>
-:root{
-  --txt:rgba(255,255,255,.96);
-  --muted:rgba(255,255,255,.64);
-  --ai-grad:linear-gradient(135deg,#67e8f9 0%, #818cf8 46%, #f472b6 100%);
-  --blue-grad: linear-gradient(180deg, #1d1016 0%, #120d16 100%);
-}
-*{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; }
-html,body{
-  margin:0; width:100%; height:100%;
-  color:var(--txt); font-family:'Outfit',sans-serif;
-  background:#120d16; overflow:hidden;
-}
-body{
-  background:
-    radial-gradient(circle at 50% 0%, rgba(251,146,60,0.1) 0%, transparent 40%),
-    radial-gradient(circle at 80% 80%, rgba(103,232,249,0.05) 0%, transparent 30%),
-    var(--blue-grad);
-  display:flex; align-items:center; justify-content:center;
+:root {
+  --bg: #08050a;
+  --primary: #818cf8;
+  --accent: #f472b6;
+  --glass: rgba(255, 255, 255, 0.03);
+  --border: rgba(255, 255, 255, 0.08);
 }
 
-/* Animasyonlu Arka Plan Parçacıkları */
-.particles {
-  position: fixed; inset: 0; pointer-events: none; z-index: 0;
-}
-.particle {
-  position: absolute; border-radius: 50%; background: #fff; opacity: 0.1;
-  animation: floatParticle linear infinite;
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+body, html { 
+  margin: 0; padding: 0; width: 100%; height: 100%; 
+  background: var(--bg); color: #fff; font-family: 'Outfit', sans-serif;
+  overflow: hidden;
 }
 
-.container{
-  width:100%; max-width:400px; padding:40px 30px;
-  text-align:center; position: relative; z-index:1;
-  background: rgba(255, 255, 255, 0.02);
-  border-radius: 32px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(10px);
-  /* Giriş Animasyonu */
-  opacity: 0; transform: translateY(20px);
-  animation: fadeInUp 0.8s ease forwards;
+/* Canlı Mesh Gradient Arka Plan */
+.mesh-bg {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: 
+    radial-gradient(circle at 0% 0%, rgba(129, 140, 248, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 100% 100%, rgba(244, 114, 182, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(30, 20, 40, 1) 0%, #08050a 100%);
+  z-index: -1;
 }
 
-.logo-area{ margin-bottom:40px; }
-.logo-title{
-  font-family:'Space Grotesk',sans-serif;
-  font-size:40px; font-weight:800; margin:0;
-  background:var(--ai-grad);
-  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
-  position: relative; display: inline-block;
+/* Animasyonlu Küreler */
+.orb {
+  position: absolute; border-radius: 50%; filter: blur(80px);
+  animation: float 20s infinite alternate; z-index: -1; opacity: 0.4;
 }
-/* Logo Parıltı Efekti */
-.logo-title::after {
-  content: ''; position: absolute; inset: 0;
-  background: inherit; filter: blur(15px); opacity: 0.5; z-index: -1;
+.orb-1 { width: 400px; height: 400px; background: #6366f1; top: -100px; left: -100px; }
+.orb-2 { width: 300px; height: 300px; background: #ec4899; bottom: -50px; right: -50px; animation-delay: -5s; }
+
+@keyframes float {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(50px, 100px) scale(1.2); }
 }
 
-.logo-sub{ font-size:16px; color:var(--muted); margin-top:8px; font-weight: 300; }
-
-.form-area {
-  opacity: 0;
-  animation: fadeIn 0.5s ease 0.6s forwards;
+/* Main Container */
+.viewport {
+  height: 100%; display: flex; align-items: center; justify-content: center;
+  padding: 20px;
 }
 
-.input-group{ margin-top:20px; text-align:left; position: relative; }
-.input-label{
-  font-size:11px; font-weight:700; color:var(--muted);
-  margin-left:16px; margin-bottom:8px; display:block;
-  text-transform:uppercase; letter-spacing: 1px;
+.card {
+  width: 100%; max-width: 420px;
+  background: var(--glass);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border: 1px solid var(--border);
+  border-radius: 40px;
+  padding: 40px 30px;
+  position: relative;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 }
 
-input{
-  width:100%; padding:18px 24px;
-  background:rgba(255,255,255,0.03);
-  border:1px solid rgba(255,255,255,0.08);
-  border-radius:20px; color:#fff;
-  font-family:'Outfit',sans-serif; font-size:16px;
-  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
-}
-input:focus{
-  background:rgba(255,255,255,0.06);
-  border-color:#818cf8;
-  box-shadow: 0 0 20px rgba(129,140,248,0.15);
-  transform: translateY(-2px);
+/* Adım Kontrolü (Step System) */
+.step { display: none; animation: slideIn 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
+.step.active { display: block; }
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(20px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* Input Yanındaki İkonlar (Görsel Zenginlik) */
-.input-icon {
-  position: absolute; right: 20px; top: 44px;
-  font-size: 18px; color: var(--muted); opacity: 0.5;
-  transition: all 0.3s ease;
-}
-input:focus + .input-icon { color: #818cf8; opacity: 1; }
-
-button{
-  margin-top:40px; width:100%; min-height:60px;
-  border:none; border-radius:22px;
-  background:var(--ai-grad); color:#0b1020;
-  font-family:'Outfit',sans-serif; font-size:18px; font-weight:900;
-  cursor:pointer; box-shadow:0 15px 30px rgba(99,102,241,0.25);
-  transition: all 0.3s ease;
-  position: relative; overflow: hidden;
-}
-button:hover {
-  box-shadow: 0 18px 35px rgba(99,102,241,0.35);
-  transform: translateY(-1px);
-}
-button:active{ transform:scale(0.98); }
-
-/* Buton Parlama Efekti */
-button::after {
-  content: ''; position: absolute; top: -50%; left: -50%;
-  width: 200%; height: 200%;
-  background: linear-gradient(45deg, transparent, rgba(255,255,255,0.2), transparent);
-  transform: rotate(45deg);
-  transition: all 0.6s ease;
-}
-button:hover::after { left: 100%; }
-
-.footer-note{
-  margin-top:30px; font-size:12px; color:var(--muted); line-height:1.6;
-}
-.footer-note a { color: var(--txt); text-decoration: none; font-weight: 500; }
-
-/* Keyframes Animasyonları */
-@keyframes fadeInUp {
-  to { opacity: 1; transform: translateY(0); }
-}
-@keyframes fadeIn { to { opacity: 1; } }
-@keyframes floatParticle {
-  from { transform: translateY(0) translateX(0); }
-  to { transform: translateY(-100vh) translateX(20px); }
+/* UI Elemanları */
+.badge {
+  background: rgba(129, 140, 248, 0.1);
+  color: var(--primary);
+  padding: 6px 12px; border-radius: 100px;
+  font-size: 12px; font-weight: 700; display: inline-block;
+  margin-bottom: 20px; border: 1px solid rgba(129, 140, 248, 0.2);
 }
 
-/* Yüklenme Logosu Animasyonu */
-.loading-overlay {
-  position: fixed; inset: 0; background: #120d16;
-  display: flex; align-items: center; justify-content: center;
-  z-index: 999; transition: opacity 0.5s ease;
+h1 { font-family: 'Space Grotesk', sans-serif; font-size: 32px; margin: 0 0 10px; line-height: 1.1; }
+p { color: rgba(255,255,255,0.6); font-size: 15px; margin-bottom: 30px; line-height: 1.5; }
+
+.input-box {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  border-radius: 20px; padding: 18px 24px;
+  margin-bottom: 15px; transition: 0.3s;
 }
-.loading-logo {
-  font-family:'Space Grotesk',sans-serif; font-size:32px; font-weight:800;
-  background:var(--ai-grad); -webkit-background-clip:text; -webkit-text-fill-color:transparent;
-  animation: pulseLogo 1.5s ease infinite;
+.input-box:focus-within { border-color: var(--primary); background: rgba(255,255,255,0.08); }
+
+input {
+  background: transparent; border: none; color: #fff; width: 100%;
+  font-family: inherit; font-size: 17px; font-weight: 500;
 }
-@keyframes pulseLogo { 0%, 100% { opacity: 0.5; transform: scale(0.95); } 50% { opacity: 1; transform: scale(1); } }
+
+.next-btn {
+  width: 100%; background: #fff; color: #000;
+  border: none; border-radius: 20px; padding: 18px;
+  font-size: 17px; font-weight: 800; cursor: pointer;
+  transition: 0.3s; margin-top: 10px;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+}
+.next-btn:hover { transform: scale(1.02); background: var(--primary); color: #fff; }
+
+.skip-link {
+  display: block; text-align: center; margin-top: 20px;
+  color: rgba(255,255,255,0.4); font-size: 13px; text-decoration: none;
+}
+
+/* Progress Bar */
+.progress-container {
+  display: flex; gap: 6px; margin-top: 30px;
+}
+.dot { height: 4px; flex: 1; background: rgba(255,255,255,0.1); border-radius: 2px; transition: 0.4s; }
+.dot.active { background: var(--primary); box-shadow: 0 0 10px var(--primary); }
 
 </style>
 </head>
-
 <body>
 
-<div id="loadingOverlay" class="loading-overlay">
-  <div class="loading-logo">italkyAI</div>
-</div>
+<div class="mesh-bg"></div>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
 
-<div class="particles" id="particles"></div>
-
-<div class="container">
-  <div class="logo-area">
-    <h1 class="logo-title">italkyAI</h1>
-    <p class="logo-sub">Geleceğin tercümanı seni bekliyor.</p>
-  </div>
-
-  <div class="form-area">
-    <div class="input-group">
-      <span class="input-label">Tam Adınız</span>
-      <input id="name" type="text" placeholder="Örn: Oğuz Özyiğit">
-      <span class="input-icon">👤</span>
+<div class="viewport">
+  <div class="card">
+    
+    <div class="step active" id="step1">
+      <div class="badge">italkyAI v3.0</div>
+      <h1>Merhaba,<br>Biz italky.</h1>
+      <p>Dil bariyerlerini ortadan kaldıran, tamamen yapay zeka tabanlı yeni nesil ekosisteme hoş geldin.</p>
+      <button class="next-btn" onclick="goStep(2)">Hemen Başla ⚡</button>
     </div>
 
-    <div class="input-group">
-      <span class="input-label">E-Posta Adresiniz</span>
-      <input id="email" type="email" placeholder="isim@mail.com">
-      <span class="input-icon">✉️</span>
+    <div class="step" id="step2">
+      <div class="badge">Tanışalım</div>
+      <h1>Sana nasıl<br>hitap edelim?</h1>
+      <p>Deneyimini kişiselleştirmek için ismine ihtiyacımız var.</p>
+      <div class="input-box">
+        <input type="text" id="name" placeholder="Adın ve Soyadın" autocomplete="off">
+      </div>
+      <button class="next-btn" onclick="goStep(3)">Devam Et →</button>
     </div>
 
-    <div class="input-group">
-      <span class="input-label">Telefon (Opsiyonel)</span>
-      <input id="phone" type="tel" placeholder="+90 5XX ...">
-      <span class="input-icon">📱</span>
+    <div class="step" id="step3">
+      <div class="badge">Güvenlik</div>
+      <h1>Sana nasıl<br>ulaşalım?</h1>
+      <p>Hesabını doğrulamak ve senkronizasyon için e-posta adresin gerekli.</p>
+      <div class="input-box">
+        <input type="email" id="email" placeholder="E-posta adresin" autocomplete="off">
+      </div>
+      <div class="input-box">
+        <input type="tel" id="phone" placeholder="Telefon (Opsiyonel)" autocomplete="off">
+      </div>
+      <button class="next-btn" id="finishBtn" onclick="finish()">Kurulumu Bitir ✨</button>
+      <a href="javascript:goStep(2)" class="skip-link">Geri Dön</a>
     </div>
 
-    <button id="btnSubmit" onclick="saveUser()">Hesabımı Oluştur</button>
+    <div class="progress-container">
+      <div class="dot active" id="d1"></div>
+      <div class="dot" id="d2"></div>
+      <div class="dot" id="d3"></div>
+    </div>
 
-    <p class="footer-note">
-      Devam ederek <a href="#">Kullanım Koşullarını</a> ve <br> <a href="#">Gizlilik Politikasını</a> kabul etmiş olursun.
-    </p>
   </div>
 </div>
 
 <script>
-// Arka Plan Parçacıkları Oluşturma
-function createParticles() {
-  const container = document.getElementById('particles');
-  for (let i = 0; i < 30; i++) {
-    const particle = document.createElement('div');
-    particle.className = 'particle';
-    const size = Math.random() * 4 + 1 + 'px';
-    particle.style.width = size;
-    particle.style.height = size;
-    particle.style.left = Math.random() * 100 + 'vw';
-    particle.style.top = Math.random() * 100 + 'vh';
-    particle.style.animationDuration = Math.random() * 10 + 5 + 's';
-    particle.style.animationDelay = Math.random() * 5 + 's';
-    container.appendChild(particle);
-  }
-}
+let currentStep = 1;
 
-// Sayfa Yüklendiğinde
-window.addEventListener('load', () => {
-  createParticles();
-  setTimeout(() => {
-    const overlay = document.getElementById('loadingOverlay');
-    overlay.style.opacity = '0';
-    setTimeout(() => overlay.style.display = 'none', 500);
-  }, 1500); // 1.5 saniye sonra yüklenme ekranı kaybolur
-});
-
-// Kayıt Fonksiyonu (Düzeltilmiş Mesaj)
-async function saveUser(){
-  const name = document.getElementById("name").value.trim();
-  const email = document.getElementById("email").value.trim();
-  const phone = document.getElementById("phone").value.trim();
-  const btn = document.getElementById("btnSubmit");
-
-  if(!name || !email){
-    alert("Lütfen Ad Soyad ve E-posta alanlarını doldurun.");
+function goStep(s) {
+  // Basit validasyon
+  if(s === 3 && !document.getElementById('name').value.trim()) {
+    alert("Lütfen ismini belirt.");
     return;
   }
 
-  // Buton Yükleniyor Durumu
-  btn.innerText = "Hesabınız Oluşturuluyor...";
-  btn.style.opacity = '0.7';
-  btn.style.pointerEvents = 'none';
+  document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
+  document.getElementById('step' + s).classList.add('active');
+  
+  // Progress dot güncelleme
+  document.querySelectorAll('.dot').forEach((d, idx) => {
+    if(idx < s) d.classList.add('active');
+    else d.classList.remove('active');
+  });
+  
+  currentStep = s;
+}
+
+async function finish() {
+  const name = document.getElementById("name").value.trim();
+  const email = document.getElementById("email").value.trim();
+  const phone = document.getElementById("phone").value.trim();
+  const btn = document.getElementById("finishBtn");
+
+  if(!email.includes('@')) {
+    alert("Geçerli bir e-posta adresi girin.");
+    return;
+  }
+
+  btn.innerText = "Hazırlanıyor...";
+  btn.style.opacity = "0.7";
 
   try {
     const res = await fetch("/api/auth/register", {
       method:"POST",
       headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify({ name, email, phone, lang: "tr" })
+      body: JSON.stringify({ name, email, phone })
     });
-
     const data = await res.json();
-
-    if(data.ok && data.user_id){
+    if(data.ok) {
       localStorage.setItem("user_id", data.user_id);
       location.href = "/";
-    } else {
-      alert("Kayıt sırasında bir hata oluştu: " + (data.error || "Bilinmiyor"));
-      resetButton(btn);
     }
-  } catch (e) {
-    console.error("Auth Hatası:", e);
-    alert("Sunucu bağlantısında sorun var.");
-    resetButton(btn);
+  } catch(e) {
+    alert("Bağlantı hatası. Tekrar deneyin.");
+    btn.innerText = "Kurulumu Bitir ✨";
+    btn.style.opacity = "1";
   }
-}
-
-function resetButton(btn) {
-  btn.innerText = "Hesabımı Oluştur";
-  btn.style.opacity = '1';
-  btn.style.pointerEvents = 'auto';
 }
 </script>
 
