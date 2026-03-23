@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>İlk Giriş</title>
+
+<style>
+body{background:#120d16;color:#fff;font-family:sans-serif;margin:0}
+.container{padding:20px}
+input{
+  width:100%;
+  padding:14px;
+  margin-top:10px;
+  border-radius:10px;
+  border:none;
+}
+button{
+  margin-top:15px;
+  padding:14px;
+  width:100%;
+  border:none;
+  border-radius:12px;
+  background:#6366f1;
+  color:#fff;
+  font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <h2>Kayıt Ol</h2>
+
+  <input id="name" placeholder="Ad Soyad *">
+  <input id="email" placeholder="Email *">
+  <input id="phone" placeholder="Telefon (opsiyonel)">
+
+  <button onclick="saveUser()">Devam</button>
+</div>
+
+<script>
+async function saveUser(){
+
+  const name = document.getElementById("name").value.trim();
+  const email = document.getElementById("email").value.trim();
+  const phone = document.getElementById("phone").value.trim();
+
+  if(!name || !email){
+    alert("Ad Soyad ve Email zorunlu");
+    return;
+  }
+
+  const res = await fetch("/api/register", {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({ name, email, phone })
+  });
+
+  const data = await res.json();
+
+  if(data.ok){
+    localStorage.setItem("user_id", data.user_id);
+    location.href = "/";
+  }else{
+    alert("Hata");
+  }
+}
+</script>
+
+</body>
+</html>
