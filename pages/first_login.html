@@ -3,97 +3,209 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-<title>italkyAI • Hızlı Erişim</title>
+<title>italkyAI • Genesis Connect</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;800&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
 <style>
 :root {
   --neon: #67e8f9;
+  --pink: #f472b6;
   --ai-grad: linear-gradient(135deg, #67e8f9 0%, #818cf8 46%, #f472b6 100%);
   --bg: #0c0810;
 }
-* { box-sizing: border-box; margin: 0; padding: 0; outline: none; }
-body, html { width: 100%; height: 100%; background: var(--bg); font-family: 'Outfit', sans-serif; color: #fff; display: flex; align-items: center; justify-content: center; overflow: hidden; }
 
-/* Arka plan derinliği */
-.bg-glow {
-  position: fixed; inset: 0;
-  background: radial-gradient(circle at 50% 0%, rgba(103,232,249,0.15) 0%, transparent 40%);
-  z-index: -1;
+* { box-sizing: border-box; margin: 0; padding: 0; outline: none; -webkit-tap-highlight-color: transparent; }
+body, html { width: 100%; height: 100%; background: var(--bg); color: #fff; font-family: 'Outfit', sans-serif; overflow: hidden; }
+
+/* --- CANLI ARKA PLAN (HOME STYLE) --- */
+.bg-layer {
+  position: fixed; inset: 0; z-index: 1;
+  background: 
+    radial-gradient(circle at 50% 0%, rgba(251,146,60,.12) 0%, transparent 35%),
+    linear-gradient(180deg, #160d1a 0%, #0c0810 100%);
 }
+
+.crystal-wrap {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  perspective: 1200px; pointer-events: none; z-index: 2;
+}
+.crystal-cage {
+  width: 320px; height: 320px; transform-style: preserve-3d;
+  animation: rotateCrystal 22s linear infinite; opacity: 0.15;
+}
+.side {
+  position: absolute; inset: 0; border: 1.5px solid var(--neon);
+  background: radial-gradient(circle, rgba(103,232,249,0.08), transparent);
+  box-shadow: 0 0 20px rgba(103,232,249,0.1);
+}
+.s1{ transform:rotateY(0deg) translateZ(160px); }
+.s2{ transform:rotateY(90deg) translateZ(160px); }
+.s3{ transform:rotateX(90deg) translateZ(160px); }
+
+@keyframes rotateCrystal {
+  from { transform: rotateX(0deg) rotateY(0deg); }
+  to { transform: rotateX(360deg) rotateY(720deg); }
+}
+
+/* --- ANA KONTROL PANELİ --- */
+.viewport {
+  position: relative; z-index: 10; height: 100%;
+  display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+  padding: 60px 24px 30px;
+}
+
+.header-area { text-align: center; }
+.logo-main {
+  font-family: 'Space Grotesk', sans-serif; font-size: 42px; font-weight: 800;
+  background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  letter-spacing: -1.5px; margin-bottom: 4px;
+}
+.logo-sub { font-size: 13px; font-weight: 600; color: #fff; letter-spacing: 6px; opacity: 0.9; }
 
 .auth-card {
-  width: 90%; max-width: 380px;
+  width: 100%; max-width: 380px;
   background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 35px; padding: 40px 30px;
-  text-align: center;
-  box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+  border-radius: 42px; padding: 40px 30px;
+  box-shadow: 0 40px 80px rgba(0,0,0,0.6);
+  animation: cardReveal 0.8s cubic-bezier(0.19, 1, 0.22, 1) forwards;
 }
 
-.logo {
-  font-family: 'Space Grotesk', sans-serif; font-size: 32px; font-weight: 800;
-  background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  margin-bottom: 30px;
+@keyframes cardReveal {
+  from { opacity: 0; transform: translateY(30px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
+
+.input-box { margin-bottom: 18px; text-align: left; }
+.input-box label { font-size: 10px; font-weight: 900; color: var(--neon); letter-spacing: 2px; margin-left: 15px; margin-bottom: 8px; display: block; opacity: 0.8; }
 
 input {
-  width: 100%; padding: 16px 20px; margin-bottom: 12px;
-  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 18px; color: #fff; font-family: inherit; font-size: 15px;
+  width: 100%; padding: 18px 25px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 20px; color: #fff;
+  font-size: 16px; font-family: inherit;
+  transition: all 0.3s ease;
+}
+input:focus {
+  background: rgba(255,255,255,0.07);
+  border-color: var(--neon);
+  box-shadow: 0 0 25px rgba(103,232,249,0.15);
+  transform: translateY(-2px);
 }
 
-.bypass-btn {
-  width: 100%; padding: 18px; margin-top: 10px;
+.submit-btn {
+  width: 100%; padding: 20px; margin-top: 10px;
   background: var(--ai-grad); color: #0c0810;
-  border: none; border-radius: 18px;
-  font-size: 16px; font-weight: 900; cursor: pointer;
-  box-shadow: 0 10px 20px rgba(103,232,249,0.2);
+  border: none; border-radius: 20px;
+  font-size: 18px; font-weight: 900; cursor: pointer;
+  box-shadow: 0 15px 35px rgba(129,140,248,0.3);
+  transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
+.submit-btn:active { transform: scale(0.96); }
+
+.footer-brand {
+  text-align: center; font-size: 11px; color: rgba(255,255,255,0.3);
+  letter-spacing: 1.5px; font-weight: 500;
+}
+.footer-brand b { color: rgba(255,255,255,0.5); }
+
 </style>
 </head>
 <body>
 
-<div class="bg-glow"></div>
+<div class="bg-layer"></div>
+<div class="crystal-wrap">
+  <div class="crystal-cage">
+    <div class="side s1"></div>
+    <div class="side s2"></div>
+    <div class="side s3"></div>
+  </div>
+</div>
 
-<div class="auth-card">
-  <h1 class="logo">italkyAI</h1>
-  
-  <p style="font-size: 12px; opacity: 0.5; margin-bottom: 20px; letter-spacing: 1px;">GEÇİCİ ERİŞİM PANELİ</p>
+<div class="viewport">
+  <header class="header-area">
+    <h1 class="logo-main">italkyAI</h1>
+    <div class="logo-sub">BE FREE</div>
+  </header>
 
-  <input type="text" id="name" placeholder="Ad Soyad (Opsiyonel)">
-  <input type="email" id="email" placeholder="E-posta (Opsiyonel)">
+  <main class="auth-card">
+    <div style="margin-bottom: 25px;">
+      <h2 style="font-size: 22px; font-weight: 800; margin-bottom: 6px;">Erişim Tanımla</h2>
+      <p style="font-size: 13px; color: rgba(255,255,255,0.5);">Sisteme giriş için profilinizi oluşturun.</p>
+    </div>
 
-  <button class="bypass-btn" onclick="forceEntry()">Sisteme Gir ✦</button>
-  
-  <p style="margin-top: 20px; font-size: 10px; color: var(--neon); opacity: 0.7;">
-    * Zorunluluk kaldırıldı. Direkt Home'a yönlendirilirsiniz.
-  </p>
+    <div class="input-box">
+      <label>AD SOYAD</label>
+      <input type="text" id="name" placeholder="Örn: Ahmet Karanlı" autocomplete="off">
+    </div>
+
+    <div class="input-box">
+      <label>E-POSTA</label>
+      <input type="email" id="email" placeholder="ahmetkar@mail.com" autocomplete="off">
+    </div>
+
+    <div class="input-box">
+      <label>TELEFON (OPSİYONEL)</label>
+      <input type="tel" id="phone" placeholder="+90 5xx" autocomplete="off">
+    </div>
+
+    <button class="submit-btn" onclick="saveUser()">Sistemi Başlat ✦</button>
+  </main>
+
+  <footer class="footer-brand">
+    italkyAI By <b>Ozyigit's</b> • 2026
+  </footer>
 </div>
 
 <script>
-function forceEntry() {
-  // Hiçbir şey yazmasa bile içeri alıyoruz
-  const name = document.getElementById('name').value || "Misafir Başkan";
-  const email = document.getElementById('email').value || "guest@italkyai.com";
-  
-  // Sahte bir ID oluşturup LocalStorage'a mühürlüyoruz
-  const fakeId = "italky_dev_" + Math.random().toString(36).substr(2, 9);
-  localStorage.setItem("user_id", fakeId);
-  
-  console.log("Erişim Yetkisi Verildi:", fakeId);
-  
-  // Home sayfasına uçuş
-  location.href = "/";
-}
+async function saveUser(){
+  const name = document.getElementById("name").value.trim();
+  const email = document.getElementById("email").value.trim();
+  const phone = document.getElementById("phone").value.trim();
 
-// Eğer yanlışlıkla home.html'den buraya atarsa ve zaten ID varsa direkt geri gönder
-if(localStorage.getItem("user_id")) {
-    location.href = "/";
+  if(!name || !email){
+    alert("Ad Soyad ve Email zorunlu");
+    return;
+  }
+
+  // Buton durumunu güncelle
+  const btn = document.querySelector('.submit-btn');
+  btn.innerText = "Sisteme Bağlanıyor...";
+  btn.style.opacity = "0.7";
+  btn.style.pointerEvents = "none";
+
+  try {
+    const res = await fetch("/api/auth/register", {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ name, email, phone })
+    });
+
+    const data = await res.json();
+    console.log("REGISTER RESPONSE:", data);
+
+    if(data.ok && data.user_id){
+      // 🔥 BURASI KRİTİK
+      localStorage.setItem("user_id", data.user_id);
+      location.href = "/"; // home
+    } else {
+      alert("Kayıt başarısız: " + (data.error || "Bilinmeyen hata"));
+      btn.innerText = "Sistemi Başlat ✦";
+      btn.style.opacity = "1";
+      btn.style.pointerEvents = "auto";
+    }
+  } catch (err) {
+    console.error("HATA:", err);
+    alert("Sunucu bağlantısı kurulamadı.");
+    btn.innerText = "Sistemi Başlat ✦";
+    btn.style.opacity = "1";
+    btn.style.pointerEvents = "auto";
+  }
 }
 </script>
 
