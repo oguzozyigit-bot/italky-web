@@ -11,10 +11,11 @@
 
 <style>
 :root {
-  --neon: #67e8f9;
-  --pink: #f472b6;
-  --ai-grad: linear-gradient(135deg, #67e8f9 0%, #818cf8 46%, #f472b6 100%);
-  --bg: #0c0810;
+  /* Renkleri pastelden kurtarıp daha canlı/parlak hale getirdim */
+  --neon: #00f2ff; /* Daha parlak Cyan */
+  --pink: #ff007a; /* Daha canlı Magenta/Pink */
+  --ai-grad: linear-gradient(135deg, #00f2ff 0%, #7000ff 50%, #ff007a 100%);
+  --bg: #060408;
 }
 
 * {
@@ -34,14 +35,15 @@ body, html {
   overflow: hidden;
 }
 
-/* --- ARKA PLAN --- */
+/* --- ARKA PLAN (Daha Derin ve Aydınlık Gradyan) --- */
 .bg-layer {
   position: fixed;
   inset: 0;
   z-index: 1;
   background:
-    radial-gradient(circle at 50% 0%, rgba(251,146,60,.12) 0%, transparent 35%),
-    linear-gradient(180deg, #160d1a 0%, #0c0810 100%);
+    radial-gradient(circle at 50% -10%, rgba(0, 242, 255, 0.2) 0%, transparent 40%),
+    radial-gradient(circle at 80% 80%, rgba(255, 0, 122, 0.1) 0%, transparent 40%),
+    linear-gradient(180deg, #0f0816 0%, #060408 100%);
 }
 
 .crystal-wrap {
@@ -60,15 +62,15 @@ body, html {
   height: 320px;
   transform-style: preserve-3d;
   animation: rotateCrystal 22s linear infinite;
-  opacity: 0.15;
+  opacity: 0.25; /* Biraz daha belirgin yaptım */
 }
 
 .side {
   position: absolute;
   inset: 0;
   border: 1.5px solid var(--neon);
-  background: radial-gradient(circle, rgba(103,232,249,0.08), transparent);
-  box-shadow: 0 0 20px rgba(103,232,249,0.1);
+  background: radial-gradient(circle, rgba(0, 242, 255, 0.15), transparent);
+  box-shadow: 0 0 30px rgba(0, 242, 255, 0.2);
 }
 .s1{ transform:rotateY(0deg) translateZ(160px); }
 .s2{ transform:rotateY(90deg) translateZ(160px); }
@@ -88,7 +90,7 @@ body, html {
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  padding: 60px 24px 30px;
+  padding: 50px 24px 20px;
 }
 
 .header-area {
@@ -97,77 +99,77 @@ body, html {
 
 .logo-main {
   font-family: 'Space Grotesk', sans-serif;
-  font-size: 42px;
+  font-size: 46px; /* Biraz büyüttüm */
   font-weight: 800;
   background: var(--ai-grad);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   letter-spacing: -1.5px;
   margin-bottom: 4px;
+  filter: drop-shadow(0 0 10px rgba(0, 242, 255, 0.3));
 }
 
 .logo-sub {
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 700;
   color: #fff;
-  letter-spacing: 6px;
-  opacity: 0.9;
+  letter-spacing: 8px;
+  opacity: 1;
+  text-shadow: 0 0 10px rgba(255,255,255,0.5);
 }
 
 .orbit-anim-area {
   width: 100%;
-  height: 180px;
+  height: 160px;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
   overflow: hidden;
-  margin: 10px 0;
+  margin: 5px 0;
 }
 
 .core-sphere {
-  width: 60px;
-  height: 60px;
+  width: 64px;
+  height: 64px;
   background:
-    radial-gradient(circle at 30% 30%, rgba(103,232,249,0.9), transparent 70%),
-    rgba(255,255,255,0.05);
+    radial-gradient(circle at 30% 30%, #fff, var(--neon) 60%, transparent 100%);
   border-radius: 50%;
   position: absolute;
   z-index: 5;
-  box-shadow: 0 0 30px rgba(103,232,249,0.5), inset 0 0 15px rgba(103,232,249,0.3);
+  box-shadow: 0 0 40px var(--neon), inset 0 0 20px #fff;
   animation: corePulse 4s infinite ease-in-out;
 }
 
 @keyframes corePulse {
-  0%, 100% { transform: scale(1); opacity: 0.8; }
-  50% { transform: scale(1.05); opacity: 1; }
+  0%, 100% { transform: scale(1); filter: brightness(1); }
+  50% { transform: scale(1.1); filter: brightness(1.3); }
 }
 
 .orbit-ring {
-  border: 1px solid rgba(103,232,249,0.15);
+  border: 1px solid rgba(0, 242, 255, 0.3);
   border-radius: 50%;
   position: absolute;
   transform-style: preserve-3d;
-  opacity: 0.6;
 }
 .r1 { width: 120px; height: 120px; animation: orbitRotate1 8s linear infinite; }
 .r2 { width: 170px; height: 170px; animation: orbitRotate2 12s linear infinite reverse; }
 .r3 { width: 220px; height: 220px; animation: orbitRotate3 16s linear infinite; }
 
 .satellite {
-  width: 10px;
-  height: 10px;
-  background: var(--neon);
+  width: 12px;
+  height: 12px;
+  background: #fff;
   border-radius: 50%;
   position: absolute;
-  top: -5px;
+  top: -6px;
   left: 50%;
   transform: translateX(-50%);
-  box-shadow: 0 0 10px var(--neon);
+  box-shadow: 0 0 15px var(--neon), 0 0 30px var(--neon);
 }
 .satellite.s2 {
   background: var(--pink);
-  box-shadow: 0 0 10px var(--pink);
+  box-shadow: 0 0 15px var(--pink), 0 0 30px var(--pink);
 }
 
 @keyframes orbitRotate1 {
@@ -186,13 +188,13 @@ body, html {
 .auth-card {
   width: 100%;
   max-width: 380px;
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(30px);
-  -webkit-backdrop-filter: blur(30px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 42px;
-  padding: 40px 30px;
-  box-shadow: 0 40px 80px rgba(0,0,0,0.6);
+  padding: 35px 30px;
+  box-shadow: 0 40px 100px rgba(0,0,0,0.8);
   animation: cardReveal 0.8s cubic-bezier(0.19, 1, 0.22, 1) forwards;
 }
 
@@ -207,21 +209,21 @@ body, html {
 }
 
 .input-box label {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 900;
   color: var(--neon);
   letter-spacing: 2px;
   margin-left: 15px;
   margin-bottom: 8px;
   display: block;
-  opacity: 0.8;
+  text-shadow: 0 0 8px rgba(0, 242, 255, 0.4);
 }
 
 input {
   width: 100%;
   padding: 18px 25px;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
   border-radius: 20px;
   color: #fff;
   font-size: 16px;
@@ -230,44 +232,65 @@ input {
 }
 
 input:focus {
-  background: rgba(255,255,255,0.07);
+  background: rgba(255,255,255,0.1);
   border-color: var(--neon);
-  box-shadow: 0 0 25px rgba(103,232,249,0.15);
+  box-shadow: 0 0 25px rgba(0, 242, 255, 0.2);
   transform: translateY(-2px);
 }
 
 .submit-btn {
   width: 100%;
   padding: 20px;
-  margin-top: 10px;
+  margin-top: 5px;
   background: var(--ai-grad);
-  color: #0c0810;
+  color: #000;
   border: none;
   border-radius: 20px;
   font-size: 18px;
   font-weight: 900;
   cursor: pointer;
-  box-shadow: 0 15px 35px rgba(129,140,248,0.3);
+  box-shadow: 0 15px 40px rgba(0, 242, 255, 0.4);
   transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 .submit-btn:active { transform: scale(0.96); }
 
 .helper-text {
-  margin-top: 10px;
+  margin-top: 15px;
   font-size: 12px;
-  color: rgba(255,255,255,0.55);
+  color: rgba(255,255,255,0.7);
   line-height: 1.45;
+  text-align: center;
+}
+
+/* Alt Linkler (Yeni Eklendi) */
+.extra-links {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 20px;
+}
+.extra-links a {
+  color: rgba(255,255,255,0.5);
+  text-decoration: none;
+  font-size: 11px;
+  font-weight: 600;
+  transition: 0.3s;
+  letter-spacing: 0.5px;
+}
+.extra-links a:hover {
+  color: var(--neon);
+  text-shadow: 0 0 8px var(--neon);
 }
 
 .footer-brand {
   text-align: center;
   font-size: 11px;
-  color: rgba(255,255,255,0.3);
-  letter-spacing: 1.5px;
-  font-weight: 500;
-  margin-top: 10px;
+  color: rgba(255,255,255,0.4);
+  letter-spacing: 2px;
+  font-weight: 600;
+  margin-top: 15px;
 }
-.footer-brand b { color: rgba(255,255,255,0.5); }
+.footer-brand b { color: #fff; text-shadow: 0 0 5px rgba(255,255,255,0.3); }
 </style>
 </head>
 <body>
@@ -296,9 +319,9 @@ input:focus {
   </div>
 
   <main class="auth-card">
-    <div style="margin-bottom: 25px;">
-      <h2 style="font-size: 22px; font-weight: 800; margin-bottom: 6px;">Erişim Tanımla</h2>
-      <p style="font-size: 13px; color: rgba(255,255,255,0.5);">
+    <div style="margin-bottom: 25px; text-align: center;">
+      <h2 style="font-size: 24px; font-weight: 800; margin-bottom: 6px; letter-spacing: -0.5px;">Erişim Tanımla</h2>
+      <p style="font-size: 13px; color: rgba(255,255,255,0.6);">
         Sisteme giriş için profilinizi oluşturun.
       </p>
     </div>
@@ -321,7 +344,14 @@ input:focus {
     <button class="submit-btn" id="submitBtn" onclick="saveUser()">Sistemi Başlat ✦</button>
 
     <div class="helper-text" id="helperText">
-      Google ile geldiysen bilgiler otomatik doldurulur. NFC ile geldiysen burada profilin oluşur.
+      Google ile geldiysen bilgiler otomatik doldurulur.
+    </div>
+
+    <div class="extra-links">
+      <a href="/pages/about.html">Hakkımızda</a>
+      <a href="/pages/faq.html">SSS</a>
+      <a href="/pages/privacy.html">Gizlilik</a>
+      <a href="/pages/contact.html">İletişim</a>
     </div>
   </main>
 
@@ -388,11 +418,10 @@ async function bootstrap() {
       if (autoName) nameEl.value = autoName;
       if (autoEmail) emailEl.value = autoEmail;
 
-      helperText.textContent = "Google hesabın algılandı. Bilgilerini kontrol edip devam et.";
+      helperText.textContent = "Google hesabın algılandı. Bilgileri kontrol edip devam et.";
       return;
     }
 
-    // Google oturumu yoksa NFC / manuel akış
     loginType = pendingUid ? "nfc" : "google";
 
     let tempId = localStorage.getItem("pending_profile_id");
@@ -403,9 +432,9 @@ async function bootstrap() {
     authUserId = tempId;
 
     if (pendingUid) {
-      helperText.textContent = "NFC kart algılandı. Profil bilgilerini tamamlayıp devam et.";
+      helperText.textContent = "NFC kart algılandı. Profili tamamlayıp devam et.";
     } else {
-      helperText.textContent = "Google oturumu bulunamadı. Bilgilerini girip devam et.";
+      helperText.textContent = "Google oturumu bulunamadı. Bilgileri girip devam et.";
     }
   } catch (e) {
     console.error("BOOTSTRAP ERROR:", e);
