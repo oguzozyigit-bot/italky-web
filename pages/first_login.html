@@ -246,14 +246,13 @@ async function saveUser(){
     return;
   }
 
-  // Buton durumunu güncelle
   const btn = document.querySelector('.submit-btn');
   btn.innerText = "Sisteme Bağlanıyor...";
   btn.style.opacity = "0.7";
   btn.style.pointerEvents = "none";
 
   try {
-    const res = await fetch("/api/auth/register", {
+    const res = await fetch("https://italky-api.onrender.com/api/auth/register", {
       method:"POST",
       headers:{ "Content-Type":"application/json" },
       body: JSON.stringify({ name, email, phone })
@@ -263,9 +262,8 @@ async function saveUser(){
     console.log("REGISTER RESPONSE:", data);
 
     if(data.ok && data.user_id){
-      // 🔥 BURASI KRİTİK
       localStorage.setItem("user_id", data.user_id);
-      location.href = "/"; // home
+      location.href = "/pages/home.html";
     } else {
       alert("Kayıt başarısız: " + (data.error || "Bilinmeyen hata"));
       btn.innerText = "Sistemi Başlat ✦";
