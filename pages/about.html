@@ -2,213 +2,210 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>italkyAI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>italkyAI • Hakkımızda</title>
   <link rel="icon" href="data:," />
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
   <style>
-    /* ✅ GLOBAL SCROLL FIX */
-    html, body{
-      margin:0;
-      padding:0;
-      height:100%;
-      overflow:hidden;
-      background:#030014;
-      color:#fff;
-      font-family:Outfit,sans-serif;
+    :root {
+      --neon: #00f2ff;
+      --pink: #ff007a;
+      --ai-grad: linear-gradient(135deg, #00f2ff 0%, #7000ff 50%, #ff007a 100%);
+      --bg: #060408;
     }
 
-    /* ✅ SCROLL ARTIK BURADA */
-    .wrap{
-      max-width:480px;
-      margin:0 auto;
-      height:100dvh;
-      overflow-y:auto;
-      overflow-x:hidden;
-      padding:18px;
-      -webkit-overflow-scrolling:touch;
+    /* ✅ GLOBAL AYARLAR */
+    html, body {
+      margin: 0; padding: 0;
+      height: 100%; overflow: hidden;
+      background: var(--bg);
+      color: #fff;
+      font-family: 'Outfit', sans-serif;
     }
 
-    .top{
-      display:flex;
-      gap:10px;
-      align-items:center;
-      position:sticky;
-      top:0;
-      background:#030014;
-      z-index:5;
-      padding-bottom:6px;
+    /* --- CANLI ARKA PLAN (SİZİN STİLİNİZ) --- */
+    .bg-layer {
+      position: fixed; inset: 0; z-index: 1;
+      background:
+        radial-gradient(circle at 50% -10%, rgba(0, 242, 255, 0.15) 0%, transparent 40%),
+        linear-gradient(180deg, #0f0816 0%, #060408 100%);
     }
 
-    .btn{
-      width:44px;
-      height:44px;
-      border-radius:16px;
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(0,0,0,.18);
-      color:#fff;
-      font-size:20px;
-      font-weight:1000;
-      cursor:pointer;
+    .crystal-wrap {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      perspective: 1200px; pointer-events: none; z-index: 2;
     }
 
-    h1{
-      margin:14px 0 10px;
-      font-size:22px;
+    .crystal-cage {
+      width: 300px; height: 300px;
+      transform-style: preserve-3d;
+      animation: rotateCrystal 22s linear infinite;
+      opacity: 0.15;
     }
 
-    p{
-      margin:0 0 14px;
-      color:rgba(255,255,255,.75);
-      line-height:1.55;
+    .side {
+      position: absolute; inset: 0;
+      border: 1px solid var(--neon);
+      background: radial-gradient(circle, rgba(0, 242, 255, 0.05), transparent);
+    }
+    .s1{ transform:rotateY(0deg) translateZ(150px); }
+    .s2{ transform:rotateY(90deg) translateZ(150px); }
+    .s3{ transform:rotateX(90deg) translateZ(150px); }
+
+    @keyframes rotateCrystal {
+      from { transform: rotateX(0deg) rotateY(0deg); }
+      to { transform: rotateX(360deg) rotateY(720deg); }
     }
 
-    .content{ margin-top:6px; }
-
-    .foot{
-      margin:24px 0 10px;
-      color:rgba(255,255,255,.22);
-      font-weight:800;
-      font-size:10px;
-      text-align:center;
+    /* ✅ WRAPPER & SCROLL */
+    .wrap {
+      position: relative; z-index: 10;
+      max-width: 480px; margin: 0 auto;
+      height: 100dvh;
+      overflow-y: auto; overflow-x: hidden;
+      padding: 24px 20px;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
     }
+    .wrap::-webkit-scrollbar { display: none; }
+
+    /* ✅ TOP NAV */
+    .top {
+      display: flex; gap: 15px; align-items: center;
+      position: sticky; top: 0;
+      background: rgba(6, 4, 8, 0.8);
+      backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+      z-index: 20; padding: 10px 0; margin-bottom: 20px;
+    }
+
+    .btn-back {
+      width: 44px; height: 44px;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff; font-size: 20px;
+      cursor: pointer; transition: 0.3s;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .btn-back:active { transform: scale(0.9); background: var(--neon); color: #000; }
+
+    .brand {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 22px; font-weight: 800;
+      background: var(--ai-grad);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* ✅ İÇERİK KARTI */
+    .content-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 32px;
+      padding: 30px 24px;
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+      animation: cardIn 0.6s ease-out forwards;
+    }
+
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    h1 {
+      margin: 0 0 20px;
+      font-size: 28px; font-weight: 800;
+      color: var(--neon);
+      text-shadow: 0 0 15px rgba(0, 242, 255, 0.3);
+      letter-spacing: -0.5px;
+    }
+
+    p {
+      margin: 0 0 18px;
+      color: rgba(255, 255, 255, 0.85);
+      line-height: 1.6;
+      font-size: 15px; font-weight: 300;
+    }
+
+    .foot {
+      margin: 40px 0 20px;
+      color: rgba(255, 255, 255, 0.3);
+      font-weight: 700; font-size: 11px;
+      text-align: center; letter-spacing: 1px;
+    }
+    .foot b { color: #fff; }
   </style>
 </head>
 
 <body>
-  <div class="wrap">
-    <div class="top">
-      <button class="btn" id="backBtn">←</button>
-      <div style="font-family:Space Grotesk, sans-serif; font-size:20px; font-weight:700;">
-        italky<span style="background:linear-gradient(135deg,#A5B4FC,#4F46E5);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">AI</span>
-      </div>
+  <div class="bg-layer"></div>
+  
+  <div class="crystal-wrap">
+    <div class="crystal-cage">
+      <div class="side s1"></div>
+      <div class="side s2"></div>
+      <div class="side s3"></div>
     </div>
-
-    <div id="content" class="content"></div>
-
-    <div class="foot">italkyAI By Ozyigit's 2026</div>
   </div>
 
-  <!-- ===== HAKKIMIZDA METİNLERİ ===== -->
+  <div class="wrap">
+    <div class="top">
+      <button class="btn-back" id="backBtn">←</button>
+      <div class="brand">italkyAI</div>
+    </div>
+
+    <div id="content" class="content-card">
+      </div>
+
+    <div class="foot">italkyAI By <b>Ozyigit's</b> • 2026</div>
+  </div>
 
   <template id="about_tr">
     <h1>Hakkımızda</h1>
-    <p>
-      italkyAI, çeviri ve dil öğrenimini tek ekranda birleştiren yapay zekâ destekli bir dil platformudur.
-      Amacımız, dili ezberletmek değil; gerçek hayatta kullanılabilir hâle getirmektir.
-    </p>
-    <p>
-      Oyunlar, yüz yüze çeviri, metinden çeviri ve konuşma desteği sayesinde öğrenme süreci pratik ve akıcı ilerler.
-      Sistem, hızınıza ve seviyenize göre kendini uyarlar.
-    </p>
-    <p>
-      italkyAI’de hedef net: Daha hızlı anla, daha rahat konuş, daha az “takıl”.
-      Dil öğrenmek sıkıcı olmak zorunda değil.
-    </p>
+    <p>italkyAI, çeviri ve dil öğrenimini tek ekranda birleştiren yapay zekâ destekli bir dil platformudur. Amacımız, dili ezberletmek değil; gerçek hayatta kullanılabilir hâle getirmektir.</p>
+    <p>Oyunlar, yüz yüze çeviri ve konuşma desteği sayesinde öğrenme süreci pratik ilerler. Sistem, hızınıza ve seviyenize göre kendini uyarlar.</p>
+    <p>Hedef net: Daha hızlı anla, daha rahat konuş. Dil öğrenmek italkyAI ile artık sıkıcı değil.</p>
   </template>
 
   <template id="about_en">
-    <h1>About</h1>
-    <p>
-      italkyAI is an AI-powered language platform that combines translation and language learning in one place.
-      Our goal is not memorization, but real-life language usage.
-    </p>
-    <p>
-      With games, face-to-face translation, text translation, and speaking support,
-      learning becomes practical and adaptive to your pace.
-    </p>
-    <p>
-      The goal is simple: understand faster, speak comfortably, and get stuck less.
-      Learning a language doesn’t have to be boring.
-    </p>
-  </template>
-
-  <template id="about_de">
-    <h1>Über</h1>
-    <p>
-      italkyAI ist eine KI-gestützte Sprachplattform, die Übersetzung und Lernen an einem Ort vereint.
-      Ziel ist die natürliche Nutzung der Sprache im Alltag.
-    </p>
-    <p>
-      Spiele, Face-to-Face-Übersetzung, Textübersetzung und Sprachunterstützung
-      machen das Lernen praktisch und effizient.
-    </p>
-    <p>
-      Schneller verstehen, entspannter sprechen und weniger hängen bleiben –
-      Sprachenlernen muss nicht langweilig sein.
-    </p>
-  </template>
-
-  <template id="about_it">
-    <h1>Info</h1>
-    <p>
-      italkyAI è una piattaforma linguistica basata sull’intelligenza artificiale
-      che unisce traduzione e apprendimento in un’unica esperienza.
-    </p>
-    <p>
-      Giochi, traduzione faccia a faccia, traduzione di testi e supporto vocale
-      rendono l’apprendimento pratico e fluido.
-    </p>
-    <p>
-      Capire più velocemente, parlare con sicurezza e bloccarsi di meno.
-      Imparare una lingua non deve essere noioso.
-    </p>
-  </template>
-
-  <template id="about_fr">
-    <h1>À propos</h1>
-    <p>
-      italkyAI est une plateforme linguistique propulsée par l’IA
-      qui réunit traduction et apprentissage dans une seule expérience.
-    </p>
-    <p>
-      Jeux, traduction en face à face, traduction de texte et assistance vocale
-      rendent l’apprentissage plus naturel et efficace.
-    </p>
-    <p>
-      Comprendre plus vite, parler avec aisance et se bloquer moins.
-      Apprendre une langue peut être agréable.
-    </p>
+    <h1>About Us</h1>
+    <p>italkyAI is an AI-powered language platform that combines translation and learning in one place. Our goal is real-life language usage, not just memorization.</p>
+    <p>With games, face-to-face translation, and voice support, the process is practical. The system adapts to your individual pace.</p>
+    <p>Goal: Understand faster, speak comfortably. Learning a language is no longer boring with italkyAI.</p>
   </template>
 
   <script type="module">
     import { getSiteLang } from "/js/i18n.js";
 
-    function getTemplates(){
-      const map = {};
-      document.querySelectorAll('template[id^="about_"]').forEach(t=>{
-        const k = t.id.replace("about_","").toLowerCase();
-        map[k] = t.id;
-      });
-      return map;
-    }
-
     function render(){
       const lang = (getSiteLang?.() || "en").toLowerCase();
-      const map = getTemplates();
-      const id = map[lang] || map["tr"] || map["en"] || Object.values(map)[0];
-
       const host = document.getElementById("content");
+      
+      // Template seçimi
+      let template = document.getElementById(`about_${lang}`);
+      if(!template) template = document.getElementById("about_tr"); // Fallback
+
       host.innerHTML = "";
-      if(id){
-        host.appendChild(document.getElementById(id).content.cloneNode(true));
+      if(template){
+        host.appendChild(template.content.cloneNode(true));
       }
 
       const h1 = host.querySelector("h1");
       document.title = h1 ? `italkyAI • ${h1.textContent}` : "italkyAI";
-      document.documentElement.lang = lang;
     }
 
     render();
 
-    document.getElementById("backBtn").onclick =
-      ()=> history.length > 1 ? history.back() : location.href="/pages/home.html";
+    document.getElementById("backBtn").onclick = () => {
+      if(history.length > 1) history.back();
+      else location.href = "/pages/home.html";
+    };
 
-    window.addEventListener("storage",(e)=>{
-      if(e.key==="italky_site_lang_v1" || e.key==="italky_lang_ping"){
-        render();
-      }
+    window.addEventListener("storage", (e) => {
+      if(e.key === "italky_site_lang_v1") render();
     });
   </script>
 </body>
