@@ -11,9 +11,8 @@
 
 <style>
 :root {
-  /* Renkleri pastelden kurtarıp daha canlı/parlak hale getirdim */
-  --neon: #00f2ff; /* Daha parlak Cyan */
-  --pink: #ff007a; /* Daha canlı Magenta/Pink */
+  --neon: #00f2ff;
+  --pink: #ff007a;
   --ai-grad: linear-gradient(135deg, #00f2ff 0%, #7000ff 50%, #ff007a 100%);
   --bg: #060408;
 }
@@ -62,7 +61,7 @@ body, html {
   height: 320px;
   transform-style: preserve-3d;
   animation: rotateCrystal 22s linear infinite;
-  opacity: 0.25; /* Biraz daha belirgin yaptım */
+  opacity: 0.25;
 }
 
 .side {
@@ -99,7 +98,7 @@ body, html {
 
 .logo-main {
   font-family: 'Space Grotesk', sans-serif;
-  font-size: 46px; /* Biraz büyüttüm */
+  font-size: 46px;
   font-weight: 800;
   background: var(--ai-grad);
   -webkit-background-clip: text;
@@ -262,7 +261,6 @@ input:focus {
   text-align: center;
 }
 
-/* Alt Linkler (Yeni Eklendi) */
 .extra-links {
   display: flex;
   justify-content: center;
@@ -485,6 +483,11 @@ window.saveUser = async function saveUser() {
 
     if (data.ok && data.user_id) {
       localStorage.setItem("user_id", data.user_id);
+
+      // 🔥 ANDROID NATIVE KÖPRÜSÜ
+      if (window.Native && window.Native.setUserId) {
+        window.Native.setUserId(data.user_id);
+      }
 
       if (loginType === "nfc") {
         localStorage.setItem("mode", "pro");
