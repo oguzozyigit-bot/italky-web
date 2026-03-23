@@ -2,675 +2,243 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>italkyAI • FAQ</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>italkyAI • SSS</title>
   <link rel="icon" href="data:," />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
   <style>
     :root {
-      --bg-deep: #020205;
-      --text-main: #ffffff;
-      --text-muted: rgba(255, 255, 255, 0.68);
-      --text-soft: rgba(255,255,255,0.48);
-      --c-indigo: #6366f1;
-      --c-purple: #a855f7;
-      --c-green: #4ade80;
-      --c-red: #f87171;
-      --ai-grad: linear-gradient(135deg, #a5b4fc 0%, #6366f1 48%, #a855f7 100%);
-      --glass-border: rgba(255, 255, 255, 0.10);
-      --ease-elastic: cubic-bezier(0.34, 1.56, 0.64, 1);
-      --ease-soft: cubic-bezier(0.4, 0, 0.2, 1);
+      --neon: #00f2ff;
+      --pink: #ff007a;
+      --ai-grad: linear-gradient(135deg, #00f2ff 0%, #7000ff 50%, #ff007a 100%);
+      --bg: #060408;
+      --glass: rgba(255, 255, 255, 0.03);
+      --border: rgba(255, 255, 255, 0.08);
     }
 
-    * {
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-      outline: none;
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+    html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: #fff; font-family: 'Outfit', sans-serif; }
+
+    /* --- CANLI ARKA PLAN (italkyAI DNA) --- */
+    .bg-layer {
+      position: fixed; inset: 0; z-index: 1;
+      background:
+        radial-gradient(circle at 50% -10%, rgba(0, 242, 255, 0.15) 0%, transparent 40%),
+        linear-gradient(180deg, #0f0816 0%, #060408 100%);
     }
 
-    html, body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      position: fixed;
-      font-family: 'Outfit', sans-serif;
-      background-color: var(--bg-deep);
-      color: var(--text-main);
+    .crystal-wrap {
+      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      perspective: 1200px; pointer-events: none; z-index: 2;
     }
 
-    .cosmos-bg {
-      position: absolute;
-      inset: -50%;
-      width: 200%;
-      height: 200%;
-      z-index: 0;
-      pointer-events: none;
+    .crystal-cage {
+      width: 300px; height: 300px; transform-style: preserve-3d;
+      animation: rotateCrystal 22s linear infinite; opacity: 0.15;
     }
 
-    .orb {
-      position: absolute;
-      border-radius: 50%;
-      filter: blur(110px);
-      opacity: 0.34;
-      animation: floatOrbit 28s infinite alternate ease-in-out;
+    .side {
+      position: absolute; inset: 0; border: 1.5px solid var(--neon);
+      background: radial-gradient(circle, rgba(0, 242, 255, 0.05), transparent);
+    }
+    .s1{ transform:rotateY(0deg) translateZ(150px); }
+    .s2{ transform:rotateY(90deg) translateZ(150px); }
+    .s3{ transform:rotateX(90deg) translateZ(150px); }
+
+    @keyframes rotateCrystal {
+      from { transform: rotateX(0deg) rotateY(0deg); }
+      to { transform: rotateX(360deg) rotateY(720deg); }
     }
 
-    .orb-1 {
-      top: 8%;
-      left: 8%;
-      width: 62vw;
-      height: 62vw;
-      background: radial-gradient(circle, var(--c-indigo), transparent 70%);
-    }
-
-    .orb-2 {
-      bottom: 8%;
-      right: 8%;
-      width: 54vw;
-      height: 54vw;
-      background: radial-gradient(circle, var(--c-purple), transparent 70%);
-    }
-
-    @keyframes floatOrbit {
-      0% { transform: translate(0, 0) scale(1); }
-      100% { transform: translate(10%, -10%) scale(1.10); }
-    }
-
+    /* --- MOBILE FRAME & CONTENT --- */
     .mobile-frame {
-      width: 100%;
-      max-width: 480px;
-      height: 100%;
-      margin: 0 auto;
-      position: relative;
-      z-index: 10;
-      display: flex;
-      flex-direction: column;
-      background: rgba(8, 8, 12, 0.54);
-      backdrop-filter: blur(30px);
-      -webkit-backdrop-filter: blur(30px);
+      width: 100%; max-width: 480px; height: 100dvh; margin: 0 auto;
+      position: relative; z-index: 10; display: flex; flex-direction: column;
+      overflow: hidden;
     }
 
-    @media (min-width: 520px) {
-      .mobile-frame {
-        height: 92vh;
-        margin-top: 4vh;
-        border-radius: 34px;
-        overflow: hidden;
-        border: 1px solid rgba(255,255,255,0.08);
-        box-shadow: 0 40px 100px -20px rgba(0,0,0,0.9);
-      }
+    .top-nav {
+      display: flex; align-items: center; gap: 15px; padding: 20px;
+      position: sticky; top: 0; z-index: 30;
     }
 
-    .topbar {
-      flex: 0 0 90px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 24px;
-      position: relative;
-      z-index: 3;
+    .btn-back {
+      background: transparent; border: none; color: #fff; font-size: 24px;
+      font-weight: 900; cursor: pointer; display: flex; align-items: center;
     }
 
-    .logo-wrap {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .logo-container {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 26px;
+    .brand {
+      font-family: 'Space Grotesk', sans-serif; font-size: 24px; font-weight: 800;
+      background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
       letter-spacing: -1px;
-      line-height: 1;
-    }
-
-    .logo-ai {
-      font-weight: 700;
-      background: var(--ai-grad);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      color: transparent;
-    }
-
-    .slogan {
-      font-size: 10px;
-      font-weight: 800;
-      color: rgba(255,255,255,0.4);
-      letter-spacing: 2px;
-      text-transform: uppercase;
     }
 
     .page-content {
-      flex: 1;
-      overflow-y: auto;
-      padding: 10px 20px 160px;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-      scrollbar-width: none;
-      -ms-overflow-style: none;
+      flex: 1; overflow-y: auto; padding: 0 20px 140px;
+      scrollbar-width: none; -webkit-overflow-scrolling: touch;
     }
-
     .page-content::-webkit-scrollbar { display: none; }
 
-    .faq-card {
-      background: linear-gradient(160deg, rgba(255,255,255,0.035) 0%, rgba(255,255,255,0.008) 100%);
-      border: 1px solid var(--glass-border);
-      border-radius: 32px;
-      padding: 30px 22px;
-      animation: fadeInUp 0.8s var(--ease-elastic);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
-    }
+    /* --- FAQ COMPONENTS --- */
+    .hero { margin-bottom: 25px; text-align: center; }
+    .hero h1 { font-family: 'Space Grotesk', sans-serif; font-size: 32px; font-weight: 800; margin: 10px 0; letter-spacing: -1px; }
+    .hero h1 span { background: var(--ai-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .hero p { font-size: 14px; color: rgba(255,255,255,0.6); line-height: 1.6; }
 
-    .hero {
-      margin-bottom: 24px;
-    }
-
-    .hero h1 {
-      margin: 0 0 10px;
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 31px;
-      line-height: 1.04;
-      letter-spacing: -1.2px;
-      color: #fff;
-    }
-
-    .hero h1 span {
-      background: var(--ai-grad);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      color: transparent;
-    }
-
-    .hero p {
-      margin: 0;
-      color: var(--text-muted);
-      font-size: 14px;
-      line-height: 1.65;
-    }
-
-    .search-wrap {
-      margin-top: 18px;
-      position: relative;
-    }
-
+    .search-wrap { margin: 20px 0; position: relative; }
     .search-input {
-      width: 100%;
-      height: 46px;
-      border-radius: 16px;
-      border: 1px solid rgba(255,255,255,0.08);
-      background: rgba(255,255,255,0.045);
-      color: #fff;
-      font-size: 14px;
-      padding: 0 44px 0 14px;
-      font-family: inherit;
+      width: 100%; height: 54px; border-radius: 20px;
+      border: 1px solid var(--border); background: rgba(255,255,255,0.05);
+      color: #fff; font-family: inherit; font-size: 15px; padding: 0 50px 0 20px;
+      transition: 0.3s; backdrop-filter: blur(10px);
     }
+    .search-input:focus { border-color: var(--neon); box-shadow: 0 0 20px rgba(0, 242, 255, 0.2); }
 
-    .search-input::placeholder {
-      color: rgba(255,255,255,0.42);
-    }
-
-    .search-icon {
-      position: absolute;
-      right: 14px;
-      top: 50%;
-      transform: translateY(-50%);
-      opacity: 0.55;
-      font-size: 15px;
-      pointer-events: none;
+    .faq-card {
+      background: var(--glass); border: 1px solid var(--border);
+      border-radius: 32px; padding: 25px 20px; backdrop-filter: blur(20px);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.3);
     }
 
     .faq-section-title {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin: 26px 0 12px;
-      color: #fff;
-      font-size: 13px;
-      font-weight: 800;
-      letter-spacing: 0.8px;
+      display: flex; align-items: center; gap: 10px; margin: 30px 0 15px;
+      color: var(--neon); font-size: 12px; font-weight: 900; letter-spacing: 1.5px;
       text-transform: uppercase;
     }
 
-    .faq-section-title::before {
-      content: "";
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--ai-grad);
-      box-shadow: 0 0 12px rgba(168,85,247,0.45);
-    }
+    .faq-item { border-bottom: 1px solid rgba(255,255,255,0.06); padding: 18px 0; transition: 0.3s; }
+    .faq-item.hidden { display: none; }
 
-    .faq-item {
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-      padding: 18px 0;
-      transition: opacity .22s ease, transform .22s ease;
-    }
+    .faq-q { font-size: 16px; font-weight: 700; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 12px; line-height: 1.4; }
+    .faq-q::after { content: "＋"; font-size: 18px; color: var(--neon); transition: 0.3s; }
 
-    .faq-item.hidden {
-      display: none;
-    }
+    .faq-a { max-height: 0; overflow: hidden; opacity: 0; font-size: 14px; color: rgba(255,255,255,0.7); line-height: 1.6; transition: 0.4s var(--ease-soft); }
+    
+    .faq-item.active .faq-a { max-height: 1000px; opacity: 1; padding-top: 15px; }
+    .faq-item.active .faq-q::after { content: "－"; transform: rotate(180deg); }
 
-    .faq-q {
-      font-size: 15px;
-      font-weight: 800;
-      color: #fff;
-      cursor: pointer;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      line-height: 1.45;
-      user-select: none;
-    }
+    .example-box { background: rgba(255,255,255,0.04); border-radius: 16px; padding: 15px; margin-top: 12px; border-left: 3px solid var(--pink); }
+    .ex-label { font-size: 10px; font-weight: 900; color: var(--pink); text-transform: uppercase; margin-bottom: 5px; display: block; }
+    .ex-good { color: var(--neon); font-weight: 700; }
 
-    .faq-q::after {
-      content: "+";
-      font-size: 20px;
-      color: var(--text-soft);
-      transition: 0.3s;
-      flex-shrink: 0;
-    }
+    .tag { display: inline-block; padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: 900; margin-bottom: 8px; text-transform: uppercase; }
+    .tag.ai { background: rgba(0, 242, 255, 0.1); color: var(--neon); }
+    .tag.pro { background: rgba(255, 0, 122, 0.1); color: var(--pink); }
 
-    .faq-a {
-      max-height: 0;
-      overflow: hidden;
-      opacity: 0;
-      transition:
-        max-height 0.4s var(--ease-soft),
-        opacity 0.28s ease,
-        padding-top 0.28s ease;
-      font-size: 14px;
-      color: var(--text-muted);
-      line-height: 1.68;
-      will-change: max-height;
-    }
-
-    .faq-item.active .faq-a {
-      max-height: 1000px;
-      opacity: 1;
-      padding-top: 15px;
-    }
-
-    .faq-item.active .faq-q::after {
-      content: "−";
-      transform: rotate(180deg);
-      color: var(--c-purple);
-    }
-
-    .example-box {
-      background: rgba(255, 255, 255, 0.04);
-      border-radius: 16px;
-      padding: 16px;
-      margin-top: 12px;
-      border-left: 3px solid var(--c-purple);
-    }
-
-    .ex-label {
-      font-size: 10px;
-      font-weight: 800;
-      color: var(--c-purple);
-      text-transform: uppercase;
-      margin-bottom: 6px;
-      display: block;
-      letter-spacing: 0.3px;
-    }
-
-    .ex-bad { color: var(--c-red); }
-    .ex-good { color: var(--c-green); font-weight: 700; }
-
-    .tag {
-      display: inline-block;
-      padding: 4px 10px;
-      border-radius: 999px;
-      font-size: 10px;
-      font-weight: 800;
-      margin-bottom: 8px;
-      text-transform: uppercase;
-      letter-spacing: 0.3px;
-    }
-
-    .tag.ai {
-      background: rgba(99, 102, 241, 0.15);
-      color: #a5b4fc;
-    }
-
-    .tag.pro {
-      background: rgba(168, 85, 247, 0.14);
-      color: #d8b4fe;
-    }
-
-    .tag.free {
-      background: rgba(34, 197, 94, 0.15);
-      color: #86efac;
-    }
-
-    .no-results {
-      display: none;
-      margin-top: 8px;
-      padding: 16px;
-      border-radius: 16px;
-      border: 1px solid rgba(255,255,255,0.08);
-      background: rgba(255,255,255,0.03);
-      color: var(--text-muted);
-      font-size: 13px;
-      line-height: 1.6;
-    }
-
-    .no-results.show {
-      display: block;
-    }
-
-    .footerbar {
-      position: absolute;
-      bottom: 0;
-      width: 100%;
-      padding: 24px;
-      background: linear-gradient(to top, #000 20%, transparent 100%);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 12px;
-      z-index: 30;
-    }
-
-    .links {
-      display: flex;
-      gap: 18px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-
-    .links a {
-      color: rgba(255,255,255,0.5);
-      text-decoration: none;
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.4px;
-    }
-
-    .links a.active {
-      color: #fff;
-    }
-
-    .footer-copy {
-      font-size: 9px;
-      color: rgba(255,255,255,0.2);
-      font-weight: 700;
-      letter-spacing: 0.5px;
-    }
-
-    @keyframes fadeInUp {
-      from { transform: translateY(30px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
-    }
+    /* --- FOOTER --- */
+    .footer-bar { position: absolute; bottom: 0; width: 100%; padding: 25px; background: linear-gradient(to top, var(--bg) 60%, transparent); display: flex; flex-direction: column; align-items: center; gap: 15px; z-index: 40; }
+    .footer-links { display: flex; gap: 20px; }
+    .footer-links a { color: rgba(255,255,255,0.5); text-decoration: none; font-size: 11px; font-weight: 700; text-transform: uppercase; transition: 0.3s; }
+    .footer-links a.active { color: var(--neon); text-shadow: 0 0 8px var(--neon); }
+    .footer-copy { font-size: 10px; color: rgba(255,255,255,0.3); font-weight: 700; }
   </style>
 </head>
 <body>
-  <div class="cosmos-bg">
-    <div class="orb orb-1"></div>
-    <div class="orb orb-2"></div>
+
+  <div class="bg-layer"></div>
+  <div class="crystal-wrap">
+    <div class="crystal-cage">
+      <div class="side s1"></div>
+      <div class="side s2"></div>
+      <div class="side s3"></div>
+    </div>
   </div>
 
   <div class="mobile-frame">
-    <div class="topbar">
-      <div class="logo-wrap">
-        <div class="logo-container">
-          <span style="color:#fff">italky</span><span class="logo-ai">AI</span>
-        </div>
-        <div class="slogan">BE FREE</div>
-      </div>
+    <div class="top-nav">
+      <button class="btn-back" id="backBtn">←</button>
+      <div class="brand">italkyAI</div>
     </div>
 
     <div class="page-content" id="contentHost"></div>
 
-    <div class="footerbar">
-      <div class="links">
-        <a href="#">About</a>
-        <a href="#" class="active">FAQ</a>
-        <a href="#">Privacy</a>
+    <div class="footer-bar">
+      <div class="footer-links">
+        <a href="/pages/about.html">About</a>
+        <a href="/pages/faq.html" class="active">FAQ</a>
+        <a href="/pages/privacy.html">Privacy</a>
       </div>
-      <div class="footer-copy">italkyAI By Ozyigit's 2026</div>
+      <div class="footer-copy">italkyAI By <b>Ozyigit's</b> • 2026</div>
     </div>
   </div>
 
   <template id="faq_tr">
-    <div class="faq-card">
-      <div class="hero">
-        <h1>Sıkça Sorulan <span>Sorular</span></h1>
-        <p>italkyAI dünyasına hoş geldiniz. Modüllerimiz, offline kullanım, jeton sistemi ve kültürel zekamız hakkında en çok merak edilenler burada.</p>
-
-        <div class="search-wrap">
-          <input
-            id="faqSearch"
-            class="search-input"
-            type="text"
-            placeholder="Ara: offline, jeton, kulaklık, meeting..."
-            autocomplete="off"
-          />
-          <div class="search-icon">⌕</div>
-        </div>
-
-        <div class="no-results" id="noResults">
-          Aradığın kelimeyle eşleşen bir soru bulunamadı. Başka bir kelime dene; mesela “offline”, “kültürel”, “jeton” ya da “kulaklık”.
-        </div>
+    <div class="hero">
+      <h1>Sıkça Sorulan <span>Sorular</span></h1>
+      <p>Modüllerimiz, offline kullanım ve jeton sistemi hakkında merak edilen her şey.</p>
+      
+      <div class="search-wrap">
+        <input id="faqSearch" class="search-input" type="text" placeholder="Soru veya kelime ara..." autocomplete="off">
       </div>
+    </div>
 
+    <div class="faq-card">
       <div class="faq-section-title">Kültürel Zeka</div>
-
-      <div class="faq-item active" data-search="kültürel çeviri atasözü deyim anlam doğal çeviri kültür">
+      <div class="faq-item active" data-search="kültürel çeviri atasözü deyim">
         <span class="tag ai">KÜLTÜREL</span>
         <div class="faq-q">italkyAI "Kültürel Çeviri"yi nasıl yapar?</div>
         <div class="faq-a">
-          Klasik araçlar kelimeleri çevirir, italkyAI ise <strong>anlamı ve kültürü</strong> çevirir. Atasözlerini, deyimleri ve günlük kullanım kalıplarını hedef dildeki en doğal karşılığıyla eşleştirmeyi hedefler.
-
+          italkyAI sadece kelimeleri değil, <strong>anlamı ve kültürü</strong> çevirir. Atasözlerini hedef dildeki en doğal karşılığıyla eşleştirir.
           <div class="example-box">
-            <span class="ex-label">Örnek 1: Atasözü</span>
+            <span class="ex-label">Örnek</span>
             <div><strong>TR:</strong> "Sakla samanı gelir zamanı."</div>
-            <div class="ex-bad">Düz Çeviri: "Keep the straw, time will come."</div>
             <div class="ex-good">italkyAI: "Save it for a rainy day."</div>
           </div>
-
-          <div class="example-box">
-            <span class="ex-label">Örnek 2: Deyim</span>
-            <div><strong>TR:</strong> "İşi yokuşa sürmek."</div>
-            <div class="ex-bad">Düz Çeviri: "Driving the work to the hill."</div>
-            <div class="ex-good">italkyAI: "Making things difficult."</div>
-          </div>
         </div>
       </div>
 
-      <div class="faq-section-title">Modüller</div>
-
-      <div class="faq-item" data-search="sidetoside facetoface bireysel tek cihaz yüz yüze konuşma diyalog">
-        <span class="tag free">MODÜL</span>
-        <div class="faq-q">SideToSide ve FaceToFace ne işe yarar?</div>
-        <div class="faq-a">
-          <strong>SideToSide:</strong> Telefonu yan yana tutarak bireysel veya hızlı diyaloglar için kullanılır.<br><br>
-          <strong>FaceToFace:</strong> İki kişinin karşılıklı durduğu senaryolarda ekranı ikiye bölerek daha doğal ve kesintisiz iletişim sağlar.
-        </div>
-      </div>
-
-      <div class="faq-item" data-search="alltoall meeting toplantı grup çok kişi katılımcı canlı çeviri">
-        <span class="tag pro">MEETING</span>
-        <div class="faq-q">AllToAll (Toplantı) modu nedir?</div>
-        <div class="faq-a">
-          Birden fazla kişinin katıldığı <strong>meeting</strong> senaryoları içindir. Katılımcılar kendi dilinde konuşabilir, sistem ise akışı destekleyerek daha anlaşılır bir çoklu iletişim deneyimi sunar.
-        </div>
-      </div>
-
-      <div class="faq-item" data-search="textotext text to text yazıdan yazıya metin çeviri mesaj">
-        <span class="tag ai">TEXT</span>
-        <div class="faq-q">TextToText ne işe yarar?</div>
-        <div class="faq-a">
-          <strong>TextToText</strong>, yazıdan yazıya çeviri için kullanılır. Mesaj, açıklama, not, kısa metin veya uzun içerik çevirilerinde idealdir.
-        </div>
-      </div>
-
-      <div class="faq-item" data-search="academy games oyunlar onetoall one to all aktif değil kapalı açık değil geliştirme">
-        <span class="tag pro">DURUM</span>
-        <div class="faq-q">Hangi bölümler henüz aktif değil?</div>
-        <div class="faq-a">
-          <strong>Academy</strong>, <strong>Games</strong> ve <strong>OneToAll</strong> bölümleri şu anda geliştirme aşamasındadır ve henüz kullanıma açılmamıştır.
-        </div>
-      </div>
-
-      <div class="faq-section-title">Offline Kullanım</div>
-
-      <div class="faq-item" data-search="offline internet yok 67 dil paketi uçak yurtdışı cihaz paketi indir">
+      <div class="faq-section-title">Offline & Jeton</div>
+      <div class="faq-item" data-search="offline internet paket indir">
         <span class="tag pro">OFFLINE</span>
         <div class="faq-q">Offline diller nasıl çalışır?</div>
-        <div class="faq-a">
-          Cihazınıza indirebileceğiniz <strong>67 farklı dil paketi</strong> sayesinde internetin olmadığı yerlerde de desteklenen çeviri işlemlerini sürdürebilirsiniz. Seyahat, uçak, düşük çekim alanı ve yurt dışı kullanımı için çok faydalıdır.
-        </div>
+        <div class="faq-a">Cihazınıza indirebileceğiniz <strong>67 farklı dil paketi</strong> sayesinde internetin olmadığı yerlerde (uçak, yurt dışı vb.) çeviri yapabilirsiniz.</div>
       </div>
 
-      <div class="faq-item" data-search="offline tamamen internetsiz her şey çalışır mı gelişmiş ai bulut">
-        <span class="tag pro">OFFLINE</span>
-        <div class="faq-q">Offline modda her şey tamamen çalışır mı?</div>
-        <div class="faq-a">
-          Hayır, desteklenen offline işlemler çalışır. Bazı gelişmiş yapay zeka özellikleri veya canlı toplantı mantığı gerektiren alanlar internet bağlantısı isteyebilir.
-        </div>
-      </div>
-
-      <div class="faq-item" data-search="telefon depolama paket boyutu hafıza yer kaplar mı">
-        <span class="tag pro">DEPOLAMA</span>
-        <div class="faq-q">Offline paketler telefonda yer kaplar mı?</div>
-        <div class="faq-a">
-          Evet. Paketler cihazınıza indiği için depolama alanı kullanır. Paket boyutu dile göre değişebilir; bu yüzden yeterli boş alan bırakmanız önerilir.
-        </div>
-      </div>
-
-      <div class="faq-section-title">Ses ve Donanım</div>
-
-      <div class="faq-item" data-search="kulaklık bluetooth hoparlör ses çıkışı kullanabilir miyim">
-        <span class="tag ai">SES</span>
-        <div class="faq-q">Kulaklık kullanabilir miyim?</div>
-        <div class="faq-a">
-          Evet. Kablolu kulaklık, bluetooth kulaklık veya telefon hoparlörü ile kullanabilirsiniz. Gürültülü ortamlarda kulaklık kullanmak genelde daha temiz deneyim sağlar.
-        </div>
-      </div>
-
-      <div class="faq-item" data-search="mikrofon izin çalışmıyor ses almıyor tarayıcı telefon">
-        <span class="tag ai">MİKROFON</span>
-        <div class="faq-q">Mikrofon çalışmıyorsa ne yapmalıyım?</div>
-        <div class="faq-a">
-          Telefon veya tarayıcı ayarlarından <strong>mikrofon izninin açık</strong> olduğundan emin olun. Ayrıca başka bir uygulama mikrofonu kullanıyorsa italkyAI ses alamayabilir.
-        </div>
-      </div>
-
-      <div class="faq-section-title">Jeton Sistemi</div>
-
-      <div class="faq-item" data-search="jeton token bakiye ücret modüller dakika kelime kullanım">
-        <span class="tag pro">JETON</span>
+      <div class="faq-item" data-search="jeton token ücret bakiye">
+        <span class="tag pro">JETON SİSTEMİ</span>
         <div class="faq-q">Jetonlar ne için kullanılır?</div>
-        <div class="faq-a">
-          italkyAI içindeki modüller; çeviri, canlı kullanım, toplantı ve sesli işlemler gibi alanlarda <strong>jeton mantığıyla</strong> çalışır. Kullanım türüne göre bakiye tüketimi değişebilir.
-        </div>
-      </div>
-
-      <div class="faq-item" data-search="tüm modüller jetonla mı çalışır hepsi token">
-        <span class="tag pro">JETON</span>
-        <div class="faq-q">Tüm modüller jetonla mı çalışır?</div>
-        <div class="faq-a">
-          Evet. italkyAI içindeki tüm modüller jeton mantığıyla planlanır ve yönetilir.
-        </div>
+        <div class="faq-a">italkyAI içindeki tüm modüller (çeviri, canlı toplantı, sesli işlemler) <strong>jeton mantığıyla</strong> çalışır. Kullanımınıza göre bakiye tüketilir.</div>
       </div>
     </div>
   </template>
 
   <script type="module">
-    function bindAccordion(root) {
-      const items = root.querySelectorAll(".faq-item");
-
-      items.forEach((item) => {
-        const question = item.querySelector(".faq-q");
-        if (!question) return;
-
-        question.addEventListener("click", () => {
-          const isActive = item.classList.contains("active");
-
-          items.forEach((i) => i.classList.remove("active"));
-
-          if (!isActive) {
-            item.classList.add("active");
-          }
-        });
-      });
-    }
-
-    function bindSearch(root) {
-      const input = root.querySelector("#faqSearch");
-      const noResults = root.querySelector("#noResults");
-      const items = Array.from(root.querySelectorAll(".faq-item"));
-      const sectionTitles = Array.from(root.querySelectorAll(".faq-section-title"));
-
-      if (!input) return;
-
-      function updateSearch() {
-        const q = String(input.value || "").trim().toLowerCase();
-        let visibleCount = 0;
-
-        items.forEach((item) => {
-          const text = (
-            item.dataset.search + " " + item.textContent
-          ).toLowerCase();
-
-          const matched = !q || text.includes(q);
-          item.classList.toggle("hidden", !matched);
-
-          if (matched) visibleCount++;
-        });
-
-        sectionTitles.forEach((title) => {
-          let next = title.nextElementSibling;
-          let hasVisibleItem = false;
-
-          while (next && !next.classList.contains("faq-section-title")) {
-            if (next.classList.contains("faq-item") && !next.classList.contains("hidden")) {
-              hasVisibleItem = true;
-            }
-            next = next.nextElementSibling;
-          }
-
-          title.style.display = hasVisibleItem ? "flex" : "none";
-        });
-
-        if (!q) {
-          noResults.classList.remove("show");
-        } else {
-          noResults.classList.toggle("show", visibleCount === 0);
-        }
-
-        if (q) {
-          items.forEach((item) => item.classList.remove("active"));
-          const firstVisible = items.find((item) => !item.classList.contains("hidden"));
-          if (firstVisible) firstVisible.classList.add("active");
-        }
-      }
-
-      input.addEventListener("input", updateSearch);
-    }
-
     function render() {
       const host = document.getElementById("contentHost");
       const tpl = document.getElementById("faq_tr");
       host.innerHTML = "";
       host.appendChild(tpl.content.cloneNode(true));
 
-      bindAccordion(host);
-      bindSearch(host);
+      // Arama ve Akordeon Mantığı
+      const items = host.querySelectorAll(".faq-item");
+      const searchInput = host.querySelector("#faqSearch");
+
+      items.forEach(item => {
+        item.querySelector(".faq-q").onclick = () => {
+          const isActive = item.classList.contains("active");
+          items.forEach(i => i.classList.remove("active"));
+          if (!isActive) item.classList.add("active");
+        };
+      });
+
+      searchInput.oninput = (e) => {
+        const q = e.target.value.toLowerCase();
+        items.forEach(item => {
+          const matched = item.innerText.toLowerCase().includes(q) || item.dataset.search.includes(q);
+          item.classList.toggle("hidden", !matched);
+        });
+      };
     }
 
     render();
+
+    document.getElementById("backBtn").onclick = () => {
+      if(history.length > 1) history.back();
+      else location.href = "/pages/home.html";
+    };
   </script>
 </body>
 </html>
