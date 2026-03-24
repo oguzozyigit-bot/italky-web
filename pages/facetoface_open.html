@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#07070b" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet" />
 
   <style>
     :root{
@@ -17,13 +17,12 @@
       --txt:rgba(255,255,255,.96);
       --muted:rgba(255,255,255,.64);
       --ai:linear-gradient(135deg,#a5b4fc,#6366f1,#ec4899);
-      --good:#22c55e;
-      --warn:#f59e0b;
-      --danger:#ef4444;
-
       --panel-bg: rgba(255, 255, 255, 0.03);
       --panel-border: rgba(255, 255, 255, 0.08);
       --accent: #818cf8;
+      --good:#22c55e;
+      --warn:#f59e0b;
+      --danger:#ef4444;
     }
 
     *{
@@ -249,8 +248,8 @@
     .btn{
       min-height:54px;
       border-radius:18px;
-      font-family:Outfit,sans-serif;
-      font-weight:900;
+      font-family:inherit;
+      font-weight:800;
       font-size:15px;
       cursor:pointer;
       display:flex;
@@ -315,7 +314,7 @@
 
     .modal-card{
       width:min(100%, 720px);
-      max-height:min(92vh,900px);
+      max-height:min(92vh,920px);
       overflow:auto;
       border:1px solid var(--line);
       background:#02000f;
@@ -359,7 +358,9 @@
     }
 
     .modal-body{
-      padding:16px;
+      max-width:500px;
+      margin:0 auto;
+      padding:14px 16px 24px;
       display:flex;
       flex-direction:column;
       gap:20px;
@@ -413,6 +414,22 @@
       font-size:12px;
       line-height:1.45;
       color:var(--muted);
+    }
+
+    .replace-note{
+      display:none;
+      padding:12px 14px;
+      border-radius:16px;
+      border:1px solid rgba(245,158,11,.22);
+      background:rgba(245,158,11,.10);
+      color:#fde68a;
+      font-size:12px;
+      font-weight:800;
+      line-height:1.45;
+    }
+
+    .replace-note.show{
+      display:block;
     }
 
     .progress-container {
@@ -763,6 +780,10 @@
           </section>
         </div>
 
+        <div class="replace-note" id="replaceVoiceNote">
+          Mevcut ses profilin yenisiyle değiştirilecektir.
+        </div>
+
         <section class="progress-container">
           <div class="progress-info">
             <span>İLERLEME</span>
@@ -782,20 +803,15 @@
           <div class="mic-btn-wrapper" id="voiceMicWrapper">
             <div class="wave"></div>
             <div class="wave"></div>
-            <button class="mic-btn" id="startVoiceRecBtn" type="button" aria-label="Kaydı başlat">
+            <button class="mic-btn" id="voiceRecordBtn" type="button" aria-label="Kaydı başlat">
               <svg viewBox="0 0 24 24"><path d="M12 1v10m-7-4a7 7 0 0014 0M12 18v5"/></svg>
             </button>
           </div>
-
           <div class="timer" id="voiceTimerText">00:00</div>
-          <div class="status-msg" id="voiceEnrollStatus">Cümle 1 / 6 • Hazır. Kayda başlayabilirsin.</div>
+          <div class="status-msg" id="voiceEnrollStatus">Mikrofona dokun ve başla</div>
         </section>
 
-        <audio class="voice-player" id="voicePreview" controls></audio>
-
         <section class="action-grid">
-          <button class="btn btn-secondary" id="stopVoiceRecBtn" type="button">Kaydı Durdur</button>
-          <button class="btn btn-secondary" id="playVoiceBtn" type="button">Kaydı Dinle</button>
           <button class="btn btn-primary" id="voiceNextBtn" type="button" disabled>Sonraki Cümle</button>
           <button class="btn btn-primary" id="voiceFinishBtn" type="button" style="display:none;" disabled>Kaydet ve Tamamla</button>
           <button class="btn btn-secondary" id="voiceCancelBtn" type="button">Vazgeç</button>
@@ -811,7 +827,7 @@
 
   <div class="toast" id="voiceToast"></div>
 
-  <script type="module" src="/js/facetoface_open.js?v=F2F_OPEN_V3"></script>
+  <script type="module" src="/js/facetoface_open.js?v=F2F_OPEN_V4"></script>
 
   <script type="module">
     import { mountShell } from "/js/ui_shell.js";
