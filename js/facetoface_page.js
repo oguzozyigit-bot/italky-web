@@ -851,6 +851,36 @@ function getPreviewText(side) {
   return String(previewNode?.textContent || "").trim();
 }
 
+function buildStableTranscript(results) {
+  const pieces = [];
+
+  for (let i = 0; i < results.length; i++) {
+    const chunk = String(results[i]?.[0]?.transcript || "").replace(/\s+/g, " ").trim();
+    if (!chunk) continue;
+
+    const prev = pieces[pieces.length - 1] || "";
+    if (prev === chunk) continue;
+    if (prev && chunk.startsWith(prev)) {
+      pieces[pieces.length - 1] = chunk;
+      continue;
+    }
+    if (prev && prev.startsWith(chunk)) {
+      continue;
+    }
+
+    pieces.push(chunk);
+  }
+
+  return pieces.join(" ").replace(/\s+/g, " ").trim();
+}
+
+function cleanupFinalTranscript(text) {
+  return String(text || "")
+    .replace(/\s+/g, " ")
+    .replace(/\b(\S+)( \1\b)+/gi, "$1")
+    .trim();
+}
+
 async function finalizeRecognition(side, text) {
   const src = side === "top" ? topLang : botLang;
   const dst = side === "top" ? botLang : topLang;
@@ -858,7 +888,7 @@ async function finalizeRecognition(side, text) {
   const other = side === "top" ? "bot" : "top";
   const mode = getFaceTranslateMode();
 
-  const cleaned = String(text || "").trim();
+  const cleaned = cleanupFinalTranscript(text);
   if (!cleaned) {
     setErrorUI();
     bounceToReady(1000);
@@ -947,20 +977,13 @@ function startRecording(side) {
   };
 
   rec.onresult = (e) => {
-    let finalText = "";
-    let interimText = "";
+    if (mySessionId !== recognitionSessionId) return;
 
-    for (let i = e.resultIndex; i < e.results.length; i++) {
-      const chunk = e.results[i]?.[0]?.transcript || "";
-      if (e.results[i].isFinal) finalText += chunk + " ";
-      else interimText += chunk + " ";
-    }
+    const builtText = buildStableTranscript(e.results);
+    if (!builtText) return;
 
-    liveTranscript = `${liveTranscript} ${finalText}`.trim();
-    latestPreviewTranscript = `${liveTranscript} ${interimText}`.trim();
-
-    const previewText = latestPreviewTranscript || liveTranscript;
-    if (!previewText) return;
+    liveTranscript = builtText;
+    latestPreviewTranscript = builtText;
 
     const body = side === "top" ? topBody : botBody;
     let previewNode = body?.querySelector(".bubble.them.preview");
@@ -973,12 +996,14 @@ function startRecording(side) {
     }
 
     const txtEl = previewNode.querySelector(".txt");
-    if (txtEl) txtEl.textContent = previewText;
+    if (txtEl) txtEl.textContent = builtText;
 
     keepLatestVisible(side);
   };
 
   rec.onerror = (e) => {
+    if (mySessionId !== recognitionSessionId) return;
+
     const helper = side === "top" ? topHelper : botHelper;
 
     if (String(e?.error || "").includes("not-allowed")) {
@@ -1002,12 +1027,9 @@ function startRecording(side) {
 
     const sideAtEnd = side;
     const previewText = getPreviewText(sideAtEnd);
-    const finalText = String(
-      latestPreviewTranscript ||
-      liveTranscript ||
-      previewText ||
-      ""
-    ).trim();
+    const finalText = cleanupFinalTranscript(
+      previewText || latestPreviewTranscript || liveTranscript || ""
+    );
 
     recognizer = null;
     recordingSide = null;
@@ -1015,9 +1037,7 @@ function startRecording(side) {
     const previewNode = (sideAtEnd === "top" ? topBody : botBody)?.querySelector(".bubble.them.preview");
     previewNode?.remove();
 
-    const shouldFinalize =
-      !!finalText &&
-      (recognitionFinishedByUser || finalText.length > 0);
+    const shouldFinalize = !!finalText;
 
     liveTranscript = "";
     latestPreviewTranscript = "";
@@ -1043,6 +1063,7 @@ function startRecording(side) {
     bounceToReady(1200);
   }
 }
+
 async function toggleRecording(side) {
   await ensureReady();
 
