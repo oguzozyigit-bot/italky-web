@@ -1,103 +1,609 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="tr">
 <head>
-<meta charset="utf-8"/>
-<title>italkyAI • New Premium Icon</title>
-<style>
-:root {
-  /* Renkleri daha tok ve derin hale getirdim */
-  --neon-core: #00e5ff; 
-  --pink-aura: #ff007a;
-  --bg-deep: #020205; /* Tam siyah değil, çok derin lacivert-siyah */
-}
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>italkyAI • SideToSide QR Oku</title>
+  <meta name="theme-color" content="#120d16" />
 
-body {
-  margin: 0; display: flex; align-items: center; justify-content: center;
-  min-height: 100dvh; background: #1a1a1a;
-}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
-/* 512x512 Play Store Standartı */
-.icon-container {
-  width: 192px; height: 192px;
-  background: var(--bg-deep);
-  border-radius: 42px; /* Squircle */
-  position: relative;
-  overflow: hidden;
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 25px 50px rgba(0,0,0,0.6);
-  border: 1px solid rgba(255,255,255,0.1);
-}
+  <style>
+    :root{
+      --txt:rgba(255,255,255,.96);
+      --muted:rgba(255,255,255,.64);
+      --line:rgba(255,255,255,.12);
+      --ai-grad:linear-gradient(135deg,#67e8f9 0%, #818cf8 46%, #f472b6 100%);
+      --bg:#120d16;
+      --good:#22c55e;
+      --warn:#f59e0b;
+      --bad:#ef4444;
+    }
 
-/* Arka plandaki o "kötü" duran patlamayı zarif bir degradeye çevirdim */
-.aura-glow {
-  position: absolute; inset: 0;
-  background: 
-    radial-gradient(circle at 100% 0%, rgba(255,0,122,0.15) 0%, transparent 50%),
-    radial-gradient(circle at 0% 100%, rgba(0,229,255,0.15) 0%, transparent 50%);
-}
+    *{
+      box-sizing:border-box;
+      -webkit-tap-highlight-color:transparent;
+      outline:none;
+    }
 
-/* Merkezi Küre - Cam Efekti (Glassmorphism) */
-.glass-sphere {
-  width: 120px; height: 120px;
-  background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.02));
-  border-radius: 50%;
-  border: 1px solid rgba(255,255,255,0.2);
-  display: flex; align-items: center; justify-content: center;
-  position: relative;
-  backdrop-filter: blur(5px);
-  box-shadow: 
-    inset 0 0 20px rgba(255,255,255,0.05),
-    0 15px 35px rgba(0,0,0,0.5);
-}
+    html,body{
+      margin:0;
+      width:100%;
+      min-height:100%;
+      background:var(--bg);
+      color:var(--txt);
+      font-family:'Outfit',sans-serif;
+      overflow:hidden;
+    }
 
-/* İkonun kalbi: iAI Sembolü */
-.symbol {
-  display: flex; align-items: baseline;
-  font-family: 'Outfit', sans-serif;
-  font-weight: 900;
-  color: #fff;
-  letter-spacing: -2px;
-}
+    body{
+      background:
+        radial-gradient(circle at 50% 0%, rgba(251,146,60,.18) 0%, transparent 28%),
+        radial-gradient(circle at 18% 16%, rgba(244,114,182,.12) 0%, transparent 25%),
+        radial-gradient(circle at 84% 14%, rgba(96,165,250,.10) 0%, transparent 20%),
+        linear-gradient(180deg, #1d1016 0%, #150e19 34%, #120d16 100%);
+    }
 
-.i-letter {
-  font-size: 70px;
-  background: linear-gradient(to bottom, #fff, #b2f9ff);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 0 15px rgba(0,229,255,0.4));
-}
+    #pageContent{
+      width:100%;
+      min-height:100dvh;
+      padding:14px;
+      overflow-y:auto;
+      overflow-x:hidden;
+      scrollbar-width:none;
+      -webkit-overflow-scrolling:touch;
+    }
 
-.ai-letter {
-  font-size: 32px;
-  color: var(--pink-aura);
-  margin-left: 2px;
-  text-shadow: 0 0 10px rgba(255,0,122,0.5);
-}
+    #pageContent::-webkit-scrollbar{ display:none; }
 
-/* Alt kısımdaki o parlayan enerji çizgisi (Modern dokunuş) */
-.energy-bar {
-  position: absolute;
-  bottom: 35px;
-  width: 40px;
-  height: 4px;
-  background: var(--neon-core);
-  border-radius: 10px;
-  box-shadow: 0 0 15px var(--neon-core);
-}
-</style>
+    .wrap{
+      width:100%;
+      max-width:760px;
+      margin:0 auto;
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+      padding-bottom:18px;
+    }
+
+    .hero,
+    .scan-card,
+    .help-card{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.04);
+      border-radius:28px;
+      box-shadow:0 16px 40px rgba(0,0,0,.22);
+      backdrop-filter:blur(14px);
+    }
+
+    .hero{
+      padding:20px 18px;
+    }
+
+    .title{
+      margin:0;
+      font-family:"Space Grotesk",sans-serif;
+      font-size:28px;
+      line-height:1.02;
+      letter-spacing:-.8px;
+    }
+
+    .sub{
+      margin:10px 0 0;
+      font-size:13px;
+      line-height:1.45;
+      color:var(--muted);
+      max-width:560px;
+    }
+
+    .scan-card{
+      padding:14px;
+    }
+
+    .scan-frame{
+      position:relative;
+      width:100%;
+      aspect-ratio: 3 / 4;
+      min-height:360px;
+      border-radius:24px;
+      overflow:hidden;
+      background:
+        radial-gradient(circle at 50% 20%, rgba(103,232,249,.08), transparent 34%),
+        rgba(0,0,0,.45);
+      border:1px solid rgba(255,255,255,.10);
+      box-shadow: inset 0 0 40px rgba(0,0,0,.26);
+    }
+
+    video{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      background:#050508;
+    }
+
+    .overlay{
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .mask-top,
+    .mask-bottom,
+    .mask-left,
+    .mask-right{
+      position:absolute;
+      background:rgba(0,0,0,.42);
+      backdrop-filter:blur(2px);
+    }
+
+    .mask-top{
+      top:0;
+      left:0;
+      right:0;
+      height:18%;
+    }
+
+    .mask-bottom{
+      bottom:0;
+      left:0;
+      right:0;
+      height:18%;
+    }
+
+    .mask-left{
+      top:18%;
+      bottom:18%;
+      left:0;
+      width:12%;
+    }
+
+    .mask-right{
+      top:18%;
+      bottom:18%;
+      right:0;
+      width:12%;
+    }
+
+    .scan-box{
+      position:absolute;
+      width:min(72vw, 280px);
+      height:min(72vw, 280px);
+      border-radius:26px;
+      border:2px solid rgba(103,232,249,.92);
+      box-shadow:
+        0 0 0 1px rgba(103,232,249,.18),
+        0 0 24px rgba(103,232,249,.28),
+        inset 0 0 24px rgba(103,232,249,.12);
+    }
+
+    .scan-box::before,
+    .scan-box::after{
+      content:"";
+      position:absolute;
+      left:10px;
+      right:10px;
+      height:2px;
+      border-radius:999px;
+      background:linear-gradient(90deg, transparent, rgba(103,232,249,.95), transparent);
+      box-shadow:0 0 18px rgba(103,232,249,.45);
+      animation:scanLine 2s linear infinite;
+    }
+
+    .scan-box::after{
+      animation-delay:1s;
+      opacity:.45;
+    }
+
+    .corner{
+      position:absolute;
+      width:22px;
+      height:22px;
+      border-color:#fff;
+      opacity:.9;
+    }
+
+    .corner.tl{ top:10px; left:10px; border-top:3px solid; border-left:3px solid; border-top-left-radius:10px; }
+    .corner.tr{ top:10px; right:10px; border-top:3px solid; border-right:3px solid; border-top-right-radius:10px; }
+    .corner.bl{ bottom:10px; left:10px; border-bottom:3px solid; border-left:3px solid; border-bottom-left-radius:10px; }
+    .corner.br{ bottom:10px; right:10px; border-bottom:3px solid; border-right:3px solid; border-bottom-right-radius:10px; }
+
+    .scan-status{
+      margin-top:12px;
+      text-align:center;
+      min-height:22px;
+      font-size:13px;
+      font-weight:800;
+      color:rgba(255,255,255,.82);
+    }
+
+    .scan-status.good{ color:#86efac; }
+    .scan-status.warn{ color:#fde68a; }
+    .scan-status.bad{ color:#fca5a5; }
+
+    .action-row{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      margin-top:12px;
+    }
+
+    .btn{
+      min-height:54px;
+      border:none;
+      border-radius:18px;
+      font-family:inherit;
+      font-size:15px;
+      font-weight:900;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-decoration:none;
+      transition:transform .18s ease, opacity .18s ease, box-shadow .18s ease;
+    }
+
+    .btn:active{ transform:scale(.985); }
+
+    .btn-primary{
+      background:var(--ai-grad);
+      color:#080b17;
+      box-shadow:0 14px 28px rgba(99,102,241,.24);
+    }
+
+    .btn-dark{
+      background:rgba(255,255,255,.06);
+      color:#fff;
+      border:1px solid rgba(255,255,255,.10);
+    }
+
+    .help-card{
+      padding:16px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+
+    .help-title{
+      margin:0;
+      font-size:16px;
+      font-weight:900;
+      letter-spacing:-.2px;
+    }
+
+    .help-text{
+      margin:0;
+      font-size:12.5px;
+      line-height:1.48;
+      color:var(--muted);
+    }
+
+    .toast{
+      position: fixed;
+      left:50%;
+      top:18px;
+      transform: translateX(-50%) translateY(-120px);
+      background: rgba(10,10,18,.92);
+      border:1px solid rgba(165,180,252,.35);
+      padding: 10px 14px;
+      border-radius: 999px;
+      color:#fff;
+      z-index:999999;
+      font-weight:900;
+      font-size:12px;
+      transition:.25s;
+      backdrop-filter: blur(12px);
+      pointer-events:none;
+      max-width:min(92vw, 520px);
+      text-align:center;
+    }
+
+    .toast.show{
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @keyframes scanLine{
+      0%{ top:12px; }
+      100%{ top:calc(100% - 14px); }
+    }
+
+    @media (min-width:700px){
+      .action-row{
+        flex-direction:row;
+      }
+      .action-row .btn{
+        flex:1;
+      }
+      .scan-frame{
+        min-height:440px;
+      }
+    }
+
+    @media (max-width:390px){
+      .title{ font-size:25px; }
+      .scan-frame{ min-height:320px; }
+    }
+  </style>
 </head>
 <body>
+  <main id="pageContent">
+    <div class="wrap">
+      <section class="hero">
+        <h1 class="title">QR Oku</h1>
+        <p class="sub">
+          SideToSide bağlantısı için karşı taraftaki QR kodu okut. Kamera açılmazsa veya QR okunmazsa bağlantı kodunu elle de girebilirsin.
+        </p>
+      </section>
 
-<div class="icon-container">
-  <div class="aura-glow"></div>
-  <div class="glass-sphere">
-    <div class="symbol">
-      <span class="i-letter">i</span>
-      <span class="ai-letter">AI</span>
+      <section class="scan-card">
+        <div class="scan-frame">
+          <video id="cameraVideo" autoplay playsinline muted></video>
+
+          <div class="overlay">
+            <div class="mask-top"></div>
+            <div class="mask-bottom"></div>
+            <div class="mask-left"></div>
+            <div class="mask-right"></div>
+
+            <div class="scan-box">
+              <div class="corner tl"></div>
+              <div class="corner tr"></div>
+              <div class="corner bl"></div>
+              <div class="corner br"></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="scanStatus" class="scan-status">Kamera hazırlanıyor...</div>
+
+        <div class="action-row">
+          <button id="retryBtn" class="btn btn-primary" type="button">Kamerayı Yeniden Dene</button>
+          <button id="manualBtn" class="btn btn-dark" type="button">Kod Gir</button>
+        </div>
+      </section>
+
+      <section class="help-card">
+        <h2 class="help-title">Nasıl çalışır?</h2>
+        <p class="help-text">QR başarıyla okununca sistem içindeki oda bilgisi alınır ve seni doğrudan SideToSide görüşmesine bağlar.</p>
+        <p class="help-text">Eski “uygulama indir” akışı kaldırıldı. Bu sayfa sadece oda bağlantısı için çalışır.</p>
+      </section>
     </div>
-    <div class="energy-bar"></div>
-  </div>
-</div>
+  </main>
 
+  <div class="toast" id="scanToast"></div>
+
+  <script type="module">
+    import { mountShell } from "/js/ui_shell.js";
+    try {
+      mountShell({ scroll: "auto" });
+    } catch (e) {
+      console.error("ui_shell HATASI:", e);
+    }
+  </script>
+
+  <script type="module">
+    const video = document.getElementById("cameraVideo");
+    const scanStatus = document.getElementById("scanStatus");
+    const retryBtn = document.getElementById("retryBtn");
+    const manualBtn = document.getElementById("manualBtn");
+    const scanToast = document.getElementById("scanToast");
+
+    let mediaStream = null;
+    let detector = null;
+    let scanTimer = null;
+    let locked = false;
+
+    function toast(msg){
+      if(!scanToast) return;
+      scanToast.textContent = String(msg || "");
+      scanToast.classList.add("show");
+      clearTimeout(window.__sidetosideScanToast);
+      window.__sidetosideScanToast = setTimeout(() => {
+        scanToast.classList.remove("show");
+      }, 1700);
+    }
+
+    function setStatus(text, mode = ""){
+      if(!scanStatus) return;
+      scanStatus.className = "scan-status";
+      if(mode) scanStatus.classList.add(mode);
+      scanStatus.textContent = text || "";
+    }
+
+    function stopScanner(){
+      try{ clearInterval(scanTimer); }catch{}
+      scanTimer = null;
+
+      try{
+        mediaStream?.getTracks?.().forEach(t => t.stop());
+      }catch{}
+      mediaStream = null;
+
+      try{
+        video.srcObject = null;
+      }catch{}
+    }
+
+    function normalizeRoom(v){
+      return String(v || "").trim();
+    }
+
+    function normalizeCode(v){
+      return String(v || "").trim().toUpperCase();
+    }
+
+    function goManual(code = "", room = ""){
+      const url = new URL("/pages/sidetoside_code.html", location.origin);
+      if(code) url.searchParams.set("code", code);
+      if(room) url.searchParams.set("room", room);
+      location.href = url.toString();
+    }
+
+    function goRoom(roomId, code = ""){
+      const room = normalizeRoom(roomId);
+      if(!room) return;
+
+      try{
+        localStorage.setItem("italky_active_interpreter_room_id", room);
+        if(code) localStorage.setItem("italky_active_interpreter_code", normalizeCode(code));
+      }catch{}
+
+      location.href = `/sidetoside.html?room=${encodeURIComponent(room)}&role=guest&my=tr`;
+    }
+
+    function parseQrPayload(raw){
+      const text = String(raw || "").trim();
+      if(!text) return null;
+
+      try{
+        const url = new URL(text);
+        const room = normalizeRoom(
+          url.searchParams.get("room") ||
+          url.searchParams.get("r")
+        );
+        const code = normalizeCode(
+          url.searchParams.get("code") ||
+          url.searchParams.get("c")
+        );
+
+        if(room || code){
+          return { room, code, raw: text };
+        }
+      }catch{}
+
+      try{
+        const params = new URLSearchParams(text);
+        const room = normalizeRoom(params.get("room") || params.get("r"));
+        const code = normalizeCode(params.get("code") || params.get("c"));
+        if(room || code){
+          return { room, code, raw: text };
+        }
+      }catch{}
+
+      if(/^[A-Z0-9]{6}$/.test(text.toUpperCase())){
+        return { room: "", code: text.toUpperCase(), raw: text };
+      }
+
+      return null;
+    }
+
+    async function handleDetected(rawValue){
+      if(locked) return;
+
+      const parsed = parseQrPayload(rawValue);
+      if(!parsed) return;
+
+      locked = true;
+      stopScanner();
+
+      if(parsed.room){
+        setStatus("QR okundu. Odaya bağlanılıyor...", "good");
+        toast("QR okundu");
+        goRoom(parsed.room, parsed.code || "");
+        return;
+      }
+
+      if(parsed.code){
+        setStatus("QR okundu. Kod ile giriş hazırlanıyor...", "good");
+        toast("Bağlantı kodu alındı");
+        goManual(parsed.code, "");
+        return;
+      }
+
+      locked = false;
+    }
+
+    async function scanLoop(){
+      if(!detector || !video || video.readyState < 2 || locked) return;
+
+      try{
+        const barcodes = await detector.detect(video);
+        if(Array.isArray(barcodes) && barcodes.length){
+          const rawValue = String(barcodes[0]?.rawValue || "").trim();
+          if(rawValue){
+            await handleDetected(rawValue);
+          }
+        }
+      }catch(e){
+        console.warn("[sidetoside_scan detect]", e);
+      }
+    }
+
+    async function startScanner(){
+      locked = false;
+      stopScanner();
+
+      if(!("BarcodeDetector" in window)){
+        setStatus("Bu cihazda yerleşik QR okuma desteklenmiyor. Kod ile devam edebilirsin.", "warn");
+        return;
+      }
+
+      try{
+        const formats = await window.BarcodeDetector.getSupportedFormats();
+        if(!formats.includes("qr_code")){
+          setStatus("QR algılama bu cihazda desteklenmiyor. Kod ile devam edebilirsin.", "warn");
+          return;
+        }
+      }catch{}
+
+      try{
+        detector = new window.BarcodeDetector({ formats: ["qr_code"] });
+      }catch(e){
+        console.error("[sidetoside_scan detector]", e);
+        setStatus("QR algılayıcı başlatılamadı. Kod ile devam edebilirsin.", "bad");
+        return;
+      }
+
+      try{
+        mediaStream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: { ideal: "environment" },
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          },
+          audio: false
+        });
+
+        video.srcObject = mediaStream;
+        await video.play();
+
+        setStatus("QR kodu çerçeve içine getir.", "good");
+
+        scanTimer = setInterval(scanLoop, 350);
+      }catch(e){
+        console.error("[sidetoside_scan camera]", e);
+        setStatus("Kamera açılamadı. İzin ver veya kod ile devam et.", "bad");
+      }
+    }
+
+    retryBtn?.addEventListener("click", async () => {
+      setStatus("Kamera yeniden başlatılıyor...");
+      await startScanner();
+    });
+
+    manualBtn?.addEventListener("click", () => {
+      goManual();
+    });
+
+    document.addEventListener("visibilitychange", () => {
+      if(document.visibilityState === "hidden"){
+        stopScanner();
+      }else if(!locked){
+        startScanner();
+      }
+    });
+
+    window.addEventListener("beforeunload", () => {
+      stopScanner();
+    });
+
+    startScanner();
+  </script>
 </body>
 </html>
