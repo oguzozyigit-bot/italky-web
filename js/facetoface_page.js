@@ -24,7 +24,7 @@ function canonical(code) {
   return String(code || "").toLowerCase().split("-")[0].trim();
 }
 
-const LANGS = (Array.isArray(getLangPoolForSite()) ? getLangPoolForSite() : [])
+const LANGS = (Array.isArray(getLangPoolForSite("tr")) ? getLangPoolForSite("tr") : [])
   .map((l) => {
     const code = canonical(l.code);
     if (!code) return null;
