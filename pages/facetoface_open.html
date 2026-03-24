@@ -20,6 +20,10 @@
       --good:#22c55e;
       --warn:#f59e0b;
       --danger:#ef4444;
+
+      --panel-bg: rgba(255, 255, 255, 0.03);
+      --panel-border: rgba(255, 255, 255, 0.08);
+      --accent: #818cf8;
     }
 
     *{
@@ -244,17 +248,21 @@
 
     .btn{
       min-height:54px;
-      border:none;
       border-radius:18px;
       font-family:Outfit,sans-serif;
-      font-size:15px;
       font-weight:900;
+      font-size:15px;
       cursor:pointer;
-      transition:transform .18s ease, opacity .18s ease, box-shadow .18s ease;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border:none;
+      transition:all .2s;
+      text-decoration:none;
       touch-action:manipulation;
     }
 
-    .btn:active{ transform:scale(.986); }
+    .btn:active { transform: scale(0.98); }
 
     .btn-primary{
       background:var(--ai);
@@ -262,10 +270,18 @@
       box-shadow:0 14px 28px rgba(99,102,241,.24);
     }
 
+    .btn-primary:disabled,
+    .btn-primary[disabled]{
+      opacity:.25;
+      filter:grayscale(1);
+      cursor:not-allowed;
+      box-shadow:none;
+    }
+
     .btn-secondary{
-      background:rgba(255,255,255,.06);
+      background:rgba(255,255,255,.05);
       color:#fff;
-      border:1px solid var(--line);
+      border:1px solid var(--panel-border);
     }
 
     .btn-market{
@@ -275,7 +291,7 @@
       display:none;
     }
 
-    .btn-market.show{ display:block; }
+    .btn-market.show{ display:flex; }
 
     .foot-note{
       font-size:11px;
@@ -299,12 +315,15 @@
 
     .modal-card{
       width:min(100%, 720px);
+      max-height:min(92vh,900px);
+      overflow:auto;
       border:1px solid var(--line);
-      background:#0d0d14;
+      background:#02000f;
       border-radius:28px;
       box-shadow:0 28px 70px rgba(0,0,0,.6);
-      overflow:hidden;
+      scrollbar-width:none;
     }
+    .modal-card::-webkit-scrollbar{ display:none; }
 
     .modal-head{
       display:flex;
@@ -313,6 +332,11 @@
       gap:10px;
       padding:16px 16px 12px;
       border-bottom:1px solid rgba(255,255,255,.08);
+      position:sticky;
+      top:0;
+      z-index:5;
+      background:rgba(2,0,15,.94);
+      backdrop-filter:blur(14px);
     }
 
     .modal-title{
@@ -331,72 +355,291 @@
       font-size:18px;
       font-weight:900;
       cursor:pointer;
+      flex:0 0 auto;
     }
 
     .modal-body{
       padding:16px;
       display:flex;
       flex-direction:column;
-      gap:14px;
+      gap:20px;
     }
 
-    .voice-box{
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.04);
-      border-radius:22px;
-      padding:16px;
+    .topRow{
       display:flex;
-      flex-direction:column;
+      align-items:center;
       gap:12px;
     }
 
-    .voice-text{
-      font-size:13px;
-      line-height:1.5;
-      color:rgba(255,255,255,.86);
+    .page-head{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      min-width:0;
     }
 
-    .voice-sample{
-      border:1px dashed rgba(255,255,255,.14);
-      border-radius:18px;
-      padding:14px;
-      font-size:14px;
-      line-height:1.55;
-      color:#fff;
-      background:rgba(255,255,255,.03);
-    }
-
-    .voice-status{
-      min-height:20px;
-      font-size:12px;
+    .page-kicker{
+      display:inline-flex;
+      width:max-content;
+      align-items:center;
+      gap:8px;
+      padding:8px 12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.05);
+      border:1px solid var(--panel-border);
+      font-size:11px;
       font-weight:800;
-      color:#cbd5e1;
+      letter-spacing:.5px;
+      color:rgba(255,255,255,.82);
     }
 
-    .voice-status.good{ color:#86efac; }
-    .voice-status.warn{ color:#fde68a; }
-    .voice-status.bad{ color:#fca5a5; }
-
-    .voice-player{
-      width:100%;
-      display:none;
+    .modal-main-title{
+      font-family:'Space Grotesk', sans-serif;
+      font-size:28px;
+      font-weight:700;
+      margin:0;
+      line-height:1;
+      letter-spacing:-1px;
     }
 
-    .voice-player.show{ display:block; }
+    .modal-main-title .ai{
+      background:var(--ai);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
 
-    .voice-actions{
+    .page-sub{
+      margin:0;
+      font-size:12px;
+      line-height:1.45;
+      color:var(--muted);
+    }
+
+    .progress-container {
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+
+    .progress-info {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--muted);
+      letter-spacing: 1px;
+    }
+
+    .progress-bar {
+      height: 4px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--ai);
+      width: 16.6%;
+      transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 0 10px var(--accent);
+    }
+
+    .sample-card {
+      background: linear-gradient(145deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01));
+      border: 1px solid var(--panel-border);
+      border-radius: 28px;
+      padding: 28px 20px;
+      text-align: center;
+      position: relative;
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      box-shadow: 0 14px 30px rgba(0,0,0,.18);
+    }
+
+    .sample-label {
+      font-size: 10px;
+      font-weight: 900;
+      color: var(--accent);
+      letter-spacing: 2px;
+      margin-bottom: 15px;
+      display: block;
+      text-transform:uppercase;
+    }
+
+    .sample-text {
+      font-size: 22px;
+      font-weight: 800;
+      line-height: 1.4;
+      color: #fff;
+      min-height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-wrap: balance;
+    }
+
+    .mic-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .mic-btn-wrapper {
+      position: relative;
+      width: 100px;
+      height: 100px;
+    }
+
+    .mic-btn {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: #12121a;
+      border: 2px solid var(--panel-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 10;
+      position: relative;
+      transition: all 0.3s;
+      box-shadow:0 10px 24px rgba(0,0,0,.28);
+    }
+
+    .mic-btn svg {
+      width: 35px;
+      height: 35px;
+      stroke: #fff;
+      fill: none;
+      stroke-width: 2.5;
+      transition: all 0.3s;
+    }
+
+    .mic-btn.listening {
+      border-color: #f472b6;
+      box-shadow: 0 0 20px rgba(244, 114, 182, 0.3);
+    }
+
+    .mic-btn.listening svg {
+      stroke: #f472b6;
+      transform: scale(1.1);
+    }
+
+    .wave {
+      position: absolute;
+      inset: 0;
+      border: 2px solid #818cf8;
+      border-radius: 50%;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .listening .wave {
+      animation: voiceWave 1.5s infinite;
+    }
+
+    .listening .wave:nth-child(2) {
+      animation-delay: 0.5s;
+    }
+
+    @keyframes voiceWave {
+      0% { transform: scale(1); opacity: 0.5; }
+      100% { transform: scale(1.8); opacity: 0; }
+    }
+
+    .timer {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: rgba(255,255,255,.78);
+    }
+
+    .status-msg {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent);
+      text-align:center;
+      min-height: 18px;
+    }
+
+    .action-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .completed-wrap{
       display:flex;
       flex-direction:column;
       gap:10px;
+    }
+
+    .completed-title{
+      margin:0;
+      font-size:12px;
+      font-weight:900;
+      letter-spacing:1px;
+      color:rgba(255,255,255,.72);
+      text-transform:uppercase;
+    }
+
+    .completed-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .completed-item {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--panel-border);
+      padding: 12px 16px;
+      border-radius: 14px;
+      display: flex;
+      justify-content: space-between;
+      gap:12px;
+      font-size: 12px;
+      font-weight: 700;
+      color:#fff;
+    }
+
+    .toast{
+      position: fixed;
+      left:50%;
+      top:18px;
+      transform: translateX(-50%) translateY(-120px);
+      background: rgba(10,10,18,.92);
+      border:1px solid rgba(165,180,252,.35);
+      padding: 10px 14px;
+      border-radius: 999px;
+      color:#fff;
+      z-index:999999;
+      font-weight:900;
+      font-size:12px;
+      transition:.25s;
+      backdrop-filter: blur(12px);
+      pointer-events:none;
+      max-width:min(92vw, 520px);
+      text-align:center;
+    }
+
+    .toast.show{
+      transform: translateX(-50%) translateY(0);
     }
 
     @media (min-width:700px){
       .grid.two{ grid-template-columns:1fr 1fr; }
       .cta-row{ flex-direction:row; }
       .cta-row .btn{ flex:1; }
-      .voice-actions{ flex-direction:row; flex-wrap:wrap; }
-      .voice-actions .btn{ flex:1; min-width:180px; }
       .modal{ align-items:center; }
+    }
+
+    @media (max-width:390px){
+      #pageContent{ padding:12px 14px 20px; }
+      .title{ font-size:25px; }
+      .modal-main-title{ font-size:25px; }
+      .sample-text{ font-size:20px; min-height:74px; }
     }
   </style>
 </head>
@@ -437,7 +680,7 @@
               <div class="choice-title">Kadın Ses</div>
               <div class="badge paid">Jetonlu</div>
             </div>
-            <p class="choice-desc">Daha kaliteli kadın ses deneyimi sunar. Jeton kullanır.</p>
+            <p class="choice-desc">Daha kontrollü kadın ses deneyimi sunar. Jeton kullanır.</p>
           </div>
 
           <div class="choice" data-voice="male">
@@ -445,7 +688,7 @@
               <div class="choice-title">Erkek Ses</div>
               <div class="badge paid">Jetonlu</div>
             </div>
-            <p class="choice-desc">Daha kaliteli erkek ses deneyimi sunar. Jeton kullanır.</p>
+            <p class="choice-desc">Daha kontrollü erkek ses deneyimi sunar. Jeton kullanır.</p>
           </div>
 
           <div class="choice" data-voice="clone" id="cloneChoice">
@@ -512,33 +755,63 @@
       </div>
 
       <div class="modal-body">
-        <div class="voice-box">
-          <div class="voice-text">
-            Aşağıdaki metni doğal şekilde okuyarak 6 örnek kayıt tamamla. Ses profili bu kayıtlarla hazırlanacaktır.
-          </div>
-
-          <div class="voice-sample" id="voiceSampleText">
-            Merhaba, ben italky AI için sesimi tanıtıyorum.
-          </div>
-
-          <div class="voice-status" id="voiceEnrollStatus">
-            Cümle 1 / 6 • Hazır. Kayda başlayabilirsin.
-          </div>
-
-          <audio class="voice-player" id="voicePreview" controls></audio>
-
-          <div class="voice-actions">
-            <button class="btn btn-secondary" id="startVoiceRecBtn" type="button">Kaydı Başlat</button>
-            <button class="btn btn-secondary" id="stopVoiceRecBtn" type="button">Kaydı Durdur</button>
-            <button class="btn btn-secondary" id="playVoiceBtn" type="button">Kaydı Dinle</button>
-            <button class="btn btn-primary" id="saveVoiceBtn" type="button">Sonraki Cümle</button>
-          </div>
+        <div class="topRow">
+          <section class="page-head">
+            <div class="page-kicker">Voice Profile</div>
+            <h1 class="modal-main-title">Sesini <span class="ai">Tanıt</span></h1>
+            <p class="page-sub">Kısa cümleleri okuyarak kendine özel ses profilini oluştur ve çeviri sesini seç.</p>
+          </section>
         </div>
+
+        <section class="progress-container">
+          <div class="progress-info">
+            <span>İLERLEME</span>
+            <span id="voiceProgressCount">1 / 6</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="voiceProgressFill"></div>
+          </div>
+        </section>
+
+        <section class="sample-card">
+          <span class="sample-label" id="voiceSampleLabel">CÜMLE 1</span>
+          <div class="sample-text" id="voiceSampleText">Yükleniyor...</div>
+        </section>
+
+        <section class="mic-section">
+          <div class="mic-btn-wrapper" id="voiceMicWrapper">
+            <div class="wave"></div>
+            <div class="wave"></div>
+            <button class="mic-btn" id="startVoiceRecBtn" type="button" aria-label="Kaydı başlat">
+              <svg viewBox="0 0 24 24"><path d="M12 1v10m-7-4a7 7 0 0014 0M12 18v5"/></svg>
+            </button>
+          </div>
+
+          <div class="timer" id="voiceTimerText">00:00</div>
+          <div class="status-msg" id="voiceEnrollStatus">Cümle 1 / 6 • Hazır. Kayda başlayabilirsin.</div>
+        </section>
+
+        <audio class="voice-player" id="voicePreview" controls></audio>
+
+        <section class="action-grid">
+          <button class="btn btn-secondary" id="stopVoiceRecBtn" type="button">Kaydı Durdur</button>
+          <button class="btn btn-secondary" id="playVoiceBtn" type="button">Kaydı Dinle</button>
+          <button class="btn btn-primary" id="voiceNextBtn" type="button" disabled>Sonraki Cümle</button>
+          <button class="btn btn-primary" id="voiceFinishBtn" type="button" style="display:none;" disabled>Kaydet ve Tamamla</button>
+          <button class="btn btn-secondary" id="voiceCancelBtn" type="button">Vazgeç</button>
+        </section>
+
+        <section class="completed-wrap">
+          <h2 class="completed-title">Tamamlananlar</h2>
+          <div class="completed-list" id="voiceCompletedList"></div>
+        </section>
       </div>
     </div>
   </div>
 
-  <script type="module" src="/js/facetoface_open.js?v=F2F_OPEN_V2"></script>
+  <div class="toast" id="voiceToast"></div>
+
+  <script type="module" src="/js/facetoface_open.js?v=F2F_OPEN_V3"></script>
 
   <script type="module">
     import { mountShell } from "/js/ui_shell.js";
