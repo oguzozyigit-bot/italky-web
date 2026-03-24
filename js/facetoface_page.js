@@ -157,6 +157,9 @@ let bootReady = false;
 let bootStarted = false;
 let bootPromise = null;
 let voicesReady = false;
+let speakRunId = 0;
+let liveTranscript = "";
+let recognitionFinishedByUser = false;
 
 function getFaceVoiceMode() {
   return String(localStorage.getItem(F2F_VOICE_KEY) || "auto").trim().toLowerCase();
@@ -360,10 +363,19 @@ function renderPop(side) {
 }
 
 function stopAudio() {
+  speakRunId += 1;
+
   try {
     currentAudio?.pause?.();
-    currentAudio = null;
   } catch {}
+
+  try {
+    if (currentAudio) {
+      currentAudio.currentTime = 0;
+    }
+  } catch {}
+
+  currentAudio = null;
 
   try {
     window.speechSynthesis?.cancel?.();
@@ -430,6 +442,7 @@ async function warmAudio() {
 }
 
 async function speakViaApi(text, langCode, tone = "neutral") {
+  const myRunId = speakRunId;
   const userId = await getCurrentUserId();
   const voice = getVoicePreference();
 
@@ -446,7 +459,11 @@ async function speakViaApi(text, langCode, tone = "neutral") {
     }),
   });
 
+  if (myRunId !== speakRunId) return false;
+
   const j = await r.json().catch(() => null);
+
+  if (myRunId !== speakRunId) return false;
 
   if (!r.ok || !j?.ok || !j?.audio_base64) {
     throw new Error(j?.error || j?.detail || "TTS API unavailable");
@@ -466,7 +483,23 @@ async function speakViaApi(text, langCode, tone = "neutral") {
   };
 
   await warmAudio();
+
+  if (myRunId !== speakRunId) {
+    try { audio.pause(); } catch {}
+    return false;
+  }
+
   await audio.play();
+
+  if (myRunId !== speakRunId) {
+    try {
+      audio.pause();
+      audio.currentTime = 0;
+    } catch {}
+    if (currentAudio === audio) currentAudio = null;
+    return false;
+  }
+
   return true;
 }
 
@@ -502,6 +535,7 @@ function toneToFallbackSpeechParams(tone) {
 }
 
 function speakFallback(text, langCode, tone = "neutral") {
+  const myRunId = speakRunId;
   const value = String(text || "").trim();
   if (!value) return;
 
@@ -515,6 +549,7 @@ function speakFallback(text, langCode, tone = "neutral") {
 
   if (pref === "auto" && window.NativeTTS && typeof window.NativeTTS.speak === "function") {
     try {
+      if (myRunId !== speakRunId) return;
       window.NativeTTS.speak(value, c);
       return;
     } catch {}
@@ -541,6 +576,7 @@ function speakFallback(text, langCode, tone = "neutral") {
   if (voice) u.voice = voice;
 
   setTimeout(() => {
+    if (myRunId !== speakRunId) return;
     try {
       window.speechSynthesis.cancel();
       window.speechSynthesis.speak(u);
@@ -553,13 +589,20 @@ async function speak(text, langCode, tone = "neutral") {
   if (!value) return;
 
   const now = Date.now();
-  if (now - ttsDebounceAt < 250) stopAudio();
+  if (now - ttsDebounceAt < 250) {
+    stopAudio();
+  } else {
+    stopAudio();
+  }
+
   ttsDebounceAt = now;
-  stopAudio();
+  speakRunId += 1;
+  const myRunId = speakRunId;
 
   const voice = getVoicePreference();
 
   if (voice === "auto") {
+    if (myRunId !== speakRunId) return;
     speakFallback(value, langCode, tone);
     return;
   }
@@ -567,13 +610,17 @@ async function speak(text, langCode, tone = "neutral") {
   if (voice === "clone") {
     try {
       const ready = await hasReadyVoiceProfile();
+      if (myRunId !== speakRunId) return;
+
       if (!ready) {
         speakFallback(value, langCode, tone);
         return;
       }
+
       await speakViaApi(value, langCode, tone);
       return;
     } catch {
+      if (myRunId !== speakRunId) return;
       speakFallback(value, langCode, tone);
       return;
     }
@@ -582,6 +629,7 @@ async function speak(text, langCode, tone = "neutral") {
   try {
     await speakViaApi(value, langCode, tone);
   } catch {
+    if (myRunId !== speakRunId) return;
     speakFallback(value, langCode, tone);
   }
 }
@@ -747,7 +795,6 @@ function stopRecognizer() {
     try {
       recognizer.stop();
     } catch {}
-    recognizer = null;
   }
 }
 
@@ -826,14 +873,45 @@ function startRecording(side) {
 
   recognizer = rec;
   recordingSide = side;
+  liveTranscript = "";
+  recognitionFinishedByUser = false;
+
+  rec.interimResults = true;
+  rec.continuous = true;
+  rec.maxAlternatives = 1;
 
   rec.onstart = () => {
     setListeningUI(side);
   };
 
   rec.onresult = (e) => {
-    const heard = e.results?.[0]?.[0]?.transcript || "";
-    Promise.resolve().then(() => finalizeRecognition(side, heard));
+    let finalText = "";
+    let interimText = "";
+
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const chunk = e.results[i]?.[0]?.transcript || "";
+      if (e.results[i].isFinal) finalText += chunk + " ";
+      else interimText += chunk + " ";
+    }
+
+    liveTranscript = `${liveTranscript} ${finalText}`.trim();
+
+    const preview = `${liveTranscript} ${interimText}`.trim();
+    if (!preview) return;
+
+    const body = side === "top" ? topBody : botBody;
+    let previewNode = body?.querySelector(".bubble.them.preview");
+
+    if (!previewNode) {
+      previewNode = document.createElement("div");
+      previewNode.className = "bubble them preview";
+      previewNode.innerHTML = `<div class="bubble-row"><span class="txt"></span></div>`;
+      body?.appendChild(previewNode);
+    }
+
+    const txtEl = previewNode.querySelector(".txt");
+    if (txtEl) txtEl.textContent = preview;
+    keepLatestVisible(side);
   };
 
   rec.onerror = (e) => {
@@ -843,15 +921,35 @@ function startRecording(side) {
     } else {
       setHelper(helper, t(lang, "preparing"), "helper-wait");
     }
+
     recordingSide = null;
     recognizer = null;
+    liveTranscript = "";
+    recognitionFinishedByUser = false;
     setErrorUI();
     bounceToReady(1600);
   };
 
   rec.onend = () => {
+    const sideAtEnd = side;
+    const finalText = String(liveTranscript || "").trim();
+
     recognizer = null;
     recordingSide = null;
+
+    const previewNode = (sideAtEnd === "top" ? topBody : botBody)?.querySelector(".bubble.them.preview");
+    previewNode?.remove();
+
+    if (recognitionFinishedByUser && finalText) {
+      liveTranscript = "";
+      recognitionFinishedByUser = false;
+      Promise.resolve().then(() => finalizeRecognition(sideAtEnd, finalText));
+      return;
+    }
+
+    liveTranscript = "";
+    recognitionFinishedByUser = false;
+    setSystemReadyUI();
   };
 
   try {
@@ -859,29 +957,31 @@ function startRecording(side) {
   } catch {
     recognizer = null;
     recordingSide = null;
+    liveTranscript = "";
+    recognitionFinishedByUser = false;
     setErrorUI();
     bounceToReady(1200);
   }
 }
-
 async function toggleRecording(side) {
   await ensureReady();
 
   if (recordingSide === side) {
+    recognitionFinishedByUser = true;
     stopRecognizer();
-    recordingSide = null;
     setTranslatingUI(side);
     return;
   }
 
   if (recordingSide && recordingSide !== side) {
+    recognitionFinishedByUser = false;
     stopRecognizer();
     recordingSide = null;
+    liveTranscript = "";
   }
 
   startRecording(side);
 }
-
 async function warmApis() {
   await Promise.allSettled([
     fetch(`${API_BASE}/healthz`).catch(() => {}),
