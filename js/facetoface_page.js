@@ -844,6 +844,12 @@ function stopRecognizer() {
   }
 }
 
+function getPreviewText(side) {
+  const body = side === "top" ? topBody : botBody;
+  const previewNode = body?.querySelector(".bubble.them.preview .txt");
+  return String(previewNode?.textContent || "").trim();
+}
+
 async function finalizeRecognition(side, text) {
   const src = side === "top" ? topLang : botLang;
   const dst = side === "top" ? botLang : topLang;
@@ -964,11 +970,13 @@ function startRecording(side) {
 
     const txtEl = previewNode.querySelector(".txt");
     if (txtEl) txtEl.textContent = latestPreviewTranscript;
+
     keepLatestVisible(side);
   };
 
   rec.onerror = (e) => {
     const helper = side === "top" ? topHelper : botHelper;
+
     if (String(e?.error || "").includes("not-allowed")) {
       setHelper(helper, t(lang, "micBlocked"), "helper-wait");
     } else {
@@ -986,7 +994,15 @@ function startRecording(side) {
 
   rec.onend = () => {
     const sideAtEnd = side;
-    const finalText = String(liveTranscript || latestPreviewTranscript || "").trim();
+
+    // KRİTİK: sadece JS değişkenine güvenmiyoruz
+    const previewText = getPreviewText(sideAtEnd);
+    const finalText = String(
+      liveTranscript ||
+      latestPreviewTranscript ||
+      previewText ||
+      ""
+    ).trim();
 
     recognizer = null;
     recordingSide = null;
@@ -994,11 +1010,16 @@ function startRecording(side) {
     const previewNode = (sideAtEnd === "top" ? topBody : botBody)?.querySelector(".bubble.them.preview");
     previewNode?.remove();
 
-    if (recognitionFinishedByUser && finalText) {
+    if (recognitionFinishedByUser) {
       liveTranscript = "";
       latestPreviewTranscript = "";
       recognitionFinishedByUser = false;
-      Promise.resolve().then(() => finalizeRecognition(sideAtEnd, finalText));
+
+      if (finalText) {
+        Promise.resolve().then(() => finalizeRecognition(sideAtEnd, finalText));
+      } else {
+        setSystemReadyUI();
+      }
       return;
     }
 
@@ -1020,14 +1041,18 @@ function startRecording(side) {
     bounceToReady(1200);
   }
 }
-
 async function toggleRecording(side) {
   await ensureReady();
 
   if (recordingSide === side) {
     recognitionFinishedByUser = true;
-    stopRecognizer();
     setTranslatingUI(side);
+
+    // küçük gecikme bazı cihazlarda son transcript'in düşmesini kolaylaştırır
+    setTimeout(() => {
+      stopRecognizer();
+    }, 120);
+
     return;
   }
 
