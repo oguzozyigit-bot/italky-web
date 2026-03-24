@@ -1,9 +1,10 @@
+<!-- FILE: /pages/sidetoside_code.html -->
 <!doctype html>
 <html lang="tr">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>italkyAI • Bağlantı Kodu</title>
+  <title>italkyAI • Bağlantı Kodu Gir</title>
   <meta name="theme-color" content="#120d16" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -35,7 +36,7 @@
       background:var(--bg);
       color:var(--txt);
       font-family:'Outfit',sans-serif;
-      overflow-x:hidden;
+      overflow:hidden;
     }
 
     body{
@@ -69,7 +70,7 @@
     }
 
     .hero,
-    .panel,
+    .entry-card,
     .help-card{
       border:1px solid var(--line);
       background:rgba(255,255,255,.04);
@@ -98,57 +99,61 @@
       max-width:560px;
     }
 
-    .panel{
+    .entry-card{
       padding:18px 16px;
       display:flex;
       flex-direction:column;
       gap:16px;
     }
 
-    .code-title{
-      font-size:16px;
-      font-weight:900;
-      text-align:center;
-      letter-spacing:-.3px;
-    }
-
-    .code-sub{
-      margin-top:-6px;
-      text-align:center;
+    .code-label{
       font-size:12px;
-      color:var(--muted);
-      line-height:1.45;
+      font-weight:900;
+      letter-spacing:1px;
+      text-transform:uppercase;
+      color:rgba(255,255,255,.72);
+      text-align:center;
     }
 
-    .code-row{
-      display:flex;
-      justify-content:center;
-      gap:8px;
-      flex-wrap:nowrap;
-    }
-
-    .digit{
-      width:46px;
-      height:58px;
-      border-radius:16px;
-      border:1px solid rgba(255,255,255,.14);
+    .code-input{
+      width:100%;
+      min-height:64px;
+      border-radius:22px;
+      border:1px solid rgba(255,255,255,.12);
       background:rgba(255,255,255,.06);
       color:#fff;
       text-align:center;
       font-family:"Space Grotesk",sans-serif;
-      font-size:24px;
+      font-size:28px;
       font-weight:700;
+      letter-spacing:8px;
+      padding:0 16px;
       text-transform:uppercase;
-      box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
+      box-shadow:inset 0 0 18px rgba(255,255,255,.03);
     }
 
-    .digit:focus{
-      border-color:rgba(129,140,248,.6);
-      box-shadow:0 0 0 2px rgba(129,140,248,.14);
+    .code-input::placeholder{
+      color:rgba(255,255,255,.24);
+      letter-spacing:6px;
+    }
+
+    .code-input:focus{
+      border-color:rgba(129,140,248,.58);
+      box-shadow:
+        0 0 0 1px rgba(129,140,248,.25),
+        0 0 24px rgba(129,140,248,.12),
+        inset 0 0 18px rgba(255,255,255,.03);
+    }
+
+    .mini-note{
+      text-align:center;
+      font-size:12px;
+      line-height:1.45;
+      color:var(--muted);
     }
 
     .status{
-      min-height:20px;
+      min-height:22px;
       text-align:center;
       font-size:13px;
       font-weight:800;
@@ -159,7 +164,7 @@
     .status.warn{ color:#fde68a; }
     .status.bad{ color:#fca5a5; }
 
-    .action-row{
+    .btn-row{
       display:flex;
       flex-direction:column;
       gap:10px;
@@ -178,6 +183,7 @@
       justify-content:center;
       text-decoration:none;
       transition:transform .18s ease, opacity .18s ease, box-shadow .18s ease;
+      padding:0 16px;
     }
 
     .btn:active{ transform:scale(.985); }
@@ -192,6 +198,12 @@
       background:rgba(255,255,255,.06);
       color:#fff;
       border:1px solid rgba(255,255,255,.10);
+    }
+
+    .btn[disabled]{
+      opacity:.45;
+      pointer-events:none;
+      filter:grayscale(.15);
     }
 
     .help-card{
@@ -240,23 +252,19 @@
     }
 
     @media (min-width:700px){
-      .action-row{
+      .btn-row{
         flex-direction:row;
       }
-      .action-row .btn{
+      .btn-row .btn{
         flex:1;
       }
     }
 
     @media (max-width:390px){
       .title{ font-size:25px; }
-      .digit{
-        width:42px;
-        height:56px;
-        font-size:22px;
-      }
-      .code-row{
-        gap:6px;
+      .code-input{
+        font-size:24px;
+        letter-spacing:6px;
       }
     }
   </style>
@@ -265,42 +273,48 @@
   <main id="pageContent">
     <div class="wrap">
       <section class="hero">
-        <h1 class="title">Bağlantı Kodu</h1>
+        <h1 class="title">Bağlantı Kodu Gir</h1>
         <p class="sub">
-          SideToSide bağlantısı için karşı taraftan aldığın 6 karakterli kodu gir. Kod doğruysa seni doğrudan görüşme ekranına bağlar.
+          Karşı taraftaki 6 karakterli bağlantı kodunu gir. Oda bulunduğunda seni doğrudan SideToSide konuşmasına bağlayacağız.
         </p>
       </section>
 
-      <section class="panel">
-        <div class="code-title">6 Karakterli Kodu Gir</div>
-        <div class="code-sub">Sadece harf ve rakam kullanılır</div>
+      <section class="entry-card">
+        <div class="code-label">Bağlantı Kodu</div>
 
-        <div class="code-row" id="codeRow">
-          <input class="digit" maxlength="1" inputmode="text" autocomplete="off" />
-          <input class="digit" maxlength="1" inputmode="text" autocomplete="off" />
-          <input class="digit" maxlength="1" inputmode="text" autocomplete="off" />
-          <input class="digit" maxlength="1" inputmode="text" autocomplete="off" />
-          <input class="digit" maxlength="1" inputmode="text" autocomplete="off" />
-          <input class="digit" maxlength="1" inputmode="text" autocomplete="off" />
+        <input
+          id="codeInput"
+          class="code-input"
+          type="text"
+          inputmode="text"
+          autocomplete="off"
+          autocapitalize="characters"
+          spellcheck="false"
+          maxlength="6"
+          placeholder="ABC123"
+        />
+
+        <div class="mini-note">
+          Kod büyük harf ve rakamdan oluşur. Boşluk girsen bile sistem uslu durur, temizler.
         </div>
 
-        <div id="joinStatus" class="status">Kod bekleniyor...</div>
+        <div id="statusText" class="status">Kod bekleniyor...</div>
 
-        <div class="action-row">
-          <button id="joinBtn" class="btn btn-primary" type="button">Odaya Bağlan</button>
-          <button id="backBtn" class="btn btn-dark" type="button">Ana Sayfaya Dön</button>
+        <div class="btn-row">
+          <button id="joinBtn" class="btn btn-primary" type="button">Odaya Katıl</button>
+          <button id="backBtn" class="btn btn-dark" type="button">Geri Dön</button>
         </div>
       </section>
 
       <section class="help-card">
         <h2 class="help-title">Nasıl çalışır?</h2>
-        <p class="help-text">Karşı taraftaki telefon ana sayfada bir bağlantı kodu üretir. Sen bu kodu girince sistem ilgili odayı bulur.</p>
-        <p class="help-text">Kod doğruysa bu sayfa seni mevcut görüşme ekranına, yani <b>live_interpreter.html</b> akışına gönderir.</p>
+        <p class="help-text">Bağlantı kodu önce oda kaydıyla eşleştirilir. Eşleşen oda bulunursa doğrudan konuşma ekranına geçilir.</p>
+        <p class="help-text">QR okutma akışı kaldırıldığı için artık en net yol bu sayfadan kod ile giriş olacaktır.</p>
       </section>
     </div>
   </main>
 
-  <div class="toast" id="joinToast"></div>
+  <div class="toast" id="pageToast"></div>
 
   <script type="module">
     import { mountShell } from "/js/ui_shell.js";
@@ -314,77 +328,59 @@
   <script type="module">
     const API_BASE = "https://italky-api.onrender.com/api";
 
+    const codeInput = document.getElementById("codeInput");
+    const joinBtn = document.getElementById("joinBtn");
+    const backBtn = document.getElementById("backBtn");
+    const statusText = document.getElementById("statusText");
+    const pageToast = document.getElementById("pageToast");
+
     const ROOM_KEY = "italky_active_interpreter_room_id";
     const ROOM_LANG_KEY = "italky_active_interpreter_lang";
     const ROOM_CODE_KEY = "italky_active_interpreter_code";
 
-    const inputs = Array.from(document.querySelectorAll(".digit"));
-    const joinBtn = document.getElementById("joinBtn");
-    const backBtn = document.getElementById("backBtn");
-    const joinStatus = document.getElementById("joinStatus");
-    const joinToast = document.getElementById("joinToast");
-
-    const params = new URLSearchParams(location.search);
-    const prefillCode = String(params.get("code") || "").trim().toUpperCase();
-    const prefillRoom = String(params.get("room") || "").trim();
-
     function toast(msg){
-      if(!joinToast) return;
-      joinToast.textContent = String(msg || "");
-      joinToast.classList.add("show");
-      clearTimeout(window.__joinToastTimer);
-      window.__joinToastTimer = setTimeout(() => {
-        joinToast.classList.remove("show");
+      if(!pageToast) return;
+      pageToast.textContent = String(msg || "");
+      pageToast.classList.add("show");
+      clearTimeout(window.__sidetosideCodeToast);
+      window.__sidetosideCodeToast = setTimeout(() => {
+        pageToast.classList.remove("show");
       }, 1700);
     }
 
     function setStatus(text, mode = ""){
-      if(!joinStatus) return;
-      joinStatus.className = "status";
-      if(mode) joinStatus.classList.add(mode);
-      joinStatus.textContent = text || "";
+      if(!statusText) return;
+      statusText.className = "status";
+      if(mode) statusText.classList.add(mode);
+      statusText.textContent = text || "";
     }
 
-    function normalizeCode(v){
-      return String(v || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
+    function normalizeCode(value){
+      return String(value || "")
+        .toUpperCase()
+        .replace(/[^A-Z0-9]/g, "")
+        .slice(0, 6);
     }
 
-    function getCode(){
-      return normalizeCode(inputs.map(x => x.value || "").join(""));
+    function setBusy(on){
+      if(!joinBtn) return;
+      joinBtn.disabled = !!on;
+      joinBtn.textContent = on ? "Oda aranıyor..." : "Odaya Katıl";
     }
 
-    function fillCode(code){
-      const clean = normalizeCode(code);
-      inputs.forEach((inp, idx) => {
-        inp.value = clean[idx] || "";
-      });
-    }
-
-    function focusNext(index){
-      const next = inputs[index + 1];
-      if(next) next.focus();
-    }
-
-    function focusPrev(index){
-      const prev = inputs[index - 1];
-      if(prev) prev.focus();
-    }
-
-    function goHome(){
-      location.href = "/pages/home.html";
-    }
-
-    function goLive(roomId, code = ""){
+    function goLive(roomId, code){
       const room = String(roomId || "").trim();
+      const cleanCode = normalizeCode(code || "");
+
       if(!room) return;
 
       try{
         localStorage.setItem(ROOM_KEY, room);
         localStorage.setItem(ROOM_LANG_KEY, "tr");
-        if(code) localStorage.setItem(ROOM_CODE_KEY, normalizeCode(code));
+        if(cleanCode) localStorage.setItem(ROOM_CODE_KEY, cleanCode);
       }catch{}
 
-      location.href = `/pages/live_interpreter.html?room=${encodeURIComponent(room)}&role=guest&my=tr`;
+      location.href = `/pages/live_interpreter.html?room=${encodeURIComponent(room)}&role=guest&my=tr&auto=1`;
     }
 
     async function resolveRoomByCode(code){
@@ -392,109 +388,102 @@
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          host_code: code
+          host_code: code,
+          my_lang: "tr",
+          mode: "interpreter"
         })
       });
 
       const j = await r.json().catch(() => ({}));
 
       if(!r.ok || !j?.room_id){
-        throw new Error(j?.detail || j?.error || "Kod bulunamadı");
+        throw new Error(j?.detail || j?.error || "Oda bulunamadı");
       }
 
       return j;
     }
 
-    async function joinByCode(){
-      const code = getCode();
+    async function handleJoin(){
+      const code = normalizeCode(codeInput?.value || "");
+
+      if(codeInput) codeInput.value = code;
 
       if(code.length !== 6){
-        setStatus("Lütfen 6 karakterli kodu tamamla.", "bad");
-        toast("Kod eksik");
+        setStatus("Lütfen 6 karakterli bir bağlantı kodu gir.", "bad");
+        toast("Kod 6 karakter olmalı");
         return;
       }
 
-      joinBtn.disabled = true;
-      setStatus("Kod doğrulanıyor...", "warn");
+      setBusy(true);
+      setStatus("Oda aranıyor...", "warn");
 
       try{
         const resolved = await resolveRoomByCode(code);
-        const roomId = String(resolved.room_id || "").trim();
+        const roomId = String(resolved?.room_id || "").trim();
 
         if(!roomId){
           throw new Error("Oda bulunamadı");
         }
 
-        setStatus("Kod doğru. Odaya bağlanılıyor...", "good");
-        toast("Bağlantı bulundu");
+        setStatus("Oda bulundu. Bağlanılıyor...", "good");
+        toast("Oda bulundu");
         goLive(roomId, code);
       }catch(e){
         console.error("[sidetoside_code resolve]", e);
-        setStatus(e?.message || "Bağlantı kodu geçersiz.", "bad");
+        setStatus(e?.message || "Oda bulunamadı", "bad");
+        toast("Kod eşleşmedi");
       }finally{
-        joinBtn.disabled = false;
+        setBusy(false);
       }
     }
 
-    inputs.forEach((inp, idx) => {
-      inp.addEventListener("input", () => {
-        inp.value = normalizeCode(inp.value);
-        if(inp.value && idx < inputs.length - 1){
-          focusNext(idx);
-        }
+    codeInput?.addEventListener("input", () => {
+      const clean = normalizeCode(codeInput.value);
+      codeInput.value = clean;
 
-        const code = getCode();
-        if(code.length === 6){
-          setStatus("Kod hazır. Bağlanabilirsin.", "good");
-        } else {
-          setStatus("Kod bekleniyor...");
-        }
-      });
+      if(!clean){
+        setStatus("Kod bekleniyor...");
+        return;
+      }
 
-      inp.addEventListener("keydown", (e) => {
-        if(e.key === "Backspace" && !inp.value && idx > 0){
-          focusPrev(idx);
-        }
+      if(clean.length < 6){
+        setStatus("Kod tamamlanıyor...", "warn");
+        return;
+      }
 
-        if(e.key === "Enter"){
-          e.preventDefault();
-          joinByCode();
-        }
-      });
-
-      inp.addEventListener("paste", (e) => {
-        e.preventDefault();
-        const pasted = normalizeCode((e.clipboardData || window.clipboardData).getData("text"));
-        if(!pasted) return;
-        fillCode(pasted);
-        const lastIndex = Math.min(pasted.length, inputs.length) - 1;
-        if(lastIndex >= 0 && inputs[lastIndex]){
-          inputs[lastIndex].focus();
-        }
-        if(pasted.length === 6){
-          setStatus("Kod hazır. Bağlanabilirsin.", "good");
-        }
-      });
+      setStatus("Hazır. İstersen hemen katıl.", "good");
     });
 
-    joinBtn?.addEventListener("click", joinByCode);
-    backBtn?.addEventListener("click", goHome);
-
-    if(prefillCode){
-      fillCode(prefillCode);
-      if(getCode().length === 6){
-        setStatus("Kod hazır. Bağlanabilirsin.", "good");
+    codeInput?.addEventListener("keydown", async (e) => {
+      if(e.key === "Enter"){
+        e.preventDefault();
+        await handleJoin();
       }
-    }
+    });
 
-    if(prefillRoom){
-      setStatus("Hazır oda bulundu. Bağlanılıyor...", "good");
-      goLive(prefillRoom, prefillCode);
-    }
+    joinBtn?.addEventListener("click", handleJoin);
 
-    if(inputs[0] && !prefillCode){
-      inputs[0].focus();
-    }
+    backBtn?.addEventListener("click", () => {
+      history.back();
+    });
+
+    (function initFromQuery(){
+      const params = new URLSearchParams(location.search);
+      const incomingCode = normalizeCode(params.get("code") || "");
+      const incomingRoom = String(params.get("room") || "").trim();
+
+      if(incomingCode && codeInput){
+        codeInput.value = incomingCode;
+        setStatus("Kod hazır. İstersen hemen katıl.", "good");
+      }
+
+      if(incomingRoom){
+        try{
+          localStorage.setItem(ROOM_KEY, incomingRoom);
+          if(incomingCode) localStorage.setItem(ROOM_CODE_KEY, incomingCode);
+        }catch{}
+      }
+    })();
   </script>
 </body>
 </html>
