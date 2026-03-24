@@ -56,69 +56,76 @@
   </div>
 
   <script type="module">
-    import { supabase } from "/js/supabase_client.js";
+  import { supabase } from "/js/supabase_client.js";
 
-    const SETUP_KEY = "facetoface_setup_done";
-    const VOICE_KEY = "facetoface_voice_mode";
-    const TRANSLATE_KEY = "facetoface_translate_mode";
+  const SETUP_KEY = "facetoface_setup_done";
+  const VOICE_KEY = "facetoface_voice_mode";
+  const TRANSLATE_KEY = "facetoface_translate_mode";
 
-    function isPremiumVoice(v){
-      return ["female","male","clone"].includes(String(v || "").trim().toLowerCase());
+  function isPremiumVoice(v){
+    return String(v || "").trim().toLowerCase() === "clone";
+  }
+
+  function isPremiumTranslate(v){
+    return String(v || "").trim().toLowerCase() === "cultural";
+  }
+
+  function needsJeton(voice, translateMode){
+    return isPremiumVoice(voice) || isPremiumTranslate(translateMode);
+  }
+
+  async function getJetonBalance(){
+    try{
+      const { data } = await supabase.auth.getUser();
+      const uid = data?.user?.id || localStorage.getItem("user_id");
+      if(!uid) return 0;
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("jeton_balance, tokens")
+        .eq("id", uid)
+        .maybeSingle();
+
+      return Number(
+        profile?.jeton_balance ??
+        profile?.tokens ??
+        0
+      );
+    }catch{
+      return 0;
+    }
+  }
+
+  async function run(){
+    const setupDone = localStorage.getItem(SETUP_KEY) === "1";
+    const voiceMode = localStorage.getItem(VOICE_KEY) || "auto";
+    const translateMode = localStorage.getItem(TRANSLATE_KEY) || "normal";
+
+    // 🔥 İlk giriş
+    if(!setupDone){
+      location.replace("/pages/facetoface_open.html");
+      return;
     }
 
-    function isPremiumTranslate(v){
-      return String(v || "").trim().toLowerCase() === "cultural";
+    // 🔥 Premium seçilmemiş → direkt gir
+    if(!needsJeton(voiceMode, translateMode)){
+      location.replace("/pages/facetoface.html");
+      return;
     }
 
-    function needsJeton(voice, translateMode){
-      return isPremiumVoice(voice) || isPremiumTranslate(translateMode);
+    // 🔥 Premium seçilmiş → jeton kontrol
+    const jeton = await getJetonBalance();
+
+    if(jeton > 0){
+      location.replace("/pages/facetoface.html");
+      return;
     }
 
-    async function getJetonBalance(){
-      try{
-        const { data } = await supabase.auth.getUser();
-        const uid = data?.user?.id || localStorage.getItem("user_id");
-        if(!uid) return 0;
+    // 🔥 Jeton yok → ayar ekranına dön
+    location.replace("/pages/facetoface_open.html?reason=insufficient");
+  }
 
-        const { data: profile, error } = await supabase
-          .from("profiles")
-          .select("tokens")
-          .eq("id", uid)
-          .maybeSingle();
-
-        if(error) return 0;
-        return Number(profile?.tokens || 0);
-      }catch{
-        return 0;
-      }
-    }
-
-    async function run(){
-      const setupDone = localStorage.getItem(SETUP_KEY) === "1";
-      const voiceMode = localStorage.getItem(VOICE_KEY) || "auto";
-      const translateMode = localStorage.getItem(TRANSLATE_KEY) || "normal";
-
-      if(!setupDone){
-        location.replace("/pages/facetoface_open.html");
-        return;
-      }
-
-      if(!needsJeton(voiceMode, translateMode)){
-        location.replace("/facetoface.html");
-        return;
-      }
-
-      const jeton = await getJetonBalance();
-
-      if(jeton > 0){
-        location.replace("/facetoface.html");
-        return;
-      }
-
-      location.replace("/pages/facetoface_open.html?reason=insufficient");
-    }
-
-    run();
-  </script>
+  run();
+</script>
 </body>
 </html>
