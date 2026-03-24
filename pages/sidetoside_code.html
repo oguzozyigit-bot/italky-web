@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+<title>italkyAI • Bağlantı Kodu</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800;900&display=swap" rel="stylesheet">
+
+<style>
+body{
+  margin:0;
+  background:#120d16;
+  color:#fff;
+  font-family:'Outfit',sans-serif;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  height:100vh;
+}
+
+.wrap{
+  width:90%;
+  max-width:420px;
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+  text-align:center;
+}
+
+.title{
+  font-size:26px;
+  font-weight:900;
+}
+
+.sub{
+  font-size:13px;
+  opacity:.7;
+}
+
+.code-input{
+  display:flex;
+  gap:8px;
+  justify-content:center;
+}
+
+.code-input input{
+  width:44px;
+  height:54px;
+  text-align:center;
+  font-size:22px;
+  font-weight:900;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.2);
+  background:#000;
+  color:#fff;
+}
+
+.btn{
+  height:52px;
+  border:none;
+  border-radius:16px;
+  font-weight:900;
+  font-size:15px;
+  cursor:pointer;
+}
+
+.btn-main{
+  background:linear-gradient(135deg,#6366f1,#ec4899);
+}
+
+.status{
+  min-height:20px;
+  font-size:13px;
+}
+
+.good{ color:#22c55e }
+.bad{ color:#ef4444 }
+
+</style>
+</head>
+
+<body>
+
+<div class="wrap">
+  <div class="title">Bağlantı Kodu</div>
+  <div class="sub">Karşı taraftan aldığın 6 haneli kodu gir</div>
+
+  <div class="code-input" id="codeInputs">
+    <input maxlength="1"/>
+    <input maxlength="1"/>
+    <input maxlength="1"/>
+    <input maxlength="1"/>
+    <input maxlength="1"/>
+    <input maxlength="1"/>
+  </div>
+
+  <button class="btn btn-main" onclick="joinRoom()">Bağlan</button>
+
+  <div id="status" class="status"></div>
+</div>
+
+<script type="module">
+const API_BASE = "https://italky-api.onrender.com/api";
+
+const inputs = [...document.querySelectorAll("#codeInputs input")];
+const status = document.getElementById("status");
+
+inputs.forEach((inp,i)=>{
+  inp.addEventListener("input",()=>{
+    inp.value = inp.value.toUpperCase().replace(/[^A-Z0-9]/g,"");
+
+    if(inp.value && inputs[i+1]){
+      inputs[i+1].focus();
+    }
+  });
+
+  inp.addEventListener("keydown",(e)=>{
+    if(e.key === "Backspace" && !inp.value && inputs[i-1]){
+      inputs[i-1].focus();
+    }
+  });
+});
+
+function getCode(){
+  return inputs.map(i=>i.value).join("").trim();
+}
+
+function setStatus(text, cls=""){
+  status.className = "status " + cls;
+  status.textContent = text;
+}
+
+async function joinRoom(){
+  const code = getCode();
+
+  if(code.length !== 6){
+    setStatus("Kod eksik", "bad");
+    return;
+  }
+
+  setStatus("Bağlanıyor...");
+
+  try{
+    const r = await fetch(`${API_BASE}/interpreter/resolve-room`,{
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({
+        host_code: code
+      })
+    });
+
+    const j = await r.json().catch(()=>null);
+
+    if(!r.ok || !j?.room_id){
+      setStatus("Kod bulunamadı", "bad");
+      return;
+    }
+
+    const roomId = j.room_id;
+
+    // 🔥 BURASI KRİTİK
+    location.href = `/sidetoside.html?room=${encodeURIComponent(roomId)}&role=guest&my=tr`;
+
+  }catch(e){
+    setStatus("Bağlantı hatası", "bad");
+  }
+}
+</script>
+
+</body>
+</html>
