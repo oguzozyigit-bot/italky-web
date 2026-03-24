@@ -56,6 +56,7 @@ let tokenBalance = 0;
 let voiceProfileReady = false;
 let reason = "";
 let isBusy = false;
+let profileRow = null;
 
 let vpRecorder = null;
 let vpRecordings = createEmptyRecordings();
@@ -129,8 +130,13 @@ function setEnrollStatus(text, mode = "") {
 
 function setMicListening(on) {
   if (!voiceRecordBtn || !voiceMicWrapper) return;
-  voiceRecordBtn.classList.toggle("listening", !!on);
-  voiceMicWrapper.classList.toggle("listening", !!on);
+  if (on) {
+    voiceRecordBtn.classList.add("listening");
+    voiceMicWrapper.classList.add("listening");
+  } else {
+    voiceRecordBtn.classList.remove("listening");
+    voiceMicWrapper.classList.remove("listening");
+  }
 }
 
 function resetVpTimer() {
@@ -157,35 +163,47 @@ async function getCurrentUid() {
   }
 }
 
-function detectVoiceProfileReady(profile) {
-  if (!profile) return false;
-
-  const hasTtsReady = !!profile?.tts_voice_ready;
-  const hasTtsId = !!String(profile?.tts_voice_id || "").trim();
-  const hasVoiceProfileReady = !!profile?.voice_profile_ready;
-
-  const samplePath = String(profile?.voice_sample_path || "").trim();
-  const hasSamplePath =
-    !!samplePath &&
-    samplePath !== "[]" &&
-    samplePath !== "null" &&
-    samplePath !== "";
-
-  const sampleUrl = String(profile?.voice_sample_url || "").trim();
-  const hasSampleUrl =
-    !!sampleUrl &&
-    sampleUrl !== "null" &&
-    sampleUrl !== "";
-
-  return hasTtsReady || hasTtsId || hasVoiceProfileReady || hasSamplePath || hasSampleUrl;
-}
-
-function pickBestPositiveNumber(...values) {
-  for (const value of values) {
-    const n = Number(value);
+function pickPositiveNumber(...vals) {
+  for (const v of vals) {
+    const n = Number(v);
     if (Number.isFinite(n) && n > 0) return n;
   }
   return 0;
+}
+
+function hasMeaningfulString(v) {
+  const s = String(v ?? "").trim();
+  return !!s && s !== "null" && s !== "[]" && s !== "{}";
+}
+
+function detectVoiceProfileReady(profile) {
+  if (!profile) return false;
+
+  const flags = [
+    profile?.tts_voice_ready,
+    profile?.voice_profile_ready,
+    profile?.voice_ready,
+    profile?.clone_voice_ready
+  ].some(Boolean);
+
+  const ids = [
+    profile?.tts_voice_id,
+    profile?.voice_id,
+    profile?.clone_voice_id
+  ].some(hasMeaningfulString);
+
+  const sampleData = [
+    profile?.voice_sample_path,
+    profile?.voice_sample_url,
+    profile?.voice_sample_urls
+  ].some(hasMeaningfulString);
+
+  const prefs = [
+    profile?.tts_voice,
+    profile?.tts_voice_preference
+  ].some((v) => String(v || "").trim().toLowerCase() === "clone");
+
+  return flags || ids || sampleData || prefs;
 }
 
 async function loadProfileInfo() {
@@ -194,23 +212,13 @@ async function loadProfileInfo() {
     if (!uid) {
       tokenBalance = 0;
       voiceProfileReady = false;
+      profileRow = null;
       return;
     }
 
     const { data, error } = await supabase
       .from("profiles")
-      .select(`
-        tokens,
-        jeton_balance,
-        jeton,
-        balance,
-        credits,
-        tts_voice_ready,
-        tts_voice_id,
-        voice_profile_ready,
-        voice_sample_path,
-        voice_sample_url
-      `)
+      .select("*")
       .eq("id", uid)
       .maybeSingle();
 
@@ -218,12 +226,13 @@ async function loadProfileInfo() {
       console.error("loadProfileInfo error:", error);
       tokenBalance = 0;
       voiceProfileReady = false;
+      profileRow = null;
       return;
     }
 
-    console.log("PROFILE DATA:", data);
+    profileRow = data || null;
 
-    tokenBalance = pickBestPositiveNumber(
+    tokenBalance = pickPositiveNumber(
       data?.jeton_balance,
       data?.tokens,
       data?.jeton,
@@ -236,6 +245,7 @@ async function loadProfileInfo() {
     console.error("loadProfileInfo catch:", e);
     tokenBalance = 0;
     voiceProfileReady = false;
+    profileRow = null;
   }
 }
 
@@ -315,7 +325,7 @@ function saveSettings() {
 }
 
 function goFaceToFace() {
-  location.href = "/pages/facetoface.html";
+  location.href = "/facetoface.html";
 }
 
 function goJetonMarket() {
@@ -495,6 +505,7 @@ async function saveVoiceProfileFull() {
     await markCloneAsSelected(enrollResp);
 
     await loadProfileInfo();
+
     voiceProfileReady = true;
     voiceMode = "clone";
 
