@@ -61,7 +61,7 @@ const UI_TEXT = {
     preparing: "Sistem hazırlanıyor...",
     repeat: "Konuşmanız bitince mikrofona tekrar basınız.",
     wait: "Lütfen bekleyiniz...",
-    translating: "Gönderiliyor...",
+    sending: "Gönderiliyor...",
     micBlocked: "⚠️ Mikrofon izni gerekli",
     speechUnsupported: "⚠️ Bu cihazda konuşma algılama desteklenmiyor",
     wsFailed: "Bağlantı kurulamadı",
@@ -70,13 +70,14 @@ const UI_TEXT = {
     peerGoneHome: "Karşı taraf ayrıldı",
     langUpdated: "Dil güncellendi",
     roomMissing: "Oda bulunamadı",
+    waitingPeer: "Karşı taraf bekleniyor...",
   },
   en: {
     ready: "Tap the microphone to speak.",
     preparing: "System is preparing...",
     repeat: "Press the microphone again when you finish speaking.",
     wait: "Please wait...",
-    translating: "Sending...",
+    sending: "Sending...",
     micBlocked: "⚠️ Microphone permission required",
     speechUnsupported: "⚠️ Speech recognition is not supported on this device",
     wsFailed: "Connection failed",
@@ -85,6 +86,7 @@ const UI_TEXT = {
     peerGoneHome: "The other side left",
     langUpdated: "Language updated",
     roomMissing: "Room not found",
+    waitingPeer: "Waiting for the other side...",
   },
 };
 
@@ -114,6 +116,7 @@ const closeBot = $("close-bot");
 const clearBtn = $("clearBtn");
 const homeLink = $("homeLink");
 const homeBtn = $("homeBtn");
+const settingsBtn = $("settingsBtn");
 
 /* =========================
    URL PARAMS
@@ -157,6 +160,7 @@ let peerHasExplicitlyLeft = false;
 let lastLocalSentText = "";
 let lastLocalSentAt = 0;
 let myClientId = "";
+let peerConnected = false;
 
 /* =========================
    CLIENT ID
@@ -216,7 +220,11 @@ function setSystemReadyUI() {
   resetMics();
   setFrameVisual("ready");
   if (topHelper) topHelper.style.display = "none";
-  setHelper(botHelper, t(myLang, "ready"), "helper-ready");
+  setHelper(
+    botHelper,
+    peerConnected ? t(myLang, "ready") : t(myLang, "waitingPeer"),
+    peerConnected ? "helper-ready" : "helper-wait"
+  );
 }
 
 function setSystemPreparingUI() {
@@ -243,7 +251,7 @@ function setSendingUI() {
   setMicState("recorded");
   setFrameVisual("translating");
   if (topHelper) topHelper.style.display = "none";
-  setHelper(botHelper, t(myLang, "translating"), "helper-repeat");
+  setHelper(botHelper, t(myLang, "sending"), "helper-repeat");
 }
 
 function setErrorUI() {
@@ -303,11 +311,14 @@ function renderPop() {
 function stopAudio() {
   try {
     currentAudio?.pause?.();
+    if (currentAudio) currentAudio.currentTime = 0;
     currentAudio = null;
   } catch {}
+
   try {
     window.speechSynthesis?.cancel?.();
   } catch {}
+
   try {
     window.NativeTTS?.stop?.();
   } catch {}
@@ -360,7 +371,7 @@ async function speakViaApi(text, langCode, sourceUserId = "", sourceVoice = "aut
       lang: canonical(langCode),
       user_id: userId,
       module: "sidetoside",
-      voice
+      voice,
     }),
   });
 
@@ -378,6 +389,7 @@ async function speakViaApi(text, langCode, sourceUserId = "", sourceVoice = "aut
   audio.onended = () => {
     if (currentAudio === audio) currentAudio = null;
   };
+
   audio.onerror = () => {
     if (currentAudio === audio) currentAudio = null;
   };
@@ -401,6 +413,7 @@ function chooseWebVoice(langCode) {
   if (pref === "female") {
     return pool.find((v) => /female|woman|zira|aria|seda|helena|jenny|susan|eva|anna|emma/i.test(v.name)) || pool[0];
   }
+
   if (pref === "male") {
     return pool.find((v) => /male|man|david|mark|george|james|alex|tom|jon|paul/i.test(v.name)) || pool[0];
   }
@@ -502,7 +515,7 @@ async function applyMyLanguageChange(nextLang) {
     if (ws && ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({
         type: "set_lang",
-        lang: myLang
+        lang: myLang,
       }));
       setHelper(botHelper, t(myLang, "langUpdated"), "helper-ready");
       bounceToReady(800);
@@ -550,9 +563,7 @@ function goHomeDelayed() {
 }
 
 function scheduleReconnect() {
-  if (manuallyClosed) return;
-  if (peerHasExplicitlyLeft) return;
-  if (reconnectTimer) return;
+  if (manuallyClosed || peerHasExplicitlyLeft || reconnectTimer) return;
 
   const delay = Math.min(1500 + reconnectCount * 1000, 6000);
 
@@ -580,7 +591,6 @@ function startSocket() {
   manuallyClosed = false;
 
   const url = wsUrl();
-
   if (!url) {
     setErrorUI();
     setHelper(botHelper, t(myLang, "roomMissing"), "helper-wait");
@@ -615,14 +625,23 @@ function startSocket() {
       const type = String(payload?.type || "").trim();
 
       if (type === "presence") {
-        if (payload?.guest_lang && role === "host") {
-          peerLang = canonical(payload.guest_lang);
+        const guestLang = canonical(payload?.guest_lang || "");
+        const hostLang = canonical(payload?.host_lang || "");
+
+        if (role === "host" && guestLang) {
+          peerLang = guestLang;
+          peerConnected = true;
           localStorage.setItem("live_interpreter_peer_lang", peerLang);
         }
 
-        if (payload?.host_lang && role === "guest") {
-          peerLang = canonical(payload.host_lang);
+        if (role === "guest" && hostLang) {
+          peerLang = hostLang;
+          peerConnected = true;
           localStorage.setItem("live_interpreter_peer_lang", peerLang);
+        }
+
+        if (!peerConnected && payload?.peer_connected === true) {
+          peerConnected = true;
         }
 
         setSystemReadyUI();
@@ -630,6 +649,8 @@ function startSocket() {
       }
 
       if (type === "peer_joined") {
+        peerConnected = true;
+
         if (payload?.guest_lang && role === "host") {
           peerLang = canonical(payload.guest_lang);
           localStorage.setItem("live_interpreter_peer_lang", peerLang);
@@ -650,13 +671,15 @@ function startSocket() {
         if (!translated && !original) return;
         if (senderId && myClientId && senderId === myClientId) return;
 
+        peerConnected = true;
+
         const text = translated || original;
 
         clearLatest("top");
         addBubble("top", "me", text, {
           latest: true,
           withSpeaker: true,
-          speakLang: myLang
+          speakLang: myLang,
         });
 
         await speak(text, myLang, senderUserId, senderVoice);
@@ -666,6 +689,7 @@ function startSocket() {
 
       if (type === "peer_left") {
         peerHasExplicitlyLeft = true;
+        peerConnected = false;
         setErrorUI();
         setHelper(botHelper, payload?.message || t(myLang, "peerGoneHome"), "helper-wait");
         goHomeDelayed();
@@ -761,7 +785,6 @@ function demoteOldMessages(side) {
   if (!items.length) return;
 
   const reversed = [...items].reverse();
-
   reversed.forEach((el, idx) => {
     if (idx === 0) {
       el.classList.add("is-latest");
@@ -824,7 +847,7 @@ function addBubble(side, kind, text, opts = {}) {
    SEND
 ========================= */
 function canSend() {
-  return !!(wsReady && ws && ws.readyState === WebSocket.OPEN && roomId);
+  return !!(wsReady && ws && ws.readyState === WebSocket.OPEN && roomId && peerConnected);
 }
 
 function shouldIgnoreDuplicateLocal(text) {
@@ -848,7 +871,7 @@ async function sendTextMessage(rawText) {
 
   if (!canSend()) {
     setErrorUI();
-    setHelper(botHelper, t(myLang, "wsFailed"), "helper-wait");
+    setHelper(botHelper, peerConnected ? t(myLang, "wsFailed") : t(myLang, "waitingPeer"), "helper-wait");
     bounceToReady(1200);
     return;
   }
@@ -863,7 +886,7 @@ async function sendTextMessage(rawText) {
       from_lang: canonical(myLang),
       sender_id: myClientId,
       sender_user_id: senderUserId || "",
-      sender_voice: senderVoice || "auto"
+      sender_voice: senderVoice || "auto",
     }));
   } catch (e) {
     console.error("[ws send]", e);
@@ -917,7 +940,7 @@ async function finalizeRecognition(text) {
   clearLatest("bottom");
   addBubble("bottom", "me", cleaned, {
     latest: true,
-    withSpeaker: false
+    withSpeaker: false,
   });
 
   setSendingUI();
@@ -926,6 +949,13 @@ async function finalizeRecognition(text) {
 }
 
 function startRecording() {
+  if (!peerConnected) {
+    setErrorUI();
+    setHelper(botHelper, t(myLang, "waitingPeer"), "helper-wait");
+    bounceToReady(1200);
+    return;
+  }
+
   const rec = buildRecognizer(myLang);
 
   if (!rec) {
@@ -1099,7 +1129,8 @@ function bind() {
     setSystemReadyUI();
   });
 
-  homeLink?.addEventListener("click", () => {
+  homeLink?.addEventListener("click", (e) => {
+    e.preventDefault();
     stopSocket();
     location.href = safeHomeHref();
   });
@@ -1107,6 +1138,11 @@ function bind() {
   homeBtn?.addEventListener("click", () => {
     stopSocket();
     location.href = safeHomeHref();
+  });
+
+  settingsBtn?.addEventListener("click", (e) => {
+    e.preventDefault();
+    location.href = "/pages/facetoface_open.html?edit=1&from=sidetoside";
   });
 
   botMic?.addEventListener("click", async (e) => {
@@ -1136,7 +1172,7 @@ async function bootRoom() {
         roomId,
         role,
         myLang,
-        peerLang
+        peerLang,
       });
     }
 
