@@ -17,6 +17,9 @@ const BCP = {
   ka: "ka-GE",
 };
 
+const F2F_VOICE_KEY = "facetoface_voice_mode";
+const F2F_TRANSLATE_KEY = "facetoface_translate_mode";
+
 function canonical(code) {
   return String(code || "").toLowerCase().split("-")[0].trim();
 }
@@ -78,7 +81,7 @@ const UI_TEXT = {
     repeat: "Drücken Sie das Mikrofon erneut, wenn Sie fertig gesprochen haben.",
     wait: "Bitte warten...",
     translating: "Wird übersetzt...",
-    translateError: "⚠️ Übersetzungsdienst nicht erreichbar",
+    translateError: "⚠️ Übersetzungsdienst not reachable",
     micBlocked: "⚠️ Mikrofonberechtigung erforderlich",
     speechUnsupported: "⚠️ Spracherkennung wird auf diesem Gerät nicht unterstützt",
   },
@@ -140,6 +143,7 @@ const closeBot = $("close-bot");
 const clearBtn = $("clearBtn");
 const homeLink = $("homeLink");
 const homeBtn = $("homeBtn");
+const settingsBtn = $("settingsBtn");
 
 let topLang = "en";
 let botLang = "tr";
@@ -153,6 +157,15 @@ let bootReady = false;
 let bootStarted = false;
 let bootPromise = null;
 let voicesReady = false;
+
+function getFaceVoiceMode() {
+  return String(localStorage.getItem(F2F_VOICE_KEY) || "auto").trim().toLowerCase();
+}
+
+function getFaceTranslateMode() {
+  const value = String(localStorage.getItem(F2F_TRANSLATE_KEY) || "normal").trim().toLowerCase();
+  return value === "cultural" ? "cultural" : "normal";
+}
 
 function canonTone(value) {
   const v = String(value || "neutral").trim().toLowerCase();
@@ -371,6 +384,9 @@ async function getCurrentUserId() {
 }
 
 function getVoicePreference() {
+  const faceMode = getFaceVoiceMode();
+  if (["auto", "female", "male", "clone"].includes(faceMode)) return faceMode;
+
   return String(
     localStorage.getItem("tts_voice") ||
     localStorage.getItem("live_interpreter_voice") ||
@@ -591,7 +607,7 @@ async function spendFaceUsage(usedChars) {
 
   if (!r.ok) {
     if (r.status === 402) {
-      alert("Kontörünüz yetersiz. Jeton Market'e yönlendiriliyorsunuz.");
+      alert("Jetonunuz yetersiz. Jeton Market'e yönlendiriliyorsunuz.");
       location.href = "/pages/jetonbuy.html";
       throw new Error("insufficient_tokens");
     }
@@ -676,21 +692,39 @@ function clearLatest(side) {
 async function translateText(text, from, to) {
   const src = canonical(from);
   const dst = canonical(to);
+  const mode = getFaceTranslateMode();
+
+  const endpoint = mode === "cultural" ? "/api/translate_ai" : "/api/translate";
 
   try {
-    const r = await fetch(`${API_BASE}/api/translate_ai`, {
+    const body =
+      mode === "cultural"
+        ? {
+            text: String(text || "").trim(),
+            from_lang: src,
+            to_lang: dst,
+          }
+        : {
+            text: String(text || "").trim(),
+            from: src,
+            to: dst,
+          };
+
+    const r = await fetch(`${API_BASE}${endpoint}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        text: String(text || "").trim(),
-        from_lang: src,
-        to_lang: dst,
-      }),
+      body: JSON.stringify(body),
     });
 
     if (!r.ok) return null;
+
     const j = await r.json().catch(() => null);
-    return String(j?.translated || "").trim() || null;
+
+    if (mode === "cultural") {
+      return String(j?.translated || "").trim() || null;
+    }
+
+    return String(j?.translated_text || j?.translated || "").trim() || null;
   } catch {
     return null;
   }
@@ -967,6 +1001,11 @@ function bind() {
     location.href = safeHomeHref();
   });
 
+  settingsBtn?.addEventListener("click", (e) => {
+    e.preventDefault();
+    location.href = "/pages/facetoface_open.html?edit=1";
+  });
+
   topMic?.addEventListener("click", async (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -991,6 +1030,10 @@ function bind() {
 
   bindKeyboardButton(homeBtn, async () => {
     location.href = safeHomeHref();
+  });
+
+  bindKeyboardButton(settingsBtn, async () => {
+    location.href = "/pages/facetoface_open.html?edit=1";
   });
 
   try {
