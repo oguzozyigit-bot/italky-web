@@ -167,6 +167,8 @@ function detectVoiceProfileReady(profile) {
 
   const hasTtsReady = !!profile?.tts_voice_ready;
   const hasTtsId = !!String(profile?.tts_voice_id || "").trim();
+  const hasVoiceProfileReady = !!profile?.voice_profile_ready;
+
   const samplePath = String(profile?.voice_sample_path || "").trim();
   const hasSamplePath =
     !!samplePath &&
@@ -174,7 +176,13 @@ function detectVoiceProfileReady(profile) {
     samplePath !== "null" &&
     samplePath !== "";
 
-  return hasTtsReady || hasTtsId || hasSamplePath;
+  const sampleUrl = String(profile?.voice_sample_url || "").trim();
+  const hasSampleUrl =
+    !!sampleUrl &&
+    sampleUrl !== "null" &&
+    sampleUrl !== "";
+
+  return hasTtsReady || hasTtsId || hasVoiceProfileReady || hasSamplePath || hasSampleUrl;
 }
 
 async function loadProfileInfo() {
@@ -188,19 +196,42 @@ async function loadProfileInfo() {
 
     const { data, error } = await supabase
       .from("profiles")
-      .select("tokens, jeton_balance, tts_voice_ready, tts_voice_id, voice_sample_path")
+      .select(`
+        tokens,
+        jeton_balance,
+        jeton,
+        balance,
+        credits,
+        tts_voice_ready,
+        tts_voice_id,
+        voice_profile_ready,
+        voice_sample_path,
+        voice_sample_url
+      `)
       .eq("id", uid)
       .maybeSingle();
 
     if (error) {
+      console.error("loadProfileInfo error:", error);
       tokenBalance = 0;
       voiceProfileReady = false;
       return;
     }
 
-    tokenBalance = Number(data?.tokens ?? data?.jeton_balance ?? 0);
+    console.log("PROFILE DATA:", data);
+
+    tokenBalance = Number(
+      data?.jeton_balance ??
+      data?.tokens ??
+      data?.jeton ??
+      data?.balance ??
+      data?.credits ??
+      0
+    );
+
     voiceProfileReady = detectVoiceProfileReady(data);
-  } catch {
+  } catch (e) {
+    console.error("loadProfileInfo catch:", e);
     tokenBalance = 0;
     voiceProfileReady = false;
   }
@@ -491,6 +522,8 @@ async function saveVoiceProfileFull() {
 async function handleCloneSelection(openEditor = false) {
   await loadProfileInfo();
   refreshCloneCard();
+  refreshSummary();
+  refreshPremiumWarning();
 
   if (voiceProfileReady && !openEditor) {
     voiceMode = "clone";
@@ -573,6 +606,8 @@ async function handleSaveAndStart() {
   try {
     await loadProfileInfo();
     refreshCloneCard();
+    refreshSummary();
+    refreshPremiumWarning();
 
     if (voiceMode === "clone" && !voiceProfileReady) {
       await openVoiceModal();
