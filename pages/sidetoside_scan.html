@@ -461,7 +461,6 @@
       const text = String(raw || "").trim();
       if(!text) return null;
 
-      // URL içindeyse
       try{
         const url = new URL(text);
         const room = normalizeRoom(
@@ -478,7 +477,6 @@
         }
       }catch{}
 
-      // düz room= / code=
       try{
         const params = new URLSearchParams(text);
         const room = normalizeRoom(params.get("room") || params.get("r"));
@@ -488,7 +486,6 @@
         }
       }catch{}
 
-      // sade 6 karakter kod
       if(/^[A-Z0-9]{6}$/.test(text.toUpperCase())){
         return { room: "", code: text.toUpperCase(), raw: text };
       }
