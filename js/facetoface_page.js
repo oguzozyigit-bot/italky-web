@@ -81,7 +81,7 @@ const UI_TEXT = {
     repeat: "Drücken Sie das Mikrofon erneut, wenn Sie fertig gesprochen haben.",
     wait: "Bitte warten...",
     translating: "Wird übersetzt...",
-    translateError: "⚠️ Übersetzungsdienst not reachable",
+    translateError: "⚠️ Übersetzungsdienst nicht erreichbar",
     micBlocked: "⚠️ Mikrofonberechtigung erforderlich",
     speechUnsupported: "⚠️ Spracherkennung wird auf diesem Gerät nicht unterstützt",
   },
@@ -158,8 +158,12 @@ let bootStarted = false;
 let bootPromise = null;
 let voicesReady = false;
 let speakRunId = 0;
+
 let liveTranscript = "";
+let latestPreviewTranscript = "";
 let recognitionFinishedByUser = false;
+
+let typewriterRunId = 0;
 
 function getFaceVoiceMode() {
   return String(localStorage.getItem(F2F_VOICE_KEY) || "auto").trim().toLowerCase();
@@ -370,9 +374,7 @@ function stopAudio() {
   } catch {}
 
   try {
-    if (currentAudio) {
-      currentAudio.currentTime = 0;
-    }
+    if (currentAudio) currentAudio.currentTime = 0;
   } catch {}
 
   currentAudio = null;
@@ -384,6 +386,58 @@ function stopAudio() {
   try {
     window.NativeTTS?.stop?.();
   } catch {}
+}
+
+function stopTypewriter() {
+  typewriterRunId += 1;
+}
+
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+function getTypingDelay(ch, index, total) {
+  const tailBoost = index > total * 0.82 ? 2 : 0;
+
+  if (ch === " ") return 0;
+  if (/[.,!?]/.test(ch)) return 80 + tailBoost;
+  if (/[;:]/.test(ch)) return 55 + tailBoost;
+  if (/[\n]/.test(ch)) return 40 + tailBoost;
+
+  return 10 + tailBoost;
+}
+
+function getTypingChunkSize(index, total) {
+  const progress = total ? index / total : 0;
+
+  if (progress < 0.2) return 1;
+  if (progress < 0.7) return 2;
+  return 1;
+}
+async function typewriteText(el, finalText) {
+  if (!el) return;
+
+  stopTypewriter();
+  const runId = typewriterRunId;
+  const full = String(finalText || "").trim();
+
+  el.textContent = "";
+  if (!full) return;
+
+  let i = 0;
+  while (i < full.length) {
+    if (runId !== typewriterRunId) return;
+
+    const chunkSize = getTypingChunkSize(i, full.length);
+    const next = Math.min(full.length, i + chunkSize);
+
+    el.textContent = full.slice(0, next);
+    i = next;
+
+    const lastChar = full.charAt(i - 1);
+    keepLatestVisible(el.closest("#topBody") ? "top" : "bot");
+
+    await wait(getTypingDelay(lastChar, i, full.length));
+  }
 }
 
 async function getCurrentUserId() {
@@ -462,7 +516,6 @@ async function speakViaApi(text, langCode, tone = "neutral") {
   if (myRunId !== speakRunId) return false;
 
   const j = await r.json().catch(() => null);
-
   if (myRunId !== speakRunId) return false;
 
   if (!r.ok || !j?.ok || !j?.audio_base64) {
@@ -588,14 +641,8 @@ async function speak(text, langCode, tone = "neutral") {
   const value = String(text || "").trim();
   if (!value) return;
 
-  const now = Date.now();
-  if (now - ttsDebounceAt < 250) {
-    stopAudio();
-  } else {
-    stopAudio();
-  }
-
-  ttsDebounceAt = now;
+  stopAudio();
+  ttsDebounceAt = Date.now();
   speakRunId += 1;
   const myRunId = speakRunId;
 
@@ -747,7 +794,6 @@ async function translateText(text, from, to, tone = "neutral") {
   const src = canonical(from);
   const dst = canonical(to);
   const mode = getFaceTranslateMode();
-
   const style = mode === "cultural" ? "warm" : "balanced";
 
   try {
@@ -784,8 +830,8 @@ function buildRecognizer(langCode) {
 
   const rec = new SR();
   rec.lang = langObj(langCode).bcp;
-  rec.interimResults = false;
-  rec.continuous = false;
+  rec.interimResults = true;
+  rec.continuous = true;
   rec.maxAlternatives = 1;
   return rec;
 }
@@ -798,67 +844,7 @@ function stopRecognizer() {
   }
 }
 
-async function finalizeRecognition(side, text) {
-  const src = side === "top" ? topLang : botLang;
-  const dst = side === "top" ? botLang : topLang;
-  const sourceTone = detectToneFromText(text);
-  const other = side === "top" ? "bot" : "top";
-  const mode = getFaceTranslateMode();
-
-  const cleaned = String(text || "").trim();
-  if (!cleaned) {
-    setErrorUI();
-    bounceToReady(1000);
-    return;
-  }
-
-  addBubble(side, "them", cleaned);
-  clearLatest(other);
-
-  setTranslatingUI(side);
-
-  const latestRow = addBubble(other, "me", t(dst, "translating"), {
-    latest: true,
-    speakLang: dst,
-    speakTone: sourceTone,
-  });
-
-  const latestTxt = latestRow?.querySelector(".txt");
-  const tr = await translateText(cleaned, src, dst, sourceTone);
-
-  if (!tr) {
-    setErrorUI();
-    if (latestTxt) {
-      latestTxt.textContent = t(dst, "translateError");
-      keepLatestVisible(other);
-    }
-    bounceToReady(1200);
-    return;
-  }
-
-  if (mode === "cultural") {
-    try {
-      await spendFaceUsage(tr.length);
-    } catch (e) {
-      if (String(e?.message || "") === "insufficient_tokens") return;
-    }
-  }
-
-  if (latestTxt) {
-    latestTxt.textContent = tr;
-    keepLatestVisible(other);
-  } else {
-    addBubble(other, "me", tr, {
-      latest: true,
-      speakLang: dst,
-      speakTone: sourceTone,
-    });
-  }
-
-  await speak(tr, dst, sourceTone);
-  setSystemReadyUI();
-}
-
+async function finalizeRecognition
 function startRecording(side) {
   const lang = side === "top" ? topLang : botLang;
   const rec = buildRecognizer(lang);
@@ -874,11 +860,8 @@ function startRecording(side) {
   recognizer = rec;
   recordingSide = side;
   liveTranscript = "";
+  latestPreviewTranscript = "";
   recognitionFinishedByUser = false;
-
-  rec.interimResults = true;
-  rec.continuous = true;
-  rec.maxAlternatives = 1;
 
   rec.onstart = () => {
     setListeningUI(side);
@@ -895,9 +878,9 @@ function startRecording(side) {
     }
 
     liveTranscript = `${liveTranscript} ${finalText}`.trim();
+    latestPreviewTranscript = `${liveTranscript} ${interimText}`.trim();
 
-    const preview = `${liveTranscript} ${interimText}`.trim();
-    if (!preview) return;
+    if (!latestPreviewTranscript) return;
 
     const body = side === "top" ? topBody : botBody;
     let previewNode = body?.querySelector(".bubble.them.preview");
@@ -910,7 +893,7 @@ function startRecording(side) {
     }
 
     const txtEl = previewNode.querySelector(".txt");
-    if (txtEl) txtEl.textContent = preview;
+    if (txtEl) txtEl.textContent = latestPreviewTranscript;
     keepLatestVisible(side);
   };
 
@@ -925,6 +908,7 @@ function startRecording(side) {
     recordingSide = null;
     recognizer = null;
     liveTranscript = "";
+    latestPreviewTranscript = "";
     recognitionFinishedByUser = false;
     setErrorUI();
     bounceToReady(1600);
@@ -932,7 +916,7 @@ function startRecording(side) {
 
   rec.onend = () => {
     const sideAtEnd = side;
-    const finalText = String(liveTranscript || "").trim();
+    const finalText = String(liveTranscript || latestPreviewTranscript || "").trim();
 
     recognizer = null;
     recordingSide = null;
@@ -942,12 +926,14 @@ function startRecording(side) {
 
     if (recognitionFinishedByUser && finalText) {
       liveTranscript = "";
+      latestPreviewTranscript = "";
       recognitionFinishedByUser = false;
       Promise.resolve().then(() => finalizeRecognition(sideAtEnd, finalText));
       return;
     }
 
     liveTranscript = "";
+    latestPreviewTranscript = "";
     recognitionFinishedByUser = false;
     setSystemReadyUI();
   };
@@ -958,11 +944,13 @@ function startRecording(side) {
     recognizer = null;
     recordingSide = null;
     liveTranscript = "";
+    latestPreviewTranscript = "";
     recognitionFinishedByUser = false;
     setErrorUI();
     bounceToReady(1200);
   }
 }
+
 async function toggleRecording(side) {
   await ensureReady();
 
@@ -978,10 +966,12 @@ async function toggleRecording(side) {
     stopRecognizer();
     recordingSide = null;
     liveTranscript = "";
+    latestPreviewTranscript = "";
   }
 
   startRecording(side);
 }
+
 async function warmApis() {
   await Promise.allSettled([
     fetch(`${API_BASE}/healthz`).catch(() => {}),
@@ -1088,8 +1078,11 @@ function bind() {
 
   clearBtn?.addEventListener("click", () => {
     stopAudio();
+    stopTypewriter();
     stopRecognizer();
     recordingSide = null;
+    liveTranscript = "";
+    latestPreviewTranscript = "";
     if (topBody) topBody.innerHTML = "";
     if (botBody) botBody.innerHTML = "";
     setSystemReadyUI();
