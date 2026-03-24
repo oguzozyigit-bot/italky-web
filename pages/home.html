@@ -221,33 +221,27 @@ body{
   text-transform:uppercase;
 }
 
-.connect-code-pill{
-  min-width:148px;
-  padding:10px 14px;
-  border-radius:999px;
-  background:rgba(255,255,255,.07);
-  border:1px solid rgba(255,255,255,.13);
+.connect-code-line{
   display:inline-flex;
   align-items:center;
   justify-content:center;
   gap:10px;
-  box-shadow:0 10px 22px rgba(0,0,0,.16);
-  backdrop-filter:blur(14px);
 }
 
 .connect-code-value{
   font-family:'Space Grotesk',sans-serif;
-  font-size:18px;
+  font-size:24px;
   font-weight:700;
   letter-spacing:2px;
   color:#fff;
   line-height:1;
+  text-shadow:0 0 14px rgba(255,255,255,.12);
 }
 
 .connect-code-copy{
-  width:28px;
-  height:28px;
-  min-width:28px;
+  width:34px;
+  height:34px;
+  min-width:34px;
   border:none;
   border-radius:50%;
   background:rgba(255,255,255,.10);
@@ -257,6 +251,7 @@ body{
   justify-content:center;
   cursor:pointer;
   transition:transform .18s ease, opacity .18s ease;
+  border:1px solid rgba(255,255,255,.12);
 }
 
 .connect-code-copy:active{
@@ -264,8 +259,8 @@ body{
 }
 
 .connect-code-copy svg{
-  width:14px;
-  height:14px;
+  width:16px;
+  height:16px;
   fill:none;
   stroke:#fff;
   stroke-width:2;
@@ -344,6 +339,14 @@ body{
 
 .heroBtnPurple{
   flex:1;
+  background:linear-gradient(135deg,#4338ca 0%, #7c3aed 100%);
+  color:#fff;
+  border:1px solid rgba(255,255,255,.12);
+  box-shadow:0 12px 24px rgba(67,56,202,.24);
+}
+
+.heroBtnWide{
+  width:100%;
   background:linear-gradient(135deg,#4338ca 0%, #7c3aed 100%);
   color:#fff;
   border:1px solid rgba(255,255,255,.12);
@@ -846,12 +849,8 @@ body{
     font-size:10.8px;
     line-height:1.32;
   }
-  .connect-code-pill{
-    min-width:138px;
-    padding:9px 12px;
-  }
   .connect-code-value{
-    font-size:16px;
+    font-size:20px;
     letter-spacing:1.8px;
   }
 }
@@ -862,7 +861,6 @@ body{
 
 <script>
 const userId = localStorage.getItem("user_id");
-
 if(!userId){
   location.href = "/pages/first_login.html";
 }
@@ -897,7 +895,7 @@ if(!userId){
 
         <div class="connect-code-wrap">
           <div class="connect-code-label">Bağlantı Kodu</div>
-          <div class="connect-code-pill">
+          <div class="connect-code-line">
             <div id="connectionCodeText" class="connect-code-value">ABC123</div>
             <button id="copyConnectionCodeBtn" class="connect-code-copy" type="button" aria-label="Bağlantı kodunu kopyala" title="Kopyala">
               <svg viewBox="0 0 24 24">
@@ -909,14 +907,11 @@ if(!userId){
         </div>
 
         <h1 class="heroTitle">Side<span class="to">To</span>Side</h1>
-        <p class="heroSub">QR kodu okut veya bağlantı kodunu paylaş. Karşı taraf girince sohbet otomatik başlar.</p>
+        <p class="heroSub">Bağlantı kodunu paylaş. Karşı taraf girince sohbet otomatik başlar.</p>
         <div class="heroStatus" id="heroStatus">Oda hazırlanıyor...</div>
 
         <div class="heroActions">
-          <div class="heroBtnRow">
-            <button class="heroBtn heroBtnDark" type="button" onclick="openQrScan()">📷 QR Oku</button>
-            <button class="heroBtn heroBtnPurple" type="button" onclick="openCodePrompt()">🔢 Kod Gir</button>
-          </div>
+          <button class="heroBtn heroBtnWide" type="button" onclick="openCodePrompt()">🔢 Bağlantı Kodunu Gir</button>
         </div>
       </div>
     </section>
@@ -970,7 +965,7 @@ if(!userId){
         <div class="wide-body">
           <div class="card-topline">İki Cihaz Arası</div>
           <h2 class="wide-title">SideToSide</h2>
-          <p class="wide-desc">İki kişi kendi telefonundan bağlanır. QR, bağlantı kodu veya butonla anında giriş yapar.</p>
+          <p class="wide-desc">İki kişi kendi telefonundan bağlanır. Bağlantı kodu ile anında giriş yapar.</p>
         </div>
 
         <div class="arrow-chip"></div>
@@ -1055,10 +1050,6 @@ try {
 </script>
 
 <script>
-function openQrScan(){
-  location.href = "/pages/sidetoside_scan.html";
-}
-
 function openCodePrompt(){
   location.href = "/pages/sidetoside_code.html";
 }
@@ -1216,7 +1207,7 @@ function startPreviewSocket(roomId, myLang = "tr"){
   }
 
   previewSocket.onopen = () => {
-    setHeroStatus("QR hazır. Karşı taraf bağlanınca sohbet başlayacak.");
+    setHeroStatus("Bağlantı kodu hazır. Karşı taraf bağlanınca sohbet başlayacak.");
   };
 
   previewSocket.onmessage = (event) => {
@@ -1249,7 +1240,7 @@ function startPreviewSocket(roomId, myLang = "tr"){
 
   previewSocket.onclose = () => {
     if(!redirected){
-      setHeroStatus("QR hazır. Karşı taraf bekleniyor...");
+      setHeroStatus("Bağlantı kodu hazır. Karşı taraf bekleniyor...");
       scheduleRefresh();
     }
   };
@@ -1290,7 +1281,7 @@ async function renderRoomQr(){
     if(finalUrl){
       const safeUrl = finalUrl + (finalUrl.includes("?") ? "&" : "?") + "t=" + Date.now();
       showQr(safeUrl);
-      setHeroStatus("QR ve bağlantı kodu hazır. Karşı taraf bekleniyor...");
+      setHeroStatus("Bağlantı kodu hazır. Karşı taraf bekleniyor...");
     }else{
       showFallback(activeRoomCode || "ABC123");
       setHeroStatus("QR servisi yanıt vermedi");
