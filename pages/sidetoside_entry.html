@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>italkyAI • SideToSide Entry</title>
+  <meta name="theme-color" content="#07070b" />
+  <style>
+    html,body{
+      margin:0;
+      width:100%;
+      height:100%;
+      background:#07070b;
+      color:#fff;
+      overflow:hidden;
+      font-family:Outfit,sans-serif;
+    }
+    .boot{
+      width:100%;
+      height:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      flex-direction:column;
+      gap:14px;
+      background:
+        radial-gradient(circle at 50% 10%, rgba(99,102,241,.18), transparent 28%),
+        radial-gradient(circle at 80% 80%, rgba(236,72,153,.10), transparent 30%),
+        #07070b;
+    }
+    .orb{
+      width:82px;
+      height:82px;
+      border-radius:50%;
+      background:linear-gradient(135deg,#a5b4fc,#6366f1,#ec4899);
+      filter:blur(.2px);
+      box-shadow:0 0 36px rgba(99,102,241,.28);
+      animation:pulse 1.4s infinite ease-in-out;
+    }
+    .txt{
+      font-size:14px;
+      font-weight:800;
+      opacity:.92;
+      letter-spacing:.2px;
+    }
+    @keyframes pulse{
+      0%,100%{ transform:scale(1); opacity:.92; }
+      50%{ transform:scale(1.08); opacity:1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="boot">
+    <div class="orb"></div>
+    <div class="txt">SideToSide hazırlanıyor...</div>
+  </div>
+
+  <script type="module">
+    import { supabase } from "/js/supabase_client.js";
+
+    const SETUP_KEY = "facetoface_setup_done";
+    const VOICE_KEY = "facetoface_voice_mode";
+    const TRANSLATE_KEY = "facetoface_translate_mode";
+
+    function normalizeVoiceMode(v) {
+      return String(v || "").trim().toLowerCase() === "clone" ? "clone" : "auto";
+    }
+
+    function normalizeTranslateMode(v) {
+      return String(v || "").trim().toLowerCase() === "cultural" ? "cultural" : "normal";
+    }
+
+    function isPremiumVoice(v){
+      return normalizeVoiceMode(v) === "clone";
+    }
+
+    function isPremiumTranslate(v){
+      return normalizeTranslateMode(v) === "cultural";
+    }
+
+    function needsJeton(voice, translateMode){
+      return isPremiumVoice(voice) || isPremiumTranslate(translateMode);
+    }
+
+    function pickBestPositiveNumber(...values) {
+      for (const value of values) {
+        const n = Number(value);
+        if (Number.isFinite(n) && n > 0) return n;
+      }
+      return 0;
+    }
+
+    function hasMeaningfulString(v) {
+      const s = String(v ?? "").trim();
+      return !!s && s !== "null" && s !== "[]" && s !== "{}";
+    }
+
+    function detectVoiceProfileReady(profile) {
+      if (!profile) return false;
+
+      const flags = [
+        profile?.tts_voice_ready,
+        profile?.voice_profile_ready,
+        profile?.voice_ready,
+        profile?.clone_voice_ready
+      ].some(Boolean);
+
+      const ids = [
+        profile?.tts_voice_id,
+        profile?.voice_id,
+        profile?.clone_voice_id
+      ].some(hasMeaningfulString);
+
+      const sampleData = [
+        profile?.voice_sample_path,
+        profile?.voice_sample_url,
+        profile?.voice_sample_urls
+      ].some(hasMeaningfulString);
+
+      const prefs = [
+        profile?.tts_voice,
+        profile?.tts_voice_preference,
+        profile?.facetoface_voice_mode
+      ].some((v) => String(v || "").trim().toLowerCase() === "clone");
+
+      return flags || ids || sampleData || prefs;
+    }
+
+    async function getProfileData(){
+      try{
+        const { data } = await supabase.auth.getUser();
+        const uid = data?.user?.id || localStorage.getItem("user_id");
+        if(!uid) return null;
+
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", uid)
+          .maybeSingle();
+
+        return profile || null;
+      }catch{
+        return null;
+      }
+    }
+
+    function syncLocalSettingsFromProfile(profile) {
+      if (!profile) return;
+
+      const profileVoice =
+        normalizeVoiceMode(
+          profile?.facetoface_voice_mode ||
+          profile?.tts_voice_preference ||
+          profile?.tts_voice ||
+          localStorage.getItem(VOICE_KEY) ||
+          "auto"
+        );
+
+      const profileTranslate =
+        normalizeTranslate
