@@ -56,76 +56,90 @@
   </div>
 
   <script type="module">
-  import { supabase } from "/js/supabase_client.js";
+    import { supabase } from "/js/supabase_client.js";
 
-  const SETUP_KEY = "facetoface_setup_done";
-  const VOICE_KEY = "facetoface_voice_mode";
-  const TRANSLATE_KEY = "facetoface_translate_mode";
+    const SETUP_KEY = "facetoface_setup_done";
+    const VOICE_KEY = "facetoface_voice_mode";
+    const TRANSLATE_KEY = "facetoface_translate_mode";
 
-  function isPremiumVoice(v){
-    return String(v || "").trim().toLowerCase() === "clone";
-  }
+    function normalizeVoiceMode(v) {
+      return String(v || "").trim().toLowerCase() === "clone" ? "clone" : "auto";
+    }
 
-  function isPremiumTranslate(v){
-    return String(v || "").trim().toLowerCase() === "cultural";
-  }
+    function normalizeTranslateMode(v) {
+      return String(v || "").trim().toLowerCase() === "cultural" ? "cultural" : "normal";
+    }
 
-  function needsJeton(voice, translateMode){
-    return isPremiumVoice(voice) || isPremiumTranslate(translateMode);
-  }
+    function isPremiumVoice(v){
+      return normalizeVoiceMode(v) === "clone";
+    }
 
-  async function getJetonBalance(){
-    try{
-      const { data } = await supabase.auth.getUser();
-      const uid = data?.user?.id || localStorage.getItem("user_id");
-      if(!uid) return 0;
+    function isPremiumTranslate(v){
+      return normalizeTranslateMode(v) === "cultural";
+    }
 
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("jeton_balance, tokens")
-        .eq("id", uid)
-        .maybeSingle();
+    function needsJeton(voice, translateMode){
+      return isPremiumVoice(voice) || isPremiumTranslate(translateMode);
+    }
 
-      return Number(
-        profile?.jeton_balance ??
-        profile?.tokens ??
-        0
-      );
-    }catch{
+    function pickBestPositiveNumber(...values) {
+      for (const value of values) {
+        const n = Number(value);
+        if (Number.isFinite(n) && n > 0) return n;
+      }
       return 0;
     }
-  }
 
-  async function run(){
-    const setupDone = localStorage.getItem(SETUP_KEY) === "1";
-    const voiceMode = localStorage.getItem(VOICE_KEY) || "auto";
-    const translateMode = localStorage.getItem(TRANSLATE_KEY) || "normal";
+    async function getJetonBalance(){
+      try{
+        const { data } = await supabase.auth.getUser();
+        const uid = data?.user?.id || localStorage.getItem("user_id");
+        if(!uid) return 0;
 
-    // 🔥 İlk giriş
-    if(!setupDone){
-      location.replace("/pages/facetoface_open.html");
-      return;
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("jeton_balance, tokens, jeton, balance, credits")
+          .eq("id", uid)
+          .maybeSingle();
+
+        return pickBestPositiveNumber(
+          profile?.jeton_balance,
+          profile?.tokens,
+          profile?.jeton,
+          profile?.balance,
+          profile?.credits
+        );
+      }catch{
+        return 0;
+      }
     }
 
-    // 🔥 Premium seçilmemiş → direkt gir
-    if(!needsJeton(voiceMode, translateMode)){
-      location.replace("/pages/facetoface.html");
-      return;
+    async function run(){
+      const setupDone = localStorage.getItem(SETUP_KEY) === "1";
+      const voiceMode = normalizeVoiceMode(localStorage.getItem(VOICE_KEY) || "auto");
+      const translateMode = normalizeTranslateMode(localStorage.getItem(TRANSLATE_KEY) || "normal");
+
+      if(!setupDone){
+        location.replace("/pages/facetoface_open.html");
+        return;
+      }
+
+      if(!needsJeton(voiceMode, translateMode)){
+        location.replace("/facetoface.html");
+        return;
+      }
+
+      const jeton = await getJetonBalance();
+
+      if(jeton > 0){
+        location.replace("/facetoface.html");
+        return;
+      }
+
+      location.replace("/pages/facetoface_open.html?reason=insufficient");
     }
 
-    // 🔥 Premium seçilmiş → jeton kontrol
-    const jeton = await getJetonBalance();
-
-    if(jeton > 0){
-      location.replace("/pages/facetoface.html");
-      return;
-    }
-
-    // 🔥 Jeton yok → ayar ekranına dön
-    location.replace("/pages/facetoface_open.html?reason=insufficient");
-  }
-
-  run();
-</script>
+    run();
+  </script>
 </body>
 </html>
