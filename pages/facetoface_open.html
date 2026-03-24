@@ -19,6 +19,7 @@
       --ai:linear-gradient(135deg,#a5b4fc,#6366f1,#ec4899);
       --good:#22c55e;
       --warn:#f59e0b;
+      --danger:#ef4444;
     }
 
     *{
@@ -65,14 +66,15 @@
       padding-bottom:18px;
     }
 
-    .hero{
+    .hero,.section,.footer-box,.warn-box{
       border:1px solid var(--line);
       background:rgba(255,255,255,.04);
       border-radius:28px;
-      padding:20px 18px;
-      box-shadow:0 16px 40px rgba(0,0,0,.26);
+      box-shadow:0 16px 40px rgba(0,0,0,.22);
       backdrop-filter:blur(14px);
     }
+
+    .hero{ padding:20px 18px; }
 
     .eyebrow{
       font-size:11px;
@@ -101,13 +103,10 @@
 
     .warn-box{
       display:none;
-      border:1px solid rgba(245,158,11,.28);
-      background:rgba(245,158,11,.10);
-      border-radius:22px;
       padding:16px 15px;
-      box-shadow:0 12px 28px rgba(0,0,0,.18);
+      border-color:rgba(245,158,11,.28);
+      background:rgba(245,158,11,.10);
     }
-
     .warn-box.show{ display:block; }
 
     .warn-title{
@@ -123,13 +122,7 @@
       color:rgba(255,255,255,.84);
     }
 
-    .section{
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.04);
-      border-radius:28px;
-      padding:16px;
-      box-shadow:0 16px 40px rgba(0,0,0,.22);
-    }
+    .section{ padding:16px; }
 
     .section-head{
       display:flex;
@@ -222,15 +215,18 @@
       color:var(--muted);
     }
 
+    .choice-mini{
+      margin-top:10px;
+      font-size:11px;
+      font-weight:800;
+      color:#c4b5fd;
+    }
+
     .footer-box{
       display:flex;
       flex-direction:column;
       gap:12px;
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.04);
-      border-radius:28px;
       padding:16px;
-      box-shadow:0 16px 40px rgba(0,0,0,.22);
     }
 
     .summary{
@@ -297,16 +293,119 @@
       text-align:center;
     }
 
+    .modal{
+      position:fixed;
+      inset:0;
+      display:none;
+      align-items:flex-end;
+      justify-content:center;
+      z-index:9999;
+      background:rgba(0,0,0,.62);
+      padding:18px 14px;
+    }
+
+    .modal.show{ display:flex; }
+
+    .modal-card{
+      width:min(100%, 720px);
+      border:1px solid var(--line);
+      background:#0d0d14;
+      border-radius:28px;
+      box-shadow:0 28px 70px rgba(0,0,0,.6);
+      overflow:hidden;
+    }
+
+    .modal-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:16px 16px 12px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+    }
+
+    .modal-title{
+      font-size:18px;
+      font-weight:900;
+      letter-spacing:-.3px;
+    }
+
+    .modal-close{
+      width:40px;
+      height:40px;
+      border-radius:12px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.06);
+      color:#fff;
+      font-size:18px;
+      font-weight:900;
+      cursor:pointer;
+    }
+
+    .modal-body{
+      padding:16px;
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+    }
+
+    .voice-box{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.04);
+      border-radius:22px;
+      padding:16px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .voice-text{
+      font-size:13px;
+      line-height:1.5;
+      color:rgba(255,255,255,.86);
+    }
+
+    .voice-sample{
+      border:1px dashed rgba(255,255,255,.14);
+      border-radius:18px;
+      padding:14px;
+      font-size:14px;
+      line-height:1.55;
+      color:#fff;
+      background:rgba(255,255,255,.03);
+    }
+
+    .voice-status{
+      min-height:20px;
+      font-size:12px;
+      font-weight:800;
+      color:#cbd5e1;
+    }
+
+    .voice-status.good{ color:#86efac; }
+    .voice-status.warn{ color:#fde68a; }
+    .voice-status.bad{ color:#fca5a5; }
+
+    .voice-actions{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .voice-player{
+      width:100%;
+      display:none;
+    }
+
+    .voice-player.show{ display:block; }
+
     @media (min-width:700px){
-      .grid.two{
-        grid-template-columns:1fr 1fr;
-      }
-      .cta-row{
-        flex-direction:row;
-      }
-      .cta-row .btn{
-        flex:1;
-      }
+      .grid.two{ grid-template-columns:1fr 1fr; }
+      .cta-row{ flex-direction:row; }
+      .cta-row .btn{ flex:1; }
+      .voice-actions{ flex-direction:row; flex-wrap:wrap; }
+      .voice-actions .btn{ flex:1; min-width:180px; }
+      .modal{ align-items:center; }
     }
   </style>
 </head>
@@ -359,12 +458,13 @@
             <p class="choice-desc">Daha kontrollü erkek ses deneyimi sunar. Jeton kullanır.</p>
           </div>
 
-          <div class="choice" data-voice="clone">
+          <div class="choice" data-voice="clone" id="cloneChoice">
             <div class="choice-top">
               <div class="choice-title">Kendi Sesim</div>
               <div class="badge paid">Jetonlu</div>
             </div>
-            <p class="choice-desc">Kayıtlı özel ses profilin varsa kullanılır. Yoksa ses oluşturma akışı açılır.</p>
+            <p class="choice-desc" id="cloneDesc">Henüz kayıtlı özel sesin yok. Oluşturmak için dokun.</p>
+            <div class="choice-mini" id="cloneMini">Özel sesi oluştur</div>
           </div>
         </div>
       </section>
@@ -414,7 +514,39 @@
     </div>
   </main>
 
-  <script type="module" src="/js/facetoface_open.js?v=F2F_OPEN_V1"></script>
+  <div class="modal" id="voiceModal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div class="modal-title" id="voiceModalTitle">Kayıtlı Ses Oluştur</div>
+        <button class="modal-close" id="voiceModalClose" type="button">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="voice-box">
+          <div class="voice-text">
+            Kısa bir ses tanıtımı oku. Bu kayıt özel sesinin hazırlanması için kullanılacaktır.
+          </div>
+
+          <div class="voice-sample" id="voiceSampleText">
+            Merhaba, ben italkyAI için sesimi tanıtıyorum. Bu kayıt sayesinde kendi sesimle daha doğal bir konuşma deneyimi yaşamak istiyorum.
+          </div>
+
+          <div class="voice-status" id="voiceEnrollStatus">Hazır. İstersen kayda başlayabilirsin.</div>
+
+          <audio class="voice-player" id="voicePreview" controls></audio>
+
+          <div class="voice-actions">
+            <button class="btn btn-secondary" id="startVoiceRecBtn" type="button">Kaydı Başlat</button>
+            <button class="btn btn-secondary" id="stopVoiceRecBtn" type="button">Kaydı Durdur</button>
+            <button class="btn btn-secondary" id="playVoiceBtn" type="button">Kaydı Dinle</button>
+            <button class="btn btn-primary" id="saveVoiceBtn" type="button">Kaydı Kaydet</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/js/facetoface_open.js?v=F2F_OPEN_V2"></script>
 
   <script type="module">
     import { mountShell } from "/js/ui_shell.js";
