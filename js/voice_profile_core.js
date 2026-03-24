@@ -41,7 +41,7 @@ export const VOICE_SAMPLE_TEXTS = {
     "Ciao, sto usando italkyAI e sto creando il mio profilo vocale.",
     "Oggi il tempo è piuttosto bello e fuori c’è una leggera brezza.",
     "Imparare una nuova lingua richiede pazienza, ripetizione e pratica regolare.",
-    "La traduzione supportata dall’intelligenza artificielle rende più facile la comunicazione quotidiana.",
+    "La traduzione supportata dall’intelligenza artificiale rende più facile la comunicazione quotidiana.",
     "Una traduzione vocale rapida e precisa è un grande vantaggio quando si viaggia.",
     "Ora sto completando l’ultimo esempio e salvo il mio profilo vocale."
   ],
@@ -143,7 +143,7 @@ export async function getUserOrThrow() {
 export async function loadCurrentProfile(userId) {
   const { data, error } = await supabase
     .from("profiles")
-    .select("id, voice_sample_path")
+    .select("id, voice_sample_path, tts_voice_ready, tts_voice_id")
     .eq("id", userId)
     .maybeSingle();
 
@@ -265,6 +265,7 @@ export async function enrollTTSVoice() {
 
 export async function markCloneAsSelected(enrollResp = {}) {
   const user = await getUserOrThrow();
+  const profile = await loadCurrentProfile(user.id);
 
   const provider = String(
     enrollResp?.provider ||
@@ -280,16 +281,23 @@ export async function markCloneAsSelected(enrollResp = {}) {
     ""
   ).trim();
 
+  const hasSamplePath = parseOldPaths(profile?.voice_sample_path).length > 0;
+  const readyFromEnroll =
+    !!voiceId ||
+    enrollResp?.ok === true ||
+    enrollResp?.success === true ||
+    hasSamplePath;
+
   const payload = {
     tts_voice_preference: "clone",
     tts_voice: "clone",
     tts_voice_provider: provider,
-    tts_voice_updated_at: new Date().toISOString()
+    tts_voice_updated_at: new Date().toISOString(),
+    tts_voice_ready: !!readyFromEnroll
   };
 
   if (voiceId) {
     payload.tts_voice_id = voiceId;
-    payload.tts_voice_ready = true;
   }
 
   const { error } = await supabase
