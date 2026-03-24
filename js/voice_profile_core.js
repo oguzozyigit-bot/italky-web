@@ -2,7 +2,7 @@ import { supabase } from "/js/supabase_client.js";
 
 const API_BASE = "https://italky-api.onrender.com";
 const BUCKET = "voice-samples";
-const SAMPLE_COUNT = 6;
+export const SAMPLE_COUNT = 6;
 
 export const VOICE_SAMPLE_TEXTS = {
   tr: [
