@@ -161,6 +161,7 @@ let speakRunId = 0;
 let liveTranscript = "";
 let latestPreviewTranscript = "";
 let recognitionFinishedByUser = false;
+let recognitionSessionId = 0;
 
 let typewriterRunId = 0;
 
@@ -933,6 +934,8 @@ function startRecording(side) {
     return;
   }
 
+  const mySessionId = ++recognitionSessionId;
+
   recognizer = rec;
   recordingSide = side;
   liveTranscript = "";
@@ -956,7 +959,8 @@ function startRecording(side) {
     liveTranscript = `${liveTranscript} ${finalText}`.trim();
     latestPreviewTranscript = `${liveTranscript} ${interimText}`.trim();
 
-    if (!latestPreviewTranscript) return;
+    const previewText = latestPreviewTranscript || liveTranscript;
+    if (!previewText) return;
 
     const body = side === "top" ? topBody : botBody;
     let previewNode = body?.querySelector(".bubble.them.preview");
@@ -969,7 +973,7 @@ function startRecording(side) {
     }
 
     const txtEl = previewNode.querySelector(".txt");
-    if (txtEl) txtEl.textContent = latestPreviewTranscript;
+    if (txtEl) txtEl.textContent = previewText;
 
     keepLatestVisible(side);
   };
@@ -983,23 +987,24 @@ function startRecording(side) {
       setHelper(helper, t(lang, "preparing"), "helper-wait");
     }
 
-    recordingSide = null;
     recognizer = null;
+    recordingSide = null;
     liveTranscript = "";
     latestPreviewTranscript = "";
     recognitionFinishedByUser = false;
+
     setErrorUI();
     bounceToReady(1600);
   };
 
   rec.onend = () => {
-    const sideAtEnd = side;
+    if (mySessionId !== recognitionSessionId) return;
 
-    // KRİTİK: sadece JS değişkenine güvenmiyoruz
+    const sideAtEnd = side;
     const previewText = getPreviewText(sideAtEnd);
     const finalText = String(
-      liveTranscript ||
       latestPreviewTranscript ||
+      liveTranscript ||
       previewText ||
       ""
     ).trim();
@@ -1010,22 +1015,19 @@ function startRecording(side) {
     const previewNode = (sideAtEnd === "top" ? topBody : botBody)?.querySelector(".bubble.them.preview");
     previewNode?.remove();
 
-    if (recognitionFinishedByUser) {
-      liveTranscript = "";
-      latestPreviewTranscript = "";
-      recognitionFinishedByUser = false;
-
-      if (finalText) {
-        Promise.resolve().then(() => finalizeRecognition(sideAtEnd, finalText));
-      } else {
-        setSystemReadyUI();
-      }
-      return;
-    }
+    const shouldFinalize =
+      !!finalText &&
+      (recognitionFinishedByUser || finalText.length > 0);
 
     liveTranscript = "";
     latestPreviewTranscript = "";
     recognitionFinishedByUser = false;
+
+    if (shouldFinalize) {
+      Promise.resolve().then(() => finalizeRecognition(sideAtEnd, finalText));
+      return;
+    }
+
     setSystemReadyUI();
   };
 
@@ -1048,7 +1050,6 @@ async function toggleRecording(side) {
     recognitionFinishedByUser = true;
     setTranslatingUI(side);
 
-    // küçük gecikme bazı cihazlarda son transcript'in düşmesini kolaylaştırır
     setTimeout(() => {
       stopRecognizer();
     }, 120);
@@ -1057,11 +1058,14 @@ async function toggleRecording(side) {
   }
 
   if (recordingSide && recordingSide !== side) {
-    recognitionFinishedByUser = false;
-    stopRecognizer();
-    recordingSide = null;
-    liveTranscript = "";
-    latestPreviewTranscript = "";
+    recognitionFinishedByUser = true;
+    setTranslatingUI(recordingSide);
+
+    setTimeout(() => {
+      stopRecognizer();
+    }, 80);
+
+    return;
   }
 
   startRecording(side);
