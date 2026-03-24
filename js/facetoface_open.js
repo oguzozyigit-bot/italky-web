@@ -58,7 +58,7 @@ let voiceProfileReady = false;
 let reason = "";
 let isBusy = false;
 
-let vpRecorder = new VoiceProfileRecorder();
+let vpRecorder = null;
 let vpRecordings = createEmptyRecordings();
 let vpIndex = 0;
 let vpLang = "tr";
@@ -73,7 +73,7 @@ function toast(msg) {
   clearTimeout(window.__f2fVoiceToast);
   window.__f2fVoiceToast = setTimeout(() => {
     voiceToast.classList.remove("show");
-  }, 1600);
+  }, 1700);
 }
 
 function isPremiumVoice(v) {
@@ -150,6 +150,7 @@ function resetVpTimer() {
 function startVpTimer() {
   resetVpTimer();
   vpTimerInt = setInterval(() => {
+    if (!vpRecorder?.startedAt) return;
     const sec = Math.max(1, Math.floor((Date.now() - vpRecorder.startedAt) / 1000));
     if (voiceTimerText) voiceTimerText.textContent = fmtSec(sec);
   }, 200);
@@ -260,6 +261,8 @@ function saveSettings() {
   localStorage.setItem(VOICE_KEY, voiceMode);
   localStorage.setItem(TRANSLATE_KEY, translateMode);
   localStorage.setItem(SETUP_KEY, "1");
+  localStorage.setItem("tts_voice", voiceMode === "clone" ? "clone" : voiceMode === "auto" ? "auto" : voiceMode);
+  localStorage.setItem("live_interpreter_voice", voiceMode === "clone" ? "clone" : voiceMode === "auto" ? "auto" : voiceMode);
 }
 
 function forceFreeSettings() {
@@ -277,6 +280,13 @@ function goFaceToFace() {
 
 function goJetonMarket() {
   location.href = "/pages/jetonbuy.html";
+}
+
+function destroyRecorder() {
+  try {
+    vpRecorder?.destroy?.();
+  } catch {}
+  vpRecorder = new VoiceProfileRecorder();
 }
 
 function renderCompletedList() {
@@ -369,9 +379,7 @@ async function initVoiceModal() {
   vpSaving = false;
 
   resetVpTimer();
-  try { vpRecorder.destroy(); } catch {}
-  vpRecorder = new VoiceProfileRecorder();
-
+  destroyRecorder();
   updateVoiceUI();
 }
 
@@ -384,13 +392,13 @@ function closeVoiceModal() {
   voiceModal?.classList.remove("show");
   resetVpTimer();
   setMicListening(false);
-  try { vpRecorder.destroy(); } catch {}
+  destroyRecorder();
 }
 
 async function toggleVoiceRecording() {
   if (vpSaving) return;
 
-  if (!vpRecorder.isRecording) {
+  if (!vpRecorder?.isRecording) {
     try {
       await vpRecorder.start();
       setMicListening(true);
@@ -462,6 +470,7 @@ async function saveVoiceProfileFull() {
     paintSelections();
     refreshSummary();
     refreshPremiumWarning();
+    saveSettings();
 
     setEnrollStatus("Özel ses hazır. Artık Kendi Sesim kullanılabilir.", "good");
     toast("Ses profili hazır");
@@ -608,7 +617,7 @@ async function init() {
 }
 
 window.addEventListener("beforeunload", () => {
-  try { vpRecorder.destroy(); } catch {}
+  destroyRecorder();
   resetVpTimer();
 });
 
