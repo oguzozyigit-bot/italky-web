@@ -90,34 +90,107 @@
       return 0;
     }
 
-    async function getJetonBalance(){
+    function hasMeaningfulString(v) {
+      const s = String(v ?? "").trim();
+      return !!s && s !== "null" && s !== "[]" && s !== "{}";
+    }
+
+    function detectVoiceProfileReady(profile) {
+      if (!profile) return false;
+
+      const flags = [
+        profile?.tts_voice_ready,
+        profile?.voice_profile_ready,
+        profile?.voice_ready,
+        profile?.clone_voice_ready
+      ].some(Boolean);
+
+      const ids = [
+        profile?.tts_voice_id,
+        profile?.voice_id,
+        profile?.clone_voice_id
+      ].some(hasMeaningfulString);
+
+      const sampleData = [
+        profile?.voice_sample_path,
+        profile?.voice_sample_url,
+        profile?.voice_sample_urls
+      ].some(hasMeaningfulString);
+
+      const prefs = [
+        profile?.tts_voice,
+        profile?.tts_voice_preference,
+        profile?.facetoface_voice_mode
+      ].some((v) => String(v || "").trim().toLowerCase() === "clone");
+
+      return flags || ids || sampleData || prefs;
+    }
+
+    async function getProfileData(){
       try{
         const { data } = await supabase.auth.getUser();
         const uid = data?.user?.id || localStorage.getItem("user_id");
-        if(!uid) return 0;
+        if(!uid) return null;
 
         const { data: profile } = await supabase
           .from("profiles")
-          .select("jeton_balance, tokens, jeton, balance, credits")
+          .select("*")
           .eq("id", uid)
           .maybeSingle();
 
-        return pickBestPositiveNumber(
-          profile?.jeton_balance,
-          profile?.tokens,
-          profile?.jeton,
-          profile?.balance,
-          profile?.credits
-        );
+        return profile || null;
       }catch{
-        return 0;
+        return null;
+      }
+    }
+
+    function syncLocalSettingsFromProfile(profile) {
+      if (!profile) return;
+
+      const profileVoice =
+        normalizeVoiceMode(
+          profile?.facetoface_voice_mode ||
+          profile?.tts_voice_preference ||
+          profile?.tts_voice ||
+          localStorage.getItem(VOICE_KEY) ||
+          "auto"
+        );
+
+      const profileTranslate =
+        normalizeTranslateMode(
+          profile?.facetoface_translate_mode ||
+          localStorage.getItem(TRANSLATE_KEY) ||
+          "normal"
+        );
+
+      localStorage.setItem(VOICE_KEY, profileVoice);
+      localStorage.setItem(TRANSLATE_KEY, profileTranslate);
+      localStorage.setItem("tts_voice", profileVoice);
+      localStorage.setItem("live_interpreter_voice", profileVoice);
+
+      if (
+        detectVoiceProfileReady(profile) ||
+        profileVoice === "clone" ||
+        profileTranslate === "cultural"
+      ) {
+        localStorage.setItem(SETUP_KEY, "1");
       }
     }
 
     async function run(){
-      const setupDone = localStorage.getItem(SETUP_KEY) === "1";
-      const voiceMode = normalizeVoiceMode(localStorage.getItem(VOICE_KEY) || "auto");
-      const translateMode = normalizeTranslateMode(localStorage.getItem(TRANSLATE_KEY) || "normal");
+      let setupDone = localStorage.getItem(SETUP_KEY) === "1";
+      let voiceMode = normalizeVoiceMode(localStorage.getItem(VOICE_KEY) || "auto");
+      let translateMode = normalizeTranslateMode(localStorage.getItem(TRANSLATE_KEY) || "normal");
+
+      const profile = await getProfileData();
+
+      if (profile) {
+        syncLocalSettingsFromProfile(profile);
+
+        setupDone = localStorage.getItem(SETUP_KEY) === "1";
+        voiceMode = normalizeVoiceMode(localStorage.getItem(VOICE_KEY) || "auto");
+        translateMode = normalizeTranslateMode(localStorage.getItem(TRANSLATE_KEY) || "normal");
+      }
 
       if(!setupDone){
         location.replace("/pages/facetoface_open.html");
@@ -129,7 +202,13 @@
         return;
       }
 
-      const jeton = await getJetonBalance();
+      const jeton = pickBestPositiveNumber(
+        profile?.jeton_balance,
+        profile?.tokens,
+        profile?.jeton,
+        profile?.balance,
+        profile?.credits
+      );
 
       if(jeton > 0){
         location.replace("/facetoface.html");
