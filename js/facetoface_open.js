@@ -129,13 +129,8 @@ function setEnrollStatus(text, mode = "") {
 
 function setMicListening(on) {
   if (!voiceRecordBtn || !voiceMicWrapper) return;
-  if (on) {
-    voiceRecordBtn.classList.add("listening");
-    voiceMicWrapper.classList.add("listening");
-  } else {
-    voiceRecordBtn.classList.remove("listening");
-    voiceMicWrapper.classList.remove("listening");
-  }
+  voiceRecordBtn.classList.toggle("listening", !!on);
+  voiceMicWrapper.classList.toggle("listening", !!on);
 }
 
 function resetVpTimer() {
@@ -185,6 +180,14 @@ function detectVoiceProfileReady(profile) {
   return hasTtsReady || hasTtsId || hasVoiceProfileReady || hasSamplePath || hasSampleUrl;
 }
 
+function pickBestPositiveNumber(...values) {
+  for (const value of values) {
+    const n = Number(value);
+    if (Number.isFinite(n) && n > 0) return n;
+  }
+  return 0;
+}
+
 async function loadProfileInfo() {
   try {
     const uid = await getCurrentUid();
@@ -220,13 +223,12 @@ async function loadProfileInfo() {
 
     console.log("PROFILE DATA:", data);
 
-    tokenBalance = Number(
-      data?.jeton_balance ??
-      data?.tokens ??
-      data?.jeton ??
-      data?.balance ??
-      data?.credits ??
-      0
+    tokenBalance = pickBestPositiveNumber(
+      data?.jeton_balance,
+      data?.tokens,
+      data?.jeton,
+      data?.balance,
+      data?.credits
     );
 
     voiceProfileReady = detectVoiceProfileReady(data);
