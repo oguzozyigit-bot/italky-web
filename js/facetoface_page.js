@@ -633,7 +633,7 @@ function keepLatestVisible(side) {
   setTimeout(apply, 100);
 }
 
-function createSpeakerButton(text, langCode, tone = "neutral") {
+function createSpeakerButton(getText, langCode, tone = "neutral") {
   const btn = document.createElement("button");
   btn.type = "button";
   btn.className = "spk-icon";
@@ -645,11 +645,17 @@ function createSpeakerButton(text, langCode, tone = "neutral") {
       <path d="M19 5a8 8 0 0 1 0 14"></path>
     </svg>
   `;
+
   btn.addEventListener("click", async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    await speak(text, langCode, tone);
+
+    const value = typeof getText === "function" ? String(getText() || "").trim() : "";
+    if (!value) return;
+
+    await speak(value, langCode, tone);
   });
+
   return btn;
 }
 
@@ -669,7 +675,7 @@ function addBubble(side, kind, text, opts = {}) {
 
   if (opts.withSpeaker || kind === "me") {
     const spk = createSpeakerButton(
-      txt.textContent || "",
+      () => txt.textContent || "",
       opts.speakLang || "en",
       opts.speakTone || "neutral"
     );
@@ -750,7 +756,6 @@ async function finalizeRecognition(side, text) {
   const dst = side === "top" ? botLang : topLang;
   const sourceTone = detectToneFromText(text);
   const other = side === "top" ? "bot" : "top";
-  const otherWrap = other === "top" ? topBody : botBody;
   const mode = getFaceTranslateMode();
 
   const cleaned = String(text || "").trim();
@@ -765,13 +770,13 @@ async function finalizeRecognition(side, text) {
 
   setTranslatingUI(side);
 
-  addBubble(other, "me", t(dst, "translating"), {
+  const latestRow = addBubble(other, "me", t(dst, "translating"), {
     latest: true,
     speakLang: dst,
     speakTone: sourceTone,
   });
 
-  const latestTxt = otherWrap?.querySelector(".bubble.me.is-latest .txt");
+  const latestTxt = latestRow?.querySelector(".txt");
   const tr = await translateText(cleaned, src, dst, sourceTone);
 
   if (!tr) {
