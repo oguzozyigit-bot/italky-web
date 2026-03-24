@@ -23,7 +23,6 @@ const voiceSummary = $("voiceSummary");
 const translateSummary = $("translateSummary");
 const tokenSummary = $("tokenSummary");
 const saveStartBtn = $("saveStartBtn");
-const freeContinueBtn = $("freeContinueBtn");
 const buyJetonBtn = $("buyJetonBtn");
 const premiumWarnBox = $("premiumWarnBox");
 const warnTitle = $("warnTitle");
@@ -51,8 +50,8 @@ const voiceCompletedList = $("voiceCompletedList");
 const voiceTimerText = $("voiceTimerText");
 const voiceToast = $("voiceToast");
 
-let voiceMode = localStorage.getItem(VOICE_KEY) || "auto";
-let translateMode = localStorage.getItem(TRANSLATE_KEY) || "normal";
+let voiceMode = normalizeVoiceMode(localStorage.getItem(VOICE_KEY) || "auto");
+let translateMode = normalizeTranslateMode(localStorage.getItem(TRANSLATE_KEY) || "normal");
 let tokenBalance = 0;
 let voiceProfileReady = false;
 let reason = "";
@@ -66,6 +65,14 @@ let vpSamples = [];
 let vpSaving = false;
 let vpTimerInt = null;
 
+function normalizeVoiceMode(v) {
+  return String(v || "").trim().toLowerCase() === "clone" ? "clone" : "auto";
+}
+
+function normalizeTranslateMode(v) {
+  return String(v || "").trim().toLowerCase() === "cultural" ? "cultural" : "normal";
+}
+
 function toast(msg) {
   if (!voiceToast) return;
   voiceToast.textContent = String(msg || "");
@@ -77,11 +84,11 @@ function toast(msg) {
 }
 
 function isPremiumVoice(v) {
-  return ["female", "male", "clone"].includes(String(v || "").trim().toLowerCase());
+  return normalizeVoiceMode(v) === "clone";
 }
 
 function isPremiumTranslate(v) {
-  return String(v || "").trim().toLowerCase() === "cultural";
+  return normalizeTranslateMode(v) === "cultural";
 }
 
 function needsJeton(voice, translate) {
@@ -89,21 +96,11 @@ function needsJeton(voice, translate) {
 }
 
 function voiceLabel(v) {
-  const map = {
-    auto: "Otomatik",
-    female: "Kadın Ses",
-    male: "Erkek Ses",
-    clone: "Kendi Sesim",
-  };
-  return map[String(v || "").trim().toLowerCase()] || "Otomatik";
+  return normalizeVoiceMode(v) === "clone" ? "Kendi Sesim" : "Otomatik";
 }
 
 function translateLabel(v) {
-  const map = {
-    normal: "Translate",
-    cultural: "Kültürel Translate",
-  };
-  return map[String(v || "").trim().toLowerCase()] || "Translate";
+  return normalizeTranslateMode(v) === "cultural" ? "Kültürel Translate" : "Translate";
 }
 
 function setBusy(btn, text) {
@@ -165,6 +162,21 @@ async function getCurrentUid() {
   }
 }
 
+function detectVoiceProfileReady(profile) {
+  if (!profile) return false;
+
+  const hasTtsReady = !!profile?.tts_voice_ready;
+  const hasTtsId = !!String(profile?.tts_voice_id || "").trim();
+  const samplePath = String(profile?.voice_sample_path || "").trim();
+  const hasSamplePath =
+    !!samplePath &&
+    samplePath !== "[]" &&
+    samplePath !== "null" &&
+    samplePath !== "";
+
+  return hasTtsReady || hasTtsId || hasSamplePath;
+}
+
 async function loadProfileInfo() {
   try {
     const uid = await getCurrentUid();
@@ -176,7 +188,7 @@ async function loadProfileInfo() {
 
     const { data, error } = await supabase
       .from("profiles")
-      .select("tokens,tts_voice_ready,tts_voice_id")
+      .select("tokens, jeton_balance, tts_voice_ready, tts_voice_id, voice_sample_path")
       .eq("id", uid)
       .maybeSingle();
 
@@ -186,8 +198,8 @@ async function loadProfileInfo() {
       return;
     }
 
-    tokenBalance = Number(data?.tokens || 0);
-    voiceProfileReady = !!data?.tts_voice_ready && !!String(data?.tts_voice_id || "").trim();
+    tokenBalance = Number(data?.tokens ?? data?.jeton_balance ?? 0);
+    voiceProfileReady = detectVoiceProfileReady(data);
   } catch {
     tokenBalance = 0;
     voiceProfileReady = false;
@@ -196,11 +208,11 @@ async function loadProfileInfo() {
 
 function paintSelections() {
   voiceGrid?.querySelectorAll(".choice").forEach((el) => {
-    el.classList.toggle("active", el.dataset.voice === voiceMode);
+    el.classList.toggle("active", normalizeVoiceMode(el.dataset.voice) === voiceMode);
   });
 
   translateGrid?.querySelectorAll(".choice").forEach((el) => {
-    el.classList.toggle("active", el.dataset.translate === translateMode);
+    el.classList.toggle("active", normalizeTranslateMode(el.dataset.translate) === translateMode);
   });
 }
 
@@ -208,11 +220,15 @@ function refreshCloneCard() {
   if (!cloneDesc || !cloneMini) return;
 
   if (voiceProfileReady) {
-    cloneDesc.textContent = "Kayıtlı özel sesin hazır. İstersen değiştirerek yeniden kaydedebilirsin.";
+    cloneDesc.textContent = "Kayıtlı özel sesin hazır. Bu kartı seçerek doğrudan kullanabilirsin.";
     cloneMini.textContent = "Kayıtlı sesi değiştir";
+    replaceVoiceNote?.classList.add("show");
+    if (voiceModalTitle) voiceModalTitle.textContent = "Kayıtlı Sesi Değiştir";
   } else {
     cloneDesc.textContent = "Henüz kayıtlı özel sesin yok. Oluşturmak için dokun.";
-    cloneMini.textContent = "Özel sesi oluştur";
+    cloneMini.textContent = "Kendi sesini oluştur";
+    replaceVoiceNote?.classList.remove("show");
+    if (voiceModalTitle) voiceModalTitle.textContent = "Kayıtlı Ses Oluştur";
   }
 }
 
@@ -237,7 +253,7 @@ function refreshPremiumWarning() {
     premiumWarnBox.classList.add("show");
     if (warnTitle) warnTitle.textContent = "Kayıtlı tercihleriniz jeton gerektiriyor";
     if (warnText) {
-      warnText.textContent = "Jetonunuz bittiği için kayıtlı tercihleriniz kullanılamamaktadır.";
+      warnText.textContent = "Jetonunuz bittiği için kayıtlı tercihleriniz şu anda kullanılamıyor.";
     }
     buyJetonBtn?.classList.add("show");
     return;
@@ -245,9 +261,9 @@ function refreshPremiumWarning() {
 
   if (premiumSelected && noJeton) {
     premiumWarnBox.classList.add("show");
-    if (warnTitle) warnTitle.textContent = "Bu ayarları kullanabilmek için jeton satın almanız gereklidir";
+    if (warnTitle) warnTitle.textContent = "Bu ayarlar jeton gerektiriyor";
     if (warnText) {
-      warnText.textContent = "Seçtiğiniz ses veya çeviri ayarı jeton gerektiriyor. Jeton satın alabilir ya da ücretsiz ayarla devam edebilirsiniz.";
+      warnText.textContent = "Jeton yoksa konuşma yarım kalmaz; sistem otomatik olarak ücretsiz moda geçer.";
     }
     buyJetonBtn?.classList.add("show");
     return;
@@ -261,21 +277,12 @@ function saveSettings() {
   localStorage.setItem(VOICE_KEY, voiceMode);
   localStorage.setItem(TRANSLATE_KEY, translateMode);
   localStorage.setItem(SETUP_KEY, "1");
-  localStorage.setItem("tts_voice", voiceMode === "clone" ? "clone" : voiceMode === "auto" ? "auto" : voiceMode);
-  localStorage.setItem("live_interpreter_voice", voiceMode === "clone" ? "clone" : voiceMode === "auto" ? "auto" : voiceMode);
-}
-
-function forceFreeSettings() {
-  voiceMode = "auto";
-  translateMode = "normal";
-  saveSettings();
-  paintSelections();
-  refreshSummary();
-  refreshPremiumWarning();
+  localStorage.setItem("tts_voice", voiceMode);
+  localStorage.setItem("live_interpreter_voice", voiceMode);
 }
 
 function goFaceToFace() {
-  location.href = "/facetoface.html";
+  location.href = "/pages/facetoface.html";
 }
 
 function goJetonMarket() {
@@ -332,14 +339,6 @@ function renderVoiceProgress() {
 
 function updateVoiceUI() {
   const txt = vpSamples[vpIndex] || "";
-
-  if (voiceModalTitle) {
-    voiceModalTitle.textContent = voiceProfileReady ? "Kayıtlı Sesi Değiştir" : "Kayıtlı Ses Oluştur";
-  }
-
-  if (replaceVoiceNote) {
-    replaceVoiceNote.classList.toggle("show", voiceProfileReady);
-  }
 
   if (voiceSampleLabel) voiceSampleLabel.textContent = `CÜMLE ${vpIndex + 1}`;
   if (voiceSampleText) voiceSampleText.textContent = txt;
@@ -462,10 +461,10 @@ async function saveVoiceProfileFull() {
     const enrollResp = await enrollTTSVoice();
     await markCloneAsSelected(enrollResp);
 
+    await loadProfileInfo();
     voiceProfileReady = true;
     voiceMode = "clone";
 
-    await loadProfileInfo();
     refreshCloneCard();
     paintSelections();
     refreshSummary();
@@ -489,59 +488,33 @@ async function saveVoiceProfileFull() {
   }
 }
 
-async function handleCloneSelection(forceOpenModal = false) {
-  voiceMode = "clone";
-  paintSelections();
-  refreshSummary();
-  refreshPremiumWarning();
+async function handleCloneSelection(openEditor = false) {
+  await loadProfileInfo();
+  refreshCloneCard();
 
-  if (!voiceProfileReady || forceOpenModal) {
-    await openVoiceModal();
+  if (voiceProfileReady && !openEditor) {
+    voiceMode = "clone";
+    paintSelections();
+    refreshSummary();
+    refreshPremiumWarning();
+    return;
   }
-}
 
-async function handleSaveAndStart() {
-  if (isBusy) return;
-  isBusy = true;
-  setBusy(saveStartBtn, "Kontrol ediliyor...");
-
-  try {
-    await loadProfileInfo();
-    refreshCloneCard();
-
-    if (voiceMode === "clone" && !voiceProfileReady) {
-      await openVoiceModal();
-      return;
-    }
-
-    const premiumSelected = needsJeton(voiceMode, translateMode);
-    if (premiumSelected && tokenBalance <= 0) {
-      reason = "";
-      refreshSummary();
-      refreshPremiumWarning();
-      return;
-    }
-
-    saveSettings();
-    goFaceToFace();
-  } finally {
-    isBusy = false;
-    clearBusy(saveStartBtn);
-  }
+  await openVoiceModal();
 }
 
 function bindVoiceChoices() {
   voiceGrid?.querySelectorAll(".choice").forEach((el) => {
     el.addEventListener("click", async (e) => {
-      const selected = String(el.dataset.voice || "auto").trim().toLowerCase();
+      const selected = normalizeVoiceMode(el.dataset.voice || "auto");
 
       if (selected === "clone") {
-        const clickedMini = e.target?.closest?.("#cloneMini");
-        await handleCloneSelection(!!clickedMini || voiceProfileReady);
+        const clickedMini = !!e.target?.closest?.("#cloneMini");
+        await handleCloneSelection(clickedMini);
         return;
       }
 
-      voiceMode = selected;
+      voiceMode = "auto";
       paintSelections();
       refreshSummary();
       refreshPremiumWarning();
@@ -558,7 +531,7 @@ function bindVoiceChoices() {
 function bindTranslateChoices() {
   translateGrid?.querySelectorAll(".choice").forEach((el) => {
     el.addEventListener("click", () => {
-      translateMode = String(el.dataset.translate || "normal").trim().toLowerCase();
+      translateMode = normalizeTranslateMode(el.dataset.translate || "normal");
       paintSelections();
       refreshSummary();
       refreshPremiumWarning();
@@ -592,6 +565,28 @@ function bindVoiceModal() {
   });
 }
 
+async function handleSaveAndStart() {
+  if (isBusy) return;
+  isBusy = true;
+  setBusy(saveStartBtn, "Kontrol ediliyor...");
+
+  try {
+    await loadProfileInfo();
+    refreshCloneCard();
+
+    if (voiceMode === "clone" && !voiceProfileReady) {
+      await openVoiceModal();
+      return;
+    }
+
+    saveSettings();
+    goFaceToFace();
+  } finally {
+    isBusy = false;
+    clearBusy(saveStartBtn);
+  }
+}
+
 async function init() {
   const url = new URL(location.href);
   reason = String(url.searchParams.get("reason") || "").trim().toLowerCase();
@@ -601,12 +596,6 @@ async function init() {
   bindVoiceModal();
 
   saveStartBtn?.addEventListener("click", handleSaveAndStart);
-
-  freeContinueBtn?.addEventListener("click", () => {
-    forceFreeSettings();
-    goFaceToFace();
-  });
-
   buyJetonBtn?.addEventListener("click", goJetonMarket);
 
   await loadProfileInfo();
