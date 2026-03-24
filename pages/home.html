@@ -91,7 +91,7 @@ body{
   align-items:center;
   justify-content:center;
   transform-style:preserve-3d;
-  margin:2px auto 12px;
+  margin:2px auto 6px;
 }
 
 .crystal-cage{
@@ -203,6 +203,72 @@ body{
   animation:platformPulse 3s ease-in-out infinite;
   opacity:.68;
   z-index:-1;
+}
+
+.connect-code-wrap{
+  margin-top:2px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:5px;
+}
+
+.connect-code-label{
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:1.1px;
+  color:rgba(255,255,255,.58);
+  text-transform:uppercase;
+}
+
+.connect-code-pill{
+  min-width:148px;
+  padding:10px 14px;
+  border-radius:999px;
+  background:rgba(255,255,255,.07);
+  border:1px solid rgba(255,255,255,.13);
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  box-shadow:0 10px 22px rgba(0,0,0,.16);
+  backdrop-filter:blur(14px);
+}
+
+.connect-code-value{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:18px;
+  font-weight:700;
+  letter-spacing:2px;
+  color:#fff;
+  line-height:1;
+}
+
+.connect-code-copy{
+  width:28px;
+  height:28px;
+  min-width:28px;
+  border:none;
+  border-radius:50%;
+  background:rgba(255,255,255,.10);
+  color:#fff;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  transition:transform .18s ease, opacity .18s ease;
+}
+
+.connect-code-copy:active{
+  transform:scale(.96);
+}
+
+.connect-code-copy svg{
+  width:14px;
+  height:14px;
+  fill:none;
+  stroke:#fff;
+  stroke-width:2;
 }
 
 .heroTitle{
@@ -683,7 +749,7 @@ body{
   clip-path:polygon(100% 0, 0 0, 100% 100%);
 }
 
-.wide-{
+.wide-body{
   flex:1;
   min-width:0;
 }
@@ -762,7 +828,7 @@ body{
 }
 
 @media (max-width:390px){
-  .holo-container{ width:190px; height:190px; margin-bottom:8px; }
+  .holo-container{ width:190px; height:190px; margin-bottom:4px; }
   .crystal-cage{ width:136px; height:136px; }
   .side1{ transform:rotateY(0deg) translateZ(68px); }
   .side2{ transform:rotateY(90deg) translateZ(68px); }
@@ -779,6 +845,14 @@ body{
   .card-desc{
     font-size:10.8px;
     line-height:1.32;
+  }
+  .connect-code-pill{
+    min-width:138px;
+    padding:9px 12px;
+  }
+  .connect-code-value{
+    font-size:16px;
+    letter-spacing:1.8px;
   }
 }
 </style>
@@ -813,7 +887,7 @@ if(!userId){
             <img id="smallQrImg" alt="italkyAI QR Hologram">
             <div id="qrFallback" class="qr-fallback">
               <div>QR hazır değil</div>
-              <div id="qrFallbackCode" class="qr-fallback-code">ROOM-XXXXXX</div>
+              <div id="qrFallbackCode" class="qr-fallback-code">ABC123</div>
             </div>
           </div>
 
@@ -821,8 +895,21 @@ if(!userId){
           <div class="energy-platform"></div>
         </div>
 
+        <div class="connect-code-wrap">
+          <div class="connect-code-label">Bağlantı Kodu</div>
+          <div class="connect-code-pill">
+            <div id="connectionCodeText" class="connect-code-value">ABC123</div>
+            <button id="copyConnectionCodeBtn" class="connect-code-copy" type="button" aria-label="Bağlantı kodunu kopyala" title="Kopyala">
+              <svg viewBox="0 0 24 24">
+                <rect x="9" y="9" width="10" height="10" rx="2"></rect>
+                <path d="M7 15H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v1"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
         <h1 class="heroTitle">Side<span class="to">To</span>Side</h1>
-        <p class="heroSub">QR kodu tarat, anında bağlan. Karşı taraf girince sen de otomatik odaya geç.</p>
+        <p class="heroSub">QR kodu okut veya bağlantı kodunu paylaş. Karşı taraf girince sohbet otomatik başlar.</p>
         <div class="heroStatus" id="heroStatus">Oda hazırlanıyor...</div>
 
         <div class="heroActions">
@@ -873,7 +960,7 @@ if(!userId){
     </section>
 
     <section class="wide-stack">
-      <a class="wide-card sidetoside-card" href="/pages/sidetoside.html">
+      <a class="wide-card sidetoside-card" href="/pages/sidetoside_entry.html">
         <div class="extra-ico">
           <div class="side-phone left"></div>
           <div class="side-phone right"></div>
@@ -883,7 +970,7 @@ if(!userId){
         <div class="wide-body">
           <div class="card-topline">İki Cihaz Arası</div>
           <h2 class="wide-title">SideToSide</h2>
-          <p class="wide-desc">İki kişi kendi telefonundan bağlanır. QR, kod veya butonla anında giriş yapar.</p>
+          <p class="wide-desc">İki kişi kendi telefonundan bağlanır. QR, bağlantı kodu veya butonla anında giriş yapar.</p>
         </div>
 
         <div class="arrow-chip"></div>
@@ -969,15 +1056,11 @@ try {
 
 <script>
 function openQrScan(){
-  location.href = "/pages/qr_scan.html";
+  location.href = "/pages/sidetoside_scan.html";
 }
 
 function openCodePrompt(){
-  const code = prompt("Kodu gir");
-  if(!code) return;
-  const cleanCode = String(code).trim();
-  if(!cleanCode) return;
-  location.href = `/pages/live_interpreter.html?code=${encodeURIComponent(cleanCode)}&role=guest&my=tr`;
+  location.href = "/pages/sidetoside_code.html";
 }
 </script>
 
@@ -989,17 +1072,39 @@ const smallQrImg = document.getElementById("smallQrImg");
 const qrFallback = document.getElementById("qrFallback");
 const qrFallbackCode = document.getElementById("qrFallbackCode");
 const heroStatus = document.getElementById("heroStatus");
+const connectionCodeText = document.getElementById("connectionCodeText");
+const copyConnectionCodeBtn = document.getElementById("copyConnectionCodeBtn");
 
 const ROOM_KEY = "italky_active_interpreter_room_id";
 const ROOM_LANG_KEY = "italky_active_interpreter_lang";
+const ROOM_CODE_KEY = "italky_active_interpreter_code";
 
 let activeRoomId = "";
+let activeRoomCode = "";
 let previewSocket = null;
 let redirected = false;
 let refreshTimer = null;
 
 function setHeroStatus(text){
   if(heroStatus) heroStatus.textContent = text || "";
+}
+
+function makeConnectionCode(length = 6){
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let out = "";
+  for(let i = 0; i < length; i++){
+    out += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return out;
+}
+
+function setConnectionCode(code){
+  activeRoomCode = String(code || "").trim().toUpperCase();
+  if(connectionCodeText) connectionCodeText.textContent = activeRoomCode || "ABC123";
+  if(qrFallbackCode) qrFallbackCode.textContent = activeRoomCode || "ABC123";
+  try{
+    localStorage.setItem(ROOM_CODE_KEY, activeRoomCode);
+  }catch{}
 }
 
 function qrUrlPrimary(targetUrl){
@@ -1011,7 +1116,7 @@ function qrUrlFallback(targetUrl){
 }
 
 function showFallback(code){
-  if(qrFallbackCode) qrFallbackCode.textContent = code || "ROOM-XXXXXX";
+  setConnectionCode(code || "ABC123");
   if(qrFallback) qrFallback.classList.add("show");
   if(smallQrImg){
     smallQrImg.style.display = "none";
@@ -1038,11 +1143,13 @@ function loadImage(url){
 }
 
 async function createRoom(myLang = "tr"){
+  const hostCode = makeConnectionCode(6);
+
   const r = await fetch(`${API_BASE}/interpreter/create-room`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      host_code: "HOME-HOST",
+      host_code: hostCode,
       my_lang: myLang,
       mode: "interpreter"
     })
@@ -1054,13 +1161,16 @@ async function createRoom(myLang = "tr"){
     throw new Error(j?.detail || j?.error || "Room oluşturulamadı");
   }
 
-  return j;
+  return {
+    ...j,
+    host_code: String(j?.host_code || hostCode || "").trim().toUpperCase()
+  };
 }
 
-function buildJoinUrl(roomId){
-  const url = new URL("https://italky.ai/open/interpreter");
+function buildJoinUrl(roomId, code){
+  const url = new URL("https://italky.ai/pages/sidetoside_code.html");
   url.searchParams.set("room", roomId);
-  url.searchParams.set("v", "1");
+  url.searchParams.set("code", code);
   return url.toString();
 }
 
@@ -1078,7 +1188,7 @@ function launchHostRoom(roomId){
   if(!roomId || redirected) return;
   redirected = true;
   stopRefreshTimer();
-  location.href = `/pages/live_interpreter.html?room=${encodeURIComponent(roomId)}&role=host&my=tr`;
+  location.href = `/sidetoside.html?room=${encodeURIComponent(roomId)}&role=host&my=tr`;
 }
 
 function scheduleRefresh(){
@@ -1106,7 +1216,7 @@ function startPreviewSocket(roomId, myLang = "tr"){
   }
 
   previewSocket.onopen = () => {
-    setHeroStatus("QR hazır. Karşı taraf bağlanınca otomatik geçilecek.");
+    setHeroStatus("QR hazır. Karşı taraf bağlanınca sohbet başlayacak.");
   };
 
   previewSocket.onmessage = (event) => {
@@ -1158,12 +1268,12 @@ async function renderRoomQr(){
       throw new Error("room_id boş geldi");
     }
 
+    setConnectionCode(created.host_code || makeConnectionCode(6));
+
     localStorage.setItem(ROOM_KEY, activeRoomId);
     localStorage.setItem(ROOM_LANG_KEY, "tr");
 
-    if(qrFallbackCode) qrFallbackCode.textContent = activeRoomId;
-
-    const joinUrl = buildJoinUrl(activeRoomId);
+    const joinUrl = buildJoinUrl(activeRoomId, activeRoomCode);
 
     let finalUrl = null;
 
@@ -1180,20 +1290,38 @@ async function renderRoomQr(){
     if(finalUrl){
       const safeUrl = finalUrl + (finalUrl.includes("?") ? "&" : "?") + "t=" + Date.now();
       showQr(safeUrl);
-      setHeroStatus("QR hazır. Karşı taraf bekleniyor...");
+      setHeroStatus("QR ve bağlantı kodu hazır. Karşı taraf bekleniyor...");
     }else{
-      showFallback(activeRoomId);
+      showFallback(activeRoomCode || "ABC123");
       setHeroStatus("QR servisi yanıt vermedi");
     }
 
     startPreviewSocket(activeRoomId, "tr");
   }catch(e){
     console.error("[home room qr]", e);
-    showFallback("ROOM-ERROR");
+    showFallback("ERROR1");
     setHeroStatus(e?.message || "Oda hazırlanamadı");
     scheduleRefresh();
   }
 }
+
+copyConnectionCodeBtn?.addEventListener("click", async () => {
+  const value = String(activeRoomCode || "").trim();
+  if(!value) return;
+
+  try{
+    await navigator.clipboard.writeText(value);
+    setHeroStatus("Bağlantı kodu kopyalandı.");
+  }catch{
+    const temp = document.createElement("textarea");
+    temp.value = value;
+    document.body.appendChild(temp);
+    temp.select();
+    try{ document.execCommand("copy"); }catch{}
+    temp.remove();
+    setHeroStatus("Bağlantı kodu kopyalandı.");
+  }
+});
 
 renderRoomQr();
 
