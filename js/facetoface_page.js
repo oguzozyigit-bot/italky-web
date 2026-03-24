@@ -692,40 +692,33 @@ function clearLatest(side) {
 async function translateText(text, from, to) {
   const src = canonical(from);
   const dst = canonical(to);
-  const mode = getFaceTranslateMode();
 
-  const endpoint = mode === "cultural" ? "/api/translate_ai" : "/api/translate";
+  // 🔥 BURASI KRİTİK
+  const mode = getFaceTranslateMode(); // normal | cultural
 
   try {
-    const body =
-      mode === "cultural"
-        ? {
-            text: String(text || "").trim(),
-            from_lang: src,
-            to_lang: dst,
-          }
-        : {
-            text: String(text || "").trim(),
-            from: src,
-            to: dst,
-          };
-
-    const r = await fetch(`${API_BASE}${endpoint}`, {
+    const r = await fetch(`${API_BASE}/api/translate_ai`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+      body: JSON.stringify({
+        text: String(text || "").trim(),
+        from_lang: src,
+        to_lang: dst,
+        mode // 🔥 BURAYI EKLEDİK
+      }),
     });
 
-    if (!r.ok) return null;
-
-    const j = await r.json().catch(() => null);
-
-    if (mode === "cultural") {
-      return String(j?.translated || "").trim() || null;
+    if (!r.ok) {
+      const raw = await r.text().catch(() => "");
+      console.error("translate_ai failed", r.status, raw);
+      return null;
     }
 
-    return String(j?.translated_text || j?.translated || "").trim() || null;
-  } catch {
+    const j = await r.json().catch(() => null);
+    return String(j?.translated || "").trim() || null;
+
+  } catch (e) {
+    console.error("translate_ai error", e);
     return null;
   }
 }
