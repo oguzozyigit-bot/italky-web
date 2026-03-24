@@ -1,4 +1,4 @@
-import { LANG_POOL } from "/js/lang_pool_full.js";
+import { getLangPoolForSite } from "/js/lang_pool_full.js";
 import { supabase } from "/js/supabase_client.js";
 
 const API_BASE = "https://italky-api.onrender.com";
@@ -24,7 +24,7 @@ function canonical(code) {
   return String(code || "").toLowerCase().split("-")[0].trim();
 }
 
-const LANGS = (Array.isArray(LANG_POOL) ? LANG_POOL : [])
+const LANGS = (Array.isArray(getLangPoolForSite()) ? getLangPoolForSite() : [])
   .map((l) => {
     const code = canonical(l.code);
     if (!code) return null;
