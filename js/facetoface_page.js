@@ -694,6 +694,8 @@ async function translateText(text, from, to, tone = "neutral") {
   const dst = canonical(to);
   const mode = getFaceTranslateMode();
 
+  const style = mode === "cultural" ? "warm" : "balanced";
+
   try {
     const r = await fetch(`${API_BASE}/api/translate_ai`, {
       method: "POST",
@@ -703,7 +705,8 @@ async function translateText(text, from, to, tone = "neutral") {
         from_lang: src,
         to_lang: dst,
         mode,
-        tone: canonTone(tone)
+        tone: canonTone(tone),
+        style
       }),
     });
 
