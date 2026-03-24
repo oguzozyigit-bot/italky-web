@@ -1,172 +1,500 @@
 <!doctype html>
 <html lang="tr">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-<title>italkyAI • Bağlantı Kodu</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>italkyAI • Bağlantı Kodu</title>
+  <meta name="theme-color" content="#120d16" />
 
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800;900&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
-<style>
-body{
-  margin:0;
-  background:#120d16;
-  color:#fff;
-  font-family:'Outfit',sans-serif;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  height:100vh;
-}
+  <style>
+    :root{
+      --txt:rgba(255,255,255,.96);
+      --muted:rgba(255,255,255,.64);
+      --line:rgba(255,255,255,.12);
+      --ai-grad:linear-gradient(135deg,#67e8f9 0%, #818cf8 46%, #f472b6 100%);
+      --bg:#120d16;
+      --good:#22c55e;
+      --warn:#f59e0b;
+      --bad:#ef4444;
+    }
 
-.wrap{
-  width:90%;
-  max-width:420px;
-  display:flex;
-  flex-direction:column;
-  gap:18px;
-  text-align:center;
-}
+    *{
+      box-sizing:border-box;
+      -webkit-tap-highlight-color:transparent;
+      outline:none;
+    }
 
-.title{
-  font-size:26px;
-  font-weight:900;
-}
+    html,body{
+      margin:0;
+      width:100%;
+      min-height:100%;
+      background:var(--bg);
+      color:var(--txt);
+      font-family:'Outfit',sans-serif;
+      overflow-x:hidden;
+    }
 
-.sub{
-  font-size:13px;
-  opacity:.7;
-}
+    body{
+      background:
+        radial-gradient(circle at 50% 0%, rgba(251,146,60,.18) 0%, transparent 28%),
+        radial-gradient(circle at 18% 16%, rgba(244,114,182,.12) 0%, transparent 25%),
+        radial-gradient(circle at 84% 14%, rgba(96,165,250,.10) 0%, transparent 20%),
+        linear-gradient(180deg, #1d1016 0%, #150e19 34%, #120d16 100%);
+    }
 
-.code-input{
-  display:flex;
-  gap:8px;
-  justify-content:center;
-}
+    #pageContent{
+      width:100%;
+      min-height:100dvh;
+      padding:14px;
+      overflow-y:auto;
+      overflow-x:hidden;
+      scrollbar-width:none;
+      -webkit-overflow-scrolling:touch;
+    }
 
-.code-input input{
-  width:44px;
-  height:54px;
-  text-align:center;
-  font-size:22px;
-  font-weight:900;
-  border-radius:12px;
-  border:1px solid rgba(255,255,255,.2);
-  background:#000;
-  color:#fff;
-}
+    #pageContent::-webkit-scrollbar{ display:none; }
 
-.btn{
-  height:52px;
-  border:none;
-  border-radius:16px;
-  font-weight:900;
-  font-size:15px;
-  cursor:pointer;
-}
+    .wrap{
+      width:100%;
+      max-width:760px;
+      margin:0 auto;
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+      padding-bottom:18px;
+    }
 
-.btn-main{
-  background:linear-gradient(135deg,#6366f1,#ec4899);
-}
+    .hero,
+    .panel,
+    .help-card{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.04);
+      border-radius:28px;
+      box-shadow:0 16px 40px rgba(0,0,0,.22);
+      backdrop-filter:blur(14px);
+    }
 
-.status{
-  min-height:20px;
-  font-size:13px;
-}
+    .hero{
+      padding:20px 18px;
+    }
 
-.good{ color:#22c55e }
-.bad{ color:#ef4444 }
+    .title{
+      margin:0;
+      font-family:"Space Grotesk",sans-serif;
+      font-size:28px;
+      line-height:1.02;
+      letter-spacing:-.8px;
+    }
 
-</style>
+    .sub{
+      margin:10px 0 0;
+      font-size:13px;
+      line-height:1.45;
+      color:var(--muted);
+      max-width:560px;
+    }
+
+    .panel{
+      padding:18px 16px;
+      display:flex;
+      flex-direction:column;
+      gap:16px;
+    }
+
+    .code-title{
+      font-size:16px;
+      font-weight:900;
+      text-align:center;
+      letter-spacing:-.3px;
+    }
+
+    .code-sub{
+      margin-top:-6px;
+      text-align:center;
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.45;
+    }
+
+    .code-row{
+      display:flex;
+      justify-content:center;
+      gap:8px;
+      flex-wrap:nowrap;
+    }
+
+    .digit{
+      width:46px;
+      height:58px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.06);
+      color:#fff;
+      text-align:center;
+      font-family:"Space Grotesk",sans-serif;
+      font-size:24px;
+      font-weight:700;
+      text-transform:uppercase;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
+    }
+
+    .digit:focus{
+      border-color:rgba(129,140,248,.6);
+      box-shadow:0 0 0 2px rgba(129,140,248,.14);
+    }
+
+    .status{
+      min-height:20px;
+      text-align:center;
+      font-size:13px;
+      font-weight:800;
+      color:rgba(255,255,255,.82);
+    }
+
+    .status.good{ color:#86efac; }
+    .status.warn{ color:#fde68a; }
+    .status.bad{ color:#fca5a5; }
+
+    .action-row{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .btn{
+      min-height:54px;
+      border:none;
+      border-radius:18px;
+      font-family:inherit;
+      font-size:15px;
+      font-weight:900;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-decoration:none;
+      transition:transform .18s ease, opacity .18s ease, box-shadow .18s ease;
+    }
+
+    .btn:active{ transform:scale(.985); }
+
+    .btn-primary{
+      background:var(--ai-grad);
+      color:#080b17;
+      box-shadow:0 14px 28px rgba(99,102,241,.24);
+    }
+
+    .btn-dark{
+      background:rgba(255,255,255,.06);
+      color:#fff;
+      border:1px solid rgba(255,255,255,.10);
+    }
+
+    .help-card{
+      padding:16px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+
+    .help-title{
+      margin:0;
+      font-size:16px;
+      font-weight:900;
+      letter-spacing:-.2px;
+    }
+
+    .help-text{
+      margin:0;
+      font-size:12.5px;
+      line-height:1.48;
+      color:var(--muted);
+    }
+
+    .toast{
+      position: fixed;
+      left:50%;
+      top:18px;
+      transform: translateX(-50%) translateY(-120px);
+      background: rgba(10,10,18,.92);
+      border:1px solid rgba(165,180,252,.35);
+      padding: 10px 14px;
+      border-radius: 999px;
+      color:#fff;
+      z-index:999999;
+      font-weight:900;
+      font-size:12px;
+      transition:.25s;
+      backdrop-filter: blur(12px);
+      pointer-events:none;
+      max-width:min(92vw, 520px);
+      text-align:center;
+    }
+
+    .toast.show{
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @media (min-width:700px){
+      .action-row{
+        flex-direction:row;
+      }
+      .action-row .btn{
+        flex:1;
+      }
+    }
+
+    @media (max-width:390px){
+      .title{ font-size:25px; }
+      .digit{
+        width:42px;
+        height:56px;
+        font-size:22px;
+      }
+      .code-row{
+        gap:6px;
+      }
+    }
+  </style>
 </head>
-
 <body>
+  <main id="pageContent">
+    <div class="wrap">
+      <section class="hero">
+        <h1 class="title">Bağlantı Kodu</h1>
+        <p class="sub">
+          SideToSide bağlantısı için karşı taraftan aldığın 6 karakterli kodu gir. Kod doğruysa seni doğrudan görüşme ekranına bağlar.
+        </p>
+      </section>
 
-<div class="wrap">
-  <div class="title">Bağlantı Kodu</div>
-  <div class="sub">Karşı taraftan aldığın 6 haneli kodu gir</div>
+      <section class="panel">
+        <div class="code-title">6 Karakterli Kodu Gir</div>
+        <div class="code-sub">Sadece harf ve rakam kullanılır</div>
 
-  <div class="code-input" id="codeInputs">
-    <input maxlength="1"/>
-    <input maxlength="1"/>
-    <input maxlength="1"/>
-    <input maxlength="1"/>
-    <input maxlength="1"/>
-    <input maxlength="1"/>
-  </div>
+        <div class="code-row" id="codeRow">
+          <input class="digit" maxlength="1" inputmode="text" autocomplete="off" />
+          <input class="digit" maxlength="1" inputmode="text" autocomplete="off" />
+          <input class="digit" maxlength="1" inputmode="text" autocomplete="off" />
+          <input class="digit" maxlength="1" inputmode="text" autocomplete="off" />
+          <input class="digit" maxlength="1" inputmode="text" autocomplete="off" />
+          <input class="digit" maxlength="1" inputmode="text" autocomplete="off" />
+        </div>
 
-  <button class="btn btn-main" onclick="joinRoom()">Bağlan</button>
+        <div id="joinStatus" class="status">Kod bekleniyor...</div>
 
-  <div id="status" class="status"></div>
-</div>
+        <div class="action-row">
+          <button id="joinBtn" class="btn btn-primary" type="button">Odaya Bağlan</button>
+          <button id="backBtn" class="btn btn-dark" type="button">Ana Sayfaya Dön</button>
+        </div>
+      </section>
 
-<script type="module">
-const API_BASE = "https://italky-api.onrender.com/api";
+      <section class="help-card">
+        <h2 class="help-title">Nasıl çalışır?</h2>
+        <p class="help-text">Karşı taraftaki telefon ana sayfada bir bağlantı kodu üretir. Sen bu kodu girince sistem ilgili odayı bulur.</p>
+        <p class="help-text">Kod doğruysa bu sayfa seni mevcut görüşme ekranına, yani <b>live_interpreter.html</b> akışına gönderir.</p>
+      </section>
+    </div>
+  </main>
 
-const inputs = [...document.querySelectorAll("#codeInputs input")];
-const status = document.getElementById("status");
+  <div class="toast" id="joinToast"></div>
 
-inputs.forEach((inp,i)=>{
-  inp.addEventListener("input",()=>{
-    inp.value = inp.value.toUpperCase().replace(/[^A-Z0-9]/g,"");
-
-    if(inp.value && inputs[i+1]){
-      inputs[i+1].focus();
+  <script type="module">
+    import { mountShell } from "/js/ui_shell.js";
+    try {
+      mountShell({ scroll: "auto" });
+    } catch (e) {
+      console.error("ui_shell HATASI:", e);
     }
-  });
+  </script>
 
-  inp.addEventListener("keydown",(e)=>{
-    if(e.key === "Backspace" && !inp.value && inputs[i-1]){
-      inputs[i-1].focus();
+  <script type="module">
+    const API_BASE = "https://italky-api.onrender.com/api";
+
+    const ROOM_KEY = "italky_active_interpreter_room_id";
+    const ROOM_LANG_KEY = "italky_active_interpreter_lang";
+    const ROOM_CODE_KEY = "italky_active_interpreter_code";
+
+    const inputs = Array.from(document.querySelectorAll(".digit"));
+    const joinBtn = document.getElementById("joinBtn");
+    const backBtn = document.getElementById("backBtn");
+    const joinStatus = document.getElementById("joinStatus");
+    const joinToast = document.getElementById("joinToast");
+
+    const params = new URLSearchParams(location.search);
+    const prefillCode = String(params.get("code") || "").trim().toUpperCase();
+    const prefillRoom = String(params.get("room") || "").trim();
+
+    function toast(msg){
+      if(!joinToast) return;
+      joinToast.textContent = String(msg || "");
+      joinToast.classList.add("show");
+      clearTimeout(window.__joinToastTimer);
+      window.__joinToastTimer = setTimeout(() => {
+        joinToast.classList.remove("show");
+      }, 1700);
     }
-  });
-});
 
-function getCode(){
-  return inputs.map(i=>i.value).join("").trim();
-}
+    function setStatus(text, mode = ""){
+      if(!joinStatus) return;
+      joinStatus.className = "status";
+      if(mode) joinStatus.classList.add(mode);
+      joinStatus.textContent = text || "";
+    }
 
-function setStatus(text, cls=""){
-  status.className = "status " + cls;
-  status.textContent = text;
-}
+    function normalizeCode(v){
+      return String(v || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
+    }
 
-async function joinRoom(){
-  const code = getCode();
+    function getCode(){
+      return normalizeCode(inputs.map(x => x.value || "").join(""));
+    }
 
-  if(code.length !== 6){
-    setStatus("Kod eksik", "bad");
-    return;
-  }
+    function fillCode(code){
+      const clean = normalizeCode(code);
+      inputs.forEach((inp, idx) => {
+        inp.value = clean[idx] || "";
+      });
+    }
 
-  setStatus("Bağlanıyor...");
+    function focusNext(index){
+      const next = inputs[index + 1];
+      if(next) next.focus();
+    }
 
-  try{
-    const r = await fetch(`${API_BASE}/interpreter/resolve-room`,{
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify({
-        host_code: code
-      })
+    function focusPrev(index){
+      const prev = inputs[index - 1];
+      if(prev) prev.focus();
+    }
+
+    function goHome(){
+      location.href = "/pages/home.html";
+    }
+
+    function goLive(roomId, code = ""){
+      const room = String(roomId || "").trim();
+      if(!room) return;
+
+      try{
+        localStorage.setItem(ROOM_KEY, room);
+        localStorage.setItem(ROOM_LANG_KEY, "tr");
+        if(code) localStorage.setItem(ROOM_CODE_KEY, normalizeCode(code));
+      }catch{}
+
+      location.href = `/pages/live_interpreter.html?room=${encodeURIComponent(room)}&role=guest&my=tr`;
+    }
+
+    async function resolveRoomByCode(code){
+      const r = await fetch(`${API_BASE}/interpreter/resolve-room`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          host_code: code
+        })
+      });
+
+      const j = await r.json().catch(() => ({}));
+
+      if(!r.ok || !j?.room_id){
+        throw new Error(j?.detail || j?.error || "Kod bulunamadı");
+      }
+
+      return j;
+    }
+
+    async function joinByCode(){
+      const code = getCode();
+
+      if(code.length !== 6){
+        setStatus("Lütfen 6 karakterli kodu tamamla.", "bad");
+        toast("Kod eksik");
+        return;
+      }
+
+      joinBtn.disabled = true;
+      setStatus("Kod doğrulanıyor...", "warn");
+
+      try{
+        const resolved = await resolveRoomByCode(code);
+        const roomId = String(resolved.room_id || "").trim();
+
+        if(!roomId){
+          throw new Error("Oda bulunamadı");
+        }
+
+        setStatus("Kod doğru. Odaya bağlanılıyor...", "good");
+        toast("Bağlantı bulundu");
+        goLive(roomId, code);
+      }catch(e){
+        console.error("[sidetoside_code resolve]", e);
+        setStatus(e?.message || "Bağlantı kodu geçersiz.", "bad");
+      }finally{
+        joinBtn.disabled = false;
+      }
+    }
+
+    inputs.forEach((inp, idx) => {
+      inp.addEventListener("input", () => {
+        inp.value = normalizeCode(inp.value);
+        if(inp.value && idx < inputs.length - 1){
+          focusNext(idx);
+        }
+
+        const code = getCode();
+        if(code.length === 6){
+          setStatus("Kod hazır. Bağlanabilirsin.", "good");
+        } else {
+          setStatus("Kod bekleniyor...");
+        }
+      });
+
+      inp.addEventListener("keydown", (e) => {
+        if(e.key === "Backspace" && !inp.value && idx > 0){
+          focusPrev(idx);
+        }
+
+        if(e.key === "Enter"){
+          e.preventDefault();
+          joinByCode();
+        }
+      });
+
+      inp.addEventListener("paste", (e) => {
+        e.preventDefault();
+        const pasted = normalizeCode((e.clipboardData || window.clipboardData).getData("text"));
+        if(!pasted) return;
+        fillCode(pasted);
+        const lastIndex = Math.min(pasted.length, inputs.length) - 1;
+        if(lastIndex >= 0 && inputs[lastIndex]){
+          inputs[lastIndex].focus();
+        }
+        if(pasted.length === 6){
+          setStatus("Kod hazır. Bağlanabilirsin.", "good");
+        }
+      });
     });
 
-    const j = await r.json().catch(()=>null);
+    joinBtn?.addEventListener("click", joinByCode);
+    backBtn?.addEventListener("click", goHome);
 
-    if(!r.ok || !j?.room_id){
-      setStatus("Kod bulunamadı", "bad");
-      return;
+    if(prefillCode){
+      fillCode(prefillCode);
+      if(getCode().length === 6){
+        setStatus("Kod hazır. Bağlanabilirsin.", "good");
+      }
     }
 
-    const roomId = j.room_id;
+    if(prefillRoom){
+      setStatus("Hazır oda bulundu. Bağlanılıyor...", "good");
+      goLive(prefillRoom, prefillCode);
+    }
 
-    // 🔥 BURASI KRİTİK
-    location.href = `/sidetoside.html?room=${encodeURIComponent(roomId)}&role=guest&my=tr`;
-
-  }catch(e){
-    setStatus("Bağlantı hatası", "bad");
-  }
-}
-</script>
-
+    if(inputs[0] && !prefillCode){
+      inputs[0].focus();
+    }
+  </script>
 </body>
 </html>
