@@ -143,7 +143,16 @@ export async function getUserOrThrow() {
 export async function loadCurrentProfile(userId) {
   const { data, error } = await supabase
     .from("profiles")
-    .select("id, voice_sample_path, tts_voice_ready, tts_voice_id")
+    .select(`
+      id,
+      voice_sample_path,
+      voice_sample_url,
+      voice_profile_ready,
+      tts_voice_ready,
+      tts_voice_id,
+      tts_voice,
+      tts_voice_preference
+    `)
     .eq("id", userId)
     .maybeSingle();
 
@@ -282,18 +291,24 @@ export async function markCloneAsSelected(enrollResp = {}) {
   ).trim();
 
   const hasSamplePath = parseOldPaths(profile?.voice_sample_path).length > 0;
+  const hasSampleUrl = !!String(profile?.voice_sample_url || "").trim();
+  const hasOldReady = !!profile?.tts_voice_ready || !!profile?.voice_profile_ready;
+
   const readyFromEnroll =
     !!voiceId ||
     enrollResp?.ok === true ||
     enrollResp?.success === true ||
-    hasSamplePath;
+    hasSamplePath ||
+    hasSampleUrl ||
+    hasOldReady;
 
   const payload = {
     tts_voice_preference: "clone",
     tts_voice: "clone",
     tts_voice_provider: provider,
     tts_voice_updated_at: new Date().toISOString(),
-    tts_voice_ready: !!readyFromEnroll
+    tts_voice_ready: !!readyFromEnroll,
+    voice_profile_ready: true
   };
 
   if (voiceId) {
