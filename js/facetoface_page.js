@@ -147,7 +147,6 @@ const settingsBtn = $("settingsBtn");
 
 let topLang = "en";
 let botLang = "tr";
-let ttsDebounceAt = 0;
 let activeSide = null;
 let recognizer = null;
 let recordingSide = null;
@@ -369,23 +368,15 @@ function renderPop(side) {
 function stopAudio() {
   speakRunId += 1;
 
-  try {
-    currentAudio?.pause?.();
-  } catch {}
-
+  try { currentAudio?.pause?.(); } catch {}
   try {
     if (currentAudio) currentAudio.currentTime = 0;
   } catch {}
 
   currentAudio = null;
 
-  try {
-    window.speechSynthesis?.cancel?.();
-  } catch {}
-
-  try {
-    window.NativeTTS?.stop?.();
-  } catch {}
+  try { window.speechSynthesis?.cancel?.(); } catch {}
+  try { window.NativeTTS?.stop?.(); } catch {}
 }
 
 function stopTypewriter() {
@@ -395,25 +386,39 @@ function stopTypewriter() {
 function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
-function getTypingDelay(ch, index, total) {
-  const tailBoost = index > total * 0.82 ? 2 : 0;
+
+function getTypingProfile(text) {
+  const len = String(text || "").trim().length;
+  if (len <= 24) return { startChunk: 1, midChunk: 2, endChunk: 1, base: 9 };
+  if (len <= 70) return { startChunk: 1, midChunk: 2, endChunk: 1, base: 8 };
+  if (len <= 130) return { startChunk: 1, midChunk: 3, endChunk: 1, base: 7 };
+  return { startChunk: 2, midChunk: 3, endChunk: 1, base: 6 };
+}
+
+function getTypingDelay(ch, index, total, text) {
+  const profile = getTypingProfile(text);
+  const progress = total ? index / total : 0;
+  const tailBoost = progress > 0.82 ? 3 : 0;
 
   if (ch === " ") return 0;
-  if (/[.,!?]/.test(ch)) return 80 + tailBoost;
-  if (/[;:]/.test(ch)) return 55 + tailBoost;
-  if (/[\n]/.test(ch)) return 40 + tailBoost;
+  if (/[.!?]/.test(ch)) return 95 + tailBoost;
+  if (/[,]/.test(ch)) return 65 + tailBoost;
+  if (/[;:]/.test(ch)) return 50 + tailBoost;
+  if (/[\n]/.test(ch)) return 45 + tailBoost;
 
-  return 10 + tailBoost;
+  return profile.base + tailBoost;
 }
 
-function getTypingChunkSize(index, total) {
+function getTypingChunkSize(index, total, text) {
+  const profile = getTypingProfile(text);
   const progress = total ? index / total : 0;
 
-  if (progress < 0.2) return 1;
-  if (progress < 0.7) return 2;
-  return 1;
+  if (progress < 0.18) return profile.startChunk;
+  if (progress < 0.78) return profile.midChunk;
+  return profile.endChunk;
 }
-async function typewriteText(el, finalText) {
+
+async function typewriteText(el, finalText, side) {
   if (!el) return;
 
   stopTypewriter();
@@ -427,16 +432,16 @@ async function typewriteText(el, finalText) {
   while (i < full.length) {
     if (runId !== typewriterRunId) return;
 
-    const chunkSize = getTypingChunkSize(i, full.length);
+    const chunkSize = getTypingChunkSize(i, full.length, full);
     const next = Math.min(full.length, i + chunkSize);
 
     el.textContent = full.slice(0, next);
     i = next;
 
     const lastChar = full.charAt(i - 1);
-    keepLatestVisible(el.closest("#topBody") ? "top" : "bot");
+    keepLatestVisible(side);
 
-    await wait(getTypingDelay(lastChar, i, full.length));
+    await wait(getTypingDelay(lastChar, i, full.length, full));
   }
 }
 
@@ -642,10 +647,7 @@ async function speak(text, langCode, tone = "neutral") {
   if (!value) return;
 
   stopAudio();
-  ttsDebounceAt = Date.now();
-  speakRunId += 1;
-  const myRunId = speakRunId;
-
+  const myRunId = ++speakRunId;
   const voice = getVoicePreference();
 
   if (voice === "auto") {
@@ -838,13 +840,81 @@ function buildRecognizer(langCode) {
 
 function stopRecognizer() {
   if (recognizer) {
-    try {
-      recognizer.stop();
-    } catch {}
+    try { recognizer.stop(); } catch {}
   }
 }
 
-async function finalizeRecognition
+async function finalizeRecognition(side, text) {
+  const src = side === "top" ? topLang : botLang;
+  const dst = side === "top" ? botLang : topLang;
+  const sourceTone = detectToneFromText(text);
+  const other = side === "top" ? "bot" : "top";
+  const mode = getFaceTranslateMode();
+
+  const cleaned = String(text || "").trim();
+  if (!cleaned) {
+    setErrorUI();
+    bounceToReady(1000);
+    return;
+  }
+
+  addBubble(side, "them", cleaned);
+  clearLatest(other);
+
+  setTranslatingUI(side);
+
+  const latestRow = addBubble(other, "me", t(dst, "translating"), {
+    latest: true,
+    speakLang: dst,
+    speakTone: sourceTone,
+  });
+
+  const latestTxt = latestRow?.querySelector(".txt");
+  const tr = await translateText(cleaned, src, dst, sourceTone);
+
+  if (!tr) {
+    setErrorUI();
+    if (latestTxt) {
+      latestTxt.textContent = t(dst, "translateError");
+      keepLatestVisible(other);
+    }
+    bounceToReady(1200);
+    return;
+  }
+
+  if (mode === "cultural") {
+    try {
+      await spendFaceUsage(tr.length);
+    } catch (e) {
+      if (String(e?.message || "") === "insufficient_tokens") return;
+    }
+  }
+
+  if (latestTxt) {
+    latestTxt.textContent = "";
+
+    const speakPromise = (async () => {
+      await wait(90);
+      await speak(tr, dst, sourceTone);
+    })();
+
+    await typewriteText(latestTxt, tr, other);
+    keepLatestVisible(other);
+    await speakPromise;
+  } else {
+    addBubble(other, "me", tr, {
+      latest: true,
+      speakLang: dst,
+      speakTone: sourceTone,
+    });
+
+    await wait(90);
+    await speak(tr, dst, sourceTone);
+  }
+
+  setSystemReadyUI();
+}
+
 function startRecording(side) {
   const lang = side === "top" ? topLang : botLang;
   const rec = buildRecognizer(lang);
@@ -981,9 +1051,7 @@ async function warmApis() {
 
 function unlockOnFirstTouch() {
   const once = async () => {
-    try {
-      await warmAudio();
-    } catch {}
+    try { await warmAudio(); } catch {}
     window.removeEventListener("touchstart", once);
     window.removeEventListener("pointerdown", once);
     window.removeEventListener("click", once);
@@ -1015,9 +1083,7 @@ function startBoot() {
 async function ensureReady() {
   if (bootReady) return true;
   if (!bootStarted) startBoot();
-  try {
-    await bootPromise;
-  } catch {}
+  try { await bootPromise; } catch {}
   return true;
 }
 
