@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>italkyAI • FaceToFace Entry</title>
+  <meta name="theme-color" content="#07070b" />
+  <style>
+    html,body{
+      margin:0;
+      width:100%;
+      height:100%;
+      background:#07070b;
+      color:#fff;
+      overflow:hidden;
+      font-family:Outfit,sans-serif;
+    }
+    .boot{
+      width:100%;
+      height:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      flex-direction:column;
+      gap:14px;
+      background:
+        radial-gradient(circle at 50% 10%, rgba(99,102,241,.18), transparent 28%),
+        radial-gradient(circle at 80% 80%, rgba(236,72,153,.10), transparent 30%),
+        #07070b;
+    }
+    .orb{
+      width:82px;
+      height:82px;
+      border-radius:50%;
+      background:linear-gradient(135deg,#a5b4fc,#6366f1,#ec4899);
+      filter:blur(.2px);
+      box-shadow:0 0 36px rgba(99,102,241,.28);
+      animation:pulse 1.4s infinite ease-in-out;
+    }
+    .txt{
+      font-size:14px;
+      font-weight:800;
+      opacity:.92;
+      letter-spacing:.2px;
+    }
+    @keyframes pulse{
+      0%,100%{ transform:scale(1); opacity:.92; }
+      50%{ transform:scale(1.08); opacity:1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="boot">
+    <div class="orb"></div>
+    <div class="txt">FaceToFace hazırlanıyor...</div>
+  </div>
+
+  <script type="module">
+    import { supabase } from "/js/supabase_client.js";
+
+    const SETUP_KEY = "facetoface_setup_done";
+    const VOICE_KEY = "facetoface_voice_mode";
+    const TRANSLATE_KEY = "facetoface_translate_mode";
+
+    function isPremiumVoice(v){
+      return ["female","male","clone"].includes(String(v || "").trim().toLowerCase());
+    }
+
+    function isPremiumTranslate(v){
+      return String(v || "").trim().toLowerCase() === "cultural";
+    }
+
+    function needsJeton(voice, translateMode){
+      return isPremiumVoice(voice) || isPremiumTranslate(translateMode);
+    }
+
+    async function getJetonBalance(){
+      try{
+        const { data } = await supabase.auth.getUser();
+        const uid = data?.user?.id || localStorage.getItem("user_id");
+        if(!uid) return 0;
+
+        const { data: profile, error } = await supabase
+          .from("profiles")
+          .select("tokens")
+          .eq("id", uid)
+          .maybeSingle();
+
+        if(error) return 0;
+        return Number(profile?.tokens || 0);
+      }catch{
+        return 0;
+      }
+    }
+
+    async function run(){
+      const setupDone = localStorage.getItem(SETUP_KEY) === "1";
+      const voiceMode = localStorage.getItem(VOICE_KEY) || "auto";
+      const translateMode = localStorage.getItem(TRANSLATE_KEY) || "normal";
+
+      if(!setupDone){
+        location.replace("/pages/facetoface_open.html");
+        return;
+      }
+
+      if(!needsJeton(voiceMode, translateMode)){
+        location.replace("/facetoface.html");
+        return;
+      }
+
+      const jeton = await getJetonBalance();
+
+      if(jeton > 0){
+        location.replace("/facetoface.html");
+        return;
+      }
+
+      location.replace("/pages/facetoface_open.html?reason=insufficient");
+    }
+
+    run();
+  </script>
+</body>
+</html>
