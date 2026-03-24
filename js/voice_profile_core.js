@@ -41,7 +41,7 @@ export const VOICE_SAMPLE_TEXTS = {
     "Ciao, sto usando italkyAI e sto creando il mio profilo vocale.",
     "Oggi il tempo è piuttosto bello e fuori c’è una leggera brezza.",
     "Imparare una nuova lingua richiede pazienza, ripetizione e pratica regolare.",
-    "La traduzione supportata dall’intelligenza artificiale rende più facile la comunicazione quotidiana.",
+    "La traduzione supportata dall’intelligenza artificielle rende più facile la comunicazione quotidiana.",
     "Una traduzione vocale rapida e precisa è un grande vantaggio quando si viaggia.",
     "Ora sto completando l’ultimo esempio e salvo il mio profilo vocale."
   ],
@@ -284,7 +284,7 @@ export async function markCloneAsSelected(enrollResp = {}) {
     tts_voice_preference: "clone",
     tts_voice: "clone",
     tts_voice_provider: provider,
-    updated_at: new Date().toISOString()
+    tts_voice_updated_at: new Date().toISOString()
   };
 
   if (voiceId) {
