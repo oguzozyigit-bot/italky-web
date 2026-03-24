@@ -1,5 +1,3 @@
-// FILE: /js/facetoface_page.js
-
 import { LANG_POOL } from "/js/lang_pool_full.js";
 import { supabase } from "/js/supabase_client.js";
 
@@ -40,9 +38,9 @@ function langObj(code) {
   const c = canonical(code);
   return (
     LANGS.find((x) => x.code === c) || {
-      code: c,
+      code: c || "en",
       flag: "🌐",
-      name: c.toUpperCase(),
+      name: (c || "en").toUpperCase(),
       bcp: BCP[c] || "en-US",
     }
   );
@@ -161,7 +159,7 @@ function canonTone(value) {
   return ["neutral", "happy", "angry", "sad", "excited"].includes(v) ? v : "neutral";
 }
 
-function detectToneFromText(text, lang = "tr") {
+function detectToneFromText(text) {
   const raw = String(text || "").trim();
   if (!raw) return "neutral";
 
@@ -175,24 +173,23 @@ function detectToneFromText(text, lang = "tr") {
   })();
 
   const angryWords = [
-    "saçma", "yeter", "sinir", "sinirim", "delirdim", "bıktım", "biktim", "rezalet",
-    "anamı ağlattı", "anami aglatti", "ensemde boza", "kafa ütülüyor", "kafa utuluyor",
-    "berbat", "nefret", "uyuz", "çıldırdım", "cildirdim", "kan beynime", "zıvanadan"
+    "saçma", "yeter", "sinir", "sinirim", "delirdim", "bıktım", "biktim",
+    "rezalet", "berbat", "nefret", "uyuz", "çıldırdım", "cildirdim"
   ];
 
   const sadWords = [
-    "üzgün", "uzgun", "kötüyüm", "kotuyum", "moralim bozuk", "canım sıkkın", "canim sikkin",
-    "yoruldum", "tükendim", "tukendim", "bittim", "içim dışıma çıktı", "icim disima cikti"
+    "üzgün", "uzgun", "kötüyüm", "kotuyum", "moralim bozuk",
+    "canım sıkkın", "canim sikkin", "yoruldum", "tükendim", "tukendim"
   ];
 
   const happyWords = [
-    "harika", "süper", "super", "müthiş", "muthis", "bayıldım", "bayildim",
-    "çok iyi", "cok iyi", "güzel olmuş", "guzel olmus", "sevindim", "mutlu oldum"
+    "harika", "süper", "super", "müthiş", "muthis", "bayıldım",
+    "bayildim", "çok iyi", "cok iyi", "sevindim", "mutlu oldum"
   ];
 
   const excitedWords = [
-    "inanamıyorum", "inanamiyorum", "şahane", "sahane", "hadi ya", "vaaay",
-    "wow", "muhteşem", "mukemmel", "efsane", "çok heyecanlıyım", "cok heyecanliyim"
+    "inanamıyorum", "inanamiyorum", "şahane", "sahane", "wow",
+    "efsane", "heyecanlıyım", "heyecanliyim"
   ];
 
   const hasAny = (arr) => arr.some((w) => s.includes(w));
@@ -201,7 +198,6 @@ function detectToneFromText(text, lang = "tr") {
   if (hasAny(sadWords)) return "sad";
   if (hasAny(excitedWords)) return "excited";
   if (hasAny(happyWords)) return "happy";
-
   if (exclamations === 1) return "excited";
 
   return "neutral";
@@ -368,18 +364,9 @@ function stopAudio() {
 async function getCurrentUserId() {
   try {
     const { data } = await supabase.auth.getUser();
-    return data?.user?.id || null;
+    return data?.user?.id || localStorage.getItem("user_id") || null;
   } catch {
-    return null;
-  }
-}
-
-async function getCurrentUser() {
-  try {
-    const { data } = await supabase.auth.getUser();
-    return data?.user || null;
-  } catch {
-    return null;
+    return localStorage.getItem("user_id") || null;
   }
 }
 
@@ -393,23 +380,18 @@ function getVoicePreference() {
 
 async function hasReadyVoiceProfile() {
   try {
-    const user = await getCurrentUser();
-    if (!user?.id) return false;
+    const userId = await getCurrentUserId();
+    if (!userId) return false;
 
     const { data, error } = await supabase
       .from("profiles")
       .select("tts_voice_ready,tts_voice_id")
-      .eq("id", user.id)
+      .eq("id", userId)
       .maybeSingle();
 
-    if (error) {
-      console.warn("[facetoface] tts voice profile read error", error);
-      return false;
-    }
-
+    if (error) return false;
     return !!data?.tts_voice_ready && !!String(data?.tts_voice_id || "").trim();
-  } catch (e) {
-    console.warn("[facetoface] tts voice profile check error", e);
+  } catch {
     return false;
   }
 }
@@ -419,22 +401,16 @@ async function warmAudio() {
     const Ctx = window.AudioContext || window.webkitAudioContext;
     if (Ctx) {
       if (!audioCtx) audioCtx = new Ctx();
-      if (audioCtx.state === "suspended") {
-        await audioCtx.resume();
-      }
+      if (audioCtx.state === "suspended") await audioCtx.resume();
     }
-  } catch (e) {
-    console.warn("warmAudio", e);
-  }
+  } catch {}
 
   try {
     if (window.speechSynthesis) {
       window.speechSynthesis.getVoices();
       voicesReady = true;
     }
-  } catch (e) {
-    console.warn("speech voices warm", e);
-  }
+  } catch {}
 }
 
 async function speakViaApi(text, langCode, tone = "neutral") {
@@ -473,22 +449,8 @@ async function speakViaApi(text, langCode, tone = "neutral") {
     if (currentAudio === audio) currentAudio = null;
   };
 
-  try {
-    await warmAudio();
-  } catch {}
-
-  const playPromise = audio.play();
-
-  if (playPromise && typeof playPromise.then === "function") {
-    try {
-      await playPromise;
-      return true;
-    } catch (e) {
-      if (currentAudio === audio) currentAudio = null;
-      throw e;
-    }
-  }
-
+  await warmAudio();
+  await audio.play();
   return true;
 }
 
@@ -504,17 +466,11 @@ function chooseWebVoice(langCode) {
   if (!pool.length) return null;
 
   if (pref === "female") {
-    return (
-      pool.find((v) => /female|woman|zira|aria|seda|helena|jenny|susan|eva|anna|emma/i.test(v.name)) ||
-      pool[0]
-    );
+    return pool.find((v) => /female|woman|zira|aria|seda|helena|jenny|susan|eva|anna|emma/i.test(v.name)) || pool[0];
   }
 
   if (pref === "male") {
-    return (
-      pool.find((v) => /male|man|david|mark|george|james|alex|tom|jon|paul/i.test(v.name)) ||
-      pool[0]
-    );
+    return pool.find((v) => /male|man|david|mark|george|james|alex|tom|jon|paul/i.test(v.name)) || pool[0];
   }
 
   return pool[0];
@@ -522,7 +478,6 @@ function chooseWebVoice(langCode) {
 
 function toneToFallbackSpeechParams(tone) {
   const t = canonTone(tone);
-
   if (t === "happy") return { rate: 1.03, pitch: 1.15 };
   if (t === "angry") return { rate: 1.08, pitch: 1.0 };
   if (t === "sad") return { rate: 0.88, pitch: 0.9 };
@@ -539,18 +494,14 @@ function speakFallback(text, langCode, tone = "neutral") {
   const toneCfg = toneToFallbackSpeechParams(tone);
 
   try {
-    if (window.speechSynthesis) {
-      window.speechSynthesis.cancel();
-    }
+    window.speechSynthesis?.cancel?.();
   } catch {}
 
   if (pref === "auto" && window.NativeTTS && typeof window.NativeTTS.speak === "function") {
     try {
       window.NativeTTS.speak(value, c);
       return;
-    } catch (e) {
-      console.warn("[facetoface] NativeTTS fallback failed", e);
-    }
+    } catch {}
   }
 
   if (!window.speechSynthesis) return;
@@ -577,9 +528,7 @@ function speakFallback(text, langCode, tone = "neutral") {
     try {
       window.speechSynthesis.cancel();
       window.speechSynthesis.speak(u);
-    } catch (e) {
-      console.warn("[facetoface] speechSynthesis failed", e);
-    }
+    } catch {}
   }, 80);
 }
 
@@ -603,15 +552,12 @@ async function speak(text, langCode, tone = "neutral") {
     try {
       const ready = await hasReadyVoiceProfile();
       if (!ready) {
-        console.warn("[facetoface] clone hazır değil, fallback");
         speakFallback(value, langCode, tone);
         return;
       }
-
       await speakViaApi(value, langCode, tone);
       return;
-    } catch (e) {
-      console.warn("[facetoface] clone api failed, fallback", e);
+    } catch {
       speakFallback(value, langCode, tone);
       return;
     }
@@ -619,8 +565,7 @@ async function speak(text, langCode, tone = "neutral") {
 
   try {
     await speakViaApi(value, langCode, tone);
-  } catch (e) {
-    console.warn("[facetoface] TTS API failed, fallback", e);
+  } catch {
     speakFallback(value, langCode, tone);
   }
 }
@@ -743,16 +688,10 @@ async function translateText(text, from, to) {
       }),
     });
 
-    if (!r.ok) {
-      const raw = await r.text().catch(() => "");
-      console.error("translate_ai failed", r.status, raw);
-      return null;
-    }
-
+    if (!r.ok) return null;
     const j = await r.json().catch(() => null);
     return String(j?.translated || "").trim() || null;
-  } catch (e) {
-    console.error("translate_ai error", e);
+  } catch {
     return null;
   }
 }
@@ -781,7 +720,7 @@ function stopRecognizer() {
 async function finalizeRecognition(side, text) {
   const src = side === "top" ? topLang : botLang;
   const dst = side === "top" ? botLang : topLang;
-  const sourceTone = detectToneFromText(text, src);
+  const sourceTone = detectToneFromText(text);
   const other = side === "top" ? "bot" : "top";
   const otherWrap = other === "top" ? topBody : botBody;
 
@@ -819,7 +758,6 @@ async function finalizeRecognition(side, text) {
   try {
     await spendFaceUsage(tr.length);
   } catch (e) {
-    console.warn("[facetoface usage]", e);
     if (String(e?.message || "") === "insufficient_tokens") return;
   }
 
@@ -863,7 +801,6 @@ function startRecording(side) {
   };
 
   rec.onerror = (e) => {
-    console.warn("speech error", e);
     const helper = side === "top" ? topHelper : botHelper;
     if (String(e?.error || "").includes("not-allowed")) {
       setHelper(helper, t(lang, "micBlocked"), "helper-wait");
@@ -883,8 +820,7 @@ function startRecording(side) {
 
   try {
     rec.start();
-  } catch (e) {
-    console.warn("rec.start error", e);
+  } catch {
     recognizer = null;
     recordingSide = null;
     setErrorUI();
@@ -941,10 +877,7 @@ function startBoot() {
     refreshLangLabels();
     pointOrbTo("bot");
 
-    await Promise.allSettled([
-      warmApis(),
-      warmAudio(),
-    ]);
+    await Promise.allSettled([warmApis(), warmAudio()]);
 
     bootReady = true;
     setSystemReadyUI();
@@ -963,7 +896,6 @@ async function ensureReady() {
 }
 
 function safeHomeHref() {
-  if (location.pathname === "/facetoface.html") return "/pages/home.html";
   return "/pages/home.html";
 }
 
@@ -1071,4 +1003,14 @@ function bind() {
   } catch {}
 }
 
-bind();
+if (
+  !frameRoot || !topBody || !botBody || !topMic || !botMic ||
+  !topHelper || !botHelper || !topLangBtn || !botLangBtn ||
+  !topLangTxt || !botLangTxt || !popTop || !popBot ||
+  !listTop || !listBot || !closeTop || !closeBot ||
+  !clearBtn || !homeLink || !homeBtn
+) {
+  console.error("[facetoface] Gerekli DOM elemanları eksik.");
+} else {
+  bind();
+}
