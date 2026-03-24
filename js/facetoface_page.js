@@ -493,11 +493,11 @@ function chooseWebVoice(langCode) {
 }
 
 function toneToFallbackSpeechParams(tone) {
-  const t = canonTone(tone);
-  if (t === "happy") return { rate: 1.03, pitch: 1.15 };
-  if (t === "angry") return { rate: 1.08, pitch: 1.0 };
-  if (t === "sad") return { rate: 0.88, pitch: 0.9 };
-  if (t === "excited") return { rate: 1.12, pitch: 1.2 };
+  const tt = canonTone(tone);
+  if (tt === "happy") return { rate: 1.03, pitch: 1.15 };
+  if (tt === "angry") return { rate: 1.08, pitch: 1.0 };
+  if (tt === "sad") return { rate: 0.88, pitch: 0.9 };
+  if (tt === "excited") return { rate: 1.12, pitch: 1.2 };
   return { rate: 1.0, pitch: 1.0 };
 }
 
@@ -689,12 +689,10 @@ function clearLatest(side) {
   wrap.querySelectorAll(".bubble.me.is-latest").forEach((el) => el.classList.remove("is-latest"));
 }
 
-async function translateText(text, from, to) {
+async function translateText(text, from, to, tone = "neutral") {
   const src = canonical(from);
   const dst = canonical(to);
-
-  // 🔥 BURASI KRİTİK
-  const mode = getFaceTranslateMode(); // normal | cultural
+  const mode = getFaceTranslateMode();
 
   try {
     const r = await fetch(`${API_BASE}/api/translate_ai`, {
@@ -704,7 +702,8 @@ async function translateText(text, from, to) {
         text: String(text || "").trim(),
         from_lang: src,
         to_lang: dst,
-        mode // 🔥 BURAYI EKLEDİK
+        mode,
+        tone: canonTone(tone)
       }),
     });
 
@@ -716,7 +715,6 @@ async function translateText(text, from, to) {
 
     const j = await r.json().catch(() => null);
     return String(j?.translated || "").trim() || null;
-
   } catch (e) {
     console.error("translate_ai error", e);
     return null;
@@ -750,6 +748,7 @@ async function finalizeRecognition(side, text) {
   const sourceTone = detectToneFromText(text);
   const other = side === "top" ? "bot" : "top";
   const otherWrap = other === "top" ? topBody : botBody;
+  const mode = getFaceTranslateMode();
 
   const cleaned = String(text || "").trim();
   if (!cleaned) {
@@ -770,7 +769,7 @@ async function finalizeRecognition(side, text) {
   });
 
   const latestTxt = otherWrap?.querySelector(".bubble.me.is-latest .txt");
-  const tr = await translateText(cleaned, src, dst);
+  const tr = await translateText(cleaned, src, dst, sourceTone);
 
   if (!tr) {
     setErrorUI();
@@ -782,10 +781,12 @@ async function finalizeRecognition(side, text) {
     return;
   }
 
-  try {
-    await spendFaceUsage(tr.length);
-  } catch (e) {
-    if (String(e?.message || "") === "insufficient_tokens") return;
+  if (mode === "cultural") {
+    try {
+      await spendFaceUsage(tr.length);
+    } catch (e) {
+      if (String(e?.message || "") === "insufficient_tokens") return;
+    }
   }
 
   if (latestTxt) {
