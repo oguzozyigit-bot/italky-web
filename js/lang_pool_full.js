@@ -81,8 +81,7 @@ export const LANG_POOL = [
   { code:"gu", flag:"🇮🇳" }
 ];
 
-const BASE_NAMES = {
-  tr: {
+const TR_NAMES = {
   tr:"Türkçe",
   en:"İngilizce",
   de:"Almanca",
@@ -152,12 +151,21 @@ const BASE_NAMES = {
   te:"Teluguca",
   mr:"Marathi",
   gu:"Guceratça"
-},
+};
+
+const BASE_NAMES = {
+  tr: TR_NAMES,
+  en: TR_NAMES,
+  de: TR_NAMES,
+  fr: TR_NAMES,
+  it: TR_NAMES,
+  es: TR_NAMES
+};
 
 export function getSiteLang() {
   try {
     const value = String(localStorage.getItem("system_lang") || "tr").trim().toLowerCase();
-    if (["tr","en","de","fr","it","es"].includes(value)) return value;
+    if (["tr", "en", "de", "fr", "it", "es"].includes(value)) return value;
   } catch {}
   return "tr";
 }
