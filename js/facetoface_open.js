@@ -1,5 +1,3 @@
-// FILE: /js/facetoface_open.js
-
 import {
   VOICE_SAMPLE_TEXTS,
   SAMPLE_COUNT,
@@ -8,7 +6,8 @@ import {
   finishVoiceProfile,
   enrollTTSVoice,
   markCloneAsSelected,
-  VoiceProfileRecorder
+  VoiceProfileRecorder,
+  fmtSec
 } from "/js/voice_profile_core.js";
 import { supabase } from "/js/supabase_client.js";
 
@@ -36,13 +35,21 @@ const cloneMini = $("cloneMini");
 const voiceModal = $("voiceModal");
 const voiceModalTitle = $("voiceModalTitle");
 const voiceModalClose = $("voiceModalClose");
-const voiceEnrollStatus = $("voiceEnrollStatus");
-const voicePreview = $("voicePreview");
-const startVoiceRecBtn = $("startVoiceRecBtn");
-const stopVoiceRecBtn = $("stopVoiceRecBtn");
-const playVoiceBtn = $("playVoiceBtn");
-const saveVoiceBtn = $("saveVoiceBtn");
+const replaceVoiceNote = $("replaceVoiceNote");
+
+const voiceSampleLabel = $("voiceSampleLabel");
 const voiceSampleText = $("voiceSampleText");
+const voiceEnrollStatus = $("voiceEnrollStatus");
+const voiceMicWrapper = $("voiceMicWrapper");
+const voiceRecordBtn = $("voiceRecordBtn");
+const voiceNextBtn = $("voiceNextBtn");
+const voiceFinishBtn = $("voiceFinishBtn");
+const voiceCancelBtn = $("voiceCancelBtn");
+const voiceProgressCount = $("voiceProgressCount");
+const voiceProgressFill = $("voiceProgressFill");
+const voiceCompletedList = $("voiceCompletedList");
+const voiceTimerText = $("voiceTimerText");
+const voiceToast = $("voiceToast");
 
 let voiceMode = localStorage.getItem(VOICE_KEY) || "auto";
 let translateMode = localStorage.getItem(TRANSLATE_KEY) || "normal";
@@ -51,43 +58,22 @@ let voiceProfileReady = false;
 let reason = "";
 let isBusy = false;
 
-/* -------------------------------------------------------------------------- */
-/*  INLINE VOICE PROFILE STATE                                                */
-/* -------------------------------------------------------------------------- */
-
 let vpRecorder = new VoiceProfileRecorder();
 let vpRecordings = createEmptyRecordings();
 let vpIndex = 0;
 let vpLang = "tr";
 let vpSamples = [];
-let vpPreviewUrl = "";
 let vpSaving = false;
+let vpTimerInt = null;
 
-function cleanupVpPreviewUrl() {
-  if (vpPreviewUrl) {
-    try {
-      URL.revokeObjectURL(vpPreviewUrl);
-    } catch {}
-    vpPreviewUrl = "";
-  }
-}
-
-function resetVpPreviewPlayer() {
-  cleanupVpPreviewUrl();
-  if (voicePreview) {
-    try {
-      voicePreview.pause();
-    } catch {}
-    voicePreview.removeAttribute("src");
-    voicePreview.classList.remove("show");
-  }
-}
-
-function setEnrollStatus(text, mode = "") {
-  if (!voiceEnrollStatus) return;
-  voiceEnrollStatus.className = "voice-status";
-  if (mode) voiceEnrollStatus.classList.add(mode);
-  voiceEnrollStatus.textContent = text || "";
+function toast(msg) {
+  if (!voiceToast) return;
+  voiceToast.textContent = String(msg || "");
+  voiceToast.classList.add("show");
+  clearTimeout(window.__f2fVoiceToast);
+  window.__f2fVoiceToast = setTimeout(() => {
+    voiceToast.classList.remove("show");
+  }, 1600);
 }
 
 function isPremiumVoice(v) {
@@ -133,6 +119,40 @@ function clearBusy(btn) {
   btn.textContent = btn.dataset.oldText || btn.textContent;
   btn.style.opacity = "1";
   btn.style.pointerEvents = "auto";
+}
+
+function setEnrollStatus(text, mode = "") {
+  if (!voiceEnrollStatus) return;
+  voiceEnrollStatus.style.color = "";
+  if (mode === "good") voiceEnrollStatus.style.color = "#86efac";
+  if (mode === "warn") voiceEnrollStatus.style.color = "#fde68a";
+  if (mode === "bad") voiceEnrollStatus.style.color = "#fca5a5";
+  voiceEnrollStatus.textContent = text || "";
+}
+
+function setMicListening(on) {
+  if (!voiceRecordBtn || !voiceMicWrapper) return;
+  if (on) {
+    voiceRecordBtn.classList.add("listening");
+    voiceMicWrapper.classList.add("listening");
+  } else {
+    voiceRecordBtn.classList.remove("listening");
+    voiceMicWrapper.classList.remove("listening");
+  }
+}
+
+function resetVpTimer() {
+  clearInterval(vpTimerInt);
+  vpTimerInt = null;
+  if (voiceTimerText) voiceTimerText.textContent = "00:00";
+}
+
+function startVpTimer() {
+  resetVpTimer();
+  vpTimerInt = setInterval(() => {
+    const sec = Math.max(1, Math.floor((Date.now() - vpRecorder.startedAt) / 1000));
+    if (voiceTimerText) voiceTimerText.textContent = fmtSec(sec);
+  }, 200);
 }
 
 async function getCurrentUid() {
@@ -216,8 +236,7 @@ function refreshPremiumWarning() {
     premiumWarnBox.classList.add("show");
     if (warnTitle) warnTitle.textContent = "Kayıtlı tercihleriniz jeton gerektiriyor";
     if (warnText) {
-      warnText.textContent =
-        "Jetonunuz bittiği için kayıtlı tercihleriniz kullanılamamaktadır.";
+      warnText.textContent = "Jetonunuz bittiği için kayıtlı tercihleriniz kullanılamamaktadır.";
     }
     buyJetonBtn?.classList.add("show");
     return;
@@ -227,8 +246,7 @@ function refreshPremiumWarning() {
     premiumWarnBox.classList.add("show");
     if (warnTitle) warnTitle.textContent = "Bu ayarları kullanabilmek için jeton satın almanız gereklidir";
     if (warnText) {
-      warnText.textContent =
-        "Seçtiğiniz ses veya çeviri ayarı jeton gerektiriyor. Jeton satın alabilir ya da ücretsiz ayarla devam edebilirsiniz.";
+      warnText.textContent = "Seçtiğiniz ses veya çeviri ayarı jeton gerektiriyor. Jeton satın alabilir ya da ücretsiz ayarla devam edebilirsiniz.";
     }
     buyJetonBtn?.classList.add("show");
     return;
@@ -261,57 +279,80 @@ function goJetonMarket() {
   location.href = "/pages/jetonbuy.html";
 }
 
-/* -------------------------------------------------------------------------- */
-/*  INLINE VOICE PROFILE FLOW                                                 */
-/* -------------------------------------------------------------------------- */
+function renderCompletedList() {
+  if (!voiceCompletedList) return;
 
-function updateVoiceModalPrimaryButton() {
-  if (!saveVoiceBtn) return;
+  const items = vpRecordings
+    .map((r, idx) => ({ ...r, idx }))
+    .filter((r) => !!r.blob);
 
-  const recordedCurrent = !!vpRecordings[vpIndex]?.blob;
-  const isLast = vpIndex === SAMPLE_COUNT - 1;
+  voiceCompletedList.innerHTML = items.length
+    ? items.map((item) => `
+        <div class="completed-item">
+          <div>Cümle ${item.idx + 1} tamamlandı</div>
+          <div>${fmtSec(item.seconds)}</div>
+        </div>
+      `).join("")
+    : "";
+}
 
-  if (isLast) {
-    saveVoiceBtn.textContent = "Kaydı Kaydet";
-    saveVoiceBtn.disabled = !recordedCurrent || vpSaving;
-    return;
+function renderVoiceProgress() {
+  const doneCount = vpRecordings.filter((x) => !!x.blob).length;
+  const currentHuman = Math.min(vpIndex + 1, SAMPLE_COUNT);
+
+  if (voiceProgressCount) voiceProgressCount.textContent = `${currentHuman} / ${SAMPLE_COUNT}`;
+  if (voiceProgressFill) {
+    const pct = Math.max(0, Math.min(100, (doneCount / SAMPLE_COUNT) * 100));
+    voiceProgressFill.style.width = `${pct}%`;
   }
 
-  saveVoiceBtn.textContent = "Sonraki Cümle";
-  saveVoiceBtn.disabled = !recordedCurrent || vpSaving;
+  const hasCurrent = !!vpRecordings[vpIndex]?.blob;
+  const isLast = vpIndex === SAMPLE_COUNT - 1;
+
+  if (voiceNextBtn) {
+    voiceNextBtn.style.display = isLast ? "none" : "flex";
+    voiceNextBtn.disabled = !hasCurrent || vpSaving;
+  }
+
+  if (voiceFinishBtn) {
+    voiceFinishBtn.style.display = isLast ? "flex" : "none";
+    voiceFinishBtn.disabled = !(doneCount === SAMPLE_COUNT) || vpSaving;
+  }
 }
 
 function updateVoiceUI() {
   const txt = vpSamples[vpIndex] || "";
-  if (voiceSampleText) voiceSampleText.textContent = txt;
 
   if (voiceModalTitle) {
-    voiceModalTitle.textContent = voiceProfileReady
-      ? "Kayıtlı Sesi Değiştir"
-      : "Kayıtlı Ses Oluştur";
+    voiceModalTitle.textContent = voiceProfileReady ? "Kayıtlı Sesi Değiştir" : "Kayıtlı Ses Oluştur";
   }
 
-  const recordedCurrent = !!vpRecordings[vpIndex]?.blob;
+  if (replaceVoiceNote) {
+    replaceVoiceNote.classList.toggle("show", voiceProfileReady);
+  }
 
-  if (recordedCurrent) {
-    setEnrollStatus(`Cümle ${vpIndex + 1} / ${SAMPLE_COUNT} tamamlandı. ${vpIndex === SAMPLE_COUNT - 1 ? "Kaydı Kaydet'e bas." : "Sonraki cümleye geçebilirsin."}`, "good");
+  if (voiceSampleLabel) voiceSampleLabel.textContent = `CÜMLE ${vpIndex + 1}`;
+  if (voiceSampleText) voiceSampleText.textContent = txt;
+
+  const existing = vpRecordings[vpIndex];
+  resetVpTimer();
+  setMicListening(false);
+
+  if (existing?.blob) {
+    if (voiceTimerText) voiceTimerText.textContent = fmtSec(existing.seconds || 0);
+    setEnrollStatus(
+      vpIndex === SAMPLE_COUNT - 1
+        ? "Kayıt tamamlandı • Kaydet ve Tamamla'ya bas"
+        : "Kayıt tamamlandı • Sonraki Cümle'ye geç",
+      "good"
+    );
   } else {
-    setEnrollStatus(`Cümle ${vpIndex + 1} / ${SAMPLE_COUNT} • Hazır. Kayda başlayabilirsin.`);
+    if (voiceTimerText) voiceTimerText.textContent = "00:00";
+    setEnrollStatus("Mikrofona dokun ve başla");
   }
 
-  resetVpPreviewPlayer();
-
-  if (recordedCurrent) {
-    try {
-      vpPreviewUrl = URL.createObjectURL(vpRecordings[vpIndex].blob);
-      if (voicePreview) {
-        voicePreview.src = vpPreviewUrl;
-        voicePreview.classList.add("show");
-      }
-    } catch {}
-  }
-
-  updateVoiceModalPrimaryButton();
+  renderVoiceProgress();
+  renderCompletedList();
 }
 
 async function initVoiceModal() {
@@ -327,10 +368,8 @@ async function initVoiceModal() {
   vpRecordings = createEmptyRecordings();
   vpSaving = false;
 
-  resetVpPreviewPlayer();
-  try {
-    vpRecorder.destroy();
-  } catch {}
+  resetVpTimer();
+  try { vpRecorder.destroy(); } catch {}
   vpRecorder = new VoiceProfileRecorder();
 
   updateVoiceUI();
@@ -343,25 +382,30 @@ async function openVoiceModal() {
 
 function closeVoiceModal() {
   voiceModal?.classList.remove("show");
-  resetVpPreviewPlayer();
-  try {
-    vpRecorder.destroy();
-  } catch {}
+  resetVpTimer();
+  setMicListening(false);
+  try { vpRecorder.destroy(); } catch {}
 }
 
-async function startVoiceRecording() {
-  try {
-    resetVpPreviewPlayer();
-    await vpRecorder.start();
-    setEnrollStatus(`Cümle ${vpIndex + 1} / ${SAMPLE_COUNT} • Kayıt başladı...`, "warn");
-    updateVoiceModalPrimaryButton();
-  } catch (e) {
-    console.error("voice record start error", e);
-    setEnrollStatus("Mikrofon izni gerekli veya kayıt başlatılamadı.", "bad");
+async function toggleVoiceRecording() {
+  if (vpSaving) return;
+
+  if (!vpRecorder.isRecording) {
+    try {
+      await vpRecorder.start();
+      setMicListening(true);
+      startVpTimer();
+      setEnrollStatus("Kayıt başladı • Bitirmek için tekrar dokun", "warn");
+    } catch (e) {
+      console.error("voice record start error", e);
+      setMicListening(false);
+      resetVpTimer();
+      setEnrollStatus("Mikrofon izni gerekli veya kayıt başlatılamadı.", "bad");
+      toast("Mikrofon izni gerekli");
+    }
+    return;
   }
-}
 
-async function stopVoiceRecording() {
   try {
     const result = await vpRecorder.stop();
 
@@ -371,33 +415,12 @@ async function stopVoiceRecording() {
       mime: result.mime,
     };
 
+    setMicListening(false);
     updateVoiceUI();
   } catch (e) {
     console.error("voice record stop error", e);
+    setMicListening(false);
     setEnrollStatus("Kayıt durdurulamadı.", "bad");
-  }
-}
-
-function playRecordedVoice() {
-  const rec = vpRecordings[vpIndex];
-  if (!rec?.blob) {
-    setEnrollStatus("Önce bu cümleyi kaydet.", "bad");
-    return;
-  }
-
-  try {
-    resetVpPreviewPlayer();
-    vpPreviewUrl = URL.createObjectURL(rec.blob);
-    if (voicePreview) {
-      voicePreview.src = vpPreviewUrl;
-      voicePreview.classList.add("show");
-      voicePreview.currentTime = 0;
-      voicePreview.play();
-    }
-    setEnrollStatus("Kayıt dinleniyor...", "warn");
-  } catch (e) {
-    console.error("preview play error", e);
-    setEnrollStatus("Kayıt dinletilemedi.", "bad");
   }
 }
 
@@ -421,15 +444,14 @@ async function saveVoiceProfileFull() {
   }
 
   vpSaving = true;
-  setBusy(saveVoiceBtn, "Kaydediliyor...");
+  setBusy(voiceFinishBtn, "Kaydediliyor...");
   setEnrollStatus("Ses profili kaydediliyor...", "warn");
 
   try {
     await finishVoiceProfile(vpLang, vpRecordings);
-
     setEnrollStatus("AI sesi hazırlanıyor...", "warn");
-    const enrollResp = await enrollTTSVoice();
 
+    const enrollResp = await enrollTTSVoice();
     await markCloneAsSelected(enrollResp);
 
     voiceProfileReady = true;
@@ -442,6 +464,7 @@ async function saveVoiceProfileFull() {
     refreshPremiumWarning();
 
     setEnrollStatus("Özel ses hazır. Artık Kendi Sesim kullanılabilir.", "good");
+    toast("Ses profili hazır");
 
     setTimeout(() => {
       closeVoiceModal();
@@ -449,16 +472,13 @@ async function saveVoiceProfileFull() {
   } catch (e) {
     console.error("voice full save error", e);
     setEnrollStatus(e?.message || "Özel ses kaydedilemedi.", "bad");
+    toast(e?.message || "Profil oluşturulamadı");
   } finally {
     vpSaving = false;
-    clearBusy(saveVoiceBtn);
-    updateVoiceModalPrimaryButton();
+    clearBusy(voiceFinishBtn);
+    renderVoiceProgress();
   }
 }
-
-/* -------------------------------------------------------------------------- */
-/*  SETTINGS FLOW                                                             */
-/* -------------------------------------------------------------------------- */
 
 async function handleCloneSelection(forceOpenModal = false) {
   voiceMode = "clone";
@@ -486,7 +506,6 @@ async function handleSaveAndStart() {
     }
 
     const premiumSelected = needsJeton(voiceMode, translateMode);
-
     if (premiumSelected && tokenBalance <= 0) {
       reason = "";
       refreshSummary();
@@ -545,30 +564,22 @@ function bindVoiceModal() {
     if (e.target === voiceModal) closeVoiceModal();
   });
 
-  startVoiceRecBtn?.addEventListener("click", async () => {
-    if (vpSaving) return;
-    await startVoiceRecording();
+  voiceRecordBtn?.addEventListener("click", async () => {
+    await toggleVoiceRecording();
   });
 
-  stopVoiceRecBtn?.addEventListener("click", async () => {
+  voiceNextBtn?.addEventListener("click", async () => {
     if (vpSaving) return;
-    await stopVoiceRecording();
+    await nextVoiceSample();
   });
 
-  playVoiceBtn?.addEventListener("click", () => {
+  voiceFinishBtn?.addEventListener("click", async () => {
     if (vpSaving) return;
-    playRecordedVoice();
-  });
-
-  saveVoiceBtn?.addEventListener("click", async () => {
-    if (vpSaving) return;
-
-    if (vpIndex < SAMPLE_COUNT - 1) {
-      await nextVoiceSample();
-      return;
-    }
-
     await saveVoiceProfileFull();
+  });
+
+  voiceCancelBtn?.addEventListener("click", () => {
+    closeVoiceModal();
   });
 }
 
@@ -597,10 +608,8 @@ async function init() {
 }
 
 window.addEventListener("beforeunload", () => {
-  try {
-    vpRecorder.destroy();
-  } catch {}
-  resetVpPreviewPlayer();
+  try { vpRecorder.destroy(); } catch {}
+  resetVpTimer();
 });
 
 init();
