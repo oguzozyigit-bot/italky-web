@@ -386,13 +386,13 @@ async function saveRecordedVoice() {
   }
 }
 
-async function handleCloneSelection() {
+async function handleCloneSelection(forceOpenModal = false) {
   voiceMode = "clone";
   paintSelections();
   refreshSummary();
   refreshPremiumWarning();
 
-  if (!voiceProfileReady) {
+  if (!voiceProfileReady || forceOpenModal) {
     openVoiceModal();
   }
 }
@@ -430,10 +430,12 @@ async function handleSaveAndStart() {
 
 function bindVoiceChoices() {
   voiceGrid?.querySelectorAll(".choice").forEach((el) => {
-    el.addEventListener("click", async () => {
+    el.addEventListener("click", async (e) => {
       const selected = String(el.dataset.voice || "auto").trim().toLowerCase();
+
       if (selected === "clone") {
-        await handleCloneSelection();
+        const clickedMini = e.target?.closest?.("#cloneMini");
+        await handleCloneSelection(!!clickedMini || voiceProfileReady);
         return;
       }
 
@@ -442,6 +444,12 @@ function bindVoiceChoices() {
       refreshSummary();
       refreshPremiumWarning();
     });
+  });
+
+  cloneMini?.addEventListener("click", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    await handleCloneSelection(true);
   });
 }
 
