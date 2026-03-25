@@ -21,20 +21,11 @@
       --bad:#ef4444;
     }
 
-    *{
-      box-sizing:border-box;
-      -webkit-tap-highlight-color:transparent;
-      outline:none;
-    }
+    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; }
 
     html,body{
-      margin:0;
-      width:100%;
-      min-height:100%;
-      background:var(--bg);
-      color:var(--txt);
-      font-family:'Outfit',sans-serif;
-      overflow:hidden;
+      margin:0; width:100%; min-height:100%;
+      background:var(--bg); color:var(--txt); font-family:'Outfit',sans-serif; overflow:hidden;
     }
 
     body{
@@ -46,29 +37,18 @@
     }
 
     #pageContent{
-      width:100%;
-      min-height:100dvh;
-      padding:14px;
-      overflow-y:auto;
-      overflow-x:hidden;
-      scrollbar-width:none;
-      -webkit-overflow-scrolling:touch;
+      width:100%; min-height:100dvh; padding:14px; overflow-y:auto; overflow-x:hidden;
+      scrollbar-width:none; -webkit-overflow-scrolling:touch;
     }
 
     #pageContent::-webkit-scrollbar{ display:none; }
 
     .wrap{
-      width:100%;
-      max-width:760px;
-      margin:0 auto;
-      display:flex;
-      flex-direction:column;
-      gap:14px;
-      padding-bottom:18px;
+      width:100%; max-width:760px; margin:0 auto;
+      display:flex; flex-direction:column; gap:14px; padding-bottom:18px;
     }
 
-    .hero,
-    .entry-card{
+    .hero,.entry-card{
       border:1px solid var(--line);
       background:rgba(255,255,255,.04);
       border-radius:28px;
@@ -76,9 +56,7 @@
       backdrop-filter:blur(14px);
     }
 
-    .hero{
-      padding:20px 18px;
-    }
+    .hero{ padding:20px 18px; }
 
     .title{
       margin:0;
@@ -216,25 +194,16 @@
       text-align:center;
     }
 
-    .toast.show{
-      transform: translateX(-50%) translateY(0);
-    }
+    .toast.show{ transform: translateX(-50%) translateY(0); }
 
     @media (min-width:700px){
-      .btn-row{
-        flex-direction:row;
-      }
-      .btn-row .btn{
-        flex:1;
-      }
+      .btn-row{ flex-direction:row; }
+      .btn-row .btn{ flex:1; }
     }
 
     @media (max-width:390px){
       .title{ font-size:25px; }
-      .code-input{
-        font-size:24px;
-        letter-spacing:6px;
-      }
+      .code-input{ font-size:24px; letter-spacing:6px; }
     }
   </style>
 </head>
@@ -253,11 +222,8 @@
       <section class="entry-card">
         <div class="code-label">Bağlantı Kodu</div>
 
-        <input
-          id="codeInput"
-          class="code-input"
-          type="text"
-          maxlength="6"
+        <input id="codeInput" class="code-input"
+          type="text" maxlength="6"
           placeholder="ABC123"
           autocomplete="off"
           autocapitalize="characters"
@@ -299,8 +265,7 @@
     const ROOM_CODE_KEY = "italky_active_interpreter_code";
 
     function toast(msg){
-      if(!toastEl) return;
-      toastEl.textContent = String(msg || "");
+      toastEl.textContent = msg;
       toastEl.classList.add("show");
       clearTimeout(window.__s2sCodeToastTimer);
       window.__s2sCodeToastTimer = setTimeout(() => {
@@ -309,37 +274,30 @@
     }
 
     function setStatus(text, type=""){
-      if(!statusText) return;
       statusText.className = "status";
       if(type) statusText.classList.add(type);
-      statusText.textContent = String(text || "");
+      statusText.textContent = text;
     }
 
     function normalize(code){
       return String(code || "")
         .toUpperCase()
-        .replace(/[^A-Z0-9]/g, "")
-        .slice(0, 6);
+        .replace(/[^A-Z0-9]/g,"")
+        .slice(0,6);
     }
 
     function setBusy(v){
-      if(!joinBtn) return;
-      joinBtn.disabled = !!v;
+      joinBtn.disabled = v;
       joinBtn.textContent = v ? "Oda aranıyor..." : "Odaya Katıl";
     }
 
     function goLive(roomId, code){
-      const cleanRoom = String(roomId || "").trim();
-      const cleanCode = normalize(code || "");
+      if(!roomId) return;
 
-      if(!cleanRoom) return;
+      localStorage.setItem(ROOM_KEY, roomId);
+      localStorage.setItem(ROOM_CODE_KEY, code);
 
-      try{
-        localStorage.setItem(ROOM_KEY, cleanRoom);
-        localStorage.setItem(ROOM_CODE_KEY, cleanCode);
-      }catch{}
-
-      location.href = `/pages/sidetoside.html?room=${encodeURIComponent(cleanRoom)}&role=guest&my=tr&auto=1`;
+      location.href = `/pages/sidetoside.html?room=${encodeURIComponent(roomId)}&role=guest&my=tr&auto=1`;
     }
 
     async function resolveRoom(code){
@@ -356,45 +314,41 @@
       const j = await r.json().catch(()=>({}));
 
       if(!r.ok || !j?.room_id){
-        throw new Error(j?.detail || j?.error || "Kod eşleşmedi");
+        throw new Error("Kod eşleşmedi");
       }
 
-      return String(j.room_id || "").trim();
+      return j.room_id;
     }
 
     async function join(){
-      const code = normalize(codeInput?.value || "");
-      if(codeInput) codeInput.value = code;
+      const code = normalize(codeInput.value);
+      codeInput.value = code;
 
       if(code.length !== 6){
-        setStatus("Kod 6 karakter olmalı", "bad");
+        setStatus("Kod 6 karakter olmalı","bad");
         toast("Eksik kod");
         return;
       }
 
       setBusy(true);
-      setStatus("Oda aranıyor...", "warn");
+      setStatus("Oda aranıyor...","warn");
 
       try{
         const roomId = await resolveRoom(code);
 
-        if(!roomId){
-          throw new Error("Kod eşleşmedi");
-        }
-
-        setStatus("Bağlanılıyor...", "good");
+        setStatus("Bağlanılıyor...","good");
         toast("Bağlandı");
+
         goLive(roomId, code);
       }catch(e){
-        console.error("[sidetoside_code resolve]", e);
-        setStatus("Kod bulunamadı", "bad");
+        setStatus("Kod bulunamadı","bad");
         toast("Geçersiz kod");
       }finally{
         setBusy(false);
       }
     }
 
-    codeInput?.addEventListener("input", () => {
+    codeInput.addEventListener("input", () => {
       const c = normalize(codeInput.value);
       codeInput.value = c;
 
@@ -404,56 +358,32 @@
       }
 
       if(c.length === 6){
-        setStatus("Hazır", "good");
+        setStatus("Hazır","good");
       }else{
-        setStatus("Kod giriliyor...", "warn");
+        setStatus("Kod giriliyor...","warn");
       }
     });
 
-    codeInput?.addEventListener("keydown", (e) => {
+    codeInput.addEventListener("keydown", (e) => {
       if(e.key === "Enter"){
         e.preventDefault();
         join();
       }
     });
 
-    joinBtn?.addEventListener("click", join);
+    joinBtn.addEventListener("click", join);
 
-    backBtn?.addEventListener("click", () => {
+    backBtn.addEventListener("click", () => {
       location.href = "/pages/sidetoside_entry.html";
     });
 
     (function init(){
       const params = new URLSearchParams(location.search);
-
       const code = normalize(params.get("code") || "");
-      const room = String(params.get("room") || "").trim();
-      const auto = params.get("auto") === "1";
-      const appRequired = params.get("app") === "required";
-      const source = params.get("source");
 
-      if(source === "qr" && appRequired){
-        if(!window.Native){
-          alert("Bu özelliği kullanabilmek için italkyAI uygulaması telefonunuzda yüklü olmalıdır.");
-          setStatus("Uygulama gerekli", "bad");
-          return;
-        }
-      }
-
-      if(code && codeInput){
+      if(code){
         codeInput.value = code;
-        setStatus("Kod hazır", "good");
-      }
-
-      if(room){
-        try{
-          localStorage.setItem(ROOM_KEY, room);
-          if(code) localStorage.setItem(ROOM_CODE_KEY, code);
-        }catch{}
-      }
-
-      if(auto && room){
-        goLive(room, code);
+        setStatus("Kod hazır","good");
       }
     })();
   </script>
