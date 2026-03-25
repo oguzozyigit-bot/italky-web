@@ -1,4 +1,3 @@
-<!-- FILE: /pages/sidetoside_code.html -->
 <!doctype html>
 <html lang="tr">
 <head>
@@ -295,7 +294,7 @@
         />
 
         <div class="mini-note">
-          Kod büyük harf ve rakamdan oluşur. Boşluk girsen bile sistem uslu durur, temizler.
+          Kod büyük harf ve rakamdan oluşur. Sistem boşluk ve gereksiz karakterleri otomatik temizler.
         </div>
 
         <div id="statusText" class="status">Kod bekleniyor...</div>
@@ -308,8 +307,8 @@
 
       <section class="help-card">
         <h2 class="help-title">Nasıl çalışır?</h2>
-        <p class="help-text">Bağlantı kodu önce oda kaydıyla eşleştirilir. Eşleşen oda bulunursa doğrudan konuşma ekranına geçilir.</p>
-        <p class="help-text">QR okutma akışı kaldırıldığı için artık en net yol bu sayfadan kod ile giriş olacaktır.</p>
+        <p class="help-text">Bağlantı kodu önce oda kaydıyla eşleştirilir.</p>
+        <p class="help-text">Eşleşen oda bulunduğunda hedef ekran olarak <b>/pages/live_interpreter.html</b> açılır.</p>
       </section>
     </div>
   </main>
@@ -405,7 +404,6 @@
 
     async function handleJoin(){
       const code = normalizeCode(codeInput?.value || "");
-
       if(codeInput) codeInput.value = code;
 
       if(code.length !== 6){
@@ -464,24 +462,16 @@
     joinBtn?.addEventListener("click", handleJoin);
 
     backBtn?.addEventListener("click", () => {
-      history.back();
+      location.href = "/pages/sidetoside_entry.html";
     });
 
     (function initFromQuery(){
       const params = new URLSearchParams(location.search);
       const incomingCode = normalizeCode(params.get("code") || "");
-      const incomingRoom = String(params.get("room") || "").trim();
 
       if(incomingCode && codeInput){
         codeInput.value = incomingCode;
         setStatus("Kod hazır. İstersen hemen katıl.", "good");
-      }
-
-      if(incomingRoom){
-        try{
-          localStorage.setItem(ROOM_KEY, incomingRoom);
-          if(incomingCode) localStorage.setItem(ROOM_CODE_KEY, incomingCode);
-        }catch{}
       }
     })();
   </script>
