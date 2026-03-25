@@ -136,6 +136,8 @@ const myInfoMain = $("myInfoMain");
 const myInfoSub = $("myInfoSub");
 const peerInfoMain = $("peerInfoMain");
 const peerInfoSub = $("peerInfoSub");
+const peerVoicePill = $("peerVoicePill");
+const peerTranslatePill = $("peerTranslatePill");
 
 /* =========================
    URL PARAMS
@@ -223,6 +225,8 @@ function renderPeerProfileBox() {
   if (!peerConnected && !peerEverConnected) {
     if (peerInfoMain) peerInfoMain.textContent = "Bağlantı bekleniyor...";
     if (peerInfoSub) peerInfoSub.textContent = "Dil, ses ve çeviri modeli burada görünecek.";
+    if (peerVoicePill) peerVoicePill.textContent = "Otomatik Ses";
+    if (peerTranslatePill) peerTranslatePill.textContent = "Translate";
     return;
   }
 
@@ -231,10 +235,19 @@ function renderPeerProfileBox() {
   const showTranslate = peerProfile.translate_mode || "normal";
 
   if (peerInfoMain) {
-    peerInfoMain.textContent = `${labelChip(showLang)} • ${voiceLabel(showVoice)}`;
+    peerInfoMain.textContent = labelChip(showLang);
   }
+
   if (peerInfoSub) {
-    peerInfoSub.textContent = `Çeviri: ${translateLabel(showTranslate)}`;
+    peerInfoSub.textContent = "Karşı tarafın aktif tercihleri";
+  }
+
+  if (peerVoicePill) {
+    peerVoicePill.textContent = voiceLabel(showVoice);
+  }
+
+  if (peerTranslatePill) {
+    peerTranslatePill.textContent = translateLabel(showTranslate);
   }
 }
 
@@ -984,7 +997,7 @@ function startSocket() {
         markPeerConnected(peerLang);
 
         peerProfile.voice_mode = normalizeVoiceMode(
-  senderVoice || peerProfile.voice_mode || "auto"
+  senderVoice === "clone" ? "clone" : (peerProfile.voice_mode || "auto")
 );
         peerProfile.translate_mode = senderTranslateMode;
         renderPeerProfileBox();
