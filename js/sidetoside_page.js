@@ -315,13 +315,19 @@ function setHelper(el, text, tone) {
 function setSystemReadyUI() {
   activeSide = null;
   resetMics();
-  setFrameVisual("ready");
-  if (topHelper) topHelper.style.display = "none";
-  setHelper(
-    botHelper,
-    peerConnected ? t(myLang, "ready") : t(myLang, "waitingPeer"),
-    peerConnected ? "helper-ready" : "helper-wait"
-  );
+
+  if (peerConnected) {
+    setFrameVisual("ready");
+    if (topHelper) topHelper.style.display = "none";
+    setHelper(botHelper, t(myLang, "ready"), "helper-ready");
+  } else {
+    setFrameVisual("error");
+    if (topHelper) topHelper.style.display = "none";
+    setHelper(botHelper, t(myLang, "waitingPeer"), "helper-wait");
+  }
+
+  renderMyProfileBox();
+  renderPeerProfileBox();
 }
 
 function setSystemPreparingUI() {
@@ -369,8 +375,7 @@ function refreshLangLabels() {
 
 function refreshReadyTextsIfIdle() {
   if (activeSide === null) {
-    if (frameRoot?.classList.contains("is-ready")) setSystemReadyUI();
-    if (frameRoot?.classList.contains("is-error")) setSystemPreparingUI();
+    setSystemReadyUI();
   }
 }
 
@@ -737,6 +742,7 @@ function startSocket() {
     wsReady = true;
     reconnectCount = 0;
     peerHasExplicitlyLeft = false;
+    peerConnected = false;
     startPing();
     setSystemReadyUI();
     await sendSelfProfile();
@@ -750,24 +756,32 @@ function startSocket() {
       if (type === "presence") {
         const guestLang = canonical(payload?.guest_lang || "");
         const hostLang = canonical(payload?.host_lang || "");
+        const status = String(payload?.status || "").trim().toLowerCase();
+        const peerCount = Number(payload?.peer_count || 0);
+        const peerConnectedFlag = payload?.peer_connected === true;
 
-        if (role === "host" && guestLang) {
-          peerLang = guestLang;
-          peerProfile.lang = guestLang;
-          peerConnected = true;
-          localStorage.setItem("live_interpreter_peer_lang", peerLang);
+        if (role === "host") {
+          if (guestLang) {
+            peerLang = guestLang;
+            peerProfile.lang = guestLang;
+            localStorage.setItem("live_interpreter_peer_lang", peerLang);
+          }
         }
 
-        if (role === "guest" && hostLang) {
-          peerLang = hostLang;
-          peerProfile.lang = hostLang;
-          peerConnected = true;
-          localStorage.setItem("live_interpreter_peer_lang", peerLang);
+        if (role === "guest") {
+          if (hostLang) {
+            peerLang = hostLang;
+            peerProfile.lang = hostLang;
+            localStorage.setItem("live_interpreter_peer_lang", peerLang);
+          }
         }
 
-        if (!peerConnected && payload?.peer_connected === true) {
-          peerConnected = true;
-        }
+        peerConnected = !!(
+          peerConnectedFlag ||
+          guestLang ||
+          (status === "active") ||
+          (peerCount >= 2)
+        );
 
         renderPeerProfileBox();
         setSystemReadyUI();
