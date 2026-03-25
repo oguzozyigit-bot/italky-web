@@ -133,7 +133,6 @@ const closeBot = $("close-bot");
 const clearBtn = $("clearBtn");
 const homeLink = $("homeLink");
 const homeBtn = $("homeBtn");
-const settingsBtn = $("settingsBtn");
 
 const myInfoMain = $("myInfoMain");
 const myInfoSub = $("myInfoSub");
@@ -1631,23 +1630,6 @@ function bind() {
     await sendLeaving("home");
     stopSocket();
     location.href = safeHomeHref();
-  });
-
-  settingsBtn?.addEventListener("click", (e) => {
-    e.preventDefault();
-    isNavigatingToSettings = true;
-    saveReturnContext();
-
-    const target = new URL("/pages/facetoface_open.html", location.origin);
-    target.searchParams.set("edit", "1");
-    target.searchParams.set("from", "sidetoside");
-
-    if (roomId) target.searchParams.set("room", roomId);
-    if (role) target.searchParams.set("role", role);
-    if (myLang) target.searchParams.set("my", myLang);
-    if (peerLang) target.searchParams.set("peer", peerLang);
-
-    location.href = target.pathname + target.search;
   });
 
   botMic?.addEventListener("click", async (e) => {
