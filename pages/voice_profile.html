@@ -1,23 +1,24 @@
-<!-- FILE: /pages/voice_profile.html -->
 <!doctype html>
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>italkyAI • Sesini Tanıt</title>
+  <title>italkyAI • Çeviri Ayarları</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
   <style>
-    :root {
+    :root{
       --txt: rgba(255,255,255,.96);
-      --muted: rgba(255,255,255,.50);
-      --ai-grad: linear-gradient(135deg, #67e8f9 0%, #818cf8 46%, #f472b6 100%);
-      --panel-bg: rgba(255, 255, 255, 0.03);
-      --panel-border: rgba(255, 255, 255, 0.08);
+      --muted: rgba(255,255,255,.56);
+      --ai-grad: linear-gradient(135deg,#67e8f9 0%,#818cf8 46%,#f472b6 100%);
+      --panel-bg: rgba(255,255,255,.03);
+      --panel-border: rgba(255,255,255,.08);
       --accent: #818cf8;
+      --ok: #22c55e;
+      --warn: #f59e0b;
     }
 
     *{
@@ -26,34 +27,34 @@
       outline:none;
     }
 
-    html, body {
-      margin: 0;
-      padding: 0;
-      background: #02000f;
-      color: var(--txt);
-      font-family: 'Outfit', sans-serif;
+    html,body{
+      margin:0;
+      padding:0;
       width:100%;
-      height:100%;
+      min-height:100%;
+      background:#02000f;
+      color:var(--txt);
+      font-family:'Outfit',sans-serif;
     }
 
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
       background:
-        radial-gradient(circle at 50% 0%, rgba(129, 140, 248, 0.12) 0%, transparent 50%),
+        radial-gradient(circle at 50% 0%, rgba(129,140,248,.12) 0%, transparent 50%),
         radial-gradient(circle at 10% 100%, rgba(244,114,182,.08) 0%, transparent 35%);
-      z-index: -1;
+      z-index:-1;
       pointer-events:none;
     }
 
-    #pageContent {
-      max-width: 500px;
-      margin: 0 auto;
-      padding: 14px 16px 24px;
+    #pageContent{
+      max-width:560px;
+      margin:0 auto;
+      padding:14px 16px 28px;
       display:flex;
       flex-direction:column;
-      gap:20px;
+      gap:18px;
     }
 
     .topRow{
@@ -75,9 +76,7 @@
       flex:0 0 auto;
     }
 
-    .backBtn:active{
-      transform:scale(.96);
-    }
+    .backBtn:active{ transform:scale(.96); }
 
     .backBtn svg{
       width:20px;
@@ -109,11 +108,11 @@
       color:rgba(255,255,255,.82);
     }
 
-    .title {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 28px;
-      font-weight: 700;
-      margin: 0;
+    .title{
+      font-family:'Space Grotesk',sans-serif;
+      font-size:28px;
+      font-weight:700;
+      margin:0;
       line-height:1;
       letter-spacing:-1px;
     }
@@ -131,47 +130,17 @@
       color:var(--muted);
     }
 
-    .progress-container {
+    .settings-panel{
       display:flex;
       flex-direction:column;
-      gap:6px;
-    }
-
-    .progress-info {
-      display: flex;
-      justify-content: space-between;
-      font-size: 11px;
-      font-weight: 800;
-      color: var(--muted);
-      letter-spacing: 1px;
-    }
-
-    .progress-bar {
-      height: 4px;
-      background: rgba(255,255,255,0.05);
-      border-radius: 10px;
-      overflow: hidden;
-    }
-
-    .progress-fill {
-      height: 100%;
-      background: var(--ai-grad);
-      width: 16.6%;
-      transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-      box-shadow: 0 0 10px var(--accent);
-    }
-
-    .voice-settings-panel{
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-      background: linear-gradient(145deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01));
-      border: 1px solid var(--panel-border);
-      border-radius: 22px;
-      padding: 16px;
-      backdrop-filter: blur(15px);
-      -webkit-backdrop-filter: blur(15px);
-      box-shadow: 0 14px 30px rgba(0,0,0,.14);
+      gap:12px;
+      background:linear-gradient(145deg, rgba(255,255,255,.05), rgba(255,255,255,.01));
+      border:1px solid var(--panel-border);
+      border-radius:22px;
+      padding:16px;
+      backdrop-filter:blur(15px);
+      -webkit-backdrop-filter:blur(15px);
+      box-shadow:0 14px 30px rgba(0,0,0,.14);
     }
 
     .panel-title{
@@ -182,266 +151,189 @@
       color:#fff;
     }
 
-    .voice-grid{
+    .panel-sub{
+      margin:0;
+      font-size:11px;
+      line-height:1.45;
+      color:var(--muted);
+    }
+
+    .choice-grid{
       display:grid;
       grid-template-columns:1fr 1fr;
       gap:10px;
     }
 
-    .voice-card{
+    .choice-card{
       padding:14px;
-      border-radius:16px;
+      border-radius:18px;
       background:rgba(255,255,255,.03);
       border:1px solid rgba(255,255,255,.08);
       cursor:pointer;
-      transition:.2s;
+      transition:.2s ease;
+      min-height:104px;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+      gap:8px;
     }
 
-    .voice-card.active{
+    .choice-card:active{
+      transform:scale(.985);
+    }
+
+    .choice-card.active{
       border-color:#818cf8;
       background:rgba(129,140,248,.15);
       box-shadow:0 0 0 1px rgba(129,140,248,.15) inset;
     }
 
-    .voice-name{
-      font-size:13px;
-      font-weight:900;
-      color:#fff;
+    .choice-top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
     }
 
-    .voice-desc{
+    .choice-name{
+      font-size:14px;
+      font-weight:900;
+      color:#fff;
+      line-height:1.2;
+    }
+
+    .choice-badge{
+      font-size:10px;
+      font-weight:900;
+      letter-spacing:.4px;
+      padding:6px 8px;
+      border-radius:999px;
+      white-space:nowrap;
+      border:1px solid rgba(255,255,255,.12);
+    }
+
+    .choice-badge.free{
+      color:#bbf7d0;
+      background:rgba(34,197,94,.10);
+      border-color:rgba(34,197,94,.20);
+    }
+
+    .choice-badge.paid{
+      color:#fde68a;
+      background:rgba(245,158,11,.10);
+      border-color:rgba(245,158,11,.20);
+    }
+
+    .choice-desc{
       font-size:11px;
-      opacity:.65;
-      margin-top:4px;
-      line-height:1.35;
+      line-height:1.45;
+      color:rgba(255,255,255,.70);
       word-break:break-word;
     }
 
-    .sample-card {
-      background: linear-gradient(145deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01));
-      border: 1px solid var(--panel-border);
-      border-radius: 28px;
-      padding: 28px 20px;
-      text-align: center;
-      position: relative;
-      backdrop-filter: blur(15px);
-      -webkit-backdrop-filter: blur(15px);
-      box-shadow: 0 14px 30px rgba(0,0,0,.18);
-    }
-
-    .sample-label {
-      font-size: 10px;
-      font-weight: 900;
-      color: var(--accent);
-      letter-spacing: 2px;
-      margin-bottom: 15px;
-      display: block;
-      text-transform:uppercase;
-    }
-
-    .sample-text {
-      font-size: 22px;
-      font-weight: 800;
-      line-height: 1.4;
-      color: #fff;
-      min-height: 80px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-wrap: balance;
-    }
-
-    .mic-section {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 14px;
-    }
-
-    .mic-btn-wrapper {
-      position: relative;
-      width: 100px;
-      height: 100px;
-    }
-
-    .mic-btn {
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-      background: #12121a;
-      border: 2px solid var(--panel-border);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      z-index: 10;
-      position: relative;
-      transition: all 0.3s;
-      box-shadow:0 10px 24px rgba(0,0,0,.28);
-    }
-
-    .mic-btn svg {
-      width: 35px;
-      height: 35px;
-      stroke: #fff;
-      fill: none;
-      transition: all 0.3s;
-    }
-
-    .mic-btn.listening {
-      border-color: #f472b6;
-      box-shadow: 0 0 20px rgba(244, 114, 182, 0.3);
-    }
-
-    .mic-btn.listening svg {
-      stroke: #f472b6;
-      transform: scale(1.1);
-    }
-
-    .wave {
-      position: absolute;
-      inset: 0;
-      border: 2px solid #818cf8;
-      border-radius: 50%;
-      opacity: 0;
-      pointer-events: none;
-    }
-
-    .listening .wave {
-      animation: voiceWave 1.5s infinite;
-    }
-
-    .listening .wave:nth-child(2) {
-      animation-delay: 0.5s;
-    }
-
-    @keyframes voiceWave {
-      0% { transform: scale(1); opacity: 0.5; }
-      100% { transform: scale(1.8); opacity: 0; }
-    }
-
-    .timer {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 20px;
-      font-weight: 700;
-      color: rgba(255,255,255,.78);
-    }
-
-    .status-msg {
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--accent);
-      text-align:center;
-      min-height: 18px;
-    }
-
-    .action-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 12px;
-    }
-
-    .btn {
-      min-height: 54px;
-      border-radius: 18px;
-      font-family: inherit;
-      font-weight: 800;
-      font-size: 15px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: none;
-      transition: all 0.2s;
+    .choice-link{
+      font-size:11px;
+      font-weight:900;
+      color:#c7d2fe;
       text-decoration:none;
     }
 
-    .btn-primary {
-      background: var(--ai-grad);
-      color: #05060d;
-      box-shadow:0 12px 26px rgba(129,140,248,.18);
-    }
-
-    .btn-primary:disabled {
-      opacity: 0.25;
-      filter: grayscale(1);
-      cursor:not-allowed;
-      box-shadow:none;
-    }
-
-    .btn-secondary {
-      background: rgba(255,255,255,0.05);
-      color: #fff;
-      border: 1px solid var(--panel-border);
-    }
-
-    .btn:active {
-      transform: scale(0.98);
-    }
-
-    .completed-wrap{
+    .summary-card{
       display:flex;
       flex-direction:column;
       gap:10px;
+      background:linear-gradient(145deg, rgba(255,255,255,.05), rgba(255,255,255,.01));
+      border:1px solid var(--panel-border);
+      border-radius:22px;
+      padding:16px;
+      backdrop-filter:blur(15px);
+      -webkit-backdrop-filter:blur(15px);
+      box-shadow:0 14px 30px rgba(0,0,0,.14);
     }
 
-    .completed-title{
-      margin:0;
-      font-size:12px;
-      font-weight:900;
-      letter-spacing:1px;
-      color:rgba(255,255,255,.72);
-      text-transform:uppercase;
-    }
-
-    .completed-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .completed-item {
-      background: rgba(255,255,255,0.02);
-      border: 1px solid var(--panel-border);
-      padding: 12px 16px;
-      border-radius: 14px;
-      display: flex;
-      justify-content: space-between;
-      gap:12px;
-      font-size: 12px;
-      font-weight: 700;
+    .summary-line{
+      font-size:13px;
       color:#fff;
+      line-height:1.45;
+    }
+
+    .summary-line span{
+      color:rgba(255,255,255,.72);
+    }
+
+    .action-grid{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:12px;
+    }
+
+    .btn{
+      min-height:54px;
+      border-radius:18px;
+      font-family:inherit;
+      font-weight:800;
+      font-size:15px;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border:none;
+      transition:all .2s;
+      text-decoration:none;
+    }
+
+    .btn:active{
+      transform:scale(.98);
+    }
+
+    .btn-primary{
+      background:var(--ai-grad);
+      color:#05060d;
+      box-shadow:0 12px 26px rgba(129,140,248,.18);
+    }
+
+    .btn-secondary{
+      background:rgba(255,255,255,.05);
+      color:#fff;
+      border:1px solid var(--panel-border);
+    }
+
+    .note{
+      font-size:11px;
+      line-height:1.5;
+      color:var(--muted);
+      text-align:center;
+      padding:0 4px;
     }
 
     .toast{
-      position: fixed;
+      position:fixed;
       left:50%;
       top:18px;
-      transform: translateX(-50%) translateY(-120px);
-      background: rgba(10,10,18,.92);
+      transform:translateX(-50%) translateY(-120px);
+      background:rgba(10,10,18,.92);
       border:1px solid rgba(165,180,252,.35);
-      padding: 10px 14px;
-      border-radius: 999px;
+      padding:10px 14px;
+      border-radius:999px;
       color:#fff;
       z-index:999999;
       font-weight:900;
       font-size:12px;
       transition:.25s;
-      backdrop-filter: blur(12px);
+      backdrop-filter:blur(12px);
       pointer-events:none;
-      max-width:min(92vw, 520px);
+      max-width:min(92vw,520px);
       text-align:center;
     }
 
     .toast.show{
-      transform: translateX(-50%) translateY(0);
+      transform:translateX(-50%) translateY(0);
     }
 
     @media (max-width:390px){
-      #pageContent{ padding:12px 14px 20px; }
+      #pageContent{ padding:12px 14px 22px; }
       .title{ font-size:25px; }
-      .sample-text{ font-size:20px; min-height:74px; }
-      .voice-grid{ grid-template-columns:1fr; }
+      .choice-grid{ grid-template-columns:1fr; }
     }
   </style>
 </head>
@@ -455,162 +347,240 @@
     </button>
 
     <section class="page-head">
-      <div class="page-kicker">Voice Profile</div>
-      <h1 class="title">Sesini <span class="ai">Tanıt</span></h1>
-      <p class="page-sub">Kısa cümleleri okuyarak kendine özel ses profilini oluştur ve çeviri sesini seç.</p>
+      <div class="page-kicker">Translation Settings</div>
+      <h1 class="title">Çeviri <span class="ai">Ayarları</span></h1>
+      <p class="page-sub">Ses seçimini ve çeviri modunu buradan belirle. Kaydet dediğinde seçimlerin saklanır ve ana sayfaya dönersün... pardon dönersin 😄</p>
     </section>
   </div>
 
-  <section class="voice-settings-panel">
+  <section class="settings-panel">
     <h2 class="panel-title">Ses Seçimi</h2>
+    <p class="panel-sub">SideToSide ve FaceToFace bu ortak ayarı kullanır.</p>
 
-    <div class="voice-grid">
-      <div class="voice-card" data-voice="auto">
-        <div class="voice-name">Otomatik</div>
-        <div class="voice-desc">Varsayılan sistem sesi</div>
+    <div class="choice-grid" id="voiceGrid">
+      <div class="choice-card" data-voice="auto">
+        <div class="choice-top">
+          <div class="choice-name">Otomatik</div>
+          <div class="choice-badge free">Ücretsiz</div>
+        </div>
+        <div class="choice-desc">Sistem uygun ücretsiz sesi otomatik kullanır.</div>
       </div>
 
-      <div class="voice-card" data-voice="female">
-        <div class="voice-name">Kadın Ses</div>
-        <div class="voice-desc">Kadın tonlu çeviri</div>
-      </div>
-
-      <div class="voice-card" data-voice="male">
-        <div class="voice-name">Erkek Ses</div>
-        <div class="voice-desc">Erkek tonlu çeviri</div>
-      </div>
-
-      <div class="voice-card" data-voice="clone">
-        <div class="voice-name">Kendi Sesim</div>
-        <div class="voice-desc" id="cloneVoiceDesc">Henüz ses dosyası oluşturmadınız</div>
+      <div class="choice-card" data-voice="clone" id="cloneCard">
+        <div class="choice-top">
+          <div class="choice-name">Kendi Sesim</div>
+          <div class="choice-badge paid">Jetonlu</div>
+        </div>
+        <div class="choice-desc" id="cloneVoiceDesc">Henüz özel ses profili oluşturmadınız.</div>
+        <a href="/pages/voice_profile.html" class="choice-link" id="createVoiceLink">Ses oluştur / güncelle</a>
       </div>
     </div>
   </section>
 
-  <section class="progress-container">
-    <div class="progress-info">
-      <span>İLERLEME</span>
-      <span id="progressCount">1 / 6</span>
-    </div>
-    <div class="progress-bar">
-      <div class="progress-fill" id="progressFill"></div>
+  <section class="settings-panel">
+    <h2 class="panel-title">Çeviri Modu</h2>
+    <p class="panel-sub">Popup’taki mantığın aynısı burada sabit ayar olarak çalışır.</p>
+
+    <div class="choice-grid" id="translateGrid">
+      <div class="choice-card" data-translate="normal">
+        <div class="choice-top">
+          <div class="choice-name">Translate</div>
+          <div class="choice-badge free">Ücretsiz</div>
+        </div>
+        <div class="choice-desc">Hızlı ve düz çeviri yapar. Günlük kullanım için hafif moddur.</div>
+      </div>
+
+      <div class="choice-card" data-translate="cultural">
+        <div class="choice-top">
+          <div class="choice-name">Kültürel Translate</div>
+          <div class="choice-badge paid">Jetonlu</div>
+        </div>
+        <div class="choice-desc">Daha doğal, bağlama daha uygun ve daha insan gibi çeviri sunar.</div>
+      </div>
     </div>
   </section>
 
-  <section class="sample-card">
-    <span class="sample-label" id="sampleLabel">CÜMLE 1</span>
-    <div class="sample-text" id="sampleText">Yükleniyor...</div>
-  </section>
-
-  <section class="mic-section">
-    <div class="mic-btn-wrapper" id="micWrapper">
-      <div class="wave"></div>
-      <div class="wave"></div>
-      <button class="mic-btn" id="recordBtn" type="button">
-        <svg viewBox="0 0 24 24" stroke-width="2.5"><path d="M12 1v10m-7-4a7 7 0 0014 0M12 18v5"/></svg>
-      </button>
-    </div>
-    <div class="timer" id="timerText">00:00</div>
-    <div class="status-msg" id="statusText">Mikrofona dokun ve başla</div>
+  <section class="summary-card">
+    <div class="summary-line"><strong>Seçili Ses:</strong> <span id="voiceSummary">Otomatik</span></div>
+    <div class="summary-line"><strong>Seçili Mod:</strong> <span id="translateSummary">Translate</span></div>
   </section>
 
   <section class="action-grid">
-    <button class="btn btn-primary" id="nextBtn" disabled>Sonraki Cümle</button>
-    <button class="btn btn-primary" id="finishBtn" style="display:none;">Kaydet ve Tamamla</button>
+    <button class="btn btn-primary" id="saveBtn" type="button">Kaydet ve Ana Sayfaya Dön</button>
     <button class="btn btn-secondary" id="cancelBtn" type="button">Vazgeç</button>
   </section>
 
-  <section class="completed-wrap">
-    <h2 class="completed-title">Tamamlananlar</h2>
-    <div class="completed-list" id="completedList"></div>
-  </section>
+  <div class="note">
+    Burada kaydettiğin seçimler FaceToFace ve SideToSide içinde ortak kullanılır.
+  </div>
 
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script type="module">
-import { supabase } from "/js/supabase_client.js";
+  import { supabase } from "/js/supabase_client.js";
 
-const voiceCards = document.querySelectorAll(".voice-card");
-const cloneVoiceDesc = document.getElementById("cloneVoiceDesc");
+  const VOICE_KEY = "facetoface_voice_mode";
+  const TRANSLATE_KEY = "facetoface_translate_mode";
+  const LEGACY_TTS_KEY = "tts_voice";
+  const LEGACY_LIVE_KEY = "live_interpreter_voice";
 
-const VOICE_KEY = "tts_voice";
-const LEGACY_KEY = "live_interpreter_voice";
+  const voiceGrid = document.getElementById("voiceGrid");
+  const translateGrid = document.getElementById("translateGrid");
+  const voiceSummary = document.getElementById("voiceSummary");
+  const translateSummary = document.getElementById("translateSummary");
+  const saveBtn = document.getElementById("saveBtn");
+  const cancelBtn = document.getElementById("cancelBtn");
+  const backBtn = document.getElementById("backBtn");
+  const toastEl = document.getElementById("toast");
+  const cloneVoiceDesc = document.getElementById("cloneVoiceDesc");
 
-let currentVoice = localStorage.getItem(VOICE_KEY) || localStorage.getItem(LEGACY_KEY) || "auto";
+  let voiceMode = normalizeVoiceMode(
+    localStorage.getItem(VOICE_KEY) ||
+    localStorage.getItem(LEGACY_TTS_KEY) ||
+    localStorage.getItem(LEGACY_LIVE_KEY) ||
+    "auto"
+  );
 
-function showToast(msg){
-  const toast = document.getElementById("toast");
-  if(!toast) return;
-  toast.textContent = String(msg || "");
-  toast.classList.add("show");
-  clearTimeout(window.__voiceToast);
-  window.__voiceToast = setTimeout(() => {
-    toast.classList.remove("show");
-  }, 1600);
-}
+  let translateMode = normalizeTranslateMode(
+    localStorage.getItem(TRANSLATE_KEY) || "normal"
+  );
 
-function renderVoice(){
-  voiceCards.forEach(v => {
-    v.classList.toggle("active", v.dataset.voice === currentVoice);
-  });
-}
-
-async function checkVoiceProfile(){
-  try{
-    const { data: { user } } = await supabase.auth.getUser();
-    if(!user){
-      if(cloneVoiceDesc) cloneVoiceDesc.textContent = "Henüz ses dosyası oluşturmadınız";
-      return;
-    }
-
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("voice_sample_path")
-      .eq("id", user.id)
-      .maybeSingle();
-
-    if(error){
-      console.warn("[voice profile check]", error);
-      if(cloneVoiceDesc) cloneVoiceDesc.textContent = "Henüz ses dosyası oluşturmadınız";
-      return;
-    }
-
-    const hasVoice =
-      !!data?.voice_sample_path &&
-      String(data.voice_sample_path).trim() !== "" &&
-      String(data.voice_sample_path).trim() !== "[]" &&
-      String(data.voice_sample_path).trim() !== 'null';
-
-    if(!hasVoice){
-      if(cloneVoiceDesc) cloneVoiceDesc.textContent = "Henüz ses dosyası oluşturmadınız";
-    }else{
-      if(cloneVoiceDesc) cloneVoiceDesc.textContent = "Ses kaydınız bulunmaktadır. Dilerseniz ses kaydınızı yenileyebilirsiniz.";
-    }
-  }catch(e){
-    console.warn("[voice profile check]", e);
-    if(cloneVoiceDesc) cloneVoiceDesc.textContent = "Henüz ses dosyası oluşturmadınız";
+  function normalizeVoiceMode(v){
+    return String(v || "").trim().toLowerCase() === "clone" ? "clone" : "auto";
   }
-}
 
-voiceCards.forEach(card => {
-  card.addEventListener("click", () => {
-    currentVoice = card.dataset.voice || "auto";
-    localStorage.setItem(VOICE_KEY, currentVoice);
-    localStorage.setItem(LEGACY_KEY, currentVoice);
-    renderVoice();
-    showToast("Ses seçimi güncellendi");
+  function normalizeTranslateMode(v){
+    return String(v || "").trim().toLowerCase() === "cultural" ? "cultural" : "normal";
+  }
+
+  function voiceLabel(v){
+    return normalizeVoiceMode(v) === "clone" ? "Kendi Sesim" : "Otomatik";
+  }
+
+  function translateLabel(v){
+    return normalizeTranslateMode(v) === "cultural" ? "Kültürel Translate" : "Translate";
+  }
+
+  function showToast(msg){
+    if(!toastEl) return;
+    toastEl.textContent = String(msg || "");
+    toastEl.classList.add("show");
+    clearTimeout(window.__translationSettingsToast);
+    window.__translationSettingsToast = setTimeout(() => {
+      toastEl.classList.remove("show");
+    }, 1600);
+  }
+
+  function paintSelections(){
+    voiceGrid?.querySelectorAll(".choice-card").forEach(card => {
+      card.classList.toggle("active", normalizeVoiceMode(card.dataset.voice) === voiceMode);
+    });
+
+    translateGrid?.querySelectorAll(".choice-card").forEach(card => {
+      card.classList.toggle("active", normalizeTranslateMode(card.dataset.translate) === translateMode);
+    });
+  }
+
+  function refreshSummary(){
+    if(voiceSummary) voiceSummary.textContent = voiceLabel(voiceMode);
+    if(translateSummary) translateSummary.textContent = translateLabel(translateMode);
+  }
+
+  async function checkVoiceProfile(){
+    try{
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if(!user){
+        if(cloneVoiceDesc) cloneVoiceDesc.textContent = "Henüz özel ses profili oluşturmadınız.";
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("voice_sample_path, tts_voice_ready, tts_voice_id")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if(error){
+        console.warn("[translation_settings voice check]", error);
+        if(cloneVoiceDesc) cloneVoiceDesc.textContent = "Henüz özel ses profili oluşturmadınız.";
+        return;
+      }
+
+      const hasSamplePath =
+        !!data?.voice_sample_path &&
+        String(data.voice_sample_path).trim() !== "" &&
+        String(data.voice_sample_path).trim() !== "[]" &&
+        String(data.voice_sample_path).trim() !== "null";
+
+      const hasReadyVoice = !!(data?.tts_voice_ready && data?.tts_voice_id);
+
+      if(hasSamplePath || hasReadyVoice){
+        if(cloneVoiceDesc){
+          cloneVoiceDesc.textContent = "Özel ses profiliniz hazır. İsterseniz yeniden güncelleyebilirsiniz.";
+        }
+      }else{
+        if(cloneVoiceDesc){
+          cloneVoiceDesc.textContent = "Henüz özel ses profili oluşturmadınız.";
+        }
+      }
+    }catch(e){
+      console.warn("[translation_settings voice check]", e);
+      if(cloneVoiceDesc) cloneVoiceDesc.textContent = "Henüz özel ses profili oluşturmadınız.";
+    }
+  }
+
+  function saveSettings(){
+    localStorage.setItem(VOICE_KEY, voiceMode);
+    localStorage.setItem(TRANSLATE_KEY, translateMode);
+    localStorage.setItem(LEGACY_TTS_KEY, voiceMode);
+    localStorage.setItem(LEGACY_LIVE_KEY, voiceMode);
+  }
+
+  function goHome(){
+    location.href = "/pages/home.html";
+  }
+
+  voiceGrid?.querySelectorAll(".choice-card").forEach(card => {
+    card.addEventListener("click", () => {
+      voiceMode = normalizeVoiceMode(card.dataset.voice || "auto");
+      paintSelections();
+      refreshSummary();
+      showToast("Ses seçimi güncellendi");
+    });
   });
-});
 
-document.getElementById("backBtn")?.addEventListener("click", () => history.back());
+  translateGrid?.querySelectorAll(".choice-card").forEach(card => {
+    card.addEventListener("click", () => {
+      translateMode = normalizeTranslateMode(card.dataset.translate || "normal");
+      paintSelections();
+      refreshSummary();
+      showToast("Çeviri modu güncellendi");
+    });
+  });
 
-renderVoice();
-checkVoiceProfile();
+  saveBtn?.addEventListener("click", () => {
+    saveSettings();
+    showToast("Ayarlar kaydedildi");
+    setTimeout(() => {
+      goHome();
+    }, 350);
+  });
+
+  cancelBtn?.addEventListener("click", () => {
+    goHome();
+  });
+
+  backBtn?.addEventListener("click", () => {
+    goHome();
+  });
+
+  paintSelections();
+  refreshSummary();
+  checkVoiceProfile();
 </script>
-
-<script type="module" src="/js/voice_profile_boot.js?v=final_free_all_2"></script>
 
 </body>
 </html>
