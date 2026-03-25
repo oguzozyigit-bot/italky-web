@@ -1099,6 +1099,7 @@ let activeRoomCode = "";
 let previewSocket = null;
 let redirected = false;
 let refreshTimer = null;
+let roomInitialized = false;
 
 function setHeroStatus(text){
   if(heroStatus) heroStatus.textContent = text || "";
@@ -1115,7 +1116,11 @@ function makeConnectionCode(length = 6){
 
 function setConnectionCode(code){
   activeRoomCode = String(code || "").trim().toUpperCase();
-  if(connectionCodeText) connectionCodeText.textContent = activeRoomCode || "ABC123";
+
+  if(connectionCodeText){
+    connectionCodeText.textContent = activeRoomCode || "ABC123";
+  }
+
   try{
     localStorage.setItem(ROOM_CODE_KEY, activeRoomCode);
   }catch{}
@@ -1147,27 +1152,35 @@ async function createRoom(myLang = "tr"){
 }
 
 function stopPreviewSocket(){
-  try{ previewSocket?.close?.(); }catch{}
+  try{
+    previewSocket?.close?.();
+  }catch{}
   previewSocket = null;
 }
 
 function stopRefreshTimer(){
-  try{ clearTimeout(refreshTimer); }catch{}
+  try{
+    clearTimeout(refreshTimer);
+  }catch{}
   refreshTimer = null;
 }
 
 function launchHostRoom(roomId){
   if(!roomId || redirected) return;
+
   redirected = true;
   stopRefreshTimer();
+  stopPreviewSocket();
+
   location.href = `/pages/sidetoside.html?room=${encodeURIComponent(roomId)}&role=host&my=tr&auto=1`;
 }
 
 function scheduleRefresh(){
   stopRefreshTimer();
+
   refreshTimer = setTimeout(() => {
     if(!redirected && document.visibilityState === "visible"){
-      prepareRoom();
+      prepareRoom(true);
     }
   }, 45000);
 }
@@ -1188,55 +1201,57 @@ function startPreviewSocket(roomId, myLang = "tr"){
   }
 
   previewSocket.onopen = () => {
-    setHeroStatus("Bağlantı kodu hazır. Karşı taraf bağlanınca sohbet başlayacak.");
+    setHeroStatus("Bağlantı kodu hazır. Karşı taraf bekleniyor...");
   };
 
   previewSocket.onmessage = (event) => {
-  try{
-    const payload = JSON.parse(event.data);
-    const type = String(payload?.type || "").trim();
+    try{
+      const payload = JSON.parse(event.data);
+      const type = String(payload?.type || "").trim();
 
-    console.log("[HOME PREVIEW MESSAGE]", payload);
+      console.log("[HOME PREVIEW MESSAGE]", payload);
 
-    if(type === "peer_joined"){
-      setHeroStatus("Karşı taraf bağlandı. Oda açılıyor...");
-      launchHostRoom(roomId);
-      return;
-    }
-
-    /* 🔥 asıl kritik ekleme */
-    if(type === "presence"){
-      const peerConnected =
-        payload?.peer_connected === true ||
-        !!String(payload?.guest_lang || "").trim() ||
-        !!String(payload?.guest_id || "").trim();
-
-      if(peerConnected){
+      if(type === "peer_joined"){
         setHeroStatus("Karşı taraf bağlandı. Oda açılıyor...");
         launchHostRoom(roomId);
         return;
       }
 
-      return;
-    }
+      if(type === "presence"){
+        const peerConnected =
+          payload?.peer_connected === true ||
+          !!String(payload?.guest_lang || "").trim() ||
+          !!String(payload?.guest_id || "").trim();
 
-    if(type === "translated_message"){
-      setHeroStatus("Karşı taraf bağlandı. Oda açılıyor...");
-      launchHostRoom(roomId);
-      return;
-    }
+        if(peerConnected){
+          setHeroStatus("Karşı taraf bağlandı. Oda açılıyor...");
+          launchHostRoom(roomId);
+          return;
+        }
 
-    if(type === "error"){
-      console.warn("[home preview ws error payload]", payload);
+        setHeroStatus("Bağlantı kodu hazır. Karşı taraf bekleniyor...");
+        return;
+      }
+
+      if(type === "translated_message"){
+        setHeroStatus("Karşı taraf bağlandı. Oda açılıyor...");
+        launchHostRoom(roomId);
+        return;
+      }
+
+      if(type === "error"){
+        console.warn("[home preview ws error payload]", payload);
+      }
+    }catch(e){
+      console.warn("[home preview ws parse]", e);
     }
-  }catch(e){
-    console.warn("[home preview ws parse]", e);
-  }
-};
+  };
 
   previewSocket.onerror = () => {
-    setHeroStatus("Bağlantı önizleme hatası");
-    scheduleRefresh();
+    if(!redirected){
+      setHeroStatus("Bağlantı önizleme hatası");
+      scheduleRefresh();
+    }
   };
 
   previewSocket.onclose = () => {
@@ -1247,9 +1262,26 @@ function startPreviewSocket(roomId, myLang = "tr"){
   };
 }
 
-async function prepareRoom(){
-  redirected = false;
+async function prepareRoom(forceNew = false){
+  if(redirected) return;
+
   stopRefreshTimer();
+
+  if(!forceNew){
+    try{
+      const savedRoomId = String(localStorage.getItem(ROOM_KEY) || "").trim();
+      const savedCode = String(localStorage.getItem(ROOM_CODE_KEY) || "").trim().toUpperCase();
+
+      if(savedRoomId && savedCode){
+        activeRoomId = savedRoomId;
+        setConnectionCode(savedCode);
+        setHeroStatus("Bağlantı kodu hazır. Karşı taraf bekleniyor...");
+        startPreviewSocket(activeRoomId, "tr");
+        return;
+      }
+    }catch{}
+  }
+
   setHeroStatus("Oda hazırlanıyor...");
 
   try{
@@ -1262,8 +1294,10 @@ async function prepareRoom(){
 
     setConnectionCode(created.host_code || makeConnectionCode(6));
 
-    localStorage.setItem(ROOM_KEY, activeRoomId);
-    localStorage.setItem(ROOM_LANG_KEY, "tr");
+    try{
+      localStorage.setItem(ROOM_KEY, activeRoomId);
+      localStorage.setItem(ROOM_LANG_KEY, "tr");
+    }catch{}
 
     setHeroStatus("Bağlantı kodu hazır. Karşı taraf bekleniyor...");
     startPreviewSocket(activeRoomId, "tr");
@@ -1287,24 +1321,22 @@ copyConnectionCodeBtn?.addEventListener("click", async () => {
     temp.value = value;
     document.body.appendChild(temp);
     temp.select();
-    try{ document.execCommand("copy"); }catch{}
+    try{
+      document.execCommand("copy");
+    }catch{}
     temp.remove();
     setHeroStatus("Bağlantı kodu kopyalandı.");
   }
 });
 
-/* 🔥 SADECE 1 KERE ODA OLUŞTUR */
-let roomInitialized = false;
-
 async function initOnce(){
   if(roomInitialized) return;
   roomInitialized = true;
-  await prepareRoom();
+  await prepareRoom(false);
 }
 
 initOnce();
 
-/* SADECE TEMİZ KAPANIŞ */
 window.addEventListener("beforeunload", () => {
   stopPreviewSocket();
   stopRefreshTimer();
