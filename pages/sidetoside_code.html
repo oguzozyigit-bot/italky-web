@@ -1,229 +1,462 @@
 <!doctype html>
 <html lang="tr">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-<title>italkyAI • Bağlantı Kodu Gir</title>
-<meta name="theme-color" content="#120d16"/>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+  <title>italkyAI • Bağlantı Kodu Gir</title>
+  <meta name="theme-color" content="#120d16"/>
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
-<style>
-/* aynen bırakıldı */
-</style>
+  <style>
+    :root{
+      --txt:rgba(255,255,255,.96);
+      --muted:rgba(255,255,255,.64);
+      --line:rgba(255,255,255,.12);
+      --ai-grad:linear-gradient(135deg,#67e8f9 0%, #818cf8 46%, #f472b6 100%);
+      --bg:#120d16;
+      --good:#22c55e;
+      --warn:#f59e0b;
+      --bad:#ef4444;
+    }
+
+    *{
+      box-sizing:border-box;
+      -webkit-tap-highlight-color:transparent;
+      outline:none;
+    }
+
+    html,body{
+      margin:0;
+      width:100%;
+      min-height:100%;
+      background:var(--bg);
+      color:var(--txt);
+      font-family:'Outfit',sans-serif;
+      overflow:hidden;
+    }
+
+    body{
+      background:
+        radial-gradient(circle at 50% 0%, rgba(251,146,60,.18) 0%, transparent 28%),
+        radial-gradient(circle at 18% 16%, rgba(244,114,182,.12) 0%, transparent 25%),
+        radial-gradient(circle at 84% 14%, rgba(96,165,250,.10) 0%, transparent 20%),
+        linear-gradient(180deg, #1d1016 0%, #150e19 34%, #120d16 100%);
+    }
+
+    #pageContent{
+      width:100%;
+      min-height:100dvh;
+      padding:14px;
+      overflow-y:auto;
+      overflow-x:hidden;
+      scrollbar-width:none;
+      -webkit-overflow-scrolling:touch;
+    }
+
+    #pageContent::-webkit-scrollbar{ display:none; }
+
+    .wrap{
+      width:100%;
+      max-width:760px;
+      margin:0 auto;
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+      padding-bottom:18px;
+    }
+
+    .hero,
+    .entry-card{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.04);
+      border-radius:28px;
+      box-shadow:0 16px 40px rgba(0,0,0,.22);
+      backdrop-filter:blur(14px);
+    }
+
+    .hero{
+      padding:20px 18px;
+    }
+
+    .title{
+      margin:0;
+      font-family:"Space Grotesk",sans-serif;
+      font-size:28px;
+      line-height:1.02;
+      letter-spacing:-.8px;
+    }
+
+    .sub{
+      margin:10px 0 0;
+      font-size:13px;
+      line-height:1.45;
+      color:var(--muted);
+      max-width:560px;
+    }
+
+    .entry-card{
+      padding:18px 16px;
+      display:flex;
+      flex-direction:column;
+      gap:16px;
+    }
+
+    .code-label{
+      font-size:12px;
+      font-weight:900;
+      letter-spacing:1px;
+      text-transform:uppercase;
+      color:rgba(255,255,255,.72);
+      text-align:center;
+    }
+
+    .code-input{
+      width:100%;
+      min-height:64px;
+      border-radius:22px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.06);
+      color:#fff;
+      text-align:center;
+      font-family:"Space Grotesk",sans-serif;
+      font-size:28px;
+      font-weight:700;
+      letter-spacing:8px;
+      padding:0 16px;
+      text-transform:uppercase;
+      box-shadow:inset 0 0 18px rgba(255,255,255,.03);
+    }
+
+    .code-input::placeholder{
+      color:rgba(255,255,255,.24);
+      letter-spacing:6px;
+    }
+
+    .code-input:focus{
+      border-color:rgba(129,140,248,.58);
+      box-shadow:
+        0 0 0 1px rgba(129,140,248,.25),
+        0 0 24px rgba(129,140,248,.12),
+        inset 0 0 18px rgba(255,255,255,.03);
+    }
+
+    .status{
+      min-height:22px;
+      text-align:center;
+      font-size:13px;
+      font-weight:800;
+      color:rgba(255,255,255,.82);
+    }
+
+    .status.good{ color:#86efac; }
+    .status.warn{ color:#fde68a; }
+    .status.bad{ color:#fca5a5; }
+
+    .btn-row{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .btn{
+      min-height:54px;
+      border:none;
+      border-radius:18px;
+      font-family:inherit;
+      font-size:15px;
+      font-weight:900;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-decoration:none;
+      transition:transform .18s ease, opacity .18s ease, box-shadow .18s ease;
+      padding:0 16px;
+    }
+
+    .btn:active{ transform:scale(.985); }
+
+    .btn-primary{
+      background:var(--ai-grad);
+      color:#080b17;
+      box-shadow:0 14px 28px rgba(99,102,241,.24);
+    }
+
+    .btn-dark{
+      background:rgba(255,255,255,.06);
+      color:#fff;
+      border:1px solid rgba(255,255,255,.10);
+    }
+
+    .btn[disabled]{
+      opacity:.45;
+      pointer-events:none;
+      filter:grayscale(.15);
+    }
+
+    .toast{
+      position: fixed;
+      left:50%;
+      top:18px;
+      transform: translateX(-50%) translateY(-120px);
+      background: rgba(10,10,18,.92);
+      border:1px solid rgba(165,180,252,.35);
+      padding: 10px 14px;
+      border-radius: 999px;
+      color:#fff;
+      z-index:999999;
+      font-weight:900;
+      font-size:12px;
+      transition:.25s;
+      backdrop-filter: blur(12px);
+      pointer-events:none;
+      max-width:min(92vw, 520px);
+      text-align:center;
+    }
+
+    .toast.show{
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @media (min-width:700px){
+      .btn-row{
+        flex-direction:row;
+      }
+      .btn-row .btn{
+        flex:1;
+      }
+    }
+
+    @media (max-width:390px){
+      .title{ font-size:25px; }
+      .code-input{
+        font-size:24px;
+        letter-spacing:6px;
+      }
+    }
+  </style>
 </head>
 <body>
 
-<main id="pageContent">
-  <div class="wrap">
+  <main id="pageContent">
+    <div class="wrap">
 
-    <section class="hero">
-      <h1 class="title">Bağlantı Kodu Gir</h1>
-      <p class="sub">
-        Karşı taraftaki 6 karakterli bağlantı kodunu gir. Oda bulunduğunda doğrudan bağlanırsın.
-      </p>
-    </section>
+      <section class="hero">
+        <h1 class="title">Bağlantı Kodu Gir</h1>
+        <p class="sub">
+          Karşı taraftaki 6 karakterli bağlantı kodunu gir. Oda bulunduğunda doğrudan bağlanırsın.
+        </p>
+      </section>
 
-    <section class="entry-card">
-      <div class="code-label">Bağlantı Kodu</div>
+      <section class="entry-card">
+        <div class="code-label">Bağlantı Kodu</div>
 
-      <input id="codeInput" class="code-input"
-        type="text" maxlength="6"
-        placeholder="ABC123"
-        autocomplete="off"
-        autocapitalize="characters"
-        spellcheck="false"
-      />
+        <input
+          id="codeInput"
+          class="code-input"
+          type="text"
+          maxlength="6"
+          placeholder="ABC123"
+          autocomplete="off"
+          autocapitalize="characters"
+          spellcheck="false"
+        />
 
-      <div id="statusText" class="status">Kod bekleniyor...</div>
+        <div id="statusText" class="status">Kod bekleniyor...</div>
 
-      <div class="btn-row">
-        <button id="joinBtn" class="btn btn-primary">Odaya Katıl</button>
-        <button id="backBtn" class="btn btn-dark">Geri Dön</button>
-      </div>
-    </section>
+        <div class="btn-row">
+          <button id="joinBtn" class="btn btn-primary" type="button">Odaya Katıl</button>
+          <button id="backBtn" class="btn btn-dark" type="button">Geri Dön</button>
+        </div>
+      </section>
 
-  </div>
-</main>
+    </div>
+  </main>
 
-<div class="toast" id="pageToast"></div>
+  <div class="toast" id="pageToast"></div>
 
-<script type="module">
-import { mountShell } from "/js/ui_shell.js";
-mountShell({ scroll:"auto" });
-</script>
-
-<script type="module">
-
-const API_BASE = "https://italky-api.onrender.com/api";
-
-const codeInput = document.getElementById("codeInput");
-const joinBtn = document.getElementById("joinBtn");
-const backBtn = document.getElementById("backBtn");
-const statusText = document.getElementById("statusText");
-const toastEl = document.getElementById("pageToast");
-
-const ROOM_KEY = "italky_active_interpreter_room_id";
-const ROOM_CODE_KEY = "italky_active_interpreter_code";
-
-/* =========================
-   UI HELPERS
-========================= */
-function toast(msg){
-  toastEl.textContent = msg;
-  toastEl.classList.add("show");
-  setTimeout(()=>toastEl.classList.remove("show"),1500);
-}
-
-function setStatus(text, type=""){
-  statusText.className = "status";
-  if(type) statusText.classList.add(type);
-  statusText.textContent = text;
-}
-
-function normalize(code){
-  return String(code||"")
-    .toUpperCase()
-    .replace(/[^A-Z0-9]/g,"")
-    .slice(0,6);
-}
-
-function setBusy(v){
-  joinBtn.disabled = v;
-  joinBtn.textContent = v ? "Oda aranıyor..." : "Odaya Katıl";
-}
-
-/* =========================
-   REDIRECT
-========================= */
-function goLive(roomId, code){
-  if(!roomId) return;
-
-  localStorage.setItem(ROOM_KEY, roomId);
-  localStorage.setItem(ROOM_CODE_KEY, code);
-
-  location.href =
-    `/pages/live_interpreter.html?room=${encodeURIComponent(roomId)}&role=guest&my=tr&auto=1`;
-}
-
-/* =========================
-   API
-========================= */
-async function resolveRoom(code){
-  const r = await fetch(`${API_BASE}/interpreter/resolve-room`,{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify({
-      host_code: code,
-      my_lang: "tr",
-      mode: "interpreter"
-    })
-  });
-
-  const j = await r.json().catch(()=>({}));
-
-  if(!r.ok || !j?.room_id){
-    throw new Error("Kod eşleşmedi");
-  }
-
-  return j.room_id;
-}
-
-/* =========================
-   JOIN FLOW
-========================= */
-async function join(){
-  const code = normalize(codeInput.value);
-  codeInput.value = code;
-
-  if(code.length !== 6){
-    setStatus("Kod 6 karakter olmalı","bad");
-    toast("Eksik kod");
-    return;
-  }
-
-  setBusy(true);
-  setStatus("Oda aranıyor...","warn");
-
-  try{
-    const roomId = await resolveRoom(code);
-
-    setStatus("Bağlanılıyor...","good");
-    toast("Bağlandı");
-
-    goLive(roomId, code);
-
-  }catch(e){
-    setStatus("Kod bulunamadı","bad");
-    toast("Geçersiz kod");
-  }
-
-  setBusy(false);
-}
-
-/* =========================
-   INPUT EVENTS
-========================= */
-codeInput.addEventListener("input",()=>{
-  const c = normalize(codeInput.value);
-  codeInput.value = c;
-
-  if(c.length === 6){
-    setStatus("Hazır","good");
-  }else{
-    setStatus("Kod giriliyor...","warn");
-  }
-});
-
-codeInput.addEventListener("keydown",(e)=>{
-  if(e.key==="Enter"){
-    e.preventDefault();
-    join();
-  }
-});
-
-joinBtn.addEventListener("click", join);
-
-backBtn.addEventListener("click",()=>{
-  location.href="/pages/sidetoside_entry.html";
-});
-
-/* =========================
-   QR / AUTO FLOW 🔥
-========================= */
-(function init(){
-
-  const params = new URLSearchParams(location.search);
-
-  const code = normalize(params.get("code"));
-  const room = params.get("room");
-  const auto = params.get("auto")==="1";
-  const appRequired = params.get("app")==="required";
-  const source = params.get("source");
-
-  // 👉 QR'dan gelmiş ama app yoksa
-  if(source==="qr" && appRequired){
-    // Webview değilse (browser)
-    if(!window.Native){
-      alert("Bu özelliği kullanabilmek için italkyAI uygulaması gereklidir.");
-      return;
+  <script type="module">
+    import { mountShell } from "/js/ui_shell.js";
+    try{
+      mountShell({ scroll:"auto" });
+    }catch(e){
+      console.error("ui_shell HATASI:", e);
     }
-  }
+  </script>
 
-  if(code){
-    codeInput.value = code;
-    setStatus("Kod hazır","good");
-  }
+  <script type="module">
+    const API_BASE = "https://italky-api.onrender.com/api";
 
-  // 🔥 otomatik giriş
-  if(auto && room){
-    goLive(room, code);
-  }
+    const codeInput = document.getElementById("codeInput");
+    const joinBtn = document.getElementById("joinBtn");
+    const backBtn = document.getElementById("backBtn");
+    const statusText = document.getElementById("statusText");
+    const toastEl = document.getElementById("pageToast");
 
-})();
+    const ROOM_KEY = "italky_active_interpreter_room_id";
+    const ROOM_CODE_KEY = "italky_active_interpreter_code";
 
-</script>
+    function toast(msg){
+      if(!toastEl) return;
+      toastEl.textContent = String(msg || "");
+      toastEl.classList.add("show");
+      clearTimeout(window.__s2sCodeToastTimer);
+      window.__s2sCodeToastTimer = setTimeout(() => {
+        toastEl.classList.remove("show");
+      }, 1500);
+    }
+
+    function setStatus(text, type=""){
+      if(!statusText) return;
+      statusText.className = "status";
+      if(type) statusText.classList.add(type);
+      statusText.textContent = String(text || "");
+    }
+
+    function normalize(code){
+      return String(code || "")
+        .toUpperCase()
+        .replace(/[^A-Z0-9]/g, "")
+        .slice(0, 6);
+    }
+
+    function setBusy(v){
+      if(!joinBtn) return;
+      joinBtn.disabled = !!v;
+      joinBtn.textContent = v ? "Oda aranıyor..." : "Odaya Katıl";
+    }
+
+    function goLive(roomId, code){
+      const cleanRoom = String(roomId || "").trim();
+      const cleanCode = normalize(code || "");
+
+      if(!cleanRoom) return;
+
+      try{
+        localStorage.setItem(ROOM_KEY, cleanRoom);
+        localStorage.setItem(ROOM_CODE_KEY, cleanCode);
+      }catch{}
+
+      location.href = `/pages/sidetoside_live.html?room=${encodeURIComponent(cleanRoom)}&role=guest&my=tr&auto=1`;
+    }
+
+    async function resolveRoom(code){
+      const r = await fetch(`${API_BASE}/interpreter/resolve-room`,{
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body:JSON.stringify({
+          host_code: code,
+          my_lang: "tr",
+          mode: "interpreter"
+        })
+      });
+
+      const j = await r.json().catch(()=>({}));
+
+      if(!r.ok || !j?.room_id){
+        throw new Error(j?.detail || j?.error || "Kod eşleşmedi");
+      }
+
+      return String(j.room_id || "").trim();
+    }
+
+    async function join(){
+      const code = normalize(codeInput?.value || "");
+      if(codeInput) codeInput.value = code;
+
+      if(code.length !== 6){
+        setStatus("Kod 6 karakter olmalı", "bad");
+        toast("Eksik kod");
+        return;
+      }
+
+      setBusy(true);
+      setStatus("Oda aranıyor...", "warn");
+
+      try{
+        const roomId = await resolveRoom(code);
+
+        if(!roomId){
+          throw new Error("Kod eşleşmedi");
+        }
+
+        setStatus("Bağlanılıyor...", "good");
+        toast("Bağlandı");
+        goLive(roomId, code);
+      }catch(e){
+        console.error("[sidetoside_code resolve]", e);
+        setStatus("Kod bulunamadı", "bad");
+        toast("Geçersiz kod");
+      }finally{
+        setBusy(false);
+      }
+    }
+
+    codeInput?.addEventListener("input", () => {
+      const c = normalize(codeInput.value);
+      codeInput.value = c;
+
+      if(!c){
+        setStatus("Kod bekleniyor...");
+        return;
+      }
+
+      if(c.length === 6){
+        setStatus("Hazır", "good");
+      }else{
+        setStatus("Kod giriliyor...", "warn");
+      }
+    });
+
+    codeInput?.addEventListener("keydown", (e) => {
+      if(e.key === "Enter"){
+        e.preventDefault();
+        join();
+      }
+    });
+
+    joinBtn?.addEventListener("click", join);
+
+    backBtn?.addEventListener("click", () => {
+      location.href = "/pages/sidetoside_entry.html";
+    });
+
+    (function init(){
+      const params = new URLSearchParams(location.search);
+
+      const code = normalize(params.get("code") || "");
+      const room = String(params.get("room") || "").trim();
+      const auto = params.get("auto") === "1";
+      const appRequired = params.get("app") === "required";
+      const source = params.get("source");
+
+      if(source === "qr" && appRequired){
+        if(!window.Native){
+          alert("Bu özelliği kullanabilmek için italkyAI uygulaması telefonunuzda yüklü olmalıdır.");
+          setStatus("Uygulama gerekli", "bad");
+          return;
+        }
+      }
+
+      if(code && codeInput){
+        codeInput.value = code;
+        setStatus("Kod hazır", "good");
+      }
+
+      if(room){
+        try{
+          localStorage.setItem(ROOM_KEY, room);
+          if(code) localStorage.setItem(ROOM_CODE_KEY, code);
+        }catch{}
+      }
+
+      if(auto && room){
+        goLive(room, code);
+      }
+    })();
+  </script>
 
 </body>
 </html>
