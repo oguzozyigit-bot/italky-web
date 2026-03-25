@@ -939,7 +939,7 @@ if(!userId){
         <div class="connect-code-wrap">
           <div class="connect-code-label">Bağlantı Kodu</div>
           <div class="connect-code-line">
-            <div id="connectionCodeText" class="connect-code-value">ABC123</div>
+            <div id="connectionCodeText" class="connect-code-value">------</div>
             <button id="copyConnectionCodeBtn" class="connect-code-copy" type="button" aria-label="Bağlantı kodunu kopyala" title="Kopyala">
               <svg viewBox="0 0 24 24">
                 <rect x="9" y="9" width="10" height="10" rx="2"></rect>
@@ -1099,7 +1099,6 @@ let activeRoomCode = "";
 let previewSocket = null;
 let redirected = false;
 let refreshTimer = null;
-let roomInitialized = false;
 
 function setHeroStatus(text){
   if(heroStatus) heroStatus.textContent = text || "";
@@ -1153,12 +1152,16 @@ async function createRoom(myLang = "tr"){
 }
 
 function stopPreviewSocket(){
-  try{ previewSocket?.close?.(); }catch(e){}
+  try{
+    previewSocket?.close?.();
+  }catch(e){}
   previewSocket = null;
 }
 
 function stopRefreshTimer(){
-  try{ clearTimeout(refreshTimer); }catch(e){}
+  try{
+    clearTimeout(refreshTimer);
+  }catch(e){}
   refreshTimer = null;
 }
 
@@ -1172,8 +1175,8 @@ function launchHostRoom(roomId){
 function scheduleRefresh(){
   stopRefreshTimer();
   refreshTimer = setTimeout(() => {
-    if(!redirected && document.visibilityState === "visible"){
-      prepareRoom(true);
+    if(!redirected){
+      prepareRoom(false);
     }
   }, 45000);
 }
@@ -1200,46 +1203,45 @@ function startPreviewSocket(roomId, myLang = "tr"){
   };
 
   previewSocket.onmessage = (event) => {
-  try{
-    const payload = JSON.parse(event.data);
-    const type = String(payload?.type || "").trim();
+    try{
+      const payload = JSON.parse(event.data);
+      const type = String(payload?.type || "").trim();
 
-    console.log("[HOME preview ws message]", payload);
+      console.log("[HOME preview ws message]", payload);
 
-    if(type === "peer_joined"){
-      setHeroStatus("Karşı taraf bağlandı. Oda açılıyor...");
-      launchHostRoom(roomId);
-      return;
-    }
-
-    if(type === "presence"){
-      const guestLang = String(payload?.guest_lang || "").trim();
-      const peerConnected = payload?.peer_connected === true;
-
-      // SADECE gerçek guest gelmişse aç
-      if(peerConnected || guestLang){
+      if(type === "peer_joined"){
         setHeroStatus("Karşı taraf bağlandı. Oda açılıyor...");
         launchHostRoom(roomId);
         return;
       }
 
-      setHeroStatus("Bağlantı kodu hazır. Karşı taraf bekleniyor...");
-      return;
-    }
+      if(type === "presence"){
+        const guestLang = String(payload?.guest_lang || "").trim();
+        const peerConnected = payload?.peer_connected === true;
 
-    if(type === "translated_message"){
-      setHeroStatus("Karşı taraf bağlandı. Oda açılıyor...");
-      launchHostRoom(roomId);
-      return;
-    }
+        if(peerConnected || guestLang){
+          setHeroStatus("Karşı taraf bağlandı. Oda açılıyor...");
+          launchHostRoom(roomId);
+          return;
+        }
 
-    if(type === "error"){
-      console.warn("[HOME preview ws error payload]", payload);
+        setHeroStatus("Bağlantı kodu hazır. Karşı taraf bekleniyor...");
+        return;
+      }
+
+      if(type === "translated_message"){
+        setHeroStatus("Karşı taraf bağlandı. Oda açılıyor...");
+        launchHostRoom(roomId);
+        return;
+      }
+
+      if(type === "error"){
+        console.warn("[HOME preview ws error payload]", payload);
+      }
+    }catch(e){
+      console.warn("[HOME preview ws parse]", e);
     }
-  }catch(e){
-    console.warn("[HOME preview ws parse]", e);
-  }
-};
+  };
 
   previewSocket.onerror = (e) => {
     console.warn("[HOME preview ws error]", e);
@@ -1264,7 +1266,6 @@ async function prepareRoom(forceNew = false){
     const cachedRoomId = String(localStorage.getItem(ROOM_KEY) || "").trim();
     const cachedCode = String(localStorage.getItem(ROOM_CODE_KEY) || "").trim().toUpperCase();
 
-    // Eğer zaten oda varsa ve zorla yenileme istenmediyse onu kullan
     if (!forceNew && cachedRoomId && cachedCode) {
       activeRoomId = cachedRoomId;
       activeRoomCode = cachedCode;
@@ -1303,7 +1304,7 @@ async function prepareRoom(forceNew = false){
     setHeroStatus("Bağlantı kodu hazır. Karşı taraf bekleniyor...");
     startPreviewSocket(activeRoomId, "tr");
   }catch(e){
-    console.error("[home room prepare]", e);
+    console.error("[HOME prepareRoom]", e);
     setConnectionCode("ERROR1");
     setHeroStatus(e?.message || "Oda hazırlanamadı");
     scheduleRefresh();
@@ -1322,13 +1323,15 @@ copyConnectionCodeBtn?.addEventListener("click", async () => {
     temp.value = value;
     document.body.appendChild(temp);
     temp.select();
-    try{ document.execCommand("copy"); }catch(e){}
+    try{
+      document.execCommand("copy");
+    }catch(e){}
     temp.remove();
     setHeroStatus("Bağlantı kodu kopyalandı.");
   }
 });
 
-prepareRoom();
+prepareRoom(false);
 
 window.addEventListener("beforeunload", () => {
   stopPreviewSocket();
