@@ -1204,48 +1204,21 @@ function startPreviewSocket(roomId, myLang = "tr"){
     setHeroStatus("Bağlantı kodu hazır. Karşı taraf bekleniyor...");
   };
 
-  previewSocket.onmessage = (event) => {
-    try{
-      const payload = JSON.parse(event.data);
-      const type = String(payload?.type || "").trim();
-
-      console.log("[HOME PREVIEW MESSAGE]", payload);
-
-      if(type === "peer_joined"){
-        setHeroStatus("Karşı taraf bağlandı. Oda açılıyor...");
-        launchHostRoom(roomId);
-        return;
-      }
-
-      if(type === "presence"){
-        const peerConnected =
-          payload?.peer_connected === true ||
-          !!String(payload?.guest_lang || "").trim() ||
-          !!String(payload?.guest_id || "").trim();
-
-        if(peerConnected){
-          setHeroStatus("Karşı taraf bağlandı. Oda açılıyor...");
-          launchHostRoom(roomId);
-          return;
-        }
-
-        setHeroStatus("Bağlantı kodu hazır. Karşı taraf bekleniyor...");
-        return;
-      }
-
-      if(type === "translated_message"){
-        setHeroStatus("Karşı taraf bağlandı. Oda açılıyor...");
-        launchHostRoom(roomId);
-        return;
-      }
-
-      if(type === "error"){
-        console.warn("[home preview ws error payload]", payload);
-      }
-    }catch(e){
-      console.warn("[home preview ws parse]", e);
-    }
-  };
+  await broadcast(
+    room,
+    {
+        "type": "presence",
+        "room_id": room_id,
+        "host_code": room.host_code,
+        "mode": room.mode,
+        "status": room.status,
+        "host_lang": room.host_lang,
+        "guest_lang": room.guest_lang,
+        "peer_count": len(room.sockets),
+        "peer_connected": bool(room.guest_lang) or len(room.sockets) >= 2,
+        "ts": now_ts(),
+    },
+)
 
   previewSocket.onerror = () => {
     if(!redirected){
