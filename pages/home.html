@@ -1257,13 +1257,31 @@ function startPreviewSocket(roomId, myLang = "tr"){
 }
 
 async function prepareRoom(forceNew = false){
-  if(roomInitialized && !forceNew) return;
-
   redirected = false;
   stopRefreshTimer();
-  setHeroStatus("Oda hazırlanıyor...");
 
   try{
+    const cachedRoomId = String(localStorage.getItem(ROOM_KEY) || "").trim();
+    const cachedCode = String(localStorage.getItem(ROOM_CODE_KEY) || "").trim().toUpperCase();
+
+    // Eğer zaten oda varsa ve zorla yenileme istenmediyse onu kullan
+    if (!forceNew && cachedRoomId && cachedCode) {
+      activeRoomId = cachedRoomId;
+      activeRoomCode = cachedCode;
+
+      setConnectionCode(cachedCode);
+      setHeroStatus("Bağlantı kodu hazır. Karşı taraf bekleniyor...");
+      startPreviewSocket(activeRoomId, "tr");
+
+      console.log("[HOME reuse existing room]", {
+        roomId: activeRoomId,
+        code: activeRoomCode
+      });
+      return;
+    }
+
+    setHeroStatus("Oda hazırlanıyor...");
+
     const created = await createRoom("tr");
     activeRoomId = String(created.room_id || "").trim();
 
@@ -1271,18 +1289,13 @@ async function prepareRoom(forceNew = false){
       throw new Error("room_id boş geldi");
     }
 
-    roomInitialized = true;
-
     setConnectionCode(created.host_code || makeConnectionCode(6));
 
-    try{
-      localStorage.setItem(ROOM_KEY, activeRoomId);
-      localStorage.setItem(ROOM_LANG_KEY, "tr");
-    }catch(e){
-      console.warn("[HOME localStorage ROOM_KEY]", e);
-    }
+    localStorage.setItem(ROOM_KEY, activeRoomId);
+    localStorage.setItem(ROOM_LANG_KEY, "tr");
+    localStorage.setItem(ROOM_CODE_KEY, activeRoomCode);
 
-    console.log("[HOME room ready]", {
+    console.log("[HOME room created]", {
       roomId: activeRoomId,
       code: activeRoomCode
     });
@@ -1290,7 +1303,7 @@ async function prepareRoom(forceNew = false){
     setHeroStatus("Bağlantı kodu hazır. Karşı taraf bekleniyor...");
     startPreviewSocket(activeRoomId, "tr");
   }catch(e){
-    console.error("[HOME prepareRoom]", e);
+    console.error("[home room prepare]", e);
     setConnectionCode("ERROR1");
     setHeroStatus(e?.message || "Oda hazırlanamadı");
     scheduleRefresh();
