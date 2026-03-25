@@ -21,11 +21,20 @@
       --bad:#ef4444;
     }
 
-    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; }
+    *{
+      box-sizing:border-box;
+      -webkit-tap-highlight-color:transparent;
+      outline:none;
+    }
 
     html,body{
-      margin:0; width:100%; min-height:100%;
-      background:var(--bg); color:var(--txt); font-family:'Outfit',sans-serif; overflow:hidden;
+      margin:0;
+      width:100%;
+      min-height:100%;
+      background:var(--bg);
+      color:var(--txt);
+      font-family:'Outfit',sans-serif;
+      overflow:hidden;
     }
 
     body{
@@ -37,15 +46,27 @@
     }
 
     #pageContent{
-      width:100%; min-height:100dvh; padding:14px; overflow-y:auto; overflow-x:hidden;
-      scrollbar-width:none; -webkit-overflow-scrolling:touch;
+      width:100%;
+      min-height:100dvh;
+      padding:14px;
+      overflow-y:auto;
+      overflow-x:hidden;
+      scrollbar-width:none;
+      -webkit-overflow-scrolling:touch;
     }
 
-    #pageContent::-webkit-scrollbar{ display:none; }
+    #pageContent::-webkit-scrollbar{
+      display:none;
+    }
 
     .wrap{
-      width:100%; max-width:760px; margin:0 auto;
-      display:flex; flex-direction:column; gap:14px; padding-bottom:18px;
+      width:100%;
+      max-width:760px;
+      margin:0 auto;
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+      padding-bottom:18px;
     }
 
     .hero,.entry-card{
@@ -56,7 +77,9 @@
       backdrop-filter:blur(14px);
     }
 
-    .hero{ padding:20px 18px; }
+    .hero{
+      padding:20px 18px;
+    }
 
     .title{
       margin:0;
@@ -120,6 +143,13 @@
         inset 0 0 18px rgba(255,255,255,.03);
     }
 
+    .mini-note{
+      text-align:center;
+      font-size:12px;
+      line-height:1.45;
+      color:var(--muted);
+    }
+
     .status{
       min-height:22px;
       text-align:center;
@@ -154,7 +184,9 @@
       padding:0 16px;
     }
 
-    .btn:active{ transform:scale(.985); }
+    .btn:active{
+      transform:scale(.985);
+    }
 
     .btn-primary{
       background:var(--ai-grad);
@@ -175,35 +207,46 @@
     }
 
     .toast{
-      position: fixed;
+      position:fixed;
       left:50%;
       top:18px;
-      transform: translateX(-50%) translateY(-120px);
-      background: rgba(10,10,18,.92);
+      transform:translateX(-50%) translateY(-120px);
+      background:rgba(10,10,18,.92);
       border:1px solid rgba(165,180,252,.35);
-      padding: 10px 14px;
-      border-radius: 999px;
+      padding:10px 14px;
+      border-radius:999px;
       color:#fff;
       z-index:999999;
       font-weight:900;
       font-size:12px;
       transition:.25s;
-      backdrop-filter: blur(12px);
+      backdrop-filter:blur(12px);
       pointer-events:none;
       max-width:min(92vw, 520px);
       text-align:center;
     }
 
-    .toast.show{ transform: translateX(-50%) translateY(0); }
+    .toast.show{
+      transform:translateX(-50%) translateY(0);
+    }
 
     @media (min-width:700px){
-      .btn-row{ flex-direction:row; }
-      .btn-row .btn{ flex:1; }
+      .btn-row{
+        flex-direction:row;
+      }
+      .btn-row .btn{
+        flex:1;
+      }
     }
 
     @media (max-width:390px){
-      .title{ font-size:25px; }
-      .code-input{ font-size:24px; letter-spacing:6px; }
+      .title{
+        font-size:25px;
+      }
+      .code-input{
+        font-size:24px;
+        letter-spacing:6px;
+      }
     }
   </style>
 </head>
@@ -222,13 +265,21 @@
       <section class="entry-card">
         <div class="code-label">Bağlantı Kodu</div>
 
-        <input id="codeInput" class="code-input"
-          type="text" maxlength="6"
+        <input
+          id="codeInput"
+          class="code-input"
+          type="text"
+          maxlength="6"
           placeholder="ABC123"
           autocomplete="off"
           autocapitalize="characters"
           spellcheck="false"
+          inputmode="text"
         />
+
+        <div class="mini-note">
+          Sistem boşluk ve gereksiz karakterleri otomatik temizler.
+        </div>
 
         <div id="statusText" class="status">Kod bekleniyor...</div>
 
@@ -263,6 +314,7 @@
 
     const ROOM_KEY = "italky_active_interpreter_room_id";
     const ROOM_CODE_KEY = "italky_active_interpreter_code";
+    const ROOM_LANG_KEY = "italky_active_interpreter_lang";
 
     function toast(msg){
       toastEl.textContent = msg;
@@ -282,26 +334,32 @@
     function normalize(code){
       return String(code || "")
         .toUpperCase()
-        .replace(/[^A-Z0-9]/g,"")
-        .slice(0,6);
+        .replace(/[^A-Z0-9]/g, "")
+        .slice(0, 6);
     }
 
     function setBusy(v){
-      joinBtn.disabled = v;
+      joinBtn.disabled = !!v;
       joinBtn.textContent = v ? "Oda aranıyor..." : "Odaya Katıl";
     }
 
     function goLive(roomId, code){
-      if(!roomId) return;
+      const cleanRoom = String(roomId || "").trim();
+      const cleanCode = normalize(code || "");
 
-      localStorage.setItem(ROOM_KEY, roomId);
-      localStorage.setItem(ROOM_CODE_KEY, code);
+      if(!cleanRoom) return;
 
-      location.href = `/pages/sidetoside.html?room=${encodeURIComponent(roomId)}&role=guest&my=tr&auto=1`;
+      try{
+        localStorage.setItem(ROOM_KEY, cleanRoom);
+        localStorage.setItem(ROOM_CODE_KEY, cleanCode);
+        localStorage.setItem(ROOM_LANG_KEY, "tr");
+      }catch{}
+
+      location.href = `/pages/sidetoside.html?room=${encodeURIComponent(cleanRoom)}&role=guest&my=tr&auto=1`;
     }
 
     async function resolveRoom(code){
-      const r = await fetch(`${API_BASE}/interpreter/resolve-room`,{
+      const r = await fetch(`${API_BASE}/interpreter/resolve-room`, {
         method:"POST",
         headers:{ "Content-Type":"application/json" },
         body:JSON.stringify({
@@ -311,13 +369,16 @@
         })
       });
 
-      const j = await r.json().catch(()=>({}));
+      const j = await r.json().catch(() => ({}));
 
       if(!r.ok || !j?.room_id){
-        throw new Error("Kod eşleşmedi");
+        throw new Error(j?.detail || j?.error || "Kod eşleşmedi");
       }
 
-      return j.room_id;
+      return {
+        roomId: String(j.room_id || "").trim(),
+        code: normalize(j.host_code || code || "")
+      };
     }
 
     async function join(){
@@ -325,23 +386,27 @@
       codeInput.value = code;
 
       if(code.length !== 6){
-        setStatus("Kod 6 karakter olmalı","bad");
+        setStatus("Kod 6 karakter olmalı", "bad");
         toast("Eksik kod");
         return;
       }
 
       setBusy(true);
-      setStatus("Oda aranıyor...","warn");
+      setStatus("Oda aranıyor...", "warn");
 
       try{
-        const roomId = await resolveRoom(code);
+        const resolved = await resolveRoom(code);
 
-        setStatus("Bağlanılıyor...","good");
+        if(!resolved.roomId){
+          throw new Error("Kod eşleşmedi");
+        }
+
+        setStatus("Bağlanılıyor...", "good");
         toast("Bağlandı");
-
-        goLive(roomId, code);
+        goLive(resolved.roomId, resolved.code || code);
       }catch(e){
-        setStatus("Kod bulunamadı","bad");
+        console.error("[sidetoside_code resolve]", e);
+        setStatus("Kod bulunamadı", "bad");
         toast("Geçersiz kod");
       }finally{
         setBusy(false);
@@ -358,9 +423,9 @@
       }
 
       if(c.length === 6){
-        setStatus("Hazır","good");
+        setStatus("Hazır", "good");
       }else{
-        setStatus("Kod giriliyor...","warn");
+        setStatus("Kod giriliyor...", "warn");
       }
     });
 
@@ -379,11 +444,13 @@
 
     (function init(){
       const params = new URLSearchParams(location.search);
-      const code = normalize(params.get("code") || "");
+      const incomingCode = normalize(params.get("code") || "");
 
-      if(code){
-        codeInput.value = code;
-        setStatus("Kod hazır","good");
+      if(incomingCode){
+        codeInput.value = incomingCode;
+        setStatus(incomingCode.length === 6 ? "Hazır" : "Kod giriliyor...", incomingCode.length === 6 ? "good" : "warn");
+      }else{
+        setStatus("Kod bekleniyor...");
       }
     })();
   </script>
