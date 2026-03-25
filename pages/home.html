@@ -1273,20 +1273,18 @@ copyConnectionCodeBtn?.addEventListener("click", async () => {
   }
 });
 
-prepareRoom();
+/* 🔥 SADECE 1 KERE ODA OLUŞTUR */
+let roomInitialized = false;
 
-document.addEventListener("visibilitychange", () => {
-  if(document.visibilityState === "visible" && !redirected){
-    prepareRoom();
-  }
-});
+async function initOnce(){
+  if(roomInitialized) return;
+  roomInitialized = true;
+  await prepareRoom();
+}
 
-window.addEventListener("focus", () => {
-  if(!redirected){
-    prepareRoom();
-  }
-});
+initOnce();
 
+/* SADECE TEMİZ KAPANIŞ */
 window.addEventListener("beforeunload", () => {
   stopPreviewSocket();
   stopRefreshTimer();
