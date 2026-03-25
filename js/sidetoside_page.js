@@ -1,5 +1,3 @@
-/* FILE: /js/live_interpreter_page.js */
-
 import { LANG_POOL } from "/js/lang_pool_full.js";
 import { supabase } from "/js/supabase_client.js";
 
@@ -8,6 +6,60 @@ const WS_BASE = "wss://italky-api.onrender.com";
 
 const $ = (id) => document.getElementById(id);
 
+/* =========================
+   LOCAL KEYS
+========================= */
+const VOICE_KEY = "facetoface_voice_mode";
+const TRANSLATE_KEY = "facetoface_translate_mode";
+const SETUP_KEY = "facetoface_setup_done";
+
+/* =========================
+   DOM
+========================= */
+const frameRoot = $("frameRoot");
+const topBody = $("topBody");
+const botBody = $("botBody");
+const botMic = $("botMic");
+const topHelper = $("topHelper");
+const botHelper = $("botHelper");
+const roomMetaText = $("roomMetaText");
+
+const botLangBtn = $("botLangBtn");
+const botLangTxt = $("botLangTxt");
+const popBot = $("pop-bot");
+const listBot = $("list-bot");
+const closeBot = $("close-bot");
+
+const clearBtn = $("clearBtn");
+const homeLink = $("homeLink");
+const homeBtn = $("homeBtn");
+const settingsBtn = $("settingsBtn");
+
+const peerInfoMain = $("peerInfoMain");
+const peerInfoSub = $("peerInfoSub");
+const myInfoMain = $("myInfoMain");
+const myInfoSub = $("myInfoSub");
+
+/* =========================
+   URL PARAMS
+========================= */
+const query = new URLSearchParams(location.search);
+
+let roomId = String(query.get("room") || "").trim();
+const role = String(query.get("role") || "guest").trim().toLowerCase();
+const autoJoin = String(query.get("auto") || "0").trim() === "1";
+
+let myLang = canonical(
+  query.get("my") || localStorage.getItem("live_interpreter_lang") || "tr"
+);
+
+let peerLang = canonical(
+  query.get("peer") || localStorage.getItem("live_interpreter_peer_lang") || "en"
+);
+
+/* =========================
+   LANGUAGE MAP
+========================= */
 const BCP = {
   tr: "tr-TR",
   en: "en-US",
@@ -55,6 +107,9 @@ function labelChip(code) {
   return `${o.flag} ${o.name}`;
 }
 
+/* =========================
+   TEXTS
+========================= */
 const UI_TEXT = {
   tr: {
     ready: "Konuşmak için mikrofona dokununuz.",
@@ -71,6 +126,8 @@ const UI_TEXT = {
     langUpdated: "Dil güncellendi",
     roomMissing: "Oda bulunamadı",
     waitingPeer: "Karşı taraf bekleniyor...",
+    mySettingsTitle: "Benim Ayarlarım",
+    peerSettingsTitle: "Karşı Taraf",
   },
   en: {
     ready: "Tap the microphone to speak.",
@@ -87,6 +144,8 @@ const UI_TEXT = {
     langUpdated: "Language updated",
     roomMissing: "Room not found",
     waitingPeer: "Waiting for the other side...",
+    mySettingsTitle: "My Settings",
+    peerSettingsTitle: "Peer",
   },
 };
 
@@ -95,45 +154,6 @@ function t(langCode, key) {
   const pack = UI_TEXT[c] || UI_TEXT.en;
   return pack[key] || UI_TEXT.en[key] || "";
 }
-
-/* =========================
-   DOM
-========================= */
-const frameRoot = $("frameRoot");
-const topBody = $("topBody");
-const botBody = $("botBody");
-const botMic = $("botMic");
-const topHelper = $("topHelper");
-const botHelper = $("botHelper");
-const roomMetaText = $("roomMetaText");
-
-const botLangBtn = $("botLangBtn");
-const botLangTxt = $("botLangTxt");
-const popBot = $("pop-bot");
-const listBot = $("list-bot");
-const closeBot = $("close-bot");
-
-const clearBtn = $("clearBtn");
-const homeLink = $("homeLink");
-const homeBtn = $("homeBtn");
-const settingsBtn = $("settingsBtn");
-
-/* =========================
-   URL PARAMS
-========================= */
-const query = new URLSearchParams(location.search);
-
-let roomId = String(query.get("room") || "").trim();
-const role = String(query.get("role") || "guest").trim().toLowerCase();
-const autoJoin = String(query.get("auto") || "0").trim() === "1";
-
-let myLang = canonical(
-  query.get("my") || localStorage.getItem("live_interpreter_lang") || "tr"
-);
-
-let peerLang = canonical(
-  query.get("peer") || localStorage.getItem("live_interpreter_peer_lang") || "en"
-);
 
 /* =========================
    STATE
@@ -162,8 +182,16 @@ let lastLocalSentAt = 0;
 let myClientId = "";
 let peerConnected = false;
 
+let myVoiceMode = normalizeVoiceMode(localStorage.getItem(VOICE_KEY) || "auto");
+let myTranslateMode = normalizeTranslateMode(localStorage.getItem(TRANSLATE_KEY) || "normal");
+let myVoiceReady = false;
+
+let peerVoiceMode = "auto";
+let peerTranslateMode = "normal";
+let peerVoiceReady = false;
+
 /* =========================
-   CLIENT ID
+   HELPERS
 ========================= */
 function getOrCreateClientId() {
   const key = "live_interpreter_client_id";
@@ -176,6 +204,119 @@ function getOrCreateClientId() {
   } catch {
     return `cli_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
   }
+}
+
+function normalizeVoiceMode(v) {
+  return String(v || "").trim().toLowerCase() === "clone" ? "clone" : "auto";
+}
+
+function normalizeTranslateMode(v) {
+  return String(v || "").trim().toLowerCase() === "cultural" ? "cultural" : "normal";
+}
+
+function voiceLabel(v, ready = true) {
+  const mode = normalizeVoiceMode(v);
+  if (mode === "clone") return ready ? "Kendi Sesim" : "Kendi Sesim hazırlanıyor";
+  return "Otomatik Ses";
+}
+
+function translateLabel(v) {
+  return normalizeTranslateMode(v) === "cultural" ? "Kültürel Translate" : "Translate";
+}
+
+function shortLangLabel(code) {
+  const l = langObj(code);
+  return `${l.flag} ${l.name}`;
+}
+
+function stopAudio() {
+  try {
+    currentAudio?.pause?.();
+    if (currentAudio) currentAudio.currentTime = 0;
+    currentAudio = null;
+  } catch {}
+
+  try {
+    window.speechSynthesis?.cancel?.();
+  } catch {}
+
+  try {
+    window.NativeTTS?.stop?.();
+  } catch {}
+}
+
+/* =========================
+   INFO BOXES
+========================= */
+async function loadMyProfileFlags() {
+  try {
+    const { data } = await supabase.auth.getUser();
+    const uid = data?.user?.id || localStorage.getItem("user_id") || null;
+    if (!uid) {
+      myVoiceReady = myVoiceMode !== "clone";
+      return;
+    }
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select(`
+        tts_voice_ready,
+        tts_voice_id,
+        voice_profile_ready,
+        voice_sample_path,
+        voice_sample_url
+      `)
+      .eq("id", uid)
+      .maybeSingle();
+
+    const hasTtsReady = !!profile?.tts_voice_ready;
+    const hasTtsId = !!String(profile?.tts_voice_id || "").trim();
+    const hasVoiceProfileReady = !!profile?.voice_profile_ready;
+    const hasSamplePath = !!String(profile?.voice_sample_path || "").trim();
+    const hasSampleUrl = !!String(profile?.voice_sample_url || "").trim();
+
+    myVoiceReady = hasTtsReady || hasTtsId || hasVoiceProfileReady || hasSamplePath || hasSampleUrl;
+  } catch {
+    myVoiceReady = myVoiceMode !== "clone";
+  }
+}
+
+function refreshMyInfoBox() {
+  if (myInfoMain) {
+    myInfoMain.textContent =
+      `${shortLangLabel(myLang)} • ${voiceLabel(myVoiceMode, myVoiceReady)}`;
+  }
+
+  if (myInfoSub) {
+    myInfoSub.textContent =
+      `${translateLabel(myTranslateMode)} seçili. Bu model karşı tarafa giden çeviride kullanılır.`;
+  }
+}
+
+function refreshPeerInfoBox() {
+  if (peerInfoMain) {
+    if (!peerConnected) {
+      peerInfoMain.textContent = "Bağlantı bekleniyor...";
+    } else {
+      peerInfoMain.textContent =
+        `${shortLangLabel(peerLang)} • ${voiceLabel(peerVoiceMode, peerVoiceReady)}`;
+    }
+  }
+
+  if (peerInfoSub) {
+    if (!peerConnected) {
+      peerInfoSub.textContent = "Dil, ses ve çeviri modeli burada görünecek.";
+    } else {
+      peerInfoSub.textContent =
+        `${translateLabel(peerTranslateMode)} ile sana çeviri gönderiyor.`;
+    }
+  }
+}
+
+async function refreshInfoBoxes() {
+  await loadMyProfileFlags();
+  refreshMyInfoBox();
+  refreshPeerInfoBox();
 }
 
 /* =========================
@@ -308,22 +449,6 @@ function renderPop() {
 /* =========================
    AUDIO / TTS
 ========================= */
-function stopAudio() {
-  try {
-    currentAudio?.pause?.();
-    if (currentAudio) currentAudio.currentTime = 0;
-    currentAudio = null;
-  } catch {}
-
-  try {
-    window.speechSynthesis?.cancel?.();
-  } catch {}
-
-  try {
-    window.NativeTTS?.stop?.();
-  } catch {}
-}
-
 async function getCurrentUserId() {
   try {
     const { data } = await supabase.auth.getUser();
@@ -504,18 +629,62 @@ function wsUrl() {
   return `${WS_BASE}/api/ws/interpreter/${roomId}?role=${role}&lang=${myLang}`;
 }
 
+function updatePeerStateFromPayload(payload = {}) {
+  const nextGuestLang = canonical(payload?.guest_lang || "");
+  const nextHostLang = canonical(payload?.host_lang || "");
+
+  if (role === "host" && nextGuestLang) {
+    peerLang = nextGuestLang;
+    localStorage.setItem("live_interpreter_peer_lang", peerLang);
+  }
+
+  if (role === "guest" && nextHostLang) {
+    peerLang = nextHostLang;
+    localStorage.setItem("live_interpreter_peer_lang", peerLang);
+  }
+
+  const incomingVoice = normalizeVoiceMode(
+    payload?.peer_voice ||
+    payload?.guest_voice ||
+    payload?.host_voice ||
+    payload?.sender_voice ||
+    ""
+  );
+
+  const incomingTranslate = normalizeTranslateMode(
+    payload?.peer_translate_mode ||
+    payload?.guest_translate_mode ||
+    payload?.host_translate_mode ||
+    payload?.sender_translate_mode ||
+    ""
+  );
+
+  const incomingVoiceReady =
+    payload?.peer_voice_ready ??
+    payload?.guest_voice_ready ??
+    payload?.host_voice_ready ??
+    payload?.sender_voice_ready;
+
+  if (incomingVoice) peerVoiceMode = incomingVoice;
+  if (incomingTranslate) peerTranslateMode = incomingTranslate;
+  if (typeof incomingVoiceReady === "boolean") peerVoiceReady = incomingVoiceReady;
+}
+
 async function applyMyLanguageChange(nextLang) {
   myLang = canonical(nextLang || "tr");
   localStorage.setItem("live_interpreter_lang", myLang);
   refreshLangLabels();
   refreshReadyTextsIfIdle();
   rebuildRecognizer();
+  refreshMyInfoBox();
 
   try {
     if (ws && ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({
         type: "set_lang",
         lang: myLang,
+        voice_mode: myVoiceMode,
+        translate_mode: myTranslateMode,
       }));
       setHelper(botHelper, t(myLang, "langUpdated"), "helper-ready");
       bounceToReady(800);
@@ -616,6 +785,17 @@ function startSocket() {
     reconnectCount = 0;
     peerHasExplicitlyLeft = false;
     startPing();
+
+    try {
+      ws.send(JSON.stringify({
+        type: "hello",
+        lang: myLang,
+        voice_mode: myVoiceMode,
+        translate_mode: myTranslateMode,
+        voice_ready: myVoiceReady,
+      }));
+    } catch {}
+
     setSystemReadyUI();
   };
 
@@ -625,37 +805,21 @@ function startSocket() {
       const type = String(payload?.type || "").trim();
 
       if (type === "presence") {
-        const guestLang = canonical(payload?.guest_lang || "");
-        const hostLang = canonical(payload?.host_lang || "");
-
-        if (role === "host" && guestLang) {
-          peerLang = guestLang;
-          peerConnected = true;
-          localStorage.setItem("live_interpreter_peer_lang", peerLang);
-        }
-
-        if (role === "guest" && hostLang) {
-          peerLang = hostLang;
-          peerConnected = true;
-          localStorage.setItem("live_interpreter_peer_lang", peerLang);
-        }
+        updatePeerStateFromPayload(payload);
 
         if (!peerConnected && payload?.peer_connected === true) {
           peerConnected = true;
         }
 
+        refreshPeerInfoBox();
         setSystemReadyUI();
         return;
       }
 
       if (type === "peer_joined") {
         peerConnected = true;
-
-        if (payload?.guest_lang && role === "host") {
-          peerLang = canonical(payload.guest_lang);
-          localStorage.setItem("live_interpreter_peer_lang", peerLang);
-        }
-
+        updatePeerStateFromPayload(payload);
+        refreshPeerInfoBox();
         setHelper(botHelper, t(myLang, "peerJoined"), "helper-ready");
         bounceToReady(1000);
         return;
@@ -672,6 +836,8 @@ function startSocket() {
         if (senderId && myClientId && senderId === myClientId) return;
 
         peerConnected = true;
+        updatePeerStateFromPayload(payload);
+        refreshPeerInfoBox();
 
         const text = translated || original;
 
@@ -690,6 +856,10 @@ function startSocket() {
       if (type === "peer_left") {
         peerHasExplicitlyLeft = true;
         peerConnected = false;
+        peerVoiceMode = "auto";
+        peerTranslateMode = "normal";
+        peerVoiceReady = false;
+        refreshPeerInfoBox();
         setErrorUI();
         setHelper(botHelper, payload?.message || t(myLang, "peerGoneHome"), "helper-wait");
         goHomeDelayed();
@@ -887,6 +1057,9 @@ async function sendTextMessage(rawText) {
       sender_id: myClientId,
       sender_user_id: senderUserId || "",
       sender_voice: senderVoice || "auto",
+      sender_voice_mode: myVoiceMode,
+      sender_translate_mode: myTranslateMode,
+      sender_voice_ready: myVoiceReady,
     }));
   } catch (e) {
     console.error("[ws send]", e);
@@ -1060,9 +1233,8 @@ function startBoot() {
     setSystemPreparingUI();
     refreshLangLabels();
     pointOrbTo("bot");
-
+    await refreshInfoBoxes();
     await Promise.allSettled([warmApis(), warmAudio()]);
-
     bootReady = true;
     setSystemReadyUI();
   })();
@@ -1150,6 +1322,14 @@ function bind() {
     e.stopPropagation();
     await toggleRecording();
   });
+
+  window.addEventListener("focus", async () => {
+    myVoiceMode = normalizeVoiceMode(localStorage.getItem(VOICE_KEY) || "auto");
+    myTranslateMode = normalizeTranslateMode(localStorage.getItem(TRANSLATE_KEY) || "normal");
+    await refreshInfoBoxes();
+    refreshLangLabels();
+    refreshReadyTextsIfIdle();
+  });
 }
 
 /* =========================
@@ -1178,7 +1358,7 @@ async function bootRoom() {
 
     startSocket();
   } catch (e) {
-    console.error("[live interpreter bootRoom]", e);
+    console.error("[sidetoside bootRoom]", e);
     setErrorUI();
     setHelper(botHelper, e?.message || t(myLang, "wsFailed"), "helper-wait");
   }
