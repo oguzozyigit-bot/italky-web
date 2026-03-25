@@ -4,6 +4,9 @@ import { supabase } from "/js/supabase_client.js";
 const API_BASE = "https://italky-api.onrender.com/api";
 const WS_BASE = "wss://italky-api.onrender.com/api";
 
+const RETURN_CTX_KEY = "sidetoside_return_ctx_v1";
+const RETURN_CTX_MAX_AGE_MS = 1000 * 60 * 30;
+
 const $ = (id) => document.getElementById(id);
 
 const BCP = {
@@ -140,12 +143,41 @@ const peerVoicePill = $("peerVoicePill");
 const peerTranslatePill = $("peerTranslatePill");
 
 /* =========================
-   URL PARAMS
+   URL PARAMS / RETURN CTX
 ========================= */
+function saveReturnContext() {
+  try {
+    const payload = {
+      roomId: String(roomId || "").trim(),
+      role: String(role || "guest").trim().toLowerCase(),
+      myLang: canonical(myLang || "tr"),
+      peerLang: canonical(peerLang || "en"),
+      ts: Date.now(),
+    };
+    sessionStorage.setItem(RETURN_CTX_KEY, JSON.stringify(payload));
+  } catch {}
+}
+
+function readReturnContext() {
+  try {
+    const raw = sessionStorage.getItem(RETURN_CTX_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    const ts = Number(parsed?.ts || 0);
+    if (!ts || Date.now() - ts > RETURN_CTX_MAX_AGE_MS) {
+      sessionStorage.removeItem(RETURN_CTX_KEY);
+      return null;
+    }
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
 const query = new URLSearchParams(location.search);
 
 let roomId = String(query.get("room") || "").trim();
-const role = String(query.get("role") || "guest").trim().toLowerCase();
+let role = String(query.get("role") || "guest").trim().toLowerCase();
 const autoJoin = String(query.get("auto") || "0").trim() === "1";
 
 let myLang = canonical(
@@ -155,6 +187,25 @@ let myLang = canonical(
 let peerLang = canonical(
   query.get("peer") || localStorage.getItem("live_interpreter_peer_lang") || "en"
 );
+
+if (!roomId) {
+  const ctx = readReturnContext();
+  if (ctx?.roomId) {
+    roomId = String(ctx.roomId || "").trim();
+    role = String(ctx.role || role || "guest").trim().toLowerCase();
+    myLang = canonical(ctx.myLang || myLang || "tr");
+    peerLang = canonical(ctx.peerLang || peerLang || "en");
+
+    try {
+      const next = new URL(location.href);
+      next.searchParams.set("room", roomId);
+      next.searchParams.set("role", role);
+      next.searchParams.set("my", myLang);
+      next.searchParams.set("peer", peerLang);
+      history.replaceState({}, "", next.toString());
+    } catch {}
+  }
+}
 
 /* =========================
    STATE
@@ -224,7 +275,7 @@ function renderMyProfileBox() {
 function renderPeerProfileBox() {
   if (!peerConnected && !peerEverConnected) {
     if (peerInfoMain) peerInfoMain.textContent = "Bağlantı bekleniyor...";
-    if (peerInfoSub) peerInfoSub.textContent = "Dil, ses ve çeviri modeli burada görünecek.";
+    if (peerInfoSub) peerInfoSub.textContent = "Ses ve çeviri tercihleri burada görünecek.";
     if (peerVoicePill) peerVoicePill.textContent = "Otomatik Ses";
     if (peerTranslatePill) peerTranslatePill.textContent = "Translate";
     return;
@@ -435,7 +486,7 @@ function setSystemReadyUI() {
   activeSide = null;
   resetMics();
 
-  if (peerConnected || peerEverConnected) {
+  if (peerConnected || peerEverConnected || peerProfileReceived) {
     setFrameVisual("ready");
     if (topHelper) topHelper.style.display = "none";
     setHelper(botHelper, t(myLang, "ready"), "helper-ready");
@@ -997,8 +1048,8 @@ function startSocket() {
         markPeerConnected(peerLang);
 
         peerProfile.voice_mode = normalizeVoiceMode(
-  senderVoice === "clone" ? "clone" : (peerProfile.voice_mode || "auto")
-);
+          senderVoice === "clone" ? "clone" : (peerProfile.voice_mode || "auto")
+        );
         peerProfile.translate_mode = senderTranslateMode;
         renderPeerProfileBox();
 
@@ -1177,8 +1228,23 @@ function addBubble(side, kind, text, opts = {}) {
 /* =========================
    SEND
 ========================= */
+function hasUsablePeerConnection() {
+  return !!(
+    peerConnected ||
+    peerEverConnected ||
+    peerProfileReceived ||
+    String(peerLang || "").trim()
+  );
+}
+
 function canSend() {
-  return !!(wsReady && ws && ws.readyState === WebSocket.OPEN && roomId && peerConnected);
+  return !!(
+    wsReady &&
+    ws &&
+    ws.readyState === WebSocket.OPEN &&
+    roomId &&
+    hasUsablePeerConnection()
+  );
 }
 
 function shouldIgnoreDuplicateLocal(text) {
@@ -1202,7 +1268,7 @@ async function sendTextMessage(rawText) {
 
   if (!canSend()) {
     setErrorUI();
-    setHelper(botHelper, peerConnected ? t(myLang, "wsFailed") : t(myLang, "waitingPeer"), "helper-wait");
+    setHelper(botHelper, hasUsablePeerConnection() ? t(myLang, "wsFailed") : t(myLang, "waitingPeer"), "helper-wait");
     bounceToReady(1200);
     return;
   }
@@ -1282,7 +1348,7 @@ async function finalizeRecognition(text) {
 }
 
 function startRecording() {
-  if (!peerConnected) {
+  if (!hasUsablePeerConnection()) {
     setErrorUI();
     setHelper(botHelper, t(myLang, "waitingPeer"), "helper-wait");
     bounceToReady(1200);
@@ -1483,7 +1549,18 @@ function bind() {
 
   settingsBtn?.addEventListener("click", (e) => {
     e.preventDefault();
-    location.href = "/pages/facetoface_open.html?edit=1&from=sidetoside";
+    saveReturnContext();
+
+    const target = new URL("/pages/facetoface_open.html", location.origin);
+    target.searchParams.set("edit", "1");
+    target.searchParams.set("from", "sidetoside");
+
+    if (roomId) target.searchParams.set("room", roomId);
+    if (role) target.searchParams.set("role", role);
+    if (myLang) target.searchParams.set("my", myLang);
+    if (peerLang) target.searchParams.set("peer", peerLang);
+
+    location.href = target.pathname + target.search;
   });
 
   botMic?.addEventListener("click", async (e) => {
@@ -1505,6 +1582,8 @@ async function bootRoom() {
     if (!roomId) {
       throw new Error(t(myLang, "roomMissing"));
     }
+
+    saveReturnContext();
 
     if (roomMetaText) {
       roomMetaText.textContent = roomId;
@@ -1538,5 +1617,6 @@ bind();
 bootRoom();
 
 window.addEventListener("beforeunload", () => {
+  saveReturnContext();
   stopSocket();
 });
