@@ -50,6 +50,10 @@ const voiceCompletedList = $("voiceCompletedList");
 const voiceTimerText = $("voiceTimerText");
 const voiceToast = $("voiceToast");
 
+const url = new URL(location.href);
+const fromPage = String(url.searchParams.get("from") || "").trim().toLowerCase();
+const editMode = String(url.searchParams.get("edit") || "").trim() === "1";
+
 let voiceMode = normalizeVoiceMode(localStorage.getItem(VOICE_KEY) || "auto");
 let translateMode = normalizeTranslateMode(localStorage.getItem(TRANSLATE_KEY) || "normal");
 let tokenBalance = 0;
@@ -324,8 +328,16 @@ function saveSettings() {
   localStorage.setItem("live_interpreter_voice", voiceMode);
 }
 
-function goFaceToFace() {
-  location.href = "/facetoface.html";
+function buildStartHref() {
+  if (fromPage === "sidetoside") {
+    return "/pages/sidetoside.html";
+  }
+  return "/facetoface.html";
+}
+
+function goStartPage() {
+  const target = buildStartHref();
+  location.href = target;
 }
 
 function goJetonMarket() {
@@ -628,16 +640,27 @@ async function handleSaveAndStart() {
     }
 
     saveSettings();
-    goFaceToFace();
+    goStartPage();
   } finally {
     isBusy = false;
     clearBusy(saveStartBtn);
   }
 }
 
+function applyEntryContext() {
+  if (!saveStartBtn) return;
+
+  if (fromPage === "sidetoside") {
+    saveStartBtn.textContent = editMode ? "Kaydet ve Dön" : "Kaydet ve Başlat";
+  } else {
+    saveStartBtn.textContent = "Kaydet ve Başlat";
+  }
+}
+
 async function init() {
-  const url = new URL(location.href);
   reason = String(url.searchParams.get("reason") || "").trim().toLowerCase();
+
+  applyEntryContext();
 
   bindVoiceChoices();
   bindTranslateChoices();
