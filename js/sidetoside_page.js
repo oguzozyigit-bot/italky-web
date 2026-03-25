@@ -176,6 +176,8 @@ let reconnectCount = 0;
 let manuallyClosed = false;
 let peerHasExplicitlyLeft = false;
 
+let roomSyncTimer = null;
+
 let lastLocalSentText = "";
 let lastLocalSentAt = 0;
 let myClientId = "";
@@ -257,6 +259,88 @@ async function loadProfileFromSupabase() {
     readLocalProfile();
     renderMyProfileBox();
   }
+}
+
+function applyPeerPresence(lang) {
+  const cleanLang = canonical(lang || peerLang || "en");
+  if (cleanLang) {
+    peerLang = cleanLang;
+    peerProfile.lang = cleanLang;
+    try {
+      localStorage.setItem("live_interpreter_peer_lang", cleanLang);
+    } catch {}
+  }
+  peerConnected = true;
+  renderPeerProfileBox();
+  setSystemReadyUI();
+}
+
+/* =========================
+   ROOM SYNC FALLBACK
+========================= */
+async function fetchRoomSnapshot() {
+  if (!roomId) return null;
+  const r = await fetch(`${API_BASE}/interpreter/room/${encodeURIComponent(roomId)}`, {
+    method: "GET",
+    cache: "no-store",
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok || !j?.room_id) {
+    throw new Error(j?.detail || j?.error || "Room okunamadı");
+  }
+  return j;
+}
+
+function stopRoomSync() {
+  if (roomSyncTimer) {
+    clearInterval(roomSyncTimer);
+    roomSyncTimer = null;
+  }
+}
+
+function applyRoomSnapshot(room) {
+  if (!room) return;
+
+  const hostLang = canonical(room?.host_lang || "");
+  const guestLang = canonical(room?.guest_lang || "");
+  const status = String(room?.status || "").trim().toLowerCase();
+  const peerCount = Number(room?.peer_count || 0);
+
+  if (role === "host") {
+    if (guestLang) {
+      peerLang = guestLang;
+      peerProfile.lang = guestLang;
+    }
+    peerConnected = !!(guestLang || status === "active" || peerCount >= 2);
+  } else {
+    if (hostLang) {
+      peerLang = hostLang;
+      peerProfile.lang = hostLang;
+    }
+    peerConnected = !!(hostLang && (status === "active" || peerCount >= 2 || guestLang));
+  }
+
+  if (peerConnected && !peerProfile.lang) {
+    peerProfile.lang = peerLang || "en";
+  }
+
+  renderPeerProfileBox();
+  setSystemReadyUI();
+}
+
+function startRoomSync() {
+  stopRoomSync();
+
+  roomSyncTimer = setInterval(async () => {
+    if (!roomId || peerHasExplicitlyLeft) return;
+
+    try {
+      const room = await fetchRoomSnapshot();
+      applyRoomSnapshot(room);
+    } catch (e) {
+      console.warn("[room sync]", e);
+    }
+  }, 1800);
 }
 
 /* =========================
@@ -680,6 +764,8 @@ function stopSocket() {
     clearTimeout(reconnectTimer);
     reconnectTimer = null;
   }
+
+  stopRoomSync();
 }
 
 function goHomeDelayed() {
@@ -742,9 +828,18 @@ function startSocket() {
     wsReady = true;
     reconnectCount = 0;
     peerHasExplicitlyLeft = false;
-    peerConnected = false;
     startPing();
-    setSystemReadyUI();
+    startRoomSync();
+    setSystemPreparingUI();
+
+    try {
+      const room = await fetchRoomSnapshot();
+      applyRoomSnapshot(room);
+    } catch (e) {
+      console.warn("[room snapshot onopen]", e);
+      setSystemReadyUI();
+    }
+
     await sendSelfProfile();
   };
 
@@ -760,20 +855,16 @@ function startSocket() {
         const peerCount = Number(payload?.peer_count || 0);
         const peerConnectedFlag = payload?.peer_connected === true;
 
-        if (role === "host") {
-          if (guestLang) {
-            peerLang = guestLang;
-            peerProfile.lang = guestLang;
-            localStorage.setItem("live_interpreter_peer_lang", peerLang);
-          }
+        if (role === "host" && guestLang) {
+          peerLang = guestLang;
+          peerProfile.lang = guestLang;
+          try { localStorage.setItem("live_interpreter_peer_lang", peerLang); } catch {}
         }
 
-        if (role === "guest") {
-          if (hostLang) {
-            peerLang = hostLang;
-            peerProfile.lang = hostLang;
-            localStorage.setItem("live_interpreter_peer_lang", peerLang);
-          }
+        if (role === "guest" && hostLang) {
+          peerLang = hostLang;
+          peerProfile.lang = hostLang;
+          try { localStorage.setItem("live_interpreter_peer_lang", peerLang); } catch {}
         }
 
         peerConnected = !!(
@@ -794,13 +885,13 @@ function startSocket() {
         if (payload?.guest_lang && role === "host") {
           peerLang = canonical(payload.guest_lang);
           peerProfile.lang = peerLang;
-          localStorage.setItem("live_interpreter_peer_lang", peerLang);
+          try { localStorage.setItem("live_interpreter_peer_lang", peerLang); } catch {}
         }
 
         renderPeerProfileBox();
         setHelper(botHelper, t(myLang, "peerJoined"), "helper-ready");
         await sendSelfProfile();
-        bounceToReady(1000);
+        bounceToReady(600);
         return;
       }
 
@@ -815,7 +906,7 @@ function startSocket() {
           translate_mode: normalizeTranslateMode(payload?.translate_mode || "normal")
         };
         peerLang = peerProfile.lang;
-        localStorage.setItem("live_interpreter_peer_lang", peerLang);
+        try { localStorage.setItem("live_interpreter_peer_lang", peerLang); } catch {}
         renderPeerProfileBox();
         setSystemReadyUI();
         return;
@@ -1350,6 +1441,13 @@ async function bootRoom() {
         myLang,
         peerLang,
       });
+    }
+
+    try {
+      const room = await fetchRoomSnapshot();
+      applyRoomSnapshot(room);
+    } catch (e) {
+      console.warn("[bootRoom room snapshot]", e);
     }
 
     startSocket();
