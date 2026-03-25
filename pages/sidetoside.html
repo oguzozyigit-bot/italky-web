@@ -716,18 +716,10 @@
 
     <div class="half-screen top" id="topSection">
       <div class="meta-stack">
-        <div class="room-badge" id="roomMetaText">Sohbet hazırlanıyor...</div>
-
-        <div class="peer-card">
-          <div class="peer-kicker">Karşı Taraf</div>
-          <div class="peer-main" id="peerInfoMain">Bağlantı bekleniyor...</div>
-
-          <div class="peer-mode-row">
-            <div class="peer-pill voice" id="peerVoicePill">Otomatik Ses</div>
-            <div class="peer-pill translate" id="peerTranslatePill">Translate</div>
-          </div>
-
-          <div class="peer-sub" id="peerInfoSub">Dil, ses ve çeviri modeli burada görünecek.</div>
+        <div class="side-info" id="peerInfoBox">
+          <div class="side-info-title">Karşı Taraf</div>
+          <div class="side-info-main" id="peerInfoMain">Bağlantı bekleniyor...</div>
+          <div class="side-info-sub" id="peerInfoSub">Ses ve çeviri tercihleri burada görünecek.</div>
         </div>
       </div>
 
@@ -799,38 +791,6 @@
 
   </div>
 
-  <script type="module" src="/js/sidetoside_page.js?v=S2S_V3"></script>
-
-  <script>
-    (function syncPeerPills(){
-      const peerInfoMain = document.getElementById("peerInfoMain");
-      const peerInfoSub = document.getElementById("peerInfoSub");
-      const peerVoicePill = document.getElementById("peerVoicePill");
-      const peerTranslatePill = document.getElementById("peerTranslatePill");
-
-      if (!peerInfoSub || !peerVoicePill || !peerTranslatePill) return;
-
-      const observer = new MutationObserver(() => {
-        const txt = String(peerInfoSub.textContent || "").trim();
-
-        if (!txt || txt.includes("burada görünecek")) {
-          peerVoicePill.textContent = "Otomatik Ses";
-          peerTranslatePill.textContent = "Translate";
-          return;
-        }
-
-        const lower = txt.toLowerCase();
-
-        peerVoicePill.textContent =
-          lower.includes("kendi sesim") ? "Kendi Sesim" : "Otomatik Ses";
-
-        peerTranslatePill.textContent =
-          lower.includes("kültürel") ? "Kültürel Translate" : "Translate";
-      });
-
-      observer.observe(peerInfoSub, { childList: true, characterData: true, subtree: true });
-      observer.observe(peerInfoMain, { childList: true, characterData: true, subtree: true });
-    })();
-  </script>
+  <script type="module" src="/js/sidetoside_page.js?v=S2S_FINAL_FIX"></script>
 </body>
 </html>
