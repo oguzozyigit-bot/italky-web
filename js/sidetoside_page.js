@@ -182,6 +182,8 @@ let lastLocalSentText = "";
 let lastLocalSentAt = 0;
 let myClientId = "";
 let peerConnected = false;
+let peerEverConnected = false;
+let peerProfileReceived = false;
 
 let myProfile = {
   lang: myLang,
@@ -231,6 +233,25 @@ function renderPeerProfileBox() {
   }
 }
 
+function markPeerConnected(lang = "") {
+  const clean = canonical(lang || peerLang || "");
+  if (clean) {
+    peerLang = clean;
+    peerProfile.lang = clean;
+    try {
+      localStorage.setItem("live_interpreter_peer_lang", clean);
+    } catch {}
+  }
+
+  peerConnected = true;
+  peerEverConnected = true;
+  renderPeerProfileBox();
+}
+
+function markPeerDisconnected() {
+  peerConnected = false;
+  renderPeerProfileBox();
+}
 async function loadProfileFromSupabase() {
   try {
     const { data } = await supabase.auth.getUser();
@@ -306,18 +327,28 @@ function applyRoomSnapshot(room) {
   const status = String(room?.status || "").trim().toLowerCase();
   const peerCount = Number(room?.peer_count || 0);
 
+  let snapshotSaysConnected = false;
+
   if (role === "host") {
     if (guestLang) {
       peerLang = guestLang;
       peerProfile.lang = guestLang;
     }
-    peerConnected = !!(guestLang || status === "active" || peerCount >= 2);
+    snapshotSaysConnected = !!(guestLang || status === "active" || peerCount >= 2);
   } else {
     if (hostLang) {
       peerLang = hostLang;
       peerProfile.lang = hostLang;
     }
-    peerConnected = !!(hostLang && (status === "active" || peerCount >= 2 || guestLang));
+    snapshotSaysConnected = !!(hostLang && (status === "active" || peerCount >= 2 || guestLang));
+  }
+
+  // Bağlantı bir kez kurulduysa snapshot yüzünden geri düşürme
+  if (snapshotSaysConnected) {
+    markPeerConnected(peerLang);
+  } else if (!peerEverConnected) {
+    peerConnected = false;
+    renderPeerProfileBox();
   }
 
   if (peerConnected && !peerProfile.lang) {
@@ -400,7 +431,7 @@ function setSystemReadyUI() {
   activeSide = null;
   resetMics();
 
-  if (peerConnected) {
+  if (peerConnected || peerEverConnected) {
     setFrameVisual("ready");
     if (topHelper) topHelper.style.display = "none";
     setHelper(botHelper, t(myLang, "ready"), "helper-ready");
@@ -825,23 +856,32 @@ function startSocket() {
   }
 
   ws.onopen = async () => {
-    wsReady = true;
-    reconnectCount = 0;
-    peerHasExplicitlyLeft = false;
-    startPing();
-    startRoomSync();
-    setSystemPreparingUI();
+  wsReady = true;
+  reconnectCount = 0;
+  peerHasExplicitlyLeft = false;
+  startPing();
+  startRoomSync();
+  setSystemPreparingUI();
 
-    try {
-      const room = await fetchRoomSnapshot();
-      applyRoomSnapshot(room);
-    } catch (e) {
-      console.warn("[room snapshot onopen]", e);
-      setSystemReadyUI();
-    }
+  try {
+    const room = await fetchRoomSnapshot();
+    applyRoomSnapshot(room);
+  } catch (e) {
+    console.warn("[room snapshot onopen]", e);
+    setSystemReadyUI();
+  }
 
-    await sendSelfProfile();
-  };
+  await sendSelfProfile();
+
+  // profil kaybolmasın diye kısa süre sonra tekrar gönder
+  setTimeout(() => {
+    sendSelfProfile().catch(() => {});
+  }, 800);
+
+  setTimeout(() => {
+    sendSelfProfile().catch(() => {});
+  }, 1800);
+};
 
   ws.onmessage = async (event) => {
     try {
@@ -849,68 +889,85 @@ function startSocket() {
       const type = String(payload?.type || "").trim();
 
       if (type === "presence") {
-        const guestLang = canonical(payload?.guest_lang || "");
-        const hostLang = canonical(payload?.host_lang || "");
-        const status = String(payload?.status || "").trim().toLowerCase();
-        const peerCount = Number(payload?.peer_count || 0);
-        const peerConnectedFlag = payload?.peer_connected === true;
+  const guestLang = canonical(payload?.guest_lang || "");
+  const hostLang = canonical(payload?.host_lang || "");
+  const status = String(payload?.status || "").trim().toLowerCase();
+  const peerCount = Number(payload?.peer_count || 0);
+  const peerConnectedFlag = payload?.peer_connected === true;
 
-        if (role === "host" && guestLang) {
-          peerLang = guestLang;
-          peerProfile.lang = guestLang;
-          try { localStorage.setItem("live_interpreter_peer_lang", peerLang); } catch {}
-        }
+  let liveConnected = false;
 
-        if (role === "guest" && hostLang) {
-          peerLang = hostLang;
-          peerProfile.lang = hostLang;
-          try { localStorage.setItem("live_interpreter_peer_lang", peerLang); } catch {}
-        }
+  if (role === "host") {
+    if (guestLang) {
+      peerLang = guestLang;
+      peerProfile.lang = guestLang;
+      try { localStorage.setItem("live_interpreter_peer_lang", peerLang); } catch {}
+    }
 
-        peerConnected = !!(
-          peerConnectedFlag ||
-          guestLang ||
-          (status === "active") ||
-          (peerCount >= 2)
-        );
+    liveConnected = !!(peerConnectedFlag || guestLang || status === "active" || peerCount >= 2);
+  }
 
-        renderPeerProfileBox();
-        setSystemReadyUI();
-        return;
-      }
+  if (role === "guest") {
+    if (hostLang) {
+      peerLang = hostLang;
+      peerProfile.lang = hostLang;
+      try { localStorage.setItem("live_interpreter_peer_lang", peerLang); } catch {}
+    }
+
+    liveConnected = !!(hostLang && (peerConnectedFlag || status === "active" || peerCount >= 2 || guestLang));
+  }
+
+  if (liveConnected) {
+    markPeerConnected(peerLang);
+  } else if (!peerEverConnected) {
+    peerConnected = false;
+  }
+
+  renderPeerProfileBox();
+  setSystemReadyUI();
+  return;
+}
 
       if (type === "peer_joined") {
-        peerConnected = true;
+  if (payload?.guest_lang && role === "host") {
+    peerLang = canonical(payload.guest_lang);
+    peerProfile.lang = peerLang;
+    try { localStorage.setItem("live_interpreter_peer_lang", peerLang); } catch {}
+  }
 
-        if (payload?.guest_lang && role === "host") {
-          peerLang = canonical(payload.guest_lang);
-          peerProfile.lang = peerLang;
-          try { localStorage.setItem("live_interpreter_peer_lang", peerLang); } catch {}
-        }
+  markPeerConnected(peerLang);
+  renderPeerProfileBox();
+  setHelper(botHelper, t(myLang, "peerJoined"), "helper-ready");
 
-        renderPeerProfileBox();
-        setHelper(botHelper, t(myLang, "peerJoined"), "helper-ready");
-        await sendSelfProfile();
-        bounceToReady(600);
-        return;
-      }
+  await sendSelfProfile();
+  setTimeout(() => {
+    sendSelfProfile().catch(() => {});
+  }, 600);
+
+  bounceToReady(600);
+  return;
+}
 
       if (type === "profile_sync") {
-        const senderId = String(payload?.sender_id || "").trim();
-        if (senderId && senderId === myClientId) return;
+  const senderId = String(payload?.sender_id || "").trim();
+  if (senderId && senderId === myClientId) return;
 
-        peerConnected = true;
-        peerProfile = {
-          lang: canonical(payload?.lang || peerLang || "en"),
-          voice_mode: normalizeVoiceMode(payload?.voice_mode || "auto"),
-          translate_mode: normalizeTranslateMode(payload?.translate_mode || "normal")
-        };
-        peerLang = peerProfile.lang;
-        try { localStorage.setItem("live_interpreter_peer_lang", peerLang); } catch {}
-        renderPeerProfileBox();
-        setSystemReadyUI();
-        return;
-      }
+  peerProfile = {
+    lang: canonical(payload?.lang || peerLang || "en"),
+    voice_mode: normalizeVoiceMode(payload?.voice_mode || "auto"),
+    translate_mode: normalizeTranslateMode(payload?.translate_mode || "normal")
+  };
+
+  peerProfileReceived = true;
+  peerLang = peerProfile.lang;
+
+  try { localStorage.setItem("live_interpreter_peer_lang", peerLang); } catch {}
+
+  markPeerConnected(peerLang);
+  renderPeerProfileBox();
+  setSystemReadyUI();
+  return;
+}
 
       if (type === "translated_message") {
         const senderId = String(payload?.sender_id || "").trim();
@@ -923,10 +980,14 @@ function startSocket() {
         if (!translated && !original) return;
         if (senderId && myClientId && senderId === myClientId) return;
 
-        peerConnected = true;
-        peerProfile.voice_mode = normalizeVoiceMode(senderVoice === "clone" ? "clone" : peerProfile.voice_mode || "auto");
-        peerProfile.translate_mode = senderTranslateMode;
-        renderPeerProfileBox();
+        markPeerConnected(peerLang);
+
+peerProfile.voice_mode = normalizeVoiceMode(
+  senderVoice === "clone" ? "clone" : (peerProfile.voice_mode || "auto")
+);
+
+peerProfile.translate_mode = senderTranslateMode;
+renderPeerProfileBox();
 
         const text = translated || original;
 
@@ -943,14 +1004,15 @@ function startSocket() {
       }
 
       if (type === "peer_left") {
-        peerHasExplicitlyLeft = true;
-        peerConnected = false;
-        renderPeerProfileBox();
-        setErrorUI();
-        setHelper(botHelper, payload?.message || t(myLang, "peerGoneHome"), "helper-wait");
-        goHomeDelayed();
-        return;
-      }
+  peerHasExplicitlyLeft = true;
+  peerEverConnected = false;
+  peerProfileReceived = false;
+  markPeerDisconnected();
+  setErrorUI();
+  setHelper(botHelper, payload?.message || t(myLang, "peerGoneHome"), "helper-wait");
+  goHomeDelayed();
+  return;
+}
 
       if (type === "pong") return;
 
