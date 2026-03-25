@@ -1192,27 +1192,47 @@ function startPreviewSocket(roomId, myLang = "tr"){
   };
 
   previewSocket.onmessage = (event) => {
-    try{
-      const payload = JSON.parse(event.data);
-      const type = String(payload?.type || "").trim();
+  try{
+    const payload = JSON.parse(event.data);
+    const type = String(payload?.type || "").trim();
 
-      if(type === "presence"){
-        return;
-      }
+    console.log("[HOME PREVIEW MESSAGE]", payload);
 
-      if(type === "peer_joined"){
+    if(type === "peer_joined"){
+      setHeroStatus("Karşı taraf bağlandı. Oda açılıyor...");
+      launchHostRoom(roomId);
+      return;
+    }
+
+    /* 🔥 asıl kritik ekleme */
+    if(type === "presence"){
+      const peerConnected =
+        payload?.peer_connected === true ||
+        !!String(payload?.guest_lang || "").trim() ||
+        !!String(payload?.guest_id || "").trim();
+
+      if(peerConnected){
         setHeroStatus("Karşı taraf bağlandı. Oda açılıyor...");
         launchHostRoom(roomId);
         return;
       }
 
-      if(type === "error"){
-        console.warn("[home preview ws error payload]", payload);
-      }
-    }catch(e){
-      console.warn("[home preview ws parse]", e);
+      return;
     }
-  };
+
+    if(type === "translated_message"){
+      setHeroStatus("Karşı taraf bağlandı. Oda açılıyor...");
+      launchHostRoom(roomId);
+      return;
+    }
+
+    if(type === "error"){
+      console.warn("[home preview ws error payload]", payload);
+    }
+  }catch(e){
+    console.warn("[home preview ws parse]", e);
+  }
+};
 
   previewSocket.onerror = () => {
     setHeroStatus("Bağlantı önizleme hatası");
