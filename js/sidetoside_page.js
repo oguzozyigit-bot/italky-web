@@ -4,7 +4,7 @@ import { LANG_POOL } from "/js/lang_pool_full.js";
 import { supabase } from "/js/supabase_client.js";
 
 const API_BASE = "https://italky-api.onrender.com/api";
-const WS_BASE = "wss://italky-api.onrender.com/api";
+const WS_BASE = "wss://italky-api.onrender.com";
 
 const $ = (id) => document.getElementById(id);
 
@@ -501,7 +501,7 @@ async function speak(text, langCode, sourceUserId = "", sourceVoice = "auto") {
 ========================= */
 function wsUrl() {
   if (!roomId) return null;
-  return `${WS_BASE}/ws/interpreter/${encodeURIComponent(roomId)}?role=${encodeURIComponent(role)}&lang=${encodeURIComponent(myLang)}`;
+  return `${WS_BASE}/api/ws/interpreter/${roomId}?role=${role}&lang=${myLang}`;
 }
 
 async function applyMyLanguageChange(nextLang) {
