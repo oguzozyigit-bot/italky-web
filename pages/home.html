@@ -121,88 +121,144 @@ body{
   position:absolute;
   width:108px;
   height:108px;
-  background:#fff;
-  border-radius:15px;
-  padding:8px;
-  box-shadow:
-    0 0 34px rgba(103,232,249,.68),
-    inset 0 0 10px rgba(103,232,249,.28);
-  animation:floatQR 4s ease-in-out infinite, glitchQR 5s infinite;
   z-index:2;
-  overflow:hidden;
+  overflow:visible;
   display:flex;
   align-items:center;
   justify-content:center;
+  animation:floatQR 4s ease-in-out infinite;
 }
 
-.holo-qr img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  display:none;
+.ai-planet{
+  background:transparent;
+  box-shadow:none;
 }
 
-.qr-fallback{
-  width:100%;
-  height:100%;
-  border-radius:10px;
-  display:none;
+.planet-glow{
+  position:absolute;
+  inset:-16px;
+  border-radius:50%;
+  background:
+    radial-gradient(circle, rgba(255,255,255,.16) 0%, rgba(255,255,255,.04) 28%, transparent 62%),
+    radial-gradient(circle, rgba(103,232,249,.26) 0%, transparent 70%);
+  filter:blur(12px);
+  animation:planetGlow 3.2s ease-in-out infinite;
+  z-index:1;
+}
+
+.planet-core{
+  position:relative;
+  width:108px;
+  height:108px;
+  border-radius:50%;
+  display:flex;
   align-items:center;
   justify-content:center;
-  flex-direction:column;
-  gap:6px;
-  text-align:center;
-  color:#111827;
-  font-size:10px;
-  font-weight:800;
-  line-height:1.2;
-  padding:8px;
-  background:linear-gradient(135deg,#ffffff 0%, #eef2ff 100%);
-}
-
-.qr-fallback.show{ display:flex; }
-
-.qr-fallback-code{
-  font-size:12px;
-  font-weight:900;
-  letter-spacing:.8px;
-  color:#4f46e5;
-  word-break:break-all;
-}
-
-.holo-beams{
-  position:absolute;
-  inset:-22px;
+  overflow:hidden;
+  z-index:2;
   background:
-    repeating-linear-gradient(
-      to bottom,
-      transparent,
-      transparent 4px,
-      rgba(103,232,249,.08) 4px,
-      rgba(103,232,249,.08) 6px
-    );
-  mask-image:radial-gradient(circle, #fff, transparent 75%);
-  -webkit-mask-image:radial-gradient(circle, #fff, transparent 75%);
-  animation:beamFlow 2s linear infinite;
-  pointer-events:none;
+    radial-gradient(circle at 28% 24%, rgba(255,255,255,.18) 0%, transparent 22%),
+    radial-gradient(circle at 68% 76%, rgba(129,140,248,.20) 0%, transparent 28%),
+    radial-gradient(circle at 50% 50%, rgba(255,255,255,.05) 0%, transparent 48%),
+    linear-gradient(145deg, #111318 0%, #08090d 42%, #030406 100%);
+  box-shadow:
+    inset -10px -12px 20px rgba(0,0,0,.72),
+    inset 10px 12px 22px rgba(255,255,255,.04),
+    inset 0 0 26px rgba(255,255,255,.04),
+    0 0 18px rgba(255,255,255,.10),
+    0 0 34px rgba(103,232,249,.20),
+    0 0 64px rgba(129,140,248,.18);
+  animation:planetBreath 2.8s ease-in-out infinite;
 }
 
-.energy-platform{
+.planet-core::before{
+  content:"";
   position:absolute;
-  bottom:-28px;
-  left:50%;
-  transform:translateX(-50%) rotateX(75deg);
-  width:176px;
-  height:176px;
-  background:
-    radial-gradient(circle, var(--cyan) 0%, transparent 70%),
-    radial-gradient(circle, rgba(244,114,182,.25) 10%, transparent 60%);
+  inset:6px;
   border-radius:50%;
-  filter:blur(5px);
-  box-shadow:0 0 44px var(--cyan), 0 0 84px var(--pink);
-  animation:platformPulse 3s ease-in-out infinite;
-  opacity:.68;
-  z-index:-1;
+  border:1px solid rgba(255,255,255,.08);
+  box-shadow:inset 0 0 12px rgba(255,255,255,.05);
+}
+
+.planet-core::after{
+  content:"";
+  position:absolute;
+  left:18px;
+  top:14px;
+  width:32px;
+  height:16px;
+  border-radius:50%;
+  background:radial-gradient(circle, rgba(255,255,255,.28) 0%, rgba(255,255,255,.08) 45%, transparent 80%);
+  filter:blur(2px);
+  transform:rotate(-18deg);
+  opacity:.9;
+}
+
+.planet-rays{
+  position:absolute;
+  inset:-18px;
+  border-radius:50%;
+  pointer-events:none;
+  z-index:1;
+}
+
+.planet-rays::before,
+.planet-rays::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:50%;
+  background:
+    conic-gradient(
+      from 0deg,
+      transparent 0deg 18deg,
+      rgba(255,255,255,.28) 24deg,
+      transparent 36deg 62deg,
+      rgba(255,255,255,.16) 70deg,
+      transparent 84deg 116deg,
+      rgba(255,255,255,.22) 124deg,
+      transparent 136deg 180deg,
+      rgba(255,255,255,.18) 192deg,
+      transparent 206deg 250deg,
+      rgba(255,255,255,.24) 258deg,
+      transparent 270deg 310deg,
+      rgba(255,255,255,.15) 318deg,
+      transparent 330deg 360deg
+    );
+  mask:radial-gradient(circle, transparent 46%, #000 66%, transparent 76%);
+  -webkit-mask:radial-gradient(circle, transparent 46%, #000 66%, transparent 76%);
+  filter:blur(1px);
+  opacity:.55;
+  animation:planetRaySpin 12s linear infinite;
+}
+
+.planet-rays::after{
+  opacity:.35;
+  transform:scale(1.14);
+  animation-duration:18s;
+  animation-direction:reverse;
+}
+
+.planet-text{
+  position:relative;
+  z-index:3;
+  display:inline-flex;
+  align-items:center;
+  gap:0;
+  font-family:'Space Grotesk',sans-serif;
+  font-size:14px;
+  font-weight:700;
+  letter-spacing:.2px;
+  color:#ffffff;
+  text-shadow:
+    0 0 10px rgba(255,255,255,.28),
+    0 0 24px rgba(255,255,255,.14);
+}
+
+.planet-text .ai{
+  background:var(--ai-grad);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
 }
 
 .connect-code-wrap{
@@ -760,19 +816,56 @@ body{
   from{ transform:rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
   to{ transform:rotateX(360deg) rotateY(720deg) rotateZ(360deg); }
 }
+
 @keyframes floatQR{
   0%,100%{ transform:translateY(0) rotateX(0deg); }
   50%{ transform:translateY(-8px) rotateX(5deg); }
 }
-@keyframes glitchQR{
-  0%,90%,100%{ opacity:1; transform:scale(1); }
-  92%{ opacity:.82; transform:scale(1.03) skewX(2deg); }
-  94%{ opacity:1; transform:scale(1) skewX(-2deg); }
+
+@keyframes planetBreath{
+  0%,100%{
+    transform:scale(1);
+    box-shadow:
+      inset -10px -12px 20px rgba(0,0,0,.72),
+      inset 10px 12px 22px rgba(255,255,255,.04),
+      inset 0 0 26px rgba(255,255,255,.04),
+      0 0 18px rgba(255,255,255,.10),
+      0 0 34px rgba(103,232,249,.20),
+      0 0 64px rgba(129,140,248,.18);
+  }
+  50%{
+    transform:scale(1.045);
+    box-shadow:
+      inset -10px -12px 20px rgba(0,0,0,.72),
+      inset 10px 12px 24px rgba(255,255,255,.05),
+      inset 0 0 28px rgba(255,255,255,.06),
+      0 0 22px rgba(255,255,255,.12),
+      0 0 42px rgba(103,232,249,.28),
+      0 0 78px rgba(129,140,248,.24);
+  }
 }
+
+@keyframes planetGlow{
+  0%,100%{
+    opacity:.55;
+    transform:scale(1);
+  }
+  50%{
+    opacity:.92;
+    transform:scale(1.16);
+  }
+}
+
+@keyframes planetRaySpin{
+  from{ transform:rotate(0deg); }
+  to{ transform:rotate(360deg); }
+}
+
 @keyframes beamFlow{
   from{ background-position:0 0; }
   to{ background-position:0 50px; }
 }
+
 @keyframes platformPulse{
   0%,100%{ transform:translateX(-50%) rotateX(75deg) scale(1); opacity:.7; }
   50%{ transform:translateX(-50%) rotateX(75deg) scale(1.08); opacity:.88; }
@@ -788,6 +881,8 @@ body{
   .side5{ transform:rotateX(90deg) translateZ(68px); }
   .side6{ transform:rotateX(-90deg) translateZ(68px); }
   .holo-qr{ width:98px; height:98px; }
+  .planet-core{ width:98px; height:98px; }
+  .planet-text{ font-size:13px; }
   .energy-platform{ width:154px; height:154px; bottom:-24px; }
   .heroTitle{ font-size:20px; }
   .card-title{ font-size:22px; }
@@ -829,12 +924,12 @@ if(!userId){
             <div class="crystal-side side6"></div>
           </div>
 
-          <div class="holo-qr deco-sun" aria-hidden="true">
-  <div class="sun-core">italky<span>AI</span></div>
-  <div class="sun-ring ring-1"></div>
-  <div class="sun-ring ring-2"></div>
-  <div class="sun-ring ring-3"></div>
-</div>
+          <div class="holo-qr ai-planet" aria-hidden="true">
+            <div class="planet-glow"></div>
+            <div class="planet-rays"></div>
+            <div class="planet-core">
+              <span class="planet-text">italky<span class="ai">AI</span></span>
+            </div>
           </div>
 
           <div class="holo-beams"></div>
@@ -859,7 +954,7 @@ if(!userId){
         <div class="heroStatus" id="heroStatus">Oda hazırlanıyor...</div>
 
         <div class="heroActions">
-          <button class="heroBtn heroBtnWide" type="button" onclick="openCodePrompt()">🔢Karşıdan Gelen Bağlantı Kodunu Gir</button>
+          <button class="heroBtn heroBtnWide" type="button" onclick="openCodePrompt()">🔢 Bağlantı Kodunu Gir</button>
         </div>
       </div>
     </section>
@@ -983,14 +1078,6 @@ try {
 
 <script>
 function openCodePrompt(){
-  const roomId = localStorage.getItem("italky_active_interpreter_room_id") || "";
-  const code = localStorage.getItem("italky_active_interpreter_code") || "";
-
-  if(roomId || code){
-    location.href = `/pages/sidetoside_code.html?room=${encodeURIComponent(roomId)}&code=${encodeURIComponent(code)}&auto=1`;
-    return;
-  }
-
   location.href = "/pages/sidetoside_code.html";
 }
 </script>
@@ -999,9 +1086,6 @@ function openCodePrompt(){
 const API_BASE = "https://italky-api.onrender.com/api";
 const WS_BASE = "wss://italky-api.onrender.com/api";
 
-const smallQrImg = document.getElementById("smallQrImg");
-const qrFallback = document.getElementById("qrFallback");
-const qrFallbackCode = document.getElementById("qrFallbackCode");
 const heroStatus = document.getElementById("heroStatus");
 const connectionCodeText = document.getElementById("connectionCodeText");
 const copyConnectionCodeBtn = document.getElementById("copyConnectionCodeBtn");
@@ -1015,13 +1099,6 @@ let activeRoomCode = "";
 let previewSocket = null;
 let redirected = false;
 let refreshTimer = null;
-let lastRenderedRoomId = "";
-
-function safeSet(key, value){
-  try{
-    localStorage.setItem(key, value);
-  }catch{}
-}
 
 function setHeroStatus(text){
   if(heroStatus) heroStatus.textContent = text || "";
@@ -1039,43 +1116,9 @@ function makeConnectionCode(length = 6){
 function setConnectionCode(code){
   activeRoomCode = String(code || "").trim().toUpperCase();
   if(connectionCodeText) connectionCodeText.textContent = activeRoomCode || "ABC123";
-  if(qrFallbackCode) qrFallbackCode.textContent = activeRoomCode || "ABC123";
-  safeSet(ROOM_CODE_KEY, activeRoomCode);
-}
-
-function qrUrlPrimary(targetUrl){
-  return `https://api.qrserver.com/v1/create-qr-code/?size=520x520&margin=6&data=${encodeURIComponent(targetUrl)}`;
-}
-
-function qrUrlFallback(targetUrl){
-  return `https://quickchart.io/qr?size=520&text=${encodeURIComponent(targetUrl)}`;
-}
-
-function showFallback(code){
-  setConnectionCode(code || "ABC123");
-  if(qrFallback) qrFallback.classList.add("show");
-  if(smallQrImg){
-    smallQrImg.style.display = "none";
-    smallQrImg.removeAttribute("src");
-  }
-}
-
-function showQr(url){
-  if(smallQrImg){
-    smallQrImg.style.display = "block";
-    smallQrImg.src = url;
-  }
-  qrFallback?.classList.remove("show");
-}
-
-function loadImage(url){
-  return new Promise((resolve, reject) => {
-    const test = new Image();
-    test.onload = () => resolve(url);
-    test.onerror = reject;
-    test.referrerPolicy = "no-referrer";
-    test.src = url;
-  });
+  try{
+    localStorage.setItem(ROOM_CODE_KEY, activeRoomCode);
+  }catch{}
 }
 
 async function createRoom(myLang = "tr"){
@@ -1103,16 +1146,6 @@ async function createRoom(myLang = "tr"){
   };
 }
 
-function buildJoinUrl(roomId, code){
-  const url = new URL("https://italky.ai/pages/sidetoside_code.html");
-  url.searchParams.set("room", roomId);
-  url.searchParams.set("code", code);
-  url.searchParams.set("auto", "1");
-  url.searchParams.set("source", "qr");
-  url.searchParams.set("app", "required");
-  return url.toString();
-}
-
 function stopPreviewSocket(){
   try{ previewSocket?.close?.(); }catch{}
   previewSocket = null;
@@ -1134,7 +1167,7 @@ function scheduleRefresh(){
   stopRefreshTimer();
   refreshTimer = setTimeout(() => {
     if(!redirected && document.visibilityState === "visible"){
-      renderRoomQr(true);
+      prepareRoom();
     }
   }, 45000);
 }
@@ -1194,41 +1227,9 @@ function startPreviewSocket(roomId, myLang = "tr"){
   };
 }
 
-async function paintQrForRoom(roomId, code){
-  const joinUrl = buildJoinUrl(roomId, code);
-
-  let finalUrl = null;
-
-  try{
-    finalUrl = await loadImage(qrUrlPrimary(joinUrl));
-  }catch{
-    try{
-      finalUrl = await loadImage(qrUrlFallback(joinUrl));
-    }catch{
-      finalUrl = null;
-    }
-  }
-
-  if(finalUrl){
-    const safeUrl = finalUrl + (finalUrl.includes("?") ? "&" : "?") + "t=" + Date.now();
-    showQr(safeUrl);
-    setHeroStatus("Bağlantı kodu hazır. Karşı taraf bekleniyor...");
-  }else{
-    showFallback(code || "ABC123");
-    setHeroStatus("QR servisi yanıt vermedi");
-  }
-}
-
-async function renderRoomQr(forceNew = false){
+async function prepareRoom(){
   redirected = false;
   stopRefreshTimer();
-
-  if(!forceNew && activeRoomId && activeRoomCode){
-    await paintQrForRoom(activeRoomId, activeRoomCode);
-    startPreviewSocket(activeRoomId, "tr");
-    return;
-  }
-
   setHeroStatus("Oda hazırlanıyor...");
 
   try{
@@ -1239,17 +1240,16 @@ async function renderRoomQr(forceNew = false){
       throw new Error("room_id boş geldi");
     }
 
-    lastRenderedRoomId = activeRoomId;
     setConnectionCode(created.host_code || makeConnectionCode(6));
 
-    safeSet(ROOM_KEY, activeRoomId);
-    safeSet(ROOM_LANG_KEY, "tr");
+    localStorage.setItem(ROOM_KEY, activeRoomId);
+    localStorage.setItem(ROOM_LANG_KEY, "tr");
 
-    await paintQrForRoom(activeRoomId, activeRoomCode);
+    setHeroStatus("Bağlantı kodu hazır. Karşı taraf bekleniyor...");
     startPreviewSocket(activeRoomId, "tr");
   }catch(e){
-    console.error("[home room qr]", e);
-    showFallback("ERROR1");
+    console.error("[home room prepare]", e);
+    setConnectionCode("ERROR1");
     setHeroStatus(e?.message || "Oda hazırlanamadı");
     scheduleRefresh();
   }
@@ -1273,17 +1273,17 @@ copyConnectionCodeBtn?.addEventListener("click", async () => {
   }
 });
 
-renderRoomQr();
+prepareRoom();
 
 document.addEventListener("visibilitychange", () => {
-  if(document.visibilityState === "visible" && !redirected && activeRoomId === lastRenderedRoomId){
-    startPreviewSocket(activeRoomId, "tr");
+  if(document.visibilityState === "visible" && !redirected){
+    prepareRoom();
   }
 });
 
 window.addEventListener("focus", () => {
-  if(!redirected && activeRoomId === lastRenderedRoomId){
-    startPreviewSocket(activeRoomId, "tr");
+  if(!redirected){
+    prepareRoom();
   }
 });
 
