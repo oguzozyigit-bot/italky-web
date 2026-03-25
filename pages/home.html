@@ -1067,24 +1067,7 @@ if(!userId){
 </main>
 
 <script type="module">
-import { mountShell } from "/js/ui_shell.js";
-
-try {
-  mountShell({ scroll: "auto" });
-} catch (e) {
-  console.error("ui_shell HATASI:", e);
-}
-</script>
-
-<script>
-function openCodePrompt(){
-  location.href = "/pages/sidetoside_code.html";
-}
-</script>
-
-<script type="module">
 const API_BASE = "https://italky-api.onrender.com/api";
-const WS_BASE = "wss://italky-api.onrender.com/api";
 
 const heroStatus = document.getElementById("heroStatus");
 const connectionCodeText = document.getElementById("connectionCodeText");
@@ -1096,9 +1079,8 @@ const ROOM_CODE_KEY = "italky_active_interpreter_code";
 
 let activeRoomId = "";
 let activeRoomCode = "";
-let previewSocket = null;
 let redirected = false;
-let refreshTimer = null;
+let roomPollTimer = null;
 
 function setHeroStatus(text){
   if(heroStatus) heroStatus.textContent = text || "";
@@ -1118,6 +1100,7 @@ function setConnectionCode(code){
   if(connectionCodeText){
     connectionCodeText.textContent = activeRoomCode || "------";
   }
+
   try{
     localStorage.setItem(ROOM_CODE_KEY, activeRoomCode);
   }catch(e){
@@ -1151,138 +1134,72 @@ async function createRoom(myLang = "tr"){
   };
 }
 
-function stopPreviewSocket(){
-  try{
-    previewSocket?.close?.();
-  }catch(e){}
-  previewSocket = null;
+async function getRoomStatus(roomId){
+  const r = await fetch(`${API_BASE}/interpreter/room/${encodeURIComponent(roomId)}`, {
+    method: "GET"
+  });
+
+  const j = await r.json().catch(() => ({}));
+
+  if(!r.ok || !j?.room_id){
+    throw new Error(j?.detail || j?.error || "Room okunamadı");
+  }
+
+  return j;
 }
 
-function stopRefreshTimer(){
+function stopRoomPolling(){
   try{
-    clearTimeout(refreshTimer);
+    clearInterval(roomPollTimer);
   }catch(e){}
-  refreshTimer = null;
+  roomPollTimer = null;
 }
 
 function launchHostRoom(roomId){
   if(!roomId || redirected) return;
   redirected = true;
-  stopRefreshTimer();
+  stopRoomPolling();
   location.href = `/pages/sidetoside.html?room=${encodeURIComponent(roomId)}&role=host&my=tr&auto=1`;
 }
 
-function scheduleRefresh(){
-  stopRefreshTimer();
-  refreshTimer = setTimeout(() => {
-    if(!redirected){
-      prepareRoom(false);
-    }
-  }, 45000);
-}
-
-function startPreviewSocket(roomId, myLang = "tr"){
+function startRoomPolling(roomId){
   if(!roomId) return;
 
-  stopPreviewSocket();
+  stopRoomPolling();
 
-  const url = `${WS_BASE}/ws/interpreter/${encodeURIComponent(roomId)}?role=host-preview&lang=${encodeURIComponent(myLang)}`;
-  console.log("[HOME preview ws url]", url);
+  roomPollTimer = setInterval(async () => {
+    if(redirected) return;
 
-  try{
-    previewSocket = new WebSocket(url);
-  }catch(e){
-    console.warn("[HOME preview ws create]", e);
-    scheduleRefresh();
-    return;
-  }
-
-  previewSocket.onopen = () => {
-    console.log("[HOME preview ws] open");
-    setHeroStatus("Bağlantı kodu hazır. Karşı taraf bekleniyor...");
-  };
-
-  previewSocket.onmessage = (event) => {
     try{
-      const payload = JSON.parse(event.data);
-      const type = String(payload?.type || "").trim();
+      const room = await getRoomStatus(roomId);
+      console.log("[HOME room poll]", room);
 
-      console.log("[HOME preview ws message]", payload);
+      const peerConnected =
+        room?.status === "active" &&
+        !!String(room?.guest_lang || "").trim();
 
-      if(type === "peer_joined"){
+      if(peerConnected){
         setHeroStatus("Karşı taraf bağlandı. Oda açılıyor...");
         launchHostRoom(roomId);
         return;
       }
 
-      if(type === "presence"){
-        const guestLang = String(payload?.guest_lang || "").trim();
-        const peerConnected = payload?.peer_connected === true;
-
-        if(peerConnected || guestLang){
-          setHeroStatus("Karşı taraf bağlandı. Oda açılıyor...");
-          launchHostRoom(roomId);
-          return;
-        }
-
-        setHeroStatus("Bağlantı kodu hazır. Karşı taraf bekleniyor...");
-        return;
-      }
-
-      if(type === "translated_message"){
-        setHeroStatus("Karşı taraf bağlandı. Oda açılıyor...");
-        launchHostRoom(roomId);
-        return;
-      }
-
-      if(type === "error"){
-        console.warn("[HOME preview ws error payload]", payload);
-      }
-    }catch(e){
-      console.warn("[HOME preview ws parse]", e);
-    }
-  };
-
-  previewSocket.onerror = (e) => {
-    console.warn("[HOME preview ws error]", e);
-    setHeroStatus("Bağlantı önizleme hatası");
-    scheduleRefresh();
-  };
-
-  previewSocket.onclose = () => {
-    console.log("[HOME preview ws] close");
-    if(!redirected){
       setHeroStatus("Bağlantı kodu hazır. Karşı taraf bekleniyor...");
-      scheduleRefresh();
+    }catch(e){
+      console.warn("[HOME room poll error]", e);
+      setHeroStatus("Bağlantı kontrol edilemiyor...");
     }
-  };
+  }, 1500);
 }
 
-async function prepareRoom(forceNew = false){
+async function prepareRoom(){
   redirected = false;
-  stopRefreshTimer();
+  stopRoomPolling();
 
   try{
-    const cachedRoomId = String(localStorage.getItem(ROOM_KEY) || "").trim();
-    const cachedCode = String(localStorage.getItem(ROOM_CODE_KEY) || "").trim().toUpperCase();
-
-    if (!forceNew && cachedRoomId && cachedCode) {
-      activeRoomId = cachedRoomId;
-      activeRoomCode = cachedCode;
-
-      setConnectionCode(cachedCode);
-      setHeroStatus("Bağlantı kodu hazır. Karşı taraf bekleniyor...");
-      startPreviewSocket(activeRoomId, "tr");
-
-      console.log("[HOME reuse existing room]", {
-        roomId: activeRoomId,
-        code: activeRoomCode
-      });
-      return;
-    }
-
     setHeroStatus("Oda hazırlanıyor...");
 
+    // HER HOME AÇILIŞINDA YENİ ODA
     const created = await createRoom("tr");
     activeRoomId = String(created.room_id || "").trim();
 
@@ -1292,9 +1209,13 @@ async function prepareRoom(forceNew = false){
 
     setConnectionCode(created.host_code || makeConnectionCode(6));
 
-    localStorage.setItem(ROOM_KEY, activeRoomId);
-    localStorage.setItem(ROOM_LANG_KEY, "tr");
-    localStorage.setItem(ROOM_CODE_KEY, activeRoomCode);
+    try{
+      localStorage.setItem(ROOM_KEY, activeRoomId);
+      localStorage.setItem(ROOM_LANG_KEY, "tr");
+      localStorage.setItem(ROOM_CODE_KEY, activeRoomCode);
+    }catch(e){
+      console.warn("[HOME localStorage save]", e);
+    }
 
     console.log("[HOME room created]", {
       roomId: activeRoomId,
@@ -1302,12 +1223,11 @@ async function prepareRoom(forceNew = false){
     });
 
     setHeroStatus("Bağlantı kodu hazır. Karşı taraf bekleniyor...");
-    startPreviewSocket(activeRoomId, "tr");
+    startRoomPolling(activeRoomId);
   }catch(e){
     console.error("[HOME prepareRoom]", e);
     setConnectionCode("ERROR1");
     setHeroStatus(e?.message || "Oda hazırlanamadı");
-    scheduleRefresh();
   }
 }
 
@@ -1331,11 +1251,10 @@ copyConnectionCodeBtn?.addEventListener("click", async () => {
   }
 });
 
-prepareRoom(false);
+prepareRoom();
 
 window.addEventListener("beforeunload", () => {
-  stopPreviewSocket();
-  stopRefreshTimer();
+  stopRoomPolling();
 });
 </script>
 </body>
