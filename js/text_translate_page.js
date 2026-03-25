@@ -1,6 +1,16 @@
 import { supabase } from "/js/supabase_client.js";
 import { ensureAuthAndCacheUser } from "/js/auth.js";
 import { LANG_POOL } from "/js/lang_pool_full.js";
+import { mountShell } from "/js/ui_shell.js";
+
+/* -------------------------
+   SHELL
+-------------------------- */
+try {
+  mountShell({ scroll: "none" });
+} catch (e) {
+  console.error("ui_shell HATASI:", e);
+}
 
 /* -------------------------
    DOM
@@ -47,6 +57,11 @@ let fromLang = localStorage.getItem("qtt_from_lang") || "tr";
 let toLang = localStorage.getItem("qtt_to_lang") || "en";
 let ALL_LANGS = [];
 
+let mediaRecorder = null;
+let mediaChunks = [];
+let mediaStream = null;
+let mediaRecording = false;
+
 /* -------------------------
    HELPERS
 -------------------------- */
@@ -71,6 +86,12 @@ function toast(msg) {
   window.__textTranslateToast = setTimeout(() => {
     toastEl.classList.remove("show");
   }, 1700);
+}
+
+function setMicState(listening) {
+  if (!btnMic) return;
+  btnMic.classList.toggle("listening", !!listening);
+  btnMic.textContent = listening ? "⏺️" : "🎙️";
 }
 
 /* -------------------------
@@ -253,7 +274,7 @@ function renderLangList(query = "") {
     : ALL_LANGS.filter((item) => item.searchText.includes(q));
 
   if (!filtered.length) {
-    langList.innerHTML = `<div class="empty-state">Aradığın dil bulunamadı. Biraz daha kısa yaz, dil sana trip atmasın.</div>`;
+    langList.innerHTML = `<div class="empty-state">Aradığın dil bulunamadı. Biraz daha kısa yaz, dil seni görmemiş olabilir.</div>`;
     return;
   }
 
@@ -338,7 +359,7 @@ function stopSpeak() {
 
 function speakNativeFallback(text, langCode) {
   const t = String(text || "").trim();
-  if (!t) return;
+  if (!t) return false;
 
   if (window.NativeTTS && typeof window.NativeTTS.speak === "function") {
     try { window.NativeTTS.stop?.(); } catch {}
@@ -420,120 +441,157 @@ async function speakText(text, langCode) {
 }
 
 /* -------------------------
-   STT (Mic)
+   MIC
 -------------------------- */
-let recording = false;
-let rec = null;
-let chunks = [];
-
-function buildRecognizer(langCode) {
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) return null;
-  const r = new SR();
-  r.lang = String(langCode || "en");
-  r.interimResults = false;
-  r.continuous = false;
-  r.maxAlternatives = 1;
-  return r;
-}
-
-async function startBrowserMic() {
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) return false;
-
-  try { rec?.stop?.(); } catch {}
-  rec = buildRecognizer(fromLang);
-  if (!rec) return false;
-
-  btnMic.classList.add("listening");
-  const oldIcon = btnMic.textContent;
-  btnMic.textContent = "⏺️";
-
-  rec.onresult = (e) => {
-    const t = e.results?.[0]?.[0]?.transcript || "";
-    const txt = String(t || "").trim();
-    if (txt) srcTxt.value = txt;
-  };
-
-  rec.onerror = () => {
-    btnMic.classList.remove("listening");
-    btnMic.textContent = oldIcon || "🎙️";
-  };
-
-  rec.onend = () => {
-    btnMic.classList.remove("listening");
-    btnMic.textContent = oldIcon || "🎙️";
-  };
-
+function stopMediaStream() {
   try {
-    rec.start();
-    return true;
-  } catch {
-    btnMic.classList.remove("listening");
-    btnMic.textContent = oldIcon || "🎙️";
-    return false;
-  }
+    mediaStream?.getTracks?.().forEach((track) => track.stop());
+  } catch {}
+  mediaStream = null;
 }
 
-async function startServerMic() {
-  if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
+function browserSpeechSupported() {
+  return !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+}
+
+function mediaRecorderSupported() {
+  return !!(navigator.mediaDevices?.getUserMedia && typeof MediaRecorder !== "undefined");
+}
+
+async function startBrowserSpeechRecognition() {
+  return new Promise((resolve) => {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) {
+      resolve(false);
+      return;
+    }
+
+    let recognition;
+    try {
+      recognition = new SR();
+      recognition.lang = canonical(fromLang);
+      recognition.interimResults = false;
+      recognition.continuous = false;
+      recognition.maxAlternatives = 1;
+    } catch {
+      resolve(false);
+      return;
+    }
+
+    let finished = false;
+    const done = (ok) => {
+      if (finished) return;
+      finished = true;
+      setMicState(false);
+      resolve(ok);
+    };
+
+    recognition.onresult = async (e) => {
+      const t = e.results?.[0]?.[0]?.transcript || "";
+      const txt = String(t || "").trim();
+      if (txt) {
+        srcTxt.value = txt;
+        await translateText();
+      }
+    };
+
+    recognition.onerror = () => done(false);
+    recognition.onend = () => done(true);
+
+    try {
+      setMicState(true);
+      recognition.start();
+    } catch {
+      done(false);
+    }
+  });
+}
+
+async function startMediaRecorderFlow() {
+  if (!mediaRecorderSupported()) {
     toast("Bu cihazda mikrofon özelliği desteklenmiyor.");
     return;
   }
 
-  if (!recording) {
+  if (!mediaRecording) {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      rec = new MediaRecorder(stream);
-      chunks = [];
+      mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorder = new MediaRecorder(mediaStream);
+      mediaChunks = [];
 
-      rec.ondataavailable = (e) => chunks.push(e.data);
-      rec.onstop = async () => {
-        const blob = new Blob(chunks, { type: "audio/webm" });
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data?.size) mediaChunks.push(e.data);
+      };
+
+      mediaRecorder.onstop = async () => {
+        setMicState(false);
+        mediaRecording = false;
+
+        const blob = new Blob(mediaChunks, { type: "audio/webm" });
         const fd = new FormData();
-        fd.append("file", blob);
+        fd.append("file", blob, "speech.webm");
         fd.append("lang", canonical(fromLang));
 
         srcTxt.value = "Dinleniyor...";
+
         try {
-          const r = await fetch(STT_ENDPOINT, { method: "POST", body: fd });
+          const r = await fetch(STT_ENDPOINT, {
+            method: "POST",
+            body: fd
+          });
+
           const j = await r.json().catch(() => ({}));
-          srcTxt.value = j?.text || "";
-          if (srcTxt.value.trim()) {
+          const text = String(j?.text || "").trim();
+
+          if (text) {
+            srcTxt.value = text;
             await translateText();
           } else {
+            srcTxt.value = "";
             toast("Ses çözümlenemedi.");
           }
-        } catch {
+        } catch (e) {
+          console.error("stt error", e);
           srcTxt.value = "";
           toast("Ses çözümlenemedi.");
+        } finally {
+          stopMediaStream();
         }
-
-        try {
-          stream.getTracks().forEach((track) => track.stop());
-        } catch {}
       };
 
-      rec.start();
-      recording = true;
-      btnMic.classList.add("listening");
-      btnMic.textContent = "⏺️";
-    } catch {
+      mediaRecorder.start();
+      mediaRecording = true;
+      setMicState(true);
+    } catch (e) {
+      console.error("mic permission error", e);
+      stopMediaStream();
+      setMicState(false);
       toast("Mikrofon izni gerekli.");
     }
-  } else {
-    try { rec.stop(); } catch {}
-    recording = false;
-    btnMic.classList.remove("listening");
-    btnMic.textContent = "🎙️";
+    return;
+  }
+
+  try {
+    mediaRecorder.stop();
+  } catch {
+    mediaRecording = false;
+    setMicState(false);
+    stopMediaStream();
   }
 }
 
 async function handleMic() {
-  const browserWorked = await startBrowserMic();
-  if (!browserWorked) {
-    await startServerMic();
+  if (mediaRecording) {
+    await startMediaRecorderFlow();
+    return;
   }
+
+  if (browserSpeechSupported()) {
+    const ok = await startBrowserSpeechRecognition();
+    if (ok) return;
+  }
+
+  await startMediaRecorderFlow();
 }
 
 /* -------------------------
@@ -668,4 +726,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   bind();
 
   dstTxt.textContent = "...";
+  setMicState(false);
+});
+
+window.addEventListener("beforeunload", () => {
+  stopSpeak();
+  stopMediaStream();
+  try { mediaRecorder?.stop?.(); } catch {}
 });
