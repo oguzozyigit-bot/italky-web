@@ -1,5 +1,3 @@
-// FILE: /js/ui_shell.js
-
 import { installAutoTranslate } from "/js/system_lang.js";
 import { STORAGE_KEY } from "/js/config.js";
 
@@ -35,9 +33,19 @@ const HOME_HEADER_HTML = `
     <div class="brand-slogan" data-no-translate="1">BE FREE</div>
   </div>
 
-  <button class="menu-btn" id="menuBtn" aria-label="Menü" type="button">
-    <span></span><span></span><span></span>
-  </button>
+  <div class="header-actions">
+    <button class="settings-btn" id="headerSettingsBtn" aria-label="Ayarlar" type="button" title="Ayarlar">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 3l1.2 2.4 2.7.4-2 1.9.5 2.7-2.4-1.3-2.4 1.3.5-2.7-2-1.9 2.7-.4L12 3z"></path>
+        <circle cx="12" cy="12" r="3.2"></circle>
+        <path d="M19.4 15a1 1 0 0 0 .2 1.1l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.9V20a2 2 0 1 1-4 0v-.2a1 1 0 0 0-.6-.9 1 1 0 0 0-1.1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1 1 0 0 0 .2-1.1 1 1 0 0 0-.9-.6H4a2 2 0 1 1 0-4h.2a1 1 0 0 0 .9-.6 1 1 0 0 0-.2-1.1l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1 1 0 0 0 1.1.2 1 1 0 0 0 .6-.9V4a2 2 0 1 1 4 0v.2a1 1 0 0 0 .6.9 1 1 0 0 0 1.1-.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1 1 0 0 0-.2 1.1 1 1 0 0 0 .9.6H20a2 2 0 1 1 0 4h-.2a1 1 0 0 0-.9.6z"></path>
+      </svg>
+    </button>
+
+    <button class="menu-btn" id="menuBtn" aria-label="Menü" type="button">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
 </header>
 
 <aside class="side-menu" id="sideMenu" aria-hidden="true">
@@ -76,9 +84,6 @@ const HOME_HEADER_HTML = `
       <a href="/pages/jetonbuy.html" class="menu-link-jeton" data-i18n="menu_token_load">Jeton Yükle</a>
 
       <a href="/pages/profile.html" data-i18n="menu_profile">Profil</a>
-      <a href="/pages/voice_profile.html" data-i18n="menu_create_voice">Sesini Oluştur</a>
-      <a href="/pages/translation_settings.html" data-i18n="menu_site_language">Site Dili</a>
-      <a href="/pages/qr-change.html" data-i18n="menu_change_qr">QR Değiştir</a>
       <a href="/pages/about.html" data-i18n="menu_about">Hakkımızda</a>
       <a href="/pages/jeton-nedir.html" data-i18n="menu_what_is_token">Jeton Nedir</a>
       <a href="/pages/faq.html" data-i18n="menu_faq">SSS</a>
@@ -89,13 +94,25 @@ const HOME_HEADER_HTML = `
       <button class="menu-action danger" id="deleteAccountBtn" type="button" data-i18n="menu_delete_account">Hesabımı Sil</button>
     </nav>
 
-    <div class="menu-sign" data-no-translate="1">italkyAI By Ozyigit's • 2026</div>
+    <div class="menu-sign" data-no-translate="1">
+      <span class="menu-sign-main">italkyAI</span>
+      <span class="menu-sign-dot">•</span>
+      <span class="menu-sign-sub">By Ozyigit's</span>
+      <span class="menu-sign-dot">•</span>
+      <span class="menu-sign-year">2026</span>
+    </div>
   </div>
 </aside>`;
 
 const HOME_FOOTER_HTML = `
 <footer class="premium-footer" id="italkyFooter">
-  <div class="signature" data-no-translate="1">italkyAI By Ozyigit's • 2026</div>
+  <div class="signature" data-no-translate="1">
+    <span class="signature-main">italkyAI</span>
+    <span class="signature-dot">•</span>
+    <span class="signature-sub">By Ozyigit's</span>
+    <span class="signature-dot">•</span>
+    <span class="signature-year">2026</span>
+  </div>
 </footer>`;
 
 const SHELL_CSS = `
@@ -225,6 +242,13 @@ body.ui-menu-open{
   margin-left:1px;
 }
 
+.header-actions{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.settings-btn,
 .menu-btn{
   width:44px;
   height:44px;
@@ -234,11 +258,24 @@ body.ui-menu-open{
   border:1px solid rgba(255,255,255,.08);
   box-shadow:0 8px 18px rgba(0,0,0,.24);
   display:flex;
-  flex-direction:column;
   align-items:center;
   justify-content:center;
-  gap:4px;
   cursor:pointer;
+  flex:0 0 auto;
+}
+
+.settings-btn svg{
+  width:18px;
+  height:18px;
+  stroke:#f2f5ff;
+  stroke-width:2;
+  fill:none;
+  opacity:.96;
+}
+
+.menu-btn{
+  flex-direction:column;
+  gap:4px;
 }
 
 .menu-btn span{
@@ -273,10 +310,36 @@ body.ui-menu-open{
 }
 
 .signature{
-  font-size:10px;
-  font-weight:700;
-  letter-spacing:.3px;
-  color:rgba(255,255,255,.34);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  flex-wrap:wrap;
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:.25px;
+  text-align:center;
+}
+
+.signature-main{
+  font-size:12px;
+  font-weight:900;
+  background:var(--ai-gradient);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  text-shadow:0 0 10px rgba(124,92,255,.18);
+}
+
+.signature-sub{
+  color:rgba(255,255,255,.68);
+}
+
+.signature-year{
+  color:rgba(139,211,255,.78);
+}
+
+.signature-dot{
+  color:rgba(255,255,255,.28);
 }
 
 .side-menu{
@@ -511,10 +574,37 @@ body.ui-menu-open{
 
 .menu-sign{
   margin-top:auto;
-  padding-top:6px;
-  font-size:10px;
-  color:rgba(255,255,255,.30);
+  padding-top:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  flex-wrap:wrap;
   text-align:center;
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:.2px;
+}
+
+.menu-sign-main{
+  font-size:13px;
+  font-weight:900;
+  background:var(--ai-gradient);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  text-shadow:0 0 12px rgba(124,92,255,.18);
+}
+
+.menu-sign-sub{
+  color:rgba(255,255,255,.70);
+}
+
+.menu-sign-year{
+  color:rgba(139,211,255,.82);
+}
+
+.menu-sign-dot{
+  color:rgba(255,255,255,.30);
 }
 `;
 
@@ -599,6 +689,7 @@ function finishMount(options) {
 
 function bindMenu() {
   const menuBtn = document.getElementById("menuBtn");
+  const headerSettingsBtn = document.getElementById("headerSettingsBtn");
   const sideMenu = document.getElementById("sideMenu");
   const menuBackdrop = document.getElementById("menuBackdrop");
   const logoutBtn = document.getElementById("logoutBtn");
@@ -627,8 +718,14 @@ function bindMenu() {
     location.href = "/pages/profile.html";
   };
 
+  const goSettings = () => {
+    closeMenu();
+    location.href = "/pages/translation_settings.html";
+  };
+
   menuBtn.addEventListener("click", openMenu);
   menuBackdrop?.addEventListener("click", closeMenu);
+  headerSettingsBtn?.addEventListener("click", goSettings);
 
   menuProfileTop?.addEventListener("click", goProfile);
   menuAvatarClick?.addEventListener("click", (e) => {
