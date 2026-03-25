@@ -244,20 +244,20 @@
     const goHomeBtn = document.getElementById("goHomeBtn");
 
     goCodeBtn?.addEventListener("click", () => {
+      const roomId = localStorage.getItem("italky_active_interpreter_room_id") || "";
+      const code = localStorage.getItem("italky_active_interpreter_code") || "";
 
-  const roomId = localStorage.getItem("italky_active_interpreter_room_id") || "";
-  const code = localStorage.getItem("italky_active_interpreter_code") || "";
+      if (roomId || code) {
+        location.href = `/pages/sidetoside_code.html?room=${encodeURIComponent(roomId)}&code=${encodeURIComponent(code)}`;
+        return;
+      }
 
-  if(roomId || code){
-    location.href = `/pages/sidetoside_code.html?room=${encodeURIComponent(roomId)}&code=${encodeURIComponent(code)}`;
-  }else{
-    location.href = "/pages/sidetoside_code.html";
-  }
-});
+      location.href = "/pages/sidetoside_code.html";
+    });
 
-goHomeBtn?.addEventListener("click", () => {
-  location.href = "/pages/home.html";
-});
+    goHomeBtn?.addEventListener("click", () => {
+      location.href = "/pages/home.html";
+    });
   </script>
 </body>
 </html>
