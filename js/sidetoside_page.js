@@ -948,25 +948,25 @@ function startSocket() {
       }
 
       if (type === "profile_sync") {
-        const senderId = String(payload?.sender_id || "").trim();
-        if (senderId && senderId === myClientId) return;
+  const senderId = String(payload?.sender_id || "").trim();
+  if (senderId && senderId === myClientId) return;
 
-        peerProfile = {
-          lang: canonical(payload?.lang || peerLang || "en"),
-          voice_mode: normalizeVoiceMode(payload?.voice_mode || "auto"),
-          translate_mode: normalizeTranslateMode(payload?.translate_mode || "normal")
-        };
+  peerProfile = {
+    lang: canonical(payload?.lang || peerLang || "en"),
+    voice_mode: normalizeVoiceMode(payload?.voice_mode || "auto"),
+    translate_mode: normalizeTranslateMode(payload?.translate_mode || "normal")
+  };
 
-        peerProfileReceived = true;
-        peerLang = peerProfile.lang;
+  peerProfileReceived = true;
+  peerLang = peerProfile.lang;
 
-        try { localStorage.setItem("live_interpreter_peer_lang", peerLang); } catch {}
+  try { localStorage.setItem("live_interpreter_peer_lang", peerLang); } catch {}
 
-        markPeerConnected(peerLang);
-        renderPeerProfileBox();
-        setSystemReadyUI();
-        return;
-      }
+  markPeerConnected(peerLang);
+  renderPeerProfileBox();
+  setSystemReadyUI();
+  return;
+}
 
       if (type === "translated_message") {
         const senderId = String(payload?.sender_id || "").trim();
@@ -984,8 +984,8 @@ function startSocket() {
         markPeerConnected(peerLang);
 
         peerProfile.voice_mode = normalizeVoiceMode(
-          senderVoice === "clone" ? "clone" : (peerProfile.voice_mode || "auto")
-        );
+  senderVoice || peerProfile.voice_mode || "auto"
+);
         peerProfile.translate_mode = senderTranslateMode;
         renderPeerProfileBox();
 
