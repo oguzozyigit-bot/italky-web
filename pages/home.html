@@ -1200,38 +1200,46 @@ function startPreviewSocket(roomId, myLang = "tr"){
   };
 
   previewSocket.onmessage = (event) => {
-    try{
-      const payload = JSON.parse(event.data);
-      const type = String(payload?.type || "").trim();
-      console.log("[HOME preview ws message]", payload);
+  try{
+    const payload = JSON.parse(event.data);
+    const type = String(payload?.type || "").trim();
 
-      if(type === "peer_joined"){
+    console.log("[HOME preview ws message]", payload);
+
+    if(type === "peer_joined"){
+      setHeroStatus("Karşı taraf bağlandı. Oda açılıyor...");
+      launchHostRoom(roomId);
+      return;
+    }
+
+    if(type === "presence"){
+      const guestLang = String(payload?.guest_lang || "").trim();
+      const peerConnected = payload?.peer_connected === true;
+
+      // SADECE gerçek guest gelmişse aç
+      if(peerConnected || guestLang){
         setHeroStatus("Karşı taraf bağlandı. Oda açılıyor...");
         launchHostRoom(roomId);
         return;
       }
 
-      if(type === "presence"){
-        const peerConnected =
-          payload?.peer_connected === true ||
-          !!String(payload?.guest_lang || "").trim() ||
-          Number(payload?.peer_count || 0) >= 2;
-
-        if(peerConnected){
-          setHeroStatus("Karşı taraf bağlandı. Oda açılıyor...");
-          launchHostRoom(roomId);
-          return;
-        }
-      }
-
-      if(type === "translated_message"){
-        setHeroStatus("Karşı taraf bağlandı. Oda açılıyor...");
-        launchHostRoom(roomId);
-      }
-    }catch(e){
-      console.warn("[HOME preview ws parse]", e);
+      setHeroStatus("Bağlantı kodu hazır. Karşı taraf bekleniyor...");
+      return;
     }
-  };
+
+    if(type === "translated_message"){
+      setHeroStatus("Karşı taraf bağlandı. Oda açılıyor...");
+      launchHostRoom(roomId);
+      return;
+    }
+
+    if(type === "error"){
+      console.warn("[HOME preview ws error payload]", payload);
+    }
+  }catch(e){
+    console.warn("[HOME preview ws parse]", e);
+  }
+};
 
   previewSocket.onerror = (e) => {
     console.warn("[HOME preview ws error]", e);
