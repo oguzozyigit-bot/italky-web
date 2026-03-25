@@ -328,16 +328,46 @@ function saveSettings() {
   localStorage.setItem("live_interpreter_voice", voiceMode);
 }
 
+function getLiveSideToSideParams() {
+  const current = new URLSearchParams(window.location.search);
+
+  const room =
+    String(current.get("room") || localStorage.getItem("italky_active_interpreter_room_id") || "").trim();
+
+  const role =
+    String(current.get("role") || localStorage.getItem("italky_active_interpreter_role") || "host").trim().toLowerCase();
+
+  const my =
+    String(current.get("my") || localStorage.getItem("live_interpreter_lang") || "tr").trim().toLowerCase();
+
+  const peer =
+    String(current.get("peer") || localStorage.getItem("live_interpreter_peer_lang") || "").trim().toLowerCase();
+
+  const auto =
+    String(current.get("auto") || "1").trim() === "1" ? "1" : "0";
+
+  return { room, role, my, peer, auto };
+}
+
 function buildStartHref() {
   if (fromPage === "sidetoside") {
-    return "/pages/sidetoside.html";
+    const { room, role, my, peer, auto } = getLiveSideToSideParams();
+
+    const qs = new URLSearchParams();
+    if (room) qs.set("room", room);
+    if (role) qs.set("role", role);
+    if (my) qs.set("my", my);
+    if (peer) qs.set("peer", peer);
+    qs.set("auto", auto || "1");
+
+    return `/pages/sidetoside.html${qs.toString() ? `?${qs.toString()}` : ""}`;
   }
+
   return "/facetoface.html";
 }
 
 function goStartPage() {
-  const target = buildStartHref();
-  location.href = target;
+  location.href = buildStartHref();
 }
 
 function goJetonMarket() {
@@ -652,9 +682,10 @@ function applyEntryContext() {
 
   if (fromPage === "sidetoside") {
     saveStartBtn.textContent = editMode ? "Kaydet ve Dön" : "Kaydet ve Başlat";
-  } else {
-    saveStartBtn.textContent = "Kaydet ve Başlat";
+    return;
   }
+
+  saveStartBtn.textContent = "Kaydet ve Başlat";
 }
 
 async function init() {
