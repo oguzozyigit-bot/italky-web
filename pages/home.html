@@ -1,3 +1,4 @@
+<!-- FILE: /pages/home.html -->
 <!doctype html>
 <html lang="tr">
 <head>
@@ -310,12 +311,6 @@ body{
   margin-top:8px;
 }
 
-.heroBtnRow{
-  display:flex;
-  gap:10px;
-  width:100%;
-}
-
 .heroBtn{
   min-height:52px;
   border:none;
@@ -328,22 +323,6 @@ body{
 }
 
 .heroBtn:active{ transform:scale(.985); }
-
-.heroBtnDark{
-  flex:1;
-  background:rgba(255,255,255,.08);
-  color:#fff;
-  border:1px solid rgba(255,255,255,.12);
-  box-shadow:0 12px 24px rgba(0,0,0,.16);
-}
-
-.heroBtnPurple{
-  flex:1;
-  background:linear-gradient(135deg,#4338ca 0%, #7c3aed 100%);
-  color:#fff;
-  border:1px solid rgba(255,255,255,.12);
-  box-shadow:0 12px 24px rgba(67,56,202,.24);
-}
 
 .heroBtnWide{
   width:100%;
@@ -567,13 +546,6 @@ body{
     0 0 18px rgba(103,232,249,.08);
 }
 
-.sidetoside-card{
-  background:
-    radial-gradient(circle at 12% 50%, rgba(251,146,60,.25) 0%, transparent 25%),
-    radial-gradient(circle at 88% 20%, rgba(103,232,249,.15) 0%, transparent 20%),
-    linear-gradient(90deg, #61220e 0%, #c2410a 36%, #ea580c 68%, #e11d48 100%);
-}
-
 .texttotext-card{
   background:
     radial-gradient(circle at 14% 50%, rgba(251,146,60,.22) 0%, transparent 24%),
@@ -583,8 +555,9 @@ body{
 
 .fun-card{
   background:
-    radial-gradient(circle at 12% 50%, rgba(255,255,255,.08) 0%, transparent 24%),
-    linear-gradient(90deg, #9d174d 0%, #db2777 42%, #7c3aed 100%);
+    radial-gradient(circle at 12% 50%, rgba(251,146,60,.25) 0%, transparent 25%),
+    radial-gradient(circle at 88% 20%, rgba(103,232,249,.15) 0%, transparent 20%),
+    linear-gradient(90deg, #61220e 0%, #c2410a 36%, #ea580c 68%, #e11d48 100%);
 }
 
 .level-card{
@@ -611,30 +584,6 @@ body{
   background:rgba(255,255,255,.12);
   border:1.5px solid rgba(255,255,255,.15);
   box-shadow:inset 0 0 22px rgba(255,255,255,.05);
-}
-
-.side-phone{
-  position:absolute;
-  width:22px;
-  height:36px;
-  border-radius:8px;
-  border:1.6px solid rgba(255,255,255,.75);
-  background:rgba(255,255,255,.10);
-  top:20px;
-}
-
-.side-phone.left{ left:14px; transform:rotate(-8deg); }
-.side-phone.right{ right:14px; transform:rotate(8deg); }
-
-.side-bridge{
-  position:absolute;
-  left:50%;
-  top:50%;
-  width:18px;
-  height:2px;
-  transform:translate(-50%,-50%);
-  background:linear-gradient(90deg, rgba(255,255,255,.18), rgba(103,232,249,.98), rgba(255,255,255,.18));
-  box-shadow:0 0 10px rgba(103,232,249,.35);
 }
 
 .text-bubble{
@@ -955,22 +904,6 @@ if(!userId){
     </section>
 
     <section class="wide-stack">
-      <a class="wide-card sidetoside-card" href="/pages/sidetoside_entry.html">
-        <div class="extra-ico">
-          <div class="side-phone left"></div>
-          <div class="side-phone right"></div>
-          <div class="side-bridge"></div>
-        </div>
-
-        <div class="wide-body">
-          <div class="card-topline">İki Cihaz Arası</div>
-          <h2 class="wide-title">SideToSide</h2>
-          <p class="wide-desc">İki kişi kendi telefonundan bağlanır. Bağlantı kodu ile anında giriş yapar.</p>
-        </div>
-
-        <div class="arrow-chip"></div>
-      </a>
-
       <a class="wide-card texttotext-card" href="/pages/text_translate.html">
         <div class="extra-ico">
           <div class="text-bubble"></div>
@@ -1051,6 +984,14 @@ try {
 
 <script>
 function openCodePrompt(){
+  const roomId = localStorage.getItem("italky_active_interpreter_room_id") || "";
+  const code = localStorage.getItem("italky_active_interpreter_code") || "";
+
+  if(roomId || code){
+    location.href = `/pages/sidetoside_code.html?room=${encodeURIComponent(roomId)}&code=${encodeURIComponent(code)}&auto=1`;
+    return;
+  }
+
   location.href = "/pages/sidetoside_code.html";
 }
 </script>
@@ -1162,6 +1103,9 @@ function buildJoinUrl(roomId, code){
   const url = new URL("https://italky.ai/pages/sidetoside_code.html");
   url.searchParams.set("room", roomId);
   url.searchParams.set("code", code);
+  url.searchParams.set("auto", "1");
+  url.searchParams.set("source", "qr");
+  url.searchParams.set("app", "required");
   return url.toString();
 }
 
@@ -1179,7 +1123,7 @@ function launchHostRoom(roomId){
   if(!roomId || redirected) return;
   redirected = true;
   stopRefreshTimer();
-  location.href = `/sidetoside.html?room=${encodeURIComponent(roomId)}&role=host&my=tr`;
+  location.href = `/pages/live_interpreter.html?room=${encodeURIComponent(roomId)}&role=host&my=tr&auto=1`;
 }
 
 function scheduleRefresh(){
