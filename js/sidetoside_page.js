@@ -228,13 +228,18 @@ let reconnectTimer = null;
 let reconnectCount = 0;
 let manuallyClosed = false;
 let peerHasExplicitlyLeft = false;
+let isNavigatingToSettings = false;
+let isNavigatingHome = false;
 
 let roomSyncTimer = null;
 let profileRetryTimers = [];
+let recognitionHasResult = false;
 
 let lastLocalSentText = "";
 let lastLocalSentAt = 0;
 let myClientId = "";
+let myUserId = "";
+let myDisplayName = "";
 let peerConnected = false;
 let peerEverConnected = false;
 let peerProfileReceived = false;
@@ -249,11 +254,17 @@ let peerProfile = {
   lang: peerLang,
   voice_mode: "auto",
   translate_mode: "normal",
+  name: "",
 };
 
 /* =========================
    PROFILE / LABELS
 ========================= */
+function displayNameOrFallback(value, fallback = "Karşı Taraf") {
+  const v = String(value || "").trim();
+  return v || fallback;
+}
+
 function readLocalProfile() {
   myProfile = {
     lang: canonical(localStorage.getItem("live_interpreter_lang") || myLang || "tr"),
@@ -273,7 +284,7 @@ function renderMyProfileBox() {
 }
 
 function renderPeerProfileBox() {
-  if (!peerConnected && !peerEverConnected) {
+  if (!peerConnected && !peerEverConnected && !peerProfileReceived) {
     if (peerInfoMain) peerInfoMain.textContent = "Bağlantı bekleniyor...";
     if (peerInfoSub) peerInfoSub.textContent = "Ses ve çeviri tercihleri burada görünecek.";
     if (peerVoicePill) peerVoicePill.textContent = "Otomatik Ses";
@@ -281,16 +292,17 @@ function renderPeerProfileBox() {
     return;
   }
 
+  const showName = displayNameOrFallback(peerProfile.name, "Karşı Taraf");
   const showLang = peerProfile.lang || peerLang || "en";
   const showVoice = peerProfile.voice_mode || "auto";
   const showTranslate = peerProfile.translate_mode || "normal";
 
   if (peerInfoMain) {
-    peerInfoMain.textContent = labelChip(showLang);
+    peerInfoMain.textContent = showName;
   }
 
   if (peerInfoSub) {
-    peerInfoSub.textContent = "Karşı tarafın aktif tercihleri";
+    peerInfoSub.textContent = labelChip(showLang);
   }
 
   if (peerVoicePill) {
@@ -302,7 +314,7 @@ function renderPeerProfileBox() {
   }
 }
 
-function markPeerConnected(lang = "") {
+function markPeerConnected(lang = "", name = "") {
   const clean = canonical(lang || peerLang || "");
   if (clean) {
     peerLang = clean;
@@ -310,6 +322,10 @@ function markPeerConnected(lang = "") {
     try {
       localStorage.setItem("live_interpreter_peer_lang", clean);
     } catch {}
+  }
+
+  if (String(name || "").trim()) {
+    peerProfile.name = String(name).trim();
   }
 
   peerConnected = true;
@@ -320,6 +336,44 @@ function markPeerConnected(lang = "") {
 function markPeerDisconnected() {
   peerConnected = false;
   renderPeerProfileBox();
+}
+
+async function loadMyIdentity() {
+  try {
+    const { data } = await supabase.auth.getUser();
+    const user = data?.user || null;
+    myUserId = String(user?.id || "").trim();
+
+    const metaName =
+      user?.user_metadata?.hitap ||
+      user?.user_metadata?.name ||
+      user?.user_metadata?.full_name ||
+      user?.user_metadata?.display_name ||
+      "";
+
+    if (metaName) {
+      myDisplayName = String(metaName).trim();
+    }
+
+    if (!myUserId) return;
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("name, full_name, display_name, hitap")
+      .eq("id", myUserId)
+      .maybeSingle();
+
+    const profileName =
+      profile?.hitap ||
+      profile?.name ||
+      profile?.display_name ||
+      profile?.full_name ||
+      "";
+
+    if (profileName) {
+      myDisplayName = String(profileName).trim();
+    }
+  } catch {}
 }
 
 async function loadProfileFromSupabase() {
@@ -406,19 +460,14 @@ function applyRoomSnapshot(room) {
     renderPeerProfileBox();
   }
 
-  if (peerConnected && !peerProfile.lang) {
-    peerProfile.lang = peerLang || "en";
-  }
-
   renderPeerProfileBox();
-  setSystemReadyUI();
 }
 
 function startRoomSync() {
   stopRoomSync();
 
   roomSyncTimer = setInterval(async () => {
-    if (!roomId || peerHasExplicitlyLeft) return;
+    if (!roomId || peerHasExplicitlyLeft || isNavigatingToSettings) return;
 
     try {
       const room = await fetchRoomSnapshot();
@@ -536,7 +585,9 @@ function setErrorUI() {
 }
 
 function bounceToReady(delay = 1200) {
-  setTimeout(() => setSystemReadyUI(), delay);
+  setTimeout(() => {
+    if (!recordingSide) setSystemReadyUI();
+  }, delay);
 }
 
 function refreshLangLabels() {
@@ -800,6 +851,7 @@ async function sendSelfProfile() {
     ws.send(JSON.stringify({
       type: "profile_sync",
       sender_id: myClientId,
+      sender_name: myDisplayName || "",
       lang: canonical(myLang),
       voice_mode: normalizeVoiceMode(myProfile.voice_mode),
       translate_mode: normalizeTranslateMode(myProfile.translate_mode)
@@ -807,6 +859,17 @@ async function sendSelfProfile() {
   } catch (e) {
     console.warn("[profile_sync send]", e);
   }
+}
+
+async function sendLeaving(reason = "left") {
+  if (!ws || ws.readyState !== WebSocket.OPEN) return;
+  try {
+    ws.send(JSON.stringify({
+      type: "leaving",
+      reason,
+      sender_name: myDisplayName || ""
+    }));
+  } catch {}
 }
 
 async function applyMyLanguageChange(nextLang) {
@@ -880,7 +943,7 @@ function goHomeDelayed() {
 }
 
 function scheduleReconnect() {
-  if (manuallyClosed || peerHasExplicitlyLeft || reconnectTimer) return;
+  if (manuallyClosed || peerHasExplicitlyLeft || reconnectTimer || isNavigatingToSettings) return;
 
   const delay = Math.min(1500 + reconnectCount * 1000, 6000);
 
@@ -1000,7 +1063,7 @@ function startSocket() {
           try { localStorage.setItem("live_interpreter_peer_lang", peerLang); } catch {}
         }
 
-        markPeerConnected(peerLang);
+        markPeerConnected(peerLang, payload?.sender_name || "");
         renderPeerProfileBox();
         setHelper(botHelper, t(myLang, "peerJoined"), "helper-ready");
 
@@ -1018,7 +1081,8 @@ function startSocket() {
         peerProfile = {
           lang: canonical(payload?.lang || peerLang || "en"),
           voice_mode: normalizeVoiceMode(payload?.voice_mode || "auto"),
-          translate_mode: normalizeTranslateMode(payload?.translate_mode || "normal")
+          translate_mode: normalizeTranslateMode(payload?.translate_mode || "normal"),
+          name: String(payload?.sender_name || peerProfile.name || "").trim()
         };
 
         peerProfileReceived = true;
@@ -1026,7 +1090,7 @@ function startSocket() {
 
         try { localStorage.setItem("live_interpreter_peer_lang", peerLang); } catch {}
 
-        markPeerConnected(peerLang);
+        markPeerConnected(peerLang, peerProfile.name);
         renderPeerProfileBox();
         setSystemReadyUI();
         return;
@@ -1041,16 +1105,18 @@ function startSocket() {
         const senderTranslateMode = normalizeTranslateMode(
           payload?.sender_translate_mode || peerProfile.translate_mode || "normal"
         );
+        const senderName = String(payload?.sender_name || "").trim();
 
         if (!translated && !original) return;
         if (senderId && myClientId && senderId === myClientId) return;
 
-        markPeerConnected(peerLang);
+        markPeerConnected(peerLang, senderName);
 
         peerProfile.voice_mode = normalizeVoiceMode(
           senderVoice === "clone" ? "clone" : (peerProfile.voice_mode || "auto")
         );
         peerProfile.translate_mode = senderTranslateMode;
+        if (senderName) peerProfile.name = senderName;
         renderPeerProfileBox();
 
         const text = translated || original;
@@ -1069,12 +1135,20 @@ function startSocket() {
 
       if (type === "peer_left") {
         peerHasExplicitlyLeft = true;
+        peerConnected = false;
         peerEverConnected = false;
         peerProfileReceived = false;
-        markPeerDisconnected();
+
+        const senderName = displayNameOrFallback(payload?.sender_name, "Karşı Taraf");
+        if (senderName) peerProfile.name = senderName;
+
+        renderPeerProfileBox();
         setErrorUI();
-        setHelper(botHelper, payload?.message || t(myLang, "peerGoneHome"), "helper-wait");
-        goHomeDelayed();
+        setHelper(
+          botHelper,
+          payload?.message || `${senderName} odadan ayrıldı.`,
+          "helper-wait"
+        );
         return;
       }
 
@@ -1092,7 +1166,7 @@ function startSocket() {
 
   ws.onerror = () => {
     wsReady = false;
-    if (!peerHasExplicitlyLeft) {
+    if (!peerHasExplicitlyLeft && !isNavigatingToSettings) {
       setErrorUI();
       setHelper(botHelper, t(myLang, "reconnecting"), "helper-wait");
       scheduleReconnect();
@@ -1107,7 +1181,7 @@ function startSocket() {
       pingTimer = null;
     }
 
-    if (!manuallyClosed && !peerHasExplicitlyLeft) {
+    if (!manuallyClosed && !peerHasExplicitlyLeft && !isNavigatingToSettings) {
       setErrorUI();
       setHelper(botHelper, t(myLang, "reconnecting"), "helper-wait");
       scheduleReconnect();
@@ -1366,12 +1440,14 @@ function startRecording() {
 
   recognizer = rec;
   recordingSide = "bot";
+  recognitionHasResult = false;
 
   rec.onstart = () => {
     setListeningUI();
   };
 
   rec.onresult = (e) => {
+    recognitionHasResult = true;
     const heard = e.results?.[0]?.[0]?.transcript || "";
     Promise.resolve().then(() => finalizeRecognition(heard));
   };
@@ -1388,6 +1464,7 @@ function startRecording() {
 
     const fallback = await speechToTextFallback();
     if (fallback) {
+      recognitionHasResult = true;
       await finalizeRecognition(fallback);
     } else {
       setErrorUI();
@@ -1398,6 +1475,10 @@ function startRecording() {
   rec.onend = () => {
     recognizer = null;
     recordingSide = null;
+
+    if (!recognitionHasResult) {
+      setSystemReadyUI();
+    }
   };
 
   try {
@@ -1436,6 +1517,7 @@ async function warmApis() {
   await Promise.allSettled([
     fetch(`${API_BASE}/healthz`).catch(() => {}),
     loadProfileFromSupabase(),
+    loadMyIdentity(),
   ]);
 }
 
@@ -1536,19 +1618,24 @@ function bind() {
     setSystemReadyUI();
   });
 
-  homeLink?.addEventListener("click", (e) => {
+  homeLink?.addEventListener("click", async (e) => {
     e.preventDefault();
+    isNavigatingHome = true;
+    await sendLeaving("home");
     stopSocket();
     location.href = safeHomeHref();
   });
 
-  homeBtn?.addEventListener("click", () => {
+  homeBtn?.addEventListener("click", async () => {
+    isNavigatingHome = true;
+    await sendLeaving("home");
     stopSocket();
     location.href = safeHomeHref();
   });
 
   settingsBtn?.addEventListener("click", (e) => {
     e.preventDefault();
+    isNavigatingToSettings = true;
     saveReturnContext();
 
     const target = new URL("/pages/facetoface_open.html", location.origin);
@@ -1618,5 +1705,7 @@ bootRoom();
 
 window.addEventListener("beforeunload", () => {
   saveReturnContext();
-  stopSocket();
+  if (!isNavigatingToSettings && !isNavigatingHome) {
+    stopSocket();
+  }
 });
