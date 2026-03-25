@@ -1067,6 +1067,23 @@ if(!userId){
 </main>
 
 <script type="module">
+import { mountShell } from "/js/ui_shell.js";
+
+try {
+  mountShell({ scroll: "auto" });
+} catch (e) {
+  console.error("ui_shell HATASI:", e);
+}
+</script>
+
+<script>
+function openCodePrompt(){
+  location.href = "/pages/sidetoside_code.html";
+}
+window.openCodePrompt = openCodePrompt;
+</script>
+
+<script type="module">
 const API_BASE = "https://italky-api.onrender.com/api";
 
 const heroStatus = document.getElementById("heroStatus");
@@ -1097,6 +1114,7 @@ function makeConnectionCode(length = 6){
 
 function setConnectionCode(code){
   activeRoomCode = String(code || "").trim().toUpperCase();
+
   if(connectionCodeText){
     connectionCodeText.textContent = activeRoomCode || "------";
   }
@@ -1199,7 +1217,6 @@ async function prepareRoom(){
   try{
     setHeroStatus("Oda hazırlanıyor...");
 
-    // HER HOME AÇILIŞINDA YENİ ODA
     const created = await createRoom("tr");
     activeRoomId = String(created.room_id || "").trim();
 
