@@ -5,145 +5,534 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
 <title>italkyAI • Quantum Translate</title>
 
-<meta name="theme-color" content="#000000">
+<meta name="theme-color" content="#0a0a12">
 <style>
-  html,body{background:#000 !important; margin:0; padding:0; overflow:hidden; font-family:'Outfit', sans-serif;}
-  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=Space+Grotesk:wght@700&display=swap');
+  html,body{
+    background:#000 !important;
+    margin:0;
+    padding:0;
+    overflow:hidden;
+    font-family:'Outfit', sans-serif;
+  }
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800;900&family=Space+Grotesk:wght@500;700&display=swap');
 </style>
 
 <style>
-:root {
-  --ai-grad: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #ec4899 100%);
-  --blue: #60a5fa;
-  --bordo: #2d0a0a;
-  --glass-border: rgba(255, 255, 255, 0.12);
+:root{
+  --bg:#070711;
+  --bg-2:#0b0b18;
+  --card:rgba(255,255,255,0.04);
+  --card-2:rgba(255,255,255,0.06);
+  --text:#ffffff;
+  --muted:rgba(255,255,255,0.65);
+  --soft:rgba(255,255,255,0.08);
+  --glass-border:rgba(255,255,255,0.12);
+
+  --ai-grad:linear-gradient(135deg,#a5b4fc 0%,#818cf8 35%,#f9a8d4 100%);
+  --out-grad:linear-gradient(180deg,rgba(65,15,40,.92) 0%, rgba(10,8,18,.98) 100%);
+
+  --pastel-btn:linear-gradient(135deg,#c4b5fd 0%, #a5b4fc 45%, #fbcfe8 100%);
+  --pastel-shadow:0 12px 28px rgba(165,180,252,.26);
+
+  --retro-pink:#ff7abf;
+  --retro-cyan:#7dd3fc;
+  --retro-violet:#a78bfa;
+  --retro-line:rgba(255,255,255,0.14);
 }
 
-* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
-
-#pageContent {
-  height: 100%;
-  display: flex; flex-direction: column;
-  background: radial-gradient(circle at 50% 20%, #0a0a20 0%, #000 100%);
+*{
+  box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
+  outline:none;
 }
 
-.main-wrap {
-  flex: 1;
-  display: flex; flex-direction: column;
-  padding: 10px;
-  gap: 0;
-  min-height: 0;
+html,body{
+  width:100%;
+  height:100%;
+  color:var(--text);
 }
 
-.lang-hub {
-  display: flex; align-items: center; justify-content: space-between;
-  background: rgba(255,255,255,0.03);
-  border: 1px solid var(--glass-border);
-  border-radius: 16px;
-  padding: 8px 16px;
-  backdrop-filter: blur(20px);
-  margin-bottom: 8px;
+body{
+  background:
+    radial-gradient(circle at 15% 10%, rgba(125,211,252,.10) 0%, transparent 20%),
+    radial-gradient(circle at 85% 16%, rgba(255,122,191,.11) 0%, transparent 22%),
+    radial-gradient(circle at 50% 0%, rgba(167,139,250,.16) 0%, transparent 34%),
+    linear-gradient(180deg,#090912 0%, #000 100%);
 }
 
-.select-box {
-  background: transparent; border: none; color: #fff;
-  font-family: 'Space Grotesk'; font-size: 13px; font-weight: 700;
-  cursor: pointer; appearance: none;
+button, input, textarea{
+  font-family:inherit;
 }
 
-.swap-trigger {
-  width: 30px; height: 30px; border-radius: 50%;
-  background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);
-  color: #fff; display: flex; align-items: center; justify-content: center;
+#pageContent{
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  background:transparent;
 }
 
-.quantum-gate {
-  flex: 1;
-  display: flex; flex-direction: column;
-  min-height: 0;
+.main-wrap{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  padding:10px;
+  min-height:0;
 }
 
-.gate-panel {
-  flex: 1;
-  position: relative;
-  border-radius: 28px;
-  border: 1px solid var(--glass-border);
-  background: rgba(255,255,255,0.02);
-  display: flex; flex-direction: column;
-  padding: 18px;
-  min-height: 0;
+.lang-hub{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  background:rgba(255,255,255,0.03);
+  border:1px solid var(--glass-border);
+  border-radius:18px;
+  padding:8px;
+  backdrop-filter:blur(20px);
+  margin-bottom:8px;
+  box-shadow:0 14px 28px rgba(0,0,0,.18);
 }
 
-.panel-in { border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-bottom: none; }
-.panel-out {
-  border-top-left-radius: 0; border-top-right-radius: 0; border-top: none;
-  background: linear-gradient(180deg, var(--bordo) 0%, #000 100%);
-  border-color: rgba(236, 72, 153, 0.2);
+.lang-pill{
+  flex:1;
+  min-width:0;
+  border:none;
+  background:rgba(255,255,255,0.04);
+  color:#fff;
+  border-radius:14px;
+  min-height:48px;
+  padding:0 12px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  cursor:pointer;
+  border:1px solid rgba(255,255,255,0.06);
+  transition:.2s ease;
+}
+.lang-pill:active{
+  transform:scale(.985);
+}
+.lang-pill-left{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+}
+.lang-flag{
+  font-size:18px;
+  width:24px;
+  text-align:center;
+  flex:0 0 24px;
+}
+.lang-name{
+  font-family:'Space Grotesk', sans-serif;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:.2px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.lang-caret{
+  color:rgba(255,255,255,.62);
+  font-size:14px;
+  flex:0 0 auto;
 }
 
-.panel-action {
-  position: absolute;
-  top: 12px; right: 12px;
-  width: 38px; height: 38px;
-  border-radius: 12px;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid var(--glass-border);
-  color: #fff;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; z-index: 30;
-  font-size: 18px;
-  transition: all 0.2s;
+.swap-trigger{
+  width:42px;
+  height:42px;
+  border-radius:14px;
+  background:rgba(255,255,255,0.05);
+  border:1px solid var(--glass-border);
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  font-size:18px;
+  flex:0 0 auto;
+  transition:.2s ease;
 }
-.panel-action:active { transform: scale(0.9); background: rgba(255,255,255,0.1); }
-
-textarea {
-  flex: 1; background: transparent; border: none;
-  color: #fff; font-size: 17px; font-weight: 300;
-  line-height: 1.5; resize: none; width: 100%;
-  padding-right: 40px;
+.swap-trigger:active{
+  transform:rotate(180deg) scale(.95);
 }
 
-.output-area {
-  flex: 1; color: #fbcfe8; font-size: 17px;
-  font-weight: 600; line-height: 1.5; overflow-y: auto;
-  white-space: pre-wrap;
-  padding-right: 40px;
+.quantum-gate{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  min-height:0;
 }
 
-.command-bar {
-  height: 58px;
-  background: rgba(20,20,30,0.4);
-  border-left: 1px solid var(--glass-border);
-  border-right: 1px solid var(--glass-border);
-  display: flex; align-items: center;
-  padding: 0 10px;
-  position: relative;
-  z-index: 20;
+.gate-panel{
+  flex:1;
+  position:relative;
+  border-radius:28px;
+  border:1px solid var(--glass-border);
+  background:rgba(255,255,255,0.025);
+  display:flex;
+  flex-direction:column;
+  padding:18px;
+  min-height:0;
+  box-shadow:0 18px 36px rgba(0,0,0,.18);
+  backdrop-filter:blur(18px);
 }
 
-.bar-btn {
-  flex: 1; border: none; background: transparent;
-  color: rgba(255,255,255,0.6); font-weight: 900; font-size: 11px;
-  display: flex; align-items: center; justify-content: center;
-  gap: 8px; cursor: pointer; height: 100%;
+.panel-in{
+  border-bottom-left-radius:0;
+  border-bottom-right-radius:0;
+  border-bottom:none;
 }
 
-.btn-3d {
-  flex: 1.2;
-  height: 44px;
-  border-radius: 20px;
-  border: none;
-  background: var(--ai-grad);
-  color: #fff;
-  font-weight: 900; font-size: 14px;
-  display: flex; align-items: center; justify-content: center;
-  gap: 8px;
-  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.3);
-  cursor: pointer;
+.panel-out{
+  border-top-left-radius:0;
+  border-top-right-radius:0;
+  border-top:none;
+  background:var(--out-grad);
+  border-color:rgba(251,207,232,.16);
 }
-.btn-3d:active { transform: translateY(2px) scale(0.98); }
 
-.divider { width: 1px; background: var(--glass-border); height: 24px; margin: 0 10px; }
+.panel-action{
+  position:absolute;
+  top:12px;
+  right:12px;
+  width:40px;
+  height:40px;
+  border-radius:13px;
+  background:rgba(255,255,255,0.06);
+  border:1px solid var(--glass-border);
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  z-index:30;
+  font-size:18px;
+  transition:all .2s;
+}
+.panel-action:active{
+  transform:scale(.92);
+  background:rgba(255,255,255,0.10);
+}
+
+textarea{
+  flex:1;
+  background:transparent;
+  border:none;
+  color:#fff;
+  font-size:17px;
+  font-weight:400;
+  line-height:1.55;
+  resize:none;
+  width:100%;
+  padding-right:46px;
+  caret-color:#c4b5fd;
+}
+textarea::placeholder{
+  color:rgba(255,255,255,.34);
+}
+
+.output-area{
+  flex:1;
+  color:#fce7f3;
+  font-size:17px;
+  font-weight:600;
+  line-height:1.55;
+  overflow-y:auto;
+  white-space:pre-wrap;
+  padding-right:46px;
+}
+
+.command-bar{
+  min-height:64px;
+  background:rgba(18,18,30,.48);
+  border-left:1px solid var(--glass-border);
+  border-right:1px solid var(--glass-border);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:10px;
+  position:relative;
+  z-index:20;
+}
+
+.btn-translate{
+  width:100%;
+  min-height:46px;
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,.24);
+  background:var(--pastel-btn);
+  color:#241630;
+  font-weight:900;
+  font-size:14px;
+  letter-spacing:.3px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  box-shadow:var(--pastel-shadow), inset 0 1px 0 rgba(255,255,255,.50);
+  cursor:pointer;
+  transition:all .2s ease;
+}
+.btn-translate:active{
+  transform:translateY(2px) scale(.985);
+}
+.btn-translate:disabled{
+  opacity:.45;
+  cursor:not-allowed;
+  box-shadow:none;
+}
+
+.modal{
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  display:none;
+  align-items:flex-end;
+  justify-content:center;
+  background:rgba(0,0,0,.68);
+  padding:14px;
+}
+.modal.show{
+  display:flex;
+}
+
+.modal-card{
+  width:min(100%,700px);
+  max-height:min(88vh,900px);
+  overflow:hidden;
+  border-radius:28px;
+  border:1px solid var(--retro-line);
+  background:
+    radial-gradient(circle at 15% 0%, rgba(125,211,252,.10) 0%, transparent 30%),
+    radial-gradient(circle at 85% 10%, rgba(255,122,191,.12) 0%, transparent 30%),
+    linear-gradient(180deg,#151323 0%, #090913 100%);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.03),
+    0 30px 70px rgba(0,0,0,.55),
+    0 0 30px rgba(167,139,250,.10);
+  backdrop-filter:blur(20px);
+  display:flex;
+  flex-direction:column;
+  position:relative;
+}
+
+.modal-gridline{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background-image:
+    linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+  background-size:24px 24px;
+  mask-image:linear-gradient(180deg, rgba(255,255,255,.55), transparent 70%);
+}
+
+.modal-head{
+  position:sticky;
+  top:0;
+  z-index:2;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:16px 16px 12px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+  background:rgba(9,9,19,.86);
+  backdrop-filter:blur(14px);
+}
+
+.modal-title-wrap{
+  min-width:0;
+}
+.modal-kicker{
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:1.8px;
+  color:var(--retro-cyan);
+  margin-bottom:6px;
+}
+.modal-title{
+  margin:0;
+  font-family:'Space Grotesk', sans-serif;
+  font-size:22px;
+  letter-spacing:-.6px;
+}
+.modal-title .accent{
+  background:linear-gradient(135deg,#7dd3fc,#a78bfa,#ff7abf);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+.modal-sub{
+  margin:6px 0 0;
+  font-size:12px;
+  line-height:1.45;
+  color:var(--muted);
+}
+
+.modal-close{
+  flex:0 0 auto;
+  width:42px;
+  height:42px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(255,255,255,.06);
+  color:#fff;
+  font-size:18px;
+  cursor:pointer;
+}
+
+.modal-search{
+  padding:12px 16px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+.search-shell{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-height:48px;
+  border-radius:16px;
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.09);
+  padding:0 14px;
+}
+.search-shell span{
+  color:rgba(255,255,255,.56);
+  font-size:16px;
+}
+.search-shell input{
+  flex:1;
+  min-width:0;
+  background:transparent;
+  border:none;
+  color:#fff;
+  font-size:14px;
+}
+.search-shell input::placeholder{
+  color:rgba(255,255,255,.34);
+}
+
+.lang-list{
+  overflow:auto;
+  padding:12px 12px 16px;
+  display:grid;
+  grid-template-columns:1fr;
+  gap:10px;
+}
+
+.lang-option{
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.04);
+  border-radius:18px;
+  padding:12px 14px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  cursor:pointer;
+  transition:all .18s ease;
+}
+.lang-option:active{
+  transform:scale(.986);
+}
+.lang-option.active{
+  border-color:rgba(167,139,250,.40);
+  background:linear-gradient(135deg, rgba(125,211,252,.10), rgba(255,122,191,.08));
+  box-shadow:0 0 0 1px rgba(167,139,250,.12);
+}
+.lang-option-left{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-width:0;
+}
+.lang-option-flag{
+  width:30px;
+  height:30px;
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(255,255,255,.06);
+  font-size:18px;
+  flex:0 0 30px;
+}
+.lang-option-text{
+  min-width:0;
+}
+.lang-option-name{
+  font-size:14px;
+  font-weight:800;
+  color:#fff;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.lang-option-code{
+  font-size:11px;
+  font-weight:700;
+  color:rgba(255,255,255,.50);
+  margin-top:3px;
+  text-transform:uppercase;
+}
+.lang-option-check{
+  color:#c4b5fd;
+  font-size:18px;
+  font-weight:900;
+  opacity:0;
+}
+.lang-option.active .lang-option-check{
+  opacity:1;
+}
+
+.empty-state{
+  padding:22px 14px;
+  text-align:center;
+  color:rgba(255,255,255,.52);
+  font-size:13px;
+}
+
+.toast{
+  position:fixed;
+  left:50%;
+  top:18px;
+  transform:translateX(-50%) translateY(-120px);
+  background:rgba(10,10,18,.94);
+  border:1px solid rgba(196,181,253,.34);
+  color:#fff;
+  padding:10px 14px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:800;
+  z-index:10000;
+  transition:.25s;
+  pointer-events:none;
+  backdrop-filter:blur(14px);
+  max-width:min(92vw,520px);
+  text-align:center;
+}
+.toast.show{
+  transform:translateX(-50%) translateY(0);
+}
+
+@media (min-width:720px){
+  .main-wrap{
+    padding:14px;
+  }
+  .lang-list{
+    grid-template-columns:1fr 1fr;
+  }
+  .modal{
+    align-items:center;
+  }
+}
+
+@media (max-width:390px){
+  .lang-name{ font-size:11px; }
+  textarea, .output-area{ font-size:16px; }
+}
 </style>
 </head>
 
@@ -152,9 +541,23 @@ textarea {
   <div class="main-wrap">
 
     <section class="lang-hub">
-      <select class="select-box" id="fromSel"></select>
-      <button class="swap-trigger" id="btnSwap" type="button">⇄</button>
-      <select class="select-box" id="toSel"></select>
+      <button class="lang-pill" id="fromBtn" type="button" aria-label="Kaynak dili seç">
+        <div class="lang-pill-left">
+          <span class="lang-flag" id="fromFlag">🇹🇷</span>
+          <span class="lang-name" id="fromName">Türkçe</span>
+        </div>
+        <span class="lang-caret">▾</span>
+      </button>
+
+      <button class="swap-trigger" id="btnSwap" type="button" aria-label="Dilleri değiştir">⇄</button>
+
+      <button class="lang-pill" id="toBtn" type="button" aria-label="Hedef dili seç">
+        <div class="lang-pill-left">
+          <span class="lang-flag" id="toFlag">🇬🇧</span>
+          <span class="lang-name" id="toName">İngilizce</span>
+        </div>
+        <span class="lang-caret">▾</span>
+      </button>
     </section>
 
     <section class="quantum-gate">
@@ -164,15 +567,8 @@ textarea {
       </div>
 
       <div class="command-bar">
-        <label class="bar-btn">
-          <input type="file" id="imgFile" accept="image/*" capture="environment" style="display:none">
-          <span>📷 FOTOĞRAF TARAT</span>
-        </label>
-
-        <div class="divider"></div>
-
-        <button class="btn-3d" id="btnTranslate">
-          ⚡ ÇEVİR
+        <button class="btn-translate" id="btnTranslate" type="button">
+          ✨ ÇEVİR
         </button>
       </div>
 
@@ -185,64 +581,329 @@ textarea {
   </div>
 </main>
 
+<div class="modal" id="langModal" aria-hidden="true">
+  <div class="modal-card">
+    <div class="modal-gridline"></div>
+
+    <div class="modal-head">
+      <div class="modal-title-wrap">
+        <div class="modal-kicker">RETRO MODERN • 90s POPUP</div>
+        <h2 class="modal-title"><span class="accent" id="modalModeTitle">Dil</span> Seç</h2>
+        <p class="modal-sub">Bayraklı tam dil listesi burada. Arayıp dokun, seç ve devam et.</p>
+      </div>
+      <button class="modal-close" id="modalClose" type="button" aria-label="Kapat">✕</button>
+    </div>
+
+    <div class="modal-search">
+      <div class="search-shell">
+        <span>⌕</span>
+        <input id="langSearch" type="text" placeholder="Dil ara..." autocomplete="off" />
+      </div>
+    </div>
+
+    <div class="lang-list" id="langList"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
 <script type="module">
   import { mountShell } from "/js/ui_shell.js";
-  mountShell({ scroll:"none" });
+  import { LANG_POOL } from "/js/lang_pool_full.js";
+
+  try{
+    mountShell({ scroll:"none" });
+  }catch(e){
+    console.error("ui_shell HATASI:", e);
+  }
 
   const API_BASE = "https://italky-api.onrender.com";
-  const $ = (id)=>document.getElementById(id);
+  const $ = (id) => document.getElementById(id);
 
-  const LANG_POOL = [
-    {code:"tr", name:"TÜRKÇE"}, {code:"en", name:"İNGİLİZCE"},
-    {code:"de", name:"ALMANCA"}, {code:"fr", name:"FRANSIZCA"}, {code:"it", name:"İTALYANCA"},
-    {code:"es", name:"İSPANYOLCA"}, {code:"ru", name:"RUSÇA"}, {code:"ar", name:"ARAPÇA"},
-    {code:"zh", name:"ÇİNCE"}, {code:"ja", name:"JAPONCA"}, {code:"ko", name:"KORECE"}
-  ];
+  const toastEl = $("toast");
+  const fromBtn = $("fromBtn");
+  const toBtn = $("toBtn");
+  const fromName = $("fromName");
+  const toName = $("toName");
+  const fromFlag = $("fromFlag");
+  const toFlag = $("toFlag");
+  const btnSwap = $("btnSwap");
+  const btnTranslate = $("btnTranslate");
+  const btnMic = $("btnMic");
+  const btnSpeak = $("btnSpeak");
+  const srcTxt = $("srcTxt");
+  const dstTxt = $("dstTxt");
 
-  const fromSel = $("fromSel");
-  const toSel = $("toSel");
+  const langModal = $("langModal");
+  const modalClose = $("modalClose");
+  const langSearch = $("langSearch");
+  const langList = $("langList");
+  const modalModeTitle = $("modalModeTitle");
 
-  const fill = (sel, list) => sel.innerHTML = list.map(l=>`<option value="${l.code}">${l.name}</option>`).join("");
-  fill(fromSel, LANG_POOL);
-  fill(toSel, LANG_POOL);
+  let modalMode = "from";
+  let fromLang = localStorage.getItem("qtt_from_lang") || "tr";
+  let toLang = localStorage.getItem("qtt_to_lang") || "en";
 
-  // ✅ İlk açılış TR -> EN
-  fromSel.value = "tr";
-  toSel.value = "en";
+  const TURKISH_LANG_NAMES = {
+    af:"Afrikanca", sq:"Arnavutça", am:"Amharca", ar:"Arapça", hy:"Ermenice", az:"Azerbaycanca",
+    eu:"Baskça", be:"Belarusça", bn:"Bengalce", bs:"Boşnakça", bg:"Bulgarca", ca:"Katalanca",
+    ceb:"Cebuano", zh:"Çince", "zh-cn":"Basitleştirilmiş Çince", "zh-tw":"Geleneksel Çince",
+    co:"Korsikaca", hr:"Hırvatça", cs:"Çekçe", da:"Danca", nl:"Hollandaca", en:"İngilizce",
+    eo:"Esperanto", et:"Estonca", fi:"Fince", fr:"Fransızca", fy:"Frizce", gl:"Galiçyaca",
+    ka:"Gürcüce", de:"Almanca", el:"Yunanca", gu:"Guceratça", ht:"Haiti Kreyolu", ha:"Hausa",
+    haw:"Hawaii Dili", he:"İbranice", iw:"İbranice", hi:"Hintçe", hmn:"Hmongca", hu:"Macarca",
+    is:"İzlandaca", ig:"İgbo", id:"Endonezce", ga:"İrlandaca", it:"İtalyanca", ja:"Japonca",
+    jv:"Cava Dili", kn:"Kannada", kk:"Kazakça", km:"Kmerce", rw:"Kinyarwanda", ko:"Korece",
+    ku:"Kürtçe", ky:"Kırgızca", lo:"Laoca", la:"Latince", lv:"Letonca", lt:"Litvanca",
+    lb:"Lüksemburgca", mk:"Makedonca", mg:"Malgaşça", ms:"Malayca", ml:"Malayalamca", mt:"Maltaca",
+    mi:"Maorice", mr:"Marathi", mn:"Moğolca", my:"Burmaca", ne:"Nepalce", no:"Norveççe",
+    ny:"Nyanja", or:"Oriyaca", ps:"Peştuca", fa:"Farsça", pl:"Lehçe", pt:"Portekizce",
+    pa:"Pencapça", ro:"Romence", ru:"Rusça", sm:"Samoaca", gd:"İskoç Galcesi", sr:"Sırpça",
+    st:"Sotho", sn:"Shona", sd:"Sindhi", si:"Sinhalaca", sk:"Slovakça", sl:"Slovence",
+    so:"Somalice", es:"İspanyolca", su:"Sundaca", sw:"Svahili", sv:"İsveççe", tl:"Tagalog",
+    tg:"Tacikçe", ta:"Tamilce", tt:"Tatarca", te:"Teluguca", th:"Tayca", tr:"Türkçe",
+    tk:"Türkmence", uk:"Ukraynaca", ur:"Urduca", ug:"Uygurca", uz:"Özbekçe", vi:"Vietnamca",
+    cy:"Galce", xh:"Xhosa", yi:"Yidiş", yo:"Yorubaca", zu:"Zuluca"
+  };
 
-  // --- Translate Core ---
-  async function doTranslate(){
-    const text = $("srcTxt").value.trim();
-    if(!text) return;
-    $("dstTxt").style.opacity = "0.4";
-    $("dstTxt").textContent = "Çevriliyor...";
-    try {
-      const r = await fetch(`${API_BASE}/api/translate_ai`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text, from_lang: fromSel.value, to_lang: toSel.value })
-      });
-      const j = await r.json();
-      $("dstTxt").textContent = j.translated || "Hata!";
-    } catch(e) {
-      $("dstTxt").textContent = "API Hatası.";
-    } finally {
-      $("dstTxt").style.opacity = "1";
+  const FLAG_MAP = {
+    tr:"🇹🇷", en:"🇬🇧", de:"🇩🇪", fr:"🇫🇷", it:"🇮🇹", es:"🇪🇸", ru:"🇷🇺", ar:"🇸🇦", zh:"🇨🇳",
+    ja:"🇯🇵", ko:"🇰🇷", pt:"🇵🇹", nl:"🇳🇱", el:"🇬🇷", uk:"🇺🇦", pl:"🇵🇱", ro:"🇷🇴", bg:"🇧🇬",
+    cs:"🇨🇿", sk:"🇸🇰", sl:"🇸🇮", hr:"🇭🇷", sr:"🇷🇸", bs:"🇧🇦", hu:"🇭🇺", fi:"🇫🇮", sv:"🇸🇪",
+    no:"🇳🇴", da:"🇩🇰", is:"🇮🇸", et:"🇪🇪", lv:"🇱🇻", lt:"🇱🇹", az:"🇦🇿", ka:"🇬🇪", fa:"🇮🇷",
+    hi:"🇮🇳", ur:"🇵🇰", bn:"🇧🇩", pa:"🇮🇳", ta:"🇮🇳", te:"🇮🇳", ml:"🇮🇳", mr:"🇮🇳", gu:"🇮🇳",
+    kn:"🇮🇳", th:"🇹🇭", vi:"🇻🇳", id:"🇮🇩", ms:"🇲🇾", sw:"🇰🇪", he:"🇮🇱", iw:"🇮🇱", hy:"🇦🇲",
+    be:"🇧🇾", kk:"🇰🇿", ky:"🇰🇬", uz:"🇺🇿", tk:"🇹🇲", mn:"🇲🇳"
+  };
+
+  function normalizeCode(code){
+    return String(code || "").trim().toLowerCase();
+  }
+
+  function toast(msg){
+    toastEl.textContent = String(msg || "");
+    toastEl.classList.add("show");
+    clearTimeout(window.__qttToast);
+    window.__qttToast = setTimeout(() => {
+      toastEl.classList.remove("show");
+    }, 1700);
+  }
+
+  function getFlag(code, item){
+    return item?.flag || FLAG_MAP[normalizeCode(code)] || "🌐";
+  }
+
+  function getTurkishName(item){
+    const code = normalizeCode(item?.code);
+    return TURKISH_LANG_NAMES[code] || item?.tr || item?.name_tr || item?.nativeName || item?.name || String(code).toUpperCase();
+  }
+
+  function sanitizeLangPool(){
+    const raw = Array.isArray(LANG_POOL) ? LANG_POOL : [];
+    const seen = new Set();
+
+    return raw
+      .map((item) => {
+        const code = normalizeCode(item?.code);
+        if(!code || seen.has(code)) return null;
+        seen.add(code);
+
+        return {
+          code,
+          flag: getFlag(code, item),
+          trName: getTurkishName(item),
+          searchText: [
+            code,
+            getTurkishName(item),
+            item?.name || "",
+            item?.nativeName || ""
+          ].join(" ").toLowerCase()
+        };
+      })
+      .filter(Boolean)
+      .sort((a,b) => a.trName.localeCompare(b.trName, "tr"));
+  }
+
+  const ALL_LANGS = sanitizeLangPool();
+
+  function ensureValidLanguages(){
+    if(!ALL_LANGS.find(x => x.code === fromLang)) fromLang = "tr";
+    if(!ALL_LANGS.find(x => x.code === toLang)) toLang = "en";
+
+    if(fromLang === toLang){
+      const fallback = fromLang === "en" ? "tr" : "en";
+      if(ALL_LANGS.find(x => x.code === fallback)) toLang = fallback;
     }
   }
 
-  $("btnTranslate").onclick = doTranslate;
+  function getLangByCode(code){
+    return ALL_LANGS.find(x => x.code === normalizeCode(code)) || {
+      code: normalizeCode(code),
+      flag: "🌐",
+      trName: String(code || "").toUpperCase()
+    };
+  }
 
-  $("srcTxt").onkeydown = (e) => {
-    if(e.key === "Enter" && !e.shiftKey) { e.preventDefault(); doTranslate(); }
-  };
+  function renderTopLanguageButtons(){
+    const fromObj = getLangByCode(fromLang);
+    const toObj = getLangByCode(toLang);
+
+    fromName.textContent = fromObj.trName;
+    toName.textContent = toObj.trName;
+    fromFlag.textContent = fromObj.flag;
+    toFlag.textContent = toObj.flag;
+
+    localStorage.setItem("qtt_from_lang", fromLang);
+    localStorage.setItem("qtt_to_lang", toLang);
+  }
+
+  function openLangModal(mode){
+    modalMode = mode === "to" ? "to" : "from";
+    modalModeTitle.textContent = modalMode === "from" ? "Kaynak Dil" : "Hedef Dil";
+    langModal.classList.add("show");
+    langModal.setAttribute("aria-hidden", "false");
+    langSearch.value = "";
+    renderLangList("");
+    setTimeout(() => langSearch.focus(), 40);
+  }
+
+  function closeLangModal(){
+    langModal.classList.remove("show");
+    langModal.setAttribute("aria-hidden", "true");
+  }
+
+  function renderLangList(query = ""){
+    const q = String(query || "").trim().toLowerCase();
+    const currentCode = modalMode === "from" ? fromLang : toLang;
+
+    const filtered = !q
+      ? ALL_LANGS
+      : ALL_LANGS.filter(item => item.searchText.includes(q));
+
+    if(!filtered.length){
+      langList.innerHTML = `<div class="empty-state">Aradığın dil bulunamadı. Biraz daha kısa yaz, dil sana küsmüş olabilir.</div>`;
+      return;
+    }
+
+    langList.innerHTML = filtered.map(item => `
+      <button class="lang-option ${item.code === currentCode ? "active" : ""}" type="button" data-code="${item.code}">
+        <div class="lang-option-left">
+          <div class="lang-option-flag">${item.flag}</div>
+          <div class="lang-option-text">
+            <div class="lang-option-name">${escapeHtml(item.trName)}</div>
+            <div class="lang-option-code">${escapeHtml(item.code)}</div>
+          </div>
+        </div>
+        <div class="lang-option-check">✓</div>
+      </button>
+    `).join("");
+
+    langList.querySelectorAll(".lang-option").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const code = normalizeCode(btn.dataset.code);
+        if(!code) return;
+
+        if(modalMode === "from"){
+          fromLang = code;
+          if(fromLang === toLang){
+            const other = ALL_LANGS.find(x => x.code !== fromLang);
+            if(other) toLang = other.code;
+          }
+        }else{
+          toLang = code;
+          if(toLang === fromLang){
+            const other = ALL_LANGS.find(x => x.code !== toLang);
+            if(other) fromLang = other.code;
+          }
+        }
+
+        renderTopLanguageButtons();
+        closeLangModal();
+      });
+    });
+  }
+
+  function escapeHtml(str){
+    return String(str ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#39;");
+  }
+
+  async function doTranslate(){
+    const text = srcTxt.value.trim();
+    if(!text){
+      toast("Önce çevrilecek bir metin yaz.");
+      return;
+    }
+
+    btnTranslate.disabled = true;
+    dstTxt.style.opacity = "0.45";
+    dstTxt.textContent = "Çevriliyor...";
+
+    try{
+      const r = await fetch(`${API_BASE}/api/translate_ai`, {
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body:JSON.stringify({
+          text,
+          from_lang: fromLang,
+          to_lang: toLang
+        })
+      });
+
+      const j = await r.json().catch(() => ({}));
+      dstTxt.textContent = j?.translated || "Çeviri alınamadı.";
+    }catch(e){
+      dstTxt.textContent = "API hatası oluştu.";
+    }finally{
+      dstTxt.style.opacity = "1";
+      btnTranslate.disabled = false;
+    }
+  }
+
+  btnTranslate.addEventListener("click", doTranslate);
+
+  srcTxt.addEventListener("keydown", (e) => {
+    if(e.key === "Enter" && !e.shiftKey){
+      e.preventDefault();
+      doTranslate();
+    }
+  });
+
+  fromBtn.addEventListener("click", () => openLangModal("from"));
+  toBtn.addEventListener("click", () => openLangModal("to"));
+
+  btnSwap.addEventListener("click", () => {
+    const a = fromLang;
+    const b = toLang;
+    fromLang = b;
+    toLang = a;
+    renderTopLanguageButtons();
+    toast("Diller değiştirildi");
+  });
+
+  modalClose.addEventListener("click", closeLangModal);
+  langModal.addEventListener("click", (e) => {
+    if(e.target === langModal) closeLangModal();
+  });
+
+  langSearch.addEventListener("input", (e) => {
+    renderLangList(e.target.value);
+  });
+
+  window.addEventListener("keydown", (e) => {
+    if(e.key === "Escape" && langModal.classList.contains("show")){
+      closeLangModal();
+    }
+  });
 
   // --- TTS (Speaker) ---
-  // ✅ FIX: spam click = abort previous fetch + ignore old responses + stop current audio
-  const speakBtn = $("btnSpeak");
   let audio = null;
-  let speakCtl = null;     // AbortController
-  let speakToken = 0;      // last-click token
+  let speakCtl = null;
+  let speakToken = 0;
   let lastClickAt = 0;
 
   function stopSpeak(){
@@ -260,121 +921,101 @@ textarea {
     audio = null;
   }
 
-  speakBtn.onclick = async () => {
+  btnSpeak.addEventListener("click", async () => {
     const now = Date.now();
-    if(now - lastClickAt < 180) return; // ultra spam kes
+    if(now - lastClickAt < 180) return;
     lastClickAt = now;
 
-    const t = $("dstTxt").textContent.trim();
+    const t = dstTxt.textContent.trim();
     if(!t || t === "...") return;
 
-    // yeni tık -> önceki her şeyi iptal et
     stopSpeak();
 
-    // bu tıkın token’ı
     const myToken = ++speakToken;
 
-    // butonu kısa süre kilitle (birikmeyi engelle)
-    speakBtn.style.pointerEvents = "none";
-    setTimeout(()=>{ speakBtn.style.pointerEvents = "auto"; }, 250);
+    btnSpeak.style.pointerEvents = "none";
+    setTimeout(() => { btnSpeak.style.pointerEvents = "auto"; }, 250);
 
-    try {
+    try{
       speakCtl = new AbortController();
 
       const r = await fetch(`${API_BASE}/api/tts`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: t, lang: toSel.value }),
-        signal: speakCtl.signal
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body:JSON.stringify({ text:t, lang:toLang }),
+        signal:speakCtl.signal
       });
 
-      // bu cevap eski bir tıka aitse yok say
       if(myToken !== speakToken) return;
 
-      const j = await r.json().catch(()=>null);
+      const j = await r.json().catch(() => null);
       if(myToken !== speakToken) return;
 
-      if(j?.audio_base64) {
+      if(j?.audio_base64){
         audio = new Audio("data:audio/mpeg;base64," + j.audio_base64);
         audio.playsInline = true;
 
         audio.onended = () => { if(myToken === speakToken) audio = null; };
         audio.onerror = () => { if(myToken === speakToken) audio = null; };
 
-        // oynatmadan önce bir kez daha token kontrol
         if(myToken !== speakToken) return;
-
         await audio.play();
       }
-    } catch(e) {
-      // abort normaldir, hata basma
-      // console.error("TTS Error", e);
+    }catch(e){
       stopSpeak();
     }
-  };
+  });
 
   // --- STT (Mic) ---
   let recording = false;
   let rec = null;
   let chunks = [];
 
-  $("btnMic").onclick = async () => {
-    if(!recording) {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      rec = new MediaRecorder(stream);
-      chunks = [];
-      rec.ondataavailable = e => chunks.push(e.data);
-      rec.onstop = async () => {
-        const blob = new Blob(chunks, { type: 'audio/webm' });
-        const fd = new FormData();
-        fd.append("file", blob);
-        fd.append("lang", fromSel.value);
+  btnMic.addEventListener("click", async () => {
+    if(!recording){
+      try{
+        const stream = await navigator.mediaDevices.getUserMedia({ audio:true });
+        rec = new MediaRecorder(stream);
+        chunks = [];
 
-        $("srcTxt").value = "Dinleniyor...";
-        const r = await fetch(`${API_BASE}/api/stt`, { method: "POST", body: fd });
-        const j = await r.json();
-        $("srcTxt").value = j.text || "";
-        doTranslate();
-      };
-      rec.start();
-      recording = true;
-      $("btnMic").textContent = "⏺️";
-    } else {
+        rec.ondataavailable = (e) => chunks.push(e.data);
+        rec.onstop = async () => {
+          const blob = new Blob(chunks, { type:"audio/webm" });
+          const fd = new FormData();
+          fd.append("file", blob);
+          fd.append("lang", fromLang);
+
+          srcTxt.value = "Dinleniyor...";
+          try{
+            const r = await fetch(`${API_BASE}/api/stt`, {
+              method:"POST",
+              body:fd
+            });
+            const j = await r.json().catch(() => ({}));
+            srcTxt.value = j?.text || "";
+            doTranslate();
+          }catch{
+            srcTxt.value = "";
+            toast("Ses çözümlenemedi.");
+          }
+        };
+
+        rec.start();
+        recording = true;
+        btnMic.textContent = "⏺️";
+      }catch(e){
+        toast("Mikrofon izni gerekli.");
+      }
+    }else{
       rec.stop();
       recording = false;
-      $("btnMic").textContent = "🎙️";
+      btnMic.textContent = "🎙️";
     }
-  };
+  });
 
-  // --- Photo (OCR + Translate) ---
-  $("imgFile").onchange = async (e) => {
-    const file = e.target.files[0];
-    if(!file) return;
-    $("srcTxt").value = "Tarama başlatıldı...";
-    const fd = new FormData();
-    fd.append("image", file);
-    fd.append("from_lang", fromSel.value);
-    fd.append("to_lang", toSel.value);
-    try {
-      const r = await fetch(`${API_BASE}/api/translate/ocr_translate`, { method: "POST", body: fd });
-      const j = await r.json();
-      if(j.ok) {
-        $("srcTxt").value = j.extracted_text;
-        $("dstTxt").textContent = j.translated_text;
-      } else {
-        $("srcTxt").value = "Tarama başarısız.";
-      }
-    } catch(e) {
-      $("srcTxt").value = "Tarama başarısız.";
-    }
-  };
-
-  $("btnSwap").onclick = () => {
-    const a = fromSel.value;
-    const b = toSel.value;
-    fromSel.value = b;
-    toSel.value = a;
-  };
+  ensureValidLanguages();
+  renderTopLanguageButtons();
+  dstTxt.textContent = "...";
 </script>
 </body>
 </html>
