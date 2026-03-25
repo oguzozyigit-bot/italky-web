@@ -1,4 +1,3 @@
-<!-- FILE: /pages/home.html -->
 <!doctype html>
 <html lang="tr">
 <head>
@@ -1016,6 +1015,13 @@ let activeRoomCode = "";
 let previewSocket = null;
 let redirected = false;
 let refreshTimer = null;
+let lastRenderedRoomId = "";
+
+function safeSet(key, value){
+  try{
+    localStorage.setItem(key, value);
+  }catch{}
+}
 
 function setHeroStatus(text){
   if(heroStatus) heroStatus.textContent = text || "";
@@ -1034,9 +1040,7 @@ function setConnectionCode(code){
   activeRoomCode = String(code || "").trim().toUpperCase();
   if(connectionCodeText) connectionCodeText.textContent = activeRoomCode || "ABC123";
   if(qrFallbackCode) qrFallbackCode.textContent = activeRoomCode || "ABC123";
-  try{
-    localStorage.setItem(ROOM_CODE_KEY, activeRoomCode);
-  }catch{}
+  safeSet(ROOM_CODE_KEY, activeRoomCode);
 }
 
 function qrUrlPrimary(targetUrl){
@@ -1130,7 +1134,7 @@ function scheduleRefresh(){
   stopRefreshTimer();
   refreshTimer = setTimeout(() => {
     if(!redirected && document.visibilityState === "visible"){
-      renderRoomQr();
+      renderRoomQr(true);
     }
   }, 45000);
 }
@@ -1190,9 +1194,41 @@ function startPreviewSocket(roomId, myLang = "tr"){
   };
 }
 
-async function renderRoomQr(){
+async function paintQrForRoom(roomId, code){
+  const joinUrl = buildJoinUrl(roomId, code);
+
+  let finalUrl = null;
+
+  try{
+    finalUrl = await loadImage(qrUrlPrimary(joinUrl));
+  }catch{
+    try{
+      finalUrl = await loadImage(qrUrlFallback(joinUrl));
+    }catch{
+      finalUrl = null;
+    }
+  }
+
+  if(finalUrl){
+    const safeUrl = finalUrl + (finalUrl.includes("?") ? "&" : "?") + "t=" + Date.now();
+    showQr(safeUrl);
+    setHeroStatus("Bağlantı kodu hazır. Karşı taraf bekleniyor...");
+  }else{
+    showFallback(code || "ABC123");
+    setHeroStatus("QR servisi yanıt vermedi");
+  }
+}
+
+async function renderRoomQr(forceNew = false){
   redirected = false;
   stopRefreshTimer();
+
+  if(!forceNew && activeRoomId && activeRoomCode){
+    await paintQrForRoom(activeRoomId, activeRoomCode);
+    startPreviewSocket(activeRoomId, "tr");
+    return;
+  }
+
   setHeroStatus("Oda hazırlanıyor...");
 
   try{
@@ -1203,34 +1239,13 @@ async function renderRoomQr(){
       throw new Error("room_id boş geldi");
     }
 
+    lastRenderedRoomId = activeRoomId;
     setConnectionCode(created.host_code || makeConnectionCode(6));
 
-    localStorage.setItem(ROOM_KEY, activeRoomId);
-    localStorage.setItem(ROOM_LANG_KEY, "tr");
+    safeSet(ROOM_KEY, activeRoomId);
+    safeSet(ROOM_LANG_KEY, "tr");
 
-    const joinUrl = buildJoinUrl(activeRoomId, activeRoomCode);
-
-    let finalUrl = null;
-
-    try{
-      finalUrl = await loadImage(qrUrlPrimary(joinUrl));
-    }catch{
-      try{
-        finalUrl = await loadImage(qrUrlFallback(joinUrl));
-      }catch{
-        finalUrl = null;
-      }
-    }
-
-    if(finalUrl){
-      const safeUrl = finalUrl + (finalUrl.includes("?") ? "&" : "?") + "t=" + Date.now();
-      showQr(safeUrl);
-      setHeroStatus("Bağlantı kodu hazır. Karşı taraf bekleniyor...");
-    }else{
-      showFallback(activeRoomCode || "ABC123");
-      setHeroStatus("QR servisi yanıt vermedi");
-    }
-
+    await paintQrForRoom(activeRoomId, activeRoomCode);
     startPreviewSocket(activeRoomId, "tr");
   }catch(e){
     console.error("[home room qr]", e);
@@ -1261,14 +1276,14 @@ copyConnectionCodeBtn?.addEventListener("click", async () => {
 renderRoomQr();
 
 document.addEventListener("visibilitychange", () => {
-  if(document.visibilityState === "visible" && !redirected){
-    renderRoomQr();
+  if(document.visibilityState === "visible" && !redirected && activeRoomId === lastRenderedRoomId){
+    startPreviewSocket(activeRoomId, "tr");
   }
 });
 
 window.addEventListener("focus", () => {
-  if(!redirected){
-    renderRoomQr();
+  if(!redirected && activeRoomId === lastRenderedRoomId){
+    startPreviewSocket(activeRoomId, "tr");
   }
 });
 
