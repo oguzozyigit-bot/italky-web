@@ -84,6 +84,7 @@
       min-height:44px;
       max-width:92%;
       text-decoration:none;
+      box-shadow:0 8px 24px rgba(0,0,0,.18);
     }
 
     .meta-stack{
@@ -91,7 +92,7 @@
       display:flex;
       flex-direction:column;
       align-items:center;
-      gap:8px;
+      gap:10px;
       z-index:40;
       flex:0 0 auto;
     }
@@ -100,48 +101,88 @@
       display:none;
     }
 
-    .side-info{
-  width:min(92%, 420px);
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-  padding:14px 14px;
-  border-radius:22px;
-  background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.05));
-  border:1px solid rgba(255,255,255,.16);
-  backdrop-filter:blur(16px);
-  box-shadow:
-    0 12px 30px rgba(0,0,0,.22),
-    inset 0 1px 0 rgba(255,255,255,.06);
-}
+    .peer-card{
+      width:min(94%, 460px);
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      padding:16px 16px 15px;
+      border-radius:24px;
+      background:
+        radial-gradient(circle at 15% 20%, rgba(165,180,252,.16) 0%, transparent 30%),
+        radial-gradient(circle at 85% 18%, rgba(236,72,153,.12) 0%, transparent 26%),
+        linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+      border:1px solid rgba(255,255,255,.16);
+      backdrop-filter:blur(16px);
+      box-shadow:
+        0 16px 38px rgba(0,0,0,.28),
+        inset 0 1px 0 rgba(255,255,255,.06);
+    }
 
-.side-info-title{
-  font-size:11px;
-  font-weight:900;
-  letter-spacing:1px;
-  text-transform:uppercase;
-  color:rgba(255,255,255,.62);
-  text-align:center;
-}
+    .peer-kicker{
+      text-align:center;
+      font-size:11px;
+      font-weight:900;
+      letter-spacing:1.15px;
+      text-transform:uppercase;
+      color:rgba(255,255,255,.64);
+    }
 
-.side-info-main{
-  text-align:center;
-  font-size:18px;
-  font-weight:900;
-  color:#fff;
-  line-height:1.25;
-  word-break:break-word;
-  text-shadow:0 0 12px rgba(255,255,255,.10);
-}
+    .peer-main{
+      text-align:center;
+      font-size:20px;
+      font-weight:900;
+      color:#fff;
+      line-height:1.24;
+      word-break:break-word;
+      text-shadow:0 0 14px rgba(255,255,255,.08);
+    }
 
-.side-info-sub{
-  text-align:center;
-  font-size:15px;
-  font-weight:800;
-  color:#f8d4ff;
-  line-height:1.35;
-  word-break:break-word;
-}
+    .peer-mode-row{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      flex-wrap:wrap;
+      gap:8px;
+    }
+
+    .peer-pill{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:36px;
+      padding:8px 14px;
+      border-radius:999px;
+      font-size:13px;
+      font-weight:900;
+      letter-spacing:.2px;
+      text-align:center;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.06);
+      color:#fff;
+      box-shadow:0 8px 20px rgba(0,0,0,.12);
+    }
+
+    .peer-pill.voice{
+      background:linear-gradient(135deg, rgba(244,114,182,.20), rgba(236,72,153,.12));
+      border-color:rgba(244,114,182,.28);
+      color:#ffd6ea;
+    }
+
+    .peer-pill.translate{
+      background:linear-gradient(135deg, rgba(129,140,248,.22), rgba(99,102,241,.12));
+      border-color:rgba(129,140,248,.30);
+      color:#dbe4ff;
+    }
+
+    .peer-sub{
+      text-align:center;
+      font-size:12px;
+      font-weight:700;
+      color:rgba(255,255,255,.72);
+      line-height:1.4;
+      word-break:break-word;
+    }
 
     .popover{
       position:absolute;
@@ -652,9 +693,19 @@
         padding:10px 14px;
       }
 
-      .side-info{
-        width:min(94%, 360px);
-        padding:9px 10px;
+      .peer-card{
+        width:min(95%, 360px);
+        padding:13px 12px;
+      }
+
+      .peer-main{
+        font-size:18px;
+      }
+
+      .peer-pill{
+        font-size:12px;
+        min-height:34px;
+        padding:8px 12px;
       }
     }
   </style>
@@ -665,10 +716,21 @@
 
     <div class="half-screen top" id="topSection">
       <div class="meta-stack">
-  <button class="lang-trigger" id="botLangBtn" type="button">
-    <span id="botLangTxt">🇹🇷 Türkçe</span> ⌵
-  </button>
-</div>
+        <div class="room-badge" id="roomMetaText">Sohbet hazırlanıyor...</div>
+
+        <div class="peer-card">
+          <div class="peer-kicker">Karşı Taraf</div>
+          <div class="peer-main" id="peerInfoMain">Bağlantı bekleniyor...</div>
+
+          <div class="peer-mode-row">
+            <div class="peer-pill voice" id="peerVoicePill">Otomatik Ses</div>
+            <div class="peer-pill translate" id="peerTranslatePill">Translate</div>
+          </div>
+
+          <div class="peer-sub" id="peerInfoSub">Dil, ses ve çeviri modeli burada görünecek.</div>
+        </div>
+      </div>
+
       <div class="chat-body" id="topBody"></div>
 
       <div class="mic-wrap">
@@ -711,6 +773,7 @@
         <button class="lang-trigger" id="botLangBtn" type="button">
           <span id="botLangTxt">🇹🇷 Türkçe</span> ⌵
         </button>
+      </div>
 
       <div class="popover" id="pop-bot" role="dialog" aria-label="Alt dil seçimi">
         <div class="pop-head">
@@ -736,6 +799,38 @@
 
   </div>
 
-  <script type="module" src="/js/sidetoside_page.js?v=S2S_V2"></script>
+  <script type="module" src="/js/sidetoside_page.js?v=S2S_V3"></script>
+
+  <script>
+    (function syncPeerPills(){
+      const peerInfoMain = document.getElementById("peerInfoMain");
+      const peerInfoSub = document.getElementById("peerInfoSub");
+      const peerVoicePill = document.getElementById("peerVoicePill");
+      const peerTranslatePill = document.getElementById("peerTranslatePill");
+
+      if (!peerInfoSub || !peerVoicePill || !peerTranslatePill) return;
+
+      const observer = new MutationObserver(() => {
+        const txt = String(peerInfoSub.textContent || "").trim();
+
+        if (!txt || txt.includes("burada görünecek")) {
+          peerVoicePill.textContent = "Otomatik Ses";
+          peerTranslatePill.textContent = "Translate";
+          return;
+        }
+
+        const lower = txt.toLowerCase();
+
+        peerVoicePill.textContent =
+          lower.includes("kendi sesim") ? "Kendi Sesim" : "Otomatik Ses";
+
+        peerTranslatePill.textContent =
+          lower.includes("kültürel") ? "Kültürel Translate" : "Translate";
+      });
+
+      observer.observe(peerInfoSub, { childList: true, characterData: true, subtree: true });
+      observer.observe(peerInfoMain, { childList: true, characterData: true, subtree: true });
+    })();
+  </script>
 </body>
 </html>
