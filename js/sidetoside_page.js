@@ -122,7 +122,6 @@ const botBody = $("botBody");
 const botMic = $("botMic");
 const topHelper = $("topHelper");
 const botHelper = $("botHelper");
-const roomMetaText = $("roomMetaText");
 
 const botLangBtn = $("botLangBtn");
 const botLangTxt = $("botLangTxt");
@@ -134,8 +133,6 @@ const clearBtn = $("clearBtn");
 const homeLink = $("homeLink");
 const homeBtn = $("homeBtn");
 
-const myInfoMain = $("myInfoMain");
-const myInfoSub = $("myInfoSub");
 const peerInfoMain = $("peerInfoMain");
 const peerInfoSub = $("peerInfoSub");
 const peerVoicePill = $("peerVoicePill");
@@ -222,22 +219,20 @@ let voicesReady = false;
 let ws = null;
 let wsReady = false;
 let pingTimer = null;
-let leavingTimer = null;
 let reconnectTimer = null;
 let reconnectCount = 0;
 let manuallyClosed = false;
 let peerHasExplicitlyLeft = false;
-let isNavigatingToSettings = false;
 let isNavigatingHome = false;
 
 let roomSyncTimer = null;
 let profileRetryTimers = [];
 let recognitionHasResult = false;
+let manualStopRequested = false;
 
 let lastLocalSentText = "";
 let lastLocalSentAt = 0;
 let myClientId = "";
-let myUserId = "";
 let myDisplayName = "";
 let peerConnected = false;
 let peerEverConnected = false;
@@ -271,15 +266,6 @@ function readLocalProfile() {
     translate_mode: normalizeTranslateMode(localStorage.getItem("facetoface_translate_mode") || "normal"),
   };
   myLang = canonical(myProfile.lang || myLang || "tr");
-}
-
-function renderMyProfileBox() {
-  if (myInfoMain) {
-    myInfoMain.textContent = `${labelChip(myLang)} • ${voiceLabel(myProfile.voice_mode)}`;
-  }
-  if (myInfoSub) {
-    myInfoSub.textContent = `Çeviri: ${translateLabel(myProfile.translate_mode)}`;
-  }
 }
 
 function renderPeerProfileBox() {
@@ -341,7 +327,6 @@ async function loadMyIdentity() {
   try {
     const { data } = await supabase.auth.getUser();
     const user = data?.user || null;
-    myUserId = String(user?.id || "").trim();
 
     const metaName =
       user?.user_metadata?.hitap ||
@@ -354,12 +339,12 @@ async function loadMyIdentity() {
       myDisplayName = String(metaName).trim();
     }
 
-    if (!myUserId) return;
+    if (!user?.id) return;
 
     const { data: profile } = await supabase
       .from("profiles")
       .select("name, full_name, display_name, hitap")
-      .eq("id", myUserId)
+      .eq("id", user.id)
       .maybeSingle();
 
     const profileName =
@@ -381,7 +366,6 @@ async function loadProfileFromSupabase() {
     const uid = data?.user?.id;
     if (!uid) {
       readLocalProfile();
-      renderMyProfileBox();
       return;
     }
 
@@ -397,11 +381,8 @@ async function loadProfileFromSupabase() {
       myProfile.voice_mode = "auto";
       localStorage.setItem("facetoface_voice_mode", "auto");
     }
-
-    renderMyProfileBox();
   } catch {
     readLocalProfile();
-    renderMyProfileBox();
   }
 }
 
@@ -458,15 +439,13 @@ function applyRoomSnapshot(room) {
     peerConnected = false;
     renderPeerProfileBox();
   }
-
-  renderPeerProfileBox();
 }
 
 function startRoomSync() {
   stopRoomSync();
 
   roomSyncTimer = setInterval(async () => {
-    if (!roomId || peerHasExplicitlyLeft || isNavigatingToSettings) return;
+    if (!roomId || peerHasExplicitlyLeft) return;
 
     try {
       const room = await fetchRoomSnapshot();
@@ -544,7 +523,6 @@ function setSystemReadyUI() {
     setHelper(botHelper, t(myLang, "waitingPeer"), "helper-wait");
   }
 
-  renderMyProfileBox();
   renderPeerProfileBox();
 }
 
@@ -733,14 +711,6 @@ function chooseWebVoice(langCode) {
   if (!pool.length) pool = voices;
   if (!pool.length) return null;
 
-  if (pref === "female") {
-    return pool.find((v) => /female|woman|zira|aria|seda|helena|jenny|susan|eva|anna|emma/i.test(v.name)) || pool[0];
-  }
-
-  if (pref === "male") {
-    return pool.find((v) => /male|man|david|mark|george|james|alex|tom|jon|paul/i.test(v.name)) || pool[0];
-  }
-
   return pool[0];
 }
 
@@ -879,7 +849,6 @@ async function applyMyLanguageChange(nextLang) {
   localStorage.setItem("live_interpreter_peer_lang", peerLang);
 
   refreshLangLabels();
-  renderMyProfileBox();
   refreshReadyTextsIfIdle();
   rebuildRecognizer();
 
@@ -934,15 +903,8 @@ function stopSocket() {
   clearProfileRetryTimers();
 }
 
-function goHomeDelayed() {
-  if (leavingTimer) clearTimeout(leavingTimer);
-  leavingTimer = setTimeout(() => {
-    location.href = "/pages/home.html";
-  }, 2500);
-}
-
 function scheduleReconnect() {
-  if (manuallyClosed || peerHasExplicitlyLeft || reconnectTimer || isNavigatingToSettings) return;
+  if (manuallyClosed || peerHasExplicitlyLeft || reconnectTimer) return;
 
   const delay = Math.min(1500 + reconnectCount * 1000, 6000);
 
@@ -1063,7 +1025,6 @@ function startSocket() {
         }
 
         markPeerConnected(peerLang, payload?.sender_name || "");
-        renderPeerProfileBox();
         setHelper(botHelper, t(myLang, "peerJoined"), "helper-ready");
 
         await sendSelfProfile();
@@ -1090,7 +1051,6 @@ function startSocket() {
         try { localStorage.setItem("live_interpreter_peer_lang", peerLang); } catch {}
 
         markPeerConnected(peerLang, peerProfile.name);
-        renderPeerProfileBox();
         setSystemReadyUI();
         return;
       }
@@ -1135,11 +1095,9 @@ function startSocket() {
       if (type === "peer_left") {
         peerHasExplicitlyLeft = true;
         peerConnected = false;
-        peerEverConnected = false;
-        peerProfileReceived = false;
 
-        const senderName = displayNameOrFallback(payload?.sender_name, "Karşı Taraf");
-        if (senderName) peerProfile.name = senderName;
+        const senderName = displayNameOrFallback(payload?.sender_name, peerProfile.name || "Karşı Taraf");
+        peerProfile.name = senderName;
 
         renderPeerProfileBox();
         setErrorUI();
@@ -1165,7 +1123,7 @@ function startSocket() {
 
   ws.onerror = () => {
     wsReady = false;
-    if (!peerHasExplicitlyLeft && !isNavigatingToSettings) {
+    if (!peerHasExplicitlyLeft) {
       setErrorUI();
       setHelper(botHelper, t(myLang, "reconnecting"), "helper-wait");
       scheduleReconnect();
@@ -1180,7 +1138,7 @@ function startSocket() {
       pingTimer = null;
     }
 
-    if (!manuallyClosed && !peerHasExplicitlyLeft && !isNavigatingToSettings) {
+    if (!manuallyClosed && !peerHasExplicitlyLeft) {
       setErrorUI();
       setHelper(botHelper, t(myLang, "reconnecting"), "helper-wait");
       scheduleReconnect();
@@ -1440,6 +1398,7 @@ function startRecording() {
   recognizer = rec;
   recordingSide = "bot";
   recognitionHasResult = false;
+  manualStopRequested = false;
 
   rec.onstart = () => {
     setListeningUI();
@@ -1475,6 +1434,10 @@ function startRecording() {
     recognizer = null;
     recordingSide = null;
 
+    if (manualStopRequested) {
+      return;
+    }
+
     if (!recognitionHasResult) {
       setSystemReadyUI();
     }
@@ -1495,6 +1458,7 @@ async function toggleRecording() {
   await ensureReady();
 
   if (recordingSide === "bot") {
+    manualStopRequested = true;
     stopRecognizer();
     recordingSide = null;
     setSendingUI();
@@ -1541,14 +1505,12 @@ function startBoot() {
     setSystemPreparingUI();
     readLocalProfile();
     refreshLangLabels();
-    renderMyProfileBox();
     renderPeerProfileBox();
     pointOrbTo("bot");
 
     await Promise.allSettled([warmApis(), warmAudio()]);
 
     bootReady = true;
-    renderMyProfileBox();
     renderPeerProfileBox();
     setSystemReadyUI();
   })();
@@ -1563,16 +1525,11 @@ async function ensureReady() {
   return true;
 }
 
-function safeHomeHref() {
-  return "/pages/home.html";
-}
-
 /* =========================
    EVENTS
 ========================= */
 function bind() {
   refreshLangLabels();
-  renderMyProfileBox();
   renderPeerProfileBox();
   unlockOnFirstTouch();
   startBoot();
@@ -1622,14 +1579,14 @@ function bind() {
     isNavigatingHome = true;
     await sendLeaving("home");
     stopSocket();
-    location.href = safeHomeHref();
+    location.href = "/pages/home.html";
   });
 
   homeBtn?.addEventListener("click", async () => {
     isNavigatingHome = true;
     await sendLeaving("home");
     stopSocket();
-    location.href = safeHomeHref();
+    location.href = "/pages/home.html";
   });
 
   botMic?.addEventListener("click", async (e) => {
@@ -1646,26 +1603,12 @@ async function bootRoom() {
   try {
     myClientId = getOrCreateClientId();
     readLocalProfile();
-    renderMyProfileBox();
 
     if (!roomId) {
       throw new Error(t(myLang, "roomMissing"));
     }
 
     saveReturnContext();
-
-    if (roomMetaText) {
-      roomMetaText.textContent = roomId;
-    }
-
-    if (autoJoin) {
-      console.log("[sidetoside] auto join active", {
-        roomId,
-        role,
-        myLang,
-        peerLang,
-      });
-    }
 
     try {
       const room = await fetchRoomSnapshot();
@@ -1687,7 +1630,7 @@ bootRoom();
 
 window.addEventListener("beforeunload", () => {
   saveReturnContext();
-  if (!isNavigatingToSettings && !isNavigatingHome) {
+  if (!isNavigatingHome) {
     stopSocket();
   }
 });
