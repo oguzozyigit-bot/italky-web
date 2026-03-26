@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>NFC Giriş</title>
+</head>
+<body style="background:#000;color:#fff;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;">
+
+<div id="status">Kart kontrol ediliyor...</div>
+
+<script>
+const params = new URLSearchParams(location.search);
+const card = params.get("card");
+
+if(!card){
+  document.getElementById("status").innerText = "Kart bilgisi yok";
+  throw new Error("card missing");
+}
+
+async function checkCard(){
+  try{
+    // BURASI SENİN API
+    const res = await fetch("https://italky-api.onrender.com/api/nfc/check",{
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ card })
+    });
+
+    const data = await res.json();
+
+    if(!data.ok){
+      document.getElementById("status").innerText = "Kart geçersiz";
+      return;
+    }
+
+    // 🔥 BURASI SİSTEM GİRİŞİ
+    localStorage.setItem("nfc_active", "1");
+    localStorage.setItem("nfc_card", card);
+
+    // örnek haklar
+    localStorage.setItem("nfc_package", JSON.stringify(data.package));
+
+    // yönlendirme
+    location.href = "/pages/home.html";
+
+  }catch(e){
+    document.getElementById("status").innerText = "Bağlantı hatası";
+  }
+}
+
+checkCard();
+</script>
+
+</body>
+</html>
