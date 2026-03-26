@@ -1,54 +1,175 @@
-<!-- FILE: /pages/admin.html -->
 <!doctype html>
 <html lang="tr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>italkyAI • Admin</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
-  <style>
-    :root{ --bd:rgba(255,255,255,.12); --card:rgba(255,255,255,.05); }
-    #pageContent{ height:100dvh; padding:12px; box-sizing:border-box; display:flex; flex-direction:column; gap:12px; }
-    .row{display:flex;gap:10px;align-items:center;justify-content:space-between}
-    .tabs{display:flex;gap:8px;flex-wrap:wrap}
-    .tab{padding:10px 12px;border-radius:999px;border:1px solid var(--bd);background:rgba(0,0,0,.18);font-weight:900;cursor:pointer}
-    .tab.active{border-color:rgba(99,102,241,.6);background:rgba(99,102,241,.14)}
-    .panel{flex:1;min-height:0;border:1px solid var(--bd);background:var(--card);border-radius:18px;padding:12px;overflow:auto}
-    .grid{display:grid;grid-template-columns:1fr;gap:10px}
-    .card{border:1px solid var(--bd);background:rgba(0,0,0,.18);border-radius:16px;padding:12px}
-    .btn{padding:10px 12px;border-radius:12px;border:1px solid var(--bd);background:rgba(0,0,0,.18);color:#fff;font-weight:900;cursor:pointer}
-    .btn.primary{border-color:rgba(99,102,241,.6);background:rgba(99,102,241,.18)}
-    .inp, textarea, select{width:100%;border-radius:12px;border:1px solid var(--bd);background:rgba(0,0,0,.18);color:#fff;padding:10px;font-weight:800}
-    textarea{min-height:220px;resize:vertical}
-    .muted{opacity:.7;font-weight:800;font-size:12px}
-  </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>italky Admin</title>
+
+<style>
+body{
+  margin:0;
+  background:#0b0b12;
+  color:#fff;
+  font-family:Arial;
+}
+
+.wrap{
+  max-width:800px;
+  margin:auto;
+  padding:20px;
+}
+
+.card{
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:16px;
+  padding:16px;
+  margin-bottom:16px;
+}
+
+input,select,button{
+  width:100%;
+  margin-top:10px;
+  padding:12px;
+  border-radius:10px;
+  border:none;
+  font-size:14px;
+}
+
+button{
+  background:#6366f1;
+  color:#fff;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.table{
+  width:100%;
+  font-size:12px;
+  margin-top:10px;
+}
+
+.table div{
+  padding:6px 0;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+</style>
 </head>
+
 <body>
-  <div id="pageContent">
-    <div class="row">
-      <div>
-        <div style="font-family:Space Grotesk;font-weight:900;font-size:22px">Admin Panel</div>
-        <div class="muted" id="meLine">Kontrol ediliyor…</div>
-      </div>
-      <div style="display:flex;gap:8px">
-        <button class="btn" id="homeBtn">Home</button>
-        <button class="btn" id="logoutBtn">Çıkış</button>
-      </div>
-    </div>
 
-    <div class="tabs">
-      <div class="tab active" data-tab="users">Kullanıcılar</div>
-      <div class="tab" data-tab="deploy">Deploy</div>
-      <div class="tab" data-tab="github">GitHub Dosya</div>
-    </div>
+<div class="wrap">
 
-    <div class="panel" id="panelUsers"></div>
-    <div class="panel" id="panelDeploy" style="display:none"></div>
-    <div class="panel" id="panelGithub" style="display:none"></div>
+<h2>🔐 Admin Panel</h2>
+
+<div class="card">
+  <h3>Giriş</h3>
+  <input id="pass" placeholder="Şifre"/>
+  <button onclick="login()">Giriş Yap</button>
+</div>
+
+<div id="panel" style="display:none;">
+
+  <div class="card">
+    <h3>NFC Kart Tanımla</h3>
+
+    <input id="uid" placeholder="UID (örn: 04E6D462FD1690)"/>
+
+    <select id="package">
+      <option value="PKG_10DIL_100J_30G">10 Dil / 100 Jeton</option>
+      <option value="PKG_20DIL_200J_395G">20 Dil / 200 Jeton</option>
+      <option value="PREMIUM_1YIL">Premium 1 Yıl</option>
+    </select>
+
+    <button onclick="saveCard()">Kart Kaydet</button>
   </div>
 
-  <script type="module" src="/js/admin_page.js?v=1"></script>
+  <div class="card">
+    <h3>Kullanıcılar</h3>
+    <button onclick="loadUsers()">Listele</button>
+    <div id="users" class="table"></div>
+  </div>
+
+</div>
+
+</div>
+
+<script type="module">
+import { supabase } from "/js/supabase_client.js";
+
+const ADMIN_PASS = "123456"; // değiştir
+
+function login(){
+  const val = document.getElementById("pass").value;
+  if(val === ADMIN_PASS){
+    document.getElementById("panel").style.display = "block";
+    alert("Giriş başarılı");
+  }else{
+    alert("Hatalı şifre");
+  }
+}
+
+window.login = login;
+
+async function saveCard(){
+
+  const uid = document.getElementById("uid").value
+    .toUpperCase()
+    .replace(/:/g,"")
+    .trim();
+
+  const pkg = document.getElementById("package").value;
+
+  if(!uid){
+    alert("UID boş");
+    return;
+  }
+
+  const { error } = await supabase
+    .from("nfc_cards")
+    .insert({
+      uid: uid,
+      package_code: pkg,
+      is_active: true,
+      status: "new"
+    });
+
+  if(error){
+    alert("Hata: " + error.message);
+    return;
+  }
+
+  alert("Kart eklendi");
+}
+
+window.saveCard = saveCard;
+
+async function loadUsers(){
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, email, app_access_mode, jeton_balance")
+    .limit(20);
+
+  if(error){
+    alert(error.message);
+    return;
+  }
+
+  const box = document.getElementById("users");
+  box.innerHTML = "";
+
+  data.forEach(u=>{
+    const div = document.createElement("div");
+    div.innerHTML = `
+      ${u.email} | ${u.app_access_mode} | ${u.jeton_balance} jeton
+    `;
+    box.appendChild(div);
+  });
+}
+
+window.loadUsers = loadUsers;
+</script>
+
 </body>
 </html>
