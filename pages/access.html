@@ -3,314 +3,154 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
-  <title>italkyAI • Access</title>
-  <meta name="theme-color" content="#090b14" />
+  <title>italkyAI • Global Access</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
   <style>
-    :root{
-      --bg:#090b14;
-      --txt:#f8fbff;
-      --muted:rgba(255,255,255,.68);
-      --line:rgba(255,255,255,.12);
-      --card:rgba(255,255,255,.06);
-      --grad:linear-gradient(135deg,#67e8f9 0%, #818cf8 46%, #f472b6 100%);
-      --ok:#22c55e;
-      --err:#ef4444;
-      --warn:#f59e0b;
+    :root {
+      --bg: #05070a;
+      --txt: #f8fbff;
+      --muted: rgba(255, 255, 255, 0.6);
+      --line: rgba(255, 255, 255, 0.1);
+      --italky-cyan: #67e8f9;
+      --italky-pink: #f472b6;
+      --italky-indigo: #818cf8;
+      --grad: linear-gradient(135deg, var(--italky-cyan) 0%, var(--italky-indigo) 46%, var(--italky-pink) 100%);
     }
-    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-    html,body{
-      margin:0;
-      width:100%;
-      min-height:100%;
-      background:#090b14;
-      color:var(--txt);
-      font-family:'Outfit',sans-serif;
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { margin: 0; width: 100%; height: 100%; background: var(--bg); color: var(--txt); font-family: 'Outfit', sans-serif; overflow: hidden; }
+
+    /* Galaksi Arkaplanı */
+    body {
+      display: flex; align-items: center; justify-content: center;
+      background: radial-gradient(circle at center, #111827 0%, #05070a 100%);
     }
-    body{
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:18px;
-      overflow:hidden;
-      background:
-        radial-gradient(circle at top, rgba(129,140,248,.18), transparent 28%),
-        radial-gradient(circle at 18% 20%, rgba(103,232,249,.10), transparent 24%),
-        radial-gradient(circle at 84% 24%, rgba(244,114,182,.12), transparent 22%),
-        linear-gradient(180deg,#0b0e18 0%, #090b14 100%);
+
+    /* --- Yörünge Animasyonu (Görsel Katman) --- */
+    .galaxy-bg {
+      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 0; opacity: 0.4;
     }
-    .glow{
-      position:fixed;
-      border-radius:50%;
-      filter:blur(80px);
-      opacity:.22;
-      pointer-events:none;
+    .orbit { position: absolute; border: 1px solid rgba(255,255,255,0.05); border-radius: 50%; animation: rotateCW 30s linear infinite; }
+    .orbit-1 { width: 300px; height: 300px; }
+    .orbit-2 { width: 500px; height: 500px; animation-duration: 50s; animation-direction: reverse; }
+    .dot { position: absolute; width: 4px; height: 4px; background: #fff; border-radius: 50%; box-shadow: 0 0 10px #fff; }
+
+    /* --- Kart Tasarımı --- */
+    .wrap { width: min(92%, 420px); position: relative; z-index: 10; }
+    .card {
+      border-radius: 32px; padding: 32px 24px;
+      background: rgba(15, 18, 28, 0.8);
+      border: 1px solid var(--line);
+      backdrop-filter: blur(25px);
+      box-shadow: 0 40px 100px rgba(0,0,0,0.6);
+      text-align: center;
     }
-    .g1{width:260px;height:260px;left:-60px;top:40px;background:#818cf8}
-    .g2{width:220px;height:220px;right:-50px;bottom:60px;background:#f472b6}
-    .wrap{width:min(100%, 460px);position:relative;z-index:1}
-    .card{
-      border-radius:28px;
-      padding:28px 24px 20px;
-      background:var(--card);
-      border:1px solid var(--line);
-      backdrop-filter:blur(18px);
-      box-shadow:0 24px 60px rgba(0,0,0,.34);
-      text-align:center;
+
+    .logo-orb {
+      width: 80px; height: 80px; margin: 0 auto 15px;
+      background: var(--grad); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 40px rgba(103, 232, 249, 0.3);
+      animation: pulse 2s infinite;
     }
-    .logo-wrap{
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      margin-bottom:16px;
+    .logo-orb b { font-family: 'Space Grotesk'; font-size: 20px; color: #000; }
+
+    h1 { font-size: 28px; font-weight: 900; margin: 10px 0; letter-spacing: -1px; }
+    .uid-tag { 
+      font-family: 'Space Grotesk'; font-size: 13px; color: var(--italky-cyan); 
+      background: rgba(103, 232, 249, 0.1); padding: 6px 16px; border-radius: 99px; display: inline-block; margin-bottom: 20px;
     }
-    .logo-orb{
-      width:92px;
-      height:92px;
-      border-radius:50%;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      background:
-        radial-gradient(circle at 30% 24%, rgba(255,255,255,.18) 0%, transparent 22%),
-        linear-gradient(145deg, #111318 0%, #08090d 46%, #030406 100%);
-      box-shadow:
-        inset 0 0 18px rgba(255,255,255,.04),
-        0 0 22px rgba(103,232,249,.16),
-        0 0 48px rgba(129,140,248,.12);
-      margin-bottom:12px;
+
+    .btn {
+      width: 100%; padding: 18px; border: none; border-radius: 20px;
+      font-size: 16px; font-weight: 900; cursor: pointer; transition: 0.2s;
     }
-    .logo-text{
-      font-family:'Space Grotesk',sans-serif;
-      font-size:26px;
-      font-weight:700;
-      color:#fff;
-      line-height:1;
-    }
-    .logo-text span{
-      background:var(--grad);
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;
-    }
-    .logo-sub{
-      font-size:11px;
-      letter-spacing:2px;
-      font-weight:900;
-      color:rgba(255,255,255,.58);
-      text-transform:uppercase;
-      margin-top:2px;
-    }
-    h1{
-      margin:6px 0 8px;
-      font-size:32px;
-      line-height:1.06;
-      letter-spacing:-.8px;
-    }
-    .desc{
-      margin:0 0 16px;
-      color:var(--muted);
-      font-size:14px;
-      line-height:1.55;
-    }
-    .uid-box{
-      min-height:54px;
-      border-radius:16px;
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.06);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:0 14px;
-      font-family:'Space Grotesk',sans-serif;
-      font-size:14px;
-      word-break:break-all;
-      margin-bottom:12px;
-    }
-    .status{
-      min-height:24px;
-      margin-top:12px;
-      font-size:14px;
-      font-weight:800;
-    }
-    .status.ok{color:var(--ok)}
-    .status.err{color:var(--err)}
-    .status.warn{color:var(--warn)}
-    .btn{
-      width:100%;
-      min-height:54px;
-      border:none;
-      border-radius:18px;
-      margin-top:12px;
-      background:var(--grad);
-      color:#fff;
-      font-size:15px;
-      font-weight:900;
-      cursor:pointer;
-      box-shadow:0 16px 34px rgba(129,140,248,.18);
-      transition:transform .16s ease, opacity .16s ease;
-    }
-    .btn:active{transform:scale(.985)}
-    .btn.secondary{
-      background:rgba(255,255,255,.08);
-      border:1px solid var(--line);
-      box-shadow:none;
-    }
-    .hint{
-      margin-top:14px;
-      color:rgba(255,255,255,.54);
-      font-size:12px;
-      line-height:1.5;
-    }
-    .footer-mark{
-      margin-top:16px;
-      text-align:center;
-      font-size:12px;
-      color:rgba(255,255,255,.56);
-      letter-spacing:.3px;
-    }
-    .footer-mark b{color:#fff;font-weight:800}
+    .btn-main { background: var(--grad); color: #fff; box-shadow: 0 15px 30px rgba(129,140,248,0.25); margin-bottom: 12px; }
+    .btn-sec { background: rgba(255,255,255,0.05); border: 1px solid var(--line); color: var(--txt); }
+    .btn:active { transform: scale(0.97); }
+
+    .status { font-size: 13px; font-weight: 700; margin-top: 15px; min-height: 20px; }
+    .ok { color: #22c55e; } .err { color: #ef4444; }
+
+    /* Animasyonlar */
+    @keyframes rotateCW { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
   </style>
 </head>
 <body>
-  <div class="glow g1"></div>
-  <div class="glow g2"></div>
+
+  <div class="galaxy-bg">
+    <div class="orbit orbit-1"><div class="dot" style="top:0; left:50%;"></div></div>
+    <div class="orbit orbit-2"><div class="dot" style="bottom:0; right:50%;"></div></div>
+  </div>
 
   <main class="wrap">
-    <section class="card">
-      <div class="logo-wrap">
-        <div class="logo-orb">
-          <div class="logo-text">italky<span>AI</span></div>
-        </div>
-        <div class="logo-sub">BE FREE</div>
-      </div>
-
+    <div class="card">
+      <div class="logo-orb"><b>italky</b></div>
       <h1>Erişim Kartı</h1>
-      <p class="desc">
-        NFC veya QR ile gelen aynı UID burada işlenir. Uygulama yüklüyse açılır, yüklü değilse mağazaya gider.
+      <div id="uidBox" class="uid-tag">UID: BEKLEYİN...</div>
+      
+      <p style="font-size: 14px; color: var(--muted); margin-bottom: 25px;">
+        italkyAI Premium dünyasına hoş geldiniz. Uygulamayı açarak hesabınızı hemen aktif edin.
       </p>
 
-      <div id="uidBox" class="uid-box">UID hazırlanıyor...</div>
-      <div id="status" class="status warn">Kontrol başlatılıyor...</div>
+      <div id="status" class="status">Kontrol ediliyor...</div>
 
-      <button id="openAppBtn" class="btn" type="button">Uygulamayı Aç</button>
-      <button id="playBtn" class="btn secondary" type="button">Google Play</button>
-
-      <div class="hint">
-        QR için bu sayfayı kullan: <br>
-        <b>/pages/access.html?uid=KART_UID</b>
+      <button id="openAppBtn" class="btn btn-main">UYGULAMAYI AÇ</button>
+      <button id="playBtn" class="btn btn-sec">GOOGLE PLAY'E GİT</button>
+      
+      <div style="font-size: 11px; margin-top: 20px; color: rgba(255,255,255,0.3);">
+        italkyAI • By Ozyigit's • 2026
       </div>
-    </section>
-
-    <div class="footer-mark">italky<b>AI</b> • By Ozyigit's • 2026</div>
+    </div>
   </main>
-  <script>
-function openApp() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const uid = urlParams.get("uid") || "";
 
-  if (!uid) {
-    alert("UID bulunamadı");
-    return;
-  }
-
-  // APP LINK
-  const appLink = `italky://nfc?uid=${uid}`;
-
-  // PLAY STORE
-  const playLink = "https://play.google.com/store/apps/details?id=com.ozyigits.italkyai";
-
-  // dene → app aç
-  window.location.href = appLink;
-
-  // açılmazsa → play store
-  setTimeout(() => {
-    window.location.href = playLink;
-  }, 1500);
-}
-</script>
   <script>
     const PLAY_URL = "https://play.google.com/store/apps/details?id=com.ozyigits.italkyai";
-
-    const uidBox = document.getElementById("uidBox");
     const statusEl = document.getElementById("status");
-    const openAppBtn = document.getElementById("openAppBtn");
-    const playBtn = document.getElementById("playBtn");
+    const uidBox = document.getElementById("uidBox");
 
-    function setStatus(text, type = "warn"){
-      statusEl.className = `status ${type}`;
-      statusEl.textContent = text || "";
-    }
-
-    function normalizeUid(v){
-      return String(v || "")
-        .trim()
-        .toUpperCase()
-        .replace(/:/g, "")
-        .replace(/\s+/g, "");
-    }
-
-    function getUid(){
+    function getUid() {
       const qs = new URLSearchParams(location.search);
-      return normalizeUid(qs.get("uid") || "");
+      return (qs.get("uid") || "").trim().toUpperCase().replace(/:/g, "");
     }
 
-    function getDeepLink(uid){
-      return `italky://join?uid=${encodeURIComponent(uid)}&source=access`;
-    }
-
-    function openApp(uid){
-      if(!uid){
-        setStatus("UID bulunamadı.", "err");
+    function openApp() {
+      const uid = getUid();
+      if(!uid) {
+        statusEl.textContent = "Hata: UID Eksik!";
+        statusEl.className = "status err";
         return;
       }
 
-      const deep = getDeepLink(uid);
-      setStatus("Uygulama açılıyor...", "warn");
+      const deep = `italky://join?uid=${encodeURIComponent(uid)}&source=access`;
+      statusEl.textContent = "Uygulama Aranıyor...";
+      statusEl.className = "status";
 
-      let done = false;
-
-      const timer = setTimeout(() => {
-        if (!done && document.visibilityState === "visible") {
-          setStatus("Uygulama bulunamadı. Google Play açılıyor...", "warn");
+      let timeout = setTimeout(() => {
+        if (document.visibilityState === "visible") {
+          statusEl.textContent = "Yönlendiriliyor...";
           location.href = PLAY_URL;
         }
-      }, 1600);
+      }, 2000);
 
-      const visHandler = () => {
-        if (document.visibilityState === "hidden") {
-          done = true;
-          clearTimeout(timer);
-        }
-      };
+      window.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "hidden") clearTimeout(timeout);
+      });
 
-      document.addEventListener("visibilitychange", visHandler, { once:true });
       location.href = deep;
     }
 
-    function goPlay(){
-      location.href = PLAY_URL;
-    }
+    // Init
+    const uid = getUid();
+    uidBox.textContent = uid ? `ID: ${uid}` : "GEÇERSİZ KART";
+    statusEl.textContent = uid ? "Bağlantı Hazır" : "Lütfen kartı tekrar okutun";
+    statusEl.className = uid ? "status ok" : "status err";
 
-    function start(){
-      const uid = getUid();
-      uidBox.textContent = uid || "UID bulunamadı";
-
-      if(!uid){
-        setStatus("Geçersiz bağlantı.", "err");
-        openAppBtn.disabled = true;
-        return;
-      }
-
-      setStatus("UID hazır. Uygulamayı açabilirsin.", "ok");
-
-      openAppBtn.onclick = () => openApp(uid);
-      playBtn.onclick = goPlay;
-    }
-
-    start();
+    document.getElementById("openAppBtn").onclick = openApp;
+    document.getElementById("playBtn").onclick = () => location.href = PLAY_URL;
   </script>
 </body>
 </html>
