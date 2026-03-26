@@ -115,19 +115,206 @@ function setHeroMessage(msg) {
   if (heroStatus) heroStatus.textContent = String(msg || "");
 }
 
+function ensureGateStyles() {
+  if (document.getElementById("italkyAccessGateStyles")) return;
+
+  const style = document.createElement("style");
+  style.id = "italkyAccessGateStyles";
+  style.textContent = `
+    .italky-lock-wrap{
+      position:relative !important;
+      overflow:hidden !important;
+    }
+
+    .italky-lock-wrap.is-locked{
+      filter:saturate(.92);
+    }
+
+    .italky-lock-wrap.is-locked::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:rgba(7,10,18,.54);
+      backdrop-filter:blur(2px);
+      z-index:20;
+      pointer-events:none;
+    }
+
+    .italky-lock-badge{
+      position:absolute;
+      top:12px;
+      right:12px;
+      z-index:24;
+      min-height:34px;
+      padding:0 12px;
+      border-radius:999px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      background:linear-gradient(135deg,#f59e0b 0%, #f97316 100%);
+      color:#fff;
+      font-size:11px;
+      font-weight:900;
+      letter-spacing:.3px;
+      box-shadow:0 10px 24px rgba(249,115,22,.26);
+      border:1px solid rgba(255,255,255,.16);
+      pointer-events:none;
+    }
+
+    .italky-lock-badge svg{
+      width:13px;
+      height:13px;
+      fill:none;
+      stroke:#fff;
+      stroke-width:2;
+    }
+
+    .italky-lock-cta{
+      position:absolute;
+      left:12px;
+      right:12px;
+      bottom:12px;
+      z-index:25;
+      min-height:50px;
+      padding:0 14px;
+      border:none;
+      border-radius:16px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      text-decoration:none;
+      font-family:inherit;
+      font-size:13px;
+      font-weight:900;
+      color:#fff;
+      background:linear-gradient(135deg,#f59e0b 0%, #f97316 100%);
+      box-shadow:0 12px 24px rgba(249,115,22,.22);
+      cursor:pointer;
+    }
+
+    .italky-lock-cta:active{
+      transform:scale(.985);
+    }
+
+    .italky-lock-note{
+      position:absolute;
+      left:14px;
+      right:14px;
+      bottom:70px;
+      z-index:25;
+      font-size:11px;
+      line-height:1.35;
+      color:rgba(255,255,255,.92);
+      text-align:center;
+      pointer-events:none;
+    }
+
+    .italky-lock-wrap.is-locked > *:not(.italky-lock-badge):not(.italky-lock-cta):not(.italky-lock-note){
+      pointer-events:none !important;
+      user-select:none !important;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+function removeLock(card) {
+  if (!card) return;
+  card.classList.remove("italky-lock-wrap", "is-locked");
+
+  const badge = card.querySelector(".italky-lock-badge");
+  const cta = card.querySelector(".italky-lock-cta");
+  const note = card.querySelector(".italky-lock-note");
+
+  if (badge) badge.remove();
+  if (cta) cta.remove();
+  if (note) note.remove();
+
+  card.removeAttribute("aria-disabled");
+}
+
+function lockCard(cardId, reasonText = "Bu modül premium üyelik ile açılır.") {
+  const card = $(cardId);
+  if (!card) return;
+
+  ensureGateStyles();
+  removeLock(card);
+
+  card.classList.add("italky-lock-wrap", "is-locked");
+  card.setAttribute("aria-disabled", "true");
+
+  const badge = document.createElement("div");
+  badge.className = "italky-lock-badge";
+  badge.innerHTML = `
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M7 10V8a5 5 0 0 1 10 0v2"></path>
+      <rect x="5" y="10" width="14" height="10" rx="2"></rect>
+    </svg>
+    Premium
+  `;
+
+  const note = document.createElement("div");
+  note.className = "italky-lock-note";
+  note.textContent = reasonText;
+
+  const cta = document.createElement("a");
+  cta.className = "italky-lock-cta";
+  cta.href = "/pages/upgrade_pack.html";
+  cta.textContent = "Premium Üye Ol";
+
+  card.appendChild(badge);
+  card.appendChild(note);
+  card.appendChild(cta);
+}
+
+function unlockCard(cardId) {
+  const card = $(cardId);
+  if (!card) return;
+  removeLock(card);
+}
+
 function applyGateToDom(access) {
   const finalAccess = mergeAccess(access);
 
-  setVisible("goTextToText", finalAccess.can_text_to_text);
-  setVisible("goFaceToFace", finalAccess.can_face_to_face);
-  setVisible("goSideToSide", finalAccess.can_side_to_side);
-  setVisible("goSideToSideBtn", finalAccess.can_side_to_side);
-  setVisible("goOffline", finalAccess.can_offline);
+  // TextToText her zaman açık
+  unlockCard("textCard");
+
+  // Games ve level test sende default true, açık kalsın
+  if (finalAccess.can_games) unlockCard("funCard");
+  else lockCard("funCard", "Oyun modülü premium üyelik ile açılır.");
+
+  if (finalAccess.can_level_test) unlockCard("levelCard");
+  else lockCard("levelCard", "Seviye tespit modülü premium üyelik ile açılır.");
+
+  // Premium / paket gerektirenler
+  if (finalAccess.can_face_to_face) unlockCard("faceCard");
+  else lockCard("faceCard", "FaceToFace modülü premium üyelik ile açılır.");
+
+  // SideToSide için ayrı kart yok, hero butonu var
+  const sideBtn = $("goSideToSide");
+  if (sideBtn) {
+    sideBtn.style.opacity = finalAccess.can_side_to_side ? "1" : ".72";
+    sideBtn.disabled = !finalAccess.can_side_to_side;
+    sideBtn.onclick = finalAccess.can_side_to_side
+      ? window.openCodePrompt || null
+      : () => { location.href = "/pages/upgrade_pack.html"; };
+    sideBtn.textContent = finalAccess.can_side_to_side
+      ? "🔢Karşı Tarafın Bağlantı Kodunu Gir"
+      : "🔒 Premium ile SideToSide Aç";
+  }
+
+  if (finalAccess.can_offline) unlockCard("offlineCard");
+  else lockCard("offlineCard", "Offline Translate premium üyelik ile açılır.");
+
+  if (finalAccess.can_practice) unlockCard("practiceCard");
+  else lockCard("practiceCard", "Pratik Yap modülü premium üyelik ile açılır.");
 
   const shouldShowUpgrade =
     !finalAccess.can_face_to_face ||
     !finalAccess.can_side_to_side ||
-    !finalAccess.can_offline;
+    !finalAccess.can_offline ||
+    !finalAccess.can_practice;
 
   setVisible("nfcUpgradeBox", shouldShowUpgrade);
 
