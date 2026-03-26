@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+
   <style>
     :root{
       --bg:#05070a;
@@ -36,26 +37,16 @@
       background:var(--bg);
       color:var(--txt);
       font-family:'Outfit',sans-serif;
-      overflow-x:hidden;
     }
 
     body{
+      overflow-x:hidden;
+      overflow-y:auto;
       background:
-        radial-gradient(circle at 50% 22%, rgba(103,232,249,.08), transparent 20%),
-        radial-gradient(circle at 80% 18%, rgba(244,114,182,.10), transparent 20%),
-        radial-gradient(circle at 20% 82%, rgba(129,140,248,.10), transparent 24%),
+        radial-gradient(circle at 50% 18%, rgba(103,232,249,.08), transparent 18%),
+        radial-gradient(circle at 84% 16%, rgba(244,114,182,.10), transparent 20%),
+        radial-gradient(circle at 18% 84%, rgba(129,140,248,.10), transparent 24%),
         linear-gradient(180deg,#05070a 0%, #09111b 48%, #05070a 100%);
-    }
-
-    #page{
-      min-height:100vh;
-      padding:
-        calc(env(safe-area-inset-top) + 88px)
-        16px
-        calc(env(safe-area-inset-bottom) + 110px + var(--shellLift))
-        16px;
-      position:relative;
-      overflow:hidden;
     }
 
     .nebula{
@@ -63,14 +54,14 @@
       inset:0;
       pointer-events:none;
       z-index:0;
-      opacity:.95;
+      overflow:hidden;
     }
 
     .blob{
       position:absolute;
       border-radius:50%;
       filter:blur(70px);
-      opacity:.24;
+      opacity:.22;
       animation:floatBlob 9s ease-in-out infinite;
     }
 
@@ -98,19 +89,27 @@
       position:absolute;
       inset:0;
       background-image:
-        radial-gradient(circle, rgba(255,255,255,.92) 1px, transparent 1.5px),
-        radial-gradient(circle, rgba(255,255,255,.5) 1px, transparent 1.5px),
-        radial-gradient(circle, rgba(255,255,255,.35) 1px, transparent 1.5px);
+        radial-gradient(circle, rgba(255,255,255,.9) 1px, transparent 1.5px),
+        radial-gradient(circle, rgba(255,255,255,.45) 1px, transparent 1.5px),
+        radial-gradient(circle, rgba(255,255,255,.28) 1px, transparent 1.5px);
       background-size:140px 140px, 220px 220px, 300px 300px;
       background-position:0 0, 30px 70px, 110px 40px;
-      opacity:.18;
+      opacity:.16;
     }
 
-    .wrap{
+    #page{
       position:relative;
       z-index:2;
-      width:min(100%, 860px);
+      width:min(100%, 880px);
       margin:0 auto;
+      padding:
+        calc(env(safe-area-inset-top) + 92px)
+        16px
+        calc(env(safe-area-inset-bottom) + 120px + var(--shellLift))
+        16px;
+    }
+
+    .stack{
       display:grid;
       gap:16px;
     }
@@ -123,11 +122,9 @@
     }
 
     .hero{
-      position:relative;
-      min-height:520px;
-      border-radius:32px;
+      border-radius:30px;
       overflow:hidden;
-      padding:22px 18px 20px;
+      padding:20px 18px 22px;
     }
 
     .hero-top{
@@ -135,9 +132,7 @@
       align-items:center;
       justify-content:space-between;
       gap:12px;
-      position:relative;
-      z-index:4;
-      margin-bottom:10px;
+      margin-bottom:14px;
     }
 
     .back-btn{
@@ -171,13 +166,23 @@
       text-transform:uppercase;
     }
 
+    .galaxy-card{
+      position:relative;
+      min-height:420px;
+      border-radius:24px;
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.07);
+      overflow:hidden;
+      margin-bottom:18px;
+    }
+
     .galaxy-zone{
       position:relative;
-      min-height:320px;
+      height:420px;
       display:flex;
       align-items:center;
       justify-content:center;
-      margin-top:4px;
+      overflow:hidden;
     }
 
     .earth-core{
@@ -230,7 +235,7 @@
 
     .orbit-1{ width:210px; height:210px; animation:rotateCW 20s linear infinite; }
     .orbit-2{ width:320px; height:320px; animation:rotateCCW 32s linear infinite; }
-    .orbit-3{ width:438px; height:438px; animation:rotateCW 48s linear infinite; }
+    .orbit-3{ width:430px; height:430px; animation:rotateCW 48s linear infinite; }
 
     .flag{
       position:absolute;
@@ -247,11 +252,9 @@
     .orbit-2 .flag{ width:30px; height:30px; }
     .orbit-3 .flag{ width:32px; height:32px; }
 
-    .content{
-      position:relative;
-      z-index:4;
+    .hero-content{
       text-align:center;
-      margin-top:4px;
+      padding:0 8px;
     }
 
     .motto-tag{
@@ -347,7 +350,7 @@
     }
 
     .info-card{
-      min-height:78px;
+      min-height:86px;
       border-radius:18px;
       background:rgba(255,255,255,.05);
       border:1px solid rgba(255,255,255,.10);
@@ -478,17 +481,17 @@
         padding-top:88px;
       }
 
-      .hero{
-        min-height:480px;
+      .galaxy-card{
+        min-height:360px;
       }
 
       .galaxy-zone{
-        min-height:270px;
+        height:360px;
       }
 
       .orbit-1{ width:180px; height:180px; }
-      .orbit-2{ width:280px; height:280px; }
-      .orbit-3{ width:370px; height:370px; }
+      .orbit-2{ width:270px; height:270px; }
+      .orbit-3{ width:340px; height:340px; }
 
       h1{
         font-size:30px;
@@ -504,11 +507,26 @@
         grid-template-columns:1fr;
       }
 
-      .hero{
-        min-height:450px;
+      .galaxy-card{
+        min-height:330px;
       }
 
-      .orbit-3{ width:340px; height:340px; }
+      .galaxy-zone{
+        height:330px;
+      }
+
+      .orbit-1{ width:170px; height:170px; }
+      .orbit-2{ width:245px; height:245px; }
+      .orbit-3{ width:305px; height:305px; }
+
+      .flag{
+        width:26px;
+        height:26px;
+      }
+
+      h1{
+        font-size:28px;
+      }
     }
   </style>
 </head>
@@ -521,7 +539,7 @@
   </div>
 
   <main id="page">
-    <div class="wrap">
+    <div class="stack">
 
       <section class="hero glass">
         <div class="hero-top">
@@ -529,44 +547,46 @@
           <div class="premium-pill">PREMIUM GLOBAL</div>
         </div>
 
-        <div class="galaxy-zone">
-          <div class="earth-core"></div>
+        <div class="galaxy-card">
+          <div class="galaxy-zone">
+            <div class="earth-core"></div>
 
-          <div class="orbit orbit-1">
-            <img src="https://flagcdn.com/w80/tr.png" class="flag" style="top:-14px; left:50%; transform:translateX(-50%);" alt="TR">
-            <img src="https://flagcdn.com/w80/us.png" class="flag" style="bottom:-14px; left:50%; transform:translateX(-50%);" alt="US">
-            <img src="https://flagcdn.com/w80/gb.png" class="flag" style="left:-14px; top:50%; transform:translateY(-50%);" alt="GB">
-            <img src="https://flagcdn.com/w80/de.png" class="flag" style="right:-14px; top:50%; transform:translateY(-50%);" alt="DE">
-            <img src="https://flagcdn.com/w80/fr.png" class="flag" style="left:18px; top:18px;" alt="FR">
-            <img src="https://flagcdn.com/w80/es.png" class="flag" style="right:18px; bottom:18px;" alt="ES">
-          </div>
+            <div class="orbit orbit-1">
+              <img src="https://flagcdn.com/w80/tr.png" class="flag" style="top:-14px; left:50%; transform:translateX(-50%);" alt="TR">
+              <img src="https://flagcdn.com/w80/us.png" class="flag" style="bottom:-14px; left:50%; transform:translateX(-50%);" alt="US">
+              <img src="https://flagcdn.com/w80/gb.png" class="flag" style="left:-14px; top:50%; transform:translateY(-50%);" alt="GB">
+              <img src="https://flagcdn.com/w80/de.png" class="flag" style="right:-14px; top:50%; transform:translateY(-50%);" alt="DE">
+              <img src="https://flagcdn.com/w80/fr.png" class="flag" style="left:18px; top:18px;" alt="FR">
+              <img src="https://flagcdn.com/w80/es.png" class="flag" style="right:18px; bottom:18px;" alt="ES">
+            </div>
 
-          <div class="orbit orbit-2">
-            <img src="https://flagcdn.com/w80/it.png" class="flag" style="top:-15px; left:50%; transform:translateX(-50%);" alt="IT">
-            <img src="https://flagcdn.com/w80/ru.png" class="flag" style="bottom:-15px; left:50%; transform:translateX(-50%);" alt="RU">
-            <img src="https://flagcdn.com/w80/jp.png" class="flag" style="left:-15px; top:50%; transform:translateY(-50%);" alt="JP">
-            <img src="https://flagcdn.com/w80/kr.png" class="flag" style="right:-15px; top:50%; transform:translateY(-50%);" alt="KR">
-            <img src="https://flagcdn.com/w80/cn.png" class="flag" style="left:26px; top:26px;" alt="CN">
-            <img src="https://flagcdn.com/w80/sa.png" class="flag" style="right:26px; top:26px;" alt="SA">
-            <img src="https://flagcdn.com/w80/br.png" class="flag" style="left:26px; bottom:26px;" alt="BR">
-            <img src="https://flagcdn.com/w80/in.png" class="flag" style="right:26px; bottom:26px;" alt="IN">
-          </div>
+            <div class="orbit orbit-2">
+              <img src="https://flagcdn.com/w80/it.png" class="flag" style="top:-15px; left:50%; transform:translateX(-50%);" alt="IT">
+              <img src="https://flagcdn.com/w80/ru.png" class="flag" style="bottom:-15px; left:50%; transform:translateX(-50%);" alt="RU">
+              <img src="https://flagcdn.com/w80/jp.png" class="flag" style="left:-15px; top:50%; transform:translateY(-50%);" alt="JP">
+              <img src="https://flagcdn.com/w80/kr.png" class="flag" style="right:-15px; top:50%; transform:translateY(-50%);" alt="KR">
+              <img src="https://flagcdn.com/w80/cn.png" class="flag" style="left:26px; top:26px;" alt="CN">
+              <img src="https://flagcdn.com/w80/sa.png" class="flag" style="right:26px; top:26px;" alt="SA">
+              <img src="https://flagcdn.com/w80/br.png" class="flag" style="left:26px; bottom:26px;" alt="BR">
+              <img src="https://flagcdn.com/w80/in.png" class="flag" style="right:26px; bottom:26px;" alt="IN">
+            </div>
 
-          <div class="orbit orbit-3">
-            <img src="https://flagcdn.com/w80/pt.png" class="flag" style="top:-16px; left:50%; transform:translateX(-50%);" alt="PT">
-            <img src="https://flagcdn.com/w80/nl.png" class="flag" style="bottom:-16px; left:50%; transform:translateX(-50%);" alt="NL">
-            <img src="https://flagcdn.com/w80/se.png" class="flag" style="left:-16px; top:50%; transform:translateY(-50%);" alt="SE">
-            <img src="https://flagcdn.com/w80/no.png" class="flag" style="right:-16px; top:50%; transform:translateY(-50%);" alt="NO">
-            <img src="https://flagcdn.com/w80/fi.png" class="flag" style="left:34px; top:18px;" alt="FI">
-            <img src="https://flagcdn.com/w80/pl.png" class="flag" style="right:34px; top:18px;" alt="PL">
-            <img src="https://flagcdn.com/w80/ae.png" class="flag" style="left:34px; bottom:18px;" alt="AE">
-            <img src="https://flagcdn.com/w80/mx.png" class="flag" style="right:34px; bottom:18px;" alt="MX">
-            <img src="https://flagcdn.com/w80/gr.png" class="flag" style="top:50px; left:6px;" alt="GR">
-            <img src="https://flagcdn.com/w80/ua.png" class="flag" style="bottom:50px; right:6px;" alt="UA">
+            <div class="orbit orbit-3">
+              <img src="https://flagcdn.com/w80/pt.png" class="flag" style="top:-16px; left:50%; transform:translateX(-50%);" alt="PT">
+              <img src="https://flagcdn.com/w80/nl.png" class="flag" style="bottom:-16px; left:50%; transform:translateX(-50%);" alt="NL">
+              <img src="https://flagcdn.com/w80/se.png" class="flag" style="left:-16px; top:50%; transform:translateY(-50%);" alt="SE">
+              <img src="https://flagcdn.com/w80/no.png" class="flag" style="right:-16px; top:50%; transform:translateY(-50%);" alt="NO">
+              <img src="https://flagcdn.com/w80/fi.png" class="flag" style="left:34px; top:18px;" alt="FI">
+              <img src="https://flagcdn.com/w80/pl.png" class="flag" style="right:34px; top:18px;" alt="PL">
+              <img src="https://flagcdn.com/w80/ae.png" class="flag" style="left:34px; bottom:18px;" alt="AE">
+              <img src="https://flagcdn.com/w80/mx.png" class="flag" style="right:34px; bottom:18px;" alt="MX">
+              <img src="https://flagcdn.com/w80/gr.png" class="flag" style="top:50px; left:6px;" alt="GR">
+              <img src="https://flagcdn.com/w80/ua.png" class="flag" style="bottom:50px; right:6px;" alt="UA">
+            </div>
           </div>
         </div>
 
-        <div class="content">
+        <div class="hero-content">
           <div class="motto-tag">italkyAI • EĞLENEREK ÖĞREN</div>
           <h1>Dünyayı <span class="grad">Cebine Sığdır,</span><br>Özgürce Konuş.</h1>
           <p class="sub">
@@ -643,15 +663,16 @@
     import { mountShell } from "/js/ui_shell.js";
 
     try {
-      mountShell({
-        scroll: "auto"
-      });
+      mountShell({ scroll: "auto" });
 
-      try{
-        const root = getComputedStyle(document.documentElement);
-        const footerH = parseFloat(root.getPropertyValue("--footerH")) || 0;
-        document.documentElement.style.setProperty("--shellLift", footerH ? `${footerH + 10}px` : "0px");
-      }catch(e){}
+      setTimeout(() => {
+        try{
+          const root = getComputedStyle(document.documentElement);
+          const footerH = parseFloat(root.getPropertyValue("--footerH")) || 0;
+          document.documentElement.style.setProperty("--shellLift", footerH ? `${footerH + 16}px` : "0px");
+        }catch(e){}
+      }, 80);
+
     } catch(e) {
       console.warn("Shell hazır değil:", e);
     }
