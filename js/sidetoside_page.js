@@ -285,21 +285,10 @@ function renderPeerProfileBox() {
   const showVoice = peerProfile.voice_mode || "auto";
   const showTranslate = peerProfile.translate_mode || "normal";
 
-  if (peerInfoMain) {
-    peerInfoMain.textContent = showName;
-  }
-
-  if (peerInfoSub) {
-    peerInfoSub.textContent = labelChip(showLang);
-  }
-
-  if (peerVoicePill) {
-    peerVoicePill.textContent = voiceLabel(showVoice);
-  }
-
-  if (peerTranslatePill) {
-    peerTranslatePill.textContent = translateLabel(showTranslate);
-  }
+  if (peerInfoMain) peerInfoMain.textContent = showName;
+  if (peerInfoSub) peerInfoSub.textContent = labelChip(showLang);
+  if (peerVoicePill) peerVoicePill.textContent = voiceLabel(showVoice);
+  if (peerTranslatePill) peerTranslatePill.textContent = translateLabel(showTranslate);
 }
 
 function markPeerConnected(lang = "", name = "") {
@@ -449,7 +438,6 @@ function startRoomSync() {
 
   roomSyncTimer = setInterval(async () => {
     if (!roomId || peerHasExplicitlyLeft) return;
-
     try {
       const room = await fetchRoomSnapshot();
       applyRoomSnapshot(room);
@@ -575,9 +563,7 @@ function refreshLangLabels() {
 }
 
 function refreshReadyTextsIfIdle() {
-  if (activeSide === null) {
-    setSystemReadyUI();
-  }
+  if (activeSide === null) setSystemReadyUI();
 }
 
 function closeAllPop() {
@@ -818,7 +804,6 @@ function clearProfileRetryTimers() {
 
 function queueProfileResend() {
   clearProfileRetryTimers();
-
   [800, 1800, 3200].forEach((ms) => {
     const id = setTimeout(() => {
       sendSelfProfile().catch(() => {});
@@ -892,7 +877,6 @@ async function applyMyLanguageChange(nextLang) {
   ws = null;
   wsReady = false;
   manuallyClosed = false;
-
   startSocket();
 }
 
@@ -1041,7 +1025,6 @@ function startSocket() {
 
         await sendSelfProfile();
         queueProfileResend();
-
         bounceToReady(600);
         return;
       }
@@ -1311,7 +1294,11 @@ async function sendTextMessage(rawText) {
 
   if (!canSend()) {
     setErrorUI();
-    setHelper(botHelper, hasUsablePeerConnection() ? t(myLang, "wsFailed") : t(myLang, "waitingPeer"), "helper-wait");
+    setHelper(
+      botHelper,
+      hasUsablePeerConnection() ? t(myLang, "wsFailed") : t(myLang, "waitingPeer"),
+      "helper-wait"
+    );
     bounceToReady(1200);
     return;
   }
@@ -1372,7 +1359,11 @@ async function speechToTextFallback() {
 function collectRecognitionText() {
   const finalPart = String(recognitionFinalText || "").trim();
   const interimPart = String(recognitionInterimText || "").trim();
-  return [finalPart, interimPart].filter(Boolean).join(" ").replace(/\s+/g, " ").trim();
+  return [finalPart, interimPart]
+    .filter(Boolean)
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 async function finalizeRecognition(text) {
@@ -1662,6 +1653,8 @@ async function bootRoom() {
     }
 
     saveReturnContext();
+
+    await loadMyIdentity();
 
     try {
       const room = await fetchRoomSnapshot();
