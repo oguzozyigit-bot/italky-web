@@ -118,7 +118,9 @@
     <div class="hint">Giriş yapılmamışsa önce giriş ekranına yönlendirilirsin.</div>
   </div>
 
-  <script>
+  <script type="module">
+    import { supabase } from "/js/supabase_client.js";
+
     const API_BASE = "https://italky-api.onrender.com/api";
     const LOGIN_URL = "/pages/login.html";
     const HOME_URL = "/pages/home.html";
@@ -142,23 +144,38 @@
 
     function getUidFromUrl(){
       const q = new URLSearchParams(location.search);
-
       const rawUid =
         q.get("uid") ||
         q.get("card") ||
         q.get("serial") ||
         q.get("nfc") ||
         "";
-
       return normalizeUid(rawUid);
     }
 
-    function getUserId(){
-      return (
+    async function getRealUserId(){
+      let userId =
         localStorage.getItem("user_id") ||
         sessionStorage.getItem("user_id") ||
-        ""
-      ).trim();
+        "";
+
+      userId = String(userId || "").trim();
+      if (userId) return userId;
+
+      try{
+        const { data, error } = await supabase.auth.getUser();
+        if (error) throw error;
+
+        const uid = String(data?.user?.id || "").trim();
+        if (uid){
+          localStorage.setItem("user_id", uid);
+          return uid;
+        }
+      }catch(e){
+        console.warn("[NFC getRealUserId]", e);
+      }
+
+      return "";
     }
 
     function getDeviceId(){
@@ -176,11 +193,13 @@
       return id;
     }
 
+    async function goLoginIfNeeded(){
+      const next = encodeURIComponent(location.pathname + location.search);
+      location.href = `${LOGIN_URL}?next=${next}`;
+    }
+
     async function activateCard(){
       const uid = getUidFromUrl();
-      const userId = getUserId();
-      const deviceId = getDeviceId();
-
       uidBox.textContent = uid || "Kart bilgisi bulunamadı";
 
       if(!uid){
@@ -189,14 +208,17 @@
         return;
       }
 
+      const userId = await getRealUserId();
+
       if(!userId){
         setStatus("Önce giriş yapmalısın. Girişe yönlendiriliyorsun...", "muted");
-        const next = encodeURIComponent(location.pathname + location.search);
         setTimeout(() => {
-          location.href = `${LOGIN_URL}?next=${next}`;
+          goLoginIfNeeded();
         }, 700);
         return;
       }
+
+      const deviceId = getDeviceId();
 
       try{
         setStatus("Kart doğrulanıyor...", "muted");
@@ -218,16 +240,14 @@
           throw new Error(data?.detail || data?.error || "Kart doğrulanamadı");
         }
 
-        try{
-          localStorage.setItem("app_access_mode", data.mode || "nfc");
-          localStorage.setItem("nfc_card_uid", data.uid || uid);
-          localStorage.setItem("nfc_package_code", data.package_code || "");
-          localStorage.setItem("nfc_expires_at", data.expires_at || "");
-
-          localStorage.setItem("nfc_features", JSON.stringify(data.features || {}));
-          localStorage.setItem("nfc_remaining_languages", String(data.remaining_languages ?? 0));
-          localStorage.setItem("nfc_remaining_jeton", String(data.remaining_jeton ?? 0));
-        } catch(e){}
+        localStorage.setItem("user_id", userId);
+        localStorage.setItem("app_access_mode", data.mode || "nfc");
+        localStorage.setItem("nfc_card_uid", data.uid || uid);
+        localStorage.setItem("nfc_package_code", data.package_code || "");
+        localStorage.setItem("nfc_expires_at", data.expires_at || "");
+        localStorage.setItem("nfc_features", JSON.stringify(data.features || {}));
+        localStorage.setItem("nfc_remaining_languages", String(data.remaining_languages ?? 0));
+        localStorage.setItem("nfc_remaining_jeton", String(data.remaining_jeton ?? 0));
 
         setStatus("Kart başarıyla tanımlandı. Ana sayfaya geçiliyor...", "ok");
 
@@ -236,7 +256,7 @@
         }, 900);
 
       }catch(err){
-        console.error("[nfc_entry]", err);
+        console.error("[nfc_entry activate]", err);
         setStatus(err?.message || "Kart geçersiz.", "err");
         retryBtn.style.display = "block";
       }
