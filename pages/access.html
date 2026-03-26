@@ -3,172 +3,581 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
-  <title>italkyAI • Global Universe</title>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+  <title>italkyAI • Erişim Kartı</title>
+  <meta name="theme-color" content="#05070a" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+
   <style>
-    :root {
-      --bg: #03050a;
-      --cyan: #67e8f9;
-      --pink: #f472b6;
-      --indigo: #818cf8;
-      --grad: linear-gradient(135deg, var(--cyan), var(--indigo), var(--pink));
+    :root{
+      --bg:#05070a;
+      --txt:#f8fbff;
+      --muted:rgba(255,255,255,.68);
+      --soft:rgba(255,255,255,.5);
+      --line:rgba(255,255,255,.12);
+      --card:rgba(255,255,255,.06);
+      --cyan:#67e8f9;
+      --pink:#f472b6;
+      --indigo:#818cf8;
+      --grad:linear-gradient(135deg,#67e8f9 0%, #818cf8 46%, #f472b6 100%);
+      --gold:linear-gradient(135deg,#f59e0b 0%, #f97316 100%);
+      --shellLift:0px;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body, html { height: 100%; width: 100%; background: var(--bg); color: #fff; font-family: 'Outfit', sans-serif; overflow: hidden; }
-
-    /* --- GALAXY ENGINE --- */
-    .universe {
-      position: fixed; inset: 0;
-      display: flex; align-items: center; justify-content: center;
-      background: radial-gradient(circle at center, #0d1224 0%, #03050a 100%);
-      z-index: 1;
+    *{
+      box-sizing:border-box;
+      -webkit-tap-highlight-color:transparent;
     }
 
-    /* Merkez Dünya (Sabit ve Parlak) */
-    .earth-core {
-      position: absolute;
-      width: 90px; height: 90px;
-      background: var(--grad);
-      border-radius: 50%;
-      z-index: 100;
-      display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 0 60px rgba(103, 232, 249, 0.5);
-      font-family: 'Space Grotesk'; font-size: 18px; color: #000;
-      animation: corePulse 3s infinite ease-in-out;
+    html,body{
+      margin:0;
+      width:100%;
+      min-height:100%;
+      background:var(--bg);
+      color:var(--txt);
+      font-family:'Outfit',sans-serif;
     }
 
-    /* Yörünge Sistemi */
-    .orbit-container {
-      position: relative;
-      width: 600px; height: 600px;
-      display: flex; align-items: center; justify-content: center;
+    body{
+      overflow-x:hidden;
+      overflow-y:auto;
+      background:
+        radial-gradient(circle at 50% 12%, rgba(103,232,249,.10), transparent 18%),
+        radial-gradient(circle at 84% 16%, rgba(244,114,182,.10), transparent 22%),
+        radial-gradient(circle at 18% 84%, rgba(129,140,248,.10), transparent 24%),
+        linear-gradient(180deg,#05070a 0%, #09111b 48%, #05070a 100%);
     }
 
-    .orbit {
-      position: absolute;
-      border: 1.5px solid rgba(255, 255, 255, 0.08);
-      border-radius: 50%;
+    .nebula{
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      z-index:0;
+      overflow:hidden;
     }
 
-    /* Bayrak Taşıyıcılar (Dönen Yapılar) */
-    .rotator {
-      position: absolute; width: 100%; height: 100%;
-      animation: spin linear infinite;
+    .blob{
+      position:absolute;
+      border-radius:50%;
+      filter:blur(70px);
+      opacity:.22;
+      animation:floatBlob 9s ease-in-out infinite;
     }
 
-    .flag {
-      position: absolute;
-      width: 28px; height: 28px;
-      border-radius: 50%;
-      border: 2px solid #fff;
-      box-shadow: 0 0 10px rgba(255,255,255,0.2);
-      object-fit: cover;
+    .blob.b1{
+      width:240px;height:240px;
+      left:-40px;top:120px;
+      background:#67e8f9;
     }
 
-    /* Yörünge 1 (Yakın) */
-    .o1 { width: 180px; height: 180px; z-index: 3; }
-    .rot1 { animation-duration: 15s; }
-
-    /* Yörünge 2 (Orta) */
-    .o2 { width: 320px; height: 320px; z-index: 2; }
-    .rot2 { animation-duration: 25s; animation-direction: reverse; }
-
-    /* Yörünge 3 (Uzak) */
-    .o3 { width: 480px; height: 480px; z-index: 1; }
-    .rot3 { animation-duration: 40s; }
-
-    /* --- UI OVERLAY --- */
-    .overlay {
-      position: relative; z-index: 200;
-      height: 100vh; display: flex; flex-direction: column;
-      justify-content: flex-end; padding: 40px 24px 120px; /* Alttan bar payı */
-      pointer-events: none;
+    .blob.b2{
+      width:260px;height:260px;
+      right:-80px;top:220px;
+      background:#f472b6;
+      animation-delay:-2s;
     }
 
-    .access-card {
-      background: rgba(10, 15, 25, 0.85);
-      backdrop-filter: blur(25px);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 32px; padding: 25px;
-      text-align: center; pointer-events: auto;
-      box-shadow: 0 -20px 60px rgba(0,0,0,0.6);
+    .blob.b3{
+      width:220px;height:220px;
+      left:30%;bottom:70px;
+      background:#818cf8;
+      animation-delay:-4s;
     }
 
-    .btn-premium {
-      width: 100%; padding: 20px; border: none; border-radius: 20px;
-      background: linear-gradient(135deg, #f59e0b, #f97316);
-      color: #fff; font-size: 17px; font-weight: 900;
-      cursor: pointer; box-shadow: 0 15px 30px rgba(249, 115, 22, 0.3);
+    .stars{
+      position:absolute;
+      inset:0;
+      background-image:
+        radial-gradient(circle, rgba(255,255,255,.9) 1px, transparent 1.5px),
+        radial-gradient(circle, rgba(255,255,255,.45) 1px, transparent 1.5px),
+        radial-gradient(circle, rgba(255,255,255,.28) 1px, transparent 1.5px);
+      background-size:140px 140px, 220px 220px, 300px 300px;
+      background-position:0 0, 30px 70px, 110px 40px;
+      opacity:.16;
     }
 
-    /* Animasyonlar */
-    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-    @keyframes corePulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+    #page{
+      position:relative;
+      z-index:2;
+      width:min(100%, 860px);
+      margin:0 auto;
+      padding:
+        calc(env(safe-area-inset-top) + 92px)
+        16px
+        calc(env(safe-area-inset-bottom) + 120px + var(--shellLift))
+        16px;
+    }
 
+    .stack{
+      display:grid;
+      gap:16px;
+    }
+
+    .glass{
+      background:var(--card);
+      border:1px solid var(--line);
+      backdrop-filter:blur(18px);
+      box-shadow:0 24px 60px rgba(0,0,0,.32);
+    }
+
+    .hero{
+      border-radius:30px;
+      overflow:hidden;
+      padding:20px 18px 22px;
+    }
+
+    .hero-top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:14px;
+    }
+
+    .back-btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:42px;
+      padding:0 14px;
+      border-radius:14px;
+      background:rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.11);
+      color:#fff;
+      text-decoration:none;
+      font-size:13px;
+      font-weight:800;
+    }
+
+    .hero-pill{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:36px;
+      padding:0 14px;
+      border-radius:999px;
+      background:rgba(103,232,249,.10);
+      border:1px solid rgba(103,232,249,.24);
+      color:var(--cyan);
+      font-size:11px;
+      font-weight:900;
+      letter-spacing:1px;
+      text-transform:uppercase;
+    }
+
+    .galaxy-card{
+      position:relative;
+      min-height:380px;
+      border-radius:24px;
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.07);
+      overflow:hidden;
+      margin-bottom:18px;
+    }
+
+    .galaxy-zone{
+      position:relative;
+      height:380px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      overflow:hidden;
+    }
+
+    .planet-core{
+      width:110px;
+      height:110px;
+      border-radius:50%;
+      z-index:5;
+      position:relative;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:
+        radial-gradient(circle at 32% 28%, rgba(255,255,255,.30) 0%, transparent 18%),
+        linear-gradient(145deg, #13161d 0%, #090b11 46%, #020305 100%);
+      box-shadow:
+        inset -12px -12px 22px rgba(0,0,0,.65),
+        inset 10px 10px 20px rgba(255,255,255,.03),
+        0 0 22px rgba(255,255,255,.10),
+        0 0 40px rgba(103,232,249,.18),
+        0 0 72px rgba(129,140,248,.18);
+      animation:planetBreath 3s ease-in-out infinite;
+    }
+
+    .planet-core::before{
+      content:"";
+      position:absolute;
+      inset:7px;
+      border-radius:50%;
+      border:1px solid rgba(255,255,255,.08);
+    }
+
+    .planet-text{
+      position:relative;
+      z-index:3;
+      font-family:'Space Grotesk',sans-serif;
+      font-size:18px;
+      font-weight:700;
+      color:#fff;
+      text-shadow:0 0 10px rgba(255,255,255,.22);
+    }
+
+    .planet-text .ai{
+      background:var(--grad);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+
+    .orbit{
+      position:absolute;
+      border-radius:50%;
+      border:1px solid rgba(255,255,255,.09);
+      left:50%;
+      top:50%;
+      transform:translate(-50%,-50%);
+      pointer-events:none;
+    }
+
+    .orbit-1{ width:190px; height:190px; animation:rotateCW 18s linear infinite; }
+    .orbit-2{ width:290px; height:290px; animation:rotateCCW 30s linear infinite; }
+    .orbit-3{ width:390px; height:390px; animation:rotateCW 44s linear infinite; }
+
+    .flag{
+      position:absolute;
+      width:28px;
+      height:28px;
+      border-radius:50%;
+      object-fit:cover;
+      border:1px solid rgba(255,255,255,.18);
+      box-shadow:0 0 10px rgba(255,255,255,.18);
+      background:#fff;
+    }
+
+    .hero-content{
+      text-align:center;
+      padding:0 8px;
+    }
+
+    .motto-tag{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:30px;
+      padding:0 12px;
+      background:rgba(103,232,249,.10);
+      border:1px solid rgba(103,232,249,.22);
+      color:var(--cyan);
+      border-radius:99px;
+      font-size:11px;
+      font-weight:800;
+      margin-bottom:10px;
+      letter-spacing:.4px;
+    }
+
+    h1{
+      font-size:34px;
+      line-height:1.03;
+      margin:0;
+      font-weight:900;
+      letter-spacing:-1px;
+    }
+
+    h1 .grad{
+      background:var(--grad);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+
+    .sub{
+      width:min(100%, 620px);
+      margin:12px auto 0;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.6;
+    }
+
+    .access-card{
+      border-radius:28px;
+      padding:18px;
+    }
+
+    .uid-box{
+      border-radius:20px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.10);
+      padding:16px;
+      text-align:center;
+      margin-bottom:14px;
+    }
+
+    .uid-label{
+      font-size:12px;
+      font-weight:900;
+      color:var(--muted);
+      margin-bottom:6px;
+      letter-spacing:.5px;
+      text-transform:uppercase;
+    }
+
+    .uid-value{
+      font-family:'Space Grotesk',sans-serif;
+      font-size:22px;
+      font-weight:700;
+      color:#fff;
+      line-height:1.15;
+      word-break:break-all;
+    }
+
+    .status{
+      min-height:22px;
+      margin:10px 0 14px;
+      text-align:center;
+      font-size:13px;
+      font-weight:800;
+    }
+
+    .status.ok{ color:#22c55e; }
+    .status.err{ color:#ef4444; }
+    .status.warn{ color:#f59e0b; }
+
+    .cta-stack{
+      display:grid;
+      gap:10px;
+    }
+
+    .btn{
+      width:100%;
+      min-height:58px;
+      border:none;
+      border-radius:20px;
+      color:#fff;
+      font-size:16px;
+      font-weight:900;
+      cursor:pointer;
+      text-decoration:none;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+    }
+
+    .btn:active{
+      transform:scale(.985);
+    }
+
+    .btn-primary{
+      background:var(--grad);
+      box-shadow:0 15px 30px rgba(129,140,248,.22);
+    }
+
+    .btn-secondary{
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.10);
+    }
+
+    .foot-note{
+      margin-top:14px;
+      text-align:center;
+      font-size:12px;
+      color:var(--soft);
+      line-height:1.5;
+    }
+
+    @keyframes rotateCW{
+      from{ transform:translate(-50%,-50%) rotate(0deg); }
+      to{ transform:translate(-50%,-50%) rotate(360deg); }
+    }
+
+    @keyframes rotateCCW{
+      from{ transform:translate(-50%,-50%) rotate(0deg); }
+      to{ transform:translate(-50%,-50%) rotate(-360deg); }
+    }
+
+    @keyframes planetBreath{
+      0%,100%{ transform:scale(1); }
+      50%{ transform:scale(1.05); }
+    }
+
+    @keyframes floatBlob{
+      0%,100%{ transform:translateY(0px); opacity:.22; }
+      50%{ transform:translateY(-14px); opacity:.30; }
+    }
+
+    @media (max-width:760px){
+      #page{ padding-top:88px; }
+      .galaxy-card{ min-height:330px; }
+      .galaxy-zone{ height:330px; }
+      .orbit-1{ width:170px; height:170px; }
+      .orbit-2{ width:245px; height:245px; }
+      .orbit-3{ width:320px; height:320px; }
+      h1{ font-size:30px; }
+    }
+
+    @media (max-width:560px){
+      .galaxy-card{ min-height:300px; }
+      .galaxy-zone{ height:300px; }
+      .orbit-1{ width:150px; height:150px; }
+      .orbit-2{ width:220px; height:220px; }
+      .orbit-3{ width:280px; height:280px; }
+      .flag{ width:24px; height:24px; }
+      h1{ font-size:28px; }
+      .uid-value{ font-size:18px; }
+    }
   </style>
 </head>
 <body>
-
-  <div class="universe">
-    <div class="earth-core">italky</div>
-    
-    <div class="orbit-container">
-      <div class="orbit o1">
-        <div class="rotator rot1">
-          <img src="https://flagcdn.com/w80/tr.png" class="flag" style="top:-14px; left:50%; margin-left:-14px;">
-          <img src="https://flagcdn.com/w80/us.png" class="flag" style="bottom:-14px; left:50%; margin-left:-14px;">
-          <img src="https://flagcdn.com/w80/gb.png" class="flag" style="left:-14px; top:50%; margin-top:-14px;">
-          <img src="https://flagcdn.com/w80/de.png" class="flag" style="right:-14px; top:50%; margin-top:-14px;">
-        </div>
-      </div>
-
-      <div class="orbit o2">
-        <div class="rotator rot2">
-          <img src="https://flagcdn.com/w80/fr.png" class="flag" style="top:10%; left:15%;">
-          <img src="https://flagcdn.com/w80/es.png" class="flag" style="top:10%; right:15%;">
-          <img src="https://flagcdn.com/w80/it.png" class="flag" style="bottom:10%; left:15%;">
-          <img src="https://flagcdn.com/w80/ru.png" class="flag" style="bottom:10%; right:15%;">
-          <img src="https://flagcdn.com/w80/jp.png" class="flag" style="top:50%; right:-14px;">
-          <img src="https://flagcdn.com/w80/kr.png" class="flag" style="top:50%; left:-14px;">
-        </div>
-      </div>
-
-      <div class="orbit o3">
-        <div class="rotator rot3">
-          <img src="https://flagcdn.com/w80/cn.png" class="flag" style="top:-14px; left:50%;">
-          <img src="https://flagcdn.com/w80/sa.png" class="flag" style="bottom:-14px; left:50%;">
-          <img src="https://flagcdn.com/w80/br.png" class="flag" style="left:-14px; top:50%;">
-          <img src="https://flagcdn.com/w80/in.png" class="flag" style="right:-14px; top:50%;">
-          <img src="https://flagcdn.com/w80/nl.png" class="flag" style="top:15%; left:15%;">
-          <img src="https://flagcdn.com/w80/se.png" class="flag" style="top:15%; right:15%;">
-          <img src="https://flagcdn.com/w80/ca.png" class="flag" style="bottom:15%; left:15%;">
-          <img src="https://flagcdn.com/w80/pt.png" class="flag" style="bottom:15%; right:15%;">
-        </div>
-      </div>
-    </div>
+  <div class="nebula">
+    <div class="blob b1"></div>
+    <div class="blob b2"></div>
+    <div class="blob b3"></div>
+    <div class="stars"></div>
   </div>
 
-  <main class="overlay">
-    <div class="access-card">
-      <h2 style="font-size: 26px; margin-bottom: 4px;">Premium Erişim</h2>
-      <p id="uidLabel" style="color: var(--cyan); font-weight: 800; font-size: 14px; margin-bottom: 12px;">ID: BEKLEMEDE</p>
-      <p style="color: var(--muted); font-size: 13px; line-height: 1.4;">
-        67 Dilin yörüngesine hoş geldin. <br>Eğlenerek öğrenmeye hemen başla!
-      </p>
-      <button onclick="handleAccess()" class="btn-premium">UYGULAMAYI BAŞLAT</button>
+  <main id="page">
+    <div class="stack">
+
+      <section class="hero glass">
+        <div class="hero-top">
+          <a class="back-btn" href="/pages/home.html">← Geri</a>
+          <div class="hero-pill">ERİŞİM KARTI</div>
+        </div>
+
+        <div class="galaxy-card">
+          <div class="galaxy-zone">
+            <div class="planet-core">
+              <span class="planet-text">italky<span class="ai">AI</span></span>
+            </div>
+
+            <div class="orbit orbit-1">
+              <img src="https://flagcdn.com/w80/tr.png" class="flag" style="top:-14px; left:50%; transform:translateX(-50%);" alt="TR">
+              <img src="https://flagcdn.com/w80/us.png" class="flag" style="bottom:-14px; left:50%; transform:translateX(-50%);" alt="US">
+              <img src="https://flagcdn.com/w80/gb.png" class="flag" style="left:-14px; top:50%; transform:translateY(-50%);" alt="GB">
+              <img src="https://flagcdn.com/w80/de.png" class="flag" style="right:-14px; top:50%; transform:translateY(-50%);" alt="DE">
+            </div>
+
+            <div class="orbit orbit-2">
+              <img src="https://flagcdn.com/w80/fr.png" class="flag" style="top:12px; left:18px;" alt="FR">
+              <img src="https://flagcdn.com/w80/es.png" class="flag" style="top:12px; right:18px;" alt="ES">
+              <img src="https://flagcdn.com/w80/it.png" class="flag" style="bottom:12px; left:18px;" alt="IT">
+              <img src="https://flagcdn.com/w80/ru.png" class="flag" style="bottom:12px; right:18px;" alt="RU">
+              <img src="https://flagcdn.com/w80/jp.png" class="flag" style="left:-14px; top:50%; transform:translateY(-50%);" alt="JP">
+              <img src="https://flagcdn.com/w80/kr.png" class="flag" style="right:-14px; top:50%; transform:translateY(-50%);" alt="KR">
+            </div>
+
+            <div class="orbit orbit-3">
+              <img src="https://flagcdn.com/w80/cn.png" class="flag" style="top:-14px; left:50%; transform:translateX(-50%);" alt="CN">
+              <img src="https://flagcdn.com/w80/sa.png" class="flag" style="bottom:-14px; left:50%; transform:translateX(-50%);" alt="SA">
+              <img src="https://flagcdn.com/w80/br.png" class="flag" style="left:-14px; top:50%; transform:translateY(-50%);" alt="BR">
+              <img src="https://flagcdn.com/w80/in.png" class="flag" style="right:-14px; top:50%; transform:translateY(-50%);" alt="IN">
+              <img src="https://flagcdn.com/w80/nl.png" class="flag" style="top:14%; left:14%;" alt="NL">
+              <img src="https://flagcdn.com/w80/se.png" class="flag" style="top:14%; right:14%;" alt="SE">
+              <img src="https://flagcdn.com/w80/ca.png" class="flag" style="bottom:14%; left:14%;" alt="CA">
+              <img src="https://flagcdn.com/w80/pt.png" class="flag" style="bottom:14%; right:14%;" alt="PT">
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-content">
+          <div class="motto-tag">italkyAI • BE FREE</div>
+          <h1>Erişim <span class="grad">Kartın</span><br>Hazır.</h1>
+          <p class="sub">
+            QR ile buraya gelen kullanıcı uygulamayı direkt açar. Uygulama yüklü değilse mağazaya yönlenir.
+          </p>
+        </div>
+      </section>
+
+      <section class="access-card glass">
+        <div class="uid-box">
+          <div class="uid-label">Kart UID</div>
+          <div id="uidValue" class="uid-value">BEKLENİYOR</div>
+        </div>
+
+        <div id="statusBox" class="status warn">Kart bilgisi okunuyor...</div>
+
+        <div class="cta-stack">
+          <button id="openAppBtn" class="btn btn-primary" type="button">Uygulamayı Aç</button>
+          <a id="playBtn" class="btn btn-secondary" href="https://play.google.com/store/apps/details?id=com.ozyigits.italkyai">Google Play</a>
+        </div>
+
+        <div class="foot-note">
+          NFC için karta bunu yaz: <br>
+          <b>italky://nfc?uid=KART_UID</b><br><br>
+          QR için bunu kullan: <br>
+          <b>/pages/access.html?uid=KART_UID</b>
+        </div>
+      </section>
+
     </div>
   </main>
 
   <script type="module">
     import { mountShell } from "/js/ui_shell.js";
-    try { mountShell({ scroll: "no", title: "italkyAI Premium" }); } catch(e) {}
 
-    function handleAccess() {
-      const uid = new URLSearchParams(window.location.search).get("uid") || "italky-guest";
-      location.href = `italky://join?uid=${uid}`;
-      setTimeout(() => { if (document.visibilityState === "visible") location.href = "https://play.google.com/store/apps/details?id=com.ozyigits.italkyai"; }, 2000);
+    try{
+      mountShell({ scroll: "auto" });
+      setTimeout(() => {
+        try{
+          const root = getComputedStyle(document.documentElement);
+          const footerH = parseFloat(root.getPropertyValue("--footerH")) || 0;
+          document.documentElement.style.setProperty("--shellLift", footerH ? `${footerH + 16}px` : "0px");
+        }catch(e){}
+      }, 80);
+    }catch(e){
+      console.warn("ui_shell yüklenemedi:", e);
     }
+
+    const uidValue = document.getElementById("uidValue");
+    const statusBox = document.getElementById("statusBox");
+    const openAppBtn = document.getElementById("openAppBtn");
+    const playBtn = document.getElementById("playBtn");
+
+    const PLAY_URL = "https://play.google.com/store/apps/details?id=com.ozyigits.italkyai";
+
+    function setStatus(text, type = "warn"){
+      statusBox.className = `status ${type}`;
+      statusBox.textContent = text || "";
+    }
+
+    function getUid(){
+      const params = new URLSearchParams(window.location.search);
+      return String(params.get("uid") || "").trim().toUpperCase();
+    }
+
+    function getAppUrl(uid){
+      return `italky://nfc?uid=${encodeURIComponent(uid)}`;
+    }
+
+    function openApp(uid){
+      const appUrl = getAppUrl(uid);
+      let fallbackWorked = false;
+
+      window.location.href = appUrl;
+
+      setTimeout(() => {
+        if (document.visibilityState === "visible" && !fallbackWorked) {
+          fallbackWorked = true;
+          window.location.href = PLAY_URL;
+        }
+      }, 1600);
+    }
+
+    const uid = getUid();
+
+    if(!uid){
+      uidValue.textContent = "UID YOK";
+      setStatus("Link içinde UID bulunamadı.", "err");
+      openAppBtn.disabled = true;
+      openAppBtn.style.opacity = ".6";
+    } else {
+      uidValue.textContent = uid;
+      setStatus("UID hazır. Uygulamayı açabilirsin.", "ok");
+      openAppBtn.addEventListener("click", () => openApp(uid));
+    }
+
+    playBtn.href = PLAY_URL;
   </script>
 </body>
 </html>
