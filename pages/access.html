@@ -3,154 +3,171 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
-  <title>italkyAI • Global Access</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+  <title>italkyAI • Deep Universe Access</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #05070a;
-      --txt: #f8fbff;
-      --muted: rgba(255, 255, 255, 0.6);
-      --line: rgba(255, 255, 255, 0.1);
+      --bg: #020408;
       --italky-cyan: #67e8f9;
       --italky-pink: #f472b6;
       --italky-indigo: #818cf8;
-      --grad: linear-gradient(135deg, var(--italky-cyan) 0%, var(--italky-indigo) 46%, var(--italky-pink) 100%);
+      --grad: linear-gradient(135deg, var(--italky-cyan), var(--italky-indigo), var(--italky-pink));
     }
 
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    html, body { margin: 0; width: 100%; height: 100%; background: var(--bg); color: var(--txt); font-family: 'Outfit', sans-serif; overflow: hidden; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body, html { height: 100%; width: 100%; background: var(--bg); color: #fff; font-family: 'Outfit', sans-serif; overflow: hidden; }
 
-    /* Galaksi Arkaplanı */
-    body {
+    /* --- GALAXY ENGINE --- */
+    .universe {
+      position: fixed; inset: 0;
       display: flex; align-items: center; justify-content: center;
-      background: radial-gradient(circle at center, #111827 0%, #05070a 100%);
+      perspective: 1500px; z-index: 1;
+      background: radial-gradient(circle at center, #0a0f1d 0%, #020408 100%);
     }
 
-    /* --- Yörünge Animasyonu (Görsel Katman) --- */
-    .galaxy-bg {
-      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 0; opacity: 0.4;
+    .solar-system {
+      position: relative;
+      width: 100%; height: 100%;
+      transform-style: preserve-3d;
+      transform: rotateX(65deg); /* Yörüngelere derinlik açısı verir */
     }
-    .orbit { position: absolute; border: 1px solid rgba(255,255,255,0.05); border-radius: 50%; animation: rotateCW 30s linear infinite; }
-    .orbit-1 { width: 300px; height: 300px; }
-    .orbit-2 { width: 500px; height: 500px; animation-duration: 50s; animation-direction: reverse; }
-    .dot { position: absolute; width: 4px; height: 4px; background: #fff; border-radius: 50%; box-shadow: 0 0 10px #fff; }
 
-    /* --- Kart Tasarımı --- */
-    .wrap { width: min(92%, 420px); position: relative; z-index: 10; }
-    .card {
-      border-radius: 32px; padding: 32px 24px;
-      background: rgba(15, 18, 28, 0.8);
-      border: 1px solid var(--line);
-      backdrop-filter: blur(25px);
-      box-shadow: 0 40px 100px rgba(0,0,0,0.6);
+    /* Merkezdeki Dünya/Çekirdek */
+    .sun-core {
+      position: absolute; top: 50%; left: 50%;
+      width: 100px; height: 100px;
+      margin: -50px;
+      background: var(--grad);
+      border-radius: 50%;
+      box-shadow: 0 0 100px var(--italky-cyan);
+      transform: rotateX(-65deg); /* Logoyu düz tutar */
+      display: flex; align-items: center; justify-content: center;
+      z-index: 100;
+      animation: coreGlow 3s infinite alternate;
+    }
+    .sun-core b { font-family: 'Space Grotesk'; font-size: 18px; color: #000; text-transform: uppercase; }
+
+    /* Yörünge Tasarımları */
+    .orbit {
+      position: absolute; top: 50%; left: 50%;
+      border: 1.5px solid rgba(103, 232, 249, 0.15);
+      border-radius: 50%;
+      transform-style: preserve-3d;
+    }
+
+    /* Bayraklar ve Gezegenler */
+    .planet {
+      position: absolute;
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      border: 2px solid #fff;
+      background-size: cover;
+      transform: rotateX(-65deg); /* Bayrakları dik tutar */
+      box-shadow: 0 0 15px rgba(255,255,255,0.4);
+    }
+
+    /* 1. Yörünge */
+    .orbit-1 { width: 280px; height: 280px; margin: -140px; animation: orbitSpin 12s linear infinite; }
+    /* 2. Yörünge */
+    .orbit-2 { width: 460px; height: 460px; margin: -230px; animation: orbitSpin 25s linear infinite reverse; }
+    /* 3. Yörünge */
+    .orbit-3 { width: 650px; height: 650px; margin: -325px; animation: orbitSpin 45s linear infinite; }
+
+    /* --- UI OVERLAY --- */
+    .ui-layer {
+      position: relative; z-index: 10;
+      height: 100%; width: 100%;
+      display: flex; flex-direction: column; justify-content: flex-end;
+      padding: 40px 24px;
+      pointer-events: none;
+    }
+
+    .access-card {
+      background: rgba(10, 15, 25, 0.7);
+      backdrop-filter: blur(30px);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 35px;
+      padding: 30px;
       text-align: center;
+      pointer-events: auto;
+      box-shadow: 0 -20px 50px rgba(0,0,0,0.5);
     }
 
-    .logo-orb {
-      width: 80px; height: 80px; margin: 0 auto 15px;
-      background: var(--grad); border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 0 40px rgba(103, 232, 249, 0.3);
-      animation: pulse 2s infinite;
-    }
-    .logo-orb b { font-family: 'Space Grotesk'; font-size: 20px; color: #000; }
-
-    h1 { font-size: 28px; font-weight: 900; margin: 10px 0; letter-spacing: -1px; }
-    .uid-tag { 
-      font-family: 'Space Grotesk'; font-size: 13px; color: var(--italky-cyan); 
-      background: rgba(103, 232, 249, 0.1); padding: 6px 16px; border-radius: 99px; display: inline-block; margin-bottom: 20px;
+    .btn-ultra {
+      width: 100%; padding: 22px; margin-top: 20px;
+      border: none; border-radius: 22px;
+      background: var(--grad); color: #fff;
+      font-size: 18px; font-weight: 900; letter-spacing: 1px;
+      cursor: pointer; box-shadow: 0 15px 40px rgba(103, 232, 249, 0.3);
     }
 
-    .btn {
-      width: 100%; padding: 18px; border: none; border-radius: 20px;
-      font-size: 16px; font-weight: 900; cursor: pointer; transition: 0.2s;
+    /* --- ANIMATIONS --- */
+    @keyframes orbitSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    @keyframes coreGlow { 
+      0% { box-shadow: 0 0 50px var(--italky-cyan); transform: rotateX(-65deg) scale(1); }
+      100% { box-shadow: 0 0 120px var(--italky-pink); transform: rotateX(-65deg) scale(1.1); }
     }
-    .btn-main { background: var(--grad); color: #fff; box-shadow: 0 15px 30px rgba(129,140,248,0.25); margin-bottom: 12px; }
-    .btn-sec { background: rgba(255,255,255,0.05); border: 1px solid var(--line); color: var(--txt); }
-    .btn:active { transform: scale(0.97); }
 
-    .status { font-size: 13px; font-weight: 700; margin-top: 15px; min-height: 20px; }
-    .ok { color: #22c55e; } .err { color: #ef4444; }
-
-    /* Animasyonlar */
-    @keyframes rotateCW { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-    @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
   </style>
 </head>
 <body>
 
-  <div class="galaxy-bg">
-    <div class="orbit orbit-1"><div class="dot" style="top:0; left:50%;"></div></div>
-    <div class="orbit orbit-2"><div class="dot" style="bottom:0; right:50%;"></div></div>
+  <div class="universe">
+    <div class="solar-system">
+      
+      <div class="sun-core"><b>italky</b></div>
+
+      <div class="orbit orbit-1">
+        <div class="planet" style="top: 0; left: 50%; background-image: url('https://flagcdn.com/w80/tr.png');"></div>
+        <div class="planet" style="bottom: 0; left: 50%; background-image: url('https://flagcdn.com/w80/us.png');"></div>
+      </div>
+
+      <div class="orbit orbit-2">
+        <div class="planet" style="top: 15%; left: 15%; background-image: url('https://flagcdn.com/w80/de.png');"></div>
+        <div class="planet" style="top: 15%; right: 15%; background-image: url('https://flagcdn.com/w80/fr.png');"></div>
+        <div class="planet" style="bottom: 50%; right: -15px; background-image: url('https://flagcdn.com/w80/it.png');"></div>
+      </div>
+
+      <div class="orbit orbit-3">
+        <div class="planet" style="top: 0; left: 50%; background-image: url('https://flagcdn.com/w80/jp.png');"></div>
+        <div class="planet" style="bottom: 20%; left: 10%; background-image: url('https://flagcdn.com/w80/es.png');"></div>
+        <div class="planet" style="bottom: 20%; right: 10%; background-image: url('https://flagcdn.com/w80/ru.png');"></div>
+      </div>
+
+    </div>
   </div>
 
-  <main class="wrap">
-    <div class="card">
-      <div class="logo-orb"><b>italky</b></div>
-      <h1>Erişim Kartı</h1>
-      <div id="uidBox" class="uid-tag">UID: BEKLEYİN...</div>
-      
-      <p style="font-size: 14px; color: var(--muted); margin-bottom: 25px;">
-        italkyAI Premium dünyasına hoş geldiniz. Uygulamayı açarak hesabınızı hemen aktif edin.
+  <main class="ui-layer">
+    <div class="access-card">
+      <h2 style="font-size: 28px; margin-bottom: 8px;">italkyAI Premium</h2>
+      <p id="uidLabel" style="color: var(--italky-cyan); font-weight: 800; margin-bottom: 15px;">UID: KART OKUTULDU</p>
+      <p style="color: rgba(255,255,255,0.5); font-size: 14px;">
+        Dünya dilleri yörüngende dönmeye başladı. <br>Hemen giriş yap ve tüm sınırlardan kurtul.
       </p>
-
-      <div id="status" class="status">Kontrol ediliyor...</div>
-
-      <button id="openAppBtn" class="btn btn-main">UYGULAMAYI AÇ</button>
-      <button id="playBtn" class="btn btn-sec">GOOGLE PLAY'E GİT</button>
       
-      <div style="font-size: 11px; margin-top: 20px; color: rgba(255,255,255,0.3);">
-        italkyAI • By Ozyigit's • 2026
+      <button onclick="handleAccess()" class="btn-ultra">UYGULAMAYI BAŞLAT</button>
+      
+      <div style="margin-top: 15px; font-size: 11px; color: rgba(255,255,255,0.3);">
+        By Ozyigit's • Eğlenerek Öğren!
       </div>
     </div>
   </main>
 
   <script>
-    const PLAY_URL = "https://play.google.com/store/apps/details?id=com.ozyigits.italkyai";
-    const statusEl = document.getElementById("status");
-    const uidBox = document.getElementById("uidBox");
-
     function getUid() {
-      const qs = new URLSearchParams(location.search);
-      return (qs.get("uid") || "").trim().toUpperCase().replace(/:/g, "");
+      return new URLSearchParams(window.location.search).get("uid") || "TEST-MODE";
     }
 
-    function openApp() {
+    document.getElementById("uidLabel").textContent = "ID: " + getUid();
+
+    function handleAccess() {
       const uid = getUid();
-      if(!uid) {
-        statusEl.textContent = "Hata: UID Eksik!";
-        statusEl.className = "status err";
-        return;
-      }
-
-      const deep = `italky://join?uid=${encodeURIComponent(uid)}&source=access`;
-      statusEl.textContent = "Uygulama Aranıyor...";
-      statusEl.className = "status";
-
-      let timeout = setTimeout(() => {
-        if (document.visibilityState === "visible") {
-          statusEl.textContent = "Yönlendiriliyor...";
-          location.href = PLAY_URL;
-        }
-      }, 2000);
-
-      window.addEventListener("visibilitychange", () => {
-        if (document.visibilityState === "hidden") clearTimeout(timeout);
-      });
-
-      location.href = deep;
+      const deepLink = `italky://join?uid=${uid}`;
+      const playStore = "https://play.google.com/store/apps/details?id=com.ozyigits.italkyai";
+      
+      location.href = deepLink;
+      setTimeout(() => { if (document.visibilityState === "visible") location.href = playStore; }, 2000);
     }
-
-    // Init
-    const uid = getUid();
-    uidBox.textContent = uid ? `ID: ${uid}` : "GEÇERSİZ KART";
-    statusEl.textContent = uid ? "Bağlantı Hazır" : "Lütfen kartı tekrar okutun";
-    statusEl.className = uid ? "status ok" : "status err";
-
-    document.getElementById("openAppBtn").onclick = openApp;
-    document.getElementById("playBtn").onclick = () => location.href = PLAY_URL;
   </script>
 </body>
 </html>
