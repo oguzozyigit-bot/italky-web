@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
-  <title>italkyAI • Eğlenerek Öğren!</title>
+  <title>italkyAI • Global Premium</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
@@ -11,89 +11,118 @@
     :root {
       --bg: #090b14;
       --txt: #f8fbff;
-      --muted: rgba(255, 255, 255, 0.65);
-      --line: rgba(255, 255, 255, 0.1);
-      /* italkyAI Enerjik Renk Paleti */
+      --muted: rgba(255, 255, 255, 0.60);
       --italky-cyan: #67e8f9;
       --italky-pink: #f472b6;
       --italky-indigo: #818cf8;
       --grad: linear-gradient(135deg, var(--italky-cyan) 0%, var(--italky-indigo) 46%, var(--italky-pink) 100%);
-      --gold-btn: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
     }
 
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     html, body { margin: 0; width: 100%; min-height: 100%; background: var(--bg); color: var(--txt); font-family: 'Outfit', sans-serif; }
 
-    body {
-      background: 
-        radial-gradient(circle at 10% 10%, rgba(103, 232, 249, 0.12), transparent 30%),
-        radial-gradient(circle at 90% 90%, rgba(244, 114, 182, 0.12), transparent 30%),
-        #090b14;
+    /* UI Shell için Güvenli Alanlar */
+    #page { 
+      padding: 80px 16px 100px 16px; /* Üst bar (80px) ve Alt bar (100px) için yer bırakıldı */
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
 
-    #page { padding: 16px; padding-bottom: 40px; }
-    .wrap { max-width: 500px; margin: 0 auto; display: grid; gap: 16px; }
+    .wrap { max-width: 480px; width: 100%; display: grid; gap: 24px; }
 
-    .glass {
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid var(--line);
+    /* --- ULTRA VISUAL: ANIMATED CORE --- */
+    .ultra-visual {
+      position: relative;
+      height: 280px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .core-orb {
+      width: 120px;
+      height: 120px;
+      background: var(--grad);
+      border-radius: 50%;
+      position: relative;
+      z-index: 5;
+      box-shadow: 0 0 60px rgba(103, 232, 249, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 24px;
+      font-weight: 700;
+      color: #fff;
+      animation: orbitPulse 3s infinite ease-in-out;
+    }
+
+    /* NFC ve Radyal Dalgalar */
+    .wave {
+      position: absolute;
+      border: 2px solid var(--italky-cyan);
+      border-radius: 50%;
+      opacity: 0;
+      animation: waveOut 4s infinite linear;
+    }
+    .wave:nth-child(2) { animation-delay: 1s; border-color: var(--italky-indigo); }
+    .wave:nth-child(3) { animation-delay: 2s; border-color: var(--italky-pink); }
+
+    /* --- PREMIUM CARD --- */
+    .premium-card {
+      background: rgba(255, 255, 255, 0.05);
       backdrop-filter: blur(20px);
-      border-radius: 28px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 32px;
+      padding: 30px 24px;
+      text-align: center;
     }
 
-    /* --- Eğlenceli Başlık Alanı --- */
-    .hero-card { padding: 30px 20px; text-align: center; position: relative; overflow: hidden; }
-    
-    .floating-icons { position: absolute; inset: 0; pointer-events: none; opacity: 0.3; }
-    .f-icon { position: absolute; font-size: 24px; animation: floatIcon 6s infinite ease-in-out; }
-
-    .hero-card h1 { 
-      font-size: 34px; font-weight: 900; line-height: 1.1; margin: 15px 0;
-      background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    .badge {
+      background: rgba(103, 232, 249, 0.15);
+      color: var(--italky-cyan);
+      padding: 6px 14px;
+      border-radius: 99px;
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
     }
 
-    .motto { 
-      display: inline-block; padding: 6px 16px; background: rgba(103, 232, 249, 0.1); 
-      border: 1px solid var(--italky-cyan); color: var(--italky-cyan);
-      border-radius: 99px; font-size: 12px; font-weight: 800; letter-spacing: 1px;
+    h1 { font-size: 32px; font-weight: 900; margin: 20px 0 10px; line-height: 1.1; }
+
+    .price-tag {
+      font-size: 44px; font-weight: 900; margin: 20px 0;
+      background: linear-gradient(to bottom, #fff, #999);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     }
 
-    /* --- İnteraktif NFC Visual --- */
-    .nfc-visual {
-      height: 140px; display: flex; align-items: center; justify-content: center; margin: 10px 0;
-    }
-    .nfc-circle {
-      width: 100px; height: 100px; border-radius: 50%; background: #fff;
-      display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 0 30px rgba(103, 232, 249, 0.4);
-      position: relative; animation: pulse 2s infinite;
-    }
-    .nfc-circle svg { width: 50px; fill: #000; }
-
-    /* --- Özellikler --- */
-    .feature-grid { display: grid; gap: 10px; margin: 20px 0; }
-    .f-item {
-      padding: 16px; display: flex; align-items: center; gap: 15px;
-      transition: 0.3s; cursor: default;
-    }
-    .f-item:hover { background: rgba(255, 255, 255, 0.08); transform: translateX(5px); }
-    .f-icon-box { font-size: 22px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 14px; background: rgba(255,255,255,0.05); }
-
-    /* --- Fiyat & CTA --- */
-    .price-box { padding: 24px; text-align: center; background: rgba(255,255,255,0.02); }
-    .old-price { text-decoration: line-through; color: var(--muted); font-size: 16px; }
-    .current-price { font-size: 48px; font-weight: 900; display: block; margin: 5px 0; }
-    .current-price span { font-size: 20px; color: var(--italky-pink); }
-
-    .cta-button {
-      width: 100%; padding: 20px; border: none; border-radius: 20px;
-      background: var(--gold-btn); color: #fff; font-size: 18px; font-weight: 900;
-      box-shadow: 0 15px 35px rgba(249, 115, 22, 0.35); cursor: pointer;
+    .cta-btn {
+      width: 100%;
+      padding: 22px;
+      border-radius: 24px;
+      border: none;
+      background: linear-gradient(135deg, #f59e0b, #f97316);
+      color: #fff;
+      font-size: 18px;
+      font-weight: 900;
+      box-shadow: 0 15px 35px rgba(249, 115, 22, 0.3);
+      cursor: pointer;
     }
 
-    /* --- Animasyonlar --- */
-    @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
-    @keyframes floatIcon { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+    /* Animasyon Kodları */
+    @keyframes orbitPulse {
+      0%, 100% { transform: scale(1); filter: brightness(1); }
+      50% { transform: scale(1.1); filter: brightness(1.3); }
+    }
+
+    @keyframes waveOut {
+      0% { width: 120px; height: 120px; opacity: 0.8; }
+      100% { width: 350px; height: 350px; opacity: 0; border-width: 1px; }
+    }
+
   </style>
 </head>
 <body>
@@ -101,48 +130,27 @@
   <main id="page">
     <div class="wrap">
       
-      <section class="glass hero-card">
-        <div class="floating-icons">
-          <span class="f-icon" style="top:10%; left:10%;">🌍</span>
-          <span class="f-icon" style="top:20%; right:15%; animation-delay:1s;">🎮</span>
-          <span class="f-icon" style="bottom:20%; left:20%; animation-delay:2s;">🎙️</span>
-        </div>
+      <section class="ultra-visual">
+        <div class="wave"></div>
+        <div class="wave"></div>
+        <div class="wave"></div>
+        <div class="core-orb">itAI</div>
+      </section>
 
-        <div class="motto">italkyAI • EĞLENEREK ÖĞREN!</div>
-        <h1>Sınırları Kaldır,<br>Dünyayı Cebine Sığdır!</h1>
-        
-        <div class="nfc-visual">
-          <div class="nfc-circle">
-            <svg viewBox="0 0 24 24"><path d="M20,2H4C2.9,2,2,2.9,2,4v16c0,1.1,0.9,2,2,2h16c1.1,0,2-0.9,2-2V4C22,2.9,21.1,2,20,2z M14.99,15.5l-2.43-2.43 c-0.12-0.12-0.29-0.19-0.47-0.19s-0.34,0.07-0.47,0.19l-2.43,2.43c-0.26,0.26-0.68,0.26-0.94,0s-0.26-0.68,0-0.94l2.43-2.43 c0.12-0.12,0.19-0.29,0.19-0.47s-0.07-0.34-0.19-0.47l-2.43-2.43c-0.26-0.26-0.26-0.68,0-0.94s0.68-0.26,0.94,0l2.43,2.43 c0.12,0.12,0.29,0.19,0.47,0.19s0.34-0.07,0.47-0.19l2.43-2.43c0.26-0.26,0.68-0.26,0.94,0s0.26,0.68,0,0.94l-2.43,2.43 c-0.12,0.12-0.19,0.29-0.19,0.47s0.07,0.34,0.19,0.47l2.43,2.43c0.26,0.26,0.26,0.68,0,0.94S15.25,15.76,14.99,15.5z"/></svg>
-          </div>
-        </div>
-        
-        <p style="color:var(--muted); font-size: 14px; padding: 0 20px;">
-          Premium Üyelik ile Text kilitlerini aç, Offline dünyasına dal ve 100 jeton hediyenle hemen başla!
+      <section class="premium-card">
+        <span class="badge">Eğlenerek Öğren</span>
+        <h1>Dünya Cebinde,<br>Sınırlar Geride.</h1>
+        <p style="color: var(--muted); font-size: 14px;">
+          Premium ile Text sınırlarını kaldır, 67 offline dili cebine indir ve her an her yerde konuşmaya başla!
         </p>
-      </section>
 
-      <section class="feature-grid">
-        <div class="glass f-item">
-          <div class="f-icon-box">🚀</div>
-          <div class="f-body"><b>Sınırsız Modül Erişimi</b><p style="margin:0; font-size:12px; color:var(--muted);">FaceToFace, SideToSide ve Oyunlar açık.</p></div>
-        </div>
-        <div class="glass f-item">
-          <div class="f-icon-box">✈️</div>
-          <div class="f-body"><b>67 Çevrimdışı Dil</b><p style="margin:0; font-size:12px; color:var(--muted);">Uçakta, metroda, internet yokken bile seninle.</p></div>
-        </div>
-        <div class="glass f-item">
-          <div class="f-icon-box">💎</div>
-          <div class="f-body"><b>100 Hediye Jeton</b><p style="margin:0; font-size:12px; color:var(--muted);">Gelişmiş AI özellikleri için cüzdanın dolu başla.</p></div>
-        </div>
-      </section>
+        <div class="price-tag">499 TL <span style="font-size: 16px; vertical-align: middle;">/ Sınırsız</span></div>
 
-      <section class="glass price-box">
-        <span class="old-price">999 TL Yerine</span>
-        <strong class="current-price">499 <span>TL</span></strong>
-        <p style="font-size:11px; color:var(--muted); margin-bottom: 20px;">* Tek seferlik ödeme, süresiz kullanım!</p>
+        <button id="buyBtn" class="cta-btn">HEMEN PREMIUM OL</button>
         
-        <button id="buyPremiumBtn" class="cta-button">PREMIUM'A GEÇ</button>
+        <p style="font-size: 11px; margin-top: 15px; color: rgba(255,255,255,0.4);">
+          * Play Store üzerinden tek seferlik ödeme. 100 Jeton hediyen seni bekliyor.
+        </p>
       </section>
 
     </div>
@@ -150,20 +158,20 @@
 
   <script type="module">
     import { mountShell } from "/js/ui_shell.js";
+    
+    // UI Shell'i başlat (Barlar otomatik gelir)
     try {
-      mountShell({ 
+      mountShell({
         scroll: "auto",
-        title: "italkyAI Premium",
-        theme: "dark"
+        activeTab: "premium",
+        title: "italkyAI Premium"
       });
-    } catch(e) {
-      console.warn("ui_shell entegrasyonu sağlandı.");
-    }
+    } catch(e) { console.error("Shell error", e); }
 
-    document.getElementById("buyPremiumBtn").addEventListener("click", () => {
-      // Android tarafında In-App Purchase tetikleme kodu buraya gelecek
-      alert("italkyAI Premium Satın Alma Akışı Başlıyor...");
+    document.getElementById("buyBtn").addEventListener("click", () => {
+      alert("italkyAI Premium Ödeme Sayfasına Yönlendiriliyorsunuz...");
     });
   </script>
+
 </body>
 </html>
