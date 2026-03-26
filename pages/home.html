@@ -20,6 +20,11 @@
   --cyan:#67e8f9;
 }
 
+/* ACCESS GATE GİZLEME CSS */
+.is-hidden-by-access {
+  display: none !important;
+}
+
 *{
   box-sizing:border-box;
   -webkit-tap-highlight-color:transparent;
@@ -903,6 +908,7 @@ body{
 <body>
 
 <script>
+// BASIT LOGIN KONTROLÜ (İLERİDE SUPABASE SESSION'A ÇEKİLECEK)
 const userId = localStorage.getItem("user_id");
 if(!userId){
   location.href = "/pages/first_login.html";
@@ -912,7 +918,7 @@ if(!userId){
 <main id="pageContent">
   <div class="page-shell-fit">
 
-    <section class="hero">
+    <section class="hero" id="heroSection">
       <div class="heroTop">
         <div class="holo-container">
           <div class="crystal-cage">
@@ -950,17 +956,36 @@ if(!userId){
         </div>
 
         <h1 class="heroTitle">Ear<span class="to">TO</span>Ear</h1>
-        <p class="heroSub">Bağlantı kodunu paylaş.Karşı taraf Bağlantı Kodunu girsin, dil bariyerleri kalksın.Karşı taraf Bağlantı Kodunu girince girince sohbet otomatik başlar.Sen sadece bekle.</p>
+        <p class="heroSub">Bağlantı kodunu paylaş. Karşı taraf Bağlantı Kodunu girsin, dil bariyerleri kalksın. Karşı taraf Bağlantı Kodunu girince sohbet otomatik başlar. Sen sadece bekle.</p>
         <div class="heroStatus" id="heroStatus">Oda hazırlanıyor...</div>
 
         <div class="heroActions">
-          <button class="heroBtn heroBtnWide" type="button" onclick="openCodePrompt()">🔢Karşı Tarafın Bağlantı Kodunu Gir</button>
+          <button id="goSideToSide" class="heroBtn heroBtnWide" type="button" onclick="openCodePrompt()">🔢Karşı Tarafın Bağlantı Kodunu Gir</button>
+        </div>
+        
+        <div id="nfcUpgradeBox" style="display:none; width:100%; max-width:320px; margin:8px auto 0;">
+          <a href="/pages/upgrade_pack.html" style="
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            min-height:48px;
+            border-radius:16px;
+            text-decoration:none;
+            font-weight:900;
+            font-size:14px;
+            color:#fff;
+            background:linear-gradient(135deg,#f59e0b 0%, #f97316 100%);
+            border:1px solid rgba(255,255,255,.14);
+            box-shadow:0 12px 24px rgba(249,115,22,.22);
+          ">
+            Paketini Yükselt
+          </a>
         </div>
       </div>
     </section>
 
     <section class="home-grid">
-      <a class="mod-card face-card" href="/pages/facetoface_entry.html">
+      <a id="faceCard" class="mod-card face-card" href="/pages/facetoface_entry.html">
         <h2 class="card-title">FaceToFace</h2>
 
         <div class="card-desc-list">
@@ -979,7 +1004,7 @@ if(!userId){
         </div>
       </a>
 
-      <a class="mod-card offline-grid-card" href="/pages/offline_languages.html">
+      <a id="offlineCard" class="mod-card offline-grid-card" href="/pages/offline_languages.html">
         <h2 class="card-title">Offline Translate</h2>
 
         <div class="card-desc-list">
@@ -998,7 +1023,7 @@ if(!userId){
     </section>
 
     <section class="wide-stack">
-      <a class="wide-card texttotext-card" href="/pages/text_translate.html">
+      <a id="textCard" class="wide-card texttotext-card" href="/pages/text_translate.html">
         <div class="extra-ico">
           <div class="text-bubble"></div>
           <div class="text-doc">
@@ -1017,7 +1042,7 @@ if(!userId){
         <div class="arrow-chip"></div>
       </a>
 
-      <a class="wide-card fun-card" href="/pages/game_menu.html">
+      <a id="funCard" class="wide-card fun-card" href="/pages/game_menu.html">
         <div class="fun-ico">
           <div class="fun-dice"></div>
         </div>
@@ -1031,7 +1056,7 @@ if(!userId){
         <div class="arrow-chip"></div>
       </a>
 
-      <a class="wide-card level-card" href="/pages/level_required.html">
+      <a id="levelCard" class="wide-card level-card" href="/pages/level_required.html">
         <div class="level-ico">
           <div class="level-bars">
             <span></span><span></span><span></span>
@@ -1047,7 +1072,7 @@ if(!userId){
         <div class="arrow-chip"></div>
       </a>
 
-      <a class="wide-card practice-card" href="/pages/teacher_select.html">
+      <a id="practiceCard" class="wide-card practice-card" href="/pages/teacher_select.html">
         <div class="practice-ico">
           <div class="practice-chat"></div>
           <div class="practice-chat right"></div>
@@ -1068,7 +1093,6 @@ if(!userId){
 
 <script type="module">
 import { mountShell } from "/js/ui_shell.js";
-
 try {
   mountShell({ scroll: "auto" });
 } catch (e) {
@@ -1085,7 +1109,6 @@ window.openCodePrompt = openCodePrompt;
 
 <script type="module">
 const API_BASE = "https://italky-api.onrender.com/api";
-
 const heroStatus = document.getElementById("heroStatus");
 const connectionCodeText = document.getElementById("connectionCodeText");
 const copyConnectionCodeBtn = document.getElementById("copyConnectionCodeBtn");
@@ -1114,11 +1137,9 @@ function makeConnectionCode(length = 6){
 
 function setConnectionCode(code){
   activeRoomCode = String(code || "").trim().toUpperCase();
-
   if(connectionCodeText){
     connectionCodeText.textContent = activeRoomCode || "------";
   }
-
   try{
     localStorage.setItem(ROOM_CODE_KEY, activeRoomCode);
   }catch(e){
@@ -1128,7 +1149,6 @@ function setConnectionCode(code){
 
 async function createRoom(myLang = "tr"){
   const hostCode = makeConnectionCode(6);
-
   const r = await fetch(`${API_BASE}/interpreter/create-room`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -1138,14 +1158,10 @@ async function createRoom(myLang = "tr"){
       mode: "interpreter"
     })
   });
-
   const j = await r.json().catch(() => ({}));
-  console.log("[HOME create-room response]", j);
-
   if(!r.ok || !j?.room_id){
     throw new Error(j?.detail || j?.error || "Room oluşturulamadı");
   }
-
   return {
     ...j,
     host_code: String(j?.host_code || hostCode || "").trim().toUpperCase()
@@ -1156,13 +1172,10 @@ async function getRoomStatus(roomId){
   const r = await fetch(`${API_BASE}/interpreter/room/${encodeURIComponent(roomId)}`, {
     method: "GET"
   });
-
   const j = await r.json().catch(() => ({}));
-
   if(!r.ok || !j?.room_id){
     throw new Error(j?.detail || j?.error || "Room okunamadı");
   }
-
   return j;
 }
 
@@ -1182,26 +1195,17 @@ function launchHostRoom(roomId){
 
 function startRoomPolling(roomId){
   if(!roomId) return;
-
   stopRoomPolling();
-
   roomPollTimer = setInterval(async () => {
     if(redirected) return;
-
     try{
       const room = await getRoomStatus(roomId);
-      console.log("[HOME room poll]", room);
-
-      const peerConnected =
-        room?.status === "active" &&
-        !!String(room?.guest_lang || "").trim();
-
+      const peerConnected = room?.status === "active" && !!String(room?.guest_lang || "").trim();
       if(peerConnected){
         setHeroStatus("Karşı taraf bağlandı. Oda açılıyor...");
         launchHostRoom(roomId);
         return;
       }
-
       setHeroStatus("Bağlantı kodu hazır. Karşı taraf bekleniyor...");
     }catch(e){
       console.warn("[HOME room poll error]", e);
@@ -1213,32 +1217,15 @@ function startRoomPolling(roomId){
 async function prepareRoom(){
   redirected = false;
   stopRoomPolling();
-
   try{
     setHeroStatus("Oda hazırlanıyor...");
-
     const created = await createRoom("tr");
     activeRoomId = String(created.room_id || "").trim();
-
-    if(!activeRoomId){
-      throw new Error("room_id boş geldi");
-    }
-
+    if(!activeRoomId) throw new Error("room_id boş geldi");
     setConnectionCode(created.host_code || makeConnectionCode(6));
-
-    try{
-      localStorage.setItem(ROOM_KEY, activeRoomId);
-      localStorage.setItem(ROOM_LANG_KEY, "tr");
-      localStorage.setItem(ROOM_CODE_KEY, activeRoomCode);
-    }catch(e){
-      console.warn("[HOME localStorage save]", e);
-    }
-
-    console.log("[HOME room created]", {
-      roomId: activeRoomId,
-      code: activeRoomCode
-    });
-
+    localStorage.setItem(ROOM_KEY, activeRoomId);
+    localStorage.setItem(ROOM_LANG_KEY, "tr");
+    localStorage.setItem(ROOM_CODE_KEY, activeRoomCode);
     setHeroStatus("Bağlantı kodu hazır. Karşı taraf bekleniyor...");
     startRoomPolling(activeRoomId);
   }catch(e){
@@ -1251,7 +1238,6 @@ async function prepareRoom(){
 copyConnectionCodeBtn?.addEventListener("click", async () => {
   const value = String(activeRoomCode || "").trim();
   if(!value) return;
-
   try{
     await navigator.clipboard.writeText(value);
     setHeroStatus("Bağlantı kodu kopyalandı.");
@@ -1260,19 +1246,22 @@ copyConnectionCodeBtn?.addEventListener("click", async () => {
     temp.value = value;
     document.body.appendChild(temp);
     temp.select();
-    try{
-      document.execCommand("copy");
-    }catch(e){}
+    try{ document.execCommand("copy"); }catch(e){}
     temp.remove();
     setHeroStatus("Bağlantı kodu kopyalandı.");
   }
 });
 
 prepareRoom();
-
 window.addEventListener("beforeunload", () => {
   stopRoomPolling();
 });
 </script>
+
+<script type="module">
+  import { bootAccessGate } from "/js/access_gate.js";
+  bootAccessGate();
+</script>
+
 </body>
 </html>
