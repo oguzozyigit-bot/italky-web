@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
-  <title>italkyAI • Admin</title>
+  <title>italkyAI • Admin Panel</title>
   <meta name="theme-color" content="#0b0b12" />
   <style>
     :root{
@@ -12,9 +12,10 @@
       --line:rgba(255,255,255,.12);
       --txt:#fff;
       --muted:rgba(255,255,255,.68);
-      --grad:linear-gradient(135deg,#67e8f9 0%, #818cf8 46%, #f472b6 100%);
       --ok:#22c55e;
       --err:#ef4444;
+      --warn:#f59e0b;
+      --grad:linear-gradient(135deg,#67e8f9 0%, #818cf8 46%, #f472b6 100%);
     }
     *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
     html,body{
@@ -29,7 +30,7 @@
       font-family:Arial,sans-serif;
     }
     body{padding:16px}
-    .wrap{max-width:1100px;margin:0 auto}
+    .wrap{max-width:1200px;margin:0 auto}
     .card{
       background:var(--card);
       border:1px solid var(--line);
@@ -37,6 +38,7 @@
       padding:16px;
       margin-bottom:16px;
       backdrop-filter:blur(12px);
+      box-shadow:0 20px 50px rgba(0,0,0,.28);
     }
     h1,h2,h3{margin:0 0 12px}
     .muted{color:var(--muted)}
@@ -45,31 +47,39 @@
       grid-template-columns:1fr 1fr;
       gap:16px;
     }
-    .grid-3{
+    .grid3{
       display:grid;
       grid-template-columns:1fr 1fr 1fr;
-      gap:12px;
+      gap:16px;
     }
-    input,button,select{
+    input,select,textarea,button{
       width:100%;
       min-height:46px;
       border-radius:14px;
       border:1px solid var(--line);
       background:rgba(255,255,255,.06);
       color:#fff;
-      padding:0 14px;
+      padding:12px 14px;
       font-size:14px;
       margin-top:10px;
     }
+    textarea{
+      min-height:140px;
+      resize:vertical;
+      font-family:monospace;
+    }
     button{
       cursor:pointer;
-      background:var(--grad);
       border:none;
+      background:var(--grad);
       font-weight:800;
     }
-    .btn-dark{
+    button.secondary{
       background:rgba(255,255,255,.08);
       border:1px solid var(--line);
+    }
+    button.warn{
+      background:linear-gradient(135deg,#f59e0b 0%, #f97316 100%);
     }
     .status{
       min-height:22px;
@@ -79,10 +89,14 @@
     }
     .ok{color:var(--ok)}
     .err{color:var(--err)}
+    .warntext{color:var(--warn)}
+    .hidden{display:none !important}
     .row{
       display:flex;
       gap:10px;
       flex-wrap:wrap;
+      align-items:center;
+      justify-content:space-between;
     }
     .pill{
       display:inline-flex;
@@ -104,7 +118,7 @@
     table{
       width:100%;
       border-collapse:collapse;
-      min-width:900px;
+      min-width:980px;
     }
     th,td{
       padding:12px 10px;
@@ -114,86 +128,139 @@
       vertical-align:top;
     }
     th{color:var(--muted)}
-    .hidden{display:none!important}
-    @media (max-width:860px){
-      .grid,.grid-3{grid-template-columns:1fr}
+    .inline-actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    .inline-actions button,
+    .inline-actions select{
+      width:auto;
+      min-width:120px;
+      margin-top:0;
+    }
+    .disabled-box{
+      opacity:.7;
+      border:1px dashed rgba(255,255,255,.18);
+      border-radius:14px;
+      padding:12px;
+      margin-top:10px;
+    }
+    @media (max-width: 960px){
+      .grid,.grid3{grid-template-columns:1fr}
     }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="card" id="loginCard">
+    <div id="loginCard" class="card">
       <h1>Admin Girişi</h1>
-      <div class="muted">Sadece admin kullanıcılar girebilir.</div>
-      <input id="email" type="email" placeholder="Admin e-posta" />
-      <input id="password" type="password" placeholder="Şifre" />
+      <div class="muted">Sadece admin ve superadmin kullanıcılar içindir.</div>
+
+      <input id="email" type="email" placeholder="Admin e-posta" autocomplete="username" />
+      <input id="password" type="password" placeholder="Şifre" autocomplete="current-password" />
       <button id="loginBtn" type="button">Giriş Yap</button>
       <div id="loginStatus" class="status"></div>
     </div>
 
-    <div id="adminPanel" class="hidden">
+    <div id="panel" class="hidden">
       <div class="card">
-        <div class="row" style="justify-content:space-between;align-items:center;">
+        <div class="row">
           <div>
             <h2>Admin Panel</h2>
-            <div class="muted" id="adminInfo">Yükleniyor...</div>
+            <div id="meInfo" class="muted">Yükleniyor...</div>
           </div>
-          <div style="width:220px;">
-            <button id="logoutBtn" class="btn-dark" type="button">Güvenli Çıkış</button>
+          <div class="inline-actions">
+            <button id="refreshMeBtn" class="secondary" type="button">Bilgiyi Yenile</button>
+            <button id="logoutBtn" class="secondary" type="button">Güvenli Çıkış</button>
           </div>
         </div>
       </div>
 
       <div class="grid">
         <div class="card">
-          <h3>Kullanıcı Tanımlama</h3>
-          <input id="newEmail" type="email" placeholder="Yeni kullanıcı e-posta" />
-          <input id="newPassword" type="password" placeholder="Geçici şifre" />
-          <input id="newFullName" type="text" placeholder="Ad Soyad" />
-          <select id="newIsAdmin">
-            <option value="false">Normal Kullanıcı</option>
-            <option value="true">Admin Kullanıcı</option>
-          </select>
-          <button id="createUserBtn" type="button">Kullanıcı Oluştur</button>
-          <div id="createUserStatus" class="status"></div>
+          <h3>Kullanıcılar</h3>
+          <div class="muted">Sistemdeki son kullanıcıları listeler.</div>
+          <button id="loadUsersBtn" type="button">Kullanıcıları Getir</button>
+          <div id="usersStatus" class="status"></div>
+
+          <div class="table">
+            <table>
+              <thead>
+                <tr>
+                  <th>E-posta</th>
+                  <th>Ad Soyad</th>
+                  <th>Role</th>
+                  <th>Jeton</th>
+                  <th>Oluşturulma</th>
+                  <th>Son Giriş</th>
+                  <th>User ID</th>
+                  <th>İşlem</th>
+                </tr>
+              </thead>
+              <tbody id="usersBody"></tbody>
+            </table>
+          </div>
         </div>
 
         <div class="card">
-          <h3>Şifre Değiştir</h3>
-          <input id="targetUserId" type="text" placeholder="Hedef kullanıcı ID" />
-          <input id="targetNewPassword" type="password" placeholder="Yeni şifre" />
-          <button id="changePasswordBtn" type="button">Şifreyi Güncelle</button>
-          <div id="changePasswordStatus" class="status"></div>
+          <h3>Rol Güncelle</h3>
+          <div class="muted">Seçili kullanıcıya user / admin / superadmin rolü ver.</div>
+
+          <input id="roleUserId" type="text" placeholder="Kullanıcı ID" />
+          <select id="roleValue">
+            <option value="user">user</option>
+            <option value="admin">admin</option>
+            <option value="superadmin">superadmin</option>
+          </select>
+          <button id="setRoleBtn" type="button">Rolü Güncelle</button>
+          <div id="roleStatus" class="status"></div>
+
+          <div class="disabled-box">
+            <strong>Hazır değil:</strong>
+            <div class="muted" style="margin-top:6px;">
+              Kullanıcı oluşturma ve şifre değiştirme için backend endpoint’i henüz yok.
+              Sonraki adımda `admin.py` içine bunları ekleyip bu kutuyu aktif hale getireceğiz.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid3">
+        <div class="card">
+          <h3>Vercel Deploy</h3>
+          <div class="muted">Frontend deploy hook tetikler.</div>
+          <button id="vercelDeployBtn" class="warn" type="button">Vercel Deploy Başlat</button>
+          <div id="vercelStatus" class="status"></div>
+        </div>
+
+        <div class="card">
+          <h3>Render Deploy</h3>
+          <div class="muted">API servisi için yeni deploy başlatır.</div>
+          <button id="renderDeployBtn" class="warn" type="button">Render Deploy Başlat</button>
+          <div id="renderStatus" class="status"></div>
+        </div>
+
+        <div class="card">
+          <h3>NFC / Premium Notu</h3>
+          <div class="muted">
+            NFC kart tanımlama ekranını bu panele ekleyeceğiz.
+            Bunun için admin backend’e yeni endpoint yazacağız.
+          </div>
+          <div class="pill" style="margin-top:12px;">Sıradaki modül: NFC Tanımlama</div>
         </div>
       </div>
 
       <div class="card">
-        <div class="row" style="justify-content:space-between;align-items:center;">
-          <div>
-            <h3>Kullanıcılar</h3>
-            <div class="muted">Son kullanıcılar burada listelenir.</div>
-          </div>
-          <div style="width:220px;">
-            <button id="refreshUsersBtn" class="btn-dark" type="button">Listeyi Yenile</button>
-          </div>
-        </div>
-        <div class="table">
-          <table>
-            <thead>
-              <tr>
-                <th>E-posta</th>
-                <th>Ad Soyad</th>
-                <th>User ID</th>
-                <th>Rol</th>
-                <th>Mode</th>
-                <th>Jeton</th>
-                <th>Bloke</th>
-                <th>İşlem</th>
-              </tr>
-            </thead>
-            <tbody id="usersBody"></tbody>
-          </table>
-        </div>
+        <h3>GitHub Commit</h3>
+        <div class="muted">Dosya yoluna içerik gönderir, repo içine commit atar.</div>
+
+        <input id="ghPath" type="text" placeholder="Dosya yolu örn: pages/test.html" />
+        <input id="ghMessage" type="text" placeholder="Commit mesajı" />
+        <input id="ghBranch" type="text" placeholder="Branch" value="main" />
+        <textarea id="ghContent" placeholder="Dosya içeriği"></textarea>
+        <button id="ghCommitBtn" type="button">GitHub'a Commit At</button>
+        <div id="ghStatus" class="status"></div>
       </div>
     </div>
   </div>
@@ -201,215 +268,281 @@
   <script type="module">
     import { supabase } from "/js/supabase_client.js";
 
-    const API_BASE = "https://italky-api.onrender.com/api";
-
+    const API_BASE = "https://italky-api.onrender.com";
     const $ = (id) => document.getElementById(id);
 
     const loginCard = $("loginCard");
-    const adminPanel = $("adminPanel");
+    const panel = $("panel");
     const loginStatus = $("loginStatus");
-    const adminInfo = $("adminInfo");
+    const meInfo = $("meInfo");
     const usersBody = $("usersBody");
 
-    let adminUser = null;
+    let accessToken = "";
+    let me = null;
 
-    function setStatus(el, text, ok = false){
-      el.className = `status ${ok ? "ok" : "err"}`;
+    function setStatus(el, text, type = ""){
+      el.className = `status ${type}`.trim();
       el.textContent = text || "";
     }
 
-    async function requireAdminUI(){
-      const { data } = await supabase.auth.getUser();
-      const user = data?.user || null;
+    async function getAccessToken(){
+      const { data } = await supabase.auth.getSession();
+      const token = data?.session?.access_token || "";
+      accessToken = String(token || "").trim();
+      return accessToken;
+    }
 
-      if(!user){
-        loginCard.classList.remove("hidden");
-        adminPanel.classList.add("hidden");
-        return false;
-      }
-
-      const res = await fetch(`${API_BASE}/admin/me/${encodeURIComponent(user.id)}`);
-      const json = await res.json().catch(() => ({}));
-
-      if(!res.ok || !json?.ok){
-        await supabase.auth.signOut();
-        loginCard.classList.remove("hidden");
-        adminPanel.classList.add("hidden");
-        setStatus(loginStatus, "Bu hesap admin değil.");
-        return false;
-      }
-
-      adminUser = user;
-      loginCard.classList.add("hidden");
-      adminPanel.classList.remove("hidden");
-      adminInfo.textContent = `${json.user.email} • ${json.user.full_name || "Admin"} • güvenli oturum açık`;
-      await loadUsers();
-      return true;
+    function authHeaders(){
+      return {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${accessToken}`
+      };
     }
 
     async function login(){
       try{
-        setStatus(loginStatus, "Giriş yapılıyor...", true);
+        setStatus(loginStatus, "Giriş yapılıyor...", "warntext");
 
         const email = $("email").value.trim();
         const password = $("password").value;
 
         if(!email || !password){
-          setStatus(loginStatus, "E-posta ve şifre gerekli.");
+          setStatus(loginStatus, "E-posta ve şifre gerekli.", "err");
           return;
         }
 
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if(error) throw error;
 
-        const ok = await requireAdminUI();
-        if(ok){
-          setStatus(loginStatus, "");
-        }
+        await getAccessToken();
+        await loadMe();
+
+        loginCard.classList.add("hidden");
+        panel.classList.remove("hidden");
+        setStatus(loginStatus, "", "");
       }catch(e){
-        setStatus(loginStatus, e?.message || "Giriş başarısız.");
+        setStatus(loginStatus, e?.message || "Giriş başarısız.", "err");
       }
     }
 
     async function logout(){
       await supabase.auth.signOut();
-      adminUser = null;
+      accessToken = "";
+      me = null;
       usersBody.innerHTML = "";
+      panel.classList.add("hidden");
       loginCard.classList.remove("hidden");
-      adminPanel.classList.add("hidden");
-      setStatus(loginStatus, "");
       $("password").value = "";
+      setStatus(loginStatus, "", "");
     }
 
-    async function createUser(){
-      try{
-        const payload = {
-          admin_user_id: adminUser?.id || "",
-          email: $("newEmail").value.trim(),
-          password: $("newPassword").value,
-          full_name: $("newFullName").value.trim(),
-          is_admin: $("newIsAdmin").value === "true"
-        };
+    async function loadMe(){
+      await getAccessToken();
 
-        const res = await fetch(`${API_BASE}/admin/create-user`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
-
-        const json = await res.json().catch(() => ({}));
-        if(!res.ok || !json?.ok){
-          throw new Error(json?.detail || "Kullanıcı oluşturulamadı");
+      const res = await fetch(`${API_BASE}/admin/me`, {
+        headers: {
+          "Authorization": `Bearer ${accessToken}`
         }
-
-        setStatus($("createUserStatus"), `Kullanıcı oluşturuldu: ${json.user.email}`, true);
-        $("newEmail").value = "";
-        $("newPassword").value = "";
-        $("newFullName").value = "";
-        $("newIsAdmin").value = "false";
-        await loadUsers();
-      }catch(e){
-        setStatus($("createUserStatus"), e?.message || "Kullanıcı oluşturulamadı");
-      }
-    }
-
-    async function changePassword(){
-      try{
-        const payload = {
-          admin_user_id: adminUser?.id || "",
-          target_user_id: $("targetUserId").value.trim(),
-          new_password: $("targetNewPassword").value
-        };
-
-        const res = await fetch(`${API_BASE}/admin/change-password`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
-
-        const json = await res.json().catch(() => ({}));
-        if(!res.ok || !json?.ok){
-          throw new Error(json?.detail || "Şifre değiştirilemedi");
-        }
-
-        setStatus($("changePasswordStatus"), "Şifre başarıyla güncellendi.", true);
-        $("targetUserId").value = "";
-        $("targetNewPassword").value = "";
-      }catch(e){
-        setStatus($("changePasswordStatus"), e?.message || "Şifre değiştirilemedi");
-      }
-    }
-
-    async function toggleBlock(targetUserId, blocked){
-      try{
-        const res = await fetch(`${API_BASE}/admin/toggle-block`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            admin_user_id: adminUser?.id || "",
-            target_user_id: targetUserId,
-            blocked
-          })
-        });
-
-        const json = await res.json().catch(() => ({}));
-        if(!res.ok || !json?.ok){
-          throw new Error(json?.detail || "Durum güncellenemedi");
-        }
-
-        await loadUsers();
-      }catch(e){
-        alert(e?.message || "İşlem başarısız");
-      }
-    }
-
-    async function loadUsers(){
-      const res = await fetch(`${API_BASE}/admin/list-users`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          admin_user_id: adminUser?.id || "",
-          limit: 100
-        })
       });
 
       const json = await res.json().catch(() => ({}));
-      if(!res.ok || !json?.ok){
-        usersBody.innerHTML = `<tr><td colspan="8">Liste alınamadı</td></tr>`;
-        return;
+
+      if(!res.ok){
+        throw new Error(json?.detail || "Admin yetkisi doğrulanamadı");
       }
 
-      const users = Array.isArray(json.users) ? json.users : [];
-      usersBody.innerHTML = users.map(u => {
-        const isBlocked = !!u.blocked;
-        return `
-          <tr>
-            <td>${u.email || ""}</td>
-            <td>${u.full_name || ""}</td>
-            <td>${u.id || ""}</td>
-            <td>${u.is_admin ? "Admin" : "Kullanıcı"}</td>
-            <td>${u.app_access_mode || "-"}</td>
-            <td>${Number(u.jeton_balance || 0)}</td>
-            <td>${isBlocked ? "Evet" : "Hayır"}</td>
-            <td>
-              <button type="button" onclick="window.__toggleBlock('${u.id}', ${!isBlocked})">
-                ${isBlocked ? "Blokeyi Kaldır" : "Bloke Et"}
-              </button>
-            </td>
-          </tr>
-        `;
-      }).join("");
+      me = json?.me || null;
+      meInfo.textContent = `ID: ${me?.user_id || "-"} • Rol: ${me?.role || "-"}`;
     }
 
-    window.__toggleBlock = toggleBlock;
+    async function loadUsers(){
+      try{
+        setStatus($("usersStatus"), "Kullanıcılar getiriliyor...", "warntext");
+        await getAccessToken();
+
+        const res = await fetch(`${API_BASE}/admin/users`, {
+          headers: {
+            "Authorization": `Bearer ${accessToken}`
+          }
+        });
+
+        const json = await res.json().catch(() => ({}));
+
+        if(!res.ok){
+          throw new Error(json?.detail || "Kullanıcı listesi alınamadı");
+        }
+
+        const items = Array.isArray(json?.items) ? json.items : [];
+        usersBody.innerHTML = items.map(user => {
+          const role = String(user?.role || "user").trim();
+          return `
+            <tr>
+              <td>${user?.email || ""}</td>
+              <td>${user?.full_name || ""}</td>
+              <td>${role}</td>
+              <td>${Number(user?.tokens || 0)}</td>
+              <td>${user?.created_at || ""}</td>
+              <td>${user?.last_login_at || ""}</td>
+              <td>${user?.id || ""}</td>
+              <td>
+                <div class="inline-actions">
+                  <button type="button" class="secondary" onclick="window.pickRoleUser('${user?.id || ""}', '${role}')">Rol Seç</button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join("");
+
+        setStatus($("usersStatus"), `${items.length} kullanıcı listelendi.`, "ok");
+      }catch(e){
+        setStatus($("usersStatus"), e?.message || "Liste alınamadı.", "err");
+      }
+    }
+
+    async function setRole(){
+      try{
+        setStatus($("roleStatus"), "Rol güncelleniyor...", "warntext");
+        await getAccessToken();
+
+        const payload = {
+          user_id: $("roleUserId").value.trim(),
+          role: $("roleValue").value
+        };
+
+        if(!payload.user_id){
+          setStatus($("roleStatus"), "Kullanıcı ID gerekli.", "err");
+          return;
+        }
+
+        const res = await fetch(`${API_BASE}/admin/users/role`, {
+          method: "POST",
+          headers: authHeaders(),
+          body: JSON.stringify(payload)
+        });
+
+        const json = await res.json().catch(() => ({}));
+
+        if(!res.ok){
+          throw new Error(json?.detail || "Rol güncellenemedi");
+        }
+
+        setStatus($("roleStatus"), "Rol başarıyla güncellendi.", "ok");
+        await loadUsers();
+      }catch(e){
+        setStatus($("roleStatus"), e?.message || "Rol güncellenemedi.", "err");
+      }
+    }
+
+    async function deployVercel(){
+      try{
+        setStatus($("vercelStatus"), "Vercel deploy tetikleniyor...", "warntext");
+        await getAccessToken();
+
+        const res = await fetch(`${API_BASE}/admin/deploy/vercel`, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${accessToken}`
+          }
+        });
+
+        const json = await res.json().catch(() => ({}));
+
+        if(!res.ok){
+          throw new Error(json?.detail || "Vercel deploy başarısız");
+        }
+
+        setStatus($("vercelStatus"), "Vercel deploy tetiklendi.", "ok");
+      }catch(e){
+        setStatus($("vercelStatus"), e?.message || "Vercel deploy başarısız.", "err");
+      }
+    }
+
+    async function deployRender(){
+      try{
+        setStatus($("renderStatus"), "Render deploy tetikleniyor...", "warntext");
+        await getAccessToken();
+
+        const res = await fetch(`${API_BASE}/admin/deploy/render`, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${accessToken}`
+          }
+        });
+
+        const json = await res.json().catch(() => ({}));
+
+        if(!res.ok){
+          throw new Error(json?.detail || "Render deploy başarısız");
+        }
+
+        setStatus($("renderStatus"), "Render deploy tetiklendi.", "ok");
+      }catch(e){
+        setStatus($("renderStatus"), e?.message || "Render deploy başarısız.", "err");
+      }
+    }
+
+    async function githubCommit(){
+      try{
+        setStatus($("ghStatus"), "Commit gönderiliyor...", "warntext");
+        await getAccessToken();
+
+        const payload = {
+          path: $("ghPath").value.trim(),
+          content: $("ghContent").value,
+          message: $("ghMessage").value.trim(),
+          branch: $("ghBranch").value.trim() || "main"
+        };
+
+        if(!payload.path || !payload.message || !payload.content){
+          setStatus($("ghStatus"), "Path, mesaj ve içerik gerekli.", "err");
+          return;
+        }
+
+        const res = await fetch(`${API_BASE}/admin/github/commit`, {
+          method: "POST",
+          headers: authHeaders(),
+          body: JSON.stringify(payload)
+        });
+
+        const json = await res.json().catch(() => ({}));
+
+        if(!res.ok){
+          throw new Error(json?.detail || "GitHub commit başarısız");
+        }
+
+        setStatus($("ghStatus"), `Commit atıldı: ${json?.path || payload.path}`, "ok");
+      }catch(e){
+        setStatus($("ghStatus"), e?.message || "GitHub commit başarısız.", "err");
+      }
+    }
+
+    window.pickRoleUser = (userId, role) => {
+      $("roleUserId").value = userId || "";
+      $("roleValue").value = role || "user";
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    };
 
     $("loginBtn").addEventListener("click", login);
     $("logoutBtn").addEventListener("click", logout);
-    $("createUserBtn").addEventListener("click", createUser);
-    $("changePasswordBtn").addEventListener("click", changePassword);
-    $("refreshUsersBtn").addEventListener("click", loadUsers);
+    $("refreshMeBtn").addEventListener("click", loadMe);
+    $("loadUsersBtn").addEventListener("click", loadUsers);
+    $("setRoleBtn").addEventListener("click", setRole);
+    $("vercelDeployBtn").addEventListener("click", deployVercel);
+    $("renderDeployBtn").addEventListener("click", deployRender);
+    $("ghCommitBtn").addEventListener("click", githubCommit);
 
-    requireAdminUI();
+    (async () => {
+      try{
+        const { data } = await supabase.auth.getSession();
+        if(data?.session?.access_token){
+          await getAccessToken();
+          await loadMe();
+          loginCard.classList.add("hidden");
+          panel.classList.remove("hidden");
+          await loadUsers();
+        }
+      }catch{}
+    })();
   </script>
 </body>
 </html>
