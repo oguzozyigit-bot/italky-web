@@ -45,6 +45,10 @@ function normalizeUid(uid){
     .trim();
 }
 
+function makeQrLink(uid){
+  return uid ? `https://italky.ai/pages/access.html?uid=${encodeURIComponent(uid)}` : "";
+}
+
 function tab(name){
   const names = ["users","nfc","deploy","github"];
 
