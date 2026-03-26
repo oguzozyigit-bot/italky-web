@@ -146,6 +146,7 @@
       const q = new URLSearchParams(location.search);
       const rawUid =
         q.get("uid") ||
+        q.get("nfc_uid") ||
         q.get("card") ||
         q.get("serial") ||
         q.get("nfc") ||
@@ -153,15 +154,29 @@
       return normalizeUid(rawUid);
     }
 
+    function getUidFromNative(){
+      try{
+        if(window.Native && typeof window.Native.getPendingNfcUid === "function"){
+          const uid = window.Native.getPendingNfcUid();
+          return normalizeUid(uid);
+        }
+      }catch(e){
+        console.warn("[NFC Native UID]", e);
+      }
+      return "";
+    }
+
+    function getUid(){
+      const fromUrl = getUidFromUrl();
+      if(fromUrl) return fromUrl;
+
+      const fromNative = getUidFromNative();
+      if(fromNative) return fromNative;
+
+      return "";
+    }
+
     async function getRealUserId(){
-      let userId =
-        localStorage.getItem("user_id") ||
-        sessionStorage.getItem("user_id") ||
-        "";
-
-      userId = String(userId || "").trim();
-      if (userId) return userId;
-
       try{
         const { data, error } = await supabase.auth.getUser();
         if (error) throw error;
@@ -169,13 +184,31 @@
         const uid = String(data?.user?.id || "").trim();
         if (uid){
           localStorage.setItem("user_id", uid);
+          sessionStorage.setItem("user_id", uid);
           return uid;
         }
       }catch(e){
-        console.warn("[NFC getRealUserId]", e);
+        console.warn("[NFC getRealUserId session]", e);
       }
 
-      return "";
+      let userId =
+        localStorage.getItem("user_id") ||
+        sessionStorage.getItem("user_id") ||
+        "";
+
+      userId = String(userId || "").trim();
+      return userId;
+    }
+
+    async function hasValidSession(){
+      try{
+        const { data, error } = await supabase.auth.getSession();
+        if (error) throw error;
+        return !!data?.session;
+      }catch(e){
+        console.warn("[NFC hasValidSession]", e);
+        return false;
+      }
     }
 
     function getDeviceId(){
@@ -187,19 +220,32 @@
       id = String(id || "").trim();
 
       if(!id){
-        id = "web_" + Math.random().toString(36).slice(2) + Date.now();
+        id = "android_" + Math.random().toString(36).slice(2) + Date.now();
         localStorage.setItem("italky_device_id", id);
       }
       return id;
     }
 
-    async function goLoginIfNeeded(){
+    function goLoginIfNeeded(){
       const next = encodeURIComponent(location.pathname + location.search);
       location.href = `${LOGIN_URL}?next=${next}`;
     }
 
+    async function saveAccessToLocal(data, uid, userId){
+      localStorage.setItem("user_id", userId);
+      localStorage.setItem("app_access_mode", data.mode || "nfc");
+      localStorage.setItem("nfc_card_uid", data.uid || uid);
+      localStorage.setItem("nfc_package_code", data.package_code || "");
+      localStorage.setItem("nfc_expires_at", data.expires_at || "");
+      localStorage.setItem("nfc_features", JSON.stringify(data.features || {}));
+      localStorage.setItem("nfc_remaining_languages", String(data.remaining_languages ?? 0));
+      localStorage.setItem("nfc_remaining_jeton", String(data.remaining_jeton ?? 0));
+    }
+
     async function activateCard(){
-      const uid = getUidFromUrl();
+      retryBtn.style.display = "none";
+
+      const uid = getUid();
       uidBox.textContent = uid || "Kart bilgisi bulunamadı";
 
       if(!uid){
@@ -208,13 +254,14 @@
         return;
       }
 
+      const sessionOk = await hasValidSession();
       const userId = await getRealUserId();
 
-      if(!userId){
+      if(!sessionOk || !userId){
         setStatus("Önce giriş yapmalısın. Girişe yönlendiriliyorsun...", "muted");
         setTimeout(() => {
           goLoginIfNeeded();
-        }, 700);
+        }, 900);
         return;
       }
 
@@ -228,9 +275,9 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             user_id: userId,
-            uid: uid,
+            uid,
             device_id: deviceId,
-            platform: "web"
+            platform: "android"
           })
         });
 
@@ -240,14 +287,15 @@
           throw new Error(data?.detail || data?.error || "Kart doğrulanamadı");
         }
 
-        localStorage.setItem("user_id", userId);
-        localStorage.setItem("app_access_mode", data.mode || "nfc");
-        localStorage.setItem("nfc_card_uid", data.uid || uid);
-        localStorage.setItem("nfc_package_code", data.package_code || "");
-        localStorage.setItem("nfc_expires_at", data.expires_at || "");
-        localStorage.setItem("nfc_features", JSON.stringify(data.features || {}));
-        localStorage.setItem("nfc_remaining_languages", String(data.remaining_languages ?? 0));
-        localStorage.setItem("nfc_remaining_jeton", String(data.remaining_jeton ?? 0));
+        await saveAccessToLocal(data, uid, userId);
+
+        try{
+          if(window.Native && typeof window.Native.clearPendingNfc === "function"){
+            window.Native.clearPendingNfc();
+          }
+        }catch(e){
+          console.warn("[NFC clearPendingNfc]", e);
+        }
 
         setStatus("Kart başarıyla tanımlandı. Ana sayfaya geçiliyor...", "ok");
 
@@ -263,7 +311,6 @@
     }
 
     retryBtn.addEventListener("click", () => {
-      retryBtn.style.display = "none";
       activateCard();
     });
 
