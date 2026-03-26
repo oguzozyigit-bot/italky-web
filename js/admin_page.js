@@ -1,178 +1,437 @@
-// FILE: /js/admin_page.js
 import { supabase } from "/js/supabase_client.js";
 import { safeLogout } from "/js/auth.js";
 import { mountShell } from "/js/ui_shell.js";
 
-mountShell({ scroll: "auto" });
+try{
+  mountShell({ scroll: "auto" });
+}catch(e){
+  console.warn("ui_shell admin skip:", e);
+}
 
-const $ = (id)=>document.getElementById(id);
-
+const $ = (id) => document.getElementById(id);
 const API = "https://italky-api.onrender.com/api";
 
+const loginView = $("loginView");
+const panelView = $("panelView");
+const loginStatus = $("loginStatus");
+const meLine = $("meLine");
+
+function setLoginStatus(text, type = ""){
+  loginStatus.className = `status-line ${type}`.trim();
+  loginStatus.textContent = text || "";
+}
+
+function setInfoLine(el, text, ok = true){
+  if(!el) return;
+  el.className = `info-line ${ok ? "status-ok" : "status-err"}`;
+  el.textContent = text || "";
+}
+
+function showPanel(){
+  loginView.classList.add("hidden");
+  panelView.classList.remove("hidden");
+}
+
+function showLogin(){
+  panelView.classList.add("hidden");
+  loginView.classList.remove("hidden");
+}
+
+function normalizeUid(uid){
+  return String(uid || "")
+    .toUpperCase()
+    .replace(/:/g, "")
+    .replace(/\s+/g, "")
+    .trim();
+}
+
 function tab(name){
-  ["users","deploy","github"].forEach(t=>{
-    document.querySelector(`.tab[data-tab="${t}"]`)?.classList.toggle("active", t===name);
-    $(`panel${t.charAt(0).toUpperCase()+t.slice(1)}`).style.display = (t===name) ? "block":"none";
+  const names = ["users","nfc","deploy","github"];
+
+  names.forEach((t) => {
+    const btn = document.querySelector(`.tab[data-tab="${t}"]`);
+    const panel = $(`panel${t.charAt(0).toUpperCase() + t.slice(1)}`);
+    btn?.classList.toggle("active", t === name);
+    panel?.classList.toggle("hidden", t !== name);
   });
 }
 
-document.querySelectorAll(".tab").forEach(el=>{
-  el.addEventListener("click", ()=> tab(el.dataset.tab));
+document.querySelectorAll(".tab").forEach((el) => {
+  el.addEventListener("click", () => tab(el.dataset.tab));
 });
 
-$("homeBtn").onclick = ()=> location.href="/pages/home.html";
-$("logoutBtn").onclick = ()=> safeLogout();
+$("homeBtn").onclick = () => location.href = "/pages/home.html";
+$("logoutBtn").onclick = async () => {
+  await safeLogout();
+};
 
 async function getAccessToken(){
   const { data:{ session } } = await supabase.auth.getSession();
   return session?.access_token || "";
 }
 
-async function api(path, opts={}){
+async function api(path, opts = {}){
   const token = await getAccessToken();
   if(!token) throw new Error("NO_SESSION");
+
   const r = await fetch(`${API}${path}`, {
     ...opts,
     headers: {
       "Content-Type":"application/json",
       "Authorization": `Bearer ${token}`,
-      ...(opts.headers||{})
+      ...(opts.headers || {})
     }
   });
+
   const txt = await r.text();
-  let j = null; try{ j = JSON.parse(txt); }catch{ j = { raw: txt }; }
-  if(!r.ok) throw new Error(j?.detail || txt || `HTTP_${r.status}`);
+  let j = null;
+
+  try{
+    j = JSON.parse(txt);
+  }catch{
+    j = { raw: txt };
+  }
+
+  if(!r.ok){
+    throw new Error(j?.detail || txt || `HTTP_${r.status}`);
+  }
+
   return j;
 }
 
+async function login(){
+  try{
+    setLoginStatus("Giriş yapılıyor...", "status-warn");
+
+    const email = $("email").value.trim();
+    const password = $("password").value;
+
+    if(!email || !password){
+      setLoginStatus("E-posta ve şifre gerekli.", "status-err");
+      return;
+    }
+
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if(error) throw error;
+
+    await boot();
+    showPanel();
+    setLoginStatus("", "");
+  }catch(e){
+    setLoginStatus(e.message || "Giriş başarısız.", "status-err");
+  }
+}
+
+$("loginBtn").addEventListener("click", login);
+
 async function boot(){
-  // admin mi?
   try{
     const me = await api("/admin/me");
-    $("meLine").textContent = `Yetki: ${me.me.role} • UID: ${me.me.user_id}`;
+    meLine.textContent = `Yetki: ${me.me.role} • UID: ${me.me.user_id}`;
+
+    renderUsers();
+    renderNfc();
+    renderDeploy();
+    renderGithub();
+    tab("users");
   }catch(e){
-    $("meLine").textContent = "Admin değil / oturum yok";
+    meLine.textContent = "Admin değil / oturum yok";
+    showLogin();
     location.replace("/pages/home.html");
-    return;
   }
-  await renderUsers();
-  renderDeploy();
-  renderGithub();
 }
 
 async function renderUsers(){
   const box = $("panelUsers");
-  box.innerHTML = `<div class="muted">Yükleniyor…</div>`;
+  box.innerHTML = `
+    <div class="admin-card">
+      <h3>Kullanıcı Yönetimi</h3>
+      <p>Sistemdeki kullanıcıları gör, rollerini değiştir ve yönetimi merkezden yap.</p>
+      <div class="muted">Yükleniyor…</div>
+    </div>
+  `;
+
   try{
     const r = await api("/admin/users");
     const items = r.items || [];
+
     box.innerHTML = `
-      <div class="grid">
-        ${items.map(u=>`
-          <div class="card">
-            <div style="display:flex;justify-content:space-between;gap:10px;align-items:center">
+      <div class="admin-card">
+        <h3>Kullanıcı Yönetimi</h3>
+        <p>Admin ve superadmin yetkileri buradan kontrol edilir.</p>
+        <div class="user-grid">
+          ${items.map(u => `
+            <div class="user-item">
               <div>
-                <div style="font-weight:1000">${u.full_name || "—"}</div>
-                <div class="muted">${u.email || "—"} • ${u.id}</div>
-                <div class="muted">Jeton: ${u.tokens ?? "—"} • Role: <b>${u.role || "user"}</b></div>
+                <div class="user-main-name">${u.full_name || "—"}</div>
+                <div class="user-meta">
+                  <div><b>E-posta:</b> ${u.email || "—"}</div>
+                  <div><b>User ID:</b> ${u.id}</div>
+                  <div><b>Rol:</b> ${u.role || "user"}</div>
+                  <div><b>Jeton:</b> ${u.tokens ?? "—"}</div>
+                  <div><b>Oluşturulma:</b> ${u.created_at || "—"}</div>
+                  <div><b>Son Giriş:</b> ${u.last_login_at || "—"}</div>
+                </div>
               </div>
-              <div style="min-width:180px">
-                <select class="inp" data-role="${u.id}">
-                  <option value="user" ${u.role==="user"?"selected":""}>user</option>
-                  <option value="admin" ${u.role==="admin"?"selected":""}>admin</option>
-                  <option value="superadmin" ${u.role==="superadmin"?"selected":""}>superadmin</option>
+
+              <div class="user-actions">
+                <select class="sel" data-role="${u.id}">
+                  <option value="user" ${u.role === "user" ? "selected" : ""}>user</option>
+                  <option value="admin" ${u.role === "admin" ? "selected" : ""}>admin</option>
+                  <option value="superadmin" ${u.role === "superadmin" ? "selected" : ""}>superadmin</option>
                 </select>
-                <button class="btn primary" data-save="${u.id}" style="margin-top:8px;width:100%">Kaydet</button>
+                <button class="btn btn-primary" data-save="${u.id}">Rolü Kaydet</button>
               </div>
             </div>
-          </div>
-        `).join("")}
+          `).join("")}
+        </div>
       </div>
     `;
 
-    box.querySelectorAll("[data-save]").forEach(btn=>{
-      btn.addEventListener("click", async ()=>{
+    box.querySelectorAll("[data-save]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
         const uid = btn.getAttribute("data-save");
         const sel = box.querySelector(`[data-role="${uid}"]`);
         const role = sel?.value || "user";
-        btn.textContent = "…";
+
+        btn.textContent = "Kaydediliyor...";
         try{
-          await api("/admin/users/role", { method:"POST", body: JSON.stringify({ user_id: uid, role }) });
+          await api("/admin/users/role", {
+            method:"POST",
+            body: JSON.stringify({ user_id: uid, role })
+          });
           btn.textContent = "Kaydedildi";
-          setTimeout(()=>btn.textContent="Kaydet", 900);
+          setTimeout(() => btn.textContent = "Rolü Kaydet", 1000);
           await renderUsers();
         }catch(e){
           alert(e.message || String(e));
-          btn.textContent = "Kaydet";
+          btn.textContent = "Rolü Kaydet";
         }
       });
     });
 
   }catch(e){
-    box.innerHTML = `<div class="card">Hata: ${e.message || e}</div>`;
+    box.innerHTML = `
+      <div class="admin-card">
+        <h3>Kullanıcı Yönetimi</h3>
+        <div class="info-line status-err">Hata: ${e.message || e}</div>
+      </div>
+    `;
   }
+}
+
+function renderNfc(){
+  const box = $("panelNfc");
+
+  box.innerHTML = `
+    <div class="grid">
+      <div class="admin-card">
+        <h3>NFC Kart Tanımlama</h3>
+        <p>Kart UID değerini gir, sistem UID içindeki iki nokta işaretlerini otomatik temizler.</p>
+
+        <div class="kv">
+          <input class="inp" id="nfcUidInput" placeholder="UID (örn: 04:E6:D4:62:FD:16:90)" />
+          <select class="sel" id="nfcPackage">
+            <option value="PKG_10DIL_100J_30G">10 Dil + 100 Jeton / 30 Gün</option>
+            <option value="PKG_20DIL_200J_395G">20 Dil + 200 Jeton / 395 Gün</option>
+            <option value="PREMIUM_1YIL">Premium 1 Yıl</option>
+          </select>
+          <button class="btn btn-primary" id="saveNfcBtn">Kartı Kaydet</button>
+          <div id="nfcStatus" class="info-line"></div>
+        </div>
+      </div>
+
+      <div class="admin-card">
+        <h3>UID Dönüştürücü</h3>
+        <p>Panelde noktalı girmen yeterli. Sistem bunu otomatik normalleştirip Supabase’e öyle yazar.</p>
+
+        <div class="kv">
+          <input class="inp" id="uidPreviewInput" placeholder="Örn: 04:E6:D4:62:FD:16:90" />
+          <input class="inp" id="uidPreviewOutput" placeholder="Temiz UID burada görünür" readonly />
+        </div>
+      </div>
+    </div>
+  `;
+
+  const nfcUidInput = box.querySelector("#nfcUidInput");
+  const uidPreviewInput = box.querySelector("#uidPreviewInput");
+  const uidPreviewOutput = box.querySelector("#uidPreviewOutput");
+  const nfcStatus = box.querySelector("#nfcStatus");
+  const saveBtn = box.querySelector("#saveNfcBtn");
+
+  function syncPreview(){
+    uidPreviewOutput.value = normalizeUid(uidPreviewInput.value);
+  }
+
+  uidPreviewInput.addEventListener("input", syncPreview);
+  syncPreview();
+
+  saveBtn.onclick = async () => {
+    const raw = nfcUidInput.value;
+    const uid = normalizeUid(raw);
+    const pkg = box.querySelector("#nfcPackage").value;
+
+    if(!uid){
+      setInfoLine(nfcStatus, "UID boş olamaz.", false);
+      return;
+    }
+
+    saveBtn.textContent = "Kaydediliyor...";
+
+    try{
+      const exists = await supabase
+        .from("nfc_cards")
+        .select("id,uid")
+        .eq("uid", uid)
+        .maybeSingle();
+
+      if(exists?.data?.id){
+        const { error:updateError } = await supabase
+          .from("nfc_cards")
+          .update({
+            package_code: pkg,
+            is_active: true,
+            status: "new"
+          })
+          .eq("id", exists.data.id);
+
+        if(updateError) throw updateError;
+
+        setInfoLine(nfcStatus, `Kart güncellendi: ${uid}`, true);
+      } else {
+        const { error:insertError } = await supabase
+          .from("nfc_cards")
+          .insert({
+            uid: uid,
+            package_code: pkg,
+            is_active: true,
+            status: "new"
+          });
+
+        if(insertError) throw insertError;
+
+        setInfoLine(nfcStatus, `Kart eklendi: ${uid}`, true);
+      }
+
+      nfcUidInput.value = "";
+      saveBtn.textContent = "Kartı Kaydet";
+    }catch(e){
+      setInfoLine(nfcStatus, e.message || "Kart kaydedilemedi.", false);
+      saveBtn.textContent = "Kartı Kaydet";
+    }
+  };
 }
 
 function renderDeploy(){
   const box = $("panelDeploy");
   box.innerHTML = `
-    <div class="card">
-      <div style="font-weight:1000;margin-bottom:8px">Deploy</div>
-      <div class="muted">Vercel/Render deploy hook ile tetikler.</div>
-      <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
-        <button class="btn primary" id="depVercel">Vercel Deploy</button>
-        <button class="btn primary" id="depRender">Render Deploy</button>
+    <div class="grid">
+      <div class="admin-card">
+        <h3>Vercel Deploy</h3>
+        <p>Frontend deploy hook tetiklenir.</p>
+        <button class="btn btn-primary" id="depVercel">Vercel Deploy Başlat</button>
+        <div id="depVercelStatus" class="info-line"></div>
+      </div>
+
+      <div class="admin-card">
+        <h3>Render Deploy</h3>
+        <p>API için yeni Render deploy tetiklenir.</p>
+        <button class="btn btn-primary" id="depRender">Render Deploy Başlat</button>
+        <div id="depRenderStatus" class="info-line"></div>
       </div>
     </div>
   `;
 
-  box.querySelector("#depVercel").onclick = async ()=>{
-    try{ await api("/admin/deploy/vercel", { method:"POST" }); alert("Vercel deploy tetiklendi"); }
-    catch(e){ alert(e.message || e); }
+  const vercelBtn = box.querySelector("#depVercel");
+  const renderBtn = box.querySelector("#depRender");
+  const vercelStatus = box.querySelector("#depVercelStatus");
+  const renderStatus = box.querySelector("#depRenderStatus");
+
+  vercelBtn.onclick = async () => {
+    try{
+      vercelBtn.textContent = "Tetikleniyor...";
+      await api("/admin/deploy/vercel", { method:"POST" });
+      setInfoLine(vercelStatus, "Vercel deploy tetiklendi.", true);
+    }catch(e){
+      setInfoLine(vercelStatus, e.message || "Vercel deploy hatası.", false);
+    }finally{
+      vercelBtn.textContent = "Vercel Deploy Başlat";
+    }
   };
-  box.querySelector("#depRender").onclick = async ()=>{
-    try{ await api("/admin/deploy/render", { method:"POST" }); alert("Render deploy tetiklendi"); }
-    catch(e){ alert(e.message || e); }
+
+  renderBtn.onclick = async () => {
+    try{
+      renderBtn.textContent = "Tetikleniyor...";
+      await api("/admin/deploy/render", { method:"POST" });
+      setInfoLine(renderStatus, "Render deploy tetiklendi.", true);
+    }catch(e){
+      setInfoLine(renderStatus, e.message || "Render deploy hatası.", false);
+    }finally{
+      renderBtn.textContent = "Render Deploy Başlat";
+    }
   };
 }
 
 function renderGithub(){
   const box = $("panelGithub");
   box.innerHTML = `
-    <div class="card">
-      <div style="font-weight:1000;margin-bottom:8px">GitHub Dosya Commit</div>
-      <div class="muted">Örn: pages/hangman.html veya js/hangman_page.js</div>
+    <div class="admin-card">
+      <h3>GitHub Dosya Commit</h3>
+      <p>Dosya içeriğini direkt repo içine commit atmak için kullanılır.</p>
 
-      <div style="display:grid;gap:10px;margin-top:10px">
-        <input class="inp" id="ghPath" placeholder="path (örn: pages/hangman.html)" />
-        <input class="inp" id="ghMsg" placeholder="commit message" value="admin update" />
-        <textarea id="ghContent" placeholder="dosya içeriği..."></textarea>
-        <button class="btn primary" id="ghCommit">Commit</button>
+      <div class="kv">
+        <input class="inp" id="ghPath" placeholder="Path (örn: pages/hangman.html)" />
+        <input class="inp" id="ghMsg" placeholder="Commit mesajı" value="admin update" />
+        <textarea class="txta" id="ghContent" placeholder="Dosya içeriği..."></textarea>
+        <div class="row-buttons">
+          <button class="btn btn-primary" id="ghCommit">Commit Gönder</button>
+        </div>
+        <div id="ghStatus" class="info-line"></div>
       </div>
     </div>
   `;
 
-  box.querySelector("#ghCommit").onclick = async ()=>{
+  const btn = box.querySelector("#ghCommit");
+  const status = box.querySelector("#ghStatus");
+
+  btn.onclick = async () => {
     const path = box.querySelector("#ghPath").value.trim();
     const message = box.querySelector("#ghMsg").value.trim() || "admin update";
     const content = box.querySelector("#ghContent").value;
 
-    if(!path){ alert("path boş"); return; }
+    if(!path){
+      setInfoLine(status, "Path boş olamaz.", false);
+      return;
+    }
 
-    const btn = box.querySelector("#ghCommit");
-    btn.textContent = "Gönderiliyor…";
+    btn.textContent = "Gönderiliyor...";
+
     try{
       await api("/admin/github/commit", {
         method:"POST",
         body: JSON.stringify({ path, message, content, branch:"main" })
       });
-      alert("Commit OK");
+      setInfoLine(status, "Commit başarılı.", true);
     }catch(e){
-      alert(e.message || e);
+      setInfoLine(status, e.message || "Commit hatası.", false);
     }finally{
-      btn.textContent = "Commit";
+      btn.textContent = "Commit Gönder";
     }
   };
 }
 
-boot();
+async function init(){
+  try{
+    const { data:{ session } } = await supabase.auth.getSession();
+    if(session?.access_token){
+      await boot();
+      showPanel();
+    } else {
+      showLogin();
+    }
+  }catch{
+    showLogin();
+  }
+}
+
+init();
