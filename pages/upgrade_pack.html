@@ -3,515 +3,242 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
-  <title>italkyAI • Premium Üyelik</title>
-  <meta name="theme-color" content="#090b14"/>
+  <title>italkyAI • Global Premium</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
   <style>
-    :root{
-      --bg:#090b14;
-      --txt:#f8fbff;
-      --muted:rgba(255,255,255,.68);
-      --line:rgba(255,255,255,.12);
-      --card:rgba(255,255,255,.06);
-      --grad:linear-gradient(135deg,#67e8f9 0%, #818cf8 46%, #f472b6 100%);
-      --gold:linear-gradient(135deg,#f59e0b 0%, #f97316 100%);
-      --goldSoft:rgba(249,115,22,.20);
+    :root {
+      --bg: #05070a;
+      --txt: #ffffff;
+      --muted: rgba(255, 255, 255, 0.6);
+      --line: rgba(255, 255, 255, 0.08);
+      --card: rgba(15, 18, 28, 0.7);
+      /* Premium Liquid Gold Gradient */
+      --premium-grad: linear-gradient(135deg, #e2e8f0 0%, #94a3b8 50%, #475569 100%);
+      --gold: linear-gradient(135deg, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c);
+      --accent: #6366f1;
     }
 
-    *{
-      box-sizing:border-box;
-      -webkit-tap-highlight-color:transparent;
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { 
+      margin: 0; width: 100%; min-height: 100%; 
+      background: var(--bg); color: var(--txt); 
+      font-family: 'Outfit', sans-serif; 
+      overflow-x: hidden;
     }
 
-    html,body{
-      margin:0;
-      width:100%;
-      min-height:100%;
-      background:#090b14;
-      color:var(--txt);
-      font-family:'Outfit',sans-serif;
+    body {
+      background: 
+        radial-gradient(circle at 0% 0%, rgba(99, 102, 241, 0.15) 0%, transparent 40%),
+        radial-gradient(circle at 100% 100%, rgba(244, 114, 182, 0.1) 0%, transparent 40%),
+        #05070a;
     }
 
-    body{
-      background:
-        radial-gradient(circle at top, rgba(129,140,248,.18), transparent 28%),
-        radial-gradient(circle at 18% 20%, rgba(103,232,249,.10), transparent 24%),
-        radial-gradient(circle at 84% 24%, rgba(244,114,182,.12), transparent 22%),
-        linear-gradient(180deg,#0b0e18 0%, #090b14 100%);
-      overflow-x:hidden;
+    #page { padding: 20px; padding-bottom: 40px; }
+    .wrap { max-width: 500px; margin: 0 auto; display: grid; gap: 20px; }
+
+    .glass {
+      background: var(--card);
+      border: 1px solid var(--line);
+      backdrop-filter: blur(25px);
+      border-radius: 32px;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.5);
     }
 
-    #page{
-      min-height:100vh;
-      padding:16px;
+    /* --- Premium Card Visual --- */
+    .premium-visual {
+      height: 240px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      perspective: 1000px;
     }
 
-    .wrap{
-      max-width:760px;
-      margin:0 auto;
-      display:grid;
-      gap:16px;
+    .nfc-card-mockup {
+      width: 180px;
+      height: 180px;
+      background: #111;
+      border-radius: 50%;
+      border: 2px solid #222;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 50px rgba(99, 102, 241, 0.3);
+      position: relative;
+      animation: float 4s ease-in-out infinite;
     }
 
-    .glass{
-      background:var(--card);
-      border:1px solid var(--line);
-      backdrop-filter:blur(18px);
-      box-shadow:0 24px 60px rgba(0,0,0,.34);
+    .nfc-card-mockup::before {
+      content: "";
+      position: absolute;
+      inset: -10px;
+      border-radius: 50%;
+      border: 1px dashed rgba(255,255,255,0.2);
+      animation: rotate 20s linear infinite;
     }
 
-    .hero{
-      position:relative;
-      overflow:hidden;
-      border-radius:30px;
-      padding:24px 20px 22px;
-      min-height:340px;
+    .nfc-card-mockup .logo {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 28px;
+      background: var(--gold);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 10px rgba(188, 155, 74, 0.4));
     }
 
-    .hero::before{
-      content:"";
-      position:absolute;
-      inset:-10% -10% auto auto;
-      width:220px;
-      height:220px;
-      border-radius:50%;
-      background:radial-gradient(circle, rgba(103,232,249,.18) 0%, transparent 70%);
-      filter:blur(10px);
-      animation:floatGlow 6s ease-in-out infinite;
+    /* --- Stats & Info --- */
+    .hero-content { padding: 0 10px; text-align: center; }
+    .hero-content h1 { 
+      font-size: 32px; font-weight: 800; margin: 10px 0; 
+      letter-spacing: -1px; line-height: 1.1;
+    }
+    
+    .badge {
+      display: inline-block;
+      padding: 6px 14px;
+      background: var(--gold);
+      color: #000;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      margin-bottom: 15px;
     }
 
-    .hero::after{
-      content:"";
-      position:absolute;
-      left:-30px;
-      bottom:-40px;
-      width:220px;
-      height:220px;
-      border-radius:50%;
-      background:radial-gradient(circle, rgba(244,114,182,.18) 0%, transparent 70%);
-      filter:blur(18px);
-      animation:floatGlow 7.4s ease-in-out infinite reverse;
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 25px;
     }
 
-    .hero-top{
-      position:relative;
-      z-index:2;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      margin-bottom:18px;
+    .stat-box {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--line);
+      padding: 15px 5px;
+      border-radius: 20px;
     }
 
-    .back-btn{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      min-height:42px;
-      padding:0 14px;
-      border-radius:14px;
-      text-decoration:none;
-      color:#fff;
-      background:rgba(255,255,255,.08);
-      border:1px solid rgba(255,255,255,.12);
-      font-size:13px;
-      font-weight:800;
+    .stat-box strong { display: block; font-size: 22px; font-weight: 900; color: #fff; }
+    .stat-box span { font-size: 11px; color: var(--muted); }
+
+    /* --- Pricing Section --- */
+    .pricing-area {
+      padding: 24px;
+      border: 2px solid rgba(191, 149, 63, 0.3); /* Gold border for active pack */
     }
 
-    .plan-badge{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      min-height:34px;
-      padding:0 14px;
-      border-radius:999px;
-      background:rgba(255,255,255,.08);
-      border:1px solid rgba(255,255,255,.12);
-      font-size:11px;
-      font-weight:900;
-      color:rgba(255,255,255,.86);
-      letter-spacing:1px;
+    .price-flex {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
     }
 
-    .hero-center{
-      position:relative;
-      z-index:2;
-      display:grid;
-      justify-items:center;
-      text-align:center;
-      gap:12px;
+    .price-val { font-size: 44px; font-weight: 900; }
+    .price-val span { font-size: 16px; font-weight: 400; color: var(--muted); }
+
+    .feature-list { display: grid; gap: 16px; margin-bottom: 30px; }
+    .f-item { display: flex; align-items: center; gap: 15px; }
+    .f-icon { 
+      width: 40px; height: 40px; background: rgba(255,255,255,0.05); 
+      border-radius: 12px; display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+    }
+    .f-text b { display: block; font-size: 14px; margin-bottom: 2px; }
+    .f-text p { margin: 0; font-size: 12px; color: var(--muted); }
+
+    /* --- CTA Button --- */
+    .btn-premium {
+      width: 100%;
+      padding: 20px;
+      border: none;
+      border-radius: 20px;
+      background: var(--gold);
+      color: #000;
+      font-size: 18px;
+      font-weight: 900;
+      cursor: pointer;
+      transition: 0.3s;
+      box-shadow: 0 15px 30px rgba(179, 135, 40, 0.3);
     }
 
-    .core-wrap{
-      position:relative;
-      width:164px;
-      height:164px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      margin-top:4px;
+    .btn-premium:active { transform: scale(0.97); }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0) rotateX(10deg); }
+      50% { transform: translateY(-15px) rotateX(-5deg); }
     }
 
-    .ring{
-      position:absolute;
-      border-radius:50%;
-      border:1px solid rgba(255,255,255,.12);
-    }
-
-    .ring.r1{
-      inset:0;
-      animation:spinA 16s linear infinite;
-    }
-
-    .ring.r2{
-      inset:12px;
-      border-color:rgba(103,232,249,.30);
-      animation:spinB 12s linear infinite reverse;
-    }
-
-    .ring.r3{
-      inset:28px;
-      border-color:rgba(249,115,22,.36);
-      animation:spinA 8.6s linear infinite;
-    }
-
-    .core{
-      width:92px;
-      height:92px;
-      border-radius:50%;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      background:
-        radial-gradient(circle at 30% 24%, rgba(255,255,255,.22) 0%, transparent 22%),
-        linear-gradient(145deg, #111318 0%, #08090d 46%, #030406 100%);
-      box-shadow:
-        inset 0 0 18px rgba(255,255,255,.04),
-        0 0 18px rgba(103,232,249,.18),
-        0 0 38px rgba(249,115,22,.16);
-      font-family:'Space Grotesk',sans-serif;
-      font-size:24px;
-      font-weight:700;
-      color:#fff;
-    }
-
-    .core .ai{
-      background:var(--grad);
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;
-    }
-
-    .hero h1{
-      margin:0;
-      font-size:36px;
-      line-height:1.03;
-      letter-spacing:-1px;
-    }
-
-    .hero-sub{
-      max-width:540px;
-      margin:0;
-      color:var(--muted);
-      font-size:14px;
-      line-height:1.6;
-    }
-
-    .hero-mini{
-      display:grid;
-      grid-template-columns:repeat(3,1fr);
-      gap:10px;
-      width:100%;
-      margin-top:10px;
-    }
-
-    .mini-stat{
-      min-height:74px;
-      border-radius:18px;
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.10);
-      display:flex;
-      flex-direction:column;
-      justify-content:center;
-      align-items:center;
-      padding:10px;
-      text-align:center;
-    }
-
-    .mini-stat strong{
-      font-size:20px;
-      font-weight:900;
-      line-height:1;
-    }
-
-    .mini-stat span{
-      margin-top:6px;
-      font-size:11px;
-      color:var(--muted);
-      line-height:1.35;
-    }
-
-    .price-card{
-      border-radius:28px;
-      padding:22px 18px;
-    }
-
-    .price-head{
-      display:flex;
-      align-items:flex-start;
-      justify-content:space-between;
-      gap:16px;
-      flex-wrap:wrap;
-    }
-
-    .price-title{
-      font-size:24px;
-      font-weight:900;
-      margin-bottom:4px;
-    }
-
-    .price-sub{
-      color:var(--muted);
-      font-size:13px;
-      line-height:1.5;
-      max-width:420px;
-    }
-
-    .price-tag{
-      text-align:right;
-    }
-
-    .price{
-      font-size:40px;
-      font-weight:900;
-      line-height:1;
-      letter-spacing:-1px;
-    }
-
-    .price-note{
-      margin-top:6px;
-      font-size:12px;
-      color:var(--muted);
-    }
-
-    .feature-grid{
-      display:grid;
-      gap:10px;
-      margin:18px 0;
-    }
-
-    .feature{
-      min-height:56px;
-      border-radius:18px;
-      border:1px solid rgba(255,255,255,.10);
-      background:rgba(255,255,255,.05);
-      display:flex;
-      align-items:center;
-      gap:12px;
-      padding:0 14px;
-    }
-
-    .feature-icon{
-      width:34px;
-      height:34px;
-      min-width:34px;
-      border-radius:12px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      background:var(--goldSoft);
-      border:1px solid rgba(255,255,255,.10);
-      font-size:16px;
-    }
-
-    .feature-body{
-      display:flex;
-      flex-direction:column;
-      justify-content:center;
-      gap:2px;
-    }
-
-    .feature-title{
-      font-size:14px;
-      font-weight:800;
-      color:#fff;
-    }
-
-    .feature-text{
-      font-size:12px;
-      color:var(--muted);
-      line-height:1.45;
-    }
-
-    .cta{
-      width:100%;
-      min-height:56px;
-      border:none;
-      border-radius:18px;
-      background:var(--gold);
-      color:#fff;
-      font-size:16px;
-      font-weight:900;
-      cursor:pointer;
-      box-shadow:0 16px 34px rgba(249,115,22,.18);
-    }
-
-    .cta:active{
-      transform:scale(.985);
-    }
-
-    .foot-note{
-      margin-top:12px;
-      text-align:center;
-      color:rgba(255,255,255,.56);
-      font-size:12px;
-      line-height:1.5;
-    }
-
-    @keyframes spinA{
-      from{ transform:rotate(0deg); }
-      to{ transform:rotate(360deg); }
-    }
-
-    @keyframes spinB{
-      from{ transform:rotate(0deg) scale(.92); }
-      to{ transform:rotate(360deg) scale(.92); }
-    }
-
-    @keyframes floatGlow{
-      0%,100%{ transform:translateY(0); opacity:.22; }
-      50%{ transform:translateY(-10px); opacity:.34; }
-    }
-
-    @media (max-width:640px){
-      .hero{
-        min-height:auto;
-      }
-
-      .hero h1{
-        font-size:30px;
-      }
-
-      .hero-mini{
-        grid-template-columns:1fr;
-      }
-
-      .price{
-        font-size:34px;
-      }
+    @keyframes rotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
     }
   </style>
 </head>
 <body>
+
   <main id="page">
     <div class="wrap">
-      <section class="hero glass">
-        <div class="hero-top">
-          <a class="back-btn" href="/pages/home.html">← Geri</a>
-          <div class="plan-badge">PREMIUM MEMBERSHIP</div>
+      
+      <section class="glass hero-section">
+        <div class="premium-visual">
+          <div class="nfc-card-mockup">
+            <div class="logo">italkyAI</div>
+          </div>
         </div>
 
-        <div class="hero-center">
-          <div class="core-wrap">
-            <div class="ring r1"></div>
-            <div class="ring r2"></div>
-            <div class="ring r3"></div>
-            <div class="core">it<span class="ai">AI</span></div>
-          </div>
-
-          <h1>Premium Üyelik ile tüm sistemi aç</h1>
-          <p class="hero-sub">
-            Text dışındaki tüm modüllere eriş. Offline dil paketlerini kullan. Premium kullanıcıya özel jeton ve gelişmiş kullanım avantajlarını aktif et.
-          </p>
-
-          <div class="hero-mini">
-            <div class="mini-stat">
-              <strong>67</strong>
-              <span>Offline dil<br>ilk indirme ücretsiz</span>
-            </div>
-            <div class="mini-stat">
-              <strong>100</strong>
-              <span>Jeton<br>pakete dahil</span>
-            </div>
-            <div class="mini-stat">
-              <strong>Tümü</strong>
-              <span>Modüller<br>tek üyelikte açık</span>
-            </div>
+        <div class="hero-content" style="padding-bottom: 25px;">
+          <div class="badge">Limited Lifetime Access</div>
+          <h1>Dünyayı cebinize<br>sığdırma vakti.</h1>
+          <p style="color:var(--muted); font-size: 14px;">Premium ile sınırları kaldırın, yapay zekayı özgürce kullanın.</p>
+          
+          <div class="stats-row">
+            <div class="stat-box"><strong>67</strong><span>Offline Dil</span></div>
+            <div class="stat-box"><strong>100</strong><span>Hediye Jeton</span></div>
+            <div class="stat-box"><strong>∞</strong><span>Sınırsız Modül</span></div>
           </div>
         </div>
       </section>
 
-      <section class="price-card glass">
-        <div class="price-head">
+      <section class="glass pricing-area">
+        <div class="price-flex">
           <div>
-            <div class="price-title">Tek Paket • Premium Üyelik</div>
-            <div class="price-sub">
-              Basic kullanıcıda yalnızca TextToText açık kalır. Premium ile sistemin geri kalanı açılır.
-            </div>
+            <h3 style="margin:0; font-size: 18px;">Global Premium</h3>
+            <p style="margin:0; font-size: 12px; color: var(--muted);">Tüm özellikler dahil tek ödeme</p>
           </div>
+          <div class="price-val">499<span>TL</span></div>
+        </div>
 
-          <div class="price-tag">
-            <div class="price">499 TL</div>
-            <div class="price-note">100 jeton dahil</div>
+        <div class="feature-list">
+          <div class="f-item">
+            <div class="f-icon">🎭</div>
+            <div class="f-text"><b>FaceToFace & SideToSide</b><p>Tüm karşılıklı konuşma modülleri aktif.</p></div>
+          </div>
+          <div class="f-item">
+            <div class="f-icon">📡</div>
+            <div class="f-text"><b>Full Offline Destek</b><p>İnternet yokken bile çeviriye devam et.</p></div>
+          </div>
+          <div class="f-item">
+            <div class="f-icon">💎</div>
+            <div class="f-text"><b>Jeton Marketi Erişimi</b><p>Özel avantajlar ve jeton yükleme yetkisi.</p></div>
+          </div>
+          <div class="f-item">
+            <div class="f-icon">🎙️</div>
+            <div class="f-text"><b>Ses Klonlama & Pratik</b><p>Kendi sesinle veya özel AI seslerle öğren.</p></div>
           </div>
         </div>
 
-        <div class="feature-grid">
-          <div class="feature">
-            <div class="feature-icon">🚀</div>
-            <div class="feature-body">
-              <div class="feature-title">Tüm modüllere eriş</div>
-              <div class="feature-text">FaceToFace, Offline, Pratik, Seviye, oyunlar ve premium akışların tamamı açılır.</div>
-            </div>
-          </div>
-
-          <div class="feature">
-            <div class="feature-icon">🌍</div>
-            <div class="feature-body">
-              <div class="feature-title">67 offline dil</div>
-              <div class="feature-text">Her dili ilk kez ücretsiz indir. Aynı dili ikinci kez indirirsen jeton kullanılır.</div>
-            </div>
-          </div>
-
-          <div class="feature">
-            <div class="feature-icon">🪙</div>
-            <div class="feature-body">
-              <div class="feature-title">Jeton marketi görünür olur</div>
-              <div class="feature-text">Jeton fiyatları ve jeton yükleme ekranı yalnızca premium üyelerde görünür.</div>
-            </div>
-          </div>
-
-          <div class="feature">
-            <div class="feature-icon">🔓</div>
-            <div class="feature-body">
-              <div class="feature-title">Basic kilitleri kalkar</div>
-              <div class="feature-text">Ana sayfadaki kilitli kartlar açılır, modüller doğrudan kullanılabilir hale gelir.</div>
-            </div>
-          </div>
-        </div>
-
-        <button id="buyPremiumBtn" class="cta" type="button">Premium Üyelik Satın Al</button>
-
-        <div class="foot-note">
-          Play Store ürün bağlantısı bağlanınca bu buton doğrudan satın alma akışını açacak.
-        </div>
+        <button class="btn-premium">SATIN ALMAYI BAŞLAT</button>
+        <p style="text-align:center; font-size: 11px; color: var(--muted); margin-top: 15px;">
+          * Satın alma işlemi Play Store üzerinden güvenle tamamlanır.
+        </p>
       </section>
+
     </div>
   </main>
 
-  <script type="module">
-    import { mountShell } from "/js/ui_shell.js";
-
-    try{
-      mountShell({ scroll: "auto" });
-    }catch(e){
-      console.warn("ui_shell premium skip:", e);
-    }
-
-    document.getElementById("buyPremiumBtn").addEventListener("click", () => {
-      alert("Play Store premium ürün bağlantısı bağlanacak.");
-    });
-  </script>
 </body>
 </html>
