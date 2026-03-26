@@ -1,175 +1,415 @@
 <!doctype html>
 <html lang="tr">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>italky Admin</title>
-
-<style>
-body{
-  margin:0;
-  background:#0b0b12;
-  color:#fff;
-  font-family:Arial;
-}
-
-.wrap{
-  max-width:800px;
-  margin:auto;
-  padding:20px;
-}
-
-.card{
-  background:rgba(255,255,255,.05);
-  border:1px solid rgba(255,255,255,.1);
-  border-radius:16px;
-  padding:16px;
-  margin-bottom:16px;
-}
-
-input,select,button{
-  width:100%;
-  margin-top:10px;
-  padding:12px;
-  border-radius:10px;
-  border:none;
-  font-size:14px;
-}
-
-button{
-  background:#6366f1;
-  color:#fff;
-  font-weight:700;
-  cursor:pointer;
-}
-
-.table{
-  width:100%;
-  font-size:12px;
-  margin-top:10px;
-}
-
-.table div{
-  padding:6px 0;
-  border-bottom:1px solid rgba(255,255,255,.08);
-}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
+  <title>italkyAI • Admin</title>
+  <meta name="theme-color" content="#0b0b12" />
+  <style>
+    :root{
+      --bg:#0b0b12;
+      --card:rgba(255,255,255,.06);
+      --line:rgba(255,255,255,.12);
+      --txt:#fff;
+      --muted:rgba(255,255,255,.68);
+      --grad:linear-gradient(135deg,#67e8f9 0%, #818cf8 46%, #f472b6 100%);
+      --ok:#22c55e;
+      --err:#ef4444;
+    }
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{
+      margin:0;
+      width:100%;
+      height:100%;
+      background:
+        radial-gradient(circle at top, rgba(129,140,248,.18), transparent 28%),
+        radial-gradient(circle at 20% 30%, rgba(244,114,182,.12), transparent 24%),
+        #0b0b12;
+      color:var(--txt);
+      font-family:Arial,sans-serif;
+    }
+    body{padding:16px}
+    .wrap{max-width:1100px;margin:0 auto}
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:16px;
+      margin-bottom:16px;
+      backdrop-filter:blur(12px);
+    }
+    h1,h2,h3{margin:0 0 12px}
+    .muted{color:var(--muted)}
+    .grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:16px;
+    }
+    .grid-3{
+      display:grid;
+      grid-template-columns:1fr 1fr 1fr;
+      gap:12px;
+    }
+    input,button,select{
+      width:100%;
+      min-height:46px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.06);
+      color:#fff;
+      padding:0 14px;
+      font-size:14px;
+      margin-top:10px;
+    }
+    button{
+      cursor:pointer;
+      background:var(--grad);
+      border:none;
+      font-weight:800;
+    }
+    .btn-dark{
+      background:rgba(255,255,255,.08);
+      border:1px solid var(--line);
+    }
+    .status{
+      min-height:22px;
+      margin-top:10px;
+      font-size:14px;
+      font-weight:700;
+    }
+    .ok{color:var(--ok)}
+    .err{color:var(--err)}
+    .row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      min-height:30px;
+      padding:6px 10px;
+      border-radius:999px;
+      background:rgba(255,255,255,.08);
+      border:1px solid var(--line);
+      font-size:12px;
+      font-weight:700;
+    }
+    .table{
+      overflow:auto;
+      border-radius:14px;
+      border:1px solid var(--line);
+      margin-top:12px;
+    }
+    table{
+      width:100%;
+      border-collapse:collapse;
+      min-width:900px;
+    }
+    th,td{
+      padding:12px 10px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+      text-align:left;
+      font-size:13px;
+      vertical-align:top;
+    }
+    th{color:var(--muted)}
+    .hidden{display:none!important}
+    @media (max-width:860px){
+      .grid,.grid-3{grid-template-columns:1fr}
+    }
+  </style>
 </head>
-
 <body>
+  <div class="wrap">
+    <div class="card" id="loginCard">
+      <h1>Admin Girişi</h1>
+      <div class="muted">Sadece admin kullanıcılar girebilir.</div>
+      <input id="email" type="email" placeholder="Admin e-posta" />
+      <input id="password" type="password" placeholder="Şifre" />
+      <button id="loginBtn" type="button">Giriş Yap</button>
+      <div id="loginStatus" class="status"></div>
+    </div>
 
-<div class="wrap">
+    <div id="adminPanel" class="hidden">
+      <div class="card">
+        <div class="row" style="justify-content:space-between;align-items:center;">
+          <div>
+            <h2>Admin Panel</h2>
+            <div class="muted" id="adminInfo">Yükleniyor...</div>
+          </div>
+          <div style="width:220px;">
+            <button id="logoutBtn" class="btn-dark" type="button">Güvenli Çıkış</button>
+          </div>
+        </div>
+      </div>
 
-<h2>🔐 Admin Panel</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>Kullanıcı Tanımlama</h3>
+          <input id="newEmail" type="email" placeholder="Yeni kullanıcı e-posta" />
+          <input id="newPassword" type="password" placeholder="Geçici şifre" />
+          <input id="newFullName" type="text" placeholder="Ad Soyad" />
+          <select id="newIsAdmin">
+            <option value="false">Normal Kullanıcı</option>
+            <option value="true">Admin Kullanıcı</option>
+          </select>
+          <button id="createUserBtn" type="button">Kullanıcı Oluştur</button>
+          <div id="createUserStatus" class="status"></div>
+        </div>
 
-<div class="card">
-  <h3>Giriş</h3>
-  <input id="pass" placeholder="Şifre"/>
-  <button onclick="login()">Giriş Yap</button>
-</div>
+        <div class="card">
+          <h3>Şifre Değiştir</h3>
+          <input id="targetUserId" type="text" placeholder="Hedef kullanıcı ID" />
+          <input id="targetNewPassword" type="password" placeholder="Yeni şifre" />
+          <button id="changePasswordBtn" type="button">Şifreyi Güncelle</button>
+          <div id="changePasswordStatus" class="status"></div>
+        </div>
+      </div>
 
-<div id="panel" style="display:none;">
-
-  <div class="card">
-    <h3>NFC Kart Tanımla</h3>
-
-    <input id="uid" placeholder="UID (örn: 04E6D462FD1690)"/>
-
-    <select id="package">
-      <option value="PKG_10DIL_100J_30G">10 Dil / 100 Jeton</option>
-      <option value="PKG_20DIL_200J_395G">20 Dil / 200 Jeton</option>
-      <option value="PREMIUM_1YIL">Premium 1 Yıl</option>
-    </select>
-
-    <button onclick="saveCard()">Kart Kaydet</button>
+      <div class="card">
+        <div class="row" style="justify-content:space-between;align-items:center;">
+          <div>
+            <h3>Kullanıcılar</h3>
+            <div class="muted">Son kullanıcılar burada listelenir.</div>
+          </div>
+          <div style="width:220px;">
+            <button id="refreshUsersBtn" class="btn-dark" type="button">Listeyi Yenile</button>
+          </div>
+        </div>
+        <div class="table">
+          <table>
+            <thead>
+              <tr>
+                <th>E-posta</th>
+                <th>Ad Soyad</th>
+                <th>User ID</th>
+                <th>Rol</th>
+                <th>Mode</th>
+                <th>Jeton</th>
+                <th>Bloke</th>
+                <th>İşlem</th>
+              </tr>
+            </thead>
+            <tbody id="usersBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <div class="card">
-    <h3>Kullanıcılar</h3>
-    <button onclick="loadUsers()">Listele</button>
-    <div id="users" class="table"></div>
-  </div>
+  <script type="module">
+    import { supabase } from "/js/supabase_client.js";
 
-</div>
+    const API_BASE = "https://italky-api.onrender.com/api";
 
-</div>
+    const $ = (id) => document.getElementById(id);
 
-<script type="module">
-import { supabase } from "/js/supabase_client.js";
+    const loginCard = $("loginCard");
+    const adminPanel = $("adminPanel");
+    const loginStatus = $("loginStatus");
+    const adminInfo = $("adminInfo");
+    const usersBody = $("usersBody");
 
-const ADMIN_PASS = "123456"; // değiştir
+    let adminUser = null;
 
-function login(){
-  const val = document.getElementById("pass").value;
-  if(val === ADMIN_PASS){
-    document.getElementById("panel").style.display = "block";
-    alert("Giriş başarılı");
-  }else{
-    alert("Hatalı şifre");
-  }
-}
+    function setStatus(el, text, ok = false){
+      el.className = `status ${ok ? "ok" : "err"}`;
+      el.textContent = text || "";
+    }
 
-window.login = login;
+    async function requireAdminUI(){
+      const { data } = await supabase.auth.getUser();
+      const user = data?.user || null;
 
-async function saveCard(){
+      if(!user){
+        loginCard.classList.remove("hidden");
+        adminPanel.classList.add("hidden");
+        return false;
+      }
 
-  const uid = document.getElementById("uid").value
-    .toUpperCase()
-    .replace(/:/g,"")
-    .trim();
+      const res = await fetch(`${API_BASE}/admin/me/${encodeURIComponent(user.id)}`);
+      const json = await res.json().catch(() => ({}));
 
-  const pkg = document.getElementById("package").value;
+      if(!res.ok || !json?.ok){
+        await supabase.auth.signOut();
+        loginCard.classList.remove("hidden");
+        adminPanel.classList.add("hidden");
+        setStatus(loginStatus, "Bu hesap admin değil.");
+        return false;
+      }
 
-  if(!uid){
-    alert("UID boş");
-    return;
-  }
+      adminUser = user;
+      loginCard.classList.add("hidden");
+      adminPanel.classList.remove("hidden");
+      adminInfo.textContent = `${json.user.email} • ${json.user.full_name || "Admin"} • güvenli oturum açık`;
+      await loadUsers();
+      return true;
+    }
 
-  const { error } = await supabase
-    .from("nfc_cards")
-    .insert({
-      uid: uid,
-      package_code: pkg,
-      is_active: true,
-      status: "new"
-    });
+    async function login(){
+      try{
+        setStatus(loginStatus, "Giriş yapılıyor...", true);
 
-  if(error){
-    alert("Hata: " + error.message);
-    return;
-  }
+        const email = $("email").value.trim();
+        const password = $("password").value;
 
-  alert("Kart eklendi");
-}
+        if(!email || !password){
+          setStatus(loginStatus, "E-posta ve şifre gerekli.");
+          return;
+        }
 
-window.saveCard = saveCard;
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if(error) throw error;
 
-async function loadUsers(){
+        const ok = await requireAdminUI();
+        if(ok){
+          setStatus(loginStatus, "");
+        }
+      }catch(e){
+        setStatus(loginStatus, e?.message || "Giriş başarısız.");
+      }
+    }
 
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("id, email, app_access_mode, jeton_balance")
-    .limit(20);
+    async function logout(){
+      await supabase.auth.signOut();
+      adminUser = null;
+      usersBody.innerHTML = "";
+      loginCard.classList.remove("hidden");
+      adminPanel.classList.add("hidden");
+      setStatus(loginStatus, "");
+      $("password").value = "";
+    }
 
-  if(error){
-    alert(error.message);
-    return;
-  }
+    async function createUser(){
+      try{
+        const payload = {
+          admin_user_id: adminUser?.id || "",
+          email: $("newEmail").value.trim(),
+          password: $("newPassword").value,
+          full_name: $("newFullName").value.trim(),
+          is_admin: $("newIsAdmin").value === "true"
+        };
 
-  const box = document.getElementById("users");
-  box.innerHTML = "";
+        const res = await fetch(`${API_BASE}/admin/create-user`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
 
-  data.forEach(u=>{
-    const div = document.createElement("div");
-    div.innerHTML = `
-      ${u.email} | ${u.app_access_mode} | ${u.jeton_balance} jeton
-    `;
-    box.appendChild(div);
-  });
-}
+        const json = await res.json().catch(() => ({}));
+        if(!res.ok || !json?.ok){
+          throw new Error(json?.detail || "Kullanıcı oluşturulamadı");
+        }
 
-window.loadUsers = loadUsers;
-</script>
+        setStatus($("createUserStatus"), `Kullanıcı oluşturuldu: ${json.user.email}`, true);
+        $("newEmail").value = "";
+        $("newPassword").value = "";
+        $("newFullName").value = "";
+        $("newIsAdmin").value = "false";
+        await loadUsers();
+      }catch(e){
+        setStatus($("createUserStatus"), e?.message || "Kullanıcı oluşturulamadı");
+      }
+    }
 
+    async function changePassword(){
+      try{
+        const payload = {
+          admin_user_id: adminUser?.id || "",
+          target_user_id: $("targetUserId").value.trim(),
+          new_password: $("targetNewPassword").value
+        };
+
+        const res = await fetch(`${API_BASE}/admin/change-password`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const json = await res.json().catch(() => ({}));
+        if(!res.ok || !json?.ok){
+          throw new Error(json?.detail || "Şifre değiştirilemedi");
+        }
+
+        setStatus($("changePasswordStatus"), "Şifre başarıyla güncellendi.", true);
+        $("targetUserId").value = "";
+        $("targetNewPassword").value = "";
+      }catch(e){
+        setStatus($("changePasswordStatus"), e?.message || "Şifre değiştirilemedi");
+      }
+    }
+
+    async function toggleBlock(targetUserId, blocked){
+      try{
+        const res = await fetch(`${API_BASE}/admin/toggle-block`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            admin_user_id: adminUser?.id || "",
+            target_user_id: targetUserId,
+            blocked
+          })
+        });
+
+        const json = await res.json().catch(() => ({}));
+        if(!res.ok || !json?.ok){
+          throw new Error(json?.detail || "Durum güncellenemedi");
+        }
+
+        await loadUsers();
+      }catch(e){
+        alert(e?.message || "İşlem başarısız");
+      }
+    }
+
+    async function loadUsers(){
+      const res = await fetch(`${API_BASE}/admin/list-users`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          admin_user_id: adminUser?.id || "",
+          limit: 100
+        })
+      });
+
+      const json = await res.json().catch(() => ({}));
+      if(!res.ok || !json?.ok){
+        usersBody.innerHTML = `<tr><td colspan="8">Liste alınamadı</td></tr>`;
+        return;
+      }
+
+      const users = Array.isArray(json.users) ? json.users : [];
+      usersBody.innerHTML = users.map(u => {
+        const isBlocked = !!u.blocked;
+        return `
+          <tr>
+            <td>${u.email || ""}</td>
+            <td>${u.full_name || ""}</td>
+            <td>${u.id || ""}</td>
+            <td>${u.is_admin ? "Admin" : "Kullanıcı"}</td>
+            <td>${u.app_access_mode || "-"}</td>
+            <td>${Number(u.jeton_balance || 0)}</td>
+            <td>${isBlocked ? "Evet" : "Hayır"}</td>
+            <td>
+              <button type="button" onclick="window.__toggleBlock('${u.id}', ${!isBlocked})">
+                ${isBlocked ? "Blokeyi Kaldır" : "Bloke Et"}
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    window.__toggleBlock = toggleBlock;
+
+    $("loginBtn").addEventListener("click", login);
+    $("logoutBtn").addEventListener("click", logout);
+    $("createUserBtn").addEventListener("click", createUser);
+    $("changePasswordBtn").addEventListener("click", changePassword);
+    $("refreshUsersBtn").addEventListener("click", loadUsers);
+
+    requireAdminUI();
+  </script>
 </body>
 </html>
