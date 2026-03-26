@@ -228,7 +228,10 @@ let isNavigatingHome = false;
 let roomSyncTimer = null;
 let profileRetryTimers = [];
 let recognitionHasResult = false;
+let recognitionFinalText = "";
+let recognitionInterimText = "";
 let manualStopRequested = false;
+let finalizeFromOnEnd = false;
 
 let lastLocalSentText = "";
 let lastLocalSentAt = 0;
@@ -704,7 +707,6 @@ function chooseWebVoice(langCode) {
   const voices = window.speechSynthesis?.getVoices?.() || [];
   const bcp = langObj(langCode).bcp.toLowerCase();
   const langBase = canonical(langCode);
-  const pref = getVoicePreference();
 
   let pool = voices.filter((v) => String(v.lang || "").toLowerCase().startsWith(langBase));
   if (!pool.length) pool = voices.filter((v) => String(v.lang || "").toLowerCase() === bcp);
@@ -743,7 +745,7 @@ function speakFallback(text, langCode) {
 
   const u = new SpeechSynthesisUtterance(value);
   u.lang = langObj(c).bcp;
-  u.rate = c === "en" ? 0.82 : ["de", "fr", "it", "es"].includes(c) ? 0.88 : 0.92;
+  u.rate = c === "en" ? 0.78 : ["de", "fr", "it", "es", "az", "ka", "ru"].includes(c) ? 0.82 : 0.86;
   u.pitch = 1.0;
   u.volume = 1;
 
@@ -755,7 +757,7 @@ function speakFallback(text, langCode) {
       window.speechSynthesis.cancel();
       window.speechSynthesis.speak(u);
     } catch {}
-  }, 80);
+  }, 140);
 }
 
 async function speak(text, langCode, sourceUserId = "", sourceVoice = "auto") {
@@ -772,6 +774,12 @@ async function speak(text, langCode, sourceUserId = "", sourceVoice = "auto") {
       await speakViaApi(value, langCode, sourceUserId, voice);
       return;
     } catch {
+      if (voice === "clone") {
+        try {
+          await speakViaApi(value, langCode, sourceUserId, "auto");
+          return;
+        } catch {}
+      }
       speakFallback(value, langCode);
       return;
     }
@@ -785,6 +793,12 @@ async function speak(text, langCode, sourceUserId = "", sourceVoice = "auto") {
   try {
     await speakViaApi(value, langCode, "", voice);
   } catch {
+    if (voice === "clone") {
+      try {
+        await speakViaApi(value, langCode, "", "auto");
+        return;
+      } catch {}
+    }
     speakFallback(value, langCode);
   }
 }
@@ -992,7 +1006,6 @@ function startSocket() {
             peerProfile.lang = guestLang;
             try { localStorage.setItem("live_interpreter_peer_lang", peerLang); } catch {}
           }
-
           liveConnected = !!(peerConnectedFlag || guestLang || status === "active" || peerCount >= 2);
         }
 
@@ -1002,7 +1015,6 @@ function startSocket() {
             peerProfile.lang = hostLang;
             try { localStorage.setItem("live_interpreter_peer_lang", peerLang); } catch {}
           }
-
           liveConnected = !!(hostLang && (peerConnectedFlag || status === "active" || peerCount >= 2 || guestLang));
         }
 
@@ -1335,8 +1347,8 @@ function buildRecognizer(langCode) {
 
   const rec = new SR();
   rec.lang = langObj(langCode).bcp;
-  rec.interimResults = false;
-  rec.continuous = false;
+  rec.interimResults = true;
+  rec.continuous = true;
   rec.maxAlternatives = 1;
   return rec;
 }
@@ -1357,6 +1369,12 @@ async function speechToTextFallback() {
   return String(txt).trim() || null;
 }
 
+function collectRecognitionText() {
+  const finalPart = String(recognitionFinalText || "").trim();
+  const interimPart = String(recognitionInterimText || "").trim();
+  return [finalPart, interimPart].filter(Boolean).join(" ").replace(/\s+/g, " ").trim();
+}
+
 async function finalizeRecognition(text) {
   const cleaned = String(text || "").trim();
   if (!cleaned) {
@@ -1365,7 +1383,10 @@ async function finalizeRecognition(text) {
     return;
   }
 
-  if (shouldIgnoreDuplicateLocal(cleaned)) return;
+  if (shouldIgnoreDuplicateLocal(cleaned)) {
+    setSystemReadyUI();
+    return;
+  }
 
   clearLatest("bottom");
   addBubble("bottom", "me", cleaned, {
@@ -1398,16 +1419,36 @@ function startRecording() {
   recognizer = rec;
   recordingSide = "bot";
   recognitionHasResult = false;
+  recognitionFinalText = "";
+  recognitionInterimText = "";
   manualStopRequested = false;
+  finalizeFromOnEnd = false;
 
   rec.onstart = () => {
     setListeningUI();
   };
 
   rec.onresult = (e) => {
-    recognitionHasResult = true;
-    const heard = e.results?.[0]?.[0]?.transcript || "";
-    Promise.resolve().then(() => finalizeRecognition(heard));
+    let finalChunk = "";
+    let interimChunk = "";
+
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const chunk = String(e.results[i]?.[0]?.transcript || "").trim();
+      if (!chunk) continue;
+
+      if (e.results[i].isFinal) {
+        finalChunk += ` ${chunk}`;
+      } else {
+        interimChunk += ` ${chunk}`;
+      }
+    }
+
+    if (finalChunk.trim()) {
+      recognitionHasResult = true;
+      recognitionFinalText = `${recognitionFinalText} ${finalChunk}`.trim();
+    }
+
+    recognitionInterimText = interimChunk.trim();
   };
 
   rec.onerror = async (e) => {
@@ -1430,12 +1471,19 @@ function startRecording() {
     }
   };
 
-  rec.onend = () => {
+  rec.onend = async () => {
     recognizer = null;
     recordingSide = null;
 
-    if (manualStopRequested) {
-      return;
+    if (finalizeFromOnEnd) {
+      const text = collectRecognitionText();
+      finalizeFromOnEnd = false;
+      manualStopRequested = false;
+
+      if (text) {
+        await finalizeRecognition(text);
+        return;
+      }
     }
 
     if (!recognitionHasResult) {
@@ -1459,8 +1507,8 @@ async function toggleRecording() {
 
   if (recordingSide === "bot") {
     manualStopRequested = true;
+    finalizeFromOnEnd = true;
     stopRecognizer();
-    recordingSide = null;
     setSendingUI();
     return;
   }
@@ -1567,6 +1615,11 @@ function bind() {
     stopAudio();
     stopRecognizer();
     recordingSide = null;
+    recognitionHasResult = false;
+    recognitionFinalText = "";
+    recognitionInterimText = "";
+    manualStopRequested = false;
+    finalizeFromOnEnd = false;
     lastLocalSentText = "";
     lastLocalSentAt = 0;
     if (topBody) topBody.innerHTML = "";
