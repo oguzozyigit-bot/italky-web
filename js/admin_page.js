@@ -130,7 +130,7 @@ async function boot(){
     meLine.textContent = `Yetki: ${me.me.role} • UID: ${me.me.user_id}`;
 
     renderUsers();
-    renderNfc();
+    ();
     renderDeploy();
     renderGithub();
     tab("users");
@@ -226,8 +226,8 @@ function renderNfc(){
   box.innerHTML = `
     <div class="grid">
       <div class="admin-card">
-        <h3>NFC Kart Tanımlama</h3>
-        <p>Kart UID değerini gir, sistem UID içindeki iki nokta işaretlerini otomatik temizler.</p>
+        <h3>NFC + QR Kart Tanımlama</h3>
+        <p>Aynı UID hem NFC için hem QR için kullanılacak. QR link otomatik üretilir.</p>
 
         <div class="kv">
           <input class="inp" id="nfcUidInput" placeholder="UID (örn: 04:E6:D4:62:FD:16:90)" />
@@ -236,18 +236,20 @@ function renderNfc(){
             <option value="PKG_20DIL_200J_395G">20 Dil + 200 Jeton / 395 Gün</option>
             <option value="PREMIUM_1YIL">Premium 1 Yıl</option>
           </select>
+
           <button class="btn btn-primary" id="saveNfcBtn">Kartı Kaydet</button>
           <div id="nfcStatus" class="info-line"></div>
         </div>
       </div>
 
       <div class="admin-card">
-        <h3>UID Dönüştürücü</h3>
-        <p>Panelde noktalı girmen yeterli. Sistem bunu otomatik normalleştirip Supabase’e öyle yazar.</p>
+        <h3>QR Link Üretici</h3>
+        <p>Noktalı UID girebilirsin. Sistem temizleyip QR için hazır link üretir.</p>
 
         <div class="kv">
           <input class="inp" id="uidPreviewInput" placeholder="Örn: 04:E6:D4:62:FD:16:90" />
           <input class="inp" id="uidPreviewOutput" placeholder="Temiz UID burada görünür" readonly />
+          <input class="inp" id="qrLinkOutput" placeholder="QR link burada oluşur" readonly />
         </div>
       </div>
     </div>
@@ -256,11 +258,18 @@ function renderNfc(){
   const nfcUidInput = box.querySelector("#nfcUidInput");
   const uidPreviewInput = box.querySelector("#uidPreviewInput");
   const uidPreviewOutput = box.querySelector("#uidPreviewOutput");
+  const qrLinkOutput = box.querySelector("#qrLinkOutput");
   const nfcStatus = box.querySelector("#nfcStatus");
   const saveBtn = box.querySelector("#saveNfcBtn");
 
+  function makeQrLink(uid){
+    return uid ? `https://italky.ai/open/access?uid=${encodeURIComponent(uid)}` : "";
+  }
+
   function syncPreview(){
-    uidPreviewOutput.value = normalizeUid(uidPreviewInput.value);
+    const clean = normalizeUid(uidPreviewInput.value);
+    uidPreviewOutput.value = clean;
+    qrLinkOutput.value = makeQrLink(clean);
   }
 
   uidPreviewInput.addEventListener("input", syncPreview);
@@ -276,6 +285,7 @@ function renderNfc(){
       return;
     }
 
+    const qrLink = makeQrLink(uid);
     saveBtn.textContent = "Kaydediliyor...";
 
     try{
@@ -284,6 +294,8 @@ function renderNfc(){
         .select("id,uid")
         .eq("uid", uid)
         .maybeSingle();
+
+      if(exists?.error) throw exists.error;
 
       if(exists?.data?.id){
         const { error:updateError } = await supabase
@@ -297,7 +309,7 @@ function renderNfc(){
 
         if(updateError) throw updateError;
 
-        setInfoLine(nfcStatus, `Kart güncellendi: ${uid}`, true);
+        setInfoLine(nfcStatus, `Kart güncellendi. QR Link: ${qrLink}`, true);
       } else {
         const { error:insertError } = await supabase
           .from("nfc_cards")
@@ -310,8 +322,12 @@ function renderNfc(){
 
         if(insertError) throw insertError;
 
-        setInfoLine(nfcStatus, `Kart eklendi: ${uid}`, true);
+        setInfoLine(nfcStatus, `Kart eklendi. QR Link: ${qrLink}`, true);
       }
+
+      uidPreviewInput.value = raw;
+      uidPreviewOutput.value = uid;
+      qrLinkOutput.value = qrLink;
 
       nfcUidInput.value = "";
       saveBtn.textContent = "Kartı Kaydet";
@@ -321,57 +337,6 @@ function renderNfc(){
     }
   };
 }
-
-function renderDeploy(){
-  const box = $("panelDeploy");
-  box.innerHTML = `
-    <div class="grid">
-      <div class="admin-card">
-        <h3>Vercel Deploy</h3>
-        <p>Frontend deploy hook tetiklenir.</p>
-        <button class="btn btn-primary" id="depVercel">Vercel Deploy Başlat</button>
-        <div id="depVercelStatus" class="info-line"></div>
-      </div>
-
-      <div class="admin-card">
-        <h3>Render Deploy</h3>
-        <p>API için yeni Render deploy tetiklenir.</p>
-        <button class="btn btn-primary" id="depRender">Render Deploy Başlat</button>
-        <div id="depRenderStatus" class="info-line"></div>
-      </div>
-    </div>
-  `;
-
-  const vercelBtn = box.querySelector("#depVercel");
-  const renderBtn = box.querySelector("#depRender");
-  const vercelStatus = box.querySelector("#depVercelStatus");
-  const renderStatus = box.querySelector("#depRenderStatus");
-
-  vercelBtn.onclick = async () => {
-    try{
-      vercelBtn.textContent = "Tetikleniyor...";
-      await api("/admin/deploy/vercel", { method:"POST" });
-      setInfoLine(vercelStatus, "Vercel deploy tetiklendi.", true);
-    }catch(e){
-      setInfoLine(vercelStatus, e.message || "Vercel deploy hatası.", false);
-    }finally{
-      vercelBtn.textContent = "Vercel Deploy Başlat";
-    }
-  };
-
-  renderBtn.onclick = async () => {
-    try{
-      renderBtn.textContent = "Tetikleniyor...";
-      await api("/admin/deploy/render", { method:"POST" });
-      setInfoLine(renderStatus, "Render deploy tetiklendi.", true);
-    }catch(e){
-      setInfoLine(renderStatus, e.message || "Render deploy hatası.", false);
-    }finally{
-      renderBtn.textContent = "Render Deploy Başlat";
-    }
-  };
-}
-
 function renderGithub(){
   const box = $("panelGithub");
   box.innerHTML = `
