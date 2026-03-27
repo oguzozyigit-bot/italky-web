@@ -1,745 +1,262 @@
 <!doctype html>
 <html lang="tr">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
-  <title>italkyAI • Global Premium</title>
-  <meta name="theme-color" content="#05070a"/>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
-
-  <style>
-    :root{
-      --bg:#05070a;
-      --txt:#f8fbff;
-      --muted:rgba(255,255,255,.72);
-      --soft:rgba(255,255,255,.52);
-      --line:rgba(255,255,255,.11);
-      --card:rgba(255,255,255,.06);
-      --cyan:#67e8f9;
-      --pink:#f472b6;
-      --indigo:#818cf8;
-      --grad:linear-gradient(135deg,#67e8f9 0%, #818cf8 46%, #f472b6 100%);
-      --gold:linear-gradient(135deg,#f59e0b 0%, #f97316 100%);
-      --shellLift:0px;
-    }
-
-    *{
-      box-sizing:border-box;
-      -webkit-tap-highlight-color:transparent;
-    }
-
-    html,body{
-      margin:0;
-      width:100%;
-      min-height:100%;
-      background:var(--bg);
-      color:var(--txt);
-      font-family:'Outfit',sans-serif;
-    }
-
-    body{
-      overflow-x:hidden;
-      overflow-y:auto;
-      background:
-        radial-gradient(circle at 50% 18%, rgba(103,232,249,.08), transparent 18%),
-        radial-gradient(circle at 84% 16%, rgba(244,114,182,.10), transparent 20%),
-        radial-gradient(circle at 18% 84%, rgba(129,140,248,.10), transparent 24%),
-        linear-gradient(180deg,#05070a 0%, #09111b 48%, #05070a 100%);
-    }
-
-    .nebula{
-      position:fixed;
-      inset:0;
-      pointer-events:none;
-      z-index:0;
-      overflow:hidden;
-    }
-
-    .blob{
-      position:absolute;
-      border-radius:50%;
-      filter:blur(70px);
-      opacity:.22;
-      animation:floatBlob 9s ease-in-out infinite;
-    }
-
-    .blob.b1{
-      width:240px;height:240px;
-      left:-40px;top:120px;
-      background:#67e8f9;
-    }
-
-    .blob.b2{
-      width:260px;height:260px;
-      right:-80px;top:220px;
-      background:#f472b6;
-      animation-delay:-2s;
-    }
-
-    .blob.b3{
-      width:220px;height:220px;
-      left:28%;bottom:90px;
-      background:#818cf8;
-      animation-delay:-4s;
-    }
-
-    .stars{
-      position:absolute;
-      inset:0;
-      background-image:
-        radial-gradient(circle, rgba(255,255,255,.9) 1px, transparent 1.5px),
-        radial-gradient(circle, rgba(255,255,255,.45) 1px, transparent 1.5px),
-        radial-gradient(circle, rgba(255,255,255,.28) 1px, transparent 1.5px);
-      background-size:140px 140px, 220px 220px, 300px 300px;
-      background-position:0 0, 30px 70px, 110px 40px;
-      opacity:.16;
-    }
-
-    #page{
-      position:relative;
-      z-index:2;
-      width:min(100%, 880px);
-      margin:0 auto;
-      padding:
-        calc(env(safe-area-inset-top) + 92px)
-        16px
-        calc(env(safe-area-inset-bottom) + 120px + var(--shellLift))
-        16px;
-    }
-
-    .stack{
-      display:grid;
-      gap:16px;
-    }
-
-    .glass{
-      background:var(--card);
-      border:1px solid var(--line);
-      backdrop-filter:blur(18px);
-      box-shadow:0 24px 60px rgba(0,0,0,.32);
-    }
-
-    .hero{
-      border-radius:30px;
-      overflow:hidden;
-      padding:20px 18px 22px;
-    }
-
-    .hero-top{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      margin-bottom:14px;
-    }
-
-    .back-btn{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      min-height:42px;
-      padding:0 14px;
-      border-radius:14px;
-      background:rgba(255,255,255,.08);
-      border:1px solid rgba(255,255,255,.11);
-      color:#fff;
-      text-decoration:none;
-      font-size:13px;
-      font-weight:800;
-    }
-
-    .premium-pill{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      min-height:36px;
-      padding:0 14px;
-      border-radius:999px;
-      background:rgba(245,158,11,.12);
-      border:1px solid rgba(245,158,11,.34);
-      color:#ffd089;
-      font-size:11px;
-      font-weight:900;
-      letter-spacing:1px;
-      text-transform:uppercase;
-    }
-
-    .galaxy-card{
-      position:relative;
-      min-height:420px;
-      border-radius:24px;
-      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));
-      border:1px solid rgba(255,255,255,.07);
-      overflow:hidden;
-      margin-bottom:18px;
-    }
-
-    .galaxy-zone{
-      position:relative;
-      height:420px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      overflow:hidden;
-    }
-
-    .earth-core{
-      width:116px;
-      height:116px;
-      border-radius:50%;
-      z-index:5;
-      background:
-        radial-gradient(circle at 32% 28%, rgba(255,255,255,.32) 0%, transparent 18%),
-        radial-gradient(circle at 50% 55%, #2dd4bf 0%, #2563eb 38%, #0f172a 78%, #020617 100%);
-      box-shadow:
-        0 0 26px rgba(103,232,249,.24),
-        0 0 56px rgba(129,140,248,.18),
-        inset -16px -16px 24px rgba(0,0,0,.45);
-      position:relative;
-      overflow:hidden;
-      animation:earthSpin 14s linear infinite;
-    }
-
-    .earth-core::before,
-    .earth-core::after{
-      content:"";
-      position:absolute;
-      inset:0;
-      border-radius:50%;
-    }
-
-    .earth-core::before{
-      background:
-        radial-gradient(circle at 25% 45%, rgba(34,197,94,.9) 0 10%, transparent 11%),
-        radial-gradient(circle at 52% 40%, rgba(34,197,94,.8) 0 13%, transparent 14%),
-        radial-gradient(circle at 68% 62%, rgba(34,197,94,.7) 0 10%, transparent 11%);
-      mix-blend-mode:screen;
-      opacity:.75;
-    }
-
-    .earth-core::after{
-      border:1px solid rgba(255,255,255,.14);
-    }
-
-    .orbit{
-      position:absolute;
-      border-radius:50%;
-      border:1px solid rgba(255,255,255,.09);
-      left:50%;
-      top:50%;
-      transform:translate(-50%,-50%);
-      pointer-events:none;
-    }
-
-    .orbit-1{ width:210px; height:210px; animation:rotateCW 20s linear infinite; }
-    .orbit-2{ width:320px; height:320px; animation:rotateCCW 32s linear infinite; }
-    .orbit-3{ width:430px; height:430px; animation:rotateCW 48s linear infinite; }
-
-    .flag{
-      position:absolute;
-      width:30px;
-      height:30px;
-      border-radius:50%;
-      object-fit:cover;
-      border:1px solid rgba(255,255,255,.18);
-      box-shadow:0 0 10px rgba(255,255,255,.18);
-      background:#fff;
-    }
-
-    .orbit-1 .flag{ width:28px; height:28px; }
-    .orbit-2 .flag{ width:30px; height:30px; }
-    .orbit-3 .flag{ width:32px; height:32px; }
-
-    .hero-content{
-      text-align:center;
-      padding:0 8px;
-    }
-
-    .motto-tag{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      min-height:30px;
-      padding:0 12px;
-      background:rgba(103,232,249,.10);
-      border:1px solid rgba(103,232,249,.22);
-      color:var(--cyan);
-      border-radius:99px;
-      font-size:11px;
-      font-weight:800;
-      margin-bottom:10px;
-      letter-spacing:.4px;
-    }
-
-    h1{
-      font-size:34px;
-      line-height:1.03;
-      margin:0;
-      font-weight:900;
-      letter-spacing:-1px;
-    }
-
-    h1 .grad{
-      background:var(--grad);
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;
-    }
-
-    .sub{
-      width:min(100%, 620px);
-      margin:12px auto 0;
-      color:var(--muted);
-      font-size:14px;
-      line-height:1.6;
-    }
-
-    .price-card{
-      border-radius:28px;
-      padding:18px;
-    }
-
-    .price-top{
-      display:flex;
-      align-items:flex-start;
-      justify-content:space-between;
-      gap:14px;
-      flex-wrap:wrap;
-      margin-bottom:14px;
-    }
-
-    .plan-name{
-      font-size:24px;
-      font-weight:900;
-      line-height:1.1;
-    }
-
-    .plan-sub{
-      margin-top:6px;
-      font-size:13px;
-      color:var(--muted);
-      line-height:1.55;
-      max-width:470px;
-    }
-
-    .price-box{
-      text-align:right;
-    }
-
-    .price-value{
-      font-size:42px;
-      font-weight:950;
-      line-height:1;
-      color:#fff;
-      letter-spacing:-1px;
-    }
-
-    .price-note{
-      margin-top:6px;
-      color:#ffd8a8;
-      font-size:12px;
-      font-weight:800;
-    }
-
-    .info-grid{
-      display:grid;
-      grid-template-columns:repeat(2,1fr);
-      gap:12px;
-      margin:14px 0 16px;
-    }
-
-    .info-card{
-      min-height:86px;
-      border-radius:18px;
-      background:rgba(255,255,255,.05);
-      border:1px solid rgba(255,255,255,.10);
-      padding:14px;
-    }
-
-    .info-title{
-      font-size:13px;
-      font-weight:900;
-      margin-bottom:6px;
-      color:#fff;
-    }
-
-    .info-text{
-      font-size:12px;
-      color:var(--muted);
-      line-height:1.5;
-    }
-
-    .feature-list{
-      display:grid;
-      gap:10px;
-      margin-top:4px;
-    }
-
-    .feature{
-      min-height:58px;
-      border-radius:18px;
-      border:1px solid rgba(255,255,255,.10);
-      background:rgba(255,255,255,.05);
-      display:flex;
-      align-items:center;
-      gap:12px;
-      padding:0 14px;
-    }
-
-    .feature-icon{
-      width:34px;
-      height:34px;
-      min-width:34px;
-      border-radius:12px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      background:rgba(245,158,11,.14);
-      border:1px solid rgba(255,255,255,.10);
-      font-size:16px;
-    }
-
-    .feature-body{
-      display:flex;
-      flex-direction:column;
-      gap:2px;
-    }
-
-    .feature-title{
-      font-size:14px;
-      font-weight:800;
-      color:#fff;
-    }
-
-    .feature-text{
-      font-size:12px;
-      color:var(--muted);
-      line-height:1.45;
-    }
-
-    .cta-main{
-      width:100%;
-      min-height:58px;
-      margin-top:16px;
-      background:var(--gold);
-      border:none;
-      border-radius:20px;
-      color:#fff;
-      font-size:17px;
-      font-weight:900;
-      box-shadow:0 15px 30px rgba(249,115,22,.32);
-      cursor:pointer;
-    }
-
-    .cta-main:active{
-      transform:scale(.985);
-    }
-
-    .status{
-      min-height:24px;
-      margin-top:10px;
-      text-align:center;
-      font-size:13px;
-      font-weight:800;
-    }
-
-    .status.ok{ color:#22c55e; }
-    .status.err{ color:#ef4444; }
-    .status.warn{ color:#f59e0b; }
-
-    .foot-note{
-      margin-top:12px;
-      text-align:center;
-      font-size:12px;
-      color:var(--soft);
-      line-height:1.5;
-    }
-
-    @keyframes earthSpin{
-      from{ transform:rotate(0deg); }
-      to{ transform:rotate(360deg); }
-    }
-
-    @keyframes rotateCW{
-      from{ transform:translate(-50%,-50%) rotate(0deg); }
-      to{ transform:translate(-50%,-50%) rotate(360deg); }
-    }
-
-    @keyframes rotateCCW{
-      from{ transform:translate(-50%,-50%) rotate(0deg); }
-      to{ transform:translate(-50%,-50%) rotate(-360deg); }
-    }
-
-    @keyframes floatBlob{
-      0%,100%{ transform:translateY(0px); opacity:.22; }
-      50%{ transform:translateY(-14px); opacity:.30; }
-    }
-
-    @media (max-width:760px){
-      #page{
-        padding-top:88px;
-      }
-
-      .galaxy-card{
-        min-height:360px;
-      }
-
-      .galaxy-zone{
-        height:360px;
-      }
-
-      .orbit-1{ width:180px; height:180px; }
-      .orbit-2{ width:270px; height:270px; }
-      .orbit-3{ width:340px; height:340px; }
-
-      h1{
-        font-size:30px;
-      }
-
-      .price-value{
-        font-size:34px;
-      }
-    }
-
-    @media (max-width:560px){
-      .info-grid{
-        grid-template-columns:1fr;
-      }
-
-      .galaxy-card{
-        min-height:330px;
-      }
-
-      .galaxy-zone{
-        height:330px;
-      }
-
-      .orbit-1{ width:170px; height:170px; }
-      .orbit-2{ width:245px; height:245px; }
-      .orbit-3{ width:305px; height:305px; }
-
-      .flag{
-        width:26px;
-        height:26px;
-      }
-
-      h1{
-        font-size:28px;
-      }
-    }
-  </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
+<title>italkyAI • Paket Seç</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg:#070a12;
+  --txt:#fff;
+  --muted:rgba(255,255,255,.65);
+  --cyan:#67e8f9;
+  --pink:#f472b6;
+  --indigo:#818cf8;
+  --grad:linear-gradient(135deg,#67e8f9,#818cf8,#f472b6);
+  --gold:linear-gradient(135deg,#f59e0b,#f97316);
+}
+
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  font-family:'Outfit',sans-serif;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(103,232,249,.08), transparent 30%),
+    linear-gradient(180deg,#05070a,#070a12);
+  color:#fff;
+}
+
+.page{
+  padding:80px 18px 120px;
+  max-width:900px;
+  margin:auto;
+}
+
+.title{
+  text-align:center;
+  margin-bottom:25px;
+}
+
+.title h1{
+  font-size:32px;
+  font-weight:900;
+}
+
+.title p{
+  font-size:13px;
+  color:var(--muted);
+  margin-top:8px;
+}
+
+/* TRIAL BAR */
+.trial{
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.1);
+  padding:12px;
+  border-radius:16px;
+  text-align:center;
+  font-size:13px;
+  margin-bottom:20px;
+}
+
+/* CARDS */
+.grid{
+  display:grid;
+  gap:14px;
+}
+
+.card{
+  border-radius:24px;
+  padding:20px;
+  border:1px solid rgba(255,255,255,.1);
+  background:rgba(255,255,255,.05);
+  backdrop-filter:blur(10px);
+  position:relative;
+  overflow:hidden;
+}
+
+/* PREMIUM HIGHLIGHT */
+.card.premium{
+  border:1px solid rgba(255,255,255,.2);
+  box-shadow:0 0 30px rgba(255,255,255,.15);
+}
+
+.badge{
+  position:absolute;
+  top:10px;
+  right:10px;
+  font-size:10px;
+  padding:4px 10px;
+  border-radius:999px;
+  font-weight:800;
+  background:var(--gold);
+}
+
+/* HEAD */
+.card h2{
+  font-size:20px;
+  font-weight:900;
+}
+
+.price{
+  font-size:28px;
+  font-weight:900;
+  margin-top:6px;
+}
+
+.jeton{
+  font-size:12px;
+  color:#ffd089;
+  margin-bottom:12px;
+}
+
+/* FEATURES */
+.features{
+  display:grid;
+  gap:6px;
+  font-size:13px;
+  color:var(--muted);
+  margin-bottom:16px;
+}
+
+/* BUTTON */
+.btn{
+  width:100%;
+  height:50px;
+  border-radius:16px;
+  border:none;
+  font-weight:900;
+  font-size:14px;
+  cursor:pointer;
+}
+
+.btn.gold{
+  background:var(--gold);
+}
+
+.btn.grad{
+  background:var(--grad);
+}
+
+/* SMALL NOTE */
+.note{
+  text-align:center;
+  font-size:11px;
+  color:var(--muted);
+  margin-top:15px;
+}
+
+</style>
 </head>
+
 <body>
-  <div class="nebula">
-    <div class="blob b1"></div>
-    <div class="blob b2"></div>
-    <div class="blob b3"></div>
-    <div class="stars"></div>
+
+<div class="page">
+
+  <div class="title">
+    <h1>Paketini Seç</h1>
+    <p>7 gün tüm özellikler açık. Süre bitmeden karar ver.</p>
   </div>
 
-  <main id="page">
-    <div class="stack">
+  <div id="trialInfo" class="trial">
+    Deneme süren devam ediyor...
+  </div>
 
-      <section class="hero glass">
-        <div class="hero-top">
-          <a class="back-btn" href="/pages/home.html">← Geri</a>
-          <div class="premium-pill">PREMIUM GLOBAL</div>
-        </div>
+  <div class="grid">
 
-        <div class="galaxy-card">
-          <div class="galaxy-zone">
-            <div class="earth-core"></div>
+    <!-- EĞİTİM -->
+    <div class="card">
+      <h2>Eğitim Paketi</h2>
+      <div class="price">499 TL</div>
+      <div class="jeton">+100 Jeton</div>
 
-            <div class="orbit orbit-1">
-              <img src="https://flagcdn.com/w80/tr.png" class="flag" style="top:-14px; left:50%; transform:translateX(-50%);" alt="TR">
-              <img src="https://flagcdn.com/w80/us.png" class="flag" style="bottom:-14px; left:50%; transform:translateX(-50%);" alt="US">
-              <img src="https://flagcdn.com/w80/gb.png" class="flag" style="left:-14px; top:50%; transform:translateY(-50%);" alt="GB">
-              <img src="https://flagcdn.com/w80/de.png" class="flag" style="right:-14px; top:50%; transform:translateY(-50%);" alt="DE">
-              <img src="https://flagcdn.com/w80/fr.png" class="flag" style="left:18px; top:18px;" alt="FR">
-              <img src="https://flagcdn.com/w80/es.png" class="flag" style="right:18px; bottom:18px;" alt="ES">
-            </div>
+      <div class="features">
+        ✓ TextToText<br>
+        ✓ Eğitim Modülü<br>
+        ✓ Eğlenerek Öğren<br>
+        ✓ Pratik Yap<br>
+        ✓ Seviye Tespit
+      </div>
 
-            <div class="orbit orbit-2">
-              <img src="https://flagcdn.com/w80/it.png" class="flag" style="top:-15px; left:50%; transform:translateX(-50%);" alt="IT">
-              <img src="https://flagcdn.com/w80/ru.png" class="flag" style="bottom:-15px; left:50%; transform:translateX(-50%);" alt="RU">
-              <img src="https://flagcdn.com/w80/jp.png" class="flag" style="left:-15px; top:50%; transform:translateY(-50%);" alt="JP">
-              <img src="https://flagcdn.com/w80/kr.png" class="flag" style="right:-15px; top:50%; transform:translateY(-50%);" alt="KR">
-              <img src="https://flagcdn.com/w80/cn.png" class="flag" style="left:26px; top:26px;" alt="CN">
-              <img src="https://flagcdn.com/w80/sa.png" class="flag" style="right:26px; top:26px;" alt="SA">
-              <img src="https://flagcdn.com/w80/br.png" class="flag" style="left:26px; bottom:26px;" alt="BR">
-              <img src="https://flagcdn.com/w80/in.png" class="flag" style="right:26px; bottom:26px;" alt="IN">
-            </div>
-
-            <div class="orbit orbit-3">
-              <img src="https://flagcdn.com/w80/pt.png" class="flag" style="top:-16px; left:50%; transform:translateX(-50%);" alt="PT">
-              <img src="https://flagcdn.com/w80/nl.png" class="flag" style="bottom:-16px; left:50%; transform:translateX(-50%);" alt="NL">
-              <img src="https://flagcdn.com/w80/se.png" class="flag" style="left:-16px; top:50%; transform:translateY(-50%);" alt="SE">
-              <img src="https://flagcdn.com/w80/no.png" class="flag" style="right:-16px; top:50%; transform:translateY(-50%);" alt="NO">
-              <img src="https://flagcdn.com/w80/fi.png" class="flag" style="left:34px; top:18px;" alt="FI">
-              <img src="https://flagcdn.com/w80/pl.png" class="flag" style="right:34px; top:18px;" alt="PL">
-              <img src="https://flagcdn.com/w80/ae.png" class="flag" style="left:34px; bottom:18px;" alt="AE">
-              <img src="https://flagcdn.com/w80/mx.png" class="flag" style="right:34px; bottom:18px;" alt="MX">
-              <img src="https://flagcdn.com/w80/gr.png" class="flag" style="top:50px; left:6px;" alt="GR">
-              <img src="https://flagcdn.com/w80/ua.png" class="flag" style="bottom:50px; right:6px;" alt="UA">
-            </div>
-          </div>
-        </div>
-
-        <div class="hero-content">
-          <div class="motto-tag">italkyAI • EĞLENEREK ÖĞREN</div>
-          <h1>Dünyayı <span class="grad">Cebine Sığdır,</span><br>Özgürce Konuş.</h1>
-          <p class="sub">
-            Premium üyelikle text dışındaki tüm modüller açılır. Dünyanın dillerini internet olsa da olmasa da yanında taşırsın.
-          </p>
-        </div>
-      </section>
-
-      <section class="price-card glass">
-        <div class="price-top">
-          <div>
-            <div class="plan-name">Tek Paket • Premium Üyelik</div>
-            <div class="plan-sub">
-              67 offline dil, 100 jeton ve tüm premium modüllere erişim tek pakette birleşir.
-            </div>
-          </div>
-
-          <div class="price-box">
-            <div class="price-value">499 TL</div>
-            <div class="price-note">100 jeton dahil</div>
-          </div>
-        </div>
-
-        <div class="info-grid">
-          <div class="info-card">
-            <div class="info-title">67 Offline Dil</div>
-            <div class="info-text">Her dil ilk kez ücretsiz indirilebilir. Aynı dil tekrar indirilirse jeton kullanılır.</div>
-          </div>
-
-          <div class="info-card">
-            <div class="info-title">Tüm Modüller Açık</div>
-            <div class="info-text">FaceToFace, Offline, Interpreter, Pratik, oyunlar ve premium özelliklerin tamamı açılır.</div>
-          </div>
-        </div>
-
-        <div class="feature-list">
-          <div class="feature">
-            <div class="feature-icon">🌍</div>
-            <div class="feature-body">
-              <div class="feature-title">Global offline kullanım</div>
-              <div class="feature-text">İnternet aramadan dil paketlerini yanında taşı ve dilediğinde kullan.</div>
-            </div>
-          </div>
-
-          <div class="feature">
-            <div class="feature-icon">🪙</div>
-            <div class="feature-body">
-              <div class="feature-title">Jeton marketi görünür olur</div>
-              <div class="feature-text">Jeton fiyatları ve ek satın alma seçenekleri yalnızca premium üyelerde açılır.</div>
-            </div>
-          </div>
-
-          <div class="feature">
-            <div class="feature-icon">🔓</div>
-            <div class="feature-body">
-              <div class="feature-title">Basic kilitleri kalkar</div>
-              <div class="feature-text">Ana sayfadaki kilitli kartlar açılır ve premium deneyim aktif olur.</div>
-            </div>
-          </div>
-        </div>
-
-        <button id="buyBtn" class="cta-main" type="button">PREMIUM'U AKTİF ET</button>
-        <div id="buyStatus" class="status"></div>
-
-        <div class="foot-note">
-          Satın alma tamamlandığında premium üyelik aktif edilir ve ana sayfaya dönülür.
-        </div>
-      </section>
-
+      <button class="btn grad" onclick="buy('edu')">
+        Eğitimi Aç
+      </button>
     </div>
-  </main>
 
-  <script type="module">
-    import { mountShell } from "/js/ui_shell.js";
+    <!-- TRANSLATE -->
+    <div class="card">
+      <h2>Translate Paketi</h2>
+      <div class="price">499 TL</div>
+      <div class="jeton">+100 Jeton</div>
 
-    try {
-      mountShell({ scroll: "auto" });
+      <div class="features">
+        ✓ FaceToFace<br>
+        ✓ EarToEar<br>
+        ✓ TextToText<br>
+        ✓ OffToOff
+      </div>
 
-      setTimeout(() => {
-        try{
-          const root = getComputedStyle(document.documentElement);
-          const footerH = parseFloat(root.getPropertyValue("--footerH")) || 0;
-          document.documentElement.style.setProperty("--shellLift", footerH ? `${footerH + 16}px` : "0px");
-        }catch(e){}
-      }, 80);
+      <button class="btn grad" onclick="buy('translate')">
+        Çeviri Aç
+      </button>
+    </div>
 
-    } catch(e) {
-      console.warn("Shell hazır değil:", e);
-    }
+    <!-- PREMIUM -->
+    <div class="card premium">
+      <div class="badge">EN İYİ</div>
 
-    const buyBtn = document.getElementById("buyBtn");
-    const buyStatus = document.getElementById("buyStatus");
-    const PREMIUM_SKU = "premium_499";
+      <h2>Premium</h2>
+      <div class="price">999 TL</div>
+      <div class="jeton">+200 Jeton</div>
 
-    function setStatus(text, type = "warn"){
-      buyStatus.className = `status ${type}`;
-      buyStatus.textContent = text || "";
-    }
+      <div class="features">
+        ✓ Tüm Modüller Açık<br>
+        ✓ Sınırsız Deneyim<br>
+        ✓ Öncelikli Performans<br>
+        ✓ Full Erişim
+      </div>
 
-    function setPremiumLocalState(){
-      localStorage.setItem("app_access_mode", "premium");
-      localStorage.setItem("premium_plan_code", "PREMIUM_499");
-      localStorage.setItem("premium_is_active", "1");
-      localStorage.setItem("nfc_features", JSON.stringify({
-        text_to_text: true,
-        face_to_face: true,
-        side_to_side: true,
-        offline: true,
-        clone_voice: true
-      }));
-      localStorage.setItem("nfc_remaining_jeton", "100");
-      localStorage.setItem("premium_included_jeton", "100");
-      localStorage.setItem("premium_offline_lang_total", "67");
-    }
+      <button class="btn gold" onclick="buy('premium')">
+        Premium'a Geç
+      </button>
+    </div>
 
-    function buyOnAndroid(){
-      if (!window.AndroidBilling || typeof window.AndroidBilling.buy !== "function") {
-        throw new Error("ANDROID_BILLING_NOT_READY");
-      }
+  </div>
 
-      setStatus("Satın alma ekranı açılıyor...", "warn");
-      window.AndroidBilling.buy(PREMIUM_SKU);
-    }
+  <div class="note">
+    Satın alma sonrası erişimin kesintisiz devam eder.
+  </div>
 
-    window.onPremiumPurchaseSuccess = function(payload){
-      console.log("Premium purchase success:", payload);
-      setPremiumLocalState();
-      setStatus("Premium üyelik aktif edildi. Ana sayfaya yönlendiriliyorsun...", "ok");
+</div>
 
-      setTimeout(() => {
-        location.href = "/pages/home.html";
-      }, 900);
-    };
+<script type="module">
+import { mountShell } from "/js/ui_shell.js";
+try { mountShell({ scroll:"auto" }); } catch(e){}
+</script>
 
-    window.onPremiumPurchaseError = function(message){
-      setStatus(message || "Satın alma tamamlanamadı.", "err");
-      buyBtn.disabled = false;
-      buyBtn.textContent = "PREMIUM'U AKTİF ET";
-    };
+<script>
+function buy(type){
 
-    buyBtn.addEventListener("click", () => {
-      buyBtn.disabled = true;
-      buyBtn.textContent = "Hazırlanıyor...";
+  if(!window.AndroidBilling){
+    alert("Sadece uygulama içinden satın alabilirsiniz");
+    return;
+  }
 
-      try{
-        buyOnAndroid();
-      }catch(e){
-        console.error(e);
-        setStatus("Bu ekran satın alma için uygulama içinden açılmalı.", "err");
-        buyBtn.disabled = false;
-        buyBtn.textContent = "PREMIUM'U AKTİF ET";
-      }
-    });
-  </script>
+  if(type === "edu"){
+    window.AndroidBilling.buy("edu_499");
+  }
+
+  if(type === "translate"){
+    window.AndroidBilling.buy("translate_499");
+  }
+
+  if(type === "premium"){
+    window.AndroidBilling.buy("premium_999");
+  }
+}
+</script>
+
 </body>
 </html>
