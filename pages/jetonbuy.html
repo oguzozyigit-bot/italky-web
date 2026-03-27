@@ -1,4 +1,3 @@
-<!-- FILE: /pages/jetonbuy.html -->
 <!doctype html>
 <html lang="tr">
 <head>
@@ -304,7 +303,7 @@ body{
 
   <div class="head">
     <h1>Jeton Market</h1>
-    <p>italkyAI özelliklerini kullanmak için jeton paketini seç</p>
+    <p>Ekstra jeton satın almak için üyelik modeliniz aktif olmalıdır</p>
   </div>
 
   <div class="balanceCard">
@@ -368,8 +367,8 @@ body{
   </div>
 
   <div class="note">
-    Jetonlar italkyAI özelliklerini kullanmanızı sağlar.<br>
-    Dil pratiği, çeviri, oyunlar ve AI öğretmen derslerinde kullanılabilir.
+    Jeton satın alma ekranı yalnızca üyelik modelini belirlemiş kullanıcılar içindir.<br>
+    Paket seçmeden jeton satın alma başlatılamaz.
   </div>
 
 </div>
@@ -380,6 +379,7 @@ body{
 import { mountShell, setHeaderTokens } from "/js/ui_shell.js";
 import { supabase } from "/js/supabase_client.js";
 import { STORAGE_KEY } from "/js/config.js";
+import { enforcePackageBeforeTokens, getGlobalAccessState } from "/js/global_access.js";
 
 try{
   mountShell({ scroll:"none" });
@@ -448,6 +448,19 @@ async function fetchProfileTokens(userId){
   }
 }
 
+function checkMembershipUiGuard(){
+  const access = getGlobalAccessState();
+
+  if (access.trialActive) return true;
+  if (access.hasPackage) return true;
+
+  toast("Önce üyelik modelinizi seçmelisiniz.");
+  setTimeout(() => {
+    location.href = "/pages/upgrade_pack.html";
+  }, 700);
+  return false;
+}
+
 async function syncBillingUserId(){
   try{
     const cached = getCachedUser();
@@ -492,6 +505,9 @@ window.buy = async function(productId){
   console.log("Jeton satın alma isteği:", productId);
 
   try{
+    if(!checkMembershipUiGuard()) return;
+    if(!enforcePackageBeforeTokens()) return;
+
     if(!__billingUserId){
       const cached = getCachedUser();
 
