@@ -551,169 +551,212 @@
   <div id="toast" class="toast"></div>
 
   <script>
-    const FLAGS = {
-      tr:"🇹🇷", en:"🇬🇧", de:"🇩🇪", fr:"🇫🇷", es:"🇪🇸", it:"🇮🇹",
-      pt:"🇵🇹", ar:"🇸🇦", ru:"🇷🇺", ja:"🇯🇵", ko:"🇰🇷", zh:"🇨🇳"
-    };
+const API_BASE = "https://italky-api.onrender.com";
+const BUCKET = "offline";
+const PIVOT = "en";
 
-    const NAMES = {
-      tr:"Türkçe", en:"İngilizce", de:"Almanca", fr:"Fransızca", es:"İspanyolca",
-      it:"İtalyanca", pt:"Portekizce", ar:"Arapça", ru:"Rusça", ja:"Japonca",
-      ko:"Korece", zh:"Çince"
-    };
+const USER_LANG_KEY = "italky_user_lang_v1";
+const BASE_READY_PREFIX = "offline_base_ready_";
+const FREE_KEY = "offline_free_langs_v1";
+const INSTALLED_KEY = "offline_installed_langs_v1";
 
-    const ALL_LANGS = ["en","tr","de","fr","es","it","pt","ar","ru","ja","ko","zh"];
+const myLangSelect = document.getElementById("myLangSelect");
+const btnInstallBase = document.getElementById("btnInstallBase");
+const btnSkipSetup = document.getElementById("btnSkipSetup");
+const statusBox = document.getElementById("statusBox");
+const installedList = document.getElementById("installedList");
+const installedCount = document.getElementById("installedCount");
+const searchInput = document.getElementById("searchInput");
+const networkTag = document.getElementById("networkTag");
+const toastEl = document.getElementById("toast");
 
-    const myLangSelect = document.getElementById("myLangSelect");
-    const btnInstallBase = document.getElementById("btnInstallBase");
-    const btnSkipSetup = document.getElementById("btnSkipSetup");
-    const statusBox = document.getElementById("statusBox");
-    const installedList = document.getElementById("installedList");
-    const installedCount = document.getElementById("installedCount");
-    const searchInput = document.getElementById("searchInput");
-    const networkTag = document.getElementById("networkTag");
-    const btnMenu = document.getElementById("btnMenu");
-    const toastEl = document.getElementById("toast");
+const LANGS = ["en","tr","de","fr","es","it","pt","ar","ru","ja","ko","zh"];
 
-    function pageUrl(file){
-      const isApp = location.href.includes("appassets.androidplatform.net");
-      return isApp
-        ? `https://appassets.androidplatform.net/assets/pages/${file}`
-        : `/pages/${file}`;
-    }
+function norm(v){
+  return String(v||"").toLowerCase().trim();
+}
 
-    function toast(msg){
-      if(!toastEl) return;
-      toastEl.textContent = msg || "";
-      toastEl.classList.add("show");
-      clearTimeout(window.__toastTimer);
-      window.__toastTimer = setTimeout(()=>{
-        toastEl.classList.remove("show");
-      }, 2200);
-    }
+function toast(msg){
+  toastEl.textContent = msg;
+  toastEl.classList.add("show");
+  setTimeout(()=>toastEl.classList.remove("show"),2000);
+}
 
-    function getInstalled(){
-      try{
-        return JSON.parse(localStorage.getItem("offline_installed_langs") || "[]");
-      }catch(e){
-        return [];
-      }
-    }
+/* ---------------- ACCESS CONTROL ---------------- */
+function accessOk(){
+  const a = window.__ITALKY_ACCESS__ || {};
+  if(a.trialActive) return true;
+  if(a.hasPackage) return true;
 
-    function setInstalled(arr){
-      localStorage.setItem("offline_installed_langs", JSON.stringify(arr));
-    }
+  toast("Üyelik gerekli");
+  setTimeout(()=>location.href="/pages/upgrade_pack.html",800);
+  return false;
+}
 
-    function ensureBaseStatus(){
-      const online = navigator.onLine !== false;
-      networkTag.textContent = online ? "ONLINE" : "OFFLINE";
+/* ---------------- STORAGE ---------------- */
+function getInstalled(){
+  return JSON.parse(localStorage.getItem(INSTALLED_KEY)||"[]");
+}
+function setInstalled(arr){
+  localStorage.setItem(INSTALLED_KEY, JSON.stringify(arr));
+}
 
-      if(localStorage.getItem("offline_base_ready") === "1"){
-        statusBox.classList.remove("hidden");
-      }else{
-        statusBox.classList.add("hidden");
-      }
-    }
+function markInstalled(lang){
+  const s = new Set(getInstalled());
+  s.add(lang);
+  setInstalled([...s]);
+}
 
-    function renderInstalled(filter = ""){
-      const q = String(filter || "").trim().toLowerCase();
-      const installed = getInstalled();
+function getFreeUsed(){
+  return JSON.parse(localStorage.getItem(FREE_KEY)||"[]");
+}
 
-      installedCount.textContent = String(installed.length);
+function markFreeUsed(lang){
+  const s = new Set(getFreeUsed());
+  s.add(lang);
+  localStorage.setItem(FREE_KEY, JSON.stringify([...s]));
+}
 
-      const list = installed
-        .filter(code => {
-          const n = (NAMES[code] || code).toLowerCase();
-          return !q || n.includes(q) || code.includes(q);
-        });
+function hasFree(lang){
+  return !getFreeUsed().includes(lang);
+}
 
-      if(!list.length){
-        installedList.innerHTML = `
-          <div class="lang-card">
-            <div class="lang-meta">
-              <div class="lang-name">Henüz kurulu dil yok</div>
-              <div class="lang-sub">Temel kurulumu başlatarak ilk offline dilleri ekleyebilirsin.</div>
+/* ---------------- BASE ---------------- */
+function baseKey(l){ return BASE_READY_PREFIX+l; }
+
+function isBaseReady(l){
+  return localStorage.getItem(baseKey(l))==="1";
+}
+
+function setBaseReady(l){
+  localStorage.setItem(baseKey(l),"1");
+}
+
+/* ---------------- OFFLINE ---------------- */
+function nativeReady(){
+  return window.Offline && window.Offline.installFromUrl;
+}
+
+function installPair(pair){
+  const url = `https://italky-api.onrender.com/storage/v1/object/public/${BUCKET}/langpacks/${pair}/model.zip`;
+  window.Offline.installFromUrl(pair, url);
+}
+
+/* ---------------- BASE INSTALL ---------------- */
+async function installBase(){
+  if(!navigator.onLine){
+    toast("İnternet gerekli");
+    return;
+  }
+
+  if(!nativeReady()){
+    toast("Offline sistem hazır değil");
+    return;
+  }
+
+  const lang = myLangSelect.value;
+
+  btnInstallBase.textContent = "Kuruluyor...";
+
+  const pairs = [`${lang}-en`,`en-${lang}`];
+
+  pairs.forEach(p=>installPair(p));
+
+  markInstalled(lang);
+  markInstalled("en");
+
+  setBaseReady(lang);
+
+  toast("Temel kurulum tamamlandı");
+
+  statusBox.classList.remove("hidden");
+
+  btnInstallBase.textContent = "Hazır";
+
+  render();
+}
+
+/* ---------------- INSTALL LANG ---------------- */
+window.installLang = function(lang){
+
+  if(!accessOk()) return;
+
+  if(getInstalled().includes(lang)){
+    toast("Zaten kurulu");
+    return;
+  }
+
+  if(!hasFree(lang)){
+    toast("Bu dili daha önce indirdin");
+    return;
+  }
+
+  if(!nativeReady()){
+    toast("Offline sistem hazır değil");
+    return;
+  }
+
+  const pairs = [`${lang}-en`,`en-${lang}`];
+
+  pairs.forEach(p=>installPair(p));
+
+  markInstalled(lang);
+  markFreeUsed(lang);
+
+  toast("Dil indirildi");
+
+  render();
+};
+
+/* ---------------- RENDER ---------------- */
+function render(){
+
+  const lang = myLangSelect.value;
+  const installed = getInstalled();
+
+  installedCount.textContent = installed.length;
+
+  installedList.innerHTML = LANGS
+    .filter(l=>l!==lang)
+    .map(l=>{
+
+      const inst = installed.includes(l);
+      const free = hasFree(l);
+
+      return `
+      <div class="lang-card">
+        <div class="lang-head">
+          <div class="flag">${l.toUpperCase()}</div>
+          <div>
+            <div class="lang-name">${l}</div>
+            <div class="lang-sub">
+              ${inst ? "Kurulu" : (free ? "Ücretsiz" : "Kullanıldı")}
             </div>
           </div>
-        `;
-        return;
-      }
-
-      installedList.innerHTML = list.map(code => `
-        <div class="lang-card">
-          <div class="lang-head">
-            <div class="flag">${FLAGS[code] || "🌐"}</div>
-            <div class="lang-meta">
-              <div class="lang-name">${NAMES[code] || code.toUpperCase()}</div>
-              <div class="lang-sub">Kurulu • Lisans aktif</div>
-            </div>
-          </div>
-          <button class="lang-btn secondary" type="button" data-code="${code}">
-            ✅ Kuruldu
-          </button>
         </div>
-      `).join("");
-    }
 
-    function installBasePack(){
-      const myLang = myLangSelect.value || "tr";
+        <button class="lang-btn" onclick="installLang('${l}')">
+          ${inst ? "✅ Kurulu" : "İndir"}
+        </button>
+      </div>
+      `;
+    }).join("");
+}
 
-      btnInstallBase.disabled = true;
-      btnInstallBase.textContent = "Kuruluyor...";
+/* ---------------- INIT ---------------- */
+btnInstallBase.onclick = installBase;
 
-      setTimeout(() => {
-        const installed = new Set(getInstalled());
+myLangSelect.onchange = ()=>{
+  localStorage.setItem(USER_LANG_KEY,myLangSelect.value);
+  render();
+};
 
-        installed.add("en");
-        installed.add(myLang);
-
-        setInstalled([...installed]);
-
-        localStorage.setItem("offline_base_ready", "1");
-        localStorage.setItem("offline_boot_done", "1");
-        localStorage.setItem("offline_base_lang", myLang);
-        localStorage.setItem("offline_setup_pending", "0");
-        localStorage.setItem("offline_setup_skipped", "0");
-
-        btnInstallBase.disabled = false;
-        btnInstallBase.textContent = "Temel Kurulum Hazır";
-
-        statusBox.classList.remove("hidden");
-        renderInstalled(searchInput.value || "");
-        toast("Temel offline kurulum tamamlandı");
-      }, 1200);
-    }
-
-    btnInstallBase?.addEventListener("click", installBasePack);
-
-    btnSkipSetup?.addEventListener("click", () => {
-      try{
-        localStorage.setItem("offline_setup_skipped", "1");
-        localStorage.setItem("offline_setup_pending", "1");
-        localStorage.setItem("offline_boot_done", "1");
-      }catch(e){}
-
-      location.replace(pageUrl("home.html"));
-    });
-
-    searchInput?.addEventListener("input", (e) => {
-      renderInstalled(e.target.value || "");
-    });
-
-    btnMenu?.addEventListener("click", () => {
-      location.href = pageUrl("home.html");
-    });
-
-    window.addEventListener("online", ensureBaseStatus);
-window.addEventListener("offline", ensureBaseStatus);
-
-ensureBaseStatus();
-renderInstalled("");
+render();
 </script>
 
 <script type="module">
-  import { initGlobalAccess } from "/js/global_access.js";
-  initGlobalAccess();
+import { initGlobalAccess } from "/js/global_access.js";
+initGlobalAccess();
 </script>
 
 </body>
