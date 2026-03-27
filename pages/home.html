@@ -1,1722 +1,1479 @@
 <!doctype html>
 <html lang="tr">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-  <title>italkyAI • Home</title>
-  <meta name="theme-color" content="#0b0f1c"/>
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
-
-  <style>
-    :root{
-      --bg:#060913;
-      --panel:rgba(255,255,255,.06);
-      --panel-2:rgba(255,255,255,.08);
-      --line:rgba(255,255,255,.11);
-      --txt:#f7fbff;
-      --muted:rgba(255,255,255,.68);
-      --soft:rgba(255,255,255,.48);
-      --cyan:#67e8f9;
-      --pink:#f472b6;
-      --indigo:#818cf8;
-      --violet:#7c3aed;
-      --green:#22c55e;
-      --gold1:#f59e0b;
-      --gold2:#f97316;
-      --danger:#ef4444;
-      --grad:linear-gradient(135deg,#67e8f9 0%, #818cf8 48%, #f472b6 100%);
-      --grad2:linear-gradient(135deg,#4338ca 0%, #7c3aed 100%);
-      --gold:linear-gradient(135deg,#f59e0b 0%, #f97316 100%);
-      --footerLift:0px;
-    }
-
-    *{
-      box-sizing:border-box;
-      -webkit-tap-highlight-color:transparent;
-    }
-
-    html,body{
-      margin:0;
-      width:100%;
-      min-height:100%;
-      color:var(--txt);
-      font-family:'Outfit',sans-serif;
-      background:#060913;
-      scrollbar-width:none;
-    }
-
-    html::-webkit-scrollbar,
-    body::-webkit-scrollbar{
-      display:none;
-    }
-
-    body{
-      overflow-x:hidden;
-      overflow-y:auto;
-      background:
-        radial-gradient(circle at 15% 12%, rgba(103,232,249,.12), transparent 24%),
-        radial-gradient(circle at 85% 10%, rgba(244,114,182,.12), transparent 24%),
-        radial-gradient(circle at 50% 75%, rgba(129,140,248,.12), transparent 28%),
-        linear-gradient(180deg,#0a0f1d 0%, #070b16 36%, #050811 100%);
-    }
-
-    .nebula{
-      position:fixed;
-      inset:0;
-      pointer-events:none;
-      z-index:0;
-      overflow:hidden;
-    }
-
-    .blob{
-      position:absolute;
-      border-radius:50%;
-      filter:blur(70px);
-      opacity:.22;
-      animation:floatBlob 10s ease-in-out infinite;
-    }
-
-    .blob.b1{
-      width:240px;height:240px;
-      left:-60px;top:90px;
-      background:#67e8f9;
-    }
-
-    .blob.b2{
-      width:280px;height:280px;
-      right:-90px;top:180px;
-      background:#f472b6;
-      animation-delay:-2s;
-    }
-
-    .blob.b3{
-      width:240px;height:240px;
-      left:25%;bottom:70px;
-      background:#818cf8;
-      animation-delay:-4s;
-    }
-
-    .stars{
-      position:absolute;
-      inset:0;
-      background-image:
-        radial-gradient(circle, rgba(255,255,255,.85) 1px, transparent 1.6px),
-        radial-gradient(circle, rgba(255,255,255,.35) 1px, transparent 1.6px),
-        radial-gradient(circle, rgba(255,255,255,.18) 1px, transparent 1.6px);
-      background-size:140px 140px, 220px 220px, 300px 300px;
-      background-position:0 0, 30px 70px, 110px 40px;
-      opacity:.14;
-    }
-
-    #page{
-      position:relative;
-      z-index:2;
-      width:min(100%, 940px);
-      margin:0 auto;
-      padding:
-        calc(env(safe-area-inset-top) + 92px)
-        14px
-        calc(env(safe-area-inset-bottom) + 120px + var(--footerLift))
-        14px;
-    }
-
-    .stack{
-      display:grid;
-      gap:14px;
-    }
-
-    .glass{
-      background:var(--panel);
-      border:1px solid var(--line);
-      backdrop-filter:blur(18px);
-      box-shadow:0 22px 60px rgba(0,0,0,.32);
-    }
-
-    .hero{
-      border-radius:30px;
-      overflow:hidden;
-      padding:18px 16px 18px;
-    }
-
-    .hero-top{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      margin-bottom:14px;
-    }
-
-    .trial-pill{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      min-height:38px;
-      padding:0 14px;
-      border-radius:999px;
-      background:rgba(103,232,249,.08);
-      border:1px solid rgba(103,232,249,.18);
-      color:#d7fbff;
-      font-size:12px;
-      font-weight:900;
-      letter-spacing:.2px;
-    }
-
-    .trial-dot{
-      width:8px;
-      height:8px;
-      border-radius:50%;
-      background:#22c55e;
-      box-shadow:0 0 10px rgba(34,197,94,.6);
-      flex:0 0 auto;
-    }
-
-    .buy-mini{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      min-height:40px;
-      padding:0 14px;
-      border-radius:14px;
-      background:var(--gold);
-      color:#fff;
-      text-decoration:none;
-      font-size:12px;
-      font-weight:900;
-      border:1px solid rgba(255,255,255,.14);
-      box-shadow:0 12px 24px rgba(249,115,22,.22);
-      white-space:nowrap;
-    }
-
-    .hero-core{
-      display:grid;
-      grid-template-columns:1.05fr .95fr;
-      gap:14px;
-      align-items:stretch;
-    }
-
-    .planet-wrap{
-      position:relative;
-      min-height:330px;
-      border-radius:26px;
-      overflow:hidden;
-      border:1px solid rgba(255,255,255,.08);
-      background:
-        radial-gradient(circle at 50% 44%, rgba(103,232,249,.12), transparent 28%),
-        linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));
-    }
-
-    .planet-stage{
-      position:relative;
-      width:100%;
-      height:100%;
-      min-height:330px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      overflow:hidden;
-    }
-
-    .ring{
-      position:absolute;
-      border-radius:50%;
-      border:1px solid rgba(255,255,255,.09);
-      left:50%;
-      top:50%;
-      transform:translate(-50%,-50%);
-    }
-
-    .ring.r1{ width:160px; height:160px; animation:spinCW 16s linear infinite; }
-    .ring.r2{ width:250px; height:250px; animation:spinCCW 26s linear infinite; }
-    .ring.r3{ width:340px; height:340px; animation:spinCW 38s linear infinite; }
-
-    .node{
-      position:absolute;
-      width:26px;
-      height:26px;
-      border-radius:50%;
-      background:rgba(255,255,255,.08);
-      border:1px solid rgba(255,255,255,.18);
-      backdrop-filter:blur(8px);
-      box-shadow:0 0 16px rgba(255,255,255,.12);
-    }
-
-    .node::before{
-      content:"";
-      position:absolute;
-      inset:5px;
-      border-radius:50%;
-      background:var(--grad);
-      opacity:.9;
-    }
-
-    .planet{
-      position:relative;
-      width:116px;
-      height:116px;
-      border-radius:50%;
-      z-index:5;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      background:
-        radial-gradient(circle at 28% 25%, rgba(255,255,255,.18) 0%, transparent 22%),
-        radial-gradient(circle at 68% 76%, rgba(129,140,248,.24) 0%, transparent 28%),
-        linear-gradient(145deg, #111623 0%, #080b12 42%, #020406 100%);
-      box-shadow:
-        inset -10px -12px 20px rgba(0,0,0,.72),
-        inset 10px 12px 22px rgba(255,255,255,.04),
-        inset 0 0 26px rgba(255,255,255,.04),
-        0 0 18px rgba(255,255,255,.10),
-        0 0 34px rgba(103,232,249,.20),
-        0 0 64px rgba(129,140,248,.18);
-      animation:planetBreath 2.8s ease-in-out infinite;
-    }
-
-    .planet::before{
-      content:"";
-      position:absolute;
-      inset:-18px;
-      border-radius:50%;
-      background:
-        radial-gradient(circle, rgba(255,255,255,.14) 0%, rgba(255,255,255,.04) 28%, transparent 62%),
-        radial-gradient(circle, rgba(103,232,249,.24) 0%, transparent 70%);
-      filter:blur(12px);
-    }
-
-    .planet-label{
-      position:relative;
-      z-index:2;
-      font-family:'Space Grotesk',sans-serif;
-      font-size:18px;
-      font-weight:700;
-      color:#fff;
-      text-shadow:0 0 14px rgba(255,255,255,.12);
-    }
-
-    .planet-label .ai{
-      background:var(--grad);
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;
-    }
-
-    .hero-copy{
-      display:flex;
-      flex-direction:column;
-      justify-content:center;
-      gap:10px;
-      padding:6px 4px;
-    }
-
-    .hero-tag{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      min-height:30px;
-      width:max-content;
-      padding:0 12px;
-      border-radius:999px;
-      background:rgba(124,58,237,.14);
-      border:1px solid rgba(129,140,248,.20);
-      color:#ddd7ff;
-      font-size:11px;
-      font-weight:900;
-      letter-spacing:.5px;
-    }
-
-    .hero-title{
-      margin:0;
-      font-size:38px;
-      line-height:1.02;
-      font-weight:900;
-      letter-spacing:-1px;
-    }
-
-    .hero-title .grad{
-      background:var(--grad);
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;
-    }
-
-    .hero-sub{
-      margin:0;
-      color:var(--muted);
-      font-size:14px;
-      line-height:1.55;
-      max-width:440px;
-    }
-
-    .hero-status{
-      min-height:24px;
-      font-size:13px;
-      font-weight:800;
-      color:#dfe8ff;
-    }
-
-    .hero-actions{
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-      margin-top:4px;
-    }
-
-    .btn{
-      min-height:52px;
-      border:none;
-      border-radius:18px;
-      padding:0 18px;
-      font-family:'Outfit',sans-serif;
-      font-size:15px;
-      font-weight:900;
-      cursor:pointer;
-      transition:transform .18s ease, opacity .18s ease, box-shadow .18s ease;
-      text-decoration:none;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-    }
-
-    .btn:active{ transform:scale(.985); }
-
-    .btn-primary{
-      background:var(--grad2);
-      color:#fff;
-      border:1px solid rgba(255,255,255,.12);
-      box-shadow:0 12px 24px rgba(67,56,202,.24);
-    }
-
-    .btn-gold{
-      background:var(--gold);
-      color:#fff;
-      border:1px solid rgba(255,255,255,.12);
-      box-shadow:0 12px 24px rgba(249,115,22,.24);
-    }
-
-    .btn-ghost{
-      background:rgba(255,255,255,.08);
-      color:#fff;
-      border:1px solid rgba(255,255,255,.10);
-    }
-
-    .code-card,
-    .banner-card,
-    .locked-card,
-    .section-card{
-      border-radius:26px;
-      overflow:hidden;
-      padding:16px;
-    }
-
-    .banner-row{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:14px;
-      flex-wrap:wrap;
-    }
-
-    .banner-left{
-      display:flex;
-      flex-direction:column;
-      gap:4px;
-    }
-
-    .banner-kicker{
-      font-size:11px;
-      font-weight:900;
-      letter-spacing:.8px;
-      color:#a5f3fc;
-      text-transform:uppercase;
-    }
-
-    .banner-title{
-      font-size:22px;
-      font-weight:900;
-      line-height:1.08;
-    }
-
-    .banner-sub{
-      color:var(--muted);
-      font-size:13px;
-      line-height:1.5;
-      max-width:560px;
-    }
-
-    .days-badge{
-      min-width:116px;
-      min-height:64px;
-      border-radius:18px;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.12);
-      box-shadow:inset 0 0 20px rgba(255,255,255,.03);
-    }
-
-    .days-num{
-      font-size:28px;
-      font-weight:900;
-      line-height:1;
-    }
-
-    .days-txt{
-      margin-top:4px;
-      font-size:11px;
-      font-weight:800;
-      color:var(--muted);
-      letter-spacing:.4px;
-      text-transform:uppercase;
-    }
-
-    .code-card{
-      display:none;
-    }
-
-    .code-top{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-bottom:12px;
-    }
-
-    .code-title{
-      font-size:22px;
-      font-weight:900;
-      line-height:1.1;
-    }
-
-    .code-sub{
-      color:var(--muted);
-      font-size:12px;
-      line-height:1.5;
-    }
-
-    .code-line{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      flex-wrap:wrap;
-    }
-
-    .code-box{
-      min-width:180px;
-      min-height:62px;
-      padding:0 18px;
-      border-radius:18px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-family:'Space Grotesk',sans-serif;
-      font-size:34px;
-      font-weight:700;
-      letter-spacing:3px;
-      background:rgba(255,255,255,.08);
-      border:1px solid rgba(255,255,255,.12);
-      box-shadow:inset 0 0 22px rgba(255,255,255,.03);
-    }
-
-    .copy-btn{
-      width:52px;
-      height:52px;
-      min-width:52px;
-      border:none;
-      border-radius:16px;
-      background:rgba(255,255,255,.08);
-      border:1px solid rgba(255,255,255,.10);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      cursor:pointer;
-      color:#fff;
-    }
-
-    .copy-btn svg{
-      width:18px;
-      height:18px;
-      fill:none;
-      stroke:#fff;
-      stroke-width:2;
-    }
-
-    .grid{
-      display:grid;
-      grid-template-columns:repeat(2, minmax(0,1fr));
-      gap:12px;
-    }
-
-    .card{
-      position:relative;
-      border-radius:26px;
-      overflow:hidden;
-      border:1px solid var(--line);
-      box-shadow:
-        0 15px 30px rgba(0,0,0,.28),
-        inset 0 1px 0 rgba(255,255,255,.05);
-      text-decoration:none;
-      color:#fff;
-      min-height:196px;
-      padding:16px 16px 86px;
-      transition:transform .22s ease, filter .22s ease, box-shadow .22s ease;
-    }
-
-    .card:active{
-      transform:scale(.985);
-      filter:brightness(1.08);
-    }
-
-    .card:hover{
-      box-shadow:
-        0 22px 36px rgba(0,0,0,.32),
-        0 0 18px rgba(103,232,249,.08);
-    }
-
-    .card.translate{
-      background:
-        radial-gradient(circle at 20% 15%, rgba(103,232,249,.35) 0%, transparent 35%),
-        linear-gradient(180deg, #301661 0%, #2b2185 50%, #1e36a3 100%);
-    }
-
-    .card.offline{
-      background:
-        radial-gradient(circle at 80% 15%, rgba(255,255,255,.12) 0%, transparent 30%),
-        linear-gradient(180deg, #4b1118 0%, #7f1d1d 48%, #b91c1c 100%);
-    }
-
-    .card.text{
-      background:
-        radial-gradient(circle at 14% 50%, rgba(251,146,60,.22) 0%, transparent 24%),
-        radial-gradient(circle at 86% 16%, rgba(103,232,249,.14) 0%, transparent 20%),
-        linear-gradient(90deg, #7e114f 0%, #db2777 34%, #a855f7 68%, #6366f1 100%);
-    }
-
-    .card.fun{
-      background:
-        radial-gradient(circle at 12% 50%, rgba(251,146,60,.25) 0%, transparent 25%),
-        radial-gradient(circle at 88% 20%, rgba(103,232,249,.15) 0%, transparent 20%),
-        linear-gradient(90deg, #61220e 0%, #c2410a 36%, #ea580c 68%, #e11d48 100%);
-    }
-
-    .card.level{
-      background:
-        radial-gradient(circle at 12% 50%, rgba(255,255,255,.08) 0%, transparent 24%),
-        linear-gradient(90deg, #166534 0%, #22c55e 46%, #16a34a 100%);
-    }
-
-    .card.practice{
-      background:
-        radial-gradient(circle at 12% 50%, rgba(255,255,255,.08) 0%, transparent 24%),
-        linear-gradient(90deg, #1d4ed8 0%, #0ea5e9 48%, #6366f1 100%);
-    }
-
-    .card-topline{
-      font-size:10px;
-      font-weight:800;
-      letter-spacing:.6px;
-      color:rgba(255,255,255,.8);
-      text-transform:uppercase;
-      margin-bottom:6px;
-    }
-
-    .card-title{
-      margin:0;
-      font-family:'Space Grotesk',sans-serif;
-      font-size:24px;
-      line-height:1;
-      letter-spacing:-.8px;
-      word-break:break-word;
-    }
-
-    .card-desc{
-      margin-top:8px;
-      font-size:12px;
-      line-height:1.45;
-      color:rgba(255,255,255,.88);
-      max-width:88%;
-    }
-
-    .card-art{
-      position:absolute;
-      left:12px;
-      right:12px;
-      bottom:12px;
-      height:64px;
-      border-radius:18px;
-      background:rgba(255,255,255,.08);
-      border:1px solid rgba(255,255,255,.10);
-      overflow:hidden;
-    }
-
-    .face-art,
-    .offline-art,
-    .text-art,
-    .fun-art,
-    .level-art,
-    .practice-art{
-      width:100%;
-      height:100%;
-      position:relative;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-    }
-
-    .face-wave{
-      position:absolute;
-      left:50%;
-      top:50%;
-      width:62px;
-      height:28px;
-      transform:translate(-50%,-50%);
-    }
-
-    .face-wave::before,
-    .face-wave::after{
-      content:"";
-      position:absolute;
-      left:0; right:0;
-      border-radius:999px;
-      background:linear-gradient(90deg, rgba(255,255,255,.08), rgba(103,232,249,.98), rgba(255,255,255,.08));
-      box-shadow:0 0 14px rgba(103,232,249,.46);
-    }
-
-    .face-wave::before{ top:9px; height:2px; }
-    .face-wave::after{ top:16px; height:2px; opacity:.68; }
-
-    .face-head{
-      position:relative;
-      width:28px;
-      height:38px;
-      margin-top:14px;
-    }
-
-    .face-head::before{
-      content:"";
-      position:absolute;
-      left:50%;
-      top:-2px;
-      width:18px;
-      height:18px;
-      border-radius:50%;
-      transform:translateX(-50%);
-      background:rgba(255,255,255,.88);
-    }
-
-    .face-head::after{
-      content:"";
-      position:absolute;
-      left:50%;
-      bottom:0;
-      width:28px;
-      height:18px;
-      border-radius:14px 14px 10px 10px;
-      transform:translateX(-50%);
-      background:linear-gradient(180deg, rgba(255,255,255,.9), rgba(255,255,255,.32));
-    }
-
-    .offline-sheet{
-      width:22px;
-      height:34px;
-      border-radius:8px;
-      background:rgba(255,255,255,.16);
-      border:1.4px solid rgba(255,255,255,.46);
-      position:relative;
-      margin:0 5px;
-    }
-
-    .offline-sheet::before,
-    .offline-sheet::after{
-      content:"";
-      position:absolute;
-      left:4px; right:4px;
-      height:2px;
-      border-radius:2px;
-      background:rgba(255,255,255,.72);
-    }
-    .offline-sheet::before{ top:10px; }
-    .offline-sheet::after{ top:17px; }
-
-    .text-bubble{
-      position:absolute;
-      left:24px;
-      top:21px;
-      width:28px;
-      height:20px;
-      border-radius:8px;
-      background:rgba(255,255,255,.92);
-    }
-
-    .text-bubble::after{
-      content:"";
-      position:absolute;
-      left:5px;
-      bottom:-5px;
-      width:8px;
-      height:8px;
-      background:rgba(255,255,255,.92);
-      clip-path:polygon(0 0, 100% 0, 0 100%);
-    }
-
-    .text-doc{
-      position:absolute;
-      right:26px;
-      top:16px;
-      width:24px;
-      height:34px;
-      border-radius:7px;
-      border:1.6px solid rgba(103,232,249,.96);
-      background:rgba(103,232,249,.08);
-    }
-
-    .text-doc::before,
-    .text-doc::after{
-      content:"";
-      position:absolute;
-      left:5px; right:5px;
-      height:2px;
-      border-radius:3px;
-      background:#67e8f9;
-    }
-
-    .text-doc::before{ top:10px; box-shadow:0 6px 0 #67e8f9, 0 12px 0 #67e8f9; }
-    .text-doc::after{ display:none; }
-
-    .fun-dice, .fun-dice::before, .fun-dice::after{
-      position:absolute;
-      border-radius:10px;
-      background:rgba(255,255,255,.92);
-    }
-
-    .fun-dice{
-      width:24px;
-      height:24px;
-      left:24px;
-      top:20px;
-    }
-
-    .fun-dice::before{
-      content:"";
-      width:18px;
-      height:18px;
-      right:-22px;
-      top:-10px;
-      opacity:.8;
-    }
-
-    .fun-dice::after{
-      content:"";
-      width:16px;
-      height:16px;
-      right:-16px;
-      bottom:-12px;
-      opacity:.65;
-    }
-
-    .level-bars span{
-      position:absolute;
-      bottom:14px;
-      width:10px;
-      border-radius:6px 6px 0 0;
-      background:rgba(255,255,255,.92);
-    }
-
-    .level-bars span:nth-child(1){ left:26px; height:18px; }
-    .level-bars span:nth-child(2){ left:42px; height:28px; }
-    .level-bars span:nth-child(3){ left:58px; height:40px; }
-
-    .practice-chat{
-      position:absolute;
-      left:20px;
-      top:18px;
-      width:24px;
-      height:18px;
-      border-radius:8px;
-      background:rgba(255,255,255,.92);
-    }
-
-    .practice-chat::after{
-      content:"";
-      position:absolute;
-      left:4px;
-      bottom:-5px;
-      width:8px;
-      height:8px;
-      background:rgba(255,255,255,.92);
-      clip-path:polygon(0 0, 100% 0, 0 100%);
-    }
-
-    .practice-chat.right{
-      left:auto;
-      right:20px;
-      top:30px;
-      background:rgba(103,232,249,.92);
-    }
-
-    .practice-chat.right::after{
-      left:auto;
-      right:4px;
-      background:rgba(103,232,249,.92);
-      clip-path:polygon(100% 0, 0 0, 100% 100%);
-    }
-
-    .locked-card{
-      display:none;
-      text-align:center;
-      padding:22px 18px;
-    }
-
-    .locked-icon{
-      width:70px;
-      height:70px;
-      margin:0 auto 14px;
-      border-radius:22px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.10);
-      font-size:30px;
-      box-shadow:inset 0 0 20px rgba(255,255,255,.03);
-    }
-
-    .locked-title{
-      font-size:26px;
-      font-weight:900;
-      line-height:1.08;
-      margin:0;
-    }
-
-    .locked-sub{
-      max-width:620px;
-      margin:10px auto 0;
-      color:var(--muted);
-      font-size:14px;
-      line-height:1.6;
-    }
-
-    .locked-actions{
-      display:flex;
-      justify-content:center;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-top:18px;
-    }
-
-    .pack-grid{
-      display:grid;
-      grid-template-columns:repeat(3, minmax(0,1fr));
-      gap:12px;
-      margin-top:18px;
-    }
-
-    .pack-card{
-      border-radius:24px;
-      padding:16px;
-      background:rgba(255,255,255,.05);
-      border:1px solid rgba(255,255,255,.10);
-      text-align:left;
-      box-shadow:inset 0 0 18px rgba(255,255,255,.02);
-    }
-
-    .pack-name{
-      font-size:20px;
-      font-weight:900;
-      line-height:1.08;
-      margin:0;
-    }
-
-    .pack-price{
-      margin-top:8px;
-      font-size:28px;
-      font-weight:900;
-      line-height:1;
-    }
-
-    .pack-jeton{
-      margin-top:4px;
-      font-size:12px;
-      font-weight:800;
-      color:#ffd18f;
-    }
-
-    .pack-desc{
-      margin-top:10px;
-      font-size:12px;
-      line-height:1.55;
-      color:var(--muted);
-      min-height:74px;
-    }
-
-    .pack-btn{
-      width:100%;
-      margin-top:12px;
-      min-height:46px;
-      border-radius:16px;
-      border:none;
-      cursor:pointer;
-      font-size:14px;
-      font-weight:900;
-      color:#fff;
-      background:var(--grad2);
-    }
-
-    .footer-note{
-      text-align:center;
-      color:var(--soft);
-      font-size:12px;
-      line-height:1.5;
-      padding:4px 10px 0;
-    }
-
-    @keyframes floatBlob{
-      0%,100%{ transform:translateY(0px); opacity:.22; }
-      50%{ transform:translateY(-14px); opacity:.30; }
-    }
-
-    @keyframes spinCW{
-      from{ transform:translate(-50%,-50%) rotate(0deg); }
-      to{ transform:translate(-50%,-50%) rotate(360deg); }
-    }
-
-    @keyframes spinCCW{
-      from{ transform:translate(-50%,-50%) rotate(0deg); }
-      to{ transform:translate(-50%,-50%) rotate(-360deg); }
-    }
-
-    @keyframes planetBreath{
-      0%,100%{
-        transform:scale(1);
-        box-shadow:
-          inset -10px -12px 20px rgba(0,0,0,.72),
-          inset 10px 12px 22px rgba(255,255,255,.04),
-          inset 0 0 26px rgba(255,255,255,.04),
-          0 0 18px rgba(255,255,255,.10),
-          0 0 34px rgba(103,232,249,.20),
-          0 0 64px rgba(129,140,248,.18);
-      }
-      50%{
-        transform:scale(1.045);
-        box-shadow:
-          inset -10px -12px 20px rgba(0,0,0,.72),
-          inset 10px 12px 24px rgba(255,255,255,.05),
-          inset 0 0 28px rgba(255,255,255,.06),
-          0 0 22px rgba(255,255,255,.12),
-          0 0 42px rgba(103,232,249,.28),
-          0 0 78px rgba(129,140,248,.24);
-      }
-    }
-
-    @media (max-width:860px){
-      .hero-core{
-        grid-template-columns:1fr;
-      }
-
-      .planet-wrap{
-        min-height:290px;
-      }
-
-      .planet-stage{
-        min-height:290px;
-      }
-
-      .ring.r1{ width:150px; height:150px; }
-      .ring.r2{ width:220px; height:220px; }
-      .ring.r3{ width:290px; height:290px; }
-
-      .pack-grid{
-        grid-template-columns:1fr;
-      }
-    }
-
-    @media (max-width:640px){
-      #page{
-        padding-top:88px;
-      }
-
-      .hero-title{
-        font-size:32px;
-      }
-
-      .grid{
-        grid-template-columns:1fr;
-      }
-
-      .code-box{
-        width:100%;
-      }
-
-      .code-line{
-        align-items:stretch;
-      }
-
-      .copy-btn{
-        min-width:52px;
-      }
-
-      .planet{
-        width:104px;
-        height:104px;
-      }
-
-      .planet-wrap{
-        min-height:260px;
-      }
-
-      .planet-stage{
-        min-height:260px;
-      }
-
-      .ring.r1{ width:140px; height:140px; }
-      .ring.r2{ width:200px; height:200px; }
-      .ring.r3{ width:258px; height:258px; }
-
-      .node{
-        width:22px;
-        height:22px;
-      }
-    }
-  </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+<title>italkyAI • Future Home</title>
+<meta name="theme-color" content="#120d16"/>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --txt:rgba(255,255,255,.96);
+  --muted:rgba(255,255,255,.64);
+  --cardLine:rgba(255,255,255,.12);
+  --ai-grad:linear-gradient(135deg,#67e8f9 0%, #818cf8 46%, #f472b6 100%);
+  --pink:#f472b6;
+  --cyan:#67e8f9;
+}
+
+.is-hidden-by-access {
+  display: none !important;
+}
+
+*{
+  box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
+  outline:none;
+}
+
+html,body{
+  margin:0;
+  width:100%;
+  height:100%;
+  color:var(--txt);
+  font-family:'Outfit',sans-serif;
+  background:#120d16;
+  scrollbar-width:none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+#pageContent::-webkit-scrollbar{
+  display:none;
+}
+
+body{
+  background:
+    radial-gradient(circle at 50% 0%, rgba(251,146,60,.18) 0%, transparent 28%),
+    radial-gradient(circle at 20% 18%, rgba(244,114,182,.12) 0%, transparent 25%),
+    radial-gradient(circle at 82% 18%, rgba(96,165,250,.10) 0%, transparent 20%),
+    linear-gradient(180deg, #1d1016 0%, #150e19 34%, #120d16 100%);
+  overflow:hidden;
+}
+
+#pageContent{
+  width:100%;
+  height:100%;
+  min-height:100%;
+  padding:10px 14px 18px;
+  display:block;
+  overflow-y:auto;
+  overflow-x:hidden;
+  scrollbar-width:none;
+  -webkit-overflow-scrolling:touch;
+}
+
+.page-shell-fit{
+  min-height:100%;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.hero{
+  flex:0 0 auto;
+  perspective:1000px;
+}
+
+.heroTop{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+}
+
+.holo-container{
+  width:210px;
+  height:210px;
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transform-style:preserve-3d;
+  margin:2px auto 6px;
+}
+
+.crystal-cage{
+  position:absolute;
+  width:150px;
+  height:150px;
+  transform-style:preserve-3d;
+  animation:rotateCrystal 18s linear infinite;
+}
+
+.crystal-side{
+  position:absolute;
+  inset:0;
+  border:2px solid rgba(103,232,249,.42);
+  background:radial-gradient(circle, rgba(129,140,248,.12), transparent);
+  box-shadow:0 0 18px rgba(103,232,249,.22);
+}
+
+.side1{ transform:rotateY(0deg) translateZ(75px); }
+.side2{ transform:rotateY(90deg) translateZ(75px); }
+.side3{ transform:rotateY(180deg) translateZ(75px); }
+.side4{ transform:rotateY(270deg) translateZ(75px); }
+.side5{ transform:rotateX(90deg) translateZ(75px); }
+.side6{ transform:rotateX(-90deg) translateZ(75px); }
+
+.holo-qr{
+  position:absolute;
+  width:108px;
+  height:108px;
+  z-index:2;
+  overflow:visible;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  animation:floatQR 4s ease-in-out infinite;
+}
+
+.ai-planet{
+  background:transparent;
+  box-shadow:none;
+}
+
+.planet-glow{
+  position:absolute;
+  inset:-16px;
+  border-radius:50%;
+  background:
+    radial-gradient(circle, rgba(255,255,255,.16) 0%, rgba(255,255,255,.04) 28%, transparent 62%),
+    radial-gradient(circle, rgba(103,232,249,.26) 0%, transparent 70%);
+  filter:blur(12px);
+  animation:planetGlow 3.2s ease-in-out infinite;
+  z-index:1;
+}
+
+.planet-core{
+  position:relative;
+  width:108px;
+  height:108px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  z-index:2;
+  background:
+    radial-gradient(circle at 28% 24%, rgba(255,255,255,.18) 0%, transparent 22%),
+    radial-gradient(circle at 68% 76%, rgba(129,140,248,.20) 0%, transparent 28%),
+    radial-gradient(circle at 50% 50%, rgba(255,255,255,.05) 0%, transparent 48%),
+    linear-gradient(145deg, #111318 0%, #08090d 42%, #030406 100%);
+  box-shadow:
+    inset -10px -12px 20px rgba(0,0,0,.72),
+    inset 10px 12px 22px rgba(255,255,255,.04),
+    inset 0 0 26px rgba(255,255,255,.04),
+    0 0 18px rgba(255,255,255,.10),
+    0 0 34px rgba(103,232,249,.20),
+    0 0 64px rgba(129,140,248,.18);
+  animation:planetBreath 2.8s ease-in-out infinite;
+}
+
+.planet-core::before{
+  content:"";
+  position:absolute;
+  inset:6px;
+  border-radius:50%;
+  border:1px solid rgba(255,255,255,.08);
+  box-shadow:inset 0 0 12px rgba(255,255,255,.05);
+}
+
+.planet-core::after{
+  content:"";
+  position:absolute;
+  left:18px;
+  top:14px;
+  width:32px;
+  height:16px;
+  border-radius:50%;
+  background:radial-gradient(circle, rgba(255,255,255,.28) 0%, rgba(255,255,255,.08) 45%, transparent 80%);
+  filter:blur(2px);
+  transform:rotate(-18deg);
+  opacity:.9;
+}
+
+.planet-rays{
+  position:absolute;
+  inset:-18px;
+  border-radius:50%;
+  pointer-events:none;
+  z-index:1;
+}
+
+.planet-rays::before,
+.planet-rays::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:50%;
+  background:
+    conic-gradient(
+      from 0deg,
+      transparent 0deg 18deg,
+      rgba(255,255,255,.28) 24deg,
+      transparent 36deg 62deg,
+      rgba(255,255,255,.16) 70deg,
+      transparent 84deg 116deg,
+      rgba(255,255,255,.22) 124deg,
+      transparent 136deg 180deg,
+      rgba(255,255,255,.18) 192deg,
+      transparent 206deg 250deg,
+      rgba(255,255,255,.24) 258deg,
+      transparent 270deg 310deg,
+      rgba(255,255,255,.15) 318deg,
+      transparent 330deg 360deg
+    );
+  mask:radial-gradient(circle, transparent 46%, #000 66%, transparent 76%);
+  -webkit-mask:radial-gradient(circle, transparent 46%, #000 66%, transparent 76%);
+  filter:blur(1px);
+  opacity:.55;
+  animation:planetRaySpin 12s linear infinite;
+}
+
+.planet-rays::after{
+  opacity:.35;
+  transform:scale(1.14);
+  animation-duration:18s;
+  animation-direction:reverse;
+}
+
+.planet-text{
+  position:relative;
+  z-index:3;
+  display:inline-flex;
+  align-items:center;
+  gap:0;
+  font-family:'Space Grotesk',sans-serif;
+  font-size:14px;
+  font-weight:700;
+  letter-spacing:.2px;
+  color:#ffffff;
+  text-shadow:
+    0 0 10px rgba(255,255,255,.28),
+    0 0 24px rgba(255,255,255,.14);
+}
+
+.planet-text .ai{
+  background:var(--ai-grad);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+
+.connect-code-wrap{
+  margin-top:2px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:5px;
+}
+
+.connect-code-label{
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:1.1px;
+  color:rgba(255,255,255,.58);
+  text-transform:uppercase;
+}
+
+.connect-code-line{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+}
+
+.connect-code-value{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:24px;
+  font-weight:700;
+  letter-spacing:2px;
+  color:#fff;
+  line-height:1;
+  text-shadow:0 0 14px rgba(255,255,255,.12);
+}
+
+.connect-code-copy{
+  width:34px;
+  height:34px;
+  min-width:34px;
+  border:none;
+  border-radius:50%;
+  background:rgba(255,255,255,.10);
+  color:#fff;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  transition:transform .18s ease, opacity .18s ease;
+  border:1px solid rgba(255,255,255,.12);
+}
+
+.connect-code-copy:active{
+  transform:scale(.96);
+}
+
+.connect-code-copy svg{
+  width:16px;
+  height:16px;
+  fill:none;
+  stroke:#fff;
+  stroke-width:2;
+}
+
+.heroTitle{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:22px;
+  font-weight:700;
+  letter-spacing:-.4px;
+  color:#fff;
+  margin:0;
+  line-height:1.08;
+  text-align:center;
+  text-shadow:0 0 12px rgba(255,255,255,.18);
+}
+
+.heroTitle .to{
+  background:var(--ai-grad);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+
+.heroSub{
+  margin:0;
+  font-size:10.8px;
+  color:var(--muted);
+  text-align:center;
+  line-height:1.36;
+  max-width:310px;
+}
+
+.heroStatus{
+  min-height:20px;
+  font-size:11px;
+  font-weight:800;
+  color:rgba(255,255,255,.78);
+  text-align:center;
+}
+
+.heroActions{
+  width:100%;
+  max-width:320px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  margin-top:8px;
+}
+
+.heroBtn{
+  min-height:52px;
+  border:none;
+  border-radius:18px;
+  font-family:'Outfit',sans-serif;
+  font-size:15px;
+  font-weight:900;
+  cursor:pointer;
+  transition:transform .18s ease, opacity .18s ease, box-shadow .18s ease;
+}
+
+.heroBtn:active{ transform:scale(.985); }
+
+.heroBtnWide{
+  width:100%;
+  background:linear-gradient(135deg,#4338ca 0%, #7c3aed 100%);
+  color:#fff;
+  border:1px solid rgba(255,255,255,.12);
+  box-shadow:0 12px 24px rgba(67,56,202,.24);
+}
+
+.home-grid{
+  flex:0 0 auto;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+
+.mod-card{
+  position:relative;
+  border-radius:28px;
+  overflow:hidden;
+  border:1px solid var(--cardLine);
+  box-shadow:
+    0 15px 30px rgba(0,0,0,.28),
+    inset 0 1px 0 rgba(255,255,255,.05);
+  padding:16px 15px 108px;
+  text-decoration:none;
+  color:#fff;
+  min-height:300px;
+  transition:transform .22s ease, filter .22s ease, box-shadow .22s ease;
+}
+
+.mod-card:active{
+  transform:scale(.985);
+  filter:brightness(1.08);
+}
+
+.mod-card:hover{
+  box-shadow:
+    0 22px 36px rgba(0,0,0,.32),
+    0 0 18px rgba(103,232,249,.08);
+}
+
+.face-card{
+  background:
+    radial-gradient(circle at 20% 15%, rgba(103,232,249,.35) 0%, transparent 35%),
+    linear-gradient(180deg, #301661 0%, #2b2185 50%, #1e36a3 100%);
+}
+
+.offline-grid-card{
+  background:
+    radial-gradient(circle at 80% 15%, rgba(255,255,255,.12) 0%, transparent 30%),
+    linear-gradient(180deg, #4b1118 0%, #7f1d1d 48%, #b91c1c 100%);
+}
+
+.card-title{
+  margin:0;
+  font-family:'Space Grotesk',sans-serif;
+  font-size:24px;
+  line-height:1;
+  letter-spacing:-.8px;
+  color:#fff;
+  word-break:break-word;
+}
+
+.card-desc-list{
+  margin-top:8px;
+  display:flex;
+  flex-direction:column;
+  gap:5px;
+  max-width:100%;
+  padding-right:2px;
+}
+
+.card-desc{
+  margin:0;
+  font-size:11.2px;
+  line-height:1.34;
+  color:rgba(255,255,255,.88);
+  white-space:normal;
+  overflow:visible;
+  text-overflow:unset;
+  word-break:break-word;
+}
+
+.card-art{
+  position:absolute;
+  left:12px;
+  right:12px;
+  bottom:12px;
+  height:76px;
+  border-radius:20px;
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.10);
+  overflow:hidden;
+}
+
+.face-art{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:16px;
+}
+
+.face-headset{
+  position:relative;
+  width:28px;
+  height:38px;
+  margin-top:14px;
+}
+
+.face-headset::before{
+  content:"";
+  position:absolute;
+  left:50%;
+  top:-2px;
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  transform:translateX(-50%);
+  background:rgba(255,255,255,.88);
+  box-shadow:0 0 10px rgba(255,255,255,.16);
+}
+
+.face-headset::after{
+  content:"";
+  position:absolute;
+  left:50%;
+  bottom:0;
+  width:28px;
+  height:18px;
+  border-radius:14px 14px 10px 10px;
+  transform:translateX(-50%);
+  background:linear-gradient(180deg, rgba(255,255,255,.9), rgba(255,255,255,.32));
+}
+
+.face-wave{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:62px;
+  height:28px;
+  transform:translate(-50%,-50%);
+}
+
+.face-wave::before,
+.face-wave::after{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  border-radius:999px;
+  background:linear-gradient(90deg, rgba(255,255,255,.08), rgba(103,232,249,.98), rgba(255,255,255,.08));
+  box-shadow:0 0 14px rgba(103,232,249,.46);
+}
+
+.face-wave::before{ top:9px;height:2px; }
+.face-wave::after{ top:16px;height:2px;opacity:.68; }
+
+.offline-art{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+}
+
+.offline-sheet{
+  width:22px;
+  height:34px;
+  border-radius:8px;
+  background:rgba(255,255,255,.16);
+  border:1.4px solid rgba(255,255,255,.46);
+  position:relative;
+}
+
+.offline-sheet::before,
+.offline-sheet::after{
+  content:"";
+  position:absolute;
+  left:4px;
+  right:4px;
+  height:2px;
+  border-radius:2px;
+  background:rgba(255,255,255,.72);
+}
+.offline-sheet::before{ top:10px; }
+.offline-sheet::after{ top:17px; }
+
+.wide-stack{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.wide-card{
+  position:relative;
+  width:100%;
+  min-height:126px;
+  border-radius:28px;
+  overflow:hidden;
+  border:1px solid var(--cardLine);
+  box-shadow:
+    0 15px 30px rgba(0,0,0,.28),
+    inset 0 1px 0 rgba(255,255,255,.05);
+  display:flex;
+  align-items:center;
+  gap:16px;
+  padding:16px 52px 16px 16px;
+  text-decoration:none;
+  color:#fff;
+  transition:transform .22s ease, filter .22s ease, box-shadow .22s ease;
+}
+
+.wide-card:active{
+  transform:scale(.985);
+  filter:brightness(1.08);
+}
+
+.wide-card:hover{
+  box-shadow:
+    0 22px 36px rgba(0,0,0,.32),
+    0 0 18px rgba(103,232,249,.08);
+}
+
+.texttotext-card{
+  background:
+    radial-gradient(circle at 14% 50%, rgba(251,146,60,.22) 0%, transparent 24%),
+    radial-gradient(circle at 86% 16%, rgba(103,232,249,.14) 0%, transparent 20%),
+    linear-gradient(90deg, #7e114f 0%, #db2777 34%, #a855f7 68%, #6366f1 100%);
+}
+
+.fun-card{
+  background:
+    radial-gradient(circle at 12% 50%, rgba(251,146,60,.25) 0%, transparent 25%),
+    radial-gradient(circle at 88% 20%, rgba(103,232,249,.15) 0%, transparent 20%),
+    linear-gradient(90deg, #61220e 0%, #c2410a 36%, #ea580c 68%, #e11d48 100%);
+}
+
+.level-card{
+  background:
+    radial-gradient(circle at 12% 50%, rgba(255,255,255,.08) 0%, transparent 24%),
+    linear-gradient(90deg, #166534 0%, #22c55e 46%, #16a34a 100%);
+}
+
+.practice-card{
+  background:
+    radial-gradient(circle at 12% 50%, rgba(255,255,255,.08) 0%, transparent 24%),
+    linear-gradient(90deg, #1d4ed8 0%, #0ea5e9 48%, #6366f1 100%);
+}
+
+.extra-ico,
+.fun-ico,
+.level-ico,
+.practice-ico{
+  width:76px;
+  height:76px;
+  flex:0 0 auto;
+  position:relative;
+  border-radius:22px;
+  background:rgba(255,255,255,.12);
+  border:1.5px solid rgba(255,255,255,.15);
+  box-shadow:inset 0 0 22px rgba(255,255,255,.05);
+}
+
+.text-bubble{
+  position:absolute;
+  left:12px;
+  top:18px;
+  width:28px;
+  height:20px;
+  border-radius:8px;
+  background:rgba(255,255,255,.92);
+}
+
+.text-bubble::after{
+  content:"";
+  position:absolute;
+  left:5px;
+  bottom:-5px;
+  width:8px;
+  height:8px;
+  background:rgba(255,255,255,.92);
+  clip-path:polygon(0 0, 100% 0, 0 100%);
+}
+
+.text-doc{
+  position:absolute;
+  right:14px;
+  top:16px;
+  width:24px;
+  height:34px;
+  border-radius:7px;
+  border:1.6px solid rgba(103,232,249,.96);
+  background:rgba(103,232,249,.08);
+}
+
+.text-doc-line{
+  position:absolute;
+  left:5px;
+  right:5px;
+  height:2px;
+  border-radius:3px;
+  background:#67e8f9;
+}
+.t1{ top:8px; }
+.t2{ top:14px; }
+.t3{ top:20px; }
+
+.fun-dice, .fun-dice::before, .fun-dice::after{
+  position:absolute;
+  border-radius:10px;
+  background:rgba(255,255,255,.92);
+}
+.fun-dice{
+  width:24px;
+  height:24px;
+  left:14px;
+  top:24px;
+}
+.fun-dice::before{
+  content:"";
+  width:18px;
+  height:18px;
+  right:-22px;
+  top:-10px;
+  opacity:.8;
+}
+.fun-dice::after{
+  content:"";
+  width:16px;
+  height:16px;
+  right:-16px;
+  bottom:-12px;
+  opacity:.65;
+}
+
+.level-bars span{
+  position:absolute;
+  bottom:14px;
+  width:10px;
+  border-radius:6px 6px 0 0;
+  background:rgba(255,255,255,.92);
+}
+.level-bars span:nth-child(1){ left:14px; height:18px; }
+.level-bars span:nth-child(2){ left:30px; height:28px; }
+.level-bars span:nth-child(3){ left:46px; height:40px; }
+
+.practice-chat{
+  position:absolute;
+  left:12px;
+  top:18px;
+  width:24px;
+  height:18px;
+  border-radius:8px;
+  background:rgba(255,255,255,.92);
+}
+.practice-chat::after{
+  content:"";
+  position:absolute;
+  left:4px;
+  bottom:-5px;
+  width:8px;
+  height:8px;
+  background:rgba(255,255,255,.92);
+  clip-path:polygon(0 0, 100% 0, 0 100%);
+}
+.practice-chat.right{
+  left:auto;
+  right:12px;
+  top:34px;
+  background:rgba(103,232,249,.92);
+}
+.practice-chat.right::after{
+  left:auto;
+  right:4px;
+  background:rgba(103,232,249,.92);
+  clip-path:polygon(100% 0, 0 0, 100% 100%);
+}
+
+.wide-body{
+  flex:1;
+  min-width:0;
+}
+
+.card-topline{
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:.5px;
+  color:rgba(255,255,255,.8);
+  margin-bottom:6px;
+  text-transform:uppercase;
+}
+
+.wide-title{
+  margin:0;
+  font-family:'Space Grotesk',sans-serif;
+  font-size:24px;
+  line-height:1;
+  letter-spacing:-.8px;
+  word-break:break-word;
+}
+
+.wide-desc{
+  margin-top:7px;
+  font-size:10.8px;
+  line-height:1.34;
+  color:rgba(255,255,255,.88);
+  max-width:84%;
+}
+
+.arrow-chip{
+  flex:0 0 auto;
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  position:absolute;
+  right:12px;
+  top:50%;
+  transform:translateY(-50%);
+  background:rgba(255,255,255,.15);
+  border:1px solid rgba(255,255,255,.18);
+}
+
+.arrow-chip::before{
+  content:"";
+  position:absolute;
+  left:13px;
+  top:50%;
+  width:12px;
+  height:12px;
+  border-top:2px solid rgba(255,255,255,.9);
+  border-right:2px solid rgba(255,255,255,.9);
+  transform:translateY(-50%) rotate(45deg);
+}
+
+@keyframes rotateCrystal{
+  from{ transform:rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
+  to{ transform:rotateX(360deg) rotateY(720deg) rotateZ(360deg); }
+}
+
+@keyframes floatQR{
+  0%,100%{ transform:translateY(0) rotateX(0deg); }
+  50%{ transform:translateY(-8px) rotateX(5deg); }
+}
+
+@keyframes planetBreath{
+  0%,100%{
+    transform:scale(1);
+    box-shadow:
+      inset -10px -12px 20px rgba(0,0,0,.72),
+      inset 10px 12px 22px rgba(255,255,255,.04),
+      inset 0 0 26px rgba(255,255,255,.04),
+      0 0 18px rgba(255,255,255,.10),
+      0 0 34px rgba(103,232,249,.20),
+      0 0 64px rgba(129,140,248,.18);
+  }
+  50%{
+    transform:scale(1.045);
+    box-shadow:
+      inset -10px -12px 20px rgba(0,0,0,.72),
+      inset 10px 12px 24px rgba(255,255,255,.05),
+      inset 0 0 28px rgba(255,255,255,.06),
+      0 0 22px rgba(255,255,255,.12),
+      0 0 42px rgba(103,232,249,.28),
+      0 0 78px rgba(129,140,248,.24);
+  }
+}
+
+@keyframes planetGlow{
+  0%,100%{
+    opacity:.55;
+    transform:scale(1);
+  }
+  50%{
+    opacity:.92;
+    transform:scale(1.16);
+  }
+}
+
+@keyframes planetRaySpin{
+  from{ transform:rotate(0deg); }
+  to{ transform:rotate(360deg); }
+}
+
+@keyframes beamFlow{
+  from{ background-position:0 0; }
+  to{ background-position:0 50px; }
+}
+
+@keyframes platformPulse{
+  0%,100%{ transform:translateX(-50%) rotateX(75deg) scale(1); opacity:.7; }
+  50%{ transform:translateX(-50%) rotateX(75deg) scale(1.08); opacity:.88; }
+}
+
+@media (max-width:390px){
+  .holo-container{ width:190px; height:190px; margin-bottom:4px; }
+  .crystal-cage{ width:136px; height:136px; }
+  .side1{ transform:rotateY(0deg) translateZ(68px); }
+  .side2{ transform:rotateY(90deg) translateZ(68px); }
+  .side3{ transform:rotateY(180deg) translateZ(68px); }
+  .side4{ transform:rotateY(270deg) translateZ(68px); }
+  .side5{ transform:rotateX(90deg) translateZ(68px); }
+  .side6{ transform:rotateX(-90deg) translateZ(68px); }
+  .holo-qr{ width:98px; height:98px; }
+  .planet-core{ width:98px; height:98px; }
+  .planet-text{ font-size:13px; }
+  .energy-platform{ width:154px; height:154px; bottom:-24px; }
+  .heroTitle{ font-size:20px; }
+  .card-title{ font-size:22px; }
+  .wide-title{ font-size:22px; }
+  .card-art{ height:70px; }
+  .card-desc{
+    font-size:10.8px;
+    line-height:1.32;
+  }
+  .connect-code-value{
+    font-size:20px;
+    letter-spacing:1.8px;
+  }
+}
+</style>
 </head>
+
 <body>
 
-  <div class="nebula">
-    <div class="blob b1"></div>
-    <div class="blob b2"></div>
-    <div class="blob b3"></div>
-    <div class="stars"></div>
-  </div>
+<script>
+const userId = localStorage.getItem("user_id");
+if(!userId){
+  location.href = "/pages/first_login.html";
+}
+</script>
 
-  <main id="page">
-    <div class="stack">
+<main id="pageContent">
+  <div class="page-shell-fit">
 
-      <section class="hero glass">
-        <div class="hero-top">
-          <div id="trialPill" class="trial-pill">
-            <span class="trial-dot"></span>
-            <span id="trialPillText">7 gün ücretsiz deneme aktif</span>
+    <section class="hero" id="heroSection">
+      <div class="heroTop">
+        <div class="holo-container">
+          <div class="crystal-cage">
+            <div class="crystal-side side1"></div>
+            <div class="crystal-side side2"></div>
+            <div class="crystal-side side3"></div>
+            <div class="crystal-side side4"></div>
+            <div class="crystal-side side5"></div>
+            <div class="crystal-side side6"></div>
           </div>
 
-          <a href="/pages/upgrade_pack.html" id="buyMiniBtn" class="buy-mini">Paket Satın Al</a>
+          <div class="holo-qr ai-planet" aria-hidden="true">
+            <div class="planet-glow"></div>
+            <div class="planet-rays"></div>
+            <div class="planet-core">
+              <span class="planet-text">italky<span class="ai">AI</span></span>
+            </div>
+          </div>
+
+          <div class="holo-beams"></div>
+          <div class="energy-platform"></div>
         </div>
 
-        <div class="hero-core">
-          <div class="planet-wrap">
-            <div class="planet-stage">
-              <div class="ring r1">
-                <span class="node" style="top:-13px; left:50%; transform:translateX(-50%);"></span>
-                <span class="node" style="bottom:-13px; left:50%; transform:translateX(-50%);"></span>
-                <span class="node" style="left:-13px; top:50%; transform:translateY(-50%);"></span>
-                <span class="node" style="right:-13px; top:50%; transform:translateY(-50%);"></span>
-              </div>
-
-              <div class="ring r2">
-                <span class="node" style="top:16px; left:24px;"></span>
-                <span class="node" style="top:16px; right:24px;"></span>
-                <span class="node" style="bottom:16px; left:24px;"></span>
-                <span class="node" style="bottom:16px; right:24px;"></span>
-                <span class="node" style="right:-13px; top:50%; transform:translateY(-50%);"></span>
-              </div>
-
-              <div class="ring r3">
-                <span class="node" style="top:-13px; left:50%; transform:translateX(-50%);"></span>
-                <span class="node" style="bottom:-13px; left:50%; transform:translateX(-50%);"></span>
-                <span class="node" style="left:-13px; top:50%; transform:translateY(-50%);"></span>
-                <span class="node" style="right:-13px; top:50%; transform:translateY(-50%);"></span>
-                <span class="node" style="left:28px; top:18px;"></span>
-                <span class="node" style="right:28px; top:18px;"></span>
-                <span class="node" style="left:28px; bottom:18px;"></span>
-                <span class="node" style="right:28px; bottom:18px;"></span>
-              </div>
-
-              <div class="planet">
-                <div class="planet-label">italky<span class="ai">AI</span></div>
-              </div>
-            </div>
-          </div>
-
-          <div class="hero-copy">
-            <div class="hero-tag" id="heroTag">7 GÜN FREE PASS</div>
-
-            <h1 class="hero-title">
-              Dünyayı <span class="grad">Cebine Sığdır,</span><br/>
-              Özgürce Başla.
-            </h1>
-
-            <p class="hero-sub" id="heroSub">
-              İlk 7 gün boyunca tüm modüller açık. Süre bitince paket seçimi zorunlu olacak.
-            </p>
-
-            <div class="hero-status" id="heroStatus">
-              Trial hazırlanıyor...
-            </div>
-
-            <div class="hero-actions">
-              <a href="/pages/text_translate.html" id="quickTextBtn" class="btn btn-primary">TextToText</a>
-              <a href="/pages/upgrade_pack.html" id="quickPackBtn" class="btn btn-gold">Paketleri Gör</a>
-            </div>
+        <div class="connect-code-wrap">
+          <div class="connect-code-label">Bağlantı Kodu</div>
+          <div class="connect-code-line">
+            <div id="connectionCodeText" class="connect-code-value">------</div>
+            <button id="copyConnectionCodeBtn" class="connect-code-copy" type="button" aria-label="Bağlantı kodunu kopyala" title="Kopyala">
+              <svg viewBox="0 0 24 24">
+                <rect x="9" y="9" width="10" height="10" rx="2"></rect>
+                <path d="M7 15H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v1"></path>
+              </svg>
+            </button>
           </div>
         </div>
-      </section>
 
-      <section id="trialBanner" class="banner-card glass">
-        <div class="banner-row">
-          <div class="banner-left">
-            <div class="banner-kicker">Trial Durumu</div>
-            <div class="banner-title" id="bannerTitle">7 gün boyunca tüm sistem açık</div>
-            <div class="banner-sub" id="bannerSub">
-              İster Eğitim ister Translate ister Premium alacak ol, ilk 7 gün hepsini birlikte kullan.
-            </div>
-          </div>
+        <h1 class="heroTitle">Ear<span class="to">TO</span>Ear</h1>
+        <p class="heroSub">Bağlantı kodunu paylaş. Karşı taraf Bağlantı Kodunu girsin, dil bariyerleri kalksın. Karşı taraf Bağlantı Kodunu girince sohbet otomatik başlar. Sen sadece bekle.</p>
+        <div class="heroStatus" id="heroStatus">Oda hazırlanıyor...</div>
 
-          <div class="days-badge">
-            <div class="days-num" id="daysNum">7</div>
-            <div class="days-txt" id="daysTxt">Gün kaldı</div>
-          </div>
+        <div class="heroActions">
+          <button id="goSideToSide" class="heroBtn heroBtnWide" type="button" onclick="openCodePrompt()">🔢Karşı Tarafın Bağlantı Kodunu Gir</button>
         </div>
-      </section>
-
-      <section id="codeCard" class="code-card glass">
-        <div class="code-top">
-          <div>
-            <div class="code-title">EarToEar</div>
-            <div class="code-sub">
-              Bağlantı kodunu paylaş. Karşı taraf kodu girince konuşma otomatik başlar.
-            </div>
-          </div>
-
-          <a href="/pages/sidetoside_code.html" id="goCodeBtn" class="btn btn-primary">Karşı Tarafın Kodu</a>
-        </div>
-
-        <div class="code-line">
-          <div id="connectionCodeText" class="code-box">------</div>
-
-          <button id="copyConnectionCodeBtn" class="copy-btn" type="button" aria-label="Bağlantı kodunu kopyala" title="Kopyala">
-            <svg viewBox="0 0 24 24">
-              <rect x="9" y="9" width="10" height="10" rx="2"></rect>
-              <path d="M7 15H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v1"></path>
-            </svg>
-          </button>
-        </div>
-      </section>
-
-      <section id="modulesCard" class="section-card glass">
-        <div class="grid">
-
-          <a id="translateFaceCard" class="card translate" href="/pages/facetoface_entry.html">
-            <div class="card-topline">Translate Paketi</div>
-            <h2 class="card-title">FaceToFace</h2>
-            <div class="card-desc">Yüz yüze canlı çeviri. Tek telefon kullanım, hızlı akış ve anlık destek.</div>
-            <div class="card-art face-art">
-              <div class="face-wave"></div>
-              <div class="face-head"></div>
-              <div class="face-head"></div>
-            </div>
+        
+        <div id="nfcUpgradeBox" style="display:none; width:100%; max-width:320px; margin:8px auto 0;">
+          <a href="/pages/upgrade_pack.html" style="
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            min-height:48px;
+            border-radius:16px;
+            text-decoration:none;
+            font-weight:900;
+            font-size:14px;
+            color:#fff;
+            background:linear-gradient(135deg,#f59e0b 0%, #f97316 100%);
+            border:1px solid rgba(255,255,255,.14);
+            box-shadow:0 12px 24px rgba(249,115,22,.22);
+          ">
+            Paketini Yükselt
           </a>
-
-          <a id="translateOffCard" class="card offline" href="/pages/offline_languages.html">
-            <div class="card-topline">Translate Paketi</div>
-            <h2 class="card-title">OffToOff</h2>
-            <div class="card-desc">Offline dil paketlerini indir, bağlantı olmadan çeviriye devam et.</div>
-            <div class="card-art offline-art">
-              <div class="offline-sheet"></div>
-              <div class="offline-sheet"></div>
-              <div class="offline-sheet"></div>
-            </div>
-          </a>
-
-          <a id="textCard" class="card text" href="/pages/text_translate.html">
-            <div class="card-topline">Translate Paketi</div>
-            <h2 class="card-title">TextToText</h2>
-            <div class="card-desc">Metin ve fotoğraftan hızlı çeviri. Temiz arayüz, akıcı okuma desteği.</div>
-            <div class="card-art text-art">
-              <div class="text-bubble"></div>
-              <div class="text-doc"></div>
-            </div>
-          </a>
-
-          <a id="eduFunCard" class="card fun" href="/pages/game_menu.html">
-            <div class="card-topline">Eğitim Paketi</div>
-            <h2 class="card-title">Eğlenerek Öğren</h2>
-            <div class="card-desc">Mini oyunlar, kelime akışları ve tekrarlarla dili sıkılmadan öğren.</div>
-            <div class="card-art fun-art">
-              <div class="fun-dice"></div>
-            </div>
-          </a>
-
-          <a id="eduLevelCard" class="card level" href="/pages/level_required.html">
-            <div class="card-topline">Eğitim Paketi</div>
-            <h2 class="card-title">Seviye Tespit</h2>
-            <div class="card-desc">Mevcut seviyeni ölç. Sistem sana uygun başlangıç yolunu otomatik kurar.</div>
-            <div class="card-art level-art">
-              <div class="level-bars">
-                <span></span><span></span><span></span>
-              </div>
-            </div>
-          </a>
-
-          <a id="eduPracticeCard" class="card practice" href="/pages/teacher_select.html">
-            <div class="card-topline">Eğitim Paketi</div>
-            <h2 class="card-title">Pratik Yap</h2>
-            <div class="card-desc">Öğretmen destekli akışlarla tekrar yap, akıcılığını güçlendir.</div>
-            <div class="card-art practice-art">
-              <div class="practice-chat"></div>
-              <div class="practice-chat right"></div>
-            </div>
-          </a>
-
         </div>
-      </section>
-
-      <section id="lockedCard" class="locked-card glass">
-        <div class="locked-icon">🔒</div>
-        <h2 class="locked-title">Deneme süresi bitti.<br/>Paket seçme zamanı.</h2>
-        <p class="locked-sub">
-          7 günlük ücretsiz kullanım tamamlandı. Devam etmek için Eğitim Paketi, Translate Paketi ya da Premium seçmelisin.
-        </p>
-
-        <div class="locked-actions">
-          <a href="/pages/upgrade_pack.html" class="btn btn-gold">Paket Satın Al</a>
-          <a href="/pages/upgrade_pack.html#education" class="btn btn-ghost">Eğitim</a>
-          <a href="/pages/upgrade_pack.html#translate" class="btn btn-ghost">Translate</a>
-          <a href="/pages/upgrade_pack.html#premium" class="btn btn-ghost">Premium</a>
-        </div>
-
-        <div class="pack-grid">
-          <div class="pack-card">
-            <h3 class="pack-name">Eğitim</h3>
-            <div class="pack-price">499 TL</div>
-            <div class="pack-jeton">100 jeton</div>
-            <div class="pack-desc">
-              Eğlenerek Öğren, Pratik Yap, Seviye Tespit açılır.
-            </div>
-            <button class="pack-btn" onclick="location.href='/pages/upgrade_pack.html#education'">Eğitim Paketi</button>
-          </div>
-
-          <div class="pack-card">
-            <h3 class="pack-name">Translate</h3>
-            <div class="pack-price">499 TL</div>
-            <div class="pack-jeton">100 jeton</div>
-            <div class="pack-desc">
-              FaceToFace, EarToEar, TextToText, OffToOff açılır.
-            </div>
-            <button class="pack-btn" onclick="location.href='/pages/upgrade_pack.html#translate'">Translate Paketi</button>
-          </div>
-
-          <div class="pack-card">
-            <h3 class="pack-name">Premium</h3>
-            <div class="pack-price">999 TL</div>
-            <div class="pack-jeton">200 jeton</div>
-            <div class="pack-desc">
-              Tüm modüller açılır. En güçlü erişim paketi.
-            </div>
-            <button class="pack-btn" onclick="location.href='/pages/upgrade_pack.html#premium'">Premium</button>
-          </div>
-        </div>
-      </section>
-
-      <div class="footer-note">
-        italkyAI • Trial aktifken tüm modüller birlikte çalışır. Süre bitince paket zorunlu olur.
       </div>
+    </section>
 
-    </div>
-  </main>
+    <section class="home-grid">
+      <a id="faceCard" class="mod-card face-card" href="/pages/facetoface_entry.html">
+        <h2 class="card-title">FaceToFace</h2>
 
-  <script type="module">
-    import { mountShell } from "/js/ui_shell.js";
+        <div class="card-desc-list">
+          <p class="card-desc">Yüz yüze iletişim.</p>
+          <p class="card-desc">Yapay zeka sayesinde çeviri.</p>
+          <p class="card-desc">72 dil çevirisi.</p>
+          <p class="card-desc">Tek telefon ile kullanım.</p>
+          <p class="card-desc">Özel ses seçimi.</p>
+          <p class="card-desc">Bölünmüş ekran desteği.</p>
+        </div>
 
+        <div class="card-art face-art">
+          <div class="face-wave"></div>
+          <div class="face-headset"></div>
+          <div class="face-headset"></div>
+        </div>
+      </a>
+
+      <a id="offlineCard" class="mod-card offline-grid-card" href="/pages/offline_languages.html">
+        <h2 class="card-title">Offline Translate</h2>
+
+        <div class="card-desc-list">
+          <p class="card-desc">67 Offline Dil Seçeneği.</p>
+          <p class="card-desc">İnternetsiz çeviri deneyimi.</p>
+          <p class="card-desc">Dil paketlerini indir, hemen kullan.</p>
+          <p class="card-desc">Bağlantı olmadan hızlı çeviri.</p>
+        </div>
+
+        <div class="card-art offline-art">
+          <div class="offline-sheet"></div>
+          <div class="offline-sheet"></div>
+          <div class="offline-sheet"></div>
+        </div>
+      </a>
+    </section>
+
+    <section class="wide-stack">
+      <a id="textCard" class="wide-card texttotext-card" href="/pages/text_translate.html">
+        <div class="extra-ico">
+          <div class="text-bubble"></div>
+          <div class="text-doc">
+            <div class="text-doc-line t1"></div>
+            <div class="text-doc-line t2"></div>
+            <div class="text-doc-line t3"></div>
+          </div>
+        </div>
+
+        <div class="wide-body">
+          <div class="card-topline">Metin ve Fotoğraf</div>
+          <h2 class="wide-title">TextToText</h2>
+          <p class="wide-desc">Yazıdan veya fotoğraftan çeviri yap. Hızlı, sade ve otomatik sesli okuma destekli.</p>
+        </div>
+
+        <div class="arrow-chip"></div>
+      </a>
+
+      <a id="funCard" class="wide-card fun-card" href="/pages/game_menu.html">
+        <div class="fun-ico">
+          <div class="fun-dice"></div>
+        </div>
+
+        <div class="wide-body">
+          <div class="card-topline">Oyunlu Eğitim</div>
+          <h2 class="wide-title">Eğlenerek Öğren</h2>
+          <p class="wide-desc">Kelime, konuşma ve mini oyunlarla öğrenmeyi daha akıcı ve keyifli hale getir.</p>
+        </div>
+
+        <div class="arrow-chip"></div>
+      </a>
+
+      <a id="levelCard" class="wide-card level-card" href="/pages/level_required.html">
+        <div class="level-ico">
+          <div class="level-bars">
+            <span></span><span></span><span></span>
+          </div>
+        </div>
+
+        <div class="wide-body">
+          <div class="card-topline">Ölç & Başla</div>
+          <h2 class="wide-title">Seviye Tespit Sınavı</h2>
+          <p class="wide-desc">Mevcut dil seviyeni ölç, sana uygun başlangıç noktasını sistem otomatik belirlesin.</p>
+        </div>
+
+        <div class="arrow-chip"></div>
+      </a>
+
+      <a id="practiceCard" class="wide-card practice-card" href="/pages/teacher_select.html">
+        <div class="practice-ico">
+          <div class="practice-chat"></div>
+          <div class="practice-chat right"></div>
+        </div>
+
+        <div class="wide-body">
+          <div class="card-topline">Canlı Gelişim</div>
+          <h2 class="wide-title">Pratik Yap</h2>
+          <p class="wide-desc">Öğretmen destekli konuşma ve tekrar akışlarıyla pratik yap, akıcılığını güçlendir.</p>
+        </div>
+
+        <div class="arrow-chip"></div>
+      </a>
+    </section>
+
+  </div>
+</main>
+
+<script type="module">
+import { mountShell } from "/js/ui_shell.js";
+try {
+  mountShell({ scroll: "auto" });
+} catch (e) {
+  console.error("ui_shell HATASI:", e);
+}
+</script>
+
+<script>
+/* =========================================================
+   HOME ACCESS + 7 GÜN KURALI + PAKET GÖRÜNÜRLÜK
+   TASARIMA DOKUNMADAN SADECE MANTIK EKLER
+========================================================= */
+
+const ITALKY_TRIAL_DAYS = 7;
+const ITALKY_DAY_MS = 24 * 60 * 60 * 1000;
+
+function italkyGetTrialStart() {
+  let startedAt = localStorage.getItem("trial_started_at");
+  if (!startedAt) {
+    startedAt = String(Date.now());
+    localStorage.setItem("trial_started_at", startedAt);
+  }
+  return Number(startedAt);
+}
+
+function italkyNormalizePackageCode(raw) {
+  const value = String(raw || "").trim().toLowerCase();
+
+  if (!value) return "";
+  if (value.includes("premium")) return "premium";
+  if (value.includes("translate")) return "translate";
+  if (value.includes("education")) return "education";
+  if (value.includes("egitim")) return "education";
+
+  return value;
+}
+
+function italkyGetAccessState() {
+  const startedAt = italkyGetTrialStart();
+  const now = Date.now();
+  const elapsed = now - startedAt;
+
+  const remainingMs = Math.max(0, (ITALKY_TRIAL_DAYS * ITALKY_DAY_MS) - elapsed);
+  const trialActive = remainingMs > 0;
+  const remainingDays = Math.max(0, Math.ceil(remainingMs / ITALKY_DAY_MS));
+
+  const packageCode = italkyNormalizePackageCode(
+    localStorage.getItem("package_code") ||
+    localStorage.getItem("premium_plan_code") ||
+    ""
+  );
+
+  const premiumFlag =
+    localStorage.getItem("premium_is_active") === "1" ||
+    localStorage.getItem("premium_is_active") === "true";
+
+  const premiumActive = premiumFlag || packageCode === "premium";
+  const educationActive = trialActive || premiumActive || packageCode === "education";
+  const translateActive = trialActive || premiumActive || packageCode === "translate";
+  const anyPaidPackage = premiumActive || packageCode === "education" || packageCode === "translate";
+  const lockedAll = !trialActive && !anyPaidPackage;
+
+  return {
+    trialActive,
+    remainingDays,
+    packageCode,
+    premiumActive,
+    educationActive,
+    translateActive,
+    anyPaidPackage,
+    lockedAll
+  };
+}
+
+function italkyShow(el, isVisible) {
+  if (!el) return;
+  el.style.display = isVisible ? "" : "none";
+}
+
+function italkySetHeroStatus(text) {
+  const heroStatus = document.getElementById("heroStatus");
+  if (heroStatus) heroStatus.textContent = text || "";
+}
+
+function italkyApplyAccessToHome() {
+  const access = italkyGetAccessState();
+
+  const heroSub = document.querySelector(".heroSub");
+  const upgradeBox = document.getElementById("nfcUpgradeBox");
+
+  const faceCard = document.getElementById("faceCard");
+  const offlineCard = document.getElementById("offlineCard");
+  const textCard = document.getElementById("textCard");
+  const funCard = document.getElementById("funCard");
+  const levelCard = document.getElementById("levelCard");
+  const practiceCard = document.getElementById("practiceCard");
+
+  const codeWrap = document.querySelector(".connect-code-wrap");
+  const sideBtn = document.getElementById("goSideToSide");
+
+  /* Önce hepsini kapat */
+  italkyShow(faceCard, false);
+  italkyShow(offlineCard, false);
+  italkyShow(textCard, false);
+  italkyShow(funCard, false);
+  italkyShow(levelCard, false);
+  italkyShow(practiceCard, false);
+
+  italkyShow(codeWrap, false);
+  italkyShow(sideBtn, false);
+  italkyShow(upgradeBox, false);
+
+  /* Trial aktifse her şey açık */
+  if (access.trialActive) {
+    italkyShow(faceCard, true);
+    italkyShow(offlineCard, true);
+    italkyShow(textCard, true);
+    italkyShow(funCard, true);
+    italkyShow(levelCard, true);
+    italkyShow(practiceCard, true);
+
+    italkyShow(codeWrap, true);
+    italkyShow(sideBtn, true);
+
+    italkySetHeroStatus(`7 gün ücretsiz full erişim açık • ${access.remainingDays} gün kaldı`);
+
+    if (heroSub) {
+      heroSub.textContent =
+        "İlk 7 gün boyunca tüm paketler açık. Süre bitince bir paket seçmen gerekecek.";
+    }
+
+    return access;
+  }
+
+  /* Premium aktifse hepsi açık */
+  if (access.premiumActive) {
+    italkyShow(faceCard, true);
+    italkyShow(offlineCard, true);
+    italkyShow(textCard, true);
+    italkyShow(funCard, true);
+    italkyShow(levelCard, true);
+    italkyShow(practiceCard, true);
+
+    italkyShow(codeWrap, true);
+    italkyShow(sideBtn, true);
+
+    italkySetHeroStatus("Premium aktif • Tüm modüller açık");
+
+    if (heroSub) {
+      heroSub.textContent =
+        "Premium üyelik aktif. Translate ve Eğitim tarafının tamamı açık.";
+    }
+
+    return access;
+  }
+
+  /* Education paketi */
+  if (access.packageCode === "education") {
+    italkyShow(funCard, true);
+    italkyShow(levelCard, true);
+    italkyShow(practiceCard, true);
+
+    italkySetHeroStatus("Eğitim paketi aktif");
+
+    if (heroSub) {
+      heroSub.textContent =
+        "Eğlenerek Öğren, Pratik Yap ve Seviye Tespit modülleri açık.";
+    }
+
+    italkyShow(upgradeBox, true);
+    return access;
+  }
+
+  /* Translate paketi */
+  if (access.packageCode === "translate") {
+    italkyShow(faceCard, true);
+    italkyShow(offlineCard, true);
+    italkyShow(textCard, true);
+
+    italkyShow(codeWrap, true);
+    italkyShow(sideBtn, true);
+
+    italkySetHeroStatus("Translate paketi aktif");
+
+    if (heroSub) {
+      heroSub.textContent =
+        "FaceToFace, EarToEar, TextToText ve Offline Translate modülleri açık.";
+    }
+
+    italkyShow(upgradeBox, true);
+    return access;
+  }
+
+  /* Trial bitti, paket yok -> her şey kapalı */
+  italkySetHeroStatus("7 günlük deneme bitti • Paket seçmelisin");
+
+  if (heroSub) {
+    heroSub.textContent =
+      "Devam etmek için Eğitim Paketi, Translate Paketi veya Premium üyelik seç.";
+  }
+
+  italkyShow(upgradeBox, true);
+  return access;
+}
+</script>
+
+<script>
+function openCodePrompt(){
+  const access = italkyGetAccessState();
+  const canUseEarToEar = access.trialActive || access.premiumActive || access.packageCode === "translate";
+
+  if(!canUseEarToEar){
+    location.href = "/pages/upgrade_pack.html";
+    return;
+  }
+
+  location.href = "/pages/sidetoside_code.html";
+}
+window.openCodePrompt = openCodePrompt;
+</script>
+
+<script type="module">
+const API_BASE = "https://italky-api.onrender.com/api";
+const connectionCodeText = document.getElementById("connectionCodeText");
+const copyConnectionCodeBtn = document.getElementById("copyConnectionCodeBtn");
+
+const ROOM_KEY = "italky_active_interpreter_room_id";
+const ROOM_LANG_KEY = "italky_active_interpreter_lang";
+const ROOM_CODE_KEY = "italky_active_interpreter_code";
+
+let activeRoomId = "";
+let activeRoomCode = "";
+let redirected = false;
+let roomPollTimer = null;
+
+function setHeroStatus(text){
+  const heroStatus = document.getElementById("heroStatus");
+  if(heroStatus) heroStatus.textContent = text || "";
+}
+
+function makeConnectionCode(length = 6){
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let out = "";
+  for(let i = 0; i < length; i++){
+    out += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return out;
+}
+
+function setConnectionCode(code){
+  activeRoomCode = String(code || "").trim().toUpperCase();
+  if(connectionCodeText){
+    connectionCodeText.textContent = activeRoomCode || "------";
+  }
+  try{
+    localStorage.setItem(ROOM_CODE_KEY, activeRoomCode);
+  }catch(e){
+    console.warn("[HOME localStorage ROOM_CODE_KEY]", e);
+  }
+}
+
+async function createRoom(myLang = "tr"){
+  const hostCode = makeConnectionCode(6);
+  const r = await fetch(`${API_BASE}/interpreter/create-room`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      host_code: hostCode,
+      my_lang: myLang,
+      mode: "interpreter"
+    })
+  });
+  const j = await r.json().catch(() => ({}));
+  if(!r.ok || !j?.room_id){
+    throw new Error(j?.detail || j?.error || "Room oluşturulamadı");
+  }
+  return {
+    ...j,
+    host_code: String(j?.host_code || hostCode || "").trim().toUpperCase()
+  };
+}
+
+async function getRoomStatus(roomId){
+  const r = await fetch(`${API_BASE}/interpreter/room/${encodeURIComponent(roomId)}`, {
+    method: "GET"
+  });
+  const j = await r.json().catch(() => ({}));
+  if(!r.ok || !j?.room_id){
+    throw new Error(j?.detail || j?.error || "Room okunamadı");
+  }
+  return j;
+}
+
+function stopRoomPolling(){
+  try{
+    clearInterval(roomPollTimer);
+  }catch(e){}
+  roomPollTimer = null;
+}
+
+function launchHostRoom(roomId){
+  if(!roomId || redirected) return;
+  redirected = true;
+  stopRoomPolling();
+  location.href = `/pages/sidetoside.html?room=${encodeURIComponent(roomId)}&role=host&my=tr&auto=1`;
+}
+
+function startRoomPolling(roomId){
+  if(!roomId) return;
+  stopRoomPolling();
+  roomPollTimer = setInterval(async () => {
+    if(redirected) return;
     try{
-      mountShell({ scroll:"auto" });
-
-      setTimeout(() => {
-        try{
-          const root = getComputedStyle(document.documentElement);
-          const footerH = parseFloat(root.getPropertyValue("--footerH")) || 0;
-          document.documentElement.style.setProperty("--footerLift", footerH ? `${footerH + 12}px` : "0px");
-        }catch(e){}
-      }, 80);
+      const room = await getRoomStatus(roomId);
+      const peerConnected = room?.status === "active" && !!String(room?.guest_lang || "").trim();
+      if(peerConnected){
+        setHeroStatus("Karşı taraf bağlandı. Oda açılıyor...");
+        launchHostRoom(roomId);
+        return;
+      }
+      setHeroStatus("Bağlantı kodu hazır. Karşı taraf bekleniyor...");
     }catch(e){
-      console.warn("ui_shell yüklenemedi:", e);
+      console.warn("[HOME room poll error]", e);
+      setHeroStatus("Bağlantı kontrol edilemiyor...");
     }
-  </script>
+  }, 1500);
+}
 
-  <script>
-    (function(){
-      const userId = localStorage.getItem("user_id");
-      if(!userId){
-        location.href = "/pages/first_login.html";
-      }
-    })();
-  </script>
+async function prepareRoom(){
+  const access = italkyGetAccessState();
+  const canUseEarToEar = access.trialActive || access.premiumActive || access.packageCode === "translate";
 
-  <script type="module">
-    const API_BASE = "https://italky-api.onrender.com/api";
+  redirected = false;
+  stopRoomPolling();
 
-    const TRIAL_KEYS = ["trial_started_at", "trial_start"];
-    const PACKAGE_KEYS = ["package_code", "premium_plan_code"];
-    const PREMIUM_KEY = "premium_is_active";
+  if(!canUseEarToEar){
+    setConnectionCode("------");
+    return;
+  }
 
-    const TRIAL_MS = 7 * 24 * 60 * 60 * 1000;
+  try{
+    setHeroStatus("Oda hazırlanıyor...");
+    const created = await createRoom("tr");
+    activeRoomId = String(created.room_id || "").trim();
+    if(!activeRoomId) throw new Error("room_id boş geldi");
+    setConnectionCode(created.host_code || makeConnectionCode(6));
+    localStorage.setItem(ROOM_KEY, activeRoomId);
+    localStorage.setItem(ROOM_LANG_KEY, "tr");
+    localStorage.setItem(ROOM_CODE_KEY, activeRoomCode);
+    setHeroStatus("Bağlantı kodu hazır. Karşı taraf bekleniyor...");
+    startRoomPolling(activeRoomId);
+  }catch(e){
+    console.error("[HOME prepareRoom]", e);
+    setConnectionCode("ERROR1");
+    setHeroStatus(e?.message || "Oda hazırlanamadı");
+  }
+}
 
-    const trialPillText = document.getElementById("trialPillText");
-    const heroTag = document.getElementById("heroTag");
-    const heroSub = document.getElementById("heroSub");
-    const heroStatus = document.getElementById("heroStatus");
-    const bannerTitle = document.getElementById("bannerTitle");
-    const bannerSub = document.getElementById("bannerSub");
-    const daysNum = document.getElementById("daysNum");
-    const daysTxt = document.getElementById("daysTxt");
-    const trialBanner = document.getElementById("trialBanner");
-    const codeCard = document.getElementById("codeCard");
-    const modulesCard = document.getElementById("modulesCard");
-    const lockedCard = document.getElementById("lockedCard");
-    const buyMiniBtn = document.getElementById("buyMiniBtn");
+copyConnectionCodeBtn?.addEventListener("click", async () => {
+  const value = String(activeRoomCode || "").trim();
+  if(!value || value === "------") return;
+  try{
+    await navigator.clipboard.writeText(value);
+    setHeroStatus("Bağlantı kodu kopyalandı.");
+  }catch{
+    const temp = document.createElement("textarea");
+    temp.value = value;
+    document.body.appendChild(temp);
+    temp.select();
+    try{ document.execCommand("copy"); }catch(e){}
+    temp.remove();
+    setHeroStatus("Bağlantı kodu kopyalandı.");
+  }
+});
 
-    const translateFaceCard = document.getElementById("translateFaceCard");
-    const translateOffCard = document.getElementById("translateOffCard");
-    const textCard = document.getElementById("textCard");
-    const eduFunCard = document.getElementById("eduFunCard");
-    const eduLevelCard = document.getElementById("eduLevelCard");
-    const eduPracticeCard = document.getElementById("eduPracticeCard");
+/* Önce erişimi uygula, sonra gerekiyorsa oda hazırla */
+italkyApplyAccessToHome();
+prepareRoom();
 
-    const connectionCodeText = document.getElementById("connectionCodeText");
-    const copyConnectionCodeBtn = document.getElementById("copyConnectionCodeBtn");
+window.addEventListener("beforeunload", () => {
+  stopRoomPolling();
+});
+</script>
 
-    const ROOM_KEY = "italky_active_interpreter_room_id";
-    const ROOM_LANG_KEY = "italky_active_interpreter_lang";
-    const ROOM_CODE_KEY = "italky_active_interpreter_code";
-
-    let activeRoomId = "";
-    let activeRoomCode = "";
-    let redirected = false;
-    let roomPollTimer = null;
-
-    function setHeroStatus(text){
-      if(heroStatus) heroStatus.textContent = text || "";
-    }
-
-    function getFirstLocal(keys, fallback = ""){
-      for(const key of keys){
-        const value = localStorage.getItem(key);
-        if(value !== null && value !== undefined && String(value).trim() !== ""){
-          return String(value).trim();
-        }
-      }
-      return fallback;
-    }
-
-    function getOrCreateTrialStart(){
-      let raw = getFirstLocal(TRIAL_KEYS, "");
-      let ts = Number(raw || 0);
-
-      if(!ts || Number.isNaN(ts)){
-        ts = Date.now();
-        localStorage.setItem("trial_started_at", String(ts));
-        localStorage.setItem("trial_start", String(ts));
-      }
-
-      return ts;
-    }
-
-    function normalizePackageCode(raw){
-      const code = String(raw || "").trim().toLowerCase();
-
-      if(!code) return "";
-      if(code.includes("premium")) return "premium";
-      if(code.includes("translate")) return "translate";
-      if(code.includes("education")) return "education";
-      if(code.includes("egitim")) return "education";
-
-      return code;
-    }
-
-    function resolveAccessState(){
-      const premiumRaw = localStorage.getItem(PREMIUM_KEY);
-      const packageRaw = getFirstLocal(PACKAGE_KEYS, "");
-      const packageCode = normalizePackageCode(packageRaw);
-
-      const trialStartedAt = getOrCreateTrialStart();
-      const now = Date.now();
-      const elapsed = Math.max(0, now - trialStartedAt);
-      const trialRemainingMs = Math.max(0, TRIAL_MS - elapsed);
-      const trialRemainingDays = Math.max(0, Math.ceil(trialRemainingMs / (24 * 60 * 60 * 1000)));
-      const trialActive = trialRemainingMs > 0;
-
-      const premiumActive =
-        premiumRaw === "1" ||
-        premiumRaw === "true" ||
-        packageCode === "premium";
-
-      const translateActive = premiumActive || trialActive || packageCode === "translate";
-      const educationActive = premiumActive || trialActive || packageCode === "education";
-      const anyPackageActive = premiumActive || packageCode === "translate" || packageCode === "education";
-
-      const fullLocked = !trialActive && !anyPackageActive;
-
-      return {
-        now,
-        trialStartedAt,
-        trialRemainingMs,
-        trialRemainingDays,
-        trialActive,
-        packageCode,
-        premiumActive,
-        translateActive,
-        educationActive,
-        anyPackageActive,
-        fullLocked
-      };
-    }
-
-    function show(el, visible){
-      if(!el) return;
-      el.style.display = visible ? "" : "none";
-    }
-
-    function renderAccess(){
-      const access = resolveAccess();
-
-      if(access.trialActive){
-        trialPillText.textContent = `7 gün ücretsiz deneme aktif • ${access.trialRemainingDays} gün kaldı`;
-        heroTag.textContent = "7 GÜN FREE PASS";
-        heroSub.textContent = "İlk 7 gün boyunca tüm modüller birlikte açık. Süre bitince paket seçimi zorunlu olacak.";
-        bannerTitle.textContent = "7 gün boyunca tüm sistem açık";
-        bannerSub.textContent = "İster Eğitim ister Translate ister Premium alacak ol, ilk 7 gün hepsini birlikte kullan.";
-        daysNum.textContent = String(access.trialRemainingDays);
-        daysTxt.textContent = access.trialRemainingDays === 1 ? "Gün kaldı" : "Gün kaldı";
-        buyMiniBtn.textContent = "Paket Satın Al";
-      }else if(access.premiumActive){
-        trialPillText.textContent = "Premium aktif";
-        heroTag.textContent = "PREMIUM AÇIK";
-        heroSub.textContent = "Tüm modüller açık. 200 jeton dahil tam erişim aktif.";
-        bannerTitle.textContent = "Premium hesabın aktif";
-        bannerSub.textContent = "Translate ve Eğitim alanlarının tamamı tek pakette açık.";
-        daysNum.textContent = "∞";
-        daysTxt.textContent = "Sınırsız";
-        buyMiniBtn.textContent = "Premium Aktif";
-      }else if(access.packageCode === "translate"){
-        trialPillText.textContent = "Translate paketi aktif";
-        heroTag.textContent = "TRANSLATE AÇIK";
-        heroSub.textContent = "FaceToFace, EarToEar, TextToText ve OffToOff kullanıma açık.";
-        bannerTitle.textContent = "Translate paketin aktif";
-        bannerSub.textContent = "100 jeton dahil translate alanlarının tamamı açık.";
-        daysNum.textContent = "100";
-        daysTxt.textContent = "Jeton";
-        buyMiniBtn.textContent = "Paketi Yükselt";
-      }else if(access.packageCode === "education"){
-        trialPillText.textContent = "Eğitim paketi aktif";
-        heroTag.textContent = "EĞİTİM AÇIK";
-        heroSub.textContent = "Eğlenerek Öğren, Pratik Yap ve Seviye Tespit açık.";
-        bannerTitle.textContent = "Eğitim paketin aktif";
-        bannerSub.textContent = "100 jeton dahil eğitim alanları kullanıma hazır.";
-        daysNum.textContent = "100";
-        daysTxt.textContent = "Jeton";
-        buyMiniBtn.textContent = "Paketi Yükselt";
-      }else{
-        trialPillText.textContent = "Paket seçimi gerekli";
-        heroTag.textContent = "ERİŞİM KİLİTLİ";
-        heroSub.textContent = "Devam etmek için paket seçmelisin.";
-        bannerTitle.textContent = "Trial tamamlandı";
-        bannerSub.textContent = "Devam etmek için artık paket satın alma zamanı.";
-        daysNum.textContent = "0";
-        daysTxt.textContent = "Gün";
-        buyMiniBtn.textContent = "Paket Satın Al";
-      }
-
-      show(trialBanner, true);
-      show(lockedCard, access.fullLocked);
-      show(modulesCard, !access.fullLocked);
-      show(codeCard, !access.fullLocked && access.translateActive);
-
-      show(translateFaceCard, !access.fullLocked && access.translateActive);
-      show(translateOffCard, !access.fullLocked && access.translateActive);
-      show(textCard, !access.fullLocked && access.translateActive);
-
-      show(eduFunCard, !access.fullLocked && access.educationActive);
-      show(eduLevelCard, !access.fullLocked && access.educationActive);
-      show(eduPracticeCard, !access.fullLocked && access.educationActive);
-
-      if(access.fullLocked){
-        setHeroStatus("Deneme süresi doldu. Paket seçmeden devam edemezsin.");
-      }else if(access.translateActive){
-        setHeroStatus("Bağlantı kodu hazırlanıyor...");
-      }else{
-        setHeroStatus("Aktif modüller hazır.");
-      }
-
-      return access;
-    }
-
-    function makeConnectionCode(length = 6){
-      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-      let out = "";
-      for(let i = 0; i < length; i++){
-        out += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
-      return out;
-    }
-
-    function setConnectionCode(code){
-      activeRoomCode = String(code || "").trim().toUpperCase();
-      if(connectionCodeText){
-        connectionCodeText.textContent = activeRoomCode || "------";
-      }
-      try{
-        localStorage.setItem(ROOM_CODE_KEY, activeRoomCode);
-      }catch(e){
-        console.warn("[HOME ROOM_CODE_KEY]", e);
-      }
-    }
-
-    async function createRoom(myLang = "tr"){
-      const hostCode = makeConnectionCode(6);
-      const r = await fetch(`${API_BASE}/interpreter/create-room`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          host_code: hostCode,
-          my_lang: myLang,
-          mode: "interpreter"
-        })
-      });
-
-      const j = await r.json().catch(() => ({}));
-
-      if(!r.ok || !j?.room_id){
-        throw new Error(j?.detail || j?.error || "Room oluşturulamadı");
-      }
-
-      return {
-        ...j,
-        host_code: String(j?.host_code || hostCode || "").trim().toUpperCase()
-      };
-    }
-
-    async function getRoomStatus(roomId){
-      const r = await fetch(`${API_BASE}/interpreter/room/${encodeURIComponent(roomId)}`, {
-        method: "GET"
-      });
-
-      const j = await r.json().catch(() => ({}));
-
-      if(!r.ok || !j?.room_id){
-        throw new Error(j?.detail || j?.error || "Room okunamadı");
-      }
-
-      return j;
-    }
-
-    function stopRoomPolling(){
-      try{
-        clearInterval(roomPollTimer);
-      }catch(e){}
-      roomPollTimer = null;
-    }
-
-    function launchHostRoom(roomId){
-      if(!roomId || redirected) return;
-      redirected = true;
-      stopRoomPolling();
-      location.href = `/pages/sidetoside.html?room=${encodeURIComponent(roomId)}&role=host&my=tr&auto=1`;
-    }
-
-    function startRoomPolling(roomId){
-      if(!roomId) return;
-
-      stopRoomPolling();
-
-      roomPollTimer = setInterval(async () => {
-        if(redirected) return;
-
-        try{
-          const room = await getRoomStatus(roomId);
-          const peerConnected = room?.status === "active" && !!String(room?.guest_lang || "").trim();
-
-          if(peerConnected){
-            setHeroStatus("Karşı taraf bağlandı. Oda açılıyor...");
-            launchHostRoom(roomId);
-            return;
-          }
-
-          setHeroStatus("Bağlantı kodu hazır. Karşı taraf bekleniyor...");
-        }catch(e){
-          console.warn("[HOME room poll error]", e);
-          setHeroStatus("Bağlantı kontrol edilemiyor...");
-        }
-      }, 1500);
-    }
-
-    async function prepareRoomIfAllowed(access){
-      if(!access.translateActive || access.fullLocked){
-        stopRoomPolling();
-        setConnectionCode("------");
-        return;
-      }
-
-      redirected = false;
-      stopRoomPolling();
-
-      try{
-        setHeroStatus("Oda hazırlanıyor...");
-        const created = await createRoom("tr");
-        activeRoomId = String(created.room_id || "").trim();
-
-        if(!activeRoomId){
-          throw new Error("room_id boş geldi");
-        }
-
-        setConnectionCode(created.host_code || makeConnectionCode(6));
-
-        localStorage.setItem(ROOM_KEY, activeRoomId);
-        localStorage.setItem(ROOM_LANG_KEY, "tr");
-        localStorage.setItem(ROOM_CODE_KEY, activeRoomCode);
-
-        setHeroStatus("Bağlantı kodu hazır. Karşı taraf bekleniyor...");
-        startRoomPolling(activeRoomId);
-      }catch(e){
-        console.error("[HOME prepareRoom]", e);
-        setConnectionCode("ERROR1");
-        setHeroStatus(e?.message || "Oda hazırlanamadı");
-      }
-    }
-
-    copyConnectionCodeBtn?.addEventListener("click", async () => {
-      const value = String(activeRoomCode || "").trim();
-      if(!value) return;
-
-      try{
-        await navigator.clipboard.writeText(value);
-        setHeroStatus("Bağlantı kodu kopyalandı.");
-      }catch{
-        const temp = document.createElement("textarea");
-        temp.value = value;
-        document.body.appendChild(temp);
-        temp.select();
-        try{ document.execCommand("copy"); }catch(e){}
-        temp.remove();
-        setHeroStatus("Bağlantı kodu kopyalandı.");
-      }
-    });
-
-    window.openCodePrompt = function(){
-      const access = resolveAccess();
-      if(access.fullLocked || !access.translateActive){
-        location.href = "/pages/upgrade_pack.html";
-        return;
-      }
-      location.href = "/pages/sidetoside_code.html";
-    };
-
-    const access = renderAccess();
-    prepareRoomIfAllowed(access);
-
-    window.addEventListener("beforeunload", () => {
-      stopRoomPolling();
-    });
-  </script>
 </body>
-  </html>
+</html>
