@@ -448,11 +448,17 @@ async function fetchProfileTokens(userId){
   }
 }
 
-function checkMembershipUiGuard(){
-  const access = getGlobalAccessState();
+function isPackageActuallyActive(state){
+  if (!state) return false;
+  if (state.package_active !== true) return false;
+  if (!state.package_ends_at) return true;
+  return new Date(state.package_ends_at).getTime() > Date.now();
+}
 
-  if (access.trialActive) return true;
-  if (access.hasPackage) return true;
+async function checkMembershipUiGuard(){
+  const access = await getGlobalAccessState();
+
+  if (isPackageActuallyActive(access)) return true;
 
   toast("Önce üyelik modelinizi seçmelisiniz.");
   setTimeout(() => {
@@ -505,8 +511,8 @@ window.buy = async function(productId){
   console.log("Jeton satın alma isteği:", productId);
 
   try{
-    if(!checkMembershipUiGuard()) return;
-    if(!enforcePackageBeforeTokens()) return;
+    if(!(await checkMembershipUiGuard())) return;
+    if(!(await enforcePackageBeforeTokens())) return;
 
     if(!__billingUserId){
       const cached = getCachedUser();
@@ -550,7 +556,7 @@ syncBillingUserId();
 setTimeout(syncBillingUserId, 600);
 setTimeout(syncBillingUserId, 1400);
 </script>
-  
+
 <script type="module">
   import { initGlobalAccess } from "/js/global_access.js";
   initGlobalAccess();
