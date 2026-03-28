@@ -1,9 +1,8 @@
-<!-- FILE: /pages/level_test_intro.html -->
-<!DOCTYPE html>
+<!doctype html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
   <title>italkyAI • Seviye Tespit</title>
 
   <meta name="theme-color" content="#02000f">
@@ -14,314 +13,618 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
   <style>
-    #pageContent { height: 100%; overflow: hidden; }
-    .wrap { height: 100%; padding: 10px 16px 20px; display: flex; flex-direction: column; gap: 12px; }
-
-    .hero {
-      border-radius: 32px;
-      border: 1px solid rgba(255,255,255,0.08);
-      background: rgba(255,255,255,0.03);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      padding: 22px 18px;
+    :root{
+      --bg:#02000f;
+      --panel:rgba(255,255,255,0.05);
+      --panel-2:rgba(255,255,255,0.03);
+      --border:rgba(255,255,255,0.10);
+      --text:rgba(255,255,255,0.96);
+      --muted:rgba(255,255,255,0.64);
+      --ai:linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
+      --ok:#22c55e;
     }
 
-    .topRow { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
-    .flagBox {
-      width: 66px; height: 66px; border-radius: 22px;
-      display: flex; align-items: center; justify-content: center;
-      background: rgba(99, 102, 241, 0.12);
-      border: 1px solid rgba(99, 102, 241, 0.22);
-      flex: 0 0 auto;
-    }
-    .flagBox span { font-size: 32px; }
-
-    .who { display: flex; flex-direction: column; min-width: 0; }
-    .role { font-size: 12px; font-weight: 900; color: #a5b4fc; text-transform: uppercase; letter-spacing: 1px; }
-    .name { font-size: 22px; font-weight: 1000; color: #fff; line-height: 1.05; }
-
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      padding: 8px 12px;
-      border-radius: 14px;
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.08);
-      margin: 10px 0 14px;
-      font-weight: 1000;
-      color: rgba(255,255,255,0.92);
-      font-size: 12px;
-      letter-spacing: .3px;
-    }
-    .badge strong{ color:#a5b4fc; }
-
-    .rules { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .rule { background: rgba(0,0,0,0.20); padding: 14px 12px; border-radius: 20px; text-align: center; border: 1px solid rgba(255,255,255,0.05); }
-    .k { font-size: 11px; color: rgba(255,255,255,0.45); text-transform: uppercase; letter-spacing: 1px; font-weight: 900; }
-    .v { font-size: 20px; font-weight: 1000; color: #fff; margin-top: 4px; }
-
-    .tips{
-      margin-top: 14px;
-      padding: 14px 12px;
-      border-radius: 22px;
-      background: rgba(0,0,0,0.18);
-      border: 1px solid rgba(255,255,255,0.06);
-      color: rgba(255,255,255,0.78);
-      font-size: 12px;
-      font-weight: 800;
-      line-height: 1.55;
-    }
-    .tips b{ color:#fff; }
-
-    .mini{
-      margin-top: 10px;
-      font-size: 11px;
-      font-weight: 800;
-      color: rgba(255,255,255,0.55);
-      line-height: 1.45;
+    *{
+      box-sizing:border-box;
+      -webkit-tap-highlight-color:transparent;
+      outline:none;
     }
 
-    .btn {
-      height: 56px;
-      border-radius: 18px;
-      border: none;
-      font-weight: 1000;
-      font-size: 15px;
-      cursor: pointer;
-      transition: 0.2s;
-      margin-top: auto;
+    html,body{
+      margin:0;
+      width:100%;
+      height:100%;
+      overflow:hidden;
+      background:var(--bg);
+      color:var(--text);
+      font-family:Outfit,sans-serif;
     }
-    .btn-main { background: #fff; color: #000; }
-    .btn-main:disabled { background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.35); cursor: not-allowed; }
 
-    .toast{
-      position: fixed; left:50%; top:18px;
-      transform: translateX(-50%) translateY(-120px);
-      background: rgba(10,10,18,.92);
-      border: 1px solid rgba(165,180,252,.35);
-      padding: 10px 14px;
-      border-radius: 999px;
-      color:#fff;
-      z-index: 999999;
-      font-weight: 900;
-      font-size: 12px;
-      transition: .25s;
-      backdrop-filter: blur(12px);
+    #pageContent{
+      height:100%;
+      width:100%;
+    }
+
+    .screen{
+      position:relative;
+      width:100%;
+      height:100%;
+      overflow:hidden;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:14px;
+    }
+
+    .bg{
+      position:absolute;
+      inset:0;
+      overflow:hidden;
       pointer-events:none;
-      max-width: min(92vw, 520px);
+    }
+
+    .bg::before,
+    .bg::after{
+      content:"";
+      position:absolute;
+      inset:-20%;
+      filter:blur(42px);
+    }
+
+    .bg::before{
+      background:
+        radial-gradient(circle at 18% 20%, rgba(99,102,241,.32) 0%, transparent 36%),
+        radial-gradient(circle at 82% 28%, rgba(236,72,153,.24) 0%, transparent 32%),
+        radial-gradient(circle at 48% 85%, rgba(168,85,247,.18) 0%, transparent 38%);
+      animation:driftA 10s ease-in-out infinite alternate;
+    }
+
+    .bg::after{
+      background:
+        radial-gradient(circle at 70% 72%, rgba(165,180,252,.18) 0%, transparent 30%),
+        radial-gradient(circle at 28% 74%, rgba(236,72,153,.14) 0%, transparent 34%);
+      animation:driftB 13s ease-in-out infinite alternate;
+    }
+
+    @keyframes driftA{
+      from{ transform:translate3d(-10px,-8px,0) scale(1); }
+      to{ transform:translate3d(12px,10px,0) scale(1.06); }
+    }
+
+    @keyframes driftB{
+      from{ transform:translate3d(8px,-6px,0) scale(1); }
+      to{ transform:translate3d(-10px,10px,0) scale(1.08); }
+    }
+
+    .spark{
+      position:absolute;
+      border-radius:999px;
+      pointer-events:none;
+      opacity:.55;
+      animation:floaty 7s ease-in-out infinite;
+    }
+
+    .spark.s1{
+      width:10px;height:10px;
+      left:15%;top:18%;
+      background:rgba(165,180,252,.95);
+      box-shadow:0 0 18px rgba(165,180,252,.55);
+    }
+
+    .spark.s2{
+      width:8px;height:8px;
+      left:80%;top:26%;
+      background:rgba(236,72,153,.92);
+      box-shadow:0 0 18px rgba(236,72,153,.45);
+      animation-duration:8.2s;
+    }
+
+    .spark.s3{
+      width:7px;height:7px;
+      left:72%;top:76%;
+      background:rgba(99,102,241,.95);
+      box-shadow:0 0 18px rgba(99,102,241,.45);
+      animation-duration:6.6s;
+    }
+
+    .spark.s4{
+      width:9px;height:9px;
+      left:22%;top:78%;
+      background:rgba(168,85,247,.9);
+      box-shadow:0 0 18px rgba(168,85,247,.42);
+      animation-duration:9.1s;
+    }
+
+    @keyframes floaty{
+      0%{ transform:translateY(10px); opacity:.35; }
+      50%{ transform:translateY(-14px); opacity:.75; }
+      100%{ transform:translateY(10px); opacity:.35; }
+    }
+
+    .card{
+      position:relative;
+      z-index:2;
+      width:min(100%, 520px);
+      border-radius:30px;
+      border:1px solid var(--border);
+      background:rgba(8,8,18,0.54);
+      backdrop-filter:blur(20px);
+      -webkit-backdrop-filter:blur(20px);
+      box-shadow:
+        0 24px 70px rgba(0,0,0,.42),
+        inset 0 1px 0 rgba(255,255,255,.03);
+      padding:18px;
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+      overflow:hidden;
+    }
+
+    .card::before{
+      content:"";
+      position:absolute;
+      left:18px;
+      right:18px;
+      top:0;
+      height:1px;
+      background:linear-gradient(90deg, transparent, rgba(165,180,252,.40), transparent);
+      opacity:.8;
+    }
+
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+
+    .brand{
+      display:flex;
+      flex-direction:column;
+      gap:3px;
+    }
+
+    .brand-main{
+      font-family:"Space Grotesk",sans-serif;
+      font-size:19px;
+      font-weight:900;
+      letter-spacing:-.2px;
+    }
+
+    .brand-main .ai{
+      background:var(--ai);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+
+    .brand-sub{
+      font-size:10px;
+      font-weight:1000;
+      color:rgba(255,255,255,.42);
+      letter-spacing:2.2px;
+      text-transform:uppercase;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:34px;
+      padding:8px 12px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.05);
+      font-size:11px;
+      font-weight:1000;
+      color:#fff;
+      white-space:nowrap;
+    }
+
+    .hero{
+      border-radius:24px;
+      border:1px solid rgba(255,255,255,.08);
+      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.025));
+      padding:16px 14px;
+      display:flex;
+      gap:14px;
+      align-items:center;
+    }
+
+    .orb{
+      width:74px;
+      height:74px;
+      min-width:74px;
+      border-radius:22px;
+      background:var(--ai);
+      padding:2px;
+      position:relative;
+      overflow:hidden;
+      animation:orbHue 7.5s linear infinite;
+      box-shadow:0 0 28px rgba(99,102,241,.18);
+    }
+
+    .orb::before{
+      content:"";
+      position:absolute;
+      inset:-30%;
+      background:conic-gradient(from 0deg, rgba(255,255,255,.28), transparent 40%, rgba(255,255,255,.18), transparent 70%);
+      animation:orbSpin 4s linear infinite;
+    }
+
+    .orb-inner{
+      position:relative;
+      z-index:2;
+      width:100%;
+      height:100%;
+      border-radius:20px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:#070711;
+      font-size:32px;
+    }
+
+    @keyframes orbSpin{
+      from{ transform:rotate(0deg); }
+      to{ transform:rotate(360deg); }
+    }
+
+    @keyframes orbHue{
+      from{ filter:hue-rotate(0deg); }
+      to{ filter:hue-rotate(24deg); }
+    }
+
+    .hero-text{
+      min-width:0;
+      flex:1;
+    }
+
+    .hero-kicker{
+      font-size:11px;
+      font-weight:1000;
+      color:#a5b4fc;
+      letter-spacing:1.1px;
+      text-transform:uppercase;
+      margin-bottom:4px;
+    }
+
+    .hero-title{
+      font-size:24px;
+      font-weight:1000;
+      line-height:1.05;
+      letter-spacing:-.4px;
+      margin:0;
+      color:#fff;
+    }
+
+    .hero-desc{
+      margin:8px 0 0;
+      color:var(--muted);
+      font-size:13px;
+      font-weight:800;
+      line-height:1.52;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+
+    .stat{
+      border-radius:20px;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.035);
+      padding:14px 12px;
       text-align:center;
     }
-    .toast.show{ transform: translateX(-50%) translateY(0); }
+
+    .stat-k{
+      font-size:11px;
+      color:rgba(255,255,255,.48);
+      font-weight:1000;
+      text-transform:uppercase;
+      letter-spacing:1px;
+    }
+
+    .stat-v{
+      margin-top:4px;
+      font-size:20px;
+      font-weight:1000;
+      color:#fff;
+    }
+
+    .info{
+      border-radius:22px;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(0,0,0,.18);
+      padding:14px 13px;
+      color:rgba(255,255,255,.80);
+      font-size:13px;
+      font-weight:900;
+      line-height:1.6;
+    }
+
+    .info b{
+      color:#fff;
+    }
+
+    .info .hl{
+      background:var(--ai);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+
+    .status{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      border-radius:18px;
+      border:1px solid rgba(34,197,94,.22);
+      background:rgba(34,197,94,.08);
+      padding:12px 13px;
+      color:#eafff0;
+      font-size:12px;
+      font-weight:1000;
+      line-height:1.5;
+    }
+
+    .dot{
+      width:10px;
+      height:10px;
+      min-width:10px;
+      border-radius:999px;
+      background:var(--ok);
+      box-shadow:0 0 18px rgba(34,197,94,.55);
+      animation:blink 1.3s ease-in-out infinite;
+    }
+
+    @keyframes blink{
+      0%,100%{ opacity:.55; transform:scale(1); }
+      50%{ opacity:1; transform:scale(1.15); }
+    }
+
+    .actions{
+      display:flex;
+      gap:10px;
+      margin-top:2px;
+    }
+
+    .btn{
+      flex:1;
+      min-height:54px;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.05);
+      color:#fff;
+      font-size:14px;
+      font-weight:1000;
+      cursor:pointer;
+      transition:transform .18s ease, opacity .18s ease, filter .18s ease;
+      text-decoration:none;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      padding:0 14px;
+    }
+
+    .btn:active{
+      transform:scale(.986);
+    }
+
+    .btn.primary{
+      background:#fff;
+      color:#000;
+      border:none;
+    }
+
+    .btn.primary:hover{
+      filter:brightness(.98);
+    }
+
+    .btn.secondary{
+      background:rgba(255,255,255,.04);
+    }
+
+    .mini{
+      text-align:center;
+      font-size:11px;
+      font-weight:900;
+      color:rgba(255,255,255,.46);
+      line-height:1.45;
+      margin-top:2px;
+    }
+
+    .toast{
+      position:fixed;
+      left:50%;
+      top:18px;
+      transform:translateX(-50%) translateY(-120px);
+      background:rgba(10,10,18,.96);
+      border:1px solid rgba(165,180,252,.35);
+      padding:10px 14px;
+      border-radius:999px;
+      color:#fff;
+      z-index:999999;
+      font-weight:1000;
+      font-size:12px;
+      transition:.25s;
+      backdrop-filter:blur(12px);
+      pointer-events:none;
+      max-width:min(92vw, 520px);
+      text-align:center;
+    }
+
+    .toast.show{
+      transform:translateX(-50%) translateY(0);
+    }
+
+    @media (max-width:390px){
+      .card{
+        padding:15px;
+        border-radius:26px;
+      }
+      .hero{
+        gap:12px;
+        padding:14px 12px;
+      }
+      .orb{
+        width:66px;
+        height:66px;
+        min-width:66px;
+      }
+      .hero-title{
+        font-size:22px;
+      }
+      .actions{
+        flex-direction:column;
+      }
+    }
   </style>
 </head>
+
 <body>
   <main id="pageContent">
-    <div class="wrap">
+    <section class="screen">
+      <div class="bg">
+        <div class="spark s1"></div>
+        <div class="spark s2"></div>
+        <div class="spark s3"></div>
+        <div class="spark s4"></div>
+      </div>
 
-      <section class="hero">
-        <div class="topRow">
-          <div class="flagBox"><span id="flag">🏁</span></div>
-          <div class="who">
-            <div class="role" id="role">Seviye Tespit</div>
-            <div class="name" id="langName">italky Academy</div>
+      <div class="card">
+        <div class="topbar">
+          <div class="brand">
+            <div class="brand-main">italky<span class="ai">AI</span></div>
+            <div class="brand-sub">Seviye Tespit</div>
+          </div>
+          <div class="pill" id="langPill">Yönlendiriliyor</div>
+        </div>
+
+        <div class="hero">
+          <div class="orb">
+            <div class="orb-inner" id="flag">🏁</div>
+          </div>
+
+          <div class="hero-text">
+            <div class="hero-kicker">Hazırlık Merkezi</div>
+            <h1 class="hero-title" id="titleText">Seviye tespit ekranı açılıyor</h1>
+            <p class="hero-desc" id="descText">
+              Doğru seviyeden başlamak için seni sınav merkezine yönlendiriyoruz.
+            </p>
           </div>
         </div>
 
-        <div class="badge">Sınav Giriş Ücreti: <strong><span id="feeTxt">40</span> Jeton</strong></div>
-
-        <div class="rules">
-          <div class="rule"><div class="k">Soru</div><div class="v" id="qCount">12</div></div>
-          <div class="rule"><div class="k">Süre</div><div class="v" id="durTxt">4 dk</div></div>
+        <div class="grid">
+          <div class="stat">
+            <div class="stat-k">Adım</div>
+            <div class="stat-v">1</div>
+          </div>
+          <div class="stat">
+            <div class="stat-k">Hedef</div>
+            <div class="stat-v" id="targetCode">EN</div>
+          </div>
         </div>
 
-        <div class="tips">
-          <b>Tek kontrol:</b> Bu test 12 sorudan oluşur ve yaklaşık 4 dakika sürer.<br/>
-          Lütfen mümkünse <b>sessiz bir ortamda</b> tamamlayın.<br/>
-          <b>Çeviri / sözlük</b> kullanmak gerçek seviyeyi saklar ve planı bozar.
+        <div class="info">
+          <span class="hl" id="langLabel">Bu dil</span> için seviye tespiti, artık tek merkezden yönetiliyor.
+          Doğru giriş noktası <b>Seviye Tespit Hub</b> sayfasıdır. Burada hem mevcut seviyeni görürsün,
+          hem de istersen yeni sınavı başlatırsın.
+        </div>
+
+        <div class="status">
+          <div class="dot"></div>
+          <div id="statusText">Birazdan otomatik yönlendirme yapılacak.</div>
+        </div>
+
+        <div class="actions">
+          <a class="btn secondary" id="btnHome" href="/pages/home.html">Ana Sayfa</a>
+          <a class="btn primary" id="btnGo" href="/pages/level_test_hub.html">Seviye Merkezine Git</a>
         </div>
 
         <div class="mini">
-          • Başlatınca <b>ücret düşer</b> ve test açılır.<br/>
-          • Sonuç, seçtiğin ders için profilinde kaydedilir.
+          Eski bağlantılar burada toplanır ve doğru merkeze yönlendirilir.
         </div>
-      </section>
+      </div>
+    </section>
 
-      <button class="btn btn-main" id="btnStart" disabled>Bakiye Kontrol Ediliyor...</button>
-
-      <div class="toast" id="toast"></div>
-    </div>
+    <div class="toast" id="toast"></div>
   </main>
 
   <script type="module">
-    import { mountShell, setHeaderTokens } from "/js/ui_shell.js";
-    import { supabase } from "/js/supabase_client.js";
+    import { mountShell } from "/js/ui_shell.js";
 
     mountShell({ scroll: "none" });
 
-    const $ = (id)=>document.getElementById(id);
-    const FEE = 40;
-    const TEST_Q = 12;
-    const TEST_MIN = 4;
+    const $ = (id) => document.getElementById(id);
 
     function toast(msg){
       const t = $("toast");
       if(!t) return;
-      t.textContent = String(msg||"");
+      t.textContent = String(msg || "");
       t.classList.add("show");
-      clearTimeout(window.__to);
-      window.__to = setTimeout(()=>t.classList.remove("show"), 1400);
+      clearTimeout(window.__levelIntroToast);
+      window.__levelIntroToast = setTimeout(() => {
+        t.classList.remove("show");
+      }, 1500);
     }
 
-    // teacher id: ?t=... > localStorage
     const params = new URLSearchParams(location.search);
-    const teacherId = String(params.get("t") || localStorage.getItem("italky_teacher_pref") || "").trim();
-    if(!teacherId){
-      location.replace("/pages/teacher_select.html");
-    }
+    const redirect = (params.get("redirect") || "").trim();
+    const next = (params.get("next") || "").trim();
+    const langRaw = (params.get("lang") || params.get("code") || "en").trim().toLowerCase();
 
-    const LANGS = {
-      dora:{flag:"🇬🇧", role:"English",   local:"English"},
-      ayda:{flag:"🇩🇪", role:"German",    local:"Deutsch"},
-      jale:{flag:"🇫🇷", role:"French",    local:"Français"},
-      ozan:{flag:"🇪🇸", role:"Spanish",   local:"Español"},
-      sencer:{flag:"🇮🇹", role:"Italian", local:"Italiano"},
-      sungur:{flag:"🇷🇺", role:"Russian", local:"Русский"},
-      huma:{flag:"🇯🇵", role:"Japanese",  local:"日本語 (Japanese)"},
-      umay:{flag:"🇨🇳", role:"Chinese",   local:"中文 (Chinese)"}
+    const ALIAS = {
+      cn:"zh", jp:"ja", kr:"ko", sa:"ar", gr:"el", cz:"cs", rs:"sr", se:"sv", ua:"uk", ir:"fa"
     };
 
-    const lang = LANGS[teacherId];
-    if(lang){
-      $("flag").textContent = lang.flag;
-      $("role").textContent = `Seviye Tespit • ${lang.role}`;
-      $("langName").textContent = lang.local;
+    const lang = ALIAS[langRaw] || langRaw;
+
+    const LANGS = {
+      en:{ name:"English", flag:"🇬🇧" },
+      de:{ name:"German",  flag:"🇩🇪" },
+      fr:{ name:"French",  flag:"🇫🇷" },
+      it:{ name:"Italian", flag:"🇮🇹" },
+      ru:{ name:"Russian", flag:"🇷🇺" },
+      es:{ name:"Spanish", flag:"🇪🇸" },
+      ja:{ name:"Japanese", flag:"🇯🇵" },
+      zh:{ name:"Chinese", flag:"🇨🇳" }
+    };
+
+    const info = LANGS[lang] || { name: lang.toUpperCase(), flag:"🏁" };
+
+    $("flag").textContent = info.flag;
+    $("langPill").textContent = `${lang.toUpperCase()} • HUB`;
+    $("targetCode").textContent = lang.toUpperCase();
+    $("langLabel").textContent = info.name;
+    $("titleText").textContent = `${info.name} seviye merkezi açılıyor`;
+    $("descText").textContent = `${info.name} için mevcut seviyeni görüntüleyebilir veya yeni sınav başlatabilirsin.`;
+
+    const hubUrl = new URL("/pages/level_test_hub.html", location.origin);
+    hubUrl.searchParams.set("lang", lang);
+
+    if (redirect) hubUrl.searchParams.set("redirect", redirect);
+    if (next) hubUrl.searchParams.set("next", next);
+
+    $("btnGo").href = hubUrl.toString();
+
+    let jumped = false;
+
+    function goHub(){
+      if (jumped) return;
+      jumped = true;
+      location.href = hubUrl.toString();
     }
 
-    $("feeTxt").textContent = String(FEE);
-    $("qCount").textContent = String(TEST_Q);
-    $("durTxt").textContent = `${TEST_MIN} dk`;
+    toast("Seviye merkezi hazırlanıyor...");
 
-    async function getSessionUser(){
-      const { data:{ session } } = await supabase.auth.getSession();
-      return session?.user || null;
-    }
+    setTimeout(() => {
+      $("statusText").textContent = "Yönlendirme tamamlanıyor...";
+    }, 700);
 
-    async function getTokens(userId){
-      try{
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("tokens")
-          .eq("id", userId)
-          .maybeSingle();
-
-        if(error) return 0;
-        return Number(data?.tokens ?? 0);
-      }catch{
-        return 0;
-      }
-    }
-
-    async function deductTokensIfEnough(userId, fee){
-      // ✅ atomic-ish: update only if tokens >= fee
-      // Postgrest update returns array
-      const { data, error } = await supabase
-        .from("profiles")
-        .update({ tokens: supabase.raw ? undefined : undefined }) // placeholder (ignored)
-        .select("tokens") // will be overwritten below using rpc-like approach? nope.
-
-      // Supabase JS doesn't allow tokens = tokens - fee directly without RPC in a clean way.
-      // So we do: read -> update with eq old tokens. (best effort)
-      // (We keep it stable, and if collision happens, user retries.)
-      const cur = await getTokens(userId);
-      if(cur < fee) return { ok:false, tokens:cur };
-
-      const next = cur - fee;
-
-      try{
-        const { data: upd, error: upErr } = await supabase
-          .from("profiles")
-          .update({ tokens: next })
-          .eq("id", userId)
-          .eq("tokens", cur)        // ✅ optimistic lock
-          .select("tokens")
-          .maybeSingle();
-
-        if(upErr || !upd){
-          // someone changed tokens; re-read
-          const again = await getTokens(userId);
-          if(again < fee) return { ok:false, tokens:again };
-          // last attempt
-          const finalNext = again - fee;
-          const { data: upd2, error: upErr2 } = await supabase
-            .from("profiles")
-            .update({ tokens: finalNext })
-            .eq("id", userId)
-            .eq("tokens", again)
-            .select("tokens")
-            .maybeSingle();
-          if(upErr2 || !upd2) return { ok:false, tokens: await getTokens(userId) };
-          return { ok:true, tokens:Number(upd2.tokens ?? finalNext) };
-        }
-
-        return { ok:true, tokens:Number(upd.tokens ?? next) };
-      }catch{
-        return { ok:false, tokens: await getTokens(userId) };
-      }
-    }
-
-    async function checkWallet(){
-      const btn = $("btnStart");
-      btn.disabled = true;
-      btn.textContent = "Bakiye Kontrol Ediliyor...";
-
-      const user = await getSessionUser();
-      if(!user){
-        btn.disabled = true;
-        btn.textContent = "Giriş gerekli";
-        location.replace("/pages/login.html");
-        return;
-      }
-
-      const tokens = await getTokens(user.id);
-      try{ setHeaderTokens(tokens); }catch{}
-
-      if(tokens >= FEE){
-        btn.disabled = false;
-        btn.textContent = `Sınavı Başlat (${FEE} Jeton)`;
-      }else{
-        btn.disabled = true;
-        btn.textContent = `Yetersiz Bakiye (Min: ${FEE} Jeton)`;
-      }
-    }
-
-    $("btnStart").addEventListener("click", async ()=>{
-      const btn = $("btnStart");
-      btn.disabled = true;
-      btn.textContent = "Ücret düşülüyor...";
-
-      const user = await getSessionUser();
-      if(!user){
-        location.replace("/pages/login.html");
-        return;
-      }
-
-      const res = await deductTokensIfEnough(user.id, FEE);
-      try{ setHeaderTokens(res.tokens); }catch{}
-
-      if(!res.ok){
-        toast("Yetersiz bakiye veya işlem başarısız.");
-        await checkWallet();
-        return;
-      }
-
-      toast("Başlıyor...");
-      setTimeout(()=>{
-        location.href = `/pages/level_test.html?t=${encodeURIComponent(teacherId)}`;
-      }, 120);
-    });
-
-    checkWallet();
+    setTimeout(goHub, 1500);
   </script>
 </body>
 </html>
