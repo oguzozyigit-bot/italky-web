@@ -348,27 +348,83 @@
     // ücret (ekranda yazmıyoruz ama buton davranışı aynı)
     const FEE = 1;
 
+    <script type="module">
+    import { mountShell } from "/js/ui_shell.js";
+    import { supabase } from "/js/supabase_client.js";
+
+    mountShell({ scroll:"none" });
+
+    const $ = (id)=>document.getElementById(id);
+
+    function toast(msg){
+      const t = $("toast");
+      if(!t) return;
+      t.textContent = String(msg || "");
+      t.classList.add("show");
+      clearTimeout(window.__to);
+      window.__to = setTimeout(() => t.classList.remove("show"), 1600);
+    }
+
+    const params = new URLSearchParams(location.search);
+    const langRaw = (params.get("lang") || "en").trim().toLowerCase();
+    const redirect = (params.get("redirect") || "").trim();
+    const next = (params.get("next") || "").trim();
+    const teacher = (params.get("t") || "").trim();
+
+    const ALIAS = {
+      cn:"zh", jp:"ja", kr:"ko", sa:"ar", gr:"el", cz:"cs", rs:"sr", se:"sv", ua:"uk", ir:"fa"
+    };
+    const code = ALIAS[langRaw] || langRaw;
+
+    const LANGS = {
+      en:{ name:"English",   flag:"🇬🇧" },
+      de:{ name:"German",    flag:"🇩🇪" },
+      fr:{ name:"French",    flag:"🇫🇷" },
+      it:{ name:"Italian",   flag:"🇮🇹" },
+      ru:{ name:"Russian",   flag:"🇷🇺" },
+      es:{ name:"Spanish",   flag:"🇪🇸" },
+      ja:{ name:"Japanese",  flag:"🇯🇵" },
+      zh:{ name:"Chinese",   flag:"🇨🇳" }
+    };
+
+    const info = LANGS[code] || { name: code.toUpperCase(), flag:"🏁" };
+    $("flag").textContent = info.flag;
+    $("langName").textContent = info.name;
+    $("langCode").textContent = code.toUpperCase();
+    $("hlLang").textContent = info.name;
+
+    const { data:{ session } } = await supabase.auth.getSession();
+    if(!session?.user){
+      location.replace("/pages/login.html");
+    }
+
+    $("btnBack").addEventListener("click", () => {
+      if (teacher) location.href = "/pages/teacher_select.html";
+      else location.href = "/pages/home.html";
+    });
+
     async function startTest(){
       const btn = $("btnStart");
       btn.disabled = true;
       toast("Sınav başlatılıyor…");
 
-      const { data, error } = await supabase.rpc("start_level_test", { p_language_code: code });
+      const { data, error } = await supabase.rpc("start_level_test", {
+        p_language_code: code
+      });
 
       if(error){
-        // en sık: Not enough tokens / Not authenticated
         const msg = (error.message || "").toLowerCase();
 
         if(msg.includes("not enough") || msg.includes("yetersiz")){
           toast("Jeton yetersiz. Jeton yükleyip tekrar deneyin.");
-          setTimeout(()=>location.href="/pages/profile.html", 900);
+          setTimeout(() => location.href = "/pages/profile.html", 900);
           btn.disabled = false;
           return;
         }
 
         if(msg.includes("not authenticated")){
           toast("Giriş gerekli.");
-          setTimeout(()=>location.href="/pages/login.html", 800);
+          setTimeout(() => location.href = "/pages/login.html", 800);
           return;
         }
 
@@ -386,8 +442,17 @@
         return;
       }
 
-      // sınav sayfası
-      location.href = `/pages/level_test.html?test_id=${encodeURIComponent(testId)}&lang=${encodeURIComponent(code)}`;
+      let url = `/pages/level_test.html?test_id=${encodeURIComponent(testId)}&lang=${encodeURIComponent(code)}`;
+
+      if (redirect) {
+        url += `&redirect=${encodeURIComponent(redirect)}`;
+      }
+
+      if (next) {
+        url += `&next=${encodeURIComponent(next)}`;
+      }
+
+      location.href = url;
     }
 
     $("btnStart").addEventListener("click", startTest, { passive:true });
