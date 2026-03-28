@@ -1,266 +1,565 @@
 <!doctype html>
 <html lang="tr">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
-<title>italkyAI • Paket Seç</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
+  <title>italkyAI • Paket Seç</title>
+  <meta name="theme-color" content="#070a12"/>
 
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
-<style>
-:root{
-  --bg:#070a12;
-  --txt:#fff;
-  --muted:rgba(255,255,255,.65);
-  --cyan:#67e8f9;
-  --pink:#f472b6;
-  --indigo:#818cf8;
-  --grad:linear-gradient(135deg,#67e8f9,#818cf8,#f472b6);
-  --gold:linear-gradient(135deg,#f59e0b,#f97316);
-}
+  <style>
+    :root{
+      --bg:#070a12;
+      --bg2:#0b1020;
+      --txt:#fff;
+      --muted:rgba(255,255,255,.68);
+      --line:rgba(255,255,255,.10);
+      --grad:linear-gradient(135deg,#67e8f9 0%, #818cf8 46%, #f472b6 100%);
+      --gold:linear-gradient(135deg,#f59e0b 0%, #f97316 100%);
+      --card:rgba(255,255,255,.06);
+      --ok:#22c55e;
+      --err:#ef4444;
+      --shadow:0 20px 55px rgba(0,0,0,.28);
+    }
 
-*{box-sizing:border-box;margin:0;padding:0;}
-body{
-  font-family:'Outfit',sans-serif;
-  background:
-    radial-gradient(circle at 50% 0%, rgba(103,232,249,.08), transparent 30%),
-    linear-gradient(180deg,#05070a,#070a12);
-  color:#fff;
-}
+    *{
+      box-sizing:border-box;
+      -webkit-tap-highlight-color:transparent;
+    }
 
-.page{
-  padding:80px 18px 120px;
-  max-width:900px;
-  margin:auto;
-}
+    html,body{
+      margin:0;
+      padding:0;
+      width:100%;
+      min-height:100%;
+      background:
+        radial-gradient(circle at top, rgba(103,232,249,.10), transparent 28%),
+        radial-gradient(circle at 85% 15%, rgba(244,114,182,.10), transparent 20%),
+        linear-gradient(180deg,var(--bg) 0%, var(--bg2) 100%);
+      color:var(--txt);
+      font-family:'Outfit',sans-serif;
+      overflow-x:hidden;
+      overflow-y:auto;
+      -webkit-overflow-scrolling:touch;
+    }
 
-.title{
-  text-align:center;
-  margin-bottom:25px;
-}
+    body{
+      padding:16px;
+    }
 
-.title h1{
-  font-size:32px;
-  font-weight:900;
-}
+    .wrap{
+      width:min(100%, 980px);
+      margin:0 auto;
+      padding-bottom:120px;
+    }
 
-.title p{
-  font-size:13px;
-  color:var(--muted);
-  margin-top:8px;
-}
+    .hero{
+      position:relative;
+      overflow:hidden;
+      border-radius:30px;
+      padding:22px 18px 18px;
+      background:
+        radial-gradient(circle at top left, rgba(103,232,249,.12), transparent 32%),
+        radial-gradient(circle at top right, rgba(244,114,182,.12), transparent 24%),
+        linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+      border:1px solid var(--line);
+      box-shadow:var(--shadow);
+      margin-bottom:16px;
+    }
 
-/* TRIAL BAR */
-.trial{
-  background:rgba(255,255,255,.05);
-  border:1px solid rgba(255,255,255,.1);
-  padding:12px;
-  border-radius:16px;
-  text-align:center;
-  font-size:13px;
-  margin-bottom:20px;
-}
+    .hero::after{
+      content:"";
+      position:absolute;
+      right:-48px;
+      bottom:-48px;
+      width:180px;
+      height:180px;
+      border-radius:50%;
+      background:rgba(255,255,255,.06);
+      filter:blur(10px);
+    }
 
-/* CARDS */
-.grid{
-  display:grid;
-  gap:14px;
-}
+    .hero-top{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      margin-bottom:12px;
+    }
 
-.card{
-  border-radius:24px;
-  padding:20px;
-  border:1px solid rgba(255,255,255,.1);
-  background:rgba(255,255,255,.05);
-  backdrop-filter:blur(10px);
-  position:relative;
-  overflow:hidden;
-}
+    .logo{
+      width:58px;
+      height:58px;
+      border-radius:18px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:var(--grad);
+      box-shadow:0 14px 34px rgba(129,140,248,.20);
+      font-family:"Space Grotesk",sans-serif;
+      font-size:23px;
+      font-weight:900;
+      flex:0 0 auto;
+    }
 
-/* PREMIUM HIGHLIGHT */
-.card.premium{
-  border:1px solid rgba(255,255,255,.2);
-  box-shadow:0 0 30px rgba(255,255,255,.15);
-}
+    .hero h1{
+      margin:0;
+      font-family:"Space Grotesk",sans-serif;
+      font-size:30px;
+      font-weight:700;
+      letter-spacing:-.8px;
+      line-height:1.02;
+    }
 
-.badge{
-  position:absolute;
-  top:10px;
-  right:10px;
-  font-size:10px;
-  padding:4px 10px;
-  border-radius:999px;
-  font-weight:800;
-  background:var(--gold);
-}
+    .hero p{
+      margin:8px 0 0;
+      font-size:13px;
+      line-height:1.6;
+      color:var(--muted);
+      font-weight:700;
+      max-width:760px;
+    }
 
-/* HEAD */
-.card h2{
-  font-size:20px;
-  font-weight:900;
-}
+    .trial{
+      margin-top:14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:12px 14px;
+      border-radius:16px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.08);
+      position:relative;
+      z-index:1;
+      flex-wrap:wrap;
+    }
 
-.price{
-  font-size:28px;
-  font-weight:900;
-  margin-top:6px;
-}
+    .trial strong{
+      font-size:14px;
+      font-weight:900;
+    }
 
-.jeton{
-  font-size:12px;
-  color:#ffd089;
-  margin-bottom:12px;
-}
+    .trial span{
+      font-size:12px;
+      color:var(--muted);
+      font-weight:800;
+    }
 
-/* FEATURES */
-.features{
-  display:grid;
-  gap:6px;
-  font-size:13px;
-  color:var(--muted);
-  margin-bottom:16px;
-}
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(3, minmax(0,1fr));
+      gap:16px;
+      margin-top:16px;
+    }
 
-/* BUTTON */
-.btn{
-  width:100%;
-  height:50px;
-  border-radius:16px;
-  border:none;
-  font-weight:900;
-  font-size:14px;
-  cursor:pointer;
-}
+    .card{
+      position:relative;
+      display:flex;
+      flex-direction:column;
+      min-height:100%;
+      border-radius:28px;
+      padding:18px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+      border:1px solid var(--line);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
 
-.btn.gold{
-  background:var(--gold);
-}
+    .card::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:radial-gradient(circle at top left, rgba(103,232,249,.08), transparent 28%);
+      pointer-events:none;
+    }
 
-.btn.grad{
-  background:var(--grad);
-}
+    .card.premium{
+      border:1px solid rgba(245,158,11,.36);
+      box-shadow:0 22px 60px rgba(249,115,22,.18);
+      background:
+        radial-gradient(circle at top right, rgba(245,158,11,.12), transparent 26%),
+        linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.05));
+    }
 
-/* SMALL NOTE */
-.note{
-  text-align:center;
-  font-size:11px;
-  color:var(--muted);
-  margin-top:15px;
-}
+    .badge{
+      position:absolute;
+      top:12px;
+      right:12px;
+      display:inline-flex;
+      align-items:center;
+      min-height:28px;
+      padding:5px 10px;
+      border-radius:999px;
+      font-size:10px;
+      font-weight:900;
+      letter-spacing:.4px;
+      background:var(--gold);
+      color:#fff;
+      z-index:1;
+    }
 
-</style>
+    .type{
+      font-size:13px;
+      font-weight:900;
+      letter-spacing:.5px;
+      text-transform:uppercase;
+      color:rgba(255,255,255,.72);
+      margin-bottom:8px;
+      position:relative;
+      z-index:1;
+    }
+
+    .card h2{
+      margin:0;
+      font-size:24px;
+      font-weight:900;
+      letter-spacing:-.5px;
+      line-height:1.05;
+      position:relative;
+      z-index:1;
+    }
+
+    .price{
+      margin-top:10px;
+      font-family:"Space Grotesk",sans-serif;
+      font-size:34px;
+      font-weight:700;
+      line-height:1;
+      position:relative;
+      z-index:1;
+    }
+
+    .bonus{
+      margin-top:8px;
+      font-size:13px;
+      font-weight:900;
+      color:#ffd089;
+      position:relative;
+      z-index:1;
+    }
+
+    .features{
+      margin:16px 0 18px;
+      display:grid;
+      gap:8px;
+      position:relative;
+      z-index:1;
+    }
+
+    .features div{
+      font-size:13px;
+      line-height:1.45;
+      color:var(--muted);
+      font-weight:700;
+    }
+
+    .spacer{
+      flex:1 1 auto;
+    }
+
+    .btn{
+      width:100%;
+      min-height:52px;
+      border:none;
+      border-radius:16px;
+      cursor:pointer;
+      font-size:14px;
+      font-weight:900;
+      font-family:'Outfit',sans-serif;
+      color:#fff;
+      position:relative;
+      z-index:1;
+    }
+
+    .btn.grad{
+      background:var(--grad);
+    }
+
+    .btn.gold{
+      background:var(--gold);
+    }
+
+    .foot-note{
+      margin-top:18px;
+      text-align:center;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.7;
+      font-weight:700;
+    }
+
+    .mini{
+      margin-top:14px;
+      display:grid;
+      grid-template-columns:repeat(3, minmax(0,1fr));
+      gap:12px;
+    }
+
+    .mini-box{
+      border-radius:18px;
+      padding:14px;
+      background:var(--card);
+      border:1px solid var(--line);
+      box-shadow:0 12px 30px rgba(0,0,0,.18);
+    }
+
+    .mini-box b{
+      display:block;
+      font-size:13px;
+      margin-bottom:6px;
+    }
+
+    .mini-box span{
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.55;
+      font-weight:700;
+    }
+
+    .toast{
+      position:fixed;
+      left:50%;
+      bottom:calc(18px + env(safe-area-inset-bottom));
+      transform:translateX(-50%) translateY(18px);
+      min-width:240px;
+      max-width:92vw;
+      padding:12px 14px;
+      border-radius:14px;
+      background:rgba(10,12,18,.95);
+      border:1px solid rgba(255,255,255,.09);
+      color:#fff;
+      font-size:13px;
+      font-weight:800;
+      text-align:center;
+      opacity:0;
+      pointer-events:none;
+      transition:.22s ease;
+      z-index:9999;
+    }
+
+    .toast.show{
+      opacity:1;
+      transform:translateX(-50%) translateY(0);
+    }
+
+    @media (max-width: 980px){
+      .grid{
+        grid-template-columns:1fr;
+      }
+      .mini{
+        grid-template-columns:1fr;
+      }
+    }
+
+    @media (max-width: 540px){
+      body{
+        padding:12px;
+      }
+      .hero{
+        padding:18px 14px 16px;
+        border-radius:24px;
+      }
+      .hero h1{
+        font-size:26px;
+      }
+      .price{
+        font-size:30px;
+      }
+      .card{
+        padding:16px;
+        border-radius:24px;
+      }
+    }
+  </style>
 </head>
-
 <body>
 
-<div class="page">
-
-  <div class="title">
-    <h1>Paketini Seç</h1>
-    <p>7 gün tüm özellikler açık. Süre bitmeden karar ver.</p>
-  </div>
-
-  <div id="trialInfo" class="trial">
-    Deneme süren devam ediyor...
-  </div>
-
-  <div class="grid">
-
-    <!-- EĞİTİM -->
-    <div class="card">
-      <h2>Eğitim Paketi</h2>
-      <div class="price">499 TL</div>
-      <div class="jeton">+100 Jeton</div>
-
-      <div class="features">
-        ✓ TextToText<br>
-        ✓ Eğitim Modülü<br>
-        ✓ Eğlenerek Öğren<br>
-        ✓ Pratik Yap<br>
-        ✓ Seviye Tespit
+  <div class="wrap">
+    <section class="hero">
+      <div class="hero-top">
+        <div class="logo">AI</div>
+        <div>
+          <h1>Paketini Seç</h1>
+          <p>
+            Üyeliğini şimdi aktif et. Eğitim, çeviri ve tam erişim seçenekleri arasından ihtiyacına uygun paketi seç.
+          </p>
+        </div>
       </div>
 
-      <button class="btn grad" onclick="buy('edu')">
-        Eğitimi Aç
-      </button>
-    </div>
-
-    <!-- TRANSLATE -->
-    <div class="card">
-      <h2>Translate Paketi</h2>
-      <div class="price">499 TL</div>
-      <div class="jeton">+100 Jeton</div>
-
-      <div class="features">
-        ✓ FaceToFace<br>
-        ✓ EarToEar<br>
-        ✓ TextToText<br>
-        ✓ OffToOff
+      <div class="trial">
+        <div>
+          <strong id="trialTitle">Deneme süresi bilgisi yükleniyor...</strong><br>
+          <span id="trialText">Lütfen bekleyin</span>
+        </div>
       </div>
+    </section>
 
-      <button class="btn grad" onclick="buy('translate')">
-        Çeviri Aç
-      </button>
-    </div>
+    <section class="grid">
+      <article class="card">
+        <div class="type">Eğitim</div>
+        <h2>Online Dil Eğitim Asistanı</h2>
+        <div class="price">699 TL</div>
+        <div class="bonus">+100 Jeton</div>
 
-    <!-- PREMIUM -->
-    <div class="card premium">
-      <div class="badge">EN İYİ</div>
+        <div class="features">
+          <div>✓ TextToText ile destekli öğrenme</div>
+          <div>✓ Eğitim modülü ve günlük pratik akışı</div>
+          <div>✓ Seviye gelişimi ve tekrar desteği</div>
+          <div>✓ Dil öğrenmeye odaklı kullanım</div>
+        </div>
 
-      <h2>Premium</h2>
-      <div class="price">999 TL</div>
-      <div class="jeton">+200 Jeton</div>
+        <div class="spacer"></div>
+        <button class="btn grad" type="button" onclick="buyPackage('edu_699')">Eğitim Paketini Aç</button>
+      </article>
 
-      <div class="features">
-        ✓ Tüm Modüller Açık<br>
-        ✓ Sınırsız Deneyim<br>
-        ✓ Öncelikli Performans<br>
-        ✓ Full Erişim
+      <article class="card">
+        <div class="type">Çeviri</div>
+        <h2>Cebinizdeki Tercüman</h2>
+        <div class="price">699 TL</div>
+        <div class="bonus">+100 Jeton</div>
+
+        <div class="features">
+          <div>✓ FaceToFace gerçek zamanlı çeviri</div>
+          <div>✓ TextToText hızlı yazılı çeviri</div>
+          <div>✓ SideToSide iletişim desteği</div>
+          <div>✓ Offline kullanım avantajı</div>
+        </div>
+
+        <div class="spacer"></div>
+        <button class="btn grad" type="button" onclick="buyPackage('translate_699')">Çeviri Paketini Aç</button>
+      </article>
+
+      <article class="card premium">
+        <div class="badge">EN İYİ SEÇİM</div>
+        <div class="type">Premium</div>
+        <h2>Premium Üyelik</h2>
+        <div class="price">999 TL</div>
+        <div class="bonus">+100 Jeton</div>
+
+        <div class="features">
+          <div>✓ Tüm modüller açık</div>
+          <div>✓ Eğitim + Çeviri tek pakette</div>
+          <div>✓ Offline ve klon ses erişimi</div>
+          <div>✓ En avantajlı tam erişim deneyimi</div>
+        </div>
+
+        <div class="spacer"></div>
+        <button class="btn gold" type="button" onclick="buyPackage('premium_999')">Premium’a Geç</button>
+      </article>
+    </section>
+
+    <section class="mini">
+      <div class="mini-box">
+        <b>Jeton Neden Ayrı?</b>
+        <span>Jeton bakiyen hesapta kalır. Üyelik erişimi açar, jeton kullanım gücü sağlar.</span>
       </div>
+      <div class="mini-box">
+        <b>NFC / QR Ayrımı</b>
+        <span>Kartlı erişimler ayrıca tanımlanır. Bu ekran Play Store paketleri içindir.</span>
+      </div>
+      <div class="mini-box">
+        <b>Kesintisiz Devam</b>
+        <span>Paket aktif olduğunda erişimin açılır, kalan jetonların hesabında durur.</span>
+      </div>
+    </section>
 
-      <button class="btn gold" onclick="buy('premium')">
-        Premium'a Geç
-      </button>
+    <div class="foot-note">
+      Satın alma yalnızca uygulama içinden yapılır. <br>
+      Bu sayfa özellikle açık bırakılmıştır; erişim kilidi uygulanmaz.
     </div>
-
   </div>
 
-  <div class="note">
-    Satın alma sonrası erişimin kesintisiz devam eder.
-  </div>
+  <div id="toast" class="toast"></div>
 
-</div>
-
-<script type="module">
-import { mountShell } from "/js/ui_shell.js";
-try { mountShell({ scroll:"auto" }); } catch(e){}
-</script>
-
-<script>
-function buy(type){
-
-  if(!window.AndroidBilling){
-    alert("Sadece uygulama içinden satın alabilirsiniz");
-    return;
-  }
-
-  if(type === "edu"){
-    window.AndroidBilling.buy("edu_499");
-  }
-
-  if(type === "translate"){
-    window.AndroidBilling.buy("translate_499");
-  }
-
-  if(type === "premium"){
-    window.AndroidBilling.buy("premium_999");
-  }
-}
-</script>
   <script type="module">
-  import { initGlobalAccess } from "/js/global_access.js";
-  initGlobalAccess();
-</script>
+    import { mountShell } from "/js/ui_shell.js";
+    import { getGlobalAccessState } from "/js/global_access.js";
 
+    try {
+      mountShell({ scroll: "auto" });
+    } catch (e) {
+      console.warn("[upgrade_pack shell]", e);
+    }
+
+    const trialTitle = document.getElementById("trialTitle");
+    const trialText = document.getElementById("trialText");
+    const toastEl = document.getElementById("toast");
+
+    function toast(msg){
+      if(!toastEl) return;
+      toastEl.textContent = String(msg || "");
+      toastEl.classList.add("show");
+      clearTimeout(window.__upgradeToast);
+      window.__upgradeToast = setTimeout(() => {
+        toastEl.classList.remove("show");
+      }, 2400);
+    }
+
+    function isTrialActive(state){
+      if (!state?.trial_ends_at) return false;
+      return new Date(state.trial_ends_at).getTime() > Date.now();
+    }
+
+    function getTrialDaysLeft(state){
+      if (!state) return 0;
+      if (typeof state.trial_days_left === "number") return Math.max(0, state.trial_days_left);
+      if (!state.trial_ends_at) return 0;
+      const diff = new Date(state.trial_ends_at).getTime() - Date.now();
+      return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+    }
+
+    function isPackageActive(state){
+      if (!state) return false;
+      if (state.package_active !== true) return false;
+      if (!state.package_ends_at) return true;
+      return new Date(state.package_ends_at).getTime() > Date.now();
+    }
+
+    async function paintTrialInfo(){
+      try{
+        const access = await getGlobalAccessState();
+
+        if (isPackageActive(access)) {
+          trialTitle.textContent = "Üyeliğin aktif görünüyor";
+          trialText.textContent = "Yeni paket alabilir veya mevcut kullanımına devam edebilirsin.";
+          return;
+        }
+
+        if (isTrialActive(access)) {
+          const left = getTrialDaysLeft(access);
+          trialTitle.textContent = `Deneme süren aktif • ${left} gün kaldı`;
+          trialText.textContent = "Süre dolmadan paketini seçersen erişimin kesintisiz devam eder.";
+          return;
+        }
+
+        trialTitle.textContent = "Deneme süren tamamlandı";
+        trialText.textContent = "Devam etmek için paket seçebilirsin.";
+      }catch(e){
+        console.warn("[upgrade_pack] access info load fail:", e);
+        trialTitle.textContent = "Paket seçimi hazır";
+        trialText.textContent = "Aşağıdan sana uygun üyeliği seçebilirsin.";
+      }
+    }
+
+    window.buyPackage = function(productId){
+      try{
+        if (!window.AndroidBilling || typeof window.AndroidBilling.buy !== "function") {
+          toast("Satın alma yalnızca uygulama içinden yapılabilir.");
+          return;
+        }
+
+        window.AndroidBilling.buy(productId);
+      }catch(e){
+        console.warn("[upgrade_pack] buy error:", e);
+        toast("Satın alma başlatılamadı.");
+      }
+    };
+
+    paintTrialInfo();
+  </script>
 </body>
 </html>
