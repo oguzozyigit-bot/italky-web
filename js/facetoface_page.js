@@ -1,5 +1,12 @@
 import { getLangPoolForSite } from "/js/lang_pool_full.js";
 import { supabase } from "/js/supabase_client.js";
+import { setHeaderTokens } from "/js/ui_shell.js";
+import {
+  commitUsage,
+  resolveUsageModule,
+  resolveUsageMode,
+  buildUsageNote
+} from "/js/usage_meter.js";
 
 const API_BASE = "https://italky-api.onrender.com";
 const $ = (id) => document.getElementById(id);
@@ -172,6 +179,40 @@ function getFaceVoiceMode() {
 function getFaceTranslateMode() {
   const value = String(localStorage.getItem(F2F_TRANSLATE_KEY) || "normal").trim().toLowerCase();
   return value === "cultural" ? "cultural" : "normal";
+}
+
+function isPaidFaceMode() {
+  return getFaceTranslateMode() === "cultural" || getFaceVoiceMode() === "clone";
+}
+
+function faceUsageModule() {
+  return resolveUsageModule({ surface: "facetoface", ai: isPaidFaceMode() });
+}
+
+function faceUsageMode() {
+  return resolveUsageMode({ ai: isPaidFaceMode() });
+}
+
+function faceUsageNote(charCount) {
+  const paid = isPaidFaceMode();
+  const cultural = getFaceTranslateMode() === "cultural";
+  const clone = getFaceVoiceMode() === "clone";
+
+  if (!paid) {
+    return buildUsageNote({
+      surface: "facetoface",
+      ai: false,
+      custom: `FaceToFace standart kullanım (${charCount} karakter)`
+    });
+  }
+
+  if (cultural && clone) {
+    return `FaceToFace kültürel çeviri + özel ses kullanımı (${charCount} karakter)`;
+  }
+  if (cultural) {
+    return `FaceToFace kültürel çeviri kullanımı (${charCount} karakter)`;
+  }
+  return `FaceToFace özel ses kullanımı (${charCount} karakter)`;
 }
 
 function canonTone(value) {
@@ -684,35 +725,34 @@ async function speak(text, langCode, tone = "neutral") {
   }
 }
 
-async function spendFaceUsage(usedChars) {
-  const safeChars = Number(usedChars || 0);
-  if (safeChars <= 0) return;
+async function chargeFaceUsage(inputText, outputText, srcLang, dstLang) {
+  const inLen = String(inputText || "").trim().length;
+  const outLen = String(outputText || "").trim().length;
+  const billableChars = Math.max(inLen, outLen);
 
-  const userId = await getCurrentUserId();
-  if (!userId) return;
+  if (billableChars <= 0) return;
 
-  const r = await fetch(`${API_BASE}/api/billing/usage`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      user_id: userId,
-      module: "facetoface",
-      characters: safeChars,
-    }),
+  const result = await commitUsage({
+    module: faceUsageModule(),
+    mode: faceUsageMode(),
+    charCount: billableChars,
+    note: faceUsageNote(billableChars),
+    meta: {
+      surface: "facetoface",
+      from_lang: canonical(srcLang),
+      to_lang: canonical(dstLang),
+      translate_mode: getFaceTranslateMode(),
+      voice_mode: getFaceVoiceMode(),
+      input_chars: inLen,
+      output_chars: outLen
+    }
   });
 
-  const j = await r.json().catch(() => ({}));
-
-  if (!r.ok) {
-    if (r.status === 402) {
-      alert("Jetonunuz yetersiz. Jeton Market'e yönlendiriliyorsunuz.");
-      location.href = "/pages/jetonbuy.html";
-      throw new Error("insufficient_tokens");
-    }
-    throw new Error(j.detail || "facetoface_usage_failed");
+  if (typeof result?.tokens_after === "number") {
+    try { setHeaderTokens(result.tokens_after); } catch {}
   }
 
-  return j;
+  return result;
 }
 
 function keepLatestVisible(side) {
@@ -798,33 +838,50 @@ async function translateText(text, from, to, tone = "neutral") {
   const dst = canonical(to);
   const mode = getFaceTranslateMode();
   const style = mode === "cultural" ? "warm" : "balanced";
+  const endpoints = [
+    `${API_BASE}/api/translate_ai`,
+    `${API_BASE}/api/translate-ai`,
+    `${API_BASE}/api/translate`
+  ];
 
-  try {
-    const r = await fetch(`${API_BASE}/api/translate_ai`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        text: String(text || "").trim(),
-        from_lang: src,
-        to_lang: dst,
-        mode,
-        tone: canonTone(tone),
-        style
-      }),
-    });
+  for (const endpoint of endpoints) {
+    try {
+      const r = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: String(text || "").trim(),
+          from_lang: src,
+          to_lang: dst,
+          source: src,
+          target: dst,
+          mode,
+          use_ai: mode === "cultural",
+          cultural: mode === "cultural",
+          tone: canonTone(tone),
+          style
+        }),
+      });
 
-    if (!r.ok) {
-      const raw = await r.text().catch(() => "");
-      console.error("translate_ai failed", r.status, raw);
-      return null;
+      if (!r.ok) {
+        continue;
+      }
+
+      const j = await r.json().catch(() => null);
+      const value = String(
+        j?.translated ||
+        j?.translation ||
+        j?.text ||
+        ""
+      ).trim();
+
+      if (value) return value;
+    } catch (e) {
+      console.error("translate error", endpoint, e);
     }
-
-    const j = await r.json().catch(() => null);
-    return String(j?.translated || "").trim() || null;
-  } catch (e) {
-    console.error("translate_ai error", e);
-    return null;
   }
+
+  return null;
 }
 
 function buildRecognizer(langCode) {
@@ -886,7 +943,6 @@ async function finalizeRecognition(side, text) {
   const dst = side === "top" ? botLang : topLang;
   const sourceTone = detectToneFromText(text);
   const other = side === "top" ? "bot" : "top";
-  const mode = getFaceTranslateMode();
 
   const cleaned = cleanupFinalTranscript(text);
   if (!cleaned) {
@@ -919,12 +975,15 @@ async function finalizeRecognition(side, text) {
     return;
   }
 
-  if (mode === "cultural") {
-    try {
-      await spendFaceUsage(tr.length);
-    } catch (e) {
-      if (String(e?.message || "") === "insufficient_tokens") return;
+  try {
+    await chargeFaceUsage(cleaned, tr, src, dst);
+  } catch (e) {
+    if (e?.code === "INSUFFICIENT_TOKENS") {
+      alert("Jetonunuz yetersiz. Jeton Market'e yönlendiriliyorsunuz.");
+      location.href = "/pages/jetonbuy.html";
+      return;
     }
+    console.error("[facetoface usage]", e);
   }
 
   if (latestTxt) {
@@ -1096,6 +1155,23 @@ async function warmApis() {
   await Promise.allSettled([
     fetch(`${API_BASE}/healthz`).catch(() => {}),
     fetch(`${API_BASE}/api/translate_ai/health`).catch(() => {}),
+    (async () => {
+      try {
+        const { data } = await supabase.auth.getUser();
+        const uid = data?.user?.id;
+        if (!uid) return;
+
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("tokens")
+          .eq("id", uid)
+          .maybeSingle();
+
+        if (typeof profile?.tokens === "number") {
+          setHeaderTokens(profile.tokens);
+        }
+      } catch {}
+    })(),
   ]);
 }
 
