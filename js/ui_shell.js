@@ -99,6 +99,7 @@ const HOME_HEADER_HTML = `
 
     <nav class="menu-nav">
       <a href="/pages/jetonbuy.html" class="menu-link-jeton" data-i18n="menu_token_load">Jeton Yükle</a>
+      <a href="/pages/wallet_history.html" data-i18n="menu_wallet_history">Jeton Hareketleri</a>
 
       <a href="/pages/profile.html" data-i18n="menu_profile">Profil</a>
       <a href="/pages/about.html" data-i18n="menu_about">Hakkımızda</a>
