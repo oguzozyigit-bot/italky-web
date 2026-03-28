@@ -78,6 +78,23 @@ const HOME_HEADER_HTML = `
           </div>
         </div>
       </div>
+
+      <div class="menu-membership-card" id="menuMembershipCard">
+        <div class="menu-membership-top">
+          <div class="menu-membership-title">Üyelik Durumu</div>
+          <div class="menu-membership-badge neutral" id="menuMembershipBadge">Yükleniyor</div>
+        </div>
+
+        <div class="menu-membership-main" id="menuMembershipMain">Bilgi alınıyor...</div>
+        <div class="menu-membership-sub" id="menuMembershipSub">Lütfen bekleyin</div>
+
+        <div class="menu-membership-pills">
+          <div class="menu-membership-pill" id="menuMembershipSourcePill">Kaynak: -</div>
+          <div class="menu-membership-pill" id="menuMembershipDaysPill">Kalan: -</div>
+        </div>
+
+        <button class="menu-membership-btn hidden" id="menuMembershipBtn" type="button">Paket Seç</button>
+      </div>
     </div>
 
     <nav class="menu-nav">
@@ -388,7 +405,9 @@ body.ui-menu-open{
 }
 
 .menu-top{
-  display:block;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
 }
 
 .menu-user-card{
@@ -505,6 +524,142 @@ body.ui-menu-open{
   padding:6px 0;
 }
 
+.menu-membership-card{
+  width:100%;
+  padding:14px;
+  border-radius:20px;
+  background:linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.025));
+  border:1px solid rgba(255,255,255,.07);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.02);
+}
+
+.menu-membership-card.state-active{
+  border-color:rgba(139,211,255,.18);
+  background:
+    radial-gradient(circle at top left, rgba(139,211,255,.08), transparent 30%),
+    linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+}
+
+.menu-membership-card.state-warning{
+  border-color:rgba(245,158,11,.26);
+  background:
+    radial-gradient(circle at top left, rgba(245,158,11,.08), transparent 30%),
+    linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+}
+
+.menu-membership-card.state-expired{
+  border-color:rgba(239,68,68,.22);
+  background:
+    radial-gradient(circle at top left, rgba(239,68,68,.07), transparent 30%),
+    linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.025));
+}
+
+.menu-membership-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:8px;
+}
+
+.menu-membership-title{
+  font-size:12px;
+  font-weight:900;
+  letter-spacing:.35px;
+  color:rgba(255,255,255,.74);
+  text-transform:uppercase;
+}
+
+.menu-membership-badge{
+  display:inline-flex;
+  align-items:center;
+  min-height:26px;
+  padding:4px 9px;
+  border-radius:999px;
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.4px;
+  text-transform:uppercase;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.05);
+  color:#fff;
+}
+
+.menu-membership-badge.neutral{
+  background:rgba(255,255,255,.06);
+}
+
+.menu-membership-badge.active{
+  background:rgba(139,211,255,.14);
+  border-color:rgba(139,211,255,.18);
+  color:#dff1ff;
+}
+
+.menu-membership-badge.warning{
+  background:rgba(245,158,11,.14);
+  border-color:rgba(245,158,11,.20);
+  color:#ffe2b3;
+}
+
+.menu-membership-badge.expired{
+  background:rgba(239,68,68,.12);
+  border-color:rgba(239,68,68,.18);
+  color:#ffd1d1;
+}
+
+.menu-membership-main{
+  font-size:15px;
+  font-weight:900;
+  color:#fff;
+  line-height:1.25;
+}
+
+.menu-membership-sub{
+  margin-top:5px;
+  font-size:12px;
+  font-weight:700;
+  color:rgba(255,255,255,.62);
+  line-height:1.45;
+}
+
+.menu-membership-pills{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:10px;
+}
+
+.menu-membership-pill{
+  display:inline-flex;
+  align-items:center;
+  min-height:28px;
+  padding:6px 9px;
+  border-radius:999px;
+  font-size:11px;
+  font-weight:800;
+  color:#e9efff;
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.08);
+}
+
+.menu-membership-btn{
+  width:100%;
+  margin-top:12px;
+  min-height:42px;
+  border:none;
+  border-radius:14px;
+  background:linear-gradient(135deg, var(--trendyol-orange) 0%, var(--trendyol-orange-dark) 100%);
+  color:#fff;
+  font-size:13px;
+  font-weight:900;
+  cursor:pointer;
+  box-shadow:0 10px 24px rgba(242,122,26,.18);
+}
+
+.menu-membership-btn.hidden{
+  display:none;
+}
+
 .menu-nav{
   display:flex;
   flex-direction:column;
@@ -611,6 +766,7 @@ body.ui-menu-open{
 let __shellAutoTranslateInstalled = false;
 let __shellResizeBound = false;
 let __shellEscapeBound = false;
+let __membershipLoadRunning = false;
 
 export function mountShell(options = {}) {
   document.documentElement.style.backgroundColor = "#05070f";
@@ -673,6 +829,7 @@ function finishMount(options) {
     document.body.classList.add("ui-ready");
     hydrateFromCache();
     syncFooterHeight();
+    hydrateMembershipCard();
 
     try {
       if (!__shellAutoTranslateInstalled) {
@@ -697,6 +854,7 @@ function bindMenu() {
   const menuProfileTop = document.getElementById("menuProfileTop");
   const menuAvatarClick = document.getElementById("menuAvatarClick");
   const menuJetonInfoLink = document.getElementById("menuJetonInfoLink");
+  const menuMembershipBtn = document.getElementById("menuMembershipBtn");
 
   if (!menuBtn || !sideMenu) return;
   if (menuBtn.dataset.bound === "1") return;
@@ -705,6 +863,7 @@ function bindMenu() {
     sideMenu.classList.add("open");
     sideMenu.setAttribute("aria-hidden", "false");
     document.body.classList.add("ui-menu-open");
+    hydrateMembershipCard();
   };
 
   const closeMenu = () => {
@@ -721,6 +880,11 @@ function bindMenu() {
   const goSettings = () => {
     closeMenu();
     location.href = "/pages/translation_settings.html";
+  };
+
+  const goUpgrade = () => {
+    closeMenu();
+    location.href = "/pages/upgrade_pack.html";
   };
 
   menuBtn.addEventListener("click", openMenu);
@@ -740,6 +904,8 @@ function bindMenu() {
     closeMenu();
     location.href = "/pages/jeton-nedir.html";
   });
+
+  menuMembershipBtn?.addEventListener("click", goUpgrade);
 
   sideMenu.querySelectorAll(".menu-nav a").forEach((link) => {
     link.addEventListener("click", () => {
@@ -798,6 +964,217 @@ export function hydrateFromCache() {
   } catch {}
 }
 
+async function hydrateMembershipCard() {
+  if (__membershipLoadRunning) return;
+  __membershipLoadRunning = true;
+
+  const card = document.getElementById("menuMembershipCard");
+  const badge = document.getElementById("menuMembershipBadge");
+  const main = document.getElementById("menuMembershipMain");
+  const sub = document.getElementById("menuMembershipSub");
+  const sourcePill = document.getElementById("menuMembershipSourcePill");
+  const daysPill = document.getElementById("menuMembershipDaysPill");
+  const btn = document.getElementById("menuMembershipBtn");
+
+  if (!card || !badge || !main || !sub || !sourcePill || !daysPill || !btn) {
+    __membershipLoadRunning = false;
+    return;
+  }
+
+  setMembershipUi({
+    cardClass: "neutral",
+    badgeClass: "neutral",
+    badgeText: "Yükleniyor",
+    mainText: "Bilgi alınıyor...",
+    subText: "Lütfen bekleyin",
+    sourceText: "Kaynak: -",
+    daysText: "Kalan: -",
+    showButton: false
+  });
+
+  try {
+    const mod = await import("/js/global_access.js");
+    const state = await mod.getGlobalAccessState();
+
+    if (!state) {
+      setMembershipUi({
+        cardClass: "expired",
+        badgeClass: "expired",
+        badgeText: "Paket Yok",
+        mainText: "Aktif üyelik bulunamadı",
+        subText: "Üyeliğini başlatmak için paket seçebilirsin.",
+        sourceText: "Kaynak: -",
+        daysText: "Kalan: 0 gün",
+        showButton: true
+      });
+      return;
+    }
+
+    const packageActive = isPackageActuallyActive(state);
+    const trialActive = isTrialActuallyActive(state);
+    const trialDays = getTrialDaysLeft(state);
+
+    if (packageActive) {
+      const code = String(state.selected_package_code || state.package_code || "-").trim();
+      const sourceType = resolveSourceType(state);
+      const remainingDays = getPackageDaysLeft(state);
+      const niceName = packageDisplayName(code, sourceType);
+
+      setMembershipUi({
+        cardClass: remainingDays <= 7 ? "warning" : "active",
+        badgeClass: remainingDays <= 7 ? "warning" : "active",
+        badgeText: remainingDays <= 7 ? "Az Kaldı" : "Aktif",
+        mainText: niceName,
+        subText: remainingDays > 0
+          ? `Üyeliğin aktif. Bitişe ${remainingDays} gün kaldı.`
+          : "Üyeliğin aktif görünüyor.",
+        sourceText: `Kaynak: ${sourceLabel(sourceType)}`,
+        daysText: `Kalan: ${Math.max(remainingDays, 0)} gün`,
+        showButton: false
+      });
+      return;
+    }
+
+    if (trialActive) {
+      setMembershipUi({
+        cardClass: trialDays <= 3 ? "warning" : "active",
+        badgeClass: trialDays <= 3 ? "warning" : "active",
+        badgeText: "Deneme",
+        mainText: "Ücretsiz deneme aktif",
+        subText: `Deneme süren devam ediyor. Süre dolmadan paket seçebilirsin.`,
+        sourceText: "Kaynak: Deneme",
+        daysText: `Kalan: ${trialDays} gün`,
+        showButton: true
+      });
+      return;
+    }
+
+    setMembershipUi({
+      cardClass: "expired",
+      badgeClass: "expired",
+      badgeText: "Süre Doldu",
+      mainText: "Aktif üyelik yok",
+      subText: "Devam etmek için paket seçmelisin.",
+      sourceText: "Kaynak: -",
+      daysText: "Kalan: 0 gün",
+      showButton: true
+    });
+  } catch (e) {
+    console.warn("[ui_shell membership]", e);
+    setMembershipUi({
+      cardClass: "neutral",
+      badgeClass: "neutral",
+      badgeText: "Bilinmiyor",
+      mainText: "Üyelik bilgisi alınamadı",
+      subText: "Bağlantı tekrar kurulduğunda bilgi güncellenecek.",
+      sourceText: "Kaynak: -",
+      daysText: "Kalan: -",
+      showButton: true
+    });
+  } finally {
+    __membershipLoadRunning = false;
+  }
+}
+
+function setMembershipUi({
+  cardClass = "neutral",
+  badgeClass = "neutral",
+  badgeText = "",
+  mainText = "",
+  subText = "",
+  sourceText = "",
+  daysText = "",
+  showButton = false
+}) {
+  const card = document.getElementById("menuMembershipCard");
+  const badge = document.getElementById("menuMembershipBadge");
+  const main = document.getElementById("menuMembershipMain");
+  const sub = document.getElementById("menuMembershipSub");
+  const sourcePill = document.getElementById("menuMembershipSourcePill");
+  const daysPill = document.getElementById("menuMembershipDaysPill");
+  const btn = document.getElementById("menuMembershipBtn");
+
+  if (card) {
+    card.classList.remove("state-active", "state-warning", "state-expired");
+    if (cardClass === "active") card.classList.add("state-active");
+    if (cardClass === "warning") card.classList.add("state-warning");
+    if (cardClass === "expired") card.classList.add("state-expired");
+  }
+
+  if (badge) {
+    badge.classList.remove("neutral", "active", "warning", "expired");
+    badge.classList.add(badgeClass || "neutral");
+    badge.textContent = badgeText || "";
+  }
+
+  if (main) main.textContent = mainText || "";
+  if (sub) sub.textContent = subText || "";
+  if (sourcePill) sourcePill.textContent = sourceText || "";
+  if (daysPill) daysPill.textContent = daysText || "";
+
+  if (btn) {
+    btn.classList.toggle("hidden", !showButton);
+  }
+}
+
+function isPackageActuallyActive(state) {
+  if (!state) return false;
+  if (state.package_active !== true) return false;
+  if (!state.package_ends_at) return true;
+  return new Date(state.package_ends_at).getTime() > Date.now();
+}
+
+function isTrialActuallyActive(state) {
+  if (!state?.trial_ends_at) return false;
+  return new Date(state.trial_ends_at).getTime() > Date.now();
+}
+
+function getTrialDaysLeft(state) {
+  if (!state) return 0;
+  if (typeof state.trial_days_left === "number") {
+    return Math.max(0, state.trial_days_left);
+  }
+  if (!state.trial_ends_at) return 0;
+  const diff = new Date(state.trial_ends_at).getTime() - Date.now();
+  return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+}
+
+function getPackageDaysLeft(state) {
+  if (!state?.package_ends_at) return 0;
+  const diff = new Date(state.package_ends_at).getTime() - Date.now();
+  return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+}
+
+function resolveSourceType(state) {
+  const raw = String(state?.source_type || "").trim().toLowerCase();
+  if (raw) return raw;
+
+  const pkg = String(state?.selected_package_code || state?.package_code || "").trim().toLowerCase();
+  if (pkg.startsWith("pkg_")) return "nfc_qr";
+  if (pkg.startsWith("premium_") || pkg.startsWith("edu_") || pkg.startsWith("translate_")) return "playstore";
+  return "playstore";
+}
+
+function sourceLabel(type) {
+  if (type === "nfc_qr") return "NFC / QR";
+  if (type === "playstore") return "Play Store";
+  if (type === "manual") return "Manuel";
+  return "-";
+}
+
+function packageDisplayName(code, sourceType) {
+  const c = String(code || "").trim().toLowerCase();
+
+  if (sourceType === "nfc_qr") return "Kartlı Erişim";
+  if (c === "premium_999") return "Premium Üyelik";
+  if (c === "translate_699") return "Cebinizdeki Tercüman";
+  if (c === "edu_699") return "Online Dil Eğitim Asistanı";
+  if (c === "premium") return "Premium Üyelik";
+  if (c === "translate") return "Çeviri Paketi";
+  if (c === "education" || c === "egitim" || c === "edu") return "Eğitim Paketi";
+  return code || "Aktif Üyelik";
+}
+
 function syncFooterHeight() {
   const f = document.getElementById("italkyFooter");
   if (f) {
@@ -823,4 +1200,8 @@ export function setHeaderTokens(val) {
     u.tokens = Number(val ?? 0);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(u));
   } catch {}
+}
+
+export function refreshShellMembership() {
+  hydrateMembershipCard();
 }
