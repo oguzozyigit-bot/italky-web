@@ -36,9 +36,7 @@ async function fetchAccessState(force = false) {
 function isPackageActuallyActive(state) {
   if (!state) return false;
   if (state.package_active !== true) return false;
-
   if (!state.package_ends_at) return true;
-
   return new Date(state.package_ends_at).getTime() > Date.now();
 }
 
@@ -303,9 +301,11 @@ export async function enforcePackageBeforeTokens() {
     return false;
   }
 
-  if (hasAnyAccess(state)) return true;
+  const packageActive = isPackageActuallyActive(state);
 
-  alert("Jeton satın almak için önce üyelik modelinizi belirleyin.");
+  if (packageActive) return true;
+
+  alert("Jeton satın almak için önce üyelik modelinizi belirlemelisiniz.");
   location.href = "/pages/upgrade_pack.html";
   return false;
 }
