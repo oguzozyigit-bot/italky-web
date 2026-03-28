@@ -1,5 +1,12 @@
 import { LANG_POOL } from "/js/lang_pool_full.js";
 import { supabase } from "/js/supabase_client.js";
+import { setHeaderTokens } from "/js/ui_shell.js";
+import {
+  commitUsage,
+  resolveUsageModule,
+  resolveUsageMode,
+  buildUsageNote
+} from "/js/usage_meter.js";
 
 const API_BASE = "https://italky-api.onrender.com/api";
 const WS_BASE = "wss://italky-api.onrender.com/api";
@@ -70,6 +77,82 @@ function voiceLabel(v) {
 
 function translateLabel(v) {
   return normalizeTranslateMode(v) === "cultural" ? "Kültürel Translate" : "Translate";
+}
+
+function isPaidEarToEarMode() {
+  return (
+    normalizeTranslateMode(myProfile.translate_mode) === "cultural" ||
+    normalizeVoiceMode(myProfile.voice_mode) === "clone"
+  );
+}
+
+function earToEarUsageMode() {
+  return resolveUsageMode({ ai: isPaidEarToEarMode() });
+}
+
+function earToEarUsageModule() {
+  return resolveUsageModule({ surface: "eartoear", ai: isPaidEarToEarMode() });
+}
+
+function earToEarUsageNote(charCount) {
+  const paid = isPaidEarToEarMode();
+
+  if (paid) {
+    if (
+      normalizeTranslateMode(myProfile.translate_mode) === "cultural" &&
+      normalizeVoiceMode(myProfile.voice_mode) === "clone"
+    ) {
+      return `EarToEar kültürel çeviri + özel ses kullanımı (${charCount} karakter)`;
+    }
+    if (normalizeTranslateMode(myProfile.translate_mode) === "cultural") {
+      return `EarToEar kültürel çeviri kullanımı (${charCount} karakter)`;
+    }
+    return `EarToEar özel ses kullanımı (${charCount} karakter)`;
+  }
+
+  return buildUsageNote({
+    surface: "eartoear",
+    ai: false,
+    custom: `EarToEar standart kullanım (${charCount} karakter)`
+  });
+}
+
+async function chargeEarToEarUsage(textValue) {
+  const charCount = String(textValue || "").trim().length;
+  if (!charCount) {
+    return { ok: true, tokens_after: null, tokens_charged: 0 };
+  }
+
+  try {
+    const result = await commitUsage({
+      module: earToEarUsageModule(),
+      mode: earToEarUsageMode(),
+      charCount,
+      note: earToEarUsageNote(charCount),
+      meta: {
+        surface: "eartoear",
+        from_lang: canonical(myLang),
+        to_lang: canonical(peerLang || "en"),
+        translate_mode: normalizeTranslateMode(myProfile.translate_mode),
+        voice_mode: normalizeVoiceMode(myProfile.voice_mode),
+        char_count: charCount
+      }
+    });
+
+    if (typeof result?.tokens_after === "number") {
+      setHeaderTokens(result.tokens_after);
+    }
+
+    return result;
+  } catch (e) {
+    if (e?.code === "INSUFFICIENT_TOKENS") {
+      setHelper(botHelper, "Jeton yetersiz. Jeton Market açılıyor...", "helper-wait");
+      setTimeout(() => {
+        location.href = "/pages/jetonbuy.html";
+      }, 450);
+    }
+    throw e;
+  }
 }
 
 const UI_TEXT = {
@@ -363,11 +446,17 @@ async function loadProfileFromSupabase() {
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("tts_voice_ready, tts_voice_id")
+      .select("tts_voice_ready, tts_voice_id, tokens")
       .eq("id", uid)
       .maybeSingle();
 
     readLocalProfile();
+
+    if (typeof profile?.tokens === "number") {
+      try {
+        setHeaderTokens(profile.tokens);
+      } catch {}
+    }
 
     if (myProfile.voice_mode === "clone" && !(profile?.tts_voice_ready && profile?.tts_voice_id)) {
       myProfile.voice_mode = "auto";
@@ -802,7 +891,7 @@ function clearProfileRetryTimers() {
   profileRetryTimers = [];
 }
 
-function queueProfileResend() {
+async function queueProfileResend() {
   clearProfileRetryTimers();
   [800, 1800, 3200].forEach((ms) => {
     const id = setTimeout(() => {
@@ -967,7 +1056,7 @@ function startSocket() {
     }
 
     await sendSelfProfile();
-    queueProfileResend();
+    await queueProfileResend();
   };
 
   ws.onmessage = async (event) => {
@@ -1024,7 +1113,7 @@ function startSocket() {
         setHelper(botHelper, t(myLang, "peerJoined"), "helper-ready");
 
         await sendSelfProfile();
-        queueProfileResend();
+        await queueProfileResend();
         bounceToReady(600);
         return;
       }
@@ -1376,6 +1465,18 @@ async function finalizeRecognition(text) {
 
   if (shouldIgnoreDuplicateLocal(cleaned)) {
     setSystemReadyUI();
+    return;
+  }
+
+  try {
+    await chargeEarToEarUsage(cleaned);
+  } catch (e) {
+    console.warn("[eartoear usage]", e);
+    setErrorUI();
+    if (e?.code !== "INSUFFICIENT_TOKENS") {
+      setHelper(botHelper, "Jeton kontrolü yapılamadı", "helper-wait");
+    }
+    bounceToReady(1000);
     return;
   }
 
