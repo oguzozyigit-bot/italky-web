@@ -1,6 +1,6 @@
-/* FILE: /js/hangman_page.js */
 import { mountShell } from "/js/ui_shell.js";
 import { supabase } from "/js/supabase_client.js";
+import { requireLevelForLanguage, normalizeLang } from "/js/level_gate.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -24,16 +24,6 @@ function qp(name) {
   } catch {
     return null;
   }
-}
-
-function normalizeLang(v) {
-  return String(v || "en").trim().toLowerCase();
-}
-
-function normalizeLevel(v) {
-  const raw = String(v || "").trim().toUpperCase();
-  const allowed = ["A1", "A2", "B1", "B2", "C1", "C2"];
-  return allowed.includes(raw) ? raw : null;
 }
 
 function setGate(msg) {
@@ -65,7 +55,7 @@ function escapeHtml(str) {
 ----------------------------- */
 let state = {
   lang: normalizeLang(qp("lang") || localStorage.getItem("italky_game_lang") || "en"),
-  level: normalizeLevel(qp("level") || localStorage.getItem("italky_game_level")) || null,
+  level: null,
   pool: [],
   target: null,
   lastWord: null,
@@ -88,58 +78,18 @@ let state = {
 async function loadGameData() {
   try {
     disableStartBtn(true, "YÜKLENİYOR...");
-    setGate("OYUN VERİSİ HAZIRLANIYOR...");
+    setGate("SEVİYE KONTROL EDİLİYOR...");
 
-    const {
-      data: { session }
-    } = await supabase.auth.getSession();
+    const gate = await requireLevelForLanguage(state.lang, "hangman", {
+      lang: state.lang
+    });
 
-    state.userId = session?.user?.id || "anon";
+    if (!gate.ok) return;
 
-    let profile = null;
-    if (state.userId !== "anon") {
-      const { data: prof, error: profErr } = await supabase
-        .from("profiles")
-        .select("id, game_lang, current_level, english_level, placement_completed, hangman_best")
-        .eq("id", state.userId)
-        .maybeSingle();
+    state.userId = gate.profile?.id || "anon";
+    state.level = gate.level;
+    state.placementOk = true;
 
-      if (!profErr) profile = prof || null;
-    }
-
-    // Dil: query > localStorage > profile > en
-    if (!state.lang) {
-      state.lang = normalizeLang(profile?.game_lang || "en");
-    }
-
-    // Seviye: query > localStorage > profile.current_level > profile.english_level
-    if (!state.level) {
-      state.level =
-        normalizeLevel(profile?.current_level) ||
-        normalizeLevel(profile?.english_level) ||
-        null;
-    }
-
-    // Placement kontrolü
-    // İster boolean alan olsun, ister level varsa tamam say
-    state.placementOk = Boolean(
-      profile?.placement_completed ||
-      state.level
-    );
-
-    if (!state.placementOk) {
-      setGate("Önce seviye tespit sınavını tamamlamalısın.");
-      disableStartBtn(true, "KİLİTLİ");
-      return;
-    }
-
-    if (!state.level) {
-      setGate("Seviye bilgisi bulunamadı. Önce seviye tespitini tamamla.");
-      disableStartBtn(true, "KİLİTLİ");
-      return;
-    }
-
-    // Cachele
     localStorage.setItem("italky_game_lang", state.lang);
     localStorage.setItem("italky_game_level", state.level);
 
@@ -159,16 +109,16 @@ async function loadGameData() {
     }
 
     state.pool = Array.isArray(words)
-      ? words.filter(x => x && x.w && String(x.w).trim())
+      ? words.filter((x) => x && x.w && String(x.w).trim())
       : [];
 
-    // Rekor
     let best = 0;
-    if (profile?.hangman_best) {
+    const bestMap = gate.profile?.hangman_best || {};
+    if (bestMap && typeof bestMap === "object") {
       const key = `${state.lang}::${state.level}`;
-      best = profile.hangman_best?.[key] || 0;
+      best = Number(bestMap[key] || 0);
     }
-    $("bestVal").textContent = String(best);
+    if ($("bestVal")) $("bestVal").textContent = String(best);
 
     if (!state.pool.length) {
       setGate(`${state.lang.toUpperCase()} • ${state.level} için havuz boş.`);
@@ -204,7 +154,7 @@ async function updateBestScore(newScore) {
         .update({ hangman_best: map })
         .eq("id", state.userId);
 
-      $("bestVal").textContent = String(newScore);
+      if ($("bestVal")) $("bestVal").textContent = String(newScore);
     }
   } catch (err) {
     console.error("updateBestScore failed:", err);
@@ -239,8 +189,8 @@ function startRound() {
   state.flawless = true;
   state.jokerUsed = false;
 
-  $("j0").classList.remove("spent");
-  $("j1").classList.remove("spent");
+  $("j0")?.classList.remove("spent");
+  $("j1")?.classList.remove("spent");
 
   state.target = pickWord();
 
@@ -256,13 +206,15 @@ function startRound() {
   renderHearts();
   resetMan();
 
-  $("trText").textContent = String(state.target.tr || "—").toUpperCase();
-  $("scoreVal").textContent = String(state.totalScore);
+  if ($("trText")) $("trText").textContent = String(state.target.tr || "—").toUpperCase();
+  if ($("scoreVal")) $("scoreVal").textContent = String(state.totalScore);
 }
 
 function renderWord() {
   const w = String(state.target?.w || "").toUpperCase();
-  $("matrix").innerHTML = w.split("").map(ch => {
+  if (!$("matrix")) return;
+
+  $("matrix").innerHTML = w.split("").map((ch) => {
     const isLetter = /[A-Z]/.test(ch);
     const found = !isLetter || state.guessed.has(ch);
 
@@ -275,12 +227,14 @@ function renderWord() {
 }
 
 function renderKeyboard() {
+  if (!$("kb")) return;
+
   const abc = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
-  $("kb").innerHTML = abc.map(l =>
+  $("kb").innerHTML = abc.map((l) =>
     `<button class="key" id="key-${l}" data-l="${l}">${l}</button>`
   ).join("");
 
-  $("kb").querySelectorAll(".key").forEach(btn => {
+  $("kb").querySelectorAll(".key").forEach((btn) => {
     btn.onclick = () => makeGuess(btn.dataset.l);
   });
 }
@@ -300,8 +254,8 @@ function makeGuess(l) {
 
     const completed = w
       .split("")
-      .filter(ch => /[A-Z]/.test(ch))
-      .every(ch => state.guessed.has(ch));
+      .filter((ch) => /[A-Z]/.test(ch))
+      .every((ch) => state.guessed.has(ch));
 
     if (completed) endRound(true);
   } else {
@@ -322,13 +276,15 @@ function updateMan(errs) {
 }
 
 function resetMan() {
-  ["p_head", "p_body", "p_larm", "p_rarm", "p_lleg", "p_rleg"].forEach(id => {
+  ["p_head", "p_body", "p_larm", "p_rarm", "p_lleg", "p_rleg"].forEach((id) => {
     $(id)?.classList.remove("on");
   });
   $("man")?.classList.remove("swing");
 }
 
 function renderHearts() {
+  if (!$("hearts")) return;
+
   let html = "";
   for (let i = 0; i < state.lives; i++) {
     html += `<span class="heart">❤️</span>`;
@@ -351,11 +307,13 @@ async function endRound(win) {
 
   renderHearts();
 
-  $("mTitle").textContent = win ? "BAŞARILI!" : "MİSYON BAŞARISIZ";
-  $("mTitle").style.color = win ? "var(--green)" : "var(--red)";
-  $("mWord").textContent = String(state.target?.w || "").toUpperCase();
-  $("mTr").textContent = `(${state.target?.tr || "—"})`;
-  $("modal").classList.add("on");
+  if ($("mTitle")) {
+    $("mTitle").textContent = win ? "BAŞARILI!" : "MİSYON BAŞARISIZ";
+    $("mTitle").style.color = win ? "var(--green)" : "var(--red)";
+  }
+  if ($("mWord")) $("mWord").textContent = String(state.target?.w || "").toUpperCase();
+  if ($("mTr")) $("mTr").textContent = `(${state.target?.tr || "—"})`;
+  $("modal")?.classList.add("on");
 }
 
 /* -----------------------------
@@ -374,18 +332,18 @@ function useJ(i) {
   const remaining = String(state.target.w)
     .toUpperCase()
     .split("")
-    .filter(l => /[A-Z]/.test(l) && !state.guessed.has(l));
+    .filter((l) => /[A-Z]/.test(l) && !state.guessed.has(l));
 
   if (remaining.length > 0) {
     makeGuess(remaining[0]);
   }
 }
 
-$("j0").onclick = () => useJ(0);
-$("j1").onclick = () => useJ(1);
+$("j0") && ($("j0").onclick = () => useJ(0));
+$("j1") && ($("j1").onclick = () => useJ(1));
 
-$("mBtn").onclick = () => {
-  $("modal").classList.remove("on");
+$("mBtn") && ($("mBtn").onclick = () => {
+  $("modal")?.classList.remove("on");
 
   if (state.lives > 0) {
     startRound();
@@ -394,16 +352,16 @@ $("mBtn").onclick = () => {
     if (again) {
       state.totalScore = 0;
       state.lives = 3;
-      $("scoreVal").textContent = "0";
+      if ($("scoreVal")) $("scoreVal").textContent = "0";
       renderHearts();
       startRound();
     } else {
       location.href = "/pages/game_menu.html";
     }
   }
-};
+});
 
-$("realStartBtn").onclick = () => {
+$("realStartBtn") && ($("realStartBtn").onclick = () => {
   if (!state.placementOk) {
     alert("Önce seviye tespit sınavını tamamlamalısın.");
     return;
@@ -414,9 +372,9 @@ $("realStartBtn").onclick = () => {
     return;
   }
 
-  $("readyGate").style.display = "none";
+  if ($("readyGate")) $("readyGate").style.display = "none";
   startRound();
-};
+});
 
 /* -----------------------------
    BOOT
