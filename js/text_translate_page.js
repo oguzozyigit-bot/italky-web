@@ -1,7 +1,13 @@
 import { supabase } from "/js/supabase_client.js";
 import { ensureAuthAndCacheUser } from "/js/auth.js";
 import { LANG_POOL } from "/js/lang_pool_full.js";
-import { mountShell } from "/js/ui_shell.js";
+import { mountShell, setHeaderTokens } from "/js/ui_shell.js";
+import {
+  commitUsage,
+  resolveUsageModule,
+  resolveUsageMode,
+  buildUsageNote
+} from "/js/usage_meter.js";
 
 /* -------------------------
    SHELL
@@ -40,14 +46,28 @@ const langList = $("langList");
 const modalModeTitle = $("modalModeTitle");
 const toastEl = $("toast");
 
+/* AI / MODE (HTML’de varsa kullanır, yoksa bozulmaz) */
+const btnModeStandard = $("btnModeStandard") || $("btnStandardMode") || $("btnStandard");
+const btnModeAi = $("btnModeAi") || $("btnAiMode") || $("btnAi") || $("btnCultural");
+const modeBadge = $("modeBadge") || $("translateModeBadge") || $("modeText");
+
 /* -------------------------
    CONFIG
 -------------------------- */
 const API_BASE = "https://italky-api.onrender.com";
-const TRANSLATE_ENDPOINT = `${API_BASE}/api/translate`;
+
+const TRANSLATE_STANDARD_ENDPOINTS = [
+  `${API_BASE}/api/translate`
+];
+
+const TRANSLATE_AI_ENDPOINTS = [
+  `${API_BASE}/api/translate_ai`,
+  `${API_BASE}/api/translate-ai`,
+  `${API_BASE}/api/translate`
+];
+
 const TTS_ENDPOINT = `${API_BASE}/api/tts`;
 const STT_ENDPOINT = `${API_BASE}/api/stt`;
-const USAGE_SPEND_ENDPOINT = `${API_BASE}/api/usage/spend`;
 
 /* -------------------------
    STATE
@@ -61,6 +81,13 @@ let mediaRecorder = null;
 let mediaChunks = [];
 let mediaStream = null;
 let mediaRecording = false;
+
+let translateCtl = null;
+let activeTranslateToken = 0;
+
+let activeMode = (localStorage.getItem("qtt_translate_mode") || "standard").toLowerCase() === "ai"
+  ? "ai"
+  : "standard";
 
 /* -------------------------
    HELPERS
@@ -85,13 +112,55 @@ function toast(msg) {
   clearTimeout(window.__textTranslateToast);
   window.__textTranslateToast = setTimeout(() => {
     toastEl.classList.remove("show");
-  }, 1700);
+  }, 1800);
 }
 
 function setMicState(listening) {
   if (!btnMic) return;
   btnMic.classList.toggle("listening", !!listening);
   btnMic.textContent = listening ? "⏺️" : "🎙️";
+}
+
+function isAiMode() {
+  return activeMode === "ai";
+}
+
+function syncModeUi() {
+  localStorage.setItem("qtt_translate_mode", isAiMode() ? "ai" : "standard");
+
+  if (btnModeStandard) {
+    btnModeStandard.classList.toggle("active", !isAiMode());
+    btnModeStandard.setAttribute("aria-pressed", String(!isAiMode()));
+  }
+
+  if (btnModeAi) {
+    btnModeAi.classList.toggle("active", isAiMode());
+    btnModeAi.setAttribute("aria-pressed", String(isAiMode()));
+  }
+
+  if (modeBadge) {
+    modeBadge.textContent = isAiMode() ? "AI / Kültürel" : "Standart";
+    modeBadge.classList.toggle("ai-mode", isAiMode());
+    modeBadge.classList.toggle("standard-mode", !isAiMode());
+  }
+
+  if (btnTranslate) {
+    btnTranslate.textContent = isAiMode() ? "✨ AI ÇEVİR" : "✨ ÇEVİR";
+  }
+}
+
+function setTranslateBusy(isBusy, text = "") {
+  if (!btnTranslate) return;
+  btnTranslate.disabled = !!isBusy;
+  btnTranslate.textContent = text || (isAiMode() ? "✨ AI ÇEVİR" : "✨ ÇEVİR");
+  dstTxt.style.opacity = isBusy ? "0.45" : "1";
+}
+
+function stopTranslateRequest() {
+  try {
+    if (translateCtl) translateCtl.abort();
+  } catch {}
+  translateCtl = null;
 }
 
 /* -------------------------
@@ -103,49 +172,67 @@ async function requireLogin() {
     location.replace("/pages/login.html");
     return false;
   }
-  try { await ensureAuthAndCacheUser(); } catch {}
+  try {
+    await ensureAuthAndCacheUser();
+  } catch {}
   return true;
 }
 
 /* -------------------------
-   BILLING
+   TOKENS / USAGE
 -------------------------- */
-async function spendUsage(moduleKey, usedChars) {
-  const safeChars = Number(usedChars || 0);
-  if (safeChars <= 0) {
-    return { ok: true, charged_tokens: 0, remaining_chars: 0 };
+async function chargeTranslationUsage(inputText, outputText) {
+  const inLen = String(inputText || "").trim().length;
+  const outLen = String(outputText || "").trim().length;
+  const billableChars = Math.max(inLen, outLen);
+
+  if (billableChars <= 0) {
+    return { ok: true, tokens_after: null, tokens_charged: 0 };
   }
 
-  const { data } = await supabase.auth.getUser();
-  const userId = data?.user?.id || "";
-
-  if (!userId) {
-    toast("Önce giriş yapın.");
-    throw new Error("no_user");
-  }
-
-  const r = await fetch(USAGE_SPEND_ENDPOINT, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      user_id: userId,
-      module_key: moduleKey,
-      used_chars: safeChars
-    })
+  const moduleKey = resolveUsageModule({
+    surface: "text",
+    ai: isAiMode()
   });
 
-  const j = await r.json().catch(() => ({}));
+  const mode = resolveUsageMode({
+    ai: isAiMode()
+  });
 
-  if (!r.ok) {
-    if (r.status === 402) {
-      toast("Jeton yetersiz. Jeton Market açılıyor.");
-      location.href = "/pages/jetonbuy.html";
-      throw new Error("insufficient_tokens");
+  const note = buildUsageNote({
+    surface: "text",
+    ai: isAiMode()
+  });
+
+  try {
+    const result = await commitUsage({
+      module: moduleKey,
+      mode,
+      charCount: billableChars,
+      note,
+      meta: {
+        from_lang: canonical(fromLang),
+        to_lang: canonical(toLang),
+        input_chars: inLen,
+        output_chars: outLen
+      }
+    });
+
+    if (typeof result?.tokens_after === "number") {
+      setHeaderTokens(result.tokens_after);
     }
-    throw new Error(j.detail || "usage_spend_failed");
-  }
 
-  return j;
+    return result;
+  } catch (e) {
+    if (e?.code === "INSUFFICIENT_TOKENS") {
+      toast("Jeton yetersiz. Jeton Market açılıyor.");
+      setTimeout(() => {
+        location.href = "/pages/jetonbuy.html";
+      }, 350);
+      throw e;
+    }
+    throw e;
+  }
 }
 
 /* -------------------------
@@ -397,10 +484,12 @@ async function speakText(text, langCode) {
 
   const myToken = ++speakToken;
 
-  btnSpeak.style.pointerEvents = "none";
-  setTimeout(() => {
-    btnSpeak.style.pointerEvents = "auto";
-  }, 250);
+  if (btnSpeak) {
+    btnSpeak.style.pointerEvents = "none";
+    setTimeout(() => {
+      btnSpeak.style.pointerEvents = "auto";
+    }, 250);
+  }
 
   try {
     speakCtl = new AbortController();
@@ -597,19 +686,70 @@ async function handleMic() {
 /* -------------------------
    TRANSLATE
 -------------------------- */
+async function fetchTranslation(body, endpoints) {
+  let lastError = null;
+
+  for (const endpoint of endpoints) {
+    try {
+      const ctl = new AbortController();
+      translateCtl = ctl;
+
+      const r = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+        signal: ctl.signal
+      });
+
+      const raw = await r.text().catch(() => "");
+      if (!r.ok) {
+        lastError = new Error(`translate_fail_${r.status}`);
+        continue;
+      }
+
+      let data = {};
+      try {
+        data = JSON.parse(raw);
+      } catch {
+        data = {};
+      }
+
+      const out = String(
+        data?.translated ||
+        data?.translation ||
+        data?.text ||
+        data?.output ||
+        ""
+      ).trim();
+
+      if (out) return { ok: true, data, out };
+      lastError = new Error("empty_translation");
+    } catch (e) {
+      if (e?.name === "AbortError") throw e;
+      lastError = e;
+    }
+  }
+
+  throw lastError || new Error("translate_failed");
+}
+
 async function translateText() {
-  const text = String(srcTxt.value || "").trim();
+  const text = String(srcTxt?.value || "").trim();
 
   if (!text) {
-    dstTxt.textContent = "...";
+    if (dstTxt) dstTxt.textContent = "...";
     toast("Önce çevrilecek bir metin yaz.");
     return;
   }
 
-  btnTranslate.disabled = true;
-  btnTranslate.textContent = "✨ ÇEVRİLİYOR...";
-  dstTxt.style.opacity = "0.45";
-  dstTxt.textContent = "Çevriliyor...";
+  stopTranslateRequest();
+
+  const myToken = ++activeTranslateToken;
+  setTranslateBusy(true, isAiMode() ? "✨ AI ÇEVRİLİYOR..." : "✨ ÇEVRİLİYOR...");
+
+  if (dstTxt) {
+    dstTxt.textContent = "Çevriliyor...";
+  }
 
   try {
     const body = {
@@ -617,48 +757,45 @@ async function translateText() {
       source: canonical(fromLang),
       target: canonical(toLang),
       from_lang: canonical(fromLang),
-      to_lang: canonical(toLang)
+      to_lang: canonical(toLang),
+      mode: activeMode,
+      use_ai: isAiMode(),
+      cultural: isAiMode(),
+      special_voice: false
     };
 
-    const r = await fetch(TRANSLATE_ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
-    });
+    const endpoints = isAiMode()
+      ? TRANSLATE_AI_ENDPOINTS
+      : TRANSLATE_STANDARD_ENDPOINTS;
 
-    const raw = await r.text().catch(() => "");
-    if (!r.ok) {
-      console.warn("translate fail", r.status, raw);
-      dstTxt.textContent = "⚠️ Çeviri şu an yapılamadı.";
-      return;
-    }
+    const result = await fetchTranslation(body, endpoints);
 
-    let data = {};
-    try { data = JSON.parse(raw); } catch { data = {}; }
+    if (myToken !== activeTranslateToken) return;
 
-    const out = String(data?.translated || data?.translation || data?.text || "").trim();
-
+    const out = String(result?.out || "").trim();
     if (!out) {
-      dstTxt.textContent = "⚠️ Çeviri şu an yapılamadı.";
+      if (dstTxt) dstTxt.textContent = "⚠️ Çeviri şu an yapılamadı.";
       return;
     }
 
-    await spendUsage("text", out.length);
+    await chargeTranslationUsage(text, out);
 
-    dstTxt.textContent = out;
+    if (myToken !== activeTranslateToken) return;
+
+    if (dstTxt) dstTxt.textContent = out;
 
     setTimeout(() => {
       speakText(out, canonical(toLang));
     }, 160);
   } catch (e) {
-    console.warn(e);
-    if (String(e?.message || "") !== "insufficient_tokens") {
-      dstTxt.textContent = "⚠️ Çeviri şu an yapılamadı.";
+    console.warn("translateText error:", e);
+    if (e?.name !== "AbortError" && String(e?.message || "") !== "insufficient_tokens") {
+      if (dstTxt) dstTxt.textContent = "⚠️ Çeviri şu an yapılamadı.";
     }
   } finally {
-    dstTxt.style.opacity = "1";
-    btnTranslate.disabled = false;
-    btnTranslate.textContent = "✨ ÇEVİR";
+    if (myToken === activeTranslateToken) {
+      setTranslateBusy(false);
+    }
   }
 }
 
@@ -706,10 +843,22 @@ function bind() {
   btnMic?.addEventListener("click", handleMic);
 
   btnSpeak?.addEventListener("click", () => {
-    const t = String(dstTxt.textContent || "").trim();
+    const t = String(dstTxt?.textContent || "").trim();
     if (t && t !== "...") {
       speakText(t, canonical(toLang));
     }
+  });
+
+  btnModeStandard?.addEventListener("click", () => {
+    activeMode = "standard";
+    syncModeUi();
+    toast("Standart çeviri aktif");
+  });
+
+  btnModeAi?.addEventListener("click", () => {
+    activeMode = "ai";
+    syncModeUi();
+    toast("AI / kültürel çeviri aktif");
   });
 }
 
@@ -724,13 +873,15 @@ document.addEventListener("DOMContentLoaded", async () => {
   renderTopLanguageButtons();
   renderLangList("");
   bind();
+  syncModeUi();
 
-  dstTxt.textContent = "...";
+  if (dstTxt) dstTxt.textContent = "...";
   setMicState(false);
 });
 
 window.addEventListener("beforeunload", () => {
   stopSpeak();
+  stopTranslateRequest();
   stopMediaStream();
   try { mediaRecorder?.stop?.(); } catch {}
 });
