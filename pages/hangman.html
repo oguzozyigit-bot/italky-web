@@ -15,14 +15,14 @@
 
   <style>
     :root{
-      --bg:#030014;
-      --grad:linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
-      --red:#ff0033;
-      --green:#00ff9d;
-      --dockH:220px;
-      --shellLift:0px;
-      --safeB:env(safe-area-inset-bottom, 0px);
-    }
+  --bg:#030014;
+  --grad:linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
+  --red:#ff0033;
+  --green:#00ff9d;
+  --dockH:220px;
+  --shellLift:0px;
+  --safeB:env(safe-area-inset-bottom, 0px);
+}
 
     *{ box-sizing:border-box; }
 
@@ -43,18 +43,36 @@
     }
 
     #pageContent{
-      height:100%;
-      padding:14px;
-      position:relative;
-    }
+  height:100%;
+  padding:14px 14px calc(var(--dockH) + var(--shellLift) + 24px) 14px;
+  position:relative;
+}
 
     .top{
-      height:calc(100% - var(--dockH) - 20px);
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-      position:relative;
-    }
+  min-height:0;
+  height:auto;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  position:relative;
+}
+
+.dock{
+  position:fixed;
+  left:14px;
+  right:14px;
+  bottom:calc(var(--safeB) + var(--shellLift) + 10px);
+  height:var(--dockH);
+  padding:12px;
+  border-radius:22px;
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(3,0,20,.90);
+  backdrop-filter:blur(10px);
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  z-index:9000;
+}
 
     .title{
       margin:0;
