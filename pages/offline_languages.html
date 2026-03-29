@@ -1,3 +1,4 @@
+<!-- FILE: /pages/offline_languages.html -->
 <!doctype html>
 <html lang="tr">
 <head>
@@ -20,6 +21,7 @@
       --grad:linear-gradient(135deg,#4de8ff 0%, #7b7dff 46%, #ff54c9 100%);
       --ok:#15d682;
       --warn:#ffb84d;
+      --err:#ff5d7a;
       --safe-top:env(safe-area-inset-top,0px);
       --safe-bottom:env(safe-area-inset-bottom,0px);
       --shadow:0 18px 38px rgba(0,0,0,.26);
@@ -47,6 +49,10 @@
     body{
       padding-top:var(--safe-top);
       padding-bottom:var(--safe-bottom);
+    }
+
+    #pageContent{
+      min-height:100dvh;
     }
 
     .page{
@@ -91,8 +97,8 @@
       color:rgba(255,255,255,.55);
     }
 
-    .menu-btn{
-      width:62px;
+    .home-btn{
+      min-width:62px;
       height:62px;
       border-radius:20px;
       border:1px solid var(--line2);
@@ -105,22 +111,9 @@
       box-shadow:inset 0 0 20px rgba(255,255,255,.03);
       backdrop-filter:blur(12px);
       -webkit-backdrop-filter:blur(12px);
-    }
-
-    .menu-lines{
-      width:24px;
-      display:flex;
-      flex-direction:column;
-      gap:5px;
-    }
-
-    .menu-lines span{
-      display:block;
-      width:100%;
-      height:3px;
-      border-radius:99px;
-      background:#fff;
-      opacity:.92;
+      padding:0 18px;
+      font-size:14px;
+      font-weight:1000;
     }
 
     .panel{
@@ -298,31 +291,16 @@
       cursor:default;
     }
 
-    .btn-skip{
-      width:100%;
-      height:58px;
-      border-radius:20px;
-      border:1px solid rgba(255,255,255,.14);
-      background:rgba(255,255,255,.04);
-      color:#fff;
-      font-size:15px;
-      font-weight:900;
-      letter-spacing:.2px;
-      cursor:pointer;
-      backdrop-filter:blur(12px);
-      -webkit-backdrop-filter:blur(12px);
-      transition:transform .18s ease, background .18s ease, border-color .18s ease;
-    }
-
-    .btn-skip:active{
-      transform:scale(.985);
-    }
-
-    .skip-note{
-      text-align:center;
-      font-size:12px;
-      line-height:1.4;
-      color:rgba(255,255,255,.56);
+    .helper-note{
+      padding:14px 16px;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.03);
+      font-size:13px;
+      line-height:1.5;
+      color:var(--muted);
+      font-weight:800;
+      margin-top:14px;
     }
 
     .status-box{
@@ -337,8 +315,19 @@
       line-height:1.55;
     }
 
-    .hidden{
-      display:none !important;
+    .status-box[data-kind="ok"]{
+      border-color:rgba(31,195,136,.26);
+      background:linear-gradient(135deg, rgba(31,195,136,.12), rgba(123,125,255,.10));
+    }
+
+    .status-box[data-kind="warn"]{
+      border-color:rgba(255,184,77,.28);
+      background:linear-gradient(135deg, rgba(255,184,77,.10), rgba(123,125,255,.08));
+    }
+
+    .status-box[data-kind="err"]{
+      border-color:rgba(255,93,122,.28);
+      background:linear-gradient(135deg, rgba(255,93,122,.10), rgba(123,125,255,.08));
     }
 
     .tools{
@@ -410,10 +399,6 @@
       flex:0 0 auto;
     }
 
-    .lang-meta{
-      min-width:0;
-    }
-
     .lang-name{
       font-size:19px;
       font-weight:1000;
@@ -441,15 +426,24 @@
       cursor:pointer;
     }
 
+    .lang-btn.installed{
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.12);
+    }
+
+    .lang-btn.free{
+      background:linear-gradient(135deg, rgba(31,195,136,.22), rgba(123,125,255,.14));
+      border:1px solid rgba(31,195,136,.30);
+    }
+
+    .lang-btn.paid{
+      background:linear-gradient(135deg, rgba(255,184,77,.18), rgba(255,84,201,.14));
+      border:1px solid rgba(255,184,77,.30);
+    }
+
     .lang-btn[disabled]{
       opacity:.72;
       cursor:default;
-    }
-
-    .lang-btn.secondary{
-      margin-top:10px;
-      background:rgba(255,255,255,.04);
-      border:1px solid rgba(255,255,255,.12);
     }
 
     .toast{
@@ -514,724 +508,103 @@
   </style>
 </head>
 <body>
-  <div class="page">
-    <header class="topbar">
-      <div class="brand">
-        <div class="brand-title">italky<span class="ai">AI</span></div>
-        <div class="brand-sub">BE FREE</div>
-      </div>
-
-      <button id="btnMenu" class="menu-btn" type="button" aria-label="Menü">
-        <div class="menu-lines">
-          <span></span>
-          <span></span>
-          <span></span>
+  <main id="pageContent">
+    <div class="page">
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-title">italky<span class="ai">AI</span></div>
+          <div class="brand-sub">BE FREE</div>
         </div>
-      </button>
-    </header>
 
-    <section class="panel hero">
-      <h1 class="title">Offline Diller</h1>
-      <p class="desc">
-        Önce kendi dilini seç. Sistem temel köprüyü kursun. Sonra cihazına istediğin offline dilleri indir ve internetsiz kullan.
-      </p>
+        <button id="btnHome" class="home-btn" type="button">Ana Menü</button>
+      </header>
 
-      <div class="hero-flags">
-        <div class="flag-pill">🇹🇷</div>
-        <div class="flag-pill">🇬🇧</div>
-        <div class="flag-pill">🇩🇪</div>
-        <div class="flag-pill">🇫🇷</div>
-        <div class="flag-pill">🇪🇸</div>
-        <div class="flag-pill">🇮🇹</div>
-        <div class="flag-pill">🇷🇺</div>
-        <div class="flag-pill">🇯🇵</div>
-        <div class="flag-pill">🇰🇷</div>
-        <div class="flag-pill">🇨🇳</div>
-        <div class="flag-pill">🇸🇦</div>
-        <div class="flag-pill">🇵🇹</div>
-      </div>
+      <section class="panel hero">
+        <h1 class="title">Offline Diller</h1>
+        <p class="desc">
+          Önce kendi dilini seç. Sistem senin dilin ile İngilizce arasında temel offline köprüyü kursun. Sonra cihazına istediğin dilleri indir ve internetsiz kullan.
+        </p>
 
-      <div class="status-row">
-        <div class="status-pill">Ağ <b id="networkTag">ONLINE</b></div>
-        <div class="status-pill">Durum <b id="trialTag">KULLANIMA AÇIK</b></div>
-      </div>
-    </section>
-
-    <section class="panel">
-      <h2 class="setup-title">İlk Kurulum</h2>
-      <p class="desc">
-        Kendi dilini seç. Sistem senin dilin ile İngilizce arasında temel offline köprüyü hazırlasın.
-      </p>
-
-      <label class="label" for="myLangSelect">Benim Dilim</label>
-
-      <div class="select-wrap">
-        <select id="myLangSelect" class="select">
-          <option value="tr">🇹🇷 Türkçe</option>
-          <option value="de">🇩🇪 Almanca</option>
-          <option value="fr">🇫🇷 Fransızca</option>
-          <option value="es">🇪🇸 İspanyolca</option>
-          <option value="it">🇮🇹 İtalyanca</option>
-          <option value="pt">🇵🇹 Portekizce</option>
-          <option value="ar">🇸🇦 Arapça</option>
-          <option value="ru">🇷🇺 Rusça</option>
-          <option value="ja">🇯🇵 Japonca</option>
-          <option value="ko">🇰🇷 Korece</option>
-          <option value="zh">🇨🇳 Çince</option>
-        </select>
-        <div class="select-arrow">⌄</div>
-      </div>
-
-      <div class="setup-actions">
-        <button id="btnInstallBase" class="btn-primary" type="button">
-          Temel Kurulumu Başlat
-        </button>
-
-        <button id="btnSkipSetup" class="btn-skip" type="button">
-          Sonra Kur
-        </button>
-
-        <div class="skip-note">
-          Offline dilleri daha sonra da kurabilirsin.
+        <div class="hero-flags">
+          <div class="flag-pill">🇹🇷</div>
+          <div class="flag-pill">🇬🇧</div>
+          <div class="flag-pill">🇩🇪</div>
+          <div class="flag-pill">🇫🇷</div>
+          <div class="flag-pill">🇪🇸</div>
+          <div class="flag-pill">🇮🇹</div>
+          <div class="flag-pill">🇷🇺</div>
+          <div class="flag-pill">🇯🇵</div>
+          <div class="flag-pill">🇰🇷</div>
+          <div class="flag-pill">🇨🇳</div>
+          <div class="flag-pill">🇸🇦</div>
+          <div class="flag-pill">🇵🇹</div>
         </div>
-      </div>
 
-      <div id="statusBox" class="status-box hidden">
-        Temel offline çeviri yüklendi. İngilizce köprü hazır. Şimdi diğer dilleri indirebilirsiniz.
-      </div>
-    </section>
+        <div class="status-row">
+          <div class="status-pill">Ağ <b id="networkTag">ONLINE</b></div>
+          <div class="status-pill">Durum <b id="trialTag">KULLANIMA AÇIK</b></div>
+        </div>
+      </section>
 
-    <section class="panel">
-      <div class="tools">
-        <input id="searchInput" class="search" type="text" placeholder="Dil ara..."/>
-        <div class="count-chip">Kurulu: <span id="installedCount" style="margin-left:6px;">0</span></div>
-      </div>
+      <section class="panel">
+        <h2 class="setup-title">Temel Kurulum</h2>
+        <p class="desc">
+          Kendi dilini bir kez seç. Sistem bu dili İngilizce köprü dili ile otomatik eşleştirip temel offline altyapıyı kurar.
+        </p>
 
-      <div class="section-title">Kurulu ve Kullanılabilir Diller</div>
-      <div id="installedList"></div>
-    </section>
+        <label class="label" for="sourceSelect">Benim Dilim</label>
+        <div class="select-wrap">
+          <select id="sourceSelect" class="select">
+            <option value="tr">🇹🇷 Türkçe</option>
+            <option value="de">🇩🇪 Almanca</option>
+            <option value="fr">🇫🇷 Fransızca</option>
+            <option value="es">🇪🇸 İspanyolca</option>
+            <option value="it">🇮🇹 İtalyanca</option>
+            <option value="pt">🇵🇹 Portekizce</option>
+            <option value="ar">🇸🇦 Arapça</option>
+            <option value="ru">🇷🇺 Rusça</option>
+            <option value="ja">🇯🇵 Japonca</option>
+            <option value="ko">🇰🇷 Korece</option>
+            <option value="zh">🇨🇳 Çince</option>
+          </select>
+          <div class="select-arrow">⌄</div>
+        </div>
 
-    <div class="footer">italkyAI By Ozyigit's • 2026</div>
-  </div>
+        <div class="setup-actions">
+          <button id="btnInstallBase" class="btn-primary" type="button">
+            Temel Kurulumu Başlat
+          </button>
+        </div>
+
+        <div class="helper-note">
+          İngilizce köprü dili ayrıca listede gösterilmez. Temel kurulum sırasında otomatik hazırlanır. Böylece gereksiz tekrar ve karışıklık olmaz.
+        </div>
+
+        <div id="statusBox" class="status-box" data-kind="info">
+          Offline diller hazır
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="tools">
+          <input id="searchInput" class="search" type="text" placeholder="Dil ara..."/>
+          <div class="count-chip">Kurulu: <span id="installedCount" style="margin-left:6px;">0</span></div>
+        </div>
+
+        <div class="section-title">Ek Offline Diller</div>
+        <div id="installedList"></div>
+      </section>
+
+      <div class="footer">italkyAI By Ozyigit's • 2026</div>
+    </div>
+  </main>
 
   <div id="toast" class="toast"></div>
 
-  <script>
-    const API_BASE = "https://italky-api.onrender.com";
-    const BUCKET = "offline";
-    const PIVOT = "en";
-
-    const USER_LANG_KEY = "italky_user_lang_v1";
-    const BASE_READY_PREFIX = "offline_base_ready_";
-    const FREE_KEY = "offline_free_langs_v1";
-    const INSTALLED_KEY = "offline_installed_pairs_v1";
-
-    const FLAGS = {
-      tr:"🇹🇷", en:"🇬🇧", de:"🇩🇪", fr:"🇫🇷", es:"🇪🇸", it:"🇮🇹",
-      pt:"🇵🇹", ar:"🇸🇦", ru:"🇷🇺", ja:"🇯🇵", ko:"🇰🇷", zh:"🇨🇳"
-    };
-
-    const NAMES = {
-      tr:"Türkçe", en:"İngilizce", de:"Almanca", fr:"Fransızca", es:"İspanyolca",
-      it:"İtalyanca", pt:"Portekizce", ar:"Arapça", ru:"Rusça", ja:"Japonca",
-      ko:"Korece", zh:"Çince"
-    };
-
-    const ALL_LANGS = ["en","tr","de","fr","es","it","pt","ar","ru","ja","ko","zh"];
-
-    const myLangSelect = document.getElementById("myLangSelect");
-    const btnInstallBase = document.getElementById("btnInstallBase");
-    const btnSkipSetup = document.getElementById("btnSkipSetup");
-    const statusBox = document.getElementById("statusBox");
-    const installedList = document.getElementById("installedList");
-    const installedCount = document.getElementById("installedCount");
-    const searchInput = document.getElementById("searchInput");
-    const networkTag = document.getElementById("networkTag");
-    const trialTag = document.getElementById("trialTag");
-    const btnMenu = document.getElementById("btnMenu");
-    const toastEl = document.getElementById("toast");
-
-    function norm(v){
-      return String(v || "").trim().toLowerCase().replaceAll("_", "-");
-    }
-
-    function toast(msg){
-      if(!toastEl) return;
-      toastEl.textContent = msg || "";
-      toastEl.classList.add("show");
-      clearTimeout(window.__toastTimer);
-      window.__toastTimer = setTimeout(()=>{
-        toastEl.classList.remove("show");
-      }, 2200);
-    }
-
-    function pageUrl(file){
-      const isApp = location.href.includes("appassets.androidplatform.net");
-      return isApp
-        ? `https://appassets.androidplatform.net/assets/pages/${file}`
-        : `/pages/${file}`;
-    }
-
-    function getUserLang() {
-      return norm(localStorage.getItem(USER_LANG_KEY) || "tr");
-    }
-
-    function setUserLang(code) {
-      localStorage.setItem(USER_LANG_KEY, norm(code));
-    }
-
-    function baseReadyKey(userLang) {
-      return `${BASE_READY_PREFIX}${norm(userLang)}`;
-    }
-
-    function isBaseReady(userLang) {
-      try {
-        return localStorage.getItem(baseReadyKey(userLang)) === "1";
-      } catch {
-        return false;
-      }
-    }
-
-    function setBaseReady(userLang, ready = true) {
-      try {
-        localStorage.setItem(baseReadyKey(userLang), ready ? "1" : "0");
-      } catch {}
-    }
-
-    function getInstalledPairs() {
-      try {
-        return JSON.parse(localStorage.getItem(INSTALLED_KEY) || "[]");
-      } catch {
-        return [];
-      }
-    }
-
-    function setInstalledPairs(arr) {
-      localStorage.setItem(INSTALLED_KEY, JSON.stringify(arr));
-    }
-
-    function markPairInstalled(pair) {
-      const set = new Set(getInstalledPairs().map(norm));
-      set.add(norm(pair));
-      setInstalledPairs([...set]);
-    }
-
-    function markPairRemoved(pair) {
-      const arr = getInstalledPairs().map(norm).filter(x => x !== norm(pair));
-      setInstalledPairs(arr);
-    }
-
-    function getUsedFreeLangs(){
-      try{
-        return JSON.parse(localStorage.getItem(FREE_KEY) || "[]");
-      }catch{
-        return [];
-      }
-    }
-
-    function markLangAsUsed(lang){
-      const set = new Set(getUsedFreeLangs().map(norm));
-      set.add(norm(lang));
-      localStorage.setItem(FREE_KEY, JSON.stringify([...set]));
-    }
-
-    function hasFreeRight(lang){
-      return !getUsedFreeLangs().map(norm).includes(norm(lang));
-    }
-
-    function pairPath(pair) {
-      return `langpacks/${pair}/model.zip`;
-    }
-
-    function publicUrl(path) {
-      return `https://italky-api.onrender.com/storage/v1/object/public/${BUCKET}/${path}`;
-    }
-
-    function nativeReady() {
-      return !!(
-        window.Offline &&
-        typeof window.Offline.installFromUrl === "function" &&
-        typeof window.Offline.isInstalled === "function"
-      );
-    }
-
-    function isInstalledNative(pair) {
-      try {
-        return !!window.Offline.isInstalled(norm(pair));
-      } catch {
-        return false;
-      }
-    }
-
-    function installNative(pair, url) {
-      window.Offline.installFromUrl(norm(pair), String(url || "").trim());
-    }
-
-    function uninstallNative(pair) {
-      if (typeof window.Offline?.uninstall !== "function") return false;
-      window.Offline.uninstall(norm(pair));
-      return true;
-    }
-
-    function basePairs(userLang) {
-      if (userLang === PIVOT) return [];
-      return [`${userLang}-${PIVOT}`, `${PIVOT}-${userLang}`];
-    }
-
-    function targetPairs(targetLang) {
-      if (targetLang === PIVOT) return [];
-      return [`${targetLang}-${PIVOT}`, `${PIVOT}-${targetLang}`];
-    }
-
-    function installPairsForTarget(targetLang) {
-      return [...new Set(targetPairs(targetLang))];
-    }
-
-    function isLanguageInstalledForUser(userLang, targetLang) {
-      if (targetLang === userLang) return false;
-      if (!isBaseReady(userLang)) return false;
-
-      if (targetLang === PIVOT) {
-        return basePairs(userLang).every((pair) => isInstalledNative(pair));
-      }
-
-      return targetPairs(targetLang).every((pair) => isInstalledNative(pair));
-    }
-
-    function removablePairsForTarget(targetLang) {
-      if (targetLang === PIVOT) return [];
-      return targetPairs(targetLang);
-    }
-
-    function getAccessState() {
-      const a = window.__ITALKY_ACCESS__ || {};
-
-      const trialActive =
-        a.trialActive === true ||
-        a.trial_active === true ||
-        Number(a.trialDaysLeft || 0) > 0 ||
-        Number(a.trial_days_left || 0) > 0 ||
-        Number(a.remainingTrialDays || 0) > 0 ||
-        Number(a.remaining_trial_days || 0) > 0;
-
-      const hasPackage =
-        a.hasPackage === true ||
-        a.has_package === true ||
-        a.packageActive === true ||
-        a.package_active === true ||
-        a.isPremium === true ||
-        a.premium === true;
-
-      return { trialActive, hasPackage };
-    }
-
-    function accessOk() {
-      const access = getAccessState();
-
-      if (access.trialActive || access.hasPackage) {
-        return true;
-      }
-
-      toast("Üyelik modeli gerekli.");
-      setTimeout(() => {
-        location.href = "/pages/upgrade_pack.html";
-      }, 850);
-      return false;
-    }
-
-    function updateTopStatus(){
-      networkTag.textContent = navigator.onLine ? "ONLINE" : "OFFLINE";
-
-      const access = getAccessState();
-      if (access.trialActive) {
-        trialTag.textContent = "DENEME AKTİF";
-      } else if (access.hasPackage) {
-        trialTag.textContent = "PAKET AKTİF";
-      } else {
-        trialTag.textContent = "KİLİTLİ";
-      }
-    }
-
-    async function getCurrentUserId() {
-      try {
-        if (!window.supabase?.auth?.getUser) return "";
-        const { data } = await window.supabase.auth.getUser();
-        return data?.user?.id || "";
-      } catch {
-        return "";
-      }
-    }
-
-    async function activateOfflineLicense(fileName) {
-      try {
-        const userId = await getCurrentUserId();
-        if (!userId) {
-          return { ok: true, skipped: true };
-        }
-
-        const r = await fetch(`${API_BASE}/api/offline/files/activate`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            user_id: userId,
-            file_name: String(fileName || "").trim()
-          })
-        });
-
-        const j = await r.json().catch(() => ({}));
-
-        if (!r.ok) {
-          throw new Error(j?.detail || j?.error || "Offline lisans alınamadı.");
-        }
-
-        return j;
-      } catch (e) {
-        console.warn("offline license skip/fail:", e);
-        return { ok: true, skipped: true };
-      }
-    }
-
-    async function fileExists(pair){
-      try{
-        const url = publicUrl(pairPath(pair));
-        const res = await fetch(url, { method:"HEAD", cache:"no-store" });
-        return res.ok;
-      }catch{
-        return false;
-      }
-    }
-
-    async function installPairsWithPolling(pairs, label) {
-      if (!pairs.length) return true;
-
-      for (const pair of pairs) {
-        const exists = await fileExists(pair);
-        if (!exists) {
-          toast(`${label} paketi bulunamadı.`);
-          return false;
-        }
-      }
-
-      for (const pair of pairs) {
-        const url = publicUrl(pairPath(pair));
-        installNative(pair, url);
-      }
-
-      return await new Promise((resolve) => {
-        const started = Date.now();
-        const poll = setInterval(() => {
-          const ok = pairs.every((pair) => isInstalledNative(pair));
-
-          if (ok) {
-            clearInterval(poll);
-            pairs.forEach(markPairInstalled);
-            toast(`${label} kuruldu ✅`);
-            resolve(true);
-            return;
-          }
-
-          if (Date.now() - started > 70000) {
-            clearInterval(poll);
-            toast(`Kurulum tamamlanamadı: ${label}`);
-            resolve(false);
-          }
-        }, 2200);
-      });
-    }
-
-    async function installBaseLanguage(userLang) {
-      const pairs = basePairs(userLang);
-
-      if (!pairs.length) {
-        setBaseReady(userLang, true);
-        return true;
-      }
-
-      const needed = pairs.filter((pair) => !isInstalledNative(pair));
-      if (!needed.length) {
-        setBaseReady(userLang, true);
-        return true;
-      }
-
-      toast("Temel offline kurulum başlatıldı…");
-      const ok = await installPairsWithPolling(needed, "Temel offline köprü");
-
-      if (ok) {
-        setBaseReady(userLang, true);
-        return true;
-      }
-
-      return false;
-    }
-
-    function renderCard(lang, installed, userLang) {
-      const card = document.createElement("div");
-      card.className = "lang-card";
-
-      const usedFree = !hasFreeRight(lang.code);
-      const subtitle = installed
-        ? "Kurulu • Hazır"
-        : (usedFree ? "Bu dil daha önce indirildi" : "İlk indirme açık");
-
-      card.innerHTML = `
-        <div class="lang-head">
-          <div class="flag">${lang.flag || "🌐"}</div>
-          <div class="lang-meta">
-            <div class="lang-name">${lang.name}</div>
-            <div class="lang-sub">${subtitle}</div>
-          </div>
-        </div>
-      `;
-
-      const btn = document.createElement("button");
-      btn.className = "lang-btn";
-      btn.type = "button";
-
-      const removeBtn = document.createElement("button");
-      removeBtn.className = "lang-btn secondary";
-      removeBtn.type = "button";
-      removeBtn.textContent = "Sil";
-
-      if (installed) {
-        btn.textContent = "✅ Kuruldu";
-        btn.disabled = true;
-
-        if (norm(lang.code) === PIVOT) {
-          removeBtn.style.display = "none";
-        }
-
-        removeBtn.onclick = async () => {
-          const pairs = removablePairsForTarget(norm(lang.code));
-          if (!pairs.length) {
-            toast("Bu dil silinemez.");
-            return;
-          }
-
-          if (!confirm(`${lang.name} dilini silmek istiyor musun?`)) return;
-
-          pairs.forEach((pair, i) => {
-            setTimeout(() => {
-              uninstallNative(pair);
-              markPairRemoved(pair);
-            }, i * 350);
-          });
-
-          toast("Dil silindi ✅");
-          setTimeout(renderAll, 900);
-        };
-
-        card.appendChild(btn);
-        card.appendChild(removeBtn);
-        return card;
-      }
-
-      btn.textContent = usedFree ? "Tekrar indirilemez" : "İndir";
-
-      if (usedFree) {
-        btn.disabled = true;
-        card.appendChild(btn);
-        return card;
-      }
-
-      btn.onclick = async () => {
-        if (!accessOk()) return;
-
-        if (!navigator.onLine) {
-          toast("İndirmek için internet gerekir.");
-          return;
-        }
-
-        if (!nativeReady()) {
-          toast("Offline sistem hazır değil.");
-          return;
-        }
-
-        if (!isBaseReady(userLang)) {
-          toast("Önce temel offline kurulumu tamamlayın.");
-          return;
-        }
-
-        btn.disabled = true;
-        btn.textContent = "Hazırlanıyor…";
-
-        await activateOfflineLicense(norm(lang.code));
-
-        const neededPairs = installPairsForTarget(norm(lang.code))
-          .filter((pair) => !isInstalledNative(pair));
-
-        if (!neededPairs.length) {
-          markLangAsUsed(lang.code);
-          toast("Bu dil zaten cihazda hazır.");
-          renderAll();
-          return;
-        }
-
-        btn.textContent = "İndiriliyor…";
-        const ok = await installPairsWithPolling(neededPairs, lang.name);
-
-        if (ok) {
-          markLangAsUsed(lang.code);
-        }
-
-        renderAll();
-      };
-
-      card.appendChild(btn);
-      return card;
-    }
-
-    function renderInstalled(filter = "") {
-      const q = String(filter || "").trim().toLowerCase();
-      const userLang = getUserLang();
-
-      const installedLangs = ALL_LANGS
-        .filter(code => code !== userLang)
-        .filter(code => isLanguageInstalledForUser(userLang, code))
-        .filter(code => {
-          const n = (NAMES[code] || code).toLowerCase();
-          return !q || n.includes(q) || code.includes(q);
-        });
-
-      installedCount.textContent = String(installedLangs.length);
-
-      installedList.innerHTML = "";
-
-      if(!installedLangs.length){
-        installedList.innerHTML = `
-          <div class="lang-card">
-            <div class="lang-meta">
-              <div class="lang-name">Henüz kurulu hedef dil yok</div>
-              <div class="lang-sub">Temel kurulumdan sonra burada kurduğun diller görünür.</div>
-            </div>
-          </div>
-        `;
-        return;
-      }
-
-      installedLangs.forEach((code) => {
-        const lang = {
-          code,
-          flag: FLAGS[code] || "🌐",
-          name: NAMES[code] || code.toUpperCase()
-        };
-        installedList.appendChild(renderCard(lang, true, userLang));
-      });
-    }
-
-    function renderAvailable(filter = "") {
-      const q = String(filter || "").trim().toLowerCase();
-      const userLang = getUserLang();
-
-      const available = ALL_LANGS
-        .filter(code => code !== userLang)
-        .filter(code => !isLanguageInstalledForUser(userLang, code))
-        .filter(code => code !== PIVOT)
-        .filter(code => {
-          const n = (NAMES[code] || code).toLowerCase();
-          return !q || n.includes(q) || code.includes(q);
-        });
-
-      available.forEach((code) => {
-        const lang = {
-          code,
-          flag: FLAGS[code] || "🌐",
-          name: NAMES[code] || code.toUpperCase()
-        };
-        installedList.appendChild(renderCard(lang, false, userLang));
-      });
-    }
-
-    function renderAll() {
-      installedList.innerHTML = "";
-      renderInstalled(searchInput.value || "");
-
-      if (isBaseReady(getUserLang())) {
-        renderAvailable(searchInput.value || "");
-        statusBox.classList.remove("hidden");
-      } else {
-        statusBox.classList.add("hidden");
-      }
-
-      updateTopStatus();
-    }
-
-    btnInstallBase?.addEventListener("click", async () => {
-      const userLang = norm(myLangSelect.value || getUserLang());
-
-      if (!accessOk()) return;
-
-      if (!navigator.onLine) {
-        toast("Temel kurulum için internet gerekir.");
-        return;
-      }
-
-      if (!nativeReady()) {
-        toast("Offline bridge hazır değil.");
-        return;
-      }
-
-      btnInstallBase.disabled = true;
-      btnInstallBase.textContent = "Kuruluyor…";
-
-      const ok = await installBaseLanguage(userLang);
-
-      if (ok) {
-        setUserLang(userLang);
-        statusBox.classList.remove("hidden");
-        statusBox.textContent = "Temel offline çeviri yüklendi. İngilizce köprü hazır. Şimdi diğer dilleri indirebilirsiniz.";
-        toast("Temel offline kurulum tamamlandı ✅");
-        btnInstallBase.textContent = "Temel Kurulum Hazır";
-      } else {
-        btnInstallBase.disabled = false;
-        btnInstallBase.textContent = "Temel Kurulumu Başlat";
-      }
-
-      renderAll();
-    });
-
-    btnSkipSetup?.addEventListener("click", () => {
-      try{
-        localStorage.setItem("offline_setup_skipped", "1");
-        localStorage.setItem("offline_setup_pending", "1");
-        localStorage.setItem("offline_boot_done", "1");
-      }catch(e){}
-
-      location.replace(pageUrl("home.html"));
-    });
-
-    searchInput?.addEventListener("input", (e) => {
-      renderAll(e.target.value || "");
-    });
-
-    myLangSelect?.addEventListener("change", () => {
-      setUserLang(myLangSelect.value);
-      renderAll();
-    });
-
-    btnMenu?.addEventListener("click", () => {
-      location.href = pageUrl("home.html");
-    });
-
-    (function init(){
-      const current = getUserLang();
-      if (myLangSelect && ALL_LANGS.includes(current)) {
-        myLangSelect.value = current;
-      }
-      updateTopStatus();
-      renderAll();
-    })();
-
-    window.addEventListener("online", updateTopStatus);
-    window.addEventListener("offline", updateTopStatus);
-  </script>
-
+  <script type="module" src="/js/offline_languages_page.js"></script>
   <script type="module">
     import { initGlobalAccess } from "/js/global_access.js";
     initGlobalAccess();
   </script>
-  <script type="module">
-  import { initGlobalAccess } from "/js/global_access.js";
-  initGlobalAccess();
-</script>
 </body>
 </html>
