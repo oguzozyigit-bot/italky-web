@@ -3,313 +3,409 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-  <title>italkyAI • Karşılıklı Çeviri (Offline)</title>
-  <link rel="icon" href="data:," />
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+  <title>italkyAI • Offline FaceToFace</title>
+  <meta name="theme-color" content="#050814"/>
 
   <style>
     :root{
-      --bg-void:#02000a;
-      --brand-burgundy:#580c1f;
-      --brand-lacivert:#0f172a;
-      --text:#fff;
-      --muted:rgba(255,255,255,.45);
-      --icon-bordo:#8b2635;
-      --mic-navy:#5b76ff;
-      --ai-grad: linear-gradient(135deg, #a5b4fc 0%, #6366f1 100%);
-      --safe-top: env(safe-area-inset-top, 0px);
-      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --bg:#050814;
+      --bg2:#090d1c;
+      --line:rgba(255,255,255,.10);
+      --txt:#fff;
+      --muted:rgba(255,255,255,.66);
+      --grad:linear-gradient(135deg,#4de8ff 0%, #7b7dff 46%, #ff54c9 100%);
+      --ok:#15d682;
+      --err:#ff5d7a;
+      --warn:#ffb84d;
+      --safe-top:env(safe-area-inset-top,0px);
+      --safe-bottom:env(safe-area-inset-bottom,0px);
     }
 
-    *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none;}
-    html,body{margin:0; width:100%; height:100%; background:var(--bg-void); color:var(--text); font-family:Outfit,sans-serif; overflow:hidden;}
-    .container{position:relative; width:100%; height:100%; display:flex; flex-direction:column;}
-
-    .half-screen{
-      flex:1; position:relative;
-      display:flex; flex-direction:column;
-      align-items:center; justify-content:space-between;
-      padding: calc(16px + var(--safe-top)) 18px calc(16px + var(--safe-bottom));
-      gap:14px; overflow:hidden;
-    }
-    .half-screen.top{
-      background: linear-gradient(to bottom, #1a0208, var(--brand-burgundy));
-      transform: rotate(180deg);
-      --mic-accent: var(--mic-navy);
-    }
-    .half-screen.bottom{
-      background: linear-gradient(to bottom, var(--brand-lacivert), #02000a);
-      --mic-accent: var(--icon-bordo);
+    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; }
+    html,body{
+      margin:0;
+      min-height:100%;
+      background:
+        radial-gradient(circle at 16% 10%, rgba(123,125,255,.18), transparent 28%),
+        radial-gradient(circle at 84% 16%, rgba(255,84,201,.15), transparent 24%),
+        radial-gradient(circle at 50% 0%, rgba(77,232,255,.10), transparent 30%),
+        linear-gradient(180deg,var(--bg),var(--bg2));
+      color:var(--txt);
+      font-family:Inter, Outfit, Arial, sans-serif;
     }
 
-    .top-back{
-      position:absolute; left:14px; top: calc(14px + var(--safe-top));
-      z-index: 120;
-      width:38px;height:38px;border-radius:14px;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(0,0,0,.18);
-      color:#fff;display:flex;align-items:center;justify-content:center;
-      cursor:pointer; user-select:none;
-    }
-    .top-back:active{transform:scale(.96);}
+    body{ padding-top:var(--safe-top); padding-bottom:var(--safe-bottom); }
+    #pageContent{ min-height:100dvh; }
 
-    .top-clear{
-      position:absolute; left:58px; top: calc(14px + var(--safe-top));
-      z-index: 120;
-      width:38px;height:38px;border-radius:14px;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(0,0,0,.18);
-      color:#fff;display:flex;align-items:center;justify-content:center;
-      cursor:pointer; user-select:none;
-      font-size:16px;
-    }
-    .top-clear:active{transform:scale(.96);}
-
-    .top-top, .bottom-top{
-      width:100%;
-      display:flex; align-items:center; justify-content:center;
-      z-index:110;
-      padding-top: 6px;
+    .page{
+      max-width:720px;
+      margin:0 auto;
+      padding:14px 14px 34px;
     }
 
-    .lang-trigger{
-      background: rgba(0,0,0,.28);
-      border:1px solid rgba(255,255,255,.10);
-      color: rgba(255,255,255,.92);
-      padding:10px 14px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 900;
-      letter-spacing:.3px;
-      cursor:pointer;
+    .topbar{
       display:flex;
       align-items:center;
-      gap:8px;
-      backdrop-filter: blur(10px);
-      user-select:none;
+      justify-content:space-between;
+      padding:6px 2px 16px;
+      border-bottom:1px solid rgba(255,255,255,.06);
+      margin-bottom:14px;
     }
-    .lang-trigger svg{width:14px; height:14px; opacity:.7}
 
-    .popover{
-      position:absolute; left:50%;
-      transform: translateX(-50%);
-      width:min(280px, calc(100vw - 60px));
-      height:320px;
-      background: radial-gradient(circle at 50% 50%, #2a020f 0%, #12000a 58%, #060006 100%);
-      border: 1px solid rgba(139,38,53,.28);
-      border-radius: 22px;
-      box-shadow: 0 22px 46px rgba(0,0,0,.80);
-      display:none;
-      flex-direction:column;
-      z-index: 999;
-      overflow:hidden;
+    .brand-title{
+      font-size:26px;
+      font-weight:1000;
+      letter-spacing:-1px;
+      line-height:1;
     }
-    .popover.show{display:flex;}
-    .pop-head{padding:12px; border-bottom:1px solid rgba(255,255,255,.06); display:flex; align-items:center; justify-content:space-between;}
-    .pop-title{font-weight:900; font-size:12px; opacity:.9; letter-spacing:.3px;}
-    .pop-close{
-      width:34px; height:34px; border-radius:14px;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.18);
-      color:#fff; cursor:pointer;
-      display:flex; align-items:center; justify-content:center;
+    .brand-title .ai{
+      background:var(--grad);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
     }
-    .pop-close:active{transform:scale(.96);}
-    .pop-list{flex:1; overflow:auto; padding:10px; scrollbar-width:none;}
-    .pop-list::-webkit-scrollbar{ width:0; height:0; display:none; }
-    .pop-item{
-      padding:12px; border-radius:14px;
-      display:flex; align-items:center; justify-content:space-between;
-      cursor:pointer; border:1px solid transparent; user-select:none;
+    .brand-sub{
+      font-size:11px;
+      font-weight:900;
+      letter-spacing:4px;
+      color:rgba(255,255,255,.55);
+      margin-top:2px;
     }
-    .pop-item:hover{background: rgba(255,255,255,.04);}
-    .pop-item.active{background: rgba(139,38,53,.10); border-color: rgba(139,38,53,.24); color:#fff;}
-    .pop-left{display:flex; align-items:center; gap:10px; min-width:0;}
-    .pop-flag{font-size:18px}
-    .pop-name{font-weight:900; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:190px;}
-    .pop-code{font-size:12px; font-weight:900; opacity:.7; text-transform:uppercase;}
-    .top .popover{ top: calc(62px + var(--safe-top)); }
-    .bottom .popover{ bottom: 120px; }
 
-    .chat-body{
-      flex:1; width:100%; max-width:92%;
-      display:flex; flex-direction:column; justify-content:center;
-      gap:10px; overflow-y:auto; scrollbar-width:none;
-      padding: 6px 0; z-index: 50;
-    }
-    .chat-body::-webkit-scrollbar{display:none}
-    .bubble{
-      width:100%;
-      display:flex; align-items:flex-start; justify-content:center;
-      gap:10px; text-align:center; word-break: break-word;
-    }
-    .bubble .txt{display:inline-block; max-width: 92%;}
-    .bubble.them .txt{color: rgba(255,255,255,.42); font-size:16px; font-weight:450; line-height:1.25;}
-    .bubble.me .txt{color: rgba(255,255,255,.78); font-size:16px; font-weight:650; line-height:1.2; letter-spacing:.1px;}
-    .bubble.me.is-latest .txt{color:#fff; font-size:26px; font-weight:950; line-height:1.1; letter-spacing:.2px;}
-
-    .bubble .spk{
-      width:34px;height:34px;border-radius:14px;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.18);
+    .home-btn{
+      min-width:64px;
+      height:58px;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.04);
       color:#fff;
-      display:none;
+      font-weight:1000;
+      cursor:pointer;
+      padding:0 18px;
+    }
+
+    .panel{
+      border:1px solid var(--line);
+      border-radius:28px;
+      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+      padding:18px;
+      margin-bottom:16px;
+      backdrop-filter:blur(14px);
+      -webkit-backdrop-filter:blur(14px);
+    }
+
+    .title{
+      margin:0 0 10px;
+      font-size:24px;
+      font-weight:1000;
+      line-height:1.1;
+      letter-spacing:-.5px;
+    }
+
+    .desc{
+      margin:0;
+      font-size:15px;
+      line-height:1.55;
+      color:var(--muted);
+      font-weight:700;
+    }
+
+    .pill-row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:16px;
+    }
+
+    .pill{
+      min-height:46px;
+      padding:0 16px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.04);
+      display:flex;
       align-items:center;
       justify-content:center;
-      cursor:pointer;
-      flex:0 0 auto;
-      margin-top:4px;
-    }
-    .bubble.me .spk{display:flex;}
-    .bubble .spk svg{width:16px; height:16px;}
-    .bubble .spk:active{transform:scale(.95);}
-
-    .mic-wrap{width:100%; display:flex; align-items:center; justify-content:center; padding-bottom:4px; z-index:60;}
-    .btn-mic{
-      width:78px;height:78px;border-radius:26px;
-      cursor:pointer; display:flex; align-items:center; justify-content:center;
-      background: radial-gradient(circle at 50% 50%, #2a020f 0%, #12000a 58%, #060006 100%);
-      border:1px solid rgba(255,255,255,.10);
-      box-shadow:0 14px 30px rgba(0,0,0,.65);
-      transition: transform .18s, border-color .18s, box-shadow .18s;
-      position:relative;
-    }
-    .btn-mic svg{width:34px; height:34px; stroke: var(--mic-accent); fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round;}
-    @keyframes recPulse{
-      0%,100%{ transform: scale(1); box-shadow: 0 14px 30px rgba(0,0,0,.65); }
-      50%{ transform: scale(1.06); box-shadow: 0 18px 40px rgba(0,0,0,.75); }
-    }
-    .btn-mic.listening{border-color: rgba(255,255,255,.18); animation: recPulse .9s ease-in-out infinite;}
-    .btn-mic.listening::after{
-      content:"REC";
-      position:absolute; top:-10px; right:-8px;
-      font-size:10px; font-weight:900; letter-spacing:.6px;
-      padding:6px 8px; border-radius:999px;
-      background: rgba(0,0,0,.55);
-      border:1px solid rgba(255,255,255,.14);
+      font-size:13px;
+      font-weight:900;
       color:#fff;
     }
-    .btn-mic:active{transform:scale(1.02);}
 
-    .center-hub{
-      position:absolute; top:50%; left:0; width:100%; height:74px;
-      transform: translateY(-50%);
-      display:flex; align-items:center; justify-content:center;
-      z-index:120; pointer-events:none;
-    }
-    .logo-capsule{
-      background:#02000a;
+    .select-wrap{ position:relative; margin-top:14px; }
+    .select{
+      width:100%;
+      height:68px;
+      border-radius:20px;
       border:1px solid rgba(255,255,255,.10);
-      padding:12px 22px;
-      border-radius:999px;
-      display:flex; align-items:center; gap:12px;
-      box-shadow:0 24px 50px rgba(0,0,0,.78);
-      pointer-events:auto;
+      background:rgba(255,255,255,.03);
+      color:#fff;
+      padding:0 56px 0 18px;
+      font-size:18px;
+      font-weight:900;
+      appearance:none;
       cursor:pointer;
-      position:relative; overflow:hidden;
     }
-    .logo-text{font-family:"Space Grotesk",sans-serif; font-size:18px; font-weight:800; color:#fff; position:relative; z-index:2;}
-    .logo-ai{background:var(--ai-grad); -webkit-background-clip:text; -webkit-text-fill-color:transparent;}
-    .logo-wave{
-      position:absolute; inset:0;
-      display:flex; align-items:center; justify-content:center;
-      gap:4px; opacity:0; transition:.2s; z-index:1; pointer-events:none;
+    .select option{ color:#000; }
+    .select-arrow{
+      position:absolute;
+      right:18px;
+      top:50%;
+      transform:translateY(-50%);
+      font-size:18px;
+      opacity:.8;
+      pointer-events:none;
     }
-    #frameRoot.listening .logo-wave{opacity:1;}
-    .logo-wave .bar{width:3px; height:10px; border-radius:3px; background: rgba(165,180,252,.42); animation: bounce .9s infinite ease-in-out;}
-    .logo-wave .bar:nth-child(2){animation-delay:.15s}
-    .logo-wave .bar:nth-child(3){animation-delay:.28s}
-    .logo-wave .bar:nth-child(4){animation-delay:.15s}
-    .logo-wave .bar:nth-child(5){animation-delay:0s}
-    @keyframes bounce{0%,100%{height:10px} 50%{height:40px}}
+
+    .action{
+      width:100%;
+      height:64px;
+      border:none;
+      border-radius:20px;
+      margin-top:14px;
+      background:linear-gradient(135deg, rgba(31,195,136,.22), rgba(123,125,255,.16));
+      border:1px solid rgba(31,195,136,.35);
+      color:#fff;
+      font-size:17px;
+      font-weight:1000;
+      cursor:pointer;
+    }
+
+    .action.secondary{
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.12);
+    }
+
+    .notice{
+      margin-top:14px;
+      padding:16px 18px;
+      border-radius:20px;
+      font-size:15px;
+      font-weight:900;
+      line-height:1.55;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.03);
+    }
+
+    .notice.ok{
+      border-color:rgba(31,195,136,.28);
+      background:linear-gradient(135deg, rgba(31,195,136,.10), rgba(123,125,255,.08));
+    }
+
+    .notice.err{
+      border-color:rgba(255,93,122,.28);
+      background:linear-gradient(135deg, rgba(255,93,122,.10), rgba(123,125,255,.08));
+    }
+
+    .hidden{ display:none !important; }
+
+    .footer{
+      text-align:center;
+      padding-top:10px;
+      color:rgba(255,255,255,.44);
+      font-size:12px;
+      font-weight:900;
+      letter-spacing:.4px;
+    }
+
+    .toast{
+      position:fixed;
+      left:50%;
+      bottom:calc(22px + var(--safe-bottom));
+      transform:translateX(-50%) translateY(120px);
+      background:rgba(10,12,24,.96);
+      border:1px solid rgba(255,255,255,.10);
+      color:#fff;
+      padding:14px 18px;
+      border-radius:999px;
+      font-size:13px;
+      font-weight:900;
+      z-index:9999;
+      transition:.25s ease;
+      text-align:center;
+      max-width:min(92vw, 560px);
+    }
+
+    .toast.show{ transform:translateX(-50%) translateY(0); }
   </style>
 </head>
-
-<body id="frameRoot">
-  <div class="container">
-    <div class="half-screen top" id="topSection">
-      <button class="top-back" id="topBack" title="Geri">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M15 18l-6-6 6-6"/>
-        </svg>
-      </button>
-
-      <button class="top-clear" id="clearChat" title="Sohbeti temizle">🧹</button>
-
-      <div class="top-top">
-        <button class="lang-trigger" id="topLangBtn" type="button">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 0 20"/>
-          </svg>
-          <span id="topLangTxt">🇬🇧 İngilizce</span>
-        </button>
-      </div>
-
-      <div class="popover" id="pop-top" role="dialog" aria-label="Üst dil seçimi">
-        <div class="pop-head">
-          <div class="pop-title">ÜST DİL</div>
-          <button class="pop-close" id="close-top" aria-label="Kapat" type="button">✕</button>
+<body>
+  <main id="pageContent">
+    <div class="page">
+      <header class="topbar">
+        <div>
+          <div class="brand-title">italky<span class="ai">AI</span></div>
+          <div class="brand-sub">BE FREE</div>
         </div>
-        <div class="pop-list" id="list-top"></div>
-      </div>
+        <button id="btnHome" class="home-btn" type="button">Ana Menü</button>
+      </header>
 
-      <div class="chat-body" id="topBody"></div>
+      <section class="panel">
+        <h1 class="title">Offline FaceToFace</h1>
+        <p class="desc">
+          İnternet bağlantısı yok. Önceden kurduğun offline dil paketleri ile çeviriye devam edebilirsin.
+        </p>
 
-      <div class="mic-wrap">
-        <button class="btn-mic" id="topMic" title="Konuş" type="button">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
-            <path d="M19 11v1a7 7 0 0 1-14 0v-1"/>
-            <path d="M12 19v3"/>
-          </svg>
-        </button>
-      </div>
-    </div>
-
-    <div class="center-hub">
-      <div class="logo-capsule" id="homeBtn" title="Ana Sayfa">
-        <div class="logo-wave" aria-hidden="true">
-          <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+        <div class="pill-row">
+          <div class="pill">Ağ <b id="networkTag" style="margin-left:6px;">OFFLINE</b></div>
+          <div class="pill">Yetki <b id="accessTag" style="margin-left:6px;">Kontrol</b></div>
         </div>
-        <span class="logo-text">italky<span class="logo-ai">AI</span></span>
-      </div>
-    </div>
+      </section>
 
-    <div class="half-screen bottom" id="botSection">
-      <div class="bottom-top">
-        <button class="lang-trigger" id="botLangBtn" type="button">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 0 20"/>
-          </svg>
-          <span id="botLangTxt">🇹🇷 Türkçe</span>
-        </button>
-      </div>
-
-      <div class="popover" id="pop-bot" role="dialog" aria-label="Alt dil seçimi">
-        <div class="pop-head">
-          <div class="pop-title">ALT DİL</div>
-          <button class="pop-close" id="close-bot" aria-label="Kapat" type="button">✕</button>
+      <section class="panel">
+        <p class="desc">Kaynak Dil</p>
+        <div class="select-wrap">
+          <select id="fromSelect" class="select">
+            <option value="tr">🇹🇷 Türkçe</option>
+            <option value="de">🇩🇪 Almanca</option>
+            <option value="fr">🇫🇷 Fransızca</option>
+            <option value="es">🇪🇸 İspanyolca</option>
+            <option value="it">🇮🇹 İtalyanca</option>
+            <option value="pt">🇵🇹 Portekizce</option>
+            <option value="ar">🇸🇦 Arapça</option>
+            <option value="ru">🇷🇺 Rusça</option>
+            <option value="ja">🇯🇵 Japonca</option>
+            <option value="ko">🇰🇷 Korece</option>
+            <option value="zh">🇨🇳 Çince</option>
+          </select>
+          <div class="select-arrow">⌄</div>
         </div>
-        <div class="pop-list" id="list-bot"></div>
-      </div>
 
-      <div class="chat-body" id="botBody"></div>
+        <p class="desc" style="margin-top:14px;">Hedef Dil</p>
+        <div class="select-wrap">
+          <select id="toSelect" class="select">
+            <option value="tr">🇹🇷 Türkçe</option>
+            <option value="de">🇩🇪 Almanca</option>
+            <option value="fr">🇫🇷 Fransızca</option>
+            <option value="es">🇪🇸 İspanyolca</option>
+            <option value="it">🇮🇹 İtalyanca</option>
+            <option value="pt">🇵🇹 Portekizce</option>
+            <option value="ar">🇸🇦 Arapça</option>
+            <option value="ru">🇷🇺 Rusça</option>
+            <option value="ja">🇯🇵 Japonca</option>
+            <option value="ko">🇰🇷 Korece</option>
+            <option value="zh">🇨🇳 Çince</option>
+          </select>
+          <div class="select-arrow">⌄</div>
+        </div>
 
-      <div class="mic-wrap">
-        <button class="btn-mic" id="botMic" title="Konuş" type="button">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
-            <path d="M19 11v1a7 7 0 0 1-14 0v-1"/>
-            <path d="M12 19v3"/>
-          </svg>
-        </button>
-      </div>
+        <button id="btnStartOffline" class="action" type="button">Offline Çeviriyi Başlat</button>
+        <button id="btnManage" class="action secondary" type="button">Offline Dilleri Yönet</button>
+
+        <div id="noticeBox" class="notice hidden"></div>
+      </section>
+
+      <div class="footer">italkyAI By Ozyigit's • 2026</div>
     </div>
-  </div>
+  </main>
 
-  <script type="module" src="../js/facetoface_offline.js"></script>
+  <div id="toast" class="toast"></div>
+
+  <script type="module">
+    import { mountShell } from "/js/ui_shell.js";
+    import { resolveOfflineRuntime, explainOfflineFailure } from "/js/offline_runtime_guard.js";
+
+    mountShell({ scroll:"auto" });
+
+    const $ = (id) => document.getElementById(id);
+    const noticeBox = $("noticeBox");
+    const accessTag = $("accessTag");
+    const fromSelect = $("fromSelect");
+    const toSelect = $("toSelect");
+
+    function toast(msg){
+      const t = $("toast");
+      if(!t) return;
+      t.textContent = String(msg || "");
+      t.classList.add("show");
+      clearTimeout(window.__to);
+      window.__to = setTimeout(() => t.classList.remove("show"), 1800);
+    }
+
+    function showNotice(msg, kind = "err"){
+      noticeBox.textContent = String(msg || "");
+      noticeBox.className = `notice ${kind}`;
+      noticeBox.classList.remove("hidden");
+    }
+
+    function hideNotice(){
+      noticeBox.className = "notice hidden";
+      noticeBox.textContent = "";
+    }
+
+    function norm(v){
+      return String(v || "").trim().toLowerCase();
+    }
+
+    function syncDifferentTargets(){
+      if (norm(fromSelect.value) === norm(toSelect.value)) {
+        const fallback = ["tr","de","fr","es","it","pt","ar","ru","ja","ko","zh"].find(x => x !== norm(fromSelect.value)) || "en";
+        toSelect.value = fallback;
+      }
+    }
+
+    function getPageUrl(file){
+      const isApp = location.href.includes("appassets.androidplatform.net");
+      return isApp
+        ? `https://appassets.androidplatform.net/assets/pages/${file}`
+        : `/pages/${file}`;
+    }
+
+    $("btnHome")?.addEventListener("click", () => {
+      location.href = getPageUrl("home.html");
+    });
+
+    $("btnManage")?.addEventListener("click", () => {
+      location.href = getPageUrl("offline_languages.html");
+    });
+
+    fromSelect?.addEventListener("change", () => {
+      syncDifferentTargets();
+      hideNotice();
+    });
+
+    toSelect?.addEventListener("change", () => {
+      syncDifferentTargets();
+      hideNotice();
+    });
+
+    $("btnStartOffline")?.addEventListener("click", async () => {
+      const from = norm(fromSelect.value);
+      const to = norm(toSelect.value);
+
+      if (!from || !to || from === to) {
+        showNotice("Kaynak ve hedef diller farklı olmalıdır.", "err");
+        return;
+      }
+
+      const gate = await resolveOfflineRuntime(from, to);
+
+      if (!gate.ok) {
+        accessTag.textContent = "Kapalı";
+        showNotice(explainOfflineFailure(gate.reason), "err");
+        return;
+      }
+
+      accessTag.textContent = "Açık";
+      showNotice("Offline çeviri açılıyor…", "ok");
+
+      const url = `/pages/offline_facetoface_runtime.html?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
+      location.href = url;
+    });
+
+    (function init(){
+      if (navigator.onLine) {
+        accessTag.textContent = "Online";
+        showNotice("İnternet geri geldi. İstersen normal FaceToFace moduna dönebilirsin.", "ok");
+      } else {
+        accessTag.textContent = "Kontrol";
+      }
+
+      syncDifferentTargets();
+    })();
+  </script>
+
+  <script type="module">
+    import { initGlobalAccess } from "/js/global_access.js";
+    initGlobalAccess();
+  </script>
 </body>
 </html>
