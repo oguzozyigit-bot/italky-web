@@ -15,14 +15,15 @@
 
   <style>
     :root{
-  --bg:#030014;
-  --grad:linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
-  --red:#ff0033;
-  --green:#00ff9d;
-  --dockH:220px;
-  --shellLift:0px;
-  --safeB:env(safe-area-inset-bottom, 0px);
-}
+      --bg:#030014;
+      --grad:linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
+      --red:#ff0033;
+      --green:#00ff9d;
+      --cyan:#63f3ff;
+      --dockH:220px;
+      --shellLift:0px;
+      --safeB:env(safe-area-inset-bottom, 0px);
+    }
 
     *{ box-sizing:border-box; }
 
@@ -43,36 +44,19 @@
     }
 
     #pageContent{
-  height:100%;
-  padding:14px 14px calc(var(--dockH) + var(--shellLift) + 24px) 14px;
-  position:relative;
-}
+      height:100%;
+      padding:14px 14px calc(var(--dockH) + var(--shellLift) + 24px) 14px;
+      position:relative;
+    }
 
     .top{
-  min-height:0;
-  height:auto;
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-  position:relative;
-}
-
-.dock{
-  position:fixed;
-  left:14px;
-  right:14px;
-  bottom:calc(var(--safeB) + var(--shellLift) + 10px);
-  height:var(--dockH);
-  padding:12px;
-  border-radius:22px;
-  border:1px solid rgba(255,255,255,.10);
-  background:rgba(3,0,20,.90);
-  backdrop-filter:blur(10px);
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-  z-index:9000;
-}
+      min-height:0;
+      height:auto;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      position:relative;
+    }
 
     .title{
       margin:0;
@@ -166,9 +150,7 @@
       transition:.2s ease;
     }
 
-    .joker:active{
-      transform:scale(.96);
-    }
+    .joker:active{ transform:scale(.96); }
 
     .joker.spent{
       opacity:.14;
@@ -184,6 +166,7 @@
       justify-content:center;
       z-index:1;
       padding-top:40px;
+      min-height:460px;
     }
 
     .gallows{
@@ -244,9 +227,7 @@
       box-shadow:0 0 10px #fff;
     }
 
-    .organ.on{
-      display:block;
-    }
+    .organ.on{ display:block; }
 
     .head{
       left:-11px;
@@ -300,7 +281,7 @@
     .trBox{
       width:100%;
       margin-top:18px;
-      padding:12px;
+      padding:12px 52px 12px 12px;
       border-radius:16px;
       border:1px solid rgba(255,255,255,.10);
       background:rgba(255,255,255,.05);
@@ -309,13 +290,33 @@
       font-weight:900;
       color:rgba(255,255,255,.72);
       letter-spacing:.4px;
+      position:relative;
+    }
+
+    .speakWordBtn{
+      position:absolute;
+      right:10px;
+      top:50%;
+      transform:translateY(-50%);
+      width:34px;
+      height:34px;
+      border:none;
+      border-radius:12px;
+      background:rgba(99,102,241,.16);
+      border:1px solid rgba(255,255,255,.10);
+      color:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      font-size:16px;
     }
 
     .dock{
       position:fixed;
       left:14px;
       right:14px;
-      bottom:calc(var(--safeB) + 10px + var(--shellLift));
+      bottom:calc(var(--safeB) + var(--shellLift) + 10px);
       height:var(--dockH);
       padding:12px;
       border-radius:22px;
@@ -325,7 +326,8 @@
       display:flex;
       flex-direction:column;
       gap:10px;
-      z-index:9999;
+      z-index:9000;
+      box-shadow:0 20px 40px rgba(0,0,0,.30);
     }
 
     .matrix{
@@ -372,9 +374,7 @@
       transition:.2s ease;
     }
 
-    .key:active{
-      transform:scale(.97);
-    }
+    .key:active{ transform:scale(.97); }
 
     .key.hit{
       background:var(--green);
@@ -384,20 +384,29 @@
 
     .key.miss{
       background:var(--red);
-      opacity:.2;
+      opacity:.28;
+      color:#fff;
+      box-shadow:0 0 14px rgba(255,0,51,.45);
     }
 
     .ready-gate{
       position:fixed;
       inset:0;
       z-index:60000;
-      background:rgba(3,0,20,.98);
+      background:rgba(3,0,20,.96);
       display:flex;
       flex-direction:column;
       align-items:center;
       justify-content:center;
       padding:24px;
       text-align:center;
+      backdrop-filter:blur(10px);
+    }
+
+    .gate-logo{
+      font-size:58px;
+      margin-bottom:10px;
+      filter:drop-shadow(0 0 18px rgba(99,102,241,.32));
     }
 
     .gate-title{
@@ -410,11 +419,11 @@
 
     .gate-sub{
       max-width:320px;
-      margin:0 0 34px;
+      margin:0 0 26px;
       line-height:1.45;
-      opacity:.75;
-      font-size:13px;
-      font-weight:700;
+      opacity:.85;
+      font-size:14px;
+      font-weight:800;
     }
 
     .start-btn{
@@ -428,6 +437,20 @@
       font-weight:900;
       cursor:pointer;
       box-shadow:0 10px 35px rgba(99,102,241,.28);
+    }
+
+    .langChangeBtn{
+      margin-top:12px;
+      width:220px;
+      height:52px;
+      border:none;
+      border-radius:18px;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.10);
+      color:#fff;
+      font-size:14px;
+      font-weight:900;
+      cursor:pointer;
     }
 
     .start-btn:disabled{
@@ -446,11 +469,19 @@
       justify-content:center;
       padding:34px;
       text-align:center;
-      background:rgba(1,0,8,.98);
+      background:rgba(1,0,8,.94);
+      backdrop-filter:blur(8px);
     }
 
-    .modal.on{
-      display:flex;
+    .modal.on{ display:flex; }
+
+    .modalCard{
+      width:min(92vw,420px);
+      border-radius:28px;
+      border:1px solid rgba(255,255,255,.12);
+      background:linear-gradient(180deg, rgba(20,20,34,.96), rgba(5,0,20,.96));
+      padding:24px;
+      box-shadow:0 20px 60px rgba(0,0,0,.45);
     }
 
     .modal h1{
@@ -469,22 +500,177 @@
 
     .m-tr{
       margin-bottom:24px;
-      opacity:.6;
+      opacity:.75;
       font-style:italic;
+      font-size:14px;
+    }
+
+    .modalActions{
+      display:flex;
+      gap:10px;
+      justify-content:center;
+      flex-wrap:wrap;
+    }
+
+    .alt-btn{
+      width:170px;
+      height:54px;
+      border:none;
+      border-radius:18px;
+      background:rgba(255,255,255,.07);
+      color:#fff;
+      font-size:15px;
+      font-weight:900;
+      cursor:pointer;
+    }
+
+    .langSheet{
+      position:fixed;
+      inset:0;
+      z-index:70000;
+      display:none;
+      align-items:flex-end;
+      background:rgba(0,0,0,.50);
+      backdrop-filter:blur(6px);
+    }
+
+    .langSheet.show{ display:flex; }
+
+    .langPanel{
+      width:100%;
+      max-height:82vh;
+      overflow:auto;
+      border-radius:26px 26px 0 0;
+      border:1px solid rgba(255,255,255,.10);
+      background:linear-gradient(180deg, rgba(14,14,28,.98), rgba(5,0,20,.98));
+      padding:18px 16px calc(16px + var(--safeB));
+      box-shadow:0 -20px 60px rgba(0,0,0,.45);
+    }
+
+    .langPanelTop{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:14px;
+    }
+
+    .langPanelTitle{
+      font-family:"Space Grotesk",sans-serif;
+      font-size:22px;
+      font-weight:900;
+      letter-spacing:1px;
+    }
+
+    .langPanelSub{
+      font-size:13px;
+      line-height:1.5;
+      color:rgba(255,255,255,.70);
+      font-weight:700;
+      margin-bottom:14px;
+    }
+
+    .langClose{
+      width:40px;
+      height:40px;
+      border:none;
+      border-radius:14px;
+      background:rgba(255,255,255,.06);
+      color:#fff;
+      font-size:22px;
+      cursor:pointer;
+    }
+
+    .langGrid{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:12px;
+    }
+
+    .langCard{
+      border-radius:22px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.04);
+      padding:16px;
+      min-height:104px;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      gap:8px;
+      cursor:pointer;
+      transition:.18s ease;
+    }
+
+    .langCard:active{ transform:scale(.98); }
+
+    .langCard.active{
+      border-color:rgba(0,255,157,.45);
+      box-shadow:0 0 0 1px rgba(0,255,157,.30), 0 0 22px rgba(0,255,157,.12);
+      background:linear-gradient(180deg, rgba(0,255,157,.08), rgba(255,255,255,.04));
+    }
+
+    .langFlag{
+      font-size:28px;
+      line-height:1;
+    }
+
+    .langName{
+      font-size:18px;
+      font-weight:900;
+      line-height:1.1;
+    }
+
+    .langHint{
+      font-size:12px;
+      color:rgba(255,255,255,.58);
+      font-weight:700;
+    }
+
+    .toast{
+      position:fixed;
+      left:50%;
+      bottom:calc(var(--safeB) + var(--shellLift) + 16px);
+      transform:translateX(-50%) translateY(120px);
+      z-index:80000;
+      min-width:180px;
+      max-width:min(92vw,420px);
+      padding:14px 18px;
+      border-radius:999px;
+      background:rgba(6,8,22,.96);
+      border:1px solid rgba(255,255,255,.10);
+      box-shadow:0 18px 36px rgba(0,0,0,.30);
+      text-align:center;
+      font-size:13px;
+      font-weight:900;
+      transition:.22s ease;
+    }
+
+    .toast.show{
+      transform:translateX(-50%) translateY(0);
+    }
+
+    @media (max-width:420px){
+      .langGrid{
+        grid-template-columns:1fr 1fr;
+      }
+      .gate-title{
+        font-size:34px;
+        letter-spacing:6px;
+      }
     }
   </style>
 </head>
 <body>
   <div id="pageContent">
 
-    <!-- READY GATE -->
     <div class="ready-gate" id="readyGate">
+      <div class="gate-logo">🎯</div>
       <div class="gate-title">HANGMAN</div>
       <div class="gate-sub" id="gateInfo">BAĞLANILIYOR...</div>
       <button class="start-btn" id="realStartBtn" type="button">BAŞLA</button>
+      <button class="langChangeBtn" id="langChangeBtn" type="button">Dil Değiştir</button>
     </div>
 
-    <!-- GAME AREA -->
     <div class="top">
       <h1 class="title">HANGMAN</h1>
 
@@ -495,7 +681,7 @@
 
         <div class="rightHud">
           <div class="score">
-            <div class="best">REKOR: <span id="bestVal">0</span></div>
+            <div class="best">EN YÜKSEK SKOR: <span id="bestVal">0</span></div>
             <div class="val" id="scoreVal">0</div>
           </div>
 
@@ -522,24 +708,47 @@
           </div>
         </div>
 
-        <div class="trBox" id="trText">—</div>
+        <div class="trBox" id="trText">
+          —
+          <button class="speakWordBtn" id="speakWordBtn" type="button" aria-label="Kelimeyi oku">🔊</button>
+        </div>
       </div>
     </div>
 
-    <!-- KEYBOARD / WORD -->
     <div class="dock">
       <div class="matrix" id="matrix"></div>
       <div class="kb" id="kb"></div>
     </div>
 
-    <!-- RESULT MODAL -->
     <div class="modal" id="modal">
-      <h1 id="mTitle">MİSYON</h1>
-      <div class="m-word" id="mWord">WORD</div>
-      <div class="m-tr" id="mTr">(—)</div>
-      <button class="start-btn" id="mBtn" type="button">DEVAM</button>
+      <div class="modalCard">
+        <h1 id="mTitle">MİSYON</h1>
+        <div class="m-word" id="mWord">WORD</div>
+        <div class="m-tr" id="mTr">(—)</div>
+
+        <div class="modalActions">
+          <button class="start-btn" id="mBtn" type="button">DEVAM</button>
+          <button class="alt-btn" id="mHomeBtn" type="button">Ana Menü</button>
+        </div>
+      </div>
     </div>
 
+    <div class="langSheet" id="langSheet">
+      <div class="langPanel">
+        <div class="langPanelTop">
+          <div class="langPanelTitle">Oyun Dili</div>
+          <button class="langClose" id="langSheetClose" type="button">×</button>
+        </div>
+
+        <div class="langPanelSub">
+          Bayrağa dokun, dili seç. Sonraki girişte oyun bu dille doğrudan açılır.
+        </div>
+
+        <div class="langGrid" id="langGrid"></div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
   </div>
 
   <script type="module" src="/js/hangman_page.js"></script>
