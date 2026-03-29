@@ -24,6 +24,12 @@ const statusBox = $("statusBox");
 const networkTag = $("networkTag");
 const trialTag = $("trialTag");
 
+const confirmBackdrop = $("confirmBackdrop");
+const confirmTitle = $("confirmTitle");
+const confirmText = $("confirmText");
+const confirmCancel = $("confirmCancel");
+const confirmOk = $("confirmOk");
+
 /* ---------------- STATE ---------------- */
 let currentUserId = "";
 let profileRow = null;
@@ -87,6 +93,28 @@ function langName(code) {
   return LANGS.find((x) => x.code === norm(code))?.name || String(code || "").toUpperCase();
 }
 
+/* ---------------- MODAL ---------------- */
+function askConfirm({ title, text }) {
+  return new Promise((resolve) => {
+    confirmTitle.textContent = title || "Onay";
+    confirmText.textContent = text || "";
+    confirmBackdrop.classList.add("show");
+
+    const close = (result) => {
+      confirmBackdrop.classList.remove("show");
+      confirmCancel.removeEventListener("click", onCancel);
+      confirmOk.removeEventListener("click", onOk);
+      resolve(result);
+    };
+
+    const onCancel = () => close(false);
+    const onOk = () => close(true);
+
+    confirmCancel.addEventListener("click", onCancel);
+    confirmOk.addEventListener("click", onOk);
+  });
+}
+
 /* ---------------- ACCESS ---------------- */
 function getAccessState() {
   const a = window.__ITALKY_ACCESS__ || {};
@@ -135,16 +163,10 @@ async function waitForAccessState(maxMs = 5000) {
   return getAccessState();
 }
 
-/* Kritik değişiklik:
-   access boşsa kurulumda kullanıcıyı kilitlemiyoruz.
-   Login varsa temel kuruluma izin veriyoruz.
-*/
 function accessOk(access) {
   const s = access || getAccessState();
-
   if (!s.loaded) return true;
   if (s.trialActive || s.hasPackage || s.nfcActive) return true;
-
   return true;
 }
 
@@ -396,6 +418,27 @@ function installNative(pair, url) {
   window.Offline.installFromUrl(pair, url);
 }
 
+function nativeCheckDirectionInstalled(pair) {
+  try {
+    if (window.Offline && typeof window.Offline.isInstalled === "function") {
+      return !!window.Offline.isInstalled(pair);
+    }
+  } catch {}
+  return false;
+}
+
+async function waitUntilPairsInstalled(pairs, timeoutMs = 90000) {
+  const started = Date.now();
+
+  while (Date.now() - started < timeoutMs) {
+    const allReady = pairs.every((pair) => nativeCheckDirectionInstalled(pair));
+    if (allReady) return true;
+    await new Promise((r) => setTimeout(r, 1500));
+  }
+
+  return false;
+}
+
 /* ---------------- FILE ---------------- */
 function publicUrl(path) {
   const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
@@ -417,8 +460,8 @@ async function installBase() {
   const ownLang = norm(getUserLang());
 
   if (!ownLang || ownLang === PIVOT) {
-    setStatus("İngilizce seçiliyse temel köprü kurulumu gerekmez.", "warn");
-    toast("İngilizce için köprü kurulumu gerekmez");
+    setStatus("İngilizce seçiliyse temel kurulum gerekmez.", "warn");
+    toast("İngilizce için temel kurulum gerekmez");
     return;
   }
 
@@ -436,19 +479,20 @@ async function installBase() {
   }
 
   if (!nativeReady()) {
-    setStatus("Offline bridge hazır değil.", "err");
+    setStatus("Offline sistem hazır değil.", "err");
     toast("Offline sistem hazır değil");
     return;
   }
 
   const ownName = langName(ownLang);
-  const approved = confirm(
-    `${ownName} kurulumu başlatılıyor.\n\n` +
-    `Sistem arka planda şu köprüleri hazırlar:\n` +
-    `• ${ownName} → İngilizce\n` +
-    `• İngilizce → ${ownName}\n\n` +
-    `Onaylıyor musunuz?`
-  );
+
+  const approved = await askConfirm({
+    title: "Dil seçimini onaylayın",
+    text:
+      `Kendi diliniz olarak ${ownName} seçtiniz.\n` +
+      `Kurulum bu dilde tamamlanacak.\n\n` +
+      `Dil seçimini onaylıyor musunuz?`
+  });
 
   if (!approved) {
     setStatus("Kurulum iptal edildi.", "warn");
@@ -456,10 +500,12 @@ async function installBase() {
   }
 
   installBaseBtn.disabled = true;
-  installBaseBtn.textContent = "Kuruluyor...";
+  installBaseBtn.textContent = "Kurulum Sürüyor...";
 
   try {
     const pairs = installPairsForLanguage(ownLang);
+
+    setStatus(`${ownName} kurulumu hazırlanıyor. Lütfen bekleyin...`, "info");
 
     for (const pair of pairs) {
       const url = publicUrl(pairPath(pair));
@@ -467,20 +513,35 @@ async function installBase() {
       installNative(pair, url);
     }
 
+    setStatus(`${ownName} indiriliyor ve kuruluyor. Kurulum doğrulanıyor...`, "warn");
+
+    const ready = await waitUntilPairsInstalled(pairs, 90000);
+
+    if (!ready) {
+      setStatus(`${ownName} kurulumu henüz tamamlanmadı. İndirme devam ediyor olabilir. Biraz sonra tekrar kontrol edin.`, "warn");
+      toast("Kurulum sürüyor");
+      installBaseBtn.disabled = false;
+      installBaseBtn.textContent = "Kurulumu Başlat";
+      return;
+    }
+
     markLocalInstalled(ownLang);
     setBaseReady(ownLang);
     await saveOwnLanguageBase(ownLang);
 
-    setStatus(`${ownName} temel köprü kurulumu tamamlandı. Şimdi diğer hedef dilleri indirebilirsiniz.`, "ok");
+    setStatus(`${ownName} kurulumu tamamlandı. Şimdi diğer hedef dilleri indirebilirsiniz.`, "ok");
     toast(`${ownName} kurulumu tamamlandı`);
+
+    installBaseBtn.disabled = true;
+    installBaseBtn.textContent = "Kurulum Tamamlandı";
   } catch (e) {
     console.error(e);
     setStatus("Temel kurulum başarısız.", "err");
     toast("Kurulum hatası");
+    installBaseBtn.disabled = false;
+    installBaseBtn.textContent = "Kurulumu Başlat";
   }
 
-  installBaseBtn.disabled = false;
-  installBaseBtn.textContent = "Kurulumu Başlat";
   render();
 }
 
@@ -540,18 +601,14 @@ window.installLang = async function (lang) {
   const title = langName(code);
 
   try {
-    setStatus(
-      cost > 0
-        ? `${title} yeniden indiriliyor (${cost} jeton)`
-        : `${title} ilk kez indiriliyor (ücretsiz)`,
-      cost > 0 ? "warn" : "info"
-    );
-
     if (cost > 0) {
-      const approved = confirm(
-        `${title} dili daha önce indirildi.\n` +
-        `Bu yeniden indirme ${cost} jeton düşer.\n\nDevam edilsin mi?`
-      );
+      const approved = await askConfirm({
+        title: "İndirmeyi onaylayın",
+        text:
+          `${title} dili daha önce indirildi.\n` +
+          `Bu yeniden indirme ${cost} jeton düşer.\n\n` +
+          `Devam etmek istiyor musunuz?`
+      });
 
       if (!approved) {
         setStatus("İşlem iptal edildi", "warn");
@@ -563,10 +620,20 @@ window.installLang = async function (lang) {
 
     const pairs = installPairsForLanguage(code);
 
+    setStatus(`${title} indiriliyor ve kuruluyor. Lütfen bekleyin...`, "info");
+
     for (const pair of pairs) {
       const url = publicUrl(pairPath(pair));
       if (!url) throw new Error(`pack_url_missing_${pair}`);
       installNative(pair, url);
+    }
+
+    const ready = await waitUntilPairsInstalled(pairs, 90000);
+
+    if (!ready) {
+      setStatus(`${title} henüz tamamlanmadı. İndirme devam ediyor olabilir. Biraz sonra tekrar kontrol edin.`, "warn");
+      toast("Kurulum sürüyor");
+      return;
     }
 
     markLocalInstalled(code);
@@ -575,9 +642,9 @@ window.installLang = async function (lang) {
     if (myToken !== renderToken) return;
 
     const afterCount = getDownloadCount(code);
-    const chargedText = cost > 0 ? ` • ${cost} jeton düşüldü` : " • ücretsiz";
-    setStatus(`${title} indirildi • indirme sayısı: ${afterCount}${chargedText}`, "ok");
-    toast(cost > 0 ? `${title} indirildi • ${cost} jeton düşüldü` : `${title} indirildi`);
+    const chargedText = cost > 0 ? ` • ${cost} jeton düşüldü` : " • ilk indirme";
+    setStatus(`${title} kuruldu • indirme sayısı: ${afterCount}${chargedText}`, "ok");
+    toast(`${title} kuruldu`);
   } catch (e) {
     console.error(e);
 
@@ -590,7 +657,7 @@ window.installLang = async function (lang) {
       return;
     }
 
-    setStatus("Dil indirilemedi", "err");
+    setStatus("Dil indirilemedi.", "err");
     toast("İndirme hatası");
   }
 
@@ -687,6 +754,15 @@ function render() {
       </div>
     </div>
   `;
+
+  const ownName = langName(ownLang);
+  if (isBaseReady(ownLang)) {
+    installBaseBtn.disabled = true;
+    installBaseBtn.textContent = "Kurulum Tamamlandı";
+  } else {
+    installBaseBtn.disabled = false;
+    installBaseBtn.textContent = "Kurulumu Başlat";
+  }
 
   updateTopStatus();
 }
