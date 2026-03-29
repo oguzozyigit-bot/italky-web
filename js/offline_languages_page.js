@@ -1,3 +1,5 @@
+// FILE: /js/offline_languages_page.js
+
 import { mountShell, setHeaderTokens } from "/js/ui_shell.js";
 import { supabase } from "/js/supabase_client.js";
 import { ensureAuthAndCacheUser } from "/js/auth.js";
@@ -122,26 +124,45 @@ function getAccessState() {
     a.cardAccess === true ||
     a.card_access === true;
 
-  return { trialActive, hasPackage, nfcActive };
+  const loaded =
+    a.loaded === true ||
+    a.ready === true ||
+    a.accessLoaded === true ||
+    a.access_loaded === true ||
+    Object.keys(a).length > 0;
+
+  return { trialActive, hasPackage, nfcActive, loaded };
 }
 
-function accessOk() {
-  const access = getAccessState();
-  return access.trialActive || access.hasPackage || access.nfcActive;
+async function waitForAccessState(maxMs = 5000) {
+  const started = Date.now();
+
+  while (Date.now() - started < maxMs) {
+    const access = getAccessState();
+    if (access.loaded) return access;
+    await new Promise((r) => setTimeout(r, 150));
+  }
+
+  return getAccessState();
 }
 
-function updateTopStatus(){
+function accessOk(access) {
+  const s = access || getAccessState();
+  return s.trialActive || s.hasPackage || s.nfcActive;
+}
+
+function updateTopStatus() {
   if (networkTag) networkTag.textContent = navigator.onLine ? "ONLINE" : "OFFLINE";
 
   const access = getAccessState();
-  if (trialTag) {
-    if (access.trialActive) {
-      trialTag.textContent = "DENEME AKTİF";
-    } else if (access.hasPackage || access.nfcActive) {
-      trialTag.textContent = "ERİŞİM AÇIK";
-    } else {
-      trialTag.textContent = "KİLİTLİ";
-    }
+  if (!trialTag) return;
+
+  if (access.trialActive) {
+    trialTag.textContent = "DENEME AKTİF";
+  } else if (access.hasPackage || access.nfcActive) {
+    trialTag.textContent = "ERİŞİM AÇIK";
+  } else {
+    trialTag.textContent = "KİLİTLİ";
   }
 }
 
@@ -243,7 +264,6 @@ async function loadProfile() {
     .single();
 
   if (pErr) throw pErr;
-
   profileRow = row || null;
 
   try {
@@ -403,7 +423,9 @@ async function installBase() {
     return;
   }
 
-  if (!accessOk()) {
+  const access = await waitForAccessState();
+
+  if (!accessOk(access)) {
     setStatus("Offline kullanım için erişim gerekli.", "err");
     toast("Üyelik veya erişim gerekli");
     return;
@@ -497,7 +519,9 @@ window.installLang = async function (lang) {
     return;
   }
 
-  if (!accessOk()) {
+  const access = await waitForAccessState();
+
+  if (!accessOk(access)) {
     setStatus("Offline kullanım için erişim gerekli.", "err");
     toast("Üyelik veya erişim gerekli");
     return;
@@ -579,6 +603,7 @@ window.installLang = async function (lang) {
 /* ---------------- RENDER ---------------- */
 function populateOwnLanguageSelect() {
   if (!sourceSelect) return;
+
   sourceSelect.innerHTML = LANGS
     .filter((l) => l.code !== PIVOT)
     .map((l) => `<option value="${escapeHtml(l.code)}">${escapeHtml(l.flag)} ${escapeHtml(l.name)}</option>`)
@@ -691,6 +716,8 @@ async function boot() {
     }
 
     await loadProfile();
+    await waitForAccessState();
+    updateTopStatus();
 
     populateOwnLanguageSelect();
 
