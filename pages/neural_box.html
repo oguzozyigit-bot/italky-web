@@ -20,12 +20,14 @@
   --shellLift: 0px;
   --grad: linear-gradient(135deg,#a5b4fc 0%, #6366f1 55%, #ec4899 100%);
 }
+
 *{
   box-sizing:border-box;
   -webkit-tap-highlight-color:transparent;
   outline:none;
   user-select:none;
 }
+
 html,body{
   margin:0;
   width:100%;
@@ -35,6 +37,7 @@ html,body{
   color:#fff;
   overflow:hidden;
 }
+
 body{
   background:
     radial-gradient(circle at 50% 0%, rgba(79,70,229,.18), transparent 28%),
@@ -46,11 +49,17 @@ body{
 #pageContent{
   height:100%;
   padding:10px 12px calc(14px + var(--safeB) + var(--shellLift)) 12px;
+  overflow-y:auto;
+  overflow-x:hidden;
+  scrollbar-width:none;
+}
+#pageContent::-webkit-scrollbar{
+  display:none;
 }
 
 .app{
   max-width:480px;
-  height:100%;
+  min-height:100%;
   margin:0 auto;
   display:flex;
   flex-direction:column;
@@ -108,7 +117,7 @@ body{
   flex-direction:column;
   gap:10px;
   position:relative;
-  overflow:hidden;
+  overflow:visible;
   backdrop-filter: blur(14px);
   box-shadow:0 28px 60px rgba(0,0,0,.45);
 }
@@ -159,7 +168,7 @@ body{
 
 .box-grid{
   display:grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap:8px;
   width:100%;
 }
@@ -180,6 +189,7 @@ body{
   transition:0.22s ease;
   box-shadow:0 8px 18px rgba(0,0,0,0.25);
 }
+
 .box:active{ transform:scale(0.94); }
 
 .box.selected{
@@ -248,6 +258,12 @@ body{
   border:1px solid rgba(255,255,255,.10);
   text-align:center;
   box-shadow:0 25px 70px rgba(0,0,0,.7);
+  max-height:88vh;
+  overflow:auto;
+  scrollbar-width:none;
+}
+.card::-webkit-scrollbar{
+  display:none;
 }
 
 .qWord{
@@ -361,6 +377,16 @@ body{
   margin-top:0;
   flex:1;
 }
+
+@media (max-width:420px){
+  .box-grid{
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .box{
+    height:54px;
+    font-size:20px;
+  }
+}
 </style>
 </head>
 <body>
@@ -382,7 +408,7 @@ body{
   </div>
 
   <div class="main">
-    <div class="statusTxt" id="statusTxt">KUTUNU SEÇ BAŞKANIM!</div>
+    <div class="statusTxt" id="statusTxt">KUTUNU SEÇ</div>
 
     <div class="valueBoard" id="valueBoard"></div>
     <div class="box-grid" id="boxGrid"></div>
@@ -493,7 +519,7 @@ const game = {
   lastOffer: 0
 };
 
-/* ---------------- AUDIO ---------------- */
+/* AUDIO */
 let audioCtx = null;
 function getAudioCtx(){
   try{
@@ -561,7 +587,7 @@ function playBankerFx() {
   window.addEventListener(evt, () => unlockAudio(), { passive:true, once:true });
 });
 
-/* ---------------- HELPERS ---------------- */
+/* HELPERS */
 function normalize(s){
   return String(s||"")
     .toLowerCase()
@@ -730,7 +756,7 @@ function handleBoxClick(box, el) {
     $("myBoxSlot").innerHTML = "";
     $("myBoxSlot").appendChild(el);
     game.stage = "OPEN_BOXES";
-    setStatus("BİR KUTU SEÇ VE ELE!");
+    setStatus("BİR KUTU SEÇ VE ELE");
     return;
   }
 
@@ -817,7 +843,7 @@ function checkRoundFlow() {
   if (game.boxesOpenedInRound >= game.boxesToOpenThisRound) {
     showBankerOffer();
   } else {
-    setStatus("DEVAM! BİR KUTU DAHA ELE!");
+    setStatus("DEVAM ET VE BİR KUTU DAHA ELE");
   }
 }
 
@@ -843,7 +869,7 @@ function continueAfterBanker() {
   game.boxesOpenedInRound = 0;
   game.roundStep = Math.min(game.roundStep + 1, OFFER_PLAN.length - 1);
   game.boxesToOpenThisRound = OFFER_PLAN[game.roundStep];
-  setStatus("DEVAM! BİR KUTU DAHA ELE!");
+  setStatus("DEVAM ET VE KUTU AÇ");
 }
 
 function finishWithAmount(amount, text) {
@@ -894,31 +920,29 @@ async function startGame() {
   renderBoard();
   createBoxes();
   updateHud();
-  setStatus("KUTUNU SEÇ BAŞKANIM!");
+  setStatus("KUTUNU SEÇ");
 }
 
-/* ---- Buttons ---- */
+/* BUTTONS */
 $("startBtn").onclick = startGame;
 
 $("btnNoDeal").onclick = continueAfterBanker;
 
 $("btnDeal").onclick = () => {
   $("bankerModal").classList.remove("show");
-  finishWithAmount(game.lastOffer, "Banker ile anlaştın. Masadan bu ödülle kalktın.");
+  finishWithAmount(game.lastOffer, "Banker ile anlaştın. Oyundan bu ödülle çıktın.");
 };
 
 $("btnSwap").onclick = () => {
   $("finalModal").classList.remove("show");
   const otherBox = game.boxes.find(b => !b.opened && b !== game.myBox);
-  if (otherBox) {
-    game.myBox = otherBox;
-  }
-  finishWithAmount(game.myBox.val, "Kutuyu değiştirdin. İçinden çıkan ödül bu.");
+  if (otherBox) game.myBox = otherBox;
+  finishWithAmount(game.myBox.val, "Kutuyu değiştirdin. Açılan ödül bu.");
 };
 
 $("btnKeep").onclick = () => {
   $("finalModal").classList.remove("show");
-  finishWithAmount(game.myBox.val, "Kendi kutunu tuttun. İçinden çıkan ödül bu.");
+  finishWithAmount(game.myBox.val, "Kendi kutunu tuttun. Açılan ödül bu.");
 };
 
 $("btnReplay").onclick = () => {
