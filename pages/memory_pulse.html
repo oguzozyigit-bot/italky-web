@@ -228,16 +228,78 @@ body{
   position:relative;
 }
 
-.card.flipped .inner,
-.card.matched .inner{
+.face{
+  position:absolute;
+  inset:0;
+  border-radius:18px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:1px solid var(--border);
+  backface-visibility:hidden;
+  overflow:hidden;
+}
+
+/* KAPALI YÜZ */
+.front{
+  position:relative;
+  font-size:34px;
+  font-weight:900;
+}
+
+.trFront{
+  background:linear-gradient(180deg,#ffffff,#f3f4f6);
+  border:1px solid rgba(0,0,0,.08);
+}
+.trFront::before{
+  content:"";
+  position:absolute;
+  inset:6px;
+  border:2px solid #ef4444;
+  border-radius:12px;
+}
+
+.fxFront{
+  background:linear-gradient(180deg,#edf6ff,#dbeafe);
+  border:1px solid rgba(0,0,0,.06);
+}
+
+.frontFlagMark{
+  position:relative;
+  z-index:2;
+  font-size:34px;
+  line-height:1;
+  filter: drop-shadow(0 0 6px rgba(0,0,0,.08));
+}
+
+/* AÇIK YÜZ */
+.back{
   transform:rotateY(180deg);
+  font-weight:900;
+  font-size:16px;
+  text-align:center;
+  padding:10px;
+  word-break:break-word;
+  line-height:1.2;
+  display:flex;
+  align-items:center;
+  justify-content:center;
 }
 
-.card.matched .inner{
-  box-shadow:0 0 18px rgba(0,230,118,.20);
-  animation:pulseMatch .35s ease-out;
+.back.tr{
+  background:#ffffff;
+  color:#111;
+  border:1px solid rgba(0,0,0,.08);
 }
 
+.back.fx{
+  background:linear-gradient(180deg,#edf6ff,#dbeafe);
+  color:#1e3a8a;
+}
+
+/* Bunları tamamen etkisiz bırak */
+.flagRibbon{ display:none !important; }
+.wordType{ display:none !important; }
 @keyframes pulseMatch{
   0%{ transform:rotateY(180deg) scale(1); }
   50%{ transform:rotateY(180deg) scale(1.05); }
@@ -802,9 +864,7 @@ function render() {
         </div>
 
         <div class="face back ${isTr ? "tr" : "fx"}">
-          <div class="flagRibbon">${frontFlag}</div>
           <div>${c.text}</div>
-          <div class="wordType">${isTr ? "TR" : lang.toUpperCase()}</div>
         </div>
       </div>
 
