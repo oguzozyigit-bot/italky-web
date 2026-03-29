@@ -1,5 +1,3 @@
-// FILE: /js/hangman_page.js
-
 import { mountShell } from "/js/ui_shell.js";
 import { supabase } from "/js/supabase_client.js";
 import { ensureAuthAndCacheUser } from "/js/auth.js";
@@ -10,14 +8,25 @@ const $ = (id) => document.getElementById(id);
    UI SHELL
 ----------------------------- */
 mountShell({ scroll: "none" });
-try {
-  const root = getComputedStyle(document.documentElement);
-  const footerH = parseFloat(root.getPropertyValue("--footerH")) || 0;
-  document.documentElement.style.setProperty(
-    "--shellLift",
-    footerH ? `${footerH + 10}px` : "0px"
-  );
-} catch (e) {}
+
+function syncShellLift() {
+  try {
+    const root = getComputedStyle(document.documentElement);
+    const footerH = parseFloat(root.getPropertyValue("--footerH")) || 0;
+    document.documentElement.style.setProperty(
+      "--shellLift",
+      footerH ? `${footerH + 12}px` : "0px"
+    );
+  } catch {}
+}
+syncShellLift();
+window.addEventListener("load", () => {
+  syncShellLift();
+  setTimeout(syncShellLift, 150);
+  setTimeout(syncShellLift, 500);
+  setTimeout(syncShellLift, 1000);
+});
+window.addEventListener("resize", syncShellLift);
 
 /* -----------------------------
    HELPERS
@@ -78,6 +87,20 @@ function langTitle(code) {
   return map[c] || c.toUpperCase();
 }
 
+function normalizePlayableWord(raw) {
+  return String(raw || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z]/g, "")
+    .toUpperCase()
+    .trim();
+}
+
+function getPublicLangUrl(langCode) {
+  const { data } = supabase.storage.from("lang").getPublicUrl(`${langCode}.json`);
+  return data?.publicUrl || "";
+}
+
 function getGameAccessState() {
   const a = window.__ITALKY_ACCESS__ || {};
 
@@ -136,7 +159,7 @@ let state = {
   pool: [],
   target: null,
   lastWord: null,
-  lives: 3,
+  lives: 5,
   MAX_LIVES: 9,
   totalScore: 0,
   roundScore: 100,
@@ -308,30 +331,57 @@ function openLanguagePicker() {
 /* -----------------------------
    DATA LOAD
 ----------------------------- */
+async function loadAvailableLangsFromBucket() {
+  try {
+    const { data, error } = await supabase.storage.from("lang").list("", {
+      limit: 100,
+      offset: 0
+    });
+
+    if (error) throw error;
+
+    const list = (Array.isArray(data) ? data : [])
+      .map((x) => String(x?.name || ""))
+      .filter((name) => name.endsWith(".json"))
+      .map((name) => normalizeLang(name.replace(".json", "")))
+      .filter(Boolean);
+
+    return [...new Set(list)];
+  } catch (err) {
+    console.error("bucket lang list error:", err);
+    return [];
+  }
+}
+
+async function loadAvailableLangsFromDb() {
+  try {
+    const { data, error } = await supabase
+      .from("game_content")
+      .select("lang")
+      .eq("game_key", "hangman")
+      .eq("is_active", true);
+
+    if (error) throw error;
+
+    const list = (Array.isArray(data) ? data : [])
+      .map((row) => normalizeLang(row?.lang))
+      .filter(Boolean);
+
+    return [...new Set(list)];
+  } catch (err) {
+    console.error("db lang list error:", err);
+    return [];
+  }
+}
+
 async function loadAvailableLangs() {
   setGate("OYUN DİLLERİ HAZIRLANIYOR...");
   disableStartBtn(true, "YÜKLENİYOR...");
 
-  const { data, error } = await supabase
-    .from("game_content")
-    .select("lang")
-    .eq("game_key", "hangman")
-    .eq("is_active", true);
+  let langs = await loadAvailableLangsFromBucket();
+  if (!langs.length) langs = await loadAvailableLangsFromDb();
 
-  if (error) {
-    console.error("game_content lang error:", error);
-    setGate("Dil listesi alınamadı.");
-    disableStartBtn(true, "HATA");
-    return false;
-  }
-
-  const set = new Set();
-  (Array.isArray(data) ? data : []).forEach((row) => {
-    const l = normalizeLang(row?.lang);
-    if (l) set.add(l);
-  });
-
-  state.availableLangs = [...set];
+  state.availableLangs = langs;
 
   if (!state.availableLangs.length) {
     setGate("Henüz oyun dili bulunamadı.");
@@ -346,6 +396,97 @@ async function loadAvailableLangs() {
   return true;
 }
 
+function extractItems(payload) {
+  if (Array.isArray(payload)) return payload;
+  if (payload && typeof payload === "object") {
+    const keys = ["items", "words", "data", "list", "entries", "pool"];
+    for (const key of keys) {
+      if (Array.isArray(payload[key])) return payload[key];
+    }
+  }
+  return [];
+}
+
+function normalizeBucketItems(items) {
+  return items
+    .map((item) => {
+      if (typeof item === "string") {
+        const w = normalizePlayableWord(item);
+        return {
+          w,
+          tr: item
+        };
+      }
+
+      const rawWord =
+        item?.word ??
+        item?.w ??
+        item?.text ??
+        item?.term ??
+        item?.answer ??
+        item?.source ??
+        "";
+
+      const rawMeaning =
+        item?.meaning ??
+        item?.tr ??
+        item?.translation ??
+        item?.mean ??
+        item?.hint ??
+        item?.target ??
+        "";
+
+      const w = normalizePlayableWord(rawWord);
+      const tr = String(rawMeaning || "").trim();
+
+      return { w, tr };
+    })
+    .filter((x) => x.w);
+}
+
+async function loadWordsFromBucket(langCode) {
+  try {
+    const url = getPublicLangUrl(langCode);
+    if (!url) return [];
+
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) return [];
+
+    const json = await res.json();
+    const items = extractItems(json);
+    return normalizeBucketItems(items);
+  } catch (err) {
+    console.error("bucket word load error:", err);
+    return [];
+  }
+}
+
+async function loadWordsFromDb(langCode) {
+  try {
+    const { data: words, error } = await supabase
+      .from("game_content")
+      .select("content")
+      .eq("game_key", "hangman")
+      .eq("lang", langCode)
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true });
+
+    if (error) throw error;
+
+    return Array.isArray(words)
+      ? words
+          .map((x) => ({
+            w: normalizePlayableWord(x?.content?.word || ""),
+            tr: String(x?.content?.meaning || "").trim()
+          }))
+          .filter((x) => x.w)
+      : [];
+  } catch (err) {
+    console.error("db word load error:", err);
+    return [];
+  }
+}
+
 async function loadWordsForLang(langCode) {
   state.lang = normalizeLang(langCode);
   localStorage.setItem(GAME_LANG_KEY, state.lang);
@@ -354,31 +495,14 @@ async function loadWordsForLang(langCode) {
   setGate(`${langTitle(state.lang)} yükleniyor...`);
   disableStartBtn(true, "YÜKLENİYOR...");
 
-  const { data: words, error } = await supabase
-    .from("game_content")
-    .select("content")
-    .eq("game_key", "hangman")
-    .eq("lang", state.lang)
-    .eq("is_active", true)
-    .order("sort_order", { ascending: true });
-
-  if (error) {
-    console.error("game_content words error:", error);
-    setGate("Kelime havuzu alınamadı.");
-    disableStartBtn(true, "HATA");
-    return false;
+  let pool = await loadWordsFromBucket(state.lang);
+  if (!pool.length) {
+    pool = await loadWordsFromDb(state.lang);
   }
 
-  state.pool = Array.isArray(words)
-    ? words
-        .map((x) => ({
-          w: String(x?.content?.word || "").trim(),
-          tr: String(x?.content?.meaning || "").trim()
-        }))
-        .filter((x) => x.w)
-    : [];
+  state.pool = pool;
 
-  const bestKey = state.lang;
+  const bestKey = `hangman::${state.lang}`;
   let best = 0;
 
   try {
@@ -413,7 +537,7 @@ async function updateBestScore(newScore) {
   try {
     if (state.userId === "anon") return;
 
-    const key = state.lang;
+    const key = `hangman::${state.lang}`;
     const { data: prof } = await supabase
       .from("profiles")
       .select("hangman_best")
@@ -626,7 +750,7 @@ $("mBtn") && ($("mBtn").onclick = () => {
     const again = confirm(`Oyun bitti! Skor: ${state.totalScore}. Yeniden başla?`);
     if (again) {
       state.totalScore = 0;
-      state.lives = 3;
+      state.lives = 5;
       if ($("scoreVal")) $("scoreVal").textContent = "0";
       renderHearts();
       startRound();
