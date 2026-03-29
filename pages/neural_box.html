@@ -20,14 +20,12 @@
   --shellLift: 0px;
   --grad: linear-gradient(135deg,#a5b4fc 0%, #6366f1 55%, #ec4899 100%);
 }
-
 *{
   box-sizing:border-box;
   -webkit-tap-highlight-color:transparent;
   outline:none;
   user-select:none;
 }
-
 html,body{
   margin:0;
   width:100%;
@@ -37,7 +35,6 @@ html,body{
   color:#fff;
   overflow:hidden;
 }
-
 body{
   background:
     radial-gradient(circle at 50% 0%, rgba(79,70,229,.18), transparent 28%),
@@ -53,9 +50,7 @@ body{
   overflow-x:hidden;
   scrollbar-width:none;
 }
-#pageContent::-webkit-scrollbar{
-  display:none;
-}
+#pageContent::-webkit-scrollbar{ display:none; }
 
 .app{
   max-width:480px;
@@ -262,9 +257,7 @@ body{
   overflow:auto;
   scrollbar-width:none;
 }
-.card::-webkit-scrollbar{
-  display:none;
-}
+.card::-webkit-scrollbar{ display:none; }
 
 .qWord{
   font-size:34px;
@@ -378,14 +371,13 @@ body{
   flex:1;
 }
 
-@media (max-width:420px){
-  .box-grid{
-    grid-template-columns: repeat(4, 1fr);
-  }
-  .box{
-    height:54px;
-    font-size:20px;
-  }
+.rulesList{
+  text-align:left;
+  margin:16px 0 8px;
+  padding-left:18px;
+  line-height:1.8;
+  color:rgba(255,255,255,.86);
+  font-size:14px;
 }
 </style>
 </head>
@@ -409,7 +401,6 @@ body{
 
   <div class="main">
     <div class="statusTxt" id="statusTxt">KUTUNU SEÇ</div>
-
     <div class="valueBoard" id="valueBoard"></div>
     <div class="box-grid" id="boxGrid"></div>
 
@@ -424,11 +415,27 @@ body{
   <div class="card">
     <h2 style="margin:0; color:var(--cyan); font-family:'Space Grotesk';">NEURAL BOX</h2>
     <p style="font-size:14px; opacity:.8; line-height:1.6; margin:14px 0;">
-      Bayrağa dokun, oyun dilini seç. Kutuları açmak için soruları doğru cevapla. Banker teklif verecek.
+      Bayrağa dokun, oyun dilini seç.
     </p>
 
     <div class="langGrid" id="langGrid"></div>
-    <button class="btnMain" id="startBtn">SİSTEMİ BAŞLAT</button>
+    <button class="btnMain" id="startBtn">DEVAM ET</button>
+  </div>
+</div>
+
+<div class="modal" id="rulesModal">
+  <div class="card">
+    <h2 style="margin:0; color:var(--gold); font-family:'Space Grotesk';">KURALLAR</h2>
+    <ul class="rulesList">
+      <li>Önce kendi kutunu seçersin.</li>
+      <li>Diğer kutuları açmak için soruları doğru cevaplaman gerekir.</li>
+      <li>Doğru bilirsen seçtiğin kutu açılır ve içindeki ödül masadan silinir.</li>
+      <li>Yanlış bilirsen sistem masadaki en büyük ödülü siler.</li>
+      <li>Belli aralıklarda banker teklif verir.</li>
+      <li>İstersen teklifi kabul eder, istersen devam edersin.</li>
+      <li>Finalde kendi kutunu tutabilir ya da son kutuyla değiştirebilirsin.</li>
+    </ul>
+    <button class="btnMain" id="rulesOkBtn">ANLADIM, BAŞLA</button>
   </div>
 </div>
 
@@ -445,7 +452,7 @@ body{
   <div class="card bankerCard">
     <h2 style="color:var(--gold); margin:0; letter-spacing:2px;">BANKER TEKLİFİ</h2>
     <p style="font-size:14px; opacity:0.7; margin:15px 0;">
-      Neural analiz tamamlandı. Banker masaya bunu koydu:
+      Banker masaya bunu koydu:
     </p>
     <div class="offerAmt" id="offerAmt">500 P</div>
     <button class="btnMain" id="btnDeal">VARIM</button>
@@ -457,7 +464,7 @@ body{
   <div class="card bankerCard">
     <h2 style="color:var(--gold); margin:0;">FİNAL</h2>
     <p style="font-size:14px; opacity:.78; margin:14px 0;">
-      Sona geldin. Elindeki kutuyla yerdeki son kutuyu değiştirmek ister misin?
+      Elindeki kutuyla son kutuyu değiştirmek ister misin?
     </p>
     <div class="finalChoice">
       <button class="btnMain" id="btnSwap">VARIM</button>
@@ -519,7 +526,6 @@ const game = {
   lastOffer: 0
 };
 
-/* AUDIO */
 let audioCtx = null;
 function getAudioCtx(){
   try{
@@ -587,7 +593,6 @@ function playBankerFx() {
   window.addEventListener(evt, () => unlockAudio(), { passive:true, once:true });
 });
 
-/* HELPERS */
 function normalize(s){
   return String(s||"")
     .toLowerCase()
@@ -843,7 +848,7 @@ function checkRoundFlow() {
   if (game.boxesOpenedInRound >= game.boxesToOpenThisRound) {
     showBankerOffer();
   } else {
-    setStatus("DEVAM ET VE BİR KUTU DAHA ELE");
+    setStatus("DEVAM ET VE BİR KUTU DAHA AÇ");
   }
 }
 
@@ -882,7 +887,7 @@ function showFinalSwap() {
   $("finalModal").classList.add("show");
 }
 
-async function startGame() {
+async function beginGame() {
   const ok = await ensureAuthAndCacheUser();
   if (!ok) {
     location.href = "/pages/login.html";
@@ -912,7 +917,7 @@ async function startGame() {
   game.lastOffer = 0;
 
   $("myBoxSlot").innerHTML = "";
-  $("startModal").classList.remove("show");
+  $("rulesModal").classList.remove("show");
   $("bankerModal").classList.remove("show");
   $("finalModal").classList.remove("show");
   $("resultModal").classList.remove("show");
@@ -923,21 +928,36 @@ async function startGame() {
   setStatus("KUTUNU SEÇ");
 }
 
+async function prepareStart() {
+  const ok = await ensureAuthAndCacheUser();
+  if (!ok) {
+    location.href = "/pages/login.html";
+    return;
+  }
+
+  game.lang = game.selectedLang;
+  localStorage.setItem(GAME_LANG_KEY, game.lang);
+
+  $("startModal").classList.remove("show");
+  $("rulesModal").classList.add("show");
+}
+
 /* BUTTONS */
-$("startBtn").onclick = startGame;
+$("startBtn").onclick = prepareStart;
+$("rulesOkBtn").onclick = beginGame;
 
 $("btnNoDeal").onclick = continueAfterBanker;
 
 $("btnDeal").onclick = () => {
   $("bankerModal").classList.remove("show");
-  finishWithAmount(game.lastOffer, "Banker ile anlaştın. Oyundan bu ödülle çıktın.");
+  finishWithAmount(game.lastOffer, "Banker teklifini kabul ettin. Oyun bu ödülle bitti.");
 };
 
 $("btnSwap").onclick = () => {
   $("finalModal").classList.remove("show");
   const otherBox = game.boxes.find(b => !b.opened && b !== game.myBox);
   if (otherBox) game.myBox = otherBox;
-  finishWithAmount(game.myBox.val, "Kutuyu değiştirdin. Açılan ödül bu.");
+  finishWithAmount(game.myBox.val, "Kutunu değiştirdin. Açılan ödül bu.");
 };
 
 $("btnKeep").onclick = () => {
@@ -947,7 +967,7 @@ $("btnKeep").onclick = () => {
 
 $("btnReplay").onclick = () => {
   $("resultModal").classList.remove("show");
-  startGame();
+  beginGame();
 };
 
 $("btnBack").onclick = () => {
