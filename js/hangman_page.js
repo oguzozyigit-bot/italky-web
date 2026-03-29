@@ -94,6 +94,23 @@ function updateTranslationBox(text) {
   if (el) el.textContent = String(text || "—");
 }
 
+function getPublicLangUrl(langCode) {
+  const code = normalizeLang(langCode);
+  return `https://auth.italky.ai/storage/v1/object/public/lang/${code}.json`;
+}
+
+async function fileExists(url) {
+  try {
+    const res = await fetch(url, {
+      method: "HEAD",
+      cache: "no-store"
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
 /* -----------------------------
    LANGUAGE META
 ----------------------------- */
@@ -115,26 +132,6 @@ function langFlag(code) {
 
 function langBCP(code) {
   return LANG_META[normalizeLang(code)]?.bcp || "en-US";
-}
-
-/* -----------------------------
-   STORAGE URL / BUCKET PROBE
------------------------------ */
-function getPublicLangUrl(langCode) {
-  const code = normalizeLang(langCode);
-  return `https://auth.italky.ai/storage/v1/object/public/lang/${code}.json`;
-}
-
-async function fileExists(url) {
-  try {
-    const res = await fetch(url, {
-      method: "HEAD",
-      cache: "no-store"
-    });
-    return res.ok;
-  } catch {
-    return false;
-  }
 }
 
 /* -----------------------------
@@ -286,7 +283,7 @@ let state = {
   pool: [],
   target: null,
   lastWord: null,
-  lives: 5,
+  lives: 3,
   MAX_LIVES: 9,
   totalScore: 0,
   roundScore: 100,
@@ -706,9 +703,11 @@ async function endRound(win) {
 
   if (win) {
     state.totalScore += state.roundScore;
+
     if (state.flawless && !state.jokerUsed && state.lives < state.MAX_LIVES) {
       state.lives++;
     }
+
     playWinFx();
     await updateBestScore(state.totalScore);
   } else {
@@ -727,14 +726,17 @@ async function endRound(win) {
 
   $("modal")?.classList.add("on");
 
-  speakText(state.target.w, state.lang);
+  // Kullanıcının istediği gibi cevap oyun sonunda sesli okunsun
+  setTimeout(() => {
+    speakText(String(state.target?.tr || state.target?.w || ""), state.lang);
+  }, 250);
 
   state.autoNextTimer = setTimeout(() => {
     $("modal")?.classList.remove("on");
 
     if (state.lives <= 0) {
       state.totalScore = 0;
-      state.lives = 5;
+      state.lives = 3;
       if ($("scoreVal")) $("scoreVal").textContent = "0";
       renderHearts();
     }
