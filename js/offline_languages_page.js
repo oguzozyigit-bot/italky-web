@@ -227,6 +227,11 @@ function markLocalInstalled(code) {
   setLocalInstalled([...set]);
 }
 
+function markLocalRemoved(code) {
+  const next = getLocalInstalled().map(norm).filter((x) => x !== norm(code));
+  setLocalInstalled(next);
+}
+
 function isLocallyInstalled(code) {
   return getLocalInstalled().map(norm).includes(norm(code));
 }
@@ -413,9 +418,23 @@ function nativeReady() {
   return !!(window.Offline && typeof window.Offline.installFromUrl === "function");
 }
 
+function nativeCanDelete() {
+  return !!(window.Offline && typeof window.Offline.uninstall === "function");
+}
+
 function installNative(pair, url) {
   if (!nativeReady()) throw new Error("native_offline_not_ready");
   window.Offline.installFromUrl(pair, url);
+}
+
+function uninstallNative(pair) {
+  if (!nativeCanDelete()) return false;
+  try {
+    window.Offline.uninstall(pair);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function nativeCheckDirectionInstalled(pair) {
@@ -453,6 +472,17 @@ function installPairsForLanguage(code) {
   const lang = norm(code);
   if (!lang || lang === PIVOT) return [];
   return [`${lang}-${PIVOT}`, `${PIVOT}-${lang}`];
+}
+
+async function remotePairExists(pair) {
+  try {
+    const url = publicUrl(pairPath(pair));
+    if (!url) return false;
+    const res = await fetch(url, { method: "HEAD", cache: "no-store" });
+    return res.ok;
+  } catch {
+    return false;
+  }
 }
 
 /* ---------------- INSTALL BASE ---------------- */
@@ -505,21 +535,28 @@ async function installBase() {
   try {
     const pairs = installPairsForLanguage(ownLang);
 
-    setStatus(`${ownName} kurulumu hazırlanıyor. Lütfen bekleyin...`, "info");
-
     for (const pair of pairs) {
-      const url = publicUrl(pairPath(pair));
-      if (!url) throw new Error(`base_url_missing_${pair}`);
-      installNative(pair, url);
+      const exists = await remotePairExists(pair);
+      if (!exists) {
+        throw new Error(`remote_pack_missing_${pair}`);
+      }
     }
 
     setStatus(`${ownName} indiriliyor ve kuruluyor. Kurulum doğrulanıyor...`, "warn");
 
+    for (const pair of pairs) {
+      const url = publicUrl(pairPath(pair));
+      installNative(pair, url);
+    }
+
     const ready = await waitUntilPairsInstalled(pairs, 90000);
 
     if (!ready) {
-      setStatus(`${ownName} kurulumu henüz tamamlanmadı. İndirme devam ediyor olabilir. Biraz sonra tekrar kontrol edin.`, "warn");
-      toast("Kurulum sürüyor");
+      setStatus(
+        `${ownName} kurulumu henüz tamamlanmadı. Web tarafı kur komutu verdi ama cihaz kurulu olarak doğrulamadı. Android offline bridge kontrol edilmeli.`,
+        "err"
+      );
+      toast("Kurulum doğrulanamadı");
       installBaseBtn.disabled = false;
       installBaseBtn.textContent = "Kurulumu Başlat";
       return;
@@ -536,14 +573,66 @@ async function installBase() {
     installBaseBtn.textContent = "Kurulum Tamamlandı";
   } catch (e) {
     console.error(e);
-    setStatus("Temel kurulum başarısız.", "err");
-    toast("Kurulum hatası");
+    const msg = String(e?.message || "");
+
+    if (msg.startsWith("remote_pack_missing_")) {
+      setStatus("Sunucuda ilgili offline paket bulunamadı.", "err");
+      toast("Paket bulunamadı");
+    } else {
+      setStatus("Temel kurulum başarısız.", "err");
+      toast("Kurulum hatası");
+    }
+
     installBaseBtn.disabled = false;
     installBaseBtn.textContent = "Kurulumu Başlat";
   }
 
   render();
 }
+
+/* ---------------- REMOVE LANG ---------------- */
+window.removeLang = async function (lang) {
+  const code = norm(lang);
+  if (!code) return;
+
+  const ownLang = norm(getUserLang());
+  if (code === ownLang) {
+    toast("Kendi konuşma diliniz buradan silinmez");
+    return;
+  }
+  if (code === PIVOT) {
+    toast("İngilizce köprü dili burada silinmez");
+    return;
+  }
+
+  const title = langName(code);
+
+  const approved = await askConfirm({
+    title: "Dili sil",
+    text: `${title} bu cihazdan kaldırılacak.\n\nDevam etmek istiyor musunuz?`
+  });
+
+  if (!approved) return;
+
+  const pairs = installPairsForLanguage(code);
+  let ok = true;
+
+  for (const pair of pairs) {
+    const removed = uninstallNative(pair);
+    if (!removed) ok = false;
+  }
+
+  if (!ok) {
+    setStatus(`${title} silinemedi. Android bridge uninstall desteği eksik olabilir.`, "err");
+    toast("Silme başarısız");
+    return;
+  }
+
+  markLocalRemoved(code);
+  setStatus(`${title} cihazdan kaldırıldı.`, "ok");
+  toast(`${title} silindi`);
+  render();
+};
 
 /* ---------------- INSTALL LANG ---------------- */
 window.installLang = async function (lang) {
@@ -620,19 +709,28 @@ window.installLang = async function (lang) {
 
     const pairs = installPairsForLanguage(code);
 
-    setStatus(`${title} indiriliyor ve kuruluyor. Lütfen bekleyin...`, "info");
+    for (const pair of pairs) {
+      const exists = await remotePairExists(pair);
+      if (!exists) {
+        throw new Error(`remote_pack_missing_${pair}`);
+      }
+    }
+
+    setStatus(`${title} indiriliyor ve kuruluyor. Lütfen bekleyin...`, "warn");
 
     for (const pair of pairs) {
       const url = publicUrl(pairPath(pair));
-      if (!url) throw new Error(`pack_url_missing_${pair}`);
       installNative(pair, url);
     }
 
     const ready = await waitUntilPairsInstalled(pairs, 90000);
 
     if (!ready) {
-      setStatus(`${title} henüz tamamlanmadı. İndirme devam ediyor olabilir. Biraz sonra tekrar kontrol edin.`, "warn");
-      toast("Kurulum sürüyor");
+      setStatus(
+        `${title} için kur komutu gönderildi ama cihaz paketi kurulu olarak doğrulamadı. Android offline bridge kontrol edilmeli.`,
+        "err"
+      );
+      toast("Kurulum doğrulanamadı");
       return;
     }
 
@@ -648,7 +746,14 @@ window.installLang = async function (lang) {
   } catch (e) {
     console.error(e);
 
-    if (e?.code === "INSUFFICIENT_TOKENS" || String(e?.message || "").includes("insufficient_tokens")) {
+    const msg = String(e?.message || "");
+    if (msg.startsWith("remote_pack_missing_")) {
+      setStatus(`${title} için sunucuda paket bulunamadı.`, "err");
+      toast("Paket bulunamadı");
+      return;
+    }
+
+    if (e?.code === "INSUFFICIENT_TOKENS" || msg.includes("insufficient_tokens")) {
       setStatus("Yetersiz jeton", "err");
       toast("Jeton yetersiz");
       setTimeout(() => {
@@ -701,15 +806,25 @@ function buildLangCard(l, query) {
     sub = `Tekrar indirme ${cost} jeton • Önceki indirme: ${downloadCount}`;
   }
 
-  const btnText = localInstalled
-    ? "✅ Kuruldu"
-    : (!downloadedBefore ? "Ücretsiz İndir" : `${cost} Jetonla İndir`);
+  if (localInstalled) {
+    return `
+      <div class="lang-card">
+        <div class="lang-head">
+          <div class="flag">${escapeHtml(l.flag)}</div>
+          <div>
+            <div class="lang-name">${escapeHtml(l.name)}</div>
+            <div class="lang-sub">${escapeHtml(sub)}</div>
+          </div>
+        </div>
 
-  const btnClass = localInstalled
-    ? "lang-btn installed"
-    : (!downloadedBefore ? "lang-btn free" : "lang-btn paid");
+        <button class="lang-btn installed" type="button" disabled>✅ Kuruldu</button>
+        <button class="lang-btn paid" style="margin-top:10px;" onclick="removeLang('${escapeHtml(l.code)}')">Sil</button>
+      </div>
+    `;
+  }
 
-  const disabledAttr = localInstalled ? "disabled" : "";
+  const btnText = !downloadedBefore ? "Ücretsiz İndir" : `${cost} Jetonla İndir`;
+  const btnClass = !downloadedBefore ? "lang-btn free" : "lang-btn paid";
 
   return `
     <div class="lang-card">
@@ -721,7 +836,7 @@ function buildLangCard(l, query) {
         </div>
       </div>
 
-      <button class="${btnClass}" onclick="installLang('${escapeHtml(l.code)}')" ${disabledAttr}>
+      <button class="${btnClass}" onclick="installLang('${escapeHtml(l.code)}')">
         ${escapeHtml(btnText)}
       </button>
     </div>
@@ -755,7 +870,6 @@ function render() {
     </div>
   `;
 
-  const ownName = langName(ownLang);
   if (isBaseReady(ownLang)) {
     installBaseBtn.disabled = true;
     installBaseBtn.textContent = "Kurulum Tamamlandı";
