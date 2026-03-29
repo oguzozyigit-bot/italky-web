@@ -1,18 +1,16 @@
-// FILE: /js/offline_languages_page.js
-
 import { mountShell, setHeaderTokens } from "/js/ui_shell.js";
 import { supabase } from "/js/supabase_client.js";
 import { ensureAuthAndCacheUser } from "/js/auth.js";
+import { getLangPoolForSite } from "/js/lang_pool_full.js";
 
 mountShell({ scroll: "auto" });
 
-const API_BASE = "https://italky-api.onrender.com";
-const BUCKET = "offline";
 const PIVOT = "en";
 const USER_LANG_KEY = "italky_user_lang_v1";
 const BASE_READY_PREFIX = "offline_base_ready_";
 const LOCAL_INSTALLED_KEY = "offline_installed_langs_v2";
 const REDOWNLOAD_COST = 20;
+const BUCKET = "offline";
 
 const $ = (id) => document.getElementById(id);
 
@@ -23,13 +21,17 @@ const searchInput = $("searchInput");
 const countPill = $("installedCount");
 const installBaseBtn = $("btnInstallBase");
 const statusBox = $("statusBox");
+const networkTag = $("networkTag");
+const trialTag = $("trialTag");
+const btnHome = $("btnHome");
 
 /* ---------------- STATE ---------------- */
 let currentUserId = "";
 let profileRow = null;
 let renderToken = 0;
+let LANGS = [];
 
-/* ---------------- TOAST ---------------- */
+/* ---------------- HELPERS ---------------- */
 function toast(msg) {
   if (!toastEl) return;
   toastEl.textContent = String(msg || "");
@@ -59,19 +61,89 @@ function escapeHtml(str) {
     .replaceAll("'", "&#39;");
 }
 
-/* ---------------- LANG ---------------- */
-const LANGS = [
-  { code: "tr", flag: "🇹🇷", name: "Türkçe" },
-  { code: "en", flag: "🇬🇧", name: "İngilizce" },
-  { code: "de", flag: "🇩🇪", name: "Almanca" },
-  { code: "fr", flag: "🇫🇷", name: "Fransızca" },
-  { code: "es", flag: "🇪🇸", name: "İspanyolca" },
-  { code: "it", flag: "🇮🇹", name: "İtalyanca" },
-  { code: "ru", flag: "🇷🇺", name: "Rusça" },
-  { code: "ja", flag: "🇯🇵", name: "Japonca" },
-  { code: "ko", flag: "🇰🇷", name: "Korece" },
-  { code: "zh", flag: "🇨🇳", name: "Çince" }
-];
+function getHomeUrl() {
+  return "/pages/home.html";
+}
+
+function getLanguagePool() {
+  const raw = Array.isArray(getLangPoolForSite?.("tr")) ? getLangPoolForSite("tr") : [];
+  const seen = new Set();
+  const list = raw
+    .map((x) => ({
+      code: norm(x?.code),
+      name: String(x?.name || "").trim(),
+      flag: String(x?.flag || "🌐")
+    }))
+    .filter((x) => x.code && x.name)
+    .filter((x) => {
+      if (seen.has(x.code)) return false;
+      seen.add(x.code);
+      return true;
+    });
+
+  if (!list.find((x) => x.code === "en")) {
+    list.unshift({ code: "en", name: "İngilizce", flag: "🇬🇧" });
+  }
+
+  return list;
+}
+
+function langName(code) {
+  return LANGS.find((x) => x.code === norm(code))?.name || String(code || "").toUpperCase();
+}
+
+function langFlag(code) {
+  return LANGS.find((x) => x.code === norm(code))?.flag || "🌐";
+}
+
+/* ---------------- ACCESS ---------------- */
+function getAccessState() {
+  const a = window.__ITALKY_ACCESS__ || {};
+
+  const trialActive =
+    a.trialActive === true ||
+    a.trial_active === true ||
+    Number(a.trialDaysLeft || 0) > 0 ||
+    Number(a.trial_days_left || 0) > 0 ||
+    Number(a.remainingTrialDays || 0) > 0 ||
+    Number(a.remaining_trial_days || 0) > 0;
+
+  const hasPackage =
+    a.hasPackage === true ||
+    a.has_package === true ||
+    a.packageActive === true ||
+    a.package_active === true ||
+    a.isPremium === true ||
+    a.premium === true;
+
+  const nfcActive =
+    a.nfcActive === true ||
+    a.nfc_active === true ||
+    a.cardAccess === true ||
+    a.card_access === true;
+
+  return { trialActive, hasPackage, nfcActive };
+}
+
+function accessOk() {
+  const access = getAccessState();
+  return access.trialActive || access.hasPackage || access.nfcActive;
+}
+
+function updateTopStatus(){
+  if (networkTag) networkTag.textContent = navigator.onLine ? "ONLINE" : "OFFLINE";
+
+  const access = getAccessState();
+  if (trialTag) {
+    if (access.trialActive) {
+      trialTag.textContent = "DENEME AKTİF";
+    } else if (access.hasPackage || access.nfcActive) {
+      trialTag.textContent = "ERİŞİM AÇIK";
+    } else {
+      trialTag.textContent = "KİLİTLİ";
+    }
+  }
+}
 
 /* ---------------- USER LANG ---------------- */
 function getUserLang() {
@@ -82,7 +154,6 @@ function setUserLang(code) {
   localStorage.setItem(USER_LANG_KEY, norm(code));
 }
 
-/* ---------------- BASE ---------------- */
 function baseReadyKey(lang) {
   return BASE_READY_PREFIX + norm(lang);
 }
@@ -95,7 +166,7 @@ function setBaseReady(lang) {
   localStorage.setItem(baseReadyKey(lang), "1");
 }
 
-/* ---------------- LOCAL INSTALL STATE (DEVICE) ---------------- */
+/* ---------------- DEVICE STATE ---------------- */
 function getLocalInstalled() {
   try {
     return JSON.parse(localStorage.getItem(LOCAL_INSTALLED_KEY) || "[]");
@@ -104,14 +175,18 @@ function getLocalInstalled() {
   }
 }
 
-function markLocalInstalled(lang) {
-  const set = new Set(getLocalInstalled().map(norm));
-  set.add(norm(lang));
-  localStorage.setItem(LOCAL_INSTALLED_KEY, JSON.stringify([...set]));
+function setLocalInstalled(arr) {
+  localStorage.setItem(LOCAL_INSTALLED_KEY, JSON.stringify(arr));
 }
 
-function isLocallyInstalled(lang) {
-  return getLocalInstalled().map(norm).includes(norm(lang));
+function markLocalInstalled(code) {
+  const set = new Set(getLocalInstalled().map(norm));
+  set.add(norm(code));
+  setLocalInstalled([...set]);
+}
+
+function isLocallyInstalled(code) {
+  return getLocalInstalled().map(norm).includes(norm(code));
 }
 
 /* ---------------- PROFILE / DB ---------------- */
@@ -208,6 +283,36 @@ async function saveOfflineLangDownload(lang) {
   profileRow = data || profileRow;
 }
 
+async function saveOwnLanguageBase(lang) {
+  const code = norm(lang);
+  const list = getProfileOfflineLangEntries();
+  const nowIso = new Date().toISOString();
+
+  const idx = list.findIndex((x) => x.code === code);
+  if (idx >= 0) {
+    if (Number(list[idx].download_count || 0) < 1) {
+      list[idx].download_count = 1;
+    }
+    list[idx].last_download_at = nowIso;
+  } else {
+    list.push({
+      code,
+      download_count: 1,
+      last_download_at: nowIso
+    });
+  }
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .update({ offline_langs: list })
+    .eq("id", currentUserId)
+    .select("id,tokens,offline_langs")
+    .single();
+
+  if (error) throw error;
+  profileRow = data || profileRow;
+}
+
 async function chargeRedownload(lang) {
   const entry = getOfflineEntry(lang);
   const count = Number(entry?.download_count || 0);
@@ -282,12 +387,51 @@ function pairPath(pair) {
   return `langpacks/${pair}/model.zip`;
 }
 
+function installPairsForLanguage(code) {
+  const lang = norm(code);
+  if (!lang || lang === PIVOT) return [];
+  return [`${lang}-${PIVOT}`, `${PIVOT}-${lang}`];
+}
+
 /* ---------------- INSTALL BASE ---------------- */
 async function installBase() {
-  const lang = getUserLang();
+  const ownLang = norm(getUserLang());
+
+  if (!ownLang || ownLang === PIVOT) {
+    setStatus("İngilizce seçiliyse temel köprü kurulumu gerekmez.", "warn");
+    toast("İngilizce için köprü kurulumu gerekmez");
+    return;
+  }
+
+  if (!accessOk()) {
+    setStatus("Offline kullanım için erişim gerekli.", "err");
+    toast("Üyelik veya erişim gerekli");
+    return;
+  }
+
+  if (!navigator.onLine) {
+    setStatus("Kurulum için internet gerekir.", "err");
+    toast("Kurulum için internet gerekir");
+    return;
+  }
 
   if (!nativeReady()) {
+    setStatus("Offline bridge hazır değil.", "err");
     toast("Offline sistem hazır değil");
+    return;
+  }
+
+  const ownName = langName(ownLang);
+  const approved = confirm(
+    `${ownName} kurulumu başlatılıyor.\n\n` +
+    `Sistem arka planda şu köprüleri hazırlar:\n` +
+    `• ${ownName} → İngilizce\n` +
+    `• İngilizce → ${ownName}\n\n` +
+    `Onaylıyor musunuz?`
+  );
+
+  if (!approved) {
+    setStatus("Kurulum iptal edildi.", "warn");
     return;
   }
 
@@ -295,7 +439,7 @@ async function installBase() {
   installBaseBtn.textContent = "Kuruluyor...";
 
   try {
-    const pairs = [`${lang}-${PIVOT}`, `${PIVOT}-${lang}`];
+    const pairs = installPairsForLanguage(ownLang);
 
     for (const pair of pairs) {
       const url = publicUrl(pairPath(pair));
@@ -303,20 +447,20 @@ async function installBase() {
       installNative(pair, url);
     }
 
-    markLocalInstalled("en");
-    markLocalInstalled(lang);
-    setBaseReady(lang);
+    markLocalInstalled(ownLang);
+    setBaseReady(ownLang);
+    await saveOwnLanguageBase(ownLang);
 
-    setStatus("Temel kurulum tamamlandı", "ok");
-    toast("Temel kurulum tamamlandı");
+    setStatus(`${ownName} temel köprü kurulumu tamamlandı. Şimdi diğer hedef dilleri indirebilirsiniz.`, "info");
+    toast(`${ownName} kurulumu tamamlandı`);
   } catch (e) {
     console.error(e);
-    setStatus("Temel kurulum başarısız", "err");
+    setStatus("Temel kurulum başarısız.", "err");
     toast("Kurulum hatası");
   }
 
   installBaseBtn.disabled = false;
-  installBaseBtn.textContent = "Hazır";
+  installBaseBtn.textContent = "Kurulumu Başlat";
   render();
 }
 
@@ -324,6 +468,18 @@ async function installBase() {
 window.installLang = async function (lang) {
   const code = norm(lang);
   if (!code) return;
+
+  const ownLang = norm(getUserLang());
+
+  if (code === ownLang) {
+    toast("Kendi konuşma diliniz burada tekrar gösterilmez");
+    return;
+  }
+
+  if (code === PIVOT) {
+    toast("İngilizce köprü dilidir ve ayrıca gösterilmez");
+    return;
+  }
 
   if (!nativeReady()) {
     toast("Offline sistem hazır değil");
@@ -335,6 +491,24 @@ window.installLang = async function (lang) {
     return;
   }
 
+  if (!isBaseReady(ownLang)) {
+    setStatus("Önce kendi konuşma diliniz için temel kurulumu tamamlayın.", "warn");
+    toast("Önce temel kurulumu tamamlayın");
+    return;
+  }
+
+  if (!accessOk()) {
+    setStatus("Offline kullanım için erişim gerekli.", "err");
+    toast("Üyelik veya erişim gerekli");
+    return;
+  }
+
+  if (!navigator.onLine) {
+    setStatus("Dil paketi indirmek için internet gerekir.", "err");
+    toast("İndirme için internet gerekir");
+    return;
+  }
+
   if (isLocallyInstalled(code)) {
     toast("Bu dil bu cihazda zaten kurulu");
     return;
@@ -342,18 +516,19 @@ window.installLang = async function (lang) {
 
   const myToken = ++renderToken;
   const cost = nextDownloadCost(code);
+  const title = langName(code);
 
   try {
     setStatus(
       cost > 0
-        ? `${code.toUpperCase()} yeniden indiriliyor (${cost} jeton)`
-        : `${code.toUpperCase()} ilk kez indiriliyor (ücretsiz)`,
-      "info"
+        ? `${title} yeniden indiriliyor (${cost} jeton)`
+        : `${title} ilk kez indiriliyor (ücretsiz)`,
+      cost > 0 ? "warn" : "info"
     );
 
     if (cost > 0) {
       const approved = confirm(
-        `${code.toUpperCase()} dili daha önce indirildi.\n` +
+        `${title} dili daha önce indirildi.\n` +
         `Bu yeniden indirme ${cost} jeton düşer.\n\nDevam edilsin mi?`
       );
 
@@ -365,7 +540,7 @@ window.installLang = async function (lang) {
       await chargeRedownload(code);
     }
 
-    const pairs = [`${code}-${PIVOT}`, `${PIVOT}-${code}`];
+    const pairs = installPairsForLanguage(code);
 
     for (const pair of pairs) {
       const url = publicUrl(pairPath(pair));
@@ -380,8 +555,8 @@ window.installLang = async function (lang) {
 
     const afterCount = getDownloadCount(code);
     const chargedText = cost > 0 ? ` • ${cost} jeton düşüldü` : " • ücretsiz";
-    setStatus(`${code.toUpperCase()} indirildi • indirme sayısı: ${afterCount}${chargedText}`, "ok");
-    toast(cost > 0 ? `Dil indirildi • ${cost} jeton düşüldü` : "Dil indirildi");
+    setStatus(`${title} indirildi • indirme sayısı: ${afterCount}${chargedText}`, "info");
+    toast(cost > 0 ? `${title} indirildi • ${cost} jeton düşüldü` : `${title} indirildi`);
   } catch (e) {
     console.error(e);
 
@@ -402,8 +577,23 @@ window.installLang = async function (lang) {
 };
 
 /* ---------------- RENDER ---------------- */
-function buildLangCard(l, userLang, query) {
-  if (l.code === userLang) return "";
+function populateOwnLanguageSelect() {
+  if (!sourceSelect) return;
+  sourceSelect.innerHTML = LANGS
+    .filter((l) => l.code !== PIVOT)
+    .map((l) => `<option value="${escapeHtml(l.code)}">${escapeHtml(l.flag)} ${escapeHtml(l.name)}</option>`)
+    .join("");
+
+  const current = norm(getUserLang());
+  if (LANGS.some((l) => l.code === current && l.code !== PIVOT)) {
+    sourceSelect.value = current;
+  }
+}
+
+function buildLangCard(l, query) {
+  const ownLang = norm(getUserLang());
+  if (l.code === ownLang) return "";
+  if (l.code === PIVOT) return "";
 
   const q = norm(query);
   if (q && !(`${l.name} ${l.code}`.toLowerCase().includes(q))) return "";
@@ -450,14 +640,17 @@ function buildLangCard(l, userLang, query) {
 }
 
 function render() {
-  const userLang = getUserLang();
-  const localInstalled = getLocalInstalled();
+  const ownLang = getUserLang();
+  const localInstalled = getLocalInstalled().filter((x) => x !== PIVOT);
 
-  if (sourceSelect) sourceSelect.value = userLang;
-  if (countPill) countPill.textContent = String(localInstalled.length);
+  populateOwnLanguageSelect();
+
+  if (countPill) {
+    countPill.textContent = String(localInstalled.filter((x) => x !== ownLang).length);
+  }
 
   const html = LANGS
-    .map((l) => buildLangCard(l, userLang, searchInput?.value || ""))
+    .map((l) => buildLangCard(l, searchInput?.value || ""))
     .filter(Boolean)
     .join("");
 
@@ -473,19 +666,24 @@ function render() {
     </div>
   `;
 
-  const baseText = isBaseReady(userLang)
-    ? `${userLang.toUpperCase()} temel kurulum hazır`
-    : `${userLang.toUpperCase()} temel kurulum bekleniyor`;
+  const ownName = langName(ownLang);
+  const baseText = isBaseReady(ownLang)
+    ? `${ownName} temel köprü hazır`
+    : `${ownName} temel köprü kurulumu bekleniyor`;
 
   const tokenInfo = Number(profileRow?.tokens || 0);
   if (statusBox && !statusBox.textContent.trim()) {
     setStatus(`${baseText} • Bakiye: ${tokenInfo} jeton`, "info");
   }
+
+  updateTopStatus();
 }
 
 /* ---------------- INIT ---------------- */
 async function boot() {
   try {
+    LANGS = getLanguagePool();
+
     const ok = await ensureAuthAndCacheUser();
     if (!ok) {
       location.replace("/pages/login.html");
@@ -494,16 +692,13 @@ async function boot() {
 
     await loadProfile();
 
-    const userLang = getUserLang();
-    if (sourceSelect) {
-      sourceSelect.value = userLang;
-    }
+    populateOwnLanguageSelect();
 
     try {
       setHeaderTokens(Number(profileRow?.tokens || 0));
     } catch {}
 
-    setStatus("Offline diller hazır", "ok");
+    setStatus("Önce kendi konuşma dilinizi seçin.", "info");
     render();
   } catch (e) {
     console.error(e);
@@ -523,7 +718,7 @@ if (installBaseBtn) {
 if (sourceSelect) {
   sourceSelect.onchange = () => {
     setUserLang(sourceSelect.value);
-    setStatus("", "info");
+    setStatus(`${langName(sourceSelect.value)} seçildi. Kurulumu başlatabilirsiniz.`, "info");
     render();
   };
 }
@@ -533,5 +728,14 @@ if (searchInput) {
     render();
   };
 }
+
+if (btnHome) {
+  btnHome.onclick = () => {
+    location.href = getHomeUrl();
+  };
+}
+
+window.addEventListener("online", updateTopStatus);
+window.addEventListener("offline", updateTopStatus);
 
 boot();
