@@ -125,7 +125,6 @@
       border-radius: 28px;
       backdrop-filter: blur(15px);
       padding: 20px 16px;
-      margin: 0;
       position:relative;
       box-shadow: 0 30px 60px rgba(0,0,0,.5);
       display:flex;
@@ -367,6 +366,7 @@
       line-height:1.9;
       margin:16px 0;
       text-align:left;
+      white-space:pre-line;
     }
 
     .resultBtns{
@@ -397,8 +397,6 @@
   </style>
 </head>
 <body>
-  <div class="cosmos-bg"></div>
-
   <div class="wrap" id="pageContent">
     <div class="nav-top">
       <div style="width:54px;"></div>
@@ -491,7 +489,7 @@ const state = {
   mistakes: 0,
   maxMistakes: 8,
   lives: 3,
-  maxLives: 3,
+  maxLives: 9,
   jokers: 2,
   totalScore: 0,
   streak: 0,
@@ -503,13 +501,113 @@ const state = {
   best: Number(localStorage.getItem("sentence_forge_best") || 0)
 };
 
-function escapeRegExp(s){
+let audioCtx = null;
+
+function getAudioCtx() {
+  try {
+    if (!audioCtx) {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return null;
+      audioCtx = new Ctx();
+    }
+    return audioCtx;
+  } catch {
+    return null;
+  }
+}
+
+async function unlockAudio() {
+  try {
+    const ctx = getAudioCtx();
+    if (ctx && ctx.state === "suspended") {
+      await ctx.resume();
+    }
+  } catch {}
+}
+
+function beep({freq=440,duration=.08,type="sine",gain=.03,when=0}) {
+  const ctx = getAudioCtx();
+  if (!ctx) return;
+  if (ctx.state === "suspended") ctx.resume().catch(() => {});
+  const now = ctx.currentTime + when;
+
+  const osc = ctx.createOscillator();
+  const g = ctx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, now);
+  g.gain.setValueAtTime(.0001, now);
+  g.gain.exponentialRampToValueAtTime(gain, now + .01);
+  g.gain.exponentialRampToValueAtTime(.0001, now + duration);
+  osc.connect(g);
+  g.connect(ctx.destination);
+  osc.start(now);
+  osc.stop(now + duration + .02);
+}
+
+function playCorrectFx() {
+  beep({freq:720,duration:.08,type:"triangle",gain:.05});
+  beep({freq:920,duration:.09,type:"triangle",gain:.04,when:.07});
+}
+
+function playWrongFx() {
+  beep({freq:220,duration:.10,type:"sawtooth",gain:.05});
+  beep({freq:170,duration:.12,type:"sawtooth",gain:.04,when:.05});
+}
+
+function nativeSpeak(text, lang) {
+  try {
+    if (window.NativeTTS && typeof window.NativeTTS.speak === "function") {
+      window.NativeTTS.speak(String(text || "").trim(), String(lang || "en").trim());
+      return true;
+    }
+  } catch {}
+  return false;
+}
+
+async function speakText(text, lang) {
+  const t = String(text || "").trim();
+  if (!t) return;
+
+  await unlockAudio();
+
+  if (nativeSpeak(t, lang)) return;
+  if (!("speechSynthesis" in window)) return;
+
+  try { window.speechSynthesis.cancel(); } catch {}
+
+  const u = new SpeechSynthesisUtterance(t);
+  u.lang = `${lang}-${lang.toUpperCase()}`;
+  if (lang === "en") u.lang = "en-US";
+  if (lang === "de") u.lang = "de-DE";
+  if (lang === "fr") u.lang = "fr-FR";
+  if (lang === "es") u.lang = "es-ES";
+  if (lang === "it") u.lang = "it-IT";
+  u.rate = .92;
+  u.pitch = 1;
+  u.volume = 1;
+
+  const voices = window.speechSynthesis.getVoices();
+  if (voices?.length) {
+    const found = voices.find(v => String(v.lang || "").toLowerCase().startsWith(lang));
+    if (found) u.voice = found;
+  }
+
+  setTimeout(() => {
+    try { window.speechSynthesis.speak(u); } catch {}
+  }, 80);
+}
+
+["click","touchstart","pointerdown"].forEach(evt => {
+  window.addEventListener(evt, () => unlockAudio(), { passive:true, once:true });
+});
+
+function escapeRegExp(s) {
   return String(s ?? "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 function shuffle(a) {
   const arr = [...a];
-  for(let i = arr.length - 1; i > 0; i--) {
+  for (let i = arr.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [arr[i], arr[j]] = [arr[j], arr[i]];
   }
@@ -587,7 +685,7 @@ async function loadLangPool(lang) {
   return { items: normalizeLangItems(extractItems(json)) };
 }
 
-function normalizeKey(s){
+function normalizeKey(s) {
   return String(s || "")
     .toLowerCase()
     .normalize("NFD")
@@ -596,7 +694,7 @@ function normalizeKey(s){
     .trim();
 }
 
-function nextUniqueWord(items){
+function nextUniqueWord(items) {
   if (!items.length) return null;
 
   if (state.used.size >= items.length) {
@@ -748,7 +846,12 @@ function calculatePuan() {
   const speedBonus = !state.usedJokerInRound ? (timeUsed < 6 ? 10 : (timeUsed < 10 ? 5 : 0)) : 0;
   const perfectBonus = (!state.usedJokerInRound && state.mistakes === 0) ? 15 : 0;
 
-  if (state.mistakes === 0 && !state.usedJokerInRound) state.perfectCount++;
+  if (state.mistakes === 0 && !state.usedJokerInRound) {
+    state.perfectCount++;
+    if (state.lives < state.maxLives) {
+      state.lives++;
+    }
+  }
 
   const roundTotal = Math.round((base * multiplier) + speedBonus + perfectBonus);
   state.totalScore += roundTotal;
@@ -759,12 +862,20 @@ function calculatePuan() {
   updateUI();
 }
 
+function revealAndSpeakCorrectAnswer() {
+  $("resInfo").textContent = `✅ DOĞRU: ${state.currentWord}`;
+  $("resInfo").style.opacity = "1";
+  speakText(state.currentWord, state.lang);
+}
+
 function handleGuess(char, btn) {
   if (!btn || btn.disabled) return;
   btn.disabled = true;
 
   if (state.currentWord.includes(char)) {
     btn.classList.add("correct");
+    playCorrectFx();
+
     state.currentWord.split("").forEach((c, i) => {
       if (c === char) state.discovered[i] = true;
     });
@@ -772,12 +883,12 @@ function handleGuess(char, btn) {
 
     if (state.discovered.every(v => v)) {
       calculatePuan();
-      $("resInfo").textContent = `✅ DOĞRU: ${state.currentWord}`;
-      $("resInfo").style.opacity = "1";
-      setTimeout(() => startRound(), 1200);
+      revealAndSpeakCorrectAnswer();
+      setTimeout(() => startRound(), 1600);
     }
   } else {
     btn.classList.add("wrong");
+    playWrongFx();
     state.mistakes++;
     state.streak = 0;
     updateUI();
@@ -785,10 +896,12 @@ function handleGuess(char, btn) {
     if (state.mistakes >= state.maxMistakes) {
       state.lives--;
       state.totalScore = Math.max(0, state.totalScore - 5);
+      revealAndSpeakCorrectAnswer();
+
       if (state.lives <= 0) {
-        finishGame();
+        setTimeout(() => finishGame(), 1600);
       } else {
-        setTimeout(() => startRound(), 1200);
+        setTimeout(() => startRound(), 1600);
       }
     } else {
       $("resInfo").textContent = `HATA: ${state.mistakes}/${state.maxMistakes}`;
@@ -814,6 +927,7 @@ function saveRecord() {
   records.sort((a,b) => b.score - a.score);
   const top10 = records.slice(0,10);
   localStorage.setItem('italky_sentence_forge_hof', JSON.stringify(top10));
+  localStorage.setItem('sentence_forge_best', String(state.best));
 
   updateLeaderboardUI();
   return top10.some(r => r.id === newRecord.id);
@@ -822,12 +936,11 @@ function saveRecord() {
 function finishGame() {
   const isNew = saveRecord();
   $("endTitle").textContent = isNew ? "YENİ REKOR! 👑" : "OYUN BİTTİ";
-  $("endStats").innerHTML = `
-Toplam Skor: <b>${state.totalScore}</b><br>
-Max Seri: <b>🔥 ${state.maxStreak}</b><br>
-Mükemmel Tur: <b>${state.perfectCount}</b><br>
-Dil: <b>${LANG_META[state.lang]?.name || state.lang}</b>
-  `;
+  $("endStats").textContent =
+`Toplam Skor: ${state.totalScore}
+Max Seri: 🔥 ${state.maxStreak}
+Mükemmel Tur: ${state.perfectCount}
+Dil: ${LANG_META[state.lang]?.name || state.lang}`;
   $("endModal").style.display = "flex";
 }
 
@@ -865,7 +978,7 @@ async function initGame() {
   state.mistakes = 0;
   state.maxMistakes = 8;
   state.lives = 3;
-  state.maxLives = 3;
+  state.maxLives = 9;
   state.jokers = 2;
   state.totalScore = 0;
   state.streak = 0;
@@ -913,7 +1026,8 @@ $("jokerBtn").onclick = () => {
 $("skipBtn").onclick = () => {
   state.streak = 0;
   state.totalScore = Math.max(0, state.totalScore - 3);
-  startRound();
+  revealAndSpeakCorrectAnswer();
+  setTimeout(() => startRound(), 1400);
 };
 
 window.addEventListener("load", () => {
