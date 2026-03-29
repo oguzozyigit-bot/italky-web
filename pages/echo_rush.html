@@ -1,355 +1,474 @@
-<!DOCTYPE html>
+<!-- FILE: /pages/echo_rush.html -->
+<!doctype html>
 <html lang="tr">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-<title>italkyAI • Signal Hunt</title>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Share+Tech+Mono&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet">
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+  <title>italkyAI • Echo Rush</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;800&family=Space+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
 
-<style>
-  :root{
-    --bg:#02000f;
-    --radar:#00ffd5;
-    --danger:#ff2456;
-    --ok:#00ff9d;
-    --gold:#ffcc33;
-    --grad: linear-gradient(135deg,#a5b4fc 0%, #6366f1 55%, #ec4899 100%);
-    --bd: rgba(255,255,255,0.10);
-    --safeB: env(safe-area-inset-bottom, 0px);
-    --shellLift: 0px;
-  }
-  *{
-    box-sizing:border-box;
-    -webkit-tap-highlight-color:transparent;
-    user-select:none;
-    outline:none;
-  }
-  html,body{
-    margin:0;
-    width:100%;
-    height:100%;
-    background:var(--bg);
-    color:#fff;
-    font-family:Outfit,sans-serif;
-    overflow:hidden;
-  }
-  body{
-    background:
-      radial-gradient(circle at 50% 10%, rgba(99,102,241,.14), transparent 28%),
-      radial-gradient(circle at 0% 100%, rgba(0,255,213,.10), transparent 24%),
-      radial-gradient(circle at 100% 0%, rgba(236,72,153,.10), transparent 22%),
-      var(--bg);
-  }
+  <style>
+    :root{
+      --bg:#030305;
+      --border: rgba(255,255,255,0.12);
+      --cyan:#00f0ff;
+      --pink:#ff0055;
+      --green:#00e676;
+      --gold:#ffd700;
+      --red:#ff1744;
+      --font-main:'Outfit',sans-serif;
+      --font-display:'Space Grotesk',sans-serif;
+      --accent: var(--cyan);
+      --accentGlow: rgba(0,240,255,0.18);
+      --safeB: env(safe-area-inset-bottom, 0px);
+      --shellLift: 0px;
+    }
 
-  #pageContent{
-    height:100%;
-    padding:10px 12px calc(18px + var(--safeB) + var(--shellLift)) 12px;
-  }
+    *{box-sizing:border-box; user-select:none; -webkit-tap-highlight-color:transparent; outline:none}
+    html,body{
+      margin:0; padding:0; width:100%; height:100%;
+      overflow:hidden; position:fixed;
+      font-family:var(--font-main); color:#fff; background:var(--bg);
+    }
 
-  .wrap{
-    height:100%;
-    display:flex;
-    flex-direction:column;
-    gap:10px;
-  }
+    .bg-fx{
+      position:absolute; inset:0; z-index:0;
+      background:
+        radial-gradient(circle at 50% 50%, rgba(15,15,35,0.85) 0%, rgba(0,0,0,1) 70%),
+        radial-gradient(circle at 10% 20%, rgba(255,255,255,0.04) 0%, rgba(0,0,0,0) 55%);
+    }
+    .nebula{
+      position:absolute; width:120vmax; height:120vmax; border-radius:50%;
+      filter: blur(90px); opacity:0.16;
+      animation: breathe 10s infinite alternate ease-in-out;
+      pointer-events:none; mix-blend-mode: screen;
+    }
+    .nebula.a{ left:-35vmax; top:-35vmax; background: var(--accent); }
+    .nebula.b{ right:-35vmax; bottom:-35vmax; background: rgba(255,255,255,0.14); animation-delay:-4s; }
 
-  .hud{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding:10px 12px;
-    border-radius:20px;
-    border:1px solid var(--bd);
-    background: rgba(0,0,0,0.22);
-    backdrop-filter: blur(12px);
-    box-shadow: 0 16px 40px rgba(0,0,0,0.35);
-  }
+    @keyframes breathe{
+      0%{ transform:scale(1); opacity:.11 }
+      100%{ transform:scale(1.18); opacity:.22 }
+    }
 
-  .score{
-    font-family:"Share Tech Mono", monospace;
-    font-size:24px;
-    color: var(--radar);
-    line-height:1;
-  }
+    #pageContent{
+      position:relative;
+      z-index:10;
+      width:100%;
+      height:100dvh;
+      padding:72px 14px calc(110px + var(--shellLift) + var(--safeB)) 14px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
 
-  .labelMini{
-    font-size:10px;
-    font-weight:900;
-    letter-spacing:1.4px;
-    opacity:.65;
-    margin-top:4px;
-  }
+    .card{
+      width:min(92vw, 430px);
+      min-height:560px;
+      border-radius:32px;
+      border:1px solid rgba(255,255,255,0.14);
+      background:rgba(255,255,255,0.035);
+      backdrop-filter:blur(14px);
+      box-shadow:0 28px 70px rgba(0,0,0,0.55), 0 0 40px var(--accentGlow);
+      position:relative;
+      padding:18px 18px 16px;
+      overflow:hidden;
+    }
 
-  .centerHud{
-    text-align:center;
-  }
+    .toprow{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:14px;
+      position:relative;
+      z-index:2;
+    }
 
-  .gameTitle{
-    font-family:"Space Grotesk", sans-serif;
-    font-size:16px;
-    font-weight:900;
-    letter-spacing:.6px;
-  }
+    .playerName{
+      font-family:var(--font-display);
+      font-weight:800;
+      font-size:18px;
+      letter-spacing:.4px;
+      text-transform:uppercase;
+      color:var(--accent);
+      text-shadow:0 0 18px rgba(255,255,255,0.06);
+    }
 
-  .langDisp{
-    font-size:12px;
-    opacity:.78;
-    margin-top:4px;
-    font-weight:800;
-  }
+    .meta{
+      display:flex;
+      flex-direction:column;
+      align-items:flex-end;
+      gap:8px;
+    }
 
-  .lives{
-    font-size:22px;
-    letter-spacing:2px;
-    filter: drop-shadow(0 0 10px rgba(255,36,86,.35));
-  }
+    .chip{
+      font-size:11px;
+      font-weight:800;
+      letter-spacing:1px;
+      padding:6px 10px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,0.14);
+      background:rgba(0,0,0,0.35);
+      backdrop-filter:blur(10px);
+      opacity:.92;
+    }
 
-  .main{
-    flex:1;
-    border-radius:24px;
-    border:1px solid var(--bd);
-    background: rgba(255,255,255,0.03);
-    padding:16px;
-    display:flex;
-    flex-direction:column;
-    gap:14px;
-    position:relative;
-    overflow:hidden;
-    backdrop-filter: blur(14px);
-  }
+    .score{
+      text-align:right;
+    }
 
-  .radarBox{
-    width: 190px;
-    height: 190px;
-    margin: 0 auto;
-    border-radius: 50%;
-    border: 1px solid rgba(0,255,213,.32);
-    position: relative;
-    overflow:hidden;
-    background:
-      radial-gradient(circle at center, rgba(0,255,213,.08), transparent 55%),
-      rgba(255,255,255,.02);
-    box-shadow: inset 0 0 40px rgba(0,255,213,.10), 0 0 24px rgba(0,255,213,.08);
-  }
+    .scoreLabel{
+      font-size:10px;
+      font-weight:900;
+      opacity:.5;
+      letter-spacing:1px;
+    }
 
-  .radarRing{
-    position:absolute;
-    inset:18px;
-    border:1px solid rgba(0,255,213,.14);
-    border-radius:50%;
-  }
-  .radarRing.r2{ inset:40px; }
-  .radarRing.r3{ inset:62px; }
+    .scoreVal{
+      font-size:30px;
+      font-weight:900;
+      background:linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      background-clip:text;
+      color:transparent;
+      line-height:1;
+    }
 
-  .crossV,.crossH{
-    position:absolute;
-    background:rgba(0,255,213,.10);
-  }
-  .crossV{ width:1px; top:0; bottom:0; left:50%; transform:translateX(-50%); }
-  .crossH{ height:1px; left:0; right:0; top:50%; transform:translateY(-50%); }
+    .hearts{
+      display:flex;
+      gap:6px;
+      margin-top:8px;
+      justify-content:flex-end;
+      flex-wrap:wrap;
+      max-width:150px;
+    }
 
-  .scan{
-    position:absolute;
-    inset:-28%;
-    background: conic-gradient(from 0deg, transparent 0deg, rgba(0,255,213,.24) 70deg, transparent 120deg);
-    animation: spin 3.8s linear infinite;
-  }
-  .scan.fast{
-    animation-duration: 1.2s;
-  }
-  @keyframes spin{ to{ transform: rotate(360deg);} }
+    .heart{
+      font-size:20px;
+      filter:drop-shadow(0 0 10px var(--red));
+      transition:.3s;
+    }
 
-  .pulseDot{
-    position:absolute;
-    width:14px;
-    height:14px;
-    border-radius:50%;
-    background:var(--radar);
-    box-shadow:0 0 22px var(--radar);
-    left:62%;
-    top:34%;
-    animation:pulseDot 1.4s infinite ease-in-out;
-  }
-  @keyframes pulseDot{
-    0%,100%{ transform:scale(.8); opacity:.75; }
-    50%{ transform:scale(1.22); opacity:1; }
-  }
+    .mid{
+      min-height:320px;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      align-items:center;
+      text-align:center;
+      padding:10px 6px;
+      position:relative;
+      z-index:2;
+    }
 
-  .listenBtn{
-    height:58px;
-    border-radius:18px;
-    border:1px solid var(--radar);
-    background: rgba(0,0,0,0.25);
-    color: var(--radar);
-    font-weight: 900;
-    font-size:15px;
-    cursor:pointer;
-    transition:.16s ease;
-  }
-  .listenBtn:active{ transform:scale(.98); }
-  .listenBtn.playing{
-    background: rgba(0,255,213,.12);
-    box-shadow: 0 0 26px rgba(0,255,213,.18);
-  }
+    .roundTag{
+      font-size:12px;
+      font-weight:900;
+      letter-spacing:2px;
+      opacity:.62;
+      margin-bottom:10px;
+    }
 
-  .questionBox{
-    padding:12px;
-    border-radius:16px;
-    border:1px solid rgba(255,255,255,.08);
-    background:rgba(255,255,255,.03);
-    text-align:center;
-  }
+    .mainWord{
+      font-family:var(--font-display);
+      font-weight:800;
+      font-size:44px;
+      letter-spacing:-1px;
+      line-height:1.05;
+      margin:0 0 10px;
+      text-shadow:0 18px 60px rgba(0,0,0,0.55);
+    }
 
-  .questionMain{
-    font-size:15px;
-    font-weight:900;
-    color:#fff;
-    line-height:1.45;
-  }
+    .subMeaning{
+      font-size:18px;
+      font-weight:600;
+      color:rgba(255,255,255,0.68);
+      min-height:26px;
+    }
 
-  .questionSub{
-    font-size:12px;
-    color:rgba(255,255,255,.58);
-    margin-top:6px;
-    font-weight:700;
-  }
+    .helper{
+      margin-top:18px;
+      min-height:24px;
+      font-size:13px;
+      font-weight:800;
+      color:rgba(255,255,255,.60);
+    }
 
-  .optionsArea{
-    display:flex;
-    flex-direction:column;
-    gap:9px;
-  }
+    .controls{
+      display:flex;
+      gap:10px;
+      width:100%;
+      height:58px;
+      position:relative;
+      z-index:2;
+    }
 
-  .opt{
-    padding:15px 14px;
-    border-radius:16px;
-    border:1px solid var(--bd);
-    background: rgba(0,0,0,0.22);
-    text-align:center;
-    cursor:pointer;
-    font-weight:700;
-    transition:.16s ease;
-    min-height:52px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-  }
-  .opt:active{ transform:scale(.985); }
+    .btn{
+      flex:1;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,0.14);
+      background:rgba(255,255,255,0.06);
+      color:#fff;
+      font-family:var(--font-display);
+      font-weight:800;
+      font-size:13px;
+      letter-spacing:.4px;
+      cursor:pointer;
+      transition:.12s;
+      backdrop-filter:blur(10px);
+      box-shadow:0 10px 22px rgba(0,0,0,0.25);
+    }
 
-  .opt.correct{
-    border-color: var(--ok);
-    color: var(--ok);
-    box-shadow:0 0 0 1px rgba(0,255,157,.22), 0 0 18px rgba(0,255,157,.12);
-  }
+    .btn:active{
+      transform:scale(.95);
+      background:rgba(255,255,255,0.12);
+    }
 
-  .opt.wrong{
-    border-color: var(--danger);
-    color: var(--danger);
-    box-shadow:0 0 0 1px rgba(255,36,86,.18), 0 0 18px rgba(255,36,86,.10);
-  }
+    .btn:disabled{
+      opacity:.25;
+      cursor:not-allowed;
+      box-shadow:none;
+      transform:none;
+    }
 
-  .momDisp{
-    text-align:center;
-    color:var(--ok);
-    font-size:12px;
-    font-weight:900;
-    letter-spacing:1px;
-    min-height:18px;
-  }
+    .btn-mic{
+      flex:1;
+      background:rgba(255,255,255,0.14);
+      border-color:rgba(255,255,255,0.25);
+      font-size:15px;
+    }
 
-  .modal{
-    position: fixed;
-    inset: 0;
-    display:none;
-    align-items:center;
-    justify-content:center;
-    background: rgba(0,0,0,0.84);
-    backdrop-filter: blur(10px);
-    z-index: 100;
-    padding:20px;
-  }
-  .modal.show{ display:flex; }
+    .btn-mic.listening{
+      background:#fff !important;
+      color:#000 !important;
+      animation:pulse 1s infinite;
+    }
 
-  .cardModal{
-    width: 100%;
-    max-width: 420px;
-    background: linear-gradient(180deg, rgba(16,16,24,.96), rgba(8,8,12,.96));
-    padding: 22px;
-    border-radius: 24px;
-    border: 1px solid rgba(0,255,213,.18);
-    text-align:center;
-    box-shadow: 0 25px 70px rgba(0,0,0,0.65);
-  }
+    @keyframes pulse{
+      0%{ box-shadow: 0 0 0 0 rgba(255,255,255,0.38); }
+      100%{ box-shadow: 0 0 0 18px rgba(255,255,255,0); }
+    }
 
-  .mainBtn{
-    width:100%;
-    height:54px;
-    border-radius:16px;
-    border:none;
-    background: var(--grad);
-    color:#000;
-    font-weight:900;
-    font-size:15px;
-    cursor:pointer;
-    margin-top:12px;
-  }
+    .overlay{
+      position:absolute;
+      inset:0;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      align-items:center;
+      background:rgba(0,0,0,0.82);
+      backdrop-filter:blur(16px);
+      opacity:0;
+      pointer-events:none;
+      transition:.18s;
+      z-index:20;
+      padding:18px;
+      text-align:center;
+      overflow:hidden;
+    }
 
-  .langGrid{
-    display:grid;
-    grid-template-columns:repeat(2,1fr);
-    gap:10px;
-    margin:16px 0;
-  }
+    .overlay.show{
+      opacity:1;
+      pointer-events:auto;
+    }
 
-  .langBtn{
-    background:rgba(255,255,255,.06);
-    border:1px solid rgba(255,255,255,.12);
-    color:#fff;
-    border-radius:16px;
-    padding:14px 10px;
-    cursor:pointer;
-    transition:.16s ease;
-    min-height:84px;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    gap:8px;
-    font-weight:800;
-  }
-  .langBtn:active{ transform:scale(.98); }
-  .langBtn.active{
-    border-color: rgba(0,255,157,.30);
-    box-shadow:0 0 0 1px rgba(0,255,157,.24), 0 0 18px rgba(0,255,157,.12);
-    background: rgba(0,255,157,.08);
-  }
-  .langBtn .flag{ font-size:26px; }
+    .ovTitle{
+      font-family:var(--font-display);
+      font-weight:900;
+      font-size:42px;
+      margin:0;
+      letter-spacing:-1px;
+      position:relative;
+      z-index:2;
+    }
 
-  .resultStat{
-    margin-top:12px;
-    font-size:14px;
-    font-weight:800;
-    color:rgba(255,255,255,.82);
-    white-space:pre-line;
-  }
+    .ovSub{
+      margin-top:10px;
+      font-size:16px;
+      color:rgba(255,255,255,0.8);
+      min-height:20px;
+      position:relative;
+      z-index:2;
+      white-space:pre-line;
+    }
 
-  .topActions{
-    display:flex;
-    gap:10px;
-    margin-top:12px;
-  }
+    .ovBadge{
+      margin-top:14px;
+      padding:7px 14px;
+      border-radius:999px;
+      font-weight:900;
+      font-size:13px;
+      border:1px solid rgba(255,255,255,0.16);
+      background:rgba(255,255,255,0.08);
+      display:none;
+      position:relative;
+      z-index:2;
+    }
 
-  .secondaryBtn{
-    flex:1;
-    height:50px;
-    border-radius:14px;
-    border:1px solid rgba(255,255,255,.12);
-    background:rgba(255,255,255,.08);
-    color:#fff;
-    font-weight:900;
-    cursor:pointer;
-  }
-</style>
+    .success-burst{
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      opacity:0;
+      transition:.18s;
+    }
+
+    .overlay.show.good .success-burst{
+      opacity:1;
+    }
+
+    .burst-ring{
+      position:absolute;
+      left:50%;
+      top:50%;
+      width:90px;
+      height:90px;
+      border-radius:50%;
+      border:2px solid rgba(0,255,157,.35);
+      transform:translate(-50%, -50%);
+      animation: burstRing 1s ease-out infinite;
+    }
+
+    .burst-ring.r2{
+      width:150px;
+      height:150px;
+      animation-delay:.18s;
+    }
+
+    .burst-ring.r3{
+      width:210px;
+      height:210px;
+      animation-delay:.34s;
+    }
+
+    @keyframes burstRing{
+      0%{ transform:translate(-50%, -50%) scale(.75); opacity:.75; }
+      100%{ transform:translate(-50%, -50%) scale(1.25); opacity:0; }
+    }
+
+    .sparkles{
+      position:absolute;
+      inset:0;
+    }
+
+    .spark{
+      position:absolute;
+      width:10px;
+      height:10px;
+      border-radius:50%;
+      background:radial-gradient(circle, #fff 0%, var(--green) 45%, transparent 70%);
+      box-shadow:0 0 18px rgba(0,255,157,.45);
+      animation: sparkle 1.2s ease-in-out infinite;
+    }
+
+    .s1{ left:18%; top:28%; animation-delay:.05s; }
+    .s2{ left:72%; top:20%; animation-delay:.18s; }
+    .s3{ left:26%; top:72%; animation-delay:.30s; }
+    .s4{ left:78%; top:66%; animation-delay:.45s; }
+    .s5{ left:50%; top:18%; animation-delay:.12s; }
+    .s6{ left:50%; top:78%; animation-delay:.38s; }
+
+    @keyframes sparkle{
+      0%,100%{ transform:scale(.6); opacity:.18; }
+      50%{ transform:scale(1.3); opacity:1; }
+    }
+
+    .launchGate{
+      position:fixed;
+      inset:0;
+      z-index:50000;
+      background:rgba(0,0,0,.95);
+      backdrop-filter:blur(14px);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:22px;
+    }
+
+    .launchBox{
+      width:min(92vw, 420px);
+      border-radius:30px;
+      border:1px solid rgba(255,255,255,.12);
+      background:linear-gradient(180deg, rgba(18,18,24,.96), rgba(6,6,10,.96));
+      padding:24px;
+      box-shadow:0 25px 70px rgba(0,0,0,0.7);
+      text-align:center;
+    }
+
+    .launchTitle{
+      font-family:var(--font-display);
+      font-weight:900;
+      font-size:28px;
+      margin:0 0 8px;
+    }
+
+    .launchSub{
+      font-size:14px;
+      color:rgba(255,255,255,.72);
+      line-height:1.6;
+      margin-bottom:16px;
+      font-weight:700;
+    }
+
+    .langGrid{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:10px;
+      margin-bottom:16px;
+    }
+
+    .langCard{
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.04);
+      padding:14px 10px;
+      min-height:92px;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      gap:8px;
+      cursor:pointer;
+      transition:.18s ease;
+    }
+
+    .langCard:active{ transform:scale(.98); }
+
+    .langCard.active{
+      border-color:rgba(0,255,157,.45);
+      box-shadow:0 0 0 1px rgba(0,255,157,.30), 0 0 22px rgba(0,255,157,.12);
+      background:linear-gradient(180deg, rgba(0,255,157,.08), rgba(255,255,255,.04));
+    }
+
+    .langFlag{
+      font-size:28px;
+      line-height:1;
+    }
+
+    .langName{
+      font-size:16px;
+      font-weight:900;
+      line-height:1.1;
+    }
+
+    .launchBtn{
+      width:100%;
+      height:56px;
+      border:none;
+      border-radius:18px;
+      background:linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
+      color:#fff;
+      font-size:16px;
+      font-weight:900;
+      cursor:pointer;
+    }
+
+    @media (max-width:420px){
+      .mainWord{ font-size:38px; }
+      .langGrid{ grid-template-columns:1fr 1fr; }
+    }
+  </style>
 </head>
 <body>
 
@@ -358,102 +477,103 @@
 <div class="nebula b"></div>
 
 <main id="pageContent">
-  <div class="wrap">
-    <div class="hud">
+  <div class="card">
+    <div class="overlay" id="overlay">
+      <div class="success-burst">
+        <div class="burst-ring"></div>
+        <div class="burst-ring r2"></div>
+        <div class="burst-ring r3"></div>
+        <div class="sparkles">
+          <div class="spark s1"></div>
+          <div class="spark s2"></div>
+          <div class="spark s3"></div>
+          <div class="spark s4"></div>
+          <div class="spark s5"></div>
+          <div class="spark s6"></div>
+        </div>
+      </div>
+      <h2 class="ovTitle" id="ovTitle">HARİKA!</h2>
+      <div class="ovSub" id="ovSub">+5 PUAN</div>
+      <div class="ovBadge" id="ovBadge">%100 BENZERLİK</div>
+    </div>
+
+    <div class="toprow">
       <div>
-        <div class="score" id="scoreDisp">0</div>
-        <div class="labelMini">SKOR</div>
+        <div class="playerName">ECHO RUSH</div>
       </div>
 
-      <div class="centerHud">
-        <div class="gameTitle">SIGNAL HUNT</div>
-        <div class="langDisp" id="langDisp">EN • TR</div>
-      </div>
+      <div class="meta">
+        <div class="chip" id="chipRound">0</div>
 
-      <div>
-        <div class="lives" id="livesDisp">❤️❤️❤️</div>
-        <div class="labelMini" style="text-align:right;">CAN</div>
+        <div class="score">
+          <div class="scoreLabel">SKOR</div>
+          <div class="scoreVal" id="scoreVal">0</div>
+          <div class="scoreLabel" style="margin-top:6px;">REKOR: <span id="bestVal">0</span></div>
+        </div>
+
+        <div class="hearts" id="hearts"></div>
       </div>
     </div>
 
-    <div class="main">
-      <div class="radarBox" id="radar">
-        <div class="radarRing"></div>
-        <div class="radarRing r2"></div>
-        <div class="radarRing r3"></div>
-        <div class="crossV"></div>
-        <div class="crossH"></div>
-        <div class="scan" id="scan"></div>
-        <div class="pulseDot"></div>
-      </div>
+    <div class="mid">
+      <div class="roundTag" id="langTag">DİL</div>
+      <div class="mainWord" id="wMain">...</div>
+      <div class="subMeaning" id="wSub">...</div>
+      <div class="helper" id="helperText">Kelimeyi dinle ve tekrar et</div>
+    </div>
 
-      <button class="listenBtn" id="listenBtn">▶ SİNYALİ DİNLE</button>
-
-      <div class="questionBox">
-        <div class="questionMain" id="questionMain">Doğru karşılığı bul</div>
-        <div class="questionSub" id="questionSub">Dinlediğin cümlenin doğru Türkçe karşılığını seç</div>
-      </div>
-
-      <div class="optionsArea" id="optionsArea"></div>
-      <div class="momDisp" id="momDisp">x1.00 MOMENTUM</div>
+    <div class="controls">
+      <button class="btn btn-mic" id="btnMic">🎙️ TEKRAR ET</button>
     </div>
   </div>
 </main>
 
-<div class="modal show" id="startModal">
-  <div class="cardModal">
-    <h2 style="color:var(--radar); margin:0;">SİSTEM HAZIR</h2>
-    <p style="opacity:.78; line-height:1.6; font-weight:700; margin:12px 0 0;">
-      Bayrağa dokun, oyun dilini seç. Sonra sinyali dinle ve doğru Türkçe karşılığı bul.
-    </p>
+<div class="launchGate" id="launchGate">
+  <div class="launchBox">
+    <div class="launchTitle">Echo Rush</div>
+    <div class="launchSub">Bayrağa dokun, oyun dilini seç. Sonraki girişlerde oyun bu dille doğrudan açılır.</div>
 
     <div class="langGrid" id="langGrid"></div>
-    <button class="mainBtn" id="startBtn">BAŞLA</button>
-  </div>
-</div>
 
-<div class="modal" id="resultModal">
-  <div class="cardModal">
-    <h2 id="resultTitle" style="margin:0;">OYUN BİTTİ</h2>
-    <div class="resultStat" id="resultStats">Skor: 0</div>
-    <div class="topActions">
-      <button class="secondaryBtn" id="retryBtn">TEKRAR OYNA</button>
-      <button class="secondaryBtn" id="backBtn">ANA MENÜ</button>
-    </div>
+    <button class="launchBtn" id="launchBtn">BAŞLA</button>
   </div>
 </div>
 
 <script type="module">
 import { mountShell } from "/js/ui_shell.js";
 import { ensureAuthAndCacheUser } from "/js/auth.js";
+import { supabase } from "/js/supabase_client.js";
 
-mountShell({ scroll:"none" });
+mountShell({ scroll: "none" });
 
-const $ = (id) => document.getElementById(id);
-const GAME_LANG_KEY = "italky_signal_hunt_lang";
+const $ = (id)=>document.getElementById(id);
+const GAME_LANG_KEY = "italky_echo_rush_lang";
 
 const LANGS = {
   en:{ name:"İngilizce", flag:"🇬🇧", bcp:"en-US" },
-  de:{ name:"Almanca", flag:"🇩🇪", bcp:"de-DE" },
+  de:{ name:"Almanca",   flag:"🇩🇪", bcp:"de-DE" },
   fr:{ name:"Fransızca", flag:"🇫🇷", bcp:"fr-FR" },
-  es:{ name:"İspanyolca", flag:"🇪🇸", bcp:"es-ES" },
+  es:{ name:"İspanyolca",flag:"🇪🇸", bcp:"es-ES" },
   it:{ name:"İtalyanca", flag:"🇮🇹", bcp:"it-IT" }
 };
 
 const state = {
-  lang: localStorage.getItem(GAME_LANG_KEY) || "en",
-  selectedLang: localStorage.getItem(GAME_LANG_KEY) || "en",
+  lang: localStorage.getItem(GAME_LANG_KEY) || "",
   pool: [],
   used: new Set(),
-  lastKey: "",
   current: null,
+  lastWordKey: "",
   score: 0,
-  best: Number(localStorage.getItem("signal_hunt_best") || 0),
+  best: 0,
   lives: 3,
-  momentum: 1.0,
-  playingAudio: false
+  maxLives: 9,
+  roundsPlayed: 0,
+  listening: false,
+  recog: null,
+  selectedLang: localStorage.getItem(GAME_LANG_KEY) || "en"
 };
 
+/* ---------------- AUDIO ---------------- */
 let audioCtx = null;
 
 function getAudioCtx(){
@@ -484,33 +604,44 @@ function beep({freq=440,duration=.08,type="sine",gain=.03,when=0}){
   if(ctx.state === "suspended"){
     ctx.resume().catch(() => {});
   }
+
   const now = ctx.currentTime + when;
   const osc = ctx.createOscillator();
   const g = ctx.createGain();
+
   osc.type = type;
   osc.frequency.setValueAtTime(freq, now);
   g.gain.setValueAtTime(.0001, now);
   g.gain.exponentialRampToValueAtTime(gain, now + .01);
   g.gain.exponentialRampToValueAtTime(.0001, now + duration);
-  osc.connect(g); g.connect(ctx.destination);
-  osc.start(now); osc.stop(now + duration + .02);
+
+  osc.connect(g);
+  g.connect(ctx.destination);
+
+  osc.start(now);
+  osc.stop(now + duration + .02);
 }
 
-function playSignalFx() {
-  beep({ freq: 760, duration: .08, type: "triangle", gain: .04 });
-  beep({ freq: 920, duration: .08, type: "triangle", gain: .04, when: .12 });
-  beep({ freq: 760, duration: .08, type: "triangle", gain: .04, when: .24 });
+function playHitFx(){
+  beep({freq:720,duration:.07,type:"triangle",gain:.05});
+  beep({freq:920,duration:.08,type:"triangle",gain:.04,when:.05});
 }
 
-function playCorrectFx() {
-  beep({ freq: 520, duration: .08, type: "triangle", gain: .05 });
-  beep({ freq: 660, duration: .08, type: "triangle", gain: .05, when: .08 });
-  beep({ freq: 880, duration: .12, type: "triangle", gain: .05, when: .16 });
+function playMissFx(){
+  beep({freq:220,duration:.10,type:"sawtooth",gain:.05});
+  beep({freq:170,duration:.12,type:"sawtooth",gain:.04,when:.04});
 }
 
-function playWrongFx() {
-  beep({ freq: 220, duration: .10, type: "sawtooth", gain: .05 });
-  beep({ freq: 180, duration: .12, type: "sawtooth", gain: .04, when: .06 });
+function playWinFx(){
+  beep({freq:523,duration:.09,type:"triangle",gain:.05});
+  beep({freq:659,duration:.09,type:"triangle",gain:.05,when:.08});
+  beep({freq:784,duration:.11,type:"triangle",gain:.05,when:.16});
+  beep({freq:1046,duration:.15,type:"triangle",gain:.05,when:.26});
+}
+
+function playLoseFx(){
+  beep({freq:250,duration:.12,type:"square",gain:.05});
+  beep({freq:180,duration:.15,type:"square",gain:.04,when:.10});
 }
 
 function nativeSpeak(text, lang){
@@ -526,34 +657,40 @@ function nativeSpeak(text, lang){
 async function speak(text, lang) {
   const t = String(text || "").trim();
   if(!t) return;
+
   await unlockAudio();
 
   if (nativeSpeak(t, lang)) return;
 
   if(!("speechSynthesis" in window)) return;
+
   try { window.speechSynthesis.cancel(); } catch {}
 
   const u = new SpeechSynthesisUtterance(t);
   u.lang = LANGS[lang]?.bcp || "en-US";
-  u.rate = .88;
+  u.rate = 0.9;
   u.pitch = 1;
   u.volume = 1;
 
   const voices = window.speechSynthesis.getVoices();
   if (voices?.length) {
-    const found = voices.find(v => String(v.lang || "").toLowerCase().startsWith(lang));
+    const base = lang;
+    const found = voices.find(v => String(v.lang || "").toLowerCase().startsWith(base));
     if (found) u.voice = found;
   }
 
   setTimeout(() => {
     try { window.speechSynthesis.speak(u); } catch {}
-  }, 80);
+  }, 100);
 }
 
 ["click","touchstart","pointerdown"].forEach(evt => {
-  window.addEventListener(evt, () => unlockAudio(), { passive:true, once:true });
+  window.addEventListener(evt, () => {
+    unlockAudio();
+  }, { passive:true, once:true });
 });
 
+/* ---------------- UTILS ---------------- */
 function normalize(s){
   return String(s||"")
     .toLowerCase()
@@ -564,25 +701,68 @@ function normalize(s){
     .trim();
 }
 
-function renderStartLangs() {
-  $("langGrid").innerHTML = Object.entries(LANGS).map(([code, meta]) => `
-    <button class="langBtn ${state.selectedLang===code ? "active" : ""}" data-lang="${code}" type="button">
-      <div class="flag">${meta.flag}</div>
-      <div>${meta.name}</div>
+function editDistance(a,b){
+  const s1=String(a), s2=String(b);
+  const costs = new Array(s2.length+1);
+  for(let j=0;j<=s2.length;j++) costs[j]=j;
+  for(let i=1;i<=s1.length;i++){
+    let prev=i-1;
+    costs[0]=i;
+    for(let j=1;j<=s2.length;j++){
+      const tmp=costs[j];
+      const val=Math.min(costs[j]+1, costs[j-1]+1, prev+(s1[i-1]===s2[j-1]?0:1));
+      costs[j]=val; prev=tmp;
+    }
+  }
+  return costs[s2.length];
+}
+
+function similarityScore(a,b){
+  const s1=normalize(a), s2=normalize(b);
+  if(!s1 && !s2) return 100;
+  if(!s1 || !s2) return 0;
+  if(s2.includes(s1)) return 100;
+  const longer = s1.length >= s2.length ? s1 : s2;
+  const shorter = s1.length >= s2.length ? s2 : s1;
+  const dist = editDistance(longer, shorter);
+  return Math.max(0, Math.min(100, Math.floor(((longer.length - dist)/longer.length)*100)));
+}
+
+/* ---------------- UI ---------------- */
+function showOverlay({ title, titleColor, sub, badgeText, good }) {
+  $("ovTitle").textContent = title;
+  $("ovTitle").style.color = titleColor || "#fff";
+  $("ovSub").textContent = sub || "";
+  $("ovBadge").style.display = badgeText ? "block" : "none";
+  $("ovBadge").textContent = badgeText || "";
+  $("overlay").classList.toggle("good", !!good);
+  $("overlay").classList.add("show");
+}
+
+function hideOverlay(){
+  $("overlay").classList.remove("show", "good");
+}
+
+function renderLangPicker() {
+  const grid = $("langGrid");
+  grid.innerHTML = Object.entries(LANGS).map(([code, meta]) => `
+    <button class="langCard ${state.selectedLang===code ? "active" : ""}" data-lang="${code}" type="button">
+      <div class="langFlag">${meta.flag}</div>
+      <div class="langName">${meta.name}</div>
     </button>
   `).join("");
 
-  $("langGrid").querySelectorAll(".langBtn").forEach(btn => {
+  grid.querySelectorAll(".langCard").forEach(btn => {
     btn.onclick = () => {
       state.selectedLang = btn.dataset.lang;
-      renderStartLangs();
+      renderLangPicker();
     };
   });
 }
 
 async function fileExists(url) {
   try {
-    const res = await fetch(url, { method: "HEAD", cache:"no-store" });
+    const res = await fetch(url, { method:"HEAD", cache:"no-store" });
     return res.ok;
   } catch {
     return false;
@@ -596,7 +776,7 @@ function getPublicLangUrl(langCode) {
 function extractItems(payload) {
   if (Array.isArray(payload)) return payload;
   if (payload && typeof payload === "object") {
-    const keys = ["items","words","data","list","entries","pool"];
+    const keys = ["items", "words", "data", "list", "entries", "pool"];
     for (const key of keys) {
       if (Array.isArray(payload[key])) return payload[key];
     }
@@ -624,32 +804,91 @@ function normalizePoolItems(items) {
       item?.target ??
       "";
 
-    const rawSentence =
-      item?.sentence ??
-      item?.s ??
-      item?.sample ??
-      item?.example ??
-      item?.voice ??
-      rawWord;
-
     return {
       word: String(rawWord || "").trim(),
-      meaning: String(rawMeaning || "").trim(),
-      sentence: String(rawSentence || "").trim()
+      meaning: String(rawMeaning || "").trim()
     };
-  }).filter(x => x.word && x.meaning);
+  }).filter(x => x.word);
 }
 
 async function loadPool(lang) {
   const url = getPublicLangUrl(lang);
   const ok = await fileExists(url);
-  if (!ok) return [];
+  if(!ok) return [];
 
   const res = await fetch(url, { cache:"no-store" });
-  if (!res.ok) return [];
+  if(!res.ok) return [];
 
   const json = await res.json();
   return normalizePoolItems(extractItems(json));
+}
+
+function renderHearts() {
+  $("hearts").innerHTML = Array.from({length: state.lives}).map(() => `<span class="heart">❤️</span>`).join("");
+}
+
+function renderHud() {
+  $("langTag").textContent = `${LANGS[state.lang]?.flag || "🌐"} ${LANGS[state.lang]?.name || state.lang}`;
+  $("scoreVal").textContent = String(state.score);
+  $("bestVal").textContent = String(state.best);
+  $("chipRound").textContent = `${state.roundsPlayed}`;
+}
+
+function readCurrentWord() {
+  if (!state.current?.word) return;
+  speak(state.current.word, state.lang);
+}
+
+async function loadBest() {
+  try {
+    const { data } = await supabase.auth.getUser();
+    const uid = data?.user?.id;
+    if (!uid) return;
+
+    const { data: prof } = await supabase
+      .from("profiles")
+      .select("echo_rush_best")
+      .eq("id", uid)
+      .maybeSingle();
+
+    const map = prof?.echo_rush_best || {};
+    state.best = Number(map[state.lang] || 0);
+  } catch {}
+
+  try {
+    const localBest = Number(localStorage.getItem(`echo_rush_best_${state.lang}`) || 0);
+    if (localBest > state.best) state.best = localBest;
+  } catch {}
+}
+
+async function saveBest() {
+  if (state.score <= state.best) return;
+
+  state.best = state.score;
+
+  try {
+    localStorage.setItem(`echo_rush_best_${state.lang}`, String(state.best));
+  } catch {}
+
+  try {
+    const { data } = await supabase.auth.getUser();
+    const uid = data?.user?.id;
+    if (!uid) return;
+
+    const { data: prof } = await supabase
+      .from("profiles")
+      .select("echo_rush_best")
+      .eq("id", uid)
+      .maybeSingle();
+
+    const map = prof?.echo_rush_best || {};
+    map[state.lang] = state.best;
+
+    await supabase
+      .from("profiles")
+      .update({ echo_rush_best: map })
+      .eq("id", uid);
+  } catch {}
 }
 
 function nextItem() {
@@ -659,148 +898,169 @@ function nextItem() {
     state.used.clear();
   }
 
-  let pick = null;
+  let item = null;
   let guard = 0;
 
   while (guard < 100) {
-    const item = state.pool[Math.floor(Math.random() * state.pool.length)];
-    const key = normalize(item.word);
+    const pick = state.pool[Math.floor(Math.random() * state.pool.length)];
+    const key = normalize(pick.word);
 
-    if (!state.used.has(key) && key !== state.lastKey) {
+    if (key !== state.lastWordKey && !state.used.has(key)) {
       state.used.add(key);
-      state.lastKey = key;
-      pick = item;
+      state.lastWordKey = key;
+      item = pick;
       break;
     }
     guard++;
   }
 
-  if (!pick) {
-    const fallback = state.pool.find(x => normalize(x.word) !== state.lastKey) || state.pool[0];
-    state.lastKey = normalize(fallback.word);
-    state.used.add(state.lastKey);
-    pick = fallback;
+  if (!item) {
+    const fallback = state.pool.find((x) => normalize(x.word) !== state.lastWordKey) || state.pool[0];
+    state.lastWordKey = normalize(fallback.word);
+    state.used.add(state.lastWordKey);
+    item = fallback;
   }
 
-  return pick;
+  return item;
 }
 
-function renderQuestion() {
+function renderCurrent() {
   if (!state.current) return;
-
-  $("questionMain").textContent = "Sinyal hazır";
-  $("questionSub").textContent = "Dinlediğin cümlenin doğru Türkçe karşılığını seç";
-  $("langDisp").textContent = `${LANGS[state.lang]?.flag || ""} ${LANGS[state.lang]?.name || state.lang}`;
-  $("scoreDisp").textContent = state.score;
-  $("livesDisp").textContent = "❤️".repeat(state.lives);
-  $("momDisp").textContent = `x${state.momentum.toFixed(2)} MOMENTUM`;
-
-  const options = buildOptions();
-  $("optionsArea").innerHTML = "";
-
-  options.forEach(opt => {
-    const div = document.createElement("div");
-    div.className = "opt";
-    div.textContent = opt;
-    div.onclick = () => checkAnswer(div, opt);
-    $("optionsArea").appendChild(div);
-  });
+  $("wMain").textContent = state.current.word;
+  $("wSub").textContent = state.current.meaning || "—";
+  $("helperText").textContent = "Kelimeyi dinle ve tekrar et";
+  renderHud();
+  renderHearts();
 }
 
-function buildOptions() {
-  if (!state.current) return [];
-  const options = [state.current.meaning];
-
-  const poolMeanings = state.pool
-    .map(x => x.meaning)
-    .filter(x => x && x !== state.current.meaning);
-
-  while (options.length < 4 && poolMeanings.length) {
-    const pick = poolMeanings[Math.floor(Math.random() * poolMeanings.length)];
-    if (!options.includes(pick)) options.push(pick);
-  }
-
-  return [...options].sort(() => Math.random() - 0.5);
-}
-
-async function playSignal() {
-  if (!state.current || state.playingAudio) return;
-  state.playingAudio = true;
-  $("listenBtn").classList.add("playing");
-  $("scan").classList.add("fast");
-
-  playSignalFx();
-  await speak(state.current.sentence || state.current.word, state.lang);
-
-  setTimeout(() => {
-    state.playingAudio = false;
-    $("listenBtn").classList.remove("playing");
-    $("scan").classList.remove("fast");
-  }, 1000);
-}
-
-function updateBest() {
-  if (state.score > state.best) {
-    state.best = state.score;
-    localStorage.setItem("signal_hunt_best", String(state.best));
-  }
-}
-
-function nextQuestion() {
-  if (state.lives <= 0) {
-    finishGame();
-    return;
-  }
+function startRound() {
+  hideOverlay();
 
   state.current = nextItem();
-  if (!state.current) {
-    finishGame();
+  if (!state.current) return;
+
+  state.roundsPlayed += 1;
+  renderCurrent();
+
+  setTimeout(() => {
+    readCurrentWord();
+  }, 280);
+}
+
+function finishRound(success, similarity) {
+  if (success) {
+    state.score += 5;
+    let bonusText = "+5 PUAN";
+
+    if (similarity === 100 && state.lives < state.maxLives) {
+      state.lives += 1;
+      bonusText = "+5 PUAN • +1 CAN";
+    }
+
+    playWinFx();
+    saveBest();
+
+    showOverlay({
+      title: "OYUN BAŞARILI",
+      titleColor: "var(--green)",
+      sub: bonusText,
+      badgeText: `%${similarity} BENZERLİK`,
+      good: true
+    });
+  } else {
+    state.lives -= 1;
+    playLoseFx();
+    showOverlay({
+      title: "OYUN BAŞARISIZ",
+      titleColor: "var(--red)",
+      sub: `${state.current.word}\n${state.current.meaning}`,
+      badgeText: `%${similarity} BENZERLİK`,
+      good: false
+    });
+  }
+
+  renderHud();
+  renderHearts();
+
+  setTimeout(() => {
+    if (state.lives <= 0) {
+      state.score = 0;
+      state.lives = 3;
+      state.used.clear();
+      state.lastWordKey = "";
+    }
+    startRound();
+  }, 3000);
+}
+
+function startListening() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    showOverlay({
+      title: "SES DESTEKLENMİYOR",
+      titleColor: "var(--red)",
+      sub: "Bu cihazda konuşma algılama yok",
+      badgeText: "",
+      good: false
+    });
+    setTimeout(() => hideOverlay(), 1800);
     return;
   }
 
-  renderQuestion();
-}
+  state.listening = true;
+  $("btnMic").classList.add("listening");
+  $("btnMic").textContent = "👂 DİNLİYOR";
 
-function checkAnswer(el, val) {
-  if (!state.current) return;
+  const rec = new SR();
+  state.recog = rec;
+  rec.lang = LANGS[state.lang]?.bcp || "en-US";
+  rec.interimResults = false;
+  rec.maxAlternatives = 1;
 
-  Array.from($("optionsArea").children).forEach(x => x.style.pointerEvents = "none");
+  const watchdog = setTimeout(() => {
+    try { rec.stop(); } catch {}
+  }, 7000);
 
-  if (val === state.current.meaning) {
-    el.classList.add("correct");
-    state.score += Math.round(100 * state.momentum);
-    state.momentum += 0.1;
-    playCorrectFx();
-    updateBest();
-  } else {
-    el.classList.add("wrong");
-    state.lives--;
-    state.momentum = 1.0;
+  rec.onresult = async (e) => {
+    clearTimeout(watchdog);
+    const spoken = e.results?.[0]?.[0]?.transcript || "";
+    const similarity = similarityScore(state.current.word, spoken);
 
-    Array.from($("optionsArea").children).forEach(x => {
-      if (x.textContent === state.current.meaning) {
-        x.classList.add("correct");
-      }
+    state.listening = false;
+    $("btnMic").classList.remove("listening");
+    $("btnMic").textContent = "🎙️ TEKRAR ET";
+
+    finishRound(similarity >= 95, similarity);
+  };
+
+  rec.onerror = () => {
+    clearTimeout(watchdog);
+    state.listening = false;
+    $("btnMic").classList.remove("listening");
+    $("btnMic").textContent = "🎙️ TEKRAR ET";
+    showOverlay({
+      title: "TEKRAR DENE",
+      titleColor: "var(--red)",
+      sub: "Dinleme başarısız oldu",
+      badgeText: "",
+      good: false
     });
+    setTimeout(() => hideOverlay(), 1500);
+  };
 
-    playWrongFx();
-  }
+  rec.onend = () => {
+    clearTimeout(watchdog);
+    if (state.listening) {
+      state.listening = false;
+      $("btnMic").classList.remove("listening");
+      $("btnMic").textContent = "🎙️ TEKRAR ET";
+    }
+  };
 
-  $("scoreDisp").textContent = state.score;
-  $("livesDisp").textContent = "❤️".repeat(state.lives);
-  $("momDisp").textContent = `x${state.momentum.toFixed(2)} MOMENTUM`;
-
-  setTimeout(nextQuestion, 1200);
+  rec.start();
 }
 
-function finishGame() {
-  $("resultTitle").textContent = "OYUN BİTTİ";
-  $("resultStats").textContent =
-    `Skor: ${state.score}\nEn yüksek skor: ${state.best}\nDil: ${LANGS[state.lang]?.name || state.lang}`;
-  $("resultModal").classList.add("show");
-}
-
-async function startGame() {
+async function launchGame() {
   const ok = await ensureAuthAndCacheUser();
   if (!ok) {
     location.href = "/pages/login.html";
@@ -810,42 +1070,37 @@ async function startGame() {
   state.lang = state.selectedLang;
   localStorage.setItem(GAME_LANG_KEY, state.lang);
 
+  $("launchGate").style.display = "none";
+
   state.pool = await loadPool(state.lang);
+  await loadBest();
+
   if (!state.pool.length) {
-    alert("Bu dil için havuz bulunamadı.");
+    $("launchGate").style.display = "flex";
+    showOverlay({
+      title: "HAVUZ YOK",
+      titleColor: "var(--red)",
+      sub: "Bu dil için oyun havuzu bulunamadı",
+      badgeText: "",
+      good: false
+    });
+    setTimeout(() => hideOverlay(), 1800);
     return;
   }
 
-  state.used.clear();
-  state.lastKey = "";
-  state.score = 0;
-  state.lives = 3;
-  state.momentum = 1.0;
-  state.best = Number(localStorage.getItem("signal_hunt_best") || 0);
-
-  $("startModal").classList.remove("show");
-  $("resultModal").classList.remove("show");
-
-  nextQuestion();
+  renderHud();
+  renderHearts();
+  startRound();
 }
 
-$("listenBtn").onclick = playSignal;
-$("startBtn").onclick = startGame;
-$("retryBtn").onclick = () => {
-  $("resultModal").classList.remove("show");
-  state.used.clear();
-  state.lastKey = "";
-  state.score = 0;
-  state.lives = 3;
-  state.momentum = 1.0;
-  nextQuestion();
-};
-$("backBtn").onclick = () => {
-  location.href = "/pages/game_menu.html";
-};
+$("launchBtn").addEventListener("click", launchGame);
+$("btnMic").addEventListener("click", startListening);
 
-(function init() {
-  renderStartLangs();
+(function init(){
+  renderLangPicker();
+  renderHud();
+  renderHearts();
+  try { window.speechSynthesis?.getVoices?.(); } catch {}
 })();
 </script>
 </body>
