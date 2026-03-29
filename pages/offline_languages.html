@@ -365,12 +365,82 @@
       letter-spacing:.4px;
     }
 
+    .modal-backdrop{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.58);
+      backdrop-filter:blur(6px);
+      -webkit-backdrop-filter:blur(6px);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:9998;
+      padding:18px;
+    }
+
+    .modal-backdrop.show{
+      display:flex;
+    }
+
+    .modal{
+      width:min(92vw, 520px);
+      border-radius:28px;
+      border:1px solid rgba(255,255,255,.10);
+      background:linear-gradient(180deg, rgba(20,24,44,.98), rgba(10,12,24,.98));
+      box-shadow:0 24px 60px rgba(0,0,0,.45);
+      padding:22px;
+    }
+
+    .modal-title{
+      font-size:22px;
+      font-weight:1000;
+      margin:0 0 10px;
+      line-height:1.15;
+    }
+
+    .modal-text{
+      font-size:15px;
+      line-height:1.6;
+      color:rgba(255,255,255,.84);
+      font-weight:800;
+      white-space:pre-line;
+    }
+
+    .modal-actions{
+      display:flex;
+      gap:12px;
+      margin-top:18px;
+    }
+
+    .modal-btn{
+      flex:1;
+      height:56px;
+      border-radius:18px;
+      border:none;
+      font-size:16px;
+      font-weight:1000;
+      cursor:pointer;
+    }
+
+    .modal-btn.cancel{
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.12);
+      color:#fff;
+    }
+
+    .modal-btn.ok{
+      background:linear-gradient(135deg, rgba(31,195,136,.22), rgba(123,125,255,.16));
+      border:1px solid rgba(31,195,136,.35);
+      color:#fff;
+    }
+
     @media (max-width:420px){
       .title{ font-size:20px; }
       .desc{ font-size:14px; }
       .select{ height:68px; font-size:17px; }
       .tools{ flex-direction:column; }
       .count-chip{ width:100%; }
+      .modal-actions{ flex-direction:column; }
     }
   </style>
 </head>
@@ -380,7 +450,8 @@
       <section class="panel">
         <h1 class="title">Offline Diller</h1>
         <p class="desc">
-          Önce kendi konuşma dilini seç. Sistem bu dil için İngilizce köprü kurulumunu otomatik yapar. Sonra ihtiyacın olan diğer dil paketlerini indirirsin.
+          İnternetinizin olmadığı yerlerde, daha önce indirmiş olduğunuz dilleri çeviri için kullanabilirsiniz.
+          Önce kendi konuşma dilinizi seçin. Sonra ihtiyacınız olan hedef dilleri indirip hazırda tutun.
         </p>
 
         <div class="status-row">
@@ -403,8 +474,7 @@
         </button>
 
         <div class="helper-note">
-          Seçtiğiniz dil için yükleme hakkınız temel kurulumda bir kez esas alınır. Sistem arka planda otomatik olarak
-          seçtiğiniz dil → İngilizce ve İngilizce → seçtiğiniz dil köprü paketlerini hazırlar.
+          Kurulum tamamlandıktan sonra internet olmadan da, önceden indirdiğiniz dilleri kullanabilirsiniz.
         </div>
 
         <div id="statusBox" class="status-box" data-kind="info">
@@ -427,6 +497,17 @@
   </main>
 
   <div id="toast" class="toast"></div>
+
+  <div id="confirmBackdrop" class="modal-backdrop">
+    <div class="modal">
+      <h3 id="confirmTitle" class="modal-title">Dil seçimini onaylayın</h3>
+      <div id="confirmText" class="modal-text"></div>
+      <div class="modal-actions">
+        <button id="confirmCancel" class="modal-btn cancel" type="button">Vazgeç</button>
+        <button id="confirmOk" class="modal-btn ok" type="button">Evet, Devam Et</button>
+      </div>
+    </div>
+  </div>
 
   <script type="module">
     import { initGlobalAccess } from "/js/global_access.js";
