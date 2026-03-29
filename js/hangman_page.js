@@ -1,3 +1,5 @@
+// FILE: /js/hangman_page.js
+
 import { mountShell } from "/js/ui_shell.js";
 import { supabase } from "/js/supabase_client.js";
 import { ensureAuthAndCacheUser } from "/js/auth.js";
@@ -92,11 +94,6 @@ function updateTranslationBox(text) {
   if (el) el.textContent = String(text || "—");
 }
 
-function getPublicLangUrl(langCode) {
-  const { data } = supabase.storage.from("lang").getPublicUrl(`${langCode}.json`);
-  return data?.publicUrl || "";
-}
-
 /* -----------------------------
    LANGUAGE META
 ----------------------------- */
@@ -118,6 +115,26 @@ function langFlag(code) {
 
 function langBCP(code) {
   return LANG_META[normalizeLang(code)]?.bcp || "en-US";
+}
+
+/* -----------------------------
+   STORAGE URL / BUCKET PROBE
+----------------------------- */
+function getPublicLangUrl(langCode) {
+  const code = normalizeLang(langCode);
+  return `https://auth.italky.ai/storage/v1/object/public/lang/${code}.json`;
+}
+
+async function fileExists(url) {
+  try {
+    const res = await fetch(url, {
+      method: "HEAD",
+      cache: "no-store"
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
 }
 
 /* -----------------------------
@@ -281,7 +298,6 @@ let state = {
   userId: "anon",
   availableLangs: [],
   accessOk: true,
-  langMeta: LANG_META,
   autoNextTimer: null
 };
 
@@ -370,25 +386,19 @@ function openLangSheet() {
 ----------------------------- */
 async function loadAvailableLangsFromBucket() {
   try {
-    const { data, error } = await supabase.storage.from("lang").list("", {
-      limit: 100,
-      offset: 0
-    });
+    const candidates = ["de", "en", "es", "fr", "it"];
+    const found = [];
 
-    if (error) throw error;
+    for (const code of candidates) {
+      const url = getPublicLangUrl(code);
+      const ok = await fileExists(url);
+      if (ok) found.push(code);
+    }
 
-    const allowed = ["de", "en", "es", "fr", "it"];
-
-    const list = (Array.isArray(data) ? data : [])
-      .map((x) => String(x?.name || ""))
-      .filter((name) => name.endsWith(".json"))
-      .map((name) => normalizeLang(name.replace(".json", "")))
-      .filter((code) => allowed.includes(code));
-
-    state.availableLangs = [...new Set(list)];
-    return state.availableLangs.length > 0;
+    state.availableLangs = found;
+    return found.length > 0;
   } catch (err) {
-    console.error("bucket lang list error:", err);
+    console.error("bucket lang probe error:", err);
     state.availableLangs = [];
     return false;
   }
