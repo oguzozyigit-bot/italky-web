@@ -232,7 +232,7 @@
     }
 
     .btn-mic{
-      flex:2;
+      flex:1;
       background:rgba(255,255,255,0.14);
       border-color:rgba(255,255,255,0.25);
       font-size:15px;
@@ -264,6 +264,7 @@
       z-index:20;
       padding:18px;
       text-align:center;
+      overflow:hidden;
     }
 
     .overlay.show{
@@ -277,6 +278,8 @@
       font-size:42px;
       margin:0;
       letter-spacing:-1px;
+      position:relative;
+      z-index:2;
     }
 
     .ovSub{
@@ -284,6 +287,9 @@
       font-size:16px;
       color:rgba(255,255,255,0.8);
       min-height:20px;
+      position:relative;
+      z-index:2;
+      white-space:pre-line;
     }
 
     .ovBadge{
@@ -295,6 +301,76 @@
       border:1px solid rgba(255,255,255,0.16);
       background:rgba(255,255,255,0.08);
       display:none;
+      position:relative;
+      z-index:2;
+    }
+
+    .success-burst{
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      opacity:0;
+      transition:.18s;
+    }
+
+    .overlay.show.good .success-burst{
+      opacity:1;
+    }
+
+    .burst-ring{
+      position:absolute;
+      left:50%;
+      top:50%;
+      width:90px;
+      height:90px;
+      border-radius:50%;
+      border:2px solid rgba(0,255,157,.35);
+      transform:translate(-50%, -50%);
+      animation: burstRing 1s ease-out infinite;
+    }
+
+    .burst-ring.r2{
+      width:150px;
+      height:150px;
+      animation-delay:.18s;
+    }
+
+    .burst-ring.r3{
+      width:210px;
+      height:210px;
+      animation-delay:.34s;
+    }
+
+    @keyframes burstRing{
+      0%{ transform:translate(-50%, -50%) scale(.75); opacity:.75; }
+      100%{ transform:translate(-50%, -50%) scale(1.25); opacity:0; }
+    }
+
+    .sparkles{
+      position:absolute;
+      inset:0;
+    }
+
+    .spark{
+      position:absolute;
+      width:10px;
+      height:10px;
+      border-radius:50%;
+      background:radial-gradient(circle, #fff 0%, var(--green) 45%, transparent 70%);
+      box-shadow:0 0 18px rgba(0,255,157,.45);
+      animation: sparkle 1.2s ease-in-out infinite;
+    }
+
+    .s1{ left:18%; top:28%; animation-delay:.05s; }
+    .s2{ left:72%; top:20%; animation-delay:.18s; }
+    .s3{ left:26%; top:72%; animation-delay:.30s; }
+    .s4{ left:78%; top:66%; animation-delay:.45s; }
+    .s5{ left:50%; top:18%; animation-delay:.12s; }
+    .s6{ left:50%; top:78%; animation-delay:.38s; }
+
+    @keyframes sparkle{
+      0%,100%{ transform:scale(.6); opacity:.18; }
+      50%{ transform:scale(1.3); opacity:1; }
     }
 
     .launchGate{
@@ -401,6 +477,19 @@
 <main id="pageContent">
   <div class="card">
     <div class="overlay" id="overlay">
+      <div class="success-burst">
+        <div class="burst-ring"></div>
+        <div class="burst-ring r2"></div>
+        <div class="burst-ring r3"></div>
+        <div class="sparkles">
+          <div class="spark s1"></div>
+          <div class="spark s2"></div>
+          <div class="spark s3"></div>
+          <div class="spark s4"></div>
+          <div class="spark s5"></div>
+          <div class="spark s6"></div>
+        </div>
+      </div>
       <h2 class="ovTitle" id="ovTitle">HARİKA!</h2>
       <div class="ovSub" id="ovSub">+5 PUAN</div>
       <div class="ovBadge" id="ovBadge">%100 BENZERLİK</div>
@@ -428,12 +517,11 @@
       <div class="roundTag" id="langTag">DİL</div>
       <div class="mainWord" id="wMain">...</div>
       <div class="subMeaning" id="wSub">...</div>
-      <div class="helper" id="helperText">Kelimeyi dinle ve cevapla</div>
+      <div class="helper" id="helperText">Kelimeyi dinle ve tekrar et</div>
     </div>
 
     <div class="controls">
-      <button class="btn" id="btnPass">PAS</button>
-      <button class="btn btn-mic" id="btnMic">🎙️ CEVAPLA</button>
+      <button class="btn btn-mic" id="btnMic">🎙️ TEKRAR ET</button>
     </div>
   </div>
 </main>
@@ -483,7 +571,9 @@ const state = {
   selectedLang: localStorage.getItem(GAME_LANG_KEY) || "en"
 };
 
+/* ---------------- AUDIO ---------------- */
 let audioCtx = null;
+
 function getAudioCtx(){
   try{
     if(!audioCtx){
@@ -492,52 +582,113 @@ function getAudioCtx(){
       audioCtx = new Ctx();
     }
     return audioCtx;
-  }catch{ return null; }
+  }catch{
+    return null;
+  }
 }
+
+async function unlockAudio(){
+  try{
+    const ctx = getAudioCtx();
+    if(ctx && ctx.state === "suspended"){
+      await ctx.resume();
+    }
+  }catch{}
+}
+
 function beep({freq=440,duration=.08,type="sine",gain=.03,when=0}){
   const ctx = getAudioCtx();
   if(!ctx) return;
+  if(ctx.state === "suspended"){
+    ctx.resume().catch(() => {});
+  }
+
   const now = ctx.currentTime + when;
   const osc = ctx.createOscillator();
   const g = ctx.createGain();
+
   osc.type = type;
   osc.frequency.setValueAtTime(freq, now);
   g.gain.setValueAtTime(.0001, now);
   g.gain.exponentialRampToValueAtTime(gain, now + .01);
   g.gain.exponentialRampToValueAtTime(.0001, now + duration);
-  osc.connect(g); g.connect(ctx.destination);
-  osc.start(now); osc.stop(now + duration + .02);
+
+  osc.connect(g);
+  g.connect(ctx.destination);
+
+  osc.start(now);
+  osc.stop(now + duration + .02);
 }
+
 function playHitFx(){
   beep({freq:720,duration:.07,type:"triangle",gain:.05});
   beep({freq:920,duration:.08,type:"triangle",gain:.04,when:.05});
 }
+
 function playMissFx(){
   beep({freq:220,duration:.10,type:"sawtooth",gain:.05});
   beep({freq:170,duration:.12,type:"sawtooth",gain:.04,when:.04});
 }
+
 function playWinFx(){
   beep({freq:523,duration:.09,type:"triangle",gain:.05});
   beep({freq:659,duration:.09,type:"triangle",gain:.05,when:.08});
   beep({freq:784,duration:.11,type:"triangle",gain:.05,when:.16});
   beep({freq:1046,duration:.15,type:"triangle",gain:.05,when:.26});
 }
+
 function playLoseFx(){
   beep({freq:250,duration:.12,type:"square",gain:.05});
   beep({freq:180,duration:.15,type:"square",gain:.04,when:.10});
 }
 
-function toastLike(title, sub="", good=true){
-  $("ovTitle").textContent = title;
-  $("ovTitle").style.color = good ? "var(--green)" : "var(--red)";
-  $("ovSub").textContent = sub;
-  $("ovBadge").style.display = "none";
-  $("overlay").classList.add("show");
-}
-function hideToastLike(){
-  $("overlay").classList.remove("show");
+function nativeSpeak(text, lang){
+  try{
+    if(window.NativeTTS && typeof window.NativeTTS.speak === "function"){
+      window.NativeTTS.speak(String(text || "").trim(), String(lang || "en").trim());
+      return true;
+    }
+  }catch{}
+  return false;
 }
 
+async function speak(text, lang) {
+  const t = String(text || "").trim();
+  if(!t) return;
+
+  await unlockAudio();
+
+  if (nativeSpeak(t, lang)) return;
+
+  if(!("speechSynthesis" in window)) return;
+
+  try { window.speechSynthesis.cancel(); } catch {}
+
+  const u = new SpeechSynthesisUtterance(t);
+  u.lang = LANGS[lang]?.bcp || "en-US";
+  u.rate = 0.9;
+  u.pitch = 1;
+  u.volume = 1;
+
+  const voices = window.speechSynthesis.getVoices();
+  if (voices?.length) {
+    const base = lang;
+    const found = voices.find(v => String(v.lang || "").toLowerCase().startsWith(base));
+    if (found) u.voice = found;
+  }
+
+  setTimeout(() => {
+    try { window.speechSynthesis.speak(u); } catch {}
+  }, 100);
+}
+
+["click","touchstart","pointerdown"].forEach(evt => {
+  window.addEventListener(evt, () => {
+    unlockAudio();
+  }, { passive:true, once:true });
+});
+
+/* ---------------- UTILS ---------------- */
 function normalize(s){
   return String(s||"")
     .toLowerCase()
@@ -573,6 +724,21 @@ function similarityScore(a,b){
   const shorter = s1.length >= s2.length ? s2 : s1;
   const dist = editDistance(longer, shorter);
   return Math.max(0, Math.min(100, Math.floor(((longer.length - dist)/longer.length)*100)));
+}
+
+/* ---------------- UI ---------------- */
+function showOverlay({ title, titleColor, sub, badgeText, good }) {
+  $("ovTitle").textContent = title;
+  $("ovTitle").style.color = titleColor || "#fff";
+  $("ovSub").textContent = sub || "";
+  $("ovBadge").style.display = badgeText ? "block" : "none";
+  $("ovBadge").textContent = badgeText || "";
+  $("overlay").classList.toggle("good", !!good);
+  $("overlay").classList.add("show");
+}
+
+function hideOverlay(){
+  $("overlay").classList.remove("show", "good");
 }
 
 function renderLangPicker() {
@@ -666,59 +832,6 @@ function renderHud() {
   $("chipRound").textContent = `${state.round}/${state.limit}`;
 }
 
-function speak(text, lang) {
-  if(!("speechSynthesis" in window)) return;
-  try { window.speechSynthesis.cancel(); } catch {}
-  const u = new SpeechSynthesisUtterance(String(text || "").trim());
-  u.lang = LANGS[lang]?.bcp || "en-US";
-  u.rate = .9;
-  u.pitch = 1;
-  u.volume = 1;
-
-  const voices = window.speechSynthesis.getVoices();
-  if (voices?.length) {
-    const base = lang;
-    const found = voices.find(v => String(v.lang || "").toLowerCase().startsWith(base));
-    if (found) u.voice = found;
-  }
-
-  setTimeout(() => {
-    try { window.speechSynthesis.speak(u); } catch {}
-  }, 100);
-}
-
-function nextItem() {
-  if (!state.pool.length) return null;
-
-  if (state.used.size >= state.pool.length) {
-    state.used.clear();
-  }
-
-  let item = null;
-  let guard = 0;
-  while (guard < 100) {
-    const pick = state.pool[Math.floor(Math.random() * state.pool.length)];
-    const key = normalize(pick.word);
-    if (!state.used.has(key)) {
-      state.used.add(key);
-      item = pick;
-      break;
-    }
-    guard++;
-  }
-
-  return item || state.pool[0];
-}
-
-function renderCurrent() {
-  if (!state.current) return;
-  $("wMain").textContent = state.current.word;
-  $("wSub").textContent = state.current.meaning || "—";
-  $("helperText").textContent = "Kelimeyi dinle, doğru söyle ve puanı topla";
-  renderHud();
-  renderHearts();
-}
-
 function readCurrentWord() {
   if (!state.current?.word) return;
   speak(state.current.word, state.lang);
@@ -766,8 +879,40 @@ async function saveBest() {
   } catch {}
 }
 
+function nextItem() {
+  if (!state.pool.length) return null;
+
+  if (state.used.size >= state.pool.length) {
+    state.used.clear();
+  }
+
+  let item = null;
+  let guard = 0;
+  while (guard < 100) {
+    const pick = state.pool[Math.floor(Math.random() * state.pool.length)];
+    const key = normalize(pick.word);
+    if (!state.used.has(key)) {
+      state.used.add(key);
+      item = pick;
+      break;
+    }
+    guard++;
+  }
+
+  return item || state.pool[0];
+}
+
+function renderCurrent() {
+  if (!state.current) return;
+  $("wMain").textContent = state.current.word;
+  $("wSub").textContent = state.current.meaning || "—";
+  $("helperText").textContent = "Kelimeyi dinle ve tekrar et";
+  renderHud();
+  renderHearts();
+}
+
 function startRound() {
-  hideToastLike();
+  hideOverlay();
 
   if (state.round >= state.limit) {
     state.round = 0;
@@ -787,16 +932,28 @@ function startRound() {
   }, 280);
 }
 
-function finishRound(success) {
+function finishRound(success, similarity) {
   if (success) {
     state.score += 5;
     playWinFx();
-    toastLike("HARİKA!", "+5 PUAN", true);
     saveBest();
+    showOverlay({
+      title: "OYUN BAŞARILI",
+      titleColor: "var(--green)",
+      sub: `+5 PUAN`,
+      badgeText: `%${similarity} BENZERLİK`,
+      good: true
+    });
   } else {
     state.lives -= 1;
     playLoseFx();
-    toastLike("OLMADI", "Can hakkın azaldı", false);
+    showOverlay({
+      title: "OYUN BAŞARISIZ",
+      titleColor: "var(--red)",
+      sub: `${state.current.word}\n${state.current.meaning}`,
+      badgeText: `%${similarity} BENZERLİK`,
+      good: false
+    });
   }
 
   renderHud();
@@ -816,14 +973,20 @@ function finishRound(success) {
 function startListening() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) {
-    toast("Bu cihazda konuşma algılama yok");
+    showOverlay({
+      title: "SES DESTEKLENMİYOR",
+      titleColor: "var(--red)",
+      sub: "Bu cihazda konuşma algılama yok",
+      badgeText: "",
+      good: false
+    });
+    setTimeout(() => hideOverlay(), 1800);
     return;
   }
 
   state.listening = true;
   $("btnMic").classList.add("listening");
   $("btnMic").textContent = "👂 DİNLİYOR";
-  $("btnPass").disabled = true;
 
   const rec = new SR();
   state.recog = rec;
@@ -838,29 +1001,28 @@ function startListening() {
   rec.onresult = async (e) => {
     clearTimeout(watchdog);
     const spoken = e.results?.[0]?.[0]?.transcript || "";
-    const score = similarityScore(state.current.word, spoken);
+    const similarity = similarityScore(state.current.word, spoken);
 
     state.listening = false;
     $("btnMic").classList.remove("listening");
-    $("btnMic").textContent = "🎙️ CEVAPLA";
-    $("btnPass").disabled = false;
+    $("btnMic").textContent = "🎙️ TEKRAR ET";
 
-    if (score >= 95) {
-      playHitFx();
-      finishRound(true);
-    } else {
-      playMissFx();
-      finishRound(false);
-    }
+    finishRound(similarity >= 95, similarity);
   };
 
   rec.onerror = () => {
     clearTimeout(watchdog);
     state.listening = false;
     $("btnMic").classList.remove("listening");
-    $("btnMic").textContent = "🎙️ CEVAPLA";
-    $("btnPass").disabled = false;
-    toast("Dinleme başarısız");
+    $("btnMic").textContent = "🎙️ TEKRAR ET";
+    showOverlay({
+      title: "TEKRAR DENE",
+      titleColor: "var(--red)",
+      sub: "Dinleme başarısız oldu",
+      badgeText: "",
+      good: false
+    });
+    setTimeout(() => hideOverlay(), 1500);
   };
 
   rec.onend = () => {
@@ -868,17 +1030,11 @@ function startListening() {
     if (state.listening) {
       state.listening = false;
       $("btnMic").classList.remove("listening");
-      $("btnMic").textContent = "🎙️ CEVAPLA";
-      $("btnPass").disabled = false;
+      $("btnMic").textContent = "🎙️ TEKRAR ET";
     }
   };
 
   rec.start();
-}
-
-function passWord() {
-  if (state.listening) return;
-  finishRound(false);
 }
 
 async function launchGame() {
@@ -898,7 +1054,14 @@ async function launchGame() {
 
   if (!state.pool.length) {
     $("launchGate").style.display = "flex";
-    toast("Bu dilin havuzu bulunamadı");
+    showOverlay({
+      title: "HAVUZ YOK",
+      titleColor: "var(--red)",
+      sub: "Bu dil için oyun havuzu bulunamadı",
+      badgeText: "",
+      good: false
+    });
+    setTimeout(() => hideOverlay(), 1800);
     return;
   }
 
@@ -909,12 +1072,12 @@ async function launchGame() {
 
 $("launchBtn").addEventListener("click", launchGame);
 $("btnMic").addEventListener("click", startListening);
-$("btnPass").addEventListener("click", passWord);
 
 (function init(){
   renderLangPicker();
   renderHud();
   renderHearts();
+  try { window.speechSynthesis?.getVoices?.(); } catch {}
 })();
 </script>
 </body>
