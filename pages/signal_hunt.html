@@ -43,21 +43,21 @@
 
   #pageContent{
     height:100%;
-    padding:74px 12px calc(18px + var(--safeB) + var(--shellLift)) 12px;
+    padding:10px 12px calc(18px + var(--safeB) + var(--shellLift)) 12px;
   }
 
   .wrap{
     height:100%;
     display:flex;
     flex-direction:column;
-    gap:12px;
+    gap:10px;
   }
 
   .hud{
     display:flex;
     align-items:center;
     justify-content:space-between;
-    padding:12px 14px;
+    padding:10px 12px;
     border-radius:20px;
     border:1px solid var(--bd);
     background: rgba(0,0,0,0.22);
@@ -153,6 +153,9 @@
     inset:-28%;
     background: conic-gradient(from 0deg, transparent 0deg, rgba(0,255,213,.24) 70deg, transparent 120deg);
     animation: spin 3.8s linear infinite;
+  }
+  .scan.fast{
+    animation-duration: 1.2s;
   }
   @keyframes spin{ to{ transform: rotate(360deg);} }
 
@@ -380,7 +383,7 @@
         <div class="radarRing r3"></div>
         <div class="crossV"></div>
         <div class="crossH"></div>
-        <div class="scan"></div>
+        <div class="scan" id="scan"></div>
         <div class="pulseDot"></div>
       </div>
 
@@ -685,7 +688,7 @@ function nextItem() {
 function renderQuestion() {
   if (!state.current) return;
 
-  $("questionMain").textContent = state.current.word;
+  $("questionMain").textContent = "Sinyal hazır";
   $("questionSub").textContent = "Dinlediğin cümlenin doğru Türkçe karşılığını seç";
   $("langDisp").textContent = `${LANGS[state.lang]?.flag || ""} ${LANGS[state.lang]?.name || state.lang}`;
   $("scoreDisp").textContent = state.score;
@@ -724,11 +727,15 @@ async function playSignal() {
   if (!state.current || state.playingAudio) return;
   state.playingAudio = true;
   $("listenBtn").classList.add("playing");
+  $("scan").classList.add("fast");
+
   playSignalFx();
   await speak(state.current.sentence || state.current.word, state.lang);
+
   setTimeout(() => {
     state.playingAudio = false;
     $("listenBtn").classList.remove("playing");
+    $("scan").classList.remove("fast");
   }, 1000);
 }
 
