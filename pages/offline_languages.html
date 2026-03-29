@@ -11,7 +11,6 @@
       --bg1:#050814;
       --bg2:#090d1c;
       --line:rgba(255,255,255,.10);
-      --line2:rgba(255,255,255,.14);
       --txt:#fff;
       --muted:rgba(255,255,255,.68);
       --grad:linear-gradient(135deg,#4de8ff 0%, #7b7dff 46%, #ff54c9 100%);
@@ -56,48 +55,6 @@
       max-width:700px;
       margin:0 auto;
       padding:14px 14px 34px;
-    }
-
-    .topbar{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      padding:6px 2px 16px;
-      border-bottom:1px solid rgba(255,255,255,.06);
-      margin-bottom:14px;
-    }
-
-    .brand-title{
-      font-size:26px;
-      font-weight:1000;
-      letter-spacing:-1px;
-      line-height:1;
-    }
-
-    .brand-title .ai{
-      background:var(--grad);
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;
-    }
-
-    .brand-sub{
-      font-size:11px;
-      font-weight:900;
-      letter-spacing:4px;
-      color:rgba(255,255,255,.55);
-      margin-top:2px;
-    }
-
-    .home-btn{
-      min-width:64px;
-      height:58px;
-      border-radius:18px;
-      border:1px solid rgba(255,255,255,.14);
-      background:rgba(255,255,255,.04);
-      color:#fff;
-      font-weight:1000;
-      cursor:pointer;
-      padding:0 18px;
     }
 
     .panel{
@@ -237,24 +194,29 @@
 
     .status-box{
       margin-top:14px;
-      padding:18px;
+      padding:16px 18px;
       border-radius:20px;
-      border:1px solid rgba(31,195,136,.26);
-      background:linear-gradient(135deg, rgba(31,195,136,.12), rgba(123,125,255,.10));
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.03);
       color:#fff;
-      font-size:16px;
+      font-size:15px;
       font-weight:900;
       line-height:1.55;
     }
 
+    .status-box[data-kind="ok"]{
+      border-color:rgba(21,214,130,.26);
+      background:linear-gradient(135deg, rgba(21,214,130,.10), rgba(123,125,255,.08));
+    }
+
     .status-box[data-kind="warn"]{
       border-color:rgba(255,184,77,.26);
-      background:linear-gradient(135deg, rgba(255,184,77,.12), rgba(123,125,255,.10));
+      background:linear-gradient(135deg, rgba(255,184,77,.10), rgba(123,125,255,.08));
     }
 
     .status-box[data-kind="err"]{
       border-color:rgba(255,93,122,.26);
-      background:linear-gradient(135deg, rgba(255,93,122,.12), rgba(123,125,255,.10));
+      background:linear-gradient(135deg, rgba(255,93,122,.10), rgba(123,125,255,.08));
     }
 
     .tools{
@@ -415,15 +377,6 @@
 <body>
   <main id="pageContent">
     <div class="page">
-      <header class="topbar">
-        <div>
-          <div class="brand-title">italky<span class="ai">AI</span></div>
-          <div class="brand-sub">BE FREE</div>
-        </div>
-
-        <button id="btnHome" class="home-btn" type="button">Ana Menü</button>
-      </header>
-
       <section class="panel">
         <h1 class="title">Offline Diller</h1>
         <p class="desc">
@@ -432,7 +385,7 @@
 
         <div class="status-row">
           <div class="status-pill">Ağ <b id="networkTag">ONLINE</b></div>
-          <div class="status-pill">Durum <b id="trialTag">KULLANIMA AÇIK</b></div>
+          <div class="status-pill">Durum <b id="trialTag">KONTROL</b></div>
         </div>
       </section>
 
@@ -451,11 +404,11 @@
 
         <div class="helper-note">
           Seçtiğiniz dil için yükleme hakkınız temel kurulumda bir kez esas alınır. Sistem arka planda otomatik olarak
-          <b>seçtiğiniz dil → İngilizce</b> ve <b>İngilizce → seçtiğiniz dil</b> köprü paketlerini hazırlar.
+          seçtiğiniz dil → İngilizce ve İngilizce → seçtiğiniz dil köprü paketlerini hazırlar.
         </div>
 
         <div id="statusBox" class="status-box" data-kind="info">
-          Temel kurulum bekleniyor.
+          Önce kendi konuşma dilinizi seçin.
         </div>
       </section>
 
@@ -469,16 +422,16 @@
         <div id="installedList"></div>
       </section>
 
-      <div class="footer">italkyAI By Ozyigit's • 2026</div>
+      <div class="footer">italkyAI • By Ozyigit's • 2026</div>
     </div>
   </main>
 
   <div id="toast" class="toast"></div>
 
-  <script type="module" src="/js/offline_languages_page.js"></script>
   <script type="module">
     import { initGlobalAccess } from "/js/global_access.js";
-    initGlobalAccess();
+    await initGlobalAccess();
   </script>
+  <script type="module" src="/js/offline_languages_page.js"></script>
 </body>
 </html>
