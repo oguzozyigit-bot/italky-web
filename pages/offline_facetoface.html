@@ -3,42 +3,57 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-  <title>italkyAI • Offline FaceToFace</title>
+  <title>italkyAI • Offline Diller</title>
   <meta name="theme-color" content="#050814"/>
 
   <style>
     :root{
-      --bg:#050814;
+      --bg1:#050814;
       --bg2:#090d1c;
       --line:rgba(255,255,255,.10);
+      --line2:rgba(255,255,255,.14);
       --txt:#fff;
-      --muted:rgba(255,255,255,.66);
+      --muted:rgba(255,255,255,.68);
       --grad:linear-gradient(135deg,#4de8ff 0%, #7b7dff 46%, #ff54c9 100%);
       --ok:#15d682;
-      --err:#ff5d7a;
       --warn:#ffb84d;
+      --err:#ff5d7a;
       --safe-top:env(safe-area-inset-top,0px);
       --safe-bottom:env(safe-area-inset-bottom,0px);
+      --shadow:0 18px 38px rgba(0,0,0,.26);
     }
 
-    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; }
+    *{
+      box-sizing:border-box;
+      -webkit-tap-highlight-color:transparent;
+      outline:none;
+    }
+
     html,body{
       margin:0;
+      width:100%;
       min-height:100%;
+      color:var(--txt);
+      font-family:Inter, Outfit, Arial, sans-serif;
       background:
         radial-gradient(circle at 16% 10%, rgba(123,125,255,.18), transparent 28%),
         radial-gradient(circle at 84% 16%, rgba(255,84,201,.15), transparent 24%),
         radial-gradient(circle at 50% 0%, rgba(77,232,255,.10), transparent 30%),
-        linear-gradient(180deg,var(--bg),var(--bg2));
-      color:var(--txt);
-      font-family:Inter, Outfit, Arial, sans-serif;
+        linear-gradient(180deg,var(--bg1),var(--bg2));
     }
 
-    body{ padding-top:var(--safe-top); padding-bottom:var(--safe-bottom); }
-    #pageContent{ min-height:100dvh; }
+    body{
+      padding-top:var(--safe-top);
+      padding-bottom:var(--safe-bottom);
+    }
+
+    #pageContent{
+      min-height:100dvh;
+    }
 
     .page{
-      max-width:720px;
+      width:100%;
+      max-width:700px;
       margin:0 auto;
       padding:14px 14px 34px;
     }
@@ -58,11 +73,13 @@
       letter-spacing:-1px;
       line-height:1;
     }
+
     .brand-title .ai{
       background:var(--grad);
       -webkit-background-clip:text;
       -webkit-text-fill-color:transparent;
     }
+
     .brand-sub{
       font-size:11px;
       font-weight:900;
@@ -87,15 +104,17 @@
       border:1px solid var(--line);
       border-radius:28px;
       background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+      box-shadow:var(--shadow), inset 0 1px 0 rgba(255,255,255,.03);
       padding:18px;
       margin-bottom:16px;
+      overflow:hidden;
       backdrop-filter:blur(14px);
       -webkit-backdrop-filter:blur(14px);
     }
 
     .title{
       margin:0 0 10px;
-      font-size:24px;
+      font-size:23px;
       font-weight:1000;
       line-height:1.1;
       letter-spacing:-.5px;
@@ -109,15 +128,15 @@
       font-weight:700;
     }
 
-    .pill-row{
+    .status-row{
       display:flex;
-      gap:10px;
       flex-wrap:wrap;
+      gap:10px;
       margin-top:16px;
     }
 
-    .pill{
-      min-height:46px;
+    .status-pill{
+      min-height:48px;
       padding:0 16px;
       border-radius:16px;
       border:1px solid rgba(255,255,255,.10);
@@ -130,10 +149,29 @@
       color:#fff;
     }
 
-    .select-wrap{ position:relative; margin-top:14px; }
+    .status-pill b{
+      margin-left:6px;
+      font-weight:1000;
+      background:var(--grad);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+
+    .label{
+      display:block;
+      margin:14px 0 10px;
+      font-size:15px;
+      font-weight:900;
+      color:#fff;
+    }
+
+    .select-wrap{
+      position:relative;
+    }
+
     .select{
       width:100%;
-      height:68px;
+      height:72px;
       border-radius:20px;
       border:1px solid rgba(255,255,255,.10);
       background:rgba(255,255,255,.03);
@@ -144,66 +182,193 @@
       appearance:none;
       cursor:pointer;
     }
-    .select option{ color:#000; }
+
+    .select option{
+      color:#000;
+    }
+
     .select-arrow{
       position:absolute;
       right:18px;
       top:50%;
       transform:translateY(-50%);
       font-size:18px;
+      color:#fff;
       opacity:.8;
       pointer-events:none;
     }
 
-    .action{
+    .btn-primary{
       width:100%;
       height:64px;
       border:none;
       border-radius:20px;
-      margin-top:14px;
       background:linear-gradient(135deg, rgba(31,195,136,.22), rgba(123,125,255,.16));
       border:1px solid rgba(31,195,136,.35);
       color:#fff;
       font-size:17px;
       font-weight:1000;
       cursor:pointer;
+      box-shadow:0 10px 24px rgba(0,0,0,.16), inset 0 1px 0 rgba(255,255,255,.05);
+      transition:transform .18s ease, opacity .18s ease;
+      margin-top:16px;
     }
 
-    .action.secondary{
+    .btn-primary:active{
+      transform:scale(.985);
+    }
+
+    .btn-primary[disabled]{
+      opacity:.7;
+      cursor:default;
+    }
+
+    .helper-note{
+      padding:14px 16px;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.03);
+      font-size:13px;
+      line-height:1.55;
+      color:var(--muted);
+      font-weight:800;
+      margin-top:14px;
+    }
+
+    .status-box{
+      margin-top:14px;
+      padding:18px;
+      border-radius:20px;
+      border:1px solid rgba(31,195,136,.26);
+      background:linear-gradient(135deg, rgba(31,195,136,.12), rgba(123,125,255,.10));
+      color:#fff;
+      font-size:16px;
+      font-weight:900;
+      line-height:1.55;
+    }
+
+    .status-box[data-kind="warn"]{
+      border-color:rgba(255,184,77,.26);
+      background:linear-gradient(135deg, rgba(255,184,77,.12), rgba(123,125,255,.10));
+    }
+
+    .status-box[data-kind="err"]{
+      border-color:rgba(255,93,122,.26);
+      background:linear-gradient(135deg, rgba(255,93,122,.12), rgba(123,125,255,.10));
+    }
+
+    .tools{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      margin-bottom:12px;
+    }
+
+    .search{
+      flex:1;
+      height:60px;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.03);
+      color:#fff;
+      padding:0 16px;
+      font-size:17px;
+      font-weight:800;
+    }
+
+    .count-chip{
+      min-width:132px;
+      height:60px;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.03);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:#fff;
+      font-size:16px;
+      font-weight:1000;
+      padding:0 16px;
+      white-space:nowrap;
+    }
+
+    .section-title{
+      margin:10px 0 14px;
+      font-size:18px;
+      font-weight:1000;
+    }
+
+    .lang-card{
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.03);
+      border-radius:24px;
+      padding:18px;
+      margin-bottom:14px;
+    }
+
+    .lang-head{
+      display:flex;
+      align-items:center;
+      gap:14px;
+      margin-bottom:16px;
+    }
+
+    .flag{
+      width:56px;
+      height:56px;
+      border-radius:18px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:32px;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.08);
+      flex:0 0 auto;
+    }
+
+    .lang-name{
+      font-size:19px;
+      font-weight:1000;
+      line-height:1.1;
+      margin:0;
+    }
+
+    .lang-sub{
+      margin-top:4px;
+      font-size:14px;
+      color:var(--muted);
+      font-weight:800;
+    }
+
+    .lang-btn{
+      width:100%;
+      height:62px;
+      border-radius:18px;
+      border:none;
+      color:#fff;
+      font-size:16px;
+      font-weight:1000;
+      cursor:pointer;
+    }
+
+    .lang-btn.installed{
       background:rgba(255,255,255,.04);
       border:1px solid rgba(255,255,255,.12);
     }
 
-    .notice{
-      margin-top:14px;
-      padding:16px 18px;
-      border-radius:20px;
-      font-size:15px;
-      font-weight:900;
-      line-height:1.55;
-      border:1px solid rgba(255,255,255,.10);
-      background:rgba(255,255,255,.03);
+    .lang-btn.free{
+      background:linear-gradient(135deg, rgba(31,195,136,.22), rgba(123,125,255,.14));
+      border:1px solid rgba(31,195,136,.30);
     }
 
-    .notice.ok{
-      border-color:rgba(31,195,136,.28);
-      background:linear-gradient(135deg, rgba(31,195,136,.10), rgba(123,125,255,.08));
+    .lang-btn.paid{
+      background:linear-gradient(135deg, rgba(255,184,77,.18), rgba(255,84,201,.14));
+      border:1px solid rgba(255,184,77,.30);
     }
 
-    .notice.err{
-      border-color:rgba(255,93,122,.28);
-      background:linear-gradient(135deg, rgba(255,93,122,.10), rgba(123,125,255,.08));
-    }
-
-    .hidden{ display:none !important; }
-
-    .footer{
-      text-align:center;
-      padding-top:10px;
-      color:rgba(255,255,255,.44);
-      font-size:12px;
-      font-weight:900;
-      letter-spacing:.4px;
+    .lang-btn[disabled]{
+      opacity:.72;
+      cursor:default;
     }
 
     .toast{
@@ -220,11 +385,31 @@
       font-weight:900;
       z-index:9999;
       transition:.25s ease;
+      box-shadow:0 18px 36px rgba(0,0,0,.30);
       text-align:center;
       max-width:min(92vw, 560px);
     }
 
-    .toast.show{ transform:translateX(-50%) translateY(0); }
+    .toast.show{
+      transform:translateX(-50%) translateY(0);
+    }
+
+    .footer{
+      text-align:center;
+      padding-top:10px;
+      color:rgba(255,255,255,.44);
+      font-size:12px;
+      font-weight:900;
+      letter-spacing:.4px;
+    }
+
+    @media (max-width:420px){
+      .title{ font-size:20px; }
+      .desc{ font-size:14px; }
+      .select{ height:68px; font-size:17px; }
+      .tools{ flex-direction:column; }
+      .count-chip{ width:100%; }
+    }
   </style>
 </head>
 <body>
@@ -235,62 +420,53 @@
           <div class="brand-title">italky<span class="ai">AI</span></div>
           <div class="brand-sub">BE FREE</div>
         </div>
+
         <button id="btnHome" class="home-btn" type="button">Ana Menü</button>
       </header>
 
       <section class="panel">
-        <h1 class="title">Offline FaceToFace</h1>
+        <h1 class="title">Offline Diller</h1>
         <p class="desc">
-          İnternet bağlantısı yok. Önceden kurduğun offline dil paketleri ile çeviriye devam edebilirsin.
+          Önce kendi konuşma dilini seç. Sistem bu dil için İngilizce köprü kurulumunu otomatik yapar. Sonra ihtiyacın olan diğer dil paketlerini indirirsin.
         </p>
 
-        <div class="pill-row">
-          <div class="pill">Ağ <b id="networkTag" style="margin-left:6px;">OFFLINE</b></div>
-          <div class="pill">Yetki <b id="accessTag" style="margin-left:6px;">Kontrol</b></div>
+        <div class="status-row">
+          <div class="status-pill">Ağ <b id="networkTag">ONLINE</b></div>
+          <div class="status-pill">Durum <b id="trialTag">KULLANIMA AÇIK</b></div>
         </div>
       </section>
 
       <section class="panel">
-        <p class="desc">Kaynak Dil</p>
+        <h2 class="section-title">Temel Kurulum</h2>
+
+        <label class="label" for="sourceSelect">Önce kendi konuşma dilinizi seçin</label>
         <div class="select-wrap">
-          <select id="fromSelect" class="select">
-            <option value="tr">🇹🇷 Türkçe</option>
-            <option value="de">🇩🇪 Almanca</option>
-            <option value="fr">🇫🇷 Fransızca</option>
-            <option value="es">🇪🇸 İspanyolca</option>
-            <option value="it">🇮🇹 İtalyanca</option>
-            <option value="pt">🇵🇹 Portekizce</option>
-            <option value="ar">🇸🇦 Arapça</option>
-            <option value="ru">🇷🇺 Rusça</option>
-            <option value="ja">🇯🇵 Japonca</option>
-            <option value="ko">🇰🇷 Korece</option>
-            <option value="zh">🇨🇳 Çince</option>
-          </select>
+          <select id="sourceSelect" class="select"></select>
           <div class="select-arrow">⌄</div>
         </div>
 
-        <p class="desc" style="margin-top:14px;">Hedef Dil</p>
-        <div class="select-wrap">
-          <select id="toSelect" class="select">
-            <option value="tr">🇹🇷 Türkçe</option>
-            <option value="de">🇩🇪 Almanca</option>
-            <option value="fr">🇫🇷 Fransızca</option>
-            <option value="es">🇪🇸 İspanyolca</option>
-            <option value="it">🇮🇹 İtalyanca</option>
-            <option value="pt">🇵🇹 Portekizce</option>
-            <option value="ar">🇸🇦 Arapça</option>
-            <option value="ru">🇷🇺 Rusça</option>
-            <option value="ja">🇯🇵 Japonca</option>
-            <option value="ko">🇰🇷 Korece</option>
-            <option value="zh">🇨🇳 Çince</option>
-          </select>
-          <div class="select-arrow">⌄</div>
+        <button id="btnInstallBase" class="btn-primary" type="button">
+          Kurulumu Başlat
+        </button>
+
+        <div class="helper-note">
+          Seçtiğiniz dil için yükleme hakkınız temel kurulumda bir kez esas alınır. Sistem arka planda otomatik olarak
+          <b>seçtiğiniz dil → İngilizce</b> ve <b>İngilizce → seçtiğiniz dil</b> köprü paketlerini hazırlar.
         </div>
 
-        <button id="btnStartOffline" class="action" type="button">Offline Çeviriyi Başlat</button>
-        <button id="btnManage" class="action secondary" type="button">Offline Dilleri Yönet</button>
+        <div id="statusBox" class="status-box" data-kind="info">
+          Temel kurulum bekleniyor.
+        </div>
+      </section>
 
-        <div id="noticeBox" class="notice hidden"></div>
+      <section class="panel">
+        <div class="tools">
+          <input id="searchInput" class="search" type="text" placeholder="Dil ara..."/>
+          <div class="count-chip">Kurulu: <span id="installedCount" style="margin-left:6px;">0</span></div>
+        </div>
+
+        <div class="section-title">Ek Hedef Diller</div>
+        <div id="installedList"></div>
       </section>
 
       <div class="footer">italkyAI By Ozyigit's • 2026</div>
@@ -299,110 +475,7 @@
 
   <div id="toast" class="toast"></div>
 
-  <script type="module">
-    import { mountShell } from "/js/ui_shell.js";
-    import { resolveOfflineRuntime, explainOfflineFailure } from "/js/offline_runtime_guard.js";
-
-    mountShell({ scroll:"auto" });
-
-    const $ = (id) => document.getElementById(id);
-    const noticeBox = $("noticeBox");
-    const accessTag = $("accessTag");
-    const fromSelect = $("fromSelect");
-    const toSelect = $("toSelect");
-
-    function toast(msg){
-      const t = $("toast");
-      if(!t) return;
-      t.textContent = String(msg || "");
-      t.classList.add("show");
-      clearTimeout(window.__to);
-      window.__to = setTimeout(() => t.classList.remove("show"), 1800);
-    }
-
-    function showNotice(msg, kind = "err"){
-      noticeBox.textContent = String(msg || "");
-      noticeBox.className = `notice ${kind}`;
-      noticeBox.classList.remove("hidden");
-    }
-
-    function hideNotice(){
-      noticeBox.className = "notice hidden";
-      noticeBox.textContent = "";
-    }
-
-    function norm(v){
-      return String(v || "").trim().toLowerCase();
-    }
-
-    function syncDifferentTargets(){
-      if (norm(fromSelect.value) === norm(toSelect.value)) {
-        const fallback = ["tr","de","fr","es","it","pt","ar","ru","ja","ko","zh"].find(x => x !== norm(fromSelect.value)) || "en";
-        toSelect.value = fallback;
-      }
-    }
-
-    function getPageUrl(file){
-      const isApp = location.href.includes("appassets.androidplatform.net");
-      return isApp
-        ? `https://appassets.androidplatform.net/assets/pages/${file}`
-        : `/pages/${file}`;
-    }
-
-    $("btnHome")?.addEventListener("click", () => {
-      location.href = getPageUrl("home.html");
-    });
-
-    $("btnManage")?.addEventListener("click", () => {
-      location.href = getPageUrl("offline_languages.html");
-    });
-
-    fromSelect?.addEventListener("change", () => {
-      syncDifferentTargets();
-      hideNotice();
-    });
-
-    toSelect?.addEventListener("change", () => {
-      syncDifferentTargets();
-      hideNotice();
-    });
-
-    $("btnStartOffline")?.addEventListener("click", async () => {
-      const from = norm(fromSelect.value);
-      const to = norm(toSelect.value);
-
-      if (!from || !to || from === to) {
-        showNotice("Kaynak ve hedef diller farklı olmalıdır.", "err");
-        return;
-      }
-
-      const gate = await resolveOfflineRuntime(from, to);
-
-      if (!gate.ok) {
-        accessTag.textContent = "Kapalı";
-        showNotice(explainOfflineFailure(gate.reason), "err");
-        return;
-      }
-
-      accessTag.textContent = "Açık";
-      showNotice("Offline çeviri açılıyor…", "ok");
-
-      const url = `/pages/offline_facetoface_runtime.html?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
-      location.href = url;
-    });
-
-    (function init(){
-      if (navigator.onLine) {
-        accessTag.textContent = "Online";
-        showNotice("İnternet geri geldi. İstersen normal FaceToFace moduna dönebilirsin.", "ok");
-      } else {
-        accessTag.textContent = "Kontrol";
-      }
-
-      syncDifferentTargets();
-    })();
-  </script>
-
+  <script type="module" src="/js/offline_languages_page.js"></script>
   <script type="module">
     import { initGlobalAccess } from "/js/global_access.js";
     initGlobalAccess();
