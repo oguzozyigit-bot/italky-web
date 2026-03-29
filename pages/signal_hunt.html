@@ -1,4 +1,3 @@
-<!-- FILE: /pages/signal_hunt.html -->
 <!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -355,46 +354,48 @@
 <div class="nebula a"></div>
 <div class="nebula b"></div>
 
-<div class="wrap">
-  <div class="hud">
-    <div>
-      <div class="score" id="scoreDisp">0</div>
-      <div class="labelMini">SKOR</div>
+<main id="pageContent">
+  <div class="wrap">
+    <div class="hud">
+      <div>
+        <div class="score" id="scoreDisp">0</div>
+        <div class="labelMini">SKOR</div>
+      </div>
+
+      <div class="centerHud">
+        <div class="gameTitle">SIGNAL HUNT</div>
+        <div class="langDisp" id="langDisp">EN • TR</div>
+      </div>
+
+      <div>
+        <div class="lives" id="livesDisp">❤️❤️❤️</div>
+        <div class="labelMini" style="text-align:right;">CAN</div>
+      </div>
     </div>
 
-    <div class="centerHud">
-      <div class="gameTitle">SIGNAL HUNT</div>
-      <div class="langDisp" id="langDisp">EN • TR</div>
-    </div>
+    <div class="main">
+      <div class="radarBox" id="radar">
+        <div class="radarRing"></div>
+        <div class="radarRing r2"></div>
+        <div class="radarRing r3"></div>
+        <div class="crossV"></div>
+        <div class="crossH"></div>
+        <div class="scan"></div>
+        <div class="pulseDot"></div>
+      </div>
 
-    <div>
-      <div class="lives" id="livesDisp">❤️❤️❤️</div>
-      <div class="labelMini" style="text-align:right;">CAN</div>
+      <button class="listenBtn" id="listenBtn">▶ SİNYALİ DİNLE</button>
+
+      <div class="questionBox">
+        <div class="questionMain" id="questionMain">Doğru karşılığı bul</div>
+        <div class="questionSub" id="questionSub">Dinlediğin cümlenin doğru Türkçe karşılığını seç</div>
+      </div>
+
+      <div class="optionsArea" id="optionsArea"></div>
+      <div class="momDisp" id="momDisp">x1.00 MOMENTUM</div>
     </div>
   </div>
-
-  <div class="main">
-    <div class="radarBox" id="radar">
-      <div class="radarRing"></div>
-      <div class="radarRing r2"></div>
-      <div class="radarRing r3"></div>
-      <div class="crossV"></div>
-      <div class="crossH"></div>
-      <div class="scan"></div>
-      <div class="pulseDot"></div>
-    </div>
-
-    <button class="listenBtn" id="listenBtn">▶ SİNYALİ DİNLE</button>
-
-    <div class="questionBox">
-      <div class="questionMain" id="questionMain">Doğru karşılığı bul</div>
-      <div class="questionSub" id="questionSub">Dinlediğin cümlenin doğru anlamını seç</div>
-    </div>
-
-    <div class="optionsArea" id="optionsArea"></div>
-    <div class="momDisp" id="momDisp">x1.00 MOMENTUM</div>
-  </div>
-</div>
+</main>
 
 <div class="modal show" id="startModal">
   <div class="cardModal">
@@ -681,31 +682,11 @@ function nextItem() {
   return pick;
 }
 
-function shuffle(arr) {
-  return [...arr].sort(() => Math.random() - 0.5);
-}
-
-function buildOptions() {
-  if (!state.current) return [];
-  const options = [state.current.meaning];
-
-  const poolMeanings = state.pool
-    .map(x => x.meaning)
-    .filter(x => x && x !== state.current.meaning);
-
-  while (options.length < 4 && poolMeanings.length) {
-    const pick = poolMeanings[Math.floor(Math.random() * poolMeanings.length)];
-    if (!options.includes(pick)) options.push(pick);
-  }
-
-  return shuffle(options);
-}
-
 function renderQuestion() {
   if (!state.current) return;
 
   $("questionMain").textContent = state.current.word;
-  $("questionSub").textContent = "Sinyali dinle ve doğru Türkçe karşılığı seç";
+  $("questionSub").textContent = "Dinlediğin cümlenin doğru Türkçe karşılığını seç";
   $("langDisp").textContent = `${LANGS[state.lang]?.flag || ""} ${LANGS[state.lang]?.name || state.lang}`;
   $("scoreDisp").textContent = state.score;
   $("livesDisp").textContent = "❤️".repeat(state.lives);
@@ -721,6 +702,22 @@ function renderQuestion() {
     div.onclick = () => checkAnswer(div, opt);
     $("optionsArea").appendChild(div);
   });
+}
+
+function buildOptions() {
+  if (!state.current) return [];
+  const options = [state.current.meaning];
+
+  const poolMeanings = state.pool
+    .map(x => x.meaning)
+    .filter(x => x && x !== state.current.meaning);
+
+  while (options.length < 4 && poolMeanings.length) {
+    const pick = poolMeanings[Math.floor(Math.random() * poolMeanings.length)];
+    if (!options.includes(pick)) options.push(pick);
+  }
+
+  return [...options].sort(() => Math.random() - 0.5);
 }
 
 async function playSignal() {
@@ -837,7 +834,7 @@ $("retryBtn").onclick = () => {
   nextQuestion();
 };
 $("backBtn").onclick = () => {
-  location.href = "/pages/game.html";
+  location.href = "/pages/game_menu.html";
 };
 
 (function init() {
