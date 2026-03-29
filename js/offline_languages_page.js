@@ -1,3 +1,5 @@
+// FILE: /js/offline_languages_page.js
+
 import { mountShell, setHeaderTokens } from "/js/ui_shell.js";
 import { supabase } from "/js/supabase_client.js";
 import { ensureAuthAndCacheUser } from "/js/auth.js";
@@ -339,7 +341,6 @@ window.installLang = async function (lang) {
   }
 
   const myToken = ++renderToken;
-  const beforeCount = getDownloadCount(code);
   const cost = nextDownloadCost(code);
 
   try {
@@ -515,16 +516,22 @@ async function boot() {
 }
 
 /* ---------------- EVENTS ---------------- */
-installBaseBtn.onclick = installBase;
+if (installBaseBtn) {
+  installBaseBtn.onclick = installBase;
+}
 
-sourceSelect.onchange = () => {
-  setUserLang(sourceSelect.value);
-  setStatus("", "info");
-  render();
-};
+if (sourceSelect) {
+  sourceSelect.onchange = () => {
+    setUserLang(sourceSelect.value);
+    setStatus("", "info");
+    render();
+  };
+}
 
-searchInput.oninput = () => {
-  render();
-};
+if (searchInput) {
+  searchInput.oninput = () => {
+    render();
+  };
+}
 
 boot();
