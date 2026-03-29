@@ -87,6 +87,26 @@ function langTitle(code) {
   return map[c] || c.toUpperCase();
 }
 
+function langFlag(code) {
+  const c = normalizeLang(code);
+  const map = {
+    tr: "🇹🇷",
+    en: "🇬🇧",
+    de: "🇩🇪",
+    fr: "🇫🇷",
+    es: "🇪🇸",
+    it: "🇮🇹",
+    pt: "🇵🇹",
+    ar: "🇸🇦",
+    ru: "🇷🇺",
+    ja: "🇯🇵",
+    ko: "🇰🇷",
+    zh: "🇨🇳",
+    el: "🇬🇷"
+  };
+  return map[c] || "🌐";
+}
+
 function normalizePlayableWord(raw) {
   return String(raw || "")
     .normalize("NFD")
@@ -101,6 +121,125 @@ function getPublicLangUrl(langCode) {
   return data?.publicUrl || "";
 }
 
+function toast(msg) {
+  const el = $("toast");
+  if (!el) return;
+  el.textContent = String(msg || "");
+  el.classList.add("show");
+  clearTimeout(window.__hangmanToastTimer);
+  window.__hangmanToastTimer = setTimeout(() => {
+    el.classList.remove("show");
+  }, 1800);
+}
+
+/* -----------------------------
+   AUDIO / FX
+----------------------------- */
+let audioCtx = null;
+
+function getAudioCtx() {
+  try {
+    if (!audioCtx) {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return null;
+      audioCtx = new Ctx();
+    }
+    return audioCtx;
+  } catch {
+    return null;
+  }
+}
+
+function beep({ freq = 440, duration = 0.08, type = "sine", gain = 0.03, when = 0 }) {
+  const ctx = getAudioCtx();
+  if (!ctx) return;
+
+  const now = ctx.currentTime + when;
+  const osc = ctx.createOscillator();
+  const g = ctx.createGain();
+
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, now);
+
+  g.gain.setValueAtTime(0.0001, now);
+  g.gain.exponentialRampToValueAtTime(gain, now + 0.01);
+  g.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+  osc.connect(g);
+  g.connect(ctx.destination);
+
+  osc.start(now);
+  osc.stop(now + duration + 0.02);
+}
+
+function playHitFx() {
+  beep({ freq: 720, duration: 0.07, type: "triangle", gain: 0.04 });
+  beep({ freq: 920, duration: 0.08, type: "triangle", gain: 0.03, when: 0.05 });
+}
+
+function playMissFx() {
+  beep({ freq: 220, duration: 0.10, type: "sawtooth", gain: 0.04 });
+  beep({ freq: 170, duration: 0.12, type: "sawtooth", gain: 0.03, when: 0.04 });
+}
+
+function playWinFx() {
+  beep({ freq: 523, duration: 0.09, type: "triangle", gain: 0.05 });
+  beep({ freq: 659, duration: 0.09, type: "triangle", gain: 0.05, when: 0.08 });
+  beep({ freq: 784, duration: 0.11, type: "triangle", gain: 0.05, when: 0.16 });
+  beep({ freq: 1046, duration: 0.15, type: "triangle", gain: 0.05, when: 0.26 });
+}
+
+function playLoseFx() {
+  beep({ freq: 250, duration: 0.12, type: "square", gain: 0.04 });
+  beep({ freq: 180, duration: 0.15, type: "square", gain: 0.04, when: 0.10 });
+}
+
+function speakText(text, langCode) {
+  const t = String(text || "").trim();
+  if (!t || !("speechSynthesis" in window)) return;
+
+  try { window.speechSynthesis.cancel(); } catch {}
+
+  const u = new SpeechSynthesisUtterance(t);
+
+  const bcpMap = {
+    tr: "tr-TR",
+    en: "en-US",
+    de: "de-DE",
+    fr: "fr-FR",
+    es: "es-ES",
+    it: "it-IT",
+    pt: "pt-PT",
+    ar: "ar-SA",
+    ru: "ru-RU",
+    ja: "ja-JP",
+    ko: "ko-KR",
+    zh: "zh-CN",
+    el: "el-GR"
+  };
+
+  u.lang = bcpMap[normalizeLang(langCode)] || "en-US";
+  u.rate = 0.95;
+  u.pitch = 1.0;
+  u.volume = 1.0;
+
+  const voices = window.speechSynthesis.getVoices();
+  if (voices?.length) {
+    const base = normalizeLang(langCode);
+    const found = voices.find(v =>
+      String(v.lang || "").toLowerCase().startsWith(base)
+    );
+    if (found) u.voice = found;
+  }
+
+  setTimeout(() => {
+    try { window.speechSynthesis.speak(u); } catch {}
+  }, 60);
+}
+
+/* -----------------------------
+   ACCESS
+----------------------------- */
 function getGameAccessState() {
   const a = window.__ITALKY_ACCESS__ || {};
 
@@ -174,7 +313,7 @@ let state = {
 };
 
 /* -----------------------------
-   AUTH / ACCESS
+   AUTH
 ----------------------------- */
 async function bootSession() {
   const ok = await ensureAuthAndCacheUser();
@@ -194,10 +333,12 @@ async function bootSession() {
   state.accessOk = !access.loaded || access.allowed;
 
   if (!state.accessOk) {
-    setGate("OYUN ERİŞİMİ KAPALI");
+    setGate("Oyun erişimi kapalı.");
     disableStartBtn(true, "KİLİTLİ");
-    alert("Oyunlar trial süresince açık, paketlerde ise kullanılabilir.");
-    location.href = "/pages/upgrade_pack.html";
+    toast("Bu modül için erişim gerekli");
+    setTimeout(() => {
+      location.href = "/pages/upgrade_pack.html";
+    }, 800);
     return false;
   }
 
@@ -205,127 +346,50 @@ async function bootSession() {
 }
 
 /* -----------------------------
-   LANGUAGE PICKER
+   LANGUAGE SHEET
 ----------------------------- */
-function ensureLanguageModal() {
-  if (document.getElementById("hangmanLangModal")) return;
-
-  const modal = document.createElement("div");
-  modal.id = "hangmanLangModal";
-  modal.style.cssText = `
-    position:fixed;
-    inset:0;
-    z-index:70000;
-    background:rgba(2,0,12,.94);
-    display:none;
-    align-items:center;
-    justify-content:center;
-    padding:22px;
-    backdrop-filter:blur(8px);
-  `;
-
-  modal.innerHTML = `
-    <div style="
-      width:min(92vw,520px);
-      border-radius:28px;
-      border:1px solid rgba(255,255,255,.12);
-      background:linear-gradient(180deg, rgba(20,20,34,.96), rgba(5,0,20,.96));
-      box-shadow:0 20px 60px rgba(0,0,0,.45);
-      padding:22px;
-    ">
-      <div style="
-        font-family:'Space Grotesk',sans-serif;
-        font-size:28px;
-        font-weight:900;
-        letter-spacing:2px;
-        margin-bottom:8px;
-      ">OYUN DİLİ</div>
-
-      <div style="
-        color:rgba(255,255,255,.72);
-        font-size:14px;
-        line-height:1.55;
-        font-weight:700;
-        margin-bottom:16px;
-      ">
-        İlk girişte oyun dilinizi seçin. Sonraki girişlerde oyun bu dille doğrudan açılır.
-      </div>
-
-      <select id="hangmanLangSelect" style="
-        width:100%;
-        height:58px;
-        border-radius:18px;
-        border:1px solid rgba(255,255,255,.12);
-        background:rgba(255,255,255,.05);
-        color:#fff;
-        padding:0 16px;
-        font-size:17px;
-        font-weight:900;
-        margin-bottom:14px;
-      "></select>
-
-      <div style="display:flex; gap:10px;">
-        <button id="hangmanLangCancel" type="button" style="
-          flex:1;
-          height:54px;
-          border:none;
-          border-radius:18px;
-          background:rgba(255,255,255,.06);
-          color:#fff;
-          font-size:15px;
-          font-weight:900;
-          cursor:pointer;
-        ">Vazgeç</button>
-
-        <button id="hangmanLangSave" type="button" style="
-          flex:1;
-          height:54px;
-          border:none;
-          border-radius:18px;
-          background:linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
-          color:#fff;
-          font-size:15px;
-          font-weight:900;
-          cursor:pointer;
-        ">Devam Et</button>
-      </div>
-    </div>
-  `;
-
-  document.body.appendChild(modal);
+function closeLangSheet() {
+  $("langSheet")?.classList.remove("show");
 }
 
-function openLanguagePicker() {
-  ensureLanguageModal();
+function renderLangGrid() {
+  const grid = $("langGrid");
+  if (!grid) return;
 
-  const modal = document.getElementById("hangmanLangModal");
-  const select = document.getElementById("hangmanLangSelect");
-  const btnSave = document.getElementById("hangmanLangSave");
-  const btnCancel = document.getElementById("hangmanLangCancel");
-
-  if (!modal || !select || !btnSave || !btnCancel) return Promise.resolve(null);
-
-  select.innerHTML = state.availableLangs.map((code) => {
-    return `<option value="${escapeHtml(code)}">${escapeHtml(langTitle(code))}</option>`;
+  grid.innerHTML = state.availableLangs.map((code) => {
+    const active = code === state.lang ? "active" : "";
+    return `
+      <button class="langCard ${active}" type="button" data-lang="${escapeHtml(code)}">
+        <div class="langFlag">${escapeHtml(langFlag(code))}</div>
+        <div class="langName">${escapeHtml(langTitle(code))}</div>
+        <div class="langHint">${code === state.lang ? "Seçili" : "Dokun ve seç"}</div>
+      </button>
+    `;
   }).join("");
 
-  if (state.lang && state.availableLangs.includes(state.lang)) {
-    select.value = state.lang;
-  }
+  grid.querySelectorAll(".langCard").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const picked = normalizeLang(btn.dataset.lang);
+      if (!picked) return;
 
-  modal.style.display = "flex";
+      state.lang = picked;
+      localStorage.setItem(GAME_LANG_KEY, picked);
+      localStorage.setItem("italky_game_lang", picked);
 
-  return new Promise((resolve) => {
-    const close = (val) => {
-      modal.style.display = "none";
-      btnSave.onclick = null;
-      btnCancel.onclick = null;
-      resolve(val);
-    };
+      renderLangGrid();
+      closeLangSheet();
 
-    btnCancel.onclick = () => close(null);
-    btnSave.onclick = () => close(normalizeLang(select.value));
+      const ok = await loadWordsForLang(picked);
+      if (ok && $("readyGate")) {
+        $("readyGate").dataset.ready = "1";
+      }
+    });
   });
+}
+
+function openLangSheet() {
+  renderLangGrid();
+  $("langSheet")?.classList.add("show");
 }
 
 /* -----------------------------
@@ -375,7 +439,7 @@ async function loadAvailableLangsFromDb() {
 }
 
 async function loadAvailableLangs() {
-  setGate("OYUN DİLLERİ HAZIRLANIYOR...");
+  setGate("Oyun dilleri hazırlanıyor...");
   disableStartBtn(true, "YÜKLENİYOR...");
 
   let langs = await loadAvailableLangsFromBucket();
@@ -390,7 +454,7 @@ async function loadAvailableLangs() {
   }
 
   if (!state.lang || !state.availableLangs.includes(state.lang)) {
-    state.lang = "";
+    state.lang = state.availableLangs[0];
   }
 
   return true;
@@ -492,7 +556,7 @@ async function loadWordsForLang(langCode) {
   localStorage.setItem(GAME_LANG_KEY, state.lang);
   localStorage.setItem("italky_game_lang", state.lang);
 
-  setGate(`${langTitle(state.lang)} yükleniyor...`);
+  setGate(`${langFlag(state.lang)} ${langTitle(state.lang)} yükleniyor...`);
   disableStartBtn(true, "YÜKLENİYOR...");
 
   let pool = await loadWordsFromBucket(state.lang);
@@ -524,12 +588,13 @@ async function loadWordsForLang(langCode) {
 
   if (!state.pool.length) {
     setGate(`${langTitle(state.lang)} için havuz boş.`);
-    disableStartBtn(true, "HAZIR DEĞİL");
+    disableStartBtn(false, "TEKRAR DENE");
     return false;
   }
 
-  setGate(`${langTitle(state.lang)} hazır • İstersen tekrar dil seçebilirsin`);
+  setGate(`${langFlag(state.lang)} ${langTitle(state.lang)} hazır`);
   disableStartBtn(false, "BAŞLA");
+  toast(`${langTitle(state.lang)} seçildi`);
   return true;
 }
 
@@ -563,6 +628,11 @@ async function updateBestScore(newScore) {
 /* -----------------------------
    GAME LOGIC
 ----------------------------- */
+function speakCurrentWord() {
+  if (!state.target?.w) return;
+  speakText(state.target.w, state.lang);
+}
+
 function pickWord() {
   if (!state.pool.length) return null;
   if (state.pool.length === 1) return state.pool[0];
@@ -605,8 +675,14 @@ function startRound() {
   renderHearts();
   resetMan();
 
-  if ($("trText")) $("trText").textContent = String(state.target.tr || "—").toUpperCase();
+  if ($("trText")) {
+    $("trText").childNodes[0].textContent = String(state.target.tr || "—");
+  }
   if ($("scoreVal")) $("scoreVal").textContent = String(state.totalScore);
+
+  setTimeout(() => {
+    speakCurrentWord();
+  }, 250);
 }
 
 function renderWord() {
@@ -649,6 +725,7 @@ function makeGuess(l) {
 
   if (w.includes(l)) {
     btn?.classList.add("hit");
+    playHitFx();
     renderWord();
 
     const completed = w
@@ -659,6 +736,7 @@ function makeGuess(l) {
     if (completed) endRound(true);
   } else {
     btn?.classList.add("miss");
+    playMissFx();
     state.mistakes++;
     state.flawless = false;
     state.roundScore = Math.max(0, state.roundScore - 15);
@@ -699,15 +777,17 @@ async function endRound(win) {
     if (state.flawless && !state.jokerUsed && state.lives < state.MAX_LIVES) {
       state.lives++;
     }
+    playWinFx();
     await updateBestScore(state.totalScore);
   } else {
     state.lives--;
+    playLoseFx();
   }
 
   renderHearts();
 
   if ($("mTitle")) {
-    $("mTitle").textContent = win ? "BAŞARILI!" : "MİSYON BAŞARISIZ";
+    $("mTitle").textContent = win ? "HARİKA!" : "MİSYON BAŞARISIZ";
     $("mTitle").style.color = win ? "var(--green)" : "var(--red)";
   }
   if ($("mWord")) $("mWord").textContent = String(state.target?.w || "").toUpperCase();
@@ -738,8 +818,15 @@ function useJ(i) {
   }
 }
 
+/* -----------------------------
+   EVENTS
+----------------------------- */
 $("j0") && ($("j0").onclick = () => useJ(0));
 $("j1") && ($("j1").onclick = () => useJ(1));
+
+$("speakWordBtn")?.addEventListener("click", () => {
+  speakCurrentWord();
+});
 
 $("mBtn") && ($("mBtn").onclick = () => {
   $("modal")?.classList.remove("on");
@@ -747,17 +834,43 @@ $("mBtn") && ($("mBtn").onclick = () => {
   if (state.lives > 0) {
     startRound();
   } else {
-    const again = confirm(`Oyun bitti! Skor: ${state.totalScore}. Yeniden başla?`);
-    if (again) {
-      state.totalScore = 0;
-      state.lives = 5;
-      if ($("scoreVal")) $("scoreVal").textContent = "0";
-      renderHearts();
-      startRound();
-    } else {
-      location.href = "/pages/game_menu.html";
-    }
+    state.totalScore = 0;
+    state.lives = 5;
+    if ($("scoreVal")) $("scoreVal").textContent = "0";
+    renderHearts();
+    startRound();
   }
+});
+
+$("mHomeBtn")?.addEventListener("click", () => {
+  location.href = "/pages/game_menu.html";
+});
+
+$("realStartBtn") && ($("realStartBtn").onclick = async () => {
+  if (!state.lang || !$("readyGate")?.dataset.ready) {
+    const ok = await prepareLanguageAndData(false);
+    if (!ok) return;
+  }
+
+  if (!state.pool.length) {
+    toast("Bu dilde henüz oyun havuzu bulunamadı");
+    return;
+  }
+
+  if ($("readyGate")) $("readyGate").style.display = "none";
+  startRound();
+});
+
+$("langChangeBtn")?.addEventListener("click", () => {
+  openLangSheet();
+});
+
+$("langSheetClose")?.addEventListener("click", () => {
+  closeLangSheet();
+});
+
+$("langSheet")?.addEventListener("click", (e) => {
+  if (e.target?.id === "langSheet") closeLangSheet();
 });
 
 /* -----------------------------
@@ -767,38 +880,14 @@ async function prepareLanguageAndData(forcePick = false) {
   const ok = await loadAvailableLangs();
   if (!ok) return false;
 
-  if (forcePick || !state.lang) {
-    const picked = await openLanguagePicker();
-    if (!picked) {
-      setGate("Önce oyun dilini seçmelisin.");
-      disableStartBtn(true, "DİL SEÇ");
-      return false;
-    }
-    state.lang = picked;
+  if (!state.lang || forcePick) {
+    renderLangGrid();
+    openLangSheet();
+    return false;
   }
 
   return await loadWordsForLang(state.lang);
 }
-
-$("realStartBtn") && ($("realStartBtn").onclick = async () => {
-  if (!state.lang || !$("readyGate")?.dataset.ready) {
-    const ok = await prepareLanguageAndData(true);
-    if (!ok) return;
-  }
-
-  if (!state.pool.length) {
-    alert("Bu dilde henüz oyun havuzu bulunamadı.");
-    return;
-  }
-
-  if ($("readyGate")) $("readyGate").style.display = "none";
-  startRound();
-});
-
-$("gateInfo")?.addEventListener("click", async () => {
-  await prepareLanguageAndData(true);
-  if ($("readyGate")) $("readyGate").dataset.ready = state.pool.length ? "1" : "";
-});
 
 /* -----------------------------
    BOOT
@@ -810,7 +899,7 @@ $("gateInfo")?.addEventListener("click", async () => {
   renderHearts();
   if ($("scoreVal")) $("scoreVal").textContent = "0";
 
-  setGate("OYUN DİLİ HAZIRLANIYOR...");
+  setGate("Oyun dili hazırlanıyor...");
   disableStartBtn(true, "YÜKLENİYOR...");
 
   const ok = await prepareLanguageAndData(false);
@@ -818,7 +907,13 @@ $("gateInfo")?.addEventListener("click", async () => {
   if (ok) {
     if ($("readyGate")) $("readyGate").dataset.ready = "1";
     disableStartBtn(false, "BAŞLA");
+  } else if (!state.lang) {
+    disableStartBtn(true, "DİL SEÇ");
   } else {
-    disableStartBtn(false, "DİL SEÇ");
+    disableStartBtn(false, "BAŞLA");
   }
+
+  try {
+    window.speechSynthesis?.getVoices?.();
+  } catch {}
 })();
