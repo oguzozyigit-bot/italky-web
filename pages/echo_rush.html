@@ -141,6 +141,8 @@
       gap:6px;
       margin-top:8px;
       justify-content:flex-end;
+      flex-wrap:wrap;
+      max-width:150px;
     }
 
     .heart{
@@ -501,7 +503,7 @@
       </div>
 
       <div class="meta">
-        <div class="chip" id="chipRound">0/20</div>
+        <div class="chip" id="chipRound">0</div>
 
         <div class="score">
           <div class="scoreLabel">SKOR</div>
@@ -560,12 +562,12 @@ const state = {
   pool: [],
   used: new Set(),
   current: null,
+  lastWordKey: "",
   score: 0,
   best: 0,
   lives: 3,
   maxLives: 9,
-  round: 0,
-  limit: 20,
+  roundsPlayed: 0,
   listening: false,
   recog: null,
   selectedLang: localStorage.getItem(GAME_LANG_KEY) || "en"
@@ -829,7 +831,7 @@ function renderHud() {
   $("langTag").textContent = `${LANGS[state.lang]?.flag || "🌐"} ${LANGS[state.lang]?.name || state.lang}`;
   $("scoreVal").textContent = String(state.score);
   $("bestVal").textContent = String(state.best);
-  $("chipRound").textContent = `${state.round}/${state.limit}`;
+  $("chipRound").textContent = `${state.roundsPlayed}`;
 }
 
 function readCurrentWord() {
@@ -852,16 +854,26 @@ async function loadBest() {
     const map = prof?.echo_rush_best || {};
     state.best = Number(map[state.lang] || 0);
   } catch {}
+
+  try {
+    const localBest = Number(localStorage.getItem(`echo_rush_best_${state.lang}`) || 0);
+    if (localBest > state.best) state.best = localBest;
+  } catch {}
 }
 
 async function saveBest() {
+  if (state.score <= state.best) return;
+
+  state.best = state.score;
+
+  try {
+    localStorage.setItem(`echo_rush_best_${state.lang}`, String(state.best));
+  } catch {}
+
   try {
     const { data } = await supabase.auth.getUser();
     const uid = data?.user?.id;
     if (!uid) return;
-    if (state.score <= state.best) return;
-
-    state.best = state.score;
 
     const { data: prof } = await supabase
       .from("profiles")
@@ -888,18 +900,28 @@ function nextItem() {
 
   let item = null;
   let guard = 0;
+
   while (guard < 100) {
     const pick = state.pool[Math.floor(Math.random() * state.pool.length)];
     const key = normalize(pick.word);
-    if (!state.used.has(key)) {
+
+    if (key !== state.lastWordKey && !state.used.has(key)) {
       state.used.add(key);
+      state.lastWordKey = key;
       item = pick;
       break;
     }
     guard++;
   }
 
-  return item || state.pool[0];
+  if (!item) {
+    const fallback = state.pool.find((x) => normalize(x.word) !== state.lastWordKey) || state.pool[0];
+    state.lastWordKey = normalize(fallback.word);
+    state.used.add(state.lastWordKey);
+    item = fallback;
+  }
+
+  return item;
 }
 
 function renderCurrent() {
@@ -914,17 +936,10 @@ function renderCurrent() {
 function startRound() {
   hideOverlay();
 
-  if (state.round >= state.limit) {
-    state.round = 0;
-    state.score = 0;
-    state.lives = 3;
-    state.used.clear();
-  }
-
   state.current = nextItem();
   if (!state.current) return;
 
-  state.round += 1;
+  state.roundsPlayed += 1;
   renderCurrent();
 
   setTimeout(() => {
@@ -935,12 +950,20 @@ function startRound() {
 function finishRound(success, similarity) {
   if (success) {
     state.score += 5;
+    let bonusText = "+5 PUAN";
+
+    if (similarity === 100 && state.lives < state.maxLives) {
+      state.lives += 1;
+      bonusText = "+5 PUAN • +1 CAN";
+    }
+
     playWinFx();
     saveBest();
+
     showOverlay({
       title: "OYUN BAŞARILI",
       titleColor: "var(--green)",
-      sub: `+5 PUAN`,
+      sub: bonusText,
       badgeText: `%${similarity} BENZERLİK`,
       good: true
     });
@@ -963,8 +986,8 @@ function finishRound(success, similarity) {
     if (state.lives <= 0) {
       state.score = 0;
       state.lives = 3;
-      state.round = 0;
       state.used.clear();
+      state.lastWordKey = "";
     }
     startRound();
   }, 3000);
