@@ -313,11 +313,13 @@ async function loadAvailableLangs() {
   disableStartBtn(true, "YÜKLENİYOR...");
 
   const { data, error } = await supabase
-    .from("hangman_pool")
-    .select("lang");
+    .from("game_content")
+    .select("lang")
+    .eq("game_key", "hangman")
+    .eq("is_active", true);
 
   if (error) {
-    console.error("hangman_pool lang error:", error);
+    console.error("game_content lang error:", error);
     setGate("Dil listesi alınamadı.");
     disableStartBtn(true, "HATA");
     return false;
@@ -353,19 +355,27 @@ async function loadWordsForLang(langCode) {
   disableStartBtn(true, "YÜKLENİYOR...");
 
   const { data: words, error } = await supabase
-    .from("hangman_pool")
-    .select("w, tr")
-    .eq("lang", state.lang);
+    .from("game_content")
+    .select("content")
+    .eq("game_key", "hangman")
+    .eq("lang", state.lang)
+    .eq("is_active", true)
+    .order("sort_order", { ascending: true });
 
   if (error) {
-    console.error("hangman_pool words error:", error);
+    console.error("game_content words error:", error);
     setGate("Kelime havuzu alınamadı.");
     disableStartBtn(true, "HATA");
     return false;
   }
 
   state.pool = Array.isArray(words)
-    ? words.filter((x) => x && x.w && String(x.w).trim())
+    ? words
+        .map((x) => ({
+          w: String(x?.content?.word || "").trim(),
+          tr: String(x?.content?.meaning || "").trim()
+        }))
+        .filter((x) => x.w)
     : [];
 
   const bestKey = state.lang;
