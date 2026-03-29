@@ -8,46 +8,54 @@
 
 <style>
 :root{
-  --bg:#05000a;
-  --pink:#ff00ff;
-  --cyan:#00f3ff;
-  --purple:#8b5cf6;
-  --green:#00e676;
-  --red:#ff1744;
-  --gold:#ffd700;
-  --border:rgba(255,255,255,.10);
+  --bg:#f4f8ff;
+  --bg2:#eaf7f8;
+  --card:#ffffffcc;
+  --text:#0f172a;
+  --muted:#5b6475;
+  --cyan:#12c6d8;
+  --blue:#4f7cff;
+  --green:#11c87a;
+  --red:#ef4444;
+  --gold:#f6b80f;
+  --line:rgba(15,23,42,.10);
   --safeB: env(safe-area-inset-bottom, 0px);
   --shellLift: 0px;
-  --grad: linear-gradient(135deg,#a5b4fc 0%, #6366f1 55%, #ec4899 100%);
+  --grad: linear-gradient(135deg,#60a5fa 0%, #22d3ee 48%, #34d399 100%);
 }
+
 *{
   box-sizing:border-box;
   -webkit-tap-highlight-color:transparent;
   user-select:none;
   outline:none;
 }
+
 html,body{
   margin:0;
   width:100%;
   height:100%;
   overflow:hidden;
   font-family:Outfit,sans-serif;
-  color:#fff;
+  color:var(--text);
   background:var(--bg);
 }
+
 body{
   background:
-    radial-gradient(circle at center,#1a002b 0%,#000 100%);
+    radial-gradient(circle at 10% 10%, rgba(96,165,250,.18), transparent 20%),
+    radial-gradient(circle at 90% 0%, rgba(34,211,238,.18), transparent 22%),
+    radial-gradient(circle at 50% 100%, rgba(52,211,153,.15), transparent 20%),
+    linear-gradient(180deg,var(--bg),var(--bg2));
 }
 
-.bg-grid{
+.soft-grid{
   position:fixed;
   inset:0;
   background-image:
-    linear-gradient(rgba(189,0,255,.08) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(189,0,255,.08) 1px,transparent 1px);
-  background-size:30px 30px;
-  opacity:.32;
+    linear-gradient(rgba(15,23,42,.03) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(15,23,42,.03) 1px,transparent 1px);
+  background-size:32px 32px;
   pointer-events:none;
 }
 
@@ -79,81 +87,82 @@ body{
   gap:8px;
   padding:10px 12px;
   border-radius:18px;
-  border:1px solid var(--border);
-  background:rgba(20,0,30,.72);
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.75);
   backdrop-filter:blur(14px);
-  box-shadow:0 18px 40px rgba(0,0,0,.35);
+  box-shadow:0 10px 30px rgba(15,23,42,.08);
 }
 
 .title{
   font-family:"Space Grotesk",sans-serif;
   font-size:17px;
   font-weight:900;
-  color:var(--pink);
-  letter-spacing:.5px;
-  text-shadow:0 0 10px rgba(255,0,255,.25);
+  color:#0f172a;
+  letter-spacing:.4px;
 }
 
 .pill{
-  min-width:60px;
+  min-width:64px;
   height:34px;
   padding:0 10px;
   border-radius:12px;
-  border:1px solid var(--border);
-  background:rgba(255,255,255,.05);
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.8);
   display:flex;
   align-items:center;
   justify-content:center;
   font-size:11px;
   font-weight:900;
+  color:var(--text);
 }
 
 .momentum-chip{
-  min-width:72px;
+  min-width:74px;
   height:34px;
   padding:0 10px;
   border-radius:12px;
-  background:var(--pink);
-  color:#000;
+  background:var(--grad);
+  color:#04243a;
   font-weight:900;
   display:flex;
   align-items:center;
   justify-content:center;
-  box-shadow:0 0 14px rgba(255,0,255,.22);
+  box-shadow:0 8px 18px rgba(18,198,216,.18);
   font-size:11px;
 }
 
 .stats{
   display:grid;
-  grid-template-columns: repeat(4,1fr);
+  grid-template-columns:repeat(4,1fr);
   gap:6px;
 }
 
 .stat{
   min-height:50px;
   border-radius:14px;
-  border:1px solid var(--border);
-  background:rgba(255,255,255,.04);
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.72);
   display:flex;
   flex-direction:column;
   align-items:center;
   justify-content:center;
-  gap:4px;
+  gap:3px;
   text-align:center;
   padding:4px;
+  box-shadow:0 8px 20px rgba(15,23,42,.05);
 }
 
 .statVal{
   font-family:"Space Grotesk",sans-serif;
   font-size:16px;
   font-weight:900;
-  color:var(--cyan);
+  color:#0f172a;
   line-height:1;
 }
 
 .statLab{
   font-size:9px;
-  opacity:.62;
+  opacity:.58;
   letter-spacing:1px;
   font-weight:900;
 }
@@ -161,7 +170,7 @@ body{
 .resInfo{
   text-align:center;
   min-height:16px;
-  color:var(--cyan);
+  color:var(--blue);
   font-size:11px;
   font-weight:800;
   opacity:0;
@@ -171,10 +180,10 @@ body{
 .board{
   flex:1;
   border-radius:22px;
-  border:1px solid var(--border);
-  background:rgba(20,0,30,.70);
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.70);
   backdrop-filter:blur(14px);
-  box-shadow:0 22px 50px rgba(0,0,0,.45);
+  box-shadow:0 18px 40px rgba(15,23,42,.08);
   padding:10px;
   display:flex;
   flex-direction:column;
@@ -193,14 +202,14 @@ body{
 .langBadge{
   font-size:11px;
   font-weight:900;
-  color:var(--cyan);
+  color:var(--blue);
   letter-spacing:1px;
 }
 
 .pbBadge{
   font-size:10px;
   font-weight:800;
-  color:var(--gold);
+  color:#b7791f;
 }
 
 .grid-cards{
@@ -220,7 +229,7 @@ body{
 .inner{
   width:100%;
   height:100%;
-  transition:transform .38s;
+  transition:transform .34s;
   transform-style:preserve-3d;
   border-radius:14px;
   position:relative;
@@ -232,13 +241,13 @@ body{
 }
 
 .card.matched .inner{
-  box-shadow:0 0 18px rgba(0,230,118,.18);
+  box-shadow:0 0 0 2px rgba(17,200,122,.18), 0 10px 18px rgba(17,200,122,.14);
   animation:pulseMatch .35s ease-out;
 }
 
 @keyframes pulseMatch{
   0%{ transform:rotateY(180deg) scale(1); }
-  50%{ transform:rotateY(180deg) scale(1.06); }
+  50%{ transform:rotateY(180deg) scale(1.05); }
   100%{ transform:rotateY(180deg) scale(1); }
 }
 
@@ -249,22 +258,39 @@ body{
   display:flex;
   align-items:center;
   justify-content:center;
-  border:1px solid var(--border);
+  border:1px solid var(--line);
   backface-visibility:hidden;
   overflow:hidden;
 }
 
 .front{
-  background:linear-gradient(135deg,rgba(255,255,255,.06),rgba(255,255,255,.01));
-  color:var(--purple);
+  position:relative;
   font-size:20px;
   font-weight:900;
 }
 
-.front::after{
-  content:"◈";
-  opacity:.55;
-  font-family:"Space Grotesk",sans-serif;
+.trFront{
+  background:linear-gradient(180deg,#ffffff,#f7f7f7);
+  color:#111;
+  border:1px solid rgba(0,0,0,.08);
+}
+.trFront::before{
+  content:"";
+  position:absolute;
+  inset:5px;
+  border:2px solid #ef4444;
+  border-radius:10px;
+}
+
+.fxFront{
+  background:linear-gradient(180deg,#eff6ff,#dbeafe);
+  color:#1d4ed8;
+}
+.frontFlagMark{
+  position:relative;
+  z-index:2;
+  font-size:24px;
+  line-height:1;
 }
 
 .back{
@@ -283,29 +309,17 @@ body{
   border:1px solid rgba(0,0,0,.08);
   position:relative;
 }
-
 .back.tr::before{
   content:"";
   position:absolute;
   inset:5px;
-  border:2px solid #ff1744;
+  border:2px solid #ef4444;
   border-radius:10px;
-  pointer-events:none;
-}
-
-.back.tr .flagRibbon{
-  position:absolute;
-  top:6px;
-  left:50%;
-  transform:translateX(-50%);
-  font-size:14px;
-  line-height:1;
-  opacity:1;
 }
 
 .back.fx{
-  background:linear-gradient(135deg,rgba(30,0,50,.98),rgba(10,0,25,.98));
-  color:#fff;
+  background:linear-gradient(180deg,#eff6ff,#dbeafe);
+  color:#1e3a8a;
 }
 
 .flagRibbon{
@@ -314,7 +328,7 @@ body{
   right:6px;
   font-size:12px;
   line-height:1;
-  opacity:.95;
+  opacity:.98;
 }
 
 .wordType{
@@ -345,7 +359,7 @@ body{
   height:8px;
   border-radius:50%;
   background:radial-gradient(circle, #fff 0%, var(--green) 45%, transparent 72%);
-  box-shadow:0 0 12px rgba(0,230,118,.45);
+  box-shadow:0 0 12px rgba(17,200,122,.45);
   animation:sparkle .9s ease-out forwards;
 }
 .s1{ left:16%; top:22%; }
@@ -364,7 +378,7 @@ body{
 .modal{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.94);
+  background:rgba(255,255,255,.35);
   backdrop-filter:blur(14px);
   z-index:1000;
   display:none;
@@ -378,15 +392,16 @@ body{
 .modal-card{
   width:100%;
   max-width:380px;
-  background:#10051a;
-  border:1px solid rgba(255,255,255,.10);
+  background:#ffffff;
+  border:1px solid var(--line);
   border-radius:28px;
   padding:24px;
   text-align:center;
-  box-shadow:0 25px 70px rgba(0,0,0,.7);
+  box-shadow:0 25px 70px rgba(15,23,42,.16);
   max-height:88vh;
   overflow:auto;
   scrollbar-width:none;
+  color:var(--text);
 }
 .modal-card::-webkit-scrollbar{ display:none; }
 
@@ -395,6 +410,7 @@ body{
   font-weight:900;
   font-size:26px;
   margin:0 0 12px;
+  color:#0f172a;
 }
 
 .lang-grid{
@@ -405,9 +421,9 @@ body{
 }
 
 .lang-btn{
-  background:rgba(255,255,255,.06);
-  border:1px solid rgba(255,255,255,.12);
-  color:#fff;
+  background:rgba(15,23,42,.04);
+  border:1px solid rgba(15,23,42,.10);
+  color:#0f172a;
   border-radius:16px;
   padding:14px 10px;
   cursor:pointer;
@@ -424,9 +440,9 @@ body{
 .lang-btn .flag{ font-size:28px; }
 
 .lang-btn.active{
-  border-color:rgba(0,255,157,.30);
-  box-shadow:0 0 0 1px rgba(0,255,157,.24), 0 0 18px rgba(0,255,157,.12);
-  background:rgba(0,255,157,.08);
+  border-color:rgba(17,200,122,.28);
+  box-shadow:0 0 0 1px rgba(17,200,122,.18), 0 0 18px rgba(17,200,122,.10);
+  background:rgba(17,200,122,.08);
 }
 
 .resultStat{
@@ -435,6 +451,7 @@ body{
   text-align:left;
   white-space:pre-line;
   font-size:15px;
+  color:#334155;
 }
 
 .resultBtns{
@@ -455,19 +472,19 @@ body{
 
 .btn.primary{
   background:var(--grad);
-  color:#fff;
+  color:#073042;
 }
 
 .btn.secondary{
-  background:rgba(255,255,255,.06);
-  color:#fff;
-  border:1px solid rgba(255,255,255,.14);
+  background:rgba(15,23,42,.06);
+  color:#0f172a;
+  border:1px solid rgba(15,23,42,.10);
 }
 </style>
 </head>
 
 <body>
-<div class="bg-grid"></div>
+<div class="soft-grid"></div>
 
 <div class="app" id="pageContent">
   <div class="header">
@@ -510,8 +527,8 @@ body{
 <div class="modal show" id="startModal">
   <div class="modal-card">
     <div class="modalTitle">MEMORY PULSE</div>
-    <p style="opacity:.78; line-height:1.6; font-size:14px;">
-      Bayrağa dokun, dili seç. Türkçe kartlar beyaz, hedef dil kartları koyu görünür.
+    <p style="opacity:.78; line-height:1.6; font-size:14px; color:#475569;">
+      Bayrağa dokun, dili seç. Türkçe kartlar beyaz, hedef dil kartları renkli görünür.
     </p>
 
     <div class="lang-grid" id="langGrid"></div>
@@ -559,7 +576,6 @@ let lang = localStorage.getItem(GAME_LANG_KEY) || "en";
 let selectedLang = localStorage.getItem(GAME_LANG_KEY) || "en";
 let used = new Set();
 let lastKeys = [];
-let currentPool = [];
 
 let audioCtx = null;
 function getAudioCtx(){
@@ -602,8 +618,8 @@ function beep({freq=440,duration=.08,type="sine",gain=.03,when=0}){
   osc.stop(now + duration + .02);
 }
 function playMatchFx(){
-  beep({freq:600,duration:.08,type:"triangle",gain:.05});
-  beep({freq:820,duration:.10,type:"triangle",gain:.05,when:.08});
+  beep({freq:640,duration:.08,type:"triangle",gain:.05});
+  beep({freq:860,duration:.10,type:"triangle",gain:.05,when:.08});
 }
 function playErrorFx(){
   beep({freq:180,duration:.10,type:"sawtooth",gain:.05});
@@ -629,7 +645,7 @@ function normalize(s){
     .trim();
 }
 
-function toastRes(msg, color = 'var(--purple)'){
+function toastRes(msg, color = '#4f7cff'){
   $("resInfo").textContent = msg;
   $("resInfo").style.color = color;
   $("resInfo").style.opacity = "1";
@@ -779,17 +795,25 @@ function render() {
   g.innerHTML = "";
 
   cards.forEach((c, i) => {
+    const isTr = c.lang === "tr";
+    const frontFlag = isTr ? "🇹🇷" : (LANGS[lang]?.flag || "🌐");
+    const frontClass = isTr ? "front trFront" : "front fxFront";
+
     const el = document.createElement("div");
     el.className = "card";
     el.innerHTML = `
       <div class="inner">
-        <div class="face front"></div>
-        <div class="face back ${c.lang === "tr" ? "tr" : "fx"}">
-          <div class="flagRibbon">${c.lang === "tr" ? "🇹🇷" : (LANGS[lang]?.flag || "🌐")}</div>
+        <div class="face ${frontClass}">
+          <div class="frontFlagMark">${frontFlag}</div>
+        </div>
+
+        <div class="face back ${isTr ? "tr" : "fx"}">
+          <div class="flagRibbon">${frontFlag}</div>
           <div>${c.text}</div>
-          <div class="wordType">${c.lang === "tr" ? "TR" : lang.toUpperCase()}</div>
+          <div class="wordType">${isTr ? "TR" : lang.toUpperCase()}</div>
         </div>
       </div>
+
       <div class="fxBurst">
         <div class="spark s1"></div>
         <div class="spark s2"></div>
