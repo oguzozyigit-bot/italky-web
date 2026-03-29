@@ -1,10 +1,14 @@
+// FILE: /js/hangman_page.js
+
 import { mountShell } from "/js/ui_shell.js";
 import { supabase } from "/js/supabase_client.js";
-import { requireLevelForLanguage, normalizeLang } from "/js/level_gate.js";
+import { ensureAuthAndCacheUser } from "/js/auth.js";
 
 const $ = (id) => document.getElementById(id);
 
-// UI shell
+/* -----------------------------
+   UI SHELL
+----------------------------- */
 mountShell({ scroll: "none" });
 try {
   const root = getComputedStyle(document.documentElement);
@@ -50,12 +54,85 @@ function escapeHtml(str) {
   }[m]));
 }
 
+function normalizeLang(v) {
+  return String(v || "").trim().toLowerCase();
+}
+
+function langTitle(code) {
+  const c = normalizeLang(code);
+  const map = {
+    tr: "Türkçe",
+    en: "English",
+    de: "Deutsch",
+    fr: "Français",
+    es: "Español",
+    it: "Italiano",
+    pt: "Português",
+    ar: "العربية",
+    ru: "Русский",
+    ja: "日本語",
+    ko: "한국어",
+    zh: "中文",
+    el: "Ελληνικά"
+  };
+  return map[c] || c.toUpperCase();
+}
+
+function getGameAccessState() {
+  const a = window.__ITALKY_ACCESS__ || {};
+
+  const trialActive =
+    a.trialActive === true ||
+    a.trial_active === true ||
+    Number(a.trialDaysLeft || 0) > 0 ||
+    Number(a.trial_days_left || 0) > 0 ||
+    Number(a.remainingTrialDays || 0) > 0 ||
+    Number(a.remaining_trial_days || 0) > 0;
+
+  const hasPackage =
+    a.hasPackage === true ||
+    a.has_package === true ||
+    a.packageActive === true ||
+    a.package_active === true ||
+    a.isPremium === true ||
+    a.premium === true;
+
+  const educationActive =
+    a.educationActive === true ||
+    a.education_active === true ||
+    a.packageType === "education" ||
+    a.package_type === "education";
+
+  const loaded =
+    a.loaded === true ||
+    a.ready === true ||
+    a.accessLoaded === true ||
+    a.access_loaded === true ||
+    Object.keys(a).length > 0;
+
+  return {
+    loaded,
+    allowed: trialActive || hasPackage || educationActive
+  };
+}
+
+async function waitForAccessState(maxMs = 4000) {
+  const started = Date.now();
+  while (Date.now() - started < maxMs) {
+    const s = getGameAccessState();
+    if (s.loaded) return s;
+    await new Promise((r) => setTimeout(r, 120));
+  }
+  return getGameAccessState();
+}
+
 /* -----------------------------
    STATE
 ----------------------------- */
+const GAME_LANG_KEY = "italky_hangman_lang";
+
 let state = {
-  lang: normalizeLang(qp("lang") || localStorage.getItem("italky_game_lang") || "en"),
-  level: null,
+  lang: normalizeLang(qp("lang") || localStorage.getItem(GAME_LANG_KEY) || ""),
   pool: [],
   target: null,
   lastWord: null,
@@ -69,77 +146,264 @@ let state = {
   jokerUsed: false,
   lock: false,
   userId: "anon",
-  placementOk: false
+  availableLangs: [],
+  accessOk: true
 };
 
 /* -----------------------------
-   PROFILE / AUTH / DATA LOAD
+   AUTH / ACCESS
 ----------------------------- */
-async function loadGameData() {
-  try {
-    disableStartBtn(true, "YÜKLENİYOR...");
-    setGate("SEVİYE KONTROL EDİLİYOR...");
-
-    const gate = await requireLevelForLanguage(state.lang, "hangman", {
-      lang: state.lang
-    });
-
-    if (!gate.ok) return;
-
-    state.userId = gate.profile?.id || "anon";
-    state.level = gate.level;
-    state.placementOk = true;
-
-    localStorage.setItem("italky_game_lang", state.lang);
-    localStorage.setItem("italky_game_level", state.level);
-
-    setGate(`${state.lang.toUpperCase()} • ${state.level} YÜKLENİYOR...`);
-
-    const { data: words, error } = await supabase
-      .from("hangman_pool")
-      .select("w, tr")
-      .eq("lang", state.lang)
-      .eq("level", state.level);
-
-    if (error) {
-      console.error("hangman_pool error:", error);
-      setGate("Kelime havuzu alınamadı.");
-      disableStartBtn(true, "HATA");
-      return;
-    }
-
-    state.pool = Array.isArray(words)
-      ? words.filter((x) => x && x.w && String(x.w).trim())
-      : [];
-
-    let best = 0;
-    const bestMap = gate.profile?.hangman_best || {};
-    if (bestMap && typeof bestMap === "object") {
-      const key = `${state.lang}::${state.level}`;
-      best = Number(bestMap[key] || 0);
-    }
-    if ($("bestVal")) $("bestVal").textContent = String(best);
-
-    if (!state.pool.length) {
-      setGate(`${state.lang.toUpperCase()} • ${state.level} için havuz boş.`);
-      disableStartBtn(true, "HAZIR DEĞİL");
-      return;
-    }
-
-    setGate(`${state.lang.toUpperCase()} • ${state.level} HAZIR`);
-    disableStartBtn(false, "BAŞLA");
-  } catch (err) {
-    console.error("loadGameData failed:", err);
-    setGate("Beklenmeyen bir hata oluştu.");
-    disableStartBtn(true, "HATA");
+async function bootSession() {
+  const ok = await ensureAuthAndCacheUser();
+  if (!ok) {
+    location.replace("/pages/login.html");
+    return false;
   }
+
+  try {
+    const { data } = await supabase.auth.getUser();
+    state.userId = data?.user?.id || "anon";
+  } catch {
+    state.userId = "anon";
+  }
+
+  const access = await waitForAccessState();
+  state.accessOk = !access.loaded || access.allowed;
+
+  if (!state.accessOk) {
+    setGate("OYUN ERİŞİMİ KAPALI");
+    disableStartBtn(true, "KİLİTLİ");
+    alert("Oyunlar trial süresince açık, paketlerde ise kullanılabilir.");
+    location.href = "/pages/upgrade_pack.html";
+    return false;
+  }
+
+  return true;
+}
+
+/* -----------------------------
+   LANGUAGE PICKER
+----------------------------- */
+function ensureLanguageModal() {
+  if (document.getElementById("hangmanLangModal")) return;
+
+  const modal = document.createElement("div");
+  modal.id = "hangmanLangModal";
+  modal.style.cssText = `
+    position:fixed;
+    inset:0;
+    z-index:70000;
+    background:rgba(2,0,12,.94);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:22px;
+    backdrop-filter:blur(8px);
+  `;
+
+  modal.innerHTML = `
+    <div style="
+      width:min(92vw,520px);
+      border-radius:28px;
+      border:1px solid rgba(255,255,255,.12);
+      background:linear-gradient(180deg, rgba(20,20,34,.96), rgba(5,0,20,.96));
+      box-shadow:0 20px 60px rgba(0,0,0,.45);
+      padding:22px;
+    ">
+      <div style="
+        font-family:'Space Grotesk',sans-serif;
+        font-size:28px;
+        font-weight:900;
+        letter-spacing:2px;
+        margin-bottom:8px;
+      ">OYUN DİLİ</div>
+
+      <div style="
+        color:rgba(255,255,255,.72);
+        font-size:14px;
+        line-height:1.55;
+        font-weight:700;
+        margin-bottom:16px;
+      ">
+        İlk girişte oyun dilinizi seçin. Sonraki girişlerde oyun bu dille doğrudan açılır.
+      </div>
+
+      <select id="hangmanLangSelect" style="
+        width:100%;
+        height:58px;
+        border-radius:18px;
+        border:1px solid rgba(255,255,255,.12);
+        background:rgba(255,255,255,.05);
+        color:#fff;
+        padding:0 16px;
+        font-size:17px;
+        font-weight:900;
+        margin-bottom:14px;
+      "></select>
+
+      <div style="display:flex; gap:10px;">
+        <button id="hangmanLangCancel" type="button" style="
+          flex:1;
+          height:54px;
+          border:none;
+          border-radius:18px;
+          background:rgba(255,255,255,.06);
+          color:#fff;
+          font-size:15px;
+          font-weight:900;
+          cursor:pointer;
+        ">Vazgeç</button>
+
+        <button id="hangmanLangSave" type="button" style="
+          flex:1;
+          height:54px;
+          border:none;
+          border-radius:18px;
+          background:linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
+          color:#fff;
+          font-size:15px;
+          font-weight:900;
+          cursor:pointer;
+        ">Devam Et</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+}
+
+function openLanguagePicker() {
+  ensureLanguageModal();
+
+  const modal = document.getElementById("hangmanLangModal");
+  const select = document.getElementById("hangmanLangSelect");
+  const btnSave = document.getElementById("hangmanLangSave");
+  const btnCancel = document.getElementById("hangmanLangCancel");
+
+  if (!modal || !select || !btnSave || !btnCancel) return Promise.resolve(null);
+
+  select.innerHTML = state.availableLangs.map((code) => {
+    return `<option value="${escapeHtml(code)}">${escapeHtml(langTitle(code))}</option>`;
+  }).join("");
+
+  if (state.lang && state.availableLangs.includes(state.lang)) {
+    select.value = state.lang;
+  }
+
+  modal.style.display = "flex";
+
+  return new Promise((resolve) => {
+    const close = (val) => {
+      modal.style.display = "none";
+      btnSave.onclick = null;
+      btnCancel.onclick = null;
+      resolve(val);
+    };
+
+    btnCancel.onclick = () => close(null);
+    btnSave.onclick = () => close(normalizeLang(select.value));
+  });
+}
+
+/* -----------------------------
+   DATA LOAD
+----------------------------- */
+async function loadAvailableLangs() {
+  setGate("OYUN DİLLERİ HAZIRLANIYOR...");
+  disableStartBtn(true, "YÜKLENİYOR...");
+
+  const { data, error } = await supabase
+    .from("hangman_pool")
+    .select("lang");
+
+  if (error) {
+    console.error("hangman_pool lang error:", error);
+    setGate("Dil listesi alınamadı.");
+    disableStartBtn(true, "HATA");
+    return false;
+  }
+
+  const set = new Set();
+  (Array.isArray(data) ? data : []).forEach((row) => {
+    const l = normalizeLang(row?.lang);
+    if (l) set.add(l);
+  });
+
+  state.availableLangs = [...set];
+
+  if (!state.availableLangs.length) {
+    setGate("Henüz oyun dili bulunamadı.");
+    disableStartBtn(true, "HAZIR DEĞİL");
+    return false;
+  }
+
+  if (!state.lang || !state.availableLangs.includes(state.lang)) {
+    state.lang = "";
+  }
+
+  return true;
+}
+
+async function loadWordsForLang(langCode) {
+  state.lang = normalizeLang(langCode);
+  localStorage.setItem(GAME_LANG_KEY, state.lang);
+  localStorage.setItem("italky_game_lang", state.lang);
+
+  setGate(`${langTitle(state.lang)} yükleniyor...`);
+  disableStartBtn(true, "YÜKLENİYOR...");
+
+  const { data: words, error } = await supabase
+    .from("hangman_pool")
+    .select("w, tr")
+    .eq("lang", state.lang);
+
+  if (error) {
+    console.error("hangman_pool words error:", error);
+    setGate("Kelime havuzu alınamadı.");
+    disableStartBtn(true, "HATA");
+    return false;
+  }
+
+  state.pool = Array.isArray(words)
+    ? words.filter((x) => x && x.w && String(x.w).trim())
+    : [];
+
+  const bestKey = state.lang;
+  let best = 0;
+
+  try {
+    const { data: prof } = await supabase
+      .from("profiles")
+      .select("hangman_best")
+      .eq("id", state.userId)
+      .maybeSingle();
+
+    const bestMap = prof?.hangman_best || {};
+    if (bestMap && typeof bestMap === "object") {
+      best = Number(bestMap[bestKey] || 0);
+    }
+  } catch (err) {
+    console.error("best score read error:", err);
+  }
+
+  if ($("bestVal")) $("bestVal").textContent = String(best);
+
+  if (!state.pool.length) {
+    setGate(`${langTitle(state.lang)} için havuz boş.`);
+    disableStartBtn(true, "HAZIR DEĞİL");
+    return false;
+  }
+
+  setGate(`${langTitle(state.lang)} hazır • İstersen tekrar dil seçebilirsin`);
+  disableStartBtn(false, "BAŞLA");
+  return true;
 }
 
 async function updateBestScore(newScore) {
   try {
     if (state.userId === "anon") return;
 
-    const key = `${state.lang}::${state.level}`;
+    const key = state.lang;
     const { data: prof } = await supabase
       .from("profiles")
       .select("hangman_best")
@@ -147,8 +411,9 @@ async function updateBestScore(newScore) {
       .maybeSingle();
 
     let map = prof?.hangman_best || {};
-    if (newScore > (map[key] || 0)) {
+    if (newScore > Number(map[key] || 0)) {
       map[key] = newScore;
+
       await supabase
         .from("profiles")
         .update({ hangman_best: map })
@@ -361,14 +626,34 @@ $("mBtn") && ($("mBtn").onclick = () => {
   }
 });
 
-$("realStartBtn") && ($("realStartBtn").onclick = () => {
-  if (!state.placementOk) {
-    alert("Önce seviye tespit sınavını tamamlamalısın.");
-    return;
+/* -----------------------------
+   START FLOW
+----------------------------- */
+async function prepareLanguageAndData(forcePick = false) {
+  const ok = await loadAvailableLangs();
+  if (!ok) return false;
+
+  if (forcePick || !state.lang) {
+    const picked = await openLanguagePicker();
+    if (!picked) {
+      setGate("Önce oyun dilini seçmelisin.");
+      disableStartBtn(true, "DİL SEÇ");
+      return false;
+    }
+    state.lang = picked;
+  }
+
+  return await loadWordsForLang(state.lang);
+}
+
+$("realStartBtn") && ($("realStartBtn").onclick = async () => {
+  if (!state.lang || !$("readyGate")?.dataset.ready) {
+    const ok = await prepareLanguageAndData(true);
+    if (!ok) return;
   }
 
   if (!state.pool.length) {
-    alert("Bu dil ve seviyede henüz oyun havuzu bulunamadı.");
+    alert("Bu dilde henüz oyun havuzu bulunamadı.");
     return;
   }
 
@@ -376,7 +661,30 @@ $("realStartBtn") && ($("realStartBtn").onclick = () => {
   startRound();
 });
 
+$("gateInfo")?.addEventListener("click", async () => {
+  await prepareLanguageAndData(true);
+  if ($("readyGate")) $("readyGate").dataset.ready = state.pool.length ? "1" : "";
+});
+
 /* -----------------------------
    BOOT
 ----------------------------- */
-loadGameData();
+(async function boot() {
+  const sessionOk = await bootSession();
+  if (!sessionOk) return;
+
+  renderHearts();
+  if ($("scoreVal")) $("scoreVal").textContent = "0";
+
+  setGate("OYUN DİLİ HAZIRLANIYOR...");
+  disableStartBtn(true, "YÜKLENİYOR...");
+
+  const ok = await prepareLanguageAndData(false);
+
+  if (ok) {
+    if ($("readyGate")) $("readyGate").dataset.ready = "1";
+    disableStartBtn(false, "BAŞLA");
+  } else {
+    disableStartBtn(false, "DİL SEÇ");
+  }
+})();
