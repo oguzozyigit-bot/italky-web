@@ -67,46 +67,6 @@ function normalizeLang(v) {
   return String(v || "").trim().toLowerCase();
 }
 
-function langTitle(code) {
-  const c = normalizeLang(code);
-  const map = {
-    tr: "Türkçe",
-    en: "English",
-    de: "Deutsch",
-    fr: "Français",
-    es: "Español",
-    it: "Italiano",
-    pt: "Português",
-    ar: "العربية",
-    ru: "Русский",
-    ja: "日本語",
-    ko: "한국어",
-    zh: "中文",
-    el: "Ελληνικά"
-  };
-  return map[c] || c.toUpperCase();
-}
-
-function langFlag(code) {
-  const c = normalizeLang(code);
-  const map = {
-    tr: "🇹🇷",
-    en: "🇬🇧",
-    de: "🇩🇪",
-    fr: "🇫🇷",
-    es: "🇪🇸",
-    it: "🇮🇹",
-    pt: "🇵🇹",
-    ar: "🇸🇦",
-    ru: "🇷🇺",
-    ja: "🇯🇵",
-    ko: "🇰🇷",
-    zh: "🇨🇳",
-    el: "🇬🇷"
-  };
-  return map[c] || "🌐";
-}
-
 function normalizePlayableWord(raw) {
   return String(raw || "")
     .normalize("NFD")
@@ -114,11 +74,6 @@ function normalizePlayableWord(raw) {
     .replace(/[^a-zA-Z]/g, "")
     .toUpperCase()
     .trim();
-}
-
-function getPublicLangUrl(langCode) {
-  const { data } = supabase.storage.from("lang").getPublicUrl(`${langCode}.json`);
-  return data?.publicUrl || "";
 }
 
 function toast(msg) {
@@ -130,6 +85,39 @@ function toast(msg) {
   window.__hangmanToastTimer = setTimeout(() => {
     el.classList.remove("show");
   }, 1800);
+}
+
+function updateTranslationBox(text) {
+  const el = $("trText");
+  if (el) el.textContent = String(text || "—");
+}
+
+function getPublicLangUrl(langCode) {
+  const { data } = supabase.storage.from("lang").getPublicUrl(`${langCode}.json`);
+  return data?.publicUrl || "";
+}
+
+/* -----------------------------
+   LANGUAGE META
+----------------------------- */
+const LANG_META = {
+  de: { name: "Almanca", flag: "🇩🇪", bcp: "de-DE" },
+  en: { name: "İngilizce", flag: "🇬🇧", bcp: "en-US" },
+  es: { name: "İspanyolca", flag: "🇪🇸", bcp: "es-ES" },
+  fr: { name: "Fransızca", flag: "🇫🇷", bcp: "fr-FR" },
+  it: { name: "İtalyanca", flag: "🇮🇹", bcp: "it-IT" }
+};
+
+function langTitle(code) {
+  return LANG_META[normalizeLang(code)]?.name || String(code || "").toUpperCase();
+}
+
+function langFlag(code) {
+  return LANG_META[normalizeLang(code)]?.flag || "🌐";
+}
+
+function langBCP(code) {
+  return LANG_META[normalizeLang(code)]?.bcp || "en-US";
 }
 
 /* -----------------------------
@@ -201,24 +189,7 @@ function speakText(text, langCode) {
   try { window.speechSynthesis.cancel(); } catch {}
 
   const u = new SpeechSynthesisUtterance(t);
-
-  const bcpMap = {
-    tr: "tr-TR",
-    en: "en-US",
-    de: "de-DE",
-    fr: "fr-FR",
-    es: "es-ES",
-    it: "it-IT",
-    pt: "pt-PT",
-    ar: "ar-SA",
-    ru: "ru-RU",
-    ja: "ja-JP",
-    ko: "ko-KR",
-    zh: "zh-CN",
-    el: "el-GR"
-  };
-
-  u.lang = bcpMap[normalizeLang(langCode)] || "en-US";
+  u.lang = langBCP(langCode);
   u.rate = 0.95;
   u.pitch = 1.0;
   u.volume = 1.0;
@@ -234,7 +205,7 @@ function speakText(text, langCode) {
 
   setTimeout(() => {
     try { window.speechSynthesis.speak(u); } catch {}
-  }, 60);
+  }, 80);
 }
 
 /* -----------------------------
@@ -309,7 +280,9 @@ let state = {
   lock: false,
   userId: "anon",
   availableLangs: [],
-  accessOk: true
+  accessOk: true,
+  langMeta: LANG_META,
+  autoNextTimer: null
 };
 
 /* -----------------------------
@@ -362,7 +335,7 @@ function renderLangGrid() {
       <button class="langCard ${active}" type="button" data-lang="${escapeHtml(code)}">
         <div class="langFlag">${escapeHtml(langFlag(code))}</div>
         <div class="langName">${escapeHtml(langTitle(code))}</div>
-        <div class="langHint">${code === state.lang ? "Seçili" : "Dokun ve seç"}</div>
+        <div class="langHint">${active ? "Seçili" : "Dokun ve seç"}</div>
       </button>
     `;
   }).join("");
@@ -404,37 +377,20 @@ async function loadAvailableLangsFromBucket() {
 
     if (error) throw error;
 
+    const allowed = ["de", "en", "es", "fr", "it"];
+
     const list = (Array.isArray(data) ? data : [])
       .map((x) => String(x?.name || ""))
       .filter((name) => name.endsWith(".json"))
       .map((name) => normalizeLang(name.replace(".json", "")))
-      .filter(Boolean);
+      .filter((code) => allowed.includes(code));
 
-    return [...new Set(list)];
+    state.availableLangs = [...new Set(list)];
+    return state.availableLangs.length > 0;
   } catch (err) {
     console.error("bucket lang list error:", err);
-    return [];
-  }
-}
-
-async function loadAvailableLangsFromDb() {
-  try {
-    const { data, error } = await supabase
-      .from("game_content")
-      .select("lang")
-      .eq("game_key", "hangman")
-      .eq("is_active", true);
-
-    if (error) throw error;
-
-    const list = (Array.isArray(data) ? data : [])
-      .map((row) => normalizeLang(row?.lang))
-      .filter(Boolean);
-
-    return [...new Set(list)];
-  } catch (err) {
-    console.error("db lang list error:", err);
-    return [];
+    state.availableLangs = [];
+    return false;
   }
 }
 
@@ -442,12 +398,9 @@ async function loadAvailableLangs() {
   setGate("Oyun dilleri hazırlanıyor...");
   disableStartBtn(true, "YÜKLENİYOR...");
 
-  let langs = await loadAvailableLangsFromBucket();
-  if (!langs.length) langs = await loadAvailableLangsFromDb();
+  const ok = await loadAvailableLangsFromBucket();
 
-  state.availableLangs = langs;
-
-  if (!state.availableLangs.length) {
+  if (!ok || !state.availableLangs.length) {
     setGate("Henüz oyun dili bulunamadı.");
     disableStartBtn(true, "HAZIR DEĞİL");
     return false;
@@ -476,10 +429,7 @@ function normalizeBucketItems(items) {
     .map((item) => {
       if (typeof item === "string") {
         const w = normalizePlayableWord(item);
-        return {
-          w,
-          tr: item
-        };
+        return { w, tr: item };
       }
 
       const rawWord =
@@ -525,32 +475,6 @@ async function loadWordsFromBucket(langCode) {
   }
 }
 
-async function loadWordsFromDb(langCode) {
-  try {
-    const { data: words, error } = await supabase
-      .from("game_content")
-      .select("content")
-      .eq("game_key", "hangman")
-      .eq("lang", langCode)
-      .eq("is_active", true)
-      .order("sort_order", { ascending: true });
-
-    if (error) throw error;
-
-    return Array.isArray(words)
-      ? words
-          .map((x) => ({
-            w: normalizePlayableWord(x?.content?.word || ""),
-            tr: String(x?.content?.meaning || "").trim()
-          }))
-          .filter((x) => x.w)
-      : [];
-  } catch (err) {
-    console.error("db word load error:", err);
-    return [];
-  }
-}
-
 async function loadWordsForLang(langCode) {
   state.lang = normalizeLang(langCode);
   localStorage.setItem(GAME_LANG_KEY, state.lang);
@@ -559,12 +483,7 @@ async function loadWordsForLang(langCode) {
   setGate(`${langFlag(state.lang)} ${langTitle(state.lang)} yükleniyor...`);
   disableStartBtn(true, "YÜKLENİYOR...");
 
-  let pool = await loadWordsFromBucket(state.lang);
-  if (!pool.length) {
-    pool = await loadWordsFromDb(state.lang);
-  }
-
-  state.pool = pool;
+  state.pool = await loadWordsFromBucket(state.lang);
 
   const bestKey = `hangman::${state.lang}`;
   let best = 0;
@@ -649,6 +568,11 @@ function pickWord() {
 }
 
 function startRound() {
+  if (state.autoNextTimer) {
+    clearTimeout(state.autoNextTimer);
+    state.autoNextTimer = null;
+  }
+
   if (!state.pool.length) return;
 
   state.lock = false;
@@ -674,10 +598,8 @@ function startRound() {
   renderKeyboard();
   renderHearts();
   resetMan();
+  updateTranslationBox(state.target.tr || "—");
 
-  if ($("trText")) {
-    $("trText").childNodes[0].textContent = String(state.target.tr || "—");
-  }
   if ($("scoreVal")) $("scoreVal").textContent = String(state.totalScore);
 
   setTimeout(() => {
@@ -787,12 +709,28 @@ async function endRound(win) {
   renderHearts();
 
   if ($("mTitle")) {
-    $("mTitle").textContent = win ? "HARİKA!" : "MİSYON BAŞARISIZ";
+    $("mTitle").textContent = win ? "OYUN BAŞARILI" : "OYUN BAŞARISIZ";
     $("mTitle").style.color = win ? "var(--green)" : "var(--red)";
   }
   if ($("mWord")) $("mWord").textContent = String(state.target?.w || "").toUpperCase();
   if ($("mTr")) $("mTr").textContent = `(${state.target?.tr || "—"})`;
+
   $("modal")?.classList.add("on");
+
+  speakText(state.target.w, state.lang);
+
+  state.autoNextTimer = setTimeout(() => {
+    $("modal")?.classList.remove("on");
+
+    if (state.lives <= 0) {
+      state.totalScore = 0;
+      state.lives = 5;
+      if ($("scoreVal")) $("scoreVal").textContent = "0";
+      renderHearts();
+    }
+
+    startRound();
+  }, 3000);
 }
 
 /* -----------------------------
@@ -823,28 +761,6 @@ function useJ(i) {
 ----------------------------- */
 $("j0") && ($("j0").onclick = () => useJ(0));
 $("j1") && ($("j1").onclick = () => useJ(1));
-
-$("speakWordBtn")?.addEventListener("click", () => {
-  speakCurrentWord();
-});
-
-$("mBtn") && ($("mBtn").onclick = () => {
-  $("modal")?.classList.remove("on");
-
-  if (state.lives > 0) {
-    startRound();
-  } else {
-    state.totalScore = 0;
-    state.lives = 5;
-    if ($("scoreVal")) $("scoreVal").textContent = "0";
-    renderHearts();
-    startRound();
-  }
-});
-
-$("mHomeBtn")?.addEventListener("click", () => {
-  location.href = "/pages/game_menu.html";
-});
 
 $("realStartBtn") && ($("realStartBtn").onclick = async () => {
   if (!state.lang || !$("readyGate")?.dataset.ready) {
@@ -898,6 +814,7 @@ async function prepareLanguageAndData(forcePick = false) {
 
   renderHearts();
   if ($("scoreVal")) $("scoreVal").textContent = "0";
+  updateTranslationBox("—");
 
   setGate("Oyun dili hazırlanıyor...");
   disableStartBtn(true, "YÜKLENİYOR...");
