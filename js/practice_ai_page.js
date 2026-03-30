@@ -64,73 +64,46 @@ const state = {
 let audioCtx = null;
 
 /* ---------------------------------------------------
-   ACCESS
+   ACCESS - GLOBAL_ACCESS.JS İLE UYUMLU
 --------------------------------------------------- */
 function getAccessState() {
   const a = window.__ITALKY_ACCESS__ || {};
 
-  const trialActive =
-    a.trialActive === true ||
-    a.trial_active === true ||
-    a.isTrial === true ||
-    a.is_trial === true ||
-    Number(a.trialDaysLeft || 0) > 0 ||
-    Number(a.trial_days_left || 0) > 0 ||
-    Number(a.remainingTrialDays || 0) > 0 ||
-    Number(a.remaining_trial_days || 0) > 0;
-
-  const packageName = String(
-    a.packageName ||
-    a.package_name ||
-    a.planName ||
-    a.plan ||
-    a.membership ||
-    a.membership_type ||
-    a.active_package ||
-    a.current_package ||
-    ""
-  ).toLowerCase();
-
-  const isPremiumLike =
-    a.isPremium === true ||
-    a.premium === true ||
-    a.hasPremium === true ||
-    a.has_premium === true ||
-    a.packageActive === true ||
-    a.package_active === true ||
-    a.hasPackage === true ||
-    a.has_package === true ||
-    packageName.includes("premium") ||
-    packageName.includes("education") ||
-    packageName.includes("egitim") ||
-    packageName.includes("edu");
-
   return {
     raw: a,
-    trialActive,
-    packageName,
-    isPremiumLike
+    package_code: String(a.package_code || "none").toLowerCase(),
+    trial_active: a.trial_active === true,
+    jeton_balance: Number(a.jeton_balance || 0),
+    can_practice: a.can_practice === true,
+    is_logged_in: a.is_logged_in === true
   };
 }
 
 function ensurePracticeAccess() {
   const access = getAccessState();
-  console.log("PRACTICE ACCESS:", access);
+  console.log("PRACTICE ACCESS RAW:", access.raw);
+  console.log("PRACTICE ACCESS PARSED:", access);
 
-  if (access.trialActive) {
+  if (!access.is_logged_in) {
+    alert("Bu modül için giriş yapmalısın.");
+    location.href = "/pages/login.html";
+    return false;
+  }
+
+  if (access.trial_active) {
     alert("Practice AI deneme paketinde kapalıdır.");
     location.href = "/pages/upgrade_pack.html";
     return false;
   }
 
-  if (access.packageName.includes("translate")) {
+  if (access.package_code === "translate") {
     alert("Practice AI Translate paketinde kapalıdır.");
     location.href = "/pages/upgrade_pack.html";
     return false;
   }
 
-  if (!access.isPremiumLike) {
-    alert("Bu modül yalnızca aktif üyelik ile kullanılabilir.");
+  if (!access.can_practice) {
+    alert("Bu modül yalnızca uygun üyelik ile kullanılabilir.");
     location.href = "/pages/upgrade_pack.html";
     return false;
   }
@@ -138,20 +111,9 @@ function ensurePracticeAccess() {
   return true;
 }
 
-async function checkTokenBalance() {
-  try {
-    const raw = localStorage.getItem("italky_user_v1") || "{}";
-    const user = JSON.parse(raw);
-    const tokens = Number(user?.tokens || 0);
-    return Number.isFinite(tokens) ? tokens : 0;
-  } catch {
-    return 0;
-  }
-}
-
 async function ensureTokenAccess() {
-  const balance = await checkTokenBalance();
-  if (balance <= 0) {
+  const access = getAccessState();
+  if (access.jeton_balance <= 0) {
     alert("Practice AI için jeton gerekli.");
     location.href = "/pages/jetonbuy.html";
     return false;
@@ -303,7 +265,7 @@ function speakAI(text) {
 }
 
 /* ---------------------------------------------------
-   PROFILE / PROMPT
+   HELPERS
 --------------------------------------------------- */
 function safeJson(txt) {
   try { return JSON.parse(txt); } catch { return null; }
@@ -417,7 +379,7 @@ async function askTeacher(userText, scoreValue = null) {
 }
 
 /* ---------------------------------------------------
-   PRONUNCIATION SCORE
+   PRON SCORE
 --------------------------------------------------- */
 function stripForCompare(s) {
   return String(s || "")
@@ -604,12 +566,10 @@ function stopAll() {
 }
 
 $("micBtn")?.addEventListener("click", async () => {
-  await (async () => {
-    ensureAudio();
-    try {
-      if (window.speechSynthesis?.getVoices) window.speechSynthesis.getVoices();
-    } catch {}
-  })();
+  ensureAudio();
+  try {
+    if (window.speechSynthesis?.getVoices) window.speechSynthesis.getVoices();
+  } catch {}
 
   if (!ensurePracticeAccess()) return;
   if (!(await ensureTokenAccess())) return;
