@@ -101,6 +101,8 @@ const HOME_HEADER_HTML = `
       <a href="/pages/jetonbuy.html" class="menu-link-jeton" data-i18n="menu_token_load">Jeton Yükle</a>
       <a href="/pages/wallet_history.html" data-i18n="menu_wallet_history">Jeton Hareketleri</a>
 
+      <a href="/pages/admin.html" id="adminPanelLink" class="hidden">italky Panel</a>
+
       <a href="/pages/profile.html" data-i18n="menu_profile">Profil</a>
       <a href="/pages/about.html" data-i18n="menu_about">Hakkımızda</a>
       <a href="/pages/jeton-nedir.html" data-i18n="menu_what_is_token">Jeton Nedir</a>
@@ -115,7 +117,7 @@ const HOME_HEADER_HTML = `
     <div class="menu-sign" data-no-translate="1">
       <span class="menu-sign-main">italkyAI</span>
       <span class="menu-sign-dot">•</span>
-      <span class="menu-sign-sub">By Ozyigit's</span>
+      <span class="menu-sign-sub">Özyiğit Mührü</span>
       <span class="menu-sign-dot">•</span>
       <span class="menu-sign-year">2026</span>
     </div>
@@ -127,7 +129,7 @@ const HOME_FOOTER_HTML = `
   <div class="signature" data-no-translate="1">
     <span class="signature-main">italkyAI</span>
     <span class="signature-dot">•</span>
-    <span class="signature-sub">By Ozyigit's</span>
+    <span class="signature-sub">Özyiğit Mührü</span>
     <span class="signature-dot">•</span>
     <span class="signature-year">2026</span>
   </div>
@@ -831,6 +833,7 @@ function finishMount(options) {
     hydrateFromCache();
     syncFooterHeight();
     hydrateMembershipCard();
+    hydrateAdminButton();
 
     try {
       if (!__shellAutoTranslateInstalled) {
@@ -856,6 +859,7 @@ function bindMenu() {
   const menuAvatarClick = document.getElementById("menuAvatarClick");
   const menuJetonInfoLink = document.getElementById("menuJetonInfoLink");
   const menuMembershipBtn = document.getElementById("menuMembershipBtn");
+  const adminPanelLink = document.getElementById("adminPanelLink");
 
   if (!menuBtn || !sideMenu) return;
   if (menuBtn.dataset.bound === "1") return;
@@ -865,6 +869,7 @@ function bindMenu() {
     sideMenu.setAttribute("aria-hidden", "false");
     document.body.classList.add("ui-menu-open");
     hydrateMembershipCard();
+    hydrateAdminButton();
   };
 
   const closeMenu = () => {
@@ -907,6 +912,10 @@ function bindMenu() {
   });
 
   menuMembershipBtn?.addEventListener("click", goUpgrade);
+
+  adminPanelLink?.addEventListener("click", () => {
+    closeMenu();
+  });
 
   sideMenu.querySelectorAll(".menu-nav a").forEach((link) => {
     link.addEventListener("click", () => {
@@ -1074,6 +1083,37 @@ async function hydrateMembershipCard() {
     });
   } finally {
     __membershipLoadRunning = false;
+  }
+}
+
+async function hydrateAdminButton() {
+  const adminLink = document.getElementById("adminPanelLink");
+  if (!adminLink) return;
+
+  adminLink.classList.add("hidden");
+
+  try {
+    const { supabase } = await import("/js/supabase_client.js");
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
+    if (!userId) return;
+
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("role,is_admin")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (error || !data) return;
+
+    const role = String(data.role || "").toLowerCase().trim();
+    const allowed = data.is_admin === true || role === "admin" || role === "superadmin";
+
+    if (allowed) {
+      adminLink.classList.remove("hidden");
+    }
+  } catch (e) {
+    console.warn("[ui_shell admin btn]", e);
   }
 }
 
