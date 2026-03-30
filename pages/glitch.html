@@ -2,86 +2,371 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>ITALKY • Glitch Hunter Final Integrity</title>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>italkyAI • Glitch Hunter</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet">
 
 <style>
 :root{
-  --bg:#050505; --cyan:#00ffff; --pink:#ff0055; --green:#00ff66; --purple:#bd00ff;
-  --panel:rgba(10,20,20,.95); --border:rgba(0,255,255,.3); --text:#fff;
+  --bg:#071018;
+  --bg2:#0c1622;
+  --cyan:#22d3ee;
+  --pink:#ff4d8d;
+  --green:#22c55e;
+  --red:#ef4444;
+  --gold:#f59e0b;
+  --text:#f8fafc;
+  --muted:#94a3b8;
+  --border:rgba(255,255,255,.10);
+  --panel:rgba(8,16,24,.82);
+  --safeB: env(safe-area-inset-bottom, 0px);
+  --shellLift: 0px;
+  --grad: linear-gradient(135deg,#67e8f9 0%, #60a5fa 50%, #34d399 100%);
 }
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
-html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:'Outfit', sans-serif;color:var(--text)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;outline:none}
+html,body{
+  margin:0;width:100%;height:100%;overflow:hidden;
+  background:linear-gradient(180deg,var(--bg),var(--bg2));
+  font-family:'Outfit',sans-serif;color:var(--text);
+}
+body{
+  background:
+    radial-gradient(circle at 10% 10%, rgba(34,211,238,.10), transparent 20%),
+    radial-gradient(circle at 90% 0%, rgba(96,165,250,.10), transparent 22%),
+    radial-gradient(circle at 50% 100%, rgba(52,211,153,.08), transparent 18%),
+    linear-gradient(180deg,var(--bg),var(--bg2));
+}
 
-.app{position:relative;max-width:480px;height:100%;margin:0 auto;background:var(--panel);border:1px solid var(--border);display:flex;flex-direction:column;z-index:5}
-@media(min-width:520px){.app{height:92vh;border-radius:24px;margin-top:4vh}}
+.soft-grid{
+  position:fixed; inset:0; pointer-events:none; opacity:.16;
+  background-image:
+    linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);
+  background-size:34px 34px;
+}
 
-.header{height:60px;display:flex;align-items:center;justify-content:space-between;padding:0 16px; border-bottom:1px solid var(--border)}
-.title{font-size:16px; letter-spacing:1px; color:var(--cyan); font-weight:900;}
-.pb-badge{font-size:10px;padding:4px 8px;background:var(--cyan);color:#000;font-weight:800;border-radius:4px}
+#pageContent{
+  height:100%;
+  padding:8px 10px calc(10px + var(--safeB) + var(--shellLift)) 10px;
+  overflow-y:auto;
+  overflow-x:hidden;
+  scrollbar-width:none;
+}
+#pageContent::-webkit-scrollbar{display:none}
 
-.game{flex:1;padding:16px;display:none;flex-direction:column;justify-content:space-between; position: relative;}
-.stats{display:flex;justify-content:space-between;font-size:11px;color:var(--cyan);font-weight:bold;margin-bottom:5px; text-transform: uppercase;}
+.app{
+  width:100%;
+  max-width:480px;
+  min-height:100%;
+  margin:0 auto;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  position:relative;
+  z-index:5;
+}
 
-.mom-bar-container { width: 100%; height: 4px; background: rgba(255,255,255,0.05); border-radius: 2px; margin-bottom: 10px; overflow: hidden; }
-#momBarFill { width: 0%; height: 100%; background: var(--cyan); transition: 0.5s; }
+.header{
+  min-height:64px;
+  display:grid;
+  grid-template-columns:1fr auto auto;
+  align-items:center;
+  gap:8px;
+  padding:10px 12px;
+  border-radius:18px;
+  border:1px solid var(--border);
+  background:rgba(8,16,24,.78);
+  backdrop-filter:blur(14px);
+}
 
-.terminal{flex:1;border:2px solid var(--border);background:rgba(0,0,0,0.9);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;padding:25px;text-align:center;border-radius:20px;transition: 0.3s; cursor: pointer;}
-.terminal.boss-mode { border-color: var(--pink); box-shadow: inset 0 0 30px rgba(255,0,85,0.2); }
+.title{
+  font-family:"Space Grotesk",sans-serif;
+  font-size:17px;
+  font-weight:900;
+  letter-spacing:.4px;
+  color:var(--cyan);
+}
 
-@keyframes alarm { 0%, 100% { border-color: var(--border); } 50% { border-color: var(--pink); box-shadow: 0 0 20px var(--pink); } }
-.terminal.alarm-active { animation: alarm 0.6s infinite; }
+.pbBadge,.momChip{
+  min-width:66px;
+  height:34px;
+  padding:0 10px;
+  border-radius:12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:11px;
+  font-weight:900;
+}
+.pbBadge{
+  border:1px solid var(--border);
+  background:rgba(255,255,255,.05);
+  color:#fff;
+}
+.momChip{
+  background:var(--grad);
+  color:#062433;
+}
 
-.sentence{font-size:28px; color:#fff; line-height:1.3; font-weight:700;}
+.stats{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:6px;
+}
+.stat{
+  min-height:52px;
+  border-radius:14px;
+  border:1px solid var(--border);
+  background:rgba(255,255,255,.04);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+  text-align:center;
+  padding:4px;
+}
+.statVal{
+  font-family:"Space Grotesk",sans-serif;
+  font-size:16px;
+  font-weight:900;
+  line-height:1;
+}
+.statLab{
+  font-size:9px;
+  letter-spacing:1px;
+  font-weight:900;
+  opacity:.62;
+}
 
-#correctionBox{font-size:14px; color:var(--green); margin-top:15px; font-weight:bold; opacity:0; transition:0.2s; background: rgba(0,255,102,0.1); padding: 12px; border-radius: 10px; width: 100%; border-left: 3px solid var(--green);}
-.tr-text { color: var(--cyan); font-style: italic; font-weight: 500; margin-top: 5px; display: block; }
-.tap-hint { font-size: 10px; color: var(--cyan); margin-top: 10px; opacity: 0.6; display: none; font-weight: 900;}
+.infoToast{
+  text-align:center;
+  min-height:18px;
+  font-size:12px;
+  font-weight:800;
+  opacity:0;
+  transition:.25s;
+  color:var(--cyan);
+}
 
-.controls{display:flex;gap:12px;height:100px;margin-top:20px}
-.action{flex:1;border:3px solid var(--border);cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:.1s; font-weight:900;border-radius:16px;color:#fff; background: transparent;}
-.bug { border-color: var(--pink); color: var(--pink); }
-.ok { border-color: var(--green); color: var(--green); }
-.action:active{transform:scale(.95)}
+.terminalWrap{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
 
-.modal{position:absolute;inset:0;background:rgba(0,0,0,.98);display:flex;align-items:center;justify-content:center;z-index:200}
-.card{background:#0a0a0a;border:1px solid var(--cyan);padding:25px;width:90%;text-align:center;border-radius:28px; max-height: 90vh; overflow-y: auto;}
-.mainbtn{width:100%;padding:18px;margin-top:10px;border:none;background:var(--cyan);color:#000;font-weight:900;cursor:pointer;font-size:16px;border-radius:14px}
+.terminal{
+  flex:1;
+  min-height:300px;
+  border:1px solid var(--border);
+  background:rgba(0,0,0,.45);
+  border-radius:24px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:20px;
+  position:relative;
+  overflow:hidden;
+  backdrop-filter:blur(10px);
+}
 
-.lang-grid{display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin:15px 0}
-.lang-btn{font-size:24px; padding:10px; background:rgba(255,255,255,0.05); border:2px solid #333; border-radius:12px; cursor:pointer;}
-.lang-btn.active{border-color:var(--cyan); background:rgba(0,243,255,0.1)}
+.terminal.boss{
+  border-color:rgba(255,77,141,.45);
+  box-shadow:0 0 0 1px rgba(255,77,141,.18), 0 0 24px rgba(255,77,141,.10);
+}
+
+@keyframes pulseAlarm{
+  0%,100%{ box-shadow:0 0 0 rgba(239,68,68,0); }
+  50%{ box-shadow:0 0 30px rgba(239,68,68,.18); }
+}
+.terminal.danger{
+  animation:pulseAlarm .8s infinite;
+}
+
+.sentence{
+  font-size:26px;
+  color:#fff;
+  line-height:1.35;
+  font-weight:800;
+  max-width:95%;
+  word-break:break-word;
+}
+
+.correctionBox{
+  font-size:14px;
+  color:var(--green);
+  margin-top:16px;
+  font-weight:700;
+  opacity:0;
+  transition:.2s;
+  background:rgba(34,197,94,.08);
+  padding:12px;
+  border-radius:12px;
+  width:100%;
+  border-left:3px solid var(--green);
+  text-align:left;
+}
+.tr-text{
+  color:var(--cyan);
+  font-style:italic;
+  font-weight:500;
+  margin-top:6px;
+  display:block;
+}
+.tap-hint{
+  font-size:10px;
+  color:var(--cyan);
+  margin-top:10px;
+  opacity:0.65;
+  display:none;
+  font-weight:900;
+  text-align:center;
+}
+
+.controls{
+  display:flex;
+  gap:10px;
+  min-height:96px;
+}
+.action{
+  flex:1;
+  border:2px solid var(--border);
+  cursor:pointer;
+  font-size:16px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:.12s;
+  font-weight:900;
+  border-radius:16px;
+  color:#fff;
+  background:rgba(255,255,255,.04);
+}
+.action:active{transform:scale(.96)}
+.bug{ border-color: rgba(255,77,141,.45); color: var(--pink); }
+.ok{ border-color: rgba(34,197,94,.45); color: var(--green); }
+
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.94);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:1000;
+  padding:20px;
+}
+.card{
+  background:#081018;
+  border:1px solid rgba(34,211,238,.30);
+  padding:24px;
+  width:86%;
+  max-width:380px;
+  text-align:center;
+  border-radius:24px;
+  max-height:88vh;
+  overflow:auto;
+  scrollbar-width:none;
+}
+.card::-webkit-scrollbar{display:none}
+
+.mainbtn{
+  width:100%;
+  padding:16px;
+  margin-top:10px;
+  border:none;
+  background:var(--grad);
+  color:#052433;
+  font-weight:900;
+  cursor:pointer;
+  font-size:16px;
+  border-radius:14px;
+}
+.mainbtn.sec{
+  background:rgba(255,255,255,.06);
+  color:#fff;
+  border:1px solid var(--border);
+}
+
+.lang-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:10px;
+  margin:16px 0;
+}
+.lang-btn{
+  min-height:84px;
+  border-radius:16px;
+  background:rgba(255,255,255,.05);
+  border:1px solid var(--border);
+  color:#fff;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  font-weight:800;
+  cursor:pointer;
+}
+.lang-btn .flag{ font-size:28px; }
+.lang-btn.active{
+  border-color:rgba(34,211,238,.35);
+  box-shadow:0 0 0 1px rgba(34,211,238,.18), 0 0 18px rgba(34,211,238,.10);
+  background:rgba(34,211,238,.08);
+}
 
 .hidden{display:none!important}
 .glitch-anim{animation:shake 0.3s}
-@keyframes shake{ 0%, 100% {transform: translateX(0)} 25% {transform: translateX(-8px)} 75% {transform: translateX(8px)} }
+@keyframes shake{
+  0%,100%{transform: translateX(0)}
+  25%{transform: translateX(-8px)}
+  75%{transform: translateX(8px)}
+}
 </style>
 </head>
 
 <body>
-<div class="app" id="frame">
+<div class="soft-grid"></div>
+
+<div class="app" id="pageContent">
   <div class="header">
-    <div style="cursor:pointer; color:var(--cyan); font-size:20px" onclick="location.href='/pages/game.html'">←</div>
-    <div class="title">GLITCH_HUNTER</div>
-    <div id="pbBadge" class="pb-badge">PB: 0</div>
+    <div class="title">GLITCH HUNTER</div>
+    <div id="pbBadge" class="pbBadge">PB: 0</div>
+    <div id="momChip" class="momChip">x1.00</div>
   </div>
 
-  <div class="game" id="game">
-    <div class="stats">
-      <span>INT: <b id="life">100%</b></span>
-      <span>SCORE: <b id="scoreDisp" style="color:var(--green)">0</b></span>
-      <span>MOM: <b id="momVal">x1.00</b></span>
-      <span id="setCounter">1/12</span>
+  <div class="stats">
+    <div class="stat">
+      <div class="statVal" id="life">100%</div>
+      <div class="statLab">INTEGRITY</div>
     </div>
-    <div class="mom-bar-container"><div id="momBarFill"></div></div>
+    <div class="stat">
+      <div class="statVal" id="scoreDisp">0</div>
+      <div class="statLab">SKOR</div>
+    </div>
+    <div class="stat">
+      <div class="statVal" id="setCounter">1/12</div>
+      <div class="statLab">TUR</div>
+    </div>
+    <div class="stat">
+      <div class="statVal" id="langBadgeTop">EN</div>
+      <div class="statLab">DİL</div>
+    </div>
+  </div>
 
+  <div id="resInfo" class="infoToast">BAŞARI</div>
+
+  <div class="terminalWrap">
     <div class="terminal" id="terminal">
       <div class="sentence" id="sentence">Initializing...</div>
-      <div id="correctionBox">
+
+      <div class="correctionBox" id="correctionBox">
         <span id="correctTxt"></span>
         <span id="trTxt" class="tr-text"></span>
-        <div class="tap-hint" id="tapHint">DEVAM ET / DÜZELTTİM</div>
+        <div class="tap-hint" id="tapHint">DEVAM ET</div>
       </div>
     </div>
 
@@ -94,246 +379,451 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);f
 
 <div class="modal" id="start">
   <div class="card">
-    <h2 style="color:var(--cyan); font-size:24px; margin-bottom: 5px;">Neural Sync</h2>
-    <p style="opacity:.6; font-size:11px; margin-bottom: 15px;">Dili ayırt etme kasını çalıştır başkanım.</p>
-    
-    <div class="lang-grid">
-        <button data-lang="en" class="lang-btn active">🇬🇧</button>
-        <button data-lang="de" class="lang-btn">🇩🇪</button>
-        <button data-lang="fr" class="lang-btn">🇫🇷</button>
-        <button data-lang="es" class="lang-btn">🇪🇸</button>
-        <button data-lang="it" class="lang-btn">🇮🇹</button>
-    </div>
+    <h2 style="color:var(--cyan); font-size:24px; margin-bottom:6px;">GLITCH HUNTER</h2>
+    <p style="opacity:.7; font-size:12px; line-height:1.6; margin-bottom:12px;">
+      Bayrağa dokun, dili seç. Ekrandaki cümle doğru mu bozuk mu karar ver.
+    </p>
 
-    <button class="mainbtn" id="startBtn">BOOT SYSTEM</button>
-    <div id="leaderboardBox" style="margin-top:20px; font-size:10px; text-align:left; color:rgba(255,255,255,0.4)"></div>
+    <div class="lang-grid" id="langGrid"></div>
+    <button class="mainbtn" id="startBtn">SİSTEMİ BAŞLAT</button>
   </div>
 </div>
 
 <div class="modal hidden" id="end">
   <div class="card">
     <h2 id="endTitle" style="color:var(--green)">SYNC COMPLETE</h2>
-    <div id="learningReport" style="color:var(--cyan); font-size:12px; margin-bottom:15px; font-weight:bold; line-height:1.5;"></div>
-    <div id="bankFeedback" style="color:var(--pink); font-size:11px; margin-bottom:10px; font-weight:900; display:none;"></div>
-    <p id="endStats" style="font-size:18px; margin-bottom: 20px"></p>
-    
-    <button class="mainbtn" id="btnContinue">CONTINUE (KEEP MOMENTUM)</button>
-    <button class="mainbtn" id="btnBank" style="background:var(--pink); color:#fff">BACKUP (%5 + REPAIR)</button>
-    <button class="mainbtn" style="background:#222;color:#fff" id="btnExit">SAVE & EXIT</button>
+    <div id="learningReport" style="color:var(--cyan); font-size:12px; margin-bottom:14px; font-weight:bold; line-height:1.6;"></div>
+    <p id="endStats" style="font-size:16px; margin-bottom: 18px; line-height:1.7"></p>
+
+    <button class="mainbtn" id="btnContinue">YENİDEN DENE</button>
+    <button class="mainbtn sec" id="btnExit">ANA MENÜ</button>
   </div>
 </div>
 
 <script type="module">
-import { loadLangPool, createUsedSet, pick } from "/js/langpool.js";
+import { mountShell } from "/js/ui_shell.js";
+import { ensureAuthAndCacheUser } from "/js/auth.js";
+
+mountShell({ scroll:"none" });
 
 const $ = id => document.getElementById(id);
-let lang="en", totalScore=0, setScore=0, integrity=100, momentum=1.0, wordList=[], currentIndex=0, busy=false, currentItem=null, runActive=false, autoProceedTimer=null;
+
+let lang = "en";
+let totalScore = 0;
+let integrity = 100;
+let momentum = 1.0;
+let wordList = [];
+let currentIndex = 0;
+let busy = false;
+let currentItem = null;
+let autoProceedTimer = null;
 let statsCats = { missed:{}, hit:{} };
 let flowStreak = 0;
 
 const SET_SIZE = 12;
 
+const LANGS = {
+  en:{ name:"İngilizce", flag:"🇬🇧" },
+  de:{ name:"Almanca", flag:"🇩🇪" },
+  fr:{ name:"Fransızca", flag:"🇫🇷" },
+  es:{ name:"İspanyolca", flag:"🇪🇸" },
+  it:{ name:"İtalyanca", flag:"🇮🇹" }
+};
+
+const LANGMAP = { en:"en-US", de:"de-DE", fr:"fr-FR", es:"es-ES", it:"it-IT" };
+
+/* audio */
+let audioCtx = null;
+function getAudioCtx(){
+  try{
+    if(!audioCtx){
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if(!Ctx) return null;
+      audioCtx = new Ctx();
+    }
+    return audioCtx;
+  }catch{
+    return null;
+  }
+}
+async function unlockAudio(){
+  try{
+    const ctx = getAudioCtx();
+    if(ctx && ctx.state === "suspended"){
+      await ctx.resume();
+    }
+  }catch{}
+}
+function beep({freq=440,duration=.08,type="sine",gain=.03,when=0}){
+  const ctx = getAudioCtx();
+  if(!ctx) return;
+  if(ctx.state === "suspended") ctx.resume().catch(() => {});
+  const now = ctx.currentTime + when;
+  const osc = ctx.createOscillator();
+  const g = ctx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, now);
+  g.gain.setValueAtTime(.0001, now);
+  g.gain.exponentialRampToValueAtTime(gain, now + .01);
+  g.gain.exponentialRampToValueAtTime(.0001, now + duration);
+  osc.connect(g); g.connect(ctx.destination);
+  osc.start(now); osc.stop(now + duration + .02);
+}
+function playGood(){
+  beep({freq:620,duration:.08,type:"triangle",gain:.05});
+  beep({freq:820,duration:.10,type:"triangle",gain:.05,when:.08});
+}
+function playBad(){
+  beep({freq:180,duration:.12,type:"sawtooth",gain:.05});
+  beep({freq:140,duration:.14,type:"sawtooth",gain:.04,when:.06});
+}
+function playFinish(){
+  beep({freq:700,duration:.10,type:"triangle",gain:.05});
+  beep({freq:920,duration:.12,type:"triangle",gain:.05,when:.10});
+  beep({freq:1180,duration:.15,type:"triangle",gain:.05,when:.22});
+}
+["click","touchstart","pointerdown"].forEach(evt => {
+  window.addEventListener(evt, () => unlockAudio(), { passive:true, once:true });
+});
+
 function speak(text, targetLang) {
-  window.speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = { en:"en-US", de:"de-DE", fr:"fr-FR", es:"es-ES", it:"it-IT" }[targetLang] || "en-US";
-  u.rate = 0.95;
-  window.speechSynthesis.speak(u);
+  try{
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = LANGMAP[targetLang] || "en-US";
+    u.rate = 0.95;
+    speechSynthesis.cancel();
+    speechSynthesis.speak(u);
+  }catch{}
+}
+
+function normalize(s){
+  return String(s||"")
+    .toLowerCase()
+    .replace(/ß/g,"ss")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g,"")
+    .replace(/[^a-z0-9 ]/g,"")
+    .trim();
+}
+
+function getPublicLangUrl(langCode){
+  return `https://auth.italky.ai/storage/v1/object/public/lang/${langCode}.json`;
+}
+
+async function fileExists(url){
+  try{
+    const res = await fetch(url, { method:"HEAD", cache:"no-store" });
+    return res.ok;
+  }catch{
+    return false;
+  }
+}
+
+function extractItems(payload){
+  if (Array.isArray(payload)) return payload;
+  if (payload && typeof payload === "object") {
+    const keys = ["items","words","data","list","entries","pool"];
+    for (const key of keys) {
+      if (Array.isArray(payload[key])) return payload[key];
+    }
+  }
+  return [];
+}
+
+function normalizePoolItems(items){
+  return items.map((item) => {
+    const rawSentence =
+      item?.sentence ??
+      item?.s ??
+      item?.text ??
+      item?.source ??
+      "";
+
+    const rawMeaning =
+      item?.meaning ??
+      item?.tr ??
+      item?.translation ??
+      item?.target ??
+      "";
+
+    return {
+      sentence: String(rawSentence || "").trim(),
+      tr: String(rawMeaning || "").trim()
+    };
+  }).filter(x => x.sentence && x.tr);
+}
+
+async function loadLangPool(langCode){
+  const url = getPublicLangUrl(langCode);
+  const ok = await fileExists(url);
+  if (!ok) return { items: [] };
+
+  const res = await fetch(url, { cache:"no-store" });
+  if (!res.ok) return { items: [] };
+
+  const json = await res.json();
+  return { items: normalizePoolItems(extractItems(json)) };
+}
+
+const usedGlitchItems = {};
+function pickFreshSet(items, count, langCode){
+  if (!usedGlitchItems[langCode]) usedGlitchItems[langCode] = new Set();
+  const used = usedGlitchItems[langCode];
+
+  if (used.size >= items.length) used.clear();
+
+  const fresh = [];
+  let guard = 0;
+  while (fresh.length < count && guard < items.length * 20) {
+    const pick = items[Math.floor(Math.random() * items.length)];
+    const key = normalize(pick.sentence);
+    if (!used.has(key) && !fresh.some(x => normalize(x.sentence) === key)) {
+      used.add(key);
+      fresh.push(pick);
+    }
+    guard++;
+  }
+
+  if (fresh.length < count) {
+    const fallback = items.filter(x => !fresh.some(y => normalize(y.sentence) === normalize(x.sentence)));
+    while (fresh.length < count && fallback.length) {
+      const item = fallback.shift();
+      used.add(normalize(item.sentence));
+      fresh.push(item);
+    }
+  }
+
+  return fresh.sort(() => Math.random() - 0.5).slice(0, count);
 }
 
 function updateLeaderboardUI() {
-    const records = JSON.parse(localStorage.getItem('glitch_eternal_v64') || '[]');
-    const pb = records.filter(r => r.lang === lang.toUpperCase()).reduce((max, r) => Math.max(max, r.score), 0);
-    $("pbBadge").textContent = `PB: ${pb}`;
-    $('leaderboardBox').innerHTML = records.slice(0,3).map((r,i)=> `<div>${i+1}. ${r.score} - ${r.lang}</div>`).join('') || 'Log bulunamadı.';
+  const records = JSON.parse(localStorage.getItem('glitch_hunter_scores') || '[]');
+  const pb = records
+    .filter(r => r.lang === lang.toUpperCase())
+    .reduce((max, r) => Math.max(max, r.score), 0);
+
+  $("pbBadge").textContent = `PB: ${pb}`;
 }
 
-document.querySelectorAll(".lang-btn").forEach(b=>{
-  b.onclick=()=>{
-    document.querySelectorAll(".lang-btn").forEach(x=>x.classList.remove("active"));
-    b.classList.add("active");
-    lang=b.dataset.lang;
-    updateLeaderboardUI();
-  };
-});
+function renderLangs(){
+  $("langGrid").innerHTML = Object.entries(LANGS).map(([code, meta]) => `
+    <button class="lang-btn ${lang===code ? "active" : ""}" data-lang="${code}">
+      <div class="flag">${meta.flag}</div>
+      <div>${meta.name}</div>
+    </button>
+  `).join("");
 
-$("startBtn").onclick=async()=>{
-  $("start").classList.add("hidden"); 
-  $("game").style.display="flex";
-  if(!runActive) { totalScore=0; integrity=100; momentum=1.0; runActive=true; statsCats={ missed:{}, hit:{} }; flowStreak=0; }
-  await initGame();
-};
+  $("langGrid").querySelectorAll(".lang-btn").forEach(btn => {
+    btn.onclick = () => {
+      lang = btn.dataset.lang;
+      renderLangs();
+      updateLeaderboardUI();
+    };
+  });
+}
 
-async function initGame(isBank = false) {
-  currentIndex=0; setScore=0;
-  if(isBank) { integrity = 100; momentum = 1.0; }
-  const pool = await loadLangPool(lang);
-  const randomizedItems = [...(pool?.items || [])].sort(() => Math.random() - 0.5);
-  const USED_KEY = `used_glitch_v64_${lang}`;
-  const {used, save} = createUsedSet(USED_KEY);
-
-  wordList = pick({items: randomizedItems}, SET_SIZE, used, save, (it) => it.sentence && it.sentence.length > 5);
-  
-  if(wordList.length < SET_SIZE) { 
-    localStorage.removeItem(USED_KEY);
-    return initGame(); 
-  }
-
-  // ✅ sentence bazlı güvenli mühür başkanım
-  try { save(wordList.map(x => x.sentence)); await Promise.resolve(); } catch(e){}
-
-  nextRound();
+function updateUI() {
+  $("life").textContent = integrity + "%";
+  $("scoreDisp").textContent = totalScore;
+  $("momChip").textContent = `x${momentum.toFixed(2)}`;
+  $("setCounter").textContent = `${currentIndex + 1}/${SET_SIZE}`;
+  $("langBadgeTop").textContent = lang.toUpperCase();
+  $("life").style.color = integrity <= 25 ? "var(--pink)" : "var(--cyan)";
 }
 
 function produceGlitch(original) {
   const rules = [
-    { cat: "Subject-Verb", f: " am ", t: " is ", s: false },
-    { cat: "Subject-Verb", f: " are ", t: " is ", s: false },
-    { cat: "Subject-Verb", f: " do ", t: " does ", s: true },
-    { cat: "Article", f: " a ", t: " an ", s: true },
-    { cat: "Article", f: " an ", t: " a ", s: true },
-    { cat: "Preposition", f: " in ", t: " on ", s: true },
-    { cat: "Preposition", f: " at ", t: " in ", s: true },
-    { cat: "Pronoun", f: " me ", t: " I ", s: true },
-    { cat: "Tense", f: " did ", t: " do ", s: true },
-    { cat: "Logic", f: " good ", t: " well ", s: true },
-    { cat: "Logic", f: " well ", t: " good ", s: true },
-    { cat: "Plural", f: "s ", t: " ", s: true }
+    { cat:"Subject-Verb", f:" am ", t:" is ", subtle:false },
+    { cat:"Subject-Verb", f:" are ", t:" is ", subtle:false },
+    { cat:"Subject-Verb", f:" do ", t:" does ", subtle:true },
+    { cat:"Article", f:" a ", t:" an ", subtle:true },
+    { cat:"Article", f:" an ", t:" a ", subtle:true },
+    { cat:"Preposition", f:" in ", t:" on ", subtle:true },
+    { cat:"Preposition", f:" at ", t:" in ", subtle:true },
+    { cat:"Pronoun", f:" me ", t:" I ", subtle:true },
+    { cat:"Tense", f:" did ", t:" do ", subtle:true },
+    { cat:"Logic", f:" good ", t:" well ", subtle:true },
+    { cat:"Logic", f:" well ", t:" good ", subtle:true }
   ];
+
   let text = original;
   const applicable = rules.filter(r => text.toLowerCase().includes(r.f));
   if (applicable.length > 0) {
     const rule = applicable[Math.floor(Math.random() * applicable.length)];
-    return { text: text.replace(new RegExp(rule.f, "i"), rule.t), category: rule.cat, subtle: rule.s };
+    return { text: text.replace(new RegExp(rule.f, "i"), rule.t), category: rule.cat, subtle: rule.subtle };
   }
   return { text: text + "s", category: "Syntax", subtle: true };
 }
 
-function nextRound() {
-  if(currentIndex >= wordList.length || integrity <= 0) { finish(integrity <= 0); return; }
-  const item = wordList[currentIndex];
-  const isBoss = currentIndex >= 10;
-  
-  // Terminal Reset
-  $("terminal").classList.remove("boss-mode", "alarm-active");
-  $("correctionBox").style.opacity = "0";
-  $("correctTxt").textContent = ""; // ✅ FIX 2: Metin temizliği
-  $("trTxt").textContent = "";
-  $("tapHint").style.display = "none";
-  
-  if(isBoss) $("terminal").classList.add("boss-mode");
-  if(integrity <= 25) $("terminal").classList.add("alarm-active");
+async function initGame() {
+  currentIndex = 0;
+  totalScore = 0;
+  integrity = 100;
+  momentum = 1.0;
+  statsCats = { missed:{}, hit:{} };
+  flowStreak = 0;
 
-  const isOk = Math.random() > 0.5;
-  const glitch = isOk ? { text: item.sentence, category: "Verified", subtle: false } : produceGlitch(item.sentence);
+  const pool = await loadLangPool(lang);
+  const randomizedItems = [...(pool?.items || [])].sort(() => Math.random() - 0.5);
 
-  currentItem = { text: glitch.text, original: item.sentence, isOk, category: glitch.category, subtle: glitch.subtle, tr: item.tr || "Anlam bulunamadı." };
-  $("sentence").textContent = currentItem.text;
-  $("setCounter").textContent = `${currentIndex + 1}/12`;
-  
-  const p = ((momentum - 1.0) / 0.6) * 100;
-  $("momBarFill").style.width = p + "%";
-  if(momentum < 1.25) $("momBarFill").style.background = "var(--cyan)";
-  else if(momentum < 1.45) $("momBarFill").style.background = "var(--purple)";
-  else $("momBarFill").style.background = "var(--pink)";
-  
-  $("momVal").textContent = `x${momentum.toFixed(2)}`;
-  $("life").textContent = integrity + "%";
-  $("scoreDisp").textContent = totalScore; // ✅ FIX 1: scoreDisp mevcudiyeti garanti
-  $("life").style.color = integrity <= 25 ? "var(--pink)" : "var(--cyan)";
-  $("terminal").style.borderColor = "var(--border)";
-  busy=false;
+  wordList = pickFreshSet(randomizedItems, SET_SIZE, lang);
+
+  if (wordList.length < SET_SIZE) {
+    alert("Havuz yüklenemedi.");
+    return;
+  }
+
+  nextRound();
 }
 
-$("terminal").onclick = () => { if(busy && autoProceedTimer) { clearTimeout(autoProceedTimer); proceedNext(); } };
+function nextRound() {
+  if (currentIndex >= wordList.length || integrity <= 0) {
+    finish(integrity <= 0);
+    return;
+  }
+
+  const item = wordList[currentIndex];
+  const isBoss = currentIndex >= 10;
+
+  $("terminal").classList.remove("boss", "danger");
+  $("correctionBox").style.opacity = "0";
+  $("correctTxt").textContent = "";
+  $("trTxt").textContent = "";
+  $("tapHint").style.display = "none";
+
+  if (isBoss) $("terminal").classList.add("boss");
+  if (integrity <= 25) $("terminal").classList.add("danger");
+
+  const isOk = Math.random() > 0.5;
+  const glitch = isOk ? { text:item.sentence, category:"Verified", subtle:false } : produceGlitch(item.sentence);
+
+  currentItem = {
+    text: glitch.text,
+    original: item.sentence,
+    isOk,
+    category: glitch.category,
+    subtle: glitch.subtle,
+    tr: item.tr || "Anlam bulunamadı."
+  };
+
+  $("sentence").textContent = currentItem.text;
+  updateUI();
+  busy = false;
+}
+
+$("terminal").onclick = () => {
+  if (busy && autoProceedTimer) {
+    clearTimeout(autoProceedTimer);
+    proceedNext();
+  }
+};
 
 function handleAnswer(userPick) {
-  if(busy) return;
+  if (busy) return;
   busy = true;
+
   const correct = (userPick === currentItem.isOk);
   const isBoss = currentIndex >= 10;
 
   speak(currentItem.original, lang);
-  $("terminal").classList.remove("alarm-active"); // Feedback sırasında alarmı sustur
-  
-  if(correct) {
+  $("terminal").classList.remove("danger");
+
+  if (correct) {
+    playGood();
     flowStreak++;
     statsCats.hit[currentItem.category] = (statsCats.hit[currentItem.category] || 0) + 1;
+
     const points = isBoss ? 150 : 100;
     totalScore += Math.round(points * momentum);
-    setScore += points;
     momentum = Math.min(1.6, momentum + 0.05);
-    
+
     $("terminal").style.borderColor = "var(--green)";
+    $("correctTxt").textContent = "✓ Doğru karar";
     $("trTxt").textContent = "Anlamı: " + currentItem.tr;
     $("correctionBox").style.opacity = "1";
 
-    autoProceedTimer = setTimeout(proceedNext, 850);
+    autoProceedTimer = setTimeout(proceedNext, 900);
   } else {
+    playBad();
     flowStreak = 0;
     statsCats.missed[currentItem.category] = (statsCats.missed[currentItem.category] || 0) + 1;
+
     const damage = (currentItem.subtle || isBoss) ? 15 : 25;
     integrity -= damage;
     momentum = Math.max(1.0, momentum - 0.15);
-    
-    $("frame").classList.add("glitch-anim");
+
+    $("pageContent").classList.add("glitch-anim");
     $("terminal").style.borderColor = "var(--pink)";
-    
-    $("correctTxt").textContent = (damage === 15 ? "⚠ NEAR MISS / " : "✖ CORRUPTED / ") + currentItem.original;
+
+    $("correctTxt").textContent = currentItem.original;
     $("trTxt").textContent = "Anlamı: " + currentItem.tr;
     $("correctionBox").style.opacity = "1";
     $("tapHint").style.display = "block";
 
-    autoProceedTimer = setTimeout(proceedNext, 4500);
+    autoProceedTimer = setTimeout(proceedNext, 3800);
   }
-  $("scoreDisp").textContent = totalScore;
+
+  updateUI();
 }
 
 function proceedNext() {
-    autoProceedTimer = null; currentIndex++;
-    $("frame").classList.remove("glitch-anim");
-    nextRound();
+  autoProceedTimer = null;
+  currentIndex++;
+  $("pageContent").classList.remove("glitch-anim");
+  nextRound();
 }
 
 $("btnGlitch").onclick = () => handleAnswer(false);
 $("btnStable").onclick = () => handleAnswer(true);
 
 function finish(died) {
-  const records = JSON.parse(localStorage.getItem('glitch_eternal_v64') || '[]');
-  records.push({score: totalScore, lang: lang.toUpperCase(), id: Date.now()});
-  records.sort((a,b)=>b.score - a.score);
-  localStorage.setItem('glitch_eternal_v64', JSON.stringify(records.slice(0,10)));
+  const records = JSON.parse(localStorage.getItem('glitch_hunter_scores') || '[]');
+  records.push({ score: totalScore, lang: lang.toUpperCase(), id: Date.now() });
+  records.sort((a,b) => b.score - a.score);
+  localStorage.setItem('glitch_hunter_scores', JSON.stringify(records.slice(0,10)));
   updateLeaderboardUI();
-  
-  const worst = Object.entries(statsCats.missed).sort((a,b)=>b[1]-a[1])[0];
-  const best = Object.entries(statsCats.hit).filter(x=>x[0]!=="Verified").sort((a,b)=>b[1]-a[1])[0];
-  
-  let report = worst ? `EN ÇOK ${worst[0].toUpperCase()} KAÇIRDIN.` : "RADARIN KUSURSUZDU!";
-  if(best) report += `<br><span style="color:var(--green)">EN GÜÇLÜ ALANIN: ${best[0].toUpperCase()}</span>`;
-  $("learningReport").innerHTML = report;
-  $("bankFeedback").style.display = "none";
 
+  const worst = Object.entries(statsCats.missed).sort((a,b)=>b[1]-a[1])[0];
+  const best = Object.entries(statsCats.hit)
+    .filter(x => x[0] !== "Verified")
+    .sort((a,b)=>b[1]-a[1])[0];
+
+  let report = worst ? `En çok zorlandığın alan: ${worst[0]}` : "Temiz tarama tamamlandı.";
+  if (best) report += `\nEn güçlü alanın: ${best[0]}`;
+
+  $("learningReport").textContent = report;
   $("end").classList.remove("hidden");
   $("endTitle").textContent = died ? "SYSTEM CRASHED" : "SYNC COMPLETE";
   $("endTitle").style.color = died ? "var(--pink)" : "var(--green)";
-  $("endStats").innerHTML = `SCORE: <b>${totalScore}</b> | MOM: <b>x${momentum.toFixed(2)}</b>`;
-  
-  if(died) { $("btnContinue").classList.add("hidden"); $("btnBank").classList.add("hidden"); runActive = false; } 
-  else { $("btnContinue").classList.remove("hidden"); $("btnBank").classList.remove("hidden"); }
+  $("endStats").innerHTML = `SKOR: <b>${totalScore}</b><br>MOMENTUM: <b>x${momentum.toFixed(2)}</b>`;
+  playFinish();
 }
 
-$("btnContinue").onclick = () => { $("end").classList.add("hidden"); initGame(false); };
-$("btnBank").onclick = () => { 
-    const bonus = Math.round(setScore * 0.05);
-    totalScore += bonus;
-    $("bankFeedback").style.display = "block";
-    $("bankFeedback").innerHTML = `CASHED IN: +${bonus} | MOMENTUM RESET`;
-    momentum = 1.0; setScore = 0; flowStreak = 0;
-    setTimeout(() => { $("end").classList.add("hidden"); initGame(true); }, 1600);
-};
-$("btnExit").onclick = () => location.reload();
+$("startBtn").onclick = async () => {
+  const ok = await ensureAuthAndCacheUser();
+  if (!ok) {
+    location.href = "/pages/login.html";
+    return;
+  }
 
-window.onload = updateLeaderboardUI;
+  $("start").classList.add("hidden");
+  $("game").style.display = "flex";
+  initGame();
+};
+
+$("btnContinue").onclick = () => {
+  $("end").classList.add("hidden");
+  initGame();
+};
+
+$("btnExit").onclick = () => {
+  location.href = "/pages/game_menu.html";
+};
+
+window.onload = () => {
+  renderLangs();
+  updateLeaderboardUI();
+};
 </script>
 </body>
 </html>
