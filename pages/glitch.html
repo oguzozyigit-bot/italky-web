@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>italkyAI • Glitch Hunter</title>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet">
 
@@ -421,7 +421,7 @@ body{
       <li>Cümlede hata varsa <b>HATALI</b> seç.</li>
       <li>Yanlış karar integrity düşürür.</li>
       <li>Doğru seri yaptıkça momentum yükselir.</li>
-      <li>Set sonunda yeniden deneyebilir ya da ana menüye dönebilirsin.</li>
+      <li>Doğrusunu sistem sana gösterir ve sesli okur.</li>
     </ul>
     <button class="mainbtn" id="rulesBtn">ANLADIM, BAŞLA</button>
   </div>
@@ -469,6 +469,17 @@ const LANGS = {
 };
 
 const LANGMAP = { en:"en-US", de:"de-DE", fr:"fr-FR", es:"es-ES", it:"it-IT" };
+const CATEGORY_TR = {
+  "Syntax":"Sözdizimi",
+  "Subject-Verb":"Özne-Yüklem",
+  "Article":"Artikel",
+  "Preposition":"Edat",
+  "Pronoun":"Zamir",
+  "Tense":"Zaman",
+  "Logic":"Mantık",
+  "Verified":"Doğru",
+  "Normal":"Normal"
+};
 
 let audioCtx = null;
 function getAudioCtx(){
@@ -527,7 +538,7 @@ function speak(text, targetLang) {
   try{
     const u = new SpeechSynthesisUtterance(text);
     u.lang = LANGMAP[targetLang] || "en-US";
-    u.rate = 0.95;
+    u.rate = 0.92;
     speechSynthesis.cancel();
     speechSynthesis.speak(u);
   }catch{}
@@ -763,8 +774,9 @@ function handleAnswer(userPick) {
 
   const correct = (userPick === currentItem.isOk);
   const isBoss = currentIndex >= 10;
+  const readingText = currentItem.original;
 
-  speak(currentItem.original, lang);
+  speak(readingText, lang);
   $("terminal").classList.remove("danger");
 
   if (correct) {
@@ -778,10 +790,10 @@ function handleAnswer(userPick) {
 
     $("terminal").style.borderColor = "var(--green)";
     $("correctTxt").textContent = "✓ Doğru karar";
-    $("trTxt").textContent = "Anlamı: " + currentItem.tr;
+    $("trTxt").textContent = "Doğrusu: " + currentItem.original + "\nAnlamı: " + currentItem.tr;
     $("correctionBox").style.opacity = "1";
 
-    autoProceedTimer = setTimeout(proceedNext, 900);
+    autoProceedTimer = setTimeout(proceedNext, 2400);
   } else {
     playBad();
     flowStreak = 0;
@@ -799,7 +811,7 @@ function handleAnswer(userPick) {
     $("correctionBox").style.opacity = "1";
     $("tapHint").style.display = "block";
 
-    autoProceedTimer = setTimeout(proceedNext, 2600);
+    autoProceedTimer = setTimeout(proceedNext, 3200);
   }
 
   updateUI();
@@ -827,8 +839,11 @@ function finish(died) {
     .filter(x => x[0] !== "Verified")
     .sort((a,b)=>b[1]-a[1])[0];
 
-  let report = worst ? `En çok zorlandığın alan: ${worst[0]}` : "Temiz tarama tamamlandı.";
-  if (best) report += `\nEn güçlü alanın: ${best[0]}`;
+  const worstLabel = worst ? (CATEGORY_TR[worst[0]] || worst[0]) : null;
+  const bestLabel = best ? (CATEGORY_TR[best[0]] || best[0]) : null;
+
+  let report = worstLabel ? `En çok zorlandığın alan: ${worstLabel}` : "Temiz tarama tamamlandı.";
+  if (bestLabel) report += `\nEn güçlü alanın: ${bestLabel}`;
 
   $("learningReport").textContent = report;
   $("end").classList.remove("hidden");
