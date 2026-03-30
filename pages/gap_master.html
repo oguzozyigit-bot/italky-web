@@ -302,7 +302,6 @@ const LANGS = {
   it:{ name:"İtalyanca", flag:"🇮🇹" }
 };
 
-const LANGMAP = { en:'en-US', de:'de-DE', fr:'fr-FR', es:'es-ES', it:'it-IT' };
 const GAME_LANG_KEY = "italky_gap_master_lang";
 const GAME_PB_PREFIX = "italky_gap_master_pb_";
 const SET_SIZE = 15;
@@ -319,6 +318,7 @@ let totalAnswered = 0;
 let isBusy = false;
 let startTime = 0;
 let currentPuzzle = null;
+let lastSpoken = 0;
 
 let audioCtx = null;
 function getAudioCtx(){
@@ -380,8 +380,6 @@ function toast(msg, color = "var(--blue)"){
   clearTimeout(window.__gapToast);
   window.__gapToast = setTimeout(() => $("resInfo").style.opacity = "0", 1800);
 }
-
-let lastSpoken = 0;
 
 function speak(t) {
   const now = Date.now();
@@ -562,11 +560,11 @@ function renderLangs(){
 
 function updateUI(){
   $("statusChip").textContent = currentLang.toUpperCase();
-  $("roundText").textContent = `${currentIdx + 1}/${SET_SIZE}`;
+  $("roundText").textContent = `${Math.min(currentIdx + 1, SET_SIZE)}/${SET_SIZE}`;
   $("scorePill").textContent = score;
   $("lifeBar").textContent = "❤️".repeat(Math.max(0, lives)) + "🖤".repeat(3 - Math.max(0, lives));
   $("streakText").textContent = streak;
-  $("progFill").style.width = `${((currentIdx + 1) / SET_SIZE) * 100}%`;
+  $("progFill").style.width = `${((Math.min(currentIdx + 1, SET_SIZE)) / SET_SIZE) * 100}%`;
 }
 
 function buildSentenceWithGap(sentence, word){
@@ -596,9 +594,7 @@ function loadPuzzle(){
     if (!opts.includes(cand)) opts.push(cand);
   }
 
-  while (opts.length < 4) {
-    opts.push(correct);
-  }
+  while (opts.length < 4) opts.push(correct);
 
   opts.sort(() => Math.random() - 0.5).forEach(opt => {
     const btn = document.createElement("button");
@@ -636,11 +632,7 @@ function handleChoice(val, btn){
     toast(`+${roundScore} PUAN`, "var(--green)");
 
     speak(correctVal);
-
-    setTimeout(() => {
-      speak(currentPuzzle.sentence);
-    }, 800);
-
+    setTimeout(() => speak(currentPuzzle.sentence), 900);
   } else {
     playBad();
     streak = 0;
@@ -680,6 +672,7 @@ En İyi Seri: <b>🔥 ${maxStreak}</b><br>
 Doğruluk: <b>%${acc}</b>
   `;
   updatePB();
+  playFinish();
 }
 
 async function startGame(){
@@ -735,25 +728,18 @@ window.onload = () => {
   $("statusChip").textContent = currentLang.toUpperCase();
   updateUI();
 };
-<script>
-  window.onload = () => {
-    renderLangs();
-    updatePB();
-    $("statusChip").textContent = currentLang.toUpperCase();
-    updateUI();
-  };
 
-  window.addEventListener("click", () => {
-    try {
-      window.speechSynthesis?.getVoices?.();
-    } catch {}
-  }, { once: true });
+window.addEventListener("click", () => {
+  try {
+    window.speechSynthesis?.getVoices?.();
+  } catch {}
+}, { once: true });
 
-  window.addEventListener("touchstart", () => {
-    try {
-      window.speechSynthesis?.getVoices?.();
-    } catch {}
-  }, { once: true });
+window.addEventListener("touchstart", () => {
+  try {
+    window.speechSynthesis?.getVoices?.();
+  } catch {}
+}, { once: true });
 </script>
 </body>
 </html>
