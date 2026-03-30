@@ -381,14 +381,61 @@ function toast(msg, color = "var(--blue)"){
   window.__gapToast = setTimeout(() => $("resInfo").style.opacity = "0", 1800);
 }
 
-function speak(text) {
-  try{
+let lastSpoken = 0;
+
+function speak(t) {
+  const now = Date.now();
+  if (now - lastSpoken < 250) return;
+  lastSpoken = now;
+
+  const text = String(t || "").trim();
+  if (!text) return;
+
+  const langMap = {
+    en: "en-US",
+    de: "de-DE",
+    fr: "fr-FR",
+    es: "es-ES",
+    it: "it-IT"
+  };
+  const bcp = langMap[currentLang] || "en-US";
+
+  try {
+    if (window.NativeTTS && typeof window.NativeTTS.speak === "function") {
+      window.NativeTTS.speak(text, bcp);
+      return;
+    }
+  } catch (e) {
+    console.warn("NativeTTS speak failed:", e);
+  }
+
+  try {
+    if (!("speechSynthesis" in window)) return;
+
+    window.speechSynthesis.cancel();
+
     const u = new SpeechSynthesisUtterance(text);
-    u.lang = LANGMAP[currentLang] || "en-US";
+    u.lang = bcp;
     u.rate = 0.9;
-    speechSynthesis.cancel();
-    speechSynthesis.speak(u);
-  }catch{}
+    u.pitch = 1;
+    u.volume = 1;
+
+    const voices = window.speechSynthesis.getVoices?.() || [];
+    const found = voices.find(v =>
+      String(v.lang || "").toLowerCase().startsWith(bcp.split("-")[0].toLowerCase())
+    );
+    if (found) u.voice = found;
+
+    setTimeout(() => {
+      try {
+        window.speechSynthesis.speak(u);
+      } catch (err) {
+        console.warn("speechSynthesis speak failed:", err);
+      }
+    }, 120);
+  } catch (e) {
+    console.warn("speechSynthesis fallback failed:", e);
+  }
 }
 
 function getPublicLangUrl(langCode){
@@ -688,6 +735,25 @@ window.onload = () => {
   $("statusChip").textContent = currentLang.toUpperCase();
   updateUI();
 };
+<script>
+  window.onload = () => {
+    renderLangs();
+    updatePB();
+    $("statusChip").textContent = currentLang.toUpperCase();
+    updateUI();
+  };
+
+  window.addEventListener("click", () => {
+    try {
+      window.speechSynthesis?.getVoices?.();
+    } catch {}
+  }, { once: true });
+
+  window.addEventListener("touchstart", () => {
+    try {
+      window.speechSynthesis?.getVoices?.();
+    } catch {}
+  }, { once: true });
 </script>
 </body>
 </html>
