@@ -338,7 +338,7 @@
 
       <div class="body">
         <div class="word" id="wordB">---</div>
-        <div class="mean" id="meanB">Türkçe karşılığını söyle</div>
+        <div class="mean" id="meanB">Seçili dildeki kelimeyi dinle, Türkçesini söyle</div>
         <div class="feedback" id="feedB">Hazır</div>
       </div>
 
@@ -358,7 +358,7 @@
 
       <div class="body">
         <div class="word" id="wordA">---</div>
-        <div class="mean" id="meanA">Türkçe karşılığını söyle</div>
+        <div class="mean" id="meanA">Seçili dildeki kelimeyi dinle, Türkçesini söyle</div>
         <div class="feedback" id="feedA">Hazır</div>
       </div>
 
@@ -384,9 +384,11 @@
   <div class="card">
     <h2 style="margin:0 0 8px;color:var(--gold);font-family:'Space Grotesk',sans-serif;">KURALLAR</h2>
     <ul class="rulesList">
-      <li>Oyuncular sırayla aynı kelimenin Türkçe karşılığını söyler.</li>
+      <li>Oyuncular sırayla kelimeyi dinler.</li>
+      <li>Sistem seçili dildeki kelimeyi tur başında otomatik okur.</li>
+      <li>Oyuncu Türkçe karşılığını söyler.</li>
       <li>Doğru cevap +10 puan getirir.</li>
-      <li>Yanlış cevapta puan gelmez, sistem doğrusunu sesli okur.</li>
+      <li>Yanlışta puan gelmez, doğru cevap ekranda görünür.</li>
       <li>Pas geçebilirsin. Sıra diğer oyuncuya geçer.</li>
       <li>Oyun 20 tur sürer.</li>
     </ul>
@@ -429,50 +431,6 @@ let turn = "A";
 let score = { A:0, B:0 };
 let listening = false;
 let lastSpoken = 0;
-
-let audioCtx = null;
-function getAudioCtx(){
-  try{
-    if(!audioCtx){
-      const Ctx = window.AudioContext || window.webkitAudioContext;
-      if(!Ctx) return null;
-      audioCtx = new Ctx();
-    }
-    return audioCtx;
-  }catch{
-    return null;
-  }
-}
-async function unlockAudio(){
-  try{
-    const ctx = getAudioCtx();
-    if(ctx && ctx.state === "suspended"){
-      await ctx.resume();
-    }
-  }catch{}
-}
-function beep({freq=440,duration=.08,type="sine",gain=.03,when=0}){
-  const ctx = getAudioCtx();
-  if(!ctx) return;
-  if(ctx.state === "suspended") ctx.resume().catch(() => {});
-  const now = ctx.currentTime + when;
-  const osc = ctx.createOscillator();
-  const g = ctx.createGain();
-  osc.type = type;
-  osc.frequency.setValueAtTime(freq, now);
-  g.gain.setValueAtTime(.0001, now);
-  g.gain.exponentialRampToValueAtTime(gain, now + .01);
-  g.gain.exponentialRampToValueAtTime(.0001, now + duration);
-  osc.connect(g); g.connect(ctx.destination);
-  osc.start(now); osc.stop(now + duration + .02);
-}
-function playGood(){ beep({freq:620,duration:.08,type:"triangle",gain:.05}); beep({freq:820,duration:.10,type:"triangle",gain:.05,when:.08}); }
-function playBad(){ beep({freq:180,duration:.12,type:"sawtooth",gain:.05}); beep({freq:140,duration:.14,type:"sawtooth",gain:.04,when:.06}); }
-function playPass(){ beep({freq:320,duration:.08,type:"triangle",gain:.04}); }
-
-["click","touchstart","pointerdown"].forEach(evt => {
-  window.addEventListener(evt, () => unlockAudio(), { passive:true, once:true });
-});
 
 function normalize(s){
   return String(s || "")
@@ -572,6 +530,50 @@ function pickFreshSet(items, count, langCode){
   return fresh.sort(() => Math.random() - 0.5).slice(0, count);
 }
 
+let audioCtx = null;
+function getAudioCtx(){
+  try{
+    if(!audioCtx){
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if(!Ctx) return null;
+      audioCtx = new Ctx();
+    }
+    return audioCtx;
+  }catch{
+    return null;
+  }
+}
+async function unlockAudio(){
+  try{
+    const ctx = getAudioCtx();
+    if(ctx && ctx.state === "suspended"){
+      await ctx.resume();
+    }
+  }catch{}
+}
+function beep({freq=440,duration=.08,type="sine",gain=.03,when=0}){
+  const ctx = getAudioCtx();
+  if(!ctx) return;
+  if(ctx.state === "suspended") ctx.resume().catch(() => {});
+  const now = ctx.currentTime + when;
+  const osc = ctx.createOscillator();
+  const g = ctx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, now);
+  g.gain.setValueAtTime(.0001, now);
+  g.gain.exponentialRampToValueAtTime(gain, now + .01);
+  g.gain.exponentialRampToValueAtTime(.0001, now + duration);
+  osc.connect(g); g.connect(ctx.destination);
+  osc.start(now); osc.stop(now + duration + .02);
+}
+function playGood(){ beep({freq:620,duration:.08,type:"triangle",gain:.05}); beep({freq:820,duration:.10,type:"triangle",gain:.05,when:.08}); }
+function playBad(){ beep({freq:180,duration:.12,type:"sawtooth",gain:.05}); beep({freq:140,duration:.14,type:"sawtooth",gain:.04,when:.06}); }
+function playPass(){ beep({freq:320,duration:.08,type:"triangle",gain:.04}); }
+
+["click","touchstart","pointerdown"].forEach(evt => {
+  window.addEventListener(evt, () => unlockAudio(), { passive:true, once:true });
+});
+
 function renderLangs(){
   $("langGrid").innerHTML = Object.entries(LANGS).map(([code, meta]) => `
     <button class="lang-btn ${lang===code ? "active" : ""}" data-lang="${code}">
@@ -590,7 +592,7 @@ function renderLangs(){
   });
 }
 
-function speak(text, bcp = "tr-TR"){
+function speak(text, bcp){
   const now = Date.now();
   if (now - lastSpoken < 250) return;
   lastSpoken = now;
@@ -609,7 +611,6 @@ function speak(text, bcp = "tr-TR"){
 
   try{
     if (!("speechSynthesis" in window)) return;
-
     speechSynthesis.cancel();
 
     const u = new SpeechSynthesisUtterance(clean);
@@ -682,11 +683,15 @@ function nextWord(){
   const w = list[idx];
   $("wordA").textContent = w.w.toUpperCase();
   $("wordB").textContent = w.w.toUpperCase();
-  $("meanA").textContent = "Türkçe karşılığını söyle";
-  $("meanB").textContent = "Türkçe karşılığını söyle";
+  $("meanA").textContent = "Seçili dildeki kelimeyi dinle, Türkçesini söyle";
+  $("meanB").textContent = "Seçili dildeki kelimeyi dinle, Türkçesini söyle";
   clearFeedback();
   listening = false;
   updateTop();
+
+  setTimeout(() => {
+    speak(w.w, LANGS[lang].bcp);
+  }, 400);
 }
 
 function finishTurn(){
@@ -749,11 +754,9 @@ function check(player, spoken){
     score[player] += 10;
     updateTop();
     setFeedback(player, "✓ Doğru", "var(--ok)");
-    speak(w.tr, "tr-TR");
   } else {
     playBad();
     setFeedback(player, `Doğru: ${w.tr}`, "var(--bad)");
-    speak(w.tr, "tr-TR");
   }
 
   finishTurn();
