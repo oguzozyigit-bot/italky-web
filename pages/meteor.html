@@ -2,42 +2,164 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-<title>ITALKY • Meteor Defense — Elite Eternal</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<title>italkyAI • Meteor Defense</title>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
 <style>
 :root{
-  --bg:#020005;--panel:rgba(18,18,26,.92);
-  --blue:#00f3ff;--red:#ff0055;--green:#00ff66;--gold:#ffb800;
-  --border:rgba(255,255,255,.14);--text:#fff;
+  --bg:#020005;
+  --panel:rgba(18,18,26,.92);
+  --blue:#00f3ff;
+  --red:#ff0055;
+  --green:#00ff66;
+  --gold:#ffb800;
+  --border:rgba(255,255,255,.14);
+  --text:#fff;
   --glass: rgba(255,255,255,0.05);
+  --safeB: env(safe-area-inset-bottom, 0px);
+  --shellLift: 0px;
 }
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
-html,body{margin:0;width:100%;height:100%;background:var(--bg);font-family:Outfit,sans-serif;overflow:hidden;color:var(--text)}
-.space{position:absolute;inset:0;background:radial-gradient(circle at bottom,#1a0033,#000)}
-.stars{position:absolute;inset:0;background-image:radial-gradient(#fff 1px,transparent 1px);background-size:50px 50px;opacity:.25}
+*{
+  box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
+  user-select:none;
+  outline:none;
+}
+html,body{
+  margin:0;
+  width:100%;
+  height:100%;
+  background:var(--bg);
+  font-family:Outfit,sans-serif;
+  overflow:hidden;
+  color:var(--text);
+}
+.space{
+  position:fixed;
+  inset:0;
+  background:radial-gradient(circle at bottom,#1a0033,#000);
+}
+.stars{
+  position:fixed;
+  inset:0;
+  background-image:radial-gradient(#fff 1px,transparent 1px);
+  background-size:50px 50px;
+  opacity:.20;
+  pointer-events:none;
+}
 
-.game{position:relative;max-width:480px;height:100%;margin:0 auto;border-left:1px solid var(--border);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:5}
-.header{height:72px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;border-bottom:1px solid var(--border);background:rgba(0,0,0,.35);backdrop-filter: blur(10px)}
+#pageContent{
+  height:100%;
+  padding:8px 10px calc(10px + var(--safeB) + var(--shellLift)) 10px;
+  overflow-y:auto;
+  overflow-x:hidden;
+  scrollbar-width:none;
+}
+#pageContent::-webkit-scrollbar{ display:none; }
+
+.game{
+  position:relative;
+  max-width:480px;
+  min-height:100%;
+  margin:0 auto;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  z-index:5;
+}
+
+.header{
+  display:grid;
+  grid-template-columns:1fr auto 1fr;
+  align-items:center;
+  gap:8px;
+  padding:10px 12px;
+  border-radius:18px;
+  border:1px solid var(--border);
+  background:rgba(0,0,0,.35);
+  backdrop-filter: blur(12px);
+}
+
 .score-box{text-align:left}
-.score{font-family:"Space Grotesk";font-weight:900;color:var(--blue);font-size:20px;letter-spacing:.5px}
-.pb-chip{font-size:10px;color:var(--gold);font-weight:900;opacity:.95}
+.score{
+  font-family:"Space Grotesk";
+  font-weight:900;
+  color:var(--blue);
+  font-size:20px;
+  letter-spacing:.5px;
+}
+.pb-chip{
+  font-size:10px;
+  color:var(--gold);
+  font-weight:900;
+  opacity:.95;
+}
 
-.stats-mid{text-align:center;min-width:120px}
-.combo-tag{font-size:10px;background:var(--blue);color:#000;padding:2px 8px;border-radius:6px;font-weight:900;display:inline-block; transition: 0.3s;}
-.momentum{font-size:12px;color:var(--green);font-weight:900;margin-top:4px}
-.lives{font-size:16px;letter-spacing:2px}
+.stats-mid{
+  text-align:center;
+  min-width:110px;
+}
+.combo-tag{
+  font-size:10px;
+  background:var(--blue);
+  color:#000;
+  padding:3px 8px;
+  border-radius:8px;
+  font-weight:900;
+  display:inline-block;
+  transition:.3s;
+}
+.momentum{
+  font-size:12px;
+  color:var(--green);
+  font-weight:900;
+  margin-top:4px;
+}
+.langTag{
+  font-size:11px;
+  color:#fff;
+  opacity:.8;
+  margin-top:4px;
+  font-weight:800;
+}
 
-.stage{flex:1;position:relative;overflow:hidden;background:rgba(255,255,255,0.02)}
+.livesWrap{
+  text-align:right;
+}
+.lives{
+  font-size:16px;
+  letter-spacing:2px;
+}
+.roundMini{
+  font-size:10px;
+  opacity:.75;
+  font-weight:800;
+  margin-top:4px;
+}
+
+.stage{
+  height:360px;
+  position:relative;
+  overflow:hidden;
+  background:rgba(255,255,255,0.02);
+  border-radius:22px;
+  border:1px solid var(--border);
+  backdrop-filter: blur(10px);
+}
+
 .turret{
-  position:absolute;bottom:18px;left:50%;transform:translateX(-50%);
-  width:54px;height:28px;border-radius:14px 14px 8px 8px;
+  position:absolute;
+  bottom:18px;
+  left:50%;
+  transform:translateX(-50%);
+  width:56px;
+  height:28px;
+  border-radius:14px 14px 8px 8px;
   background:linear-gradient(180deg, rgba(0,243,255,.95), rgba(0,243,255,.35));
   box-shadow:0 0 22px rgba(0,243,255,.55);
 }
 
-/* ✅ LASER artık hedefe açılı gidecek */
 .laser{
   position:absolute;
   width:4px;
@@ -45,45 +167,83 @@ html,body{margin:0;width:100%;height:100%;background:var(--bg);font-family:Outfi
   background:var(--blue);
   box-shadow:0 0 18px var(--blue);
   opacity:0;
-  transform-origin: 50% 100%; /* bottom */
-  border-radius: 8px;
+  transform-origin: 50% 100%;
+  border-radius:8px;
   pointer-events:none;
   transition: opacity .08s ease;
 }
 
-/* ✅ METEOR */
-.meteor{position:absolute;top:-160px;width:118px;height:132px;display:flex;align-items:center;justify-content:center;will-change: transform, top}
+.meteor{
+  position:absolute;
+  top:-160px;
+  width:118px;
+  height:132px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  will-change: transform, top;
+}
 .meteor .meteor-body{
-  width:82px;height:82px;border-radius:38% 62% 63% 37% / 41% 44% 56% 59%;
+  width:82px;
+  height:82px;
+  border-radius:38% 62% 63% 37% / 41% 44% 56% 59%;
   background: radial-gradient(circle at 30% 30%, #888, #444 40%, #222);
   border: 1px solid rgba(255,255,255,0.1);
-  display:flex;align-items:center;justify-content:center;
+  display:flex;
+  align-items:center;
+  justify-content:center;
   position:relative;
   box-shadow: inset -10px -10px 20px rgba(0,0,0,0.8), 0 0 15px rgba(0,0,0,0.5);
-  overflow: hidden;
+  overflow:hidden;
 }
-.meteor-body::before {
-  content: ''; position: absolute; width: 15px; height: 10px; background: rgba(0,0,0,0.4); border-radius: 50%; top: 20%; left: 20%;
-  box-shadow: 30px 40px 0 rgba(0,0,0,0.3), 10px 50px 0 rgba(0,0,0,0.4);
+.meteor-body::before{
+  content:'';
+  position:absolute;
+  width:15px;
+  height:10px;
+  background:rgba(0,0,0,0.4);
+  border-radius:50%;
+  top:20%;
+  left:20%;
+  box-shadow:30px 40px 0 rgba(0,0,0,0.3), 10px 50px 0 rgba(0,0,0,0.4);
 }
 .meteor::after{
-  content:''; position:absolute; top:-40px; width:50px; height:100px;
+  content:'';
+  position:absolute;
+  top:-40px;
+  width:50px;
+  height:100px;
   background:linear-gradient(to top, rgba(255,100,0,0.5), rgba(255,50,0,0.2), transparent);
-  z-index:-1; filter: blur(8px); border-radius: 50% 50% 0 0;
+  z-index:-1;
+  filter:blur(8px);
+  border-radius:50% 50% 0 0;
 }
-
 .meteor .meteor-text{
-  font-family:"Space Grotesk"; font-weight:900;font-size:12px;color:#fff;text-align:center;padding:0 8px;
-  text-transform:uppercase; z-index: 2; text-shadow: 0 2px 4px #000;
+  font-family:"Space Grotesk";
+  font-weight:900;
+  font-size:12px;
+  color:#fff;
+  text-align:center;
+  padding:0 8px;
+  text-transform:uppercase;
+  z-index:2;
+  text-shadow:0 2px 4px #000;
 }
-.meteor.boss .meteor-body{ width: 100px; height: 100px; border: 2px solid var(--gold); box-shadow: 0 0 40px rgba(255,184,0,0.4); }
-.meteor.boss::after { background:linear-gradient(to top, rgba(255,200,0,0.6), transparent); }
+.meteor.boss .meteor-body{
+  width:100px;
+  height:100px;
+  border:2px solid var(--gold);
+  box-shadow:0 0 40px rgba(255,184,0,0.4);
+}
+.meteor.boss::after{
+  background:linear-gradient(to top, rgba(255,200,0,0.6), transparent);
+}
 
-/* ✅ Parçalanma parçaları */
 .shard{
   position:absolute;
-  width:14px;height:12px;
-  border-radius: 6px 10px 6px 10px;
+  width:14px;
+  height:12px;
+  border-radius:6px 10px 6px 10px;
   background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.35), rgba(120,120,120,.55), rgba(20,20,20,.95));
   border: 1px solid rgba(255,255,255,.08);
   box-shadow: 0 0 10px rgba(0,0,0,.45);
@@ -92,21 +252,45 @@ html,body{margin:0;width:100%;height:100%;background:var(--bg);font-family:Outfi
 }
 
 .explosion{
-  position:absolute;width:160px;height:160px;border-radius:50%;
+  position:absolute;
+  width:160px;
+  height:160px;
+  border-radius:50%;
   background:radial-gradient(circle,#fff,rgba(255,170,0,.9),transparent 70%);
-  animation:boom .45s forwards; pointer-events:none;
+  animation:boom .45s forwards;
+  pointer-events:none;
 }
-@keyframes boom{0%{transform:scale(0.2);opacity:1}100%{transform:scale(2.5);opacity:0}}
+@keyframes boom{
+  0%{transform:scale(0.2);opacity:1}
+  100%{transform:scale(2.5);opacity:0}
+}
 
 .panel{
-  height:228px; background:var(--panel); border-top:2px solid var(--blue); padding:12px;
-  display:grid; grid-template-columns:1fr 1fr; gap:10px;
+  min-height:220px;
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:22px;
+  padding:12px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  backdrop-filter: blur(12px);
 }
 .opt{
-  border:1px solid var(--border); border-radius:16px; background:var(--glass);
-  color:#fff;font-weight:900;font-size:15px; cursor:pointer;
-  transition: transform .1s, background .1s; display:flex;align-items:center;justify-content:center;
-  padding:10px;text-align:center;
+  border:1px solid var(--border);
+  border-radius:16px;
+  background:var(--glass);
+  color:#fff;
+  font-weight:900;
+  font-size:15px;
+  cursor:pointer;
+  transition: transform .1s, background .1s;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:10px;
+  text-align:center;
+  min-height:84px;
 }
 .opt:active{transform:scale(0.96)}
 .opt.correct{background:rgba(0,255,102,.9);color:#000;border:none}
@@ -114,20 +298,84 @@ html,body{margin:0;width:100%;height:100%;background:var(--bg);font-family:Outfi
 .opt:disabled{opacity: 0.4; cursor: default;}
 
 .toast{
-  position:absolute;top:82px;left:50%;transform:translateX(-50%);
-  background:rgba(10,10,16,.95); border:1px solid var(--blue);
-  padding:8px 20px;border-radius:20px;font-weight:900;font-size:12px;
-  opacity:0;transition:0.25s;z-index:100; pointer-events:none;
+  position:absolute;
+  top:18px;
+  left:50%;
+  transform:translateX(-50%);
+  background:rgba(10,10,16,.95);
+  border:1px solid var(--blue);
+  padding:8px 20px;
+  border-radius:20px;
+  font-weight:900;
+  font-size:12px;
+  opacity:0;
+  transition:0.25s;
+  z-index:100;
+  pointer-events:none;
 }
 
-.modal{position:absolute;inset:0;background:rgba(0,0,0,0.95);display:flex;align-items:center;justify-content:center;z-index:1000}
-.card{background:#0a0a0f;border:1px solid var(--blue);border-radius:28px;padding:30px;text-align:center;width:86%;max-width:380px}
-.langs{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:18px 0}
-.lang{padding:10px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:12px;font-weight:900;cursor:pointer;font-size:12px;color:#fff}
-.lang.active{border-color:var(--blue);background:rgba(0,243,255,0.12)}
-.mainbtn{width:100%;padding:16px;margin-top:12px;border:none;border-radius:16px;font-weight:900;background:var(--blue);color:#000;cursor:pointer}
-.mainbtn.sec { background: #222; color: #fff; border: 1px solid var(--border); }
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.95);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:1000;
+  padding:20px;
+}
 
+.card{
+  background:#0a0a0f;
+  border:1px solid var(--blue);
+  border-radius:28px;
+  padding:26px;
+  text-align:center;
+  width:86%;
+  max-width:380px;
+  max-height:88vh;
+  overflow:auto;
+  scrollbar-width:none;
+}
+.card::-webkit-scrollbar{ display:none; }
+
+.langs{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:8px;
+  margin:18px 0;
+}
+.lang{
+  padding:10px;
+  background:rgba(255,255,255,0.05);
+  border:1px solid var(--border);
+  border-radius:12px;
+  font-weight:900;
+  cursor:pointer;
+  font-size:12px;
+  color:#fff;
+}
+.lang.active{
+  border-color:var(--blue);
+  background:rgba(0,243,255,0.12);
+}
+
+.mainbtn{
+  width:100%;
+  padding:16px;
+  margin-top:12px;
+  border:none;
+  border-radius:16px;
+  font-weight:900;
+  background:var(--blue);
+  color:#000;
+  cursor:pointer;
+}
+.mainbtn.sec{
+  background:#222;
+  color:#fff;
+  border:1px solid var(--border);
+}
 .hidden{display:none!important}
 </style>
 </head>
@@ -136,32 +384,43 @@ html,body{margin:0;width:100%;height:100%;background:var(--bg);font-family:Outfi
 <div class="space"></div>
 <div class="stars"></div>
 
-<div class="game">
+<div class="game" id="pageContent">
   <div class="header">
     <div class="score-box">
       <div class="score" id="score">0</div>
       <div class="pb-chip" id="pb">PB: 0</div>
     </div>
+
     <div class="stats-mid">
       <div class="combo-tag" id="combo">COMBO x0</div>
       <div class="momentum" id="momVal">x1.00</div>
+      <div class="langTag" id="langTag">🇬🇧 EN</div>
     </div>
-    <div class="lives" id="lives">❤️❤️❤️</div>
+
+    <div class="livesWrap">
+      <div class="lives" id="lives">❤️❤️❤️</div>
+      <div class="roundMini" id="roundMini">0 / 10</div>
+    </div>
   </div>
 
   <div class="stage" id="stage">
     <div class="turret" id="turret"></div>
     <div class="laser" id="laser"></div>
+    <div id="resToast" class="toast">TOAST</div>
   </div>
 
-  <div id="resToast" class="toast">TOAST</div>
   <div class="panel" id="panel"></div>
 </div>
 
 <div class="modal" id="startModal">
   <div class="card">
     <h2 style="color:var(--blue);margin:0">METEOR DEFENSE</h2>
-    <p style="font-size:12px;opacity:.7;margin:10px 0">2 Doğru = +1 Can 🛠️ (Max 3 Can)<br>Gezegeni koru.</p>
+    <p style="font-size:12px;opacity:.75;margin:10px 0;line-height:1.7">
+      Bayrağa dokun, dili seç.<br>
+      2 doğru üst üste = +1 can<br>
+      Maksimum can: 3
+    </p>
+
     <div class="langs">
       <button class="lang active" data-lang="en">EN</button>
       <button class="lang" data-lang="de">DE</button>
@@ -169,6 +428,7 @@ html,body{margin:0;width:100%;height:100%;background:var(--bg);font-family:Outfi
       <button class="lang" data-lang="es">ES</button>
       <button class="lang" data-lang="it">IT</button>
     </div>
+
     <button class="mainbtn" id="startBtn">SAVUNMAYI BAŞLAT</button>
   </div>
 </div>
@@ -176,66 +436,46 @@ html,body{margin:0;width:100%;height:100%;background:var(--bg);font-family:Outfi
 <div class="modal hidden" id="endModal">
   <div class="card">
     <h2 id="endTitle" style="color:var(--green)">SEKTÖR TEMİZ</h2>
-    <p id="endStats" style="font-size:14px;margin:18px 0;line-height:1.6"></p>
-    <button class="mainbtn" id="btnContinue">DEVAM ET (MOMENTUM 🚀)</button>
-    <button class="mainbtn" id="btnBank" style="background:var(--gold)">BANKALA (%5 BONUS + TAMİR 🛡️)</button>
+    <p id="endStats" style="font-size:14px;margin:18px 0;line-height:1.7"></p>
+    <button class="mainbtn" id="btnContinue">DEVAM ET</button>
+    <button class="mainbtn" id="btnBank" style="background:var(--gold)">BANKALA (%5 BONUS)</button>
     <button class="mainbtn sec" id="btnExit">KAYDET VE ÇIK</button>
   </div>
 </div>
 
 <script type="module">
-import { loadLangPool, createUsedSet, pick } from "/js/langpool.js";
+import { mountShell } from "/js/ui_shell.js";
+import { ensureAuthAndCacheUser } from "/js/auth.js";
+
+mountShell({ scroll:"none" });
 
 const $ = (id) => document.getElementById(id);
-
-/* ===== GAMEKIT MIN (only gating; same logic as other games) ===== */
-const DAILY_FREE_TOKENS = 25;
-function isoDateLocal(){
-  const d=new Date();
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
-}
-function getUser(){ try{ return JSON.parse(localStorage.getItem("italky_user_v1")||"{}"); }catch{ return {}; } }
-function isPro(u){
-  const p = String(u?.plan||"").toUpperCase().trim();
-  return p==="PRO" || p==="PREMIUM" || p==="PLUS";
-}
-function uid(u){ return String(u.user_id||u.id||u.email||"guest").toLowerCase().trim(); }
-function tokenKey(u){ return `italky_game_tokens::${uid(u)}::${isoDateLocal()}`; }
-function tokenInitKey(u){ return `italky_game_tokens_init::${uid(u)}::${isoDateLocal()}`; }
-function ensureDailyTokens(){
-  const u=getUser();
-  if(isPro(u)) return;
-  if(localStorage.getItem(tokenInitKey(u))) return;
-  localStorage.setItem(tokenKey(u), String(DAILY_FREE_TOKENS));
-  localStorage.setItem(tokenInitKey(u), "1");
-}
-function getTokens(){
-  const u=getUser();
-  if(isPro(u)) return 9999;
-  const v = Number(localStorage.getItem(tokenKey(u))||"0");
-  return Number.isFinite(v)?Math.max(0,v):0;
-}
-function spendToken(){
-  const u=getUser();
-  if(isPro(u)) return true;
-  const t=getTokens();
-  if(t<=0) return false;
-  localStorage.setItem(tokenKey(u), String(t-1));
-  return true;
-}
-/* ===== END GAMEKIT ===== */
 
 let lang = "en";
 let pool = [];
 let deck = [];
 let currentMeteor = null;
-let totalScore = 0, setScore = 0, combo = 0, momentum = 1.0, lives = 3;
-let y = -160, running = false, rafId = 0, killCount = 0, setCounter = 0;
+let totalScore = 0;
+let setScore = 0;
+let combo = 0;
+let momentum = 1.0;
+let lives = 3;
+let y = -160;
+let running = false;
+let rafId = 0;
+let killCount = 0;
+let setCounter = 0;
 const SET_SIZE = 10;
 let baseSpeed = 1.1;
 const speedCap = 3.5;
 
-const LANGMAP = { en:"en-US", de:"de-DE", fr:"fr-FR", es:"es-ES", it:"it-IT" };
+const LANGMAP = {
+  en:"en-US",
+  de:"de-DE",
+  fr:"fr-FR",
+  es:"es-ES",
+  it:"it-IT"
+};
 
 function shuffle(a){
   const arr = [...a];
@@ -246,6 +486,185 @@ function shuffle(a){
   return arr;
 }
 
+let audioCtx = null;
+function getAudioCtx(){
+  try{
+    if(!audioCtx){
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if(!Ctx) return null;
+      audioCtx = new Ctx();
+    }
+    return audioCtx;
+  }catch{
+    return null;
+  }
+}
+async function unlockAudio(){
+  try{
+    const ctx = getAudioCtx();
+    if(ctx && ctx.state === "suspended"){
+      await ctx.resume();
+    }
+  }catch{}
+}
+function beep({freq=440,duration=.08,type="sine",gain=.03,when=0}){
+  const ctx = getAudioCtx();
+  if(!ctx) return;
+  if(ctx.state === "suspended"){
+    ctx.resume().catch(() => {});
+  }
+  const now = ctx.currentTime + when;
+  const osc = ctx.createOscillator();
+  const g = ctx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, now);
+  g.gain.setValueAtTime(.0001, now);
+  g.gain.exponentialRampToValueAtTime(gain, now + .01);
+  g.gain.exponentialRampToValueAtTime(.0001, now + duration);
+  osc.connect(g);
+  g.connect(ctx.destination);
+  osc.start(now);
+  osc.stop(now + duration + .02);
+}
+function playMatchSound(){
+  beep({freq:560,duration:.07,type:"triangle",gain:.05});
+  beep({freq:760,duration:.09,type:"triangle",gain:.05,when:.08});
+}
+function playWrongSound(){
+  beep({freq:190,duration:.12,type:"sawtooth",gain:.05});
+  beep({freq:150,duration:.14,type:"sawtooth",gain:.04,when:.06});
+}
+function playExplosionSound(){
+  beep({freq:920,duration:.08,type:"square",gain:.05});
+  beep({freq:460,duration:.16,type:"triangle",gain:.04,when:.08});
+}
+function playBankerSound(){
+  beep({freq:330,duration:.10,type:"square",gain:.04});
+  beep({freq:440,duration:.10,type:"square",gain:.04,when:.12});
+  beep({freq:550,duration:.12,type:"triangle",gain:.04,when:.24});
+}
+function playWinSound(){
+  beep({freq:740,duration:.10,type:"triangle",gain:.05});
+  beep({freq:940,duration:.12,type:"triangle",gain:.05,when:.10});
+  beep({freq:1240,duration:.15,type:"triangle",gain:.05,when:.22});
+}
+
+["click","touchstart","pointerdown"].forEach(evt => {
+  window.addEventListener(evt, () => unlockAudio(), { passive:true, once:true });
+});
+
+function normalize(s){
+  return String(s||"")
+    .toLowerCase()
+    .replace(/ß/g,"ss")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g,"")
+    .replace(/[^a-z0-9 ]/g,"")
+    .trim();
+}
+
+function getPublicLangUrl(langCode){
+  return `https://auth.italky.ai/storage/v1/object/public/lang/${langCode}.json`;
+}
+
+async function fileExists(url){
+  try{
+    const res = await fetch(url, { method:"HEAD", cache:"no-store" });
+    return res.ok;
+  }catch{
+    return false;
+  }
+}
+
+function extractItems(payload){
+  if (Array.isArray(payload)) return payload;
+  if (payload && typeof payload === "object") {
+    const keys = ["items","words","data","list","entries","pool"];
+    for (const key of keys) {
+      if (Array.isArray(payload[key])) return payload[key];
+    }
+  }
+  return [];
+}
+
+function normalizePoolItems(items){
+  return items.map((item) => {
+    const rawWord =
+      item?.word ??
+      item?.w ??
+      item?.text ??
+      item?.term ??
+      item?.answer ??
+      item?.source ??
+      "";
+
+    const rawMeaning =
+      item?.meaning ??
+      item?.tr ??
+      item?.translation ??
+      item?.mean ??
+      item?.hint ??
+      item?.target ??
+      "";
+
+    const rawSentence =
+      item?.sentence ??
+      item?.s ??
+      item?.sample ??
+      item?.example ??
+      rawWord;
+
+    return {
+      w: String(rawWord || "").trim(),
+      tr: String(rawMeaning || "").trim(),
+      sentence: String(rawSentence || "").trim()
+    };
+  }).filter(x => x.w && x.tr);
+}
+
+async function loadLangPool(langCode){
+  const url = getPublicLangUrl(langCode);
+  const ok = await fileExists(url);
+  if (!ok) return { items: [] };
+
+  const res = await fetch(url, { cache:"no-store" });
+  if (!res.ok) return { items: [] };
+
+  const json = await res.json();
+  return { items: normalizePoolItems(extractItems(json)) };
+}
+
+const usedMeteorWords = {};
+function pickFreshSet(items, count, langCode){
+  if (!usedMeteorWords[langCode]) usedMeteorWords[langCode] = new Set();
+  const used = usedMeteorWords[langCode];
+
+  if (used.size >= items.length) used.clear();
+
+  const fresh = [];
+  let guard = 0;
+  while (fresh.length < count && guard < items.length * 20) {
+    const pick = items[Math.floor(Math.random() * items.length)];
+    const key = normalize(pick.w);
+    if (!used.has(key) && !fresh.some(x => normalize(x.w) === key)) {
+      used.add(key);
+      fresh.push(pick);
+    }
+    guard++;
+  }
+
+  if (fresh.length < count) {
+    const fallback = items.filter(x => !fresh.some(y => normalize(y.w) === normalize(x.w)));
+    while (fresh.length < count && fallback.length) {
+      const item = fallback.shift();
+      used.add(normalize(item.w));
+      fresh.push(item);
+    }
+  }
+
+  return shuffle(fresh).slice(0, count);
+}
+
 function updatePB(){
   const pb = Number(localStorage.getItem(`meteor_pb_${lang}`) || 0);
   $("pb").textContent = `PB: ${pb}`;
@@ -254,17 +673,22 @@ function updatePB(){
 document.querySelectorAll(".lang").forEach(b=>{
   b.onclick = ()=>{
     document.querySelectorAll(".lang").forEach(x=>x.classList.remove("active"));
-    b.classList.add("active"); lang = b.dataset.lang; updatePB();
+    b.classList.add("active");
+    lang = b.dataset.lang;
+    updatePB();
   };
 });
 
 function toast(msg, color="var(--blue)"){
   const t = $("resToast");
-  t.textContent = msg; t.style.borderColor = color; t.style.color = color; t.style.opacity = "1";
-  clearTimeout(window.__tto); window.__tto = setTimeout(()=> t.style.opacity="0", 1500);
+  t.textContent = msg;
+  t.style.borderColor = color;
+  t.style.color = color;
+  t.style.opacity = "1";
+  clearTimeout(window.__tto);
+  window.__tto = setTimeout(()=> t.style.opacity="0", 1500);
 }
 
-/* ✅ Laser: aim to meteor center */
 function fireLaserTo(targetX, targetY){
   const stage = $("stage");
   const turret = $("turret");
@@ -275,26 +699,23 @@ function fireLaserTo(targetX, targetY){
   const tRect = turret.getBoundingClientRect();
 
   const ax = (tRect.left - sRect.left) + (tRect.width/2);
-  const ay = (tRect.top  - sRect.top)  + 6; // near turret top
+  const ay = (tRect.top - sRect.top) + 6;
 
   const dx = targetX - ax;
   const dy = targetY - ay;
-
-  // length from turret to target
   const len = Math.max(40, Math.hypot(dx, dy));
-
-  // angle for a vertical beam pointing UP (origin bottom)
-  // dy is usually negative (target above), formula below keeps it correct
   const ang = Math.atan2(dx, -dy);
 
-  // position beam so its bottom is at turret anchor
   beam.style.left = ax + "px";
   beam.style.top  = (ay - len) + "px";
   beam.style.height = len + "px";
   beam.style.opacity = "1";
   beam.style.transform = `translateX(-50%) rotate(${ang}rad)`;
 
-  setTimeout(()=>{ beam.style.opacity = "0"; beam.style.height = "0px"; }, 120);
+  setTimeout(()=>{
+    beam.style.opacity = "0";
+    beam.style.height = "0px";
+  }, 120);
 }
 
 function updateUI(){
@@ -302,54 +723,69 @@ function updateUI(){
   $("combo").textContent = "COMBO x" + combo;
   $("momVal").textContent = "x" + momentum.toFixed(2);
   $("lives").textContent = "❤️".repeat(Math.max(0,lives)) + "🖤".repeat(3 - Math.max(0,lives));
+  $("langTag").textContent = `${lang.toUpperCase()} • ${LANGMAP[lang] || "EN-US"}`;
+  $("roundMini").textContent = `${setCounter}/${SET_SIZE}`;
 }
 
 function safeSpeak(text){
   try{
     const u = new SpeechSynthesisUtterance(text);
-    u.lang = LANGMAP[lang] || "en-US"; u.rate = 0.9;
-    speechSynthesis.cancel(); speechSynthesis.speak(u);
+    u.lang = LANGMAP[lang] || "en-US";
+    u.rate = 0.9;
+    speechSynthesis.cancel();
+    speechSynthesis.speak(u);
   }catch{}
 }
 
 function stopGameLoop() {
   running = false;
-  if (rafId) { cancelAnimationFrame(rafId); rafId = 0; }
+  if (rafId) {
+    cancelAnimationFrame(rafId);
+    rafId = 0;
+  }
 }
 
-async function initGame(isBank=false){
+async function initGame(resetCore=false){
   stopGameLoop();
-  if(isBank){ lives = 3; momentum = 1.0; baseSpeed = 1.1; combo = 0; }
-  setScore = 0; setCounter = 0;
+
+  if(resetCore){
+    lives = 3;
+    momentum = 1.0;
+    baseSpeed = 1.1;
+    combo = 0;
+    totalScore = 0;
+    killCount = 0;
+  }
+
+  setScore = 0;
+  setCounter = 0;
 
   const data = await loadLangPool(lang);
   if (!data?.items?.length) {
-    toast("Veri paketi yüklenemedi! ⚠️", "var(--red)");
+    toast("Veri paketi yüklenemedi", "var(--red)");
     $("startModal").classList.remove("hidden");
     return;
   }
 
-  const USED_KEY = `used_meteor_v4_${lang}`;
-  const { used, save } = createUsedSet(USED_KEY);
+  const randomizedItems = shuffle([...data.items]);
+  pool = pickFreshSet(randomizedItems, 50, lang);
 
-  pool = pick(data, 50, used, save);
-
-  if (!pool || pool.length < 15){
-    localStorage.removeItem(USED_KEY);
-    const cleanUsed = new Set();
-    pool = pick(data, 50, cleanUsed, save);
+  if (!pool || pool.length < 15) {
+    pool = shuffle([...data.items]).slice(0, 50);
   }
 
-  try { save(pool.map(x => x.sentence)); } catch(e){}
-
   deck = shuffle(pool).slice(0, SET_SIZE);
+
   spawnNext();
   running = true;
   rafId = requestAnimationFrame(loop);
 }
 
 function spawnNext(){
-  if (setCounter >= SET_SIZE){ finishSet(false); return; }
+  if (setCounter >= SET_SIZE){
+    finishSet(false);
+    return;
+  }
 
   const w = deck[setCounter];
   const isBoss = (killCount > 0 && killCount % 5 === 0);
@@ -362,23 +798,23 @@ function spawnNext(){
   const left = Math.random() * (stage.offsetWidth - 118);
   el.style.left = Math.max(10, left) + "px";
 
-  // ✅ different sizes (small/medium/big)
-  let scale = 0.85 + Math.random() * 0.55; // 0.85..1.40
-  if(isBoss) scale = 1.35;
+  let scale = 0.85 + Math.random() * 0.55;
+  if (isBoss) scale = 1.35;
   el.style.transform = `scale(${scale})`;
 
   stage.appendChild(el);
 
-  currentMeteor = { el, data: w, boss: isBoss, armor: isBoss ? 2 : 1, scale };
+  currentMeteor = { el, data:w, boss:isBoss, armor:isBoss ? 2 : 1, scale };
   y = -160;
-  currentMeteor.speed = Math.min(baseSpeed + (setCounter * 0.1) + (momentum * 0.1), speedCap) * (isBoss ? 0.7 : 1);
+  currentMeteor.speed = Math.min(baseSpeed + (setCounter * 0.1) + (momentum * 0.1), speedCap) * (isBoss ? 0.72 : 1);
 
   buildOptions(w);
   updateUI();
 }
 
 function buildOptions(w){
-  const p = $("panel"); p.innerHTML = "";
+  const p = $("panel");
+  p.innerHTML = "";
   const correct = String(w.tr || "").trim();
   const opts = [correct];
 
@@ -390,7 +826,8 @@ function buildOptions(w){
 
   shuffle(opts).forEach(o=>{
     const b = document.createElement("button");
-    b.className = "opt"; b.textContent = o;
+    b.className = "opt";
+    b.textContent = o;
     b.onclick = ()=> checkAnswer(b, o, correct);
     p.appendChild(b);
   });
@@ -403,7 +840,6 @@ function setButtonsState(disabled) {
 function checkAnswer(btn, sel, correct){
   if (!running || !currentMeteor) return;
 
-  // compute target center for laser now (before meteor removed)
   const mRect = currentMeteor.el.getBoundingClientRect();
   const sRect = $("stage").getBoundingClientRect();
   const tx = (mRect.left - sRect.left) + (mRect.width/2);
@@ -412,16 +848,14 @@ function checkAnswer(btn, sel, correct){
   if (sel === correct){
     setButtonsState(true);
     btn.classList.add("correct");
-
-    // ✅ aim laser to meteor
     fireLaserTo(tx, ty);
-
     safeSpeak(currentMeteor.data.w);
 
     if (currentMeteor.boss && currentMeteor.armor > 1){
+      playMatchSound();
       currentMeteor.armor--;
-      toast("ZIRH HASAR ALDI! 🛡️", "var(--gold)");
-      setTimeout(()=> {
+      toast("ZIRH HASAR ALDI", "var(--gold)");
+      setTimeout(()=>{
         btn.classList.remove("correct");
         buildOptions(currentMeteor.data);
         setButtonsState(false);
@@ -429,41 +863,47 @@ function checkAnswer(btn, sel, correct){
       return;
     }
 
+    playExplosionSound();
+
     const gain = Math.round((currentMeteor.boss ? 150 : 100) * momentum);
-    totalScore += gain; setScore += gain;
+    totalScore += gain;
+    setScore += gain;
     combo++;
     momentum = Math.min(momentum + 0.05, 1.6);
 
     if (combo > 0 && combo % 2 === 0) {
       if (lives < 3) {
         lives++;
-        toast("SİSTEM TAMİR EDİLDİ! ❤️+1", "var(--green)");
+        toast("SİSTEM TAMİR EDİLDİ +1 CAN", "var(--green)");
       } else {
-        toast("MÜKEMMEL FLOW! ⚡", "var(--blue)");
+        toast("TEMİZ VURUŞ", "var(--blue)");
       }
     }
 
-    killCount++; setCounter++;
-
+    killCount++;
+    setCounter++;
     destroyMeteor(tx, ty);
-
     setTimeout(spawnNext, 360);
   } else {
     btn.classList.add("wrong");
-    combo = 0; momentum = Math.max(1.0, momentum - 0.2);
+    playWrongSound();
+    combo = 0;
+    momentum = 1.0;
     lives--;
     updateUI();
     toast(`DOĞRUSU: ${correct}`, "var(--red)");
-    if (lives <= 0) finishSet(true);
 
-    setTimeout(()=> {
+    setTimeout(()=>{
       btn.classList.remove("wrong");
       setButtonsState(false);
     }, 520);
+
+    if (lives <= 0) {
+      finishSet(true);
+    }
   }
 }
 
-/* ✅ meteor breaks into pieces */
 function spawnShards(cx, cy, isBoss=false){
   const stage = $("stage");
   const n = isBoss ? 14 : 10;
@@ -476,7 +916,6 @@ function spawnShards(cx, cy, isBoss=false){
     s.style.height = Math.round(size * (0.6 + Math.random()*0.6)) + "px";
     s.style.left = (cx - size/2) + "px";
     s.style.top  = (cy - size/2) + "px";
-
     stage.appendChild(s);
 
     const ang = Math.random() * Math.PI * 2;
@@ -497,11 +936,11 @@ function spawnShards(cx, cy, isBoss=false){
 function destroyMeteor(cx, cy){
   const exp = document.createElement("div");
   exp.className = "explosion";
-  exp.style.left = (cx - 80) + "px"; exp.style.top = (cy - 80) + "px";
+  exp.style.left = (cx - 80) + "px";
+  exp.style.top = (cy - 80) + "px";
   $("stage").appendChild(exp);
   setTimeout(()=> exp.remove(), 450);
 
-  // ✅ shards
   spawnShards(cx, cy, !!currentMeteor?.boss);
 
   if (currentMeteor?.el) currentMeteor.el.remove();
@@ -510,20 +949,25 @@ function destroyMeteor(cx, cy){
 
 function loop(){
   if (!running) return;
+
   if (currentMeteor){
     y += currentMeteor.speed;
     currentMeteor.el.style.top = y + "px";
 
     if (y > ($("stage").offsetHeight - 100)){
       lives -= currentMeteor.boss ? 2 : 1;
-      combo = 0; momentum = 1.0;
-      currentMeteor.el.remove(); currentMeteor = null;
+      combo = 0;
+      momentum = 1.0;
+      currentMeteor.el.remove();
+      currentMeteor = null;
       setCounter++;
+      updateUI();
+
       if (lives <= 0) finishSet(true);
       else spawnNext();
-      updateUI();
     }
   }
+
   if (running) rafId = requestAnimationFrame(loop);
 }
 
@@ -536,75 +980,66 @@ function finishSet(died){
   if (totalScore > pb) localStorage.setItem(`meteor_pb_${lang}`, String(totalScore));
 
   $("endModal").classList.remove("hidden");
-  $("endTitle").textContent = died ? "SAVUNMA ÇÖKTÜ 💀" : "SEKTÖR TEMİZ 🛰️";
+  $("endTitle").textContent = died ? "SAVUNMA ÇÖKTÜ" : "SEKTÖR TEMİZ";
   $("endTitle").style.color = died ? "var(--red)" : "var(--green)";
-  $("endStats").innerHTML = `TOPLAM SKOR: <b>${totalScore}</b><br>MOMENTUM: x${momentum.toFixed(2)}<br>METEOR İMHA: ${killCount}`;
+  $("endStats").innerHTML = `
+TOPLAM SKOR: <b>${totalScore}</b>
+MOMENTUM: x${momentum.toFixed(2)}
+METEOR İMHA: ${killCount}
+`;
 
   if (died){
-    $("btnContinue").classList.add("hidden"); $("btnBank").classList.add("hidden");
+    $("btnContinue").classList.add("hidden");
+    $("btnBank").classList.add("hidden");
   } else {
-    $("btnContinue").classList.remove("hidden"); $("btnBank").classList.remove("hidden");
+    $("btnContinue").classList.remove("hidden");
+    $("btnBank").classList.remove("hidden");
   }
   updatePB();
 }
 
-/* ✅ spend on ENTER */
 $("startBtn").onclick = async ()=>{
-  ensureDailyTokens();
-  const u=getUser();
-  if(!isPro(u) && !spendToken()){
-    alert("Hakkın bitti. Hak kazan veya PRO’ya geç.");
-    location.href="/pages/game.html";
+  const ok = await ensureAuthAndCacheUser();
+  if (!ok) {
+    location.href = "/pages/login.html";
     return;
   }
 
   $("startBtn").disabled = true;
   $("startModal").classList.add("hidden");
-  totalScore = 0; lives = 3; momentum = 1.0; baseSpeed = 1.1; combo = 0; killCount = 0;
+  totalScore = 0;
+  lives = 3;
+  momentum = 1.0;
+  baseSpeed = 1.1;
+  combo = 0;
+  killCount = 0;
   updateUI();
-  await initGame(false);
+  await initGame(true);
   $("startBtn").disabled = false;
 };
 
-/* ✅ spend on CONTINUE */
 $("btnContinue").onclick = ()=>{
-  ensureDailyTokens();
-  const u=getUser();
-  if(!isPro(u) && !spendToken()){
-    alert("Hakkın bitti. Hak kazan veya PRO’ya geç.");
-    location.href="/pages/game.html";
-    return;
-  }
-
   $("endModal").classList.add("hidden");
   baseSpeed = Math.min(baseSpeed + 0.1, 2.0);
   initGame(false);
 };
 
-/* ✅ spend on BANK */
 $("btnBank").onclick = ()=>{
-  ensureDailyTokens();
-  const u=getUser();
-  if(!isPro(u) && !spendToken()){
-    alert("Hakkın bitti. Hak kazan veya PRO’ya geç.");
-    location.href="/pages/game.html";
-    return;
-  }
-
   const bonus = Math.round(setScore * 0.05);
   totalScore += bonus;
-  toast(`BANKA: +${bonus} BONUS 💰`, "var(--gold)");
+  toast(`BANKA: +${bonus} BONUS`, "var(--gold)");
   $("endModal").classList.add("hidden");
-  initGame(true);
+  initGame(false);
 };
 
-$("btnExit").onclick = ()=> {
-  if(confirm("Kaydet ve çıkmak istiyor musunuz?")) {
-    location.href = '/pages/game.html';
-  }
+$("btnExit").onclick = ()=>{
+  location.href = "/pages/game_menu.html";
 };
 
-window.onload = ()=>{ updatePB(); updateUI(); };
+window.onload = ()=>{
+  updatePB();
+  updateUI();
+};
 </script>
 </body>
 </html>
