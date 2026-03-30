@@ -1,9 +1,10 @@
 <!doctype html>
 <html lang="tr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
   <title>italkyAI • Practice AI</title>
+  <link rel="icon" href="data:," />
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,22 +12,17 @@
 
   <style>
     :root{
-      --bg:#04070d;
+      --bg:#05070d;
       --bg2:#09101b;
       --txt:#fff;
-      --muted:rgba(255,255,255,.66);
-      --soft:rgba(255,255,255,.46);
+      --muted:rgba(255,255,255,.68);
+      --soft:rgba(255,255,255,.48);
       --line:rgba(255,255,255,.12);
-      --glass:rgba(255,255,255,.05);
       --c1:#67e8f9;
       --c2:#60a5fa;
       --c3:#34d399;
-      --ok:#00e676;
-      --warn:#ffb84d;
-      --err:#ff5d7a;
       --safe-bottom:env(safe-area-inset-bottom,0px);
       --shellLift:0px;
-      --grad:linear-gradient(135deg,var(--c1),var(--c2),var(--c3));
       --shadow:0 18px 40px rgba(0,0,0,.35);
     }
 
@@ -44,39 +40,39 @@
       font-family:Outfit,system-ui,sans-serif;
       color:var(--txt);
       background:
-        radial-gradient(circle at 12% 10%, rgba(103,232,249,.10), transparent 20%),
-        radial-gradient(circle at 88% 8%, rgba(96,165,250,.11), transparent 20%),
-        radial-gradient(circle at 50% 100%, rgba(52,211,153,.09), transparent 22%),
+        radial-gradient(circle at 12% 10%, rgba(103,232,249,.08), transparent 20%),
+        radial-gradient(circle at 88% 8%, rgba(96,165,250,.09), transparent 20%),
         linear-gradient(180deg,var(--bg),var(--bg2));
     }
 
     #pageContent{
       height:100%;
-      overflow-y:auto;
-      overflow-x:hidden;
-      scrollbar-width:none;
+      overflow:hidden;
       padding:10px 10px calc(10px + var(--safe-bottom) + var(--shellLift)) 10px;
     }
-    #pageContent::-webkit-scrollbar{display:none}
 
     .page{
       width:100%;
       max-width:480px;
-      min-height:100%;
+      height:100%;
       margin:0 auto;
       display:flex;
       flex-direction:column;
-      gap:10px;
     }
 
     .hero{
+      flex:1;
       border:1px solid var(--line);
       border-radius:26px;
-      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
       box-shadow:var(--shadow);
-      padding:16px 14px 14px;
+      padding:18px 14px 18px;
       position:relative;
       overflow:hidden;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:space-between;
     }
 
     .hero::before{
@@ -92,12 +88,20 @@
       pointer-events:none;
     }
 
-    .hero-top{
+    .top{
+      width:100%;
+      text-align:center;
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      z-index:2;
+    }
+
+    .title-row{
       display:flex;
       align-items:center;
-      justify-content:space-between;
+      justify-content:center;
       gap:10px;
-      margin-bottom:10px;
     }
 
     .title{
@@ -108,43 +112,50 @@
       letter-spacing:-.4px;
     }
 
-    .lang-chip{
-      min-height:36px;
-      padding:0 12px;
+    .lang-badge{
+      min-height:30px;
+      padding:0 10px;
       border-radius:999px;
-      border:1px solid rgba(255,255,255,.14);
-      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.05);
+      color:#fff;
+      font-size:11px;
+      font-weight:900;
       display:flex;
       align-items:center;
       justify-content:center;
-      font-size:12px;
-      font-weight:900;
       white-space:nowrap;
     }
 
-    .desc{
-      margin:0 0 12px;
-      color:var(--muted);
-      font-size:14px;
-      line-height:1.55;
-      font-weight:600;
+    .status{
+      min-height:16px;
+      font-size:11px;
+      font-weight:700;
+      color:var(--soft);
+      text-align:center;
+      text-transform:uppercase;
+      letter-spacing:1px;
     }
 
-    .ai-stage{
+    .center{
+      flex:1;
+      width:100%;
       display:flex;
       flex-direction:column;
       align-items:center;
       justify-content:center;
-      gap:12px;
-      padding:8px 0 0;
+      gap:15px;
+      z-index:2;
+      position:relative;
     }
 
-    .orb-wrap{
+    .world-wrap{
       position:relative;
-      width:214px;
-      height:214px;
+      width:220px;
+      height:220px;
       display:grid;
       place-items:center;
+      perspective:1000px;
     }
 
     .ring{
@@ -166,246 +177,103 @@
       opacity:.92;
     }
 
-    .ring.r3{
-      inset:34px;
-      animation-duration:20s;
-      opacity:.76;
-    }
-
-    .orb{
+    .world{
       position:relative;
-      width:118px;
-      height:118px;
+      width:130px;
+      height:130px;
       border-radius:50%;
       background:
-        radial-gradient(circle at 28% 28%, rgba(255,255,255,.95), rgba(255,255,255,.14) 18%, rgba(103,232,249,.38) 42%, rgba(96,165,250,.26) 62%, rgba(52,211,153,.14) 82%, rgba(255,255,255,.04) 100%);
+        radial-gradient(circle at 30% 30%, #fff, transparent 15%),
+        radial-gradient(circle at 50% 50%, var(--c1) 10%, var(--c2) 40%, #0a1525 80%),
+        radial-gradient(circle at 60% 40%, var(--c3) 15%, transparent 25%),
+        radial-gradient(circle at 20% 70%, var(--c3) 10%, transparent 20%);
       box-shadow:
-        0 0 34px rgba(103,232,249,.26),
-        0 0 84px rgba(96,165,250,.18),
-        inset 0 0 24px rgba(255,255,255,.18);
-      animation:idleBreath 3.8s ease-in-out infinite;
+        0 0 30px rgba(103,232,249,.20),
+        0 0 60px rgba(96,165,250,.15),
+        inset 0 0 20px rgba(0,0,0,.5);
+      animation:worldBreath 3.5s ease-in-out infinite;
+      transition:transform 0.3s ease, box-shadow 0.3s ease;
     }
 
-    .orb.speaking{
-      animation:talkBreath 1.15s ease-in-out infinite;
+    .world.speaking{
+      animation:worldTalk 1s ease-in-out infinite;
       box-shadow:
-        0 0 42px rgba(103,232,249,.34),
-        0 0 92px rgba(96,165,250,.22),
-        inset 0 0 26px rgba(255,255,255,.22);
+        0 0 40px rgba(103,232,249,.35),
+        0 0 80px rgba(96,165,250,.25),
+        inset 0 0 25px rgba(0,0,0,.6);
     }
 
-    .orb.listening{
-      animation:listenBreath 1s ease-in-out infinite;
-      box-shadow:
-        0 0 44px rgba(52,211,153,.36),
-        0 0 90px rgba(52,211,153,.18),
-        inset 0 0 24px rgba(255,255,255,.22);
+    .world.listening{
+      animation:worldListen 1.2s ease-in-out infinite;
     }
 
     .caption{
-      font-size:13px;
-      font-weight:900;
-      color:var(--soft);
-      text-align:center;
-      min-height:18px;
-    }
-
-    .subtitle-stream{
-      width:100%;
-      min-height:112px;
-      max-height:138px;
-      overflow:hidden;
-      mask-image:linear-gradient(180deg, transparent 0%, #000 12%, #000 78%, transparent 100%);
-      -webkit-mask-image:linear-gradient(180deg, transparent 0%, #000 12%, #000 78%, transparent 100%);
-      display:flex;
-      align-items:flex-end;
-      justify-content:center;
-      padding:0 10px;
-    }
-
-    .subtitle-inner{
-      width:100%;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      gap:8px;
-      transform:translateY(0);
-      transition:transform .55s ease;
-    }
-
-    .subline{
-      width:100%;
-      text-align:center;
-      font-size:15px;
-      line-height:1.55;
-      color:#fff;
-      font-weight:700;
-      opacity:.90;
-      padding:0 4px;
-    }
-
-    .controls{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:10px;
-      margin-top:10px;
-    }
-
-    .btn{
-      min-height:54px;
-      border-radius:16px;
-      border:1px solid var(--line);
-      background:rgba(255,255,255,.05);
-      color:#fff;
-      font-size:15px;
-      font-weight:900;
-      cursor:pointer;
-      transition:transform .14s ease, background .14s ease, border-color .14s ease;
-      box-shadow:0 10px 24px rgba(0,0,0,.18);
-    }
-    .btn:active{transform:scale(.985)}
-    .btn.primary{
-      background:linear-gradient(135deg, rgba(103,232,249,.16), rgba(96,165,250,.16));
-      border-color:rgba(103,232,249,.35);
-    }
-    .btn.success{
-      background:linear-gradient(135deg, rgba(52,211,153,.18), rgba(103,232,249,.12));
-      border-color:rgba(52,211,153,.38);
-    }
-    .btn.warn{
-      background:linear-gradient(135deg, rgba(255,184,77,.16), rgba(255,255,255,.05));
-      border-color:rgba(255,184,77,.34);
-    }
-
-    .panel{
-      border:1px solid var(--line);
-      border-radius:22px;
-      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
-      box-shadow:var(--shadow);
-      padding:14px;
-    }
-
-    .section-title{
-      margin:0 0 10px;
-      font-size:15px;
-      font-weight:900;
-      color:#fff;
-      letter-spacing:.2px;
-    }
-
-    .language-grid{
-      display:grid;
-      grid-template-columns:repeat(2,1fr);
-      gap:10px;
-    }
-
-    .lang-btn{
-      min-height:76px;
-      border-radius:18px;
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(255,255,255,.04);
-      color:#fff;
-      cursor:pointer;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      gap:6px;
-      font-weight:900;
-      font-size:14px;
-    }
-    .lang-btn .flag{font-size:28px}
-    .lang-btn.active{
-      border-color:rgba(103,232,249,.38);
-      background:rgba(103,232,249,.12);
-      box-shadow:0 0 0 1px rgba(103,232,249,.18), 0 0 18px rgba(103,232,249,.10);
-    }
-
-    .voice-row{
-      display:grid;
-      grid-template-columns:1fr;
-      gap:10px;
-      margin-top:10px;
-    }
-
-    .select{
-      width:100%;
-      min-height:52px;
-      border-radius:14px;
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(255,255,255,.05);
-      color:#fff;
-      padding:0 14px;
-      font-size:14px;
-      font-weight:800;
-    }
-    .select option{color:#111}
-
-    .conv{
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-      min-height:160px;
-      max-height:280px;
-      overflow:auto;
-      scrollbar-width:none;
-      padding-right:2px;
-    }
-    .conv::-webkit-scrollbar{display:none}
-
-    .bubble{
-      max-width:88%;
-      padding:12px 14px;
-      border-radius:18px;
-      font-size:14px;
-      line-height:1.45;
-      font-weight:700;
-      border:1px solid rgba(255,255,255,.08);
-      word-break:break-word;
-    }
-    .bubble.ai{
-      align-self:flex-start;
-      background:rgba(255,255,255,.05);
-    }
-    .bubble.sys{
-      align-self:center;
-      background:rgba(255,255,255,.04);
-      color:var(--muted);
+      min-height:16px;
       font-size:12px;
-      font-weight:800;
-    }
-
-    .heard-box, .ai-box{
-      min-height:86px;
-      border-radius:18px;
-      border:1px solid rgba(255,255,255,.10);
-      background:rgba(255,255,255,.04);
-      padding:12px 14px;
-    }
-
-    .mini-label{
-      font-size:11px;
       font-weight:900;
       color:var(--soft);
-      letter-spacing:.7px;
-      margin-bottom:8px;
+      text-align:center;
+      text-transform:uppercase;
     }
 
-    .heard-text, .ai-tr-text{
+    .translation-box{
+      width:90%;
+      min-height:74px;
+      max-height:74px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      padding:0 10px;
+      margin-top:2px;
+      background:radial-gradient(circle, rgba(255,255,255,.03) 0%, transparent 70%);
+      border-radius:12px;
+      overflow:hidden;
+    }
+
+    #turkishTranslation{
       font-size:14px;
       line-height:1.5;
       color:#fff;
-      font-weight:700;
-      min-height:24px;
+      font-weight:600;
+      display:-webkit-box;
+      -webkit-line-clamp:3;
+      -webkit-box-orient:vertical;
+      overflow:hidden;
+      text-overflow:ellipsis;
     }
 
-    .status-line{
-      margin-top:8px;
-      min-height:18px;
-      font-size:12px;
-      font-weight:800;
-      color:var(--soft);
-      text-align:center;
+    .bottom{
+      width:100%;
+      display:flex;
+      justify-content:center;
+      z-index:2;
+      margin-top:10px;
+    }
+
+    .mic-btn{
+      width:88px;
+      height:88px;
+      border-radius:50%;
+      border:1px solid rgba(255,255,255,.12);
+      background:linear-gradient(135deg, rgba(103,232,249,.15), rgba(96,165,250,.12));
+      color:#fff;
+      font-size:32px;
+      font-weight:900;
+      cursor:pointer;
+      box-shadow:
+        0 14px 28px rgba(0,0,0,.20),
+        0 0 20px rgba(103,232,249,.10);
+      transition:transform .12s ease, box-shadow .12s ease;
+    }
+
+    .mic-btn:active{ transform:scale(.98); }
+
+    .mic-btn.listening{
+      background:linear-gradient(135deg, rgba(52,211,153,.25), rgba(103,232,249,.15));
+      box-shadow:
+        0 14px 28px rgba(0,0,0,.20),
+        0 0 30px rgba(52,211,153,.20);
     }
 
     @keyframes spin{
@@ -413,21 +281,21 @@
       to{transform:rotate(360deg)}
     }
 
-    @keyframes idleBreath{
-      0%,100%{transform:scale(1)}
-      50%{transform:scale(1.035)}
+    @keyframes worldBreath{
+      0%,100%{transform:scale(1) rotate(0deg)}
+      50%{transform:scale(1.04) rotate(2deg)}
     }
 
-    @keyframes talkBreath{
+    @keyframes worldTalk{
       0%,100%{transform:scale(1)}
-      25%{transform:scale(1.04)}
-      50%{transform:scale(1.09)}
-      75%{transform:scale(1.04)}
+      25%{transform:scale(1.05)}
+      50%{transform:scale(1.11)}
+      75%{transform:scale(1.05)}
     }
 
-    @keyframes listenBreath{
+    @keyframes worldListen{
       0%,100%{transform:scale(1)}
-      50%{transform:scale(1.07)}
+      50%{transform:scale(1.06)}
     }
   </style>
 </head>
@@ -435,608 +303,39 @@
   <div id="pageContent">
     <div class="page">
       <section class="hero">
-        <div class="hero-top">
-          <h1 class="title">Practice AI</h1>
-          <div class="lang-chip" id="langChip">🇬🇧 English</div>
+        <div class="top">
+          <div class="title-row">
+            <h1 class="title">Practice AI</h1>
+            <div class="lang-badge" id="langBadge">EN</div>
+          </div>
+          <div class="status" id="statusLine">Seçili dilde konuşmaya başla.</div>
         </div>
 
-        <p class="desc">
-          Seçilen dilde öğretmen gibi konuşur, seviyeyi konuşmandan anlar ve sadece ders işler.
-        </p>
-
-        <div class="ai-stage">
-          <div class="orb-wrap">
+        <div class="center">
+          <div class="world-wrap">
             <div class="ring"></div>
             <div class="ring r2"></div>
-            <div class="ring r3"></div>
-            <div class="orb" id="orb"></div>
+            <div class="world" id="aiWorld"></div>
           </div>
 
-          <div class="caption" id="caption">Hazır</div>
+          <div class="caption" id="aiCaption">Hazır</div>
 
-          <div class="subtitle-stream">
-            <div class="subtitle-inner" id="subtitleInner">
-              <div class="subline">Türkçe açıklama burada yukarı doğru akar.</div>
-            </div>
+          <div class="translation-box">
+            <div id="turkishTranslation">Öğretmeninin Türkçe açıklaması burada görünecek.</div>
           </div>
         </div>
 
-        <div class="controls">
-          <button class="btn success" id="btnTalk">🎙️ Konuş</button>
-          <button class="btn warn" id="btnStop">■ Durdur</button>
-        </div>
-
-        <div class="status-line" id="statusLine">Seçili dil dışına çıkmadan konuşur.</div>
-      </section>
-
-      <section class="panel">
-        <h2 class="section-title">Dil ve Ses</h2>
-        <div class="language-grid" id="languageGrid"></div>
-
-        <div class="voice-row">
-          <select class="select" id="aiVoiceMode">
-            <option value="auto">AI sesi: Erkek / Otomatik</option>
-            <option value="native">AI sesi: Cihaz</option>
-            <option value="web">AI sesi: Tarayıcı</option>
-            <option value="mute">AI sesi: Kapalı</option>
-          </select>
-        </div>
-      </section>
-
-      <section class="panel">
-        <h2 class="section-title">AI Dersi</h2>
-        <div class="conv" id="conversation"></div>
-      </section>
-
-      <section class="panel">
-        <h2 class="section-title">Telaffuz / Düzeltme</h2>
-        <div class="heard-box">
-          <div class="mini-label">SON ALGILANAN KONUŞMA</div>
-          <div class="heard-text" id="heardText">Henüz konuşma yok.</div>
-        </div>
-      </section>
-
-      <section class="panel">
-        <h2 class="section-title">AI Ne Dedi? (Türkçe)</h2>
-        <div class="ai-box">
-          <div class="mini-label">TÜRKÇE AKIŞ</div>
-          <div class="ai-tr-text" id="aiTrText">Henüz AI cevabı yok.</div>
+        <div class="bottom">
+          <button class="mic-btn" id="micBtn">🎙️</button>
         </div>
       </section>
     </div>
   </div>
 
   <script type="module">
-    import { mountShell } from "/js/ui_shell.js";
-
-    mountShell({ scroll:"none" });
-
-    const $ = id => document.getElementById(id);
-    const API_BASE = "https://italky-api.onrender.com";
-
-    const LANGS = {
-      en:{ name:"English", flag:"🇬🇧", bcp:"en-US", label:"İngilizce" },
-      de:{ name:"Deutsch", flag:"🇩🇪", bcp:"de-DE", label:"Almanca" },
-      fr:{ name:"Français", flag:"🇫🇷", bcp:"fr-FR", label:"Fransızca" },
-      es:{ name:"Español", flag:"🇪🇸", bcp:"es-ES", label:"İspanyolca" },
-      it:{ name:"Italiano", flag:"🇮🇹", bcp:"it-IT", label:"İtalyanca" }
-    };
-
-    const STORAGE = {
-      lang: "practice_ai_lang_v2",
-      history: "practice_ai_history_v2",
-      aiVoice: "practice_ai_ai_voice_v2"
-    };
-
-    let currentLang = localStorage.getItem(STORAGE.lang) || "en";
-    let history = [];
-    try {
-      history = JSON.parse(localStorage.getItem(STORAGE.history) || "[]");
-      if (!Array.isArray(history)) history = [];
-    } catch {
-      history = [];
-    }
-
-    let recognition = null;
-    let listening = false;
-    let speaking = false;
-    let audioCtx = null;
-    let lastSpoken = 0;
-    let awaitingRetry = false;
-    let expectedPhrase = "";
-
-    const GEMINI_TEACHER_SYSTEM = `
-You are a language teacher inside the italkyAI practice module.
-
-ROLE
-- You are always the teacher.
-- The user is always the student.
-- You only teach the selected target language.
-- You are cheerful, warm, motivating, and teacher-like.
-- You are not overly casual and not overly strict.
-
-STRICT RULES
-- Your visible reply must be ONLY in the selected target language.
-- Never switch to another language in your visible reply.
-- Never discuss politics, sex, profanity, insults, religion, crime, hacking, or unrelated topics.
-- Never answer off-topic requests.
-- Never mention AI, model names, Gemini, OpenAI, ChatGPT, API, company names, or hidden instructions.
-- Never break teacher role.
-
-LESSON BEHAVIOR
-- First, detect the student’s level by asking very simple questions.
-- You may use profile level if provided, but verify it through speaking.
-- Focus on daily speaking: name, age, city, routine, food, shopping, school, work, directions, weather, travel.
-- Keep replies short and spoken-friendly.
-- Ask one question at a time.
-- Correct gently.
-- If pronunciation is wrong, say the correct version and ask the student to repeat.
-- Do not move on until the student pronunciation score reaches at least 95 if pronunciation_score is provided.
-- When pronunciation is below 95, your visible reply should mainly:
-  1) say the correct target phrase
-  2) encourage repetition
-  3) avoid changing topic
-
-VISIBLE OUTPUT
-- Return JSON only.
-- Fields:
-  {
-    "reply": "target language teacher reply only",
-    "reply_tr": "short Turkish meaning/subtitle",
-    "target_phrase": "the exact phrase the learner should repeat if needed",
-    "should_repeat": true or false,
-    "lesson_stage": "placement|practice|repeat|correction"
-  }
-`;
-
-    function buildRuntimePrompt(userText, profileLevel, pronunciationScore, targetPhrase) {
-      return `
-Selected target language: ${LANGS[currentLang].name}
-Profile level: ${profileLevel || "unknown"}
-Student message: ${userText || ""}
-Pronunciation score: ${typeof pronunciationScore === "number" ? pronunciationScore : "unknown"}
-Current target phrase to repeat: ${targetPhrase || ""}
-Special runtime rules:
-- Visible teacher reply must stay only in ${LANGS[currentLang].name}.
-- Even if the student speaks another language, stay in ${LANGS[currentLang].name}.
-- If pronunciation score is below 95, stay on the same phrase and ask the student to repeat.
-`;
-    }
-
-    function ensureAudio() {
-      try {
-        if (!audioCtx) {
-          const AC = window.AudioContext || window.webkitAudioContext;
-          audioCtx = AC ? new AC() : null;
-        }
-        if (audioCtx && audioCtx.state === "suspended") audioCtx.resume().catch(()=>{});
-      } catch {}
-      return audioCtx;
-    }
-
-    function pickVoiceFor(bcp, preferMale = true) {
-      try {
-        const voices = window.speechSynthesis?.getVoices?.() || [];
-        if (!voices.length) return null;
-
-        const list = voices.filter(v => String(v.lang || "").toLowerCase().startsWith(bcp.split("-")[0].toLowerCase()));
-        if (!list.length) return null;
-
-        if (preferMale) {
-          const maleHint = list.find(v => /male|david|mark|george|thomas|paul|daniel|microsoft/i.test(`${v.name} ${v.voiceURI}`));
-          if (maleHint) return maleHint;
-        }
-        return list[0] || null;
-      } catch {
-        return null;
-      }
-    }
-
-    function setOrb(mode) {
-      const orb = $("orb");
-      orb.classList.remove("speaking", "listening");
-      if (mode === "speaking") orb.classList.add("speaking");
-      if (mode === "listening") orb.classList.add("listening");
-    }
-
-    function setCaption(text) {
-      $("caption").textContent = text || "";
-    }
-
-    function setStatus(text) {
-      $("statusLine").textContent = text || "";
-    }
-
-    function renderLangs() {
-      $("languageGrid").innerHTML = Object.entries(LANGS).map(([code, meta]) => `
-        <button class="lang-btn ${code === currentLang ? "active" : ""}" data-lang="${code}">
-          <div class="flag">${meta.flag}</div>
-          <div>${meta.name}</div>
-        </button>
-      `).join("");
-
-      $("languageGrid").querySelectorAll(".lang-btn").forEach(btn => {
-        btn.onclick = () => {
-          currentLang = btn.dataset.lang;
-          updateLangUI();
-          saveState();
-          resetLesson();
-        };
-      });
-    }
-
-    function updateLangUI() {
-      const meta = LANGS[currentLang];
-      $("langChip").textContent = `${meta.flag} ${meta.name}`;
-      renderLangs();
-    }
-
-    function addBubble(text, isSystem = false) {
-      const div = document.createElement("div");
-      div.className = `bubble ${isSystem ? "sys" : "ai"}`;
-      div.textContent = text || "";
-      $("conversation").appendChild(div);
-      $("conversation").scrollTop = $("conversation").scrollHeight;
-    }
-
-    function renderHistory() {
-      $("conversation").innerHTML = "";
-      history.forEach(msg => {
-        if (msg.role === "ai") addBubble(msg.text, false);
-      });
-    }
-
-    function pushSubtitle(text) {
-      const line = document.createElement("div");
-      line.className = "subline";
-      line.textContent = text || "";
-      $("subtitleInner").appendChild(line);
-
-      const maxLines = 8;
-      while ($("subtitleInner").children.length > maxLines) {
-        $("subtitleInner").removeChild($("subtitleInner").children[0]);
-      }
-
-      const overflow = Math.max(0, $("subtitleInner").scrollHeight - $("subtitle-stream").clientHeight + 20);
-      $("subtitleInner").style.transform = `translateY(-${overflow}px)`;
-    }
-
-    function saveState() {
-      localStorage.setItem(STORAGE.lang, currentLang);
-      localStorage.setItem(STORAGE.history, JSON.stringify(history.slice(-24)));
-      localStorage.setItem(STORAGE.aiVoice, $("aiVoiceMode").value);
-    }
-
-    function safeJson(txt) {
-      try { return JSON.parse(txt); } catch { return null; }
-    }
-
-    async function getProfileLevel() {
-      try {
-        const raw = localStorage.getItem("italky_user_v1") || "{}";
-        const user = JSON.parse(raw);
-        const levels = user?.levels || {};
-        return levels?.[currentLang] || levels?.[currentLang.toUpperCase()] || "";
-      } catch {
-        return "";
-      }
-    }
-
-    async function askTeacher(userText, pronunciationScore = null, targetPhrase = "") {
-      const profileLevel = await getProfileLevel();
-
-      const payload = {
-        system_prompt: GEMINI_TEACHER_SYSTEM,
-        prompt: buildRuntimePrompt(userText, profileLevel, pronunciationScore, targetPhrase),
-        mode: "practice_teacher_only",
-        lang: currentLang,
-        response_format: "json"
-      };
-
-      const res = await fetch(`${API_BASE}/api/chat_gemini`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-
-      const raw = await res.text();
-      const data = safeJson(raw) || {};
-      const parsed = safeJson(data?.text || "") || data || {};
-
-      return {
-        reply: String(parsed.reply || "").trim(),
-        reply_tr: String(parsed.reply_tr || "").trim(),
-        target_phrase: String(parsed.target_phrase || "").trim(),
-        should_repeat: Boolean(parsed.should_repeat),
-        lesson_stage: String(parsed.lesson_stage || "").trim()
-      };
-    }
-
-    async function scorePronunciation(spoken, targetPhrase) {
-      try {
-        const res = await fetch(`${API_BASE}/api/command_parse`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            mode: "pronunciation_score",
-            lang: currentLang,
-            spoken_text: spoken,
-            target_text: targetPhrase
-          })
-        });
-
-        const raw = await res.text();
-        const data = safeJson(raw) || {};
-        const score =
-          Number(data.score ?? data.pronunciation_score ?? data.similarity ?? 0);
-
-        return Number.isFinite(score) ? score : 0;
-      } catch {
-        return 0;
-      }
-    }
-
-    function speakAI(text) {
-      const mode = $("aiVoiceMode").value;
-      if (mode === "mute") return;
-
-      const now = Date.now();
-      if (now - lastSpoken < 250) return;
-      lastSpoken = now;
-
-      const clean = String(text || "").trim();
-      if (!clean) return;
-
-      const bcp = LANGS[currentLang].bcp;
-      speaking = true;
-      setOrb("speaking");
-      setCaption("Öğretmen konuşuyor...");
-
-      try {
-        if ((mode === "auto" || mode === "native") && window.NativeTTS && typeof window.NativeTTS.speak === "function") {
-          window.NativeTTS.speak(clean, bcp);
-          setTimeout(() => {
-            speaking = false;
-            setOrb(listening ? "listening" : "idle");
-            setCaption("Hazır");
-          }, Math.max(1300, clean.length * 58));
-          return;
-        }
-      } catch (e) {
-        console.warn("NativeTTS failed:", e);
-      }
-
-      try {
-        if (!("speechSynthesis" in window)) {
-          speaking = false;
-          setOrb(listening ? "listening" : "idle");
-          setCaption("Hazır");
-          return;
-        }
-
-        window.speechSynthesis.cancel();
-
-        const u = new SpeechSynthesisUtterance(clean);
-        u.lang = bcp;
-        u.rate = 0.92;
-        u.pitch = 0.96;
-        u.volume = 1;
-
-        const v = pickVoiceFor(bcp, true);
-        if (v) u.voice = v;
-
-        u.onend = () => {
-          speaking = false;
-          setOrb(listening ? "listening" : "idle");
-          setCaption("Hazır");
-        };
-        u.onerror = () => {
-          speaking = false;
-          setOrb(listening ? "listening" : "idle");
-          setCaption("Hazır");
-        };
-
-        setTimeout(() => {
-          try { window.speechSynthesis.speak(u); } catch {}
-        }, 120);
-
-      } catch {
-        speaking = false;
-        setOrb(listening ? "listening" : "idle");
-        setCaption("Hazır");
-      }
-    }
-
-    function initRecognition() {
-      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SR) return null;
-
-      const rec = new SR();
-      rec.lang = LANGS[currentLang].bcp;
-      rec.interimResults = true;
-      rec.continuous = false;
-      rec.maxAlternatives = 1;
-
-      rec.onstart = () => {
-        listening = true;
-        setOrb("listening");
-        setCaption("Seni dinliyorum...");
-        setStatus("Konuşabilirsin.");
-      };
-
-      rec.onresult = async (e) => {
-        let finalText = "";
-        let interim = "";
-        for (let i = e.resultIndex; i < e.results.length; i++) {
-          const txt = e.results[i][0]?.transcript || "";
-          if (e.results[i].isFinal) finalText += txt + " ";
-          else interim += txt + " ";
-        }
-
-        if (interim.trim()) {
-          $("heardText").textContent = interim.trim();
-        }
-
-        if (finalText.trim()) {
-          const spoken = finalText.trim();
-          $("heardText").textContent = spoken;
-          await handleUserSpeech(spoken);
-        }
-      };
-
-      rec.onerror = () => {
-        listening = false;
-        if (!speaking) setOrb("idle");
-        if (!speaking) setCaption("Hazır");
-        setStatus("Mikrofon başlatılamadı.");
-      };
-
-      rec.onend = () => {
-        listening = false;
-        if (!speaking) setOrb("idle");
-        if (!speaking) setCaption("Hazır");
-      };
-
-      return rec;
-    }
-
-    async function handleUserSpeech(spokenText) {
-      const spoken = String(spokenText || "").trim();
-      if (!spoken) return;
-
-      setStatus("Telaffuz değerlendiriliyor...");
-
-      let pronunciationScore = null;
-      if (awaitingRetry && expectedPhrase) {
-        pronunciationScore = await scorePronunciation(spoken, expectedPhrase);
-        setStatus(`Telaffuz skoru: %${Math.round(pronunciationScore)}`);
-      }
-
-      try {
-        const ai = await askTeacher(spoken, pronunciationScore, expectedPhrase);
-
-        if (!ai.reply) {
-          setStatus("AI cevabı alınamadı.");
-          setCaption("Hazır");
-          setOrb("idle");
-          return;
-        }
-
-        history.push({
-          role: "ai",
-          text: ai.reply,
-          tr: ai.reply_tr,
-          score: pronunciationScore
-        });
-        history = history.slice(-24);
-
-        addBubble(ai.reply, false);
-        renderHistory();
-
-        $("aiTrText").textContent = ai.reply_tr || "Türkçe açıklama yok.";
-        pushSubtitle(ai.reply_tr || ai.reply);
-
-        if (ai.should_repeat && ai.target_phrase) {
-          awaitingRetry = true;
-          expectedPhrase = ai.target_phrase;
-        } else {
-          awaitingRetry = false;
-          expectedPhrase = "";
-        }
-
-        saveState();
-        speakAI(ai.reply);
-        setStatus(awaitingRetry ? "Aynı ifadeyi tekrar söyle." : "Ders devam ediyor.");
-
-      } catch (e) {
-        console.error(e);
-        setStatus("Bağlantı hatası.");
-        setCaption("Hazır");
-        setOrb("idle");
-      }
-    }
-
-    async function startFirstLessonTurn() {
-      try {
-        const ai = await askTeacher("", null, "");
-        if (!ai.reply) return;
-
-        history.push({ role: "ai", text: ai.reply, tr: ai.reply_tr });
-        history = history.slice(-24);
-        renderHistory();
-
-        $("aiTrText").textContent = ai.reply_tr || "Türkçe açıklama yok.";
-        pushSubtitle(ai.reply_tr || ai.reply);
-
-        awaitingRetry = Boolean(ai.should_repeat);
-        expectedPhrase = ai.target_phrase || "";
-
-        saveState();
-        speakAI(ai.reply);
-      } catch (e) {
-        console.error(e);
-        setStatus("İlk ders başlatılamadı.");
-      }
-    }
-
-    function resetLesson() {
-      history = [];
-      awaitingRetry = false;
-      expectedPhrase = "";
-      $("conversation").innerHTML = "";
-      $("heardText").textContent = "Henüz konuşma yok.";
-      $("aiTrText").textContent = "Henüz AI cevabı yok.";
-      $("subtitleInner").innerHTML = `<div class="subline">Türkçe açıklama burada yukarı doğru akar.</div>`;
-      saveState();
-    }
-
-    function stopAll() {
-      try { recognition?.stop?.(); } catch {}
-      try { window.speechSynthesis?.cancel?.(); } catch {}
-      listening = false;
-      speaking = false;
-      setOrb("idle");
-      setCaption("Hazır");
-      setStatus("Durduruldu.");
-    }
-
-    $("btnTalk").onclick = async () => {
-      await unlockAudio();
-      recognition = initRecognition();
-      if (!recognition) {
-        setStatus("Bu cihazda konuşma tanıma yok.");
-        return;
-      }
-      try {
-        recognition.start();
-      } catch {
-        setStatus("Mikrofon başlatılamadı.");
-      }
-    };
-
-    $("btnStop").onclick = stopAll;
-
-    $("aiVoiceMode").value = localStorage.getItem(STORAGE.aiVoice) || "auto";
-    $("aiVoiceMode").onchange = saveState;
-
-    window.addEventListener("click", () => {
-      try { window.speechSynthesis?.getVoices?.(); } catch {}
-    }, { once: true });
-
-    window.addEventListener("touchstart", () => {
-      try { window.speechSynthesis?.getVoices?.(); } catch {}
-    }, { once: true });
-
-    window.onload = () => {
-      updateLangUI();
-      renderHistory();
-      $("heardText").textContent = "Henüz konuşma yok.";
-      $("aiTrText").textContent = "Henüz AI cevabı yok.";
-      setOrb("idle");
-      setCaption("Hazır");
-      setStatus("Seçili dilde konuşmaya başla.");
-      startFirstLessonTurn();
-    };
+    import { initGlobalAccess } from "/js/global_access.js";
+    initGlobalAccess();
   </script>
+  <script type="module" src="/js/practice_ai_page.js"></script>
 </body>
 </html>
