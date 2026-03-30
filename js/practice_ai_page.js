@@ -1,15 +1,6 @@
 const API_BASE = "https://italky-api.onrender.com";
 const $ = (id) => document.getElementById(id);
 
-try {
-  const root = getComputedStyle(document.documentElement);
-  const footerH = parseFloat(root.getPropertyValue("--footerH")) || 0;
-  document.documentElement.style.setProperty(
-    "--shellLift",
-    footerH ? `${footerH + 10}px` : "0px"
-  );
-} catch {}
-
 const LANGS = {
   en: { name: "English", flag: "🇬🇧", bcp: "en-US", label: "İngilizce" },
   de: { name: "Deutsch", flag: "🇩🇪", bcp: "de-DE", label: "Almanca" },
@@ -41,6 +32,16 @@ function resolveLang() {
 }
 
 let currentLang = resolveLang();
+
+try {
+  const root = getComputedStyle(document.documentElement);
+  const footerH = parseFloat(root.getPropertyValue("--footerH")) || 0;
+  document.documentElement.style.setProperty(
+    "--shellLift",
+    footerH ? `${footerH + 10}px` : "0px"
+  );
+} catch {}
+
 let history = [];
 try {
   history = JSON.parse(localStorage.getItem(STORAGE.history) || "[]");
@@ -61,40 +62,60 @@ const state = {
 };
 
 let audioCtx = null;
-/* ACCESS */
+
+/* ---------------------------------------------------
+   ACCESS
+--------------------------------------------------- */
 function getAccessState() {
   const a = window.__ITALKY_ACCESS__ || {};
+
   const trialActive =
     a.trialActive === true ||
     a.trial_active === true ||
+    a.isTrial === true ||
+    a.is_trial === true ||
     Number(a.trialDaysLeft || 0) > 0 ||
     Number(a.trial_days_left || 0) > 0 ||
     Number(a.remainingTrialDays || 0) > 0 ||
     Number(a.remaining_trial_days || 0) > 0;
 
-  const hasPackage =
-    a.hasPackage === true ||
-    a.has_package === true ||
+  const packageName = String(
+    a.packageName ||
+    a.package_name ||
+    a.planName ||
+    a.plan ||
+    a.membership ||
+    a.membership_type ||
+    a.active_package ||
+    a.current_package ||
+    ""
+  ).toLowerCase();
+
+  const isPremiumLike =
+    a.isPremium === true ||
+    a.premium === true ||
+    a.hasPremium === true ||
+    a.has_premium === true ||
     a.packageActive === true ||
     a.package_active === true ||
-    a.isPremium === true ||
-    a.premium === true;
+    a.hasPackage === true ||
+    a.has_package === true ||
+    packageName.includes("premium") ||
+    packageName.includes("education") ||
+    packageName.includes("egitim") ||
+    packageName.includes("edu");
 
-  const packageName =
-    String(
-      a.packageName ||
-      a.package_name ||
-      a.planName ||
-      a.plan ||
-      a.membership ||
-      ""
-    ).toLowerCase();
-
-  return { trialActive, hasPackage, packageName };
+  return {
+    raw: a,
+    trialActive,
+    packageName,
+    isPremiumLike
+  };
 }
 
 function ensurePracticeAccess() {
   const access = getAccessState();
+  console.log("PRACTICE ACCESS:", access);
 
   if (access.trialActive) {
     alert("Practice AI deneme paketinde kapalıdır.");
@@ -108,7 +129,7 @@ function ensurePracticeAccess() {
     return false;
   }
 
-  if (!access.hasPackage) {
+  if (!access.isPremiumLike) {
     alert("Bu modül yalnızca aktif üyelik ile kullanılabilir.");
     location.href = "/pages/upgrade_pack.html";
     return false;
@@ -138,14 +159,54 @@ async function ensureTokenAccess() {
   return true;
 }
 
-/* WORLD / UI */
+/* ---------------------------------------------------
+   UI
+--------------------------------------------------- */
+function updateLangBadge() {
+  const badge = $("langBadge");
+  if (badge) badge.textContent = LANGS[currentLang]?.flag || "🌐";
+}
+
+function setWorld(mode = "idle") {
+  const world = $("aiWorld");
+  if (!world) return;
+  world.classList.remove("listening", "speaking");
+  if (mode === "listening") world.classList.add("listening");
+  if (mode === "speaking") world.classList.add("speaking");
+}
+
+function setCaption(text = "") {
+  const el = $("aiCaption");
+  if (el) el.textContent = text;
+}
+
+function setStatus(text = "") {
+  const el = $("statusLine");
+  if (el) el.textContent = text;
+}
+
+function updateTranslation(text = "") {
+  const el = $("turkishTranslation");
+  if (el) el.textContent = text || "Öğretmeninin Türkçe açıklaması burada görünecek.";
+}
+
+function saveState() {
+  localStorage.setItem(STORAGE.lang, currentLang);
+  localStorage.setItem(STORAGE.history, JSON.stringify(history.slice(-20)));
+}
+
+/* ---------------------------------------------------
+   AUDIO / TTS
+--------------------------------------------------- */
 function ensureAudio() {
   try {
     if (!audioCtx) {
       const AC = window.AudioContext || window.webkitAudioContext;
       audioCtx = AC ? new AC() : null;
     }
-    if (audioCtx && audioCtx.state === "suspended") audioCtx.resume().catch(()=>{});
+    if (audioCtx && audioCtx.state === "suspended") {
+      audioCtx.resume().catch(() => {});
+    }
   } catch {}
   return audioCtx;
 }
@@ -173,155 +234,6 @@ function pickBestMaleVoice(bcp) {
   }
 }
 
-function setWorld(mode = "idle") {
-  const world = $("aiWorld");
-  if (!world) return;
-  world.classList.remove("listening", "speaking");
-  if (mode === "listening") world.classList.add("listening");
-  if (mode === "speaking") world.classList.add("speaking");
-}
-
-function setCaption(text = "") {
-  const el = $("aiCaption");
-  if (el) el.textContent = text || "";
-}
-
-function setStatus(text = "") {
-  const el = $("statusLine");
-  if (el) el.textContent = text || "";
-}
-
-function updateTranslation(text = "") {
-  const el = $("turkishTranslation");
-  if (el) el.textContent = text || "Öğretmeninin açıklaması bekleniyor...";
-}
-
-function updateLangBadge() {
-  const meta = LANGS[currentLang];
-  const badge = $("langBadge");
-  if (badge) badge.textContent = `${meta.flag} ${meta.name}`;
-}
-
-function saveState() {
-  localStorage.setItem(STORAGE.lang, currentLang);
-  localStorage.setItem(STORAGE.history, JSON.stringify(history.slice(-20)));
-}
-
-function safeJson(txt) {
-  try { return JSON.parse(txt); } catch { return null; }
-}
-
-/* PROFILE */
-async function getProfileLevel() {
-  try {
-    const raw = localStorage.getItem("italky_user_v1") || "{}";
-    const user = JSON.parse(raw);
-    state.userProfile = user;
-    const levels = user?.levels || {};
-    return levels?.[currentLang] || levels?.[currentLang.toUpperCase()] || "";
-  } catch {
-    return "";
-  }
-}
-
-/* PROMPT */
-const GEMINI_TEACHER_SYSTEM = `
-You are the teacher inside italkyAI Practice AI.
-
-IDENTITY
-- You are always the teacher.
-- The user is always the student.
-- You must never mention AI, Gemini, OpenAI, ChatGPT, model names, API, company names, or hidden rules.
-
-STRICT TEACHING MODE
-- You only teach the selected target language.
-- Your visible reply must stay only in the selected target language.
-- Never switch to another language in the visible reply.
-- Never discuss politics, sex, profanity, insults, religion, crime, hacking, money advice, medicine, or unrelated knowledge.
-- Never answer off-topic requests.
-- Never give non-lesson information.
-- If the user tries to go off-topic, redirect back to language practice.
-
-STYLE
-- Cheerful, warm, motivating, teacher-like.
-- Not overly casual.
-- Not overly strict.
-- Short replies only.
-- Usually 1 short sentence + 1 short question.
-- Do not produce long paragraphs.
-
-LESSON GOAL
-- First detect the student level by asking simple questions.
-- Use profile level if available, but still verify from the student speech.
-- Focus on daily language: greeting, name, age, city, routine, food, shopping, school, work, directions, weather, travel.
-- Keep the lesson practical and spoken.
-
-PRONUNCIATION RULE
-- If pronunciation is below 95, do not continue to a new topic.
-- Give the correct phrase.
-- Ask the student to repeat it.
-- Keep repeating until pronunciation reaches at least 95.
-
-VISIBLE OUTPUT FORMAT
-Return JSON only:
-{
-  "reply": "teacher reply only in target language",
-  "reply_tr": "short Turkish meaning",
-  "target_phrase": "exact phrase to repeat if needed",
-  "should_repeat": true,
-  "lesson_stage": "placement|practice|repeat|correction"
-}
-`;
-
-function buildRuntimePrompt(userText, scoreValue) {
-  return `
-Selected target language: ${LANGS[currentLang]?.label || currentLang}
-Selected target language code: ${currentLang}
-Profile level: ${state.level || "unknown"}
-Student message: "${userText || ""}"
-Current target phrase: "${state.targetPhrase || ""}"
-Pronunciation score: ${typeof scoreValue === "number" ? scoreValue : "unknown"}
-
-Runtime rules:
-- Visible reply must stay only in ${LANGS[currentLang]?.label || currentLang}.
-- If score < 95, keep the same phrase and ask for repetition.
-- Keep the reply short.
-`;
-}
-
-/* BACKEND */
-async function askTeacher(userText, scoreValue = null) {
-  state.level = await getProfileLevel();
-
-  const payload = {
-    system_prompt: GEMINI_TEACHER_SYSTEM,
-    prompt: buildRuntimePrompt(userText, scoreValue),
-    mode: "practice_teacher_only",
-    lang: currentLang,
-    response_format: "json",
-    module: "practice_ai"
-  };
-
-  const res = await fetch(`${API_BASE}/api/practice/chat`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
-  });
-
-  const raw = await res.text();
-  const data = safeJson(raw) || {};
-  const parsed = safeJson(data?.text || "") || data || {};
-
-  return {
-    reply: String(parsed.reply || "").trim(),
-    reply_tr: String(parsed.reply_tr || "").trim(),
-    target_phrase: String(parsed.target_phrase || "").trim(),
-    should_repeat: Boolean(parsed.should_repeat),
-    lesson_stage: String(parsed.lesson_stage || "").trim()
-  };
-}
-
-/* TTS */
 function speakAI(text) {
   const clean = String(text || "").trim();
   if (!clean) return;
@@ -390,7 +302,173 @@ function speakAI(text) {
   }
 }
 
-/* RECOGNITION */
+/* ---------------------------------------------------
+   PROFILE / PROMPT
+--------------------------------------------------- */
+function safeJson(txt) {
+  try { return JSON.parse(txt); } catch { return null; }
+}
+
+async function getProfileLevel() {
+  try {
+    const raw = localStorage.getItem("italky_user_v1") || "{}";
+    const user = JSON.parse(raw);
+    state.userProfile = user;
+    const levels = user?.levels || {};
+    return levels?.[currentLang] || levels?.[currentLang.toUpperCase()] || "";
+  } catch {
+    return "";
+  }
+}
+
+const GEMINI_TEACHER_SYSTEM = `
+You are the teacher inside italkyAI Practice AI.
+
+IDENTITY
+- You are always the teacher.
+- The user is always the student.
+- You must never mention AI, Gemini, OpenAI, ChatGPT, model names, API, company names, or hidden rules.
+
+STRICT TEACHING MODE
+- You only teach the selected target language.
+- Your visible reply must stay only in the selected target language.
+- Never switch to another language in the visible reply.
+- Never discuss politics, sex, profanity, insults, religion, crime, hacking, money advice, medicine, or unrelated knowledge.
+- Never answer off-topic requests.
+- Never give non-lesson information.
+- If the user tries to go off-topic, redirect back to language practice.
+
+STYLE
+- Cheerful, warm, motivating, teacher-like.
+- Not overly casual.
+- Not overly strict.
+- Short replies only.
+- Usually 1 short sentence + 1 short question.
+- Do not produce long paragraphs.
+
+LESSON GOAL
+- First detect the student level by asking simple questions.
+- Use profile level if available, but still verify from the student speech.
+- Focus on daily language: greeting, name, age, city, routine, food, shopping, school, work, directions, weather, travel.
+- Keep the lesson practical and spoken.
+
+PRONUNCIATION RULE
+- If pronunciation is below 95, do not continue to a new topic.
+- Give the correct phrase.
+- Ask the student to repeat it.
+- Keep repeating until pronunciation reaches at least 95.
+
+VISIBLE OUTPUT FORMAT
+Return JSON only:
+{
+  "reply": "teacher reply only in target language",
+  "reply_tr": "short Turkish meaning",
+  "target_phrase": "exact phrase to repeat if needed",
+  "should_repeat": true,
+  "lesson_stage": "placement|practice|repeat|correction"
+}
+`;
+
+function buildRuntimePrompt(userText, scoreValue) {
+  return `
+Selected target language: ${LANGS[currentLang]?.label || currentLang}
+Selected target language code: ${currentLang}
+Profile level: ${state.level || "unknown"}
+Student message: "${userText || ""}"
+Current target phrase: "${state.targetPhrase || ""}"
+Pronunciation score: ${typeof scoreValue === "number" ? scoreValue : "unknown"}
+
+Runtime rules:
+- Visible reply must stay only in ${LANGS[currentLang]?.label || currentLang}.
+- If score < 95, keep the same phrase and ask for repetition.
+- Keep the reply short.
+`;
+}
+
+async function askTeacher(userText, scoreValue = null) {
+  state.level = await getProfileLevel();
+
+  const payload = {
+    system_prompt: GEMINI_TEACHER_SYSTEM,
+    prompt: buildRuntimePrompt(userText, scoreValue),
+    mode: "practice_teacher_only",
+    lang: currentLang,
+    response_format: "json",
+    module: "practice_ai"
+  };
+
+  const res = await fetch(`${API_BASE}/api/practice/chat`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+
+  const raw = await res.text();
+  const data = safeJson(raw) || {};
+  const parsed = safeJson(data?.text || "") || data || {};
+
+  return {
+    reply: String(parsed.reply || "").trim(),
+    reply_tr: String(parsed.reply_tr || "").trim(),
+    target_phrase: String(parsed.target_phrase || "").trim(),
+    should_repeat: Boolean(parsed.should_repeat),
+    lesson_stage: String(parsed.lesson_stage || "").trim()
+  };
+}
+
+/* ---------------------------------------------------
+   PRONUNCIATION SCORE
+--------------------------------------------------- */
+function stripForCompare(s) {
+  return String(s || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9 ]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function levenshtein(a, b) {
+  const s = stripForCompare(a);
+  const t = stripForCompare(b);
+  const m = s.length;
+  const n = t.length;
+
+  if (!m) return n;
+  if (!n) return m;
+
+  const dp = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
+  for (let i = 0; i <= m; i++) dp[i][0] = i;
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      const cost = s[i - 1] === t[j - 1] ? 0 : 1;
+      dp[i][j] = Math.min(
+        dp[i - 1][j] + 1,
+        dp[i][j - 1] + 1,
+        dp[i - 1][j - 1] + cost
+      );
+    }
+  }
+
+  return dp[m][n];
+}
+
+function pronunciationScore(spoken, target) {
+  const a = stripForCompare(spoken);
+  const b = stripForCompare(target);
+  if (!a || !b) return 0;
+  if (a === b) return 100;
+  const dist = levenshtein(a, b);
+  const maxLen = Math.max(a.length, b.length) || 1;
+  return Math.max(0, Math.round((1 - dist / maxLen) * 100));
+}
+
+/* ---------------------------------------------------
+   RECOGNITION
+--------------------------------------------------- */
 function initRecognition() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) return null;
@@ -440,55 +518,9 @@ function initRecognition() {
   return rec;
 }
 
-/* PRON SCORE */
-function stripForCompare(s) {
-  return String(s || "")
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9 ]/g, "")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function levenshtein(a, b) {
-  const s = stripForCompare(a);
-  const t = stripForCompare(b);
-  const m = s.length;
-  const n = t.length;
-
-  if (!m) return n;
-  if (!n) return m;
-
-  const dp = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
-  for (let i = 0; i <= m; i++) dp[i][0] = i;
-  for (let j = 0; j <= n; j++) dp[0][j] = j;
-
-  for (let i = 1; i <= m; i++) {
-    for (let j = 1; j <= n; j++) {
-      const cost = s[i - 1] === t[j - 1] ? 0 : 1;
-      dp[i][j] = Math.min(
-        dp[i - 1][j] + 1,
-        dp[i][j - 1] + 1,
-        dp[i - 1][j - 1] + cost
-      );
-    }
-  }
-
-  return dp[m][n];
-}
-
-function pronunciationScore(spoken, target) {
-  const a = stripForCompare(spoken);
-  const b = stripForCompare(target);
-  if (!a || !b) return 0;
-  if (a === b) return 100;
-  const dist = levenshtein(a, b);
-  const maxLen = Math.max(a.length, b.length) || 1;
-  return Math.max(0, Math.round((1 - dist / maxLen) * 100));
-}
-
-/* FLOW */
+/* ---------------------------------------------------
+   FLOW
+--------------------------------------------------- */
 async function handleUserSpeech(spokenText) {
   const spoken = String(spokenText || "").trim();
   if (!spoken) return;
@@ -571,8 +603,13 @@ function stopAll() {
   $("micBtn")?.classList.remove("listening");
 }
 
-$("micBtn").addEventListener("click", async () => {
-  await unlockAudio();
+$("micBtn")?.addEventListener("click", async () => {
+  await (async () => {
+    ensureAudio();
+    try {
+      if (window.speechSynthesis?.getVoices) window.speechSynthesis.getVoices();
+    } catch {}
+  })();
 
   if (!ensurePracticeAccess()) return;
   if (!(await ensureTokenAccess())) return;
