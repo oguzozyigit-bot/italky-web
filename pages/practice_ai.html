@@ -40,16 +40,21 @@
       font-family:Outfit,system-ui,sans-serif;
       color:var(--txt);
       background:
-        radial-gradient(circle at 12% 10%, rgba(103,232,249,.10), transparent 20%),
-        radial-gradient(circle at 88% 8%, rgba(96,165,250,.11), transparent 20%),
-        radial-gradient(circle at 50% 100%, rgba(52,211,153,.09), transparent 22%),
+        radial-gradient(circle at 12% 10%, rgba(103,232,249,.08), transparent 20%),
+        radial-gradient(circle at 88% 8%, rgba(96,165,250,.09), transparent 20%),
         linear-gradient(180deg,var(--bg),var(--bg2));
     }
 
     #pageContent{
       height:100%;
       overflow:hidden;
+      opacity:0;
+      transition:opacity .2s ease;
       padding:10px 10px calc(10px + var(--safe-bottom) + var(--shellLift)) 10px;
+    }
+
+    #pageContent.ready{
+      opacity:1;
     }
 
     .page{
@@ -65,7 +70,7 @@
       flex:1;
       border:1px solid var(--line);
       border-radius:26px;
-      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
       box-shadow:var(--shadow);
       padding:18px 14px 18px;
       position:relative;
@@ -74,6 +79,7 @@
       flex-direction:column;
       align-items:center;
       justify-content:space-between;
+      min-height:0;
     }
 
     .hero::before{
@@ -94,24 +100,50 @@
       text-align:center;
       display:flex;
       flex-direction:column;
-      gap:8px;
+      gap:6px;
       z-index:2;
+    }
+
+    .title-row{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
     }
 
     .title{
       margin:0;
       font-family:"Space Grotesk",sans-serif;
-      font-size:26px;
+      font-size:24px;
       font-weight:800;
       letter-spacing:-.4px;
     }
 
+    .lang-badge{
+      min-width:34px;
+      height:34px;
+      padding:0 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.05);
+      color:#fff;
+      font-size:18px;
+      font-weight:900;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      white-space:nowrap;
+      line-height:1;
+    }
+
     .status{
-      min-height:18px;
-      font-size:12px;
-      font-weight:800;
+      min-height:16px;
+      font-size:11px;
+      font-weight:700;
       color:var(--soft);
       text-align:center;
+      text-transform:uppercase;
+      letter-spacing:1px;
     }
 
     .center{
@@ -121,16 +153,20 @@
       flex-direction:column;
       align-items:center;
       justify-content:center;
-      gap:18px;
+      gap:15px;
       z-index:2;
+      position:relative;
+      min-height:0;
     }
 
-    .orb-wrap{
+    .world-wrap{
       position:relative;
-      width:230px;
-      height:230px;
+      width:220px;
+      height:220px;
       display:grid;
       place-items:center;
+      perspective:1000px;
+      flex:0 0 auto;
     }
 
     .ring{
@@ -152,74 +188,72 @@
       opacity:.92;
     }
 
-    .ring.r3{
-      inset:34px;
-      animation-duration:20s;
-      opacity:.76;
-    }
-
-    .orb{
+    .world{
       position:relative;
-      width:124px;
-      height:124px;
+      width:130px;
+      height:130px;
       border-radius:50%;
       background:
-        radial-gradient(circle at 28% 28%, rgba(255,255,255,.95), rgba(255,255,255,.14) 18%, rgba(103,232,249,.38) 42%, rgba(96,165,250,.26) 62%, rgba(52,211,153,.14) 82%, rgba(255,255,255,.04) 100%);
+        radial-gradient(circle at 30% 30%, #fff, transparent 15%),
+        radial-gradient(circle at 50% 50%, var(--c1) 10%, var(--c2) 40%, #0a1525 80%),
+        radial-gradient(circle at 60% 40%, var(--c3) 15%, transparent 25%),
+        radial-gradient(circle at 20% 70%, var(--c3) 10%, transparent 20%);
       box-shadow:
-        0 0 34px rgba(103,232,249,.26),
-        0 0 84px rgba(96,165,250,.18),
-        inset 0 0 24px rgba(255,255,255,.18);
-      animation:idleBreath 3.8s ease-in-out infinite;
+        0 0 30px rgba(103,232,249,.20),
+        0 0 60px rgba(96,165,250,.15),
+        inset 0 0 20px rgba(0,0,0,.5);
+      animation:worldBreath 3.5s ease-in-out infinite;
+      transition:transform 0.3s ease, box-shadow 0.3s ease;
     }
 
-    .orb.speaking{
-      animation:talkBreath 1.15s ease-in-out infinite;
+    .world.speaking{
+      animation:worldTalk 1s ease-in-out infinite;
+      box-shadow:
+        0 0 40px rgba(103,232,249,.35),
+        0 0 80px rgba(96,165,250,.25),
+        inset 0 0 25px rgba(0,0,0,.6);
     }
 
-    .orb.listening{
-      animation:listenBreath 1s ease-in-out infinite;
+    .world.listening{
+      animation:worldListen 1.2s ease-in-out infinite;
     }
 
     .caption{
-      min-height:18px;
-      font-size:13px;
+      min-height:16px;
+      font-size:12px;
       font-weight:900;
       color:var(--soft);
       text-align:center;
+      text-transform:uppercase;
+      flex:0 0 auto;
     }
 
-    .subtitle-wrap{
-      width:100%;
-      min-height:110px;
-      max-height:140px;
-      overflow:hidden;
+    .translation-box{
+      width:90%;
+      min-height:74px;
+      max-height:74px;
       display:flex;
-      align-items:flex-end;
-      justify-content:center;
-      padding:0 10px;
-      mask-image:linear-gradient(180deg, transparent 0%, #000 12%, #000 78%, transparent 100%);
-      -webkit-mask-image:linear-gradient(180deg, transparent 0%, #000 12%, #000 78%, transparent 100%);
-    }
-
-    .subtitle-stream{
-      width:100%;
-      display:flex;
-      flex-direction:column;
       align-items:center;
-      gap:8px;
-      transform:translateY(0);
-      transition:transform .55s ease;
+      justify-content:center;
+      text-align:center;
+      padding:0 10px;
+      margin-top:2px;
+      background:radial-gradient(circle, rgba(255,255,255,.03) 0%, transparent 70%);
+      border-radius:12px;
+      overflow:hidden;
+      flex:0 0 auto;
     }
 
-    .ai-sub-line{
-      width:100%;
-      text-align:center;
-      font-size:15px;
-      line-height:1.55;
+    #turkishTranslation{
+      font-size:14px;
+      line-height:1.5;
       color:#fff;
-      font-weight:700;
-      opacity:.92;
-      padding:0 4px;
+      font-weight:600;
+      display:-webkit-box;
+      -webkit-line-clamp:3;
+      -webkit-box-orient:vertical;
+      overflow:hidden;
+      text-overflow:ellipsis;
     }
 
     .bottom{
@@ -227,31 +261,33 @@
       display:flex;
       justify-content:center;
       z-index:2;
+      margin-top:10px;
+      flex:0 0 auto;
     }
 
     .mic-btn{
-      width:92px;
-      height:92px;
+      width:88px;
+      height:88px;
       border-radius:50%;
-      border:1px solid rgba(255,255,255,.14);
-      background:linear-gradient(135deg, rgba(103,232,249,.18), rgba(96,165,250,.16));
+      border:1px solid rgba(255,255,255,.12);
+      background:linear-gradient(135deg, rgba(103,232,249,.15), rgba(96,165,250,.12));
       color:#fff;
-      font-size:30px;
+      font-size:32px;
       font-weight:900;
       cursor:pointer;
       box-shadow:
-        0 16px 30px rgba(0,0,0,.22),
-        0 0 24px rgba(103,232,249,.14);
-      transition:transform .14s ease, box-shadow .14s ease;
+        0 14px 28px rgba(0,0,0,.20),
+        0 0 20px rgba(103,232,249,.10);
+      transition:transform .12s ease, box-shadow .12s ease;
     }
 
-    .mic-btn:active{ transform:scale(.985); }
+    .mic-btn:active{ transform:scale(.98); }
 
     .mic-btn.listening{
-      background:linear-gradient(135deg, rgba(52,211,153,.28), rgba(103,232,249,.18));
+      background:linear-gradient(135deg, rgba(52,211,153,.25), rgba(103,232,249,.15));
       box-shadow:
-        0 16px 30px rgba(0,0,0,.22),
-        0 0 34px rgba(52,211,153,.24);
+        0 14px 28px rgba(0,0,0,.20),
+        0 0 30px rgba(52,211,153,.20);
     }
 
     @keyframes spin{
@@ -259,21 +295,21 @@
       to{transform:rotate(360deg)}
     }
 
-    @keyframes idleBreath{
-      0%,100%{transform:scale(1)}
-      50%{transform:scale(1.035)}
+    @keyframes worldBreath{
+      0%,100%{transform:scale(1) rotate(0deg)}
+      50%{transform:scale(1.04) rotate(2deg)}
     }
 
-    @keyframes talkBreath{
+    @keyframes worldTalk{
       0%,100%{transform:scale(1)}
-      25%{transform:scale(1.04)}
-      50%{transform:scale(1.09)}
-      75%{transform:scale(1.04)}
+      25%{transform:scale(1.05)}
+      50%{transform:scale(1.11)}
+      75%{transform:scale(1.05)}
     }
 
-    @keyframes listenBreath{
+    @keyframes worldListen{
       0%,100%{transform:scale(1)}
-      50%{transform:scale(1.07)}
+      50%{transform:scale(1.06)}
     }
   </style>
 </head>
@@ -282,24 +318,24 @@
     <div class="page">
       <section class="hero">
         <div class="top">
-          <h1 class="title">Practice AI</h1>
+          <div class="title-row">
+            <h1 class="title">Practice AI</h1>
+            <div class="lang-badge" id="langBadge">🇬🇧</div>
+          </div>
           <div class="status" id="statusLine">Seçili dilde konuşmaya başla.</div>
         </div>
 
         <div class="center">
-          <div class="orb-wrap">
+          <div class="world-wrap">
             <div class="ring"></div>
             <div class="ring r2"></div>
-            <div class="ring r3"></div>
-            <div class="orb" id="aiOrb"></div>
+            <div class="world" id="aiWorld"></div>
           </div>
 
           <div class="caption" id="aiCaption">Hazır</div>
 
-          <div class="subtitle-wrap">
-            <div class="subtitle-stream" id="subtitleStream">
-              <div class="ai-sub-line">Türkçe açıklama burada yukarı doğru akar.</div>
-            </div>
+          <div class="translation-box">
+            <div id="turkishTranslation">Öğretmeninin Türkçe açıklaması burada görünecek.</div>
           </div>
         </div>
 
@@ -309,6 +345,29 @@
       </section>
     </div>
   </div>
+
+  <script type="module">
+    import { mountShell } from "/js/ui_shell.js";
+    mountShell({ scroll: "none" });
+
+    try {
+      const root = getComputedStyle(document.documentElement);
+      const footerH = parseFloat(root.getPropertyValue("--footerH")) || 0;
+      document.documentElement.style.setProperty(
+        "--shellLift",
+        footerH ? `${footerH + 10}px` : "0px"
+      );
+    } catch {}
+
+    setTimeout(() => {
+      document.getElementById("pageContent")?.classList.add("ready");
+    }, 120);
+  </script>
+
+  <script type="module">
+    import { initGlobalAccess } from "/js/global_access.js";
+    initGlobalAccess();
+  </script>
 
   <script type="module" src="/js/practice_ai_page.js"></script>
 </body>
