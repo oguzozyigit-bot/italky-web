@@ -1,7 +1,3 @@
-import { mountShell } from "/js/ui_shell.js";
-
-mountShell({ scroll: "none" });
-
 try{
   const root = getComputedStyle(document.documentElement);
   const footerH = parseFloat(root.getPropertyValue("--footerH")) || 0;
