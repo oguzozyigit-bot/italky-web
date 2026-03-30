@@ -1,358 +1,655 @@
-<!doctype html>
-<html lang="tr">
-<head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-  <title>italkyAI • Practice AI Dil Seçimi</title>
-  <link rel="icon" href="data:," />
+import { supabase } from "/js/supabase_client.js";
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet">
+const API_BASE = "https://italky-api.onrender.com";
+const $ = (id) => document.getElementById(id);
 
-  <style>
-    :root{
-      --bg:#05070d;
-      --bg2:#09101b;
-      --txt:#fff;
-      --muted:rgba(255,255,255,.68);
-      --line:rgba(255,255,255,.12);
-      --c1:#67e8f9;
-      --c2:#60a5fa;
-      --c3:#34d399;
-      --safe-bottom:env(safe-area-inset-bottom,0px);
-      --shellLift:0px;
-      --shadow:0 18px 40px rgba(0,0,0,.35);
-      --grad:linear-gradient(135deg,var(--c1),var(--c2),var(--c3));
+const LANGS = {
+  en: { name: "English", flag: "🇬🇧", bcp: "en-US", label: "İngilizce" },
+  de: { name: "Deutsch", flag: "🇩🇪", bcp: "de-DE", label: "Almanca" },
+  fr: { name: "Français", flag: "🇫🇷", bcp: "fr-FR", label: "Fransızca" },
+  es: { name: "Español", flag: "🇪🇸", bcp: "es-ES", label: "İspanyolca" },
+  it: { name: "Italiano", flag: "🇮🇹", bcp: "it-IT", label: "İtalyanca" }
+};
+
+const STORAGE = {
+  lang: "italky_practice_lang_v3",
+  history: "italky_practice_ai_history_v4"
+};
+
+function resolveLang() {
+  const q = new URLSearchParams(location.search);
+  const fromQuery = String(q.get("lang") || "").trim().toLowerCase();
+  const fromPractice = String(localStorage.getItem(STORAGE.lang) || "").trim().toLowerCase();
+  const fromGame = String(localStorage.getItem("italky_game_lang") || "").trim().toLowerCase();
+
+  const picked =
+    (LANGS[fromQuery] && fromQuery) ||
+    (LANGS[fromPractice] && fromPractice) ||
+    (LANGS[fromGame] && fromGame) ||
+    "en";
+
+  localStorage.setItem(STORAGE.lang, picked);
+  localStorage.setItem("italky_game_lang", picked);
+  return picked;
+}
+
+let currentLang = resolveLang();
+
+try {
+  const root = getComputedStyle(document.documentElement);
+  const footerH = parseFloat(root.getPropertyValue("--footerH")) || 0;
+  document.documentElement.style.setProperty(
+    "--shellLift",
+    footerH ? `${footerH + 10}px` : "0px"
+  );
+} catch {}
+
+let history = [];
+try {
+  history = JSON.parse(localStorage.getItem(STORAGE.history) || "[]");
+  if (!Array.isArray(history)) history = [];
+} catch {
+  history = [];
+}
+
+const state = {
+  listening: false,
+  speaking: false,
+  recognition: null,
+  targetPhrase: "",
+  mustRepeat: false,
+  level: "",
+  userProfile: null,
+  lastSpokenAt: 0
+};
+
+let audioCtx = null;
+
+/* ---------------------------------------------------
+   ACCESS
+--------------------------------------------------- */
+function getAccessState() {
+  const a = window.__ITALKY_ACCESS__ || {};
+  return {
+    raw: a,
+    is_logged_in: a.is_logged_in === true,
+    package_code: String(a.package_code || "none").toLowerCase(),
+    trial_active: a.trial_active === true,
+    jeton_balance: Number(a.jeton_balance || 0),
+    can_practice: a.can_practice === true
+  };
+}
+
+function openMembershipModalFallback(message) {
+  alert(message || "Bu modülü kullanabilmek için üyelik gerekir.");
+  location.href = "/pages/upgrade_pack.html";
+  return false;
+}
+
+function ensurePracticeAccess() {
+  const access = getAccessState();
+  console.log("PRACTICE ACCESS RAW:", access.raw);
+  console.log("PRACTICE ACCESS PARSED:", access);
+
+  const TEST_BYPASS = true;
+
+  if (TEST_BYPASS) return true;
+
+  if (!access.is_logged_in) {
+    return openMembershipModalFallback("Bu modülü kullanabilmek için üye olmanız gerekir. Lütfen üyelik sayfasına gidin.");
+  }
+
+  if (access.trial_active) {
+    return openMembershipModalFallback("Practice AI deneme paketinde kapalıdır. Devam etmek için uygun üyelik almalısınız.");
+  }
+
+  if (access.package_code === "translate") {
+    return openMembershipModalFallback("Practice AI, Translate paketinde kapalıdır. Bu modül için uygun üyelik almalısınız.");
+  }
+
+  if (!access.can_practice) {
+    return openMembershipModalFallback("Bu modülü kullanabilmek için uygun üyelik gerekir. Lütfen üyelik sayfasına gidin.");
+  }
+
+  return true;
+}
+
+async function ensureTokenAccess() {
+  const access = getAccessState();
+
+  const TEST_BYPASS = true;
+
+  if (TEST_BYPASS) return true;
+
+  if (access.jeton_balance <= 0) {
+    alert("Practice AI için jeton gerekli.");
+    location.href = "/pages/jetonbuy.html";
+    return false;
+  }
+  return true;
+}
+
+/* ---------------------------------------------------
+   AUTH HEADER
+--------------------------------------------------- */
+async function getAuthHeaders() {
+  try {
+    const { data, error } = await supabase.auth.getSession();
+    if (error) throw error;
+
+    const token = data?.session?.access_token || "";
+    if (!token) {
+      console.warn("No session token");
+      return { "Content-Type": "application/json" };
     }
 
-    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none}
-    html,body{
-      margin:0;
-      width:100%;
-      height:100%;
-      overflow:hidden;
-      font-family:Outfit,system-ui,sans-serif;
-      color:var(--txt);
-      background:
-        radial-gradient(circle at 12% 10%, rgba(103,232,249,.08), transparent 20%),
-        radial-gradient(circle at 88% 8%, rgba(96,165,250,.09), transparent 20%),
-        linear-gradient(180deg,var(--bg),var(--bg2));
+    return {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    };
+  } catch (e) {
+    console.warn("getAuthHeaders error:", e);
+    return { "Content-Type": "application/json" };
+  }
+}
+
+/* ---------------------------------------------------
+   UI
+--------------------------------------------------- */
+function updateLangBadge() {
+  const badge = $("langBadge");
+  if (badge) badge.textContent = LANGS[currentLang]?.flag || "🌐";
+}
+
+function setWorld(mode = "idle") {
+  const world = $("aiWorld");
+  if (!world) return;
+  world.classList.remove("listening", "speaking");
+  if (mode === "listening") world.classList.add("listening");
+  if (mode === "speaking") world.classList.add("speaking");
+}
+
+function setCaption(text = "") {
+  const el = $("aiCaption");
+  if (el) el.textContent = text;
+}
+
+function setStatus(text = "") {
+  const el = $("statusLine");
+  if (el) el.textContent = text;
+}
+
+function updateTranslation(text = "") {
+  const el = $("turkishTranslation");
+  if (el) el.textContent = text || "Öğretmeninin Türkçe açıklaması burada görünecek.";
+}
+
+function saveState() {
+  localStorage.setItem(STORAGE.lang, currentLang);
+  localStorage.setItem(STORAGE.history, JSON.stringify(history.slice(-20)));
+}
+
+/* ---------------------------------------------------
+   AUDIO / TTS
+--------------------------------------------------- */
+function ensureAudio() {
+  try {
+    if (!audioCtx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      audioCtx = AC ? new AC() : null;
+    }
+    if (audioCtx && audioCtx.state === "suspended") {
+      audioCtx.resume().catch(() => {});
+    }
+  } catch {}
+  return audioCtx;
+}
+
+function pickBestMaleVoice(bcp) {
+  try {
+    const voices = window.speechSynthesis?.getVoices?.() || [];
+    if (!voices.length) return null;
+
+    const short = bcp.split("-")[0].toLowerCase();
+    const list = voices.filter(v =>
+      String(v.lang || "").toLowerCase().startsWith(short)
+    );
+    if (!list.length) return null;
+
+    const maleHint = list.find(v =>
+      /male|david|mark|george|thomas|daniel|paul|alex|fred|jorge|diego|henri|luca|microsoft/i.test(
+        `${v.name} ${v.voiceURI}`
+      )
+    );
+
+    return maleHint || list[0] || null;
+  } catch {
+    return null;
+  }
+}
+
+function speakAI(text) {
+  const clean = String(text || "").trim();
+  if (!clean) return;
+
+  const now = Date.now();
+  if (now - state.lastSpokenAt < 250) return;
+  state.lastSpokenAt = now;
+
+  const bcp = LANGS[currentLang].bcp;
+  state.speaking = true;
+  setWorld("speaking");
+  setCaption("Öğretmen konuşuyor...");
+
+  try {
+    if (window.NativeTTS && typeof window.NativeTTS.speak === "function") {
+      window.NativeTTS.speak(clean, bcp);
+      setTimeout(() => {
+        state.speaking = false;
+        setWorld(state.listening ? "listening" : "idle");
+        setCaption("Hazır");
+      }, Math.max(1300, clean.length * 55));
+      return;
+    }
+  } catch (e) {
+    console.warn("NativeTTS failed:", e);
+  }
+
+  try {
+    if (!("speechSynthesis" in window)) {
+      state.speaking = false;
+      setWorld(state.listening ? "listening" : "idle");
+      setCaption("Hazır");
+      return;
     }
 
-    #pageContent{
-      height:100%;
-      overflow:hidden;
-      opacity:0;
-      transition:opacity .2s ease;
-      padding:10px 10px calc(10px + var(--safe-bottom) + var(--shellLift)) 10px;
-    }
-    #pageContent.ready{ opacity:1; }
+    window.speechSynthesis.cancel();
 
-    .page{
-      width:100%;
-      max-width:480px;
-      height:100%;
-      margin:0 auto;
-      display:flex;
-      flex-direction:column;
-    }
+    const u = new SpeechSynthesisUtterance(clean);
+    u.lang = bcp;
+    u.rate = 0.98;
+    u.pitch = 1.04;
+    u.volume = 1;
 
-    .card{
-      flex:1;
-      border:1px solid var(--line);
-      border-radius:26px;
-      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
-      box-shadow:var(--shadow);
-      padding:18px 14px;
-      display:flex;
-      flex-direction:column;
-      justify-content:space-between;
-      align-items:center;
-      text-align:center;
-      overflow:hidden;
-      position:relative;
-    }
+    const v = pickBestMaleVoice(bcp);
+    if (v) u.voice = v;
 
-    .card::before{
-      content:"";
-      position:absolute;
-      right:-70px;
-      top:-70px;
-      width:180px;
-      height:180px;
-      border-radius:50%;
-      background:radial-gradient(circle, rgba(103,232,249,.16), transparent 70%);
-      filter:blur(10px);
-      pointer-events:none;
-    }
-
-    .top{
-      width:100%;
-      z-index:2;
-    }
-
-    .title{
-      margin:0 0 8px;
-      font-family:"Space Grotesk",sans-serif;
-      font-size:25px;
-      font-weight:800;
-      letter-spacing:-.4px;
-    }
-
-    .desc{
-      margin:0;
-      color:var(--muted);
-      font-size:14px;
-      line-height:1.6;
-      font-weight:600;
-    }
-
-    .lang-grid{
-      width:100%;
-      display:grid;
-      grid-template-columns:repeat(2,1fr);
-      gap:12px;
-      z-index:2;
-    }
-
-    .lang-btn{
-      min-height:94px;
-      border-radius:18px;
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(255,255,255,.04);
-      color:#fff;
-      cursor:pointer;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      gap:8px;
-      font-weight:900;
-      font-size:15px;
-      transition:.15s ease;
-    }
-
-    .lang-btn .flag{
-      font-size:30px;
-      line-height:1;
-    }
-
-    .lang-btn.active{
-      border-color:rgba(103,232,249,.38);
-      background:rgba(103,232,249,.12);
-      box-shadow:0 0 0 1px rgba(103,232,249,.18), 0 0 18px rgba(103,232,249,.10);
-    }
-
-    .bottom{
-      width:100%;
-      z-index:2;
-    }
-
-    .start-btn{
-      width:100%;
-      min-height:56px;
-      border:none;
-      border-radius:18px;
-      background:var(--grad);
-      color:#052433;
-      font-size:16px;
-      font-weight:900;
-      cursor:pointer;
-      box-shadow:0 12px 26px rgba(0,0,0,.22);
-    }
-
-    #membershipModal{
-      display:none;
-      position:fixed;
-      inset:0;
-      z-index:9999;
-      background:rgba(0,0,0,.72);
-      backdrop-filter:blur(8px);
-      align-items:center;
-      justify-content:center;
-      padding:20px;
-    }
-
-    .membership-card{
-      width:min(92vw,380px);
-      border:1px solid rgba(255,255,255,.12);
-      border-radius:24px;
-      background:linear-gradient(180deg, rgba(18,22,32,.98), rgba(10,14,22,.98));
-      box-shadow:0 18px 40px rgba(0,0,0,.35);
-      padding:22px 18px;
-      text-align:center;
-    }
-
-    .membership-title{
-      font-family:'Space Grotesk',sans-serif;
-      font-size:24px;
-      font-weight:800;
-      margin-bottom:10px;
-    }
-
-    .membership-text{
-      font-size:15px;
-      line-height:1.6;
-      color:rgba(255,255,255,.86);
-      margin-bottom:16px;
-    }
-
-    .membership-btn{
-      width:100%;
-      min-height:54px;
-      border:none;
-      border-radius:16px;
-      background:linear-gradient(135deg,#67e8f9,#60a5fa,#34d399);
-      color:#041722;
-      font-size:16px;
-      font-weight:900;
-      cursor:pointer;
-    }
-  </style>
-</head>
-<body>
-  <div id="pageContent">
-    <div class="page">
-      <section class="card">
-        <div class="top">
-          <h1 class="title">Practice AI</h1>
-          <p class="desc">
-            Önce çalışmak istediğin dili seç. Öğretmen o dilde konuşacak ve seni o dilde yönlendirecek.
-          </p>
-        </div>
-
-        <div class="lang-grid" id="langGrid"></div>
-
-        <div class="bottom">
-          <button class="start-btn" id="startBtn">BAŞLA</button>
-        </div>
-      </section>
-    </div>
-  </div>
-
-  <div id="membershipModal">
-    <div class="membership-card">
-      <div class="membership-title">Practice AI</div>
-      <div class="membership-text" id="membershipModalText">
-        Bu modülü kullanabilmek için üyelik gerekir.
-      </div>
-      <button class="membership-btn" id="membershipGoBtn">Üyelik Sayfasına Git</button>
-    </div>
-  </div>
-
-  <script type="module">
-    import { mountShell } from "/js/ui_shell.js";
-    mountShell({ scroll:"none" });
-
-    try{
-      const root = getComputedStyle(document.documentElement);
-      const footerH = parseFloat(root.getPropertyValue("--footerH")) || 0;
-      document.documentElement.style.setProperty("--shellLift", footerH ? `${footerH + 10}px` : "0px");
-    }catch{}
+    u.onend = () => {
+      state.speaking = false;
+      setWorld(state.listening ? "listening" : "idle");
+      setCaption("Hazır");
+    };
+    u.onerror = () => {
+      state.speaking = false;
+      setWorld(state.listening ? "listening" : "idle");
+      setCaption("Hazır");
+    };
 
     setTimeout(() => {
-      document.getElementById("pageContent")?.classList.add("ready");
+      try { window.speechSynthesis.speak(u); } catch {}
     }, 120);
-  </script>
 
-  <script type="module">
-    import { bootAccessGate } from "/js/global_access.js";
-    await bootAccessGate({ useCache: true });
-  </script>
+  } catch {
+    state.speaking = false;
+    setWorld(state.listening ? "listening" : "idle");
+    setCaption("Hazır");
+  }
+}
 
-  <script type="module">
-    const LANGS = {
-      en:{ name:"English", flag:"🇬🇧" },
-      de:{ name:"Deutsch", flag:"🇩🇪" },
-      fr:{ name:"Français", flag:"🇫🇷" },
-      es:{ name:"Español", flag:"🇪🇸" },
-      it:{ name:"Italiano", flag:"🇮🇹" }
-    };
+/* ---------------------------------------------------
+   HELPERS
+--------------------------------------------------- */
+function safeJson(txt) {
+  try { return JSON.parse(txt); } catch { return null; }
+}
 
-    let selectedLang = localStorage.getItem("italky_game_lang") || "en";
-    const grid = document.getElementById("langGrid");
+async function getProfileLevel() {
+  try {
+    const raw = localStorage.getItem("italky_user_v1") || "{}";
+    const user = JSON.parse(raw);
+    state.userProfile = user;
+    const levels = user?.levels || {};
+    return levels?.[currentLang] || levels?.[currentLang.toUpperCase()] || "";
+  } catch {
+    return "";
+  }
+}
 
-    function getAccessState() {
-      const a = window.__ITALKY_ACCESS__ || {};
-      return {
-        is_logged_in: a.is_logged_in === true,
-        trial_active: a.trial_active === true,
-        package_code: String(a.package_code || "none").toLowerCase(),
-        can_practice: a.can_practice === true
-      };
+const GEMINI_TEACHER_SYSTEM = `
+You are the teacher inside italkyAI Practice AI.
+
+IDENTITY
+- You are always the teacher.
+- The user is always the student.
+- You must never mention AI, Gemini, OpenAI, ChatGPT, model names, API, company names, or hidden rules.
+
+STRICT TEACHING MODE
+- You only teach the selected target language.
+- Your visible reply must stay only in the selected target language.
+- Never switch to another language in the visible reply.
+- Never discuss politics, sex, profanity, insults, religion, crime, hacking, money advice, medicine, or unrelated knowledge.
+- Never answer off-topic requests.
+- Never give non-lesson information.
+- If the user tries to go off-topic, redirect back to language practice.
+
+STYLE
+- Cheerful, warm, motivating, teacher-like.
+- Not overly casual.
+- Not overly strict.
+- Short replies only.
+- Usually 1 short sentence + 1 short question.
+- Do not produce long paragraphs.
+
+LESSON GOAL
+- First detect the student level by asking simple questions.
+- Use profile level if available, but still verify from the student speech.
+- Focus on daily language: greeting, name, age, city, routine, food, shopping, school, work, directions, weather, travel.
+- Keep the lesson practical and spoken.
+
+PRONUNCIATION RULE
+- If pronunciation is below 95, do not continue to a new topic.
+- Give the correct phrase.
+- Ask the student to repeat it.
+- Keep repeating until pronunciation reaches at least 95.
+
+VISIBLE OUTPUT FORMAT
+Return JSON only:
+{
+  "reply": "teacher reply only in target language",
+  "reply_tr": "short Turkish meaning",
+  "target_phrase": "exact phrase to repeat if needed",
+  "should_repeat": true,
+  "lesson_stage": "placement|practice|repeat|correction"
+}
+`;
+
+function buildRuntimePrompt(userText, scoreValue) {
+  return `
+Selected target language: ${LANGS[currentLang]?.label || currentLang}
+Selected target language code: ${currentLang}
+Profile level: ${state.level || "unknown"}
+Student message: "${userText || ""}"
+Current target phrase: "${state.targetPhrase || ""}"
+Pronunciation score: ${typeof scoreValue === "number" ? scoreValue : "unknown"}
+
+Runtime rules:
+- Visible reply must stay only in ${LANGS[currentLang]?.label || currentLang}.
+- If score < 95, keep the same phrase and ask for repetition.
+- Keep the reply short.
+`;
+}
+
+async function askTeacher(userText, scoreValue = null) {
+  state.level = await getProfileLevel();
+
+  const headers = await getAuthHeaders();
+
+  const payload = {
+    system_prompt: GEMINI_TEACHER_SYSTEM,
+    prompt: buildRuntimePrompt(userText, scoreValue),
+    mode: "practice_teacher_only",
+    lang: currentLang,
+    response_format: "json",
+    module: "practice_ai"
+  };
+
+  const res = await fetch(`${API_BASE}/api/practice/chat`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(payload)
+  });
+
+  const raw = await res.text();
+  console.log("PRACTICE CHAT RAW:", raw);
+
+  if (!res.ok) {
+    throw new Error(`practice_chat_http_${res.status}: ${raw}`);
+  }
+
+  const data = safeJson(raw) || {};
+  const parsed = safeJson(data?.text || "") || data || {};
+
+  return {
+    reply: String(parsed.reply || "").trim(),
+    reply_tr: String(parsed.reply_tr || "").trim(),
+    target_phrase: String(parsed.target_phrase || "").trim(),
+    should_repeat: Boolean(parsed.should_repeat),
+    lesson_stage: String(parsed.lesson_stage || "").trim()
+  };
+}
+
+/* ---------------------------------------------------
+   PRON SCORE
+--------------------------------------------------- */
+function stripForCompare(s) {
+  return String(s || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9 ]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function levenshtein(a, b) {
+  const s = stripForCompare(a);
+  const t = stripForCompare(b);
+  const m = s.length;
+  const n = t.length;
+
+  if (!m) return n;
+  if (!n) return m;
+
+  const dp = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
+  for (let i = 0; i <= m; i++) dp[i][0] = i;
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      const cost = s[i - 1] === t[j - 1] ? 0 : 1;
+      dp[i][j] = Math.min(
+        dp[i - 1][j] + 1,
+        dp[i][j - 1] + 1,
+        dp[i - 1][j - 1] + cost
+      );
+    }
+  }
+
+  return dp[m][n];
+}
+
+function pronunciationScore(spoken, target) {
+  const a = stripForCompare(spoken);
+  const b = stripForCompare(target);
+  if (!a || !b) return 0;
+  if (a === b) return 100;
+  const dist = levenshtein(a, b);
+  const maxLen = Math.max(a.length, b.length) || 1;
+  return Math.max(0, Math.round((1 - dist / maxLen) * 100));
+}
+
+/* ---------------------------------------------------
+   RECOGNITION
+--------------------------------------------------- */
+function initRecognition() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return null;
+
+  const rec = new SR();
+  rec.lang = LANGS[currentLang].bcp;
+  rec.interimResults = true;
+  rec.continuous = false;
+  rec.maxAlternatives = 1;
+
+  rec.onstart = () => {
+    state.listening = true;
+    setWorld("listening");
+    setCaption("Seni dinliyorum...");
+    setStatus("Konuşabilirsin.");
+    $("micBtn")?.classList.add("listening");
+  };
+
+  rec.onresult = async (e) => {
+    let finalText = "";
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const txt = e.results[i][0]?.transcript || "";
+      if (e.results[i].isFinal) finalText += txt + " ";
     }
 
-    function openMembershipModal(message) {
-      const modal = document.getElementById("membershipModal");
-      const text = document.getElementById("membershipModalText");
-      const btn = document.getElementById("membershipGoBtn");
+    if (finalText.trim()) {
+      const spoken = finalText.trim();
+      await handleUserSpeech(spoken);
+    }
+  };
 
-      text.textContent = message || "Bu modülü kullanabilmek için üyelik gerekir.";
-      modal.style.display = "flex";
+  rec.onerror = () => {
+    state.listening = false;
+    $("micBtn")?.classList.remove("listening");
+    if (!state.speaking) setWorld("idle");
+    if (!state.speaking) setCaption("Hazır");
+    setStatus("Mikrofon başlatılamadı.");
+  };
 
-      btn.onclick = () => {
-        location.href = "/pages/upgrade_pack.html";
-      };
+  rec.onend = () => {
+    state.listening = false;
+    $("micBtn")?.classList.remove("listening");
+    if (!state.speaking) setWorld("idle");
+    if (!state.speaking) setCaption("Hazır");
+  };
+
+  return rec;
+}
+
+/* ---------------------------------------------------
+   FLOW
+--------------------------------------------------- */
+async function handleUserSpeech(spokenText) {
+  const spoken = String(spokenText || "").trim();
+  if (!spoken) return;
+
+  let scoreValue = null;
+  if (state.mustRepeat && state.targetPhrase) {
+    scoreValue = pronunciationScore(spoken, state.targetPhrase);
+    setStatus(`Telaffuz skoru: %${scoreValue}`);
+  } else {
+    setStatus("Öğretmen düşünüyor...");
+  }
+
+  try {
+    const ai = await askTeacher(spoken, scoreValue);
+
+    if (!ai.reply) {
+      setStatus("Öğretmen cevap veremedi.");
+      setCaption("Hazır");
+      setWorld("idle");
+      return;
     }
 
-    function ensurePracticeAccess() {
-      const access = getAccessState();
+    history.push({
+      role: "ai",
+      text: ai.reply,
+      tr: ai.reply_tr,
+      score: scoreValue
+    });
+    history = history.slice(-24);
 
-      const TEST_BYPASS = true;
+    updateTranslation(ai.reply_tr || ai.reply);
 
-      if (TEST_BYPASS) return true;
-
-      if (!access.is_logged_in) {
-        openMembershipModal("Bu modülü kullanabilmek için üye olmanız gerekir. Lütfen üyelik sayfasına gidin.");
-        return false;
-      }
-
-      if (access.trial_active) {
-        openMembershipModal("Practice AI deneme paketinde kapalıdır. Devam etmek için uygun üyelik almalısınız.");
-        return false;
-      }
-
-      if (access.package_code === "translate") {
-        openMembershipModal("Practice AI, Translate paketinde kapalıdır. Bu modül için uygun üyelik almalısınız.");
-        return false;
-      }
-
-      if (!access.can_practice) {
-        openMembershipModal("Bu modülü kullanabilmek için uygun üyelik gerekir. Lütfen üyelik sayfasına gidin.");
-        return false;
-      }
-
-      return true;
+    if (ai.should_repeat && ai.target_phrase) {
+      state.mustRepeat = true;
+      state.targetPhrase = ai.target_phrase;
+    } else {
+      state.mustRepeat = false;
+      state.targetPhrase = "";
     }
 
-    function renderLangs() {
-      grid.innerHTML = Object.entries(LANGS).map(([code, meta]) => `
-        <button class="lang-btn ${selectedLang === code ? "active" : ""}" data-lang="${code}">
-          <div class="flag">${meta.flag}</div>
-          <div>${meta.name}</div>
-        </button>
-      `).join("");
+    saveState();
+    speakAI(ai.reply);
+    setStatus(state.mustRepeat ? "Tekrarla." : "Devam edelim.");
 
-      grid.querySelectorAll(".lang-btn").forEach(btn => {
-        btn.onclick = () => {
-          selectedLang = btn.dataset.lang;
-          localStorage.setItem("italky_game_lang", selectedLang);
-          localStorage.setItem("italky_practice_lang_v3", selectedLang);
-          renderLangs();
-        };
-      });
+  } catch (e) {
+    console.error(e);
+    setStatus("Bağlantı hatası.");
+    setCaption("Hazır");
+    setWorld("idle");
+  }
+}
+
+async function startFirstTurn() {
+  try {
+    const ai = await askTeacher("", null);
+    if (!ai.reply) {
+      setStatus("Öğretmen başlatılamadı.");
+      return;
     }
 
-    document.getElementById("startBtn").onclick = () => {
-      if (!ensurePracticeAccess()) return;
+    history.push({ role: "ai", text: ai.reply, tr: ai.reply_tr });
+    updateTranslation(ai.reply_tr || ai.reply);
 
-      localStorage.setItem("italky_game_lang", selectedLang);
-      localStorage.setItem("italky_practice_lang_v3", selectedLang);
-      location.href = `/pages/practice_ai.html?lang=${encodeURIComponent(selectedLang)}`;
-    };
+    state.mustRepeat = Boolean(ai.should_repeat);
+    state.targetPhrase = ai.target_phrase || "";
 
-    renderLangs();
-  </script>
-</body>
-</html>
+    saveState();
+    speakAI(ai.reply);
+  } catch (e) {
+    console.error(e);
+    setStatus("Ders başlatılamadı.");
+  }
+}
+
+function stopAll() {
+  try { state.recognition?.stop?.(); } catch {}
+  try { window.speechSynthesis?.cancel?.(); } catch {}
+  state.listening = false;
+  state.speaking = false;
+  setWorld("idle");
+  setCaption("Hazır");
+  setStatus("Durduruldu.");
+  $("micBtn")?.classList.remove("listening");
+}
+
+$("micBtn")?.addEventListener("click", async () => {
+  ensureAudio();
+  try {
+    if (window.speechSynthesis?.getVoices) window.speechSynthesis.getVoices();
+  } catch {}
+
+  if (!ensurePracticeAccess()) return;
+  if (!(await ensureTokenAccess())) return;
+
+  if (state.listening) {
+    stopAll();
+    return;
+  }
+
+  state.recognition = initRecognition();
+  if (!state.recognition) {
+    setStatus("Ses tanıma yok.");
+    return;
+  }
+
+  try {
+    state.recognition.start();
+  } catch {
+    setStatus("Mikrofon başlatılamadı.");
+  }
+});
+
+window.addEventListener("click", () => {
+  try { window.speechSynthesis?.getVoices?.(); } catch {}
+}, { once: true });
+
+window.addEventListener("touchstart", () => {
+  try { window.speechSynthesis?.getVoices?.(); } catch {}
+}, { once: true });
+
+window.onload = async () => {
+  if (!ensurePracticeAccess()) return;
+  if (!(await ensureTokenAccess())) return;
+
+  updateLangBadge();
+  setWorld("idle");
+  setCaption("Hazır");
+  updateTranslation();
+  startFirstTurn();
+};
