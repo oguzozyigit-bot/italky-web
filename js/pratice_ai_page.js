@@ -15,8 +15,7 @@ const LANGS = {
 
 const STORAGE = {
   lang: "italky_practice_lang_v3",
-  history: "italky_practice_ai_history_v4",
-  aiVoice: "italky_practice_ai_voice_v4"
+  history: "italky_practice_ai_history_v4"
 };
 
 let currentLang =
@@ -66,7 +65,7 @@ function getAccessState() {
   const packageName =
     String(a.packageName || a.package_name || a.planName || a.plan || "").toLowerCase();
 
-  return { trialActive, hasPackage, packageName, raw: a };
+  return { trialActive, hasPackage, packageName };
 }
 
 function ensurePracticeAccess() {
@@ -164,23 +163,6 @@ function setStatus(text = "") {
   $("statusLine").textContent = text || "";
 }
 
-function updateLangUI() {
-  const meta = LANGS[currentLang];
-  if ($("langChip")) $("langChip").textContent = `${meta.flag} ${meta.name}`;
-}
-
-function addAiBubble(text = "") {
-  if (!text) return;
-  const box = $("conversation");
-  if (!box) return;
-
-  const bubble = document.createElement("div");
-  bubble.className = "bubble ai";
-  bubble.textContent = text;
-  box.appendChild(bubble);
-  box.scrollTop = box.scrollHeight;
-}
-
 function pushSubtitle(text = "") {
   if (!text) return;
   const host = $("subtitleStream");
@@ -198,8 +180,6 @@ function pushSubtitle(text = "") {
   const streamWrap = host.parentElement;
   const overflow = Math.max(0, host.scrollHeight - streamWrap.clientHeight + 20);
   host.style.transform = `translateY(-${overflow}px)`;
-
-  if ($("aiTrText")) $("aiTrText").textContent = text;
 }
 
 function saveState() {
@@ -406,16 +386,9 @@ function initRecognition() {
 
   rec.onresult = async (e) => {
     let finalText = "";
-    let interim = "";
-
     for (let i = e.resultIndex; i < e.results.length; i++) {
       const txt = e.results[i][0]?.transcript || "";
       if (e.results[i].isFinal) finalText += txt + " ";
-      else interim += txt + " ";
-    }
-
-    if (interim.trim()) {
-      // kullanıcı cümlesi chat'e düşmeyecek
     }
 
     if (finalText.trim()) {
@@ -462,7 +435,6 @@ function levenshtein(a, b) {
   if (!n) return m;
 
   const dp = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
-
   for (let i = 0; i <= m; i++) dp[i][0] = i;
   for (let j = 0; j <= n; j++) dp[0][j] = j;
 
@@ -521,7 +493,6 @@ async function handleUserSpeech(spokenText) {
     history = history.slice(-24);
 
     addAiBubble(ai.reply);
-    $("aiTrText").textContent = ai.reply_tr || "Türkçe açıklama yok.";
     pushSubtitle(ai.reply_tr || ai.reply);
 
     if (ai.should_repeat && ai.target_phrase) {
@@ -554,7 +525,6 @@ async function startFirstTurn() {
     history = history.slice(-24);
 
     addAiBubble(ai.reply);
-    $("aiTrText").textContent = ai.reply_tr || "Türkçe açıklama yok.";
     pushSubtitle(ai.reply_tr || ai.reply);
 
     state.mustRepeat = Boolean(ai.should_repeat);
@@ -615,7 +585,6 @@ window.onload = async () => {
   if (!ensurePracticeAccess()) return;
   if (!(await ensureTokenAccess())) return;
 
-  updateLangUI();
   setOrb("idle");
   setCaption("Hazır");
   setStatus("Seçili dilde konuşmaya başla.");
