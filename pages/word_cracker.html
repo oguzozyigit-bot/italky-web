@@ -487,11 +487,6 @@
   </div>
 
   <script type="module">
-    import { mountShell } from "/js/ui_shell.js";
-    import { ensureAuthAndCacheUser } from "/js/auth.js";
-
-    mountShell({ scroll:"none" });
-
     const $ = id => document.getElementById(id);
 
     let currentLang = "en";
@@ -515,6 +510,30 @@
       it:{ name:"İtalyanca", flag:"🇮🇹", bcp:"it-IT" }
     };
 
+    async function safeMountShell() {
+      try {
+        const mod = await import("/js/ui_shell.js");
+        if (typeof mod.mountShell === "function") {
+          mod.mountShell({ scroll:"none" });
+        }
+      } catch (e) {
+        console.warn("ui_shell.js yüklenemedi, oyuna devam ediliyor.", e);
+      }
+    }
+
+    async function safeEnsureAuth() {
+      try {
+        const mod = await import("/js/auth.js");
+        if (typeof mod.ensureAuthAndCacheUser === "function") {
+          return await mod.ensureAuthAndCacheUser();
+        }
+        return true;
+      } catch (e) {
+        console.warn("auth.js yüklenemedi, oyuna devam ediliyor.", e);
+        return true;
+      }
+    }
+
     let audioCtx = null;
     function getAudioCtx(){
       try{
@@ -535,38 +554,34 @@
       }catch{}
     }
 
-    function playSFX(type) {
+    function playSFXInternal({freq=440,duration=0.08,gain=0.03,type="sine",when=0}){
       const c = getAudioCtx();
       if(!c) return;
       if (c.state === "suspended") c.resume().catch(()=>{});
 
       const osc = c.createOscillator();
-      const gain = c.createGain();
-      osc.connect(gain);
-      gain.connect(c.destination);
+      const g = c.createGain();
+      osc.connect(g);
+      g.connect(c.destination);
+      osc.frequency.value = freq;
+      osc.type = type;
 
-      if (type === "type") {
-        osc.frequency.value = 800;
-        osc.type = "square";
-        gain.gain.setValueAtTime(0.05, c.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, c.currentTime + 0.05);
-        osc.start();
-        osc.stop(c.currentTime + 0.05);
-      } else if (type === "win") {
-        osc.type = "sawtooth";
-        osc.frequency.setValueAtTime(440, c.currentTime);
-        osc.frequency.linearRampToValueAtTime(880, c.currentTime + 0.2);
-        gain.gain.setValueAtTime(0.10, c.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, c.currentTime + 0.30);
-        osc.start();
-        osc.stop(c.currentTime + 0.30);
-      } else if (type === "error") {
-        osc.type = "sawtooth";
-        osc.frequency.value = 100;
-        gain.gain.setValueAtTime(0.20, c.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, c.currentTime + 0.20);
-        osc.start();
-        osc.stop(c.currentTime + 0.20);
+      const now = c.currentTime + when;
+      g.gain.setValueAtTime(gain, now);
+      g.gain.exponentialRampToValueAtTime(0.01, now + duration);
+
+      osc.start(now);
+      osc.stop(now + duration);
+    }
+
+    function playSFX(type) {
+      if (type === "type") playSFXInternal({freq:800,duration:0.05,gain:0.05,type:"square"});
+      if (type === "win") {
+        playSFXInternal({freq:440,duration:0.15,gain:0.08,type:"sawtooth"});
+        playSFXInternal({freq:880,duration:0.15,gain:0.05,type:"sawtooth",when:0.16});
+      }
+      if (type === "error") {
+        playSFXInternal({freq:100,duration:0.20,gain:0.12,type:"sawtooth"});
       }
     }
 
@@ -884,45 +899,6 @@
       renderUI();
     }
 
-    function playSFX(type) {
-      if (type === "type") playSFXType();
-      if (type === "win") playSFXWin();
-      if (type === "error") playSFXError();
-    }
-
-    function playSFXType(){ playSFXTone("type"); }
-    function playSFXWin(){ playSFXTone("win"); }
-    function playSFXError(){ playSFXTone("error"); }
-
-    function playSFXTone(type){
-      if(type === "type") playSFXInternal({freq:800,duration:0.05,gain:0.05,type:"square"});
-      if(type === "win") {
-        playSFXInternal({freq:440,duration:0.15,gain:0.08,type:"sawtooth"});
-        playSFXInternal({freq:880,duration:0.15,gain:0.05,type:"sawtooth",when:0.16});
-      }
-      if(type === "error") playSFXInternal({freq:100,duration:0.20,gain:0.12,type:"sawtooth"});
-    }
-
-    function playSFXInternal({freq=440,duration=0.08,gain=0.03,type="sine",when=0}){
-      const c = getAudioCtx();
-      if(!c) return;
-      if (c.state === "suspended") c.resume().catch(()=>{});
-
-      const osc = c.createOscillator();
-      const g = c.createGain();
-      osc.connect(g);
-      g.connect(c.destination);
-      osc.frequency.value = freq;
-      osc.type = type;
-
-      const now = c.currentTime + when;
-      g.gain.setValueAtTime(gain, now);
-      g.gain.exponentialRampToValueAtTime(0.01, now + duration);
-
-      osc.start(now);
-      osc.stop(now + duration);
-    }
-
     function checkWord() {
       const currentString = userChars.map(u => u.char).join("");
       const targetString = targetChars.join("");
@@ -978,7 +954,7 @@
     }
 
     async function startGame() {
-      const ok = await ensureAuthAndCacheUser();
+      const ok = await safeEnsureAuth();
       if (!ok) {
         location.href = "/pages/login.html";
         return;
@@ -997,7 +973,7 @@
     }
 
     $("toRulesBtn").onclick = async () => {
-      const ok = await ensureAuthAndCacheUser();
+      const ok = await safeEnsureAuth();
       if (!ok) {
         location.href = "/pages/login.html";
         return;
@@ -1020,7 +996,8 @@
       try { speechSynthesis?.getVoices?.(); } catch {}
     }, { once:true });
 
-    window.onload = () => {
+    window.onload = async () => {
+      await safeMountShell();
       renderLangs();
       updateStats();
       $("langBadge").innerText = currentLang.toUpperCase();
