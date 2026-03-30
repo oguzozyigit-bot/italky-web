@@ -44,8 +44,12 @@ const state = {
 
 let audioCtx = null;
 
+/* =========================================================
+   ACCESS
+========================================================= */
 function getAccessState() {
   const a = window.__ITALKY_ACCESS__ || {};
+
   const trialActive =
     a.trialActive === true ||
     a.trial_active === true ||
@@ -63,9 +67,16 @@ function getAccessState() {
     a.premium === true;
 
   const packageName =
-    String(a.packageName || a.package_name || a.planName || a.plan || "").toLowerCase();
+    String(
+      a.packageName ||
+      a.package_name ||
+      a.planName ||
+      a.plan ||
+      a.membership ||
+      ""
+    ).toLowerCase();
 
-  return { trialActive, hasPackage, packageName };
+  return { trialActive, hasPackage, packageName, raw: a };
 }
 
 function ensurePracticeAccess() {
@@ -113,13 +124,18 @@ async function ensureTokenAccess() {
   return true;
 }
 
+/* =========================================================
+   AUDIO / WORLD
+========================================================= */
 function ensureAudio() {
   try {
     if (!audioCtx) {
       const AC = window.AudioContext || window.webkitAudioContext;
       audioCtx = AC ? new AC() : null;
     }
-    if (audioCtx && audioCtx.state === "suspended") audioCtx.resume().catch(()=>{});
+    if (audioCtx && audioCtx.state === "suspended") {
+      audioCtx.resume().catch(() => {});
+    }
   } catch {}
   return audioCtx;
 }
@@ -136,7 +152,7 @@ function pickBestMaleVoice(bcp) {
     if (!list.length) return null;
 
     const maleHint = list.find(v =>
-      /male|david|mark|george|thomas|daniel|paul|microsoft|alex|fred|jorge|diego|henri|luca/i.test(
+      /male|david|mark|george|thomas|daniel|paul|alex|fred|jorge|diego|henri|luca|microsoft/i.test(
         `${v.name} ${v.voiceURI}`
       )
     );
@@ -147,50 +163,41 @@ function pickBestMaleVoice(bcp) {
   }
 }
 
-function setOrb(mode = "idle") {
-  const orb = $("aiOrb");
-  if (!orb) return;
-  orb.classList.remove("listening", "speaking");
-  if (mode === "listening") orb.classList.add("listening");
-  if (mode === "speaking") orb.classList.add("speaking");
+function setWorld(mode = "idle") {
+  const world = $("aiWorld");
+  if (!world) return;
+  world.classList.remove("listening", "speaking");
+  if (mode === "listening") world.classList.add("listening");
+  if (mode === "speaking") world.classList.add("speaking");
 }
 
 function setCaption(text = "") {
-  $("aiCaption").textContent = text || "";
+  const el = $("aiCaption");
+  if (el) el.textContent = text || "";
 }
 
 function setStatus(text = "") {
-  $("statusLine").textContent = text || "";
+  const el = $("statusLine");
+  if (el) el.textContent = text || "";
 }
 
-function pushSubtitle(text = "") {
-  if (!text) return;
-  const host = $("subtitleStream");
-  if (!host) return;
-
-  const line = document.createElement("div");
-  line.className = "ai-sub-line";
-  line.textContent = text;
-  host.appendChild(line);
-
-  while (host.children.length > 8) {
-    host.removeChild(host.firstChild);
-  }
-
-  const streamWrap = host.parentElement;
-  const overflow = Math.max(0, host.scrollHeight - streamWrap.clientHeight + 20);
-  host.style.transform = `translateY(-${overflow}px)`;
+function updateTranslation(text = "") {
+  const el = $("turkishTranslation");
+  if (el) el.textContent = text || "Öğretmeninin açıklaması bekleniyor...";
 }
 
 function saveState() {
   localStorage.setItem(STORAGE.lang, currentLang);
-  localStorage.setItem(STORAGE.history, JSON.stringify(history.slice(-24)));
+  localStorage.setItem(STORAGE.history, JSON.stringify(history.slice(-20)));
 }
 
 function safeJson(txt) {
   try { return JSON.parse(txt); } catch { return null; }
 }
 
+/* =========================================================
+   PROFILE
+========================================================= */
 async function getProfileLevel() {
   try {
     const raw = localStorage.getItem("italky_user_v1") || "{}";
@@ -203,6 +210,9 @@ async function getProfileLevel() {
   }
 }
 
+/* =========================================================
+   PROMPT
+========================================================= */
 const GEMINI_TEACHER_SYSTEM = `
 You are the teacher inside italkyAI Practice AI.
 
@@ -256,8 +266,8 @@ function buildRuntimePrompt(userText, scoreValue) {
 Selected target language: ${LANGS[currentLang]?.label || currentLang}
 Selected target language code: ${currentLang}
 Profile level: ${state.level || "unknown"}
-Student message: ${userText || ""}
-Current target phrase: ${state.targetPhrase || ""}
+Student message: "${userText || ""}"
+Current target phrase: "${state.targetPhrase || ""}"
 Pronunciation score: ${typeof scoreValue === "number" ? scoreValue : "unknown"}
 
 Runtime rules:
@@ -267,6 +277,9 @@ Runtime rules:
 `;
 }
 
+/* =========================================================
+   BACKEND CALL
+========================================================= */
 async function askTeacher(userText, scoreValue = null) {
   state.level = await getProfileLevel();
 
@@ -298,6 +311,9 @@ async function askTeacher(userText, scoreValue = null) {
   };
 }
 
+/* =========================================================
+   TTS
+========================================================= */
 function speakAI(text) {
   const clean = String(text || "").trim();
   if (!clean) return;
@@ -308,7 +324,7 @@ function speakAI(text) {
 
   const bcp = LANGS[currentLang].bcp;
   state.speaking = true;
-  setOrb("speaking");
+  setWorld("speaking");
   setCaption("Öğretmen konuşuyor...");
 
   try {
@@ -316,7 +332,7 @@ function speakAI(text) {
       window.NativeTTS.speak(clean, bcp);
       setTimeout(() => {
         state.speaking = false;
-        setOrb(state.listening ? "listening" : "idle");
+        setWorld(state.listening ? "listening" : "idle");
         setCaption("Hazır");
       }, Math.max(1300, clean.length * 55));
       return;
@@ -328,7 +344,7 @@ function speakAI(text) {
   try {
     if (!("speechSynthesis" in window)) {
       state.speaking = false;
-      setOrb(state.listening ? "listening" : "idle");
+      setWorld(state.listening ? "listening" : "idle");
       setCaption("Hazır");
       return;
     }
@@ -337,8 +353,8 @@ function speakAI(text) {
 
     const u = new SpeechSynthesisUtterance(clean);
     u.lang = bcp;
-    u.rate = 0.92;
-    u.pitch = 0.96;
+    u.rate = 0.98;
+    u.pitch = 1.04;
     u.volume = 1;
 
     const v = pickBestMaleVoice(bcp);
@@ -346,12 +362,12 @@ function speakAI(text) {
 
     u.onend = () => {
       state.speaking = false;
-      setOrb(state.listening ? "listening" : "idle");
+      setWorld(state.listening ? "listening" : "idle");
       setCaption("Hazır");
     };
     u.onerror = () => {
       state.speaking = false;
-      setOrb(state.listening ? "listening" : "idle");
+      setWorld(state.listening ? "listening" : "idle");
       setCaption("Hazır");
     };
 
@@ -361,11 +377,14 @@ function speakAI(text) {
 
   } catch {
     state.speaking = false;
-    setOrb(state.listening ? "listening" : "idle");
+    setWorld(state.listening ? "listening" : "idle");
     setCaption("Hazır");
   }
 }
 
+/* =========================================================
+   RECOGNITION
+========================================================= */
 function initRecognition() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) return null;
@@ -378,10 +397,10 @@ function initRecognition() {
 
   rec.onstart = () => {
     state.listening = true;
-    setOrb("listening");
+    setWorld("listening");
     setCaption("Seni dinliyorum...");
     setStatus("Konuşabilirsin.");
-    $("micBtn").classList.add("listening");
+    $("micBtn")?.classList.add("listening");
   };
 
   rec.onresult = async (e) => {
@@ -399,22 +418,25 @@ function initRecognition() {
 
   rec.onerror = () => {
     state.listening = false;
-    $("micBtn").classList.remove("listening");
-    if (!state.speaking) setOrb("idle");
+    $("micBtn")?.classList.remove("listening");
+    if (!state.speaking) setWorld("idle");
     if (!state.speaking) setCaption("Hazır");
     setStatus("Mikrofon başlatılamadı.");
   };
 
   rec.onend = () => {
     state.listening = false;
-    $("micBtn").classList.remove("listening");
-    if (!state.speaking) setOrb("idle");
+    $("micBtn")?.classList.remove("listening");
+    if (!state.speaking) setWorld("idle");
     if (!state.speaking) setCaption("Hazır");
   };
 
   return rec;
 }
 
+/* =========================================================
+   PRONUNCIATION SCORE
+========================================================= */
 function stripForCompare(s) {
   return String(s || "")
     .toLowerCase()
@@ -462,6 +484,9 @@ function pronunciationScore(spoken, target) {
   return Math.max(0, Math.round((1 - dist / maxLen) * 100));
 }
 
+/* =========================================================
+   MAIN FLOW
+========================================================= */
 async function handleUserSpeech(spokenText) {
   const spoken = String(spokenText || "").trim();
   if (!spoken) return;
@@ -471,16 +496,16 @@ async function handleUserSpeech(spokenText) {
     scoreValue = pronunciationScore(spoken, state.targetPhrase);
     setStatus(`Telaffuz skoru: %${scoreValue}`);
   } else {
-    setStatus("AI düşünüyor...");
+    setStatus("Öğretmen düşünüyor...");
   }
 
   try {
     const ai = await askTeacher(spoken, scoreValue);
 
     if (!ai.reply) {
-      setStatus("AI cevabı alınamadı.");
+      setStatus("Öğretmen cevap veremedi.");
       setCaption("Hazır");
-      setOrb("idle");
+      setWorld("idle");
       return;
     }
 
@@ -492,7 +517,7 @@ async function handleUserSpeech(spokenText) {
     });
     history = history.slice(-24);
 
-    addAiBubble(ai.reply);
+    updateTranslation(ai.reply_tr || ai.reply);
     pushSubtitle(ai.reply_tr || ai.reply);
 
     if (ai.should_repeat && ai.target_phrase) {
@@ -505,27 +530,23 @@ async function handleUserSpeech(spokenText) {
 
     saveState();
     speakAI(ai.reply);
-    setStatus(state.mustRepeat ? "Aynı ifadeyi tekrar söyle." : "Ders devam ediyor.");
+    setStatus(state.mustRepeat ? "Tekrarla." : "Devam edelim.");
 
   } catch (e) {
     console.error(e);
     setStatus("Bağlantı hatası.");
     setCaption("Hazır");
-    setOrb("idle");
+    setWorld("idle");
   }
 }
 
 async function startFirstTurn() {
   try {
     const ai = await askTeacher("", null);
-
     if (!ai.reply) return;
 
     history.push({ role: "ai", text: ai.reply, tr: ai.reply_tr });
-    history = history.slice(-24);
-
-    addAiBubble(ai.reply);
-    pushSubtitle(ai.reply_tr || ai.reply);
+    updateTranslation(ai.reply_tr || ai.reply);
 
     state.mustRepeat = Boolean(ai.should_repeat);
     state.targetPhrase = ai.target_phrase || "";
@@ -534,7 +555,7 @@ async function startFirstTurn() {
     speakAI(ai.reply);
   } catch (e) {
     console.error(e);
-    setStatus("İlk ders başlatılamadı.");
+    setStatus("Ders başlatılamadı.");
   }
 }
 
@@ -543,10 +564,10 @@ function stopAll() {
   try { window.speechSynthesis?.cancel?.(); } catch {}
   state.listening = false;
   state.speaking = false;
-  setOrb("idle");
+  setWorld("idle");
   setCaption("Hazır");
   setStatus("Durduruldu.");
-  $("micBtn").classList.remove("listening");
+  $("micBtn")?.classList.remove("listening");
 }
 
 $("micBtn").addEventListener("click", async () => {
@@ -562,7 +583,7 @@ $("micBtn").addEventListener("click", async () => {
 
   state.recognition = initRecognition();
   if (!state.recognition) {
-    setStatus("Bu cihazda konuşma tanıma yok.");
+    setStatus("Ses tanıma yok.");
     return;
   }
 
@@ -573,6 +594,7 @@ $("micBtn").addEventListener("click", async () => {
   }
 });
 
+/* warm up voices */
 window.addEventListener("click", () => {
   try { window.speechSynthesis?.getVoices?.(); } catch {}
 }, { once: true });
@@ -585,8 +607,8 @@ window.onload = async () => {
   if (!ensurePracticeAccess()) return;
   if (!(await ensureTokenAccess())) return;
 
-  setOrb("idle");
+  setWorld("idle");
   setCaption("Hazır");
-  setStatus("Seçili dilde konuşmaya başla.");
+  updateTranslation();
   startFirstTurn();
 };
