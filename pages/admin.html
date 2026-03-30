@@ -1,515 +1,604 @@
-async function renderNfc(){
-  const box = $("panelNfc");
-  const role = String(__me?.role || "").toLowerCase();
-  const isAdmin = role === "admin" || role === "superadmin";
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
+  <title>italkyAI • Yönetim Paneli</title>
+  <meta name="theme-color" content="#0f1319" />
 
-  box.innerHTML = `
-    <div class="grid grid-2">
-      <div class="card">
-        <h3>NFC / QR Tanımlama</h3>
-        <div class="desc">
-          Kartı okut, UID otomatik dolsun. Paket seç, kartı kaydet. Kaydettikten sonra QR üret, yazdır veya karta tekrar yaz.
-        </div>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
-        <div class="row" style="margin-bottom:10px">
-          <button id="readCardBtn" class="btn-secondary" type="button">Kartı Oku</button>
-          <button id="writeCardBtn" class="btn-secondary" type="button">Karta URL Yaz</button>
-        </div>
+  <style>
+    :root{
+      --bg:#11161c;
+      --bg-soft:#171d25;
+      --panel:#1b222c;
+      --panel-2:#202936;
+      --line:#2a3442;
+      --line-soft:#313d4d;
+      --txt:#f3f5f8;
+      --muted:#aab4c1;
+      --muted-2:#8d98a6;
+      --ok:#5f8f78;
+      --err:#b76464;
+      --warn:#b58a52;
+      --accent:#8fa5bc;
+      --accent-2:#aab8c8;
+      --accent-3:#c8d0d8;
+      --gold:#c7ae7b;
+      --shadow:0 18px 46px rgba(0,0,0,.22);
+      --radius:22px;
+      --shellLift:0px;
+    }
 
-        <div class="split">
-          <input id="nfcUidInput" placeholder="UID (otomatik / manuel)" />
-          <input id="nfcSerialInput" placeholder="Serial No (opsiyonel)" />
-        </div>
+    *{
+      box-sizing:border-box;
+      -webkit-tap-highlight-color:transparent;
+    }
 
-        <div class="split">
-          <select id="nfcPackageSelect"></select>
-          <input id="nfcExpiresAt" placeholder="Kart bitiş ISO (opsiyonel)" />
-        </div>
+    html,body{
+      margin:0;
+      width:100%;
+      min-height:100%;
+      background:
+        radial-gradient(circle at top left, rgba(255,255,255,.04), transparent 20%),
+        linear-gradient(180deg,#0d1117 0%, #121820 100%);
+      color:var(--txt);
+      font-family:'Outfit',sans-serif;
+    }
 
-        <div class="split">
-          <input id="nfcMaxDevices" type="number" min="1" value="1" placeholder="Maks cihaz" />
-          <select id="nfcIsActive">
-            <option value="true">Aktif</option>
-            <option value="false">Pasif</option>
-          </select>
-        </div>
+    body{overflow:hidden}
 
-        <div class="split">
-          <select id="nfcStatusSelect">
-            <option value="new">new</option>
-            <option value="bound">bound</option>
-            <option value="blocked">blocked</option>
-            <option value="passive">passive</option>
-          </select>
-          <input id="nfcNote" placeholder="Not" />
-        </div>
+    #pageContent{
+      min-height:100dvh;
+      overflow:hidden;
+      opacity:0;
+      transition:opacity .18s ease;
+      padding:12px 12px calc(12px + var(--shellLift)) 12px;
+    }
 
-        <button id="saveNfcBtn" class="btn-primary" type="button">Kartı Kaydet / Güncelle</button>
-        <div id="nfcStatus" class="status-line"></div>
-      </div>
+    #pageContent.ready{opacity:1}
 
-      <div class="card">
-        <h3>QR Üretim ve Yazdırma</h3>
-        <div class="desc">
-          UID yazıldığında QR link otomatik oluşur. Aynı link üzerinden QR indirilebilir, yazdırılabilir ve tekrar yazdırılabilir.
-        </div>
+    .page{
+      width:100%;
+      max-width:1200px;
+      margin:0 auto;
+    }
 
-        <div class="kv">
-          <input id="uidPreviewInput" placeholder="UID yaz / karttan gelsin" />
-          <input id="uidPreviewOutput" readonly placeholder="Temiz UID" />
-          <input id="qrLinkOutput" readonly placeholder="QR link burada oluşur" />
-        </div>
+    .admin-scroll{
+      height:100%;
+      overflow:auto;
+      padding-bottom:16px;
+      scrollbar-width:thin;
+      scrollbar-color:#394758 transparent;
+    }
 
-        <div style="margin-top:12px; padding:14px; border:1px solid var(--line-soft); border-radius:18px; background:#151c24;">
-          <div style="font-size:12px; font-weight:900; color:var(--muted); margin-bottom:8px;">QR Önizleme</div>
-          <div id="qrPreviewWrap" style="display:flex; justify-content:center; align-items:center; min-height:180px; border-radius:16px; background:#fff;"></div>
-        </div>
+    .admin-scroll::-webkit-scrollbar{width:8px}
+    .admin-scroll::-webkit-scrollbar-thumb{
+      background:#394758;
+      border-radius:999px;
+    }
 
-        <div class="row" style="margin-top:12px">
-          <button id="generateQrBtn" class="btn-secondary" type="button">QR Oluştur</button>
-          <button id="printQrBtn" class="btn-warn" type="button">QR Yazdır</button>
-          <button id="reprintQrBtn" class="btn-secondary" type="button">Tekrar Yazdır</button>
-        </div>
+    .hidden{display:none !important}
 
-        <div class="row" style="margin-top:10px">
-          <button id="downloadQrBtn" class="btn-secondary" type="button">QR İndir</button>
-          <button id="rewriteCardBtn" class="btn-secondary" type="button">Karta Tekrar Yaz</button>
-        </div>
+    .login-shell{
+      min-height:calc(100dvh - 24px - var(--shellLift));
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
 
-        <div id="qrStatus" class="status-line"></div>
+    .login-card,
+    .shell-header,
+    .info-card,
+    .panel,
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
+      border:1px solid var(--line);
+      box-shadow:var(--shadow);
+      backdrop-filter:blur(14px);
+    }
 
-        <div class="card" style="margin-top:12px;background:#151c24">
-          <h3 style="font-size:16px">Karta Kullanıcı Bağla</h3>
-          <div class="desc">Admin sadece kartı kullanıcıya bağlayabilir.</div>
-          <div class="split">
-            <input id="bindUserId" placeholder="Kullanıcı ID" />
-            <input id="bindCardUid" placeholder="Kart UID" />
-          </div>
-          <button id="bindCardBtn" class="btn-secondary" type="button">Kullanıcıya Bağla</button>
-          <div id="bindStatus" class="status-line"></div>
-        </div>
-      </div>
-    </div>
+    .login-card{
+      width:min(100%,460px);
+      border-radius:26px;
+      padding:22px;
+    }
 
-    <div class="card" style="margin-top:14px">
-      <h3>QR Tasarım Ayarları</h3>
-      <div class="desc">Etiket çıktısı için hızlı görünüm ayarları.</div>
+    .brand{
+      text-align:center;
+      margin-bottom:18px;
+    }
 
-      <div class="split">
-        <input id="qrTitleText" placeholder="Başlık" value="italkyAI Erişim Kartı" />
-        <input id="qrSubText" placeholder="Alt başlık" value="Tarat / okut / başlat" />
-      </div>
+    .brand-mark{
+      width:76px;
+      height:76px;
+      margin:0 auto 14px;
+      border-radius:22px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:linear-gradient(135deg,#8ca2ba 0%, #9fb0c0 100%);
+      box-shadow:0 12px 28px rgba(0,0,0,.16);
+      font-size:30px;
+      font-weight:900;
+      color:#fff;
+    }
 
-      <div class="split">
-        <select id="qrShowPackage">
-          <option value="true">Paket Adı Göster</option>
-          <option value="false">Paket Adı Gizle</option>
-        </select>
-        <select id="qrShowUid">
-          <option value="true">UID Göster</option>
-          <option value="false">UID Gizle</option>
-        </select>
-      </div>
+    .brand h1{
+      margin:0;
+      font-family:"Space Grotesk",sans-serif;
+      font-size:28px;
+      line-height:1.05;
+      letter-spacing:-.7px;
+    }
 
-      <div class="split">
-        <select id="qrShowExpiry">
-          <option value="true">Bitiş Tarihi Göster</option>
-          <option value="false">Bitiş Tarihi Gizle</option>
-        </select>
-        <select id="qrTheme">
-          <option value="light">Açık Tema</option>
-          <option value="dark">Koyu Tema</option>
-          <option value="soft">Yumuşak Tema</option>
-        </select>
-      </div>
-    </div>
+    .brand p{
+      margin:8px 0 0;
+      color:var(--muted);
+      font-size:13px;
+      font-weight:700;
+      line-height:1.6;
+    }
 
-    <div class="card" style="margin-top:14px">
-      <h3>Kayıtlı Kartlar</h3>
-      <div class="desc">Renkler işlem durumunu gösterir. Tekrar yazdırma ve tekrar yazma aktif kalır.</div>
-      <div class="table">
-        <table>
-          <thead>
-            <tr>
-              <th>UID</th>
-              <th>Paket</th>
-              <th>Durum</th>
-              <th>Bağlı User</th>
-              <th>Bitiş</th>
-              <th>QR</th>
-              <th>İşlem</th>
-            </tr>
-          </thead>
-          <tbody id="nfcCardsBody">
-            <tr><td colspan="7" class="empty">Yükleniyor...</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  `;
+    .seal{
+      margin-top:16px;
+      text-align:center;
+      color:var(--muted-2);
+      font-size:12px;
+      font-weight:800;
+      letter-spacing:.3px;
+    }
 
-  try{
-    await fillPackageSelect("nfcPackageSelect");
+    .field{margin-top:12px}
 
-    const cards = await api("/admin/nfc/cards");
-    const items = Array.isArray(cards?.items) ? cards.items : [];
+    .field label{
+      display:block;
+      margin-bottom:7px;
+      color:#dfe5ec;
+      font-size:12px;
+      font-weight:800;
+      letter-spacing:.2px;
+    }
 
-    const rowTone = (status) => {
-      const s = String(status || "").toLowerCase();
-      if (s === "bound") return "background:rgba(95,143,120,.12);";
-      if (s === "blocked") return "background:rgba(183,100,100,.12);";
-      if (s === "passive") return "background:rgba(181,138,82,.10);";
-      return "background:rgba(143,165,188,.08);";
-    };
+    input,select,textarea,button{
+      width:100%;
+      border:none;
+      outline:none;
+      border-radius:16px;
+      font-family:'Outfit',sans-serif;
+    }
 
-    $("nfcCardsBody").innerHTML = items.length ? items.map(c => {
-      const uid = escapeHtml(c.uid || "");
-      const pkg = escapeHtml(c.package_code || "");
-      const isActive = c.is_active ? "Aktif" : "Pasif";
-      const boundUser = escapeHtml(c.bound_user_id || "-");
-      const expires = escapeHtml(c.expires_at || "-");
-      const qrLink = makeQrLink(c.uid || "");
-      const status = escapeHtml(c.status || "new");
+    input,select,textarea{
+      min-height:48px;
+      background:#18202a;
+      color:#f5f7fa;
+      border:1px solid var(--line-soft);
+      padding:12px 14px;
+      font-size:14px;
+    }
 
-      return `
-        <tr style="${rowTone(c.status)}">
-          <td>${uid}</td>
-          <td>${pkg}</td>
-          <td>${status} / ${isActive}</td>
-          <td>${boundUser}</td>
-          <td>${expires}</td>
-          <td>${escapeHtml(qrLink)}</td>
-          <td>
-            <div class="mini-actions">
-              <button class="btn-secondary" data-load-card="${uid}" type="button">Yükle</button>
-              <button class="btn-warn" data-print-card="${uid}" type="button">QR Yazdır</button>
-              <button class="btn-secondary" data-rewrite-card="${uid}" type="button">Tekrar Yaz</button>
+    textarea{
+      min-height:120px;
+      resize:vertical;
+    }
+
+    input::placeholder,textarea::placeholder{color:#8290a1}
+
+    button{
+      min-height:48px;
+      cursor:pointer;
+      font-size:14px;
+      font-weight:900;
+      transition:transform .15s ease, opacity .15s ease, filter .15s ease;
+    }
+
+    button:active{transform:scale(.985)}
+
+    .btn-primary{background:#8fa5bc;color:#0e1720}
+    .btn-primary:hover{filter:brightness(1.04)}
+
+    .btn-secondary{
+      background:#202834;
+      color:#eef2f6;
+      border:1px solid var(--line-soft);
+    }
+    .btn-secondary:hover{filter:brightness(1.04)}
+
+    .btn-warn{background:#c7ae7b;color:#1b1d21}
+    .btn-warn:hover{filter:brightness(1.05)}
+
+    .status-line{
+      min-height:20px;
+      margin-top:12px;
+      font-size:13px;
+      font-weight:800;
+    }
+
+    .status-ok{color:#9fc6b1}
+    .status-err{color:#e2a0a0}
+    .status-warn{color:#dec18f}
+
+    .shell-header{
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+      padding:18px;
+      border-radius:26px;
+      margin-bottom:14px;
+    }
+
+    .shell-brand{
+      display:flex;
+      align-items:center;
+      gap:14px;
+      min-width:0;
+    }
+
+    .shell-brand .logo{
+      width:58px;
+      height:58px;
+      flex:0 0 auto;
+      border-radius:18px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:linear-gradient(135deg,#899fb5 0%, #aeb9c5 100%);
+      font-weight:900;
+      font-size:23px;
+      color:#fff;
+      box-shadow:0 12px 24px rgba(0,0,0,.16);
+    }
+
+    .shell-brand h2{
+      margin:0;
+      font-family:"Space Grotesk",sans-serif;
+      font-size:23px;
+      letter-spacing:-.6px;
+      line-height:1.02;
+    }
+
+    .shell-brand p{
+      margin:6px 0 0;
+      color:var(--muted);
+      font-size:12px;
+      font-weight:800;
+    }
+
+    .top-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .top-actions button{
+      width:auto;
+      min-width:120px;
+      padding:0 16px;
+    }
+
+    .me-strip{
+      margin-bottom:14px;
+      display:grid;
+      grid-template-columns:1fr;
+      gap:14px;
+    }
+
+    .info-card{
+      border-radius:22px;
+      padding:16px;
+    }
+
+    .info-card h3{
+      margin:0 0 8px;
+      font-size:16px;
+      font-weight:900;
+    }
+
+    .info-card p{
+      margin:0;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.6;
+    }
+
+    .pills{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:12px;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      min-height:30px;
+      padding:7px 11px;
+      border-radius:999px;
+      border:1px solid var(--line-soft);
+      background:#1a212b;
+      color:#eef2f6;
+      font-size:12px;
+      font-weight:800;
+    }
+
+    .tabs{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      margin-bottom:14px;
+    }
+
+    .tab{
+      width:100%;
+      min-width:0;
+      padding:0 12px;
+      background:#1a212b;
+      border:1px solid var(--line-soft);
+      color:#f3f5f8;
+    }
+
+    .tab.active{
+      background:#94a8bc;
+      color:#101923;
+      border-color:transparent;
+      box-shadow:0 10px 22px rgba(0,0,0,.12);
+    }
+
+    .panel{
+      border-radius:26px;
+      padding:14px;
+    }
+
+    .grid{display:grid;gap:14px}
+    .grid-2,.grid-3,.split{grid-template-columns:1fr}
+
+    .card{
+      border-radius:22px;
+      padding:16px;
+      background:#18202a;
+      border:1px solid var(--line-soft);
+      box-shadow:none;
+    }
+
+    .card h3{
+      margin:0 0 6px;
+      font-size:18px;
+      font-weight:900;
+      letter-spacing:-.3px;
+    }
+
+    .card .desc{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.55;
+      margin-bottom:12px;
+    }
+
+    .row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    .row > *{
+      flex:1;
+      min-width:140px;
+    }
+
+    .table{
+      margin-top:12px;
+      overflow:auto;
+      border-radius:18px;
+      border:1px solid var(--line-soft);
+      background:#151c24;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      min-width:980px;
+    }
+
+    th,td{
+      padding:12px 10px;
+      border-bottom:1px solid rgba(255,255,255,.06);
+      text-align:left;
+      vertical-align:top;
+      font-size:13px;
+      color:#eef2f6;
+    }
+
+    th{
+      color:#b7c0ca;
+      font-weight:800;
+      background:#1b2430;
+      position:sticky;
+      top:0;
+      z-index:1;
+    }
+
+    .mini-actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    .mini-actions button,
+    .mini-actions select{
+      width:auto;
+      min-width:104px;
+      min-height:38px;
+      margin:0;
+      padding:8px 10px;
+      border-radius:12px;
+      font-size:12px;
+    }
+
+    .kv{display:grid;gap:10px}
+
+    .footer-seal{
+      margin-top:16px;
+      text-align:center;
+      color:#97a3b1;
+      font-size:12px;
+      font-weight:900;
+      letter-spacing:.35px;
+      padding-bottom:8px;
+    }
+
+    .empty{
+      color:var(--muted-2);
+      font-size:13px;
+      padding:8px 0;
+      font-weight:700;
+    }
+
+    .modal{
+      position:fixed;
+      inset:0;
+      z-index:9999;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      background:rgba(10,12,16,.62);
+      backdrop-filter:blur(8px);
+    }
+
+    .modal.show{display:flex}
+
+    .modal-card{
+      width:min(100%,420px);
+      border-radius:24px;
+      padding:18px;
+      background:#1a212b;
+      border:1px solid var(--line-soft);
+      color:#f3f5f8;
+      box-shadow:var(--shadow);
+    }
+
+    .modal-card h4{
+      margin:0 0 8px;
+      font-size:18px;
+      font-weight:900;
+    }
+
+    .modal-card p{
+      margin:0 0 14px;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.6;
+    }
+
+    .modal-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .modal-actions button{
+      flex:1;
+      min-width:120px;
+    }
+
+    @media (min-width:900px){
+      .shell-header{
+        flex-direction:row;
+        align-items:center;
+        justify-content:space-between;
+      }
+      .me-strip{grid-template-columns:1.1fr .9fr}
+      .grid-2{grid-template-columns:1.15fr .85fr}
+      .grid-3{grid-template-columns:1fr 1fr 1fr}
+      .split{grid-template-columns:1fr 1fr}
+      .tabs{display:flex;flex-wrap:wrap}
+      .tab{width:auto;min-width:120px}
+    }
+  </style>
+</head>
+<body>
+  <div id="pageContent">
+    <div class="page">
+      <div class="admin-scroll">
+
+        <div id="loginView" class="login-shell">
+          <div class="login-card">
+            <div class="brand">
+              <div class="brand-mark">AI</div>
+              <h1>italkyAI<br>Yönetim Paneli</h1>
+              <p>Kurumsal erişim merkezi · kullanıcı, paket, NFC/QR ve üyelik yönetimi</p>
             </div>
-          </td>
-        </tr>
-      `;
-    }).join("") : `<tr><td colspan="7" class="empty">Kart bulunamadı.</td></tr>`;
 
-    function buildQrLinkFromInputs() {
-      const clean = normalizeUid($("uidPreviewInput").value);
-      $("uidPreviewOutput").value = clean;
-      $("qrLinkOutput").value = makeQrLink(clean);
+            <div class="field">
+              <label for="email">Yönetici E-Posta</label>
+              <input id="email" type="email" placeholder="admin@italky.ai" autocomplete="username" />
+            </div>
 
-      // UID senkronu
-      $("nfcUidInput").value = $("uidPreviewInput").value;
-      $("bindCardUid").value = $("uidPreviewInput").value;
+            <div class="field">
+              <label for="password">Şifre</label>
+              <input id="password" type="password" placeholder="••••••••" autocomplete="current-password" />
+            </div>
 
-      return clean;
-    }
+            <div class="field">
+              <button id="loginBtn" class="btn-primary" type="button">Güvenli Giriş Yap</button>
+              <div id="loginStatus" class="status-line"></div>
+            </div>
 
-    function drawQrPreview() {
-      const wrap = $("qrPreviewWrap");
-      const link = $("qrLinkOutput").value.trim();
+            <div class="seal">Özyiğit Mührü</div>
+          </div>
+        </div>
 
-      if (!link) {
-        wrap.innerHTML = `<div style="color:#6b7280;font-size:13px;font-weight:800;">QR link bekleniyor</div>`;
-        return;
-      }
+        <div id="panelView" class="hidden">
+          <div class="shell-header">
+            <div class="shell-brand">
+              <div class="logo">AI</div>
+              <div>
+                <h2>italkyAI Yönetim Paneli</h2>
+                <p>Üyelik, kullanıcı, paket ve erişim kontrol merkezi</p>
+              </div>
+            </div>
 
-      const imgSrc = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(link)}`;
-      wrap.innerHTML = `<img src="${imgSrc}" alt="QR" style="width:180px;height:180px;display:block;" />`;
-    }
-
-    $("uidPreviewInput").addEventListener("input", () => {
-      buildQrLinkFromInputs();
-      drawQrPreview();
-    });
-
-    $("generateQrBtn").onclick = () => {
-      const clean = buildQrLinkFromInputs();
-      const qrStatus = $("qrStatus");
-
-      if (!clean) {
-        qrStatus.className = "status-line status-err";
-        qrStatus.textContent = "Önce UID gerekli.";
-        return;
-      }
-
-      drawQrPreview();
-      qrStatus.className = "status-line status-ok";
-      qrStatus.textContent = "QR hazır.";
-    };
-
-    $("downloadQrBtn").onclick = () => {
-      const link = $("qrLinkOutput").value.trim();
-      const qrStatus = $("qrStatus");
-      if (!link) {
-        qrStatus.className = "status-line status-err";
-        qrStatus.textContent = "İndirilecek QR linki yok.";
-        return;
-      }
-      const a = document.createElement("a");
-      a.href = `https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=${encodeURIComponent(link)}`;
-      a.download = `italky_qr_${normalizeUid($("uidPreviewInput").value) || "card"}.png`;
-      a.click();
-      qrStatus.className = "status-line status-ok";
-      qrStatus.textContent = "QR indirme başlatıldı.";
-    };
-
-    function openPrintWindow() {
-      const link = $("qrLinkOutput").value.trim();
-      const uid = normalizeUid($("uidPreviewInput").value);
-      const title = $("qrTitleText").value.trim() || "italkyAI Erişim Kartı";
-      const sub = $("qrSubText").value.trim() || "Tarat / okut / başlat";
-      const pkg = $("nfcPackageSelect").selectedOptions[0]?.textContent || "";
-      const showPackage = $("qrShowPackage").value === "true";
-      const showUid = $("qrShowUid").value === "true";
-      const showExpiry = $("qrShowExpiry").value === "true";
-      const expiry = $("nfcExpiresAt").value.trim();
-      const theme = $("qrTheme").value;
-
-      if (!link) {
-        $("qrStatus").className = "status-line status-err";
-        $("qrStatus").textContent = "Yazdırmak için önce QR oluştur.";
-        return;
-      }
-
-      const bg = theme === "dark" ? "#111827" : theme === "soft" ? "#f2f4f7" : "#ffffff";
-      const fg = theme === "dark" ? "#ffffff" : "#111827";
-      const border = theme === "dark" ? "#374151" : "#d1d5db";
-
-      const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=420x420&data=${encodeURIComponent(link)}`;
-
-      const html = `
-        <!doctype html>
-        <html>
-        <head>
-          <meta charset="utf-8">
-          <title>QR Yazdır</title>
-          <style>
-            body{
-              margin:0;
-              padding:24px;
-              background:${bg};
-              color:${fg};
-              font-family:Arial,sans-serif;
-            }
-            .sheet{
-              width:320px;
-              border:1px solid ${border};
-              border-radius:18px;
-              padding:18px;
-              margin:0 auto;
-              background:${bg};
-              text-align:center;
-            }
-            .title{font-size:20px;font-weight:900;margin-bottom:6px;}
-            .sub{font-size:12px;opacity:.75;margin-bottom:12px;}
-            .qr{width:220px;height:220px;display:block;margin:0 auto 12px;}
-            .meta{font-size:12px;line-height:1.6;}
-          </style>
-        </head>
-        <body onload="window.print(); setTimeout(()=>window.close(),500);">
-          <div class="sheet">
-            <div class="title">${escapeHtml(title)}</div>
-            <div class="sub">${escapeHtml(sub)}</div>
-            <img class="qr" src="${qrSrc}" />
-            <div class="meta">
-              ${showPackage ? `<div><strong>Paket:</strong> ${escapeHtml(pkg)}</div>` : ``}
-              ${showUid ? `<div><strong>UID:</strong> ${escapeHtml(uid)}</div>` : ``}
-              ${showExpiry ? `<div><strong>Bitiş:</strong> ${escapeHtml(expiry || "-")}</div>` : ``}
+            <div class="top-actions">
+              <button id="homeBtn" class="btn-secondary" type="button">Ana Sayfa</button>
+              <button id="refreshBtn" class="btn-secondary" type="button">Verileri Yenile</button>
+              <button id="logoutBtnTop" class="btn-secondary" type="button">Güvenli Çıkış</button>
             </div>
           </div>
-        </body>
-        </html>
-      `;
 
-      const w = window.open("", "_blank", "width=420,height=720");
-      if (!w) {
-        $("qrStatus").className = "status-line status-err";
-        $("qrStatus").textContent = "Yazdırma penceresi açılamadı.";
-        return;
-      }
-      w.document.open();
-      w.document.write(html);
-      w.document.close();
-    }
+          <div class="me-strip">
+            <div class="info-card">
+              <h3>Yönetici Kimliği</h3>
+              <p id="meLine">Yükleniyor...</p>
+              <div class="pills">
+                <div class="pill">Kurumsal Görünüm</div>
+                <div class="pill">Play Store + NFC/QR Ayrımı</div>
+                <div class="pill">Merkezi Entitlement Yapısı</div>
+              </div>
+            </div>
 
-    $("printQrBtn").onclick = () => {
-      openPrintWindow();
-      $("qrStatus").className = "status-line status-ok";
-      $("qrStatus").textContent = "QR yazdırma açıldı.";
-    };
+            <div class="info-card">
+              <h3>Sistem Notu</h3>
+              <p>
+                Bu panelde Play Store kaynaklı üyelikler ile NFC/QR kaynaklı erişimler aynı izlenir.
+                Kullanıcıya verilen gerçek haklar entitlement tablosu üzerinden yönetilir.
+              </p>
+            </div>
+          </div>
 
-    $("reprintQrBtn").onclick = () => {
-      openPrintWindow();
-      $("qrStatus").className = "status-line status-ok";
-      $("qrStatus").textContent = "QR tekrar yazdırılıyor.";
-    };
+          <div class="tabs">
+            <button class="tab active" data-tab="users" type="button">Kullanıcılar</button>
+            <button class="tab" data-tab="packages" type="button">Paketler</button>
+            <button class="tab" data-tab="entitlements" type="button">Erişimler</button>
+            <button class="tab" data-tab="nfc" type="button">NFC / QR</button>
+            <button class="tab" data-tab="deploy" type="button">Deploy</button>
+            <button class="tab" data-tab="github" type="button">GitHub</button>
+          </div>
 
-    $("readCardBtn").onclick = async () => {
-      const statusEl = $("nfcStatus");
-      statusEl.className = "status-line status-warn";
-      statusEl.textContent = "Kart okutulması bekleniyor...";
-
-      try {
-        if (window.NativeAdmin && typeof window.NativeAdmin.readNfcUid === "function") {
-          const uid = await window.NativeAdmin.readNfcUid();
-          if (!uid) throw new Error("UID okunamadı");
-          $("nfcUidInput").value = uid;
-          $("uidPreviewInput").value = uid;
-          $("bindCardUid").value = uid;
-          buildQrLinkFromInputs();
-          drawQrPreview();
-          statusEl.className = "status-line status-ok";
-          statusEl.textContent = "Kart UID okundu.";
-        } else {
-          statusEl.className = "status-line status-err";
-          statusEl.textContent = "Bu cihazda NFC okuma köprüsü yok.";
-        }
-      } catch (e) {
-        statusEl.className = "status-line status-err";
-        statusEl.textContent = e?.message || "Kart okunamadı.";
-      }
-    };
-
-    async function writeUrlToCard(reason = "Kart yazılıyor...") {
-      const statusEl = $("nfcStatus");
-      statusEl.className = "status-line status-warn";
-      statusEl.textContent = reason;
-
-      try {
-        const uid = $("nfcUidInput").value.trim();
-        const clean = normalizeUid(uid);
-        const url = makeQrLink(clean);
-
-        if (!clean) throw new Error("Önce UID gerekli");
-
-        if (window.NativeAdmin && typeof window.NativeAdmin.writeNfcPayload === "function") {
-          await window.NativeAdmin.writeNfcPayload(url);
-          statusEl.className = "status-line status-ok";
-          statusEl.textContent = "Kart içine URL yazıldı.";
-        } else {
-          statusEl.className = "status-line status-err";
-          statusEl.textContent = "Bu cihazda kart yazma köprüsü yok.";
-        }
-      } catch (e) {
-        statusEl.className = "status-line status-err";
-        statusEl.textContent = e?.message || "Kart yazılamadı.";
-      }
-    }
-
-    $("writeCardBtn").onclick = async () => {
-      await writeUrlToCard("Kart içine URL yazılıyor...");
-    };
-
-    $("rewriteCardBtn").onclick = async () => {
-      await writeUrlToCard("Kart yeniden yazılıyor...");
-    };
-
-    $("saveNfcBtn").onclick = async () => {
-      const statusEl = $("nfcStatus");
-      statusEl.className = "status-line status-warn";
-      statusEl.textContent = "Kart kaydediliyor...";
-
-      try{
-        const payload = {
-          uid: $("nfcUidInput").value.trim(),
-          serial_no: $("nfcSerialInput").value.trim() || null,
-          package_code: $("nfcPackageSelect").value,
-          is_active: $("nfcIsActive").value === "true",
-          expires_at: $("nfcExpiresAt").value.trim() || null,
-          max_devices: Number($("nfcMaxDevices").value || 1),
-          status: $("nfcStatusSelect").value,
-          note: $("nfcNote").value.trim() || null
-        };
-
-        if(!payload.uid){
-          throw new Error("UID gerekli");
-        }
-
-        await api("/admin/nfc/cards/upsert", {
-          method:"POST",
-          body: JSON.stringify(payload)
-        });
-
-        buildQrLinkFromInputs();
-        drawQrPreview();
-
-        statusEl.className = "status-line status-ok";
-        statusEl.textContent = "Kart kaydedildi. QR ve kart yazma işlemleri hazır.";
-
-        await renderNfc();
-      }catch(e){
-        statusEl.className = "status-line status-err";
-        statusEl.textContent = e?.message || "Kart kaydedilemedi.";
-      }
-    };
-
-    $("bindCardBtn").onclick = async () => {
-      const bindStatus = $("bindStatus");
-      bindStatus.className = "status-line status-warn";
-      bindStatus.textContent = "Kullanıcı bağlanıyor...";
-
-      try{
-        const userId = $("bindUserId").value.trim();
-        const cardUid = $("bindCardUid").value.trim();
-        const packageCode = $("nfcPackageSelect").value;
-
-        if (!userId || !cardUid) {
-          throw new Error("Kullanıcı ID ve Kart UID gerekli");
-        }
-
-        await api("/admin/entitlements/assign", {
-          method:"POST",
-          body: JSON.stringify({
-            user_id: userId,
-            package_code: packageCode,
-            source_type: "nfc_qr",
-            card_uid: cardUid,
-            note: "Admin panelinden NFC/QR bağlandı"
-          })
-        });
-
-        bindStatus.className = "status-line status-ok";
-        bindStatus.textContent = "Kullanıcı karta bağlandı.";
-        await Promise.all([renderNfc(), renderUsers()]);
-      }catch(e){
-        bindStatus.className = "status-line status-err";
-        bindStatus.textContent = e?.message || "Bağlama başarısız.";
-      }
-    };
-
-    box.querySelectorAll("[data-load-card]").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const uid = btn.getAttribute("data-load-card") || "";
-        $("uidPreviewInput").value = uid;
-        $("nfcUidInput").value = uid;
-        $("bindCardUid").value = uid;
-        buildQrLinkFromInputs();
-        drawQrPreview();
-      });
-    });
-
-    box.querySelectorAll("[data-print-card]").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const uid = btn.getAttribute("data-print-card") || "";
-        $("uidPreviewInput").value = uid;
-        buildQrLinkFromInputs();
-        drawQrPreview();
-        openPrintWindow();
-      });
-    });
-
-    box.querySelectorAll("[data-rewrite-card]").forEach((btn) => {
-      btn.addEventListener("click", async () => {
-        const uid = btn.getAttribute("data-rewrite-card") || "";
-        $("nfcUidInput").value = uid;
-        $("uidPreviewInput").value = uid;
-        buildQrLinkFromInputs();
-        await writeUrlToCard("Kart yeniden yazılıyor...");
-      });
-    });
-
-    buildQrLinkFromInputs();
-    drawQrPreview();
-
-  } catch(e){
-    box.innerHTML = `<div class="card"><h3>NFC / QR</h3>${statusHtml(e?.message || "NFC alanı yüklenemedi", false)}</div>`;
-  }
-}
+          <div class="panel">
+            <div id="panelUsers"></div>
+            <div id="panelPackages" class="hidden"></div>
+            <div id="panelEntitlements
