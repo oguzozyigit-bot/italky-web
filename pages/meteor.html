@@ -20,362 +20,156 @@
   --safeB: env(safe-area-inset-bottom, 0px);
   --shellLift: 0px;
 }
-*{
-  box-sizing:border-box;
-  -webkit-tap-highlight-color:transparent;
-  user-select:none;
-  outline:none;
-}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;outline:none}
 html,body{
-  margin:0;
-  width:100%;
-  height:100%;
-  background:var(--bg);
-  font-family:Outfit,sans-serif;
-  overflow:hidden;
-  color:var(--text);
+  margin:0;width:100%;height:100%;
+  background:var(--bg);font-family:Outfit,sans-serif;overflow:hidden;color:var(--text)
 }
-.space{
-  position:fixed;
-  inset:0;
-  background:radial-gradient(circle at bottom,#1a0033,#000);
-}
-.stars{
-  position:fixed;
-  inset:0;
-  background-image:radial-gradient(#fff 1px,transparent 1px);
-  background-size:50px 50px;
-  opacity:.20;
-  pointer-events:none;
-}
+.space{position:fixed;inset:0;background:radial-gradient(circle at bottom,#1a0033,#000)}
+.stars{position:fixed;inset:0;background-image:radial-gradient(#fff 1px,transparent 1px);background-size:50px 50px;opacity:.18;pointer-events:none}
 
 #pageContent{
   height:100%;
   padding:8px 10px calc(10px + var(--safeB) + var(--shellLift)) 10px;
-  overflow-y:auto;
-  overflow-x:hidden;
+  overflow-y:auto; overflow-x:hidden;
   scrollbar-width:none;
 }
-#pageContent::-webkit-scrollbar{ display:none; }
+#pageContent::-webkit-scrollbar{display:none}
 
 .game{
-  position:relative;
-  max-width:480px;
-  min-height:100%;
-  margin:0 auto;
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-  z-index:5;
+  position:relative;max-width:480px;min-height:100%;margin:0 auto;
+  display:flex;flex-direction:column;gap:8px;z-index:5
 }
 
 .header{
-  display:grid;
-  grid-template-columns:1fr auto 1fr;
-  align-items:center;
-  gap:8px;
-  padding:10px 12px;
-  border-radius:18px;
-  border:1px solid var(--border);
-  background:rgba(0,0,0,.35);
-  backdrop-filter: blur(12px);
+  min-height:68px;display:grid;grid-template-columns:1fr auto 1fr;
+  align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--border);
+  border-radius:18px;background:rgba(0,0,0,.35);backdrop-filter:blur(12px)
 }
-
 .score-box{text-align:left}
-.score{
-  font-family:"Space Grotesk";
-  font-weight:900;
-  color:var(--blue);
-  font-size:20px;
-  letter-spacing:.5px;
-}
-.pb-chip{
-  font-size:10px;
-  color:var(--gold);
-  font-weight:900;
-  opacity:.95;
-}
+.score{font-family:"Space Grotesk";font-weight:900;color:var(--blue);font-size:20px;letter-spacing:.5px}
+.pb-chip{font-size:10px;color:var(--gold);font-weight:900;opacity:.95}
 
-.stats-mid{
-  text-align:center;
-  min-width:110px;
-}
+.stats-mid{text-align:center;min-width:110px}
 .combo-tag{
-  font-size:10px;
-  background:var(--blue);
-  color:#000;
-  padding:3px 8px;
-  border-radius:8px;
-  font-weight:900;
-  display:inline-block;
-  transition:.3s;
+  font-size:10px;background:var(--blue);color:#000;padding:3px 8px;border-radius:8px;
+  font-weight:900;display:inline-block;transition:.3s
 }
-.momentum{
-  font-size:12px;
-  color:var(--green);
-  font-weight:900;
-  margin-top:4px;
-}
-.langTag{
-  font-size:11px;
-  color:#fff;
-  opacity:.8;
-  margin-top:4px;
-  font-weight:800;
-}
+.momentum{font-size:12px;color:var(--green);font-weight:900;margin-top:4px}
+.langTag{font-size:11px;color:#fff;opacity:.8;margin-top:4px;font-weight:800}
 
-.livesWrap{
-  text-align:right;
-}
-.lives{
-  font-size:16px;
-  letter-spacing:2px;
-}
-.roundMini{
-  font-size:10px;
-  opacity:.75;
-  font-weight:800;
-  margin-top:4px;
-}
-
-.stage{
-  height:360px;
-  position:relative;
-  overflow:hidden;
-  background:rgba(255,255,255,0.02);
-  border-radius:22px;
-  border:1px solid var(--border);
-  backdrop-filter: blur(10px);
-}
-
-.turret{
-  position:absolute;
-  bottom:18px;
-  left:50%;
-  transform:translateX(-50%);
-  width:56px;
-  height:28px;
-  border-radius:14px 14px 8px 8px;
-  background:linear-gradient(180deg, rgba(0,243,255,.95), rgba(0,243,255,.35));
-  box-shadow:0 0 22px rgba(0,243,255,.55);
-}
-
-.laser{
-  position:absolute;
-  width:4px;
-  height:0;
-  background:var(--blue);
-  box-shadow:0 0 18px var(--blue);
-  opacity:0;
-  transform-origin: 50% 100%;
-  border-radius:8px;
-  pointer-events:none;
-  transition: opacity .08s ease;
-}
-
-.meteor{
-  position:absolute;
-  top:-160px;
-  width:118px;
-  height:132px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  will-change: transform, top;
-}
-.meteor .meteor-body{
-  width:82px;
-  height:82px;
-  border-radius:38% 62% 63% 37% / 41% 44% 56% 59%;
-  background: radial-gradient(circle at 30% 30%, #888, #444 40%, #222);
-  border: 1px solid rgba(255,255,255,0.1);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  position:relative;
-  box-shadow: inset -10px -10px 20px rgba(0,0,0,0.8), 0 0 15px rgba(0,0,0,0.5);
-  overflow:hidden;
-}
-.meteor-body::before{
-  content:'';
-  position:absolute;
-  width:15px;
-  height:10px;
-  background:rgba(0,0,0,0.4);
-  border-radius:50%;
-  top:20%;
-  left:20%;
-  box-shadow:30px 40px 0 rgba(0,0,0,0.3), 10px 50px 0 rgba(0,0,0,0.4);
-}
-.meteor::after{
-  content:'';
-  position:absolute;
-  top:-40px;
-  width:50px;
-  height:100px;
-  background:linear-gradient(to top, rgba(255,100,0,0.5), rgba(255,50,0,0.2), transparent);
-  z-index:-1;
-  filter:blur(8px);
-  border-radius:50% 50% 0 0;
-}
-.meteor .meteor-text{
-  font-family:"Space Grotesk";
-  font-weight:900;
-  font-size:12px;
-  color:#fff;
-  text-align:center;
-  padding:0 8px;
-  text-transform:uppercase;
-  z-index:2;
-  text-shadow:0 2px 4px #000;
-}
-.meteor.boss .meteor-body{
-  width:100px;
-  height:100px;
-  border:2px solid var(--gold);
-  box-shadow:0 0 40px rgba(255,184,0,0.4);
-}
-.meteor.boss::after{
-  background:linear-gradient(to top, rgba(255,200,0,0.6), transparent);
-}
-
-.shard{
-  position:absolute;
-  width:14px;
-  height:12px;
-  border-radius:6px 10px 6px 10px;
-  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.35), rgba(120,120,120,.55), rgba(20,20,20,.95));
-  border: 1px solid rgba(255,255,255,.08);
-  box-shadow: 0 0 10px rgba(0,0,0,.45);
-  pointer-events:none;
-  will-change: transform, opacity;
-}
-
-.explosion{
-  position:absolute;
-  width:160px;
-  height:160px;
-  border-radius:50%;
-  background:radial-gradient(circle,#fff,rgba(255,170,0,.9),transparent 70%);
-  animation:boom .45s forwards;
-  pointer-events:none;
-}
-@keyframes boom{
-  0%{transform:scale(0.2);opacity:1}
-  100%{transform:scale(2.5);opacity:0}
-}
+.livesWrap{text-align:right}
+.lives{font-size:16px;letter-spacing:2px}
+.roundMini{font-size:10px;opacity:.75;font-weight:800;margin-top:4px}
 
 .panel{
-  min-height:220px;
-  background:var(--panel);
-  border:1px solid var(--border);
-  border-radius:22px;
-  padding:12px;
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-  backdrop-filter: blur(12px);
+  min-height:122px;background:var(--panel);border:1px solid var(--border);border-radius:18px;
+  padding:8px;display:grid;grid-template-columns:1fr 1fr;gap:8px;backdrop-filter: blur(12px)
 }
 .opt{
-  border:1px solid var(--border);
-  border-radius:16px;
-  background:var(--glass);
-  color:#fff;
-  font-weight:900;
-  font-size:15px;
-  cursor:pointer;
-  transition: transform .1s, background .1s;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:10px;
-  text-align:center;
-  min-height:84px;
+  border:1px solid var(--border);border-radius:14px;background:var(--glass);color:#fff;
+  font-weight:900;font-size:13px;cursor:pointer;transition:transform .1s, background .1s;
+  display:flex;align-items:center;justify-content:center;padding:8px;text-align:center;min-height:48px;
+  line-height:1.2;
 }
 .opt:active{transform:scale(0.96)}
 .opt.correct{background:rgba(0,255,102,.9);color:#000;border:none}
 .opt.wrong{background:rgba(255,0,85,.9);border:none}
-.opt:disabled{opacity: 0.4; cursor: default;}
+.opt:disabled{opacity:0.45;cursor:default}
 
-.toast{
+.stage{
+  height:430px;position:relative;overflow:hidden;background:rgba(255,255,255,0.02);
+  border-radius:22px;border:1px solid var(--border);backdrop-filter:blur(10px)
+}
+
+.turret{
   position:absolute;
-  top:18px;
+  bottom:calc(10px + var(--safeB) + var(--shellLift));
   left:50%;
   transform:translateX(-50%);
-  background:rgba(10,10,16,.95);
-  border:1px solid var(--blue);
-  padding:8px 20px;
-  border-radius:20px;
-  font-weight:900;
-  font-size:12px;
-  opacity:0;
-  transition:0.25s;
-  z-index:100;
-  pointer-events:none;
+  width:58px;height:30px;border-radius:14px 14px 8px 8px;
+  background:linear-gradient(180deg, rgba(0,243,255,.98), rgba(0,243,255,.35));
+  box-shadow:0 0 22px rgba(0,243,255,.55);
+  z-index:20;
+}
+
+.laser{
+  position:absolute;
+  width:4px;height:0;background:var(--blue);box-shadow:0 0 18px var(--blue);
+  opacity:0;transform-origin:50% 100%;border-radius:8px;pointer-events:none;transition:opacity .08s ease;
+  z-index:18;
+}
+
+.meteor{
+  position:absolute;top:-170px;width:118px;height:132px;display:flex;align-items:center;justify-content:center;
+  will-change: transform, top; z-index:10;
+}
+.meteor .meteor-body{
+  width:82px;height:82px;border-radius:38% 62% 63% 37% / 41% 44% 56% 59%;
+  background: radial-gradient(circle at 30% 30%, #888, #444 40%, #222);
+  border:1px solid rgba(255,255,255,0.1);
+  display:flex;align-items:center;justify-content:center;position:relative;
+  box-shadow: inset -10px -10px 20px rgba(0,0,0,0.8), 0 0 15px rgba(0,0,0,0.5);
+  overflow:hidden;
+}
+.meteor-body::before{
+  content:''; position:absolute; width:15px; height:10px; background:rgba(0,0,0,0.4);
+  border-radius:50%; top:20%; left:20%;
+  box-shadow:30px 40px 0 rgba(0,0,0,0.3), 10px 50px 0 rgba(0,0,0,0.4);
+}
+.meteor::after{
+  content:''; position:absolute; top:-40px; width:50px; height:100px;
+  background:linear-gradient(to top, rgba(255,100,0,0.5), rgba(255,50,0,0.2), transparent);
+  z-index:-1; filter:blur(8px); border-radius:50% 50% 0 0;
+}
+.meteor .meteor-text{
+  font-family:"Space Grotesk"; font-weight:900;font-size:11px;color:#fff;text-align:center;padding:0 8px;
+  text-transform:uppercase; z-index:2; text-shadow:0 2px 4px #000; line-height:1.1;
+}
+.meteor.boss .meteor-body{
+  width:100px;height:100px;border:2px solid var(--gold);box-shadow:0 0 40px rgba(255,184,0,0.4)
+}
+.meteor.boss::after{background:linear-gradient(to top, rgba(255,200,0,0.6), transparent)}
+
+.shard{
+  position:absolute;width:14px;height:12px;border-radius:6px 10px 6px 10px;
+  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.35), rgba(120,120,120,.55), rgba(20,20,20,.95));
+  border:1px solid rgba(255,255,255,.08);box-shadow:0 0 10px rgba(0,0,0,.45);pointer-events:none;will-change: transform, opacity;
+}
+.explosion{
+  position:absolute;width:160px;height:160px;border-radius:50%;
+  background:radial-gradient(circle,#fff,rgba(255,170,0,.9),transparent 70%);
+  animation:boom .45s forwards;pointer-events:none;z-index:12;
+}
+@keyframes boom{0%{transform:scale(0.2);opacity:1}100%{transform:scale(2.5);opacity:0}}
+
+.toast{
+  position:absolute;top:14px;left:50%;transform:translateX(-50%);
+  background:rgba(10,10,16,.95);border:1px solid var(--blue);
+  padding:8px 18px;border-radius:20px;font-weight:900;font-size:12px;
+  opacity:0;transition:0.25s;z-index:100;pointer-events:none;white-space:nowrap;
 }
 
 .modal{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,0.95);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  z-index:1000;
-  padding:20px;
+  position:fixed;inset:0;background:rgba(0,0,0,0.95);display:flex;align-items:center;justify-content:center;
+  z-index:1000;padding:20px
 }
-
 .card{
-  background:#0a0a0f;
-  border:1px solid var(--blue);
-  border-radius:28px;
-  padding:26px;
-  text-align:center;
-  width:86%;
-  max-width:380px;
-  max-height:88vh;
-  overflow:auto;
-  scrollbar-width:none;
+  background:#0a0a0f;border:1px solid var(--blue);border-radius:28px;padding:26px;text-align:center;
+  width:86%;max-width:380px;max-height:88vh;overflow:auto;scrollbar-width:none
 }
-.card::-webkit-scrollbar{ display:none; }
-
-.langs{
-  display:grid;
-  grid-template-columns:repeat(5,1fr);
-  gap:8px;
-  margin:18px 0;
-}
+.card::-webkit-scrollbar{display:none}
+.langs{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:18px 0}
 .lang{
-  padding:10px;
-  background:rgba(255,255,255,0.05);
-  border:1px solid var(--border);
-  border-radius:12px;
-  font-weight:900;
-  cursor:pointer;
-  font-size:12px;
-  color:#fff;
+  padding:10px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:12px;
+  font-weight:900;cursor:pointer;font-size:12px;color:#fff
 }
-.lang.active{
-  border-color:var(--blue);
-  background:rgba(0,243,255,0.12);
-}
-
+.lang.active{border-color:var(--blue);background:rgba(0,243,255,0.12)}
 .mainbtn{
-  width:100%;
-  padding:16px;
-  margin-top:12px;
-  border:none;
-  border-radius:16px;
-  font-weight:900;
-  background:var(--blue);
-  color:#000;
-  cursor:pointer;
+  width:100%;padding:16px;margin-top:12px;border:none;border-radius:16px;font-weight:900;background:var(--blue);
+  color:#000;cursor:pointer
 }
-.mainbtn.sec{
-  background:#222;
-  color:#fff;
-  border:1px solid var(--border);
-}
+.mainbtn.sec{background:#222;color:#fff;border:1px solid var(--border)}
 .hidden{display:none!important}
 </style>
 </head>
@@ -403,13 +197,13 @@ html,body{
     </div>
   </div>
 
+  <div class="panel" id="panel"></div>
+
   <div class="stage" id="stage">
     <div class="turret" id="turret"></div>
     <div class="laser" id="laser"></div>
     <div id="resToast" class="toast">TOAST</div>
   </div>
-
-  <div class="panel" id="panel"></div>
 </div>
 
 <div class="modal" id="startModal">
@@ -437,9 +231,8 @@ html,body{
   <div class="card">
     <h2 id="endTitle" style="color:var(--green)">SEKTÖR TEMİZ</h2>
     <p id="endStats" style="font-size:14px;margin:18px 0;line-height:1.7"></p>
-    <button class="mainbtn" id="btnContinue">DEVAM ET</button>
-    <button class="mainbtn" id="btnBank" style="background:var(--gold)">BANKALA (%5 BONUS)</button>
-    <button class="mainbtn sec" id="btnExit">KAYDET VE ÇIK</button>
+    <button class="mainbtn" id="btnContinue">YENİDEN DENE</button>
+    <button class="mainbtn sec" id="btnExit">ANA MENÜ</button>
   </div>
 </div>
 
@@ -456,7 +249,6 @@ let pool = [];
 let deck = [];
 let currentMeteor = null;
 let totalScore = 0;
-let setScore = 0;
 let combo = 0;
 let momentum = 1.0;
 let lives = 3;
@@ -466,16 +258,10 @@ let rafId = 0;
 let killCount = 0;
 let setCounter = 0;
 const SET_SIZE = 10;
-let baseSpeed = 1.1;
-const speedCap = 3.5;
+let baseSpeed = 0.55;
+const speedCap = 1.55;
 
-const LANGMAP = {
-  en:"en-US",
-  de:"de-DE",
-  fr:"fr-FR",
-  es:"es-ES",
-  it:"it-IT"
-};
+const LANGMAP = { en:"en-US", de:"de-DE", fr:"fr-FR", es:"es-ES", it:"it-IT" };
 
 function shuffle(a){
   const arr = [...a];
@@ -510,9 +296,7 @@ async function unlockAudio(){
 function beep({freq=440,duration=.08,type="sine",gain=.03,when=0}){
   const ctx = getAudioCtx();
   if(!ctx) return;
-  if(ctx.state === "suspended"){
-    ctx.resume().catch(() => {});
-  }
+  if(ctx.state === "suspended") ctx.resume().catch(() => {});
   const now = ctx.currentTime + when;
   const osc = ctx.createOscillator();
   const g = ctx.createGain();
@@ -521,12 +305,10 @@ function beep({freq=440,duration=.08,type="sine",gain=.03,when=0}){
   g.gain.setValueAtTime(.0001, now);
   g.gain.exponentialRampToValueAtTime(gain, now + .01);
   g.gain.exponentialRampToValueAtTime(.0001, now + duration);
-  osc.connect(g);
-  g.connect(ctx.destination);
-  osc.start(now);
-  osc.stop(now + duration + .02);
+  osc.connect(g); g.connect(ctx.destination);
+  osc.start(now); osc.stop(now + duration + .02);
 }
-function playMatchSound(){
+function playCorrectSound(){
   beep({freq:560,duration:.07,type:"triangle",gain:.05});
   beep({freq:760,duration:.09,type:"triangle",gain:.05,when:.08});
 }
@@ -538,14 +320,9 @@ function playExplosionSound(){
   beep({freq:920,duration:.08,type:"square",gain:.05});
   beep({freq:460,duration:.16,type:"triangle",gain:.04,when:.08});
 }
-function playBankerSound(){
-  beep({freq:330,duration:.10,type:"square",gain:.04});
-  beep({freq:440,duration:.10,type:"square",gain:.04,when:.12});
-  beep({freq:550,duration:.12,type:"triangle",gain:.04,when:.24});
-}
 function playWinSound(){
-  beep({freq:740,duration:.10,type:"triangle",gain:.05});
-  beep({freq:940,duration:.12,type:"triangle",gain:.05,when:.10});
+  beep({freq:700,duration:.10,type:"triangle",gain:.05});
+  beep({freq:900,duration:.12,type:"triangle",gain:.05,when:.10});
   beep({freq:1240,duration:.15,type:"triangle",gain:.05,when:.22});
 }
 
@@ -665,17 +442,13 @@ function pickFreshSet(items, count, langCode){
   return shuffle(fresh).slice(0, count);
 }
 
-function updatePB(){
-  const pb = Number(localStorage.getItem(`meteor_pb_${lang}`) || 0);
-  $("pb").textContent = `PB: ${pb}`;
-}
-
 document.querySelectorAll(".lang").forEach(b=>{
   b.onclick = ()=>{
     document.querySelectorAll(".lang").forEach(x=>x.classList.remove("active"));
     b.classList.add("active");
     lang = b.dataset.lang;
     updatePB();
+    updateUI();
   };
 });
 
@@ -707,7 +480,7 @@ function fireLaserTo(targetX, targetY){
   const ang = Math.atan2(dx, -dy);
 
   beam.style.left = ax + "px";
-  beam.style.top  = (ay - len) + "px";
+  beam.style.top = (ay - len) + "px";
   beam.style.height = len + "px";
   beam.style.opacity = "1";
   beam.style.transform = `translateX(-50%) rotate(${ang}rad)`;
@@ -718,12 +491,17 @@ function fireLaserTo(targetX, targetY){
   }, 120);
 }
 
+function updatePB(){
+  const pb = Number(localStorage.getItem(`meteor_pb_${lang}`) || 0);
+  $("pb").textContent = `PB: ${pb}`;
+}
+
 function updateUI(){
   $("score").textContent = totalScore;
   $("combo").textContent = "COMBO x" + combo;
   $("momVal").textContent = "x" + momentum.toFixed(2);
   $("lives").textContent = "❤️".repeat(Math.max(0,lives)) + "🖤".repeat(3 - Math.max(0,lives));
-  $("langTag").textContent = `${lang.toUpperCase()} • ${LANGMAP[lang] || "EN-US"}`;
+  $("langTag").textContent = `${lang.toUpperCase()}`;
   $("roundMini").textContent = `${setCounter}/${SET_SIZE}`;
 }
 
@@ -751,13 +529,12 @@ async function initGame(resetCore=false){
   if(resetCore){
     lives = 3;
     momentum = 1.0;
-    baseSpeed = 1.1;
+    baseSpeed = 0.55;
     combo = 0;
     totalScore = 0;
     killCount = 0;
   }
 
-  setScore = 0;
   setCounter = 0;
 
   const data = await loadLangPool(lang);
@@ -799,14 +576,14 @@ function spawnNext(){
   el.style.left = Math.max(10, left) + "px";
 
   let scale = 0.85 + Math.random() * 0.55;
-  if (isBoss) scale = 1.35;
+  if (isBoss) scale = 1.25;
   el.style.transform = `scale(${scale})`;
 
   stage.appendChild(el);
 
   currentMeteor = { el, data:w, boss:isBoss, armor:isBoss ? 2 : 1, scale };
-  y = -160;
-  currentMeteor.speed = Math.min(baseSpeed + (setCounter * 0.1) + (momentum * 0.1), speedCap) * (isBoss ? 0.72 : 1);
+  y = -170;
+  currentMeteor.speed = Math.min(baseSpeed + (setCounter * 0.05) + (momentum * 0.04), speedCap) * (isBoss ? 0.78 : 1);
 
   buildOptions(w);
   updateUI();
@@ -852,7 +629,7 @@ function checkAnswer(btn, sel, correct){
     safeSpeak(currentMeteor.data.w);
 
     if (currentMeteor.boss && currentMeteor.armor > 1){
-      playMatchSound();
+      playCorrectSound();
       currentMeteor.armor--;
       toast("ZIRH HASAR ALDI", "var(--gold)");
       setTimeout(()=>{
@@ -867,7 +644,6 @@ function checkAnswer(btn, sel, correct){
 
     const gain = Math.round((currentMeteor.boss ? 150 : 100) * momentum);
     totalScore += gain;
-    setScore += gain;
     combo++;
     momentum = Math.min(momentum + 0.05, 1.6);
 
@@ -883,7 +659,7 @@ function checkAnswer(btn, sel, correct){
     killCount++;
     setCounter++;
     destroyMeteor(tx, ty);
-    setTimeout(spawnNext, 360);
+    setTimeout(spawnNext, 380);
   } else {
     btn.classList.add("wrong");
     playWrongSound();
@@ -954,7 +730,7 @@ function loop(){
     y += currentMeteor.speed;
     currentMeteor.el.style.top = y + "px";
 
-    if (y > ($("stage").offsetHeight - 100)){
+    if (y > ($("stage").offsetHeight - 120)){
       lives -= currentMeteor.boss ? 2 : 1;
       combo = 0;
       momentum = 1.0;
@@ -988,13 +764,7 @@ MOMENTUM: x${momentum.toFixed(2)}
 METEOR İMHA: ${killCount}
 `;
 
-  if (died){
-    $("btnContinue").classList.add("hidden");
-    $("btnBank").classList.add("hidden");
-  } else {
-    $("btnContinue").classList.remove("hidden");
-    $("btnBank").classList.remove("hidden");
-  }
+  $("btnContinue").classList.remove("hidden");
   updatePB();
 }
 
@@ -1010,7 +780,7 @@ $("startBtn").onclick = async ()=>{
   totalScore = 0;
   lives = 3;
   momentum = 1.0;
-  baseSpeed = 1.1;
+  baseSpeed = 0.55;
   combo = 0;
   killCount = 0;
   updateUI();
@@ -1020,16 +790,13 @@ $("startBtn").onclick = async ()=>{
 
 $("btnContinue").onclick = ()=>{
   $("endModal").classList.add("hidden");
-  baseSpeed = Math.min(baseSpeed + 0.1, 2.0);
-  initGame(false);
-};
-
-$("btnBank").onclick = ()=>{
-  const bonus = Math.round(setScore * 0.05);
-  totalScore += bonus;
-  toast(`BANKA: +${bonus} BONUS`, "var(--gold)");
-  $("endModal").classList.add("hidden");
-  initGame(false);
+  totalScore = 0;
+  lives = 3;
+  momentum = 1.0;
+  combo = 0;
+  killCount = 0;
+  baseSpeed = 0.55;
+  initGame(true);
 };
 
 $("btnExit").onclick = ()=>{
