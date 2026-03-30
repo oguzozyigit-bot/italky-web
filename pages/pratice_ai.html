@@ -48,7 +48,13 @@
     #pageContent{
       height:100%;
       overflow:hidden;
+      opacity:0;
+      transition:opacity .2s ease;
       padding:10px 10px calc(10px + var(--safe-bottom) + var(--shellLift)) 10px;
+    }
+
+    #pageContent.ready{
+      opacity:1;
     }
 
     .page{
@@ -73,6 +79,7 @@
       flex-direction:column;
       align-items:center;
       justify-content:space-between;
+      min-height:0;
     }
 
     .hero::before{
@@ -113,18 +120,20 @@
     }
 
     .lang-badge{
-      min-height:30px;
+      min-width:34px;
+      height:34px;
       padding:0 10px;
       border-radius:999px;
       border:1px solid rgba(255,255,255,.12);
       background:rgba(255,255,255,.05);
       color:#fff;
-      font-size:11px;
+      font-size:18px;
       font-weight:900;
       display:flex;
       align-items:center;
       justify-content:center;
       white-space:nowrap;
+      line-height:1;
     }
 
     .status{
@@ -147,6 +156,7 @@
       gap:15px;
       z-index:2;
       position:relative;
+      min-height:0;
     }
 
     .world-wrap{
@@ -156,6 +166,7 @@
       display:grid;
       place-items:center;
       perspective:1000px;
+      flex:0 0 auto;
     }
 
     .ring{
@@ -214,6 +225,7 @@
       color:var(--soft);
       text-align:center;
       text-transform:uppercase;
+      flex:0 0 auto;
     }
 
     .translation-box{
@@ -229,6 +241,7 @@
       background:radial-gradient(circle, rgba(255,255,255,.03) 0%, transparent 70%);
       border-radius:12px;
       overflow:hidden;
+      flex:0 0 auto;
     }
 
     #turkishTranslation{
@@ -249,6 +262,7 @@
       justify-content:center;
       z-index:2;
       margin-top:10px;
+      flex:0 0 auto;
     }
 
     .mic-btn{
@@ -306,7 +320,7 @@
         <div class="top">
           <div class="title-row">
             <h1 class="title">Practice AI</h1>
-            <div class="lang-badge" id="langBadge">EN</div>
+            <div class="lang-badge" id="langBadge">🇬🇧</div>
           </div>
           <div class="status" id="statusLine">Seçili dilde konuşmaya başla.</div>
         </div>
@@ -333,24 +347,28 @@
   </div>
 
   <script type="module">
-  import { mountShell } from "/js/ui_shell.js";
-  mountShell({ scroll: "none" });
+    import { mountShell } from "/js/ui_shell.js";
+    mountShell({ scroll: "none" });
 
-  try {
-    const root = getComputedStyle(document.documentElement);
-    const footerH = parseFloat(root.getPropertyValue("--footerH")) || 0;
-    document.documentElement.style.setProperty(
-      "--shellLift",
-      footerH ? `${footerH + 10}px` : "0px"
-    );
-  } catch {}
-</script>
+    try {
+      const root = getComputedStyle(document.documentElement);
+      const footerH = parseFloat(root.getPropertyValue("--footerH")) || 0;
+      document.documentElement.style.setProperty(
+        "--shellLift",
+        footerH ? `${footerH + 10}px` : "0px"
+      );
+    } catch {}
 
-<script type="module">
-  import { initGlobalAccess } from "/js/global_access.js";
-  initGlobalAccess();
-</script>
+    setTimeout(() => {
+      document.getElementById("pageContent")?.classList.add("ready");
+    }, 120);
+  </script>
 
-<script type="module" src="/js/practice_ai_page.js"></script>
+  <script type="module">
+    import { initGlobalAccess } from "/js/global_access.js";
+    initGlobalAccess();
+  </script>
+
+  <script type="module" src="/js/practice_ai_page.js"></script>
 </body>
 </html>
