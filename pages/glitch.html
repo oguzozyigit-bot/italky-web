@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 <title>italkyAI • Glitch Hunter</title>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet">
 
@@ -78,7 +78,6 @@ body{
   background:rgba(8,16,24,.78);
   backdrop-filter:blur(14px);
 }
-
 .title{
   font-family:"Space Grotesk",sans-serif;
   font-size:17px;
@@ -86,7 +85,6 @@ body{
   letter-spacing:.4px;
   color:var(--cyan);
 }
-
 .pbBadge,.momChip{
   min-width:66px;
   height:34px;
@@ -158,7 +156,7 @@ body{
 
 .terminal{
   flex:1;
-  min-height:300px;
+  min-height:320px;
   border:1px solid var(--border);
   background:rgba(0,0,0,.45);
   border-radius:24px;
@@ -177,7 +175,6 @@ body{
   border-color:rgba(255,77,141,.45);
   box-shadow:0 0 0 1px rgba(255,77,141,.18), 0 0 24px rgba(255,77,141,.10);
 }
-
 @keyframes pulseAlarm{
   0%,100%{ box-shadow:0 0 0 rgba(239,68,68,0); }
   50%{ box-shadow:0 0 30px rgba(239,68,68,.18); }
@@ -187,12 +184,25 @@ body{
 }
 
 .sentence{
-  font-size:26px;
+  font-size:24px;
   color:#fff;
-  line-height:1.35;
+  line-height:1.38;
   font-weight:800;
   max-width:95%;
   word-break:break-word;
+}
+
+.metaTop{
+  position:absolute;
+  top:12px;
+  left:12px;
+  right:12px;
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+  font-size:10px;
+  opacity:.7;
+  font-weight:900;
 }
 
 .correctionBox{
@@ -318,6 +328,15 @@ body{
   background:rgba(34,211,238,.08);
 }
 
+.rulesList{
+  text-align:left;
+  margin:16px 0 6px;
+  padding-left:18px;
+  line-height:1.8;
+  color:rgba(255,255,255,.85);
+  font-size:14px;
+}
+
 .hidden{display:none!important}
 .glitch-anim{animation:shake 0.3s}
 @keyframes shake{
@@ -361,7 +380,12 @@ body{
 
   <div class="terminalWrap">
     <div class="terminal" id="terminal">
-      <div class="sentence" id="sentence">Initializing...</div>
+      <div class="metaTop">
+        <span id="metaMode">SCAN</span>
+        <span id="metaRule">NORMAL</span>
+      </div>
+
+      <div class="sentence" id="sentence">Başlatmak için oyunu aç</div>
 
       <div class="correctionBox" id="correctionBox">
         <span id="correctTxt"></span>
@@ -380,12 +404,26 @@ body{
 <div class="modal" id="start">
   <div class="card">
     <h2 style="color:var(--cyan); font-size:24px; margin-bottom:6px;">GLITCH HUNTER</h2>
-    <p style="opacity:.7; font-size:12px; line-height:1.6; margin-bottom:12px;">
-      Bayrağa dokun, dili seç. Ekrandaki cümle doğru mu bozuk mu karar ver.
+    <p style="opacity:.72; font-size:12px; line-height:1.6; margin-bottom:12px;">
+      Bayrağa dokun, dili seç.
     </p>
 
     <div class="lang-grid" id="langGrid"></div>
-    <button class="mainbtn" id="startBtn">SİSTEMİ BAŞLAT</button>
+    <button class="mainbtn" id="startBtn">DEVAM ET</button>
+  </div>
+</div>
+
+<div class="modal hidden" id="rulesModal">
+  <div class="card">
+    <h2 style="color:var(--gold); font-size:24px; margin-bottom:6px;">KURALLAR</h2>
+    <ul class="rulesList">
+      <li>Ekrana gelen cümle doğruysa <b>DOĞRU</b> seç.</li>
+      <li>Cümlede hata varsa <b>HATALI</b> seç.</li>
+      <li>Yanlış karar integrity düşürür.</li>
+      <li>Doğru seri yaptıkça momentum yükselir.</li>
+      <li>Set sonunda yeniden deneyebilir ya da ana menüye dönebilirsin.</li>
+    </ul>
+    <button class="mainbtn" id="rulesBtn">ANLADIM, BAŞLA</button>
   </div>
 </div>
 
@@ -432,7 +470,6 @@ const LANGS = {
 
 const LANGMAP = { en:"en-US", de:"de-DE", fr:"fr-FR", es:"es-ES", it:"it-IT" };
 
-/* audio */
 let audioCtx = null;
 function getAudioCtx(){
   try{
@@ -690,6 +727,8 @@ function nextRound() {
   $("correctTxt").textContent = "";
   $("trTxt").textContent = "";
   $("tapHint").style.display = "none";
+  $("metaMode").textContent = "SCAN";
+  $("metaRule").textContent = isBoss ? "BOSS" : "NORMAL";
 
   if (isBoss) $("terminal").classList.add("boss");
   if (integrity <= 25) $("terminal").classList.add("danger");
@@ -760,7 +799,7 @@ function handleAnswer(userPick) {
     $("correctionBox").style.opacity = "1";
     $("tapHint").style.display = "block";
 
-    autoProceedTimer = setTimeout(proceedNext, 3800);
+    autoProceedTimer = setTimeout(proceedNext, 2600);
   }
 
   updateUI();
@@ -768,8 +807,8 @@ function handleAnswer(userPick) {
 
 function proceedNext() {
   autoProceedTimer = null;
-  currentIndex++;
   $("pageContent").classList.remove("glitch-anim");
+  currentIndex++;
   nextRound();
 }
 
@@ -805,9 +844,12 @@ $("startBtn").onclick = async () => {
     location.href = "/pages/login.html";
     return;
   }
-
   $("start").classList.add("hidden");
-  $("game").style.display = "flex";
+  $("rulesModal").classList.remove("hidden");
+};
+
+$("rulesBtn").onclick = () => {
+  $("rulesModal").classList.add("hidden");
   initGame();
 };
 
