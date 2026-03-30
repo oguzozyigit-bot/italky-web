@@ -1,395 +1,1609 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>italkyAI • Teacher Course</title>
-  <link rel="icon" href="data:," />
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+<title>italkyAI • Future Home</title>
+<meta name="theme-color" content="#120d16"/>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
-  <style>
-    :root{
-      --frameW: min(480px, calc(100vw - 18px));
-      --topH: 74px;
-      --footerH: 74px;
-      --dockH: 78px;
-      --gap: 10px;
+<style>
+:root{
+  --txt:rgba(255,255,255,.96);
+  --muted:rgba(255,255,255,.64);
+  --cardLine:rgba(255,255,255,.12);
+  --ai-grad:linear-gradient(135deg,#67e8f9 0%, #818cf8 46%, #f472b6 100%);
+  --pink:#f472b6;
+  --cyan:#67e8f9;
+}
 
-      --bg:#030014;
-      --text: rgba(255,255,255,.92);
-      --muted: rgba(255,255,255,.60);
-      --border: rgba(255,255,255,.10);
+.is-hidden-by-access {
+  display: none !important;
+}
 
-      --ai1:#A5B4FC;
-      --ai2:#4F46E5;
-      --befree:#6B7280;
+*{
+  box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
+  outline:none;
+}
 
-      --card: rgba(0,0,0,.18);
-      --glass: rgba(255,255,255,.04);
-    }
+html,body{
+  margin:0;
+  width:100%;
+  height:100%;
+  color:var(--txt);
+  font-family:'Outfit',sans-serif;
+  background:#120d16;
+  scrollbar-width:none;
+}
 
-    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; outline:none; }
-    html,body{
-      margin:0; padding:0; width:100%; height:100dvh;
-      overflow:hidden; position:fixed;
-      font-family:'Outfit', sans-serif;
-      background:var(--bg);
-      color:var(--text);
-      display:flex; align-items:center; justify-content:center;
-    }
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+#pageContent::-webkit-scrollbar{
+  display:none;
+}
 
-    .cosmos-bg{ position:absolute; inset:-50%; width:200%; height:200%; background:var(--bg); z-index:0; pointer-events:none; }
-    .orb{ position:absolute; border-radius:50%; filter: blur(90px); opacity:.28; animation: floatOrbit 30s infinite alternate ease-in-out; }
-    .orb-1{ top:10%; left:10%; width:60vw; height:60vw; background: radial-gradient(circle, rgba(79,70,229,.55), transparent 70%); }
-    .orb-2{ bottom:10%; right:10%; width:50vw; height:50vw; background: radial-gradient(circle, rgba(165,180,252,.45), transparent 70%); animation-delay:-5s; }
-    @keyframes floatOrbit{ 0%{ transform: translate(0,0) scale(1);} 100%{ transform: translate(10%,-10%) scale(1.1);} }
-    .noise{
-      position:absolute; inset:0;
-      background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
-      pointer-events:none; mix-blend-mode:overlay; z-index:1;
-    }
+body{
+  background:
+    radial-gradient(circle at 50% 0%, rgba(251,146,60,.18) 0%, transparent 28%),
+    radial-gradient(circle at 20% 18%, rgba(244,114,182,.12) 0%, transparent 25%),
+    radial-gradient(circle at 82% 18%, rgba(96,165,250,.10) 0%, transparent 20%),
+    linear-gradient(180deg, #1d1016 0%, #150e19 34%, #120d16 100%);
+  overflow:hidden;
+}
 
-    .mobile-frame{
-      width:100%; max-width:480px; height:100%;
-      position:relative; z-index:10;
-      background: rgba(8, 8, 20, 0.65);
-      backdrop-filter: blur(25px);
-      overflow:hidden;
-      display:flex; flex-direction:column;
-    }
-    @media(min-width:520px){
-      .mobile-frame{
-        height:92vh;
-        border-radius:40px;
-        border:1px solid rgba(255,255,255,0.08);
-        box-shadow:0 40px 100px -20px rgba(0,0,0,0.9);
-      }
-    }
+#pageContent{
+  width:100%;
+  height:100%;
+  min-height:100%;
+  padding:10px 14px 18px;
+  display:block;
+  overflow-y:auto;
+  overflow-x:hidden;
+  scrollbar-width:none;
+  -webkit-overflow-scrolling:touch;
+}
 
-    .topbar{
-      position: sticky;
-      top: 0;
-      z-index: 3000;
-      height: var(--topH);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      padding: 0 12px;
-      border-bottom:1px solid rgba(255,255,255,.08);
-      background: rgba(0,0,0,.35);
-      backdrop-filter: blur(12px);
-    }
-    .leftControls{ display:flex; align-items:center; gap:10px; min-width:0; }
-    .backBtn{
-      width:44px;height:44px;border-radius:16px;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(0,0,0,.18);
-      color:#fff;
-      font-size:20px;font-weight:1000;
-      display:flex;align-items:center;justify-content:center;
-      cursor:pointer; user-select:none;
-    }
-    .backBtn:active{ transform: scale(.96); }
+.page-shell-fit{
+  min-height:100%;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
 
-    .mini-brand{
-      display:flex; flex-direction:column;
-      user-select:none; cursor:pointer; line-height:1;
-      margin-top: 2px;
-      align-items:center;
-    }
-    .logo-line{
-      font-family:'Space Grotesk', sans-serif;
-      font-size: 20px;
-      letter-spacing: -0.4px;
-      display:flex; align-items:flex-end; gap:2px;
-    }
-    .logo-main{ font-weight:700; color:#FFFFFF; }
-    .logo-ai{
-      font-weight:700;
-      background: linear-gradient(135deg, var(--ai1) 0%, var(--ai2) 100%);
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;
-    }
-    .logo-slogan{
-      font-family:'Outfit', sans-serif;
-      font-size:10px;
-      font-weight:700;
-      letter-spacing: 4px;
-      color: var(--befree);
-      margin-top: 5px;
-      padding-left: 2px;
-      text-transform: uppercase;
-    }
+.hero{
+  flex:0 0 auto;
+  perspective:1000px;
+}
 
-    .rightControls{ display:flex; align-items:center; gap:10px; min-width:0; }
-    .usertext{
-      min-width:0;
-      display:flex; flex-direction:column; align-items:flex-end; gap:2px;
-      max-width: 200px;
-    }
-    .uname{ font-weight: 900; font-size: 12px; color: rgba(255,255,255,0.92); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .plan{ font-weight: 800; font-size: 11px; color: rgba(255,255,255,0.55); white-space:nowrap; }
+.heroTop{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+}
 
-    /* Bulut mini (süs) */
-    .cloud-mini{
-      position:absolute;
-      left:50%;
-      transform: translateX(-50%);
-      top: 74px;
-      width: 110px;
-      height: 44px;
-      border-radius: 999px;
-      background: rgba(255,255,255,.06);
-      border: 1px solid rgba(255,255,255,.10);
-      box-shadow: 0 12px 40px rgba(0,0,0,.35);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:6px;
-      z-index:2500;
-      backdrop-filter: blur(10px);
-      pointer-events:none;
-    }
-    .dot{width:6px;height:6px;border-radius:99px;background:rgba(165,180,252,.75);animation: b 1s infinite ease-in-out;}
-    .dot:nth-child(2){animation-delay:.12s}
-    .dot:nth-child(3){animation-delay:.24s}
-    @keyframes b{0%,100%{transform:translateY(0);opacity:.8}50%{transform:translateY(-4px);opacity:1}}
+.holo-container{
+  width:210px;
+  height:210px;
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transform-style:preserve-3d;
+  margin:2px auto 6px;
+}
 
-    .controlRow{
-      position: absolute;
-      left: 0; right: 0;
-      top: calc(var(--topH));
-      z-index: 2400;
-      padding: 10px 12px 6px;
-      display:flex;
-      gap:10px;
-      align-items:center;
-      justify-content:center;
-    }
+.crystal-cage{
+  position:absolute;
+  width:150px;
+  height:150px;
+  transform-style:preserve-3d;
+  animation:rotateCrystal 18s linear infinite;
+}
 
-    .lessonBtn{
-      height: 44px;
-      padding: 0 14px;
-      border-radius: 16px;
-      border: 1px solid rgba(255,255,255,.10);
-      background: rgba(255,255,255,.06);
-      color:#fff;
-      font-weight: 1000;
-      cursor:pointer;
-      display:flex;
-      align-items:center;
-      gap:10px;
-    }
-    .lessonBtn:active{transform:scale(.99)}
-    .badge{
-      padding: 6px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(0,0,0,.20);
-      font-weight: 1000;
-      font-size: 12px;
-      color: rgba(255,255,255,.85);
-    }
+.crystal-side{
+  position:absolute;
+  inset:0;
+  border:2px solid rgba(103,232,249,.42);
+  background:radial-gradient(circle, rgba(129,140,248,.12), transparent);
+  box-shadow:0 0 18px rgba(103,232,249,.22);
+}
 
-    /* CHAT AREA */
-    #chat.chat-area{
-      position: absolute;
-      left: 0; right: 0;
-      top: calc(var(--topH) + 62px);
-      bottom: calc(var(--dockH) + var(--footerH) + var(--gap));
-      padding: 14px 12px;
+.side1{ transform:rotateY(0deg) translateZ(75px); }
+.side2{ transform:rotateY(90deg) translateZ(75px); }
+.side3{ transform:rotateY(180deg) translateZ(75px); }
+.side4{ transform:rotateY(270deg) translateZ(75px); }
+.side5{ transform:rotateX(90deg) translateZ(75px); }
+.side6{ transform:rotateX(-90deg) translateZ(75px); }
 
-      overflow-y:auto;
-      -webkit-overflow-scrolling: touch;
-      overscroll-behavior: contain;
-      touch-action: pan-y;
+.holo-qr{
+  position:absolute;
+  width:108px;
+  height:108px;
+  z-index:2;
+  overflow:visible;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  animation:floatQR 4s ease-in-out infinite;
+}
 
-      scrollbar-width:none;
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-      min-height:0;
-      min-width:0;
-    }
-    #chat.chat-area::-webkit-scrollbar{ display:none; }
-    #chat.chat-area::before{ content:""; flex:1 0 auto; }
+.ai-planet{
+  background:transparent;
+  box-shadow:none;
+}
 
-    .bubble{
-      max-width:92%;
-      padding:12px 14px;
-      border-radius:18px;
-      font-size:15px;              /* ✅ daha büyük */
-      line-height:1.5;
-      border:1px solid rgba(255,255,255,.10);
-      background: var(--card);
-      box-shadow: 0 12px 28px rgba(0,0,0,.22);
-      backdrop-filter: blur(8px);
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
-    .bubble.bot{
-      align-self:flex-start;
-      border-left:4px solid var(--ai2);
-      background: rgba(79,70,229,.12);
-    }
-    .bubble.user{
-      align-self:flex-end;
-      border-right:4px solid var(--befree);
-      background: rgba(107,114,128,.14);
-      text-align:right;
-    }
-    .bubble.tr{
-      align-self:flex-start;
-      opacity:.85;
-      font-size:13px;
-      background: rgba(255,255,255,.04);
-      border-color: rgba(255,255,255,.08);
-      color: rgba(255,255,255,.78);
-    }
+.planet-glow{
+  position:absolute;
+  inset:-16px;
+  border-radius:50%;
+  background:
+    radial-gradient(circle, rgba(255,255,255,.16) 0%, rgba(255,255,255,.04) 28%, transparent 62%),
+    radial-gradient(circle, rgba(103,232,249,.26) 0%, transparent 70%);
+  filter:blur(12px);
+  animation:planetGlow 3.2s ease-in-out infinite;
+  z-index:1;
+}
 
-    /* INPUT DOCK */
-    .input-dock{
-      position: fixed;
-      left: 50%;
-      transform: translateX(-50%);
-      width: var(--frameW);
-      bottom: var(--footerH);
-      z-index: 2600;
-      padding: 10px 12px;
-      background: rgba(0,0,0,.32);
-      border-top: 1px solid rgba(255,255,255,.08);
-      backdrop-filter: blur(12px);
-      pointer-events: none;
-    }
-    .dock-inner{
-      pointer-events:auto;
-      width:100%;
-      min-height:54px;
-      display:flex;
-      align-items:flex-end;
-      gap:8px;
-      background: var(--glass);
-      border: 1px solid rgba(255,255,255,.10);
-      border-radius: 26px;
-      padding: 8px;
-    }
-    #msgInput{
-      flex: 1 1 auto;
-      min-width:0;
-      background: transparent;
-      border:none;
-      outline:none;
-      color:#fff;
-      font-size:15px;             /* ✅ büyük */
-      padding:10px 6px;
-      line-height:18px;
-      font-family:inherit;
-      resize:none;
-      white-space:normal;
-      overflow:hidden;
-      max-height: 140px;
-    }
-    .send-btn{
-      width:46px; height:46px;
-      border-radius:18px;
-      border:1px solid rgba(107,114,128,.28);
-      background: rgba(107,114,128,.16);
-      display:flex; align-items:center; justify-content:center;
-      cursor:pointer; user-select:none;
-      flex-shrink:0;
-      box-shadow: 0 10px 18px rgba(0,0,0,.30);
-    }
-    .send-btn svg{ width:22px; height:22px; stroke: rgba(107,114,128,.95); fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
-    .send-btn:active{transform:scale(.99)}
+.planet-core{
+  position:relative;
+  width:108px;
+  height:108px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  z-index:2;
+  background:
+    radial-gradient(circle at 28% 24%, rgba(255,255,255,.18) 0%, transparent 22%),
+    radial-gradient(circle at 68% 76%, rgba(129,140,248,.20) 0%, transparent 28%),
+    radial-gradient(circle at 50% 50%, rgba(255,255,255,.05) 0%, transparent 48%),
+    linear-gradient(145deg, #111318 0%, #08090d 42%, #030406 100%);
+  box-shadow:
+    inset -10px -12px 20px rgba(0,0,0,.72),
+    inset 10px 12px 22px rgba(255,255,255,.04),
+    inset 0 0 26px rgba(255,255,255,.04),
+    0 0 18px rgba(255,255,255,.10),
+    0 0 34px rgba(103,232,249,.20),
+    0 0 64px rgba(129,140,248,.18);
+  animation:planetBreath 2.8s ease-in-out infinite;
+}
 
-    /* FOOTER */
-    .footerbar{
-      position: fixed;
-      left: 50%;
-      transform: translateX(-50%);
-      width: var(--frameW);
-      bottom: 0;
-      z-index: 2400;
-      height: var(--footerH);
-      padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
-      background: rgba(3, 0, 20, 0.95);
-      border-top: 1px solid rgba(255,255,255,.05);
-      backdrop-filter: blur(10px);
-      display:flex;
-      flex-direction:column;
-      justify-content:center;
-      gap: 6px;
-    }
-    .footerBrand{
-      text-align:center;
-      font-size: 10px;
-      color: rgba(255,255,255,0.22);
-      letter-spacing: 0.2px;
-      font-weight: 700;
-    }
-  </style>
+.planet-core::before{
+  content:"";
+  position:absolute;
+  inset:6px;
+  border-radius:50%;
+  border:1px solid rgba(255,255,255,.08);
+  box-shadow:inset 0 0 12px rgba(255,255,255,.05);
+}
+
+.planet-core::after{
+  content:"";
+  position:absolute;
+  left:18px;
+  top:14px;
+  width:32px;
+  height:16px;
+  border-radius:50%;
+  background:radial-gradient(circle, rgba(255,255,255,.28) 0%, rgba(255,255,255,.08) 45%, transparent 80%);
+  filter:blur(2px);
+  transform:rotate(-18deg);
+  opacity:.9;
+}
+
+.planet-rays{
+  position:absolute;
+  inset:-18px;
+  border-radius:50%;
+  pointer-events:none;
+  z-index:1;
+}
+
+.planet-rays::before,
+.planet-rays::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:50%;
+  background:
+    conic-gradient(
+      from 0deg,
+      transparent 0deg 18deg,
+      rgba(255,255,255,.28) 24deg,
+      transparent 36deg 62deg,
+      rgba(255,255,255,.16) 70deg,
+      transparent 84deg 116deg,
+      rgba(255,255,255,.22) 124deg,
+      transparent 136deg 180deg,
+      rgba(255,255,255,.18) 192deg,
+      transparent 206deg 250deg,
+      rgba(255,255,255,.24) 258deg,
+      transparent 270deg 310deg,
+      rgba(255,255,255,.15) 318deg,
+      transparent 330deg 360deg
+    );
+  mask:radial-gradient(circle, transparent 46%, #000 66%, transparent 76%);
+  -webkit-mask:radial-gradient(circle, transparent 46%, #000 66%, transparent 76%);
+  filter:blur(1px);
+  opacity:.55;
+  animation:planetRaySpin 12s linear infinite;
+}
+
+.planet-rays::after{
+  opacity:.35;
+  transform:scale(1.14);
+  animation-duration:18s;
+  animation-direction:reverse;
+}
+
+.planet-text{
+  position:relative;
+  z-index:3;
+  display:inline-flex;
+  align-items:center;
+  gap:0;
+  font-family:'Space Grotesk',sans-serif;
+  font-size:14px;
+  font-weight:700;
+  letter-spacing:.2px;
+  color:#ffffff;
+  text-shadow:
+    0 0 10px rgba(255,255,255,.28),
+    0 0 24px rgba(255,255,255,.14);
+}
+
+.planet-text .ai{
+  background:var(--ai-grad);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+
+.connect-code-wrap{
+  margin-top:2px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:5px;
+}
+
+.connect-code-label{
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:1.1px;
+  color:rgba(255,255,255,.58);
+  text-transform:uppercase;
+}
+
+.connect-code-line{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+}
+
+.connect-code-value{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:24px;
+  font-weight:700;
+  letter-spacing:2px;
+  color:#fff;
+  line-height:1;
+  text-shadow:0 0 14px rgba(255,255,255,.12);
+}
+
+.connect-code-copy{
+  width:34px;
+  height:34px;
+  min-width:34px;
+  border:none;
+  border-radius:50%;
+  background:rgba(255,255,255,.10);
+  color:#fff;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  transition:transform .18s ease, opacity .18s ease;
+  border:1px solid rgba(255,255,255,.12);
+}
+
+.connect-code-copy:active{
+  transform:scale(.96);
+}
+
+.connect-code-copy svg{
+  width:16px;
+  height:16px;
+  fill:none;
+  stroke:#fff;
+  stroke-width:2;
+}
+
+.heroTitle{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:22px;
+  font-weight:700;
+  letter-spacing:-.4px;
+  color:#fff;
+  margin:0;
+  line-height:1.08;
+  text-align:center;
+  text-shadow:0 0 12px rgba(255,255,255,.18);
+}
+
+.heroTitle .to{
+  background:var(--ai-grad);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+
+.heroSub{
+  margin:0;
+  font-size:10.8px;
+  color:var(--muted);
+  text-align:center;
+  line-height:1.36;
+  max-width:310px;
+}
+
+.heroStatus{
+  min-height:20px;
+  font-size:11px;
+  font-weight:800;
+  color:rgba(255,255,255,.78);
+  text-align:center;
+}
+
+.heroActions{
+  width:100%;
+  max-width:320px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  margin-top:8px;
+}
+
+.heroBtn{
+  min-height:52px;
+  border:none;
+  border-radius:18px;
+  font-family:'Outfit',sans-serif;
+  font-size:15px;
+  font-weight:900;
+  cursor:pointer;
+  transition:transform .18s ease, opacity .18s ease, box-shadow .18s ease;
+}
+
+.heroBtn:active{ transform:scale(.985); }
+
+.heroBtnWide{
+  width:100%;
+  background:linear-gradient(135deg,#4338ca 0%, #7c3aed 100%);
+  color:#fff;
+  border:1px solid rgba(255,255,255,.12);
+  box-shadow:0 12px 24px rgba(67,56,202,.24);
+}
+
+.home-grid{
+  flex:0 0 auto;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+
+.mod-card{
+  position:relative;
+  border-radius:28px;
+  overflow:hidden;
+  border:1px solid var(--cardLine);
+  box-shadow:
+    0 15px 30px rgba(0,0,0,.28),
+    inset 0 1px 0 rgba(255,255,255,.05);
+  padding:16px 15px 108px;
+  text-decoration:none;
+  color:#fff;
+  min-height:300px;
+  transition:transform .22s ease, filter .22s ease, box-shadow .22s ease;
+}
+
+.mod-card:active{
+  transform:scale(.985);
+  filter:brightness(1.08);
+}
+
+.mod-card:hover{
+  box-shadow:
+    0 22px 36px rgba(0,0,0,.32),
+    0 0 18px rgba(103,232,249,.08);
+}
+
+.face-card{
+  background:
+    radial-gradient(circle at 20% 15%, rgba(103,232,249,.35) 0%, transparent 35%),
+    linear-gradient(180deg, #301661 0%, #2b2185 50%, #1e36a3 100%);
+}
+
+.offline-grid-card{
+  background:
+    radial-gradient(circle at 80% 15%, rgba(255,255,255,.12) 0%, transparent 30%),
+    linear-gradient(180deg, #4b1118 0%, #7f1d1d 48%, #b91c1c 100%);
+}
+
+.card-title{
+  margin:0;
+  font-family:'Space Grotesk',sans-serif;
+  font-size:24px;
+  line-height:1;
+  letter-spacing:-.8px;
+  color:#fff;
+  word-break:break-word;
+}
+
+.card-desc-list{
+  margin-top:8px;
+  display:flex;
+  flex-direction:column;
+  gap:5px;
+  max-width:100%;
+  padding-right:2px;
+}
+
+.card-desc{
+  margin:0;
+  font-size:11.2px;
+  line-height:1.34;
+  color:rgba(255,255,255,.88);
+  white-space:normal;
+  overflow:visible;
+  text-overflow:unset;
+  word-break:break-word;
+}
+
+.card-art{
+  position:absolute;
+  left:12px;
+  right:12px;
+  bottom:12px;
+  height:76px;
+  border-radius:20px;
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.10);
+  overflow:hidden;
+}
+
+.face-art{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:16px;
+}
+
+.face-headset{
+  position:relative;
+  width:28px;
+  height:38px;
+  margin-top:14px;
+}
+
+.face-headset::before{
+  content:"";
+  position:absolute;
+  left:50%;
+  top:-2px;
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  transform:translateX(-50%);
+  background:rgba(255,255,255,.88);
+  box-shadow:0 0 10px rgba(255,255,255,.16);
+}
+
+.face-headset::after{
+  content:"";
+  position:absolute;
+  left:50%;
+  bottom:0;
+  width:28px;
+  height:18px;
+  border-radius:14px 14px 10px 10px;
+  transform:translateX(-50%);
+  background:linear-gradient(180deg, rgba(255,255,255,.9), rgba(255,255,255,.32));
+}
+
+.face-wave{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:62px;
+  height:28px;
+  transform:translate(-50%,-50%);
+}
+
+.face-wave::before,
+.face-wave::after{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  border-radius:999px;
+  background:linear-gradient(90deg, rgba(255,255,255,.08), rgba(103,232,249,.98), rgba(255,255,255,.08));
+  box-shadow:0 0 14px rgba(103,232,249,.46);
+}
+
+.face-wave::before{ top:9px;height:2px; }
+.face-wave::after{ top:16px;height:2px;opacity:.68; }
+
+.offline-art{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+}
+
+.offline-sheet{
+  width:22px;
+  height:34px;
+  border-radius:8px;
+  background:rgba(255,255,255,.16);
+  border:1.4px solid rgba(255,255,255,.46);
+  position:relative;
+}
+
+.offline-sheet::before,
+.offline-sheet::after{
+  content:"";
+  position:absolute;
+  left:4px;
+  right:4px;
+  height:2px;
+  border-radius:2px;
+  background:rgba(255,255,255,.72);
+}
+.offline-sheet::before{ top:10px; }
+.offline-sheet::after{ top:17px; }
+
+.wide-stack{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+/* YENİ KART SATIRI */
+.culture-row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+
+.culture-card{
+  position:relative;
+  min-height:190px;
+  border-radius:28px;
+  overflow:hidden;
+  border:1px solid var(--cardLine);
+  box-shadow:
+    0 15px 30px rgba(0,0,0,.28),
+    inset 0 1px 0 rgba(255,255,255,.05);
+  padding:16px 14px;
+  text-decoration:none;
+  color:#fff;
+  transition:transform .22s ease, filter .22s ease, box-shadow .22s ease;
+}
+
+.culture-card:active{
+  transform:scale(.985);
+  filter:brightness(1.08);
+}
+
+.culture-card:hover{
+  box-shadow:
+    0 22px 36px rgba(0,0,0,.32),
+    0 0 18px rgba(103,232,249,.08);
+}
+
+.ata-card{
+  background:
+    radial-gradient(circle at 22% 12%, rgba(103,232,249,.24) 0%, transparent 34%),
+    radial-gradient(circle at 82% 16%, rgba(96,165,250,.16) 0%, transparent 24%),
+    linear-gradient(180deg, #053055 0%, #0b4a73 52%, #07233b 100%);
+}
+
+.geo-card{
+  background:
+    radial-gradient(circle at 78% 10%, rgba(251,146,60,.18) 0%, transparent 30%),
+    radial-gradient(circle at 15% 18%, rgba(244,114,182,.12) 0%, transparent 24%),
+    linear-gradient(180deg, #4b1118 0%, #7f1d1d 54%, #2c0d10 100%);
+}
+
+.culture-topline{
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:.5px;
+  color:rgba(255,255,255,.8);
+  margin-bottom:6px;
+  text-transform:uppercase;
+}
+
+.culture-title{
+  margin:0;
+  font-family:'Space Grotesk',sans-serif;
+  font-size:22px;
+  line-height:1.02;
+  letter-spacing:-.7px;
+  word-break:break-word;
+}
+
+.culture-rune{
+  margin:10px 0 8px;
+  font-size:22px;
+  line-height:1.1;
+  letter-spacing:1.2px;
+  color:#b9f3ff;
+  text-shadow:0 0 12px rgba(103,232,249,.22);
+}
+
+.culture-desc{
+  margin:0 0 6px;
+  font-size:11px;
+  line-height:1.38;
+  color:rgba(255,255,255,.88);
+}
+
+.culture-chip{
+  position:absolute;
+  right:12px;
+  bottom:12px;
+  min-width:38px;
+  height:38px;
+  border-radius:999px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.16);
+  font-size:16px;
+}
+
+.wide-card{
+  position:relative;
+  width:100%;
+  min-height:126px;
+  border-radius:28px;
+  overflow:hidden;
+  border:1px solid var(--cardLine);
+  box-shadow:
+    0 15px 30px rgba(0,0,0,.28),
+    inset 0 1px 0 rgba(255,255,255,.05);
+  display:flex;
+  align-items:center;
+  gap:16px;
+  padding:16px 52px 16px 16px;
+  text-decoration:none;
+  color:#fff;
+  transition:transform .22s ease, filter .22s ease, box-shadow .22s ease;
+}
+
+.wide-card:active{
+  transform:scale(.985);
+  filter:brightness(1.08);
+}
+
+.wide-card:hover{
+  box-shadow:
+    0 22px 36px rgba(0,0,0,.32),
+    0 0 18px rgba(103,232,249,.08);
+}
+
+.texttotext-card{
+  background:
+    radial-gradient(circle at 14% 50%, rgba(251,146,60,.22) 0%, transparent 24%),
+    radial-gradient(circle at 86% 16%, rgba(103,232,249,.14) 0%, transparent 20%),
+    linear-gradient(90deg, #7e114f 0%, #db2777 34%, #a855f7 68%, #6366f1 100%);
+}
+
+.fun-card{
+  background:
+    radial-gradient(circle at 12% 50%, rgba(251,146,60,.25) 0%, transparent 25%),
+    radial-gradient(circle at 88% 20%, rgba(103,232,249,.15) 0%, transparent 20%),
+    linear-gradient(90deg, #61220e 0%, #c2410a 36%, #ea580c 68%, #e11d48 100%);
+}
+
+.level-card{
+  background:
+    radial-gradient(circle at 12% 50%, rgba(255,255,255,.08) 0%, transparent 24%),
+    linear-gradient(90deg, #166534 0%, #22c55e 46%, #16a34a 100%);
+}
+
+.practice-card{
+  background:
+    radial-gradient(circle at 12% 50%, rgba(255,255,255,.08) 0%, transparent 24%),
+    linear-gradient(90deg, #1d4ed8 0%, #0ea5e9 48%, #6366f1 100%);
+}
+
+.extra-ico,
+.fun-ico,
+.level-ico,
+.practice-ico{
+  width:76px;
+  height:76px;
+  flex:0 0 auto;
+  position:relative;
+  border-radius:22px;
+  background:rgba(255,255,255,.12);
+  border:1.5px solid rgba(255,255,255,.15);
+  box-shadow:inset 0 0 22px rgba(255,255,255,.05);
+}
+
+.text-bubble{
+  position:absolute;
+  left:12px;
+  top:18px;
+  width:28px;
+  height:20px;
+  border-radius:8px;
+  background:rgba(255,255,255,.92);
+}
+
+.text-bubble::after{
+  content:"";
+  position:absolute;
+  left:5px;
+  bottom:-5px;
+  width:8px;
+  height:8px;
+  background:rgba(255,255,255,.92);
+  clip-path:polygon(0 0, 100% 0, 0 100%);
+}
+
+.text-doc{
+  position:absolute;
+  right:14px;
+  top:16px;
+  width:24px;
+  height:34px;
+  border-radius:7px;
+  border:1.6px solid rgba(103,232,249,.96);
+  background:rgba(103,232,249,.08);
+}
+
+.text-doc-line{
+  position:absolute;
+  left:5px;
+  right:5px;
+  height:2px;
+  border-radius:3px;
+  background:#67e8f9;
+}
+.t1{ top:8px; }
+.t2{ top:14px; }
+.t3{ top:20px; }
+
+.fun-dice, .fun-dice::before, .fun-dice::after{
+  position:absolute;
+  border-radius:10px;
+  background:rgba(255,255,255,.92);
+}
+.fun-dice{
+  width:24px;
+  height:24px;
+  left:14px;
+  top:24px;
+}
+.fun-dice::before{
+  content:"";
+  width:18px;
+  height:18px;
+  right:-22px;
+  top:-10px;
+  opacity:.8;
+}
+.fun-dice::after{
+  content:"";
+  width:16px;
+  height:16px;
+  right:-16px;
+  bottom:-12px;
+  opacity:.65;
+}
+
+.level-bars span{
+  position:absolute;
+  bottom:14px;
+  width:10px;
+  border-radius:6px 6px 0 0;
+  background:rgba(255,255,255,.92);
+}
+.level-bars span:nth-child(1){ left:14px; height:18px; }
+.level-bars span:nth-child(2){ left:30px; height:28px; }
+.level-bars span:nth-child(3){ left:46px; height:40px; }
+
+.practice-chat{
+  position:absolute;
+  left:12px;
+  top:18px;
+  width:24px;
+  height:18px;
+  border-radius:8px;
+  background:rgba(255,255,255,.92);
+}
+.practice-chat::after{
+  content:"";
+  position:absolute;
+  left:4px;
+  bottom:-5px;
+  width:8px;
+  height:8px;
+  background:rgba(255,255,255,.92);
+  clip-path:polygon(0 0, 100% 0, 0 100%);
+}
+.practice-chat.right{
+  left:auto;
+  right:12px;
+  top:34px;
+  background:rgba(103,232,249,.92);
+}
+.practice-chat.right::after{
+  left:auto;
+  right:4px;
+  background:rgba(103,232,249,.92);
+  clip-path:polygon(100% 0, 0 0, 100% 100%);
+}
+
+.wide-body{
+  flex:1;
+  min-width:0;
+}
+
+.card-topline{
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:.5px;
+  color:rgba(255,255,255,.8);
+  margin-bottom:6px;
+  text-transform:uppercase;
+}
+
+.wide-title{
+  margin:0;
+  font-family:'Space Grotesk',sans-serif;
+  font-size:24px;
+  line-height:1;
+  letter-spacing:-.8px;
+  word-break:break-word;
+}
+
+.wide-desc{
+  margin-top:7px;
+  font-size:10.8px;
+  line-height:1.34;
+  color:rgba(255,255,255,.88);
+  max-width:84%;
+}
+
+.arrow-chip{
+  flex:0 0 auto;
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  position:absolute;
+  right:12px;
+  top:50%;
+  transform:translateY(-50%);
+  background:rgba(255,255,255,.15);
+  border:1px solid rgba(255,255,255,.18);
+}
+
+.arrow-chip::before{
+  content:"";
+  position:absolute;
+  left:13px;
+  top:50%;
+  width:12px;
+  height:12px;
+  border-top:2px solid rgba(255,255,255,.9);
+  border-right:2px solid rgba(255,255,255,.9);
+  transform:translateY(-50%) rotate(45deg);
+}
+
+@keyframes rotateCrystal{
+  from{ transform:rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
+  to{ transform:rotateX(360deg) rotateY(720deg) rotateZ(360deg); }
+}
+
+@keyframes floatQR{
+  0%,100%{ transform:translateY(0) rotateX(0deg); }
+  50%{ transform:translateY(-8px) rotateX(5deg); }
+}
+
+@keyframes planetBreath{
+  0%,100%{
+    transform:scale(1);
+    box-shadow:
+      inset -10px -12px 20px rgba(0,0,0,.72),
+      inset 10px 12px 22px rgba(255,255,255,.04),
+      inset 0 0 26px rgba(255,255,255,.04),
+      0 0 18px rgba(255,255,255,.10),
+      0 0 34px rgba(103,232,249,.20),
+      0 0 64px rgba(129,140,248,.18);
+  }
+  50%{
+    transform:scale(1.045);
+    box-shadow:
+      inset -10px -12px 20px rgba(0,0,0,.72),
+      inset 10px 12px 24px rgba(255,255,255,.05),
+      inset 0 0 28px rgba(255,255,255,.06),
+      0 0 22px rgba(255,255,255,.12),
+      0 0 42px rgba(103,232,249,.28),
+      0 0 78px rgba(129,140,248,.24);
+  }
+}
+
+@keyframes planetGlow{
+  0%,100%{
+    opacity:.55;
+    transform:scale(1);
+  }
+  50%{
+    opacity:.92;
+    transform:scale(1.16);
+  }
+}
+
+@keyframes planetRaySpin{
+  from{ transform:rotate(0deg); }
+  to{ transform:rotate(360deg); }
+}
+
+@keyframes beamFlow{
+  from{ background-position:0 0; }
+  to{ background-position:0 50px; }
+}
+
+@keyframes platformPulse{
+  0%,100%{ transform:translateX(-50%) rotateX(75deg) scale(1); opacity:.7; }
+  50%{ transform:translateX(-50%) rotateX(75deg) scale(1.08); opacity:.88; }
+}
+
+@media (max-width:390px){
+  .holo-container{ width:190px; height:190px; margin-bottom:4px; }
+  .crystal-cage{ width:136px; height:136px; }
+  .side1{ transform:rotateY(0deg) translateZ(68px); }
+  .side2{ transform:rotateY(90deg) translateZ(68px); }
+  .side3{ transform:rotateY(180deg) translateZ(68px); }
+  .side4{ transform:rotateY(270deg) translateZ(68px); }
+  .side5{ transform:rotateX(90deg) translateZ(68px); }
+  .side6{ transform:rotateX(-90deg) translateZ(68px); }
+  .holo-qr{ width:98px; height:98px; }
+  .planet-core{ width:98px; height:98px; }
+  .planet-text{ font-size:13px; }
+  .energy-platform{ width:154px; height:154px; bottom:-24px; }
+  .heroTitle{ font-size:20px; }
+  .card-title{ font-size:22px; }
+  .wide-title{ font-size:22px; }
+  .card-art{ height:70px; }
+  .card-desc{
+    font-size:10.8px;
+    line-height:1.32;
+  }
+  .connect-code-value{
+    font-size:20px;
+    letter-spacing:1.8px;
+  }
+  .culture-title{
+    font-size:20px;
+  }
+  .culture-rune{
+    font-size:20px;
+  }
+}
+</style>
 </head>
 
 <body>
-  <div class="cosmos-bg">
-    <div class="orb orb-1"></div>
-    <div class="orb orb-2"></div>
-  </div>
-  <div class="noise"></div>
 
-  <div class="mobile-frame">
-    <div class="topbar">
-      <div class="leftControls">
-        <button class="backBtn" id="backBtn" aria-label="Geri">←</button>
-        <div class="mini-brand" id="logoHome" title="Ana sayfa">
-          <div class="logo-line"><span class="logo-main">italky</span><span class="logo-ai">AI</span></div>
-          <div class="logo-slogan">TEACHER</div>
+<script>
+const userId = localStorage.getItem("user_id");
+if(!userId){
+  location.href = "/pages/first_login.html";
+}
+</script>
+
+<main id="pageContent">
+  <div class="page-shell-fit">
+
+    <section class="hero" id="heroSection">
+      <div class="heroTop">
+        <div class="holo-container">
+          <div class="crystal-cage">
+            <div class="crystal-side side1"></div>
+            <div class="crystal-side side2"></div>
+            <div class="crystal-side side3"></div>
+            <div class="crystal-side side4"></div>
+            <div class="crystal-side side5"></div>
+            <div class="crystal-side side6"></div>
+          </div>
+
+          <div class="holo-qr ai-planet" aria-hidden="true">
+            <div class="planet-glow"></div>
+            <div class="planet-rays"></div>
+            <div class="planet-core">
+              <span class="planet-text">italky<span class="ai">AI</span></span>
+            </div>
+          </div>
+
+          <div class="holo-beams"></div>
+          <div class="energy-platform"></div>
+        </div>
+
+        <div class="connect-code-wrap">
+          <div class="connect-code-label">Bağlantı Kodu</div>
+          <div class="connect-code-line">
+            <div id="connectionCodeText" class="connect-code-value">------</div>
+            <button id="copyConnectionCodeBtn" class="connect-code-copy" type="button" aria-label="Bağlantı kodunu kopyala" title="Kopyala">
+              <svg viewBox="0 0 24 24">
+                <rect x="9" y="9" width="10" height="10" rx="2"></rect>
+                <path d="M7 15H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v1"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <h1 class="heroTitle">Ear<span class="to">TO</span>Ear</h1>
+        <p class="heroSub">Bağlantı kodunu paylaş. Karşı taraf Bağlantı Kodunu girsin, dil bariyerleri kalksın. Karşı taraf Bağlantı Kodunu girince sohbet otomatik başlar. Sen sadece bekle.</p>
+        <div class="heroStatus" id="heroStatus">Oda hazırlanıyor...</div>
+
+        <div class="heroActions">
+          <button id="goSideToSide" class="heroBtn heroBtnWide" type="button" onclick="openCodePrompt()">🔢Karşı Tarafın Bağlantı Kodunu Gir</button>
+        </div>
+        
+        <div id="nfcUpgradeBox" style="display:none; width:100%; max-width:320px; margin:8px auto 0;">
+          <a href="/pages/upgrade_pack.html" style="
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            min-height:48px;
+            border-radius:16px;
+            text-decoration:none;
+            font-weight:900;
+            font-size:14px;
+            color:#fff;
+            background:linear-gradient(135deg,#f59e0b 0%, #f97316 100%);
+            border:1px solid rgba(255,255,255,.14);
+            box-shadow:0 12px 24px rgba(249,115,22,.22);
+          ">
+            Paketini Yükselt
+          </a>
         </div>
       </div>
+    </section>
 
-      <div class="rightControls">
-        <div class="usertext">
-          <div class="uname" id="teacherName">Teacher</div>
-          <div class="plan" id="lessonInfo">—</div>
+    <section class="home-grid">
+      <a id="faceCard" class="mod-card face-card" href="/facetoface.html">
+        <h2 class="card-title">FaceToFace</h2>
+
+        <div class="card-desc-list">
+          <p class="card-desc">Yüz yüze iletişim.</p>
+          <p class="card-desc">Yapay zeka sayesinde çeviri.</p>
+          <p class="card-desc">72 dil çevirisi.</p>
+          <p class="card-desc">Tek telefon ile kullanım.</p>
+          <p class="card-desc">Özel ses seçimi.</p>
+          <p class="card-desc">Bölünmüş ekran desteği.</p>
         </div>
+
+        <div class="card-art face-art">
+          <div class="face-wave"></div>
+          <div class="face-headset"></div>
+          <div class="face-headset"></div>
+        </div>
+      </a>
+
+      <a id="offlineCard" class="mod-card offline-grid-card" href="/pages/offline_languages.html">
+        <h2 class="card-title">Offline Translate</h2>
+
+        <div class="card-desc-list">
+          <p class="card-desc">67 Offline Dil Seçeneği.</p>
+          <p class="card-desc">İnternetsiz çeviri deneyimi.</p>
+          <p class="card-desc">Dil paketlerini indir, hemen kullan.</p>
+          <p class="card-desc">Bağlantı olmadan hızlı çeviri.</p>
+        </div>
+
+        <div class="card-art offline-art">
+          <div class="offline-sheet"></div>
+          <div class="offline-sheet"></div>
+          <div class="offline-sheet"></div>
+        </div>
+      </a>
+    </section>
+
+    <section class="wide-stack">
+
+      <div class="culture-row">
+        <a id="ataCard" class="culture-card ata-card" href="/pages/ata_languages.html">
+          <div class="culture-topline">Miras & Yazı</div>
+          <h2 class="culture-title">Ata Dilleri</h2>
+          <div class="culture-rune">𐱅𐰇𐰼𐰚</div>
+          <p class="culture-desc">Göktürk alfabesiyle Türk yazım deneyimi.</p>
+          <p class="culture-desc">Latin harflerini ata yazısına dönüştür, büyük puntoda gör, otomatik seslendirme ile hisset.</p>
+          <div class="culture-chip">𐰴</div>
+        </a>
+
+        <a id="geoCard" class="culture-card geo-card" href="/pages/cultural_languages.html">
+          <div class="culture-topline">Bölgesel & Yaşayan</div>
+          <h2 class="culture-title">Coğrafyanın Dili</h2>
+          <p class="culture-desc">Kürtçe, Zazaca, Lazca, Çerkesce, Abhazca ve daha fazlası.</p>
+          <p class="culture-desc">Coğrafyamızda yaşayan dilleri yapay zeka destekli çeviri ve sesli kullanım ile keşfet.</p>
+          <div class="culture-chip">🌍</div>
+        </a>
       </div>
-    </div>
 
-    <div class="cloud-mini" aria-hidden="true">
-      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
-    </div>
+      <a id="textCard" class="wide-card texttotext-card" href="/pages/text_translate.html">
+        <div class="extra-ico">
+          <div class="text-bubble"></div>
+          <div class="text-doc">
+            <div class="text-doc-line t1"></div>
+            <div class="text-doc-line t2"></div>
+            <div class="text-doc-line t3"></div>
+          </div>
+        </div>
 
-    <div class="controlRow">
-      <button class="lessonBtn" id="btnLessonToggle" type="button">
-        <span class="badge" id="badgeState">READY</span>
-        <span id="btnLessonText">Dersi Başlat</span>
-      </button>
-      <div class="badge" id="badgeTry">●●●</div>
-      <div class="badge" id="badgeScore">95%</div>
-    </div>
+        <div class="wide-body">
+          <div class="card-topline">Metin ve Fotoğraf</div>
+          <h2 class="wide-title">TextToText</h2>
+          <p class="wide-desc">Yazıdan veya fotoğraftan çeviri yap. Hızlı, sade ve otomatik sesli okuma destekli.</p>
+        </div>
 
-    <div class="chat-area" id="chat"></div>
+        <div class="arrow-chip"></div>
+      </a>
 
-    <div class="input-dock">
-      <div class="dock-inner">
-        <textarea id="msgInput" rows="1" placeholder="Yanıtını yaz…" spellcheck="false"></textarea>
-        <button class="send-btn" id="sendBtn" aria-label="Gönder">
-          <svg viewBox="0 0 24 24">
-            <path d="M22 2L11 13"></path>
-            <path d="M22 2L15 22L11 13L2 9L22 2Z"></path>
-          </svg>
-        </button>
-      </div>
-    </div>
+      <a id="funCard" class="wide-card fun-card" href="/pages/game_menu.html">
+        <div class="fun-ico">
+          <div class="fun-dice"></div>
+        </div>
 
-    <div class="footerbar">
-      <div class="footerBrand">italkyAI Teacher • 2026</div>
-    </div>
+        <div class="wide-body">
+          <div class="card-topline">Oyunlu Eğitim</div>
+          <h2 class="wide-title">Eğlenerek Öğren</h2>
+          <p class="wide-desc">Kelime, konuşma ve mini oyunlarla öğrenmeyi daha akıcı ve keyifli hale getir.</p>
+        </div>
+
+        <div class="arrow-chip"></div>
+      </a>
+
+      <a id="levelCard" class="wide-card level-card" href="/pages/level_test_hub.html">
+        <div class="level-ico">
+          <div class="level-bars">
+            <span></span><span></span><span></span>
+          </div>
+        </div>
+
+        <div class="wide-body">
+          <div class="card-topline">Ölç & Başla</div>
+          <h2 class="wide-title">Seviye Tespit Sınavı</h2>
+          <p class="wide-desc">Mevcut dil seviyeni ölç, sana uygun başlangıç noktasını sistem otomatik belirlesin.</p>
+        </div>
+
+        <div class="arrow-chip"></div>
+      </a>
+
+      <a id="practiceCard" class="wide-card practice-card" href="/pages/pratice_ai_select.html">
+        <div class="practice-ico">
+          <div class="practice-chat"></div>
+          <div class="practice-chat right"></div>
+        </div>
+
+        <div class="wide-body">
+          <div class="card-topline">Canlı Gelişim</div>
+          <h2 class="wide-title">Pratik Yap</h2>
+          <p class="wide-desc">Öğretmen destekli konuşma ve tekrar akışlarıyla pratik yap, akıcılığını güçlendir.</p>
+        </div>
+
+        <div class="arrow-chip"></div>
+      </a>
+    </section>
+
   </div>
+</main>
 
-  <script type="module" src="/js/voice_teacher.page.js"></script>
+<script type="module">
+import { mountShell } from "/js/ui_shell.js";
+try {
+  mountShell({ scroll: "auto" });
+} catch (e) {
+  console.error("ui_shell HATASI:", e);
+}
+</script>
+
+<script>
+/* =========================================================
+   HOME ACCESS + 7 GÜN KURALI + PAKET GÖRÜNÜRLÜK
+   TASARIMA DOKUNMADAN SADECE MANTIK EKLER
+========================================================= */
+
+const ITALKY_TRIAL_DAYS = 7;
+const ITALKY_DAY_MS = 24 * 60 * 60 * 1000;
+
+function italkyGetTrialStart() {
+  let startedAt = localStorage.getItem("trial_started_at");
+  if (!startedAt) {
+    startedAt = String(Date.now());
+    localStorage.setItem("trial_started_at", startedAt);
+  }
+  return Number(startedAt);
+}
+
+function italkyNormalizePackageCode(raw) {
+  const value = String(raw || "").trim().toLowerCase();
+
+  if (!value) return "";
+  if (value.includes("premium")) return "premium";
+  if (value.includes("translate")) return "translate";
+  if (value.includes("education")) return "education";
+  if (value.includes("egitim")) return "education";
+
+  return value;
+}
+
+function italkyGetAccessState() {
+  const startedAt = italkyGetTrialStart();
+  const now = Date.now();
+  const elapsed = now - startedAt;
+
+  const remainingMs = Math.max(0, (ITALKY_TRIAL_DAYS * ITALKY_DAY_MS) - elapsed);
+  const trialActive = remainingMs > 0;
+  const remainingDays = Math.max(0, Math.ceil(remainingMs / ITALKY_DAY_MS));
+
+  const packageCode = italkyNormalizePackageCode(
+    localStorage.getItem("package_code") ||
+    localStorage.getItem("premium_plan_code") ||
+    ""
+  );
+
+  const premiumFlag =
+    localStorage.getItem("premium_is_active") === "1" ||
+    localStorage.getItem("premium_is_active") === "true";
+
+  const premiumActive = premiumFlag || packageCode === "premium";
+  const educationActive = trialActive || premiumActive || packageCode === "education";
+  const translateActive = trialActive || premiumActive || packageCode === "translate";
+  const anyPaidPackage = premiumActive || packageCode === "education" || packageCode === "translate";
+  const lockedAll = !trialActive && !anyPaidPackage;
+
+  return {
+    trialActive,
+    remainingDays,
+    packageCode,
+    premiumActive,
+    educationActive,
+    translateActive,
+    anyPaidPackage,
+    lockedAll
+  };
+}
+
+function italkyShow(el, isVisible) {
+  if (!el) return;
+  el.style.display = isVisible ? "" : "none";
+}
+
+function italkySetHeroStatus(text) {
+  const heroStatus = document.getElementById("heroStatus");
+  if (heroStatus) heroStatus.textContent = text || "";
+}
+
+function italkyApplyAccessToHome() {
+  const access = italkyGetAccessState();
+
+  const heroSub = document.querySelector(".heroSub");
+  const upgradeBox = document.getElementById("nfcUpgradeBox");
+
+  const faceCard = document.getElementById("faceCard");
+  const offlineCard = document.getElementById("offlineCard");
+  const ataCard = document.getElementById("ataCard");
+  const geoCard = document.getElementById("geoCard");
+  const textCard = document.getElementById("textCard");
+  const funCard = document.getElementById("funCard");
+  const levelCard = document.getElementById("levelCard");
+  const practiceCard = document.getElementById("practiceCard");
+
+  const codeWrap = document.querySelector(".connect-code-wrap");
+  const sideBtn = document.getElementById("goSideToSide");
+
+  italkyShow(faceCard, false);
+  italkyShow(offlineCard, false);
+  italkyShow(ataCard, false);
+  italkyShow(geoCard, false);
+  italkyShow(textCard, false);
+  italkyShow(funCard, false);
+  italkyShow(levelCard, false);
+  italkyShow(practiceCard, false);
+
+  italkyShow(codeWrap, false);
+  italkyShow(sideBtn, false);
+  italkyShow(upgradeBox, false);
+
+  if (access.trialActive) {
+    italkyShow(faceCard, true);
+    italkyShow(offlineCard, true);
+    italkyShow(ataCard, true);
+    italkyShow(geoCard, true);
+    italkyShow(textCard, true);
+    italkyShow(funCard, true);
+    italkyShow(levelCard, true);
+    italkyShow(practiceCard, true);
+
+    italkyShow(codeWrap, true);
+    italkyShow(sideBtn, true);
+
+    italkySetHeroStatus(`7 gün ücretsiz full erişim açık • ${access.remainingDays} gün kaldı`);
+
+    if (heroSub) {
+      heroSub.textContent =
+        "İlk 7 gün boyunca tüm paketler açık. Süre bitince bir paket seçmen gerekecek.";
+    }
+
+    return access;
+  }
+
+  if (access.premiumActive) {
+    italkyShow(faceCard, true);
+    italkyShow(offlineCard, true);
+    italkyShow(ataCard, true);
+    italkyShow(geoCard, true);
+    italkyShow(textCard, true);
+    italkyShow(funCard, true);
+    italkyShow(levelCard, true);
+    italkyShow(practiceCard, true);
+
+    italkyShow(codeWrap, true);
+    italkyShow(sideBtn, true);
+
+    italkySetHeroStatus("Premium aktif • Tüm modüller açık");
+
+    if (heroSub) {
+      heroSub.textContent =
+        "Premium üyelik aktif. Translate ve Eğitim tarafının tamamı açık.";
+    }
+
+    return access;
+  }
+
+  if (access.packageCode === "education") {
+    italkyShow(funCard, true);
+    italkyShow(levelCard, true);
+    italkyShow(practiceCard, true);
+
+    italkySetHeroStatus("Eğitim paketi aktif");
+
+    if (heroSub) {
+      heroSub.textContent =
+        "Eğlenerek Öğren, Pratik Yap ve Seviye Tespit modülleri açık.";
+    }
+
+    italkyShow(upgradeBox, true);
+    return access;
+  }
+
+  if (access.packageCode === "translate") {
+    italkyShow(faceCard, true);
+    italkyShow(offlineCard, true);
+    italkyShow(ataCard, true);
+    italkyShow(geoCard, true);
+    italkyShow(textCard, true);
+
+    italkyShow(codeWrap, true);
+    italkyShow(sideBtn, true);
+
+    italkySetHeroStatus("Translate paketi aktif");
+
+    if (heroSub) {
+      heroSub.textContent =
+        "FaceToFace, EarToEar, TextToText, Ata Dilleri, Coğrafyanın Dili ve Offline Translate modülleri açık.";
+    }
+
+    italkyShow(upgradeBox, true);
+    return access;
+  }
+
+  italkySetHeroStatus("7 günlük deneme bitti • Paket seçmelisin");
+
+  if (heroSub) {
+    heroSub.textContent =
+      "Devam etmek için Eğitim Paketi, Translate Paketi veya Premium üyelik seç.";
+  }
+
+  italkyShow(upgradeBox, true);
+  return access;
+}
+</script>
+
+<script>
+function openCodePrompt(){
+  const access = italkyGetAccessState();
+  const canUseEarToEar = access.trialActive || access.premiumActive || access.packageCode === "translate";
+
+  if(!canUseEarToEar){
+    location.href = "/pages/upgrade_pack.html";
+    return;
+  }
+
+  location.href = "/pages/sidetoside_code.html";
+}
+window.openCodePrompt = openCodePrompt;
+</script>
+
+<script type="module">
+const API_BASE = "https://italky-api.onrender.com/api";
+const connectionCodeText = document.getElementById("connectionCodeText");
+const copyConnectionCodeBtn = document.getElementById("copyConnectionCodeBtn");
+
+const ROOM_KEY = "italky_active_interpreter_room_id";
+const ROOM_LANG_KEY = "italky_active_interpreter_lang";
+const ROOM_CODE_KEY = "italky_active_interpreter_code";
+
+let activeRoomId = "";
+let activeRoomCode = "";
+let redirected = false;
+let roomPollTimer = null;
+
+function setHeroStatus(text){
+  const heroStatus = document.getElementById("heroStatus");
+  if(heroStatus) heroStatus.textContent = text || "";
+}
+
+function makeConnectionCode(length = 6){
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let out = "";
+  for(let i = 0; i < length; i++){
+    out += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return out;
+}
+
+function setConnectionCode(code){
+  activeRoomCode = String(code || "").trim().toUpperCase();
+  if(connectionCodeText){
+    connectionCodeText.textContent = activeRoomCode || "------";
+  }
+  try{
+    localStorage.setItem(ROOM_CODE_KEY, activeRoomCode);
+  }catch(e){
+    console.warn("[HOME localStorage ROOM_CODE_KEY]", e);
+  }
+}
+
+async function createRoom(myLang = "tr"){
+  const hostCode = makeConnectionCode(6);
+  const r = await fetch(`${API_BASE}/interpreter/create-room`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      host_code: hostCode,
+      my_lang: myLang,
+      mode: "interpreter"
+    })
+  });
+  const j = await r.json().catch(() => ({}));
+  if(!r.ok || !j?.room_id){
+    throw new Error(j?.detail || j?.error || "Room oluşturulamadı");
+  }
+  return {
+    ...j,
+    host_code: String(j?.host_code || hostCode || "").trim().toUpperCase()
+  };
+}
+
+async function getRoomStatus(roomId){
+  const r = await fetch(`${API_BASE}/interpreter/room/${encodeURIComponent(roomId)}`, {
+    method: "GET"
+  });
+  const j = await r.json().catch(() => ({}));
+  if(!r.ok || !j?.room_id){
+    throw new Error(j?.detail || j?.error || "Room okunamadı");
+  }
+  return j;
+}
+
+function stopRoomPolling(){
+  try{
+    clearInterval(roomPollTimer);
+  }catch(e){}
+  roomPollTimer = null;
+}
+
+function launchHostRoom(roomId){
+  if(!roomId || redirected) return;
+  redirected = true;
+  stopRoomPolling();
+  location.href = `/pages/sidetoside.html?room=${encodeURIComponent(roomId)}&role=host&my=tr&auto=1`;
+}
+
+function startRoomPolling(roomId){
+  if(!roomId) return;
+  stopRoomPolling();
+  roomPollTimer = setInterval(async () => {
+    if(redirected) return;
+    try{
+      const room = await getRoomStatus(roomId);
+      const peerConnected = room?.status === "active" && !!String(room?.guest_lang || "").trim();
+      if(peerConnected){
+        setHeroStatus("Karşı taraf bağlandı. Oda açılıyor...");
+        launchHostRoom(roomId);
+        return;
+      }
+      setHeroStatus("Bağlantı kodu hazır. Karşı taraf bekleniyor...");
+    }catch(e){
+      console.warn("[HOME room poll error]", e);
+      setHeroStatus("Bağlantı kontrol edilemiyor...");
+    }
+  }, 1500);
+}
+
+async function prepareRoom(){
+  const access = italkyGetAccessState();
+  const canUseEarToEar = access.trialActive || access.premiumActive || access.packageCode === "translate";
+
+  redirected = false;
+  stopRoomPolling();
+
+  if(!canUseEarToEar){
+    setConnectionCode("------");
+    return;
+  }
+
+  try{
+    setHeroStatus("Oda hazırlanıyor...");
+    const created = await createRoom("tr");
+    activeRoomId = String(created.room_id || "").trim();
+    if(!activeRoomId) throw new Error("room_id boş geldi");
+    setConnectionCode(created.host_code || makeConnectionCode(6));
+    localStorage.setItem(ROOM_KEY, activeRoomId);
+    localStorage.setItem(ROOM_LANG_KEY, "tr");
+    localStorage.setItem(ROOM_CODE_KEY, activeRoomCode);
+    setHeroStatus("Bağlantı kodu hazır. Karşı taraf bekleniyor...");
+    startRoomPolling(activeRoomId);
+  }catch(e){
+    console.error("[HOME prepareRoom]", e);
+    setConnectionCode("ERROR1");
+    setHeroStatus(e?.message || "Oda hazırlanamadı");
+  }
+}
+
+copyConnectionCodeBtn?.addEventListener("click", async () => {
+  const value = String(activeRoomCode || "").trim();
+  if(!value || value === "------") return;
+  try{
+    await navigator.clipboard.writeText(value);
+    setHeroStatus("Bağlantı kodu kopyalandı.");
+  }catch{
+    const temp = document.createElement("textarea");
+    temp.value = value;
+    document.body.appendChild(temp);
+    temp.select();
+    try{ document.execCommand("copy"); }catch(e){}
+    temp.remove();
+    setHeroStatus("Bağlantı kodu kopyalandı.");
+  }
+});
+
+italkyApplyAccessToHome();
+prepareRoom();
+
+window.addEventListener("beforeunload", () => {
+  stopRoomPolling();
+});
+</script>
+
+<script type="module">
+  import { initGlobalAccess } from "/js/global_access.js";
+  initGlobalAccess();
+</script>
+
 </body>
 </html>
