@@ -4,8 +4,8 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
   <title>italkyAI • Practice AI</title>
-
   <link rel="icon" href="data:," />
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet">
@@ -18,13 +18,11 @@
       --muted:rgba(255,255,255,.68);
       --soft:rgba(255,255,255,.48);
       --line:rgba(255,255,255,.12);
-      --glass:rgba(255,255,255,.05);
       --c1:#67e8f9;
       --c2:#60a5fa;
       --c3:#34d399;
       --safe-bottom:env(safe-area-inset-bottom,0px);
       --shellLift:0px;
-      --grad:linear-gradient(135deg,var(--c1),var(--c2),var(--c3));
       --shadow:0 18px 40px rgba(0,0,0,.35);
     }
 
@@ -50,21 +48,17 @@
 
     #pageContent{
       height:100%;
-      overflow-y:auto;
-      overflow-x:hidden;
-      scrollbar-width:none;
+      overflow:hidden;
       padding:10px 10px calc(10px + var(--safe-bottom) + var(--shellLift)) 10px;
     }
-    #pageContent::-webkit-scrollbar{display:none}
 
     .page{
       width:100%;
       max-width:480px;
-      min-height:100%;
+      height:100%;
       margin:0 auto;
       display:flex;
       flex-direction:column;
-      gap:10px;
     }
 
     .hero{
@@ -73,11 +67,13 @@
       border-radius:26px;
       background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
       box-shadow:var(--shadow);
-      padding:16px 14px 18px;
+      padding:18px 14px 18px;
       position:relative;
       overflow:hidden;
       display:flex;
       flex-direction:column;
+      align-items:center;
+      justify-content:space-between;
     }
 
     .hero::before{
@@ -93,44 +89,46 @@
       pointer-events:none;
     }
 
-    .hero-top{
+    .top{
+      width:100%;
+      text-align:center;
       display:flex;
-      align-items:center;
-      justify-content:center;
-      margin-bottom:8px;
+      flex-direction:column;
+      gap:8px;
+      z-index:2;
     }
 
     .title{
       margin:0;
       font-family:"Space Grotesk",sans-serif;
-      font-size:25px;
+      font-size:26px;
       font-weight:800;
       letter-spacing:-.4px;
     }
 
-    .desc{
-      margin:0;
-      color:var(--muted);
-      font-size:14px;
-      line-height:1.55;
-      font-weight:600;
+    .status{
+      min-height:18px;
+      font-size:12px;
+      font-weight:800;
+      color:var(--soft);
       text-align:center;
     }
 
-    .center-zone{
+    .center{
       flex:1;
+      width:100%;
       display:flex;
       flex-direction:column;
       align-items:center;
       justify-content:center;
-      gap:16px;
-      padding:8px 0 0;
+      gap:18px;
+      z-index:2;
     }
 
     .orb-wrap{
       position:relative;
-      width:220px;
-      height:220px;
+      width:230px;
+      height:230px;
       display:grid;
       place-items:center;
     }
@@ -162,8 +160,8 @@
 
     .orb{
       position:relative;
-      width:122px;
-      height:122px;
+      width:124px;
+      height:124px;
       border-radius:50%;
       background:
         radial-gradient(circle at 28% 28%, rgba(255,255,255,.95), rgba(255,255,255,.14) 18%, rgba(103,232,249,.38) 42%, rgba(96,165,250,.26) 62%, rgba(52,211,153,.14) 82%, rgba(255,255,255,.04) 100%);
@@ -176,31 +174,23 @@
 
     .orb.speaking{
       animation:talkBreath 1.15s ease-in-out infinite;
-      box-shadow:
-        0 0 42px rgba(103,232,249,.34),
-        0 0 92px rgba(96,165,250,.22),
-        inset 0 0 26px rgba(255,255,255,.22);
     }
 
     .orb.listening{
       animation:listenBreath 1s ease-in-out infinite;
-      box-shadow:
-        0 0 44px rgba(52,211,153,.36),
-        0 0 90px rgba(52,211,153,.18),
-        inset 0 0 24px rgba(255,255,255,.22);
     }
 
     .caption{
+      min-height:18px;
       font-size:13px;
       font-weight:900;
       color:var(--soft);
       text-align:center;
-      min-height:18px;
     }
 
     .subtitle-wrap{
       width:100%;
-      min-height:120px;
+      min-height:110px;
       max-height:140px;
       overflow:hidden;
       display:flex;
@@ -232,15 +222,16 @@
       padding:0 4px;
     }
 
-    .mic-zone{
+    .bottom{
+      width:100%;
       display:flex;
       justify-content:center;
-      margin-top:6px;
+      z-index:2;
     }
 
     .mic-btn{
-      width:88px;
-      height:88px;
+      width:92px;
+      height:92px;
       border-radius:50%;
       border:1px solid rgba(255,255,255,.14);
       background:linear-gradient(135deg, rgba(103,232,249,.18), rgba(96,165,250,.16));
@@ -253,7 +244,9 @@
         0 0 24px rgba(103,232,249,.14);
       transition:transform .14s ease, box-shadow .14s ease;
     }
-    .mic-btn:active{transform:scale(.985)}
+
+    .mic-btn:active{ transform:scale(.985); }
+
     .mic-btn.listening{
       background:linear-gradient(135deg, rgba(52,211,153,.28), rgba(103,232,249,.18));
       box-shadow:
@@ -261,113 +254,23 @@
         0 0 34px rgba(52,211,153,.24);
     }
 
-    .panel{
-      border:1px solid var(--line);
-      border-radius:22px;
-      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
-      box-shadow:var(--shadow);
-      padding:14px;
-    }
-
-    .section-title{
-      margin:0 0 10px;
-      font-size:15px;
-      font-weight:900;
-      color:#fff;
-      letter-spacing:.2px;
-    }
-
-    .voice-row{
-      display:grid;
-      grid-template-columns:1fr;
-      gap:10px;
-    }
-
-    .select{
-      width:100%;
-      min-height:52px;
-      border-radius:14px;
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(255,255,255,.05);
-      color:#fff;
-      padding:0 14px;
-      font-size:14px;
-      font-weight:800;
-    }
-    .select option{color:#111}
-
-    .conv{
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-      min-height:160px;
-      max-height:240px;
-      overflow:auto;
-      scrollbar-width:none;
-      padding-right:2px;
-    }
-    .conv::-webkit-scrollbar{display:none}
-
-    .bubble{
-      max-width:88%;
-      padding:12px 14px;
-      border-radius:18px;
-      font-size:14px;
-      line-height:1.45;
-      font-weight:700;
-      border:1px solid rgba(255,255,255,.08);
-      word-break:break-word;
-      align-self:flex-start;
-      background:rgba(255,255,255,.05);
-    }
-
-    .ai-box{
-      min-height:86px;
-      border-radius:18px;
-      border:1px solid rgba(255,255,255,.10);
-      background:rgba(255,255,255,.04);
-      padding:12px 14px;
-    }
-
-    .mini-label{
-      font-size:11px;
-      font-weight:900;
-      color:var(--soft);
-      letter-spacing:.7px;
-      margin-bottom:8px;
-    }
-
-    .ai-tr-text{
-      font-size:14px;
-      line-height:1.5;
-      color:#fff;
-      font-weight:700;
-      min-height:24px;
-    }
-
-    .status-line{
-      margin-top:8px;
-      min-height:18px;
-      font-size:12px;
-      font-weight:800;
-      color:var(--soft);
-      text-align:center;
-    }
-
     @keyframes spin{
       from{transform:rotate(0deg)}
       to{transform:rotate(360deg)}
     }
+
     @keyframes idleBreath{
       0%,100%{transform:scale(1)}
       50%{transform:scale(1.035)}
     }
+
     @keyframes talkBreath{
       0%,100%{transform:scale(1)}
       25%{transform:scale(1.04)}
       50%{transform:scale(1.09)}
       75%{transform:scale(1.04)}
     }
+
     @keyframes listenBreath{
       0%,100%{transform:scale(1)}
       50%{transform:scale(1.07)}
@@ -378,15 +281,12 @@
   <div id="pageContent">
     <div class="page">
       <section class="hero">
-        <div class="hero-top">
+        <div class="top">
           <h1 class="title">Practice AI</h1>
+          <div class="status" id="statusLine">Seçili dilde konuşmaya başla.</div>
         </div>
 
-        <p class="desc">
-          Seçili dilde öğretmen gibi konuşur. Kısa cümlelerle ilerler. Yanlış telaffuzda aynı ifadeyi %95 üstüne kadar tekrar ettirir.
-        </p>
-
-        <div class="center-zone">
+        <div class="center">
           <div class="orb-wrap">
             <div class="ring"></div>
             <div class="ring r2"></div>
@@ -403,26 +303,13 @@
           </div>
         </div>
 
-        <div class="mic-zone">
+        <div class="bottom">
           <button class="mic-btn" id="micBtn">🎙️</button>
-        </div>
-
-        <div class="status-line" id="statusLine">Seçili dilde konuşmaya başla.</div>
-      </section>
-
-      <section class="panel">
-        <h2 class="section-title">AI Cevabı</h2>
-        <div class="conv" id="conversation"></div>
-      </section>
-
-      <section class="panel">
-        <h2 class="section-title">Türkçe Açıklama</h2>
-        <div class="ai-box">
-          <div class="mini-label">AI ALT AÇIKLAMA</div>
-          <div class="ai-tr-text" id="aiTrText">Henüz AI cevabı yok.</div>
         </div>
       </section>
     </div>
   </div>
+
+  <script type="module" src="/js/practice_ai_page.js"></script>
 </body>
 </html>
