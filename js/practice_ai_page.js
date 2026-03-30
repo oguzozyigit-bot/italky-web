@@ -73,9 +73,14 @@ function getAccessState() {
   return {
     raw: a,
     is_logged_in: a.is_logged_in === true,
-    package_code: String(a.package_code || "none").toLowerCase(),
+    package_code: String(
+      a.package_code ||
+      a.selected_package_code ||
+      a.plan ||
+      "none"
+    ).toLowerCase(),
     trial_active: a.trial_active === true,
-    jeton_balance: Number(a.jeton_balance || 0),
+    jeton_balance: Number(a.jeton_balance ?? a.tokens ?? 0),
     can_practice: a.can_practice === true
   };
 }
@@ -103,7 +108,7 @@ function ensurePracticeAccess() {
     return openMembershipModalFallback("Practice AI deneme paketinde kapalıdır. Devam etmek için uygun üyelik almalısınız.");
   }
 
-  if (access.package_code === "translate") {
+  if (String(access.package_code).includes("translate")) {
     return openMembershipModalFallback("Practice AI, Translate paketinde kapalıdır. Bu modül için uygun üyelik almalısınız.");
   }
 
@@ -181,7 +186,7 @@ function setStatus(text = "") {
 
 function updateTranslation(text = "") {
   const el = $("turkishTranslation");
-  if (el) el.textContent = text || "Öğretmeninin Türkçe açıklaması burada görünecek.";
+  if (el) el.textContent = text || "Hoşgeldin. Öğretmen birazdan gelecek...";
 }
 
 function saveState() {
@@ -403,7 +408,9 @@ async function askTeacher(userText, scoreValue = null) {
   console.log("PRACTICE CHAT RAW:", raw);
 
   if (!res.ok) {
-    throw new Error(`practice_chat_http_${res.status}: ${raw}`);
+    const parsedErr = safeJson(raw) || {};
+    const detail = parsedErr.detail || raw || `HTTP ${res.status}`;
+    throw new Error(`practice_chat_http_${res.status}: ${detail}`);
   }
 
   const data = safeJson(raw) || {};
@@ -523,6 +530,13 @@ function initRecognition() {
 /* ---------------------------------------------------
    FLOW
 --------------------------------------------------- */
+function showUserSafeError() {
+  setStatus("italkyAI şu anda yanıt oluşturamadı.");
+  updateTranslation("italkyAI şu anda yanıt oluşturamadı. Lütfen tekrar dene.");
+  setCaption("Hazır");
+  setWorld("idle");
+}
+
 async function handleUserSpeech(spokenText) {
   const spoken = String(spokenText || "").trim();
   if (!spoken) return;
@@ -539,9 +553,8 @@ async function handleUserSpeech(spokenText) {
     const ai = await askTeacher(spoken, scoreValue);
 
     if (!ai.reply) {
-      setStatus("Öğretmen cevap veremedi.");
-      setCaption("Hazır");
-      setWorld("idle");
+      console.warn("AI reply empty");
+      showUserSafeError();
       return;
     }
 
@@ -568,18 +581,18 @@ async function handleUserSpeech(spokenText) {
     setStatus(state.mustRepeat ? "Tekrarla." : "Devam edelim.");
 
   } catch (e) {
-    console.error(e);
-    setStatus("Bağlantı hatası.");
-    setCaption("Hazır");
-    setWorld("idle");
+    console.error("PRACTICE CHAT ERROR:", e);
+    showUserSafeError();
   }
 }
 
 async function startFirstTurn() {
   try {
     const ai = await askTeacher("", null);
+
     if (!ai.reply) {
-      setStatus("Öğretmen başlatılamadı.");
+      console.warn("AI start reply empty");
+      showUserSafeError();
       return;
     }
 
@@ -592,8 +605,8 @@ async function startFirstTurn() {
     saveState();
     speakAI(ai.reply);
   } catch (e) {
-    console.error(e);
-    setStatus("Ders başlatılamadı.");
+    console.error("PRACTICE START ERROR:", e);
+    showUserSafeError();
   }
 }
 
