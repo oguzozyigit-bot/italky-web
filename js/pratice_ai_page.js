@@ -2,6 +2,12 @@ import { mountShell } from "/js/ui_shell.js";
 
 mountShell({ scroll: "none" });
 
+try{
+  const root = getComputedStyle(document.documentElement);
+  const footerH = parseFloat(root.getPropertyValue("--footerH")) || 0;
+  document.documentElement.style.setProperty("--shellLift", footerH ? `${footerH + 10}px` : "0px");
+}catch{}
+
 const API_BASE = "https://italky-api.onrender.com";
 const $ = (id) => document.getElementById(id);
 
@@ -18,11 +24,24 @@ const STORAGE = {
   history: "italky_practice_ai_history_v4"
 };
 
-let currentLang =
-  localStorage.getItem(STORAGE.lang) ||
-  localStorage.getItem("italky_game_lang") ||
-  "en";
+function resolveLang() {
+  const q = new URLSearchParams(location.search);
+  const fromQuery = String(q.get("lang") || "").trim().toLowerCase();
+  const fromPractice = String(localStorage.getItem(STORAGE.lang) || "").trim().toLowerCase();
+  const fromGame = String(localStorage.getItem("italky_game_lang") || "").trim().toLowerCase();
 
+  const picked =
+    (LANGS[fromQuery] && fromQuery) ||
+    (LANGS[fromPractice] && fromPractice) ||
+    (LANGS[fromGame] && fromGame) ||
+    "en";
+
+  localStorage.setItem(STORAGE.lang, picked);
+  localStorage.setItem("italky_game_lang", picked);
+  return picked;
+}
+
+let currentLang = resolveLang();
 let history = [];
 try {
   history = JSON.parse(localStorage.getItem(STORAGE.history) || "[]");
@@ -44,12 +63,9 @@ const state = {
 
 let audioCtx = null;
 
-/* =========================================================
-   ACCESS
-========================================================= */
+/* ACCESS */
 function getAccessState() {
   const a = window.__ITALKY_ACCESS__ || {};
-
   const trialActive =
     a.trialActive === true ||
     a.trial_active === true ||
@@ -76,7 +92,7 @@ function getAccessState() {
       ""
     ).toLowerCase();
 
-  return { trialActive, hasPackage, packageName, raw: a };
+  return { trialActive, hasPackage, packageName };
 }
 
 function ensurePracticeAccess() {
@@ -124,18 +140,14 @@ async function ensureTokenAccess() {
   return true;
 }
 
-/* =========================================================
-   AUDIO / WORLD
-========================================================= */
+/* WORLD / UI */
 function ensureAudio() {
   try {
     if (!audioCtx) {
       const AC = window.AudioContext || window.webkitAudioContext;
       audioCtx = AC ? new AC() : null;
     }
-    if (audioCtx && audioCtx.state === "suspended") {
-      audioCtx.resume().catch(() => {});
-    }
+    if (audioCtx && audioCtx.state === "suspended") audioCtx.resume().catch(()=>{});
   } catch {}
   return audioCtx;
 }
@@ -186,6 +198,12 @@ function updateTranslation(text = "") {
   if (el) el.textContent = text || "Öğretmeninin açıklaması bekleniyor...";
 }
 
+function updateLangBadge() {
+  const meta = LANGS[currentLang];
+  const badge = $("langBadge");
+  if (badge) badge.textContent = `${meta.flag} ${meta.name}`;
+}
+
 function saveState() {
   localStorage.setItem(STORAGE.lang, currentLang);
   localStorage.setItem(STORAGE.history, JSON.stringify(history.slice(-20)));
@@ -195,9 +213,7 @@ function safeJson(txt) {
   try { return JSON.parse(txt); } catch { return null; }
 }
 
-/* =========================================================
-   PROFILE
-========================================================= */
+/* PROFILE */
 async function getProfileLevel() {
   try {
     const raw = localStorage.getItem("italky_user_v1") || "{}";
@@ -210,9 +226,7 @@ async function getProfileLevel() {
   }
 }
 
-/* =========================================================
-   PROMPT
-========================================================= */
+/* PROMPT */
 const GEMINI_TEACHER_SYSTEM = `
 You are the teacher inside italkyAI Practice AI.
 
@@ -277,9 +291,7 @@ Runtime rules:
 `;
 }
 
-/* =========================================================
-   BACKEND CALL
-========================================================= */
+/* BACKEND */
 async function askTeacher(userText, scoreValue = null) {
   state.level = await getProfileLevel();
 
@@ -311,9 +323,7 @@ async function askTeacher(userText, scoreValue = null) {
   };
 }
 
-/* =========================================================
-   TTS
-========================================================= */
+/* TTS */
 function speakAI(text) {
   const clean = String(text || "").trim();
   if (!clean) return;
@@ -382,9 +392,7 @@ function speakAI(text) {
   }
 }
 
-/* =========================================================
-   RECOGNITION
-========================================================= */
+/* RECOGNITION */
 function initRecognition() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) return null;
@@ -434,9 +442,7 @@ function initRecognition() {
   return rec;
 }
 
-/* =========================================================
-   PRONUNCIATION SCORE
-========================================================= */
+/* PRON SCORE */
 function stripForCompare(s) {
   return String(s || "")
     .toLowerCase()
@@ -484,9 +490,7 @@ function pronunciationScore(spoken, target) {
   return Math.max(0, Math.round((1 - dist / maxLen) * 100));
 }
 
-/* =========================================================
-   MAIN FLOW
-========================================================= */
+/* FLOW */
 async function handleUserSpeech(spokenText) {
   const spoken = String(spokenText || "").trim();
   if (!spoken) return;
@@ -518,7 +522,6 @@ async function handleUserSpeech(spokenText) {
     history = history.slice(-24);
 
     updateTranslation(ai.reply_tr || ai.reply);
-    pushSubtitle(ai.reply_tr || ai.reply);
 
     if (ai.should_repeat && ai.target_phrase) {
       state.mustRepeat = true;
@@ -594,7 +597,6 @@ $("micBtn").addEventListener("click", async () => {
   }
 });
 
-/* warm up voices */
 window.addEventListener("click", () => {
   try { window.speechSynthesis?.getVoices?.(); } catch {}
 }, { once: true });
@@ -607,6 +609,7 @@ window.onload = async () => {
   if (!ensurePracticeAccess()) return;
   if (!(await ensureTokenAccess())) return;
 
+  updateLangBadge();
   setWorld("idle");
   setCaption("Hazır");
   updateTranslation();
