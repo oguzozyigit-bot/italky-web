@@ -347,28 +347,28 @@
   </div>
 
   <script type="module">
-    import { mountShell } from "/js/ui_shell.js";
-    mountShell({ scroll: "none" });
+  import { mountShell } from "/js/ui_shell.js";
+  mountShell({ scroll: "none" });
 
-    try {
-      const root = getComputedStyle(document.documentElement);
-      const footerH = parseFloat(root.getPropertyValue("--footerH")) || 0;
-      document.documentElement.style.setProperty(
-        "--shellLift",
-        footerH ? `${footerH + 10}px` : "0px"
-      );
-    } catch {}
+  try {
+    const root = getComputedStyle(document.documentElement);
+    const footerH = parseFloat(root.getPropertyValue("--footerH")) || 0;
+    document.documentElement.style.setProperty(
+      "--shellLift",
+      footerH ? `${footerH + 10}px` : "0px"
+    );
+  } catch {}
 
-    setTimeout(() => {
-      document.getElementById("pageContent")?.classList.add("ready");
-    }, 120);
-  </script>
+  setTimeout(() => {
+    document.getElementById("pageContent")?.classList.add("ready");
+  }, 120);
+</script>
 
-  <script type="module">
-    import { initGlobalAccess } from "/js/global_access.js";
-    initGlobalAccess();
-  </script>
+<script type="module">
+  import { bootAccessGate } from "/js/global_access.js";
+  await bootAccessGate({ useCache: true });
+</script>
 
-  <script type="module" src="/js/practice_ai_page.js"></script>
+<script type="module" src="/js/practice_ai_page.js"></script>
 </body>
 </html>
