@@ -333,9 +333,24 @@
   </div>
 
   <script type="module">
-    import { initGlobalAccess } from "/js/global_access.js";
-    initGlobalAccess();
-  </script>
-  <script type="module" src="/js/practice_ai_page.js"></script>
+  import { mountShell } from "/js/ui_shell.js";
+  mountShell({ scroll: "none" });
+
+  try {
+    const root = getComputedStyle(document.documentElement);
+    const footerH = parseFloat(root.getPropertyValue("--footerH")) || 0;
+    document.documentElement.style.setProperty(
+      "--shellLift",
+      footerH ? `${footerH + 10}px` : "0px"
+    );
+  } catch {}
+</script>
+
+<script type="module">
+  import { initGlobalAccess } from "/js/global_access.js";
+  initGlobalAccess();
+</script>
+
+<script type="module" src="/js/practice_ai_page.js"></script>
 </body>
 </html>
