@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
   <title>italkyAI • Practice AI</title>
 
+  <link rel="icon" href="data:," />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet">
@@ -14,16 +15,13 @@
       --bg:#05070d;
       --bg2:#09101b;
       --txt:#fff;
-      --muted:rgba(255,255,255,.66);
-      --soft:rgba(255,255,255,.46);
+      --muted:rgba(255,255,255,.68);
+      --soft:rgba(255,255,255,.48);
       --line:rgba(255,255,255,.12);
       --glass:rgba(255,255,255,.05);
       --c1:#67e8f9;
       --c2:#60a5fa;
       --c3:#34d399;
-      --ok:#00e676;
-      --warn:#ffb84d;
-      --err:#ff5d7a;
       --safe-bottom:env(safe-area-inset-bottom,0px);
       --shellLift:0px;
       --grad:linear-gradient(135deg,var(--c1),var(--c2),var(--c3));
@@ -70,13 +68,16 @@
     }
 
     .hero{
+      flex:1;
       border:1px solid var(--line);
       border-radius:26px;
       background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
       box-shadow:var(--shadow);
-      padding:16px 14px 14px;
+      padding:16px 14px 18px;
       position:relative;
       overflow:hidden;
+      display:flex;
+      flex-direction:column;
     }
 
     .hero::before{
@@ -95,54 +96,41 @@
     .hero-top{
       display:flex;
       align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      margin-bottom:10px;
+      justify-content:center;
+      margin-bottom:8px;
     }
 
     .title{
       margin:0;
       font-family:"Space Grotesk",sans-serif;
-      font-size:24px;
+      font-size:25px;
       font-weight:800;
       letter-spacing:-.4px;
     }
 
-    .lang-chip{
-      min-height:36px;
-      padding:0 12px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.14);
-      background:rgba(255,255,255,.06);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:12px;
-      font-weight:900;
-      white-space:nowrap;
-    }
-
     .desc{
-      margin:0 0 12px;
+      margin:0;
       color:var(--muted);
       font-size:14px;
       line-height:1.55;
       font-weight:600;
+      text-align:center;
     }
 
-    .ai-stage{
+    .center-zone{
+      flex:1;
       display:flex;
       flex-direction:column;
       align-items:center;
       justify-content:center;
-      gap:12px;
+      gap:16px;
       padding:8px 0 0;
     }
 
     .orb-wrap{
       position:relative;
-      width:214px;
-      height:214px;
+      width:220px;
+      height:220px;
       display:grid;
       place-items:center;
     }
@@ -174,8 +162,8 @@
 
     .orb{
       position:relative;
-      width:118px;
-      height:118px;
+      width:122px;
+      height:122px;
       border-radius:50%;
       background:
         radial-gradient(circle at 28% 28%, rgba(255,255,255,.95), rgba(255,255,255,.14) 18%, rgba(103,232,249,.38) 42%, rgba(96,165,250,.26) 62%, rgba(52,211,153,.14) 82%, rgba(255,255,255,.04) 100%);
@@ -212,8 +200,8 @@
 
     .subtitle-wrap{
       width:100%;
-      min-height:112px;
-      max-height:138px;
+      min-height:120px;
+      max-height:140px;
       overflow:hidden;
       display:flex;
       align-items:flex-end;
@@ -244,20 +232,20 @@
       padding:0 4px;
     }
 
-    .controls{
+    .mic-zone{
       display:flex;
       justify-content:center;
-      margin-top:8px;
+      margin-top:6px;
     }
 
     .mic-btn{
-      width:86px;
-      height:86px;
+      width:88px;
+      height:88px;
       border-radius:50%;
       border:1px solid rgba(255,255,255,.14);
       background:linear-gradient(135deg, rgba(103,232,249,.18), rgba(96,165,250,.16));
       color:#fff;
-      font-size:28px;
+      font-size:30px;
       font-weight:900;
       cursor:pointer;
       box-shadow:
@@ -265,7 +253,6 @@
         0 0 24px rgba(103,232,249,.14);
       transition:transform .14s ease, box-shadow .14s ease;
     }
-
     .mic-btn:active{transform:scale(.985)}
     .mic-btn.listening{
       background:linear-gradient(135deg, rgba(52,211,153,.28), rgba(103,232,249,.18));
@@ -314,7 +301,7 @@
       flex-direction:column;
       gap:10px;
       min-height:160px;
-      max-height:260px;
+      max-height:240px;
       overflow:auto;
       scrollbar-width:none;
       padding-right:2px;
@@ -330,13 +317,11 @@
       font-weight:700;
       border:1px solid rgba(255,255,255,.08);
       word-break:break-word;
-    }
-    .bubble.ai{
       align-self:flex-start;
       background:rgba(255,255,255,.05);
     }
 
-    .heard-box, .ai-box{
+    .ai-box{
       min-height:86px;
       border-radius:18px;
       border:1px solid rgba(255,255,255,.10);
@@ -352,7 +337,7 @@
       margin-bottom:8px;
     }
 
-    .heard-text, .ai-tr-text{
+    .ai-tr-text{
       font-size:14px;
       line-height:1.5;
       color:#fff;
@@ -395,14 +380,13 @@
       <section class="hero">
         <div class="hero-top">
           <h1 class="title">Practice AI</h1>
-          <div class="lang-chip" id="langChip">🇬🇧 English</div>
         </div>
 
         <p class="desc">
-          Seçili dilde öğretmen gibi konuşur. Kısa cümlelerle ilerler. Yanlış telaffuzda aynı ifadeyi tekrar ettirir.
+          Seçili dilde öğretmen gibi konuşur. Kısa cümlelerle ilerler. Yanlış telaffuzda aynı ifadeyi %95 üstüne kadar tekrar ettirir.
         </p>
 
-        <div class="ai-stage">
+        <div class="center-zone">
           <div class="orb-wrap">
             <div class="ring"></div>
             <div class="ring r2"></div>
@@ -419,7 +403,7 @@
           </div>
         </div>
 
-        <div class="controls">
+        <div class="mic-zone">
           <button class="mic-btn" id="micBtn">🎙️</button>
         </div>
 
@@ -427,28 +411,8 @@
       </section>
 
       <section class="panel">
-        <h2 class="section-title">AI Sesi</h2>
-        <div class="voice-row">
-          <select class="select" id="aiVoiceMode">
-            <option value="auto">Erkek ses / Otomatik</option>
-            <option value="native">Cihaz sesi</option>
-            <option value="web">Tarayıcı sesi</option>
-            <option value="mute">Sessiz</option>
-          </select>
-        </div>
-      </section>
-
-      <section class="panel">
-        <h2 class="section-title">AI Dersi</h2>
+        <h2 class="section-title">AI Cevabı</h2>
         <div class="conv" id="conversation"></div>
-      </section>
-
-      <section class="panel">
-        <h2 class="section-title">Son Algılanan Konuşma</h2>
-        <div class="heard-box">
-          <div class="mini-label">TANINAN SES</div>
-          <div class="heard-text" id="heardText">Henüz konuşma yok.</div>
-        </div>
       </section>
 
       <section class="panel">
@@ -460,647 +424,5 @@
       </section>
     </div>
   </div>
-
-  <script type="module">
-    import { mountShell } from "/js/ui_shell.js";
-
-    mountShell({ scroll:"none" });
-
-    const API_BASE = "https://italky-api.onrender.com";
-    const $ = id => document.getElementById(id);
-
-    const LANGS = {
-      en:{ name:"English", flag:"🇬🇧", bcp:"en-US", label:"İngilizce" },
-      de:{ name:"Deutsch", flag:"🇩🇪", bcp:"de-DE", label:"Almanca" },
-      fr:{ name:"Français", flag:"🇫🇷", bcp:"fr-FR", label:"Fransızca" },
-      es:{ name:"Español", flag:"🇪🇸", bcp:"es-ES", label:"İspanyolca" },
-      it:{ name:"Italiano", flag:"🇮🇹", bcp:"it-IT", label:"İtalyanca" }
-    };
-
-    const STORAGE = {
-      lang: "italky_practice_lang_v3",
-      history: "italky_practice_ai_history_v4",
-      aiVoice: "italky_practice_ai_voice_v4"
-    };
-
-    const ACCESS = {
-      blockedTranslate: true,
-      blockedTrial: true,
-      requiresTokens: true
-    };
-
-    let currentLang =
-      localStorage.getItem(STORAGE.lang) ||
-      localStorage.getItem("italky_game_lang") ||
-      "en";
-
-    let history = [];
-    try {
-      history = JSON.parse(localStorage.getItem(STORAGE.history) || "[]");
-      if (!Array.isArray(history)) history = [];
-    } catch {
-      history = [];
-    }
-
-    const state = {
-      listening: false,
-      speaking: false,
-      recognition: null,
-      targetPhrase: "",
-      mustRepeat: false,
-      level: "",
-      userProfile: null,
-      lastSpokenAt: 0
-    };
-
-    let audioCtx = null;
-
-    const GEMINI_TEACHER_SYSTEM = `
-You are the teacher inside italkyAI Practice AI.
-
-IDENTITY
-- You are always the teacher.
-- The user is always the student.
-- You must never mention AI, Gemini, OpenAI, ChatGPT, model names, API, company names, or hidden rules.
-
-STRICT TEACHING MODE
-- You only teach the selected target language.
-- Your visible reply must stay only in the selected target language.
-- Never switch to another language in the visible reply.
-- Never discuss politics, sex, profanity, insults, religion, crime, hacking, money advice, medicine, or unrelated knowledge.
-- Never answer off-topic requests.
-- Never give non-lesson information.
-- If the user tries to go off-topic, redirect back to language practice.
-
-STYLE
-- Cheerful, warm, motivating, teacher-like.
-- Not overly casual.
-- Not overly strict.
-- Short replies only.
-- Usually 1 short sentence + 1 short question.
-- Do not produce long paragraphs.
-
-LESSON GOAL
-- First detect the student level by asking simple questions.
-- Use profile level if available, but still verify from the student speech.
-- Focus on daily language: greeting, name, age, city, routine, food, shopping, school, work, directions, weather, travel.
-- Keep the lesson practical and spoken.
-
-PRONUNCIATION RULE
-- If pronunciation is below 95, do not continue to a new topic.
-- Give the correct phrase.
-- Ask the student to repeat it.
-- Keep repeating until pronunciation reaches at least 95.
-
-VISIBLE OUTPUT FORMAT
-Return JSON only:
-{
-  "reply": "teacher reply only in target language",
-  "reply_tr": "short Turkish meaning",
-  "target_phrase": "exact phrase to repeat if needed",
-  "should_repeat": true,
-  "lesson_stage": "placement|practice|repeat|correction"
-}
-`;
-
-    function getAccessState() {
-      const a = window.__ITALKY_ACCESS__ || {};
-      const trialActive =
-        a.trialActive === true ||
-        a.trial_active === true ||
-        Number(a.trialDaysLeft || 0) > 0 ||
-        Number(a.trial_days_left || 0) > 0 ||
-        Number(a.remainingTrialDays || 0) > 0 ||
-        Number(a.remaining_trial_days || 0) > 0;
-
-      const hasPackage =
-        a.hasPackage === true ||
-        a.has_package === true ||
-        a.packageActive === true ||
-        a.package_active === true ||
-        a.isPremium === true ||
-        a.premium === true;
-
-      const packageName =
-        String(a.packageName || a.package_name || a.planName || a.plan || "").toLowerCase();
-
-      return { trialActive, hasPackage, packageName, raw: a };
-    }
-
-    function ensurePracticeAccess() {
-      const access = getAccessState();
-
-      if (ACCESS.blockedTrial && access.trialActive) {
-        alert("Practice AI deneme paketinde kapalıdır.");
-        location.href = "/pages/upgrade_pack.html";
-        return false;
-      }
-
-      if (ACCESS.blockedTranslate && access.packageName.includes("translate")) {
-        alert("Practice AI Translate paketinde kapalıdır.");
-        location.href = "/pages/upgrade_pack.html";
-        return false;
-      }
-
-      if (!access.hasPackage) {
-        alert("Bu modül yalnızca aktif üyelik ile kullanılabilir.");
-        location.href = "/pages/upgrade_pack.html";
-        return false;
-      }
-
-      return true;
-    }
-
-    async function checkTokenBalance() {
-      try {
-        const raw = localStorage.getItem("italky_user_v1") || "{}";
-        const user = JSON.parse(raw);
-        const tokens = Number(user?.tokens || 0);
-        return Number.isFinite(tokens) ? tokens : 0;
-      } catch {
-        return 0;
-      }
-    }
-
-    async function ensureTokenAccess() {
-      if (!ACCESS.requiresTokens) return true;
-      const balance = await checkTokenBalance();
-      if (balance <= 0) {
-        alert("Practice AI için jeton gerekli.");
-        location.href = "/pages/jetonbuy.html";
-        return false;
-      }
-      return true;
-    }
-
-    function buildRuntimePrompt(userText, scoreValue) {
-      return `
-Selected target language: ${LANGS[currentLang]?.label || currentLang}
-Selected target language code: ${currentLang}
-Profile level: ${state.level || "unknown"}
-Student message: ${userText || ""}
-Current target phrase: ${state.targetPhrase || ""}
-Pronunciation score: ${typeof scoreValue === "number" ? scoreValue : "unknown"}
-
-Runtime rules:
-- Visible reply must stay only in ${LANGS[currentLang]?.label || currentLang}.
-- If score < 95, keep the same phrase and ask for repetition.
-- Keep the reply short.
-`;
-    }
-
-    function safeJson(txt) {
-      try { return JSON.parse(txt); } catch { return null; }
-    }
-
-    async function getProfileLevel() {
-      try {
-        const raw = localStorage.getItem("italky_user_v1") || "{}";
-        const user = JSON.parse(raw);
-        state.userProfile = user;
-        const levels = user?.levels || {};
-        return levels?.[currentLang] || levels?.[currentLang.toUpperCase()] || "";
-      } catch {
-        return "";
-      }
-    }
-
-    async function askTeacher(userText, scoreValue = null) {
-      state.level = await getProfileLevel();
-
-      const payload = {
-        system_prompt: GEMINI_TEACHER_SYSTEM,
-        prompt: buildRuntimePrompt(userText, scoreValue),
-        mode: "practice_teacher_only",
-        lang: currentLang,
-        response_format: "json",
-        module: "practice_ai"
-      };
-
-      const res = await fetch(`${API_BASE}/api/practice/chat`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-
-      const raw = await res.text();
-      const data = safeJson(raw) || {};
-      const parsed = safeJson(data?.text || "") || data || {};
-
-      return {
-        reply: String(parsed.reply || "").trim(),
-        reply_tr: String(parsed.reply_tr || "").trim(),
-        target_phrase: String(parsed.target_phrase || "").trim(),
-        should_repeat: Boolean(parsed.should_repeat),
-        lesson_stage: String(parsed.lesson_stage || "").trim()
-      };
-    }
-
-    function ensureAudio() {
-      try {
-        if (!audioCtx) {
-          const AC = window.AudioContext || window.webkitAudioContext;
-          audioCtx = AC ? new AC() : null;
-        }
-        if (audioCtx && audioCtx.state === "suspended") audioCtx.resume().catch(()=>{});
-      } catch {}
-      return audioCtx;
-    }
-
-    function pickBestMaleVoice(bcp) {
-      try {
-        const voices = window.speechSynthesis?.getVoices?.() || [];
-        if (!voices.length) return null;
-
-        const short = bcp.split("-")[0].toLowerCase();
-        const list = voices.filter(v =>
-          String(v.lang || "").toLowerCase().startsWith(short)
-        );
-        if (!list.length) return null;
-
-        const maleHint = list.find(v =>
-          /male|david|mark|george|thomas|daniel|paul|microsoft|alex|fred|jorge|diego|henri|luca/i.test(
-            `${v.name} ${v.voiceURI}`
-          )
-        );
-
-        return maleHint || list[0] || null;
-      } catch {
-        return null;
-      }
-    }
-
-    function setOrb(mode = "idle") {
-      const orb = $("aiOrb");
-      if (!orb) return;
-      orb.classList.remove("listening", "speaking");
-      if (mode === "listening") orb.classList.add("listening");
-      if (mode === "speaking") orb.classList.add("speaking");
-    }
-
-    function setCaption(text = "") {
-      $("aiCaption").textContent = text || "";
-    }
-
-    function setStatus(text = "") {
-      $("statusLine").textContent = text || "";
-    }
-
-    function updateLangUI() {
-      const meta = LANGS[currentLang];
-      $("langChip").textContent = `${meta.flag} ${meta.name}`;
-    }
-
-    function addAiBubble(text = "") {
-      if (!text) return;
-      const box = $("conversation");
-      const bubble = document.createElement("div");
-      bubble.className = "bubble ai";
-      bubble.textContent = text;
-      box.appendChild(bubble);
-      box.scrollTop = box.scrollHeight;
-    }
-
-    function pushSubtitle(text = "") {
-      if (!text) return;
-      const host = $("subtitleStream");
-      const line = document.createElement("div");
-      line.className = "ai-sub-line";
-      line.textContent = text;
-      host.appendChild(line);
-
-      while (host.children.length > 8) {
-        host.removeChild(host.firstChild);
-      }
-
-      const streamWrap = host.parentElement;
-      const overflow = Math.max(0, host.scrollHeight - streamWrap.clientHeight + 20);
-      host.style.transform = `translateY(-${overflow}px)`;
-      $("aiTrText").textContent = text;
-    }
-
-    function saveState() {
-      localStorage.setItem(STORAGE.lang, currentLang);
-      localStorage.setItem(STORAGE.history, JSON.stringify(history.slice(-24)));
-      localStorage.setItem(STORAGE.aiVoice, $("aiVoiceMode").value);
-    }
-
-    function pickVoiceMode() {
-      return $("aiVoiceMode").value;
-    }
-
-    function speakAI(text) {
-      const mode = pickVoiceMode();
-      if (mode === "mute") return;
-
-      const clean = String(text || "").trim();
-      if (!clean) return;
-
-      const now = Date.now();
-      if (now - state.lastSpokenAt < 250) return;
-      state.lastSpokenAt = now;
-
-      const bcp = LANGS[currentLang].bcp;
-      state.speaking = true;
-      setOrb("speaking");
-      setCaption("Öğretmen konuşuyor...");
-
-      try {
-        if ((mode === "auto" || mode === "native") && window.NativeTTS && typeof window.NativeTTS.speak === "function") {
-          window.NativeTTS.speak(clean, bcp);
-          setTimeout(() => {
-            state.speaking = false;
-            setOrb(state.listening ? "listening" : "idle");
-            setCaption("Hazır");
-          }, Math.max(1300, clean.length * 55));
-          return;
-        }
-      } catch (e) {
-        console.warn("NativeTTS failed:", e);
-      }
-
-      try {
-        if (!("speechSynthesis" in window)) {
-          state.speaking = false;
-          setOrb(state.listening ? "listening" : "idle");
-          setCaption("Hazır");
-          return;
-        }
-
-        window.speechSynthesis.cancel();
-
-        const u = new SpeechSynthesisUtterance(clean);
-        u.lang = bcp;
-        u.rate = 0.92;
-        u.pitch = 0.96;
-        u.volume = 1;
-
-        const v = pickBestMaleVoice(bcp);
-        if (v) u.voice = v;
-
-        u.onend = () => {
-          state.speaking = false;
-          setOrb(state.listening ? "listening" : "idle");
-          setCaption("Hazır");
-        };
-        u.onerror = () => {
-          state.speaking = false;
-          setOrb(state.listening ? "listening" : "idle");
-          setCaption("Hazır");
-        };
-
-        setTimeout(() => {
-          try { window.speechSynthesis.speak(u); } catch {}
-        }, 120);
-
-      } catch {
-        state.speaking = false;
-        setOrb(state.listening ? "listening" : "idle");
-        setCaption("Hazır");
-      }
-    }
-
-    function initRecognition() {
-      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SR) return null;
-
-      const rec = new SR();
-      rec.lang = LANGS[currentLang].bcp;
-      rec.interimResults = true;
-      rec.continuous = false;
-      rec.maxAlternatives = 1;
-
-      rec.onstart = () => {
-        state.listening = true;
-        setOrb("listening");
-        setCaption("Seni dinliyorum...");
-        setStatus("Konuşabilirsin.");
-        $("micBtn").classList.add("listening");
-      };
-
-      rec.onresult = async (e) => {
-        let finalText = "";
-        let interim = "";
-
-        for (let i = e.resultIndex; i < e.results.length; i++) {
-          const txt = e.results[i][0]?.transcript || "";
-          if (e.results[i].isFinal) finalText += txt + " ";
-          else interim += txt + " ";
-        }
-
-        if (interim.trim()) {
-          $("heardText").textContent = interim.trim();
-        }
-
-        if (finalText.trim()) {
-          const spoken = finalText.trim();
-          $("heardText").textContent = spoken;
-          await handleUserSpeech(spoken);
-        }
-      };
-
-      rec.onerror = () => {
-        state.listening = false;
-        $("micBtn").classList.remove("listening");
-        if (!state.speaking) setOrb("idle");
-        if (!state.speaking) setCaption("Hazır");
-        setStatus("Mikrofon başlatılamadı.");
-      };
-
-      rec.onend = () => {
-        state.listening = false;
-        $("micBtn").classList.remove("listening");
-        if (!state.speaking) setOrb("idle");
-        if (!state.speaking) setCaption("Hazır");
-      };
-
-      return rec;
-    }
-
-    function stripForCompare(s) {
-      return String(s || "")
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .replace(/[^a-z0-9 ]/g, "")
-        .replace(/\s+/g, " ")
-        .trim();
-    }
-
-    function levenshtein(a, b) {
-      const s = stripForCompare(a);
-      const t = stripForCompare(b);
-      const m = s.length;
-      const n = t.length;
-
-      if (!m) return n;
-      if (!n) return m;
-
-      const dp = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
-
-      for (let i = 0; i <= m; i++) dp[i][0] = i;
-      for (let j = 0; j <= n; j++) dp[0][j] = j;
-
-      for (let i = 1; i <= m; i++) {
-        for (let j = 1; j <= n; j++) {
-          const cost = s[i - 1] === t[j - 1] ? 0 : 1;
-          dp[i][j] = Math.min(
-            dp[i - 1][j] + 1,
-            dp[i][j - 1] + 1,
-            dp[i - 1][j - 1] + cost
-          );
-        }
-      }
-
-      return dp[m][n];
-    }
-
-    function pronunciationScore(spoken, target) {
-      const a = stripForCompare(spoken);
-      const b = stripForCompare(target);
-      if (!a || !b) return 0;
-      if (a === b) return 100;
-      const dist = levenshtein(a, b);
-      const maxLen = Math.max(a.length, b.length) || 1;
-      return Math.max(0, Math.round((1 - dist / maxLen) * 100));
-    }
-
-    async function handleUserSpeech(spokenText) {
-      const spoken = String(spokenText || "").trim();
-      if (!spoken) return;
-
-      let scoreValue = null;
-      if (state.mustRepeat && state.targetPhrase) {
-        scoreValue = pronunciationScore(spoken, state.targetPhrase);
-        setStatus(`Telaffuz skoru: %${scoreValue}`);
-      } else {
-        setStatus("AI düşünüyor...");
-      }
-
-      try {
-        const ai = await askTeacher(spoken, scoreValue);
-
-        if (!ai.reply) {
-          setStatus("AI cevabı alınamadı.");
-          setCaption("Hazır");
-          setOrb("idle");
-          return;
-        }
-
-        history.push({
-          role: "ai",
-          text: ai.reply,
-          tr: ai.reply_tr,
-          score: scoreValue
-        });
-        history = history.slice(-24);
-
-        addAiBubble(ai.reply);
-        $("aiTrText").textContent = ai.reply_tr || "Türkçe açıklama yok.";
-        pushSubtitle(ai.reply_tr || ai.reply);
-
-        if (ai.should_repeat && ai.target_phrase) {
-          state.mustRepeat = true;
-          state.targetPhrase = ai.target_phrase;
-        } else {
-          state.mustRepeat = false;
-          state.targetPhrase = "";
-        }
-
-        saveState();
-        speakAI(ai.reply);
-        setStatus(state.mustRepeat ? "Aynı ifadeyi tekrar söyle." : "Ders devam ediyor.");
-
-      } catch (e) {
-        console.error(e);
-        setStatus("Bağlantı hatası.");
-        setCaption("Hazır");
-        setOrb("idle");
-      }
-    }
-
-    async function startFirstTurn() {
-      try {
-        const ai = await askTeacher("", null);
-
-        if (!ai.reply) return;
-
-        history.push({ role: "ai", text: ai.reply, tr: ai.reply_tr });
-        history = history.slice(-24);
-
-        addAiBubble(ai.reply);
-        $("aiTrText").textContent = ai.reply_tr || "Türkçe açıklama yok.";
-        pushSubtitle(ai.reply_tr || ai.reply);
-
-        state.mustRepeat = Boolean(ai.should_repeat);
-        state.targetPhrase = ai.target_phrase || "";
-
-        saveState();
-        speakAI(ai.reply);
-      } catch (e) {
-        console.error(e);
-        setStatus("İlk ders başlatılamadı.");
-      }
-    }
-
-    function stopAll() {
-      try { state.recognition?.stop?.(); } catch {}
-      try { window.speechSynthesis?.cancel?.(); } catch {}
-      state.listening = false;
-      state.speaking = false;
-      setOrb("idle");
-      setCaption("Hazır");
-      setStatus("Durduruldu.");
-      $("micBtn").classList.remove("listening");
-    }
-
-    $("micBtn").addEventListener("click", async () => {
-      await unlockAudio();
-
-      if (!ensurePracticeAccess()) return;
-      if (!(await ensureTokenAccess())) return;
-
-      if (state.listening) {
-        stopAll();
-        return;
-      }
-
-      state.recognition = initRecognition();
-      if (!state.recognition) {
-        setStatus("Bu cihazda konuşma tanıma yok.");
-        return;
-      }
-
-      try {
-        state.recognition.start();
-      } catch {
-        setStatus("Mikrofon başlatılamadı.");
-      }
-    });
-
-    $("aiVoiceMode").value = localStorage.getItem(STORAGE.aiVoice) || "auto";
-    $("aiVoiceMode").onchange = saveState;
-
-    window.addEventListener("click", () => {
-      try { window.speechSynthesis?.getVoices?.(); } catch {}
-    }, { once: true });
-
-    window.addEventListener("touchstart", () => {
-      try { window.speechSynthesis?.getVoices?.(); } catch {}
-    }, { once: true });
-
-    window.onload = async () => {
-      if (!ensurePracticeAccess()) return;
-      if (!(await ensureTokenAccess())) return;
-
-      updateLangUI();
-      $("heardText").textContent = "Henüz konuşma yok.";
-      $("aiTrText").textContent = "Henüz AI cevabı yok.";
-      setOrb("idle");
-      setCaption("Hazır");
-      setStatus("Seçili dilde konuşmaya başla.");
-      startFirstTurn();
-    };
-  </script>
 </body>
 </html>
