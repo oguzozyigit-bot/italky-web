@@ -27,6 +27,7 @@ const loginStatus = $("loginStatus");
 const meLine = $("meLine");
 
 let __me = null;
+let __nfcEventsBound = false;
 
 function setLoginStatus(text, type = "") {
   loginStatus.className = `status-line ${type}`.trim();
@@ -380,9 +381,7 @@ async function renderUsers() {
             note: $("assignNote").value.trim() || null
           };
 
-          if (!payload.user_id) {
-            throw new Error("Kullanıcı ID gerekli");
-          }
+          if (!payload.user_id) throw new Error("Kullanıcı ID gerekli");
 
           await api("/admin/entitlements/assign", {
             method: "POST",
@@ -534,9 +533,7 @@ async function renderPackages() {
           note: $("pkgNote").value.trim() || null
         };
 
-        if (!payload.code || !payload.name) {
-          throw new Error("Kod ve ad gerekli");
-        }
+        if (!payload.code || !payload.name) throw new Error("Kod ve ad gerekli");
 
         await api("/admin/packages", {
           method: "POST",
@@ -654,6 +651,67 @@ async function renderEntitlements() {
   } catch (e) {
     box.innerHTML = `<div class="card"><h3>Erişimler</h3>${statusHtml(e?.message || "Erişimler yüklenemedi", false)}</div>`;
   }
+}
+
+function bindNativeAdminEvents() {
+  if (__nfcEventsBound) return;
+  __nfcEventsBound = true;
+
+  window.addEventListener("italky:nfc-read", (e) => {
+    const uid = e?.detail?.uid || "";
+    if (!uid) return;
+
+    if ($("nfcUidInput")) $("nfcUidInput").value = uid;
+    if ($("uidPreviewInput")) $("uidPreviewInput").value = uid;
+    if ($("bindCardUid")) $("bindCardUid").value = uid;
+    if ($("uidPreviewOutput")) $("uidPreviewOutput").value = normalizeUid(uid);
+    if ($("qrLinkOutput")) $("qrLinkOutput").value = makeQrLink(normalizeUid(uid));
+
+    const statusEl = $("nfcStatus");
+    if (statusEl) {
+      statusEl.className = "status-line status-ok";
+      statusEl.textContent = "Kart UID okundu.";
+    }
+
+    const qrStatus = $("qrStatus");
+    if (qrStatus) {
+      qrStatus.className = "status-line status-ok";
+      qrStatus.textContent = "UID alındı, QR hazır.";
+    }
+
+    const wrap = $("qrPreviewWrap");
+    if (wrap) {
+      const link = makeQrLink(normalizeUid(uid));
+      const imgSrc = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(link)}`;
+      wrap.innerHTML = `<img src="${imgSrc}" alt="QR" style="width:180px;height:180px;display:block;" />`;
+    }
+  });
+
+  window.addEventListener("italky:nfc-write", () => {
+    const statusEl = $("nfcStatus");
+    if (statusEl) {
+      statusEl.className = "status-line status-ok";
+      statusEl.textContent = "Kart içine URL yazıldı.";
+    }
+  });
+
+  window.addEventListener("italky:nfc-status", (e) => {
+    const msg = e?.detail?.message || "NFC bekleniyor...";
+    const statusEl = $("nfcStatus");
+    if (statusEl) {
+      statusEl.className = "status-line status-warn";
+      statusEl.textContent = msg;
+    }
+  });
+
+  window.addEventListener("italky:nfc-error", (e) => {
+    const msg = e?.detail?.message || "NFC işlemi başarısız.";
+    const statusEl = $("nfcStatus");
+    if (statusEl) {
+      statusEl.className = "status-line status-err";
+      statusEl.textContent = msg;
+    }
+  });
 }
 
 async function renderNfc() {
@@ -805,6 +863,7 @@ async function renderNfc() {
   `;
 
   try {
+    bindNativeAdminEvents();
     await fillPackageSelect("nfcPackageSelect");
 
     const cards = await api("/admin/nfc/cards");
@@ -990,18 +1049,10 @@ async function renderNfc() {
 
       try {
         if (window.NativeAdmin && typeof window.NativeAdmin.readNfcUid === "function") {
-          const uid = await window.NativeAdmin.readNfcUid();
-          if (!uid) throw new Error("UID okunamadı");
-          $("nfcUidInput").value = uid;
-          $("uidPreviewInput").value = uid;
-          $("bindCardUid").value = uid;
-          buildQrLinkFromInputs();
-          drawQrPreview();
-          statusEl.className = "status-line status-ok";
-          statusEl.textContent = "Kart UID okundu.";
+          window.NativeAdmin.readNfcUid();
         } else {
           statusEl.className = "status-line status-err";
-          statusEl.textContent = "Bu cihazda NFC okuma köprüsü yok.";
+          statusEl.textContent = "Bu cihazda NFC köprüsü yok.";
         }
       } catch (e) {
         statusEl.className = "status-line status-err";
@@ -1022,9 +1073,7 @@ async function renderNfc() {
         if (!clean) throw new Error("Önce UID gerekli");
 
         if (window.NativeAdmin && typeof window.NativeAdmin.writeNfcPayload === "function") {
-          await window.NativeAdmin.writeNfcPayload(url);
-          statusEl.className = "status-line status-ok";
-          statusEl.textContent = "Kart içine URL yazıldı.";
+          window.NativeAdmin.writeNfcPayload(url);
         } else {
           statusEl.className = "status-line status-err";
           statusEl.textContent = "Bu cihazda kart yazma köprüsü yok.";
@@ -1090,9 +1139,7 @@ async function renderNfc() {
         const cardUid = $("bindCardUid").value.trim();
         const packageCode = $("nfcPackageSelect").value;
 
-        if (!userId || !cardUid) {
-          throw new Error("Kullanıcı ID ve Kart UID gerekli");
-        }
+        if (!userId || !cardUid) throw new Error("Kullanıcı ID ve Kart UID gerekli");
 
         await api("/admin/entitlements/assign", {
           method: "POST",
@@ -1248,9 +1295,7 @@ async function renderGithub() {
         content: $("ghContent").value
       };
 
-      if (!payload.path || !payload.content) {
-        throw new Error("Path ve içerik gerekli");
-      }
+      if (!payload.path || !payload.content) throw new Error("Path ve içerik gerekli");
 
       await api("/admin/github/commit", {
         method: "POST",
