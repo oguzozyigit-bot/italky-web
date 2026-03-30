@@ -23,6 +23,10 @@
       --safeB:env(safe-area-inset-bottom, 0px);
       --shellLift:0px;
       --grad:linear-gradient(135deg,#67e8f9 0%, #60a5fa 45%, #34d399 100%);
+      --activeA:rgba(34,211,238,.12);
+      --activeABorder:rgba(34,211,238,.38);
+      --activeB:rgba(255,77,141,.12);
+      --activeBBorder:rgba(255,77,141,.38);
     }
 
     *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none;user-select:none}
@@ -86,11 +90,24 @@
     }
 
     .turnBar{
-      min-height:44px;
+      min-height:46px;
       display:flex; align-items:center; justify-content:center;
-      border:1px solid var(--border); border-radius:14px;
+      border:1px solid var(--border); border-radius:16px;
       background:rgba(255,255,255,.05);
-      font-weight:900; letter-spacing:.6px;
+      font-weight:900; letter-spacing:.6px; text-align:center; padding:0 12px;
+      transition:.2s ease;
+    }
+    .turnBar.turnA{
+      color:var(--c1);
+      border-color:var(--activeABorder);
+      box-shadow:0 0 0 1px rgba(34,211,238,.14), 0 0 20px rgba(34,211,238,.08);
+      background:var(--activeA);
+    }
+    .turnBar.turnB{
+      color:var(--c2);
+      border-color:var(--activeBBorder);
+      box-shadow:0 0 0 1px rgba(255,77,141,.14), 0 0 20px rgba(255,77,141,.08);
+      background:var(--activeB);
     }
 
     .panes{
@@ -111,9 +128,16 @@
       transition:.2s ease;
     }
 
-    .pane.active{
+    .pane.activeA{
+      background:linear-gradient(160deg, rgba(34,211,238,.10), rgba(0,0,0,.34));
       box-shadow:0 0 0 1px rgba(34,211,238,.20), 0 0 22px rgba(34,211,238,.10);
       border-color:rgba(34,211,238,.35);
+    }
+
+    .pane.activeB{
+      background:linear-gradient(160deg, rgba(255,77,141,.10), rgba(0,0,0,.34));
+      box-shadow:0 0 0 1px rgba(255,77,141,.20), 0 0 22px rgba(255,77,141,.10);
+      border-color:rgba(255,77,141,.35);
     }
 
     #paneB{transform:rotate(180deg)}
@@ -152,11 +176,12 @@
       font-weight:900;
       line-height:1.1;
       word-break:break-word;
+      text-transform:uppercase;
     }
 
     .mean{
       font-size:16px;
-      opacity:.7;
+      opacity:.75;
       min-height:24px;
     }
 
@@ -213,6 +238,17 @@
       letter-spacing:.6px;
       text-align:center;
       padding:0 12px;
+      transition:.2s ease;
+    }
+    .middleWave.turnA{
+      color:var(--c1);
+      border-color:rgba(34,211,238,.35);
+      background:rgba(34,211,238,.08);
+    }
+    .middleWave.turnB{
+      color:var(--c2);
+      border-color:rgba(255,77,141,.35);
+      background:rgba(255,77,141,.08);
     }
 
     .modal{
@@ -387,12 +423,12 @@ const GAME_LANG_KEY = "italky_duo_friend_lang";
 const TOTAL_ROUNDS = 20;
 
 let lang = localStorage.getItem(GAME_LANG_KEY) || "en";
-let pool = [];
 let list = [];
 let idx = 0;
 let turn = "A";
 let score = { A:0, B:0 };
 let listening = false;
+let lastSpoken = 0;
 
 let audioCtx = null;
 function getAudioCtx(){
@@ -555,13 +591,45 @@ function renderLangs(){
 }
 
 function speak(text, bcp = "tr-TR"){
+  const now = Date.now();
+  if (now - lastSpoken < 250) return;
+  lastSpoken = now;
+
+  const clean = String(text || "").trim();
+  if (!clean) return;
+
   try{
-    const u = new SpeechSynthesisUtterance(text);
+    if (window.NativeTTS && typeof window.NativeTTS.speak === "function") {
+      window.NativeTTS.speak(clean, bcp);
+      return;
+    }
+  }catch(e){
+    console.warn("NativeTTS speak failed:", e);
+  }
+
+  try{
+    if (!("speechSynthesis" in window)) return;
+
+    speechSynthesis.cancel();
+
+    const u = new SpeechSynthesisUtterance(clean);
     u.lang = bcp;
     u.rate = 0.92;
-    speechSynthesis.cancel();
-    speechSynthesis.speak(u);
-  }catch{}
+    u.pitch = 1;
+    u.volume = 1;
+
+    const voices = speechSynthesis.getVoices?.() || [];
+    const found = voices.find(v =>
+      String(v.lang || "").toLowerCase().startsWith(bcp.split("-")[0].toLowerCase())
+    );
+    if (found) u.voice = found;
+
+    setTimeout(() => {
+      try { speechSynthesis.speak(u); } catch {}
+    }, 120);
+  }catch(e){
+    console.warn("speechSynthesis fallback failed:", e);
+  }
 }
 
 function updateTop(){
@@ -569,10 +637,25 @@ function updateTop(){
   $("roundTop").textContent = `${Math.min(idx + 1, TOTAL_ROUNDS)}/${TOTAL_ROUNDS}`;
   $("scoreA").textContent = score.A;
   $("scoreB").textContent = score.B;
-  $("turnBar").textContent = `SIRA: OYUNCU ${turn}`;
-  $("wave").textContent = listening ? "DİNLENİYOR..." : `OYUNCU ${turn} HAZIR`;
-  $("paneA").classList.toggle("active", turn === "A");
-  $("paneB").classList.toggle("active", turn === "B");
+
+  const turnText = `SIRA: OYUNCU ${turn}`;
+  $("turnBar").textContent = turnText;
+  $("wave").textContent = listening ? `OYUNCU ${turn} DİNLENİYOR...` : turnText;
+
+  $("turnBar").classList.remove("turnA","turnB");
+  $("wave").classList.remove("turnA","turnB");
+  $("paneA").classList.remove("activeA","activeB");
+  $("paneB").classList.remove("activeA","activeB");
+
+  if (turn === "A") {
+    $("turnBar").classList.add("turnA");
+    $("wave").classList.add("turnA");
+    $("paneA").classList.add("activeA");
+  } else {
+    $("turnBar").classList.add("turnB");
+    $("wave").classList.add("turnB");
+    $("paneB").classList.add("activeB");
+  }
 }
 
 function setFeedback(player, text, color){
@@ -609,7 +692,7 @@ function nextWord(){
 function finishTurn(){
   turn = turn === "A" ? "B" : "A";
   idx++;
-  setTimeout(nextWord, 1400);
+  setTimeout(nextWord, 1500);
 }
 
 function listen(player){
@@ -622,6 +705,8 @@ function listen(player){
   }
 
   listening = true;
+  const micBtn = player === "A" ? $("micA") : $("micB");
+  micBtn.classList.add("listening");
   updateTop();
 
   const rec = new SR();
@@ -637,11 +722,13 @@ function listen(player){
 
   rec.onerror = () => {
     listening = false;
+    micBtn.classList.remove("listening");
     updateTop();
   };
 
   rec.onend = () => {
     listening = false;
+    micBtn.classList.remove("listening");
     updateTop();
   };
 
@@ -650,6 +737,8 @@ function listen(player){
 
 function check(player, spoken){
   listening = false;
+  $("micA").classList.remove("listening");
+  $("micB").classList.remove("listening");
   updateTop();
 
   const w = list[idx];
@@ -747,6 +836,18 @@ window.onload = () => {
   renderLangs();
   updateTop();
 };
+
+window.addEventListener("click", () => {
+  try {
+    window.speechSynthesis?.getVoices?.();
+  } catch {}
+}, { once: true });
+
+window.addEventListener("touchstart", () => {
+  try {
+    window.speechSynthesis?.getVoices?.();
+  } catch {}
+}, { once: true });
 </script>
 </body>
 </html>
