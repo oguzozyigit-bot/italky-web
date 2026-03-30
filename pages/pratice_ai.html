@@ -1,0 +1,883 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+  <title>italkyAI • Practice AI</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#05070d;
+      --panel:rgba(255,255,255,.06);
+      --panel-2:rgba(255,255,255,.04);
+      --line:rgba(255,255,255,.12);
+      --txt:#fff;
+      --muted:rgba(255,255,255,.68);
+      --soft:rgba(255,255,255,.48);
+      --c1:#67e8f9;
+      --c2:#60a5fa;
+      --c3:#34d399;
+      --ok:#00e676;
+      --err:#ff4d6d;
+      --warn:#ffb84d;
+      --safe-bottom:env(safe-area-inset-bottom,0px);
+      --shellLift:0px;
+      --grad:linear-gradient(135deg,var(--c1),var(--c2),var(--c3));
+      --shadow:0 20px 46px rgba(0,0,0,.35);
+    }
+
+    *{
+      box-sizing:border-box;
+      -webkit-tap-highlight-color:transparent;
+      outline:none;
+    }
+
+    html,body{
+      margin:0;
+      width:100%;
+      height:100%;
+      overflow:hidden;
+      font-family:Outfit,system-ui,sans-serif;
+      color:var(--txt);
+      background:
+        radial-gradient(circle at 15% 15%, rgba(103,232,249,.12), transparent 22%),
+        radial-gradient(circle at 85% 12%, rgba(96,165,250,.12), transparent 22%),
+        radial-gradient(circle at 50% 100%, rgba(52,211,153,.10), transparent 24%),
+        linear-gradient(180deg,#05070d,#09111b);
+    }
+
+    #pageContent{
+      height:100%;
+      overflow-y:auto;
+      overflow-x:hidden;
+      scrollbar-width:none;
+      padding:10px 10px calc(10px + var(--safe-bottom) + var(--shellLift)) 10px;
+    }
+    #pageContent::-webkit-scrollbar{display:none}
+
+    .page{
+      width:100%;
+      max-width:480px;
+      min-height:100%;
+      margin:0 auto;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .hero{
+      border:1px solid var(--line);
+      border-radius:24px;
+      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      box-shadow:var(--shadow);
+      padding:16px 14px 14px;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .hero::before{
+      content:"";
+      position:absolute;
+      inset:auto -80px -80px auto;
+      width:180px;
+      height:180px;
+      border-radius:50%;
+      background:radial-gradient(circle, rgba(103,232,249,.16), transparent 68%);
+      filter:blur(10px);
+      pointer-events:none;
+    }
+
+    .topline{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:10px;
+    }
+
+    .title{
+      font-family:"Space Grotesk",sans-serif;
+      font-weight:800;
+      font-size:24px;
+      letter-spacing:-.6px;
+      margin:0;
+    }
+
+    .lang-chip{
+      padding:8px 12px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.06);
+      font-size:12px;
+      font-weight:900;
+      color:#fff;
+      white-space:nowrap;
+    }
+
+    .desc{
+      margin:0 0 12px;
+      font-size:14px;
+      line-height:1.55;
+      color:var(--muted);
+      font-weight:600;
+    }
+
+    .ai-stage{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:12px;
+      padding:10px 0 4px;
+    }
+
+    .orb-wrap{
+      position:relative;
+      width:182px;
+      height:182px;
+      display:grid;
+      place-items:center;
+    }
+
+    .orb-ring{
+      position:absolute;
+      inset:0;
+      border-radius:50%;
+      border:1px solid rgba(255,255,255,.08);
+      background:
+        radial-gradient(circle at 30% 30%, rgba(103,232,249,.18), transparent 36%),
+        radial-gradient(circle at 70% 65%, rgba(96,165,250,.18), transparent 36%),
+        radial-gradient(circle at 50% 50%, rgba(52,211,153,.14), transparent 48%);
+      filter:blur(.2px);
+      animation:spin 16s linear infinite;
+    }
+
+    .orb-ring.r2{
+      inset:14px;
+      animation-direction:reverse;
+      animation-duration:11s;
+      opacity:.92;
+    }
+
+    .orb-core{
+      position:relative;
+      width:112px;
+      height:112px;
+      border-radius:50%;
+      background:
+        radial-gradient(circle at 30% 30%, rgba(255,255,255,.85), rgba(255,255,255,.12) 22%, rgba(103,232,249,.35) 44%, rgba(96,165,250,.28) 62%, rgba(52,211,153,.18) 78%, rgba(255,255,255,.06) 100%);
+      box-shadow:
+        0 0 36px rgba(103,232,249,.28),
+        0 0 72px rgba(96,165,250,.18),
+        inset 0 0 20px rgba(255,255,255,.18);
+      animation:floaty 3.2s ease-in-out infinite;
+    }
+
+    .orb-core.speaking{
+      animation:talk 1.15s ease-in-out infinite;
+      box-shadow:
+        0 0 40px rgba(103,232,249,.34),
+        0 0 90px rgba(96,165,250,.22),
+        inset 0 0 24px rgba(255,255,255,.22);
+    }
+
+    .orb-core.listening{
+      animation:listen 1s ease-in-out infinite;
+      box-shadow:
+        0 0 40px rgba(52,211,153,.36),
+        0 0 90px rgba(52,211,153,.18),
+        inset 0 0 24px rgba(255,255,255,.22);
+    }
+
+    .ai-caption{
+      text-align:center;
+      font-size:13px;
+      font-weight:800;
+      color:var(--soft);
+      min-height:18px;
+    }
+
+    .controls{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+
+    .btn{
+      min-height:54px;
+      border-radius:16px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.05);
+      color:#fff;
+      font-size:15px;
+      font-weight:900;
+      cursor:pointer;
+      transition:transform .14s ease, background .14s ease, border-color .14s ease;
+      box-shadow:0 10px 24px rgba(0,0,0,.18);
+    }
+    .btn:active{ transform:scale(.985); }
+    .btn.primary{
+      background:linear-gradient(135deg, rgba(103,232,249,.16), rgba(96,165,250,.16));
+      border-color:rgba(103,232,249,.35);
+      color:#fff;
+    }
+    .btn.success{
+      background:linear-gradient(135deg, rgba(52,211,153,.18), rgba(103,232,249,.12));
+      border-color:rgba(52,211,153,.38);
+    }
+    .btn.warn{
+      background:linear-gradient(135deg, rgba(255,184,77,.16), rgba(255,255,255,.05));
+      border-color:rgba(255,184,77,.34);
+    }
+
+    .panel{
+      border:1px solid var(--line);
+      border-radius:22px;
+      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+      box-shadow:var(--shadow);
+      padding:14px;
+    }
+
+    .section-title{
+      margin:0 0 10px;
+      font-size:15px;
+      font-weight:900;
+      color:#fff;
+      letter-spacing:.2px;
+    }
+
+    .language-grid{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:10px;
+    }
+
+    .lang-btn{
+      min-height:76px;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.04);
+      color:#fff;
+      cursor:pointer;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:6px;
+      font-weight:900;
+      font-size:14px;
+    }
+
+    .lang-btn .flag{ font-size:28px; }
+    .lang-btn.active{
+      border-color:rgba(103,232,249,.38);
+      background:rgba(103,232,249,.12);
+      box-shadow:0 0 0 1px rgba(103,232,249,.18), 0 0 18px rgba(103,232,249,.10);
+    }
+
+    .voice-row{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      margin-top:10px;
+    }
+
+    .select{
+      width:100%;
+      min-height:50px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.05);
+      color:#fff;
+      padding:0 14px;
+      font-size:14px;
+      font-weight:800;
+    }
+    .select option{ color:#111; }
+
+    .conversation{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      min-height:180px;
+      max-height:320px;
+      overflow:auto;
+      scrollbar-width:none;
+      padding-right:2px;
+    }
+    .conversation::-webkit-scrollbar{display:none}
+
+    .bubble{
+      max-width:88%;
+      padding:12px 14px;
+      border-radius:18px;
+      font-size:14px;
+      line-height:1.45;
+      font-weight:700;
+      border:1px solid rgba(255,255,255,.08);
+      word-break:break-word;
+    }
+
+    .bubble.me{
+      align-self:flex-end;
+      background:rgba(103,232,249,.12);
+      border-color:rgba(103,232,249,.22);
+      color:#fff;
+    }
+
+    .bubble.ai{
+      align-self:flex-start;
+      background:rgba(255,255,255,.05);
+      color:#fff;
+    }
+
+    .bubble .mini{
+      display:block;
+      margin-top:6px;
+      font-size:11px;
+      color:var(--soft);
+      font-weight:800;
+    }
+
+    .trans-box,
+    .heard-box{
+      min-height:80px;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.04);
+      padding:12px 14px;
+    }
+
+    .trans-label,
+    .heard-label{
+      font-size:11px;
+      font-weight:900;
+      color:var(--soft);
+      letter-spacing:.7px;
+      margin-bottom:8px;
+    }
+
+    .trans-text,
+    .heard-text{
+      font-size:14px;
+      line-height:1.5;
+      color:#fff;
+      font-weight:700;
+      min-height:24px;
+    }
+
+    .status-line{
+      margin-top:8px;
+      min-height:18px;
+      font-size:12px;
+      font-weight:800;
+      color:var(--soft);
+      text-align:center;
+    }
+
+    @keyframes spin{
+      from{ transform:rotate(0deg); }
+      to{ transform:rotate(360deg); }
+    }
+
+    @keyframes floaty{
+      0%,100%{ transform:translateY(0) scale(1); }
+      50%{ transform:translateY(-3px) scale(1.02); }
+    }
+
+    @keyframes talk{
+      0%,100%{ transform:scale(1); }
+      25%{ transform:scale(1.03); }
+      50%{ transform:scale(1.08); }
+      75%{ transform:scale(1.03); }
+    }
+
+    @keyframes listen{
+      0%,100%{ transform:scale(1); }
+      50%{ transform:scale(1.06); }
+    }
+  </style>
+</head>
+<body>
+  <div id="pageContent">
+    <div class="page">
+      <section class="hero">
+        <div class="topline">
+          <h1 class="title">Practice AI</h1>
+          <div class="lang-chip" id="langChip">🇬🇧 English</div>
+        </div>
+
+        <p class="desc">
+          Yapay zekâ seçtiğin dilde konuşur. Seviyeni konuşmandan anlayıp ona göre öğretmen gibi yönlendirir.
+        </p>
+
+        <div class="ai-stage">
+          <div class="orb-wrap">
+            <div class="orb-ring"></div>
+            <div class="orb-ring r2"></div>
+            <div class="orb-core" id="orbCore"></div>
+          </div>
+          <div class="ai-caption" id="aiCaption">Hazır</div>
+        </div>
+
+        <div class="controls">
+          <button class="btn success" id="btnStartTalk">🎙️ Konuş</button>
+          <button class="btn warn" id="btnStopTalk">■ Durdur</button>
+        </div>
+
+        <div class="status-line" id="statusLine">Seçili dil dışına çıkmadan sohbet eder.</div>
+      </section>
+
+      <section class="panel">
+        <h2 class="section-title">Dil ve Ses</h2>
+
+        <div class="language-grid" id="languageGrid"></div>
+
+        <div class="voice-row">
+          <select class="select" id="userVoiceMode">
+            <option value="auto">Kullanıcı sesi: Otomatik</option>
+            <option value="native">Kullanıcı sesi: Cihaz</option>
+            <option value="web">Kullanıcı sesi: Tarayıcı</option>
+          </select>
+
+          <select class="select" id="aiVoiceMode">
+            <option value="auto">AI sesi: Otomatik</option>
+            <option value="native">AI sesi: Cihaz</option>
+            <option value="web">AI sesi: Tarayıcı</option>
+            <option value="mute">AI sesi: Kapalı</option>
+          </select>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2 class="section-title">Sohbet</h2>
+        <div class="conversation" id="conversation"></div>
+      </section>
+
+      <section class="panel">
+        <h2 class="section-title">Senin Son Cümlen</h2>
+        <div class="heard-box">
+          <div class="heard-label">ALGILANAN KONUŞMA</div>
+          <div class="heard-text" id="heardText">Henüz konuşma yok.</div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2 class="section-title">AI Ne Dedi? (Türkçe)</h2>
+        <div class="trans-box">
+          <div class="trans-label">ALT YAZI / TÜRKÇE AÇIKLAMA</div>
+          <div class="trans-text" id="aiTrText">Henüz AI cevabı yok.</div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script type="module">
+    import { mountShell } from "/js/ui_shell.js";
+
+    mountShell({ scroll:"none" });
+
+    const API_BASE = "https://italky-api.onrender.com";
+    const $ = (id) => document.getElementById(id);
+
+    const LANGS = {
+      en: { name: "English", flag: "🇬🇧", bcp: "en-US" },
+      de: { name: "Deutsch", flag: "🇩🇪", bcp: "de-DE" },
+      fr: { name: "Français", flag: "🇫🇷", bcp: "fr-FR" },
+      es: { name: "Español", flag: "🇪🇸", bcp: "es-ES" },
+      it: { name: "Italiano", flag: "🇮🇹", bcp: "it-IT" }
+    };
+
+    const STORAGE = {
+      lang: "practice_ai_lang_v1",
+      history: "practice_ai_history_v1",
+      userVoice: "practice_ai_user_voice_v1",
+      aiVoice: "practice_ai_ai_voice_v1"
+    };
+
+    let currentLang = localStorage.getItem(STORAGE.lang) || "en";
+    let history = [];
+    try {
+      history = JSON.parse(localStorage.getItem(STORAGE.history) || "[]");
+      if (!Array.isArray(history)) history = [];
+    } catch {
+      history = [];
+    }
+
+    let recognition = null;
+    let listening = false;
+    let speaking = false;
+    let voicesReady = false;
+    let audioCtx = null;
+    let lastSpoken = 0;
+
+    function saveState() {
+      localStorage.setItem(STORAGE.lang, currentLang);
+      localStorage.setItem(STORAGE.history, JSON.stringify(history.slice(-20)));
+      localStorage.setItem(STORAGE.userVoice, $("userVoiceMode").value);
+      localStorage.setItem(STORAGE.aiVoice, $("aiVoiceMode").value);
+    }
+
+    function ensureAudio() {
+      try {
+        if (!audioCtx) {
+          const AC = window.AudioContext || window.webkitAudioContext;
+          audioCtx = AC ? new AC() : null;
+        }
+        if (audioCtx && audioCtx.state === "suspended") audioCtx.resume().catch(()=>{});
+      } catch {}
+      return audioCtx;
+    }
+
+    function pickVoiceFor(bcp) {
+      try {
+        const voices = window.speechSynthesis?.getVoices?.() || [];
+        if (!voices.length) return null;
+        let v = voices.find(x => (x.lang || "").toLowerCase() === bcp.toLowerCase());
+        if (v) return v;
+        const short = bcp.split("-")[0].toLowerCase();
+        v = voices.find(x => (x.lang || "").toLowerCase().startsWith(short));
+        return v || null;
+      } catch {
+        return null;
+      }
+    }
+
+    function setOrbState(mode) {
+      const orb = $("orbCore");
+      orb.classList.remove("speaking", "listening");
+      if (mode === "speaking") orb.classList.add("speaking");
+      if (mode === "listening") orb.classList.add("listening");
+    }
+
+    function setStatus(text) {
+      $("statusLine").textContent = text || "";
+    }
+
+    function setCaption(text) {
+      $("aiCaption").textContent = text || "";
+    }
+
+    function renderLangs() {
+      $("languageGrid").innerHTML = Object.entries(LANGS).map(([code, meta]) => `
+        <button class="lang-btn ${code === currentLang ? "active" : ""}" data-lang="${code}">
+          <div class="flag">${meta.flag}</div>
+          <div>${meta.name}</div>
+        </button>
+      `).join("");
+
+      $("languageGrid").querySelectorAll(".lang-btn").forEach(btn => {
+        btn.onclick = () => {
+          currentLang = btn.dataset.lang;
+          updateLangUI();
+          saveState();
+        };
+      });
+    }
+
+    function updateLangUI() {
+      const meta = LANGS[currentLang];
+      $("langChip").textContent = `${meta.flag} ${meta.name}`;
+      renderLangs();
+    }
+
+    function addBubble(role, text, tr = "") {
+      const wrap = document.createElement("div");
+      wrap.className = `bubble ${role === "user" ? "me" : "ai"}`;
+      wrap.textContent = text || "";
+
+      if (tr && role === "ai") {
+        const mini = document.createElement("span");
+        mini.className = "mini";
+        mini.textContent = "TR: " + tr;
+        wrap.appendChild(mini);
+      }
+
+      $("conversation").appendChild(wrap);
+      $("conversation").scrollTop = $("conversation").scrollHeight;
+    }
+
+    function renderHistory() {
+      $("conversation").innerHTML = "";
+      history.forEach(msg => {
+        addBubble(msg.role, msg.text, msg.tr || "");
+      });
+    }
+
+    function safeJsonParse(txt) {
+      try { return JSON.parse(txt); } catch { return null; }
+    }
+
+    function parseTeacherResponse(data) {
+      const reply =
+        data?.reply ||
+        data?.message ||
+        data?.answer ||
+        data?.text ||
+        data?.content ||
+        "";
+
+      const replyTr =
+        data?.reply_tr ||
+        data?.translation_tr ||
+        data?.turkish ||
+        data?.subtitle_tr ||
+        "";
+
+      return {
+        reply: String(reply || "").trim(),
+        replyTr: String(replyTr || "").trim()
+      };
+    }
+
+    async function askTeacher(userText) {
+      const payload = {
+        lang: currentLang,
+        message: userText,
+        mode: "practice_ai",
+        teacher_style: "friendly_strict_teacher",
+        force_target_language_only: true,
+        translate_to_turkish_subtitle: true,
+        adapt_to_user_level: true,
+        system_hint:
+          "You are a language teacher. Speak ONLY in the selected target language. Never switch to any other language. Infer the user's level from their speaking and respond accordingly. Keep answers short, conversational, and educational.",
+        history: history.slice(-10).map(x => ({
+          role: x.role,
+          content: x.text
+        }))
+      };
+
+      const res = await fetch(`${API_BASE}/api/teacher_chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      const raw = await res.text();
+      const data = safeJsonParse(raw) || {};
+      return parseTeacherResponse(data);
+    }
+
+    function speakAI(text) {
+      const mode = $("aiVoiceMode").value;
+      if (mode === "mute") return;
+
+      const now = Date.now();
+      if (now - lastSpoken < 250) return;
+      lastSpoken = now;
+
+      const clean = String(text || "").trim();
+      if (!clean) return;
+
+      const bcp = LANGS[currentLang].bcp;
+      speaking = true;
+      setOrbState("speaking");
+      setCaption("AI konuşuyor...");
+
+      try {
+        if ((mode === "auto" || mode === "native") && window.NativeTTS && typeof window.NativeTTS.speak === "function") {
+          window.NativeTTS.speak(clean, bcp);
+          setTimeout(() => {
+            speaking = false;
+            setOrbState(listening ? "listening" : "idle");
+            setCaption("Hazır");
+          }, Math.max(1200, clean.length * 55));
+          return;
+        }
+      } catch (e) {
+        console.warn("NativeTTS failed:", e);
+      }
+
+      try {
+        if (!("speechSynthesis" in window)) {
+          speaking = false;
+          setOrbState(listening ? "listening" : "idle");
+          setCaption("Hazır");
+          return;
+        }
+
+        window.speechSynthesis.cancel();
+
+        const u = new SpeechSynthesisUtterance(clean);
+        u.lang = bcp;
+        u.rate = 0.92;
+        u.pitch = 1;
+        u.volume = 1;
+
+        const v = pickVoiceFor(bcp);
+        if (v) u.voice = v;
+
+        u.onend = () => {
+          speaking = false;
+          setOrbState(listening ? "listening" : "idle");
+          setCaption("Hazır");
+        };
+        u.onerror = () => {
+          speaking = false;
+          setOrbState(listening ? "listening" : "idle");
+          setCaption("Hazır");
+        };
+
+        setTimeout(() => {
+          try {
+            window.speechSynthesis.speak(u);
+          } catch {
+            speaking = false;
+            setOrbState(listening ? "listening" : "idle");
+            setCaption("Hazır");
+          }
+        }, 100);
+
+      } catch {
+        speaking = false;
+        setOrbState(listening ? "listening" : "idle");
+        setCaption("Hazır");
+      }
+    }
+
+    function initRecognition() {
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SR) return null;
+
+      const rec = new SR();
+      rec.lang = LANGS[currentLang].bcp;
+      rec.interimResults = true;
+      rec.continuous = false;
+      rec.maxAlternatives = 1;
+
+      rec.onstart = () => {
+        listening = true;
+        setOrbState("listening");
+        setCaption("Seni dinliyorum...");
+        setStatus("Konuşabilirsin.");
+      };
+
+      rec.onresult = (e) => {
+        let finalText = "";
+        let interim = "";
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          const txt = e.results[i][0]?.transcript || "";
+          if (e.results[i].isFinal) finalText += txt + " ";
+          else interim += txt + " ";
+        }
+
+        if (interim.trim()) {
+          $("heardText").textContent = interim.trim();
+        }
+
+        if (finalText.trim()) {
+          const spoken = finalText.trim();
+          $("heardText").textContent = spoken;
+          handleUserMessage(spoken);
+        }
+      };
+
+      rec.onerror = () => {
+        listening = false;
+        setOrbState("idle");
+        setCaption("Hazır");
+        setStatus("Mikrofon başlatılamadı.");
+      };
+
+      rec.onend = () => {
+        listening = false;
+        if (!speaking) setOrbState("idle");
+        if (!speaking) setCaption("Hazır");
+      };
+
+      return rec;
+    }
+
+    async function handleUserMessage(text) {
+      const clean = String(text || "").trim();
+      if (!clean) return;
+
+      history.push({ role: "user", text: clean });
+      addBubble("user", clean);
+      saveState();
+
+      setStatus("AI düşünüyor...");
+      setCaption("Cevap hazırlanıyor...");
+
+      try {
+        const { reply, replyTr } = await askTeacher(clean);
+
+        if (!reply) {
+          setStatus("AI cevabı alınamadı.");
+          setCaption("Hazır");
+          setOrbState("idle");
+          return;
+        }
+
+        history.push({ role: "ai", text: reply, tr: replyTr });
+        addBubble("ai", reply, replyTr);
+        $("aiTrText").textContent = replyTr || "Türkçe açıklama gelmedi.";
+        saveState();
+
+        setStatus("AI cevap verdi.");
+        speakAI(reply);
+
+      } catch (e) {
+        console.error(e);
+        setStatus("Bağlantı hatası.");
+        setCaption("Hazır");
+        setOrbState("idle");
+      }
+    }
+
+    function stopAll() {
+      try { recognition?.stop?.(); } catch {}
+      try { window.speechSynthesis?.cancel?.(); } catch {}
+      listening = false;
+      speaking = false;
+      setOrbState("idle");
+      setCaption("Hazır");
+      setStatus("Durduruldu.");
+    }
+
+    $("btnStartTalk").onclick = async () => {
+      await unlockAudio();
+      recognition = initRecognition();
+      if (!recognition) {
+        setStatus("Bu cihazda konuşma tanıma yok.");
+        return;
+      }
+      try {
+        recognition.start();
+      } catch {
+        setStatus("Mikrofon başlatılamadı.");
+      }
+    };
+
+    $("btnStopTalk").onclick = stopAll;
+
+    $("userVoiceMode").value = localStorage.getItem(STORAGE.userVoice) || "auto";
+    $("aiVoiceMode").value = localStorage.getItem(STORAGE.aiVoice) || "auto";
+
+    $("userVoiceMode").onchange = saveState;
+    $("aiVoiceMode").onchange = saveState;
+
+    window.addEventListener("click", () => {
+      try { window.speechSynthesis?.getVoices?.(); } catch {}
+    }, { once: true });
+
+    window.addEventListener("touchstart", () => {
+      try { window.speechSynthesis?.getVoices?.(); } catch {}
+    }, { once: true });
+
+    window.onload = () => {
+      updateLangUI();
+      renderHistory();
+      $("heardText").textContent = "Henüz konuşma yok.";
+      $("aiTrText").textContent = "Henüz AI cevabı yok.";
+      setOrbState("idle");
+      setCaption("Hazır");
+      setStatus("Seçili dilde konuşmaya başla.");
+    };
+  </script>
+</body>
+</html>
