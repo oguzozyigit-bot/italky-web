@@ -1,18 +1,21 @@
-try{
-  const root = getComputedStyle(document.documentElement);
-  const footerH = parseFloat(root.getPropertyValue("--footerH")) || 0;
-  document.documentElement.style.setProperty("--shellLift", footerH ? `${footerH + 10}px` : "0px");
-}catch{}
-
 const API_BASE = "https://italky-api.onrender.com";
 const $ = (id) => document.getElementById(id);
 
+try {
+  const root = getComputedStyle(document.documentElement);
+  const footerH = parseFloat(root.getPropertyValue("--footerH")) || 0;
+  document.documentElement.style.setProperty(
+    "--shellLift",
+    footerH ? `${footerH + 10}px` : "0px"
+  );
+} catch {}
+
 const LANGS = {
-  en:{ name:"English", flag:"🇬🇧", bcp:"en-US", label:"İngilizce" },
-  de:{ name:"Deutsch", flag:"🇩🇪", bcp:"de-DE", label:"Almanca" },
-  fr:{ name:"Français", flag:"🇫🇷", bcp:"fr-FR", label:"Fransızca" },
-  es:{ name:"Español", flag:"🇪🇸", bcp:"es-ES", label:"İspanyolca" },
-  it:{ name:"Italiano", flag:"🇮🇹", bcp:"it-IT", label:"İtalyanca" }
+  en: { name: "English", flag: "🇬🇧", bcp: "en-US", label: "İngilizce" },
+  de: { name: "Deutsch", flag: "🇩🇪", bcp: "de-DE", label: "Almanca" },
+  fr: { name: "Français", flag: "🇫🇷", bcp: "fr-FR", label: "Fransızca" },
+  es: { name: "Español", flag: "🇪🇸", bcp: "es-ES", label: "İspanyolca" },
+  it: { name: "Italiano", flag: "🇮🇹", bcp: "it-IT", label: "İtalyanca" }
 };
 
 const STORAGE = {
@@ -58,7 +61,6 @@ const state = {
 };
 
 let audioCtx = null;
-
 /* ACCESS */
 function getAccessState() {
   const a = window.__ITALKY_ACCESS__ || {};
