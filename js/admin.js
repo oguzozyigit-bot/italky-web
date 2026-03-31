@@ -26,6 +26,9 @@ const systemNote = $("systemNote");
 
 let __me = null;
 let __currentPreviewCode = "";
+let __singleCodeDraft = "";
+let __singlePackageDraft = "";
+let __singleNoteDraft = "";
 
 function escapeHtml(s) {
   return String(s ?? "")
@@ -447,7 +450,7 @@ async function fillPackageSelect(selectId) {
   }
 }
 
-async function writeCodeToNfc(reason = "Kartı telefona yaklaştır. Lisans kodu NFC’ye yazılacak.") {
+async function writeCodeToNfc(reason = "Kartı telefona yaklaştır. Lisans kodu NFC'ye yazılacak.") {
   const statusEl = $("singleQrStatus");
   statusEl.className = "status-line status-warn";
   statusEl.textContent = reason;
@@ -466,13 +469,13 @@ async function writeCodeToNfc(reason = "Kartı telefona yaklaştır. Lisans kodu
     if (window.NativeAdmin && typeof window.NativeAdmin.writeNfcPayload === "function") {
       window.NativeAdmin.writeNfcPayload(makeNfcPayload(code));
       statusEl.className = "status-line status-warn";
-      statusEl.textContent = "Kartı tekrar telefona yaklaştır. Lisans kodu NFC’ye yazılacak.";
+      statusEl.textContent = "Kartı tekrar telefona yaklaştır. Lisans kodu NFC'ye yazılacak.";
     } else {
       throw new Error("Bu cihazda NFC yazma köprüsü yok.");
     }
   } catch (e) {
     statusEl.className = "status-line status-err";
-    statusEl.textContent = e?.message || "NFC’ye yazılamadı.";
+    statusEl.textContent = e?.message || "NFC'ye yazılamadı.";
   }
 }
 
@@ -567,6 +570,22 @@ async function renderCodesQr() {
     await fillPackageSelect("singlePackageSelect");
     await fillPackageSelect("bulkPackageSelect");
 
+    function restoreSingleForm() {
+      if ($("singleCodeInput")) $("singleCodeInput").value = __singleCodeDraft || "";
+      if ($("singleCodeNote")) $("singleCodeNote").value = __singleNoteDraft || "";
+      if ($("singlePackageSelect") && __singlePackageDraft) {
+        $("singlePackageSelect").value = __singlePackageDraft;
+      }
+    }
+
+    function captureSingleForm() {
+      __singleCodeDraft = String($("singleCodeInput")?.value || "").trim().toUpperCase();
+      __singlePackageDraft = String($("singlePackageSelect")?.value || "").trim();
+      __singleNoteDraft = String($("singleCodeNote")?.value || "").trim();
+    }
+
+    restoreSingleForm();
+
     const rows = await loadCodeRows();
 
     function applyPreviewCode(code) {
@@ -651,13 +670,19 @@ async function renderCodesQr() {
 
     $("generateSingleCodeBtn").onclick = () => {
       const code = generateLicenseCode();
-      $("singleCodeInput").value = code;
+      __singleCodeDraft = code;
+      if ($("singleCodeInput")) $("singleCodeInput").value = code;
+
+      captureSingleForm();
       applyPreviewCode(code);
+
       $("singleCodeStatus").className = "status-line status-ok";
       $("singleCodeStatus").textContent = `Lisans Kodu : ${code}`;
     };
 
     $("saveSingleCodeBtn").onclick = async () => {
+      captureSingleForm();
+
       const statusEl = $("singleCodeStatus");
       statusEl.className = "status-line status-warn";
       statusEl.textContent = "Kod kaydediliyor...";
@@ -671,6 +696,9 @@ async function renderCodesQr() {
         if (!packageCode) throw new Error("Paket seçilmedi");
 
         __currentPreviewCode = code;
+        __singleCodeDraft = code;
+        __singlePackageDraft = packageCode;
+        __singleNoteDraft = note || "";
 
         await api("/admin/nfc/cards/upsert", {
           method: "POST",
@@ -683,11 +711,16 @@ async function renderCodesQr() {
           })
         });
 
-        statusEl.className = "status-line status-ok";
-        statusEl.textContent = `Kod kaydedildi: ${code}`;
-
         await renderCodesQr();
+
+        if ($("singleCodeInput")) $("singleCodeInput").value = code;
+        if ($("singleCodeNote")) $("singleCodeNote").value = __singleNoteDraft;
+        if ($("singlePackageSelect")) $("singlePackageSelect").value = packageCode;
+
         applyPreviewCode(code);
+
+        $("singleCodeStatus").className = "status-line status-ok";
+        $("singleCodeStatus").textContent = `Kod kaydedildi: ${code}`;
 
         if ($("singleQrStatus")) {
           $("singleQrStatus").className = "status-line status-ok";
@@ -754,6 +787,7 @@ async function renderCodesQr() {
       const code = String($("qrCodePreviewInput").value || "").trim().toUpperCase();
       $("qrCodePreviewInput").value = code;
       __currentPreviewCode = code;
+      __singleCodeDraft = code;
       $("qrLinkPreviewOutput").value = buildInstallQrLink();
       drawCodeQrPreview();
     });
