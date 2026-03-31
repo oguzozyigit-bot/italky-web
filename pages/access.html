@@ -3,363 +3,177 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
-  <title>italkyAI • Aktivasyon</title>
-  <meta name="theme-color" content="#070b14" />
-
+  <title>italkyAI • Deep Space Activation</title>
+  
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;700;900&family=Space+Grotesk:wght@300;700&display=swap" rel="stylesheet">
 
   <style>
-    :root{
-      --bg:#060913;
-      --panel:rgba(255,255,255,.04);
-      --line:rgba(255,255,255,.10);
-      --txt:#f7f9ff;
-      --muted:rgba(255,255,255,.62);
-      --ok:#9ad5b0;
-      --warn:#e5c27c;
-      --err:#f0aaaa;
-      --cyan:#8bd3ff;
-      --violet:#7c5cff;
-      --pink:#ff66c4;
-      --grad:linear-gradient(135deg,#8bd3ff 0%,#7c5cff 46%,#ff66c4 100%);
-      --btn:linear-gradient(135deg,#9fb4ca 0%,#b7c7d8 100%);
-      --btnText:#09111b;
-      --shadow:0 26px 60px rgba(0,0,0,.34);
+    :root {
+      --cyan: #00f2ff;
+      --violet: #7000ff;
+      --pink: #ff00c8;
+      --space-bg: #03050a;
+      --glass: rgba(255, 255, 255, 0.03);
+      --border: rgba(0, 242, 255, 0.2);
     }
 
-    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-
-    html,body{
-      margin:0;
-      width:100%;
-      min-height:100%;
-      background:
-        radial-gradient(circle at 15% 0%, rgba(124,92,255,.20), transparent 28%),
-        radial-gradient(circle at 85% 10%, rgba(139,211,255,.14), transparent 26%),
-        radial-gradient(circle at 50% 60%, rgba(255,102,196,.08), transparent 26%),
-        linear-gradient(180deg,#050812 0%,#08101e 100%);
-      color:var(--txt);
-      font-family:'Outfit',sans-serif;
+    body, html {
+      margin: 0; padding: 0; width: 100%; min-height: 100vh;
+      background: var(--space-bg);
+      color: #fff;
+      font-family: 'Outfit', sans-serif;
+      overflow-x: hidden;
     }
 
-    #pageContent{
-      min-height:100dvh;
-      padding:18px 14px 30px;
+    /* Uzay Arka Planı Animasyonu */
+    .space-canvas {
+      position: fixed; inset: 0; z-index: -1;
+      background: radial-gradient(circle at center, #0a1025 0%, #03050a 100%);
     }
 
-    .page{
-      width:100%;
-      max-width:430px;
-      margin:0 auto;
-      display:grid;
-      gap:16px;
+    .stars {
+      position: absolute; width: 2px; height: 2px; background: white;
+      border-radius: 50%; opacity: 0.5; animation: twinkle 3s infinite;
     }
 
-    /* Hero Section */
-    .hero{
-      position:relative;
-      overflow:hidden;
-      border:1px solid var(--line);
-      border-radius:32px;
-      background:
-        radial-gradient(circle at top right, rgba(139,211,255,.12), transparent 32%),
-        linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.02));
-      box-shadow:var(--shadow);
-      padding:22px 18px 18px;
-    }
+    @keyframes twinkle { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
 
-    .hero-badge{
-      display:inline-flex;
-      align-items:center;
-      min-height:30px;
-      padding:6px 12px;
-      border-radius:999px;
-      font-size:11px;
-      font-weight:900;
-      letter-spacing:1.2px;
-      text-transform:uppercase;
-      color:#eaf5ff;
-      background:rgba(255,255,255,.05);
-      border:1px solid var(--line);
-    }
+    #pageContent { padding: 40px 20px; display: flex; justify-content: center; }
 
-    .hero-title{
-      margin:14px 0 8px;
-      font-family:"Space Grotesk",sans-serif;
-      font-size:34px;
-      line-height:1;
-      letter-spacing:-1.4px;
-    }
+    .container { width: 100%; max-width: 400px; position: relative; }
 
-    .hero-title .ai{
-      background:var(--grad);
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;
-    }
-
-    .hero-text{
-      margin:0;
-      color:var(--muted);
-      font-size:14px;
-      line-height:1.65;
-      font-weight:700;
-    }
-
-    /* NFC Animation Box */
-    .nfc-visual-container {
+    /* Holografik Panel */
+    .hologram-card {
+      background: var(--glass);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: 40px;
+      padding: 30px 20px;
+      box-shadow: 0 0 50px rgba(0, 242, 255, 0.1);
       position: relative;
-      width: 100%;
-      height: 200px;
-      margin: 10px 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
       overflow: hidden;
     }
 
-    /* Phone Body */
-    .phone-body {
-      width: 110px;
-      height: 180px;
-      background: #1a1a1a;
-      border: 3px solid #333;
-      border-radius: 20px;
-      position: relative;
-      z-index: 2;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    .hologram-card::before {
+      content: ""; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+      background: conic-gradient(from 0deg, transparent, var(--cyan), transparent 30%);
+      animation: rotate 10s linear infinite; opacity: 0.1;
     }
 
-    .phone-screen {
+    @keyframes rotate { 100% { transform: rotate(360deg); } }
+
+    .hero-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 38px; text-align: center; margin: 0;
+      letter-spacing: -2px; font-weight: 300;
+    }
+
+    .hero-title span {
+      background: linear-gradient(90deg, var(--cyan), var(--pink));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      font-weight: 700;
+    }
+
+    /* NFC Uzay Animasyonu */
+    .nfc-stage {
+      height: 240px; position: relative; display: flex; 
+      justify-content: center; align-items: center; margin: 20px 0;
+    }
+
+    .portal {
+      width: 140px; height: 140px; border-radius: 50%;
+      border: 2px dashed var(--cyan);
+      position: absolute; animation: pulsePortal 4s infinite;
+    }
+
+    @keyframes pulsePortal {
+      0% { transform: scale(0.8); opacity: 0.2; box-shadow: 0 0 0px var(--cyan); }
+      50% { transform: scale(1.1); opacity: 0.6; box-shadow: 0 0 40px var(--cyan); }
+      100% { transform: scale(0.8); opacity: 0.2; }
+    }
+
+    .scanner-line {
+      position: absolute; width: 100%; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+      top: 50%; animation: scan 3s ease-in-out infinite;
+    }
+
+    @keyframes scan { 0%, 100% { top: 20%; } 50% { top: 80%; } }
+
+    .space-card {
+      width: 110px; height: 70px;
+      background: linear-gradient(135deg, rgba(0, 242, 255, 0.4), rgba(112, 0, 255, 0.4));
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 10px; z-index: 5;
+      backdrop-filter: blur(5px);
       position: absolute;
-      inset: 5px;
-      background: #080c14;
-      border-radius: 15px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
+      animation: orbitCard 6s infinite ease-in-out;
     }
 
-    /* NFC Waves */
-    .nfc-wave {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 40px;
-      height: 40px;
-      border: 2px solid var(--cyan);
-      border-radius: 50%;
-      opacity: 0;
-      animation: waveOut 2s infinite;
-    }
-    .nfc-wave:nth-child(2) { animation-delay: 0.6s; }
-    .nfc-wave:nth-child(3) { animation-delay: 1.2s; }
-
-    @keyframes waveOut {
-      0% { width: 40px; height: 40px; opacity: 0.8; }
-      100% { width: 140px; height: 140px; opacity: 0; }
+    @keyframes orbitCard {
+      0% { transform: translateY(120px) rotateX(45deg) scale(0.5); opacity: 0; }
+      30% { transform: translateY(0px) rotateX(0deg) scale(1); opacity: 1; }
+      70% { transform: translateY(0px) rotateX(0deg) scale(1); opacity: 1; }
+      100% { transform: translateY(-150px) rotateZ(20deg) scale(0); opacity: 0; }
     }
 
-    /* The NFC Card */
-    .animated-card {
-      position: absolute;
-      width: 100px;
-      height: 60px;
-      background: var(--grad);
-      border-radius: 8px;
-      z-index: 1;
-      bottom: -70px; /* Start below */
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-      animation: cardSlide 4s infinite cubic-bezier(0.45, 0, 0.55, 1);
+    /* Input & Buttons */
+    .input-wrap { margin-top: 20px; }
+    
+    .field {
+      width: 100%; background: rgba(0,0,0,0.4);
+      border: 1px solid var(--border);
+      border-radius: 20px; padding: 20px;
+      color: var(--cyan); font-size: 24px; text-align: center;
+      font-family: 'Space Grotesk', sans-serif;
+      transition: 0.3s;
     }
 
-    .animated-card::before {
-      content: "";
-      position: absolute;
-      width: 20px;
-      height: 15px;
-      background: rgba(255,255,255,0.3);
-      left: 10px;
-      top: 10px;
-      border-radius: 3px;
+    .field:focus { outline: none; border-color: var(--pink); box-shadow: 0 0 20px rgba(255,0,200,0.2); }
+
+    .btn {
+      width: 100%; padding: 18px; border-radius: 20px; border: none;
+      margin-top: 15px; cursor: pointer; font-weight: 900;
+      text-transform: uppercase; letter-spacing: 1px; transition: 0.3s;
     }
 
-    @keyframes cardSlide {
-      0% { transform: translateY(0) rotateX(0deg); opacity: 0; }
-      20% { transform: translateY(-80px) rotateX(20deg); opacity: 1; }
-      50% { transform: translateY(-110px) rotateX(0deg); opacity: 1; filter: brightness(1.3); }
-      80% { transform: translateY(-80px) rotateX(20deg); opacity: 1; }
-      100% { transform: translateY(20px) rotateX(0deg); opacity: 0; }
+    .btn-main {
+      background: linear-gradient(90deg, var(--cyan), var(--violet));
+      color: #000;
     }
 
-    .card{
-      border:1px solid var(--line);
-      border-radius:32px;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.02));
-      box-shadow:var(--shadow);
-      overflow:hidden;
-    }
+    .btn-main:hover { transform: scale(1.02); filter: brightness(1.2); }
 
-    .card-head{
-      padding:20px 18px 0;
-      text-align: center;
-    }
-
-    .body{
-      padding:8px 18px 18px;
-      display:grid;
-      gap:12px;
-    }
-
-    .label{
-      display:block;
-      margin-bottom:7px;
-      font-size:12px;
-      font-weight:900;
-      letter-spacing:.7px;
-      text-transform:uppercase;
-      color:#dfe9ff;
-    }
-
-    .field{
-      width:100%;
-      min-height:56px;
-      border:none;
-      outline:none;
-      border-radius:18px;
-      padding:0 16px;
-      background:#152031;
-      border:1px solid var(--line);
-      color:#fff;
-      text-align:center;
-      font-size:24px;
-      font-weight:900;
-      letter-spacing:4px;
-      text-transform:uppercase;
-      transition: all .2s ease;
-    }
-
-    .field:focus{
-      border-color:var(--cyan);
-      box-shadow:0 0 15px rgba(139,211,255,.2);
-      background:#182638;
-    }
-
-    .btn{
-      width:100%;
-      min-height:54px;
-      border:none;
-      outline:none;
-      border-radius:18px;
-      cursor:pointer;
-      font-family:'Outfit',sans-serif;
-      font-size:15px;
-      font-weight:900;
-      transition:transform .15s ease, filter .15s ease;
-    }
-
-    .btn-primary{
-      background:var(--btn);
-      color:var(--btnText);
-      box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-    }
-
-    .btn-ghost{
-      background:transparent;
-      border:1px dashed rgba(255,255,255,.18);
-      color:#eff5ff;
-    }
-
-    .status{
-      min-height:18px;
-      text-align:center;
-      font-size:13px;
-      font-weight:900;
-      line-height:1.5;
-    }
-
-    .status.ok{ color:var(--ok); text-shadow: 0 0 10px rgba(154,213,176,0.3); }
-    .status.warn{ color:var(--warn); }
-    .status.err{ color:var(--err); }
-
-    .tip{
-      border:1px solid var(--line);
-      border-radius:22px;
-      background:rgba(255,255,255,.03);
-      padding:14px;
-      margin-top: 10px;
-    }
-
-    .tip b{ display:block; margin-bottom:6px; font-size:14px; color: var(--cyan); }
-    .tip span{ color:var(--muted); font-size:13px; font-weight:700; }
-
+    .status { text-align: center; margin-top: 15px; font-size: 14px; min-height: 20px; }
   </style>
 </head>
 <body>
+
+  <div class="space-canvas" id="space"></div>
+
   <div id="pageContent">
-    <div class="page">
-      <section class="hero">
-        <div class="hero-badge">Smart Activation</div>
-        <h1 class="hero-title">italky<span class="ai">AI</span><br>Aktivasyon</h1>
-        <p class="hero-text">
-          Lisans kodunuzu NFC ile saniyeler içinde tanımlayın veya manuel giriş yapın.
-        </p>
-      </section>
+    <div class="container">
+      <div class="hologram-card">
+        <h1 class="hero-title">italky<span>AI</span></h1>
+        <p style="text-align:center; opacity: 0.6; font-size: 13px;">Terminal Bağlantısı Kuruluyor...</p>
 
-      <section class="card">
-        <div class="nfc-visual-container">
-          <div class="nfc-wave"></div>
-          <div class="nfc-wave"></div>
-          <div class="nfc-wave"></div>
-          
-          <div class="phone-body">
-            <div class="phone-screen">
-              <div style="font-size: 10px; opacity: 0.5; margin-bottom: 5px;">italkyAI</div>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--cyan)">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-              </svg>
-            </div>
-          </div>
-          
-          <div class="animated-card">
-            <div style="font-size: 8px; font-weight: 900; color: #000; letter-spacing: 1px;">PREMIUM CARD</div>
+        <div class="nfc-stage">
+          <div class="portal"></div>
+          <div class="scanner-line"></div>
+          <div class="space-card">
+            <div style="padding: 10px; font-size: 8px; font-weight: 900;">DATA ENCRYPTION KEY</div>
           </div>
         </div>
 
-        <div class="card-head">
-          <h2 class="card-title" style="font-size: 20px;">NFC Kartınızı Yaklaştırın</h2>
-          <p class="card-sub">
-            Veya 8 haneli kodunuzu aşağıya girin.
-          </p>
+        <div class="input-wrap">
+          <input id="licenseCodeInput" class="field" maxlength="8" placeholder="KODU GİRİN" />
+          <button id="activateBtn" class="btn btn-main">Sistemi Başlat</button>
+          <button id="trialBtn" class="btn" style="background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.1);">Deneme Modu</button>
         </div>
 
-        <div class="body">
-          <div>
-            <label class="label" for="licenseCodeInput">Lisans Kodunuz</label>
-            <input id="licenseCodeInput" class="field" maxlength="8" placeholder="XXXX-XXXX" autocomplete="off" />
-          </div>
-
-          <div class="actions">
-            <button id="activateBtn" class="btn btn-primary" type="button">Lisansı Aktifleştir</button>
-            <button id="trialBtn" class="btn btn-ghost" type="button">7 Gün Ücretsiz Dene</button>
-          </div>
-
-          <div id="statusLine" class="status"></div>
-        </div>
-      </section>
-
-      <section class="tip">
-        <b>NFC Teknolojisi</b>
-        <span>Kartınızı telefonun üst-arka kısmına yaklaştırdığınızda kodunuz otomatik olarak algılanacaktır.</span>
-      </section>
+        <div id="statusLine" class="status"></div>
+      </div>
     </div>
   </div>
 
@@ -367,11 +181,18 @@
     import { mountShell } from "/js/ui_shell.js";
     import { supabase } from "/js/supabase_client.js";
 
-    try {
-      mountShell({ scroll: "auto" });
-    } catch (e) {
-      console.warn("ui_shell access skip:", e);
+    // Arka plan yıldızlarını oluştur
+    const space = document.getElementById('space');
+    for (let i = 0; i < 100; i++) {
+      const star = document.createElement('div');
+      star.className = 'stars';
+      star.style.left = Math.random() * 100 + '%';
+      star.style.top = Math.random() * 100 + '%';
+      star.style.animationDelay = Math.random() * 3 + 's';
+      space.appendChild(star);
     }
+
+    try { mountShell({ scroll: "auto" }); } catch (e) {}
 
     const API_BASE = "https://italky-api.onrender.com/api";
     const codeInput = document.getElementById("licenseCodeInput");
@@ -379,98 +200,46 @@
     const trialBtn = document.getElementById("trialBtn");
     const statusLine = document.getElementById("statusLine");
 
-    const params = new URLSearchParams(location.search);
-    const urlCode = String(params.get("code") || "").trim().toUpperCase();
-
-    if (urlCode) {
-      codeInput.value = urlCode;
-      setStatus("Kod algılandı, devam edebilirsiniz.", "ok");
+    function setStatus(text, type) {
+      statusLine.textContent = text;
+      statusLine.style.color = type === 'err' ? '#ffaaaa' : '#9ad5b0';
     }
 
-    function normalizeCode(v) {
-      return String(v || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8);
-    }
-
-    function setStatus(text, type = "") {
-      statusLine.className = `status ${type}`.trim();
-      statusLine.textContent = text || "";
-    }
-
-    async function getAccessToken() {
+    async function api(path, payload) {
       const { data: { session } } = await supabase.auth.getSession();
-      return session?.access_token || "";
-    }
-
-    async function api(path, payload = {}) {
-      const token = await getAccessToken();
       const r = await fetch(`${API_BASE}${path}`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { "Authorization": `Bearer ${token}` } : {})
+        headers: { 
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${session?.access_token || ""}`
         },
         body: JSON.stringify(payload)
       });
-
-      const txt = await r.text();
-      let json = null;
-      try { json = JSON.parse(txt); } catch { json = { raw: txt }; }
-      if (!r.ok) throw new Error(json?.detail || txt || `HTTP_${r.status}`);
-      return json;
+      if (!r.ok) throw new Error("Bağlantı Hatası");
+      return r.json();
     }
 
-    function openAfterSuccess() {
-      location.href = "/pages/home.html";
-    }
-
-    async function activateLicense() {
-      const code = normalizeCode(codeInput.value);
-      codeInput.value = code;
-
-      if (code.length !== 8) {
-        setStatus("Lütfen 8 karakterlik lisans kodunu girin.", "err");
-        return;
-      }
-
-      activateBtn.disabled = true;
-      trialBtn.disabled = true;
-      setStatus("Doğrulanıyor...", "warn");
-
+    activateBtn.onclick = async () => {
+      const code = codeInput.value.toUpperCase();
+      if(code.length < 8) return setStatus("Geçersiz Protokol", "err");
+      
+      setStatus("Veri paketleri gönderiliyor...", "warn");
       try {
         await api("/license/activate-code", { code });
-        setStatus("Harika! Lisans başarıyla aktif edildi.", "ok");
-        setTimeout(openAfterSuccess, 800);
+        setStatus("Sistem Aktif. Hoş geldiniz.", "ok");
+        setTimeout(() => location.href = "/pages/home.html", 1000);
       } catch (e) {
-        setStatus(e?.message || "Hata: Lisans bulunamadı.", "err");
-      } finally {
-        activateBtn.disabled = false;
-        trialBtn.disabled = false;
+        setStatus("Yetkisiz Erişim", "err");
       }
-    }
+    };
 
-    async function startTrial() {
-      activateBtn.disabled = true;
-      trialBtn.disabled = true;
-      setStatus("Deneme süresi başlatılıyor...", "warn");
-
+    trialBtn.onclick = async () => {
+      setStatus("Geçici tünel açılıyor...", "warn");
       try {
         await api("/license/start-trial", { days: 7 });
-        setStatus("7 günlük deneme başladı! Keyfini çıkar.", "ok");
-        setTimeout(openAfterSuccess, 800);
-      } catch (e) {
-        setStatus(e?.message || "Ücretsiz giriş başlatılamadı.", "err");
-      } finally {
-        activateBtn.disabled = false;
-        trialBtn.disabled = false;
-      }
-    }
-
-    codeInput.addEventListener("input", () => {
-      codeInput.value = normalizeCode(codeInput.value);
-    });
-
-    activateBtn.addEventListener("click", activateLicense);
-    trialBtn.addEventListener("click", startTrial);
+        location.href = "/pages/home.html";
+      } catch (e) { setStatus("Hata", "err"); }
+    };
   </script>
 </body>
 </html>
