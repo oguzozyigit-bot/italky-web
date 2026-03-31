@@ -86,9 +86,13 @@ function normalizeUid(uid) {
 
 function makeQrLink(uid) {
   const clean = normalizeUid(uid);
-  return clean
-    ? `https://italky.ai/open/nfc?uid=${encodeURIComponent(clean)}`
-    : "";
+  if (!clean) return "";
+
+  const packageId = "com.ozyigits.italkyai";
+  const marketFallback =
+    `market://details?id=${packageId}&referrer=${encodeURIComponent(`uid=${clean}&source=nfc_qr`)}`;
+
+  return `intent://open/nfc?uid=${encodeURIComponent(clean)}#Intent;scheme=https;package=${packageId};S.browser_fallback_url=${encodeURIComponent(marketFallback)};end`;
 }
 
 function tab(name) {
@@ -1104,31 +1108,31 @@ async function renderNfc() {
     }
 
     async function writeUrlToCard(reason = "Kart yazılıyor...") {
-      const statusEl = $("nfcStatus");
-      statusEl.className = "status-line status-warn";
-      statusEl.textContent = reason;
+  const statusEl = $("nfcStatus");
+  statusEl.className = "status-line status-warn";
+  statusEl.textContent = reason;
 
-      try {
-        const clean = buildQrLinkFromInputs();
-        const url = makeQrLink(clean);
+  try {
+    const clean = buildQrLinkFromInputs();
+    const url = makeQrLink(clean);
 
-        if (!clean) throw new Error("Önce kartı okut veya UID gir.");
-        if (!url || !url.startsWith("https://italky.ai/open/nfc?uid=")) {
-          throw new Error("Geçerli NFC linki üretilemedi.");
-        }
-
-        if ($("qrLinkOutput")) $("qrLinkOutput").value = url;
-
-        if (window.NativeAdmin && typeof window.NativeAdmin.writeNfcPayload === "function") {
-          window.NativeAdmin.writeNfcPayload(url);
-        } else {
-          throw new Error("Bu cihazda kart yazma köprüsü yok.");
-        }
-      } catch (e) {
-        statusEl.className = "status-line status-err";
-        statusEl.textContent = e?.message || "Kart yazılamadı.";
-      }
+    if (!clean) throw new Error("Önce kartı okut veya UID gir.");
+    if (!url || !url.startsWith("intent://open/nfc?uid=")) {
+      throw new Error("Geçerli NFC linki üretilemedi.");
     }
+
+    if ($("qrLinkOutput")) $("qrLinkOutput").value = url;
+
+    if (window.NativeAdmin && typeof window.NativeAdmin.writeNfcPayload === "function") {
+      window.NativeAdmin.writeNfcPayload(url);
+    } else {
+      throw new Error("Bu cihazda kart yazma köprüsü yok.");
+    }
+  } catch (e) {
+    statusEl.className = "status-line status-err";
+    statusEl.textContent = e?.message || "Kart yazılamadı.";
+  }
+}
 
     $("uidPreviewInput").addEventListener("input", () => {
       buildQrLinkFromInputs();
@@ -1245,12 +1249,14 @@ async function renderNfc() {
         syncNfcStateFromDom();
 
         statusEl.className = "status-line status-ok";
-        statusEl.textContent = "Kart kaydedildi. Şimdi karta URL yazabilirsin.";
+statusEl.textContent = "Kart kaydedildi. Karta URL yazılıyor...";
 
-        if ($("qrStatus")) {
-          $("qrStatus").className = "status-line status-ok";
-          $("qrStatus").textContent = $("qrLinkOutput").value || "Link oluşmadı";
-        }
+if ($("qrStatus")) {
+  $("qrStatus").className = "status-line status-ok";
+  $("qrStatus").textContent = $("qrLinkOutput").value || "Link oluşmadı";
+}
+
+await writeUrlToCard("Kart kaydedildi, NFC bağlantısı karta yazılıyor...");
       } catch (e) {
         statusEl.className = "status-line status-err";
         statusEl.textContent = e?.message || "Kart kaydedilemedi.";
