@@ -2,8 +2,9 @@
 <html lang="tr">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>italkyAI • NFC Açılıyor</title>
+  <meta name="theme-color" content="#07111f" />
   <style>
     body{
       margin:0;
@@ -26,7 +27,7 @@
     }
     h1{margin:0 0 10px;font-size:28px}
     p{margin:0 0 18px;opacity:.82;line-height:1.6}
-    .muted{font-size:13px;opacity:.65}
+    .muted{font-size:13px;opacity:.65;word-break:break-word}
     .btn{
       display:inline-block;
       padding:14px 20px;
@@ -51,12 +52,15 @@
     const params = new URLSearchParams(location.search);
     const uid = String(params.get("uid") || "").trim().toUpperCase();
     const source = "nfc_qr";
+    const packageId = "com.ozyigits.italkyai";
 
     const info = document.getElementById("info");
     const debugLine = document.getElementById("debugLine");
     const storeBtn = document.getElementById("storeBtn");
 
-    const packageId = "com.ozyigits.italkyai";
+    const deepLink = uid
+      ? `italky://nfc?uid=${encodeURIComponent(uid)}`
+      : "italky://nfc";
 
     const playWeb =
       `https://play.google.com/store/apps/details?id=${encodeURIComponent(packageId)}&referrer=${encodeURIComponent(`uid=${uid}&source=${source}`)}`;
@@ -65,31 +69,33 @@
       `market://details?id=${encodeURIComponent(packageId)}&referrer=${encodeURIComponent(`uid=${uid}&source=${source}`)}`;
 
     storeBtn.href = playWeb;
-
     debugLine.textContent = uid ? `UID: ${uid}` : "UID bulunamadı";
 
     if (!uid) {
       info.textContent = "Kart UID bilgisi eksik.";
     } else {
-      info.textContent = "Uygulama yüklüyse açılacak, değilse mağazaya yönlendirileceksin.";
+      info.textContent = "Uygulama yüklüyse açılacak, değilse Play Store’a yönlendirileceksin.";
     }
 
-    // Android App Link veya deep link denemesi
-    const deepLink = `italky://nfc?uid=${encodeURIComponent(uid)}`;
+    let pageHidden = false;
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "hidden") pageHidden = true;
+    });
 
-    // Önce deep link dene
+    window.addEventListener("pagehide", () => {
+      pageHidden = true;
+    });
+
     setTimeout(() => {
       location.href = deepLink;
-    }, 300);
+    }, 250);
 
-    // Uygulama açılmazsa Play'e düş
     setTimeout(() => {
-      location.href = playMarket;
-    }, 1600);
+      if (!pageHidden) location.href = playMarket;
+    }, 1400);
 
-    // Market intent çalışmazsa web Play fallback
     setTimeout(() => {
-      location.href = playWeb;
+      if (!pageHidden) location.href = playWeb;
     }, 2600);
   </script>
 </body>
