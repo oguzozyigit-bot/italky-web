@@ -29,6 +29,26 @@ const meLine = $("meLine");
 let __me = null;
 let __nfcEventsBound = false;
 
+/* NFC UI state: renderNfc yeniden çizilse bile alanlar kaybolmasın */
+const __nfcState = {
+  uid: "",
+  serialNo: "",
+  packageCode: "",
+  expiresAt: "",
+  maxDevices: "1",
+  isActive: "true",
+  status: "new",
+  note: "",
+  bindUserId: "",
+  bindCardUid: "",
+  qrTitleText: "italkyAI Erişim Kartı",
+  qrSubText: "Tarat / okut / başlat",
+  qrShowPackage: "true",
+  qrShowUid: "true",
+  qrShowExpiry: "true",
+  qrTheme: "light"
+};
+
 function setLoginStatus(text, type = "") {
   loginStatus.className = `status-line ${type}`.trim();
   loginStatus.textContent = text || "";
@@ -65,8 +85,12 @@ function normalizeUid(uid) {
     .trim();
 }
 
+/* QR ve NFC için TEK doğru hedef */
 function makeQrLink(uid) {
-  return uid ? `https://italky.ai/open/access?uid=${encodeURIComponent(uid)}` : "";
+  const clean = normalizeUid(uid);
+  return clean
+    ? `https://italky.ai/pages/access.html?uid=${encodeURIComponent(clean)}&source=nfc_qr`
+    : "";
 }
 
 function tab(name) {
@@ -374,7 +398,7 @@ async function renderUsers() {
             user_id: $("assignUserId").value.trim(),
             package_code: $("assignPackageCode").value,
             source_type: $("assignSourceType").value,
-            card_uid: $("assignCardUid").value.trim() || null,
+            card_uid: normalizeUid($("assignCardUid").value) || null,
             purchase_token: $("assignPurchaseToken").value.trim() || null,
             started_at: $("assignStartedAt").value.trim() || null,
             expires_at: $("assignExpiresAt").value.trim() || null,
@@ -406,6 +430,7 @@ async function renderUsers() {
           setTimeout(() => {
             const bindUserId = $("bindUserId");
             if (bindUserId) bindUserId.value = uid;
+            __nfcState.bindUserId = uid;
           }, 100);
         });
       });
@@ -653,6 +678,91 @@ async function renderEntitlements() {
   }
 }
 
+/* ---------- NFC helpers ---------- */
+
+function syncNfcStateFromDom() {
+  __nfcState.uid = $("nfcUidInput")?.value ?? __nfcState.uid;
+  __nfcState.serialNo = $("nfcSerialInput")?.value ?? __nfcState.serialNo;
+  __nfcState.packageCode = $("nfcPackageSelect")?.value ?? __nfcState.packageCode;
+  __nfcState.expiresAt = $("nfcExpiresAt")?.value ?? __nfcState.expiresAt;
+  __nfcState.maxDevices = $("nfcMaxDevices")?.value ?? __nfcState.maxDevices;
+  __nfcState.isActive = $("nfcIsActive")?.value ?? __nfcState.isActive;
+  __nfcState.status = $("nfcStatusSelect")?.value ?? __nfcState.status;
+  __nfcState.note = $("nfcNote")?.value ?? __nfcState.note;
+  __nfcState.bindUserId = $("bindUserId")?.value ?? __nfcState.bindUserId;
+  __nfcState.bindCardUid = $("bindCardUid")?.value ?? __nfcState.bindCardUid;
+  __nfcState.qrTitleText = $("qrTitleText")?.value ?? __nfcState.qrTitleText;
+  __nfcState.qrSubText = $("qrSubText")?.value ?? __nfcState.qrSubText;
+  __nfcState.qrShowPackage = $("qrShowPackage")?.value ?? __nfcState.qrShowPackage;
+  __nfcState.qrShowUid = $("qrShowUid")?.value ?? __nfcState.qrShowUid;
+  __nfcState.qrShowExpiry = $("qrShowExpiry")?.value ?? __nfcState.qrShowExpiry;
+  __nfcState.qrTheme = $("qrTheme")?.value ?? __nfcState.qrTheme;
+}
+
+function applyNfcStateToDom() {
+  if ($("nfcUidInput")) $("nfcUidInput").value = __nfcState.uid || "";
+  if ($("nfcSerialInput")) $("nfcSerialInput").value = __nfcState.serialNo || "";
+  if ($("nfcExpiresAt")) $("nfcExpiresAt").value = __nfcState.expiresAt || "";
+  if ($("nfcMaxDevices")) $("nfcMaxDevices").value = __nfcState.maxDevices || "1";
+  if ($("nfcIsActive")) $("nfcIsActive").value = __nfcState.isActive || "true";
+  if ($("nfcStatusSelect")) $("nfcStatusSelect").value = __nfcState.status || "new";
+  if ($("nfcNote")) $("nfcNote").value = __nfcState.note || "";
+  if ($("bindUserId")) $("bindUserId").value = __nfcState.bindUserId || "";
+  if ($("bindCardUid")) $("bindCardUid").value = __nfcState.bindCardUid || "";
+  if ($("qrTitleText")) $("qrTitleText").value = __nfcState.qrTitleText || "italkyAI Erişim Kartı";
+  if ($("qrSubText")) $("qrSubText").value = __nfcState.qrSubText || "Tarat / okut / başlat";
+  if ($("qrShowPackage")) $("qrShowPackage").value = __nfcState.qrShowPackage || "true";
+  if ($("qrShowUid")) $("qrShowUid").value = __nfcState.qrShowUid || "true";
+  if ($("qrShowExpiry")) $("qrShowExpiry").value = __nfcState.qrShowExpiry || "true";
+  if ($("qrTheme")) $("qrTheme").value = __nfcState.qrTheme || "light";
+
+  if ($("uidPreviewInput")) $("uidPreviewInput").value = __nfcState.uid || "";
+  if ($("uidPreviewOutput")) $("uidPreviewOutput").value = normalizeUid(__nfcState.uid || "");
+  if ($("qrLinkOutput")) $("qrLinkOutput").value = makeQrLink(__nfcState.uid || "");
+
+  if ($("nfcPackageSelect")) {
+    const select = $("nfcPackageSelect");
+    if (__nfcState.packageCode && [...select.options].some(o => o.value === __nfcState.packageCode)) {
+      select.value = __nfcState.packageCode;
+    }
+  }
+}
+
+function setUidEverywhere(uid) {
+  const clean = normalizeUid(uid);
+  __nfcState.uid = clean;
+  __nfcState.bindCardUid = clean;
+
+  if ($("nfcUidInput")) $("nfcUidInput").value = clean;
+  if ($("uidPreviewInput")) $("uidPreviewInput").value = clean;
+  if ($("uidPreviewOutput")) $("uidPreviewOutput").value = clean;
+  if ($("bindCardUid")) $("bindCardUid").value = clean;
+  if ($("qrLinkOutput")) $("qrLinkOutput").value = makeQrLink(clean);
+}
+
+function buildQrLinkFromInputs() {
+  syncNfcStateFromDom();
+
+  const clean = normalizeUid($("uidPreviewInput")?.value || $("nfcUidInput")?.value || __nfcState.uid);
+  setUidEverywhere(clean);
+
+  return clean;
+}
+
+function drawQrPreview() {
+  const wrap = $("qrPreviewWrap");
+  if (!wrap) return;
+
+  const link = $("qrLinkOutput")?.value?.trim() || "";
+  if (!link) {
+    wrap.innerHTML = `<div style="color:#6b7280;font-size:13px;font-weight:800;">QR link bekleniyor</div>`;
+    return;
+  }
+
+  const imgSrc = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(link)}`;
+  wrap.innerHTML = `<img src="${imgSrc}" alt="QR" style="width:180px;height:180px;display:block;" />`;
+}
+
 function bindNativeAdminEvents() {
   if (__nfcEventsBound) return;
   __nfcEventsBound = true;
@@ -661,11 +771,8 @@ function bindNativeAdminEvents() {
     const uid = e?.detail?.uid || "";
     if (!uid) return;
 
-    if ($("nfcUidInput")) $("nfcUidInput").value = uid;
-    if ($("uidPreviewInput")) $("uidPreviewInput").value = uid;
-    if ($("bindCardUid")) $("bindCardUid").value = uid;
-    if ($("uidPreviewOutput")) $("uidPreviewOutput").value = normalizeUid(uid);
-    if ($("qrLinkOutput")) $("qrLinkOutput").value = makeQrLink(normalizeUid(uid));
+    setUidEverywhere(uid);
+    drawQrPreview();
 
     const statusEl = $("nfcStatus");
     if (statusEl) {
@@ -677,13 +784,6 @@ function bindNativeAdminEvents() {
     if (qrStatus) {
       qrStatus.className = "status-line status-ok";
       qrStatus.textContent = "UID alındı, QR hazır.";
-    }
-
-    const wrap = $("qrPreviewWrap");
-    if (wrap) {
-      const link = makeQrLink(normalizeUid(uid));
-      const imgSrc = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(link)}`;
-      wrap.innerHTML = `<img src="${imgSrc}" alt="QR" style="width:180px;height:180px;display:block;" />`;
     }
   });
 
@@ -716,6 +816,7 @@ function bindNativeAdminEvents() {
 
 async function renderNfc() {
   const box = $("panelNfc");
+  syncNfcStateFromDom();
 
   box.innerHTML = `
     <div class="grid grid-2">
@@ -865,6 +966,7 @@ async function renderNfc() {
   try {
     bindNativeAdminEvents();
     await fillPackageSelect("nfcPackageSelect");
+    applyNfcStateToDom();
 
     const cards = await api("/admin/nfc/cards");
     const items = Array.isArray(cards?.items) ? cards.items : [];
@@ -905,34 +1007,25 @@ async function renderNfc() {
       `;
     }).join("") : `<tr><td colspan="7" class="empty">Kart bulunamadı.</td></tr>`;
 
-    function buildQrLinkFromInputs() {
-      const clean = normalizeUid($("uidPreviewInput").value);
-      $("uidPreviewOutput").value = clean;
-      $("qrLinkOutput").value = makeQrLink(clean);
-
-      $("nfcUidInput").value = $("uidPreviewInput").value;
-      $("bindCardUid").value = $("uidPreviewInput").value;
-
-      return clean;
-    }
-
-    function drawQrPreview() {
-      const wrap = $("qrPreviewWrap");
-      const link = $("qrLinkOutput").value.trim();
-
-      if (!link) {
-        wrap.innerHTML = `<div style="color:#6b7280;font-size:13px;font-weight:800;">QR link bekleniyor</div>`;
-        return;
-      }
-
-      const imgSrc = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(link)}`;
-      wrap.innerHTML = `<img src="${imgSrc}" alt="QR" style="width:180px;height:180px;display:block;" />`;
-    }
+    drawQrPreview();
 
     $("uidPreviewInput").addEventListener("input", () => {
       buildQrLinkFromInputs();
       drawQrPreview();
     });
+
+    $("nfcUidInput").addEventListener("input", () => {
+      const clean = normalizeUid($("nfcUidInput").value);
+      setUidEverywhere(clean);
+      drawQrPreview();
+    });
+
+    ["nfcSerialInput", "nfcExpiresAt", "nfcMaxDevices", "nfcIsActive", "nfcStatusSelect", "nfcNote", "bindUserId", "bindCardUid", "qrTitleText", "qrSubText", "qrShowPackage", "qrShowUid", "qrShowExpiry", "qrTheme"].forEach((id) => {
+      $(id)?.addEventListener("input", syncNfcStateFromDom);
+      $(id)?.addEventListener("change", syncNfcStateFromDom);
+    });
+
+    $("nfcPackageSelect")?.addEventListener("change", syncNfcStateFromDom);
 
     $("generateQrBtn").onclick = () => {
       const clean = buildQrLinkFromInputs();
@@ -966,6 +1059,8 @@ async function renderNfc() {
     };
 
     function openPrintWindow() {
+      syncNfcStateFromDom();
+
       const link = $("qrLinkOutput").value.trim();
       const uid = normalizeUid($("uidPreviewInput").value);
       const title = $("qrTitleText").value.trim() || "italkyAI Erişim Kartı";
@@ -1066,11 +1161,11 @@ async function renderNfc() {
       statusEl.textContent = reason;
 
       try {
-        const uid = $("nfcUidInput").value.trim();
-        const clean = normalizeUid(uid);
+        const clean = buildQrLinkFromInputs();
         const url = makeQrLink(clean);
 
         if (!clean) throw new Error("Önce UID gerekli");
+        if (!url) throw new Error("URL oluşturulamadı");
 
         if (window.NativeAdmin && typeof window.NativeAdmin.writeNfcPayload === "function") {
           window.NativeAdmin.writeNfcPayload(url);
@@ -1098,8 +1193,10 @@ async function renderNfc() {
       statusEl.textContent = "Kart kaydediliyor...";
 
       try {
+        const cleanUid = normalizeUid($("nfcUidInput").value.trim());
+
         const payload = {
-          uid: $("nfcUidInput").value.trim(),
+          uid: cleanUid,
           serial_no: $("nfcSerialInput").value.trim() || null,
           package_code: $("nfcPackageSelect").value,
           is_active: $("nfcIsActive").value === "true",
@@ -1116,11 +1213,12 @@ async function renderNfc() {
           body: JSON.stringify(payload)
         });
 
-        buildQrLinkFromInputs();
+        setUidEverywhere(cleanUid);
+        syncNfcStateFromDom();
         drawQrPreview();
 
         statusEl.className = "status-line status-ok";
-        statusEl.textContent = "Kart kaydedildi. QR ve kart yazma işlemleri hazır.";
+        statusEl.textContent = "Kart kaydedildi. UID korundu, QR ve kart yazma işlemleri hazır.";
 
         await renderNfc();
       } catch (e) {
@@ -1136,7 +1234,7 @@ async function renderNfc() {
 
       try {
         const userId = $("bindUserId").value.trim();
-        const cardUid = $("bindCardUid").value.trim();
+        const cardUid = normalizeUid($("bindCardUid").value.trim());
         const packageCode = $("nfcPackageSelect").value;
 
         if (!userId || !cardUid) throw new Error("Kullanıcı ID ve Kart UID gerekli");
@@ -1152,6 +1250,9 @@ async function renderNfc() {
           })
         });
 
+        __nfcState.bindUserId = userId;
+        __nfcState.bindCardUid = cardUid;
+
         bindStatus.className = "status-line status-ok";
         bindStatus.textContent = "Kullanıcı karta bağlandı.";
         await Promise.all([renderNfc(), renderUsers()]);
@@ -1164,10 +1265,8 @@ async function renderNfc() {
     box.querySelectorAll("[data-load-card]").forEach((btn) => {
       btn.addEventListener("click", () => {
         const uid = btn.getAttribute("data-load-card") || "";
-        $("uidPreviewInput").value = uid;
-        $("nfcUidInput").value = uid;
-        $("bindCardUid").value = uid;
-        buildQrLinkFromInputs();
+        setUidEverywhere(uid);
+        syncNfcStateFromDom();
         drawQrPreview();
       });
     });
@@ -1175,8 +1274,8 @@ async function renderNfc() {
     box.querySelectorAll("[data-print-card]").forEach((btn) => {
       btn.addEventListener("click", () => {
         const uid = btn.getAttribute("data-print-card") || "";
-        $("uidPreviewInput").value = uid;
-        buildQrLinkFromInputs();
+        setUidEverywhere(uid);
+        syncNfcStateFromDom();
         drawQrPreview();
         openPrintWindow();
       });
@@ -1185,9 +1284,9 @@ async function renderNfc() {
     box.querySelectorAll("[data-rewrite-card]").forEach((btn) => {
       btn.addEventListener("click", async () => {
         const uid = btn.getAttribute("data-rewrite-card") || "";
-        $("nfcUidInput").value = uid;
-        $("uidPreviewInput").value = uid;
-        buildQrLinkFromInputs();
+        setUidEverywhere(uid);
+        syncNfcStateFromDom();
+        drawQrPreview();
         await writeUrlToCard("Kart yeniden yazılıyor...");
       });
     });
@@ -1321,6 +1420,10 @@ async function fillPackageSelect(selectId) {
     sel.innerHTML = items.length
       ? items.map(p => `<option value="${escapeHtml(p.code || "")}">${escapeHtml((p.name || p.code || "") + " • " + (p.source_type || ""))}</option>`).join("")
       : `<option value="">Paket yok</option>`;
+
+    if (__nfcState.packageCode && [...sel.options].some(o => o.value === __nfcState.packageCode)) {
+      sel.value = __nfcState.packageCode;
+    }
   } catch {
     sel.innerHTML = `<option value="">Paket alınamadı</option>`;
   }
