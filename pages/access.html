@@ -57,6 +57,7 @@
       gap:16px;
     }
 
+    /* Hero Section */
     .hero{
       position:relative;
       overflow:hidden;
@@ -106,6 +107,98 @@
       font-weight:700;
     }
 
+    /* NFC Animation Box */
+    .nfc-visual-container {
+      position: relative;
+      width: 100%;
+      height: 200px;
+      margin: 10px 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    /* Phone Body */
+    .phone-body {
+      width: 110px;
+      height: 180px;
+      background: #1a1a1a;
+      border: 3px solid #333;
+      border-radius: 20px;
+      position: relative;
+      z-index: 2;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    .phone-screen {
+      position: absolute;
+      inset: 5px;
+      background: #080c14;
+      border-radius: 15px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* NFC Waves */
+    .nfc-wave {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 40px;
+      height: 40px;
+      border: 2px solid var(--cyan);
+      border-radius: 50%;
+      opacity: 0;
+      animation: waveOut 2s infinite;
+    }
+    .nfc-wave:nth-child(2) { animation-delay: 0.6s; }
+    .nfc-wave:nth-child(3) { animation-delay: 1.2s; }
+
+    @keyframes waveOut {
+      0% { width: 40px; height: 40px; opacity: 0.8; }
+      100% { width: 140px; height: 140px; opacity: 0; }
+    }
+
+    /* The NFC Card */
+    .animated-card {
+      position: absolute;
+      width: 100px;
+      height: 60px;
+      background: var(--grad);
+      border-radius: 8px;
+      z-index: 1;
+      bottom: -70px; /* Start below */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      animation: cardSlide 4s infinite cubic-bezier(0.45, 0, 0.55, 1);
+    }
+
+    .animated-card::before {
+      content: "";
+      position: absolute;
+      width: 20px;
+      height: 15px;
+      background: rgba(255,255,255,0.3);
+      left: 10px;
+      top: 10px;
+      border-radius: 3px;
+    }
+
+    @keyframes cardSlide {
+      0% { transform: translateY(0) rotateX(0deg); opacity: 0; }
+      20% { transform: translateY(-80px) rotateX(20deg); opacity: 1; }
+      50% { transform: translateY(-110px) rotateX(0deg); opacity: 1; filter: brightness(1.3); }
+      80% { transform: translateY(-80px) rotateX(20deg); opacity: 1; }
+      100% { transform: translateY(20px) rotateX(0deg); opacity: 0; }
+    }
+
     .card{
       border:1px solid var(--line);
       border-radius:32px;
@@ -117,67 +210,7 @@
 
     .card-head{
       padding:20px 18px 0;
-    }
-
-    .card-title{
-      margin:0;
-      font-size:24px;
-      font-weight:900;
-      letter-spacing:-.5px;
-    }
-
-    .card-sub{
-      margin:8px 0 0;
-      color:var(--muted);
-      font-size:13px;
-      line-height:1.6;
-      font-weight:700;
-    }
-
-    .nfc-box{
-      margin:16px 18px 10px;
-      border:1px solid rgba(139,211,255,.16);
-      border-radius:24px;
-      background:
-        radial-gradient(circle at top, rgba(139,211,255,.10), transparent 60%),
-        rgba(8,12,20,.65);
-      padding:20px 16px;
-      text-align:center;
-    }
-
-    .nfc-icon{
-      width:72px;
-      height:72px;
-      margin:0 auto 14px;
-      border-radius:22px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      background:linear-gradient(135deg, rgba(139,211,255,.18), rgba(124,92,255,.16));
-      border:1px solid rgba(255,255,255,.10);
-      box-shadow:0 14px 30px rgba(0,0,0,.24);
-    }
-
-    .nfc-icon svg{
-      width:34px;
-      height:34px;
-      stroke:#eaf5ff;
-      fill:none;
-      stroke-width:1.8;
-    }
-
-    .nfc-title{
-      font-size:18px;
-      font-weight:900;
-      margin:0 0 6px;
-    }
-
-    .nfc-text{
-      margin:0;
-      color:var(--muted);
-      font-size:13px;
-      line-height:1.65;
-      font-weight:700;
+      text-align: center;
     }
 
     .body{
@@ -211,26 +244,13 @@
       font-weight:900;
       letter-spacing:4px;
       text-transform:uppercase;
-      transition:border-color .2s ease, box-shadow .2s ease, background .2s ease;
+      transition: all .2s ease;
     }
 
     .field:focus{
-      border-color:rgba(139,211,255,.5);
-      box-shadow:0 0 0 4px rgba(139,211,255,.08);
+      border-color:var(--cyan);
+      box-shadow:0 0 15px rgba(139,211,255,.2);
       background:#182638;
-    }
-
-    .field::placeholder{
-      font-size:16px;
-      letter-spacing:0;
-      text-transform:none;
-      color:rgba(255,255,255,.36);
-      font-weight:700;
-    }
-
-    .actions{
-      display:grid;
-      gap:10px;
     }
 
     .btn{
@@ -243,14 +263,13 @@
       font-family:'Outfit',sans-serif;
       font-size:15px;
       font-weight:900;
-      transition:transform .15s ease, filter .15s ease, opacity .15s ease;
+      transition:transform .15s ease, filter .15s ease;
     }
-
-    .btn:active{ transform:scale(.985); }
 
     .btn-primary{
       background:var(--btn);
       color:var(--btnText);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.2);
     }
 
     .btn-ghost{
@@ -265,10 +284,9 @@
       font-size:13px;
       font-weight:900;
       line-height:1.5;
-      padding-top:2px;
     }
 
-    .status.ok{ color:var(--ok); }
+    .status.ok{ color:var(--ok); text-shadow: 0 0 10px rgba(154,213,176,0.3); }
     .status.warn{ color:var(--warn); }
     .status.err{ color:var(--err); }
 
@@ -277,67 +295,61 @@
       border-radius:22px;
       background:rgba(255,255,255,.03);
       padding:14px;
+      margin-top: 10px;
     }
 
-    .tip b{
-      display:block;
-      margin-bottom:6px;
-      font-size:14px;
-    }
+    .tip b{ display:block; margin-bottom:6px; font-size:14px; color: var(--cyan); }
+    .tip span{ color:var(--muted); font-size:13px; font-weight:700; }
 
-    .tip span{
-      color:var(--muted);
-      font-size:13px;
-      line-height:1.6;
-      font-weight:700;
-    }
   </style>
 </head>
 <body>
   <div id="pageContent">
     <div class="page">
       <section class="hero">
-        <div class="hero-badge">Hoş Geldin</div>
+        <div class="hero-badge">Smart Activation</div>
         <h1 class="hero-title">italky<span class="ai">AI</span><br>Aktivasyon</h1>
         <p class="hero-text">
-          Lütfen lisans kodunuzu giriniz. Lisans kodunuz yok ise ücretsiz giriş yapabilirsiniz.
-          7 Gün boyunca Premium özellikler hariç tüm modüller aktif kalacaktır.
+          Lisans kodunuzu NFC ile saniyeler içinde tanımlayın veya manuel giriş yapın.
         </p>
       </section>
 
       <section class="card">
-        <div class="card-head">
-          <h2 class="card-title">Lisans Aktivasyon Kodu</h2>
-          <p class="card-sub">
-            Telefonda NFC okuyucu bulunuyorsa kartınızı okutunuz. Bulunmuyorsa QR kod üzerinde yazılı olan lisans kodunu bu alana yazın ve Devam Et'e basın.
-          </p>
+        <div class="nfc-visual-container">
+          <div class="nfc-wave"></div>
+          <div class="nfc-wave"></div>
+          <div class="nfc-wave"></div>
+          
+          <div class="phone-body">
+            <div class="phone-screen">
+              <div style="font-size: 10px; opacity: 0.5; margin-bottom: 5px;">italkyAI</div>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--cyan)">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              </svg>
+            </div>
+          </div>
+          
+          <div class="animated-card">
+            <div style="font-size: 8px; font-weight: 900; color: #000; letter-spacing: 1px;">PREMIUM CARD</div>
+          </div>
         </div>
 
-        <div class="nfc-box">
-          <div class="nfc-icon">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M7 6a8 8 0 0 1 10 0"></path>
-              <path d="M9 8.5a5 5 0 0 1 6 0"></path>
-              <path d="M11 11a2 2 0 0 1 2 0"></path>
-              <path d="M6 5v14"></path>
-              <path d="M18 5v14"></path>
-            </svg>
-          </div>
-          <h3 class="nfc-title">NFC ile Okut</h3>
-          <p class="nfc-text">
-            Telefonda NFC okuyucu bulunuyorsa kartınızı telefona yaklaştırın. Lisans kodu otomatik olarak algılanacaktır.
+        <div class="card-head">
+          <h2 class="card-title" style="font-size: 20px;">NFC Kartınızı Yaklaştırın</h2>
+          <p class="card-sub">
+            Veya 8 haneli kodunuzu aşağıya girin.
           </p>
         </div>
 
         <div class="body">
           <div>
             <label class="label" for="licenseCodeInput">Lisans Kodunuz</label>
-            <input id="licenseCodeInput" class="field" maxlength="8" placeholder="Lisans kodunu girin" autocomplete="off" />
+            <input id="licenseCodeInput" class="field" maxlength="8" placeholder="XXXX-XXXX" autocomplete="off" />
           </div>
 
           <div class="actions">
-            <button id="activateBtn" class="btn btn-primary" type="button">Devam Et</button>
-            <button id="trialBtn" class="btn btn-ghost" type="button">Ücretsiz Denemek İçin Lütfen Burayı Tıklayın</button>
+            <button id="activateBtn" class="btn btn-primary" type="button">Lisansı Aktifleştir</button>
+            <button id="trialBtn" class="btn btn-ghost" type="button">7 Gün Ücretsiz Dene</button>
           </div>
 
           <div id="statusLine" class="status"></div>
@@ -345,8 +357,8 @@
       </section>
 
       <section class="tip">
-        <b>NFC yoksa ne yapacağım?</b>
-        <span>QR kod üzerindeki veya kart altında yazan lisans kodunu elle girip Devam Et butonuna basabilirsiniz.</span>
+        <b>NFC Teknolojisi</b>
+        <span>Kartınızı telefonun üst-arka kısmına yaklaştırdığınızda kodunuz otomatik olarak algılanacaktır.</span>
       </section>
     </div>
   </div>
@@ -372,14 +384,11 @@
 
     if (urlCode) {
       codeInput.value = urlCode;
-      setStatus("Lisans kodu hazır.", "ok");
+      setStatus("Kod algılandı, devam edebilirsiniz.", "ok");
     }
 
     function normalizeCode(v) {
-      return String(v || "")
-        .toUpperCase()
-        .replace(/[^A-Z0-9]/g, "")
-        .slice(0, 8);
+      return String(v || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8);
     }
 
     function setStatus(text, type = "") {
@@ -394,7 +403,6 @@
 
     async function api(path, payload = {}) {
       const token = await getAccessToken();
-
       const r = await fetch(`${API_BASE}${path}`, {
         method: "POST",
         headers: {
@@ -406,12 +414,7 @@
 
       const txt = await r.text();
       let json = null;
-      try {
-        json = JSON.parse(txt);
-      } catch {
-        json = { raw: txt };
-      }
-
+      try { json = JSON.parse(txt); } catch { json = { raw: txt }; }
       if (!r.ok) throw new Error(json?.detail || txt || `HTTP_${r.status}`);
       return json;
     }
@@ -431,14 +434,14 @@
 
       activateBtn.disabled = true;
       trialBtn.disabled = true;
-      setStatus("Lisans kodu doğrulanıyor...", "warn");
+      setStatus("Doğrulanıyor...", "warn");
 
       try {
         await api("/license/activate-code", { code });
-        setStatus("Lisans başarıyla aktive edildi.", "ok");
-        setTimeout(openAfterSuccess, 500);
+        setStatus("Harika! Lisans başarıyla aktif edildi.", "ok");
+        setTimeout(openAfterSuccess, 800);
       } catch (e) {
-        setStatus(e?.message || "Lisans doğrulanamadı.", "err");
+        setStatus(e?.message || "Hata: Lisans bulunamadı.", "err");
       } finally {
         activateBtn.disabled = false;
         trialBtn.disabled = false;
@@ -448,12 +451,12 @@
     async function startTrial() {
       activateBtn.disabled = true;
       trialBtn.disabled = true;
-      setStatus("Ücretsiz giriş başlatılıyor...", "warn");
+      setStatus("Deneme süresi başlatılıyor...", "warn");
 
       try {
         await api("/license/start-trial", { days: 7 });
-        setStatus("7 günlük ücretsiz giriş başlatıldı.", "ok");
-        setTimeout(openAfterSuccess, 500);
+        setStatus("7 günlük deneme başladı! Keyfini çıkar.", "ok");
+        setTimeout(openAfterSuccess, 800);
       } catch (e) {
         setStatus(e?.message || "Ücretsiz giriş başlatılamadı.", "err");
       } finally {
