@@ -183,12 +183,16 @@ export async function ensureAuthAndCacheUser(){
 /* =========================================================
    🚀 GOOGLE LOGIN
 ========================================================= */
-export async function loginWithGoogle(nextTarget = ""){
-
+export async function loginWithGoogle(nextTarget = "") {
   let redirectTo = `${CANONICAL_ORIGIN}/pages/auth_callback.html`;
 
-  const cleanNext = String(nextTarget || "").trim();
-  if(cleanNext){
+  let cleanNext = String(nextTarget || "").trim();
+
+  if (cleanNext.includes("first_login.html")) {
+    cleanNext = "";
+  }
+
+  if (cleanNext) {
     redirectTo += `?next=${encodeURIComponent(cleanNext)}`;
   }
 
@@ -203,9 +207,8 @@ export async function loginWithGoogle(nextTarget = ""){
     }
   });
 
-  if(error) throw error;
+  if (error) throw error;
 }
-
 /* =========================================================
    🔓 LOGOUT
 ========================================================= */
