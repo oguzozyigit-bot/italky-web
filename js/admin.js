@@ -29,7 +29,6 @@ const meLine = $("meLine");
 let __me = null;
 let __nfcEventsBound = false;
 
-/* NFC UI state: renderNfc yeniden çizilse bile alanlar kaybolmasın */
 const __nfcState = {
   uid: "",
   serialNo: "",
@@ -85,44 +84,11 @@ function normalizeUid(uid) {
     .trim();
 }
 
-/* QR ve NFC için TEK doğru hedef */
 function makeQrLink(uid) {
   const clean = normalizeUid(uid);
   return clean
     ? `https://italky.ai/open/nfc?uid=${encodeURIComponent(clean)}`
     : "";
-}
-
-async function writeUrlToCard(reason = "Kart yazılıyor...") {
-  const statusEl = $("nfcStatus");
-  statusEl.className = "status-line status-warn";
-  statusEl.textContent = reason;
-
-  try {
-    const clean = normalizeUid($("nfcUidInput").value || $("uidPreviewInput").value);
-    const url = makeQrLink(clean);
-
-    if (!clean) throw new Error("Önce UID gerekli");
-    if (!url || !url.startsWith("https://italky.ai/open/nfc?uid=")) {
-      throw new Error("Geçerli NFC linki üretilemedi");
-    }
-
-    if ($("nfcUidInput")) $("nfcUidInput").value = clean;
-    if ($("uidPreviewInput")) $("uidPreviewInput").value = clean;
-    if ($("uidPreviewOutput")) $("uidPreviewOutput").value = clean;
-    if ($("qrLinkOutput")) $("qrLinkOutput").value = url;
-    if ($("bindCardUid")) $("bindCardUid").value = clean;
-
-    if (window.NativeAdmin && typeof window.NativeAdmin.writeNfcPayload === "function") {
-      window.NativeAdmin.writeNfcPayload(url);
-    } else {
-      statusEl.className = "status-line status-err";
-      statusEl.textContent = "Bu cihazda kart yazma köprüsü yok.";
-    }
-  } catch (e) {
-    statusEl.className = "status-line status-err";
-    statusEl.textContent = e?.message || "Kart yazılamadı.";
-  }
 }
 
 function tab(name) {
@@ -264,10 +230,10 @@ function applyRoleVisibility() {
   document.querySelector(`.tab[data-tab="entitlements"]`)?.classList.toggle("hidden", !isSuper);
 
   if (isAdmin) {
-    $("panelPackages").classList.add("hidden");
-    $("panelDeploy").classList.add("hidden");
-    $("panelGithub").classList.add("hidden");
-    $("panelEntitlements").classList.add("hidden");
+    $("panelPackages")?.classList.add("hidden");
+    $("panelDeploy")?.classList.add("hidden");
+    $("panelGithub")?.classList.add("hidden");
+    $("panelEntitlements")?.classList.add("hidden");
   }
 }
 
@@ -460,8 +426,7 @@ async function renderUsers() {
           const uid = btn.getAttribute("data-open-nfc-bind") || "";
           tab("nfc");
           setTimeout(() => {
-            const bindUserId = $("bindUserId");
-            if (bindUserId) bindUserId.value = uid;
+            if ($("bindUserId")) $("bindUserId").value = uid;
             __nfcState.bindUserId = uid;
           }, 100);
         });
@@ -710,8 +675,6 @@ async function renderEntitlements() {
   }
 }
 
-/* ---------- NFC helpers ---------- */
-
 function syncNfcStateFromDom() {
   __nfcState.uid = $("nfcUidInput")?.value ?? __nfcState.uid;
   __nfcState.serialNo = $("nfcSerialInput")?.value ?? __nfcState.serialNo;
@@ -760,6 +723,16 @@ function applyNfcStateToDom() {
   }
 }
 
+function updateNfcActionButtons() {
+  const uid = normalizeUid($("nfcUidInput")?.value || $("uidPreviewInput")?.value || "");
+  const hasUid = !!uid;
+
+  if ($("saveNfcBtn")) $("saveNfcBtn").disabled = !hasUid;
+  if ($("writeCardBtn")) $("writeCardBtn").disabled = !hasUid;
+  if ($("rewriteCardBtn")) $("rewriteCardBtn").disabled = !hasUid;
+  if ($("generateQrBtn")) $("generateQrBtn").disabled = !hasUid;
+}
+
 function setUidEverywhere(uid) {
   const clean = normalizeUid(uid);
   __nfcState.uid = clean;
@@ -770,6 +743,9 @@ function setUidEverywhere(uid) {
   if ($("uidPreviewOutput")) $("uidPreviewOutput").value = clean;
   if ($("bindCardUid")) $("bindCardUid").value = clean;
   if ($("qrLinkOutput")) $("qrLinkOutput").value = makeQrLink(clean);
+
+  drawQrPreview();
+  updateNfcActionButtons();
 }
 
 function buildQrLinkFromInputs() {
@@ -779,6 +755,9 @@ function buildQrLinkFromInputs() {
   if ($("uidPreviewOutput")) $("uidPreviewOutput").value = clean;
   if ($("qrLinkOutput")) $("qrLinkOutput").value = makeQrLink(clean);
   if ($("bindCardUid")) $("bindCardUid").value = clean;
+  __nfcState.uid = clean;
+  __nfcState.bindCardUid = clean;
+  updateNfcActionButtons();
   return clean;
 }
 
@@ -805,27 +784,40 @@ function bindNativeAdminEvents() {
     if (!uid) return;
 
     setUidEverywhere(uid);
-    drawQrPreview();
 
     const statusEl = $("nfcStatus");
     if (statusEl) {
       statusEl.className = "status-line status-ok";
-      statusEl.textContent = "Kart UID okundu.";
+      statusEl.textContent = "Kart UID okundu. Şimdi kaydet ve karta yaz.";
     }
 
     const qrStatus = $("qrStatus");
     if (qrStatus) {
       qrStatus.className = "status-line status-ok";
-      qrStatus.textContent = "UID alındı, QR hazır.";
+      qrStatus.textContent = $("qrLinkOutput")?.value || "Kart linki hazır.";
     }
   });
 
-  window.addEventListener("italky:nfc-write", () => {
+  window.addEventListener("italky:nfc-write", (e) => {
+    const payload = e?.detail?.payload || "";
+    const uid = e?.detail?.uid || "";
+
+    if (uid) setUidEverywhere(uid);
+    if (payload && $("qrLinkOutput")) $("qrLinkOutput").value = payload;
+
     const statusEl = $("nfcStatus");
     if (statusEl) {
       statusEl.className = "status-line status-ok";
       statusEl.textContent = "Kart içine URL yazıldı.";
     }
+
+    const qrStatus = $("qrStatus");
+    if (qrStatus) {
+      qrStatus.className = "status-line status-ok";
+      qrStatus.textContent = payload || $("qrLinkOutput")?.value || "Kart linki yazıldı.";
+    }
+
+    drawQrPreview();
   });
 
   window.addEventListener("italky:nfc-status", (e) => {
@@ -842,7 +834,7 @@ function bindNativeAdminEvents() {
     const statusEl = $("nfcStatus");
     if (statusEl) {
       statusEl.className = "status-line status-err";
-      statusEl.textContent = msg;
+      statusEl.textContent = `${msg} Tekrar yaz butonunu kullanabilirsin.`;
     }
   });
 }
@@ -856,7 +848,7 @@ async function renderNfc() {
       <div class="card">
         <h3>NFC / QR Tanımlama</h3>
         <div class="desc">
-          Kartı okut, UID otomatik dolsun. Paket seç, kartı kaydet. Kaydettikten sonra QR üret, yazdır veya karta tekrar yaz.
+          Önce kartı okut. UID otomatik dolsun. Sonra kartı kaydet. Ardından karta URL yaz. Hata olursa tekrar yaz.
         </div>
 
         <div class="row" style="margin-bottom:10px">
@@ -899,13 +891,13 @@ async function renderNfc() {
       <div class="card">
         <h3>QR Üretim ve Yazdırma</h3>
         <div class="desc">
-          UID yazıldığında QR link otomatik oluşur. Aynı link üzerinden QR indirilebilir, yazdırılabilir ve tekrar yazdırılabilir.
+          Kart okutulunca link otomatik oluşur. Bu link ekranda görünür. Aynı link üzerinden QR oluşturulur, yazdırılır ve karta yazılır.
         </div>
 
         <div class="kv">
           <input id="uidPreviewInput" placeholder="UID yaz / karttan gelsin" />
           <input id="uidPreviewOutput" readonly placeholder="Temiz UID" />
-          <input id="qrLinkOutput" readonly placeholder="QR link burada oluşur" />
+          <input id="qrLinkOutput" readonly placeholder="Kartta yazılacak link burada oluşur" />
         </div>
 
         <div style="margin-top:12px; padding:14px; border:1px solid var(--line-soft); border-radius:18px; background:#151c24;">
@@ -974,7 +966,7 @@ async function renderNfc() {
 
     <div class="card" style="margin-top:14px">
       <h3>Kayıtlı Kartlar</h3>
-      <div class="desc">Renkler işlem durumunu gösterir. Tekrar yazdırma ve tekrar yazma aktif kalır.</div>
+      <div class="desc">Tekrar yazdırma ve tekrar yazma butonları aktif kalır.</div>
       <div class="table">
         <table>
           <thead>
@@ -984,7 +976,7 @@ async function renderNfc() {
               <th>Durum</th>
               <th>Bağlı User</th>
               <th>Bitiş</th>
-              <th>QR</th>
+              <th>QR Link</th>
               <th>İşlem</th>
             </tr>
           </thead>
@@ -1028,7 +1020,7 @@ async function renderNfc() {
           <td>${status} / ${isActive}</td>
           <td>${boundUser}</td>
           <td>${expires}</td>
-          <td>${escapeHtml(qrLink)}</td>
+          <td style="font-size:12px;line-height:1.4">${escapeHtml(qrLink)}</td>
           <td>
             <div class="mini-actions">
               <button class="btn-secondary" data-load-card="${uid}" type="button">Yükle</button>
@@ -1039,57 +1031,6 @@ async function renderNfc() {
         </tr>
       `;
     }).join("") : `<tr><td colspan="7" class="empty">Kart bulunamadı.</td></tr>`;
-
-    drawQrPreview();
-
-    $("uidPreviewInput").addEventListener("input", () => {
-      buildQrLinkFromInputs();
-      drawQrPreview();
-    });
-
-    $("nfcUidInput").addEventListener("input", () => {
-      const clean = normalizeUid($("nfcUidInput").value);
-      setUidEverywhere(clean);
-      drawQrPreview();
-    });
-
-    ["nfcSerialInput", "nfcExpiresAt", "nfcMaxDevices", "nfcIsActive", "nfcStatusSelect", "nfcNote", "bindUserId", "bindCardUid", "qrTitleText", "qrSubText", "qrShowPackage", "qrShowUid", "qrShowExpiry", "qrTheme"].forEach((id) => {
-      $(id)?.addEventListener("input", syncNfcStateFromDom);
-      $(id)?.addEventListener("change", syncNfcStateFromDom);
-    });
-
-    $("nfcPackageSelect")?.addEventListener("change", syncNfcStateFromDom);
-
-    $("generateQrBtn").onclick = () => {
-      const clean = buildQrLinkFromInputs();
-      const qrStatus = $("qrStatus");
-
-      if (!clean) {
-        qrStatus.className = "status-line status-err";
-        qrStatus.textContent = "Önce UID gerekli.";
-        return;
-      }
-
-      drawQrPreview();
-      qrStatus.className = "status-line status-ok";
-      qrStatus.textContent = "QR hazır.";
-    };
-
-    $("downloadQrBtn").onclick = () => {
-      const link = $("qrLinkOutput").value.trim();
-      const qrStatus = $("qrStatus");
-      if (!link) {
-        qrStatus.className = "status-line status-err";
-        qrStatus.textContent = "İndirilecek QR linki yok.";
-        return;
-      }
-      const a = document.createElement("a");
-      a.href = `https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=${encodeURIComponent(link)}`;
-      a.download = `italky_qr_${normalizeUid($("uidPreviewInput").value) || "card"}.png`;
-      a.click();
-      qrStatus.className = "status-line status-ok";
-      qrStatus.textContent = "QR indirme başlatıldı.";
-    };
 
     function openPrintWindow() {
       syncNfcStateFromDom();
@@ -1107,7 +1048,7 @@ async function renderNfc() {
 
       if (!link) {
         $("qrStatus").className = "status-line status-err";
-        $("qrStatus").textContent = "Yazdırmak için önce QR oluştur.";
+        $("qrStatus").textContent = "Yazdırmak için önce kart linki oluşmalı.";
         return;
       }
 
@@ -1129,7 +1070,7 @@ async function renderNfc() {
             .title{font-size:20px;font-weight:900;margin-bottom:6px}
             .sub{font-size:12px;opacity:.75;margin-bottom:12px}
             .qr{width:220px;height:220px;display:block;margin:0 auto 12px}
-            .meta{font-size:12px;line-height:1.6}
+            .meta{font-size:12px;line-height:1.6;word-break:break-word}
           </style>
         </head>
         <body onload="window.print(); setTimeout(()=>window.close(),500);">
@@ -1158,6 +1099,89 @@ async function renderNfc() {
       w.document.close();
     }
 
+    async function writeUrlToCard(reason = "Kart yazılıyor...") {
+      const statusEl = $("nfcStatus");
+      statusEl.className = "status-line status-warn";
+      statusEl.textContent = reason;
+
+      try {
+        const clean = buildQrLinkFromInputs();
+        const url = makeQrLink(clean);
+
+        if (!clean) throw new Error("Önce kartı okut veya UID gir.");
+        if (!url || !url.startsWith("https://italky.ai/open/nfc?uid=")) {
+          throw new Error("Geçerli NFC linki üretilemedi.");
+        }
+
+        if ($("qrLinkOutput")) $("qrLinkOutput").value = url;
+
+        if (window.NativeAdmin && typeof window.NativeAdmin.writeNfcPayload === "function") {
+          window.NativeAdmin.writeNfcPayload(url);
+        } else {
+          throw new Error("Bu cihazda kart yazma köprüsü yok.");
+        }
+      } catch (e) {
+        statusEl.className = "status-line status-err";
+        statusEl.textContent = e?.message || "Kart yazılamadı.";
+      }
+    }
+
+    $("uidPreviewInput").addEventListener("input", () => {
+      buildQrLinkFromInputs();
+      drawQrPreview();
+      if ($("qrStatus")) {
+        $("qrStatus").className = "status-line status-ok";
+        $("qrStatus").textContent = $("qrLinkOutput").value || "Link oluşmadı";
+      }
+    });
+
+    $("nfcUidInput").addEventListener("input", () => {
+      const clean = normalizeUid($("nfcUidInput").value);
+      setUidEverywhere(clean);
+      if ($("qrStatus")) {
+        $("qrStatus").className = "status-line status-ok";
+        $("qrStatus").textContent = $("qrLinkOutput").value || "Link oluşmadı";
+      }
+    });
+
+    ["nfcSerialInput", "nfcExpiresAt", "nfcMaxDevices", "nfcIsActive", "nfcStatusSelect", "nfcNote", "bindUserId", "bindCardUid", "qrTitleText", "qrSubText", "qrShowPackage", "qrShowUid", "qrShowExpiry", "qrTheme"].forEach((id) => {
+      $(id)?.addEventListener("input", syncNfcStateFromDom);
+      $(id)?.addEventListener("change", syncNfcStateFromDom);
+    });
+
+    $("nfcPackageSelect")?.addEventListener("change", syncNfcStateFromDom);
+
+    $("generateQrBtn").onclick = () => {
+      const clean = buildQrLinkFromInputs();
+      const qrStatus = $("qrStatus");
+
+      if (!clean) {
+        qrStatus.className = "status-line status-err";
+        qrStatus.textContent = "Önce UID gerekli.";
+        return;
+      }
+
+      drawQrPreview();
+      qrStatus.className = "status-line status-ok";
+      qrStatus.textContent = $("qrLinkOutput").value || "QR hazır.";
+    };
+
+    $("downloadQrBtn").onclick = () => {
+      const link = $("qrLinkOutput").value.trim();
+      const qrStatus = $("qrStatus");
+      if (!link) {
+        qrStatus.className = "status-line status-err";
+        qrStatus.textContent = "İndirilecek QR linki yok.";
+        return;
+      }
+      const a = document.createElement("a");
+      a.href = `https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=${encodeURIComponent(link)}`;
+      a.download = `italky_qr_${normalizeUid($("uidPreviewInput").value) || "card"}.png`;
+      a.click();
+      qrStatus.className = "status-line status-ok";
+      qrStatus.textContent = "QR indirme başlatıldı.";
+    };
+
     $("printQrBtn").onclick = () => {
       openPrintWindow();
       $("qrStatus").className = "status-line status-ok";
@@ -1179,45 +1203,12 @@ async function renderNfc() {
         if (window.NativeAdmin && typeof window.NativeAdmin.readNfcUid === "function") {
           window.NativeAdmin.readNfcUid();
         } else {
-          statusEl.className = "status-line status-err";
-          statusEl.textContent = "Bu cihazda NFC köprüsü yok.";
+          throw new Error("Bu cihazda NFC köprüsü yok.");
         }
       } catch (e) {
         statusEl.className = "status-line status-err";
         statusEl.textContent = e?.message || "Kart okunamadı.";
       }
-    };
-
-    async function writeUrlToCard(reason = "Kart yazılıyor...") {
-      const statusEl = $("nfcStatus");
-      statusEl.className = "status-line status-warn";
-      statusEl.textContent = reason;
-
-      try {
-        const clean = buildQrLinkFromInputs();
-        const url = makeQrLink(clean);
-
-        if (!clean) throw new Error("Önce UID gerekli");
-        if (!url) throw new Error("URL oluşturulamadı");
-
-        if (window.NativeAdmin && typeof window.NativeAdmin.writeNfcPayload === "function") {
-          window.NativeAdmin.writeNfcPayload(url);
-        } else {
-          statusEl.className = "status-line status-err";
-          statusEl.textContent = "Bu cihazda kart yazma köprüsü yok.";
-        }
-      } catch (e) {
-        statusEl.className = "status-line status-err";
-        statusEl.textContent = e?.message || "Kart yazılamadı.";
-      }
-    }
-
-    $("writeCardBtn").onclick = async () => {
-      await writeUrlToCard("Kart içine URL yazılıyor...");
-    };
-
-    $("rewriteCardBtn").onclick = async () => {
-      await writeUrlToCard("Kart yeniden yazılıyor...");
     };
 
     $("saveNfcBtn").onclick = async () => {
@@ -1239,7 +1230,7 @@ async function renderNfc() {
           note: $("nfcNote").value.trim() || null
         };
 
-        if (!payload.uid) throw new Error("UID gerekli");
+        if (!payload.uid) throw new Error("Önce kartı okut.");
 
         await api("/admin/nfc/cards/upsert", {
           method: "POST",
@@ -1248,16 +1239,26 @@ async function renderNfc() {
 
         setUidEverywhere(cleanUid);
         syncNfcStateFromDom();
-        drawQrPreview();
 
         statusEl.className = "status-line status-ok";
-        statusEl.textContent = "Kart kaydedildi. UID korundu, QR ve kart yazma işlemleri hazır.";
+        statusEl.textContent = "Kart kaydedildi. Şimdi karta URL yazabilirsin.";
 
-        await renderNfc();
+        if ($("qrStatus")) {
+          $("qrStatus").className = "status-line status-ok";
+          $("qrStatus").textContent = $("qrLinkOutput").value || "Link oluşmadı";
+        }
       } catch (e) {
         statusEl.className = "status-line status-err";
         statusEl.textContent = e?.message || "Kart kaydedilemedi.";
       }
+    };
+
+    $("writeCardBtn").onclick = async () => {
+      await writeUrlToCard("Kart içine URL yazılıyor...");
+    };
+
+    $("rewriteCardBtn").onclick = async () => {
+      await writeUrlToCard("Kart yeniden yazılıyor...");
     };
 
     $("bindCardBtn").onclick = async () => {
@@ -1301,6 +1302,10 @@ async function renderNfc() {
         setUidEverywhere(uid);
         syncNfcStateFromDom();
         drawQrPreview();
+        if ($("qrStatus")) {
+          $("qrStatus").className = "status-line status-ok";
+          $("qrStatus").textContent = $("qrLinkOutput").value || "Link oluşmadı";
+        }
       });
     });
 
@@ -1324,8 +1329,15 @@ async function renderNfc() {
       });
     });
 
-    buildQrLinkFromInputs();
-    drawQrPreview();
+    setTimeout(() => {
+      buildQrLinkFromInputs();
+      drawQrPreview();
+      updateNfcActionButtons();
+      if ($("qrStatus")) {
+        $("qrStatus").className = "status-line status-ok";
+        $("qrStatus").textContent = $("qrLinkOutput").value || "Önce kartı okut.";
+      }
+    }, 50);
 
   } catch (e) {
     box.innerHTML = `<div class="card"><h3>NFC / QR</h3>${statusHtml(e?.message || "NFC alanı yüklenemedi", false)}</div>`;
