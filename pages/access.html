@@ -14,9 +14,7 @@
     :root{
       --bg:#050812;
       --panel:rgba(255,255,255,.045);
-      --panel2:rgba(255,255,255,.03);
       --line:rgba(255,255,255,.09);
-      --line-strong:rgba(255,255,255,.14);
       --txt:#f7f9ff;
       --muted:rgba(255,255,255,.62);
       --cyan:#00f2ff;
@@ -26,6 +24,8 @@
       --warn:#e7c47d;
       --err:#f3aaaa;
       --grad:linear-gradient(135deg,#00f2ff 0%,#7c5cff 48%,#ff66c4 100%);
+      --btn:linear-gradient(135deg,#ffffff 0%,#e7f0ff 100%);
+      --btnText:#09111b;
       --glass-shadow:0 30px 80px rgba(0,0,0,.42);
     }
 
@@ -37,7 +37,8 @@
     html,body{
       margin:0;
       width:100%;
-      min-height:100%;
+      height:100%;
+      overflow:hidden;
       background:
         radial-gradient(circle at 20% 0%, rgba(0,242,255,.12), transparent 25%),
         radial-gradient(circle at 90% 10%, rgba(124,92,255,.18), transparent 24%),
@@ -48,10 +49,10 @@
     }
 
     #pageContent{
-      min-height:100dvh;
+      height:100dvh;
       position:relative;
       overflow:hidden;
-      padding:18px 14px 30px;
+      padding:14px;
     }
 
     .fx-grid{
@@ -110,16 +111,18 @@
       z-index:2;
       width:100%;
       max-width:430px;
+      height:100%;
       margin:0 auto;
       display:grid;
-      gap:16px;
+      grid-template-rows:auto 1fr auto;
+      gap:14px;
     }
 
     .hero{
       position:relative;
       overflow:hidden;
-      border-radius:34px;
-      padding:22px 18px 18px;
+      border-radius:32px;
+      padding:18px 18px 16px;
       background:
         radial-gradient(circle at top right, rgba(0,242,255,.12), transparent 34%),
         linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.025));
@@ -127,23 +130,10 @@
       box-shadow:var(--glass-shadow);
     }
 
-    .hero::after{
-      content:"";
-      position:absolute;
-      right:-30px;
-      bottom:-40px;
-      width:180px;
-      height:180px;
-      border-radius:50%;
-      background:radial-gradient(circle, rgba(124,92,255,.20), transparent 64%);
-      filter:blur(18px);
-      pointer-events:none;
-    }
-
     .hero-badge{
       display:inline-flex;
       align-items:center;
-      min-height:30px;
+      min-height:28px;
       padding:6px 12px;
       border-radius:999px;
       background:rgba(255,255,255,.05);
@@ -156,11 +146,11 @@
     }
 
     .hero-title{
-      margin:14px 0 8px;
+      margin:12px 0 6px;
       font-family:'Space Grotesk',sans-serif;
-      font-size:34px;
+      font-size:30px;
       line-height:1;
-      letter-spacing:-1.6px;
+      letter-spacing:-1.4px;
       font-weight:700;
     }
 
@@ -173,19 +163,22 @@
     .hero-text{
       margin:0;
       color:var(--muted);
-      font-size:14px;
-      line-height:1.65;
+      font-size:13px;
+      line-height:1.6;
       font-weight:700;
     }
 
     .terminal{
       position:relative;
-      border-radius:34px;
+      border-radius:32px;
       border:1px solid var(--line);
       background:
         linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.025));
       box-shadow:var(--glass-shadow);
       overflow:hidden;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
     }
 
     .terminal::before{
@@ -203,7 +196,7 @@
 
     .terminal-title{
       margin:0;
-      font-size:25px;
+      font-size:24px;
       font-weight:900;
       letter-spacing:-.6px;
     }
@@ -218,13 +211,13 @@
 
     .gateway-stage{
       position:relative;
-      height:190px;
-      margin:16px 18px 0;
-      border-radius:26px;
+      height:180px;
+      margin:14px 18px 0;
+      border-radius:24px;
       background:
         radial-gradient(circle at center, rgba(0,242,255,.06), transparent 45%),
         linear-gradient(180deg, rgba(0,0,0,.26), rgba(0,0,0,.35));
-      border:1px solid var(--line-strong);
+      border:1px solid rgba(255,255,255,.14);
       overflow:hidden;
     }
 
@@ -252,15 +245,12 @@
     }
 
     .phone{
-      width:92px;
-      height:156px;
+      width:88px;
+      height:148px;
       border-radius:24px;
       border:1px solid rgba(255,255,255,.18);
-      background:
-        linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
-      box-shadow:
-        inset 0 0 0 1px rgba(255,255,255,.04),
-        0 18px 40px rgba(0,0,0,.28);
+      background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+      box-shadow:inset 0 0 0 1px rgba(255,255,255,.04), 0 18px 40px rgba(0,0,0,.28);
       position:relative;
       z-index:3;
     }
@@ -295,7 +285,6 @@
     }
 
     .access-card{
-      position:absolute;
       width:112px;
       height:72px;
       border-radius:14px;
@@ -303,6 +292,7 @@
       box-shadow:0 16px 30px rgba(0,0,0,.28);
       z-index:4;
       animation:cardHover 4.8s ease-in-out infinite;
+      position:absolute;
     }
 
     .access-card::before{
@@ -417,9 +407,9 @@
       padding-top:2px;
     }
 
-    .status-line.ok{ color:var(--ok); }
-    .status-line.warn{ color:var(--warn); }
-    .status-line.err{ color:var(--err); }
+    .status-line.ok{ color:#9ad6b2; }
+    .status-line.warn{ color:#e7c47d; }
+    .status-line.err{ color:#f3aaaa; }
 
     .tip{
       border:1px solid var(--line);
@@ -504,7 +494,7 @@
     import { supabase } from "/js/supabase_client.js";
 
     try {
-      mountShell({ scroll: "auto" });
+      mountShell({ scroll: "none" });
     } catch (e) {
       console.warn("ui_shell access skip:", e);
     }
