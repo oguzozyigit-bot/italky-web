@@ -1078,7 +1078,9 @@ async function hydrateAdminButton() {
   const adminLink = document.getElementById("adminPanelLink");
   if (!adminLink) return;
 
+  // Varsayılan: HER ZAMAN gizli başla
   adminLink.classList.add("hidden");
+  adminLink.style.display = "none";
 
   try {
     const { supabase } = await import("/js/supabase_client.js");
@@ -1095,16 +1097,24 @@ async function hydrateAdminButton() {
     if (error || !data) return;
 
     const role = String(data.role || "").toLowerCase().trim();
-    const allowed = data.is_admin === true || role === "admin" || role === "superadmin";
+    const allowed =
+      data.is_admin === true ||
+      role === "admin" ||
+      role === "superadmin";
 
     if (allowed) {
       adminLink.classList.remove("hidden");
+      adminLink.style.display = "";
+    } else {
+      adminLink.classList.add("hidden");
+      adminLink.style.display = "none";
     }
   } catch (e) {
     console.warn("[ui_shell admin btn]", e);
+    adminLink.classList.add("hidden");
+    adminLink.style.display = "none";
   }
 }
-
 function setMembershipUi({
   cardClass = "neutral",
   badgeClass = "neutral",
