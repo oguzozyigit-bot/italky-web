@@ -89,8 +89,40 @@ function normalizeUid(uid) {
 function makeQrLink(uid) {
   const clean = normalizeUid(uid);
   return clean
-    ? `https://italky.ai/pages/access.html?uid=${encodeURIComponent(clean)}&source=nfc_qr`
+    ? `https://italky.ai/open/nfc?uid=${encodeURIComponent(clean)}`
     : "";
+}
+
+async function writeUrlToCard(reason = "Kart yazılıyor...") {
+  const statusEl = $("nfcStatus");
+  statusEl.className = "status-line status-warn";
+  statusEl.textContent = reason;
+
+  try {
+    const clean = normalizeUid($("nfcUidInput").value || $("uidPreviewInput").value);
+    const url = makeQrLink(clean);
+
+    if (!clean) throw new Error("Önce UID gerekli");
+    if (!url || !url.startsWith("https://italky.ai/open/nfc?uid=")) {
+      throw new Error("Geçerli NFC linki üretilemedi");
+    }
+
+    if ($("nfcUidInput")) $("nfcUidInput").value = clean;
+    if ($("uidPreviewInput")) $("uidPreviewInput").value = clean;
+    if ($("uidPreviewOutput")) $("uidPreviewOutput").value = clean;
+    if ($("qrLinkOutput")) $("qrLinkOutput").value = url;
+    if ($("bindCardUid")) $("bindCardUid").value = clean;
+
+    if (window.NativeAdmin && typeof window.NativeAdmin.writeNfcPayload === "function") {
+      window.NativeAdmin.writeNfcPayload(url);
+    } else {
+      statusEl.className = "status-line status-err";
+      statusEl.textContent = "Bu cihazda kart yazma köprüsü yok.";
+    }
+  } catch (e) {
+    statusEl.className = "status-line status-err";
+    statusEl.textContent = e?.message || "Kart yazılamadı.";
+  }
 }
 
 function tab(name) {
@@ -741,11 +773,12 @@ function setUidEverywhere(uid) {
 }
 
 function buildQrLinkFromInputs() {
-  syncNfcStateFromDom();
-
-  const clean = normalizeUid($("uidPreviewInput")?.value || $("nfcUidInput")?.value || __nfcState.uid);
-  setUidEverywhere(clean);
-
+  const clean = normalizeUid($("uidPreviewInput")?.value || $("nfcUidInput")?.value || "");
+  if ($("nfcUidInput")) $("nfcUidInput").value = clean;
+  if ($("uidPreviewInput")) $("uidPreviewInput").value = clean;
+  if ($("uidPreviewOutput")) $("uidPreviewOutput").value = clean;
+  if ($("qrLinkOutput")) $("qrLinkOutput").value = makeQrLink(clean);
+  if ($("bindCardUid")) $("bindCardUid").value = clean;
   return clean;
 }
 
