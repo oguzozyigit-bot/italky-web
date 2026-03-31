@@ -93,14 +93,6 @@
 
     .hidden{display:none !important}
 
-    .login-shell{
-      min-height:calc(100dvh - 24px - var(--shellLift));
-      display:flex;
-      align-items:center;
-      justify-content:center;
-    }
-
-    .login-card,
     .shell-header,
     .info-card,
     .panel,
@@ -109,68 +101,6 @@
       border:1px solid var(--line);
       box-shadow:var(--shadow);
       backdrop-filter:blur(14px);
-    }
-
-    .login-card{
-      width:min(100%,460px);
-      border-radius:26px;
-      padding:22px;
-    }
-
-    .brand{
-      text-align:center;
-      margin-bottom:18px;
-    }
-
-    .brand-mark{
-      width:76px;
-      height:76px;
-      margin:0 auto 14px;
-      border-radius:22px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      background:linear-gradient(135deg,#8ca2ba 0%, #9fb0c0 100%);
-      box-shadow:0 12px 28px rgba(0,0,0,.16);
-      font-size:30px;
-      font-weight:900;
-      color:#fff;
-    }
-
-    .brand h1{
-      margin:0;
-      font-family:"Space Grotesk",sans-serif;
-      font-size:28px;
-      line-height:1.05;
-      letter-spacing:-.7px;
-    }
-
-    .brand p{
-      margin:8px 0 0;
-      color:var(--muted);
-      font-size:13px;
-      font-weight:700;
-      line-height:1.6;
-    }
-
-    .seal{
-      margin-top:16px;
-      text-align:center;
-      color:var(--muted-2);
-      font-size:12px;
-      font-weight:800;
-      letter-spacing:.3px;
-    }
-
-    .field{margin-top:12px}
-
-    .field label{
-      display:block;
-      margin-bottom:7px;
-      color:#dfe5ec;
-      font-size:12px;
-      font-weight:800;
-      letter-spacing:.2px;
     }
 
     input,select,textarea,button{
@@ -209,10 +139,7 @@
       z-index:20;
     }
 
-    button:disabled{
-      cursor:not-allowed;
-    }
-
+    button:disabled{cursor:not-allowed}
     button:active{transform:scale(.985)}
 
     .btn-primary{background:#8fa5bc;color:#0e1720}
@@ -478,16 +405,6 @@
 
     .kv{display:grid;gap:10px}
 
-    .footer-seal{
-      margin-top:16px;
-      text-align:center;
-      color:#97a3b1;
-      font-size:12px;
-      font-weight:900;
-      letter-spacing:.35px;
-      padding-bottom:8px;
-    }
-
     .empty{
       color:var(--muted-2);
       font-size:13px;
@@ -562,48 +479,20 @@
   <div id="pageContent">
     <div class="page">
       <div class="admin-scroll">
-
-        <div id="loginView" class="login-shell">
-          <div class="login-card">
-            <div class="brand">
-              <div class="brand-mark">AI</div>
-              <h1>italkyAI<br>Yönetim Paneli</h1>
-              <p>Kurumsal erişim merkezi · kullanıcı, paket, NFC/QR ve üyelik yönetimi</p>
-            </div>
-
-            <div class="field">
-              <label for="email">Yönetici E-Posta</label>
-              <input id="email" type="email" placeholder="admin@italky.ai" autocomplete="username" />
-            </div>
-
-            <div class="field">
-              <label for="password">Şifre</label>
-              <input id="password" type="password" placeholder="••••••••" autocomplete="current-password" />
-            </div>
-
-            <div class="field">
-              <button id="loginBtn" class="btn-primary" type="button">Güvenli Giriş Yap</button>
-              <div id="loginStatus" class="status-line"></div>
-            </div>
-
-            <div class="seal">Özyiğit Mührü</div>
-          </div>
-        </div>
-
-        <div id="panelView" class="hidden">
+        <div id="panelView">
           <div class="shell-header">
             <div class="shell-brand">
               <div class="logo">AI</div>
               <div>
                 <h2>italkyAI Yönetim Paneli</h2>
-                <p>Üyelik, kullanıcı, paket ve erişim kontrol merkezi</p>
+                <p>Üyelik, kullanıcı, paket ve lisans kodu yönetimi</p>
               </div>
             </div>
 
             <div class="top-actions">
               <button id="homeBtn" class="btn-secondary" type="button">Ana Sayfa</button>
               <button id="refreshBtn" class="btn-secondary" type="button">Verileri Yenile</button>
-              <button id="logoutBtnTop" class="btn-secondary" type="button">Güvenli Çıkış</button>
+              <button id="logoutBtnTop" class="btn-secondary" type="button">Çıkış</button>
             </div>
           </div>
 
@@ -612,17 +501,16 @@
               <h3>Yönetici Kimliği</h3>
               <p id="meLine">Yükleniyor...</p>
               <div class="pills">
-                <div class="pill">Kurumsal Görünüm</div>
-                <div class="pill">Play Store + NFC/QR Ayrımı</div>
-                <div class="pill">Merkezi Entitlement Yapısı</div>
+                <div class="pill">Kodlar / QR</div>
+                <div class="pill">Toplu Yazdırma</div>
+                <div class="pill">Aktivasyon Takibi</div>
               </div>
             </div>
 
             <div class="info-card">
               <h3>Sistem Notu</h3>
-              <p>
-                Bu panelde Play Store kaynaklı üyelikler ile NFC/QR kaynaklı erişimler aynı izlenir.
-                Kullanıcıya verilen gerçek haklar entitlement tablosu üzerinden yönetilir.
+              <p id="systemNote">
+                Bu panel yalnızca admin ve superadmin kullanıcılar içindir.
               </p>
             </div>
           </div>
@@ -644,10 +532,7 @@
             <div id="panelDeploy" class="hidden"></div>
             <div id="panelGithub" class="hidden"></div>
           </div>
-
-          <div class="footer-seal">Özyiğit Mührü</div>
         </div>
-
       </div>
     </div>
   </div>
