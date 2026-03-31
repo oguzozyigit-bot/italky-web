@@ -26,6 +26,7 @@
       --grad:linear-gradient(135deg,#00f2ff 0%,#7c5cff 48%,#ff66c4 100%);
       --btn:linear-gradient(135deg,#ffffff 0%,#e7f0ff 100%);
       --btnText:#09111b;
+      --trialGrad:linear-gradient(135deg,#f27a1a 0%,#ff9a2f 100%);
       --glass-shadow:0 30px 80px rgba(0,0,0,.42);
     }
 
@@ -392,10 +393,10 @@
       box-shadow:0 14px 30px rgba(255,255,255,.08);
     }
 
-    .btn-ghost{
-      background:transparent;
-      border:1px dashed rgba(255,255,255,.18);
-      color:#eff5ff;
+    .btn-trial{
+      background:var(--trialGrad);
+      color:#fff;
+      box-shadow:0 14px 30px rgba(242,122,26,.26);
     }
 
     .status-line{
@@ -475,16 +476,16 @@
 
           <div class="actions">
             <button id="activateBtn" class="btn btn-primary" type="button">Devam Et</button>
-            <button id="trialBtn" class="btn btn-ghost" type="button">Ücretsiz Denemek İçin Lütfen Burayı Tıklayın</button>
+            <button id="trialBtn" class="btn btn-trial" type="button">Ücretsiz Dene</button>
+          </div>
+
+          <div class="tip">
+            <b>Ücretsiz Giriş Yapabilirsiniz</b>
+            <span>7 Gün boyunca Premium özellikler hariç tüm modüller aktif kalacaktır.</span>
           </div>
 
           <div id="statusLine" class="status-line"></div>
         </div>
-      </section>
-
-      <section class="tip">
-        <b>NFC yoksa ne yapacağım?</b>
-        <span>QR kod üzerindeki veya kart altında yazan lisans kodunu elle girip Devam Et butonuna basabilirsiniz.</span>
       </section>
     </div>
   </div>
@@ -507,11 +508,6 @@
 
     const params = new URLSearchParams(location.search);
     const urlCode = String(params.get("code") || "").trim().toUpperCase();
-
-    if (urlCode) {
-      codeInput.value = urlCode;
-      setStatus("Lisans kodu hazır.", "ok");
-    }
 
     function normalizeCode(v) {
       return String(v || "")
@@ -598,6 +594,19 @@
         activateBtn.disabled = false;
         trialBtn.disabled = false;
       }
+    }
+
+    if (urlCode) {
+      setStatus("Kart okundu. Giriş yapılıyor...", "warn");
+      api("/license/activate-code", { code: urlCode })
+        .then(() => {
+          setStatus("Lisans başarıyla aktive edildi.", "ok");
+          setTimeout(openAfterSuccess, 400);
+        })
+        .catch((e) => {
+          codeInput.value = urlCode;
+          setStatus(e?.message || "Kart okunamadı. Kodu elle girin.", "err");
+        });
     }
 
     codeInput.addEventListener("input", () => {
