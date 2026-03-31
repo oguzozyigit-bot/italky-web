@@ -14,9 +14,7 @@
     :root{
       --bg:#060913;
       --panel:rgba(255,255,255,.04);
-      --panel-2:rgba(255,255,255,.03);
       --line:rgba(255,255,255,.10);
-      --line-2:rgba(255,255,255,.14);
       --txt:#f7f9ff;
       --muted:rgba(255,255,255,.62);
       --ok:#9ad5b0;
@@ -29,7 +27,6 @@
       --btn:linear-gradient(135deg,#9fb4ca 0%,#b7c7d8 100%);
       --btnText:#09111b;
       --shadow:0 26px 60px rgba(0,0,0,.34);
-      --radius:28px;
     }
 
     *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
@@ -70,18 +67,6 @@
         linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.02));
       box-shadow:var(--shadow);
       padding:22px 18px 18px;
-    }
-
-    .hero::after{
-      content:"";
-      position:absolute;
-      inset:auto -40px -50px auto;
-      width:180px;
-      height:180px;
-      border-radius:999px;
-      background:radial-gradient(circle, rgba(124,92,255,.20), transparent 62%);
-      filter:blur(18px);
-      pointer-events:none;
     }
 
     .hero-badge{
@@ -149,76 +134,50 @@
       font-weight:700;
     }
 
-    .scan-wrap{
-      padding:16px 18px 10px;
+    .nfc-box{
+      margin:16px 18px 10px;
+      border:1px solid rgba(139,211,255,.16);
+      border-radius:24px;
+      background:
+        radial-gradient(circle at top, rgba(139,211,255,.10), transparent 60%),
+        rgba(8,12,20,.65);
+      padding:20px 16px;
+      text-align:center;
     }
 
-    .camera-box{
-      position:relative;
-      width:100%;
-      aspect-ratio:1/1;
-      border-radius:26px;
-      overflow:hidden;
-      background:#04070d;
-      border:1px solid var(--line-2);
-      box-shadow:inset 0 0 0 1px rgba(255,255,255,.03);
-    }
-
-    #qrVideo{
-      width:100%;
-      height:100%;
-      object-fit:cover;
-      display:block;
-      background:#000;
-      opacity:.90;
-    }
-
-    .camera-mask{
-      position:absolute;
-      inset:0;
+    .nfc-icon{
+      width:72px;
+      height:72px;
+      margin:0 auto 14px;
+      border-radius:22px;
       display:flex;
       align-items:center;
       justify-content:center;
-      pointer-events:none;
+      background:linear-gradient(135deg, rgba(139,211,255,.18), rgba(124,92,255,.16));
+      border:1px solid rgba(255,255,255,.10);
+      box-shadow:0 14px 30px rgba(0,0,0,.24);
     }
 
-    .camera-frame{
-      width:min(68vw,240px);
-      height:min(68vw,240px);
-      border-radius:28px;
-      border:2px solid rgba(255,255,255,.96);
-      box-shadow:
-        0 0 0 999px rgba(0,0,0,.34),
-        0 0 26px rgba(139,211,255,.20);
-      position:relative;
+    .nfc-icon svg{
+      width:34px;
+      height:34px;
+      stroke:#eaf5ff;
+      fill:none;
+      stroke-width:1.8;
     }
 
-    .camera-frame::before{
-      content:"";
-      position:absolute;
-      left:10px;
-      right:10px;
-      top:14px;
-      height:2px;
-      border-radius:999px;
-      background:linear-gradient(90deg,transparent,var(--cyan),transparent);
-      box-shadow:0 0 14px rgba(139,211,255,.55);
-      animation:scanLine 2.4s linear infinite;
+    .nfc-title{
+      font-size:18px;
+      font-weight:900;
+      margin:0 0 6px;
     }
 
-    @keyframes scanLine{
-      0%{ transform:translateY(0); opacity:.16; }
-      50%{ transform:translateY(180px); opacity:1; }
-      100%{ transform:translateY(0); opacity:.16; }
-    }
-
-    .camera-state{
-      padding:12px 4px 0;
-      min-height:18px;
-      text-align:center;
-      font-size:12px;
+    .nfc-text{
+      margin:0;
       color:var(--muted);
-      font-weight:800;
+      font-size:13px;
+      line-height:1.65;
+      font-weight:700;
     }
 
     .body{
@@ -294,12 +253,6 @@
       color:var(--btnText);
     }
 
-    .btn-secondary{
-      background:#1a2536;
-      border:1px solid var(--line);
-      color:#eff5ff;
-    }
-
     .btn-ghost{
       background:transparent;
       border:1px dashed rgba(255,255,255,.18);
@@ -318,11 +271,6 @@
     .status.ok{ color:var(--ok); }
     .status.warn{ color:var(--warn); }
     .status.err{ color:var(--err); }
-
-    .tips{
-      display:grid;
-      gap:10px;
-    }
 
     .tip{
       border:1px solid var(--line);
@@ -343,8 +291,6 @@
       line-height:1.6;
       font-weight:700;
     }
-
-    .hidden{ display:none !important; }
   </style>
 </head>
 <body>
@@ -363,18 +309,24 @@
         <div class="card-head">
           <h2 class="card-title">Lisans Aktivasyon Kodu</h2>
           <p class="card-sub">
-            QR okutabilir, kodu elle girebilir veya ücretsiz giriş yapabilirsiniz.
+            Telefonda NFC okuyucu bulunuyorsa kartınızı okutunuz. Bulunmuyorsa QR kod üzerinde yazılı olan lisans kodunu bu alana yazın ve Devam Et'e basın.
           </p>
         </div>
 
-        <div class="scan-wrap">
-          <div class="camera-box">
-            <video id="qrVideo" autoplay muted playsinline></video>
-            <div class="camera-mask">
-              <div class="camera-frame"></div>
-            </div>
+        <div class="nfc-box">
+          <div class="nfc-icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M7 6a8 8 0 0 1 10 0"></path>
+              <path d="M9 8.5a5 5 0 0 1 6 0"></path>
+              <path d="M11 11a2 2 0 0 1 2 0"></path>
+              <path d="M6 5v14"></path>
+              <path d="M18 5v14"></path>
+            </svg>
           </div>
-          <div id="cameraState" class="camera-state">QR okutmak için kamera hazırlanıyor...</div>
+          <h3 class="nfc-title">NFC ile Okut</h3>
+          <p class="nfc-text">
+            Telefonda NFC okuyucu bulunuyorsa kartınızı telefona yaklaştırın. Lisans kodu otomatik olarak algılanacaktır.
+          </p>
         </div>
 
         <div class="body">
@@ -384,25 +336,17 @@
           </div>
 
           <div class="actions">
-            <button id="activateBtn" class="btn btn-primary" type="button">Lisans Kodu ile Devam Et</button>
-            <button id="toggleCameraBtn" class="btn btn-secondary" type="button">QR Okut</button>
-            <button id="trialBtn" class="btn btn-ghost" type="button">Ücretsiz Giriş Yap</button>
+            <button id="activateBtn" class="btn btn-primary" type="button">Devam Et</button>
+            <button id="trialBtn" class="btn btn-ghost" type="button">Ücretsiz Denemek İçin Lütfen Burayı Tıklayın</button>
           </div>
 
           <div id="statusLine" class="status"></div>
         </div>
       </section>
 
-      <section class="tips">
-        <div class="tip">
-          <b>QR okutunca ne olur?</b>
-          <span>QR içindeki lisans kodu otomatik olarak alana yazılır. İsterseniz elle de değiştirebilirsiniz.</span>
-        </div>
-
-        <div class="tip">
-          <b>Ücretsiz girişte ne olur?</b>
-          <span>7 gün boyunca Premium özellikler hariç tüm modüller aktif kalır. Daha sonra lisans kodu girerek devam edebilirsiniz.</span>
-        </div>
+      <section class="tip">
+        <b>NFC yoksa ne yapacağım?</b>
+        <span>QR kod üzerindeki veya kart altında yazan lisans kodunu elle girip Devam Et butonuna basabilirsiniz.</span>
       </section>
     </div>
   </div>
@@ -420,16 +364,16 @@
     const API_BASE = "https://italky-api.onrender.com/api";
     const codeInput = document.getElementById("licenseCodeInput");
     const activateBtn = document.getElementById("activateBtn");
-    const toggleCameraBtn = document.getElementById("toggleCameraBtn");
     const trialBtn = document.getElementById("trialBtn");
     const statusLine = document.getElementById("statusLine");
-    const qrVideo = document.getElementById("qrVideo");
-    const cameraState = document.getElementById("cameraState");
 
-    let mediaStream = null;
-    let scanLoopId = null;
-    let barcodeDetector = null;
-    let cameraActive = false;
+    const params = new URLSearchParams(location.search);
+    const urlCode = String(params.get("code") || "").trim().toUpperCase();
+
+    if (urlCode) {
+      codeInput.value = urlCode;
+      setStatus("Lisans kodu hazır.", "ok");
+    }
 
     function normalizeCode(v) {
       return String(v || "")
@@ -518,107 +462,12 @@
       }
     }
 
-    async function ensureBarcodeDetector() {
-      if ("BarcodeDetector" in window) {
-        try {
-          const formats = await window.BarcodeDetector.getSupportedFormats();
-          if (formats.includes("qr_code")) {
-            barcodeDetector = new window.BarcodeDetector({ formats: ["qr_code"] });
-            return true;
-          }
-        } catch {}
-      }
-      return false;
-    }
-
-    async function stopCamera() {
-      cameraActive = false;
-
-      if (scanLoopId) {
-        cancelAnimationFrame(scanLoopId);
-        scanLoopId = null;
-      }
-
-      if (mediaStream) {
-        mediaStream.getTracks().forEach(t => t.stop());
-        mediaStream = null;
-      }
-
-      qrVideo.srcObject = null;
-      toggleCameraBtn.textContent = "QR Okut";
-      cameraState.textContent = "Kamera kapalı.";
-    }
-
-    async function scanFrame() {
-      if (!cameraActive || !barcodeDetector || !qrVideo.videoWidth) {
-        scanLoopId = requestAnimationFrame(scanFrame);
-        return;
-      }
-
-      try {
-        const barcodes = await barcodeDetector.detect(qrVideo);
-        if (Array.isArray(barcodes) && barcodes.length) {
-          const raw = normalizeCode(barcodes[0]?.rawValue || "");
-          if (raw) {
-            codeInput.value = raw;
-            setStatus("QR okundu. Lisans kodu otomatik yazıldı.", "ok");
-            await stopCamera();
-            return;
-          }
-        }
-      } catch {}
-
-      scanLoopId = requestAnimationFrame(scanFrame);
-    }
-
-    async function startCamera() {
-      const detectorOk = await ensureBarcodeDetector();
-      if (!detectorOk) {
-        setStatus("Bu cihazda QR tarama desteği yok. Kodu elle girin.", "err");
-        cameraState.textContent = "QR tarama desteklenmiyor.";
-        return;
-      }
-
-      try {
-        mediaStream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "environment" },
-          audio: false
-        });
-
-        qrVideo.srcObject = mediaStream;
-        cameraActive = true;
-        toggleCameraBtn.textContent = "Kamerayı Kapat";
-        cameraState.textContent = "QR kodunu çerçevenin içine getir.";
-        setStatus("Kamera açıldı. QR okutabilirsiniz.", "ok");
-        scanLoopId = requestAnimationFrame(scanFrame);
-      } catch (e) {
-        setStatus("Kamera açılamadı. Kodu elle girin.", "err");
-        cameraState.textContent = "Kamera izni verilmedi.";
-      }
-    }
-
-    async function toggleCamera() {
-      if (cameraActive) {
-        await stopCamera();
-        return;
-      }
-      await startCamera();
-    }
-
     codeInput.addEventListener("input", () => {
       codeInput.value = normalizeCode(codeInput.value);
     });
 
     activateBtn.addEventListener("click", activateLicense);
     trialBtn.addEventListener("click", startTrial);
-    toggleCameraBtn.addEventListener("click", toggleCamera);
-
-    window.addEventListener("beforeunload", () => {
-      stopCamera();
-    });
-
-    // İlk ekranda kamera açık başlasın
-    startCamera();
   </script>
 </body>
 </html>
