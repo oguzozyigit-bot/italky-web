@@ -29,6 +29,47 @@ let __currentPreviewCode = "";
 let __singleCodeDraft = "";
 let __singlePackageDraft = "";
 let __singleNoteDraft = "";
+let __me = null;
+let __currentPreviewCode = "";
+let __nfcEventsBound = false;
+
+function bindNativeAdminEvents() {
+  if (__nfcEventsBound) return;
+  __nfcEventsBound = true;
+
+  window.addEventListener("italky:nfc-write", (e) => {
+    const payload = String(e?.detail?.payload || "").trim().toUpperCase();
+
+    if (payload) {
+      __currentPreviewCode = payload;
+      if ($("qrCodePreviewInput")) $("qrCodePreviewInput").value = payload;
+    }
+
+    const statusEl = $("singleQrStatus");
+    if (statusEl) {
+      statusEl.className = "status-line status-ok";
+      statusEl.textContent = `NFC'ye yazıldı: ${payload || "Lisans kodu"}`;
+    }
+  });
+
+  window.addEventListener("italky:nfc-status", (e) => {
+    const msg = e?.detail?.message || "Kartı telefona yaklaştır.";
+    const statusEl = $("singleQrStatus");
+    if (statusEl) {
+      statusEl.className = "status-line status-warn";
+      statusEl.textContent = msg;
+    }
+  });
+
+  window.addEventListener("italky:nfc-error", (e) => {
+    const msg = e?.detail?.message || "NFC yazma başarısız.";
+    const statusEl = $("singleQrStatus");
+    if (statusEl) {
+      statusEl.className = "status-line status-err";
+      statusEl.textContent = msg;
+    }
+  });
+}
 
 function escapeHtml(s) {
   return String(s ?? "")
@@ -481,8 +522,9 @@ async function writeCodeToNfc(reason = "Kartı telefona yaklaştır. Lisans kodu
 
 async function renderCodesQr() {
   const box = $("panelNfc");
+  bindNativeAdminEvents();
 
-  box.innerHTML = `
+  box.innerHTML = ``
     <div class="grid grid-2">
       <div class="card">
         <h3>Tekli Kod Üret</h3>
