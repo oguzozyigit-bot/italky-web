@@ -4,8 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
   <title>italkyAI • Global Gateway</title>
-  <meta name="theme-color" content="#070b14" />
-
+  
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=Space+Grotesk:wght@300;700&display=swap" rel="stylesheet">
 
@@ -14,9 +13,7 @@
       --cyan: #00f2ff;
       --violet: #7c5cff;
       --pink: #ff66c4;
-      --bg: #050812;
-      --glass: rgba(255, 255, 255, 0.03);
-      --line: rgba(255, 255, 255, 0.08);
+      --bg: #0b0e14;
       --grad: linear-gradient(135deg, #00f2ff 0%, #7c5cff 50%, #ff66c4 100%);
     }
 
@@ -27,252 +24,243 @@
       background: var(--bg);
       color: #fff;
       font-family: 'Outfit', sans-serif;
-      overflow: hidden; /* Scroll yönetimi shell'e bırakıldı */
+      overflow: hidden;
     }
 
-    /* Kuantum Arka Plan */
     #pageContent {
       height: 100dvh;
       display: flex;
       flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      padding: env(safe-area-inset-top) 20px env(safe-area-inset-bottom);
-      background: 
-        radial-gradient(circle at 50% -20%, rgba(0, 242, 255, 0.15), transparent 50%),
-        radial-gradient(circle at 50% 120%, rgba(255, 102, 196, 0.1), transparent 50%);
-      position: relative;
+      justify-content: space-between;
+      padding: 10px 20px;
+      background: radial-gradient(circle at 50% 50%, #1a1421 0%, #0b0e14 100%);
     }
 
-    /* Dünyayı Küçülten Hologram */
-    .world-container {
-      position: absolute;
-      top: 10%;
-      width: 300px;
-      height: 300px;
-      opacity: 0.4;
-      pointer-events: none;
-      filter: blur(1px);
-    }
-    .world-sphere {
-      width: 100%; height: 100%;
-      border-radius: 50%;
-      border: 1px dashed var(--cyan);
-      animation: rotateWorld 20s linear infinite;
-      position: relative;
-    }
-    @keyframes rotateWorld { 100% { transform: rotate(360deg); } }
-
-    /* Terminal Kartı */
-    .terminal {
-      width: 100%;
-      max-width: 400px;
-      background: var(--glass);
-      backdrop-filter: blur(25px);
-      -webkit-backdrop-filter: blur(25px);
-      border: 1px solid var(--line);
-      border-radius: 40px;
-      padding: 30px 24px;
-      box-shadow: 0 40px 100px rgba(0,0,0,0.5);
-      z-index: 10;
-      position: relative;
-    }
-
-    .hero-badge {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 10px; font-weight: 700; color: var(--cyan);
-      text-transform: uppercase; letter-spacing: 3px;
-      text-align: center; margin-bottom: 10px;
-      display: block;
-    }
-
-    .hero-title {
-      font-size: 32px; font-weight: 900; text-align: center; margin: 0;
-      letter-spacing: -1.5px; line-height: 1;
-    }
-    .hero-title span { background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-
-    /* NFC Şov Alanı */
-    .nfc-visual {
-      height: 160px;
+    /* --- ÜST PANEL: NFC & HOME ANIMASYONU --- */
+    .visual-stage {
+      flex: 1;
       display: flex;
       justify-content: center;
       align-items: center;
-      margin: 20px 0;
-      perspective: 1000px;
-    }
-    .phone-mockup {
-      width: 80px; height: 140px;
-      background: #000; border: 2px solid #222;
-      border-radius: 15px; position: relative;
-      z-index: 2;
-    }
-    .nfc-card-anim {
-      width: 100px; height: 64px;
-      background: var(--grad);
-      border-radius: 8px;
-      position: absolute;
-      z-index: 3;
-      box-shadow: 0 10px 20px rgba(0,0,0,0.4);
-      animation: nfcPass 5s infinite cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    @keyframes nfcPass {
-      0% { transform: translate3d(120px, 40px, -100px) rotateY(-40deg); opacity: 0; }
-      30% { transform: translate3d(0, 0, 50px) rotateY(0deg); opacity: 1; }
-      70% { transform: translate3d(0, 0, 50px) rotateY(0deg); opacity: 1; filter: brightness(1.5); }
-      100% { transform: translate3d(-120px, -40px, -100px) rotateY(40deg); opacity: 0; }
+      position: relative;
+      perspective: 1200px;
     }
 
-    /* Input & Action */
-    .field-group { margin-top: 20px; position: relative; }
-    .label { font-size: 11px; font-weight: 700; color: var(--muted); margin-left: 15px; margin-bottom: 8px; display: block; }
-    
-    .field {
-      width: 100%; height: 64px; background: rgba(0,0,0,0.5);
-      border: 1px solid var(--line); border-radius: 20px;
-      color: var(--cyan); font-size: 26px; font-weight: 900;
-      text-align: center; font-family: 'Space Grotesk', sans-serif;
-      letter-spacing: 6px; transition: 0.3s;
+    /* Telefon Mockup */
+    .phone-frame {
+      width: 140px;
+      height: 250px;
+      background: #000;
+      border: 4px solid #222;
+      border-radius: 25px;
+      position: relative;
+      z-index: 5;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+      overflow: hidden;
     }
-    .field:focus { outline: none; border-color: var(--cyan); box-shadow: 0 0 25px rgba(0, 242, 255, 0.15); }
+
+    /* Telefonun içindeki Home.html Dünyası */
+    .phone-screen {
+      position: absolute;
+      inset: 4px;
+      background: #120d16;
+      border-radius: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transform: scale(0.6); /* İçeriyi küçültüp sığdırıyoruz */
+    }
+
+    /* Crystal Cage (Home.html'den) */
+    .crystal-cage {
+      position: absolute;
+      width: 120px; height: 120px;
+      transform-style: preserve-3d;
+      animation: rotateCrystal 15s linear infinite;
+    }
+    .crystal-side {
+      position: absolute; inset: 0;
+      border: 1px solid rgba(0, 242, 255, 0.3);
+      background: radial-gradient(circle, rgba(124, 92, 255, 0.1), transparent);
+    }
+    .side1{ transform:rotateY(0deg) translateZ(60px); }
+    .side2{ transform:rotateY(90deg) translateZ(60px); }
+    .side3{ transform:rotateY(180deg) translateZ(60px); }
+    .side4{ transform:rotateY(270deg) translateZ(60px); }
+    .side5{ transform:rotateX(90deg) translateZ(60px); }
+    .side6{ transform:rotateX(-90deg) translateZ(60px); }
+
+    /* Siyah Premium Kart */
+    .black-premium-card {
+      position: absolute;
+      width: 130px;
+      height: 80px;
+      background: linear-gradient(135deg, #111 0%, #000 100%);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+      animation: cardNFCAction 6s infinite cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Kart Üzerindeki QR Kod */
+    .card-qr {
+      width: 35px;
+      height: 35px;
+      background: #fff;
+      padding: 3px;
+      border-radius: 4px;
+      position: relative;
+    }
+    .card-qr::after {
+      content: ""; position: absolute; inset: 0;
+      background: repeating-linear-gradient(45deg, #000, #000 2px, #fff 2px, #fff 4px);
+      opacity: 0.8;
+    }
+
+    @keyframes cardNFCAction {
+      0% { transform: translate3d(140px, 100px, -150px) rotateY(-45deg); opacity: 0; }
+      30% { transform: translate3d(0, 40px, 50px) rotateY(0deg); opacity: 1; }
+      50% { transform: translate3d(0, 0px, 80px) scale(1.1); filter: brightness(1.5); }
+      70% { transform: translate3d(0, 40px, 50px) rotateY(0deg); opacity: 1; }
+      100% { transform: translate3d(-140px, 100px, -150px) rotateY(45deg); opacity: 0; }
+    }
+
+    @keyframes rotateCrystal { 100% { transform: rotateX(360deg) rotateY(360deg); } }
+
+    /* --- ALT PANEL: KONTROLLER --- */
+    .control-panel {
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 35px;
+      padding: 20px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .connect-label { font-size: 10px; font-weight: 900; letter-spacing: 2px; color: var(--muted); opacity: 0.6; }
+    .connect-value { font-family: 'Space Grotesk', sans-serif; font-size: 32px; font-weight: 700; color: #fff; margin: 5px 0; }
+    
+    .status-msg { font-size: 12px; color: var(--cyan); margin-bottom: 15px; min-height: 18px; }
 
     .btn {
-      width: 100%; height: 60px; border-radius: 20px; border: none;
-      cursor: pointer; font-family: 'Outfit', sans-serif;
-      font-size: 16px; font-weight: 900; transition: 0.3s;
-      display: flex; align-items: center; justify-content: center;
-      margin-top: 12px;
+      width: 100%; height: 56px; border-radius: 18px; border: none;
+      font-weight: 900; font-family: 'Outfit'; cursor: pointer; transition: 0.3s;
+      margin-bottom: 10px;
     }
-    .btn-primary { background: #fff; color: #000; }
-    .btn-primary:active { transform: scale(0.97); }
-    .btn-ghost { background: transparent; border: 1px solid var(--line); color: #fff; font-size: 13px; font-weight: 600; }
+    .btn-primary { background: #fff; color: #000; font-size: 15px; }
+    .btn-ghost { background: transparent; border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 13px; }
 
-    .status-line {
-      height: 20px; text-align: center; margin-top: 15px;
-      font-size: 13px; font-weight: 600;
-    }
-    .ok { color: var(--ok); } .err { color: var(--err); } .warn { color: var(--warn); }
+    .hero-title { font-family: 'Space Grotesk'; font-size: 24px; margin-bottom: 5px; }
+    .hero-title span { background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
-    /* Arka Plan Partikülleri */
-    .particle { position: absolute; background: #fff; border-radius: 50%; opacity: 0.2; pointer-events: none; }
   </style>
 </head>
 <body>
 
-  <div id="pageContent">
-    <div class="world-container">
-      <div class="world-sphere"></div>
-    </div>
-
-    <div class="page">
-      <div class="terminal">
-        <span class="hero-badge">Birlikte Dünyayı Küçültüyoruz</span>
-        <h1 class="hero-title">italky<span>AI</span> Gateway</h1>
-        
-        <div class="nfc-visual">
-          <div class="phone-mockup"></div>
-          <div class="nfc-card-anim"></div>
+<main id="pageContent">
+  <div class="visual-stage">
+    <div class="phone-frame">
+      <div class="phone-screen">
+        <div class="crystal-cage">
+          <div class="crystal-side side1"></div>
+          <div class="crystal-side side2"></div>
+          <div class="crystal-side side3"></div>
+          <div class="crystal-side side4"></div>
+          <div class="crystal-side side5"></div>
+          <div class="crystal-side side6"></div>
         </div>
-
-        <div class="field-group">
-          <label class="label">AKTİVASYON PROTOKOLÜ</label>
-          <input id="licenseCodeInput" class="field" maxlength="8" placeholder="••••••••" autocomplete="off" />
-        </div>
-
-        <div class="actions" style="margin-top: 15px;">
-          <button id="activateBtn" class="btn btn-primary">ERİŞİMİ ONAYLA</button>
-          <button id="trialBtn" class="btn btn-ghost">Ücretsiz Keşfet (7 Gün)</button>
-        </div>
-
-        <div id="statusLine" class="status-line"></div>
+        <div style="z-index:10; font-family:'Space Grotesk'; font-weight:700; color:var(--cyan); margin-top:80px;">italkyAI</div>
       </div>
-      
-      <p style="text-align: center; font-size: 11px; color: var(--muted); margin-top: 20px;">
-        NFC Kartınızı veya QR kodunuzu hazır bulundurun.
-      </p>
+    </div>
+    
+    <div class="black-premium-card">
+      <div class="card-qr"></div>
+      <div style="position:absolute; bottom:8px; right:10px; font-size:6px; color:rgba(255,255,255,0.5);">PREMIUM NFC</div>
     </div>
   </div>
 
-  <script type="module">
-    import { mountShell } from "/js/ui_shell.js";
-    import { supabase } from "/js/supabase_client.js";
+  <div class="control-panel">
+    <div class="hero-title">Ear<span>TO</span>Ear</div>
+    <div class="connect-label">BAĞLANTI KODUNUZ</div>
+    <div id="connectionCodeText" class="connect-value">------</div>
+    <div id="heroStatus" class="status-msg">Sistem Hazırlanıyor...</div>
 
-    // Arka Plan Efekti
-    function createParticles() {
-      const container = document.getElementById('pageContent');
-      for(let i=0; i<30; i++) {
-        const p = document.createElement('div');
-        p.className = 'particle';
-        const size = Math.random() * 3;
-        p.style.width = size + 'px';
-        p.style.height = size + 'px';
-        p.style.left = Math.random() * 100 + '%';
-        p.style.top = Math.random() * 100 + '%';
-        container.appendChild(p);
-      }
-    }
-    createParticles();
+    <div class="actions">
+      <button id="activateBtn" class="btn btn-primary" onclick="openCodePrompt()">KOD İLE BAĞLAN</button>
+      <button id="trialBtn" class="btn btn-ghost" onclick="copyCode()">KODU KOPYALA</button>
+    </div>
+  </div>
+</main>
 
-    try { mountShell({ scroll: "auto" }); } catch (e) { console.warn(e); }
+<script type="module">
+  import { mountShell } from "/js/ui_shell.js";
+  import { supabase } from "/js/supabase_client.js";
 
-    const API_BASE = "https://italky-api.onrender.com/api";
-    const codeInput = document.getElementById("licenseCodeInput");
-    const activateBtn = document.getElementById("activateBtn");
-    const trialBtn = document.getElementById("trialBtn");
-    const statusLine = document.getElementById("statusLine");
+  // Shell ve Access Ayarları
+  try { mountShell({ scroll: "auto" }); } catch (e) {}
 
-    function setStatus(text, type = "") {
-      statusLine.className = `status-line ${type}`;
-      statusLine.textContent = text;
-    }
+  const API_BASE = "https://italky-api.onrender.com/api";
+  const codeText = document.getElementById("connectionCodeText");
+  const heroStatus = document.getElementById("heroStatus");
+  let activeCode = "";
 
-    function normalize(v) { return v.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8); }
+  // 1. Kodu Kopyalama Fonksiyonu
+  window.copyCode = async () => {
+    if(!activeCode || activeCode === "------") return;
+    await navigator.clipboard.writeText(activeCode);
+    heroStatus.textContent = "Kod Panoya Kopyalandı!";
+    setTimeout(() => heroStatus.textContent = "Bağlantı Bekleniyor...", 2000);
+  };
 
-    async function api(path, payload) {
-      const { data: { session } } = await supabase.auth.getSession();
-      const r = await fetch(`${API_BASE}${path}`, {
+  // 2. Sayfa Yönlendirme (Home.html mantığıyla aynı)
+  window.openCodePrompt = () => {
+    location.href = "/pages/sidetoside_code.html";
+  };
+
+  // 3. Oda Oluşturma ve Polling (Home.html'den gelen orijinal logic)
+  async function prepareGateway() {
+    try {
+      heroStatus.textContent = "Şifreli Kanal Açılıyor...";
+      const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+      
+      const r = await fetch(`${API_BASE}/interpreter/create-room`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(session ? { "Authorization": `Bearer ${session.access_token}` } : {})
-        },
-        body: JSON.stringify(payload)
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ host_code: code, my_lang: "tr", mode: "interpreter" })
       });
-      const res = await r.json();
-      if (!r.ok) throw new Error(res.detail || "Bağlantı başarısız");
-      return res;
+      
+      const j = await r.json();
+      if(j.room_id) {
+        activeCode = j.host_code;
+        codeText.textContent = activeCode;
+        heroStatus.textContent = "Bağlantı Hazır. Karşı Taraf Bekleniyor...";
+        startPolling(j.room_id);
+      }
+    } catch(e) {
+      heroStatus.textContent = "Bağlantı Hatası!";
     }
+  }
 
-    activateBtn.onclick = async () => {
-      const code = normalize(codeInput.value);
-      if (code.length !== 8) return setStatus("8 karakterli kod gerekli", "err");
-      
-      activateBtn.disabled = true;
-      setStatus("Protokol doğrulanıyor...", "warn");
-      
+  function startPolling(roomId) {
+    setInterval(async () => {
       try {
-        await api("/license/activate-code", { code });
-        setStatus("Bağlantı Başarılı!", "ok");
-        setTimeout(() => location.href = "/pages/home.html", 800);
-      } catch (e) {
-        setStatus(e.message, "err");
-        activateBtn.disabled = false;
-      }
-    };
+        const r = await fetch(`${API_BASE}/interpreter/room/${roomId}`);
+        const j = await r.json();
+        if(j.status === "active" && j.guest_lang) {
+          location.href = `/pages/sidetoside.html?room=${roomId}&role=host&my=tr&auto=1`;
+        }
+      } catch(e) {}
+    }, 2000);
+  }
 
-    trialBtn.onclick = async () => {
-      trialBtn.disabled = true;
-      setStatus("Geçici erişim açılıyor...", "warn");
-      try {
-        await api("/license/start-trial", { days: 7 });
-        location.href = "/pages/home.html";
-      } catch (e) {
-        setStatus("Sistem hatası", "err");
-        trialBtn.disabled = false;
-      }
-    };
+  prepareGateway();
+</script>
 
-    codeInput.oninput = () => { codeInput.value = normalize(codeInput.value); };
-  </script>
 </body>
 </html>
