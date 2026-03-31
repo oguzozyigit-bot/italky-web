@@ -115,7 +115,7 @@ const HOME_HEADER_HTML = `
     </nav>
 
     <div class="menu-sign" data-no-translate="1">
-      <span class="menu-sign-main">italkyAI</span>
+      <span class="menu-sign-main">italkyAI By ozyigit's</span>
       <span class="menu-sign-dot">•</span>
       <span class="menu-sign-year">2026</span>
     </div>
