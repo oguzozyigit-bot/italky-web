@@ -851,9 +851,8 @@ async function renderNfc() {
           Önce kartı okut. UID otomatik dolsun. Sonra kartı kaydet. Ardından karta URL yaz. Hata olursa tekrar yaz.
         </div>
 
-        <div class="row" style="margin-bottom:10px">
-          <button id="readCardBtn" class="btn-secondary" type="button">Kartı Oku</button>
-          <button id="writeCardBtn" class="btn-secondary" type="button">Karta URL Yaz</button>
+        <div class="row nfc-top-actions" style="margin-bottom:14px; display:flex; gap:10px; flex-wrap:wrap; position:relative; z-index:20;">
+          <button id="readCardBtn" class="btn-secondary" type="button" style="pointer-events:auto;">Kartı Oku</button>
         </div>
 
         <div class="split">
@@ -885,6 +884,12 @@ async function renderNfc() {
         </div>
 
         <button id="saveNfcBtn" class="btn-primary" type="button">Kartı Kaydet / Güncelle</button>
+
+        <div class="row" style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap; position:relative; z-index:20;">
+          <button id="writeCardBtn" class="btn-secondary" type="button">Karta URL Yaz</button>
+          <button id="rewriteCardBtn" class="btn-secondary" type="button">Karta Tekrar Yaz</button>
+        </div>
+
         <div id="nfcStatus" class="status-line"></div>
       </div>
 
@@ -913,7 +918,6 @@ async function renderNfc() {
 
         <div class="row" style="margin-top:10px">
           <button id="downloadQrBtn" class="btn-secondary" type="button">QR İndir</button>
-          <button id="rewriteCardBtn" class="btn-secondary" type="button">Karta Tekrar Yaz</button>
         </div>
 
         <div id="qrStatus" class="status-line"></div>
