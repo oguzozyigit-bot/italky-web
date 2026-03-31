@@ -101,7 +101,7 @@ const HOME_HEADER_HTML = `
       <a href="/pages/jetonbuy.html" class="menu-link-jeton" data-i18n="menu_token_load">Jeton Yükle</a>
       <a href="/pages/wallet_history.html" data-i18n="menu_wallet_history">Jeton Hareketleri</a>
 
-      <a href="/pages/admin.html" id="adminPanelLink" class="hidden">italky Panel</a>
+      <a href="/pages/admin.html" id="adminPanelLink" class="hidden">Admin Panel</a>
 
       <a href="/pages/profile.html" data-i18n="menu_profile">Profil</a>
       <a href="/pages/about.html" data-i18n="menu_about">Hakkımızda</a>
@@ -117,8 +117,6 @@ const HOME_HEADER_HTML = `
     <div class="menu-sign" data-no-translate="1">
       <span class="menu-sign-main">italkyAI</span>
       <span class="menu-sign-dot">•</span>
-      <span class="menu-sign-sub">Özyiğit Mührü</span>
-      <span class="menu-sign-dot">•</span>
       <span class="menu-sign-year">2026</span>
     </div>
   </div>
@@ -128,8 +126,6 @@ const HOME_FOOTER_HTML = `
 <footer class="premium-footer" id="italkyFooter">
   <div class="signature" data-no-translate="1">
     <span class="signature-main">italkyAI</span>
-    <span class="signature-dot">•</span>
-    <span class="signature-sub">Özyiğit Mührü</span>
     <span class="signature-dot">•</span>
     <span class="signature-year">2026</span>
   </div>
@@ -348,10 +344,6 @@ body.ui-menu-open{
   -webkit-background-clip:text;
   -webkit-text-fill-color:transparent;
   text-shadow:0 0 10px rgba(124,92,255,.18);
-}
-
-.signature-sub{
-  color:rgba(255,255,255,.68);
 }
 
 .signature-year{
@@ -751,10 +743,6 @@ body.ui-menu-open{
   -webkit-background-clip:text;
   -webkit-text-fill-color:transparent;
   text-shadow:0 0 12px rgba(124,92,255,.18);
-}
-
-.menu-sign-sub{
-  color:rgba(255,255,255,.70);
 }
 
 .menu-sign-year{
