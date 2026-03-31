@@ -21,21 +21,11 @@ setTimeout(() => {
 const API = "https://italky-api.onrender.com/api";
 const $ = (id) => document.getElementById(id);
 
-const loginView = $("loginView");
 const panelView = $("panelView");
-const loginStatus = $("loginStatus");
 const meLine = $("meLine");
+const systemNote = $("systemNote");
 
 let __me = null;
-
-function setLoginStatus(text, type = "") {
-  loginStatus.className = `status-line ${type}`.trim();
-  loginStatus.textContent = text || "";
-}
-
-function statusHtml(text, ok = true) {
-  return `<div class="status-line ${ok ? "status-ok" : "status-err"}">${escapeHtml(text || "")}</div>`;
-}
 
 function escapeHtml(s) {
   return String(s ?? "")
@@ -46,14 +36,8 @@ function escapeHtml(s) {
     .replaceAll("'", "&#39;");
 }
 
-function showPanel() {
-  loginView.classList.add("hidden");
-  panelView.classList.remove("hidden");
-}
-
-function showLogin() {
-  panelView.classList.add("hidden");
-  loginView.classList.remove("hidden");
+function statusHtml(text, ok = true) {
+  return `<div class="status-line ${ok ? "status-ok" : "status-err"}">${escapeHtml(text || "")}</div>`;
 }
 
 function tab(name) {
@@ -68,36 +52,17 @@ document.querySelectorAll(".tab").forEach((el) => {
   el.addEventListener("click", () => tab(el.dataset.tab));
 });
 
-$("homeBtn").onclick = () => location.href = "/pages/home.html";
-$("logoutBtnTop").onclick = async () => { await safeLogout(); };
-$("refreshBtn").onclick = async () => { await boot(); };
+$("homeBtn")?.addEventListener("click", () => {
+  location.href = "/pages/home.html";
+});
 
-function showConfirm({
-  title = "Onay",
-  text = "Devam edilsin mi?",
-  okText = "Tamam",
-  cancelText = "Vazgeç"
-} = {}) {
-  return new Promise((resolve) => {
-    $("confirmTitle").textContent = title;
-    $("confirmText").textContent = text;
-    $("confirmOk").textContent = okText;
-    $("confirmCancel").textContent = cancelText;
+$("logoutBtnTop")?.addEventListener("click", async () => {
+  await safeLogout();
+});
 
-    const modal = $("confirmModal");
-    modal.classList.add("show");
-
-    const close = (val) => {
-      modal.classList.remove("show");
-      $("confirmOk").onclick = null;
-      $("confirmCancel").onclick = null;
-      resolve(val);
-    };
-
-    $("confirmOk").onclick = () => close(true);
-    $("confirmCancel").onclick = () => close(false);
-  });
-}
+$("refreshBtn")?.addEventListener("click", async () => {
+  await boot();
+});
 
 async function getAccessToken() {
   const { data: { session } } = await supabase.auth.getSession();
@@ -133,54 +98,31 @@ async function api(path, opts = {}) {
   return j;
 }
 
-async function login() {
-  try {
-    setLoginStatus("Giriş yapılıyor...", "status-warn");
-    const email = $("email").value.trim();
-    const password = $("password").value;
+function showUnauthorized(message = "Bu panel yalnızca admin ve superadmin kullanıcılar içindir.") {
+  if (meLine) meLine.textContent = "Yetki yok";
+  if (systemNote) systemNote.textContent = message;
 
-    if (!email || !password) {
-      setLoginStatus("E-posta ve şifre gerekli.", "status-err");
-      return;
-    }
+  $("panelUsers").innerHTML = `
+    <div class="card">
+      <h3>Yetki Gerekli</h3>
+      <div class="desc">${escapeHtml(message)}</div>
+      <div class="row" style="margin-top:12px">
+        <button id="goHomeNoAuth" class="btn-primary" type="button">Ana Sayfaya Dön</button>
+      </div>
+    </div>
+  `;
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
+  $("panelPackages").innerHTML = "";
+  $("panelEntitlements").innerHTML = "";
+  $("panelNfc").innerHTML = "";
+  $("panelDeploy").innerHTML = "";
+  $("panelGithub").innerHTML = "";
 
-    await boot();
-    showPanel();
-    setLoginStatus("");
-  } catch (e) {
-    setLoginStatus(e?.message || "Giriş başarısız.", "status-err");
-  }
-}
+  tab("users");
 
-$("loginBtn").addEventListener("click", login);
-
-async function boot() {
-  try {
-    const me = await api("/admin/me");
-    __me = me?.me || null;
-    const role = String(__me?.role || "").toLowerCase();
-    meLine.textContent = `Yetki: ${role || "-"} • UID: ${__me?.user_id || "-"} • ${__me?.email || ""}`;
-
-    await Promise.all([
-      renderUsers(),
-      renderPackages(),
-      renderEntitlements(),
-      renderCodesQr(),
-      renderDeploy(),
-      renderGithub()
-    ]);
-
-    applyRoleVisibility();
-    tab(role === "admin" ? "nfc" : "users");
-    showPanel();
-  } catch (e) {
-    console.warn("admin boot:", e);
-    meLine.textContent = "Admin değil / oturum yok";
-    showLogin();
-  }
+  $("goHomeNoAuth")?.addEventListener("click", () => {
+    location.href = "/pages/home.html";
+  });
 }
 
 function applyRoleVisibility() {
@@ -191,7 +133,6 @@ function applyRoleVisibility() {
   document.querySelector(`.tab[data-tab="packages"]`)?.classList.toggle("hidden", !isSuper);
   document.querySelector(`.tab[data-tab="deploy"]`)?.classList.toggle("hidden", !isSuper);
   document.querySelector(`.tab[data-tab="github"]`)?.classList.toggle("hidden", !isSuper);
-  document.querySelector(`.tab[data-tab="users"]`)?.classList.toggle("hidden", false);
   document.querySelector(`.tab[data-tab="entitlements"]`)?.classList.toggle("hidden", !isSuper);
 
   if (isAdmin) {
@@ -199,35 +140,20 @@ function applyRoleVisibility() {
     $("panelDeploy")?.classList.add("hidden");
     $("panelGithub")?.classList.add("hidden");
     $("panelEntitlements")?.classList.add("hidden");
+  } else {
+    $("panelPackages")?.classList.remove("hidden");
+    $("panelDeploy")?.classList.remove("hidden");
+    $("panelGithub")?.classList.remove("hidden");
+    $("panelEntitlements")?.classList.remove("hidden");
   }
 }
 
 async function renderUsers() {
   const box = $("panelUsers");
-  const role = String(__me?.role || "").toLowerCase();
-  const canEditRole = role === "superadmin";
-  const canAssign = role === "superadmin";
-
   box.innerHTML = `
     <div class="card">
       <h3>Kullanıcılar</h3>
-      <div class="desc">Kullanıcı bilgileri, aktif paket, erişim kaynağı ve rol yönetimi bu alandan yapılır.</div>
-      <div class="table"><table>
-        <thead>
-          <tr>
-            <th>E-Posta</th>
-            <th>Ad Soyad</th>
-            <th>Rol</th>
-            <th>Jeton</th>
-            <th>Aktif Paket</th>
-            <th>Kaynak</th>
-            <th>Paket Bitiş</th>
-            <th>Kullanıcı ID</th>
-            <th>İşlem</th>
-          </tr>
-        </thead>
-        <tbody><tr><td colspan="9" class="empty">Yükleniyor...</td></tr></tbody>
-      </table></div>
+      <div class="desc">Yükleniyor...</div>
     </div>
   `;
 
@@ -238,7 +164,7 @@ async function renderUsers() {
     box.innerHTML = `
       <div class="card">
         <h3>Kullanıcılar</h3>
-        <div class="desc">${role === "admin" ? "Admin kullanıcı yalnızca görüntüleyebilir." : "Rol atama, üyelik kaynağı görüntüleme ve kullanıcı erişimini izleme ekranı."}</div>
+        <div class="desc">Toplam ${items.length} kullanıcı</div>
         <div class="table">
           <table>
             <thead>
@@ -250,8 +176,6 @@ async function renderUsers() {
                 <th>Aktif Paket</th>
                 <th>Kaynak</th>
                 <th>Paket Bitiş</th>
-                <th>Kullanıcı ID</th>
-                <th>İşlem</th>
               </tr>
             </thead>
             <tbody>
@@ -264,50 +188,13 @@ async function renderUsers() {
                   <td>${escapeHtml(u.selected_package_code || "-")}</td>
                   <td>${escapeHtml(u.access_source_type || "-")}</td>
                   <td>${escapeHtml(u.package_ends_at || "-")}</td>
-                  <td>${escapeHtml(u.id || "")}</td>
-                  <td>
-                    <div class="mini-actions">
-                      ${canEditRole ? `
-                        <select data-role-user="${escapeHtml(u.id || "")}">
-                          <option value="user" ${u.role === "user" ? "selected" : ""}>user</option>
-                          <option value="admin" ${u.role === "admin" ? "selected" : ""}>admin</option>
-                          <option value="superadmin" ${u.role === "superadmin" ? "selected" : ""}>superadmin</option>
-                        </select>
-                        <button class="btn-secondary" data-save-role="${escapeHtml(u.id || "")}" type="button">Rolü Kaydet</button>
-                      ` : ``}
-                    </div>
-                  </td>
                 </tr>
-              `).join("") : `<tr><td colspan="9" class="empty">Kullanıcı bulunamadı.</td></tr>`}
+              `).join("") : `<tr><td colspan="7" class="empty">Kullanıcı bulunamadı.</td></tr>`}
             </tbody>
           </table>
         </div>
       </div>
     `;
-
-    if (canEditRole) {
-      box.querySelectorAll("[data-save-role]").forEach((btn) => {
-        btn.addEventListener("click", async () => {
-          const userId = btn.getAttribute("data-save-role");
-          const sel = box.querySelector(`[data-role-user="${userId}"]`);
-          const roleVal = sel?.value || "user";
-
-          btn.textContent = "Kaydediliyor...";
-          try {
-            await api("/admin/users/role", {
-              method: "POST",
-              body: JSON.stringify({ user_id: userId, role: roleVal })
-            });
-            btn.textContent = "Kaydedildi";
-            await renderUsers();
-          } catch (e) {
-            btn.textContent = "Rolü Kaydet";
-            alert(e?.message || "Rol kaydedilemedi");
-          }
-        });
-      });
-    }
-
   } catch (e) {
     box.innerHTML = `<div class="card"><h3>Kullanıcılar</h3>${statusHtml(e?.message || "Liste alınamadı", false)}</div>`;
   }
@@ -316,61 +203,19 @@ async function renderUsers() {
 async function renderPackages() {
   const box = $("panelPackages");
   const role = String(__me?.role || "").toLowerCase();
-  const isSuper = role === "superadmin";
 
-  if (!isSuper) {
+  if (role !== "superadmin") {
     box.innerHTML = `<div class="card"><h3>Paketler</h3><div class="desc">Bu alan yalnızca superadmin içindir.</div></div>`;
     return;
   }
 
-  box.innerHTML = `
-    <div class="grid grid-2">
+  try {
+    const r = await api("/admin/packages");
+    const items = Array.isArray(r?.items) ? r.items : [];
+
+    box.innerHTML = `
       <div class="card">
-        <h3>Paket Oluştur</h3>
-        <div class="desc">Yeni paketleri panelden oluştur.</div>
-
-        <div class="split">
-          <input id="pkgCode" placeholder="Kod (örn: PREMIUM_1YIL)" />
-          <input id="pkgName" placeholder="Ad (örn: Premium 1 Yıl)" />
-        </div>
-
-        <div class="split">
-          <input id="pkgDurationDays" type="number" min="1" placeholder="Süre (gün)" value="365" />
-          <input id="pkgJetonAmount" type="number" min="0" placeholder="Jeton" value="200" />
-        </div>
-
-        <div class="split">
-          <input id="pkgLangLimit" type="number" min="0" placeholder="Dil Limiti" value="0" />
-          <select id="pkgSourceType">
-            <option value="playstore">playstore</option>
-            <option value="qr_code">qr_code</option>
-            <option value="manual">manual</option>
-          </select>
-        </div>
-
-        <div class="split">
-          <select id="pkgText"><option value="true">TextToText Açık</option><option value="false">TextToText Kapalı</option></select>
-          <select id="pkgF2F"><option value="true">FaceToFace Açık</option><option value="false" selected>FaceToFace Kapalı</option></select>
-        </div>
-
-        <div class="split">
-          <select id="pkgS2S"><option value="true">SideToSide Açık</option><option value="false" selected>SideToSide Kapalı</option></select>
-          <select id="pkgOffline"><option value="true">Offline Açık</option><option value="false" selected>Offline Kapalı</option></select>
-        </div>
-
-        <div class="split">
-          <select id="pkgClone"><option value="true">Klon Ses Açık</option><option value="false" selected>Klon Ses Kapalı</option></select>
-          <select id="pkgActive"><option value="true">Aktif</option><option value="false">Pasif</option></select>
-        </div>
-
-        <input id="pkgNote" placeholder="Not" />
-        <button id="createPkgBtn" class="btn-primary" type="button">Paket Oluştur</button>
-        <div id="pkgCreateStatus" class="status-line"></div>
-      </div>
-
-      <div class="card">
-        <h3>Paket Listesi</h3>
-        <div class="desc">Panelden açılan tüm paketler burada görünür.</div>
+        <h3>Paketler</h3>
         <div class="table">
           <table>
             <thead>
@@ -380,74 +225,27 @@ async function renderPackages() {
                 <th>Kaynak</th>
                 <th>Süre</th>
                 <th>Jeton</th>
-                <th>Dil</th>
                 <th>Aktif</th>
               </tr>
             </thead>
-            <tbody id="packagesBody">
-              <tr><td colspan="7" class="empty">Yükleniyor...</td></tr>
+            <tbody>
+              ${items.length ? items.map(p => `
+                <tr>
+                  <td>${escapeHtml(p.code || "")}</td>
+                  <td>${escapeHtml(p.name || "")}</td>
+                  <td>${escapeHtml(p.source_type || "")}</td>
+                  <td>${Number(p.duration_days || 0)} gün</td>
+                  <td>${Number(p.jeton_amount || 0)}</td>
+                  <td>${p.is_active ? "Aktif" : "Pasif"}</td>
+                </tr>
+              `).join("") : `<tr><td colspan="6" class="empty">Paket yok.</td></tr>`}
             </tbody>
           </table>
         </div>
       </div>
-    </div>
-  `;
-
-  try {
-    const r = await api("/admin/packages");
-    const items = Array.isArray(r?.items) ? r.items : [];
-    $("packagesBody").innerHTML = items.length ? items.map(p => `
-      <tr>
-        <td>${escapeHtml(p.code || "")}</td>
-        <td>${escapeHtml(p.name || "")}</td>
-        <td>${escapeHtml(p.source_type || "")}</td>
-        <td>${Number(p.duration_days || 0)} gün</td>
-        <td>${Number(p.jeton_amount || 0)}</td>
-        <td>${Number(p.language_limit || 0)}</td>
-        <td>${p.is_active ? "Aktif" : "Pasif"}</td>
-      </tr>
-    `).join("") : `<tr><td colspan="7" class="empty">Paket bulunamadı.</td></tr>`;
-
-    $("createPkgBtn").onclick = async () => {
-      const statusEl = $("pkgCreateStatus");
-      statusEl.className = "status-line status-warn";
-      statusEl.textContent = "Paket oluşturuluyor...";
-
-      try {
-        const payload = {
-          code: $("pkgCode").value.trim(),
-          name: $("pkgName").value.trim(),
-          duration_days: Number($("pkgDurationDays").value || 0),
-          language_limit: Number($("pkgLangLimit").value || 0),
-          jeton_amount: Number($("pkgJetonAmount").value || 0),
-          can_use_text_to_text: $("pkgText").value === "true",
-          can_use_face_to_face: $("pkgF2F").value === "true",
-          can_use_side_to_side: $("pkgS2S").value === "true",
-          can_use_offline: $("pkgOffline").value === "true",
-          can_use_clone_voice: $("pkgClone").value === "true",
-          is_active: $("pkgActive").value === "true",
-          source_type: $("pkgSourceType").value,
-          note: $("pkgNote").value.trim() || null
-        };
-
-        if (!payload.code || !payload.name) throw new Error("Kod ve ad gerekli");
-
-        await api("/admin/packages", {
-          method: "POST",
-          body: JSON.stringify(payload)
-        });
-
-        statusEl.className = "status-line status-ok";
-        statusEl.textContent = "Paket oluşturuldu.";
-        await Promise.all([renderPackages(), renderUsers(), renderCodesQr()]);
-      } catch (e) {
-        statusEl.className = "status-line status-err";
-        statusEl.textContent = e?.message || "Paket oluşturulamadı.";
-      }
-    };
-
+    `;
   } catch (e) {
-    box.innerHTML = `<div class="card"><h3>Paketler</h3>${statusHtml(e?.message || "Paketler yüklenemedi", false)}</div>`;
+    box.innerHTML = `<div class="card"><h3>Paketler</h3>${statusHtml(e?.message || "Paketler alınamadı", false)}</div>`;
   }
 }
 
@@ -460,111 +258,55 @@ async function renderEntitlements() {
     return;
   }
 
-  box.innerHTML = `
-    <div class="card">
-      <h3>Erişim Kayıtları</h3>
-      <div class="desc">Kullanıcılara atanmış gerçek erişimler burada listelenir.</div>
-      <div class="table">
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>User ID</th>
-              <th>Paket</th>
-              <th>Kaynak</th>
-              <th>Kod</th>
-              <th>Başlangıç</th>
-              <th>Bitiş</th>
-              <th>Jeton</th>
-              <th>Durum</th>
-              <th>İşlem</th>
-            </tr>
-          </thead>
-          <tbody id="entsBody">
-            <tr><td colspan="10" class="empty">Yükleniyor...</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  `;
-
   try {
     const r = await api("/admin/entitlements");
     const items = Array.isArray(r?.items) ? r.items : [];
 
-    $("entsBody").innerHTML = items.length ? items.map(ent => `
-      <tr>
-        <td>${ent.id}</td>
-        <td>${escapeHtml(ent.user_id || "")}</td>
-        <td>${escapeHtml(ent.package_code || "")}</td>
-        <td>${escapeHtml(ent.source_type || "")}</td>
-        <td>${escapeHtml(ent.card_uid || "-")}</td>
-        <td>${escapeHtml(ent.started_at || "")}</td>
-        <td>${escapeHtml(ent.expires_at || "")}</td>
-        <td>${Number(ent.remaining_jeton || 0)}</td>
-        <td>${escapeHtml(ent.status || "")}</td>
-        <td>
-          <div class="mini-actions">
-            <select data-ent-status="${ent.id}">
-              <option value="active" ${ent.status === "active" ? "selected" : ""}>active</option>
-              <option value="expired" ${ent.status === "expired" ? "selected" : ""}>expired</option>
-              <option value="cancelled" ${ent.status === "cancelled" ? "selected" : ""}>cancelled</option>
-              <option value="passive" ${ent.status === "passive" ? "selected" : ""}>passive</option>
-            </select>
-            <button class="btn-secondary" data-save-ent="${ent.id}" type="button">Durumu Kaydet</button>
-          </div>
-        </td>
-      </tr>
-    `).join("") : `<tr><td colspan="10" class="empty">Erişim kaydı bulunamadı.</td></tr>`;
-
-    box.querySelectorAll("[data-save-ent]").forEach((btn) => {
-      btn.addEventListener("click", async () => {
-        const entId = Number(btn.getAttribute("data-save-ent"));
-        const sel = box.querySelector(`[data-ent-status="${entId}"]`);
-        const status = sel?.value || "active";
-
-        const ok = await showConfirm({
-          title: "Erişim Durumu",
-          text: `Bu entitlement durumunu "${status}" olarak güncellemek istiyor musun?`,
-          okText: "Kaydet"
-        });
-        if (!ok) return;
-
-        btn.textContent = "Kaydediliyor...";
-        try {
-          await api("/admin/entitlements/status", {
-            method: "POST",
-            body: JSON.stringify({ entitlement_id: entId, status })
-          });
-          btn.textContent = "Kaydedildi";
-          await Promise.all([renderEntitlements(), renderUsers(), renderCodesQr()]);
-        } catch (e) {
-          btn.textContent = "Durumu Kaydet";
-          alert(e?.message || "Durum kaydedilemedi");
-        }
-      });
-    });
-
+    box.innerHTML = `
+      <div class="card">
+        <h3>Erişimler</h3>
+        <div class="table">
+          <table>
+            <thead>
+              <tr>
+                <th>User ID</th>
+                <th>Paket</th>
+                <th>Kaynak</th>
+                <th>Kod</th>
+                <th>Durum</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${items.length ? items.map(ent => `
+                <tr>
+                  <td>${escapeHtml(ent.user_id || "")}</td>
+                  <td>${escapeHtml(ent.package_code || "")}</td>
+                  <td>${escapeHtml(ent.source_type || "")}</td>
+                  <td>${escapeHtml(ent.card_uid || "-")}</td>
+                  <td>${escapeHtml(ent.status || "")}</td>
+                </tr>
+              `).join("") : `<tr><td colspan="5" class="empty">Erişim yok.</td></tr>`}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
   } catch (e) {
-    box.innerHTML = `<div class="card"><h3>Erişimler</h3>${statusHtml(e?.message || "Erişimler yüklenemedi", false)}</div>`;
+    box.innerHTML = `<div class="card"><h3>Erişimler</h3>${statusHtml(e?.message || "Erişimler alınamadı", false)}</div>`;
   }
 }
 
 function randomLetters(count = 4) {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ";
   let out = "";
-  for (let i = 0; i < count; i++) {
-    out += chars[Math.floor(Math.random() * chars.length)];
-  }
+  for (let i = 0; i < count; i++) out += chars[Math.floor(Math.random() * chars.length)];
   return out;
 }
 
 function randomDigits(count = 4) {
   const chars = "0123456789";
   let out = "";
-  for (let i = 0; i < count; i++) {
-    out += chars[Math.floor(Math.random() * chars.length)];
-  }
+  for (let i = 0; i < count; i++) out += chars[Math.floor(Math.random() * chars.length)];
   return out;
 }
 
@@ -578,21 +320,20 @@ function generateLicenseCode() {
 }
 
 function buildCodeQrLink(code) {
-  const clean = String(code || "").trim().toUpperCase();
-  return clean ? `https://italky.ai/open/nfc?code=${encodeURIComponent(clean)}` : "";
+  return String(code || "").trim().toUpperCase();
 }
 
 function drawCodeQrPreview(code) {
   const wrap = $("codeQrPreviewWrap");
   if (!wrap) return;
 
-  const link = buildCodeQrLink(code);
-  if (!link) {
-    wrap.innerHTML = `<div style="color:#6b7280;font-size:13px;font-weight:800;">QR link bekleniyor</div>`;
+  const payload = buildCodeQrLink(code);
+  if (!payload) {
+    wrap.innerHTML = `<div style="color:#6b7280;font-size:13px;font-weight:800;">QR bekleniyor</div>`;
     return;
   }
 
-  const imgSrc = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(link)}`;
+  const imgSrc = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(payload)}`;
   wrap.innerHTML = `<img src="${imgSrc}" alt="QR" style="width:180px;height:180px;display:block;" />`;
 }
 
@@ -603,8 +344,8 @@ function openCodePrintWindow(items) {
   const cardsHtml = rows.map((row) => {
     const code = String(row.code || "").trim().toUpperCase();
     const packageName = String(row.package_name || row.package_code || "").trim();
-    const qrLink = buildCodeQrLink(code);
-    const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=420x420&data=${encodeURIComponent(qrLink)}`;
+    const qrPayload = buildCodeQrLink(code);
+    const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=420x420&data=${encodeURIComponent(qrPayload)}`;
 
     return `
       <div class="card">
@@ -647,27 +388,6 @@ function openCodePrintWindow(items) {
   w.document.close();
 }
 
-async function markCodesPrinted(codes = []) {
-  const list = (Array.isArray(codes) ? codes : []).map(c => String(c || "").trim().toUpperCase()).filter(Boolean);
-  if (!list.length) return;
-
-  for (const code of list) {
-    try {
-      await api("/admin/nfc/cards/upsert", {
-        method: "POST",
-        body: JSON.stringify({
-          uid: code,
-          status: "new",
-          is_active: true,
-          note: "__printed__"
-        })
-      });
-    } catch {
-      // sessiz geç
-    }
-  }
-}
-
 async function loadCodeRows() {
   const cards = await api("/admin/nfc/cards");
   const items = Array.isArray(cards?.items) ? cards.items : [];
@@ -675,12 +395,11 @@ async function loadCodeRows() {
     const note = String(c.note || "");
     const printedCountMatch = note.match(/print_count:(\d+)/i);
     const lastPrintedMatch = note.match(/last_printed_at:([^\|]+)/i);
-    const activatedMatch = note.match(/activated:true/i);
 
-    const printCount = printedCountMatch ? Number(printedCountMatch[1] || 0) : (note.includes("__printed__") ? 1 : 0);
+    const printCount = printedCountMatch ? Number(printedCountMatch[1] || 0) : 0;
     const lastPrintedAt = lastPrintedMatch ? lastPrintedMatch[1] : null;
     const isPrinted = printCount > 0;
-    const isActivated = activatedMatch ? true : String(c.status || "").toLowerCase() === "bound" || !!c.bound_user_id;
+    const isActivated = String(c.status || "").toLowerCase() === "bound" || !!c.bound_user_id;
 
     return {
       raw: c,
@@ -693,7 +412,6 @@ async function loadCodeRows() {
       last_printed_at: lastPrintedAt,
       is_activated: isActivated,
       activated_by_user_id: c.bound_user_id || "",
-      activated_at: c.bound_user_id ? (c.expires_at || "") : "",
       status: c.status || "new"
     };
   });
@@ -706,10 +424,8 @@ async function savePrintMeta(row, nextCount) {
     .map(s => s.trim())
     .filter(Boolean)
     .filter(s => !/^print_count:/i.test(s))
-    .filter(s => !/^last_printed_at:/i.test(s))
-    .filter(s => s !== "__printed__");
+    .filter(s => !/^last_printed_at:/i.test(s));
 
-  cleanParts.push("__printed__");
   cleanParts.push(`print_count:${nextCount}`);
   cleanParts.push(`last_printed_at:${new Date().toISOString()}`);
 
@@ -725,9 +441,40 @@ async function savePrintMeta(row, nextCount) {
   });
 }
 
+async function fillPackageSelect(selectId) {
+  const sel = $(selectId);
+  if (!sel) return;
+
+  try {
+    const r = await api("/admin/packages");
+    const items = Array.isArray(r?.items) ? r.items : [];
+    sel.innerHTML = items.length
+      ? items.map(p => `<option value="${escapeHtml(p.code || "")}">${escapeHtml((p.name || p.code || "") + " • " + (p.source_type || ""))}</option>`).join("")
+      : `<option value="">Paket yok</option>`;
+  } catch {
+    sel.innerHTML = `<option value="">Paket alınamadı</option>`;
+  }
+}
+
+async function fillPackageFilter(selectId) {
+  const sel = $(selectId);
+  if (!sel) return;
+
+  try {
+    const r = await api("/admin/packages");
+    const items = Array.isArray(r?.items) ? r.items : [];
+    sel.innerHTML = `<option value="">Tüm Paketler</option>` + (
+      items.length
+        ? items.map(p => `<option value="${escapeHtml(p.code || "")}">${escapeHtml(p.name || p.code || "")}</option>`).join("")
+        : ""
+    );
+  } catch {
+    sel.innerHTML = `<option value="">Tüm Paketler</option>`;
+  }
+}
+
 async function renderCodesQr() {
   const box = $("panelNfc");
-  const role = String(__me?.role || "").toLowerCase();
 
   box.innerHTML = `
     <div class="grid grid-2">
@@ -767,11 +514,11 @@ async function renderCodesQr() {
     <div class="grid grid-2" style="margin-top:14px">
       <div class="card">
         <h3>QR Önizleme</h3>
-        <div class="desc">Kod girildiğinde QR önizlemesi oluşur. Kod kartın altında büyük görünür.</div>
+        <div class="desc">QR içine sadece lisans kodu yazılır.</div>
 
         <div class="kv">
           <input id="qrCodePreviewInput" placeholder="Lisans Kodu : 4A5KR8B1" />
-          <input id="qrLinkPreviewOutput" readonly placeholder="QR link burada oluşur" />
+          <input id="qrLinkPreviewOutput" readonly placeholder="QR içeriği burada görünür" />
         </div>
 
         <div style="margin-top:12px; padding:14px; border:1px solid var(--line-soft); border-radius:18px; background:#151c24;">
@@ -826,7 +573,7 @@ async function renderCodesQr() {
               <th>Yazdırma</th>
               <th>Aktivasyon</th>
               <th>Kullanıcı</th>
-              <th>QR</th>
+              <th>QR İçeriği</th>
               <th>İşlem</th>
             </tr>
           </thead>
@@ -860,11 +607,9 @@ async function renderCodesQr() {
       return rows.filter((row) => {
         if (pkg && row.package_code !== pkg) return false;
         if (search && !row.code.includes(search)) return false;
-
         if (printState === "not_printed" && row.is_printed) return false;
         if (printState === "printed" && !row.is_printed) return false;
         if (printState === "activated" && !row.is_activated) return false;
-
         return true;
       });
     }
@@ -1002,7 +747,7 @@ async function renderCodesQr() {
 
         const produced = [];
         for (let i = 0; i < count; i++) {
-          let code = generateLicenseCode();
+          const code = generateLicenseCode();
           produced.push(code);
 
           await api("/admin/nfc/cards/upsert", {
@@ -1142,38 +887,6 @@ async function renderCodesQr() {
   }
 }
 
-async function fillPackageSelect(selectId) {
-  const sel = $(selectId);
-  if (!sel) return;
-
-  try {
-    const r = await api("/admin/packages");
-    const items = Array.isArray(r?.items) ? r.items : [];
-    sel.innerHTML = items.length
-      ? items.map(p => `<option value="${escapeHtml(p.code || "")}">${escapeHtml((p.name || p.code || "") + " • " + (p.source_type || ""))}</option>`).join("")
-      : `<option value="">Paket yok</option>`;
-  } catch {
-    sel.innerHTML = `<option value="">Paket alınamadı</option>`;
-  }
-}
-
-async function fillPackageFilter(selectId) {
-  const sel = $(selectId);
-  if (!sel) return;
-
-  try {
-    const r = await api("/admin/packages");
-    const items = Array.isArray(r?.items) ? r.items : [];
-    sel.innerHTML = `<option value="">Tüm Paketler</option>` + (
-      items.length
-        ? items.map(p => `<option value="${escapeHtml(p.code || "")}">${escapeHtml(p.name || p.code || "")}</option>`).join("")
-        : ""
-    );
-  } catch {
-    sel.innerHTML = `<option value="">Tüm Paketler</option>`;
-  }
-}
-
 async function renderDeploy() {
   const box = $("panelDeploy");
   const role = String(__me?.role || "").toLowerCase();
@@ -1285,17 +998,37 @@ async function renderGithub() {
   };
 }
 
-async function init() {
+async function boot() {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session?.access_token) {
-      await boot();
-    } else {
-      showLogin();
+    const me = await api("/admin/me");
+    __me = me?.me || null;
+
+    const role = String(__me?.role || "").toLowerCase();
+    if (role !== "admin" && role !== "superadmin") {
+      showUnauthorized();
+      return;
     }
-  } catch {
-    showLogin();
+
+    meLine.textContent = `Yetki: ${role} • UID: ${__me?.user_id || "-"} • ${__me?.email || ""}`;
+
+    await Promise.all([
+      renderUsers(),
+      renderPackages(),
+      renderEntitlements(),
+      renderCodesQr(),
+      renderDeploy(),
+      renderGithub()
+    ]);
+
+    applyRoleVisibility();
+    tab(role === "admin" ? "nfc" : "users");
+  } catch (e) {
+    showUnauthorized(e?.message || "Bu panel yalnızca admin ve superadmin kullanıcılar içindir.");
   }
+}
+
+async function init() {
+  await boot();
 }
 
 init();
