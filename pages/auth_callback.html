@@ -43,8 +43,9 @@
     import { supabase } from "/js/supabase_client.js";
     import { ensureAuthAndCacheUser } from "/js/auth.js";
 
-    const HOME  = "/pages/home.html";
-    const LOGIN = "/pages/login.html";
+    const HOME   = "/pages/home.html";
+    const LOGIN  = "/pages/login.html";
+    const ACCESS = "/pages/access.html";
     const errBox = document.getElementById("errBox");
 
     function showErr(msg){
@@ -70,12 +71,54 @@
 
     async function waitForSession(maxMs=9000){
       const start = Date.now();
-      while(Date.now()-start < maxMs){
+      while(Date.now() - start < maxMs){
         const { data:{ session } } = await supabase.auth.getSession();
         if(session) return session;
         await new Promise(r=>setTimeout(r, 250));
       }
       return null;
+    }
+
+    async function resolvePostLoginTarget(next = ""){
+      if(next) return next;
+
+      const { data:{ user }, error:userErr } = await supabase.auth.getUser();
+      if(userErr || !user?.id) return LOGIN;
+
+      const { data:profile, error:profileErr } = await supabase
+        .from("profiles")
+        .select(`
+          id,
+          selected_package_code,
+          package_active,
+          package_started_at,
+          package_ends_at,
+          trial_started_at,
+          trial_ends_at
+        `)
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if(profileErr || !profile){
+        return ACCESS;
+      }
+
+      const now = Date.now();
+
+      const hasActivePackage =
+        !!profile.selected_package_code &&
+        profile.package_active === true &&
+        (!profile.package_ends_at || new Date(profile.package_ends_at).getTime() > now);
+
+      const hasActiveTrial =
+        !!profile.trial_ends_at &&
+        new Date(profile.trial_ends_at).getTime() > now;
+
+      if(hasActivePackage || hasActiveTrial){
+        return HOME;
+      }
+
+      return ACCESS;
     }
 
     try{
@@ -106,7 +149,8 @@
 
       await ensureAuthAndCacheUser();
 
-      const target = next || HOME;
+      const target = await resolvePostLoginTarget(next);
+
       history.replaceState({}, "", target);
       location.replace(target);
 
