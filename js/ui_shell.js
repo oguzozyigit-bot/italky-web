@@ -145,6 +145,10 @@ const SHELL_CSS = `
   -webkit-tap-highlight-color:transparent;
 }
 
+.hidden{
+  display:none !important;
+}
+
 html,body{
   margin:0;
   padding:0;
@@ -1078,7 +1082,6 @@ async function hydrateAdminButton() {
   const adminLink = document.getElementById("adminPanelLink");
   if (!adminLink) return;
 
-  // Varsayılan: HER ZAMAN gizli başla
   adminLink.classList.add("hidden");
   adminLink.style.display = "none";
 
@@ -1115,6 +1118,7 @@ async function hydrateAdminButton() {
     adminLink.style.display = "none";
   }
 }
+
 function setMembershipUi({
   cardClass = "neutral",
   badgeClass = "neutral",
