@@ -29,9 +29,28 @@ let __currentPreviewCode = "";
 let __singleCodeDraft = "";
 let __singlePackageDraft = "";
 let __singleNoteDraft = "";
-let __me = null;
-let __currentPreviewCode = "";
 let __nfcEventsBound = false;
+
+function escapeHtml(s) {
+  return String(s ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function statusHtml(text, ok = true) {
+  return `<div class="status-line ${ok ? "status-ok" : "status-err"}">${escapeHtml(text || "")}</div>`;
+}
+
+function tab(name) {
+  const names = ["users", "packages", "entitlements", "nfc", "deploy", "github"];
+  names.forEach((t) => {
+    document.querySelector(`.tab[data-tab="${t}"]`)?.classList.toggle("active", t === name);
+    $(`panel${t.charAt(0).toUpperCase() + t.slice(1)}`)?.classList.toggle("hidden", t !== name);
+  });
+}
 
 function bindNativeAdminEvents() {
   if (__nfcEventsBound) return;
@@ -68,27 +87,6 @@ function bindNativeAdminEvents() {
       statusEl.className = "status-line status-err";
       statusEl.textContent = msg;
     }
-  });
-}
-
-function escapeHtml(s) {
-  return String(s ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
-}
-
-function statusHtml(text, ok = true) {
-  return `<div class="status-line ${ok ? "status-ok" : "status-err"}">${escapeHtml(text || "")}</div>`;
-}
-
-function tab(name) {
-  const names = ["users", "packages", "entitlements", "nfc", "deploy", "github"];
-  names.forEach((t) => {
-    document.querySelector(`.tab[data-tab="${t}"]`)?.classList.toggle("active", t === name);
-    $(`panel${t.charAt(0).toUpperCase() + t.slice(1)}`)?.classList.toggle("hidden", t !== name);
   });
 }
 
@@ -524,7 +522,7 @@ async function renderCodesQr() {
   const box = $("panelNfc");
   bindNativeAdminEvents();
 
-  box.innerHTML = ``
+  box.innerHTML = `
     <div class="grid grid-2">
       <div class="card">
         <h3>Tekli Kod Üret</h3>
