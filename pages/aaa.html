@@ -1,0 +1,615 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
+  <title>italkyAI • Aktivasyon</title>
+  <meta name="theme-color" content="#0b1020" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#060914;
+      --panel:#121a28;
+      --panel2:#182132;
+      --line:rgba(255,255,255,.08);
+      --line2:rgba(255,255,255,.12);
+      --txt:#f4f7ff;
+      --muted:rgba(255,255,255,.68);
+      --ok:#9fd4b2;
+      --warn:#e6c27b;
+      --err:#efaaaa;
+      --ai-grad:linear-gradient(135deg,#8bd3ff 0%,#7c5cff 45%,#ff66c4 100%);
+      --btn:#9eb2c9;
+      --btnText:#0c1520;
+      --safeTop:env(safe-area-inset-top);
+      --safeBottom:env(safe-area-inset-bottom);
+    }
+
+    *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+    html,body{
+      margin:0;
+      width:100%;
+      min-height:100%;
+      background:
+        radial-gradient(circle at 20% 10%, rgba(124,92,255,.18), transparent 26%),
+        radial-gradient(circle at 80% 16%, rgba(139,211,255,.12), transparent 24%),
+        linear-gradient(180deg,#050811 0%,#08101e 100%);
+      color:var(--txt);
+      font-family:'Outfit',sans-serif;
+    }
+
+    #pageContent{
+      min-height:100dvh;
+      padding:12px 14px calc(20px + var(--safeBottom));
+    }
+
+    .wrap{
+      display:grid;
+      gap:14px;
+      max-width:430px;
+      margin:0 auto;
+    }
+
+    .hero{
+      position:relative;
+      overflow:hidden;
+      border:1px solid var(--line);
+      border-radius:28px;
+      padding:20px 18px 18px;
+      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      box-shadow:0 20px 44px rgba(0,0,0,.24);
+    }
+
+    .hero::before{
+      content:"";
+      position:absolute;
+      inset:auto -30px -60px auto;
+      width:180px; height:180px;
+      background:radial-gradient(circle, rgba(139,211,255,.18), transparent 66%);
+      filter:blur(18px);
+      pointer-events:none;
+    }
+
+    .hero-badge{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      min-height:32px;
+      padding:6px 12px;
+      border-radius:999px;
+      border:1px solid var(--line2);
+      background:rgba(255,255,255,.05);
+      font-size:12px;
+      font-weight:900;
+      color:#eef5ff;
+    }
+
+    .hero-title{
+      margin:14px 0 8px;
+      font-family:"Space Grotesk",sans-serif;
+      font-size:32px;
+      line-height:1.02;
+      letter-spacing:-1px;
+    }
+
+    .hero-title .ai{
+      background:var(--ai-grad);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+
+    .hero-sub{
+      margin:0;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.65;
+      font-weight:700;
+    }
+
+    .card{
+      border:1px solid var(--line);
+      border-radius:24px;
+      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      box-shadow:0 18px 38px rgba(0,0,0,.18);
+      overflow:hidden;
+    }
+
+    .card-head{
+      padding:16px 16px 0;
+    }
+
+    .card-title{
+      margin:0;
+      font-size:22px;
+      font-weight:900;
+      letter-spacing:-.4px;
+    }
+
+    .card-desc{
+      margin:8px 0 0;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.6;
+      font-weight:700;
+    }
+
+    .scan-box{
+      padding:16px;
+      display:grid;
+      gap:12px;
+    }
+
+    .camera-wrap{
+      position:relative;
+      width:100%;
+      aspect-ratio: 3 / 4;
+      border-radius:22px;
+      overflow:hidden;
+      background:#05070e;
+      border:1px solid var(--line2);
+    }
+
+    video{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+      background:#000;
+    }
+
+    .camera-overlay{
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .scan-frame{
+      width:min(72vw,260px);
+      height:min(72vw,260px);
+      border-radius:26px;
+      border:3px solid rgba(255,255,255,.92);
+      box-shadow:
+        0 0 0 999px rgba(0,0,0,.32),
+        0 0 26px rgba(139,211,255,.24);
+      position:relative;
+    }
+
+    .scan-frame::before,
+    .scan-frame::after{
+      content:"";
+      position:absolute;
+      left:12px;
+      right:12px;
+      height:2px;
+      background:linear-gradient(90deg,transparent,#8bd3ff,transparent);
+      animation:scanY 2.2s linear infinite;
+    }
+
+    .scan-frame::before{ top:16px; }
+    .scan-frame::after{ top:calc(100% - 18px); animation-delay:1.1s; }
+
+    @keyframes scanY{
+      0%{ transform:translateY(0); opacity:.15; }
+      50%{ transform:translateY(180px); opacity:1; }
+      100%{ transform:translateY(0); opacity:.15; }
+    }
+
+    .camera-state{
+      min-height:18px;
+      color:var(--muted);
+      font-size:12px;
+      font-weight:800;
+      text-align:center;
+    }
+
+    .field-wrap{
+      padding:0 16px 16px;
+      display:grid;
+      gap:12px;
+    }
+
+    .field-label{
+      font-size:13px;
+      font-weight:900;
+      color:#eef5ff;
+      margin-bottom:6px;
+      display:block;
+    }
+
+    .field{
+      width:100%;
+      min-height:54px;
+      border:none;
+      outline:none;
+      border-radius:18px;
+      background:#142030;
+      color:#f5f8ff;
+      border:1px solid rgba(255,255,255,.10);
+      padding:0 16px;
+      font-size:22px;
+      font-weight:900;
+      letter-spacing:2px;
+      text-transform:uppercase;
+      text-align:center;
+    }
+
+    .field::placeholder{
+      letter-spacing:0;
+      font-size:16px;
+      text-transform:none;
+      color:rgba(255,255,255,.38);
+      font-weight:700;
+    }
+
+    .actions{
+      display:grid;
+      gap:10px;
+    }
+
+    .btn{
+      width:100%;
+      min-height:54px;
+      border:none;
+      outline:none;
+      border-radius:18px;
+      cursor:pointer;
+      font-family:'Outfit',sans-serif;
+      font-size:15px;
+      font-weight:900;
+      transition:transform .15s ease, opacity .15s ease, filter .15s ease;
+    }
+
+    .btn:active{ transform:scale(.985); }
+
+    .btn-primary{
+      background:var(--btn);
+      color:var(--btnText);
+    }
+
+    .btn-secondary{
+      background:#1b2636;
+      color:#edf4ff;
+      border:1px solid rgba(255,255,255,.10);
+    }
+
+    .btn-ghost{
+      background:transparent;
+      color:#edf4ff;
+      border:1px dashed rgba(255,255,255,.18);
+    }
+
+    .status{
+      min-height:18px;
+      font-size:13px;
+      font-weight:900;
+      line-height:1.5;
+      text-align:center;
+    }
+
+    .status.ok{ color:var(--ok); }
+    .status.warn{ color:var(--warn); }
+    .status.err{ color:var(--err); }
+
+    .tips{
+      display:grid;
+      gap:10px;
+      padding:16px;
+    }
+
+    .tip{
+      border:1px solid var(--line);
+      border-radius:18px;
+      background:rgba(255,255,255,.03);
+      padding:14px;
+    }
+
+    .tip b{
+      display:block;
+      margin-bottom:6px;
+      font-size:14px;
+    }
+
+    .tip span{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.6;
+      font-weight:700;
+    }
+
+    .hidden{ display:none !important; }
+  </style>
+</head>
+<body>
+  <div id="pageContent">
+    <div class="wrap">
+      <section class="hero">
+        <div class="hero-badge">Hoş geldin</div>
+        <h1 class="hero-title">italky<span class="ai">AI</span><br>Aktivasyon</h1>
+        <p class="hero-sub">
+          Lütfen lisans kodunuzu giriniz. Lisans kodunuz yok ise ücretsiz giriş yapabilirsiniz.
+          7 Gün boyunca Premium özellikler hariç tüm modüller aktif kalacaktır.
+        </p>
+      </section>
+
+      <section class="card">
+        <div class="card-head">
+          <h2 class="card-title">Lisans Aktivasyon Kodu</h2>
+          <p class="card-desc">
+            QR okutabilir, kodu elle girebilir veya ücretsiz devam edebilirsiniz.
+          </p>
+        </div>
+
+        <div class="scan-box">
+          <div class="camera-wrap" id="cameraWrap">
+            <video id="qrVideo" autoplay muted playsinline></video>
+            <div class="camera-overlay">
+              <div class="scan-frame"></div>
+            </div>
+          </div>
+
+          <div class="camera-state" id="cameraState">Kamera hazırlandığında QR burada okutulacak.</div>
+        </div>
+
+        <div class="field-wrap">
+          <div>
+            <label class="field-label" for="licenseCodeInput">Lisans Kodunuz</label>
+            <input id="licenseCodeInput" class="field" maxlength="8" placeholder="Lisans kodunu girin" autocomplete="off" />
+          </div>
+
+          <div class="actions">
+            <button id="activateBtn" class="btn btn-primary" type="button">Lisans Kodu ile Devam Et</button>
+            <button id="toggleCameraBtn" class="btn btn-secondary" type="button">QR Okut</button>
+            <button id="trialBtn" class="btn btn-ghost" type="button">Ücretsiz Giriş Yap</button>
+          </div>
+
+          <div id="statusLine" class="status"></div>
+        </div>
+      </section>
+
+      <section class="tips">
+        <div class="tip">
+          <b>QR okutunca ne olacak?</b>
+          <span>QR içindeki lisans kodu otomatik olarak kutuya yazılır. Dilerseniz kodu elle de değiştirebilirsiniz.</span>
+        </div>
+
+        <div class="tip">
+          <b>Ücretsiz giriş ne sağlar?</b>
+          <span>7 gün boyunca Premium özellikler hariç tüm modüller aktif kalır. Daha sonra lisans kodu girerek hesabınızı yükseltebilirsiniz.</span>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script type="module">
+    import { mountShell } from "/js/ui_shell.js";
+    import { supabase } from "/js/supabase_client.js";
+
+    try {
+      mountShell({ scroll: "auto" });
+    } catch (e) {
+      console.warn("ui_shell access skip:", e);
+    }
+
+    const API_BASE = "https://italky-api.onrender.com/api";
+    const codeInput = document.getElementById("licenseCodeInput");
+    const activateBtn = document.getElementById("activateBtn");
+    const toggleCameraBtn = document.getElementById("toggleCameraBtn");
+    const trialBtn = document.getElementById("trialBtn");
+    const statusLine = document.getElementById("statusLine");
+    const qrVideo = document.getElementById("qrVideo");
+    const cameraState = document.getElementById("cameraState");
+
+    let mediaStream = null;
+    let scanLoopId = null;
+    let barcodeDetector = null;
+    let cameraActive = false;
+
+    const params = new URLSearchParams(location.search);
+    const urlCode = String(params.get("code") || "").trim().toUpperCase();
+
+    if (urlCode) {
+      codeInput.value = urlCode;
+      setStatus("Lisans kodu bağlantıdan alındı.", "ok");
+    }
+
+    function normalizeCode(v) {
+      return String(v || "")
+        .toUpperCase()
+        .replace(/[^A-Z0-9]/g, "")
+        .slice(0, 8);
+    }
+
+    function setStatus(text, type = "") {
+      statusLine.className = `status ${type}`.trim();
+      statusLine.textContent = text || "";
+    }
+
+    async function getAccessToken() {
+      const { data: { session } } = await supabase.auth.getSession();
+      return session?.access_token || "";
+    }
+
+    async function api(path, payload = {}) {
+      const token = await getAccessToken();
+
+      const r = await fetch(`${API_BASE}${path}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { "Authorization": `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const txt = await r.text();
+      let json = null;
+      try {
+        json = JSON.parse(txt);
+      } catch {
+        json = { raw: txt };
+      }
+
+      if (!r.ok) throw new Error(json?.detail || txt || `HTTP_${r.status}`);
+      return json;
+    }
+
+    function openAfterSuccess() {
+      location.href = "/pages/home.html";
+    }
+
+    async function activateLicense() {
+      const code = normalizeCode(codeInput.value);
+      codeInput.value = code;
+
+      if (code.length !== 8) {
+        setStatus("Lütfen 8 karakterlik lisans kodunu girin.", "err");
+        return;
+      }
+
+      activateBtn.disabled = true;
+      trialBtn.disabled = true;
+      setStatus("Lisans kodu doğrulanıyor...", "warn");
+
+      try {
+        // Backend route adın farklıysa sadece bu path’i değiştir.
+        await api("/license/activate-code", { code });
+
+        setStatus("Lisans başarıyla aktive edildi.", "ok");
+        setTimeout(openAfterSuccess, 500);
+      } catch (e) {
+        setStatus(e?.message || "Lisans doğrulanamadı.", "err");
+      } finally {
+        activateBtn.disabled = false;
+        trialBtn.disabled = false;
+      }
+    }
+
+    async function startTrial() {
+      activateBtn.disabled = true;
+      trialBtn.disabled = true;
+      setStatus("Ücretsiz giriş başlatılıyor...", "warn");
+
+      try {
+        // Backend route adın farklıysa sadece bu path’i değiştir.
+        await api("/license/start-trial", { days: 7 });
+
+        setStatus("7 günlük ücretsiz giriş başlatıldı.", "ok");
+        setTimeout(openAfterSuccess, 500);
+      } catch (e) {
+        setStatus(e?.message || "Ücretsiz giriş başlatılamadı.", "err");
+      } finally {
+        activateBtn.disabled = false;
+        trialBtn.disabled = false;
+      }
+    }
+
+    async function ensureBarcodeDetector() {
+      if ("BarcodeDetector" in window) {
+        try {
+          const formats = await window.BarcodeDetector.getSupportedFormats();
+          if (formats.includes("qr_code")) {
+            barcodeDetector = new window.BarcodeDetector({ formats: ["qr_code"] });
+            return true;
+          }
+        } catch {}
+      }
+      return false;
+    }
+
+    async function stopCamera() {
+      cameraActive = false;
+
+      if (scanLoopId) {
+        cancelAnimationFrame(scanLoopId);
+        scanLoopId = null;
+      }
+
+      if (mediaStream) {
+        mediaStream.getTracks().forEach(t => t.stop());
+        mediaStream = null;
+      }
+
+      qrVideo.srcObject = null;
+      toggleCameraBtn.textContent = "QR Okut";
+      cameraState.textContent = "Kamera kapalı.";
+    }
+
+    async function scanFrame() {
+      if (!cameraActive || !barcodeDetector || !qrVideo.videoWidth) {
+        scanLoopId = requestAnimationFrame(scanFrame);
+        return;
+      }
+
+      try {
+        const barcodes = await barcodeDetector.detect(qrVideo);
+        if (Array.isArray(barcodes) && barcodes.length) {
+          const raw = normalizeCode(barcodes[0]?.rawValue || "");
+          if (raw) {
+            codeInput.value = raw;
+            setStatus("QR okundu. Lisans kodu otomatik yazıldı.", "ok");
+            await stopCamera();
+            return;
+          }
+        }
+      } catch {}
+
+      scanLoopId = requestAnimationFrame(scanFrame);
+    }
+
+    async function startCamera() {
+      const detectorOk = await ensureBarcodeDetector();
+      if (!detectorOk) {
+        setStatus("Bu cihazda QR tarama desteği yok. Kodu elle girin.", "err");
+        return;
+      }
+
+      try {
+        mediaStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "environment" },
+          audio: false
+        });
+
+        qrVideo.srcObject = mediaStream;
+        cameraActive = true;
+        toggleCameraBtn.textContent = "Kamerayı Kapat";
+        cameraState.textContent = "QR kodunu çerçevenin içine getir.";
+        setStatus("Kamera açıldı. QR okutabilirsiniz.", "ok");
+        scanLoopId = requestAnimationFrame(scanFrame);
+      } catch (e) {
+        setStatus("Kamera açılamadı. Kodu elle girin.", "err");
+      }
+    }
+
+    async function toggleCamera() {
+      if (cameraActive) {
+        await stopCamera();
+        return;
+      }
+      await startCamera();
+    }
+
+    codeInput.addEventListener("input", () => {
+      codeInput.value = normalizeCode(codeInput.value);
+    });
+
+    activateBtn.addEventListener("click", activateLicense);
+    trialBtn.addEventListener("click", startTrial);
+    toggleCameraBtn.addEventListener("click", toggleCamera);
+
+    window.addEventListener("beforeunload", () => {
+      stopCamera();
+    });
+
+    // Kamera ekranı üstte açık hazır dursun
+    startCamera();
+  </script>
+</body>
+</html>
