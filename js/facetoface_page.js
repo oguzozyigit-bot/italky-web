@@ -31,6 +31,16 @@ function canonical(code) {
   return String(code || "").toLowerCase().split("-")[0].trim();
 }
 
+function normalizePackageCode(raw) {
+  const code = String(raw || "").trim().toLowerCase();
+  if (!code) return "";
+  if (code.startsWith("premium")) return "premium";
+  if (code.startsWith("translate")) return "translate";
+  if (code.startsWith("education")) return "education";
+  if (code.startsWith("edu")) return "education";
+  return code;
+}
+
 const LANGS = (Array.isArray(getLangPoolForSite("tr")) ? getLangPoolForSite("tr") : [])
   .map((l) => {
     const code = canonical(l.code);
@@ -152,6 +162,18 @@ const homeLink = $("homeLink");
 const homeBtn = $("homeBtn");
 const settingsBtn = $("settingsBtn");
 
+const uiModal = $("uiModal");
+const uiModalTitle = $("uiModalTitle");
+const uiModalText = $("uiModalText");
+const uiModalGo = $("uiModalGo");
+const uiModalClose = $("uiModalClose");
+
+let accessState = {
+  trialActive: false,
+  packageCode: "",
+  lockedAll: false
+};
+
 let topLang = "en";
 let botLang = "tr";
 let activeSide = null;
@@ -171,6 +193,70 @@ let recognitionFinishedByUser = false;
 let recognitionSessionId = 0;
 
 let typewriterRunId = 0;
+
+function showUiModal(message, title = "Üyelik Gerekli") {
+  if (!uiModal) return;
+  uiModalTitle.textContent = title;
+  uiModalText.textContent = message;
+  uiModal.classList.add("open");
+}
+
+function closeUiModal() {
+  uiModal?.classList.remove("open");
+}
+
+uiModalGo?.addEventListener("click", () => {
+  location.href = "/pages/upgrade_pack.html";
+});
+uiModalClose?.addEventListener("click", closeUiModal);
+uiModal?.addEventListener("click", (e) => {
+  if (e.target === uiModal) closeUiModal();
+});
+
+async function readAccessState() {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      accessState = { trialActive: false, packageCode: "", lockedAll: false };
+      return;
+    }
+
+    const { data: row } = await supabase
+      .from("user_access_state")
+      .select("*")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (row) {
+      const rawCode = String(row.selected_package_code || "").trim().toLowerCase();
+      const packageCode = normalizePackageCode(rawCode);
+      const packageActive = !!packageCode && row.package_active === true &&
+        (!row.package_ends_at || new Date(row.package_ends_at).getTime() > Date.now());
+
+      const trialActive = !packageActive && (
+        Number(row.trial_days_left || 0) > 0 ||
+        (!!row.trial_ends_at && new Date(row.trial_ends_at).getTime() > Date.now())
+      );
+
+      accessState = {
+        trialActive,
+        packageCode: packageActive ? packageCode : "",
+        lockedAll: !packageActive && !trialActive
+      };
+      return;
+    }
+
+    accessState = { trialActive: false, packageCode: "", lockedAll: false };
+  } catch {
+    accessState = { trialActive: false, packageCode: "", lockedAll: false };
+  }
+}
+
+function canOpenFaceSettings() {
+  if (accessState.lockedAll) return false;
+  if (accessState.trialActive) return false;
+  return true;
+}
 
 function getFaceVoiceMode() {
   return String(localStorage.getItem(F2F_VOICE_KEY) || "auto").trim().toLowerCase();
@@ -979,8 +1065,7 @@ async function finalizeRecognition(side, text) {
     await chargeFaceUsage(cleaned, tr, src, dst);
   } catch (e) {
     if (e?.code === "INSUFFICIENT_TOKENS") {
-      alert("Jetonunuz yetersiz. Jeton Market'e yönlendiriliyorsunuz.");
-      location.href = "/pages/jetonbuy.html";
+      showUiModal("Jetonunuz yetersiz. Jeton Market'e yönlendiriliyorsunuz.", "Yetersiz Jeton");
       return;
     }
     console.error("[facetoface usage]", e);
@@ -1126,6 +1211,11 @@ function startRecording(side) {
 async function toggleRecording(side) {
   await ensureReady();
 
+  if (accessState.lockedAll) {
+    showUiModal("Deneme süreniz doldu. Sistemi kullanabilmek için üyelik paketi satın almanız gereklidir.");
+    return;
+  }
+
   if (recordingSide === side) {
     recognitionFinishedByUser = true;
     setTranslatingUI(side);
@@ -1197,7 +1287,7 @@ function startBoot() {
     refreshLangLabels();
     pointOrbTo("bot");
 
-    await Promise.allSettled([warmApis(), warmAudio()]);
+    await Promise.allSettled([warmApis(), warmAudio(), readAccessState()]);
 
     bootReady = true;
     setSystemReadyUI();
@@ -1269,6 +1359,11 @@ function bind() {
   }, { capture: true });
 
   clearBtn?.addEventListener("click", () => {
+    if (accessState.lockedAll) {
+      showUiModal("Deneme süreniz doldu. Sistemi kullanabilmek için üyelik paketi satın almanız gereklidir.");
+      return;
+    }
+
     stopAudio();
     stopTypewriter();
     stopRecognizer();
@@ -1290,6 +1385,12 @@ function bind() {
 
   settingsBtn?.addEventListener("click", (e) => {
     e.preventDefault();
+
+    if (!canOpenFaceSettings()) {
+      showUiModal("Bu menüyü kullanabilmek için üyelik paketi satın almanız gereklidir.");
+      return;
+    }
+
     location.href = "/pages/facetoface_open.html?edit=1";
   });
 
@@ -1320,6 +1421,10 @@ function bind() {
   });
 
   bindKeyboardButton(settingsBtn, async () => {
+    if (!canOpenFaceSettings()) {
+      showUiModal("Bu menüyü kullanabilmek için üyelik paketi satın almanız gereklidir.");
+      return;
+    }
     location.href = "/pages/facetoface_open.html?edit=1";
   });
 
