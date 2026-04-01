@@ -54,6 +54,7 @@
       position:relative;
       overflow:hidden;
       padding:12px 14px 18px;
+      z-index:5;
     }
 
     .fx-grid{
@@ -109,18 +110,19 @@
 
     .page{
       position:relative;
-      z-index:2;
+      z-index:20;
       width:100%;
       max-width:430px;
       height:100%;
       margin:0 auto;
       display:grid;
-      grid-template-rows:auto 1fr auto;
+      grid-template-rows:1fr;
       gap:12px;
     }
 
     .terminal{
       position:relative;
+      z-index:20;
       border-radius:32px;
       border:1px solid var(--line);
       background:
@@ -139,9 +141,12 @@
       height:1px;
       background:linear-gradient(90deg, transparent, rgba(0,242,255,.4), transparent);
       opacity:.8;
+      pointer-events:none;
     }
 
     .terminal-head{
+      position:relative;
+      z-index:20;
       padding:18px 18px 0;
     }
 
@@ -170,6 +175,8 @@
         linear-gradient(180deg, rgba(0,0,0,.26), rgba(0,0,0,.35));
       border:1px solid rgba(255,255,255,.14);
       overflow:hidden;
+      pointer-events:none;
+      z-index:10;
     }
 
     .gateway-stage::before{
@@ -185,6 +192,7 @@
           rgba(255,255,255,.018) 21px
         );
       opacity:.45;
+      pointer-events:none;
     }
 
     .gateway-core{
@@ -193,6 +201,7 @@
       display:flex;
       align-items:center;
       justify-content:center;
+      pointer-events:none;
     }
 
     .phone{
@@ -204,6 +213,7 @@
       box-shadow:inset 0 0 0 1px rgba(255,255,255,.04), 0 18px 40px rgba(0,0,0,.28);
       position:relative;
       z-index:3;
+      pointer-events:none;
     }
 
     .phone::before{
@@ -223,6 +233,7 @@
       border-radius:50%;
       border:1px solid rgba(0,242,255,.22);
       animation:pulse 2.6s ease-out infinite;
+      pointer-events:none;
     }
 
     .signal-ring.r1{ width:100px; height:100px; }
@@ -252,6 +263,7 @@
       font-size:14px;
       font-weight:900;
       letter-spacing:1px;
+      pointer-events:none;
     }
 
     .access-card::before{
@@ -278,6 +290,8 @@
     }
 
     .terminal-body{
+      position:relative;
+      z-index:20;
       padding:16px 18px 18px;
       display:grid;
       gap:12px;
@@ -309,6 +323,9 @@
       letter-spacing:4px;
       text-transform:uppercase;
       transition:.2s ease;
+      position:relative;
+      z-index:20;
+      pointer-events:auto !important;
     }
 
     .field:focus{
@@ -326,6 +343,8 @@
     }
 
     .actions{
+      position:relative;
+      z-index:20;
       display:grid;
       gap:10px;
     }
@@ -341,6 +360,10 @@
       font-size:15px;
       font-weight:900;
       transition:transform .15s ease, filter .15s ease, opacity .15s ease;
+      position:relative;
+      z-index:20;
+      pointer-events:auto !important;
+      touch-action:manipulation;
     }
 
     .btn:active{ transform:scale(.985); }
@@ -364,6 +387,8 @@
       font-weight:900;
       line-height:1.5;
       padding-top:2px;
+      position:relative;
+      z-index:20;
     }
 
     .status-line.ok{ color:#9ad6b2; }
@@ -371,6 +396,8 @@
     .status-line.err{ color:#f3aaaa; }
 
     .tip{
+      position:relative;
+      z-index:20;
       border:1px solid var(--line);
       border-radius:22px;
       background:rgba(255,255,255,.03);
@@ -448,6 +475,27 @@
     } catch (e) {
       console.warn("ui_shell access skip:", e);
     }
+
+    setTimeout(() => {
+      const brand = document.getElementById("brandHome");
+      const menuBtn = document.getElementById("menuBtn");
+      const settingsBtn = document.getElementById("headerSettingsBtn");
+
+      if (brand) {
+        brand.style.pointerEvents = "none";
+        brand.onclick = null;
+      }
+
+      if (menuBtn) {
+        menuBtn.style.pointerEvents = "none";
+        menuBtn.style.opacity = "0.35";
+      }
+
+      if (settingsBtn) {
+        settingsBtn.style.pointerEvents = "none";
+        settingsBtn.style.opacity = "0.35";
+      }
+    }, 50);
 
     const API_BASE = "https://italky-api.onrender.com/api";
     const codeInput = document.getElementById("licenseCodeInput");
