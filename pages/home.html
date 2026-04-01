@@ -906,11 +906,23 @@ body{
 
 <body>
 
-<script>
-const userId = localStorage.getItem("user_id");
-if(!userId){
-  location.href = "/pages/first_login.html";
-}
+<script type="module">
+  import { supabase } from "/js/supabase_client.js";
+
+  const LOGIN_PAGE = "/pages/login.html";
+
+  (async () => {
+    try {
+      const { data: { session }, error } = await supabase.auth.getSession();
+
+      if (error || !session?.user) {
+        location.replace(LOGIN_PAGE);
+        return;
+      }
+    } catch (e) {
+      location.replace(LOGIN_PAGE);
+    }
+  })();
 </script>
 
 <main id="pageContent">
