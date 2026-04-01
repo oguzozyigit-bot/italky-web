@@ -224,10 +224,12 @@
       brand.style.pointerEvents = "none";
       brand.onclick = null;
     }
+
     if (menuBtn) {
       menuBtn.style.pointerEvents = "none";
       menuBtn.style.opacity = "0.35";
     }
+
     if (settingsBtn) {
       settingsBtn.style.pointerEvents = "none";
       settingsBtn.style.opacity = "0.35";
@@ -245,6 +247,8 @@
   const params = new URLSearchParams(location.search);
   const urlCode = String(params.get("code") || "").trim().toUpperCase();
 
+  const LOOP_KEY = "italky_access_loop_guard_v1";
+
   function normalizeCode(v) {
     return String(v || "")
       .toUpperCase()
@@ -257,11 +261,42 @@
     statusLine.textContent = text || "";
   }
 
+  function markLoopHit() {
+    try {
+      const now = Date.now();
+      const raw = sessionStorage.getItem(LOOP_KEY);
+      const obj = raw ? JSON.parse(raw) : { count: 0, ts: 0 };
+
+      if (now - Number(obj.ts || 0) < 4000) {
+        obj.count = Number(obj.count || 0) + 1;
+      } else {
+        obj.count = 1;
+      }
+
+      obj.ts = now;
+      sessionStorage.setItem(LOOP_KEY, JSON.stringify(obj));
+      return obj.count;
+    } catch {
+      return 1;
+    }
+  }
+
+  function resetLoopGuard() {
+    try { sessionStorage.removeItem(LOOP_KEY); } catch {}
+  }
+
   function safeReplace(url) {
+    const hit = markLoopHit();
+    if (hit >= 3) {
+      setStatus("Yönlendirme döngüsü durduruldu. Bu sayfada kaldın.", "err");
+      return;
+    }
+
     const target = new URL(url, location.origin);
     const currentPath = location.pathname + location.search;
     const nextPath = target.pathname + target.search;
     if (currentPath === nextPath) return;
+
     location.replace(nextPath);
   }
 
@@ -269,32 +304,6 @@
     const { data: { session }, error } = await supabase.auth.getSession();
     if (error) return null;
     return session || null;
-  }
-
-  async function hasAccess(userId) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select(`
-        selected_package_code,
-        package_active,
-        package_ends_at,
-        trial_ends_at
-      `)
-      .eq("id", userId)
-      .maybeSingle();
-
-    const now = Date.now();
-
-    const hasActivePackage =
-      !!profile?.selected_package_code &&
-      profile?.package_active === true &&
-      (!profile?.package_ends_at || new Date(profile.package_ends_at).getTime() > now);
-
-    const hasActiveTrial =
-      !!profile?.trial_ends_at &&
-      new Date(profile.trial_ends_at).getTime() > now;
-
-    return hasActivePackage || hasActiveTrial;
   }
 
   async function guardedApi(path, payload = {}) {
@@ -338,12 +347,12 @@
 
     try {
       await guardedApi("/license/activate-code", { code });
+      resetLoopGuard();
       setStatus("Lisans başarıyla aktive edildi.", "ok");
       setTimeout(() => safeReplace(HOME_PAGE), 500);
     } catch (e) {
       if (String(e.message) === "SESSION_REQUIRED") {
         setStatus("Önce giriş yapmalısınız.", "err");
-        setTimeout(() => safeReplace(LOGIN_PAGE), 500);
         return;
       }
       setStatus(e?.message || "Lisans doğrulanamadı.", "err");
@@ -358,12 +367,12 @@
 
     try {
       await guardedApi("/license/start-trial", { days: 7 });
+      resetLoopGuard();
       setStatus("7 günlük ücretsiz giriş başlatıldı.", "ok");
       setTimeout(() => safeReplace(HOME_PAGE), 500);
     } catch (e) {
       if (String(e.message) === "SESSION_REQUIRED") {
         setStatus("Önce giriş yapmalısınız.", "err");
-        setTimeout(() => safeReplace(LOGIN_PAGE), 500);
         return;
       }
       setStatus(e?.message || "Ücretsiz giriş başlatılamadı.", "err");
@@ -376,14 +385,7 @@
     const session = await getSessionSafe();
 
     if (!session?.user) {
-      setStatus("Önce giriş yapmalısınız.", "err");
-      return;
-    }
-
-    const alreadyHasAccess = await hasAccess(session.user.id);
-    if (alreadyHasAccess) {
-      setStatus("Aktif erişim bulundu. Ana sayfaya gidiliyor...", "ok");
-      setTimeout(() => safeReplace(HOME_PAGE), 300);
+      setStatus("Önce Google ile giriş yapmalısınız.", "err");
       return;
     }
 
@@ -391,6 +393,7 @@
       setStatus("Kart okundu. Giriş yapılıyor...", "warn");
       try {
         await guardedApi("/license/activate-code", { code: urlCode });
+        resetLoopGuard();
         setStatus("Lisans başarıyla aktive edildi.", "ok");
         setTimeout(() => safeReplace(HOME_PAGE), 400);
         return;
