@@ -17,9 +17,6 @@
       --panel-bg: rgba(255,255,255,.03);
       --panel-border: rgba(255,255,255,.08);
       --accent: #818cf8;
-      --ok: #22c55e;
-      --warn: #f59e0b;
-      --danger: #ef4444;
     }
 
     *{
@@ -125,6 +122,7 @@
       font-size:12px;
       line-height:1.55;
       font-weight:800;
+      display:none;
     }
 
     .settings-panel{
@@ -186,10 +184,6 @@
       box-shadow:0 0 0 1px rgba(129,140,248,.15) inset;
     }
 
-    .choice-card.locked{
-      opacity:.78;
-    }
-
     .choice-top{
       display:flex;
       align-items:center;
@@ -240,10 +234,19 @@
       text-decoration:none;
     }
 
+    .voice-list-wrap{
+      display:none;
+    }
+
+    .voice-list-wrap.open{
+      display:block;
+    }
+
     .voice-list{
       display:flex;
       flex-direction:column;
       gap:10px;
+      margin-top:10px;
     }
 
     .voice-item{
@@ -311,11 +314,6 @@
     .mini-btn.select{
       background:var(--ai-grad);
       color:#05060d;
-    }
-
-    .mini-btn:disabled{
-      opacity:.5;
-      cursor:not-allowed;
     }
 
     .summary-card{
@@ -410,6 +408,74 @@
       transform:translateX(-50%) translateY(0);
     }
 
+    .modal{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.52);
+      backdrop-filter:blur(6px);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:999999;
+      padding:20px;
+    }
+
+    .modal.open{
+      display:flex;
+    }
+
+    .modal-card{
+      width:min(100%, 420px);
+      border-radius:24px;
+      padding:18px;
+      background:linear-gradient(145deg, rgba(16,16,24,.96), rgba(10,10,18,.96));
+      border:1px solid rgba(255,255,255,.10);
+      box-shadow:0 24px 50px rgba(0,0,0,.30);
+    }
+
+    .modal-title{
+      margin:0 0 8px;
+      font-family:'Space Grotesk',sans-serif;
+      font-size:20px;
+      font-weight:900;
+      color:#fff;
+    }
+
+    .modal-text{
+      margin:0;
+      font-size:13px;
+      line-height:1.6;
+      color:rgba(255,255,255,.76);
+    }
+
+    .modal-actions{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      margin-top:16px;
+    }
+
+    .modal-btn{
+      min-height:46px;
+      border:none;
+      border-radius:16px;
+      cursor:pointer;
+      font-family:inherit;
+      font-size:13px;
+      font-weight:900;
+    }
+
+    .modal-btn.primary{
+      background:var(--ai-grad);
+      color:#05060d;
+    }
+
+    .modal-btn.secondary{
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.10);
+      color:#fff;
+    }
+
     @media (max-width:390px){
       #pageContent{ padding:12px 14px 22px; }
       .title{ font-size:25px; }
@@ -420,7 +486,6 @@
 <body>
 
 <div id="pageContent">
-
   <div class="topRow">
     <button class="backBtn" id="backBtn" type="button" aria-label="Geri dön">
       <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
@@ -432,7 +497,7 @@
     </section>
   </div>
 
-  <div class="warnBox" id="trialWarnBox" style="display:none;">
+  <div class="warnBox" id="trialWarnBox">
     Deneme sürecinde özel sesleri dinleyebilirsiniz. Kullanmak için üyelik gereklidir.
   </div>
 
@@ -469,10 +534,12 @@
   </section>
 
   <section class="settings-panel">
-    <h2 class="panel-title">Hazır Özel Sesler</h2>
-    <p class="panel-sub">Dinleyip sonra seçim yapabilirsin. Trial kullanıcı dinleyebilir, kullanamaz.</p>
+    <h2 class="panel-title">Özel Sesler</h2>
+    <p class="panel-sub">Dinleyip sonra seçim yapabilirsin.</p>
 
-    <div class="voice-list" id="presetVoiceList"></div>
+    <div class="voice-list-wrap" id="presetVoiceWrap">
+      <div class="voice-list" id="presetVoiceList"></div>
+    </div>
   </section>
 
   <section class="settings-panel">
@@ -511,10 +578,20 @@
   <div class="note">
     Burada kaydettiğin seçimler FaceToFace ve SideToSide içinde ortak kullanılır.
   </div>
-
 </div>
 
 <div class="toast" id="toast"></div>
+
+<div class="modal" id="uiModal">
+  <div class="modal-card">
+    <h3 class="modal-title" id="uiModalTitle">Bilgi</h3>
+    <p class="modal-text" id="uiModalText">Bilgilendirme metni</p>
+    <div class="modal-actions">
+      <button class="modal-btn primary" id="uiModalGo">Üyelik Paketlerini Gör</button>
+      <button class="modal-btn secondary" id="uiModalClose">Atla</button>
+    </div>
+  </div>
+</div>
 
 <script type="module">
   import { supabase } from "/js/supabase_client.js";
@@ -528,6 +605,7 @@
   const voiceGrid = document.getElementById("voiceGrid");
   const translateGrid = document.getElementById("translateGrid");
   const presetVoiceList = document.getElementById("presetVoiceList");
+  const presetVoiceWrap = document.getElementById("presetVoiceWrap");
   const voiceSummary = document.getElementById("voiceSummary");
   const translateSummary = document.getElementById("translateSummary");
   const saveBtn = document.getElementById("saveBtn");
@@ -536,6 +614,13 @@
   const toastEl = document.getElementById("toast");
   const cloneVoiceDesc = document.getElementById("cloneVoiceDesc");
   const trialWarnBox = document.getElementById("trialWarnBox");
+  const createVoiceLink = document.getElementById("createVoiceLink");
+
+  const uiModal = document.getElementById("uiModal");
+  const uiModalTitle = document.getElementById("uiModalTitle");
+  const uiModalText = document.getElementById("uiModalText");
+  const uiModalGo = document.getElementById("uiModalGo");
+  const uiModalClose = document.getElementById("uiModalClose");
 
   const PRESET_VOICES = [
     { id: "huma", name: "Hüma", tag: "Kadın", text: "Merhaba, ben Hüma. Ben neşeliyim. Haydi italkyAI sayesinde dil engellerini birlikte kaldıralım." },
@@ -607,9 +692,24 @@
     }, 1600);
   }
 
-  function showLockedPopup(msg){
-    alert(msg);
+  function showUiModal(message, title = "Üyelik Gerekli") {
+    uiModalTitle.textContent = title;
+    uiModalText.textContent = message;
+    uiModal.classList.add("open");
   }
+
+  function closeUiModal() {
+    uiModal.classList.remove("open");
+  }
+
+  uiModalGo.addEventListener("click", () => {
+    location.href = "/pages/upgrade_pack.html";
+  });
+
+  uiModalClose.addEventListener("click", closeUiModal);
+  uiModal.addEventListener("click", (e) => {
+    if (e.target === uiModal) closeUiModal();
+  });
 
   function canUsePresetVoice(){
     const pkg = normalizePackageCode(accessState.packageCode);
@@ -619,6 +719,11 @@
   function canUseCloneVoice(){
     const pkg = normalizePackageCode(accessState.packageCode);
     return pkg === "premium";
+  }
+
+  function canUseCulturalTranslate(){
+    const pkg = normalizePackageCode(accessState.packageCode);
+    return pkg === "premium" || pkg === "translate";
   }
 
   function paintSelections(){
@@ -640,6 +745,48 @@
     if(translateSummary) translateSummary.textContent = translateLabel(translateMode);
   }
 
+  async function checkVoiceProfile(){
+    try{
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if(!user){
+        if(cloneVoiceDesc) cloneVoiceDesc.textContent = "Henüz özel ses profili oluşturmadınız.";
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("voice_sample_path, tts_voice_ready, tts_voice_id")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if(error){
+        if(cloneVoiceDesc) cloneVoiceDesc.textContent = "Henüz özel ses profili oluşturmadınız.";
+        return;
+      }
+
+      const hasSamplePath =
+        !!data?.voice_sample_path &&
+        String(data.voice_sample_path).trim() !== "" &&
+        String(data.voice_sample_path).trim() !== "[]" &&
+        String(data.voice_sample_path).trim() !== "null";
+
+      const hasReadyVoice = !!(data?.tts_voice_ready && data?.tts_voice_id);
+
+      if(hasSamplePath || hasReadyVoice){
+        if(cloneVoiceDesc){
+          cloneVoiceDesc.textContent = "Özel ses profiliniz hazır. İsterseniz yeniden güncelleyebilirsiniz.";
+        }
+      }else{
+        if(cloneVoiceDesc){
+          cloneVoiceDesc.textContent = "Henüz özel ses profili oluşturmadınız.";
+        }
+      }
+    }catch(e){
+      if(cloneVoiceDesc) cloneVoiceDesc.textContent = "Henüz özel ses profili oluşturmadınız.";
+    }
+  }
+
   async function previewPresetVoice(voice){
     showToast(`${voice.name} sesi hazırlanıyor...`);
     try{
@@ -649,9 +796,9 @@
         body: JSON.stringify({
           text: voice.text,
           lang: "tr",
-          voice: "female",
+          voice: voice.id,
           tone: "neutral",
-          module: "preset_preview"
+          module: "voice_preset_preview"
         })
       });
 
@@ -666,7 +813,6 @@
         showToast("Ses oynatılamadı");
       });
     }catch(e){
-      console.warn("[preset preview]", e);
       showToast("Ses önizleme oynatılamadı");
     }
   }
@@ -702,12 +848,12 @@
         if (!id) return;
 
         if (accessState.trialActive) {
-          showLockedPopup("Bu sesi kullanmak için üye olmanız gereklidir.");
+          showUiModal("Bu sesi kullanmak için üye olmanız gereklidir.");
           return;
         }
 
         if (!canUsePresetVoice()) {
-          showLockedPopup("Bu sesi kullanabilmek için üyelik paketi satın almanız gereklidir.");
+          showUiModal("Bu sesi kullanmak için üyelik paketi satın almanız gereklidir.");
           return;
         }
 
@@ -735,69 +881,30 @@
         .maybeSingle();
 
       if(row){
+        const rawCode = String(row.selected_package_code || "").trim().toLowerCase();
+        const packageCode = normalizePackageCode(rawCode);
+        const packageActive = !!packageCode && row.package_active === true &&
+          (!row.package_ends_at || new Date(row.package_ends_at).getTime() > Date.now());
+
+        const trialActive = !packageActive && (
+          Number(row.trial_days_left || 0) > 0 ||
+          (!!row.trial_ends_at && new Date(row.trial_ends_at).getTime() > Date.now())
+        );
+
         accessState = {
-          trialActive: Number(row.trial_days_left || 0) > 0 ||
-            (!!row.trial_ends_at && new Date(row.trial_ends_at).getTime() > Date.now()),
-          packageCode: normalizePackageCode(row.selected_package_code || ""),
-          lockedAll: !(
-            (Number(row.trial_days_left || 0) > 0) ||
-            (!!row.selected_package_code && row.package_active === true)
-          )
+          trialActive,
+          packageCode: packageActive ? packageCode : "",
+          lockedAll: !packageActive && !trialActive
         };
       }else{
         accessState = { trialActive:false, packageCode:"", lockedAll:false };
       }
     }catch(e){
-      console.warn("[translation settings access]", e);
       accessState = { trialActive:false, packageCode:"", lockedAll:false };
     }
 
     if (trialWarnBox) {
       trialWarnBox.style.display = accessState.trialActive ? "" : "none";
-    }
-  }
-
-  async function checkVoiceProfile(){
-    try{
-      const { data: { user } } = await supabase.auth.getUser();
-
-      if(!user){
-        if(cloneVoiceDesc) cloneVoiceDesc.textContent = "Henüz özel ses profili oluşturmadınız.";
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("voice_sample_path, tts_voice_ready, tts_voice_id")
-        .eq("id", user.id)
-        .maybeSingle();
-
-      if(error){
-        console.warn("[translation_settings voice check]", error);
-        if(cloneVoiceDesc) cloneVoiceDesc.textContent = "Henüz özel ses profili oluşturmadınız.";
-        return;
-      }
-
-      const hasSamplePath =
-        !!data?.voice_sample_path &&
-        String(data.voice_sample_path).trim() !== "" &&
-        String(data.voice_sample_path).trim() !== "[]" &&
-        String(data.voice_sample_path).trim() !== "null";
-
-      const hasReadyVoice = !!(data?.tts_voice_ready && data?.tts_voice_id);
-
-      if(hasSamplePath || hasReadyVoice){
-        if(cloneVoiceDesc){
-          cloneVoiceDesc.textContent = "Özel ses profiliniz hazır. İsterseniz yeniden güncelleyebilirsiniz.";
-        }
-      }else{
-        if(cloneVoiceDesc){
-          cloneVoiceDesc.textContent = "Henüz özel ses profili oluşturmadınız.";
-        }
-      }
-    }catch(e){
-      console.warn("[translation_settings voice check]", e);
-      if(cloneVoiceDesc) cloneVoiceDesc.textContent = "Henüz özel ses profili oluşturmadınız.";
     }
   }
 
@@ -813,44 +920,74 @@
     location.href = "/pages/home.html";
   }
 
-  voiceGrid?.querySelectorAll(".choice-card").forEach(card => {
-    card.addEventListener("click", () => {
-      const selected = normalizeVoiceMode(card.dataset.voice || "auto");
+  document.getElementById("presetCard")?.addEventListener("click", () => {
+    if (accessState.lockedAll) {
+      showUiModal("Bu menüyü kullanabilmek için üye olmanız gereklidir.");
+      return;
+    }
 
-      if (accessState.lockedAll) {
-        showLockedPopup("Bu menüyü kullanabilmek için üye olmanız gereklidir.");
-        return;
-      }
+    if (accessState.trialActive) {
+      showUiModal("Bu sesi kullanmak için üye olmanız gereklidir.");
+      return;
+    }
 
-      if (selected === "clone") {
-        if (accessState.trialActive) {
-          showLockedPopup("Kendi sesinizi kullanmak için üye olmanız gereklidir.");
-          return;
-        }
+    presetVoiceWrap.classList.toggle("open");
+  });
 
-        if (!canUseCloneVoice()) {
-          showLockedPopup("Kendi sesinizi kullanmak için üyelik paketi satın almanız gereklidir.");
-          return;
-        }
-      }
+  document.querySelector('[data-voice="auto"]')?.addEventListener("click", () => {
+    if (accessState.lockedAll) {
+      showUiModal("Bu menüyü kullanabilmek için üye olmanız gereklidir.");
+      return;
+    }
 
-      if (selected === "preset") {
-        if (accessState.trialActive) {
-          showLockedPopup("Bu sesi kullanmak için üye olmanız gereklidir.");
-          return;
-        }
+    voiceMode = "auto";
+    paintSelections();
+    refreshSummary();
+    showToast("Ses seçimi güncellendi");
+  });
 
-        if (!canUsePresetVoice()) {
-          showLockedPopup("Bu sesi kullanmak için üyelik paketi satın almanız gereklidir.");
-          return;
-        }
-      }
+  document.getElementById("cloneCard")?.addEventListener("click", (e) => {
+    if (e.target.closest("a")) return;
 
-      voiceMode = selected;
-      paintSelections();
-      refreshSummary();
-      showToast("Ses seçimi güncellendi");
-    });
+    if (accessState.lockedAll) {
+      showUiModal("Bu menüyü kullanabilmek için üye olmanız gereklidir.");
+      return;
+    }
+
+    if (accessState.trialActive) {
+      showUiModal("Kendi sesinizi kullanmak için üye olmanız gereklidir.");
+      return;
+    }
+
+    if (!canUseCloneVoice()) {
+      showUiModal("Kendi sesinizi kullanmak için üyelik paketi satın almanız gereklidir.");
+      return;
+    }
+
+    voiceMode = "clone";
+    paintSelections();
+    refreshSummary();
+    showToast("Kendi sesim seçildi");
+  });
+
+  createVoiceLink?.addEventListener("click", (e) => {
+    if (accessState.lockedAll) {
+      e.preventDefault();
+      showUiModal("Bu menüyü kullanabilmek için üye olmanız gereklidir.");
+      return;
+    }
+
+    if (accessState.trialActive) {
+      e.preventDefault();
+      showUiModal("Kendi sesinizi oluşturmak için üye olmanız gereklidir.");
+      return;
+    }
+
+    if (!canUseCloneVoice()) {
+      e.preventDefault();
+      showUiModal("Kendi sesinizi oluşturmak için üyelik paketi satın almanız gereklidir.");
+      return;
+    }
   });
 
   translateGrid?.querySelectorAll(".choice-card").forEach(card => {
@@ -858,8 +995,20 @@
       const selected = normalizeTranslateMode(card.dataset.translate || "normal");
 
       if (accessState.lockedAll) {
-        showLockedPopup("Bu menüyü kullanabilmek için üye olmanız gereklidir.");
+        showUiModal("Bu menüyü kullanabilmek için üye olmanız gereklidir.");
         return;
+      }
+
+      if (selected === "cultural") {
+        if (accessState.trialActive) {
+          showUiModal("Kültürel Translate kullanmak için üye olmanız gereklidir.");
+          return;
+        }
+
+        if (!canUseCulturalTranslate()) {
+          showUiModal("Kültürel Translate kullanmak için üyelik paketi satın almanız gereklidir.");
+          return;
+        }
       }
 
       translateMode = selected;
@@ -871,7 +1020,7 @@
 
   saveBtn?.addEventListener("click", () => {
     if (accessState.lockedAll) {
-      showLockedPopup("Bu menüyü kullanabilmek için üye olmanız gereklidir.");
+      showUiModal("Bu menüyü kullanabilmek için üye olmanız gereklidir.");
       return;
     }
 
