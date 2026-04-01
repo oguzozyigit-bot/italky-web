@@ -930,8 +930,15 @@ body.home-ready #pageContent{
 
       const now = Date.now();
 
+      const rawCode = String(profile?.selected_package_code || "").trim().toLowerCase();
+      const packageCode =
+        rawCode.startsWith("premium") ? "premium" :
+        rawCode.startsWith("translate") ? "translate" :
+        (rawCode.startsWith("education") || rawCode.startsWith("edu")) ? "education" :
+        rawCode;
+
       const hasActivePackage =
-        !!profile?.selected_package_code &&
+        !!packageCode &&
         profile?.package_active === true &&
         (!profile?.package_ends_at || new Date(profile.package_ends_at).getTime() > now);
 
@@ -1148,6 +1155,16 @@ try {
     if (heroStatus) heroStatus.textContent = text || "";
   }
 
+  function normalizePackageCode(raw) {
+    const code = String(raw || "").trim().toLowerCase();
+    if (!code) return "";
+    if (code.startsWith("premium")) return "premium";
+    if (code.startsWith("translate")) return "translate";
+    if (code.startsWith("education")) return "education";
+    if (code.startsWith("edu")) return "education";
+    return code;
+  }
+
   async function italkyApplyAccessToHome() {
     const access = await initGlobalAccess({ useCache: false });
 
@@ -1171,7 +1188,7 @@ try {
     italkyShow(levelCard, true);
     italkyShow(practiceCard, true);
 
-    const packageCode = String(access?.packageCode || "").toLowerCase();
+    const packageCode = normalizePackageCode(access?.packageCode);
     const canUseEarToEar = !!(
       access?.trialActive ||
       packageCode === "premium" ||
@@ -1184,7 +1201,6 @@ try {
 
     if (access?.trialActive) {
       italkySetHeroStatus(`7 gün ücretsiz full erişim açık • ${access.trialDaysLeft} gün kaldı`);
-
       if (heroSub) {
         heroSub.textContent =
           "İlk 7 gün boyunca tüm paketler açık. Süre bitince bir paket seçmen gerekecek.";
@@ -1194,7 +1210,6 @@ try {
 
     if (packageCode === "premium") {
       italkySetHeroStatus("Premium aktif • Tüm modüller açık");
-
       if (heroSub) {
         heroSub.textContent =
           "Premium üyelik aktif. Translate ve Eğitim tarafının tamamı açık.";
@@ -1204,45 +1219,40 @@ try {
 
     if (packageCode === "education") {
       italkySetHeroStatus("Eğitim paketi aktif");
-
       if (heroSub) {
         heroSub.textContent =
           "Eğlenerek Öğren, Pratik Yap ve Seviye Tespit modülleri açık.";
       }
-
       return access;
     }
 
     if (packageCode === "translate") {
       italkySetHeroStatus("Translate paketi aktif");
-
       if (heroSub) {
         heroSub.textContent =
           "FaceToFace, EarToEar, TextToText ve Offline Translate modülleri açık.";
       }
-
       return access;
     }
 
     italkySetHeroStatus("7 günlük deneme bitti • Paket seçmelisin");
-
     if (heroSub) {
       heroSub.textContent =
         "Devam etmek için Eğitim Paketi, Translate Paketi veya Premium üyelik seç.";
     }
-
     return access;
   }
 
   window.italkyApplyAccessToHome = italkyApplyAccessToHome;
   window.italkyGetAccessState = getGlobalAccessState;
   window.italkySetHeroStatus = italkySetHeroStatus;
+  window.normalizePackageCode = normalizePackageCode;
 </script>
 
 <script>
 function openCodePrompt(){
   const access = window.italkyGetAccessState ? window.italkyGetAccessState() : null;
-  const packageCode = String(access?.packageCode || "").toLowerCase();
+  const packageCode = window.normalizePackageCode ? window.normalizePackageCode(access?.packageCode) : "";
   const canUseEarToEar = !!(access?.trialActive || packageCode === "premium" || packageCode === "translate");
 
   if(!canUseEarToEar){
@@ -1364,7 +1374,7 @@ function startRoomPolling(roomId){
 
 async function prepareRoom(){
   const access = window.italkyGetAccessState ? window.italkyGetAccessState() : null;
-  const packageCode = String(access?.packageCode || "").toLowerCase();
+  const packageCode = window.normalizePackageCode ? window.normalizePackageCode(access?.packageCode) : "";
   const canUseEarToEar = !!(access?.trialActive || packageCode === "premium" || packageCode === "translate");
 
   redirected = false;
