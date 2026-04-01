@@ -20,10 +20,6 @@
   --cyan:#67e8f9;
 }
 
-.is-hidden-by-access {
-  display: none !important;
-}
-
 *{
   box-sizing:border-box;
   -webkit-tap-highlight-color:transparent;
@@ -907,102 +903,54 @@ body.home-ready #pageContent{
 <body>
 
 <script type="module">
-  import { getGlobalAccessState, initGlobalAccess } from "/js/global_access.js";
+  import { supabase } from "/js/supabase_client.js";
 
-  function italkyShow(el, isVisible) {
-    if (!el) return;
-    el.style.display = isVisible ? "" : "none";
+  const LOGIN_PAGE = "/pages/login.html";
+  const ACCESS_PAGE = "/pages/access.html";
+
+  async function bootAuthGate() {
+    try {
+      const { data: { session }, error } = await supabase.auth.getSession();
+
+      if (error || !session?.user) {
+        location.replace(LOGIN_PAGE);
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select(`
+          selected_package_code,
+          package_active,
+          package_ends_at,
+          trial_ends_at
+        `)
+        .eq("id", session.user.id)
+        .maybeSingle();
+
+      const now = Date.now();
+
+      const hasActivePackage =
+        !!profile?.selected_package_code &&
+        profile?.package_active === true &&
+        (!profile?.package_ends_at || new Date(profile.package_ends_at).getTime() > now);
+
+      const hasActiveTrial =
+        !!profile?.trial_ends_at &&
+        new Date(profile.trial_ends_at).getTime() > now;
+
+      if (!hasActivePackage && !hasActiveTrial) {
+        location.replace(ACCESS_PAGE);
+        return;
+      }
+
+      document.body.classList.add("home-ready");
+    } catch (e) {
+      location.replace(LOGIN_PAGE);
+    }
   }
 
-  function italkySetHeroStatus(text) {
-    const heroStatus = document.getElementById("heroStatus");
-    if (heroStatus) heroStatus.textContent = text || "";
-  }
-
-  async function italkyApplyAccessToHome() {
-    const access = await initGlobalAccess({ useCache: false });
-
-    const heroSub = document.querySelector(".heroSub");
-    const upgradeBox = document.getElementById("nfcUpgradeBox");
-
-    const faceCard = document.getElementById("faceCard");
-    const offlineCard = document.getElementById("offlineCard");
-    const textCard = document.getElementById("textCard");
-    const funCard = document.getElementById("funCard");
-    const levelCard = document.getElementById("levelCard");
-    const practiceCard = document.getElementById("practiceCard");
-
-    const codeWrap = document.querySelector(".connect-code-wrap");
-    const sideBtn = document.getElementById("goSideToSide");
-
-    // Kartlar artık her zaman görünsün
-    italkyShow(faceCard, true);
-    italkyShow(offlineCard, true);
-    italkyShow(textCard, true);
-    italkyShow(funCard, true);
-    italkyShow(levelCard, true);
-    italkyShow(practiceCard, true);
-
-    // Sadece EarToEar alanını erişime göre aç/kapat
-    const packageCode = String(access?.packageCode || "").toLowerCase();
-    const canUseEarToEar = !!(
-      access?.trialActive ||
-      packageCode === "premium" ||
-      packageCode === "translate"
-    );
-
-    italkyShow(codeWrap, canUseEarToEar);
-    italkyShow(sideBtn, canUseEarToEar);
-    italkyShow(upgradeBox, !canUseEarToEar);
-
-    if (access?.trialActive) {
-      italkySetHeroStatus(`7 gün ücretsiz full erişim açık • ${access.trialDaysLeft} gün kaldı`);
-      if (heroSub) {
-        heroSub.textContent =
-          "İlk 7 gün boyunca tüm paketler açık. Süre bitince bir paket seçmen gerekecek.";
-      }
-      return access;
-    }
-
-    if (packageCode === "premium") {
-      italkySetHeroStatus("Premium aktif • Tüm modüller açık");
-      if (heroSub) {
-        heroSub.textContent =
-          "Premium üyelik aktif. Translate ve Eğitim tarafının tamamı açık.";
-      }
-      return access;
-    }
-
-    if (packageCode === "education") {
-      italkySetHeroStatus("Eğitim paketi aktif");
-      if (heroSub) {
-        heroSub.textContent =
-          "Eğlenerek Öğren, Pratik Yap ve Seviye Tespit modülleri açık.";
-      }
-      return access;
-    }
-
-    if (packageCode === "translate") {
-      italkySetHeroStatus("Translate paketi aktif");
-      if (heroSub) {
-        heroSub.textContent =
-          "FaceToFace, EarToEar, TextToText ve Offline Translate modülleri açık.";
-      }
-      return access;
-    }
-
-    italkySetHeroStatus("7 günlük deneme bitti • Paket seçmelisin");
-    if (heroSub) {
-      heroSub.textContent =
-        "Devam etmek için Eğitim Paketi, Translate Paketi veya Premium üyelik seç.";
-    }
-
-    return access;
-  }
-
-  window.italkyApplyAccessToHome = italkyApplyAccessToHome;
-  window.italkyGetAccessState = getGlobalAccessState;
-  window.italkySetHeroStatus = italkySetHeroStatus;
+  bootAuthGate();
 </script>
 
 <main id="pageContent">
@@ -1216,26 +1164,25 @@ try {
     const codeWrap = document.querySelector(".connect-code-wrap");
     const sideBtn = document.getElementById("goSideToSide");
 
-    italkyShow(faceCard, false);
-    italkyShow(offlineCard, false);
-    italkyShow(textCard, false);
-    italkyShow(funCard, false);
-    italkyShow(levelCard, false);
-    italkyShow(practiceCard, false);
-    italkyShow(codeWrap, false);
-    italkyShow(sideBtn, false);
-    italkyShow(upgradeBox, false);
+    italkyShow(faceCard, true);
+    italkyShow(offlineCard, true);
+    italkyShow(textCard, true);
+    italkyShow(funCard, true);
+    italkyShow(levelCard, true);
+    italkyShow(practiceCard, true);
 
-    if (access.trialActive) {
-      italkyShow(faceCard, true);
-      italkyShow(offlineCard, true);
-      italkyShow(textCard, true);
-      italkyShow(funCard, true);
-      italkyShow(levelCard, true);
-      italkyShow(practiceCard, true);
-      italkyShow(codeWrap, true);
-      italkyShow(sideBtn, true);
+    const packageCode = String(access?.packageCode || "").toLowerCase();
+    const canUseEarToEar = !!(
+      access?.trialActive ||
+      packageCode === "premium" ||
+      packageCode === "translate"
+    );
 
+    italkyShow(codeWrap, canUseEarToEar);
+    italkyShow(sideBtn, canUseEarToEar);
+    italkyShow(upgradeBox, !canUseEarToEar);
+
+    if (access?.trialActive) {
       italkySetHeroStatus(`7 gün ücretsiz full erişim açık • ${access.trialDaysLeft} gün kaldı`);
 
       if (heroSub) {
@@ -1245,19 +1192,7 @@ try {
       return access;
     }
 
-    const packageCode = String(access.packageCode || "").toLowerCase();
-    const premiumActive = packageCode === "premium";
-
-    if (premiumActive) {
-      italkyShow(faceCard, true);
-      italkyShow(offlineCard, true);
-      italkyShow(textCard, true);
-      italkyShow(funCard, true);
-      italkyShow(levelCard, true);
-      italkyShow(practiceCard, true);
-      italkyShow(codeWrap, true);
-      italkyShow(sideBtn, true);
-
+    if (packageCode === "premium") {
       italkySetHeroStatus("Premium aktif • Tüm modüller açık");
 
       if (heroSub) {
@@ -1268,9 +1203,6 @@ try {
     }
 
     if (packageCode === "education") {
-      italkyShow(funCard, true);
-      italkyShow(levelCard, true);
-      italkyShow(practiceCard, true);
       italkySetHeroStatus("Eğitim paketi aktif");
 
       if (heroSub) {
@@ -1278,17 +1210,10 @@ try {
           "Eğlenerek Öğren, Pratik Yap ve Seviye Tespit modülleri açık.";
       }
 
-      italkyShow(upgradeBox, true);
       return access;
     }
 
     if (packageCode === "translate") {
-      italkyShow(faceCard, true);
-      italkyShow(offlineCard, true);
-      italkyShow(textCard, true);
-      italkyShow(codeWrap, true);
-      italkyShow(sideBtn, true);
-
       italkySetHeroStatus("Translate paketi aktif");
 
       if (heroSub) {
@@ -1296,7 +1221,6 @@ try {
           "FaceToFace, EarToEar, TextToText ve Offline Translate modülleri açık.";
       }
 
-      italkyShow(upgradeBox, true);
       return access;
     }
 
@@ -1307,7 +1231,6 @@ try {
         "Devam etmek için Eğitim Paketi, Translate Paketi veya Premium üyelik seç.";
     }
 
-    italkyShow(upgradeBox, true);
     return access;
   }
 
