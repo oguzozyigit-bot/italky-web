@@ -160,6 +160,10 @@ html,body{
   color:var(--shell-text);
 }
 
+#pageContent{
+  transition:opacity .18s ease;
+}
+
 body.ui-menu-open{
   overflow:hidden;
 }
@@ -206,6 +210,7 @@ body.ui-menu-open{
   border-right:1px solid rgba(255,255,255,.06);
   overflow:hidden;
   box-shadow:0 18px 50px rgba(0,0,0,.36);
+  opacity:0;
 }
 
 .premium-header{
@@ -766,6 +771,12 @@ let __membershipLoadRunning = false;
 export function mountShell(options = {}) {
   document.documentElement.style.backgroundColor = "#05070f";
 
+  const content = document.getElementById("pageContent");
+  if (content) {
+    content.style.visibility = "hidden";
+    content.style.opacity = "0";
+  }
+
   if (!document.getElementById("shellOverlay")) {
     document.body.insertAdjacentHTML("afterbegin", LOADING_OVERLAY_HTML);
   }
@@ -777,7 +788,6 @@ export function mountShell(options = {}) {
     document.head.prepend(st);
   }
 
-  const content = document.getElementById("pageContent");
   if (!content) {
     removeOverlaySoon();
     return;
@@ -816,6 +826,9 @@ export function mountShell(options = {}) {
 
 function finishMount(options) {
   const main = document.getElementById("shellMain");
+  const shell = document.getElementById("italkyAppShell");
+  const content = document.getElementById("pageContent");
+
   if (main) {
     main.style.overflow = (options?.scroll === "none") ? "hidden" : "auto";
   }
@@ -836,7 +849,17 @@ function finishMount(options) {
       console.warn("[system lang install]", e);
     }
 
-    setTimeout(removeOverlaySoon, 100);
+    if (content) {
+      content.style.visibility = "visible";
+      content.style.opacity = "1";
+    }
+
+    if (shell) {
+      shell.style.opacity = "1";
+      shell.style.transition = "opacity .18s ease";
+    }
+
+    setTimeout(removeOverlaySoon, 60);
   });
 }
 
@@ -926,6 +949,10 @@ function bindMenu() {
 
   deleteAccountBtn?.addEventListener("click", () => {
     closeMenu();
+
+    const ok = window.confirm("Hesabınızı kalıcı olarak silmek istediğinize emin misiniz?");
+    if (!ok) return;
+
     location.href = "/pages/delete-account.html";
   });
 
