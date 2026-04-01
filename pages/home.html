@@ -277,7 +277,9 @@ body.home-ready #pageContent{
   display:flex;
   flex-direction:column;
   align-items:center;
-  gap:5px;
+  gap:7px;
+  width:100%;
+  max-width:320px;
 }
 
 .connect-code-label{
@@ -289,13 +291,18 @@ body.home-ready #pageContent{
 }
 
 .connect-code-line{
-  display:inline-flex;
+  position:relative;
+  width:100%;
+  min-height:44px;
+  display:flex;
   align-items:center;
   justify-content:center;
-  gap:10px;
 }
 
 .connect-code-value{
+  position:absolute;
+  left:50%;
+  transform:translateX(-50%);
   font-family:'Space Grotesk',sans-serif;
   font-size:24px;
   font-weight:700;
@@ -303,9 +310,14 @@ body.home-ready #pageContent{
   color:#fff;
   line-height:1;
   text-shadow:0 0 14px rgba(255,255,255,.12);
+  text-align:center;
+  width:max-content;
+  pointer-events:none;
 }
 
 .connect-code-copy{
+  position:absolute;
+  right:0;
   width:34px;
   height:34px;
   min-width:34px;
@@ -366,6 +378,15 @@ body.home-ready #pageContent{
   font-weight:800;
   color:rgba(255,255,255,.78);
   text-align:center;
+}
+
+.heroTrialWarn{
+  margin:0;
+  font-size:10.8px;
+  color:rgba(255,255,255,.72);
+  text-align:center;
+  line-height:1.42;
+  max-width:320px;
 }
 
 .heroActions{
@@ -1000,6 +1021,9 @@ body.home-ready #pageContent{
         <h1 class="heroTitle">Ear<span class="to">TO</span>Ear</h1>
         <p class="heroSub">Bağlantı kodunu paylaş. Karşı taraf Bağlantı Kodunu girsin, dil bariyerleri kalksın. Karşı taraf Bağlantı Kodunu girince sohbet otomatik başlar. Sen sadece bekle.</p>
         <div class="heroStatus" id="heroStatus">Oda hazırlanıyor...</div>
+        <p class="heroTrialWarn" id="heroTrialWarn" style="display:none;">
+          Deneme süreniz yalnızca başlattığınız ülkede geçerlidir. Ülke değiştirmeniz halinde ücretsiz deneme hakkınızı kullanamazsınız.
+        </p>
 
         <div class="heroActions">
           <button id="goSideToSide" class="heroBtn heroBtnWide" type="button" onclick="openCodePrompt()">🔢Karşı Tarafın Bağlantı Kodunu Gir</button>
@@ -1182,11 +1206,20 @@ try {
       .maybeSingle();
 
     if (row) {
+      const trialActive = Number(row.trial_days_left || 0) > 0 ||
+        (!!row.trial_ends_at && new Date(row.trial_ends_at).getTime() > Date.now());
+
+      const rawCode = String(row.selected_package_code || "").trim().toLowerCase();
+      const packageCode =
+        rawCode.startsWith("premium") ? "premium" :
+        rawCode.startsWith("translate") ? "translate" :
+        (rawCode.startsWith("education") || rawCode.startsWith("edu")) ? "education" :
+        rawCode;
+
       return {
-        trialActive: Number(row.trial_days_left || 0) > 0 ||
-          (!!row.trial_ends_at && new Date(row.trial_ends_at).getTime() > Date.now()),
+        trialActive,
         trialDaysLeft: Number(row.trial_days_left || 0),
-        packageCode: normalizePackageCode(row.selected_package_code || "")
+        packageCode
       };
     }
 
@@ -1205,15 +1238,24 @@ try {
       ? Math.max(0, Math.ceil((new Date(profile.trial_ends_at).getTime() - now) / 86400000))
       : 0;
 
-    const packageActive =
-      !!profile?.selected_package_code &&
+    const rawCode = String(profile?.selected_package_code || "").trim().toLowerCase();
+    const normalizedCode =
+      rawCode.startsWith("premium") ? "premium" :
+      rawCode.startsWith("translate") ? "translate" :
+      (rawCode.startsWith("education") || rawCode.startsWith("edu")) ? "education" :
+      rawCode;
+
+    const packageCode =
+      !!normalizedCode &&
       profile?.package_active === true &&
-      (!profile?.package_ends_at || new Date(profile.package_ends_at).getTime() > now);
+      (!profile?.package_ends_at || new Date(profile.package_ends_at).getTime() > now)
+        ? normalizedCode
+        : "";
 
     return {
-      trialActive,
-      trialDaysLeft,
-      packageCode: packageActive ? normalizePackageCode(profile.selected_package_code || "") : ""
+      trialActive: packageCode ? false : trialActive,
+      trialDaysLeft: packageCode ? 0 : trialDaysLeft,
+      packageCode
     };
   }
 
@@ -1222,6 +1264,7 @@ try {
 
     const heroSub = document.querySelector(".heroSub");
     const upgradeBox = document.getElementById("nfcUpgradeBox");
+    const trialWarn = document.getElementById("heroTrialWarn");
 
     const faceCard = document.getElementById("faceCard");
     const offlineCard = document.getElementById("offlineCard");
@@ -1240,7 +1283,7 @@ try {
     italkyShow(levelCard, true);
     italkyShow(practiceCard, true);
 
-    const packageCode = access.packageCode;
+    const packageCode = normalizePackageCode(access.packageCode);
     const canUseEarToEar = !!(
       access.trialActive ||
       packageCode === "premium" ||
@@ -1250,6 +1293,7 @@ try {
     italkyShow(codeWrap, canUseEarToEar);
     italkyShow(sideBtn, canUseEarToEar);
     italkyShow(upgradeBox, !canUseEarToEar);
+    italkyShow(trialWarn, !!access.trialActive);
 
     if (access.trialActive) {
       italkySetHeroStatus(`7 gün ücretsiz full erişim açık • ${access.trialDaysLeft} gün kaldı`);
@@ -1257,7 +1301,13 @@ try {
         heroSub.textContent =
           "İlk 7 gün boyunca tüm paketler açık. Süre bitince bir paket seçmen gerekecek.";
       }
-      return access;
+      return {
+        packageCode: "",
+        trialActive: true,
+        trialDaysLeft: access.trialDaysLeft,
+        canUseEarToEar: true,
+        lockedAll: false
+      };
     }
 
     if (packageCode === "premium") {
@@ -1266,7 +1316,13 @@ try {
         heroSub.textContent =
           "Premium üyelik aktif. Translate ve Eğitim tarafının tamamı açık.";
       }
-      return access;
+      return {
+        packageCode: "premium",
+        trialActive: false,
+        trialDaysLeft: 0,
+        canUseEarToEar: true,
+        lockedAll: false
+      };
     }
 
     if (packageCode === "education") {
@@ -1275,7 +1331,13 @@ try {
         heroSub.textContent =
           "Eğlenerek Öğren, Pratik Yap ve Seviye Tespit modülleri açık.";
       }
-      return access;
+      return {
+        packageCode: "education",
+        trialActive: false,
+        trialDaysLeft: 0,
+        canUseEarToEar: false,
+        lockedAll: false
+      };
     }
 
     if (packageCode === "translate") {
@@ -1284,7 +1346,13 @@ try {
         heroSub.textContent =
           "FaceToFace, EarToEar, TextToText ve Offline Translate modülleri açık.";
       }
-      return access;
+      return {
+        packageCode: "translate",
+        trialActive: false,
+        trialDaysLeft: 0,
+        canUseEarToEar: true,
+        lockedAll: false
+      };
     }
 
     italkySetHeroStatus("7 günlük deneme bitti • Paket seçmelisin");
@@ -1292,24 +1360,28 @@ try {
       heroSub.textContent =
         "Devam etmek için Eğitim Paketi, Translate Paketi veya Premium üyelik seç.";
     }
-    return access;
+
+    return {
+      packageCode: "",
+      trialActive: false,
+      trialDaysLeft: 0,
+      canUseEarToEar: false,
+      lockedAll: true
+    };
   }
 
   window.italkyApplyAccessToHome = italkyApplyAccessToHome;
-  window.italkySetHeroStatus = italkySetHeroStatus;
   window.normalizePackageCode = normalizePackageCode;
 </script>
 
 <script>
-async function openCodePrompt(){
-  const heroStatus = document.getElementById("heroStatus");
-  const txt = heroStatus ? String(heroStatus.textContent || "").toLowerCase() : "";
-  const canUseEarToEar =
-    txt.includes("premium aktif") ||
-    txt.includes("translate paketi aktif") ||
-    txt.includes("7 gün ücretsiz");
+let __homeResolvedAccess = null;
+
+function openCodePrompt(){
+  const canUseEarToEar = !!(__homeResolvedAccess?.canUseEarToEar);
 
   if(!canUseEarToEar){
+    alert("Deneme süreniz doldu. Sistemi kullanabilmek için üyelik paketi satın almanız gereklidir.");
     location.href = "/pages/upgrade_pack.html";
     return;
   }
@@ -1427,9 +1499,7 @@ function startRoomPolling(roomId){
 }
 
 async function prepareRoom(){
-  const access = window.italkyGetAccessState ? window.italkyGetAccessState() : null;
-  const packageCode = window.normalizePackageCode ? window.normalizePackageCode(access?.packageCode) : "";
-  const canUseEarToEar = !!(access?.trialActive || packageCode === "premium" || packageCode === "translate");
+  const canUseEarToEar = !!(__homeResolvedAccess?.canUseEarToEar);
 
   redirected = false;
   stopRoomPolling();
@@ -1474,7 +1544,7 @@ copyConnectionCodeBtn?.addEventListener("click", async () => {
   }
 });
 
-await window.italkyApplyAccessToHome();
+__homeResolvedAccess = await window.italkyApplyAccessToHome();
 prepareRoom();
 
 window.addEventListener("beforeunload", () => {
@@ -1482,5 +1552,28 @@ window.addEventListener("beforeunload", () => {
 });
 </script>
 
+<script>
+(function lockedExpiredState(){
+  const UPGRADE_URL = "/pages/upgrade_pack.html";
+
+  function expiredPopup(msg){
+    alert(msg);
+    location.href = UPGRADE_URL;
+  }
+
+  document.addEventListener("click", function(e){
+    if (!__homeResolvedAccess) return;
+    if (!__homeResolvedAccess.lockedAll) return;
+
+    const target = e.target.closest("a,button,.menu-btn,.settings-btn,.menu-action,.menu-nav a");
+    if (!target) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+    expiredPopup("Deneme süreniz doldu. Sistemi kullanabilmek için üyelik paketi satın almanız gereklidir.");
+  }, true);
+})();
+</script>
+
 </body>
-</html>
+          </html>
