@@ -215,21 +215,94 @@ async function fetchAccessState() {
     return { ...DEFAULT_STATE, ready: true };
   }
 
-  const { data, error } = await supabase
-    .from("user_access_state")
-    .select("*")
-    .eq("user_id", userId)
-    .maybeSingle();
+  // 1) Önce hızlı state tablosunu dene
+  try {
+    const { data, error } = await supabase
+      .from("user_access_state")
+      .select("*")
+      .eq("user_id", userId)
+      .maybeSingle();
 
-  if (error) throw error;
+    if (!error && data) {
+      return buildStateFromRow(data);
+    }
+  } catch {}
 
-  if (!data) {
+  // 2) Yoksa profiles tablosundan türet
+  try {
+    const { data: profile, error: profileErr } = await supabase
+      .from("profiles")
+      .select(`
+        tokens,
+        selected_package_code,
+        package_active,
+        package_ends_at,
+        trial_started_at,
+        trial_ends_at
+      `)
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (profileErr || !profile) {
+      return { ...DEFAULT_STATE, ready: true };
+    }
+
+    const now = Date.now();
+
+    const trialActive =
+      !!profile.trial_ends_at &&
+      new Date(profile.trial_ends_at).getTime() > now;
+
+    const trialDaysLeft = trialActive
+      ? Math.max(
+          0,
+          Math.ceil((new Date(profile.trial_ends_at).getTime() - now) / (1000 * 60 * 60 * 24))
+        )
+      : 0;
+
+    const hasPackage =
+      !!profile.selected_package_code &&
+      profile.package_active === true &&
+      (!profile.package_ends_at || new Date(profile.package_ends_at).getTime() > now);
+
+    const packageCode = safeText(profile.selected_package_code).toLowerCase();
+    const packageCaps = hasPackage ? getPackageCapabilities(packageCode) : getPackageCapabilities("");
+
+    const trialCaps = trialActive
+      ? {
+          canUseTextToText: true,
+          canUseFaceToFace: true,
+          canUseEarToEar: true,
+          canUseOffline: true,
+          canUseEducation: true,
+          canUseGames: true,
+          canUsePractice: true,
+          canUseLevelTest: true
+        }
+      : null;
+
+    return {
+      ready: true,
+      accessOpen: hasPackage || trialActive,
+
+      trialActive,
+      trialDaysLeft,
+      trialEndsAt: profile.trial_ends_at || null,
+
+      hasPackage,
+      packageCode,
+      packageActive: !!hasPackage,
+      packageEndsAt: profile.package_ends_at || null,
+
+      tokens: safeNum(profile.tokens, 0),
+
+      ...(trialCaps || packageCaps)
+    };
+  } catch (e) {
+    console.warn("[global_access] profile fallback error:", e);
     return { ...DEFAULT_STATE, ready: true };
   }
-
-  return buildStateFromRow(data);
 }
-
 function setWindowState(state) {
   window.__ITALKY_ACCESS__ = state;
 }
