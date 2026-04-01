@@ -209,6 +209,31 @@
   import { mountShell } from "/js/ui_shell.js";
   import { supabase } from "/js/supabase_client.js";
 
+  try {
+    mountShell({ scroll: "none" });
+  } catch (e) {
+    console.warn("ui_shell access skip:", e);
+  }
+
+  setTimeout(() => {
+    const brand = document.getElementById("brandHome");
+    const menuBtn = document.getElementById("menuBtn");
+    const settingsBtn = document.getElementById("headerSettingsBtn");
+
+    if (brand) {
+      brand.style.pointerEvents = "none";
+      brand.onclick = null;
+    }
+    if (menuBtn) {
+      menuBtn.style.pointerEvents = "none";
+      menuBtn.style.opacity = "0.35";
+    }
+    if (settingsBtn) {
+      settingsBtn.style.pointerEvents = "none";
+      settingsBtn.style.opacity = "0.35";
+    }
+  }, 50);
+
   const API_BASE = "https://italky-api.onrender.com/api";
   const LOGIN_PAGE = "/pages/login.html";
   const HOME_PAGE = "/pages/home.html";
@@ -232,12 +257,12 @@
     statusLine.textContent = text || "";
   }
 
-  function safeRedirect(url) {
-    const current = location.pathname + location.search;
+  function safeReplace(url) {
     const target = new URL(url, location.origin);
-    const next = target.pathname + target.search;
-    if (current === next) return;
-    location.replace(next);
+    const currentPath = location.pathname + location.search;
+    const nextPath = target.pathname + target.search;
+    if (currentPath === nextPath) return;
+    location.replace(nextPath);
   }
 
   async function getSessionSafe() {
@@ -299,10 +324,6 @@
     return json;
   }
 
-  function openAfterSuccess() {
-    safeRedirect(HOME_PAGE);
-  }
-
   async function activateLicense() {
     const code = normalizeCode(codeInput.value);
     codeInput.value = code;
@@ -318,11 +339,11 @@
     try {
       await guardedApi("/license/activate-code", { code });
       setStatus("Lisans başarıyla aktive edildi.", "ok");
-      setTimeout(openAfterSuccess, 500);
+      setTimeout(() => safeReplace(HOME_PAGE), 500);
     } catch (e) {
       if (String(e.message) === "SESSION_REQUIRED") {
         setStatus("Önce giriş yapmalısınız.", "err");
-        setTimeout(() => safeRedirect(LOGIN_PAGE), 500);
+        setTimeout(() => safeReplace(LOGIN_PAGE), 500);
         return;
       }
       setStatus(e?.message || "Lisans doğrulanamadı.", "err");
@@ -338,11 +359,11 @@
     try {
       await guardedApi("/license/start-trial", { days: 7 });
       setStatus("7 günlük ücretsiz giriş başlatıldı.", "ok");
-      setTimeout(openAfterSuccess, 500);
+      setTimeout(() => safeReplace(HOME_PAGE), 500);
     } catch (e) {
       if (String(e.message) === "SESSION_REQUIRED") {
         setStatus("Önce giriş yapmalısınız.", "err");
-        setTimeout(() => safeRedirect(LOGIN_PAGE), 500);
+        setTimeout(() => safeReplace(LOGIN_PAGE), 500);
         return;
       }
       setStatus(e?.message || "Ücretsiz giriş başlatılamadı.", "err");
@@ -355,49 +376,23 @@
     const session = await getSessionSafe();
 
     if (!session?.user) {
-      safeRedirect(LOGIN_PAGE);
+      setStatus("Önce giriş yapmalısınız.", "err");
       return;
     }
 
     const alreadyHasAccess = await hasAccess(session.user.id);
     if (alreadyHasAccess) {
-      safeRedirect(HOME_PAGE);
+      setStatus("Aktif erişim bulundu. Ana sayfaya gidiliyor...", "ok");
+      setTimeout(() => safeReplace(HOME_PAGE), 300);
       return;
     }
-
-    try {
-      mountShell({ scroll: "none" });
-    } catch (e) {
-      console.warn("ui_shell access skip:", e);
-    }
-
-    setTimeout(() => {
-      const brand = document.getElementById("brandHome");
-      const menuBtn = document.getElementById("menuBtn");
-      const settingsBtn = document.getElementById("headerSettingsBtn");
-
-      if (brand) {
-        brand.style.pointerEvents = "none";
-        brand.onclick = null;
-      }
-
-      if (menuBtn) {
-        menuBtn.style.pointerEvents = "none";
-        menuBtn.style.opacity = "0.35";
-      }
-
-      if (settingsBtn) {
-        settingsBtn.style.pointerEvents = "none";
-        settingsBtn.style.opacity = "0.35";
-      }
-    }, 50);
 
     if (urlCode) {
       setStatus("Kart okundu. Giriş yapılıyor...", "warn");
       try {
         await guardedApi("/license/activate-code", { code: urlCode });
         setStatus("Lisans başarıyla aktive edildi.", "ok");
-        setTimeout(openAfterSuccess, 400);
+        setTimeout(() => safeReplace(HOME_PAGE), 400);
         return;
       } catch (e) {
         codeInput.value = urlCode;
