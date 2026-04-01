@@ -910,6 +910,7 @@ body{
   import { supabase } from "/js/supabase_client.js";
 
   const LOGIN_PAGE = "/pages/login.html";
+  const ACCESS_PAGE = "/pages/access.html";
 
   (async () => {
     try {
@@ -918,6 +919,32 @@ body{
       if (error || !session?.user) {
         location.replace(LOGIN_PAGE);
         return;
+      }
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select(`
+          selected_package_code,
+          package_active,
+          package_ends_at,
+          trial_ends_at
+        `)
+        .eq("id", session.user.id)
+        .maybeSingle();
+
+      const now = Date.now();
+
+      const hasActivePackage =
+        !!profile?.selected_package_code &&
+        profile?.package_active === true &&
+        (!profile?.package_ends_at || new Date(profile.package_ends_at).getTime() > now);
+
+      const hasActiveTrial =
+        !!profile?.trial_ends_at &&
+        new Date(profile.trial_ends_at).getTime() > now;
+
+      if (!hasActivePackage && !hasActiveTrial) {
+        location.replace(ACCESS_PAGE);
       }
     } catch (e) {
       location.replace(LOGIN_PAGE);
