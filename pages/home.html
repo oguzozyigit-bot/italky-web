@@ -55,6 +55,17 @@ body{
   overflow:hidden;
 }
 
+body:not(.home-ready) #pageContent{
+  visibility:hidden;
+  opacity:0;
+}
+
+body.home-ready #pageContent{
+  visibility:visible;
+  opacity:1;
+  transition:opacity .18s ease;
+}
+
 #pageContent{
   width:100%;
   height:100%;
@@ -865,16 +876,6 @@ body{
   to{ transform:rotate(360deg); }
 }
 
-@keyframes beamFlow{
-  from{ background-position:0 0; }
-  to{ background-position:0 50px; }
-}
-
-@keyframes platformPulse{
-  0%,100%{ transform:translateX(-50%) rotateX(75deg) scale(1); opacity:.7; }
-  50%{ transform:translateX(-50%) rotateX(75deg) scale(1.08); opacity:.88; }
-}
-
 @media (max-width:390px){
   .holo-container{ width:190px; height:190px; margin-bottom:4px; }
   .crystal-cage{ width:136px; height:136px; }
@@ -887,7 +888,6 @@ body{
   .holo-qr{ width:98px; height:98px; }
   .planet-core{ width:98px; height:98px; }
   .planet-text{ font-size:13px; }
-  .energy-platform{ width:154px; height:154px; bottom:-24px; }
   .heroTitle{ font-size:20px; }
   .card-title{ font-size:22px; }
   .wide-title{ font-size:22px; }
@@ -912,7 +912,7 @@ body{
   const LOGIN_PAGE = "/pages/login.html";
   const ACCESS_PAGE = "/pages/access.html";
 
-  (async () => {
+  async function bootAuthGate() {
     try {
       const { data: { session }, error } = await supabase.auth.getSession();
 
@@ -945,11 +945,16 @@ body{
 
       if (!hasActivePackage && !hasActiveTrial) {
         location.replace(ACCESS_PAGE);
+        return;
       }
+
+      document.body.classList.add("home-ready");
     } catch (e) {
       location.replace(LOGIN_PAGE);
     }
-  })();
+  }
+
+  bootAuthGate();
 </script>
 
 <main id="pageContent">
@@ -974,9 +979,6 @@ body{
               <span class="planet-text">italky<span class="ai">AI</span></span>
             </div>
           </div>
-
-          <div class="holo-beams"></div>
-          <div class="energy-platform"></div>
         </div>
 
         <div class="connect-code-wrap">
@@ -1094,20 +1096,20 @@ body{
       </a>
 
       <a id="levelCard" class="wide-card level-card" href="/pages/level_test_hub.html">
-  <div class="level-ico">
-    <div class="level-bars">
-      <span></span><span></span><span></span>
-    </div>
-  </div>
+        <div class="level-ico">
+          <div class="level-bars">
+            <span></span><span></span><span></span>
+          </div>
+        </div>
 
-  <div class="wide-body">
-    <div class="card-topline">Ölç & Başla</div>
-    <h2 class="wide-title">Seviye Tespit Sınavı</h2>
-    <p class="wide-desc">Mevcut dil seviyeni ölç, sana uygun başlangıç noktasını sistem otomatik belirlesin.</p>
-  </div>
+        <div class="wide-body">
+          <div class="card-topline">Ölç & Başla</div>
+          <h2 class="wide-title">Seviye Tespit Sınavı</h2>
+          <p class="wide-desc">Mevcut dil seviyeni ölç, sana uygun başlangıç noktasını sistem otomatik belirlesin.</p>
+        </div>
 
-  <div class="arrow-chip"></div>
-</a>
+        <div class="arrow-chip"></div>
+      </a>
 
       <a id="practiceCard" class="wide-card practice-card" href="/pages/pratice_ai_select.html">
         <div class="practice-ico">
@@ -1137,209 +1139,140 @@ try {
 }
 </script>
 
-<script>
-/* =========================================================
-   HOME ACCESS + 7 GÜN KURALI + PAKET GÖRÜNÜRLÜK
-   TASARIMA DOKUNMADAN SADECE MANTIK EKLER
-========================================================= */
+<script type="module">
+  import { getGlobalAccessState, initGlobalAccess } from "/js/global_access.js";
 
-const ITALKY_TRIAL_DAYS = 7;
-const ITALKY_DAY_MS = 24 * 60 * 60 * 1000;
-
-function italkyGetTrialStart() {
-  let startedAt = localStorage.getItem("trial_started_at");
-  if (!startedAt) {
-    startedAt = String(Date.now());
-    localStorage.setItem("trial_started_at", startedAt);
+  function italkyShow(el, isVisible) {
+    if (!el) return;
+    el.style.display = isVisible ? "" : "none";
   }
-  return Number(startedAt);
-}
 
-function italkyNormalizePackageCode(raw) {
-  const value = String(raw || "").trim().toLowerCase();
+  function italkySetHeroStatus(text) {
+    const heroStatus = document.getElementById("heroStatus");
+    if (heroStatus) heroStatus.textContent = text || "";
+  }
 
-  if (!value) return "";
-  if (value.includes("premium")) return "premium";
-  if (value.includes("translate")) return "translate";
-  if (value.includes("education")) return "education";
-  if (value.includes("egitim")) return "education";
+  async function italkyApplyAccessToHome() {
+    const access = await initGlobalAccess({ useCache: false });
 
-  return value;
-}
+    const heroSub = document.querySelector(".heroSub");
+    const upgradeBox = document.getElementById("nfcUpgradeBox");
 
-function italkyGetAccessState() {
-  const startedAt = italkyGetTrialStart();
-  const now = Date.now();
-  const elapsed = now - startedAt;
+    const faceCard = document.getElementById("faceCard");
+    const offlineCard = document.getElementById("offlineCard");
+    const textCard = document.getElementById("textCard");
+    const funCard = document.getElementById("funCard");
+    const levelCard = document.getElementById("levelCard");
+    const practiceCard = document.getElementById("practiceCard");
 
-  const remainingMs = Math.max(0, (ITALKY_TRIAL_DAYS * ITALKY_DAY_MS) - elapsed);
-  const trialActive = remainingMs > 0;
-  const remainingDays = Math.max(0, Math.ceil(remainingMs / ITALKY_DAY_MS));
+    const codeWrap = document.querySelector(".connect-code-wrap");
+    const sideBtn = document.getElementById("goSideToSide");
 
-  const packageCode = italkyNormalizePackageCode(
-    localStorage.getItem("package_code") ||
-    localStorage.getItem("premium_plan_code") ||
-    ""
-  );
+    italkyShow(faceCard, false);
+    italkyShow(offlineCard, false);
+    italkyShow(textCard, false);
+    italkyShow(funCard, false);
+    italkyShow(levelCard, false);
+    italkyShow(practiceCard, false);
+    italkyShow(codeWrap, false);
+    italkyShow(sideBtn, false);
+    italkyShow(upgradeBox, false);
 
-  const premiumFlag =
-    localStorage.getItem("premium_is_active") === "1" ||
-    localStorage.getItem("premium_is_active") === "true";
+    if (access.trialActive) {
+      italkyShow(faceCard, true);
+      italkyShow(offlineCard, true);
+      italkyShow(textCard, true);
+      italkyShow(funCard, true);
+      italkyShow(levelCard, true);
+      italkyShow(practiceCard, true);
+      italkyShow(codeWrap, true);
+      italkyShow(sideBtn, true);
 
-  const premiumActive = premiumFlag || packageCode === "premium";
-  const educationActive = trialActive || premiumActive || packageCode === "education";
-  const translateActive = trialActive || premiumActive || packageCode === "translate";
-  const anyPaidPackage = premiumActive || packageCode === "education" || packageCode === "translate";
-  const lockedAll = !trialActive && !anyPaidPackage;
+      italkySetHeroStatus(`7 gün ücretsiz full erişim açık • ${access.trialDaysLeft} gün kaldı`);
 
-  return {
-    trialActive,
-    remainingDays,
-    packageCode,
-    premiumActive,
-    educationActive,
-    translateActive,
-    anyPaidPackage,
-    lockedAll
-  };
-}
-
-function italkyShow(el, isVisible) {
-  if (!el) return;
-  el.style.display = isVisible ? "" : "none";
-}
-
-function italkySetHeroStatus(text) {
-  const heroStatus = document.getElementById("heroStatus");
-  if (heroStatus) heroStatus.textContent = text || "";
-}
-
-function italkyApplyAccessToHome() {
-  const access = italkyGetAccessState();
-
-  const heroSub = document.querySelector(".heroSub");
-  const upgradeBox = document.getElementById("nfcUpgradeBox");
-
-  const faceCard = document.getElementById("faceCard");
-  const offlineCard = document.getElementById("offlineCard");
-  const textCard = document.getElementById("textCard");
-  const funCard = document.getElementById("funCard");
-  const levelCard = document.getElementById("levelCard");
-  const practiceCard = document.getElementById("practiceCard");
-
-  const codeWrap = document.querySelector(".connect-code-wrap");
-  const sideBtn = document.getElementById("goSideToSide");
-
-  /* Önce hepsini kapat */
-  italkyShow(faceCard, false);
-  italkyShow(offlineCard, false);
-  italkyShow(textCard, false);
-  italkyShow(funCard, false);
-  italkyShow(levelCard, false);
-  italkyShow(practiceCard, false);
-
-  italkyShow(codeWrap, false);
-  italkyShow(sideBtn, false);
-  italkyShow(upgradeBox, false);
-
-  /* Trial aktifse her şey açık */
-  if (access.trialActive) {
-    italkyShow(faceCard, true);
-    italkyShow(offlineCard, true);
-    italkyShow(textCard, true);
-    italkyShow(funCard, true);
-    italkyShow(levelCard, true);
-    italkyShow(practiceCard, true);
-
-    italkyShow(codeWrap, true);
-    italkyShow(sideBtn, true);
-
-    italkySetHeroStatus(`7 gün ücretsiz full erişim açık • ${access.remainingDays} gün kaldı`);
-
-    if (heroSub) {
-      heroSub.textContent =
-        "İlk 7 gün boyunca tüm paketler açık. Süre bitince bir paket seçmen gerekecek.";
+      if (heroSub) {
+        heroSub.textContent =
+          "İlk 7 gün boyunca tüm paketler açık. Süre bitince bir paket seçmen gerekecek.";
+      }
+      return access;
     }
 
-    return access;
-  }
+    const packageCode = String(access.packageCode || "").toLowerCase();
+    const premiumActive = packageCode === "premium";
 
-  /* Premium aktifse hepsi açık */
-  if (access.premiumActive) {
-    italkyShow(faceCard, true);
-    italkyShow(offlineCard, true);
-    italkyShow(textCard, true);
-    italkyShow(funCard, true);
-    italkyShow(levelCard, true);
-    italkyShow(practiceCard, true);
+    if (premiumActive) {
+      italkyShow(faceCard, true);
+      italkyShow(offlineCard, true);
+      italkyShow(textCard, true);
+      italkyShow(funCard, true);
+      italkyShow(levelCard, true);
+      italkyShow(practiceCard, true);
+      italkyShow(codeWrap, true);
+      italkyShow(sideBtn, true);
 
-    italkyShow(codeWrap, true);
-    italkyShow(sideBtn, true);
+      italkySetHeroStatus("Premium aktif • Tüm modüller açık");
 
-    italkySetHeroStatus("Premium aktif • Tüm modüller açık");
-
-    if (heroSub) {
-      heroSub.textContent =
-        "Premium üyelik aktif. Translate ve Eğitim tarafının tamamı açık.";
+      if (heroSub) {
+        heroSub.textContent =
+          "Premium üyelik aktif. Translate ve Eğitim tarafının tamamı açık.";
+      }
+      return access;
     }
 
-    return access;
-  }
+    if (packageCode === "education") {
+      italkyShow(funCard, true);
+      italkyShow(levelCard, true);
+      italkyShow(practiceCard, true);
+      italkySetHeroStatus("Eğitim paketi aktif");
 
-  /* Education paketi */
-  if (access.packageCode === "education") {
-    italkyShow(funCard, true);
-    italkyShow(levelCard, true);
-    italkyShow(practiceCard, true);
+      if (heroSub) {
+        heroSub.textContent =
+          "Eğlenerek Öğren, Pratik Yap ve Seviye Tespit modülleri açık.";
+      }
 
-    italkySetHeroStatus("Eğitim paketi aktif");
+      italkyShow(upgradeBox, true);
+      return access;
+    }
+
+    if (packageCode === "translate") {
+      italkyShow(faceCard, true);
+      italkyShow(offlineCard, true);
+      italkyShow(textCard, true);
+      italkyShow(codeWrap, true);
+      italkyShow(sideBtn, true);
+
+      italkySetHeroStatus("Translate paketi aktif");
+
+      if (heroSub) {
+        heroSub.textContent =
+          "FaceToFace, EarToEar, TextToText ve Offline Translate modülleri açık.";
+      }
+
+      italkyShow(upgradeBox, true);
+      return access;
+    }
+
+    italkySetHeroStatus("7 günlük deneme bitti • Paket seçmelisin");
 
     if (heroSub) {
       heroSub.textContent =
-        "Eğlenerek Öğren, Pratik Yap ve Seviye Tespit modülleri açık.";
+        "Devam etmek için Eğitim Paketi, Translate Paketi veya Premium üyelik seç.";
     }
 
     italkyShow(upgradeBox, true);
     return access;
   }
 
-  /* Translate paketi */
-  if (access.packageCode === "translate") {
-    italkyShow(faceCard, true);
-    italkyShow(offlineCard, true);
-    italkyShow(textCard, true);
-
-    italkyShow(codeWrap, true);
-    italkyShow(sideBtn, true);
-
-    italkySetHeroStatus("Translate paketi aktif");
-
-    if (heroSub) {
-      heroSub.textContent =
-        "FaceToFace, EarToEar, TextToText ve Offline Translate modülleri açık.";
-    }
-
-    italkyShow(upgradeBox, true);
-    return access;
-  }
-
-  /* Trial bitti, paket yok -> her şey kapalı */
-  italkySetHeroStatus("7 günlük deneme bitti • Paket seçmelisin");
-
-  if (heroSub) {
-    heroSub.textContent =
-      "Devam etmek için Eğitim Paketi, Translate Paketi veya Premium üyelik seç.";
-  }
-
-  italkyShow(upgradeBox, true);
-  return access;
-}
+  window.italkyApplyAccessToHome = italkyApplyAccessToHome;
+  window.italkyGetAccessState = getGlobalAccessState;
+  window.italkySetHeroStatus = italkySetHeroStatus;
 </script>
 
 <script>
 function openCodePrompt(){
-  const access = italkyGetAccessState();
-  const canUseEarToEar = access.trialActive || access.premiumActive || access.packageCode === "translate";
+  const access = window.italkyGetAccessState ? window.italkyGetAccessState() : null;
+  const packageCode = String(access?.packageCode || "").toLowerCase();
+  const canUseEarToEar = !!(access?.trialActive || packageCode === "premium" || packageCode === "translate");
 
   if(!canUseEarToEar){
     location.href = "/pages/upgrade_pack.html";
@@ -1459,8 +1392,9 @@ function startRoomPolling(roomId){
 }
 
 async function prepareRoom(){
-  const access = italkyGetAccessState();
-  const canUseEarToEar = access.trialActive || access.premiumActive || access.packageCode === "translate";
+  const access = window.italkyGetAccessState ? window.italkyGetAccessState() : null;
+  const packageCode = String(access?.packageCode || "").toLowerCase();
+  const canUseEarToEar = !!(access?.trialActive || packageCode === "premium" || packageCode === "translate");
 
   redirected = false;
   stopRoomPolling();
@@ -1505,17 +1439,12 @@ copyConnectionCodeBtn?.addEventListener("click", async () => {
   }
 });
 
-/* Önce erişimi uygula, sonra gerekiyorsa oda hazırla */
-italkyApplyAccessToHome();
+await window.italkyApplyAccessToHome();
 prepareRoom();
 
 window.addEventListener("beforeunload", () => {
   stopRoomPolling();
 });
-</script>
-  <script type="module">
-  import { initGlobalAccess } from "/js/global_access.js";
-  initGlobalAccess();
 </script>
 
 </body>
