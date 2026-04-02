@@ -948,13 +948,9 @@ function bindMenu() {
   });
 
   deleteAccountBtn?.addEventListener("click", () => {
-    closeMenu();
-
-    const ok = window.confirm("Hesabınızı kalıcı olarak silmek istediğinize emin misiniz?");
-    if (!ok) return;
-
-    location.href = "/pages/delete-account.html";
-  });
+  closeMenu();
+  location.href = "/pages/delete-account.html";
+});
 
   if (!__shellEscapeBound) {
     document.addEventListener("keydown", (e) => {
