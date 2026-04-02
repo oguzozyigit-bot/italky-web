@@ -11,12 +11,15 @@
 
   <style>
     :root{
-      --txt: rgba(255,255,255,.96);
-      --muted: rgba(255,255,255,.56);
+      --txt: rgba(255,255,255,.97);
+      --muted: rgba(255,255,255,.62);
       --ai-grad: linear-gradient(135deg,#67e8f9 0%,#818cf8 46%,#f472b6 100%);
-      --panel-bg: rgba(255,255,255,.03);
-      --panel-border: rgba(255,255,255,.08);
+      --panel-bg: rgba(255,255,255,.04);
+      --panel-border: rgba(255,255,255,.10);
       --accent: #818cf8;
+      --soft-cyan: rgba(103,232,249,.12);
+      --soft-pink: rgba(244,114,182,.12);
+      --soft-violet: rgba(129,140,248,.14);
     }
 
     *{
@@ -40,8 +43,9 @@
       position:fixed;
       inset:0;
       background:
-        radial-gradient(circle at 50% 0%, rgba(129,140,248,.12) 0%, transparent 50%),
-        radial-gradient(circle at 10% 100%, rgba(244,114,182,.08) 0%, transparent 35%);
+        radial-gradient(circle at 50% 0%, rgba(129,140,248,.18) 0%, transparent 44%),
+        radial-gradient(circle at 12% 100%, rgba(244,114,182,.10) 0%, transparent 35%),
+        radial-gradient(circle at 100% 18%, rgba(103,232,249,.10) 0%, transparent 24%);
       z-index:-1;
       pointer-events:none;
     }
@@ -66,12 +70,13 @@
       height:42px;
       border-radius:14px;
       border:1px solid var(--panel-border);
-      background:rgba(255,255,255,.05);
+      background:rgba(255,255,255,.06);
       display:flex;
       align-items:center;
       justify-content:center;
       cursor:pointer;
       flex:0 0 auto;
+      box-shadow:0 8px 18px rgba(0,0,0,.16);
     }
 
     .backBtn:active{ transform:scale(.96); }
@@ -93,7 +98,7 @@
 
     .title{
       font-family:'Space Grotesk',sans-serif;
-      font-size:28px;
+      font-size:29px;
       font-weight:700;
       margin:0;
       line-height:1;
@@ -109,33 +114,34 @@
     .page-sub{
       margin:0;
       font-size:12px;
-      line-height:1.45;
+      line-height:1.5;
       color:var(--muted);
     }
 
     .warnBox{
       padding:14px 16px;
       border-radius:18px;
-      background:rgba(245,158,11,.08);
-      border:1px solid rgba(245,158,11,.18);
+      background:rgba(245,158,11,.09);
+      border:1px solid rgba(245,158,11,.20);
       color:#fde68a;
       font-size:12px;
       line-height:1.55;
       font-weight:800;
       display:none;
+      box-shadow:0 10px 24px rgba(0,0,0,.12);
     }
 
     .settings-panel{
       display:flex;
       flex-direction:column;
       gap:12px;
-      background:linear-gradient(145deg, rgba(255,255,255,.05), rgba(255,255,255,.01));
+      background:linear-gradient(145deg, rgba(255,255,255,.06), rgba(255,255,255,.015));
       border:1px solid var(--panel-border);
-      border-radius:22px;
+      border-radius:24px;
       padding:16px;
       backdrop-filter:blur(15px);
       -webkit-backdrop-filter:blur(15px);
-      box-shadow:0 14px 30px rgba(0,0,0,.14);
+      box-shadow:0 14px 30px rgba(0,0,0,.16);
     }
 
     .panel-title{
@@ -162,16 +168,29 @@
     .choice-card{
       padding:14px;
       border-radius:18px;
-      background:rgba(255,255,255,.03);
+      background:rgba(255,255,255,.035);
       border:1px solid rgba(255,255,255,.08);
       cursor:pointer;
       transition:.2s ease;
-      min-height:104px;
+      min-height:108px;
       display:flex;
       flex-direction:column;
       justify-content:space-between;
       gap:8px;
       position:relative;
+      overflow:hidden;
+    }
+
+    .choice-card::after{
+      content:"";
+      position:absolute;
+      inset:auto -10% -30% auto;
+      width:90px;
+      height:90px;
+      border-radius:50%;
+      background:rgba(255,255,255,.03);
+      filter:blur(8px);
+      pointer-events:none;
     }
 
     .choice-card:active{
@@ -180,8 +199,8 @@
 
     .choice-card.active{
       border-color:#818cf8;
-      background:rgba(129,140,248,.15);
-      box-shadow:0 0 0 1px rgba(129,140,248,.15) inset;
+      background:rgba(129,140,248,.16);
+      box-shadow:0 0 0 1px rgba(129,140,248,.15) inset, 0 12px 24px rgba(0,0,0,.14);
     }
 
     .choice-top{
@@ -223,7 +242,7 @@
     .choice-desc{
       font-size:11px;
       line-height:1.45;
-      color:rgba(255,255,255,.70);
+      color:rgba(255,255,255,.72);
       word-break:break-word;
     }
 
@@ -236,27 +255,40 @@
 
     .voice-list-wrap{
       display:none;
+      margin-top:2px;
+      animation:fadeDown .22s ease;
     }
 
     .voice-list-wrap.open{
       display:block;
     }
 
+    @keyframes fadeDown{
+      from{ opacity:0; transform:translateY(-6px); }
+      to{ opacity:1; transform:translateY(0); }
+    }
+
     .voice-list{
       display:flex;
       flex-direction:column;
       gap:10px;
-      margin-top:10px;
+      margin-top:2px;
     }
 
     .voice-item{
       padding:14px;
       border-radius:18px;
-      background:rgba(255,255,255,.03);
+      background:linear-gradient(145deg, rgba(255,255,255,.045), rgba(255,255,255,.02));
       border:1px solid rgba(255,255,255,.08);
       display:flex;
       flex-direction:column;
       gap:10px;
+      box-shadow:0 8px 18px rgba(0,0,0,.10);
+    }
+
+    .voice-item.active{
+      border-color:#818cf8;
+      box-shadow:0 0 0 1px rgba(129,140,248,.12) inset;
     }
 
     .voice-row{
@@ -285,7 +317,7 @@
     .voice-desc{
       font-size:11px;
       line-height:1.45;
-      color:rgba(255,255,255,.70);
+      color:rgba(255,255,255,.72);
     }
 
     .voice-actions{
@@ -303,6 +335,7 @@
       font-family:inherit;
       font-size:12px;
       font-weight:900;
+      transition:.18s ease;
     }
 
     .mini-btn.listen{
@@ -316,17 +349,21 @@
       color:#05060d;
     }
 
+    .mini-btn:active{
+      transform:scale(.98);
+    }
+
     .summary-card{
       display:flex;
       flex-direction:column;
       gap:10px;
-      background:linear-gradient(145deg, rgba(255,255,255,.05), rgba(255,255,255,.01));
+      background:linear-gradient(145deg, rgba(255,255,255,.06), rgba(255,255,255,.015));
       border:1px solid var(--panel-border);
-      border-radius:22px;
+      border-radius:24px;
       padding:16px;
       backdrop-filter:blur(15px);
       -webkit-backdrop-filter:blur(15px);
-      box-shadow:0 14px 30px rgba(0,0,0,.14);
+      box-shadow:0 14px 30px rgba(0,0,0,.16);
     }
 
     .summary-line{
@@ -389,7 +426,7 @@
       left:50%;
       top:18px;
       transform:translateX(-50%) translateY(-120px);
-      background:rgba(10,10,18,.92);
+      background:rgba(10,10,18,.94);
       border:1px solid rgba(165,180,252,.35);
       padding:10px 14px;
       border-radius:999px;
@@ -402,6 +439,7 @@
       pointer-events:none;
       max-width:min(92vw,520px);
       text-align:center;
+      box-shadow:0 10px 24px rgba(0,0,0,.18);
     }
 
     .toast.show{
@@ -493,17 +531,17 @@
 
     <section class="page-head">
       <h1 class="title">Çeviri <span class="ai">Ayarları</span></h1>
-      <p class="page-sub">Ses seçimini ve çeviri modunu burada belirle. Kaydet dediğinde seçimlerin saklanır ve ana sayfaya dönersin.</p>
+      <p class="page-sub">Sesini, tarzını ve çeviri modunu seç. Biraz parlak, biraz akıllı, biraz da keyifli olsun ✨</p>
     </section>
   </div>
 
   <div class="warnBox" id="trialWarnBox">
-    Deneme sürecinde özel sesleri dinleyebilirsiniz. Kullanmak için üyelik gereklidir.
+    Deneme sürecinde özel sesleri inceleyebilirsiniz. Kullanmak için üyelik gereklidir.
   </div>
 
   <section class="settings-panel">
     <h2 class="panel-title">Ses Seçimi</h2>
-    <p class="panel-sub">SideToSide ve FaceToFace bu ortak ayarı kullanır.</p>
+    <p class="panel-sub">FaceToFace ve SideToSide bu ortak ayarı kullanır.</p>
 
     <div class="choice-grid" id="voiceGrid">
       <div class="choice-card" data-voice="auto">
@@ -531,11 +569,6 @@
         <a href="/pages/voice_profile.html" class="choice-link" id="createVoiceLink">Ses oluştur / güncelle</a>
       </div>
     </div>
-  </section>
-
-  <section class="settings-panel">
-    <h2 class="panel-title">Özel Sesler</h2>
-    <p class="panel-sub">Dinleyip sonra seçim yapabilirsin.</p>
 
     <div class="voice-list-wrap" id="presetVoiceWrap">
       <div class="voice-list" id="presetVoiceList"></div>
@@ -544,7 +577,7 @@
 
   <section class="settings-panel">
     <h2 class="panel-title">Çeviri Modu</h2>
-    <p class="panel-sub">Kültürel çeviri yapay zeka kullanır. Kelimesi kelimesine değilde, karşı dildeki anlamına göre doğal çeviri yapar.</p>
+    <p class="panel-sub">Kültürel çeviri, anlamı daha doğal ve daha insan gibi aktarır.</p>
 
     <div class="choice-grid" id="translateGrid">
       <div class="choice-card" data-translate="normal">
@@ -623,11 +656,11 @@
   const uiModalClose = document.getElementById("uiModalClose");
 
   const PRESET_VOICES = [
-  { id: "huma", name: "Hüma", tag: "Kadın", text: "Merhaba, ben Hüma. Ben neşeliyim. Haydi italkyAI sayesinde dil engellerini birlikte kaldıralım." },
-  { id: "beren", name: "Beren", tag: "Kadın", text: "Merhaba, ben Beren. Daha yumuşak ve doğal bir tonla sana eşlik ediyorum." },
-  { id: "jale", name: "Jale", tag: "Kadın", text: "Merhaba, ben Jale. italkyAI ile çevirileri daha sıcak ve doğal hale getiriyorum." },
-  { id: "ozan", name: "Ozan", tag: "Erkek", text: "Merhaba, ben Ozan. Güçlü ve net bir ses tonuyla italkyAI deneyimine eşlik ediyorum." }
-];
+    { id: "huma", name: "Hüma", tag: "Kadın", text: "Merhaba, ben Hüma. Ben neşeliyim. Haydi italkyAI sayesinde dil engellerini birlikte kaldıralım." },
+    { id: "beren", name: "Beren", tag: "Kadın", text: "Merhaba, ben Beren. Daha yumuşak ve doğal bir tonla sana eşlik ediyorum." },
+    { id: "jale", name: "Jale", tag: "Kadın", text: "Merhaba, ben Jale. italkyAI ile çevirileri daha sıcak ve doğal hale getiriyorum." },
+    { id: "ozan", name: "Ozan", tag: "Erkek", text: "Merhaba, ben Ozan. Güçlü ve net bir ses tonuyla italkyAI deneyimine eşlik ediyorum." }
+  ];
 
   let voiceMode = normalizeVoiceMode(
     localStorage.getItem(VOICE_KEY) ||
@@ -785,34 +818,34 @@
   }
 
   async function previewPresetVoice(voice){
-  showToast(`${voice.name} sesi hazırlanıyor...`);
-  try{
-    const r = await fetch(`https://italky-api.onrender.com/api/tts`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        text: voice.text,
-        lang: "tr",
-        voice: voice.id,
-        tone: "neutral",
-        module: "voice_preset_preview"
-      })
-    });
+    showToast(`${voice.name} sesi hazırlanıyor...`);
+    try{
+      const r = await fetch(`https://italky-api.onrender.com/api/tts`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: voice.text,
+          lang: "tr",
+          voice: voice.id,
+          tone: "neutral",
+          module: "voice_preset_preview"
+        })
+      });
 
-    const j = await r.json().catch(() => ({}));
-    if (!r.ok || !j?.audio_base64) {
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok || !j?.audio_base64) {
+        showToast("Ses önizleme oynatılamadı");
+        return;
+      }
+
+      const audio = new Audio(`data:audio/mp3;base64,${j.audio_base64}`);
+      audio.play().catch(() => {
+        showToast("Ses oynatılamadı");
+      });
+    } catch {
       showToast("Ses önizleme oynatılamadı");
-      return;
     }
-
-    const audio = new Audio(`data:audio/mp3;base64,${j.audio_base64}`);
-    audio.play().catch(() => {
-      showToast("Ses oynatılamadı");
-    });
-  } catch {
-    showToast("Ses önizleme oynatılamadı");
   }
-}
 
   function renderPresetVoices(){
     if (!presetVoiceList) return;
