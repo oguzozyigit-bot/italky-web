@@ -602,9 +602,16 @@ async function getCurrentUserId() {
   }
 }
 
+function getSelectedPresetVoice() {
+  return String(localStorage.getItem("facetoface_voice_preset") || "huma").trim().toLowerCase();
+}
+
 function getVoicePreference() {
   const faceMode = getFaceVoiceMode();
-  if (["auto", "female", "male", "clone"].includes(faceMode)) return faceMode;
+
+  if (["auto", "female", "male", "clone", "preset"].includes(faceMode)) {
+    return faceMode;
+  }
 
   return String(
     localStorage.getItem("tts_voice") ||
@@ -652,19 +659,20 @@ async function speakViaApi(text, langCode, tone = "neutral") {
   const myRunId = speakRunId;
   const userId = await getCurrentUserId();
   const voice = getVoicePreference();
+const finalVoice = voice === "preset" ? getSelectedPresetVoice() : voice;
 
-  const r = await fetch(`${API_BASE}/api/tts`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      text: String(text || "").trim(),
-      lang: canonical(langCode),
-      user_id: userId,
-      module: "facetoface",
-      voice,
-      tone: canonTone(tone),
-    }),
-  });
+const r = await fetch(`${API_BASE}/api/tts`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    text: String(text || "").trim(),
+    lang: canonical(langCode),
+    user_id: userId,
+    module: "facetoface",
+    voice: finalVoice,
+    tone: canonTone(tone),
+  }),
+});
 
   if (myRunId !== speakRunId) return false;
 
