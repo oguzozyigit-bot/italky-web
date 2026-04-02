@@ -623,14 +623,11 @@
   const uiModalClose = document.getElementById("uiModalClose");
 
   const PRESET_VOICES = [
-    { id: "huma", name: "Hüma", tag: "Kadın", text: "Merhaba, ben Hüma. Ben neşeliyim. Haydi italkyAI sayesinde dil engellerini birlikte kaldıralım." },
-    { id: "umay", name: "Umay", tag: "Kadın", text: "Merhaba, ben Umay. Sakin, net ve güven veren bir sesle seninleyim." },
-    { id: "jale", name: "Jale", tag: "Kadın", text: "Merhaba, ben Jale. italkyAI ile çevirileri daha sıcak ve doğal hale getiriyorum." },
-    { id: "mina", name: "Mina", tag: "Kadın", text: "Merhaba, ben Mina. Hızlı, enerjik ve akıcı bir şekilde konuşabilirim." },
-    { id: "beren", name: "Beren", tag: "Kadın", text: "Merhaba, ben Beren. Daha yumuşak ve doğal bir tonla sana eşlik ediyorum." },
-    { id: "ozan", name: "Ozan", tag: "Erkek", text: "Merhaba, ben Ozan. Güçlü ve net bir ses tonuyla italkyAI deneyimine eşlik ediyorum." },
-    { id: "kaan", name: "Kaan", tag: "Erkek", text: "Merhaba, ben Kaan. Doğal, akıcı ve dengeli bir ses istiyorsan buradayım." }
-  ];
+  { id: "huma", name: "Hüma", tag: "Kadın", text: "Merhaba, ben Hüma. Ben neşeliyim. Haydi italkyAI sayesinde dil engellerini birlikte kaldıralım." },
+  { id: "beren", name: "Beren", tag: "Kadın", text: "Merhaba, ben Beren. Daha yumuşak ve doğal bir tonla sana eşlik ediyorum." },
+  { id: "jale", name: "Jale", tag: "Kadın", text: "Merhaba, ben Jale. italkyAI ile çevirileri daha sıcak ve doğal hale getiriyorum." },
+  { id: "ozan", name: "Ozan", tag: "Erkek", text: "Merhaba, ben Ozan. Güçlü ve net bir ses tonuyla italkyAI deneyimine eşlik ediyorum." }
+];
 
   let voiceMode = normalizeVoiceMode(
     localStorage.getItem(VOICE_KEY) ||
@@ -788,34 +785,34 @@
   }
 
   async function previewPresetVoice(voice){
-    showToast(`${voice.name} sesi hazırlanıyor...`);
-    try{
-      const r = await fetch(`${location.origin}/api/tts`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          text: voice.text,
-          lang: "tr",
-          voice: voice.id,
-          tone: "neutral",
-          module: "voice_preset_preview"
-        })
-      });
+  showToast(`${voice.name} sesi hazırlanıyor...`);
+  try{
+    const r = await fetch(`https://italky-api.onrender.com/api/tts`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text: voice.text,
+        lang: "tr",
+        voice: voice.id,
+        tone: "neutral",
+        module: "voice_preset_preview"
+      })
+    });
 
-      const j = await r.json().catch(() => ({}));
-      if (!r.ok || !j?.audio_base64) {
-        showToast("Ses önizleme oynatılamadı");
-        return;
-      }
-
-      const audio = new Audio(`data:audio/mp3;base64,${j.audio_base64}`);
-      audio.play().catch(() => {
-        showToast("Ses oynatılamadı");
-      });
-    }catch(e){
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || !j?.audio_base64) {
       showToast("Ses önizleme oynatılamadı");
+      return;
     }
+
+    const audio = new Audio(`data:audio/mp3;base64,${j.audio_base64}`);
+    audio.play().catch(() => {
+      showToast("Ses oynatılamadı");
+    });
+  } catch {
+    showToast("Ses önizleme oynatılamadı");
   }
+}
 
   function renderPresetVoices(){
     if (!presetVoiceList) return;
