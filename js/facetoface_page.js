@@ -1391,7 +1391,7 @@ function bind() {
       return;
     }
 
-    location.href = "/pages/facetoface_open.html?edit=1";
+    location.href = "/pages/translation_settings.html?from=facetoface";
   });
 
   topMic?.addEventListener("click", async (e) => {
@@ -1425,7 +1425,7 @@ function bind() {
       showUiModal("Bu menüyü kullanabilmek için üyelik paketi satın almanız gereklidir.");
       return;
     }
-    location.href = "/pages/facetoface_open.html?edit=1";
+    location.href = "/pages/translation_settings.html?from=facetoface";
   });
 
   try {
