@@ -289,10 +289,6 @@ if (!roomId) {
   }
 }
 
-function shouldJoinRoom() {
-  return role === "guest";
-}
-
 /* =========================
    STATE
 ========================= */
@@ -1008,9 +1004,7 @@ async function applyMyLanguageChange(nextLang) {
   roomJoined = false;
 
   try {
-    if (shouldJoinRoom()) {
-      await ensureRoomJoined();
-    }
+    await ensureRoomJoined();
 
     if (ws && ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({
@@ -1121,12 +1115,10 @@ function startSocket() {
     startRoomSync();
     setSystemPreparingUI();
 
-    if (shouldJoinRoom()) {
-      try {
-        await ensureRoomJoined();
-      } catch (e) {
-        console.warn("[join-room onopen]", e);
-      }
+    try {
+      await ensureRoomJoined();
+    } catch (e) {
+      console.warn("[join-room onopen]", e);
     }
 
     try {
@@ -1857,12 +1849,10 @@ async function bootRoom() {
 
     setHelper(botHelper, t(myLang, "joiningRoom"), "helper-wait");
 
-    if (shouldJoinRoom()) {
-      try {
-        await ensureRoomJoined();
-      } catch (e) {
-        console.warn("[bootRoom join-room]", e);
-      }
+    try {
+      await ensureRoomJoined();
+    } catch (e) {
+      console.warn("[bootRoom join-room]", e);
     }
 
     try {
