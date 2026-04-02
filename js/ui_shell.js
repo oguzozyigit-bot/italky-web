@@ -69,7 +69,7 @@ const HOME_HEADER_HTML = `
           <div class="menu-username" id="menuUserName">Kullanıcı</div>
 
           <div class="menu-token-row">
-            <div class="menu-token-pill">
+            <div class="menu-token-pill" id="menuTokenPill">
               <span>Jeton</span>
               <strong id="menuHeaderJeton">0</strong>
             </div>
@@ -98,14 +98,14 @@ const HOME_HEADER_HTML = `
     </div>
 
     <nav class="menu-nav">
-      <a href="/pages/jetonbuy.html" class="menu-link-jeton" data-i18n="menu_token_load">Jeton Yükle</a>
-      <a href="/pages/wallet_history.html" data-i18n="menu_wallet_history">Jeton Hareketleri</a>
+      <a href="/pages/jetonbuy.html" id="menuJetonLoadLink" class="menu-link-jeton" data-i18n="menu_token_load">Jeton Yükle</a>
+      <a href="/pages/wallet_history.html" id="menuWalletHistoryLink" data-i18n="menu_wallet_history">Jeton Hareketleri</a>
 
       <a href="/pages/admin.html" id="adminPanelLink" class="hidden">Admin Panel</a>
 
       <a href="/pages/profile.html" data-i18n="menu_profile">Profil</a>
       <a href="/pages/about.html" data-i18n="menu_about">Hakkımızda</a>
-      <a href="/pages/jeton-nedir.html" data-i18n="menu_what_is_token">Jeton Nedir</a>
+      <a href="/pages/jeton-nedir.html" id="menuJetonWhatIsLink" data-i18n="menu_what_is_token">Jeton Nedir</a>
       <a href="/pages/faq.html" data-i18n="menu_faq">SSS</a>
       <a href="/pages/privacy.html" data-i18n="menu_privacy">Gizlilik</a>
       <a href="/pages/contact.html" data-i18n="menu_contact">İletişim</a>
