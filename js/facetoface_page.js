@@ -1106,6 +1106,7 @@ async function finalizeRecognition(side, text) {
   clearLatest(other);
 
   setTranslatingUI(side);
+
   const speakStatusLang = other === "top" ? topLang : botLang;
   const speakHelper = other === "top" ? topHelper : botHelper;
   setHelper(speakHelper, t(speakStatusLang, "translating"), "helper-repeat");
@@ -1140,27 +1141,30 @@ async function finalizeRecognition(side, text) {
   }
 
   if (latestTxt) {
-  latestTxt.textContent = "";
+    latestTxt.textContent = "";
 
-  // sesi hemen paralel başlat
-  const speakPromise = speak(tr, dst, sourceTone);
+    // sesi hemen paralel başlat
+    const speakPromise = speak(tr, dst, sourceTone);
 
-  await typewriteText(latestTxt, tr, other);
-  keepLatestVisible(other);
+    await typewriteText(latestTxt, tr, other);
+    keepLatestVisible(other);
 
-  try {
-    await speakPromise;
-  } catch {}
-} else {
-  addBubble(other, "me", tr, {
-    latest: true,
-    speakLang: dst,
-    speakTone: sourceTone,
-  });
+    try {
+      await speakPromise;
+    } catch {}
+  } else {
+    addBubble(other, "me", tr, {
+      latest: true,
+      speakLang: dst,
+      speakTone: sourceTone,
+    });
 
-  try {
-    await speak(tr, dst, sourceTone);
-  } catch {}
+    try {
+      await speak(tr, dst, sourceTone);
+    } catch {}
+  }
+
+  setSystemReadyUI();
 }
 function startRecording(side) {
   const lang = side === "top" ? topLang : botLang;
