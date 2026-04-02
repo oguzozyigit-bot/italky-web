@@ -14,9 +14,7 @@
       --txt: rgba(255,255,255,.97);
       --muted: rgba(255,255,255,.62);
       --ai-grad: linear-gradient(135deg,#67e8f9 0%,#818cf8 46%,#f472b6 100%);
-      --panel-bg: rgba(255,255,255,.04);
       --panel-border: rgba(255,255,255,.10);
-      --accent: #818cf8;
     }
 
     *{
@@ -271,102 +269,6 @@
       filter:grayscale(.2);
     }
 
-    .voice-list-wrap{
-      display:none;
-      margin-top:2px;
-      animation:fadeDown .22s ease;
-    }
-
-    .voice-list-wrap.open{
-      display:block;
-    }
-
-    @keyframes fadeDown{
-      from{ opacity:0; transform:translateY(-6px); }
-      to{ opacity:1; transform:translateY(0); }
-    }
-
-    .voice-list{
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-      margin-top:2px;
-    }
-
-    .voice-item{
-      padding:14px;
-      border-radius:18px;
-      background:linear-gradient(145deg, rgba(255,255,255,.045), rgba(255,255,255,.02));
-      border:1px solid rgba(255,255,255,.08);
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-      box-shadow:0 8px 18px rgba(0,0,0,.10);
-    }
-
-    .voice-item.active{
-      border-color:#818cf8;
-      box-shadow:0 0 0 1px rgba(129,140,248,.12) inset;
-    }
-
-    .voice-row{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-    }
-
-    .voice-name{
-      font-size:14px;
-      font-weight:900;
-      color:#fff;
-    }
-
-    .voice-tag{
-      font-size:10px;
-      font-weight:900;
-      padding:6px 8px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.12);
-      color:#dbeafe;
-      background:rgba(129,140,248,.12);
-    }
-
-    .voice-desc{
-      font-size:11px;
-      line-height:1.45;
-      color:rgba(255,255,255,.72);
-    }
-
-    .voice-actions{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-    }
-
-    .mini-btn{
-      min-height:40px;
-      padding:0 14px;
-      border:none;
-      border-radius:14px;
-      cursor:pointer;
-      font-family:inherit;
-      font-size:12px;
-      font-weight:900;
-      transition:.18s ease;
-    }
-
-    .mini-btn.listen{
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.10);
-      color:#fff;
-    }
-
-    .mini-btn.select{
-      background:var(--ai-grad);
-      color:#05060d;
-    }
-
     .summary-card{
       display:flex;
       flex-direction:column;
@@ -543,12 +445,12 @@
 
     <section class="page-head">
       <h1 class="title">Çeviri <span class="ai">Ayarları</span></h1>
-      <p class="page-sub">Sesini, tarzını ve çeviri modunu seç. Biraz parlak, biraz akıllı, biraz da keyifli olsun ✨</p>
+      <p class="page-sub">Sesini ve çeviri modunu seç. Gereksiz süsleri attık, işini gören ayarlar kaldı ✨</p>
     </section>
   </div>
 
   <div class="warnBox" id="trialWarnBox">
-    Deneme sürecinde özel sesleri inceleyebilirsiniz. Kullanmak için üyelik gereklidir.
+    Deneme sürecinde sadece ücretsiz ses kullanılabilir. Kendi sesinizi kullanmak için üyelik gereklidir.
   </div>
 
   <section class="settings-panel">
@@ -564,14 +466,6 @@
         <div class="choice-desc">Sistem uygun ücretsiz sesi otomatik kullanır.</div>
       </div>
 
-      <div class="choice-card" data-voice="preset" id="presetCard">
-        <div class="choice-top">
-          <div class="choice-name">Özel Sesler</div>
-          <div class="choice-badge paid">Jetonlu</div>
-        </div>
-        <div class="choice-desc">Hazır özel sesleri dinleyip seçebilirsiniz.</div>
-      </div>
-
       <div class="choice-card" data-voice="clone" id="cloneCard">
         <div class="choice-top">
           <div class="choice-name">Kendi Sesim</div>
@@ -585,10 +479,6 @@
           <button class="clone-btn ghost" id="cloneEditBtn" type="button">Oluştur / Güncelle</button>
         </div>
       </div>
-    </div>
-
-    <div class="voice-list-wrap" id="presetVoiceWrap">
-      <div class="voice-list" id="presetVoiceList"></div>
     </div>
   </section>
 
@@ -654,15 +544,12 @@
   }
 
   const VOICE_KEY = "facetoface_voice_mode";
-  const VOICE_PRESET_KEY = "facetoface_voice_preset";
   const TRANSLATE_KEY = "facetoface_translate_mode";
   const LEGACY_TTS_KEY = "tts_voice";
   const LEGACY_LIVE_KEY = "live_interpreter_voice";
 
   const voiceGrid = document.getElementById("voiceGrid");
   const translateGrid = document.getElementById("translateGrid");
-  const presetVoiceList = document.getElementById("presetVoiceList");
-  const presetVoiceWrap = document.getElementById("presetVoiceWrap");
   const voiceSummary = document.getElementById("voiceSummary");
   const translateSummary = document.getElementById("translateSummary");
   const saveBtn = document.getElementById("saveBtn");
@@ -682,20 +569,6 @@
   const uiModalGo = document.getElementById("uiModalGo");
   const uiModalClose = document.getElementById("uiModalClose");
 
-  const PRESET_VOICES = [
-    { id: "huma",   name: "Hüma",   tag: "Kadın", text: "Merhaba, ben Hüma. Neşeli ve sıcak bir ses tonuyla sana eşlik ediyorum." },
-    { id: "selden", name: "Selden", tag: "Kadın", text: "Merhaba, ben Selden. Dengeli ve yumuşak bir anlatımla yanındayım." },
-    { id: "jale",   name: "Jale",   tag: "Kadın", text: "Merhaba, ben Jale. Doğal ve zarif bir tonla konuşmaları akıcı hale getiriyorum." },
-    { id: "handan", name: "Handan", tag: "Kadın", text: "Merhaba, ben Handan. Sakin, net ve güven veren bir ses tonum var." },
-    { id: "nilay",  name: "Nilay",  tag: "Kadın", text: "Merhaba, ben Nilay. Yumuşak ve doğal bir sesle sana yardımcı oluyorum." },
-
-    { id: "ozan",   name: "Ozan",   tag: "Erkek", text: "Merhaba, ben Ozan. Güçlü ve net bir ses tonuyla italkyAI deneyimine eşlik ediyorum." },
-    { id: "yigit",  name: "Yiğit",  tag: "Erkek", text: "Merhaba, ben Yiğit. Dengeli ve kararlı bir tonla konuşmaları destekliyorum." },
-    { id: "oguz",   name: "Oğuz",   tag: "Erkek", text: "Merhaba, ben Oğuz. Doğal, sıcak ve kendine yakın bir ses deneyimi sunuyorum." },
-    { id: "yavuz",  name: "Yavuz",  tag: "Erkek", text: "Merhaba, ben Yavuz. Güven veren ve tok bir tonla yanında olacağım." },
-    { id: "yilmaz", name: "Yılmaz", tag: "Erkek", text: "Merhaba, ben Yılmaz. Net ve güçlü bir ses yapısıyla konuşmaları taşıyorum." }
-  ];
-
   let voiceMode = normalizeVoiceMode(
     localStorage.getItem(VOICE_KEY) ||
     localStorage.getItem(LEGACY_TTS_KEY) ||
@@ -703,7 +576,6 @@
     "auto"
   );
 
-  let selectedPreset = String(localStorage.getItem(VOICE_PRESET_KEY) || "huma").trim().toLowerCase();
   let translateMode = normalizeTranslateMode(localStorage.getItem(TRANSLATE_KEY) || "normal");
   let cloneReady = false;
   let currentUserId = "";
@@ -728,7 +600,6 @@
   function normalizeVoiceMode(v){
     const x = String(v || "").trim().toLowerCase();
     if (x === "clone") return "clone";
-    if (x === "preset") return "preset";
     return "auto";
   }
 
@@ -748,10 +619,6 @@
 
   function voiceLabel(v){
     if (v === "clone") return "Kendi Sesim";
-    if (v === "preset") {
-      const found = PRESET_VOICES.find(x => x.id === selectedPreset);
-      return found ? `Özel Ses • ${found.name}` : "Özel Sesler";
-    }
     return "Otomatik";
   }
 
@@ -788,11 +655,6 @@
     if (e.target === uiModal) closeUiModal();
   });
 
-  function canUsePresetVoice(){
-    const pkg = normalizePackageCode(accessState.packageCode);
-    return pkg === "premium" || pkg === "translate";
-  }
-
   function canUseCloneVoice(){
     const pkg = normalizePackageCode(accessState.packageCode);
     return pkg === "premium";
@@ -810,10 +672,6 @@
 
     translateGrid?.querySelectorAll(".choice-card").forEach(card => {
       card.classList.toggle("active", normalizeTranslateMode(card.dataset.translate) === translateMode);
-    });
-
-    document.querySelectorAll(".voice-item").forEach(item => {
-      item.classList.toggle("active", item.dataset.voiceId === selectedPreset && voiceMode === "preset");
     });
   }
 
@@ -899,33 +757,6 @@
     }
   }
 
-  async function previewPresetVoice(voice){
-    showToast(`${voice.name} sesi hazırlanıyor...`);
-    try{
-      const r = await fetch(`https://italky-api.onrender.com/api/tts`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          text: voice.text,
-          lang: "tr",
-          voice: voice.id,
-          tone: "neutral",
-          module: "voice_preset_preview"
-        })
-      });
-
-      const j = await r.json().catch(() => ({}));
-      if (!r.ok || !j?.audio_base64) {
-        showToast("Ses önizleme oynatılamadı");
-        return;
-      }
-
-      await playPreviewFromBase64(j.audio_base64, "Ses oynatılamadı");
-    } catch {
-      showToast("Ses önizleme oynatılamadı");
-    }
-  }
-
   async function previewCloneVoice(){
     if (!cloneReady || !currentUserId) {
       showToast("Önce kendi sesinizi oluşturun");
@@ -959,55 +790,6 @@
     }
   }
 
-  function renderPresetVoices(){
-    if (!presetVoiceList) return;
-
-    presetVoiceList.innerHTML = PRESET_VOICES.map(voice => `
-      <div class="voice-item ${voice.id === selectedPreset && voiceMode === "preset" ? "active" : ""}" data-voice-id="${voice.id}">
-        <div class="voice-row">
-          <div class="voice-name">${voice.name}</div>
-          <div class="voice-tag">${voice.tag}</div>
-        </div>
-        <div class="voice-desc">${voice.text}</div>
-        <div class="voice-actions">
-          <button class="mini-btn listen" type="button" data-listen="${voice.id}">Dinle</button>
-          <button class="mini-btn select" type="button" data-select="${voice.id}">Seç</button>
-        </div>
-      </div>
-    `).join("");
-
-    presetVoiceList.querySelectorAll("[data-listen]").forEach(btn => {
-      btn.addEventListener("click", () => {
-        const voice = PRESET_VOICES.find(v => v.id === btn.dataset.listen);
-        if (!voice) return;
-        previewPresetVoice(voice);
-      });
-    });
-
-    presetVoiceList.querySelectorAll("[data-select]").forEach(btn => {
-      btn.addEventListener("click", () => {
-        const id = String(btn.dataset.select || "").trim().toLowerCase();
-        if (!id) return;
-
-        if (accessState.trialActive) {
-          showUiModal("Bu sesi kullanmak için üye olmanız gereklidir.");
-          return;
-        }
-
-        if (!canUsePresetVoice()) {
-          showUiModal("Bu sesi kullanmak için üyelik paketi satın almanız gereklidir.");
-          return;
-        }
-
-        selectedPreset = id;
-        voiceMode = "preset";
-        paintSelections();
-        refreshSummary();
-        showToast("Özel ses seçildi");
-      });
-    });
-  }
-
   async function readAccessState(){
     try{
       const { data: { user } } = await supabase.auth.getUser();
@@ -1028,7 +810,6 @@
 
         const packageActive =
           (!!packageCode && row.package_active === true && (!row.package_ends_at || new Date(row.package_ends_at).getTime() > Date.now()))
-          || (!!packageCode && row.package_active === true && !row.package_ends_at)
           || (!!packageCode && row.package_active === true);
 
         const trialActive = !packageActive && (
@@ -1055,7 +836,6 @@
 
   function saveSettings(){
     localStorage.setItem(VOICE_KEY, voiceMode);
-    localStorage.setItem(VOICE_PRESET_KEY, selectedPreset);
     localStorage.setItem(TRANSLATE_KEY, translateMode);
     localStorage.setItem(LEGACY_TTS_KEY, voiceMode);
     localStorage.setItem(LEGACY_LIVE_KEY, voiceMode);
@@ -1066,15 +846,33 @@
     location.href = "/pages/home.html";
   }
 
-  document.getElementById("presetCard")?.addEventListener("click", () => {
-    presetVoiceWrap.classList.toggle("open");
-  });
-
   document.querySelector('[data-voice="auto"]')?.addEventListener("click", () => {
     voiceMode = "auto";
     paintSelections();
     refreshSummary();
     showToast("Ses seçimi güncellendi");
+  });
+
+  document.getElementById("cloneCard")?.addEventListener("click", (e) => {
+    if (e.target.closest("button")) return;
+
+    if (accessState.trialActive) {
+      showUiModal("Kendi sesinizi kullanmak için üye olmanız gereklidir.");
+      return;
+    }
+    if (!canUseCloneVoice()) {
+      showUiModal("Kendi sesinizi kullanmak için üyelik paketi satın almanız gereklidir.");
+      return;
+    }
+    if (!cloneReady) {
+      showToast("Önce kendi sesinizi oluşturun");
+      return;
+    }
+
+    voiceMode = "clone";
+    paintSelections();
+    refreshSummary();
+    showToast("Kendi sesim seçildi");
   });
 
   cloneUseBtn?.addEventListener("click", () => {
@@ -1165,7 +963,6 @@
   await checkVoiceProfile();
   paintSelections();
   refreshSummary();
-  renderPresetVoices();
 </script>
 
 </body>
