@@ -237,13 +237,27 @@ function getAccessState() {
     Number(a.remainingTrialDays || 0) > 0 ||
     Number(a.remaining_trial_days || 0) > 0;
 
+  const rawPackageCode = String(
+    a.selected_package_code ||
+    a.package_code ||
+    a.plan ||
+    ""
+  ).trim().toLowerCase();
+
+  const packageCode =
+    rawPackageCode.startsWith("premium") ? "premium" :
+    rawPackageCode.startsWith("translate") ? "translate" :
+    rawPackageCode.startsWith("edu") || rawPackageCode.startsWith("education") ? "education" :
+    rawPackageCode;
+
   const hasPackage =
     a.hasPackage === true ||
     a.has_package === true ||
     a.packageActive === true ||
     a.package_active === true ||
     a.isPremium === true ||
-    a.premium === true;
+    a.premium === true ||
+    !!packageCode;
 
   const nfcActive =
     a.nfcActive === true ||
@@ -262,7 +276,14 @@ function getAccessState() {
   if (hasPackage || nfcActive) tier = "member";
   else if (trialActive) tier = "trial";
 
-  return { loaded, trialActive, hasPackage, nfcActive, tier };
+  return {
+    loaded,
+    trialActive,
+    hasPackage,
+    nfcActive,
+    packageCode,
+    tier
+  };
 }
 
 async function waitForAccessState(maxMs = 5000) {
@@ -282,7 +303,11 @@ async function waitForAccessState(maxMs = 5000) {
 }
 
 function canUseOfflineDownloads(access = accessState) {
-  return access?.tier === "member";
+  if (!access) return false;
+  if (access.tier === "member") return true;
+  if (access.hasPackage === true) return true;
+  if (access.nfcActive === true) return true;
+  return false;
 }
 
 function requireOfflineMembership() {
@@ -303,9 +328,9 @@ function updateTopStatus() {
   }
 
   if (access.tier === "member") {
-    trialTag.textContent = "ERİŞİM AÇIK";
-    return;
-  }
+  trialTag.textContent = access.packageCode ? `ÜYE • ${access.packageCode.toUpperCase()}` : "ERİŞİM AÇIK";
+  return;
+}
 
   if (access.tier === "trial") {
     trialTag.textContent = "DENEME";
