@@ -204,6 +204,7 @@ const botBody = $("botBody");
 const botMic = $("botMic");
 const topHelper = $("topHelper");
 const botHelper = $("botHelper");
+const roomMetaText = $("roomMetaText");
 
 const botLangBtn = $("botLangBtn");
 const botLangTxt = $("botLangTxt");
@@ -214,7 +215,10 @@ const closeBot = $("close-bot");
 const clearBtn = $("clearBtn");
 const homeLink = $("homeLink");
 const homeBtn = $("homeBtn");
+const settingsBtn = $("settingsBtn");
 
+const myInfoMain = $("myInfoMain");
+const myInfoSub = $("myInfoSub");
 const peerInfoMain = $("peerInfoMain");
 const peerInfoSub = $("peerInfoSub");
 const peerVoicePill = $("peerVoicePill");
@@ -283,6 +287,10 @@ if (!roomId) {
       history.replaceState({}, "", next.toString());
     } catch {}
   }
+}
+
+function shouldJoinRoom() {
+  return role === "guest";
 }
 
 /* =========================
@@ -354,6 +362,15 @@ function readLocalProfile() {
   myLang = canonical(myProfile.lang || myLang || "tr");
 }
 
+function renderMyProfileBox() {
+  if (myInfoMain) {
+    myInfoMain.textContent = `${labelChip(myLang)} • ${voiceLabel(myProfile.voice_mode)}`;
+  }
+  if (myInfoSub) {
+    myInfoSub.textContent = `Çeviri: ${translateLabel(myProfile.translate_mode)}`;
+  }
+}
+
 function renderPeerProfileBox() {
   if (!peerConnected && !peerEverConnected && !peerProfileReceived) {
     if (peerInfoMain) peerInfoMain.textContent = "Bağlantı bekleniyor...";
@@ -414,25 +431,27 @@ async function loadMyIdentity() {
       myDisplayName = String(metaName).trim();
     }
 
-    if (!user?.id) return;
+    if (user?.id) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("name, full_name, display_name, hitap")
+        .eq("id", user.id)
+        .maybeSingle();
 
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("name, full_name, display_name, hitap")
-      .eq("id", user.id)
-      .maybeSingle();
+      const profileName =
+        profile?.hitap ||
+        profile?.name ||
+        profile?.display_name ||
+        profile?.full_name ||
+        "";
 
-    const profileName =
-      profile?.hitap ||
-      profile?.name ||
-      profile?.display_name ||
-      profile?.full_name ||
-      "";
-
-    if (profileName) {
-      myDisplayName = String(profileName).trim();
+      if (profileName) {
+        myDisplayName = String(profileName).trim();
+      }
     }
   } catch {}
+
+  myDisplayName = String(myDisplayName || "").trim() || "Kullanıcı";
 }
 
 async function loadProfileFromSupabase() {
@@ -441,6 +460,7 @@ async function loadProfileFromSupabase() {
     const uid = data?.user?.id;
     if (!uid) {
       readLocalProfile();
+      renderMyProfileBox();
       return;
     }
 
@@ -462,8 +482,11 @@ async function loadProfileFromSupabase() {
       myProfile.voice_mode = "auto";
       localStorage.setItem("facetoface_voice_mode", "auto");
     }
+
+    renderMyProfileBox();
   } catch {
     readLocalProfile();
+    renderMyProfileBox();
   }
 }
 
@@ -635,6 +658,7 @@ function setSystemReadyUI() {
     setHelper(botHelper, t(myLang, "waitingPeer"), "helper-wait");
   }
 
+  renderMyProfileBox();
   renderPeerProfileBox();
 }
 
@@ -940,7 +964,7 @@ async function sendSelfProfile() {
     ws.send(JSON.stringify({
       type: "profile_sync",
       sender_id: myClientId,
-      sender_name: myDisplayName || "",
+      sender_name: String(myDisplayName || "").trim() || "Kullanıcı",
       lang: canonical(myLang),
       voice_mode: normalizeVoiceMode(myProfile.voice_mode),
       translate_mode: normalizeTranslateMode(myProfile.translate_mode)
@@ -956,7 +980,7 @@ async function sendLeaving(reason = "left") {
     ws.send(JSON.stringify({
       type: "leaving",
       reason,
-      sender_name: myDisplayName || ""
+      sender_name: String(myDisplayName || "").trim() || "Kullanıcı"
     }));
   } catch {}
 }
@@ -969,12 +993,15 @@ async function applyMyLanguageChange(nextLang) {
   localStorage.setItem("live_interpreter_peer_lang", peerLang);
 
   refreshLangLabels();
+  renderMyProfileBox();
   refreshReadyTextsIfIdle();
   rebuildRecognizer();
   roomJoined = false;
 
   try {
-    await ensureRoomJoined();
+    if (shouldJoinRoom()) {
+      await ensureRoomJoined();
+    }
 
     if (ws && ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({
@@ -1085,10 +1112,12 @@ function startSocket() {
     startRoomSync();
     setSystemPreparingUI();
 
-    try {
-      await ensureRoomJoined();
-    } catch (e) {
-      console.warn("[join-room onopen]", e);
+    if (shouldJoinRoom()) {
+      try {
+        await ensureRoomJoined();
+      } catch (e) {
+        console.warn("[join-room onopen]", e);
+      }
     }
 
     try {
@@ -1689,12 +1718,14 @@ function startBoot() {
     setSystemPreparingUI();
     readLocalProfile();
     refreshLangLabels();
+    renderMyProfileBox();
     renderPeerProfileBox();
     pointOrbTo("bot");
 
     await Promise.allSettled([warmApis(), warmAudio()]);
 
     bootReady = true;
+    renderMyProfileBox();
     renderPeerProfileBox();
     setSystemReadyUI();
   })();
@@ -1709,11 +1740,16 @@ async function ensureReady() {
   return true;
 }
 
+function safeHomeHref() {
+  return "/pages/home.html";
+}
+
 /* =========================
    EVENTS
 ========================= */
 function bind() {
   refreshLangLabels();
+  renderMyProfileBox();
   renderPeerProfileBox();
   unlockOnFirstTouch();
   startBoot();
@@ -1768,14 +1804,19 @@ function bind() {
     isNavigatingHome = true;
     await sendLeaving("home");
     stopSocket();
-    location.href = "/pages/home.html";
+    location.href = safeHomeHref();
   });
 
   homeBtn?.addEventListener("click", async () => {
     isNavigatingHome = true;
     await sendLeaving("home");
     stopSocket();
-    location.href = "/pages/home.html";
+    location.href = safeHomeHref();
+  });
+
+  settingsBtn?.addEventListener("click", (e) => {
+    e.preventDefault();
+    location.href = "/pages/facetoface_open.html?edit=1&from=sidetoside";
   });
 
   botMic?.addEventListener("click", async (e) => {
@@ -1792,9 +1833,14 @@ async function bootRoom() {
   try {
     myClientId = getOrCreateClientId();
     readLocalProfile();
+    renderMyProfileBox();
 
     if (!roomId) {
       throw new Error(t(myLang, "roomMissing"));
+    }
+
+    if (roomMetaText) {
+      roomMetaText.textContent = roomId;
     }
 
     saveReturnContext();
@@ -1802,10 +1848,12 @@ async function bootRoom() {
 
     setHelper(botHelper, t(myLang, "joiningRoom"), "helper-wait");
 
-    try {
-      await ensureRoomJoined();
-    } catch (e) {
-      console.warn("[bootRoom join-room]", e);
+    if (shouldJoinRoom()) {
+      try {
+        await ensureRoomJoined();
+      } catch (e) {
+        console.warn("[bootRoom join-room]", e);
+      }
     }
 
     try {
