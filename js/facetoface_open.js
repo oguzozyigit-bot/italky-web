@@ -57,12 +57,9 @@ const editMode = String(url.searchParams.get("edit") || "").trim() === "1";
 
 const PRESET_VOICES = [
   { id: "huma", name: "Hüma", tag: "Kadın", text: "Merhaba, ben Hüma. Ben neşeliyim. Haydi italkyAI sayesinde dil engellerini birlikte kaldıralım." },
-  { id: "umay", name: "Umay", tag: "Kadın", text: "Merhaba, ben Umay. Sakin, net ve güven veren bir sesle seninleyim." },
-  { id: "jale", name: "Jale", tag: "Kadın", text: "Merhaba, ben Jale. italkyAI ile çevirileri daha sıcak ve doğal hale getiriyorum." },
-  { id: "mina", name: "Mina", tag: "Kadın", text: "Merhaba, ben Mina. Hızlı, enerjik ve akıcı bir şekilde konuşabilirim." },
   { id: "beren", name: "Beren", tag: "Kadın", text: "Merhaba, ben Beren. Daha yumuşak ve doğal bir tonla sana eşlik ediyorum." },
-  { id: "ozan", name: "Ozan", tag: "Erkek", text: "Merhaba, ben Ozan. Güçlü ve net bir ses tonuyla italkyAI deneyimine eşlik ediyorum." },
-  { id: "kaan", name: "Kaan", tag: "Erkek", text: "Merhaba, ben Kaan. Doğal, akıcı ve dengeli bir ses istiyorsan buradayım." }
+  { id: "jale", name: "Jale", tag: "Kadın", text: "Merhaba, ben Jale. italkyAI ile çevirileri daha sıcak ve doğal hale getiriyorum." },
+  { id: "ozan", name: "Ozan", tag: "Erkek", text: "Merhaba, ben Ozan. Güçlü ve net bir ses tonuyla italkyAI deneyimine eşlik ediyorum." }
 ];
 
 let voiceMode = normalizeVoiceMode(localStorage.getItem(VOICE_KEY) || "auto");
@@ -649,17 +646,12 @@ async function previewCloneVoice() {
     return;
   }
 
-  const name =
-    String(profileRow?.full_name || profileRow?.name || "").trim().split(" ")[0] || "Arkadaşım";
-
-  const text = `Merhaba, ben ${name}. italkyAI ile çevirileri kendi sesimle ve duygularımı da yansıtarak yapabiliyorum. Böylece konuşmalarım daha doğal, daha sıcak ve bana daha yakın oluyor.`;
-
   try {
-    const r = await fetch(`${location.origin}/api/tts`, {
+    const r = await fetch(`https://italky-api.onrender.com/api/tts`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        text,
+        text: "",
         lang: "tr",
         user_id: uid,
         voice: "clone",
@@ -673,6 +665,15 @@ async function previewCloneVoice() {
       toast("Kendi sesin oynatılamadı");
       return;
     }
+
+    const audio = new Audio(`data:audio/mp3;base64,${j.audio_base64}`);
+    audio.play().catch(() => {
+      toast("Ses oynatılamadı");
+    });
+  } catch {
+    toast("Kendi sesin oynatılamadı");
+  }
+}
 
     const audio = new Audio(`data:audio/mp3;base64,${j.audio_base64}`);
     audio.play().catch(() => {
