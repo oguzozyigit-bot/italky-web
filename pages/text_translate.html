@@ -562,7 +562,6 @@ textarea::placeholder{
 
     <section class="quantum-gate">
       <div class="gate-panel panel-in">
-        <button class="panel-action" id="btnMic" type="button" title="Konuş">🎙️</button>
         <textarea id="srcTxt" placeholder="Metin girin..."></textarea>
       </div>
 
@@ -629,7 +628,6 @@ textarea::placeholder{
   const toFlag = $("toFlag");
   const btnSwap = $("btnSwap");
   const btnTranslate = $("btnTranslate");
-  const btnMic = $("btnMic");
   const btnSpeak = $("btnSpeak");
   const srcTxt = $("srcTxt");
   const dstTxt = $("dstTxt");
@@ -960,6 +958,7 @@ textarea::placeholder{
     if(!t || t === "...") return;
 
     stopSpeak();
+
     const myToken = ++speakToken;
 
     btnSpeak.style.pointerEvents = "none";
@@ -999,114 +998,6 @@ textarea::placeholder{
       speakFallback(t, toLang);
     }catch(e){
       speakFallback(t, toLang);
-    }
-  });
-
-  // --- STT (Mic) ---
-  let recording = false;
-  let rec = null;
-  let chunks = [];
-
-  async function browserSpeechToText(){
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if(!SR) return null;
-
-    return await new Promise((resolve, reject) => {
-      try{
-        const r = new SR();
-        r.lang = getLangByCode(fromLang)?.code === "en" ? "en-US" : fromLang;
-        r.interimResults = false;
-        r.maxAlternatives = 1;
-
-        r.onresult = (e) => {
-          const text = String(e.results?.[0]?.[0]?.transcript || "").trim();
-          resolve(text || null);
-        };
-
-        r.onerror = () => resolve(null);
-        r.onend = () => {};
-
-        r.start();
-      }catch(err){
-        reject(err);
-      }
-    });
-  }
-
-  async function backendSpeechToText(){
-    const stream = await navigator.mediaDevices.getUserMedia({ audio:true });
-    return await new Promise((resolve, reject) => {
-      rec = new MediaRecorder(stream);
-      chunks = [];
-
-      rec.ondataavailable = (e) => chunks.push(e.data);
-
-      rec.onstop = async () => {
-        try{
-          const blob = new Blob(chunks, { type:"audio/webm" });
-          const fd = new FormData();
-          fd.append("file", blob, "speech.webm");
-          fd.append("lang", fromLang);
-
-          const r = await fetch(`${API_BASE}/api/stt`, {
-            method:"POST",
-            body:fd
-          });
-
-          const j = await r.json().catch(() => ({}));
-          const text = String(j?.text || "").trim();
-          resolve(text || null);
-        }catch(err){
-          reject(err);
-        }finally{
-          try{ stream.getTracks().forEach(t => t.stop()); }catch{}
-        }
-      };
-
-      rec.start();
-      recording = true;
-      btnMic.textContent = "⏺️";
-
-      setTimeout(() => {
-        try{
-          if(rec && rec.state !== "inactive"){
-            rec.stop();
-          }
-        }catch{}
-      }, 4500);
-    });
-  }
-
-  btnMic.addEventListener("click", async () => {
-    if(recording) return;
-
-    btnMic.style.pointerEvents = "none";
-    setTimeout(() => { btnMic.style.pointerEvents = "auto"; }, 400);
-
-    try{
-      srcTxt.value = "Dinleniyor...";
-
-      let text = await browserSpeechToText();
-
-      if(!text){
-        text = await backendSpeechToText();
-      }
-
-      recording = false;
-      btnMic.textContent = "🎙️";
-
-      if(text){
-        srcTxt.value = text;
-        doTranslate();
-      }else{
-        srcTxt.value = "";
-        toast("Ses çözümlenemedi.");
-      }
-    }catch(e){
-      recording = false;
-      btnMic.textContent = "🎙️";
-      srcTxt.value = "";
-      toast("Mikrofon izni gerekli.");
     }
   });
 
