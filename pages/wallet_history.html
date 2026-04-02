@@ -512,7 +512,14 @@
       "usage_meeting",
       "usage_clone_voice",
       "usage_teacher",
-      "manual_deduct"
+      "manual_deduct",
+      "text_ai",
+      "voice_ai",
+      "voice_clone",
+      "voice_clone_preview",
+      "voice_preset_use",
+      "voice_preset_preview",
+      "practic_ai"
     ]);
 
     function formatInt(val){
@@ -549,8 +556,10 @@
       try{ return JSON.parse(meta); } catch { return {}; }
     }
 
-    function typeLabel(type){
+    function typeLabel(type, reason){
       const t = String(type || "").trim().toLowerCase();
+      const r = String(reason || "").trim();
+
       const map = {
         purchase: "Satın Alma",
         package_bonus: "Paket Bonusu",
@@ -558,33 +567,51 @@
         gift: "Hediye",
         manual_add: "Manuel Ekleme",
         manual_deduct: "Manuel Düşüm",
-        usage_text: "Text Kullanımı",
+
+        usage_text: "Metin Kullanımı",
         usage_face_to_face: "FaceToFace",
         usage_side_to_side: "SideToSide",
         usage_meeting: "Toplantı Kullanımı",
         usage_clone_voice: "Klon Ses",
-        usage_teacher: "Öğretmen Kullanımı"
+        usage_teacher: "Practice AI",
+
+        text_ai: "Kültürel Translate",
+        voice_ai: "Ses Kullanımı",
+        voice_clone: "Kendi Sesim",
+        voice_clone_preview: "Kendi Sesim Önizleme",
+        voice_preset_use: "Özel Ses Kullanımı",
+        voice_preset_preview: "Özel Ses Önizleme",
+        practic_ai: "Practice AI"
       };
-      return map[t] || (type || "İşlem");
+
+      if (map[t]) return map[t];
+      if (r) return r;
+      return type || "İşlem";
     }
 
-    function typeIcon(type, amount){
+    function typeIcon(type, amount, reason){
       const t = String(type || "").trim().toLowerCase();
+      const r = String(reason || "").toLowerCase();
+
       if (amount > 0) {
         if (t === "upgrade_credit") return "⬆️";
         if (t === "package_bonus") return "🎁";
         if (t === "gift") return "🎉";
         return "➕";
       }
+
       if (amount < 0) {
-        if (t === "usage_text") return "📝";
+        if (t === "text_ai" || r.includes("kültürel translate")) return "📝";
+        if (t === "voice_preset_use" || r.includes("özel ses")) return "🎧";
+        if (t === "voice_clone" || r.includes("kendi sesim")) return "🗣️";
+        if (t === "voice_ai") return "🔊";
+        if (t === "practic_ai" || t === "usage_teacher" || r.includes("practice ai")) return "🎓";
         if (t === "usage_face_to_face") return "🎙️";
         if (t === "usage_side_to_side") return "🌍";
         if (t === "usage_meeting") return "👥";
-        if (t === "usage_clone_voice") return "🗣️";
-        if (t === "usage_teacher") return "🎓";
         return "➖";
       }
+
       return "•";
     }
 
@@ -666,7 +693,7 @@
       listWrap.innerHTML = filtered.map((row) => {
         const amt = Number(row.amount || 0);
         const group = typeGroup(row.type, amt);
-        const icon = typeIcon(row.type, amt);
+        const icon = typeIcon(row.type, amt, row.reason);
         const meta = parseMeta(row.meta);
         const balanceAfter = meta?.balance_after;
         const deltaText = `${amt > 0 ? "+" : ""}${formatInt(amt)}`;
@@ -677,7 +704,7 @@
 
             <div class="mid">
               <div class="mid-top">
-                <div class="type-pill">${escapeHtml(typeLabel(row.type))}</div>
+                <div class="type-pill">${escapeHtml(typeLabel(row.type, row.reason))}</div>
               </div>
 
               <div class="title">${escapeHtml(row.reason || "Jeton işlemi")}</div>
@@ -696,11 +723,18 @@
 
     function buildSubText(row, meta){
       const bits = [];
+      const type = String(row.type || "").trim().toLowerCase();
 
       if (meta?.module) bits.push(`Modül: ${meta.module}`);
+      if (meta?.surface) bits.push(`Alan: ${meta.surface}`);
+      if (meta?.usage_kind) bits.push(`Tür: ${meta.usage_kind}`);
       if (meta?.source) bits.push(`Kaynak: ${meta.source}`);
+      if (meta?.input_chars) bits.push(`Giriş: ${meta.input_chars} kr`);
+      if (meta?.output_chars) bits.push(`Çıkış: ${meta.output_chars} kr`);
+      if (meta?.billable_chars) bits.push(`Ücretlenen: ${meta.billable_chars} kr`);
+      if (meta?.charge_type === "startup") bits.push("İlk kullanım düşümü");
+      if (meta?.charge_type === "3000_step") bits.push("3000 karakter eşiği");
 
-      const type = String(row.type || "").trim().toLowerCase();
       if (type === "upgrade_credit") bits.push("Paket yükseltmesinden kalan değer jetona çevrildi");
       if (type === "package_bonus") bits.push("Paketle birlikte gelen bonus jeton");
       if (type === "purchase") bits.push("Jeton satın alma işlemi");
