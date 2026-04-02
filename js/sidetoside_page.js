@@ -3,8 +3,6 @@ import { supabase } from "/js/supabase_client.js";
 import { setHeaderTokens } from "/js/ui_shell.js";
 import {
   commitUsage,
-  resolveUsageModule,
-  resolveUsageMode,
   buildUsageNote
 } from "/js/usage_meter.js";
 
@@ -86,35 +84,30 @@ function isPaidEarToEarMode() {
   );
 }
 
-function earToEarUsageMode() {
-  return resolveUsageMode({ ai: isPaidEarToEarMode() });
-}
-
 function earToEarUsageModule() {
-  return resolveUsageModule({ surface: "eartoear", ai: isPaidEarToEarMode() });
+  return isPaidEarToEarMode() ? "eartoear_ai" : "usage_side_to_side";
 }
 
 function earToEarUsageNote(charCount) {
   const paid = isPaidEarToEarMode();
+  const cultural = normalizeTranslateMode(myProfile.translate_mode) === "cultural";
+  const clone = normalizeVoiceMode(myProfile.voice_mode) === "clone";
 
-  if (paid) {
-    if (
-      normalizeTranslateMode(myProfile.translate_mode) === "cultural" &&
-      normalizeVoiceMode(myProfile.voice_mode) === "clone"
-    ) {
-      return `EarToEar kültürel çeviri + özel ses kullanımı (${charCount} karakter)`;
-    }
-    if (normalizeTranslateMode(myProfile.translate_mode) === "cultural") {
-      return `EarToEar kültürel çeviri kullanımı (${charCount} karakter)`;
-    }
-    return `EarToEar özel ses kullanımı (${charCount} karakter)`;
+  if (!paid) {
+    return buildUsageNote({
+      surface: "sidetoside",
+      ai: false,
+      custom: `SideToSide standart kullanım (${charCount} karakter)`
+    });
   }
 
-  return buildUsageNote({
-    surface: "eartoear",
-    ai: false,
-    custom: `EarToEar standart kullanım (${charCount} karakter)`
-  });
+  if (cultural && clone) {
+    return `SideToSide kültürel çeviri + kendi sesim kullanımı (${charCount} karakter)`;
+  }
+  if (cultural) {
+    return `SideToSide kültürel çeviri kullanımı (${charCount} karakter)`;
+  }
+  return `SideToSide kendi sesim kullanımı (${charCount} karakter)`;
 }
 
 async function chargeEarToEarUsage(textValue) {
@@ -123,14 +116,18 @@ async function chargeEarToEarUsage(textValue) {
     return { ok: true, tokens_after: null, tokens_charged: 0 };
   }
 
+  if (!isPaidEarToEarMode()) {
+    return { ok: true, tokens_after: null, tokens_charged: 0 };
+  }
+
   try {
     const result = await commitUsage({
       module: earToEarUsageModule(),
-      mode: earToEarUsageMode(),
+      usageKind: "text",
       charCount,
       note: earToEarUsageNote(charCount),
       meta: {
-        surface: "eartoear",
+        surface: "sidetoside",
         from_lang: canonical(myLang),
         to_lang: canonical(peerLang || "en"),
         translate_mode: normalizeTranslateMode(myProfile.translate_mode),
@@ -171,6 +168,7 @@ const UI_TEXT = {
     langUpdated: "Dil güncellendi",
     roomMissing: "Oda bulunamadı",
     waitingPeer: "Karşı taraf bekleniyor...",
+    joiningRoom: "Odaya bağlanılıyor..."
   },
   en: {
     ready: "Tap the microphone to speak.",
@@ -187,6 +185,7 @@ const UI_TEXT = {
     langUpdated: "Language updated",
     roomMissing: "Room not found",
     waitingPeer: "Waiting for the other side...",
+    joiningRoom: "Joining room..."
   },
 };
 
@@ -323,6 +322,7 @@ let myDisplayName = "";
 let peerConnected = false;
 let peerEverConnected = false;
 let peerProfileReceived = false;
+let roomJoined = false;
 
 let myProfile = {
   lang: myLang,
@@ -468,8 +468,40 @@ async function loadProfileFromSupabase() {
 }
 
 /* =========================
-   ROOM SYNC FALLBACK
+   ROOM JOIN / SYNC
 ========================= */
+async function ensureRoomJoined() {
+  if (!roomId) throw new Error(t(myLang, "roomMissing"));
+  if (roomJoined) return true;
+
+  const payload = {
+    room_id: roomId,
+    my_lang: myLang
+  };
+
+  const r = await fetch(`${API_BASE}/interpreter/join-room`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+
+  const j = await r.json().catch(() => ({}));
+
+  if (!r.ok) {
+    throw new Error(j?.detail || j?.error || t(myLang, "wsFailed"));
+  }
+
+  roomJoined = true;
+
+  if (j?.peer_lang) {
+    peerLang = canonical(j.peer_lang);
+    peerProfile.lang = peerLang;
+    try { localStorage.setItem("live_interpreter_peer_lang", peerLang); } catch {}
+  }
+
+  return j;
+}
+
 async function fetchRoomSnapshot() {
   if (!roomId) return null;
   const r = await fetch(`${API_BASE}/interpreter/room/${encodeURIComponent(roomId)}`, {
@@ -939,8 +971,11 @@ async function applyMyLanguageChange(nextLang) {
   refreshLangLabels();
   refreshReadyTextsIfIdle();
   rebuildRecognizer();
+  roomJoined = false;
 
   try {
+    await ensureRoomJoined();
+
     if (ws && ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({
         type: "set_lang",
@@ -948,13 +983,15 @@ async function applyMyLanguageChange(nextLang) {
       }));
 
       await sendSelfProfile();
-      queueProfileResend();
+      await queueProfileResend();
 
       setHelper(botHelper, t(myLang, "langUpdated"), "helper-ready");
       bounceToReady(800);
       return;
     }
-  } catch {}
+  } catch (e) {
+    console.warn("[applyMyLanguageChange join]", e);
+  }
 
   try {
     if (ws) {
@@ -998,6 +1035,7 @@ function scheduleReconnect() {
   reconnectTimer = setTimeout(() => {
     reconnectTimer = null;
     reconnectCount += 1;
+    roomJoined = false;
     setHelper(botHelper, t(myLang, "reconnecting"), "helper-wait");
     startSocket();
   }, delay);
@@ -1046,6 +1084,12 @@ function startSocket() {
     startPing();
     startRoomSync();
     setSystemPreparingUI();
+
+    try {
+      await ensureRoomJoined();
+    } catch (e) {
+      console.warn("[join-room onopen]", e);
+    }
 
     try {
       const room = await fetchRoomSnapshot();
@@ -1471,7 +1515,7 @@ async function finalizeRecognition(text) {
   try {
     await chargeEarToEarUsage(cleaned);
   } catch (e) {
-    console.warn("[eartoear usage]", e);
+    console.warn("[sidetoside usage]", e);
     setErrorUI();
     if (e?.code !== "INSUFFICIENT_TOKENS") {
       setHelper(botHelper, "Jeton kontrolü yapılamadı", "helper-wait");
@@ -1754,8 +1798,15 @@ async function bootRoom() {
     }
 
     saveReturnContext();
-
     await loadMyIdentity();
+
+    setHelper(botHelper, t(myLang, "joiningRoom"), "helper-wait");
+
+    try {
+      await ensureRoomJoined();
+    } catch (e) {
+      console.warn("[bootRoom join-room]", e);
+    }
 
     try {
       const room = await fetchRoomSnapshot();
