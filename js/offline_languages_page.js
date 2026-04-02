@@ -924,17 +924,14 @@ function buildLangCard(l, query) {
   const downloadedBefore = hasEverDownloaded(l.code);
   const downloadCount = getDownloadCount(l.code);
   const cost = nextDownloadCost(l.code);
-  const canUse = canUseOfflineDownloads(accessState);
 
   let sub = "";
   if (localInstalled) {
     sub = "Bu cihazda kurulu";
   } else if (!downloadedBefore) {
-    sub = canUse ? "İlk indirme ücretsiz" : "İndirmek için üyelik gerekir";
+    sub = "İlk indirme ücretsiz";
   } else {
-    sub = canUse
-      ? `Tekrar indirme ${cost} jeton • Önceki indirme: ${downloadCount}`
-      : `Tekrar indirme kapalı • Üyelik gerekir`;
+    sub = `Tekrar indirme ${cost} jeton • Önceki indirme: ${downloadCount}`;
   }
 
   if (localInstalled) {
@@ -954,13 +951,8 @@ function buildLangCard(l, query) {
     `;
   }
 
-  const btnText = !canUse
-    ? "Üyelik Gerekli"
-    : (!downloadedBefore ? "Ücretsiz İndir" : `${cost} Jetonla İndir`);
-
-  const btnClass = !canUse
-    ? "lang-btn paid"
-    : (!downloadedBefore ? "lang-btn free" : "lang-btn paid");
+  const btnText = !downloadedBefore ? "Ücretsiz İndir" : `${cost} Jetonla İndir`;
+  const btnClass = !downloadedBefore ? "lang-btn free" : "lang-btn paid";
 
   return `
     <div class="lang-card">
