@@ -98,6 +98,8 @@ const HOME_HEADER_HTML = `
     </div>
 
     <nav class="menu-nav">
+      <a href="/pages/upgrade_pack.html" id="menuPackagesLink">Üyelik Paketleri</a>
+
       <a href="/pages/jetonbuy.html" id="menuJetonLoadLink" class="menu-link-jeton" data-i18n="menu_token_load">Jeton Yükle</a>
       <a href="/pages/wallet_history.html" id="menuWalletHistoryLink" data-i18n="menu_wallet_history">Jeton Hareketleri</a>
 
@@ -879,6 +881,8 @@ function bindMenu() {
   if (!menuBtn || !sideMenu) return;
   if (menuBtn.dataset.bound === "1") return;
 
+  hydrateJetonVisibility(null, false);
+
   const openMenu = () => {
     sideMenu.classList.add("open");
     sideMenu.setAttribute("aria-hidden", "false");
@@ -948,9 +952,9 @@ function bindMenu() {
   });
 
   deleteAccountBtn?.addEventListener("click", () => {
-  closeMenu();
-  location.href = "/pages/delete-account.html";
-});
+    closeMenu();
+    location.href = "/pages/delete-account.html";
+  });
 
   if (!__shellEscapeBound) {
     document.addEventListener("keydown", (e) => {
@@ -989,6 +993,26 @@ export function hydrateFromCache() {
   } catch {}
 }
 
+function isMemberAccess(state) {
+  return isPackageActuallyActive(state);
+}
+
+function hydrateJetonVisibility(state, isAdmin = false) {
+  const visible = !!isAdmin || isMemberAccess(state);
+
+  const tokenPill = document.getElementById("menuTokenPill");
+  const jetonInfoTop = document.getElementById("menuJetonInfoLink");
+  const jetonLoad = document.getElementById("menuJetonLoadLink");
+  const walletHistory = document.getElementById("menuWalletHistoryLink");
+  const jetonWhatIs = document.getElementById("menuJetonWhatIsLink");
+
+  [tokenPill, jetonInfoTop, jetonLoad, walletHistory, jetonWhatIs].forEach((el) => {
+    if (!el) return;
+    el.classList.toggle("hidden", !visible);
+    el.style.display = visible ? "" : "none";
+  });
+}
+
 async function hydrateMembershipCard() {
   if (__membershipLoadRunning) return;
   __membershipLoadRunning = true;
@@ -1020,6 +1044,9 @@ async function hydrateMembershipCard() {
   try {
     const mod = await import("/js/global_access.js");
     const state = await mod.getGlobalAccessState();
+
+    const adminInfo = await getAdminAccessInfo();
+    hydrateJetonVisibility(state, adminInfo.allowed);
 
     if (!state) {
       setMembershipUi({
@@ -1086,6 +1113,9 @@ async function hydrateMembershipCard() {
     });
   } catch (e) {
     console.warn("[ui_shell membership]", e);
+    const adminInfo = await getAdminAccessInfo();
+    hydrateJetonVisibility(null, adminInfo.allowed);
+
     setMembershipUi({
       cardClass: "neutral",
       badgeClass: "neutral",
@@ -1101,6 +1131,33 @@ async function hydrateMembershipCard() {
   }
 }
 
+async function getAdminAccessInfo() {
+  try {
+    const { supabase } = await import("/js/supabase_client.js");
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
+    if (!userId) return { allowed: false };
+
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("role,is_admin")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (error || !data) return { allowed: false };
+
+    const role = String(data.role || "").toLowerCase().trim();
+    const allowed =
+      data.is_admin === true ||
+      role === "admin" ||
+      role === "superadmin";
+
+    return { allowed };
+  } catch {
+    return { allowed: false };
+  }
+}
+
 async function hydrateAdminButton() {
   const adminLink = document.getElementById("adminPanelLink");
   if (!adminLink) return;
@@ -1109,26 +1166,9 @@ async function hydrateAdminButton() {
   adminLink.style.display = "none";
 
   try {
-    const { supabase } = await import("/js/supabase_client.js");
-    const { data: { session } } = await supabase.auth.getSession();
-    const userId = session?.user?.id;
-    if (!userId) return;
+    const adminInfo = await getAdminAccessInfo();
 
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("role,is_admin")
-      .eq("id", userId)
-      .maybeSingle();
-
-    if (error || !data) return;
-
-    const role = String(data.role || "").toLowerCase().trim();
-    const allowed =
-      data.is_admin === true ||
-      role === "admin" ||
-      role === "superadmin";
-
-    if (allowed) {
+    if (adminInfo.allowed) {
       adminLink.classList.remove("hidden");
       adminLink.style.display = "";
     } else {
