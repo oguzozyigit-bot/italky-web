@@ -645,6 +645,13 @@
 
 <script type="module">
   import { supabase } from "/js/supabase_client.js";
+  import { mountShell } from "/js/ui_shell.js";
+
+  try {
+    mountShell({ scroll: "auto" });
+  } catch (e) {
+    console.error("ui_shell HATASI:", e);
+  }
 
   const VOICE_KEY = "facetoface_voice_mode";
   const VOICE_PRESET_KEY = "facetoface_voice_preset";
@@ -693,12 +700,23 @@
   let translateMode = normalizeTranslateMode(localStorage.getItem(TRANSLATE_KEY) || "normal");
   let cloneReady = false;
   let currentUserId = "";
+  let currentPreviewAudio = null;
 
   let accessState = {
     trialActive: false,
     packageCode: "",
     lockedAll: false
   };
+
+  function stopCurrentPreview() {
+    try {
+      if (currentPreviewAudio) {
+        currentPreviewAudio.pause();
+        currentPreviewAudio.currentTime = 0;
+      }
+    } catch {}
+    currentPreviewAudio = null;
+  }
 
   function normalizeVoiceMode(v){
     const x = String(v || "").trim().toLowerCase();
@@ -855,6 +873,25 @@
     }
   }
 
+  async function playPreviewFromBase64(base64Audio, failMsg) {
+    stopCurrentPreview();
+    try {
+      const audio = new Audio(`data:audio/mp3;base64,${base64Audio}`);
+      currentPreviewAudio = audio;
+      audio.onended = () => {
+        if (currentPreviewAudio === audio) currentPreviewAudio = null;
+      };
+      audio.onerror = () => {
+        if (currentPreviewAudio === audio) currentPreviewAudio = null;
+        showToast(failMsg);
+      };
+      await audio.play();
+    } catch {
+      currentPreviewAudio = null;
+      showToast(failMsg);
+    }
+  }
+
   async function previewPresetVoice(voice){
     showToast(`${voice.name} sesi hazırlanıyor...`);
     try{
@@ -876,10 +913,7 @@
         return;
       }
 
-      const audio = new Audio(`data:audio/mp3;base64,${j.audio_base64}`);
-      audio.play().catch(() => {
-        showToast("Ses oynatılamadı");
-      });
+      await playPreviewFromBase64(j.audio_base64, "Ses oynatılamadı");
     } catch {
       showToast("Ses önizleme oynatılamadı");
     }
@@ -912,10 +946,7 @@
         return;
       }
 
-      const audio = new Audio(`data:audio/mp3;base64,${j.audio_base64}`);
-      audio.play().catch(() => {
-        showToast("Ses oynatılamadı");
-      });
+      await playPreviewFromBase64(j.audio_base64, "Kendi sesiniz oynatılamadı");
     } catch {
       showToast("Kendi sesiniz oynatılamadı");
     }
@@ -1021,6 +1052,7 @@
   }
 
   function goHome(){
+    stopCurrentPreview();
     location.href = "/pages/home.html";
   }
 
@@ -1103,7 +1135,8 @@
       showUiModal("Kendi sesinizi oluşturmak için üyelik paketi satın almanız gereklidir.");
       return;
     }
-    location.href = "/pages/voice_profile.html";
+    stopCurrentPreview();
+    location.href = "/pages/ai_voice_profile.html?from=translation_settings";
   });
 
   translateGrid?.querySelectorAll(".choice-card").forEach(card => {
