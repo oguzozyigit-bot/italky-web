@@ -3,7 +3,6 @@ import { supabase } from "/js/supabase_client.js";
 import { setHeaderTokens } from "/js/ui_shell.js";
 import {
   commitUsage,
-  resolveUsageModule,
   buildUsageNote
 } from "/js/usage_meter.js";
 
@@ -193,7 +192,6 @@ let liveTranscript = "";
 let latestPreviewTranscript = "";
 let recognitionFinishedByUser = false;
 let recognitionSessionId = 0;
-
 let typewriterRunId = 0;
 
 function showUiModal(message, title = "Üyelik Gerekli") {
@@ -279,26 +277,15 @@ function isPaidFaceVoiceMode() {
 }
 
 function faceTextUsageModule() {
-  return resolveUsageModule({
-    surface: "facetoface",
-    kind: "text",
-    mode: getFaceTranslateMode() === "cultural" ? "cultural" : "normal"
-  });
+  return getFaceTranslateMode() === "cultural" ? "facetoface_ai" : "usage_face_to_face";
 }
 
 function faceVoiceUsageModule() {
   const v = getFaceVoiceMode();
-
-  let mode = "normal";
-  if (v === "clone") mode = "clone";
-  else if (v === "preset") mode = "preset";
-  else if (v === "female" || v === "male") mode = "ai";
-
-  return resolveUsageModule({
-    surface: "facetoface",
-    kind: "voice",
-    mode
-  });
+  if (v === "clone") return "voice_clone";
+  if (v === "preset") return "voice_preset_use";
+  if (v === "female" || v === "male") return "voice_ai";
+  return "voice_ai";
 }
 
 function faceTextUsageNote() {
