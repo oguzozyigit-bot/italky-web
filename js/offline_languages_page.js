@@ -38,7 +38,6 @@ let LANGS = [];
 
 let accessState = {
   loaded: false,
-  tier: "free",      // free | trial | member
   trialActive: false,
   hasPackage: false,
   nfcActive: false
@@ -226,7 +225,7 @@ function showMemberOnlyModal(message, title = "Üyelik Gerekli") {
 }
 
 /* ---------------- ACCESS ---------------- */
-function getAccessState() {
+function parseWindowAccess() {
   const a = window.__ITALKY_ACCESS__ || {};
 
   const trialActive =
@@ -258,28 +257,65 @@ function getAccessState() {
     a.access_loaded === true ||
     Object.keys(a).length > 0;
 
-  return {
-    loaded,
-    trialActive,
-    hasPackage,
-    nfcActive
-  };
+  return { loaded, trialActive, hasPackage, nfcActive };
 }
 
-async function waitForAccessState(maxMs = 5000) {
-  const started = Date.now();
+async function resolveAccessState() {
+  const win = parseWindowAccess();
 
-  while (Date.now() - started < maxMs) {
-    const access = getAccessState();
-    if (access.loaded) {
-      accessState = access;
-      return access;
-    }
-    await new Promise((r) => setTimeout(r, 150));
+  if (win.hasPackage || win.nfcActive) {
+    accessState = win;
+    return accessState;
   }
 
-  accessState = getAccessState();
-  return accessState;
+  try {
+    const { data: authData, error: authErr } = await supabase.auth.getUser();
+    if (authErr) throw authErr;
+
+    const user = authData?.user;
+    if (!user?.id) {
+      accessState = win;
+      return accessState;
+    }
+
+    const { data: row, error } = await supabase
+      .from("user_access_state")
+      .select("*")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (error || !row) {
+      accessState = win;
+      return accessState;
+    }
+
+    const packageActive =
+      row.package_active === true &&
+      (!row.package_ends_at || new Date(row.package_ends_at).getTime() > Date.now());
+
+    const trialActive =
+      !packageActive &&
+      (
+        Number(row.trial_days_left || 0) > 0 ||
+        (!!row.trial_ends_at && new Date(row.trial_ends_at).getTime() > Date.now())
+      );
+
+    accessState = {
+      loaded: true,
+      hasPackage: packageActive,
+      nfcActive: false,
+      trialActive
+    };
+
+    return accessState;
+  } catch {
+    accessState = win;
+    return accessState;
+  }
+}
+
+async function waitForAccessState() {
+  return await resolveAccessState();
 }
 
 function canUseOfflineDownloads(access = accessState) {
@@ -295,7 +331,7 @@ function requireOfflineMembership() {
 function updateTopStatus() {
   if (networkTag) networkTag.textContent = navigator.onLine ? "ONLINE" : "OFFLINE";
 
-  const access = accessState?.loaded ? accessState : getAccessState();
+  const access = accessState;
   if (!trialTag) return;
 
   if (!access.loaded) {
@@ -308,6 +344,7 @@ function updateTopStatus() {
     trialTag.textContent = "FREE";
   }
 }
+
 /* ---------------- USER LANG ---------------- */
 function getUserLang() {
   return localStorage.getItem(USER_LANG_KEY) || "tr";
@@ -1003,9 +1040,7 @@ function render() {
     installBaseBtn.textContent = "Kurulum Tamamlandı";
   } else {
     installBaseBtn.disabled = false;
-    installBaseBtn.textContent = canUseOfflineDownloads(accessState)
-      ? "Kurulumu Başlat"
-      : "Üyelik Gerekli";
+    installBaseBtn.textContent = "Kurulumu Başlat";
   }
 
   updateTopStatus();
@@ -1032,12 +1067,7 @@ async function boot() {
       setHeaderTokens(Number(profileRow?.tokens || 0));
     } catch {}
 
-    if (canUseOfflineDownloads(accessState)) {
-      setStatus("Önce kendi konuşma dilinizi seçin.", "info");
-    } else {
-      setStatus("Offline paket indirmek için üyelik gerekir.", "warn");
-    }
-
+    setStatus("Önce kendi konuşma dilinizi seçin.", "info");
     render();
   } catch (e) {
     console.error(e);
@@ -1057,11 +1087,7 @@ if (installBaseBtn) {
 if (sourceSelect) {
   sourceSelect.onchange = () => {
     setUserLang(sourceSelect.value);
-    if (canUseOfflineDownloads(accessState)) {
-      setStatus(`${langName(sourceSelect.value)} seçildi. Kurulumu başlatabilirsiniz.`, "info");
-    } else {
-      setStatus(`${langName(sourceSelect.value)} seçildi. Kurulum için üyelik gerekir.`, "warn");
-    }
+    setStatus(`${langName(sourceSelect.value)} seçildi. Kurulumu başlatabilirsiniz.`, "info");
     render();
   };
 }
