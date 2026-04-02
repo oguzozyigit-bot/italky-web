@@ -229,13 +229,6 @@ function showMemberOnlyModal(message, title = "Üyelik Gerekli") {
 function getAccessState() {
   const a = window.__ITALKY_ACCESS__ || {};
 
-  const rawPackageCode = String(
-    a.selected_package_code ||
-    a.package_code ||
-    a.plan ||
-    ""
-  ).trim().toLowerCase();
-
   const trialActive =
     a.trialActive === true ||
     a.trial_active === true ||
@@ -244,6 +237,20 @@ function getAccessState() {
     Number(a.remainingTrialDays || 0) > 0 ||
     Number(a.remaining_trial_days || 0) > 0;
 
+  const hasPackage =
+    a.hasPackage === true ||
+    a.has_package === true ||
+    a.packageActive === true ||
+    a.package_active === true ||
+    a.isPremium === true ||
+    a.premium === true;
+
+  const nfcActive =
+    a.nfcActive === true ||
+    a.nfc_active === true ||
+    a.cardAccess === true ||
+    a.card_access === true;
+
   const loaded =
     a.loaded === true ||
     a.ready === true ||
@@ -251,15 +258,11 @@ function getAccessState() {
     a.access_loaded === true ||
     Object.keys(a).length > 0;
 
-  let tier = "free";
-  if (rawPackageCode) tier = "member";
-  else if (trialActive) tier = "trial";
-
   return {
     loaded,
-    tier,
     trialActive,
-    packageCode: rawPackageCode
+    hasPackage,
+    nfcActive
   };
 }
 
@@ -280,7 +283,8 @@ async function waitForAccessState(maxMs = 5000) {
 }
 
 function canUseOfflineDownloads(access = accessState) {
-  return access?.tier === "member";
+  if (!access) return false;
+  return access.hasPackage === true || access.nfcActive === true;
 }
 
 function requireOfflineMembership() {
@@ -291,28 +295,19 @@ function requireOfflineMembership() {
 function updateTopStatus() {
   if (networkTag) networkTag.textContent = navigator.onLine ? "ONLINE" : "OFFLINE";
 
-  if (!trialTag) return;
-
   const access = accessState?.loaded ? accessState : getAccessState();
+  if (!trialTag) return;
 
   if (!access.loaded) {
     trialTag.textContent = "KONTROL";
-    return;
-  }
-
-  if (access.tier === "member") {
-  trialTag.textContent = access.packageCode ? `ÜYE • ${access.packageCode.toUpperCase()}` : "ERİŞİM AÇIK";
-  return;
-}
-
-  if (access.tier === "trial") {
+  } else if (access.hasPackage || access.nfcActive) {
+    trialTag.textContent = "ERİŞİM AÇIK";
+  } else if (access.trialActive) {
     trialTag.textContent = "DENEME";
-    return;
+  } else {
+    trialTag.textContent = "FREE";
   }
-
-  trialTag.textContent = "FREE";
 }
-
 /* ---------------- USER LANG ---------------- */
 function getUserLang() {
   return localStorage.getItem(USER_LANG_KEY) || "tr";
