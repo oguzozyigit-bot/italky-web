@@ -229,14 +229,6 @@ function showMemberOnlyModal(message, title = "Üyelik Gerekli") {
 function getAccessState() {
   const a = window.__ITALKY_ACCESS__ || {};
 
-  const trialActive =
-    a.trialActive === true ||
-    a.trial_active === true ||
-    Number(a.trialDaysLeft || 0) > 0 ||
-    Number(a.trial_days_left || 0) > 0 ||
-    Number(a.remainingTrialDays || 0) > 0 ||
-    Number(a.remaining_trial_days || 0) > 0;
-
   const rawPackageCode = String(
     a.selected_package_code ||
     a.package_code ||
@@ -244,26 +236,13 @@ function getAccessState() {
     ""
   ).trim().toLowerCase();
 
-  const packageCode =
-    rawPackageCode.startsWith("premium") ? "premium" :
-    rawPackageCode.startsWith("translate") ? "translate" :
-    rawPackageCode.startsWith("edu") || rawPackageCode.startsWith("education") ? "education" :
-    rawPackageCode;
-
-  const hasPackage =
-    a.hasPackage === true ||
-    a.has_package === true ||
-    a.packageActive === true ||
-    a.package_active === true ||
-    a.isPremium === true ||
-    a.premium === true ||
-    !!packageCode;
-
-  const nfcActive =
-    a.nfcActive === true ||
-    a.nfc_active === true ||
-    a.cardAccess === true ||
-    a.card_access === true;
+  const trialActive =
+    a.trialActive === true ||
+    a.trial_active === true ||
+    Number(a.trialDaysLeft || 0) > 0 ||
+    Number(a.trial_days_left || 0) > 0 ||
+    Number(a.remainingTrialDays || 0) > 0 ||
+    Number(a.remaining_trial_days || 0) > 0;
 
   const loaded =
     a.loaded === true ||
@@ -273,16 +252,14 @@ function getAccessState() {
     Object.keys(a).length > 0;
 
   let tier = "free";
-  if (hasPackage || nfcActive) tier = "member";
+  if (rawPackageCode) tier = "member";
   else if (trialActive) tier = "trial";
 
   return {
     loaded,
+    tier,
     trialActive,
-    hasPackage,
-    nfcActive,
-    packageCode,
-    tier
+    packageCode: rawPackageCode
   };
 }
 
@@ -303,11 +280,7 @@ async function waitForAccessState(maxMs = 5000) {
 }
 
 function canUseOfflineDownloads(access = accessState) {
-  if (!access) return false;
-  if (access.tier === "member") return true;
-  if (access.hasPackage === true) return true;
-  if (access.nfcActive === true) return true;
-  return false;
+  return access?.tier === "member";
 }
 
 function requireOfflineMembership() {
