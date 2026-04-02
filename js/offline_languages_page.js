@@ -36,6 +36,14 @@ let profileRow = null;
 let renderToken = 0;
 let LANGS = [];
 
+let accessState = {
+  loaded: false,
+  tier: "free",      // free | trial | member
+  trialActive: false,
+  hasPackage: false,
+  nfcActive: false
+};
+
 /* ---------------- HELPERS ---------------- */
 function toast(msg) {
   if (!toastEl) return;
@@ -93,7 +101,7 @@ function langName(code) {
   return LANGS.find((x) => x.code === norm(code))?.name || String(code || "").toUpperCase();
 }
 
-/* ---------------- MODAL ---------------- */
+/* ---------------- MODALS ---------------- */
 function askConfirm({ title, text }) {
   return new Promise((resolve) => {
     confirmTitle.textContent = title || "Onay";
@@ -113,6 +121,108 @@ function askConfirm({ title, text }) {
     confirmCancel.addEventListener("click", onCancel);
     confirmOk.addEventListener("click", onOk);
   });
+}
+
+function ensureMemberModal() {
+  let modal = document.getElementById("memberOnlyModal");
+  if (modal) return modal;
+
+  modal = document.createElement("div");
+  modal.id = "memberOnlyModal";
+  modal.innerHTML = `
+    <div class="member-only-backdrop" style="
+      position:fixed; inset:0; display:none; align-items:center; justify-content:center;
+      background:rgba(0,0,0,.58); backdrop-filter:blur(6px); z-index:999999; padding:18px;
+    ">
+      <div style="
+        width:min(100%,420px);
+        border-radius:24px;
+        padding:18px;
+        background:linear-gradient(145deg, rgba(16,16,24,.96), rgba(10,10,18,.96));
+        border:1px solid rgba(255,255,255,.10);
+        box-shadow:0 24px 50px rgba(0,0,0,.30);
+        color:#fff;
+        font-family:Outfit,sans-serif;
+      ">
+        <h3 id="memberOnlyTitle" style="
+          margin:0 0 8px;
+          font-family:'Space Grotesk',sans-serif;
+          font-size:20px;
+          font-weight:900;
+          color:#fff;
+        ">Üyelik Gerekli</h3>
+
+        <p id="memberOnlyText" style="
+          margin:0;
+          font-size:13px;
+          line-height:1.6;
+          color:rgba(255,255,255,.76);
+        ">Bu özelliği kullanabilmek için üye olmanız gerekir.</p>
+
+        <div style="
+          display:grid;
+          grid-template-columns:1fr 1fr;
+          gap:10px;
+          margin-top:16px;
+        ">
+          <button id="memberOnlyGo" type="button" style="
+            min-height:46px;
+            border:none;
+            border-radius:16px;
+            cursor:pointer;
+            font-family:inherit;
+            font-size:13px;
+            font-weight:900;
+            background:linear-gradient(135deg,#8bd3ff 0%,#7c5cff 45%,#ff66c4 100%);
+            color:#05060d;
+          ">Üyelik Paketlerini Gör</button>
+
+          <button id="memberOnlySkip" type="button" style="
+            min-height:46px;
+            border:none;
+            border-radius:16px;
+            cursor:pointer;
+            font-family:inherit;
+            font-size:13px;
+            font-weight:900;
+            background:rgba(255,255,255,.06);
+            border:1px solid rgba(255,255,255,.10);
+            color:#fff;
+          ">Atla</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  const backdrop = modal.querySelector(".member-only-backdrop");
+  const skip = modal.querySelector("#memberOnlySkip");
+  const go = modal.querySelector("#memberOnlyGo");
+
+  const close = () => {
+    backdrop.style.display = "none";
+  };
+
+  skip.addEventListener("click", close);
+  backdrop.addEventListener("click", (e) => {
+    if (e.target === backdrop) close();
+  });
+  go.addEventListener("click", () => {
+    location.href = "/pages/upgrade_pack.html";
+  });
+
+  return modal;
+}
+
+function showMemberOnlyModal(message, title = "Üyelik Gerekli") {
+  const modal = ensureMemberModal();
+  const backdrop = modal.querySelector(".member-only-backdrop");
+  const titleEl = modal.querySelector("#memberOnlyTitle");
+  const textEl = modal.querySelector("#memberOnlyText");
+
+  titleEl.textContent = title;
+  textEl.textContent = message || "Bu özelliği kullanabilmek için üye olmanız gerekir.";
+  backdrop.style.display = "flex";
 }
 
 /* ---------------- ACCESS ---------------- */
@@ -148,7 +258,11 @@ function getAccessState() {
     a.access_loaded === true ||
     Object.keys(a).length > 0;
 
-  return { trialActive, hasPackage, nfcActive, loaded };
+  let tier = "free";
+  if (hasPackage || nfcActive) tier = "member";
+  else if (trialActive) tier = "trial";
+
+  return { loaded, trialActive, hasPackage, nfcActive, tier };
 }
 
 async function waitForAccessState(maxMs = 5000) {
@@ -156,35 +270,49 @@ async function waitForAccessState(maxMs = 5000) {
 
   while (Date.now() - started < maxMs) {
     const access = getAccessState();
-    if (access.loaded) return access;
+    if (access.loaded) {
+      accessState = access;
+      return access;
+    }
     await new Promise((r) => setTimeout(r, 150));
   }
 
-  return getAccessState();
+  accessState = getAccessState();
+  return accessState;
 }
 
-function accessOk(access) {
-  const s = access || getAccessState();
-  if (!s.loaded) return true;
-  if (s.trialActive || s.hasPackage || s.nfcActive) return true;
-  return true;
+function canUseOfflineDownloads(access = accessState) {
+  return access?.tier === "member";
+}
+
+function requireOfflineMembership() {
+  showMemberOnlyModal("Offline dil paketlerini indirebilmek için üye olmanız gerekir.");
+  return false;
 }
 
 function updateTopStatus() {
   if (networkTag) networkTag.textContent = navigator.onLine ? "ONLINE" : "OFFLINE";
 
-  const access = getAccessState();
   if (!trialTag) return;
+
+  const access = accessState?.loaded ? accessState : getAccessState();
 
   if (!access.loaded) {
     trialTag.textContent = "KONTROL";
-  } else if (access.trialActive) {
-    trialTag.textContent = "DENEME AKTİF";
-  } else if (access.hasPackage || access.nfcActive) {
-    trialTag.textContent = "ERİŞİM AÇIK";
-  } else {
-    trialTag.textContent = "AÇIK";
+    return;
   }
+
+  if (access.tier === "member") {
+    trialTag.textContent = "ERİŞİM AÇIK";
+    return;
+  }
+
+  if (access.tier === "trial") {
+    trialTag.textContent = "DENEME";
+    return;
+  }
+
+  trialTag.textContent = "FREE";
 }
 
 /* ---------------- USER LANG ---------------- */
@@ -496,9 +624,9 @@ async function installBase() {
   }
 
   const access = await waitForAccessState();
-  if (!accessOk(access)) {
-    setStatus("Offline kullanım için erişim gerekli.", "err");
-    toast("Üyelik veya erişim gerekli");
+  if (!canUseOfflineDownloads(access)) {
+    setStatus("Offline kurulum için üyelik gerekir.", "err");
+    requireOfflineMembership();
     return;
   }
 
@@ -605,6 +733,13 @@ window.removeLang = async function (lang) {
     return;
   }
 
+  const access = await waitForAccessState();
+  if (!canUseOfflineDownloads(access)) {
+    setStatus("Offline dil yönetimi için üyelik gerekir.", "err");
+    requireOfflineMembership();
+    return;
+  }
+
   const title = langName(code);
 
   const approved = await askConfirm({
@@ -661,16 +796,16 @@ window.installLang = async function (lang) {
     return;
   }
 
-  if (!isBaseReady(ownLang)) {
-    setStatus("Önce kendi konuşma diliniz için temel kurulumu tamamlayın.", "warn");
-    toast("Önce temel kurulumu tamamlayın");
+  const access = await waitForAccessState();
+  if (!canUseOfflineDownloads(access)) {
+    setStatus("Offline dil indirmek için üyelik gerekir.", "err");
+    requireOfflineMembership();
     return;
   }
 
-  const access = await waitForAccessState();
-  if (!accessOk(access)) {
-    setStatus("Offline kullanım için erişim gerekli.", "err");
-    toast("Üyelik veya erişim gerekli");
+  if (!isBaseReady(ownLang)) {
+    setStatus("Önce kendi konuşma diliniz için temel kurulumu tamamlayın.", "warn");
+    toast("Önce temel kurulumu tamamlayın");
     return;
   }
 
@@ -796,14 +931,17 @@ function buildLangCard(l, query) {
   const downloadedBefore = hasEverDownloaded(l.code);
   const downloadCount = getDownloadCount(l.code);
   const cost = nextDownloadCost(l.code);
+  const canUse = canUseOfflineDownloads(accessState);
 
   let sub = "";
   if (localInstalled) {
     sub = "Bu cihazda kurulu";
   } else if (!downloadedBefore) {
-    sub = "İlk indirme ücretsiz";
+    sub = canUse ? "İlk indirme ücretsiz" : "İndirmek için üyelik gerekir";
   } else {
-    sub = `Tekrar indirme ${cost} jeton • Önceki indirme: ${downloadCount}`;
+    sub = canUse
+      ? `Tekrar indirme ${cost} jeton • Önceki indirme: ${downloadCount}`
+      : `Tekrar indirme kapalı • Üyelik gerekir`;
   }
 
   if (localInstalled) {
@@ -823,8 +961,13 @@ function buildLangCard(l, query) {
     `;
   }
 
-  const btnText = !downloadedBefore ? "Ücretsiz İndir" : `${cost} Jetonla İndir`;
-  const btnClass = !downloadedBefore ? "lang-btn free" : "lang-btn paid";
+  const btnText = !canUse
+    ? "Üyelik Gerekli"
+    : (!downloadedBefore ? "Ücretsiz İndir" : `${cost} Jetonla İndir`);
+
+  const btnClass = !canUse
+    ? "lang-btn paid"
+    : (!downloadedBefore ? "lang-btn free" : "lang-btn paid");
 
   return `
     <div class="lang-card">
@@ -875,7 +1018,9 @@ function render() {
     installBaseBtn.textContent = "Kurulum Tamamlandı";
   } else {
     installBaseBtn.disabled = false;
-    installBaseBtn.textContent = "Kurulumu Başlat";
+    installBaseBtn.textContent = canUseOfflineDownloads(accessState)
+      ? "Kurulumu Başlat"
+      : "Üyelik Gerekli";
   }
 
   updateTopStatus();
@@ -902,7 +1047,12 @@ async function boot() {
       setHeaderTokens(Number(profileRow?.tokens || 0));
     } catch {}
 
-    setStatus("Önce kendi konuşma dilinizi seçin.", "info");
+    if (canUseOfflineDownloads(accessState)) {
+      setStatus("Önce kendi konuşma dilinizi seçin.", "info");
+    } else {
+      setStatus("Offline paket indirmek için üyelik gerekir.", "warn");
+    }
+
     render();
   } catch (e) {
     console.error(e);
@@ -922,7 +1072,11 @@ if (installBaseBtn) {
 if (sourceSelect) {
   sourceSelect.onchange = () => {
     setUserLang(sourceSelect.value);
-    setStatus(`${langName(sourceSelect.value)} seçildi. Kurulumu başlatabilirsiniz.`, "info");
+    if (canUseOfflineDownloads(accessState)) {
+      setStatus(`${langName(sourceSelect.value)} seçildi. Kurulumu başlatabilirsiniz.`, "info");
+    } else {
+      setStatus(`${langName(sourceSelect.value)} seçildi. Kurulum için üyelik gerekir.`, "warn");
+    }
     render();
   };
 }
