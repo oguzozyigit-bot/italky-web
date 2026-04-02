@@ -683,18 +683,18 @@
   const uiModalClose = document.getElementById("uiModalClose");
 
   const PRESET_VOICES = [
-  { id: "huma",   name: "Hüma",   tag: "Kadın", text: "Merhaba, ben Hüma. Neşeli ve sıcak bir ses tonuyla sana eşlik ediyorum." },
-  { id: "selden", name: "Selden", tag: "Kadın", text: "Merhaba, ben Selden. Dengeli ve yumuşak bir anlatımla yanındayım." },
-  { id: "jale",   name: "Jale",   tag: "Kadın", text: "Merhaba, ben Jale. Doğal ve zarif bir tonla konuşmaları akıcı hale getiriyorum." },
-  { id: "handan", name: "Handan", tag: "Kadın", text: "Merhaba, ben Handan. Sakin, net ve güven veren bir ses tonum var." },
-  { id: "nilay",  name: "Nilay",  tag: "Kadın", text: "Merhaba, ben Nilay. Yumuşak ve doğal bir sesle sana yardımcı oluyorum." },
+    { id: "huma",   name: "Hüma",   tag: "Kadın", text: "Merhaba, ben Hüma. Neşeli ve sıcak bir ses tonuyla sana eşlik ediyorum." },
+    { id: "selden", name: "Selden", tag: "Kadın", text: "Merhaba, ben Selden. Dengeli ve yumuşak bir anlatımla yanındayım." },
+    { id: "jale",   name: "Jale",   tag: "Kadın", text: "Merhaba, ben Jale. Doğal ve zarif bir tonla konuşmaları akıcı hale getiriyorum." },
+    { id: "handan", name: "Handan", tag: "Kadın", text: "Merhaba, ben Handan. Sakin, net ve güven veren bir ses tonum var." },
+    { id: "nilay",  name: "Nilay",  tag: "Kadın", text: "Merhaba, ben Nilay. Yumuşak ve doğal bir sesle sana yardımcı oluyorum." },
 
-  { id: "ozan",   name: "Ozan",   tag: "Erkek", text: "Merhaba, ben Ozan. Güçlü ve net bir ses tonuyla italkyAI deneyimine eşlik ediyorum." },
-  { id: "yigit",  name: "Yiğit",  tag: "Erkek", text: "Merhaba, ben Yiğit. Dengeli ve kararlı bir tonla konuşmaları destekliyorum." },
-  { id: "oguz",   name: "Oğuz",   tag: "Erkek", text: "Merhaba, ben Oğuz. Doğal, sıcak ve kendine yakın bir ses deneyimi sunuyorum." },
-  { id: "yavuz",  name: "Yavuz",  tag: "Erkek", text: "Merhaba, ben Yavuz. Güven veren ve tok bir tonla yanında olacağım." },
-  { id: "yilmaz", name: "Yılmaz", tag: "Erkek", text: "Merhaba, ben Yılmaz. Net ve güçlü bir ses yapısıyla konuşmaları taşıyorum." }
-];
+    { id: "ozan",   name: "Ozan",   tag: "Erkek", text: "Merhaba, ben Ozan. Güçlü ve net bir ses tonuyla italkyAI deneyimine eşlik ediyorum." },
+    { id: "yigit",  name: "Yiğit",  tag: "Erkek", text: "Merhaba, ben Yiğit. Dengeli ve kararlı bir tonla konuşmaları destekliyorum." },
+    { id: "oguz",   name: "Oğuz",   tag: "Erkek", text: "Merhaba, ben Oğuz. Doğal, sıcak ve kendine yakın bir ses deneyimi sunuyorum." },
+    { id: "yavuz",  name: "Yavuz",  tag: "Erkek", text: "Merhaba, ben Yavuz. Güven veren ve tok bir tonla yanında olacağım." },
+    { id: "yilmaz", name: "Yılmaz", tag: "Erkek", text: "Merhaba, ben Yılmaz. Net ve güçlü bir ses yapısıyla konuşmaları taşıyorum." }
+  ];
 
   let voiceMode = normalizeVoiceMode(
     localStorage.getItem(VOICE_KEY) ||
@@ -1025,8 +1025,11 @@
       if(row){
         const rawCode = String(row.selected_package_code || "").trim().toLowerCase();
         const packageCode = normalizePackageCode(rawCode);
-        const packageActive = !!packageCode && row.package_active === true &&
-          (!row.package_ends_at || new Date(row.package_ends_at).getTime() > Date.now());
+
+        const packageActive =
+          (!!packageCode && row.package_active === true && (!row.package_ends_at || new Date(row.package_ends_at).getTime() > Date.now()))
+          || (!!packageCode && row.package_active === true && !row.package_ends_at)
+          || (!!packageCode && row.package_active === true);
 
         const trialActive = !packageActive && (
           Number(row.trial_days_left || 0) > 0 ||
@@ -1036,7 +1039,7 @@
         accessState = {
           trialActive,
           packageCode: packageActive ? packageCode : "",
-          lockedAll: !packageActive && !trialActive
+          lockedAll: false
         };
       }else{
         accessState = { trialActive:false, packageCode:"", lockedAll:false };
@@ -1064,25 +1067,10 @@
   }
 
   document.getElementById("presetCard")?.addEventListener("click", () => {
-    if (accessState.lockedAll) {
-      showUiModal("Bu menüyü kullanabilmek için üye olmanız gereklidir.");
-      return;
-    }
-
-    if (accessState.trialActive) {
-      showUiModal("Bu sesi kullanmak için üye olmanız gereklidir.");
-      return;
-    }
-
     presetVoiceWrap.classList.toggle("open");
   });
 
   document.querySelector('[data-voice="auto"]')?.addEventListener("click", () => {
-    if (accessState.lockedAll) {
-      showUiModal("Bu menüyü kullanabilmek için üye olmanız gereklidir.");
-      return;
-    }
-
     voiceMode = "auto";
     paintSelections();
     refreshSummary();
@@ -1090,10 +1078,6 @@
   });
 
   cloneUseBtn?.addEventListener("click", () => {
-    if (accessState.lockedAll) {
-      showUiModal("Bu menüyü kullanabilmek için üye olmanız gereklidir.");
-      return;
-    }
     if (accessState.trialActive) {
       showUiModal("Kendi sesinizi kullanmak için üye olmanız gereklidir.");
       return;
@@ -1114,10 +1098,6 @@
   });
 
   cloneListenBtn?.addEventListener("click", () => {
-    if (accessState.lockedAll) {
-      showUiModal("Bu menüyü kullanabilmek için üye olmanız gereklidir.");
-      return;
-    }
     if (accessState.trialActive) {
       showUiModal("Kendi sesinizi dinlemek için üye olmanız gereklidir.");
       return;
@@ -1130,10 +1110,6 @@
   });
 
   cloneEditBtn?.addEventListener("click", () => {
-    if (accessState.lockedAll) {
-      showUiModal("Bu menüyü kullanabilmek için üye olmanız gereklidir.");
-      return;
-    }
     if (accessState.trialActive) {
       showUiModal("Kendi sesinizi oluşturmak için üye olmanız gereklidir.");
       return;
@@ -1143,17 +1119,12 @@
       return;
     }
     stopCurrentPreview();
-    location.href = "/pages/ai_voice_profile.html?from=translation_settings";
+    location.href = "/pages/voice_profile.html?from=translation_settings";
   });
 
   translateGrid?.querySelectorAll(".choice-card").forEach(card => {
     card.addEventListener("click", () => {
       const selected = normalizeTranslateMode(card.dataset.translate || "normal");
-
-      if (accessState.lockedAll) {
-        showUiModal("Bu menüyü kullanabilmek için üye olmanız gereklidir.");
-        return;
-      }
 
       if (selected === "cultural") {
         if (accessState.trialActive) {
@@ -1175,11 +1146,6 @@
   });
 
   saveBtn?.addEventListener("click", () => {
-    if (accessState.lockedAll) {
-      showUiModal("Bu menüyü kullanabilmek için üye olmanız gereklidir.");
-      return;
-    }
-
     saveSettings();
     showToast("Ayarlar kaydedildi");
     setTimeout(() => {
