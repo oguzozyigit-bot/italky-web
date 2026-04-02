@@ -644,11 +644,20 @@ function setHelper(el, text, tone) {
   el.textContent = text || "";
 }
 
+function hasUsablePeerConnection() {
+  return !!(
+    peerConnected ||
+    peerEverConnected ||
+    peerProfileReceived ||
+    String(peerLang || "").trim()
+  );
+}
+
 function setSystemReadyUI() {
   activeSide = null;
   resetMics();
 
-  if (peerConnected || peerEverConnected || peerProfileReceived) {
+  if (hasUsablePeerConnection()) {
     setFrameVisual("ready");
     if (topHelper) topHelper.style.display = "none";
     setHelper(botHelper, t(myLang, "ready"), "helper-ready");
