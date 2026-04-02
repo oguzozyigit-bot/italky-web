@@ -850,7 +850,8 @@ textarea::placeholder{
         body:JSON.stringify({
           text,
           from_lang: fromLang,
-          to_lang: toLang
+          to_lang: toLang,
+          mode: "normal"
         })
       });
 
@@ -919,6 +920,35 @@ textarea::placeholder{
       }
     }catch{}
     audio = null;
+
+    try{
+      window.speechSynthesis?.cancel?.();
+    }catch{}
+
+    try{
+      window.NativeTTS?.stop?.();
+    }catch{}
+  }
+
+  function speakFallback(text, lang){
+    try{
+      if(window.NativeTTS && typeof window.NativeTTS.speak === "function"){
+        window.NativeTTS.speak(text, lang);
+        return true;
+      }
+    }catch{}
+
+    try{
+      if("speechSynthesis" in window){
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = lang;
+        window.speechSynthesis.speak(u);
+        return true;
+      }
+    }catch{}
+
+    return false;
   }
 
   btnSpeak.addEventListener("click", async () => {
@@ -930,7 +960,6 @@ textarea::placeholder{
     if(!t || t === "...") return;
 
     stopSpeak();
-
     const myToken = ++speakToken;
 
     btnSpeak.style.pointerEvents = "none";
@@ -942,7 +971,11 @@ textarea::placeholder{
       const r = await fetch(`${API_BASE}/api/tts`, {
         method:"POST",
         headers:{ "Content-Type":"application/json" },
-        body:JSON.stringify({ text:t, lang:toLang }),
+        body:JSON.stringify({
+          text: t,
+          lang: toLang,
+          voice: "auto"
+        }),
         signal:speakCtl.signal
       });
 
@@ -960,9 +993,12 @@ textarea::placeholder{
 
         if(myToken !== speakToken) return;
         await audio.play();
+        return;
       }
+
+      speakFallback(t, toLang);
     }catch(e){
-      stopSpeak();
+      speakFallback(t, toLang);
     }
   });
 
@@ -971,54 +1007,114 @@ textarea::placeholder{
   let rec = null;
   let chunks = [];
 
-  btnMic.addEventListener("click", async () => {
-    if(!recording){
+  async function browserSpeechToText(){
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if(!SR) return null;
+
+    return await new Promise((resolve, reject) => {
       try{
-        const stream = await navigator.mediaDevices.getUserMedia({ audio:true });
-        rec = new MediaRecorder(stream);
-        chunks = [];
+        const r = new SR();
+        r.lang = getLangByCode(fromLang)?.code === "en" ? "en-US" : fromLang;
+        r.interimResults = false;
+        r.maxAlternatives = 1;
 
-        rec.ondataavailable = (e) => chunks.push(e.data);
-        rec.onstop = async () => {
-          const blob = new Blob(chunks, { type:"audio/webm" });
-          const fd = new FormData();
-          fd.append("file", blob);
-          fd.append("lang", fromLang);
-
-          srcTxt.value = "Dinleniyor...";
-          try{
-            const r = await fetch(`${API_BASE}/api/stt`, {
-              method:"POST",
-              body:fd
-            });
-            const j = await r.json().catch(() => ({}));
-            srcTxt.value = j?.text || "";
-            doTranslate();
-          }catch{
-            srcTxt.value = "";
-            toast("Ses çözümlenemedi.");
-          }
+        r.onresult = (e) => {
+          const text = String(e.results?.[0]?.[0]?.transcript || "").trim();
+          resolve(text || null);
         };
 
-        rec.start();
-        recording = true;
-        btnMic.textContent = "⏺️";
-      }catch(e){
-        toast("Mikrofon izni gerekli.");
+        r.onerror = () => resolve(null);
+        r.onend = () => {};
+
+        r.start();
+      }catch(err){
+        reject(err);
       }
-    }else{
-      rec.stop();
+    });
+  }
+
+  async function backendSpeechToText(){
+    const stream = await navigator.mediaDevices.getUserMedia({ audio:true });
+    return await new Promise((resolve, reject) => {
+      rec = new MediaRecorder(stream);
+      chunks = [];
+
+      rec.ondataavailable = (e) => chunks.push(e.data);
+
+      rec.onstop = async () => {
+        try{
+          const blob = new Blob(chunks, { type:"audio/webm" });
+          const fd = new FormData();
+          fd.append("file", blob, "speech.webm");
+          fd.append("lang", fromLang);
+
+          const r = await fetch(`${API_BASE}/api/stt`, {
+            method:"POST",
+            body:fd
+          });
+
+          const j = await r.json().catch(() => ({}));
+          const text = String(j?.text || "").trim();
+          resolve(text || null);
+        }catch(err){
+          reject(err);
+        }finally{
+          try{ stream.getTracks().forEach(t => t.stop()); }catch{}
+        }
+      };
+
+      rec.start();
+      recording = true;
+      btnMic.textContent = "⏺️";
+
+      setTimeout(() => {
+        try{
+          if(rec && rec.state !== "inactive"){
+            rec.stop();
+          }
+        }catch{}
+      }, 4500);
+    });
+  }
+
+  btnMic.addEventListener("click", async () => {
+    if(recording) return;
+
+    btnMic.style.pointerEvents = "none";
+    setTimeout(() => { btnMic.style.pointerEvents = "auto"; }, 400);
+
+    try{
+      srcTxt.value = "Dinleniyor...";
+
+      let text = await browserSpeechToText();
+
+      if(!text){
+        text = await backendSpeechToText();
+      }
+
       recording = false;
       btnMic.textContent = "🎙️";
+
+      if(text){
+        srcTxt.value = text;
+        doTranslate();
+      }else{
+        srcTxt.value = "";
+        toast("Ses çözümlenemedi.");
+      }
+    }catch(e){
+      recording = false;
+      btnMic.textContent = "🎙️";
+      srcTxt.value = "";
+      toast("Mikrofon izni gerekli.");
     }
   });
 
   ensureValidLanguages();
-renderTopLanguageButtons();
-dstTxt.textContent = "...";
+  renderTopLanguageButtons();
+  dstTxt.textContent = "...";
 </script>
 
-<script type="module" src="/js/text_translate_page.js?v=TEXT_TRANSLATE_V3"></script>
 <script type="module">
   import { initGlobalAccess } from "/js/global_access.js";
   initGlobalAccess();
