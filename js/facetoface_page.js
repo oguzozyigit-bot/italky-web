@@ -6,6 +6,8 @@ import {
   resolveUsageModule,
   buildUsageNote
 } from "/js/usage_meter.js";
+const ttsMemoryCache = new Map();
+const TTS_CACHE_LIMIT = 24;
 
 const API_BASE = "https://italky-api.onrender.com";
 const $ = (id) => document.getElementById(id);
@@ -654,25 +656,87 @@ async function warmAudio() {
     }
   } catch {}
 }
+function buildTtsCacheKey(text, langCode, tone = "neutral") {
+  const voice = getVoicePreference();
+  const finalVoice = voice === "preset" ? getSelectedPresetVoice() : voice;
 
+  return JSON.stringify({
+    t: String(text || "").trim(),
+    l: canonical(langCode),
+    v: String(finalVoice || "auto").trim().toLowerCase(),
+    n: canonTone(tone)
+  });
+}
+
+function rememberTtsCache(key, audioSrc) {
+  if (!key || !audioSrc) return;
+
+  if (ttsMemoryCache.has(key)) {
+    ttsMemoryCache.delete(key);
+  }
+
+  ttsMemoryCache.set(key, audioSrc);
+
+  while (ttsMemoryCache.size > TTS_CACHE_LIMIT) {
+    const firstKey = ttsMemoryCache.keys().next().value;
+    ttsMemoryCache.delete(firstKey);
+  }
+}
+
+async function playCachedAudio(audioSrc, runId) {
+  if (!audioSrc) return false;
+  if (runId !== speakRunId) return false;
+
+  const nextAudio = new Audio(audioSrc);
+  nextAudio.preload = "auto";
+  nextAudio.playsInline = true;
+  nextAudio.crossOrigin = "anonymous";
+
+  await warmAudio();
+
+  if (runId !== speakRunId) return false;
+
+  currentAudio = nextAudio;
+
+  nextAudio.onended = () => {
+    if (currentAudio === nextAudio) currentAudio = null;
+  };
+
+  nextAudio.onerror = () => {
+    if (currentAudio === nextAudio) currentAudio = null;
+  };
+
+  await nextAudio.play();
+
+  if (runId !== speakRunId) {
+    try {
+      nextAudio.pause();
+      nextAudio.currentTime = 0;
+    } catch {}
+    if (currentAudio === nextAudio) currentAudio = null;
+    return false;
+  }
+
+  return true;
+}
 async function speakViaApi(text, langCode, tone = "neutral") {
   const myRunId = speakRunId;
   const userId = await getCurrentUserId();
   const voice = getVoicePreference();
-const finalVoice = voice === "preset" ? getSelectedPresetVoice() : voice;
+  const finalVoice = voice === "preset" ? getSelectedPresetVoice() : voice;
 
-const r = await fetch(`${API_BASE}/api/tts`, {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    text: String(text || "").trim(),
-    lang: canonical(langCode),
-    user_id: userId,
-    module: "facetoface",
-    voice: finalVoice,
-    tone: canonTone(tone),
-  }),
-});
+  const r = await fetch(`${API_BASE}/api/tts`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      text: String(text || "").trim(),
+      lang: canonical(langCode),
+      user_id: userId,
+      module: "facetoface",
+      voice: finalVoice,
+      tone: canonTone(tone),
+    }),
+  });
 
   if (myRunId !== speakRunId) return false;
 
@@ -683,46 +747,18 @@ const r = await fetch(`${API_BASE}/api/tts`, {
     throw new Error(j?.error || j?.detail || "TTS API unavailable");
   }
 
-  const audio = new Audio(`data:audio/mp3;base64,${j.audio_base64}`);
-  audio.preload = "auto";
-  audio.playsInline = true;
-  currentAudio = audio;
+  const audioSrc = `data:audio/mp3;base64,${j.audio_base64}`;
+  const cacheKey = buildTtsCacheKey(text, langCode, tone);
+  rememberTtsCache(cacheKey, audioSrc);
 
-  audio.onended = () => {
-    if (currentAudio === audio) currentAudio = null;
-  };
-
-  audio.onerror = () => {
-    if (currentAudio === audio) currentAudio = null;
-  };
-
-  await warmAudio();
-
-  if (myRunId !== speakRunId) {
-    try { audio.pause(); } catch {}
-    return false;
-  }
-
-  await audio.play();
-
-  if (myRunId !== speakRunId) {
-    try {
-      audio.pause();
-      audio.currentTime = 0;
-    } catch {}
-    if (currentAudio === audio) currentAudio = null;
-    return false;
-  }
-
-  return true;
+  return await playCachedAudio(audioSrc, myRunId);
 }
-
 function chooseWebVoice(langCode) {
   const voices = window.speechSynthesis?.getVoices?.() || [];
   const bcp = langObj(langCode).bcp.toLowerCase();
   const langBase = canonical(langCode);
   const pref = getVoicePreference();
-
+ 
   let pool = voices.filter((v) => String(v.lang || "").toLowerCase().startsWith(langBase));
   if (!pool.length) pool = voices.filter((v) => String(v.lang || "").toLowerCase() === bcp);
   if (!pool.length) pool = voices;
@@ -806,11 +842,25 @@ async function speak(text, langCode, tone = "neutral") {
   const myRunId = ++speakRunId;
   const voice = getVoicePreference();
 
+  const cacheKey = buildTtsCacheKey(value, langCode, tone);
+  const cachedAudioSrc = ttsMemoryCache.get(cacheKey);
+
   // Ücretsiz cihaz sesi
   if (voice === "auto") {
     if (myRunId !== speakRunId) return;
     speakFallback(value, langCode, tone);
     return;
+  }
+
+  // Cache varsa tekrar üretme, tekrar ücret düşme
+  if (cachedAudioSrc) {
+    try {
+      await playCachedAudio(cachedAudioSrc, myRunId);
+      return;
+    } catch (e) {
+      console.warn("[facetoface cached audio replay failed]", e);
+      ttsMemoryCache.delete(cacheKey);
+    }
   }
 
   // Jetonlu seslerde önce usage düş
@@ -843,6 +893,8 @@ async function speak(text, langCode, tone = "neutral") {
     }
   }
 
+  if (myRunId !== speakRunId) return;
+
   if (voice === "clone") {
     try {
       const ready = await hasReadyVoiceProfile();
@@ -853,9 +905,13 @@ async function speak(text, langCode, tone = "neutral") {
         return;
       }
 
-      await speakViaApi(value, langCode, tone);
+      const ok = await speakViaApi(value, langCode, tone);
+      if (!ok && myRunId === speakRunId) {
+        speakFallback(value, langCode, tone);
+      }
       return;
-    } catch {
+    } catch (e) {
+      console.warn("[facetoface clone speak fallback]", e);
       if (myRunId !== speakRunId) return;
       speakFallback(value, langCode, tone);
       return;
@@ -863,8 +919,12 @@ async function speak(text, langCode, tone = "neutral") {
   }
 
   try {
-    await speakViaApi(value, langCode, tone);
-  } catch {
+    const ok = await speakViaApi(value, langCode, tone);
+    if (!ok && myRunId === speakRunId) {
+      speakFallback(value, langCode, tone);
+    }
+  } catch (e) {
+    console.warn("[facetoface preset speak fallback]", e);
     if (myRunId !== speakRunId) return;
     speakFallback(value, langCode, tone);
   }
