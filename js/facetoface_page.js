@@ -6,6 +6,7 @@ import {
   resolveUsageModule,
   buildUsageNote
 } from "/js/usage_meter.js";
+
 const ttsMemoryCache = new Map();
 const TTS_CACHE_LIMIT = 24;
 
@@ -656,6 +657,7 @@ async function warmAudio() {
     }
   } catch {}
 }
+
 function buildTtsCacheKey(text, langCode, tone = "neutral") {
   const voice = getVoicePreference();
   const finalVoice = voice === "preset" ? getSelectedPresetVoice() : voice;
@@ -693,7 +695,6 @@ async function playCachedAudio(audioSrc, runId) {
   nextAudio.crossOrigin = "anonymous";
 
   await warmAudio();
-
   if (runId !== speakRunId) return false;
 
   currentAudio = nextAudio;
@@ -719,6 +720,7 @@ async function playCachedAudio(audioSrc, runId) {
 
   return true;
 }
+
 async function speakViaApi(text, langCode, tone = "neutral") {
   const myRunId = speakRunId;
   const userId = await getCurrentUserId();
@@ -753,12 +755,13 @@ async function speakViaApi(text, langCode, tone = "neutral") {
 
   return await playCachedAudio(audioSrc, myRunId);
 }
+
 function chooseWebVoice(langCode) {
   const voices = window.speechSynthesis?.getVoices?.() || [];
   const bcp = langObj(langCode).bcp.toLowerCase();
   const langBase = canonical(langCode);
   const pref = getVoicePreference();
- 
+
   let pool = voices.filter((v) => String(v.lang || "").toLowerCase().startsWith(langBase));
   if (!pool.length) pool = voices.filter((v) => String(v.lang || "").toLowerCase() === bcp);
   if (!pool.length) pool = voices;
@@ -834,512 +837,110 @@ function speakFallback(text, langCode, tone = "neutral") {
   }, 80);
 }
 
-from __future__ import annotations
+async function speak(text, langCode, tone = "neutral") {
+  const value = String(text || "").trim();
+  if (!value) return;
 
-import os
-import re
-from typing import Optional
+  stopAudio();
+  const myRunId = ++speakRunId;
+  const voice = getVoicePreference();
 
-import requests
-from fastapi import APIRouter
-from pydantic import BaseModel
+  const cacheKey = buildTtsCacheKey(value, langCode, tone);
+  const cachedAudioSrc = ttsMemoryCache.get(cacheKey);
 
-router = APIRouter(tags=["translate_ai"])
+  if (voice === "auto") {
+    if (myRunId !== speakRunId) return;
+    speakFallback(value, langCode, tone);
+    return;
+  }
 
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "").strip()
-OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini").strip()
-GOOGLE_TRANSLATE_API_KEY = os.getenv("GOOGLE_TRANSLATE_API_KEY", "").strip()
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip()
-
-
-class TranslateBody(BaseModel):
-    text: str
-    from_lang: str
-    to_lang: str
-    mode: Optional[str] = "normal"      # normal | cultural
-    tone: Optional[str] = "neutral"     # neutral | happy | angry | sad | excited
-    style: Optional[str] = "balanced"   # balanced | warm | clear | social
-
-
-def canonical(code: str) -> str:
-    return str(code or "").strip().lower().split("-")[0]
-
-
-def normalize_text(text: str) -> str:
-    return str(text or "").strip()
-
-
-def canonical_tone(tone: str) -> str:
-    v = str(tone or "neutral").strip().lower()
-    if v in {"neutral", "happy", "angry", "sad", "excited"}:
-        return v
-    return "neutral"
-
-
-def canonical_style(style: str) -> str:
-    v = str(style or "balanced").strip().lower()
-    if v in {"balanced", "warm", "clear", "social"}:
-        return v
-    return "balanced"
-
-
-def detect_register_hint(text: str) -> str:
-    s = normalize_text(text).lower()
-
-    formal_markers = [
-        "sayın", "saygılarımla", "arz ederim", "rica ederim", "teşekkür ederim",
-        "lütfen", "bilginize", "tarafınıza", "konu hakkında", "gerekmektedir",
-        "uygundur", "hususunda", "talep ediyorum", "değerlendirmenizi"
-    ]
-
-    casual_markers = [
-        "ya", "abi", "abla", "kanka", "bence", "hadi", "vallahi", "valla",
-        "tamam", "olur", "aynen", "şöyle", "şoyle", "yani", "off", "wow"
-    ]
-
-    formal_score = sum(1 for x in formal_markers if x in s)
-    casual_score = sum(1 for x in casual_markers if x in s)
-
-    if formal_score >= casual_score + 2:
-        return "formal"
-    if casual_score >= formal_score + 1:
-        return "casual"
-    return "neutral"
-
-
-def should_use_ai_for_cultural(text: str, tone: str, style: str) -> bool:
-    s = normalize_text(text)
-    low = s.lower()
-
-    if not s:
-        return False
-
-    # kısa ve düz cümlelerde AI'a gitme
-    words = re.findall(r"\S+", s)
-    word_count = len(words)
-    char_count = len(s)
-
-    if char_count <= 60 and word_count <= 8:
-        simple_hits = [
-            "selam", "merhaba", "günaydın", "iyi geceler", "iyi akşamlar",
-            "nasılsın", "nasilsin", "iyiyim", "teşekkürler", "tesekkurler",
-            "tamam", "olur", "evet", "hayır", "hayir", "görüşürüz", "gorusuruz",
-            "hoşça kal", "hosca kal", "kaç para", "yardım eder misin", "adres nerede"
-        ]
-        if any(x in low for x in simple_hits):
-            return False
-
-    # kültürel fark gerektiren tetikleyiciler
-    emotional_hits = [
-        "kırıldım", "kirildim", "alındım", "alindim", "gönül", "gonul",
-        "kalbim", "içim", "icim", "ayıp oldu", "ayip oldu", "bozuldu",
-        "üzgünüm", "uzgunum", "mutluyum", "çok sevindim", "cok sevindim"
-    ]
-
-    idiom_hits = [
-        "lafın gelişi", "lafin gelisi", "üstü kapalı", "ustu kapali",
-        "ince ince", "iğneleme", "igneleme", "ima", "imalı", "imali",
-        "taş atmak", "tas atmak", "gönlünü almak", "gonlunu almak"
-    ]
-
-    formal_hits = [
-        "sayın", "saygılarımla", "arz ederim", "rica ederim",
-        "tarafınıza", "hususunda", "değerlendirmenizi"
-    ]
-
-    if tone != "neutral":
-        return True
-
-    if style in {"warm", "social"} and char_count >= 50:
-        return True
-
-    if any(x in low for x in emotional_hits):
-        return True
-
-    if any(x in low for x in idiom_hits):
-        return True
-
-    if any(x in low for x in formal_hits):
-        return True
-
-    if char_count >= 180:
-        return True
-
-    if word_count >= 20:
-        return True
-
-    if "!" in s or "?" in s:
-        if char_count >= 70:
-            return True
-
-    return False
-
-
-def google_translate_free(text: str, source: str, target: str) -> str:
-    url = "https://translate.googleapis.com/translate_a/single"
-    params = {
-        "client": "gtx",
-        "sl": source,
-        "tl": target,
-        "dt": "t",
-        "q": text,
+  if (cachedAudioSrc) {
+    try {
+      await playCachedAudio(cachedAudioSrc, myRunId);
+      return;
+    } catch (e) {
+      console.warn("[facetoface cached audio replay failed]", e);
+      ttsMemoryCache.delete(cacheKey);
     }
+  }
 
-    r = requests.get(url, params=params, timeout=12)
-    r.raise_for_status()
-    data = r.json()
+  if (myRunId !== speakRunId) return;
 
-    translated = ""
-    if isinstance(data, list) and data and isinstance(data[0], list):
-        for item in data[0]:
-            if isinstance(item, list) and item:
-                translated += str(item[0] or "")
-    return translated.strip()
+  let played = false;
 
+  if (voice === "clone") {
+    try {
+      const ready = await hasReadyVoiceProfile();
+      if (myRunId !== speakRunId) return;
 
-def google_translate_official(text: str, source: str, target: str) -> str:
-    if not GOOGLE_TRANSLATE_API_KEY:
-        raise RuntimeError("GOOGLE_TRANSLATE_API_KEY missing")
-
-    url = "https://translation.googleapis.com/language/translate/v2"
-    payload = {
-        "q": text,
-        "source": source,
-        "target": target,
-        "format": "text",
-        "key": GOOGLE_TRANSLATE_API_KEY,
-    }
-
-    r = requests.post(url, data=payload, timeout=12)
-    r.raise_for_status()
-    data = r.json()
-    translated = (
-        data.get("data", {})
-        .get("translations", [{}])[0]
-        .get("translatedText", "")
-    )
-    return str(translated).strip()
-
-
-def openai_cultural_translate(
-    text: str,
-    source: str,
-    target: str,
-    tone: str = "neutral",
-    style: str = "balanced"
-) -> str:
-    if not OPENAI_API_KEY:
-        raise RuntimeError("OPENAI_API_KEY missing")
-
-    tone = canonical_tone(tone)
-    style = canonical_style(style)
-    register_hint = detect_register_hint(text)
-
-    tone_map = {
-        "neutral": "Keep the tone natural, clear, smooth and human.",
-        "happy": "Keep the tone warm, friendly, positive and lively.",
-        "angry": "Keep the emotional intensity, but make it sound natural, socially appropriate and human.",
-        "sad": "Keep the tone soft, sincere, empathetic and emotionally gentle.",
-        "excited": "Keep the tone energetic, vivid, enthusiastic and natural."
-    }
-
-    style_map = {
-        "balanced": "Use balanced, natural, everyday phrasing.",
-        "warm": "Prefer warmer, softer, more human phrasing when possible.",
-        "clear": "Prefer simpler, clearer, easier-to-understand phrasing.",
-        "social": "Prefer slightly more conversational spoken-language phrasing."
-    }
-
-    register_map = {
-        "formal": "If the source sounds formal, keep it respectful but do not make it stiff or robotic.",
-        "casual": "If the source sounds casual, keep it relaxed, natural and conversational.",
-        "neutral": "Prefer natural daily phrasing over overly formal or rigid wording."
-    }
-
-    tone_rule = tone_map.get(tone, tone_map["neutral"])
-    style_rule = style_map.get(style, style_map["balanced"])
-    register_rule = register_map.get(register_hint, register_map["neutral"])
-
-    prompt = f"""
-You are a highly natural conversational translator.
-
-Translate the following text from "{source}" to "{target}".
-
-Core rules:
-- Preserve the exact meaning.
-- Do not sound robotic, stiff, or overly literal.
-- Make the result feel like something a real person would naturally say.
-- Keep the speaker's emotional tone.
-- Keep the social intent and politeness level.
-- Prefer fluent, human, culturally appropriate phrasing.
-- If a sentence sounds too formal in the target language, soften it slightly into natural spoken language without losing meaning.
-- If the source is already casual, keep it casual and natural.
-- Do not add extra explanation.
-- Do not add quotation marks.
-- Do not mention translation systems, AI tools, model names, brands, or technology.
-- Return only the translated text.
-
-Tone guidance:
-{tone_rule}
-
-Style guidance:
-{style_rule}
-
-Register guidance:
-{register_rule}
-
-Text:
-{text}
-""".strip()
-
-    payload = {
-        "model": OPENAI_MODEL,
-        "input": prompt,
-    }
-
-    headers = {
-        "Authorization": f"Bearer {OPENAI_API_KEY}",
-        "Content-Type": "application/json",
-    }
-
-    r = requests.post(
-        "https://api.openai.com/v1/responses",
-        headers=headers,
-        json=payload,
-        timeout=18,
-    )
-    r.raise_for_status()
-    data = r.json()
-
-    chunks = []
-    for item in data.get("output", []) or []:
-        for content in item.get("content", []) or []:
-            if content.get("type") in {"output_text", "text"}:
-                txt = str(content.get("text") or "").strip()
-                if txt:
-                    chunks.append(txt)
-
-    out = "".join(chunks).strip()
-    if not out:
-        out = str(data.get("output_text") or data.get("text") or "").strip()
-
-    if not out:
-        raise RuntimeError("OpenAI empty text")
-
-    return out
-
-
-def gemini_cultural_translate(
-    text: str,
-    source: str,
-    target: str,
-    tone: str = "neutral",
-    style: str = "balanced"
-) -> str:
-    if not GEMINI_API_KEY:
-        raise RuntimeError("GEMINI_API_KEY missing")
-
-    tone = canonical_tone(tone)
-    style = canonical_style(style)
-    register_hint = detect_register_hint(text)
-
-    tone_map = {
-        "neutral": "Keep the tone natural, clear, smooth and human.",
-        "happy": "Keep the tone warm, friendly, positive and lively.",
-        "angry": "Keep the emotional intensity, but make it sound natural, socially appropriate and human.",
-        "sad": "Keep the tone soft, sincere, empathetic and emotionally gentle.",
-        "excited": "Keep the tone energetic, vivid, enthusiastic and natural."
-    }
-
-    style_map = {
-        "balanced": "Use balanced, natural, everyday phrasing.",
-        "warm": "Prefer warmer, softer, more human phrasing when possible.",
-        "clear": "Prefer simpler, clearer, easier-to-understand phrasing.",
-        "social": "Prefer slightly more conversational spoken-language phrasing."
-    }
-
-    register_map = {
-        "formal": "If the source sounds formal, keep it respectful but do not make it stiff or robotic.",
-        "casual": "If the source sounds casual, keep it relaxed, natural and conversational.",
-        "neutral": "Prefer natural daily phrasing over overly formal or rigid wording."
-    }
-
-    tone_rule = tone_map.get(tone, tone_map["neutral"])
-    style_rule = style_map.get(style, style_map["balanced"])
-    register_rule = register_map.get(register_hint, register_map["neutral"])
-
-    prompt = f"""
-You are a highly natural conversational translator.
-
-Translate the following text from "{source}" to "{target}".
-
-Core rules:
-- Preserve the exact meaning.
-- Do not sound robotic, stiff, or overly literal.
-- Make the result feel like something a real person would naturally say.
-- Keep the speaker's emotional tone.
-- Keep the social intent and politeness level.
-- Prefer fluent, human, culturally appropriate phrasing.
-- If a sentence sounds too formal in the target language, soften it slightly into natural spoken language without losing meaning.
-- If the source is already casual, keep it casual and natural.
-- Do not add extra explanation.
-- Do not add quotation marks.
-- Do not mention translation systems, AI tools, model names, brands, or technology.
-- Return only the translated text.
-
-Tone guidance:
-{tone_rule}
-
-Style guidance:
-{style_rule}
-
-Register guidance:
-{register_rule}
-
-Text:
-{text}
-""".strip()
-
-    url = (
-        "https://generativelanguage.googleapis.com/v1beta/models/"
-        f"{GEMINI_MODEL}:generateContent?key={GEMINI_API_KEY}"
-    )
-
-    payload = {
-        "contents": [
-            {
-                "parts": [
-                    {"text": prompt}
-                ]
-            }
-        ],
-        "generationConfig": {
-            "temperature": 0.42,
-            "topP": 0.9,
-            "maxOutputTokens": 512
+      if (!ready) {
+        speakFallback(value, langCode, tone);
+        played = true;
+      } else {
+        const ok = await speakViaApi(value, langCode, tone);
+        if (myRunId !== speakRunId) return;
+        if (ok) played = true;
+        else {
+          speakFallback(value, langCode, tone);
+          played = true;
         }
+      }
+    } catch (e) {
+      console.warn("[facetoface clone speak fallback]", e);
+      if (myRunId !== speakRunId) return;
+      speakFallback(value, langCode, tone);
+      played = true;
     }
+  } else {
+    try {
+      const ok = await speakViaApi(value, langCode, tone);
+      if (myRunId !== speakRunId) return;
+      if (ok) played = true;
+      else {
+        speakFallback(value, langCode, tone);
+        played = true;
+      }
+    } catch (e) {
+      console.warn("[facetoface preset speak fallback]", e);
+      if (myRunId !== speakRunId) return;
+      speakFallback(value, langCode, tone);
+      played = true;
+    }
+  }
 
-    r = requests.post(url, json=payload, timeout=16)
-    r.raise_for_status()
-    data = r.json()
+  if (!played || myRunId !== speakRunId) return;
 
-    candidates = data.get("candidates") or []
-    if not candidates:
-        raise RuntimeError("Gemini empty candidates")
+  if (isPaidFaceVoiceMode()) {
+    Promise.resolve().then(async () => {
+      try {
+        const voiceUsageResult = await commitUsage({
+          module: faceVoiceUsageModule(),
+          usageKind: "voice",
+          charCount: value.length,
+          note: faceVoiceUsageNote(),
+          meta: {
+            surface: "facetoface",
+            lang: canonical(langCode),
+            tone: canonTone(tone),
+            voice_mode: getFaceVoiceMode(),
+            output_chars: value.length,
+            billable_chars: value.length
+          }
+        });
 
-    parts = candidates[0].get("content", {}).get("parts", [])
-    out = "".join(str(p.get("text", "")) for p in parts).strip()
-
-    if not out:
-        raise RuntimeError("Gemini empty text")
-
-    return out
-
-
-def fast_translate_fallback(text: str, source: str, target: str) -> str:
-    try:
-        print("[translate_ai] trying google free")
-        translated = google_translate_free(text, source, target)
-        if translated:
-            return translated
-    except Exception as e1:
-        print("[translate_ai] google_free failed:", e1)
-
-    print("[translate_ai] trying google official fallback")
-    translated = google_translate_official(text, source, target)
-    return translated
-
-
-@router.get("/translate_ai/health")
-def translate_ai_health():
-    return {"ok": True, "service": "translate_ai"}
-
-
-@router.post("/translate_ai")
-def translate_ai(body: TranslateBody):
-    text = normalize_text(body.text)
-    source = canonical(body.from_lang)
-    target = canonical(body.to_lang)
-    mode = str(body.mode or "normal").strip().lower()
-    tone = canonical_tone(body.tone or "neutral")
-    style = canonical_style(body.style or "balanced")
-
-    print("[translate_ai] request:", {
-        "text": text,
-        "source": source,
-        "target": target,
-        "mode": mode,
-        "tone": tone,
-        "style": style,
-    })
-
-    if not text:
-        return {"ok": False, "error": "empty_text"}
-
-    if not source or not target:
-        return {"ok": False, "error": "missing_lang"}
-
-    if source == target:
-        return {"ok": True, "translated": text}
-
-    if mode == "normal":
-        try:
-            translated = fast_translate_fallback(text, source, target)
-            if translated:
-                return {"ok": True, "translated": translated}
-        except Exception as e:
-            print("[translate_ai] normal failed:", e)
-
-        return {"ok": False, "error": "normal_translate_failed"}
-
-    if mode == "cultural":
-        # hız için: basit cümlelerde AI'a hiç gitme
-        if not should_use_ai_for_cultural(text, tone, style):
-          try:
-              print("[translate_ai] cultural fast path -> google")
-              translated = fast_translate_fallback(text, source, target)
-              if translated:
-                  return {"ok": True, "translated": translated}
-          except Exception as e0:
-              print("[translate_ai] cultural fast path failed:", e0)
-
-        try:
-            print("[translate_ai] trying gemini cultural")
-            translated = gemini_cultural_translate(text, source, target, tone, style)
-            if translated:
-                return {"ok": True, "translated": translated}
-        except Exception as e1:
-            print("[translate_ai] gemini failed:", e1)
-
-        try:
-            print("[translate_ai] trying openai cultural fallback")
-            translated = openai_cultural_translate(text, source, target, tone, style)
-            if translated:
-                return {"ok": True, "translated": translated}
-        except Exception as e2:
-            print("[translate_ai] openai failed:", e2)
-
-        try:
-            print("[translate_ai] trying google official fallback")
-            translated = google_translate_official(text, source, target)
-            if translated:
-                return {"ok": True, "translated": translated}
-        except Exception as e3:
-            print("[translate_ai] google_official fallback failed:", e3)
-
-        try:
-            print("[translate_ai] trying google free fallback")
-            translated = google_translate_free(text, source, target)
-            if translated:
-                return {"ok": True, "translated": translated}
-        except Exception as e4:
-            print("[translate_ai] google_free fallback failed:", e4)
-
-        return {"ok": False, "error": "cultural_translate_failed"}
-
-    return {"ok": False, "error": "invalid_mode"}
+        if (typeof voiceUsageResult?.tokens_after === "number") {
+          try { setHeaderTokens(voiceUsageResult.tokens_after); } catch {}
+        }
+      } catch (e) {
+        if (e?.code === "INSUFFICIENT_TOKENS") {
+          console.warn("[facetoface voice usage] insufficient tokens after playback");
+          return;
+        }
+        console.error("[facetoface voice usage]", e);
+      }
+    });
+  }
+}
 
 async function chargeFaceUsage(inputText, outputText, srcLang, dstLang) {
   const inLen = String(inputText || "").trim().length;
@@ -1350,7 +951,6 @@ async function chargeFaceUsage(inputText, outputText, srcLang, dstLang) {
 
   let latestResult = null;
 
-  // 1) Kültürel çeviri varsa text usage düş
   if (isPaidFaceTextMode()) {
     latestResult = await commitUsage({
       module: faceTextUsageModule(),
@@ -1485,9 +1085,7 @@ async function translateText(text, from, to, tone = "neutral") {
         }),
       });
 
-      if (!r.ok) {
-        continue;
-      }
+      if (!r.ok) continue;
 
       const j = await r.json().catch(() => null);
       const value = String(
@@ -1613,13 +1211,9 @@ async function finalizeRecognition(side, text) {
 
   if (latestTxt) {
     latestTxt.textContent = "";
-
-    // sesi hemen paralel başlat
     const speakPromise = speak(tr, dst, sourceTone);
-
     await typewriteText(latestTxt, tr, other);
     keepLatestVisible(other);
-
     try {
       await speakPromise;
     } catch {}
@@ -1637,6 +1231,7 @@ async function finalizeRecognition(side, text) {
 
   setSystemReadyUI();
 }
+
 function startRecording(side) {
   const lang = side === "top" ? topLang : botLang;
   const rec = buildRecognizer(lang);
