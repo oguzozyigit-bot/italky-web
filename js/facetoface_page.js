@@ -4,7 +4,6 @@ import { setHeaderTokens } from "/js/ui_shell.js";
 import {
   commitUsage,
   resolveUsageModule,
-  resolveUsageMode,
   buildUsageNote
 } from "/js/usage_meter.js";
 
@@ -267,38 +266,59 @@ function getFaceTranslateMode() {
   return value === "cultural" ? "cultural" : "normal";
 }
 
-function isPaidFaceMode() {
-  return getFaceTranslateMode() === "cultural" || getFaceVoiceMode() === "clone";
+function isPaidFaceTextMode() {
+  return getFaceTranslateMode() === "cultural";
 }
 
-function faceUsageModule() {
-  return resolveUsageModule({ surface: "facetoface", ai: isPaidFaceMode() });
+function isPaidFaceVoiceMode() {
+  const v = getFaceVoiceMode();
+  return v === "clone" || v === "female" || v === "male" || v === "preset";
 }
 
-function faceUsageMode() {
-  return resolveUsageMode({ ai: isPaidFaceMode() });
+function faceTextUsageModule() {
+  return resolveUsageModule({
+    surface: "facetoface",
+    kind: "text",
+    mode: getFaceTranslateMode() === "cultural" ? "cultural" : "normal"
+  });
 }
 
-function faceUsageNote(charCount) {
-  const paid = isPaidFaceMode();
-  const cultural = getFaceTranslateMode() === "cultural";
-  const clone = getFaceVoiceMode() === "clone";
+function faceVoiceUsageModule() {
+  const v = getFaceVoiceMode();
 
-  if (!paid) {
-    return buildUsageNote({
-      surface: "facetoface",
-      ai: false,
-      custom: `FaceToFace standart kullanım (${charCount} karakter)`
-    });
-  }
+  let mode = "normal";
+  if (v === "clone") mode = "clone";
+  else if (v === "preset") mode = "preset";
+  else if (v === "female" || v === "male") mode = "ai";
 
-  if (cultural && clone) {
-    return `FaceToFace kültürel çeviri + özel ses kullanımı (${charCount} karakter)`;
-  }
-  if (cultural) {
-    return `FaceToFace kültürel çeviri kullanımı (${charCount} karakter)`;
-  }
-  return `FaceToFace özel ses kullanımı (${charCount} karakter)`;
+  return resolveUsageModule({
+    surface: "facetoface",
+    kind: "voice",
+    mode
+  });
+}
+
+function faceTextUsageNote() {
+  return buildUsageNote({
+    surface: "facetoface",
+    usageKind: "text",
+    mode: getFaceTranslateMode() === "cultural" ? "cultural" : "normal"
+  });
+}
+
+function faceVoiceUsageNote() {
+  const v = getFaceVoiceMode();
+
+  let mode = "normal";
+  if (v === "clone") mode = "clone";
+  else if (v === "preset") mode = "preset";
+  else if (v === "female" || v === "male") mode = "ai";
+
+  return buildUsageNote({
+    surface: "facetoface",
+    usageKind: "voice",
+    mode
+  });
 }
 
 function canonTone(value) {
@@ -778,10 +798,41 @@ async function speak(text, langCode, tone = "neutral") {
   const myRunId = ++speakRunId;
   const voice = getVoicePreference();
 
+  // Ücretsiz cihaz sesi
   if (voice === "auto") {
     if (myRunId !== speakRunId) return;
     speakFallback(value, langCode, tone);
     return;
+  }
+
+  // Jetonlu seslerde önce usage düş
+  if (isPaidFaceVoiceMode()) {
+    try {
+      const voiceUsageResult = await commitUsage({
+        module: faceVoiceUsageModule(),
+        usageKind: "voice",
+        charCount: value.length,
+        note: faceVoiceUsageNote(),
+        meta: {
+          surface: "facetoface",
+          lang: canonical(langCode),
+          tone: canonTone(tone),
+          voice_mode: getFaceVoiceMode(),
+          output_chars: value.length,
+          billable_chars: value.length
+        }
+      });
+
+      if (typeof voiceUsageResult?.tokens_after === "number") {
+        try { setHeaderTokens(voiceUsageResult.tokens_after); } catch {}
+      }
+    } catch (e) {
+      if (e?.code === "INSUFFICIENT_TOKENS") {
+        showUiModal("Jetonunuz yetersiz. Jeton Market'e yönlendiriliyorsunuz.", "Yetersiz Jeton");
+        return;
+      }
+      console.error("[facetoface voice usage]", e);
+    }
   }
 
   if (voice === "clone") {
@@ -816,29 +867,35 @@ async function chargeFaceUsage(inputText, outputText, srcLang, dstLang) {
   const outLen = String(outputText || "").trim().length;
   const billableChars = Math.max(inLen, outLen);
 
-  if (billableChars <= 0) return;
+  if (billableChars <= 0) return null;
 
-  const result = await commitUsage({
-    module: faceUsageModule(),
-    mode: faceUsageMode(),
-    charCount: billableChars,
-    note: faceUsageNote(billableChars),
-    meta: {
-      surface: "facetoface",
-      from_lang: canonical(srcLang),
-      to_lang: canonical(dstLang),
-      translate_mode: getFaceTranslateMode(),
-      voice_mode: getFaceVoiceMode(),
-      input_chars: inLen,
-      output_chars: outLen
-    }
-  });
+  let latestResult = null;
 
-  if (typeof result?.tokens_after === "number") {
-    try { setHeaderTokens(result.tokens_after); } catch {}
+  // 1) Kültürel çeviri varsa text usage düş
+  if (isPaidFaceTextMode()) {
+    latestResult = await commitUsage({
+      module: faceTextUsageModule(),
+      usageKind: "text",
+      charCount: billableChars,
+      note: faceTextUsageNote(),
+      meta: {
+        surface: "facetoface",
+        from_lang: canonical(srcLang),
+        to_lang: canonical(dstLang),
+        translate_mode: getFaceTranslateMode(),
+        voice_mode: getFaceVoiceMode(),
+        input_chars: inLen,
+        output_chars: outLen,
+        billable_chars: billableChars
+      }
+    });
   }
 
-  return result;
+  if (typeof latestResult?.tokens_after === "number") {
+    try { setHeaderTokens(latestResult.tokens_after); } catch {}
+  }
+
+  return latestResult;
 }
 
 function keepLatestVisible(side) {
