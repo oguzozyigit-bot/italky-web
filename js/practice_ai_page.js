@@ -1,4 +1,9 @@
 import { supabase } from "/js/supabase_client.js";
+import {
+  commitUsage,
+  resolveUsageModule,
+  buildUsageNote
+} from "/js/usage_meter.js";
 
 const API_BASE = "https://italky-api.onrender.com";
 const $ = (id) => document.getElementById(id);
@@ -97,7 +102,6 @@ function ensurePracticeAccess() {
   console.log("PRACTICE ACCESS PARSED:", access);
 
   const TEST_BYPASS = true;
-
   if (TEST_BYPASS) return true;
 
   if (!access.is_logged_in) {
@@ -123,7 +127,6 @@ async function ensureTokenAccess() {
   const access = getAccessState();
 
   const TEST_BYPASS = true;
-
   if (TEST_BYPASS) return true;
 
   if (access.jeton_balance <= 0) {
@@ -156,6 +159,82 @@ async function getAuthHeaders() {
     console.warn("getAuthHeaders error:", e);
     return { "Content-Type": "application/json" };
   }
+}
+
+/* ---------------------------------------------------
+   USAGE
+--------------------------------------------------- */
+function practiceTextUsageModule() {
+  return resolveUsageModule({
+    surface: "practice",
+    kind: "text",
+    mode: "ai"
+  });
+}
+
+function practiceVoiceUsageModule() {
+  return resolveUsageModule({
+    surface: "practice",
+    kind: "voice",
+    mode: "ai"
+  });
+}
+
+async function chargePracticeTextUsage(inputText, outputText) {
+  const inLen = String(inputText || "").trim().length;
+  const outLen = String(outputText || "").trim().length;
+  const billableChars = Math.max(inLen, outLen);
+
+  if (billableChars <= 0) return null;
+
+  return await commitUsage({
+    module: practiceTextUsageModule(),
+    usageKind: "text",
+    charCount: billableChars,
+    note: buildUsageNote({
+      surface: "practice",
+      usageKind: "text",
+      mode: "ai"
+    }),
+    meta: {
+      surface: "practice_ai",
+      lang: currentLang,
+      input_chars: inLen,
+      output_chars: outLen,
+      billable_chars: billableChars
+    }
+  });
+}
+
+async function chargePracticeVoiceUsage(text) {
+  const charCount = String(text || "").trim().length;
+  if (charCount <= 0) return null;
+
+  return await commitUsage({
+    module: practiceVoiceUsageModule(),
+    usageKind: "voice",
+    charCount,
+    note: buildUsageNote({
+      surface: "practice",
+      usageKind: "voice",
+      mode: "ai"
+    }),
+    meta: {
+      surface: "practice_ai",
+      lang: currentLang,
+      output_chars: charCount,
+      billable_chars: charCount
+    }
+  });
+}
+
+function redirectForInsufficientTokens(err) {
+  if (err?.code === "INSUFFICIENT_TOKENS") {
+    alert("Jetonunuz yetersiz. Jeton Market'e yönlendiriliyorsunuz.");
+    location.href = "/pages/jetonbuy.html";
+    return true;
+  }
+  return false;
 }
 
 /* ---------------------------------------------------
@@ -233,7 +312,7 @@ function pickBestMaleVoice(bcp) {
   }
 }
 
-function speakAI(text) {
+async function speakAI(text) {
   const clean = String(text || "").trim();
   if (!clean) return;
 
@@ -247,19 +326,56 @@ function speakAI(text) {
   setCaption("Öğretmen konuşuyor...");
 
   try {
-    if (window.NativeTTS && typeof window.NativeTTS.speak === "function") {
-      window.NativeTTS.speak(clean, bcp);
-      setTimeout(() => {
+    await chargePracticeVoiceUsage(clean);
+  } catch (e) {
+    console.error("PRACTICE VOICE USAGE ERROR:", e);
+    if (redirectForInsufficientTokens(e)) return;
+  }
+
+  // Önce backend TTS
+  try {
+    const { data } = await supabase.auth.getUser();
+    const userId = data?.user?.id || null;
+
+    const r = await fetch(`${API_BASE}/api/tts`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text: clean,
+        lang: currentLang,
+        user_id: userId,
+        voice: "male",
+        tone: "neutral",
+        module: "practice_ai"
+      })
+    });
+
+    const j = await r.json().catch(() => null);
+    if (r.ok && j?.ok && j?.audio_base64) {
+      const audio = new Audio(`data:audio/mp3;base64,${j.audio_base64}`);
+      audio.preload = "auto";
+      audio.playsInline = true;
+
+      audio.onended = () => {
         state.speaking = false;
         setWorld(state.listening ? "listening" : "idle");
         setCaption("Hazır");
-      }, Math.max(1300, clean.length * 55));
+      };
+
+      audio.onerror = () => {
+        state.speaking = false;
+        setWorld(state.listening ? "listening" : "idle");
+        setCaption("Hazır");
+      };
+
+      await audio.play();
       return;
     }
   } catch (e) {
-    console.warn("NativeTTS failed:", e);
+    console.warn("Practice API TTS failed, fallback browser TTS:", e);
   }
 
+  // Son fallback cihaz/browser TTS
   try {
     if (!("speechSynthesis" in window)) {
       state.speaking = false;
@@ -410,11 +526,22 @@ async function askTeacher(userText, scoreValue = null) {
   if (!res.ok) {
     const parsedErr = safeJson(raw) || {};
     const detail = parsedErr.detail || raw || `HTTP ${res.status}`;
+
+    if (String(detail).includes("insufficient_tokens")) {
+      const err = new Error("Yetersiz jeton");
+      err.code = "INSUFFICIENT_TOKENS";
+      throw err;
+    }
+
     throw new Error(`practice_chat_http_${res.status}: ${detail}`);
   }
 
   const data = safeJson(raw) || {};
   const parsed = safeJson(data?.text || "") || data || {};
+
+  if (typeof data?.tokens_after === "number" && window.setHeaderTokens) {
+    try { window.setHeaderTokens(data.tokens_after); } catch {}
+  }
 
   return {
     reply: String(parsed.reply || "").trim(),
@@ -577,11 +704,12 @@ async function handleUserSpeech(spokenText) {
     }
 
     saveState();
-    speakAI(ai.reply);
+    await speakAI(ai.reply);
     setStatus(state.mustRepeat ? "Tekrarla." : "Devam edelim.");
 
   } catch (e) {
     console.error("PRACTICE CHAT ERROR:", e);
+    if (redirectForInsufficientTokens(e)) return;
     showUserSafeError();
   }
 }
@@ -603,9 +731,10 @@ async function startFirstTurn() {
     state.targetPhrase = ai.target_phrase || "";
 
     saveState();
-    speakAI(ai.reply);
+    await speakAI(ai.reply);
   } catch (e) {
     console.error("PRACTICE START ERROR:", e);
+    if (redirectForInsufficientTokens(e)) return;
     showUserSafeError();
   }
 }
