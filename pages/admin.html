@@ -1,4 +1,3 @@
-<!-- FILE: /pages/admin.html -->
 <!doctype html>
 <html lang="tr">
 <head>
@@ -14,31 +13,21 @@
   <style>
     :root{
       --bg:#11161c;
-      --bg-soft:#171d25;
       --panel:#1b222c;
-      --panel-2:#202936;
+      --panel2:#202936;
       --line:#2a3442;
-      --line-soft:#313d4d;
+      --line2:#313d4d;
       --txt:#f3f5f8;
       --muted:#aab4c1;
-      --muted-2:#8d98a6;
-      --ok:#5f8f78;
-      --err:#b76464;
-      --warn:#b58a52;
+      --ok:#93c5a8;
+      --err:#e4a2a2;
+      --warn:#dec18f;
       --accent:#8fa5bc;
-      --accent-2:#aab8c8;
-      --accent-3:#c8d0d8;
-      --gold:#c7ae7b;
       --shadow:0 18px 46px rgba(0,0,0,.22);
-      --radius:22px;
       --shellLift:0px;
     }
 
-    *{
-      box-sizing:border-box;
-      -webkit-tap-highlight-color:transparent;
-    }
-
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
     html,body{
       margin:0;
       width:100%;
@@ -50,58 +39,148 @@
       font-family:'Outfit',sans-serif;
     }
 
-    body{
-      overflow:auto;
-    }
+    body{overflow:auto}
 
     #pageContent{
       min-height:100dvh;
-      overflow:visible !important;
       opacity:0;
       transition:opacity .18s ease;
       padding:24px 12px calc(12px + var(--shellLift)) 12px;
-      position:relative;
-      z-index:5;
     }
-
     #pageContent.ready{opacity:1}
 
-    .page{
-      width:100%;
-      max-width:1200px;
-      margin:0 auto;
-      position:relative;
-      z-index:6;
-    }
+    .page{max-width:1280px;margin:0 auto}
 
-    .admin-scroll{
-      min-height:calc(100dvh - var(--shellLift));
-      height:auto;
-      overflow:auto !important;
-      padding-top:8px;
-      padding-bottom:16px;
-      scrollbar-width:thin;
-      scrollbar-color:#394758 transparent;
-      position:relative;
-      z-index:6;
-    }
-
-    .admin-scroll::-webkit-scrollbar{width:8px}
-    .admin-scroll::-webkit-scrollbar-thumb{
-      background:#394758;
-      border-radius:999px;
-    }
-
-    .hidden{display:none !important}
-
-    .shell-header,
-    .info-card,
-    .panel,
-    .card{
+    .shell-header,.card,.panel{
       background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
       border:1px solid var(--line);
       box-shadow:var(--shadow);
       backdrop-filter:blur(14px);
+    }
+
+    .shell-header{
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+      padding:18px;
+      border-radius:26px;
+      margin-bottom:14px;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:14px;
+      min-width:0;
+    }
+
+    .logo{
+      width:58px;
+      height:58px;
+      border-radius:18px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:linear-gradient(135deg,#899fb5 0%, #aeb9c5 100%);
+      font-weight:900;
+      font-size:23px;
+      color:#fff;
+    }
+
+    .brand h1{
+      margin:0;
+      font-family:"Space Grotesk",sans-serif;
+      font-size:23px;
+      letter-spacing:-.6px;
+      line-height:1.02;
+    }
+
+    .brand p{
+      margin:6px 0 0;
+      color:var(--muted);
+      font-size:12px;
+      font-weight:800;
+    }
+
+    .top-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .top-actions button{
+      width:auto;
+      min-width:120px;
+      padding:0 16px;
+    }
+
+    .tabs{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:10px;
+      margin-bottom:14px;
+    }
+
+    .tab{
+      min-height:46px;
+      border:none;
+      border-radius:16px;
+      font-weight:900;
+      background:#1a212b;
+      color:#f3f5f8;
+      border:1px solid var(--line2);
+      cursor:pointer;
+    }
+
+    .tab.active{
+      background:#94a8bc;
+      color:#101923;
+      border-color:transparent;
+    }
+
+    .panel{
+      border-radius:26px;
+      padding:14px;
+    }
+
+    .hidden{display:none !important}
+
+    .grid{display:grid;gap:14px}
+    .grid-2{grid-template-columns:1fr}
+    .grid-3{grid-template-columns:1fr}
+
+    .card{
+      border-radius:22px;
+      padding:16px;
+      background:#18202a;
+      border:1px solid var(--line2);
+      box-shadow:none;
+    }
+
+    .card h3{
+      margin:0 0 6px;
+      font-size:18px;
+      font-weight:900;
+      letter-spacing:-.3px;
+    }
+
+    .desc{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.55;
+      margin-bottom:12px;
+    }
+
+    .row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    .row > *{
+      flex:1;
+      min-width:140px;
     }
 
     input,select,textarea,button{
@@ -116,7 +195,7 @@
       min-height:48px;
       background:#18202a;
       color:#f5f7fa;
-      border:1px solid var(--line-soft);
+      border:1px solid var(--line2);
       padding:12px 14px;
       font-size:14px;
     }
@@ -126,35 +205,20 @@
       resize:vertical;
     }
 
-    input::placeholder,textarea::placeholder{color:#8290a1}
-
     button{
       min-height:48px;
       cursor:pointer;
       font-size:14px;
       font-weight:900;
       transition:transform .15s ease, opacity .15s ease, filter .15s ease;
-      pointer-events:auto !important;
-      touch-action:manipulation;
-      position:relative;
-      z-index:20;
     }
 
-    button:disabled{cursor:not-allowed}
     button:active{transform:scale(.985)}
 
     .btn-primary{background:#8fa5bc;color:#0e1720}
-    .btn-primary:hover{filter:brightness(1.04)}
-
-    .btn-secondary{
-      background:#202834;
-      color:#eef2f6;
-      border:1px solid var(--line-soft);
-    }
-    .btn-secondary:hover{filter:brightness(1.04)}
-
+    .btn-secondary{background:#202834;color:#eef2f6;border:1px solid var(--line2)}
     .btn-warn{background:#c7ae7b;color:#1b1d21}
-    .btn-warn:hover{filter:brightness(1.05)}
+    .btn-danger{background:#a35f5f;color:#fff}
 
     .status-line{
       min-height:20px;
@@ -164,202 +228,15 @@
       line-height:1.5;
       word-break:break-word;
     }
-
-    .status-ok{color:#9fc6b1}
-    .status-err{color:#e2a0a0}
-    .status-warn{color:#dec18f}
-
-    .shell-header{
-      display:flex;
-      flex-direction:column;
-      gap:14px;
-      padding:18px;
-      border-radius:26px;
-      margin-bottom:14px;
-      position:relative;
-      z-index:6;
-    }
-
-    .shell-brand{
-      display:flex;
-      align-items:center;
-      gap:14px;
-      min-width:0;
-    }
-
-    .shell-brand .logo{
-      width:58px;
-      height:58px;
-      flex:0 0 auto;
-      border-radius:18px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      background:linear-gradient(135deg,#899fb5 0%, #aeb9c5 100%);
-      font-weight:900;
-      font-size:23px;
-      color:#fff;
-      box-shadow:0 12px 24px rgba(0,0,0,.16);
-    }
-
-    .shell-brand h2{
-      margin:0;
-      font-family:"Space Grotesk",sans-serif;
-      font-size:23px;
-      letter-spacing:-.6px;
-      line-height:1.02;
-    }
-
-    .shell-brand p{
-      margin:6px 0 0;
-      color:var(--muted);
-      font-size:12px;
-      font-weight:800;
-    }
-
-    .top-actions{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      position:relative;
-      z-index:20;
-    }
-
-    .top-actions button{
-      width:auto;
-      min-width:120px;
-      padding:0 16px;
-    }
-
-    .me-strip{
-      margin-bottom:14px;
-      display:grid;
-      grid-template-columns:1fr;
-      gap:14px;
-      position:relative;
-      z-index:6;
-    }
-
-    .info-card{
-      border-radius:22px;
-      padding:16px;
-      position:relative;
-      z-index:6;
-    }
-
-    .info-card h3{
-      margin:0 0 8px;
-      font-size:16px;
-      font-weight:900;
-    }
-
-    .info-card p{
-      margin:0;
-      color:var(--muted);
-      font-size:13px;
-      line-height:1.6;
-    }
-
-    .pills{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      margin-top:12px;
-    }
-
-    .pill{
-      display:inline-flex;
-      align-items:center;
-      min-height:30px;
-      padding:7px 11px;
-      border-radius:999px;
-      border:1px solid var(--line-soft);
-      background:#1a212b;
-      color:#eef2f6;
-      font-size:12px;
-      font-weight:800;
-    }
-
-    .tabs{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:10px;
-      margin-bottom:14px;
-      position:relative;
-      z-index:10;
-    }
-
-    .tab{
-      width:100%;
-      min-width:0;
-      padding:0 12px;
-      background:#1a212b;
-      border:1px solid var(--line-soft);
-      color:#f3f5f8;
-    }
-
-    .tab.active{
-      background:#94a8bc;
-      color:#101923;
-      border-color:transparent;
-      box-shadow:0 10px 22px rgba(0,0,0,.12);
-    }
-
-    .panel{
-      border-radius:26px;
-      padding:14px;
-      position:relative;
-      z-index:6;
-      overflow:visible;
-    }
-
-    .grid{display:grid;gap:14px}
-    .grid-2,.grid-3,.split{grid-template-columns:1fr}
-
-    .card{
-      border-radius:22px;
-      padding:16px;
-      background:#18202a;
-      border:1px solid var(--line-soft);
-      box-shadow:none;
-      position:relative;
-      z-index:6;
-      overflow:visible;
-    }
-
-    .card h3{
-      margin:0 0 6px;
-      font-size:18px;
-      font-weight:900;
-      letter-spacing:-.3px;
-    }
-
-    .card .desc{
-      color:var(--muted);
-      font-size:13px;
-      line-height:1.55;
-      margin-bottom:12px;
-    }
-
-    .row{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      align-items:center;
-      position:relative;
-      z-index:20;
-    }
-
-    .row > *{
-      flex:1;
-      min-width:140px;
-    }
+    .status-ok{color:var(--ok)}
+    .status-err{color:var(--err)}
+    .status-warn{color:var(--warn)}
 
     .table{
       margin-top:12px;
       overflow:auto;
       border-radius:18px;
-      border:1px solid var(--line-soft);
+      border:1px solid var(--line2);
       background:#151c24;
     }
 
@@ -393,281 +270,237 @@
       flex-wrap:wrap;
     }
 
-    .mini-actions button,
-    .mini-actions select{
+    .mini-actions button{
       width:auto;
-      min-width:104px;
+      min-width:96px;
       min-height:38px;
-      margin:0;
       padding:8px 10px;
       border-radius:12px;
       font-size:12px;
     }
 
-    .kv{display:grid;gap:10px}
-
     .empty{
-      color:var(--muted-2);
+      color:#8d98a6;
       font-size:13px;
       padding:8px 0;
       font-weight:700;
     }
 
-    .modal{
-      position:fixed;
-      inset:0;
-      z-index:9999;
-      display:none;
+    .pill{
+      display:inline-flex;
       align-items:center;
-      justify-content:center;
-      padding:20px;
-      background:rgba(10,12,16,.62);
-      backdrop-filter:blur(8px);
-    }
-
-    .modal.show{display:flex}
-
-    .modal-card{
-      width:min(100%,420px);
-      border-radius:24px;
-      padding:18px;
+      min-height:30px;
+      padding:7px 11px;
+      border-radius:999px;
+      border:1px solid var(--line2);
       background:#1a212b;
-      border:1px solid var(--line-soft);
-      color:#f3f5f8;
-      box-shadow:var(--shadow);
+      color:#eef2f6;
+      font-size:12px;
+      font-weight:800;
+      margin-right:8px;
+      margin-top:8px;
     }
 
-    .modal-card h4{
-      margin:0 0 8px;
-      font-size:18px;
-      font-weight:900;
-    }
-
-    .modal-card p{
-      margin:0 0 14px;
-      color:var(--muted);
-      font-size:14px;
-      line-height:1.6;
-    }
-
-    .modal-actions{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-    }
-
-    .modal-actions button{
-      flex:1;
-      min-width:120px;
-    }
-
-    @media (min-width:900px){
+    @media (min-width:980px){
       .shell-header{
         flex-direction:row;
         align-items:center;
         justify-content:space-between;
       }
-      .me-strip{grid-template-columns:1.1fr .9fr}
-      .grid-2{grid-template-columns:1.15fr .85fr}
+      .grid-2{grid-template-columns:1fr 1fr}
       .grid-3{grid-template-columns:1fr 1fr 1fr}
-      .split{grid-template-columns:1fr 1fr}
       .tabs{display:flex;flex-wrap:wrap}
-      .tab{width:auto;min-width:120px}
+      .tab{width:auto;min-width:140px;padding:0 16px}
     }
   </style>
 </head>
 <body>
   <div id="pageContent">
     <div class="page">
-      <div class="admin-scroll">
-        <div id="panelView">
-          <div class="shell-header">
-            <div class="shell-brand">
-              <div class="logo">AI</div>
-              <div>
-                <h2>italkyAI Yönetim Paneli</h2>
-                <p>Üyelik, kullanıcı, paket ve lisans kodu yönetimi</p>
-              </div>
-            </div>
+      <div class="shell-header">
+        <div class="brand">
+          <div class="logo">AI</div>
+          <div>
+            <h1>italkyAI Yönetim Paneli</h1>
+            <p>Jeton, NFC, QR ve kullanıcı yönetimi</p>
+          </div>
+        </div>
 
-            <div class="top-actions">
-              <button id="homeBtn" class="btn-secondary" type="button">Ana Sayfa</button>
-              <button id="refreshBtn" class="btn-secondary" type="button">Verileri Yenile</button>
-              <button id="logoutBtnTop" class="btn-secondary" type="button">Çıkış</button>
-            </div>
+        <div class="top-actions">
+          <button id="homeBtn" class="btn-secondary" type="button">Ana Sayfa</button>
+          <button id="refreshBtn" class="btn-secondary" type="button">Verileri Yenile</button>
+          <button id="logoutBtnTop" class="btn-secondary" type="button">Çıkış</button>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <button class="tab active" data-tab="users" type="button">Kullanıcılar</button>
+        <button class="tab" data-tab="wallet" type="button">Jeton Hareketleri</button>
+        <button class="tab" data-tab="nfc" type="button">NFC / QR Kartları</button>
+        <button class="tab" data-tab="manual" type="button">Manuel Jeton</button>
+      </div>
+
+      <div class="panel">
+        <div id="panelUsers">
+          <div class="grid grid-2">
+            <section class="card">
+              <h3>Kullanıcı Arama</h3>
+              <div class="desc">Kullanıcıları isim, e-posta veya uid ile ara.</div>
+              <div class="row">
+                <input id="userSearch" type="text" placeholder="Ad, mail veya uid ara..." />
+                <button id="userRefreshBtn" class="btn-secondary" type="button">Listeyi Yenile</button>
+              </div>
+            </section>
+
+            <section class="card">
+              <h3>Yetki Bilgisi</h3>
+              <div class="desc">Superadmin kullanıcılar manuel jeton yükleme yapabilir.</div>
+              <div id="meLine"></div>
+              <div class="pill">NFC Jeton</div>
+              <div class="pill">QR Yönlendirme</div>
+              <div class="pill">Manuel Kod</div>
+            </section>
           </div>
 
-          <div class="me-strip">
-            <div class="info-card">
-              <h3>Yönetici Kimliği</h3>
-              <p id="meLine">Yükleniyor...</p>
-              <div class="pills">
-                <div class="pill">Kodlar / QR</div>
-                <div class="pill">Toplu Yazdırma</div>
-                <div class="pill">Aktivasyon Takibi</div>
-              </div>
+          <section class="card" style="margin-top:14px">
+            <h3>Kullanıcılar</h3>
+            <div class="table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Kullanıcı</th>
+                    <th>E-posta</th>
+                    <th>Rol</th>
+                    <th>Jeton</th>
+                    <th>UID</th>
+                  </tr>
+                </thead>
+                <tbody id="usersTableBody">
+                  <tr><td colspan="5" class="empty">Yükleniyor...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+
+        <div id="panelWallet" class="hidden">
+          <section class="card">
+            <h3>Jeton Hareketleri</h3>
+            <div class="desc">NFC, manuel yükleme ve harcama hareketleri burada görünür.</div>
+            <div class="row">
+              <input id="walletSearch" type="text" placeholder="Kullanıcı veya neden ara..." />
+              <button id="walletRefreshBtn" class="btn-secondary" type="button">Listeyi Yenile</button>
             </div>
 
-            <div class="info-card">
-              <h3>Sistem Notu</h3>
-              <p id="systemNote">
-                Bu panel yalnızca admin ve superadmin kullanıcılar içindir.
-              </p>
+            <div class="table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Kullanıcı</th>
+                    <th>Delta</th>
+                    <th>Neden</th>
+                    <th>Not</th>
+                    <th>Tarih</th>
+                  </tr>
+                </thead>
+                <tbody id="walletTableBody">
+                  <tr><td colspan="5" class="empty">Yükleniyor...</td></tr>
+                </tbody>
+              </table>
             </div>
-          </div>
+          </section>
+        </div>
 
-          <div class="tabs">
-            <button class="tab active" data-tab="users" type="button">Kullanıcılar</button>
-            <button class="tab" data-tab="packages" type="button">Paketler</button>
-            <button class="tab" data-tab="entitlements" type="button">Erişimler</button>
-            <button class="tab" data-tab="nfc" type="button">Kodlar / QR</button>
-            <button class="tab" data-tab="deploy" type="button">Deploy</button>
-            <button class="tab" data-tab="github" type="button">GitHub</button>
-          </div>
+        <div id="panelNfc" class="hidden">
+          <div class="grid grid-2">
+            <section class="card">
+              <h3>Yeni Jeton Kartı Oluştur</h3>
+              <div class="desc">NFC veya QR için tek kullanımlık jeton kartı üret.</div>
 
-          <div class="panel">
-            <div id="panelUsers"></div>
-            <div id="panelPackages" class="hidden"></div>
-            <div id="panelEntitlements" class="hidden"></div>
-
-            <!-- NFC / QR PANELİ -->
-            <div id="panelNfc" class="hidden">
-              <div class="grid grid-2">
-                <section class="card">
-                  <h3>Yeni Jeton Kartı Oluştur</h3>
-                  <div class="desc">
-                    NFC veya QR için tek kullanımlık jeton kartı üret. Kart okutulunca kullanıcı hesabına jeton yüklenir.
-                  </div>
-
-                  <div class="kv">
-                    <input id="uid" type="text" placeholder="Kart UID / QR kod değeri" />
-                    <input id="amount" type="number" min="1" step="1" placeholder="Jeton miktarı" />
-                    <input id="note" type="text" placeholder="Not (opsiyonel)" />
-                    <button id="saveBtn" class="btn-primary" type="button">Kartı Kaydet</button>
-                  </div>
-
-                  <div id="nfcCreateStatus" class="status-line"></div>
-                </section>
-
-                <section class="card">
-                  <h3>Hızlı Paketler</h3>
-                  <div class="desc">
-                    Tek dokunuşla hazır jeton kartı oluştur.
-                  </div>
-
-                  <div class="row">
-                    <button class="btn-secondary" type="button" data-quick-amount="10">10 Jeton</button>
-                    <button class="btn-secondary" type="button" data-quick-amount="25">25 Jeton</button>
-                    <button class="btn-secondary" type="button" data-quick-amount="50">50 Jeton</button>
-                    <button class="btn-secondary" type="button" data-quick-amount="100">100 Jeton</button>
-                  </div>
-
-                  <div class="desc" style="margin-top:12px">
-                    UID alanına kartı okut, ardından hızlı paketlerden birini seç veya miktarı elle gir.
-                  </div>
-                </section>
+              <div class="row">
+                <input id="uid" type="text" placeholder="Uzun tekil UID" />
+                <button id="genUidBtn" class="btn-secondary" type="button">UID Üret</button>
               </div>
 
-              <section class="card" style="margin-top:14px">
-                <h3>Kartlar</h3>
-                <div class="desc">
-                  Aktif, kullanılmış ve engellenmiş NFC / QR kartları burada görüntülersin.
-                </div>
+              <div class="row" style="margin-top:10px">
+                <input id="amount" type="number" min="1" step="1" placeholder="Jeton miktarı" />
+                <input id="note" type="text" placeholder="Not (opsiyonel)" />
+              </div>
 
-                <div class="row">
-                  <input id="nfcSearch" type="text" placeholder="UID veya not ara..." />
-                  <button id="nfcRefreshBtn" class="btn-secondary" type="button">Listeyi Yenile</button>
-                </div>
+              <div class="row" style="margin-top:10px">
+                <button class="btn-secondary" type="button" data-quick-amount="10">10 Jeton</button>
+                <button class="btn-secondary" type="button" data-quick-amount="25">25 Jeton</button>
+                <button class="btn-secondary" type="button" data-quick-amount="50">50 Jeton</button>
+                <button class="btn-secondary" type="button" data-quick-amount="100">100 Jeton</button>
+              </div>
 
-                <div class="table">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>UID</th>
-                        <th>Jeton</th>
-                        <th>Durum</th>
-                        <th>Kullanıcı</th>
-                        <th>Kullanım</th>
-                        <th>Not</th>
-                      </tr>
-                    </thead>
-                    <tbody id="nfcTableBody">
-                      <tr>
-                        <td colspan="6" class="empty">Henüz kart verisi yüklenmedi.</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </section>
+              <button id="saveBtn" class="btn-primary" type="button" style="margin-top:10px">Kartı Kaydet</button>
+              <div id="nfcCreateStatus" class="status-line"></div>
+            </section>
+
+            <section class="card">
+              <h3>QR / Kod Bilgisi</h3>
+              <div class="desc">Kart oluşunca kısa kod ve QR linki otomatik üretilir.</div>
+              <div id="nfcPreview" class="empty">Henüz kart oluşturulmadı.</div>
+            </section>
+          </div>
+
+          <section class="card" style="margin-top:14px">
+            <h3>Kartlar</h3>
+            <div class="row">
+              <input id="nfcSearch" type="text" placeholder="UID, manuel kod veya not ara..." />
+              <button id="nfcRefreshBtn" class="btn-secondary" type="button">Listeyi Yenile</button>
             </div>
 
-            <div id="panelDeploy" class="hidden"></div>
-            <div id="panelGithub" class="hidden"></div>
+            <div class="table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>UID</th>
+                    <th>6 Haneli Kod</th>
+                    <th>Jeton</th>
+                    <th>Durum</th>
+                    <th>Kullanan</th>
+                    <th>QR</th>
+                    <th>İşlem</th>
+                  </tr>
+                </thead>
+                <tbody id="nfcTableBody">
+                  <tr><td colspan="7" class="empty">Yükleniyor...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+
+        <div id="panelManual" class="hidden">
+          <div class="grid grid-2">
+            <section class="card">
+              <h3>Superadmin Manuel Jeton Yükleme</h3>
+              <div class="desc">Bu alan sadece superadmin için aktif olmalıdır.</div>
+              <div class="row">
+                <input id="manualUserId" type="text" placeholder="Kullanıcı UID" />
+                <input id="manualAmount" type="number" min="1" step="1" placeholder="Jeton miktarı" />
+              </div>
+              <textarea id="manualNote" placeholder="Yükleme notu"></textarea>
+              <button id="manualLoadBtn" class="btn-warn" type="button">Jeton Yükle</button>
+              <div id="manualStatus" class="status-line"></div>
+            </section>
+
+            <section class="card">
+              <h3>Açıklama</h3>
+              <div class="desc">
+                Bu işlem kullanıcı hesabına doğrudan jeton ekler ve wallet hareketlerine yazılır.
+              </div>
+              <div class="pill">Sadece superadmin</div>
+              <div class="pill">wallet_tx kaydı</div>
+              <div class="pill">Geri izlenebilir</div>
+            </section>
           </div>
         </div>
       </div>
     </div>
   </div>
-
-  <div id="confirmModal" class="modal">
-    <div class="modal-card">
-      <h4 id="confirmTitle">Onay</h4>
-      <p id="confirmText">Bu işlemi yapmak istediğine emin misin?</p>
-      <div class="modal-actions">
-        <button id="confirmCancel" class="btn-secondary" type="button">Vazgeç</button>
-        <button id="confirmOk" class="btn-primary" type="button">Tamam</button>
-      </div>
-    </div>
-  </div>
-
-  <script type="module">
-    import { createNfcTokenCard } from "/js/admin_nfc_tokens.js";
-
-    const uidInput = document.getElementById("uid");
-    const amountInput = document.getElementById("amount");
-    const noteInput = document.getElementById("note");
-    const btn = document.getElementById("saveBtn");
-    const statusEl = document.getElementById("nfcCreateStatus");
-
-    function setStatus(text, kind = "") {
-      if (!statusEl) return;
-      statusEl.className = `status-line ${kind}`.trim();
-      statusEl.textContent = text || "";
-    }
-
-    function makeRandomUid() {
-      return "QR-" + Math.random().toString(36).slice(2, 10).toUpperCase();
-    }
-
-    document.querySelectorAll("[data-quick-amount]").forEach((el) => {
-      el.addEventListener("click", () => {
-        amountInput.value = el.getAttribute("data-quick-amount") || "";
-        if (!uidInput.value.trim()) {
-          uidInput.value = makeRandomUid();
-        }
-      });
-    });
-
-    btn?.addEventListener("click", async () => {
-      try {
-        setStatus("Kart kaydediliyor...", "status-warn");
-
-        const row = await createNfcTokenCard({
-          uid: uidInput.value,
-          tokenAmount: amountInput.value,
-          note: noteInput.value
-        });
-
-        setStatus(`Kart oluşturuldu: ${row.uid} / ${row.token_amount} jeton`, "status-ok");
-
-        uidInput.value = "";
-        amountInput.value = "";
-        noteInput.value = "";
-      } catch (e) {
-        setStatus("Kart oluşturulamadı: " + (e.message || e), "status-err");
-      }
-    });
-  </script>
 
   <script type="module" src="/js/admin.js"></script>
 </body>
