@@ -17,14 +17,12 @@ export function generateManualCode() {
   return String(Math.floor(100000 + Math.random() * 900000));
 }
 
-export function buildQrInstallUrl(uid, manualCode = "") {
-  const base = "https://italky.ai/pages/nfc_redeem.html";
-  const url = new URL(base);
-
-  if (uid) url.searchParams.set("uid", String(uid).trim());
-  if (manualCode) url.searchParams.set("code", String(manualCode).trim());
-
-  return url.toString();
+/**
+ * QR artık sabit olacak.
+ * UID veya kısa kod QR içine gömülmeyecek.
+ */
+export function buildQrInstallUrl() {
+  return "https://italky.ai/pages/install.html";
 }
 
 export async function createNfcTokenCard({
@@ -36,7 +34,7 @@ export async function createNfcTokenCard({
   const cleanUid = String(uid || "").trim() || generateLongUid();
   const amount = Number(tokenAmount || 0);
   const manualCode = generateManualCode();
-  const qrUrl = buildQrInstallUrl(cleanUid, manualCode);
+  const qrUrl = buildQrInstallUrl();
 
   if (!Number.isFinite(amount) || amount <= 0) {
     throw new Error("Geçerli jeton miktarı gerekli");
