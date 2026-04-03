@@ -221,167 +221,143 @@
   <div id="toast"></div>
 
   <script type="module">
-    import { supabase } from "/js/supabase_client.js";
-    import { ensureAuthAndCacheUser, loginWithGoogle } from "/js/auth.js";
+  import { supabase } from "/js/supabase_client.js";
+  import { ensureAuthAndCacheUser, loginWithGoogle } from "/js/auth.js";
 
-    const toastEl = document.getElementById("toast");
-    const HOME = "/pages/home.html";
-    const ACCESS = "/pages/access.html";
-    const CALLBACK = "/pages/auth_callback.html";
-    const googleBtn = document.getElementById("googleBtn");
+  const toastEl = document.getElementById("toast");
+  const HOME = "/pages/home.html";
+  const CALLBACK = "/pages/auth_callback.html";
+  const googleBtn = document.getElementById("googleBtn");
 
-    function toast(msg){
-      if(!toastEl) return;
-      toastEl.textContent = String(msg || "");
-      toastEl.classList.add("show");
-      clearTimeout(window.__to);
-      window.__to = setTimeout(()=>toastEl.classList.remove("show"), 2200);
+  function toast(msg){
+    if(!toastEl) return;
+    toastEl.textContent = String(msg || "");
+    toastEl.classList.add("show");
+    clearTimeout(window.__to);
+    window.__to = setTimeout(()=>toastEl.classList.remove("show"), 2200);
+  }
+
+  function isNative(){
+    return !!(window.Native && typeof window.Native.startGoogleLogin === "function");
+  }
+
+  function getNextTarget(){
+    try{
+      const u = new URL(location.href);
+      return String(u.searchParams.get("next") || "").trim();
+    }catch{
+      return "";
     }
+  }
 
-    function isNative(){
-      return !!(window.Native && typeof window.Native.startGoogleLogin === "function");
+  async function resolveTarget(){
+    const next = getNextTarget();
+    if (next) return next;
+    return HOME;
+  }
+
+  async function routeAfterLogin(){
+    try{
+      await ensureAuthAndCacheUser();
+      const target = await resolveTarget();
+      location.replace(target);
+    }catch(e){
+      console.error("routeAfterLogin error:", e);
+      location.replace(HOME);
     }
+  }
 
-    function getNextTarget(){
-      try{
-        const u = new URL(location.href);
-        return String(u.searchParams.get("next") || "").trim();
-      }catch{
-        return "";
+  (function bounceToCallbackIfNeeded(){
+    const hasCode = new URLSearchParams(location.search).has("code");
+    const hasToken = location.hash.includes("access_token=");
+    if((hasCode || hasToken) && !location.pathname.endsWith("/pages/auth_callback.html")){
+      location.replace(CALLBACK + location.search + location.hash);
+    }
+  })();
+
+  window.onNativeLoginSuccess = async function(payload){
+    try{
+      const data = (typeof payload === "string") ? JSON.parse(payload) : payload;
+      const idToken = String(data?.id_token || data?.idToken || "").trim();
+      if(!idToken){ toast("Token yok, giriş tamamlanamadı."); return; }
+
+      googleBtn.disabled = true;
+      toast("Oturum açılıyor...");
+
+      const { error } = await supabase.auth.signInWithIdToken({ provider: "google", token: idToken });
+      if(error){
+        googleBtn.disabled = false;
+        toast("Oturum açılamadı.");
+        return;
       }
-    }
 
-    async function resolveTarget(session){
+      const { data:{ session } } = await supabase.auth.getSession();
+      if(!session){
+        googleBtn.disabled = false;
+        toast("Oturum bulunamadı.");
+        return;
+      }
+
+      toast("Hoş geldin!");
+      setTimeout(() => routeAfterLogin(), 300);
+    }catch(e){
+      googleBtn.disabled = false;
+      toast("Giriş hatası");
+    }
+  };
+
+  googleBtn?.addEventListener("click", async ()=>{
+    try{
       const next = getNextTarget();
-      if (next) return next;
-
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select(`
-          selected_package_code,
-          package_active,
-          package_ends_at,
-          trial_ends_at
-        `)
-        .eq("id", session.user.id)
-        .maybeSingle();
-
-      const now = Date.now();
-
-      const hasActivePackage =
-        !!profile?.selected_package_code &&
-        profile?.package_active === true &&
-        (!profile?.package_ends_at || new Date(profile.package_ends_at).getTime() > now);
-
-      const hasActiveTrial =
-        !!profile?.trial_ends_at &&
-        new Date(profile.trial_ends_at).getTime() > now;
-
-      return (hasActivePackage || hasActiveTrial) ? HOME : ACCESS;
-    }
-
-    async function routeAfterLogin(session){
-      try{
-        await ensureAuthAndCacheUser();
-        const target = await resolveTarget(session);
-        location.replace(target);
-      }catch(e){
-        console.error("routeAfterLogin error:", e);
-        location.replace(ACCESS);
-      }
-    }
-
-    (function bounceToCallbackIfNeeded(){
-      const hasCode = new URLSearchParams(location.search).has("code");
-      const hasToken = location.hash.includes("access_token=");
-      if((hasCode || hasToken) && !location.pathname.endsWith("/pages/auth_callback.html")){
-        location.replace(CALLBACK + location.search + location.hash);
-      }
-    })();
-
-    window.onNativeLoginSuccess = async function(payload){
-      try{
-        const data = (typeof payload === "string") ? JSON.parse(payload) : payload;
-        const idToken = String(data?.id_token || data?.idToken || "").trim();
-        if(!idToken){ toast("Token yok, giriş tamamlanamadı."); return; }
-
+      if(isNative()){
         googleBtn.disabled = true;
-        toast("Oturum açılıyor...");
-
-        const { error } = await supabase.auth.signInWithIdToken({ provider: "google", token: idToken });
-        if(error){
-          googleBtn.disabled = false;
-          toast("Oturum açılamadı.");
-          return;
-        }
-
-        const { data:{ session } } = await supabase.auth.getSession();
-        if(!session){
-          googleBtn.disabled = false;
-          toast("Oturum bulunamadı.");
-          return;
-        }
-
-        toast("Hoş geldin!");
-        setTimeout(() => routeAfterLogin(session), 300);
-      }catch(e){
-        googleBtn.disabled = false;
-        toast("Giriş hatası");
+        toast("Güvenli giriş başlatılıyor…");
+        window.Native.startGoogleLogin();
+        return;
       }
-    };
+      toast("Google yönlendiriliyor…");
+      await loginWithGoogle(next);
+    }catch(e){
+      googleBtn.disabled = false;
+      toast(e?.message || "Giriş başlatılamadı");
+    }
+  });
 
-    googleBtn?.addEventListener("click", async ()=>{
-      try{
-        const next = getNextTarget();
-        if(isNative()){
-          googleBtn.disabled = true;
-          toast("Güvenli giriş başlatılıyor…");
-          window.Native.startGoogleLogin();
-          return;
-        }
-        toast("Google yönlendiriliyor…");
-        await loginWithGoogle(next);
-      }catch(e){
-        googleBtn.disabled = false;
-        toast(e?.message || "Giriş başlatılamadı");
-      }
-    });
+  const phrases = [
+    "Dünyayı küçülttük…",
+    "Cebinize sığdırdık…",
+    "Kültürel çeviri ile…",
+    "Kelimeyi değil, anlamı çeviriyoruz…",
+    "Ofline çeviri ile kasintisiz yaşa…",
+    "Dünya artık senin dilinde…",
+    "Başlamak için sadece giriş yap…"
+  ];
 
-    const phrases = [
-      "Dil bariyerlerini görünmez yapıyoruz…",
-      "italky Academy ile seviyeni netleştir…",
-      "Yüz yüze çeviri, anında ve doğal…",
-      "Offline paketlerin hazır olduğunda internet şart değil…",
-      "Akıllı ders planı: adım adım ilerle…",
-      "Dünya artık senin dilinde…",
-      "Başlamak için sadece bir hesap seç…"
-    ];
+  let pi = 0;
+  const typeEl = document.getElementById("typewriter");
+  setInterval(()=>{
+    pi = (pi + 1) % phrases.length;
+    if(typeEl){
+      typeEl.style.animation = "none";
+      typeEl.offsetHeight;
+      typeEl.textContent = phrases[pi];
+      typeEl.style.animation = null;
+    }
+  }, 5600);
 
-    let pi = 0;
-    const typeEl = document.getElementById("typewriter");
-    setInterval(()=>{
-      pi = (pi + 1) % phrases.length;
-      if(typeEl){
-        typeEl.style.animation = "none";
-        typeEl.offsetHeight;
-        typeEl.textContent = phrases[pi];
-        typeEl.style.animation = null;
-      }
-    }, 5600);
-
-    (async function boot(){
-      try{
-        const { data:{ session } } = await supabase.auth.getSession();
-        if(!session){
-          document.body.classList.add("login-ready");
-          return;
-        }
-
-        await routeAfterLogin(session);
-      }catch(_e){
+  (async function boot(){
+    try{
+      const { data:{ session } } = await supabase.auth.getSession();
+      if(!session){
         document.body.classList.add("login-ready");
+        return;
       }
-    })();
-  </script>
+
+      await routeAfterLogin();
+    }catch(_e){
+      document.body.classList.add("login-ready");
+    }
+  })();
+</script>
 </body>
 </html>
