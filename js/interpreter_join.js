@@ -1,4 +1,5 @@
 const API_BASE = "https://italky-api.onrender.com/api";
+const LIVE_PAGE_BASE = "/pages/sidetoside.html";
 
 function getPreferredGuestLang() {
   return String(
@@ -16,6 +17,18 @@ async function safeJson(response) {
   } catch {
     throw new Error(raw || "Geçersiz sunucu yanıtı");
   }
+}
+
+function buildGuestLiveUrl(roomId, myLang, peerLang, auto = "0") {
+  const liveUrl = new URL(LIVE_PAGE_BASE, location.origin);
+  liveUrl.searchParams.set("room", roomId);
+  liveUrl.searchParams.set("role", "guest");
+  liveUrl.searchParams.set("my", myLang);
+  liveUrl.searchParams.set("peer", peerLang);
+  if (String(auto || "0") === "1") {
+    liveUrl.searchParams.set("auto", "1");
+  }
+  return liveUrl.toString();
 }
 
 async function joinProcess() {
@@ -48,7 +61,6 @@ async function joinProcess() {
 
     setStatus("Odaya katılıyor...");
 
-    // 1) join-room
     const joinRes = await fetch(`${API_BASE}/interpreter/join-room`, {
       method: "POST",
       headers: {
@@ -68,7 +80,6 @@ async function joinProcess() {
 
     setStatus("Oda bilgisi alınıyor...");
 
-    // 2) room info
     const roomRes = await fetch(`${API_BASE}/interpreter/room/${encodeURIComponent(roomId)}`);
     const roomData = await safeJson(roomRes);
 
@@ -83,17 +94,10 @@ async function joinProcess() {
 
     setStatus("Bağlantı kuruldu, yönlendiriliyor...", "ok");
 
-    const liveUrl = new URL("/pages/live_interpreter.html", location.origin);
-    liveUrl.searchParams.set("room", roomId);
-    liveUrl.searchParams.set("role", "guest");
-    liveUrl.searchParams.set("my", myLang);
-    liveUrl.searchParams.set("peer", peerLang);
-    if (auto === "1") {
-      liveUrl.searchParams.set("auto", "1");
-    }
+    const targetUrl = buildGuestLiveUrl(roomId, myLang, peerLang, auto);
 
     setTimeout(() => {
-      window.location.href = liveUrl.toString();
+      window.location.href = targetUrl;
     }, 600);
 
   } catch (error) {
