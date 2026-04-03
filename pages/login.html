@@ -284,7 +284,11 @@
       googleBtn.disabled = true;
       toast("Oturum açılıyor...");
 
-      const { error } = await supabase.auth.signInWithIdToken({ provider: "google", token: idToken });
+      const { error } = await supabase.auth.signInWithIdToken({
+        provider: "google",
+        token: idToken
+      });
+
       if(error){
         googleBtn.disabled = false;
         toast("Oturum açılamadı.");
@@ -309,12 +313,14 @@
   googleBtn?.addEventListener("click", async ()=>{
     try{
       const next = getNextTarget();
+
       if(isNative()){
         googleBtn.disabled = true;
         toast("Güvenli giriş başlatılıyor…");
         window.Native.startGoogleLogin();
         return;
       }
+
       toast("Google yönlendiriliyor…");
       await loginWithGoogle(next);
     }catch(e){
@@ -324,8 +330,8 @@
   });
 
   const phrases = [
-    "Dünyayı küçülttük…",
-    "Cebinize sığdırdık…",
+    "Dünyayı küçülttük, Cebinize sığdırdık...",
+    "Dünyada işk ve tek…",
     "Kültürel çeviri ile…",
     "Kelimeyi değil, anlamı çeviriyoruz…",
     "Ofline çeviri ile kasintisiz yaşa…",
