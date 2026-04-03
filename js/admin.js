@@ -195,7 +195,7 @@ function renderNfcPreview(row) {
     <div style="margin-top:8px"><b>6 Haneli Kod:</b> ${row.manual_code || "-"}</div>
     <div style="margin-top:8px"><b>QR:</b><br>${row.qr_url || "-"}</div>
     <div style="margin-top:8px"><b>Jeton:</b> ${row.token_amount ?? 0}</div>
-    <div style="margin-top:8px"><b>Kart Üstü Yazı:</b><br>Kod: ${row.manual_code || "-"}</div>
+    <div style="margin-top:8px"><b>Kart Altı Yazı:</b><br>Kod: ${row.manual_code || "-"}</div>
   `;
 }
 
