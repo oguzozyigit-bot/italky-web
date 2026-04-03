@@ -37,6 +37,8 @@ const nfcRefreshBtn = $("nfcRefreshBtn");
 const nfcTableBody = $("nfcTableBody");
 const nfcCreateStatus = $("nfcCreateStatus");
 const nfcPreview = $("nfcPreview");
+const writeNfcBtn = $("writeNfcBtn");
+const printQrBtn = $("printQrBtn");
 
 const manualUserId = $("manualUserId");
 const manualAmount = $("manualAmount");
@@ -50,6 +52,7 @@ const logoutBtnTop = $("logoutBtnTop");
 
 let currentUser = null;
 let currentProfile = null;
+let latestCreatedCard = null;
 
 function setStatus(el, text, cls = "") {
   if (!el) return;
@@ -185,6 +188,8 @@ async function loadWallet() {
 }
 
 function renderNfcPreview(row) {
+  latestCreatedCard = row || null;
+
   if (!row) {
     nfcPreview.textContent = "Henüz kart oluşturulmadı.";
     return;
@@ -349,6 +354,120 @@ function bindNfc() {
       await loadNfcCards();
     } catch (e) {
       setStatus(nfcCreateStatus, "Kart oluşturulamadı: " + (e.message || e), "status-err");
+    }
+  });
+
+  writeNfcBtn?.addEventListener("click", async () => {
+    try {
+      if (!latestCreatedCard?.uid) {
+        setStatus(nfcCreateStatus, "Önce kart oluştur.", "status-warn");
+        return;
+      }
+
+      if (window.NativeNFC && typeof window.NativeNFC.writeText === "function") {
+        window.NativeNFC.writeText(latestCreatedCard.uid);
+        setStatus(nfcCreateStatus, `NFC yazdırma başlatıldı: ${latestCreatedCard.uid}`, "status-ok");
+        return;
+      }
+
+      setStatus(nfcCreateStatus, "Bu cihazda NFC yazdırma köprüsü yok.", "status-err");
+    } catch (e) {
+      setStatus(nfcCreateStatus, "NFC yazdırma hatası: " + (e.message || e), "status-err");
+    }
+  });
+
+  printQrBtn?.addEventListener("click", () => {
+    try {
+      if (!latestCreatedCard?.qr_url || !latestCreatedCard?.manual_code) {
+        setStatus(nfcCreateStatus, "Önce kart oluştur.", "status-warn");
+        return;
+      }
+
+      const qrText = latestCreatedCard.qr_url;
+      const shortCode = latestCreatedCard.manual_code;
+      const tokenAmount = latestCreatedCard.token_amount || 0;
+
+      const w = window.open("", "_blank", "width=480,height=760");
+      if (!w) {
+        setStatus(nfcCreateStatus, "QR yazdırma penceresi açılamadı.", "status-err");
+        return;
+      }
+
+      const qrImg = `https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=${encodeURIComponent(qrText)}`;
+
+      w.document.write(`
+        <!doctype html>
+        <html lang="tr">
+        <head>
+          <meta charset="utf-8">
+          <title>Jeton Kartı Yazdır</title>
+          <style>
+            body{
+              margin:0;
+              font-family:Arial,sans-serif;
+              background:#fff;
+              color:#111;
+              display:flex;
+              justify-content:center;
+              align-items:center;
+              min-height:100vh;
+            }
+            .card{
+              width:340px;
+              border:2px solid #111;
+              border-radius:24px;
+              padding:24px;
+              text-align:center;
+            }
+            .brand{
+              font-size:28px;
+              font-weight:900;
+              margin-bottom:10px;
+            }
+            .amount{
+              font-size:26px;
+              font-weight:900;
+              margin-bottom:18px;
+            }
+            .qr{
+              width:280px;
+              height:280px;
+              object-fit:contain;
+              margin:0 auto 16px;
+              display:block;
+            }
+            .code{
+              font-size:34px;
+              font-weight:900;
+              letter-spacing:4px;
+              margin-top:10px;
+            }
+            .sub{
+              margin-top:10px;
+              font-size:14px;
+              line-height:1.5;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="card">
+            <div class="brand">italkyAI</div>
+            <div class="amount">${tokenAmount} JETON</div>
+            <img class="qr" src="${qrImg}" alt="QR">
+            <div class="code">${shortCode}</div>
+            <div class="sub">QR okutun veya uygulamada bu 6 haneli kodu girin.</div>
+          </div>
+          <script>
+            window.onload = () => {
+              setTimeout(() => window.print(), 250);
+            };
+          <\/script>
+        </body>
+        </html>
+      `);
+      w.document.close();
+    } catch (e) {
+      setStatus(nfcCreateStatus, "QR yazdırma hatası: " + (e.message || e), "status-err");
     }
   });
 
