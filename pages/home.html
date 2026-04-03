@@ -102,7 +102,7 @@ body.home-ready #pageContent{
   align-items:center;
   justify-content:center;
   transform-style:preserve-3d;
-  margin:2px auto 2px;
+  margin:2px auto 4px;
 }
 
 .crystal-cage{
@@ -272,79 +272,6 @@ body.home-ready #pageContent{
   -webkit-text-fill-color:transparent;
 }
 
-.connect-code-wrap{
-  margin-top:-4px;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  gap:6px;
-  width:100%;
-  max-width:320px;
-}
-
-.connect-code-label{
-  font-size:10px;
-  font-weight:900;
-  letter-spacing:1.1px;
-  color:rgba(255,255,255,.58);
-  text-transform:uppercase;
-}
-
-.connect-code-line{
-  position:relative;
-  width:100%;
-  min-height:44px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-
-.connect-code-value{
-  position:absolute;
-  left:50%;
-  transform:translateX(-50%);
-  font-family:'Space Grotesk',sans-serif;
-  font-size:24px;
-  font-weight:700;
-  letter-spacing:2px;
-  color:#fff;
-  line-height:1;
-  text-shadow:0 0 14px rgba(255,255,255,.12);
-  text-align:center;
-  width:max-content;
-  pointer-events:none;
-}
-
-.connect-code-copy{
-  position:absolute;
-  right:0;
-  width:34px;
-  height:34px;
-  min-width:34px;
-  border:none;
-  border-radius:50%;
-  background:rgba(255,255,255,.10);
-  color:#fff;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  cursor:pointer;
-  transition:transform .18s ease, opacity .18s ease;
-  border:1px solid rgba(255,255,255,.12);
-}
-
-.connect-code-copy:active{
-  transform:scale(.96);
-}
-
-.connect-code-copy svg{
-  width:16px;
-  height:16px;
-  fill:none;
-  stroke:#fff;
-  stroke-width:2;
-}
-
 .heroTitle{
   font-family:'Space Grotesk',sans-serif;
   font-size:20px;
@@ -360,25 +287,29 @@ body.home-ready #pageContent{
 
 .heroSub{
   margin:0;
-  font-size:10.8px;
-  color:var(--muted);
+  font-size:12px;
+  color:rgba(255,255,255,.86);
   text-align:center;
-  line-height:1.36;
+  line-height:1.35;
   max-width:310px;
+  font-weight:800;
 }
 
-.heroStatus{
-  min-height:20px;
-  font-size:11px;
-  font-weight:800;
-  color:rgba(255,255,255,.78);
+.heroName{
+  margin:0;
+  font-size:13px;
+  color:var(--muted);
   text-align:center;
+  line-height:1.3;
+  max-width:310px;
+  font-weight:700;
 }
 
 .heroActions,
 #nfcUpgradeBox,
 .heroTrialWarn,
-#goSideToSide{
+#goSideToSide,
+.connect-code-wrap{
   display:none !important;
 }
 
@@ -876,10 +807,6 @@ body.home-ready #pageContent{
     font-size:10.8px;
     line-height:1.32;
   }
-  .connect-code-value{
-    font-size:20px;
-    letter-spacing:1.8px;
-  }
 }
 </style>
 </head>
@@ -888,18 +815,15 @@ body.home-ready #pageContent{
 
 <script type="module">
   import { supabase } from "/js/supabase_client.js";
-
   const LOGIN_PAGE = "/pages/login.html";
 
   async function bootAuthGate() {
     try {
       const { data: { session }, error } = await supabase.auth.getSession();
-
       if (error || !session?.user) {
         location.replace(LOGIN_PAGE);
         return;
       }
-
       document.body.classList.add("home-ready");
     } catch (e) {
       location.replace(LOGIN_PAGE);
@@ -933,22 +857,8 @@ body.home-ready #pageContent{
           </div>
         </div>
 
-        <div class="connect-code-wrap">
-          <div class="connect-code-label">Bağlantı Kodu</div>
-          <div class="connect-code-line">
-            <div id="connectionCodeText" class="connect-code-value">------</div>
-            <button id="copyConnectionCodeBtn" class="connect-code-copy" type="button" aria-label="Bağlantı kodunu kopyala" title="Kopyala">
-              <svg viewBox="0 0 24 24">
-                <rect x="9" y="9" width="10" height="10" rx="2"></rect>
-                <path d="M7 15H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v1"></path>
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        <h1 class="heroTitle">Dünya'yı Küçülttük, Cebinize Sığdırdık</h1>
-        <p class="heroSub">Bağlantı kodunu paylaş. Karşı taraf kodu girince görüşme otomatik başlar. Sen sadece bekle.</p>
-        <div class="heroStatus" id="heroStatus">Oda hazırlanıyor...</div>
+        <h1 class="heroTitle">Dünya’yı Küçülttük, Cebinize Sığdırdık</h1>
+        <p class="heroName" id="heroUserName">Hoş geldin</p>
       </div>
     </section>
 
@@ -1071,164 +981,43 @@ try {
 <script type="module">
   import { supabase } from "/js/supabase_client.js";
 
-  function setHeroStatus(text){
-    const heroStatus = document.getElementById("heroStatus");
-    if (heroStatus) heroStatus.textContent = text || "";
-  }
+  async function loadHomeUserName() {
+    const heroUserName = document.getElementById("heroUserName");
+    if (!heroUserName) return;
 
-  function makeConnectionCode(length = 6){
-    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-    let out = "";
-    for(let i = 0; i < length; i++){
-      out += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return out;
-  }
-
-  const API_BASE = "https://italky-api.onrender.com/api";
-  const connectionCodeText = document.getElementById("connectionCodeText");
-  const copyConnectionCodeBtn = document.getElementById("copyConnectionCodeBtn");
-
-  const ROOM_KEY = "italky_active_interpreter_room_id";
-  const ROOM_LANG_KEY = "italky_active_interpreter_lang";
-  const ROOM_CODE_KEY = "italky_active_interpreter_code";
-
-  let activeRoomId = "";
-  let activeRoomCode = "";
-  let redirected = false;
-  let roomPollTimer = null;
-
-  function setConnectionCode(code){
-    activeRoomCode = String(code || "").trim().toUpperCase();
-    if(connectionCodeText){
-      connectionCodeText.textContent = activeRoomCode || "------";
-    }
-    try{
-      localStorage.setItem(ROOM_CODE_KEY, activeRoomCode);
-    }catch(e){
-      console.warn("[HOME localStorage ROOM_CODE_KEY]", e);
-    }
-  }
-
-  async function createRoom(myLang = "tr"){
-    const hostCode = makeConnectionCode(6);
-    const r = await fetch(`${API_BASE}/interpreter/create-room`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        host_code: hostCode,
-        my_lang: myLang,
-        mode: "interpreter"
-      })
-    });
-    const j = await r.json().catch(() => ({}));
-    if(!r.ok || !j?.room_id){
-      throw new Error(j?.detail || j?.error || "Room oluşturulamadı");
-    }
-    return {
-      ...j,
-      host_code: String(j?.host_code || hostCode || "").trim().toUpperCase()
-    };
-  }
-
-  async function getRoomStatus(roomId){
-    const r = await fetch(`${API_BASE}/interpreter/room/${encodeURIComponent(roomId)}`, {
-      method: "GET"
-    });
-    const j = await r.json().catch(() => ({}));
-    if(!r.ok || !j?.room_id){
-      throw new Error(j?.detail || j?.error || "Room okunamadı");
-    }
-    return j;
-  }
-
-  function stopRoomPolling(){
-    try{
-      clearInterval(roomPollTimer);
-    }catch(e){}
-    roomPollTimer = null;
-  }
-
-  function launchHostRoom(roomId){
-    if(!roomId || redirected) return;
-    redirected = true;
-    stopRoomPolling();
-    location.href = `/pages/sidetoside.html?room=${encodeURIComponent(roomId)}&role=host&my=tr&auto=1`;
-  }
-
-  function startRoomPolling(roomId) {
-    clearInterval(roomPollTimer);
-
-    roomPollTimer = setInterval(async () => {
-      if (redirected) return;
-
-      try {
-        const room = await getRoomStatus(roomId);
-        const peerConnected =
-          room?.status === "active" &&
-          !!String(room?.guest_lang || "").trim();
-
-        if (peerConnected) {
-          setHeroStatus("Karşı taraf bağlandı. Oda açılıyor...");
-          launchHostRoom(roomId);
-          return;
-        }
-
-        setHeroStatus("Bağlantı kodu hazır. Karşı taraf bekleniyor...");
-      } catch (e) {
-        console.warn("[HOME room poll error]", e);
-        setHeroStatus("Bağlantı kontrol edilemiyor...");
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const uid = user?.id;
+      if (!uid) {
+        heroUserName.textContent = "Hoş geldin";
+        return;
       }
-    }, 1500);
-  }
 
-  async function prepareRoom(){
-    try{
-      redirected = false;
-      stopRoomPolling();
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("hitap, name, full_name, display_name")
+        .eq("id", uid)
+        .maybeSingle();
 
-      setHeroStatus("Oda hazırlanıyor...");
-      const created = await createRoom("tr");
-      activeRoomId = String(created.room_id || "").trim();
-      if(!activeRoomId) throw new Error("room_id boş geldi");
+      const rawName =
+        profile?.hitap ||
+        profile?.name ||
+        profile?.display_name ||
+        profile?.full_name ||
+        user?.user_metadata?.hitap ||
+        user?.user_metadata?.name ||
+        user?.user_metadata?.full_name ||
+        user?.email ||
+        "";
 
-      setConnectionCode(created.host_code || makeConnectionCode(6));
-
-      localStorage.setItem(ROOM_KEY, activeRoomId);
-      localStorage.setItem(ROOM_LANG_KEY, "tr");
-      localStorage.setItem(ROOM_CODE_KEY, activeRoomCode);
-
-      setHeroStatus("Bağlantı kodu hazır. Karşı taraf bekleniyor...");
-      startRoomPolling(activeRoomId);
-    }catch(e){
-      console.error("[HOME prepareRoom]", e);
-      setConnectionCode("ERROR1");
-      setHeroStatus(e?.message || "Oda hazırlanamadı");
+      const cleanName = String(rawName || "").trim();
+      heroUserName.textContent = cleanName ? cleanName : "Hoş geldin";
+    } catch (e) {
+      heroUserName.textContent = "Hoş geldin";
     }
   }
 
-  copyConnectionCodeBtn?.addEventListener("click", async () => {
-    const value = String(activeRoomCode || "").trim();
-    if(!value || value === "------") return;
-    try{
-      await navigator.clipboard.writeText(value);
-      setHeroStatus("Bağlantı kodu kopyalandı.");
-    }catch{
-      const temp = document.createElement("textarea");
-      temp.value = value;
-      document.body.appendChild(temp);
-      temp.select();
-      try{ document.execCommand("copy"); }catch(e){}
-      temp.remove();
-      setHeroStatus("Bağlantı kodu kopyalandı.");
-    }
-  });
-
-  prepareRoom();
-
-  window.addEventListener("beforeunload", () => {
-    stopRoomPolling();
-  });
+  loadHomeUserName();
 </script>
 
 </body>
