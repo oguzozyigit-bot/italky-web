@@ -78,7 +78,7 @@ body.home-ready #pageContent{
   min-height:100%;
   display:flex;
   flex-direction:column;
-  gap:10px;
+  gap:8px;
 }
 
 .hero{
@@ -91,7 +91,7 @@ body.home-ready #pageContent{
   flex-direction:column;
   align-items:center;
   justify-content:center;
-  gap:8px;
+  gap:6px;
 }
 
 .holo-container{
@@ -102,7 +102,7 @@ body.home-ready #pageContent{
   align-items:center;
   justify-content:center;
   transform-style:preserve-3d;
-  margin:2px auto 6px;
+  margin:2px auto 2px;
 }
 
 .crystal-cage{
@@ -273,11 +273,11 @@ body.home-ready #pageContent{
 }
 
 .connect-code-wrap{
-  margin-top:2px;
+  margin-top:-4px;
   display:flex;
   flex-direction:column;
   align-items:center;
-  gap:7px;
+  gap:6px;
   width:100%;
   max-width:320px;
 }
@@ -347,20 +347,15 @@ body.home-ready #pageContent{
 
 .heroTitle{
   font-family:'Space Grotesk',sans-serif;
-  font-size:22px;
+  font-size:20px;
   font-weight:700;
   letter-spacing:-.4px;
   color:#fff;
   margin:0;
-  line-height:1.08;
+  line-height:1.15;
   text-align:center;
   text-shadow:0 0 12px rgba(255,255,255,.18);
-}
-
-.heroTitle .to{
-  background:var(--ai-grad);
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
+  max-width:320px;
 }
 
 .heroSub{
@@ -380,43 +375,11 @@ body.home-ready #pageContent{
   text-align:center;
 }
 
-.heroTrialWarn{
-  margin:0;
-  font-size:10.8px;
-  color:rgba(255,255,255,.72);
-  text-align:center;
-  line-height:1.42;
-  max-width:320px;
-}
-
-.heroActions{
-  width:100%;
-  max-width:320px;
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-  margin-top:8px;
-}
-
-.heroBtn{
-  min-height:52px;
-  border:none;
-  border-radius:18px;
-  font-family:'Outfit',sans-serif;
-  font-size:15px;
-  font-weight:900;
-  cursor:pointer;
-  transition:transform .18s ease, opacity .18s ease, box-shadow .18s ease;
-}
-
-.heroBtn:active{ transform:scale(.985); }
-
-.heroBtnWide{
-  width:100%;
-  background:linear-gradient(135deg,#4338ca 0%, #7c3aed 100%);
-  color:#fff;
-  border:1px solid rgba(255,255,255,.12);
-  box-shadow:0 12px 24px rgba(67,56,202,.24);
+.heroActions,
+#nfcUpgradeBox,
+.heroTrialWarn,
+#goSideToSide{
+  display:none !important;
 }
 
 .home-grid{
@@ -894,7 +857,7 @@ body.home-ready #pageContent{
 }
 
 @media (max-width:390px){
-  .holo-container{ width:190px; height:190px; margin-bottom:4px; }
+  .holo-container{ width:190px; height:190px; margin-bottom:2px; }
   .crystal-cage{ width:136px; height:136px; }
   .side1{ transform:rotateY(0deg) translateZ(68px); }
   .side2{ transform:rotateY(90deg) translateZ(68px); }
@@ -905,7 +868,7 @@ body.home-ready #pageContent{
   .holo-qr{ width:98px; height:98px; }
   .planet-core{ width:98px; height:98px; }
   .planet-text{ font-size:13px; }
-  .heroTitle{ font-size:20px; }
+  .heroTitle{ font-size:18px; }
   .card-title{ font-size:22px; }
   .wide-title{ font-size:22px; }
   .card-art{ height:70px; }
@@ -927,7 +890,6 @@ body.home-ready #pageContent{
   import { supabase } from "/js/supabase_client.js";
 
   const LOGIN_PAGE = "/pages/login.html";
-  const ACCESS_PAGE = "/pages/access.html";
 
   async function bootAuthGate() {
     try {
@@ -935,40 +897,6 @@ body.home-ready #pageContent{
 
       if (error || !session?.user) {
         location.replace(LOGIN_PAGE);
-        return;
-      }
-
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select(`
-          selected_package_code,
-          package_active,
-          package_ends_at,
-          trial_ends_at
-        `)
-        .eq("id", session.user.id)
-        .maybeSingle();
-
-      const now = Date.now();
-
-      const rawCode = String(profile?.selected_package_code || "").trim().toLowerCase();
-      const packageCode =
-        rawCode.startsWith("premium") ? "premium" :
-        rawCode.startsWith("translate") ? "translate" :
-        (rawCode.startsWith("education") || rawCode.startsWith("edu")) ? "education" :
-        rawCode;
-
-      const hasActivePackage =
-        !!packageCode &&
-        profile?.package_active === true &&
-        (!profile?.package_ends_at || new Date(profile.package_ends_at).getTime() > now);
-
-      const hasActiveTrial =
-        !!profile?.trial_ends_at &&
-        new Date(profile.trial_ends_at).getTime() > now;
-
-      if (!hasActivePackage && !hasActiveTrial) {
-        location.replace(ACCESS_PAGE);
         return;
       }
 
@@ -1018,35 +946,9 @@ body.home-ready #pageContent{
           </div>
         </div>
 
-        <h1 class="heroTitle">Ear<span class="to">TO</span>Ear</h1>
-        <p class="heroSub">Bağlantı kodunu paylaş. Karşı taraf Bağlantı Kodunu girsin, dil bariyerleri kalksın. Karşı taraf Bağlantı Kodunu girince sohbet otomatik başlar. Sen sadece bekle.</p>
+        <h1 class="heroTitle">Dünya'yı Küçülttük, Cebinize Sığdırdık</h1>
+        <p class="heroSub">Bağlantı kodunu paylaş. Karşı taraf kodu girince görüşme otomatik başlar. Sen sadece bekle.</p>
         <div class="heroStatus" id="heroStatus">Oda hazırlanıyor...</div>
-        <p class="heroTrialWarn" id="heroTrialWarn" style="display:none;">
-          Deneme süreniz yalnızca başlattığınız ülkede geçerlidir. Ülke değiştirmeniz halinde ücretsiz deneme hakkınızı kullanamazsınız.
-        </p>
-
-        <div class="heroActions">
-          <button id="goSideToSide" class="heroBtn heroBtnWide" type="button" onclick="openCodePrompt()">🔢Karşı Tarafın Bağlantı Kodunu Gir</button>
-        </div>
-        
-        <div id="nfcUpgradeBox" style="display:none; width:100%; max-width:320px; margin:8px auto 0;">
-          <a href="/pages/upgrade_pack.html" style="
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            min-height:48px;
-            border-radius:16px;
-            text-decoration:none;
-            font-weight:900;
-            font-size:14px;
-            color:#fff;
-            background:linear-gradient(135deg,#f59e0b 0%, #f97316 100%);
-            border:1px solid rgba(255,255,255,.14);
-            box-shadow:0 12px 24px rgba(249,115,22,.22);
-          ">
-            Paketini Yükselt
-          </a>
-        </div>
       </div>
     </section>
 
@@ -1169,411 +1071,165 @@ try {
 <script type="module">
   import { supabase } from "/js/supabase_client.js";
 
-  function italkyShow(el, isVisible) {
-    if (!el) return;
-    el.style.display = isVisible ? "" : "none";
-  }
-
-  function italkySetHeroStatus(text) {
+  function setHeroStatus(text){
     const heroStatus = document.getElementById("heroStatus");
     if (heroStatus) heroStatus.textContent = text || "";
   }
 
-  function normalizePackageCode(raw) {
-    const code = String(raw || "").trim().toLowerCase();
-    if (!code) return "";
-    if (code.startsWith("premium")) return "premium";
-    if (code.startsWith("translate")) return "translate";
-    if (code.startsWith("education")) return "education";
-    if (code.startsWith("edu")) return "education";
-    return code;
-  }
-
-  async function readAccessFromDb() {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) {
-      return {
-        trialActive: false,
-        trialDaysLeft: 0,
-        packageCode: "",
-      };
+  function makeConnectionCode(length = 6){
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    let out = "";
+    for(let i = 0; i < length; i++){
+      out += chars.charAt(Math.floor(Math.random() * chars.length));
     }
+    return out;
+  }
 
-    const { data: row } = await supabase
-      .from("user_access_state")
-      .select("*")
-      .eq("user_id", session.user.id)
-      .maybeSingle();
+  const API_BASE = "https://italky-api.onrender.com/api";
+  const connectionCodeText = document.getElementById("connectionCodeText");
+  const copyConnectionCodeBtn = document.getElementById("copyConnectionCodeBtn");
 
-    if (row) {
-      const trialActive = Number(row.trial_days_left || 0) > 0 ||
-        (!!row.trial_ends_at && new Date(row.trial_ends_at).getTime() > Date.now());
+  const ROOM_KEY = "italky_active_interpreter_room_id";
+  const ROOM_LANG_KEY = "italky_active_interpreter_lang";
+  const ROOM_CODE_KEY = "italky_active_interpreter_code";
 
-      const rawCode = String(row.selected_package_code || "").trim().toLowerCase();
-      const packageCode =
-        rawCode.startsWith("premium") ? "premium" :
-        rawCode.startsWith("translate") ? "translate" :
-        (rawCode.startsWith("education") || rawCode.startsWith("edu")) ? "education" :
-        rawCode;
+  let activeRoomId = "";
+  let activeRoomCode = "";
+  let redirected = false;
+  let roomPollTimer = null;
 
-      return {
-        trialActive,
-        trialDaysLeft: Number(row.trial_days_left || 0),
-        packageCode
-      };
+  function setConnectionCode(code){
+    activeRoomCode = String(code || "").trim().toUpperCase();
+    if(connectionCodeText){
+      connectionCodeText.textContent = activeRoomCode || "------";
     }
-
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("selected_package_code, package_active, package_ends_at, trial_ends_at")
-      .eq("id", session.user.id)
-      .maybeSingle();
-
-    const now = Date.now();
-    const trialActive =
-      !!profile?.trial_ends_at &&
-      new Date(profile.trial_ends_at).getTime() > now;
-
-    const trialDaysLeft = trialActive
-      ? Math.max(0, Math.ceil((new Date(profile.trial_ends_at).getTime() - now) / 86400000))
-      : 0;
-
-    const rawCode = String(profile?.selected_package_code || "").trim().toLowerCase();
-    const normalizedCode =
-      rawCode.startsWith("premium") ? "premium" :
-      rawCode.startsWith("translate") ? "translate" :
-      (rawCode.startsWith("education") || rawCode.startsWith("edu")) ? "education" :
-      rawCode;
-
-    const packageCode =
-      !!normalizedCode &&
-      profile?.package_active === true &&
-      (!profile?.package_ends_at || new Date(profile.package_ends_at).getTime() > now)
-        ? normalizedCode
-        : "";
-
-    return {
-      trialActive: packageCode ? false : trialActive,
-      trialDaysLeft: packageCode ? 0 : trialDaysLeft,
-      packageCode
-    };
-  }
-
-  async function italkyApplyAccessToHome() {
-    const access = await readAccessFromDb();
-
-    const heroSub = document.querySelector(".heroSub");
-    const upgradeBox = document.getElementById("nfcUpgradeBox");
-    const trialWarn = document.getElementById("heroTrialWarn");
-
-    const faceCard = document.getElementById("faceCard");
-    const offlineCard = document.getElementById("offlineCard");
-    const textCard = document.getElementById("textCard");
-    const funCard = document.getElementById("funCard");
-    const levelCard = document.getElementById("levelCard");
-    const practiceCard = document.getElementById("practiceCard");
-
-    const codeWrap = document.querySelector(".connect-code-wrap");
-    const sideBtn = document.getElementById("goSideToSide");
-
-    italkyShow(faceCard, true);
-    italkyShow(offlineCard, true);
-    italkyShow(textCard, true);
-    italkyShow(funCard, true);
-    italkyShow(levelCard, true);
-    italkyShow(practiceCard, true);
-
-    const packageCode = normalizePackageCode(access.packageCode);
-    const canUseEarToEar = !!(
-      access.trialActive ||
-      packageCode === "premium" ||
-      packageCode === "translate"
-    );
-
-    italkyShow(codeWrap, canUseEarToEar);
-    italkyShow(sideBtn, canUseEarToEar);
-    italkyShow(upgradeBox, !canUseEarToEar);
-    italkyShow(trialWarn, !!access.trialActive);
-
-    if (access.trialActive) {
-      italkySetHeroStatus(`7 gün ücretsiz full erişim açık • ${access.trialDaysLeft} gün kaldı`);
-      if (heroSub) {
-        heroSub.textContent =
-          "İlk 7 gün boyunca tüm paketler açık. Süre bitince bir paket seçmen gerekecek.";
-      }
-      return {
-        packageCode: "",
-        trialActive: true,
-        trialDaysLeft: access.trialDaysLeft,
-        canUseEarToEar: true,
-        lockedAll: false
-      };
-    }
-
-    if (packageCode === "premium") {
-      italkySetHeroStatus("Premium aktif • Tüm modüller açık");
-      if (heroSub) {
-        heroSub.textContent =
-          "Premium üyelik aktif. Translate ve Eğitim tarafının tamamı açık.";
-      }
-      return {
-        packageCode: "premium",
-        trialActive: false,
-        trialDaysLeft: 0,
-        canUseEarToEar: true,
-        lockedAll: false
-      };
-    }
-
-    if (packageCode === "education") {
-      italkySetHeroStatus("Eğitim paketi aktif");
-      if (heroSub) {
-        heroSub.textContent =
-          "Eğlenerek Öğren, Pratik Yap ve Seviye Tespit modülleri açık.";
-      }
-      return {
-        packageCode: "education",
-        trialActive: false,
-        trialDaysLeft: 0,
-        canUseEarToEar: false,
-        lockedAll: false
-      };
-    }
-
-    if (packageCode === "translate") {
-      italkySetHeroStatus("Translate paketi aktif");
-      if (heroSub) {
-        heroSub.textContent =
-          "FaceToFace, EarToEar, TextToText ve Offline Translate modülleri açık.";
-      }
-      return {
-        packageCode: "translate",
-        trialActive: false,
-        trialDaysLeft: 0,
-        canUseEarToEar: true,
-        lockedAll: false
-      };
-    }
-
-    italkySetHeroStatus("7 günlük deneme bitti • Paket seçmelisin");
-    if (heroSub) {
-      heroSub.textContent =
-        "Devam etmek için Eğitim Paketi, Translate Paketi veya Premium üyelik seç.";
-    }
-
-    return {
-      packageCode: "",
-      trialActive: false,
-      trialDaysLeft: 0,
-      canUseEarToEar: false,
-      lockedAll: true
-    };
-  }
-
-  window.italkyApplyAccessToHome = italkyApplyAccessToHome;
-  window.normalizePackageCode = normalizePackageCode;
-</script>
-
-<script>
-let __homeResolvedAccess = null;
-
-function openCodePrompt(){
-  const canUseEarToEar = !!(__homeResolvedAccess?.canUseEarToEar);
-
-  if(!canUseEarToEar){
-    alert("Deneme süreniz doldu. Sistemi kullanabilmek için üyelik paketi satın almanız gereklidir.");
-    location.href = "/pages/upgrade_pack.html";
-    return;
-  }
-
-  location.href = "/pages/sidetoside_code.html";
-}
-window.openCodePrompt = openCodePrompt;
-</script>
-
-<script type="module">
-const API_BASE = "https://italky-api.onrender.com/api";
-const connectionCodeText = document.getElementById("connectionCodeText");
-const copyConnectionCodeBtn = document.getElementById("copyConnectionCodeBtn");
-
-const ROOM_KEY = "italky_active_interpreter_room_id";
-const ROOM_LANG_KEY = "italky_active_interpreter_lang";
-const ROOM_CODE_KEY = "italky_active_interpreter_code";
-
-let activeRoomId = "";
-let activeRoomCode = "";
-let redirected = false;
-let roomPollTimer = null;
-
-function setHeroStatus(text){
-  const heroStatus = document.getElementById("heroStatus");
-  if(heroStatus) heroStatus.textContent = text || "";
-}
-
-function makeConnectionCode(length = 6){
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let out = "";
-  for(let i = 0; i < length; i++){
-    out += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return out;
-}
-
-function setConnectionCode(code){
-  activeRoomCode = String(code || "").trim().toUpperCase();
-  if(connectionCodeText){
-    connectionCodeText.textContent = activeRoomCode || "------";
-  }
-  try{
-    localStorage.setItem(ROOM_CODE_KEY, activeRoomCode);
-  }catch(e){
-    console.warn("[HOME localStorage ROOM_CODE_KEY]", e);
-  }
-}
-
-async function createRoom(myLang = "tr"){
-  const hostCode = makeConnectionCode(6);
-  const r = await fetch(`${API_BASE}/interpreter/create-room`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      host_code: hostCode,
-      my_lang: myLang,
-      mode: "interpreter"
-    })
-  });
-  const j = await r.json().catch(() => ({}));
-  if(!r.ok || !j?.room_id){
-    throw new Error(j?.detail || j?.error || "Room oluşturulamadı");
-  }
-  return {
-    ...j,
-    host_code: String(j?.host_code || hostCode || "").trim().toUpperCase()
-  };
-}
-
-async function getRoomStatus(roomId){
-  const r = await fetch(`${API_BASE}/interpreter/room/${encodeURIComponent(roomId)}`, {
-    method: "GET"
-  });
-  const j = await r.json().catch(() => ({}));
-  if(!r.ok || !j?.room_id){
-    throw new Error(j?.detail || j?.error || "Room okunamadı");
-  }
-  return j;
-}
-
-function stopRoomPolling(){
-  try{
-    clearInterval(roomPollTimer);
-  }catch(e){}
-  roomPollTimer = null;
-}
-
-function launchHostRoom(roomId){
-  if(!roomId || redirected) return;
-  redirected = true;
-  stopRoomPolling();
-  location.href = `/pages/sidetoside.html?room=${encodeURIComponent(roomId)}&role=host&my=tr&auto=1`;
-}
-
-function startRoomPolling(roomId){
-  if(!roomId) return;
-  stopRoomPolling();
-  roomPollTimer = setInterval(async () => {
-    if(redirected) return;
     try{
-      const room = await getRoomStatus(roomId);
-      const peerConnected = room?.status === "active" && !!String(room?.guest_lang || "").trim();
-      if(peerConnected){
-        setHeroStatus("Karşı taraf bağlandı. Oda açılıyor...");
-        launchHostRoom(roomId);
-        return;
-      }
-      setHeroStatus("Bağlantı kodu hazır. Karşı taraf bekleniyor...");
+      localStorage.setItem(ROOM_CODE_KEY, activeRoomCode);
     }catch(e){
-      console.warn("[HOME room poll error]", e);
-      setHeroStatus("Bağlantı kontrol edilemiyor...");
+      console.warn("[HOME localStorage ROOM_CODE_KEY]", e);
     }
-  }, 1500);
-}
-
-async function prepareRoom(){
-  const canUseEarToEar = !!(__homeResolvedAccess?.canUseEarToEar);
-
-  redirected = false;
-  stopRoomPolling();
-
-  if(!canUseEarToEar){
-    setConnectionCode("------");
-    return;
   }
 
-  try{
-    setHeroStatus("Oda hazırlanıyor...");
-    const created = await createRoom("tr");
-    activeRoomId = String(created.room_id || "").trim();
-    if(!activeRoomId) throw new Error("room_id boş geldi");
-    setConnectionCode(created.host_code || makeConnectionCode(6));
-    localStorage.setItem(ROOM_KEY, activeRoomId);
-    localStorage.setItem(ROOM_LANG_KEY, "tr");
-    localStorage.setItem(ROOM_CODE_KEY, activeRoomCode);
-    setHeroStatus("Bağlantı kodu hazır. Karşı taraf bekleniyor...");
-    startRoomPolling(activeRoomId);
-  }catch(e){
-    console.error("[HOME prepareRoom]", e);
-    setConnectionCode("ERROR1");
-    setHeroStatus(e?.message || "Oda hazırlanamadı");
-  }
-}
-
-copyConnectionCodeBtn?.addEventListener("click", async () => {
-  const value = String(activeRoomCode || "").trim();
-  if(!value || value === "------") return;
-  try{
-    await navigator.clipboard.writeText(value);
-    setHeroStatus("Bağlantı kodu kopyalandı.");
-  }catch{
-    const temp = document.createElement("textarea");
-    temp.value = value;
-    document.body.appendChild(temp);
-    temp.select();
-    try{ document.execCommand("copy"); }catch(e){}
-    temp.remove();
-    setHeroStatus("Bağlantı kodu kopyalandı.");
-  }
-});
-
-__homeResolvedAccess = await window.italkyApplyAccessToHome();
-prepareRoom();
-
-window.addEventListener("beforeunload", () => {
-  stopRoomPolling();
-});
-</script>
-
-<script>
-(function lockedExpiredState(){
-  const UPGRADE_URL = "/pages/upgrade_pack.html";
-
-  function expiredPopup(msg){
-    alert(msg);
-    location.href = UPGRADE_URL;
+  async function createRoom(myLang = "tr"){
+    const hostCode = makeConnectionCode(6);
+    const r = await fetch(`${API_BASE}/interpreter/create-room`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        host_code: hostCode,
+        my_lang: myLang,
+        mode: "interpreter"
+      })
+    });
+    const j = await r.json().catch(() => ({}));
+    if(!r.ok || !j?.room_id){
+      throw new Error(j?.detail || j?.error || "Room oluşturulamadı");
+    }
+    return {
+      ...j,
+      host_code: String(j?.host_code || hostCode || "").trim().toUpperCase()
+    };
   }
 
-  document.addEventListener("click", function(e){
-    if (!__homeResolvedAccess) return;
-    if (!__homeResolvedAccess.lockedAll) return;
+  async function getRoomStatus(roomId){
+    const r = await fetch(`${API_BASE}/interpreter/room/${encodeURIComponent(roomId)}`, {
+      method: "GET"
+    });
+    const j = await r.json().catch(() => ({}));
+    if(!r.ok || !j?.room_id){
+      throw new Error(j?.detail || j?.error || "Room okunamadı");
+    }
+    return j;
+  }
 
-    const target = e.target.closest("a,button,.menu-btn,.settings-btn,.menu-action,.menu-nav a");
-    if (!target) return;
+  function stopRoomPolling(){
+    try{
+      clearInterval(roomPollTimer);
+    }catch(e){}
+    roomPollTimer = null;
+  }
 
-    e.preventDefault();
-    e.stopPropagation();
-    expiredPopup("Deneme süreniz doldu. Sistemi kullanabilmek için üyelik paketi satın almanız gereklidir.");
-  }, true);
-})();
+  function launchHostRoom(roomId){
+    if(!roomId || redirected) return;
+    redirected = true;
+    stopRoomPolling();
+    location.href = `/pages/sidetoside.html?room=${encodeURIComponent(roomId)}&role=host&my=tr&auto=1`;
+  }
+
+  function startRoomPolling(roomId) {
+    clearInterval(roomPollTimer);
+
+    roomPollTimer = setInterval(async () => {
+      if (redirected) return;
+
+      try {
+        const room = await getRoomStatus(roomId);
+        const peerConnected =
+          room?.status === "active" &&
+          !!String(room?.guest_lang || "").trim();
+
+        if (peerConnected) {
+          setHeroStatus("Karşı taraf bağlandı. Oda açılıyor...");
+          launchHostRoom(roomId);
+          return;
+        }
+
+        setHeroStatus("Bağlantı kodu hazır. Karşı taraf bekleniyor...");
+      } catch (e) {
+        console.warn("[HOME room poll error]", e);
+        setHeroStatus("Bağlantı kontrol edilemiyor...");
+      }
+    }, 1500);
+  }
+
+  async function prepareRoom(){
+    try{
+      redirected = false;
+      stopRoomPolling();
+
+      setHeroStatus("Oda hazırlanıyor...");
+      const created = await createRoom("tr");
+      activeRoomId = String(created.room_id || "").trim();
+      if(!activeRoomId) throw new Error("room_id boş geldi");
+
+      setConnectionCode(created.host_code || makeConnectionCode(6));
+
+      localStorage.setItem(ROOM_KEY, activeRoomId);
+      localStorage.setItem(ROOM_LANG_KEY, "tr");
+      localStorage.setItem(ROOM_CODE_KEY, activeRoomCode);
+
+      setHeroStatus("Bağlantı kodu hazır. Karşı taraf bekleniyor...");
+      startRoomPolling(activeRoomId);
+    }catch(e){
+      console.error("[HOME prepareRoom]", e);
+      setConnectionCode("ERROR1");
+      setHeroStatus(e?.message || "Oda hazırlanamadı");
+    }
+  }
+
+  copyConnectionCodeBtn?.addEventListener("click", async () => {
+    const value = String(activeRoomCode || "").trim();
+    if(!value || value === "------") return;
+    try{
+      await navigator.clipboard.writeText(value);
+      setHeroStatus("Bağlantı kodu kopyalandı.");
+    }catch{
+      const temp = document.createElement("textarea");
+      temp.value = value;
+      document.body.appendChild(temp);
+      temp.select();
+      try{ document.execCommand("copy"); }catch(e){}
+      temp.remove();
+      setHeroStatus("Bağlantı kodu kopyalandı.");
+    }
+  });
+
+  prepareRoom();
+
+  window.addEventListener("beforeunload", () => {
+    stopRoomPolling();
+  });
 </script>
 
 </body>
-          </html>
+</html>
