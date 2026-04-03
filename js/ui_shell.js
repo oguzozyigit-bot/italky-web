@@ -1,3 +1,5 @@
+// FILE: /js/ui_shell.js
+
 import { installAutoTranslate } from "/js/system_lang.js";
 import { STORAGE_KEY } from "/js/config.js";
 
@@ -67,10 +69,11 @@ const HOME_HEADER_HTML = `
           </div>
 
           <div class="menu-username" id="menuUserName">Kullanıcı</div>
+          <div class="menu-last-login" id="menuLastLogin">Son Giriş Tarihi: -</div>
 
           <div class="menu-token-row">
             <div class="menu-token-pill">
-              <span>Jeton</span>
+              <span>Jeton Bakiyesi</span>
               <strong id="menuHeaderJeton">0</strong>
             </div>
 
@@ -475,6 +478,13 @@ body.ui-menu-open{
   word-break:break-word;
 }
 
+.menu-last-login{
+  font-size:11px;
+  font-weight:800;
+  color:rgba(255,255,255,.56);
+  line-height:1.3;
+}
+
 .menu-token-row{
   display:flex;
   align-items:center;
@@ -488,19 +498,20 @@ body.ui-menu-open{
   gap:8px;
   width:max-content;
   max-width:100%;
-  padding:6px 10px;
+  padding:8px 12px;
   border-radius:999px;
-  background:rgba(139,211,255,.10);
-  border:1px solid rgba(139,211,255,.14);
-  color:#d9e9ff;
-  font-size:11px;
-  font-weight:700;
+  background:linear-gradient(135deg, rgba(242,122,26,.18), rgba(255,173,96,.12));
+  border:1px solid rgba(255,173,96,.28);
+  color:#fff3e1;
+  font-size:12px;
+  font-weight:800;
+  box-shadow:0 8px 20px rgba(242,122,26,.14);
 }
 
 .menu-token-pill strong{
-  font-size:12px;
-  font-weight:900;
-  color:#fff;
+  font-size:14px;
+  font-weight:1000;
+  color:#ffffff;
 }
 
 .menu-token-link{
@@ -810,6 +821,11 @@ export function hydrateFromCache() {
     const nm = u?.display_name || u?.name || u?.full_name || u?.email || "Kullanıcı";
     const pic = u?.picture || u?.avatar || "";
     const tokens = Number(u?.tokens ?? 0);
+    const lastLogin =
+      u?.last_login_at ||
+      u?.lastLoginAt ||
+      u?.updated_at ||
+      "";
 
     const nameEl = document.getElementById("menuUserName");
     if (nameEl) nameEl.textContent = nm;
@@ -822,6 +838,17 @@ export function hydrateFromCache() {
 
     const jetonEl = document.getElementById("menuHeaderJeton");
     if (jetonEl) jetonEl.textContent = String(tokens);
+
+    const lastLoginEl = document.getElementById("menuLastLogin");
+    if (lastLoginEl) {
+      let text = "Son Giriş Tarihi: -";
+      if (lastLogin) {
+        try {
+          text = "Son Giriş Tarihi: " + new Date(lastLogin).toLocaleString("tr-TR");
+        } catch {}
+      }
+      lastLoginEl.textContent = text;
+    }
   } catch {}
 }
 
@@ -829,14 +856,61 @@ async function hydrateAdminButton() {
   const adminLink = document.getElementById("adminPanelLink");
   if (!adminLink) return;
 
-  adminLink.classList.add("hidden");
-  adminLink.style.display = "none";
+  const show = () => {
+    adminLink.classList.remove("hidden");
+    adminLink.style.display = "";
+  };
+
+  const hide = () => {
+    adminLink.classList.add("hidden");
+    adminLink.style.display = "none";
+  };
+
+  hide();
 
   try {
     const { supabase } = await import("/js/supabase_client.js");
+
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const u = JSON.parse(raw);
+
+        const cachedRole = String(
+          u?.role ||
+          u?.user_metadata?.role ||
+          ""
+        ).toLowerCase().trim();
+
+        const cachedAdmin =
+          u?.is_admin === true ||
+          u?.user_metadata?.is_admin === true ||
+          cachedRole === "admin" ||
+          cachedRole === "superadmin";
+
+        if (cachedAdmin) show();
+      }
+    } catch {}
+
     const { data: { session } } = await supabase.auth.getSession();
-    const userId = session?.user?.id;
-    if (!userId) return;
+    const user = session?.user || null;
+    const userId = user?.id || "";
+
+    if (!userId) {
+      hide();
+      return;
+    }
+
+    const sessionRole = String(
+      user?.user_metadata?.role || ""
+    ).toLowerCase().trim();
+
+    const sessionAdmin =
+      user?.user_metadata?.is_admin === true ||
+      sessionRole === "admin" ||
+      sessionRole === "superadmin";
+
+    if (sessionAdmin) show();
 
     const { data, error } = await supabase
       .from("profiles")
@@ -844,7 +918,9 @@ async function hydrateAdminButton() {
       .eq("id", userId)
       .maybeSingle();
 
-    if (error || !data) return;
+    if (error || !data) {
+      return;
+    }
 
     const role = String(data.role || "").toLowerCase().trim();
     const allowed =
@@ -852,17 +928,12 @@ async function hydrateAdminButton() {
       role === "admin" ||
       role === "superadmin";
 
-    if (allowed) {
-      adminLink.classList.remove("hidden");
-      adminLink.style.display = "";
-    } else {
-      adminLink.classList.add("hidden");
-      adminLink.style.display = "none";
-    }
+    if (allowed) show();
+    else hide();
+
   } catch (e) {
     console.warn("[ui_shell admin btn]", e);
-    adminLink.classList.add("hidden");
-    adminLink.style.display = "none";
+    hide();
   }
 }
 
