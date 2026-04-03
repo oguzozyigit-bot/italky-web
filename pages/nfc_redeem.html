@@ -1,4 +1,3 @@
-<!-- FILE: /pages/nfc_redeem.html -->
 <!doctype html>
 <html lang="tr">
 <head>
@@ -111,8 +110,6 @@
       cursor:pointer;
     }
 
-    .btn:active{transform:scale(.985)}
-
     .hint{
       margin-top:14px;
       padding:14px;
@@ -176,6 +173,13 @@
     const manualCodeInput = document.getElementById("manualCode");
     const redeemBtn = document.getElementById("redeemBtn");
     const statusBox = document.getElementById("statusBox");
+
+    const params = new URLSearchParams(location.search);
+    const codeFromQuery = String(params.get("code") || "").trim();
+
+    if (codeFromQuery && manualCodeInput) {
+      manualCodeInput.value = codeFromQuery.slice(0, 6);
+    }
 
     function setStatus(text, ok = false) {
       statusBox.textContent = text || "";
