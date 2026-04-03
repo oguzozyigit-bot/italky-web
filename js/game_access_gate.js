@@ -290,4 +290,23 @@ export async function ensureGamesBundleAccess(gameCode = "") {
 
     if (typeof json.tokens_after === "number" && window.setHeaderTokens) {
       try {
-        window.setHeader
+        window.setHeaderTokens(json.tokens_after);
+      } catch {}
+    }
+
+    return {
+      ok: true,
+      access_open: true,
+      reason: json.used_token ? "token_spent_access_opened" : "existing_bundle_active",
+      data: json
+    };
+  } catch (e) {
+    console.error("[game_access_gate] exception:", e);
+    return {
+      ok: false,
+      access_open: false,
+      reason: "exception",
+      error: e
+    };
+  }
+}
