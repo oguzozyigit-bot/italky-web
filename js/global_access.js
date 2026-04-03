@@ -1,927 +1,365 @@
-<!doctype html>
-<html lang="tr">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>italkyAI • Çeviri Ayarları</title>
+// FILE: /js/global_access.js
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+import { supabase } from "/js/supabase_client.js";
 
-  <style>
-    :root{
-      --txt: rgba(255,255,255,.97);
-      --muted: rgba(255,255,255,.62);
-      --ai-grad: linear-gradient(135deg,#67e8f9 0%,#818cf8 46%,#f472b6 100%);
-      --panel-bg: rgba(255,255,255,.04);
-      --panel-border: rgba(255,255,255,.10);
-      --accent: #818cf8;
-    }
+const API_BASE = "https://italky-api.onrender.com";
 
-    *{
-      box-sizing:border-box;
-      -webkit-tap-highlight-color:transparent;
-      outline:none;
-    }
+function el(tag, cls, html) {
+  const n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (html !== undefined) n.innerHTML = html;
+  return n;
+}
 
-    html,body{
-      margin:0;
-      padding:0;
-      width:100%;
-      min-height:100%;
-      background:#02000f;
-      color:var(--txt);
-      font-family:'Outfit',sans-serif;
-    }
+function safeNum(v, fallback = 0) {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : fallback;
+}
 
-    body::before{
-      content:"";
+function formatDateTR(value) {
+  if (!value) return "-";
+  try {
+    return new Date(value).toLocaleDateString("tr-TR", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit"
+    });
+  } catch {
+    return "-";
+  }
+}
+
+function ensurePopupStyles() {
+  if (document.getElementById("globalAccessPopupStyles")) return;
+
+  const style = document.createElement("style");
+  style.id = "globalAccessPopupStyles";
+  style.textContent = `
+    .ga-backdrop{
       position:fixed;
       inset:0;
-      background:
-        radial-gradient(circle at 50% 0%, rgba(129,140,248,.18) 0%, transparent 44%),
-        radial-gradient(circle at 12% 100%, rgba(244,114,182,.10) 0%, transparent 35%),
-        radial-gradient(circle at 100% 18%, rgba(103,232,249,.10) 0%, transparent 24%);
-      z-index:-1;
-      pointer-events:none;
-    }
-
-    #pageContent{
-      max-width:560px;
-      margin:0 auto;
-      padding:14px 16px 28px;
-      display:flex;
-      flex-direction:column;
-      gap:18px;
-    }
-
-    .topRow{
-      display:flex;
-      align-items:center;
-      gap:12px;
-    }
-
-    .backBtn{
-      width:42px;
-      height:42px;
-      border-radius:14px;
-      border:1px solid var(--panel-border);
-      background:rgba(255,255,255,.06);
+      z-index:99998;
+      background:rgba(2,6,23,.72);
+      backdrop-filter:blur(10px);
       display:flex;
       align-items:center;
       justify-content:center;
-      cursor:pointer;
-      flex:0 0 auto;
-      box-shadow:0 8px 18px rgba(0,0,0,.16);
-    }
-
-    .backBtn:active{ transform:scale(.96); }
-
-    .backBtn svg{
-      width:20px;
-      height:20px;
-      stroke:#fff;
-      fill:none;
-      stroke-width:2.5;
-    }
-
-    .page-head{
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-      min-width:0;
-    }
-
-    .title{
-      font-family:'Space Grotesk',sans-serif;
-      font-size:29px;
-      font-weight:700;
-      margin:0;
-      line-height:1;
-      letter-spacing:-1px;
-    }
-
-    .title .ai{
-      background:var(--ai-grad);
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;
-    }
-
-    .page-sub{
-      margin:0;
-      font-size:12px;
-      line-height:1.5;
-      color:var(--muted);
-    }
-
-    .settings-panel{
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-      background:linear-gradient(145deg, rgba(255,255,255,.06), rgba(255,255,255,.015));
-      border:1px solid var(--panel-border);
-      border-radius:24px;
-      padding:16px;
-      backdrop-filter:blur(15px);
-      -webkit-backdrop-filter:blur(15px);
-      box-shadow:0 14px 30px rgba(0,0,0,.16);
-    }
-
-    .panel-title{
-      margin:0;
-      font-family:'Space Grotesk',sans-serif;
-      font-size:16px;
-      font-weight:900;
-      color:#fff;
-    }
-
-    .panel-sub{
-      margin:0;
-      font-size:11px;
-      line-height:1.45;
-      color:var(--muted);
-    }
-
-    .choice-grid{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:10px;
-    }
-
-    .choice-card{
-      padding:14px;
-      border-radius:18px;
-      background:rgba(255,255,255,.035);
-      border:1px solid rgba(255,255,255,.08);
-      cursor:pointer;
-      transition:.2s ease;
-      min-height:108px;
-      display:flex;
-      flex-direction:column;
-      justify-content:space-between;
-      gap:8px;
-      position:relative;
-      overflow:hidden;
-    }
-
-    .choice-card:active{ transform:scale(.985); }
-
-    .choice-card.active{
-      border-color:#818cf8;
-      background:rgba(129,140,248,.16);
-      box-shadow:0 0 0 1px rgba(129,140,248,.15) inset, 0 12px 24px rgba(0,0,0,.14);
-    }
-
-    .choice-top{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:8px;
-    }
-
-    .choice-name{
-      font-size:14px;
-      font-weight:900;
-      color:#fff;
-      line-height:1.2;
-    }
-
-    .choice-badge{
-      font-size:10px;
-      font-weight:900;
-      letter-spacing:.4px;
-      padding:6px 8px;
-      border-radius:999px;
-      white-space:nowrap;
-      border:1px solid rgba(255,255,255,.12);
-    }
-
-    .choice-badge.free{
-      color:#bbf7d0;
-      background:rgba(34,197,94,.10);
-      border-color:rgba(34,197,94,.20);
-    }
-
-    .choice-badge.paid{
-      color:#fde68a;
-      background:rgba(245,158,11,.10);
-      border-color:rgba(245,158,11,.20);
-    }
-
-    .choice-desc{
-      font-size:11px;
-      line-height:1.45;
-      color:rgba(255,255,255,.72);
-      word-break:break-word;
-    }
-
-    .clone-actions{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      margin-top:8px;
-    }
-
-    .clone-btn{
-      min-height:38px;
-      padding:0 12px;
-      border:none;
-      border-radius:12px;
-      cursor:pointer;
-      font-family:inherit;
-      font-size:12px;
-      font-weight:900;
-      transition:.18s ease;
-    }
-
-    .clone-btn.primary{
-      background:var(--ai-grad);
-      color:#05060d;
-    }
-
-    .clone-btn.secondary{
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.10);
-      color:#fff;
-    }
-
-    .clone-btn.ghost{
-      background:rgba(255,255,255,.04);
-      border:1px solid rgba(255,255,255,.08);
-      color:#dbeafe;
-    }
-
-    .clone-btn:disabled{
-      opacity:.38;
-      cursor:not-allowed;
-      filter:grayscale(.2);
-    }
-
-    .summary-card{
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-      background:linear-gradient(145deg, rgba(255,255,255,.06), rgba(255,255,255,.015));
-      border:1px solid var(--panel-border);
-      border-radius:24px;
-      padding:16px;
-      backdrop-filter:blur(15px);
-      -webkit-backdrop-filter:blur(15px);
-      box-shadow:0 14px 30px rgba(0,0,0,.16);
-    }
-
-    .summary-line{
-      font-size:13px;
-      color:#fff;
-      line-height:1.45;
-    }
-
-    .summary-line span{
-      color:rgba(255,255,255,.72);
-    }
-
-    .action-grid{
-      display:grid;
-      grid-template-columns:1fr;
-      gap:12px;
-    }
-
-    .btn{
-      min-height:54px;
-      border-radius:18px;
-      font-family:inherit;
-      font-weight:800;
-      font-size:15px;
-      cursor:pointer;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      border:none;
-      transition:all .2s;
-      text-decoration:none;
-    }
-
-    .btn:active{ transform:scale(.98); }
-
-    .btn-primary{
-      background:var(--ai-grad);
-      color:#05060d;
-      box-shadow:0 12px 26px rgba(129,140,248,.18);
-    }
-
-    .btn-secondary{
-      background:rgba(255,255,255,.05);
-      color:#fff;
-      border:1px solid var(--panel-border);
-    }
-
-    .note{
-      font-size:11px;
-      line-height:1.5;
-      color:var(--muted);
-      text-align:center;
-      padding:0 4px;
-    }
-
-    .toast{
-      position:fixed;
-      left:50%;
-      top:18px;
-      transform:translateX(-50%) translateY(-120px);
-      background:rgba(10,10,18,.94);
-      border:1px solid rgba(165,180,252,.35);
-      padding:10px 14px;
-      border-radius:999px;
-      color:#fff;
-      z-index:999999;
-      font-weight:900;
-      font-size:12px;
-      transition:.25s;
-      backdrop-filter:blur(12px);
-      pointer-events:none;
-      max-width:min(92vw,520px);
-      text-align:center;
-      box-shadow:0 10px 24px rgba(0,0,0,.18);
-    }
-
-    .toast.show{
-      transform:translateX(-50%) translateY(0);
-    }
-
-    .modal{
-      position:fixed;
-      inset:0;
-      background:rgba(0,0,0,.52);
-      backdrop-filter:blur(6px);
-      display:none;
-      align-items:center;
-      justify-content:center;
-      z-index:999999;
-      padding:20px;
-    }
-
-    .modal.open{
-      display:flex;
-    }
-
-    .modal-card{
-      width:min(100%, 420px);
-      border-radius:24px;
       padding:18px;
-      background:linear-gradient(145deg, rgba(16,16,24,.96), rgba(10,10,18,.96));
-      border:1px solid rgba(255,255,255,.10);
-      box-shadow:0 24px 50px rgba(0,0,0,.30);
     }
 
-    .fancy-jeton-card{
-      position:relative;
-      overflow:hidden;
-      background:
-        radial-gradient(circle at 18% 0%, rgba(103,232,249,.14) 0%, transparent 28%),
-        radial-gradient(circle at 84% 12%, rgba(244,114,182,.16) 0%, transparent 26%),
-        linear-gradient(145deg, rgba(18,18,30,.98), rgba(9,10,18,.98));
+    .ga-card{
+      width:min(100%, 430px);
+      border-radius:28px;
+      background:linear-gradient(180deg, rgba(12,17,36,.98), rgba(7,11,24,.98));
       border:1px solid rgba(255,255,255,.12);
-      box-shadow:
-        0 24px 50px rgba(0,0,0,.34),
-        0 0 0 1px rgba(255,255,255,.03) inset;
+      box-shadow:0 24px 80px rgba(0,0,0,.45);
+      color:#fff;
+      overflow:hidden;
+      font-family:Outfit, system-ui, sans-serif;
     }
 
-    .fancy-jeton-card::before{
-      content:"";
-      position:absolute;
-      inset:0;
-      background:
-        linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
-      background-size:22px 22px;
-      mask-image:linear-gradient(180deg, rgba(255,255,255,.5), transparent 78%);
-      pointer-events:none;
+    .ga-top{
+      padding:20px 20px 14px;
+      background:linear-gradient(135deg,#6366f1,#8b5cf6,#ec4899);
     }
 
-    .fancy-jeton-icon{
-      width:54px;
-      height:54px;
-      border-radius:18px;
-      display:flex;
+    .ga-badge{
+      display:inline-flex;
       align-items:center;
-      justify-content:center;
-      margin:0 0 12px;
+      gap:8px;
+      padding:8px 12px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:800;
+      background:rgba(255,255,255,.16);
+      border:1px solid rgba(255,255,255,.18);
+      letter-spacing:.2px;
+    }
+
+    .ga-title{
+      margin:14px 0 6px;
       font-size:24px;
       font-weight:900;
-      color:#fff;
-      background:var(--ai-grad);
-      box-shadow:0 12px 24px rgba(129,140,248,.22);
-      position:relative;
-      z-index:1;
+      line-height:1.15;
     }
 
-    .modal-title{
-      margin:0 0 8px;
-      font-family:'Space Grotesk',sans-serif;
-      font-size:20px;
-      font-weight:900;
-      color:#fff;
-      position:relative;
-      z-index:1;
-    }
-
-    .modal-text{
+    .ga-sub{
       margin:0;
-      font-size:13px;
-      line-height:1.6;
-      color:rgba(255,255,255,.76);
-      position:relative;
-      z-index:1;
+      font-size:14px;
+      line-height:1.5;
+      color:rgba(255,255,255,.9);
     }
 
-    .modal-mini-note{
-      margin-top:12px;
-      font-size:11px;
-      line-height:1.45;
-      color:rgba(255,255,255,.56);
-      font-weight:700;
-      position:relative;
-      z-index:1;
+    .ga-body{
+      padding:18px 20px 20px;
     }
 
-    .modal-actions{
+    .ga-grid{
       display:grid;
-      grid-template-columns:1fr 1fr;
       gap:10px;
-      margin-top:16px;
-      position:relative;
-      z-index:1;
+      margin-bottom:16px;
     }
 
-    .modal-btn{
-      min-height:46px;
+    .ga-info{
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.04);
+      border-radius:18px;
+      padding:14px;
+    }
+
+    .ga-label{
+      font-size:12px;
+      color:rgba(255,255,255,.62);
+      margin-bottom:6px;
+    }
+
+    .ga-value{
+      font-size:16px;
+      font-weight:800;
+      color:#fff;
+    }
+
+    .ga-note{
+      margin:0 0 16px;
+      color:rgba(255,255,255,.74);
+      font-size:13px;
+      line-height:1.5;
+    }
+
+    .ga-actions{
+      display:grid;
+      gap:10px;
+    }
+
+    .ga-btn{
+      appearance:none;
       border:none;
+      width:100%;
+      min-height:50px;
       border-radius:16px;
       cursor:pointer;
-      font-family:inherit;
-      font-size:13px;
       font-weight:900;
+      font-size:15px;
+      letter-spacing:.2px;
+      transition:transform .15s ease, opacity .15s ease;
     }
 
-    .modal-btn.primary{
-      background:var(--ai-grad);
-      color:#05060d;
+    .ga-btn:active{
+      transform:scale(.985);
     }
 
-    .modal-btn.secondary{
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.10);
+    .ga-btn-primary{
+      background:linear-gradient(135deg,#8b5cf6,#6366f1,#ec4899);
       color:#fff;
+      box-shadow:0 10px 24px rgba(99,102,241,.28);
     }
 
-    @media (max-width:390px){
-      #pageContent{ padding:12px 14px 22px; }
-      .title{ font-size:25px; }
-      .choice-grid{ grid-template-columns:1fr; }
+    .ga-btn-secondary{
+      background:rgba(255,255,255,.06);
+      color:#fff;
+      border:1px solid rgba(255,255,255,.1);
     }
-  </style>
-</head>
-<body>
+  `;
+  document.head.appendChild(style);
+}
 
-<div id="pageContent">
-  <div class="topRow">
-    <button class="backBtn" id="backBtn" type="button" aria-label="Geri dön">
-      <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
-    </button>
+async function getAuthUser() {
+  const { data, error } = await supabase.auth.getUser();
+  if (error) throw error;
+  return data?.user || null;
+}
 
-    <section class="page-head">
-      <h1 class="title">Çeviri <span class="ai">Ayarları</span></h1>
-      <p class="page-sub">Sesini, tarzını ve çeviri modunu seç. Biraz parlak, biraz akıllı, biraz da keyifli olsun ✨</p>
-    </section>
-  </div>
+async function getAccessState(userId) {
+  const { data, error } = await supabase
+    .from("user_access_state")
+    .select("*")
+    .eq("user_id", userId)
+    .maybeSingle();
 
-  <section class="settings-panel">
-    <h2 class="panel-title">Ses Seçimi</h2>
-    <p class="panel-sub">FaceToFace ve SideToSide bu ortak ayarı kullanır.</p>
+  if (error) throw error;
+  return data || null;
+}
 
-    <div class="choice-grid" id="voiceGrid">
-      <div class="choice-card" data-voice="auto">
-        <div class="choice-top">
-          <div class="choice-name">Otomatik</div>
-          <div class="choice-badge free">Ücretsiz</div>
-        </div>
-        <div class="choice-desc">Sistem uygun ücretsiz sesi otomatik kullanır.</div>
-      </div>
+function buildPopupData(access, moduleName) {
+  const trialDaysLeft = safeNum(access?.trial_days_left, 0);
+  const packageCode = String(access?.selected_package_code || "-");
+  const packageEndsAt = access?.package_ends_at || null;
+  const accessOpen = !!access?.access_open;
 
-      <div class="choice-card" data-voice="clone" id="cloneCard">
-        <div class="choice-top">
-          <div class="choice-name">Kendi Sesim</div>
-          <div class="choice-badge paid">Jetonlu</div>
-        </div>
-        <div class="choice-desc" id="cloneVoiceDesc">Henüz özel ses profili oluşturmadınız.</div>
+  let headerTitle = `${moduleName} erişim bilgisi`;
+  let headerSub = "Kullanım durumun burada görünüyor.";
+  let statusText = accessOpen ? "Erişim açık" : "Erişim kilitli";
 
-        <div class="clone-actions">
-          <button class="clone-btn primary" id="cloneUseBtn" type="button" disabled>Kullan</button>
-          <button class="clone-btn secondary" id="cloneListenBtn" type="button" disabled>Dinle</button>
-          <button class="clone-btn ghost" id="cloneEditBtn" type="button">Oluştur / Güncelle</button>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="settings-panel">
-    <h2 class="panel-title">Çeviri Modu</h2>
-    <p class="panel-sub">Kültürel çeviri, anlamı daha doğal ve daha insan gibi aktarır.</p>
-
-    <div class="choice-grid" id="translateGrid">
-      <div class="choice-card" data-translate="normal">
-        <div class="choice-top">
-          <div class="choice-name">Translate</div>
-          <div class="choice-badge free">Ücretsiz</div>
-        </div>
-        <div class="choice-desc">Hızlı ve düz çeviri yapar. Günlük kullanım için hafif moddur.</div>
-      </div>
-
-      <div class="choice-card" data-translate="cultural">
-        <div class="choice-top">
-          <div class="choice-name">Kültürel Translate</div>
-          <div class="choice-badge paid">Jetonlu</div>
-        </div>
-        <div class="choice-desc">Daha doğal, bağlama daha uygun ve daha insan gibi çeviri sunar.</div>
-      </div>
-    </div>
-  </section>
-
-  <section class="summary-card">
-    <div class="summary-line"><strong>Seçili Ses:</strong> <span id="voiceSummary">Otomatik</span></div>
-    <div class="summary-line"><strong>Seçili Mod:</strong> <span id="translateSummary">Translate</span></div>
-  </section>
-
-  <section class="action-grid">
-    <button class="btn btn-primary" id="saveBtn" type="button">Kaydet ve Ana Sayfaya Dön</button>
-    <button class="btn btn-secondary" id="cancelBtn" type="button">Vazgeç</button>
-  </section>
-
-  <div class="note">
-    Burada kaydettiğin seçimler FaceToFace ve SideToSide içinde ortak kullanılır.
-  </div>
-</div>
-
-<div class="toast" id="toast"></div>
-
-<div class="modal" id="uiModal">
-  <div class="modal-card fancy-jeton-card">
-    <div class="fancy-jeton-icon">✦</div>
-
-    <h3 class="modal-title" id="uiModalTitle">Jeton Gerekli</h3>
-
-    <p class="modal-text" id="uiModalText">
-      Bu özellik standart kullanımın ötesinde, gelişmiş yapay zekâ desteğiyle çalışır.
-      Kendi Sesim ve Kültürel Çeviri deneyimini başlatmak için jeton yüklemeniz gereklidir.
-    </p>
-
-    <div class="modal-mini-note" id="uiModalMiniNote">
-      Jeton yüklemek için aşağıdaki butona dokunun.
-    </div>
-
-    <div class="modal-actions">
-      <button class="modal-btn primary" id="uiModalGo">Jeton Yükle</button>
-      <button class="modal-btn secondary" id="uiModalClose">Daha Sonra</button>
-    </div>
-  </div>
-</div>
-
-<script type="module">
-  import { supabase } from "/js/supabase_client.js";
-  import { mountShell } from "/js/ui_shell.js";
-
-  try {
-    mountShell({ scroll: "auto" });
-  } catch (e) {
-    console.error("ui_shell HATASI:", e);
+  if (!accessOpen) {
+    headerTitle = `${moduleName} şu an kilitli`;
+    headerSub = "Devam etmek için aktif deneme süresi veya uygun paket gerekiyor.";
+  } else if (trialDaysLeft > 0) {
+    headerTitle = `${moduleName} kullanıma açık`;
+    headerSub = `Deneme süren devam ediyor. Kalan gününü burada görüyorsun.`;
+    statusText = `${trialDaysLeft} gün kaldı`;
+  } else if (packageCode && packageCode !== "-") {
+    headerTitle = `${moduleName} kullanıma açık`;
+    headerSub = "Paket erişimin aktif görünüyor.";
+    statusText = "Paket aktif";
   }
 
-  const VOICE_KEY = "facetoface_voice_mode";
-  const TRANSLATE_KEY = "facetoface_translate_mode";
-  const LEGACY_TTS_KEY = "tts_voice";
-  const LEGACY_LIVE_KEY = "live_interpreter_voice";
+  return {
+    accessOpen,
+    trialDaysLeft,
+    packageCode,
+    packageEndsAt,
+    headerTitle,
+    headerSub,
+    statusText
+  };
+}
 
-  const voiceGrid = document.getElementById("voiceGrid");
-  const translateGrid = document.getElementById("translateGrid");
-  const voiceSummary = document.getElementById("voiceSummary");
-  const translateSummary = document.getElementById("translateSummary");
-  const saveBtn = document.getElementById("saveBtn");
-  const cancelBtn = document.getElementById("cancelBtn");
-  const backBtn = document.getElementById("backBtn");
-  const toastEl = document.getElementById("toast");
-  const cloneVoiceDesc = document.getElementById("cloneVoiceDesc");
+function showAccessPopup({
+  moduleName = "Modül",
+  access,
+  redirectTo = "/pages/membership.html"
+}) {
+  ensurePopupStyles();
 
-  const cloneUseBtn = document.getElementById("cloneUseBtn");
-  const cloneListenBtn = document.getElementById("cloneListenBtn");
-  const cloneEditBtn = document.getElementById("cloneEditBtn");
+  const existing = document.getElementById("gaBackdrop");
+  if (existing) existing.remove();
 
-  const uiModal = document.getElementById("uiModal");
-  const uiModalTitle = document.getElementById("uiModalTitle");
-  const uiModalText = document.getElementById("uiModalText");
-  const uiModalGo = document.getElementById("uiModalGo");
-  const uiModalClose = document.getElementById("uiModalClose");
+  const view = buildPopupData(access, moduleName);
 
-  let voiceMode = normalizeVoiceMode(
-    localStorage.getItem(VOICE_KEY) ||
-    localStorage.getItem(LEGACY_TTS_KEY) ||
-    localStorage.getItem(LEGACY_LIVE_KEY) ||
-    "auto"
+  const backdrop = el("div", "ga-backdrop");
+  backdrop.id = "gaBackdrop";
+
+  const card = el("div", "ga-card");
+  const top = el("div", "ga-top");
+  const body = el("div", "ga-body");
+
+  top.innerHTML = `
+    <div class="ga-badge">italkyAI • Erişim</div>
+    <div class="ga-title">${view.headerTitle}</div>
+    <p class="ga-sub">${view.headerSub}</p>
+  `;
+
+  const grid = el("div", "ga-grid");
+  grid.innerHTML = `
+    <div class="ga-info">
+      <div class="ga-label">Durum</div>
+      <div class="ga-value">${view.statusText}</div>
+    </div>
+
+    <div class="ga-info">
+      <div class="ga-label">Kalan deneme günü</div>
+      <div class="ga-value">${view.trialDaysLeft > 0 ? `${view.trialDaysLeft} gün` : "Yok"}</div>
+    </div>
+
+    <div class="ga-info">
+      <div class="ga-label">Paket</div>
+      <div class="ga-value">${view.packageCode}</div>
+    </div>
+
+    <div class="ga-info">
+      <div class="ga-label">Paket bitiş</div>
+      <div class="ga-value">${view.packageEndsAt ? formatDateTR(view.packageEndsAt) : "-"}</div>
+    </div>
+  `;
+
+  const note = el(
+    "p",
+    "ga-note",
+    view.accessOpen
+      ? `${moduleName} için erişimin açık. Bilgilendirme popup’ı olarak gösteriliyor.`
+      : `${moduleName} için erişim şu an kapalı. Paket ekranından devam edebilirsin.`
   );
 
-  let translateMode = normalizeTranslateMode(localStorage.getItem(TRANSLATE_KEY) || "normal");
-  let cloneReady = false;
-  let currentUserId = "";
-  let currentPreviewAudio = null;
+  const actions = el("div", "ga-actions");
 
-  function stopCurrentPreview() {
-    try {
-      if (currentPreviewAudio) {
-        currentPreviewAudio.pause();
-        currentPreviewAudio.currentTime = 0;
-      }
-    } catch {}
-    currentPreviewAudio = null;
-  }
+  const primary = el(
+    "button",
+    "ga-btn ga-btn-primary",
+    view.accessOpen ? "Devam et" : "Paketleri Gör"
+  );
 
-  function normalizeVoiceMode(v){
-    const x = String(v || "").trim().toLowerCase();
-    if (x === "clone") return "clone";
-    return "auto";
-  }
-
-  function normalizeTranslateMode(v){
-    return String(v || "").trim().toLowerCase() === "cultural" ? "cultural" : "normal";
-  }
-
-  function voiceLabel(v){
-    if (v === "clone") return "Kendi Sesim";
-    return "Otomatik";
-  }
-
-  function translateLabel(v){
-    return normalizeTranslateMode(v) === "cultural" ? "Kültürel Translate" : "Translate";
-  }
-
-  function showToast(msg){
-    if(!toastEl) return;
-    toastEl.textContent = String(msg || "");
-    toastEl.classList.add("show");
-    clearTimeout(window.__translationSettingsToast);
-    window.__translationSettingsToast = setTimeout(() => {
-      toastEl.classList.remove("show");
-    }, 1600);
-  }
-
-  function showUiModal(
-    message = "Bu özellik standart kullanımın ötesinde, gelişmiş yapay zekâ desteğiyle çalışır. Kendi Sesim ve Kültürel Çeviri deneyimini başlatmak için jeton yüklemeniz gereklidir.",
-    title = "Jeton Gerekli",
-    miniNote = "Jeton yüklemek için aşağıdaki butona dokunun."
-  ) {
-    uiModalTitle.textContent = title;
-    uiModalText.textContent = message;
-
-    const mini = document.getElementById("uiModalMiniNote");
-    if (mini) mini.textContent = miniNote;
-
-    uiModal.classList.add("open");
-  }
-
-  function closeUiModal() {
-    uiModal.classList.remove("open");
-  }
-
-  uiModalGo.addEventListener("click", () => {
-    location.href = "/pages/jetonbuy.html";
+  primary.addEventListener("click", () => {
+    backdrop.remove();
+    if (!view.accessOpen) window.location.href = redirectTo;
   });
 
-  uiModalClose.addEventListener("click", closeUiModal);
-  uiModal.addEventListener("click", (e) => {
-    if (e.target === uiModal) closeUiModal();
-  });
+  actions.appendChild(primary);
 
-  function paintSelections(){
-    voiceGrid?.querySelectorAll(".choice-card").forEach(card => {
-      card.classList.toggle("active", normalizeVoiceMode(card.dataset.voice) === voiceMode);
+  if (!view.accessOpen) {
+    const secondary = el("button", "ga-btn ga-btn-secondary", "Ana Sayfaya Dön");
+    secondary.addEventListener("click", () => {
+      window.location.href = "/pages/home.html";
     });
-
-    translateGrid?.querySelectorAll(".choice-card").forEach(card => {
-      card.classList.toggle("active", normalizeTranslateMode(card.dataset.translate) === translateMode);
-    });
+    actions.appendChild(secondary);
   }
 
-  function refreshSummary(){
-    if(voiceSummary) voiceSummary.textContent = voiceLabel(voiceMode);
-    if(translateSummary) translateSummary.textContent = translateLabel(translateMode);
-  }
+  body.appendChild(grid);
+  body.appendChild(note);
+  body.appendChild(actions);
 
-  function refreshCloneButtons() {
-    cloneUseBtn.disabled = !cloneReady;
-    cloneListenBtn.disabled = !cloneReady;
-  }
+  card.appendChild(top);
+  card.appendChild(body);
+  backdrop.appendChild(card);
+  document.body.appendChild(backdrop);
 
-  async function checkVoiceProfile(){
-    try{
-      const { data: { user } } = await supabase.auth.getUser();
-      currentUserId = user?.id || "";
+  return view.accessOpen;
+}
 
-      if(!user){
-        cloneReady = false;
-        if(cloneVoiceDesc) cloneVoiceDesc.textContent = "Henüz özel ses profili oluşturmadınız.";
-        refreshCloneButtons();
-        return;
+export async function initGlobalAccess(options = {}) {
+  const {
+    moduleName = "Modül",
+    requireAccess = false,
+    popup = true,
+    redirectTo = "/pages/membership.html"
+  } = options;
+
+  try {
+    const user = await getAuthUser();
+
+    if (!user) {
+      if (requireAccess) {
+        window.location.href = "/pages/login.html";
       }
-
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("voice_sample_path, tts_voice_ready, tts_voice_id")
-        .eq("id", user.id)
-        .maybeSingle();
-
-      if(error){
-        cloneReady = false;
-        if(cloneVoiceDesc) cloneVoiceDesc.textContent = "Henüz özel ses profili oluşturmadınız.";
-        refreshCloneButtons();
-        return;
-      }
-
-      const hasSamplePath =
-        !!data?.voice_sample_path &&
-        String(data.voice_sample_path).trim() !== "" &&
-        String(data.voice_sample_path).trim() !== "[]" &&
-        String(data.voice_sample_path).trim() !== "null";
-
-      const hasReadyVoice = !!(data?.tts_voice_ready && data?.tts_voice_id);
-
-      cloneReady = !!(hasSamplePath || hasReadyVoice);
-
-      if(cloneReady){
-        if(cloneVoiceDesc){
-          cloneVoiceDesc.textContent = "Kayıtlı özel sesiniz hazır. Kullanabilir, dinleyebilir veya güncelleyebilirsiniz.";
-        }
-      }else{
-        if(cloneVoiceDesc){
-          cloneVoiceDesc.textContent = "Henüz özel ses profili oluşturmadınız.";
-        }
-      }
-
-      refreshCloneButtons();
-    }catch(e){
-      cloneReady = false;
-      if(cloneVoiceDesc) cloneVoiceDesc.textContent = "Henüz özel ses profili oluşturmadınız.";
-      refreshCloneButtons();
-    }
-  }
-
-  async function playPreviewFromBase64(base64Audio, failMsg) {
-    stopCurrentPreview();
-    try {
-      const audio = new Audio(`data:audio/mp3;base64,${base64Audio}`);
-      currentPreviewAudio = audio;
-      audio.onended = () => {
-        if (currentPreviewAudio === audio) currentPreviewAudio = null;
-      };
-      audio.onerror = () => {
-        if (currentPreviewAudio === audio) currentPreviewAudio = null;
-        showToast(failMsg);
-      };
-      await audio.play();
-    } catch {
-      currentPreviewAudio = null;
-      showToast(failMsg);
-    }
-  }
-
-  async function previewCloneVoice(){
-    if (!cloneReady || !currentUserId) {
-      showToast("Önce kendi sesinizi oluşturun");
-      return;
+      return { ok: false, reason: "no_user", accessOpen: false };
     }
 
-    showToast("Kendi sesiniz hazırlanıyor...");
-    try{
-      const r = await fetch(`https://italky-api.onrender.com/api/tts`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          text: "",
-          lang: "tr",
-          user_id: currentUserId,
-          voice: "clone",
-          tone: "neutral",
-          module: "clone_preview"
-        })
+    const access = await getAccessState(user.id);
+
+    const accessOpen = !!access?.access_open;
+    const trialDaysLeft = safeNum(access?.trial_days_left, 0);
+
+    if (popup) {
+      showAccessPopup({
+        moduleName,
+        access,
+        redirectTo
       });
-
-      const j = await r.json().catch(() => ({}));
-      if (!r.ok || !j?.audio_base64) {
-        showToast("Kendi sesiniz oynatılamadı");
-        return;
-      }
-
-      await playPreviewFromBase64(j.audio_base64, "Kendi sesiniz oynatılamadı");
-    } catch {
-      showToast("Kendi sesiniz oynatılamadı");
     }
+
+    if (requireAccess && !accessOpen) {
+      return {
+        ok: false,
+        reason: "locked",
+        accessOpen: false,
+        trialDaysLeft,
+        access
+      };
+    }
+
+    return {
+      ok: true,
+      reason: accessOpen ? "granted" : "info_only",
+      accessOpen,
+      trialDaysLeft,
+      access
+    };
+  } catch (err) {
+    console.error("initGlobalAccess error:", err);
+    return {
+      ok: false,
+      reason: "error",
+      accessOpen: false,
+      error: err
+    };
   }
-
-  function saveSettings(){
-    localStorage.setItem(VOICE_KEY, voiceMode);
-    localStorage.setItem(TRANSLATE_KEY, translateMode);
-    localStorage.setItem(LEGACY_TTS_KEY, voiceMode);
-    localStorage.setItem(LEGACY_LIVE_KEY, voiceMode);
-  }
-
-  function goHome(){
-    stopCurrentPreview();
-    location.href = "/pages/home.html";
-  }
-
-  document.querySelector('[data-voice="auto"]')?.addEventListener("click", () => {
-    voiceMode = "auto";
-    paintSelections();
-    refreshSummary();
-    showToast("Ses seçimi güncellendi");
-  });
-
-  document.getElementById("cloneCard")?.addEventListener("click", () => {
-    if (!cloneReady) {
-      showUiModal(
-        "Bu özellik standart kullanımın ötesinde, gelişmiş yapay zekâ desteğiyle çalışır. Kendi Sesim deneyimini başlatmak için jeton yüklemeniz gereklidir."
-      );
-    }
-  });
-
-  cloneUseBtn?.addEventListener("click", () => {
-    if (!cloneReady) {
-      showUiModal(
-        "Bu özellik standart kullanımın ötesinde, gelişmiş yapay zekâ desteğiyle çalışır. Kendi Sesim deneyimini başlatmak için jeton yüklemeniz gereklidir."
-      );
-      return;
-    }
-
-    showUiModal(
-      "Bu özellik standart kullanımın ötesinde, gelişmiş yapay zekâ desteğiyle çalışır. Kendi Sesim deneyimini başlatmak için jeton yüklemeniz gereklidir."
-    );
-  });
-
-  cloneListenBtn?.addEventListener("click", () => {
-    if (!cloneReady) {
-      showUiModal(
-        "Bu özellik standart kullanımın ötesinde, gelişmiş yapay zekâ desteğiyle çalışır. Kendi Sesim önizlemesini dinlemek için jeton yüklemeniz gereklidir."
-      );
-      return;
-    }
-
-    showUiModal(
-      "Bu özellik standart kullanımın ötesinde, gelişmiş yapay zekâ desteğiyle çalışır. Kendi Sesim önizlemesini dinlemek için jeton yüklemeniz gereklidir."
-    );
-  });
-
-  cloneEditBtn?.addEventListener("click", () => {
-    showUiModal(
-      "Bu özellik standart kullanımın ötesinde, gelişmiş yapay zekâ desteğiyle çalışır. Kendi Sesim profilinizi oluşturmak için jeton yüklemeniz gereklidir."
-    );
-  });
-
-  translateGrid?.querySelectorAll(".choice-card").forEach(card => {
-    card.addEventListener("click", () => {
-      const selected = normalizeTranslateMode(card.dataset.translate || "normal");
-
-      if (selected === "cultural") {
-        showUiModal(
-          "Bu özellik standart kullanımın ötesinde, gelişmiş yapay zekâ desteğiyle çalışır. Kültürel Çeviri deneyimini başlatmak için jeton yüklemeniz gereklidir."
-        );
-        return;
-      }
-
-      translateMode = selected;
-      paintSelections();
-      refreshSummary();
-      showToast("Çeviri modu güncellendi");
-    });
-  });
-
-  saveBtn?.addEventListener("click", () => {
-    saveSettings();
-    showToast("Ayarlar kaydedildi");
-    setTimeout(() => {
-      goHome();
-    }, 350);
-  });
-
-  cancelBtn?.addEventListener("click", () => {
-    goHome();
-  });
-
-  backBtn?.addEventListener("click", () => {
-    goHome();
-  });
-
-  await checkVoiceProfile();
-  paintSelections();
-  refreshSummary();
-</script>
-
-</body>
-</html>
+}
