@@ -474,11 +474,12 @@
   <div class="toast" id="toast"></div>
 
   <script type="module">
-    import { mountShell } from "/js/ui_shell.js";
+    import { mountShell, setHeaderTokens } from "/js/ui_shell.js";
     import { supabase } from "/js/supabase_client.js";
 
     mountShell({ scroll:"auto" });
 
+    const API_BASE = "https://italky-api.onrender.com";
     const $ = (id) => document.getElementById(id);
     const list = $("list");
     const heroPill = $("heroPill");
@@ -514,6 +515,67 @@
 
     function langInfo(code){
       return LANGS.find(x => x.code === code) || { code, name: code?.toUpperCase() || "Dil", flag: "🏁" };
+    }
+
+    async function getAuthHeaders() {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (error) throw error;
+        const token = data?.session?.access_token || "";
+        return {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        };
+      } catch (e) {
+        console.warn("[level_test_hub] getAuthHeaders error:", e);
+        return { "Content-Type": "application/json" };
+      }
+    }
+
+    function showTokenWarning() {
+      alert("Seviye Tespit Sınavı için 1 jeton gerekir. 1 jetonla 7 gün boyunca sınırsız giriş açılır.");
+      location.href = "/pages/jetonbuy.html";
+    }
+
+    async function ensureLevelTestAccess() {
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user || null;
+
+      if (!user?.id) {
+        location.replace("/pages/login.html");
+        return false;
+      }
+
+      const res = await fetch(`${API_BASE}/level_test/ensure_access`, {
+        method: "POST",
+        headers: await getAuthHeaders(),
+        body: JSON.stringify({
+          user_id: user.id
+        })
+      });
+
+      const json = await res.json().catch(() => null);
+
+      if (!json) {
+        alert("Sınav erişimi şu anda kontrol edilemedi.");
+        return false;
+      }
+
+      if (!json.ok && json.reason === "INSUFFICIENT_TOKENS") {
+        showTokenWarning();
+        return false;
+      }
+
+      if (!res.ok) {
+        alert("Sınav erişimi kontrolünde hata oluştu.");
+        return false;
+      }
+
+      if (typeof json.tokens_after === "number") {
+        try { setHeaderTokens(json.tokens_after); } catch {}
+      }
+
+      return true;
     }
 
     function updateFocusArea() {
@@ -590,9 +652,9 @@
 
     function bindEvents() {
       list.querySelectorAll(".langCard").forEach((btn) => {
-        btn.onclick = () => {
+        btn.onclick = async () => {
           const code = btn.getAttribute("data-code");
-          startTest(code, btn);
+          await startTest(code, btn);
         };
       });
     }
@@ -603,9 +665,18 @@
       if (busy) return;
       busy = true;
       btn.disabled = true;
-      toast("Sınav başlatılıyor...");
+      toast("Sınav erişimi kontrol ediliyor...");
 
       try {
+        const accessOk = await ensureLevelTestAccess();
+        if (!accessOk) {
+          btn.disabled = false;
+          busy = false;
+          return;
+        }
+
+        toast("Sınav başlatılıyor...");
+
         const { data, error } = await supabase.rpc("start_level_test", {
           p_language_code: code
         });
