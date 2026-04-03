@@ -41,14 +41,15 @@ export async function createNfcTokenCard({
   }
 
   const payload = {
-    uid: cleanUid,
-    manual_code: manualCode,
-    token_amount: amount,
-    qr_url: qrUrl,
-    status: "active",
-    expire_at: expireAt || null,
-    note: String(note || "").trim() || null
-  };
+  uid: cleanUid,
+  manual_code: manualCode,
+  package_code: "jeton_card",
+  token_amount: amount,
+  qr_url: qrUrl,
+  status: "active",
+  expire_at: expireAt || null,
+  note: String(note || "").trim() || null
+};
 
   const { data, error } = await supabase
     .from("nfc_cards")
