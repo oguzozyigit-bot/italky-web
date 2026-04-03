@@ -1,5 +1,3 @@
-// FILE: /js/ui_shell.js
-
 import { installAutoTranslate } from "/js/system_lang.js";
 import { STORAGE_KEY } from "/js/config.js";
 
@@ -76,7 +74,9 @@ const HOME_HEADER_HTML = `
               <span>Jeton Bakiyesi</span>
               <strong id="menuHeaderJeton">0</strong>
             </div>
+          </div>
 
+          <div class="menu-token-link-wrap">
             <a class="menu-token-link" id="menuJetonInfoLink" href="/pages/jeton-nedir.html">Jeton Nedir?</a>
           </div>
         </div>
@@ -99,6 +99,19 @@ const HOME_HEADER_HTML = `
       <button class="menu-action danger-lite" id="logoutBtn" type="button" data-i18n="menu_logout">Güvenli Çıkış</button>
       <button class="menu-action danger" id="deleteAccountBtn" type="button" data-i18n="menu_delete_account">Hesabımı Sil</button>
     </nav>
+
+    <div class="menu-orbit-wrap" aria-hidden="true">
+      <div class="menu-orbit-core">italkyAI</div>
+      <div class="menu-orbit-ring ring-1">
+        <span class="orbit-dot dot-red"></span>
+      </div>
+      <div class="menu-orbit-ring ring-2">
+        <span class="orbit-dot dot-blue"></span>
+      </div>
+      <div class="menu-orbit-ring ring-3">
+        <span class="orbit-dot dot-green"></span>
+      </div>
+    </div>
 
     <div class="menu-sign" data-no-translate="1">
       <span class="menu-sign-main">italkyAI By Ozyigit's</span>
@@ -403,7 +416,7 @@ body.ui-menu-open{
 .menu-user-card{
   width:100%;
   display:flex;
-  align-items:center;
+  align-items:flex-start;
   gap:14px;
   padding:14px;
   border-radius:22px;
@@ -411,11 +424,12 @@ body.ui-menu-open{
   border:1px solid rgba(255,255,255,.07);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.03);
   cursor:pointer;
-  min-height:92px;
+  min-height:108px;
 }
 
 .menu-avatar-wrap{
   flex:0 0 auto;
+  padding-top:18px;
 }
 
 .menu-avatar{
@@ -449,6 +463,7 @@ body.ui-menu-open{
   display:flex;
   flex-direction:column;
   gap:6px;
+  flex:1;
 }
 
 .menu-brandline{
@@ -458,6 +473,7 @@ body.ui-menu-open{
   font-size:20px;
   line-height:1;
   font-weight:800;
+  margin-top:-2px;
 }
 
 .menu-brand-main{
@@ -495,31 +511,43 @@ body.ui-menu-open{
 .menu-token-pill{
   display:inline-flex;
   align-items:center;
-  gap:8px;
+  justify-content:center;
+  gap:10px;
   width:max-content;
   max-width:100%;
-  padding:8px 12px;
+  padding:10px 14px;
   border-radius:999px;
-  background:linear-gradient(135deg, rgba(242,122,26,.18), rgba(255,173,96,.12));
-  border:1px solid rgba(255,173,96,.28);
-  color:#fff3e1;
-  font-size:12px;
-  font-weight:800;
-  box-shadow:0 8px 20px rgba(242,122,26,.14);
+  background:
+    linear-gradient(135deg, rgba(255,129,38,.28), rgba(255,186,120,.18)),
+    radial-gradient(circle at top left, rgba(255,255,255,.18), transparent 42%);
+  border:1px solid rgba(255,173,96,.38);
+  color:#fff7ed;
+  font-size:13px;
+  font-weight:900;
+  box-shadow:
+    0 10px 24px rgba(242,122,26,.18),
+    inset 0 1px 0 rgba(255,255,255,.10);
 }
 
 .menu-token-pill strong{
-  font-size:14px;
+  font-size:16px;
   font-weight:1000;
   color:#ffffff;
 }
 
+.menu-token-link-wrap{
+  display:flex;
+  justify-content:center;
+  width:100%;
+}
+
 .menu-token-link{
-  font-size:11px;
-  font-weight:800;
+  font-size:12px;
+  font-weight:900;
   color:#f4d8ff;
   text-decoration:none;
-  padding:6px 0;
+  padding:4px 0 0;
+  text-align:center;
 }
 
 .menu-nav{
@@ -587,6 +615,87 @@ body.ui-menu-open{
 .menu-action.danger{
   border-color:rgba(255,120,120,.18);
   color:#ffd6d6;
+}
+
+.menu-orbit-wrap{
+  position:relative;
+  width:160px;
+  height:160px;
+  margin:8px auto 2px;
+  flex:0 0 auto;
+}
+
+.menu-orbit-core{
+  position:absolute;
+  inset:50%;
+  width:68px;
+  height:68px;
+  margin-left:-34px;
+  margin-top:-34px;
+  border-radius:50%;
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255,255,255,.08), transparent 26%),
+    linear-gradient(180deg,#05070f 0%, #0c1020 100%);
+  border:1px solid rgba(255,255,255,.08);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#f5f7ff;
+  font-size:12px;
+  font-weight:900;
+  box-shadow:inset 0 0 18px rgba(255,255,255,.04), 0 0 26px rgba(124,92,255,.12);
+}
+
+.menu-orbit-ring{
+  position:absolute;
+  inset:0;
+  border-radius:50%;
+  border:1px solid rgba(139,211,255,.08);
+  animation:orbitSpin 18s linear infinite;
+}
+
+.menu-orbit-ring.ring-2{
+  inset:16px;
+  animation-duration:14s;
+  animation-direction:reverse;
+  border-color:rgba(255,102,196,.08);
+}
+
+.menu-orbit-ring.ring-3{
+  inset:32px;
+  animation-duration:11s;
+  border-color:rgba(52,211,153,.08);
+}
+
+.orbit-dot{
+  position:absolute;
+  top:-5px;
+  left:50%;
+  width:10px;
+  height:10px;
+  margin-left:-5px;
+  border-radius:50%;
+  box-shadow:0 0 14px currentColor;
+}
+
+.dot-red{
+  background:#ff4d6d;
+  color:#ff4d6d;
+}
+
+.dot-blue{
+  background:#38bdf8;
+  color:#38bdf8;
+}
+
+.dot-green{
+  background:#34d399;
+  color:#34d399;
+}
+
+@keyframes orbitSpin{
+  from{ transform:rotate(0deg); }
+  to{ transform:rotate(360deg); }
 }
 
 .menu-sign{
