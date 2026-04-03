@@ -1,3 +1,5 @@
+// FILE: /js/facetoface_page.js
+
 import { getLangPoolForSite } from "/js/lang_pool_full.js";
 import { supabase } from "/js/supabase_client.js";
 import { setHeaderTokens } from "/js/ui_shell.js";
@@ -83,6 +85,7 @@ function labelChip(code) {
   const o = langObj(code);
   return `${o.flag} ${o.name}`;
 }
+
 const UI_TEXT = {
   tr: {
     ready: "Konuşmak için mikrofona dokununuz.",
@@ -281,6 +284,12 @@ function getFaceTranslateMode() {
 function isPaidFaceTextMode() {
   return getFaceTranslateMode() === "cultural";
 }
+
+function isPaidFaceVoiceMode() {
+  const v = getFaceVoiceMode();
+  return v === "clone" || v === "female" || v === "male" || v === "preset";
+}
+
 async function ensureCurrentFacePremiumModeAccess() {
   const needsPremium =
     isPaidFaceTextMode() ||
@@ -292,11 +301,6 @@ async function ensureCurrentFacePremiumModeAccess() {
   if (!ok) return false;
 
   return true;
-}
-
-function isPaidFaceVoiceMode() {
-  const v = getFaceVoiceMode();
-  return v === "clone" || v === "female" || v === "male" || v === "preset";
 }
 
 function faceTextUsageModule() {
@@ -1023,6 +1027,9 @@ function createSpeakerButton(getText, langCode, tone = "neutral") {
     const value = typeof getText === "function" ? String(getText() || "").trim() : "";
     if (!value) return;
 
+    const premiumOk = await ensureCurrentFacePremiumModeAccess();
+    if (!premiumOk) return;
+
     await speak(value, langCode, tone);
   });
 
@@ -1213,7 +1220,7 @@ async function finalizeRecognition(side, text) {
     await chargeFaceUsage(cleaned, tr, src, dst);
   } catch (e) {
     if (e?.code === "INSUFFICIENT_TOKENS") {
-      showUiModal("Jetonunuz yetersiz. Jeton Market'e yönlendiriliyorsunuz.", "Yetersiz Jeton");
+      await ensureFaceToFacePremiumAccess();
       return;
     }
     console.error("[facetoface usage]", e);
@@ -1389,6 +1396,7 @@ async function toggleRecording(side) {
 
   startRecording(side);
 }
+
 async function warmApis() {
   await Promise.allSettled([
     fetch(`${API_BASE}/healthz`).catch(() => {}),
