@@ -67,7 +67,7 @@ const HOME_HEADER_HTML = `
           </div>
 
           <div class="menu-username" id="menuUserName">Kullanıcı</div>
-          <div class="menu-last-login" id="menuLastLogin">Son Giriş Tarihi: -</div>
+          <div class="menu-last-login" id="menuLastLogin">S.G.T: -</div>
 
           <div class="menu-token-row">
             <div class="menu-token-pill">
@@ -401,6 +401,7 @@ body.ui-menu-open{
   display:flex;
   flex-direction:column;
   gap:10px;
+  overflow:hidden;
 }
 
 .side-menu.open .menu-panel{
@@ -411,6 +412,9 @@ body.ui-menu-open{
   display:flex;
   flex-direction:column;
   gap:10px;
+  position:relative;
+  z-index:3;
+  flex:0 0 auto;
 }
 
 .menu-user-card{
@@ -424,12 +428,12 @@ body.ui-menu-open{
   border:1px solid rgba(255,255,255,.07);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.03);
   cursor:pointer;
-  min-height:108px;
+  min-height:112px;
 }
 
 .menu-avatar-wrap{
   flex:0 0 auto;
-  padding-top:18px;
+  padding-top:20px;
 }
 
 .menu-avatar{
@@ -473,7 +477,7 @@ body.ui-menu-open{
   font-size:20px;
   line-height:1;
   font-weight:800;
-  margin-top:-2px;
+  margin-top:-12px;
 }
 
 .menu-brand-main{
@@ -518,15 +522,16 @@ body.ui-menu-open{
   padding:10px 14px;
   border-radius:999px;
   background:
-    linear-gradient(135deg, rgba(255,129,38,.28), rgba(255,186,120,.18)),
+    linear-gradient(135deg, rgba(255,118,20,.35), rgba(255,184,92,.24)),
     radial-gradient(circle at top left, rgba(255,255,255,.18), transparent 42%);
-  border:1px solid rgba(255,173,96,.38);
-  color:#fff7ed;
+  border:1px solid rgba(255,167,71,.55);
+  color:#fff8ef;
   font-size:13px;
-  font-weight:900;
+  font-weight:1000;
   box-shadow:
-    0 10px 24px rgba(242,122,26,.18),
-    inset 0 1px 0 rgba(255,255,255,.10);
+    0 12px 26px rgba(242,122,26,.22),
+    0 0 18px rgba(255,145,50,.14),
+    inset 0 1px 0 rgba(255,255,255,.12);
 }
 
 .menu-token-pill strong{
@@ -554,10 +559,11 @@ body.ui-menu-open{
   display:flex;
   flex-direction:column;
   gap:7px;
-  overflow:auto;
-  padding-right:2px;
-  scrollbar-width:none;
-  -ms-overflow-style:none;
+  overflow:visible;
+  padding-right:0;
+  position:relative;
+  z-index:3;
+  flex:0 0 auto;
 }
 
 .menu-nav::-webkit-scrollbar{
@@ -618,11 +624,17 @@ body.ui-menu-open{
 }
 
 .menu-orbit-wrap{
-  position:relative;
-  width:160px;
-  height:160px;
-  margin:8px auto 2px;
+  position:absolute;
+  left:50%;
+  bottom:62px;
+  transform:translateX(-50%);
+  width:170px;
+  height:170px;
+  margin:0;
   flex:0 0 auto;
+  pointer-events:none;
+  z-index:1;
+  opacity:.92;
 }
 
 .menu-orbit-core{
@@ -635,7 +647,7 @@ body.ui-menu-open{
   border-radius:50%;
   background:
     radial-gradient(circle at 35% 30%, rgba(255,255,255,.08), transparent 26%),
-    linear-gradient(180deg,#05070f 0%, #0c1020 100%);
+    linear-gradient(180deg,#030406 0%, #0a0d18 100%);
   border:1px solid rgba(255,255,255,.08);
   display:flex;
   align-items:center;
@@ -710,6 +722,8 @@ body.ui-menu-open{
   font-size:11px;
   font-weight:800;
   letter-spacing:.2px;
+  position:relative;
+  z-index:3;
 }
 
 .menu-sign-main{
@@ -803,6 +817,7 @@ function finishMount(options) {
     document.body.classList.add("ui-ready");
     hydrateFromCache();
     syncFooterHeight();
+    hydrateShellMeta();
     hydrateAdminButton();
 
     try {
@@ -847,6 +862,7 @@ function bindMenu() {
     sideMenu.classList.add("open");
     sideMenu.setAttribute("aria-hidden", "false");
     document.body.classList.add("ui-menu-open");
+    hydrateShellMeta();
     hydrateAdminButton();
   };
 
@@ -930,11 +946,6 @@ export function hydrateFromCache() {
     const nm = u?.display_name || u?.name || u?.full_name || u?.email || "Kullanıcı";
     const pic = u?.picture || u?.avatar || "";
     const tokens = Number(u?.tokens ?? 0);
-    const lastLogin =
-      u?.last_login_at ||
-      u?.lastLoginAt ||
-      u?.updated_at ||
-      "";
 
     const nameEl = document.getElementById("menuUserName");
     if (nameEl) nameEl.textContent = nm;
@@ -947,18 +958,87 @@ export function hydrateFromCache() {
 
     const jetonEl = document.getElementById("menuHeaderJeton");
     if (jetonEl) jetonEl.textContent = String(tokens);
+  } catch {}
+}
 
-    const lastLoginEl = document.getElementById("menuLastLogin");
+async function hydrateShellMeta() {
+  const lastLoginEl = document.getElementById("menuLastLogin");
+  const adminLink = document.getElementById("adminPanelLink");
+
+  try {
+    const { supabase } = await import("/js/supabase_client.js");
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user || null;
+    const userId = user?.id || "";
+    if (!userId) return;
+
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("last_login_at, role, is_admin, tokens, full_name, avatar_url, email")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (error || !data) return;
+
     if (lastLoginEl) {
-      let text = "Son Giriş Tarihi: -";
-      if (lastLogin) {
+      let text = "S.G.T: -";
+      if (data.last_login_at) {
         try {
-          text = "Son Giriş Tarihi: " + new Date(lastLogin).toLocaleString("tr-TR");
+          text = "S.G.T: " + new Date(data.last_login_at).toLocaleString("tr-TR");
         } catch {}
       }
       lastLoginEl.textContent = text;
     }
-  } catch {}
+
+    const jetonEl = document.getElementById("menuHeaderJeton");
+    if (jetonEl && typeof data.tokens !== "undefined" && data.tokens !== null) {
+      jetonEl.textContent = String(Number(data.tokens || 0));
+    }
+
+    const nameEl = document.getElementById("menuUserName");
+    if (nameEl && data.full_name) {
+      nameEl.textContent = data.full_name;
+    }
+
+    const picEl = document.getElementById("menuUserPic");
+    if (picEl && data.avatar_url) {
+      picEl.src = data.avatar_url;
+      picEl.referrerPolicy = "no-referrer";
+    }
+
+    const role = String(data.role || "").toLowerCase().trim();
+    const email = String(data.email || user.email || "").toLowerCase().trim();
+    const allowed =
+      data.is_admin === true ||
+      role === "admin" ||
+      role === "superadmin" ||
+      email === "oguzozyigit@gmail.com";
+
+    if (adminLink) {
+      if (allowed) {
+        adminLink.classList.remove("hidden");
+        adminLink.style.display = "";
+      } else {
+        adminLink.classList.add("hidden");
+        adminLink.style.display = "none";
+      }
+    }
+
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      const cached = raw ? JSON.parse(raw) : {};
+      cached.tokens = Number(data.tokens || 0);
+      cached.role = role;
+      cached.is_admin = data.is_admin === true;
+      cached.last_login_at = data.last_login_at || "";
+      cached.email = email || cached.email || "";
+      if (data.full_name) cached.full_name = data.full_name;
+      if (data.avatar_url) cached.avatar = data.avatar_url;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(cached));
+    } catch {}
+  } catch (e) {
+    console.warn("[ui_shell hydrateShellMeta]", e);
+  }
 }
 
 async function hydrateAdminButton() {
@@ -984,10 +1064,15 @@ async function hydrateAdminButton() {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const u = JSON.parse(raw);
-
         const cachedRole = String(
           u?.role ||
           u?.user_metadata?.role ||
+          ""
+        ).toLowerCase().trim();
+
+        const cachedEmail = String(
+          u?.email ||
+          u?.user_metadata?.email ||
           ""
         ).toLowerCase().trim();
 
@@ -995,7 +1080,8 @@ async function hydrateAdminButton() {
           u?.is_admin === true ||
           u?.user_metadata?.is_admin === true ||
           cachedRole === "admin" ||
-          cachedRole === "superadmin";
+          cachedRole === "superadmin" ||
+          cachedEmail === "oguzozyigit@gmail.com";
 
         if (cachedAdmin) show();
       }
@@ -1004,7 +1090,6 @@ async function hydrateAdminButton() {
     const { data: { session } } = await supabase.auth.getSession();
     const user = session?.user || null;
     const userId = user?.id || "";
-
     if (!userId) {
       hide();
       return;
@@ -1014,32 +1099,36 @@ async function hydrateAdminButton() {
       user?.user_metadata?.role || ""
     ).toLowerCase().trim();
 
+    const sessionEmail = String(
+      user?.email || ""
+    ).toLowerCase().trim();
+
     const sessionAdmin =
       user?.user_metadata?.is_admin === true ||
       sessionRole === "admin" ||
-      sessionRole === "superadmin";
+      sessionRole === "superadmin" ||
+      sessionEmail === "oguzozyigit@gmail.com";
 
     if (sessionAdmin) show();
 
     const { data, error } = await supabase
       .from("profiles")
-      .select("role,is_admin")
+      .select("role,is_admin,email")
       .eq("id", userId)
       .maybeSingle();
 
-    if (error || !data) {
-      return;
-    }
+    if (error || !data) return;
 
     const role = String(data.role || "").toLowerCase().trim();
+    const email = String(data.email || sessionEmail || "").toLowerCase().trim();
     const allowed =
       data.is_admin === true ||
       role === "admin" ||
-      role === "superadmin";
+      role === "superadmin" ||
+      email === "oguzozyigit@gmail.com";
 
     if (allowed) show();
     else hide();
-
   } catch (e) {
     console.warn("[ui_shell admin btn]", e);
     hide();
