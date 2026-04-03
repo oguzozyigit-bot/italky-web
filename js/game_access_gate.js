@@ -164,25 +164,25 @@ function buildModalIfNeeded() {
     <div class="gg-card">
       <div class="gg-top">
         <div class="gg-chip">italkyAI • Oyun Erişimi</div>
-        <div class="gg-title" id="ggTitle">Bu oyun için 1 jeton lazım</div>
-        <p class="gg-sub" id="ggSub">1 jeton verince bu oyun 7 gün boyunca açık kalır.</p>
+        <div class="gg-title" id="ggTitle">Bu oyun için 1 jeton gerekiyor</div>
+        <p class="gg-sub" id="ggSub">Bu oyunu açmak için 1 jeton kullanılır. Açıldıktan sonra 7 gün boyunca sınırsız oynayabilirsin.</p>
       </div>
 
       <div class="gg-body">
         <div class="gg-info">
-          <div class="gg-label">Erişim modeli</div>
-          <div class="gg-value">1 Jeton • Oyun Bazlı</div>
-          <p class="gg-desc">Jeton sadece seçtiğin oyuna uygulanır. Diğer oyunlar ayrı değerlendirilir.</p>
+          <div class="gg-label" id="ggInfo1Label">Erişim Tipi</div>
+          <div class="gg-value" id="ggInfo1Value">1 Jeton • Tek Oyun</div>
+          <p class="gg-desc" id="ggInfo1Desc">Jeton sadece seçtiğin oyun için geçerlidir.</p>
         </div>
 
         <div class="gg-info">
-          <div class="gg-label">Geçerlilik</div>
-          <div class="gg-value">7 Gün</div>
-          <p class="gg-desc">Bir kez açınca aynı oyuna 7 gün boyunca tekrar jeton vermeden girersin.</p>
+          <div class="gg-label" id="ggInfo2Label">Süre</div>
+          <div class="gg-value" id="ggInfo2Value">7 Gün</div>
+          <p class="gg-desc" id="ggInfo2Desc">Bu süre boyunca aynı oyuna tekrar girişte jeton düşmez.</p>
         </div>
 
         <div class="gg-actions">
-          <button class="gg-btn primary" id="ggGoMarketBtn">Jeton Market’e Git</button>
+          <button class="gg-btn primary" id="ggPrimaryBtn">Jeton Al</button>
           <button class="gg-btn secondary" id="ggCloseBtn">Kapat</button>
         </div>
       </div>
@@ -190,8 +190,15 @@ function buildModalIfNeeded() {
   `;
   document.body.appendChild(wrap);
 
-  $("ggGoMarketBtn")?.addEventListener("click", () => {
-    location.href = "/pages/jetonbuy.html";
+  $("ggPrimaryBtn")?.addEventListener("click", () => {
+    const action = $("ggPrimaryBtn")?.dataset?.action || "market";
+
+    if (action === "market") {
+      location.href = "/pages/jetonbuy.html";
+      return;
+    }
+
+    closeGamesGateModal();
   });
 
   $("ggCloseBtn")?.addEventListener("click", closeGamesGateModal);
@@ -201,31 +208,91 @@ function buildModalIfNeeded() {
   });
 }
 
+export function closeGamesGateModal() {
+  $("gameGateModal")?.classList.remove("show");
+}
+
 export function openGamesGateModal(options = {}) {
   buildModalIfNeeded();
 
   const {
-    title = "Bu oyun için 1 jeton lazım",
-    message = "1 jeton verince bu oyun 7 gün boyunca açık kalır."
+    title = "Bu oyun için 1 jeton gerekiyor",
+    message = "Bu oyunu açmak için 1 jeton kullanılır. Açıldıktan sonra 7 gün boyunca sınırsız oynayabilirsin.",
+    info1Label = "Erişim Tipi",
+    info1Value = "1 Jeton • Tek Oyun",
+    info1Desc = "Jeton sadece seçtiğin oyun için geçerlidir.",
+    info2Label = "Süre",
+    info2Value = "7 Gün",
+    info2Desc = "Bu süre boyunca aynı oyuna tekrar girişte jeton düşmez.",
+    primaryText = "Jeton Al",
+    primaryAction = "market",
+    showPrimary = true,
+    closeText = "Kapat"
   } = options;
 
   if ($("ggTitle")) $("ggTitle").textContent = title;
   if ($("ggSub")) $("ggSub").textContent = message;
+
+  if ($("ggInfo1Label")) $("ggInfo1Label").textContent = info1Label;
+  if ($("ggInfo1Value")) $("ggInfo1Value").textContent = info1Value;
+  if ($("ggInfo1Desc")) $("ggInfo1Desc").textContent = info1Desc;
+
+  if ($("ggInfo2Label")) $("ggInfo2Label").textContent = info2Label;
+  if ($("ggInfo2Value")) $("ggInfo2Value").textContent = info2Value;
+  if ($("ggInfo2Desc")) $("ggInfo2Desc").textContent = info2Desc;
+
+  if ($("ggPrimaryBtn")) {
+    $("ggPrimaryBtn").textContent = primaryText;
+    $("ggPrimaryBtn").dataset.action = primaryAction;
+    $("ggPrimaryBtn").style.display = showPrimary ? "" : "none";
+  }
+
+  if ($("ggCloseBtn")) {
+    $("ggCloseBtn").textContent = closeText;
+  }
+
   $("gameGateModal")?.classList.add("show");
 }
 
-export function closeGamesGateModal() {
-  $("gameGateModal")?.classList.remove("show");
+function openInsufficientTokensModal() {
+  openGamesGateModal({
+    title: "Bu oyun için 1 jeton gerekiyor",
+    message: `Bu oyunu açmak için ${GAME_PRICE} jeton kullanılır. Açıldıktan sonra ${GAME_DAYS} gün boyunca sınırsız oynayabilirsin.`,
+    info1Label: "Erişim Tipi",
+    info1Value: "1 Jeton • Tek Oyun",
+    info1Desc: "Jeton sadece seçtiğin oyun için geçerlidir.",
+    info2Label: "Süre",
+    info2Value: "7 Gün",
+    info2Desc: "Bu süre boyunca aynı oyuna tekrar girişte jeton düşmez.",
+    primaryText: "Jeton Al",
+    primaryAction: "market",
+    showPrimary: true,
+    closeText: "Kapat"
+  });
+}
+
+function openSystemErrorModal() {
+  openGamesGateModal({
+    title: "Oyun şu an açılamadı",
+    message: "Bağlantı veya sistem kaynaklı bir sorun oluştu. Lütfen biraz sonra tekrar dene.",
+    info1Label: "Durum",
+    info1Value: "Geçici Hata",
+    info1Desc: "Bu sorun jeton yetersizliği kaynaklı olmayabilir.",
+    info2Label: "Ne Yapabilirsin?",
+    info2Value: "Tekrar Dene",
+    info2Desc: "Biraz bekleyip yeniden denemen yeterli olabilir.",
+    primaryText: "Tamam",
+    primaryAction: "close",
+    showPrimary: true,
+    closeText: "Kapat"
+  });
 }
 
 export async function ensureGamesBundleAccess(gameCode = "") {
   const code = String(gameCode || "").trim().toLowerCase();
 
   if (!code) {
-    openGamesGateModal({
-      title: "Oyun açılamadı",
-      message: "Oyun kodu bulunamadı. Lütfen tekrar deneyin."
-    });
+    openSystemErrorModal();
     return {
       ok: false,
       access_open: false,
@@ -263,12 +330,7 @@ export async function ensureGamesBundleAccess(gameCode = "") {
 
     if (error) {
       console.error("[game_access_gate] rpc error:", error);
-
-      openGamesGateModal({
-        title: "Oyun erişimi doğrulanamadı",
-        message: "Şu anda oyun erişimi kontrol edilemedi.\n\nİstersen Jeton Market’e gidip bakiyeni kontrol et."
-      });
-
+      openSystemErrorModal();
       return {
         ok: false,
         access_open: false,
@@ -280,11 +342,7 @@ export async function ensureGamesBundleAccess(gameCode = "") {
     const json = data || null;
 
     if (!json) {
-      openGamesGateModal({
-        title: "Oyun erişimi doğrulanamadı",
-        message: "Boş yanıt alındı. Lütfen tekrar deneyin."
-      });
-
+      openSystemErrorModal();
       return {
         ok: false,
         access_open: false,
@@ -293,11 +351,7 @@ export async function ensureGamesBundleAccess(gameCode = "") {
     }
 
     if (!json.ok && json.reason === "INSUFFICIENT_TOKENS") {
-      openGamesGateModal({
-        title: "Bu oyun için 1 jeton lazım",
-        message: `Bu oyuna giriş için ${GAME_PRICE} jeton gerekir.\nAçılınca ${GAME_DAYS} gün boyunca tekrar jeton istemez.`
-      });
-
+      openInsufficientTokensModal();
       return {
         ok: false,
         access_open: false,
@@ -307,11 +361,7 @@ export async function ensureGamesBundleAccess(gameCode = "") {
     }
 
     if (!json.ok) {
-      openGamesGateModal({
-        title: "Oyun açılamadı",
-        message: "Bu oyun için erişim verilemedi.\nLütfen tekrar deneyin."
-      });
-
+      openSystemErrorModal();
       return {
         ok: false,
         access_open: false,
@@ -334,12 +384,7 @@ export async function ensureGamesBundleAccess(gameCode = "") {
     };
   } catch (e) {
     console.error("[game_access_gate] exception:", e);
-
-    openGamesGateModal({
-      title: "Bağlantı sorunu oluştu",
-      message: "Oyun erişimi kontrol edilirken bir hata oluştu.\nİstersen Jeton Market’e gidip bakiyeni kontrol et."
-    });
-
+    openSystemErrorModal();
     return {
       ok: false,
       access_open: false,
