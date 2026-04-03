@@ -17,9 +17,14 @@ export function generateManualCode() {
   return String(Math.floor(100000 + Math.random() * 900000));
 }
 
-export function buildQrInstallUrl(uid) {
-  const base = "https://italky.ai/pages/install.html";
-  return `${base}?uid=${encodeURIComponent(uid)}`;
+export function buildQrInstallUrl(uid, manualCode = "") {
+  const base = "https://italky.ai/pages/nfc_redeem.html";
+  const url = new URL(base);
+
+  if (uid) url.searchParams.set("uid", String(uid).trim());
+  if (manualCode) url.searchParams.set("code", String(manualCode).trim());
+
+  return url.toString();
 }
 
 export async function createNfcTokenCard({
@@ -31,7 +36,7 @@ export async function createNfcTokenCard({
   const cleanUid = String(uid || "").trim() || generateLongUid();
   const amount = Number(tokenAmount || 0);
   const manualCode = generateManualCode();
-  const qrUrl = buildQrInstallUrl(cleanUid);
+  const qrUrl = buildQrInstallUrl(cleanUid, manualCode);
 
   if (!Number.isFinite(amount) || amount <= 0) {
     throw new Error("Geçerli jeton miktarı gerekli");
@@ -50,6 +55,42 @@ export async function createNfcTokenCard({
   const { data, error } = await supabase
     .from("nfc_cards")
     .insert(payload)
+    .select("*")
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function listNfcTokenCards(search = "") {
+  let query = supabase
+    .from("nfc_cards")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  const q = String(search || "").trim();
+  if (q) {
+    query = query.or(`uid.ilike.%${q}%,manual_code.ilike.%${q}%,note.ilike.%${q}%`);
+  }
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return Array.isArray(data) ? data : [];
+}
+
+export async function updateNfcCardStatus(uid, status) {
+  const cleanUid = String(uid || "").trim();
+  const cleanStatus = String(status || "").trim().toLowerCase();
+
+  if (!cleanUid) throw new Error("UID gerekli");
+  if (!["active", "used", "blocked"].includes(cleanStatus)) {
+    throw new Error("Geçersiz kart durumu");
+  }
+
+  const { data, error } = await supabase
+    .from("nfc_cards")
+    .update({ status: cleanStatus })
+    .eq("uid", cleanUid)
     .select("*")
     .single();
 
