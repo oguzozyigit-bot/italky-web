@@ -307,6 +307,26 @@ function looksLikeInsufficientTokens(payload) {
   );
 }
 
+async function getCurrentTokens(userId) {
+  try {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("tokens")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (error) {
+      console.error("[game_access_gate] profile token read error:", error);
+      return null;
+    }
+
+    return Number(data?.tokens ?? 0);
+  } catch (e) {
+    console.error("[game_access_gate] getCurrentTokens exception:", e);
+    return null;
+  }
+}
+
 export async function ensureGamesBundleAccess(gameCode = "") {
   const code = String(gameCode || "").trim().toLowerCase();
 
@@ -338,6 +358,18 @@ export async function ensureGamesBundleAccess(gameCode = "") {
       ok: false,
       access_open: false,
       reason: "no_session"
+    };
+  }
+
+  // Önce lokal/token ön kontrolü
+  const currentTokens = await getCurrentTokens(user.id);
+  if (currentTokens !== null && currentTokens < GAME_PRICE) {
+    openInsufficientTokensModal();
+    return {
+      ok: false,
+      access_open: false,
+      reason: "INSUFFICIENT_TOKENS_LOCAL",
+      tokens: currentTokens
     };
   }
 
