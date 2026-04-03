@@ -274,18 +274,37 @@ function openInsufficientTokensModal() {
 function openSystemErrorModal() {
   openGamesGateModal({
     title: "Oyun şu an açılamadı",
-    message: "Bağlantı veya sistem kaynaklı bir sorun oluştu. Lütfen biraz sonra tekrar dene.",
+    message: "Sistem erişim kontrolünü tamamlayamadı. Lütfen biraz sonra tekrar dene.",
     info1Label: "Durum",
-    info1Value: "Geçici Hata",
-    info1Desc: "Bu sorun jeton yetersizliği kaynaklı olmayabilir.",
+    info1Value: "Geçici Sorun",
+    info1Desc: "Bu hata jeton bakiyenden bağımsız olabilir.",
     info2Label: "Ne Yapabilirsin?",
     info2Value: "Tekrar Dene",
-    info2Desc: "Biraz bekleyip yeniden denemen yeterli olabilir.",
+    info2Desc: "Sorun devam ederse teknik kontrol gerekebilir.",
     primaryText: "Tamam",
     primaryAction: "close",
     showPrimary: true,
     closeText: "Kapat"
   });
+}
+
+function looksLikeInsufficientTokens(payload) {
+  const text = String(
+    payload?.reason ||
+    payload?.message ||
+    payload?.detail ||
+    payload?.error?.message ||
+    payload?.error ||
+    ""
+  ).toLowerCase();
+
+  return (
+    text.includes("insufficient_tokens") ||
+    text.includes("insufficient token") ||
+    text.includes("yetersiz") ||
+    text.includes("token") ||
+    text.includes("jeton")
+  );
 }
 
 export async function ensureGamesBundleAccess(gameCode = "") {
@@ -330,6 +349,17 @@ export async function ensureGamesBundleAccess(gameCode = "") {
 
     if (error) {
       console.error("[game_access_gate] rpc error:", error);
+
+      if (looksLikeInsufficientTokens(error)) {
+        openInsufficientTokensModal();
+        return {
+          ok: false,
+          access_open: false,
+          reason: "INSUFFICIENT_TOKENS",
+          error
+        };
+      }
+
       openSystemErrorModal();
       return {
         ok: false,
@@ -350,17 +380,17 @@ export async function ensureGamesBundleAccess(gameCode = "") {
       };
     }
 
-    if (!json.ok && json.reason === "INSUFFICIENT_TOKENS") {
-      openInsufficientTokensModal();
-      return {
-        ok: false,
-        access_open: false,
-        reason: "INSUFFICIENT_TOKENS",
-        data: json
-      };
-    }
-
     if (!json.ok) {
+      if (looksLikeInsufficientTokens(json)) {
+        openInsufficientTokensModal();
+        return {
+          ok: false,
+          access_open: false,
+          reason: "INSUFFICIENT_TOKENS",
+          data: json
+        };
+      }
+
       openSystemErrorModal();
       return {
         ok: false,
@@ -384,6 +414,17 @@ export async function ensureGamesBundleAccess(gameCode = "") {
     };
   } catch (e) {
     console.error("[game_access_gate] exception:", e);
+
+    if (looksLikeInsufficientTokens(e)) {
+      openInsufficientTokensModal();
+      return {
+        ok: false,
+        access_open: false,
+        reason: "INSUFFICIENT_TOKENS",
+        error: e
+      };
+    }
+
     openSystemErrorModal();
     return {
       ok: false,
