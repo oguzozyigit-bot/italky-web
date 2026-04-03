@@ -1,4 +1,3 @@
-<!-- FILE: /pages/level_test_hub.html -->
 <!doctype html>
 <html lang="tr">
 <head>
@@ -413,6 +412,137 @@
       transform:translateX(-50%) translateY(0);
     }
 
+    .tokenModal{
+      position:fixed;
+      inset:0;
+      z-index:1000000;
+      background:rgba(2,4,12,.72);
+      backdrop-filter:blur(12px);
+      -webkit-backdrop-filter:blur(12px);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+    }
+
+    .tokenModal.show{
+      display:flex;
+    }
+
+    .tokenCard{
+      width:min(100%, 430px);
+      border-radius:30px;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,0.12);
+      background:linear-gradient(180deg, rgba(10,12,26,.98), rgba(6,8,20,.98));
+      box-shadow:0 28px 90px rgba(0,0,0,.42);
+    }
+
+    .tokenTop{
+      padding:20px 20px 16px;
+      background:linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
+    }
+
+    .tokenChip{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:34px;
+      padding:8px 14px;
+      border-radius:999px;
+      background:rgba(255,255,255,.16);
+      border:1px solid rgba(255,255,255,.18);
+      color:#fff;
+      font-size:12px;
+      font-weight:1000;
+    }
+
+    .tokenTitle{
+      margin:14px 0 6px;
+      font-size:28px;
+      line-height:1.08;
+      font-weight:1000;
+      color:#fff;
+      letter-spacing:-.6px;
+    }
+
+    .tokenSub{
+      margin:0;
+      font-size:14px;
+      line-height:1.55;
+      font-weight:800;
+      color:rgba(255,255,255,.90);
+    }
+
+    .tokenBody{
+      padding:18px;
+      display:grid;
+      gap:12px;
+    }
+
+    .tokenInfo{
+      border-radius:20px;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.04);
+      padding:14px 14px;
+    }
+
+    .tokenLabel{
+      font-size:11px;
+      font-weight:1000;
+      color:rgba(255,255,255,.50);
+      text-transform:uppercase;
+      letter-spacing:.8px;
+      margin-bottom:5px;
+    }
+
+    .tokenValue{
+      font-size:20px;
+      font-weight:1000;
+      color:#fff;
+      line-height:1.15;
+    }
+
+    .tokenDesc{
+      margin:2px 0 0;
+      font-size:12px;
+      line-height:1.45;
+      font-weight:800;
+      color:rgba(255,255,255,.62);
+    }
+
+    .tokenActions{
+      display:grid;
+      gap:10px;
+      margin-top:2px;
+    }
+
+    .tokenBtn{
+      min-height:54px;
+      border:none;
+      border-radius:18px;
+      cursor:pointer;
+      font-size:15px;
+      font-weight:1000;
+      transition:transform .16s ease, opacity .16s ease;
+    }
+
+    .tokenBtn:active{
+      transform:scale(.985);
+    }
+
+    .tokenBtn.primary{
+      color:#fff;
+      background:linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%);
+      box-shadow:0 14px 34px rgba(99,102,241,.26);
+    }
+
+    .tokenBtn.secondary{
+      color:#fff;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.10);
+    }
+
     @keyframes rotateRing{
       from{ transform:rotate(0deg); }
       to{ transform:rotate(360deg); }
@@ -434,6 +564,10 @@
 
       .txt .name{
         font-size:15px;
+      }
+
+      .tokenTitle{
+        font-size:24px;
       }
     }
   </style>
@@ -476,6 +610,37 @@
 
   <div class="toast" id="toast"></div>
 
+  <div class="tokenModal" id="tokenModal">
+    <div class="tokenCard">
+      <div class="tokenTop">
+        <div class="tokenChip">italkyAI • Jeton Gerekli</div>
+        <div class="tokenTitle">Seviye sınavı için jeton lazım</div>
+        <p class="tokenSub">
+          Bu sınava giriş için 1 jeton kullanılır. Açılan erişimle 7 gün boyunca sınırsız giriş yapabilirsin.
+        </p>
+      </div>
+
+      <div class="tokenBody">
+        <div class="tokenInfo">
+          <div class="tokenLabel">Sınav erişim kuralı</div>
+          <div class="tokenValue">1 Jeton • 7 Gün</div>
+          <p class="tokenDesc">Bir kez açılır, 7 gün boyunca tekrar tekrar kullanılabilir.</p>
+        </div>
+
+        <div class="tokenInfo">
+          <div class="tokenLabel">Devam etmek için</div>
+          <div class="tokenValue">Jeton Market</div>
+          <p class="tokenDesc">Jeton alıp geri dönerek sınavı anında başlatabilirsin.</p>
+        </div>
+
+        <div class="tokenActions">
+          <button class="tokenBtn primary" id="goTokenMarketBtn">Jeton Market’e Git</button>
+          <button class="tokenBtn secondary" id="closeTokenModalBtn">Şimdilik Kapat</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script type="module">
     import { mountShell, setHeaderTokens } from "/js/ui_shell.js";
     import { supabase } from "/js/supabase_client.js";
@@ -498,6 +663,9 @@
     const focusFlag = $("focusFlag");
     const focusTitle = $("focusTitle");
     const focusSub = $("focusSub");
+    const tokenModal = $("tokenModal");
+    const goTokenMarketBtn = $("goTokenMarketBtn");
+    const closeTokenModalBtn = $("closeTokenModalBtn");
 
     const params = new URLSearchParams(location.search);
     const selectedLang = String(params.get("lang") || "").trim().toLowerCase();
@@ -528,10 +696,23 @@
       return LANGS.find(x => x.code === code) || { code, name: code?.toUpperCase() || "Dil", flag: "🏁" };
     }
 
-    function showTokenWarning() {
-      alert("Seviye Tespit Sınavı için 1 jeton gerekir. 1 jetonla 7 gün boyunca sınırsız giriş açılır.");
-      location.href = "/pages/jetonbuy.html";
+    function openTokenModal() {
+      tokenModal?.classList.add("show");
     }
+
+    function closeTokenModal() {
+      tokenModal?.classList.remove("show");
+    }
+
+    goTokenMarketBtn?.addEventListener("click", () => {
+      location.href = "/pages/jetonbuy.html";
+    });
+
+    closeTokenModalBtn?.addEventListener("click", closeTokenModal);
+
+    tokenModal?.addEventListener("click", (e) => {
+      if (e.target === tokenModal) closeTokenModal();
+    });
 
     async function ensureLevelTestAccess() {
       const { data: { session } } = await supabase.auth.getSession();
@@ -549,24 +730,24 @@
 
         if (error) {
           console.error("[level_test_hub] ensure access rpc error:", error);
-          alert("Sınav erişimi kontrolünde hata oluştu: " + (error.message || "RPC error"));
+          toast("Sınav erişimi kontrol edilemedi.");
           return false;
         }
 
         const json = data || null;
 
         if (!json) {
-          alert("Sınav erişimi şu anda kontrol edilemedi.");
+          toast("Sınav erişimi şu anda kontrol edilemedi.");
           return false;
         }
 
         if (!json.ok && json.reason === "INSUFFICIENT_TOKENS") {
-          showTokenWarning();
+          openTokenModal();
           return false;
         }
 
         if (!json.ok) {
-          alert("Sınav erişimi kontrolünde hata oluştu.");
+          toast("Sınav erişimi kontrolünde hata oluştu.");
           return false;
         }
 
@@ -577,7 +758,7 @@
         return true;
       } catch (e) {
         console.error("[level_test_hub] ensure access exception:", e);
-        alert("Sınav başlatılamadı: " + (e?.message || "Bilinmeyen hata"));
+        toast("Sınav başlatılamadı.");
         return false;
       }
     }
@@ -706,8 +887,8 @@
 
         location.href = url;
       } catch (e) {
-        const msg = e?.message || String(e) || "Sınav başlatılamadı.";
-        alert("Sınav başlatılamadı: " + msg);
+        console.error("[level_test_hub] start test error:", e);
+        toast("Sınav başlatılamadı.");
         btn.disabled = false;
         busy = false;
       }
