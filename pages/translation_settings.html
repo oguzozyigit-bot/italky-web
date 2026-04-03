@@ -14,7 +14,9 @@
       --txt: rgba(255,255,255,.97);
       --muted: rgba(255,255,255,.62);
       --ai-grad: linear-gradient(135deg,#67e8f9 0%,#818cf8 46%,#f472b6 100%);
+      --panel-bg: rgba(255,255,255,.04);
       --panel-border: rgba(255,255,255,.10);
+      --accent: #818cf8;
     }
 
     *{
@@ -111,19 +113,6 @@
       font-size:12px;
       line-height:1.5;
       color:var(--muted);
-    }
-
-    .warnBox{
-      padding:14px 16px;
-      border-radius:18px;
-      background:rgba(245,158,11,.09);
-      border:1px solid rgba(245,158,11,.20);
-      color:#fde68a;
-      font-size:12px;
-      line-height:1.55;
-      font-weight:800;
-      display:none;
-      box-shadow:0 10px 24px rgba(0,0,0,.12);
     }
 
     .settings-panel{
@@ -385,12 +374,56 @@
       box-shadow:0 24px 50px rgba(0,0,0,.30);
     }
 
+    .fancy-jeton-card{
+      position:relative;
+      overflow:hidden;
+      background:
+        radial-gradient(circle at 18% 0%, rgba(103,232,249,.14) 0%, transparent 28%),
+        radial-gradient(circle at 84% 12%, rgba(244,114,182,.16) 0%, transparent 26%),
+        linear-gradient(145deg, rgba(18,18,30,.98), rgba(9,10,18,.98));
+      border:1px solid rgba(255,255,255,.12);
+      box-shadow:
+        0 24px 50px rgba(0,0,0,.34),
+        0 0 0 1px rgba(255,255,255,.03) inset;
+    }
+
+    .fancy-jeton-card::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:
+        linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+      background-size:22px 22px;
+      mask-image:linear-gradient(180deg, rgba(255,255,255,.5), transparent 78%);
+      pointer-events:none;
+    }
+
+    .fancy-jeton-icon{
+      width:54px;
+      height:54px;
+      border-radius:18px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      margin:0 0 12px;
+      font-size:24px;
+      font-weight:900;
+      color:#fff;
+      background:var(--ai-grad);
+      box-shadow:0 12px 24px rgba(129,140,248,.22);
+      position:relative;
+      z-index:1;
+    }
+
     .modal-title{
       margin:0 0 8px;
       font-family:'Space Grotesk',sans-serif;
       font-size:20px;
       font-weight:900;
       color:#fff;
+      position:relative;
+      z-index:1;
     }
 
     .modal-text{
@@ -398,6 +431,18 @@
       font-size:13px;
       line-height:1.6;
       color:rgba(255,255,255,.76);
+      position:relative;
+      z-index:1;
+    }
+
+    .modal-mini-note{
+      margin-top:12px;
+      font-size:11px;
+      line-height:1.45;
+      color:rgba(255,255,255,.56);
+      font-weight:700;
+      position:relative;
+      z-index:1;
     }
 
     .modal-actions{
@@ -405,6 +450,8 @@
       grid-template-columns:1fr 1fr;
       gap:10px;
       margin-top:16px;
+      position:relative;
+      z-index:1;
     }
 
     .modal-btn{
@@ -445,12 +492,8 @@
 
     <section class="page-head">
       <h1 class="title">Çeviri <span class="ai">Ayarları</span></h1>
-      <p class="page-sub">Sesini ve çeviri modunu seç. Gereksiz süsleri attık, işini gören ayarlar kaldı ✨</p>
+      <p class="page-sub">Sesini, tarzını ve çeviri modunu seç. Biraz parlak, biraz akıllı, biraz da keyifli olsun ✨</p>
     </section>
-  </div>
-
-  <div class="warnBox" id="trialWarnBox">
-    Deneme sürecinde sadece ücretsiz ses kullanılabilir. Kendi sesinizi kullanmak için üyelik gereklidir.
   </div>
 
   <section class="settings-panel">
@@ -523,12 +566,23 @@
 <div class="toast" id="toast"></div>
 
 <div class="modal" id="uiModal">
-  <div class="modal-card">
-    <h3 class="modal-title" id="uiModalTitle">Bilgi</h3>
-    <p class="modal-text" id="uiModalText">Bilgilendirme metni</p>
+  <div class="modal-card fancy-jeton-card">
+    <div class="fancy-jeton-icon">✦</div>
+
+    <h3 class="modal-title" id="uiModalTitle">Jeton Gerekli</h3>
+
+    <p class="modal-text" id="uiModalText">
+      Bu özellik standart kullanımın ötesinde, gelişmiş yapay zekâ desteğiyle çalışır.
+      Kendi Sesim ve Kültürel Çeviri deneyimini başlatmak için jeton yüklemeniz gereklidir.
+    </p>
+
+    <div class="modal-mini-note" id="uiModalMiniNote">
+      Jeton yüklemek için aşağıdaki butona dokunun.
+    </div>
+
     <div class="modal-actions">
-      <button class="modal-btn primary" id="uiModalGo">Üyelik Paketlerini Gör</button>
-      <button class="modal-btn secondary" id="uiModalClose">Atla</button>
+      <button class="modal-btn primary" id="uiModalGo">Jeton Yükle</button>
+      <button class="modal-btn secondary" id="uiModalClose">Daha Sonra</button>
     </div>
   </div>
 </div>
@@ -557,7 +611,6 @@
   const backBtn = document.getElementById("backBtn");
   const toastEl = document.getElementById("toast");
   const cloneVoiceDesc = document.getElementById("cloneVoiceDesc");
-  const trialWarnBox = document.getElementById("trialWarnBox");
 
   const cloneUseBtn = document.getElementById("cloneUseBtn");
   const cloneListenBtn = document.getElementById("cloneListenBtn");
@@ -581,12 +634,6 @@
   let currentUserId = "";
   let currentPreviewAudio = null;
 
-  let accessState = {
-    trialActive: false,
-    packageCode: "",
-    lockedAll: false
-  };
-
   function stopCurrentPreview() {
     try {
       if (currentPreviewAudio) {
@@ -605,16 +652,6 @@
 
   function normalizeTranslateMode(v){
     return String(v || "").trim().toLowerCase() === "cultural" ? "cultural" : "normal";
-  }
-
-  function normalizePackageCode(raw){
-    const code = String(raw || "").trim().toLowerCase();
-    if (!code) return "";
-    if (code.startsWith("premium")) return "premium";
-    if (code.startsWith("translate")) return "translate";
-    if (code.startsWith("education")) return "education";
-    if (code.startsWith("edu")) return "education";
-    return code;
   }
 
   function voiceLabel(v){
@@ -636,9 +673,17 @@
     }, 1600);
   }
 
-  function showUiModal(message, title = "Üyelik Gerekli") {
+  function showUiModal(
+    message = "Bu özellik standart kullanımın ötesinde, gelişmiş yapay zekâ desteğiyle çalışır. Kendi Sesim ve Kültürel Çeviri deneyimini başlatmak için jeton yüklemeniz gereklidir.",
+    title = "Jeton Gerekli",
+    miniNote = "Jeton yüklemek için aşağıdaki butona dokunun."
+  ) {
     uiModalTitle.textContent = title;
     uiModalText.textContent = message;
+
+    const mini = document.getElementById("uiModalMiniNote");
+    if (mini) mini.textContent = miniNote;
+
     uiModal.classList.add("open");
   }
 
@@ -647,23 +692,13 @@
   }
 
   uiModalGo.addEventListener("click", () => {
-    location.href = "/pages/upgrade_pack.html";
+    location.href = "/pages/jetonbuy.html";
   });
 
   uiModalClose.addEventListener("click", closeUiModal);
   uiModal.addEventListener("click", (e) => {
     if (e.target === uiModal) closeUiModal();
   });
-
-  function canUseCloneVoice(){
-    const pkg = normalizePackageCode(accessState.packageCode);
-    return pkg === "premium";
-  }
-
-  function canUseCulturalTranslate(){
-    const pkg = normalizePackageCode(accessState.packageCode);
-    return pkg === "premium" || pkg === "translate";
-  }
 
   function paintSelections(){
     voiceGrid?.querySelectorAll(".choice-card").forEach(card => {
@@ -790,50 +825,6 @@
     }
   }
 
-  async function readAccessState(){
-    try{
-      const { data: { user } } = await supabase.auth.getUser();
-      if(!user){
-        accessState = { trialActive:false, packageCode:"", lockedAll:false };
-        return;
-      }
-
-      const { data: row } = await supabase
-        .from("user_access_state")
-        .select("*")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      if(row){
-        const rawCode = String(row.selected_package_code || "").trim().toLowerCase();
-        const packageCode = normalizePackageCode(rawCode);
-
-        const packageActive =
-          (!!packageCode && row.package_active === true && (!row.package_ends_at || new Date(row.package_ends_at).getTime() > Date.now()))
-          || (!!packageCode && row.package_active === true);
-
-        const trialActive = !packageActive && (
-          Number(row.trial_days_left || 0) > 0 ||
-          (!!row.trial_ends_at && new Date(row.trial_ends_at).getTime() > Date.now())
-        );
-
-        accessState = {
-          trialActive,
-          packageCode: packageActive ? packageCode : "",
-          lockedAll: false
-        };
-      }else{
-        accessState = { trialActive:false, packageCode:"", lockedAll:false };
-      }
-    }catch(e){
-      accessState = { trialActive:false, packageCode:"", lockedAll:false };
-    }
-
-    if (trialWarnBox) {
-      trialWarnBox.style.display = accessState.trialActive ? "" : "none";
-    }
-  }
-
   function saveSettings(){
     localStorage.setItem(VOICE_KEY, voiceMode);
     localStorage.setItem(TRANSLATE_KEY, translateMode);
@@ -853,71 +844,44 @@
     showToast("Ses seçimi güncellendi");
   });
 
-  document.getElementById("cloneCard")?.addEventListener("click", (e) => {
-    if (e.target.closest("button")) return;
-
-    if (accessState.trialActive) {
-      showUiModal("Kendi sesinizi kullanmak için üye olmanız gereklidir.");
-      return;
-    }
-    if (!canUseCloneVoice()) {
-      showUiModal("Kendi sesinizi kullanmak için üyelik paketi satın almanız gereklidir.");
-      return;
-    }
+  document.getElementById("cloneCard")?.addEventListener("click", () => {
     if (!cloneReady) {
-      showToast("Önce kendi sesinizi oluşturun");
-      return;
+      showUiModal(
+        "Bu özellik standart kullanımın ötesinde, gelişmiş yapay zekâ desteğiyle çalışır. Kendi Sesim deneyimini başlatmak için jeton yüklemeniz gereklidir."
+      );
     }
-
-    voiceMode = "clone";
-    paintSelections();
-    refreshSummary();
-    showToast("Kendi sesim seçildi");
   });
 
   cloneUseBtn?.addEventListener("click", () => {
-    if (accessState.trialActive) {
-      showUiModal("Kendi sesinizi kullanmak için üye olmanız gereklidir.");
-      return;
-    }
-    if (!canUseCloneVoice()) {
-      showUiModal("Kendi sesinizi kullanmak için üyelik paketi satın almanız gereklidir.");
-      return;
-    }
     if (!cloneReady) {
-      showToast("Önce kendi sesinizi oluşturun");
+      showUiModal(
+        "Bu özellik standart kullanımın ötesinde, gelişmiş yapay zekâ desteğiyle çalışır. Kendi Sesim deneyimini başlatmak için jeton yüklemeniz gereklidir."
+      );
       return;
     }
 
-    voiceMode = "clone";
-    paintSelections();
-    refreshSummary();
-    showToast("Kendi sesim seçildi");
+    showUiModal(
+      "Bu özellik standart kullanımın ötesinde, gelişmiş yapay zekâ desteğiyle çalışır. Kendi Sesim deneyimini başlatmak için jeton yüklemeniz gereklidir."
+    );
   });
 
   cloneListenBtn?.addEventListener("click", () => {
-    if (accessState.trialActive) {
-      showUiModal("Kendi sesinizi dinlemek için üye olmanız gereklidir.");
+    if (!cloneReady) {
+      showUiModal(
+        "Bu özellik standart kullanımın ötesinde, gelişmiş yapay zekâ desteğiyle çalışır. Kendi Sesim önizlemesini dinlemek için jeton yüklemeniz gereklidir."
+      );
       return;
     }
-    if (!canUseCloneVoice()) {
-      showUiModal("Kendi sesinizi dinlemek için üyelik paketi satın almanız gereklidir.");
-      return;
-    }
-    previewCloneVoice();
+
+    showUiModal(
+      "Bu özellik standart kullanımın ötesinde, gelişmiş yapay zekâ desteğiyle çalışır. Kendi Sesim önizlemesini dinlemek için jeton yüklemeniz gereklidir."
+    );
   });
 
   cloneEditBtn?.addEventListener("click", () => {
-    if (accessState.trialActive) {
-      showUiModal("Kendi sesinizi oluşturmak için üye olmanız gereklidir.");
-      return;
-    }
-    if (!canUseCloneVoice()) {
-      showUiModal("Kendi sesinizi oluşturmak için üyelik paketi satın almanız gereklidir.");
-      return;
-    }
-    stopCurrentPreview();
-    location.href = "/pages/voice_profile.html?from=translation_settings";
+    showUiModal(
+      "Bu özellik standart kullanımın ötesinde, gelişmiş yapay zekâ desteğiyle çalışır. Kendi Sesim profilinizi oluşturmak için jeton yüklemeniz gereklidir."
+    );
   });
 
   translateGrid?.querySelectorAll(".choice-card").forEach(card => {
@@ -925,15 +889,10 @@
       const selected = normalizeTranslateMode(card.dataset.translate || "normal");
 
       if (selected === "cultural") {
-        if (accessState.trialActive) {
-          showUiModal("Kültürel Translate kullanmak için üye olmanız gereklidir.");
-          return;
-        }
-
-        if (!canUseCulturalTranslate()) {
-          showUiModal("Kültürel Translate kullanmak için üyelik paketi satın almanız gereklidir.");
-          return;
-        }
+        showUiModal(
+          "Bu özellik standart kullanımın ötesinde, gelişmiş yapay zekâ desteğiyle çalışır. Kültürel Çeviri deneyimini başlatmak için jeton yüklemeniz gereklidir."
+        );
+        return;
       }
 
       translateMode = selected;
@@ -959,7 +918,6 @@
     goHome();
   });
 
-  await readAccessState();
   await checkVoiceProfile();
   paintSelections();
   refreshSummary();
