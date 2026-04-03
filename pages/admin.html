@@ -1,3 +1,4 @@
+<!-- FILE: /pages/admin.html -->
 <!doctype html>
 <html lang="tr">
 <head>
@@ -528,7 +529,78 @@
             <div id="panelUsers"></div>
             <div id="panelPackages" class="hidden"></div>
             <div id="panelEntitlements" class="hidden"></div>
-            <div id="panelNfc" class="hidden"></div>
+
+            <!-- NFC / QR PANELİ -->
+            <div id="panelNfc" class="hidden">
+              <div class="grid grid-2">
+                <section class="card">
+                  <h3>Yeni Jeton Kartı Oluştur</h3>
+                  <div class="desc">
+                    NFC veya QR için tek kullanımlık jeton kartı üret. Kart okutulunca kullanıcı hesabına jeton yüklenir.
+                  </div>
+
+                  <div class="kv">
+                    <input id="uid" type="text" placeholder="Kart UID / QR kod değeri" />
+                    <input id="amount" type="number" min="1" step="1" placeholder="Jeton miktarı" />
+                    <input id="note" type="text" placeholder="Not (opsiyonel)" />
+                    <button id="saveBtn" class="btn-primary" type="button">Kartı Kaydet</button>
+                  </div>
+
+                  <div id="nfcCreateStatus" class="status-line"></div>
+                </section>
+
+                <section class="card">
+                  <h3>Hızlı Paketler</h3>
+                  <div class="desc">
+                    Tek dokunuşla hazır jeton kartı oluştur.
+                  </div>
+
+                  <div class="row">
+                    <button class="btn-secondary" type="button" data-quick-amount="10">10 Jeton</button>
+                    <button class="btn-secondary" type="button" data-quick-amount="25">25 Jeton</button>
+                    <button class="btn-secondary" type="button" data-quick-amount="50">50 Jeton</button>
+                    <button class="btn-secondary" type="button" data-quick-amount="100">100 Jeton</button>
+                  </div>
+
+                  <div class="desc" style="margin-top:12px">
+                    UID alanına kartı okut, ardından hızlı paketlerden birini seç veya miktarı elle gir.
+                  </div>
+                </section>
+              </div>
+
+              <section class="card" style="margin-top:14px">
+                <h3>Kartlar</h3>
+                <div class="desc">
+                  Aktif, kullanılmış ve engellenmiş NFC / QR kartları burada görüntülersin.
+                </div>
+
+                <div class="row">
+                  <input id="nfcSearch" type="text" placeholder="UID veya not ara..." />
+                  <button id="nfcRefreshBtn" class="btn-secondary" type="button">Listeyi Yenile</button>
+                </div>
+
+                <div class="table">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>UID</th>
+                        <th>Jeton</th>
+                        <th>Durum</th>
+                        <th>Kullanıcı</th>
+                        <th>Kullanım</th>
+                        <th>Not</th>
+                      </tr>
+                    </thead>
+                    <tbody id="nfcTableBody">
+                      <tr>
+                        <td colspan="6" class="empty">Henüz kart verisi yüklenmedi.</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            </div>
+
             <div id="panelDeploy" class="hidden"></div>
             <div id="panelGithub" class="hidden"></div>
           </div>
@@ -547,28 +619,56 @@
       </div>
     </div>
   </div>
- <script type="module">
-  import { createNfcTokenCard } from "/js/admin_nfc_tokens.js";
 
-  const uidInput = document.getElementById("uid");
-  const amountInput = document.getElementById("amount");
-  const noteInput = document.getElementById("note");
-  const btn = document.getElementById("saveBtn");
+  <script type="module">
+    import { createNfcTokenCard } from "/js/admin_nfc_tokens.js";
 
-  btn.addEventListener("click", async () => {
-    try {
-      const row = await createNfcTokenCard({
-        uid: uidInput.value,
-        tokenAmount: amountInput.value,
-        note: noteInput.value
-      });
+    const uidInput = document.getElementById("uid");
+    const amountInput = document.getElementById("amount");
+    const noteInput = document.getElementById("note");
+    const btn = document.getElementById("saveBtn");
+    const statusEl = document.getElementById("nfcCreateStatus");
 
-      alert(`Kart oluşturuldu: ${row.uid} / ${row.token_amount} jeton`);
-    } catch (e) {
-      alert("Kart oluşturulamadı: " + (e.message || e));
+    function setStatus(text, kind = "") {
+      if (!statusEl) return;
+      statusEl.className = `status-line ${kind}`.trim();
+      statusEl.textContent = text || "";
     }
-  });
-</script>
+
+    function makeRandomUid() {
+      return "QR-" + Math.random().toString(36).slice(2, 10).toUpperCase();
+    }
+
+    document.querySelectorAll("[data-quick-amount]").forEach((el) => {
+      el.addEventListener("click", () => {
+        amountInput.value = el.getAttribute("data-quick-amount") || "";
+        if (!uidInput.value.trim()) {
+          uidInput.value = makeRandomUid();
+        }
+      });
+    });
+
+    btn?.addEventListener("click", async () => {
+      try {
+        setStatus("Kart kaydediliyor...", "status-warn");
+
+        const row = await createNfcTokenCard({
+          uid: uidInput.value,
+          tokenAmount: amountInput.value,
+          note: noteInput.value
+        });
+
+        setStatus(`Kart oluşturuldu: ${row.uid} / ${row.token_amount} jeton`, "status-ok");
+
+        uidInput.value = "";
+        amountInput.value = "";
+        noteInput.value = "";
+      } catch (e) {
+        setStatus("Kart oluşturulamadı: " + (e.message || e), "status-err");
+      }
+    });
+  </script>
+
   <script type="module" src="/js/admin.js"></script>
 </body>
 </html>
