@@ -547,7 +547,28 @@
       </div>
     </div>
   </div>
+ <script type="module">
+  import { createNfcTokenCard } from "/js/admin_nfc_tokens.js";
 
+  const uidInput = document.getElementById("uid");
+  const amountInput = document.getElementById("amount");
+  const noteInput = document.getElementById("note");
+  const btn = document.getElementById("saveBtn");
+
+  btn.addEventListener("click", async () => {
+    try {
+      const row = await createNfcTokenCard({
+        uid: uidInput.value,
+        tokenAmount: amountInput.value,
+        note: noteInput.value
+      });
+
+      alert(`Kart oluşturuldu: ${row.uid} / ${row.token_amount} jeton`);
+    } catch (e) {
+      alert("Kart oluşturulamadı: " + (e.message || e));
+    }
+  });
+</script>
   <script type="module" src="/js/admin.js"></script>
 </body>
 </html>
