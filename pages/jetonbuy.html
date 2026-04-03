@@ -1,11 +1,12 @@
+<!-- FILE: /pages/jetonbuy.html -->
 <!doctype html>
 <html lang="tr">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
 <title>italkyAI • Jeton Market</title>
-
 <meta name="theme-color" content="#02000f">
+
 <style>
 html,body{
   background:#02000f!important;
@@ -29,6 +30,8 @@ html,body{
   --panel-bg:rgba(255,255,255,0.04);
   --panel-border:rgba(255,255,255,0.10);
   --cyan:#a5b4fc;
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+  --shellLift:0px;
 }
 
 *{
@@ -59,13 +62,18 @@ body{
   height:100%;
   max-width:560px;
   margin:auto;
-  padding:14px 14px 14px;
+  padding:84px 14px calc(14px + var(--safe-bottom) + var(--shellLift)) 14px;
   display:flex;
   flex-direction:column;
   gap:10px;
   justify-content:flex-start;
-  overflow:hidden;
+  overflow:auto;
   color:#fff;
+  scrollbar-width:none;
+}
+
+#pageContent::-webkit-scrollbar{
+  display:none;
 }
 
 .head{
@@ -285,7 +293,7 @@ body{
 }
 
 @media (max-width:390px){
-  #pageContent{ padding:12px 12px 12px; gap:9px; }
+  #pageContent{ padding:84px 12px calc(12px + var(--safe-bottom) + var(--shellLift)) 12px; gap:9px; }
   .head h1{ font-size:24px; }
   .balanceVal{ font-size:28px; }
   .pkg{ padding:13px 13px; min-height:66px; }
@@ -379,12 +387,22 @@ body{
 import { mountShell, setHeaderTokens } from "/js/ui_shell.js";
 import { supabase } from "/js/supabase_client.js";
 import { STORAGE_KEY } from "/js/config.js";
-import { enforcePackageBeforeTokens, getGlobalAccessState } from "/js/global_access.js";
 
 try{
   mountShell({ scroll:"none" });
 }catch(e){
   console.warn("[jetonbuy shell]", e);
+}
+
+try{
+  const root = getComputedStyle(document.documentElement);
+  const footerH = parseFloat(root.getPropertyValue("--footerH")) || 0;
+  document.documentElement.style.setProperty(
+    "--shellLift",
+    footerH ? `${footerH + 10}px` : "0px"
+  );
+}catch(e){
+  console.warn("[jetonbuy shellLift]", e);
 }
 
 let __billingUserId = "";
@@ -428,7 +446,7 @@ function resolveTokenValue(user, cached, profileRow){
   );
 }
 
-async function fetchProfileTokens(userId){
+async function fetchProfile(userId){
   try{
     const { data, error } = await supabase
       .from("profiles")
@@ -437,7 +455,7 @@ async function fetchProfileTokens(userId){
       .single();
 
     if(error){
-      console.warn("[jetonbuy] profiles tokens okunamadı:", error.message || error);
+      console.warn("[jetonbuy] profiles okunamadı:", error.message || error);
       return null;
     }
 
@@ -448,23 +466,60 @@ async function fetchProfileTokens(userId){
   }
 }
 
-function isPackageActuallyActive(state){
-  if (!state) return false;
-  if (state.package_active !== true) return false;
-  if (!state.package_ends_at) return true;
-  return new Date(state.package_ends_at).getTime() > Date.now();
+async function fetchAccessState(userId){
+  try{
+    const { data, error } = await supabase
+      .from("user_access_state")
+      .select("selected_package_code, package_active, package_ends_at")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if(error){
+      console.warn("[jetonbuy] access okunamadı:", error.message || error);
+      return null;
+    }
+
+    return data || null;
+  }catch(e){
+    console.warn("[jetonbuy] access sorgu hata:", e);
+    return null;
+  }
+}
+
+function hasActivePackage(access){
+  if(!access) return false;
+  if(access.package_active !== true) return false;
+  if(!access.package_ends_at) return true;
+  return new Date(access.package_ends_at).getTime() > Date.now();
 }
 
 async function checkMembershipUiGuard(){
-  const access = await getGlobalAccessState();
+  try{
+    const { data, error } = await supabase.auth.getUser();
+    if(error) throw error;
 
-  if (isPackageActuallyActive(access)) return true;
+    const user = data?.user || null;
+    if(!user?.id){
+      toast("Önce giriş yapmanız gerekiyor.");
+      setTimeout(() => {
+        location.href = "/pages/login.html";
+      }, 700);
+      return false;
+    }
 
-  toast("Önce üyelik modelinizi seçmelisiniz.");
-  setTimeout(() => {
-    location.href = "/pages/upgrade_pack.html";
-  }, 700);
-  return false;
+    const access = await fetchAccessState(user.id);
+    if(hasActivePackage(access)) return true;
+
+    toast("Önce üyelik modelinizi seçmelisiniz.");
+    setTimeout(() => {
+      location.href = "/pages/upgrade_pack.html";
+    }, 700);
+    return false;
+  }catch(e){
+    console.warn("[jetonbuy] membership guard hata:", e);
+    toast("Üyelik bilgisi kontrol edilemedi.");
+    return false;
+  }
 }
 
 async function syncBillingUserId(){
@@ -480,7 +535,7 @@ async function syncBillingUserId(){
 
     let profileRow = null;
     if(userId){
-      profileRow = await fetchProfileTokens(userId);
+      profileRow = await fetchProfile(userId);
     }
 
     const tokenVal = resolveTokenValue(user, cached, profileRow);
@@ -512,7 +567,6 @@ window.buy = async function(productId){
 
   try{
     if(!(await checkMembershipUiGuard())) return;
-    if(!(await enforcePackageBeforeTokens())) return;
 
     if(!__billingUserId){
       const cached = getCachedUser();
@@ -524,7 +578,7 @@ window.buy = async function(productId){
 
       let profileRow = null;
       if(userId){
-        profileRow = await fetchProfileTokens(userId);
+        profileRow = await fetchProfile(userId);
       }
 
       const tokenVal = resolveTokenValue(user, cached, profileRow);
