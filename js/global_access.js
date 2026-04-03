@@ -1,319 +1,927 @@
-import { supabase } from "/js/supabase_client.js";
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>italkyAI • Çeviri Ayarları</title>
 
-let __accessCache = null;
-let __popupShown = false;
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
-async function getSessionUser() {
-  const { data, error } = await supabase.auth.getUser();
-  if (error) {
-    console.error("getUser error:", error);
-    return null;
-  }
-  return data?.user || null;
-}
+  <style>
+    :root{
+      --txt: rgba(255,255,255,.97);
+      --muted: rgba(255,255,255,.62);
+      --ai-grad: linear-gradient(135deg,#67e8f9 0%,#818cf8 46%,#f472b6 100%);
+      --panel-bg: rgba(255,255,255,.04);
+      --panel-border: rgba(255,255,255,.10);
+      --accent: #818cf8;
+    }
 
-async function fetchAccessState(force = false) {
-  if (!force && __accessCache) return __accessCache;
+    *{
+      box-sizing:border-box;
+      -webkit-tap-highlight-color:transparent;
+      outline:none;
+    }
 
-  const user = await getSessionUser();
-  if (!user) return null;
+    html,body{
+      margin:0;
+      padding:0;
+      width:100%;
+      min-height:100%;
+      background:#02000f;
+      color:var(--txt);
+      font-family:'Outfit',sans-serif;
+    }
 
-  const { data, error } = await supabase
-    .from("user_access_state")
-    .select("*")
-    .eq("user_id", user.id)
-    .single();
-
-  if (error) {
-    console.error("user_access_state read error:", error);
-    return null;
-  }
-
-  __accessCache = data || null;
-  return __accessCache;
-}
-
-function isPackageActuallyActive(state) {
-  if (!state) return false;
-  if (state.package_active !== true) return false;
-  if (!state.package_ends_at) return true;
-  return new Date(state.package_ends_at).getTime() > Date.now();
-}
-
-function isTrialActuallyActive(state) {
-  if (!state?.trial_ends_at) return false;
-  return new Date(state.trial_ends_at).getTime() > Date.now();
-}
-
-function getTrialDaysLeft(state) {
-  if (!state) return 0;
-
-  if (typeof state.trial_days_left === "number") {
-    return Math.max(0, state.trial_days_left);
-  }
-
-  if (!state.trial_ends_at) return 0;
-
-  const diff = new Date(state.trial_ends_at).getTime() - Date.now();
-  return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
-}
-
-function hasAnyAccess(state) {
-  if (!state) return false;
-  if (state.access_open === true) return true;
-  if (isTrialActuallyActive(state)) return true;
-  if (isPackageActuallyActive(state)) return true;
-  return false;
-}
-
-function removeExistingPopup() {
-  const el = document.getElementById("italkyUpgradePopup");
-  if (el) el.remove();
-}
-
-function createUpgradePopup() {
-  removeExistingPopup();
-
-  const popup = document.createElement("div");
-  popup.id = "italkyUpgradePopup";
-  popup.style.cssText = `
-    position: fixed;
-    inset: 0;
-    z-index: 999999;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    padding: 18px;
-    background: rgba(2,6,12,0.76);
-    backdrop-filter: blur(12px);
-  `;
-
-  popup.innerHTML = `
-    <div style="
-      width:min(100%,390px);
-      border-radius:24px;
-      padding:18px;
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
       background:
-        radial-gradient(circle at top left, rgba(103,232,249,.10), transparent 30%),
-        radial-gradient(circle at top right, rgba(244,114,182,.10), transparent 28%),
-        linear-gradient(180deg, #0b0f18 0%, #070a11 100%);
-      border:1px solid rgba(255,255,255,.12);
-      box-shadow:0 24px 60px rgba(0,0,0,.45);
-      color:#fff;
-      font-family: Outfit, sans-serif;
-    ">
-      <div style="
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        width:64px;
-        height:64px;
-        margin:0 auto 14px;
-        border-radius:18px;
-        background: linear-gradient(135deg,#67e8f9 0%, #818cf8 46%, #f472b6 100%);
-        box-shadow: 0 12px 28px rgba(129,140,248,.24);
-        font-size:28px;
-      ">✨</div>
+        radial-gradient(circle at 50% 0%, rgba(129,140,248,.18) 0%, transparent 44%),
+        radial-gradient(circle at 12% 100%, rgba(244,114,182,.10) 0%, transparent 35%),
+        radial-gradient(circle at 100% 18%, rgba(103,232,249,.10) 0%, transparent 24%);
+      z-index:-1;
+      pointer-events:none;
+    }
 
-      <div style="
-        text-align:center;
-        font-size:20px;
-        font-weight:900;
-        margin-bottom:10px;
-        letter-spacing:-.3px;
-      ">
-        italkyAI Üyelik
-      </div>
+    #pageContent{
+      max-width:560px;
+      margin:0 auto;
+      padding:14px 16px 28px;
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+    }
 
-      <div id="italkyUpgradePopupText" style="
-        text-align:center;
-        font-size:14px;
-        line-height:1.6;
-        color:rgba(255,255,255,.86);
-        margin-bottom:16px;
-      "></div>
+    .topRow{
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
 
-      <button id="italkyUpgradeGoBtn" type="button" style="
-        width:100%;
-        min-height:48px;
-        border:none;
-        border-radius:14px;
-        background: linear-gradient(135deg,#f59e0b 0%, #f97316 100%);
-        color:#fff;
-        font-size:14px;
-        font-weight:900;
-        cursor:pointer;
-        box-shadow:0 14px 30px rgba(249,115,22,.24);
-      ">
-        Üyelik Modellerini Gör
-      </button>
-
-      <button id="italkyUpgradeLaterBtn" type="button" style="
-        width:100%;
-        min-height:44px;
-        margin-top:10px;
-        border:none;
-        border-radius:12px;
-        background: rgba(255,255,255,.08);
-        color: rgba(255,255,255,.82);
-        font-size:13px;
-        font-weight:800;
-        cursor:pointer;
-      ">
-        Kapat
-      </button>
-    </div>
-  `;
-
-  document.body.appendChild(popup);
-
-  const goBtn = document.getElementById("italkyUpgradeGoBtn");
-  const laterBtn = document.getElementById("italkyUpgradeLaterBtn");
-
-  goBtn?.addEventListener("click", () => {
-    location.href = "/pages/upgrade_pack.html";
-  });
-
-  laterBtn?.addEventListener("click", () => {
-    popup.style.display = "none";
-  });
-
-  return popup;
-}
-
-function showUpgradePopup(state) {
-  if (__popupShown) return;
-  if (!state) return;
-
-  const packageActive = isPackageActuallyActive(state);
-  const trialActive = isTrialActuallyActive(state);
-  const remainingDays = getTrialDaysLeft(state);
-
-  if (packageActive) return;
-  if (!trialActive) return;
-  if (remainingDays > 3) return;
-
-  const popup =
-    document.getElementById("italkyUpgradePopup") || createUpgradePopup();
-  const text = document.getElementById("italkyUpgradePopupText");
-
-  if (!popup || !text) return;
-
-  text.innerHTML = `
-    Ücretsiz kullanım hakkınız <b>${remainingDays} gün</b> kaldı.<br><br>
-    Tüm modülleri sınırsız kullanmak, kültürel çeviri ve kendi sesinizle çeviri gibi gelişmiş özellikleri açmak için üyelik modelinizi seçin.
-  `;
-
-  popup.style.display = "flex";
-  __popupShown = true;
-}
-
-function replacePageWithLockScreen() {
-  document.body.innerHTML = `
-    <div style="
-      min-height:100vh;
+    .backBtn{
+      width:42px;
+      height:42px;
+      border-radius:14px;
+      border:1px solid var(--panel-border);
+      background:rgba(255,255,255,.06);
       display:flex;
       align-items:center;
       justify-content:center;
-      padding:24px;
-      background:
-        radial-gradient(circle at top left, rgba(103,232,249,.08), transparent 28%),
-        radial-gradient(circle at top right, rgba(244,114,182,.08), transparent 26%),
-        linear-gradient(180deg,#080b12 0%, #05070a 100%);
+      cursor:pointer;
+      flex:0 0 auto;
+      box-shadow:0 8px 18px rgba(0,0,0,.16);
+    }
+
+    .backBtn:active{ transform:scale(.96); }
+
+    .backBtn svg{
+      width:20px;
+      height:20px;
+      stroke:#fff;
+      fill:none;
+      stroke-width:2.5;
+    }
+
+    .page-head{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      min-width:0;
+    }
+
+    .title{
+      font-family:'Space Grotesk',sans-serif;
+      font-size:29px;
+      font-weight:700;
+      margin:0;
+      line-height:1;
+      letter-spacing:-1px;
+    }
+
+    .title .ai{
+      background:var(--ai-grad);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+
+    .page-sub{
+      margin:0;
+      font-size:12px;
+      line-height:1.5;
+      color:var(--muted);
+    }
+
+    .settings-panel{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      background:linear-gradient(145deg, rgba(255,255,255,.06), rgba(255,255,255,.015));
+      border:1px solid var(--panel-border);
+      border-radius:24px;
+      padding:16px;
+      backdrop-filter:blur(15px);
+      -webkit-backdrop-filter:blur(15px);
+      box-shadow:0 14px 30px rgba(0,0,0,.16);
+    }
+
+    .panel-title{
+      margin:0;
+      font-family:'Space Grotesk',sans-serif;
+      font-size:16px;
+      font-weight:900;
       color:#fff;
-      font-family: Outfit, sans-serif;
+    }
+
+    .panel-sub{
+      margin:0;
+      font-size:11px;
+      line-height:1.45;
+      color:var(--muted);
+    }
+
+    .choice-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+
+    .choice-card{
+      padding:14px;
+      border-radius:18px;
+      background:rgba(255,255,255,.035);
+      border:1px solid rgba(255,255,255,.08);
+      cursor:pointer;
+      transition:.2s ease;
+      min-height:108px;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+      gap:8px;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .choice-card:active{ transform:scale(.985); }
+
+    .choice-card.active{
+      border-color:#818cf8;
+      background:rgba(129,140,248,.16);
+      box-shadow:0 0 0 1px rgba(129,140,248,.15) inset, 0 12px 24px rgba(0,0,0,.14);
+    }
+
+    .choice-top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+    }
+
+    .choice-name{
+      font-size:14px;
+      font-weight:900;
+      color:#fff;
+      line-height:1.2;
+    }
+
+    .choice-badge{
+      font-size:10px;
+      font-weight:900;
+      letter-spacing:.4px;
+      padding:6px 8px;
+      border-radius:999px;
+      white-space:nowrap;
+      border:1px solid rgba(255,255,255,.12);
+    }
+
+    .choice-badge.free{
+      color:#bbf7d0;
+      background:rgba(34,197,94,.10);
+      border-color:rgba(34,197,94,.20);
+    }
+
+    .choice-badge.paid{
+      color:#fde68a;
+      background:rgba(245,158,11,.10);
+      border-color:rgba(245,158,11,.20);
+    }
+
+    .choice-desc{
+      font-size:11px;
+      line-height:1.45;
+      color:rgba(255,255,255,.72);
+      word-break:break-word;
+    }
+
+    .clone-actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:8px;
+    }
+
+    .clone-btn{
+      min-height:38px;
+      padding:0 12px;
+      border:none;
+      border-radius:12px;
+      cursor:pointer;
+      font-family:inherit;
+      font-size:12px;
+      font-weight:900;
+      transition:.18s ease;
+    }
+
+    .clone-btn.primary{
+      background:var(--ai-grad);
+      color:#05060d;
+    }
+
+    .clone-btn.secondary{
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.10);
+      color:#fff;
+    }
+
+    .clone-btn.ghost{
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.08);
+      color:#dbeafe;
+    }
+
+    .clone-btn:disabled{
+      opacity:.38;
+      cursor:not-allowed;
+      filter:grayscale(.2);
+    }
+
+    .summary-card{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      background:linear-gradient(145deg, rgba(255,255,255,.06), rgba(255,255,255,.015));
+      border:1px solid var(--panel-border);
+      border-radius:24px;
+      padding:16px;
+      backdrop-filter:blur(15px);
+      -webkit-backdrop-filter:blur(15px);
+      box-shadow:0 14px 30px rgba(0,0,0,.16);
+    }
+
+    .summary-line{
+      font-size:13px;
+      color:#fff;
+      line-height:1.45;
+    }
+
+    .summary-line span{
+      color:rgba(255,255,255,.72);
+    }
+
+    .action-grid{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:12px;
+    }
+
+    .btn{
+      min-height:54px;
+      border-radius:18px;
+      font-family:inherit;
+      font-weight:800;
+      font-size:15px;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border:none;
+      transition:all .2s;
+      text-decoration:none;
+    }
+
+    .btn:active{ transform:scale(.98); }
+
+    .btn-primary{
+      background:var(--ai-grad);
+      color:#05060d;
+      box-shadow:0 12px 26px rgba(129,140,248,.18);
+    }
+
+    .btn-secondary{
+      background:rgba(255,255,255,.05);
+      color:#fff;
+      border:1px solid var(--panel-border);
+    }
+
+    .note{
+      font-size:11px;
+      line-height:1.5;
+      color:var(--muted);
       text-align:center;
-    ">
-      <div style="
-        width:min(100%,420px);
-        border-radius:26px;
-        padding:22px;
-        background:rgba(255,255,255,.05);
-        border:1px solid rgba(255,255,255,.10);
-        box-shadow:0 26px 60px rgba(0,0,0,.34);
-      ">
-        <div style="
-          width:76px;
-          height:76px;
-          margin:0 auto 14px;
-          border-radius:22px;
-          display:flex;
-          align-items:center;
-          justify-content:center;
-          background:linear-gradient(135deg,#f59e0b 0%, #f97316 100%);
-          font-size:34px;
-        ">🔒</div>
+      padding:0 4px;
+    }
 
-        <div style="font-size:24px;font-weight:900;line-height:1.1;margin-bottom:10px;">
-          Kullanım Süresi Doldu
+    .toast{
+      position:fixed;
+      left:50%;
+      top:18px;
+      transform:translateX(-50%) translateY(-120px);
+      background:rgba(10,10,18,.94);
+      border:1px solid rgba(165,180,252,.35);
+      padding:10px 14px;
+      border-radius:999px;
+      color:#fff;
+      z-index:999999;
+      font-weight:900;
+      font-size:12px;
+      transition:.25s;
+      backdrop-filter:blur(12px);
+      pointer-events:none;
+      max-width:min(92vw,520px);
+      text-align:center;
+      box-shadow:0 10px 24px rgba(0,0,0,.18);
+    }
+
+    .toast.show{
+      transform:translateX(-50%) translateY(0);
+    }
+
+    .modal{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.52);
+      backdrop-filter:blur(6px);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:999999;
+      padding:20px;
+    }
+
+    .modal.open{
+      display:flex;
+    }
+
+    .modal-card{
+      width:min(100%, 420px);
+      border-radius:24px;
+      padding:18px;
+      background:linear-gradient(145deg, rgba(16,16,24,.96), rgba(10,10,18,.96));
+      border:1px solid rgba(255,255,255,.10);
+      box-shadow:0 24px 50px rgba(0,0,0,.30);
+    }
+
+    .fancy-jeton-card{
+      position:relative;
+      overflow:hidden;
+      background:
+        radial-gradient(circle at 18% 0%, rgba(103,232,249,.14) 0%, transparent 28%),
+        radial-gradient(circle at 84% 12%, rgba(244,114,182,.16) 0%, transparent 26%),
+        linear-gradient(145deg, rgba(18,18,30,.98), rgba(9,10,18,.98));
+      border:1px solid rgba(255,255,255,.12);
+      box-shadow:
+        0 24px 50px rgba(0,0,0,.34),
+        0 0 0 1px rgba(255,255,255,.03) inset;
+    }
+
+    .fancy-jeton-card::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:
+        linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+      background-size:22px 22px;
+      mask-image:linear-gradient(180deg, rgba(255,255,255,.5), transparent 78%);
+      pointer-events:none;
+    }
+
+    .fancy-jeton-icon{
+      width:54px;
+      height:54px;
+      border-radius:18px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      margin:0 0 12px;
+      font-size:24px;
+      font-weight:900;
+      color:#fff;
+      background:var(--ai-grad);
+      box-shadow:0 12px 24px rgba(129,140,248,.22);
+      position:relative;
+      z-index:1;
+    }
+
+    .modal-title{
+      margin:0 0 8px;
+      font-family:'Space Grotesk',sans-serif;
+      font-size:20px;
+      font-weight:900;
+      color:#fff;
+      position:relative;
+      z-index:1;
+    }
+
+    .modal-text{
+      margin:0;
+      font-size:13px;
+      line-height:1.6;
+      color:rgba(255,255,255,.76);
+      position:relative;
+      z-index:1;
+    }
+
+    .modal-mini-note{
+      margin-top:12px;
+      font-size:11px;
+      line-height:1.45;
+      color:rgba(255,255,255,.56);
+      font-weight:700;
+      position:relative;
+      z-index:1;
+    }
+
+    .modal-actions{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      margin-top:16px;
+      position:relative;
+      z-index:1;
+    }
+
+    .modal-btn{
+      min-height:46px;
+      border:none;
+      border-radius:16px;
+      cursor:pointer;
+      font-family:inherit;
+      font-size:13px;
+      font-weight:900;
+    }
+
+    .modal-btn.primary{
+      background:var(--ai-grad);
+      color:#05060d;
+    }
+
+    .modal-btn.secondary{
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.10);
+      color:#fff;
+    }
+
+    @media (max-width:390px){
+      #pageContent{ padding:12px 14px 22px; }
+      .title{ font-size:25px; }
+      .choice-grid{ grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="pageContent">
+  <div class="topRow">
+    <button class="backBtn" id="backBtn" type="button" aria-label="Geri dön">
+      <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+
+    <section class="page-head">
+      <h1 class="title">Çeviri <span class="ai">Ayarları</span></h1>
+      <p class="page-sub">Sesini, tarzını ve çeviri modunu seç. Biraz parlak, biraz akıllı, biraz da keyifli olsun ✨</p>
+    </section>
+  </div>
+
+  <section class="settings-panel">
+    <h2 class="panel-title">Ses Seçimi</h2>
+    <p class="panel-sub">FaceToFace ve SideToSide bu ortak ayarı kullanır.</p>
+
+    <div class="choice-grid" id="voiceGrid">
+      <div class="choice-card" data-voice="auto">
+        <div class="choice-top">
+          <div class="choice-name">Otomatik</div>
+          <div class="choice-badge free">Ücretsiz</div>
         </div>
+        <div class="choice-desc">Sistem uygun ücretsiz sesi otomatik kullanır.</div>
+      </div>
 
-        <div style="font-size:14px;line-height:1.6;color:rgba(255,255,255,.82);margin-bottom:16px;">
-          Ücretsiz kullanım süreniz tamamlandı.<br>
-          Devam etmek için paket seçmelisiniz.
+      <div class="choice-card" data-voice="clone" id="cloneCard">
+        <div class="choice-top">
+          <div class="choice-name">Kendi Sesim</div>
+          <div class="choice-badge paid">Jetonlu</div>
         </div>
+        <div class="choice-desc" id="cloneVoiceDesc">Henüz özel ses profili oluşturmadınız.</div>
 
-        <button onclick="location.href='/pages/upgrade_pack.html'" style="
-          width:100%;
-          min-height:50px;
-          border:none;
-          border-radius:14px;
-          background:linear-gradient(135deg,#f59e0b 0%, #f97316 100%);
-          color:#fff;
-          font-size:14px;
-          font-weight:900;
-          cursor:pointer;
-        ">
-          Paket Seç
-        </button>
+        <div class="clone-actions">
+          <button class="clone-btn primary" id="cloneUseBtn" type="button" disabled>Kullan</button>
+          <button class="clone-btn secondary" id="cloneListenBtn" type="button" disabled>Dinle</button>
+          <button class="clone-btn ghost" id="cloneEditBtn" type="button">Oluştur / Güncelle</button>
+        </div>
       </div>
     </div>
-  `;
-}
+  </section>
 
-export async function initGlobalAccess() {
-  createUpgradePopup();
+  <section class="settings-panel">
+    <h2 class="panel-title">Çeviri Modu</h2>
+    <p class="panel-sub">Kültürel çeviri, anlamı daha doğal ve daha insan gibi aktarır.</p>
 
-  const user = await getSessionUser();
-  if (!user) return;
+    <div class="choice-grid" id="translateGrid">
+      <div class="choice-card" data-translate="normal">
+        <div class="choice-top">
+          <div class="choice-name">Translate</div>
+          <div class="choice-badge free">Ücretsiz</div>
+        </div>
+        <div class="choice-desc">Hızlı ve düz çeviri yapar. Günlük kullanım için hafif moddur.</div>
+      </div>
 
-  const state = await fetchAccessState(true);
+      <div class="choice-card" data-translate="cultural">
+        <div class="choice-top">
+          <div class="choice-name">Kültürel Translate</div>
+          <div class="choice-badge paid">Jetonlu</div>
+        </div>
+        <div class="choice-desc">Daha doğal, bağlama daha uygun ve daha insan gibi çeviri sunar.</div>
+      </div>
+    </div>
+  </section>
 
-  if (!state) {
-    replacePageWithLockScreen();
-    return;
+  <section class="summary-card">
+    <div class="summary-line"><strong>Seçili Ses:</strong> <span id="voiceSummary">Otomatik</span></div>
+    <div class="summary-line"><strong>Seçili Mod:</strong> <span id="translateSummary">Translate</span></div>
+  </section>
+
+  <section class="action-grid">
+    <button class="btn btn-primary" id="saveBtn" type="button">Kaydet ve Ana Sayfaya Dön</button>
+    <button class="btn btn-secondary" id="cancelBtn" type="button">Vazgeç</button>
+  </section>
+
+  <div class="note">
+    Burada kaydettiğin seçimler FaceToFace ve SideToSide içinde ortak kullanılır.
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="modal" id="uiModal">
+  <div class="modal-card fancy-jeton-card">
+    <div class="fancy-jeton-icon">✦</div>
+
+    <h3 class="modal-title" id="uiModalTitle">Jeton Gerekli</h3>
+
+    <p class="modal-text" id="uiModalText">
+      Bu özellik standart kullanımın ötesinde, gelişmiş yapay zekâ desteğiyle çalışır.
+      Kendi Sesim ve Kültürel Çeviri deneyimini başlatmak için jeton yüklemeniz gereklidir.
+    </p>
+
+    <div class="modal-mini-note" id="uiModalMiniNote">
+      Jeton yüklemek için aşağıdaki butona dokunun.
+    </div>
+
+    <div class="modal-actions">
+      <button class="modal-btn primary" id="uiModalGo">Jeton Yükle</button>
+      <button class="modal-btn secondary" id="uiModalClose">Daha Sonra</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { supabase } from "/js/supabase_client.js";
+  import { mountShell } from "/js/ui_shell.js";
+
+  try {
+    mountShell({ scroll: "auto" });
+  } catch (e) {
+    console.error("ui_shell HATASI:", e);
   }
 
-  if (!hasAnyAccess(state)) {
-    replacePageWithLockScreen();
-    return;
+  const VOICE_KEY = "facetoface_voice_mode";
+  const TRANSLATE_KEY = "facetoface_translate_mode";
+  const LEGACY_TTS_KEY = "tts_voice";
+  const LEGACY_LIVE_KEY = "live_interpreter_voice";
+
+  const voiceGrid = document.getElementById("voiceGrid");
+  const translateGrid = document.getElementById("translateGrid");
+  const voiceSummary = document.getElementById("voiceSummary");
+  const translateSummary = document.getElementById("translateSummary");
+  const saveBtn = document.getElementById("saveBtn");
+  const cancelBtn = document.getElementById("cancelBtn");
+  const backBtn = document.getElementById("backBtn");
+  const toastEl = document.getElementById("toast");
+  const cloneVoiceDesc = document.getElementById("cloneVoiceDesc");
+
+  const cloneUseBtn = document.getElementById("cloneUseBtn");
+  const cloneListenBtn = document.getElementById("cloneListenBtn");
+  const cloneEditBtn = document.getElementById("cloneEditBtn");
+
+  const uiModal = document.getElementById("uiModal");
+  const uiModalTitle = document.getElementById("uiModalTitle");
+  const uiModalText = document.getElementById("uiModalText");
+  const uiModalGo = document.getElementById("uiModalGo");
+  const uiModalClose = document.getElementById("uiModalClose");
+
+  let voiceMode = normalizeVoiceMode(
+    localStorage.getItem(VOICE_KEY) ||
+    localStorage.getItem(LEGACY_TTS_KEY) ||
+    localStorage.getItem(LEGACY_LIVE_KEY) ||
+    "auto"
+  );
+
+  let translateMode = normalizeTranslateMode(localStorage.getItem(TRANSLATE_KEY) || "normal");
+  let cloneReady = false;
+  let currentUserId = "";
+  let currentPreviewAudio = null;
+
+  function stopCurrentPreview() {
+    try {
+      if (currentPreviewAudio) {
+        currentPreviewAudio.pause();
+        currentPreviewAudio.currentTime = 0;
+      }
+    } catch {}
+    currentPreviewAudio = null;
   }
 
-  showUpgradePopup(state);
-}
-
-export async function enforcePackageBeforeTokens() {
-  const state = await fetchAccessState(true);
-
-  if (!state) {
-    alert("Erişim bilgisi alınamadı.");
-    location.href = "/pages/upgrade_pack.html";
-    return false;
+  function normalizeVoiceMode(v){
+    const x = String(v || "").trim().toLowerCase();
+    if (x === "clone") return "clone";
+    return "auto";
   }
 
-  const packageActive = isPackageActuallyActive(state);
+  function normalizeTranslateMode(v){
+    return String(v || "").trim().toLowerCase() === "cultural" ? "cultural" : "normal";
+  }
 
-  if (packageActive) return true;
+  function voiceLabel(v){
+    if (v === "clone") return "Kendi Sesim";
+    return "Otomatik";
+  }
 
-  alert("Jeton satın almak için önce üyelik modelinizi belirlemelisiniz.");
-  location.href = "/pages/upgrade_pack.html";
-  return false;
-}
+  function translateLabel(v){
+    return normalizeTranslateMode(v) === "cultural" ? "Kültürel Translate" : "Translate";
+  }
 
-export async function getGlobalAccessState() {
-  return await fetchAccessState(true);
-}
+  function showToast(msg){
+    if(!toastEl) return;
+    toastEl.textContent = String(msg || "");
+    toastEl.classList.add("show");
+    clearTimeout(window.__translationSettingsToast);
+    window.__translationSettingsToast = setTimeout(() => {
+      toastEl.classList.remove("show");
+    }, 1600);
+  }
 
-export function clearGlobalAccessCache() {
-  __accessCache = null;
-}
+  function showUiModal(
+    message = "Bu özellik standart kullanımın ötesinde, gelişmiş yapay zekâ desteğiyle çalışır. Kendi Sesim ve Kültürel Çeviri deneyimini başlatmak için jeton yüklemeniz gereklidir.",
+    title = "Jeton Gerekli",
+    miniNote = "Jeton yüklemek için aşağıdaki butona dokunun."
+  ) {
+    uiModalTitle.textContent = title;
+    uiModalText.textContent = message;
+
+    const mini = document.getElementById("uiModalMiniNote");
+    if (mini) mini.textContent = miniNote;
+
+    uiModal.classList.add("open");
+  }
+
+  function closeUiModal() {
+    uiModal.classList.remove("open");
+  }
+
+  uiModalGo.addEventListener("click", () => {
+    location.href = "/pages/jetonbuy.html";
+  });
+
+  uiModalClose.addEventListener("click", closeUiModal);
+  uiModal.addEventListener("click", (e) => {
+    if (e.target === uiModal) closeUiModal();
+  });
+
+  function paintSelections(){
+    voiceGrid?.querySelectorAll(".choice-card").forEach(card => {
+      card.classList.toggle("active", normalizeVoiceMode(card.dataset.voice) === voiceMode);
+    });
+
+    translateGrid?.querySelectorAll(".choice-card").forEach(card => {
+      card.classList.toggle("active", normalizeTranslateMode(card.dataset.translate) === translateMode);
+    });
+  }
+
+  function refreshSummary(){
+    if(voiceSummary) voiceSummary.textContent = voiceLabel(voiceMode);
+    if(translateSummary) translateSummary.textContent = translateLabel(translateMode);
+  }
+
+  function refreshCloneButtons() {
+    cloneUseBtn.disabled = !cloneReady;
+    cloneListenBtn.disabled = !cloneReady;
+  }
+
+  async function checkVoiceProfile(){
+    try{
+      const { data: { user } } = await supabase.auth.getUser();
+      currentUserId = user?.id || "";
+
+      if(!user){
+        cloneReady = false;
+        if(cloneVoiceDesc) cloneVoiceDesc.textContent = "Henüz özel ses profili oluşturmadınız.";
+        refreshCloneButtons();
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("voice_sample_path, tts_voice_ready, tts_voice_id")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if(error){
+        cloneReady = false;
+        if(cloneVoiceDesc) cloneVoiceDesc.textContent = "Henüz özel ses profili oluşturmadınız.";
+        refreshCloneButtons();
+        return;
+      }
+
+      const hasSamplePath =
+        !!data?.voice_sample_path &&
+        String(data.voice_sample_path).trim() !== "" &&
+        String(data.voice_sample_path).trim() !== "[]" &&
+        String(data.voice_sample_path).trim() !== "null";
+
+      const hasReadyVoice = !!(data?.tts_voice_ready && data?.tts_voice_id);
+
+      cloneReady = !!(hasSamplePath || hasReadyVoice);
+
+      if(cloneReady){
+        if(cloneVoiceDesc){
+          cloneVoiceDesc.textContent = "Kayıtlı özel sesiniz hazır. Kullanabilir, dinleyebilir veya güncelleyebilirsiniz.";
+        }
+      }else{
+        if(cloneVoiceDesc){
+          cloneVoiceDesc.textContent = "Henüz özel ses profili oluşturmadınız.";
+        }
+      }
+
+      refreshCloneButtons();
+    }catch(e){
+      cloneReady = false;
+      if(cloneVoiceDesc) cloneVoiceDesc.textContent = "Henüz özel ses profili oluşturmadınız.";
+      refreshCloneButtons();
+    }
+  }
+
+  async function playPreviewFromBase64(base64Audio, failMsg) {
+    stopCurrentPreview();
+    try {
+      const audio = new Audio(`data:audio/mp3;base64,${base64Audio}`);
+      currentPreviewAudio = audio;
+      audio.onended = () => {
+        if (currentPreviewAudio === audio) currentPreviewAudio = null;
+      };
+      audio.onerror = () => {
+        if (currentPreviewAudio === audio) currentPreviewAudio = null;
+        showToast(failMsg);
+      };
+      await audio.play();
+    } catch {
+      currentPreviewAudio = null;
+      showToast(failMsg);
+    }
+  }
+
+  async function previewCloneVoice(){
+    if (!cloneReady || !currentUserId) {
+      showToast("Önce kendi sesinizi oluşturun");
+      return;
+    }
+
+    showToast("Kendi sesiniz hazırlanıyor...");
+    try{
+      const r = await fetch(`https://italky-api.onrender.com/api/tts`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: "",
+          lang: "tr",
+          user_id: currentUserId,
+          voice: "clone",
+          tone: "neutral",
+          module: "clone_preview"
+        })
+      });
+
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok || !j?.audio_base64) {
+        showToast("Kendi sesiniz oynatılamadı");
+        return;
+      }
+
+      await playPreviewFromBase64(j.audio_base64, "Kendi sesiniz oynatılamadı");
+    } catch {
+      showToast("Kendi sesiniz oynatılamadı");
+    }
+  }
+
+  function saveSettings(){
+    localStorage.setItem(VOICE_KEY, voiceMode);
+    localStorage.setItem(TRANSLATE_KEY, translateMode);
+    localStorage.setItem(LEGACY_TTS_KEY, voiceMode);
+    localStorage.setItem(LEGACY_LIVE_KEY, voiceMode);
+  }
+
+  function goHome(){
+    stopCurrentPreview();
+    location.href = "/pages/home.html";
+  }
+
+  document.querySelector('[data-voice="auto"]')?.addEventListener("click", () => {
+    voiceMode = "auto";
+    paintSelections();
+    refreshSummary();
+    showToast("Ses seçimi güncellendi");
+  });
+
+  document.getElementById("cloneCard")?.addEventListener("click", () => {
+    if (!cloneReady) {
+      showUiModal(
+        "Bu özellik standart kullanımın ötesinde, gelişmiş yapay zekâ desteğiyle çalışır. Kendi Sesim deneyimini başlatmak için jeton yüklemeniz gereklidir."
+      );
+    }
+  });
+
+  cloneUseBtn?.addEventListener("click", () => {
+    if (!cloneReady) {
+      showUiModal(
+        "Bu özellik standart kullanımın ötesinde, gelişmiş yapay zekâ desteğiyle çalışır. Kendi Sesim deneyimini başlatmak için jeton yüklemeniz gereklidir."
+      );
+      return;
+    }
+
+    showUiModal(
+      "Bu özellik standart kullanımın ötesinde, gelişmiş yapay zekâ desteğiyle çalışır. Kendi Sesim deneyimini başlatmak için jeton yüklemeniz gereklidir."
+    );
+  });
+
+  cloneListenBtn?.addEventListener("click", () => {
+    if (!cloneReady) {
+      showUiModal(
+        "Bu özellik standart kullanımın ötesinde, gelişmiş yapay zekâ desteğiyle çalışır. Kendi Sesim önizlemesini dinlemek için jeton yüklemeniz gereklidir."
+      );
+      return;
+    }
+
+    showUiModal(
+      "Bu özellik standart kullanımın ötesinde, gelişmiş yapay zekâ desteğiyle çalışır. Kendi Sesim önizlemesini dinlemek için jeton yüklemeniz gereklidir."
+    );
+  });
+
+  cloneEditBtn?.addEventListener("click", () => {
+    showUiModal(
+      "Bu özellik standart kullanımın ötesinde, gelişmiş yapay zekâ desteğiyle çalışır. Kendi Sesim profilinizi oluşturmak için jeton yüklemeniz gereklidir."
+    );
+  });
+
+  translateGrid?.querySelectorAll(".choice-card").forEach(card => {
+    card.addEventListener("click", () => {
+      const selected = normalizeTranslateMode(card.dataset.translate || "normal");
+
+      if (selected === "cultural") {
+        showUiModal(
+          "Bu özellik standart kullanımın ötesinde, gelişmiş yapay zekâ desteğiyle çalışır. Kültürel Çeviri deneyimini başlatmak için jeton yüklemeniz gereklidir."
+        );
+        return;
+      }
+
+      translateMode = selected;
+      paintSelections();
+      refreshSummary();
+      showToast("Çeviri modu güncellendi");
+    });
+  });
+
+  saveBtn?.addEventListener("click", () => {
+    saveSettings();
+    showToast("Ayarlar kaydedildi");
+    setTimeout(() => {
+      goHome();
+    }, 350);
+  });
+
+  cancelBtn?.addEventListener("click", () => {
+    goHome();
+  });
+
+  backBtn?.addEventListener("click", () => {
+    goHome();
+  });
+
+  await checkVoiceProfile();
+  paintSelections();
+  refreshSummary();
+</script>
+
+</body>
+</html>
