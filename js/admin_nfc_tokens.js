@@ -17,10 +17,6 @@ export function generateManualCode() {
   return String(Math.floor(100000 + Math.random() * 900000));
 }
 
-/**
- * QR artık sabit olacak.
- * UID veya kısa kod QR içine gömülmeyecek.
- */
 export function buildQrInstallUrl() {
   return "https://italky.ai/pages/install.html";
 }
