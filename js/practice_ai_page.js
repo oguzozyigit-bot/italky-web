@@ -1,3 +1,5 @@
+// FILE: /js/practice_ai_page.js
+
 import { supabase } from "/js/supabase_client.js";
 import {
   commitUsage,
@@ -20,6 +22,8 @@ const STORAGE = {
   lang: "italky_practice_lang_v3",
   history: "italky_practice_ai_history_v4"
 };
+
+const PRACTICE_REQUIRED_TOKENS = 1;
 
 function resolveLang() {
   const q = new URLSearchParams(location.search);
@@ -71,69 +75,311 @@ const state = {
 let audioCtx = null;
 
 /* ---------------------------------------------------
-   ACCESS
+   TOKEN ACCESS
 --------------------------------------------------- */
-function getAccessState() {
-  const a = window.__ITALKY_ACCESS__ || {};
-  return {
-    raw: a,
-    is_logged_in: a.is_logged_in === true,
-    package_code: String(
-      a.package_code ||
-      a.selected_package_code ||
-      a.plan ||
-      "none"
-    ).toLowerCase(),
-    trial_active: a.trial_active === true,
-    jeton_balance: Number(a.jeton_balance ?? a.tokens ?? 0),
-    can_practice: a.can_practice === true
-  };
+function safeNum(v, fallback = 0) {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : fallback;
 }
 
-function openMembershipModalFallback(message) {
-  alert(message || "Bu modülü kullanabilmek için üyelik gerekir.");
-  location.href = "/pages/upgrade_pack.html";
-  return false;
+async function getCurrentUser() {
+  try {
+    const { data, error } = await supabase.auth.getUser();
+    if (error) throw error;
+    return data?.user || null;
+  } catch (e) {
+    console.warn("getCurrentUser error:", e);
+    return null;
+  }
 }
 
-function ensurePracticeAccess() {
-  const access = getAccessState();
-  console.log("PRACTICE ACCESS RAW:", access.raw);
-  console.log("PRACTICE ACCESS PARSED:", access);
+async function getTokenBalance() {
+  try {
+    const user = await getCurrentUser();
+    if (!user?.id) return 0;
 
-  const TEST_BYPASS = true;
-  if (TEST_BYPASS) return true;
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("tokens")
+      .eq("id", user.id)
+      .maybeSingle();
 
-  if (!access.is_logged_in) {
-    return openMembershipModalFallback("Bu modülü kullanabilmek için üye olmanız gerekir. Lütfen üyelik sayfasına gidin.");
+    if (error) throw error;
+    return safeNum(data?.tokens, 0);
+  } catch (e) {
+    console.warn("getTokenBalance error:", e);
+    return 0;
   }
-
-  if (access.trial_active) {
-    return openMembershipModalFallback("Practice AI deneme paketinde kapalıdır. Devam etmek için uygun üyelik almalısınız.");
-  }
-
-  if (String(access.package_code).includes("translate")) {
-    return openMembershipModalFallback("Practice AI, Translate paketinde kapalıdır. Bu modül için uygun üyelik almalısınız.");
-  }
-
-  if (!access.can_practice) {
-    return openMembershipModalFallback("Bu modülü kullanabilmek için uygun üyelik gerekir. Lütfen üyelik sayfasına gidin.");
-  }
-
-  return true;
 }
 
-async function ensureTokenAccess() {
-  const access = getAccessState();
+function ensureTokenPopupStyles() {
+  if (document.getElementById("practiceTokenPopupStyles")) return;
 
-  const TEST_BYPASS = true;
-  if (TEST_BYPASS) return true;
+  const style = document.createElement("style");
+  style.id = "practiceTokenPopupStyles";
+  style.textContent = `
+    .tp-backdrop{
+      position:fixed;
+      inset:0;
+      z-index:999999;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      background:rgba(3,7,18,.72);
+      backdrop-filter:blur(10px);
+    }
 
-  if (access.jeton_balance <= 0) {
-    alert("Practice AI için jeton gerekli.");
+    .tp-card{
+      width:min(100%, 430px);
+      border-radius:28px;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.12);
+      background:linear-gradient(180deg, rgba(10,14,28,.98), rgba(6,10,22,.98));
+      box-shadow:0 24px 80px rgba(0,0,0,.45);
+      color:#fff;
+      font-family:Outfit,system-ui,sans-serif;
+    }
+
+    .tp-top{
+      padding:20px 20px 14px;
+      background:linear-gradient(135deg,#67e8f9,#60a5fa,#34d399);
+      color:#08111d;
+    }
+
+    .tp-badge{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 12px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:900;
+      background:rgba(255,255,255,.24);
+      border:1px solid rgba(255,255,255,.25);
+    }
+
+    .tp-title{
+      margin:14px 0 6px;
+      font-size:25px;
+      font-weight:900;
+      line-height:1.12;
+    }
+
+    .tp-sub{
+      margin:0;
+      font-size:14px;
+      line-height:1.5;
+      color:rgba(8,17,29,.86);
+      font-weight:700;
+    }
+
+    .tp-body{
+      padding:18px 20px 20px;
+      display:grid;
+      gap:12px;
+    }
+
+    .tp-box{
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.04);
+      border-radius:18px;
+      padding:14px;
+    }
+
+    .tp-label{
+      font-size:12px;
+      color:rgba(255,255,255,.6);
+      margin-bottom:6px;
+    }
+
+    .tp-value{
+      font-size:18px;
+      font-weight:900;
+      color:#fff;
+    }
+
+    .tp-note{
+      margin:2px 0 0;
+      color:rgba(255,255,255,.76);
+      font-size:13px;
+      line-height:1.5;
+    }
+
+    .tp-actions{
+      display:grid;
+      gap:10px;
+      margin-top:4px;
+    }
+
+    .tp-btn{
+      appearance:none;
+      border:none;
+      width:100%;
+      min-height:52px;
+      border-radius:16px;
+      cursor:pointer;
+      font-weight:900;
+      font-size:15px;
+      transition:transform .14s ease, opacity .14s ease;
+    }
+
+    .tp-btn:active{
+      transform:scale(.985);
+    }
+
+    .tp-btn-primary{
+      background:linear-gradient(135deg,#67e8f9,#60a5fa,#34d399);
+      color:#08111d;
+      box-shadow:0 10px 24px rgba(96,165,250,.22);
+    }
+
+    .tp-btn-secondary{
+      background:rgba(255,255,255,.06);
+      color:#fff;
+      border:1px solid rgba(255,255,255,.1);
+    }
+
+    .lang-sheet{
+      position:fixed;
+      inset:0;
+      z-index:999998;
+      display:flex;
+      align-items:flex-end;
+      justify-content:center;
+      background:rgba(3,7,18,.55);
+      backdrop-filter:blur(8px);
+      padding:14px;
+    }
+
+    .lang-sheet-card{
+      width:min(100%, 460px);
+      border-radius:24px;
+      border:1px solid rgba(255,255,255,.12);
+      background:linear-gradient(180deg, rgba(10,14,28,.98), rgba(6,10,22,.98));
+      box-shadow:0 24px 80px rgba(0,0,0,.45);
+      color:#fff;
+      padding:16px;
+      font-family:Outfit,system-ui,sans-serif;
+    }
+
+    .lang-sheet-title{
+      margin:0 0 12px;
+      font-size:20px;
+      font-weight:900;
+    }
+
+    .lang-list{
+      display:grid;
+      gap:10px;
+    }
+
+    .lang-item{
+      min-height:52px;
+      border:none;
+      border-radius:16px;
+      cursor:pointer;
+      padding:0 14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.08);
+      color:#fff;
+      font-weight:800;
+      font-size:15px;
+    }
+
+    .lang-item.active{
+      background:linear-gradient(135deg, rgba(103,232,249,.18), rgba(96,165,250,.16));
+      border-color:rgba(103,232,249,.34);
+    }
+
+    .lang-close{
+      margin-top:12px;
+      width:100%;
+      min-height:48px;
+      border:none;
+      border-radius:16px;
+      cursor:pointer;
+      font-weight:900;
+      font-size:15px;
+      background:rgba(255,255,255,.06);
+      color:#fff;
+      border:1px solid rgba(255,255,255,.1);
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+function closeTokenPopup() {
+  document.getElementById("practiceTokenBackdrop")?.remove();
+}
+
+function showTokenPopup({ tokens = 0, required = 1, reason = "Bu işlem için jeton gerekiyor." } = {}) {
+  ensureTokenPopupStyles();
+  closeTokenPopup();
+
+  const backdrop = document.createElement("div");
+  backdrop.className = "tp-backdrop";
+  backdrop.id = "practiceTokenBackdrop";
+
+  backdrop.innerHTML = `
+    <div class="tp-card">
+      <div class="tp-top">
+        <div class="tp-badge">italkyAI • Jeton Gerekli</div>
+        <div class="tp-title">Önce jeton lazım</div>
+        <p class="tp-sub">${reason}</p>
+      </div>
+
+      <div class="tp-body">
+        <div class="tp-box">
+          <div class="tp-label">Mevcut jeton</div>
+          <div class="tp-value">${tokens}</div>
+        </div>
+
+        <div class="tp-box">
+          <div class="tp-label">Gerekli jeton</div>
+          <div class="tp-value">${required}</div>
+        </div>
+
+        <p class="tp-note">
+          Jeton olmadan bu işlem başlamaz. Önce jeton al, sonra devam et.
+        </p>
+
+        <div class="tp-actions">
+          <button class="tp-btn tp-btn-primary" id="tpBuyBtn">Jeton Al</button>
+          <button class="tp-btn tp-btn-secondary" id="tpCloseBtn">Kapat</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(backdrop);
+
+  document.getElementById("tpBuyBtn")?.addEventListener("click", () => {
     location.href = "/pages/jetonbuy.html";
+  });
+
+  document.getElementById("tpCloseBtn")?.addEventListener("click", closeTokenPopup);
+
+  backdrop.addEventListener("click", (e) => {
+    if (e.target === backdrop) closeTokenPopup();
+  });
+}
+
+async function ensureTokenAccess(reason = "Practice AI için jeton gerekli.") {
+  const tokens = await getTokenBalance();
+
+  if (tokens < PRACTICE_REQUIRED_TOKENS) {
+    showTokenPopup({
+      tokens,
+      required: PRACTICE_REQUIRED_TOKENS,
+      reason
+    });
     return false;
   }
+
   return true;
 }
 
@@ -230,8 +476,11 @@ async function chargePracticeVoiceUsage(text) {
 
 function redirectForInsufficientTokens(err) {
   if (err?.code === "INSUFFICIENT_TOKENS") {
-    alert("Jetonunuz yetersiz. Jeton Market'e yönlendiriliyorsunuz.");
-    location.href = "/pages/jetonbuy.html";
+    showTokenPopup({
+      tokens: 0,
+      required: PRACTICE_REQUIRED_TOKENS,
+      reason: "Jetonun yetersiz. Devam etmek için jeton almalısın."
+    });
     return true;
   }
   return false;
@@ -271,6 +520,97 @@ function updateTranslation(text = "") {
 function saveState() {
   localStorage.setItem(STORAGE.lang, currentLang);
   localStorage.setItem(STORAGE.history, JSON.stringify(history.slice(-20)));
+}
+
+/* ---------------------------------------------------
+   LANGUAGE SHEET
+--------------------------------------------------- */
+function closeLanguageSheet() {
+  document.getElementById("practiceLangSheet")?.remove();
+}
+
+function openLanguageSheet() {
+  ensureTokenPopupStyles();
+  closeLanguageSheet();
+
+  const sheet = document.createElement("div");
+  sheet.className = "lang-sheet";
+  sheet.id = "practiceLangSheet";
+
+  const listHtml = Object.entries(LANGS).map(([code, item]) => {
+    const active = code === currentLang ? "active" : "";
+    return `
+      <button class="lang-item ${active}" data-lang-code="${code}">
+        <span>${item.flag} ${item.label}</span>
+        <span>${code === currentLang ? "Seçili" : "Seç"}</span>
+      </button>
+    `;
+  }).join("");
+
+  sheet.innerHTML = `
+    <div class="lang-sheet-card">
+      <h3 class="lang-sheet-title">Dil seç</h3>
+      <div class="lang-list">${listHtml}</div>
+      <button class="lang-close" id="practiceLangClose">Kapat</button>
+    </div>
+  `;
+
+  document.body.appendChild(sheet);
+
+  sheet.querySelectorAll("[data-lang-code]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const code = String(btn.getAttribute("data-lang-code") || "").trim().toLowerCase();
+      if (!LANGS[code]) return;
+
+      currentLang = code;
+      localStorage.setItem(STORAGE.lang, currentLang);
+      localStorage.setItem("italky_game_lang", currentLang);
+
+      try {
+        if (state.recognition) {
+          state.recognition.stop();
+        }
+      } catch {}
+
+      state.recognition = null;
+      state.listening = false;
+      state.mustRepeat = false;
+      state.targetPhrase = "";
+
+      updateLangBadge();
+      setWorld("idle");
+      setCaption("Hazır");
+      setStatus(`${LANGS[currentLang].label} seçildi.`);
+      updateTranslation("Dil güncellendi. Yeni öğretmen şimdi geliyor.");
+      closeLanguageSheet();
+
+      await startFirstTurn();
+    });
+  });
+
+  $("practiceLangClose")?.addEventListener("click", closeLanguageSheet);
+
+  sheet.addEventListener("click", (e) => {
+    if (e.target === sheet) closeLanguageSheet();
+  });
+}
+
+function bindLanguagePicker() {
+  const badge = $("langBadge");
+  if (!badge) return;
+
+  badge.style.cursor = "pointer";
+  badge.title = "Dil seç";
+
+  badge.addEventListener("click", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const allowed = await ensureTokenAccess("Dil seçimini değiştirmek için jeton gerekiyor.");
+    if (!allowed) return;
+
+    openLanguageSheet();
+  });
 }
 
 /* ---------------------------------------------------
@@ -332,7 +672,6 @@ async function speakAI(text) {
     if (redirectForInsufficientTokens(e)) return;
   }
 
-  // Önce backend TTS
   try {
     const { data } = await supabase.auth.getUser();
     const userId = data?.user?.id || null;
@@ -375,7 +714,6 @@ async function speakAI(text) {
     console.warn("Practice API TTS failed, fallback browser TTS:", e);
   }
 
-  // Son fallback cihaz/browser TTS
   try {
     if (!("speechSynthesis" in window)) {
       state.speaking = false;
@@ -715,6 +1053,9 @@ async function handleUserSpeech(spokenText) {
 }
 
 async function startFirstTurn() {
+  const allowed = await ensureTokenAccess("Practice AI öğretmenini başlatmak için jeton gerekiyor.");
+  if (!allowed) return;
+
   try {
     const ai = await askTeacher("", null);
 
@@ -756,8 +1097,8 @@ $("micBtn")?.addEventListener("click", async () => {
     if (window.speechSynthesis?.getVoices) window.speechSynthesis.getVoices();
   } catch {}
 
-  if (!ensurePracticeAccess()) return;
-  if (!(await ensureTokenAccess())) return;
+  const allowed = await ensureTokenAccess("Practice AI konuşmasını başlatmak için jeton gerekiyor.");
+  if (!allowed) return;
 
   if (state.listening) {
     stopAll();
@@ -786,12 +1127,10 @@ window.addEventListener("touchstart", () => {
 }, { once: true });
 
 window.onload = async () => {
-  if (!ensurePracticeAccess()) return;
-  if (!(await ensureTokenAccess())) return;
-
   updateLangBadge();
+  bindLanguagePicker();
   setWorld("idle");
   setCaption("Hazır");
   updateTranslation();
-  startFirstTurn();
+  await startFirstTurn();
 };
