@@ -1,6 +1,7 @@
 import { getLangPoolForSite } from "/js/lang_pool_full.js";
 import { supabase } from "/js/supabase_client.js";
 import { setHeaderTokens } from "/js/ui_shell.js";
+import { ensureFaceToFacePremiumAccess } from "/js/facetoface_premium_gate.js";
 import {
   commitUsage,
   buildUsageNote
@@ -29,7 +30,10 @@ const F2F_VOICE_KEY = "facetoface_voice_mode";
 const F2F_TRANSLATE_KEY = "facetoface_translate_mode";
 
 function canonical(code) {
-  return String(code || "").toLowerCase().split("-")[0].trim();
+  return String(code || "")
+    .toLowerCase()
+    .split("-")[0]
+    .trim();
 }
 
 function normalizePackageCode(raw) {
@@ -42,10 +46,17 @@ function normalizePackageCode(raw) {
   return code;
 }
 
-const LANGS = (Array.isArray(getLangPoolForSite("tr")) ? getLangPoolForSite("tr") : [])
+const SITE_LANG = "tr";
+
+const RAW_LANG_POOL = Array.isArray(getLangPoolForSite(SITE_LANG))
+  ? getLangPoolForSite(SITE_LANG)
+  : [];
+
+const LANGS = RAW_LANG_POOL
   .map((l) => {
     const code = canonical(l.code);
     if (!code) return null;
+
     return {
       code,
       flag: l.flag || "🌐",
@@ -57,6 +68,7 @@ const LANGS = (Array.isArray(getLangPoolForSite("tr")) ? getLangPoolForSite("tr"
 
 function langObj(code) {
   const c = canonical(code);
+
   return (
     LANGS.find((x) => x.code === c) || {
       code: c || "en",
@@ -71,7 +83,6 @@ function labelChip(code) {
   const o = langObj(code);
   return `${o.flag} ${o.name}`;
 }
-
 const UI_TEXT = {
   tr: {
     ready: "Konuşmak için mikrofona dokununuz.",
