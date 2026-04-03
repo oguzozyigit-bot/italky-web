@@ -281,6 +281,18 @@ function getFaceTranslateMode() {
 function isPaidFaceTextMode() {
   return getFaceTranslateMode() === "cultural";
 }
+async function ensureCurrentFacePremiumModeAccess() {
+  const needsPremium =
+    isPaidFaceTextMode() ||
+    isPaidFaceVoiceMode();
+
+  if (!needsPremium) return true;
+
+  const ok = await ensureFaceToFacePremiumAccess();
+  if (!ok) return false;
+
+  return true;
+}
 
 function isPaidFaceVoiceMode() {
   const v = getFaceVoiceMode();
@@ -1350,6 +1362,9 @@ async function toggleRecording(side) {
     return;
   }
 
+  const premiumOk = await ensureCurrentFacePremiumModeAccess();
+  if (!premiumOk) return;
+
   if (recordingSide === side) {
     recognitionFinishedByUser = true;
     setTranslatingUI(side);
@@ -1374,7 +1389,6 @@ async function toggleRecording(side) {
 
   startRecording(side);
 }
-
 async function warmApis() {
   await Promise.allSettled([
     fetch(`${API_BASE}/healthz`).catch(() => {}),
