@@ -1,5 +1,6 @@
 const API_BASE = "https://italky-api.onrender.com/api";
 const JOIN_PAGE_BASE = "https://italky.ai/pages/interpreter_join.html";
+const LIVE_PAGE_BASE = "/pages/sidetoside.html";
 
 const btnGenerate = document.getElementById("btn-generate");
 const btnShake = document.getElementById("btn-shake");
@@ -84,6 +85,27 @@ function buildQrUrl(joinUrl) {
   return `https://api.qrserver.com/v1/create-qr-code/?size=420x420&margin=10&data=${encodeURIComponent(joinUrl)}`;
 }
 
+function buildHostLiveUrl(roomId, hostLang, guestLang = "") {
+  const url = new URL(LIVE_PAGE_BASE, location.origin);
+  url.searchParams.set("room", roomId);
+  url.searchParams.set("role", "host");
+  url.searchParams.set("my", String(hostLang || "tr").trim().toLowerCase());
+  url.searchParams.set("peer", String(guestLang || "en").trim().toLowerCase());
+  return url.toString();
+}
+
+function buildGuestLiveUrl(roomId, myLang, peerLang, auto = "0") {
+  const url = new URL(LIVE_PAGE_BASE, location.origin);
+  url.searchParams.set("room", roomId);
+  url.searchParams.set("role", "guest");
+  url.searchParams.set("my", String(myLang || "tr").trim().toLowerCase());
+  url.searchParams.set("peer", String(peerLang || "en").trim().toLowerCase());
+  if (String(auto || "0") === "1") {
+    url.searchParams.set("auto", "1");
+  }
+  return url.toString();
+}
+
 async function createRoom(myLang) {
   const payload = { my_lang: myLang };
 
@@ -134,17 +156,12 @@ function displayQR(roomId) {
 }
 
 function redirectHostToLive(roomId, hostLang, guestLang) {
-  const url = new URL("/pages/live_interpreter.html", location.origin);
-  url.searchParams.set("room", roomId);
-  url.searchParams.set("role", "host");
-  url.searchParams.set("my", hostLang);
-  url.searchParams.set("peer", guestLang || "en");
-  window.location.href = url.toString();
+  window.location.href = buildHostLiveUrl(roomId, hostLang, guestLang);
 }
 
 function redirectShakeMatchedToLive(roomId, myLang, peerLang, role) {
   const finalRole = String(role || "guest").trim().toLowerCase();
-  const url = new URL("/pages/live_interpreter.html", location.origin);
+  const url = new URL(LIVE_PAGE_BASE, location.origin);
   url.searchParams.set("room", roomId);
   url.searchParams.set("role", finalRole);
   url.searchParams.set("my", String(myLang || "tr").trim().toLowerCase());
@@ -179,7 +196,7 @@ function startPolling(roomId, hostLang) {
 
       if (roomData.status === "active" && roomData.guest_lang) {
         clearPolling();
-        setStatus("Guest bağlandı. Live ekrana geçiliyor...", "ok");
+        setStatus("Guest bağlandı. Görüşme ekranına geçiliyor...", "ok");
 
         setTimeout(() => {
           redirectHostToLive(
@@ -204,6 +221,8 @@ async function handleCreateClick() {
   setStatus("Oda oluşturuluyor...", "waiting");
 
   try {
+    localStorage.setItem("live_interpreter_lang", selectedLang);
+
     const data = await createRoom(selectedLang);
     const roomId = String(data.room_id || "").trim();
 
@@ -345,7 +364,7 @@ async function armShakeMode() {
   }
 }
 
-async function handleShakeLogic(strength) {
+async function handleShakeLogic() {
   const now = Date.now();
 
   if (!isShakeArmed) return;
@@ -354,7 +373,6 @@ async function handleShakeLogic(strength) {
 
   lastShakeAt = now;
   isShakingBusy = true;
-  matched = false;
   clearShakePolling();
 
   const myLang = getSelectedLang();
@@ -464,7 +482,7 @@ function handleMotionEvent(event) {
   lastMotionSampleAt = now;
 
   if (delta > SHAKE_THRESHOLD) {
-    handleShakeLogic(delta);
+    handleShakeLogic();
   }
 }
 
