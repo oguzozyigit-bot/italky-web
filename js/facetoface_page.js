@@ -184,8 +184,6 @@ const uiModalGo = $("uiModalGo");
 const uiModalClose = $("uiModalClose");
 
 let accessState = {
-  trialActive: false,
-  packageCode: "",
   lockedAll: false
 };
 
@@ -208,7 +206,7 @@ let recognitionFinishedByUser = false;
 let recognitionSessionId = 0;
 let typewriterRunId = 0;
 
-function showUiModal(message, title = "Üyelik Gerekli") {
+function showUiModal(message, title = "Jeton Gerekli") {
   if (!uiModal) return;
   uiModalTitle.textContent = title;
   uiModalText.textContent = message;
@@ -220,51 +218,14 @@ function closeUiModal() {
 }
 
 uiModalGo?.addEventListener("click", () => {
-  location.href = "/pages/upgrade_pack.html";
+  location.href = "/pages/jetonbuy.html";
 });
 uiModalClose?.addEventListener("click", closeUiModal);
 uiModal?.addEventListener("click", (e) => {
   if (e.target === uiModal) closeUiModal();
 });
 
-async function readAccessState() {
-  try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      accessState = { trialActive: false, packageCode: "", lockedAll: false };
-      return;
-    }
 
-    const { data: row } = await supabase
-      .from("user_access_state")
-      .select("*")
-      .eq("user_id", user.id)
-      .maybeSingle();
-
-    if (row) {
-      const rawCode = String(row.selected_package_code || "").trim().toLowerCase();
-      const packageCode = normalizePackageCode(rawCode);
-      const packageActive = !!packageCode && row.package_active === true &&
-        (!row.package_ends_at || new Date(row.package_ends_at).getTime() > Date.now());
-
-      const trialActive = !packageActive && (
-        Number(row.trial_days_left || 0) > 0 ||
-        (!!row.trial_ends_at && new Date(row.trial_ends_at).getTime() > Date.now())
-      );
-
-      accessState = {
-        trialActive,
-        packageCode: packageActive ? packageCode : "",
-        lockedAll: !packageActive && !trialActive
-      };
-      return;
-    }
-
-    accessState = { trialActive: false, packageCode: "", lockedAll: false };
-  } catch {
-    accessState = { trialActive: false, packageCode: "", lockedAll: false };
-  }
-}
 
 function canOpenFaceSettings() {
   if (accessState.lockedAll) return false;
@@ -338,9 +299,8 @@ function faceVoiceUsageNote() {
   });
 }
 
-function canonTone(value) {
-  const v = String(value || "neutral").trim().toLowerCase();
-  return ["neutral", "happy", "angry", "sad", "excited"].includes(v) ? v : "neutral";
+function canOpenFaceSettings() {
+  return true;
 }
 
 function detectToneFromText(text) {
@@ -1364,11 +1324,6 @@ function startRecording(side) {
 async function toggleRecording(side) {
   await ensureReady();
 
-  if (accessState.lockedAll) {
-    showUiModal("Deneme süreniz doldu. Sistemi kullanabilmek için üyelik paketi satın almanız gereklidir.");
-    return;
-  }
-
   const premiumOk = await ensureCurrentFacePremiumModeAccess();
   if (!premiumOk) return;
 
@@ -1515,11 +1470,7 @@ function bind() {
   }, { capture: true });
 
   clearBtn?.addEventListener("click", () => {
-    if (accessState.lockedAll) {
-      showUiModal("Deneme süreniz doldu. Sistemi kullanabilmek için üyelik paketi satın almanız gereklidir.");
-      return;
-    }
-
+    
     stopAudio();
     stopTypewriter();
     stopRecognizer();
@@ -1538,17 +1489,11 @@ function bind() {
   homeBtn?.addEventListener("click", () => {
     location.href = safeHomeHref();
   });
-
+  
   settingsBtn?.addEventListener("click", (e) => {
-    e.preventDefault();
-
-    if (!canOpenFaceSettings()) {
-      showUiModal("Bu menüyü kullanabilmek için üyelik paketi satın almanız gereklidir.");
-      return;
-    }
-
-    location.href = "/pages/translation_settings.html?from=facetoface";
-  });
+  e.preventDefault();
+  location.href = "/pages/translation_settings.html?from=facetoface";
+});
 
   topMic?.addEventListener("click", async (e) => {
     e.preventDefault();
@@ -1577,12 +1522,8 @@ function bind() {
   });
 
   bindKeyboardButton(settingsBtn, async () => {
-    if (!canOpenFaceSettings()) {
-      showUiModal("Bu menüyü kullanabilmek için üyelik paketi satın almanız gereklidir.");
-      return;
-    }
-    location.href = "/pages/translation_settings.html?from=facetoface";
-  });
+  location.href = "/pages/translation_settings.html?from=facetoface";
+});
 
   try {
     if (window.speechSynthesis) {
