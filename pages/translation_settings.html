@@ -14,9 +14,7 @@
       --txt: rgba(255,255,255,.97);
       --muted: rgba(255,255,255,.62);
       --ai-grad: linear-gradient(135deg,#67e8f9 0%,#818cf8 46%,#f472b6 100%);
-      --panel-bg: rgba(255,255,255,.04);
       --panel-border: rgba(255,255,255,.10);
-      --accent: #818cf8;
     }
 
     *{
@@ -603,6 +601,8 @@
   const LEGACY_TTS_KEY = "tts_voice";
   const LEGACY_LIVE_KEY = "live_interpreter_voice";
 
+  const CLONE_EDITOR_URL = "/pages/voice_profile.html";
+
   const voiceGrid = document.getElementById("voiceGrid");
   const translateGrid = document.getElementById("translateGrid");
   const voiceSummary = document.getElementById("voiceSummary");
@@ -853,12 +853,18 @@
   }
 
   async function previewCloneVoice(){
-    if (!(await ensurePaidFeature("Kendi Sesim önizlemesi"))) return;
-
-    if (!cloneReady || !currentUserId) {
+    if (!cloneReady) {
       showToast("Önce kendi ses profilinizi oluşturun");
+      location.href = CLONE_EDITOR_URL;
       return;
     }
+
+    if (!currentUserId) {
+      showToast("Önce giriş yapmanız gerekiyor");
+      return;
+    }
+
+    if (!(await ensurePaidFeature("Kendi Sesim önizlemesi"))) return;
 
     showToast("Kendi sesiniz hazırlanıyor...");
     try{
@@ -908,15 +914,12 @@
 
   document.getElementById("cloneCard")?.addEventListener("click", async () => {
     if (!cloneReady) {
-      const ok = await ensurePaidFeature("Kendi Sesim");
-      if (ok) {
-        showToast("Önce özel ses profilinizi oluşturun");
-      }
+      showToast("Önce özel ses profilinizi oluşturun");
+      location.href = CLONE_EDITOR_URL;
       return;
     }
 
-    const ok = await ensurePaidFeature("Kendi Sesim");
-    if (!ok) return;
+    if (!(await ensurePaidFeature("Kendi Sesim"))) return;
 
     voiceMode = "clone";
     paintSelections();
@@ -928,13 +931,12 @@
     e.stopPropagation();
 
     if (!cloneReady) {
-      const ok = await ensurePaidFeature("Kendi Sesim");
-      if (ok) showToast("Önce özel ses profilinizi oluşturun");
+      showToast("Önce özel ses profilinizi oluşturun");
+      location.href = CLONE_EDITOR_URL;
       return;
     }
 
-    const ok = await ensurePaidFeature("Kendi Sesim");
-    if (!ok) return;
+    if (!(await ensurePaidFeature("Kendi Sesim"))) return;
 
     voiceMode = "clone";
     paintSelections();
@@ -950,11 +952,9 @@
   cloneEditBtn?.addEventListener("click", async (e) => {
     e.stopPropagation();
 
-    const ok = await ensurePaidFeature("Kendi Sesim profil oluşturma");
-    if (!ok) return;
+    if (!(await ensurePaidFeature("Kendi Sesim profil oluşturma"))) return;
 
-    // Profil / özel ses oluşturma ekranı sende farklıysa burayı o sayfaya yönlendir.
-    location.href = "/pages/profile.html";
+    location.href = CLONE_EDITOR_URL;
   });
 
   translateGrid?.querySelectorAll(".choice-card").forEach(card => {
@@ -962,8 +962,7 @@
       const selected = normalizeTranslateMode(card.dataset.translate || "normal");
 
       if (selected === "cultural") {
-        const ok = await ensurePaidFeature("Kültürel Çeviri");
-        if (!ok) return;
+        if (!(await ensurePaidFeature("Kültürel Çeviri"))) return;
       }
 
       translateMode = selected;
@@ -990,6 +989,7 @@
   });
 
   await checkVoiceProfile();
+  await getLiveTokens();
   paintSelections();
   refreshSummary();
 </script>
