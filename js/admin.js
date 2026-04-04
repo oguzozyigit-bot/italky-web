@@ -106,7 +106,7 @@ async function getCurrentUserAndProfile() {
     : `${currentUser.email || "-"} • Profil bulunamadı`;
 
   if ((currentProfile?.role || "").toLowerCase() !== "superadmin") {
-    manualLoadBtn.disabled = true;
+    if (manualLoadBtn) manualLoadBtn.disabled = true;
     setStatus(manualStatus, "Manuel jeton yükleme sadece superadmin içindir.", "status-warn");
   }
 }
@@ -179,7 +179,7 @@ async function loadWallet() {
   walletTableBody.innerHTML = rows.map((row) => `
     <tr>
       <td>${row.user_id || "-"}</td>
-      <td>${row.delta ?? 0}</td>
+      <td>${row.delta ?? row.amount ?? 0}</td>
       <td>${row.reason || "-"}</td>
       <td>${row.note || "-"}</td>
       <td>${fmt(row.created_at)}</td>
@@ -272,6 +272,8 @@ async function createManualTokenLoad(userId, amount, note) {
     .from("wallet_tx")
     .insert({
       user_id: userId,
+      type: "credit",
+      amount: n,
       delta: n,
       reason: "manual_admin_load",
       note: String(note || "").trim() || "Manual admin token load",
@@ -314,6 +316,41 @@ function bindUsers() {
 function bindWallet() {
   walletRefreshBtn?.addEventListener("click", loadWallet);
   walletSearch?.addEventListener("input", loadWallet);
+}
+
+function bindNativeAdminEvents() {
+  window.onNativeNfcWriteResult = function(ok, message) {
+    const cls = ok ? "status-ok" : "status-err";
+    setStatus(
+      nfcCreateStatus,
+      String(message || (ok ? "NFC yazdırma işlemi tamamlandı." : "NFC yazdırma işlemi başarısız oldu.")),
+      cls
+    );
+  };
+
+  window.addEventListener("italky:nfc-write", (e) => {
+    const detail = e?.detail || {};
+    const uid = String(detail.uid || "").trim();
+    const payload = String(detail.payload || "").trim();
+
+    if (uid || payload) {
+      setStatus(
+        nfcCreateStatus,
+        `NFC yazdırma tamamlandı • UID: ${uid || "-"} • Veri: ${payload || "-"}`,
+        "status-ok"
+      );
+    }
+  });
+
+  window.addEventListener("italky:nfc-error", (e) => {
+    const msg = String(e?.detail?.message || "NFC işlemi başarısız oldu.").trim();
+    setStatus(nfcCreateStatus, msg, "status-err");
+  });
+
+  window.addEventListener("italky:nfc-status", (e) => {
+    const msg = String(e?.detail?.message || "").trim();
+    if (msg) setStatus(nfcCreateStatus, msg, "status-warn");
+  });
 }
 
 function bindNfc() {
@@ -364,9 +401,9 @@ function bindNfc() {
         return;
       }
 
-      if (window.NativeNFC && typeof window.NativeNFC.writeText === "function") {
-        window.NativeNFC.writeText(latestCreatedCard.uid);
-        setStatus(nfcCreateStatus, `NFC yazdırma başlatıldı: ${latestCreatedCard.uid}`, "status-ok");
+      if (window.NativeAdmin && typeof window.NativeAdmin.writeNfcText === "function") {
+        window.NativeAdmin.writeNfcText(String(latestCreatedCard.uid));
+        setStatus(nfcCreateStatus, `Kartı telefona yaklaştırın • Yazılacak UID: ${latestCreatedCard.uid}`, "status-warn");
         return;
       }
 
@@ -513,6 +550,8 @@ async function init() {
     const footerH = parseFloat(root.getPropertyValue("--footerH")) || 0;
     document.documentElement.style.setProperty("--shellLift", footerH ? `${footerH + 10}px` : "0px");
   } catch {}
+
+  bindNativeAdminEvents();
 
   await getCurrentUserAndProfile();
 
