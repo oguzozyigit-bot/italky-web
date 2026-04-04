@@ -551,6 +551,7 @@
   <section class="summary-card">
     <div class="summary-line"><strong>Seçili Ses:</strong> <span id="voiceSummary">Otomatik</span></div>
     <div class="summary-line"><strong>Seçili Mod:</strong> <span id="translateSummary">Translate</span></div>
+    <div class="summary-line"><strong>Mevcut Jeton:</strong> <span id="tokenSummary">0</span></div>
   </section>
 
   <section class="action-grid">
@@ -589,7 +590,7 @@
 
 <script type="module">
   import { supabase } from "/js/supabase_client.js";
-  import { mountShell } from "/js/ui_shell.js";
+  import { mountShell, setHeaderTokens } from "/js/ui_shell.js";
 
   try {
     mountShell({ scroll: "auto" });
@@ -606,6 +607,7 @@
   const translateGrid = document.getElementById("translateGrid");
   const voiceSummary = document.getElementById("voiceSummary");
   const translateSummary = document.getElementById("translateSummary");
+  const tokenSummary = document.getElementById("tokenSummary");
   const saveBtn = document.getElementById("saveBtn");
   const cancelBtn = document.getElementById("cancelBtn");
   const backBtn = document.getElementById("backBtn");
@@ -632,6 +634,7 @@
   let translateMode = normalizeTranslateMode(localStorage.getItem(TRANSLATE_KEY) || "normal");
   let cloneReady = false;
   let currentUserId = "";
+  let currentTokens = 0;
   let currentPreviewAudio = null;
 
   function stopCurrentPreview() {
@@ -670,7 +673,7 @@
     clearTimeout(window.__translationSettingsToast);
     window.__translationSettingsToast = setTimeout(() => {
       toastEl.classList.remove("show");
-    }, 1600);
+    }, 1700);
   }
 
   function showUiModal(
@@ -682,7 +685,7 @@
     uiModalText.textContent = message;
 
     const mini = document.getElementById("uiModalMiniNote");
-    if (mini) mini.textContent = miniNote;
+    if (mini) mini.textContent = `${miniNote} Mevcut jeton: ${currentTokens}`;
 
     uiModal.classList.add("open");
   }
@@ -713,11 +716,58 @@
   function refreshSummary(){
     if(voiceSummary) voiceSummary.textContent = voiceLabel(voiceMode);
     if(translateSummary) translateSummary.textContent = translateLabel(translateMode);
+    if(tokenSummary) tokenSummary.textContent = String(currentTokens);
   }
 
   function refreshCloneButtons() {
     cloneUseBtn.disabled = !cloneReady;
     cloneListenBtn.disabled = !cloneReady;
+  }
+
+  async function getLiveTokens() {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      currentUserId = user?.id || "";
+
+      if (!currentUserId) {
+        currentTokens = 0;
+        refreshSummary();
+        return 0;
+      }
+
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("tokens")
+        .eq("id", currentUserId)
+        .maybeSingle();
+
+      if (error || !data) {
+        currentTokens = 0;
+        refreshSummary();
+        return 0;
+      }
+
+      currentTokens = Number(data.tokens || 0);
+      try { setHeaderTokens(currentTokens); } catch {}
+      refreshSummary();
+      return currentTokens;
+    } catch {
+      currentTokens = 0;
+      refreshSummary();
+      return 0;
+    }
+  }
+
+  async function ensurePaidFeature(featureName = "Bu özellik", needed = 1) {
+    const tokens = await getLiveTokens();
+    if (tokens >= needed) return true;
+
+    showUiModal(
+      `${featureName} standart kullanımın ötesinde, gelişmiş yapay zekâ desteğiyle çalışır. Bu deneyimi başlatmak için jeton yüklemeniz gereklidir.`,
+      "Jeton Gerekli",
+      "Jeton yüklemek için aşağıdaki butona dokunun."
+    );
+    return false;
   }
 
   async function checkVoiceProfile(){
@@ -727,23 +777,29 @@
 
       if(!user){
         cloneReady = false;
+        currentTokens = 0;
         if(cloneVoiceDesc) cloneVoiceDesc.textContent = "Henüz özel ses profili oluşturmadınız.";
         refreshCloneButtons();
+        refreshSummary();
         return;
       }
 
       const { data, error } = await supabase
         .from("profiles")
-        .select("voice_sample_path, tts_voice_ready, tts_voice_id")
+        .select("voice_sample_path, tts_voice_ready, tts_voice_id, tokens")
         .eq("id", user.id)
         .maybeSingle();
 
-      if(error){
+      if(error || !data){
         cloneReady = false;
+        currentTokens = 0;
         if(cloneVoiceDesc) cloneVoiceDesc.textContent = "Henüz özel ses profili oluşturmadınız.";
         refreshCloneButtons();
+        refreshSummary();
         return;
       }
+
+      currentTokens = Number(data.tokens || 0);
 
       const hasSamplePath =
         !!data?.voice_sample_path &&
@@ -765,11 +821,15 @@
         }
       }
 
+      try { setHeaderTokens(currentTokens); } catch {}
       refreshCloneButtons();
+      refreshSummary();
     }catch(e){
       cloneReady = false;
+      currentTokens = 0;
       if(cloneVoiceDesc) cloneVoiceDesc.textContent = "Henüz özel ses profili oluşturmadınız.";
       refreshCloneButtons();
+      refreshSummary();
     }
   }
 
@@ -793,8 +853,10 @@
   }
 
   async function previewCloneVoice(){
+    if (!(await ensurePaidFeature("Kendi Sesim önizlemesi"))) return;
+
     if (!cloneReady || !currentUserId) {
-      showToast("Önce kendi sesinizi oluşturun");
+      showToast("Önce kendi ses profilinizi oluşturun");
       return;
     }
 
@@ -844,55 +906,64 @@
     showToast("Ses seçimi güncellendi");
   });
 
-  document.getElementById("cloneCard")?.addEventListener("click", () => {
+  document.getElementById("cloneCard")?.addEventListener("click", async () => {
     if (!cloneReady) {
-      showUiModal(
-        "Bu özellik standart kullanımın ötesinde, gelişmiş yapay zekâ desteğiyle çalışır. Kendi Sesim deneyimini başlatmak için jeton yüklemeniz gereklidir."
-      );
-    }
-  });
-
-  cloneUseBtn?.addEventListener("click", () => {
-    if (!cloneReady) {
-      showUiModal(
-        "Bu özellik standart kullanımın ötesinde, gelişmiş yapay zekâ desteğiyle çalışır. Kendi Sesim deneyimini başlatmak için jeton yüklemeniz gereklidir."
-      );
+      const ok = await ensurePaidFeature("Kendi Sesim");
+      if (ok) {
+        showToast("Önce özel ses profilinizi oluşturun");
+      }
       return;
     }
 
-    showUiModal(
-      "Bu özellik standart kullanımın ötesinde, gelişmiş yapay zekâ desteğiyle çalışır. Kendi Sesim deneyimini başlatmak için jeton yüklemeniz gereklidir."
-    );
+    const ok = await ensurePaidFeature("Kendi Sesim");
+    if (!ok) return;
+
+    voiceMode = "clone";
+    paintSelections();
+    refreshSummary();
+    showToast("Kendi Sesim seçildi");
   });
 
-  cloneListenBtn?.addEventListener("click", () => {
+  cloneUseBtn?.addEventListener("click", async (e) => {
+    e.stopPropagation();
+
     if (!cloneReady) {
-      showUiModal(
-        "Bu özellik standart kullanımın ötesinde, gelişmiş yapay zekâ desteğiyle çalışır. Kendi Sesim önizlemesini dinlemek için jeton yüklemeniz gereklidir."
-      );
+      const ok = await ensurePaidFeature("Kendi Sesim");
+      if (ok) showToast("Önce özel ses profilinizi oluşturun");
       return;
     }
 
-    showUiModal(
-      "Bu özellik standart kullanımın ötesinde, gelişmiş yapay zekâ desteğiyle çalışır. Kendi Sesim önizlemesini dinlemek için jeton yüklemeniz gereklidir."
-    );
+    const ok = await ensurePaidFeature("Kendi Sesim");
+    if (!ok) return;
+
+    voiceMode = "clone";
+    paintSelections();
+    refreshSummary();
+    showToast("Kendi Sesim aktif edildi");
   });
 
-  cloneEditBtn?.addEventListener("click", () => {
-    showUiModal(
-      "Bu özellik standart kullanımın ötesinde, gelişmiş yapay zekâ desteğiyle çalışır. Kendi Sesim profilinizi oluşturmak için jeton yüklemeniz gereklidir."
-    );
+  cloneListenBtn?.addEventListener("click", async (e) => {
+    e.stopPropagation();
+    await previewCloneVoice();
+  });
+
+  cloneEditBtn?.addEventListener("click", async (e) => {
+    e.stopPropagation();
+
+    const ok = await ensurePaidFeature("Kendi Sesim profil oluşturma");
+    if (!ok) return;
+
+    // Profil / özel ses oluşturma ekranı sende farklıysa burayı o sayfaya yönlendir.
+    location.href = "/pages/profile.html";
   });
 
   translateGrid?.querySelectorAll(".choice-card").forEach(card => {
-    card.addEventListener("click", () => {
+    card.addEventListener("click", async () => {
       const selected = normalizeTranslateMode(card.dataset.translate || "normal");
 
       if (selected === "cultural") {
-        showUiModal(
-          "Bu özellik standart kullanımın ötesinde, gelişmiş yapay zekâ desteğiyle çalışır. Kültürel Çeviri deneyimini başlatmak için jeton yüklemeniz gereklidir."
-        );
-        return;
+        const ok = await ensurePaidFeature("Kültürel Çeviri");
+        if (!ok) return;
       }
 
       translateMode = selected;
@@ -924,4 +995,4 @@
 </script>
 
 </body>
-</html> 
+</html>
