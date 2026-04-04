@@ -29,6 +29,7 @@ const STORAGE = {
 const PRACTICE_REQUIRED_TOKENS = 1;
 const PRACTICE_TEXT_STEP = 1500;
 const PRACTICE_VOICE_STEP = 1500;
+const MAX_REPEAT_FAIL = 5;
 
 function resolveLang() {
   const q = new URLSearchParams(location.search);
@@ -56,10 +57,13 @@ const state = {
   targetPhrase: "",
   mustRepeat: false,
   level: "",
-  lastSpokenAt: 0
+  lastSpokenAt: 0,
+  repeatFailCount: 0
 };
 
 let audioCtx = null;
+let currentPracticeAudio = null;
+let currentSpeechUtterance = null;
 let history = [];
 
 try {
@@ -373,15 +377,54 @@ function showTokenPopup({ tokens = 0, required = 1, reason = "Bu işlem için je
   });
 }
 
+function stopPracticeAudio() {
+  try {
+    if (currentPracticeAudio) {
+      currentPracticeAudio.pause();
+      currentPracticeAudio.currentTime = 0;
+    }
+  } catch {}
+  currentPracticeAudio = null;
+
+  try {
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+    }
+  } catch {}
+
+  currentSpeechUtterance = null;
+  state.speaking = false;
+}
+
+function lockPracticeForNoTokens(message = "Jetonun bitti. Practice AI devam etmek için jeton almalısın.") {
+  try { state.recognition?.stop?.(); } catch {}
+  try { window.speechSynthesis?.cancel?.(); } catch {}
+
+  state.listening = false;
+  state.speaking = false;
+  state.mustRepeat = false;
+  state.targetPhrase = "";
+  state.repeatFailCount = 0;
+
+  $("micBtn")?.classList.remove("listening");
+  updateRepeatGuide("", "");
+  setWorld("idle");
+  setCaption("Jeton gerekli");
+  setStatus("Jetonun bitti.");
+  updateTranslation("Jetonun bitti. Devam etmek için jeton almalısın.");
+
+  showTokenPopup({
+    tokens: 0,
+    required: PRACTICE_REQUIRED_TOKENS,
+    reason: message
+  });
+}
+
 async function ensureTokenAccess(reason = "Practice AI için jeton gerekli.") {
   const tokens = await getTokenBalance();
 
   if (tokens < PRACTICE_REQUIRED_TOKENS) {
-    showTokenPopup({
-      tokens,
-      required: PRACTICE_REQUIRED_TOKENS,
-      reason
-    });
+    lockPracticeForNoTokens(reason);
     return false;
   }
 
@@ -593,6 +636,7 @@ function openLanguageSheet() {
       state.listening = false;
       state.mustRepeat = false;
       state.targetPhrase = "";
+      state.repeatFailCount = 0;
       updateRepeatGuide("", "");
 
       updateLangBadge();
@@ -671,6 +715,8 @@ async function speakAI(text) {
   const clean = String(text || "").trim();
   if (!clean) return;
 
+  stopPracticeAudio();
+
   const now = Date.now();
   if (now - state.lastSpokenAt < 120) return;
   state.lastSpokenAt = now;
@@ -684,6 +730,11 @@ async function speakAI(text) {
     await accumulatePracticeVoiceOut(clean);
   } catch (e) {
     console.error("PRACTICE VOICE USAGE ERROR:", e);
+
+    if (String(e?.code || "").includes("INSUFFICIENT_TOKENS")) {
+      lockPracticeForNoTokens("Seslendirme için jetonun bitti.");
+      return;
+    }
   }
 
   try {
@@ -710,16 +761,19 @@ async function speakAI(text) {
       }
 
       const audio = new Audio(`data:audio/mp3;base64,${j.audio_base64}`);
+      currentPracticeAudio = audio;
       audio.preload = "auto";
       audio.playsInline = true;
 
       audio.onended = () => {
+        if (currentPracticeAudio === audio) currentPracticeAudio = null;
         state.speaking = false;
         setWorld(state.listening ? "listening" : "idle");
         setCaption("Hazır");
       };
 
       audio.onerror = () => {
+        if (currentPracticeAudio === audio) currentPracticeAudio = null;
         state.speaking = false;
         setWorld(state.listening ? "listening" : "idle");
         setCaption("Hazır");
@@ -743,6 +797,7 @@ async function speakAI(text) {
     window.speechSynthesis.cancel();
 
     const u = new SpeechSynthesisUtterance(clean);
+    currentSpeechUtterance = u;
     u.lang = bcp;
     u.rate = 1.0;
     u.pitch = 1.03;
@@ -752,11 +807,13 @@ async function speakAI(text) {
     if (v) u.voice = v;
 
     u.onend = () => {
+      if (currentSpeechUtterance === u) currentSpeechUtterance = null;
       state.speaking = false;
       setWorld(state.listening ? "listening" : "idle");
       setCaption("Hazır");
     };
     u.onerror = () => {
+      if (currentSpeechUtterance === u) currentSpeechUtterance = null;
       state.speaking = false;
       setWorld(state.listening ? "listening" : "idle");
       setCaption("Hazır");
@@ -987,6 +1044,7 @@ async function handleUserSpeech(spokenText) {
   if (isWrongLanguageForLesson(spoken)) {
     state.mustRepeat = false;
     state.targetPhrase = "";
+    state.repeatFailCount = 0;
     updateRepeatGuide("", "");
     setStatus("Seçili dilde konuş.");
     updateTranslation("Seçili ders dili dışında konuştun. Lütfen seçili dilde cevap ver.");
@@ -1000,8 +1058,29 @@ async function handleUserSpeech(spokenText) {
   if (state.mustRepeat && state.targetPhrase) {
     scoreValue = pronunciationScore(spoken, state.targetPhrase);
     setStatus(`Telaffuz skoru: %${scoreValue}`);
+
+    if (scoreValue >= 95) {
+      state.repeatFailCount = 0;
+    } else {
+      state.repeatFailCount += 1;
+    }
   } else {
     setStatus("Öğretmen düşünüyor...");
+  }
+
+  if (state.mustRepeat && state.targetPhrase && state.repeatFailCount >= MAX_REPEAT_FAIL) {
+    state.mustRepeat = false;
+    state.targetPhrase = "";
+    state.repeatFailCount = 0;
+    updateRepeatGuide("", "");
+    updateTranslation("Olmadı ama bunu başaracağına eminim. Şimdi bir sonraki adıma geçelim.");
+    setStatus("Devam edelim.");
+    await speakAI(
+      currentLang === "en"
+        ? "That one was not easy, but I believe you can do it. Let us move on and come back to it later."
+        : "Let us move on and come back to this later."
+    );
+    return;
   }
 
   try {
@@ -1033,6 +1112,7 @@ async function handleUserSpeech(spokenText) {
     } else {
       state.mustRepeat = false;
       state.targetPhrase = "";
+      state.repeatFailCount = 0;
       updateRepeatGuide("", "");
     }
 
@@ -1041,15 +1121,12 @@ async function handleUserSpeech(spokenText) {
     setStatus(state.mustRepeat ? "Tekrarla." : "Devam edelim.");
   } catch (e) {
     console.error("PRACTICE CHAT ERROR:", e);
+
     if (String(e?.code || "").includes("INSUFFICIENT_TOKENS")) {
-      const tokens = await getTokenBalance();
-      showTokenPopup({
-        tokens,
-        required: PRACTICE_REQUIRED_TOKENS,
-        reason: "Jetonun bitti. Practice AI devam etmek için jeton almalısın."
-      });
+      lockPracticeForNoTokens("Jetonun bitti. Practice AI devam etmek için jeton almalısın.");
       return;
     }
+
     showUserSafeError();
   }
 }
@@ -1073,6 +1150,7 @@ async function startFirstTurn() {
 
     state.mustRepeat = Boolean(ai.should_repeat);
     state.targetPhrase = ai.target_phrase || "";
+    state.repeatFailCount = 0;
 
     if (state.mustRepeat && state.targetPhrase) {
       updateRepeatGuide(ai.target_phrase, ai.repeat_hint_tr || "");
@@ -1084,13 +1162,19 @@ async function startFirstTurn() {
     await speakAI(ai.reply);
   } catch (e) {
     console.error("PRACTICE START ERROR:", e);
+
+    if (String(e?.code || "").includes("INSUFFICIENT_TOKENS")) {
+      lockPracticeForNoTokens("Practice AI öğretmenini başlatmak için jeton gerekiyor.");
+      return;
+    }
+
     showUserSafeError();
   }
 }
 
 function stopAll() {
   try { state.recognition?.stop?.(); } catch {}
-  try { window.speechSynthesis?.cancel?.(); } catch {}
+  stopPracticeAudio();
   state.listening = false;
   state.speaking = false;
   setWorld("idle");
@@ -1107,6 +1191,8 @@ $("micBtn")?.addEventListener("click", async () => {
 
   const allowed = await ensureTokenAccess("Practice AI konuşmasını başlatmak için jeton gerekiyor.");
   if (!allowed) return;
+
+  stopPracticeAudio();
 
   if (state.listening) {
     stopAll();
