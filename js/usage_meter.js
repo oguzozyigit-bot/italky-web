@@ -1,7 +1,8 @@
 import { supabase } from "/js/supabase_client.js";
 
 const API_BASE = "https://italky-api.onrender.com";
-const CHARS_PER_JETON = 3000;
+const DEFAULT_CHARS_PER_JETON = 3000;
+const PRACTICE_CHARS_PER_JETON = 1500;
 
 function normalizeText(value) {
   return String(value || "")
@@ -13,9 +14,10 @@ export function countChars(value) {
   return normalizeText(value).length;
 }
 
-export function calcTokensFromChars(charCount) {
+export function calcTokensFromChars(charCount, charsPerJeton = DEFAULT_CHARS_PER_JETON) {
   const n = Math.max(0, Number(charCount || 0));
-  return Math.ceil(n / CHARS_PER_JETON);
+  const step = Math.max(1, Number(charsPerJeton || DEFAULT_CHARS_PER_JETON));
+  return Math.ceil(n / step);
 }
 
 async function getUserIdOrThrow() {
@@ -47,7 +49,7 @@ async function postUsage(path, payload) {
   if (!res.ok) {
     const detail = json?.detail;
 
-    if (detail?.code === "INSUFFICIENT_TOKENS") {
+    if (detail?.code === "INSUFFICIENT_TOKENS" || detail === "insufficient_tokens") {
       const needed = Number(detail?.tokens_needed || 0);
       const have = Number(detail?.tokens_before || 0);
       const err = new Error(`Yetersiz jeton. Gereken: ${needed}, mevcut: ${have}`);
@@ -68,10 +70,9 @@ async function postUsage(path, payload) {
 }
 
 /*
-  Yeni mantık:
-  - standard / ai ayrımı yerine usage_kind: text | voice
-  - ücretli olan her modül tek merkezden usage_billing'e gider
-  - ilk kullanımda 1 jeton + her 3000 karakterde 1 jeton
+  Jeton düşümü:
+  - Practice AI: 1500 karakter eşiği
+  - Diğerleri: 3000 karakter eşiği
 */
 export async function commitUsage({
   module,
@@ -97,18 +98,25 @@ export async function commitUsage({
     };
   }
 
+  const normalizedModule = String(module || "").trim().toLowerCase();
+  const charsPerJeton =
+    normalizedModule === "practice_ai"
+      ? PRACTICE_CHARS_PER_JETON
+      : DEFAULT_CHARS_PER_JETON;
+
   return await postUsage("/api/usage/commit", {
     user_id: userId,
-    module,
+    module: normalizedModule,
     usage_kind: usageKind,
     char_count: finalCharCount,
+    chars_per_jeton: charsPerJeton,
     note,
     meta
   });
 }
 
 /*
-  Jetonlu modül isimlerini tek merkezden çözüyoruz
+  Tek merkezli modül çözümleme
 */
 export function resolveUsageModule({
   surface = "",
@@ -120,9 +128,12 @@ export function resolveUsageModule({
   const m = String(mode || "").trim().toLowerCase();
 
   // Practice AI
-  if (s === "practice" || s === "practic" || s === "practiceai") {
-    if (k === "voice") return "voice_ai";
-    return "practic_ai";
+  if (s === "practice_ai" || s === "practiceai" || s === "practice") {
+    if (k === "voice") return "practice_ai";
+    if (k === "text_in") return "practice_ai";
+    if (k === "text_out") return "practice_ai";
+    if (k === "voice_out") return "practice_ai";
+    return "practice_ai";
   }
 
   // FaceToFace
@@ -184,16 +195,19 @@ export function buildUsageNote({
   const k = String(usageKind || "text").trim().toLowerCase();
   const m = String(mode || "").trim().toLowerCase();
 
+  if (s === "practice_ai" || s === "practiceai" || s === "practice") {
+    if (k === "text_in") return "Practice AI • Öğrenci konuşması";
+    if (k === "text_out") return "Practice AI • Öğretmen cevabı";
+    if (k === "voice_out" || k === "voice") return "Practice AI • Öğretmen sesi";
+    return "Practice AI";
+  }
+
   if (k === "voice") {
     if (m === "preset_preview") return "Ücretsiz özel ses önizleme";
     if (m === "preset") return "Jetonlu model kullanımı • Özel Ses";
     if (m === "clone_preview") return "Jetonlu model kullanımı • Kendi Sesim Önizleme";
     if (m === "clone") return "Jetonlu model kullanımı • Kendi Sesim";
     return "Jetonlu model kullanımı • Ses";
-  }
-
-  if (s === "practice" || s === "practic" || s === "practiceai") {
-    return "Jetonlu model kullanımı • Practice AI";
   }
 
   if (m === "cultural") {
