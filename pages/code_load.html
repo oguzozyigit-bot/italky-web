@@ -18,7 +18,6 @@
       --ai-grad:linear-gradient(135deg,#8bd3ff 0%,#7c5cff 45%,#ff66c4 100%);
       --ok:#9df0b9;
       --err:#ffb2b2;
-      --warn:#ffd59a;
     }
 
     *{
@@ -149,24 +148,6 @@
       color:rgba(255,255,255,.88);
     }
 
-    .debug-box{
-      margin-top:12px;
-      padding:12px;
-      border-radius:16px;
-      background:rgba(255,255,255,.04);
-      border:1px solid rgba(255,255,255,.08);
-      color:var(--warn);
-      font-size:12px;
-      line-height:1.55;
-      font-weight:800;
-      word-break:break-word;
-      display:none;
-    }
-
-    .debug-box.show{
-      display:block;
-    }
-
     .result-actions{
       display:flex;
       gap:12px;
@@ -206,7 +187,6 @@
       <div id="resultBox" class="result">
         <div id="resultTitle" class="result-title"></div>
         <div id="resultText" class="result-text"></div>
-        <div id="debugBox" class="debug-box"></div>
 
         <div class="result-actions">
           <button class="result-btn secondary" type="button" id="goHomeBtn">Anasayfaya Dön</button>
@@ -228,22 +208,13 @@
     const resultBox = document.getElementById("resultBox");
     const resultTitle = document.getElementById("resultTitle");
     const resultText = document.getElementById("resultText");
-    const debugBox = document.getElementById("debugBox");
     const goHomeBtn = document.getElementById("goHomeBtn");
     const retryBtn = document.getElementById("retryBtn");
 
-    function showResult(ok, title, text, debugText = "") {
+    function showResult(ok, title, text) {
       resultBox.className = "result show " + (ok ? "ok" : "err");
       resultTitle.textContent = title;
       resultText.innerHTML = text;
-
-      if (debugText) {
-        debugBox.textContent = debugText;
-        debugBox.classList.add("show");
-      } else {
-        debugBox.textContent = "";
-        debugBox.classList.remove("show");
-      }
     }
 
     function mapCodeLoadError(reasonRaw, detailRaw = "") {
@@ -268,7 +239,6 @@
       if (reason === "CARD_NOT_FOUND") {
         return "Bu karta ait kayıt bulunamadı.";
       }
-
       if (detail) {
         return "İşlem sırasında sistem hatası oluştu.";
       }
@@ -322,8 +292,7 @@
           showResult(
             false,
             "İşlem Başarısız",
-            "Kod ile yükleme işlemi gerçekleştirilemedi.",
-            `HTTP: ${res.status} • JSON parse edilemedi`
+            "Kod ile yükleme işlemi gerçekleştirilemedi."
           );
           loadBtn.disabled = false;
           return;
@@ -348,8 +317,7 @@
         showResult(
           false,
           "İşlem Başarısız",
-          `Kod ile yükleme işlemi gerçekleştirilemedi.<br>Sebep: <b>${reasonText}</b>`,
-          `reason=${json.reason || "-"} • detail=${json.detail || "-"} • http=${res.status}`
+          `Kod ile yükleme işlemi gerçekleştirilemedi.<br>Sebep: <b>${reasonText}</b>`
         );
 
         loadBtn.disabled = false;
@@ -357,8 +325,7 @@
         showResult(
           false,
           "İşlem Başarısız",
-          "Kod ile yükleme işlemi gerçekleştirilemedi.",
-          `fetch_error=${e?.message || e}`
+          "Kod ile yükleme işlemi gerçekleştirilemedi."
         );
         loadBtn.disabled = false;
       }
@@ -376,8 +343,6 @@
 
     retryBtn?.addEventListener("click", () => {
       resultBox.className = "result";
-      debugBox.classList.remove("show");
-      debugBox.textContent = "";
       loadBtn.disabled = false;
       manualCode.focus();
     });
