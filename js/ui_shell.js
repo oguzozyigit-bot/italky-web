@@ -84,11 +84,21 @@ const HOME_HEADER_HTML = `
     </div>
 
     <nav class="menu-nav">
-      <a href="/pages/jetonbuy.html" class="menu-link-jeton" data-i18n="menu_token_load">Jeton Yükle</a>
+      <div class="menu-accordion" id="jetonAccordion">
+        <button class="menu-link-jeton accordion-trigger" id="jetonAccordionBtn" type="button">
+          <span>Jeton Yükle</span>
+          <span class="accordion-arrow">⌄</span>
+        </button>
+
+        <div class="accordion-body" id="jetonAccordionBody">
+          <button class="accordion-subbtn" id="jetonPlayBtn" type="button">Play Hesabınla Yükle</button>
+          <button class="accordion-subbtn" id="jetonNfcBtn" type="button">NFC Kart İle Yükle</button>
+          <button class="accordion-subbtn" id="jetonCodeBtn" type="button">Kod İle Yükle</button>
+        </div>
+      </div>
+
       <a href="/pages/wallet_history.html" data-i18n="menu_wallet_history">Jeton Hareketleri</a>
-
       <a href="/pages/admin.html" id="adminPanelLink" class="hidden">Admin Panel</a>
-
       <a href="/pages/profile.html" data-i18n="menu_profile">Profil</a>
       <a href="/pages/about.html" data-i18n="menu_about">Hakkımızda</a>
       <a href="/pages/jeton-nedir.html" data-i18n="menu_what_is_token">Jeton Nedir</a>
@@ -573,7 +583,9 @@ body.ui-menu-open{
 }
 
 .menu-nav a,
-.menu-action{
+.menu-action,
+.accordion-trigger,
+.accordion-subbtn{
   width:100%;
   text-align:left;
   text-decoration:none;
@@ -594,11 +606,16 @@ body.ui-menu-open{
 .menu-nav a:hover,
 .menu-nav a:active,
 .menu-action:hover,
-.menu-action:active{
+.menu-action:active,
+.accordion-trigger:hover,
+.accordion-trigger:active,
+.accordion-subbtn:hover,
+.accordion-subbtn:active{
   background:linear-gradient(180deg, rgba(139,211,255,.12), rgba(124,92,255,.10));
 }
 
-.menu-link-jeton{
+.menu-link-jeton,
+.accordion-trigger{
   color:#fffaf2 !important;
   background:linear-gradient(135deg, var(--trendyol-orange) 0%, var(--trendyol-orange-dark) 100%) !important;
   border:1px solid rgba(255,173,96,.34) !important;
@@ -606,7 +623,9 @@ body.ui-menu-open{
 }
 
 .menu-link-jeton:hover,
-.menu-link-jeton:active{
+.menu-link-jeton:active,
+.accordion-trigger:hover,
+.accordion-trigger:active{
   filter:brightness(1.06);
 }
 
@@ -621,6 +640,48 @@ body.ui-menu-open{
 .menu-action.danger{
   border-color:rgba(255,120,120,.18);
   color:#ffd6d6;
+}
+
+.menu-accordion{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.accordion-trigger{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+
+.accordion-arrow{
+  font-size:20px;
+  font-weight:900;
+  opacity:.85;
+  transition:transform .18s ease;
+}
+
+.menu-accordion.open .accordion-arrow{
+  transform:rotate(180deg);
+}
+
+.accordion-body{
+  display:none;
+  flex-direction:column;
+  gap:8px;
+  padding-left:10px;
+}
+
+.menu-accordion.open .accordion-body{
+  display:flex;
+}
+
+.accordion-subbtn{
+  background:linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.03));
+  border:1px solid rgba(255,255,255,.08);
+  font-size:12px;
+  font-weight:800;
+  min-height:46px;
 }
 
 .menu-orbit-wrap{
@@ -854,6 +915,11 @@ function bindMenu() {
   const menuAvatarClick = document.getElementById("menuAvatarClick");
   const menuJetonInfoLink = document.getElementById("menuJetonInfoLink");
   const adminPanelLink = document.getElementById("adminPanelLink");
+  const jetonAccordion = document.getElementById("jetonAccordion");
+  const jetonAccordionBtn = document.getElementById("jetonAccordionBtn");
+  const jetonPlayBtn = document.getElementById("jetonPlayBtn");
+  const jetonNfcBtn = document.getElementById("jetonNfcBtn");
+  const jetonCodeBtn = document.getElementById("jetonCodeBtn");
 
   if (!menuBtn || !sideMenu) return;
   if (menuBtn.dataset.bound === "1") return;
@@ -902,6 +968,25 @@ function bindMenu() {
 
   adminPanelLink?.addEventListener("click", () => {
     closeMenu();
+  });
+
+  jetonAccordionBtn?.addEventListener("click", () => {
+    jetonAccordion?.classList.toggle("open");
+  });
+
+  jetonPlayBtn?.addEventListener("click", () => {
+    closeMenu();
+    location.href = "/pages/jeton_market_play.html";
+  });
+
+  jetonNfcBtn?.addEventListener("click", () => {
+    closeMenu();
+    location.href = "/pages/nfc_load.html";
+  });
+
+  jetonCodeBtn?.addEventListener("click", () => {
+    closeMenu();
+    location.href = "/pages/code_load.html";
   });
 
   sideMenu.querySelectorAll(".menu-nav a").forEach((link) => {
