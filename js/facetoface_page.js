@@ -38,16 +38,6 @@ function canonical(code) {
     .trim();
 }
 
-function normalizePackageCode(raw) {
-  const code = String(raw || "").trim().toLowerCase();
-  if (!code) return "";
-  if (code.startsWith("premium")) return "premium";
-  if (code.startsWith("translate")) return "translate";
-  if (code.startsWith("education")) return "education";
-  if (code.startsWith("edu")) return "education";
-  return code;
-}
-
 const SITE_LANG = "tr";
 
 const RAW_LANG_POOL = Array.isArray(getLangPoolForSite(SITE_LANG))
@@ -225,11 +215,11 @@ uiModal?.addEventListener("click", (e) => {
   if (e.target === uiModal) closeUiModal();
 });
 
-
+async function readAccessState() {
+  accessState = { lockedAll: false };
+}
 
 function canOpenFaceSettings() {
-  if (accessState.lockedAll) return false;
-  if (accessState.trialActive) return false;
   return true;
 }
 
@@ -299,8 +289,9 @@ function faceVoiceUsageNote() {
   });
 }
 
-function canOpenFaceSettings() {
-  return true;
+function canonTone(value) {
+  const v = String(value || "neutral").trim().toLowerCase();
+  return ["neutral", "happy", "angry", "sad", "excited"].includes(v) ? v : "neutral";
 }
 
 function detectToneFromText(text) {
@@ -1470,7 +1461,6 @@ function bind() {
   }, { capture: true });
 
   clearBtn?.addEventListener("click", () => {
-    
     stopAudio();
     stopTypewriter();
     stopRecognizer();
@@ -1489,11 +1479,11 @@ function bind() {
   homeBtn?.addEventListener("click", () => {
     location.href = safeHomeHref();
   });
-  
+
   settingsBtn?.addEventListener("click", (e) => {
-  e.preventDefault();
-  location.href = "/pages/translation_settings.html?from=facetoface";
-});
+    e.preventDefault();
+    location.href = "/pages/translation_settings.html?from=facetoface";
+  });
 
   topMic?.addEventListener("click", async (e) => {
     e.preventDefault();
@@ -1522,8 +1512,8 @@ function bind() {
   });
 
   bindKeyboardButton(settingsBtn, async () => {
-  location.href = "/pages/translation_settings.html?from=facetoface";
-});
+    location.href = "/pages/translation_settings.html?from=facetoface";
+  });
 
   try {
     if (window.speechSynthesis) {
