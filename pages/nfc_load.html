@@ -57,6 +57,8 @@
       background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
       padding:18px;
       box-shadow:0 18px 40px rgba(0,0,0,.22);
+      position:relative;
+      overflow:hidden;
     }
 
     .title{
@@ -89,6 +91,7 @@
       justify-content:center;
       margin-bottom:18px;
       isolation:isolate;
+      transition:opacity .28s ease, transform .28s ease;
     }
 
     .energy-ring{
@@ -286,6 +289,7 @@
       font-weight:800;
       line-height:1.65;
       text-align:center;
+      transition:opacity .28s ease, transform .28s ease;
     }
 
     .helper button{
@@ -302,17 +306,29 @@
     .result{
       margin-top:18px;
       border-radius:24px;
-      padding:16px;
+      padding:18px;
       border:1px solid rgba(255,255,255,.08);
       background:rgba(255,255,255,.03);
       display:none;
+      max-width:430px;
+      margin-left:auto;
+      margin-right:auto;
     }
 
-    .result.show{ display:block; }
+    .result.show{
+      display:block;
+      animation:successPop .38s ease;
+    }
+
+    @keyframes successPop{
+      0%{ opacity:0; transform:translateY(20px) scale(.96); }
+      100%{ opacity:1; transform:translateY(0) scale(1); }
+    }
 
     .result.ok{
       border-color:rgba(157,240,185,.28);
       background:linear-gradient(135deg, rgba(157,240,185,.10), rgba(255,255,255,.03));
+      box-shadow:0 14px 36px rgba(57,255,163,.08);
     }
 
     .result.err{
@@ -323,20 +339,21 @@
     .result-title{
       font-size:18px;
       font-weight:1000;
-      margin:0 0 8px;
+      margin:0 0 10px;
+      line-height:1.35;
     }
 
     .result-text{
-      font-size:14px;
-      line-height:1.65;
+      font-size:15px;
+      line-height:1.7;
       font-weight:800;
-      color:rgba(255,255,255,.88);
+      color:rgba(255,255,255,.92);
     }
 
     .result-actions{
       display:flex;
       gap:12px;
-      margin-top:14px;
+      margin-top:16px;
     }
 
     .result-btn{
@@ -355,11 +372,57 @@
       background:rgba(255,255,255,.06);
       border:1px solid rgba(255,255,255,.10);
     }
+
+    .success-mode .stage,
+    .success-mode .helper{
+      opacity:.22;
+      transform:scale(.98);
+      pointer-events:none;
+    }
+
+    .success-mode .title,
+    .success-mode .desc{
+      text-align:center;
+    }
+
+    .confetti-layer{
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      overflow:hidden;
+      z-index:9999;
+    }
+
+    .confetti{
+      position:absolute;
+      top:-20px;
+      width:10px;
+      height:16px;
+      opacity:.95;
+      animation:fall linear forwards;
+      border-radius:3px;
+    }
+
+    @keyframes fall{
+      0%{
+        transform:translateY(-20px) rotate(0deg);
+        opacity:0;
+      }
+      10%{
+        opacity:1;
+      }
+      100%{
+        transform:translateY(110vh) rotate(720deg);
+        opacity:.95;
+      }
+    }
   </style>
 </head>
 <body>
+  <div id="confettiLayer" class="confetti-layer"></div>
+
   <main id="pageContent">
-    <section class="hero">
+    <section id="heroCard" class="hero">
       <h1 class="title">NFC Kartını Okut</h1>
       <p class="desc">
         Satın aldığınız siyah NFC kartı telefonun arka kısmına yaklaştırın. Okuma tamamlandığında jetonlar hesabınıza aktarılır.
@@ -409,17 +472,52 @@
     mountShell({ scroll:"auto" });
 
     const API_BASE = "https://italky-api.onrender.com";
+    const heroCard = document.getElementById("heroCard");
     const resultBox = document.getElementById("resultBox");
     const resultTitle = document.getElementById("resultTitle");
     const resultText = document.getElementById("resultText");
     const goCodeBtn = document.getElementById("goCodeBtn");
     const goCodeBtn2 = document.getElementById("goCodeBtn2");
     const goHomeBtn = document.getElementById("goHomeBtn");
+    const confettiLayer = document.getElementById("confettiLayer");
+
+    function launchConfetti() {
+      if (!confettiLayer) return;
+      confettiLayer.innerHTML = "";
+
+      const colors = ["#8bd3ff", "#7c5cff", "#ff66c4", "#34d399", "#fbbf24", "#ffffff"];
+      const count = 70;
+
+      for (let i = 0; i < count; i++) {
+        const piece = document.createElement("div");
+        piece.className = "confetti";
+        piece.style.left = `${Math.random() * 100}%`;
+        piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+        piece.style.animationDuration = `${2.6 + Math.random() * 1.8}s`;
+        piece.style.animationDelay = `${Math.random() * 0.45}s`;
+        piece.style.transform = `translateY(-20px) rotate(${Math.random() * 180}deg)`;
+        piece.style.width = `${8 + Math.random() * 6}px`;
+        piece.style.height = `${10 + Math.random() * 10}px`;
+        confettiLayer.appendChild(piece);
+      }
+
+      setTimeout(() => {
+        confettiLayer.innerHTML = "";
+      }, 5000);
+    }
 
     function showResult(ok, title, text){
       resultBox.className = "result show " + (ok ? "ok" : "err");
       resultTitle.textContent = title;
       resultText.innerHTML = text;
+
+      if (ok) {
+        heroCard.classList.add("success-mode");
+        launchConfetti();
+        resultBox.scrollIntoView({ behavior: "smooth", block: "center" });
+      } else {
+        heroCard.classList.remove("success-mode");
+      }
     }
 
     function mapNfcError(reasonRaw) {
@@ -525,8 +623,6 @@
           return;
         }
       } catch {}
-
-      // Köprü yoksa sabit hata göstermiyoruz; sayfa temiz kalsın.
     })();
   </script>
 </body>
