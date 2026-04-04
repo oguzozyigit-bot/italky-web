@@ -558,70 +558,120 @@
     }
 
     function typeLabel(type, reason){
-      const t = String(type || "").trim().toLowerCase();
-      const r = String(reason || "").trim();
+  const t = String(type || "").trim().toLowerCase();
+  const r = String(reason || "").trim().toLowerCase();
 
-      const map = {
-        purchase: "Satın Alma",
-        package_bonus: "Paket Bonusu",
-        upgrade_credit: "Yükseltme Kredisi",
-        gift: "Hediye",
-        manual_add: "Manuel Ekleme",
-        manual_deduct: "Manuel Düşüm",
+  const map = {
+    credit: "Yüklenen",
+    debit: "Harcanan",
 
-        usage_text: "Metin Kullanımı",
-        usage_face_to_face: "FaceToFace",
-        usage_side_to_side: "SideToSide",
-        usage_meeting: "Toplantı Kullanımı",
-        usage_clone_voice: "Klon Ses",
-        usage_teacher: "Practice AI",
+    purchase: "Satın Alma",
+    package_bonus: "Paket Bonusu",
+    upgrade_credit: "Yükseltme Kredisi",
+    gift: "Hediye",
+    manual_add: "Manuel Ekleme",
+    manual_deduct: "Manuel Düşüm",
 
-        text_ai: "Kültürel Translate",
-        voice_ai: "Ses Kullanımı",
-        voice_clone: "Kendi Sesim",
-        voice_clone_preview: "Kendi Sesim Önizleme",
-        voice_preset_use: "Özel Ses Kullanımı",
-        voice_preset_preview: "Özel Ses Önizleme",
-        practic_ai: "Practice AI"
-      };
+    nfc_token_load: "NFC Kart Yükleme",
+    manual_code_token_load: "Kod ile Yükleme",
+    google_play_token_load: "Google Play Yükleme",
 
-      if (map[t]) return map[t];
-      if (r) return r;
-      return type || "İşlem";
-    }
+    usage_text: "Metin Kullanımı",
+    usage_face_to_face: "FaceToFace",
+    usage_side_to_side: "SideToSide",
+    usage_meeting: "Toplantı Kullanımı",
+    usage_clone_voice: "Klon Ses",
+    usage_teacher: "Practice AI",
+
+    text_ai: "Kültürel Translate",
+    voice_ai: "Ses Kullanımı",
+    voice_clone: "Kendi Sesim",
+    voice_clone_preview: "Kendi Sesim Önizleme",
+    voice_preset_use: "Özel Ses Kullanımı",
+    voice_preset_preview: "Özel Ses Önizleme",
+    practic_ai: "Practice AI",
+
+    level_test_exam: "Seviye Tespit Sınavı",
+    game_pass_use: "Oyun Erişimi"
+  };
+
+  if (map[r]) return map[r];
+  if (map[t]) return map[t];
+  if (reason) return reason;
+  return type || "İşlem";
+}
 
     function typeIcon(type, amount, reason){
-      const t = String(type || "").trim().toLowerCase();
-      const r = String(reason || "").toLowerCase();
+  const t = String(type || "").trim().toLowerCase();
+  const r = String(reason || "").trim().toLowerCase();
 
-      if (amount > 0) {
-        if (t === "upgrade_credit") return "⬆️";
-        if (t === "package_bonus") return "🎁";
-        if (t === "gift") return "🎉";
-        return "➕";
-      }
+  if (
+    amount > 0 ||
+    r.includes("nfc_token_load") ||
+    r.includes("manual_code_token_load") ||
+    r.includes("google_play_token_load") ||
+    r.includes("purchase") ||
+    r.includes("gift") ||
+    r.includes("package_bonus") ||
+    r.includes("upgrade_credit")
+  ) {
+    if (r.includes("gift")) return "🎁";
+    if (r.includes("google_play")) return "🛒";
+    if (r.includes("manual_code")) return "🔢";
+    if (r.includes("nfc_token_load")) return "📶";
+    return "➕";
+  }
 
-      if (amount < 0) {
-        if (t === "text_ai" || r.includes("kültürel translate")) return "📝";
-        if (t === "voice_preset_use" || r.includes("özel ses")) return "🎧";
-        if (t === "voice_clone" || r.includes("kendi sesim")) return "🗣️";
-        if (t === "voice_ai") return "🔊";
-        if (t === "practic_ai" || t === "usage_teacher" || r.includes("practice ai")) return "🎓";
-        if (t === "usage_face_to_face") return "🎙️";
-        if (t === "usage_side_to_side") return "🌍";
-        if (t === "usage_meeting") return "👥";
-        return "➖";
-      }
+  if (
+    amount < 0 ||
+    r.includes("level_test_exam") ||
+    r.includes("game_pass_use") ||
+    r.includes("text_ai") ||
+    r.includes("voice_ai") ||
+    r.includes("voice_clone") ||
+    r.includes("practice")
+  ) {
+    if (r.includes("level_test_exam")) return "📝";
+    if (r.includes("game_pass_use")) return "🎮";
+    if (r.includes("text_ai")) return "🌍";
+    if (r.includes("voice_clone")) return "🗣️";
+    if (r.includes("voice_ai")) return "🔊";
+    if (r.includes("practice")) return "🎓";
+    return "➖";
+  }
 
-      return "•";
-    }
+  return "•";
+}
 
-    function typeGroup(type, amount){
-      const t = String(type || "").trim().toLowerCase();
-      if (amount > 0 || LOADED_TYPES.has(t)) return "plus";
-      if (amount < 0 || SPENT_TYPES.has(t)) return "minus";
-      return "neutral";
-    }
+    function typeGroup(type, amount, reason){
+  const t = String(type || "").trim().toLowerCase();
+  const r = String(reason || "").trim().toLowerCase();
+
+  if (
+    amount > 0 ||
+    t === "credit" ||
+    r.includes("nfc_token_load") ||
+    r.includes("manual_code_token_load") ||
+    r.includes("google_play_token_load") ||
+    r.includes("purchase") ||
+    r.includes("gift") ||
+    r.includes("package_bonus") ||
+    r.includes("upgrade_credit")
+  ) return "plus";
+
+  if (
+    amount < 0 ||
+    t === "debit" ||
+    r.includes("level_test_exam") ||
+    r.includes("game_pass_use") ||
+    r.includes("text_ai") ||
+    r.includes("voice_ai") ||
+    r.includes("voice_clone") ||
+    r.includes("practice")
+  ) return "minus";
+
+  return "neutral";
+}
 
     function filterRows(rows){
       const q = String(searchInput.value || "").trim().toLowerCase();
@@ -696,7 +746,16 @@
         const group = typeGroup(row.type, amt);
         const icon = typeIcon(row.type, amt, row.reason);
         const meta = parseMeta(row.meta);
-        const balanceAfter = meta?.balance_after;
+        const balanceAfterRaw =
+  meta?.balance_after ??
+  row?.balance_after ??
+  row?.tokens_after ??
+  row?.after_balance ??
+  null;
+
+const balanceAfter = Number.isFinite(Number(balanceAfterRaw))
+  ? Number(balanceAfterRaw)
+  : null;
         const deltaText = `${amt > 0 ? "+" : ""}${formatInt(amt)}`;
 
         return `
@@ -715,7 +774,7 @@
 
             <div class="right">
               <div class="delta ${group}">${escapeHtml(deltaText)}</div>
-              <div class="after">Bakiye: ${escapeHtml(formatInt(balanceAfter ?? "-"))}</div>
+              <div class="after">Bakiye: ${escapeHtml(balanceAfter === null ? "-" : formatInt(balanceAfter))}</div>
             </div>
           </div>
         `;
