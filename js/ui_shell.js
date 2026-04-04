@@ -1,3 +1,5 @@
+// FILE: /js/ui_shell.js
+
 import { installAutoTranslate } from "/js/system_lang.js";
 import { STORAGE_KEY } from "/js/config.js";
 
@@ -91,9 +93,22 @@ const HOME_HEADER_HTML = `
         </button>
 
         <div class="accordion-body" id="jetonAccordionBody">
-          <button class="accordion-subbtn" id="jetonPlayBtn" type="button">Play Hesabınla Yükle</button>
-          <button class="accordion-subbtn" id="jetonNfcBtn" type="button">NFC Kart İle Yükle</button>
-          <button class="accordion-subbtn" id="jetonCodeBtn" type="button">Kod İle Yükle</button>
+          <div class="accordion-body-inner">
+            <button class="accordion-subbtn sub-google" id="jetonPlayBtn" type="button">
+              <span class="sub-dot"></span>
+              Google Hesabınla Yükle
+            </button>
+
+            <button class="accordion-subbtn sub-nfc" id="jetonNfcBtn" type="button">
+              <span class="sub-dot"></span>
+              NFC Kart İle Yükle
+            </button>
+
+            <button class="accordion-subbtn sub-code" id="jetonCodeBtn" type="button">
+              <span class="sub-dot"></span>
+              Kod İle Yükle
+            </button>
+          </div>
         </div>
       </div>
 
@@ -576,12 +591,6 @@ body.ui-menu-open{
   flex:0 0 auto;
 }
 
-.menu-nav::-webkit-scrollbar{
-  width:0;
-  height:0;
-  display:none;
-}
-
 .menu-nav a,
 .menu-action,
 .accordion-trigger,
@@ -600,7 +609,12 @@ body.ui-menu-open{
   cursor:pointer;
   font-family:'Outfit',sans-serif;
   line-height:1.15;
-  transition:transform .18s ease, filter .18s ease, border-color .18s ease, box-shadow .18s ease;
+  transition:
+    transform .18s ease,
+    filter .18s ease,
+    border-color .18s ease,
+    box-shadow .18s ease,
+    background .18s ease;
 }
 
 .menu-nav a:hover,
@@ -622,11 +636,112 @@ body.ui-menu-open{
   box-shadow:0 10px 24px rgba(242,122,26,.22), inset 0 1px 0 rgba(255,255,255,.08);
 }
 
-.menu-link-jeton:hover,
-.menu-link-jeton:active,
-.accordion-trigger:hover,
-.accordion-trigger:active{
-  filter:brightness(1.06);
+.accordion-trigger{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  min-height:60px;
+}
+
+.menu-accordion{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.accordion-arrow{
+  font-size:22px;
+  font-weight:900;
+  opacity:.9;
+  transition:transform .22s ease, opacity .22s ease;
+}
+
+.menu-accordion.open .accordion-arrow{
+  transform:rotate(180deg) scale(1.08);
+  opacity:1;
+}
+
+.accordion-body{
+  display:grid;
+  grid-template-rows:0fr;
+  transition:grid-template-rows .24s ease;
+}
+
+.menu-accordion.open .accordion-body{
+  grid-template-rows:1fr;
+}
+
+.accordion-body-inner{
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  padding:0 2px 2px 10px;
+}
+
+.accordion-subbtn{
+  min-height:50px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-size:13px;
+  font-weight:900;
+  border:1px solid rgba(255,255,255,.08);
+  transform:translateY(-4px);
+  opacity:.92;
+}
+
+.menu-accordion.open .accordion-subbtn{
+  transform:translateY(0);
+  opacity:1;
+}
+
+.accordion-subbtn .sub-dot{
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  flex:0 0 auto;
+  box-shadow:0 0 10px currentColor;
+}
+
+.accordion-subbtn.sub-google{
+  background:linear-gradient(135deg, rgba(255,86,86,.18), rgba(255,126,126,.10));
+  border-color:rgba(255,106,106,.24);
+  color:#ffecec;
+  box-shadow:0 8px 18px rgba(255,86,86,.08);
+}
+
+.accordion-subbtn.sub-google .sub-dot{
+  background:#ff5f5f;
+  color:#ff5f5f;
+}
+
+.accordion-subbtn.sub-nfc{
+  background:linear-gradient(135deg, rgba(70,155,255,.18), rgba(100,190,255,.10));
+  border-color:rgba(100,190,255,.22);
+  color:#ecf7ff;
+  box-shadow:0 8px 18px rgba(70,155,255,.08);
+}
+
+.accordion-subbtn.sub-nfc .sub-dot{
+  background:#4ea8ff;
+  color:#4ea8ff;
+}
+
+.accordion-subbtn.sub-code{
+  background:linear-gradient(135deg, rgba(60,210,140,.16), rgba(90,230,170,.10));
+  border-color:rgba(90,230,170,.20);
+  color:#ecfff5;
+  box-shadow:0 8px 18px rgba(65,216,143,.08);
+}
+
+.accordion-subbtn.sub-code .sub-dot{
+  background:#41d88f;
+  color:#41d88f;
+}
+
+.accordion-subbtn:active{
+  transform:scale(.985);
 }
 
 .menu-action{
@@ -640,48 +755,6 @@ body.ui-menu-open{
 .menu-action.danger{
   border-color:rgba(255,120,120,.18);
   color:#ffd6d6;
-}
-
-.menu-accordion{
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-}
-
-.accordion-trigger{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-}
-
-.accordion-arrow{
-  font-size:20px;
-  font-weight:900;
-  opacity:.85;
-  transition:transform .18s ease;
-}
-
-.menu-accordion.open .accordion-arrow{
-  transform:rotate(180deg);
-}
-
-.accordion-body{
-  display:none;
-  flex-direction:column;
-  gap:8px;
-  padding-left:10px;
-}
-
-.menu-accordion.open .accordion-body{
-  display:flex;
-}
-
-.accordion-subbtn{
-  background:linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.03));
-  border:1px solid rgba(255,255,255,.08);
-  font-size:12px;
-  font-weight:800;
-  min-height:46px;
 }
 
 .menu-orbit-wrap{
@@ -976,7 +1049,7 @@ function bindMenu() {
 
   jetonPlayBtn?.addEventListener("click", () => {
     closeMenu();
-    location.href = "/pages/jeton_market_play.html";
+    location.href = "/pages/jetonbuy.html";
   });
 
   jetonNfcBtn?.addEventListener("click", () => {
