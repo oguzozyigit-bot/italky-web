@@ -1,6 +1,8 @@
 // FILE: /js/practice_ai_page.js
 
 import { supabase } from "/js/supabase_client.js";
+import { setHeaderTokens } from "/js/ui_shell.js";
+import { STORAGE_KEY } from "/js/config.js";
 import {
   commitUsage,
   resolveUsageModule,
@@ -82,6 +84,22 @@ function safeNum(v, fallback = 0) {
   return Number.isFinite(n) ? n : fallback;
 }
 
+function patchCachedTokens(tokens) {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    const cached = raw ? JSON.parse(raw) : {};
+    cached.tokens = Number(tokens || 0);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(cached));
+  } catch {}
+}
+
+function syncTokenUI(tokens) {
+  const n = safeNum(tokens, 0);
+  try { setHeaderTokens(n); } catch {}
+  try { window.setHeaderTokens?.(n); } catch {}
+  patchCachedTokens(n);
+}
+
 async function getCurrentUser() {
   try {
     const { data, error } = await supabase.auth.getUser();
@@ -105,7 +123,10 @@ async function getTokenBalance() {
       .maybeSingle();
 
     if (error) throw error;
-    return safeNum(data?.tokens, 0);
+
+    const tokens = safeNum(data?.tokens, 0);
+    syncTokenUI(tokens);
+    return tokens;
   } catch (e) {
     console.warn("getTokenBalance error:", e);
     return 0;
@@ -433,7 +454,7 @@ async function chargePracticeTextUsage(inputText, outputText) {
 
   if (billableChars <= 0) return null;
 
-  return await commitUsage({
+  const result = await commitUsage({
     module: practiceTextUsageModule(),
     usageKind: "text",
     charCount: billableChars,
@@ -450,13 +471,19 @@ async function chargePracticeTextUsage(inputText, outputText) {
       billable_chars: billableChars
     }
   });
+
+  if (typeof result?.tokens_after === "number") {
+    syncTokenUI(result.tokens_after);
+  }
+
+  return result;
 }
 
 async function chargePracticeVoiceUsage(text) {
   const charCount = String(text || "").trim().length;
   if (charCount <= 0) return null;
 
-  return await commitUsage({
+  const result = await commitUsage({
     module: practiceVoiceUsageModule(),
     usageKind: "voice",
     charCount,
@@ -472,12 +499,19 @@ async function chargePracticeVoiceUsage(text) {
       billable_chars: charCount
     }
   });
+
+  if (typeof result?.tokens_after === "number") {
+    syncTokenUI(result.tokens_after);
+  }
+
+  return result;
 }
 
-function redirectForInsufficientTokens(err) {
+async function redirectForInsufficientTokens(err) {
   if (err?.code === "INSUFFICIENT_TOKENS") {
+    const tokens = await getTokenBalance();
     showTokenPopup({
-      tokens: 0,
+      tokens,
       required: PRACTICE_REQUIRED_TOKENS,
       reason: "Jetonun yetersiz. Devam etmek için jeton almalısın."
     });
@@ -515,6 +549,39 @@ function setStatus(text = "") {
 function updateTranslation(text = "") {
   const el = $("turkishTranslation");
   if (el) el.textContent = text || "Hoşgeldin. Öğretmen birazdan gelecek...";
+}
+
+function updateRepeatGuide(targetPhrase = "", repeatHintTr = "") {
+  const phraseEl =
+    $("repeatPhrase") ||
+    $("targetPhrase") ||
+    $("repeatTargetPhrase") ||
+    $("lessonPhrase");
+
+  const hintEl =
+    $("repeatHint") ||
+    $("repeatHintTr") ||
+    $("repeatGuideTr");
+
+  const wrapEl =
+    $("repeatWrap") ||
+    $("repeatCard") ||
+    $("repeatGuide");
+
+  const cleanPhrase = String(targetPhrase || "").trim();
+  const cleanHint = String(repeatHintTr || "").trim();
+
+  if (phraseEl) phraseEl.textContent = cleanPhrase;
+  if (hintEl) hintEl.textContent = cleanHint;
+
+  if (wrapEl) {
+    wrapEl.style.display = cleanPhrase ? "" : "none";
+  } else if (!phraseEl && !hintEl && cleanPhrase) {
+    const merged = cleanHint
+      ? `${cleanHint}\n${cleanPhrase}`
+      : cleanPhrase;
+    updateTranslation(merged);
+  }
 }
 
 function saveState() {
@@ -576,6 +643,7 @@ function openLanguageSheet() {
       state.listening = false;
       state.mustRepeat = false;
       state.targetPhrase = "";
+      updateRepeatGuide("", "");
 
       updateLangBadge();
       setWorld("idle");
@@ -669,7 +737,7 @@ async function speakAI(text) {
     await chargePracticeVoiceUsage(clean);
   } catch (e) {
     console.error("PRACTICE VOICE USAGE ERROR:", e);
-    if (redirectForInsufficientTokens(e)) return;
+    if (await redirectForInsufficientTokens(e)) return;
   }
 
   try {
@@ -691,6 +759,10 @@ async function speakAI(text) {
 
     const j = await r.json().catch(() => null);
     if (r.ok && j?.ok && j?.audio_base64) {
+      if (typeof j?.tokens_after === "number") {
+        syncTokenUI(j.tokens_after);
+      }
+
       const audio = new Audio(`data:audio/mp3;base64,${j.audio_base64}`);
       audio.preload = "auto";
       audio.playsInline = true;
@@ -793,10 +865,12 @@ STRICT TEACHING MODE
 
 STYLE
 - Cheerful, warm, motivating, teacher-like.
-- Not overly casual.
+- A little relaxed, natural, human.
+- Not robotic.
 - Not overly strict.
 - Short replies only.
 - Usually 1 short sentence + 1 short question.
+- Sometimes a mini challenge, small quiz, or simple playful prompt is okay.
 - Do not produce long paragraphs.
 
 LESSON GOAL
@@ -808,8 +882,8 @@ LESSON GOAL
 PRONUNCIATION RULE
 - If pronunciation is below 95, do not continue to a new topic.
 - Give the correct phrase.
-- Ask the student to repeat it.
-- Keep repeating until pronunciation reaches at least 95.
+- Ask the student to repeat it gently.
+- If pronunciation is 95 or above, move on.
 
 VISIBLE OUTPUT FORMAT
 Return JSON only:
@@ -817,13 +891,31 @@ Return JSON only:
   "reply": "teacher reply only in target language",
   "reply_tr": "short Turkish meaning",
   "target_phrase": "exact phrase to repeat if needed",
+  "repeat_hint_tr": "very short Turkish hint for the repeat phrase",
   "should_repeat": true,
   "lesson_stage": "placement|practice|repeat|correction"
 }
 `;
 
-function buildRuntimePrompt(userText, scoreValue) {
-  return `
+/* ---------------------------------------------------
+   FLOW
+--------------------------------------------------- */
+function showUserSafeError() {
+  setStatus("italkyAI şu anda yanıt oluşturamadı.");
+  updateTranslation("italkyAI şu anda yanıt oluşturamadı. Lütfen tekrar dene.");
+  updateRepeatGuide("", "");
+  setCaption("Hazır");
+  setWorld("idle");
+}
+
+async function askTeacher(userText, scoreValue = null) {
+  state.level = await getProfileLevel();
+
+  const headers = await getAuthHeaders();
+
+  const payload = {
+    system_prompt: GEMINI_TEACHER_SYSTEM,
+    prompt: `
 Selected target language: ${LANGS[currentLang]?.label || currentLang}
 Selected target language code: ${currentLang}
 Profile level: ${state.level || "unknown"}
@@ -834,18 +926,10 @@ Pronunciation score: ${typeof scoreValue === "number" ? scoreValue : "unknown"}
 Runtime rules:
 - Visible reply must stay only in ${LANGS[currentLang]?.label || currentLang}.
 - If score < 95, keep the same phrase and ask for repetition.
-- Keep the reply short.
-`;
-}
-
-async function askTeacher(userText, scoreValue = null) {
-  state.level = await getProfileLevel();
-
-  const headers = await getAuthHeaders();
-
-  const payload = {
-    system_prompt: GEMINI_TEACHER_SYSTEM,
-    prompt: buildRuntimePrompt(userText, scoreValue),
+- If score >= 95, move on.
+- Keep the reply short, natural and encouraging.
+- Do not repeat the student's name in every message.
+`,
     mode: "practice_teacher_only",
     lang: currentLang,
     response_format: "json",
@@ -877,14 +961,15 @@ async function askTeacher(userText, scoreValue = null) {
   const data = safeJson(raw) || {};
   const parsed = safeJson(data?.text || "") || data || {};
 
-  if (typeof data?.tokens_after === "number" && window.setHeaderTokens) {
-    try { window.setHeaderTokens(data.tokens_after); } catch {}
+  if (typeof data?.tokens_after === "number") {
+    syncTokenUI(data.tokens_after);
   }
 
   return {
     reply: String(parsed.reply || "").trim(),
     reply_tr: String(parsed.reply_tr || "").trim(),
     target_phrase: String(parsed.target_phrase || "").trim(),
+    repeat_hint_tr: String(parsed.repeat_hint_tr || "").trim(),
     should_repeat: Boolean(parsed.should_repeat),
     lesson_stage: String(parsed.lesson_stage || "").trim()
   };
@@ -995,13 +1080,6 @@ function initRecognition() {
 /* ---------------------------------------------------
    FLOW
 --------------------------------------------------- */
-function showUserSafeError() {
-  setStatus("italkyAI şu anda yanıt oluşturamadı.");
-  updateTranslation("italkyAI şu anda yanıt oluşturamadı. Lütfen tekrar dene.");
-  setCaption("Hazır");
-  setWorld("idle");
-}
-
 async function handleUserSpeech(spokenText) {
   const spoken = String(spokenText || "").trim();
   if (!spoken) return;
@@ -1023,6 +1101,13 @@ async function handleUserSpeech(spokenText) {
       return;
     }
 
+    try {
+      await chargePracticeTextUsage(spoken, ai.reply);
+    } catch (e) {
+      console.error("PRACTICE TEXT USAGE ERROR:", e);
+      if (await redirectForInsufficientTokens(e)) return;
+    }
+
     history.push({
       role: "ai",
       text: ai.reply,
@@ -1036,18 +1121,19 @@ async function handleUserSpeech(spokenText) {
     if (ai.should_repeat && ai.target_phrase) {
       state.mustRepeat = true;
       state.targetPhrase = ai.target_phrase;
+      updateRepeatGuide(ai.target_phrase, ai.repeat_hint_tr || "");
     } else {
       state.mustRepeat = false;
       state.targetPhrase = "";
+      updateRepeatGuide("", "");
     }
 
     saveState();
     await speakAI(ai.reply);
     setStatus(state.mustRepeat ? "Tekrarla." : "Devam edelim.");
-
   } catch (e) {
     console.error("PRACTICE CHAT ERROR:", e);
-    if (redirectForInsufficientTokens(e)) return;
+    if (await redirectForInsufficientTokens(e)) return;
     showUserSafeError();
   }
 }
@@ -1071,11 +1157,17 @@ async function startFirstTurn() {
     state.mustRepeat = Boolean(ai.should_repeat);
     state.targetPhrase = ai.target_phrase || "";
 
+    if (state.mustRepeat && state.targetPhrase) {
+      updateRepeatGuide(ai.target_phrase, ai.repeat_hint_tr || "");
+    } else {
+      updateRepeatGuide("", "");
+    }
+
     saveState();
     await speakAI(ai.reply);
   } catch (e) {
     console.error("PRACTICE START ERROR:", e);
-    if (redirectForInsufficientTokens(e)) return;
+    if (await redirectForInsufficientTokens(e)) return;
     showUserSafeError();
   }
 }
@@ -1132,5 +1224,7 @@ window.onload = async () => {
   setWorld("idle");
   setCaption("Hazır");
   updateTranslation();
+  updateRepeatGuide("", "");
+  await getTokenBalance();
   await startFirstTurn();
 };
