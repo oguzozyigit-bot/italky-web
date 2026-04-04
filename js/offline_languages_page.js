@@ -7,14 +7,8 @@ import { getLangPoolForSite } from "/js/lang_pool_full.js";
 
 const $ = (id) => document.getElementById(id);
 
-const sourceSelect = $("sourceSelect");
-const btnInstallBase = $("btnInstallBase");
-const statusBox = $("statusBox");
 const installedList = $("installedList");
-const installedCount = $("installedCount");
 const searchInput = $("searchInput");
-const networkTag = $("networkTag");
-const trialTag = $("trialTag");
 
 const confirmBackdrop = $("confirmBackdrop");
 const confirmTitle = $("confirmTitle");
@@ -25,10 +19,21 @@ const confirmOk = $("confirmOk");
 const toastEl = $("toast");
 
 const STORAGE = {
-  sourceLang: "italky_offline_source_lang_v5",
-  installed: "italky_offline_installed_packs_v5",
+  installed: "italky_offline_installed_packs_v6",
   siteLang: "italky_site_lang"
 };
+
+const PRIORITY_ORDER = [
+  "tr",
+  "en",
+  "de",
+  "fr",
+  "es",
+  "it",
+  "ar",
+  "ru",
+  "az"
+];
 
 let currentUser = null;
 let busy = false;
@@ -86,9 +91,17 @@ function normalizeFlag(code) {
     hi: "🇮🇳",
     ja: "🇯🇵",
     ko: "🇰🇷",
-    zh: "🇨🇳"
+    zh: "🇨🇳",
+    sq: "🇦🇱",
+    af: "🇿🇦",
+    bg: "🇧🇬"
   };
   return map[String(code || "").trim().toLowerCase()] || "🌐";
+}
+
+function priorityIndex(code) {
+  const idx = PRIORITY_ORDER.indexOf(String(code || "").trim().toLowerCase());
+  return idx === -1 ? 999 : idx;
 }
 
 function buildLangsFromPool() {
@@ -137,23 +150,14 @@ function buildLangsFromPool() {
   }
 
   uniq.sort((a, b) => {
-    if (a.code === "tr") return -1;
-    if (b.code === "tr") return 1;
-    if (a.code === "en") return -1;
-    if (b.code === "en") return 1;
+    const pa = priorityIndex(a.code);
+    const pb = priorityIndex(b.code);
+
+    if (pa !== pb) return pa - pb;
     return a.name.localeCompare(b.name, siteLang);
   });
 
   return uniq;
-}
-
-function getSourceLang() {
-  const saved = String(localStorage.getItem(STORAGE.sourceLang) || "").trim().toLowerCase();
-  return LANGS.some((l) => l.code === saved) ? saved : "tr";
-}
-
-function setSourceLang(code) {
-  localStorage.setItem(STORAGE.sourceLang, String(code || "tr").trim().toLowerCase());
 }
 
 function getInstalledPacks() {
@@ -177,7 +181,7 @@ function isPackActive(pack) {
 
 function packKeyForLang(code) {
   const lang = String(code || "").trim().toLowerCase();
-  if (lang === "tr" || lang === "en") return "free-core";
+  if (lang === "tr" || lang === "en") return `free-${lang}`;
   return `${lang}-offline`;
 }
 
@@ -204,21 +208,8 @@ function getInstalledPackByLang(code) {
   return getInstalledPacks().find((p) => p.lang_pack === key) || null;
 }
 
-function updateNetworkUi() {
-  const online = navigator.onLine;
-  if (networkTag) networkTag.textContent = online ? "ONLINE" : "OFFLINE";
-  if (trialTag) trialTag.textContent = "HAZIR";
-}
-
-function setStatus(message, kind = "info") {
-  if (!statusBox) return;
-  statusBox.textContent = message;
-  statusBox.setAttribute("data-kind", kind);
-}
-
 function setBusy(flag) {
   busy = !!flag;
-  if (btnInstallBase) btnInstallBase.disabled = busy;
 }
 
 function langInfo(code) {
@@ -227,34 +218,6 @@ function langInfo(code) {
     name: code?.toUpperCase() || "Dil",
     flag: normalizeFlag(code)
   };
-}
-
-function formatRemaining(expiresAt) {
-  if (!expiresAt) return "";
-  const diff = new Date(expiresAt).getTime() - nowTs();
-  if (diff <= 0) return "Süre doldu";
-
-  const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
-
-  if (days >= 365) {
-    const years = Math.max(1, Math.round(days / 365));
-    return `${years} yıl kaldı`;
-  }
-
-  return `${days} gün kaldı`;
-}
-
-function syncInstalledCount() {
-  const activeCount = getInstalledPacks().filter(isPackActive).length;
-  if (installedCount) installedCount.textContent = String(activeCount);
-}
-
-function buildSourceOptions() {
-  sourceSelect.innerHTML = LANGS.map((l) => {
-    return `<option value="${l.code}">${l.flag} ${l.name}</option>`;
-  }).join("");
-
-  sourceSelect.value = getSourceLang();
 }
 
 function showConfirm(title, text) {
@@ -323,8 +286,7 @@ async function installFreePack(lang) {
   });
 
   renderInstalledList();
-  setStatus(`${info.name} ücretsiz offline erişimi hazırlandı.`, "ok");
-  toast(`${info.name} hazır`);
+  toast(`${info.name} kuruldu`);
 }
 
 async function openOfflinePack(langCode) {
@@ -335,24 +297,22 @@ async function openOfflinePack(langCode) {
   const currentPack = getInstalledPackByLang(lang);
 
   if (isPackActive(currentPack)) {
-    setStatus(`${info.name} zaten aktif. ${formatRemaining(currentPack.expires_at)}.`, "ok");
-    toast(`${info.name} zaten açık`);
+    toast(`${info.name} zaten kurulu`);
     return;
   }
 
   const title = isFreeLang(lang)
-    ? `${info.name} indirilsin mi?`
-    : `${info.name} offline paketi açılsın mı?`;
+    ? `${info.name} ücretsiz kurulsun mu?`
+    : `${info.name} offline erişimi açılsın mı?`;
 
   const text = isFreeLang(lang)
-    ? `${info.name} ücretsiz olarak hazır edilecek.`
-    : `${info.name} için 5 jeton kullanılacak.\n\nBu erişim 12 ay boyunca aktif kalır.`;
+    ? `${info.name} ücretsiz kurulacak.`
+    : `${info.name} için 10 jeton kullanılacak.`;
 
   const confirmed = await showConfirm(title, text);
   if (!confirmed) return;
 
   setBusy(true);
-  setStatus(`${info.name} erişimi kontrol ediliyor...`, "warn");
 
   try {
     if (isFreeLang(lang)) {
@@ -361,10 +321,10 @@ async function openOfflinePack(langCode) {
       return;
     }
 
-    const access = await ensureOfflineLangAccess(lang);
+    const access = await ensureOfflineLangAccess(lang, 10);
 
     if (!access?.ok) {
-      setStatus(`${info.name} açılamadı. Jeton veya erişim kontrolü başarısız.`, "err");
+      toast(`${info.name} açılamadı`);
       return;
     }
 
@@ -373,7 +333,7 @@ async function openOfflinePack(langCode) {
     upsertInstalledPack({
       lang_pack: data.lang_pack || packKeyForLang(lang),
       free_pack: false,
-      token_spent: 5,
+      token_spent: 10,
       starts_at: new Date().toISOString(),
       expires_at: data.valid_until || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
       lang: lang
@@ -381,37 +341,13 @@ async function openOfflinePack(langCode) {
 
     renderInstalledList();
     await refreshHeaderTokens();
-
-    setStatus(`${info.name} offline paketi açıldı. ${formatRemaining(data.valid_until)}.`, "ok");
-    toast(`${info.name} paketi hazır`);
+    toast(`${info.name} açıldı`);
   } catch (e) {
     console.error("[offline_languages_page] openOfflinePack error:", e);
-    setStatus(`${info.name} açılamadı.`, "err");
+    toast(`${info.name} açılamadı`);
   } finally {
     setBusy(false);
   }
-}
-
-async function handleBaseInstall() {
-  if (busy) return;
-
-  const lang = String(sourceSelect?.value || "tr").trim().toLowerCase();
-  const info = langInfo(lang);
-
-  setSourceLang(lang);
-
-  const title = isFreeLang(lang)
-    ? `${info.name} ücretsiz kurulsun mu?`
-    : `${info.name} temel kurulum başlasın mı?`;
-
-  const text = isFreeLang(lang)
-    ? `${info.name} ücretsiz olarak hazır edilecek.`
-    : `${info.name} için 5 jeton kullanılacak.\n\nBu erişim 12 ay boyunca aktif kalır.`;
-
-  const confirmed = await showConfirm(title, text);
-  if (!confirmed) return;
-
-  await openOfflinePack(lang);
 }
 
 /* -------------------------------------------------------
@@ -428,19 +364,17 @@ function renderInstalledList() {
       const free = isFreeLang(lang.code);
 
       let btnClass = "lang-btn paid";
-      let btnText = "5 Jeton ile Aç";
+      let btnText = "10 Jeton ile Aç";
       let subText = free
         ? "Offline erişim ücretsiz"
-        : "Offline erişim • 12 ay";
+        : "Offline erişim";
 
       if (free) {
-        btnClass = "lang-btn free";
-        btnText = active
-          ? `Kurulu • ${formatRemaining(pack?.expires_at || "2099-12-31T23:59:59.000Z")}`
-          : "Ücretsiz Aç";
+        btnClass = active ? "lang-btn installed" : "lang-btn free";
+        btnText = active ? "Kuruldu" : "Ücretsiz Kur";
       } else if (active) {
         btnClass = "lang-btn installed";
-        btnText = `Kurulu • ${formatRemaining(pack.expires_at)}`;
+        btnText = "Kuruldu";
       }
 
       return `
@@ -457,7 +391,6 @@ function renderInstalledList() {
             class="${btnClass}"
             type="button"
             data-lang="${lang.code}"
-            style="${!free && !active ? "background:linear-gradient(135deg, rgba(255,140,40,.24), rgba(255,84,201,.14)); border:1px solid rgba(255,140,40,.38);" : ""}"
             ${busy ? "disabled" : ""}
           >
             ${btnText}
@@ -485,8 +418,6 @@ function renderInstalledList() {
       await openOfflinePack(lang);
     });
   });
-
-  syncInstalledCount();
 }
 
 /* -------------------------------------------------------
@@ -513,28 +444,10 @@ async function init() {
     document.documentElement.style.setProperty("--shellLift", footerH ? `${footerH + 10}px` : "0px");
   } catch {}
 
-  updateNetworkUi();
-  buildSourceOptions();
   renderInstalledList();
   await refreshHeaderTokens();
 
-  const selected = getSourceLang();
-  const info = langInfo(selected);
-  setStatus(`Seçili ana dil: ${info.name}. Kurulumu başlatabilir veya aşağıdan ek dilleri açabilirsiniz.`, "warn");
-
-  btnInstallBase?.addEventListener("click", handleBaseInstall);
-
-  sourceSelect?.addEventListener("change", () => {
-    const lang = String(sourceSelect.value || "tr").trim().toLowerCase();
-    setSourceLang(lang);
-    const inf = langInfo(lang);
-    setStatus(`${inf.name} seçildi. Kurulumu başlatabilirsiniz.`, "warn");
-  });
-
   searchInput?.addEventListener("input", renderInstalledList);
-
-  window.addEventListener("online", updateNetworkUi);
-  window.addEventListener("offline", updateNetworkUi);
 }
 
 init();
