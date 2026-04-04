@@ -1,6 +1,7 @@
 // FILE: /js/game_access_gate.js
 
 import { supabase } from "/js/supabase_client.js";
+import { setHeaderTokens } from "/js/ui_shell.js";
 
 const FREE_GAME_CODES = new Set(["hangman"]);
 const GAME_PRICE = 1;
@@ -232,11 +233,9 @@ export function openGamesGateModal(options = {}) {
 
   if ($("ggTitle")) $("ggTitle").textContent = title;
   if ($("ggSub")) $("ggSub").textContent = message;
-
   if ($("ggInfo1Label")) $("ggInfo1Label").textContent = info1Label;
   if ($("ggInfo1Value")) $("ggInfo1Value").textContent = info1Value;
   if ($("ggInfo1Desc")) $("ggInfo1Desc").textContent = info1Desc;
-
   if ($("ggInfo2Label")) $("ggInfo2Label").textContent = info2Label;
   if ($("ggInfo2Value")) $("ggInfo2Value").textContent = info2Value;
   if ($("ggInfo2Desc")) $("ggInfo2Desc").textContent = info2Desc;
@@ -271,10 +270,12 @@ function openInsufficientTokensModal() {
   });
 }
 
-function openSystemErrorModal() {
+function openSystemErrorModal(detailText = "") {
   openGamesGateModal({
     title: "Oyun şu an açılamadı",
-    message: "Sistem erişim kontrolünü tamamlayamadı. Lütfen biraz sonra tekrar dene.",
+    message: detailText
+      ? `Sistem erişim kontrolünü tamamlayamadı.\n${detailText}`
+      : "Sistem erişim kontrolünü tamamlayamadı. Lütfen biraz sonra tekrar dene.",
     info1Label: "Durum",
     info1Value: "Geçici Sorun",
     info1Desc: "Bu hata jeton bakiyenden bağımsız olabilir.",
@@ -331,7 +332,7 @@ export async function ensureGamesBundleAccess(gameCode = "") {
   const code = String(gameCode || "").trim().toLowerCase();
 
   if (!code) {
-    openSystemErrorModal();
+    openSystemErrorModal("Oyun kodu boş geldi.");
     return {
       ok: false,
       access_open: false,
@@ -361,7 +362,6 @@ export async function ensureGamesBundleAccess(gameCode = "") {
     };
   }
 
-  // Önce lokal/token ön kontrolü
   const currentTokens = await getCurrentTokens(user.id);
   if (currentTokens !== null && currentTokens < GAME_PRICE) {
     openInsufficientTokensModal();
@@ -392,7 +392,7 @@ export async function ensureGamesBundleAccess(gameCode = "") {
         };
       }
 
-      openSystemErrorModal();
+      openSystemErrorModal(error.message || error.details || "RPC hatası");
       return {
         ok: false,
         access_open: false,
@@ -404,7 +404,7 @@ export async function ensureGamesBundleAccess(gameCode = "") {
     const json = data || null;
 
     if (!json) {
-      openSystemErrorModal();
+      openSystemErrorModal("Boş yanıt alındı.");
       return {
         ok: false,
         access_open: false,
@@ -423,7 +423,7 @@ export async function ensureGamesBundleAccess(gameCode = "") {
         };
       }
 
-      openSystemErrorModal();
+      openSystemErrorModal(json.reason || json.message || "Erişim reddedildi.");
       return {
         ok: false,
         access_open: false,
@@ -432,10 +432,9 @@ export async function ensureGamesBundleAccess(gameCode = "") {
       };
     }
 
-    if (typeof json.tokens_after === "number" && window.setHeaderTokens) {
-      try {
-        window.setHeaderTokens(json.tokens_after);
-      } catch {}
+    if (typeof json.tokens_after === "number") {
+      try { setHeaderTokens(json.tokens_after); } catch {}
+      try { window.setHeaderTokens?.(json.tokens_after); } catch {}
     }
 
     return {
@@ -457,7 +456,7 @@ export async function ensureGamesBundleAccess(gameCode = "") {
       };
     }
 
-    openSystemErrorModal();
+    openSystemErrorModal(e?.message || "Beklenmeyen hata");
     return {
       ok: false,
       access_open: false,
