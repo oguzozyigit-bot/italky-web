@@ -2,31 +2,11 @@
 
 import { supabase } from "/js/supabase_client.js";
 
-const API_BASE = "https://italky-api.onrender.com";
-
 function el(tag, cls, html) {
   const n = document.createElement(tag);
   if (cls) n.className = cls;
   if (html !== undefined) n.innerHTML = html;
   return n;
-}
-
-function safeNum(v, fallback = 0) {
-  const n = Number(v);
-  return Number.isFinite(n) ? n : fallback;
-}
-
-function formatDateTR(value) {
-  if (!value) return "-";
-  try {
-    return new Date(value).toLocaleDateString("tr-TR", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit"
-    });
-  } catch {
-    return "-";
-  }
 }
 
 function ensurePopupStyles() {
@@ -88,16 +68,13 @@ function ensurePopupStyles() {
       font-size:14px;
       line-height:1.5;
       color:rgba(255,255,255,.9);
+      white-space:pre-line;
     }
 
     .ga-body{
       padding:18px 20px 20px;
-    }
-
-    .ga-grid{
       display:grid;
-      gap:10px;
-      margin-bottom:16px;
+      gap:14px;
     }
 
     .ga-info{
@@ -120,7 +97,7 @@ function ensurePopupStyles() {
     }
 
     .ga-note{
-      margin:0 0 16px;
+      margin:0;
       color:rgba(255,255,255,.74);
       font-size:13px;
       line-height:1.5;
@@ -169,62 +146,27 @@ async function getAuthUser() {
   return data?.user || null;
 }
 
-async function getAccessState(userId) {
+async function getCurrentTokens(userId) {
   const { data, error } = await supabase
-    .from("user_access_state")
-    .select("*")
-    .eq("user_id", userId)
+    .from("profiles")
+    .select("tokens")
+    .eq("id", userId)
     .maybeSingle();
 
   if (error) throw error;
-  return data || null;
+  return Number(data?.tokens ?? 0);
 }
 
-function buildPopupData(access, moduleName) {
-  const trialDaysLeft = safeNum(access?.trial_days_left, 0);
-  const packageCode = String(access?.selected_package_code || "-");
-  const packageEndsAt = access?.package_ends_at || null;
-  const accessOpen = !!access?.access_open;
-
-  let headerTitle = `${moduleName} erişim bilgisi`;
-  let headerSub = "Kullanım durumun burada görünüyor.";
-  let statusText = accessOpen ? "Erişim açık" : "Erişim kilitli";
-
-  if (!accessOpen) {
-    headerTitle = `${moduleName} şu an kilitli`;
-    headerSub = "Devam etmek için aktif deneme süresi veya uygun paket gerekiyor.";
-  } else if (trialDaysLeft > 0) {
-    headerTitle = `${moduleName} kullanıma açık`;
-    headerSub = `Deneme süren devam ediyor. Kalan gününü burada görüyorsun.`;
-    statusText = `${trialDaysLeft} gün kaldı`;
-  } else if (packageCode && packageCode !== "-") {
-    headerTitle = `${moduleName} kullanıma açık`;
-    headerSub = "Paket erişimin aktif görünüyor.";
-    statusText = "Paket aktif";
-  }
-
-  return {
-    accessOpen,
-    trialDaysLeft,
-    packageCode,
-    packageEndsAt,
-    headerTitle,
-    headerSub,
-    statusText
-  };
-}
-
-function showAccessPopup({
+function showTokenPopup({
   moduleName = "Modül",
-  access,
-  redirectTo = "/pages/membership.html"
+  tokens = 0,
+  neededTokens = 1,
+  redirectTo = "/pages/jetonbuy.html"
 }) {
   ensurePopupStyles();
 
   const existing = document.getElementById("gaBackdrop");
   if (existing) existing.remove();
-
-  const view = buildPopupData(access, moduleName);
 
   const backdrop = el("div", "ga-backdrop");
   backdrop.id = "gaBackdrop";
@@ -234,66 +176,45 @@ function showAccessPopup({
   const body = el("div", "ga-body");
 
   top.innerHTML = `
-    <div class="ga-badge">italkyAI • Erişim</div>
-    <div class="ga-title">${view.headerTitle}</div>
-    <p class="ga-sub">${view.headerSub}</p>
+    <div class="ga-badge">italkyAI • Jeton Erişimi</div>
+    <div class="ga-title">Jeton Gerekli</div>
+    <p class="ga-sub">${moduleName} özelliğini kullanmak için yeterli jeton bulunmuyor.</p>
   `;
 
-  const grid = el("div", "ga-grid");
-  grid.innerHTML = `
-    <div class="ga-info">
-      <div class="ga-label">Durum</div>
-      <div class="ga-value">${view.statusText}</div>
-    </div>
+  const info = el("div", "ga-info", `
+    <div class="ga-label">Mevcut Jeton</div>
+    <div class="ga-value">${tokens}</div>
+  `);
 
-    <div class="ga-info">
-      <div class="ga-label">Kalan deneme günü</div>
-      <div class="ga-value">${view.trialDaysLeft > 0 ? `${view.trialDaysLeft} gün` : "Yok"}</div>
-    </div>
-
-    <div class="ga-info">
-      <div class="ga-label">Paket</div>
-      <div class="ga-value">${view.packageCode}</div>
-    </div>
-
-    <div class="ga-info">
-      <div class="ga-label">Paket bitiş</div>
-      <div class="ga-value">${view.packageEndsAt ? formatDateTR(view.packageEndsAt) : "-"}</div>
-    </div>
-  `;
+  const info2 = el("div", "ga-info", `
+    <div class="ga-label">Gerekli Jeton</div>
+    <div class="ga-value">${neededTokens}</div>
+  `);
 
   const note = el(
     "p",
     "ga-note",
-    view.accessOpen
-      ? `${moduleName} için erişimin açık. Bilgilendirme popup’ı olarak gösteriliyor.`
-      : `${moduleName} için erişim şu an kapalı. Paket ekranından devam edebilirsin.`
+    "Bu sistem artık üyelik veya deneme süresi ile değil, sadece jeton ile çalışır. Devam etmek için jeton yükleyebilirsiniz."
   );
 
   const actions = el("div", "ga-actions");
 
-  const primary = el(
-    "button",
-    "ga-btn ga-btn-primary",
-    view.accessOpen ? "Devam et" : "Paketleri Gör"
-  );
-
+  const primary = el("button", "ga-btn ga-btn-primary", "Jeton Yükle");
   primary.addEventListener("click", () => {
     backdrop.remove();
-    if (!view.accessOpen) window.location.href = redirectTo;
+    window.location.href = redirectTo;
+  });
+
+  const secondary = el("button", "ga-btn ga-btn-secondary", "Ana Sayfaya Dön");
+  secondary.addEventListener("click", () => {
+    window.location.href = "/pages/home.html";
   });
 
   actions.appendChild(primary);
+  actions.appendChild(secondary);
 
-  if (!view.accessOpen) {
-    const secondary = el("button", "ga-btn ga-btn-secondary", "Ana Sayfaya Dön");
-    secondary.addEventListener("click", () => {
-      window.location.href = "/pages/home.html";
-    });
-    actions.appendChild(secondary);
-  }
-
-  body.appendChild(grid);
+  body.appendChild(info);
+  body.appendChild(info2);
   body.appendChild(note);
   body.appendChild(actions);
 
@@ -302,7 +223,7 @@ function showAccessPopup({
   backdrop.appendChild(card);
   document.body.appendChild(backdrop);
 
-  return view.accessOpen;
+  return false;
 }
 
 export async function initGlobalAccess(options = {}) {
@@ -310,7 +231,8 @@ export async function initGlobalAccess(options = {}) {
     moduleName = "Modül",
     requireAccess = false,
     popup = true,
-    redirectTo = "/pages/membership.html"
+    redirectTo = "/pages/jetonbuy.html",
+    requiredTokens = 0
   } = options;
 
   try {
@@ -320,45 +242,43 @@ export async function initGlobalAccess(options = {}) {
       if (requireAccess) {
         window.location.href = "/pages/login.html";
       }
-      return { ok: false, reason: "no_user", accessOpen: false };
-    }
-
-    const access = await getAccessState(user.id);
-
-    const accessOpen = !!access?.access_open;
-    const trialDaysLeft = safeNum(access?.trial_days_left, 0);
-
-    if (popup) {
-      showAccessPopup({
-        moduleName,
-        access,
-        redirectTo
-      });
-    }
-
-    if (requireAccess && !accessOpen) {
       return {
         ok: false,
-        reason: "locked",
-        accessOpen: false,
-        trialDaysLeft,
-        access
+        reason: "no_user",
+        tokens: 0
+      };
+    }
+
+    const tokens = await getCurrentTokens(user.id);
+
+    if (requiredTokens > 0 && tokens < requiredTokens) {
+      if (popup) {
+        showTokenPopup({
+          moduleName,
+          tokens,
+          neededTokens: requiredTokens,
+          redirectTo
+        });
+      }
+
+      return {
+        ok: false,
+        reason: "insufficient_tokens",
+        tokens
       };
     }
 
     return {
       ok: true,
-      reason: accessOpen ? "granted" : "info_only",
-      accessOpen,
-      trialDaysLeft,
-      access
+      reason: "granted",
+      tokens
     };
   } catch (err) {
     console.error("initGlobalAccess error:", err);
     return {
       ok: false,
       reason: "error",
-      accessOpen: false,
+      tokens: 0,
       error: err
     };
   }
