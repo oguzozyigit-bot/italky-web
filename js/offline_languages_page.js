@@ -1,453 +1,315 @@
-// FILE: /js/offline_languages_page.js
+// FILE: /js/offline_access_gate.js
 
-import { mountShell, setHeaderTokens } from "/js/ui_shell.js";
 import { supabase } from "/js/supabase_client.js";
-import { ensureOfflineLangAccess } from "/js/offline_access_gate.js";
-import { getLangPoolForSite } from "/js/lang_pool_full.js";
 
-const $ = (id) => document.getElementById(id);
+const FREE_LANGS = new Set(["tr", "en"]);
+const PACK_PRICE = 10;
 
-const installedList = $("installedList");
-const searchInput = $("searchInput");
-
-const confirmBackdrop = $("confirmBackdrop");
-const confirmTitle = $("confirmTitle");
-const confirmText = $("confirmText");
-const confirmCancel = $("confirmCancel");
-const confirmOk = $("confirmOk");
-
-const toastEl = $("toast");
-
-const STORAGE = {
-  installed: "italky_offline_installed_packs_v6",
-  siteLang: "italky_site_lang"
-};
-
-const PRIORITY_ORDER = [
-  "tr",
-  "en",
-  "de",
-  "fr",
-  "es",
-  "it",
-  "ar",
-  "ru",
-  "az"
-];
-
-let currentUser = null;
-let busy = false;
-let confirmResolver = null;
-let LANGS = [];
-
-/* -------------------------------------------------------
-   HELPERS
-------------------------------------------------------- */
-function toast(message = "") {
-  if (!toastEl) return;
-  toastEl.textContent = String(message || "");
-  toastEl.classList.add("show");
-  clearTimeout(window.__offlineToastTimer);
-  window.__offlineToastTimer = setTimeout(() => {
-    toastEl.classList.remove("show");
-  }, 1800);
+function $(id) {
+  return document.getElementById(id);
 }
 
-function safeJsonParse(raw, fallback) {
-  try {
-    const parsed = JSON.parse(raw);
-    return parsed ?? fallback;
-  } catch {
-    return fallback;
-  }
-}
+function ensureOfflineGateStyles() {
+  if (document.getElementById("offlineGateStyles")) return;
 
-function getSiteLang() {
-  return String(
-    localStorage.getItem(STORAGE.siteLang) ||
-    document.documentElement.lang ||
-    "tr"
-  ).trim().toLowerCase();
-}
-
-function normalizeFlag(code) {
-  const map = {
-    tr: "🇹🇷",
-    en: "🇬🇧",
-    de: "🇩🇪",
-    fr: "🇫🇷",
-    it: "🇮🇹",
-    es: "🇪🇸",
-    ru: "🇷🇺",
-    ar: "🇸🇦",
-    pt: "🇵🇹",
-    nl: "🇳🇱",
-    pl: "🇵🇱",
-    uk: "🇺🇦",
-    el: "🇬🇷",
-    az: "🇦🇿",
-    ka: "🇬🇪",
-    fa: "🇮🇷",
-    hi: "🇮🇳",
-    ja: "🇯🇵",
-    ko: "🇰🇷",
-    zh: "🇨🇳",
-    sq: "🇦🇱",
-    af: "🇿🇦",
-    bg: "🇧🇬"
-  };
-  return map[String(code || "").trim().toLowerCase()] || "🌐";
-}
-
-function priorityIndex(code) {
-  const idx = PRIORITY_ORDER.indexOf(String(code || "").trim().toLowerCase());
-  return idx === -1 ? 999 : idx;
-}
-
-function buildLangsFromPool() {
-  const siteLang = getSiteLang();
-  let pool = [];
-
-  try {
-    pool = getLangPoolForSite(siteLang) || [];
-  } catch (e) {
-    console.warn("[offline_languages_page] getLangPoolForSite error:", e);
-    pool = [];
-  }
-
-  const normalized = pool
-    .map((item) => {
-      const code = String(
-        item?.code ||
-        item?.lang ||
-        item?.value ||
-        item?.key ||
-        ""
-      ).trim().toLowerCase();
-
-      if (!code) return null;
-
-      const name = String(
-        item?.label ||
-        item?.name ||
-        item?.title ||
-        code.toUpperCase()
-      ).trim();
-
-      const flag = String(item?.flag || normalizeFlag(code)).trim();
-
-      return { code, name, flag };
-    })
-    .filter(Boolean);
-
-  const uniq = [];
-  const seen = new Set();
-
-  for (const item of normalized) {
-    if (seen.has(item.code)) continue;
-    seen.add(item.code);
-    uniq.push(item);
-  }
-
-  uniq.sort((a, b) => {
-    const pa = priorityIndex(a.code);
-    const pb = priorityIndex(b.code);
-
-    if (pa !== pb) return pa - pb;
-    return a.name.localeCompare(b.name, siteLang);
-  });
-
-  return uniq;
-}
-
-function getInstalledPacks() {
-  const data = safeJsonParse(localStorage.getItem(STORAGE.installed) || "[]", []);
-  return Array.isArray(data) ? data : [];
-}
-
-function saveInstalledPacks(list) {
-  localStorage.setItem(STORAGE.installed, JSON.stringify(Array.isArray(list) ? list : []));
-}
-
-function nowTs() {
-  return Date.now();
-}
-
-function isPackActive(pack) {
-  if (!pack) return false;
-  if (!pack.expires_at) return false;
-  return new Date(pack.expires_at).getTime() > nowTs();
-}
-
-function packKeyForLang(code) {
-  const lang = String(code || "").trim().toLowerCase();
-  if (lang === "tr" || lang === "en") return `free-${lang}`;
-  return `${lang}-offline`;
-}
-
-function isFreeLang(code) {
-  const lang = String(code || "").trim().toLowerCase();
-  return lang === "tr" || lang === "en";
-}
-
-function upsertInstalledPack(entry) {
-  const packs = getInstalledPacks();
-  const idx = packs.findIndex((p) => p.lang_pack === entry.lang_pack);
-
-  if (idx >= 0) {
-    packs[idx] = { ...packs[idx], ...entry };
-  } else {
-    packs.push(entry);
-  }
-
-  saveInstalledPacks(packs);
-}
-
-function getInstalledPackByLang(code) {
-  const key = packKeyForLang(code);
-  return getInstalledPacks().find((p) => p.lang_pack === key) || null;
-}
-
-function setBusy(flag) {
-  busy = !!flag;
-}
-
-function langInfo(code) {
-  return LANGS.find((l) => l.code === code) || {
-    code,
-    name: code?.toUpperCase() || "Dil",
-    flag: normalizeFlag(code)
-  };
-}
-
-function showConfirm(title, text) {
-  return new Promise((resolve) => {
-    confirmResolver = resolve;
-    if (confirmTitle) confirmTitle.textContent = title;
-    if (confirmText) confirmText.textContent = text;
-    confirmBackdrop?.classList.add("show");
-  });
-}
-
-function closeConfirm(result) {
-  confirmBackdrop?.classList.remove("show");
-  if (typeof confirmResolver === "function") {
-    confirmResolver(result);
-    confirmResolver = null;
-  }
-}
-
-confirmCancel?.addEventListener("click", () => closeConfirm(false));
-confirmOk?.addEventListener("click", () => closeConfirm(true));
-confirmBackdrop?.addEventListener("click", (e) => {
-  if (e.target === confirmBackdrop) closeConfirm(false);
-});
-
-/* -------------------------------------------------------
-   HEADER TOKENS
-------------------------------------------------------- */
-async function getCurrentUser() {
-  const {
-    data: { session }
-  } = await supabase.auth.getSession();
-
-  return session?.user || null;
-}
-
-async function refreshHeaderTokens() {
-  if (!currentUser?.id) return;
-
-  try {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("tokens")
-      .eq("id", currentUser.id)
-      .maybeSingle();
-
-    if (!error && typeof data?.tokens === "number") {
-      try { setHeaderTokens(data.tokens); } catch {}
-    }
-  } catch {}
-}
-
-/* -------------------------------------------------------
-   INSTALL LOGIC
-------------------------------------------------------- */
-async function installFreePack(lang) {
-  const info = langInfo(lang);
-
-  upsertInstalledPack({
-    lang_pack: packKeyForLang(lang),
-    free_pack: true,
-    token_spent: 0,
-    starts_at: new Date().toISOString(),
-    expires_at: "2099-12-31T23:59:59.000Z",
-    lang: lang
-  });
-
-  renderInstalledList();
-  toast(`${info.name} kuruldu`);
-}
-
-async function openOfflinePack(langCode) {
-  const lang = String(langCode || "").trim().toLowerCase();
-  if (!lang || busy) return;
-
-  const info = langInfo(lang);
-  const currentPack = getInstalledPackByLang(lang);
-
-  if (isPackActive(currentPack)) {
-    toast(`${info.name} zaten kurulu`);
-    return;
-  }
-
-  const title = isFreeLang(lang)
-    ? `${info.name} ücretsiz kurulsun mu?`
-    : `${info.name} offline erişimi açılsın mı?`;
-
-  const text = isFreeLang(lang)
-    ? `${info.name} ücretsiz kurulacak.`
-    : `${info.name} için 10 jeton kullanılacak.`;
-
-  const confirmed = await showConfirm(title, text);
-  if (!confirmed) return;
-
-  setBusy(true);
-
-  try {
-    if (isFreeLang(lang)) {
-      await installFreePack(lang);
-      await refreshHeaderTokens();
-      return;
+  const style = document.createElement("style");
+  style.id = "offlineGateStyles";
+  style.textContent = `
+    .og-backdrop{
+      position:fixed;
+      inset:0;
+      z-index:1000000;
+      background:rgba(2,4,12,.72);
+      backdrop-filter:blur(12px);
+      -webkit-backdrop-filter:blur(12px);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
     }
 
-    const access = await ensureOfflineLangAccess(lang, 10);
-
-    if (!access?.ok) {
-      toast(`${info.name} açılamadı`);
-      return;
+    .og-backdrop.show{
+      display:flex;
     }
 
-    const data = access.data || {};
+    .og-card{
+      width:min(100%,430px);
+      border-radius:30px;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.12);
+      background:linear-gradient(180deg, rgba(10,12,26,.98), rgba(6,8,20,.98));
+      box-shadow:0 28px 90px rgba(0,0,0,.42);
+      color:#fff;
+      font-family:Outfit, system-ui, sans-serif;
+    }
 
-    upsertInstalledPack({
-      lang_pack: data.lang_pack || packKeyForLang(lang),
-      free_pack: false,
-      token_spent: 10,
-      starts_at: new Date().toISOString(),
-      expires_at: data.valid_until || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
-      lang: lang
-    });
+    .og-top{
+      padding:20px 20px 16px;
+      background:linear-gradient(135deg, rgba(255,140,40,.92), rgba(255,84,201,.88));
+    }
 
-    renderInstalledList();
-    await refreshHeaderTokens();
-    toast(`${info.name} açıldı`);
-  } catch (e) {
-    console.error("[offline_languages_page] openOfflinePack error:", e);
-    toast(`${info.name} açılamadı`);
-  } finally {
-    setBusy(false);
-  }
+    .og-chip{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:34px;
+      padding:8px 14px;
+      border-radius:999px;
+      background:rgba(255,255,255,.16);
+      border:1px solid rgba(255,255,255,.18);
+      color:#fff;
+      font-size:12px;
+      font-weight:1000;
+    }
+
+    .og-title{
+      margin:14px 0 6px;
+      font-size:28px;
+      line-height:1.08;
+      font-weight:1000;
+      color:#fff;
+      letter-spacing:-.6px;
+    }
+
+    .og-sub{
+      margin:0;
+      font-size:14px;
+      line-height:1.55;
+      font-weight:800;
+      color:rgba(255,255,255,.90);
+    }
+
+    .og-body{
+      padding:18px;
+      display:grid;
+      gap:12px;
+    }
+
+    .og-info{
+      border-radius:20px;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.04);
+      padding:14px;
+    }
+
+    .og-label{
+      font-size:11px;
+      font-weight:1000;
+      color:rgba(255,255,255,.50);
+      text-transform:uppercase;
+      letter-spacing:.8px;
+      margin-bottom:5px;
+    }
+
+    .og-value{
+      font-size:20px;
+      font-weight:1000;
+      color:#fff;
+      line-height:1.15;
+    }
+
+    .og-desc{
+      margin:2px 0 0;
+      font-size:12px;
+      line-height:1.45;
+      font-weight:800;
+      color:rgba(255,255,255,.62);
+    }
+
+    .og-actions{
+      display:grid;
+      gap:10px;
+      margin-top:2px;
+    }
+
+    .og-btn{
+      min-height:54px;
+      border:none;
+      border-radius:18px;
+      cursor:pointer;
+      font-size:15px;
+      font-weight:1000;
+      transition:transform .16s ease;
+    }
+
+    .og-btn:active{
+      transform:scale(.985);
+    }
+
+    .og-btn.primary{
+      color:#fff;
+      background:linear-gradient(135deg, rgba(255,140,40,.92), rgba(255,84,201,.88));
+      box-shadow:0 14px 34px rgba(255,140,40,.24);
+    }
+
+    .og-btn.secondary{
+      color:#fff;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.10);
+    }
+  `;
+  document.head.appendChild(style);
 }
 
-/* -------------------------------------------------------
-   RENDER
-------------------------------------------------------- */
-function renderInstalledList() {
-  const q = String(searchInput?.value || "").trim().toLowerCase();
+function buildModalIfNeeded() {
+  ensureOfflineGateStyles();
+  if ($("offlineGateModal")) return;
 
-  const cards = LANGS
-    .filter((l) => !q || l.name.toLowerCase().includes(q) || l.code.includes(q))
-    .map((lang) => {
-      const pack = getInstalledPackByLang(lang.code);
-      const active = isPackActive(pack);
-      const free = isFreeLang(lang.code);
+  const wrap = document.createElement("div");
+  wrap.className = "og-backdrop";
+  wrap.id = "offlineGateModal";
+  wrap.innerHTML = `
+    <div class="og-card">
+      <div class="og-top">
+        <div class="og-chip">italkyAI • Offline Dil</div>
+        <div class="og-title" id="ogTitle">Bu dil için 10 jeton gerekiyor</div>
+        <p class="og-sub" id="ogSub">Seçilen dil offline kullanım için açılacak.</p>
+      </div>
 
-      let btnClass = "lang-btn paid";
-      let btnText = "10 Jeton ile Aç";
-      let subText = free
-        ? "Offline erişim ücretsiz"
-        : "Offline erişim";
-
-      if (free) {
-        btnClass = active ? "lang-btn installed" : "lang-btn free";
-        btnText = active ? "Kuruldu" : "Ücretsiz Kur";
-      } else if (active) {
-        btnClass = "lang-btn installed";
-        btnText = "Kuruldu";
-      }
-
-      return `
-        <div class="lang-card">
-          <div class="lang-head">
-            <div class="flag">${lang.flag}</div>
-            <div>
-              <h3 class="lang-name">${lang.name}</h3>
-              <div class="lang-sub">${subText}</div>
-            </div>
-          </div>
-
-          <button
-            class="${btnClass}"
-            type="button"
-            data-lang="${lang.code}"
-            ${busy ? "disabled" : ""}
-          >
-            ${btnText}
-          </button>
+      <div class="og-body">
+        <div class="og-info">
+          <div class="og-label">Erişim modeli</div>
+          <div class="og-value">10 Jeton</div>
+          <p class="og-desc">Türkçe ve İngilizce ücretsizdir. Diğer diller tek tek açılır.</p>
         </div>
-      `;
-    })
-    .join("");
 
-  installedList.innerHTML = cards || `
-    <div class="lang-card">
-      <div class="lang-head">
-        <div class="flag">🔎</div>
-        <div>
-          <h3 class="lang-name">Sonuç bulunamadı</h3>
-          <div class="lang-sub">Arama metnini değiştirip tekrar deneyin.</div>
+        <div class="og-actions">
+          <button class="og-btn primary" id="ogGoMarketBtn">Jeton Market’e Git</button>
+          <button class="og-btn secondary" id="ogCloseBtn">Şimdilik Kapat</button>
         </div>
       </div>
     </div>
   `;
+  document.body.appendChild(wrap);
 
-  installedList.querySelectorAll("[data-lang]").forEach((btn) => {
-    btn.addEventListener("click", async () => {
-      const lang = btn.getAttribute("data-lang");
-      await openOfflinePack(lang);
-    });
+  $("ogGoMarketBtn")?.addEventListener("click", () => {
+    location.href = "/pages/jetonbuy.html";
+  });
+
+  $("ogCloseBtn")?.addEventListener("click", closeOfflineGateModal);
+
+  wrap.addEventListener("click", (e) => {
+    if (e.target === wrap) closeOfflineGateModal();
   });
 }
 
-/* -------------------------------------------------------
-   INIT
-------------------------------------------------------- */
-async function init() {
-  try {
-    mountShell({ scroll: "auto" });
-  } catch (e) {
-    console.warn("[offline_languages_page] shell:", e);
-  }
+export function openOfflineGateModal(options = {}) {
+  buildModalIfNeeded();
 
-  LANGS = buildLangsFromPool();
+  const {
+    title = "Bu dil için 10 jeton gerekiyor",
+    message = "Seçilen dil offline kullanım için açılacak."
+  } = options;
 
-  currentUser = await getCurrentUser();
-  if (!currentUser?.id) {
-    location.replace("/pages/login.html");
-    return;
-  }
-
-  try {
-    const root = getComputedStyle(document.documentElement);
-    const footerH = parseFloat(root.getPropertyValue("--footerH")) || 0;
-    document.documentElement.style.setProperty("--shellLift", footerH ? `${footerH + 10}px` : "0px");
-  } catch {}
-
-  renderInstalledList();
-  await refreshHeaderTokens();
-
-  searchInput?.addEventListener("input", renderInstalledList);
+  if ($("ogTitle")) $("ogTitle").textContent = title;
+  if ($("ogSub")) $("ogSub").textContent = message;
+  $("offlineGateModal")?.classList.add("show");
 }
 
-init();
+export function closeOfflineGateModal() {
+  $("offlineGateModal")?.classList.remove("show");
+}
+
+export async function ensureOfflineLangAccess(lang = "", price = PACK_PRICE) {
+  const code = String(lang || "").trim().toLowerCase();
+  const packPrice = Math.max(1, Number(price || PACK_PRICE));
+
+  if (!code) {
+    return {
+      ok: false,
+      access_open: false,
+      reason: "LANG_REQUIRED"
+    };
+  }
+
+  if (FREE_LANGS.has(code)) {
+    return {
+      ok: true,
+      access_open: true,
+      reason: "free_lang"
+    };
+  }
+
+  const {
+    data: { session }
+  } = await supabase.auth.getSession();
+
+  const user = session?.user || null;
+  if (!user?.id) {
+    location.replace("/pages/login.html");
+    return {
+      ok: false,
+      access_open: false,
+      reason: "no_session"
+    };
+  }
+
+  try {
+    const { data, error } = await supabase.rpc("ensure_offline_lang_access", {
+      p_user_id: user.id,
+      p_lang: code,
+      p_price: packPrice
+    });
+
+    if (error) {
+      console.error("[offline_access_gate] rpc error:", error);
+      return {
+        ok: false,
+        access_open: false,
+        reason: "rpc_error",
+        error
+      };
+    }
+
+    const json = data || null;
+
+    if (!json) {
+      return {
+        ok: false,
+        access_open: false,
+        reason: "empty_response"
+      };
+    }
+
+    if (!json.ok && json.reason === "INSUFFICIENT_TOKENS") {
+      openOfflineGateModal({
+        title: `Bu dil için ${packPrice} jeton gerekiyor`,
+        message: `Bu dili offline kullanmak için ${packPrice} jeton gerekir.`
+      });
+      return {
+        ok: false,
+        access_open: false,
+        reason: "INSUFFICIENT_TOKENS",
+        data: json
+      };
+    }
+
+    if (!json.ok) {
+      return {
+        ok: false,
+        access_open: false,
+        reason: "unknown_denied",
+        data: json
+      };
+    }
+
+    if (typeof json.tokens_after === "number") {
+      try { window.setHeaderTokens?.(json.tokens_after); } catch {}
+    }
+
+    return {
+      ok: true,
+      access_open: true,
+      reason: json.used_token ? "offline_pack_opened" : "existing_offline_pack_active",
+      data: json
+    };
+  } catch (e) {
+    console.error("[offline_access_gate] exception:", e);
+    return {
+      ok: false,
+      access_open: false,
+      reason: "exception",
+      error: e
+    };
+  }
+}
