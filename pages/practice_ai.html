@@ -229,7 +229,7 @@
     }
 
     .translation-box{
-      width:90%;
+      width:92%;
       min-height:74px;
       max-height:74px;
       display:flex;
@@ -254,6 +254,45 @@
       -webkit-box-orient:vertical;
       overflow:hidden;
       text-overflow:ellipsis;
+    }
+
+    .repeat-card{
+      width:92%;
+      display:none;
+      flex-direction:column;
+      gap:8px;
+      padding:12px 12px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.10);
+      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      box-shadow:0 10px 24px rgba(0,0,0,.18);
+      flex:0 0 auto;
+    }
+
+    .repeat-label{
+      font-size:11px;
+      font-weight:900;
+      color:rgba(103,232,249,.95);
+      text-transform:uppercase;
+      letter-spacing:1px;
+      text-align:center;
+    }
+
+    .repeat-hint{
+      font-size:12px;
+      line-height:1.45;
+      font-weight:700;
+      color:rgba(255,255,255,.72);
+      text-align:center;
+    }
+
+    .repeat-phrase{
+      font-size:16px;
+      line-height:1.5;
+      font-weight:900;
+      color:#fff;
+      text-align:center;
+      word-break:break-word;
     }
 
     .bottom{
@@ -337,6 +376,12 @@
           <div class="translation-box">
             <div id="turkishTranslation">Öğretmeninin Türkçe açıklaması burada görünecek.</div>
           </div>
+
+          <div class="repeat-card" id="repeatWrap">
+            <div class="repeat-label">Tekrar Et</div>
+            <div class="repeat-hint" id="repeatHint"></div>
+            <div class="repeat-phrase" id="repeatPhrase"></div>
+          </div>
         </div>
 
         <div class="bottom">
@@ -347,28 +392,24 @@
   </div>
 
   <script type="module">
-  import { mountShell } from "/js/ui_shell.js";
-  mountShell({ scroll: "none" });
+    import { mountShell } from "/js/ui_shell.js";
 
-  try {
-    const root = getComputedStyle(document.documentElement);
-    const footerH = parseFloat(root.getPropertyValue("--footerH")) || 0;
-    document.documentElement.style.setProperty(
-      "--shellLift",
-      footerH ? `${footerH + 10}px` : "0px"
-    );
-  } catch {}
+    mountShell({ scroll: "none" });
 
-  setTimeout(() => {
-    document.getElementById("pageContent")?.classList.add("ready");
-  }, 120);
-</script>
+    try {
+      const root = getComputedStyle(document.documentElement);
+      const footerH = parseFloat(root.getPropertyValue("--footerH")) || 0;
+      document.documentElement.style.setProperty(
+        "--shellLift",
+        footerH ? `${footerH + 10}px` : "0px"
+      );
+    } catch {}
 
-<script type="module">
-  import { bootAccessGate } from "/js/global_access.js";
-  await bootAccessGate({ useCache: true });
-</script>
+    setTimeout(() => {
+      document.getElementById("pageContent")?.classList.add("ready");
+    }, 120);
+  </script>
 
-<script type="module" src="/js/practice_ai_page.js"></script>
+  <script type="module" src="/js/practice_ai_page.js"></script>
 </body>
 </html>
