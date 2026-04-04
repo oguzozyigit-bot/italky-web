@@ -13,11 +13,16 @@
   <style>
     :root{
       --txt:#fff;
-      --muted:rgba(255,255,255,.62);
+      --muted:rgba(255,255,255,.66);
+      --soft:rgba(255,255,255,.44);
       --line:rgba(255,255,255,.10);
+      --line-2:rgba(255,255,255,.07);
       --ai-grad:linear-gradient(135deg,#8bd3ff 0%,#7c5cff 45%,#ff66c4 100%);
-      --ok:#8ef0b1;
-      --err:#ff9e9e;
+      --ok:#9df0b9;
+      --err:#ffb2b2;
+      --bg1:#05070f;
+      --bg2:#090d19;
+      --card:#111625;
     }
 
     *{
@@ -41,7 +46,7 @@
         radial-gradient(circle at 18% 14%, rgba(124,92,255,.16), transparent 28%),
         radial-gradient(circle at 82% 20%, rgba(139,211,255,.13), transparent 24%),
         radial-gradient(circle at 50% 100%, rgba(255,102,196,.08), transparent 25%),
-        linear-gradient(180deg,#05070f 0%, #090d19 100%);
+        linear-gradient(180deg,var(--bg1) 0%, var(--bg2) 100%);
     }
 
     #pageContent{
@@ -53,76 +58,100 @@
     }
 
     .hero{
-      border-radius:28px;
+      border-radius:30px;
       border:1px solid var(--line);
       background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
       padding:18px;
+      box-shadow:0 18px 40px rgba(0,0,0,.22);
     }
 
     .title{
-      font-size:28px;
-      font-weight:1000;
-      line-height:1.12;
       margin:0 0 10px;
+      font-size:34px;
+      line-height:1.02;
+      letter-spacing:-1px;
+      font-weight:1000;
     }
 
     .desc{
+      margin:0 0 18px;
       color:var(--muted);
-      font-size:14px;
+      font-size:15px;
       font-weight:800;
       line-height:1.65;
-      margin:0 0 18px;
     }
 
     .stage{
       position:relative;
-      height:290px;
-      border-radius:24px;
-      border:1px solid rgba(255,255,255,.08);
+      height:360px;
+      border-radius:28px;
+      border:1px solid var(--line-2);
       background:
         radial-gradient(circle at center, rgba(255,255,255,.03), transparent 70%),
-        linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01));
+        linear-gradient(180deg, rgba(255,255,255,.015), rgba(255,255,255,.01));
       overflow:hidden;
       display:flex;
       align-items:center;
       justify-content:center;
       margin-bottom:18px;
+      isolation:isolate;
     }
 
-    .rings{
-      position:absolute;
-      width:240px;
-      height:240px;
-      border-radius:50%;
-      border:1px solid rgba(32,212,255,.12);
-      animation:ringPulse 2.8s ease-in-out infinite;
-    }
-
-    .rings::before,
-    .rings::after{
-      content:"";
+    .energy-ring{
       position:absolute;
       border-radius:50%;
-      border:1px solid rgba(32,212,255,.10);
+      border:1px solid rgba(56,189,248,.14);
+      box-shadow:0 0 20px rgba(56,189,248,.08);
+      animation:ringFloat 3.2s ease-in-out infinite;
+      pointer-events:none;
     }
 
-    .rings::before{ inset:22px; }
-    .rings::after{ inset:44px; }
+    .energy-ring.r1{ width:290px; height:290px; animation-delay:0s; }
+    .energy-ring.r2{ width:230px; height:230px; animation-delay:.35s; border-color:rgba(168,85,247,.15); }
+    .energy-ring.r3{ width:170px; height:170px; animation-delay:.7s; border-color:rgba(34,211,238,.12); }
 
-    @keyframes ringPulse{
-      0%,100%{ opacity:.35; transform:scale(.96); }
-      50%{ opacity:.95; transform:scale(1.03); }
+    @keyframes ringFloat{
+      0%,100%{ transform:scale(.96); opacity:.34; }
+      50%{ transform:scale(1.03); opacity:.95; }
+    }
+
+    .phone-wrap{
+      position:relative;
+      width:190px;
+      height:300px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      z-index:2;
+    }
+
+    .phone-glow{
+      position:absolute;
+      width:210px;
+      height:210px;
+      border-radius:50%;
+      background:radial-gradient(circle, rgba(56,189,248,.16), transparent 68%);
+      filter:blur(18px);
+      animation:phoneGlow 2.8s ease-in-out infinite;
+    }
+
+    @keyframes phoneGlow{
+      0%,100%{ opacity:.45; transform:scale(.96); }
+      50%{ opacity:.95; transform:scale(1.06); }
     }
 
     .phone{
       position:relative;
-      width:154px;
-      height:246px;
-      border-radius:36px;
-      background:linear-gradient(180deg,#171d28,#0b1019);
-      border:1px solid rgba(255,255,255,.12);
-      box-shadow:0 20px 50px rgba(0,0,0,.35);
-      z-index:2;
+      width:176px;
+      height:294px;
+      border-radius:38px;
+      background:
+        linear-gradient(180deg,#1b2230 0%, #0c1119 100%);
+      border:1px solid rgba(255,255,255,.13);
+      box-shadow:
+        0 24px 48px rgba(0,0,0,.36),
+        inset 0 1px 0 rgba(255,255,255,.06);
+      overflow:hidden;
     }
 
     .phone::before{
@@ -131,92 +160,158 @@
       top:14px;
       left:50%;
       transform:translateX(-50%);
-      width:54px;
+      width:56px;
       height:8px;
       border-radius:999px;
       background:rgba(255,255,255,.18);
+      z-index:3;
     }
 
     .phone-screen{
       position:absolute;
-      inset:18px;
-      border-radius:24px;
+      inset:16px;
+      border-radius:28px;
       background:
-        radial-gradient(circle at center, rgba(139,211,255,.15), transparent 65%),
-        linear-gradient(180deg,#0f1522,#070b14);
+        radial-gradient(circle at center, rgba(56,189,248,.14), transparent 55%),
+        repeating-linear-gradient(
+          to bottom,
+          rgba(255,255,255,.00) 0px,
+          rgba(255,255,255,.00) 16px,
+          rgba(255,255,255,.02) 17px
+        ),
+        linear-gradient(180deg,#07111d 0%, #04070d 100%);
+      border:1px solid rgba(255,255,255,.05);
+      overflow:hidden;
       display:flex;
       align-items:center;
       justify-content:center;
-      color:#9ed7ff;
-      font-size:32px;
-      font-weight:1000;
+      box-shadow:inset 0 0 30px rgba(0,0,0,.48);
+    }
+
+    .phone-screen::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:
+        linear-gradient(180deg, transparent 0%, rgba(56,189,248,.08) 50%, transparent 100%);
+      animation:scanLine 2.2s linear infinite;
+      pointer-events:none;
+    }
+
+    @keyframes scanLine{
+      0%{ transform:translateY(-100%); opacity:0; }
+      10%{ opacity:1; }
+      50%{ opacity:.55; }
+      100%{ transform:translateY(100%); opacity:0; }
+    }
+
+    .screen-text{
+      position:relative;
+      z-index:2;
+      font-size:34px;
       letter-spacing:2px;
-      box-shadow:inset 0 0 28px rgba(0,0,0,.45);
-      text-shadow:0 0 14px rgba(139,211,255,.35);
+      font-weight:1000;
+      color:#9fdcff;
+      text-shadow:0 0 16px rgba(56,189,248,.32);
     }
 
     .nfc-card{
       position:absolute;
-      width:122px;
-      height:78px;
-      border-radius:20px;
-      background:linear-gradient(135deg,#20d4ff 0%, #8b5cf6 55%, #ff5fc0 100%);
-      box-shadow:0 16px 36px rgba(0,0,0,.25);
+      width:148px;
+      height:92px;
+      border-radius:22px;
+      background:
+        linear-gradient(180deg,#141414 0%, #050505 100%);
+      border:1px solid rgba(255,255,255,.10);
+      box-shadow:
+        0 18px 38px rgba(0,0,0,.36),
+        inset 0 1px 0 rgba(255,255,255,.06);
       display:flex;
       align-items:center;
       justify-content:center;
-      color:#fff;
-      font-size:22px;
-      font-weight:1000;
-      letter-spacing:1px;
-      z-index:3;
-      animation:nfcMove 2.8s ease-in-out infinite;
-    }
-
-    .nfc-card::before,
-    .nfc-card::after{
-      content:"";
-      position:absolute;
-      border-radius:16px;
-      border:1px solid rgba(255,255,255,.28);
+      z-index:4;
+      animation:nfcMove 2.9s ease-in-out infinite;
+      overflow:hidden;
     }
 
     .nfc-card::before{
-      inset:10px auto auto 12px;
-      width:22px;
-      height:16px;
+      content:"";
+      position:absolute;
+      inset:0;
+      background:
+        linear-gradient(135deg, rgba(56,189,248,.18), transparent 30%, transparent 70%, rgba(168,85,247,.16));
+      mix-blend-mode:screen;
+      opacity:.85;
     }
 
     .nfc-card::after{
-      inset:auto 12px 12px auto;
-      width:18px;
-      height:18px;
-      border-radius:8px;
+      content:"";
+      position:absolute;
+      inset:10px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.05);
+    }
+
+    .nfc-chip{
+      position:absolute;
+      left:14px;
+      top:14px;
+      width:22px;
+      height:16px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,.18);
+      background:rgba(255,255,255,.04);
+    }
+
+    .nfc-mark{
+      position:relative;
+      z-index:2;
+      font-size:20px;
+      font-weight:1000;
+      letter-spacing:.8px;
+      color:#f6f8ff;
+      text-shadow:0 0 10px rgba(255,255,255,.08);
+    }
+
+    .nfc-logo{
+      position:absolute;
+      bottom:12px;
+      right:14px;
+      z-index:2;
+      font-size:10px;
+      font-weight:900;
+      color:rgba(255,255,255,.78);
+      letter-spacing:.3px;
     }
 
     @keyframes nfcMove{
-      0%,100%{ transform:translateX(96px) rotate(-10deg); }
-      50%{ transform:translateX(22px) rotate(-4deg); }
+      0%,100%{ transform:translateX(110px) rotate(-9deg); }
+      50%{ transform:translateX(28px) rotate(-3deg); }
     }
 
     .helper{
-      margin-top:8px;
+      margin-top:4px;
       color:var(--muted);
       font-size:14px;
       font-weight:800;
-      line-height:1.6;
+      line-height:1.65;
       text-align:center;
     }
 
-    .helper a{
-      color:#ffd7ff;
-      text-decoration:none;
-      font-weight:900;
+    .helper button{
+      border:none;
+      background:none;
+      color:#f4d8ff;
+      font-weight:1000;
+      font-size:14px;
+      cursor:pointer;
+      padding:0;
+      font-family:'Outfit',sans-serif;
     }
 
     .result{
       margin-top:18px;
-      border-radius:22px;
+      border-radius:24px;
       padding:16px;
       border:1px solid rgba(255,255,255,.08);
       background:rgba(255,255,255,.03);
@@ -226,13 +321,13 @@
     .result.show{ display:block; }
 
     .result.ok{
-      border-color:rgba(142,240,177,.28);
-      background:linear-gradient(135deg, rgba(142,240,177,.10), rgba(255,255,255,.03));
+      border-color:rgba(157,240,185,.28);
+      background:linear-gradient(135deg, rgba(157,240,185,.10), rgba(255,255,255,.03));
     }
 
     .result.err{
-      border-color:rgba(255,158,158,.28);
-      background:linear-gradient(135deg, rgba(255,158,158,.10), rgba(255,255,255,.03));
+      border-color:rgba(255,178,178,.28);
+      background:linear-gradient(135deg, rgba(255,178,178,.10), rgba(255,255,255,.03));
     }
 
     .result-title{
@@ -245,7 +340,7 @@
       font-size:14px;
       line-height:1.65;
       font-weight:800;
-      color:rgba(255,255,255,.86);
+      color:rgba(255,255,255,.88);
     }
 
     .result-actions{
@@ -275,30 +370,43 @@
 <body>
   <main id="pageContent">
     <section class="hero">
-      <h1 class="title">Satın Aldığınız NFC Kartını Telefona Okut</h1>
+      <h1 class="title">NFC Kartını Okut</h1>
       <p class="desc">
-        Satın aldığınız NFC kartını telefonunuza yaklaştırın. Kart başarıyla okunduğunda jeton yükleme işlemi otomatik olarak tamamlanacaktır.
+        Satın aldığınız siyah NFC kartı telefonun arka kısmına yaklaştırın. Okuma tamamlandığında jetonlar hesabınıza aktarılır.
       </p>
 
       <div class="stage">
-        <div class="rings"></div>
-        <div class="phone">
-          <div class="phone-screen">NFC</div>
+        <div class="energy-ring r1"></div>
+        <div class="energy-ring r2"></div>
+        <div class="energy-ring r3"></div>
+
+        <div class="phone-wrap">
+          <div class="phone-glow"></div>
+          <div class="phone">
+            <div class="phone-screen">
+              <div class="screen-text">NFC</div>
+            </div>
+          </div>
         </div>
-        <div class="nfc-card">NFC</div>
+
+        <div class="nfc-card">
+          <div class="nfc-chip"></div>
+          <div class="nfc-mark">NFC</div>
+          <div class="nfc-logo">italkyAI</div>
+        </div>
       </div>
 
       <div class="helper">
         Telefonunuzda NFC kart özelliği yoksa yükleme işlemini
-        <a href="/pages/code_load.html">Kod İle Yüklemek için tıklayınız...</a>
+        <button type="button" id="goCodeBtn">Kod ile Yüklemek için tıklayınız...</button>
       </div>
 
       <div id="resultBox" class="result">
         <div id="resultTitle" class="result-title"></div>
         <div id="resultText" class="result-text"></div>
         <div class="result-actions">
-          <button class="result-btn secondary" type="button" onclick="location.href='/pages/code_load.html'">Kod İle Yükle</button>
-          <button class="result-btn" type="button" onclick="location.href='/pages/home.html'">Anasayfaya Dön</button>
+          <button class="result-btn secondary" type="button" id="goCodeBtn2">Kod İle Yükle</button>
+          <button class="result-btn" type="button" id="goHomeBtn">Anasayfaya Dön</button>
         </div>
       </div>
     </section>
@@ -314,6 +422,9 @@
     const resultBox = document.getElementById("resultBox");
     const resultTitle = document.getElementById("resultTitle");
     const resultText = document.getElementById("resultText");
+    const goCodeBtn = document.getElementById("goCodeBtn");
+    const goCodeBtn2 = document.getElementById("goCodeBtn2");
+    const goHomeBtn = document.getElementById("goHomeBtn");
 
     function showResult(ok, title, text){
       resultBox.className = "result show " + (ok ? "ok" : "err");
@@ -354,7 +465,7 @@
       const json = await res.json().catch(() => null);
 
       if (!json) {
-        showResult(false, "İşlem Başarısız", "Jeton yükleme işlemi gerçekleştirilemedi.");
+        showResult(false, "İşlem Başarısız", "Jeton yükleme işleminiz gerçekleştirilemedi.");
         return;
       }
 
@@ -374,7 +485,7 @@
       showResult(
         false,
         "İşlem Başarısız",
-        `NFC ile yükleme işlemi gerçekleştirilemedi.<br>Sebep: <b>${json.reason || "Bilinmeyen hata"}</b>`
+        `NFC den yükleme işlemi gerçekleştirilemedi.<br>Sebep: <b>${json.reason || "Bilinmeyen hata"}</b>`
       );
     }
 
@@ -382,7 +493,7 @@
       try{
         const uid = String(payload || "").trim();
         if (!uid) {
-          showResult(false, "İşlem Başarısız", "NFC kart UID bilgisi alınamadı.");
+          showResult(false, "İşlem Başarısız", "NFC kart bilgisi alınamadı.");
           return;
         }
         redeemByUid(uid);
@@ -391,16 +502,17 @@
       }
     };
 
+    goCodeBtn?.addEventListener("click", () => location.href = "/pages/code_load.html");
+    goCodeBtn2?.addEventListener("click", () => location.href = "/pages/code_load.html");
+    goHomeBtn?.addEventListener("click", () => location.href = "/pages/home.html");
+
     (async function startNfcFlow(){
       try{
         if (window.NativeNFC && typeof window.NativeNFC.readText === "function") {
           window.NativeNFC.readText();
           return;
         }
-        showResult(false, "NFC Özelliği Kullanılamadı", "Bu cihazda NFC okuma köprüsü bulunamadı.");
-      }catch(e){
-        showResult(false, "İşlem Başarısız", "NFC okuma başlatılamadı.");
-      }
+      } catch {}
     })();
   </script>
 </body>
