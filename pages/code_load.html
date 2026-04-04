@@ -16,6 +16,8 @@
       --muted:rgba(255,255,255,.62);
       --line:rgba(255,255,255,.10);
       --ai-grad:linear-gradient(135deg,#8bd3ff 0%,#7c5cff 45%,#ff66c4 100%);
+      --ok:#9df0b9;
+      --err:#ffb2b2;
     }
 
     *{
@@ -62,18 +64,18 @@
     }
 
     .title{
+      margin:0 0 12px;
       font-size:28px;
       font-weight:1000;
       line-height:1.12;
-      margin:0 0 12px;
     }
 
     .desc{
+      margin:0 0 24px;
       color:var(--muted);
       font-size:15px;
       font-weight:800;
       line-height:1.7;
-      margin:0 0 24px;
     }
 
     .code-box{
@@ -89,6 +91,7 @@
       letter-spacing:10px;
       margin-bottom:16px;
       padding:0 12px;
+      font-family:'Outfit',sans-serif;
     }
 
     .submit-btn{
@@ -116,13 +119,13 @@
     .result.show{ display:block; }
 
     .result.ok{
-      border-color:rgba(142,240,177,.28);
-      background:linear-gradient(135deg, rgba(142,240,177,.10), rgba(255,255,255,.03));
+      border-color:rgba(157,240,185,.28);
+      background:linear-gradient(135deg, rgba(157,240,185,.10), rgba(255,255,255,.03));
     }
 
     .result.err{
-      border-color:rgba(255,158,158,.28);
-      background:linear-gradient(135deg, rgba(255,158,158,.10), rgba(255,255,255,.03));
+      border-color:rgba(255,178,178,.28);
+      background:linear-gradient(135deg, rgba(255,178,178,.10), rgba(255,255,255,.03));
     }
 
     .result-title{
@@ -135,7 +138,7 @@
       font-size:14px;
       line-height:1.65;
       font-weight:800;
-      color:rgba(255,255,255,.86);
+      color:rgba(255,255,255,.88);
     }
 
     .result-actions{
@@ -178,8 +181,8 @@
         <div id="resultTitle" class="result-title"></div>
         <div id="resultText" class="result-text"></div>
         <div class="result-actions">
-          <button class="result-btn secondary" type="button" onclick="location.href='/pages/nfc_load.html'">NFC İle Yükle</button>
-          <button class="result-btn" type="button" onclick="location.href='/pages/home.html'">Anasayfaya Dön</button>
+          <button class="result-btn secondary" type="button" id="goHomeBtn">Anasayfaya Dön</button>
+          <button class="result-btn" type="button" id="retryBtn">Tekrar Dene</button>
         </div>
       </div>
     </section>
@@ -197,6 +200,8 @@
     const resultBox = document.getElementById("resultBox");
     const resultTitle = document.getElementById("resultTitle");
     const resultText = document.getElementById("resultText");
+    const goHomeBtn = document.getElementById("goHomeBtn");
+    const retryBtn = document.getElementById("retryBtn");
 
     function showResult(ok, title, text){
       resultBox.className = "result show " + (ok ? "ok" : "err");
@@ -272,6 +277,15 @@
 
     manualCode?.addEventListener("input", () => {
       manualCode.value = manualCode.value.replace(/\D/g, "").slice(0, 6);
+    });
+
+    goHomeBtn?.addEventListener("click", () => {
+      location.href = "/pages/home.html";
+    });
+
+    retryBtn?.addEventListener("click", () => {
+      resultBox.className = "result";
+      manualCode.focus();
     });
   </script>
 </body>
