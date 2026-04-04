@@ -22,7 +22,7 @@ export function generateManualCode() {
  * UID ve kısa kod QR içine gömülmez.
  */
 export function buildQrInstallUrl() {
-  return "https://italky.ai/pages/install.html";
+  return "https://play.google.com/store/apps/details?id=com.ozyigits.italkyai";
 }
 
 export async function createNfcTokenCard({
