@@ -17,6 +17,8 @@
       --line:rgba(255,255,255,.10);
       --line2:rgba(255,255,255,.07);
       --ai-grad:linear-gradient(135deg,#8bd3ff 0%,#7c5cff 45%,#ff66c4 100%);
+      --ok:#9df0b9;
+      --err:#ff9ca8;
     }
 
     *{
@@ -59,6 +61,7 @@
       box-shadow:0 18px 40px rgba(0,0,0,.22);
       position:relative;
       overflow:hidden;
+      min-height:720px;
     }
 
     .title{
@@ -67,6 +70,7 @@
       line-height:1.02;
       letter-spacing:-1px;
       font-weight:1000;
+      text-align:center;
     }
 
     .desc{
@@ -75,6 +79,7 @@
       font-size:15px;
       font-weight:800;
       line-height:1.65;
+      text-align:center;
     }
 
     .stage{
@@ -303,44 +308,62 @@
       font-family:'Outfit',sans-serif;
     }
 
+    .overlay{
+      position:absolute;
+      inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      background:rgba(5,7,15,.50);
+      backdrop-filter:blur(4px);
+      z-index:20;
+    }
+
+    .overlay.show{
+      display:flex;
+      animation:fadeIn .24s ease;
+    }
+
+    @keyframes fadeIn{
+      from{opacity:0}
+      to{opacity:1}
+    }
+
     .result{
-      margin-top:18px;
+      width:min(100%, 430px);
       border-radius:24px;
       padding:18px;
       border:1px solid rgba(255,255,255,.08);
       background:rgba(255,255,255,.03);
-      display:none;
-      max-width:430px;
-      margin-left:auto;
-      margin-right:auto;
-    }
-
-    .result.show{
-      display:block;
-      animation:successPop .38s ease;
-    }
-
-    @keyframes successPop{
-      0%{ opacity:0; transform:translateY(20px) scale(.96); }
-      100%{ opacity:1; transform:translateY(0) scale(1); }
+      box-shadow:0 18px 36px rgba(0,0,0,.28);
+      transform:translateY(0);
     }
 
     .result.ok{
-      border-color:rgba(157,240,185,.28);
-      background:linear-gradient(135deg, rgba(157,240,185,.10), rgba(255,255,255,.03));
-      box-shadow:0 14px 36px rgba(57,255,163,.08);
+      border-color:rgba(157,240,185,.32);
+      background:linear-gradient(135deg, rgba(157,240,185,.12), rgba(255,255,255,.03));
     }
 
     .result.err{
-      border-color:rgba(255,178,178,.28);
-      background:linear-gradient(135deg, rgba(255,178,178,.10), rgba(255,255,255,.03));
+      border-color:rgba(255,156,168,.36);
+      background:linear-gradient(135deg, rgba(255,156,168,.12), rgba(255,255,255,.03));
     }
 
     .result-title{
-      font-size:18px;
+      font-size:20px;
       font-weight:1000;
       margin:0 0 10px;
       line-height:1.35;
+      text-align:left;
+    }
+
+    .result.ok .result-title{
+      color:#ffffff;
+    }
+
+    .result.err .result-title{
+      color:#ffacb6;
     }
 
     .result-text{
@@ -348,6 +371,7 @@
       line-height:1.7;
       font-weight:800;
       color:rgba(255,255,255,.92);
+      text-align:left;
     }
 
     .result-actions{
@@ -374,15 +398,11 @@
     }
 
     .success-mode .stage,
-    .success-mode .helper{
-      opacity:.22;
-      transform:scale(.98);
-      pointer-events:none;
-    }
-
-    .success-mode .title,
+    .success-mode .helper,
     .success-mode .desc{
-      text-align:center;
+      opacity:.18;
+      transform:scale(.985);
+      pointer-events:none;
     }
 
     .confetti-layer{
@@ -404,17 +424,9 @@
     }
 
     @keyframes fall{
-      0%{
-        transform:translateY(-20px) rotate(0deg);
-        opacity:0;
-      }
-      10%{
-        opacity:1;
-      }
-      100%{
-        transform:translateY(110vh) rotate(720deg);
-        opacity:.95;
-      }
+      0%{ transform:translateY(-20px) rotate(0deg); opacity:0; }
+      10%{ opacity:1; }
+      100%{ transform:translateY(110vh) rotate(720deg); opacity:.95; }
     }
   </style>
 </head>
@@ -454,12 +466,14 @@
         <button type="button" id="goCodeBtn">Kod ile Yüklemek için tıklayınız...</button>
       </div>
 
-      <div id="resultBox" class="result">
-        <div id="resultTitle" class="result-title"></div>
-        <div id="resultText" class="result-text"></div>
-        <div class="result-actions">
-          <button class="result-btn secondary" type="button" id="goCodeBtn2">Kod İle Yükle</button>
-          <button class="result-btn" type="button" id="goHomeBtn">Anasayfaya Dön</button>
+      <div id="overlay" class="overlay">
+        <div id="resultCard" class="result">
+          <div id="resultTitle" class="result-title"></div>
+          <div id="resultText" class="result-text"></div>
+          <div class="result-actions">
+            <button class="result-btn secondary" type="button" id="goCodeBtn2">Kod İle Yükle</button>
+            <button class="result-btn" type="button" id="goHomeBtn">Anasayfaya Dön</button>
+          </div>
         </div>
       </div>
     </section>
@@ -473,7 +487,8 @@
 
     const API_BASE = "https://italky-api.onrender.com";
     const heroCard = document.getElementById("heroCard");
-    const resultBox = document.getElementById("resultBox");
+    const overlay = document.getElementById("overlay");
+    const resultCard = document.getElementById("resultCard");
     const resultTitle = document.getElementById("resultTitle");
     const resultText = document.getElementById("resultText");
     const goCodeBtn = document.getElementById("goCodeBtn");
@@ -481,12 +496,54 @@
     const goHomeBtn = document.getElementById("goHomeBtn");
     const confettiLayer = document.getElementById("confettiLayer");
 
-    function launchConfetti() {
-      if (!confettiLayer) return;
-      confettiLayer.innerHTML = "";
+    let audioCtx = null;
 
+    function ensureAudio() {
+      if (!audioCtx) {
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if (Ctx) audioCtx = new Ctx();
+      }
+      if (audioCtx && audioCtx.state === "suspended") {
+        audioCtx.resume().catch(() => {});
+      }
+    }
+
+    function beep({ freq = 880, duration = 0.12, type = "sine", gain = 0.05, delay = 0 }) {
+      if (!audioCtx) return;
+      const osc = audioCtx.createOscillator();
+      const amp = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.value = freq;
+      amp.gain.value = 0.0001;
+      osc.connect(amp);
+      amp.connect(audioCtx.destination);
+
+      const now = audioCtx.currentTime + delay;
+      amp.gain.setValueAtTime(0.0001, now);
+      amp.gain.exponentialRampToValueAtTime(gain, now + 0.01);
+      amp.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+      osc.start(now);
+      osc.stop(now + duration + 0.02);
+    }
+
+    function playSuccessSound() {
+      ensureAudio();
+      beep({ freq: 740, duration: 0.10, gain: 0.05, type: "sine", delay: 0.00 });
+      beep({ freq: 988, duration: 0.12, gain: 0.05, type: "sine", delay: 0.11 });
+      beep({ freq: 1318, duration: 0.16, gain: 0.06, type: "triangle", delay: 0.24 });
+    }
+
+    function playErrorSound() {
+      ensureAudio();
+      beep({ freq: 330, duration: 0.14, gain: 0.05, type: "sawtooth", delay: 0.00 });
+      beep({ freq: 220, duration: 0.18, gain: 0.05, type: "square", delay: 0.14 });
+    }
+
+    function launchConfetti() {
+      confettiLayer.innerHTML = "";
       const colors = ["#8bd3ff", "#7c5cff", "#ff66c4", "#34d399", "#fbbf24", "#ffffff"];
-      const count = 70;
+      const count = 80;
 
       for (let i = 0; i < count; i++) {
         const piece = document.createElement("div");
@@ -495,7 +552,6 @@
         piece.style.background = colors[Math.floor(Math.random() * colors.length)];
         piece.style.animationDuration = `${2.6 + Math.random() * 1.8}s`;
         piece.style.animationDelay = `${Math.random() * 0.45}s`;
-        piece.style.transform = `translateY(-20px) rotate(${Math.random() * 180}deg)`;
         piece.style.width = `${8 + Math.random() * 6}px`;
         piece.style.height = `${10 + Math.random() * 10}px`;
         confettiLayer.appendChild(piece);
@@ -506,17 +562,47 @@
       }, 5000);
     }
 
-    function showResult(ok, title, text){
-      resultBox.className = "result show " + (ok ? "ok" : "err");
+    function extractUidFromValue(raw) {
+      const value = String(raw || "").trim();
+      if (!value) return "";
+
+      if (value.startsWith("italky://") || value.startsWith("http://") || value.startsWith("https://")) {
+        try {
+          const normalized = value.startsWith("italky://")
+            ? value.replace("italky://", "https://")
+            : value;
+          const u = new URL(normalized);
+          return String(u.searchParams.get("uid") || "").trim();
+        } catch {
+          return "";
+        }
+      }
+
+      return value;
+    }
+
+    function getUidFromUrl() {
+      try {
+        const u = new URL(location.href);
+        return String(u.searchParams.get("uid") || "").trim();
+      } catch {
+        return "";
+      }
+    }
+
+    function showResult(ok, title, text) {
+      resultCard.className = "result " + (ok ? "ok" : "err");
       resultTitle.textContent = title;
       resultText.innerHTML = text;
+      overlay.classList.add("show");
 
       if (ok) {
         heroCard.classList.add("success-mode");
         launchConfetti();
-        resultBox.scrollIntoView({ behavior: "smooth", block: "center" });
+        playSuccessSound();
       } else {
         heroCard.classList.remove("success-mode");
+        playErrorSound();
       }
     }
 
@@ -595,12 +681,12 @@
 
     window.onNativeNfcRead = function(payload){
       try{
-        const value = String(payload || "").trim();
-        if (!value) {
-          showResult(false, "İşlem Başarısız", "NFC kart bilgisi alınamadı.");
+        const uid = extractUidFromValue(payload);
+        if (!uid) {
+          showResult(false, "İşlem Başarısız", "NFC kart UID bilgisi alınamadı.");
           return;
         }
-        redeemByUid(value);
+        redeemByUid(uid);
       }catch(e){
         showResult(false, "İşlem Başarısız", "NFC kart okunurken hata oluştu.");
       }
@@ -616,11 +702,19 @@
     goCodeBtn2?.addEventListener("click", () => location.href = "/pages/code_load.html");
     goHomeBtn?.addEventListener("click", () => location.href = "/pages/home.html");
 
+    window.addEventListener("pointerdown", ensureAudio, { passive: true });
+    window.addEventListener("touchstart", ensureAudio, { passive: true });
+
     (function startNfcFlow(){
+      const uidFromUrl = getUidFromUrl();
+      if (uidFromUrl) {
+        redeemByUid(uidFromUrl);
+        return;
+      }
+
       try{
         if (window.NativeAdmin && typeof window.NativeAdmin.readNfcText === "function") {
           window.NativeAdmin.readNfcText();
-          return;
         }
       } catch {}
     })();
