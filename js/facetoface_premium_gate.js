@@ -6,40 +6,22 @@ const JETON_PAGE_URL = "/pages/jetonbuy.html";
 
 const POPUPS = [
   {
-    title: "Jeton Yükleyerek Sınırları Kaldırın",
-    text: "Yüz yüze çevirinin premium özelliklerini kullanabilmek için jeton yüklemeniz gerekmektedir.\nKültürel çeviri, kendi sesinizle çeviri ve daha doğal sonuçlar jetonla aktif edilir.",
+    title: "Jeton Gerekli",
+    text: "Bu özelliği kullanmak için jeton yüklemeniz gerekmektedir.\nKültürel çeviri ve kendi sesinizle çeviri gibi gelişmiş özellikler jetonla çalışır.",
     accent: "linear-gradient(135deg,#a5b4fc 0%,#6366f1 50%,#ec4899 100%)",
-    button: "Jeton Yükle ve Devam Et"
+    button: "Jeton Yükle"
   },
   {
-    title: "Premium Çeviri Deneyimi Seni Bekliyor",
-    text: "FaceToFace içinde gelişmiş çeviri özelliklerini açmak için jeton yüklemeniz gerekir.\nKültürel bağlama uygun çeviri ve kendi sesinizle çeviri alma ayrıcalıkları jetonla kullanılır.",
+    title: "Jetonunuzla Devam Edin",
+    text: "FaceToFace içindeki gelişmiş özellikleri kullanmak için jeton gereklidir.\nJeton yükleyerek işlemi hemen başlatabilirsiniz.",
     accent: "linear-gradient(135deg,#ff9a3c 0%,#ff4fa3 100%)",
     button: "Jeton Yükle"
   },
   {
-    title: "Çeviriyi Bir Üst Seviyeye Taşıyın",
-    text: "Standart çevirinin ötesine geçmek için premium özellikler sizi bekliyor.\nDaha güçlü anlam aktarımı ve kendi sesinizle çeviri deneyimi için jeton yükleyin.",
+    title: "Gelişmiş Özellik İçin Jeton Gerekli",
+    text: "Standart kullanımın ötesindeki çeviri özellikleri jetonla çalışır.\nJeton yükleyerek devam edebilirsiniz.",
     accent: "linear-gradient(135deg,#4de8ff 0%,#7b7dff 100%)",
-    button: "Devam Et ve Jeton Yükle"
-  },
-  {
-    title: "Daha Akıllı, Daha Kişisel",
-    text: "FaceToFace premium özellikleri yalnızca kelimeleri değil, anlamı ve duyguyu da daha güçlü taşır.\nKültürel çeviri ve kendi sesinizle çeviri kullanmak için jeton yükleyin.",
-    accent: "linear-gradient(135deg,#34d399 0%,#6366f1 100%)",
-    button: "Jetonla Aç"
-  },
-  {
-    title: "Kendi Sesinizle Çeviri Kilidi",
-    text: "Kendi sesinizle çeviri alma ve gelişmiş FaceToFace özelliklerini etkinleştirmek için jeton gereklidir.\nPremium deneyimi açarak daha doğal ve daha etkileyici bir iletişim kurabilirsiniz.",
-    accent: "linear-gradient(135deg,#22c55e 0%,#06b6d4 100%)",
-    button: "Kilidi Aç"
-  },
-  {
-    title: "FaceToFace Premium Kilidi",
-    text: "Bu alandaki gelişmiş özellikleri kullanabilmek için jeton yüklemeniz gerekmektedir.\nKültürel çeviri, kendi sesinizle çeviri ve daha doğal premium sonuçlar jetonla aktif edilir.",
-    accent: "linear-gradient(135deg,#ef4444 0%,#8b5cf6 100%)",
-    button: "Jeton Yükle ve Devam Et"
+    button: "Jeton Yükle"
   }
 ];
 
@@ -198,26 +180,26 @@ function ensureModal() {
   wrap.innerHTML = `
     <div class="f2f-gate-card">
       <div class="f2f-gate-top" id="f2fGateTop">
-        <div class="f2f-gate-chip">italkyAI • FaceToFace Premium</div>
+        <div class="f2f-gate-chip">italkyAI • FaceToFace</div>
         <div class="f2f-gate-title" id="f2fGateTitle"></div>
         <p class="f2f-gate-text" id="f2fGateText"></p>
       </div>
 
       <div class="f2f-gate-body">
         <div class="f2f-gate-box">
-          <div class="f2f-gate-label">Premium Özellikler</div>
+          <div class="f2f-gate-label">Jetonla Açılan Özellikler</div>
           <div class="f2f-gate-value">Kültürel Çeviri • Kendi Sesiniz</div>
-          <p class="f2f-gate-desc">Daha doğal anlam aktarımı ve kişisel ses deneyimi için jeton gerekir.</p>
+          <p class="f2f-gate-desc">Gelişmiş özellikler jetonla kullanılabilir.</p>
         </div>
 
         <div class="f2f-gate-box">
-          <div class="f2f-gate-label">Deneyim</div>
-          <div class="f2f-gate-value">Daha Akıllı • Daha Kişisel</div>
-          <p class="f2f-gate-desc">Sadece kelimeleri değil, anlamı ve duyguyu da daha güçlü taşıyın.</p>
+          <div class="f2f-gate-label">Durum</div>
+          <div class="f2f-gate-value">Jeton Yetersiz</div>
+          <p class="f2f-gate-desc">Devam etmek için jeton yükleyebilirsiniz.</p>
         </div>
 
         <div class="f2f-gate-actions">
-          <button class="f2f-gate-btn primary" id="f2fGatePrimary">Jeton Yükle ve Devam Et</button>
+          <button class="f2f-gate-btn primary" id="f2fGatePrimary">Jeton Yükle</button>
           <button class="f2f-gate-btn secondary" id="f2fGateClose">Şimdilik Vazgeç</button>
         </div>
       </div>
@@ -279,11 +261,6 @@ export async function getCurrentTokens() {
   return Number(data?.tokens ?? 0);
 }
 
-/**
- * Premium özellik açılmadan önce çağır.
- * Jeton varsa true döner ve popup açılmaz.
- * Jeton yoksa popup açar ve false döner.
- */
 export async function ensureFaceToFacePremiumAccess() {
   const {
     data: { session }
@@ -298,7 +275,6 @@ export async function ensureFaceToFacePremiumAccess() {
   const tokens = await getCurrentTokens();
 
   if (tokens === null) {
-    // token okunamadıysa burada popup açmıyorum; yanlış yönlendirme olmasın
     return false;
   }
 
