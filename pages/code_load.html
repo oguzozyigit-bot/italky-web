@@ -18,6 +18,7 @@
       --ai-grad:linear-gradient(135deg,#8bd3ff 0%,#7c5cff 45%,#ff66c4 100%);
       --ok:#9df0b9;
       --err:#ffb2b2;
+      --warn:#ffd59a;
     }
 
     *{
@@ -61,6 +62,7 @@
       background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
       padding:22px 18px;
       text-align:center;
+      box-shadow:0 18px 40px rgba(0,0,0,.22);
     }
 
     .title{
@@ -104,6 +106,12 @@
       font-weight:1000;
       color:#fff;
       background:var(--ai-grad);
+      box-shadow:0 14px 28px rgba(124,92,255,.18);
+    }
+
+    .submit-btn:disabled{
+      opacity:.72;
+      cursor:default;
     }
 
     .result{
@@ -139,6 +147,24 @@
       line-height:1.65;
       font-weight:800;
       color:rgba(255,255,255,.88);
+    }
+
+    .debug-box{
+      margin-top:12px;
+      padding:12px;
+      border-radius:16px;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.08);
+      color:var(--warn);
+      font-size:12px;
+      line-height:1.55;
+      font-weight:800;
+      word-break:break-word;
+      display:none;
+    }
+
+    .debug-box.show{
+      display:block;
     }
 
     .result-actions{
@@ -180,6 +206,8 @@
       <div id="resultBox" class="result">
         <div id="resultTitle" class="result-title"></div>
         <div id="resultText" class="result-text"></div>
+        <div id="debugBox" class="debug-box"></div>
+
         <div class="result-actions">
           <button class="result-btn secondary" type="button" id="goHomeBtn">Anasayfaya Dön</button>
           <button class="result-btn" type="button" id="retryBtn">Tekrar Dene</button>
@@ -200,13 +228,52 @@
     const resultBox = document.getElementById("resultBox");
     const resultTitle = document.getElementById("resultTitle");
     const resultText = document.getElementById("resultText");
+    const debugBox = document.getElementById("debugBox");
     const goHomeBtn = document.getElementById("goHomeBtn");
     const retryBtn = document.getElementById("retryBtn");
 
-    function showResult(ok, title, text){
+    function showResult(ok, title, text, debugText = "") {
       resultBox.className = "result show " + (ok ? "ok" : "err");
       resultTitle.textContent = title;
       resultText.innerHTML = text;
+
+      if (debugText) {
+        debugBox.textContent = debugText;
+        debugBox.classList.add("show");
+      } else {
+        debugBox.textContent = "";
+        debugBox.classList.remove("show");
+      }
+    }
+
+    function mapCodeLoadError(reasonRaw, detailRaw = "") {
+      const reason = String(reasonRaw || "").trim().toUpperCase();
+      const detail = String(detailRaw || "").trim();
+
+      if (reason === "CODE_NOT_FOUND") {
+        return "Bu kod sistemde kayıtlı değil.";
+      }
+      if (reason === "CARD_ALREADY_USED") {
+        return "Bu kod daha önce kullanılmış.";
+      }
+      if (reason === "CARD_BLOCKED") {
+        return "Bu kart kullanıma kapatılmış.";
+      }
+      if (reason === "CARD_EXPIRED") {
+        return "Bu kartın kullanım süresi dolmuş.";
+      }
+      if (reason === "INVALID_TOKEN_AMOUNT") {
+        return "Bu kartta yüklenebilir jeton bulunamadı.";
+      }
+      if (reason === "CARD_NOT_FOUND") {
+        return "Bu karta ait kayıt bulunamadı.";
+      }
+
+      if (detail) {
+        return "İşlem sırasında sistem hatası oluştu.";
+      }
+
+      return "İşlem sırasında bağlantı veya sistem hatası oluştu.";
     }
 
     async function getAuthHeaders() {
@@ -237,40 +304,64 @@
         return;
       }
 
-      const res = await fetch(`${API_BASE}/api/nfc/redeem-manual-code`, {
-        method: "POST",
-        headers: await getAuthHeaders(),
-        body: JSON.stringify({
-          manual_code: code,
-          user_id: userId
-        })
-      });
+      loadBtn.disabled = true;
 
-      const json = await res.json().catch(() => null);
+      try {
+        const res = await fetch(`${API_BASE}/api/nfc/redeem-manual-code`, {
+          method: "POST",
+          headers: await getAuthHeaders(),
+          body: JSON.stringify({
+            manual_code: code,
+            user_id: userId
+          })
+        });
 
-      if (!json) {
-        showResult(false, "İşlem Başarısız", "Kod ile yükleme işlemi gerçekleştirilemedi.");
-        return;
-      }
+        const json = await res.json().catch(() => null);
 
-      if (json.ok) {
-        if (typeof json.tokens_after === "number") {
-          try { setHeaderTokens(json.tokens_after); } catch {}
+        if (!json) {
+          showResult(
+            false,
+            "İşlem Başarısız",
+            "Kod ile yükleme işlemi gerçekleştirilemedi.",
+            `HTTP: ${res.status} • JSON parse edilemedi`
+          );
+          loadBtn.disabled = false;
+          return;
         }
 
-        showResult(
-          true,
-          "Kod ile Yükleme İşlemi Gerçekleşmiştir",
-          `Yüklenen: <b>${json.loaded_tokens}</b><br>Toplam Bakiye: <b>${json.tokens_after}</b>`
-        );
-        return;
-      }
+        if (json.ok) {
+          if (typeof json.tokens_after === "number") {
+            try { setHeaderTokens(json.tokens_after); } catch {}
+          }
 
-      showResult(
-        false,
-        "İşlem Başarısız",
-        `Kod ile yükleme işlemi gerçekleştirilemedi.<br>Sebep: <b>${json.reason || "Bilinmeyen hata"}</b>`
-      );
+          showResult(
+            true,
+            "Kod ile Yükleme İşlemi Gerçekleşmiştir",
+            `Yüklenen: <b>${json.loaded_tokens}</b><br>Toplam Bakiye: <b>${json.tokens_after}</b>`
+          );
+          loadBtn.disabled = false;
+          return;
+        }
+
+        const reasonText = mapCodeLoadError(json.reason, json.detail);
+
+        showResult(
+          false,
+          "İşlem Başarısız",
+          `Kod ile yükleme işlemi gerçekleştirilemedi.<br>Sebep: <b>${reasonText}</b>`,
+          `reason=${json.reason || "-"} • detail=${json.detail || "-"} • http=${res.status}`
+        );
+
+        loadBtn.disabled = false;
+      } catch (e) {
+        showResult(
+          false,
+          "İşlem Başarısız",
+          "Kod ile yükleme işlemi gerçekleştirilemedi.",
+          `fetch_error=${e?.message || e}`
+        );
+        loadBtn.disabled = false;
+      }
     }
 
     loadBtn?.addEventListener("click", redeemCode);
@@ -285,6 +376,9 @@
 
     retryBtn?.addEventListener("click", () => {
       resultBox.className = "result";
+      debugBox.classList.remove("show");
+      debugBox.textContent = "";
+      loadBtn.disabled = false;
       manualCode.focus();
     });
   </script>
