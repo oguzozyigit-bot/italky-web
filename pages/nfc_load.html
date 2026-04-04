@@ -14,15 +14,9 @@
     :root{
       --txt:#fff;
       --muted:rgba(255,255,255,.66);
-      --soft:rgba(255,255,255,.44);
       --line:rgba(255,255,255,.10);
-      --line-2:rgba(255,255,255,.07);
+      --line2:rgba(255,255,255,.07);
       --ai-grad:linear-gradient(135deg,#8bd3ff 0%,#7c5cff 45%,#ff66c4 100%);
-      --ok:#9df0b9;
-      --err:#ffb2b2;
-      --bg1:#05070f;
-      --bg2:#090d19;
-      --card:#111625;
     }
 
     *{
@@ -46,7 +40,7 @@
         radial-gradient(circle at 18% 14%, rgba(124,92,255,.16), transparent 28%),
         radial-gradient(circle at 82% 20%, rgba(139,211,255,.13), transparent 24%),
         radial-gradient(circle at 50% 100%, rgba(255,102,196,.08), transparent 25%),
-        linear-gradient(180deg,var(--bg1) 0%, var(--bg2) 100%);
+        linear-gradient(180deg,#05070f 0%, #090d19 100%);
     }
 
     #pageContent{
@@ -85,7 +79,7 @@
       position:relative;
       height:360px;
       border-radius:28px;
-      border:1px solid var(--line-2);
+      border:1px solid var(--line2);
       background:
         radial-gradient(circle at center, rgba(255,255,255,.03), transparent 70%),
         linear-gradient(180deg, rgba(255,255,255,.015), rgba(255,255,255,.01));
@@ -145,8 +139,7 @@
       width:176px;
       height:294px;
       border-radius:38px;
-      background:
-        linear-gradient(180deg,#1b2230 0%, #0c1119 100%);
+      background:linear-gradient(180deg,#1b2230 0%, #0c1119 100%);
       border:1px solid rgba(255,255,255,.13);
       box-shadow:
         0 24px 48px rgba(0,0,0,.36),
@@ -192,8 +185,7 @@
       content:"";
       position:absolute;
       inset:0;
-      background:
-        linear-gradient(180deg, transparent 0%, rgba(56,189,248,.08) 50%, transparent 100%);
+      background:linear-gradient(180deg, transparent 0%, rgba(56,189,248,.08) 50%, transparent 100%);
       animation:scanLine 2.2s linear infinite;
       pointer-events:none;
     }
@@ -220,8 +212,7 @@
       width:148px;
       height:92px;
       border-radius:22px;
-      background:
-        linear-gradient(180deg,#141414 0%, #050505 100%);
+      background:linear-gradient(180deg,#141414 0%, #050505 100%);
       border:1px solid rgba(255,255,255,.10);
       box-shadow:
         0 18px 38px rgba(0,0,0,.36),
@@ -238,8 +229,7 @@
       content:"";
       position:absolute;
       inset:0;
-      background:
-        linear-gradient(135deg, rgba(56,189,248,.18), transparent 30%, transparent 70%, rgba(168,85,247,.16));
+      background:linear-gradient(135deg, rgba(56,189,248,.18), transparent 30%, transparent 70%, rgba(168,85,247,.16));
       mix-blend-mode:screen;
       opacity:.85;
     }
@@ -432,6 +422,18 @@
       resultText.innerHTML = text;
     }
 
+    function mapNfcError(reasonRaw) {
+      const reason = String(reasonRaw || "").trim().toUpperCase();
+
+      if (reason === "CARD_NOT_FOUND") return "Okutulan kart sistemde kayıtlı değil.";
+      if (reason === "CARD_ALREADY_USED") return "Bu kart daha önce kullanılmış.";
+      if (reason === "CARD_BLOCKED") return "Bu kart kullanıma kapatılmış.";
+      if (reason === "CARD_EXPIRED") return "Bu kartın kullanım süresi dolmuş.";
+      if (reason === "INVALID_TOKEN_AMOUNT") return "Bu kartta yüklenebilir jeton bulunamadı.";
+
+      return "İşlem sırasında sistem hatası oluştu.";
+    }
+
     async function getAuthHeaders() {
       const { data } = await supabase.auth.getSession();
       const token = data?.session?.access_token || "";
@@ -453,66 +455,78 @@
         return;
       }
 
-      const res = await fetch(`${API_BASE}/api/nfc/redeem-token-card`, {
-        method: "POST",
-        headers: await getAuthHeaders(),
-        body: JSON.stringify({
-          uid: String(uid || "").trim(),
-          user_id: userId
-        })
-      });
+      try {
+        const res = await fetch(`${API_BASE}/api/nfc/redeem-token-card`, {
+          method: "POST",
+          headers: await getAuthHeaders(),
+          body: JSON.stringify({
+            uid: String(uid || "").trim(),
+            user_id: userId
+          })
+        });
 
-      const json = await res.json().catch(() => null);
+        const json = await res.json().catch(() => null);
 
-      if (!json) {
-        showResult(false, "İşlem Başarısız", "Jeton yükleme işleminiz gerçekleştirilemedi.");
-        return;
-      }
+        if (!json) {
+          showResult(false, "İşlem Başarısız", "Jeton yükleme işleminiz gerçekleştirilemedi.");
+          return;
+        }
 
-      if (json.ok) {
-        if (typeof json.tokens_after === "number") {
-          try { setHeaderTokens(json.tokens_after); } catch {}
+        if (json.ok) {
+          if (typeof json.tokens_after === "number") {
+            try { setHeaderTokens(json.tokens_after); } catch {}
+          }
+
+          showResult(
+            true,
+            "Jeton Yükleme İşleminiz Başarı ile Gerçekleşmiştir",
+            `Yüklenen: <b>${json.loaded_tokens}</b><br>Toplam Bakiye: <b>${json.tokens_after}</b>`
+          );
+          return;
         }
 
         showResult(
-          true,
-          "Jeton Yükleme İşleminiz Başarı ile Gerçekleşmiştir",
-          `Yüklenen: <b>${json.loaded_tokens}</b><br>Toplam Bakiye: <b>${json.tokens_after}</b>`
+          false,
+          "İşlem Başarısız",
+          `NFC den yükleme işlemi gerçekleştirilemedi.<br>Sebep: <b>${mapNfcError(json.reason)}</b>`
         );
-        return;
+      } catch (e) {
+        showResult(false, "İşlem Başarısız", "Jeton yükleme işlemi gerçekleştirilemedi.");
       }
-
-      showResult(
-        false,
-        "İşlem Başarısız",
-        `NFC den yükleme işlemi gerçekleştirilemedi.<br>Sebep: <b>${json.reason || "Bilinmeyen hata"}</b>`
-      );
     }
 
     window.onNativeNfcRead = function(payload){
       try{
-        const uid = String(payload || "").trim();
-        if (!uid) {
+        const value = String(payload || "").trim();
+        if (!value) {
           showResult(false, "İşlem Başarısız", "NFC kart bilgisi alınamadı.");
           return;
         }
-        redeemByUid(uid);
+        redeemByUid(value);
       }catch(e){
         showResult(false, "İşlem Başarısız", "NFC kart okunurken hata oluştu.");
       }
+    };
+
+    window.onNativeNfcReadError = function(message){
+      const msg = String(message || "").trim();
+      if (!msg) return;
+      showResult(false, "İşlem Başarısız", msg);
     };
 
     goCodeBtn?.addEventListener("click", () => location.href = "/pages/code_load.html");
     goCodeBtn2?.addEventListener("click", () => location.href = "/pages/code_load.html");
     goHomeBtn?.addEventListener("click", () => location.href = "/pages/home.html");
 
-    (async function startNfcFlow(){
+    (function startNfcFlow(){
       try{
-        if (window.NativeNFC && typeof window.NativeNFC.readText === "function") {
-          window.NativeNFC.readText();
+        if (window.NativeAdmin && typeof window.NativeAdmin.readNfcText === "function") {
+          window.NativeAdmin.readNfcText();
           return;
         }
       } catch {}
+
+      // Köprü yoksa sabit hata göstermiyoruz; sayfa temiz kalsın.
     })();
   </script>
 </body>
