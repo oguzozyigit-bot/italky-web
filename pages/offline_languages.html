@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-  <title>italkyAI • Offline Diller</title>
+  <title>italkyAI • Offline Translate</title>
   <meta name="theme-color" content="#050814"/>
 
   <style>
@@ -20,6 +20,8 @@
       --safe-top:env(safe-area-inset-top,0px);
       --safe-bottom:env(safe-area-inset-bottom,0px);
       --shadow:0 18px 38px rgba(0,0,0,.26);
+      --orange-grad:linear-gradient(135deg, rgba(255,140,40,.24), rgba(255,84,201,.14));
+      --orange-line:rgba(255,140,40,.38);
     }
 
     *{
@@ -69,161 +71,27 @@
       -webkit-backdrop-filter:blur(14px);
     }
 
-    .title{
-      margin:0 0 10px;
-      font-size:23px;
+    .hero-title{
+      margin:0 0 8px;
+      font-size:28px;
       font-weight:1000;
-      line-height:1.1;
-      letter-spacing:-.5px;
+      line-height:1.08;
+      letter-spacing:-.6px;
     }
 
-    .desc{
+    .hero-sub{
       margin:0;
-      font-size:15px;
-      line-height:1.55;
-      color:var(--muted);
-      font-weight:700;
-    }
-
-    .status-row{
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-      margin-top:16px;
-    }
-
-    .status-pill{
-      min-height:48px;
-      padding:0 16px;
-      border-radius:16px;
-      border:1px solid rgba(255,255,255,.10);
-      background:rgba(255,255,255,.04);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:13px;
-      font-weight:900;
-      color:#fff;
-    }
-
-    .status-pill b{
-      margin-left:6px;
-      font-weight:1000;
-      background:var(--grad);
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;
-    }
-
-    .label{
-      display:block;
-      margin:14px 0 10px;
-      font-size:15px;
-      font-weight:900;
-      color:#fff;
-    }
-
-    .select-wrap{
-      position:relative;
-    }
-
-    .select{
-      width:100%;
-      height:72px;
-      border-radius:20px;
-      border:1px solid rgba(255,255,255,.10);
-      background:rgba(255,255,255,.03);
-      color:#fff;
-      padding:0 56px 0 18px;
-      font-size:18px;
-      font-weight:900;
-      appearance:none;
-      cursor:pointer;
-    }
-
-    .select option{
-      color:#000;
-    }
-
-    .select-arrow{
-      position:absolute;
-      right:18px;
-      top:50%;
-      transform:translateY(-50%);
-      font-size:18px;
-      color:#fff;
-      opacity:.8;
-      pointer-events:none;
-    }
-
-    .btn-primary{
-      width:100%;
-      height:64px;
-      border:none;
-      border-radius:20px;
-      background:linear-gradient(135deg, rgba(31,195,136,.22), rgba(123,125,255,.16));
-      border:1px solid rgba(31,195,136,.35);
-      color:#fff;
-      font-size:17px;
-      font-weight:1000;
-      cursor:pointer;
-      box-shadow:0 10px 24px rgba(0,0,0,.16), inset 0 1px 0 rgba(255,255,255,.05);
-      transition:transform .18s ease, opacity .18s ease;
-      margin-top:16px;
-    }
-
-    .btn-primary:active{
-      transform:scale(.985);
-    }
-
-    .btn-primary[disabled]{
-      opacity:.7;
-      cursor:default;
-    }
-
-    .helper-note{
-      padding:14px 16px;
-      border-radius:18px;
-      border:1px solid rgba(255,255,255,.08);
-      background:rgba(255,255,255,.03);
-      font-size:13px;
+      font-size:16px;
       line-height:1.55;
       color:var(--muted);
       font-weight:800;
-      margin-top:14px;
-    }
-
-    .status-box{
-      margin-top:14px;
-      padding:16px 18px;
-      border-radius:20px;
-      border:1px solid rgba(255,255,255,.08);
-      background:rgba(255,255,255,.03);
-      color:#fff;
-      font-size:15px;
-      font-weight:900;
-      line-height:1.55;
-    }
-
-    .status-box[data-kind="ok"]{
-      border-color:rgba(21,214,130,.26);
-      background:linear-gradient(135deg, rgba(21,214,130,.10), rgba(123,125,255,.08));
-    }
-
-    .status-box[data-kind="warn"]{
-      border-color:rgba(255,184,77,.26);
-      background:linear-gradient(135deg, rgba(255,184,77,.10), rgba(123,125,255,.08));
-    }
-
-    .status-box[data-kind="err"]{
-      border-color:rgba(255,93,122,.26);
-      background:linear-gradient(135deg, rgba(255,93,122,.10), rgba(123,125,255,.08));
     }
 
     .tools{
       display:flex;
       gap:12px;
       align-items:center;
-      margin-bottom:12px;
+      margin-bottom:16px;
     }
 
     .search{
@@ -233,29 +101,17 @@
       border:1px solid rgba(255,255,255,.10);
       background:rgba(255,255,255,.03);
       color:#fff;
-      padding:0 16px;
+      padding:0 18px;
       font-size:17px;
       font-weight:800;
     }
 
-    .count-chip{
-      min-width:132px;
-      height:60px;
-      border-radius:18px;
-      border:1px solid rgba(255,255,255,.10);
-      background:rgba(255,255,255,.03);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      color:#fff;
-      font-size:16px;
-      font-weight:1000;
-      padding:0 16px;
-      white-space:nowrap;
+    .search::placeholder{
+      color:rgba(255,255,255,.42);
     }
 
     .section-title{
-      margin:10px 0 14px;
+      margin:6px 0 14px;
       font-size:18px;
       font-weight:1000;
     }
@@ -324,8 +180,8 @@
     }
 
     .lang-btn.paid{
-      background:linear-gradient(135deg, rgba(255,184,77,.18), rgba(255,84,201,.14));
-      border:1px solid rgba(255,184,77,.30);
+      background:var(--orange-grad);
+      border:1px solid var(--orange-line);
     }
 
     .lang-btn[disabled]{
@@ -429,17 +285,15 @@
     }
 
     .modal-btn.ok{
-      background:linear-gradient(135deg, rgba(31,195,136,.22), rgba(123,125,255,.16));
-      border:1px solid rgba(31,195,136,.35);
+      background:var(--orange-grad);
+      border:1px solid var(--orange-line);
       color:#fff;
     }
 
     @media (max-width:420px){
-      .title{ font-size:20px; }
-      .desc{ font-size:14px; }
-      .select{ height:68px; font-size:17px; }
+      .hero-title{ font-size:24px; }
+      .hero-sub{ font-size:15px; }
       .tools{ flex-direction:column; }
-      .count-chip{ width:100%; }
       .modal-actions{ flex-direction:column; }
     }
   </style>
@@ -448,47 +302,16 @@
   <main id="pageContent">
     <div class="page">
       <section class="panel">
-        <h1 class="title">Offline Diller</h1>
-        <p class="desc">
-          İnternetinizin olmadığı yerlerde, daha önce indirmiş olduğunuz dilleri çeviri için kullanabilirsiniz.
-          Önce kendi konuşma dilinizi seçin. Sonra ihtiyacınız olan hedef dilleri indirip hazırda tutun.
-        </p>
-
-        <div class="status-row">
-          <div class="status-pill">Ağ <b id="networkTag">ONLINE</b></div>
-          <div class="status-pill">Durum <b id="trialTag">KONTROL</b></div>
-        </div>
-      </section>
-
-      <section class="panel">
-        <h2 class="section-title">Temel Kurulum</h2>
-
-        <label class="label" for="sourceSelect">Önce kendi konuşma dilinizi seçin</label>
-        <div class="select-wrap">
-          <select id="sourceSelect" class="select"></select>
-          <div class="select-arrow">⌄</div>
-        </div>
-
-        <button id="btnInstallBase" class="btn-primary" type="button">
-          Kurulumu Başlat
-        </button>
-
-        <div class="helper-note">
-          Kurulum tamamlandıktan sonra internet olmadan da, önceden indirdiğiniz dilleri kullanabilirsiniz.
-        </div>
-
-        <div id="statusBox" class="status-box" data-kind="info">
-          Önce kendi konuşma dilinizi seçin.
-        </div>
+        <h1 class="hero-title">Offline Translate</h1>
+        <p class="hero-sub">İnternet olmadan iletişime devam</p>
       </section>
 
       <section class="panel">
         <div class="tools">
-          <input id="searchInput" class="search" type="text" placeholder="Dil ara..."/>
-          <div class="count-chip">Kurulu: <span id="installedCount" style="margin-left:6px;">0</span></div>
+          <input id="searchInput" class="search" type="text" placeholder="Dil Ara"/>
         </div>
 
-        <div class="section-title">Ek Hedef Diller</div>
+        <div class="section-title">Diller</div>
         <div id="installedList"></div>
       </section>
 
@@ -500,11 +323,11 @@
 
   <div id="confirmBackdrop" class="modal-backdrop">
     <div class="modal">
-      <h3 id="confirmTitle" class="modal-title">Dil seçimini onaylayın</h3>
+      <h3 id="confirmTitle" class="modal-title">Dil erişimini onaylayın</h3>
       <div id="confirmText" class="modal-text"></div>
       <div class="modal-actions">
         <button id="confirmCancel" class="modal-btn cancel" type="button">Vazgeç</button>
-        <button id="confirmOk" class="modal-btn ok" type="button">Evet, Devam Et</button>
+        <button id="confirmOk" class="modal-btn ok" type="button">Devam Et</button>
       </div>
     </div>
   </div>
