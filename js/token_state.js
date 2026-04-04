@@ -1,5 +1,3 @@
-// FILE: /js/token_state.js
-
 import { supabase } from "/js/supabase_client.js";
 import { setHeaderTokens } from "/js/ui_shell.js";
 import { STORAGE_KEY } from "/js/config.js";
@@ -30,7 +28,6 @@ function writeCachedTokens(tokens) {
 
     const data = raw ? JSON.parse(raw) : {};
     data.tokens = Number(tokens || 0);
-
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   } catch {}
 }
@@ -66,30 +63,10 @@ export async function getLiveTokens() {
   }
 }
 
-export async function syncLiveTokensToUi(targetEl = null) {
+export async function requireTokens({ needed = 1 } = {}) {
   const tokens = await getLiveTokens();
-
-  if (targetEl) {
-    try {
-      targetEl.textContent = String(tokens);
-    } catch {}
-  }
-
-  return tokens;
-}
-
-export async function requireTokens({
-  needed = 1,
-  onOk = null,
-  onFail = null
-} = {}) {
-  const tokens = await getLiveTokens();
-
-  if (tokens >= needed) {
-    if (typeof onOk === "function") onOk(tokens);
-    return { ok: true, tokens };
-  }
-
-  if (typeof onFail === "function") onFail(tokens);
-  return { ok: false, tokens };
+  return {
+    ok: tokens >= needed,
+    tokens
+  };
 }
