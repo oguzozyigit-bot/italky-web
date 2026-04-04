@@ -58,7 +58,8 @@ const state = {
   mustRepeat: false,
   level: "",
   lastSpokenAt: 0,
-  repeatFailCount: 0
+  repeatFailCount: 0,
+  skipPhraseUntilNextSuccess: ""
 };
 
 let audioCtx = null;
@@ -224,7 +225,6 @@ function ensureTokenPopupStyles() {
     .tp-actions{
       display:grid;
       gap:10px;
-      margin-top:4px;
     }
 
     .tp-btn{
@@ -405,6 +405,7 @@ function lockPracticeForNoTokens(message = "Jetonun bitti. Practice AI devam etm
   state.mustRepeat = false;
   state.targetPhrase = "";
   state.repeatFailCount = 0;
+  state.skipPhraseUntilNextSuccess = "";
 
   $("micBtn")?.classList.remove("listening");
   updateRepeatGuide("", "");
@@ -637,6 +638,7 @@ function openLanguageSheet() {
       state.mustRepeat = false;
       state.targetPhrase = "";
       state.repeatFailCount = 0;
+      state.skipPhraseUntilNextSuccess = "";
       updateRepeatGuide("", "");
 
       updateLangBadge();
@@ -894,6 +896,7 @@ Selected target language code: ${currentLang}
 Profile level: ${level || "unknown"}
 Student message: "${userText || ""}"
 Current target phrase: "${state.targetPhrase || ""}"
+Blocked phrase for now: "${state.skipPhraseUntilNextSuccess || ""}"
 Pronunciation score: ${typeof scoreValue === "number" ? scoreValue : "unknown"}
 `,
     mode: "practice_teacher_only",
@@ -1045,6 +1048,7 @@ async function handleUserSpeech(spokenText) {
     state.mustRepeat = false;
     state.targetPhrase = "";
     state.repeatFailCount = 0;
+    state.skipPhraseUntilNextSuccess = "";
     updateRepeatGuide("", "");
     setStatus("Seçili dilde konuş.");
     updateTranslation("Seçili ders dili dışında konuştun. Lütfen seçili dilde cevap ver.");
@@ -1061,6 +1065,7 @@ async function handleUserSpeech(spokenText) {
 
     if (scoreValue >= 95) {
       state.repeatFailCount = 0;
+      state.skipPhraseUntilNextSuccess = "";
     } else {
       state.repeatFailCount += 1;
     }
@@ -1069,16 +1074,19 @@ async function handleUserSpeech(spokenText) {
   }
 
   if (state.mustRepeat && state.targetPhrase && state.repeatFailCount >= MAX_REPEAT_FAIL) {
+    state.skipPhraseUntilNextSuccess = state.targetPhrase;
     state.mustRepeat = false;
     state.targetPhrase = "";
     state.repeatFailCount = 0;
+
     updateRepeatGuide("", "");
-    updateTranslation("Olmadı ama bunu başaracağına eminim. Şimdi bir sonraki adıma geçelim.");
-    setStatus("Devam edelim.");
+    updateTranslation("Olmadı ama bunu başaracağına eminim. Şimdi başka bir adıma geçiyoruz.");
+    setStatus("Yeni adıma geçiliyor.");
+
     await speakAI(
       currentLang === "en"
-        ? "That one was not easy, but I believe you can do it. Let us move on and come back to it later."
-        : "Let us move on and come back to this later."
+        ? "That one was not easy, but I believe you can do it. Let us leave this phrase now and continue with a new step."
+        : "Let us leave this phrase now and continue with a new step."
     );
     return;
   }
@@ -1106,9 +1114,21 @@ async function handleUserSpeech(spokenText) {
     updateTranslation(ai.reply_tr || ai.reply);
 
     if (ai.should_repeat && ai.target_phrase) {
-      state.mustRepeat = true;
-      state.targetPhrase = ai.target_phrase;
-      updateRepeatGuide(ai.target_phrase, ai.repeat_hint_tr || "");
+      const nextTarget = String(ai.target_phrase || "").trim();
+
+      if (
+        state.skipPhraseUntilNextSuccess &&
+        nextTarget &&
+        nextTarget === state.skipPhraseUntilNextSuccess
+      ) {
+        state.mustRepeat = false;
+        state.targetPhrase = "";
+        updateRepeatGuide("", "");
+      } else {
+        state.mustRepeat = true;
+        state.targetPhrase = nextTarget;
+        updateRepeatGuide(nextTarget, ai.repeat_hint_tr || "");
+      }
     } else {
       state.mustRepeat = false;
       state.targetPhrase = "";
@@ -1151,6 +1171,7 @@ async function startFirstTurn() {
     state.mustRepeat = Boolean(ai.should_repeat);
     state.targetPhrase = ai.target_phrase || "";
     state.repeatFailCount = 0;
+    state.skipPhraseUntilNextSuccess = "";
 
     if (state.mustRepeat && state.targetPhrase) {
       updateRepeatGuide(ai.target_phrase, ai.repeat_hint_tr || "");
