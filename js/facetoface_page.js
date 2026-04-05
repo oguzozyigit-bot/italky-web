@@ -26,52 +26,16 @@ const BCP = {
   el: "el-GR",
   az: "az-AZ",
   ka: "ka-GE",
-  kmr: "tr-TR",
-  ckb: "tr-TR",
-  zza: "tr-TR",
-  lzz: "tr-TR",
-  ady: "tr-TR",
-  ab: "tr-TR",
-  ar: "ar-SA",
-  fa: "fa-IR",
-  hy: "hy-AM"
 };
 
 const F2F_VOICE_KEY = "facetoface_voice_mode";
 const F2F_TRANSLATE_KEY = "facetoface_translate_mode";
-const F2F_RUNTIME_KEY = "facetoface_runtime_mode";
-const OFFLINE_PACK_KEY = "italky_offline_installed_packs_v5";
 
 function canonical(code) {
-  return String(code || "").toLowerCase().split("-")[0].trim();
-}
-
-function getQueryMode() {
-  try {
-    const u = new URL(location.href);
-    return String(u.searchParams.get("mode") || "").trim().toLowerCase();
-  } catch {
-    return "";
-  }
-}
-
-function isForcedOffline() {
-  return getQueryMode() === "offline-forced";
-}
-
-function getRuntimeMode() {
-  if (isForcedOffline()) return "offline";
-  const saved = String(localStorage.getItem(F2F_RUNTIME_KEY) || "online").trim().toLowerCase();
-  return saved === "offline" ? "offline" : "online";
-}
-
-function setRuntimeMode(mode) {
-  if (isForcedOffline()) return;
-  localStorage.setItem(F2F_RUNTIME_KEY, mode === "offline" ? "offline" : "online");
-}
-
-function isOfflineMode() {
-  return getRuntimeMode() === "offline";
+  return String(code || "")
+    .toLowerCase()
+    .split("-")[0]
+    .trim();
 }
 
 const SITE_LANG = "tr";
@@ -80,7 +44,7 @@ const RAW_LANG_POOL = Array.isArray(getLangPoolForSite(SITE_LANG))
   ? getLangPoolForSite(SITE_LANG)
   : [];
 
-const BASE_LANGS = RAW_LANG_POOL
+const LANGS = RAW_LANG_POOL
   .map((l) => {
     const code = canonical(l.code);
     if (!code) return null;
@@ -94,39 +58,11 @@ const BASE_LANGS = RAW_LANG_POOL
   })
   .filter(Boolean);
 
-function getOfflinePackCodes() {
-  try {
-    const raw = JSON.parse(localStorage.getItem(OFFLINE_PACK_KEY) || "[]");
-    const rows = Array.isArray(raw) ? raw : [];
-    const now = Date.now();
-    const codes = new Set(["tr", "en"]);
-
-    for (const row of rows) {
-      const expiresAt = row?.expires_at ? new Date(row.expires_at).getTime() : 0;
-      if (expiresAt > now && row?.lang) {
-        codes.add(canonical(row.lang));
-      }
-    }
-
-    return [...codes];
-  } catch {
-    return ["tr", "en"];
-  }
-}
-
-function getRuntimeLangs() {
-  if (!isOfflineMode()) return BASE_LANGS;
-
-  const allowed = new Set(getOfflinePackCodes());
-  return BASE_LANGS.filter((x) => allowed.has(canonical(x.code)));
-}
-
 function langObj(code) {
   const c = canonical(code);
 
   return (
-    getRuntimeLangs().find((x) => x.code === c) ||
-    BASE_LANGS.find((x) => x.code === c) || {
+    LANGS.find((x) => x.code === c) || {
       code: c || "en",
       flag: "🌐",
       name: (c || "en").toUpperCase(),
@@ -230,9 +166,16 @@ const clearBtn = $("clearBtn");
 const homeLink = $("homeLink");
 const homeBtn = $("homeBtn");
 const settingsBtn = $("settingsBtn");
-const modeFlag = $("modeFlag");
-const modeFlagTxt = $("modeFlagTxt");
-const miniToast = $("miniToast");
+
+const uiModal = $("uiModal");
+const uiModalTitle = $("uiModalTitle");
+const uiModalText = $("uiModalText");
+const uiModalGo = $("uiModalGo");
+const uiModalClose = $("uiModalClose");
+
+let accessState = {
+  lockedAll: false
+};
 
 let topLang = "en";
 let botLang = "tr";
@@ -253,14 +196,31 @@ let recognitionFinishedByUser = false;
 let recognitionSessionId = 0;
 let typewriterRunId = 0;
 
-function showToast(msg = "") {
-  if (!miniToast) return;
-  miniToast.textContent = String(msg || "");
-  miniToast.classList.add("show");
-  clearTimeout(window.__toastTimer);
-  window.__toastTimer = setTimeout(() => {
-    miniToast.classList.remove("show");
-  }, 1800);
+function showUiModal(message, title = "Jeton Gerekli") {
+  if (!uiModal) return;
+  uiModalTitle.textContent = title;
+  uiModalText.textContent = message;
+  uiModal.classList.add("open");
+}
+
+function closeUiModal() {
+  uiModal?.classList.remove("open");
+}
+
+uiModalGo?.addEventListener("click", () => {
+  location.href = "/pages/jetonbuy.html";
+});
+uiModalClose?.addEventListener("click", closeUiModal);
+uiModal?.addEventListener("click", (e) => {
+  if (e.target === uiModal) closeUiModal();
+});
+
+async function readAccessState() {
+  accessState = { lockedAll: false };
+}
+
+function canOpenFaceSettings() {
+  return true;
 }
 
 function getFaceVoiceMode() {
@@ -272,39 +232,61 @@ function getFaceTranslateMode() {
   return value === "cultural" ? "cultural" : "normal";
 }
 
-/* Sadece kültürel çeviri ve kendi sesim ücretli */
-function isPaidFaceMode() {
-  return getFaceTranslateMode() === "cultural" || getFaceVoiceMode() === "clone";
+function isPaidFaceTextMode() {
+  return getFaceTranslateMode() === "cultural";
 }
 
-function faceUsageModule() {
-  return isPaidFaceMode() ? "facetoface_ai" : "usage_face_to_face";
+function isPaidFaceVoiceMode() {
+  const v = getFaceVoiceMode();
+  return v === "clone" || v === "female" || v === "male" || v === "preset";
 }
 
-function faceUsageMode() {
-  return isPaidFaceMode() ? "ai" : "normal";
+async function ensureCurrentFacePremiumModeAccess() {
+  const needsPremium =
+    isPaidFaceTextMode() ||
+    isPaidFaceVoiceMode();
+
+  if (!needsPremium) return true;
+
+  const ok = await ensureFaceToFacePremiumAccess();
+  if (!ok) return false;
+
+  return true;
 }
 
-function faceUsageNote(charCount) {
-  const paid = isPaidFaceMode();
-  const cultural = getFaceTranslateMode() === "cultural";
-  const clone = getFaceVoiceMode() === "clone";
+function faceTextUsageModule() {
+  return getFaceTranslateMode() === "cultural" ? "facetoface_ai" : "usage_face_to_face";
+}
 
-  if (!paid) {
-    return buildUsageNote({
-      surface: "facetoface",
-      usageKind: "text",
-      mode: "normal"
-    });
-  }
+function faceVoiceUsageModule() {
+  const v = getFaceVoiceMode();
+  if (v === "clone") return "voice_clone";
+  if (v === "preset") return "voice_preset_use";
+  if (v === "female" || v === "male") return "voice_ai";
+  return "voice_ai";
+}
 
-  if (cultural && clone) {
-    return `FaceToFace kültürel çeviri + kendi sesim kullanımı (${charCount} karakter)`;
-  }
-  if (cultural) {
-    return `FaceToFace kültürel çeviri kullanımı (${charCount} karakter)`;
-  }
-  return `FaceToFace kendi sesim kullanımı (${charCount} karakter)`;
+function faceTextUsageNote() {
+  return buildUsageNote({
+    surface: "facetoface",
+    usageKind: "text",
+    mode: getFaceTranslateMode() === "cultural" ? "cultural" : "normal"
+  });
+}
+
+function faceVoiceUsageNote() {
+  const v = getFaceVoiceMode();
+
+  let mode = "normal";
+  if (v === "clone") mode = "clone";
+  else if (v === "preset") mode = "preset";
+  else if (v === "female" || v === "male") mode = "ai";
+
+  return buildUsageNote({
+    surface: "facetoface",
+    usageKind: "voice",
+    mode
+  });
 }
 
 function canonTone(value) {
@@ -396,12 +378,8 @@ function setSystemReadyUI() {
   activeSide = null;
   resetMics();
   setFrameVisual("ready");
-
-  const readyTop = isOfflineMode() ? "Offline mod hazır" : t(topLang, "ready");
-  const readyBot = isOfflineMode() ? "Offline mod hazır" : t(botLang, "ready");
-
-  setHelper(topHelper, readyTop, "helper-ready");
-  setHelper(botHelper, readyBot, "helper-ready");
+  setHelper(topHelper, t(topLang, "ready"), "helper-ready");
+  setHelper(botHelper, t(botLang, "ready"), "helper-ready");
 }
 
 function setSystemPreparingUI() {
@@ -460,28 +438,6 @@ function refreshLangLabels() {
   if (botLangTxt) botLangTxt.textContent = labelChip(botLang);
 }
 
-function refreshModeFlag() {
-  if (!modeFlag || !modeFlagTxt) return;
-  const offline = isOfflineMode();
-  modeFlag.classList.toggle("offline", offline);
-  modeFlagTxt.textContent = offline ? "OFFLINE" : "ONLINE";
-}
-
-function ensureRuntimeLangsValid() {
-  const runtime = getRuntimeLangs();
-  const codes = runtime.map((x) => canonical(x.code));
-
-  if (!codes.includes(canonical(topLang))) {
-    topLang = codes.includes("en") ? "en" : (codes[0] || "en");
-  }
-
-  if (!codes.includes(canonical(botLang))) {
-    botLang = codes.includes("tr") ? "tr" : (codes[0] || "tr");
-  }
-
-  refreshLangLabels();
-}
-
 function refreshReadyTextsIfIdle() {
   if (activeSide === null) {
     if (frameRoot?.classList.contains("is-ready")) setSystemReadyUI();
@@ -499,9 +455,7 @@ function renderPop(side) {
   const sel = side === "top" ? topLang : botLang;
   if (!list) return;
 
-  const runtimeLangs = getRuntimeLangs();
-
-  list.innerHTML = runtimeLangs.map((l) => {
+  list.innerHTML = LANGS.map((l) => {
     const active = canonical(l.code) === canonical(sel) ? "active" : "";
     return `
       <div class="pop-item ${active}" data-code="${l.code}">
@@ -1435,7 +1389,7 @@ function startBoot() {
     refreshLangLabels();
     pointOrbTo("bot");
 
-    await Promise.allSettled([warmApis(), warmAudio()]);
+    await Promise.allSettled([warmApis(), warmAudio(), readAccessState()]);
 
     bootReady = true;
     setSystemReadyUI();
