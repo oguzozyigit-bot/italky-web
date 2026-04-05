@@ -418,6 +418,49 @@
       opacity:.95;
     }
 
+    /* sadece eklenen */
+    .mode-flag{
+      position:absolute;
+      left:18px;
+      top:12px;
+      min-width:92px;
+      height:42px;
+      padding:0 14px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.07);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      color:#fff;
+      font-size:11px;
+      font-weight:1000;
+      z-index:950;
+      backdrop-filter:blur(14px);
+      cursor:pointer;
+      user-select:none;
+    }
+
+    .mode-flag.offline{
+      border-color:rgba(245,158,11,.35);
+      box-shadow:0 0 18px rgba(245,158,11,.14);
+    }
+
+    .mode-dot{
+      width:8px;
+      height:8px;
+      border-radius:50%;
+      background:#22c55e;
+      box-shadow:0 0 8px rgba(34,197,94,.55);
+      flex:0 0 auto;
+    }
+
+    .mode-flag.offline .mode-dot{
+      background:#f59e0b;
+      box-shadow:0 0 8px rgba(245,158,11,.55);
+    }
+
     .orb-container{
       width:100px;
       height:100px;
@@ -579,78 +622,122 @@
       .btn-clear{
         padding:10px 14px;
       }
+      .mode-flag{
+        left:14px;
+        top:10px;
+        min-width:82px;
+        height:40px;
+        padding:0 12px;
+        font-size:10px;
+      }
     }
+
     .modal{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.52);
-  backdrop-filter:blur(6px);
-  display:none;
-  align-items:center;
-  justify-content:center;
-  z-index:999999;
-  padding:20px;
-}
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.52);
+      backdrop-filter:blur(6px);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:999999;
+      padding:20px;
+    }
 
-.modal.open{
-  display:flex;
-}
+    .modal.open{
+      display:flex;
+    }
 
-.modal-card{
-  width:min(100%, 420px);
-  border-radius:24px;
-  padding:18px;
-  background:linear-gradient(145deg, rgba(16,16,24,.96), rgba(10,10,18,.96));
-  border:1px solid rgba(255,255,255,.10);
-  box-shadow:0 24px 50px rgba(0,0,0,.30);
-}
+    .modal-card{
+      width:min(100%, 420px);
+      border-radius:24px;
+      padding:18px;
+      background:linear-gradient(145deg, rgba(16,16,24,.96), rgba(10,10,18,.96));
+      border:1px solid rgba(255,255,255,.10);
+      box-shadow:0 24px 50px rgba(0,0,0,.30);
+    }
 
-.modal-title{
-  margin:0 0 8px;
-  font-family:'Space Grotesk',sans-serif;
-  font-size:20px;
-  font-weight:900;
-  color:#fff;
-}
+    .modal-title{
+      margin:0 0 8px;
+      font-family:'Space Grotesk',sans-serif;
+      font-size:20px;
+      font-weight:900;
+      color:#fff;
+    }
 
-.modal-text{
-  margin:0;
-  font-size:13px;
-  line-height:1.6;
-  color:rgba(255,255,255,.76);
-}
+    .modal-text{
+      margin:0;
+      font-size:13px;
+      line-height:1.6;
+      color:rgba(255,255,255,.76);
+    }
 
-.modal-actions{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-  margin-top:16px;
-}
+    .modal-actions{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      margin-top:16px;
+    }
 
-.modal-btn{
-  min-height:46px;
-  border:none;
-  border-radius:16px;
-  cursor:pointer;
-  font-family:inherit;
-  font-size:13px;
-  font-weight:900;
-}
+    .modal-btn{
+      min-height:46px;
+      border:none;
+      border-radius:16px;
+      cursor:pointer;
+      font-family:inherit;
+      font-size:13px;
+      font-weight:900;
+    }
 
-.modal-btn.primary{
-  background:var(--ai-gradient);
-  color:#05060d;
-}
+    .modal-btn.primary{
+      background:var(--ai-gradient);
+      color:#05060d;
+    }
 
-.modal-btn.secondary{
-  background:rgba(255,255,255,.06);
-  border:1px solid rgba(255,255,255,.10);
-  color:#fff;
-}
+    .modal-btn.secondary{
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.10);
+      color:#fff;
+    }
+
+    /* sadece eklenen */
+    .mini-toast{
+      position:fixed;
+      left:50%;
+      bottom:24px;
+      transform:translateX(-50%) translateY(120px);
+      min-height:44px;
+      padding:10px 16px;
+      border-radius:16px;
+      background:rgba(12,16,28,.96);
+      border:1px solid rgba(255,255,255,.10);
+      color:#fff;
+      font-size:12px;
+      font-weight:1000;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      max-width:min(92vw,420px);
+      z-index:99999;
+      box-shadow:0 18px 36px rgba(0,0,0,.35);
+      transition:.22s ease;
+      backdrop-filter:blur(14px);
+      pointer-events:none;
+    }
+
+    .mini-toast.show{
+      transform:translateX(-50%) translateY(0);
+    }
   </style>
 </head>
 <body id="frameRoot" class="to-bot">
   <div class="container">
+    <button class="mode-flag" id="modeFlag" type="button" aria-label="Çalışma modu">
+      <span class="mode-dot"></span>
+      <span id="modeFlagTxt">ONLINE</span>
+    </button>
+
     <a class="btn-settings" id="settingsBtn" href="/pages/facetoface_open.html?edit=1" aria-label="FaceToFace ayarları" title="Ayarlar">
       <svg viewBox="0 0 24 24">
         <path d="M12 3l1.2 2.4 2.7.4-2 1.9.5 2.7-2.4-1.3-2.4 1.3.5-2.7-2-1.9 2.7-.4L12 3z"></path>
@@ -746,6 +833,8 @@
   </div>
 </div>
 
-  <script type="module" src="/js/facetoface_page.js?v=FACE2FACE_FINAL_LOCKED_V9"></script>
+  <div class="mini-toast" id="miniToast"></div>
+
+  <script type="module" src="/js/facetoface_page.js?v=FACE2FACE_OFFLINE_FLAG_V1"></script>
 </body>
 </html>
