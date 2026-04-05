@@ -66,13 +66,43 @@ function translitToRunes(text) {
   const chars = Array.from(String(text || "").toLowerCase());
   return chars.map((ch) => {
     if (ch === " ") return " ";
-    if (ch === "." || ch === "," || ch === "!" || ch === "?" || ch === ":" || ch === ";") return " · ";
+    if (".,!?;:".includes(ch)) return " · ";
     return runeMap[ch] || ch;
   }).join("");
 }
 
-function buildLatinReading(text) {
-  return normalizeInput(text);
+function toOldTurkicStyle(text) {
+  let t = normalizeInput(text).toLowerCase();
+
+  const replacements = [
+    [/tanrı/g, "teŋri"],
+    [/gök/g, "kök"],
+    [/türk/g, "türük"],
+    [/korusun/g, "koruġsın"],
+    [/nasılsın/g, "neçüksen"],
+    [/iyiyim/g, "edgümen"],
+    [/merhaba/g, "esen bol"],
+    [/selam/g, "esenlik"],
+    [/ben/g, "men"],
+    [/biz/g, "biz"],
+    [/sen/g, "sen"],
+    [/siz/g, "siz"],
+    [/yazı/g, "bitig"],
+    [/dil/g, "til"],
+    [/millet/g, "bodun"],
+    [/vatan/g, "yurt"],
+    [/ordu/g, "sü"],
+    [/bilge/g, "bilge"],
+    [/kağan/g, "kağan"],
+    [/kutlu/g, "kutluğ"],
+    [/güçlü/g, "küçlüg"]
+  ];
+
+  for (const [rx, val] of replacements) {
+    t = t.replace(rx, val);
+  }
+
+  return t;
 }
 
 function stopAudio() {
@@ -155,7 +185,7 @@ async function ensureTranslationAccess() {
 
 function animateOutputs(runes, latin) {
   gokturkOutput.textContent = runes || "𐱅𐰇𐰼𐰰 𐰖𐰀𐰔𐰃𐰽𐰃";
-  latinOutput.textContent = latin || "Türk yazısı";
+  latinOutput.textContent = latin || "türük bitig";
 
   gokturkOutput.style.animation = "none";
   latinOutput.style.animation = "none";
@@ -166,8 +196,8 @@ function animateOutputs(runes, latin) {
 }
 
 async function transformNow() {
-  const text = normalizeInput(inputText.value);
-  if (!text) {
+  const rawText = normalizeInput(inputText.value);
+  if (!rawText) {
     toast("Önce Türkçe metin girin");
     return;
   }
@@ -179,8 +209,8 @@ async function transformNow() {
   setRightStatus("Eski Türkçe hazırlanıyor...");
   translateBtn.disabled = true;
 
-  let finalRunes = translitToRunes(text);
-  let finalLatin = buildLatinReading(text);
+  let finalLatin = toOldTurkicStyle(rawText);
+  let finalRunes = translitToRunes(finalLatin);
   let aiSucceeded = false;
 
   try {
@@ -188,14 +218,15 @@ async function transformNow() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        text,
+        text: rawText,
         from_lang: "tr",
         to_lang: "otk",
         mode: "cultural",
         cultural: true,
         use_ai: true,
         style: "historic",
-        domain: "ancestors_language"
+        domain: "ancestors_language",
+        instruction: "Translate only from Turkish into Old Turkic style. Never translate to English. Output Old Turkic Latin reading if possible."
       })
     });
 
@@ -205,21 +236,18 @@ async function transformNow() {
       const aiLatin = String(
         json?.latin_reading ||
         json?.old_turkic_latin ||
-        json?.translation ||
         json?.translated ||
+        json?.translation ||
         ""
       ).trim();
 
-      const aiRunes = String(
-        json?.gokturk_text ||
-        json?.old_turkic_runes ||
-        json?.target_script ||
-        ""
-      ).trim();
-
-      if (aiLatin || aiRunes) {
-        finalLatin = aiLatin || finalLatin;
-        finalRunes = aiRunes || translitToRunes(finalLatin);
+      if (aiLatin && !/[a-z]{2,}\s+[a-z]{2,}\s+[a-z]{2,}/i.test(aiLatin.replace(/teŋri|türük|bitig|bodun|yurt/g, ""))) {
+        finalLatin = aiLatin;
+        finalRunes = String(
+          json?.gokturk_text ||
+          json?.old_turkic_runes ||
+          ""
+        ).trim() || translitToRunes(finalLatin);
         aiSucceeded = true;
       }
     }
@@ -230,38 +258,34 @@ async function transformNow() {
   animateOutputs(finalRunes, finalLatin);
   lastLatin = finalLatin;
 
-  if (aiSucceeded) {
-    try {
-      const usage = await commitUsage({
-        module: "practice_ai",
-        usageKind: "text_out",
-        charCount: Math.max(text.length, finalLatin.length),
-        note: "Ataların Dili • Metin dönüşümü",
-        meta: {
-          surface: "ancestors_language",
-          from_lang: "tr",
-          to_lang: "otk",
-          input_chars: text.length,
-          output_chars: finalLatin.length
-        }
-      });
+  try {
+    const usage = await commitUsage({
+      module: "practice_ai",
+      usageKind: "text_out",
+      charCount: Math.max(rawText.length, finalLatin.length),
+      note: "Ataların Dili • Metin dönüşümü",
+      meta: {
+        surface: "ancestors_language",
+        from_lang: "tr",
+        to_lang: "otk",
+        input_chars: rawText.length,
+        output_chars: finalLatin.length
+      }
+    });
 
-      if (typeof usage?.tokens_after === "number") {
-        try { setHeaderTokens(usage.tokens_after); } catch {}
-      }
-    } catch (e) {
-      if (String(e?.code || "").includes("INSUFFICIENT_TOKENS")) {
-        showTokenPopup("Ataların Dili çevirisi için jeton gerekiyor.");
-        translateBtn.disabled = false;
-        return;
-      }
-      console.error("[ancestors_language usage]", e);
+    if (typeof usage?.tokens_after === "number") {
+      try { setHeaderTokens(usage.tokens_after); } catch {}
     }
-    setRightStatus("Eski Türkçe hazır");
-  } else {
-    setRightStatus("Yaklaşık Göktürk yazımı gösterildi");
+  } catch (e) {
+    if (String(e?.code || "").includes("INSUFFICIENT_TOKENS")) {
+      showTokenPopup("Ataların Dili çevirisi için jeton gerekiyor.");
+      translateBtn.disabled = false;
+      return;
+    }
+    console.error("[ancestors_language usage]", e);
   }
 
+  setRightStatus(aiSucceeded ? "Eski Türkçe hazır" : "Eski Türkçe biçimi hazır");
   translateBtn.disabled = false;
 }
 
@@ -303,8 +327,8 @@ async function speakNow() {
   try {
     const u = new SpeechSynthesisUtterance(text);
     u.lang = "tr-TR";
-    u.rate = 0.92;
-    u.pitch = 0.98;
+    u.rate = 0.88;
+    u.pitch = 0.96;
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(u);
     setRightStatus("TTS ile seslendirildi");
@@ -379,7 +403,7 @@ retryBtn?.addEventListener("click", transformNow);
 
 clearBtn?.addEventListener("click", () => {
   inputText.value = "";
-  animateOutputs("𐱅𐰇𐰼𐰰 𐰖𐰀𐰔𐰃𐰽𐰃", "Türk yazısı");
+  animateOutputs("𐱅𐰇𐰼𐰰 𐰖𐰀𐰔𐰃𐰽𐰃", "türük bitig");
   lastLatin = "";
   setLeftStatus("Hazır");
   setRightStatus("Çıktı burada görünecek");
