@@ -1,0 +1,789 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+  />
+  <title>italkyAI • Kod Çöz</title>
+  <link rel="icon" href="data:," />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@500;700;800&display=swap"
+    rel="stylesheet"
+  >
+
+  <style>
+    :root{
+      --bg:#05060a;
+      --panel:#0d111b;
+      --panel-2:#101726;
+      --card:rgba(255,255,255,.06);
+      --card-2:rgba(255,255,255,.08);
+      --line:rgba(255,255,255,.12);
+      --text:#f7faff;
+      --muted:rgba(247,250,255,.72);
+      --soft:rgba(247,250,255,.52);
+      --blue:#4fc3ff;
+      --cyan:#00e5ff;
+      --purple:#8b5cf6;
+      --pink:#ff4fd8;
+      --green:#22c55e;
+      --amber:#f59e0b;
+      --red:#ef4444;
+      --shadow:0 20px 70px rgba(0,0,0,.38);
+      --radius:26px;
+      --safe-top:env(safe-area-inset-top,0px);
+      --safe-bottom:env(safe-area-inset-bottom,0px);
+    }
+
+    *{box-sizing:border-box}
+    html,body{
+      margin:0;
+      padding:0;
+      background:
+        radial-gradient(circle at top left, rgba(79,195,255,.16), transparent 26%),
+        radial-gradient(circle at top right, rgba(255,79,216,.12), transparent 24%),
+        linear-gradient(180deg,#05060a 0%, #070a12 45%, #05060a 100%);
+      color:var(--text);
+      font-family:"Outfit",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      min-height:100%;
+    }
+
+    body.shell-main{
+      overflow-x:hidden;
+    }
+
+    .page{
+      width:min(980px, calc(100vw - 24px));
+      margin:0 auto;
+      padding:calc(18px + var(--safe-top)) 0 calc(28px + var(--safe-bottom));
+    }
+
+    .hero{
+      position:relative;
+      overflow:hidden;
+      border:1px solid var(--line);
+      border-radius:32px;
+      padding:22px 18px 18px;
+      background:
+        radial-gradient(circle at 20% 10%, rgba(79,195,255,.18), transparent 24%),
+        radial-gradient(circle at 80% 0%, rgba(139,92,246,.18), transparent 22%),
+        linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.035));
+      box-shadow:var(--shadow);
+      backdrop-filter: blur(16px);
+    }
+
+    .eyebrow{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 12px;
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:999px;
+      color:var(--muted);
+      font-size:12px;
+      letter-spacing:.2px;
+      background:rgba(255,255,255,.04);
+    }
+
+    .eyebrow-dot{
+      width:8px;
+      height:8px;
+      border-radius:50%;
+      background:linear-gradient(135deg,var(--cyan),var(--pink));
+      box-shadow:0 0 14px rgba(0,229,255,.8);
+    }
+
+    .hero h1{
+      margin:14px 0 8px;
+      font-family:"Space Grotesk","Outfit",sans-serif;
+      font-size:clamp(30px, 7vw, 46px);
+      line-height:1.02;
+      letter-spacing:-.03em;
+    }
+
+    .hero p{
+      margin:0;
+      color:var(--muted);
+      line-height:1.6;
+      font-size:15px;
+    }
+
+    .statusbar{
+      margin-top:18px;
+      display:grid;
+      gap:12px;
+      grid-template-columns:repeat(4, minmax(0,1fr));
+    }
+
+    .mini{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.045);
+      border-radius:22px;
+      padding:14px;
+    }
+
+    .mini .k{
+      color:var(--soft);
+      font-size:12px;
+      margin-bottom:6px;
+    }
+
+    .mini .v{
+      font-weight:800;
+      font-size:15px;
+      letter-spacing:.01em;
+    }
+
+    .stage{
+      margin-top:18px;
+      border:1px solid var(--line);
+      border-radius:32px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.03));
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+
+    .stepbar{
+      display:flex;
+      gap:10px;
+      padding:14px;
+      border-bottom:1px solid var(--line);
+      background:rgba(255,255,255,.03);
+      flex-wrap:wrap;
+    }
+
+    .step{
+      flex:1 1 160px;
+      min-width:0;
+      padding:12px 14px;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.035);
+      color:var(--soft);
+      font-size:13px;
+      font-weight:700;
+    }
+
+    .step.active{
+      color:#07111c;
+      background:linear-gradient(135deg,var(--cyan),var(--blue));
+      border-color:transparent;
+      box-shadow:0 10px 30px rgba(79,195,255,.28);
+    }
+
+    .step.done{
+      color:#dbfef2;
+      background:linear-gradient(135deg, rgba(34,197,94,.25), rgba(34,197,94,.14));
+      border-color:rgba(34,197,94,.28);
+    }
+
+    .panel{
+      display:none;
+      padding:18px;
+    }
+
+    .panel.active{
+      display:block;
+    }
+
+    .card{
+      border:1px solid var(--line);
+      border-radius:28px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.03));
+      padding:18px;
+    }
+
+    .card h2{
+      margin:0 0 8px;
+      font-family:"Space Grotesk","Outfit",sans-serif;
+      font-size:24px;
+      letter-spacing:-.02em;
+    }
+
+    .sub{
+      margin:0 0 16px;
+      color:var(--muted);
+      line-height:1.65;
+      font-size:14px;
+    }
+
+    .lang-grid,
+    .difficulty-grid{
+      display:grid;
+      grid-template-columns:repeat(2, minmax(0,1fr));
+      gap:12px;
+    }
+
+    .opt{
+      position:relative;
+      border:1px solid var(--line);
+      border-radius:24px;
+      padding:16px;
+      background:rgba(255,255,255,.04);
+      cursor:pointer;
+      transition:.22s ease;
+      user-select:none;
+      min-height:96px;
+    }
+
+    .opt:hover{
+      transform:translateY(-1px);
+      border-color:rgba(79,195,255,.32);
+      box-shadow:0 12px 26px rgba(0,0,0,.22);
+    }
+
+    .opt.selected{
+      border-color:rgba(79,195,255,.55);
+      background:
+        linear-gradient(180deg, rgba(79,195,255,.16), rgba(79,195,255,.08));
+      box-shadow:0 0 0 1px rgba(79,195,255,.18) inset, 0 16px 30px rgba(79,195,255,.15);
+    }
+
+    .opt-top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:8px;
+    }
+
+    .flag{
+      font-size:22px;
+      line-height:1;
+    }
+
+    .badge{
+      font-size:11px;
+      font-weight:800;
+      letter-spacing:.04em;
+      text-transform:uppercase;
+      padding:6px 9px;
+      border-radius:999px;
+      background:rgba(255,255,255,.08);
+      color:var(--muted);
+      border:1px solid rgba(255,255,255,.08);
+    }
+
+    .opt-title{
+      font-weight:800;
+      font-size:16px;
+      margin-bottom:4px;
+    }
+
+    .opt-desc{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.55;
+    }
+
+    .rules{
+      display:grid;
+      gap:12px;
+    }
+
+    .rule{
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:14px;
+      background:rgba(255,255,255,.035);
+    }
+
+    .rule-no{
+      min-width:34px;
+      height:34px;
+      border-radius:50%;
+      display:grid;
+      place-items:center;
+      font-weight:900;
+      background:linear-gradient(135deg,var(--purple),var(--pink));
+      box-shadow:0 8px 18px rgba(139,92,246,.3);
+    }
+
+    .rule p{
+      margin:0;
+      color:var(--muted);
+      line-height:1.6;
+      font-size:14px;
+    }
+
+    .actions{
+      margin-top:16px;
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+    }
+
+    .btn{
+      appearance:none;
+      border:none;
+      outline:none;
+      cursor:pointer;
+      border-radius:18px;
+      padding:13px 16px;
+      font-weight:800;
+      letter-spacing:.01em;
+      font-family:inherit;
+      transition:.2s ease;
+      min-height:48px;
+    }
+
+    .btn:disabled{
+      opacity:.45;
+      cursor:not-allowed;
+      transform:none!important;
+    }
+
+    .btn-primary{
+      color:#08131f;
+      background:linear-gradient(135deg,var(--cyan),var(--blue));
+      box-shadow:0 16px 28px rgba(79,195,255,.25);
+    }
+
+    .btn-primary:hover{ transform:translateY(-1px); }
+
+    .btn-secondary{
+      color:var(--text);
+      background:rgba(255,255,255,.06);
+      border:1px solid var(--line);
+    }
+
+    .btn-secondary:hover{ transform:translateY(-1px); }
+
+    .btn-danger{
+      color:#ffe7e7;
+      background:linear-gradient(135deg, rgba(239,68,68,.26), rgba(239,68,68,.16));
+      border:1px solid rgba(239,68,68,.22);
+    }
+
+    .game-head{
+      display:grid;
+      grid-template-columns:1.1fr .9fr;
+      gap:14px;
+    }
+
+    .score-board{
+      display:grid;
+      grid-template-columns:repeat(4, minmax(0,1fr));
+      gap:10px;
+      margin-top:14px;
+    }
+
+    .score{
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:12px;
+      background:rgba(255,255,255,.04);
+    }
+
+    .score .k{
+      color:var(--soft);
+      font-size:12px;
+      margin-bottom:5px;
+    }
+
+    .score .v{
+      font-weight:900;
+      font-size:18px;
+    }
+
+    .morse-wrap{
+      margin-top:14px;
+      border:1px solid rgba(79,195,255,.22);
+      border-radius:28px;
+      padding:18px;
+      background:
+        radial-gradient(circle at top left, rgba(79,195,255,.12), transparent 38%),
+        linear-gradient(180deg, rgba(79,195,255,.08), rgba(255,255,255,.03));
+    }
+
+    .morse-label{
+      color:var(--soft);
+      font-size:12px;
+      margin-bottom:10px;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      font-weight:800;
+    }
+
+    .morse-code{
+      font-family:"Space Grotesk","Outfit",sans-serif;
+      font-weight:800;
+      font-size:clamp(22px, 5.2vw, 38px);
+      line-height:1.35;
+      letter-spacing:.08em;
+      word-break:break-word;
+      min-height:64px;
+    }
+
+    .answer-wrap{
+      margin-top:14px;
+      display:grid;
+      gap:10px;
+    }
+
+    .input{
+      width:100%;
+      border:none;
+      outline:none;
+      color:var(--text);
+      background:rgba(255,255,255,.05);
+      border:1px solid var(--line);
+      border-radius:22px;
+      padding:16px 16px;
+      font-family:inherit;
+      font-size:17px;
+      font-weight:700;
+    }
+
+    .input::placeholder{ color:rgba(255,255,255,.38); }
+
+    .helper-box{
+      margin-top:14px;
+      display:grid;
+      gap:10px;
+    }
+
+    .helper{
+      display:none;
+      border-radius:18px;
+      padding:14px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.045);
+    }
+
+    .helper.show{ display:block; }
+
+    .helper .t{
+      font-size:12px;
+      color:var(--soft);
+      margin-bottom:6px;
+      text-transform:uppercase;
+      letter-spacing:.07em;
+      font-weight:800;
+    }
+
+    .helper .v{
+      font-weight:800;
+      font-size:16px;
+    }
+
+    .feedback{
+      margin-top:12px;
+      min-height:26px;
+      font-weight:800;
+      font-size:14px;
+    }
+
+    .feedback.ok{ color:#87f0b0; }
+    .feedback.bad{ color:#ff9c9c; }
+    .feedback.info{ color:#a6dcff; }
+
+    .footnote{
+      margin-top:12px;
+      color:var(--soft);
+      font-size:12px;
+      line-height:1.55;
+    }
+
+    .final-box{
+      display:none;
+      margin-top:16px;
+      border:1px solid rgba(34,197,94,.22);
+      background:linear-gradient(180deg, rgba(34,197,94,.15), rgba(255,255,255,.03));
+      border-radius:24px;
+      padding:18px;
+    }
+
+    .final-box.show{ display:block; }
+
+    .final-box h3{
+      margin:0 0 8px;
+      font-family:"Space Grotesk","Outfit",sans-serif;
+      font-size:24px;
+    }
+
+    .final-box p{
+      margin:0;
+      color:var(--muted);
+      line-height:1.6;
+    }
+
+    .hide{ display:none!important; }
+
+    @media (max-width: 860px){
+      .game-head{
+        grid-template-columns:1fr;
+      }
+    }
+
+    @media (max-width: 720px){
+      .statusbar,
+      .score-board,
+      .lang-grid,
+      .difficulty-grid{
+        grid-template-columns:1fr;
+      }
+
+      .hero{
+        border-radius:26px;
+      }
+
+      .stage{
+        border-radius:26px;
+      }
+
+      .panel{
+        padding:14px;
+      }
+
+      .card{
+        border-radius:24px;
+        padding:16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <div class="eyebrow">
+        <span class="eyebrow-dot"></span>
+        <span>italkyAI • Eğlenerek Öğren</span>
+      </div>
+
+      <h1>Kod Çöz</h1>
+      <p>
+        Mors alfabesini çöz, dinle, tahmin et. Seçtiğin dilde kelimeleri çözmeye çalış,
+        gerekirse Türkçe ipucu al, anlamı gör ve puan topla.
+      </p>
+
+      <div class="statusbar">
+        <div class="mini">
+          <div class="k">Oyun Türü</div>
+          <div class="v">Mors Alfabesi</div>
+        </div>
+        <div class="mini">
+          <div class="k">İpucu Dili</div>
+          <div class="v">Türkçe</div>
+        </div>
+        <div class="mini">
+          <div class="k">Akış</div>
+          <div class="v">Dil → Kural → Zorluk</div>
+        </div>
+        <div class="mini">
+          <div class="k">Mod</div>
+          <div class="v">Dinle & Çöz</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="stage">
+      <div class="stepbar">
+        <div class="step active" id="stepLang">1 • Dil Seçimi</div>
+        <div class="step" id="stepRules">2 • Oyun Kuralları</div>
+        <div class="step" id="stepDifficulty">3 • Zorluk Seviyesi</div>
+        <div class="step" id="stepGame">4 • Oyun</div>
+      </div>
+
+      <!-- LANGUAGE -->
+      <div class="panel active" id="panelLanguage">
+        <div class="card">
+          <h2>Oyun dilini seç</h2>
+          <p class="sub">
+            Mors kodunu çözerken gelecek kelimelerin hangi dilde olacağını seç.
+            Türkçe havuz kullanılmıyor; Türkçe sadece ipucu ve anlam desteğinde kullanılacak.
+          </p>
+
+          <div class="lang-grid" id="languageGrid"></div>
+
+          <div class="actions">
+            <button class="btn btn-primary" id="btnGoRules" disabled>Devam Et</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- RULES -->
+      <div class="panel" id="panelRules">
+        <div class="card">
+          <h2>Oyun kuralları</h2>
+          <p class="sub">
+            Önce kuralları oku, sonra zorluk seviyeni seç. Zorluk yoksa oyun direkt başlardı;
+            bu oyunda zorluk seviyesi bulunduğu için bir sonraki adımda seviye seçimi yapılacak.
+          </p>
+
+          <div class="rules">
+            <div class="rule">
+              <div class="rule-no">1</div>
+              <p>
+                Ekranda bir kelimenin <strong>Mors kodu</strong> gösterilir. İstersen aynı kodu
+                <strong>bip sesi</strong> olarak tekrar dinleyebilirsin.
+              </p>
+            </div>
+
+            <div class="rule">
+              <div class="rule-no">2</div>
+              <p>
+                Tahmin ettiğin kelimeyi yaz ve <strong>Kontrol Et</strong> butonuna bas.
+                Doğru cevap verdiğinde puan kazanırsın ve yeni kelimeye geçersin.
+              </p>
+            </div>
+
+            <div class="rule">
+              <div class="rule-no">3</div>
+              <p>
+                Zorlanırsan önce <strong>Türkçe İpucu</strong> alabilirsin. Daha da zorlanırsan
+                <strong>Türkçe Anlamı Göster</strong> seçeneğini kullanabilirsin.
+              </p>
+            </div>
+
+            <div class="rule">
+              <div class="rule-no">4</div>
+              <p>
+                Yardım almadan doğru bilirsen daha çok puan kazanırsın. İpucu alınca puan azalır,
+                anlamı açınca biraz daha azalır. Ama boş geçmekten iyidir; oyun da hayat da böyledir.
+              </p>
+            </div>
+
+            <div class="rule">
+              <div class="rule-no">5</div>
+              <p>
+                Toplam <strong>10 tur</strong> oynanır. Süre baskısı yoktur. Ama Mors’u çözerken
+                beyin “ben bunu çözerim” moduna geçebilir, önceden söylemiş olayım.
+              </p>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button class="btn btn-secondary" id="btnBackToLang">Geri</button>
+            <button class="btn btn-primary" id="btnGoDifficulty">Zorluk Seçimine Geç</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- DIFFICULTY -->
+      <div class="panel" id="panelDifficulty">
+        <div class="card">
+          <h2>Zorluk seviyesini seç</h2>
+          <p class="sub">
+            Kolay seviyede daha kısa ve tanıdık kelimeler gelir. Zor seviyede kelimeler uzar,
+            Mors dizisi karışır ve göz biraz daha fazla “nokta mıydı çizgi miydi” der.
+          </p>
+
+          <div class="difficulty-grid" id="difficultyGrid"></div>
+
+          <div class="actions">
+            <button class="btn btn-secondary" id="btnBackToRules">Geri</button>
+            <button class="btn btn-primary" id="btnStartGame" disabled>Oyunu Başlat</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- GAME -->
+      <div class="panel" id="panelGame">
+        <div class="card">
+          <div class="game-head">
+            <div>
+              <h2>Oyuna başla</h2>
+              <p class="sub" id="gameInfoText">
+                Mors kodunu çöz, cevapla ve puan topla.
+              </p>
+            </div>
+
+            <div class="score-board">
+              <div class="score">
+                <div class="k">Dil</div>
+                <div class="v" id="statLang">-</div>
+              </div>
+              <div class="score">
+                <div class="k">Seviye</div>
+                <div class="v" id="statDifficulty">-</div>
+              </div>
+              <div class="score">
+                <div class="k">Tur</div>
+                <div class="v"><span id="statRound">1</span> / 10</div>
+              </div>
+              <div class="score">
+                <div class="k">Puan</div>
+                <div class="v" id="statScore">0</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="morse-wrap">
+            <div class="morse-label">Mors Kodu</div>
+            <div class="morse-code" id="morseCode">.... . .-.. .-.. ---</div>
+
+            <div class="actions">
+              <button class="btn btn-secondary" id="btnReplayAudio">Tekrar Dinle</button>
+              <button class="btn btn-secondary" id="btnShowHint">Türkçe İpucu Al</button>
+              <button class="btn btn-secondary" id="btnShowMeaning">Anlamı Göster</button>
+            </div>
+          </div>
+
+          <div class="answer-wrap">
+            <input
+              class="input"
+              id="answerInput"
+              type="text"
+              autocomplete="off"
+              autocapitalize="characters"
+              spellcheck="false"
+              placeholder="Cevabını buraya yaz…"
+            />
+
+            <div class="actions">
+              <button class="btn btn-primary" id="btnCheck">Kontrol Et</button>
+              <button class="btn btn-danger" id="btnSkip">Bu Turu Geç</button>
+            </div>
+          </div>
+
+          <div class="helper-box">
+            <div class="helper" id="hintBox">
+              <div class="t">Türkçe İpucu</div>
+              <div class="v" id="hintText">-</div>
+            </div>
+
+            <div class="helper" id="meaningBox">
+              <div class="t">Türkçe Anlam</div>
+              <div class="v" id="meaningText">-</div>
+            </div>
+          </div>
+
+          <div class="feedback info" id="feedbackText">
+            Hazırsan Mors kodunu incele veya dinleyip cevabı yaz.
+          </div>
+
+          <div class="footnote">
+            Puan sistemi: doğrudan doğru bil = 10 puan, ipucu sonrası doğru bil = 7 puan,
+            anlam açıldıktan sonra doğru bil = 5 puan. Pas geçilen tur puan kazandırmaz.
+          </div>
+
+          <div class="final-box" id="finalBox">
+            <h3>Tur tamamlandı</h3>
+            <p id="finalText">
+              Oyun bitti.
+            </p>
+
+            <div class="actions">
+              <button class="btn btn-secondary" id="btnRestart">Aynı Ayarlarla Tekrar Oyna</button>
+              <button class="btn btn-primary" id="btnBackToStart">Başa Dön</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="/js/morse_game.js"></script>
+</body>
+</html>
