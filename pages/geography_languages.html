@@ -15,8 +15,6 @@
       --border:rgba(255,255,255,0.15);
       --safe-top:env(safe-area-inset-top, 0px);
       --safe-bottom:env(safe-area-inset-bottom, 0px);
-      --earth-top: rgba(184,115,51,0.20);
-      --earth-bottom: rgba(120,53,15,0.22);
     }
 
     *{
@@ -35,7 +33,9 @@
       overflow:hidden;
     }
 
-    body{ min-height:100dvh; }
+    body{
+      min-height:100dvh;
+    }
 
     .container{
       display:flex;
@@ -56,13 +56,15 @@
       overflow:hidden;
     }
 
+    /* ÜST: full langpool */
     .half-screen.top{
       transform:rotate(180deg);
-      background:linear-gradient(180deg, var(--earth-top), var(--bg));
+      background:linear-gradient(180deg, rgba(184,115,51,0.20), var(--bg));
     }
 
+    /* ALT: coğrafi diller */
     .half-screen.bottom{
-      background:linear-gradient(180deg, var(--earth-bottom), var(--bg));
+      background:linear-gradient(180deg, rgba(92,54,24,0.24), var(--bg));
     }
 
     .lang-trigger{
@@ -84,13 +86,14 @@
       pointer-events:auto;
       min-height:44px;
       max-width:92%;
-      text-decoration:none;
       touch-action:manipulation;
+      text-decoration:none;
     }
 
     .popover{
       position:absolute;
       left:50%;
+      transform:translateX(-50%);
       width:min(92vw,360px);
       height:360px;
       background:#0a0a0f;
@@ -105,15 +108,8 @@
     }
 
     .popover.show{ display:flex; }
-    .half-screen.top .popover{
-      top:64px;
-      transform:translateX(-50%) rotate(180deg);
-      transform-origin:center center;
-    }
-    .half-screen.bottom .popover{
-      bottom:64px;
-      transform:translateX(-50%);
-    }
+    .half-screen.top .popover{ top:64px; }
+    .half-screen.bottom .popover{ bottom:64px; }
 
     .pop-head{
       padding:14px;
@@ -276,17 +272,6 @@
       width:100%;
       padding-bottom:10px;
       z-index:30;
-    }
-
-    .half-screen.top .lang-trigger,
-    .half-screen.top .chat-body,
-    .half-screen.top .bubble{
-      transform:rotate(180deg);
-    }
-
-    .half-screen.top .mic-wrap{
-      min-height:18px;
-      padding-bottom:0;
     }
 
     .btn-mic{
@@ -488,13 +473,13 @@
       z-index:20;
     }
 
-    body.is-listening .eq-wrap,
-    body.is-translating .eq-wrap{
+    #frameRoot.is-listening .eq-wrap,
+    #frameRoot.is-translating .eq-wrap{
       opacity:1;
     }
 
-    body.is-listening .logo-text,
-    body.is-translating .logo-text{
+    #frameRoot.is-listening .logo-text,
+    #frameRoot.is-translating .logo-text{
       opacity:0;
     }
 
@@ -504,6 +489,37 @@
       border-radius:10px;
       animation:eqAnim .7s infinite ease-in-out;
     }
+
+    .status-pill{ display:none; }
+
+    #frameRoot.is-idle .ball-1,
+    #frameRoot.is-idle .ball-2,
+    #frameRoot.is-error .ball-1,
+    #frameRoot.is-error .ball-2{
+      background:#ef4444;
+      box-shadow:0 0 18px rgba(239,68,68,.9);
+    }
+
+    #frameRoot.is-listening .ball-1,
+    #frameRoot.is-translating .ball-1{
+      background:#6366f1;
+      box-shadow:0 0 18px rgba(99,102,241,.95);
+    }
+
+    #frameRoot.is-listening .ball-2,
+    #frameRoot.is-translating .ball-2{
+      background:#ec4899;
+      box-shadow:0 0 18px rgba(236,72,153,.95);
+    }
+
+    #frameRoot.is-ready .ball-1,
+    #frameRoot.is-ready .ball-2{
+      background:#22c55e;
+      box-shadow:0 0 18px rgba(34,197,94,.9);
+    }
+
+    #frameRoot.to-top .orb-container{ transform:rotate(180deg); }
+    #frameRoot.to-bot .orb-container{ transform:rotate(0deg); }
 
     @keyframes rotateOrbit{
       from{ transform:rotate(0deg); }
@@ -595,7 +611,7 @@
 </head>
 <body id="frameRoot" class="to-bot">
   <div class="container">
-    <div class="half-screen top">
+    <div class="half-screen top" id="topSection">
       <button class="lang-trigger" id="topLangBtn" type="button">
         <span id="topLangTxt">🌐 Hedef Dil</span> ⌵
       </button>
@@ -611,14 +627,14 @@
       <div class="chat-body" id="topBody"></div>
 
       <div class="mic-wrap">
-        <div class="helper-text helper-ready" id="topHelper">Hedef dili seçin</div>
+        <div class="helper-text" id="topHelper"></div>
       </div>
     </div>
 
     <div class="center-hub">
       <a class="nav-btn btn-home" id="homeLink" href="/pages/home.html">ANA SAYFA</a>
 
-      <div class="orb-container">
+      <div class="orb-container" id="homeBtn" title="Ana sayfa">
         <div class="energy-orbit">
           <div class="ball-1"></div>
           <div class="ball-2"></div>
@@ -634,9 +650,10 @@
       </div>
 
       <div class="nav-btn btn-clear" id="clearBtn">TEMİZLE</div>
+      <div id="statusPill" class="status-pill">Hazır</div>
     </div>
 
-    <div class="half-screen bottom">
+    <div class="half-screen bottom" id="botSection">
       <button class="lang-trigger" id="botLangBtn" type="button">
         <span id="botLangTxt">🌍 Coğrafi Diller</span> ⌵
       </button>
@@ -652,14 +669,14 @@
       <div class="chat-body" id="botBody"></div>
 
       <div class="mic-wrap">
-        <div class="btn-mic" id="botMic" aria-label="Mikrofon" role="button" tabindex="0">
+        <div class="btn-mic" id="botMic" aria-label="Alt mikrofon" role="button" tabindex="0">
           <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path>
             <path d="M19 11v1a7 7 0 0 1-14 0v-1"></path>
             <path d="M12 19v3"></path>
           </svg>
         </div>
-        <div class="helper-text helper-ready" id="botHelper">Konuşmak için mikrofona dokununuz.</div>
+        <div class="helper-text" id="botHelper"></div>
       </div>
     </div>
   </div>
