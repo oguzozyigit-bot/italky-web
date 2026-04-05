@@ -1,0 +1,558 @@
+// FILE: /js/geography_languages_page.js
+
+import { supabase } from "/js/supabase_client.js";
+import { setHeaderTokens } from "/js/ui_shell.js";
+import { commitUsage, buildUsageNote } from "/js/usage_meter.js";
+import { getLangPoolForSite } from "/js/lang_pool_full.js";
+
+const API_BASE = "https://italky-api.onrender.com";
+const $ = (id) => document.getElementById(id);
+
+const topBody = $("topBody");
+const botBody = $("botBody");
+const botMic = $("botMic");
+const topHelper = $("topHelper");
+const botHelper = $("botHelper");
+const topLangBtn = $("topLangBtn");
+const botLangBtn = $("botLangBtn");
+const topLangTxt = $("topLangTxt");
+const botLangTxt = $("botLangTxt");
+const popTop = $("pop-top");
+const popBot = $("pop-bot");
+const listTop = $("list-top");
+const listBot = $("list-bot");
+const closeTop = $("close-top");
+const closeBot = $("close-bot");
+const clearBtn = $("clearBtn");
+const homeLink = $("homeLink");
+
+const uiModal = $("uiModal");
+const uiModalText = $("uiModalText");
+const uiModalGo = $("uiModalGo");
+const uiModalClose = $("uiModalClose");
+
+let recognizer = null;
+let listening = false;
+let currentAudio = null;
+let sourceText = "";
+
+const GEO_CODES = [
+  "ku", "kmr", "ckb", "zza", "lzz", "ady", "ab", "az", "ka", "hy", "ar", "fa"
+];
+
+const GEO_FALLBACK = [
+  { code: "ku", name: "Kürtçe", flag: "🟨" },
+  { code: "zza", name: "Zazaca", flag: "🟫" },
+  { code: "lzz", name: "Lazca", flag: "🌊" },
+  { code: "ady", name: "Çerkezce", flag: "🟩" },
+  { code: "ab", name: "Abhazca", flag: "⬛" },
+  { code: "az", name: "Azerbaycanca", flag: "🇦🇿" },
+  { code: "ka", name: "Gürcüce", flag: "🇬🇪" },
+  { code: "hy", name: "Ermenice", flag: "🇦🇲" },
+  { code: "ar", name: "Arapça", flag: "🇸🇦" },
+  { code: "fa", name: "Farsça", flag: "🇮🇷" }
+];
+
+let TOP_LANGS = [];
+let BOT_LANGS = [];
+let topLang = "tr";
+let botLang = "ku";
+
+function getFullLangPool() {
+  try {
+    const siteLang = String(document.documentElement.lang || "tr").toLowerCase();
+    const pool = getLangPoolForSite(siteLang) || [];
+    const seen = new Set();
+    const out = [];
+
+    for (const item of pool) {
+      const code = String(item?.code || item?.lang || item?.value || "").trim().toLowerCase();
+      if (!code || seen.has(code)) continue;
+      seen.add(code);
+      out.push({
+        code,
+        name: String(item?.label || item?.name || code.toUpperCase()).trim(),
+        flag: String(item?.flag || "🌐").trim()
+      });
+    }
+
+    return out;
+  } catch {
+    return [
+      { code: "tr", name: "Türkçe", flag: "🇹🇷" },
+      { code: "en", name: "English", flag: "🇬🇧" },
+      { code: "de", name: "Deutsch", flag: "🇩🇪" },
+      { code: "fr", name: "Français", flag: "🇫🇷" },
+      { code: "es", name: "Español", flag: "🇪🇸" },
+      { code: "it", name: "Italiano", flag: "🇮🇹" }
+    ];
+  }
+}
+
+function buildGeoPool(fullPool) {
+  const byCode = new Map(fullPool.map((x) => [x.code, x]));
+  const out = [];
+
+  for (const code of GEO_CODES) {
+    if (byCode.has(code)) out.push(byCode.get(code));
+  }
+
+  for (const item of GEO_FALLBACK) {
+    if (!out.find((x) => x.code === item.code)) out.push(item);
+  }
+
+  return out;
+}
+
+function labelOf(list, code) {
+  const x = list.find((l) => l.code === code);
+  return x ? `${x.flag} ${x.name}` : code.toUpperCase();
+}
+
+function closeAllPop() {
+  popTop?.classList.remove("show");
+  popBot?.classList.remove("show");
+}
+
+function renderPop(which) {
+  const list = which === "top" ? listTop : listBot;
+  const pool = which === "top" ? TOP_LANGS : BOT_LANGS;
+  const selected = which === "top" ? topLang : botLang;
+  if (!list) return;
+
+  list.innerHTML = pool.map((l) => `
+    <div class="pop-item ${l.code === selected ? "active" : ""}" data-code="${l.code}">
+      <div class="pop-left">
+        <div class="pop-flag">${l.flag}</div>
+        <div class="pop-name">${l.name}</div>
+      </div>
+      <div class="pop-code">${l.code.toUpperCase()}</div>
+    </div>
+  `).join("");
+
+  list.querySelectorAll(".pop-item").forEach((el) => {
+    el.addEventListener("click", () => {
+      const code = String(el.dataset.code || "").trim().toLowerCase();
+      if (!code) return;
+
+      if (which === "top") {
+        topLang = code;
+        topLangTxt.textContent = labelOf(TOP_LANGS, topLang);
+      } else {
+        botLang = code;
+        botLangTxt.textContent = labelOf(BOT_LANGS, botLang);
+      }
+
+      closeAllPop();
+    });
+  });
+}
+
+function stopAudio() {
+  try {
+    if (currentAudio) {
+      currentAudio.pause();
+      currentAudio.currentTime = 0;
+    }
+  } catch {}
+  currentAudio = null;
+
+  try { window.speechSynthesis?.cancel?.(); } catch {}
+}
+
+function addTopBubble(text, withSpeaker = false) {
+  topBody.innerHTML = "";
+  const bubble = document.createElement("div");
+  bubble.className = "bubble me is-latest";
+  bubble.innerHTML = `
+    <div class="bubble-row">
+      <span class="txt">${text}</span>
+      ${withSpeaker ? `
+        <button class="spk-icon" id="topSpeakBtn" aria-label="Seslendir">
+          <svg viewBox="0 0 24 24">
+            <path d="M3 10v4h4l5 4V6L7 10H3"></path>
+            <path d="M16 8a4 4 0 0 1 0 8"></path>
+            <path d="M19 5a8 8 0 0 1 0 14"></path>
+          </svg>
+        </button>
+      ` : ""}
+    </div>
+  `;
+  topBody.appendChild(bubble);
+}
+
+function addBotBubble(text) {
+  botBody.innerHTML = "";
+  const bubble = document.createElement("div");
+  bubble.className = "bubble me is-latest";
+  bubble.innerHTML = `<div class="bubble-row"><span class="txt">${text}</span></div>`;
+  botBody.appendChild(bubble);
+}
+
+function setHelpers(topText, botText, botWait = false) {
+  topHelper.textContent = topText || "";
+  botHelper.textContent = botText || "";
+  botHelper.className = `helper-text${botWait ? " helper-wait" : " helper-ready"}`;
+  topHelper.className = "helper-text helper-ready";
+}
+
+async function refreshHeaderTokens() {
+  try {
+    const { data: auth } = await supabase.auth.getUser();
+    const user = auth?.user;
+    if (!user?.id) return;
+
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("tokens")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (!error && typeof data?.tokens === "number") {
+      try { setHeaderTokens(data.tokens); } catch {}
+    }
+  } catch {}
+}
+
+async function getTokenBalance() {
+  try {
+    const { data: auth } = await supabase.auth.getUser();
+    const user = auth?.user;
+    if (!user?.id) return 0;
+
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("tokens")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (error) return 0;
+    return Number(data?.tokens || 0);
+  } catch {
+    return 0;
+  }
+}
+
+function showUiModal(message) {
+  uiModalText.textContent = message;
+  uiModal.classList.add("open");
+}
+
+function closeUiModal() {
+  uiModal.classList.remove("open");
+}
+
+uiModalGo?.addEventListener("click", () => {
+  location.href = "/pages/jetonbuy.html";
+});
+uiModalClose?.addEventListener("click", closeUiModal);
+uiModal?.addEventListener("click", (e) => {
+  if (e.target === uiModal) closeUiModal();
+});
+
+async function ensureTranslationAccess() {
+  const tokens = await getTokenBalance();
+  if (tokens <= 0) {
+    showUiModal("Coğrafyanın Dilleri çevirisi için jeton gerekiyor.");
+    return false;
+  }
+  return true;
+}
+
+async function speakText(text, langCode) {
+  const clean = String(text || "").trim();
+  if (!clean) return;
+
+  stopAudio();
+
+  try {
+    const { data } = await supabase.auth.getUser();
+    const userId = data?.user?.id || null;
+
+    const res = await fetch(`${API_BASE}/api/tts`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text: clean,
+        lang: langCode,
+        user_id: userId,
+        module: "geography_languages",
+        voice: "auto",
+        tone: "neutral"
+      })
+    });
+
+    const json = await res.json().catch(() => ({}));
+    if (res.ok && json?.audio_base64) {
+      const audio = new Audio(`data:audio/mp3;base64,${json.audio_base64}`);
+      currentAudio = audio;
+      await audio.play();
+      return;
+    }
+  } catch {}
+
+  try {
+    const u = new SpeechSynthesisUtterance(clean);
+    u.lang = langCode === "tr" ? "tr-TR" : "en-US";
+    u.rate = 0.95;
+    u.pitch = 1.0;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(u);
+  } catch {}
+}
+
+async function translateNow() {
+  const rawText = String(sourceText || "").trim();
+  if (!rawText) return;
+
+  const canRun = await ensureTranslationAccess();
+  if (!canRun) return;
+
+  document.body.classList.add("is-translating");
+  setHelpers("Çeviri hazırlanıyor...", "Lütfen bekleyiniz...", true);
+
+  try {
+    const res = await fetch(`${API_BASE}/api/translate_ai`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text: rawText,
+        from_lang: botLang,
+        to_lang: topLang,
+        mode: "cultural",
+        cultural: true,
+        use_ai: true,
+        style: "warm",
+        domain: "geography_languages"
+      })
+    });
+
+    const json = await res.json().catch(() => ({}));
+    const translated = String(
+      json?.translated ||
+      json?.translation ||
+      json?.text ||
+      ""
+    ).trim();
+
+    if (!res.ok || !translated) {
+      throw new Error(json?.detail || "Çeviri alınamadı");
+    }
+
+    addTopBubble(translated, true);
+    document.getElementById("topSpeakBtn")?.addEventListener("click", () => speakText(translated, topLang));
+
+    try {
+      const usage = await commitUsage({
+        module: "text_ai",
+        usageKind: "text",
+        charCount: Math.max(rawText.length, translated.length),
+        note: buildUsageNote({
+          surface: "text",
+          usageKind: "text",
+          mode: "cultural"
+        }),
+        meta: {
+          surface: "geography_languages",
+          from_lang: botLang,
+          to_lang: topLang,
+          input_chars: rawText.length,
+          output_chars: translated.length,
+          billable_chars: Math.max(rawText.length, translated.length)
+        }
+      });
+
+      if (typeof usage?.tokens_after === "number") {
+        try { setHeaderTokens(usage.tokens_after); } catch {}
+      }
+    } catch (e) {
+      if (String(e?.code || "").includes("INSUFFICIENT_TOKENS")) {
+        showUiModal("Coğrafyanın Dilleri çevirisi için jeton gerekiyor.");
+        document.body.classList.remove("is-translating");
+        return;
+      }
+    }
+
+    await speakText(translated, topLang);
+    setHelpers("Hazır", "Konuşmak için mikrofona dokununuz.");
+  } catch {
+    addTopBubble("Çeviri alınamadı.");
+    setHelpers("Çeviri başarısız", "Konuşmak için mikrofona dokununuz.");
+  } finally {
+    document.body.classList.remove("is-translating");
+  }
+}
+
+function initRecognition() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return null;
+
+  const rec = new SR();
+  rec.lang = botLang === "tr" ? "tr-TR" : "en-US";
+  rec.interimResults = true;
+  rec.continuous = false;
+  rec.maxAlternatives = 1;
+
+  rec.onstart = () => {
+    listening = true;
+    document.body.classList.add("is-listening");
+    botMic.classList.add("listening");
+    setHelpers("Hazır", "Konuşuyorsunuz...");
+  };
+
+  rec.onresult = (e) => {
+    let finalText = "";
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const txt = e.results[i][0]?.transcript || "";
+      if (e.results[i].isFinal) finalText += txt + " ";
+    }
+
+    if (finalText.trim()) {
+      sourceText = normalizeInput(sourceText + " " + finalText.trim());
+      addBotBubble(sourceText);
+      translateNow();
+    }
+  };
+
+  rec.onerror = () => {
+    listening = false;
+    document.body.classList.remove("is-listening");
+    botMic.classList.remove("listening");
+    setHelpers("Hazır", "Mikrofon başlatılamadı", true);
+  };
+
+  rec.onend = () => {
+    listening = false;
+    document.body.classList.remove("is-listening");
+    botMic.classList.remove("listening");
+    setHelpers("Hazır", "Konuşmak için mikrofona dokununuz.");
+  };
+
+  return rec;
+}
+
+function normalizeInput(value) {
+  return String(value || "").replace(/\s+/g, " ").trim();
+}
+
+botMic?.addEventListener("click", () => {
+  recognizer = initRecognition();
+  if (!recognizer) return;
+
+  if (listening) {
+    try { recognizer.stop(); } catch {}
+    return;
+  }
+
+  try {
+    recognizer.start();
+  } catch {}
+});
+
+topLangBtn?.addEventListener("click", (e) => {
+  e.preventDefault();
+  closeAllPop();
+  renderPop("top");
+  popTop?.classList.add("show");
+});
+
+botLangBtn?.addEventListener("click", (e) => {
+  e.preventDefault();
+  closeAllPop();
+  renderPop("bot");
+  popBot?.classList.add("show");
+});
+
+closeTop?.addEventListener("click", closeAllPop);
+closeBot?.addEventListener("click", closeAllPop);
+
+document.addEventListener("click", (e) => {
+  const inside =
+    (popTop && popTop.contains(e.target)) ||
+    (popBot && popBot.contains(e.target));
+  const isBtn = e.target?.closest?.("#topLangBtn,#botLangBtn");
+  if (!inside && !isBtn) closeAllPop();
+}, { capture: true });
+
+function closeAllPop() {
+  popTop?.classList.remove("show");
+  popBot?.classList.remove("show");
+}
+
+function renderPop(which) {
+  const list = which === "top" ? listTop : listBot;
+  const pool = which === "top" ? TOP_LANGS : BOT_LANGS;
+  const selected = which === "top" ? topLang : botLang;
+  if (!list) return;
+
+  list.innerHTML = pool.map((l) => `
+    <div class="pop-item ${l.code === selected ? "active" : ""}" data-code="${l.code}">
+      <div class="pop-left">
+        <div class="pop-flag">${l.flag}</div>
+        <div class="pop-name">${l.name}</div>
+      </div>
+      <div class="pop-code">${l.code.toUpperCase()}</div>
+    </div>
+  `).join("");
+
+  list.querySelectorAll(".pop-item").forEach((el) => {
+    el.addEventListener("click", () => {
+      const code = String(el.dataset.code || "").trim().toLowerCase();
+      if (!code) return;
+
+      if (which === "top") {
+        topLang = code;
+        topLangTxt.textContent = labelOf(TOP_LANGS, topLang);
+      } else {
+        botLang = code;
+        botLangTxt.textContent = labelOf(BOT_LANGS, botLang);
+      }
+
+      sourceText = "";
+      addBotBubble("Henüz konuşma alınmadı.");
+      addTopBubble("Çeviri burada görünecek.");
+      closeAllPop();
+    });
+  });
+}
+
+function labelOf(list, code) {
+  const x = list.find((l) => l.code === code);
+  return x ? `${x.flag} ${x.name}` : code.toUpperCase();
+}
+
+clearBtn?.addEventListener("click", () => {
+  sourceText = "";
+  stopAudio();
+  addBotBubble("Henüz konuşma alınmadı.");
+  addTopBubble("Çeviri burada görünecek.");
+  setHelpers("Hedef dili seçin", "Konuşmak için mikrofona dokununuz.");
+});
+
+homeLink?.addEventListener("click", () => {
+  location.href = "/pages/home.html";
+});
+
+let TOP_LANGS = [];
+let BOT_LANGS = [];
+
+function initPools() {
+  TOP_LANGS = getFullLangPool();
+  BOT_LANGS = buildGeoPool(TOP_LANGS);
+
+  if (!TOP_LANGS.find((x) => x.code === topLang)) topLang = "tr";
+  if (!BOT_LANGS.find((x) => x.code === botLang)) botLang = BOT_LANGS[0]?.code || "ku";
+
+  topLangTxt.textContent = labelOf(TOP_LANGS, topLang);
+  botLangTxt.textContent = labelOf(BOT_LANGS, botLang);
+}
+
+async function init() {
+  initPools();
+  addBotBubble("Henüz konuşma alınmadı.");
+  addTopBubble("Çeviri burada görünecek.");
+  setHelpers("Hedef dili seçin", "Konuşmak için mikrofona dokununuz.");
+  await refreshHeaderTokens();
+}
+
+init();
