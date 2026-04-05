@@ -91,7 +91,6 @@
     .popover{
       position:absolute;
       left:50%;
-      transform:translateX(-50%);
       width:min(92vw,360px);
       height:360px;
       background:#0a0a0f;
@@ -106,8 +105,15 @@
     }
 
     .popover.show{ display:flex; }
-    .half-screen.top .popover{ top:64px; }
-    .half-screen.bottom .popover{ bottom:64px; }
+    .half-screen.top .popover{
+      top:64px;
+      transform:translateX(-50%) rotate(180deg);
+      transform-origin:center center;
+    }
+    .half-screen.bottom .popover{
+      bottom:64px;
+      transform:translateX(-50%);
+    }
 
     .pop-head{
       padding:14px;
@@ -270,6 +276,17 @@
       width:100%;
       padding-bottom:10px;
       z-index:30;
+    }
+
+    .half-screen.top .lang-trigger,
+    .half-screen.top .chat-body,
+    .half-screen.top .bubble{
+      transform:rotate(180deg);
+    }
+
+    .half-screen.top .mic-wrap{
+      min-height:18px;
+      padding-bottom:0;
     }
 
     .btn-mic{
@@ -580,12 +597,12 @@
   <div class="container">
     <div class="half-screen top">
       <button class="lang-trigger" id="topLangBtn" type="button">
-        <span id="topLangTxt">🌐 Türkçe / İngilizce / Almanca...</span> ⌵
+        <span id="topLangTxt">🌐 Hedef Dil</span> ⌵
       </button>
 
       <div class="popover" id="pop-top" role="dialog" aria-label="Üst dil seçimi">
         <div class="pop-head">
-          <div>ÜST DİL</div>
+          <div>HEDEF DİL</div>
           <div class="pop-close" id="close-top">✕</div>
         </div>
         <div class="pop-list" id="list-top"></div>
@@ -621,12 +638,12 @@
 
     <div class="half-screen bottom">
       <button class="lang-trigger" id="botLangBtn" type="button">
-        <span id="botLangTxt">🌍 Kürtçe / Lazca / Çerkezce...</span> ⌵
+        <span id="botLangTxt">🌍 Coğrafi Diller</span> ⌵
       </button>
 
       <div class="popover" id="pop-bot" role="dialog" aria-label="Alt dil seçimi">
         <div class="pop-head">
-          <div>ALT DİL</div>
+          <div>COĞRAFİ DİLLER</div>
           <div class="pop-close" id="close-bot">✕</div>
         </div>
         <div class="pop-list" id="list-bot"></div>
