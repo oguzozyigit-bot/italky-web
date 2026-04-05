@@ -2,9 +2,10 @@
 <html lang="tr">
 <head>
   <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-  <title>italkyAI</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
+  <title>italkyAI • Ataların Dili</title>
   <link rel="icon" href="data:," />
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;800;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet">
@@ -12,12 +13,12 @@
   <style>
     :root{
       --txt:#fff;
-      --muted:rgba(255,255,255,.72);
+      --muted:rgba(255,255,255,.76);
       --line:rgba(255,255,255,.12);
+      --red1:#7f1515;
+      --red2:#c61f1f;
       --blue1:#10355e;
       --blue2:#2e66d7;
-      --red1:#7a1313;
-      --red2:#c61c1c;
       --safe-bottom:env(safe-area-inset-bottom,0px);
       --shadow:0 18px 42px rgba(0,0,0,.30);
     }
@@ -93,14 +94,28 @@
 
     .top-panel{
       background:
-        radial-gradient(circle at 85% 18%, rgba(255,255,255,.07), transparent 18%),
-        linear-gradient(180deg,var(--blue1),var(--blue2));
+        radial-gradient(circle at 15% 18%, rgba(255,255,255,.08), transparent 18%),
+        linear-gradient(180deg,var(--red1),var(--red2));
+    }
+
+    .top-panel::before{
+      background:
+        radial-gradient(circle at 20% 50%, rgba(255,255,255,.95) 0 12%, transparent 13%),
+        radial-gradient(circle at 25% 50%, transparent 0 8%, rgba(255,255,255,.85) 9% 14%, transparent 15%);
+      transform:scale(1.95);
     }
 
     .bottom-panel{
       background:
-        radial-gradient(circle at 15% 18%, rgba(255,255,255,.08), transparent 18%),
-        linear-gradient(180deg,var(--red1),var(--red2));
+        radial-gradient(circle at 85% 18%, rgba(255,255,255,.07), transparent 18%),
+        linear-gradient(180deg,var(--blue1),var(--blue2));
+    }
+
+    .bottom-panel::before{
+      background:
+        linear-gradient(90deg, transparent 0 34%, rgba(255,255,255,.9) 35% 37%, transparent 38% 100%),
+        linear-gradient(0deg, transparent 0 20%, rgba(255,255,255,.7) 21% 23%, transparent 24% 100%);
+      transform:scale(1.8);
     }
 
     .panel-top{
@@ -111,6 +126,25 @@
       align-items:flex-start;
       gap:12px;
       margin-bottom:12px;
+      flex:0 0 auto;
+    }
+
+    .title{
+      margin:0;
+      font-size:22px;
+      font-weight:1000;
+      line-height:1.05;
+    }
+
+    .pill{
+      min-height:34px;
+      padding:8px 12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.10);
+      border:1px solid rgba(255,255,255,.14);
+      font-size:12px;
+      font-weight:1000;
+      white-space:nowrap;
       flex:0 0 auto;
     }
 
@@ -145,6 +179,7 @@
       font-weight:1000;
       letter-spacing:2px;
       word-break:break-word;
+      text-shadow:0 0 16px rgba(255,255,255,.16);
     }
 
     .latin-row{
@@ -160,113 +195,271 @@
       line-height:1.6;
       font-weight:800;
       color:rgba(255,255,255,.88);
+      text-align:center;
       word-break:break-word;
     }
 
     .mini-speak{
-      width:36px;
-      height:36px;
+      width:40px;
+      height:40px;
       border:none;
-      border-radius:10px;
+      border-radius:12px;
       background:rgba(255,255,255,.10);
       border:1px solid rgba(255,255,255,.14);
       color:#fff;
-      font-size:16px;
+      font-size:18px;
       cursor:pointer;
-      display:flex;
-      align-items:center;
-      justify-content:center;
+      flex:0 0 auto;
     }
 
     .input-wrap{
       width:100%;
       display:flex;
       align-items:center;
-      justify-content:space-between;
-      gap:10px;
+      justify-content:center;
     }
 
     .input-preview{
-      flex:1;
-      min-height:92px;
+      width:100%;
+      min-height:96px;
       display:flex;
       align-items:center;
+      justify-content:center;
+      text-align:center;
       font-size:24px;
+      line-height:1.45;
       font-weight:900;
       word-break:break-word;
     }
 
-    .send-mini{
-      width:56px;
-      height:56px;
-      border:none;
-      border-radius:18px;
-      background:linear-gradient(135deg, rgba(103,232,249,.24), rgba(255,255,255,.10));
-      border:1px solid rgba(103,232,249,.30);
-      color:#fff;
-      font-size:22px;
-      cursor:pointer;
-    }
-
-    .toolbar{
+    .center-row{
       position:relative;
-      z-index:2;
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:10px;
-      margin-top:12px;
-      flex:0 0 auto;
+      z-index:10;
+      height:90px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      margin:-4px 0;
+      pointer-events:none;
     }
 
-    .btn{
-      min-height:56px;
-      border:none;
-      border-radius:20px;
+    .center-bar{
+      width:100%;
+      max-width:720px;
+      height:86px;
+      border-radius:28px;
+      background:linear-gradient(180deg, rgba(5,6,12,.96), rgba(8,10,18,.96));
+      border:1px solid rgba(255,255,255,.10);
+      box-shadow:0 16px 38px rgba(0,0,0,.36);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:0 16px;
+      pointer-events:auto;
+    }
+
+    .side-action{
+      min-width:122px;
+      height:52px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.05);
       color:#fff;
       font-size:15px;
       font-weight:1000;
       cursor:pointer;
-      background:rgba(255,255,255,.07);
-      border:1px solid rgba(255,255,255,.12);
     }
 
-    .btn.primary{
-      background:linear-gradient(135deg, rgba(103,232,249,.22), rgba(255,255,255,.08));
-      border:1px solid rgba(103,232,249,.28);
-    }
-
-    .orb-wrap{
-      position:absolute;
-      left:50%;
-      top:50%;
-      transform:translate(-50%,-50%);
-      width:94px;
-      height:94px;
+    .center-logo{
+      position:relative;
+      width:106px;
+      height:106px;
+      flex:0 0 auto;
       display:flex;
       align-items:center;
       justify-content:center;
-      z-index:9;
-    }
-
-    .orb{
-      width:74px;
-      height:74px;
       border-radius:50%;
-      background:radial-gradient(circle at 35% 35%, rgba(255,255,255,.30), transparent 24%), radial-gradient(circle at 50% 50%, rgba(103,232,249,.35), rgba(99,102,241,.30) 55%, rgba(0,0,0,.18) 100%);
-      box-shadow:0 0 18px rgba(103,232,249,.28), 0 0 40px rgba(99,102,241,.22);
-      border:1px solid rgba(255,255,255,.18);
-      animation:orbFloat 3s ease-in-out infinite;
+      background:linear-gradient(180deg, rgba(8,10,16,.98), rgba(4,5,10,.98));
+      border:1px solid rgba(255,255,255,.12);
+      box-shadow:0 0 0 1px rgba(255,255,255,.03) inset;
     }
 
-    @keyframes orbFloat{
-      0%,100%{ transform:translateY(0) scale(1); }
-      50%{ transform:translateY(-5px) scale(1.03); }
+    .center-logo::before,
+    .center-logo::after{
+      content:"";
+      position:absolute;
+      top:50%;
+      width:10px;
+      height:10px;
+      border-radius:50%;
+      background:#22c55e;
+      box-shadow:0 0 12px rgba(34,197,94,.72);
+    }
+
+    .center-logo::before{ left:-18px; transform:translateY(-50%); }
+    .center-logo::after{ right:-18px; transform:translateY(-50%); }
+
+    .center-logo-text{
+      font-family:'Space Grotesk',sans-serif;
+      font-size:18px;
+      font-weight:700;
+      letter-spacing:.2px;
+      color:#fff;
+    }
+
+    .center-logo-text .ai{
+      background:linear-gradient(135deg,#67e8f9 0%, #818cf8 46%, #f472b6 100%);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+
+    .mic-wrap{
+      position:relative;
+      z-index:2;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      flex:1;
+      min-height:0;
+    }
+
+    .mic-btn{
+      width:122px;
+      height:122px;
+      border-radius:50%;
+      border:3px solid transparent;
+      background-image: linear-gradient(#050814,#050814), linear-gradient(135deg,#67e8f9 0%, #818cf8 46%, #f472b6 100%);
+      background-origin:border-box;
+      background-clip:content-box,border-box;
+      background-color:#050814;
+      color:#fff;
+      font-size:44px;
+      cursor:pointer;
+      box-shadow:0 16px 32px rgba(0,0,0,.28);
+      position:relative;
+    }
+
+    .mic-btn.listening::after{
+      content:"";
+      position:absolute;
+      inset:-10px;
+      border-radius:50%;
+      border:2px solid rgba(165,180,252,.55);
+      animation:pulse 1.15s infinite ease-in-out;
+    }
+
+    @keyframes pulse{
+      0%{ transform:scale(.92); opacity:.8; }
+      50%{ transform:scale(1.08); opacity:.25; }
+      100%{ transform:scale(.92); opacity:.8; }
+    }
+
+    .status{
+      position:relative;
+      z-index:2;
+      margin-top:12px;
+      min-height:20px;
+      font-size:13px;
+      font-weight:900;
+      color:rgba(255,255,255,.82);
+      flex:0 0 auto;
+      text-align:center;
+    }
+
+    .toast{
+      position:fixed;
+      left:50%;
+      bottom:calc(22px + var(--safe-bottom));
+      transform:translateX(-50%) translateY(120px);
+      background:rgba(10,12,24,.96);
+      border:1px solid rgba(255,255,255,.10);
+      color:#fff;
+      padding:14px 18px;
+      border-radius:999px;
+      font-size:13px;
+      font-weight:900;
+      z-index:9999;
+      transition:.25s ease;
+      box-shadow:0 18px 36px rgba(0,0,0,.30);
+      text-align:center;
+      max-width:min(92vw,560px);
+    }
+
+    .toast.show{ transform:translateX(-50%) translateY(0); }
+
+    .modal-backdrop{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.58);
+      backdrop-filter:blur(6px);
+      -webkit-backdrop-filter:blur(6px);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:9998;
+      padding:18px;
+    }
+
+    .modal-backdrop.show{ display:flex; }
+
+    .modal{
+      width:min(92vw,520px);
+      border-radius:28px;
+      border:1px solid rgba(255,255,255,.10);
+      background:linear-gradient(180deg, rgba(20,24,44,.98), rgba(10,12,24,.98));
+      box-shadow:0 24px 60px rgba(0,0,0,.45);
+      padding:22px;
+    }
+
+    .modal-title{
+      font-size:22px;
+      font-weight:1000;
+      margin:0 0 10px;
+    }
+
+    .modal-text{
+      font-size:15px;
+      line-height:1.6;
+      color:rgba(255,255,255,.84);
+      font-weight:800;
+      white-space:pre-line;
+    }
+
+    .modal-actions{
+      display:flex;
+      gap:12px;
+      margin-top:18px;
+    }
+
+    .modal-btn{
+      flex:1;
+      height:56px;
+      border-radius:18px;
+      border:none;
+      font-size:16px;
+      font-weight:1000;
+      cursor:pointer;
+    }
+
+    .modal-btn.cancel{
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.12);
+      color:#fff;
+    }
+
+    .modal-btn.ok{
+      background:linear-gradient(135deg, rgba(255,140,40,.92), rgba(255,84,201,.88));
+      color:#fff;
     }
 
     @media (max-width:640px){
-      .toolbar{ grid-template-columns:1fr; }
       #gokturkOutput{ font-size:26px; }
-      .input-preview{ font-size:21px; }
+      .input-preview{ font-size:21px; min-height:84px; }
+      .center-bar{ height:78px; padding:0 10px; }
+      .side-action{ min-width:102px; font-size:14px; }
+      .center-logo{ width:94px; height:94px; }
+      .mic-btn{ width:108px; height:108px; font-size:40px; }
+      .modal-actions{ flex-direction:column; }
     }
   </style>
 </head>
@@ -275,37 +468,69 @@
     <div class="page">
       <section class="frame">
         <div class="panel top-panel">
+          <div class="panel-top">
+            <h2 class="title">Türkçe</h2>
+          </div>
+
           <div class="bubble">
-            <div class="out-wrap">
-              <div id="gokturkOutput"></div>
-              <div class="latin-row">
-                <div id="latinOutput"></div>
-                <button id="speakBtn" class="mini-speak" type="button">🔊</button>
-              </div>
+            <div class="input-wrap">
+              <div id="inputPreview" class="input-preview">Henüz konuşma alınmadı.</div>
             </div>
           </div>
-          <div class="toolbar">
-            <button id="copyBtn" class="btn secondary" type="button">Kopyala</button>
-            <button id="replayBtn" class="btn secondary" type="button">🔊 Dinle</button>
+
+          <div id="leftStatus" class="status">Hazır</div>
+        </div>
+
+        <div class="center-row">
+          <div class="center-bar">
+            <button id="homeBtn" class="side-action" type="button">ANA SAYFA</button>
+
+            <div class="center-logo">
+              <div class="center-logo-text">italky<span class="ai">AI</span></div>
+            </div>
+
+            <button id="clearBtn" class="side-action" type="button">TEMİZLE</button>
           </div>
         </div>
 
-        <div class="orb-wrap"><div class="orb"></div></div>
-
         <div class="panel bottom-panel">
+          <div class="panel-top">
+            <h2 class="title">Eski Türk Alfabesi</h2>
+          </div>
+
           <div class="bubble">
-            <div class="input-wrap">
-              <div id="inputPreview" class="input-preview"></div>
-              <button id="sendBtn" class="send-mini" type="button">➜</button>
+            <div class="out-wrap">
+              <div id="gokturkOutput">𐱅𐰇𐰼𐰰 𐰖𐰀𐰔𐰃𐰽𐰃</div>
+              <div class="latin-row">
+                <div id="latinOutput">türük bitig</div>
+                <button id="speakBtn" class="mini-speak" type="button" aria-label="Seslendir">🔊</button>
+              </div>
             </div>
           </div>
-          <div class="toolbar">
-            <button id="micBtn" class="btn primary" type="button">🎙️ Konuş</button>
-            <button id="clearBtn" class="btn secondary" type="button">Temizle</button>
+
+          <div class="mic-wrap">
+            <button id="micBtn" class="mic-btn" type="button" aria-label="Konuş">🎙️</button>
           </div>
+
+          <div id="rightStatus" class="status">Konuşmak için mikrofona dokununuz.</div>
         </div>
       </section>
     </div>
   </main>
+
+  <div id="toast" class="toast"></div>
+
+  <div id="tokenBackdrop" class="modal-backdrop">
+    <div class="modal">
+      <h3 id="tokenTitle" class="modal-title">Jeton Gerekli</h3>
+      <div id="tokenText" class="modal-text">Ataların Dili dönüşümü için jeton gerekiyor.</div>
+      <div class="modal-actions">
+        <button id="tokenCancel" class="modal-btn cancel" type="button">Kapat</button>
+        <button id="tokenOk" class="modal-btn ok" type="button">Jeton Al</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/js/ancestors_language_page.js"></script>
 </body>
 </html>
