@@ -12,17 +12,15 @@
 
   <style>
     :root{
-      --bg:#050814;
-      --bg2:#0a1020;
       --txt:#fff;
       --muted:rgba(255,255,255,.72);
-      --line:rgba(255,255,255,.10);
-      --red1:#7f1d1d;
-      --red2:#b91c1c;
-      --blue1:#0f2f59;
-      --blue2:#2563eb;
+      --line:rgba(255,255,255,.12);
+      --blue1:#10355e;
+      --blue2:#2e66d7;
+      --red1:#7a1313;
+      --red2:#c61c1c;
       --safe-bottom:env(safe-area-inset-bottom,0px);
-      --shadow:0 20px 44px rgba(0,0,0,.32);
+      --shadow:0 18px 42px rgba(0,0,0,.30);
     }
 
     *{
@@ -36,238 +34,307 @@
       width:100%;
       min-height:100%;
       color:var(--txt);
-      font-family:Outfit,system-ui,sans-serif;
+      font-family:'Outfit',sans-serif;
       background:
-        radial-gradient(circle at 18% 8%, rgba(255,255,255,.05), transparent 18%),
-        radial-gradient(circle at 82% 8%, rgba(255,255,255,.05), transparent 18%),
-        linear-gradient(180deg,var(--bg),var(--bg2));
+        radial-gradient(circle at 18% 8%, rgba(255,255,255,.05), transparent 16%),
+        radial-gradient(circle at 82% 8%, rgba(255,255,255,.05), transparent 16%),
+        linear-gradient(180deg,#050814,#0a1020 45%,#060b18);
+      overflow:hidden;
     }
 
     #pageContent{
+      width:100%;
       min-height:100dvh;
-      padding:12px 12px calc(20px + var(--safe-bottom));
+      padding:10px 12px calc(10px + var(--safe-bottom));
+      opacity:0;
+      transition:opacity .18s ease;
+    }
+
+    #pageContent.ready{
+      opacity:1;
     }
 
     .page{
       width:100%;
       max-width:760px;
+      min-height:calc(100dvh - 20px - var(--safe-bottom));
       margin:0 auto;
       display:flex;
       flex-direction:column;
-      gap:12px;
+      gap:10px;
     }
 
-    .hero{
-      border:1px solid var(--line);
-      border-radius:28px;
-      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
-      box-shadow:var(--shadow);
-      padding:18px;
-    }
-
-    .hero-title{
-      margin:0 0 8px;
-      font-family:"Space Grotesk",sans-serif;
-      font-size:28px;
-      font-weight:800;
-      letter-spacing:-.6px;
-    }
-
-    .hero-sub{
-      margin:0;
-      color:var(--muted);
-      font-size:14px;
-      line-height:1.65;
-      font-weight:800;
-    }
-
-    .split{
+    .frame{
+      position:relative;
+      flex:1;
+      min-height:0;
       display:grid;
       grid-template-rows:1fr 1fr;
-      gap:12px;
-      min-height:640px;
+      gap:10px;
     }
 
-    .side{
+    .panel{
       position:relative;
       overflow:hidden;
-      border-radius:28px;
+      border-radius:30px;
       border:1px solid var(--line);
       box-shadow:var(--shadow);
       padding:16px;
       display:flex;
       flex-direction:column;
-      min-height:290px;
+      min-height:0;
     }
 
-    .side::before{
+    .panel::before{
       content:"";
       position:absolute;
       inset:0;
-      opacity:.14;
       pointer-events:none;
-      background-size:cover;
-      background-position:center;
-      mix-blend-mode:screen;
-    }
-
-    .gokturk-side{
-      background:
-        radial-gradient(circle at 88% 18%, rgba(255,255,255,.07), transparent 18%),
-        linear-gradient(180deg, var(--blue1), var(--blue2));
-    }
-
-    .gokturk-side::before{
-      background-image:
-        linear-gradient(90deg, transparent 0 34%, rgba(255,255,255,.88) 35% 37%, transparent 38% 100%),
-        linear-gradient(0deg, transparent 0 22%, rgba(255,255,255,.70) 23% 25%, transparent 26% 100%);
-      transform:scale(1.8);
+      opacity:.14;
       filter:blur(8px);
     }
 
-    .turkish-side{
+    .top-panel{
       background:
-        radial-gradient(circle at 12% 16%, rgba(255,255,255,.07), transparent 18%),
-        linear-gradient(180deg, var(--red1), var(--red2));
+        radial-gradient(circle at 15% 18%, rgba(255,255,255,.08), transparent 18%),
+        linear-gradient(180deg,var(--red1),var(--red2));
     }
 
-    .turkish-side::before{
-      background-image:
+    .top-panel::before{
+      background:
         radial-gradient(circle at 20% 50%, rgba(255,255,255,.95) 0 12%, transparent 13%),
         radial-gradient(circle at 25% 50%, transparent 0 8%, rgba(255,255,255,.85) 9% 14%, transparent 15%);
-      transform:scale(1.9);
-      filter:blur(6px);
+      transform:scale(1.95);
     }
 
-    .side-top{
+    .bottom-panel{
+      background:
+        radial-gradient(circle at 85% 18%, rgba(255,255,255,.07), transparent 18%),
+        linear-gradient(180deg,var(--blue1),var(--blue2));
+    }
+
+    .bottom-panel::before{
+      background:
+        linear-gradient(90deg, transparent 0 34%, rgba(255,255,255,.9) 35% 37%, transparent 38% 100%),
+        linear-gradient(0deg, transparent 0 20%, rgba(255,255,255,.7) 21% 23%, transparent 24% 100%);
+      transform:scale(1.8);
+    }
+
+    .panel-top{
       position:relative;
       z-index:2;
       display:flex;
-      align-items:flex-start;
       justify-content:space-between;
+      align-items:flex-start;
       gap:12px;
       margin-bottom:12px;
+      flex:0 0 auto;
     }
 
-    .side-title{
+    .title{
       margin:0;
-      font-size:20px;
+      font-size:21px;
       font-weight:1000;
-      line-height:1.1;
+      line-height:1.05;
     }
 
-    .side-sub{
+    .sub{
       margin-top:6px;
       font-size:12px;
-      color:rgba(255,255,255,.80);
-      font-weight:800;
       line-height:1.45;
+      color:rgba(255,255,255,.82);
+      font-weight:800;
     }
 
-    .mini-chip{
+    .pill{
       min-height:34px;
       padding:8px 12px;
       border-radius:999px;
       background:rgba(255,255,255,.10);
-      border:1px solid rgba(255,255,255,.12);
+      border:1px solid rgba(255,255,255,.14);
       font-size:12px;
       font-weight:1000;
       white-space:nowrap;
+      flex:0 0 auto;
     }
 
-    .text-box{
+    .bubble{
       position:relative;
       z-index:2;
       flex:1;
-      border-radius:22px;
+      min-height:0;
+      border-radius:28px;
       border:1px solid rgba(255,255,255,.12);
-      background:rgba(255,255,255,.05);
-      padding:16px;
-      overflow:hidden;
+      background:rgba(255,255,255,.06);
+      padding:18px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      overflow:auto;
+    }
+
+    .out-wrap{
       display:flex;
       flex-direction:column;
+      align-items:center;
       justify-content:center;
+      width:100%;
+      gap:14px;
     }
 
     #gokturkOutput{
-      font-size:32px;
+      font-size:34px;
       line-height:1.6;
       font-weight:1000;
       letter-spacing:2px;
-      color:#fff;
       word-break:break-word;
-      text-align:center;
-      text-shadow:0 0 18px rgba(255,255,255,.18);
-      animation:riseIn .45s ease;
+      text-shadow:0 0 16px rgba(255,255,255,.16);
+    }
+
+    .latin-row{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      width:100%;
     }
 
     #latinOutput{
-      margin-top:14px;
-      font-size:15px;
-      line-height:1.55;
+      font-size:16px;
+      line-height:1.6;
+      font-weight:800;
+      color:rgba(255,255,255,.88);
       text-align:center;
-      color:rgba(255,255,255,.84);
-      font-weight:800;
-      animation:riseIn .55s ease;
+      word-break:break-word;
     }
 
-    textarea#inputText{
-      width:100%;
-      min-height:150px;
-      resize:none;
+    .mini-speak{
+      width:40px;
+      height:40px;
       border:none;
-      background:transparent;
+      border-radius:12px;
+      background:rgba(255,255,255,.10);
+      border:1px solid rgba(255,255,255,.14);
       color:#fff;
-      font-size:20px;
-      line-height:1.65;
-      font-family:inherit;
-      font-weight:800;
+      font-size:18px;
+      cursor:pointer;
+      flex:0 0 auto;
     }
 
-    textarea#inputText::placeholder{
-      color:rgba(255,255,255,.42);
+    .input-wrap{
+      width:100%;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+
+    .input-preview{
+      flex:1;
+      min-height:92px;
+      display:flex;
+      align-items:center;
+      justify-content:flex-start;
+      text-align:left;
+      font-size:24px;
+      line-height:1.45;
+      font-weight:900;
+      word-break:break-word;
+    }
+
+    .send-mini{
+      width:56px;
+      height:56px;
+      border:none;
+      border-radius:18px;
+      background:linear-gradient(135deg, rgba(103,232,249,.24), rgba(255,255,255,.10));
+      border:1px solid rgba(103,232,249,.30);
+      color:#fff;
+      font-size:22px;
+      font-weight:1000;
+      cursor:pointer;
+      flex:0 0 auto;
     }
 
     .toolbar{
       position:relative;
       z-index:2;
       display:grid;
-      grid-template-columns:1fr 1fr 1fr;
+      grid-template-columns:1fr 1fr;
       gap:10px;
       margin-top:12px;
+      flex:0 0 auto;
     }
 
     .btn{
       min-height:56px;
       border:none;
-      border-radius:18px;
+      border-radius:20px;
       color:#fff;
       font-size:15px;
       font-weight:1000;
       cursor:pointer;
+      background:rgba(255,255,255,.07);
+      border:1px solid rgba(255,255,255,.12);
     }
 
     .btn.primary{
-      background:linear-gradient(135deg, rgba(255,255,255,.16), rgba(255,255,255,.08));
-      border:1px solid rgba(255,255,255,.14);
-    }
-
-    .btn.mic{
       background:linear-gradient(135deg, rgba(103,232,249,.22), rgba(255,255,255,.08));
       border:1px solid rgba(103,232,249,.28);
     }
 
-    .btn.secondary{
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.10);
-    }
-
     .status{
+      position:relative;
+      z-index:2;
       margin-top:12px;
-      min-height:22px;
+      min-height:20px;
       font-size:13px;
       font-weight:900;
-      color:rgba(255,255,255,.78);
+      color:rgba(255,255,255,.82);
+      flex:0 0 auto;
+    }
+
+    .orb-wrap{
+      position:absolute;
+      left:50%;
+      top:50%;
+      transform:translate(-50%,-50%);
+      width:94px;
+      height:94px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      pointer-events:none;
+      z-index:9;
+    }
+
+    .orb{
+      width:74px;
+      height:74px;
+      border-radius:50%;
+      background:
+        radial-gradient(circle at 35% 35%, rgba(255,255,255,.30), transparent 24%),
+        radial-gradient(circle at 50% 50%, rgba(103,232,249,.35), rgba(99,102,241,.30) 55%, rgba(0,0,0,.18) 100%);
+      box-shadow:
+        0 0 18px rgba(103,232,249,.28),
+        0 0 40px rgba(99,102,241,.22);
+      border:1px solid rgba(255,255,255,.18);
+      animation:orbFloat 3s ease-in-out infinite;
+    }
+
+    .orb::before,
+    .orb::after{
+      content:"";
+      position:absolute;
+      inset:-10px;
+      border-radius:50%;
+      border:1px solid rgba(255,255,255,.12);
+    }
+
+    .orb::after{
+      inset:-18px;
+      border-color:rgba(103,232,249,.18);
     }
 
     .toast{
@@ -323,7 +390,6 @@
       font-size:22px;
       font-weight:1000;
       margin:0 0 10px;
-      line-height:1.15;
     }
 
     .modal-text{
@@ -361,16 +427,17 @@
       color:#fff;
     }
 
-    @keyframes riseIn{
-      from{ opacity:0; transform:translateY(22px); }
-      to{ opacity:1; transform:translateY(0); }
+    @keyframes orbFloat{
+      0%,100%{ transform:translateY(0) scale(1); }
+      50%{ transform:translateY(-5px) scale(1.03); }
     }
 
     @media (max-width:640px){
-      .split{ min-height:auto; }
       .toolbar{ grid-template-columns:1fr; }
-      #gokturkOutput{ font-size:24px; }
-      .hero-title{ font-size:24px; }
+      #gokturkOutput{ font-size:26px; }
+      .input-preview{ font-size:21px; min-height:84px; }
+      .orb-wrap{ width:80px;height:80px; }
+      .orb{ width:62px;height:62px; }
       .modal-actions{ flex-direction:column; }
     }
   </style>
@@ -378,61 +445,59 @@
 <body>
   <main id="pageContent">
     <div class="page">
-
-      <section class="hero">
-        <h1 class="hero-title">Ataların Dili</h1>
-        <p class="hero-sub">
-          Türkçeden Eski Türkçeye dönüşüm alanı. Üst tarafta Göktürk alfabesi, altında Latin okunuş ve ücretsiz TTS seslendirme bulunur.
-        </p>
-      </section>
-
-      <section class="split">
-        <div class="side gokturk-side">
-          <div class="side-top">
+      <section class="frame">
+        <div class="panel top-panel">
+          <div class="panel-top">
             <div>
-              <h2 class="side-title">Eski Türk Alfabesi</h2>
-              <div class="side-sub">Göktürk yazımı burada görünür. Altında Latin harfli okunuş yer alır.</div>
+              <h2 class="title">Türkçe</h2>
+              <div class="sub">Sadece konuş. Metin burada görünür, ok ile aşağı Eski Türkçeye dönüşür.</div>
             </div>
-            <div class="mini-chip">Göktürk Mavisi</div>
+            <div class="pill">Türk Bayrağı</div>
           </div>
 
-          <div class="text-box">
-            <div id="gokturkOutput">𐱅𐰇𐰼𐰰 𐰖𐰀𐰔𐰃𐰽𐰃</div>
-            <div id="latinOutput">Türük bitigi</div>
+          <div class="bubble">
+            <div class="input-wrap">
+              <div id="inputPreview" class="input-preview">Henüz konuşma alınmadı.</div>
+              <button id="sendBtn" class="send-mini" type="button" aria-label="Dönüştür">➜</button>
+            </div>
           </div>
 
           <div class="toolbar">
-            <button id="speakBtn" class="btn primary" type="button">Seslendir</button>
-            <button id="copyBtn" class="btn secondary" type="button">Kopyala</button>
-            <button id="retryBtn" class="btn secondary" type="button">Yeniden</button>
-          </div>
-
-          <div id="rightStatus" class="status">Çıktı burada görünecek</div>
-        </div>
-
-        <div class="side turkish-side">
-          <div class="side-top">
-            <div>
-              <h2 class="side-title">Türkçe</h2>
-              <div class="side-sub">Konuş veya yaz. Kaynak metin aşağıdaki alanda oluşur.</div>
-            </div>
-            <div class="mini-chip">Türk Bayrağı</div>
-          </div>
-
-          <div class="text-box">
-            <textarea id="inputText" placeholder="Buraya Türkçe yazın ya da mikrofona basıp konuşun..."></textarea>
-          </div>
-
-          <div class="toolbar">
-            <button id="micBtn" class="btn mic" type="button">🎙️ Konuş</button>
-            <button id="translateBtn" class="btn primary" type="button">Dönüştür</button>
+            <button id="micBtn" class="btn primary" type="button">🎙️ Konuş</button>
             <button id="clearBtn" class="btn secondary" type="button">Temizle</button>
           </div>
 
           <div id="leftStatus" class="status">Hazır</div>
         </div>
-      </section>
 
+        <div class="orb-wrap"><div class="orb"></div></div>
+
+        <div class="panel bottom-panel">
+          <div class="panel-top">
+            <div>
+              <h2 class="title">Eski Türk Alfabesi</h2>
+              <div class="sub">Göktürk yazımı ve altında Latin harfleriyle Eski Türkçe okunuş.</div>
+            </div>
+            <div class="pill">Göktürk Mavisi</div>
+          </div>
+
+          <div class="bubble">
+            <div class="out-wrap">
+              <div id="gokturkOutput">𐱅𐰇𐰼𐰰 𐰖𐰀𐰔𐰃𐰽𐰃</div>
+              <div class="latin-row">
+                <div id="latinOutput">türük bitig</div>
+                <button id="speakBtn" class="mini-speak" type="button" aria-label="Seslendir">🔊</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="toolbar">
+            <button id="copyBtn" class="btn secondary" type="button">Kopyala</button>
+          </div>
+
+          <div id="rightStatus" class="status">Çıktı burada görünecek</div>
+        </div>
+      </section>
     </div>
   </main>
 
@@ -441,7 +506,7 @@
   <div id="tokenBackdrop" class="modal-backdrop">
     <div class="modal">
       <h3 id="tokenTitle" class="modal-title">Jeton Gerekli</h3>
-      <div id="tokenText" class="modal-text">Ataların Dili çevirisi için jeton gerekiyor.</div>
+      <div id="tokenText" class="modal-text">Ataların Dili dönüşümü için jeton gerekiyor.</div>
       <div class="modal-actions">
         <button id="tokenCancel" class="modal-btn cancel" type="button">Kapat</button>
         <button id="tokenOk" class="modal-btn ok" type="button">Jeton Al</button>
