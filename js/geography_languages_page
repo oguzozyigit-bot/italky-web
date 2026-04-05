@@ -10,6 +10,7 @@ const $ = (id) => document.getElementById(id);
 
 const topBody = $("topBody");
 const botBody = $("botBody");
+const topMic = $("topMic");
 const botMic = $("botMic");
 const topHelper = $("topHelper");
 const botHelper = $("botHelper");
@@ -31,10 +32,14 @@ const uiModalText = $("uiModalText");
 const uiModalGo = $("uiModalGo");
 const uiModalClose = $("uiModalClose");
 
-let recognizer = null;
-let listening = false;
+let topRecognizer = null;
+let botRecognizer = null;
+let topListening = false;
+let botListening = false;
 let currentAudio = null;
-let sourceText = "";
+
+let topText = "";
+let botText = "";
 
 const GEO_CODES = [
   "kmr",
@@ -66,6 +71,11 @@ const GEO_FALLBACK = [
 
 const STT_LANG_MAP = {
   tr: "tr-TR",
+  en: "en-US",
+  de: "de-DE",
+  fr: "fr-FR",
+  es: "es-ES",
+  it: "it-IT",
   kmr: "tr-TR",
   ckb: "tr-TR",
   zza: "tr-TR",
@@ -79,10 +89,34 @@ const STT_LANG_MAP = {
   fa: "fa-IR"
 };
 
+const TTS_LANG_MAP = {
+  tr: "tr",
+  en: "en",
+  de: "de",
+  fr: "fr",
+  es: "es",
+  it: "it",
+  kmr: "tr",
+  ckb: "tr",
+  zza: "tr",
+  lzz: "tr",
+  ady: "tr",
+  ab: "tr",
+  az: "az",
+  ka: "ka",
+  hy: "hy",
+  ar: "ar",
+  fa: "fa"
+};
+
 let TOP_LANGS = [];
 let BOT_LANGS = [];
 let topLang = "tr";
 let botLang = "kmr";
+
+function normalizeInput(value) {
+  return String(value || "").replace(/\s+/g, " ").trim();
+}
 
 function getFullLangPool() {
   try {
@@ -164,14 +198,15 @@ function renderPop(which) {
       if (which === "top") {
         topLang = code;
         topLangTxt.textContent = labelOf(TOP_LANGS, topLang);
+        topText = "";
+        renderTopBubble("Henüz konuşma alınmadı.");
       } else {
         botLang = code;
         botLangTxt.textContent = labelOf(BOT_LANGS, botLang);
+        botText = "";
+        renderBotBubble("Henüz konuşma alınmadı.");
       }
 
-      sourceText = "";
-      addBotBubble("Henüz konuşma alınmadı.");
-      addTopBubble("Çeviri burada görünecek.");
       closeAllPop();
     });
   });
@@ -189,7 +224,7 @@ function stopAudio() {
   try { window.speechSynthesis?.cancel?.(); } catch {}
 }
 
-function addTopBubble(text, withSpeaker = false) {
+function renderTopBubble(text, withSpeaker = false) {
   topBody.innerHTML = "";
   const bubble = document.createElement("div");
   bubble.className = "bubble me is-latest";
@@ -197,32 +232,43 @@ function addTopBubble(text, withSpeaker = false) {
     <div class="bubble-row">
       <span class="txt">${text}</span>
       ${withSpeaker ? `
-        <button class="spk-icon" id="topSpeakBtn" aria-label="Seslendir">
-          <svg viewBox="0 0 24 24">
-            <path d="M3 10v4h4l5 4V6L7 10H3"></path>
-            <path d="M16 8a4 4 0 0 1 0 8"></path>
-            <path d="M19 5a8 8 0 0 1 0 14"></path>
-          </svg>
-        </button>
-      ` : ""}
+      <button class="spk-icon" id="topSpeakBtn" aria-label="Seslendir">
+        <svg viewBox="0 0 24 24">
+          <path d="M3 10v4h4l5 4V6L7 10H3"></path>
+          <path d="M16 8a4 4 0 0 1 0 8"></path>
+          <path d="M19 5a8 8 0 0 1 0 14"></path>
+        </svg>
+      </button>` : ""}
     </div>
   `;
   topBody.appendChild(bubble);
 }
 
-function addBotBubble(text) {
+function renderBotBubble(text, withSpeaker = false) {
   botBody.innerHTML = "";
   const bubble = document.createElement("div");
   bubble.className = "bubble me is-latest";
-  bubble.innerHTML = `<div class="bubble-row"><span class="txt">${text}</span></div>`;
+  bubble.innerHTML = `
+    <div class="bubble-row">
+      <span class="txt">${text}</span>
+      ${withSpeaker ? `
+      <button class="spk-icon" id="botSpeakBtn" aria-label="Seslendir">
+        <svg viewBox="0 0 24 24">
+          <path d="M3 10v4h4l5 4V6L7 10H3"></path>
+          <path d="M16 8a4 4 0 0 1 0 8"></path>
+          <path d="M19 5a8 8 0 0 1 0 14"></path>
+        </svg>
+      </button>` : ""}
+    </div>
+  `;
   botBody.appendChild(bubble);
 }
 
-function setHelpers(topText, botText, botWait = false) {
+function setHelpers(topText, botText, topWait = false, botWait = false) {
   topHelper.textContent = topText || "";
   botHelper.textContent = botText || "";
+  topHelper.className = `helper-text ${topWait ? "helper-wait" : "helper-ready"}`;
   botHelper.className = `helper-text ${botWait ? "helper-wait" : "helper-ready"}`;
-  topHelper.className = "helper-text helper-ready";
 }
 
 async function refreshHeaderTokens() {
@@ -303,7 +349,7 @@ async function speakText(text, langCode) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         text: clean,
-        lang: langCode,
+        lang: TTS_LANG_MAP[langCode] || "tr",
         user_id: userId,
         module: "geography_languages",
         voice: "auto",
@@ -322,7 +368,7 @@ async function speakText(text, langCode) {
 
   try {
     const u = new SpeechSynthesisUtterance(clean);
-    u.lang = langCode === "tr" ? "tr-TR" : "en-US";
+    u.lang = STT_LANG_MAP[langCode] || "tr-TR";
     u.rate = 0.95;
     u.pitch = 1.0;
     window.speechSynthesis.cancel();
@@ -330,15 +376,14 @@ async function speakText(text, langCode) {
   } catch {}
 }
 
-async function translateNow() {
-  const rawText = String(sourceText || "").trim();
+async function translateSide(fromText, fromLang, toLang, targetBodyRenderer, targetSpeakerHook) {
+  const rawText = String(fromText || "").trim();
   if (!rawText) return;
 
   const canRun = await ensureTranslationAccess();
   if (!canRun) return;
 
   document.body.classList.add("is-translating");
-  setHelpers("Çeviri hazırlanıyor...", "Lütfen bekleyiniz...", true);
 
   try {
     const res = await fetch(`${API_BASE}/api/translate_ai`, {
@@ -346,8 +391,8 @@ async function translateNow() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         text: rawText,
-        from_lang: botLang,
-        to_lang: topLang,
+        from_lang: fromLang,
+        to_lang: toLang,
         mode: "cultural",
         cultural: true,
         use_ai: true,
@@ -368,8 +413,8 @@ async function translateNow() {
       throw new Error(json?.detail || "Çeviri alınamadı");
     }
 
-    addTopBubble(translated, true);
-    document.getElementById("topSpeakBtn")?.addEventListener("click", () => speakText(translated, topLang));
+    targetBodyRenderer(translated, true);
+    targetSpeakerHook(translated);
 
     try {
       const usage = await commitUsage({
@@ -383,8 +428,8 @@ async function translateNow() {
         }),
         meta: {
           surface: "geography_languages",
-          from_lang: botLang,
-          to_lang: topLang,
+          from_lang: fromLang,
+          to_lang: toLang,
           input_chars: rawText.length,
           output_chars: translated.length,
           billable_chars: Math.max(rawText.length, translated.length)
@@ -402,31 +447,34 @@ async function translateNow() {
       }
     }
 
-    await speakText(translated, topLang);
-    setHelpers("Hazır", "Konuşmak için mikrofona dokununuz.");
-  } catch {
-    addTopBubble("Çeviri alınamadı.");
-    setHelpers("Çeviri başarısız", "Konuşmak için mikrofona dokununuz.");
+    await speakText(translated, toLang);
   } finally {
     document.body.classList.remove("is-translating");
   }
 }
 
-function initRecognition() {
+function initRecognizer(side) {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) return null;
 
   const rec = new SR();
-  rec.lang = STT_LANG_MAP[botLang] || "tr-TR";
+  const langCode = side === "top" ? topLang : botLang;
+  rec.lang = STT_LANG_MAP[langCode] || "tr-TR";
   rec.interimResults = true;
   rec.continuous = false;
   rec.maxAlternatives = 1;
 
   rec.onstart = () => {
-    listening = true;
+    if (side === "top") {
+      topListening = true;
+      topMic.classList.add("listening");
+      setHelpers("Konuşuyorsunuz...", "Hazır");
+    } else {
+      botListening = true;
+      botMic.classList.add("listening");
+      setHelpers("Hazır", "Konuşuyorsunuz...");
+    }
     document.body.classList.add("is-listening");
-    botMic.classList.add("listening");
-    setHelpers("Hazır", "Konuşuyorsunuz...");
   };
 
   rec.onresult = (e) => {
@@ -437,45 +485,81 @@ function initRecognition() {
     }
 
     if (finalText.trim()) {
-      sourceText = normalizeInput(sourceText + " " + finalText.trim());
-      addBotBubble(sourceText);
-      translateNow();
+      const clean = normalizeInput(finalText);
+
+      if (side === "top") {
+        topText = normalizeInput(topText + " " + clean);
+        renderTopBubble(topText, true);
+        document.getElementById("topSpeakBtn")?.addEventListener("click", () => speakText(topText, topLang));
+        translateSide(topText, topLang, botLang, renderBotBubble, (translated) => {
+          document.getElementById("botSpeakBtn")?.addEventListener("click", () => speakText(translated, botLang));
+        });
+      } else {
+        botText = normalizeInput(botText + " " + clean);
+        renderBotBubble(botText, true);
+        document.getElementById("botSpeakBtn")?.addEventListener("click", () => speakText(botText, botLang));
+        translateSide(botText, botLang, topLang, renderTopBubble, (translated) => {
+          document.getElementById("topSpeakBtn")?.addEventListener("click", () => speakText(translated, topLang));
+        });
+      }
     }
   };
 
   rec.onerror = () => {
-    listening = false;
-    document.body.classList.remove("is-listening");
-    botMic.classList.remove("listening");
-    setHelpers("Hazır", "Mikrofon başlatılamadı", true);
+    if (side === "top") {
+      topListening = false;
+      topMic.classList.remove("listening");
+      setHelpers("Mikrofon başlatılamadı", botListening ? "Konuşuyorsunuz..." : "Hazır", true, false);
+    } else {
+      botListening = false;
+      botMic.classList.remove("listening");
+      setHelpers(topListening ? "Konuşuyorsunuz..." : "Hazır", "Mikrofon başlatılamadı", false, true);
+    }
+    if (!topListening && !botListening) {
+      document.body.classList.remove("is-listening");
+    }
   };
 
   rec.onend = () => {
-    listening = false;
-    document.body.classList.remove("is-listening");
-    botMic.classList.remove("listening");
-    setHelpers("Hazır", "Konuşmak için mikrofona dokununuz.");
+    if (side === "top") {
+      topListening = false;
+      topMic.classList.remove("listening");
+    } else {
+      botListening = false;
+      botMic.classList.remove("listening");
+    }
+
+    if (!topListening && !botListening) {
+      document.body.classList.remove("is-listening");
+      setHelpers("Hazır", "Konuşmak için mikrofona dokununuz.");
+    }
   };
 
   return rec;
 }
 
-function normalizeInput(value) {
-  return String(value || "").replace(/\s+/g, " ").trim();
-}
+topMic?.addEventListener("click", () => {
+  topRecognizer = initRecognizer("top");
+  if (!topRecognizer) return;
 
-botMic?.addEventListener("click", () => {
-  recognizer = initRecognition();
-  if (!recognizer) return;
-
-  if (listening) {
-    try { recognizer.stop(); } catch {}
+  if (topListening) {
+    try { topRecognizer.stop(); } catch {}
     return;
   }
 
-  try {
-    recognizer.start();
-  } catch {}
+  try { topRecognizer.start(); } catch {}
+});
+
+botMic?.addEventListener("click", () => {
+  botRecognizer = initRecognizer("bottom");
+  if (!botRecognizer) return;
+
+  if (botListening) {
+    try { botRecognizer.stop(); } catch {}
+    return;
+  }
+
+  try { botRecognizer.start(); } catch {}
 });
 
 topLangBtn?.addEventListener("click", (e) => {
@@ -504,11 +588,12 @@ document.addEventListener("click", (e) => {
 }, { capture: true });
 
 clearBtn?.addEventListener("click", () => {
-  sourceText = "";
+  topText = "";
+  botText = "";
   stopAudio();
-  addBotBubble("Henüz konuşma alınmadı.");
-  addTopBubble("Çeviri burada görünecek.");
-  setHelpers("Hedef dili seçin", "Konuşmak için mikrofona dokununuz.");
+  renderBotBubble("Henüz konuşma alınmadı.");
+  renderTopBubble("Henüz konuşma alınmadı.");
+  setHelpers("Hazır", "Konuşmak için mikrofona dokununuz.");
 });
 
 homeLink?.addEventListener("click", () => {
@@ -528,9 +613,9 @@ function initPools() {
 
 async function init() {
   initPools();
-  addBotBubble("Henüz konuşma alınmadı.");
-  addTopBubble("Çeviri burada görünecek.");
-  setHelpers("Hedef dili seçin", "Konuşmak için mikrofona dokununuz.");
+  renderBotBubble("Henüz konuşma alınmadı.");
+  renderTopBubble("Henüz konuşma alınmadı.");
+  setHelpers("Hazır", "Konuşmak için mikrofona dokununuz.");
   await refreshHeaderTokens();
 }
 
