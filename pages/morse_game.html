@@ -17,6 +17,7 @@
   --green:#00e676;
   --border: rgba(255,255,255,0.10);
   --safeB: env(safe-area-inset-bottom, 0px);
+  --safeT: env(safe-area-inset-top, 0px);
   --shellLift: 0px;
   --grad: linear-gradient(135deg,#a5b4fc 0%, #6366f1 55%, #ec4899 100%);
 }
@@ -44,59 +45,57 @@ body{
 }
 
 #pageContent{
-  height:100%;
-  padding:10px 12px calc(14px + var(--safeB) + var(--shellLift)) 12px;
-  overflow-y:auto;
-  overflow-x:hidden;
-  scrollbar-width:none;
+  height:100dvh;
+  padding:8px 10px calc(10px + var(--safeB) + var(--shellLift)) 10px;
+  overflow:hidden;
 }
-#pageContent::-webkit-scrollbar{ display:none; }
 
 .app{
   max-width:480px;
-  min-height:100%;
+  height:100%;
   margin:0 auto;
   display:flex;
   flex-direction:column;
-  gap:10px;
+  gap:8px;
 }
 
 .hud{
   display:grid;
   grid-template-columns: 1fr 1fr 1fr 1fr;
-  gap:8px;
-  padding:10px;
-  border-radius:20px;
+  gap:6px;
+  padding:8px;
+  border-radius:18px;
   border:1px solid var(--border);
   background:rgba(255,255,255,0.04);
   backdrop-filter:blur(14px);
   box-shadow:0 18px 40px rgba(0,0,0,0.35);
   align-items:center;
+  flex:0 0 auto;
 }
 
 .hudCard{
-  min-height:58px;
-  border-radius:16px;
+  min-height:52px;
+  border-radius:14px;
   border:1px solid rgba(255,255,255,.08);
   background:rgba(255,255,255,.04);
   display:flex;
   flex-direction:column;
   align-items:center;
   justify-content:center;
-  gap:3px;
+  gap:2px;
   text-align:center;
-  padding:4px;
+  padding:4px 3px;
 }
 
 .hudBig{
   font-family:"Space Grotesk",sans-serif;
-  font-size:16px;
+  font-size:15px;
   font-weight:900;
   line-height:1;
 }
 
 .hudSmall{
-  font-size:10px;
+  font-size:9px;
   font-weight:900;
   opacity:.6;
   letter-spacing:1px;
@@ -104,15 +103,16 @@ body{
 
 .main{
   flex:1;
-  border-radius:24px;
+  min-height:0;
+  border-radius:22px;
   border:1px solid var(--border);
   background: rgba(255,255,255,0.03);
-  padding:12px;
+  padding:10px;
   display:flex;
   flex-direction:column;
-  gap:10px;
+  gap:8px;
   position:relative;
-  overflow:visible;
+  overflow:hidden;
   backdrop-filter: blur(14px);
   box-shadow:0 28px 60px rgba(0,0,0,.45);
 }
@@ -123,16 +123,18 @@ body{
   font-weight:900;
   text-transform:uppercase;
   letter-spacing:1px;
-  min-height:18px;
-  font-size:13px;
+  min-height:16px;
+  font-size:12px;
+  flex:0 0 auto;
 }
 
 .progressBar{
-  height:10px;
+  height:8px;
   border-radius:999px;
   background:rgba(255,255,255,.06);
   overflow:hidden;
   border:1px solid rgba(255,255,255,.08);
+  flex:0 0 auto;
 }
 
 .progressFill{
@@ -143,33 +145,34 @@ body{
 }
 
 .morseBoard{
-  border-radius:22px;
-  padding:18px 14px;
+  border-radius:20px;
+  padding:14px 12px;
   border:1px solid rgba(255,255,255,.10);
   background:
     radial-gradient(circle at top left, rgba(0,243,255,.08), transparent 30%),
     rgba(255,255,255,.03);
   box-shadow:0 12px 30px rgba(0,0,0,.18);
+  flex:0 0 auto;
 }
 
 .morseLabel{
   text-align:center;
-  font-size:11px;
+  font-size:10px;
   font-weight:900;
   opacity:.58;
   letter-spacing:2px;
-  margin-bottom:10px;
+  margin-bottom:8px;
 }
 
 .morseCode{
   text-align:center;
   font-family:"Space Grotesk",sans-serif;
-  font-size:28px;
+  font-size:24px;
   font-weight:900;
-  line-height:1.45;
+  line-height:1.35;
   color:var(--gold);
-  letter-spacing:3px;
-  min-height:86px;
+  letter-spacing:2px;
+  min-height:64px;
   display:flex;
   align-items:center;
   justify-content:center;
@@ -179,20 +182,21 @@ body{
 .answerWrap{
   display:flex;
   flex-direction:column;
-  gap:10px;
+  gap:8px;
+  flex:0 0 auto;
 }
 
 .answerInput{
   width:100%;
-  min-height:56px;
-  border-radius:18px;
+  min-height:50px;
+  border-radius:16px;
   border:1px solid rgba(255,255,255,.12);
   background:rgba(255,255,255,.04);
   color:#fff;
-  font-size:18px;
+  font-size:17px;
   font-weight:900;
   text-align:center;
-  padding:14px 12px;
+  padding:12px 10px;
   text-transform:uppercase;
   user-select:text;
 }
@@ -216,13 +220,14 @@ body{
 
 .btnMain{
   width:100%;
-  padding:15px 12px;
-  border-radius:18px;
+  min-height:46px;
+  padding:12px 10px;
+  border-radius:16px;
   border:none;
   background:var(--cyan);
   color:#000;
   font-weight:1000;
-  font-size:14px;
+  font-size:13px;
   cursor:pointer;
 }
 
@@ -247,39 +252,42 @@ body{
 
 .infoBox{
   display:grid;
-  gap:8px;
+  gap:6px;
+  flex:0 0 auto;
 }
 
 .infoCard{
-  border-radius:18px;
+  border-radius:16px;
   border:1px solid rgba(255,255,255,.10);
   background:rgba(255,255,255,.04);
-  padding:12px;
+  padding:10px;
   display:none;
 }
 
 .infoCard.show{ display:block; }
 
 .infoTitle{
-  font-size:11px;
+  font-size:10px;
   font-weight:900;
   letter-spacing:1px;
   opacity:.58;
-  margin-bottom:6px;
+  margin-bottom:5px;
 }
 
 .infoValue{
-  font-size:18px;
+  font-size:16px;
   font-weight:900;
   color:#fff;
+  line-height:1.2;
 }
 
 .feedback{
-  min-height:24px;
+  min-height:18px;
   text-align:center;
-  font-size:13px;
+  font-size:12px;
   font-weight:900;
-  letter-spacing:.4px;
+  letter-spacing:.3px;
+  flex:0 0 auto;
 }
 .feedback.ok{ color:var(--green); }
 .feedback.bad{ color:#ff8ba7; }
@@ -294,7 +302,7 @@ body{
   display:none;
   align-items:center;
   justify-content:center;
-  padding:20px;
+  padding:18px;
 }
 
 .modal.show{ display:flex; }
@@ -303,8 +311,8 @@ body{
   width:100%;
   max-width:400px;
   background:#111;
-  padding:22px;
-  border-radius:24px;
+  padding:20px;
+  border-radius:22px;
   border:1px solid rgba(255,255,255,.10);
   text-align:center;
   box-shadow:0 25px 70px rgba(0,0,0,.7);
@@ -326,10 +334,10 @@ body{
   border:1px solid rgba(255,255,255,.12);
   color:#fff;
   border-radius:16px;
-  padding:14px 10px;
+  padding:12px 8px;
   cursor:pointer;
   transition:.16s ease;
-  min-height:84px;
+  min-height:78px;
   display:flex;
   flex-direction:column;
   align-items:center;
@@ -338,7 +346,7 @@ body{
   font-weight:800;
 }
 
-.langBtn .flag{ font-size:28px; }
+.langBtn .flag{ font-size:26px; }
 
 .langBtn.active, .levelBtn.active{
   border-color: rgba(0,255,157,.30);
@@ -350,7 +358,7 @@ body{
   text-align:left;
   margin:16px 0 8px;
   padding-left:18px;
-  line-height:1.8;
+  line-height:1.7;
   color:rgba(255,255,255,.86);
   font-size:14px;
 }
@@ -365,17 +373,103 @@ body{
 }
 
 @media (max-width:420px){
+  #pageContent{
+    padding:6px 8px calc(8px + var(--safeB) + var(--shellLift)) 8px;
+  }
+  .app{ gap:6px; }
   .hud{
     grid-template-columns:1fr 1fr;
+    gap:6px;
+    padding:7px;
   }
-  .btnRow{
-    grid-template-columns:1fr;
+  .hudCard{ min-height:48px; }
+  .hudBig{ font-size:14px; }
+  .hudSmall{ font-size:8px; }
+
+  .main{
+    padding:8px;
+    gap:7px;
+    border-radius:20px;
   }
-  .btnGrid{
-    grid-template-columns:1fr;
-  }
+
+  .statusTxt{ font-size:11px; }
+  .morseBoard{ padding:12px 10px; }
   .morseCode{
-    font-size:24px;
+    font-size:21px;
+    min-height:56px;
+  }
+
+  .answerInput{
+    min-height:46px;
+    font-size:16px;
+    padding:10px 8px;
+  }
+
+  .btnMain{
+    min-height:42px;
+    font-size:12px;
+    padding:10px 8px;
+  }
+
+  .infoValue{ font-size:15px; }
+  .feedback{ font-size:11px; }
+
+  .modal{ padding:14px; }
+  .card{
+    padding:18px;
+    border-radius:20px;
+  }
+}
+
+@media (max-height:760px){
+  .hudCard{ min-height:46px; }
+  .hudBig{ font-size:14px; }
+  .hudSmall{ font-size:8px; }
+
+  .main{
+    padding:8px;
+    gap:6px;
+  }
+
+  .statusTxt{
+    font-size:11px;
+    min-height:14px;
+  }
+
+  .progressBar{ height:7px; }
+
+  .morseBoard{
+    padding:12px 10px;
+  }
+
+  .morseLabel{
+    font-size:9px;
+    margin-bottom:6px;
+  }
+
+  .morseCode{
+    font-size:20px;
+    min-height:52px;
+  }
+
+  .answerInput{
+    min-height:44px;
+    font-size:15px;
+    padding:10px 8px;
+  }
+
+  .btnMain{
+    min-height:40px;
+    font-size:11px;
+    padding:9px 8px;
+  }
+
+  .infoCard{ padding:8px; }
+  .infoTitle{ font-size:9px; }
+  .infoValue{ font-size:14px; }
+  .feedback{
+    font-size:11px;
+    min-height:16px;
   }
 }
 </style>
