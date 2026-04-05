@@ -13,12 +13,12 @@
   <style>
     :root{
       --txt:#fff;
-      --muted:rgba(255,255,255,.76);
+      --muted:rgba(255,255,255,.78);
       --line:rgba(255,255,255,.12);
-      --red1:#7f1515;
-      --red2:#c61f1f;
-      --blue1:#10355e;
-      --blue2:#2e66d7;
+      --red1:#7c1414;
+      --red2:#d11616;
+      --blue1:#10365f;
+      --blue2:#2d67d7;
       --safe-bottom:env(safe-area-inset-bottom,0px);
       --shadow:0 18px 42px rgba(0,0,0,.30);
     }
@@ -32,30 +32,32 @@
     html,body{
       margin:0;
       width:100%;
-      min-height:100%;
+      height:100%;
+      overflow:hidden;
       color:var(--txt);
       font-family:'Outfit',sans-serif;
       background:
-        radial-gradient(circle at 18% 8%, rgba(255,255,255,.05), transparent 16%),
-        radial-gradient(circle at 82% 8%, rgba(255,255,255,.05), transparent 16%),
+        radial-gradient(circle at 16% 8%, rgba(255,255,255,.05), transparent 16%),
+        radial-gradient(circle at 84% 8%, rgba(255,255,255,.05), transparent 16%),
         linear-gradient(180deg,#050814,#0a1020 45%,#060b18);
-      overflow:hidden;
     }
 
     #pageContent{
       width:100%;
-      min-height:100dvh;
+      height:100%;
       padding:10px 12px calc(10px + var(--safe-bottom));
       opacity:0;
       transition:opacity .18s ease;
     }
 
-    #pageContent.ready{ opacity:1; }
+    #pageContent.ready{
+      opacity:1;
+    }
 
     .page{
       width:100%;
       max-width:760px;
-      min-height:calc(100dvh - 20px - var(--safe-bottom));
+      height:100%;
       margin:0 auto;
       display:flex;
       flex-direction:column;
@@ -67,7 +69,7 @@
       flex:1;
       min-height:0;
       display:grid;
-      grid-template-rows:1fr 1fr;
+      grid-template-rows:1fr 94px 1fr;
       gap:10px;
     }
 
@@ -113,8 +115,8 @@
 
     .bottom-panel::before{
       background:
-        linear-gradient(90deg, transparent 0 34%, rgba(255,255,255,.9) 35% 37%, transparent 38% 100%),
-        linear-gradient(0deg, transparent 0 20%, rgba(255,255,255,.7) 21% 23%, transparent 24% 100%);
+        linear-gradient(90deg, transparent 0 34%, rgba(255,255,255,.90) 35% 37%, transparent 38% 100%),
+        linear-gradient(0deg, transparent 0 20%, rgba(255,255,255,.70) 21% 23%, transparent 24% 100%);
       transform:scale(1.8);
     }
 
@@ -162,6 +164,26 @@
       justify-content:center;
       text-align:center;
       overflow:auto;
+    }
+
+    .input-wrap{
+      width:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .input-preview{
+      width:100%;
+      min-height:96px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      font-size:24px;
+      line-height:1.45;
+      font-weight:900;
+      word-break:break-word;
     }
 
     .out-wrap{
@@ -212,41 +234,30 @@
       flex:0 0 auto;
     }
 
-    .input-wrap{
-      width:100%;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-    }
-
-    .input-preview{
-      width:100%;
-      min-height:96px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      text-align:center;
-      font-size:24px;
-      line-height:1.45;
+    .status{
+      position:relative;
+      z-index:2;
+      margin-top:12px;
+      min-height:20px;
+      font-size:13px;
       font-weight:900;
-      word-break:break-word;
+      color:rgba(255,255,255,.84);
+      text-align:center;
+      flex:0 0 auto;
     }
 
     .center-row{
       position:relative;
       z-index:10;
-      height:90px;
       display:flex;
       align-items:center;
       justify-content:center;
-      margin:-4px 0;
       pointer-events:none;
     }
 
     .center-bar{
       width:100%;
-      max-width:720px;
-      height:86px;
+      height:94px;
       border-radius:28px;
       background:linear-gradient(180deg, rgba(5,6,12,.96), rgba(8,10,18,.96));
       border:1px solid rgba(255,255,255,.10);
@@ -256,6 +267,8 @@
       justify-content:space-between;
       padding:0 16px;
       pointer-events:auto;
+      position:relative;
+      overflow:visible;
     }
 
     .side-action{
@@ -272,8 +285,8 @@
 
     .center-logo{
       position:relative;
-      width:106px;
-      height:106px;
+      width:108px;
+      height:108px;
       flex:0 0 auto;
       display:flex;
       align-items:center;
@@ -292,12 +305,22 @@
       width:10px;
       height:10px;
       border-radius:50%;
-      background:#22c55e;
-      box-shadow:0 0 12px rgba(34,197,94,.72);
+      box-shadow:0 0 12px currentColor;
     }
 
-    .center-logo::before{ left:-18px; transform:translateY(-50%); }
-    .center-logo::after{ right:-18px; transform:translateY(-50%); }
+    .center-logo::before{
+      left:-18px;
+      transform:translateY(-50%);
+      color:#e11d48;
+      background:#e11d48;
+    }
+
+    .center-logo::after{
+      right:-18px;
+      transform:translateY(-50%);
+      color:#22c55e;
+      background:#22c55e;
+    }
 
     .center-logo-text{
       font-family:'Space Grotesk',sans-serif;
@@ -354,18 +377,6 @@
       100%{ transform:scale(.92); opacity:.8; }
     }
 
-    .status{
-      position:relative;
-      z-index:2;
-      margin-top:12px;
-      min-height:20px;
-      font-size:13px;
-      font-weight:900;
-      color:rgba(255,255,255,.82);
-      flex:0 0 auto;
-      text-align:center;
-    }
-
     .toast{
       position:fixed;
       left:50%;
@@ -385,7 +396,9 @@
       max-width:min(92vw,560px);
     }
 
-    .toast.show{ transform:translateX(-50%) translateY(0); }
+    .toast.show{
+      transform:translateX(-50%) translateY(0);
+    }
 
     .modal-backdrop{
       position:fixed;
@@ -400,7 +413,9 @@
       padding:18px;
     }
 
-    .modal-backdrop.show{ display:flex; }
+    .modal-backdrop.show{
+      display:flex;
+    }
 
     .modal{
       width:min(92vw,520px);
@@ -455,7 +470,7 @@
     @media (max-width:640px){
       #gokturkOutput{ font-size:26px; }
       .input-preview{ font-size:21px; min-height:84px; }
-      .center-bar{ height:78px; padding:0 10px; }
+      .center-bar{ height:82px; padding:0 10px; }
       .side-action{ min-width:102px; font-size:14px; }
       .center-logo{ width:94px; height:94px; }
       .mic-btn{ width:108px; height:108px; font-size:40px; }
