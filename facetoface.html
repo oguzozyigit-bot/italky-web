@@ -420,7 +420,7 @@
 
     .mode-flag{
       position:absolute;
-      right:66px;
+      left:18px;
       top:12px;
       min-width:84px;
       height:42px;
@@ -619,7 +619,7 @@
         min-width:40px;
       }
       .mode-flag{
-        right:60px;
+        left:14px;
         top:10px;
         min-width:74px;
         height:40px;
@@ -673,7 +673,7 @@
 
     .modal-actions{
       display:grid;
-      grid-template-columns:1fr 1fr;
+      grid-template-columns:1fr;
       gap:10px;
       margin-top:16px;
     }
@@ -694,9 +694,36 @@
     }
 
     .modal-btn.secondary{
-      background:rgba(255,255,255,.06);
+      display:none;
+    }
+
+    .mini-toast{
+      position:fixed;
+      left:50%;
+      bottom:calc(24px + env(safe-area-inset-bottom, 0px));
+      transform:translateX(-50%) translateY(120px);
+      min-height:44px;
+      padding:10px 16px;
+      border-radius:16px;
+      background:rgba(12,16,28,.96);
       border:1px solid rgba(255,255,255,.10);
       color:#fff;
+      font-size:12px;
+      font-weight:1000;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      max-width:min(92vw,420px);
+      z-index:99999;
+      box-shadow:0 18px 36px rgba(0,0,0,.35);
+      transition:.22s ease;
+      backdrop-filter:blur(14px);
+      pointer-events:none;
+    }
+
+    .mini-toast.show{
+      transform:translateX(-50%) translateY(0);
     }
   </style>
 </head>
@@ -793,15 +820,17 @@
 
   <div class="modal" id="uiModal">
     <div class="modal-card">
-      <h3 class="modal-title" id="uiModalTitle">Üyelik Gerekli</h3>
-      <p class="modal-text" id="uiModalText">Bu özelliği kullanabilmek için üyelik gereklidir.</p>
+      <h3 class="modal-title" id="uiModalTitle">Bilgi</h3>
+      <p class="modal-text" id="uiModalText">Tamam</p>
       <div class="modal-actions">
-        <button class="modal-btn primary" id="uiModalGo">Üyelik Paketlerini Gör</button>
-        <button class="modal-btn secondary" id="uiModalClose">Atla</button>
+        <button class="modal-btn primary" id="uiModalGo">Tamam</button>
+        <button class="modal-btn secondary" id="uiModalClose">Kapat</button>
       </div>
     </div>
   </div>
 
-  <script type="module" src="/js/facetoface_page.js?v=FACE2FACE_OFFLINE_LOCKED_V10"></script>
+  <div class="mini-toast" id="miniToast"></div>
+
+  <script type="module" src="/js/facetoface_page.js?v=FACE2FACE_OFFLINE_LOCKED_V11"></script>
 </body>
 </html>
