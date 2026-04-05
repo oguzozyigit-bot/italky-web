@@ -601,4 +601,22 @@ homeLink?.addEventListener("click", () => {
 });
 
 function initPools() {
-  TOP_LANGS = get
+  TOP_LANGS = getFullLangPool();
+  BOT_LANGS = buildGeoPool(TOP_LANGS);
+
+  if (!TOP_LANGS.find((x) => x.code === topLang)) topLang = "tr";
+  if (!BOT_LANGS.find((x) => x.code === botLang)) botLang = BOT_LANGS[0]?.code || "kmr";
+
+  topLangTxt.textContent = labelOf(TOP_LANGS, topLang);
+  botLangTxt.textContent = labelOf(BOT_LANGS, botLang);
+}
+
+async function init() {
+  initPools();
+  renderBotBubble("Henüz konuşma alınmadı.");
+  renderTopBubble("Henüz konuşma alınmadı.");
+  setHelpers("Hazır", "Konuşmak için mikrofona dokununuz.");
+  await refreshHeaderTokens();
+}
+
+init();
