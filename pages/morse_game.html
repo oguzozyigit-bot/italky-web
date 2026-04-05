@@ -437,7 +437,7 @@
       margin:16px 0;
     }
 
-    .lang-btn, .level-btn{
+    .lang-btn{
       min-height:82px;
       border-radius:16px;
       border:1px solid var(--border);
@@ -452,7 +452,7 @@
       font-weight:800;
     }
     .lang-btn .flag{font-size:28px}
-    .lang-btn.active, .level-btn.active{
+    .lang-btn.active{
       border-color:rgba(34,211,238,.35);
       box-shadow:0 0 0 1px rgba(34,211,238,.18), 0 0 18px rgba(34,211,238,.10);
       background:rgba(34,211,238,.08);
@@ -583,25 +583,26 @@
       <h2 style="margin:0 0 10px;color:var(--gold);font-family:'Space Grotesk',sans-serif;">KURALLAR</h2>
       <ul class="rulesList">
         <li>Mors kodunu dinle ve oku.</li>
-        <li>Kontrol yerine doğrudan cevap ver.</li>
+        <li>Doğrudan cevap ver.</li>
         <li>Yanlış cevapta 1 can düşer.</li>
         <li>3 canla başlarsın.</li>
         <li>İpucu veya anlam almadan doğru cevap verirsen 1 can kazanırsın.</li>
         <li>Maksimum can 5’tir.</li>
-        <li>Alttaki harf ve sayılara basınca o karakterin Mors sesi çalar.</li>
-        <li>Hakların bitince oyun sona erer.</li>
+        <li>Cevaptan sonra doğru kelime ekranda görünür, TTS ile okunur ve Türkçe anlamı gösterilir.</li>
+        <li>Sonra Devam veya Üst Menüye Dön popup’ı gelir.</li>
       </ul>
       <button class="mainbtn" id="startBtn">ANLADIM, BAŞLA</button>
     </div>
   </div>
 
-  <div class="modal-wrap hidden" id="endModal">
+  <div class="modal-wrap hidden" id="answerModal">
     <div class="modal-card">
-      <h2 id="endTitle" style="margin:0 0 10px;color:var(--green);font-family:'Space Grotesk',sans-serif;">OYUN BİTTİ</h2>
-      <div id="endStats" style="text-align:left; margin:18px 0; font-size:15px; line-height:1.9;"></div>
+      <h2 id="answerTitle" style="margin:0 0 10px;color:var(--green);font-family:'Space Grotesk',sans-serif;">DOĞRU CEVAP</h2>
+      <div id="answerWord" style="font-size:34px;font-weight:1000;letter-spacing:2px;margin-top:10px;"></div>
+      <div id="answerMeaning" style="margin-top:14px;font-size:16px;line-height:1.7;color:#9df0b9;"></div>
       <div class="resultActions">
         <button class="mainbtn sec" id="btnTopMenu">ÜST MENÜYE DÖN</button>
-        <button class="mainbtn" id="btnNewGame">YENİ OYUN</button>
+        <button class="mainbtn" id="btnContinue">DEVAM</button>
       </div>
     </div>
   </div>
@@ -615,11 +616,11 @@ mountShell({ scroll:"none" });
 const $ = id => document.getElementById(id);
 
 const LANGS = {
-  en:{ name:"İngilizce", flag:"🇬🇧" },
-  de:{ name:"Almanca", flag:"🇩🇪" },
-  fr:{ name:"Fransızca", flag:"🇫🇷" },
-  es:{ name:"İspanyolca", flag:"🇪🇸" },
-  it:{ name:"İtalyanca", flag:"🇮🇹" }
+  en:{ name:"İngilizce", flag:"🇬🇧", bcp:"en-US" },
+  de:{ name:"Almanca", flag:"🇩🇪", bcp:"de-DE" },
+  fr:{ name:"Fransızca", flag:"🇫🇷", bcp:"fr-FR" },
+  es:{ name:"İspanyolca", flag:"🇪🇸", bcp:"es-ES" },
+  it:{ name:"İtalyanca", flag:"🇮🇹", bcp:"it-IT" }
 };
 
 const MORSE = {
@@ -634,6 +635,7 @@ const MORSE = {
 const GAME_LANG_KEY = "italky_morse_lang";
 const GAME_PB_PREFIX = "italky_morse_pb_";
 const SET_SIZE = 15;
+const MAX_LIVES = 5;
 
 let currentLang = localStorage.getItem(GAME_LANG_KEY) || "en";
 let puzzles = [];
@@ -649,8 +651,8 @@ let currentPuzzle = null;
 let hintUsed = false;
 let meaningUsed = false;
 let currentLegendTab = "letters";
-
 let audioCtx = null;
+
 function getAudioCtx(){
   try{
     if(!audioCtx){
@@ -689,7 +691,6 @@ function beep({freq=440,duration=.08,type="sine",gain=.03,when=0}){
 function playGood(){ beep({freq:620,duration:.08,type:"triangle",gain:.05}); beep({freq:820,duration:.10,type:"triangle",gain:.05,when:.08}); }
 function playBad(){ beep({freq:180,duration:.12,type:"sawtooth",gain:.05}); beep({freq:140,duration:.14,type:"sawtooth",gain:.04,when:.06}); }
 function playLifeUp(){ beep({freq:560,duration:.08,type:"triangle",gain:.05}); beep({freq:760,duration:.10,type:"triangle",gain:.05,when:.08}); beep({freq:980,duration:.12,type:"triangle",gain:.05,when:.16}); }
-function playFinish(){ beep({freq:700,duration:.10,type:"triangle",gain:.05}); beep({freq:920,duration:.12,type:"triangle",gain:.05,when:.10}); beep({freq:1180,duration:.15,type:"triangle",gain:.05,when:.22}); }
 
 ["click","touchstart","pointerdown"].forEach(evt => {
   window.addEventListener(evt, () => unlockAudio(), { passive:true, once:true });
@@ -711,6 +712,35 @@ function toast(msg, color = "var(--blue)"){
   $("resInfo").style.opacity = "1";
   clearTimeout(window.__morseToast);
   window.__morseToast = setTimeout(() => $("resInfo").style.opacity = "0", 1800);
+}
+
+async function speakWord(text){
+  const t = String(text || "").trim();
+  if (!t) return;
+  await unlockAudio();
+
+  try {
+    if (window.NativeTTS && typeof window.NativeTTS.speak === "function") {
+      window.NativeTTS.speak(t, LANGS[currentLang]?.bcp || "en-US");
+      return;
+    }
+  } catch {}
+
+  try {
+    if (!("speechSynthesis" in window)) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(t);
+    u.lang = LANGS[currentLang]?.bcp || "en-US";
+    u.rate = 0.9;
+    u.pitch = 1;
+    u.volume = 1;
+    const voices = window.speechSynthesis.getVoices?.() || [];
+    const found = voices.find(v =>
+      String(v.lang || "").toLowerCase().startsWith((LANGS[currentLang]?.bcp || "en").split("-")[0].toLowerCase())
+    );
+    if (found) u.voice = found;
+    window.speechSynthesis.speak(u);
+  } catch {}
 }
 
 function getPublicLangUrl(langCode){
@@ -906,7 +936,7 @@ function resetHelpers(){
 }
 
 async function loadPuzzle(){
-  if (lives <= 0) return showFinal(true);
+  if (lives <= 0) return;
   if (currentIdx >= puzzles.length) return showFinal(false);
 
   currentPuzzle = puzzles[currentIdx];
@@ -920,6 +950,31 @@ async function loadPuzzle(){
   setTimeout(() => {
     playMorseAudio($("morseDisplay").textContent);
   }, 180);
+}
+
+function showAnswerPopup(isCorrect){
+  $("answerTitle").textContent = isCorrect ? "DOĞRU CEVAP" : "YANLIŞ CEVAP";
+  $("answerTitle").style.color = isCorrect ? "var(--green)" : "var(--red)";
+  $("answerWord").textContent = normalize(currentPuzzle.w);
+  $("answerMeaning").textContent = currentPuzzle.tr || "";
+  $("answerModal").classList.remove("hidden");
+
+  setTimeout(() => {
+    speakWord(currentPuzzle.w);
+  }, 120);
+}
+
+function proceedNextRound(){
+  $("answerModal").classList.add("hidden");
+
+  if (lives <= 0) {
+    showFinal(true);
+    return;
+  }
+
+  currentIdx++;
+  isBusy = false;
+  loadPuzzle();
 }
 
 async function answerCurrent(){
@@ -936,7 +991,9 @@ async function answerCurrent(){
   isBusy = true;
   totalAnswered++;
 
-  if (answer === correct) {
+  const isCorrect = answer === correct;
+
+  if (isCorrect) {
     playGood();
     streak++;
     totalCorrect++;
@@ -947,7 +1004,7 @@ async function answerCurrent(){
 
     let extraText = "";
     if (!hintUsed && !meaningUsed) {
-      if (lives < 5) {
+      if (lives < MAX_LIVES) {
         lives++;
         playLifeUp();
         extraText = " • +1 CAN";
@@ -965,12 +1022,7 @@ async function answerCurrent(){
   }
 
   updateUI();
-
-  setTimeout(() => {
-    currentIdx++;
-    isBusy = false;
-    loadPuzzle();
-  }, 1800);
+  showAnswerPopup(isCorrect);
 }
 
 function openHint(){
@@ -997,6 +1049,7 @@ function showFinal(gameEnded){
 
   const acc = totalAnswered ? Math.round((totalCorrect / totalAnswered) * 100) : 0;
 
+  $("answerModal").classList.add("hidden");
   $("endModal").classList.remove("hidden");
   $("endTitle").textContent = gameEnded ? "OYUN BİTTİ" : "SET TAMAMLANDI";
   $("endTitle").style.color = gameEnded ? "var(--red)" : "var(--green)";
@@ -1007,7 +1060,6 @@ En İyi Seri: <b>🔥 ${maxStreak}</b><br>
 Doğruluk: <b>%${acc}</b>
   `;
   updatePB();
-  playFinish();
 }
 
 async function startGame(){
@@ -1041,6 +1093,7 @@ async function startGame(){
   $("startModal").classList.add("hidden");
   $("rulesModal").classList.add("hidden");
   $("endModal").classList.add("hidden");
+  $("answerModal").classList.add("hidden");
 
   loadPuzzle();
 }
@@ -1056,12 +1109,13 @@ $("toRulesBtn").onclick = async () => {
 };
 
 $("startBtn").onclick = startGame;
+$("btnContinue").onclick = proceedNextRound;
 $("btnNewGame").onclick = startGame;
 
 $("btnTopMenu").onclick = () => {
   const shellMenu = document.querySelector('[data-shell-menu-btn], .shell-menu-btn, .menu-btn, #menuBtn');
   if (shellMenu) {
-    $("endModal").classList.add("hidden");
+    $("answerModal").classList.add("hidden");
     shellMenu.click();
   } else {
     location.href = "/pages/home.html";
@@ -1111,4 +1165,4 @@ window.addEventListener("touchstart", () => {
 }, { once: true });
 </script>
 </body>
-  </html>
+</html>
