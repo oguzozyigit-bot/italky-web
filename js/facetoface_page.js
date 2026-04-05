@@ -612,6 +612,30 @@ async function getCurrentUserId() {
 function getVoicePreference() {
   return String(getFaceVoiceMode() || "auto").trim().toLowerCase();
 }
+async function warmAudio() {
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return;
+
+    if (!audioCtx) {
+      audioCtx = new Ctx();
+    }
+
+    if (audioCtx.state === "suspended") {
+      await audioCtx.resume();
+    }
+
+    const buffer = audioCtx.createBuffer(1, 1, 22050);
+    const source = audioCtx.createBufferSource();
+    source.buffer = buffer;
+    source.connect(audioCtx.destination);
+    source.start(0);
+
+    voicesReady = true;
+  } catch (e) {
+    console.warn("[facetoface warmAudio]", e);
+  }
+}
 
 /* Ücretsiz ses: cihaz sesi
    Ücretli ses: clone varsa API */
