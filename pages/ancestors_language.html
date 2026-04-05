@@ -81,28 +81,11 @@
       font-weight:800;
     }
 
-    .chips{
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-      margin-top:14px;
-    }
-
-    .chip{
-      min-height:34px;
-      padding:8px 12px;
-      border-radius:999px;
-      background:rgba(255,255,255,.05);
-      border:1px solid rgba(255,255,255,.10);
-      font-size:12px;
-      font-weight:1000;
-    }
-
     .split{
       display:grid;
       grid-template-rows:1fr 1fr;
       gap:12px;
-      min-height:620px;
+      min-height:640px;
     }
 
     .side{
@@ -114,33 +97,18 @@
       padding:16px;
       display:flex;
       flex-direction:column;
-      min-height:280px;
+      min-height:290px;
     }
 
     .side::before{
       content:"";
       position:absolute;
       inset:0;
-      opacity:.12;
+      opacity:.14;
       pointer-events:none;
       background-size:cover;
       background-position:center;
       mix-blend-mode:screen;
-    }
-
-    .turkish-side{
-      background:
-        radial-gradient(circle at 12% 16%, rgba(255,255,255,.07), transparent 18%),
-        linear-gradient(180deg, var(--red1), var(--red2));
-    }
-
-    .turkish-side::before{
-      background-image:
-        radial-gradient(circle at 20% 50%, rgba(255,255,255,.95) 0 12%, transparent 13%),
-        radial-gradient(circle at 25% 50%, transparent 0 8%, rgba(255,255,255,.85) 9% 14%, transparent 15%);
-      transform:scale(1.9);
-      filter:blur(6px);
-      opacity:.16;
     }
 
     .gokturk-side{
@@ -155,7 +123,20 @@
         linear-gradient(0deg, transparent 0 22%, rgba(255,255,255,.70) 23% 25%, transparent 26% 100%);
       transform:scale(1.8);
       filter:blur(8px);
-      opacity:.13;
+    }
+
+    .turkish-side{
+      background:
+        radial-gradient(circle at 12% 16%, rgba(255,255,255,.07), transparent 18%),
+        linear-gradient(180deg, var(--red1), var(--red2));
+    }
+
+    .turkish-side::before{
+      background-image:
+        radial-gradient(circle at 20% 50%, rgba(255,255,255,.95) 0 12%, transparent 13%),
+        radial-gradient(circle at 25% 50%, transparent 0 8%, rgba(255,255,255,.85) 9% 14%, transparent 15%);
+      transform:scale(1.9);
+      filter:blur(6px);
     }
 
     .side-top{
@@ -178,7 +159,7 @@
     .side-sub{
       margin-top:6px;
       font-size:12px;
-      color:rgba(255,255,255,.78);
+      color:rgba(255,255,255,.80);
       font-weight:800;
       line-height:1.45;
     }
@@ -208,25 +189,8 @@
       justify-content:center;
     }
 
-    textarea#inputText{
-      width:100%;
-      min-height:150px;
-      resize:none;
-      border:none;
-      background:transparent;
-      color:#fff;
-      font-size:18px;
-      line-height:1.65;
-      font-family:inherit;
-      font-weight:700;
-    }
-
-    textarea#inputText::placeholder{
-      color:rgba(255,255,255,.42);
-    }
-
-    .gokturk-output{
-      font-size:28px;
+    #gokturkOutput{
+      font-size:32px;
       line-height:1.6;
       font-weight:1000;
       letter-spacing:2px;
@@ -237,14 +201,31 @@
       animation:riseIn .45s ease;
     }
 
-    .latin-line{
-      margin-top:12px;
+    #latinOutput{
+      margin-top:14px;
       font-size:15px;
       line-height:1.55;
       text-align:center;
       color:rgba(255,255,255,.84);
       font-weight:800;
       animation:riseIn .55s ease;
+    }
+
+    textarea#inputText{
+      width:100%;
+      min-height:150px;
+      resize:none;
+      border:none;
+      background:transparent;
+      color:#fff;
+      font-size:20px;
+      line-height:1.65;
+      font-family:inherit;
+      font-weight:800;
+    }
+
+    textarea#inputText::placeholder{
+      color:rgba(255,255,255,.42);
     }
 
     .toolbar{
@@ -279,11 +260,6 @@
     .btn.secondary{
       background:rgba(255,255,255,.06);
       border:1px solid rgba(255,255,255,.10);
-    }
-
-    .btn:disabled{
-      opacity:.6;
-      cursor:default;
     }
 
     .status{
@@ -386,36 +362,16 @@
     }
 
     @keyframes riseIn{
-      from{
-        opacity:0;
-        transform:translateY(22px);
-      }
-      to{
-        opacity:1;
-        transform:translateY(0);
-      }
+      from{ opacity:0; transform:translateY(22px); }
+      to{ opacity:1; transform:translateY(0); }
     }
 
     @media (max-width:640px){
-      .split{
-        min-height:auto;
-      }
-
-      .toolbar{
-        grid-template-columns:1fr;
-      }
-
-      .gokturk-output{
-        font-size:22px;
-      }
-
-      .hero-title{
-        font-size:24px;
-      }
-
-      .modal-actions{
-        flex-direction:column;
-      }
+      .split{ min-height:auto; }
+      .toolbar{ grid-template-columns:1fr; }
+      #gokturkOutput{ font-size:24px; }
+      .hero-title{ font-size:24px; }
+      .modal-actions{ flex-direction:column; }
     }
   </style>
 </head>
@@ -426,22 +382,39 @@
       <section class="hero">
         <h1 class="hero-title">Ataların Dili</h1>
         <p class="hero-sub">
-          Türkçeden Eski Türkçeye dönüşüm alanı. Sağ tarafta Göktürk alfabesiyle yazım, altında Latin harfli okunuş ve TTS seslendirme bulunur.
+          Türkçeden Eski Türkçeye dönüşüm alanı. Üst tarafta Göktürk alfabesi, altında Latin okunuş ve ücretsiz TTS seslendirme bulunur.
         </p>
-        <div class="chips">
-          <div class="chip">Türkçe → Eski Türkçe</div>
-          <div class="chip">Göktürk Alfabesi</div>
-          <div class="chip">AI Destekli</div>
-          <div class="chip">Ses Ücretsiz</div>
-        </div>
       </section>
 
       <section class="split">
+        <div class="side gokturk-side">
+          <div class="side-top">
+            <div>
+              <h2 class="side-title">Eski Türk Alfabesi</h2>
+              <div class="side-sub">Göktürk yazımı burada görünür. Altında Latin harfli okunuş yer alır.</div>
+            </div>
+            <div class="mini-chip">Göktürk Mavisi</div>
+          </div>
+
+          <div class="text-box">
+            <div id="gokturkOutput">𐱅𐰇𐰼𐰰 𐰖𐰀𐰔𐰃𐰽𐰃</div>
+            <div id="latinOutput">Türük bitigi</div>
+          </div>
+
+          <div class="toolbar">
+            <button id="speakBtn" class="btn primary" type="button">Seslendir</button>
+            <button id="copyBtn" class="btn secondary" type="button">Kopyala</button>
+            <button id="retryBtn" class="btn secondary" type="button">Yeniden</button>
+          </div>
+
+          <div id="rightStatus" class="status">Çıktı burada görünecek</div>
+        </div>
+
         <div class="side turkish-side">
           <div class="side-top">
             <div>
               <h2 class="side-title">Türkçe</h2>
-              <div class="side-sub">Konuş veya yaz. Kaynak metin burada oluşur.</div>
+              <div class="side-sub">Konuş veya yaz. Kaynak metin aşağıdaki alanda oluşur.</div>
             </div>
             <div class="mini-chip">Türk Bayrağı</div>
           </div>
@@ -457,29 +430,6 @@
           </div>
 
           <div id="leftStatus" class="status">Hazır</div>
-        </div>
-
-        <div class="side gokturk-side">
-          <div class="side-top">
-            <div>
-              <h2 class="side-title">Eski Türk Alfabesi</h2>
-              <div class="side-sub">Göktürk yazımı aşağıdan yukarı akış hissiyle görünür. Altında Latin okunuş yer alır.</div>
-            </div>
-            <div class="mini-chip">Göktürk Mavisi</div>
-          </div>
-
-          <div class="text-box">
-            <div id="gokturkOutput" class="gokturk-output">𐱅𐰇𐰼𐰰 𐰖𐰀𐰔𐰃𐰽𐰃</div>
-            <div id="latinOutput" class="latin-line">Türk yazısı</div>
-          </div>
-
-          <div class="toolbar">
-            <button id="speakBtn" class="btn primary" type="button">Seslendir</button>
-            <button id="copyBtn" class="btn secondary" type="button">Kopyala</button>
-            <button id="retryBtn" class="btn secondary" type="button">Yeniden</button>
-          </div>
-
-          <div id="rightStatus" class="status">Çıktı burada görünecek</div>
         </div>
       </section>
 
