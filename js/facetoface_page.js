@@ -1,12 +1,16 @@
+// FILE: /js/facetoface_page.js
+
 import { getLangPoolForSite } from "/js/lang_pool_full.js";
 import { supabase } from "/js/supabase_client.js";
 import { setHeaderTokens } from "/js/ui_shell.js";
+import { ensureFaceToFacePremiumAccess } from "/js/facetoface_premium_gate.js";
 import {
   commitUsage,
-  resolveUsageModule,
-  resolveUsageMode,
   buildUsageNote
 } from "/js/usage_meter.js";
+
+const ttsMemoryCache = new Map();
+const TTS_CACHE_LIMIT = 24;
 
 const API_BASE = "https://italky-api.onrender.com";
 const $ = (id) => document.getElementById(id);
@@ -70,12 +74,17 @@ function isOfflineMode() {
   return getRuntimeMode() === "offline";
 }
 
-const RAW_POOL = Array.isArray(getLangPoolForSite("tr")) ? getLangPoolForSite("tr") : [];
+const SITE_LANG = "tr";
 
-const BASE_LANGS = RAW_POOL
+const RAW_LANG_POOL = Array.isArray(getLangPoolForSite(SITE_LANG))
+  ? getLangPoolForSite(SITE_LANG)
+  : [];
+
+const BASE_LANGS = RAW_LANG_POOL
   .map((l) => {
     const code = canonical(l.code);
     if (!code) return null;
+
     return {
       code,
       flag: l.flag || "🌐",
@@ -114,6 +123,7 @@ function getRuntimeLangs() {
 
 function langObj(code) {
   const c = canonical(code);
+
   return (
     getRuntimeLangs().find((x) => x.code === c) ||
     BASE_LANGS.find((x) => x.code === c) || {
@@ -159,7 +169,7 @@ const UI_TEXT = {
     translating: "Wird übersetzt...",
     translateError: "⚠️ Übersetzungsdienst nicht erreichbar",
     micBlocked: "⚠️ Mikrofonberechtigung erforderlich",
-    speechUnsupported: "⚠️ Die Spracherkennung wird auf diesem Gerät nicht unterstützt",
+    speechUnsupported: "⚠️ Spracherkennung wird auf diesem Gerät nicht unterstützt",
   },
   fr: {
     ready: "Touchez le micro pour parler.",
@@ -268,11 +278,11 @@ function isPaidFaceMode() {
 }
 
 function faceUsageModule() {
-  return resolveUsageModule({ surface: "facetoface", ai: isPaidFaceMode() });
+  return isPaidFaceMode() ? "facetoface_ai" : "usage_face_to_face";
 }
 
 function faceUsageMode() {
-  return resolveUsageMode({ ai: isPaidFaceMode() });
+  return isPaidFaceMode() ? "ai" : "normal";
 }
 
 function faceUsageNote(charCount) {
@@ -283,8 +293,8 @@ function faceUsageNote(charCount) {
   if (!paid) {
     return buildUsageNote({
       surface: "facetoface",
-      ai: false,
-      custom: `FaceToFace standart kullanım (${charCount} karakter)`
+      usageKind: "text",
+      mode: "normal"
     });
   }
 
@@ -505,18 +515,15 @@ function renderPop(side) {
   }).join("");
 
   list.querySelectorAll(".pop-item").forEach((el) => {
-    el.onclick = (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-
-      const code = el.getAttribute("data-code") || "en";
+    el.addEventListener("click", () => {
+      const code = el.dataset.code || "en";
       if (side === "top") topLang = canonical(code);
       else botLang = canonical(code);
 
       refreshLangLabels();
-      refreshReadyTextsIfIdle?.();
+      refreshReadyTextsIfIdle();
       closeAllPop();
-    };
+    });
   });
 }
 
@@ -608,84 +615,176 @@ async function getCurrentUserId() {
     return localStorage.getItem("user_id") || null;
   }
 }
-async function warmAudio() {
-  try {
-    const Ctx = window.AudioContext || window.webkitAudioContext;
-    if (!Ctx) return;
 
-    if (!audioCtx) {
-      audioCtx = new Ctx();
-    }
-
-    if (audioCtx.state === "suspended") {
-      await audioCtx.resume();
-    }
-
-    const buffer = audioCtx.createBuffer(1, 1, 22050);
-    const source = audioCtx.createBufferSource();
-    source.buffer = buffer;
-    source.connect(audioCtx.destination);
-    source.start(0);
-
-    voicesReady = true;
-  } catch (e) {
-    console.warn("[facetoface warmAudio]", e);
-  }
+function getSelectedPresetVoice() {
+  return String(localStorage.getItem("facetoface_voice_preset") || "huma").trim().toLowerCase();
 }
 
 function getVoicePreference() {
-  return String(getFaceVoiceMode() || "auto").trim().toLowerCase();
+  const faceMode = getFaceVoiceMode();
+
+  if (["auto", "female", "male", "clone", "preset"].includes(faceMode)) {
+    return faceMode;
+  }
+
+  return String(
+    localStorage.getItem("tts_voice") ||
+    localStorage.getItem("live_interpreter_voice") ||
+    "auto"
+  ).toLowerCase().trim();
 }
-async function warmAudio() {
+
+async function hasReadyVoiceProfile() {
   try {
-    const Ctx = window.AudioContext || window.webkitAudioContext;
-    if (!Ctx) return;
+    const userId = await getCurrentUserId();
+    if (!userId) return false;
 
-    if (!audioCtx) {
-      audioCtx = new Ctx();
-    }
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("tts_voice_ready,tts_voice_id")
+      .eq("id", userId)
+      .maybeSingle();
 
-    if (audioCtx.state === "suspended") {
-      await audioCtx.resume();
-    }
-
-    const buffer = audioCtx.createBuffer(1, 1, 22050);
-    const source = audioCtx.createBufferSource();
-    source.buffer = buffer;
-    source.connect(audioCtx.destination);
-    source.start(0);
-
-    voicesReady = true;
-  } catch (e) {
-    console.warn("[facetoface warmAudio]", e);
+    if (error) return false;
+    return !!data?.tts_voice_ready && !!String(data?.tts_voice_id || "").trim();
+  } catch {
+    return false;
   }
 }
 
-/* Ücretsiz ses: cihaz sesi
-   Ücretli ses: clone varsa API */
-async function speakWithNative(text, langCode) {
-  const clean = String(text || "").trim();
-  if (!clean) return false;
-
+async function warmAudio() {
   try {
-    if (window.NativeTTS && typeof window.NativeTTS.speak === "function") {
-      window.NativeTTS.speak(clean, canonical(langCode));
-      return true;
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (Ctx) {
+      if (!audioCtx) audioCtx = new Ctx();
+      if (audioCtx.state === "suspended") await audioCtx.resume();
     }
   } catch {}
 
-  return false;
+  try {
+    if (window.speechSynthesis) {
+      window.speechSynthesis.getVoices();
+      voicesReady = true;
+    }
+  } catch {}
+}
+
+function buildTtsCacheKey(text, langCode, tone = "neutral") {
+  const voice = getVoicePreference();
+  const finalVoice = voice === "preset" ? getSelectedPresetVoice() : voice;
+
+  return JSON.stringify({
+    t: String(text || "").trim(),
+    l: canonical(langCode),
+    v: String(finalVoice || "auto").trim().toLowerCase(),
+    n: canonTone(tone)
+  });
+}
+
+function rememberTtsCache(key, audioSrc) {
+  if (!key || !audioSrc) return;
+
+  if (ttsMemoryCache.has(key)) {
+    ttsMemoryCache.delete(key);
+  }
+
+  ttsMemoryCache.set(key, audioSrc);
+
+  while (ttsMemoryCache.size > TTS_CACHE_LIMIT) {
+    const firstKey = ttsMemoryCache.keys().next().value;
+    ttsMemoryCache.delete(firstKey);
+  }
+}
+
+async function playCachedAudio(audioSrc, runId) {
+  if (!audioSrc) return false;
+  if (runId !== speakRunId) return false;
+
+  const nextAudio = new Audio(audioSrc);
+  nextAudio.preload = "auto";
+  nextAudio.playsInline = true;
+  nextAudio.crossOrigin = "anonymous";
+
+  await warmAudio();
+  if (runId !== speakRunId) return false;
+
+  currentAudio = nextAudio;
+
+  nextAudio.onended = () => {
+    if (currentAudio === nextAudio) currentAudio = null;
+  };
+
+  nextAudio.onerror = () => {
+    if (currentAudio === nextAudio) currentAudio = null;
+  };
+
+  await nextAudio.play();
+
+  if (runId !== speakRunId) {
+    try {
+      nextAudio.pause();
+      nextAudio.currentTime = 0;
+    } catch {}
+    if (currentAudio === nextAudio) currentAudio = null;
+    return false;
+  }
+
+  return true;
+}
+
+async function speakViaApi(text, langCode, tone = "neutral") {
+  const myRunId = speakRunId;
+  const userId = await getCurrentUserId();
+  const voice = getVoicePreference();
+  const finalVoice = voice === "preset" ? getSelectedPresetVoice() : voice;
+
+  const r = await fetch(`${API_BASE}/api/tts`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      text: String(text || "").trim(),
+      lang: canonical(langCode),
+      user_id: userId,
+      module: "facetoface",
+      voice: finalVoice,
+      tone: canonTone(tone),
+    }),
+  });
+
+  if (myRunId !== speakRunId) return false;
+
+  const j = await r.json().catch(() => null);
+  if (myRunId !== speakRunId) return false;
+
+  if (!r.ok || !j?.ok || !j?.audio_base64) {
+    throw new Error(j?.error || j?.detail || "TTS API unavailable");
+  }
+
+  const audioSrc = `data:audio/mp3;base64,${j.audio_base64}`;
+  const cacheKey = buildTtsCacheKey(text, langCode, tone);
+  rememberTtsCache(cacheKey, audioSrc);
+
+  return await playCachedAudio(audioSrc, myRunId);
 }
 
 function chooseWebVoice(langCode) {
   const voices = window.speechSynthesis?.getVoices?.() || [];
   const bcp = langObj(langCode).bcp.toLowerCase();
   const langBase = canonical(langCode);
+  const pref = getVoicePreference();
 
   let pool = voices.filter((v) => String(v.lang || "").toLowerCase().startsWith(langBase));
   if (!pool.length) pool = voices.filter((v) => String(v.lang || "").toLowerCase() === bcp);
   if (!pool.length) pool = voices;
   if (!pool.length) return null;
+
+  if (pref === "female") {
+    return pool.find((v) => /female|woman|zira|aria|seda|helena|jenny|susan|eva|anna|emma/i.test(v.name)) || pool[0];
+  }
+
+  if (pref === "male") {
+    return pool.find((v) => /male|man|david|mark|george|james|alex|tom|jon|paul/i.test(v.name)) || pool[0];
+  }
 
   return pool[0];
 }
@@ -705,11 +804,20 @@ function speakFallback(text, langCode, tone = "neutral") {
   if (!value) return;
 
   const c = canonical(langCode);
+  const pref = getVoicePreference();
   const toneCfg = toneToFallbackSpeechParams(tone);
 
   try {
     window.speechSynthesis?.cancel?.();
   } catch {}
+
+  if (pref === "auto" && window.NativeTTS && typeof window.NativeTTS.speak === "function") {
+    try {
+      if (myRunId !== speakRunId) return;
+      window.NativeTTS.speak(value, c);
+      return;
+    } catch {}
+  }
 
   if (!window.speechSynthesis) return;
 
@@ -740,76 +848,108 @@ function speakFallback(text, langCode, tone = "neutral") {
   }, 80);
 }
 
-async function speakViaApi(text, langCode, tone = "neutral") {
-  const myRunId = speakRunId;
-  const userId = await getCurrentUserId();
-
-  const r = await fetch(`${API_BASE}/api/tts`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      text: String(text || "").trim(),
-      lang: canonical(langCode),
-      user_id: userId,
-      module: "facetoface",
-      voice: "clone",
-      tone: canonTone(tone),
-    }),
-  });
-
-  if (myRunId !== speakRunId) return false;
-
-  const j = await r.json().catch(() => null);
-  if (myRunId !== speakRunId) return false;
-
-  if (!r.ok || !j?.ok || !j?.audio_base64) {
-    throw new Error(j?.error || j?.detail || "TTS API unavailable");
-  }
-
-  const audio = new Audio(`data:audio/mp3;base64,${j.audio_base64}`);
-  audio.preload = "auto";
-  audio.playsInline = true;
-  currentAudio = audio;
-
-  audio.onended = () => {
-    if (currentAudio === audio) currentAudio = null;
-  };
-
-  audio.onerror = () => {
-    if (currentAudio === audio) currentAudio = null;
-  };
-
-  await warmAudio();
-  if (myRunId !== speakRunId) return false;
-
-  await audio.play();
-  return true;
-}
-
 async function speak(text, langCode, tone = "neutral") {
   const value = String(text || "").trim();
   if (!value) return;
 
   stopAudio();
   const myRunId = ++speakRunId;
-  const voiceMode = getVoicePreference();
+  const voice = getVoicePreference();
 
-  /* Ücretsiz ses → cihaz sesi */
-  if (voiceMode !== "clone") {
-    const nativeOk = await speakWithNative(value, langCode);
+  const cacheKey = buildTtsCacheKey(value, langCode, tone);
+  const cachedAudioSrc = ttsMemoryCache.get(cacheKey);
+
+  if (voice === "auto") {
     if (myRunId !== speakRunId) return;
-
-    if (nativeOk) return;
     speakFallback(value, langCode, tone);
     return;
   }
 
-  /* Kendi sesim → ücretli */
-  try {
-    await speakViaApi(value, langCode, tone);
-  } catch {
-    if (myRunId !== speakRunId) return;
-    speakFallback(value, langCode, tone);
+  if (cachedAudioSrc) {
+    try {
+      await playCachedAudio(cachedAudioSrc, myRunId);
+      return;
+    } catch (e) {
+      console.warn("[facetoface cached audio replay failed]", e);
+      ttsMemoryCache.delete(cacheKey);
+    }
+  }
+
+  if (myRunId !== speakRunId) return;
+
+  let played = false;
+
+  if (voice === "clone") {
+    try {
+      const ready = await hasReadyVoiceProfile();
+      if (myRunId !== speakRunId) return;
+
+      if (!ready) {
+        speakFallback(value, langCode, tone);
+        played = true;
+      } else {
+        const ok = await speakViaApi(value, langCode, tone);
+        if (myRunId !== speakRunId) return;
+        if (ok) played = true;
+        else {
+          speakFallback(value, langCode, tone);
+          played = true;
+        }
+      }
+    } catch (e) {
+      console.warn("[facetoface clone speak fallback]", e);
+      if (myRunId !== speakRunId) return;
+      speakFallback(value, langCode, tone);
+      played = true;
+    }
+  } else {
+    try {
+      const ok = await speakViaApi(value, langCode, tone);
+      if (myRunId !== speakRunId) return;
+      if (ok) played = true;
+      else {
+        speakFallback(value, langCode, tone);
+        played = true;
+      }
+    } catch (e) {
+      console.warn("[facetoface preset speak fallback]", e);
+      if (myRunId !== speakRunId) return;
+      speakFallback(value, langCode, tone);
+      played = true;
+    }
+  }
+
+  if (!played || myRunId !== speakRunId) return;
+
+  if (isPaidFaceVoiceMode()) {
+    Promise.resolve().then(async () => {
+      try {
+        const voiceUsageResult = await commitUsage({
+          module: faceVoiceUsageModule(),
+          usageKind: "voice",
+          charCount: value.length,
+          note: faceVoiceUsageNote(),
+          meta: {
+            surface: "facetoface",
+            lang: canonical(langCode),
+            tone: canonTone(tone),
+            voice_mode: getFaceVoiceMode(),
+            output_chars: value.length,
+            billable_chars: value.length
+          }
+        });
+
+        if (typeof voiceUsageResult?.tokens_after === "number") {
+          try { setHeaderTokens(voiceUsageResult.tokens_after); } catch {}
+        }
+      } catch (e) {
+        if (e?.code === "INSUFFICIENT_TOKENS") {
+          console.warn("[facetoface voice usage] insufficient tokens after playback");
+          return;
+        }
+        console.error("[facetoface voice usage]", e);
+      }
+    });
   }
 }
 
@@ -820,28 +960,32 @@ async function chargeFaceUsage(inputText, outputText, srcLang, dstLang) {
 
   if (billableChars <= 0) return null;
 
-  const result = await commitUsage({
-    module: faceUsageModule(),
-    mode: faceUsageMode(),
-    charCount: billableChars,
-    note: faceUsageNote(billableChars),
-    meta: {
-      surface: "facetoface",
-      from_lang: canonical(srcLang),
-      to_lang: canonical(dstLang),
-      runtime_mode: getRuntimeMode(),
-      translate_mode: getFaceTranslateMode(),
-      voice_mode: getFaceVoiceMode(),
-      input_chars: inLen,
-      output_chars: outLen
-    }
-  });
+  let latestResult = null;
 
-  if (typeof result?.tokens_after === "number") {
-    try { setHeaderTokens(result.tokens_after); } catch {}
+  if (isPaidFaceTextMode()) {
+    latestResult = await commitUsage({
+      module: faceTextUsageModule(),
+      usageKind: "text",
+      charCount: billableChars,
+      note: faceTextUsageNote(),
+      meta: {
+        surface: "facetoface",
+        from_lang: canonical(srcLang),
+        to_lang: canonical(dstLang),
+        translate_mode: getFaceTranslateMode(),
+        voice_mode: getFaceVoiceMode(),
+        input_chars: inLen,
+        output_chars: outLen,
+        billable_chars: billableChars
+      }
+    });
   }
 
-  return result;
+  if (typeof latestResult?.tokens_after === "number") {
+    try { setHeaderTokens(latestResult.tokens_after); } catch {}
+  }
+
+  return latestResult;
 }
 
 function keepLatestVisible(side) {
@@ -879,6 +1023,9 @@ function createSpeakerButton(getText, langCode, tone = "neutral") {
 
     const value = typeof getText === "function" ? String(getText() || "").trim() : "";
     if (!value) return;
+
+    const premiumOk = await ensureCurrentFacePremiumModeAccess();
+    if (!premiumOk) return;
 
     await speak(value, langCode, tone);
   });
@@ -922,7 +1069,7 @@ function clearLatest(side) {
   wrap.querySelectorAll(".bubble.me.is-latest").forEach((el) => el.classList.remove("is-latest"));
 }
 
-async function translateTextOnline(text, from, to, tone = "neutral") {
+async function translateText(text, from, to, tone = "neutral") {
   const src = canonical(from);
   const dst = canonical(to);
   const mode = getFaceTranslateMode();
@@ -969,35 +1116,6 @@ async function translateTextOnline(text, from, to, tone = "neutral") {
   }
 
   return null;
-}
-
-async function translateTextOffline(text, from, to) {
-  const clean = String(text || "").trim();
-  if (!clean) return null;
-
-  try {
-    if (window.AndroidOfflineTranslate?.translate) {
-      const result = await window.AndroidOfflineTranslate.translate(
-        JSON.stringify({
-          text: clean,
-          from: canonical(from),
-          to: canonical(to)
-        })
-      );
-      if (result) return String(result).trim();
-    }
-  } catch (e) {
-    console.warn("offline translate error", e);
-  }
-
-  return clean;
-}
-
-async function translateText(text, from, to, tone = "neutral") {
-  if (isOfflineMode()) {
-    return await translateTextOffline(text, from, to);
-  }
-  return await translateTextOnline(text, from, to, tone);
 }
 
 function buildRecognizer(langCode) {
@@ -1072,6 +1190,10 @@ async function finalizeRecognition(side, text) {
 
   setTranslatingUI(side);
 
+  const speakStatusLang = other === "top" ? topLang : botLang;
+  const speakHelper = other === "top" ? topHelper : botHelper;
+  setHelper(speakHelper, t(speakStatusLang, "translating"), "helper-repeat");
+
   const latestRow = addBubble(other, "me", t(dst, "translating"), {
     latest: true,
     speakLang: dst,
@@ -1092,13 +1214,10 @@ async function finalizeRecognition(side, text) {
   }
 
   try {
-    if (!isOfflineMode()) {
-      await chargeFaceUsage(cleaned, tr, src, dst);
-    }
+    await chargeFaceUsage(cleaned, tr, src, dst);
   } catch (e) {
     if (e?.code === "INSUFFICIENT_TOKENS") {
-      alert("Jetonunuz yetersiz. Jeton Market'e yönlendiriliyorsunuz.");
-      location.href = "/pages/jetonbuy.html";
+      await ensureFaceToFacePremiumAccess();
       return;
     }
     console.error("[facetoface usage]", e);
@@ -1106,14 +1225,12 @@ async function finalizeRecognition(side, text) {
 
   if (latestTxt) {
     latestTxt.textContent = "";
-    const speakPromise = (async () => {
-      await wait(90);
-      await speak(tr, dst, sourceTone);
-    })();
-
+    const speakPromise = speak(tr, dst, sourceTone);
     await typewriteText(latestTxt, tr, other);
     keepLatestVisible(other);
-    await speakPromise;
+    try {
+      await speakPromise;
+    } catch {}
   } else {
     addBubble(other, "me", tr, {
       latest: true,
@@ -1121,8 +1238,9 @@ async function finalizeRecognition(side, text) {
       speakTone: sourceTone,
     });
 
-    await wait(90);
-    await speak(tr, dst, sourceTone);
+    try {
+      await speak(tr, dst, sourceTone);
+    } catch {}
   }
 
   setSystemReadyUI();
@@ -1243,6 +1361,9 @@ function startRecording(side) {
 async function toggleRecording(side) {
   await ensureReady();
 
+  const premiumOk = await ensureCurrentFacePremiumModeAccess();
+  if (!premiumOk) return;
+
   if (recordingSide === side) {
     recognitionFinishedByUser = true;
     setTranslatingUI(side);
@@ -1269,25 +1390,6 @@ async function toggleRecording(side) {
 }
 
 async function warmApis() {
-  if (isOfflineMode()) {
-    try {
-      const { data } = await supabase.auth.getUser();
-      const uid = data?.user?.id;
-      if (!uid) return;
-
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("tokens")
-        .eq("id", uid)
-        .maybeSingle();
-
-      if (typeof profile?.tokens === "number") {
-        setHeaderTokens(profile.tokens);
-      }
-    } catch {}
-    return;
-  }
-
   await Promise.allSettled([
     fetch(`${API_BASE}/healthz`).catch(() => {}),
     fetch(`${API_BASE}/api/translate_ai/health`).catch(() => {}),
@@ -1331,8 +1433,6 @@ function startBoot() {
   bootPromise = (async () => {
     setSystemPreparingUI();
     refreshLangLabels();
-    refreshModeFlag();
-    ensureRuntimeLangsValid();
     pointOrbTo("bot");
 
     await Promise.allSettled([warmApis(), warmAudio()]);
@@ -1367,9 +1467,8 @@ function bindKeyboardButton(el, handler) {
 
 function bind() {
   refreshLangLabels();
-  refreshModeFlag();
-  ensureRuntimeLangsValid();
   unlockOnFirstTouch();
+  startBoot();
 
   topLangBtn?.addEventListener("click", (e) => {
     e.preventDefault();
@@ -1429,48 +1528,7 @@ function bind() {
 
   settingsBtn?.addEventListener("click", (e) => {
     e.preventDefault();
-    location.href = "/pages/facetoface_open.html?edit=1";
-  });
-
-  modeFlag?.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    if (isForcedOffline()) {
-      showToast("Bağlantı yokken sistem otomatik offline modda çalışır");
-      return;
-    }
-
-    const next = isOfflineMode() ? "online" : "offline";
-    setRuntimeMode(next);
-    ensureRuntimeLangsValid();
-    refreshModeFlag();
-    closeAllPop();
-
-    stopAudio();
-    stopRecognizer();
-    recordingSide = null;
-    liveTranscript = "";
-    latestPreviewTranscript = "";
-
-    if (topBody) topBody.innerHTML = "";
-    if (botBody) botBody.innerHTML = "";
-
-    setSystemReadyUI();
-    showToast(next === "offline" ? "Offline mod açıldı" : "Online mod açıldı");
-  });
-
-  window.addEventListener("online", () => {
-    refreshModeFlag();
-    ensureRuntimeLangsValid();
-    refreshReadyTextsIfIdle();
-  });
-
-  window.addEventListener("offline", () => {
-    if (isForcedOffline()) return;
-    refreshModeFlag();
-    ensureRuntimeLangsValid();
-    refreshReadyTextsIfIdle();
+    location.href = "/pages/translation_settings.html?from=facetoface";
   });
 
   topMic?.addEventListener("click", async (e) => {
@@ -1500,7 +1558,7 @@ function bind() {
   });
 
   bindKeyboardButton(settingsBtn, async () => {
-    location.href = "/pages/facetoface_open.html?edit=1";
+    location.href = "/pages/translation_settings.html?from=facetoface";
   });
 
   try {
@@ -1511,13 +1569,6 @@ function bind() {
       window.speechSynthesis.getVoices();
     }
   } catch {}
-
-  /* EN SONA ALINDI */
-  try {
-    startBoot();
-  } catch (e) {
-    console.error("[facetoface startBoot error]", e);
-  }
 }
 
 if (
@@ -1525,14 +1576,9 @@ if (
   !topHelper || !botHelper || !topLangBtn || !botLangBtn ||
   !topLangTxt || !botLangTxt || !popTop || !popBot ||
   !listTop || !listBot || !closeTop || !closeBot ||
-  !clearBtn || !homeLink || !homeBtn || !settingsBtn ||
-  !modeFlag || !modeFlagTxt || !miniToast
+  !clearBtn || !homeLink || !homeBtn
 ) {
   console.error("[facetoface] Gerekli DOM elemanları eksik.");
 } else {
-  try {
-    bind();
-  } catch (e) {
-    console.error("[facetoface bind error]", e);
-  }
+  bind();
 }
