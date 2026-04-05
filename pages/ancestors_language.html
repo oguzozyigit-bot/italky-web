@@ -214,16 +214,17 @@ body{
   box-shadow:0 0 0 1px rgba(255,0,85,.16) inset;
 }
 .runeBig{
-  font-size:34px;
+  font-size:38px;
   line-height:1;
   font-weight:900;
   color:#fff;
 }
 .runeSub{
-  font-size:11px;
+  font-size:10px;
   font-weight:900;
-  color:rgba(255,255,255,.55);
+  color:rgba(255,255,255,.38);
   letter-spacing:1px;
+  text-transform:uppercase;
 }
 
 .controlRow{
@@ -475,7 +476,7 @@ body{
   }
   .qSub{ font-size:11px; }
   .choiceBtn{ min-height:74px; }
-  .runeBig{ font-size:30px; }
+  .runeBig{ font-size:34px; }
   .btnMain{
     min-height:42px;
     font-size:11px;
@@ -512,7 +513,7 @@ body{
     min-height:68px;
     padding:6px;
   }
-  .runeBig{ font-size:28px; }
+  .runeBig{ font-size:32px; }
   .btnMain{
     min-height:38px;
     font-size:11px;
@@ -614,6 +615,7 @@ body{
     <ul class="rulesList">
       <li>Ekranda önce Latin harfi görünür.</li>
       <li>Aşağıdaki dört seçenekten doğru Göktürk işaretini bulursun.</li>
+      <li>Seçeneklerde cevap yazısı görünmez; sadece sembollerden bulursun.</li>
       <li>Doğru seçersen puan alırsın.</li>
       <li>İpucu açarsan puanın biraz düşer.</li>
       <li>Harfin sesini dinleyebilir, alttaki alfabe tablosundaki sembollere dokunup tek tek çalışabilirsin.</li>
@@ -877,7 +879,7 @@ function renderLevels(){
 
 function renderLegend(){
   $("legendGrid").innerHTML = RUNES.map(item => `
-    <button class="legendItem" type="button" data-latin="${item.latin}" data-rune="${item.rune}">
+    <button class="legendItem" type="button" data-latin="${item.latin}">
       <div class="legendRune">${item.rune}</div>
       <div class="legendLatin">${item.latin}</div>
       <div class="legendSound">${item.sound}</div>
@@ -913,7 +915,7 @@ function renderQuestion(){
   $("choiceGrid").innerHTML = options.map(opt => `
     <button class="choiceBtn" type="button" data-latin="${opt.latin}">
       <div class="runeBig">${opt.rune}</div>
-      <div class="runeSub">${opt.sound}</div>
+      <div class="runeSub">SEÇ</div>
     </button>
   `).join("");
 
@@ -958,7 +960,7 @@ function handleChoice(selectedLatin, btnEl){
     showCorrectChoice();
     $("infoCard").classList.add("show");
     $("infoText").textContent = `${game.current.latin} harfinin doğru ata işareti: ${game.current.rune}`;
-    setStatus("TEKRAR DENECEK KADAR KÖTÜ DEĞİL");
+    setStatus("YANLIŞ SEÇİM");
     setFeedback(`Yanlış seçim. Doğru cevap ${game.current.rune}.`, "bad");
 
     setTimeout(() => nextRound(), 1200);
@@ -1127,4 +1129,4 @@ window.addEventListener("load", () => {
 });
 </script>
 </body>
-</html>
+  </html>
