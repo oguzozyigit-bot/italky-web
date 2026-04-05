@@ -489,7 +489,7 @@ function renderPop(side) {
   const sel = side === "top" ? topLang : botLang;
   if (!list) return;
 
-  const runtimeLangs = getRuntimeLangs ? getRuntimeLangs() : LANGS;
+  const runtimeLangs = getRuntimeLangs();
 
   list.innerHTML = runtimeLangs.map((l) => {
     const active = canonical(l.code) === canonical(sel) ? "active" : "";
@@ -1370,7 +1370,6 @@ function bind() {
   refreshModeFlag();
   ensureRuntimeLangsValid();
   unlockOnFirstTouch();
-  startBoot();
 
   topLangBtn?.addEventListener("click", (e) => {
     e.preventDefault();
@@ -1512,6 +1511,13 @@ function bind() {
       window.speechSynthesis.getVoices();
     }
   } catch {}
+
+  /* EN SONA ALINDI */
+  try {
+    startBoot();
+  } catch (e) {
+    console.error("[facetoface startBoot error]", e);
+  }
 }
 
 if (
