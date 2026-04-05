@@ -489,7 +489,7 @@ function renderPop(side) {
   const sel = side === "top" ? topLang : botLang;
   if (!list) return;
 
-  const runtimeLangs = getRuntimeLangs();
+  const runtimeLangs = getRuntimeLangs ? getRuntimeLangs() : LANGS;
 
   list.innerHTML = runtimeLangs.map((l) => {
     const active = canonical(l.code) === canonical(sel) ? "active" : "";
@@ -505,15 +505,18 @@ function renderPop(side) {
   }).join("");
 
   list.querySelectorAll(".pop-item").forEach((el) => {
-    el.addEventListener("click", () => {
-      const code = el.dataset.code || "en";
+    el.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const code = el.getAttribute("data-code") || "en";
       if (side === "top") topLang = canonical(code);
       else botLang = canonical(code);
 
       refreshLangLabels();
-      refreshReadyTextsIfIdle();
+      refreshReadyTextsIfIdle?.();
       closeAllPop();
-    });
+    };
   });
 }
 
@@ -1473,5 +1476,8 @@ if (
 ) {
   console.error("[facetoface] Gerekli DOM elemanları eksik.");
 } else {
+ try {
   bind();
+} catch (e) {
+  console.error("[facetoface bind error]", e);
 }
