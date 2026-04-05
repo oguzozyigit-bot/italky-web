@@ -165,8 +165,8 @@ function buildGeoPool(fullPool) {
 }
 
 function labelOf(list, code) {
-  const x = list.find((l) => l.code === code);
-  return x ? `${x.flag} ${x.name}` : code.toUpperCase();
+  const item = list.find((l) => l.code === code);
+  return item ? `${item.flag} ${item.name}` : code.toUpperCase();
 }
 
 function closeAllPop() {
@@ -221,7 +221,9 @@ function stopAudio() {
   } catch {}
   currentAudio = null;
 
-  try { window.speechSynthesis?.cancel?.(); } catch {}
+  try {
+    window.speechSynthesis?.cancel?.();
+  } catch {}
 }
 
 function renderTopBubble(text, withSpeaker = false) {
@@ -284,7 +286,9 @@ async function refreshHeaderTokens() {
       .maybeSingle();
 
     if (!error && typeof data?.tokens === "number") {
-      try { setHeaderTokens(data.tokens); } catch {}
+      try {
+        setHeaderTokens(data.tokens);
+      } catch {}
     }
   } catch {}
 }
@@ -367,12 +371,12 @@ async function speakText(text, langCode) {
   } catch {}
 
   try {
-    const u = new SpeechSynthesisUtterance(clean);
-    u.lang = STT_LANG_MAP[langCode] || "tr-TR";
-    u.rate = 0.95;
-    u.pitch = 1.0;
+    const utter = new SpeechSynthesisUtterance(clean);
+    utter.lang = STT_LANG_MAP[langCode] || "tr-TR";
+    utter.rate = 0.95;
+    utter.pitch = 1.0;
     window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(u);
+    window.speechSynthesis.speak(utter);
   } catch {}
 }
 
@@ -437,7 +441,9 @@ async function translateSide(fromText, fromLang, toLang, targetBodyRenderer, tar
       });
 
       if (typeof usage?.tokens_after === "number") {
-        try { setHeaderTokens(usage.tokens_after); } catch {}
+        try {
+          setHeaderTokens(usage.tokens_after);
+        } catch {}
       }
     } catch (e) {
       if (String(e?.code || "").includes("INSUFFICIENT_TOKENS")) {
@@ -468,11 +474,11 @@ function initRecognizer(side) {
     if (side === "top") {
       topListening = true;
       topMic.classList.add("listening");
-      setHelpers("Konuşuyorsunuz...", "Hazır");
+      setHelpers("Konuşuyorsunuz...", botListening ? "Konuşuyorsunuz..." : "Hazır", false, false);
     } else {
       botListening = true;
       botMic.classList.add("listening");
-      setHelpers("Hazır", "Konuşuyorsunuz...");
+      setHelpers(topListening ? "Konuşuyorsunuz..." : "Hazır", "Konuşuyorsunuz...", false, false);
     }
     document.body.classList.add("is-listening");
   };
@@ -564,16 +570,18 @@ botMic?.addEventListener("click", () => {
 
 topLangBtn?.addEventListener("click", (e) => {
   e.preventDefault();
-  closeAllPop();
+  e.stopPropagation();
+  if (popBot?.classList.contains("show")) popBot.classList.remove("show");
   renderPop("top");
-  popTop?.classList.add("show");
+  popTop?.classList.toggle("show");
 });
 
 botLangBtn?.addEventListener("click", (e) => {
   e.preventDefault();
-  closeAllPop();
+  e.stopPropagation();
+  if (popTop?.classList.contains("show")) popTop.classList.remove("show");
   renderPop("bot");
-  popBot?.classList.add("show");
+  popBot?.classList.toggle("show");
 });
 
 closeTop?.addEventListener("click", closeAllPop);
@@ -585,7 +593,7 @@ document.addEventListener("click", (e) => {
     (popBot && popBot.contains(e.target));
   const isBtn = e.target?.closest?.("#topLangBtn,#botLangBtn");
   if (!inside && !isBtn) closeAllPop();
-}, { capture: true });
+});
 
 clearBtn?.addEventListener("click", () => {
   topText = "";
