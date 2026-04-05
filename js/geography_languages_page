@@ -37,11 +37,22 @@ let currentAudio = null;
 let sourceText = "";
 
 const GEO_CODES = [
-  "ku", "kmr", "ckb", "zza", "lzz", "ady", "ab", "az", "ka", "hy", "ar", "fa"
+  "kmr",
+  "ckb",
+  "zza",
+  "lzz",
+  "ady",
+  "ab",
+  "az",
+  "ka",
+  "hy",
+  "ar",
+  "fa"
 ];
 
 const GEO_FALLBACK = [
-  { code: "ku", name: "Kürtçe", flag: "🟨" },
+  { code: "kmr", name: "Kürtçe (Kurmançça)", flag: "🟨" },
+  { code: "ckb", name: "Kürtçe (Sorani)", flag: "🟧" },
   { code: "zza", name: "Zazaca", flag: "🟫" },
   { code: "lzz", name: "Lazca", flag: "🌊" },
   { code: "ady", name: "Çerkezce", flag: "🟩" },
@@ -53,10 +64,25 @@ const GEO_FALLBACK = [
   { code: "fa", name: "Farsça", flag: "🇮🇷" }
 ];
 
+const STT_LANG_MAP = {
+  tr: "tr-TR",
+  kmr: "tr-TR",
+  ckb: "tr-TR",
+  zza: "tr-TR",
+  lzz: "tr-TR",
+  ady: "tr-TR",
+  ab: "tr-TR",
+  az: "az-AZ",
+  ka: "ka-GE",
+  hy: "hy-AM",
+  ar: "ar-SA",
+  fa: "fa-IR"
+};
+
 let TOP_LANGS = [];
 let BOT_LANGS = [];
 let topLang = "tr";
-let botLang = "ku";
+let botLang = "kmr";
 
 function getFullLangPool() {
   try {
@@ -143,6 +169,9 @@ function renderPop(which) {
         botLangTxt.textContent = labelOf(BOT_LANGS, botLang);
       }
 
+      sourceText = "";
+      addBotBubble("Henüz konuşma alınmadı.");
+      addTopBubble("Çeviri burada görünecek.");
       closeAllPop();
     });
   });
@@ -192,7 +221,7 @@ function addBotBubble(text) {
 function setHelpers(topText, botText, botWait = false) {
   topHelper.textContent = topText || "";
   botHelper.textContent = botText || "";
-  botHelper.className = `helper-text${botWait ? " helper-wait" : " helper-ready"}`;
+  botHelper.className = `helper-text ${botWait ? "helper-wait" : "helper-ready"}`;
   topHelper.className = "helper-text helper-ready";
 }
 
@@ -388,7 +417,7 @@ function initRecognition() {
   if (!SR) return null;
 
   const rec = new SR();
-  rec.lang = botLang === "tr" ? "tr-TR" : "en-US";
+  rec.lang = STT_LANG_MAP[botLang] || "tr-TR";
   rec.interimResults = true;
   rec.continuous = false;
   rec.maxAlternatives = 1;
@@ -474,53 +503,6 @@ document.addEventListener("click", (e) => {
   if (!inside && !isBtn) closeAllPop();
 }, { capture: true });
 
-function closeAllPop() {
-  popTop?.classList.remove("show");
-  popBot?.classList.remove("show");
-}
-
-function renderPop(which) {
-  const list = which === "top" ? listTop : listBot;
-  const pool = which === "top" ? TOP_LANGS : BOT_LANGS;
-  const selected = which === "top" ? topLang : botLang;
-  if (!list) return;
-
-  list.innerHTML = pool.map((l) => `
-    <div class="pop-item ${l.code === selected ? "active" : ""}" data-code="${l.code}">
-      <div class="pop-left">
-        <div class="pop-flag">${l.flag}</div>
-        <div class="pop-name">${l.name}</div>
-      </div>
-      <div class="pop-code">${l.code.toUpperCase()}</div>
-    </div>
-  `).join("");
-
-  list.querySelectorAll(".pop-item").forEach((el) => {
-    el.addEventListener("click", () => {
-      const code = String(el.dataset.code || "").trim().toLowerCase();
-      if (!code) return;
-
-      if (which === "top") {
-        topLang = code;
-        topLangTxt.textContent = labelOf(TOP_LANGS, topLang);
-      } else {
-        botLang = code;
-        botLangTxt.textContent = labelOf(BOT_LANGS, botLang);
-      }
-
-      sourceText = "";
-      addBotBubble("Henüz konuşma alınmadı.");
-      addTopBubble("Çeviri burada görünecek.");
-      closeAllPop();
-    });
-  });
-}
-
-function labelOf(list, code) {
-  const x = list.find((l) => l.code === code);
-  return x ? `${x.flag} ${x.name}` : code.toUpperCase();
-}
-
 clearBtn?.addEventListener("click", () => {
   sourceText = "";
   stopAudio();
@@ -533,15 +515,12 @@ homeLink?.addEventListener("click", () => {
   location.href = "/pages/home.html";
 });
 
-let TOP_LANGS = [];
-let BOT_LANGS = [];
-
 function initPools() {
   TOP_LANGS = getFullLangPool();
   BOT_LANGS = buildGeoPool(TOP_LANGS);
 
   if (!TOP_LANGS.find((x) => x.code === topLang)) topLang = "tr";
-  if (!BOT_LANGS.find((x) => x.code === botLang)) botLang = BOT_LANGS[0]?.code || "ku";
+  if (!BOT_LANGS.find((x) => x.code === botLang)) botLang = BOT_LANGS[0]?.code || "kmr";
 
   topLangTxt.textContent = labelOf(TOP_LANGS, topLang);
   botLangTxt.textContent = labelOf(BOT_LANGS, botLang);
